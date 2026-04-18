@@ -1,0 +1,110 @@
+
+'use client';
+
+import React from 'react';
+import Link from 'next/link';
+import { CalendarDays, Eye, FileCheck2, Handshake, Landmark, WalletCards, XCircle } from 'lucide-react';
+import PanelLayout from '../../../components/PanelLayout';
+
+const CONTRACT_CREATE_ITEMS = [
+  {
+    id: 'subject',
+    title: 'اطلاعات پایه',
+    description: 'منعقد کننده قرارداد، نوع قرارداد، تاریخ، شماره قرارداد و انتخاب واحد را در این بخش تنظیم کنید.',
+    icon: CalendarDays,
+    completed: true,
+  },
+  {
+    id: 'financial',
+    title: 'اطلاعات مالی قرارداد',
+    description: 'مبلغ کل قرارداد، پیش پرداخت، سررسیدها و جمع مبالغ مالی در این بخش مدیریت می شود.',
+    icon: WalletCards,
+    completed: false,
+  },
+  {
+    id: 'party-one',
+    title: 'طرف اول',
+    description: 'مشخصات واگذارکننده، فروشنده یا نماینده طرف اول در این مرحله ثبت می شود.',
+    icon: Landmark,
+    completed: true,
+  },
+  {
+    id: 'party-two',
+    title: 'طرف دوم',
+    description: 'اطلاعات خریدار، متعهد یا نماینده طرف دوم را در این صفحه تکمیل می کنید.',
+    icon: Handshake,
+    completed: false,
+  },
+  {
+    id: 'termination',
+    title: 'شرایط فسخ',
+    description: 'بندهای فسخ، جریمه ها، مهلت ها و شروط مهم قراردادی در این بخش قرار می گیرد.',
+    icon: XCircle,
+    completed: false,
+  },
+  {
+    id: 'review',
+    title: 'نمایش کلی جزئیات',
+    description: 'مرور جمع بندی همه اطلاعات ثبت شده پیش از تایید نهایی در این صفحه انجام می شود.',
+    icon: Eye,
+    completed: false,
+  },
+  {
+    id: 'final',
+    title: 'تایید نهایی قرارداد',
+    description: 'پس از تکمیل همه مراحل، قرارداد در این بخش برای تایید نهایی و ثبت بررسی می شود.',
+    icon: FileCheck2,
+    completed: false,
+  },
+] as const;
+
+const NewContractHubPage = () => {
+  return (
+    <PanelLayout>
+      <div className="space-y-5">
+        <div>
+            <h1 className="text-2xl font-bold">ثبت قرارداد جدید</h1>
+            <p className="text-gray-500 mt-1">هر بخش قرارداد در یک صفحه مستقل باز می شود. برای شروع، یکی از مراحل زیر را انتخاب کنید.</p>
+        </div>
+
+        <div className="space-y-3">
+          {CONTRACT_CREATE_ITEMS.map((item) => (
+            <Link
+              key={item.id}
+              href={`/contracts/new/${item.id}`}
+              className="block w-full rounded-lg border bg-white p-4 text-right transition-all hover:border-blue-400 hover:bg-gray-50 shadow-sm"
+            >
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg border bg-gray-100 text-blue-600">
+                    <item.icon className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <div className="text-base font-bold text-gray-800">{item.title}</div>
+                      <span
+                        className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium ${
+                          item.completed
+                            ? 'border-green-300 bg-green-100 text-green-800'
+                            : 'border-yellow-300 bg-yellow-100 text-yellow-800'
+                        }`}
+                      >
+                        {item.completed ? 'تکمیل شده' : 'تکمیل نشده'}
+                      </span>
+                    </div>
+                    <div className="mt-1 text-sm leading-6 text-gray-600">{item.description}</div>
+                  </div>
+                </div>
+                <div className="text-gray-400">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </PanelLayout>
+  );
+};
+
+export default NewContractHubPage;
