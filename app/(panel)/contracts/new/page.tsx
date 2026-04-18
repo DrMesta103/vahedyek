@@ -1,7 +1,16 @@
 'use client';
 
 import Link from 'next/link';
-import { CalendarDays, Eye, FileCheck2, Landmark, WalletCards, XCircle } from 'lucide-react';
+import {
+  AlertTriangle,
+  BadgePercent,
+  CalendarDays,
+  Eye,
+  FileCheck2,
+  Landmark,
+  WalletCards,
+  XCircle,
+} from 'lucide-react';
 import PanelLayout from '../../../components/PanelLayout';
 
 const CONTRACT_CREATE_ITEMS = [
@@ -13,13 +22,6 @@ const CONTRACT_CREATE_ITEMS = [
     completed: true,
   },
   {
-    id: 'financial',
-    title: 'اطلاعات مالی قرارداد',
-    description: 'مبلغ کل قرارداد، پیش پرداخت، سررسیدها و جمع مبالغ مالی در این بخش مدیریت می‌شود.',
-    icon: WalletCards,
-    completed: false,
-  },
-  {
     id: 'parties',
     title: 'طرفین',
     description: 'مدیریت طرف اول و طرف دوم در یک صفحه انجام می‌شود. فعلاً تب و منطق طرف اول فعال است.',
@@ -27,9 +29,30 @@ const CONTRACT_CREATE_ITEMS = [
     completed: true,
   },
   {
+    id: 'financial',
+    title: 'اطلاعات مالی قرارداد',
+    description: 'مبلغ کل قرارداد، پیش پرداخت، سررسیدها و جمع مبالغ مالی در این بخش مدیریت می‌شود.',
+    icon: WalletCards,
+    completed: false,
+  },
+  {
+    id: 'penalties',
+    title: 'جرایم',
+    description: 'تنظیمات انواع جریمه‌ها، هزینه دیرکرد، قواعد گرد کردن و روش محاسبه هر آیتم در این بخش مدیریت می‌شود.',
+    icon: AlertTriangle,
+    completed: false,
+  },
+  {
+    id: 'discounts',
+    title: 'تخفیف‌ها',
+    description: 'تنظیم تخفیف روی اصل قرارداد، تخفیف‌های موردی و مشوق‌های پرداخت زودتر از موعد در این بخش انجام می‌شود.',
+    icon: BadgePercent,
+    completed: false,
+  },
+  {
     id: 'termination',
     title: 'شرایط فسخ',
-    description: 'بندهای فسخ، جریمه ها، مهلت ها و شروط مهم قراردادی در این بخش قرار می‌گیرد.',
+    description: 'بندهای فسخ، جریمه‌ها، مهلت‌ها و شروط مهم قراردادی در این بخش قرار می‌گیرد.',
     icon: XCircle,
     completed: false,
   },

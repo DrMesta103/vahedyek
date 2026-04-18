@@ -2,23 +2,33 @@
 
 import { useParams } from 'next/navigation';
 import PanelLayout from '../../../../components/PanelLayout';
-import { SubjectStep } from '../_components/SubjectStep';
+import { DiscountsStep } from '../_components/DiscountsStep';
 import { FinancialStep } from '../_components/FinancialStep';
 import { PartiesStep } from '../_components/PartiesStep';
+import { PenaltiesStep } from '../_components/PenaltiesStep';
 import { PlaceholderStep } from '../_components/PlaceholderStep';
+import { SubjectStep } from '../_components/SubjectStep';
 
 const STEP_CONFIG = {
   subject: {
     title: 'اطلاعات پایه',
     component: SubjectStep,
   },
+  parties: {
+    title: 'طرفین',
+    component: PartiesStep,
+  },
   financial: {
     title: 'اطلاعات مالی قرارداد',
     component: FinancialStep,
   },
-  parties: {
-    title: 'طرفین',
-    component: PartiesStep,
+  penalties: {
+    title: 'جرایم',
+    component: PenaltiesStep,
+  },
+  discounts: {
+    title: 'تخفیف‌ها',
+    component: DiscountsStep,
   },
   'party-one': {
     title: 'طرفین',
@@ -53,7 +63,7 @@ const ContractStepPage = () => {
   if (!stepInfo) {
     return (
       <PanelLayout>
-        <div className="p-8 text-center">مرحله مورد نظر یافت نشد.</div>
+        <div className="p-8 text-center">مرحله موردنظر یافت نشد.</div>
       </PanelLayout>
     );
   }
