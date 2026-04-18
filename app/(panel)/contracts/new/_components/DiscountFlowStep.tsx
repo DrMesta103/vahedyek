@@ -11,6 +11,7 @@ import {
   getDiscountGroup,
   type DiscountScope,
 } from './discountsConfig';
+import { useContractFlowBasePath } from './useContractFlowBasePath';
 
 function ConfirmModal({
   open,
@@ -91,6 +92,7 @@ function ScopeTab({
 
 export function DiscountFlowStep({ discountId }: { discountId: string }) {
   const router = useRouter();
+  const basePath = useContractFlowBasePath();
   const discountGroup = getDiscountGroup(discountId);
   const [activeScope, setActiveScope] = useState<DiscountScope>('whole');
   const [pendingScope, setPendingScope] = useState<DiscountScope | null>(null);
@@ -130,7 +132,7 @@ export function DiscountFlowStep({ discountId }: { discountId: string }) {
           <div>
             <button
               type="button"
-              onClick={() => router.push('/contracts/new/discounts')}
+              onClick={() => router.push(`${basePath}/discounts`)}
               className="mb-3 inline-flex items-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
             >
               <ChevronLeft className="h-4 w-4" />
@@ -165,7 +167,7 @@ export function DiscountFlowStep({ discountId }: { discountId: string }) {
             {items.map((item) => (
               <Link
                 key={item.id}
-                href={`/contracts/new/discounts/${discountId}/${activeScope}/${item.id}`}
+                href={`${basePath}/discounts/${discountId}/${activeScope}/${item.id}`}
                 className="group block rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition-all hover:border-cyan-300 hover:bg-cyan-50/30 hover:shadow-md"
               >
                 <div className="flex items-start justify-between gap-3">

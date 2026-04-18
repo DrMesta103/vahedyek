@@ -2,10 +2,12 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useContractFlowBasePath } from './useContractFlowBasePath';
 
 export function PlaceholderStep({ stepId, title }: { stepId: string, title: string }) {
   const router = useRouter();
-  const handleBack = () => router.push('/contracts/new');
+  const basePath = useContractFlowBasePath();
+  const handleBack = () => router.push(basePath);
 
   return (
     <div className="space-y-5">

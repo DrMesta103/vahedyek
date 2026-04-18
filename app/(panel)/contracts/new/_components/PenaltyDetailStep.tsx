@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { StickySubmitBar } from './StickySubmitBar';
 import { getPenaltyItem } from './penaltiesConfig';
+import { useContractFlowBasePath } from './useContractFlowBasePath';
 
 type PenaltyMode = 'fixed' | 'overdue' | 'contract' | 'progressive';
 type PenaltyPeriod = 'daily' | 'monthly' | 'yearly';
@@ -191,6 +192,7 @@ function ToggleCard({
 
 export function PenaltyDetailStep({ penaltyId }: { penaltyId: string }) {
   const router = useRouter();
+  const basePath = useContractFlowBasePath();
   const penalty = getPenaltyItem(penaltyId);
 
   const [mode, setMode] = useState<PenaltyMode>('fixed');
@@ -229,7 +231,7 @@ export function PenaltyDetailStep({ penaltyId }: { penaltyId: string }) {
         <div>
           <button
             type="button"
-            onClick={() => router.push('/contracts/new/penalties')}
+            onClick={() => router.push(`${basePath}/penalties`)}
             className="mb-3 inline-flex items-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
           >
             <ChevronLeft className="h-4 w-4" />
@@ -464,7 +466,7 @@ export function PenaltyDetailStep({ penaltyId }: { penaltyId: string }) {
         </div>
       </div>
 
-      <StickySubmitBar label="ثبت" onClick={() => router.push('/contracts/new/penalties')} />
+      <StickySubmitBar label="ثبت" onClick={() => router.push(`${basePath}/penalties`)} />
     </div>
   );
 }

@@ -7,6 +7,7 @@ import { FormBox } from './FormBox';
 import { ChoiceCard } from './ChoiceCard';
 import { FieldLabel } from './FieldLabel';
 import { StickySubmitBar } from './StickySubmitBar';
+import { useContractFlowBasePath } from './useContractFlowBasePath';
 import { Input } from '../../../../components/ui/input';
 import type { PersonType, ShareMode } from '../../../../types/contract';
 
@@ -447,6 +448,7 @@ function PartySection({
 
 export function PartiesStep({ title }: { stepId: string; title: string }) {
   const router = useRouter();
+  const basePath = useContractFlowBasePath();
 
   const [activeTab, setActiveTab] = useState<PartyKey>('party-one');
 
@@ -464,7 +466,7 @@ export function PartiesStep({ title }: { stepId: string; title: string }) {
   const [partyOneDialogOpen, setPartyOneDialogOpen] = useState(false);
   const [partyTwoDialogOpen, setPartyTwoDialogOpen] = useState(false);
 
-  const handleBack = () => router.push('/contracts/new');
+  const handleBack = () => router.push(basePath);
 
   const updateRowShare = (
     rows: PartyRow[],
@@ -595,7 +597,7 @@ export function PartiesStep({ title }: { stepId: string; title: string }) {
         />
       )}
 
-      <StickySubmitBar label="ثبت اطلاعات طرفین" onClick={() => router.push('/contracts/new')} />
+      <StickySubmitBar label="ثبت اطلاعات طرفین" onClick={() => router.push(basePath)} />
 
       <PartySelectionDialog
         open={partyOneDialogOpen}

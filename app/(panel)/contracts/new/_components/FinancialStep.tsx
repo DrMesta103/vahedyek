@@ -10,6 +10,7 @@ import { StickySubmitBar } from './StickySubmitBar';
 import { Input } from '../../../../components/ui/input';
 import { PersianDatePicker } from '../../../../components/ui/PersianDatePicker';
 import jalaali from 'jalaali-js';
+import { useContractFlowBasePath } from './useContractFlowBasePath';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -247,6 +248,7 @@ function Modal({ open, onClose, title, description, children, footer }: {
 
 export function FinancialStep({ stepId, title }: { stepId: string; title: string }) {
   const router = useRouter();
+  const basePath = useContractFlowBasePath();
 
   // Pricing
   const [pricingType, setPricingType] = useState<PricingType>('fixed');
@@ -397,7 +399,7 @@ export function FinancialStep({ stepId, title }: { stepId: string; title: string
       setSubmitBlockedOpen(true);
       return;
     }
-    router.push('/contracts/new');
+    router.push(basePath);
   };
 
   const openDueDialog = () => {
@@ -456,7 +458,7 @@ export function FinancialStep({ stepId, title }: { stepId: string; title: string
           <h1 className="text-2xl font-bold text-gray-800">{title}</h1>
           <p className="mt-1 text-sm text-gray-500">مدل قیمت‌گذاری، جمع مالی و دسته‌بندی‌های مالی قرارداد را در این بخش مدیریت کنید.</p>
         </div>
-        <button type="button" onClick={() => router.push('/contracts/new')} className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">
+        <button type="button" onClick={() => router.push(basePath)} className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">
           بازگشت به مراحل
         </button>
       </div>

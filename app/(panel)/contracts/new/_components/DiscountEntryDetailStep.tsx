@@ -9,6 +9,7 @@ import {
   getDiscountGroup,
   type DiscountScope,
 } from './discountsConfig';
+import { useContractFlowBasePath } from './useContractFlowBasePath';
 
 type ValueMode = 'amount' | 'percent';
 
@@ -93,6 +94,7 @@ export function DiscountEntryDetailStep({
   entryId: string;
 }) {
   const router = useRouter();
+  const basePath = useContractFlowBasePath();
   const group = getDiscountGroup(discountId);
   const entry = getDiscountEntry(scope, entryId);
   const [activeState, setActiveState] = useState(true);
@@ -118,7 +120,7 @@ export function DiscountEntryDetailStep({
         <div>
           <button
             type="button"
-            onClick={() => router.push(`/contracts/new/discounts/${discountId}`)}
+            onClick={() => router.push(`${basePath}/discounts/${discountId}`)}
             className="mb-3 inline-flex items-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
           >
             <ChevronLeft className="h-4 w-4" />
@@ -252,7 +254,7 @@ export function DiscountEntryDetailStep({
         </div>
       </div>
 
-      <StickySubmitBar label="ثبت" onClick={() => router.push(`/contracts/new/discounts/${discountId}`)} />
+      <StickySubmitBar label="ثبت" onClick={() => router.push(`${basePath}/discounts/${discountId}`)} />
     </div>
   );
 }

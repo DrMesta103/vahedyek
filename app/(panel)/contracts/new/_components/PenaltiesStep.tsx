@@ -5,9 +5,11 @@ import { useRouter } from 'next/navigation';
 import { ChevronLeft, Settings2 } from 'lucide-react';
 import { FormBox } from './FormBox';
 import { PENALTY_ITEMS } from './penaltiesConfig';
+import { useContractFlowBasePath } from './useContractFlowBasePath';
 
 export function PenaltiesStep({ title }: { stepId: string; title: string }) {
   const router = useRouter();
+  const basePath = useContractFlowBasePath();
 
   return (
     <div className="space-y-5">
@@ -18,7 +20,7 @@ export function PenaltiesStep({ title }: { stepId: string; title: string }) {
         </div>
         <button
           type="button"
-          onClick={() => router.push('/contracts/new')}
+          onClick={() => router.push(basePath)}
           className="rounded-md border border-gray-300 px-3.5 py-2 text-sm text-gray-600 transition-colors hover:bg-gray-50"
         >
           بازگشت به مراحل
@@ -33,7 +35,7 @@ export function PenaltiesStep({ title }: { stepId: string; title: string }) {
           {PENALTY_ITEMS.map((item) => (
             <Link
               key={item.id}
-              href={`/contracts/new/penalties/${item.id}`}
+              href={`${basePath}/penalties/${item.id}`}
               className="group rounded-2xl border border-gray-200 bg-white p-5 text-gray-900 shadow-sm transition-all hover:border-cyan-300 hover:bg-cyan-50/40 hover:shadow-md"
             >
               <div className="flex items-start justify-between gap-3">

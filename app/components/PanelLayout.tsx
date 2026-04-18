@@ -1,8 +1,7 @@
-
 'use client';
 
-import Sidebar from './Sidebar';
 import { usePathname } from 'next/navigation';
+import Sidebar from './Sidebar';
 
 interface PanelLayoutProps {
   children: React.ReactNode;
@@ -10,18 +9,23 @@ interface PanelLayoutProps {
 
 export default function PanelLayout({ children }: PanelLayoutProps) {
   const pathname = usePathname();
-  
-  let activeItem = 'complex'; // Default
-  let breadcrumb = 'جزئیات مجتمع'; // Default
 
-  if (pathname.startsWith('/contracts')) {
+  let activeItem = 'complex';
+  let breadcrumb = 'جزئیات مجتمع';
+
+  if (pathname.startsWith('/draft-templates')) {
+    activeItem = 'draft-templates';
+    breadcrumb = 'فهرست قالب‌های پیش‌نویس';
+    if (pathname.includes('/new')) {
+      breadcrumb = 'قالب پیش‌نویس جدید';
+    }
+  } else if (pathname.startsWith('/contracts')) {
     activeItem = 'contracts';
     breadcrumb = 'فهرست قراردادها';
     if (pathname.includes('/new')) {
       breadcrumb = 'قرارداد جدید';
     }
   }
-  // You can add more conditions for other routes here
 
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
@@ -33,9 +37,7 @@ export default function PanelLayout({ children }: PanelLayoutProps) {
             خانه <i className="fa fa-chevron-left"></i> {breadcrumb}
           </div>
         </div>
-        <div className="content-body">
-          {children}
-        </div>
+        <div className="content-body">{children}</div>
       </main>
     </div>
   );

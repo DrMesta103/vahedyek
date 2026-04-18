@@ -2,9 +2,9 @@
 
 import { useParams } from 'next/navigation';
 import PanelLayout from '../../../../components/PanelLayout';
-import { ContractFlowStepContent } from '../_components/ContractFlowStepContent';
+import { ContractFlowStepContent } from '../../../contracts/new/_components/ContractFlowStepContent';
 
-const ContractStepPage = () => {
+const DraftTemplateStepPage = () => {
   const params = useParams();
   const stepId = params.stepId as string;
 
@@ -15,4 +15,4 @@ const ContractStepPage = () => {
   );
 };
 
-export default ContractStepPage;
+export default DraftTemplateStepPage;

@@ -8,6 +8,7 @@ import { StickySubmitBar } from './StickySubmitBar';
 import { ChoiceCard } from './ChoiceCard';
 import { FieldLabel } from './FieldLabel';
 import { SearchableSelect } from './SearchableSelect';
+import { useContractFlowBasePath } from './useContractFlowBasePath';
 import { Input } from '../../../../components/ui/input';
 
 // Mock data - replace with actual data fetching
@@ -23,6 +24,7 @@ const BLOCK_OPTIONS = [
 
 export function SubjectStep({ stepId, title }: { stepId: string, title: string }) {
   const router = useRouter();
+  const basePath = useContractFlowBasePath();
   
   const [issuerType, setIssuerType] = useState('self');
   const [formerEmployeeName, setFormerEmployeeName] = useState('');
@@ -36,11 +38,11 @@ export function SubjectStep({ stepId, title }: { stepId: string, title: string }
   const selectedBlockData = BLOCK_OPTIONS.find((block) => block.id === selectedBlock);
   const unitOptions = useMemo(() => selectedBlockData?.units.map(u => ({label: u, value: u})) ?? [], [selectedBlockData]);
 
-  const handleBack = () => router.push('/contracts/new');
+  const handleBack = () => router.push(basePath);
   const handleSubmit = () => {
     // Handle form submission logic here
     console.log('Form submitted');
-    router.push('/contracts/new');
+    router.push(basePath);
   };
 
   return (
