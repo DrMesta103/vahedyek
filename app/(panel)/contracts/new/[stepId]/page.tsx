@@ -1,13 +1,12 @@
-
 'use client';
 
 import { useParams } from 'next/navigation';
 import PanelLayout from '../../../../components/PanelLayout';
 import { SubjectStep } from '../_components/SubjectStep';
 import { FinancialStep } from '../_components/FinancialStep';
+import { PartiesStep } from '../_components/PartiesStep';
 import { PlaceholderStep } from '../_components/PlaceholderStep';
 
-// We can expand this config as we implement more steps
 const STEP_CONFIG = {
   subject: {
     title: 'اطلاعات پایه',
@@ -17,13 +16,17 @@ const STEP_CONFIG = {
     title: 'اطلاعات مالی قرارداد',
     component: FinancialStep,
   },
+  parties: {
+    title: 'طرفین',
+    component: PartiesStep,
+  },
   'party-one': {
-    title: 'طرف اول',
-    component: PlaceholderStep,
+    title: 'طرفین',
+    component: PartiesStep,
   },
   'party-two': {
-    title: 'طرف دوم',
-    component: PlaceholderStep,
+    title: 'طرفین',
+    component: PartiesStep,
   },
   termination: {
     title: 'شرایط فسخ',
@@ -48,11 +51,10 @@ const ContractStepPage = () => {
   const stepInfo = STEP_CONFIG[stepId];
 
   if (!stepInfo) {
-    // Or show a 404 not found page
     return (
-        <PanelLayout>
-            <div className="text-center p-8">مرحله مورد نظر یافت نشد.</div>
-        </PanelLayout>
+      <PanelLayout>
+        <div className="p-8 text-center">مرحله مورد نظر یافت نشد.</div>
+      </PanelLayout>
     );
   }
 
@@ -60,7 +62,7 @@ const ContractStepPage = () => {
 
   return (
     <PanelLayout>
-        <StepComponent stepId={stepId} title={stepInfo.title} />
+      <StepComponent stepId={stepId} title={stepInfo.title} />
     </PanelLayout>
   );
 };
