@@ -19,6 +19,7 @@ type DirectoryItem = {
 
 type PartyRow = DirectoryItem & {
   shareValue: number;
+  isPrimary: boolean;
   locked?: boolean;
 };
 
@@ -54,6 +55,7 @@ const DEFAULT_PARTY_ONE: PartyRow = {
   name: 'شرکت فپکو',
   personType: 'legal',
   shareValue: 6,
+  isPrimary: true,
   locked: true,
 };
 
@@ -287,7 +289,7 @@ function PartySelectionDialog({
             </div>
           ) : null}
 
-          <div className="mb-4 relative">
+          <div className="relative mb-4">
             <Search className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
             <Input
               value={searchTerm}
@@ -345,6 +347,7 @@ function PartySection({
   shareMode,
   onShareModeChange,
   onShareChange,
+  onPrimaryChange,
   onRemove,
   addButtonLabel,
   onOpenDialog,
@@ -355,6 +358,7 @@ function PartySection({
   shareMode: ShareMode;
   onShareModeChange: (mode: ShareMode) => void;
   onShareChange: (id: string, value: string) => void;
+  onPrimaryChange: (id: string) => void;
   onRemove: (id: string) => void;
   addButtonLabel: string;
   onOpenDialog: () => void;
@@ -396,6 +400,11 @@ function PartySection({
                           پیش‌فرض
                         </span>
                       ) : null}
+                      {row.isPrimary ? (
+                        <span className="rounded-full border border-emerald-200 bg-emerald-100 px-2.5 py-1 text-xs text-emerald-700">
+                          طرف اصلی
+                        </span>
+                      ) : null}
                     </div>
                     <p className="mt-1 text-xs text-gray-500">شناسه: {row.id}</p>
                   </div>
@@ -415,7 +424,22 @@ function PartySection({
                   />
                 </div>
 
-                <div className="flex justify-end lg:self-end">
+                <div className="flex flex-col items-end gap-2 lg:self-end">
+                  {rows.length > 1 ? (
+                    <button
+                      type="button"
+                      onClick={() => onPrimaryChange(row.id)}
+                      className={`inline-flex h-10 items-center gap-2 rounded-lg border px-4 text-sm font-medium transition-colors ${
+                        row.isPrimary
+                          ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
+                          : 'border-gray-300 bg-white text-gray-600 hover:bg-gray-50'
+                      }`}
+                    >
+                      <span className={`h-2.5 w-2.5 rounded-full ${row.isPrimary ? 'bg-emerald-600' : 'bg-gray-300'}`} />
+                      {row.isPrimary ? 'طرف اصلی' : 'انتخاب به عنوان طرف اصلی'}
+                    </button>
+                  ) : null}
+
                   <button
                     type="button"
                     onClick={() => onRemove(row.id)}
@@ -451,29 +475,20 @@ export function PartiesStep({ title }: { stepId: string; title: string }) {
   const basePath = useContractFlowBasePath();
 
   const [activeTab, setActiveTab] = useState<PartyKey>('party-one');
-
   const [partyOneMode, setPartyOneMode] = useState<ShareMode>('dang');
   const [partyTwoMode, setPartyTwoMode] = useState<ShareMode>('dang');
-
   const [partyOneRows, setPartyOneRows] = useState<PartyRow[]>([DEFAULT_PARTY_ONE]);
   const [partyTwoRows, setPartyTwoRows] = useState<PartyRow[]>([]);
-
   const [partnerNaturals, setPartnerNaturals] = useState<DirectoryItem[]>(NATURAL_PARTNERS);
   const [partnerLegals, setPartnerLegals] = useState<DirectoryItem[]>(LEGAL_PARTNERS);
   const [buyerNaturals, setBuyerNaturals] = useState<DirectoryItem[]>(NATURAL_BUYERS);
   const [buyerLegals, setBuyerLegals] = useState<DirectoryItem[]>(LEGAL_BUYERS);
-
   const [partyOneDialogOpen, setPartyOneDialogOpen] = useState(false);
   const [partyTwoDialogOpen, setPartyTwoDialogOpen] = useState(false);
 
   const handleBack = () => router.push(basePath);
 
-  const updateRowShare = (
-    rows: PartyRow[],
-    id: string,
-    rawValue: string,
-    mode: ShareMode,
-  ) => {
+  const updateRowShare = (rows: PartyRow[], id: string, rawValue: string, mode: ShareMode) => {
     const parsed = rawValue === '' ? 0 : Number(rawValue);
     const otherTotal = rows.filter((row) => row.id !== id).reduce((sum, row) => sum + row.shareValue, 0);
     const maxForRow = Math.max(0, PARTY_TOTALS[mode] - otherTotal);
@@ -488,6 +503,22 @@ export function PartiesStep({ title }: { stepId: string; title: string }) {
       shareValue: convertShare(row.shareValue, from, to),
     }));
 
+  const normalizePrimary = (rows: PartyRow[]) => {
+    if (!rows.length) return rows;
+    if (rows.some((row) => row.isPrimary)) return rows;
+
+    return rows.map((row, index) => ({
+      ...row,
+      isPrimary: index === 0,
+    }));
+  };
+
+  const setPrimaryRow = (rows: PartyRow[], id: string) =>
+    rows.map((row) => ({
+      ...row,
+      isPrimary: row.id === id,
+    }));
+
   const handlePartyOneModeChange = (nextMode: ShareMode) => {
     if (nextMode === partyOneMode) return;
     setPartyOneRows((current) => convertRows(current, partyOneMode, nextMode));
@@ -500,15 +531,19 @@ export function PartiesStep({ title }: { stepId: string; title: string }) {
     setPartyTwoMode(nextMode);
   };
 
-  const addRows = (currentRows: PartyRow[], items: DirectoryItem[]) => [
-    ...currentRows,
-    ...items
-      .filter((item) => !currentRows.some((row) => row.id === item.id))
-      .map((item) => ({
-        ...item,
-        shareValue: 0,
-      })),
-  ];
+  const addRows = (currentRows: PartyRow[], items: DirectoryItem[]) =>
+    normalizePrimary([
+      ...currentRows,
+      ...items
+        .filter((item) => !currentRows.some((row) => row.id === item.id))
+        .map((item) => ({
+          ...item,
+          shareValue: 0,
+          isPrimary: currentRows.length === 0,
+        })),
+    ]);
+
+  const removeRow = (rows: PartyRow[], id: string) => normalizePrimary(rows.filter((row) => row.id !== id));
 
   const createDirectoryItem = (kind: EntityKind, personType: PersonType, name: string) => {
     const item = {
@@ -579,7 +614,8 @@ export function PartiesStep({ title }: { stepId: string; title: string }) {
           shareMode={partyOneMode}
           onShareModeChange={handlePartyOneModeChange}
           onShareChange={(id, value) => setPartyOneRows((current) => updateRowShare(current, id, value, partyOneMode))}
-          onRemove={(id) => setPartyOneRows((current) => current.filter((row) => row.id !== id))}
+          onPrimaryChange={(id) => setPartyOneRows((current) => setPrimaryRow(current, id))}
+          onRemove={(id) => setPartyOneRows((current) => removeRow(current, id))}
           addButtonLabel={partyOneLabels.addButton}
           onOpenDialog={() => setPartyOneDialogOpen(true)}
         />
@@ -591,7 +627,8 @@ export function PartiesStep({ title }: { stepId: string; title: string }) {
           shareMode={partyTwoMode}
           onShareModeChange={handlePartyTwoModeChange}
           onShareChange={(id, value) => setPartyTwoRows((current) => updateRowShare(current, id, value, partyTwoMode))}
-          onRemove={(id) => setPartyTwoRows((current) => current.filter((row) => row.id !== id))}
+          onPrimaryChange={(id) => setPartyTwoRows((current) => setPrimaryRow(current, id))}
+          onRemove={(id) => setPartyTwoRows((current) => removeRow(current, id))}
           addButtonLabel={partyTwoLabels.addButton}
           onOpenDialog={() => setPartyTwoDialogOpen(true)}
         />
