@@ -7,16 +7,16 @@ interface SidebarProps {
 }
 
 const menuItems = [
-  { id: 'business', label: 'جزئیات کسب و کار', icon: 'fa-briefcase', href: '#' },
-  { id: 'complex', label: 'جزئیات مجتمع', icon: 'fa-building', href: '#' },
-  { id: 'units', label: 'فهرست واحد ها', icon: 'fa-list-ul', href: '#' },
-  { id: 'draft-templates', label: 'قالب های پیش نویس', icon: 'fa-copy', href: '/draft-templates' },
+  { id: 'business', label: 'جزئیات کسب و کار', icon: 'fa-briefcase', href: '#', disabled: true },
+  { id: 'complex', label: 'جزئیات مجتمع', icon: 'fa-building', href: '#', disabled: true },
+  { id: 'units', label: 'فهرست واحد ها', icon: 'fa-list-ul', href: '#', disabled: true },
+  { id: 'draft-templates', label: 'قالب های پیش نویس', icon: 'fa-copy', href: '/draft-templates', disabled: true },
   { id: 'contracts', label: 'فهرست قرارداد ها', icon: 'fa-file-invoice', href: '/contracts' },
-  { id: 'drafts', label: 'پیش نویس های در انتظار بررسی', icon: 'fa-file-edit', href: '#' },
-  { id: 'payments', label: 'واریزی مشتریان', icon: 'fa-hand-holding-usd', href: '#' },
-  { id: 'reports', label: 'گزارش های مدیریتی', icon: 'fa-chart-line', href: '#' },
-  { id: 'employees', label: 'کارمندان', icon: 'fa-users', href: '#' },
-  { id: 'account', label: 'حساب کاربری', icon: 'fa-user-circle', href: '#' },
+  { id: 'drafts', label: 'پیش نویس های در انتظار بررسی', icon: 'fa-file-edit', href: '#', disabled: true },
+  { id: 'payments', label: 'واریزی مشتریان', icon: 'fa-hand-holding-usd', href: '#', disabled: true },
+  { id: 'reports', label: 'گزارش های مدیریتی', icon: 'fa-chart-line', href: '#', disabled: true },
+  { id: 'employees', label: 'کارمندان', icon: 'fa-users', href: '#', disabled: true },
+  { id: 'account', label: 'حساب کاربری', icon: 'fa-user-circle', href: '#', disabled: true },
 ];
 
 export default function Sidebar({ activeItem = 'complex' }: SidebarProps) {
@@ -51,16 +51,29 @@ export default function Sidebar({ activeItem = 'complex' }: SidebarProps) {
       </div>
 
       <nav className="menu-list">
-        {menuItems.map((item) => (
-          <Link
-            key={item.id}
-            href={item.href}
-            className={`menu-link${activeItem === item.id ? ' active' : ''}`}
-          >
-            <i className={`fa ${item.icon}`}></i>
-            <span>{item.label}</span>
-          </Link>
-        ))}
+        {menuItems.map((item) =>
+          item.disabled ? (
+            <div
+              key={item.id}
+              className="menu-link"
+              aria-disabled="true"
+              style={{ opacity: 0.5, cursor: 'not-allowed', pointerEvents: 'none' }}
+            >
+              <i className={`fa ${item.icon}`}></i>
+              <span>{item.label}</span>
+              <i className="fa fa-lock" style={{ marginRight: 'auto', fontSize: '12px' }}></i>
+            </div>
+          ) : (
+            <Link
+              key={item.id}
+              href={item.href}
+              className={`menu-link${activeItem === item.id ? ' active' : ''}`}
+            >
+              <i className={`fa ${item.icon}`}></i>
+              <span>{item.label}</span>
+            </Link>
+          ),
+        )}
       </nav>
 
       <div className="invite-section">
