@@ -1,8 +1,13 @@
 import { NextResponse } from 'next/server';
+import { Prisma } from '@prisma/client';
 import { requireSessionContext } from '../../../../../lib/auth';
 import { prisma } from '../../../../../lib/prisma';
 import { handlePrismaApiError } from '../../../../../lib/prismaApiError';
 import { parseContractorType, parseContractType, serializeContractorType, serializeContractType } from '../../../../../lib/subjectUtils';
+
+function normalizeFormerEmployeeName(value: string) {
+  return value.trim().replace(/\s+/g, ' ');
+}
 
 export async function GET(_: Request, { params }: { params: { draftId: string } }) {
   try {
@@ -61,16 +66,35 @@ export async function PUT(request: Request, { params }: { params: { draftId: str
 
     const body = await request.json();
     const contractor = body.contractor ?? {};
+    const formerEmployeeName =
+      contractor.type === 'former-employee'
+        ? normalizeFormerEmployeeName([contractor.formerFirstName, contractor.formerLastName].filter(Boolean).join(' '))
+        : '';
+
+    if (contractor.type === 'former-employee' && formerEmployeeName) {
+      await prisma.$executeRaw(Prisma.sql`
+        INSERT INTO "FormerEmployee" ("id", "tenantId", "fullName", "normalizedName", "createdAt", "updatedAt")
+        VALUES (
+          ${crypto.randomUUID()},
+          ${session.tenantId},
+          ${formerEmployeeName},
+          ${formerEmployeeName.toLocaleLowerCase('fa-IR')},
+          NOW(),
+          NOW()
+        )
+        ON CONFLICT ("tenantId", "normalizedName")
+        DO UPDATE SET
+          "fullName" = EXCLUDED."fullName",
+          "updatedAt" = NOW()
+      `);
+    }
 
     const result = await prisma.contractSubject.upsert({
       where: { draftId: params.draftId },
       update: {
         contractorType: parseContractorType(contractor.type),
         contractorEmployeeId: contractor.employeeId || null,
-        contractorFormerName:
-          contractor.type === 'former-employee'
-            ? [contractor.formerFirstName, contractor.formerLastName].filter(Boolean).join(' ')
-            : null,
+        contractorFormerName: contractor.type === 'former-employee' ? formerEmployeeName : null,
         contractType: parseContractType(body.contractType),
         contractDate: body.contractDate,
         contractNumber: body.contractNumber,
@@ -82,10 +106,7 @@ export async function PUT(request: Request, { params }: { params: { draftId: str
         draftId: params.draftId,
         contractorType: parseContractorType(contractor.type),
         contractorEmployeeId: contractor.employeeId || null,
-        contractorFormerName:
-          contractor.type === 'former-employee'
-            ? [contractor.formerFirstName, contractor.formerLastName].filter(Boolean).join(' ')
-            : null,
+        contractorFormerName: contractor.type === 'former-employee' ? formerEmployeeName : null,
         contractType: parseContractType(body.contractType),
         contractDate: body.contractDate,
         contractNumber: body.contractNumber,

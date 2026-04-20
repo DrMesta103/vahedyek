@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { DirectoryRole, PersonType } from '@prisma/client';
+import { DirectoryRole, PersonType, Prisma } from '@prisma/client';
 import { requireSessionContext } from '../../../lib/auth';
 import { prisma } from '../../../lib/prisma';
 import { handlePrismaApiError } from '../../../lib/prismaApiError';
@@ -9,11 +9,17 @@ export async function GET() {
     const session = await requireSessionContext();
     if (session instanceof NextResponse) return session;
 
-    const [employees, blocks, directory] = await Promise.all([
+    const [employees, formerEmployees, blocks, directory] = await Promise.all([
       prisma.employee.findMany({
         where: { tenantId: session.tenantId, isActive: true },
         orderBy: [{ firstName: 'asc' }, { lastName: 'asc' }],
       }),
+      prisma.$queryRaw<Array<{ id: string; fullName: string }>>(Prisma.sql`
+        SELECT "id", "fullName"
+        FROM "FormerEmployee"
+        WHERE "tenantId" = ${session.tenantId}
+        ORDER BY "fullName" ASC
+      `),
       prisma.block.findMany({
         where: { tenantId: session.tenantId },
         include: {
@@ -38,17 +44,21 @@ export async function GET() {
         }));
 
     return NextResponse.json({
-    employees,
-    blocks: blocks.map((block) => ({
-      id: block.id,
-      name: block.name,
-      units: block.units.map((unit) => ({
-        id: unit.id,
-        floorName: unit.floorName,
-        name: unit.name,
-        title: `${unit.floorName} - ${unit.name}`,
+      employees,
+      formerEmployees: formerEmployees.map((item) => ({
+        id: item.id,
+        fullName: item.fullName,
       })),
-    })),
+      blocks: blocks.map((block) => ({
+        id: block.id,
+        name: block.name,
+        units: block.units.map((unit) => ({
+          id: unit.id,
+          floorName: unit.floorName,
+          name: unit.name,
+          title: `${unit.floorName} - ${unit.name}`,
+        })),
+      })),
       directory: {
         partner: {
           natural: byRole(DirectoryRole.partner, PersonType.natural),

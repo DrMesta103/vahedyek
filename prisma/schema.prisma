@@ -54,6 +54,7 @@ model Tenant {
   sessions      Session[]
   drafts        ContractDraft[]
   employees     Employee[]
+  formerEmployees FormerEmployee[]
   blocks        Block[]
   units         Unit[]
   directory     DirectoryPerson[]
@@ -208,6 +209,19 @@ model Employee {
   subjects  ContractSubject[]
 
   @@index([tenantId])
+}
+
+model FormerEmployee {
+  id             String   @id @default(uuid())
+  tenantId       String
+  fullName       String
+  normalizedName String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  tenant         Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, normalizedName])
+  @@index([tenantId, fullName])
 }
 
 model Block {

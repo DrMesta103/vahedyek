@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { CalendarDays, FileText, KeyRound } from 'lucide-react';
+import { Calendar, Check, CalendarDays, FileText, KeyRound } from 'lucide-react';
 import { FormBox } from './FormBox';
 import { StickySubmitBar } from './StickySubmitBar';
 import { ChoiceCard } from './ChoiceCard';
@@ -31,7 +31,7 @@ function ContractMetaField({
   children: ReactNode;
 }) {
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm transition-colors hover:border-blue-200">
+    <div className="rounded-2xl border-[0.5px] border-[#ededed] bg-white p-4 shadow-sm transition-colors hover:border-blue-200">
       <div className="flex items-start gap-3">
         <div className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
           {icon}
@@ -46,6 +46,53 @@ function ContractMetaField({
   );
 }
 
+function ReferenceDivider() {
+  return <div className="h-px w-full bg-[#c8d0da]" />;
+}
+
+function ReferenceSection({
+  title,
+  helper,
+  children,
+}: {
+  title: string;
+  helper: string;
+  children: ReactNode;
+}) {
+  return (
+    <section className="space-y-3">
+      <h3 className="text-right text-[20px] font-bold text-[#314a67]">{title}</h3>
+      {children}
+      <p className="text-center text-[15px] leading-7 text-[#3d4f65]">{helper}</p>
+    </section>
+  );
+}
+
+function SelectionPill({
+  label,
+  active,
+  onClick,
+}: {
+  label: string;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`inline-flex min-h-[43px] items-center gap-2 rounded-full border-[0.5px] px-5 py-2 text-[14px] transition-all ${
+        active
+          ? 'border-[#a6e8ef] bg-[#a6e8ef] font-semibold text-[#123b69]'
+          : 'border-[#6e86a3] bg-white text-[#314a67]'
+      }`}
+    >
+      {active ? <Check className="h-3.5 w-3.5 shrink-0 stroke-[2.75]" /> : null}
+      <span>{label}</span>
+    </button>
+  );
+}
+
 export function SubjectStep({ stepId, title, embedded = false }: { stepId: string; title: string; embedded?: boolean }) {
   const router = useRouter();
   const basePath = useContractFlowBasePath();
@@ -57,6 +104,7 @@ export function SubjectStep({ stepId, title, embedded = false }: { stepId: strin
   const [formError, setFormError] = useState('');
 
   const [employees, setEmployees] = useState<EmployeeOption[]>([]);
+  const [formerEmployees, setFormerEmployees] = useState<Array<{ id: string; fullName: string }>>([]);
   const [blocks, setBlocks] = useState<BlockOption[]>([]);
 
   const [issuerType, setIssuerType] = useState<'self' | 'former' | 'staff'>('self');
@@ -70,6 +118,7 @@ export function SubjectStep({ stepId, title, embedded = false }: { stepId: strin
   const [selectedUnit, setSelectedUnit] = useState('');
 
   const selectedBlockData = blocks.find((block) => block.id === selectedBlock);
+  const selectedUnitData = selectedBlockData?.units.find((unit) => unit.id === selectedUnit);
   const unitOptions = useMemo(
     () => selectedBlockData?.units.map((unit) => ({ label: unit.title, value: unit.id })) ?? [],
     [selectedBlockData],
@@ -82,6 +131,15 @@ export function SubjectStep({ stepId, title, embedded = false }: { stepId: strin
         value: employee.id,
       })),
     [employees],
+  );
+
+  const formerEmployeeOptions = useMemo(
+    () =>
+      formerEmployees.map((employee) => ({
+        label: employee.fullName,
+        value: employee.fullName,
+      })),
+    [formerEmployees],
   );
 
   useEffect(() => {
@@ -99,6 +157,7 @@ export function SubjectStep({ stepId, title, embedded = false }: { stepId: strin
 
         setDraftId(id);
         setEmployees(referenceData.employees);
+        setFormerEmployees(referenceData.formerEmployees);
         setBlocks(referenceData.blocks);
 
         if (subjectData) {
@@ -117,7 +176,6 @@ export function SubjectStep({ stepId, title, embedded = false }: { stepId: strin
           setSelectedBlock(subjectData.blockId);
           setSelectedUnit(subjectData.unitId);
         }
-
       } catch (error) {
         if (mounted) {
           setFormError(error instanceof Error ? error.message : 'بارگذاری اطلاعات پایه انجام نشد.');
@@ -127,7 +185,7 @@ export function SubjectStep({ stepId, title, embedded = false }: { stepId: strin
       }
     };
 
-    load();
+    void load();
 
     return () => {
       mounted = false;
@@ -224,43 +282,62 @@ export function SubjectStep({ stepId, title, embedded = false }: { stepId: strin
 
   return (
     <div className="space-y-5">
-      {!embedded ? <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">{title}</h1>
-          <p className="mt-1 text-gray-500">اطلاعات پایه و اولیه قرارداد را در این بخش وارد کنید.</p>
+      {!embedded ? (
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">{title}</h1>
+            <p className="mt-1 text-gray-500">اطلاعات پایه و اولیه قرارداد را در این بخش وارد کنید.</p>
+          </div>
+          <button
+            type="button"
+            onClick={handleBack}
+            className="rounded-md border border-gray-300 px-3.5 py-2 text-sm text-gray-600 transition-colors hover:bg-gray-50"
+          >
+            بازگشت به مراحل
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={handleBack}
-          className="rounded-md border border-gray-300 px-3.5 py-2 text-sm text-gray-600 transition-colors hover:bg-gray-50"
-        >
-          بازگشت به مراحل
-        </button>
-      </div> : null}
+      ) : null}
 
       <div className="grid gap-4">
-        {formError ? <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{formError}</div> : null}
+        {formError ? <div className="rounded-xl border-[0.5px] border-[#ededed] bg-rose-50 px-4 py-3 text-sm text-rose-700">{formError}</div> : null}
 
-        <FormBox title="منعقد کننده قرارداد" description="مشخص کنید قرارداد توسط چه شخصی منعقد می‌شود.">
-          <div className="grid gap-3 md:grid-cols-3">
-            <ChoiceCard title="خودم" active={issuerType === 'self'} onClick={() => setIssuerType('self')} />
-            <ChoiceCard title="کارمند سابق" active={issuerType === 'former'} onClick={() => setIssuerType('former')} />
-            <ChoiceCard title="سایر کارمندان" active={issuerType === 'staff'} onClick={() => setIssuerType('staff')} />
+        <FormBox
+          title="منعقدکننده قرارداد"
+          description="فردی که قرارداد را با مشتری منعقد کرده مشخص کنید. خودتان، یکی از کارمندان فعلی یا یکی از کارمندان سابق شرکت. در صورت نیاز نام کارمند سابق را به صورت دستی وارد کنید."
+        >
+          <div className="flex flex-wrap gap-2 text-right">
+            <ChoiceCard title="خودم" active={issuerType === 'self'} onClick={() => setIssuerType('self')} variant="pill" />
+            <ChoiceCard title="کارمند سابق" active={issuerType === 'former'} onClick={() => setIssuerType('former')} variant="pill" />
+            <ChoiceCard title="سایرکارمندان" active={issuerType === 'staff'} onClick={() => setIssuerType('staff')} variant="pill" />
           </div>
 
-          {issuerType === 'former' && (
-            <div className="mt-4">
-              <FieldLabel label="نام و نام خانوادگی کارمند سابق" />
-              <Input
-                value={formerEmployeeName}
-                onChange={(event) => setFormerEmployeeName(event.target.value)}
-                placeholder="نام کامل کارمند سابق را وارد کنید"
-                className="mt-2"
-              />
-            </div>
-          )}
+          {issuerType === 'former' ? (
+            <div className="mt-4 space-y-4">
+              <div>
+                <FieldLabel label="انتخاب از کارمندان سابق قبلی" />
+                <SearchableSelect
+                  value={formerEmployeeName}
+                  onSelect={setFormerEmployeeName}
+                  placeholder="در صورت وجود، از لیست انتخاب کنید"
+                  searchPlaceholder="جستجو در کارمندان سابق..."
+                  options={formerEmployeeOptions}
+                  emptyText="کارمند سابقی ثبت نشده"
+                />
+              </div>
 
-          {issuerType === 'staff' && (
+              <div>
+                <FieldLabel label="نام و نام خانوادگی کارمند سابق" />
+                <Input
+                  value={formerEmployeeName}
+                  onChange={(event) => setFormerEmployeeName(event.target.value)}
+                  placeholder="نام کامل کارمند سابق را وارد کنید"
+                  className="mt-2"
+                />
+              </div>
+            </div>
+          ) : null}
+
+          {issuerType === 'staff' ? (
             <div className="mt-4">
               <FieldLabel label="انتخاب از سایر کارمندان" />
               <SearchableSelect
@@ -272,93 +349,105 @@ export function SubjectStep({ stepId, title, embedded = false }: { stepId: strin
                 emptyText="کارمندی پیدا نشد"
               />
             </div>
-          )}
+          ) : null}
         </FormBox>
 
-        <FormBox title="نوع قرارداد" description="مشخص کنید قرارداد از نوع فروش است یا پیش‌فروش.">
-          <div className="grid gap-3 md:grid-cols-2">
-            <ChoiceCard title="فروش" active={selectedContractType === 'sale'} onClick={() => setSelectedContractType('sale')} />
-            <ChoiceCard title="پیش‌فروش" active={selectedContractType === 'pre-sale'} onClick={() => setSelectedContractType('pre-sale')} />
+        <FormBox
+          title="نوع قرارداد"
+          description="با انتخاب نوع مناسب قرارداد (فروش یا پیش فروش)، اطلاعات و جزئیات لازم به صورت دقیق برای ادامه فرآیند ثبت قرارداد تنظیم می‌شود"
+        >
+          <div className="flex flex-wrap gap-2 text-right">
+            <ChoiceCard title="فروش" active={selectedContractType === 'sale'} onClick={() => setSelectedContractType('sale')} variant="pill" />
+            <ChoiceCard
+              title="پیش فروش"
+              active={selectedContractType === 'pre-sale'}
+              onClick={() => setSelectedContractType('pre-sale')}
+              variant="pill"
+            />
           </div>
         </FormBox>
 
-        <FormBox title="اطلاعات ثبت قرارداد" description="تاریخ‌ها و شماره قرارداد را در این بخش با جزئیات کامل ثبت کنید.">
-          <div className="rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-blue-50 p-4 md:p-5">
-            <div className="mb-4 flex flex-col gap-3 border-b border-slate-200 pb-4 md:flex-row md:items-center md:justify-between">
-              <div>
-                <p className="text-sm font-semibold text-slate-800">ثبت مشخصات سند قرارداد</p>
-                <p className="mt-1 text-xs leading-5 text-slate-500">
-                  این سه مقدار، شناسه اصلی قرارداد شما را می‌سازند و بهتر است قبل از ادامه فرم کامل شوند.
-                </p>
-              </div>
-              <div className="inline-flex w-fit items-center rounded-full border border-blue-200 bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700">
-                اطلاعات کلیدی
-              </div>
-            </div>
+        <ReferenceDivider />
 
-            <div className="grid gap-4 xl:grid-cols-2 2xl:grid-cols-3">
-              <ContractMetaField
-                icon={<CalendarDays className="h-5 w-5" />}
-                label="تاریخ قرارداد"
-                hint="تاریخ رسمی انعقاد قرارداد را از تقویم شمسی انتخاب کنید."
-              >
-                <PersianDatePicker value={contractDate} onChange={setContractDate} placeholder="تاریخ قرارداد را انتخاب کنید" />
-              </ContractMetaField>
+        <ReferenceSection title="شماره قرارداد*" helper="شماره قرارداد باید یکتا باشد.">
+          <Input
+            value={contractNumber}
+            onChange={(event) => setContractNumber(event.target.value)}
+            className="h-[58px] rounded-[14px] border-[#6f86a3] px-5 text-base text-[#314a67] shadow-none focus:border-[#6f86a3] focus:ring-0"
+          />
+        </ReferenceSection>
 
-              <ContractMetaField
-                icon={<KeyRound className="h-5 w-5" />}
-                label="شماره قرارداد"
-                hint="شماره یا کد یکتای قرارداد را دقیقاً مطابق مستندات ثبت کنید."
-              >
-                <Input
-                  value={contractNumber}
-                  onChange={(event) => setContractNumber(event.target.value)}
-                  placeholder="شماره قرارداد را وارد کنید"
+        <ReferenceDivider />
+
+        <ReferenceSection title="زمان عقد قرارداد*" helper="تاریخ قرارداد می تواند امروز یا در گذشته باشد. رز">
+          <div className="relative">
+            <PersianDatePicker
+              value={contractDate}
+              onChange={setContractDate}
+              placeholder="تاریخ قرارداد را انتخاب کنید"
+              className="h-[58px] rounded-[14px] border-[#6f86a3] pr-5 pl-14 text-base text-[#314a67] shadow-none focus:border-[#6f86a3] focus:ring-0"
+            />
+            <Calendar className="pointer-events-none absolute left-4 top-1/2 h-6 w-6 -translate-y-1/2 text-black" />
+          </div>
+        </ReferenceSection>
+
+        <ReferenceDivider />
+
+        <ReferenceSection
+          title="تاریخ تحویل واحد*"
+          helper="تاریخ تحویل باید مطابق با برنامه زمان بندی پروژه تعیین شود و در متن قرارداد درج گردد. این تاریخ تعهدی رسمی از سوی شرکت سازنده محسوب شده و باید با دقت انتخاب شود"
+        >
+          <div className="relative">
+            <PersianDatePicker
+              value={deliveryDate}
+              onChange={setDeliveryDate}
+              placeholder="تاریخ تحویل واحد را انتخاب کنید"
+              className="h-[58px] rounded-[14px] border-[#6f86a3] pr-5 pl-14 text-base text-[#314a67] shadow-none focus:border-[#6f86a3] focus:ring-0"
+            />
+            <Calendar className="pointer-events-none absolute left-4 top-1/2 h-6 w-6 -translate-y-1/2 text-black" />
+          </div>
+        </ReferenceSection>
+
+        <ReferenceDivider />
+
+        <section className="space-y-4">
+          <h3 className="text-right text-[20px] font-bold text-[#314a67]">انتخاب واحد</h3>
+
+          <div className="space-y-3">
+            <div className="flex flex-wrap gap-3">
+              {blocks.map((block) => (
+                <SelectionPill
+                  key={block.id}
+                  label={block.name}
+                  active={selectedBlock === block.id}
+                  onClick={() => {
+                    setSelectedBlock(block.id);
+                    setSelectedUnit('');
+                  }}
                 />
-              </ContractMetaField>
+              ))}
+            </div>
 
-              <ContractMetaField
-                icon={<FileText className="h-5 w-5" />}
-                label="تاریخ تحویل واحد"
-                hint="اگر زمان تحویل مشخص است، آن را به‌صورت شمسی برای پیگیری‌های بعدی ثبت کنید."
-              >
-                <PersianDatePicker value={deliveryDate} onChange={setDeliveryDate} placeholder="تاریخ تحویل واحد را انتخاب کنید" />
-              </ContractMetaField>
+            <div className="flex flex-wrap gap-3">
+              {selectedBlockData?.units.map((unit) => (
+                <SelectionPill
+                  key={unit.id}
+                  label={unit.name}
+                  active={selectedUnit === unit.id}
+                  onClick={() => setSelectedUnit(unit.id)}
+                />
+              ))}
             </div>
           </div>
-        </FormBox>
 
-        <FormBox title="انتخاب واحد" description="ابتدا بلوک و سپس واحد را انتخاب کنید.">
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <FieldLabel label="انتخاب بلوک" />
-              <SearchableSelect
-                value={selectedBlock}
-                onSelect={(value) => {
-                  setSelectedBlock(value);
-                  setSelectedUnit('');
-                }}
-                placeholder="بلوک را انتخاب کنید"
-                searchPlaceholder="جستجو در بلوک‌ها..."
-                options={blocks.map((block) => ({ label: block.name, value: block.id }))}
-                emptyText="بلوکی پیدا نشد"
-              />
-            </div>
+          {selectedUnitData ? (
+            <p className="text-right text-[18px] font-medium text-[#1778ff]">مشخصات {selectedUnitData.name}</p>
+          ) : null}
 
-            <div>
-              <FieldLabel label="انتخاب واحد" />
-              <SearchableSelect
-                value={selectedUnit}
-                onSelect={setSelectedUnit}
-                placeholder={selectedBlock ? 'واحد را انتخاب کنید' : 'ابتدا بلوک را انتخاب کنید'}
-                searchPlaceholder="جستجو در واحدها..."
-                options={unitOptions}
-                disabled={!selectedBlock}
-                emptyText="واحدی پیدا نشد"
-              />
-            </div>
-          </div>
-        </FormBox>
+          <p className="text-center text-[15px] leading-7 text-[#3d4f65]">
+            برای ثبت دقیق قرارداد، ابتدا بلوک سپس واحد موردنظر را انتخاب کنید. این انتخاب برای شفاف سازی و جلوگیری از تداخل در فروش واحدها ضروری است.
+          </p>
+        </section>
       </div>
 
       <StickySubmitBar
