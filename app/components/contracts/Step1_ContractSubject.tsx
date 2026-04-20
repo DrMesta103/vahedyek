@@ -90,11 +90,11 @@ export default function Step1_ContractSubject({ data, employees, blocks, units, 
       <div>
         <label style={labelStyle}>نوع قرارداد</label>
         <div style={{ display: 'flex', gap: '20px' }}>
-          {(['sale', 'pre-sale'] as ContractType[]).map((type) => (
+          {(['pre-sale'] as ContractType[]).map((type) => (
             <label key={type} style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px', color: '#4b5563' }}>
               <input type="radio" name="contractType" value={type} checked={data.contractType === type}
                 onChange={() => handleChange('contractType', type)} style={{ accentColor: 'var(--dark-teal)' }} />
-              {type === 'sale' ? 'فروش' : 'پیش‌فروش'}
+              {'پیش‌فروش'}
             </label>
           ))}
         </div>

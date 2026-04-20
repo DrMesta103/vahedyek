@@ -1,4 +1,5 @@
 import type {
+  ContractFinancialData,
   ContractSubjectData,
   ContractPartiesData,
   ContractParty,
@@ -53,9 +54,9 @@ export function validateShares(parties: ContractParty[], mode: ShareMode): Valid
   const total = parties.reduce((sum, p) => sum + (p.share?.value ?? 0), 0);
 
   if (mode === 'percent' && total > 100) {
-    errors['shares'] = 'مجموع سهم‌ها نباید از ۱۰۰٪ تجاوز کند';
+    errors['shares'] = 'مجموع سهم‌ها نباید از 100٪ تجاوز کند';
   } else if (mode === 'dang' && total > 6) {
-    errors['shares'] = 'مجموع سهم‌ها نباید از ۶ دانگ تجاوز کند';
+    errors['shares'] = 'مجموع سهم‌ها نباید از 6 دانگ تجاوز کند';
   }
 
   return { valid: Object.keys(errors).length === 0, errors };
@@ -73,7 +74,7 @@ export function validateStep2(data: Partial<ContractPartiesData>): ValidationRes
   }
 
   if (data.partyOne && data.partyOne.length > 0) {
-    const mode = data.partyOne[0].share?.mode;
+    const mode = data.partyOneMode ?? data.partyOne[0].share?.mode;
     if (mode) {
       const sharesResult = validateShares(data.partyOne, mode);
       Object.assign(errors, sharesResult.errors);
@@ -81,13 +82,48 @@ export function validateStep2(data: Partial<ContractPartiesData>): ValidationRes
   }
 
   if (data.partyTwo && data.partyTwo.length > 0) {
-    const mode = data.partyTwo[0].share?.mode;
+    const mode = data.partyTwoMode ?? data.partyTwo[0].share?.mode;
     if (mode) {
       const sharesResult = validateShares(data.partyTwo, mode);
       if (!sharesResult.valid) {
         errors['partyTwoShares'] = Object.values(sharesResult.errors)[0];
       }
     }
+  }
+
+  return { valid: Object.keys(errors).length === 0, errors };
+}
+
+export function validateFinancialStep(data: Partial<ContractFinancialData>): ValidationResult {
+  const errors: Record<string, string> = {};
+
+  const pricingType = data.pricingType ?? 'fixed';
+  const totalArea = Number(data.totalArea ?? 0);
+  const pricePerMeter = Number(data.pricePerMeter ?? 0);
+  const fixedTotalAmount = Number(data.fixedTotalAmount ?? 0);
+  const categories = data.categories ?? [];
+  const dueItems = data.dueItems ?? [];
+
+  if (pricingType === 'metered') {
+    if (totalArea <= 0) errors['totalArea'] = REQUIRED_MSG;
+    if (pricePerMeter <= 0) errors['pricePerMeter'] = REQUIRED_MSG;
+  } else if (fixedTotalAmount <= 0) {
+    errors['fixedTotalAmount'] = REQUIRED_MSG;
+  }
+
+  if (!categories.length) {
+    errors['categories'] = 'حداقل یک ردیف مالی باید ثبت شود';
+  }
+
+  const totalContractAmount = pricingType === 'metered' ? totalArea * pricePerMeter : fixedTotalAmount;
+  const categoriesTotal = categories.reduce((sum, item) => sum + Number(item.capAmount ?? 0), 0);
+  if (totalContractAmount > 0 && categoriesTotal > totalContractAmount) {
+    errors['categoriesTotal'] = 'جمع ردیف‌های مالی از مبلغ قرارداد بیشتر است.';
+  }
+
+  const validCategoryIds = new Set(categories.map((item) => item.id));
+  if (dueItems.some((item) => !validCategoryIds.has(item.categoryId))) {
+    errors['dueItems'] = 'بعضی از سررسیدها به دسته‌بندی معتبر متصل نیستند';
   }
 
   return { valid: Object.keys(errors).length === 0, errors };

@@ -1,0 +1,103 @@
+import { NextResponse } from 'next/server';
+import { requireSessionContext } from '../../../../../lib/auth';
+import { prisma } from '../../../../../lib/prisma';
+import { handlePrismaApiError } from '../../../../../lib/prismaApiError';
+import { parseContractorType, parseContractType, serializeContractorType, serializeContractType } from '../../../../../lib/subjectUtils';
+
+export async function GET(_: Request, { params }: { params: { draftId: string } }) {
+  try {
+    const session = await requireSessionContext();
+    if (session instanceof NextResponse) return session;
+
+    const draft = await prisma.contractDraft.findFirst({
+      where: { id: params.draftId, tenantId: session.tenantId },
+      select: { id: true },
+    });
+
+    if (!draft) {
+      return NextResponse.json({ message: 'پیش‌نویس موردنظر در این تننت پیدا نشد.' }, { status: 404 });
+    }
+
+    const subject = await prisma.contractSubject.findUnique({
+      where: { draftId: params.draftId },
+    });
+
+    if (!subject) {
+      return NextResponse.json(null);
+    }
+
+    return NextResponse.json({
+      contractor: {
+        type: serializeContractorType(subject.contractorType),
+        employeeId: subject.contractorEmployeeId ?? undefined,
+        formerFirstName: subject.contractorFormerName?.split(' ')[0] ?? '',
+        formerLastName: subject.contractorFormerName?.split(' ').slice(1).join(' ') ?? '',
+      },
+      contractType: serializeContractType(subject.contractType),
+      contractDate: subject.contractDate,
+      contractNumber: subject.contractNumber,
+      deliveryDate: subject.deliveryDate,
+      blockId: subject.blockId,
+      unitId: subject.unitId,
+    });
+  } catch (error) {
+    return handlePrismaApiError(error);
+  }
+}
+
+export async function PUT(request: Request, { params }: { params: { draftId: string } }) {
+  try {
+    const session = await requireSessionContext();
+    if (session instanceof NextResponse) return session;
+
+    const draft = await prisma.contractDraft.findFirst({
+      where: { id: params.draftId, tenantId: session.tenantId },
+      select: { id: true },
+    });
+
+    if (!draft) {
+      return NextResponse.json({ message: 'پیش‌نویس موردنظر در این تننت پیدا نشد.' }, { status: 404 });
+    }
+
+    const body = await request.json();
+    const contractor = body.contractor ?? {};
+
+    const result = await prisma.contractSubject.upsert({
+      where: { draftId: params.draftId },
+      update: {
+        contractorType: parseContractorType(contractor.type),
+        contractorEmployeeId: contractor.employeeId || null,
+        contractorFormerName:
+          contractor.type === 'former-employee'
+            ? [contractor.formerFirstName, contractor.formerLastName].filter(Boolean).join(' ')
+            : null,
+        contractType: parseContractType(body.contractType),
+        contractDate: body.contractDate,
+        contractNumber: body.contractNumber,
+        deliveryDate: body.deliveryDate,
+        blockId: body.blockId,
+        unitId: body.unitId,
+      },
+      create: {
+        draftId: params.draftId,
+        contractorType: parseContractorType(contractor.type),
+        contractorEmployeeId: contractor.employeeId || null,
+        contractorFormerName:
+          contractor.type === 'former-employee'
+            ? [contractor.formerFirstName, contractor.formerLastName].filter(Boolean).join(' ')
+            : null,
+        contractType: parseContractType(body.contractType),
+        contractDate: body.contractDate,
+        contractNumber: body.contractNumber,
+        deliveryDate: body.deliveryDate,
+        blockId: body.blockId,
+        unitId: body.unitId,
+      },
+      select: { id: true },
+    });
+
+    return NextResponse.json({ success: true, id: result.id });
+  } catch (error) {
+    return handlePrismaApiError(error);
+  }
+}

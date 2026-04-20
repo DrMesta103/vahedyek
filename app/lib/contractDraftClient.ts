@@ -1,0 +1,103 @@
+'use client';
+
+const ACTIVE_DRAFT_KEY = 'active-contract-draft-id';
+export type ReferenceDataResponse = {
+  employees: Array<{ id: string; firstName: string; lastName: string }>;
+  blocks: Array<{ id: string; name: string; units: Array<{ id: string; floorName: string; name: string; title: string }> }>;
+  directory: {
+    partner: {
+      natural: Array<{ id: string; name: string }>;
+      legal: Array<{ id: string; name: string }>;
+    };
+    buyer: {
+      natural: Array<{ id: string; name: string }>;
+      legal: Array<{ id: string; name: string }>;
+    };
+  };
+};
+
+async function readJson<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
+  const response = await fetch(input, {
+    ...init,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(init?.headers ?? {}),
+    },
+    cache: 'no-store',
+  });
+
+  if (!response.ok) {
+    const contentType = response.headers.get('content-type') ?? '';
+
+    if (contentType.includes('application/json')) {
+      const payload = (await response.json()) as { message?: string };
+      throw new Error(payload.message || 'خطا در ارتباط با سرور');
+    }
+
+    const message = await response.text();
+    throw new Error(message || 'خطا در ارتباط با سرور');
+  }
+
+  return response.json() as Promise<T>;
+}
+
+export function getActiveDraftId() {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem(ACTIVE_DRAFT_KEY);
+}
+
+export function setActiveDraftId(draftId: string) {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(ACTIVE_DRAFT_KEY, draftId);
+}
+
+export function clearActiveDraftId() {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem(ACTIVE_DRAFT_KEY);
+}
+
+export async function ensureActiveDraftId() {
+  const existingId = getActiveDraftId();
+  if (existingId) return existingId;
+
+  const result = await readJson<{ id: string }>('/api/contracts/drafts', {
+    method: 'POST',
+    body: JSON.stringify({}),
+  });
+
+  localStorage.setItem(ACTIVE_DRAFT_KEY, result.id);
+  return result.id;
+}
+
+export async function getStepData<T>(draftId: string, step: 'subject' | 'parties' | 'financial') {
+  return readJson<T | null>(`/api/contracts/drafts/${draftId}/${step}`);
+}
+
+export async function saveStepData<T>(draftId: string, step: 'subject' | 'parties' | 'financial', payload: T) {
+  return readJson<{ success: true }>(`/api/contracts/drafts/${draftId}/${step}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function getReferenceData() {
+  return readJson<ReferenceDataResponse>('/api/contracts/reference-data');
+}
+
+export async function createDirectoryPerson(payload: {
+  role: 'partner' | 'buyer';
+  personType: 'natural' | 'legal';
+  name: string;
+}) {
+  return readJson<{ id: string; name: string; role: 'partner' | 'buyer'; personType: 'natural' | 'legal' }>(
+    '/api/contracts/reference-data',
+    {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    },
+  );
+}
+
+export async function getContractsList() {
+  return readJson<any[]>('/api/contracts');
+}

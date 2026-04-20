@@ -12,9 +12,10 @@ interface PersianDatePickerProps {
   onChange: (val: string) => void;
   placeholder?: string;
   className?: string;
+  containerClassName?: string;
 }
 
-export function PersianDatePicker({ value, onChange, placeholder = 'انتخاب تاریخ', className = '' }: PersianDatePickerProps) {
+export function PersianDatePicker({ value, onChange, placeholder = 'انتخاب تاریخ', className = '', containerClassName = '' }: PersianDatePickerProps) {
   return (
     <DatePicker
       calendar={persian}
@@ -28,6 +29,7 @@ export function PersianDatePicker({ value, onChange, placeholder = 'انتخاب
       inputClass={`flex h-10 w-full rounded-md border border-gray-300 bg-white px-3.5 py-2 text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500 ${className}`}
       placeholder={placeholder}
       style={{ width: '100%' }}
+      containerClassName={containerClassName}
     />
   );
 }

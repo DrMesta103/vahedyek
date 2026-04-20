@@ -7,13 +7,6 @@ import PanelLayout from '../../components/PanelLayout';
 
 const TEMPLATE_ITEMS = [
   {
-    id: 'tpl-001',
-    title: 'قالب پیش‌نویس فروش واحد مسکونی',
-    category: 'فروش',
-    updatedAt: '۱۴۰۵/۰۱/۲۷',
-    description: 'قالب پایه برای فروش واحدهای مسکونی با اقساط ثابت، جرایم و تخفیف‌های استاندارد.',
-  },
-  {
     id: 'tpl-002',
     title: 'قالب پیش‌نویس پیش‌فروش با تسویه مرحله‌ای',
     category: 'پیش‌فروش',

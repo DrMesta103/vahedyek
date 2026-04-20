@@ -1,64 +1,82 @@
-// وضعیت قرارداد
 export type ContractStatus = 'finalized' | 'draft';
-
-// نوع قرارداد
 export type ContractType = 'sale' | 'pre-sale';
-
-// نوع منعقدکننده
 export type ContractorType = 'self' | 'employee' | 'former-employee';
-
-// حالت سهم‌بندی
 export type ShareMode = 'percent' | 'dang';
-
-// نوع شخص
 export type PersonType = 'natural' | 'legal';
+export type PricingType = 'fixed' | 'metered';
 
-// سهم
 export interface Share {
   value: number;
   mode: ShareMode;
 }
 
-// منعقدکننده قرارداد
 export interface Contractor {
   type: ContractorType;
-  employeeId?: string;       // برای نوع 'employee'
-  formerFirstName?: string;  // برای نوع 'former-employee'
-  formerLastName?: string;   // برای نوع 'former-employee'
+  employeeId?: string;
+  formerFirstName?: string;
+  formerLastName?: string;
 }
 
-// طرف قرارداد (یک نفر)
 export interface ContractParty {
   personId: string;
+  directoryId?: string | null;
   personType: PersonType;
   name: string;
   share: Share;
+  isPrimary?: boolean;
 }
 
-// داده‌های مرحله اول فرم
 export interface ContractSubjectData {
   contractor: Contractor;
   contractType: ContractType;
-  contractDate: string;    // تاریخ شمسی به فرمت YYYY/MM/DD
+  contractDate: string;
   contractNumber: string;
-  deliveryDate: string;    // تاریخ شمسی
+  deliveryDate: string;
   blockId: string;
   unitId: string;
 }
 
-// داده‌های مرحله دوم فرم
 export interface ContractPartiesData {
-  partyOne: ContractParty[];  // طرف اول (صاحب کسب‌وکار یا شرکا)
-  partyTwo: ContractParty[];  // طرف دوم (خریداران)
+  partyOneMode: ShareMode;
+  partyTwoMode: ShareMode;
+  partyOne: ContractParty[];
+  partyTwo: ContractParty[];
 }
 
-// داده کامل فرم قرارداد
+export interface FinancialCategoryData {
+  id: string;
+  name: string;
+  capAmount: number;
+  dueAmount: number;
+  noDueAmount: number;
+  system: boolean;
+  requiresDue: boolean;
+}
+
+export interface FinancialDueItemData {
+  id: string;
+  categoryId: string;
+  title: string;
+  amount: number;
+  dueDate: string;
+}
+
+export interface ContractFinancialData {
+  pricingType: PricingType;
+  totalArea: string;
+  pricePerMeter: string;
+  fixedTotalAmount: string;
+  activeTab: string;
+  categories: FinancialCategoryData[];
+  dueItems: FinancialDueItemData[];
+}
+
 export interface ContractFormData {
   subject: ContractSubjectData;
   parties: ContractPartiesData;
+  financial?: ContractFinancialData;
 }
 
-// موجودیت قرارداد ذخیره‌شده
 export interface Contract {
   id: string;
   status: ContractStatus;
@@ -67,7 +85,6 @@ export interface Contract {
   data: ContractFormData;
 }
 
-// وضعیت فیلترها
 export interface FilterState {
   contractType: ContractType | null;
   dateFrom: string | null;
@@ -76,7 +93,6 @@ export interface FilterState {
   unitId: string | null;
 }
 
-// موجودیت‌های مرجع
 export interface Block {
   id: string;
   name: string;
@@ -85,6 +101,7 @@ export interface Block {
 export interface Unit {
   id: string;
   blockId: string;
+  floorName?: string;
   name: string;
 }
 

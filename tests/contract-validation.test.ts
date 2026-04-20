@@ -1,0 +1,116 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { validateFinancialStep } from '../app/lib/contractValidation';
+import type { ContractFinancialData } from '../app/types/contract';
+
+function makeValidFinancialData(overrides: Partial<ContractFinancialData> = {}): ContractFinancialData {
+  return {
+    pricingType: 'fixed',
+    totalArea: '0',
+    pricePerMeter: '0',
+    fixedTotalAmount: '10000000',
+    activeTab: 'advance',
+    categories: [
+      {
+        id: 'advance',
+        name: 'پیش پرداخت',
+        capAmount: 4000000,
+        dueAmount: 4000000,
+        noDueAmount: 0,
+        system: true,
+        requiresDue: true,
+      },
+      {
+        id: 'installment',
+        name: 'اقساط',
+        capAmount: 6000000,
+        dueAmount: 6000000,
+        noDueAmount: 0,
+        system: true,
+        requiresDue: true,
+      },
+    ],
+    dueItems: [
+      {
+        id: 'due-1',
+        categoryId: 'advance',
+        title: 'پیش پرداخت اول',
+        amount: 4000000,
+        dueDate: '1405/01/01',
+      },
+    ],
+    ...overrides,
+  };
+}
+
+test('validateFinancialStep accepts a valid fixed-price payload', () => {
+  const result = validateFinancialStep(makeValidFinancialData());
+
+  assert.equal(result.valid, true);
+  assert.deepEqual(result.errors, {});
+});
+
+test('validateFinancialStep rejects fixed pricing without total amount', () => {
+  const result = validateFinancialStep(makeValidFinancialData({ fixedTotalAmount: '0' }));
+
+  assert.equal(result.valid, false);
+  assert.equal(result.errors.fixedTotalAmount, 'این فیلد الزامی است');
+});
+
+test('validateFinancialStep rejects metered pricing without area or price-per-meter', () => {
+  const result = validateFinancialStep(
+    makeValidFinancialData({
+      pricingType: 'metered',
+      totalArea: '0',
+      pricePerMeter: '0',
+      fixedTotalAmount: '0',
+    }),
+  );
+
+  assert.equal(result.valid, false);
+  assert.equal(result.errors.totalArea, 'این فیلد الزامی است');
+  assert.equal(result.errors.pricePerMeter, 'این فیلد الزامی است');
+});
+
+test('validateFinancialStep rejects category totals above contract amount', () => {
+  const result = validateFinancialStep(
+    makeValidFinancialData({
+      fixedTotalAmount: '5000000',
+    }),
+  );
+
+  assert.equal(result.valid, false);
+  assert.equal(result.errors.categoriesTotal, 'جمع ردیف‌های مالی از مبلغ قرارداد بیشتر است.');
+});
+
+test('validateFinancialStep rejects due items linked to invalid categories', () => {
+  const result = validateFinancialStep(
+    makeValidFinancialData({
+      dueItems: [
+        {
+          id: 'due-invalid',
+          categoryId: 'missing-category',
+          title: 'قسط نامعتبر',
+          amount: 1000000,
+          dueDate: '1405/02/01',
+        },
+      ],
+    }),
+  );
+
+  assert.equal(result.valid, false);
+  assert.equal(result.errors.dueItems, 'بعضی از سررسیدها به دسته‌بندی معتبر متصل نیستند');
+});
+
+test('validateFinancialStep rejects when categories are completely missing', () => {
+  const result = validateFinancialStep(
+    makeValidFinancialData({
+      categories: [],
+      dueItems: [],
+      activeTab: '',
+    }),
+  );
+
+  assert.equal(result.valid, false);
+  assert.equal(result.errors.categories, 'حداقل یک ردیف مالی باید ثبت شود');
+});

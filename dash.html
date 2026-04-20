@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>چرخ‌دنده صوتی با قابلیت کنترل</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @font-face {
+            font-family: 'IRANSans';
+            src: url('fonts/iran.woff2') format('woff2');
+        }
+
+        :root {
+            --primary-teal: #008080;
+            --sidebar-width: 290px;
+            --bg-pattern: #f4f7f6;
+            --text-muted: #9ca3af;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'IRANSans', Tahoma, sans-serif;
+            background-color: var(--bg-pattern);
+            background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHRleHQgeD0iMCIgeT0iMjAiIGZpbGw9IiNlZWUiIGZvbnQtc2l6ZT0iMTAiPlNPT0Q8L3RleHQ+PC9zdmc+');
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        /* --- محفظه اصلی سمت چپ --- */
+        .main-wrapper {
+            flex: 1;
+            position: relative;
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .gear-system {
+            position: absolute;
+            left: -280px; 
+            width: 600px;
+            height: 600px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: grab;
+        }
+        .gear-system:active { cursor: grabbing; }
+
+        .orbit-line {
+            position: absolute;
+            width: 520px;
+            height: 520px;
+            border: 2px dashed #00808022;
+            border-radius: 50%;
+            transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .node {
+            position: absolute;
+            width: 55px;
+            height: 55px;
+            background: #fff;
+            border: 2px solid var(--primary-teal);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-teal);
+            font-size: 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+
+        .node.active {
+            width: 68px; 
+            height: 68px;
+            font-size: 28px;
+            border-width: 3px;
+            z-index: 30;
+            box-shadow: 0 0 20px rgba(0,128,128,0.2);
+        }
+
+        .node-label {
+            position: absolute;
+            right: -140px;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            white-space: nowrap;
+            opacity: 0;
+            transform: scale(0.85);
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+
+        .node.active .node-label {
+            opacity: 1;
+            transform: scale(1);
+            right: -155px;
+            background: #fff;
+            border: 1px dashed var(--primary-teal);
+            color: var(--primary-teal);
+            font-weight: bold;
+        }
+
+        .node.neighbor .node-label {
+            opacity: 0.6;
+            transform: scale(0.9);
+            right: -135px;
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid transparent;
+        }
+
+        /* --- سایدبار سمت راست --- */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: #fff;
+            border-left: 1px solid #e5e7eb;
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+        }
+
+        .profile-item { padding: 12px 15px; display: flex; align-items: center; border-bottom: 1px solid #f3f4f6; }
+        .avatar { width: 40px; height: 40px; border-radius: 50%; margin-left: 12px; display: flex; align-items: center; justify-content: center; color: white; }
+        
+        /* تولبار سایدبار */
+        .nav-toolbar { display: flex; justify-content: space-around; padding: 15px; background: #e0f2f1; margin: 5px 0; }
+        .nav-toolbar i { color: var(--primary-teal); font-size: 18px; cursor: pointer; transition: 0.3s; }
+        .nav-toolbar i.off { color: #9ca3af; }
+
+        .menu-list { flex: 1; overflow-y: auto; }
+        .menu-link { display: flex; align-items: center; padding: 12px 20px; color: #4b5563; text-decoration: none; font-size: 13px; }
+        .menu-link i { margin-left: 15px; color: #9ca3af; width: 20px; text-align: center; }
+        .menu-link.active { background: #e5e7eb; border-radius: 40px 0 0 40px; font-weight: bold; color: #111827; }
+
+        .invite-box { background: linear-gradient(to bottom, #a7f3d0, #6ee7b7); padding: 20px; text-align: center; }
+        .invite-btn { background: #065f46; color: white; border: none; width: 100%; padding: 10px; border-radius: 8px; cursor: pointer; font-family: inherit; }
+    </style>
+</head>
+<body>
+
+    <div class="main-wrapper">
+        <div class="gear-system" id="gearSystem">
+            <div class="orbit-line" id="orbit"></div>
+        </div>
+    </div>
+
+    <aside class="sidebar">
+        <div class="profile-item">
+            <div class="avatar" style="background: #fb923c;"><i class="fa fa-user"></i></div>
+            <div style="flex:1; font-size:13px;">علی علینقی پور</div>
+            <div style="background:#ccf2f4; border-radius:50%; width:30px; height:30px; display:flex; align-items:center; justify-content:center; color:#008080;"><i class="fa fa-chevron-left" style="font-size:10px;"></i></div>
+        </div>
+
+        <div class="nav-toolbar">
+            <i class="fa fa-sign-out-alt" style="transform: scaleX(-1);"></i>
+            <i class="fa fa-bell"></i>
+            <i class="fa fa-volume-up" id="soundToggle" title="قطع/وصل صدا"></i>
+            <i class="fa fa-cog"></i>
+            <i class="fa fa-moon"></i>
+        </div>
+
+        <nav class="menu-list">
+            <a href="#" class="menu-link"><i class="fa fa-briefcase"></i><span>جزئیات کسب و کار</span></a>
+            <a href="#" class="menu-link active"><i class="fa fa-building"></i><span>جزئیات مجتمع</span></a>
+            <a href="#" class="menu-link"><i class="fa fa-list-ul"></i><span>فهرست واحد ها</span></a>
+            <a href="#" class="menu-link"><i class="fa fa-file-contract"></i><span>فهرست قرارداد ها</span></a>
+            <a href="#" class="menu-link"><i class="fa fa-wallet"></i><span>واریزی مشتریان</span></a>
+        </nav>
+
+        <div class="invite-box">
+            <p style="font-size: 11px; margin-bottom: 10px; color: #064e3b;">دعوت از دوستان و کسب درآمد</p>
+            <button class="invite-btn">شروع درآمدزایی</button>
+        </div>
+        <div style="background:#ccf2f4; padding:10px; text-align:center; font-size:12px; color:#008080;">0.6.98</div>
+    </aside>
+
+    <script>
+        const orbit = document.getElementById('orbit');
+        const gearSystem = document.getElementById('gearSystem');
+        const soundToggle = document.getElementById('soundToggle');
+        
+        let soundEnabled = true;
+        let lastInchedIndex = -1;
+
+        // تنظیمات صدا
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playTick(frequency = 150, volume = 0.1) {
+            if (!soundEnabled) return;
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+
+            oscillator.type = 'sine'; // صدای نرم شبیه تیک مکانیکی
+            oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+            
+            gainNode.gain.setValueAtTime(volume, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + 0.1);
+        }
+
+        // سوئیچ صدا
+        soundToggle.addEventListener('click', () => {
+            soundEnabled = !soundEnabled;
+            soundToggle.className = soundEnabled ? 'fa fa-volume-up' : 'fa fa-volume-mute off';
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+        });
+
+        const menuData = [
+            { icon: 'fa-briefcase', label: 'جزئیات کسب و کار' },
+            { icon: 'fa-building', label: 'جزئیات مجتمع' },
+            { icon: 'fa-list-ul', label: 'فهرست واحد ها' },
+            { icon: 'fa-file-invoice', label: 'فهرست قراردادها' },
+            { icon: 'fa-edit', label: 'پیش‌نویس‌ها' },
+            { icon: 'fa-hand-holding-usd', label: 'واریزی مشتریان' },
+            { icon: 'fa-chart-line', label: 'گزارش‌های مدیریت' },
+            { icon: 'fa-users', label: 'کارمندان' }
+        ];
+
+        const totalItems = menuData.length;
+        const orbitRadius = 260; 
+        const stepAngle = (Math.PI * 2) / totalItems;
+        let currentRotation = 0;
+
+        menuData.forEach((item, i) => {
+            const angle = i * stepAngle;
+            const x = Math.cos(angle) * orbitRadius + orbitRadius - 27;
+            const y = Math.sin(angle) * orbitRadius + orbitRadius - 27;
+
+            const node = document.createElement('div');
+            node.className = 'node';
+            node.innerHTML = `<i class="fa ${item.icon}"></i><div class="node-label">${item.label}</div>`;
+            node.style.left = `${x}px`;
+            node.style.top = `${y}px`;
+            node.dataset.index = i;
+            orbit.appendChild(node);
+        });
+
+        function updateNodes() {
+            const nodes = document.querySelectorAll('.node');
+            let normalizedRot = (-currentRotation) % (Math.PI * 2);
+            if (normalizedRot < 0) normalizedRot += Math.PI * 2;
+            
+            const activeIndex = Math.round(normalizedRot / stepAngle) % totalItems;
+            
+            // پخش صدای تیک هنگام رد شدن از هر آیتم
+            if (activeIndex !== lastInchedIndex) {
+                playTick(120, 0.05);
+                lastInchedIndex = activeIndex;
+            }
+
+            const prevIndex = (activeIndex - 1 + totalItems) % totalItems;
+            const nextIndex = (activeIndex + 1) % totalItems;
+
+            nodes.forEach((node, i) => {
+                const idx = parseInt(node.dataset.index);
+                node.classList.remove('active', 'neighbor');
+                if (idx === activeIndex) node.classList.add('active');
+                else if (idx === prevIndex || idx === nextIndex) node.classList.add('neighbor');
+                node.style.transform = `rotate(${-currentRotation}rad)`;
+            });
+        }
+
+        function snapToNearest() {
+            const targetIndex = Math.round((-currentRotation) / stepAngle);
+            currentRotation = -(targetIndex * stepAngle);
+            orbit.style.transition = "transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)";
+            orbit.style.transform = `rotate(${currentRotation}rad)`;
+            updateNodes();
+            // صدای قفل شدن نهایی
+            setTimeout(() => playTick(200, 0.1), 100);
+        }
+
+        let isDragging = false;
+        let startAngle = 0;
+
+        gearSystem.addEventListener('mousedown', (e) => {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            isDragging = true;
+            orbit.style.transition = "none";
+            const rect = gearSystem.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            startAngle = Math.atan2(e.clientY - centerY, e.clientX - centerX) - currentRotation;
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            const rect = gearSystem.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            const angle = Math.atan2(e.clientY - centerY, e.clientX - centerX);
+            currentRotation = angle - startAngle;
+            orbit.style.transform = `rotate(${currentRotation}rad)`;
+            updateNodes();
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isDragging) {
+                isDragging = false;
+                snapToNearest();
+            }
+        });
+
+        updateNodes();
+    </script>
+</body>
+</html>

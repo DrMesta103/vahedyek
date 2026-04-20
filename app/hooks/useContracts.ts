@@ -2,12 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import type { Contract, ContractFormData, ContractStatus, FilterState } from '../types/contract';
-import {
-  getContracts,
-  saveContract as storeSaveContract,
-  getContractById as storeGetContractById,
-  deleteContract as storeDeleteContract,
-} from '../lib/contractStore';
+import { getContractsList } from '../lib/contractDraftClient';
 
 const EMPTY_FILTERS: FilterState = {
   contractType: null,
@@ -25,10 +20,12 @@ export interface UseContractsReturn {
   activeTab: ContractStatus;
   finalizedCount: number;
   draftCount: number;
+  loading: boolean;
   setActiveTab: (tab: ContractStatus) => void;
   setSearchQuery: (q: string) => void;
   setFilters: (f: FilterState) => void;
   clearFilters: () => void;
+  refresh: () => Promise<void>;
   saveContract: (data: ContractFormData, status: ContractStatus, id?: string) => Contract;
   getContractById: (id: string) => Contract | undefined;
   deleteContract: (id: string) => void;
@@ -36,17 +33,37 @@ export interface UseContractsReturn {
 
 export function useContracts(): UseContractsReturn {
   const [contracts, setContracts] = useState<Contract[]>([]);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<ContractStatus>('finalized');
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [filters, setFilters] = useState<FilterState>(EMPTY_FILTERS);
 
-  // بارگذاری اولیه از store
-  useEffect(() => {
-    setContracts(getContracts());
+  const refresh = useCallback(async () => {
+    setLoading(true);
+    try {
+      const result = await getContractsList();
+      setContracts(result as Contract[]);
+    } catch {
+      setContracts([]);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  // debounce 250ms برای searchQuery
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  useEffect(() => {
+    const hasFinalized = contracts.some((contract) => contract.status === 'finalized');
+    const hasDraft = contracts.some((contract) => contract.status === 'draft');
+
+    if (!hasFinalized && hasDraft && activeTab === 'finalized') {
+      setActiveTab('draft');
+    }
+  }, [contracts, activeTab]);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(searchQuery);
@@ -54,65 +71,27 @@ export function useContracts(): UseContractsReturn {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  const refresh = useCallback(() => {
-    setContracts(getContracts());
-  }, []);
-
-  const saveContract = useCallback(
-    (data: ContractFormData, status: ContractStatus, id?: string): Contract => {
-      const result = storeSaveContract(data, status, id);
-      refresh();
-      return result;
-    },
-    [refresh]
-  );
-
-  const deleteContract = useCallback(
-    (id: string): void => {
-      storeDeleteContract(id);
-      refresh();
-    },
-    [refresh]
-  );
-
-  const getContractById = useCallback(
-    (id: string): Contract | undefined => storeGetContractById(id),
-    []
-  );
-
   const clearFilters = useCallback(() => {
     setFilters(EMPTY_FILTERS);
   }, []);
 
-  // محاسبه شمارنده‌ها
-  const finalizedCount = contracts.filter((c) => c.status === 'finalized').length;
-  const draftCount = contracts.filter((c) => c.status === 'draft').length;
+  const finalizedCount = contracts.filter((contract) => contract.status === 'finalized').length;
+  const draftCount = contracts.filter((contract) => contract.status === 'draft').length;
 
-  // منطق فیلتر
   const filteredContracts = contracts.filter((contract) => {
-    // ۱. فیلتر بر اساس تب فعال
     if (contract.status !== activeTab) return false;
 
-    // ۲. جستجوی متنی
     if (debouncedSearch.trim()) {
-      const q = debouncedSearch.trim().toLowerCase();
+      const query = debouncedSearch.trim().toLowerCase();
       const contractNumber = contract.data.subject.contractNumber?.toLowerCase() ?? '';
-      const partyOneNames = (contract.data.parties.partyOne ?? [])
-        .map((p) => p.name?.toLowerCase() ?? '')
-        .join(' ');
-      const partyTwoNames = (contract.data.parties.partyTwo ?? [])
-        .map((p) => p.name?.toLowerCase() ?? '')
-        .join(' ');
+      const partyOneNames = (contract.data.parties.partyOne ?? []).map((party) => party.name?.toLowerCase() ?? '').join(' ');
+      const partyTwoNames = (contract.data.parties.partyTwo ?? []).map((party) => party.name?.toLowerCase() ?? '').join(' ');
 
-      const matchesSearch =
-        contractNumber.includes(q) ||
-        partyOneNames.includes(q) ||
-        partyTwoNames.includes(q);
-
-      if (!matchesSearch) return false;
+      if (!contractNumber.includes(query) && !partyOneNames.includes(query) && !partyTwoNames.includes(query)) {
+        return false;
+      }
     }
 
-    // ۳. فیلترهای اضافه
     if (filters.contractType && contract.data.subject.contractType !== filters.contractType) {
       return false;
     }
@@ -136,6 +115,11 @@ export function useContracts(): UseContractsReturn {
     return true;
   });
 
+  const getContractById = useCallback(
+    (id: string) => contracts.find((contract) => contract.id === id),
+    [contracts],
+  );
+
   return {
     contracts,
     filteredContracts,
@@ -144,12 +128,18 @@ export function useContracts(): UseContractsReturn {
     activeTab,
     finalizedCount,
     draftCount,
+    loading,
     setActiveTab,
     setSearchQuery,
     setFilters,
     clearFilters,
-    saveContract,
+    refresh,
+    saveContract: () => {
+      throw new Error('ذخیره قرارداد از این مسیر پشتیبانی نمی‌شود.');
+    },
     getContractById,
-    deleteContract,
+    deleteContract: () => {
+      throw new Error('حذف قرارداد از این مسیر پشتیبانی نمی‌شود.');
+    },
   };
 }

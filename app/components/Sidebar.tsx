@@ -1,57 +1,78 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useAuthContext } from '../hooks/useAuthContext';
+import { APP_MENU_ITEMS } from '../lib/navigation';
 
 interface SidebarProps {
   activeItem?: string;
 }
 
-const menuItems = [
-  { id: 'business', label: 'جزئیات کسب و کار', icon: 'fa-briefcase', href: '#', disabled: true },
-  { id: 'complex', label: 'جزئیات مجتمع', icon: 'fa-building', href: '#', disabled: true },
-  { id: 'units', label: 'فهرست واحد ها', icon: 'fa-list-ul', href: '#', disabled: true },
-  { id: 'draft-templates', label: 'قالب های پیش نویس', icon: 'fa-copy', href: '/draft-templates', disabled: true },
-  { id: 'contracts', label: 'فهرست قرارداد ها', icon: 'fa-file-invoice', href: '/contracts' },
-  { id: 'drafts', label: 'پیش نویس های در انتظار بررسی', icon: 'fa-file-edit', href: '#', disabled: true },
-  { id: 'payments', label: 'واریزی مشتریان', icon: 'fa-hand-holding-usd', href: '#', disabled: true },
-  { id: 'reports', label: 'گزارش های مدیریتی', icon: 'fa-chart-line', href: '#', disabled: true },
-  { id: 'employees', label: 'کارمندان', icon: 'fa-users', href: '#', disabled: true },
-  { id: 'account', label: 'حساب کاربری', icon: 'fa-user-circle', href: '#', disabled: true },
-];
+export default function Sidebar({ activeItem = 'home' }: SidebarProps) {
+  const router = useRouter();
+  const { data } = useAuthContext();
 
-export default function Sidebar({ activeItem = 'complex' }: SidebarProps) {
+  const handleLogout = async () => {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    router.push('/login');
+    router.refresh();
+  };
+
+  const handleSwitchTenant = async () => {
+    router.push('/select-tenant?next=%2F');
+    router.refresh();
+  };
+
   return (
     <aside className="sidebar">
       <div className="profile-item">
         <div className="avatar-small" style={{ background: '#fb923c' }}>
           <i className="fa fa-user"></i>
         </div>
-        <div className="name">علی علی‌نقی پور</div>
+        <div className="name">
+          <div>{data?.user.fullName ?? 'در حال بارگذاری...'}</div>
+          <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '2px' }}>{data?.user.email ?? ''}</div>
+        </div>
         <div className="back-btn">
           <i className="fa fa-chevron-left"></i>
         </div>
       </div>
 
       <div className="profile-item">
-        <div className="avatar-small" style={{ background: '#111', fontSize: '10px' }}>lind</div>
-        <div className="name" style={{ color: '#6b7280' }}>lind</div>
-        <div className="back-btn">
-          <i className="fa fa-chevron-left"></i>
+        <div className="avatar-small" style={{ background: '#111', fontSize: '10px' }}>
+          {data?.tenant?.brandCode ?? 'TEN'}
         </div>
+        <div className="name" style={{ color: '#6b7280' }}>
+          <div>{data?.tenant?.name ?? 'tenant'}</div>
+          <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '2px' }}>{data?.tenant?.slug ?? ''}</div>
+        </div>
+        <button
+          type="button"
+          onClick={handleSwitchTenant}
+          title="تغییر کسب‌وکار"
+          style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}
+          className="back-btn"
+        >
+          <i className="fa fa-exchange-alt"></i>
+        </button>
       </div>
 
       <div className="sidebar-toolbar">
-        <i className="fa fa-sign-out-alt" style={{ transform: 'scaleX(-1)' }}></i>
+        <button type="button" onClick={handleLogout} style={{ background: 'transparent', border: 'none' }}>
+          <i className="fa fa-sign-out-alt" style={{ transform: 'scaleX(-1)' }}></i>
+        </button>
         <i className="fa fa-bell" style={{ position: 'relative' }}>
           <span className="badge">1</span>
         </i>
-        <i className="fa fa-home"></i>
-        <i className="fa fa-cog"></i>
+        <button type="button" onClick={() => router.push('/')} style={{ background: 'transparent', border: 'none' }}>
+          <i className={`fa fa-home${activeItem === 'home' ? ' active-toolbar-icon' : ''}`}></i>
+        </button>
         <i className="fa fa-moon"></i>
       </div>
 
       <nav className="menu-list">
-        {menuItems.map((item) =>
+        {APP_MENU_ITEMS.map((item) =>
           item.disabled ? (
             <div
               key={item.id}
@@ -64,11 +85,7 @@ export default function Sidebar({ activeItem = 'complex' }: SidebarProps) {
               <i className="fa fa-lock" style={{ marginRight: 'auto', fontSize: '12px' }}></i>
             </div>
           ) : (
-            <Link
-              key={item.id}
-              href={item.href}
-              className={`menu-link${activeItem === item.id ? ' active' : ''}`}
-            >
+            <Link key={item.id} href={item.href} className={`menu-link${activeItem === item.id ? ' active' : ''}`}>
               <i className={`fa ${item.icon}`}></i>
               <span>{item.label}</span>
             </Link>
@@ -77,13 +94,13 @@ export default function Sidebar({ activeItem = 'complex' }: SidebarProps) {
       </nav>
 
       <div className="invite-section">
-        <p>دعوت از دوستان و کسب درآمد</p>
-        <button className="invite-btn">شروع درآمدزایی</button>
+        <p>tenant فعال</p>
+        <button className="invite-btn">{data?.tenant?.name ?? 'در حال بارگذاری...'}</button>
       </div>
 
       <div className="version-footer">
         <i className="fa fa-angle-double-left"></i>
-        <span>0.6.98</span>
+        <span>0.8.0</span>
       </div>
     </aside>
   );

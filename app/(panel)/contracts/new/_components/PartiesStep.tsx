@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { Building2, Plus, Search, Trash2, User, X } from 'lucide-react';
 import { FormBox } from './FormBox';
@@ -9,12 +9,21 @@ import { FieldLabel } from './FieldLabel';
 import { StickySubmitBar } from './StickySubmitBar';
 import { useContractFlowBasePath } from './useContractFlowBasePath';
 import { Input } from '../../../../components/ui/input';
-import type { PersonType, ShareMode } from '../../../../types/contract';
+import {
+  createDirectoryPerson,
+  ensureActiveDraftId,
+  getReferenceData,
+  getStepData,
+  saveStepData,
+  type ReferenceDataResponse,
+} from '../../../../lib/contractDraftClient';
+import type { ContractPartiesData, PersonType, ShareMode } from '../../../../types/contract';
 
 type DirectoryItem = {
   id: string;
   name: string;
   personType: PersonType;
+  directoryId?: string | null;
 };
 
 type PartyRow = DirectoryItem & {
@@ -26,32 +35,9 @@ type PartyRow = DirectoryItem & {
 type EntityKind = 'partner' | 'buyer';
 type PartyKey = 'party-one' | 'party-two';
 
-const NATURAL_PARTNERS: DirectoryItem[] = [
-  { id: 'partner-natural-1', name: 'علی رضایی', personType: 'natural' },
-  { id: 'partner-natural-2', name: 'مریم احمدی', personType: 'natural' },
-  { id: 'partner-natural-3', name: 'حسین کریمی', personType: 'natural' },
-];
-
-const LEGAL_PARTNERS: DirectoryItem[] = [
-  { id: 'partner-legal-1', name: 'شرکت فپکو', personType: 'legal' },
-  { id: 'partner-legal-2', name: 'شرکت توسعه سپهر', personType: 'legal' },
-  { id: 'partner-legal-3', name: 'موسسه سرمایه گستر', personType: 'legal' },
-];
-
-const NATURAL_BUYERS: DirectoryItem[] = [
-  { id: 'buyer-natural-1', name: 'سارا محمدی', personType: 'natural' },
-  { id: 'buyer-natural-2', name: 'رضا عباسی', personType: 'natural' },
-  { id: 'buyer-natural-3', name: 'نرگس یوسفی', personType: 'natural' },
-];
-
-const LEGAL_BUYERS: DirectoryItem[] = [
-  { id: 'buyer-legal-1', name: 'شرکت افق سازان', personType: 'legal' },
-  { id: 'buyer-legal-2', name: 'شرکت آتیه مسکن', personType: 'legal' },
-  { id: 'buyer-legal-3', name: 'گروه سرمایه گذاری پرگاس', personType: 'legal' },
-];
-
 const DEFAULT_PARTY_ONE: PartyRow = {
   id: 'partner-legal-1',
+  directoryId: 'partner-legal-1',
   name: 'شرکت فپکو',
   personType: 'legal',
   shareValue: 6,
@@ -119,8 +105,8 @@ function Modal({
   onClose: () => void;
   title: string;
   description?: string;
-  children: React.ReactNode;
-  footer: React.ReactNode;
+  children: ReactNode;
+  footer: ReactNode;
 }) {
   if (!open) return null;
 
@@ -155,6 +141,7 @@ function PartySelectionDialog({
   legalItems,
   onCreateItem,
   onAddSelected,
+  loading,
 }: {
   open: boolean;
   onClose: () => void;
@@ -162,8 +149,9 @@ function PartySelectionDialog({
   rows: PartyRow[];
   naturalItems: DirectoryItem[];
   legalItems: DirectoryItem[];
-  onCreateItem: (personType: PersonType, name: string) => void;
+  onCreateItem: (personType: PersonType, name: string) => Promise<DirectoryItem | null>;
   onAddSelected: (items: DirectoryItem[]) => void;
+  loading: boolean;
 }) {
   const labels = getEntityLabels(kind);
   const [personTab, setPersonTab] = useState<PersonType>('natural');
@@ -171,6 +159,7 @@ function PartySelectionDialog({
   const [searchTerm, setSearchTerm] = useState('');
   const [newItemMode, setNewItemMode] = useState(false);
   const [newName, setNewName] = useState('');
+  const [creating, setCreating] = useState(false);
 
   const currentItems = personTab === 'natural' ? naturalItems : legalItems;
   const availableItems = useMemo(
@@ -197,10 +186,15 @@ function PartySelectionDialog({
     setNewName('');
   };
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     const trimmed = newName.trim();
     if (!trimmed) return;
-    onCreateItem(personTab, trimmed);
+    setCreating(true);
+    const created = await onCreateItem(personTab, trimmed);
+    setCreating(false);
+    if (created) {
+      onAddSelected([created]);
+    }
     setNewName('');
     setNewItemMode(false);
     setSearchTerm('');
@@ -280,10 +274,10 @@ function PartySelectionDialog({
                 <button
                   type="button"
                   onClick={handleCreate}
-                  disabled={!newName.trim()}
+                  disabled={!newName.trim() || creating}
                   className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  ثبت {labels.singular} جدید
+                  {creating ? 'در حال ثبت...' : `ثبت ${labels.singular} جدید`}
                 </button>
               </div>
             </div>
@@ -300,7 +294,11 @@ function PartySelectionDialog({
           </div>
 
           <div className="space-y-3">
-            {availableItems.length ? (
+            {loading ? (
+              <div className="rounded-2xl border border-gray-200 bg-white p-8 text-center text-sm text-gray-400">
+                در حال بارگذاری اشخاص...
+              </div>
+            ) : availableItems.length ? (
               availableItems.map((item) => {
                 const checked = selectedIds.includes(item.id);
                 return (
@@ -474,17 +472,100 @@ export function PartiesStep({ title }: { stepId: string; title: string }) {
   const router = useRouter();
   const basePath = useContractFlowBasePath();
 
+  const [draftId, setDraftId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
   const [activeTab, setActiveTab] = useState<PartyKey>('party-one');
   const [partyOneMode, setPartyOneMode] = useState<ShareMode>('dang');
   const [partyTwoMode, setPartyTwoMode] = useState<ShareMode>('dang');
   const [partyOneRows, setPartyOneRows] = useState<PartyRow[]>([DEFAULT_PARTY_ONE]);
   const [partyTwoRows, setPartyTwoRows] = useState<PartyRow[]>([]);
-  const [partnerNaturals, setPartnerNaturals] = useState<DirectoryItem[]>(NATURAL_PARTNERS);
-  const [partnerLegals, setPartnerLegals] = useState<DirectoryItem[]>(LEGAL_PARTNERS);
-  const [buyerNaturals, setBuyerNaturals] = useState<DirectoryItem[]>(NATURAL_BUYERS);
-  const [buyerLegals, setBuyerLegals] = useState<DirectoryItem[]>(LEGAL_BUYERS);
+  const [partnerNaturals, setPartnerNaturals] = useState<DirectoryItem[]>([]);
+  const [partnerLegals, setPartnerLegals] = useState<DirectoryItem[]>([]);
+  const [buyerNaturals, setBuyerNaturals] = useState<DirectoryItem[]>([]);
+  const [buyerLegals, setBuyerLegals] = useState<DirectoryItem[]>([]);
   const [partyOneDialogOpen, setPartyOneDialogOpen] = useState(false);
   const [partyTwoDialogOpen, setPartyTwoDialogOpen] = useState(false);
+  const [directoryLoading, setDirectoryLoading] = useState(false);
+
+  const applyReferenceData = (referenceData: ReferenceDataResponse) => {
+    setPartnerNaturals(
+      referenceData.directory.partner.natural.map((item) => ({ ...item, personType: 'natural' as const, directoryId: item.id })),
+    );
+    setPartnerLegals(
+      referenceData.directory.partner.legal.map((item) => ({ ...item, personType: 'legal' as const, directoryId: item.id })),
+    );
+    setBuyerNaturals(
+      referenceData.directory.buyer.natural.map((item) => ({ ...item, personType: 'natural' as const, directoryId: item.id })),
+    );
+    setBuyerLegals(
+      referenceData.directory.buyer.legal.map((item) => ({ ...item, personType: 'legal' as const, directoryId: item.id })),
+    );
+  };
+
+  const reloadReferenceData = async () => {
+    setDirectoryLoading(true);
+    try {
+      const referenceData = await getReferenceData();
+      applyReferenceData(referenceData);
+    } finally {
+      setDirectoryLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    let mounted = true;
+
+    const load = async () => {
+      try {
+        const id = await ensureActiveDraftId();
+        const [referenceData, partiesData] = await Promise.all([
+          getReferenceData(),
+          getStepData<ContractPartiesData>(id, 'parties'),
+        ]);
+
+        if (!mounted) return;
+
+        setDraftId(id);
+        applyReferenceData(referenceData);
+
+        if (partiesData) {
+          setPartyOneMode(partiesData.partyOneMode);
+          setPartyTwoMode(partiesData.partyTwoMode);
+          setPartyOneRows(
+            partiesData.partyOne.map((item) => ({
+              id: item.personId,
+              directoryId: item.directoryId ?? null,
+              personType: item.personType,
+              name: item.name,
+              shareValue: item.share.value,
+              isPrimary: Boolean(item.isPrimary),
+              locked: item.personId === DEFAULT_PARTY_ONE.id,
+            })),
+          );
+          setPartyTwoRows(
+            partiesData.partyTwo.map((item) => ({
+              id: item.personId,
+              directoryId: item.directoryId ?? null,
+              personType: item.personType,
+              name: item.name,
+              shareValue: item.share.value,
+              isPrimary: Boolean(item.isPrimary),
+            })),
+          );
+        }
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    load();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const handleBack = () => router.push(basePath);
 
@@ -545,21 +626,69 @@ export function PartiesStep({ title }: { stepId: string; title: string }) {
 
   const removeRow = (rows: PartyRow[], id: string) => normalizePrimary(rows.filter((row) => row.id !== id));
 
-  const createDirectoryItem = (kind: EntityKind, personType: PersonType, name: string) => {
-    const item = {
-      id: `${kind}-${personType}-${Date.now()}`,
-      name,
+  const createDirectoryItem = async (kind: EntityKind, personType: PersonType, name: string) => {
+    const created = await createDirectoryPerson({
+      role: kind,
       personType,
+      name,
+    });
+
+    const item = {
+      id: created.id,
+      directoryId: created.id,
+      name: created.name,
+      personType: created.personType,
     } satisfies DirectoryItem;
 
     if (kind === 'partner') {
       if (personType === 'natural') setPartnerNaturals((current) => [...current, item]);
       else setPartnerLegals((current) => [...current, item]);
-      return;
+    } else if (personType === 'natural') {
+      setBuyerNaturals((current) => [...current, item]);
+    } else {
+      setBuyerLegals((current) => [...current, item]);
     }
 
-    if (personType === 'natural') setBuyerNaturals((current) => [...current, item]);
-    else setBuyerLegals((current) => [...current, item]);
+    return item;
+  };
+
+  const buildPayload = (): ContractPartiesData => ({
+    partyOneMode,
+    partyTwoMode,
+    partyOne: partyOneRows.map((row) => ({
+      personId: row.id,
+      directoryId: row.directoryId ?? null,
+      personType: row.personType,
+      name: row.name,
+      isPrimary: row.isPrimary,
+      share: {
+        value: row.shareValue,
+        mode: partyOneMode,
+      },
+    })),
+    partyTwo: partyTwoRows.map((row) => ({
+      personId: row.id,
+      directoryId: row.directoryId ?? null,
+      personType: row.personType,
+      name: row.name,
+      isPrimary: row.isPrimary,
+      share: {
+        value: row.shareValue,
+        mode: partyTwoMode,
+      },
+    })),
+  });
+
+  const handleSubmit = async () => {
+    if (!draftId) return;
+
+    setSaving(true);
+    try {
+      await saveStepData(draftId, 'parties', buildPayload());
+      router.push(basePath);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const partyOneLabels = getEntityLabels('partner');
@@ -617,7 +746,10 @@ export function PartiesStep({ title }: { stepId: string; title: string }) {
           onPrimaryChange={(id) => setPartyOneRows((current) => setPrimaryRow(current, id))}
           onRemove={(id) => setPartyOneRows((current) => removeRow(current, id))}
           addButtonLabel={partyOneLabels.addButton}
-          onOpenDialog={() => setPartyOneDialogOpen(true)}
+          onOpenDialog={() => {
+            void reloadReferenceData();
+            setPartyOneDialogOpen(true);
+          }}
         />
       ) : (
         <PartySection
@@ -630,11 +762,19 @@ export function PartiesStep({ title }: { stepId: string; title: string }) {
           onPrimaryChange={(id) => setPartyTwoRows((current) => setPrimaryRow(current, id))}
           onRemove={(id) => setPartyTwoRows((current) => removeRow(current, id))}
           addButtonLabel={partyTwoLabels.addButton}
-          onOpenDialog={() => setPartyTwoDialogOpen(true)}
+          onOpenDialog={() => {
+            void reloadReferenceData();
+            setPartyTwoDialogOpen(true);
+          }}
         />
       )}
 
-      <StickySubmitBar label="ثبت اطلاعات طرفین" onClick={() => router.push(basePath)} />
+      <StickySubmitBar
+        label="ثبت اطلاعات طرفین"
+        loadingLabel={loading ? 'در حال بارگذاری...' : 'در حال ذخیره...'}
+        disabled={loading || saving}
+        onClick={handleSubmit}
+      />
 
       <PartySelectionDialog
         open={partyOneDialogOpen}
@@ -648,6 +788,7 @@ export function PartiesStep({ title }: { stepId: string; title: string }) {
           setPartyOneRows((current) => addRows(current, items));
           setPartyOneDialogOpen(false);
         }}
+        loading={directoryLoading}
       />
 
       <PartySelectionDialog
@@ -662,6 +803,7 @@ export function PartiesStep({ title }: { stepId: string; title: string }) {
           setPartyTwoRows((current) => addRows(current, items));
           setPartyTwoDialogOpen(false);
         }}
+        loading={directoryLoading}
       />
     </div>
   );

@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { CalendarDays, FileText, KeyRound } from 'lucide-react';
 import { FormBox } from './FormBox';
@@ -11,16 +11,12 @@ import { SearchableSelect } from './SearchableSelect';
 import { useContractFlowBasePath } from './useContractFlowBasePath';
 import { Input } from '../../../../components/ui/input';
 import { PersianDatePicker } from '../../../../components/ui/PersianDatePicker';
+import { validateStep1 } from '../../../../lib/contractValidation';
+import { ensureActiveDraftId, getReferenceData, getStepData, saveStepData } from '../../../../lib/contractDraftClient';
+import type { ContractSubjectData } from '../../../../types/contract';
 
-const STAFF_OPTIONS = [
-  { value: 'user1', label: 'کاربر شماره یک' },
-  { value: 'user2', label: 'کاربر شماره دو' },
-];
-
-const BLOCK_OPTIONS = [
-  { id: 'block1', label: 'بلوک ۱', units: ['واحد ۱', 'واحد ۲'] },
-  { id: 'block2', label: 'بلوک ۲', units: ['واحد ۳', 'واحد ۴'] },
-];
+type EmployeeOption = { id: string; firstName: string; lastName: string };
+type BlockOption = { id: string; name: string; units: Array<{ id: string; name: string; floorName: string; title: string }> };
 
 function ContractMetaField({
   icon,
@@ -28,10 +24,10 @@ function ContractMetaField({
   hint,
   children,
 }: {
-  icon: React.ReactNode;
+  icon: ReactNode;
   label: string;
   hint: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm transition-colors hover:border-blue-200">
@@ -53,37 +49,145 @@ export function SubjectStep({ stepId, title }: { stepId: string; title: string }
   const router = useRouter();
   const basePath = useContractFlowBasePath();
 
-  const [issuerType, setIssuerType] = useState('self');
+  const [draftId, setDraftId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState('');
+
+  const [employees, setEmployees] = useState<EmployeeOption[]>([]);
+  const [blocks, setBlocks] = useState<BlockOption[]>([]);
+
+  const [issuerType, setIssuerType] = useState<'self' | 'former' | 'staff'>('self');
   const [formerEmployeeName, setFormerEmployeeName] = useState('');
   const [selectedStaff, setSelectedStaff] = useState('');
-  const [selectedContractType, setSelectedContractType] = useState('sale');
+  const [selectedContractType, setSelectedContractType] = useState<'sale' | 'pre-sale'>('pre-sale');
   const [contractDate, setContractDate] = useState('');
   const [deliveryDate, setDeliveryDate] = useState('');
   const [contractNumber, setContractNumber] = useState('');
   const [selectedBlock, setSelectedBlock] = useState('');
   const [selectedUnit, setSelectedUnit] = useState('');
 
-  const selectedBlockData = BLOCK_OPTIONS.find((block) => block.id === selectedBlock);
+  const selectedBlockData = blocks.find((block) => block.id === selectedBlock);
   const unitOptions = useMemo(
-    () => selectedBlockData?.units.map((unit) => ({ label: unit, value: unit })) ?? [],
+    () => selectedBlockData?.units.map((unit) => ({ label: unit.title, value: unit.id })) ?? [],
     [selectedBlockData],
   );
 
+  const staffOptions = useMemo(
+    () =>
+      employees.map((employee) => ({
+        label: `${employee.firstName} ${employee.lastName}`,
+        value: employee.id,
+      })),
+    [employees],
+  );
+
+  useEffect(() => {
+    let mounted = true;
+
+    const load = async () => {
+      try {
+        const id = await ensureActiveDraftId();
+        const [referenceData, subjectData] = await Promise.all([
+          getReferenceData(),
+          getStepData<ContractSubjectData>(id, 'subject'),
+        ]);
+
+        if (!mounted) return;
+
+        setDraftId(id);
+        setEmployees(referenceData.employees);
+        setBlocks(referenceData.blocks);
+
+        if (subjectData) {
+          if (subjectData.contractor.type === 'employee') setIssuerType('staff');
+          else if (subjectData.contractor.type === 'former-employee') setIssuerType('former');
+          else setIssuerType('self');
+
+          setFormerEmployeeName(
+            [subjectData.contractor.formerFirstName, subjectData.contractor.formerLastName].filter(Boolean).join(' '),
+          );
+          setSelectedStaff(subjectData.contractor.employeeId ?? '');
+          setSelectedContractType(subjectData.contractType);
+          setContractDate(subjectData.contractDate);
+          setDeliveryDate(subjectData.deliveryDate);
+          setContractNumber(subjectData.contractNumber);
+          setSelectedBlock(subjectData.blockId);
+          setSelectedUnit(subjectData.unitId);
+        }
+      } catch (error) {
+        if (mounted) {
+          setFormError(error instanceof Error ? error.message : 'بارگذاری اطلاعات پایه انجام نشد.');
+        }
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    load();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   const handleBack = () => router.push(basePath);
-  const handleSubmit = () => {
-    console.log('Form submitted', {
-      stepId,
-      issuerType,
-      formerEmployeeName,
-      selectedStaff,
-      selectedContractType,
+
+  const buildPayload = (): ContractSubjectData => {
+    const contractor =
+      issuerType === 'staff'
+        ? { type: 'employee' as const, employeeId: selectedStaff }
+        : issuerType === 'former'
+          ? {
+              type: 'former-employee' as const,
+              formerFirstName: formerEmployeeName.split(' ')[0] ?? '',
+              formerLastName: formerEmployeeName.split(' ').slice(1).join(' '),
+            }
+          : { type: 'self' as const };
+
+    return {
+      contractor,
+      contractType: selectedContractType,
       contractDate,
-      deliveryDate,
       contractNumber,
-      selectedBlock,
-      selectedUnit,
-    });
-    router.push(basePath);
+      deliveryDate,
+      blockId: selectedBlock,
+      unitId: selectedUnit,
+    };
+  };
+
+  const handleSubmit = async () => {
+    if (!draftId) return;
+
+    const payload = buildPayload();
+    const validation = validateStep1(payload);
+    if (!validation.valid) {
+      setFormError(
+        validation.errors.contractType ??
+          validation.errors.contractDate ??
+          validation.errors.contractNumber ??
+          validation.errors.deliveryDate ??
+          validation.errors.blockId ??
+          validation.errors.unitId ??
+          validation.errors['contractor.employeeId'] ??
+          validation.errors['contractor.formerFirstName'] ??
+          validation.errors['contractor.formerLastName'] ??
+          'اطلاعات پایه معتبر نیست.',
+      );
+      return;
+    }
+
+    setSaving(true);
+    setFormError('');
+    try {
+      await saveStepData(draftId, 'subject', payload);
+      router.push(basePath);
+      router.refresh();
+    } catch (error) {
+      setFormError(error instanceof Error ? error.message : 'ذخیره اطلاعات پایه انجام نشد.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -103,6 +207,8 @@ export function SubjectStep({ stepId, title }: { stepId: string; title: string }
       </div>
 
       <div className="grid gap-4">
+        {formError ? <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{formError}</div> : null}
+
         <FormBox title="منعقد کننده قرارداد" description="مشخص کنید قرارداد توسط چه شخصی منعقد می‌شود.">
           <div className="grid gap-3 md:grid-cols-3">
             <ChoiceCard title="خودم" active={issuerType === 'self'} onClick={() => setIssuerType('self')} />
@@ -112,11 +218,11 @@ export function SubjectStep({ stepId, title }: { stepId: string; title: string }
 
           {issuerType === 'former' && (
             <div className="mt-4">
-              <FieldLabel label="نام کارمند سابق" />
+              <FieldLabel label="نام و نام خانوادگی کارمند سابق" />
               <Input
                 value={formerEmployeeName}
                 onChange={(event) => setFormerEmployeeName(event.target.value)}
-                placeholder="نام کارمند سابق را وارد کنید"
+                placeholder="نام کامل کارمند سابق را وارد کنید"
                 className="mt-2"
               />
             </div>
@@ -130,21 +236,17 @@ export function SubjectStep({ stepId, title }: { stepId: string; title: string }
                 onSelect={setSelectedStaff}
                 placeholder="یک کارمند را انتخاب کنید"
                 searchPlaceholder="جستجو در کارمندان..."
-                options={STAFF_OPTIONS}
+                options={staffOptions}
                 emptyText="کارمندی پیدا نشد"
               />
             </div>
           )}
         </FormBox>
 
-        <FormBox title="نوع قرارداد" description="نوع قرارداد را مشخص کنید.">
+        <FormBox title="نوع قرارداد" description="مشخص کنید قرارداد از نوع فروش است یا پیش‌فروش.">
           <div className="grid gap-3 md:grid-cols-2">
             <ChoiceCard title="فروش" active={selectedContractType === 'sale'} onClick={() => setSelectedContractType('sale')} />
-            <ChoiceCard
-              title="پیش فروش"
-              active={selectedContractType === 'pre-sale'}
-              onClick={() => setSelectedContractType('pre-sale')}
-            />
+            <ChoiceCard title="پیش‌فروش" active={selectedContractType === 'pre-sale'} onClick={() => setSelectedContractType('pre-sale')} />
           </div>
         </FormBox>
 
@@ -168,11 +270,7 @@ export function SubjectStep({ stepId, title }: { stepId: string; title: string }
                 label="تاریخ قرارداد"
                 hint="تاریخ رسمی انعقاد قرارداد را از تقویم شمسی انتخاب کنید."
               >
-                <PersianDatePicker
-                  value={contractDate}
-                  onChange={setContractDate}
-                  placeholder="تاریخ قرارداد را انتخاب کنید"
-                />
+                <PersianDatePicker value={contractDate} onChange={setContractDate} placeholder="تاریخ قرارداد را انتخاب کنید" />
               </ContractMetaField>
 
               <ContractMetaField
@@ -190,13 +288,9 @@ export function SubjectStep({ stepId, title }: { stepId: string; title: string }
               <ContractMetaField
                 icon={<FileText className="h-5 w-5" />}
                 label="تاریخ تحویل واحد"
-                hint="اگر زمان تحویل مشخص است، آن را به‌صورت شمسی برای پیگیری‌ها"
+                hint="اگر زمان تحویل مشخص است، آن را به‌صورت شمسی برای پیگیری‌های بعدی ثبت کنید."
               >
-                <PersianDatePicker
-                  value={deliveryDate}
-                  onChange={setDeliveryDate}
-                  placeholder="تاریخ تحویل واحد را انتخاب کنید"
-                />
+                <PersianDatePicker value={deliveryDate} onChange={setDeliveryDate} placeholder="تاریخ تحویل واحد را انتخاب کنید" />
               </ContractMetaField>
             </div>
           </div>
@@ -213,8 +307,8 @@ export function SubjectStep({ stepId, title }: { stepId: string; title: string }
                   setSelectedUnit('');
                 }}
                 placeholder="بلوک را انتخاب کنید"
-                searchPlaceholder="جستجو در بلوک ها..."
-                options={BLOCK_OPTIONS.map((block) => ({ label: block.label, value: block.id }))}
+                searchPlaceholder="جستجو در بلوک‌ها..."
+                options={blocks.map((block) => ({ label: block.name, value: block.id }))}
                 emptyText="بلوکی پیدا نشد"
               />
             </div>
@@ -235,7 +329,12 @@ export function SubjectStep({ stepId, title }: { stepId: string; title: string }
         </FormBox>
       </div>
 
-      <StickySubmitBar label="ثبت اطلاعات پایه" onClick={handleSubmit} />
+      <StickySubmitBar
+        label="ثبت اطلاعات پایه"
+        loadingLabel={loading ? 'در حال بارگذاری...' : 'در حال ذخیره...'}
+        disabled={loading || saving}
+        onClick={handleSubmit}
+      />
     </div>
   );
 }

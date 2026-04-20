@@ -1,9 +1,9 @@
 'use client';
 
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { Block, Unit, Employee, Partner, Buyer } from '../../types/contract';
 import { useContracts } from '../../hooks/useContracts';
+import { clearActiveDraftId, setActiveDraftId } from '../../lib/contractDraftClient';
 import ContractTabs from './ContractTabs';
 import ContractSearch from './ContractSearch';
 import ContractFilters from './ContractFilters';
@@ -19,9 +19,24 @@ interface ContractListProps {
 
 export default function ContractList({ blocks, units = [] }: ContractListProps) {
   const router = useRouter();
-  const { filteredContracts, filters, searchQuery, activeTab, finalizedCount, draftCount, setActiveTab, setSearchQuery, setFilters, clearFilters } = useContracts();
+  const {
+    filteredContracts,
+    filters,
+    searchQuery,
+    activeTab,
+    finalizedCount,
+    draftCount,
+    loading,
+    setActiveTab,
+    setSearchQuery,
+    setFilters,
+    clearFilters,
+  } = useContracts();
 
-  const handleEdit = (id: string) => router.push(`/contracts/${id}/edit`);
+  const handleEdit = (id: string) => {
+    setActiveDraftId(id);
+    router.push('/contracts/new');
+  };
 
   return (
     <div className="card" style={{ padding: '0', overflow: 'hidden' }}>
@@ -31,16 +46,16 @@ export default function ContractList({ blocks, units = [] }: ContractListProps) 
           <i className="fa fa-file-invoice"></i>
           <span>فهرست قراردادها</span>
         </div>
-        <Link href="/contracts/new" style={{
+        <button onClick={() => { clearActiveDraftId(); router.push('/contracts/new'); }} style={{
           display: 'inline-flex', alignItems: 'center', gap: '6px',
           background: 'transparent', border: '1px solid var(--dark-teal)',
           color: 'var(--dark-teal)', padding: '6px 18px',
           borderRadius: '20px', fontFamily: 'inherit', fontSize: '12px',
-          textDecoration: 'none', cursor: 'pointer',
+          cursor: 'pointer',
         }}>
           <i className="fa fa-plus" style={{ fontSize: '11px' }}></i>
           ثبت قرارداد جدید
-        </Link>
+        </button>
       </div>
 
       {/* تب‌ها */}
@@ -55,7 +70,7 @@ export default function ContractList({ blocks, units = [] }: ContractListProps) 
       </div>
 
       {/* جدول */}
-      <ContractTable contracts={filteredContracts} onEdit={handleEdit} />
+      <ContractTable contracts={filteredContracts} blocks={blocks} units={units} onEdit={handleEdit} loading={loading} />
     </div>
   );
 }
