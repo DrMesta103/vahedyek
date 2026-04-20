@@ -14,6 +14,7 @@ import { ensureActiveDraftId, getStepData, saveStepData } from '../../../../lib/
 import { validateFinancialStep } from '../../../../lib/contractValidation';
 import { addIntervalToDate, buildRegularDueItems, distributeAmount, type DueFrequency } from '../../../../lib/financialUtils';
 import type { ContractFinancialData, FinancialCategoryData, FinancialDueItemData, PricingType } from '../../../../types/contract';
+import { dispatchContractFlowDirty, dispatchContractFlowFinancialSnapshot, dispatchContractFlowSaved } from './contractFlowSignals';
 
 type FinancialCategory = FinancialCategoryData;
 type DueItem = FinancialDueItemData;
@@ -245,7 +246,7 @@ function Modal({
   );
 }
 
-export function FinancialStep({ title }: { stepId: string; title: string }) {
+export function FinancialStep({ stepId, title, embedded = false }: { stepId: string; title: string; embedded?: boolean }) {
   const router = useRouter();
   const basePath = useContractFlowBasePath();
   const initialSnapshotRef = useRef('');
@@ -397,6 +398,8 @@ export function FinancialStep({ title }: { stepId: string; title: string }) {
       await saveStepData(draftId, 'financial', payload);
       initialSnapshotRef.current = JSON.stringify(payload);
       setDirty(false);
+      dispatchContractFlowDirty(stepId as 'financial', false);
+      dispatchContractFlowSaved(stepId as 'financial');
       return true;
     } catch (error) {
       setFormError(error instanceof Error ? error.message : 'ثبت اطلاعات مالی انجام نشد.');
@@ -570,15 +573,20 @@ export function FinancialStep({ title }: { stepId: string; title: string }) {
   useEffect(() => {
     if (loading) return;
 
-    const snapshot = JSON.stringify(buildPayload());
+    const payload = buildPayload();
+    const snapshot = JSON.stringify(payload);
+    dispatchContractFlowFinancialSnapshot(payload);
     if (!initialSnapshotRef.current) {
       initialSnapshotRef.current = snapshot;
       setDirty(false);
+      dispatchContractFlowDirty(stepId as 'financial', false);
       return;
     }
 
-    setDirty(snapshot !== initialSnapshotRef.current);
-  }, [loading, pricingType, totalArea, pricePerMeter, fixedTotalAmount, activeTab, categories, dueItems]);
+    const hasChanges = snapshot !== initialSnapshotRef.current;
+    setDirty(hasChanges);
+    dispatchContractFlowDirty(stepId as 'financial', hasChanges);
+  }, [activeTab, categories, dueItems, fixedTotalAmount, loading, pricePerMeter, pricingType, stepId, totalArea]);
 
   useEffect(() => {
     if (!dirty) return;
@@ -673,7 +681,7 @@ export function FinancialStep({ title }: { stepId: string; title: string }) {
 
   return (
     <div className="space-y-5 rounded-[28px] border border-white/70 bg-[radial-gradient(circle_at_top,#f8fffe,white_45%)] p-1">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      {!embedded ? <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">{title}</h1>
           <p className="mt-1 text-sm text-gray-500">مدل قیمت‌گذاری، جمع مالی و دسته‌بندی‌های مالی قرارداد را در این بخش مدیریت کنید.</p>
@@ -681,7 +689,7 @@ export function FinancialStep({ title }: { stepId: string; title: string }) {
         <button type="button" onClick={() => requestNavigation(basePath)} className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">
           بازگشت به مراحل
         </button>
-      </div>
+      </div> : null}
 
       <FormBox title="قیمت‌گذاری قرارداد" description="نوع قیمت‌گذاری قرارداد را مشخص کنید.">
         <div className="grid gap-3 md:grid-cols-2">
@@ -935,6 +943,8 @@ export function FinancialStep({ title }: { stepId: string; title: string }) {
         loadingLabel={loading ? 'در حال بارگذاری...' : 'در حال ذخیره...'}
         disabled={loading || saving}
         onClick={handleSubmit}
+        embedded={embedded}
+        submitId={stepId}
       />
 
       <Modal

@@ -11,6 +11,7 @@ type OrbitMenuProps = {
 export default function OrbitMenu({ activeItem }: OrbitMenuProps) {
   const router = useRouter();
   const gearRef = useRef<HTMLDivElement | null>(null);
+  const dragMovedRef = useRef(false);
   const totalItems = APP_MENU_ITEMS.length;
   const stepAngle = (Math.PI * 2) / totalItems;
   const activeIndexFromRoute = Math.max(APP_MENU_ITEMS.findIndex((item) => item.id === activeItem), 0);
@@ -43,6 +44,7 @@ export default function OrbitMenu({ activeItem }: OrbitMenuProps) {
       const centerX = rect.left + rect.width / 2;
       const centerY = rect.top + rect.height / 2;
       const angle = Math.atan2(event.clientY - centerY, event.clientX - centerX);
+      dragMovedRef.current = true;
       setCurrentRotation(angle - dragState.startAngle);
     };
 
@@ -60,8 +62,9 @@ export default function OrbitMenu({ activeItem }: OrbitMenuProps) {
     };
   }, [dragState, stepAngle]);
 
-  const handleMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
+  const handleMouseDown = (event: React.MouseEvent<HTMLElement>) => {
     if (!gearRef.current) return;
+    dragMovedRef.current = false;
     const rect = gearRef.current.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2;
@@ -73,6 +76,10 @@ export default function OrbitMenu({ activeItem }: OrbitMenuProps) {
   };
 
   const navigateTo = (index: number) => {
+    if (dragMovedRef.current) {
+      dragMovedRef.current = false;
+      return;
+    }
     const item = APP_MENU_ITEMS[index];
     if (!item || item.disabled || item.href === '#') return;
     router.push(item.href);
@@ -95,6 +102,7 @@ export default function OrbitMenu({ activeItem }: OrbitMenuProps) {
                 type="button"
                 className={`node${isActive ? ' active' : ''}${isNeighbor ? ' neighbor' : ''}`}
                 style={{ left: `${x}px`, top: `${y}px`, transform: `rotate(${-currentRotation}rad)` }}
+                onMouseDown={handleMouseDown}
                 onClick={() => navigateTo(index)}
                 disabled={item.disabled}
               >

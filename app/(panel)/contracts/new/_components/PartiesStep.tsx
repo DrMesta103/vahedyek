@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { Building2, Plus, Search, Trash2, User, X } from 'lucide-react';
 import { FormBox } from './FormBox';
@@ -18,6 +18,7 @@ import {
   type ReferenceDataResponse,
 } from '../../../../lib/contractDraftClient';
 import type { ContractPartiesData, PersonType, ShareMode } from '../../../../types/contract';
+import { dispatchContractFlowDirty, dispatchContractFlowSaved } from './contractFlowSignals';
 
 type DirectoryItem = {
   id: string;
@@ -468,9 +469,10 @@ function PartySection({
   );
 }
 
-export function PartiesStep({ title }: { stepId: string; title: string }) {
+export function PartiesStep({ stepId, title, embedded = false }: { stepId: string; title: string; embedded?: boolean }) {
   const router = useRouter();
   const basePath = useContractFlowBasePath();
+  const initialSnapshotRef = useRef('');
 
   const [draftId, setDraftId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -555,6 +557,7 @@ export function PartiesStep({ title }: { stepId: string; title: string }) {
             })),
           );
         }
+
       } finally {
         if (mounted) setLoading(false);
       }
@@ -684,19 +687,36 @@ export function PartiesStep({ title }: { stepId: string; title: string }) {
 
     setSaving(true);
     try {
-      await saveStepData(draftId, 'parties', buildPayload());
+      const payload = buildPayload();
+      await saveStepData(draftId, 'parties', payload);
+      initialSnapshotRef.current = JSON.stringify(payload);
+      dispatchContractFlowDirty(stepId as 'parties', false);
+      dispatchContractFlowSaved(stepId as 'parties');
       router.push(basePath);
     } finally {
       setSaving(false);
     }
   };
 
+  useEffect(() => {
+    if (loading || !draftId) return;
+    const snapshot = JSON.stringify(buildPayload());
+    if (!initialSnapshotRef.current) {
+      initialSnapshotRef.current = snapshot;
+      dispatchContractFlowDirty(stepId as 'parties', false);
+      return;
+    }
+
+    const dirty = snapshot !== initialSnapshotRef.current;
+    dispatchContractFlowDirty(stepId as 'parties', dirty);
+  }, [draftId, loading, partyOneMode, partyOneRows, partyTwoMode, partyTwoRows, stepId]);
+
   const partyOneLabels = getEntityLabels('partner');
   const partyTwoLabels = getEntityLabels('buyer');
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      {!embedded ? <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">{title}</h1>
           <p className="mt-1 text-gray-500">طرف اول و طرف دوم را در یک صفحه مدیریت کنید و برای هر کدام سهم مستقل ثبت کنید.</p>
@@ -708,7 +728,7 @@ export function PartiesStep({ title }: { stepId: string; title: string }) {
         >
           بازگشت به مراحل
         </button>
-      </div>
+      </div> : null}
 
       <div className="rounded-xl border border-gray-200 bg-white p-2 shadow-sm">
         <div className="grid gap-2 md:grid-cols-2">
@@ -774,6 +794,8 @@ export function PartiesStep({ title }: { stepId: string; title: string }) {
         loadingLabel={loading ? 'در حال بارگذاری...' : 'در حال ذخیره...'}
         disabled={loading || saving}
         onClick={handleSubmit}
+        embedded={embedded}
+        submitId={stepId}
       />
 
       <PartySelectionDialog

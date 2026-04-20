@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { CalendarDays, FileText, KeyRound } from 'lucide-react';
 import { FormBox } from './FormBox';
@@ -14,6 +14,7 @@ import { PersianDatePicker } from '../../../../components/ui/PersianDatePicker';
 import { validateStep1 } from '../../../../lib/contractValidation';
 import { ensureActiveDraftId, getReferenceData, getStepData, saveStepData } from '../../../../lib/contractDraftClient';
 import type { ContractSubjectData } from '../../../../types/contract';
+import { dispatchContractFlowDirty, dispatchContractFlowSaved } from './contractFlowSignals';
 
 type EmployeeOption = { id: string; firstName: string; lastName: string };
 type BlockOption = { id: string; name: string; units: Array<{ id: string; name: string; floorName: string; title: string }> };
@@ -45,9 +46,10 @@ function ContractMetaField({
   );
 }
 
-export function SubjectStep({ stepId, title }: { stepId: string; title: string }) {
+export function SubjectStep({ stepId, title, embedded = false }: { stepId: string; title: string; embedded?: boolean }) {
   const router = useRouter();
   const basePath = useContractFlowBasePath();
+  const initialSnapshotRef = useRef('');
 
   const [draftId, setDraftId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -115,6 +117,7 @@ export function SubjectStep({ stepId, title }: { stepId: string; title: string }
           setSelectedBlock(subjectData.blockId);
           setSelectedUnit(subjectData.unitId);
         }
+
       } catch (error) {
         if (mounted) {
           setFormError(error instanceof Error ? error.message : 'بارگذاری اطلاعات پایه انجام نشد.');
@@ -181,6 +184,9 @@ export function SubjectStep({ stepId, title }: { stepId: string; title: string }
     setFormError('');
     try {
       await saveStepData(draftId, 'subject', payload);
+      initialSnapshotRef.current = JSON.stringify(payload);
+      dispatchContractFlowDirty(stepId as 'subject', false);
+      dispatchContractFlowSaved(stepId as 'subject');
       router.push(basePath);
       router.refresh();
     } catch (error) {
@@ -190,9 +196,35 @@ export function SubjectStep({ stepId, title }: { stepId: string; title: string }
     }
   };
 
+  useEffect(() => {
+    if (loading || !draftId) return;
+    const snapshot = JSON.stringify(buildPayload());
+    if (!initialSnapshotRef.current) {
+      initialSnapshotRef.current = snapshot;
+      dispatchContractFlowDirty(stepId as 'subject', false);
+      return;
+    }
+
+    const dirty = snapshot !== initialSnapshotRef.current;
+    dispatchContractFlowDirty(stepId as 'subject', dirty);
+  }, [
+    contractDate,
+    contractNumber,
+    deliveryDate,
+    draftId,
+    formerEmployeeName,
+    issuerType,
+    loading,
+    selectedBlock,
+    selectedContractType,
+    selectedStaff,
+    selectedUnit,
+    stepId,
+  ]);
+
   return (
     <div className="space-y-5">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      {!embedded ? <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">{title}</h1>
           <p className="mt-1 text-gray-500">اطلاعات پایه و اولیه قرارداد را در این بخش وارد کنید.</p>
@@ -204,7 +236,7 @@ export function SubjectStep({ stepId, title }: { stepId: string; title: string }
         >
           بازگشت به مراحل
         </button>
-      </div>
+      </div> : null}
 
       <div className="grid gap-4">
         {formError ? <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{formError}</div> : null}
@@ -264,7 +296,7 @@ export function SubjectStep({ stepId, title }: { stepId: string; title: string }
               </div>
             </div>
 
-            <div className="grid gap-4 xl:grid-cols-3">
+            <div className="grid gap-4 xl:grid-cols-2 2xl:grid-cols-3">
               <ContractMetaField
                 icon={<CalendarDays className="h-5 w-5" />}
                 label="تاریخ قرارداد"
@@ -334,6 +366,8 @@ export function SubjectStep({ stepId, title }: { stepId: string; title: string }
         loadingLabel={loading ? 'در حال بارگذاری...' : 'در حال ذخیره...'}
         disabled={loading || saving}
         onClick={handleSubmit}
+        embedded={embedded}
+        submitId={stepId}
       />
     </div>
   );

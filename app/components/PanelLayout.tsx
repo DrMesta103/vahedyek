@@ -109,6 +109,7 @@ function buildDraftTemplateBreadcrumb(pathname: string): Crumb[] {
 export default function PanelLayout({ children }: PanelLayoutProps) {
   const pathname = usePathname();
   const showOrbitMenu = pathname === '/';
+  const isContractsNewHub = pathname === '/contracts/new';
 
   const { activeItem, trail } = useMemo(() => {
     if (pathname === '/') {
@@ -147,7 +148,7 @@ export default function PanelLayout({ children }: PanelLayoutProps) {
 
   return (
     <div className="app-shell">
-      <Sidebar activeItem={activeItem} />
+      <Sidebar activeItem={activeItem} forceCollapsed={isContractsNewHub} lockCollapsed={isContractsNewHub} />
       {showOrbitMenu ? (
         <main className="main-content home-main-content">
           <OrbitMenu activeItem={activeItem} />
@@ -157,27 +158,29 @@ export default function PanelLayout({ children }: PanelLayoutProps) {
         <main className="main-content">
           <div className="main-stage">
             <div className="main-stage-content">
-              <div className="top-header">
-                <div className="breadcrumb">
-                  <Link href="/" className="breadcrumb-link">
-                    خانه
-                  </Link>
-                  {trail.map((item, index) => (
-                    <span key={`${item.label}-${index}`}>
-                      {' '}
-                      <i className="fa fa-chevron-left"></i>{' '}
-                      {item.href && index < trail.length - 1 ? (
-                        <Link href={item.href} className="breadcrumb-link">
-                          {item.label}
-                        </Link>
-                      ) : (
-                        <span>{item.label}</span>
-                      )}
-                    </span>
-                  ))}
+              {!isContractsNewHub ? (
+                <div className="top-header">
+                  <div className="breadcrumb">
+                    <Link href="/" className="breadcrumb-link">
+                      خانه
+                    </Link>
+                    {trail.map((item, index) => (
+                      <span key={`${item.label}-${index}`}>
+                        {' '}
+                        <i className="fa fa-chevron-left"></i>{' '}
+                        {item.href && index < trail.length - 1 ? (
+                          <Link href={item.href} className="breadcrumb-link">
+                            {item.label}
+                          </Link>
+                        ) : (
+                          <span>{item.label}</span>
+                        )}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-              </div>
-              <div className="content-body">{children}</div>
+              ) : null}
+              <div className={`content-body${isContractsNewHub ? ' content-body-wide' : ''}`}>{children}</div>
             </div>
           </div>
         </main>

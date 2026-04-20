@@ -7,13 +7,13 @@ import { FormBox } from './FormBox';
 import { DISCOUNT_GROUPS } from './discountsConfig';
 import { useContractFlowBasePath } from './useContractFlowBasePath';
 
-export function DiscountsStep({ title }: { stepId: string; title: string }) {
+export function DiscountsStep({ title, embedded = false }: { stepId: string; title: string; embedded?: boolean }) {
   const router = useRouter();
   const basePath = useContractFlowBasePath();
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      {!embedded ? <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold">{title}</h1>
           <p className="mt-1 text-gray-500">مدیریت تخفیف‌های قراردادی و مشوق‌های پرداخت زودتر از موعد در این بخش انجام می‌شود.</p>
@@ -25,7 +25,7 @@ export function DiscountsStep({ title }: { stepId: string; title: string }) {
         >
           بازگشت به مراحل
         </button>
-      </div>
+      </div> : null}
 
       <FormBox
         title="تعریف تخفیف‌های قرارداد"

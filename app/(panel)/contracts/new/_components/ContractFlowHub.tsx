@@ -1,30 +1,22 @@
 'use client';
 
-import { useEffect, useMemo, useState, type ComponentType } from 'react';
-import Link from 'next/link';
-import {
-  AlertTriangle,
-  BadgePercent,
-  CalendarDays,
-  Eye,
-  FileCheck2,
-  Landmark,
-  WalletCards,
-  X,
-  XCircle,
-} from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import { getActiveDraftId, getStepData } from '../../../../lib/contractDraftClient';
 import { validateFinancialStep, validateStep1, validateStep2 } from '../../../../lib/contractValidation';
 import type { ContractFinancialData, ContractPartiesData, ContractSubjectData } from '../../../../types/contract';
-import { useContractFlowBasePath } from './useContractFlowBasePath';
-
-type FlowItem = {
-  id: string;
-  title: string;
-  description: string;
-  icon: ComponentType<{ className?: string }>;
-  enabled: boolean;
-};
+import { DiscountsStep } from './DiscountsStep';
+import { FinancialStep } from './FinancialStep';
+import { PartiesStep } from './PartiesStep';
+import { PenaltiesStep } from './PenaltiesStep';
+import { PlaceholderStep } from './PlaceholderStep';
+import { SubjectStep } from './SubjectStep';
+import {
+  CONTRACT_FLOW_DIRTY_EVENT,
+  CONTRACT_FLOW_FINANCIAL_SNAPSHOT_EVENT,
+  CONTRACT_FLOW_SAVED_EVENT,
+  getStoredLastUpdated,
+  type ContractFlowSectionId,
+} from './contractFlowSignals';
 
 type StatusTone = 'green' | 'amber' | 'slate' | 'blue';
 
@@ -34,64 +26,14 @@ type StepStatus = {
   tone: StatusTone;
 };
 
-const CONTRACT_CREATE_ITEMS: FlowItem[] = [
-  {
-    id: 'subject',
-    title: 'اطلاعات پایه',
-    description: 'منعقد کننده قرارداد، نوع قرارداد، تاریخ، شماره قرارداد و انتخاب واحد را در این بخش تنظیم کنید.',
-    icon: CalendarDays,
-    enabled: true,
-  },
-  {
-    id: 'parties',
-    title: 'طرفین',
-    description: 'مدیریت طرف اول و طرف دوم، تعیین سهم هر کدام و انتخاب طرف اصلی در این بخش انجام می‌شود.',
-    icon: Landmark,
-    enabled: true,
-  },
-  {
-    id: 'financial',
-    title: 'اطلاعات مالی قرارداد',
-    description: 'مدل قیمت‌گذاری، دسته‌بندی‌های مالی و سررسیدهای قرارداد در این بخش ثبت می‌شود.',
-    icon: WalletCards,
-    enabled: true,
-  },
-  {
-    id: 'penalties',
-    title: 'جرایم',
-    description: 'تنظیمات جریمه‌های تاخیر، هزینه دیرکرد و قواعد محاسبه هر مورد در این بخش انجام می‌شود.',
-    icon: AlertTriangle,
-    enabled: true,
-  },
-  {
-    id: 'discounts',
-    title: 'تخفیف‌ها',
-    description: 'تخفیف روی اصل قرارداد، تخفیف‌های موردی و مشوق‌های پرداخت زودتر از موعد از اینجا مدیریت می‌شود.',
-    icon: BadgePercent,
-    enabled: true,
-  },
-  {
-    id: 'termination',
-    title: 'شرایط فسخ',
-    description: 'بندهای فسخ، جرایم، مهلت‌ها و شروط مهم قراردادی در این بخش قرار می‌گیرد.',
-    icon: XCircle,
-    enabled: false,
-  },
-  {
-    id: 'review',
-    title: 'نمایش کلی جزئیات',
-    description: 'جمع‌بندی همه اطلاعات ثبت‌شده پیش از تایید نهایی در این صفحه مرور می‌شود.',
-    icon: Eye,
-    enabled: false,
-  },
-  {
-    id: 'final',
-    title: 'تایید نهایی قرارداد',
-    description: 'پس از تکمیل همه مراحل، قرارداد در این بخش برای تایید نهایی و ثبت بررسی می‌شود.',
-    icon: FileCheck2,
-    enabled: false,
-  },
-];
+type SectionItem = {
+  id: ContractFlowSectionId;
+  title: string;
+  navLabel: string;
+  render: () => JSX.Element;
+};
+
+const SAVEABLE_SECTIONS: ContractFlowSectionId[] = ['subject', 'parties', 'financial'];
 
 function hasSubjectData(data: ContractSubjectData | null) {
   if (!data) return false;
@@ -136,134 +78,74 @@ function getToneClasses(tone: StatusTone) {
   }
 }
 
-function UnderDevelopmentDialog({
-  open,
-  onClose,
-  stepTitle,
-}: {
-  open: boolean;
-  onClose: () => void;
-  stepTitle: string;
-}) {
-  if (!open) return null;
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
-      <div
-        className="w-full max-w-md rounded-2xl border border-gray-200 bg-white shadow-2xl"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <div className="flex items-start justify-between border-b border-gray-100 p-5">
-          <div>
-            <h3 className="text-base font-bold text-gray-800">در حال توسعه</h3>
-            <p className="mt-1 text-sm text-gray-500">امکان ورود به بخش «{stepTitle}» هنوز پیاده‌سازی نشده است.</p>
-          </div>
-          <button type="button" onClick={onClose} className="rounded-lg p-1 text-gray-400 hover:bg-gray-100">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-        <div className="p-5 text-sm leading-6 text-gray-600">این بخش فعلاً غیرفعال است و بعداً تکمیل می‌شود.</div>
-        <div className="flex justify-end border-t border-gray-100 p-4">
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
-          >
-            متوجه شدم
-          </button>
-        </div>
-      </div>
-    </div>
-  );
+function formatCurrency(value: number) {
+  return `${Math.round(value || 0).toLocaleString('fa-IR')} تومان`;
 }
 
-function StepCard({
-  item,
-  basePath,
-  status,
-  onDisabledClick,
-}: {
-  item: FlowItem;
-  basePath: string;
-  status: StepStatus;
-  onDisabledClick: (title: string) => void;
-}) {
-  const content = (
-    <div className="flex items-center justify-between gap-4">
-      <div className="flex items-center gap-4">
-        <div
-          className={`flex h-10 w-10 items-center justify-center rounded-lg border ${
-            item.enabled ? 'bg-gray-100 text-blue-600' : 'bg-gray-100 text-amber-600'
-          }`}
-        >
-          <item.icon className="h-5 w-5" />
-        </div>
-        <div>
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="text-base font-bold text-gray-800">{item.title}</div>
-            <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium ${getToneClasses(status.tone)}`}>
-              {status.label}
-            </span>
-          </div>
-          <div className="mt-1 text-sm leading-6 text-gray-600">{item.description}</div>
-          <div className="mt-2 text-xs font-medium text-gray-500">{status.detail}</div>
-        </div>
-      </div>
-      <div className={item.enabled ? 'text-gray-400' : 'text-amber-500'}>
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="m9 18 6-6-6-6" />
-        </svg>
-      </div>
-    </div>
-  );
+function getContractTotal(data: ContractFinancialData | null) {
+  if (!data) return 0;
+  if (data.pricingType === 'metered') {
+    return Number(data.totalArea || 0) * Number(data.pricePerMeter || 0);
+  }
+  return Number(data.fixedTotalAmount || 0);
+}
 
-  if (item.enabled) {
-    return (
-      <Link
-        href={`${basePath}/${item.id}`}
-        className="block w-full rounded-lg border bg-white p-4 text-right shadow-sm transition-all hover:border-blue-400 hover:bg-gray-50"
-      >
-        {content}
-      </Link>
-    );
+function getFinancialSlices(data: ContractFinancialData | null) {
+  if (!data?.categories?.length) return [];
+  return data.categories
+    .filter((item) => item.capAmount > 0)
+    .map((item, index) => ({
+      id: item.id,
+      name: item.name,
+      value: item.capAmount,
+      color: ['#0f766e', '#14b8a6', '#2dd4bf', '#5eead4', '#99f6e4', '#0ea5e9'][index % 6],
+    }));
+}
+
+function FinancialDonut({ slices }: { slices: Array<{ id: string; name: string; value: number; color: string }> }) {
+  const total = slices.reduce((sum, item) => sum + item.value, 0);
+  if (!total) {
+    return <div className="contract-flow-report-chart-empty">هنوز داده مالی کافی ثبت نشده است</div>;
   }
 
+  let offset = 0;
+  const gradient = slices
+    .map((item) => {
+      const start = Math.round((offset / total) * 100);
+      offset += item.value;
+      const end = Math.round((offset / total) * 100);
+      return `${item.color} ${start}% ${end}%`;
+    })
+    .join(', ');
+
   return (
-    <button
-      type="button"
-      onClick={() => onDisabledClick(item.title)}
-      className="block w-full rounded-lg border bg-white p-4 text-right shadow-sm transition-all hover:border-amber-400 hover:bg-amber-50/40"
-    >
-      {content}
-    </button>
+    <div className="contract-flow-report-chart-wrap">
+      <div className="contract-flow-report-chart" style={{ backgroundImage: `conic-gradient(${gradient})` }}>
+        <div className="contract-flow-report-chart-center">
+          <strong>{new Intl.NumberFormat('fa-IR').format(slices.length)}</strong>
+          <span>دسته</span>
+        </div>
+      </div>
+    </div>
   );
 }
 
 export function ContractFlowHub() {
-  const basePath = useContractFlowBasePath();
-  const [pendingStepTitle, setPendingStepTitle] = useState('');
+  const [activeSection, setActiveSection] = useState<SectionItem['id']>('subject');
   const [loading, setLoading] = useState(true);
   const [subjectData, setSubjectData] = useState<ContractSubjectData | null>(null);
   const [partiesData, setPartiesData] = useState<ContractPartiesData | null>(null);
   const [financialData, setFinancialData] = useState<ContractFinancialData | null>(null);
+  const [financialLiveData, setFinancialLiveData] = useState<ContractFinancialData | null>(null);
+  const [dirtyMap, setDirtyMap] = useState<Partial<Record<ContractFlowSectionId, boolean>>>({});
+  const [savingMap, setSavingMap] = useState<Partial<Record<ContractFlowSectionId, boolean>>>({});
+  const [lastUpdatedMap, setLastUpdatedMap] = useState<Partial<Record<ContractFlowSectionId, number>>>({});
 
   useEffect(() => {
     let mounted = true;
 
     const load = async () => {
-      if (mounted) {
-        setLoading(true);
-      }
+      if (mounted) setLoading(true);
 
       const draftId = getActiveDraftId();
       if (!draftId) {
@@ -282,6 +164,7 @@ export function ContractFlowHub() {
         setSubjectData(subject);
         setPartiesData(parties);
         setFinancialData(financial);
+        setFinancialLiveData(financial);
       } finally {
         if (mounted) setLoading(false);
       }
@@ -305,11 +188,71 @@ export function ContractFlowHub() {
     };
   }, []);
 
+  useEffect(() => {
+    setLastUpdatedMap(getStoredLastUpdated());
+
+    const handleDirty = (event: Event) => {
+      const customEvent = event as CustomEvent<{ sectionId: ContractFlowSectionId; dirty: boolean }>;
+      setDirtyMap((current) => ({ ...current, [customEvent.detail.sectionId]: customEvent.detail.dirty }));
+      if (!customEvent.detail.dirty) {
+        setSavingMap((current) => ({ ...current, [customEvent.detail.sectionId]: false }));
+      }
+    };
+
+    const handleSaved = (event: Event) => {
+      const customEvent = event as CustomEvent<{ sectionId: ContractFlowSectionId; savedAt: number }>;
+      setDirtyMap((current) => ({ ...current, [customEvent.detail.sectionId]: false }));
+      setSavingMap((current) => ({ ...current, [customEvent.detail.sectionId]: false }));
+      setLastUpdatedMap((current) => ({ ...current, [customEvent.detail.sectionId]: customEvent.detail.savedAt }));
+    };
+
+    const handleFinancialSnapshot = (event: Event) => {
+      const customEvent = event as CustomEvent<{ payload: ContractFinancialData | null }>;
+      setFinancialLiveData(customEvent.detail.payload);
+    };
+
+    window.addEventListener(CONTRACT_FLOW_DIRTY_EVENT, handleDirty as EventListener);
+    window.addEventListener(CONTRACT_FLOW_SAVED_EVENT, handleSaved as EventListener);
+    window.addEventListener(CONTRACT_FLOW_FINANCIAL_SNAPSHOT_EVENT, handleFinancialSnapshot as EventListener);
+
+    return () => {
+      window.removeEventListener(CONTRACT_FLOW_DIRTY_EVENT, handleDirty as EventListener);
+      window.removeEventListener(CONTRACT_FLOW_SAVED_EVENT, handleSaved as EventListener);
+      window.removeEventListener(CONTRACT_FLOW_FINANCIAL_SNAPSHOT_EVENT, handleFinancialSnapshot as EventListener);
+    };
+  }, []);
+
+  useEffect(() => {
+    const sections = Array.from(document.querySelectorAll<HTMLElement>('[data-contract-section]'));
+    if (!sections.length) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visibleEntries = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+
+        if (!visibleEntries.length) return;
+
+        const nextId = visibleEntries[0].target.getAttribute('id') as SectionItem['id'] | null;
+        if (nextId) setActiveSection(nextId);
+      },
+      {
+        root: null,
+        threshold: [0.2, 0.35, 0.5, 0.7],
+        rootMargin: '-80px 0px -35% 0px',
+      },
+    );
+
+    sections.forEach((section) => observer.observe(section));
+    return () => observer.disconnect();
+  }, []);
+
   const subjectComplete = Boolean(subjectData && validateStep1(subjectData).valid);
   const partiesComplete = Boolean(partiesData && validateStep2(partiesData).valid);
   const financialComplete = Boolean(financialData && validateFinancialStep(financialData).valid);
 
-  const statusMap = useMemo<Record<string, StepStatus>>(
+  const statusMap = useMemo<Record<SectionItem['id'], StepStatus>>(
     () => ({
       subject: loading
         ? { label: 'در حال بررسی', detail: 'وضعیت این مرحله در حال بارگذاری است.', tone: 'slate' }
@@ -339,36 +282,212 @@ export function ContractFlowHub() {
         ? { label: 'آماده تنظیم', detail: 'پس از تکمیل بخش مالی، ثبت تخفیف‌ها آماده است.', tone: 'blue' }
         : { label: 'در انتظار مالی', detail: 'این بخش به اطلاعات مالی قرارداد وابسته است.', tone: 'amber' },
       termination: { label: 'در حال توسعه', detail: 'این بخش هنوز در دست پیاده‌سازی است.', tone: 'amber' },
-      review: { label: 'در حال توسعه', detail: 'مرور نهایی قرارداد هنوز فعال نشده است.', tone: 'amber' },
-      final: { label: 'در حال توسعه', detail: 'ثبت نهایی قرارداد هنوز فعال نشده است.', tone: 'amber' },
     }),
     [financialComplete, financialData, loading, partiesComplete, partiesData, subjectComplete, subjectData],
   );
 
+  const sections: SectionItem[] = [
+    {
+      id: 'subject',
+      title: 'اطلاعات پایه',
+      navLabel: 'Basic Info',
+      render: () => <SubjectStep stepId="subject" title="اطلاعات پایه" embedded />,
+    },
+    {
+      id: 'parties',
+      title: 'طرفین',
+      navLabel: 'Parties',
+      render: () => <PartiesStep stepId="parties" title="طرفین" embedded />,
+    },
+    {
+      id: 'financial',
+      title: 'اطلاعات مالی',
+      navLabel: 'Financial Info',
+      render: () => <FinancialStep stepId="financial" title="اطلاعات مالی قرارداد" embedded />,
+    },
+    {
+      id: 'penalties',
+      title: 'جرایم',
+      navLabel: 'Penalties',
+      render: () => <PenaltiesStep stepId="penalties" title="جرایم" embedded />,
+    },
+    {
+      id: 'discounts',
+      title: 'تخفیف‌ها',
+      navLabel: 'Discounts',
+      render: () => <DiscountsStep stepId="discounts" title="تخفیف‌ها" embedded />,
+    },
+    {
+      id: 'termination',
+      title: 'شرایط فسخ',
+      navLabel: 'Termination Terms',
+      render: () => <PlaceholderStep stepId="termination" title="شرایط فسخ" embedded />,
+    },
+  ];
+
+  const reportData = financialLiveData ?? financialData;
+  const contractTotal = getContractTotal(reportData);
+  const paidSlices = getFinancialSlices(reportData);
+  const allocatedAmount = paidSlices.reduce((sum, item) => sum + item.value, 0);
+  const dueAmount = reportData?.dueItems?.reduce((sum, item) => sum + item.amount, 0) ?? 0;
+  const remainder = Math.max(contractTotal - allocatedAmount, 0);
+
+  const formatAbsoluteTime = (timestamp?: number) => {
+    if (!timestamp) return 'وارد نشده';
+    return new Intl.DateTimeFormat('fa-IR', {
+      hour: '2-digit',
+      minute: '2-digit',
+      month: 'short',
+      day: 'numeric',
+    }).format(timestamp);
+  };
+
+  const requestSectionSave = (sectionId: ContractFlowSectionId) => {
+    const trigger = document.querySelector<HTMLButtonElement>(`[data-contract-save-trigger="${sectionId}"]`);
+    if (!trigger || trigger.disabled) return;
+
+    setSavingMap((current) => ({ ...current, [sectionId]: true }));
+    trigger.click();
+  };
+
+  const scrollToSection = (sectionId: SectionItem['id']) => {
+    const section = document.getElementById(sectionId);
+    if (!section) return;
+    setActiveSection(sectionId);
+    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="text-2xl font-bold">ثبت قرارداد جدید</h1>
-        <p className="mt-1 text-gray-500">هر بخش قرارداد در یک صفحه مستقل باز می‌شود. وضعیت هر مرحله را از همینجا می‌توانید ببینید.</p>
-      </div>
+    <div className="contract-flow-layout lg:flex lg:flex-row lg:items-stretch lg:gap-0">
+      <aside className="contract-flow-sidebar shrink-0">
+        <div className="contract-flow-sidebar-panel">
+          <div className="contract-flow-sidebar-header">
+            <h1 className="text-lg font-bold text-gray-900">مواد قرارداد</h1>
+          </div>
 
-      <div className="space-y-3">
-        {CONTRACT_CREATE_ITEMS.map((item) => (
-          <StepCard
-            key={item.id}
-            item={item}
-            basePath={basePath}
-            status={statusMap[item.id]}
-            onDisabledClick={setPendingStepTitle}
-          />
-        ))}
-      </div>
+          <div className="contract-flow-sidebar-body">
+            <div className="contract-flow-nav-list flex gap-2 overflow-x-auto lg:flex-col lg:overflow-visible">
+              {sections.map((section, index) => {
+                const isActive = activeSection === section.id;
+                const isDirty = Boolean(dirtyMap[section.id]);
+                const isSaving = Boolean(savingMap[section.id]);
+                const canSave = SAVEABLE_SECTIONS.includes(section.id) && isDirty;
+                return (
+                  <div key={section.id} className={`contract-flow-nav-item min-w-max text-right transition-colors lg:w-full ${isActive ? 'is-active' : ''}`}>
+                    <button type="button" onClick={() => scrollToSection(section.id)} className="contract-flow-nav-main">
+                      <span className="contract-flow-nav-content">
+                        <span className="contract-flow-nav-title-wrap">
+                          <span className="contract-flow-nav-title">{section.title}</span>
+                          <span className="contract-flow-nav-updated">{formatAbsoluteTime(lastUpdatedMap[section.id])}</span>
+                        </span>
+                        <span className="contract-flow-nav-number">{new Intl.NumberFormat('fa-IR').format(index + 1)}</span>
+                      </span>
+                    </button>
 
-      <UnderDevelopmentDialog
-        open={Boolean(pendingStepTitle)}
-        onClose={() => setPendingStepTitle('')}
-        stepTitle={pendingStepTitle}
-      />
+                    {canSave ? (
+                      <div className="contract-flow-nav-save-slot">
+                        <button
+                          type="button"
+                          onClick={() => requestSectionSave(section.id)}
+                          disabled={isSaving}
+                          className="contract-flow-nav-save"
+                        >
+                          {isSaving ? '...' : 'ذخیره'}
+                        </button>
+                      </div>
+                    ) : null}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <aside className="contract-flow-report-sidebar shrink-0">
+        <div className="contract-flow-report-panel">
+          <div className="contract-flow-report-header">
+            <h2>گزارش زنده مالی</h2>
+            <p>خلاصه‌ی لحظه‌ای از مبلغ قرارداد، تخصیص‌ها و سررسیدها</p>
+          </div>
+
+          <div className="contract-flow-report-body">
+            <div className="contract-flow-report-card">
+              <div className="contract-flow-report-card-label">جمع کل قرارداد</div>
+              <div className="contract-flow-report-card-value">{formatCurrency(contractTotal)}</div>
+            </div>
+
+            <div className="contract-flow-report-grid">
+              <div className="contract-flow-report-mini">
+                <span>مبالغ دسته‌بندی‌شده</span>
+                <strong>{formatCurrency(allocatedAmount)}</strong>
+              </div>
+              <div className="contract-flow-report-mini">
+                <span>جمع سررسیدها</span>
+                <strong>{formatCurrency(dueAmount)}</strong>
+              </div>
+            </div>
+
+            <div className="contract-flow-report-card">
+              <div className="contract-flow-report-card-head">
+                <span>پراکندگی مالی</span>
+                <strong>{paidSlices.length ? `${new Intl.NumberFormat('fa-IR').format(paidSlices.length)} دسته` : 'بدون داده'}</strong>
+              </div>
+              <FinancialDonut slices={paidSlices} />
+            </div>
+
+            <div className="contract-flow-report-card">
+              <div className="contract-flow-report-card-head">
+                <span>مانده تا سقف قرارداد</span>
+                <strong>{formatCurrency(remainder)}</strong>
+              </div>
+              <div className="contract-flow-report-legend">
+                {paidSlices.slice(0, 5).map((item) => (
+                  <div key={item.id} className="contract-flow-report-legend-row">
+                    <span className="contract-flow-report-legend-dot" style={{ backgroundColor: item.color }} />
+                    <span className="contract-flow-report-legend-name">{item.name}</span>
+                    <strong>{formatCurrency(item.value)}</strong>
+                  </div>
+                ))}
+                {!paidSlices.length ? <div className="contract-flow-report-empty">بعد از ورود اطلاعات مالی، گزارش اینجا کامل می‌شود.</div> : null}
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <div className="contract-flow-content min-w-0 flex-1 space-y-6">
+        {sections.map((section) => {
+          const status = statusMap[section.id];
+          const isSubjectSection = section.id === 'subject';
+          return (
+            <section
+              key={section.id}
+              id={section.id}
+              data-contract-section
+              className={`scroll-mt-24 rounded-3xl border border-gray-200/80 bg-white/50 shadow-[0_10px_35px_rgba(15,23,42,0.04)] ${
+                isSubjectSection ? 'p-0' : 'p-4 md:p-5'
+              }`}
+            >
+              <div className={`flex flex-col gap-3 border-b border-gray-200/80 sm:flex-row sm:items-start sm:justify-between ${
+                isSubjectSection ? 'px-4 pb-4 pt-4 md:px-5 md:pt-5' : 'mb-5 pb-4'
+              }`}>
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h2 className="text-xl font-bold text-gray-900">{section.title}</h2>
+                    <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium ${getToneClasses(status.tone)}`}>
+                      {status.label}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-sm leading-6 text-gray-500">{status.detail}</p>
+                </div>
+              </div>
+
+              <div className={isSubjectSection ? 'px-4 pb-4 md:px-5 md:pb-5' : ''}>{section.render()}</div>
+            </section>
+          );
+        })}
+      </div>
     </div>
   );
 }

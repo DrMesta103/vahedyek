@@ -2,16 +2,49 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useEffect, useRef, useState } from 'react';
 import { useAuthContext } from '../hooks/useAuthContext';
 import { APP_MENU_ITEMS } from '../lib/navigation';
 
 interface SidebarProps {
   activeItem?: string;
+  forceCollapsed?: boolean;
+  lockCollapsed?: boolean;
 }
 
-export default function Sidebar({ activeItem = 'home' }: SidebarProps) {
+export default function Sidebar({
+  activeItem = 'home',
+  forceCollapsed = false,
+  lockCollapsed = false,
+}: SidebarProps) {
   const router = useRouter();
   const { data } = useAuthContext();
+  const [collapsed, setCollapsed] = useState(false);
+  const [toolbarMenuOpen, setToolbarMenuOpen] = useState(false);
+  const toolbarMenuRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const savedState = window.localStorage.getItem('app-sidebar-collapsed');
+    if (forceCollapsed || savedState === 'true') {
+      setCollapsed(true);
+    }
+  }, [forceCollapsed]);
+
+  useEffect(() => {
+    if (forceCollapsed) return;
+    window.localStorage.setItem('app-sidebar-collapsed', String(collapsed));
+  }, [collapsed, forceCollapsed]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!toolbarMenuRef.current?.contains(event.target as Node)) {
+        setToolbarMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
@@ -24,8 +57,10 @@ export default function Sidebar({ activeItem = 'home' }: SidebarProps) {
     router.refresh();
   };
 
+  const effectiveCollapsed = forceCollapsed || collapsed;
+
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar${effectiveCollapsed ? ' collapsed' : ''}${lockCollapsed ? ' locked-collapsed' : ''}`}>
       <div className="profile-item">
         <div className="avatar-small" style={{ background: '#fb923c' }}>
           <i className="fa fa-user"></i>
@@ -34,7 +69,7 @@ export default function Sidebar({ activeItem = 'home' }: SidebarProps) {
           <div>{data?.user.fullName ?? 'در حال بارگذاری...'}</div>
           <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '2px' }}>{data?.user.email ?? ''}</div>
         </div>
-        <div className="back-btn">
+        <div className="back-btn" style={{ visibility: 'hidden' }} aria-hidden="true">
           <i className="fa fa-chevron-left"></i>
         </div>
       </div>
@@ -52,23 +87,57 @@ export default function Sidebar({ activeItem = 'home' }: SidebarProps) {
           onClick={handleSwitchTenant}
           title="تغییر کسب‌وکار"
           style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}
-          className="back-btn"
+          className="back-btn tenant-switch-btn"
         >
           <i className="fa fa-exchange-alt"></i>
         </button>
       </div>
 
       <div className="sidebar-toolbar">
-        <button type="button" onClick={handleLogout} style={{ background: 'transparent', border: 'none' }}>
-          <i className="fa fa-sign-out-alt" style={{ transform: 'scaleX(-1)' }}></i>
-        </button>
-        <i className="fa fa-bell" style={{ position: 'relative' }}>
-          <span className="badge">1</span>
-        </i>
-        <button type="button" onClick={() => router.push('/')} style={{ background: 'transparent', border: 'none' }}>
-          <i className={`fa fa-home${activeItem === 'home' ? ' active-toolbar-icon' : ''}`}></i>
-        </button>
-        <i className="fa fa-moon"></i>
+        {effectiveCollapsed ? (
+          <div className="toolbar-menu-wrap" ref={toolbarMenuRef}>
+            <button
+              type="button"
+              className="toolbar-menu-trigger"
+              onClick={() => setToolbarMenuOpen((current) => !current)}
+              title="گزینه‌های بیشتر"
+            >
+              <i className="fa fa-ellipsis-h"></i>
+            </button>
+            {toolbarMenuOpen ? (
+              <div className="toolbar-menu-dropdown">
+                <button type="button" onClick={handleLogout} className="toolbar-menu-item">
+                  <i className="fa fa-sign-out-alt" style={{ transform: 'scaleX(-1)' }}></i>
+                </button>
+                <button type="button" className="toolbar-menu-item">
+                  <span className="toolbar-badge-wrap">
+                    <i className="fa fa-bell"></i>
+                    <span className="badge">1</span>
+                  </span>
+                </button>
+                <button type="button" onClick={() => router.push('/')} className="toolbar-menu-item">
+                  <i className={`fa fa-home${activeItem === 'home' ? ' active-toolbar-icon' : ''}`}></i>
+                </button>
+                <button type="button" className="toolbar-menu-item">
+                  <i className="fa fa-moon"></i>
+                </button>
+              </div>
+            ) : null}
+          </div>
+        ) : (
+          <>
+            <button type="button" onClick={handleLogout} style={{ background: 'transparent', border: 'none' }}>
+              <i className="fa fa-sign-out-alt" style={{ transform: 'scaleX(-1)' }}></i>
+            </button>
+            <i className="fa fa-bell" style={{ position: 'relative' }}>
+              <span className="badge">1</span>
+            </i>
+            <button type="button" onClick={() => router.push('/')} style={{ background: 'transparent', border: 'none' }}>
+              <i className={`fa fa-home${activeItem === 'home' ? ' active-toolbar-icon' : ''}`}></i>
+            </button>
+            <i className="fa fa-moon"></i>
+          </>
+        )}
       </div>
 
       <nav className="menu-list">
@@ -78,6 +147,7 @@ export default function Sidebar({ activeItem = 'home' }: SidebarProps) {
               key={item.id}
               className="menu-link"
               aria-disabled="true"
+              title={item.label}
               style={{ opacity: 0.5, cursor: 'not-allowed', pointerEvents: 'none' }}
             >
               <i className={`fa ${item.icon}`}></i>
@@ -85,7 +155,7 @@ export default function Sidebar({ activeItem = 'home' }: SidebarProps) {
               <i className="fa fa-lock" style={{ marginRight: 'auto', fontSize: '12px' }}></i>
             </div>
           ) : (
-            <Link key={item.id} href={item.href} className={`menu-link${activeItem === item.id ? ' active' : ''}`}>
+            <Link key={item.id} href={item.href} title={item.label} className={`menu-link${activeItem === item.id ? ' active' : ''}`}>
               <i className={`fa ${item.icon}`}></i>
               <span>{item.label}</span>
             </Link>
@@ -99,7 +169,15 @@ export default function Sidebar({ activeItem = 'home' }: SidebarProps) {
       </div>
 
       <div className="version-footer">
-        <i className="fa fa-angle-double-left"></i>
+        <button
+          type="button"
+          className="version-toggle"
+          onClick={() => setCollapsed((current) => !current)}
+          title={effectiveCollapsed ? 'باز کردن سایدبار' : 'جمع کردن سایدبار'}
+          disabled={lockCollapsed}
+        >
+          <i className={`fa ${effectiveCollapsed ? 'fa-angle-double-left' : 'fa-angle-double-right'}`}></i>
+        </button>
         <span>0.8.0</span>
       </div>
     </aside>
