@@ -54,7 +54,7 @@ export default function RegisterPage() {
               onChange={(e) => setFullName(e.target.value)}
               required
               placeholder="مثال: علی محمدی"
-              className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 outline-none transition focus:border-emerald-500"
+              className="app-control app-auth-control w-full transition focus:border-emerald-500"
             />
           </label>
 
@@ -67,7 +67,7 @@ export default function RegisterPage() {
               required
               placeholder="example@email.com"
               dir="ltr"
-              className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-left outline-none transition focus:border-emerald-500"
+              className="app-control app-auth-control w-full text-left transition focus:border-emerald-500"
             />
           </label>
 
@@ -80,7 +80,7 @@ export default function RegisterPage() {
               required
               minLength={6}
               placeholder="حداقل ۶ کاراکتر"
-              className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 outline-none transition focus:border-emerald-500"
+              className="app-control app-auth-control w-full transition focus:border-emerald-500"
             />
           </label>
 
@@ -91,7 +91,7 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={loading}
-            className="h-12 w-full rounded-2xl bg-emerald-600 text-sm font-bold text-white transition hover:bg-emerald-700 disabled:opacity-50"
+            className="app-button app-auth-button transition hover:bg-emerald-700"
           >
             {loading ? 'در حال ثبت‌نام...' : 'ثبت‌نام'}
           </button>

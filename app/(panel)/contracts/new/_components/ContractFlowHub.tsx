@@ -6,9 +6,11 @@ import { validateFinancialStep, validateStep1, validateStep2 } from '../../../..
 import type { ContractFinancialData, ContractPartiesData, ContractSubjectData } from '../../../../types/contract';
 import { DiscountsStep } from './DiscountsStep';
 import { FinancialStep } from './FinancialStep';
+import { LeftReportSidebar } from './LeftReportSidebar';
 import { PartiesStep } from './PartiesStep';
 import { PenaltiesStep } from './PenaltiesStep';
 import { PlaceholderStep } from './PlaceholderStep';
+import { RightNavSidebar } from './RightNavSidebar';
 import { SubjectStep } from './SubjectStep';
 import {
   CONTRACT_FLOW_DIRTY_EVENT,
@@ -76,10 +78,6 @@ function getToneClasses(tone: StatusTone) {
     default:
       return 'border-slate-300 bg-slate-100 text-slate-700';
   }
-}
-
-function formatCurrency(value: number) {
-  return `${Math.round(value || 0).toLocaleString('fa-IR')} تومان`;
 }
 
 function getContractTotal(data: ContractFinancialData | null) {
@@ -332,16 +330,6 @@ export function ContractFlowHub() {
   const dueAmount = reportData?.dueItems?.reduce((sum, item) => sum + item.amount, 0) ?? 0;
   const remainder = Math.max(contractTotal - allocatedAmount, 0);
 
-  const formatAbsoluteTime = (timestamp?: number) => {
-    if (!timestamp) return 'وارد نشده';
-    return new Intl.DateTimeFormat('fa-IR', {
-      hour: '2-digit',
-      minute: '2-digit',
-      month: 'short',
-      day: 'numeric',
-    }).format(timestamp);
-  };
-
   const requestSectionSave = (sectionId: ContractFlowSectionId) => {
     const trigger = document.querySelector<HTMLButtonElement>(`[data-contract-save-trigger="${sectionId}"]`);
     if (!trigger || trigger.disabled) return;
@@ -359,102 +347,24 @@ export function ContractFlowHub() {
 
   return (
     <div className="contract-flow-layout lg:flex lg:flex-row lg:items-stretch lg:gap-0">
-      <aside className="contract-flow-sidebar shrink-0">
-        <div className="contract-flow-sidebar-panel">
-          <div className="contract-flow-sidebar-header">
-            <h1 className="text-lg font-bold text-gray-900">مواد قرارداد</h1>
-          </div>
+      <RightNavSidebar
+        sections={sections}
+        activeSection={activeSection}
+        dirtyMap={dirtyMap}
+        savingMap={savingMap}
+        lastUpdatedMap={lastUpdatedMap}
+        onScrollTo={scrollToSection}
+        onSave={requestSectionSave}
+      />
 
-          <div className="contract-flow-sidebar-body">
-            <div className="contract-flow-nav-list flex gap-2 overflow-x-auto lg:flex-col lg:overflow-visible">
-              {sections.map((section, index) => {
-                const isActive = activeSection === section.id;
-                const isDirty = Boolean(dirtyMap[section.id]);
-                const isSaving = Boolean(savingMap[section.id]);
-                const canSave = SAVEABLE_SECTIONS.includes(section.id) && isDirty;
-                return (
-                  <div key={section.id} className={`contract-flow-nav-item min-w-max text-right transition-colors lg:w-full ${isActive ? 'is-active' : ''}`}>
-                    <button type="button" onClick={() => scrollToSection(section.id)} className="contract-flow-nav-main">
-                      <span className="contract-flow-nav-content">
-                        <span className="contract-flow-nav-title-wrap">
-                          <span className="contract-flow-nav-title">{section.title}</span>
-                          <span className="contract-flow-nav-updated">{formatAbsoluteTime(lastUpdatedMap[section.id])}</span>
-                        </span>
-                        <span className="contract-flow-nav-number">{new Intl.NumberFormat('fa-IR').format(index + 1)}</span>
-                      </span>
-                    </button>
-
-                    {canSave ? (
-                      <div className="contract-flow-nav-save-slot">
-                        <button
-                          type="button"
-                          onClick={() => requestSectionSave(section.id)}
-                          disabled={isSaving}
-                          className="contract-flow-nav-save"
-                        >
-                          {isSaving ? '...' : 'ذخیره'}
-                        </button>
-                      </div>
-                    ) : null}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </aside>
-
-      <aside className="contract-flow-report-sidebar shrink-0">
-        <div className="contract-flow-report-panel">
-          <div className="contract-flow-report-header">
-            <h2>گزارش زنده مالی</h2>
-            <p>خلاصه‌ی لحظه‌ای از مبلغ قرارداد، تخصیص‌ها و سررسیدها</p>
-          </div>
-
-          <div className="contract-flow-report-body">
-            <div className="contract-flow-report-card">
-              <div className="contract-flow-report-card-label">جمع کل قرارداد</div>
-              <div className="contract-flow-report-card-value">{formatCurrency(contractTotal)}</div>
-            </div>
-
-            <div className="contract-flow-report-grid">
-              <div className="contract-flow-report-mini">
-                <span>مبالغ دسته‌بندی‌شده</span>
-                <strong>{formatCurrency(allocatedAmount)}</strong>
-              </div>
-              <div className="contract-flow-report-mini">
-                <span>جمع سررسیدها</span>
-                <strong>{formatCurrency(dueAmount)}</strong>
-              </div>
-            </div>
-
-            <div className="contract-flow-report-card">
-              <div className="contract-flow-report-card-head">
-                <span>پراکندگی مالی</span>
-                <strong>{paidSlices.length ? `${new Intl.NumberFormat('fa-IR').format(paidSlices.length)} دسته` : 'بدون داده'}</strong>
-              </div>
-              <FinancialDonut slices={paidSlices} />
-            </div>
-
-            <div className="contract-flow-report-card">
-              <div className="contract-flow-report-card-head">
-                <span>مانده تا سقف قرارداد</span>
-                <strong>{formatCurrency(remainder)}</strong>
-              </div>
-              <div className="contract-flow-report-legend">
-                {paidSlices.slice(0, 5).map((item) => (
-                  <div key={item.id} className="contract-flow-report-legend-row">
-                    <span className="contract-flow-report-legend-dot" style={{ backgroundColor: item.color }} />
-                    <span className="contract-flow-report-legend-name">{item.name}</span>
-                    <strong>{formatCurrency(item.value)}</strong>
-                  </div>
-                ))}
-                {!paidSlices.length ? <div className="contract-flow-report-empty">بعد از ورود اطلاعات مالی، گزارش اینجا کامل می‌شود.</div> : null}
-              </div>
-            </div>
-          </div>
-        </div>
-      </aside>
+      <LeftReportSidebar
+        reportData={reportData}
+        contractTotal={contractTotal}
+        paidSlices={paidSlices}
+        allocatedAmount={allocatedAmount}
+        dueAmount={dueAmount}
+        remainder={remainder}
+      />
 
       <div className="contract-flow-content min-w-0 flex-1 space-y-6">
         {sections.map((section) => {

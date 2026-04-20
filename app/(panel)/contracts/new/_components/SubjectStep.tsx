@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { Calendar, Check, CalendarDays, FileText, KeyRound } from 'lucide-react';
+import { Calendar, Check, CalendarDays, KeyRound } from 'lucide-react';
 import { FormBox } from './FormBox';
 import { StickySubmitBar } from './StickySubmitBar';
 import { ChoiceCard } from './ChoiceCard';
@@ -369,27 +369,31 @@ export function SubjectStep({ stepId, title, embedded = false }: { stepId: strin
 
         <ReferenceDivider />
 
-        <ReferenceSection title="شماره قرارداد*" helper="شماره قرارداد باید یکتا باشد.">
-          <Input
-            value={contractNumber}
-            onChange={(event) => setContractNumber(event.target.value)}
-            className="h-[58px] rounded-[14px] border-[#6f86a3] px-5 text-base text-[#314a67] shadow-none focus:border-[#6f86a3] focus:ring-0"
-          />
-        </ReferenceSection>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <ReferenceSection title="شماره قرارداد*" helper="شماره قرارداد باید یکتا باشد.">
+            <div className="relative">
+              <KeyRound className="pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#6f86a3]" />
+              <Input
+                value={contractNumber}
+                onChange={(event) => setContractNumber(event.target.value)}
+                placeholder="مثلاً ۱۴۰۳-۰۰۱"
+                className="h-[54px] rounded-[14px] border-[#c8d4e0] bg-white pr-11 pl-5 text-base text-[#314a67] shadow-sm transition-all focus:border-[#4a90d9] focus:ring-2 focus:ring-[#4a90d9]/15"
+              />
+            </div>
+          </ReferenceSection>
 
-        <ReferenceDivider />
-
-        <ReferenceSection title="زمان عقد قرارداد*" helper="تاریخ قرارداد می تواند امروز یا در گذشته باشد. رز">
-          <div className="relative">
-            <PersianDatePicker
-              value={contractDate}
-              onChange={setContractDate}
-              placeholder="تاریخ قرارداد را انتخاب کنید"
-              className="h-[58px] rounded-[14px] border-[#6f86a3] pr-5 pl-14 text-base text-[#314a67] shadow-none focus:border-[#6f86a3] focus:ring-0"
-            />
-            <Calendar className="pointer-events-none absolute left-4 top-1/2 h-6 w-6 -translate-y-1/2 text-black" />
-          </div>
-        </ReferenceSection>
+          <ReferenceSection title="زمان عقد قرارداد*" helper="تاریخ قرارداد می‌تواند امروز یا در گذشته باشد.">
+            <div className="relative">
+              <PersianDatePicker
+                value={contractDate}
+                onChange={setContractDate}
+                placeholder="تاریخ قرارداد را انتخاب کنید"
+                className="h-[54px] rounded-[14px] border-[#c8d4e0] bg-white pr-5 pl-12 text-base text-[#314a67] shadow-sm transition-all focus:border-[#4a90d9] focus:ring-2 focus:ring-[#4a90d9]/15"
+              />
+              <Calendar className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#6f86a3]" />
+            </div>
+          </ReferenceSection>
+        </div>
 
         <ReferenceDivider />
 
@@ -402,9 +406,9 @@ export function SubjectStep({ stepId, title, embedded = false }: { stepId: strin
               value={deliveryDate}
               onChange={setDeliveryDate}
               placeholder="تاریخ تحویل واحد را انتخاب کنید"
-              className="h-[58px] rounded-[14px] border-[#6f86a3] pr-5 pl-14 text-base text-[#314a67] shadow-none focus:border-[#6f86a3] focus:ring-0"
+              className="h-[54px] rounded-[14px] border-[#c8d4e0] bg-white pr-5 pl-12 text-base text-[#314a67] shadow-sm transition-all focus:border-[#4a90d9] focus:ring-2 focus:ring-[#4a90d9]/15"
             />
-            <Calendar className="pointer-events-none absolute left-4 top-1/2 h-6 w-6 -translate-y-1/2 text-black" />
+            <CalendarDays className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#6f86a3]" />
           </div>
         </ReferenceSection>
 

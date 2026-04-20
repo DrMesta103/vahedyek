@@ -94,7 +94,7 @@ function SelectTenantPageContent() {
                     key={tenant.id}
                     onClick={() => selectTenant(tenant.id)}
                     disabled={selecting === tenant.id}
-                    className="flex w-full items-center gap-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-right transition hover:border-emerald-400 hover:bg-emerald-50 disabled:opacity-60"
+                    className="app-card-action flex w-full items-center gap-4 rounded-[14px] border border-slate-200 bg-slate-50 px-4 py-2.5 text-right transition hover:border-emerald-400 hover:bg-emerald-50 disabled:opacity-60"
                   >
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-800 text-xs font-bold text-white">
                       {tenant.brandCode}
@@ -117,7 +117,7 @@ function SelectTenantPageContent() {
                 )}
                 <button
                   onClick={() => setShowCreate(true)}
-                  className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-emerald-300 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700 transition hover:border-emerald-500 hover:bg-emerald-100"
+                  className="app-card-action flex w-full items-center justify-center gap-2 rounded-[14px] border-2 border-dashed border-emerald-300 bg-emerald-50 px-4 py-2.5 text-sm font-semibold text-emerald-700 transition hover:border-emerald-500 hover:bg-emerald-100"
                 >
                   <i className="fa fa-plus" />
                   افزودن کسب‌وکار جدید
@@ -149,7 +149,7 @@ function SelectTenantPageContent() {
                   onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
                   required
                   placeholder="مثال: شرکت لیند"
-                  className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 outline-none transition focus:border-emerald-500"
+                  className="app-control app-auth-control w-full transition focus:border-emerald-500"
                 />
               </label>
               <label className="block">
@@ -160,7 +160,7 @@ function SelectTenantPageContent() {
                   required
                   placeholder="مثال: lind"
                   dir="ltr"
-                  className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-left outline-none transition focus:border-emerald-500"
+                  className="app-control app-auth-control w-full text-left transition focus:border-emerald-500"
                 />
                 <span className="mt-1 block text-xs text-slate-400">فقط حروف انگلیسی، اعداد و خط تیره</span>
               </label>
@@ -172,7 +172,7 @@ function SelectTenantPageContent() {
                   placeholder="مثال: LN"
                   maxLength={5}
                   dir="ltr"
-                  className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-left outline-none transition focus:border-emerald-500"
+                  className="app-control app-auth-control w-full text-left transition focus:border-emerald-500"
                 />
               </label>
               {createError ? (
@@ -181,7 +181,7 @@ function SelectTenantPageContent() {
               <button
                 type="submit"
                 disabled={creating}
-                className="h-12 w-full rounded-2xl bg-emerald-600 text-sm font-bold text-white transition hover:bg-emerald-700 disabled:opacity-50"
+                className="app-button app-auth-button transition hover:bg-emerald-700"
               >
                 {creating ? 'در حال ساخت...' : 'ساخت و ورود'}
               </button>

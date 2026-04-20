@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import type { Block, Unit, Employee, Partner, Buyer } from '../../types/contract';
 import { useContracts } from '../../hooks/useContracts';
 import { clearActiveDraftId, setActiveDraftId } from '../../lib/contractDraftClient';
+import { outlineButtonStyle } from '../ui/formStyles';
 import ContractTabs from './ContractTabs';
 import ContractSearch from './ContractSearch';
 import ContractFilters from './ContractFilters';
@@ -47,11 +48,11 @@ export default function ContractList({ blocks, units = [] }: ContractListProps) 
           <span>فهرست قراردادها</span>
         </div>
         <button onClick={() => { clearActiveDraftId(); router.push('/contracts/new'); }} style={{
+          ...outlineButtonStyle,
           display: 'inline-flex', alignItems: 'center', gap: '6px',
           background: 'transparent', border: '1px solid var(--dark-teal)',
-          color: 'var(--dark-teal)', padding: '6px 18px',
-          borderRadius: '20px', fontFamily: 'inherit', fontSize: '12px',
-          cursor: 'pointer',
+          color: 'var(--dark-teal)', padding: '0 18px',
+          minHeight: '40px',
         }}>
           <i className="fa fa-plus" style={{ fontSize: '11px' }}></i>
           ثبت قرارداد جدید

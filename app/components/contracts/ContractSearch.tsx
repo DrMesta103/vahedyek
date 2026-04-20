@@ -1,5 +1,7 @@
 'use client';
 
+import { formControlStyle } from '../ui/formStyles';
+
 interface ContractSearchProps {
   value: string;
   onChange: (value: string) => void;
@@ -20,10 +22,8 @@ export default function ContractSearch({ value, onChange }: ContractSearchProps)
         onChange={(e) => onChange(e.target.value)}
         placeholder="جستجو در قراردادها..."
         style={{
-          width: '100%', padding: '10px 36px 10px 14px',
-          border: '1px solid #d1d5db', borderRadius: '8px',
-          fontFamily: 'inherit', fontSize: '13px', outline: 'none',
-          color: '#4b5563', background: '#fff', transition: '0.2s',
+          ...formControlStyle,
+          paddingRight: '36px',
         }}
         onFocus={(e) => e.target.style.borderColor = 'var(--dark-teal)'}
         onBlur={(e) => e.target.style.borderColor = '#d1d5db'}

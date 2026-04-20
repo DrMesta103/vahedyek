@@ -1,6 +1,7 @@
 'use client';
 
 import type { Share, ShareMode } from '../../types/contract';
+import { formControlStyle } from '../ui/formStyles';
 
 interface ShareInputProps {
   value: Share;
@@ -19,7 +20,7 @@ export default function ShareInput({ value, onChange }: ShareInputProps) {
       <div style={{ display: 'flex', border: '1px solid #d1d5db', borderRadius: '20px', overflow: 'hidden' }}>
         {(['percent', 'dang'] as ShareMode[]).map((mode) => (
           <button key={mode} type="button" onClick={() => handleModeChange(mode)} style={{
-            padding: '4px 12px', fontSize: '12px', fontFamily: 'inherit', cursor: 'pointer', border: 'none',
+            minHeight: '34px', padding: '0 12px', fontSize: '12px', fontFamily: 'inherit', cursor: 'pointer', border: 'none',
             background: value.mode === mode ? 'var(--dark-teal)' : '#fff',
             color: value.mode === mode ? '#fff' : '#6b7280',
             transition: '0.2s',
@@ -31,8 +32,8 @@ export default function ShareInput({ value, onChange }: ShareInputProps) {
       <input type="number" min={0} max={value.mode === 'percent' ? 100 : 6} step={value.mode === 'dang' ? 0.5 : 1}
         value={value.value === 0 ? '' : value.value} onChange={handleValueChange}
         placeholder="0" style={{
-          width: '80px', padding: '6px 10px', border: '1px solid #d1d5db',
-          borderRadius: '8px', fontFamily: 'inherit', fontSize: '13px',
+          ...formControlStyle,
+          width: '84px',
           textAlign: 'center', outline: 'none',
         }}
         onFocus={(e) => e.target.style.borderColor = 'var(--dark-teal)'}
