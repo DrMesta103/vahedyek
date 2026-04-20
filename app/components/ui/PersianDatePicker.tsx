@@ -26,7 +26,7 @@ export function PersianDatePicker({ value, onChange, placeholder = 'انتخاب
         if (date) onChange(date.format('YYYY/MM/DD'));
         else onChange('');
       }}
-      inputClass={`app-control text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:ring-teal-500 focus:border-teal-500 ${className}`}
+      inputClass={`app-control text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:ring-teal-500 focus:border-teal-500 [direction:ltr] text-left ${className}`}
       placeholder={placeholder}
       style={{ width: '100%' }}
       containerClassName={containerClassName}
