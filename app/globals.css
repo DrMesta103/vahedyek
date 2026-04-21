@@ -1136,6 +1136,7 @@ textarea::placeholder {
 }
 
 .business-settings-card {
+  display: block;
   overflow: hidden;
   border: 1px solid var(--border-color);
   border-radius: 24px;
@@ -1143,6 +1144,11 @@ textarea::placeholder {
   box-shadow: 0 2px 8px var(--shadow-soft);
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.business-settings-card-link {
+  color: inherit;
+  text-decoration: none;
 }
 
 .business-settings-card:hover {
@@ -1190,7 +1196,7 @@ textarea::placeholder {
   color: var(--text-body);
   font-size: 28px;
   line-height: 1;
-  transform: translateY(-50%);
+  transform: translateY(-50%) rotate(180deg);
 }
 
 .business-settings-card-title {
@@ -1217,6 +1223,238 @@ textarea::placeholder {
   font-size: 14px;
   line-height: 2;
   text-align: justify;
+}
+
+.business-profile-page {
+  width: min(543px, 100%);
+  margin: 0 auto;
+  padding: 2px 0 42px;
+}
+
+.business-profile-intro {
+  padding: 0 8px 10px;
+  text-align: center;
+}
+
+.business-profile-intro p {
+  margin: 0;
+  color: var(--text-body);
+  font-size: 15px;
+  line-height: 2;
+}
+
+.business-profile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.business-profile-card-full {
+  grid-column: 1 / -1;
+}
+
+.business-profile-grid .business-settings-card {
+  border-radius: 14px;
+}
+
+.business-profile-grid .business-settings-card-header {
+  height: 50px;
+}
+
+.business-profile-grid .business-settings-card-title {
+  right: 18px;
+  font-size: 13px;
+}
+
+.business-profile-grid .business-settings-card-arrow {
+  left: 18px;
+  font-size: 22px;
+}
+
+.business-profile-grid .business-settings-card-body {
+  min-height: 84px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 18px;
+}
+
+.business-profile-grid .business-settings-card-body p {
+  font-size: 11px;
+  line-height: 1.9;
+  text-align: right;
+}
+
+.business-project-page {
+  width: min(820px, 100%);
+  margin: 0 auto;
+  padding: 64px 0 48px;
+}
+
+.business-project-card {
+  position: relative;
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: 0 8px 24px var(--shadow-soft);
+  padding: 64px 32px 28px;
+}
+
+.business-project-avatar {
+  position: absolute;
+  top: -56px;
+  left: 50%;
+  width: 112px;
+  height: 112px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 4px solid var(--surface);
+  border-radius: 999px;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--theme-accent-soft) 54%, var(--surface)), var(--surface-soft));
+  color: var(--dark-teal);
+  box-shadow: 0 10px 26px var(--shadow-soft);
+  transform: translateX(-50%);
+}
+
+.business-project-avatar svg {
+  width: 42px;
+  height: 42px;
+}
+
+.business-project-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.business-project-title-row h1 {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.business-project-edit {
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 999px;
+  background: var(--theme-action-bg);
+  color: var(--theme-action-text);
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.business-project-edit:hover {
+  background: var(--theme-action-bg-hover);
+  transform: translateY(-1px);
+}
+
+.business-project-edit svg {
+  width: 18px;
+  height: 18px;
+}
+
+.business-project-section {
+  margin-top: 22px;
+  padding-top: 22px;
+  border-top: 1px solid var(--border-soft);
+}
+
+.business-project-section h2 {
+  margin: 0 0 12px;
+  color: var(--text-strong);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.business-project-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.business-project-section p {
+  margin: 8px 0 0;
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.9;
+}
+
+.business-project-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 18px;
+  margin-top: 20px;
+}
+
+.business-project-info-item {
+  width: 100%;
+  min-height: 92px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  border: none;
+  border-top: 1px solid var(--border-soft);
+  border-radius: 0;
+  background: transparent;
+  padding: 18px 8px;
+  color: inherit;
+  text-align: right;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.business-project-info-item:hover {
+  background: var(--surface-soft);
+}
+
+.business-project-info-content {
+  min-width: 0;
+  display: grid;
+  gap: 7px;
+}
+
+.business-project-info-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.business-project-info-title svg {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  color: var(--text-faint);
+}
+
+.business-project-info-title h3 {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.business-project-info-content p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.business-project-chevron {
+  flex-shrink: 0;
+  color: var(--text-faint);
+  font-size: 24px;
+  line-height: 1;
+  transform: rotate(180deg);
 }
 
 .general-settings-page {
@@ -1717,6 +1955,26 @@ textarea::placeholder {
     min-height: auto;
     align-items: flex-start;
     padding: 20px 0;
+  }
+
+  .business-profile-page {
+    padding-bottom: 28px;
+  }
+
+  .business-profile-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .business-project-page {
+    padding: 56px 0 28px;
+  }
+
+  .business-project-card {
+    padding: 56px 18px 22px;
+  }
+
+  .business-project-info-grid {
+    grid-template-columns: 1fr;
   }
 
   .access-role-create {

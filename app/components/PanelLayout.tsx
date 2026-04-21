@@ -141,9 +141,19 @@ export default function PanelLayout({ children }: PanelLayoutProps) {
     }
 
     if (pathname.startsWith('/business-settings')) {
+      const trail: Crumb[] = [{ label: 'تنظیمات کسب و کار', href: '/business-settings' }];
+
+      if (pathname.startsWith('/business-settings/profile')) {
+        trail.push({ label: 'پروفایل کسب‌وکار' });
+      }
+
+      if (pathname.startsWith('/business-settings/project')) {
+        trail.push({ label: 'تعریف پروژه / مجتمع' });
+      }
+
       return {
         activeItem: 'business',
-        trail: [{ label: 'تنظیمات کسب و کار' }],
+        trail,
       };
     }
 
