@@ -1,0 +1,347 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ContractType {
+  sale
+  pre_sale
+}
+
+enum ContractorType {
+  self
+  employee
+  former_employee
+}
+
+enum ShareMode {
+  percent
+  dang
+}
+
+enum PersonType {
+  natural
+  legal
+}
+
+enum PricingType {
+  fixed
+  metered
+}
+
+enum PartySide {
+  party_one
+  party_two
+}
+
+enum DirectoryRole {
+  partner
+  buyer
+  shareholder
+}
+
+enum RepresentativePrincipalType {
+  partner
+  legal_shareholder
+}
+
+model Tenant {
+  id            String                 @id @default(cuid())
+  slug          String                 @unique
+  name          String
+  brandCode     String                 @default("VN")
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
+  memberships   UserTenantMembership[]
+  sessions      Session[]
+  drafts        ContractDraft[]
+  employees     Employee[]
+  formerEmployees FormerEmployee[]
+  blocks        Block[]
+  units         Unit[]
+  directory     DirectoryPerson[]
+  roles         TenantRole[]
+  representatives DirectoryRepresentative[]
+}
+
+model AppUser {
+  id           String                @id @default(cuid())
+  email        String                @unique
+  fullName     String
+  passwordHash String
+  passwordSalt String
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+  memberships  UserTenantMembership[]
+  sessions     Session[]
+  representatives DirectoryRepresentative[]
+}
+
+model UserTenantMembership {
+  id        String   @id @default(cuid())
+  userId    String
+  tenantId  String
+  role      String   @default("member")
+  createdAt DateTime @default(now())
+  user      AppUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  roles     UserTenantMembershipRole[]
+
+  @@unique([userId, tenantId])
+  @@index([userId])
+  @@index([tenantId])
+}
+
+model TenantRole {
+  id          String                     @id @default(cuid())
+  tenantId    String
+  key         String
+  label       String
+  system      Boolean                    @default(false)
+  createdAt   DateTime                   @default(now())
+  updatedAt   DateTime                   @updatedAt
+  tenant      Tenant                     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  memberships UserTenantMembershipRole[]
+  permissions TenantRolePermission[]
+  legacyMenuPermissions TenantRoleMenuPermission[]
+
+  @@unique([tenantId, key])
+  @@index([tenantId])
+}
+
+model TenantRolePermission {
+  id            String     @id @default(cuid())
+  roleId        String
+  permissionKey String
+  createdAt     DateTime   @default(now())
+  role          TenantRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionKey])
+  @@index([roleId])
+  @@index([permissionKey])
+}
+
+model UserTenantMembershipRole {
+  id           String               @id @default(cuid())
+  membershipId String
+  roleId       String
+  createdAt    DateTime             @default(now())
+  membership   UserTenantMembership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+  role         TenantRole           @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([membershipId, roleId])
+  @@index([membershipId])
+  @@index([roleId])
+}
+
+model TenantRoleMenuPermission {
+  id         String     @id @default(cuid())
+  roleId     String
+  menuItemId String
+  createdAt  DateTime   @default(now())
+  role       TenantRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, menuItemId])
+  @@index([roleId])
+  @@index([menuItemId])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  tenantId   String?
+  userId     String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  tenant    Tenant?  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user      AppUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, userId])
+}
+
+model ContractDraft {
+  id        String             @id @default(uuid())
+  tenantId  String
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+  tenant    Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  subject   ContractSubject?
+  parties   ContractParties?
+  financial ContractFinancial?
+
+  @@index([tenantId, updatedAt])
+}
+
+model ContractSubject {
+  id                   String         @id @default(cuid())
+  draftId              String         @unique
+  contractorType       ContractorType
+  contractorEmployeeId String?
+  contractorFormerName String?
+  contractType         ContractType
+  contractDate         String
+  contractNumber       String
+  deliveryDate         String
+  blockId              String
+  unitId               String
+  draft                ContractDraft  @relation(fields: [draftId], references: [id], onDelete: Cascade)
+  contractorEmployee   Employee?      @relation(fields: [contractorEmployeeId], references: [id], onDelete: SetNull)
+  block                Block          @relation(fields: [blockId], references: [id], onDelete: Restrict)
+  unit                 Unit           @relation(fields: [unitId], references: [id], onDelete: Restrict)
+
+  @@index([contractNumber])
+}
+
+model ContractParties {
+  id           String                @id @default(cuid())
+  draftId      String                @unique
+  partyOneMode ShareMode             @default(dang)
+  partyTwoMode ShareMode             @default(dang)
+  draft        ContractDraft         @relation(fields: [draftId], references: [id], onDelete: Cascade)
+  members      ContractPartyMember[]
+}
+
+model ContractPartyMember {
+  id          String           @id @default(cuid())
+  partiesId   String
+  side        PartySide
+  personId    String
+  directoryId String?
+  personType  PersonType
+  name        String
+  shareValue  Decimal          @db.Decimal(18, 2)
+  isPrimary   Boolean          @default(false)
+  createdAt   DateTime         @default(now())
+  parties     ContractParties  @relation(fields: [partiesId], references: [id], onDelete: Cascade)
+  directory   DirectoryPerson? @relation(fields: [directoryId], references: [id], onDelete: SetNull)
+
+  @@index([partiesId, side])
+}
+
+model ContractFinancial {
+  id               String               @id @default(cuid())
+  draftId          String               @unique
+  pricingType      PricingType          @default(fixed)
+  totalArea        Decimal?             @db.Decimal(18, 2)
+  pricePerMeter    Decimal?             @db.Decimal(18, 2)
+  fixedTotalAmount Decimal?             @db.Decimal(18, 2)
+  activeTab        String?
+  draft            ContractDraft        @relation(fields: [draftId], references: [id], onDelete: Cascade)
+  categories       FinancialCategory[]
+  dueItems         FinancialDueItem[]
+}
+
+model FinancialCategory {
+  id          String            @id
+  financialId String
+  name        String
+  capAmount   Decimal           @db.Decimal(18, 2)
+  dueAmount   Decimal           @db.Decimal(18, 2)
+  noDueAmount Decimal           @db.Decimal(18, 2)
+  system      Boolean           @default(false)
+  requiresDue Boolean           @default(true)
+  financial   ContractFinancial @relation(fields: [financialId], references: [id], onDelete: Cascade)
+  dueItems    FinancialDueItem[]
+
+  @@index([financialId])
+}
+
+model FinancialDueItem {
+  id          String            @id
+  financialId String
+  categoryId  String
+  title       String            @default("")
+  amount      Decimal           @db.Decimal(18, 2)
+  dueDate     String
+  financial   ContractFinancial @relation(fields: [financialId], references: [id], onDelete: Cascade)
+  category    FinancialCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@index([financialId, categoryId])
+}
+
+model Employee {
+  id        String            @id
+  tenantId  String
+  firstName String
+  lastName  String
+  isActive  Boolean           @default(true)
+  tenant    Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  subjects  ContractSubject[]
+
+  @@index([tenantId])
+}
+
+model FormerEmployee {
+  id             String   @id @default(uuid())
+  tenantId       String
+  fullName       String
+  normalizedName String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  tenant         Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, normalizedName])
+  @@index([tenantId, fullName])
+}
+
+model Block {
+  id        String            @id
+  tenantId  String
+  name      String
+  tenant    Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  units     Unit[]
+  subjects  ContractSubject[]
+
+  @@index([tenantId])
+}
+
+model Unit {
+  id        String            @id
+  tenantId  String
+  blockId   String
+  floorName String
+  name      String
+  tenant    Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  block     Block             @relation(fields: [blockId], references: [id], onDelete: Cascade)
+  subjects  ContractSubject[]
+
+  @@index([tenantId, blockId])
+}
+
+model DirectoryPerson {
+  id         String               @id
+  tenantId   String
+  name       String
+  role       DirectoryRole
+  personType PersonType
+  tenant     Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  parties    ContractPartyMember[]
+  representatives DirectoryRepresentative[]
+
+  @@index([tenantId, role, personType])
+}
+
+model DirectoryRepresentative {
+  id                    String                      @id @default(cuid())
+  tenantId              String
+  principalId           String
+  userId                String?
+  principalType         RepresentativePrincipalType
+  fullName              String
+  email                 String?
+  hasSigningAuthority   Boolean                     @default(false)
+  panelAccessEnabled    Boolean                     @default(false)
+  createdAt             DateTime                    @default(now())
+  updatedAt             DateTime                    @updatedAt
+  tenant                Tenant                      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  principal             DirectoryPerson             @relation(fields: [principalId], references: [id], onDelete: Cascade)
+  user                  AppUser?                    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, principalType])
+  @@index([principalId])
+  @@index([userId])
+}
