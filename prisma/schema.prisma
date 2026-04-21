@@ -41,6 +41,12 @@ enum PartySide {
 enum DirectoryRole {
   partner
   buyer
+  shareholder
+}
+
+enum RepresentativePrincipalType {
+  partner
+  legal_shareholder
 }
 
 model Tenant {
@@ -58,6 +64,8 @@ model Tenant {
   blocks        Block[]
   units         Unit[]
   directory     DirectoryPerson[]
+  roles         TenantRole[]
+  representatives DirectoryRepresentative[]
 }
 
 model AppUser {
@@ -70,6 +78,7 @@ model AppUser {
   updatedAt    DateTime              @updatedAt
   memberships  UserTenantMembership[]
   sessions     Session[]
+  representatives DirectoryRepresentative[]
 }
 
 model UserTenantMembership {
@@ -80,10 +89,52 @@ model UserTenantMembership {
   createdAt DateTime @default(now())
   user      AppUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
   tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  roles     UserTenantMembershipRole[]
 
   @@unique([userId, tenantId])
   @@index([userId])
   @@index([tenantId])
+}
+
+model TenantRole {
+  id          String                     @id @default(cuid())
+  tenantId    String
+  key         String
+  label       String
+  system      Boolean                    @default(false)
+  createdAt   DateTime                   @default(now())
+  updatedAt   DateTime                   @updatedAt
+  tenant      Tenant                     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  memberships UserTenantMembershipRole[]
+  permissions TenantRoleMenuPermission[]
+
+  @@unique([tenantId, key])
+  @@index([tenantId])
+}
+
+model UserTenantMembershipRole {
+  id           String               @id @default(cuid())
+  membershipId String
+  roleId       String
+  createdAt    DateTime             @default(now())
+  membership   UserTenantMembership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+  role         TenantRole           @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([membershipId, roleId])
+  @@index([membershipId])
+  @@index([roleId])
+}
+
+model TenantRoleMenuPermission {
+  id         String     @id @default(cuid())
+  roleId     String
+  menuItemId String
+  createdAt  DateTime   @default(now())
+  role       TenantRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, menuItemId])
+  @@index([roleId])
+  @@index([menuItemId])
 }
 
 model Session {
@@ -256,6 +307,28 @@ model DirectoryPerson {
   personType PersonType
   tenant     Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   parties    ContractPartyMember[]
+  representatives DirectoryRepresentative[]
 
   @@index([tenantId, role, personType])
+}
+
+model DirectoryRepresentative {
+  id                    String                      @id @default(cuid())
+  tenantId              String
+  principalId           String
+  userId                String?
+  principalType         RepresentativePrincipalType
+  fullName              String
+  email                 String?
+  hasSigningAuthority   Boolean                     @default(false)
+  panelAccessEnabled    Boolean                     @default(false)
+  createdAt             DateTime                    @default(now())
+  updatedAt             DateTime                    @updatedAt
+  tenant                Tenant                      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  principal             DirectoryPerson             @relation(fields: [principalId], references: [id], onDelete: Cascade)
+  user                  AppUser?                    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, principalType])
+  @@index([principalId])
+  @@index([userId])
 }

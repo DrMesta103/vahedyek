@@ -1,4 +1,5 @@
-import { Home, Bell, Settings, Moon } from 'lucide-react';
+import { Home, Bell, Settings } from 'lucide-react';
+import { ThemeToggle } from './theme/ThemeToggle';
 
 interface HeaderProps {
   username: string;
@@ -31,9 +32,7 @@ export default function Header({ username }: HeaderProps) {
           <button className="p-2 hover:bg-gray-100 rounded-full">
             <Bell className="w-5 h-5 text-gray-600" />
           </button>
-          <button className="p-2 hover:bg-gray-100 rounded-full bg-teal-100">
-            <Moon className="w-5 h-5 text-gray-700" />
-          </button>
+          <ThemeToggle collapsed />
           <button className="p-2 hover:bg-gray-100 rounded-full">
             <Settings className="w-5 h-5 text-gray-600" />
           </button>

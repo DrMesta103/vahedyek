@@ -140,6 +140,20 @@ export default function PanelLayout({ children }: PanelLayoutProps) {
       };
     }
 
+    if (pathname.startsWith('/business-settings')) {
+      return {
+        activeItem: 'business',
+        trail: [{ label: 'تنظیمات کسب و کار' }],
+      };
+    }
+
+    if (pathname.startsWith('/settings')) {
+      return {
+        activeItem: 'settings',
+        trail: [{ label: 'تنظیمات کلی' }],
+      };
+    }
+
     return {
       activeItem: 'home',
       trail: [{ label: 'خانه اپ' }],
@@ -157,7 +171,7 @@ export default function PanelLayout({ children }: PanelLayoutProps) {
       ) : (
         <main className="main-content">
           <div className="main-stage">
-            <div className="main-stage-content">
+            <div className={`main-stage-content${isContractsNewHub ? ' contract-flow-stage-content' : ''}`}>
               {!isContractsNewHub ? (
                 <div className="top-header">
                   <div className="breadcrumb">

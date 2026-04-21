@@ -1,7 +1,9 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { getActiveDraftId, getStepData } from '../../../../lib/contractDraftClient';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { AlertCircle, CheckCircle2, Info, Lock, X } from 'lucide-react';
+import { getActiveDraftId, getFrontendStepDraft, getStepData } from '../../../../lib/contractDraftClient';
 import { validateFinancialStep, validateStep1, validateStep2 } from '../../../../lib/contractValidation';
 import type { ContractFinancialData, ContractPartiesData, ContractSubjectData } from '../../../../types/contract';
 import { DiscountsStep } from './DiscountsStep';
@@ -28,6 +30,26 @@ type StepStatus = {
   tone: StatusTone;
 };
 
+type SectionRequirementStatus = {
+  id: ContractFlowSectionId;
+  title: string;
+  complete: boolean;
+  dirty: boolean;
+  statusText: string;
+};
+
+type SectionAccess = {
+  locked: boolean;
+  info: string;
+  requirements: SectionRequirementStatus[];
+};
+
+type LeaveIssue = {
+  id: ContractFlowSectionId;
+  title: string;
+  status: string;
+};
+
 type SectionItem = {
   id: ContractFlowSectionId;
   title: string;
@@ -36,6 +58,23 @@ type SectionItem = {
 };
 
 const SAVEABLE_SECTIONS: ContractFlowSectionId[] = ['subject', 'parties', 'financial'];
+const SECTION_ORDER: ContractFlowSectionId[] = ['subject', 'parties', 'financial', 'penalties', 'discounts', 'termination'];
+const SECTION_PREREQUISITES: Record<ContractFlowSectionId, ContractFlowSectionId[]> = {
+  subject: [],
+  parties: ['subject'],
+  financial: ['subject', 'parties'],
+  penalties: ['subject', 'parties', 'financial'],
+  discounts: ['subject', 'parties', 'financial'],
+  termination: ['subject', 'parties', 'financial'],
+};
+const SECTION_TITLES: Record<ContractFlowSectionId, string> = {
+  subject: 'اطلاعات پایه',
+  parties: 'طرفین',
+  financial: 'اطلاعات مالی',
+  penalties: 'جرایم',
+  discounts: 'تخفیف‌ها',
+  termination: 'شرایط فسخ',
+};
 
 function hasSubjectData(data: ContractSubjectData | null) {
   if (!data) return false;
@@ -70,13 +109,13 @@ function hasFinancialData(data: ContractFinancialData | null) {
 function getToneClasses(tone: StatusTone) {
   switch (tone) {
     case 'green':
-      return 'border-emerald-300 bg-emerald-100 text-emerald-800';
+      return 'border-[var(--theme-action-border)] bg-[var(--theme-action-bg)] text-[var(--theme-action-text)]';
     case 'amber':
-      return 'border-amber-300 bg-amber-100 text-amber-800';
+      return 'border-[var(--theme-warning-border)] bg-[var(--theme-warning-bg)] text-[var(--theme-warning-text)]';
     case 'blue':
-      return 'border-blue-300 bg-blue-100 text-blue-800';
+      return 'border-[var(--theme-info-border)] bg-[var(--theme-info-bg)] text-[var(--theme-info-text)]';
     default:
-      return 'border-slate-300 bg-slate-100 text-slate-700';
+      return 'border-[var(--theme-neutral-border)] bg-[var(--theme-neutral-bg)] text-[var(--theme-neutral-text)]';
   }
 }
 
@@ -96,7 +135,7 @@ function getFinancialSlices(data: ContractFinancialData | null) {
       id: item.id,
       name: item.name,
       value: item.capAmount,
-      color: ['#0f766e', '#14b8a6', '#2dd4bf', '#5eead4', '#99f6e4', '#0ea5e9'][index % 6],
+      color: `var(--theme-chart-${(index % 6) + 1})`,
     }));
 }
 
@@ -129,6 +168,8 @@ function FinancialDonut({ slices }: { slices: Array<{ id: string; name: string; 
 }
 
 export function ContractFlowHub() {
+  const router = useRouter();
+  const leavingRef = useRef(false);
   const [activeSection, setActiveSection] = useState<SectionItem['id']>('subject');
   const [loading, setLoading] = useState(true);
   const [subjectData, setSubjectData] = useState<ContractSubjectData | null>(null);
@@ -138,6 +179,9 @@ export function ContractFlowHub() {
   const [dirtyMap, setDirtyMap] = useState<Partial<Record<ContractFlowSectionId, boolean>>>({});
   const [savingMap, setSavingMap] = useState<Partial<Record<ContractFlowSectionId, boolean>>>({});
   const [lastUpdatedMap, setLastUpdatedMap] = useState<Partial<Record<ContractFlowSectionId, number>>>({});
+  const [lockedDialogSection, setLockedDialogSection] = useState<ContractFlowSectionId | null>(null);
+  const [pendingScrollSection, setPendingScrollSection] = useState<ContractFlowSectionId | null>(null);
+  const [pendingLeave, setPendingLeave] = useState<{ mode: 'route' | 'back'; href?: string } | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -157,12 +201,13 @@ export function ContractFlowHub() {
           getStepData<ContractPartiesData>(draftId, 'parties'),
           getStepData<ContractFinancialData>(draftId, 'financial'),
         ]);
+        const financialFrontendDraft = getFrontendStepDraft<ContractFinancialData>(draftId, 'financial');
 
         if (!mounted) return;
         setSubjectData(subject);
         setPartiesData(parties);
         setFinancialData(financial);
-        setFinancialLiveData(financial);
+        setFinancialLiveData(financialFrontendDraft ?? financial);
       } finally {
         if (mounted) setLoading(false);
       }
@@ -197,11 +242,30 @@ export function ContractFlowHub() {
       }
     };
 
-    const handleSaved = (event: Event) => {
+    const handleSaved = async (event: Event) => {
       const customEvent = event as CustomEvent<{ sectionId: ContractFlowSectionId; savedAt: number }>;
+      const savedSectionId = customEvent.detail.sectionId;
       setDirtyMap((current) => ({ ...current, [customEvent.detail.sectionId]: false }));
       setSavingMap((current) => ({ ...current, [customEvent.detail.sectionId]: false }));
       setLastUpdatedMap((current) => ({ ...current, [customEvent.detail.sectionId]: customEvent.detail.savedAt }));
+
+      const draftId = getActiveDraftId();
+      if (!draftId) return;
+
+      if (savedSectionId === 'subject') {
+        const subject = await getStepData<ContractSubjectData>(draftId, 'subject');
+        setSubjectData(subject);
+        if (subject && validateStep1(subject).valid) setPendingScrollSection('parties');
+      } else if (savedSectionId === 'parties') {
+        const parties = await getStepData<ContractPartiesData>(draftId, 'parties');
+        setPartiesData(parties);
+        if (parties && validateStep2(parties).valid) setPendingScrollSection('financial');
+      } else if (savedSectionId === 'financial') {
+        const financial = await getStepData<ContractFinancialData>(draftId, 'financial');
+        setFinancialData(financial);
+        setFinancialLiveData(financial);
+        if (financial && validateFinancialStep(financial).valid) setPendingScrollSection('penalties');
+      }
     };
 
     const handleFinancialSnapshot = (event: Event) => {
@@ -220,9 +284,56 @@ export function ContractFlowHub() {
     };
   }, []);
 
+  const subjectComplete = Boolean(subjectData && validateStep1(subjectData).valid);
+  const partiesComplete = Boolean(partiesData && validateStep2(partiesData).valid);
+  const financialComplete = Boolean(financialData && validateFinancialStep(financialData).valid);
+  const completionMap: Record<ContractFlowSectionId, boolean> = {
+    subject: subjectComplete,
+    parties: partiesComplete,
+    financial: financialComplete,
+    penalties: false,
+    discounts: false,
+    termination: false,
+  };
+
+  const accessMap = useMemo<Record<ContractFlowSectionId, SectionAccess>>(() => {
+    const result = {} as Record<ContractFlowSectionId, SectionAccess>;
+
+    SECTION_ORDER.forEach((sectionId) => {
+      const requirements = SECTION_PREREQUISITES[sectionId].map((requiredId) => {
+        const dirty = Boolean(dirtyMap[requiredId]);
+        const complete = Boolean(completionMap[requiredId]) && !dirty;
+        return {
+          id: requiredId,
+          title: SECTION_TITLES[requiredId],
+          complete,
+          dirty,
+          statusText: dirty ? 'تغییر کرده و باید ذخیره شود' : complete ? 'تکمیل شده' : 'نیاز به تکمیل',
+        };
+      });
+      const locked = requirements.some((item) => !item.complete);
+      const missingTitles = requirements.filter((item) => !item.complete).map((item) => item.title);
+      result[sectionId] = {
+        locked,
+        requirements,
+        info: locked
+          ? `برای باز شدن این بخش باید ${missingTitles.join('، ')} تکمیل و ذخیره شود.`
+          : 'این بخش در دسترس است.',
+      };
+    });
+
+    result.subject = {
+      locked: false,
+      requirements: [],
+      info: 'اولین بخش قرارداد است و همیشه در دسترس است.',
+    };
+
+    return result;
+  }, [dirtyMap, financialComplete, partiesComplete, subjectComplete]);
+
   useEffect(() => {
-    const sections = Array.from(document.querySelectorAll<HTMLElement>('[data-contract-section]'));
-    if (!sections.length) return;
+    const renderedSections = Array.from(document.querySelectorAll<HTMLElement>('[data-contract-section]'));
+    if (!renderedSections.length) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -233,7 +344,7 @@ export function ContractFlowHub() {
         if (!visibleEntries.length) return;
 
         const nextId = visibleEntries[0].target.getAttribute('id') as SectionItem['id'] | null;
-        if (nextId) setActiveSection(nextId);
+        if (nextId && !accessMap[nextId]?.locked) setActiveSection(nextId);
       },
       {
         root: null,
@@ -242,13 +353,9 @@ export function ContractFlowHub() {
       },
     );
 
-    sections.forEach((section) => observer.observe(section));
+    renderedSections.forEach((section) => observer.observe(section));
     return () => observer.disconnect();
-  }, []);
-
-  const subjectComplete = Boolean(subjectData && validateStep1(subjectData).valid);
-  const partiesComplete = Boolean(partiesData && validateStep2(partiesData).valid);
-  const financialComplete = Boolean(financialData && validateFinancialStep(financialData).valid);
+  }, [accessMap]);
 
   const statusMap = useMemo<Record<SectionItem['id'], StepStatus>>(
     () => ({
@@ -329,6 +436,37 @@ export function ContractFlowHub() {
   const allocatedAmount = paidSlices.reduce((sum, item) => sum + item.value, 0);
   const dueAmount = reportData?.dueItems?.reduce((sum, item) => sum + item.amount, 0) ?? 0;
   const remainder = Math.max(contractTotal - allocatedAmount, 0);
+  const leaveIssues = useMemo<LeaveIssue[]>(() => {
+    const issues: LeaveIssue[] = [];
+    const financialLiveComplete = Boolean(reportData && validateFinancialStep(reportData).valid);
+
+    if (!subjectComplete || dirtyMap.subject) {
+      issues.push({
+        id: 'subject',
+        title: SECTION_TITLES.subject,
+        status: dirtyMap.subject ? 'تغییر کرده و ذخیره نشده است' : 'تکمیل نشده است',
+      });
+    }
+
+    if (!partiesComplete || dirtyMap.parties) {
+      issues.push({
+        id: 'parties',
+        title: SECTION_TITLES.parties,
+        status: dirtyMap.parties ? 'تغییر کرده و ذخیره نشده است' : 'تکمیل نشده است',
+      });
+    }
+
+    if (!financialLiveComplete || dirtyMap.financial) {
+      issues.push({
+        id: 'financial',
+        title: SECTION_TITLES.financial,
+        status: dirtyMap.financial ? 'تغییر کرده و ذخیره نشده است' : 'تکمیل نشده است',
+      });
+    }
+
+    return issues;
+  }, [dirtyMap.financial, dirtyMap.parties, dirtyMap.subject, partiesComplete, reportData, subjectComplete]);
+  const shouldBlockContractLeave = !loading && leaveIssues.length > 0;
 
   const requestSectionSave = (sectionId: ContractFlowSectionId) => {
     const trigger = document.querySelector<HTMLButtonElement>(`[data-contract-save-trigger="${sectionId}"]`);
@@ -339,11 +477,145 @@ export function ContractFlowHub() {
   };
 
   const scrollToSection = (sectionId: SectionItem['id']) => {
+    if (accessMap[sectionId]?.locked) {
+      setLockedDialogSection(sectionId);
+      return;
+    }
     const section = document.getElementById(sectionId);
     if (!section) return;
     setActiveSection(sectionId);
     section.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
+
+  const continueContractLeave = () => {
+    if (!pendingLeave) return;
+
+    leavingRef.current = true;
+    const target = pendingLeave;
+    setPendingLeave(null);
+
+    if (target.mode === 'back') {
+      router.back();
+      return;
+    }
+
+    if (!target.href) return;
+    const nextUrl = new URL(target.href, window.location.href);
+    const nextHref = `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`;
+
+    if (nextUrl.origin === window.location.origin) {
+      router.push(nextHref);
+      return;
+    }
+
+    window.location.assign(nextUrl.href);
+  };
+
+  useEffect(() => {
+    if (!pendingScrollSection || accessMap[pendingScrollSection]?.locked) return;
+    const timer = window.setTimeout(() => {
+      scrollToSection(pendingScrollSection);
+      setPendingScrollSection(null);
+    }, 80);
+    return () => window.clearTimeout(timer);
+  }, [accessMap, pendingScrollSection]);
+
+  useEffect(() => {
+    if (!accessMap[activeSection]?.locked) return;
+    const fallback = SECTION_ORDER.find((sectionId) => !accessMap[sectionId].locked) ?? 'subject';
+    setActiveSection(fallback);
+  }, [accessMap, activeSection]);
+
+  useEffect(() => {
+    if (!shouldBlockContractLeave) return;
+
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (leavingRef.current) return;
+      event.preventDefault();
+      event.returnValue = '';
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [shouldBlockContractLeave]);
+
+  useEffect(() => {
+    if (!shouldBlockContractLeave) return;
+
+    const handlePopState = () => {
+      if (leavingRef.current) return;
+      window.history.pushState(null, '', window.location.href);
+      setPendingLeave({ mode: 'back' });
+    };
+
+    window.history.pushState(null, '', window.location.href);
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [shouldBlockContractLeave]);
+
+  useEffect(() => {
+    if (!shouldBlockContractLeave) return;
+
+    const handleDocumentClick = (event: MouseEvent) => {
+      if (leavingRef.current || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+
+      const target = event.target as HTMLElement | null;
+      const anchor = target?.closest('a[href]') as HTMLAnchorElement | null;
+      if (!anchor || anchor.target === '_blank' || anchor.hasAttribute('download')) return;
+
+      const href = anchor.getAttribute('href');
+      if (!href || href.startsWith('#') || href.startsWith('javascript:') || href.startsWith('mailto:') || href.startsWith('tel:')) return;
+
+      const nextUrl = new URL(anchor.href, window.location.href);
+      const currentUrl = new URL(window.location.href);
+      const nextHref = `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`;
+      const currentHref = `${currentUrl.pathname}${currentUrl.search}${currentUrl.hash}`;
+
+      if (nextUrl.origin === currentUrl.origin && nextHref === currentHref) return;
+
+      event.preventDefault();
+      setPendingLeave({ mode: 'route', href: nextUrl.href });
+    };
+
+    document.addEventListener('click', handleDocumentClick, true);
+    return () => document.removeEventListener('click', handleDocumentClick, true);
+  }, [shouldBlockContractLeave]);
+
+  useEffect(() => {
+    if (!shouldBlockContractLeave) return;
+
+    const originalPushState = window.history.pushState;
+    const originalReplaceState = window.history.replaceState;
+
+    const interceptHistoryChange = (url?: string | URL | null) => {
+      if (leavingRef.current || !url) return false;
+
+      const nextUrl = new URL(String(url), window.location.href);
+      const currentUrl = new URL(window.location.href);
+      const nextHref = `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`;
+      const currentHref = `${currentUrl.pathname}${currentUrl.search}${currentUrl.hash}`;
+
+      if (nextUrl.origin !== currentUrl.origin || nextHref === currentHref) return false;
+
+      setPendingLeave({ mode: 'route', href: nextHref });
+      return true;
+    };
+
+    window.history.pushState = function pushState(data, unused, url) {
+      if (interceptHistoryChange(url)) return;
+      originalPushState.call(window.history, data, unused, url);
+    };
+
+    window.history.replaceState = function replaceState(data, unused, url) {
+      if (interceptHistoryChange(url)) return;
+      originalReplaceState.call(window.history, data, unused, url);
+    };
+
+    return () => {
+      window.history.pushState = originalPushState;
+      window.history.replaceState = originalReplaceState;
+    };
+  }, [shouldBlockContractLeave]);
 
   return (
     <div className="contract-flow-layout lg:flex lg:flex-row lg:items-stretch lg:gap-0">
@@ -353,8 +625,10 @@ export function ContractFlowHub() {
         dirtyMap={dirtyMap}
         savingMap={savingMap}
         lastUpdatedMap={lastUpdatedMap}
+        accessMap={accessMap}
         onScrollTo={scrollToSection}
         onSave={requestSectionSave}
+        onLockedClick={setLockedDialogSection}
       />
 
       <LeftReportSidebar
@@ -367,7 +641,7 @@ export function ContractFlowHub() {
       />
 
       <div className="contract-flow-content min-w-0 flex-1 space-y-6">
-        {sections.map((section) => {
+        {sections.filter((section) => !accessMap[section.id].locked).map((section) => {
           const status = statusMap[section.id];
           const isSubjectSection = section.id === 'subject';
           return (
@@ -398,6 +672,130 @@ export function ContractFlowHub() {
           );
         })}
       </div>
+
+      {pendingLeave ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4" onClick={() => setPendingLeave(null)}>
+          <div
+            className="w-full max-w-xl rounded-3xl border border-[var(--border-color)] bg-[var(--surface)] shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-4 border-b border-[var(--border-color)] px-5 py-4">
+              <div>
+                <div className="flex items-center gap-2 text-[var(--text-strong)]">
+                  <AlertCircle className="h-5 w-5 text-[var(--theme-warning-text)]" />
+                  <h3 className="text-base font-bold">خروج از صفحه قرارداد</h3>
+                </div>
+                <p className="mt-2 text-sm leading-6 text-[var(--text-muted)]">
+                  قبل از خروج، وضعیت بخش‌های ناقص یا ذخیره‌نشده را بررسی کنید.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPendingLeave(null)}
+                className="rounded-lg p-1 text-[var(--text-faint)] transition-colors hover:bg-[var(--surface-soft)]"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3 px-5 py-4">
+              <div className="rounded-2xl border border-[var(--theme-warning-border)] bg-[var(--theme-warning-bg)] px-4 py-3">
+                <div className="mb-3 text-sm font-bold text-[var(--theme-warning-text)]">بخش‌های نیازمند تکمیل</div>
+                <div className="grid gap-2">
+                  {leaveIssues.map((item) => (
+                    <div key={item.id} className="flex items-center justify-between gap-3 rounded-xl bg-[var(--surface)] px-3 py-2 text-sm">
+                      <span className="font-bold text-[var(--text-body)]">{item.title}</span>
+                      <span className="rounded-full border border-[var(--theme-warning-border)] bg-[var(--theme-warning-bg)] px-2.5 py-1 text-xs font-bold text-[var(--theme-warning-text)]">
+                        {item.status}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap justify-end gap-3 border-t border-[var(--border-color)] px-5 py-4">
+              <button
+                type="button"
+                onClick={() => setPendingLeave(null)}
+                className="rounded-lg border border-[var(--border-color)] px-4 py-2 text-sm font-bold text-[var(--text-body)] transition-colors hover:bg-[var(--surface-soft)]"
+              >
+                ماندن در صفحه
+              </button>
+              <button
+                type="button"
+                onClick={continueContractLeave}
+                className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-bold text-rose-700 transition-colors hover:bg-rose-100"
+              >
+                خروج بدون تکمیل
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {lockedDialogSection ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4" onClick={() => setLockedDialogSection(null)}>
+          <div
+            className="w-full max-w-2xl rounded-3xl border border-[var(--border-color)] bg-[var(--surface)] shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-4 border-b border-[var(--border-color)] px-5 py-4">
+              <div>
+                <div className="flex items-center gap-2 text-[var(--text-strong)]">
+                  <Lock className="h-4 w-4 text-[var(--theme-warning-text)]" />
+                  <h3 className="text-base font-bold">این بخش هنوز قفل است</h3>
+                </div>
+                <p className="mt-2 text-sm leading-6 text-[var(--text-muted)]">
+                  {accessMap[lockedDialogSection].info}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setLockedDialogSection(null)}
+                className="rounded-lg p-1 text-[var(--text-faint)] transition-colors hover:bg-[var(--surface-soft)]"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3 px-5 py-4">
+              <div className="rounded-2xl border border-[var(--theme-warning-border)] bg-[var(--theme-warning-bg)] px-4 py-3">
+                <div className="mb-3 flex items-center gap-2 text-sm font-bold text-[var(--theme-warning-text)]">
+                  <AlertCircle className="h-4 w-4" />
+                  پیش‌نیازهای لازم
+                </div>
+                <div className="grid gap-2">
+                  {accessMap[lockedDialogSection].requirements.map((item) => {
+                    const status = statusMap[item.id];
+                    return (
+                      <div key={item.id} className="flex items-center justify-between gap-3 rounded-xl bg-[var(--surface)] px-3 py-2 text-sm">
+                        <span className="flex items-center gap-2 font-bold text-[var(--text-body)]">
+                          {item.complete ? (
+                            <CheckCircle2 className="h-4 w-4 text-[var(--theme-action-text)]" />
+                          ) : (
+                            <Lock className="h-4 w-4 text-[var(--theme-warning-text)]" />
+                          )}
+                          {item.title}
+                          <span className="group relative inline-flex h-6 w-6 items-center justify-center rounded-full border border-[var(--border-color)] text-[var(--text-muted)]">
+                            <Info className="h-3.5 w-3.5" />
+                            <span className="pointer-events-none absolute left-0 top-8 z-10 hidden w-64 rounded-xl border border-[var(--border-color)] bg-[var(--surface)] p-3 text-right text-xs leading-6 text-[var(--text-muted)] shadow-lg group-hover:block">
+                              برای باز شدن {SECTION_TITLES[lockedDialogSection]} باید بخش {item.title} تکمیل و ذخیره شده باشد.
+                            </span>
+                          </span>
+                        </span>
+                        <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-bold ${getToneClasses(status.tone)}`}>
+                          {item.statusText}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

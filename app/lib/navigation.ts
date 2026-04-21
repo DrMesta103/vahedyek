@@ -7,7 +7,7 @@ export type AppMenuItem = {
 };
 
 export const APP_MENU_ITEMS: AppMenuItem[] = [
-  { id: 'business', label: 'جزئیات کسب و کار', icon: 'fa-briefcase', href: '#', disabled: true },
+  { id: 'business', label: 'تنظیمات کسب و کار', icon: 'fa-briefcase', href: '/business-settings' },
   { id: 'complex', label: 'جزئیات مجتمع', icon: 'fa-building', href: '/complex' },
   { id: 'units', label: 'فهرست واحد ها', icon: 'fa-list-ul', href: '#', disabled: true },
   { id: 'contracts', label: 'فهرست قرارداد ها', icon: 'fa-file-invoice', href: '/contracts' },

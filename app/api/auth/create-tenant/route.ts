@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { ensureOwnerMembershipRole, ensureTenantDefaultRoles } from '../../../lib/access-control';
 import { createSession, getSessionContext, setAuthCookie } from '../../../lib/auth';
 import { prisma } from '../../../lib/prisma';
 import { handlePrismaApiError } from '../../../lib/prismaApiError';
@@ -32,6 +33,14 @@ export async function POST(request: Request) {
         memberships: { create: { userId: session.userId, role: 'owner' } },
       },
     });
+
+    await ensureTenantDefaultRoles(tenant.id);
+    const membership = await prisma.userTenantMembership.findUnique({
+      where: { userId_tenantId: { userId: session.userId, tenantId: tenant.id } },
+    });
+    if (membership) {
+      await ensureOwnerMembershipRole(membership.id, tenant.id);
+    }
 
     const newSession = await createSession(session.userId, tenant.id);
 

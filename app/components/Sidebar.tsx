@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { useAuthContext } from '../hooks/useAuthContext';
 import { APP_MENU_ITEMS } from '../lib/navigation';
+import { ThemeToggle } from './theme/ThemeToggle';
 
 interface SidebarProps {
   activeItem?: string;
@@ -58,6 +59,8 @@ export default function Sidebar({
   };
 
   const effectiveCollapsed = forceCollapsed || collapsed;
+  const allowedMenuItemIds = data?.access?.allowedMenuItemIds;
+  const visibleMenuItems = APP_MENU_ITEMS.filter((item) => !allowedMenuItemIds || allowedMenuItemIds.includes(item.id));
 
   return (
     <aside className={`sidebar${effectiveCollapsed ? ' collapsed' : ''}${lockCollapsed ? ' locked-collapsed' : ''}`}>
@@ -66,8 +69,8 @@ export default function Sidebar({
           <i className="fa fa-user"></i>
         </div>
         <div className="name">
-          <div>{data?.user.fullName ?? 'در حال بارگذاری...'}</div>
-          <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '2px' }}>{data?.user.email ?? ''}</div>
+          <div>{data?.user?.fullName ?? 'در حال بارگذاری...'}</div>
+          <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '2px' }}>{data?.user?.email ?? ''}</div>
         </div>
         <div className="back-btn" style={{ visibility: 'hidden' }} aria-hidden="true">
           <i className="fa fa-chevron-left"></i>
@@ -115,12 +118,13 @@ export default function Sidebar({
                     <span className="badge">1</span>
                   </span>
                 </button>
+                <button type="button" onClick={() => router.push('/settings')} className="toolbar-menu-item" title="تنظیمات کلی">
+                  <i className="fa fa-cog"></i>
+                </button>
                 <button type="button" onClick={() => router.push('/')} className="toolbar-menu-item">
                   <i className={`fa fa-home${activeItem === 'home' ? ' active-toolbar-icon' : ''}`}></i>
                 </button>
-                <button type="button" className="toolbar-menu-item">
-                  <i className="fa fa-moon"></i>
-                </button>
+                <ThemeToggle collapsed />
               </div>
             ) : null}
           </div>
@@ -132,16 +136,19 @@ export default function Sidebar({
             <i className="fa fa-bell" style={{ position: 'relative' }}>
               <span className="badge">1</span>
             </i>
+            <button type="button" onClick={() => router.push('/settings')} style={{ background: 'transparent', border: 'none' }} title="تنظیمات کلی">
+              <i className="fa fa-cog"></i>
+            </button>
             <button type="button" onClick={() => router.push('/')} style={{ background: 'transparent', border: 'none' }}>
               <i className={`fa fa-home${activeItem === 'home' ? ' active-toolbar-icon' : ''}`}></i>
             </button>
-            <i className="fa fa-moon"></i>
+            <ThemeToggle />
           </>
         )}
       </div>
 
       <nav className="menu-list">
-        {APP_MENU_ITEMS.map((item) =>
+        {visibleMenuItems.map((item) =>
           item.disabled ? (
             <div
               key={item.id}

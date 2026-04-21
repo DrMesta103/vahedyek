@@ -1,6 +1,7 @@
 'use client';
 
 const ACTIVE_DRAFT_KEY = 'active-contract-draft-id';
+const FRONTEND_STEP_DRAFT_PREFIX = 'contract-flow:frontend-step-draft';
 export type ReferenceDataResponse = {
   employees: Array<{ id: string; firstName: string; lastName: string }>;
   formerEmployees: Array<{ id: string; fullName: string }>;
@@ -55,6 +56,28 @@ export function setActiveDraftId(draftId: string) {
 export function clearActiveDraftId() {
   if (typeof window === 'undefined') return;
   localStorage.removeItem(ACTIVE_DRAFT_KEY);
+}
+
+export function getFrontendStepDraft<T>(draftId: string, step: 'subject' | 'parties' | 'financial') {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    const raw = localStorage.getItem(`${FRONTEND_STEP_DRAFT_PREFIX}:${draftId}:${step}`);
+    if (!raw) return null;
+    return JSON.parse(raw) as T;
+  } catch {
+    return null;
+  }
+}
+
+export function setFrontendStepDraft<T>(draftId: string, step: 'subject' | 'parties' | 'financial', payload: T) {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(`${FRONTEND_STEP_DRAFT_PREFIX}:${draftId}:${step}`, JSON.stringify(payload));
+}
+
+export function clearFrontendStepDraft(draftId: string, step: 'subject' | 'parties' | 'financial') {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem(`${FRONTEND_STEP_DRAFT_PREFIX}:${draftId}:${step}`);
 }
 
 export async function ensureActiveDraftId() {

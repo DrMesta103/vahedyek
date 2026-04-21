@@ -1,16 +1,25 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { AlertTriangle, CalendarDays, EllipsisVertical, Info, Pencil, Plus, Trash2, X } from 'lucide-react';
-import { FormBox } from './FormBox';
+import { AlertTriangle, CalendarDays, Plus, X } from 'lucide-react';
 import { ChoiceCard } from './ChoiceCard';
 import { FieldLabel } from './FieldLabel';
+import { FinancialCategoriesBox } from './FinancialCategoriesBox';
+import { FinancialPricingBox } from './FinancialPricingBox';
+import { FinancialSummaryBoxes } from './FinancialSummaryBoxes';
 import { StickySubmitBar } from './StickySubmitBar';
 import { Input } from '../../../../components/ui/input';
 import { PersianDatePicker } from '../../../../components/ui/PersianDatePicker';
 import { useContractFlowBasePath } from './useContractFlowBasePath';
-import { ensureActiveDraftId, getStepData, saveStepData } from '../../../../lib/contractDraftClient';
+import {
+  clearFrontendStepDraft,
+  ensureActiveDraftId,
+  getFrontendStepDraft,
+  getStepData,
+  saveStepData,
+  setFrontendStepDraft,
+} from '../../../../lib/contractDraftClient';
 import { validateFinancialStep } from '../../../../lib/contractValidation';
 import { addIntervalToDate, buildRegularDueItems, distributeAmount, type DueFrequency } from '../../../../lib/financialUtils';
 import type { ContractFinancialData, FinancialCategoryData, FinancialDueItemData, PricingType } from '../../../../types/contract';
@@ -30,6 +39,25 @@ const INITIAL_CATEGORIES: FinancialCategory[] = [
   { id: 'handover', name: 'تحویل واحد', capAmount: 0, dueAmount: 0, noDueAmount: 0, system: true, requiresDue: true },
   { id: 'installment', name: 'اقساط ثابت', capAmount: 0, dueAmount: 0, noDueAmount: 0, system: true, requiresDue: true },
 ];
+
+function normalizeFinancialPayload(data: ContractFinancialData | null): ContractFinancialData {
+  const categories = data?.categories?.length ? data.categories : INITIAL_CATEGORIES;
+
+  return {
+    pricingType: data?.pricingType ?? 'fixed',
+    totalArea: String(Number(data?.totalArea || 0)),
+    pricePerMeter: String(Number(data?.pricePerMeter || 0)),
+    fixedTotalAmount: String(Number(data?.fixedTotalAmount || 0)),
+    activeTab: data?.activeTab || categories[0]?.id || 'advance',
+    categories: categories.map((item) => ({
+      ...item,
+      requiresDue: true,
+      dueAmount: item.capAmount,
+      noDueAmount: 0,
+    })),
+    dueItems: data?.dueItems ?? [],
+  };
+}
 
 function parseNum(value: string) {
   return Number(value.replace(/,/g, '')) || 0;
@@ -91,16 +119,6 @@ function DateField({
           containerClassName="w-full"
         />
       </div>
-    </div>
-  );
-}
-
-function SummaryCard({ title, value, hint }: { title: string; value: string; hint?: string }) {
-  return (
-    <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-      <p className="text-xs text-gray-500">{title}</p>
-      <p className="mt-2 text-lg font-bold text-gray-800">{value}</p>
-      {hint ? <p className="mt-1 text-xs text-gray-400">{hint}</p> : null}
     </div>
   );
 }
@@ -301,23 +319,26 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
       try {
         const id = await ensureActiveDraftId();
         const financialData = await getStepData<ContractFinancialData>(id, 'financial');
+        const frontendDraft = getFrontendStepDraft<ContractFinancialData>(id, 'financial');
+        const sourceData = frontendDraft ?? financialData;
 
         if (!mounted) return;
 
         setDraftId(id);
+        initialSnapshotRef.current = JSON.stringify(normalizeFinancialPayload(financialData));
 
-        if (financialData) {
-          setPricingType(financialData.pricingType);
-          setTotalArea(financialData.totalArea ? Number(financialData.totalArea).toLocaleString('en-US') : '');
-          setPricePerMeter(financialData.pricePerMeter ? Number(financialData.pricePerMeter).toLocaleString('en-US') : '');
-          setFixedTotalAmount(financialData.fixedTotalAmount ? Number(financialData.fixedTotalAmount).toLocaleString('en-US') : '');
+        if (sourceData) {
+          setPricingType(sourceData.pricingType);
+          setTotalArea(sourceData.totalArea ? Number(sourceData.totalArea).toLocaleString('en-US') : '');
+          setPricePerMeter(sourceData.pricePerMeter ? Number(sourceData.pricePerMeter).toLocaleString('en-US') : '');
+          setFixedTotalAmount(sourceData.fixedTotalAmount ? Number(sourceData.fixedTotalAmount).toLocaleString('en-US') : '');
           setCategories(
-            financialData.categories.length
-              ? financialData.categories.map((item) => ({ ...item, requiresDue: true, noDueAmount: 0, dueAmount: item.capAmount }))
+            sourceData.categories.length
+              ? sourceData.categories.map((item) => ({ ...item, requiresDue: true, noDueAmount: 0, dueAmount: item.capAmount }))
               : INITIAL_CATEGORIES,
           );
-          setActiveTab(financialData.activeTab || financialData.categories[0]?.id || 'advance');
-          setDueItems(financialData.dueItems);
+          setActiveTab(sourceData.activeTab || sourceData.categories[0]?.id || 'advance');
+          setDueItems(sourceData.dueItems);
         }
       } finally {
         if (mounted) setLoading(false);
@@ -397,6 +418,7 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
     try {
       await saveStepData(draftId, 'financial', payload);
       initialSnapshotRef.current = JSON.stringify(payload);
+      clearFrontendStepDraft(draftId, 'financial');
       setDirty(false);
       dispatchContractFlowDirty(stepId as 'financial', false);
       dispatchContractFlowSaved(stepId as 'financial');
@@ -584,11 +606,19 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
     }
 
     const hasChanges = snapshot !== initialSnapshotRef.current;
+    if (draftId) {
+      if (hasChanges) {
+        setFrontendStepDraft(draftId, 'financial', payload);
+      } else {
+        clearFrontendStepDraft(draftId, 'financial');
+      }
+    }
     setDirty(hasChanges);
     dispatchContractFlowDirty(stepId as 'financial', hasChanges);
-  }, [activeTab, categories, dueItems, fixedTotalAmount, loading, pricePerMeter, pricingType, stepId, totalArea]);
+  }, [activeTab, categories, draftId, dueItems, fixedTotalAmount, loading, pricePerMeter, pricingType, stepId, totalArea]);
 
   useEffect(() => {
+    if (embedded) return;
     if (!dirty) return;
 
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
@@ -598,9 +628,10 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
 
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [dirty]);
+  }, [dirty, embedded]);
 
   useEffect(() => {
+    if (embedded) return;
     const handlePopState = () => {
       if (!dirty || isLeaving) return;
       window.history.pushState(null, '', window.location.href);
@@ -610,9 +641,10 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
     window.history.pushState(null, '', window.location.href);
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [dirty, isLeaving]);
+  }, [dirty, embedded, isLeaving]);
 
   useEffect(() => {
+    if (embedded) return;
     const handleDocumentClick = (event: MouseEvent) => {
       if (!dirty || isLeaving) return;
 
@@ -635,9 +667,10 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
 
     document.addEventListener('click', handleDocumentClick, true);
     return () => document.removeEventListener('click', handleDocumentClick, true);
-  }, [dirty, isLeaving]);
+  }, [dirty, embedded, isLeaving]);
 
   useEffect(() => {
+    if (embedded) return;
     const originalPushState = window.history.pushState;
     const originalReplaceState = window.history.replaceState;
 
@@ -669,7 +702,7 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
       window.history.pushState = originalPushState;
       window.history.replaceState = originalReplaceState;
     };
-  }, [dirty, isLeaving]);
+  }, [dirty, embedded, isLeaving]);
 
   const handleSubmit = async () => {
     const saved = await persistCurrentStep();
@@ -691,36 +724,19 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
         </button>
       </div> : null}
 
-      <FormBox title="قیمت‌گذاری قرارداد" description="نوع قیمت‌گذاری قرارداد را مشخص کنید.">
-        <div className="grid gap-3 md:grid-cols-2">
-          <ChoiceCard title="مقطوع" active={pricingType === 'fixed'} onClick={() => setPricingType('fixed')} />
-          <ChoiceCard title="متری" active={pricingType === 'metered'} onClick={() => setPricingType('metered')} />
-        </div>
-
-        {pricingType === 'metered' ? (
-          <div className="mt-4 grid gap-4 lg:grid-cols-3">
-            <div>
-              <FieldLabel label="متراژ کل" />
-              <Input value={totalArea} onChange={(event) => setTotalArea(formatInput(event.target.value))} placeholder="مثال: 120" className="mt-2" />
-            </div>
-            <div>
-              <FieldLabel label="قیمت هر متر مربع" />
-              <Input value={pricePerMeter} onChange={(event) => setPricePerMeter(formatInput(event.target.value))} placeholder="مثال: 450,000" className="mt-2" />
-            </div>
-            <div>
-              <FieldLabel label="قیمت کل محاسبه شده" />
-              <div className="mt-2 flex h-10 items-center rounded-md border border-green-300 bg-green-50 px-3.5 text-sm font-semibold text-green-700">
-                {formatMoney(meteredTotal)}
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="mt-4 max-w-md">
-            <FieldLabel label="مبلغ کل قرارداد" />
-            <Input value={fixedTotalAmount} onChange={(event) => setFixedTotalAmount(formatInput(event.target.value))} placeholder="مبلغ کل را وارد کنید" className="mt-2" />
-          </div>
-        )}
-      </FormBox>
+      <FinancialPricingBox
+        pricingType={pricingType}
+        onPricingTypeChange={setPricingType}
+        totalArea={totalArea}
+        onTotalAreaChange={setTotalArea}
+        pricePerMeter={pricePerMeter}
+        onPricePerMeterChange={setPricePerMeter}
+        fixedTotalAmount={fixedTotalAmount}
+        onFixedTotalAmountChange={setFixedTotalAmount}
+        meteredTotal={meteredTotal}
+        formatInput={formatInput}
+        formatMoney={formatMoney}
+      />
 
       {overContractAmount ? (
         <div className="flex items-start gap-3 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800">
@@ -731,212 +747,44 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
 
       {formError ? <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{formError}</div> : null}
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        <SummaryCard title="جمع ردیف‌های مالی" value={formatMoney(overall.cap || totalContractAmount)} />
-        <SummaryCard title="جمع سررسیدها" value={formatMoney(overall.due)} />
-        <SummaryCard
-          title="مبلغ کل قرارداد"
-          value={formatMoney(totalContractAmount)}
-          hint={pricingType === 'metered' ? 'محاسبه شده از متراژ و نرخ' : 'ثبت شده به صورت مقطوع'}
-        />
-      </div>
+      <FinancialSummaryBoxes
+        capAmount={overall.cap}
+        dueAmount={overall.due}
+        totalContractAmount={totalContractAmount}
+        pricingHint={pricingType === 'metered' ? 'محاسبه شده از متراژ و نرخ' : 'ثبت شده به صورت مقطوع'}
+        formatMoney={formatMoney}
+      />
 
-      <FormBox title="دسته‌بندی‌های مالی" description="برای هر دسته‌بندی می‌توانید سقف مبلغ و سررسیدها را مدیریت کنید.">
-        <div className="mb-4 space-y-3">
-          <FinancialCategoriesPieChart categories={categories} totalContractAmount={totalContractAmount} />
-
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-            {categories.map((category) => {
-              const isLocked = LOCKED_CATEGORY_IDS.includes(category.id);
-              const categoryDueItems = categoryDueItemsMap[category.id] ?? [];
-
-              return (
-                <div
-                  key={category.id}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => {
-                    setActiveTab(category.id);
-                    setOpenMenuId(null);
-                  }}
-                  onKeyDown={(event) => event.key === 'Enter' && setActiveTab(category.id)}
-                  className={`relative cursor-pointer rounded-xl border p-3.5 text-right transition-all ${
-                    activeTab === category.id ? 'border-teal-400 bg-teal-50' : 'border-gray-200 bg-white hover:border-gray-300'
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-bold text-gray-800">{category.name}</span>
-                        {isLocked ? <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] text-gray-400">سیستمی</span> : null}
-                      </div>
-                      <p className="mt-1 text-xs text-gray-500">{formatMoney(category.capAmount)}</p>
-                    </div>
-
-                    <div className="relative flex items-center gap-1">
-                      <button
-                        type="button"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          setOpenMenuId(null);
-                          setOpenInfoId((current) => (current === category.id ? null : category.id));
-                        }}
-                        className="rounded-lg p-1 text-sky-500 hover:bg-sky-50"
-                        title="جزئیات ردیف مالی"
-                      >
-                        <Info className="h-4 w-4" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          setOpenInfoId(null);
-                          setOpenMenuId((current) => (current === category.id ? null : category.id));
-                        }}
-                        className="rounded-lg p-1 text-gray-400 hover:bg-gray-100"
-                      >
-                        <EllipsisVertical className="h-4 w-4" />
-                      </button>
-
-                      {openInfoId === category.id ? (
-                        <div
-                          className="absolute left-0 top-8 z-20 w-72 rounded-xl border border-sky-100 bg-white p-3 shadow-lg"
-                          onClick={(event) => event.stopPropagation()}
-                        >
-                          <div className="border-b border-gray-100 pb-2">
-                            <div className="text-sm font-bold text-gray-800">جزئیات ردیف مالی</div>
-                            <div className="mt-1 text-xs text-gray-500">{category.name}</div>
-                          </div>
-                          <div className="space-y-2 pt-3 text-xs text-gray-600">
-                            <div className="flex items-center justify-between">
-                              <span>سقف مبلغ</span>
-                              <span className="font-semibold text-gray-800">{formatMoney(category.capAmount)}</span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <span>وضعیت ردیف</span>
-                              <span className="font-semibold text-gray-800">{isLocked ? 'سیستمی' : 'قابل ویرایش'}</span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <span>تعداد سررسیدهای داخلی</span>
-                              <span className="font-semibold text-gray-800">{categoryDueItems.length}</span>
-                            </div>
-                            <div className="border-t border-gray-100 pt-2">
-                              <div className="mb-2 text-[11px] font-semibold text-gray-500">سررسیدهای داخلی</div>
-                              {categoryDueItems.length ? (
-                                <div className="space-y-1.5">
-                                  {categoryDueItems.map((item) => (
-                                    <div key={item.id} className="rounded-lg bg-gray-50 px-2.5 py-2">
-                                      <div className="mb-1 text-[11px] font-semibold text-gray-700">{item.title}</div>
-                                      <div className="flex items-center justify-between gap-3">
-                                        <span>{item.dueDate}</span>
-                                        <span className="font-semibold text-teal-700">{formatMoney(item.amount)}</span>
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              ) : (
-                                <div className="rounded-lg border border-dashed border-gray-200 px-2.5 py-3 text-center text-[11px] text-gray-400">
-                                  برای این ردیف هنوز سررسیدی ثبت نشده است.
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      ) : null}
-
-                      {openMenuId === category.id ? (
-                        <div
-                          className="absolute left-0 top-8 z-20 min-w-[132px] rounded-xl border border-gray-200 bg-white p-1.5 shadow-lg"
-                          onClick={(event) => event.stopPropagation()}
-                        >
-                          <button
-                            type="button"
-                            onClick={() => openEdit(category)}
-                            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-right text-sm text-gray-700 hover:bg-gray-50"
-                          >
-                            <Pencil className="h-4 w-4" />
-                            ویرایش
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => deleteCategory(category.id)}
-                            disabled={isLocked}
-                            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-right text-sm text-rose-600 hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-40"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                            حذف
-                          </button>
-                        </div>
-                      ) : null}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="flex justify-end">
-            <button type="button" onClick={openAdd} className="inline-flex h-10 items-center gap-2 rounded-lg border border-teal-300 bg-teal-50 px-4 text-sm font-medium text-teal-700 hover:bg-teal-100">
-              <Plus className="h-4 w-4" />
-              افزودن ردیف مالی
-            </button>
-          </div>
-        </div>
-
-        <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-          <div className="mb-4 flex flex-col gap-3 border-b border-gray-200 pb-4 md:flex-row md:items-center md:justify-between">
-            <div>
-              <p className="font-semibold text-gray-800">{`سررسیدهای ${categories.find((item) => item.id === activeTab)?.name ?? ''}`}</p>
-              <p className="mt-0.5 text-xs text-gray-500">فهرست سررسیدها برای دسته‌بندی فعال در این بخش نمایش داده می‌شود.</p>
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                setDueMode('irregular');
-                setDueTitle('');
-                setDueAmount('');
-                setDueDate('');
-                setRegularFrequency('monthly');
-                setRegularPeriod('1');
-                setRegularCount('');
-                setRegularStartDate('');
-                setDueFormError('');
-                setDueDialogOpen(true);
-              }}
-              className="inline-flex h-9 items-center gap-2 rounded-lg border border-teal-300 bg-teal-50 px-4 text-sm font-medium text-teal-700 hover:bg-teal-100"
-            >
-              <Plus className="h-4 w-4" />
-              ثبت سررسید
-            </button>
-          </div>
-
-          <div className="space-y-3">
-            {visibleDueItems.map((item) => (
-              <div key={item.id} className="flex items-center justify-between rounded-lg border border-teal-100 bg-white p-3.5">
-                <div>
-                  <p className="text-sm font-semibold text-gray-800">{item.title}</p>
-                  <p className="mt-0.5 text-xs text-gray-500">تاریخ: {item.dueDate}</p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-sm font-bold text-teal-700">{formatMoney(item.amount)}</span>
-                  <button
-                    type="button"
-                    onClick={() => setDueItems((current) => current.filter((dueItem) => dueItem.id !== item.id))}
-                    className="rounded-lg p-1 text-rose-500 hover:bg-rose-50"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-            ))}
-            {!visibleDueItems.length ? (
-              <div className="rounded-lg border-2 border-dashed border-gray-200 p-6 text-center text-sm text-gray-400">
-                برای این بخش سررسیدی ثبت نشده است.
-              </div>
-            ) : null}
-          </div>
-        </div>
-      </FormBox>
+      <FinancialCategoriesBox
+        categories={categories}
+        activeTab={activeTab}
+        openMenuId={openMenuId}
+        openInfoId={openInfoId}
+        lockedCategoryIds={LOCKED_CATEGORY_IDS}
+        categoryDueItemsMap={categoryDueItemsMap}
+        visibleDueItems={visibleDueItems}
+        chart={<FinancialCategoriesPieChart categories={categories} totalContractAmount={totalContractAmount} />}
+        onActiveTabChange={setActiveTab}
+        onOpenMenuIdChange={setOpenMenuId}
+        onOpenInfoIdChange={setOpenInfoId}
+        onOpenAddCategory={openAdd}
+        onOpenEditCategory={openEdit}
+        onDeleteCategory={deleteCategory}
+        onOpenDueDialog={() => {
+          setDueMode('irregular');
+          setDueTitle('');
+          setDueAmount('');
+          setDueDate('');
+          setRegularFrequency('monthly');
+          setRegularPeriod('1');
+          setRegularCount('');
+          setRegularStartDate('');
+          setDueFormError('');
+          setDueDialogOpen(true);
+        }}
+        onDeleteDueItem={(id) => setDueItems((current) => current.filter((dueItem) => dueItem.id !== id))}
+        formatMoney={formatMoney}
+      />
 
       <StickySubmitBar
         label="ثبت اطلاعات مالی"
