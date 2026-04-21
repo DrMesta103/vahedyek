@@ -1,0 +1,5 @@
+[phases.build]
+cmds = ["npm run build:vahedyek"]
+
+[start]
+cmd = "npm run start:vahedyek"

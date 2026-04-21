@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "test:financial": "node --test --import tsx tests/financial-utils.test.ts tests/contract-validation.test.ts",
     "test:subject": "node --test --import tsx tests/subject-utils.test.ts",
