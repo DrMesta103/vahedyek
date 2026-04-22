@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { CalendarDays, Plus, X } from 'lucide-react';
-import { ChoiceCard } from './ChoiceCard';
 import { FieldLabel } from './FieldLabel';
 import { FinancialPaymentFlow } from './FinancialPaymentFlow';
 import { FinancialPricingBox } from './FinancialPricingBox';
@@ -30,7 +29,6 @@ type FinancialCategory = FinancialCategoryData;
 type DueItem = FinancialDueItemData;
 type DueMode = 'irregular' | 'regular';
 
-const SYSTEM_CATEGORY_OPTIONS = ['پیش پرداخت', 'تحویل سند', 'تحویل واحد', 'اقساط ثابت', 'انشعابات آب'];
 const LOCKED_CATEGORY_IDS = ['advance', 'document', 'handover', 'installment'];
 const PIE_CHART_COLORS = ['#0f766e', '#14b8a6', '#0ea5e9', '#6366f1', '#f59e0b', '#ef4444', '#84cc16', '#8b5cf6'];
 
@@ -99,7 +97,7 @@ function DueModeButton({
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+      className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
         active ? 'bg-[#ffa173] text-white shadow-sm' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
       }`}
     >
@@ -245,6 +243,8 @@ function Modal({
   description,
   children,
   footer,
+  panelClassName = '',
+  footerClassName = '',
 }: {
   open: boolean;
   onClose: () => void;
@@ -252,13 +252,15 @@ function Modal({
   description?: string;
   children: ReactNode;
   footer: ReactNode;
+  panelClassName?: string;
+  footerClassName?: string;
 }) {
   if (!open) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
       <div
-        className="w-full max-w-lg rounded-2xl border border-gray-200 bg-white shadow-2xl"
+        className={`w-full max-w-lg rounded-2xl border border-gray-200 bg-white shadow-2xl ${panelClassName}`}
         onClick={(event) => event.stopPropagation()}
       >
         <div className="flex items-start justify-between border-b border-gray-100 p-5">
@@ -271,7 +273,7 @@ function Modal({
           </button>
         </div>
         <div className="space-y-4 p-5">{children}</div>
-        <div className="flex justify-end gap-3 border-t border-gray-100 p-4">{footer}</div>
+        <div className={`flex justify-end gap-3 border-t border-gray-100 p-4 ${footerClassName}`}>{footer}</div>
       </div>
     </div>
   );
@@ -309,8 +311,6 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
 
   const [catDialogOpen, setCatDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [catMode, setCatMode] = useState<'system' | 'custom'>('system');
-  const [systemName, setSystemName] = useState(SYSTEM_CATEGORY_OPTIONS[0]);
   const [customName, setCustomName] = useState('');
   const [capAmount, setCapAmount] = useState('');
 
@@ -513,8 +513,6 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
 
   const openAdd = () => {
     setEditingId(null);
-    setCatMode('system');
-    setSystemName(SYSTEM_CATEGORY_OPTIONS[0]);
     setCustomName('');
     setCapAmount('');
     setCatDialogOpen(true);
@@ -522,8 +520,6 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
 
   const openEdit = (category: FinancialCategory) => {
     setEditingId(category.id);
-    setCatMode(category.system ? 'system' : 'custom');
-    setSystemName(category.system ? category.name : SYSTEM_CATEGORY_OPTIONS[0]);
     setCustomName(category.system ? '' : category.name);
     setCapAmount(category.capAmount.toLocaleString('en-US'));
     setCatDialogOpen(true);
@@ -531,7 +527,9 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
   };
 
   const submitCategory = () => {
-    const name = catMode === 'system' ? systemName : customName.trim();
+    const name = editingLockedCategory ? editingCategory?.name ?? '' : customName.trim();
+    if (!name) return;
+
     const amount = parseNum(capAmount);
     const nextCategory: FinancialCategory = {
       id: editingId ?? `custom-${Date.now()}`,
@@ -539,7 +537,7 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
       capAmount: amount,
       dueAmount: amount,
       noDueAmount: 0,
-      system: catMode === 'system',
+      system: Boolean(editingLockedCategory),
       requiresDue: true,
     };
 
@@ -902,42 +900,25 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
         open={catDialogOpen}
         onClose={() => setCatDialogOpen(false)}
         title={editingId ? 'ویرایش ردیف مالی' : 'افزودن ردیف مالی'}
-        description="می‌توانید از دسته‌بندی‌های موجود انتخاب کنید یا یک نام جدید بسازید."
+        panelClassName="!max-w-[320px]"
+        footerClassName="justify-start border-gray-100 px-5 py-3"
         footer={
           <>
-            <button type="button" onClick={() => setCatDialogOpen(false)} className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">
-              انصراف
+            <button type="button" onClick={() => setCatDialogOpen(false)} className="px-1 py-1 text-sm font-bold text-[#0e989d] transition hover:text-[#0b7f84]">
+              لغو
             </button>
-            <button type="button" onClick={submitCategory} className="rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700">
-              {editingId ? 'ذخیره تغییرات' : 'افزودن'}
+            <button type="button" onClick={submitCategory} className="px-1 py-1 text-sm font-bold text-[#0e989d] transition hover:text-[#0b7f84]">
+              ثبت
             </button>
           </>
         }
       >
-        {!editingLockedCategory ? (
-          <div className="grid gap-3 md:grid-cols-2">
-            <ChoiceCard title="انتخاب از دسته‌بندی موجود" active={catMode === 'system'} onClick={() => setCatMode('system')} />
-            <ChoiceCard title="ثبت نام جدید" active={catMode === 'custom'} onClick={() => setCatMode('custom')} />
-          </div>
-        ) : null}
-
         {editingLockedCategory ? (
           <div>
             <FieldLabel label="دسته‌بندی ردیف" />
             <div className="mt-2 flex h-10 items-center rounded-md border border-gray-200 bg-gray-50 px-3 text-sm font-medium text-gray-700">
               {editingCategory?.name}
             </div>
-          </div>
-        ) : catMode === 'system' ? (
-          <div>
-            <FieldLabel label="دسته‌بندی موجود" />
-            <select value={systemName} onChange={(event) => setSystemName(event.target.value)} className="mt-2 h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-800 focus:outline-none focus:ring-1 focus:ring-teal-500">
-              {SYSTEM_CATEGORY_OPTIONS.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
           </div>
         ) : (
           <div>
@@ -1005,11 +986,11 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
                 setEditingDueId(null);
                 setDueFormError('');
               }}
-              className="rounded-full border border-teal-500 px-5 py-2 text-sm font-medium text-teal-700 hover:bg-teal-50"
+              className="rounded-lg border border-teal-500 px-3 py-1.5 text-xs font-bold text-teal-700 hover:bg-teal-50"
             >
               بازگشت
             </button>
-            <button type="button" onClick={submitDue} className="rounded-full bg-teal-600 px-5 py-2 text-sm font-medium text-white hover:bg-teal-700">
+            <button type="button" onClick={submitDue} className="rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-teal-700">
               {editingDueId ? 'ذخیره تغییرات' : 'ثبت'}
             </button>
           </>

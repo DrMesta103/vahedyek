@@ -841,9 +841,29 @@ textarea::placeholder {
   width: 134px;
   height: 134px;
   border-radius: 50%;
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.contract-flow-report-chart-animated {
+  animation: contract-flow-report-chart-spin 720ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.contract-flow-report-chart-svg {
+  position: absolute;
+  inset: -3px;
+  width: calc(100% + 6px);
+  height: calc(100% + 6px);
+  filter: drop-shadow(0 8px 18px rgba(15, 23, 42, 0.08));
+}
+
+.contract-flow-report-chart-segment {
+  transition:
+    stroke-dasharray 520ms ease,
+    stroke-dashoffset 520ms ease,
+    stroke 220ms ease;
 }
 
 .contract-flow-report-chart-center {
@@ -856,6 +876,8 @@ textarea::placeholder {
   align-items: center;
   justify-content: center;
   box-shadow: inset 0 0 0 1px var(--theme-accent-border);
+  position: relative;
+  z-index: 1;
 }
 
 .contract-flow-report-chart-center strong {
@@ -876,6 +898,21 @@ textarea::placeholder {
   justify-content: center;
   text-align: center;
   line-height: 1.8;
+}
+
+@keyframes contract-flow-report-chart-spin {
+  0% {
+    opacity: 0.62;
+    transform: rotate(-18deg) scale(0.96);
+  }
+  62% {
+    opacity: 1;
+    transform: rotate(8deg) scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+  }
 }
 
 .contract-flow-report-legend {

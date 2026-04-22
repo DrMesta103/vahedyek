@@ -3,6 +3,7 @@
 import { CircleCheck } from 'lucide-react';
 import { FieldGroup, TagPills } from './ContractFormPrimitives';
 import { Input } from '../../../../components/ui/input';
+import { persianMoneyWords } from '../../../../lib/persianNumberWords';
 import type { PricingType } from '../../../../types/contract';
 
 function PricingInput({
@@ -16,6 +17,8 @@ function PricingInput({
   onChange: (value: string) => void;
   placeholder: string;
 }) {
+  const words = persianMoneyWords(Number(value.replace(/,/g, '')) || 0);
+
   return (
     <div className="w-full">
       <div className="mb-1.5 text-[13px] text-[#6b7078]">{label}</div>
@@ -29,6 +32,7 @@ function PricingInput({
         />
         <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-xs font-semibold text-[#8b9096]">تومان</span>
       </div>
+      {words ? <div className="mt-1.5 text-[11px] font-bold leading-5 text-[#18a9c3]">{words}</div> : null}
     </div>
   );
 }
