@@ -6,8 +6,11 @@ import type { ContractFinancialData } from '../app/types/contract';
 function makeValidFinancialData(overrides: Partial<ContractFinancialData> = {}): ContractFinancialData {
   return {
     pricingType: 'fixed',
+    unitArea: '0',
+    parkingArea: '0',
     totalArea: '0',
     pricePerMeter: '0',
+    parkingPricePerMeter: '0',
     fixedTotalAmount: '10000000',
     activeTab: 'advance',
     categories: [
@@ -61,8 +64,11 @@ test('validateFinancialStep rejects metered pricing without area or price-per-me
   const result = validateFinancialStep(
     makeValidFinancialData({
       pricingType: 'metered',
+      unitArea: '0',
+      parkingArea: '0',
       totalArea: '0',
       pricePerMeter: '0',
+      parkingPricePerMeter: '0',
       fixedTotalAmount: '0',
     }),
   );
@@ -70,6 +76,23 @@ test('validateFinancialStep rejects metered pricing without area or price-per-me
   assert.equal(result.valid, false);
   assert.equal(result.errors.totalArea, 'این فیلد الزامی است');
   assert.equal(result.errors.pricePerMeter, 'این فیلد الزامی است');
+});
+
+test('validateFinancialStep rejects metered pricing with parking area but without parking price', () => {
+  const result = validateFinancialStep(
+    makeValidFinancialData({
+      pricingType: 'metered',
+      unitArea: '100',
+      parkingArea: '12',
+      totalArea: '112',
+      pricePerMeter: '1000000',
+      parkingPricePerMeter: '0',
+      fixedTotalAmount: '0',
+    }),
+  );
+
+  assert.equal(result.valid, false);
+  assert.ok(result.errors.parkingPricePerMeter);
 });
 
 test('validateFinancialStep rejects category totals above contract amount', () => {

@@ -228,8 +228,11 @@ model ContractFinancial {
   id               String               @id @default(cuid())
   draftId          String               @unique
   pricingType      PricingType          @default(fixed)
+  unitArea         Decimal?             @db.Decimal(18, 2)
+  parkingArea      Decimal?             @db.Decimal(18, 2)
   totalArea        Decimal?             @db.Decimal(18, 2)
   pricePerMeter    Decimal?             @db.Decimal(18, 2)
+  parkingPricePerMeter Decimal?         @db.Decimal(18, 2)
   fixedTotalAmount Decimal?             @db.Decimal(18, 2)
   activeTab        String?
   draft            ContractDraft        @relation(fields: [draftId], references: [id], onDelete: Cascade)

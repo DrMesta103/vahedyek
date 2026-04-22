@@ -57,6 +57,9 @@ export async function GET() {
           floorName: unit.floorName,
           name: unit.name,
           title: `${unit.floorName} - ${unit.name}`,
+          category: unit.category,
+          area: unit.area,
+          assignedToUnitId: unit.assignedToUnitId,
         })),
       })),
       directory: {

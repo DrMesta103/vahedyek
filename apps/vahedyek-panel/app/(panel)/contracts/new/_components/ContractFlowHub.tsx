@@ -101,6 +101,7 @@ function hasFinancialData(data: ContractFinancialData | null) {
     data.fixedTotalAmount ||
       data.totalArea ||
       data.pricePerMeter ||
+      data.parkingPricePerMeter ||
       (data.categories?.length ?? 0) ||
       (data.dueItems?.length ?? 0),
   );
@@ -122,7 +123,9 @@ function getToneClasses(tone: StatusTone) {
 function getContractTotal(data: ContractFinancialData | null) {
   if (!data) return 0;
   if (data.pricingType === 'metered') {
-    return Number(data.totalArea || 0) * Number(data.pricePerMeter || 0);
+    const parkingArea = Number(data.parkingArea || 0);
+    const unitArea = Number(data.unitArea || Math.max(Number(data.totalArea || 0) - parkingArea, 0));
+    return unitArea * Number(data.pricePerMeter || 0) + parkingArea * Number(data.parkingPricePerMeter || 0);
   }
   return Number(data.fixedTotalAmount || 0);
 }

@@ -104,8 +104,11 @@ export async function GET() {
         financial: draft.financial
           ? {
               pricingType: serializePricingType(draft.financial.pricingType),
+              unitArea: draft.financial.unitArea ? String(Number(draft.financial.unitArea)) : '',
+              parkingArea: draft.financial.parkingArea ? String(Number(draft.financial.parkingArea)) : '',
               totalArea: draft.financial.totalArea ? String(Number(draft.financial.totalArea)) : '',
               pricePerMeter: draft.financial.pricePerMeter ? String(Number(draft.financial.pricePerMeter)) : '',
+              parkingPricePerMeter: draft.financial.parkingPricePerMeter ? String(Number(draft.financial.parkingPricePerMeter)) : '',
               fixedTotalAmount: draft.financial.fixedTotalAmount ? String(Number(draft.financial.fixedTotalAmount)) : '',
               activeTab: draft.financial.activeTab ?? '',
               categories: draft.financial.categories.map((item) => ({

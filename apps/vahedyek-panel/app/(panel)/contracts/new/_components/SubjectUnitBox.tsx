@@ -5,7 +5,15 @@ import { ExpandableTagGroup, SectionCard, SectionHeader } from './ContractFormPr
 type BlockOption = {
   id: string;
   name: string;
-  units: Array<{ id: string; name: string; floorName: string; title: string }>;
+  units: Array<{
+    id: string;
+    name: string;
+    floorName: string;
+    title: string;
+    category: string;
+    area: number | null;
+    assignedToUnitId: string | null;
+  }>;
 };
 
 function UnitSelector({

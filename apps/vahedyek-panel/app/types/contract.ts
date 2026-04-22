@@ -63,8 +63,11 @@ export interface FinancialDueItemData {
 
 export interface ContractFinancialData {
   pricingType: PricingType;
+  unitArea?: string;
+  parkingArea?: string;
   totalArea: string;
   pricePerMeter: string;
+  parkingPricePerMeter?: string;
   fixedTotalAmount: string;
   activeTab: string;
   categories: FinancialCategoryData[];
@@ -103,6 +106,9 @@ export interface Unit {
   blockId: string;
   floorName?: string;
   name: string;
+  category?: string;
+  area?: number | null;
+  assignedToUnitId?: string | null;
 }
 
 export interface Employee {

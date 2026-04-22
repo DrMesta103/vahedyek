@@ -16,7 +16,15 @@ type EmployeeOption = { id: string; firstName: string; lastName: string };
 type BlockOption = {
   id: string;
   name: string;
-  units: Array<{ id: string; name: string; floorName: string; title: string }>;
+  units: Array<{
+    id: string;
+    name: string;
+    floorName: string;
+    title: string;
+    category: string;
+    area: number | null;
+    assignedToUnitId: string | null;
+  }>;
 };
 
 export function SubjectStep({ stepId, title, embedded = false }: { stepId: string; title: string; embedded?: boolean }) {

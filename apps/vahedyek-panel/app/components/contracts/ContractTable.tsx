@@ -55,9 +55,11 @@ export default function ContractTable({ contracts, blocks, units, onEdit, loadin
         const primaryPartyOne = parties.partyOne.find((party) => party.isPrimary) ?? parties.partyOne[0];
         const partyOneNames = parties.partyOne.map((party) => party.name);
         const partyTwoNames = parties.partyTwo.map((party) => party.name);
+        const parkingArea = Number(financial?.parkingArea || 0);
+        const unitArea = Number(financial?.unitArea || Math.max(Number(financial?.totalArea || 0) - parkingArea, 0));
         const amount =
           financial?.pricingType === 'metered'
-            ? Number(financial.totalArea || 0) * Number(financial.pricePerMeter || 0)
+            ? unitArea * Number(financial.pricePerMeter || 0) + parkingArea * Number(financial.parkingPricePerMeter || 0)
             : Number(financial?.fixedTotalAmount || 0);
 
         return (

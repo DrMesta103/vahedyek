@@ -99,7 +99,9 @@ export function validateFinancialStep(data: Partial<ContractFinancialData>): Val
 
   const pricingType = data.pricingType ?? 'fixed';
   const totalArea = Number(data.totalArea ?? 0);
+  const parkingArea = Number(data.parkingArea ?? 0);
   const pricePerMeter = Number(data.pricePerMeter ?? 0);
+  const parkingPricePerMeter = Number(data.parkingPricePerMeter ?? 0);
   const fixedTotalAmount = Number(data.fixedTotalAmount ?? 0);
   const categories = data.categories ?? [];
   const dueItems = data.dueItems ?? [];
@@ -107,6 +109,7 @@ export function validateFinancialStep(data: Partial<ContractFinancialData>): Val
   if (pricingType === 'metered') {
     if (totalArea <= 0) errors['totalArea'] = REQUIRED_MSG;
     if (pricePerMeter <= 0) errors['pricePerMeter'] = REQUIRED_MSG;
+    if (parkingArea > 0 && parkingPricePerMeter <= 0) errors['parkingPricePerMeter'] = REQUIRED_MSG;
   } else if (fixedTotalAmount <= 0) {
     errors['fixedTotalAmount'] = REQUIRED_MSG;
   }
@@ -115,7 +118,8 @@ export function validateFinancialStep(data: Partial<ContractFinancialData>): Val
     errors['categories'] = 'حداقل یک ردیف مالی باید ثبت شود';
   }
 
-  const totalContractAmount = pricingType === 'metered' ? totalArea * pricePerMeter : fixedTotalAmount;
+  const unitArea = Number(data.unitArea ?? Math.max(totalArea - parkingArea, 0));
+  const totalContractAmount = pricingType === 'metered' ? unitArea * pricePerMeter + parkingArea * parkingPricePerMeter : fixedTotalAmount;
   const categoriesTotal = categories.reduce((sum, item) => sum + Number(item.capAmount ?? 0), 0);
   if (totalContractAmount > 0 && categoriesTotal > totalContractAmount) {
     errors['categoriesTotal'] = 'جمع ردیف‌های مالی از مبلغ قرارداد بیشتر است.';

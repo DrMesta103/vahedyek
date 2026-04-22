@@ -2,12 +2,11 @@
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { AlertTriangle, CalendarDays, Plus, X } from 'lucide-react';
+import { CalendarDays, Plus, X } from 'lucide-react';
 import { ChoiceCard } from './ChoiceCard';
 import { FieldLabel } from './FieldLabel';
-import { FinancialCategoriesBox } from './FinancialCategoriesBox';
+import { FinancialPaymentFlow } from './FinancialPaymentFlow';
 import { FinancialPricingBox } from './FinancialPricingBox';
-import { FinancialSummaryBoxes } from './FinancialSummaryBoxes';
 import { StickySubmitBar } from './StickySubmitBar';
 import { Input } from '../../../../components/ui/input';
 import { PersianDatePicker } from '../../../../components/ui/PersianDatePicker';
@@ -16,13 +15,15 @@ import {
   clearFrontendStepDraft,
   ensureActiveDraftId,
   getFrontendStepDraft,
+  getReferenceData,
   getStepData,
   saveStepData,
   setFrontendStepDraft,
+  type ReferenceUnit,
 } from '../../../../lib/contractDraftClient';
 import { validateFinancialStep } from '../../../../lib/contractValidation';
 import { addIntervalToDate, buildRegularDueItems, distributeAmount, type DueFrequency } from '../../../../lib/financialUtils';
-import type { ContractFinancialData, FinancialCategoryData, FinancialDueItemData, PricingType } from '../../../../types/contract';
+import type { ContractFinancialData, ContractSubjectData, FinancialCategoryData, FinancialDueItemData, PricingType } from '../../../../types/contract';
 import { dispatchContractFlowDirty, dispatchContractFlowFinancialSnapshot, dispatchContractFlowSaved } from './contractFlowSignals';
 
 type FinancialCategory = FinancialCategoryData;
@@ -45,8 +46,11 @@ function normalizeFinancialPayload(data: ContractFinancialData | null): Contract
 
   return {
     pricingType: data?.pricingType ?? 'fixed',
+    unitArea: String(Number(data?.unitArea || data?.totalArea || 0)),
+    parkingArea: String(Number(data?.parkingArea || 0)),
     totalArea: String(Number(data?.totalArea || 0)),
     pricePerMeter: String(Number(data?.pricePerMeter || 0)),
+    parkingPricePerMeter: String(Number(data?.parkingPricePerMeter || 0)),
     fixedTotalAmount: String(Number(data?.fixedTotalAmount || 0)),
     activeTab: data?.activeTab || categories[0]?.id || 'advance',
     categories: categories.map((item) => ({
@@ -71,6 +75,15 @@ function formatInput(value: string) {
 
 function formatMoney(value: number) {
   return `${Math.round(value).toLocaleString('en-US')} تومان`;
+}
+
+function formatArea(value: number) {
+  if (!value) return '';
+  return value.toLocaleString('en-US', { maximumFractionDigits: 2 });
+}
+
+function getMeteredTotal(unitArea: number, parkingArea: number, unitPrice: number, parkingPrice: number) {
+  return unitArea * unitPrice + parkingArea * parkingPrice;
 }
 
 function DueModeButton({
@@ -279,7 +292,10 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
 
   const [pricingType, setPricingType] = useState<PricingType>('fixed');
   const [totalArea, setTotalArea] = useState('');
+  const [unitArea, setUnitArea] = useState('');
+  const [parkingArea, setParkingArea] = useState('');
   const [pricePerMeter, setPricePerMeter] = useState('');
+  const [parkingPricePerMeter, setParkingPricePerMeter] = useState('');
   const [fixedTotalAmount, setFixedTotalAmount] = useState('');
   const [categories, setCategories] = useState<FinancialCategory[]>(INITIAL_CATEGORIES);
   const [activeTab, setActiveTab] = useState('advance');
@@ -299,6 +315,7 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
   const [capAmount, setCapAmount] = useState('');
 
   const [dueDialogOpen, setDueDialogOpen] = useState(false);
+  const [editingDueId, setEditingDueId] = useState<string | null>(null);
   const [dueMode, setDueMode] = useState<DueMode>('irregular');
   const [dueTitle, setDueTitle] = useState('');
   const [dueAmount, setDueAmount] = useState('');
@@ -318,19 +335,43 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
     const load = async () => {
       try {
         const id = await ensureActiveDraftId();
-        const financialData = await getStepData<ContractFinancialData>(id, 'financial');
+        const [referenceData, subjectData, financialData] = await Promise.all([
+          getReferenceData(),
+          getStepData<ContractSubjectData>(id, 'subject'),
+          getStepData<ContractFinancialData>(id, 'financial'),
+        ]);
         const frontendDraft = getFrontendStepDraft<ContractFinancialData>(id, 'financial');
         const sourceData = frontendDraft ?? financialData;
+        const allUnits: ReferenceUnit[] = referenceData.blocks.flatMap((block) => block.units);
+        const selectedUnit =
+          allUnits.find((unit) => unit.id === subjectData?.unitId && unit.category === 'unit') ??
+          allUnits.find((unit) => unit.id === subjectData?.unitId);
+        const assignedParking = allUnits.filter((unit) => unit.category === 'parking' && unit.assignedToUnitId === subjectData?.unitId);
+        const derivedUnitArea = selectedUnit?.area ?? 0;
+        const derivedParkingArea = assignedParking.reduce((sum, unit) => sum + (unit.area ?? 0), 0);
+        const derivedTotalArea = derivedUnitArea + derivedParkingArea;
 
         if (!mounted) return;
 
         setDraftId(id);
-        initialSnapshotRef.current = JSON.stringify(normalizeFinancialPayload(financialData));
+        initialSnapshotRef.current = JSON.stringify({
+          ...normalizeFinancialPayload(financialData),
+          unitArea: String(derivedUnitArea),
+          parkingArea: String(derivedParkingArea),
+          totalArea: String(derivedTotalArea),
+        });
+
+        setUnitArea(formatArea(derivedUnitArea));
+        setParkingArea(formatArea(derivedParkingArea));
+        setTotalArea(formatArea(derivedTotalArea));
 
         if (sourceData) {
           setPricingType(sourceData.pricingType);
-          setTotalArea(sourceData.totalArea ? Number(sourceData.totalArea).toLocaleString('en-US') : '');
+          setUnitArea(formatArea(derivedUnitArea));
+          setParkingArea(formatArea(derivedParkingArea));
+          setTotalArea(formatArea(derivedTotalArea));
           setPricePerMeter(sourceData.pricePerMeter ? Number(sourceData.pricePerMeter).toLocaleString('en-US') : '');
+          setParkingPricePerMeter(sourceData.parkingPricePerMeter ? Number(sourceData.parkingPricePerMeter).toLocaleString('en-US') : '');
           setFixedTotalAmount(sourceData.fixedTotalAmount ? Number(sourceData.fixedTotalAmount).toLocaleString('en-US') : '');
           setCategories(
             sourceData.categories.length
@@ -352,7 +393,7 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
     };
   }, []);
 
-  const meteredTotal = parseNum(totalArea) * parseNum(pricePerMeter);
+  const meteredTotal = getMeteredTotal(parseNum(unitArea), parseNum(parkingArea), parseNum(pricePerMeter), parseNum(parkingPricePerMeter));
   const totalContractAmount = pricingType === 'metered' ? meteredTotal : parseNum(fixedTotalAmount);
 
   const overall = useMemo(
@@ -389,8 +430,11 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
 
   const buildPayload = (): ContractFinancialData => ({
     pricingType,
+    unitArea: String(parseNum(unitArea)),
+    parkingArea: String(parseNum(parkingArea)),
     totalArea: String(parseNum(totalArea)),
     pricePerMeter: String(parseNum(pricePerMeter)),
+    parkingPricePerMeter: String(parseNum(parkingPricePerMeter)),
     fixedTotalAmount: String(parseNum(fixedTotalAmount)),
     activeTab,
     categories: categories.map((item) => ({
@@ -409,7 +453,7 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
     const validation = validateFinancialStep(payload);
 
     if (!validation.valid) {
-      setFormError(validation.errors.categoriesTotal ?? validation.errors.fixedTotalAmount ?? validation.errors.totalArea ?? validation.errors.pricePerMeter ?? 'اطلاعات مالی معتبر نیست.');
+      setFormError(validation.errors.categoriesTotal ?? validation.errors.fixedTotalAmount ?? validation.errors.totalArea ?? validation.errors.pricePerMeter ?? validation.errors.parkingPricePerMeter ?? 'اطلاعات مالی معتبر نیست.');
       return false;
     }
 
@@ -523,6 +567,52 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
     setOpenInfoId(null);
   };
 
+  const updateCategoryAmount = (categoryId: string, value: string) => {
+    const amount = parseNum(value);
+    const nextCategories = categories.map((item) =>
+      item.id === categoryId
+        ? {
+            ...item,
+            capAmount: amount,
+            dueAmount: amount,
+            noDueAmount: 0,
+          }
+        : item,
+    );
+
+    setCategories(nextCategories);
+  };
+
+  const openDueForCategory = (categoryId: string) => {
+    setActiveTab(categoryId);
+    setEditingDueId(null);
+    setDueMode('irregular');
+    setDueTitle('');
+    setDueAmount('');
+    setDueDate('');
+    setRegularFrequency('monthly');
+    setRegularPeriod('1');
+    setRegularCount('');
+    setRegularStartDate('');
+    setDueFormError('');
+    setDueDialogOpen(true);
+  };
+
+  const openEditDueItem = (item: DueItem) => {
+    setActiveTab(item.categoryId);
+    setEditingDueId(item.id);
+    setDueMode('irregular');
+    setDueTitle(item.title);
+    setDueAmount(item.amount ? item.amount.toLocaleString('en-US') : '');
+    setDueDate(item.dueDate);
+    setRegularFrequency('monthly');
+    setRegularPeriod('1');
+    setRegularCount('');
+    setRegularStartDate('');
+    setDueFormError('');
+    setDueDialogOpen(true);
+  };
+
   const submitDue = () => {
     if (!dueTitle.trim()) {
       setDueFormError('عنوان سررسید را وارد کنید.');
@@ -540,16 +630,17 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
         return;
       }
 
-      setDueItems((current) => [
-        ...current,
-        {
-          id: `due-${Date.now()}`,
-          categoryId: activeTab,
-          title: dueTitle.trim(),
-          amount: parseNum(dueAmount),
-          dueDate,
-        },
-      ]);
+      const nextItem: DueItem = {
+        id: editingDueId ?? `due-${Date.now()}`,
+        categoryId: activeTab,
+        title: dueTitle.trim(),
+        amount: parseNum(dueAmount),
+        dueDate,
+      };
+
+      setDueItems((current) =>
+        editingDueId ? current.map((item) => (item.id === editingDueId ? nextItem : item)) : [...current, nextItem],
+      );
     } else {
       const count = Number(regularCount);
       if (!Number.isFinite(count) || count <= 0) {
@@ -581,6 +672,7 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
     }
 
     setDueMode('irregular');
+    setEditingDueId(null);
     setDueTitle('');
     setDueAmount('');
     setDueDate('');
@@ -615,7 +707,7 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
     }
     setDirty(hasChanges);
     dispatchContractFlowDirty(stepId as 'financial', hasChanges);
-  }, [activeTab, categories, draftId, dueItems, fixedTotalAmount, loading, pricePerMeter, pricingType, stepId, totalArea]);
+  }, [activeTab, categories, draftId, dueItems, fixedTotalAmount, loading, parkingArea, parkingPricePerMeter, pricePerMeter, pricingType, stepId, totalArea, unitArea]);
 
   useEffect(() => {
     if (embedded) return;
@@ -713,7 +805,7 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
   };
 
   return (
-    <div className="space-y-5 rounded-[28px] border border-white/70 bg-[radial-gradient(circle_at_top,#f8fffe,white_45%)] p-1">
+    <div className="space-y-5">
       {!embedded ? <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">{title}</h1>
@@ -728,9 +820,12 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
         pricingType={pricingType}
         onPricingTypeChange={setPricingType}
         totalArea={totalArea}
-        onTotalAreaChange={setTotalArea}
+        unitArea={unitArea}
+        parkingArea={parkingArea}
         pricePerMeter={pricePerMeter}
         onPricePerMeterChange={setPricePerMeter}
+        parkingPricePerMeter={parkingPricePerMeter}
+        onParkingPricePerMeterChange={setParkingPricePerMeter}
         fixedTotalAmount={fixedTotalAmount}
         onFixedTotalAmountChange={setFixedTotalAmount}
         meteredTotal={meteredTotal}
@@ -738,51 +833,21 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
         formatMoney={formatMoney}
       />
 
-      {overContractAmount ? (
-        <div className="flex items-start gap-3 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
-          <div>جمع ردیف‌های مالی از مبلغ قرارداد بیشتر شده است. مبلغ قرارداد را اصلاح کنید؛ در غیر این صورت ثبت اطلاعات مالی انجام نمی‌شود.</div>
-        </div>
-      ) : null}
-
       {formError ? <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{formError}</div> : null}
 
-      <FinancialSummaryBoxes
-        capAmount={overall.cap}
-        dueAmount={overall.due}
-        totalContractAmount={totalContractAmount}
-        pricingHint={pricingType === 'metered' ? 'محاسبه شده از متراژ و نرخ' : 'ثبت شده به صورت مقطوع'}
-        formatMoney={formatMoney}
-      />
-
-      <FinancialCategoriesBox
+      <FinancialPaymentFlow
         categories={categories}
-        activeTab={activeTab}
-        openMenuId={openMenuId}
-        openInfoId={openInfoId}
         lockedCategoryIds={LOCKED_CATEGORY_IDS}
         categoryDueItemsMap={categoryDueItemsMap}
-        visibleDueItems={visibleDueItems}
-        chart={<FinancialCategoriesPieChart categories={categories} totalContractAmount={totalContractAmount} />}
-        onActiveTabChange={setActiveTab}
-        onOpenMenuIdChange={setOpenMenuId}
-        onOpenInfoIdChange={setOpenInfoId}
+        dueAmount={overall.due}
+        onCategoryAmountChange={updateCategoryAmount}
         onOpenAddCategory={openAdd}
         onOpenEditCategory={openEdit}
         onDeleteCategory={deleteCategory}
-        onOpenDueDialog={() => {
-          setDueMode('irregular');
-          setDueTitle('');
-          setDueAmount('');
-          setDueDate('');
-          setRegularFrequency('monthly');
-          setRegularPeriod('1');
-          setRegularCount('');
-          setRegularStartDate('');
-          setDueFormError('');
-          setDueDialogOpen(true);
-        }}
+        onOpenDueDialog={openDueForCategory}
+        onEditDueItem={openEditDueItem}
         onDeleteDueItem={(id) => setDueItems((current) => current.filter((dueItem) => dueItem.id !== id))}
+        formatInput={formatInput}
         formatMoney={formatMoney}
       />
 
@@ -926,9 +991,10 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
         open={dueDialogOpen}
         onClose={() => {
           setDueDialogOpen(false);
+          setEditingDueId(null);
           setDueFormError('');
         }}
-        title="ثبت سررسید"
+        title={editingDueId ? 'ویرایش سررسید' : 'ثبت سررسید'}
         description={`سررسید برای ${categories.find((item) => item.id === activeTab)?.name ?? 'دسته‌بندی فعال'} ثبت می‌شود.`}
         footer={
           <>
@@ -936,6 +1002,7 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
               type="button"
               onClick={() => {
                 setDueDialogOpen(false);
+                setEditingDueId(null);
                 setDueFormError('');
               }}
               className="rounded-full border border-teal-500 px-5 py-2 text-sm font-medium text-teal-700 hover:bg-teal-50"
@@ -943,24 +1010,26 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
               بازگشت
             </button>
             <button type="button" onClick={submitDue} className="rounded-full bg-teal-600 px-5 py-2 text-sm font-medium text-white hover:bg-teal-700">
-              ثبت
+              {editingDueId ? 'ذخیره تغییرات' : 'ثبت'}
             </button>
           </>
         }
       >
         <div className="space-y-5">
           <div className="rounded-[22px] border border-gray-100 bg-[#fcfdfd] p-4 shadow-[0_12px_40px_rgba(15,118,110,0.06)]">
-            <div className="flex flex-wrap items-center justify-end gap-3 text-sm font-semibold text-gray-800">
-              <span>نوع قسط</span>
-              <div className="flex items-center gap-2 rounded-full bg-white p-1 shadow-sm">
-                <DueModeButton active={dueMode === 'irregular'} onClick={() => setDueMode('irregular')}>
-                  قسط نامنظم
-                </DueModeButton>
-                <DueModeButton active={dueMode === 'regular'} onClick={() => setDueMode('regular')}>
-                  قسط منظم
-                </DueModeButton>
+              <div className="flex flex-wrap items-center justify-end gap-3 text-sm font-semibold text-gray-800">
+                <span>نوع قسط</span>
+                <div className="flex items-center gap-2 rounded-full bg-white p-1 shadow-sm">
+                  <DueModeButton active={dueMode === 'irregular'} onClick={() => setDueMode('irregular')}>
+                    قسط نامنظم
+                  </DueModeButton>
+                  {!editingDueId ? (
+                    <DueModeButton active={dueMode === 'regular'} onClick={() => setDueMode('regular')}>
+                      قسط منظم
+                    </DueModeButton>
+                  ) : null}
+                </div>
               </div>
-            </div>
           </div>
 
           <div className="rounded-[22px] border border-gray-100 bg-white p-4 shadow-[0_12px_36px_rgba(15,23,42,0.04)]">

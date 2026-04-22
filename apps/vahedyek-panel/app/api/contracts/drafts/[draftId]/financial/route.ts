@@ -67,8 +67,11 @@ export async function GET(_: Request, { params }: { params: { draftId: string } 
 
     return NextResponse.json({
       pricingType: serializePricingType(financial.pricingType),
+      unitArea: financial.unitArea ? String(Number(financial.unitArea)) : '',
+      parkingArea: financial.parkingArea ? String(Number(financial.parkingArea)) : '',
       totalArea: financial.totalArea ? String(Number(financial.totalArea)) : '',
       pricePerMeter: financial.pricePerMeter ? String(Number(financial.pricePerMeter)) : '',
+      parkingPricePerMeter: financial.parkingPricePerMeter ? String(Number(financial.parkingPricePerMeter)) : '',
       fixedTotalAmount: financial.fixedTotalAmount ? String(Number(financial.fixedTotalAmount)) : '',
       activeTab: categoryIds.has(financial.activeTab ?? '') ? financial.activeTab : categories[0]?.id ?? '',
       categories,
@@ -99,11 +102,17 @@ export async function PUT(request: Request, { params }: { params: { draftId: str
     const dueItems = normalizeFinancialDueItems(body.dueItems ?? [], categoryIds);
     const activeTab = categoryIds.has(body.activeTab) ? body.activeTab : categories[0]?.id ?? null;
     const pricingType = parsePricingType(body.pricingType);
+    const unitArea = body.unitArea ? toNumber(body.unitArea) : null;
+    const parkingArea = body.parkingArea ? toNumber(body.parkingArea) : null;
     const totalArea = body.totalArea ? toNumber(body.totalArea) : null;
     const pricePerMeter = body.pricePerMeter ? toNumber(body.pricePerMeter) : null;
+    const parkingPricePerMeter = body.parkingPricePerMeter ? toNumber(body.parkingPricePerMeter) : null;
     const fixedTotalAmount = body.fixedTotalAmount ? toNumber(body.fixedTotalAmount) : null;
     const totalContractAmount =
-      pricingType === PricingType.metered ? (totalArea ?? 0) * (pricePerMeter ?? 0) : (fixedTotalAmount ?? 0);
+      pricingType === PricingType.metered
+        ? (unitArea ?? Math.max((totalArea ?? 0) - (parkingArea ?? 0), 0)) * (pricePerMeter ?? 0) +
+          (parkingArea ?? 0) * (parkingPricePerMeter ?? 0)
+        : (fixedTotalAmount ?? 0);
     const categoriesTotal = categories.reduce((sum, item) => sum + item.capAmount, 0);
 
     if (totalContractAmount > 0 && categoriesTotal > totalContractAmount) {
@@ -117,16 +126,22 @@ export async function PUT(request: Request, { params }: { params: { draftId: str
       where: { draftId: params.draftId },
       update: {
         pricingType,
+        unitArea,
+        parkingArea,
         totalArea,
         pricePerMeter,
+        parkingPricePerMeter,
         fixedTotalAmount,
         activeTab,
       },
       create: {
         draftId: params.draftId,
         pricingType,
+        unitArea,
+        parkingArea,
         totalArea,
         pricePerMeter,
+        parkingPricePerMeter,
         fixedTotalAmount,
         activeTab,
       },

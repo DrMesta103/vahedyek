@@ -1,18 +1,48 @@
 'use client';
 
-import { ChoiceCard } from './ChoiceCard';
-import { FieldLabel } from './FieldLabel';
-import { FormBox } from './FormBox';
+import { CircleCheck } from 'lucide-react';
+import { FieldGroup, TagPills } from './ContractFormPrimitives';
 import { Input } from '../../../../components/ui/input';
 import type { PricingType } from '../../../../types/contract';
+
+function PricingInput({
+  label,
+  value,
+  onChange,
+  placeholder,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+}) {
+  return (
+    <div className="w-full">
+      <div className="mb-1.5 text-[13px] text-[#6b7078]">{label}</div>
+      <div className="relative">
+        <Input
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          placeholder={placeholder}
+          inputMode="numeric"
+          className="h-10 rounded-lg border-[#cfd4db] bg-white/80 pr-3 pl-14 text-left text-[13px] font-semibold text-[#4e545c]"
+        />
+        <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-xs font-semibold text-[#8b9096]">تومان</span>
+      </div>
+    </div>
+  );
+}
 
 export function FinancialPricingBox({
   pricingType,
   onPricingTypeChange,
   totalArea,
-  onTotalAreaChange,
+  unitArea,
+  parkingArea,
   pricePerMeter,
   onPricePerMeterChange,
+  parkingPricePerMeter,
+  onParkingPricePerMeterChange,
   fixedTotalAmount,
   onFixedTotalAmountChange,
   meteredTotal,
@@ -22,9 +52,12 @@ export function FinancialPricingBox({
   pricingType: PricingType;
   onPricingTypeChange: (value: PricingType) => void;
   totalArea: string;
-  onTotalAreaChange: (value: string) => void;
+  unitArea: string;
+  parkingArea: string;
   pricePerMeter: string;
   onPricePerMeterChange: (value: string) => void;
+  parkingPricePerMeter: string;
+  onParkingPricePerMeterChange: (value: string) => void;
   fixedTotalAmount: string;
   onFixedTotalAmountChange: (value: string) => void;
   meteredTotal: number;
@@ -32,35 +65,101 @@ export function FinancialPricingBox({
   formatMoney: (value: number) => string;
 }) {
   return (
-    <FormBox title="قیمت‌گذاری قرارداد" description="نوع قیمت‌گذاری قرارداد را مشخص کنید.">
-      <div className="grid gap-3 md:grid-cols-2">
-        <ChoiceCard title="مقطوع" active={pricingType === 'fixed'} onClick={() => onPricingTypeChange('fixed')} />
-        <ChoiceCard title="متری" active={pricingType === 'metered'} onClick={() => onPricingTypeChange('metered')} />
+    <section className="border-b border-[#d9dde4] pb-5">
+      <div className="mb-3 text-[13px] font-bold text-[#4c5259]">
+        قیمت‌گذاری قرارداد
       </div>
 
-      {pricingType === 'metered' ? (
-        <div className="mt-4 grid gap-4 lg:grid-cols-3">
-          <div>
-            <FieldLabel label="متراژ کل" />
-            <Input value={totalArea} onChange={(event) => onTotalAreaChange(formatInput(event.target.value))} placeholder="مثال: 120" className="mt-2" />
-          </div>
-          <div>
-            <FieldLabel label="قیمت هر متر مربع" />
-            <Input value={pricePerMeter} onChange={(event) => onPricePerMeterChange(formatInput(event.target.value))} placeholder="مثال: 450,000" className="mt-2" />
-          </div>
-          <div>
-            <FieldLabel label="قیمت کل محاسبه شده" />
-            <div className="mt-2 flex h-10 items-center rounded-md border border-green-300 bg-green-50 px-3.5 text-sm font-semibold text-green-700">
-              {formatMoney(meteredTotal)}
+      <div>
+        <p className="mb-4 text-[13px] leading-7 text-[#666b73]">
+          برای تعیین مبلغ قرارداد انتخاب کنید که مبلغ واحد به صورت مقطوع است یا بر اساس مساحت متر مربع محاسبه می‌شود.
+        </p>
+
+        <FieldGroup label="نوع قیمت‌گذاری" required>
+          <TagPills
+            value={pricingType}
+            onChange={onPricingTypeChange}
+            options={[
+              { value: 'metered', label: 'قیمت فروش به صورت متری' },
+              { value: 'fixed', label: 'قیمت فروش کلی' },
+            ]}
+          />
+        </FieldGroup>
+
+        <div className="mt-4 rounded-xl bg-[#ededed] px-3 py-3">
+          {pricingType === 'metered' ? (
+            <div className="space-y-3">
+              <div className="grid gap-4 border-b border-[#cfd4db]/70 pb-3 lg:grid-cols-[1fr_minmax(280px,520px)] lg:items-start">
+                  <div>
+                    <div className="mb-1 flex items-center gap-2 text-[13px] font-bold text-[#52575f]">
+                      <CircleCheck className="h-5 w-5 text-[#59606a]" />
+                      <span>هر مترمربع واحد</span>
+                    </div>
+                    <p className="text-[13px] leading-7 text-[#666b73]">
+                      مبلغ موردنظر برای هر مترمربع از واحد را وارد کنید. این مقدار در متراژ واحد ضرب شده و مبلغ پایه قرارداد را تشکیل می‌دهد.
+                    </p>
+                  </div>
+                  <div>
+                    <PricingInput
+                      label="مبلغ هر مترمربع واحد"
+                      value={pricePerMeter}
+                      onChange={(value) => onPricePerMeterChange(formatInput(value))}
+                      placeholder="مثال: 450,000"
+                    />
+                    <div className="mt-2 text-sm text-[#5c6169]">متراژ واحد: {unitArea || '0'} متر مربع</div>
+                  </div>
+              </div>
+
+              <div className="grid gap-4 border-b border-[#cfd4db]/70 pb-3 lg:grid-cols-[1fr_minmax(280px,520px)] lg:items-start">
+                  <div>
+                    <div className="mb-1 flex items-center gap-2 text-[13px] font-bold text-[#52575f]">
+                      <CircleCheck className="h-5 w-5 text-[#59606a]" />
+                      <span>هر مترمربع پارکینگ</span>
+                    </div>
+                    <p className="text-[13px] leading-7 text-[#666b73]">
+                      اگر واحد دارای پارکینگ است، قیمت هر متر پارکینگ را جداگانه وارد کنید تا در مبلغ کل محاسبه شود.
+                    </p>
+                  </div>
+                  <div>
+                    <PricingInput
+                      label="مبلغ هر مترمربع پارکینگ"
+                      value={parkingPricePerMeter}
+                      onChange={(value) => onParkingPricePerMeterChange(formatInput(value))}
+                      placeholder="مثال: 120,000"
+                    />
+                    <div className="mt-2 text-sm text-[#5c6169]">متراژ پارکینگ: {parkingArea || '0'} متر مربع</div>
+                  </div>
+              </div>
+
+              <div className="pt-1">
+                <div className="mb-1 text-[13px] text-[#6b7078]">قیمت کل محاسبه‌شده</div>
+                <div className="flex min-h-10 items-center justify-between rounded-lg border border-[#aeb9c3] bg-white/60 px-3 text-[13px] font-bold text-[#4b5159]">
+                  <span>متراژ کل: {totalArea || '0'} متر مربع</span>
+                  <span>{formatMoney(meteredTotal)}</span>
+                </div>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="grid gap-4 lg:grid-cols-[1fr_minmax(280px,520px)] lg:items-start">
+                <div>
+                  <div className="mb-1 flex items-center gap-2 text-[13px] font-bold text-[#52575f]">
+                    <CircleCheck className="h-5 w-5 text-[#59606a]" />
+                    <span>قیمت فروش کلی</span>
+                  </div>
+                  <p className="text-[13px] leading-7 text-[#666b73]">
+                    مبلغ کل قرارداد را به صورت ثابت وارد کنید. در این حالت متراژ واحد و پارکینگ در محاسبه مبلغ دخالت داده نمی‌شود.
+                  </p>
+                </div>
+                <PricingInput
+                  label="مبلغ کل قرارداد"
+                  value={fixedTotalAmount}
+                  onChange={(value) => onFixedTotalAmountChange(formatInput(value))}
+                  placeholder="مبلغ کل را وارد کنید"
+                />
+            </div>
+          )}
         </div>
-      ) : (
-        <div className="mt-4 max-w-md">
-          <FieldLabel label="مبلغ کل قرارداد" />
-          <Input value={fixedTotalAmount} onChange={(event) => onFixedTotalAmountChange(formatInput(event.target.value))} placeholder="مبلغ کل را وارد کنید" className="mt-2" />
-        </div>
-      )}
-    </FormBox>
+      </div>
+    </section>
   );
 }

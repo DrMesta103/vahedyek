@@ -31,6 +31,9 @@ export default function ContractsPage() {
               blockId: block.id,
               floorName: unit.floorName,
               name: unit.name,
+              category: unit.category,
+              area: unit.area,
+              assignedToUnitId: unit.assignedToUnitId,
             })),
           ),
         );

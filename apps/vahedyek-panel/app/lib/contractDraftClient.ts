@@ -2,10 +2,20 @@
 
 const ACTIVE_DRAFT_KEY = 'active-contract-draft-id';
 const FRONTEND_STEP_DRAFT_PREFIX = 'contract-flow:frontend-step-draft';
+export type ReferenceUnit = {
+  id: string;
+  floorName: string;
+  name: string;
+  title: string;
+  category: string;
+  area: number | null;
+  assignedToUnitId: string | null;
+};
+
 export type ReferenceDataResponse = {
   employees: Array<{ id: string; firstName: string; lastName: string }>;
   formerEmployees: Array<{ id: string; fullName: string }>;
-  blocks: Array<{ id: string; name: string; units: Array<{ id: string; floorName: string; name: string; title: string }> }>;
+  blocks: Array<{ id: string; name: string; units: ReferenceUnit[] }>;
   directory: {
     partner: {
       natural: Array<{ id: string; name: string }>;
