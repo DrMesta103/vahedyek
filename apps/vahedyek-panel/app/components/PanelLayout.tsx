@@ -149,7 +149,41 @@ export default function PanelLayout({ children }: PanelLayoutProps) {
       }
 
       if (pathname.startsWith('/business-settings/project')) {
-        trail.push({ label: 'تعریف پروژه / مجتمع' });
+        trail.push({
+          label: 'تعریف پروژه / مجتمع',
+          href: pathname.startsWith('/business-settings/project/') ? '/business-settings/project' : undefined,
+        });
+      }
+
+      if (pathname.startsWith('/business-settings/project/blocks')) {
+        trail.push({
+          label: 'فهرست بلوک',
+          href: pathname === '/business-settings/project/blocks' ? undefined : '/business-settings/project/blocks',
+        });
+      }
+
+      if (pathname.startsWith('/business-settings/project/blocks/new')) {
+        trail.push({ label: 'ثبت بلوک' });
+      }
+
+      if (pathname.includes('/business-settings/project/blocks/') && pathname.endsWith('/edit')) {
+        trail.push({ label: 'ویرایش بلوک' });
+      }
+
+      if (pathname.includes('/business-settings/project/blocks/') && !pathname.endsWith('/edit') && !pathname.endsWith('/new') && !pathname.includes('/floors/')) {
+        trail.push({ label: 'جزئیات بلوک' });
+      }
+
+      if (pathname.includes('/business-settings/project/blocks/') && pathname.includes('/floors/')) {
+        trail.push({ label: 'جزئیات بلوک', href: pathname.split('/floors/')[0] });
+        if (pathname.endsWith('/floors/new')) {
+          trail.push({ label: 'ثبت طبقه' });
+        } else if (pathname.endsWith('/units/new')) {
+          trail.push({ label: 'جزئیات طبقه', href: pathname.split('/units/new')[0] });
+          trail.push({ label: 'ثبت واحد' });
+        } else {
+          trail.push({ label: 'جزئیات طبقه' });
+        }
       }
 
       return {

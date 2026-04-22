@@ -62,6 +62,8 @@ model Tenant {
   employees     Employee[]
   formerEmployees FormerEmployee[]
   blocks        Block[]
+  blockFloors   BlockFloor[]
+  projectPlates ProjectPlate[]
   units         Unit[]
   directory     DirectoryPerson[]
   roles         TenantRole[]
@@ -292,24 +294,71 @@ model Block {
   id        String            @id
   tenantId  String
   name      String
+  mainPlate String?
+  subPlate  String?
+  status    String            @default("incomplete")
+  usageCounts Json            @default("{\"residential\":0,\"commercial\":0,\"office\":0,\"parking\":0,\"storage\":0,\"amenity\":0}")
   tenant    Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  floors    BlockFloor[]
   units     Unit[]
   subjects  ContractSubject[]
 
   @@index([tenantId])
 }
 
-model Unit {
-  id        String            @id
+model BlockFloor {
+  id        String   @id
   tenantId  String
   blockId   String
-  floorName String
   name      String
-  tenant    Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  block     Block             @relation(fields: [blockId], references: [id], onDelete: Cascade)
-  subjects  ContractSubject[]
+  createdAt DateTime @default(now())
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  block     Block    @relation(fields: [blockId], references: [id], onDelete: Cascade)
 
   @@index([tenantId, blockId])
+  @@unique([tenantId, blockId, name])
+}
+
+model ProjectPlate {
+  id        String   @id
+  tenantId  String
+  mainPlate String
+  subPlates Json     @default("[]")
+  createdAt DateTime @default(now())
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, mainPlate])
+  @@index([tenantId])
+}
+
+model Unit {
+  id               String            @id
+  tenantId         String
+  blockId          String
+  floorName        String
+  name             String
+  category         String            @default("unit")
+  unitType         String?
+  usage            String            @default("residential")
+  saleEnabled      Boolean           @default(true)
+  deliveryStatus   String            @default("ready")
+  area             Float?
+  balconyCount     Int               @default(0)
+  bedroomCount     Int               @default(0)
+  postalCode       String?
+  amenities        Json              @default("[]")
+  baseInfo         String?
+  direction        String            @default("unknown")
+  assignedToUnitId String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  tenant           Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  block            Block             @relation(fields: [blockId], references: [id], onDelete: Cascade)
+  subjects         ContractSubject[]
+
+  @@index([tenantId, blockId])
+  @@index([tenantId, blockId, category])
+  @@index([tenantId, assignedToUnitId])
 }
 
 model DirectoryPerson {
