@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { CalendarDays, Plus, X } from 'lucide-react';
+import { TagPills } from './ContractFormPrimitives';
 import { FieldLabel } from './FieldLabel';
 import { FinancialPaymentFlow } from './FinancialPaymentFlow';
 import { FinancialPricingBox } from './FinancialPricingBox';
@@ -84,24 +85,38 @@ function getMeteredTotal(unitArea: number, parkingArea: number, unitPrice: numbe
   return unitArea * unitPrice + parkingArea * parkingPrice;
 }
 
-function DueModeButton({
-  active,
-  children,
-  onClick,
+function TwoOptionSwitch<T extends string>({
+  value,
+  onChange,
+  onValue,
+  offValue,
+  onText,
+  offText,
+  disabled = false,
 }: {
-  active: boolean;
-  children: ReactNode;
-  onClick: () => void;
+  value: T;
+  onChange: (value: T) => void;
+  onValue: T;
+  offValue: T;
+  onText: string;
+  offText: string;
+  disabled?: boolean;
 }) {
+  const checked = value === onValue;
+
   return (
     <button
       type="button"
-      onClick={onClick}
-      className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
-        active ? 'bg-[#ffa173] text-white shadow-sm' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-      }`}
+      className="business-switch financial-due-switch"
+      aria-pressed={checked}
+      disabled={disabled}
+      onClick={() => {
+        if (disabled) return;
+        onChange(checked ? offValue : onValue);
+      }}
     >
-      {children}
+      <span className="business-switch-option is-on">{onText}</span>
+      <span className="business-switch-option is-off">{offText}</span>
     </button>
   );
 }
@@ -977,6 +992,7 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
         }}
         title={editingDueId ? 'ویرایش سررسید' : 'ثبت سررسید'}
         description={`سررسید برای ${categories.find((item) => item.id === activeTab)?.name ?? 'دسته‌بندی فعال'} ثبت می‌شود.`}
+        footerClassName="justify-start border-gray-100 px-5 py-3"
         footer={
           <>
             <button
@@ -986,42 +1002,42 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
                 setEditingDueId(null);
                 setDueFormError('');
               }}
-              className="rounded-lg border border-teal-500 px-3 py-1.5 text-xs font-bold text-teal-700 hover:bg-teal-50"
+              className="px-1 py-1 text-sm font-bold text-[#0e989d] transition hover:text-[#0b7f84]"
             >
-              بازگشت
+              لغو
             </button>
-            <button type="button" onClick={submitDue} className="rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-teal-700">
+            <button type="button" onClick={submitDue} className="px-1 py-1 text-sm font-bold text-[#0e989d] transition hover:text-[#0b7f84]">
               {editingDueId ? 'ذخیره تغییرات' : 'ثبت'}
             </button>
           </>
         }
       >
-        <div className="space-y-5">
-          <div className="rounded-[22px] border border-gray-100 bg-[#fcfdfd] p-4 shadow-[0_12px_40px_rgba(15,118,110,0.06)]">
-              <div className="flex flex-wrap items-center justify-end gap-3 text-sm font-semibold text-gray-800">
-                <span>نوع قسط</span>
-                <div className="flex items-center gap-2 rounded-full bg-white p-1 shadow-sm">
-                  <DueModeButton active={dueMode === 'irregular'} onClick={() => setDueMode('irregular')}>
-                    قسط نامنظم
-                  </DueModeButton>
-                  {!editingDueId ? (
-                    <DueModeButton active={dueMode === 'regular'} onClick={() => setDueMode('regular')}>
-                      قسط منظم
-                    </DueModeButton>
-                  ) : null}
-                </div>
-              </div>
-          </div>
+        <div className="space-y-4">
+          <section className="space-y-2">
+            <div className="flex items-center justify-between gap-3">
+              <FieldLabel label="نوع سررسید" />
+              <TwoOptionSwitch<DueMode>
+                value={dueMode}
+                onChange={setDueMode}
+                onValue="regular"
+                offValue="irregular"
+                onText="منظم"
+                offText="نامنظم"
+                disabled={Boolean(editingDueId)}
+              />
+            </div>
+          </section>
 
-          <div className="rounded-[22px] border border-gray-100 bg-white p-4 shadow-[0_12px_36px_rgba(15,23,42,0.04)]">
-            <div className="space-y-3.5">
+          <section className="space-y-3 border-t border-gray-100 pt-4">
+            <div className="text-[13px] font-bold text-gray-800">اطلاعات اصلی</div>
+            <div className="grid gap-3 md:grid-cols-2">
               <div>
                 <FieldLabel label="عنوان" />
                 <Input
                   value={dueTitle}
                   onChange={(event) => setDueTitle(event.target.value)}
                   placeholder={dueMode === 'regular' ? 'مثال: اقساط ماهانه' : 'مثال: قسط نامنظم'}
-                  className="mt-2 h-11 rounded-full border-gray-200 bg-[#fcfdfd] px-4 text-[13px]"
+                  className="mt-2 h-10 rounded-lg border-gray-200 bg-[#fcfdfd] px-3 text-[13px]"
                 />
               </div>
 
@@ -1032,82 +1048,81 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
                     value={dueAmount}
                     onChange={(event) => setDueAmount(formatInput(event.target.value))}
                     placeholder={dueMode === 'regular' ? 'مبلغ کل را وارد کنید' : 'مبلغ سررسید'}
-                    className="h-11 rounded-full border-gray-200 bg-[#fcfdfd] px-4 text-[13px]"
+                    className="h-10 rounded-lg border-gray-200 bg-[#fcfdfd] pr-3 pl-12 text-[13px]"
                   />
-                  <span className="pointer-events-none absolute inset-y-0 left-5 flex items-center text-sm text-gray-400">تومان</span>
+                  <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-xs text-gray-400">تومان</span>
                 </div>
               </div>
+            </div>
+          </section>
 
-              {dueMode === 'irregular' ? (
-                <DateField label="تاریخ را وارد کنید" value={dueDate} onChange={setDueDate} placeholder="تاریخ سررسید را انتخاب کنید" />
-              ) : (
-                <div className="space-y-3 rounded-[18px] border border-[#eef4f3] bg-[#fbfdfd] p-3.5">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <p className="text-sm font-bold text-gray-800">تقسیم‌بندی اقساط</p>
-                    <div className="flex items-center gap-2 text-sm">
-                      <span className="text-gray-400">بازه زمانی اقساط</span>
-                      <div className="flex items-center gap-2 rounded-full bg-white p-1 shadow-sm">
-                        <DueModeButton active={regularFrequency === 'monthly'} onClick={() => setRegularFrequency('monthly')}>
-                          ماهانه
-                        </DueModeButton>
-                        <DueModeButton active={regularFrequency === 'daily'} onClick={() => setRegularFrequency('daily')}>
-                          روزانه
-                        </DueModeButton>
-                      </div>
-                    </div>
-                  </div>
+          <section className="space-y-3 border-t border-gray-100 pt-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className="text-[13px] font-bold text-gray-800">{dueMode === 'regular' ? 'زمان‌بندی اقساط' : 'زمان سررسید'}</div>
+              {dueMode === 'regular' ? (
+                <TagPills<DueFrequency>
+                  value={regularFrequency}
+                  onChange={setRegularFrequency}
+                  options={[
+                    { value: 'monthly', label: 'ماهانه' },
+                    { value: 'daily', label: 'روزانه' },
+                  ]}
+                />
+              ) : null}
+            </div>
 
-                  <div className="grid gap-3 md:grid-cols-2">
-                    <div>
-                      <FieldLabel label={`دوره اقساط ${regularFrequency === 'monthly' ? 'ماهانه' : 'روزانه'}`} />
-                      <Input
-                        value={regularPeriod}
-                        onChange={(event) => setRegularPeriod(event.target.value.replace(/\D/g, ''))}
-                        placeholder={regularFrequency === 'monthly' ? 'مثال: 1 ماه' : 'مثال: 7 روز'}
-                        className="mt-2 h-11 rounded-full border-gray-200 bg-white px-4 text-[13px]"
-                      />
-                    </div>
-                    <div>
-                      <FieldLabel label={regularFrequency === 'monthly' ? 'تعداد اقساط ماهانه' : 'تعداد اقساط روزانه'} />
-                      <Input
-                        value={regularCount}
-                        onChange={(event) => setRegularCount(event.target.value.replace(/\D/g, ''))}
-                        placeholder="مثال: 6"
-                        className="mt-2 h-11 rounded-full border-gray-200 bg-white px-4 text-[13px]"
-                      />
-                    </div>
-                    <DateField
-                      label={`شروع اقساط ${regularFrequency === 'monthly' ? 'منظم' : 'روزانه'}`}
-                      value={regularStartDate}
-                      onChange={setRegularStartDate}
-                      placeholder="تاریخ شروع را انتخاب کنید"
+            {dueMode === 'irregular' ? (
+              <DateField label="تاریخ سررسید" value={dueDate} onChange={setDueDate} placeholder="تاریخ سررسید را انتخاب کنید" />
+            ) : (
+              <>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <div>
+                    <FieldLabel label={`دوره اقساط ${regularFrequency === 'monthly' ? 'ماهانه' : 'روزانه'}`} />
+                    <Input
+                      value={regularPeriod}
+                      onChange={(event) => setRegularPeriod(event.target.value.replace(/\D/g, ''))}
+                      placeholder={regularFrequency === 'monthly' ? 'مثال: 1 ماه' : 'مثال: 7 روز'}
+                      className="mt-2 h-10 rounded-lg border-gray-200 bg-white px-3 text-[13px]"
                     />
-                    <div>
-                      <FieldLabel label={`پایان اقساط ${regularFrequency === 'monthly' ? 'منظم' : 'روزانه'}`} />
-                      <div className="mt-2 flex h-11 items-center rounded-full border border-gray-200 bg-gray-50 px-4 text-[13px] text-gray-600">
-                        {regularEndDate || 'با تعیین تعداد و شروع، این تاریخ محاسبه می‌شود'}
-                      </div>
-                    </div>
-                    <div>
-                      <FieldLabel label="مبلغ هر قسط" />
-                      <div className="mt-2 flex h-11 items-center rounded-full border border-gray-200 bg-gray-50 px-4 text-[13px] font-medium text-teal-700">
-                        {regularPreviewAmounts.length ? formatMoney(regularPreviewAmounts[0]) : 'بعد از تعیین مبلغ و تعداد محاسبه می‌شود'}
-                      </div>
+                  </div>
+                  <div>
+                    <FieldLabel label={regularFrequency === 'monthly' ? 'تعداد اقساط ماهانه' : 'تعداد اقساط روزانه'} />
+                    <Input
+                      value={regularCount}
+                      onChange={(event) => setRegularCount(event.target.value.replace(/\D/g, ''))}
+                      placeholder="مثال: 6"
+                      className="mt-2 h-10 rounded-lg border-gray-200 bg-white px-3 text-[13px]"
+                    />
+                  </div>
+                  <DateField
+                    label={`شروع اقساط ${regularFrequency === 'monthly' ? 'ماهانه' : 'روزانه'}`}
+                    value={regularStartDate}
+                    onChange={setRegularStartDate}
+                    placeholder="تاریخ شروع را انتخاب کنید"
+                  />
+                  <div>
+                    <FieldLabel label="پایان اقساط" />
+                    <div className="mt-2 flex h-10 items-center rounded-lg border border-gray-200 bg-gray-50 px-3 text-[13px] text-gray-600">
+                      {regularEndDate}
                     </div>
                   </div>
-
-                  <div className="rounded-[16px] border border-teal-100 bg-white px-4 py-3 text-xs text-gray-500">
-                    <div className="flex items-center justify-between gap-3">
-                      <span>{`فاصله ثبت اقساط: هر ${regularIntervalPeriod} ${regularFrequency === 'monthly' ? 'ماه' : 'روز'}`}</span>
-                      <span>{regularInstallmentCount > 0 ? `${regularInstallmentCount} سررسید` : 'تعداد سررسید نامشخص'}</span>
+                  <div>
+                    <FieldLabel label="مبلغ هر قسط" />
+                    <div className="mt-2 flex h-10 items-center rounded-lg border border-gray-200 bg-gray-50 px-3 text-[13px] font-medium text-teal-700">
+                      {regularPreviewAmounts.length ? formatMoney(regularPreviewAmounts[0]) : 'بعد از تعیین مبلغ و تعداد'}
                     </div>
                   </div>
                 </div>
-              )}
 
-              {dueFormError ? <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{dueFormError}</div> : null}
-            </div>
-          </div>
+                <div className="flex items-center justify-between gap-3 rounded-lg bg-[#f6f7f4] px-3 py-2 text-xs text-gray-500">
+                  <span>{`فاصله ثبت اقساط: هر ${regularIntervalPeriod} ${regularFrequency === 'monthly' ? 'ماه' : 'روز'}`}</span>
+                  <span>{regularInstallmentCount > 0 ? `${regularInstallmentCount} سررسید` : 'تعداد سررسید نامشخص'}</span>
+                </div>
+              </>
+            )}
+          </section>
+
+          {dueFormError ? <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{dueFormError}</div> : null}
         </div>
       </Modal>
     </div>

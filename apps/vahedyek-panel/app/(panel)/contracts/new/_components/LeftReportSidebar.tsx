@@ -39,41 +39,82 @@ function getDonutSegment({
   };
 }
 
-function getSliceFilterId(id: string) {
-  return `report-slice-shadow-${id.replace(/[^a-zA-Z0-9_-]/g, '-')}`;
-}
-
 function FinancialDonut({
   slices,
+  contractTotal,
+  allocatedAmount,
 }: {
   slices: Array<{ id: string; name: string; value: number; color: string }>;
+  contractTotal: number;
+  allocatedAmount: number;
 }) {
   const total = slices.reduce((sum, item) => sum + item.value, 0);
   if (!total) {
     return <div className="contract-flow-report-chart-empty">هنوز داده مالی کافی ثبت نشده است</div>;
   }
 
-  const size = 140;
+  const size = 220;
   const center = size / 2;
-  const radius = 51;
-  const strokeWidth = 16;
+  const radius = 87;
+  const strokeWidth = 7;
   const circumference = 2 * Math.PI * radius;
-  const gap = slices.length > 1 ? 8 : 0;
+  const gap = slices.length > 1 ? 7 : 0;
+  const innerRadius = 23;
+  const innerCircumference = 2 * Math.PI * innerRadius;
+  const paidPercent = contractTotal > 0 ? Math.min(Math.round((allocatedAmount / contractTotal) * 100), 100) : 0;
   const chartKey = slices.map((item) => `${item.id}:${item.value}`).join('|');
   let offset = 0;
+  let separatorOffset = 0;
 
   return (
     <div className="contract-flow-report-chart-wrap">
       <div key={chartKey} className="contract-flow-report-chart contract-flow-report-chart-animated">
         <svg viewBox={`0 0 ${size} ${size}`} className="contract-flow-report-chart-svg" aria-hidden="true">
           <defs>
+            <radialGradient id="report-orbit-depth" cx="50%" cy="50%" r="72%">
+              <stop offset="0%" stopColor="#050712" />
+              <stop offset="32%" stopColor="#0b0f1c" />
+              <stop offset="68%" stopColor="#111427" />
+              <stop offset="100%" stopColor="#060711" />
+            </radialGradient>
+            <radialGradient id="report-orbit-warm-core" cx="50%" cy="50%" r="58%">
+              <stop offset="0%" stopColor="#ffb74a" stopOpacity="1" />
+              <stop offset="48%" stopColor="#f97316" stopOpacity="0.85" />
+              <stop offset="100%" stopColor="#7c2d12" stopOpacity="0.4" />
+            </radialGradient>
             {slices.map((item) => (
-              <filter key={item.id} id={getSliceFilterId(item.id)} x="-35%" y="-35%" width="170%" height="170%">
-                <feDropShadow dx="0" dy="2" stdDeviation="2.2" floodColor={item.color} floodOpacity="0.32" />
+              <radialGradient key={`orbit-gradient-${item.id}`} id={`orbit-gradient-${item.id.replace(/[^a-zA-Z0-9_-]/g, '-')}`} cx="50%" cy="50%" r="72%">
+                <stop offset="42%" stopColor={item.color} stopOpacity="0.22" />
+                <stop offset="72%" stopColor={item.color} stopOpacity="0.86" />
+                <stop offset="100%" stopColor={item.color} />
+              </radialGradient>
+            ))}
+            {slices.map((item) => (
+              <filter key={`orbit-shadow-${item.id}`} id={`orbit-shadow-${item.id.replace(/[^a-zA-Z0-9_-]/g, '-')}`} x="-80%" y="-80%" width="260%" height="260%">
+                <feDropShadow dx="0" dy="0" stdDeviation="3.4" floodColor={item.color} floodOpacity="0.72" />
               </filter>
             ))}
           </defs>
-          <circle cx={center} cy={center} r={radius} fill="none" stroke="#ffffff" strokeWidth={strokeWidth + 8} />
+
+          <circle cx={center} cy={center} r="105" fill="url(#report-orbit-depth)" />
+          <circle cx={center} cy={center} r="100" fill="none" stroke="rgba(255,255,255,0.035)" strokeWidth="1" />
+          <circle cx={center} cy={center} r={radius} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={strokeWidth} />
+          <circle cx={center} cy={center} r="51" fill="none" stroke="url(#report-orbit-warm-core)" strokeWidth="19" className="contract-flow-report-warm-ring" />
+          <circle cx={center} cy={center} r="35" fill="#050712" />
+
+          <g className="contract-flow-report-separators" transform={`rotate(-90 ${center} ${center})`}>
+            {slices.map((item) => {
+              const angle = (separatorOffset / total) * Math.PI * 2;
+              separatorOffset += item.value;
+              const x1 = center + Math.cos(angle) * 63;
+              const y1 = center + Math.sin(angle) * 63;
+              const x2 = center + Math.cos(angle) * 99;
+              const y2 = center + Math.sin(angle) * 99;
+
+              return <line key={`sep-${item.id}`} x1={x1} y1={y1} x2={x2} y2={y2} />;
+            })}
+          </g>
+
           <g transform={`rotate(-90 ${center} ${center})`}>
             {slices.map((item) => {
               const segment = getDonutSegment({
@@ -92,33 +133,38 @@ function FinancialDonut({
                     cy={center}
                     r={radius}
                     fill="none"
-                    stroke="#ffffff"
-                    strokeWidth={strokeWidth + 5}
-                    strokeLinecap="round"
-                    strokeDasharray={segment.dasharray}
-                    strokeDashoffset={segment.dashoffset}
-                  />
-                  <circle
-                    cx={center}
-                    cy={center}
-                    r={radius}
-                    fill="none"
-                    stroke={item.color}
+                    stroke={`url(#orbit-gradient-${item.id.replace(/[^a-zA-Z0-9_-]/g, '-')})`}
                     strokeWidth={strokeWidth}
-                    strokeLinecap="round"
+                    strokeLinecap="butt"
                     strokeDasharray={segment.dasharray}
                     strokeDashoffset={segment.dashoffset}
-                    filter={`url(#${getSliceFilterId(item.id)})`}
+                    filter={`url(#orbit-shadow-${item.id.replace(/[^a-zA-Z0-9_-]/g, '-')})`}
                     className="contract-flow-report-chart-segment"
                   />
                 </g>
               );
             })}
           </g>
+
+          <g transform={`rotate(-90 ${center} ${center})`}>
+            <circle cx={center} cy={center} r={innerRadius} fill="none" stroke="rgba(255,255,255,0.16)" strokeWidth="4" />
+            <circle
+              cx={center}
+              cy={center}
+              r={innerRadius}
+              fill="none"
+              stroke="#22c55e"
+              strokeWidth="4"
+              strokeLinecap="round"
+              strokeDasharray={`${(paidPercent / 100) * innerCircumference} ${innerCircumference}`}
+              strokeDashoffset="0"
+              className="contract-flow-report-inner-progress"
+            />
+          </g>
         </svg>
         <div className="contract-flow-report-chart-center">
-          <strong>{new Intl.NumberFormat('fa-IR').format(slices.length)}</strong>
-          <span>دسته</span>
+          <strong>{new Intl.NumberFormat('fa-IR').format(paidPercent)}%</strong>
+          <span>سهم</span>
         </div>
       </div>
     </div>
@@ -176,7 +222,7 @@ export function LeftReportSidebar({
                   : 'بدون داده'}
               </strong>
             </div>
-            <FinancialDonut slices={paidSlices} />
+            <FinancialDonut slices={paidSlices} contractTotal={contractTotal} allocatedAmount={allocatedAmount} />
           </div>
 
           <div className="contract-flow-report-card">
