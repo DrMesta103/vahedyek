@@ -1,5 +1,5 @@
-import { redirect } from 'next/navigation';
+import { PanelShell } from './components/PanelShell';
 
 export default function RootPage() {
-  redirect('/quick-setup');
+  return <PanelShell>{null}</PanelShell>;
 }

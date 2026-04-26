@@ -43,11 +43,11 @@ export async function getQuickSetupChecklist() {
   return {
     profile,
     steps: [
-      { key: 'location', title: 'محل کار', done: locations > 0, href: '/locations/new' },
-      { key: 'calendar', title: 'تقویم کاری', done: calendars > 0, href: '/calendars/new' },
-      { key: 'policy', title: 'سیاست کاری', done: policies > 0, href: '/policies/new' },
-      { key: 'employee', title: 'کارمندان', done: employees > 0, href: '/employees/new' },
-      { key: 'work-group', title: 'گروه کاری', done: workGroups > 0, href: '/work-groups/new' },
+      { key: 'location', title: 'محل کار', subtitle: 'ثبت محل کار و شعاع مجاز', done: locations > 0, href: '/locations/new', manageHref: '/locations', count: locations },
+      { key: 'calendar', title: 'تقویم کاری', subtitle: 'تقویم، تعطیلات و شیفت', done: calendars > 0, href: '/calendars/new', manageHref: '/calendars', count: calendars },
+      { key: 'policy', title: 'سیاست‌های کاری', subtitle: 'قوانین حضور و غیاب', done: policies > 0, href: '/policies/new', manageHref: '/policies', count: policies },
+      { key: 'employee', title: 'مدیریت کارکنان', subtitle: 'ساخت پرونده پرسنلی', done: employees > 0, href: '/employees/new', manageHref: '/employees', count: employees },
+      { key: 'work-group', title: 'گروه‌های کاری', subtitle: 'اتصال افراد، محل و سیاست', done: workGroups > 0, href: '/work-groups/new', manageHref: '/work-groups', count: workGroups },
     ],
   };
 }

@@ -1,0 +1,13 @@
+
+> @apps/dastranj-panel@0.1.0 dev
+> next dev -p 3001
+
+  ▲ Next.js 14.2.35
+  - Local:        http://localhost:3001
+  - Environments: .env
+
+ ✓ Starting...
+ ✓ Ready in 6.7s
+ ○ Compiling /quick-setup ...
+ ✓ Compiled /quick-setup in 1707ms (582 modules)
+ GET /quick-setup 200 in 2558ms
