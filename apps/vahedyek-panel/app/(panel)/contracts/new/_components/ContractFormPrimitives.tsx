@@ -100,7 +100,7 @@ export function TagPill({ label, active, onClick }: { label: string; active: boo
     <button
       type="button"
       onClick={onClick}
-      className={`inline-flex h-[34px] items-center gap-1.5 rounded-full border-[0.5px] px-4 text-[12px] transition-all ${
+      className={`inline-flex h-[34px] items-center gap-1.5 rounded-full border-[0.5px] px-4 text-[12px] whitespace-nowrap transition-all ${
         active
           ? 'border-[#a6e8ef] bg-[#a6e8ef] font-semibold text-[#123b69]'
           : 'border-[#6e86a3] bg-white text-[#314a67] hover:bg-slate-50'
@@ -116,13 +116,17 @@ export function TagPills<T extends string>({
   options,
   value,
   onChange,
+  wrap = true,
+  className = '',
 }: {
   options: { value: T; label: string }[];
   value: T;
   onChange: (value: T) => void;
+  wrap?: boolean;
+  className?: string;
 }) {
   return (
-    <div className="flex flex-wrap gap-1.5">
+    <div className={`flex gap-1.5 ${wrap ? 'flex-wrap' : 'flex-nowrap overflow-x-auto pb-1'} ${className}`}>
       {options.map((option) => (
         <TagPill key={option.value} label={option.label} active={value === option.value} onClick={() => onChange(option.value)} />
       ))}

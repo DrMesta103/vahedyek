@@ -30,6 +30,7 @@ function UnitSelector({
   onUnitChange: (id: string) => void;
 }) {
   const blockData = blocks.find((block) => block.id === selectedBlock);
+  const selectableUnits = blockData?.units.filter((unit) => unit.category === 'unit') ?? [];
 
   return (
     <div className="space-y-4">
@@ -47,7 +48,7 @@ function UnitSelector({
       {blockData ? (
         <ExpandableTagGroup
           label="واحد"
-          items={blockData.units.map((unit) => ({ id: unit.id, name: unit.name, sub: unit.floorName }))}
+          items={selectableUnits.map((unit) => ({ id: unit.id, name: unit.name, sub: unit.floorName }))}
           selectedId={selectedUnit}
           onSelect={onUnitChange}
           emptyText="واحدی در این بلوک وجود ندارد"

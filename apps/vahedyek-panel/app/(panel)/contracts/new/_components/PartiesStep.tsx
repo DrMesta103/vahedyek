@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { PartySection } from './PartySection';
 import { PartySelectionDialog } from './PartySelectionDialog';
 import { StickySubmitBar } from './StickySubmitBar';
+import { ContractStepLoader } from './ContractStepLoader';
+import { FieldGroup, TagPills } from './ContractFormPrimitives';
 import { dispatchContractFlowDirty, dispatchContractFlowSaved } from './contractFlowSignals';
 import {
   clampShare,
@@ -39,8 +41,7 @@ export function PartiesStep({ stepId, title, embedded = false }: { stepId: strin
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  const [partyOneMode, setPartyOneMode] = useState<ShareMode>('dang');
-  const [partyTwoMode, setPartyTwoMode] = useState<ShareMode>('dang');
+  const [shareMode, setShareMode] = useState<ShareMode>('dang');
   const [partyOneRows, setPartyOneRows] = useState<PartyRow[]>([]);
   const [partyTwoRows, setPartyTwoRows] = useState<PartyRow[]>([]);
   const [partnerNaturals, setPartnerNaturals] = useState<DirectoryItem[]>([]);
@@ -93,8 +94,7 @@ export function PartiesStep({ stepId, title, embedded = false }: { stepId: strin
         applyReferenceData(referenceData);
 
         if (partiesData) {
-          setPartyOneMode(partiesData.partyOneMode);
-          setPartyTwoMode(partiesData.partyTwoMode);
+          setShareMode(partiesData.partyOneMode ?? partiesData.partyTwoMode ?? 'dang');
           setPartyOneRows(
             partiesData.partyOne.map((item) => ({
               id: item.personId,
@@ -159,16 +159,11 @@ export function PartiesStep({ stepId, title, embedded = false }: { stepId: strin
       isPrimary: row.id === id,
     }));
 
-  const handlePartyOneModeChange = (nextMode: ShareMode) => {
-    if (nextMode === partyOneMode) return;
-    setPartyOneRows((current) => convertRows(current, partyOneMode, nextMode));
-    setPartyOneMode(nextMode);
-  };
-
-  const handlePartyTwoModeChange = (nextMode: ShareMode) => {
-    if (nextMode === partyTwoMode) return;
-    setPartyTwoRows((current) => convertRows(current, partyTwoMode, nextMode));
-    setPartyTwoMode(nextMode);
+  const handleShareModeChange = (nextMode: ShareMode) => {
+    if (nextMode === shareMode) return;
+    setPartyOneRows((current) => convertRows(current, shareMode, nextMode));
+    setPartyTwoRows((current) => convertRows(current, shareMode, nextMode));
+    setShareMode(nextMode);
   };
 
   const addRows = (currentRows: PartyRow[], items: DirectoryItem[]) =>
@@ -212,10 +207,10 @@ export function PartiesStep({ stepId, title, embedded = false }: { stepId: strin
   };
 
   const buildPayload = (): ContractPartiesData => ({
-    partyOneMode,
-    partyTwoMode,
-    partyOne: mapRowsToPayload(partyOneRows, partyOneMode),
-    partyTwo: mapRowsToPayload(partyTwoRows, partyTwoMode),
+    partyOneMode: shareMode,
+    partyTwoMode: shareMode,
+    partyOne: mapRowsToPayload(partyOneRows, shareMode),
+    partyTwo: mapRowsToPayload(partyTwoRows, shareMode),
   });
 
   const handleSubmit = async () => {
@@ -244,7 +239,7 @@ export function PartiesStep({ stepId, title, embedded = false }: { stepId: strin
     }
 
     dispatchContractFlowDirty(stepId as 'parties', snapshot !== initialSnapshotRef.current);
-  }, [draftId, loading, partyOneMode, partyOneRows, partyTwoMode, partyTwoRows, stepId]);
+  }, [draftId, loading, partyOneRows, partyTwoRows, shareMode, stepId]);
 
   const partyOneLabels = getEntityLabels('partner');
   const partyTwoLabels = getEntityLabels('buyer');
@@ -257,6 +252,10 @@ export function PartiesStep({ stepId, title, embedded = false }: { stepId: strin
       <div className="h-px flex-1 bg-[var(--theme-divider)]" />
     </div>
   );
+
+  if (loading) {
+    return <ContractStepLoader title={title} description="در حال بارگذاری اطلاعات طرفین قرارداد..." />;
+  }
 
   return (
     <div className="space-y-5">
@@ -276,15 +275,25 @@ export function PartiesStep({ stepId, title, embedded = false }: { stepId: strin
         </div>
       ) : null}
 
+      <FieldGroup label="نوع سهم">
+        <TagPills
+          value={shareMode}
+          onChange={handleShareModeChange}
+          options={[
+            { value: 'dang', label: 'دانگ' },
+            { value: 'percent', label: 'درصد' },
+          ]}
+        />
+      </FieldGroup>
+
       {sectionDivider('طرف اول')}
 
       <PartySection
         title={partyOneLabels.formTitle}
         description={partyOneLabels.formDescription}
         rows={partyOneRows}
-        shareMode={partyOneMode}
-        onShareModeChange={handlePartyOneModeChange}
-        onShareChange={(id, value) => setPartyOneRows((current) => updateRowShare(current, id, value, partyOneMode))}
+        shareMode={shareMode}
+        onShareChange={(id, value) => setPartyOneRows((current) => updateRowShare(current, id, value, shareMode))}
         onPrimaryChange={(id) => setPartyOneRows((current) => setPrimaryRow(current, id))}
         onRemove={(id) => setPartyOneRows((current) => removeRow(current, id))}
         addButtonLabel={partyOneLabels.addButton}
@@ -300,9 +309,8 @@ export function PartiesStep({ stepId, title, embedded = false }: { stepId: strin
         title={partyTwoLabels.formTitle}
         description={partyTwoLabels.formDescription}
         rows={partyTwoRows}
-        shareMode={partyTwoMode}
-        onShareModeChange={handlePartyTwoModeChange}
-        onShareChange={(id, value) => setPartyTwoRows((current) => updateRowShare(current, id, value, partyTwoMode))}
+        shareMode={shareMode}
+        onShareChange={(id, value) => setPartyTwoRows((current) => updateRowShare(current, id, value, shareMode))}
         onPrimaryChange={(id) => setPartyTwoRows((current) => setPrimaryRow(current, id))}
         onRemove={(id) => setPartyTwoRows((current) => removeRow(current, id))}
         addButtonLabel={partyTwoLabels.addButton}

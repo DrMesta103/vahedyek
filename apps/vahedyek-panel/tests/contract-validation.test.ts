@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { validateFinancialStep } from '../app/lib/contractValidation';
-import type { ContractFinancialData } from '../app/types/contract';
+import { validateFinancialStep, validatePenaltiesStep } from '../app/lib/contractValidation';
+import type { ContractFinancialData, ContractPenaltiesData } from '../app/types/contract';
 
 function makeValidFinancialData(overrides: Partial<ContractFinancialData> = {}): ContractFinancialData {
   return {
@@ -136,4 +136,61 @@ test('validateFinancialStep rejects when categories are completely missing', () 
 
   assert.equal(result.valid, false);
   assert.equal(result.errors.categories, 'حداقل یک ردیف مالی باید ثبت شود');
+});
+
+function makeValidPenaltiesData(overrides: Partial<ContractPenaltiesData> = {}): ContractPenaltiesData {
+  return {
+    activeTab: 'installment-delay',
+    types: [
+      {
+        id: 'installment-delay',
+        title: 'جریمه تاخیر در پرداخت اقساط',
+        description: 'desc',
+        active: true,
+      },
+      {
+        id: 'document-delay',
+        title: 'جریمه تاخیر در تحویل سند',
+        description: 'desc',
+        active: false,
+      },
+    ],
+    rules: [
+      {
+        id: 'rule-1',
+        penaltyTypeId: 'installment-delay',
+        mode: 'fixed',
+        period: 'monthly',
+        fixedAmount: '100000',
+        penaltyPercent: '',
+        bankInterestPercent: '',
+        graceDays: '2',
+        roundRule: '100',
+        extraFeeEnabled: false,
+        extraFeeType: 'percent',
+        extraFeeAmount: '',
+        extraFeeRoundRule: '100',
+        progressiveRows: [],
+      },
+    ],
+    ...overrides,
+  };
+}
+
+test('validatePenaltiesStep accepts active penalty types with at least one rule', () => {
+  const result = validatePenaltiesStep(makeValidPenaltiesData());
+
+  assert.equal(result.valid, true);
+  assert.deepEqual(result.errors, {});
+});
+
+test('validatePenaltiesStep rejects active penalty types without any saved rule', () => {
+  const result = validatePenaltiesStep(
+    makeValidPenaltiesData({
+      rules: [],
+    }),
+  );
+
+  assert.equal(result.valid, false);
+  assert.equal(result.errors['type:installment-delay'], 'برای «جریمه تاخیر در پرداخت اقساط» باید حداقل یک جریمه ثبت شود.');
 });

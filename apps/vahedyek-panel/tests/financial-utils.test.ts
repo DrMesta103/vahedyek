@@ -23,6 +23,10 @@ test('addIntervalToDate respects daily period', () => {
   assert.equal(addIntervalToDate('1405/01/01', 2, 'daily', 10), '1405/01/21');
 });
 
+test('addIntervalToDate accepts Persian digits from date picker values', () => {
+  assert.equal(addIntervalToDate('۱۴۰۵/۰۱/۱۵', 2, 'monthly', 2), '1405/05/15');
+});
+
 test('buildRegularDueItems generates grouped installments with titles and dates', () => {
   const result = buildRegularDueItems({
     activeTab: 'installment',
@@ -51,11 +55,29 @@ test('buildRegularDueItems generates grouped installments with titles and dates'
   );
 });
 
+test('buildRegularDueItems accepts Persian-digit start dates', () => {
+  const result = buildRegularDueItems({
+    activeTab: 'installment',
+    title: 'قسط منظم',
+    totalAmount: 900,
+    count: 3,
+    startDate: '۱۴۰۵/۰۲/۱۰',
+    frequency: 'monthly',
+    period: 1,
+    idPrefix: 'persian-seed',
+  });
+
+  assert.deepEqual(
+    result.map((item) => item.dueDate),
+    ['1405/02/10', '1405/03/10', '1405/04/10'],
+  );
+});
+
 test('normalizeFinancialCategories trims values and removes duplicate ids', () => {
   const result = normalizeFinancialCategories([
     { id: 'advance', name: ' پیش پرداخت ', capAmount: '1000', system: true },
     { id: 'advance', name: 'تکراری', capAmount: 700, system: false },
-    { id: 'custom-1', name: 'قسط', capAmount: '2500', system: false },
+    { id: 'custom-1', name: 'قسط', capAmount: '2500', system: false, requiresDue: false },
   ]);
 
   assert.deepEqual(result, [
@@ -72,10 +94,10 @@ test('normalizeFinancialCategories trims values and removes duplicate ids', () =
       id: 'custom-1',
       name: 'قسط',
       capAmount: 2500,
-      dueAmount: 2500,
-      noDueAmount: 0,
+      dueAmount: 0,
+      noDueAmount: 2500,
       system: false,
-      requiresDue: true,
+      requiresDue: false,
     },
   ]);
 });

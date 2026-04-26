@@ -60,6 +60,7 @@ type UnitDto = {
   bedroomCount?: number | null;
   postalCode?: string | null;
   amenities?: Array<{ title: string; count: number }> | null;
+  baseInfo?: string | null;
   direction?: string | null;
 };
 
@@ -973,6 +974,7 @@ export function BusinessFloorDetail({ blockId, floorId }: { blockId: string; flo
   const [query, setQuery] = useState('');
   const [activeUnitType, setActiveUnitType] = useState<(typeof unitTypeTabs)[number]['value']>('unit');
   const [activeUsage, setActiveUsage] = useState('residential');
+  const [openMenuId, setOpenMenuId] = useState('');
 
   useEffect(() => {
     fetch(`/api/business-settings/project/blocks/${blockId}/floors/${floorId}`, { cache: 'no-store' })
@@ -1069,11 +1071,23 @@ export function BusinessFloorDetail({ blockId, floorId }: { blockId: string; flo
                     <h3>نوع کاربری {display.usage}</h3>
                     <p>متراژ {display.area} متر مربع</p>
                   </div>
-                  <span className="business-unit-dots" aria-hidden="true">
-                    <i />
-                    <i />
-                    <i />
-                  </span>
+                  <div className="business-unit-card-actions">
+                    <button
+                      type="button"
+                      className="business-unit-card-menu"
+                      aria-label={`گزینه‌های ${unit.name}`}
+                      onClick={() => setOpenMenuId((current) => (current === unit.id ? '' : unit.id))}
+                    >
+                      <MoreVertical />
+                    </button>
+                    {openMenuId === unit.id ? (
+                      <div className="business-block-menu-popover business-unit-menu-popover">
+                        <Link href={`/business-settings/project/blocks/${blockId}/floors/${floorId}/units/${unit.id}/edit`}>
+                          <Pencil /> ویرایش
+                        </Link>
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
                 <div className="business-unit-tags">
                   <span className="is-orange">اتاق خواب {display.bedrooms}</span>
@@ -1094,9 +1108,11 @@ export function BusinessFloorDetail({ blockId, floorId }: { blockId: string; flo
   );
 }
 
-export function BusinessUnitForm({ blockId, floorId, category }: { blockId: string; floorId: string; category?: string }) {
+export function BusinessUnitForm({ blockId, floorId, category, unitId }: { blockId: string; floorId: string; category?: string; unitId?: string }) {
   const router = useRouter();
-  const unitCategory: UnitCategory = category === 'storage' || category === 'parking' || category === 'amenity' ? category : 'unit';
+  const isEdit = Boolean(unitId);
+  const initialCategory: UnitCategory = category === 'storage' || category === 'parking' || category === 'amenity' ? category : 'unit';
+  const [unitCategory, setUnitCategory] = useState<UnitCategory>(initialCategory);
   const categoryLabel = unitCategoryLabels[unitCategory];
   const isMainUnit = unitCategory === 'unit';
   const isSimpleAsset = unitCategory === 'storage' || unitCategory === 'parking';
@@ -1129,18 +1145,66 @@ export function BusinessUnitForm({ blockId, floorId, category }: { blockId: stri
   const [assignmentDialog, setAssignmentDialog] = useState<'parking' | 'storage' | null>(null);
   const [message, setMessage] = useState('');
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(isEdit);
   const usageSelected = !isMainUnit || Boolean(usage);
 
   useEffect(() => {
-    fetch(`/api/business-settings/project/blocks/${blockId}/floors/${floorId}/units`, { cache: 'no-store' })
-      .then(async (response) => {
-        const data = (await response.json()) as { options?: { unitTypes?: string[]; parking?: AssignmentOption[]; storage?: AssignmentOption[] }; message?: string };
+    let cancelled = false;
+
+    async function loadFormData() {
+      setLoading(isEdit);
+      try {
+        const response = await fetch(
+          isEdit
+            ? `/api/business-settings/project/blocks/${blockId}/floors/${floorId}/units/${unitId}`
+            : `/api/business-settings/project/blocks/${blockId}/floors/${floorId}/units`,
+          { cache: 'no-store' },
+        );
+        const data = (await response.json()) as {
+          unit?: UnitDto;
+          options?: { unitTypes?: string[]; parking?: AssignmentOption[]; storage?: AssignmentOption[] };
+          message?: string;
+        };
         if (!response.ok) throw new Error(data.message ?? 'دریافت اطلاعات ثبت واحد ناموفق بود.');
-        setParkingOptions(data.options?.parking ?? []);
-        setStorageOptions(data.options?.storage ?? []);
-      })
-      .catch((err) => setMessage(err instanceof Error ? err.message : 'دریافت اطلاعات ثبت واحد ناموفق بود.'));
-  }, [blockId, floorId]);
+        if (cancelled) return;
+
+        const parking = data.options?.parking ?? [];
+        const storage = data.options?.storage ?? [];
+        setParkingOptions(parking);
+        setStorageOptions(storage);
+
+        if (data.unit) {
+          const nextCategory = (data.unit.category ?? 'unit') as UnitCategory;
+          setUnitCategory(nextCategory);
+          setUnitType(data.unit.unitType ?? unitTypeOptions[0]);
+          setUsage((data.unit.usage as (typeof unitUsageOptions)[number]['value'] | '') ?? '');
+          setName(data.unit.name ?? '');
+          setSaleEnabled(data.unit.saleEnabled !== false);
+          setDeliveryStatus(data.unit.deliveryStatus === 'presale' ? 'presale' : 'ready');
+          setArea(data.unit.area ? String(data.unit.area) : '');
+          setBalconyCount(String(data.unit.balconyCount ?? 0));
+          setBedroomCount(String(data.unit.bedroomCount ?? 0));
+          setPostalCode(data.unit.postalCode ?? '');
+          setDirection((data.unit.direction as (typeof directionOptions)[number]['value']) ?? 'unknown');
+          setAmenities(Array.isArray(data.unit.amenities) ? data.unit.amenities : []);
+          setBaseInfo(data.unit.baseInfo ?? '');
+          setBaseInfoDraft(data.unit.baseInfo ?? '');
+          setSelectedParkingIds(parking.filter((item) => item.assignedToUnitId === data.unit?.id).map((item) => item.id));
+          setSelectedStorageIds(storage.filter((item) => item.assignedToUnitId === data.unit?.id).map((item) => item.id));
+        }
+      } catch (err) {
+        if (!cancelled) setMessage(err instanceof Error ? err.message : 'دریافت اطلاعات ثبت واحد ناموفق بود.');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    loadFormData();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [blockId, floorId, isEdit, unitId]);
 
   const applyUnitType = (value: string) => {
     setUnitType(value);
@@ -1204,17 +1268,17 @@ export function BusinessUnitForm({ blockId, floorId, category }: { blockId: stri
     };
 
     try {
-      const response = await fetch(`/api/business-settings/project/blocks/${blockId}/floors/${floorId}/units`, {
-        method: 'POST',
+      const response = await fetch(isEdit ? `/api/business-settings/project/blocks/${blockId}/floors/${floorId}/units/${unitId}` : `/api/business-settings/project/blocks/${blockId}/floors/${floorId}/units`, {
+        method: isEdit ? 'PATCH' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
       const data = (await response.json()) as { message?: string };
-      if (!response.ok) throw new Error(data.message ?? 'ثبت واحد ناموفق بود.');
+      if (!response.ok) throw new Error(data.message ?? (isEdit ? 'ویرایش واحد ناموفق بود.' : 'ثبت واحد ناموفق بود.'));
       router.push(`/business-settings/project/blocks/${blockId}/floors/${floorId}`);
       router.refresh();
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : 'ثبت واحد ناموفق بود.');
+      setMessage(err instanceof Error ? err.message : isEdit ? 'ویرایش واحد ناموفق بود.' : 'ثبت واحد ناموفق بود.');
     } finally {
       setSaving(false);
     }
@@ -1226,20 +1290,21 @@ export function BusinessUnitForm({ blockId, floorId, category }: { blockId: stri
   const selectedStorageNames = storageOptions.filter((item) => selectedStorageIds.includes(item.id)).map((item) => item.name);
 
   return (
-    <section className="business-unit-form-page" aria-label={`ثبت ${categoryLabel}`}>
+    <section className="business-unit-form-page" aria-label={`${isEdit ? 'ویرایش' : 'ثبت'} ${categoryLabel}`}>
       <div className="business-block-form-card business-unit-form-card">
         <div className="business-block-form-tabs">
           <button type="button" className={activeTab === 'single' ? 'active' : ''} onClick={() => setActiveTab('single')}>
             <Square />
-            ثبت تکی
+            {isEdit ? 'ویرایش تکی' : 'ثبت تکی'}
           </button>
-          <button type="button" className={activeTab === 'bulk' ? 'active' : ''} onClick={() => setActiveTab('bulk')}>
+          <button type="button" className={activeTab === 'bulk' ? 'active' : ''} onClick={() => setActiveTab('bulk')} disabled={isEdit}>
             <Table2 />
             ثبت تجمیعی
           </button>
         </div>
 
         {message ? <div className="business-blocks-state is-error">{message}</div> : null}
+        {loading ? <div className="business-blocks-state">در حال دریافت اطلاعات واحد...</div> : null}
 
         <div className="business-unit-form-grid">
           {isMainUnit ? (
@@ -1390,9 +1455,9 @@ export function BusinessUnitForm({ blockId, floorId, category }: { blockId: stri
           ) : null}
         </div>
 
-        {usageSelected ? <div className="business-block-form-actions">
+        {usageSelected && !loading ? <div className="business-block-form-actions">
           <button type="button" className="business-block-form-submit" onClick={submitUnit} disabled={saving}>
-            {saving ? 'در حال ثبت...' : activeTab === 'bulk' ? `ثبت تجمیعی ${categoryLabel}` : `ثبت ${categoryLabel}`}
+            {saving ? (isEdit ? 'در حال ذخیره...' : 'در حال ثبت...') : isEdit ? `ذخیره ${categoryLabel}` : activeTab === 'bulk' ? `ثبت تجمیعی ${categoryLabel}` : `ثبت ${categoryLabel}`}
           </button>
         </div> : null}
       </div>

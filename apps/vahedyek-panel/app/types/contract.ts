@@ -4,6 +4,10 @@ export type ContractorType = 'self' | 'employee' | 'former-employee';
 export type ShareMode = 'percent' | 'dang';
 export type PersonType = 'natural' | 'legal';
 export type PricingType = 'fixed' | 'metered';
+export type PenaltyMode = 'fixed' | 'overdue' | 'contract' | 'progressive';
+export type PenaltyPeriod = 'daily' | 'monthly' | 'yearly';
+export type PenaltyExtraFeeType = 'percent' | 'fixed';
+export type PenaltyRoundRule = '0.5' | '5' | '100' | '1000';
 
 export interface Share {
   value: number;
@@ -74,10 +78,48 @@ export interface ContractFinancialData {
   dueItems: FinancialDueItemData[];
 }
 
+export interface PenaltyProgressiveRowData {
+  id: string;
+  fromDay: string;
+  toDay: string;
+  rate: string;
+}
+
+export interface PenaltyTypeStateData {
+  id: string;
+  title: string;
+  description: string;
+  active: boolean;
+}
+
+export interface PenaltyRuleData {
+  id: string;
+  penaltyTypeId: string;
+  mode: PenaltyMode;
+  period: PenaltyPeriod;
+  fixedAmount: string;
+  penaltyPercent: string;
+  bankInterestPercent: string;
+  graceDays: string;
+  roundRule: PenaltyRoundRule;
+  extraFeeEnabled: boolean;
+  extraFeeType: PenaltyExtraFeeType;
+  extraFeeAmount: string;
+  extraFeeRoundRule: PenaltyRoundRule;
+  progressiveRows: PenaltyProgressiveRowData[];
+}
+
+export interface ContractPenaltiesData {
+  activeTab: string;
+  types: PenaltyTypeStateData[];
+  rules: PenaltyRuleData[];
+}
+
 export interface ContractFormData {
   subject: ContractSubjectData;
   parties: ContractPartiesData;
   financial?: ContractFinancialData;
+  penalties?: ContractPenaltiesData;
 }
 
 export interface Contract {

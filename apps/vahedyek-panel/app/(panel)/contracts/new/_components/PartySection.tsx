@@ -2,29 +2,14 @@
 
 import { Plus, Star } from 'lucide-react';
 import { FormBox } from './FormBox';
-import { FieldGroup, TagPills } from './ContractFormPrimitives';
 import { Input } from '../../../../components/ui/input';
 import { getTypeLabel, PARTY_TOTALS, type PartyRow, type ShareMode } from './partiesTypes';
-
-function ShareModePills({ value, onChange }: { value: ShareMode; onChange: (value: ShareMode) => void }) {
-  return (
-    <TagPills
-      value={value}
-      onChange={onChange}
-      options={[
-        { value: 'dang', label: 'دانگ' },
-        { value: 'percent', label: 'درصد' },
-      ]}
-    />
-  );
-}
 
 export function PartySection({
   title,
   description,
   rows,
   shareMode,
-  onShareModeChange,
   onShareChange,
   onPrimaryChange,
   onRemove,
@@ -35,7 +20,6 @@ export function PartySection({
   description: string;
   rows: PartyRow[];
   shareMode: ShareMode;
-  onShareModeChange: (mode: ShareMode) => void;
   onShareChange: (id: string, value: string) => void;
   onPrimaryChange: (id: string) => void;
   onRemove: (id: string) => void;
@@ -44,9 +28,6 @@ export function PartySection({
 }) {
   return (
     <div className="space-y-4">
-      <FieldGroup label="نوع سهم">
-        <ShareModePills value={shareMode} onChange={onShareModeChange} />
-      </FieldGroup>
       <FormBox title={title} description={description}>
         <div className="space-y-4">
           {rows.length ? (

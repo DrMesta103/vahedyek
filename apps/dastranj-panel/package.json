@@ -2,14 +2,19 @@
   "name": "@apps/dastranj-panel",
   "private": true,
   "version": "0.1.0",
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
   "scripts": {
     "dev": "next dev -p 3001",
-    "build": "prisma generate && next build",
+    "build": "prisma generate --no-engine && next build",
     "start": "next start",
     "lint": "next lint",
-    "prisma:generate": "prisma generate",
+    "prisma:generate": "prisma generate --no-engine",
+    "prisma:push": "prisma db push",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:deploy": "prisma migrate deploy"
+    "prisma:deploy": "prisma migrate deploy",
+    "db:seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.7.0",
@@ -23,6 +28,7 @@
     "@types/react": "^18.3.23",
     "@types/react-dom": "^18.3.7",
     "prisma": "^6.7.0",
+    "tsx": "^4.19.4",
     "typescript": "^5.8.3"
   }
 }

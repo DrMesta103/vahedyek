@@ -2,7 +2,6 @@ export type PenaltyItem = {
   id: string;
   title: string;
   description: string;
-  configured?: boolean;
 };
 
 export const PENALTY_ITEMS: PenaltyItem[] = [
@@ -10,19 +9,16 @@ export const PENALTY_ITEMS: PenaltyItem[] = [
     id: 'unit-handover-delay',
     title: 'جریمه تاخیر در تحویل واحد',
     description: 'تنظیمات محاسبه جریمه در صورت تاخیر در تحویل واحد برای فروشنده یا سازنده را مشخص می‌کند.',
-    configured: true,
   },
   {
     id: 'installment-delay',
     title: 'جریمه تاخیر در پرداخت اقساط',
     description: 'تنظیمات محاسبه جریمه برای دیرکرد در پرداخت اقساط برای خریدار را مشخص می‌کند.',
-    configured: true,
   },
   {
     id: 'document-delay',
     title: 'جریمه تاخیر در تحویل سند',
     description: 'تنظیمات محاسبه جریمه در صورت تاخیر در تحویل سند را مشخص می‌کند.',
-    configured: true,
   },
   {
     id: 'advance-payment-delay',
@@ -66,5 +62,6 @@ export const PENALTY_ITEMS: PenaltyItem[] = [
   },
 ];
 
-export const getPenaltyItem = (penaltyId: string) =>
-  PENALTY_ITEMS.find((item) => item.id === penaltyId);
+export function getPenaltyItem(penaltyId: string) {
+  return PENALTY_ITEMS.find((item) => item.id === penaltyId);
+}

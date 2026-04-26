@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { StickySubmitBar } from './StickySubmitBar';
+import { ContractStepLoader } from './ContractStepLoader';
 import { SubjectContractorBox, type IssuerType } from './SubjectContractorBox';
 import { SubjectDetailsBox } from './SubjectDetailsBox';
 import { SubjectUnitBox } from './SubjectUnitBox';
@@ -173,6 +174,10 @@ export function SubjectStep({ stepId, title, embedded = false }: { stepId: strin
     }
     dispatchContractFlowDirty(stepId as 'subject', snapshot !== initialSnapshotRef.current);
   }, [contractDate, contractNumber, deliveryDate, draftId, formerEmployeeName, issuerType, loading, selectedBlock, selectedContractType, selectedStaff, selectedUnit, stepId]);
+
+  if (loading) {
+    return <ContractStepLoader title={title} description="در حال بارگذاری اطلاعات پایه قرارداد..." />;
+  }
 
   return (
     <div className="space-y-4">

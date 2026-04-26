@@ -68,7 +68,7 @@ export function clearActiveDraftId() {
   localStorage.removeItem(ACTIVE_DRAFT_KEY);
 }
 
-export function getFrontendStepDraft<T>(draftId: string, step: 'subject' | 'parties' | 'financial') {
+export function getFrontendStepDraft<T>(draftId: string, step: 'subject' | 'parties' | 'financial' | 'penalties') {
   if (typeof window === 'undefined') return null;
 
   try {
@@ -80,12 +80,12 @@ export function getFrontendStepDraft<T>(draftId: string, step: 'subject' | 'part
   }
 }
 
-export function setFrontendStepDraft<T>(draftId: string, step: 'subject' | 'parties' | 'financial', payload: T) {
+export function setFrontendStepDraft<T>(draftId: string, step: 'subject' | 'parties' | 'financial' | 'penalties', payload: T) {
   if (typeof window === 'undefined') return;
   localStorage.setItem(`${FRONTEND_STEP_DRAFT_PREFIX}:${draftId}:${step}`, JSON.stringify(payload));
 }
 
-export function clearFrontendStepDraft(draftId: string, step: 'subject' | 'parties' | 'financial') {
+export function clearFrontendStepDraft(draftId: string, step: 'subject' | 'parties' | 'financial' | 'penalties') {
   if (typeof window === 'undefined') return;
   localStorage.removeItem(`${FRONTEND_STEP_DRAFT_PREFIX}:${draftId}:${step}`);
 }
@@ -103,11 +103,11 @@ export async function ensureActiveDraftId() {
   return result.id;
 }
 
-export async function getStepData<T>(draftId: string, step: 'subject' | 'parties' | 'financial') {
+export async function getStepData<T>(draftId: string, step: 'subject' | 'parties' | 'financial' | 'penalties') {
   return readJson<T | null>(`/api/contracts/drafts/${draftId}/${step}`);
 }
 
-export async function saveStepData<T>(draftId: string, step: 'subject' | 'parties' | 'financial', payload: T) {
+export async function saveStepData<T>(draftId: string, step: 'subject' | 'parties' | 'financial' | 'penalties', payload: T) {
   return readJson<{ success: true }>(`/api/contracts/drafts/${draftId}/${step}`, {
     method: 'PUT',
     body: JSON.stringify(payload),

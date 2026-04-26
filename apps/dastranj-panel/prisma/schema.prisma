@@ -7,10 +7,210 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model DastranjRequest {
-  id        String   @id @default(cuid())
-  title     String
-  status    String   @default("draft")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+enum QuickSetupStatus {
+  pending
+  in_progress
+  completed
+}
+
+enum ShiftTemplateType {
+  fixed
+  floating_day_start
+  floating_absolute
+  split
+  rotate
+}
+
+enum RequestReasonCategory {
+  attendance
+  remote_work
+  loan
+  salary_advance
+  mission
+  annual_leave
+  unpaid_leave
+  reward_leave
+  sick_leave
+}
+
+enum MaritalStatus {
+  single
+  married
+  divorced
+}
+
+enum CalendarStatus {
+  active
+  inactive
+}
+
+enum DraftTemplateCategory {
+  payroll
+  attendance
+  hr
+}
+
+enum WorkGroupAccessLevel {
+  employee
+  lead
+  manager
+}
+
+model BusinessProfile {
+  id                    String           @id @default(cuid())
+  brandName             String
+  legalName             String?
+  contactEmail          String?
+  phone                 String?
+  address               String?
+  payrollPackageEnabled Boolean          @default(false)
+  quickSetupStatus      QuickSetupStatus @default(pending)
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+}
+
+model Location {
+  id          String      @id @default(cuid())
+  title       String
+  address     String
+  radius      Int
+  description String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  workGroups  WorkGroup[]
+}
+
+model OrganizationUnit {
+  id          String                   @id @default(cuid())
+  title       String
+  description String?
+  createdAt   DateTime                 @default(now())
+  updatedAt   DateTime                 @updatedAt
+  employees   EmployeeOrganizationUnit[]
+}
+
+model RequestReason {
+  id           String                @id @default(cuid())
+  title        String
+  description  String?
+  category     RequestReasonCategory
+  isActive     Boolean               @default(true)
+  displayOrder Int                   @default(0)
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+}
+
+model ShiftTemplate {
+  id          String            @id @default(cuid())
+  title       String
+  description String?
+  type        ShiftTemplateType
+  weekDays    Json              @default("[]")
+  config      Json              @default("{}")
+  breaks      Json              @default("[]")
+  isActive    Boolean           @default(true)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+}
+
+model Calendar {
+  id             String         @id @default(cuid())
+  title          String
+  description    String?
+  yearLabel      String
+  startDate      String
+  endDate        String
+  status         CalendarStatus @default(active)
+  shiftTitle     String
+  shiftTypeLabel String
+  holidayCount   Int            @default(0)
+  totalShiftDays Int            @default(0)
+  totalEventDays Int            @default(0)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  policies       WorkPolicy[]
+}
+
+model WorkPolicy {
+  id            String      @id @default(cuid())
+  title         String
+  description   String?
+  calendarId    String?
+  sectionValues Json        @default("{}")
+  employeeCount Int         @default(0)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  calendar      Calendar?   @relation(fields: [calendarId], references: [id], onDelete: SetNull)
+  workGroups    WorkGroup[]
+}
+
+model Employee {
+  id                   String                   @id @default(cuid())
+  firstName            String
+  lastName             String
+  nationalId           String?
+  mobile1              String?
+  mobile2              String?
+  email                String?
+  personnelCode        String?
+  maritalStatus        MaritalStatus           @default(single)
+  childrenCount        Int                     @default(0)
+  canEditIdentityPhoto Boolean                 @default(false)
+  isActive             Boolean                 @default(true)
+  avatarUrl            String?
+  identityPhotoUrl     String?
+  bankAccounts         Json                    @default("[]")
+  guarantees           Json                    @default("[]")
+  createdAt            DateTime                @default(now())
+  updatedAt            DateTime                @updatedAt
+  organizationUnits    EmployeeOrganizationUnit[]
+  workGroupMemberships WorkGroupMember[]
+}
+
+model EmployeeOrganizationUnit {
+  id                 String           @id @default(cuid())
+  employeeId         String
+  organizationUnitId String
+  employee           Employee         @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  organizationUnit   OrganizationUnit @relation(fields: [organizationUnitId], references: [id], onDelete: Cascade)
+
+  @@unique([employeeId, organizationUnitId])
+}
+
+model WorkGroup {
+  id          String          @id @default(cuid())
+  title       String
+  description String?
+  tags        Json            @default("[]")
+  locationId  String?
+  policyId    String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  location    Location?       @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  policy      WorkPolicy?     @relation(fields: [policyId], references: [id], onDelete: SetNull)
+  members     WorkGroupMember[]
+}
+
+model WorkGroupMember {
+  id          String               @id @default(cuid())
+  workGroupId String
+  employeeId  String
+  accessLevel WorkGroupAccessLevel @default(employee)
+  joinedAt    DateTime             @default(now())
+  workGroup   WorkGroup            @relation(fields: [workGroupId], references: [id], onDelete: Cascade)
+  employee    Employee             @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([workGroupId, employeeId])
+}
+
+model DraftTemplate {
+  id          String                @id @default(cuid())
+  title       String
+  description String?
+  category    DraftTemplateCategory @default(hr)
+  body        String
+  version     Int                   @default(1)
+  isActive    Boolean               @default(true)
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
 }

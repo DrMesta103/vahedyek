@@ -25,8 +25,14 @@ export function toNumber(value: unknown) {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
+function normalizeDigits(value: string) {
+  return value
+    .replace(/[۰-۹]/g, (digit) => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(digit)))
+    .replace(/[٠-٩]/g, (digit) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(digit)));
+}
+
 export function parseJalaliDate(value: string) {
-  const [year, month, day] = value.split('/').map(Number);
+  const [year, month, day] = normalizeDigits(value).split('/').map(Number);
   if (!year || !month || !day) return null;
   return { year, month, day };
 }
@@ -110,14 +116,15 @@ export function normalizeFinancialCategories(categories: any[]): NormalizedFinan
     })
     .map((item) => {
       const capAmount = toNumber(item.capAmount);
+      const requiresDue = item.requiresDue !== false;
       return {
         id: item.id,
         name: item.name.trim(),
         capAmount,
-        dueAmount: capAmount,
-        noDueAmount: 0,
+        dueAmount: requiresDue ? capAmount : 0,
+        noDueAmount: requiresDue ? 0 : capAmount,
         system: Boolean(item.system),
-        requiresDue: true,
+        requiresDue,
       };
     });
 }

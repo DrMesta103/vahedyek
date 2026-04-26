@@ -13,6 +13,14 @@ function serializePricingType(value: PricingType) {
   return value === PricingType.metered ? 'metered' : 'fixed';
 }
 
+function buildScopedId(financialId: string, rawId: string) {
+  return `${financialId}:${rawId}`;
+}
+
+function unwrapScopedId(financialId: string, rawId: string) {
+  const prefix = `${financialId}:`;
+  return rawId.startsWith(prefix) ? rawId.slice(prefix.length) : rawId;
+}
 
 export async function GET(_: Request, { params }: { params: { draftId: string } }) {
   try {
@@ -45,7 +53,7 @@ export async function GET(_: Request, { params }: { params: { draftId: string } 
     }
 
     const categories = financial.categories.map((item) => ({
-      id: item.id,
+      id: unwrapScopedId(financial.id, item.id),
       name: item.name,
       capAmount: Number(item.capAmount),
       dueAmount: Number(item.dueAmount),
@@ -56,12 +64,19 @@ export async function GET(_: Request, { params }: { params: { draftId: string } 
 
     const categoryIds = new Set(categories.map((item) => item.id));
     const dueItems = financial.dueItems
+      .map((item) => ({
+        id: unwrapScopedId(financial.id, item.id),
+        categoryId: unwrapScopedId(financial.id, item.categoryId),
+        title: item.title,
+        amount: Number(item.amount),
+        dueDate: item.dueDate,
+      }))
       .filter((item) => categoryIds.has(item.categoryId))
       .map((item) => ({
         id: item.id,
         categoryId: item.categoryId,
         title: item.title,
-        amount: Number(item.amount),
+        amount: item.amount,
         dueDate: item.dueDate,
       }));
 
@@ -159,7 +174,13 @@ export async function PUT(request: Request, { params }: { params: { draftId: str
     if (categories.length) {
       await prisma.financialCategory.createMany({
         data: categories.map((item) => ({
-          ...item,
+          id: buildScopedId(financial.id, item.id),
+          name: item.name,
+          capAmount: item.capAmount,
+          dueAmount: item.dueAmount,
+          noDueAmount: item.noDueAmount,
+          system: item.system,
+          requiresDue: item.requiresDue,
           financialId: financial.id,
         })),
       });
@@ -168,7 +189,11 @@ export async function PUT(request: Request, { params }: { params: { draftId: str
     if (dueItems.length) {
       await prisma.financialDueItem.createMany({
         data: dueItems.map((item) => ({
-          ...item,
+          id: buildScopedId(financial.id, item.id),
+          categoryId: buildScopedId(financial.id, item.categoryId),
+          title: item.title,
+          amount: item.amount,
+          dueDate: item.dueDate,
           financialId: financial.id,
         })),
       });

@@ -8,6 +8,7 @@ import { FieldLabel } from './FieldLabel';
 import { FinancialPaymentFlow } from './FinancialPaymentFlow';
 import { FinancialPricingBox } from './FinancialPricingBox';
 import { StickySubmitBar } from './StickySubmitBar';
+import { ContractStepLoader } from './ContractStepLoader';
 import { Input } from '../../../../components/ui/input';
 import { PersianDatePicker } from '../../../../components/ui/PersianDatePicker';
 import { useContractFlowBasePath } from './useContractFlowBasePath';
@@ -30,18 +31,94 @@ type FinancialCategory = FinancialCategoryData;
 type DueItem = FinancialDueItemData;
 type DueMode = 'irregular' | 'regular';
 
-const LOCKED_CATEGORY_IDS = ['advance', 'document', 'handover', 'installment'];
+const SYSTEM_FINANCIAL_CATEGORIES = [
+  { id: 'advance', name: 'پیش پرداخت', requiresDue: true },
+  { id: 'installment', name: 'اقساط ثابت', requiresDue: true },
+  { id: 'loan', name: 'وام بانکی', requiresDue: false },
+  { id: 'handover', name: 'تحویل واحد', requiresDue: false },
+  { id: 'document', name: 'تحویل سند', requiresDue: false },
+] as const;
+const LOCKED_CATEGORY_IDS = SYSTEM_FINANCIAL_CATEGORIES.map((item) => item.id);
+const DUE_TAG_OPTIONS = SYSTEM_FINANCIAL_CATEGORIES.map((item) => item.name);
+const REGULAR_DUE_CATEGORY_ID = 'installment';
 const PIE_CHART_COLORS = ['#0f766e', '#14b8a6', '#0ea5e9', '#6366f1', '#f59e0b', '#ef4444', '#84cc16', '#8b5cf6'];
 
-const INITIAL_CATEGORIES: FinancialCategory[] = [
-  { id: 'advance', name: 'پیش پرداخت', capAmount: 0, dueAmount: 0, noDueAmount: 0, system: true, requiresDue: true },
-  { id: 'document', name: 'تحویل سند', capAmount: 0, dueAmount: 0, noDueAmount: 0, system: true, requiresDue: true },
-  { id: 'handover', name: 'تحویل واحد', capAmount: 0, dueAmount: 0, noDueAmount: 0, system: true, requiresDue: true },
-  { id: 'installment', name: 'اقساط ثابت', capAmount: 0, dueAmount: 0, noDueAmount: 0, system: true, requiresDue: true },
-];
+const INITIAL_CATEGORIES: FinancialCategory[] = SYSTEM_FINANCIAL_CATEGORIES.map((item) => ({
+  id: item.id,
+  name: item.name,
+  capAmount: 0,
+  dueAmount: 0,
+  noDueAmount: 0,
+  system: true,
+  requiresDue: item.requiresDue,
+}));
+
+function getCategoryRequiresDue(categoryId: string) {
+  return SYSTEM_FINANCIAL_CATEGORIES.find((item) => item.id === (categoryId as (typeof SYSTEM_FINANCIAL_CATEGORIES)[number]['id']))?.requiresDue ?? true;
+}
+
+function normalizeCategory(item: FinancialCategory) {
+  const requiresDue = item.system ? getCategoryRequiresDue(item.id) : (item.requiresDue ?? true);
+  return {
+    ...item,
+    requiresDue,
+    dueAmount: requiresDue ? item.capAmount : 0,
+    noDueAmount: requiresDue ? 0 : item.capAmount,
+  };
+}
+
+function mergeWithSystemCategories(categories: FinancialCategory[]) {
+  const normalizedCategories = categories.map(normalizeCategory);
+  const existingById = new Map(normalizedCategories.map((item) => [item.id, item]));
+  const merged = SYSTEM_FINANCIAL_CATEGORIES.map((item) => existingById.get(item.id) ?? normalizeCategory({
+    id: item.id,
+    name: item.name,
+    capAmount: 0,
+    dueAmount: 0,
+    noDueAmount: 0,
+    system: true,
+    requiresDue: item.requiresDue,
+  }));
+
+  const customCategories = normalizedCategories.filter((item) => !LOCKED_CATEGORY_IDS.includes(item.id as any));
+  return [...merged, ...customCategories];
+}
+
+function orderCategories(categories: FinancialCategory[]) {
+  const systemOrder = new Map<string, number>(SYSTEM_FINANCIAL_CATEGORIES.map((item, index) => [item.id, index]));
+  return categories
+    .map((item, index) => ({ item, index }))
+    .sort((a, b) => {
+      const aIndex = systemOrder.get(a.item.id);
+      const bIndex = systemOrder.get(b.item.id);
+      if (aIndex !== undefined && bIndex !== undefined) return aIndex - bIndex;
+      if (aIndex !== undefined) return -1;
+      if (bIndex !== undefined) return 1;
+      return a.index - b.index;
+    })
+    .map(({ item }) => item);
+}
+
+function splitTaggedTitle(title: string) {
+  const normalizedTitle = title.trim();
+  const matchedTag = DUE_TAG_OPTIONS.find((tag) => normalizedTitle.startsWith(`${tag} `));
+  if (!matchedTag) return { dueTag: '', dueTitle: normalizedTitle };
+  return {
+    dueTag: matchedTag,
+    dueTitle: normalizedTitle.slice(matchedTag.length).trim(),
+  };
+}
+
+function buildDueTitle(category: FinancialCategory | null, title: string, dueTag: string) {
+  const trimmedTitle = title.trim();
+  if (!trimmedTitle) return '';
+  const isCustomCategory = category ? !category.system : false;
+  if (!isCustomCategory || !dueTag.trim()) return trimmedTitle;
+  return `${dueTag.trim()} ${trimmedTitle}`;
+}
 
 function normalizeFinancialPayload(data: ContractFinancialData | null): ContractFinancialData {
-  const categories = data?.categories?.length ? data.categories : INITIAL_CATEGORIES;
+  const categories = orderCategories(mergeWithSystemCategories(data?.categories?.length ? data.categories : INITIAL_CATEGORIES));
 
   return {
     pricingType: data?.pricingType ?? 'fixed',
@@ -52,12 +129,7 @@ function normalizeFinancialPayload(data: ContractFinancialData | null): Contract
     parkingPricePerMeter: String(Number(data?.parkingPricePerMeter || 0)),
     fixedTotalAmount: String(Number(data?.fixedTotalAmount || 0)),
     activeTab: data?.activeTab || categories[0]?.id || 'advance',
-    categories: categories.map((item) => ({
-      ...item,
-      requiresDue: true,
-      dueAmount: item.capAmount,
-      noDueAmount: 0,
-    })),
+    categories,
     dueItems: data?.dueItems ?? [],
   };
 }
@@ -332,6 +404,7 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
   const [dueDialogOpen, setDueDialogOpen] = useState(false);
   const [editingDueId, setEditingDueId] = useState<string | null>(null);
   const [dueMode, setDueMode] = useState<DueMode>('irregular');
+  const [dueTag, setDueTag] = useState('');
   const [dueTitle, setDueTitle] = useState('');
   const [dueAmount, setDueAmount] = useState('');
   const [dueDate, setDueDate] = useState('');
@@ -342,7 +415,10 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
   const [dueFormError, setDueFormError] = useState('');
 
   const editingCategory = editingId ? categories.find((item) => item.id === editingId) ?? null : null;
-  const editingLockedCategory = editingCategory ? LOCKED_CATEGORY_IDS.includes(editingCategory.id) : false;
+  const editingLockedCategory = editingCategory ? (LOCKED_CATEGORY_IDS as readonly string[]).includes(editingCategory.id) : false;
+  const activeCategory = useMemo(() => categories.find((item) => item.id === activeTab) ?? null, [activeTab, categories]);
+  const activeCategorySupportsRegular = activeCategory?.id === REGULAR_DUE_CATEGORY_ID;
+  const activeCategoryIsCustom = activeCategory ? !activeCategory.system : false;
 
   useEffect(() => {
     let mounted = true;
@@ -381,6 +457,7 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
         setTotalArea(formatArea(derivedTotalArea));
 
         if (sourceData) {
+          const normalizedSourceData = normalizeFinancialPayload(sourceData);
           setPricingType(sourceData.pricingType);
           setUnitArea(formatArea(derivedUnitArea));
           setParkingArea(formatArea(derivedParkingArea));
@@ -388,13 +465,9 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
           setPricePerMeter(sourceData.pricePerMeter ? Number(sourceData.pricePerMeter).toLocaleString('en-US') : '');
           setParkingPricePerMeter(sourceData.parkingPricePerMeter ? Number(sourceData.parkingPricePerMeter).toLocaleString('en-US') : '');
           setFixedTotalAmount(sourceData.fixedTotalAmount ? Number(sourceData.fixedTotalAmount).toLocaleString('en-US') : '');
-          setCategories(
-            sourceData.categories.length
-              ? sourceData.categories.map((item) => ({ ...item, requiresDue: true, noDueAmount: 0, dueAmount: item.capAmount }))
-              : INITIAL_CATEGORIES,
-          );
-          setActiveTab(sourceData.activeTab || sourceData.categories[0]?.id || 'advance');
-          setDueItems(sourceData.dueItems);
+          setCategories(normalizedSourceData.categories);
+          setActiveTab(normalizedSourceData.activeTab || normalizedSourceData.categories[0]?.id || 'advance');
+          setDueItems(normalizedSourceData.dueItems);
         }
       } finally {
         if (mounted) setLoading(false);
@@ -414,9 +487,8 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
   const overall = useMemo(
     () => ({
       cap: categories.reduce((sum, item) => sum + item.capAmount, 0),
-      due: dueItems.reduce((sum, item) => sum + item.amount, 0),
     }),
-    [categories, dueItems],
+    [categories],
   );
 
   const overContractAmount = totalContractAmount > 0 && overall.cap > totalContractAmount;
@@ -452,12 +524,7 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
     parkingPricePerMeter: String(parseNum(parkingPricePerMeter)),
     fixedTotalAmount: String(parseNum(fixedTotalAmount)),
     activeTab,
-    categories: categories.map((item) => ({
-      ...item,
-      requiresDue: true,
-      dueAmount: item.capAmount,
-      noDueAmount: 0,
-    })),
+    categories: categories.map((item) => normalizeCategory(item)),
     dueItems,
   });
 
@@ -550,15 +617,15 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
       id: editingId ?? `custom-${Date.now()}`,
       name,
       capAmount: amount,
-      dueAmount: amount,
-      noDueAmount: 0,
+      dueAmount: editingLockedCategory ? (editingCategory?.requiresDue === false ? 0 : amount) : amount,
+      noDueAmount: editingLockedCategory && editingCategory?.requiresDue === false ? amount : 0,
       system: Boolean(editingLockedCategory),
-      requiresDue: true,
+      requiresDue: editingLockedCategory ? editingCategory?.requiresDue !== false : true,
     };
 
-    const nextCategories = editingId
+    const nextCategories = orderCategories(editingId
       ? categories.map((item) => (item.id === editingId ? nextCategory : item))
-      : [...categories, nextCategory];
+      : [...categories, nextCategory]);
 
     if (!maybeWarnOnExcess(nextCategories, nextCategory.id)) return;
 
@@ -568,9 +635,9 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
   };
 
   const deleteCategory = (categoryId: string) => {
-    if (LOCKED_CATEGORY_IDS.includes(categoryId)) return;
+    if ((LOCKED_CATEGORY_IDS as readonly string[]).includes(categoryId)) return;
 
-    const nextCategories = categories.filter((item) => item.id !== categoryId);
+    const nextCategories = orderCategories(categories.filter((item) => item.id !== categoryId));
     setCategories(nextCategories);
     setDueItems((current) => current.filter((item) => item.categoryId !== categoryId));
     if (activeTab === categoryId) {
@@ -582,16 +649,14 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
 
   const updateCategoryAmount = (categoryId: string, value: string) => {
     const amount = parseNum(value);
-    const nextCategories = categories.map((item) =>
+    const nextCategories = orderCategories(categories.map((item) =>
       item.id === categoryId
-        ? {
+        ? normalizeCategory({
             ...item,
             capAmount: amount,
-            dueAmount: amount,
-            noDueAmount: 0,
-          }
+          })
         : item,
-    );
+    ));
 
     setCategories(nextCategories);
   };
@@ -600,6 +665,7 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
     setActiveTab(categoryId);
     setEditingDueId(null);
     setDueMode('irregular');
+    setDueTag('');
     setDueTitle('');
     setDueAmount('');
     setDueDate('');
@@ -615,7 +681,10 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
     setActiveTab(item.categoryId);
     setEditingDueId(item.id);
     setDueMode('irregular');
-    setDueTitle(item.title);
+    const category = categories.find((entry) => entry.id === item.categoryId) ?? null;
+    const parsedTaggedTitle = category && !category.system ? splitTaggedTitle(item.title) : { dueTag: '', dueTitle: item.title };
+    setDueTag(parsedTaggedTitle.dueTag);
+    setDueTitle(parsedTaggedTitle.dueTitle);
     setDueAmount(item.amount ? item.amount.toLocaleString('en-US') : '');
     setDueDate(item.dueDate);
     setRegularFrequency('monthly');
@@ -637,7 +706,9 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
       return;
     }
 
-    if (dueMode === 'irregular') {
+    const finalDueTitle = buildDueTitle(activeCategory, dueTitle, dueTag);
+
+    if (dueMode === 'irregular' || !activeCategorySupportsRegular) {
       if (!dueDate.trim()) {
         setDueFormError('تاریخ سررسید را وارد کنید.');
         return;
@@ -646,7 +717,7 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
       const nextItem: DueItem = {
         id: editingDueId ?? `due-${Date.now()}`,
         categoryId: activeTab,
-        title: dueTitle.trim(),
+        title: finalDueTitle,
         amount: parseNum(dueAmount),
         dueDate,
       };
@@ -668,7 +739,7 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
 
       const generatedItems = buildRegularDueItems({
         activeTab,
-        title: dueTitle.trim(),
+        title: finalDueTitle,
         totalAmount: parseNum(dueAmount),
         count,
         startDate: regularStartDate,
@@ -686,6 +757,7 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
 
     setDueMode('irregular');
     setEditingDueId(null);
+    setDueTag('');
     setDueTitle('');
     setDueAmount('');
     setDueDate('');
@@ -817,6 +889,10 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
     }
   };
 
+  if (loading) {
+    return <ContractStepLoader title={title} description="در حال بارگذاری اطلاعات مالی قرارداد..." />;
+  }
+
   return (
     <div className="space-y-5">
       {!embedded ? <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -852,7 +928,6 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
         categories={categories}
         lockedCategoryIds={LOCKED_CATEGORY_IDS}
         categoryDueItemsMap={categoryDueItemsMap}
-        dueAmount={overall.due}
         onCategoryAmountChange={updateCategoryAmount}
         onOpenAddCategory={openAdd}
         onOpenEditCategory={openEdit}
@@ -988,10 +1063,12 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
         onClose={() => {
           setDueDialogOpen(false);
           setEditingDueId(null);
+          setDueTag('');
           setDueFormError('');
         }}
         title={editingDueId ? 'ویرایش سررسید' : 'ثبت سررسید'}
         description={`سررسید برای ${categories.find((item) => item.id === activeTab)?.name ?? 'دسته‌بندی فعال'} ثبت می‌شود.`}
+        panelClassName="!max-w-[27vw]"
         footerClassName="justify-start border-gray-100 px-5 py-3"
         footer={
           <>
@@ -1000,6 +1077,7 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
               onClick={() => {
                 setDueDialogOpen(false);
                 setEditingDueId(null);
+                setDueTag('');
                 setDueFormError('');
               }}
               className="px-1 py-1 text-sm font-bold text-[#0e989d] transition hover:text-[#0b7f84]"
@@ -1013,41 +1091,54 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
         }
       >
         <div className="space-y-4">
-          <section className="space-y-2">
-            <div className="flex items-center justify-between gap-3">
-              <FieldLabel label="نوع سررسید" />
-              <TwoOptionSwitch<DueMode>
-                value={dueMode}
-                onChange={setDueMode}
-                onValue="regular"
-                offValue="irregular"
-                onText="منظم"
-                offText="نامنظم"
-                disabled={Boolean(editingDueId)}
-              />
-            </div>
-          </section>
+          {activeCategorySupportsRegular ? (
+            <section className="space-y-2">
+              <div className="flex items-center justify-between gap-3">
+                <FieldLabel label="نوع سررسید" />
+                <TwoOptionSwitch<DueMode>
+                  value={dueMode}
+                  onChange={setDueMode}
+                  onValue="regular"
+                  offValue="irregular"
+                  onText="منظم"
+                  offText="نامنظم"
+                  disabled={Boolean(editingDueId)}
+                />
+              </div>
+            </section>
+          ) : null}
 
           <section className="space-y-3 border-t border-gray-100 pt-4">
             <div className="text-[13px] font-bold text-gray-800">اطلاعات اصلی</div>
-            <div className="grid gap-3 md:grid-cols-2">
+            <div className="grid gap-3">
+              {activeCategoryIsCustom ? (
+                <div className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-3">
+                  <FieldLabel label="تگ" />
+                  <TagPills<string>
+                    value={dueTag}
+                    onChange={setDueTag}
+                    options={DUE_TAG_OPTIONS.map((option) => ({ value: option, label: option }))}
+                    className="mt-2 w-full gap-2"
+                  />
+                </div>
+              ) : null}
               <div>
                 <FieldLabel label="عنوان" />
                 <Input
                   value={dueTitle}
                   onChange={(event) => setDueTitle(event.target.value)}
-                  placeholder={dueMode === 'regular' ? 'مثال: اقساط ماهانه' : 'مثال: قسط نامنظم'}
+                  placeholder={activeCategorySupportsRegular && dueMode === 'regular' ? 'مثال: اقساط ماهانه' : 'مثال: انشعابات آب'}
                   className="mt-2 h-10 rounded-lg border-gray-200 bg-[#fcfdfd] px-3 text-[13px]"
                 />
               </div>
 
               <div>
-                <FieldLabel label={dueMode === 'regular' ? 'مبلغ کل اقساط منظم' : 'مبلغ'} />
+                <FieldLabel label={activeCategorySupportsRegular && dueMode === 'regular' ? 'مبلغ کل اقساط' : 'مبلغ'} />
                 <div className="relative mt-2">
                   <Input
                     value={dueAmount}
                     onChange={(event) => setDueAmount(formatInput(event.target.value))}
-                    placeholder={dueMode === 'regular' ? 'مبلغ کل را وارد کنید' : 'مبلغ سررسید'}
+                    placeholder={activeCategorySupportsRegular && dueMode === 'regular' ? 'مبلغ کل را وارد کنید' : 'مبلغ سررسید'}
                     className="h-10 rounded-lg border-gray-200 bg-[#fcfdfd] pr-3 pl-12 text-[13px]"
                   />
                   <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-xs text-gray-400">تومان</span>
@@ -1058,8 +1149,8 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
 
           <section className="space-y-3 border-t border-gray-100 pt-4">
             <div className="flex items-center justify-between gap-3">
-              <div className="text-[13px] font-bold text-gray-800">{dueMode === 'regular' ? 'زمان‌بندی اقساط' : 'زمان سررسید'}</div>
-              {dueMode === 'regular' ? (
+              <div className="text-[13px] font-bold text-gray-800">{activeCategorySupportsRegular && dueMode === 'regular' ? 'زمان‌بندی اقساط' : 'زمان سررسید'}</div>
+              {activeCategorySupportsRegular && dueMode === 'regular' ? (
                 <TagPills<DueFrequency>
                   value={regularFrequency}
                   onChange={setRegularFrequency}
@@ -1071,11 +1162,11 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
               ) : null}
             </div>
 
-            {dueMode === 'irregular' ? (
+            {!activeCategorySupportsRegular || dueMode === 'irregular' ? (
               <DateField label="تاریخ سررسید" value={dueDate} onChange={setDueDate} placeholder="تاریخ سررسید را انتخاب کنید" />
             ) : (
               <>
-                <div className="grid gap-3 md:grid-cols-2">
+                <div className="grid gap-3">
                   <div>
                     <FieldLabel label={`دوره اقساط ${regularFrequency === 'monthly' ? 'ماهانه' : 'روزانه'}`} />
                     <Input

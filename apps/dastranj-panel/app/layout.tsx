@@ -3,7 +3,7 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: 'دسترنج',
-  description: 'پنل مستقل دسترنج',
+  description: 'پنل نکست‌جی‌اس دسترنج با بک‌اند و منطق داده',
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -13,3 +13,4 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     </html>
   );
 }
+

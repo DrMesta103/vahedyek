@@ -190,7 +190,15 @@ function ToggleCard({
   );
 }
 
-export function PenaltyDetailStep({ penaltyId }: { penaltyId: string }) {
+export function PenaltyDetailStep({
+  penaltyId,
+  embedded = false,
+  onBack,
+}: {
+  penaltyId: string;
+  embedded?: boolean;
+  onBack?: () => void;
+}) {
   const router = useRouter();
   const basePath = useContractFlowBasePath();
   const penalty = getPenaltyItem(penaltyId);
@@ -217,6 +225,24 @@ export function PenaltyDetailStep({ penaltyId }: { penaltyId: string }) {
     );
   };
 
+  const handleBack = () => {
+    if (embedded) {
+      onBack?.();
+      return;
+    }
+
+    router.push(`${basePath}/penalties`);
+  };
+
+  const handleSubmit = () => {
+    if (embedded) {
+      onBack?.();
+      return;
+    }
+
+    router.push(`${basePath}/penalties`);
+  };
+
   if (!penalty) {
     return (
       <div className="rounded-2xl border border-rose-200 bg-rose-50 p-8 text-center text-rose-700">
@@ -231,7 +257,7 @@ export function PenaltyDetailStep({ penaltyId }: { penaltyId: string }) {
         <div>
           <button
             type="button"
-            onClick={() => router.push(`${basePath}/penalties`)}
+            onClick={handleBack}
             className="mb-3 inline-flex items-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
           >
             <ChevronLeft className="h-4 w-4" />
@@ -466,7 +492,7 @@ export function PenaltyDetailStep({ penaltyId }: { penaltyId: string }) {
         </div>
       </div>
 
-      <StickySubmitBar label="ثبت" onClick={() => router.push(`${basePath}/penalties`)} />
+      <StickySubmitBar label="ثبت" onClick={handleSubmit} embedded={embedded} />
     </div>
   );
 }

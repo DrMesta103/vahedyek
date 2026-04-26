@@ -1,5 +1,6 @@
 import type {
   ContractFinancialData,
+  ContractPenaltiesData,
   ContractSubjectData,
   ContractPartiesData,
   ContractParty,
@@ -128,6 +129,22 @@ export function validateFinancialStep(data: Partial<ContractFinancialData>): Val
   const validCategoryIds = new Set(categories.map((item) => item.id));
   if (dueItems.some((item) => !validCategoryIds.has(item.categoryId))) {
     errors['dueItems'] = 'بعضی از سررسیدها به دسته‌بندی معتبر متصل نیستند';
+  }
+
+  return { valid: Object.keys(errors).length === 0, errors };
+}
+
+export function validatePenaltiesStep(data: Partial<ContractPenaltiesData>): ValidationResult {
+  const errors: Record<string, string> = {};
+  const types = data.types ?? [];
+  const rules = data.rules ?? [];
+  const activeTypes = types.filter((item) => item.active);
+
+  for (const type of activeTypes) {
+    const typeRules = rules.filter((item) => item.penaltyTypeId === type.id);
+    if (typeRules.length === 0) {
+      errors[`type:${type.id}`] = `برای «${type.title}» باید حداقل یک جریمه ثبت شود.`;
+    }
   }
 
   return { valid: Object.keys(errors).length === 0, errors };
