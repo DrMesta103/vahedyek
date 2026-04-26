@@ -1,4 +1,5 @@
 import type {
+  ContractDiscountsData,
   ContractFinancialData,
   ContractPenaltiesData,
   ContractSubjectData,
@@ -146,6 +147,44 @@ export function validatePenaltiesStep(data: Partial<ContractPenaltiesData>): Val
       errors[`type:${type.id}`] = `برای «${type.title}» باید حداقل یک جریمه ثبت شود.`;
     }
   }
+
+  return { valid: Object.keys(errors).length === 0, errors };
+}
+
+export function validateDiscountsStep(data: Partial<ContractDiscountsData>): ValidationResult {
+  const errors: Record<string, string> = {};
+  const types = data.types ?? [];
+  const rules = data.rules ?? [];
+  const activeTypes = types.filter((item) => item.active);
+
+  for (const type of activeTypes) {
+    const typeRules = rules.filter((item) => item.discountTypeId === type.id);
+    if (typeRules.length === 0) {
+      errors[`type:${type.id}`] = `برای «${type.title}» باید حداقل یک تخفیف ثبت شود.`;
+    }
+  }
+
+  rules.forEach((rule, index) => {
+    const minValue = Number(String(rule.minValue ?? '').replace(/,/g, ''));
+    const maxValue = Number(String(rule.maxValue ?? '').replace(/,/g, ''));
+    const thresholdValue = Number(String(rule.approvalThreshold ?? '').replace(/,/g, ''));
+
+    if (!(maxValue > 0)) {
+      errors[`rule:${rule.id || index}:maxValue`] = 'حداکثر مقدار تخفیف را وارد کنید.';
+    }
+
+    if (String(rule.minValue ?? '').trim() !== '' && minValue < 0) {
+      errors[`rule:${rule.id || index}:minValue`] = 'حداقل مقدار تخفیف معتبر نیست.';
+    }
+
+    if (minValue > maxValue && maxValue > 0) {
+      errors[`rule:${rule.id || index}:range`] = 'حداقل تخفیف نمی‌تواند بیشتر از حداکثر تخفیف باشد.';
+    }
+
+    if (rule.managerApproval && !(thresholdValue > 0)) {
+      errors[`rule:${rule.id || index}:approvalThreshold`] = 'آستانه تایید مدیر را وارد کنید.';
+    }
+  });
 
   return { valid: Object.keys(errors).length === 0, errors };
 }

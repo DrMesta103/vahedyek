@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { BadgePercent, ChevronLeft, CircleDollarSign, CirclePercent, LoaderCircle, Plus, Save, TrendingUp, X } from 'lucide-react';
+import { LoaderCircle, Plus, Save, X } from 'lucide-react';
 import { Input } from '../../../../components/ui/input';
 import { ContractStepLoader } from './ContractStepLoader';
 import { FieldLabel } from './FieldLabel';
@@ -36,31 +36,26 @@ const MODE_OPTIONS: Array<{
   id: PenaltyMode;
   title: string;
   description: string;
-  icon: typeof CircleDollarSign;
 }> = [
   {
     id: 'fixed',
     title: 'مبلغ ثابت برای هر روز/ماه',
     description: 'در این روش، برای هر دوره تاخیر مبلغ ثابتی به‌عنوان جریمه محاسبه می‌شود.',
-    icon: CircleDollarSign,
   },
   {
     id: 'overdue',
     title: 'درصدی از مانده بدهی معوق',
     description: 'جریمه به‌صورت درصدی از مانده بدهی معوق محاسبه می‌شود.',
-    icon: BadgePercent,
   },
   {
     id: 'contract',
     title: 'درصدی از کل قرارداد',
     description: 'جریمه بر مبنای درصدی از کل مبلغ قرارداد در بازه انتخاب‌شده محاسبه می‌شود.',
-    icon: CirclePercent,
   },
   {
     id: 'progressive',
     title: 'جریمه تصاعدی با روزهای تاخیر',
     description: 'مبلغ جریمه با افزایش مدت تاخیر بر اساس بازه‌های زمانی مختلف افزایش پیدا می‌کند.',
-    icon: TrendingUp,
   },
 ];
 
@@ -71,8 +66,8 @@ const PERIOD_OPTIONS: Array<{ value: PenaltyPeriod; label: string }> = [
 ];
 
 const ROUND_RULE_OPTIONS: Array<{ value: PenaltyRoundRule; label: string }> = [
-  { value: '0.5', label: '۰.۵' },
-  { value: '5', label: '۵' },
+  { value: '00', label: '00' },
+  { value: '0', label: '0' },
   { value: '100', label: 'کسر ۱۰۰' },
   { value: '1000', label: 'کسر ۱۰۰۰' },
 ];
@@ -116,13 +111,22 @@ function makeEmptyRule(penaltyTypeId: string): PenaltyRuleData {
 }
 
 function normalizeRule(rule: PenaltyRuleData): PenaltyRuleData {
+  const normalizeRoundRuleValue = (value: string | undefined): PenaltyRoundRule => {
+    if (value === '00' || value === '0' || value === '100' || value === '1000') return value;
+    if (value === '0.5') return '00';
+    if (value === '5') return '0';
+    return '100';
+  };
+
   return {
     ...rule,
     fixedAmount: String(rule.fixedAmount ?? ''),
     penaltyPercent: String(rule.penaltyPercent ?? ''),
     bankInterestPercent: String(rule.bankInterestPercent ?? ''),
     graceDays: String(rule.graceDays ?? ''),
+    roundRule: normalizeRoundRuleValue(rule.roundRule),
     extraFeeAmount: String(rule.extraFeeAmount ?? ''),
+    extraFeeRoundRule: normalizeRoundRuleValue(rule.extraFeeRoundRule),
     progressiveRows: (rule.progressiveRows?.length ? rule.progressiveRows : DEFAULT_PROGRESSIVE_ROWS).map((row, index) => ({
       id: row.id || `row-${index + 1}`,
       fromDay: String(row.fromDay ?? ''),
@@ -523,7 +527,7 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
                           <button
                             type="button"
                             onClick={() => openRuleDialog(type.id)}
-                            className="inline-flex items-center gap-2 rounded-lg bg-teal-700 px-3.5 py-2 text-sm font-medium text-white hover:bg-teal-800"
+                            className="mt-2 inline-flex h-8 items-center gap-2 rounded-lg border border-[#14a7ad] bg-white/65 px-3 text-xs font-bold text-[#0e989d] transition hover:bg-[#dff4f3]"
                           >
                             <Plus className="h-4 w-4" />
                             افزودن جریمه
@@ -606,7 +610,7 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
                         <button
                           type="button"
                           onClick={() => openRuleDialog(type.id)}
-                          className="inline-flex items-center gap-2 rounded-lg bg-teal-700 px-3.5 py-2 text-sm font-medium text-white hover:bg-teal-800"
+                          className="mt-2 inline-flex h-8 items-center gap-2 rounded-lg border border-[#14a7ad] bg-white/65 px-3 text-xs font-bold text-[#0e989d] transition hover:bg-[#dff4f3]"
                         >
                           <Plus className="h-4 w-4" />
                           افزودن جریمه
@@ -696,34 +700,14 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
         }
       >
         <section className="space-y-3">
-          <FieldLabel label="روش محاسبه جریمه" />
-          <div className="grid gap-3 md:grid-cols-2">
-            {MODE_OPTIONS.map((item) => {
-              const Icon = item.icon;
-              const isActive = ruleForm.mode === item.id;
-
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => setRuleForm((current) => ({ ...current, mode: item.id }))}
-                  className={`rounded-2xl border p-4 text-right transition ${
-                    isActive ? 'border-cyan-300 bg-cyan-50 text-cyan-800' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
-                  }`}
-                >
-                  <div className="flex items-start gap-3">
-                    <span className={`flex h-10 w-10 items-center justify-center rounded-full border ${isActive ? 'border-cyan-200 bg-white' : 'border-slate-200 bg-slate-50'}`}>
-                      <Icon className="h-4 w-4" />
-                    </span>
-                    <span className="space-y-1">
-                      <span className="block text-sm font-bold">{item.title}</span>
-                      <span className="block text-xs leading-5 text-slate-500">{item.description}</span>
-                    </span>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
+          <FieldBlock label="روش محاسبه جریمه">
+            <TagPills
+              options={MODE_OPTIONS.map((item) => ({ value: item.id, label: item.title }))}
+              value={ruleForm.mode}
+              onChange={(value) => setRuleForm((current) => ({ ...current, mode: value }))}
+            />
+            <p className="text-xs text-slate-500">{MODE_OPTIONS.find((item) => item.id === ruleForm.mode)?.description}</p>
+          </FieldBlock>
         </section>
 
         <FieldBlock label="دوره محاسبه جریمه">

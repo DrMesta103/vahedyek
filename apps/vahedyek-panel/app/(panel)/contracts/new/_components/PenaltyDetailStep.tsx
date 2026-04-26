@@ -16,7 +16,7 @@ import { useContractFlowBasePath } from './useContractFlowBasePath';
 type PenaltyMode = 'fixed' | 'overdue' | 'contract' | 'progressive';
 type PenaltyPeriod = 'daily' | 'monthly' | 'yearly';
 type ExtraFeeType = 'percent' | 'fixed';
-type RoundRule = '0.5' | '5' | '100' | '1000';
+type RoundRule = '00' | '0' | '100' | '1000';
 
 type ProgressiveRow = {
   id: string;
@@ -64,8 +64,8 @@ const PERIOD_OPTIONS: Array<{ id: PenaltyPeriod; label: string }> = [
 ];
 
 const ROUNDING_OPTIONS: Array<{ id: RoundRule; label: string }> = [
-  { id: '0.5', label: '۰.۵' },
-  { id: '5', label: '۵.۰' },
+  { id: '00', label: '00' },
+  { id: '0', label: '0' },
   { id: '100', label: 'کسر ۱۰۰' },
   { id: '1000', label: 'کسر ۱۰۰۰' },
 ];

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { validateFinancialStep, validatePenaltiesStep } from '../app/lib/contractValidation';
-import type { ContractFinancialData, ContractPenaltiesData } from '../app/types/contract';
+import { validateDiscountsStep, validateFinancialStep, validatePenaltiesStep } from '../app/lib/contractValidation';
+import type { ContractDiscountsData, ContractFinancialData, ContractPenaltiesData } from '../app/types/contract';
 
 function makeValidFinancialData(overrides: Partial<ContractFinancialData> = {}): ContractFinancialData {
   return {
@@ -193,4 +193,82 @@ test('validatePenaltiesStep rejects active penalty types without any saved rule'
 
   assert.equal(result.valid, false);
   assert.equal(result.errors['type:installment-delay'], 'برای «جریمه تاخیر در پرداخت اقساط» باید حداقل یک جریمه ثبت شود.');
+});
+
+function makeValidDiscountsData(overrides: Partial<ContractDiscountsData> = {}): ContractDiscountsData {
+  return {
+    activeTab: 'contract-base',
+    types: [
+      {
+        id: 'contract-base',
+        title: 'تخفیف روی اصل قرارداد',
+        description: 'desc',
+        active: true,
+      },
+      {
+        id: 'early-payment',
+        title: 'تخفیف مشوق پرداخت زودتر از موعد',
+        description: 'desc',
+        active: false,
+      },
+    ],
+    rules: [
+      {
+        id: 'discount-rule-1',
+        discountTypeId: 'contract-base',
+        scope: 'whole',
+        entryId: 'all-dues',
+        valueMode: 'amount',
+        minValue: '100000',
+        maxValue: '250000',
+        conditionNote: 'پرداخت زودتر از موعد',
+        managerApproval: false,
+        approvalThreshold: '',
+      },
+    ],
+    ...overrides,
+  };
+}
+
+test('validateDiscountsStep accepts active discount types with at least one rule', () => {
+  const result = validateDiscountsStep(makeValidDiscountsData());
+
+  assert.equal(result.valid, true);
+  assert.deepEqual(result.errors, {});
+});
+
+test('validateDiscountsStep rejects active discount types without any saved rule', () => {
+  const result = validateDiscountsStep(
+    makeValidDiscountsData({
+      rules: [],
+    }),
+  );
+
+  assert.equal(result.valid, false);
+  assert.equal(result.errors['type:contract-base'], 'برای «تخفیف روی اصل قرارداد» باید حداقل یک تخفیف ثبت شود.');
+});
+
+test('validateDiscountsStep rejects invalid discount ranges and empty approval threshold', () => {
+  const result = validateDiscountsStep(
+    makeValidDiscountsData({
+      rules: [
+        {
+          id: 'discount-rule-1',
+          discountTypeId: 'contract-base',
+          scope: 'itemized',
+          entryId: 'installments',
+          valueMode: 'percent',
+          minValue: '20',
+          maxValue: '10',
+          conditionNote: '',
+          managerApproval: true,
+          approvalThreshold: '',
+        },
+      ],
+    }),
+  );
+
+  assert.equal(result.valid, false);
+  assert.equal(result.errors['rule:discount-rule-1:range'], 'حداقل تخفیف نمی‌تواند بیشتر از حداکثر تخفیف باشد.');
+  assert.equal(result.errors['rule:discount-rule-1:approvalThreshold'], 'آستانه تایید مدیر را وارد کنید.');
 });

@@ -7,7 +7,7 @@ import { PENALTY_ITEMS } from '../../../../../(panel)/contracts/new/_components/
 type PenaltyMode = 'fixed' | 'overdue' | 'contract' | 'progressive';
 type PenaltyPeriod = 'daily' | 'monthly' | 'yearly';
 type ExtraFeeType = 'percent' | 'fixed';
-type RoundRule = '0.5' | '5' | '100' | '1000';
+type RoundRule = '00' | '0' | '100' | '1000';
 
 type ProgressiveRow = {
   id: string;
@@ -53,7 +53,10 @@ function normalizeExtraFeeType(value: unknown): ExtraFeeType {
 }
 
 function normalizeRoundRule(value: unknown): RoundRule {
-  return value === '0.5' || value === '5' || value === '1000' ? value : '100';
+  if (value === '00' || value === '0' || value === '100' || value === '1000') return value;
+  if (value === '0.5') return '00';
+  if (value === '5') return '0';
+  return '100';
 }
 
 function normalizeProgressiveRows(rows: unknown): ProgressiveRow[] {

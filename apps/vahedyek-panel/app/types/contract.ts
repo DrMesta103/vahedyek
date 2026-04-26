@@ -7,7 +7,9 @@ export type PricingType = 'fixed' | 'metered';
 export type PenaltyMode = 'fixed' | 'overdue' | 'contract' | 'progressive';
 export type PenaltyPeriod = 'daily' | 'monthly' | 'yearly';
 export type PenaltyExtraFeeType = 'percent' | 'fixed';
-export type PenaltyRoundRule = '0.5' | '5' | '100' | '1000';
+export type PenaltyRoundRule = '00' | '0' | '100' | '1000';
+export type DiscountScope = 'whole' | 'itemized';
+export type DiscountValueMode = 'amount' | 'percent';
 
 export interface Share {
   value: number;
@@ -115,11 +117,38 @@ export interface ContractPenaltiesData {
   rules: PenaltyRuleData[];
 }
 
+export interface DiscountTypeStateData {
+  id: string;
+  title: string;
+  description: string;
+  active: boolean;
+}
+
+export interface DiscountRuleData {
+  id: string;
+  discountTypeId: string;
+  scope: DiscountScope;
+  entryId: string;
+  valueMode: DiscountValueMode;
+  minValue: string;
+  maxValue: string;
+  conditionNote: string;
+  managerApproval: boolean;
+  approvalThreshold: string;
+}
+
+export interface ContractDiscountsData {
+  activeTab: string;
+  types: DiscountTypeStateData[];
+  rules: DiscountRuleData[];
+}
+
 export interface ContractFormData {
   subject: ContractSubjectData;
   parties: ContractPartiesData;
   financial?: ContractFinancialData;
   penalties?: ContractPenaltiesData;
+  discounts?: ContractDiscountsData;
 }
 
 export interface Contract {
