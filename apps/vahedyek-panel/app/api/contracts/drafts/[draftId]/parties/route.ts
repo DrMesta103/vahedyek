@@ -16,13 +16,14 @@ function serializeShareMode(value: ShareMode) {
   return value === ShareMode.percent ? 'percent' : 'dang';
 }
 
-export async function GET(_: Request, { params }: { params: { draftId: string } }) {
+export async function GET(_: Request, { params }: { params: Promise<{ draftId: string }> }) {
   try {
+    const { draftId } = await params;
     const session = await requireSessionContext();
     if (session instanceof NextResponse) return session;
 
     const draft = await prisma.contractDraft.findFirst({
-      where: { id: params.draftId, tenantId: session.tenantId },
+      where: { id: draftId, tenantId: session.tenantId },
       select: { id: true },
     });
 
@@ -31,7 +32,7 @@ export async function GET(_: Request, { params }: { params: { draftId: string } 
     }
 
     const parties = await prisma.contractParties.findUnique({
-      where: { draftId: params.draftId },
+      where: { draftId },
       include: {
         members: {
           orderBy: { createdAt: 'asc' },
@@ -69,13 +70,14 @@ export async function GET(_: Request, { params }: { params: { draftId: string } 
   }
 }
 
-export async function PUT(request: Request, { params }: { params: { draftId: string } }) {
+export async function PUT(request: Request, { params }: { params: Promise<{ draftId: string }> }) {
   try {
+    const { draftId } = await params;
     const session = await requireSessionContext();
     if (session instanceof NextResponse) return session;
 
     const draft = await prisma.contractDraft.findFirst({
-      where: { id: params.draftId, tenantId: session.tenantId },
+      where: { id: draftId, tenantId: session.tenantId },
       select: { id: true },
     });
 
@@ -86,13 +88,13 @@ export async function PUT(request: Request, { params }: { params: { draftId: str
     const body = await request.json();
 
     const contractParties = await prisma.contractParties.upsert({
-      where: { draftId: params.draftId },
+      where: { draftId },
       update: {
         partyOneMode: parseShareMode(body.partyOneMode),
         partyTwoMode: parseShareMode(body.partyTwoMode),
       },
       create: {
-        draftId: params.draftId,
+        draftId,
         partyOneMode: parseShareMode(body.partyOneMode),
         partyTwoMode: parseShareMode(body.partyTwoMode),
       },

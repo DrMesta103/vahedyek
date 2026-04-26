@@ -9,13 +9,14 @@ function normalizeFormerEmployeeName(value: string) {
   return value.trim().replace(/\s+/g, ' ');
 }
 
-export async function GET(_: Request, { params }: { params: { draftId: string } }) {
+export async function GET(_: Request, { params }: { params: Promise<{ draftId: string }> }) {
   try {
+    const { draftId } = await params;
     const session = await requireSessionContext();
     if (session instanceof NextResponse) return session;
 
     const draft = await prisma.contractDraft.findFirst({
-      where: { id: params.draftId, tenantId: session.tenantId },
+      where: { id: draftId, tenantId: session.tenantId },
       select: { id: true },
     });
 
@@ -24,7 +25,7 @@ export async function GET(_: Request, { params }: { params: { draftId: string } 
     }
 
     const subject = await prisma.contractSubject.findUnique({
-      where: { draftId: params.draftId },
+      where: { draftId },
     });
 
     if (!subject) {
@@ -50,13 +51,14 @@ export async function GET(_: Request, { params }: { params: { draftId: string } 
   }
 }
 
-export async function PUT(request: Request, { params }: { params: { draftId: string } }) {
+export async function PUT(request: Request, { params }: { params: Promise<{ draftId: string }> }) {
   try {
+    const { draftId } = await params;
     const session = await requireSessionContext();
     if (session instanceof NextResponse) return session;
 
     const draft = await prisma.contractDraft.findFirst({
-      where: { id: params.draftId, tenantId: session.tenantId },
+      where: { id: draftId, tenantId: session.tenantId },
       select: { id: true },
     });
 
@@ -90,7 +92,7 @@ export async function PUT(request: Request, { params }: { params: { draftId: str
     }
 
     const result = await prisma.contractSubject.upsert({
-      where: { draftId: params.draftId },
+      where: { draftId },
       update: {
         contractorType: parseContractorType(contractor.type),
         contractorEmployeeId: contractor.employeeId || null,
@@ -103,7 +105,7 @@ export async function PUT(request: Request, { params }: { params: { draftId: str
         unitId: body.unitId,
       },
       create: {
-        draftId: params.draftId,
+        draftId,
         contractorType: parseContractorType(contractor.type),
         contractorEmployeeId: contractor.employeeId || null,
         contractorFormerName: contractor.type === 'former-employee' ? formerEmployeeName : null,

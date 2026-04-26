@@ -45,26 +45,28 @@ async function getFloors(tenantId: string, blockId: string) {
   return rows.map((row) => ({ id: row.id, name: row.name, unitCount: Number(row.unitCount ?? 0) }));
 }
 
-export async function GET(_: Request, { params }: { params: { blockId: string } }) {
+export async function GET(_: Request, { params }: { params: Promise<{ blockId: string }> }) {
   try {
+    const { blockId } = await params;
     const session = await requireSessionContext();
     if (session instanceof NextResponse) return session;
 
-    const block = await ensureBlock(session.tenantId, params.blockId);
+    const block = await ensureBlock(session.tenantId, blockId);
     if (!block) return NextResponse.json({ message: 'بلوک پیدا نشد.' }, { status: 404 });
 
-    return NextResponse.json({ block, floors: await getFloors(session.tenantId, params.blockId) });
+    return NextResponse.json({ block, floors: await getFloors(session.tenantId, blockId) });
   } catch (error) {
     return handlePrismaApiError(error);
   }
 }
 
-export async function POST(request: Request, { params }: { params: { blockId: string } }) {
+export async function POST(request: Request, { params }: { params: Promise<{ blockId: string }> }) {
   try {
+    const { blockId } = await params;
     const session = await requireSessionContext();
     if (session instanceof NextResponse) return session;
 
-    const block = await ensureBlock(session.tenantId, params.blockId);
+    const block = await ensureBlock(session.tenantId, blockId);
     if (!block) return NextResponse.json({ message: 'بلوک پیدا نشد.' }, { status: 404 });
 
     const body = (await request.json()) as { mode?: 'single' | 'bulk'; name?: string; prefix?: string; from?: string | number; to?: string | number };
@@ -79,7 +81,7 @@ export async function POST(request: Request, { params }: { params: { blockId: st
       for (let index = from; index <= to; index += 1) {
         await prisma.$executeRaw(Prisma.sql`
           INSERT INTO "BlockFloor" ("id", "tenantId", "blockId", "name")
-          VALUES (${crypto.randomUUID()}, ${session.tenantId}, ${params.blockId}, ${`${prefix}-${index}`})
+          VALUES (${crypto.randomUUID()}, ${session.tenantId}, ${blockId}, ${`${prefix}-${index}`})
           ON CONFLICT ("tenantId", "blockId", "name") DO NOTHING
         `);
       }
@@ -89,12 +91,12 @@ export async function POST(request: Request, { params }: { params: { blockId: st
 
       await prisma.$executeRaw(Prisma.sql`
         INSERT INTO "BlockFloor" ("id", "tenantId", "blockId", "name")
-        VALUES (${crypto.randomUUID()}, ${session.tenantId}, ${params.blockId}, ${name})
+        VALUES (${crypto.randomUUID()}, ${session.tenantId}, ${blockId}, ${name})
         ON CONFLICT ("tenantId", "blockId", "name") DO NOTHING
       `);
     }
 
-    return NextResponse.json({ block, floors: await getFloors(session.tenantId, params.blockId) }, { status: 201 });
+    return NextResponse.json({ block, floors: await getFloors(session.tenantId, blockId) }, { status: 201 });
   } catch (error) {
     return handlePrismaApiError(error);
   }

@@ -4,8 +4,9 @@ import { requireSessionContext } from '../../../../../../../lib/auth';
 import { prisma } from '../../../../../../../lib/prisma';
 import { handlePrismaApiError } from '../../../../../../../lib/prismaApiError';
 
-export async function GET(_: Request, { params }: { params: { blockId: string; floorId: string } }) {
+export async function GET(_: Request, { params }: { params: Promise<{ blockId: string; floorId: string }> }) {
   try {
+    const { blockId, floorId } = await params;
     const session = await requireSessionContext();
     if (session instanceof NextResponse) return session;
 
@@ -13,7 +14,7 @@ export async function GET(_: Request, { params }: { params: { blockId: string; f
       SELECT f."id", f."name", b."name" AS "blockName", b."mainPlate", b."subPlate"
       FROM "BlockFloor" f
       JOIN "Block" b ON b."id" = f."blockId" AND b."tenantId" = f."tenantId"
-      WHERE f."tenantId" = ${session.tenantId} AND f."blockId" = ${params.blockId} AND f."id" = ${params.floorId}
+      WHERE f."tenantId" = ${session.tenantId} AND f."blockId" = ${blockId} AND f."id" = ${floorId}
       LIMIT 1
     `);
 
@@ -23,7 +24,7 @@ export async function GET(_: Request, { params }: { params: { blockId: string; f
     const units = await prisma.$queryRaw<Array<{ id: string; name: string; floorName: string }>>(Prisma.sql`
       SELECT "id", "name", "floorName", "category", "unitType", "usage", "saleEnabled", "deliveryStatus", "area", "balconyCount", "bedroomCount", "postalCode", "amenities", "baseInfo", "direction"
       FROM "Unit"
-      WHERE "tenantId" = ${session.tenantId} AND "blockId" = ${params.blockId} AND "floorName" = ${floor.name}
+      WHERE "tenantId" = ${session.tenantId} AND "blockId" = ${blockId} AND "floorName" = ${floor.name}
       ORDER BY "name" ASC
     `);
 
