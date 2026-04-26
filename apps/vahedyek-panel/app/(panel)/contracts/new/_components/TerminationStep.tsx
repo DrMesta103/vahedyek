@@ -2,7 +2,21 @@
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { AlertCircle } from 'lucide-react';
+import {
+  AlertCircle,
+  Bell,
+  Building2,
+  CircleOff,
+  FileCheck2,
+  FileText,
+  HandCoins,
+  LayoutPanelTop,
+  Ruler,
+  Scale,
+  ShieldAlert,
+  TimerReset,
+  UserRound,
+} from 'lucide-react';
 import { ContractStepLoader } from './ContractStepLoader';
 import { FieldGroup, FormTextInput, SectionCard, SectionHeader } from './ContractFormPrimitives';
 import { StickySubmitBar } from './StickySubmitBar';
@@ -347,6 +361,99 @@ function FormActionBar({
   );
 }
 
+function FlowTabCard({
+  title,
+  description,
+  icon,
+  active,
+  inactive,
+  onClick,
+}: {
+  title: string;
+  description: string;
+  icon: ReactNode;
+  active: boolean;
+  inactive: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex min-h-[132px] flex-col items-center justify-center gap-4 px-4 py-6 text-center transition ${
+        active ? 'bg-cyan-50 text-cyan-700' : 'bg-white text-gray-500 hover:bg-gray-50'
+      }`}
+    >
+      <span
+        className={`flex h-16 w-16 items-center justify-center rounded-full border ${
+          active ? 'border-cyan-200 bg-white text-cyan-700' : 'border-gray-300 text-gray-500'
+        }`}
+      >
+        {icon}
+      </span>
+      <div className="space-y-1">
+        <div className="text-sm font-bold">{title}</div>
+        <div className="text-xs leading-6 text-gray-500">{description}</div>
+        <div className={`text-xs font-semibold ${active ? 'text-cyan-700' : inactive ? 'text-gray-400' : 'text-gray-500'}`}>
+          {active ? 'فعال' : inactive ? 'غیرفعال' : 'آماده تنظیم'}
+        </div>
+      </div>
+    </button>
+  );
+}
+
+function ScenarioMenuCard({
+  title,
+  description,
+  countLabel,
+  active,
+  enabled,
+  icon,
+  onClick,
+}: {
+  title: string;
+  description: string;
+  countLabel?: string;
+  active: boolean;
+  enabled: boolean;
+  icon: ReactNode;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`w-full rounded-2xl border p-4 text-right transition-all ${
+        active ? 'border-cyan-300 bg-cyan-50/70 shadow-sm' : 'border-slate-200 bg-white hover:border-slate-300'
+      }`}
+    >
+      <div className="flex items-start gap-3">
+        <span
+          className={`mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border ${
+            active ? 'border-cyan-200 bg-white text-cyan-700' : 'border-slate-200 bg-slate-50 text-slate-500'
+          }`}
+        >
+          {icon}
+        </span>
+        <div className="min-w-0 flex-1 space-y-1">
+          <div className="flex items-center gap-2">
+            <h3 className="text-sm font-bold text-slate-900">{title}</h3>
+            <span
+              className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                enabled ? 'border border-emerald-200 bg-emerald-50 text-emerald-700' : 'border border-slate-200 bg-slate-50 text-slate-400'
+              }`}
+            >
+              {enabled ? 'فعال' : 'غیرفعال'}
+            </span>
+          </div>
+          <p className="text-xs leading-6 text-slate-500">{description}</p>
+          {countLabel ? <p className="text-[11px] font-medium text-cyan-700">{countLabel}</p> : null}
+        </div>
+      </div>
+    </button>
+  );
+}
+
 export function TerminationStep({ stepId, title, embedded = false }: { stepId: string; title: string; embedded?: boolean }) {
   const router = useRouter();
   const basePath = useContractFlowBasePath();
@@ -428,6 +535,70 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
     { id: 'notifications', label: 'اطلاع‌رسانی', description: 'اطلاع به خریدار و مسئول قرارداد و نمایش در جزئیات.' },
   ];
 
+  const builderFormMeta: Record<BuilderFormId, { icon: ReactNode; enabled: boolean; countLabel?: string }> = {
+    'installment-delay': {
+      icon: <TimerReset className="h-5 w-5" />,
+      enabled: payload.builder.installmentDelay.enabled,
+      countLabel:
+        payload.builder.installmentDelay.allowedDelayPreset === 'other'
+          ? `مهلت سفارشی: ${payload.builder.installmentDelay.allowedDelayDays || '0'} روز`
+          : `مهلت انتخابی: ${payload.builder.installmentDelay.allowedDelayPreset} روز`,
+    },
+    'financial-default': {
+      icon: <HandCoins className="h-5 w-5" />,
+      enabled: payload.builder.financialDefault.enabled,
+      countLabel: `${payload.builder.financialDefault.obligationTypes.length} تعهد مالی`,
+    },
+    'document-defect': {
+      icon: <FileCheck2 className="h-5 w-5" />,
+      enabled: payload.builder.documentDefect.enabled,
+      countLabel: `${payload.builder.documentDefect.requiredItems.length} مورد الزامی`,
+    },
+    'other-breach': {
+      icon: <ShieldAlert className="h-5 w-5" />,
+      enabled: payload.builder.otherBreach.enabled,
+      countLabel: `${payload.builder.otherBreach.breachTypes.length} تخلف`,
+    },
+    notifications: {
+      icon: <Bell className="h-5 w-5" />,
+      enabled:
+        payload.builder.notifications.notifyBuilderOnActivation ||
+        payload.builder.notifications.notifyContractManager ||
+        payload.builder.notifications.showTerminationSectionInDetails,
+    },
+  };
+
+  const buyerFormMeta: Record<BuyerFormId, { icon: ReactNode; enabled: boolean; countLabel?: string }> = {
+    'delivery-delay': {
+      icon: <Building2 className="h-5 w-5" />,
+      enabled: payload.buyer.deliveryDelay.enabled,
+      countLabel:
+        payload.buyer.deliveryDelay.allowedDelayPreset === 'other'
+          ? `مهلت سفارشی: ${payload.buyer.deliveryDelay.allowedDelayDays || '0'} روز`
+          : `مهلت انتخابی: ${payload.buyer.deliveryDelay.allowedDelayPreset} روز`,
+    },
+    'spec-change': {
+      icon: <FileText className="h-5 w-5" />,
+      enabled: payload.buyer.specChange.enabled,
+      countLabel: `${payload.buyer.specChange.changeTypes.length} مورد تغییر`,
+    },
+    'area-discrepancy': {
+      icon: <Ruler className="h-5 w-5" />,
+      enabled: payload.buyer.areaDiscrepancy.enabled,
+      countLabel:
+        payload.buyer.areaDiscrepancy.toleranceValue.trim() !== ''
+          ? `آستانه: ${payload.buyer.areaDiscrepancy.toleranceValue} ${payload.buyer.areaDiscrepancy.toleranceMode === 'percent' ? 'درصد' : 'متر'}`
+          : undefined,
+    },
+    notifications: {
+      icon: <Bell className="h-5 w-5" />,
+      enabled:
+        payload.buyer.notifications.notifyBuyerOnActivation ||
+        payload.buyer.notifications.notifyContractManager ||
+        payload.buyer.notifications.showTerminationSectionInDetails,
+    },
+  };
+
   const updatePayload = (updater: (current: ContractTerminationData) => ContractTerminationData) => {
     setFormError('');
     setPayload((current) => updater(current));
@@ -508,45 +679,69 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
         </div>
       ) : null}
 
-      <SectionCard>
-        <SectionHeader label="فعال‌سازی فسخ" description="با فعال شدن این بخش، تنظیمات اختصاصی سازنده، خریدار و پیش‌نویس قرارداد در دسترس قرار می‌گیرد." />
-        <div className="p-5">
-          <Toggle
-            checked={payload.terminationEnabled}
-            onChange={(checked) =>
-              updatePayload((current) => ({
-                ...current,
-                terminationEnabled: checked,
-                activeMainTab: checked ? current.activeMainTab : 'builder',
-              }))
-            }
-            label="فعال‌سازی فسخ"
-          />
+      <div className="overflow-hidden rounded-[30px] border border-gray-200 bg-white text-right shadow-sm">
+        <div className="border-b border-gray-100 px-6 py-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <h2 className="text-lg font-bold text-gray-900">تنظیمات جریان فسخ</h2>
+              <p className="mt-1 text-sm leading-7 text-gray-500">ظاهر و جریان این بخش بر اساس ساختار سناریومحور تخفیف و جریمه تنظیم شده است.</p>
+            </div>
+            <div className="lg:min-w-[360px]">
+              <Toggle
+                checked={payload.terminationEnabled}
+                onChange={(checked) =>
+                  updatePayload((current) => ({
+                    ...current,
+                    terminationEnabled: checked,
+                    activeMainTab: checked ? current.activeMainTab : 'builder',
+                  }))
+                }
+                label="فعال‌سازی فسخ"
+                description="با فعال شدن این سوئیچ، سناریوهای سازنده، خریدار و پیش‌نویس در دسترس قرار می‌گیرند."
+              />
+            </div>
+          </div>
         </div>
-      </SectionCard>
 
       {payload.terminationEnabled ? (
         <>
-          <SectionCard>
-            <SectionHeader label="منوهای فسخ" description="هر بخش تنظیمات مستقل خود را دارد و با ثبت، در پیش‌نویس فعلی ذخیره می‌شود." />
-            <div className="flex flex-wrap gap-2 p-5">
-              <ChoiceGrid<MainTabId>
-                value={payload.activeMainTab}
-                onChange={(value) => updatePayload((current) => ({ ...current, activeMainTab: value }))}
-                options={[
-                  { value: 'builder', label: 'تنظیمات فسخ سازنده' },
-                  { value: 'buyer', label: 'تنظیمات فسخ خریدار' },
-                  { value: 'draft', label: 'استفاده در پیش‌نویس' },
-                ]}
-              />
-            </div>
-          </SectionCard>
+          <div className="grid gap-px bg-gray-200 md:grid-cols-3" dir="rtl">
+            <FlowTabCard
+              title="تنظیمات فسخ سازنده"
+              description="سناریوهای مالی، مدارک، تخلفات و اطلاع‌رسانی مربوط به سازنده."
+              icon={<Scale className="h-7 w-7" />}
+              active={payload.activeMainTab === 'builder'}
+              inactive={!payload.builder.enabled}
+              onClick={() => updatePayload((current) => ({ ...current, activeMainTab: 'builder' }))}
+            />
+            <FlowTabCard
+              title="تنظیمات فسخ خریدار"
+              description="تحویل، تغییر مشخصات، اختلاف متراژ و اعلان‌های سمت خریدار."
+              icon={<UserRound className="h-7 w-7" />}
+              active={payload.activeMainTab === 'buyer'}
+              inactive={!payload.buyer.enabled}
+              onClick={() => updatePayload((current) => ({ ...current, activeMainTab: 'buyer' }))}
+            />
+            <FlowTabCard
+              title="استفاده در پیش‌نویس"
+              description="کنترل پیش‌فرض بودن این تنظیمات و امکان تغییر برای قرارداد خاص."
+              icon={<LayoutPanelTop className="h-7 w-7" />}
+              active={payload.activeMainTab === 'draft'}
+              inactive={!payload.draftUsage.useAsDefault && !payload.draftUsage.allowPerContractOverride}
+              onClick={() => updatePayload((current) => ({ ...current, activeMainTab: 'draft' }))}
+            />
+          </div>
 
           {payload.activeMainTab === 'builder' ? (
-            <div className="space-y-5">
-              <SectionCard>
-                <SectionHeader label="تنظیمات فسخ سازنده" description="در این بخش اختیارات فسخ مربوط به طرف سازنده یا فروشنده تنظیم می‌شود." />
-                <div className="space-y-4 p-5">
+            <div className="space-y-5 p-6 md:p-8">
+              <section className="space-y-5">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h3 className="text-2xl font-bold text-gray-900">تنظیمات فسخ سازنده</h3>
+                    <p className="mt-2 max-w-3xl text-sm leading-7 text-gray-600">ابتدا اختیار فسخ سازنده را فعال کنید، سپس برای هر سناریوی فعال تنظیمات مستقل ثبت کنید.</p>
+                  </div>
+                </div>
+                <div className="rounded-2xl border border-slate-200 bg-slate-50/50 p-4">
                   <Toggle
                     checked={payload.builder.enabled}
                     onChange={(checked) => updatePayload((current) => ({ ...current, builder: { ...current.builder, enabled: checked } }))}
@@ -554,24 +749,34 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
                   />
 
                   {payload.builder.enabled ? (
-                    <div className="grid gap-3 lg:grid-cols-[320px_minmax(0,1fr)]">
-                      <div className="space-y-2">
+                    <div className="mt-5 grid gap-5 lg:grid-cols-[360px_minmax(0,1fr)]">
+                      <div className="space-y-3">
                         {builderForms.map((form) => (
-                          <button
+                          <ScenarioMenuCard
                             key={form.id}
-                            type="button"
+                            title={form.label}
+                            description={form.description}
+                            active={payload.builder.activeForm === form.id}
+                            enabled={builderFormMeta[form.id].enabled}
+                            countLabel={builderFormMeta[form.id].countLabel}
+                            icon={builderFormMeta[form.id].icon}
                             onClick={() => updatePayload((current) => ({ ...current, builder: { ...current.builder, activeForm: form.id } }))}
-                            className={`w-full rounded-2xl border px-4 py-3 text-right transition-all ${
-                              payload.builder.activeForm === form.id ? 'border-cyan-500 bg-cyan-50 shadow-sm' : 'border-slate-200 bg-white hover:border-slate-300'
-                            }`}
-                          >
-                            <div className="text-sm font-bold text-slate-900">{form.label}</div>
-                            <div className="mt-1 text-xs leading-6 text-slate-500">{form.description}</div>
-                          </button>
+                          />
                         ))}
                       </div>
 
-                      <SectionCard className="overflow-hidden">
+                      <div className="overflow-hidden rounded-[28px] border border-gray-200 bg-white shadow-sm">
+                        <div className="border-b border-gray-100 px-5 py-4">
+                          <div className="flex items-center gap-3">
+                            <span className="flex h-11 w-11 items-center justify-center rounded-2xl border border-cyan-200 bg-cyan-50 text-cyan-700">
+                              {builderFormMeta[payload.builder.activeForm].icon}
+                            </span>
+                            <div>
+                              <h4 className="text-base font-bold text-slate-900">{builderForms.find((item) => item.id === payload.builder.activeForm)?.label}</h4>
+                              <p className="mt-1 text-sm text-slate-500">{builderForms.find((item) => item.id === payload.builder.activeForm)?.description}</p>
+                            </div>
+                          </div>
+                        </div>
                         <div className="p-5">
                           {payload.builder.activeForm === 'installment-delay' ? (
                             <div className="space-y-5">
@@ -1090,19 +1295,24 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
                             </div>
                           ) : null}
                         </div>
-                      </SectionCard>
+                      </div>
                     </div>
                   ) : null}
                 </div>
-              </SectionCard>
+              </section>
             </div>
           ) : null}
 
           {payload.activeMainTab === 'buyer' ? (
-            <div className="space-y-5">
-              <SectionCard>
-                <SectionHeader label="تنظیمات فسخ خریدار" description="در این بخش اختیارات فسخ مربوط به خریدار تنظیم می‌شود." />
-                <div className="space-y-4 p-5">
+            <div className="space-y-5 p-6 md:p-8">
+              <section className="space-y-5">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h3 className="text-2xl font-bold text-gray-900">تنظیمات فسخ خریدار</h3>
+                    <p className="mt-2 max-w-3xl text-sm leading-7 text-gray-600">سناریوهای سمت خریدار را با همان الگوی کارت‌های سناریویی انتخاب و برای هر مورد تنظیم کنید.</p>
+                  </div>
+                </div>
+                <div className="rounded-2xl border border-slate-200 bg-slate-50/50 p-4">
                   <Toggle
                     checked={payload.buyer.enabled}
                     onChange={(checked) => updatePayload((current) => ({ ...current, buyer: { ...current.buyer, enabled: checked } }))}
@@ -1110,24 +1320,34 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
                   />
 
                   {payload.buyer.enabled ? (
-                    <div className="grid gap-3 lg:grid-cols-[320px_minmax(0,1fr)]">
-                      <div className="space-y-2">
+                    <div className="mt-5 grid gap-5 lg:grid-cols-[360px_minmax(0,1fr)]">
+                      <div className="space-y-3">
                         {buyerForms.map((form) => (
-                          <button
+                          <ScenarioMenuCard
                             key={form.id}
-                            type="button"
+                            title={form.label}
+                            description={form.description}
+                            active={payload.buyer.activeForm === form.id}
+                            enabled={buyerFormMeta[form.id].enabled}
+                            countLabel={buyerFormMeta[form.id].countLabel}
+                            icon={buyerFormMeta[form.id].icon}
                             onClick={() => updatePayload((current) => ({ ...current, buyer: { ...current.buyer, activeForm: form.id } }))}
-                            className={`w-full rounded-2xl border px-4 py-3 text-right transition-all ${
-                              payload.buyer.activeForm === form.id ? 'border-cyan-500 bg-cyan-50 shadow-sm' : 'border-slate-200 bg-white hover:border-slate-300'
-                            }`}
-                          >
-                            <div className="text-sm font-bold text-slate-900">{form.label}</div>
-                            <div className="mt-1 text-xs leading-6 text-slate-500">{form.description}</div>
-                          </button>
+                          />
                         ))}
                       </div>
 
-                      <SectionCard className="overflow-hidden">
+                      <div className="overflow-hidden rounded-[28px] border border-gray-200 bg-white shadow-sm">
+                        <div className="border-b border-gray-100 px-5 py-4">
+                          <div className="flex items-center gap-3">
+                            <span className="flex h-11 w-11 items-center justify-center rounded-2xl border border-cyan-200 bg-cyan-50 text-cyan-700">
+                              {buyerFormMeta[payload.buyer.activeForm].icon}
+                            </span>
+                            <div>
+                              <h4 className="text-base font-bold text-slate-900">{buyerForms.find((item) => item.id === payload.buyer.activeForm)?.label}</h4>
+                              <p className="mt-1 text-sm text-slate-500">{buyerForms.find((item) => item.id === payload.buyer.activeForm)?.description}</p>
+                            </div>
+                          </div>
+                        </div>
                         <div className="p-5">
                           {payload.buyer.activeForm === 'delivery-delay' ? (
                             <div className="space-y-5">
@@ -1514,18 +1734,29 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
                             </div>
                           ) : null}
                         </div>
-                      </SectionCard>
+                      </div>
                     </div>
                   ) : null}
                 </div>
-              </SectionCard>
+              </section>
             </div>
           ) : null}
 
           {payload.activeMainTab === 'draft' ? (
-            <SectionCard>
-              <SectionHeader label="استفاده در پیش‌نویس" description="کنترل می‌کند این تنظیمات به صورت پیش‌فرض در قراردادهای جدید استفاده شوند یا برای هر قرارداد قابل ویرایش باشند." />
-              <div className="space-y-5 p-5">
+            <div className="space-y-5 p-6 md:p-8">
+              <div className="overflow-hidden rounded-[28px] border border-gray-200 bg-white shadow-sm">
+                <div className="border-b border-gray-100 px-5 py-4">
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-11 w-11 items-center justify-center rounded-2xl border border-cyan-200 bg-cyan-50 text-cyan-700">
+                      <LayoutPanelTop className="h-5 w-5" />
+                    </span>
+                    <div>
+                      <h3 className="text-lg font-bold text-slate-900">استفاده در پیش‌نویس</h3>
+                      <p className="mt-1 text-sm text-slate-500">تنظیم کنید این قواعد به عنوان پیش‌فرض اعمال شوند یا برای هر قرارداد امکان override داشته باشند.</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-5 p-5">
                 <Toggle
                   checked={payload.draftUsage.useAsDefault}
                   onChange={(checked) => updatePayload((current) => ({ ...current, draftUsage: { ...current.draftUsage, useAsDefault: checked } }))}
@@ -1541,10 +1772,12 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
 
                 <FormActionBar onSave={handleSave} saving={saving} />
               </div>
-            </SectionCard>
+              </div>
+            </div>
           ) : null}
         </>
       ) : null}
+      </div>
 
       {formError ? (
         <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
