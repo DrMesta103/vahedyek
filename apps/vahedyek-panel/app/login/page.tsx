@@ -5,6 +5,21 @@ import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
+async function readJsonResponse(response: Response) {
+  const contentType = response.headers.get('content-type') ?? '';
+  const raw = await response.text();
+
+  if (contentType.includes('application/json')) {
+    try {
+      return JSON.parse(raw) as { message?: string; user?: { id: string } };
+    } catch {
+      return { message: 'پاسخ JSON سرور نامعتبر است.' };
+    }
+  }
+
+  return { message: raw || 'پاسخ نامعتبر از سرور دریافت شد.' };
+}
+
 function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -33,7 +48,7 @@ function LoginPageContent() {
         body: JSON.stringify({ email, password }),
       });
 
-      const payload = await response.json();
+      const payload = await readJsonResponse(response);
       if (!response.ok) {
         throw new Error(payload.message || 'ورود انجام نشد.');
       }

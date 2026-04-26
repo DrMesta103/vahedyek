@@ -5,6 +5,26 @@ const SETUP_MESSAGE =
   'جدول‌های دیتابیس هنوز ساخته نشده‌اند. این دستورها را اجرا کنید: npm run prisma:generate سپس npm run prisma:push و در آخر npm run db:seed';
 
 export function handlePrismaApiError(error: unknown) {
+  if (error instanceof Error && error.message.includes('Missing DATABASE_URL')) {
+    return NextResponse.json(
+      {
+        error: 'missing_database_url',
+        message: 'فایل apps/vahedyek-panel/.env ساخته نشده یا DATABASE_URL داخل آن تنظیم نشده است.',
+      },
+      { status: 500 },
+    );
+  }
+
+  if (error instanceof Error && error.message.includes("Can't reach database server")) {
+    return NextResponse.json(
+      {
+        error: 'database_unreachable',
+        message: 'اتصال به دیتابیس برقرار نشد. آدرس یا پورت DATABASE_URL را بررسی کنید و مطمئن شوید سرور دیتابیس در دسترس است.',
+      },
+      { status: 500 },
+    );
+  }
+
   if (error instanceof Prisma.PrismaClientKnownRequestError) {
     if (error.code === 'P2021') {
       return NextResponse.json(

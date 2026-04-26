@@ -4,6 +4,21 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
+async function readJsonResponse(response: Response) {
+  const contentType = response.headers.get('content-type') ?? '';
+  const raw = await response.text();
+
+  if (contentType.includes('application/json')) {
+    try {
+      return JSON.parse(raw) as { message?: string; user?: { email: string } };
+    } catch {
+      return { message: 'پاسخ JSON سرور نامعتبر است.' };
+    }
+  }
+
+  return { message: raw || 'پاسخ نامعتبر از سرور دریافت شد.' };
+}
+
 export default function RegisterPage() {
   const router = useRouter();
   const [fullName, setFullName] = useState('');
@@ -24,7 +39,7 @@ export default function RegisterPage() {
         body: JSON.stringify({ fullName, email, password }),
       });
 
-      const data = await res.json();
+      const data = await readJsonResponse(res);
       if (!res.ok) throw new Error(data.message || 'خطا در ثبت‌نام');
 
       router.push(`/login?registered=1&email=${encodeURIComponent(data.user.email)}`);

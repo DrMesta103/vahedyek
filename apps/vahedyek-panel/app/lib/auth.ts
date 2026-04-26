@@ -61,7 +61,8 @@ export async function getAuthContextFromPayload(payload: AuthTokenPayload) {
 }
 
 export async function getTokenPayloadFromCookies() {
-  const token = cookies().get(AUTH_COOKIE)?.value;
+  const cookieStore = await cookies();
+  const token = cookieStore.get(AUTH_COOKIE)?.value;
   if (!token) return null;
   return verifyAuthToken(token);
 }

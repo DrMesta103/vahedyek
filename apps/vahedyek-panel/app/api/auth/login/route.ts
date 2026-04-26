@@ -1,10 +1,13 @@
 import { NextResponse } from 'next/server';
-import { createPendingSession, setAuthCookie, verifyPassword } from '../../../lib/auth';
-import { prisma } from '../../../lib/prisma';
 import { handlePrismaApiError } from '../../../lib/prismaApiError';
 
 export async function POST(request: Request) {
   try {
+    const [{ createPendingSession, setAuthCookie, verifyPassword }, { prisma }] = await Promise.all([
+      import('../../../lib/auth'),
+      import('../../../lib/prisma'),
+    ]);
+
     const body = (await request.json()) as { email?: string; password?: string };
 
     const email = body.email?.trim().toLowerCase();
