@@ -68,7 +68,7 @@ export function clearActiveDraftId() {
   localStorage.removeItem(ACTIVE_DRAFT_KEY);
 }
 
-export function getFrontendStepDraft<T>(draftId: string, step: 'subject' | 'parties' | 'financial' | 'penalties' | 'discounts') {
+export function getFrontendStepDraft<T>(draftId: string, step: 'subject' | 'parties' | 'financial' | 'penalties' | 'discounts' | 'termination') {
   if (typeof window === 'undefined') return null;
 
   try {
@@ -80,12 +80,12 @@ export function getFrontendStepDraft<T>(draftId: string, step: 'subject' | 'part
   }
 }
 
-export function setFrontendStepDraft<T>(draftId: string, step: 'subject' | 'parties' | 'financial' | 'penalties' | 'discounts', payload: T) {
+export function setFrontendStepDraft<T>(draftId: string, step: 'subject' | 'parties' | 'financial' | 'penalties' | 'discounts' | 'termination', payload: T) {
   if (typeof window === 'undefined') return;
   localStorage.setItem(`${FRONTEND_STEP_DRAFT_PREFIX}:${draftId}:${step}`, JSON.stringify(payload));
 }
 
-export function clearFrontendStepDraft(draftId: string, step: 'subject' | 'parties' | 'financial' | 'penalties' | 'discounts') {
+export function clearFrontendStepDraft(draftId: string, step: 'subject' | 'parties' | 'financial' | 'penalties' | 'discounts' | 'termination') {
   if (typeof window === 'undefined') return;
   localStorage.removeItem(`${FRONTEND_STEP_DRAFT_PREFIX}:${draftId}:${step}`);
 }

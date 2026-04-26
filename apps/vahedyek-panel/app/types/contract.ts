@@ -143,12 +143,23 @@ export interface ContractDiscountsData {
   rules: DiscountRuleData[];
 }
 
+export interface ContractTerminationData {
+  noticeDays: string;
+  cureDays: string;
+  settlementDays: string;
+  restitutionDays: string;
+  handoverDays: string;
+  customClauses: string;
+  acknowledged: boolean;
+}
+
 export interface ContractFormData {
   subject: ContractSubjectData;
   parties: ContractPartiesData;
   financial?: ContractFinancialData;
   penalties?: ContractPenaltiesData;
   discounts?: ContractDiscountsData;
+  termination?: ContractTerminationData;
 }
 
 export interface Contract {

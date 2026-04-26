@@ -6,6 +6,7 @@ import { PartiesStep } from './PartiesStep';
 import { PenaltiesStep } from './PenaltiesStep';
 import { PlaceholderStep } from './PlaceholderStep';
 import { SubjectStep } from './SubjectStep';
+import { TerminationStep } from './TerminationStep';
 
 const STEP_CONFIG = {
   subject: {
@@ -38,7 +39,7 @@ const STEP_CONFIG = {
   },
   termination: {
     title: 'شرایط فسخ',
-    component: PlaceholderStep,
+    component: TerminationStep,
   },
   review: {
     title: 'نمایش کلی جزئیات',

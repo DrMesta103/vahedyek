@@ -4,16 +4,16 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AlertCircle, CheckCircle2, Info, Lock, X } from 'lucide-react';
 import { getActiveDraftId, getFrontendStepDraft, getStepData } from '../../../../lib/contractDraftClient';
-import { validateDiscountsStep, validateFinancialStep, validatePenaltiesStep, validateStep1, validateStep2 } from '../../../../lib/contractValidation';
-import type { ContractDiscountsData, ContractFinancialData, ContractPartiesData, ContractPenaltiesData, ContractSubjectData } from '../../../../types/contract';
+import { validateDiscountsStep, validateFinancialStep, validatePenaltiesStep, validateStep1, validateStep2, validateTerminationStep } from '../../../../lib/contractValidation';
+import type { ContractDiscountsData, ContractFinancialData, ContractPartiesData, ContractPenaltiesData, ContractSubjectData, ContractTerminationData } from '../../../../types/contract';
 import { DiscountsStep } from './DiscountsStep';
 import { FinancialStep } from './FinancialStep';
 import { LeftReportSidebar } from './LeftReportSidebar';
 import { PartiesStep } from './PartiesStep';
 import { PenaltiesStep } from './PenaltiesStep';
-import { PlaceholderStep } from './PlaceholderStep';
 import { RightNavSidebar } from './RightNavSidebar';
 import { SubjectStep } from './SubjectStep';
+import { TerminationStep } from './TerminationStep';
 import {
   CONTRACT_FLOW_DIRTY_EVENT,
   CONTRACT_FLOW_FINANCIAL_SNAPSHOT_EVENT,
@@ -57,7 +57,7 @@ type SectionItem = {
   render: () => JSX.Element;
 };
 
-const SAVEABLE_SECTIONS: ContractFlowSectionId[] = ['subject', 'parties', 'financial', 'penalties', 'discounts'];
+const SAVEABLE_SECTIONS: ContractFlowSectionId[] = ['subject', 'parties', 'financial', 'penalties', 'discounts', 'termination'];
 const SECTION_ORDER: ContractFlowSectionId[] = ['subject', 'parties', 'financial', 'penalties', 'discounts', 'termination'];
 const SECTION_PREREQUISITES: Record<ContractFlowSectionId, ContractFlowSectionId[]> = {
   subject: [],
@@ -65,7 +65,7 @@ const SECTION_PREREQUISITES: Record<ContractFlowSectionId, ContractFlowSectionId
   financial: ['subject', 'parties'],
   penalties: ['subject', 'parties', 'financial'],
   discounts: ['subject', 'parties', 'financial'],
-  termination: ['subject', 'parties', 'financial'],
+  termination: ['subject', 'parties', 'financial', 'penalties', 'discounts'],
 };
 const SECTION_TITLES: Record<ContractFlowSectionId, string> = {
   subject: 'اطلاعات پایه',
@@ -210,6 +210,7 @@ export function ContractFlowHub() {
   const [financialLiveData, setFinancialLiveData] = useState<ContractFinancialData | null>(null);
   const [penaltiesData, setPenaltiesData] = useState<ContractPenaltiesData | null>(null);
   const [discountsData, setDiscountsData] = useState<ContractDiscountsData | null>(null);
+  const [terminationData, setTerminationData] = useState<ContractTerminationData | null>(null);
   const [dirtyMap, setDirtyMap] = useState<Partial<Record<ContractFlowSectionId, boolean>>>({});
   const [savingMap, setSavingMap] = useState<Partial<Record<ContractFlowSectionId, boolean>>>({});
   const [lastUpdatedMap, setLastUpdatedMap] = useState<Partial<Record<ContractFlowSectionId, number>>>({});
@@ -239,6 +240,7 @@ export function ContractFlowHub() {
         const financialFrontendDraft = getFrontendStepDraft<ContractFinancialData>(draftId, 'financial');
         const penaltiesFrontendDraft = getFrontendStepDraft<ContractPenaltiesData>(draftId, 'penalties');
         const discountsFrontendDraft = getFrontendStepDraft<ContractDiscountsData>(draftId, 'discounts');
+        const terminationFrontendDraft = getFrontendStepDraft<ContractTerminationData>(draftId, 'termination');
 
         if (!mounted) return;
         setSubjectData(subject);
@@ -247,6 +249,7 @@ export function ContractFlowHub() {
         setFinancialLiveData(financialFrontendDraft ?? financial);
         setPenaltiesData(penaltiesFrontendDraft ?? penalties);
         setDiscountsData(discountsFrontendDraft);
+        setTerminationData(terminationFrontendDraft);
       } finally {
         if (mounted) setLoading(false);
       }
@@ -312,6 +315,9 @@ export function ContractFlowHub() {
         const discounts = getFrontendStepDraft<ContractDiscountsData>(draftId, 'discounts');
         setDiscountsData(discounts);
         if (discounts && validateDiscountsStep(discounts).valid) setPendingScrollSection('termination');
+      } else if (savedSectionId === 'termination') {
+        const termination = getFrontendStepDraft<ContractTerminationData>(draftId, 'termination');
+        setTerminationData(termination);
       }
     };
 
@@ -336,13 +342,14 @@ export function ContractFlowHub() {
   const financialComplete = Boolean(financialData && validateFinancialStep(financialData).valid);
   const penaltiesComplete = Boolean(penaltiesData && validatePenaltiesStep(penaltiesData).valid);
   const discountsComplete = Boolean(discountsData && validateDiscountsStep(discountsData).valid);
+  const terminationComplete = Boolean(terminationData && validateTerminationStep(terminationData).valid);
   const completionMap: Record<ContractFlowSectionId, boolean> = {
     subject: subjectComplete,
     parties: partiesComplete,
     financial: financialComplete,
     penalties: penaltiesComplete,
     discounts: discountsComplete,
-    termination: false,
+    termination: terminationComplete,
   };
 
   const accessMap = useMemo<Record<ContractFlowSectionId, SectionAccess>>(() => {
@@ -378,7 +385,7 @@ export function ContractFlowHub() {
     };
 
     return result;
-  }, [dirtyMap, financialComplete, partiesComplete, subjectComplete]);
+  }, [completionMap, dirtyMap]);
 
   useEffect(() => {
     const renderedSections = Array.from(document.querySelectorAll<HTMLElement>('[data-contract-section]'));
@@ -439,9 +446,15 @@ export function ContractFlowHub() {
           : discountsData
             ? { label: 'ناقص', detail: 'بخشی از تنظیمات تخفیف ثبت شده و هنوز کامل نیست.', tone: 'amber' }
             : { label: 'آماده تنظیم', detail: 'پس از تکمیل بخش مالی، ثبت تخفیف‌ها آماده است.', tone: 'blue' },
-      termination: { label: 'در حال توسعه', detail: 'این بخش هنوز در دست پیاده‌سازی است.', tone: 'amber' },
+      termination: !discountsComplete
+        ? { label: 'Waiting', detail: 'Complete penalties and discounts before finalizing termination clauses.', tone: 'amber' }
+        : terminationComplete
+          ? { label: 'Completed', detail: 'Balanced termination rights for both parties have been saved.', tone: 'green' }
+          : terminationData
+            ? { label: 'Incomplete', detail: 'Termination clauses were reviewed but are not confirmed yet.', tone: 'amber' }
+            : { label: 'Ready', detail: 'Balanced termination clauses are ready for review.', tone: 'blue' },
     }),
-    [discountsComplete, discountsData, financialComplete, financialData, loading, partiesComplete, partiesData, subjectComplete, subjectData],
+    [discountsComplete, discountsData, financialComplete, financialData, loading, partiesComplete, partiesData, subjectComplete, subjectData, terminationComplete, terminationData],
   );
 
   const sections: SectionItem[] = [
@@ -479,7 +492,7 @@ export function ContractFlowHub() {
       id: 'termination',
       title: 'شرایط فسخ',
       navLabel: 'Termination Terms',
-      render: () => <PlaceholderStep stepId="termination" title="شرایط فسخ" embedded />,
+      render: () => <TerminationStep stepId="termination" title="شرایط فسخ" embedded />,
     },
   ];
 
@@ -494,6 +507,7 @@ export function ContractFlowHub() {
     const financialLiveComplete = Boolean(reportData && validateFinancialStep(reportData).valid);
     const penaltiesValid = Boolean(penaltiesData && validatePenaltiesStep(penaltiesData).valid);
     const discountsValid = Boolean(discountsData && validateDiscountsStep(discountsData).valid);
+    const terminationValid = Boolean(terminationData && validateTerminationStep(terminationData).valid);
 
     if (!subjectComplete || dirtyMap.subject) {
       issues.push({
@@ -535,8 +549,16 @@ export function ContractFlowHub() {
       });
     }
 
+    if (!terminationValid || dirtyMap.termination) {
+      issues.push({
+        id: 'termination',
+        title: SECTION_TITLES.termination,
+        status: dirtyMap.termination ? 'تغییر کرده و ذخیره نشده است' : 'تکمیل نشده است',
+      });
+    }
+
     return issues;
-  }, [discountsData, dirtyMap.discounts, dirtyMap.financial, dirtyMap.parties, dirtyMap.penalties, dirtyMap.subject, partiesComplete, penaltiesData, reportData, subjectComplete]);
+  }, [discountsData, dirtyMap.discounts, dirtyMap.financial, dirtyMap.parties, dirtyMap.penalties, dirtyMap.subject, dirtyMap.termination, partiesComplete, penaltiesData, reportData, subjectComplete, terminationData]);
   const shouldBlockContractLeave = !loading && leaveIssues.length > 0;
 
   const requestSectionSave = (sectionId: ContractFlowSectionId) => {

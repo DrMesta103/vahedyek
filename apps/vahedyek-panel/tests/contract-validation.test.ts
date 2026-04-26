@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { validateDiscountsStep, validateFinancialStep, validatePenaltiesStep } from '../app/lib/contractValidation';
-import type { ContractDiscountsData, ContractFinancialData, ContractPenaltiesData } from '../app/types/contract';
+import { validateDiscountsStep, validateFinancialStep, validatePenaltiesStep, validateTerminationStep } from '../app/lib/contractValidation';
+import type { ContractDiscountsData, ContractFinancialData, ContractPenaltiesData, ContractTerminationData } from '../app/types/contract';
 
 function makeValidFinancialData(overrides: Partial<ContractFinancialData> = {}): ContractFinancialData {
   return {
@@ -271,4 +271,38 @@ test('validateDiscountsStep rejects invalid discount ranges and empty approval t
   assert.equal(result.valid, false);
   assert.equal(result.errors['rule:discount-rule-1:range'], 'حداقل تخفیف نمی‌تواند بیشتر از حداکثر تخفیف باشد.');
   assert.equal(result.errors['rule:discount-rule-1:approvalThreshold'], 'آستانه تایید مدیر را وارد کنید.');
+});
+function makeValidTerminationData(overrides: Partial<ContractTerminationData> = {}): ContractTerminationData {
+  return {
+    noticeDays: '10',
+    cureDays: '15',
+    settlementDays: '20',
+    restitutionDays: '10',
+    handoverDays: '7',
+    customClauses: '',
+    acknowledged: true,
+    ...overrides,
+  };
+}
+
+test('validateTerminationStep accepts a complete termination payload', () => {
+  const result = validateTerminationStep(makeValidTerminationData());
+
+  assert.equal(result.valid, true);
+  assert.deepEqual(result.errors, {});
+});
+
+test('validateTerminationStep rejects missing timing data and acknowledgment', () => {
+  const result = validateTerminationStep(
+    makeValidTerminationData({
+      noticeDays: '0',
+      cureDays: '',
+      acknowledged: false,
+    }),
+  );
+
+  assert.equal(result.valid, false);
+  assert.ok(result.errors.noticeDays);
+  assert.ok(result.errors.cureDays);
+  assert.ok(result.errors.acknowledged);
 });

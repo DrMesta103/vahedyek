@@ -3,7 +3,7 @@
 import { Lock } from 'lucide-react';
 import type { ContractFlowSectionId } from './contractFlowSignals';
 
-const SAVEABLE_SECTIONS: ContractFlowSectionId[] = ['subject', 'parties', 'financial'];
+const SAVEABLE_SECTIONS: ContractFlowSectionId[] = ['subject', 'parties', 'financial', 'penalties', 'discounts', 'termination'];
 
 type SectionItem = {
   id: ContractFlowSectionId;

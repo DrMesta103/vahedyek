@@ -3,6 +3,7 @@ import type {
   ContractFinancialData,
   ContractPenaltiesData,
   ContractSubjectData,
+  ContractTerminationData,
   ContractPartiesData,
   ContractParty,
   ShareMode,
@@ -185,6 +186,30 @@ export function validateDiscountsStep(data: Partial<ContractDiscountsData>): Val
       errors[`rule:${rule.id || index}:approvalThreshold`] = 'آستانه تایید مدیر را وارد کنید.';
     }
   });
+
+  return { valid: Object.keys(errors).length === 0, errors };
+}
+
+export function validateTerminationStep(data: Partial<ContractTerminationData>): ValidationResult {
+  const errors: Record<string, string> = {};
+  const positiveFields: Array<keyof Pick<ContractTerminationData, 'noticeDays' | 'cureDays' | 'settlementDays' | 'restitutionDays' | 'handoverDays'>> = [
+    'noticeDays',
+    'cureDays',
+    'settlementDays',
+    'restitutionDays',
+    'handoverDays',
+  ];
+
+  positiveFields.forEach((field) => {
+    const value = Number(data[field] ?? 0);
+    if (!(value > 0)) {
+      errors[field] = REQUIRED_MSG;
+    }
+  });
+
+  if (!data.acknowledged) {
+    errors.acknowledged = 'برای استفاده از این متن، تأیید شما الزامی است.';
+  }
 
   return { valid: Object.keys(errors).length === 0, errors };
 }
