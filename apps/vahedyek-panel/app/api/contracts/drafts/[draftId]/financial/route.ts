@@ -22,13 +22,14 @@ function unwrapScopedId(financialId: string, rawId: string) {
   return rawId.startsWith(prefix) ? rawId.slice(prefix.length) : rawId;
 }
 
-export async function GET(_: Request, { params }: { params: { draftId: string } }) {
+export async function GET(_: Request, { params }: { params: Promise<{ draftId: string }> }) {
   try {
+    const { draftId } = await params;
     const session = await requireSessionContext();
     if (session instanceof NextResponse) return session;
 
     const draft = await prisma.contractDraft.findFirst({
-      where: { id: params.draftId, tenantId: session.tenantId },
+      where: { id: draftId, tenantId: session.tenantId },
       select: { id: true },
     });
 
@@ -37,7 +38,7 @@ export async function GET(_: Request, { params }: { params: { draftId: string } 
     }
 
     const financial = await prisma.contractFinancial.findUnique({
-      where: { draftId: params.draftId },
+      where: { draftId },
       include: {
         categories: {
           orderBy: { name: 'asc' },
@@ -97,13 +98,14 @@ export async function GET(_: Request, { params }: { params: { draftId: string } 
   }
 }
 
-export async function PUT(request: Request, { params }: { params: { draftId: string } }) {
+export async function PUT(request: Request, { params }: { params: Promise<{ draftId: string }> }) {
   try {
+    const { draftId } = await params;
     const session = await requireSessionContext();
     if (session instanceof NextResponse) return session;
 
     const draft = await prisma.contractDraft.findFirst({
-      where: { id: params.draftId, tenantId: session.tenantId },
+      where: { id: draftId, tenantId: session.tenantId },
       select: { id: true },
     });
 
@@ -138,7 +140,7 @@ export async function PUT(request: Request, { params }: { params: { draftId: str
     }
 
     const financial = await prisma.contractFinancial.upsert({
-      where: { draftId: params.draftId },
+      where: { draftId },
       update: {
         pricingType,
         unitArea,
@@ -150,7 +152,7 @@ export async function PUT(request: Request, { params }: { params: { draftId: str
         activeTab,
       },
       create: {
-        draftId: params.draftId,
+        draftId,
         pricingType,
         unitArea,
         parkingArea,

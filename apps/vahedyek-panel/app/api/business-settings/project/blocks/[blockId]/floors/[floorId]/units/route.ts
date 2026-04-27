@@ -60,31 +60,32 @@ async function getFloor(tenantId: string, blockId: string, floorId: string) {
   return floors[0] ?? null;
 }
 
-export async function GET(_: Request, { params }: { params: { blockId: string; floorId: string } }) {
+export async function GET(_: Request, { params }: { params: Promise<{ blockId: string; floorId: string }> }) {
   try {
+    const { blockId, floorId } = await params;
     const session = await requireSessionContext();
     if (session instanceof NextResponse) return session;
 
-    const floor = await getFloor(session.tenantId, params.blockId, params.floorId);
+    const floor = await getFloor(session.tenantId, blockId, floorId);
     if (!floor) return NextResponse.json({ message: 'طبقه پیدا نشد.' }, { status: 404 });
 
     const [units, parking, storage] = await Promise.all([
       prisma.$queryRaw(Prisma.sql`
         SELECT "id", "name", "floorName", "category", "unitType", "usage", "saleEnabled", "deliveryStatus", "area", "balconyCount", "bedroomCount", "postalCode", "amenities", "baseInfo", "direction"
         FROM "Unit"
-        WHERE "tenantId" = ${session.tenantId} AND "blockId" = ${params.blockId} AND "floorName" = ${floor.name} AND "category" = 'unit'
+        WHERE "tenantId" = ${session.tenantId} AND "blockId" = ${blockId} AND "floorName" = ${floor.name} AND "category" = 'unit'
         ORDER BY "name" ASC
       `),
       prisma.$queryRaw(Prisma.sql`
         SELECT "id", "name", "assignedToUnitId"
         FROM "Unit"
-        WHERE "tenantId" = ${session.tenantId} AND "blockId" = ${params.blockId} AND "category" = 'parking'
+        WHERE "tenantId" = ${session.tenantId} AND "blockId" = ${blockId} AND "category" = 'parking'
         ORDER BY "name" ASC
       `),
       prisma.$queryRaw(Prisma.sql`
         SELECT "id", "name", "assignedToUnitId"
         FROM "Unit"
-        WHERE "tenantId" = ${session.tenantId} AND "blockId" = ${params.blockId} AND "category" = 'storage'
+        WHERE "tenantId" = ${session.tenantId} AND "blockId" = ${blockId} AND "category" = 'storage'
         ORDER BY "name" ASC
       `),
     ]);
@@ -95,12 +96,13 @@ export async function GET(_: Request, { params }: { params: { blockId: string; f
   }
 }
 
-export async function POST(request: Request, { params }: { params: { blockId: string; floorId: string } }) {
+export async function POST(request: Request, { params }: { params: Promise<{ blockId: string; floorId: string }> }) {
   try {
+    const { blockId, floorId } = await params;
     const session = await requireSessionContext();
     if (session instanceof NextResponse) return session;
 
-    const floor = await getFloor(session.tenantId, params.blockId, params.floorId);
+    const floor = await getFloor(session.tenantId, blockId, floorId);
     if (!floor) return NextResponse.json({ message: 'طبقه پیدا نشد.' }, { status: 404 });
 
     const payload = (await request.json()) as UnitPayload;
@@ -140,7 +142,7 @@ export async function POST(request: Request, { params }: { params: { blockId: st
       SELECT "name"
       FROM "Unit"
       WHERE "tenantId" = ${session.tenantId}
-        AND "blockId" = ${params.blockId}
+        AND "blockId" = ${blockId}
         AND "floorName" = ${floor.name}
         AND "category" = ${category}
         AND "name" IN (${Prisma.join(names)})
@@ -159,7 +161,7 @@ export async function POST(request: Request, { params }: { params: { blockId: st
         createdIds.push(id);
         await tx.$executeRaw(Prisma.sql`
           INSERT INTO "Unit" ("id", "tenantId", "blockId", "floorName", "name", "category", "unitType", "usage", "saleEnabled", "deliveryStatus", "area", "balconyCount", "bedroomCount", "postalCode", "amenities", "baseInfo", "direction", "createdAt", "updatedAt")
-          VALUES (${id}, ${session.tenantId}, ${params.blockId}, ${floor.name}, ${name}, ${category}, ${unitType}, ${usage}, ${saleEnabled}, ${deliveryStatus}, ${area}, ${category === 'unit' ? balconyCount : 0}, ${category === 'unit' ? bedroomCount : 0}, ${category === 'unit' ? postalCode : null}, ${JSON.stringify(category === 'unit' ? amenities : [])}::jsonb, ${baseInfo}, ${direction}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+          VALUES (${id}, ${session.tenantId}, ${blockId}, ${floor.name}, ${name}, ${category}, ${unitType}, ${usage}, ${saleEnabled}, ${deliveryStatus}, ${area}, ${category === 'unit' ? balconyCount : 0}, ${category === 'unit' ? bedroomCount : 0}, ${category === 'unit' ? postalCode : null}, ${JSON.stringify(category === 'unit' ? amenities : [])}::jsonb, ${baseInfo}, ${direction}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
         `);
       }
 
@@ -168,7 +170,7 @@ export async function POST(request: Request, { params }: { params: { blockId: st
         await tx.$executeRaw(Prisma.sql`
           UPDATE "Unit"
           SET "assignedToUnitId" = ${targetUnitId}, "updatedAt" = CURRENT_TIMESTAMP
-          WHERE "tenantId" = ${session.tenantId} AND "blockId" = ${params.blockId} AND "category" = 'parking' AND "assignedToUnitId" IS NULL AND "id" IN (${Prisma.join(parkingIds)})
+          WHERE "tenantId" = ${session.tenantId} AND "blockId" = ${blockId} AND "category" = 'parking' AND "assignedToUnitId" IS NULL AND "id" IN (${Prisma.join(parkingIds)})
         `);
       }
 
@@ -176,7 +178,7 @@ export async function POST(request: Request, { params }: { params: { blockId: st
         await tx.$executeRaw(Prisma.sql`
           UPDATE "Unit"
           SET "assignedToUnitId" = ${targetUnitId}, "updatedAt" = CURRENT_TIMESTAMP
-          WHERE "tenantId" = ${session.tenantId} AND "blockId" = ${params.blockId} AND "category" = 'storage' AND "assignedToUnitId" IS NULL AND "id" IN (${Prisma.join(storageIds)})
+          WHERE "tenantId" = ${session.tenantId} AND "blockId" = ${blockId} AND "category" = 'storage' AND "assignedToUnitId" IS NULL AND "id" IN (${Prisma.join(storageIds)})
         `);
       }
     });

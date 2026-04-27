@@ -83,28 +83,29 @@ async function getUnit(tenantId: string, blockId: string, floorName: string, uni
   return units[0] ?? null;
 }
 
-export async function GET(_: Request, { params }: { params: { blockId: string; floorId: string; unitId: string } }) {
+export async function GET(_: Request, { params }: { params: Promise<{ blockId: string; floorId: string; unitId: string }> }) {
   try {
+    const { blockId, floorId, unitId } = await params;
     const session = await requireSessionContext();
     if (session instanceof NextResponse) return session;
 
-    const floor = await getFloor(session.tenantId, params.blockId, params.floorId);
+    const floor = await getFloor(session.tenantId, blockId, floorId);
     if (!floor) return NextResponse.json({ message: 'طبقه پیدا نشد.' }, { status: 404 });
 
-    const unit = await getUnit(session.tenantId, params.blockId, floor.name, params.unitId);
+    const unit = await getUnit(session.tenantId, blockId, floor.name, unitId);
     if (!unit) return NextResponse.json({ message: 'واحد پیدا نشد.' }, { status: 404 });
 
     const [parking, storage] = await Promise.all([
       prisma.$queryRaw<Array<{ id: string; name: string; assignedToUnitId: string | null }>>(Prisma.sql`
         SELECT "id", "name", "assignedToUnitId"
         FROM "Unit"
-        WHERE "tenantId" = ${session.tenantId} AND "blockId" = ${params.blockId} AND "category" = 'parking'
+        WHERE "tenantId" = ${session.tenantId} AND "blockId" = ${blockId} AND "category" = 'parking'
         ORDER BY "name" ASC
       `),
       prisma.$queryRaw<Array<{ id: string; name: string; assignedToUnitId: string | null }>>(Prisma.sql`
         SELECT "id", "name", "assignedToUnitId"
         FROM "Unit"
-        WHERE "tenantId" = ${session.tenantId} AND "blockId" = ${params.blockId} AND "category" = 'storage'
+        WHERE "tenantId" = ${session.tenantId} AND "blockId" = ${blockId} AND "category" = 'storage'
         ORDER BY "name" ASC
       `),
     ]);
@@ -115,15 +116,16 @@ export async function GET(_: Request, { params }: { params: { blockId: string; f
   }
 }
 
-export async function PATCH(request: Request, { params }: { params: { blockId: string; floorId: string; unitId: string } }) {
+export async function PATCH(request: Request, { params }: { params: Promise<{ blockId: string; floorId: string; unitId: string }> }) {
   try {
+    const { blockId, floorId, unitId } = await params;
     const session = await requireSessionContext();
     if (session instanceof NextResponse) return session;
 
-    const floor = await getFloor(session.tenantId, params.blockId, params.floorId);
+    const floor = await getFloor(session.tenantId, blockId, floorId);
     if (!floor) return NextResponse.json({ message: 'طبقه پیدا نشد.' }, { status: 404 });
 
-    const existingUnit = await getUnit(session.tenantId, params.blockId, floor.name, params.unitId);
+    const existingUnit = await getUnit(session.tenantId, blockId, floor.name, unitId);
     if (!existingUnit) return NextResponse.json({ message: 'واحد پیدا نشد.' }, { status: 404 });
 
     const payload = (await request.json()) as UnitPayload;
@@ -152,11 +154,11 @@ export async function PATCH(request: Request, { params }: { params: { blockId: s
       SELECT "name"
       FROM "Unit"
       WHERE "tenantId" = ${session.tenantId}
-        AND "blockId" = ${params.blockId}
+        AND "blockId" = ${blockId}
         AND "floorName" = ${floor.name}
         AND "category" = ${category}
         AND "name" = ${name}
-        AND "id" <> ${params.unitId}
+        AND "id" <> ${unitId}
       LIMIT 1
     `);
     if (duplicate.length) return NextResponse.json({ message: `واحد «${duplicate[0].name}» قبلا ثبت شده است.` }, { status: 409 });
@@ -183,26 +185,26 @@ export async function PATCH(request: Request, { params }: { params: { blockId: s
           "baseInfo" = ${baseInfo},
           "direction" = ${direction},
           "updatedAt" = CURRENT_TIMESTAMP
-        WHERE "tenantId" = ${session.tenantId} AND "blockId" = ${params.blockId} AND "id" = ${params.unitId}
+        WHERE "tenantId" = ${session.tenantId} AND "blockId" = ${blockId} AND "id" = ${unitId}
       `);
 
       await tx.$executeRaw(Prisma.sql`
         UPDATE "Unit"
         SET "assignedToUnitId" = NULL, "updatedAt" = CURRENT_TIMESTAMP
         WHERE "tenantId" = ${session.tenantId}
-          AND "blockId" = ${params.blockId}
+          AND "blockId" = ${blockId}
           AND "category" IN ('parking', 'storage')
-          AND "assignedToUnitId" = ${params.unitId}
+          AND "assignedToUnitId" = ${unitId}
       `);
 
       if (parkingIds.length) {
         await tx.$executeRaw(Prisma.sql`
           UPDATE "Unit"
-          SET "assignedToUnitId" = ${params.unitId}, "updatedAt" = CURRENT_TIMESTAMP
+          SET "assignedToUnitId" = ${unitId}, "updatedAt" = CURRENT_TIMESTAMP
           WHERE "tenantId" = ${session.tenantId}
-            AND "blockId" = ${params.blockId}
+            AND "blockId" = ${blockId}
             AND "category" = 'parking'
-            AND ("assignedToUnitId" IS NULL OR "assignedToUnitId" = ${params.unitId})
+            AND ("assignedToUnitId" IS NULL OR "assignedToUnitId" = ${unitId})
             AND "id" IN (${Prisma.join(parkingIds)})
         `);
       }
@@ -210,11 +212,11 @@ export async function PATCH(request: Request, { params }: { params: { blockId: s
       if (storageIds.length) {
         await tx.$executeRaw(Prisma.sql`
           UPDATE "Unit"
-          SET "assignedToUnitId" = ${params.unitId}, "updatedAt" = CURRENT_TIMESTAMP
+          SET "assignedToUnitId" = ${unitId}, "updatedAt" = CURRENT_TIMESTAMP
           WHERE "tenantId" = ${session.tenantId}
-            AND "blockId" = ${params.blockId}
+            AND "blockId" = ${blockId}
             AND "category" = 'storage'
-            AND ("assignedToUnitId" IS NULL OR "assignedToUnitId" = ${params.unitId})
+            AND ("assignedToUnitId" IS NULL OR "assignedToUnitId" = ${unitId})
             AND "id" IN (${Prisma.join(storageIds)})
         `);
       }

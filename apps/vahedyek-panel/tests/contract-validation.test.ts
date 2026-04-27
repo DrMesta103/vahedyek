@@ -274,13 +274,81 @@ test('validateDiscountsStep rejects invalid discount ranges and empty approval t
 });
 function makeValidTerminationData(overrides: Partial<ContractTerminationData> = {}): ContractTerminationData {
   return {
-    noticeDays: '10',
-    cureDays: '15',
-    settlementDays: '20',
-    restitutionDays: '10',
-    handoverDays: '7',
-    customClauses: '',
-    acknowledged: true,
+    terminationEnabled: true,
+    activeMainTab: 'builder',
+    builder: {
+      enabled: true,
+      activeForm: 'installment-delay',
+      installmentDelay: {
+        enabled: true,
+        allowedDelayPreset: '7',
+        allowedDelayDays: '',
+        delayBasis: 'debt-amount',
+        minDebtAmount: '5000000',
+        partialPaymentMode: 'decide-by-balance',
+      },
+      financialDefault: {
+        enabled: true,
+        obligationTypes: ['contract-costs', 'installments'],
+        gracePeriodPreset: '7',
+        gracePeriodDays: '',
+        officialNoticeRequired: true,
+      },
+      documentDefect: {
+        enabled: true,
+        requiredItems: ['identity-documents'],
+        gracePeriodPreset: '10',
+        gracePeriodDays: '',
+        reminderBeforeTermination: true,
+      },
+      otherBreach: {
+        enabled: true,
+        breachTypes: ['false-information'],
+        gracePeriodPreset: '15',
+        gracePeriodDays: '',
+        managerApprovalRequired: true,
+      },
+      notifications: {
+        notifyBuilderOnActivation: true,
+        notifyContractManager: true,
+        showTerminationSectionInDetails: true,
+      },
+    },
+    buyer: {
+      enabled: true,
+      activeForm: 'delivery-delay',
+      deliveryDelay: {
+        enabled: true,
+        deliveryBasis: 'contract-delivery-date',
+        allowedDelayPreset: '30',
+        allowedDelayDays: '',
+        expertApprovalRequired: true,
+      },
+      specChange: {
+        enabled: true,
+        changeTypes: ['materials'],
+        tolerancePercent: '5',
+        allowCompensationBeforeTermination: true,
+        managerReviewRequired: true,
+      },
+      areaDiscrepancy: {
+        enabled: true,
+        discrepancyBasis: 'official-survey',
+        toleranceMode: 'percent',
+        toleranceValue: '3',
+        allowPriceAdjustmentFirst: true,
+        expertApprovalRequired: true,
+      },
+      notifications: {
+        notifyBuyerOnActivation: true,
+        notifyContractManager: true,
+        showTerminationSectionInDetails: true,
+      },
+    },
+    draftUsage: {
+      useAsDefault: true,
+      allowPerContractOverride: true,
+    },
     ...overrides,
   };
 }
@@ -292,17 +360,51 @@ test('validateTerminationStep accepts a complete termination payload', () => {
   assert.deepEqual(result.errors, {});
 });
 
-test('validateTerminationStep rejects missing timing data and acknowledgment', () => {
+test('validateTerminationStep rejects conditional fields for custom presets and dependent inputs', () => {
   const result = validateTerminationStep(
     makeValidTerminationData({
-      noticeDays: '0',
-      cureDays: '',
-      acknowledged: false,
+      builder: {
+        ...makeValidTerminationData().builder,
+        installmentDelay: {
+          ...makeValidTerminationData().builder.installmentDelay,
+          allowedDelayPreset: 'other',
+          allowedDelayDays: '',
+          minDebtAmount: '',
+        },
+        financialDefault: {
+          ...makeValidTerminationData().builder.financialDefault,
+          obligationTypes: [],
+          gracePeriodPreset: 'other',
+          gracePeriodDays: '',
+        },
+      },
+      buyer: {
+        ...makeValidTerminationData().buyer,
+        deliveryDelay: {
+          ...makeValidTerminationData().buyer.deliveryDelay,
+          allowedDelayPreset: 'other',
+          allowedDelayDays: '',
+        },
+        specChange: {
+          ...makeValidTerminationData().buyer.specChange,
+          changeTypes: [],
+          tolerancePercent: '0',
+        },
+        areaDiscrepancy: {
+          ...makeValidTerminationData().buyer.areaDiscrepancy,
+          toleranceValue: '',
+        },
+      },
     }),
   );
 
   assert.equal(result.valid, false);
-  assert.ok(result.errors.noticeDays);
-  assert.ok(result.errors.cureDays);
-  assert.ok(result.errors.acknowledged);
+  assert.ok(result.errors['builder.installmentDelay.allowedDelayDays']);
+  assert.ok(result.errors['builder.installmentDelay.minDebtAmount']);
+  assert.ok(result.errors['builder.financialDefault.obligationTypes']);
+  assert.ok(result.errors['builder.financialDefault.gracePeriodDays']);
+  assert.ok(result.errors['buyer.deliveryDelay.allowedDelayDays']);
+  assert.ok(result.errors['buyer.specChange.changeTypes']);
+  assert.ok(result.errors['buyer.specChange.tolerancePercent']);
+  assert.ok(result.errors['buyer.areaDiscrepancy.toleranceValue']);
 });

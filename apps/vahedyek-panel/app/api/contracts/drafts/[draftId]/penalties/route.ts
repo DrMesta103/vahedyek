@@ -120,13 +120,14 @@ function normalizeRules(rawRules: unknown, validTypeIds: Set<string>) {
     .filter((item) => validTypeIds.has(item.penaltyTypeId));
 }
 
-export async function GET(_: Request, { params }: { params: { draftId: string } }) {
+export async function GET(_: Request, { params }: { params: Promise<{ draftId: string }> }) {
   try {
+    const { draftId } = await params;
     const session = await requireSessionContext();
     if (session instanceof NextResponse) return session;
 
     const draft = await prisma.contractDraft.findFirst({
-      where: { id: params.draftId, tenantId: session.tenantId },
+      where: { id: draftId, tenantId: session.tenantId },
       select: { id: true },
     });
 
@@ -135,7 +136,7 @@ export async function GET(_: Request, { params }: { params: { draftId: string } 
     }
 
     const penalties = await prisma.contractPenalties.findUnique({
-      where: { draftId: params.draftId },
+      where: { draftId },
       include: {
         types: { orderBy: { title: 'asc' } },
         rules: { orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] },
@@ -201,13 +202,14 @@ export async function GET(_: Request, { params }: { params: { draftId: string } 
   }
 }
 
-export async function PUT(request: Request, { params }: { params: { draftId: string } }) {
+export async function PUT(request: Request, { params }: { params: Promise<{ draftId: string }> }) {
   try {
+    const { draftId } = await params;
     const session = await requireSessionContext();
     if (session instanceof NextResponse) return session;
 
     const draft = await prisma.contractDraft.findFirst({
-      where: { id: params.draftId, tenantId: session.tenantId },
+      where: { id: draftId, tenantId: session.tenantId },
       select: { id: true },
     });
 
@@ -231,9 +233,9 @@ export async function PUT(request: Request, { params }: { params: { draftId: str
     }
 
     const penalties = await prisma.contractPenalties.upsert({
-      where: { draftId: params.draftId },
+      where: { draftId },
       update: {},
-      create: { draftId: params.draftId },
+      create: { draftId },
       select: { id: true },
     });
 

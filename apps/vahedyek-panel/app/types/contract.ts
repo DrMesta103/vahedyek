@@ -144,13 +144,81 @@ export interface ContractDiscountsData {
 }
 
 export interface ContractTerminationData {
-  noticeDays: string;
-  cureDays: string;
-  settlementDays: string;
-  restitutionDays: string;
-  handoverDays: string;
-  customClauses: string;
-  acknowledged: boolean;
+  terminationEnabled: boolean;
+  activeMainTab: 'builder' | 'buyer' | 'draft';
+  builder: {
+    enabled: boolean;
+    activeForm: 'installment-delay' | 'financial-default' | 'document-defect' | 'other-breach' | 'notifications';
+    installmentDelay: {
+      enabled: boolean;
+      allowedDelayPreset: '3' | '7' | '10' | '15' | '30' | 'other';
+      allowedDelayDays: string;
+      delayBasis: 'unpaid-installment' | 'debt-amount' | 'consecutive-unpaid-installments';
+      minDebtAmount: string;
+      partialPaymentMode: 'activate-on-incomplete' | 'ignore-partial' | 'decide-by-balance';
+    };
+    financialDefault: {
+      enabled: boolean;
+      obligationTypes: Array<'contract-costs' | 'contract-penalties' | 'custom-financial' | 'extra-costs' | 'side-costs' | 'installments'>;
+      gracePeriodPreset: '3' | '7' | '15' | '30' | 'other';
+      gracePeriodDays: string;
+      officialNoticeRequired: boolean;
+    };
+    documentDefect: {
+      enabled: boolean;
+      requiredItems: Array<'identity-documents' | 'signature-completion' | 'legal-permits' | 'payment-documents' | 'physical-attendance'>;
+      gracePeriodPreset: '3' | '7' | '10' | '15' | '30' | 'other';
+      gracePeriodDays: string;
+      reminderBeforeTermination: boolean;
+    };
+    otherBreach: {
+      enabled: boolean;
+      breachTypes: Array<'transfer-restriction' | 'refusal-to-sign' | 'false-information' | 'non-cooperation'>;
+      gracePeriodPreset: '3' | '7' | '15' | '30' | 'other';
+      gracePeriodDays: string;
+      managerApprovalRequired: boolean;
+    };
+    notifications: {
+      notifyBuilderOnActivation: boolean;
+      notifyContractManager: boolean;
+      showTerminationSectionInDetails: boolean;
+    };
+  };
+  buyer: {
+    enabled: boolean;
+    activeForm: 'delivery-delay' | 'spec-change' | 'area-discrepancy' | 'notifications';
+    deliveryDelay: {
+      enabled: boolean;
+      deliveryBasis: 'latest-addendum-date' | 'official-project-end-date' | 'contract-delivery-date';
+      allowedDelayPreset: '10' | '30' | '60' | '90' | '180' | 'other';
+      allowedDelayDays: string;
+      expertApprovalRequired: boolean;
+    };
+    specChange: {
+      enabled: boolean;
+      changeTypes: Array<'unit-area' | 'materials' | 'layout' | 'shared-spaces' | 'parking-storage'>;
+      tolerancePercent: string;
+      allowCompensationBeforeTermination: boolean;
+      managerReviewRequired: boolean;
+    };
+    areaDiscrepancy: {
+      enabled: boolean;
+      discrepancyBasis: 'contract-area' | 'official-survey' | 'delivery-session';
+      toleranceMode: 'percent' | 'meter';
+      toleranceValue: string;
+      allowPriceAdjustmentFirst: boolean;
+      expertApprovalRequired: boolean;
+    };
+    notifications: {
+      notifyBuyerOnActivation: boolean;
+      notifyContractManager: boolean;
+      showTerminationSectionInDetails: boolean;
+    };
+  };
+  draftUsage: {
+    useAsDefault: boolean;
+    allowPerContractOverride: boolean;
+  };
 }
 
 export interface ContractFormData {

@@ -83,12 +83,13 @@ async function getBlock(tenantId: string, blockId: string) {
   return rows[0] ? mapBlock(rows[0]) : null;
 }
 
-export async function GET(_: Request, { params }: { params: { blockId: string } }) {
+export async function GET(_: Request, { params }: { params: Promise<{ blockId: string }> }) {
   try {
+    const { blockId } = await params;
     const session = await requireSessionContext();
     if (session instanceof NextResponse) return session;
 
-    const block = await getBlock(session.tenantId, params.blockId);
+    const block = await getBlock(session.tenantId, blockId);
     if (!block) return NextResponse.json({ message: 'بلوک پیدا نشد.' }, { status: 404 });
 
     return NextResponse.json({ block });
@@ -97,8 +98,9 @@ export async function GET(_: Request, { params }: { params: { blockId: string } 
   }
 }
 
-export async function PATCH(request: Request, { params }: { params: { blockId: string } }) {
+export async function PATCH(request: Request, { params }: { params: Promise<{ blockId: string }> }) {
   try {
+    const { blockId } = await params;
     const session = await requireSessionContext();
     if (session instanceof NextResponse) return session;
 
@@ -109,7 +111,7 @@ export async function PATCH(request: Request, { params }: { params: { blockId: s
     const mainPlate = body.mainPlate?.trim() || null;
     const subPlate = body.subPlate?.trim() || null;
 
-    const existing = await getBlock(session.tenantId, params.blockId);
+    const existing = await getBlock(session.tenantId, blockId);
     if (!existing) return NextResponse.json({ message: 'بلوک پیدا نشد.' }, { status: 404 });
     const status = existing.status;
     const usageJson = JSON.stringify(existing.usageCounts);
@@ -122,24 +124,25 @@ export async function PATCH(request: Request, { params }: { params: { blockId: s
         "subPlate" = ${subPlate},
         "status" = ${status},
         "usageCounts" = ${usageJson}::jsonb
-      WHERE "tenantId" = ${session.tenantId} AND "id" = ${params.blockId}
+      WHERE "tenantId" = ${session.tenantId} AND "id" = ${blockId}
     `);
 
-    return NextResponse.json({ block: await getBlock(session.tenantId, params.blockId) });
+    return NextResponse.json({ block: await getBlock(session.tenantId, blockId) });
   } catch (error) {
     return handlePrismaApiError(error);
   }
 }
 
-export async function POST(request: Request, { params }: { params: { blockId: string } }) {
+export async function POST(request: Request, { params }: { params: Promise<{ blockId: string }> }) {
   try {
+    const { blockId } = await params;
     const session = await requireSessionContext();
     if (session instanceof NextResponse) return session;
 
     const body = (await request.json()) as { action?: string; name?: string };
     if (body.action !== 'copy') return NextResponse.json({ message: 'عملیات معتبر نیست.' }, { status: 400 });
 
-    const source = await getBlock(session.tenantId, params.blockId);
+    const source = await getBlock(session.tenantId, blockId);
     if (!source) return NextResponse.json({ message: 'بلوک پیدا نشد.' }, { status: 404 });
 
     const name = body.name?.trim();
@@ -158,17 +161,18 @@ export async function POST(request: Request, { params }: { params: { blockId: st
   }
 }
 
-export async function DELETE(_: Request, { params }: { params: { blockId: string } }) {
+export async function DELETE(_: Request, { params }: { params: Promise<{ blockId: string }> }) {
   try {
+    const { blockId } = await params;
     const session = await requireSessionContext();
     if (session instanceof NextResponse) return session;
 
-    const existing = await getBlock(session.tenantId, params.blockId);
+    const existing = await getBlock(session.tenantId, blockId);
     if (!existing) return NextResponse.json({ message: 'بلوک پیدا نشد.' }, { status: 404 });
 
     await prisma.$executeRaw(Prisma.sql`
       DELETE FROM "Block"
-      WHERE "tenantId" = ${session.tenantId} AND "id" = ${params.blockId}
+      WHERE "tenantId" = ${session.tenantId} AND "id" = ${blockId}
     `);
 
     return NextResponse.json({ success: true });

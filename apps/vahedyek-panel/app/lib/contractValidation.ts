@@ -1,11 +1,11 @@
 import type {
   ContractDiscountsData,
   ContractFinancialData,
+  ContractPartiesData,
+  ContractParty,
   ContractPenaltiesData,
   ContractSubjectData,
   ContractTerminationData,
-  ContractPartiesData,
-  ContractParty,
   ShareMode,
 } from '../types/contract';
 
@@ -53,13 +53,12 @@ export function validateStep1(data: Partial<ContractSubjectData>): ValidationRes
 
 export function validateShares(parties: ContractParty[], mode: ShareMode): ValidationResult {
   const errors: Record<string, string> = {};
-
   const total = parties.reduce((sum, p) => sum + (p.share?.value ?? 0), 0);
 
   if (mode === 'percent' && total > 100) {
-    errors['shares'] = 'مجموع سهم‌ها نباید از 100٪ تجاوز کند';
+    errors.shares = 'مجموع سهم‌ها نباید از 100٪ تجاوز کند';
   } else if (mode === 'dang' && total > 6) {
-    errors['shares'] = 'مجموع سهم‌ها نباید از 6 دانگ تجاوز کند';
+    errors.shares = 'مجموع سهم‌ها نباید از 6 دانگ تجاوز کند';
   }
 
   return { valid: Object.keys(errors).length === 0, errors };
@@ -69,11 +68,11 @@ export function validateStep2(data: Partial<ContractPartiesData>): ValidationRes
   const errors: Record<string, string> = {};
 
   if (!data.partyOne || data.partyOne.length === 0) {
-    errors['partyOne'] = REQUIRED_MSG;
+    errors.partyOne = REQUIRED_MSG;
   }
 
   if (!data.partyTwo || data.partyTwo.length === 0) {
-    errors['partyTwo'] = REQUIRED_MSG;
+    errors.partyTwo = REQUIRED_MSG;
   }
 
   if (data.partyOne && data.partyOne.length > 0) {
@@ -89,7 +88,7 @@ export function validateStep2(data: Partial<ContractPartiesData>): ValidationRes
     if (mode) {
       const sharesResult = validateShares(data.partyTwo, mode);
       if (!sharesResult.valid) {
-        errors['partyTwoShares'] = Object.values(sharesResult.errors)[0];
+        errors.partyTwoShares = Object.values(sharesResult.errors)[0];
       }
     }
   }
@@ -110,27 +109,27 @@ export function validateFinancialStep(data: Partial<ContractFinancialData>): Val
   const dueItems = data.dueItems ?? [];
 
   if (pricingType === 'metered') {
-    if (totalArea <= 0) errors['totalArea'] = REQUIRED_MSG;
-    if (pricePerMeter <= 0) errors['pricePerMeter'] = REQUIRED_MSG;
-    if (parkingArea > 0 && parkingPricePerMeter <= 0) errors['parkingPricePerMeter'] = REQUIRED_MSG;
+    if (totalArea <= 0) errors.totalArea = REQUIRED_MSG;
+    if (pricePerMeter <= 0) errors.pricePerMeter = REQUIRED_MSG;
+    if (parkingArea > 0 && parkingPricePerMeter <= 0) errors.parkingPricePerMeter = REQUIRED_MSG;
   } else if (fixedTotalAmount <= 0) {
-    errors['fixedTotalAmount'] = REQUIRED_MSG;
+    errors.fixedTotalAmount = REQUIRED_MSG;
   }
 
   if (!categories.length) {
-    errors['categories'] = 'حداقل یک ردیف مالی باید ثبت شود';
+    errors.categories = 'حداقل یک ردیف مالی باید ثبت شود';
   }
 
   const unitArea = Number(data.unitArea ?? Math.max(totalArea - parkingArea, 0));
   const totalContractAmount = pricingType === 'metered' ? unitArea * pricePerMeter + parkingArea * parkingPricePerMeter : fixedTotalAmount;
   const categoriesTotal = categories.reduce((sum, item) => sum + Number(item.capAmount ?? 0), 0);
   if (totalContractAmount > 0 && categoriesTotal > totalContractAmount) {
-    errors['categoriesTotal'] = 'جمع ردیف‌های مالی از مبلغ قرارداد بیشتر است.';
+    errors.categoriesTotal = 'جمع ردیف‌های مالی از مبلغ قرارداد بیشتر است.';
   }
 
   const validCategoryIds = new Set(categories.map((item) => item.id));
   if (dueItems.some((item) => !validCategoryIds.has(item.categoryId))) {
-    errors['dueItems'] = 'بعضی از سررسیدها به دسته‌بندی معتبر متصل نیستند';
+    errors.dueItems = 'بعضی از سررسیدها به دسته‌بندی معتبر متصل نیستند';
   }
 
   return { valid: Object.keys(errors).length === 0, errors };
@@ -192,23 +191,77 @@ export function validateDiscountsStep(data: Partial<ContractDiscountsData>): Val
 
 export function validateTerminationStep(data: Partial<ContractTerminationData>): ValidationResult {
   const errors: Record<string, string> = {};
-  const positiveFields: Array<keyof Pick<ContractTerminationData, 'noticeDays' | 'cureDays' | 'settlementDays' | 'restitutionDays' | 'handoverDays'>> = [
-    'noticeDays',
-    'cureDays',
-    'settlementDays',
-    'restitutionDays',
-    'handoverDays',
-  ];
+  const isPositive = (value: string | undefined) => Number(value ?? 0) > 0;
+  const builder = data.builder;
+  const buyer = data.buyer;
 
-  positiveFields.forEach((field) => {
-    const value = Number(data[field] ?? 0);
-    if (!(value > 0)) {
-      errors[field] = REQUIRED_MSG;
+  if (builder?.enabled) {
+    const installmentDelay = builder.installmentDelay;
+    if (installmentDelay?.enabled) {
+      if (installmentDelay.allowedDelayPreset === 'other' && !isPositive(installmentDelay.allowedDelayDays)) {
+        errors['builder.installmentDelay.allowedDelayDays'] = REQUIRED_MSG;
+      }
+
+      if (installmentDelay.delayBasis === 'debt-amount' && !isPositive(installmentDelay.minDebtAmount)) {
+        errors['builder.installmentDelay.minDebtAmount'] = REQUIRED_MSG;
+      }
     }
-  });
 
-  if (!data.acknowledged) {
-    errors.acknowledged = 'برای استفاده از این متن، تأیید شما الزامی است.';
+    const financialDefault = builder.financialDefault;
+    if (financialDefault?.enabled) {
+      if (!financialDefault.obligationTypes?.length) {
+        errors['builder.financialDefault.obligationTypes'] = 'حداقل یک تعهد مالی را انتخاب کنید.';
+      }
+
+      if (financialDefault.gracePeriodPreset === 'other' && !isPositive(financialDefault.gracePeriodDays)) {
+        errors['builder.financialDefault.gracePeriodDays'] = REQUIRED_MSG;
+      }
+    }
+
+    const documentDefect = builder.documentDefect;
+    if (documentDefect?.enabled) {
+      if (!documentDefect.requiredItems?.length) {
+        errors['builder.documentDefect.requiredItems'] = 'حداقل یک مورد الزامی را انتخاب کنید.';
+      }
+
+      if (documentDefect.gracePeriodPreset === 'other' && !isPositive(documentDefect.gracePeriodDays)) {
+        errors['builder.documentDefect.gracePeriodDays'] = REQUIRED_MSG;
+      }
+    }
+
+    const otherBreach = builder.otherBreach;
+    if (otherBreach?.enabled) {
+      if (!otherBreach.breachTypes?.length) {
+        errors['builder.otherBreach.breachTypes'] = 'حداقل یک مورد تخلف را انتخاب کنید.';
+      }
+
+      if (otherBreach.gracePeriodPreset === 'other' && !isPositive(otherBreach.gracePeriodDays)) {
+        errors['builder.otherBreach.gracePeriodDays'] = REQUIRED_MSG;
+      }
+    }
+  }
+
+  if (buyer?.enabled) {
+    const deliveryDelay = buyer.deliveryDelay;
+    if (deliveryDelay?.enabled && deliveryDelay.allowedDelayPreset === 'other' && !isPositive(deliveryDelay.allowedDelayDays)) {
+      errors['buyer.deliveryDelay.allowedDelayDays'] = REQUIRED_MSG;
+    }
+
+    const specChange = buyer.specChange;
+    if (specChange?.enabled) {
+      if (!specChange.changeTypes?.length) {
+        errors['buyer.specChange.changeTypes'] = 'حداقل یک نوع تغییر را انتخاب کنید.';
+      }
+
+      if (!isPositive(specChange.tolerancePercent)) {
+        errors['buyer.specChange.tolerancePercent'] = REQUIRED_MSG;
+      }
+    }
+
+    const areaDiscrepancy = buyer.areaDiscrepancy;
+    if (areaDiscrepancy?.enabled && !isPositive(areaDiscrepancy.toleranceValue)) {
+      errors['buyer.areaDiscrepancy.toleranceValue'] = REQUIRED_MSG;
+    }
   }
 
   return { valid: Object.keys(errors).length === 0, errors };

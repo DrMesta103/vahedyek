@@ -1,10 +1,13 @@
 import { NextResponse } from 'next/server';
-import { hashPassword } from '../../../lib/auth';
-import { prisma } from '../../../lib/prisma';
 import { handlePrismaApiError } from '../../../lib/prismaApiError';
 
 export async function POST(request: Request) {
   try {
+    const [{ hashPassword }, { prisma }] = await Promise.all([
+      import('../../../lib/auth'),
+      import('../../../lib/prisma'),
+    ]);
+
     const body = (await request.json()) as { fullName?: string; email?: string; password?: string };
 
     const fullName = body.fullName?.trim();
