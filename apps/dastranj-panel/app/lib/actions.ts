@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { prisma } from './prisma';
+import { getSessionContext } from './auth';
 import { seedSampleData } from './seed';
 
 function value(formData: FormData, key: string) {
@@ -13,6 +14,11 @@ function boolValue(formData: FormData, key: string) {
   return formData.get(key) === 'on';
 }
 
+async function getTenantId() {
+  const session = await getSessionContext();
+  return session?.tenantId ?? null;
+}
+
 export async function seedSampleDataAction() {
   await seedSampleData(prisma);
   revalidatePath('/');
@@ -20,8 +26,10 @@ export async function seedSampleDataAction() {
 }
 
 export async function saveBusinessProfileAction(formData: FormData) {
-  const current = await prisma.businessProfile.findFirst();
+  const tenantId = await getTenantId();
+  const current = await prisma.businessProfile.findFirst({ where: tenantId ? { tenantId } : {} });
   const data = {
+    tenantId: tenantId ?? undefined,
     brandName: value(formData, 'brandName'),
     legalName: value(formData, 'legalName') || null,
     contactEmail: value(formData, 'contactEmail') || null,
@@ -30,7 +38,6 @@ export async function saveBusinessProfileAction(formData: FormData) {
     payrollPackageEnabled: boolValue(formData, 'payrollPackageEnabled'),
     quickSetupStatus: (value(formData, 'quickSetupStatus') || 'in_progress') as 'pending' | 'in_progress' | 'completed',
   };
-
   if (current) {
     await prisma.businessProfile.update({ where: { id: current.id }, data });
   } else {
@@ -41,7 +48,41 @@ export async function saveBusinessProfileAction(formData: FormData) {
 }
 
 export async function createLocationAction(formData: FormData) {
+  const tenantId = await getTenantId();
   await prisma.location.create({
+    data: {
+      tenantId,
+      title: value(formData, 'title'),
+      address: value(formData, 'address'),
+      radius: Number(value(formData, 'radius') || '100'),
+      description: value(formData, 'description') || null,
+    },
+  });
+  revalidatePath('/locations');
+  revalidatePath('/quick-setup');
+  redirect('/locations');
+}
+
+export async function createLocationFromQuickSetupAction(formData: FormData) {
+  const tenantId = await getTenantId();
+  await prisma.location.create({
+    data: {
+      tenantId,
+      title: value(formData, 'title'),
+      address: value(formData, 'address'),
+      radius: Number(value(formData, 'radius') || '100'),
+      description: value(formData, 'description') || null,
+    },
+  });
+  revalidatePath('/locations');
+  revalidatePath('/quick-setup');
+  redirect('/quick-setup');
+}
+
+export async function updateLocationAction(formData: FormData) {
+  const id = value(formData, 'id');
+  await prisma.location.update({
+    where: { id },
     data: {
       title: value(formData, 'title'),
       address: value(formData, 'address'),
@@ -49,6 +90,15 @@ export async function createLocationAction(formData: FormData) {
       description: value(formData, 'description') || null,
     },
   });
+  revalidatePath('/locations');
+  revalidatePath(`/locations/${id}/edit`);
+  revalidatePath('/quick-setup');
+  redirect('/locations');
+}
+
+export async function deleteLocationAction(formData: FormData) {
+  const id = value(formData, 'id');
+  await prisma.location.delete({ where: { id } });
   revalidatePath('/locations');
   revalidatePath('/quick-setup');
   redirect('/locations');
@@ -101,8 +151,10 @@ export async function createShiftTemplateAction(formData: FormData) {
 }
 
 export async function createCalendarAction(formData: FormData) {
+  const tenantId = await getTenantId();
   await prisma.calendar.create({
     data: {
+      tenantId,
       title: value(formData, 'title'),
       description: value(formData, 'description') || null,
       yearLabel: value(formData, 'yearLabel'),
@@ -121,10 +173,58 @@ export async function createCalendarAction(formData: FormData) {
   redirect('/calendars');
 }
 
+export async function createCalendarWithShiftAction(data: {
+  title: string;
+  yearLabel: string;
+  startDate: string;
+  endDate: string;
+  weekends: string[];
+  singleHolidays: { id: string; title: string; date: string }[];
+  shiftType: string;
+  shiftTitle: string;
+  shiftConfig: Record<string, unknown>;
+  breaks: unknown[];
+}) {
+  const tenantId = await getTenantId();
+  const holidayCount = data.weekends.length + data.singleHolidays.length;
+  const shiftTypeLabel =
+    data.shiftType === 'fixed' ? 'شیفت ثابت' :
+    data.shiftType === 'float-day' ? 'شیفت شناور (شروع روز)' :
+    data.shiftType === 'float-abs' ? 'شیفت شناور مطلق' :
+    data.shiftType === 'split' ? 'شیفت دوتکه' :
+    data.shiftType === 'rotate' ? 'شیفت چرخشی' : data.shiftType;
+
+  const calendar = await prisma.calendar.create({
+    data: {
+      tenantId,
+      title: data.title,
+      description: null,
+      yearLabel: data.yearLabel,
+      startDate: data.startDate,
+      endDate: data.endDate,
+      weekends: data.weekends,
+      singleHolidays: data.singleHolidays,
+      shiftTitle: data.shiftTitle,
+      shiftTypeLabel,
+      shiftConfig: data.shiftConfig,
+      holidayCount,
+      totalShiftDays: 0,
+      totalEventDays: data.singleHolidays.length,
+      status: 'active',
+    },
+  });
+
+  revalidatePath('/calendars');
+  revalidatePath('/quick-setup');
+  return { id: calendar.id, title: calendar.title, yearLabel: calendar.yearLabel };
+}
+
 export async function createPolicyAction(formData: FormData) {
+  const tenantId = await getTenantId();
   const calendarId = value(formData, 'calendarId') || null;
   await prisma.workPolicy.create({
     data: {
+      tenantId,
       title: value(formData, 'title'),
       description: value(formData, 'description') || null,
       calendarId,
@@ -141,10 +241,31 @@ export async function createPolicyAction(formData: FormData) {
   redirect('/policies');
 }
 
+export async function createPolicyFromQuickSetupAction(data: {
+  calendarId: string;
+  policyTemplateId: string;
+  title: string;
+}) {
+  const tenantId = await getTenantId();
+  const policy = await prisma.workPolicy.create({
+    data: {
+      tenantId,
+      title: data.title,
+      calendarId: data.calendarId,
+      sectionValues: { manualAttendance: false, overtimeFromAttendance: true, nightWorkStart: '22:00' },
+    },
+  });
+  revalidatePath('/policies');
+  revalidatePath('/quick-setup');
+  return { id: policy.id, title: policy.title };
+}
+
 export async function createEmployeeAction(formData: FormData) {
+  const tenantId = await getTenantId();
   const unitIds = formData.getAll('organizationUnitIds').map(String);
   await prisma.employee.create({
     data: {
+      tenantId,
       firstName: value(formData, 'firstName'),
       lastName: value(formData, 'lastName'),
       nationalId: value(formData, 'nationalId') || null,
@@ -166,10 +287,35 @@ export async function createEmployeeAction(formData: FormData) {
   redirect('/employees');
 }
 
+export async function createEmployeeFromQuickSetupAction(data: {
+  firstName: string;
+  lastName: string;
+  nationalId?: string;
+  mobile?: string;
+  email?: string;
+}) {
+  const tenantId = await getTenantId();
+  const employee = await prisma.employee.create({
+    data: {
+      tenantId,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      nationalId: data.nationalId || null,
+      mobile1: data.mobile || null,
+      email: data.email || null,
+    },
+  });
+  revalidatePath('/employees');
+  revalidatePath('/quick-setup');
+  return { id: employee.id, firstName: employee.firstName, lastName: employee.lastName };
+}
+
 export async function createWorkGroupAction(formData: FormData) {
+  const tenantId = await getTenantId();
   const employeeIds = formData.getAll('employeeIds').map(String);
   await prisma.workGroup.create({
     data: {
+      tenantId,
       title: value(formData, 'title'),
       description: value(formData, 'description') || null,
       tags: value(formData, 'tags').split(',').map((item) => item.trim()).filter(Boolean),

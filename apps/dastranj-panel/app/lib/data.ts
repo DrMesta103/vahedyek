@@ -1,17 +1,30 @@
+import { getSessionContext } from './auth';
 import { prisma } from './prisma';
 
+async function getTenantId(): Promise<string | null> {
+  const session = await getSessionContext();
+  return session?.tenantId ?? null;
+}
+
 export async function getBusinessProfile() {
-  return prisma.businessProfile.findFirst({ orderBy: { createdAt: 'asc' } });
+  const tenantId = await getTenantId();
+  return prisma.businessProfile.findFirst({
+    where: tenantId ? { tenantId } : {},
+    orderBy: { createdAt: 'asc' },
+  });
 }
 
 export async function getDashboardData() {
+  const tenantId = await getTenantId();
+  const where = tenantId ? { tenantId } : {};
+
   const [profile, locations, calendars, policies, employees, workGroups, draftTemplates, requestReasons] = await Promise.all([
     getBusinessProfile(),
-    prisma.location.count(),
-    prisma.calendar.count(),
-    prisma.workPolicy.count(),
-    prisma.employee.count(),
-    prisma.workGroup.count(),
+    prisma.location.count({ where }),
+    prisma.calendar.count({ where }),
+    prisma.workPolicy.count({ where }),
+    prisma.employee.count({ where }),
+    prisma.workGroup.count({ where }),
     prisma.draftTemplate.count(),
     prisma.requestReason.count(),
   ]);
@@ -31,17 +44,24 @@ export async function getDashboardData() {
 }
 
 export async function getQuickSetupChecklist() {
-  const [profile, locations, calendars, policies, employees, workGroups] = await Promise.all([
+  const tenantId = await getTenantId();
+  const where = tenantId ? { tenantId } : {};
+
+  const [profile, locationList, calendars, policies, employees, workGroups] = await Promise.all([
     getBusinessProfile(),
-    prisma.location.count(),
-    prisma.calendar.count(),
-    prisma.workPolicy.count(),
-    prisma.employee.count(),
-    prisma.workGroup.count(),
+    prisma.location.findMany({ where, orderBy: { createdAt: 'desc' }, take: 10 }),
+    prisma.calendar.count({ where }),
+    prisma.workPolicy.count({ where }),
+    prisma.employee.count({ where }),
+    prisma.workGroup.count({ where }),
   ]);
+
+  const locations = locationList.length;
 
   return {
     profile,
+    locationItems: locationList,
+    tenantId,
     steps: [
       { key: 'location', title: 'محل کار', subtitle: 'ثبت محل کار و شعاع مجاز', done: locations > 0, href: '/locations/new', manageHref: '/locations', count: locations },
       { key: 'calendar', title: 'تقویم کاری', subtitle: 'تقویم، تعطیلات و شیفت', done: calendars > 0, href: '/calendars/new', manageHref: '/calendars', count: calendars },
@@ -53,15 +73,18 @@ export async function getQuickSetupChecklist() {
 }
 
 export async function getBusinessSettingsData() {
+  const tenantId = await getTenantId();
+  const where = tenantId ? { tenantId } : {};
+
   const [locations, requestReasons, organizationUnits, shiftTemplates, calendars, policies, draftTemplates, employees] = await Promise.all([
-    prisma.location.count(),
+    prisma.location.count({ where }),
     prisma.requestReason.count(),
     prisma.organizationUnit.count(),
     prisma.shiftTemplate.count(),
-    prisma.calendar.count(),
-    prisma.workPolicy.count(),
+    prisma.calendar.count({ where }),
+    prisma.workPolicy.count({ where }),
     prisma.draftTemplate.count(),
-    prisma.employee.count(),
+    prisma.employee.count({ where }),
   ]);
 
   return [
@@ -77,7 +100,12 @@ export async function getBusinessSettingsData() {
 }
 
 export async function listLocations() {
-  return prisma.location.findMany({ orderBy: { createdAt: 'desc' } });
+  const tenantId = await getTenantId();
+  return prisma.location.findMany({ where: tenantId ? { tenantId } : {}, orderBy: { createdAt: 'desc' } });
+}
+
+export async function getLocation(id: string) {
+  return prisma.location.findUnique({ where: { id } });
 }
 
 export async function listRequestReasons() {
@@ -85,10 +113,7 @@ export async function listRequestReasons() {
 }
 
 export async function listOrganizationUnits() {
-  return prisma.organizationUnit.findMany({
-    include: { employees: true },
-    orderBy: { createdAt: 'desc' },
-  });
+  return prisma.organizationUnit.findMany({ include: { employees: true }, orderBy: { createdAt: 'desc' } });
 }
 
 export async function listShiftTemplates() {
@@ -96,25 +121,35 @@ export async function listShiftTemplates() {
 }
 
 export async function listCalendars() {
-  return prisma.calendar.findMany({ orderBy: { updatedAt: 'desc' } });
+  const tenantId = await getTenantId();
+  return prisma.calendar.findMany({ where: tenantId ? { tenantId } : {}, orderBy: { updatedAt: 'desc' } });
 }
 
 export async function listPolicies() {
+  const tenantId = await getTenantId();
   return prisma.workPolicy.findMany({
+    where: tenantId ? { tenantId } : {},
     include: { calendar: true, workGroups: true },
     orderBy: { updatedAt: 'desc' },
   });
 }
 
+export async function listDefaultPolicies() {
+  const tenantId = await getTenantId();
+  return prisma.workPolicy.findMany({
+    where: tenantId ? { tenantId, isDefault: true } : { isDefault: true },
+    include: { calendar: true },
+    orderBy: { createdAt: 'asc' },
+  });
+}
+
 export async function listEmployees() {
+  const tenantId = await getTenantId();
   return prisma.employee.findMany({
+    where: tenantId ? { tenantId } : {},
     include: {
-      organizationUnits: {
-        include: { organizationUnit: true },
-      },
-      workGroupMemberships: {
-        include: { workGroup: true },
-      },
+      organizationUnits: { include: { organizationUnit: true } },
+      workGroupMemberships: { include: { workGroup: true } },
     },
     orderBy: { createdAt: 'desc' },
   });
@@ -124,24 +159,20 @@ export async function getEmployee(id: string) {
   return prisma.employee.findUnique({
     where: { id },
     include: {
-      organizationUnits: {
-        include: { organizationUnit: true },
-      },
-      workGroupMemberships: {
-        include: { workGroup: true },
-      },
+      organizationUnits: { include: { organizationUnit: true } },
+      workGroupMemberships: { include: { workGroup: true } },
     },
   });
 }
 
 export async function listWorkGroups() {
+  const tenantId = await getTenantId();
   return prisma.workGroup.findMany({
+    where: tenantId ? { tenantId } : {},
     include: {
       location: true,
       policy: { include: { calendar: true } },
-      members: {
-        include: { employee: true },
-      },
+      members: { include: { employee: true } },
     },
     orderBy: { updatedAt: 'desc' },
   });

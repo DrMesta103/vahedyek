@@ -1,11 +1,99 @@
 generator client {
   provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+// ─── Auth ─────────────────────────────────────────────────────────────────────
+
+model AppUser {
+  id           String                 @id @default(cuid())
+  email        String                 @unique
+  fullName     String
+  passwordHash String
+  passwordSalt String
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
+  memberships  UserTenantMembership[]
+}
+
+model Tenant {
+  id               String                 @id @default(cuid())
+  slug             String                 @unique
+  name             String
+  brandCode        String                 @default("DS")
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+  memberships      UserTenantMembership[]
+  roles            TenantRole[]
+  businessProfiles BusinessProfile[]
+  locations        Location[]
+  calendars        Calendar[]
+  policies         WorkPolicy[]
+  employees        Employee[]
+  workGroups       WorkGroup[]
+}
+
+model UserTenantMembership {
+  id        String                     @id @default(cuid())
+  userId    String
+  tenantId  String
+  role      String                     @default("member")
+  createdAt DateTime                   @default(now())
+  user      AppUser                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenant    Tenant                     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  roles     UserTenantMembershipRole[]
+
+  @@unique([userId, tenantId])
+  @@index([userId])
+  @@index([tenantId])
+}
+
+model TenantRole {
+  id          String                     @id @default(cuid())
+  tenantId    String
+  key         String
+  label       String
+  system      Boolean                    @default(false)
+  createdAt   DateTime                   @default(now())
+  updatedAt   DateTime                   @updatedAt
+  tenant      Tenant                     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  memberships UserTenantMembershipRole[]
+  permissions TenantRolePermission[]
+
+  @@unique([tenantId, key])
+  @@index([tenantId])
+}
+
+model TenantRolePermission {
+  id            String     @id @default(cuid())
+  roleId        String
+  permissionKey String
+  createdAt     DateTime   @default(now())
+  role          TenantRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionKey])
+  @@index([roleId])
+}
+
+model UserTenantMembershipRole {
+  id           String               @id @default(cuid())
+  membershipId String
+  roleId       String
+  createdAt    DateTime             @default(now())
+  membership   UserTenantMembership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+  role         TenantRole           @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([membershipId, roleId])
+  @@index([membershipId])
+  @@index([roleId])
+}
+
+// ─── HR Enums ─────────────────────────────────────────────────────────────────
 
 enum QuickSetupStatus {
   pending
@@ -56,8 +144,11 @@ enum WorkGroupAccessLevel {
   manager
 }
 
+// ─── HR Models ────────────────────────────────────────────────────────────────
+
 model BusinessProfile {
   id                    String           @id @default(cuid())
+  tenantId              String?
   brandName             String
   legalName             String?
   contactEmail          String?
@@ -67,25 +158,28 @@ model BusinessProfile {
   quickSetupStatus      QuickSetupStatus @default(pending)
   createdAt             DateTime         @default(now())
   updatedAt             DateTime         @updatedAt
+  tenant                Tenant?          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 }
 
 model Location {
   id          String      @id @default(cuid())
+  tenantId    String?
   title       String
   address     String
   radius      Int
   description String?
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
+  tenant      Tenant?     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   workGroups  WorkGroup[]
 }
 
 model OrganizationUnit {
-  id          String                   @id @default(cuid())
+  id          String                    @id @default(cuid())
   title       String
   description String?
-  createdAt   DateTime                 @default(now())
-  updatedAt   DateTime                 @updatedAt
+  createdAt   DateTime                  @default(now())
+  updatedAt   DateTime                  @updatedAt
   employees   EmployeeOrganizationUnit[]
 }
 
@@ -115,37 +209,46 @@ model ShiftTemplate {
 
 model Calendar {
   id             String         @id @default(cuid())
+  tenantId       String?
   title          String
   description    String?
   yearLabel      String
   startDate      String
   endDate        String
+  weekends       Json           @default("[]")
+  singleHolidays Json           @default("[]")
   status         CalendarStatus @default(active)
-  shiftTitle     String
-  shiftTypeLabel String
+  shiftTitle     String         @default("")
+  shiftTypeLabel String         @default("")
+  shiftConfig    Json           @default("{}")
   holidayCount   Int            @default(0)
   totalShiftDays Int            @default(0)
   totalEventDays Int            @default(0)
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
+  tenant         Tenant?        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   policies       WorkPolicy[]
 }
 
 model WorkPolicy {
   id            String      @id @default(cuid())
+  tenantId      String?
   title         String
   description   String?
   calendarId    String?
   sectionValues Json        @default("{}")
   employeeCount Int         @default(0)
+  isDefault     Boolean     @default(false)
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
+  tenant        Tenant?     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   calendar      Calendar?   @relation(fields: [calendarId], references: [id], onDelete: SetNull)
   workGroups    WorkGroup[]
 }
 
 model Employee {
-  id                   String                   @id @default(cuid())
+  id                   String                    @id @default(cuid())
+  tenantId             String?
   firstName            String
   lastName             String
   nationalId           String?
@@ -153,16 +256,17 @@ model Employee {
   mobile2              String?
   email                String?
   personnelCode        String?
-  maritalStatus        MaritalStatus           @default(single)
-  childrenCount        Int                     @default(0)
-  canEditIdentityPhoto Boolean                 @default(false)
-  isActive             Boolean                 @default(true)
+  maritalStatus        MaritalStatus             @default(single)
+  childrenCount        Int                       @default(0)
+  canEditIdentityPhoto Boolean                   @default(false)
+  isActive             Boolean                   @default(true)
   avatarUrl            String?
   identityPhotoUrl     String?
-  bankAccounts         Json                    @default("[]")
-  guarantees           Json                    @default("[]")
-  createdAt            DateTime                @default(now())
-  updatedAt            DateTime                @updatedAt
+  bankAccounts         Json                      @default("[]")
+  guarantees           Json                      @default("[]")
+  createdAt            DateTime                  @default(now())
+  updatedAt            DateTime                  @updatedAt
+  tenant               Tenant?                   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   organizationUnits    EmployeeOrganizationUnit[]
   workGroupMemberships WorkGroupMember[]
 }
@@ -178,16 +282,18 @@ model EmployeeOrganizationUnit {
 }
 
 model WorkGroup {
-  id          String          @id @default(cuid())
+  id          String            @id @default(cuid())
+  tenantId    String?
   title       String
   description String?
-  tags        Json            @default("[]")
+  tags        Json              @default("[]")
   locationId  String?
   policyId    String?
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
-  location    Location?       @relation(fields: [locationId], references: [id], onDelete: SetNull)
-  policy      WorkPolicy?     @relation(fields: [policyId], references: [id], onDelete: SetNull)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  tenant      Tenant?           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  location    Location?         @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  policy      WorkPolicy?       @relation(fields: [policyId], references: [id], onDelete: SetNull)
   members     WorkGroupMember[]
 }
 

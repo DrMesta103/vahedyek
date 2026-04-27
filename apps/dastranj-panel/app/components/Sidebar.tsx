@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Bell, Building2, ChevronLeft, ChevronsLeft, ChevronsRight, Ellipsis, Home, LogOut, MoonStar, Settings } from 'lucide-react';
+import { Bell, Building2, ChevronLeft, ChevronsLeft, ChevronsRight, Ellipsis, Home, LogOut, MoonStar, Settings, Sun } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { APP_MENU_ITEMS, getActiveNavigationItem } from '../lib/navigation';
 
@@ -12,6 +12,22 @@ export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [toolbarMenuOpen, setToolbarMenuOpen] = useState(false);
   const toolbarMenuRef = useRef<HTMLDivElement | null>(null);
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+
+  useEffect(() => {
+    const saved = window.localStorage.getItem('dastranj-theme') as 'dark' | 'light' | null;
+    if (saved) {
+      setTheme(saved);
+      document.documentElement.setAttribute('data-theme', saved);
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    const next = theme === 'dark' ? 'light' : 'dark';
+    setTheme(next);
+    window.localStorage.setItem('dastranj-theme', next);
+    document.documentElement.setAttribute('data-theme', next);
+  };
 
   useEffect(() => {
     const savedState = window.localStorage.getItem('dastranj-sidebar-collapsed');
@@ -54,8 +70,8 @@ export function Sidebar() {
       <button type="button" onClick={() => router.push('/')} title="خانه">
         <Home size={18} className={`toolbar-icon${activeItem.id === 'home' ? ' active-toolbar-icon' : ''}`} />
       </button>
-      <button type="button" title="تم دسترنج">
-        <MoonStar size={18} className="toolbar-icon" />
+      <button type="button" title="تم دسترنج" onClick={toggleTheme}>
+        {theme === 'dark' ? <MoonStar size={18} className="toolbar-icon" /> : <Sun size={18} className="toolbar-icon" />}
       </button>
     </>
   );
