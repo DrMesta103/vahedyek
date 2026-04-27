@@ -22,5 +22,12 @@
     "db:seed:vahedyek": "npm --workspace @apps/vahedyek-panel run db:seed",
     "test:financial": "npm --workspace @apps/vahedyek-panel run test:financial",
     "test:subject": "npm --workspace @apps/vahedyek-panel run test:subject"
+  },
+  "devDependencies": {
+    "@babel/preset-react": "^7.28.5",
+    "@locator/webpack-loader": "^0.5.1"
+  },
+  "dependencies": {
+    "@locator/runtime": "^0.5.1"
   }
 }
