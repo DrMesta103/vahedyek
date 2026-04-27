@@ -3,6 +3,7 @@ import './globals.css';
 import { currentAppConfig } from './config/current';
 import { ThemeInitScript } from './components/theme/ThemeInitScript';
 import { ThemeProvider } from './components/theme/ThemeProvider';
+import { LocatorRuntime } from './components/LocatorRuntime';
 
 export const metadata: Metadata = {
   title: currentAppConfig.appName,
@@ -21,6 +22,7 @@ export default function RootLayout({
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
       </head>
       <body>
+        <LocatorRuntime />
         <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>

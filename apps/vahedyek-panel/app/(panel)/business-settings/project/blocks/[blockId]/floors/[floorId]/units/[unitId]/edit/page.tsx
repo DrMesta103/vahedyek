@@ -1,10 +1,12 @@
 import PanelLayout from '../../../../../../../../../../components/PanelLayout';
 import { BusinessUnitForm } from '../../../../../../../../_components/BusinessProjectPanel';
 
-export default function BusinessProjectUnitEditPage({ params }: { params: { blockId: string; floorId: string; unitId: string } }) {
+export default async function BusinessProjectUnitEditPage({ params }: { params: Promise<{ blockId: string; floorId: string; unitId: string }> }) {
+  const { blockId, floorId, unitId } = await params;
+
   return (
     <PanelLayout>
-      <BusinessUnitForm blockId={params.blockId} floorId={params.floorId} unitId={params.unitId} />
+      <BusinessUnitForm blockId={blockId} floorId={floorId} unitId={unitId} />
     </PanelLayout>
   );
 }
