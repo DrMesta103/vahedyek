@@ -1,10 +1,12 @@
 import PanelLayout from '../../../../../../components/PanelLayout';
 import { BusinessBlockForm } from '../../../../_components/BusinessProjectPanel';
 
-export default function EditBusinessProjectBlockPage({ params }: { params: { blockId: string } }) {
+export default async function EditBusinessProjectBlockPage({ params }: { params: Promise<{ blockId: string }> }) {
+  const { blockId } = await params;
+
   return (
     <PanelLayout>
-      <BusinessBlockForm blockId={params.blockId} />
+      <BusinessBlockForm blockId={blockId} />
     </PanelLayout>
   );
 }

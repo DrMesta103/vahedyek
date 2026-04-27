@@ -1,10 +1,19 @@
 import PanelLayout from '../../../../../../../../../components/PanelLayout';
 import { BusinessUnitForm } from '../../../../../../../_components/BusinessProjectPanel';
 
-export default function BusinessProjectUnitNewPage({ params, searchParams }: { params: { blockId: string; floorId: string }; searchParams?: { category?: string } }) {
+export default async function BusinessProjectUnitNewPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ blockId: string; floorId: string }>;
+  searchParams?: Promise<{ category?: string }>;
+}) {
+  const { blockId, floorId } = await params;
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
+
   return (
     <PanelLayout>
-      <BusinessUnitForm blockId={params.blockId} floorId={params.floorId} category={searchParams?.category} />
+      <BusinessUnitForm blockId={blockId} floorId={floorId} category={resolvedSearchParams?.category} />
     </PanelLayout>
   );
 }

@@ -26,10 +26,10 @@ async function ensureTenantTable() {
 
   await prisma.$executeRawUnsafe(
     `
-      INSERT INTO "Tenant" ("id", "slug", "name", "brandCode")
-      VALUES ($1, $2, $3, $4)
+      INSERT INTO "Tenant" ("id", "slug", "name", "brandCode", "updatedAt")
+      VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)
       ON CONFLICT ("slug")
-      DO UPDATE SET "name" = EXCLUDED."name", "brandCode" = EXCLUDED."brandCode";
+      DO UPDATE SET "name" = EXCLUDED."name", "brandCode" = EXCLUDED."brandCode", "updatedAt" = CURRENT_TIMESTAMP;
     `,
     DEFAULT_TENANT_ID,
     DEFAULT_TENANT_SLUG,

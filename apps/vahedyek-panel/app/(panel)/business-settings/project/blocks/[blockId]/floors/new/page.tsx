@@ -1,10 +1,12 @@
 import PanelLayout from '../../../../../../../components/PanelLayout';
 import { BusinessFloorForm } from '../../../../../_components/BusinessProjectPanel';
 
-export default function NewBusinessProjectFloorPage({ params }: { params: { blockId: string } }) {
+export default async function NewBusinessProjectFloorPage({ params }: { params: Promise<{ blockId: string }> }) {
+  const { blockId } = await params;
+
   return (
     <PanelLayout>
-      <BusinessFloorForm blockId={params.blockId} />
+      <BusinessFloorForm blockId={blockId} />
     </PanelLayout>
   );
 }
