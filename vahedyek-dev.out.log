@@ -1,0 +1,23 @@
+
+> vahedyek-monorepo@0.1.0 dev:vahedyek
+> npm --workspace @apps/vahedyek-panel run dev
+
+
+> @apps/vahedyek-panel@0.1.0 dev
+> next dev
+
+▲ Next.js 16.2.4 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.55.214:3000
+- Environments: .env
+✓ Ready in 284ms
+Creating turbopack project {
+  dir: 'C:\\Users\\s.roosta\\Desktop\\Project\\vahedyek\\apps\\vahedyek-panel',
+  testMode: true
+}
+
+ GET /login?next=%2F 200 in 825ms (next.js: 678ms, proxy.ts: 38ms, application-code: 109ms)
+ GET /login?next=%2F 200 in 24ms (next.js: 2ms, proxy.ts: 1505µs, application-code: 20ms)
+ GET /login?next=%2F 200 in 22ms (next.js: 3ms, proxy.ts: 1743µs, application-code: 17ms)
+ GET /login?next=%2F 200 in 76ms (next.js: 30ms, proxy.ts: 17ms, application-code: 29ms)
+[?25h
