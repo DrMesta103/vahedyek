@@ -1,3 +1,5 @@
+import { fixMojibakeDeep } from '../../../../lib/fixMojibake';
+
 export type DiscountGroup = {
   id: string;
   title: string;
@@ -14,7 +16,7 @@ export type DiscountEntry = {
   configured?: boolean;
 };
 
-export const DISCOUNT_GROUPS: DiscountGroup[] = [
+export const DISCOUNT_GROUPS: DiscountGroup[] = fixMojibakeDeep([
   {
     id: 'contract-base',
     title: 'تخفیف روی اصل قرارداد',
@@ -27,9 +29,9 @@ export const DISCOUNT_GROUPS: DiscountGroup[] = [
     description: 'میزان جریمه‌ای که سازنده در صورت تحویل واحد نسبت به تاریخ مقرر باید به خریدار پرداخت کند.',
     configured: true,
   },
-];
+]);
 
-export const ITEMIZED_DISCOUNT_ENTRIES: DiscountEntry[] = [
+export const ITEMIZED_DISCOUNT_ENTRIES: DiscountEntry[] = fixMojibakeDeep([
   {
     id: 'installments',
     title: 'تخفیف اقساط',
@@ -65,14 +67,14 @@ export const ITEMIZED_DISCOUNT_ENTRIES: DiscountEntry[] = [
     title: 'تخفیف برای سود',
     description: 'اعمال تخفیف بر سود یا بهره محاسبه‌شده برای سررسیدهای قرارداد.',
   },
-];
+]);
 
-export const WHOLE_DISCOUNT_ENTRY: DiscountEntry = {
+export const WHOLE_DISCOUNT_ENTRY: DiscountEntry = fixMojibakeDeep({
   id: 'all-dues',
   title: 'تخفیف روی کل سررسیدها',
   description: 'اعمال تنظیمات تخفیف برای تمامی سررسیدهای مالی ثبت‌شده در قرارداد.',
   configured: true,
-};
+});
 
 export const getDiscountGroup = (discountId: string) =>
   DISCOUNT_GROUPS.find((item) => item.id === discountId);

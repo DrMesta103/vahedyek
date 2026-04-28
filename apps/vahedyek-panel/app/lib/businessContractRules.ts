@@ -1,3 +1,5 @@
+import { fixMojibakeDeep } from './fixMojibake';
+
 export type ContractRuleId =
   | 'installments'
   | 'prepayment'
@@ -52,7 +54,7 @@ export type LoanSettingsState = {
   selectedBank: string;
 };
 
-export const CONTRACT_RULE_ITEMS: Array<{ id: ContractRuleId; title: string; description: string }> = [
+export const CONTRACT_RULE_ITEMS: Array<{ id: ContractRuleId; title: string; description: string }> = fixMojibakeDeep([
   {
     id: 'installments',
     title: 'اقساط',
@@ -93,9 +95,9 @@ export const CONTRACT_RULE_ITEMS: Array<{ id: ContractRuleId; title: string; des
     title: 'سود دریافتی',
     description: 'نرخ سود، دوره محاسبه و بازه‌های اعمال سود برای قراردادهای تقسیطی را مشخص کنید.',
   },
-];
+]);
 
-export const BANKS = [
+export const BANKS = fixMojibakeDeep([
   'مسکن',
   'تجارت',
   'ملت',
@@ -114,9 +116,9 @@ export const BANKS = [
   'کارآفرین',
   'قوامین',
   'مهر اقتصاد',
-] as const;
+] as const);
 
-export const RULE_CONFIGS: Record<ContractRuleId, RuleConfig> = {
+export const RULE_CONFIGS: Record<ContractRuleId, RuleConfig> = fixMojibakeDeep({
   installments: {
     id: 'installments',
     title: 'تنظیمات اقساط',
@@ -511,7 +513,7 @@ export const RULE_CONFIGS: Record<ContractRuleId, RuleConfig> = {
       },
     ],
   },
-};
+});
 
 export function createInitialRuleState(ruleId: ContractRuleId): ContractRuleState {
   const rule = RULE_CONFIGS[ruleId];
