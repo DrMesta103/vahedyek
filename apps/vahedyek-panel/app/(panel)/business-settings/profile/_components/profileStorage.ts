@@ -1,0 +1,560 @@
+'use client';
+
+export type OwnershipKind = 'legal' | 'natural';
+
+export type LegalOwnershipForm = {
+  legalType: string;
+  companyName: string;
+  brandName: string;
+  registrationNumber: string;
+  nationalId: string;
+  taxFileNumber: string;
+  registrationDate: string;
+  economicCode: string;
+};
+
+export type NaturalOwnershipForm = {
+  taxFileNumber: string;
+  economicCode: string;
+};
+
+export type RepresentativeRecord = {
+  id: string;
+  fullName: string;
+  mobile: string;
+  email: string;
+  avatarMode: 'image' | 'badge' | 'ghost';
+  avatarText: string;
+  avatarImage?: string;
+  isPrimary: boolean;
+  linkedUser: boolean;
+};
+
+export type RepresentativeCandidate = RepresentativeRecord & {
+  canEmail: boolean;
+};
+
+export type ShareholderAvatarMode = RepresentativeRecord['avatarMode'];
+
+export type NaturalShareholderRecord = {
+  id: string;
+  fullName: string;
+  mobile: string;
+  email: string;
+  avatarMode: ShareholderAvatarMode;
+  avatarText: string;
+  avatarImage?: string;
+  sharePercent: string;
+};
+
+export type LegalShareholderRecord = {
+  id: string;
+  legalType: string;
+  companyName: string;
+  brandName: string;
+  registrationNumber: string;
+  nationalId: string;
+  taxFileNumber: string;
+  registrationDate: string;
+  economicCode: string;
+  sharePercent: string;
+  avatarMode: ShareholderAvatarMode;
+  avatarText: string;
+  avatarImage?: string;
+  representatives: RepresentativeRecord[];
+};
+
+export type BankAccountType = 'current' | 'short' | 'long' | 'loan' | 'foreign';
+export type BankAccountUsage =
+  | 'primary'
+  | 'contract'
+  | 'penalty'
+  | 'late-fee'
+  | 'installment'
+  | 'shareholders'
+  | 'project-cost'
+  | 'other';
+
+export type BankAccountRecord = {
+  id: string;
+  bankName: string;
+  bankCode: string;
+  bankLogoMode: 'text' | 'badge';
+  accountNumber: string;
+  sheba: string;
+  cardNumber: string;
+  showInContracts: boolean;
+  owners: string[];
+  accountType: BankAccountType;
+  usage: BankAccountUsage;
+  title: string;
+};
+
+export type BrandingSettings = {
+  logoImage: string;
+  sealImage: string;
+  headerImage: string;
+  footerImage: string;
+  legalStatement: string;
+};
+
+export type LanguageSettings = {
+  defaultLanguage: string;
+  activeLanguages: string[];
+};
+
+export type CurrencySettings = {
+  baseCurrency: 'irr';
+  quoteCurrency: 'irr' | 'toman';
+};
+
+export type MeasurementSettings = {
+  unit: 'meter' | 'foot';
+};
+
+export type CalendarSettings = {
+  system: 'jalali' | 'gregorian';
+  format: 'yyyy/mm/dd' | 'dd/mm/yyyy' | 'yyyy/mm/dd-short' | 'month-title';
+};
+
+export type ProfileStore = {
+  ownershipKind: OwnershipKind;
+  legal: LegalOwnershipForm;
+  natural: NaturalOwnershipForm;
+  naturalShareholders: NaturalShareholderRecord[];
+  legalShareholders: LegalShareholderRecord[];
+  representatives: RepresentativeRecord[];
+  directory: RepresentativeCandidate[];
+  bankAccounts: BankAccountRecord[];
+  branding: BrandingSettings;
+  languages: LanguageSettings;
+  currency: CurrencySettings;
+  measurement: MeasurementSettings;
+  calendar: CalendarSettings;
+};
+
+export const PROFILE_STORAGE_KEY = 'vahedyek.business-profile.v1';
+
+export const LEGAL_TYPE_OPTIONS = [
+  'شرکت سهامی خاص',
+  'شرکت سهامی عام',
+  'شرکت با مسئولیت محدود',
+  'شرکت تضامنی',
+  'شرکت تعاونی',
+] as const;
+
+const defaultStore: ProfileStore = {
+  ownershipKind: 'legal',
+  legal: {
+    legalType: 'شرکت سهامی خاص',
+    companyName: '',
+    brandName: '',
+    registrationNumber: '',
+    nationalId: '',
+    taxFileNumber: '22',
+    registrationDate: '',
+    economicCode: '45454',
+  },
+  natural: {
+    taxFileNumber: '22',
+    economicCode: '45454',
+  },
+  naturalShareholders: [
+    {
+      id: 'natural-shareholder-1',
+      fullName: 'احمد زارعی',
+      mobile: '+989121000001',
+      email: 'ahmad.zarei@example.com',
+      avatarMode: 'badge',
+      avatarText: 'ا',
+      avatarImage: '',
+      sharePercent: '50',
+    },
+    {
+      id: 'natural-shareholder-2',
+      fullName: 'علی کریمی',
+      mobile: '+989121000002',
+      email: '',
+      avatarMode: 'image',
+      avatarText: 'ع',
+      avatarImage: '',
+      sharePercent: '20',
+    },
+    {
+      id: 'natural-shareholder-3',
+      fullName: 'قلندا الغا',
+      mobile: '+989121000003',
+      email: 'gholanda@example.com',
+      avatarMode: 'ghost',
+      avatarText: 'ق',
+      avatarImage: '',
+      sharePercent: '25',
+    },
+    {
+      id: 'natural-shareholder-4',
+      fullName: 'احمدرضا زارع',
+      mobile: '+989121000004',
+      email: '',
+      avatarMode: 'ghost',
+      avatarText: 'ا',
+      avatarImage: '',
+      sharePercent: '20',
+    },
+  ],
+  legalShareholders: [
+    {
+      id: 'legal-shareholder-1',
+      legalType: 'شرکت سهامی عام',
+      companyName: '1111111',
+      brandName: '',
+      registrationNumber: '15151616124124684464748464646',
+      nationalId: '155184845451515151515151518448',
+      taxFileNumber: '',
+      registrationDate: '1404/07/13',
+      economicCode: '545454848484484848484844484844',
+      sharePercent: '11.2',
+      avatarMode: 'badge',
+      avatarText: '1',
+      avatarImage: '',
+      representatives: [
+        {
+          id: 'rep-3',
+          fullName: 'محمد کاظم عباسی',
+          mobile: '+989334442511',
+          email: 'm.kazem@example.com',
+          avatarMode: 'badge',
+          avatarText: '1',
+          avatarImage: '',
+          isPrimary: true,
+          linkedUser: false,
+        },
+      ],
+    },
+    {
+      id: 'legal-shareholder-2',
+      legalType: 'شرکت سهامی عام',
+      companyName: 'ماد',
+      brandName: '',
+      registrationNumber: '',
+      nationalId: '',
+      taxFileNumber: '',
+      registrationDate: '',
+      economicCode: '',
+      sharePercent: '10',
+      avatarMode: 'ghost',
+      avatarText: 'م',
+      avatarImage: '',
+      representatives: [
+        {
+          id: 'rep-1',
+          fullName: 'عباس عباسی',
+          mobile: '+989121111111',
+          email: 'abbas.abbasi@example.com',
+          avatarMode: 'image',
+          avatarText: 'ع',
+          avatarImage: '',
+          isPrimary: false,
+          linkedUser: true,
+        },
+        {
+          id: 'rep-2',
+          fullName: 'احمدرضا زارع',
+          mobile: '+989137477540',
+          email: 'ahmad.zare@example.com',
+          avatarMode: 'ghost',
+          avatarText: 'ا',
+          avatarImage: '',
+          isPrimary: false,
+          linkedUser: true,
+        },
+      ],
+    },
+  ],
+  representatives: [
+    {
+      id: 'rep-1',
+      fullName: 'عباس عباسی',
+      mobile: '+989121111111',
+      email: 'abbas.abbasi@example.com',
+      avatarMode: 'image',
+      avatarText: 'ع',
+      avatarImage: '',
+      isPrimary: false,
+      linkedUser: true,
+    },
+    {
+      id: 'rep-2',
+      fullName: 'احمدرضا زارع',
+      mobile: '+989137477540',
+      email: 'ahmad.zare@example.com',
+      avatarMode: 'ghost',
+      avatarText: 'ا',
+      avatarImage: '',
+      isPrimary: false,
+      linkedUser: true,
+    },
+    {
+      id: 'rep-3',
+      fullName: 'محمد کاظم عباسی',
+      mobile: '+989334442511',
+      email: 'm.kazem@example.com',
+      avatarMode: 'badge',
+      avatarText: '1',
+      avatarImage: '',
+      isPrimary: true,
+      linkedUser: false,
+    },
+  ],
+  directory: [
+    {
+      id: 'rep-1',
+      fullName: 'عباس عباسی',
+      mobile: '+989121111111',
+      email: 'abbas.abbasi@example.com',
+      avatarMode: 'image',
+      avatarText: 'ع',
+      avatarImage: '',
+      isPrimary: false,
+      linkedUser: true,
+      canEmail: true,
+    },
+    {
+      id: 'rep-2',
+      fullName: 'احمدرضا زارع',
+      mobile: '+989137477540',
+      email: 'ahmad.zare@example.com',
+      avatarMode: 'ghost',
+      avatarText: 'ا',
+      avatarImage: '',
+      isPrimary: false,
+      linkedUser: true,
+      canEmail: false,
+    },
+    {
+      id: 'rep-3',
+      fullName: 'محمد کاظم عباسی',
+      mobile: '+989334442511',
+      email: 'm.kazem@example.com',
+      avatarMode: 'badge',
+      avatarText: '1',
+      avatarImage: '',
+      isPrimary: true,
+      linkedUser: false,
+      canEmail: false,
+    },
+  ],
+  bankAccounts: [
+    {
+      id: 'bank-1',
+      bankName: 'ثامن',
+      bankCode: 'ث',
+      bankLogoMode: 'badge',
+      accountNumber: '6219 8619 8943 9962',
+      sheba: 'IR35056061182800578179201',
+      cardNumber: '50781879201',
+      showInContracts: true,
+      owners: ['رضا رضایی'],
+      accountType: 'current',
+      usage: 'primary',
+      title: 'وجه التزام',
+    },
+    {
+      id: 'bank-2',
+      bankName: 'سپه‌گارد',
+      bankCode: 'س',
+      bankLogoMode: 'text',
+      accountNumber: '5022 2915 8286 3957',
+      sheba: 'IR75019000002004875550007',
+      cardNumber: '204875550007',
+      showInContracts: true,
+      owners: ['محمدرضا'],
+      accountType: 'short',
+      usage: 'project-cost',
+      title: 'حساب هزینه پروژه',
+    },
+    {
+      id: 'bank-3',
+      bankName: 'ملی',
+      bankCode: 'م',
+      bankLogoMode: 'text',
+      accountNumber: '6037 7995 6565 6565',
+      sheba: 'IR34363636363636363636363636',
+      cardNumber: '5555555555',
+      showInContracts: false,
+      owners: ['kJ'],
+      accountType: 'long',
+      usage: 'other',
+      title: 'سایر',
+    },
+  ],
+  branding: {
+    logoImage: '',
+    sealImage: '',
+    headerImage: '',
+    footerImage: '',
+    legalStatement: '',
+  },
+  languages: {
+    defaultLanguage: 'fa-IR',
+    activeLanguages: ['fa-IR', 'en-US', 'ar-AR', 'fr-CA'],
+  },
+  currency: {
+    baseCurrency: 'irr',
+    quoteCurrency: 'toman',
+  },
+  measurement: {
+    unit: 'meter',
+  },
+  calendar: {
+    system: 'jalali',
+    format: 'yyyy/mm/dd-short',
+  },
+};
+
+function safeParse(value: string | null) {
+  if (!value) return null;
+  try {
+    return JSON.parse(value) as Partial<ProfileStore>;
+  } catch {
+    return null;
+  }
+}
+
+export function normalizePhone(value: string) {
+  return value
+    .trim()
+    .replace(/[۰-۹]/g, (digit) => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(digit)))
+    .replace(/[٠-٩]/g, (digit) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(digit)))
+    .replace(/[^\d+]/g, '');
+}
+
+export function getDefaultProfileStore(): ProfileStore {
+  return JSON.parse(JSON.stringify(defaultStore)) as ProfileStore;
+}
+
+export function loadProfileStore(): ProfileStore {
+  if (typeof window === 'undefined') {
+    return getDefaultProfileStore();
+  }
+
+  const parsed = safeParse(window.localStorage.getItem(PROFILE_STORAGE_KEY));
+  if (!parsed) return getDefaultProfileStore();
+
+  const base = getDefaultProfileStore();
+  return {
+    ownershipKind: parsed.ownershipKind === 'natural' ? 'natural' : 'legal',
+    legal: { ...base.legal, ...(parsed.legal ?? {}) },
+    natural: { ...base.natural, ...(parsed.natural ?? {}) },
+    naturalShareholders: Array.isArray(parsed.naturalShareholders) ? parsed.naturalShareholders : base.naturalShareholders,
+    legalShareholders: Array.isArray(parsed.legalShareholders) ? parsed.legalShareholders : base.legalShareholders,
+    representatives: Array.isArray(parsed.representatives) ? parsed.representatives : base.representatives,
+    directory: Array.isArray(parsed.directory) ? parsed.directory : base.directory,
+    bankAccounts: Array.isArray(parsed.bankAccounts) ? parsed.bankAccounts : base.bankAccounts,
+    branding: { ...base.branding, ...(parsed.branding ?? {}) },
+    languages: {
+      defaultLanguage: typeof parsed.languages?.defaultLanguage === 'string' ? parsed.languages.defaultLanguage : base.languages.defaultLanguage,
+      activeLanguages: Array.isArray(parsed.languages?.activeLanguages) ? parsed.languages.activeLanguages : base.languages.activeLanguages,
+    },
+    currency: { ...base.currency, ...(parsed.currency ?? {}) },
+    measurement: { ...base.measurement, ...(parsed.measurement ?? {}) },
+    calendar: { ...base.calendar, ...(parsed.calendar ?? {}) },
+  };
+}
+
+export function saveProfileStore(store: ProfileStore) {
+  if (typeof window === 'undefined') return;
+  window.localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(store));
+}
+
+export function upsertRepresentative(store: ProfileStore, candidate: RepresentativeCandidate) {
+  const exists = store.representatives.some((item) => item.id === candidate.id);
+  if (exists) return store;
+
+  return {
+    ...store,
+    representatives: [
+      ...store.representatives,
+      {
+        id: candidate.id,
+        fullName: candidate.fullName,
+        mobile: candidate.mobile,
+        email: candidate.email,
+        avatarMode: candidate.avatarMode,
+        avatarText: candidate.avatarText,
+        avatarImage: candidate.avatarImage,
+        isPrimary: false,
+        linkedUser: candidate.linkedUser,
+      },
+    ],
+  };
+}
+
+export function upsertLegalShareholder(store: ProfileStore, shareholder: LegalShareholderRecord) {
+  const exists = store.legalShareholders.some((item) => item.id === shareholder.id);
+  return {
+    ...store,
+    legalShareholders: exists
+      ? store.legalShareholders.map((item) => (item.id === shareholder.id ? shareholder : item))
+      : [shareholder, ...store.legalShareholders],
+  };
+}
+
+export function upsertNaturalShareholder(store: ProfileStore, shareholder: NaturalShareholderRecord) {
+  const exists = store.naturalShareholders.some((item) => item.id === shareholder.id);
+  return {
+    ...store,
+    naturalShareholders: exists
+      ? store.naturalShareholders.map((item) => (item.id === shareholder.id ? shareholder : item))
+      : [shareholder, ...store.naturalShareholders],
+  };
+}
+
+export function linkRepresentativeToLegalShareholder(store: ProfileStore, shareholderId: string, representative: RepresentativeRecord) {
+  return {
+    ...store,
+    legalShareholders: store.legalShareholders.map((shareholder) => {
+      if (shareholder.id !== shareholderId) return shareholder;
+      if (shareholder.representatives.some((item) => item.id === representative.id)) return shareholder;
+      return {
+        ...shareholder,
+        representatives: [...shareholder.representatives, representative],
+      };
+    }),
+  };
+}
+
+export function addBankAccount(store: ProfileStore, account: BankAccountRecord) {
+  return {
+    ...store,
+    bankAccounts: [account, ...store.bankAccounts],
+  };
+}
+
+export function updateBankAccount(store: ProfileStore, accountId: string, account: BankAccountRecord) {
+  return {
+    ...store,
+    bankAccounts: store.bankAccounts.map((item) => (item.id === accountId ? account : item)),
+  };
+}
+
+export function removeBankAccount(store: ProfileStore, accountId: string) {
+  return {
+    ...store,
+    bankAccounts: store.bankAccounts.filter((item) => item.id !== accountId),
+  };
+}
+
+export function formatCurrencyBySettings(amount: number, settings?: CurrencySettings) {
+  const currency = settings?.quoteCurrency ?? 'toman';
+  const formatted = new Intl.NumberFormat('fa-IR').format(amount);
+  return `${formatted} ${currency === 'toman' ? 'تومان' : 'ریال'}`;
+}
+
+export function formatDateBySettings(input: string, settings?: CalendarSettings) {
+  const format = settings?.format ?? 'yyyy/mm/dd-short';
+  if (!input) return '';
+  if (format === 'dd/mm/yyyy') return '16/09/1400';
+  if (format === 'yyyy/mm/dd') return '1400/09/16';
+  if (format === 'month-title') return '16 آذر 1400';
+  return '09/16/1400';
+}

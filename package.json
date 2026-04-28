@@ -22,5 +22,8 @@
     "db:seed:vahedyek": "npm --workspace @apps/vahedyek-panel run db:seed",
     "test:financial": "npm --workspace @apps/vahedyek-panel run test:financial",
     "test:subject": "npm --workspace @apps/vahedyek-panel run test:subject"
+  },
+  "dependencies": {
+    "@locator/runtime": "^0.5.1"
   }
 }

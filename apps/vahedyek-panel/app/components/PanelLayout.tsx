@@ -145,7 +145,61 @@ export default function PanelLayout({ children }: PanelLayoutProps) {
       const trail: Crumb[] = [{ label: 'تنظیمات کسب و کار', href: '/business-settings' }];
 
       if (pathname.startsWith('/business-settings/profile')) {
-        trail.push({ label: 'پروفایل کسب‌وکار' });
+        trail.push({
+          label: 'پروفایل کسب‌وکار',
+          href: pathname === '/business-settings/profile' ? undefined : '/business-settings/profile',
+        });
+        if (pathname.startsWith('/business-settings/profile/ownership')) {
+          trail.push({ label: 'نوع مالکیت و اطلاعات پایه' });
+        }
+        if (pathname.startsWith('/business-settings/profile/shareholders')) {
+          trail.push({
+            label: 'سهامداران اصلی',
+            href: pathname === '/business-settings/profile/shareholders' ? undefined : '/business-settings/profile/shareholders',
+          });
+        }
+        if (pathname.startsWith('/business-settings/profile/shareholders/new')) {
+          trail.push({ label: 'افزودن سهامدار' });
+        }
+        if (
+          pathname.startsWith('/business-settings/profile/shareholders/') &&
+          !pathname.startsWith('/business-settings/profile/shareholders/new')
+        ) {
+          trail.push({ label: 'ویرایش سهامدار حقوقی' });
+        }
+        if (pathname.startsWith('/business-settings/profile/bank-accounts')) {
+          trail.push({
+            label: 'شماره حساب',
+            href: pathname === '/business-settings/profile/bank-accounts' ? undefined : '/business-settings/profile/bank-accounts',
+          });
+        }
+        if (pathname.startsWith('/business-settings/profile/bank-accounts/new')) {
+          trail.push({ label: 'افزودن حساب بانکی جدید' });
+        }
+        if (pathname.startsWith('/business-settings/profile/representatives')) {
+          trail.push({
+            label: 'لیست نماینده قانونی',
+            href: pathname === '/business-settings/profile/representatives' ? undefined : '/business-settings/profile/representatives',
+          });
+        }
+        if (pathname.startsWith('/business-settings/profile/representatives/new')) {
+          trail.push({ label: 'افزودن نماینده قانونی' });
+        }
+        if (pathname.startsWith('/business-settings/profile/branding')) {
+          trail.push({ label: 'لوگو و مهر' });
+        }
+        if (pathname.startsWith('/business-settings/profile/languages')) {
+          trail.push({ label: 'زبان های فعال' });
+        }
+        if (pathname.startsWith('/business-settings/profile/currency')) {
+          trail.push({ label: 'ارز پایه' });
+        }
+        if (pathname.startsWith('/business-settings/profile/measurement')) {
+          trail.push({ label: 'واحد اندازه گیری' });
+        }
+        if (pathname.startsWith('/business-settings/profile/calendar')) {
+          trail.push({ label: 'تقویم' });
+        }
       }
 
       if (pathname.startsWith('/business-settings/project')) {
