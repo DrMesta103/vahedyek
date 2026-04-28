@@ -95,16 +95,28 @@ export function FormDateInput({
   );
 }
 
-export function TagPill({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+export function TagPill({
+  label,
+  active,
+  onClick,
+  className = '',
+}: {
+  label: string;
+  active: boolean;
+  onClick: () => void;
+  className?: string;
+}) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`inline-flex h-[34px] items-center gap-1.5 rounded-full border-[0.5px] px-4 text-[12px] whitespace-nowrap transition-all ${
+      data-tag-pill="true"
+      data-active={active ? 'true' : 'false'}
+      className={`inline-flex h-[34px] items-center gap-1.5 rounded-full border px-4 text-[12px] whitespace-nowrap transition-all ${
         active
-          ? 'border-[#a6e8ef] bg-[#a6e8ef] font-semibold text-[#123b69]'
-          : 'border-[#6e86a3] bg-white text-[#314a67] hover:bg-slate-50'
-      }`}
+          ? 'border-[var(--theme-action-border)] bg-[var(--theme-action-bg)] font-semibold text-[var(--theme-action-text)] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.25)]'
+          : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
+      } ${className}`}
     >
       {active ? <Check className="h-3 w-3 shrink-0 stroke-[2.75]" /> : null}
       {label}
