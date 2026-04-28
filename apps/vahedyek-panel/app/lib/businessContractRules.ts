@@ -1,0 +1,616 @@
+export type ContractRuleId =
+  | 'installments'
+  | 'prepayment'
+  | 'adjustment'
+  | 'additional-costs'
+  | 'discount'
+  | 'penalty'
+  | 'forgiveness'
+  | 'interest';
+
+export type LoanAmountMode = 'fixed' | 'percent';
+export type LoanTiming = 'before-sign' | 'after-sign' | 'after-first-installment';
+export type RepaymentTiming = 'next-month' | 'after-two-months' | 'custom';
+
+export type RuleField =
+  | { key: string; label: string; type: 'text' | 'number'; placeholder?: string }
+  | { key: string; label: string; type: 'select'; options: string[] }
+  | { key: string; label: string; type: 'switch' };
+
+export type RuleTabConfig = {
+  id: string;
+  title: string;
+  description: string;
+  fields: RuleField[];
+};
+
+export type RuleConfig = {
+  id: ContractRuleId;
+  title: string;
+  description: string;
+  activationTitle: string;
+  activationDescription: string;
+  detailsLabel?: string;
+  chips?: string[];
+  tabs: RuleTabConfig[];
+};
+
+export type ContractRuleState = {
+  active: boolean;
+  activeTab: string;
+  activeChip?: string;
+  values: Record<string, string | boolean>;
+};
+
+export type LoanSettingsState = {
+  enabled: boolean;
+  loanAmountMode: LoanAmountMode;
+  loanTiming: LoanTiming;
+  repaymentTiming: RepaymentTiming;
+  fixedAmount: string;
+  percentAmount: string;
+  selectedBank: string;
+};
+
+export const CONTRACT_RULE_ITEMS: Array<{ id: ContractRuleId; title: string; description: string }> = [
+  {
+    id: 'installments',
+    title: 'اقساط',
+    description: 'تنظیم تعداد اقساط، فاصله زمانی و نحوه محاسبه اقساط را تنظیم کنید.',
+  },
+  {
+    id: 'prepayment',
+    title: 'پیش پرداخت',
+    description: 'نحوه تعیین مبلغ پیش‌پرداخت، درصد پیش‌پرداخت و زمان پرداخت را از این بخش تنظیم کنید.',
+  },
+  {
+    id: 'adjustment',
+    title: 'تنظیمات تعدیل',
+    description: 'نحوه تعدیل مبلغ قرارداد بر اساس شاخص‌های اقتصادی یا نرخ‌های ثابت را از این بخش مدیریت کنید.',
+  },
+  {
+    id: 'additional-costs',
+    title: 'هزینه های جانبی',
+    description: 'هزینه‌های ثابت یا درصدی مانند کارمزد اداری هزینه تشکیل پرونده و هزینه خدمات را در این بخش تعریف کنید.',
+  },
+  {
+    id: 'discount',
+    title: 'تنظیمات تخفیف',
+    description: 'وضعیت تخفیف، شرایط اعمال و نحوه تسویه آن را مدیریت کنید.',
+  },
+  {
+    id: 'penalty',
+    title: 'تنظیمات جریمه',
+    description: 'میزان جریمه تاخیر، مبنای محاسبه و دوره محاسبه جریمه را در این بخش مشخص کنید.',
+  },
+  {
+    id: 'forgiveness',
+    title: 'تنظیمات بخشودگی',
+    description: 'در این بخش می‌توانید تنظیمات مربوط به بخشودگی را انجام دهید.',
+  },
+  {
+    id: 'interest',
+    title: 'سود دریافتی',
+    description: 'نرخ سود، دوره محاسبه و بازه‌های اعمال سود برای قراردادهای تقسیطی را مشخص کنید.',
+  },
+];
+
+export const BANKS = [
+  'مسکن',
+  'تجارت',
+  'ملت',
+  'صادرات',
+  'شهر',
+  'رفاه کارگران',
+  'سپه',
+  'سامان',
+  'دی',
+  'ملی',
+  'اقتصاد نوین',
+  'پاسارگاد',
+  'پارسیان',
+  'کشاورزی',
+  'صنعت و معدن',
+  'کارآفرین',
+  'قوامین',
+  'مهر اقتصاد',
+] as const;
+
+export const RULE_CONFIGS: Record<ContractRuleId, RuleConfig> = {
+  installments: {
+    id: 'installments',
+    title: 'تنظیمات اقساط',
+    description: 'فلو تنظیم اقساط منظم، نامنظم و بالونی مطابق نمونه مرجع.',
+    activationTitle: 'می‌توانید چارچوب پیشنهادی پرداخت اقساط را مشخص کنید.',
+    activationDescription: 'در صورت فعال بودن، پرداخت اقساطی به‌عنوان گزینه پیشنهادی در زمان ثبت قرارداد نمایش داده می‌شود. در صورت غیرفعال بودن، پرداخت یکجا بعنوان پیشنهاد نمایش داده می‌شود.',
+    detailsLabel: 'جزئیات تنظیمات اقساط',
+    tabs: [
+      {
+        id: 'regular',
+        title: 'اقساط منظم',
+        description: 'در این روش مبلغ پیشنهادی هر قسط ثابت است و در بازه‌های زمانی منظم نمایش داده می‌شود.',
+        fields: [
+          { key: 'regularInterval', label: 'بازه زمانی اقساط', type: 'select', options: ['در بازه قابل تنظیم در زمان عقد قرارداد', 'دو هفته ای', 'ماهانه', 'دوماهه', 'سه ماهه', 'شش ماهه', 'سالانه'] },
+          { key: 'regularLastDueDate', label: 'تاریخ آخرین قسط', type: 'text', placeholder: '۰۲ / ۱۱ / ۱۴۰۴' },
+          { key: 'regularBalloonEnabled', label: 'پرداخت بالونی', type: 'switch' },
+          { key: 'regularBalloonWindow', label: 'بازه زمانی پیشنهادی پرداخت بالونی', type: 'select', options: ['ماه آخر', '۳ ماه آخر', '۵ ماه آخر', '۷ ماه آخر'] },
+          { key: 'regularBalloonPercent', label: 'درصد پیشنهادی سهم پرداخت بالونی', type: 'number', placeholder: '۲۰' },
+        ],
+      },
+      {
+        id: 'irregular',
+        title: 'اقساط نامنظم',
+        description: 'تاریخ هر قسط تا آن زمان به پایان می‌رسد. تعداد و مبلغ اقساط بر اساس این تاریخ محاسبه می‌شود.',
+        fields: [
+          { key: 'irregularLastDueDate', label: 'تاریخ آخرین قسط', type: 'text', placeholder: '۰۱ / ۲۶ / ۱۴۰۴' },
+          { key: 'irregularBalloonEnabled', label: 'پرداخت بالونی', type: 'switch' },
+          { key: 'irregularBalloonWindow', label: 'بازه زمانی پیشنهادی پرداخت بالونی', type: 'select', options: ['ماه آخر', '۳ ماه آخر', '۵ ماه آخر', '۷ ماه آخر'] },
+          { key: 'irregularBalloonPercent', label: 'درصد پیشنهادی سهم پرداخت بالونی', type: 'number', placeholder: '۲۰' },
+        ],
+      },
+    ],
+  },
+  prepayment: {
+    id: 'prepayment',
+    title: 'پیش پرداخت',
+    description: 'فلو فعال‌سازی، جزئیات و چهار تب اصلی مطابق مرجع.',
+    activationTitle: 'نمایش پیش پرداخت در پیشنهاد فروش',
+    activationDescription: 'اگر بخش فعال باشد، کاربر بین حالت درصدی، مبلغ ثابت، ترکیبی و اختیار کارشناس فروش انتخاب می‌کند.',
+    detailsLabel: 'جزئیات تنظیمات پیش پرداخت',
+    tabs: [
+      {
+        id: 'percent',
+        title: 'درصدی',
+        description: 'پیش‌پرداخت بر اساس درصدی از مبلغ قرارداد',
+        fields: [
+          { key: 'prePercent', label: 'درصدی از مبلغ کل قرارداد', type: 'number', placeholder: '20' },
+          { key: 'prePercentMin', label: 'حداقل درصد مجاز', type: 'number', placeholder: '5' },
+          { key: 'prePercentInstallmentEnabled', label: 'امکان پرداخت اقساطی پیش‌پرداخت', type: 'switch' },
+          {
+            key: 'prePercentInstallmentWindow',
+            label: 'حداکثر بازه پیشنهادی پس از ثبت قرارداد',
+            type: 'select',
+            options: ['در اختیار مدیر فروش', 'یک هفته', 'دو هفته', 'یک ماه', 'چهل و پنج روز', 'دو ماه'],
+          },
+        ],
+      },
+      {
+        id: 'fixed',
+        title: 'مبلغ ثابت',
+        description: 'پیش‌پرداخت ثابت برای همه قراردادها',
+        fields: [
+          { key: 'preFixedAmount', label: 'مبلغ ثابت', type: 'number', placeholder: '150000000' },
+          { key: 'preFixedInstallmentEnabled', label: 'امکان پرداخت اقساطی پیش‌پرداخت', type: 'switch' },
+          {
+            key: 'preFixedInstallmentWindow',
+            label: 'حداکثر بازه پیشنهادی پس از ثبت قرارداد',
+            type: 'select',
+            options: ['در اختیار مدیر فروش', 'یک هفته', 'دو هفته', 'یک ماه', 'چهل و پنج روز', 'دو ماه'],
+          },
+        ],
+      },
+      {
+        id: 'combined',
+        title: 'ترکیبی',
+        description: 'ترکیب درصد و مبلغ ثابت در یک تنظیم',
+        fields: [
+          { key: 'preCombinedPercent', label: 'درصدی از مبلغ کل قرارداد', type: 'number', placeholder: '10' },
+          { key: 'preCombinedAmount', label: 'مبلغ ثابت', type: 'number', placeholder: '50000000' },
+          { key: 'preCombinedInstallmentEnabled', label: 'امکان پرداخت اقساطی پیش‌پرداخت', type: 'switch' },
+          {
+            key: 'preCombinedInstallmentWindow',
+            label: 'حداکثر بازه پیشنهادی پس از ثبت قرارداد',
+            type: 'select',
+            options: ['در اختیار مدیر فروش', 'یک هفته', 'دو هفته', 'یک ماه', 'چهل و پنج روز', 'دو ماه'],
+          },
+        ],
+      },
+      {
+        id: 'sales',
+        title: 'اختیار کارشناس فروش',
+        description: 'بازه مجاز برای تعیین پیش‌پرداخت توسط فروش',
+        fields: [
+          { key: 'preSalesEnabled', label: 'امکان ثبت پیش‌پرداخت با توجه به سیاست مدیر فروش', type: 'switch' },
+          { key: 'preSalesInstallmentEnabled', label: 'امکان پرداخت اقساطی پیش‌پرداخت', type: 'switch' },
+          {
+            key: 'preSalesInstallmentWindow',
+            label: 'حداکثر بازه پیشنهادی پس از ثبت قرارداد',
+            type: 'select',
+            options: ['در اختیار مدیر فروش', 'یک هفته', 'دو هفته', 'یک ماه', 'چهل و پنج روز', 'دو ماه'],
+          },
+        ],
+      },
+    ],
+  },
+  adjustment: {
+    id: 'adjustment',
+    title: 'تنظیمات تعدیل',
+    description: 'فعال‌سازی تعدیل قیمت قرارداد، انتخاب زمان اثر و نوع شاخص.',
+    activationTitle: 'فعال‌سازی چارچوب تعدیل قیمت قرارداد',
+    activationDescription: 'در صورت فعال بودن، چارچوب پیشنهادی تعدیل قیمت قرارداد بر اساس شاخص‌ها یا درصد ثابت و در بازه‌های زمانی مشخص تعریف می‌شود.',
+    detailsLabel: 'جزئیات تنظیمات تعدیل',
+    chips: ['روزانه', 'ماهانه', 'سه ماهه', 'شش ماهه', 'سالانه'],
+    tabs: [
+      {
+        id: 'fixed-percent',
+        title: 'درصد ثابت',
+        description: 'اعمال درصد مشخص در هر نوبت تعدیل',
+        fields: [
+          { key: 'adjustFixedPercent', label: 'درصد تعدیل', type: 'number', placeholder: '18' },
+          { key: 'adjustFixedRound', label: 'قاعده گرد کردن', type: 'select', options: ['بدون گرد کردن', 'به بالا', 'به پایین'] },
+        ],
+      },
+      {
+        id: 'specific-indicator',
+        title: 'یک شاخص مشخص',
+        description: 'تعدیل بر اساس یک شاخص اقتصادی واحد',
+        fields: [
+          { key: 'adjustIndicatorName', label: 'نام شاخص', type: 'select', options: ['تورم بانک مرکزی', 'شاخص ساخت‌وساز', 'ارز توافقی'] },
+          { key: 'adjustIndicatorSource', label: 'منبع شاخص', type: 'select', options: ['مرکز آمار', 'بانک مرکزی', 'ورود دستی'] },
+        ],
+      },
+      {
+        id: 'multi-indicator',
+        title: 'چند شاخص',
+        description: 'ترکیب چند شاخص برای فرمول تعدیل',
+        fields: [
+          { key: 'adjustMultiHousingWeight', label: 'وزن شاخص مسکن', type: 'number', placeholder: '40' },
+          { key: 'adjustMultiLaborWeight', label: 'وزن شاخص دستمزد', type: 'number', placeholder: '30' },
+          { key: 'adjustMultiMaterialWeight', label: 'وزن شاخص مصالح', type: 'number', placeholder: '30' },
+          { key: 'adjustMultiManualOverride', label: 'اجازه بازنویسی دستی', type: 'switch' },
+          { key: 'adjustMultiMaterialsOtherWeight', label: 'وزن مصالح', type: 'number', placeholder: '1' },
+          { key: 'adjustMultiWageWeight', label: 'وزن دستمزد', type: 'number', placeholder: '0' },
+          { key: 'adjustMultiEnergyWeight', label: 'وزن انرژی', type: 'number', placeholder: '0' },
+          { key: 'adjustMultiGeneralPriceWeight', label: 'وزن شاخص عمومی قیمت', type: 'number', placeholder: '0' },
+        ],
+      },
+    ],
+  },
+  'additional-costs': {
+    id: 'additional-costs',
+    title: 'هزینه های جانبی',
+    description: 'فعال‌سازی و تنظیم انواع هزینه جانبی، شامل حالت‌های خاص و ترکیبی.',
+    activationTitle: 'فعال کردن هزینه‌هایی است که خارج از مبلغ اصل قرارداد محاسبه می‌شوند.',
+    activationDescription: 'هزینه‌های جانبی به‌صورت مستقل از اصل مبلغ و تعهدات اصلی طرفین تعیین می‌گردند.',
+    tabs: [
+      {
+        id: 'amount',
+        title: 'مبلغ ثابت',
+        description: 'هزینه جانبی با مبلغ مشخص',
+        fields: [
+          { key: 'costAmountValue', label: 'مبلغ متنظر', type: 'number', placeholder: '100000' },
+        ],
+      },
+      {
+        id: 'contract-percent',
+        title: 'درصدی از قرارداد',
+        description: 'محاسبه هزینه جانبی از مبلغ کل قرارداد',
+        fields: [
+          { key: 'costPercentValue', label: 'درصد متنظر', type: 'number', placeholder: '2' },
+        ],
+      },
+      {
+        id: 'combined',
+        title: 'ترکیبی',
+        description: 'ترکیب مبلغ ثابت و درصدی برای یک هزینه',
+        fields: [
+          { key: 'costCombinedAmount', label: 'مبلغ متنظر', type: 'number', placeholder: '100000' },
+          { key: 'costCombinedPercent', label: 'درصد متنظر', type: 'number', placeholder: '2' },
+        ],
+      },
+      {
+        id: 'per-installment-fixed',
+        title: 'مبلغ ثابت به ازای هر قسط بر مانده بدهی',
+        description: 'برای هر قسط بر اساس مانده بدهی یک مبلغ ثابت هزینه اعمال می‌شود.',
+        fields: [
+          { key: 'costPerInstallmentValue', label: 'مبلغ ثابت به ازای هر قسط', type: 'number', placeholder: '100000' },
+        ],
+      },
+    ],
+  },
+  discount: {
+    id: 'discount',
+    title: 'تنظیمات تخفیف',
+    description: 'فعال‌سازی تخفیف و مدیریت تخفیف روی اصل قرارداد یا تخفیف‌های موردی.',
+    activationTitle: 'فعال‌سازی تخفیف',
+    activationDescription: 'با فعال‌سازی این گزینه، می‌توانید انواع تخفیف را تعریف کنید.',
+    tabs: [
+      {
+        id: 'early-payment',
+        title: 'پرداخت زودهنگام',
+        description: 'تخفیف بابت تسویه زودتر از موعد',
+        fields: [
+          { key: 'discountEarlyTarget', label: 'مبنای تخفیف', type: 'select', options: ['درصد', 'مبلغ'] },
+          { key: 'discountEarlyValue', label: 'مقدار تخفیف', type: 'number', placeholder: '5' },
+          { key: 'discountEarlyDeadline', label: 'آخرین مهلت استفاده', type: 'text', placeholder: 'تا 10 روز قبل از سررسید' },
+          { key: 'discountEarlyKeepOnDelay', label: 'حفظ تخفیف در تاخیر جزئی', type: 'switch' },
+          { key: 'discountScope', label: 'دامنه اعمال تخفیف', type: 'select', options: ['whole', 'itemized'] },
+          { key: 'discountEntryId', label: 'آیتم تخفیف', type: 'select', options: ['all-dues', 'installments', 'unit-handover', 'advance-payment', 'document-handover', 'adjustment-payment', 'misc-costs', 'interest', 'early-payment'] },
+          { key: 'discountValueMode', label: 'نوع تخفیف', type: 'select', options: ['percent', 'amount'] },
+          { key: 'discountMinValue', label: 'حداقل تخفیف', type: 'number', placeholder: '0' },
+          { key: 'discountMaxValue', label: 'حداکثر تخفیف', type: 'number', placeholder: '0' },
+          { key: 'discountConditionConfigured', label: 'شرط تخفیف', type: 'switch' },
+          { key: 'discountManagerApproval', label: 'تایید مدیر', type: 'switch' },
+          { key: 'discountApprovalThreshold', label: 'آستانه تایید مدیر', type: 'number', placeholder: '0' },
+        ],
+      },
+      {
+        id: 'on-contract',
+        title: 'روی قرارداد',
+        description: 'تخفیف در زمان ثبت یا اصلاح قرارداد',
+        fields: [
+          { key: 'discountContractTarget', label: 'نوع تخفیف', type: 'select', options: ['درصد', 'مبلغ'] },
+          { key: 'discountContractValue', label: 'مقدار تخفیف', type: 'number', placeholder: '100000000' },
+          { key: 'discountContractSettlement', label: 'زمان تسویه در ابطال', type: 'select', options: ['همان روز', 'اولین قسط', 'آخرین قسط'] },
+          { key: 'discountContractNeedApproval', label: 'نیاز به تایید مدیر فروش', type: 'switch' },
+        ],
+      },
+    ],
+  },
+  penalty: {
+    id: 'penalty',
+    title: 'تنظیمات جریمه',
+    description: 'فعال‌سازی جریمه‌ها و تعریف چارچوب محاسبه هر مورد مطابق قرارداد.',
+    activationTitle: 'تنظیمات جریمه‌ها',
+    activationDescription: 'در صورت فعال بودن، چارچوب پیشنهادی محاسبه جریمه تعریف می‌شود و در زمان ثبت یا اجرای قرارداد، در صورت وقوع تأخیر محاسبه و هشدار نمایش داده می‌شود.',
+    tabs: [
+      {
+        id: 'fixed',
+        title: 'مبلغ ثابت برای هر روز/ماه',
+        description: 'در این روش برای هر روز، ماه یا سال تاخیر مبلغ ثابتی به‌عنوان جریمه محاسبه می‌شود.',
+        fields: [
+          { key: 'penaltyFixedPeriod', label: 'دوره محاسبه جریمه', type: 'select', options: ['روزانه', 'ماهانه', 'سالانه'] },
+          { key: 'penaltyFixedAmount', label: 'مبلغ ثابت جریمه', type: 'number', placeholder: '100000' },
+          { key: 'penaltyFixedGraceDays', label: 'مهلت تنفس (بدون جریمه)', type: 'number', placeholder: '2' },
+          { key: 'penaltyFixedExtraFeeEnabled', label: 'هزینه دیرکرد', type: 'switch' },
+          { key: 'penaltyFixedExtraFeeType', label: 'نوع هزینه دیرکرد', type: 'select', options: ['درصد', 'مبلغ ثابت'] },
+          { key: 'penaltyFixedExtraFeeAmount', label: 'جریمه بالاسری', type: 'number', placeholder: '0.5' },
+          { key: 'penaltyFixedExtraFeeRound', label: 'قاعده گرد کردن هزینه دیرکرد', type: 'select', options: ['0.0', '0.00', 'کسر 100', 'کسر 1000'] },
+        ],
+      },
+      {
+        id: 'debt-percent',
+        title: 'درصدی از مانده بدهی معوق',
+        description: 'در این روش مبلغ جریمه بر اساس درصدی از مانده بدهی خریدار محاسبه می‌شود.',
+        fields: [
+          { key: 'penaltyDebtPeriod', label: 'دوره محاسبه', type: 'select', options: ['روزانه', 'ماهانه', 'سالانه'] },
+          { key: 'penaltyDebtPercent', label: 'درصد جریمه', type: 'number', placeholder: '25.2' },
+          { key: 'penaltyDebtBankPercent', label: 'درصد سود بانکی', type: 'number', placeholder: '0' },
+          { key: 'penaltyDebtGraceDays', label: 'مهلت تنفس (بدون جریمه)', type: 'number', placeholder: '2' },
+          { key: 'penaltyDebtRound', label: 'قاعده گرد کردن مبلغ جریمه', type: 'select', options: ['0.0', '0.00', 'کسر 100', 'کسر 1000'] },
+          { key: 'penaltyDebtExtraFeeEnabled', label: 'هزینه دیرکرد', type: 'switch' },
+          { key: 'penaltyDebtExtraFeeType', label: 'نوع هزینه دیرکرد', type: 'select', options: ['درصد', 'مبلغ ثابت'] },
+          { key: 'penaltyDebtExtraFeeAmount', label: 'جریمه بالاسری', type: 'number', placeholder: '0.5' },
+          { key: 'penaltyDebtExtraFeeRound', label: 'قاعده گرد کردن هزینه دیرکرد', type: 'select', options: ['0.0', '0.00', 'کسر 100', 'کسر 1000'] },
+        ],
+      },
+      {
+        id: 'contract-percent',
+        title: 'درصدی از کل قرارداد',
+        description: 'در این روش مبلغ جریمه بر اساس درصدی از مبلغ کل قرارداد محاسبه می‌شود.',
+        fields: [
+          { key: 'penaltyContractPeriod', label: 'دوره محاسبه', type: 'select', options: ['روزانه', 'ماهانه', 'سالانه'] },
+          { key: 'penaltyContractPercent', label: 'درصد جریمه', type: 'number', placeholder: '0.5' },
+          { key: 'penaltyContractBankPercent', label: 'درصد سود بانکی', type: 'number', placeholder: '0' },
+          { key: 'penaltyContractGraceDays', label: 'مهلت تنفس (بدون جریمه)', type: 'number', placeholder: '2' },
+          { key: 'penaltyContractRound', label: 'قاعده گرد کردن مبلغ جریمه', type: 'select', options: ['0.0', '0.00', 'کسر 100', 'کسر 1000'] },
+          { key: 'penaltyContractExtraFeeEnabled', label: 'هزینه دیرکرد', type: 'switch' },
+          { key: 'penaltyContractExtraFeeType', label: 'نوع هزینه دیرکرد', type: 'select', options: ['درصد', 'مبلغ ثابت'] },
+          { key: 'penaltyContractExtraFeeAmount', label: 'جریمه بالاسری', type: 'number', placeholder: '0.5' },
+          { key: 'penaltyContractExtraFeeRound', label: 'قاعده گرد کردن هزینه دیرکرد', type: 'select', options: ['0.0', '0.00', 'کسر 100', 'کسر 1000'] },
+        ],
+      },
+      {
+        id: 'progressive',
+        title: 'جریمه تصاعدی با روزهای تاخیر',
+        description: 'در این روش با افزایش مدت تاخیر، نرخ جریمه بر اساس بازه‌های زمانی افزایش پیدا می‌کند.',
+        fields: [
+          { key: 'penaltyProgressivePeriod', label: 'دوره محاسبه جریمه', type: 'select', options: ['روزانه', 'ماهانه', 'سالانه'] },
+          { key: 'penaltyProgressiveBankPercent', label: 'درصد سود بانکی', type: 'number', placeholder: '0' },
+          { key: 'penaltyProgressiveGraceDays', label: 'مهلت تنفس (بدون جریمه)', type: 'number', placeholder: '2' },
+          { key: 'penaltyProgressiveRound', label: 'قاعده گرد کردن مبلغ جریمه', type: 'select', options: ['0.0', '0.00', 'کسر 100', 'کسر 1000'] },
+          { key: 'penaltyProgressiveRow1From', label: 'از روز ۱', type: 'number', placeholder: '1' },
+          { key: 'penaltyProgressiveRow1To', label: 'تا روز ۱', type: 'number', placeholder: '4' },
+          { key: 'penaltyProgressiveRow1Rate', label: 'نرخ جریمه ۱', type: 'number', placeholder: '0.5' },
+          { key: 'penaltyProgressiveRow2From', label: 'از روز ۲', type: 'number', placeholder: '5' },
+          { key: 'penaltyProgressiveRow2To', label: 'تا روز ۲', type: 'number', placeholder: '6' },
+          { key: 'penaltyProgressiveRow2Rate', label: 'نرخ جریمه ۲', type: 'number', placeholder: '0.5' },
+          { key: 'penaltyProgressiveRow3From', label: 'از روز ۳', type: 'number', placeholder: '7' },
+          { key: 'penaltyProgressiveRow3To', label: 'تا روز ۳', type: 'number', placeholder: '45' },
+          { key: 'penaltyProgressiveRow3Rate', label: 'نرخ جریمه ۳', type: 'number', placeholder: '3.3' },
+          { key: 'penaltyProgressiveRow4From', label: 'از روز ۴', type: 'number', placeholder: '' },
+          { key: 'penaltyProgressiveRow4To', label: 'تا روز ۴', type: 'number', placeholder: '' },
+          { key: 'penaltyProgressiveRow4Rate', label: 'نرخ جریمه ۴', type: 'number', placeholder: '' },
+          { key: 'penaltyProgressiveExtraFeeEnabled', label: 'هزینه دیرکرد', type: 'switch' },
+          { key: 'penaltyProgressiveExtraFeeType', label: 'نوع هزینه دیرکرد', type: 'select', options: ['درصد', 'مبلغ ثابت'] },
+          { key: 'penaltyProgressiveExtraFeeAmount', label: 'جریمه بالاسری', type: 'number', placeholder: '0.5' },
+          { key: 'penaltyProgressiveExtraFeeRound', label: 'قاعده گرد کردن هزینه دیرکرد', type: 'select', options: ['0.0', '0.00', 'کسر 100', 'کسر 1000'] },
+        ],
+      },
+    ],
+  },
+  forgiveness: {
+    id: 'forgiveness',
+    title: 'تنظیمات بخشودگی',
+    description: 'فعال‌سازی بخشودگی جرایم و مدیریت بخشودگی روی کل قرارداد یا آیتم‌های موردی.',
+    activationTitle: 'فعال‌سازی بخش بخشودگی',
+    activationDescription: 'در این بخش می‌توانید وضعیت فعال‌سازی بخشودگی جرایم را مدیریت کنید.',
+    tabs: [
+      {
+        id: 'whole-contract',
+        title: 'بخشودگی روی کل قرارداد',
+        description: 'تعریف بخشودگی جرایم برای کل قرارداد',
+        fields: [
+          { key: 'forgiveMaxDelayCount', label: 'حداکثر تعداد دفعات تاخیر در یک قرارداد', type: 'number', placeholder: '3' },
+          { key: 'forgiveScope', label: 'دامنه اعمال بخشودگی', type: 'select', options: ['whole', 'itemized'] },
+          { key: 'forgiveEntryId', label: 'آیتم بخشودگی', type: 'select', options: ['whole-contract', 'unit-handover-delay', 'installment-delay', 'document-delay', 'advance-payment-delay', 'misc-cost-delay', 'adjustment-delay', 'penalty-payment-delay', 'bank-loan-case-delay', 'lawsuit-cost', 'document-transfer-followup'] },
+          { key: 'forgiveValueMode', label: 'نوع مقدار بخشودگی', type: 'select', options: ['amount', 'percent'] },
+          { key: 'forgiveMinValue', label: 'حداقل جریمه قابل بخشش', type: 'number', placeholder: '1000000' },
+          { key: 'forgiveMaxValue', label: 'حداکثر جریمه قابل بخشش', type: 'number', placeholder: '10000000' },
+          { key: 'forgiveOutsideBuyerControl', label: 'تاخیر خارج از اختیار خریدار', type: 'switch' },
+          { key: 'forgiveManagerApproval', label: 'تایید مدیر برای بخشودگی‌های بزرگ', type: 'switch' },
+        ],
+      },
+      {
+        id: 'itemized',
+        title: 'بخشودگی موردی قرارداد',
+        description: 'تعریف بخشودگی برای آیتم‌های مشخص قرارداد',
+        fields: [
+          { key: 'forgiveAllowed', label: 'مجاز بودن بخشودگی', type: 'switch' },
+        ],
+      },
+    ],
+  },
+  interest: {
+    id: 'interest',
+    title: 'سود دریافتی',
+    description: 'تنظیم محاسبه سود قرارداد بر اساس سود ساده، مرکب یا سود بر مانده بدهی.',
+    activationTitle: 'آیا دریافت سود در قرارداد فعال باشد یا خیر',
+    activationDescription: 'اگر این گزینه فعال باشد، مبلغ اقساط بر اساس یکی از روش‌های محاسبه سود (ساده، مرکب یا بر مانده بدهی) محاسبه می‌شود.',
+    detailsLabel: 'جزئیات تنظیمات سود',
+    tabs: [
+      {
+        id: 'simple-interest',
+        title: 'سود ساده',
+        description: 'در این روش سود به صورت درصد ثابت روی مبلغ قرارداد محاسبه می‌شود و در طول دوره تغییر نمی‌کند.',
+        fields: [
+          { key: 'interestApr', label: 'نرخ سود سالیانه (APR)', type: 'number', placeholder: '44' },
+          { key: 'interestPenaltyEnabled', label: 'اعمال جریمه بر مبلغ سود معوق', type: 'switch' },
+          { key: 'interestRoundRule', label: 'قاعده گرد کردن مبلغ سود', type: 'select', options: ['0.0', '0.00', 'کسر 100', 'کسر 1000'] },
+          { key: 'interestReducingPrincipal', label: 'سهم اصل ثابت سود کاهشی', type: 'switch' },
+          { key: 'interestTogetherPayment', label: 'پرداخت همزمان اصل و سود', type: 'switch' },
+          { key: 'interestPrincipalAtEnd', label: 'پرداخت فقط سود تسویه اصل در پایان', type: 'switch' },
+        ],
+      },
+      {
+        id: 'compound-interest',
+        title: 'سود مرکب',
+        description: 'در این روش سود به همراه سود قبلی محاسبه می‌شود بنابراین سود با گذشت زمان افزایش پیدا می‌کند.',
+        fields: [
+          { key: 'interestAprCompound', label: 'نرخ سود سالیانه (APR)', type: 'number', placeholder: '55' },
+          { key: 'interestCompoundPeriod', label: 'انتخاب دوره محاسبه سود', type: 'select', options: ['روزانه', 'ماهانه', 'سه‌ماهه', 'سالانه'] },
+          { key: 'interestPenaltyEnabledCompound', label: 'اعمال جریمه بر مبلغ سود معوق', type: 'switch' },
+          { key: 'interestRoundRuleCompound', label: 'قاعده گرد کردن مبلغ سود', type: 'select', options: ['0.0', '0.00', 'کسر 100', 'کسر 1000'] },
+          { key: 'interestReducingPrincipalCompound', label: 'سهم اصل ثابت سود کاهشی', type: 'switch' },
+          { key: 'interestTogetherPaymentCompound', label: 'پرداخت همزمان اصل و سود', type: 'switch' },
+          { key: 'interestPrincipalAtEndCompound', label: 'پرداخت فقط سود تسویه اصل در پایان', type: 'switch' },
+        ],
+      },
+      {
+        id: 'remaining-debt-interest',
+        title: 'سود بر مانده بدهی',
+        description: 'در این روش سود در هر دوره بر اساس مانده بدهی باقی‌مانده محاسبه می‌شود.',
+        fields: [
+          { key: 'interestAprRemaining', label: 'نرخ سود سالیانه (APR)', type: 'number', placeholder: '55' },
+          { key: 'interestPenaltyEnabledRemaining', label: 'اعمال جریمه بر مبلغ سود معوق', type: 'switch' },
+          { key: 'interestRoundRuleRemaining', label: 'قاعده گرد کردن مبلغ سود', type: 'select', options: ['0.0', '0.00', 'کسر 100', 'کسر 1000'] },
+          { key: 'interestReducingPrincipalRemaining', label: 'سهم اصل ثابت سود کاهشی', type: 'switch' },
+          { key: 'interestTogetherPaymentRemaining', label: 'پرداخت همزمان اصل و سود', type: 'switch' },
+          { key: 'interestPrincipalAtEndRemaining', label: 'پرداخت فقط سود تسویه اصل در پایان', type: 'switch' },
+        ],
+      },
+    ],
+  },
+};
+
+export function createInitialRuleState(ruleId: ContractRuleId): ContractRuleState {
+  const rule = RULE_CONFIGS[ruleId];
+  const values: Record<string, string | boolean> = {};
+
+  rule.tabs.forEach((tab) => {
+    tab.fields.forEach((field) => {
+      if (field.type === 'switch') {
+        values[field.key] = false;
+      } else if (field.type === 'select') {
+        values[field.key] = field.options[0] ?? '';
+      } else {
+        values[field.key] = '';
+      }
+    });
+  });
+
+  return {
+    active:
+      ruleId === 'prepayment' ||
+      ruleId === 'installments' ||
+      ruleId === 'additional-costs' ||
+      ruleId === 'adjustment' ||
+      ruleId === 'discount' ||
+      ruleId === 'penalty'
+        ? false
+        : true,
+    activeTab: rule.tabs[0]?.id ?? '',
+    activeChip: rule.chips?.[0],
+    values,
+  };
+}
+
+export function createInitialLoanSettingsState(): LoanSettingsState {
+  return {
+    enabled: true,
+    loanAmountMode: 'fixed',
+    loanTiming: 'before-sign',
+    repaymentTiming: 'next-month',
+    fixedAmount: '120000000',
+    percentAmount: '15',
+    selectedBank: 'ملت',
+  };
+}
+
+export function normalizeRuleState(ruleId: ContractRuleId, payload: unknown): ContractRuleState {
+  const initial = createInitialRuleState(ruleId);
+  const rule = RULE_CONFIGS[ruleId];
+  const input = payload && typeof payload === 'object' ? (payload as Record<string, unknown>) : {};
+  const valuesInput = input.values && typeof input.values === 'object' ? (input.values as Record<string, unknown>) : {};
+  const values = { ...initial.values };
+
+  rule.tabs.forEach((tab) => {
+    tab.fields.forEach((field) => {
+      const rawValue = valuesInput[field.key];
+      if (field.type === 'switch') {
+        values[field.key] = Boolean(rawValue);
+      } else if (field.type === 'select') {
+        values[field.key] = typeof rawValue === 'string' && field.options.includes(rawValue) ? rawValue : field.options[0] ?? '';
+      } else {
+        values[field.key] = typeof rawValue === 'string' ? rawValue : '';
+      }
+    });
+  });
+
+  const activeTab = typeof input.activeTab === 'string' && rule.tabs.some((tab) => tab.id === input.activeTab) ? input.activeTab : initial.activeTab;
+  const activeChip =
+    rule.chips && typeof input.activeChip === 'string' && rule.chips.includes(input.activeChip)
+      ? input.activeChip
+      : initial.activeChip;
+
+  return {
+    active: typeof input.active === 'boolean' ? input.active : initial.active,
+    activeTab,
+    activeChip,
+    values,
+  };
+}
+
+export function normalizeLoanSettingsState(payload: unknown): LoanSettingsState {
+  const initial = createInitialLoanSettingsState();
+  const input = payload && typeof payload === 'object' ? (payload as Record<string, unknown>) : {};
+
+  return {
+    enabled: typeof input.enabled === 'boolean' ? input.enabled : initial.enabled,
+    loanAmountMode: input.loanAmountMode === 'percent' ? 'percent' : 'fixed',
+    loanTiming:
+      input.loanTiming === 'after-sign' || input.loanTiming === 'after-first-installment'
+        ? input.loanTiming
+        : 'before-sign',
+    repaymentTiming:
+      input.repaymentTiming === 'after-two-months' || input.repaymentTiming === 'custom'
+        ? input.repaymentTiming
+        : 'next-month',
+    fixedAmount: typeof input.fixedAmount === 'string' ? input.fixedAmount : initial.fixedAmount,
+    percentAmount: typeof input.percentAmount === 'string' ? input.percentAmount : initial.percentAmount,
+    selectedBank:
+      typeof input.selectedBank === 'string' && BANKS.includes(input.selectedBank as (typeof BANKS)[number])
+        ? input.selectedBank
+        : initial.selectedBank,
+  };
+}

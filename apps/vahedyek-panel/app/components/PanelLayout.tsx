@@ -107,6 +107,86 @@ function buildDraftTemplateBreadcrumb(pathname: string): Crumb[] {
   return trail;
 }
 
+function buildBusinessSettingsBreadcrumb(pathname: string): Crumb[] {
+  const trail: Crumb[] = [{ label: 'تنظیمات کسب و کار', href: '/business-settings' }];
+
+  if (pathname.startsWith('/business-settings/profile')) {
+    trail.push({ label: 'پروفایل کسب‌وکار' });
+  }
+
+  if (pathname.startsWith('/business-settings/contract-rules')) {
+    trail.push({
+      label: 'تنظیمات مالی و قواعد قراردادی',
+      href: pathname === '/business-settings/contract-rules' ? undefined : '/business-settings/contract-rules',
+    });
+
+    if (pathname.startsWith('/business-settings/contract-rules/loan-settings')) {
+      trail.push({ label: 'تنظیمات وام' });
+    } else {
+      const ruleSegment = pathname.split('/')[3];
+      const ruleTitleMap: Record<string, string> = {
+        installments: 'اقساط',
+        prepayment: 'پیش پرداخت',
+        adjustment: 'تنظیمات تعدیل',
+        'additional-costs': 'هزینه های جانبی',
+        discount: 'تنظیمات تخفیف',
+        penalty: 'تنظیمات جریمه',
+        forgiveness: 'تنظیمات بخشودگی',
+        interest: 'سود دریافتی',
+      };
+
+      if (ruleSegment && ruleTitleMap[ruleSegment]) {
+        trail.push({ label: ruleTitleMap[ruleSegment] });
+      }
+    }
+  }
+
+  if (pathname.startsWith('/business-settings/project')) {
+    trail.push({
+      label: 'تعریف پروژه / مجتمع',
+      href: pathname.startsWith('/business-settings/project/') ? '/business-settings/project' : undefined,
+    });
+  }
+
+  if (pathname.startsWith('/business-settings/project/blocks')) {
+    trail.push({
+      label: 'فهرست بلوک',
+      href: pathname === '/business-settings/project/blocks' ? undefined : '/business-settings/project/blocks',
+    });
+  }
+
+  if (pathname.startsWith('/business-settings/project/blocks/new')) {
+    trail.push({ label: 'ثبت بلوک' });
+  }
+
+  if (pathname.includes('/business-settings/project/blocks/') && pathname.endsWith('/edit')) {
+    trail.push({ label: 'ویرایش بلوک' });
+  }
+
+  if (
+    pathname.includes('/business-settings/project/blocks/') &&
+    !pathname.endsWith('/edit') &&
+    !pathname.endsWith('/new') &&
+    !pathname.includes('/floors/')
+  ) {
+    trail.push({ label: 'جزئیات بلوک' });
+  }
+
+  if (pathname.includes('/business-settings/project/blocks/') && pathname.includes('/floors/')) {
+    trail.push({ label: 'جزئیات بلوک', href: pathname.split('/floors/')[0] });
+    if (pathname.endsWith('/floors/new')) {
+      trail.push({ label: 'ثبت طبقه' });
+    } else if (pathname.endsWith('/units/new')) {
+      trail.push({ label: 'جزئیات طبقه', href: pathname.split('/units/new')[0] });
+      trail.push({ label: 'ثبت واحد' });
+    } else {
+      trail.push({ label: 'جزئیات طبقه' });
+    }
+  }
+
+  return trail;
+}
+
 export default function PanelLayout({ children }: PanelLayoutProps) {
   const pathname = usePathname();
   const showOrbitMenu = pathname === '/';
@@ -142,53 +222,9 @@ export default function PanelLayout({ children }: PanelLayoutProps) {
     }
 
     if (pathname.startsWith('/business-settings')) {
-      const trail: Crumb[] = [{ label: 'تنظیمات کسب و کار', href: '/business-settings' }];
-
-      if (pathname.startsWith('/business-settings/profile')) {
-        trail.push({ label: 'پروفایل کسب‌وکار' });
-      }
-
-      if (pathname.startsWith('/business-settings/project')) {
-        trail.push({
-          label: 'تعریف پروژه / مجتمع',
-          href: pathname.startsWith('/business-settings/project/') ? '/business-settings/project' : undefined,
-        });
-      }
-
-      if (pathname.startsWith('/business-settings/project/blocks')) {
-        trail.push({
-          label: 'فهرست بلوک',
-          href: pathname === '/business-settings/project/blocks' ? undefined : '/business-settings/project/blocks',
-        });
-      }
-
-      if (pathname.startsWith('/business-settings/project/blocks/new')) {
-        trail.push({ label: 'ثبت بلوک' });
-      }
-
-      if (pathname.includes('/business-settings/project/blocks/') && pathname.endsWith('/edit')) {
-        trail.push({ label: 'ویرایش بلوک' });
-      }
-
-      if (pathname.includes('/business-settings/project/blocks/') && !pathname.endsWith('/edit') && !pathname.endsWith('/new') && !pathname.includes('/floors/')) {
-        trail.push({ label: 'جزئیات بلوک' });
-      }
-
-      if (pathname.includes('/business-settings/project/blocks/') && pathname.includes('/floors/')) {
-        trail.push({ label: 'جزئیات بلوک', href: pathname.split('/floors/')[0] });
-        if (pathname.endsWith('/floors/new')) {
-          trail.push({ label: 'ثبت طبقه' });
-        } else if (pathname.endsWith('/units/new')) {
-          trail.push({ label: 'جزئیات طبقه', href: pathname.split('/units/new')[0] });
-          trail.push({ label: 'ثبت واحد' });
-        } else {
-          trail.push({ label: 'جزئیات طبقه' });
-        }
-      }
-
       return {
         activeItem: 'business',
-        trail,
+        trail: buildBusinessSettingsBreadcrumb(pathname),
       };
     }
 
