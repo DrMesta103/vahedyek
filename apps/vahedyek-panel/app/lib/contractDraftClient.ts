@@ -1,5 +1,7 @@
 'use client';
 
+import type { ContractStatus } from '../types/contract';
+
 const ACTIVE_DRAFT_KEY = 'active-contract-draft-id';
 const FRONTEND_STEP_DRAFT_PREFIX = 'contract-flow:frontend-step-draft';
 export type ReferenceUnit = {
@@ -26,6 +28,11 @@ export type ReferenceDataResponse = {
       legal: Array<{ id: string; name: string }>;
     };
   };
+};
+
+export type ContractsListResponse = {
+  items: any[];
+  counts: Record<ContractStatus, number>;
 };
 
 async function readJson<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
@@ -132,6 +139,6 @@ export async function createDirectoryPerson(payload: {
   );
 }
 
-export async function getContractsList() {
-  return readJson<any[]>('/api/contracts');
+export async function getContractsList(status: ContractStatus) {
+  return readJson<ContractsListResponse>(`/api/contracts?status=${status}`);
 }

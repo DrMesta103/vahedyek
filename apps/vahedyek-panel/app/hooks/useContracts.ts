@@ -18,8 +18,9 @@ export interface UseContractsReturn {
   filters: FilterState;
   searchQuery: string;
   activeTab: ContractStatus;
-  finalizedCount: number;
   draftCount: number;
+  pendingApprovalCount: number;
+  completedCount: number;
   loading: boolean;
   setActiveTab: (tab: ContractStatus) => void;
   setSearchQuery: (q: string) => void;
@@ -34,35 +35,33 @@ export interface UseContractsReturn {
 export function useContracts(): UseContractsReturn {
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<ContractStatus>('finalized');
+  const [activeTab, setActiveTab] = useState<ContractStatus>('draft');
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [filters, setFilters] = useState<FilterState>(EMPTY_FILTERS);
+  const [counts, setCounts] = useState<Record<ContractStatus, number>>({
+    draft: 0,
+    pending_approval: 0,
+    completed: 0,
+  });
 
   const refresh = useCallback(async () => {
     setLoading(true);
     try {
-      const result = await getContractsList();
-      setContracts(result as Contract[]);
+      const result = await getContractsList(activeTab);
+      setContracts(result.items as Contract[]);
+      setCounts(result.counts);
     } catch {
       setContracts([]);
+      setCounts({ draft: 0, pending_approval: 0, completed: 0 });
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [activeTab]);
 
   useEffect(() => {
     void refresh();
   }, [refresh]);
-
-  useEffect(() => {
-    const hasFinalized = contracts.some((contract) => contract.status === 'finalized');
-    const hasDraft = contracts.some((contract) => contract.status === 'draft');
-
-    if (!hasFinalized && hasDraft && activeTab === 'finalized') {
-      setActiveTab('draft');
-    }
-  }, [contracts, activeTab]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -75,12 +74,7 @@ export function useContracts(): UseContractsReturn {
     setFilters(EMPTY_FILTERS);
   }, []);
 
-  const finalizedCount = contracts.filter((contract) => contract.status === 'finalized').length;
-  const draftCount = contracts.filter((contract) => contract.status === 'draft').length;
-
   const filteredContracts = contracts.filter((contract) => {
-    if (contract.status !== activeTab) return false;
-
     if (debouncedSearch.trim()) {
       const query = debouncedSearch.trim().toLowerCase();
       const contractNumber = contract.data.subject.contractNumber?.toLowerCase() ?? '';
@@ -126,8 +120,9 @@ export function useContracts(): UseContractsReturn {
     filters,
     searchQuery,
     activeTab,
-    finalizedCount,
-    draftCount,
+    draftCount: counts.draft,
+    pendingApprovalCount: counts.pending_approval,
+    completedCount: counts.completed,
     loading,
     setActiveTab,
     setSearchQuery,

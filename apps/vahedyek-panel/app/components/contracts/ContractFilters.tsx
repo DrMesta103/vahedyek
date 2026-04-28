@@ -1,7 +1,6 @@
 'use client';
 
-import type { FilterState, Block, Unit, ContractType } from '../../types/contract';
-import { formControlMutedDisabledStyle, formControlStyle, formMetaLabelStyle, outlineButtonStyle } from '../ui/formStyles';
+import type { Block, ContractType, FilterState, Unit } from '../../types/contract';
 
 interface ContractFiltersProps {
   filters: FilterState;
@@ -12,93 +11,102 @@ interface ContractFiltersProps {
 }
 
 export default function ContractFilters({ filters, blocks, units, onFilterChange, onClearFilters }: ContractFiltersProps) {
-  const filteredUnits = filters.blockId ? units.filter((u) => u.blockId === filters.blockId) : [];
+  const filteredUnits = filters.blockId ? units.filter((unit) => unit.blockId === filters.blockId) : [];
 
   const handleChange = (key: keyof FilterState, value: string | null) => {
     const updated = { ...filters, [key]: value || null };
-    if (key === 'blockId') updated.unitId = null;
+
+    if (key === 'blockId') {
+      updated.unitId = null;
+    }
+
     onFilterChange(updated);
   };
 
-  const hasActiveFilters = filters.contractType || filters.dateFrom || filters.dateTo || filters.blockId || filters.unitId;
+  const hasActiveFilters = Boolean(filters.contractType || filters.dateFrom || filters.dateTo || filters.blockId || filters.unitId);
 
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'flex-end' }}>
-      <div style={{ minWidth: '130px' }}>
-        <label style={formMetaLabelStyle}>نوع قرارداد</label>
-        <select value={filters.contractType ?? ''} onChange={(e) => handleChange('contractType', e.target.value as ContractType)} style={formControlStyle}>
-          <option value="">همه</option>
-          <option value="pre-sale">پیش‌فروش</option>
-        </select>
-      </div>
+    <section className="contracts-filter-sidebar">
+      <div className="contracts-filter-panel">
+        <div className="contracts-filter-panel-head">
+        <div>
+          <p>فیلترهای فهرست قرارداد</p>
+          <h2>جستجو و مرتب‌سازی</h2>
+        </div>
 
-      <div style={{ minWidth: '130px' }}>
-        <label style={formMetaLabelStyle}>از تاریخ</label>
-        <input
-          type="text"
-          value={filters.dateFrom ?? ''}
-          onChange={(e) => handleChange('dateFrom', e.target.value)}
-          placeholder="۱۴۰۰/۰۱/۰۱"
-          style={formControlStyle}
-          onFocus={(e) => (e.target.style.borderColor = 'var(--dark-teal)')}
-          onBlur={(e) => (e.target.style.borderColor = '#d1d5db')}
-        />
-      </div>
+        {hasActiveFilters ? (
+          <button type="button" className="contracts-filter-reset" onClick={onClearFilters}>
+            پاک کردن
+          </button>
+        ) : null}
+        </div>
 
-      <div style={{ minWidth: '130px' }}>
-        <label style={formMetaLabelStyle}>تا تاریخ</label>
-        <input
-          type="text"
-          value={filters.dateTo ?? ''}
-          onChange={(e) => handleChange('dateTo', e.target.value)}
-          placeholder="۱۴۰۳/۱۲/۲۹"
-          style={formControlStyle}
-          onFocus={(e) => (e.target.style.borderColor = 'var(--dark-teal)')}
-          onBlur={(e) => (e.target.style.borderColor = '#d1d5db')}
-        />
-      </div>
+        <div className="contracts-filter-body">
+          <div className="contracts-filter-stack">
+            <div className="contracts-filter-section">
+              <label className="contracts-filter-label">نوع قرارداد</label>
+              <select className="app-select contracts-filter-control" value={filters.contractType ?? ''} onChange={(e) => handleChange('contractType', e.target.value as ContractType)}>
+                <option value="">همه</option>
+                <option value="sale">فروش</option>
+                <option value="pre-sale">پیش‌فروش</option>
+              </select>
+            </div>
 
-      <div style={{ minWidth: '120px' }}>
-        <label style={formMetaLabelStyle}>بلوک</label>
-        <select value={filters.blockId ?? ''} onChange={(e) => handleChange('blockId', e.target.value)} style={formControlStyle}>
-          <option value="">همه بلوک‌ها</option>
-          {blocks.map((b) => (
-            <option key={b.id} value={b.id}>
-              {b.name}
-            </option>
-          ))}
-        </select>
-      </div>
+            <div className="contracts-filter-section">
+              <label className="contracts-filter-label">بازه تاریخ قرارداد</label>
+              <div className="contracts-filter-date-grid">
+                <input
+                  type="text"
+                  value={filters.dateFrom ?? ''}
+                  onChange={(e) => handleChange('dateFrom', e.target.value)}
+                  placeholder="از تاریخ"
+                  className="app-control contracts-filter-control"
+                />
+                <input
+                  type="text"
+                  value={filters.dateTo ?? ''}
+                  onChange={(e) => handleChange('dateTo', e.target.value)}
+                  placeholder="تا تاریخ"
+                  className="app-control contracts-filter-control"
+                />
+              </div>
+            </div>
 
-      <div style={{ minWidth: '120px' }}>
-        <label style={formMetaLabelStyle}>واحد</label>
-        <select
-          value={filters.unitId ?? ''}
-          onChange={(e) => handleChange('unitId', e.target.value)}
-          disabled={!filters.blockId}
-          style={!filters.blockId ? { ...formControlStyle, ...formControlMutedDisabledStyle } : formControlStyle}
-        >
-          <option value="">همه واحدها</option>
-          {filteredUnits.map((u) => (
-            <option key={u.id} value={u.id}>
-              {u.floorName ? `${u.floorName} - ${u.name}` : u.name}
-            </option>
-          ))}
-        </select>
-      </div>
+            <div className="contracts-filter-section">
+              <label className="contracts-filter-label">نام بلوک</label>
+              <select className="app-select contracts-filter-control" value={filters.blockId ?? ''} onChange={(e) => handleChange('blockId', e.target.value)}>
+                <option value="">همه بلوک‌ها</option>
+                {blocks.map((block) => (
+                  <option key={block.id} value={block.id}>
+                    {block.name}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-      {hasActiveFilters && (
-        <button
-          onClick={onClearFilters}
-          style={{
-            ...outlineButtonStyle,
-            borderColor: '#ef4444',
-            color: '#ef4444',
-          }}
-        >
-          پاک کردن فیلترها
-        </button>
-      )}
-    </div>
+            <div className="contracts-filter-section">
+              <label className="contracts-filter-label">شماره واحد</label>
+              <select
+                className="app-select contracts-filter-control"
+                value={filters.unitId ?? ''}
+                onChange={(e) => handleChange('unitId', e.target.value)}
+                disabled={!filters.blockId}
+              >
+                <option value="">همه واحدها</option>
+                {filteredUnits.map((unit) => (
+                  <option key={unit.id} value={unit.id}>
+                    {unit.floorName ? `${unit.floorName} - ${unit.name}` : unit.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="contracts-filter-note">
+              <span>فیلترها روی قراردادهای تب فعال اعمال می‌شوند.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }

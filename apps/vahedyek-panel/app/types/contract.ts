@@ -1,4 +1,4 @@
-export type ContractStatus = 'finalized' | 'draft';
+export type ContractStatus = 'draft' | 'pending_approval' | 'completed';
 export type ContractType = 'sale' | 'pre-sale';
 export type ContractorType = 'self' | 'employee' | 'former-employee';
 export type ShareMode = 'percent' | 'dang';
