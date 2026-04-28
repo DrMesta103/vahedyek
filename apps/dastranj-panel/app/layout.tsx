@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import { LocatorRuntime } from './components/LocatorRuntime';
 
 export const metadata: Metadata = {
   title: 'دسترنج',
@@ -9,7 +10,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="fa" dir="rtl">
-      <body>{children}</body>
+      <body>
+        <LocatorRuntime />
+        {children}
+      </body>
     </html>
   );
 }

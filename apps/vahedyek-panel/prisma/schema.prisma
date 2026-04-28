@@ -68,6 +68,7 @@ model Tenant {
   directory     DirectoryPerson[]
   roles         TenantRole[]
   representatives DirectoryRepresentative[]
+  contractRuleSettings TenantContractRuleSettings?
 }
 
 model AppUser {
@@ -440,4 +441,16 @@ model DirectoryRepresentative {
   @@index([tenantId, principalType])
   @@index([principalId])
   @@index([userId])
+}
+
+model TenantContractRuleSettings {
+  id           String   @id @default(cuid())
+  tenantId     String   @unique
+  rulesPayload Json     @default("{}")
+  loanPayload  Json     @default("{}")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
 }
