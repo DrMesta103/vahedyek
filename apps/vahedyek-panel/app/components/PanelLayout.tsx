@@ -339,7 +339,11 @@ export default function PanelLayout({ children }: PanelLayoutProps) {
                   </div>
                 </div>
               ) : null}
-              <div className={`content-body${isContractsNewHub || isContractsListPage ? ' content-body-wide' : ''}${isContractsListPage ? ' contracts-content-body' : ''}`}>{children}</div>
+              {isContractsListPage ? (
+                children
+              ) : (
+                <div className={`content-body${isContractsNewHub ? ' content-body-wide' : ''}`}>{children}</div>
+              )}
             </div>
           </div>
         </main>

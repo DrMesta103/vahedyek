@@ -2,64 +2,19 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
-import { ChevronLeft, Percent, WalletCards } from 'lucide-react';
+import { ChevronLeft, Landmark } from 'lucide-react';
 import { BANKS, createInitialLoanSettingsState, type LoanSettingsState } from '../../../lib/businessContractRules';
-
-function cn(...classes: Array<string | false | null | undefined>) {
-  return classes.filter(Boolean).join(' ');
-}
-
-function SelectionChip({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        'rounded-full border px-5 py-2 text-sm font-bold transition',
-        active ? 'border-[#a6e8ef] bg-[#a6e8ef] text-[#123b69]' : 'border-[#6e86a3] bg-white text-[#314a67] hover:bg-slate-50',
-      )}
-    >
-      {label}
-    </button>
-  );
-}
-
-function Toggle({ checked, onChange }: { checked: boolean; onChange: (value: boolean) => void }) {
-  return (
-    <div className="inline-flex rounded-full border border-slate-200 bg-slate-100 p-1">
-      <button
-        type="button"
-        onClick={() => onChange(false)}
-        className={cn(
-          'min-w-[92px] rounded-full px-4 py-2.5 text-sm font-black transition-all',
-          !checked ? 'bg-[#a6e8ef] text-[#123b69] shadow-[0_8px_24px_rgba(148,163,184,0.18)]' : 'text-slate-500',
-        )}
-      >
-        غیرفعال
-      </button>
-      <button
-        type="button"
-        onClick={() => onChange(true)}
-        className={cn(
-          'min-w-[92px] rounded-full px-4 py-2.5 text-sm font-black transition-all',
-          checked ? 'bg-[#a6e8ef] text-[#123b69] shadow-[0_8px_24px_rgba(148,163,184,0.18)]' : 'text-slate-500',
-        )}
-      >
-        فعال
-      </button>
-    </div>
-  );
-}
-
-function StatusBadge({ visible }: { visible: boolean }) {
-  if (!visible) return null;
-
-  return (
-    <span className="inline-flex items-center rounded-full border border-[color:var(--theme-action-border)] px-3 py-1 text-xs font-bold text-[color:var(--theme-action-text)]">
-      تنظیمات انجام‌شده
-    </span>
-  );
-}
+import {
+  CollapsibleTagSelector,
+  ContractRegistrationSwitch,
+  LoanError,
+  LoanIntroCard,
+  LoanLoadingState,
+  LoanPageShell,
+  LoanSaveBar,
+  LoanSectionCard,
+  LoanSuccess,
+} from './LoanSettingsPrimitives';
 
 function NextPageCard({
   href,
@@ -75,13 +30,17 @@ function NextPageCard({
   return (
     <Link
       href={href}
-      className="group flex items-center justify-between gap-4 rounded-[18px] bg-[#f8fbfc] px-6 py-6 transition hover:bg-[#f1f8fa]"
+      className="group flex items-center justify-between gap-4 rounded-[20px] border border-[color:var(--border-soft)] bg-[color:var(--surface)] px-5 py-5 transition hover:border-[color:var(--theme-action-border)] hover:bg-[color:var(--surface-soft)]"
     >
-      <ChevronLeft className="h-6 w-6 shrink-0 text-[#58738f] transition group-hover:-translate-x-0.5" />
+      <ChevronLeft className="h-5 w-5 shrink-0 text-[color:var(--text-muted)] transition group-hover:-translate-x-0.5 group-hover:text-[color:var(--theme-action-text)]" />
       <div className="flex-1 text-right">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <StatusBadge visible={configured} />
-          <h3 className="text-[28px] font-black leading-none text-[color:var(--text-strong)] sm:text-[32px]">{title}</h3>
+          {configured ? (
+            <span className="rounded-full border border-[color:var(--theme-action-border)] bg-[color:var(--theme-action-bg)] px-3 py-1 text-xs font-bold text-[color:var(--theme-action-text)]">
+              تنظیمات انجام‌شده
+            </span>
+          ) : null}
+          <h3 className="text-lg font-black text-[color:var(--text-strong)] sm:text-xl">{title}</h3>
         </div>
         <p className="mt-3 text-sm leading-7 text-[color:var(--text-muted)]">{description}</p>
       </div>
@@ -154,154 +113,101 @@ export function LoanSettingsPanel() {
   };
 
   if (loading || !state) {
-    return (
-      <section className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 lg:px-8">
-        <div className="rounded-3xl border border-[color:var(--border-color)] bg-[color:var(--surface)] p-8 text-center text-sm text-[color:var(--text-muted)]">
-          در حال بارگذاری تنظیمات وام...
-        </div>
-      </section>
-    );
+    return <LoanLoadingState label="در حال بارگذاری تنظیمات وام..." />;
   }
 
-  const timingConfigured = state.enabled && state.loanTiming !== initialState.loanTiming;
+  const timingConfigured =
+    state.enabled &&
+    (state.loanTiming !== initialState.loanTiming || state.loanReceivedDate !== initialState.loanReceivedDate);
   const amountConfigured =
     state.enabled &&
-    (state.loanAmountMode === 'fixed'
-      ? state.fixedAmount !== initialState.fixedAmount
-      : state.percentAmount !== initialState.percentAmount);
+    (state.loanAmountSelectionMode !== initialState.loanAmountSelectionMode ||
+      state.fixedAmount !== initialState.fixedAmount ||
+      state.loanGracePeriod !== initialState.loanGracePeriod);
   const repaymentConfigured = state.enabled && state.repaymentTiming !== initialState.repaymentTiming;
 
   return (
-    <section className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 lg:px-8">
-      <div className="space-y-5 rounded-[28px] border border-[color:var(--border-color)] bg-[color:var(--surface-overlay)] p-5 shadow-[0_18px_45px_var(--shadow-soft)] backdrop-blur sm:p-6">
-        <section className="rounded-[24px] border border-[color:var(--theme-accent-border)] bg-[color:var(--surface)] p-5">
+    <>
+      <LoanPageShell
+        title="تنظیمات وام"
+        description="در این بخش چارچوب نمایش وام در قراردادها را مشخص می‌کنید؛ از فعال‌سازی این بخش تا زمان دریافت، مبلغ و زمان بازپرداخت."
+      >
+        <LoanSectionCard className="p-5">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <div className="space-y-3 text-right">
-              <h2 className="text-xl font-black text-[color:var(--text-strong)] sm:text-2xl">آیا مایل به فعال‌سازی بخش وام در قرارداد هستید؟</h2>
+              <h2 className="text-xl font-black text-[color:var(--text-strong)]">فعال‌سازی بخش وام در قرارداد</h2>
               <p className="text-sm leading-7 text-[color:var(--text-muted)]">
-                در صورت فعال بودن، می‌توانید تنظیمات مربوط به مبلغ وام را برای قرارداد تعیین کنید.
+                با فعال بودن این بخش، در زمان ثبت قرارداد امکان تعریف وام بانکی بر اساس تنظیمات این صفحه نمایش داده می‌شود.
               </p>
+              {!state.enabled ? <p className="text-sm text-[color:var(--text-muted)]">برای مشاهده جزئیات، این بخش را فعال کنید.</p> : null}
             </div>
             <div className="self-start lg:self-auto">
-              <Toggle checked={state.enabled} onChange={(enabled) => setState((current) => (current ? { ...current, enabled } : current))} />
+              <ContractRegistrationSwitch
+                checked={state.enabled}
+                variant="segmented"
+                onChange={(enabled) => setState((current) => (current ? { ...current, enabled } : current))}
+              />
             </div>
           </div>
-        </section>
+        </LoanSectionCard>
 
         {state.enabled ? (
           <>
-            <section id="loan-details" className="overflow-hidden rounded-[24px] border border-[color:var(--border-soft)] bg-[color:var(--surface)]">
-              <div className="flex flex-wrap border-b border-[color:var(--border-soft)]">
-                <button
-                  type="button"
-                  onClick={() => setState((current) => (current ? { ...current, loanAmountMode: 'percent' } : current))}
-                  className={cn(
-                    'group relative flex min-w-[220px] flex-1 flex-col items-center justify-center gap-3 px-3 py-5 text-center transition',
-                    state.loanAmountMode === 'percent' ? 'text-slate-800' : 'text-slate-500 hover:text-slate-800',
-                  )}
-                >
-                  <span
-                    className={cn(
-                      'flex h-14 w-14 items-center justify-center rounded-full border transition',
-                      state.loanAmountMode === 'percent' ? 'border-[#a6e8ef] bg-[#a6e8ef] text-[#123b69]' : 'border-slate-200 bg-white text-slate-500',
-                    )}
-                  >
-                    <Percent className="h-6 w-6" />
-                  </span>
-                  <span className="text-sm font-bold">درصدی از مبلغ کل قرارداد</span>
-                  <span className={cn('absolute inset-x-4 bottom-0 h-[2px] transition', state.loanAmountMode === 'percent' ? 'bg-[#a6e8ef]' : 'bg-transparent group-hover:bg-slate-200')} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setState((current) => (current ? { ...current, loanAmountMode: 'fixed' } : current))}
-                  className={cn(
-                    'group relative flex min-w-[220px] flex-1 flex-col items-center justify-center gap-3 border-r border-[color:var(--border-soft)] px-3 py-5 text-center transition',
-                    state.loanAmountMode === 'fixed' ? 'text-slate-800' : 'text-slate-500 hover:text-slate-800',
-                  )}
-                >
-                  <span
-                    className={cn(
-                      'flex h-14 w-14 items-center justify-center rounded-full border transition',
-                      state.loanAmountMode === 'fixed' ? 'border-[#a6e8ef] bg-[#a6e8ef] text-[#123b69]' : 'border-slate-200 bg-white text-slate-500',
-                    )}
-                  >
-                    <WalletCards className="h-6 w-6" />
-                  </span>
-                  <span className="text-sm font-bold">مبلغ ثابت</span>
-                  <span className={cn('absolute inset-x-4 bottom-0 h-[2px] transition', state.loanAmountMode === 'fixed' ? 'bg-[#a6e8ef]' : 'bg-transparent group-hover:bg-slate-200')} />
-                </button>
-              </div>
-
-              <div className="border-t border-[color:var(--border-soft)] px-5 py-4 text-center text-sm leading-7 text-[color:var(--text-muted)]">
-                {state.loanAmountMode === 'fixed'
-                  ? 'در این روش، مبلغ وام به‌صورت عدد ثابت در نظر گرفته می‌شود.'
-                  : 'در این روش، مبلغ وام به‌صورت درصدی از مبلغ کل قرارداد محاسبه می‌شود.'}
-              </div>
-            </section>
-
-            <div className="space-y-3">
-              <NextPageCard
-                href={SECTION_LINKS.timing}
-                title="انتخاب زمان دریافت وام"
-                description="مشخص کنید وام بانکی در چه درجه زمانی نسبت به قرارداد پرداخت می‌شود."
-                configured={timingConfigured}
-              />
-              <NextPageCard
-                href={SECTION_LINKS.amount}
-                title="مبلغ وام"
-                description="تعیین کنید مبلغ وام ثابت است یا درصدی از مبلغ کل قرارداد."
-                configured={amountConfigured}
-              />
-              <NextPageCard
-                href={SECTION_LINKS.repayment}
-                title="زمان بازپرداخت"
-                description="مشخص کنید بازپرداخت وام از چه زمانی آغاز شود."
-                configured={repaymentConfigured}
-              />
-            </div>
-
-            <section className="rounded-[24px] border border-[color:var(--theme-accent-border)] bg-[color:var(--surface)] p-5">
-              <div className="text-right">
-                <h3 className="text-lg font-black text-[color:var(--text-strong)]">
-                  بانک عامل <span className="text-rose-400">*</span>
-                </h3>
-              </div>
-              <div className="mt-4 flex flex-wrap justify-end gap-2.5">
-                {BANKS.map((bank) => (
-                  <SelectionChip
-                    key={bank}
-                    label={bank}
-                    active={state.selectedBank === bank}
-                    onClick={() => setState((current) => (current ? { ...current, selectedBank: bank } : current))}
+            <LoanSectionCard className="p-5">
+              <div className="space-y-5 text-right">
+                <LoanIntroCard
+                  title="فلو تنظیمات وام"
+                  description="برای حفظ یکپارچگی UI و بیزینس، تنظیمات وام در سه بخش مستقل انجام می‌شود. هر کارت شما را به جزئیات همان بخش می‌برد."
+                  icon={Landmark}
+                />
+                <div className="space-y-3">
+                  <NextPageCard
+                    href={SECTION_LINKS.timing}
+                    title="انتخاب زمان دریافت وام"
+                    description="مشخص کنید وام بانکی در چه زمان‌بندی‌ای نسبت به قرارداد دریافت شده یا دریافت خواهد شد."
+                    configured={timingConfigured}
                   />
-                ))}
+                  <NextPageCard
+                    href={SECTION_LINKS.amount}
+                    title="مبلغ وام"
+                    description="مشخص کنید مبلغ وام ثابت است یا درصدی از مبلغ کل قرارداد."
+                    configured={amountConfigured}
+                  />
+                  <NextPageCard
+                    href={SECTION_LINKS.repayment}
+                    title="زمان بازپرداخت"
+                    description="زمان شروع بازپرداخت وام را برای نمایش در قراردادها تعیین کنید."
+                    configured={repaymentConfigured}
+                  />
+                </div>
               </div>
-            </section>
+            </LoanSectionCard>
+
+            <LoanSectionCard className="p-5">
+              <div className="space-y-5 text-right">
+                <LoanIntroCard
+                  title="بانک عامل"
+                  description="بانک پیش‌فرض وام را مشخص کنید تا در زمان ثبت قرارداد، همین گزینه به صورت پیش‌فرض انتخاب شود."
+                />
+                <CollapsibleTagSelector
+                  title="انتخاب بانک عامل"
+                  options={BANKS.map((bank) => ({ value: bank, label: bank }))}
+                  value={state.selectedBank}
+                  onChange={(selectedBank) => setState((current) => (current ? { ...current, selectedBank } : current))}
+                />
+                <div className="rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] px-4 py-4 text-sm leading-7 text-[color:var(--text-muted)]">
+                  بانک انتخاب‌شده: <span className="font-black text-[color:var(--text-strong)]">{state.selectedBank}</span>
+                </div>
+              </div>
+            </LoanSectionCard>
           </>
         ) : null}
 
-        <div className="flex justify-center">
-          <button
-            type="button"
-            onClick={() => void handleSave()}
-            disabled={saving}
-            className="rounded-xl bg-[color:var(--theme-accent)] px-8 py-2.5 text-sm font-bold text-[color:var(--theme-on-accent)] transition-colors hover:bg-[color:var(--theme-accent-strong)] disabled:opacity-60"
-          >
-            {saving ? 'در حال ذخیره...' : 'ثبت'}
-          </button>
-        </div>
+        {message ? <LoanSuccess message={message} /> : null}
+        {error ? <LoanError error={error} /> : null}
+      </LoanPageShell>
 
-        {message ? (
-          <div className="rounded-2xl border border-[color:var(--theme-action-border)] bg-[color:var(--theme-action-bg)] px-4 py-3 text-sm text-[color:var(--theme-action-text)]">
-            {message}
-          </div>
-        ) : null}
-        {error ? (
-          <div className="rounded-2xl border border-[#fecdd3] bg-[#fff1f2] px-4 py-3 text-sm text-[#be123c] dark:border-[color:var(--theme-warning-border)] dark:bg-[color:var(--theme-warning-bg)] dark:text-[color:var(--theme-warning-text)]">
-            {error}
-          </div>
-        ) : null}
-      </div>
-    </section>
+      <LoanSaveBar saving={saving} onSave={() => void handleSave()} />
+    </>
   );
 }

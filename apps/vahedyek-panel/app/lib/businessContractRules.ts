@@ -11,7 +11,8 @@ export type ContractRuleId =
   | 'interest';
 
 export type LoanAmountMode = 'fixed' | 'percent';
-export type LoanTiming = 'before-sign' | 'after-sign' | 'after-first-installment';
+export type LoanAmountSelectionMode = 'unselected' | 'fixed' | 'contract-time';
+export type LoanTiming = 'undated' | 'contract-date' | 'before-contract' | 'dated';
 export type RepaymentTiming = 'next-month' | 'after-two-months' | 'custom';
 
 export type RuleField =
@@ -47,12 +48,65 @@ export type ContractRuleState = {
 export type LoanSettingsState = {
   enabled: boolean;
   loanAmountMode: LoanAmountMode;
+  loanAmountSelectionMode: LoanAmountSelectionMode;
+  loanBankInterestEnabled: boolean;
+  loanBankInterestRate: string;
+  loanBankFeeBuyer: boolean;
+  loanBankFeeSeller: boolean;
+  loanBankFeeBankPolicyEnabled: boolean;
+  loanBankFeeMode: 'fixed' | 'percent' | 'combined';
+  loanBankFeeValue: string;
+  loanParticipationBuyer: boolean;
+  loanParticipationSeller: boolean;
+  loanParticipationBankPolicyEnabled: boolean;
+  loanParticipationRate: string;
+  loanExpertBuyer: boolean;
+  loanExpertSeller: boolean;
+  loanExpertBankPolicyEnabled: boolean;
+  loanExpertRate: string;
+  loanPriorityBondBuyer: boolean;
+  loanPriorityBondSeller: boolean;
+  loanPriorityBondBankPolicyEnabled: boolean;
+  loanPriorityBondRate: string;
   loanTiming: LoanTiming;
+  loanReceivedDate: string;
   repaymentTiming: RepaymentTiming;
   fixedAmount: string;
   percentAmount: string;
+  loanGracePeriod: string;
   selectedBank: string;
 };
+
+export const LOAN_TIMING_OPTIONS = fixMojibakeDeep([
+  {
+    id: 'undated',
+    label: 'وام دریافت شده و تاریخ مشخصی ندارد',
+    description: 'برای حالتی که دریافت وام قطعی است اما تاریخ دقیق آن در قرارداد ثبت نمی‌شود.',
+    helperText: 'در این حالت تاریخ مشخصی برای ثبت دریافت وام لازم نیست.',
+    requiresDate: false,
+  },
+  {
+    id: 'contract-date',
+    label: 'تاریخ وام همزمان با انعقاد قرارداد است',
+    description: 'اگر دریافت وام همزمان با روز عقد قرارداد باشد این گزینه را انتخاب کنید.',
+    helperText: 'زمان دریافت وام با تاریخ قرارداد یکسان در نظر گرفته می‌شود.',
+    requiresDate: false,
+  },
+  {
+    id: 'before-contract',
+    label: 'تاریخ دریافت وام قبل از انعقاد قرارداد است',
+    description: 'برای شرایطی که وام پیش از ثبت قرارداد دریافت شده و باید تاریخ آن ثبت شود.',
+    helperText: 'تاریخی را وارد کنید که وام پیش از قرارداد دریافت شده است.',
+    requiresDate: true,
+  },
+  {
+    id: 'dated',
+    label: 'وام دریافت شده اما تاریخ مشخصی دارد',
+    description: 'اگر لازم است تاریخ دریافت وام به صورت دقیق در تنظیمات ثبت شود از این گزینه استفاده کنید.',
+    helperText: 'تاریخ دقیق دریافت وام را در این بخش وارد کنید.',
+    requiresDate: true,
+  },
+] as const);
 
 export const CONTRACT_RULE_ITEMS: Array<{ id: ContractRuleId; title: string; description: string }> = fixMojibakeDeep([
   {
@@ -551,10 +605,32 @@ export function createInitialLoanSettingsState(): LoanSettingsState {
   return {
     enabled: true,
     loanAmountMode: 'fixed',
-    loanTiming: 'before-sign',
+    loanAmountSelectionMode: 'unselected',
+    loanBankInterestEnabled: false,
+    loanBankInterestRate: '',
+    loanBankFeeBuyer: false,
+    loanBankFeeSeller: false,
+    loanBankFeeBankPolicyEnabled: true,
+    loanBankFeeMode: 'fixed',
+    loanBankFeeValue: '',
+    loanParticipationBuyer: false,
+    loanParticipationSeller: false,
+    loanParticipationBankPolicyEnabled: true,
+    loanParticipationRate: '',
+    loanExpertBuyer: false,
+    loanExpertSeller: false,
+    loanExpertBankPolicyEnabled: true,
+    loanExpertRate: '',
+    loanPriorityBondBuyer: false,
+    loanPriorityBondSeller: false,
+    loanPriorityBondBankPolicyEnabled: true,
+    loanPriorityBondRate: '',
+    loanTiming: 'undated',
+    loanReceivedDate: '',
     repaymentTiming: 'next-month',
-    fixedAmount: '120000000',
+    fixedAmount: '',
     percentAmount: '15',
+    loanGracePeriod: '',
     selectedBank: 'ملت',
   };
 }
@@ -596,20 +672,66 @@ export function normalizeRuleState(ruleId: ContractRuleId, payload: unknown): Co
 export function normalizeLoanSettingsState(payload: unknown): LoanSettingsState {
   const initial = createInitialLoanSettingsState();
   const input = payload && typeof payload === 'object' ? (payload as Record<string, unknown>) : {};
+  const inferredLoanAmountSelectionMode =
+    input.loanAmountSelectionMode === 'fixed' || input.loanAmountSelectionMode === 'contract-time'
+      ? input.loanAmountSelectionMode
+      : typeof input.fixedAmount === 'string' && input.fixedAmount.trim()
+        ? 'fixed'
+        : input.loanAmountMode === 'percent'
+          ? 'contract-time'
+          : 'unselected';
 
   return {
     enabled: typeof input.enabled === 'boolean' ? input.enabled : initial.enabled,
     loanAmountMode: input.loanAmountMode === 'percent' ? 'percent' : 'fixed',
+    loanAmountSelectionMode: inferredLoanAmountSelectionMode,
+    loanBankInterestEnabled: typeof input.loanBankInterestEnabled === 'boolean' ? input.loanBankInterestEnabled : initial.loanBankInterestEnabled,
+    loanBankInterestRate: typeof input.loanBankInterestRate === 'string' ? input.loanBankInterestRate : initial.loanBankInterestRate,
+    loanBankFeeBuyer: typeof input.loanBankFeeBuyer === 'boolean' ? input.loanBankFeeBuyer : initial.loanBankFeeBuyer,
+    loanBankFeeSeller: typeof input.loanBankFeeSeller === 'boolean' ? input.loanBankFeeSeller : initial.loanBankFeeSeller,
+    loanBankFeeBankPolicyEnabled:
+      typeof input.loanBankFeeBankPolicyEnabled === 'boolean' ? input.loanBankFeeBankPolicyEnabled : initial.loanBankFeeBankPolicyEnabled,
+    loanBankFeeMode:
+      input.loanBankFeeMode === 'percent' || input.loanBankFeeMode === 'combined' ? input.loanBankFeeMode : 'fixed',
+    loanBankFeeValue: typeof input.loanBankFeeValue === 'string' ? input.loanBankFeeValue : initial.loanBankFeeValue,
+    loanParticipationBuyer: typeof input.loanParticipationBuyer === 'boolean' ? input.loanParticipationBuyer : initial.loanParticipationBuyer,
+    loanParticipationSeller: typeof input.loanParticipationSeller === 'boolean' ? input.loanParticipationSeller : initial.loanParticipationSeller,
+    loanParticipationBankPolicyEnabled:
+      typeof input.loanParticipationBankPolicyEnabled === 'boolean'
+        ? input.loanParticipationBankPolicyEnabled
+        : initial.loanParticipationBankPolicyEnabled,
+    loanParticipationRate: typeof input.loanParticipationRate === 'string' ? input.loanParticipationRate : initial.loanParticipationRate,
+    loanExpertBuyer: typeof input.loanExpertBuyer === 'boolean' ? input.loanExpertBuyer : initial.loanExpertBuyer,
+    loanExpertSeller: typeof input.loanExpertSeller === 'boolean' ? input.loanExpertSeller : initial.loanExpertSeller,
+    loanExpertBankPolicyEnabled:
+      typeof input.loanExpertBankPolicyEnabled === 'boolean' ? input.loanExpertBankPolicyEnabled : initial.loanExpertBankPolicyEnabled,
+    loanExpertRate: typeof input.loanExpertRate === 'string' ? input.loanExpertRate : initial.loanExpertRate,
+    loanPriorityBondBuyer: typeof input.loanPriorityBondBuyer === 'boolean' ? input.loanPriorityBondBuyer : initial.loanPriorityBondBuyer,
+    loanPriorityBondSeller: typeof input.loanPriorityBondSeller === 'boolean' ? input.loanPriorityBondSeller : initial.loanPriorityBondSeller,
+    loanPriorityBondBankPolicyEnabled:
+      typeof input.loanPriorityBondBankPolicyEnabled === 'boolean'
+        ? input.loanPriorityBondBankPolicyEnabled
+        : initial.loanPriorityBondBankPolicyEnabled,
+    loanPriorityBondRate: typeof input.loanPriorityBondRate === 'string' ? input.loanPriorityBondRate : initial.loanPriorityBondRate,
     loanTiming:
-      input.loanTiming === 'after-sign' || input.loanTiming === 'after-first-installment'
+      input.loanTiming === 'contract-date' ||
+      input.loanTiming === 'before-contract' ||
+      input.loanTiming === 'dated' ||
+      input.loanTiming === 'undated'
         ? input.loanTiming
-        : 'before-sign',
+        : input.loanTiming === 'after-sign'
+          ? 'contract-date'
+          : input.loanTiming === 'before-sign'
+            ? 'before-contract'
+            : 'undated',
+    loanReceivedDate: typeof input.loanReceivedDate === 'string' ? input.loanReceivedDate : initial.loanReceivedDate,
     repaymentTiming:
       input.repaymentTiming === 'after-two-months' || input.repaymentTiming === 'custom'
         ? input.repaymentTiming
         : 'next-month',
     fixedAmount: typeof input.fixedAmount === 'string' ? input.fixedAmount : initial.fixedAmount,
     percentAmount: typeof input.percentAmount === 'string' ? input.percentAmount : initial.percentAmount,
+    loanGracePeriod: typeof input.loanGracePeriod === 'string' ? input.loanGracePeriod : initial.loanGracePeriod,
     selectedBank:
       typeof input.selectedBank === 'string' && BANKS.includes(input.selectedBank as (typeof BANKS)[number])
         ? input.selectedBank

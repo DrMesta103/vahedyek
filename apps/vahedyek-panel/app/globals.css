@@ -1183,7 +1183,7 @@ textarea::placeholder {
 }
 
 .content-body {
-  max-width: none;
+  max-width: 980px;
   margin: 0 auto;
   width: 100%;
   padding: 10px 28px 40px;
