@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { FormTextInput } from '../../../contracts/new/_components/ContractFormPrimitives';
 import {
-  loadProfileStore,
+  fetchProfileStore,
   type LegalShareholderRecord,
   type NaturalShareholderRecord,
   type RepresentativeRecord,
@@ -23,11 +23,19 @@ export function BusinessShareholdersPanel() {
   const [legalShareholders, setLegalShareholders] = useState<LegalShareholderRecord[]>([]);
 
   useEffect(() => {
-    const store = loadProfileStore();
-    setNaturalShareholders(store.naturalShareholders);
-    setLegalShareholders(store.legalShareholders);
-    const tab = searchParams.get('tab');
-    setActiveTab(tab === 'legal' ? 'legal' : 'natural');
+    let ignore = false;
+
+    fetchProfileStore().then((store) => {
+      if (ignore) return;
+      setNaturalShareholders(store.naturalShareholders);
+      setLegalShareholders(store.legalShareholders);
+      const tab = searchParams.get('tab');
+      setActiveTab(tab === 'legal' ? 'legal' : 'natural');
+    });
+
+    return () => {
+      ignore = true;
+    };
   }, [searchParams]);
 
   const normalizedQuery = query.trim();

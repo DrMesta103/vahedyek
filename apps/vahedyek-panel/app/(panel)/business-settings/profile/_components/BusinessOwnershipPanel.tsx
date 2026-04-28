@@ -5,11 +5,11 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   LEGAL_TYPE_OPTIONS,
+  fetchProfileStore,
   type LegalOwnershipForm,
   type NaturalOwnershipForm,
   type OwnershipKind,
-  loadProfileStore,
-  saveProfileStore,
+  persistProfileStore,
 } from './profileStorage';
 import {
   ProfileCard,
@@ -47,15 +47,23 @@ export function BusinessOwnershipPanel() {
   });
 
   useEffect(() => {
-    const store = loadProfileStore();
-    setOwnershipKind(store.ownershipKind);
-    setLegalForm(store.legal);
-    setNaturalForm(store.natural);
+    let ignore = false;
+
+    fetchProfileStore().then((store) => {
+      if (ignore) return;
+      setOwnershipKind(store.ownershipKind);
+      setLegalForm(store.legal);
+      setNaturalForm(store.natural);
+    });
+
+    return () => {
+      ignore = true;
+    };
   }, []);
 
-  const save = () => {
-    const store = loadProfileStore();
-    saveProfileStore({
+  const save = async () => {
+    const store = await fetchProfileStore();
+    await persistProfileStore({
       ...store,
       ownershipKind,
       legal: legalForm,

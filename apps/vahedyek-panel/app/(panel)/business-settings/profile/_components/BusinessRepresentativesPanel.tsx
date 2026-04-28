@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { Plus, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { loadProfileStore, type RepresentativeRecord } from './profileStorage';
+import { fetchProfileStore, type RepresentativeRecord } from './profileStorage';
 import { FormTextInput } from '../../../contracts/new/_components/ContractFormPrimitives';
 import { PersonAvatar, PersonRowCard } from './ProfilePeoplePrimitives';
 
@@ -12,7 +12,16 @@ export function BusinessRepresentativesPanel() {
   const [representatives, setRepresentatives] = useState<RepresentativeRecord[]>([]);
 
   useEffect(() => {
-    setRepresentatives(loadProfileStore().representatives);
+    let ignore = false;
+
+    fetchProfileStore().then((store) => {
+      if (ignore) return;
+      setRepresentatives(store.representatives);
+    });
+
+    return () => {
+      ignore = true;
+    };
   }, []);
 
   const normalizedQuery = query.trim();

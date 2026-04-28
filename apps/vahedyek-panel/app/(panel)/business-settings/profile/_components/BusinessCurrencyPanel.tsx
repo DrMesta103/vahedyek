@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { formatCurrencyBySettings, loadProfileStore, saveProfileStore, type CurrencySettings } from './profileStorage';
+import { fetchProfileStore, formatCurrencyBySettings, persistProfileStore, type CurrencySettings } from './profileStorage';
 import { ProfileCard, ProfileChipGroup, ProfileHeading, ProfilePageShell, ProfileSubmitBar } from './ProfileFormShell';
 
 export function BusinessCurrencyPanel() {
@@ -10,12 +10,21 @@ export function BusinessCurrencyPanel() {
   const [settings, setSettings] = useState<CurrencySettings>({ baseCurrency: 'irr', quoteCurrency: 'toman' });
 
   useEffect(() => {
-    setSettings(loadProfileStore().currency);
+    let ignore = false;
+
+    fetchProfileStore().then((store) => {
+      if (ignore) return;
+      setSettings(store.currency);
+    });
+
+    return () => {
+      ignore = true;
+    };
   }, []);
 
-  const save = () => {
-    const store = loadProfileStore();
-    saveProfileStore({ ...store, currency: settings });
+  const save = async () => {
+    const store = await fetchProfileStore();
+    await persistProfileStore({ ...store, currency: settings });
     router.push('/business-settings/profile');
     router.refresh();
   };

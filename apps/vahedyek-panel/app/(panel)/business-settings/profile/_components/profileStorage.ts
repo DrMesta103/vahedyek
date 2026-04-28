@@ -134,6 +134,7 @@ export type ProfileStore = {
 };
 
 export const PROFILE_STORAGE_KEY = 'vahedyek.business-profile.v1';
+const PROFILE_API_ENDPOINT = '/api/business-settings/profile';
 
 export const LEGAL_TYPE_OPTIONS = [
   'شرکت سهامی خاص',
@@ -432,6 +433,46 @@ export function getDefaultProfileStore(): ProfileStore {
   return JSON.parse(JSON.stringify(defaultStore)) as ProfileStore;
 }
 
+function mergeProfileStore(parsed: unknown): ProfileStore {
+  const base = getDefaultProfileStore();
+  return {
+    ownershipKind: (parsed as { ownershipKind?: string })?.ownershipKind === 'natural' ? 'natural' : 'legal',
+    legal: { ...base.legal, ...(((parsed as { legal?: LegalOwnershipForm })?.legal ?? {}) as Partial<LegalOwnershipForm>) },
+    natural: { ...base.natural, ...(((parsed as { natural?: NaturalOwnershipForm })?.natural ?? {}) as Partial<NaturalOwnershipForm>) },
+    naturalShareholders: Array.isArray((parsed as { naturalShareholders?: unknown[] })?.naturalShareholders)
+      ? ((parsed as { naturalShareholders: NaturalShareholderRecord[] }).naturalShareholders ?? base.naturalShareholders)
+      : base.naturalShareholders,
+    legalShareholders: Array.isArray((parsed as { legalShareholders?: unknown[] })?.legalShareholders)
+      ? ((parsed as { legalShareholders: LegalShareholderRecord[] }).legalShareholders ?? base.legalShareholders)
+      : base.legalShareholders,
+    representatives: Array.isArray((parsed as { representatives?: unknown[] })?.representatives)
+      ? ((parsed as { representatives: RepresentativeRecord[] }).representatives ?? base.representatives)
+      : base.representatives,
+    directory: Array.isArray((parsed as { directory?: unknown[] })?.directory)
+      ? ((parsed as { directory: RepresentativeCandidate[] }).directory ?? base.directory)
+      : base.directory,
+    bankAccounts: Array.isArray((parsed as { bankAccounts?: unknown[] })?.bankAccounts)
+      ? ((parsed as { bankAccounts: BankAccountRecord[] }).bankAccounts ?? base.bankAccounts)
+      : base.bankAccounts,
+    branding: { ...base.branding, ...(((parsed as { branding?: BrandingSettings })?.branding ?? {}) as Partial<BrandingSettings>) },
+    languages: {
+      defaultLanguage:
+        typeof (parsed as { languages?: LanguageSettings })?.languages?.defaultLanguage === 'string'
+          ? ((parsed as { languages?: LanguageSettings }).languages?.defaultLanguage ?? base.languages.defaultLanguage)
+          : base.languages.defaultLanguage,
+      activeLanguages: Array.isArray((parsed as { languages?: LanguageSettings })?.languages?.activeLanguages)
+        ? ((parsed as { languages?: LanguageSettings }).languages?.activeLanguages ?? base.languages.activeLanguages)
+        : base.languages.activeLanguages,
+    },
+    currency: { ...base.currency, ...(((parsed as { currency?: CurrencySettings })?.currency ?? {}) as Partial<CurrencySettings>) },
+    measurement: {
+      ...base.measurement,
+      ...(((parsed as { measurement?: MeasurementSettings })?.measurement ?? {}) as Partial<MeasurementSettings>),
+    },
+    calendar: { ...base.calendar, ...(((parsed as { calendar?: CalendarSettings })?.calendar ?? {}) as Partial<CalendarSettings>) },
+  };
+}
+
 export function loadProfileStore(): ProfileStore {
   if (typeof window === 'undefined') {
     return getDefaultProfileStore();
@@ -439,31 +480,54 @@ export function loadProfileStore(): ProfileStore {
 
   const parsed = safeParse(window.localStorage.getItem(PROFILE_STORAGE_KEY));
   if (!parsed) return getDefaultProfileStore();
-
-  const base = getDefaultProfileStore();
-  return {
-    ownershipKind: parsed.ownershipKind === 'natural' ? 'natural' : 'legal',
-    legal: { ...base.legal, ...(parsed.legal ?? {}) },
-    natural: { ...base.natural, ...(parsed.natural ?? {}) },
-    naturalShareholders: Array.isArray(parsed.naturalShareholders) ? parsed.naturalShareholders : base.naturalShareholders,
-    legalShareholders: Array.isArray(parsed.legalShareholders) ? parsed.legalShareholders : base.legalShareholders,
-    representatives: Array.isArray(parsed.representatives) ? parsed.representatives : base.representatives,
-    directory: Array.isArray(parsed.directory) ? parsed.directory : base.directory,
-    bankAccounts: Array.isArray(parsed.bankAccounts) ? parsed.bankAccounts : base.bankAccounts,
-    branding: { ...base.branding, ...(parsed.branding ?? {}) },
-    languages: {
-      defaultLanguage: typeof parsed.languages?.defaultLanguage === 'string' ? parsed.languages.defaultLanguage : base.languages.defaultLanguage,
-      activeLanguages: Array.isArray(parsed.languages?.activeLanguages) ? parsed.languages.activeLanguages : base.languages.activeLanguages,
-    },
-    currency: { ...base.currency, ...(parsed.currency ?? {}) },
-    measurement: { ...base.measurement, ...(parsed.measurement ?? {}) },
-    calendar: { ...base.calendar, ...(parsed.calendar ?? {}) },
-  };
+  return mergeProfileStore(parsed);
 }
 
 export function saveProfileStore(store: ProfileStore) {
   if (typeof window === 'undefined') return;
   window.localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(store));
+}
+
+export async function fetchProfileStore() {
+  try {
+    const response = await fetch(PROFILE_API_ENDPOINT, {
+      cache: 'no-store',
+      credentials: 'same-origin',
+    });
+
+    if (!response.ok) {
+      throw new Error(`profile_fetch_failed:${response.status}`);
+    }
+
+    const payload = (await response.json()) as { store?: unknown };
+    const merged = mergeProfileStore(payload.store ?? {});
+    saveProfileStore(merged);
+    return merged;
+  } catch {
+    return loadProfileStore();
+  }
+}
+
+export async function persistProfileStore(store: ProfileStore) {
+  saveProfileStore(store);
+
+  const response = await fetch(PROFILE_API_ENDPOINT, {
+    method: 'PUT',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ store }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`profile_save_failed:${response.status}`);
+  }
+
+  const payload = (await response.json()) as { store?: unknown };
+  const merged = mergeProfileStore(payload.store ?? store);
+  saveProfileStore(merged);
+  return merged;
 }
 
 export function upsertRepresentative(store: ProfileStore, candidate: RepresentativeCandidate) {

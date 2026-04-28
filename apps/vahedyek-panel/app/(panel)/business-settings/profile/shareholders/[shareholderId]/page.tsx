@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import PanelLayout from '../../../../../components/PanelLayout';
 import { BusinessShareholderEditorPanel } from '../../_components/BusinessShareholderEditorPanel';
 
@@ -6,7 +7,9 @@ export default async function BusinessShareholderEditPage({ params }: { params: 
 
   return (
     <PanelLayout>
-      <BusinessShareholderEditorPanel shareholderId={shareholderId} />
+      <Suspense fallback={null}>
+        <BusinessShareholderEditorPanel shareholderId={shareholderId} />
+      </Suspense>
     </PanelLayout>
   );
 }

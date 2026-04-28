@@ -4,7 +4,7 @@ import { Building2, FileText, Stamp } from 'lucide-react';
 import { useRef } from 'react';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { loadProfileStore, saveProfileStore, type BrandingSettings } from './profileStorage';
+import { fetchProfileStore, persistProfileStore, type BrandingSettings } from './profileStorage';
 import {
   ProfileCard,
   ProfileHeading,
@@ -25,7 +25,16 @@ export function BusinessBrandingPanel() {
   });
 
   useEffect(() => {
-    setBranding(loadProfileStore().branding);
+    let ignore = false;
+
+    fetchProfileStore().then((store) => {
+      if (ignore) return;
+      setBranding(store.branding);
+    });
+
+    return () => {
+      ignore = true;
+    };
   }, []);
 
   const readFile = (file: File | null, key: keyof BrandingSettings) => {
@@ -37,9 +46,9 @@ export function BusinessBrandingPanel() {
     reader.readAsDataURL(file);
   };
 
-  const save = () => {
-    const store = loadProfileStore();
-    saveProfileStore({ ...store, branding });
+  const save = async () => {
+    const store = await fetchProfileStore();
+    await persistProfileStore({ ...store, branding });
     router.push('/business-settings/profile');
     router.refresh();
   };

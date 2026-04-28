@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { formatDateBySettings, loadProfileStore, saveProfileStore, type CalendarSettings } from './profileStorage';
+import { fetchProfileStore, formatDateBySettings, persistProfileStore, type CalendarSettings } from './profileStorage';
 import { ProfileCard, ProfileChipGroup, ProfileHeading, ProfilePageShell, ProfileSubmitBar } from './ProfileFormShell';
 
 const formatOptions = [
@@ -17,12 +17,21 @@ export function BusinessCalendarPanel() {
   const [settings, setSettings] = useState<CalendarSettings>({ system: 'jalali', format: 'yyyy/mm/dd-short' });
 
   useEffect(() => {
-    setSettings(loadProfileStore().calendar);
+    let ignore = false;
+
+    fetchProfileStore().then((store) => {
+      if (ignore) return;
+      setSettings(store.calendar);
+    });
+
+    return () => {
+      ignore = true;
+    };
   }, []);
 
-  const save = () => {
-    const store = loadProfileStore();
-    saveProfileStore({ ...store, calendar: settings });
+  const save = async () => {
+    const store = await fetchProfileStore();
+    await persistProfileStore({ ...store, calendar: settings });
     router.push('/business-settings/profile');
     router.refresh();
   };

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { BusinessSettingsCard, type BusinessSettingsCardProps } from '../../_components/BusinessSettingsCard';
-import { loadProfileStore, type OwnershipKind } from './profileStorage';
+import { fetchProfileStore, type OwnershipKind } from './profileStorage';
 
 type ProfileSection = BusinessSettingsCardProps & {
   span?: 'full' | 'half';
@@ -75,7 +75,16 @@ export function BusinessProfileOverviewPanel() {
   const [ownershipKind, setOwnershipKind] = useState<OwnershipKind>('legal');
 
   useEffect(() => {
-    setOwnershipKind(loadProfileStore().ownershipKind);
+    let ignore = false;
+
+    fetchProfileStore().then((store) => {
+      if (ignore) return;
+      setOwnershipKind(store.ownershipKind);
+    });
+
+    return () => {
+      ignore = true;
+    };
   }, []);
 
   const sections = baseSections

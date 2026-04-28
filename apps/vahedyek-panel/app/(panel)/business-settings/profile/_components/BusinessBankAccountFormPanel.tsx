@@ -5,8 +5,9 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import {
   addBankAccount,
+  fetchProfileStore,
   loadProfileStore,
-  saveProfileStore,
+  persistProfileStore,
   updateBankAccount,
   type BankAccountRecord,
   type BankAccountType,
@@ -60,19 +61,28 @@ export function BusinessBankAccountFormPanel({ accountId }: { accountId?: string
 
   useEffect(() => {
     if (!accountId) return;
-    const account = loadProfileStore().bankAccounts.find((item) => item.id === accountId);
-    if (!account) return;
-    setAccountType(account.accountType);
-    setUsage(account.usage);
-    setTitle(account.title);
-    setShowInContracts(account.showInContracts);
-    setOwners(account.owners);
-    setCardParts(account.cardNumber.split(' ').concat(['', '', '', '']).slice(0, 4));
-    setSheba(account.sheba);
-    setAccountNumber(account.accountNumber);
+    let ignore = false;
+
+    fetchProfileStore().then((store) => {
+      if (ignore) return;
+      const account = store.bankAccounts.find((item) => item.id === accountId);
+      if (!account) return;
+      setAccountType(account.accountType);
+      setUsage(account.usage);
+      setTitle(account.title);
+      setShowInContracts(account.showInContracts);
+      setOwners(account.owners);
+      setCardParts(account.cardNumber.split(' ').concat(['', '', '', '']).slice(0, 4));
+      setSheba(account.sheba);
+      setAccountNumber(account.accountNumber);
+    });
+
+    return () => {
+      ignore = true;
+    };
   }, [accountId]);
 
-  const submit = () => {
+  const submit = async () => {
     if (!accountType || !usage) return;
 
     const bankAccount: BankAccountRecord = {
@@ -90,8 +100,8 @@ export function BusinessBankAccountFormPanel({ accountId }: { accountId?: string
       title: title || 'سایر',
     };
 
-    const store = loadProfileStore();
-    saveProfileStore(accountId ? updateBankAccount(store, accountId, bankAccount) : addBankAccount(store, bankAccount));
+    const store = await fetchProfileStore();
+    await persistProfileStore(accountId ? updateBankAccount(store, accountId, bankAccount) : addBankAccount(store, bankAccount));
     router.push('/business-settings/profile/bank-accounts');
     router.refresh();
   };

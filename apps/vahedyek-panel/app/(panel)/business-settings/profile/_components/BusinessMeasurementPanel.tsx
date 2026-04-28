@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { loadProfileStore, saveProfileStore, type MeasurementSettings } from './profileStorage';
+import { fetchProfileStore, persistProfileStore, type MeasurementSettings } from './profileStorage';
 import { ProfileCard, ProfileChipGroup, ProfileHeading, ProfilePageShell, ProfileSubmitBar } from './ProfileFormShell';
 
 export function BusinessMeasurementPanel() {
@@ -10,12 +10,21 @@ export function BusinessMeasurementPanel() {
   const [settings, setSettings] = useState<MeasurementSettings>({ unit: 'meter' });
 
   useEffect(() => {
-    setSettings(loadProfileStore().measurement);
+    let ignore = false;
+
+    fetchProfileStore().then((store) => {
+      if (ignore) return;
+      setSettings(store.measurement);
+    });
+
+    return () => {
+      ignore = true;
+    };
   }, []);
 
-  const save = () => {
-    const store = loadProfileStore();
-    saveProfileStore({ ...store, measurement: settings });
+  const save = async () => {
+    const store = await fetchProfileStore();
+    await persistProfileStore({ ...store, measurement: settings });
     router.push('/business-settings/profile');
     router.refresh();
   };

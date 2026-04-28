@@ -7,8 +7,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { FormTextInput } from '../../../contracts/new/_components/ContractFormPrimitives';
 import {
   LEGAL_TYPE_OPTIONS,
-  loadProfileStore,
-  saveProfileStore,
+  fetchProfileStore,
+  persistProfileStore,
   upsertLegalShareholder,
   upsertNaturalShareholder,
   type LegalShareholderRecord,
@@ -67,48 +67,57 @@ export function BusinessShareholderEditorPanel({ shareholderId }: { shareholderI
   const [query, setQuery] = useState('');
 
   useEffect(() => {
-    const store = loadProfileStore();
-    const requestedKind = searchParams.get('kind');
-    const requestedStep = searchParams.get('step');
-    const legalShareholder = shareholderId ? store.legalShareholders.find((item) => item.id === shareholderId) : null;
-    const naturalShareholder = shareholderId ? store.naturalShareholders.find((item) => item.id === shareholderId) : null;
+    let ignore = false;
 
-    if (legalShareholder) {
-      setKind('legal');
-      setLegalForm({
-        legalType: legalShareholder.legalType,
-        companyName: legalShareholder.companyName,
-        brandName: legalShareholder.brandName,
-        registrationNumber: legalShareholder.registrationNumber,
-        nationalId: legalShareholder.nationalId,
-        taxFileNumber: legalShareholder.taxFileNumber,
-        registrationDate: legalShareholder.registrationDate,
-        economicCode: legalShareholder.economicCode,
-        sharePercent: legalShareholder.sharePercent,
-        avatarMode: legalShareholder.avatarMode,
-        avatarText: legalShareholder.avatarText,
-        avatarImage: legalShareholder.avatarImage ?? '',
-      });
-      setRepresentatives(legalShareholder.representatives);
-    } else if (naturalShareholder) {
-      setKind('natural');
-      setNaturalForm({
-        fullName: naturalShareholder.fullName,
-        mobile: naturalShareholder.mobile,
-        email: naturalShareholder.email,
-        avatarMode: naturalShareholder.avatarMode,
-        avatarText: naturalShareholder.avatarText,
-        avatarImage: naturalShareholder.avatarImage ?? '',
-        sharePercent: naturalShareholder.sharePercent,
-      });
-    } else {
-      setKind(requestedKind === 'natural' ? 'natural' : 'legal');
-      setRepresentatives([]);
-      setLegalForm(emptyLegalForm);
-      setNaturalForm(emptyNaturalForm);
-    }
+    fetchProfileStore().then((store) => {
+      if (ignore) return;
 
-    setStep(requestedStep === 'representatives' ? 'representatives' : 'details');
+      const requestedKind = searchParams.get('kind');
+      const requestedStep = searchParams.get('step');
+      const legalShareholder = shareholderId ? store.legalShareholders.find((item) => item.id === shareholderId) : null;
+      const naturalShareholder = shareholderId ? store.naturalShareholders.find((item) => item.id === shareholderId) : null;
+
+      if (legalShareholder) {
+        setKind('legal');
+        setLegalForm({
+          legalType: legalShareholder.legalType,
+          companyName: legalShareholder.companyName,
+          brandName: legalShareholder.brandName,
+          registrationNumber: legalShareholder.registrationNumber,
+          nationalId: legalShareholder.nationalId,
+          taxFileNumber: legalShareholder.taxFileNumber,
+          registrationDate: legalShareholder.registrationDate,
+          economicCode: legalShareholder.economicCode,
+          sharePercent: legalShareholder.sharePercent,
+          avatarMode: legalShareholder.avatarMode,
+          avatarText: legalShareholder.avatarText,
+          avatarImage: legalShareholder.avatarImage ?? '',
+        });
+        setRepresentatives(legalShareholder.representatives);
+      } else if (naturalShareholder) {
+        setKind('natural');
+        setNaturalForm({
+          fullName: naturalShareholder.fullName,
+          mobile: naturalShareholder.mobile,
+          email: naturalShareholder.email,
+          avatarMode: naturalShareholder.avatarMode,
+          avatarText: naturalShareholder.avatarText,
+          avatarImage: naturalShareholder.avatarImage ?? '',
+          sharePercent: naturalShareholder.sharePercent,
+        });
+      } else {
+        setKind(requestedKind === 'natural' ? 'natural' : 'legal');
+        setRepresentatives([]);
+        setLegalForm(emptyLegalForm);
+        setNaturalForm(emptyNaturalForm);
+      }
+
+      setStep(requestedStep === 'representatives' ? 'representatives' : 'details');
+    });
+
+    return () => {
+      ignore = true;
+    };
   }, [searchParams, shareholderId]);
 
   const filteredRepresentatives = useMemo(() => {
@@ -132,11 +141,11 @@ export function BusinessShareholderEditorPanel({ shareholderId }: { shareholderI
     reader.readAsDataURL(file);
   };
 
-  const saveDetails = () => {
-    const store = loadProfileStore();
+  const saveDetails = async () => {
+    const store = await fetchProfileStore();
 
     if (kind === 'natural') {
-      saveProfileStore(
+      await persistProfileStore(
         upsertNaturalShareholder(store, {
           id: shareholderId ?? `natural-shareholder-${Date.now()}`,
           ...naturalForm,
@@ -155,7 +164,7 @@ export function BusinessShareholderEditorPanel({ shareholderId }: { shareholderI
       representatives,
     };
 
-    saveProfileStore(upsertLegalShareholder(store, nextShareholder));
+    await persistProfileStore(upsertLegalShareholder(store, nextShareholder));
     router.push(`/business-settings/profile/shareholders/${activeShareholderId}?step=representatives&tab=legal`);
     router.refresh();
   };

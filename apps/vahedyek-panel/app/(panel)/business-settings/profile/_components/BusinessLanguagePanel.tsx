@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { loadProfileStore, saveProfileStore, type LanguageSettings } from './profileStorage';
+import { fetchProfileStore, persistProfileStore, type LanguageSettings } from './profileStorage';
 import { ProfileCard, ProfileChipGroup, ProfileHeading, ProfilePageShell, ProfileSubmitBar } from './ProfileFormShell';
 
 const languageOptions = [
@@ -17,12 +17,21 @@ export function BusinessLanguagePanel() {
   const [settings, setSettings] = useState<LanguageSettings>({ defaultLanguage: 'fa-IR', activeLanguages: ['fa-IR'] });
 
   useEffect(() => {
-    setSettings(loadProfileStore().languages);
+    let ignore = false;
+
+    fetchProfileStore().then((store) => {
+      if (ignore) return;
+      setSettings(store.languages);
+    });
+
+    return () => {
+      ignore = true;
+    };
   }, []);
 
-  const save = () => {
-    const store = loadProfileStore();
-    saveProfileStore({ ...store, languages: settings });
+  const save = async () => {
+    const store = await fetchProfileStore();
+    await persistProfileStore({ ...store, languages: settings });
     router.push('/business-settings/profile');
     router.refresh();
   };

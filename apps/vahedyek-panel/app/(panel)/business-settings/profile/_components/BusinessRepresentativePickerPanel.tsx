@@ -4,10 +4,10 @@ import { Search, UserRound, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
+  fetchProfileStore,
   linkRepresentativeToLegalShareholder,
-  loadProfileStore,
   normalizePhone,
-  saveProfileStore,
+  persistProfileStore,
   type RepresentativeCandidate,
   upsertRepresentative,
 } from './profileStorage';
@@ -21,17 +21,25 @@ export function BusinessRepresentativePickerPanel() {
   const [selected, setSelected] = useState<RepresentativeCandidate | null>(null);
 
   useEffect(() => {
-    const store = loadProfileStore();
-    setDirectory(store.directory);
+    let ignore = false;
+
+    fetchProfileStore().then((store) => {
+      if (ignore) return;
+      setDirectory(store.directory);
+    });
+
+    return () => {
+      ignore = true;
+    };
   }, []);
 
   const normalizedQuery = normalizePhone(query);
   const candidate =
     directory.find((item) => normalizePhone(item.mobile) === normalizedQuery || item.email.toLowerCase() === query.trim().toLowerCase()) ?? null;
 
-  const confirm = () => {
+  const confirm = async () => {
     if (!selected) return;
-    const store = loadProfileStore();
+    const store = await fetchProfileStore();
     const nextStore = upsertRepresentative(store, selected);
     const storedRepresentative =
       nextStore.representatives.find((item) => item.id === selected.id) ?? {
@@ -44,10 +52,10 @@ export function BusinessRepresentativePickerPanel() {
         avatarImage: selected.avatarImage,
         isPrimary: false,
         linkedUser: selected.linkedUser,
-      };
+    };
     const shareholderId = searchParams.get('shareholderId');
     const finalStore = shareholderId ? linkRepresentativeToLegalShareholder(nextStore, shareholderId, storedRepresentative) : nextStore;
-    saveProfileStore(finalStore);
+    await persistProfileStore(finalStore);
     router.push(searchParams.get('returnTo') || '/business-settings/profile/representatives');
     router.refresh();
   };

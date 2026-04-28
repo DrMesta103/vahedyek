@@ -4,9 +4,9 @@ import Link from 'next/link';
 import { MoreVertical, Pencil, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import {
-  loadProfileStore,
+  fetchProfileStore,
+  persistProfileStore,
   removeBankAccount,
-  saveProfileStore,
   type BankAccountRecord,
 } from './profileStorage';
 
@@ -14,27 +14,29 @@ export function BusinessBankAccountsPanel() {
   const [accounts, setAccounts] = useState<BankAccountRecord[]>([]);
 
   useEffect(() => {
-    setAccounts(loadProfileStore().bankAccounts);
+    let ignore = false;
+
+    fetchProfileStore().then((store) => {
+      if (ignore) return;
+      setAccounts(store.bankAccounts);
+    });
+
+    return () => {
+      ignore = true;
+    };
   }, []);
 
-  const toggleVisibility = (accountId: string) => {
-    setAccounts((current) => {
-      const next = current.map((item) =>
-        item.id === accountId ? { ...item, showInContracts: !item.showInContracts } : item
-      );
-      const store = loadProfileStore();
-      saveProfileStore({ ...store, bankAccounts: next });
-      return next;
-    });
+  const toggleVisibility = async (accountId: string) => {
+    const next = accounts.map((item) => (item.id === accountId ? { ...item, showInContracts: !item.showInContracts } : item));
+    setAccounts(next);
+    const store = await fetchProfileStore();
+    await persistProfileStore({ ...store, bankAccounts: next });
   };
 
-  const deleteAccount = (accountId: string) => {
-    setAccounts((current) => {
-      const store = loadProfileStore();
-      const nextStore = removeBankAccount(store, accountId);
-      saveProfileStore(nextStore);
-      return current.filter((item) => item.id !== accountId);
-    });
+  const deleteAccount = async (accountId: string) => {
+    setAccounts((current) => current.filter((item) => item.id !== accountId));
+    const store = await fetchProfileStore();
+    await persistProfileStore(removeBankAccount(store, accountId));
   };
 
   return (
