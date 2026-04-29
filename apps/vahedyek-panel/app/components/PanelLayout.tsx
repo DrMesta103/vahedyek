@@ -246,6 +246,7 @@ export default function PanelLayout({ children }: PanelLayoutProps) {
   const pathname = usePathname();
   const showOrbitMenu = pathname === '/';
   const isContractsNewHub = pathname === '/contracts/new';
+  const isContractsListPage = pathname === '/contracts';
 
   const { activeItem, trail } = useMemo(() => {
     if (pathname === '/') {
@@ -313,11 +314,11 @@ export default function PanelLayout({ children }: PanelLayoutProps) {
           {children}
         </main>
       ) : (
-        <main className="main-content">
-          <div className="main-stage">
-            <div className={`main-stage-content${isContractsNewHub ? ' contract-flow-stage-content' : ''}`}>
+        <main className={`main-content${isContractsListPage ? ' contracts-page-main' : ''}`}>
+          <div className={`main-stage${isContractsListPage ? ' main-stage-wide' : ''}`}>
+            <div className={`main-stage-content${isContractsNewHub ? ' contract-flow-stage-content' : ''}${isContractsListPage ? ' main-stage-content-wide' : ''}`}>
               {!isContractsNewHub ? (
-                <div className="top-header">
+                <div className={`top-header${isContractsListPage ? ' top-header-compact' : ''}`}>
                   <div className="breadcrumb">
                     <Link href="/" className="breadcrumb-link">
                       خانه
@@ -338,7 +339,11 @@ export default function PanelLayout({ children }: PanelLayoutProps) {
                   </div>
                 </div>
               ) : null}
-              <div className={`content-body${isContractsNewHub ? ' content-body-wide' : ''}`}>{children}</div>
+              {isContractsListPage ? (
+                children
+              ) : (
+                <div className={`content-body${isContractsNewHub ? ' content-body-wide' : ''}`}>{children}</div>
+              )}
             </div>
           </div>
         </main>

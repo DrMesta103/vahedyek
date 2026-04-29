@@ -4,6 +4,7 @@ import { requireSessionContext } from '../../lib/auth';
 import { serializeContractorType, serializeContractType } from '../../lib/subjectUtils';
 import { prisma } from '../../lib/prisma';
 import { handlePrismaApiError } from '../../lib/prismaApiError';
+import type { ContractStatus } from '../../types/contract';
 
 function serializeShareMode(value: ShareMode) {
   return value === ShareMode.percent ? 'percent' : 'dang';
@@ -13,10 +14,28 @@ function serializePricingType(value: PricingType) {
   return value === PricingType.metered ? 'metered' : 'fixed';
 }
 
-export async function GET() {
+function isDraftReadyForApproval(draft: Awaited<ReturnType<typeof prisma.contractDraft.findMany>>[number] & any) {
+  const hasSubject = Boolean(
+    draft.subject?.contractNumber &&
+      draft.subject?.contractDate &&
+      draft.subject?.blockId &&
+      draft.subject?.unitId,
+  );
+  const hasParties = Boolean(
+    draft.parties?.members?.some((member: any) => member.side === PartySide.party_one) &&
+      draft.parties?.members?.some((member: any) => member.side === PartySide.party_two),
+  );
+  const hasFinancial = Boolean(draft.financial);
+
+  return hasSubject && hasParties && hasFinancial;
+}
+
+export async function GET(request: Request) {
   try {
     const session = await requireSessionContext();
     if (session instanceof NextResponse) return session;
+    const { searchParams } = new URL(request.url);
+    const status = (searchParams.get('status') as ContractStatus | null) ?? 'draft';
 
     const drafts = await prisma.contractDraft.findMany({
       where: { tenantId: session.tenantId },
@@ -41,7 +60,7 @@ export async function GET() {
 
     const contracts = drafts.map((draft) => ({
       id: draft.id,
-      status: 'draft',
+      status: (isDraftReadyForApproval(draft) ? 'pending_approval' : 'draft') as ContractStatus,
       createdAt: draft.createdAt.toISOString(),
       updatedAt: draft.updatedAt.toISOString(),
       data: {
@@ -132,7 +151,15 @@ export async function GET() {
       },
     }));
 
-    return NextResponse.json(contracts);
+    const counts = {
+      draft: contracts.filter((contract) => contract.status === 'draft').length,
+      pending_approval: contracts.filter((contract) => contract.status === 'pending_approval').length,
+      completed: 0,
+    } satisfies Record<ContractStatus, number>;
+
+    const items = status === 'completed' ? [] : contracts.filter((contract) => contract.status === status);
+
+    return NextResponse.json({ items, counts });
   } catch (error) {
     return handlePrismaApiError(error);
   }

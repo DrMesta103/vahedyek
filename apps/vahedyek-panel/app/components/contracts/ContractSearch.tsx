@@ -9,24 +9,17 @@ interface ContractSearchProps {
 
 export default function ContractSearch({ value, onChange }: ContractSearchProps) {
   return (
-    <div style={{ position: 'relative' }}>
-      <span style={{
-        position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
-        color: '#9ca3af', pointerEvents: 'none', display: 'flex',
-      }}>
-        <i className="fa fa-search" style={{ fontSize: '13px' }}></i>
+    <div className="contracts-search">
+      <span className="contracts-search-icon">
+        <i className="fa fa-search text-[13px]" />
       </span>
       <input
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="جستجو در قراردادها..."
-        style={{
-          ...formControlStyle,
-          paddingRight: '36px',
-        }}
-        onFocus={(e) => e.target.style.borderColor = 'var(--dark-teal)'}
-        onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+        placeholder="جستجو در شماره قرارداد، طرفین و اطلاعات ثبت..."
+        className="contracts-search-input"
+        style={formControlStyle}
       />
     </div>
   );

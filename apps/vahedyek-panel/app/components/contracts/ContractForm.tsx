@@ -63,7 +63,7 @@ export default function ContractForm({ initialData, contractId, employees, block
       if (!r1.valid) setCurrentStep(1);
       return;
     }
-    saveContract(buildFormData(), 'finalized', contractId);
+    saveContract(buildFormData(), 'pending_approval', contractId);
     router.push('/contracts');
   };
 

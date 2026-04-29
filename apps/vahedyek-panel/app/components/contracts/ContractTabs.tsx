@@ -4,46 +4,27 @@ import type { ContractStatus } from '../../types/contract';
 
 interface ContractTabsProps {
   activeTab: ContractStatus;
-  finalizedCount: number;
   draftCount: number;
+  pendingApprovalCount: number;
+  completedCount: number;
   onTabChange: (tab: ContractStatus) => void;
 }
 
-export default function ContractTabs({ activeTab, finalizedCount, draftCount, onTabChange }: ContractTabsProps) {
+export default function ContractTabs({ activeTab, draftCount, pendingApprovalCount, completedCount, onTabChange }: ContractTabsProps) {
   const tabs: { key: ContractStatus; label: string; count: number }[] = [
-    { key: 'finalized', label: 'قراردادهای نهایی', count: finalizedCount },
-    { key: 'draft', label: 'پیش‌نویس‌ها', count: draftCount },
+    { key: 'draft', label: 'پیش‌نویس', count: draftCount },
+    { key: 'pending_approval', label: 'در انتظار تایید', count: pendingApprovalCount },
+    { key: 'completed', label: 'تکمیل شده', count: completedCount },
   ];
 
   return (
-    <div style={{ display: 'flex', borderBottom: '2px solid #e5e7eb', marginBottom: '0' }}>
+    <div className="contracts-tabs">
       {tabs.map((tab) => {
         const isActive = activeTab === tab.key;
         return (
-          <button
-            key={tab.key}
-            onClick={() => onTabChange(tab.key)}
-            style={{
-              display: 'flex', alignItems: 'center', gap: '8px',
-              padding: '12px 24px', fontSize: '13px', fontFamily: 'inherit',
-              background: 'none', border: 'none', cursor: 'pointer',
-              borderBottom: isActive ? '2px solid var(--dark-teal)' : '2px solid transparent',
-              marginBottom: '-2px',
-              color: isActive ? 'var(--dark-teal)' : '#6b7280',
-              fontWeight: isActive ? 'bold' : 'normal',
-              transition: '0.2s',
-            }}
-          >
+          <button key={tab.key} type="button" onClick={() => onTabChange(tab.key)} className={`contracts-tab${isActive ? ' is-active' : ''}`}>
             {tab.label}
-            <span style={{
-              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-              minWidth: '22px', height: '22px', padding: '0 6px',
-              borderRadius: '20px', fontSize: '11px', fontFamily: 'tahoma',
-              background: isActive ? 'var(--dark-teal)' : '#e5e7eb',
-              color: isActive ? '#fff' : '#6b7280',
-            }}>
-              {tab.count}
-            </span>
+            <span className="contracts-tab-count">{tab.count}</span>
           </button>
         );
       })}
