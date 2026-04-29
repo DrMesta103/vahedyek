@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { parseAuthIdentifier } from '../../../lib/contact';
 import { handlePrismaApiError } from '../../../lib/prismaApiError';
 
 export async function POST(request: Request) {
@@ -8,16 +9,23 @@ export async function POST(request: Request) {
       import('../../../lib/prisma'),
     ]);
 
-    const body = (await request.json()) as { email?: string; password?: string };
+    const body = (await request.json()) as { identifier?: string; password?: string };
 
-    const email = body.email?.trim().toLowerCase();
+    const identifier = parseAuthIdentifier(body.identifier ?? '');
     const password = body.password ?? '';
 
-    if (!email || !password) {
-      return NextResponse.json({ message: 'ایمیل و رمز عبور الزامی است.' }, { status: 400 });
+    if (!body.identifier?.trim() || !password) {
+      return NextResponse.json({ message: 'ایمیل یا موبایل و رمز عبور الزامی است.' }, { status: 400 });
     }
 
-    const user = await prisma.appUser.findUnique({ where: { email } });
+    if (identifier.type === 'unknown') {
+      return NextResponse.json({ message: 'ایمیل یا شماره موبایل صحیح وارد کنید.' }, { status: 400 });
+    }
+
+    const user =
+      identifier.type === 'email'
+        ? await prisma.appUser.findUnique({ where: { email: identifier.value } })
+        : await prisma.appUser.findUnique({ where: { mobile: identifier.value } });
 
     if (!user) {
       return NextResponse.json({ message: 'کاربر با این مشخصات پیدا نشد.' }, { status: 404 });
@@ -28,12 +36,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: 'رمز عبور اشتباه است.' }, { status: 401 });
     }
 
-    // Create a short-lived pending session (no tenant yet)
     const session = await createPendingSession(user.id);
 
     const response = NextResponse.json({
       success: true,
-      user: { id: user.id, fullName: user.fullName, email: user.email },
+      user: { id: user.id, fullName: user.fullName, email: user.email, mobile: user.mobile },
     });
     setAuthCookie(response, session);
 

@@ -24,20 +24,25 @@ export async function GET() {
     return NextResponse.json({
       user: {
         id: session.user.id,
+        firstName: session.user.firstName,
+        lastName: session.user.lastName,
         fullName: session.user.fullName,
         email: session.user.email,
+        mobile: session.user.mobile,
       },
       membership: access
         ? {
             id: access.membership.id,
             role: access.membership.role,
             roleLabels: access.roleLabels,
+            roleKeys: access.membership.roles.map((item) => item.role.key),
           }
         : null,
       access: access
         ? {
             isOwner: access.isOwner,
             roleLabels: access.roleLabels,
+            roleKeys: access.membership.roles.map((item) => item.role.key),
             permissionKeys: access.permissionKeys,
             allowedMenuItemIds: access.allowedMenuItemIds,
           }

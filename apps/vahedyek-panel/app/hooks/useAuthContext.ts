@@ -5,8 +5,11 @@ import { useEffect, useState } from 'react';
 type AuthContext = {
   user: {
     id: string;
+    firstName: string;
+    lastName: string;
     fullName: string;
-    email: string;
+    email: string | null;
+    mobile: string | null;
   };
   tenant: {
     id: string;
@@ -18,10 +21,12 @@ type AuthContext = {
     id: string;
     role: string;
     roleLabels: string[];
+    roleKeys: string[];
   } | null;
   access: {
     isOwner: boolean;
     roleLabels: string[];
+    roleKeys: string[];
     permissionKeys: string[];
     allowedMenuItemIds: string[];
   } | null;

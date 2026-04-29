@@ -54,6 +54,8 @@ model Tenant {
   slug          String                 @unique
   name          String
   brandCode     String                 @default("VN")
+  packageKey    String                 @default("starter")
+  billingCycle  String                 @default("monthly")
   createdAt     DateTime               @default(now())
   updatedAt     DateTime               @updatedAt
   memberships   UserTenantMembership[]
@@ -73,7 +75,10 @@ model Tenant {
 
 model AppUser {
   id           String                @id @default(cuid())
-  email        String                @unique
+  email        String?               @unique
+  mobile       String?               @unique
+  firstName    String
+  lastName     String
   fullName     String
   passwordHash String
   passwordSalt String
