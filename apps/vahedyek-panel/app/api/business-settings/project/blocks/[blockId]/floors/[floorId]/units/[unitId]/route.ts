@@ -18,6 +18,7 @@ type UnitPayload = {
   amenities?: Array<{ title: string; count: number }>;
   baseInfo?: string;
   direction?: string;
+  areaPricingMode?: string;
   parkingIds?: string[];
   storageIds?: string[];
 };
@@ -27,6 +28,7 @@ const categories = new Set(['unit', 'storage', 'parking', 'amenity']);
 const usages = new Set(['residential', 'commercial', 'office']);
 const deliveryStatuses = new Set(['ready', 'presale']);
 const directions = new Set(['unknown', 'north', 'south', 'east', 'west', 'north-east', 'north-west', 'south-east', 'south-west']);
+const areaPricingModes = new Set(['unit-only', 'unit-plus-parking', 'unit-plus-storage', 'unit-plus-storage-parking']);
 
 function cleanText(value: unknown, max = 80) {
   return typeof value === 'string' ? value.trim().slice(0, max) : '';
@@ -56,6 +58,13 @@ async function getFloor(tenantId: string, blockId: string, floorId: string) {
   return floors[0] ?? null;
 }
 
+async function ensureAreaPricingModeColumn() {
+  await prisma.$executeRawUnsafe(`
+    ALTER TABLE "Unit"
+    ADD COLUMN IF NOT EXISTS "areaPricingMode" TEXT NOT NULL DEFAULT 'unit-only'
+  `);
+}
+
 async function getUnit(tenantId: string, blockId: string, floorName: string, unitId: string) {
   const units = await prisma.$queryRaw<Array<{
     id: string;
@@ -73,8 +82,9 @@ async function getUnit(tenantId: string, blockId: string, floorName: string, uni
     amenities: Array<{ title: string; count: number }> | null;
     baseInfo: string | null;
     direction: string | null;
+    areaPricingMode: string | null;
   }>>(Prisma.sql`
-    SELECT "id", "name", "floorName", "category", "unitType", "usage", "saleEnabled", "deliveryStatus", "area", "balconyCount", "bedroomCount", "postalCode", "amenities", "baseInfo", "direction"
+    SELECT "id", "name", "floorName", "category", "unitType", "usage", "saleEnabled", "deliveryStatus", "area", "balconyCount", "bedroomCount", "postalCode", "amenities", "baseInfo", "direction", "areaPricingMode"
     FROM "Unit"
     WHERE "tenantId" = ${tenantId} AND "blockId" = ${blockId} AND "floorName" = ${floorName} AND "id" = ${unitId}
     LIMIT 1
@@ -88,6 +98,8 @@ export async function GET(_: Request, { params }: { params: Promise<{ blockId: s
     const { blockId, floorId, unitId } = await params;
     const session = await requireSessionContext();
     if (session instanceof NextResponse) return session;
+
+    await ensureAreaPricingModeColumn();
 
     const floor = await getFloor(session.tenantId, blockId, floorId);
     if (!floor) return NextResponse.json({ message: 'طبقه پیدا نشد.' }, { status: 404 });
@@ -122,6 +134,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ bl
     const session = await requireSessionContext();
     if (session instanceof NextResponse) return session;
 
+    await ensureAreaPricingModeColumn();
+
     const floor = await getFloor(session.tenantId, blockId, floorId);
     if (!floor) return NextResponse.json({ message: 'طبقه پیدا نشد.' }, { status: 404 });
 
@@ -135,6 +149,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ bl
     const usage = usages.has(cleanText(payload.usage)) ? cleanText(payload.usage) : 'residential';
     const deliveryStatus = deliveryStatuses.has(cleanText(payload.deliveryStatus)) ? cleanText(payload.deliveryStatus) : 'ready';
     const direction = directions.has(cleanText(payload.direction)) ? cleanText(payload.direction) : 'unknown';
+    const areaPricingMode = areaPricingModes.has(cleanText(payload.areaPricingMode)) ? cleanText(payload.areaPricingMode) : 'unit-only';
     const area = parseNumber(payload.area);
     const balconyCount = parseCount(payload.balconyCount);
     const bedroomCount = parseCount(payload.bedroomCount);
@@ -184,6 +199,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ bl
           "amenities" = ${JSON.stringify(category === 'unit' ? amenities : [])}::jsonb,
           "baseInfo" = ${baseInfo},
           "direction" = ${direction},
+          "areaPricingMode" = ${category === 'unit' ? areaPricingMode : 'unit-only'},
           "updatedAt" = CURRENT_TIMESTAMP
         WHERE "tenantId" = ${session.tenantId} AND "blockId" = ${blockId} AND "id" = ${unitId}
       `);

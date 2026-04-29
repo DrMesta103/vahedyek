@@ -21,7 +21,12 @@ export type NaturalOwnershipForm = {
 export type RepresentativeRecord = {
   id: string;
   fullName: string;
+  firstName?: string;
+  lastName?: string;
+  gender?: 'male' | 'female';
+  nationalId?: string;
   mobile: string;
+  secondaryMobile?: string;
   email: string;
   avatarMode: 'image' | 'badge' | 'ghost';
   avatarText: string;
@@ -45,6 +50,10 @@ export type NaturalShareholderRecord = {
   avatarText: string;
   avatarImage?: string;
   sharePercent: string;
+  mandateEndDate?: string;
+  signatureAvatarMode?: ShareholderAvatarMode;
+  signatureAvatarText?: string;
+  signatureAvatarImage?: string;
 };
 
 export type LegalShareholderRecord = {
@@ -429,6 +438,16 @@ export function normalizePhone(value: string) {
     .replace(/[^\d+]/g, '');
 }
 
+export function normalizeEmail(value: string) {
+  return value.trim().toLowerCase();
+}
+
+export function buildRepresentativeFullName(firstName?: string, lastName?: string, fallback?: string) {
+  const fullName = `${firstName ?? ''} ${lastName ?? ''}`.trim();
+  if (fullName) return fullName;
+  return (fallback ?? '').trim();
+}
+
 export function getDefaultProfileStore(): ProfileStore {
   return JSON.parse(JSON.stringify(defaultStore)) as ProfileStore;
 }
@@ -530,26 +549,39 @@ export async function persistProfileStore(store: ProfileStore) {
   return merged;
 }
 
-export function upsertRepresentative(store: ProfileStore, candidate: RepresentativeCandidate) {
+export function upsertRepresentative(store: ProfileStore, candidate: RepresentativeRecord | RepresentativeCandidate) {
+  const representative: RepresentativeRecord = {
+    id: candidate.id,
+    fullName: candidate.fullName,
+    firstName: candidate.firstName,
+    lastName: candidate.lastName,
+    gender: candidate.gender,
+    nationalId: candidate.nationalId,
+    mobile: candidate.mobile,
+    secondaryMobile: candidate.secondaryMobile,
+    email: candidate.email,
+    avatarMode: candidate.avatarMode,
+    avatarText: candidate.avatarText,
+    avatarImage: candidate.avatarImage,
+    isPrimary: candidate.isPrimary,
+    linkedUser: candidate.linkedUser,
+  };
   const exists = store.representatives.some((item) => item.id === candidate.id);
-  if (exists) return store;
 
   return {
     ...store,
-    representatives: [
-      ...store.representatives,
-      {
-        id: candidate.id,
-        fullName: candidate.fullName,
-        mobile: candidate.mobile,
-        email: candidate.email,
-        avatarMode: candidate.avatarMode,
-        avatarText: candidate.avatarText,
-        avatarImage: candidate.avatarImage,
-        isPrimary: false,
-        linkedUser: candidate.linkedUser,
-      },
-    ],
+    representatives: exists
+      ? store.representatives.map((item) => (item.id === candidate.id ? { ...item, ...representative } : item))
+      : [...store.representatives, representative],
+  };
+}
+
+export function upsertRepresentativeCandidate(store: ProfileStore, candidate: RepresentativeCandidate) {
+  const exists = store.directory.some((item) => item.id === candidate.id);
+
+  return {
+    ...store,
+    directory: exists ? store.directory.map((item) => (item.id === candidate.id ? { ...item, ...candidate } : item)) : [...store.directory, candidate],
   };
 }
 
@@ -578,12 +610,28 @@ export function linkRepresentativeToLegalShareholder(store: ProfileStore, shareh
     ...store,
     legalShareholders: store.legalShareholders.map((shareholder) => {
       if (shareholder.id !== shareholderId) return shareholder;
-      if (shareholder.representatives.some((item) => item.id === representative.id)) return shareholder;
+      if (shareholder.representatives.some((item) => item.id === representative.id)) {
+        return {
+          ...shareholder,
+          representatives: shareholder.representatives.map((item) => (item.id === representative.id ? { ...item, ...representative } : item)),
+        };
+      }
       return {
         ...shareholder,
         representatives: [...shareholder.representatives, representative],
       };
     }),
+  };
+}
+
+export function syncRepresentativeAcrossStore(store: ProfileStore, representative: RepresentativeRecord | RepresentativeCandidate) {
+  const next = upsertRepresentative(store, representative);
+  return {
+    ...next,
+    legalShareholders: next.legalShareholders.map((shareholder) => ({
+      ...shareholder,
+      representatives: shareholder.representatives.map((item) => (item.id === representative.id ? { ...item, ...representative } : item)),
+    })),
   };
 }
 

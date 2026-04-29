@@ -35,7 +35,7 @@ export function BusinessRepresentativesPanel() {
   return (
     <section className="representative-list-page" aria-label="لیست نماینده قانونی">
       <div className="representative-toolbar">
-        <Link href="/business-settings/profile/representatives/new" className="representative-add-button">
+        <Link href={`/business-settings/profile/representatives/new?title=${encodeURIComponent('ثبت نماینده')}`} className="representative-add-button">
           <Plus />
           افزودن نماینده
         </Link>

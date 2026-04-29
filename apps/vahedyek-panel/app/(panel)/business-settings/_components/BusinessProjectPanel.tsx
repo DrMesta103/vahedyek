@@ -23,7 +23,7 @@ import {
   Wrench,
   X,
 } from 'lucide-react';
-import { FieldGroup, FormTextInput, InlineSelect, TagPill } from '../../contracts/new/_components/ContractFormPrimitives';
+import { FieldGroup, FormTextInput, InlineSelect, TagPill, TagPills } from '../../contracts/new/_components/ContractFormPrimitives';
 
 type BlockDto = {
   id: string;
@@ -62,6 +62,7 @@ type UnitDto = {
   amenities?: Array<{ title: string; count: number }> | null;
   baseInfo?: string | null;
   direction?: string | null;
+  areaPricingMode?: string | null;
 };
 
 type AssignmentOption = {
@@ -163,6 +164,29 @@ const unitCategoryLabels: Record<UnitCategory, string> = {
   parking: 'پارکینگ',
   amenity: 'واحد رفاهی',
 };
+
+const unitAreaPricingOptions = [
+  {
+    value: 'unit-plus-parking',
+    label: 'واحد + پارکینگ',
+    hint: 'متراژ واحد و پارکینگ با هم در متراژ قابل قیمت‌گذاری لحاظ می‌شوند.',
+  },
+  {
+    value: 'unit-plus-storage-parking',
+    label: 'واحد + انباری + پارکینگ',
+    hint: 'متراژ واحد، انباری و پارکینگ یکجا در مبنای قیمت‌گذاری استفاده می‌شوند.',
+  },
+  {
+    value: 'unit-plus-storage',
+    label: 'واحد + انباری',
+    hint: 'متراژ واحد و انباری با هم در متراژ قابل قیمت‌گذاری منظور می‌شوند.',
+  },
+  {
+    value: 'unit-only',
+    label: 'تفکیک کامل',
+    hint: 'متراژ واحد، انباری و پارکینگ جدا نگه داشته می‌شوند و در قیمت‌گذاری مستقل عمل می‌کنند.',
+  },
+] as const;
 
 const unitUsageFilters = [
   { value: 'residential', label: '۵ مسکونی' },
@@ -1131,6 +1155,7 @@ export function BusinessUnitForm({ blockId, floorId, category, unitId }: { block
   const [bedroomCount, setBedroomCount] = useState('0');
   const [postalCode, setPostalCode] = useState('');
   const [direction, setDirection] = useState<(typeof directionOptions)[number]['value']>('unknown');
+  const [areaPricingMode, setAreaPricingMode] = useState<(typeof unitAreaPricingOptions)[number]['value']>('unit-only');
   const [amenities, setAmenities] = useState<AmenityItem[]>([]);
   const [amenityDialogOpen, setAmenityDialogOpen] = useState(false);
   const [amenityTitle, setAmenityTitle] = useState('');
@@ -1186,6 +1211,7 @@ export function BusinessUnitForm({ blockId, floorId, category, unitId }: { block
           setBedroomCount(String(data.unit.bedroomCount ?? 0));
           setPostalCode(data.unit.postalCode ?? '');
           setDirection((data.unit.direction as (typeof directionOptions)[number]['value']) ?? 'unknown');
+          setAreaPricingMode((data.unit.areaPricingMode as (typeof unitAreaPricingOptions)[number]['value']) ?? 'unit-only');
           setAmenities(Array.isArray(data.unit.amenities) ? data.unit.amenities : []);
           setBaseInfo(data.unit.baseInfo ?? '');
           setBaseInfoDraft(data.unit.baseInfo ?? '');
@@ -1263,6 +1289,7 @@ export function BusinessUnitForm({ blockId, floorId, category, unitId }: { block
       amenities,
       baseInfo,
       direction,
+      areaPricingMode,
       parkingIds: activeTab === 'single' && (isMainUnit || isAmenityUnit) ? selectedParkingIds : [],
       storageIds: activeTab === 'single' && (isMainUnit || isAmenityUnit) ? selectedStorageIds : [],
     };
@@ -1376,6 +1403,22 @@ export function BusinessUnitForm({ blockId, floorId, category, unitId }: { block
                   <FieldGroup label="متراژ" required>
                     <FormTextInput value={area} onChange={setArea} placeholder="مثلا 100" />
                   </FieldGroup>
+
+                  <div className="business-unit-form-fieldset">
+                    <span>نحوه اثرگذاری متراژ در قیمت‌گذاری</span>
+                    <TagPills
+                      options={unitAreaPricingOptions.map((option) => ({ value: option.value, label: option.label }))}
+                      value={areaPricingMode}
+                      onChange={(value) => setAreaPricingMode(value)}
+                      className="business-unit-choice-tags business-unit-choice-tags-radio"
+                    />
+                    <p className="business-unit-assignment-summary">
+                      {unitAreaPricingOptions.find((option) => option.value === areaPricingMode)?.hint}
+                    </p>
+                    <p className="business-unit-form-hint">
+                      این تنظیم مشخص می‌کند در مرحله قیمت‌گذاری پیش‌نویس، متراژ واحد به‌تنهایی یا به‌همراه انباری و پارکینگ در مبنای محاسبه مبلغ هر متر لحاظ شود.
+                    </p>
+                  </div>
 
                   <div className="business-unit-bulk-row">
                     <FieldGroup label="تعداد بالکن">

@@ -22,6 +22,7 @@ type UnitPayload = {
   amenities?: Array<{ title: string; count: number }>;
   baseInfo?: string;
   direction?: string;
+  areaPricingMode?: string;
   parkingIds?: string[];
   storageIds?: string[];
 };
@@ -31,6 +32,7 @@ const categories = new Set(['unit', 'storage', 'parking', 'amenity']);
 const usages = new Set(['residential', 'commercial', 'office']);
 const deliveryStatuses = new Set(['ready', 'presale']);
 const directions = new Set(['unknown', 'north', 'south', 'east', 'west', 'north-east', 'north-west', 'south-east', 'south-west']);
+const areaPricingModes = new Set(['unit-only', 'unit-plus-parking', 'unit-plus-storage', 'unit-plus-storage-parking']);
 
 function cleanText(value: unknown, max = 80) {
   return typeof value === 'string' ? value.trim().slice(0, max) : '';
@@ -60,18 +62,27 @@ async function getFloor(tenantId: string, blockId: string, floorId: string) {
   return floors[0] ?? null;
 }
 
+async function ensureAreaPricingModeColumn() {
+  await prisma.$executeRawUnsafe(`
+    ALTER TABLE "Unit"
+    ADD COLUMN IF NOT EXISTS "areaPricingMode" TEXT NOT NULL DEFAULT 'unit-only'
+  `);
+}
+
 export async function GET(_: Request, { params }: { params: Promise<{ blockId: string; floorId: string }> }) {
   try {
     const { blockId, floorId } = await params;
     const session = await requireSessionContext();
     if (session instanceof NextResponse) return session;
 
+    await ensureAreaPricingModeColumn();
+
     const floor = await getFloor(session.tenantId, blockId, floorId);
     if (!floor) return NextResponse.json({ message: 'طبقه پیدا نشد.' }, { status: 404 });
 
     const [units, parking, storage] = await Promise.all([
       prisma.$queryRaw(Prisma.sql`
-        SELECT "id", "name", "floorName", "category", "unitType", "usage", "saleEnabled", "deliveryStatus", "area", "balconyCount", "bedroomCount", "postalCode", "amenities", "baseInfo", "direction"
+        SELECT "id", "name", "floorName", "category", "unitType", "usage", "saleEnabled", "deliveryStatus", "area", "balconyCount", "bedroomCount", "postalCode", "amenities", "baseInfo", "direction", "areaPricingMode"
         FROM "Unit"
         WHERE "tenantId" = ${session.tenantId} AND "blockId" = ${blockId} AND "floorName" = ${floor.name} AND "category" = 'unit'
         ORDER BY "name" ASC
@@ -102,6 +113,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ blo
     const session = await requireSessionContext();
     if (session instanceof NextResponse) return session;
 
+    await ensureAreaPricingModeColumn();
+
     const floor = await getFloor(session.tenantId, blockId, floorId);
     if (!floor) return NextResponse.json({ message: 'طبقه پیدا نشد.' }, { status: 404 });
 
@@ -112,6 +125,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ blo
     const usage = usages.has(cleanText(payload.usage)) ? cleanText(payload.usage) : 'residential';
     const deliveryStatus = deliveryStatuses.has(cleanText(payload.deliveryStatus)) ? cleanText(payload.deliveryStatus) : 'ready';
     const direction = directions.has(cleanText(payload.direction)) ? cleanText(payload.direction) : 'unknown';
+    const areaPricingMode = areaPricingModes.has(cleanText(payload.areaPricingMode)) ? cleanText(payload.areaPricingMode) : 'unit-only';
     const area = parseNumber(payload.area);
     const balconyCount = parseCount(payload.balconyCount);
     const bedroomCount = parseCount(payload.bedroomCount);
@@ -160,8 +174,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ blo
         const id = crypto.randomUUID();
         createdIds.push(id);
         await tx.$executeRaw(Prisma.sql`
-          INSERT INTO "Unit" ("id", "tenantId", "blockId", "floorName", "name", "category", "unitType", "usage", "saleEnabled", "deliveryStatus", "area", "balconyCount", "bedroomCount", "postalCode", "amenities", "baseInfo", "direction", "createdAt", "updatedAt")
-          VALUES (${id}, ${session.tenantId}, ${blockId}, ${floor.name}, ${name}, ${category}, ${unitType}, ${usage}, ${saleEnabled}, ${deliveryStatus}, ${area}, ${category === 'unit' ? balconyCount : 0}, ${category === 'unit' ? bedroomCount : 0}, ${category === 'unit' ? postalCode : null}, ${JSON.stringify(category === 'unit' ? amenities : [])}::jsonb, ${baseInfo}, ${direction}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+          INSERT INTO "Unit" ("id", "tenantId", "blockId", "floorName", "name", "category", "unitType", "usage", "saleEnabled", "deliveryStatus", "area", "balconyCount", "bedroomCount", "postalCode", "amenities", "baseInfo", "direction", "areaPricingMode", "createdAt", "updatedAt")
+          VALUES (${id}, ${session.tenantId}, ${blockId}, ${floor.name}, ${name}, ${category}, ${unitType}, ${usage}, ${saleEnabled}, ${deliveryStatus}, ${area}, ${category === 'unit' ? balconyCount : 0}, ${category === 'unit' ? bedroomCount : 0}, ${category === 'unit' ? postalCode : null}, ${JSON.stringify(category === 'unit' ? amenities : [])}::jsonb, ${baseInfo}, ${direction}, ${category === 'unit' ? areaPricingMode : 'unit-only'}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
         `);
       }
 
