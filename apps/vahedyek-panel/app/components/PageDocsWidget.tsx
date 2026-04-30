@@ -2,61 +2,31 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
-import {
-  CalendarDays,
-  Eye,
-  EyeOff,
-  FileAudio2,
-  FileText,
-  Info,
-  Loader2,
-  Mic,
-  Pause,
-  Pencil,
-  Plus,
-  Tag,
-  Trash2,
-  Upload,
-  User2,
-  X,
-} from 'lucide-react';
+import { Camera, FileText, Info, Loader2, Maximize2, Mic, Minimize2, Pause, Plus, Reply, Send, Tag, Upload, X } from 'lucide-react';
 import { Input } from '@repo/ui';
 import { currentAppConfig } from '../config/current';
-import { getDocTypeLabel, normalizeLabels, PAGE_DOC_TYPES, type PageDocRecord, type PageDocType } from '../lib/page-docs';
+import { useAuthContext } from '../hooks/useAuthContext';
+import { DEFAULT_DOC_TYPES, THREAD_PRIORITIES, type PageMessageRecord, type PageThreadRecord, type ThreadPriority } from '../lib/page-threads';
 
-type SortMode = 'updated-desc' | 'created-desc' | 'title-asc' | 'author-asc';
-type WidgetMode = 'list' | 'view' | 'create' | 'edit';
+type WidgetMode = 'threads' | 'wizard' | 'chat';
 
-type PageDocsResponse = {
+type ThreadsResponse = {
   pagePath: string;
   pageKey: string;
-  docs: PageDocRecord[];
+  threads: PageThreadRecord[];
 };
 
-const SORT_LABELS: Record<SortMode, string> = {
-  'updated-desc': 'جدیدترین بروزرسانی',
-  'created-desc': 'جدیدترین ثبت',
-  'title-asc': 'عنوان',
-  'author-asc': 'نویسنده',
+type CreateThreadResponse = { success: true; threadId: string; pageKey: string; pagePath: string } | { message?: string };
+
+const PRIORITY_LABELS: Record<ThreadPriority, string> = {
+  p0: 'خیلی فوری',
+  p1: 'فوری',
+  p2: 'عادی',
+  p3: 'کم‌اهمیت',
 };
 
-function formatDate(value: string) {
+function formatDateTime(value: string) {
   return new Intl.DateTimeFormat('fa-IR', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
-}
-
-function sortDocs(docs: PageDocRecord[], sortMode: SortMode) {
-  const items = [...docs];
-  items.sort((left, right) => {
-    if (sortMode === 'updated-desc') return new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime();
-    if (sortMode === 'created-desc') return new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime();
-    if (sortMode === 'title-asc') return left.title.localeCompare(right.title, 'fa');
-    return (left.author?.fullName || '').localeCompare(right.author?.fullName || '', 'fa');
-  });
-  return items;
-}
-
-function toolbarButtonClass() {
-  return 'rounded-xl border border-[color:var(--border-color)] bg-[color:var(--surface)] px-3 py-2 text-xs font-medium text-[color:var(--text-body)] transition hover:border-[color:var(--theme-accent)] hover:text-[color:var(--theme-accent-strong)]';
 }
 
 function actionButtonClass(primary = false) {
@@ -65,135 +35,173 @@ function actionButtonClass(primary = false) {
     : 'app-button rounded-xl border border-[color:var(--border-color)] bg-[color:var(--surface)] px-4 py-2 text-sm font-medium text-[color:var(--text-body)]';
 }
 
-function iconButtonClass(active = false, danger = false) {
-  if (danger) {
-    return 'inline-flex h-10 w-10 items-center justify-center rounded-xl border border-rose-200 bg-rose-50 text-rose-700 transition hover:bg-rose-100';
-  }
-
-  return `inline-flex h-10 w-10 items-center justify-center rounded-xl border transition ${
-    active
-      ? 'border-[color:var(--theme-accent)] bg-[color:var(--surface-soft)] text-[color:var(--theme-accent-strong)]'
-      : 'border-[color:var(--border-color)] bg-[color:var(--surface)] text-[color:var(--text-body)] hover:border-[color:var(--theme-accent)] hover:text-[color:var(--theme-accent-strong)]'
-  }`;
-}
-
 function chipClass() {
   return 'inline-flex items-center rounded-full bg-[color:var(--surface-soft)] px-2.5 py-1 text-xs font-medium text-[color:var(--text-body)]';
 }
 
-function HtmlEditor({ value, onChange }: { value: string; onChange: (value: string) => void }) {
-  const editorRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    if (editorRef.current && editorRef.current.innerHTML !== value) {
-      editorRef.current.innerHTML = value;
-    }
-  }, [value]);
-
-  const runCommand = (command: string, commandValue?: string) => {
-    editorRef.current?.focus();
-    document.execCommand(command, false, commandValue);
-    onChange(editorRef.current?.innerHTML || '');
-  };
-
-  return (
-    <div className="overflow-hidden rounded-[22px] border border-[color:var(--border-color)] bg-[color:var(--surface)]">
-      <div className="flex flex-wrap gap-2 border-b border-[color:var(--border-color)] bg-[color:var(--surface-soft)] p-3">
-        <button type="button" className={toolbarButtonClass()} onClick={() => runCommand('formatBlock', '<p>')}>
-          پاراگراف
-        </button>
-        <button type="button" className={toolbarButtonClass()} onClick={() => runCommand('formatBlock', '<h2>')}>
-          تیتر
-        </button>
-        <button type="button" className={toolbarButtonClass()} onClick={() => runCommand('bold')}>
-          بولد
-        </button>
-        <button type="button" className={toolbarButtonClass()} onClick={() => runCommand('italic')}>
-          ایتالیک
-        </button>
-        <button type="button" className={toolbarButtonClass()} onClick={() => runCommand('underline')}>
-          زیرخط
-        </button>
-        <button type="button" className={toolbarButtonClass()} onClick={() => runCommand('insertUnorderedList')}>
-          لیست
-        </button>
-        <button type="button" className={toolbarButtonClass()} onClick={() => runCommand('insertOrderedList')}>
-          شماره‌دار
-        </button>
-        <button type="button" className={toolbarButtonClass()} onClick={() => runCommand('formatBlock', '<blockquote>')}>
-          نقل‌قول
-        </button>
-        <button type="button" className={toolbarButtonClass()} onClick={() => runCommand('removeFormat')}>
-          پاک‌سازی
-        </button>
-      </div>
-      <div
-        ref={editorRef}
-        className="min-h-[220px] w-full px-4 py-4 text-right text-sm leading-8 text-[color:var(--text-body)] outline-none"
-        contentEditable
-        suppressContentEditableWarning
-        onInput={() => onChange(editorRef.current?.innerHTML || '')}
-      />
-    </div>
-  );
+function activeChipClass(active: boolean) {
+  return `inline-flex items-center rounded-full px-3 py-1 text-xs font-bold transition ${
+    active
+      ? 'bg-[color:var(--theme-accent)] text-white'
+      : 'bg-[color:var(--surface-soft)] text-[color:var(--text-body)] hover:bg-[color:var(--surface)]'
+  }`;
 }
+
+async function fileToDataUrl(file: File) {
+  return await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ''));
+    reader.onerror = () => reject(new Error('خواندن فایل انجام نشد.'));
+    reader.readAsDataURL(file);
+  });
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function dataUrlToFile(dataUrl: string, filename: string) {
+  const [header, base64] = dataUrl.split(',');
+  const mimeMatch = header?.match(/data:(.*?);base64/);
+  const mimeType = mimeMatch?.[1] || 'application/octet-stream';
+  const bytes = atob(base64 || '');
+  const array = new Uint8Array(bytes.length);
+  for (let i = 0; i < bytes.length; i++) array[i] = bytes.charCodeAt(i);
+  return new File([array], filename, { type: mimeType });
+}
+
+type ScreenshotStep = null | 'select' | 'edit';
+
+type UiMessage = PageMessageRecord & { pending?: boolean };
 
 export default function PageDocsWidget() {
   const pathname = usePathname();
+  const { data: authContext } = useAuthContext();
+  const currentUserId = authContext?.user?.id ?? null;
+
+  const [widgetPos, setWidgetPos] = useState<{ x: number; y: number } | null>(null);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [recording, setRecording] = useState(false);
-  const [mode, setMode] = useState<WidgetMode>('list');
-  const [sortMode, setSortMode] = useState<SortMode>('updated-desc');
-  const [docs, setDocs] = useState<PageDocRecord[]>([]);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [title, setTitle] = useState('');
-  const [docType, setDocType] = useState<PageDocType>('free');
-  const [labelsInput, setLabelsInput] = useState('');
-  const [contentHtml, setContentHtml] = useState('');
-  const [audioDataUrl, setAudioDataUrl] = useState<string | null>(null);
-  const [audioMimeType, setAudioMimeType] = useState<string | null>(null);
+  const [maximized, setMaximized] = useState(false);
+  const [mode, setMode] = useState<WidgetMode>('threads');
+  const [threads, setThreads] = useState<PageThreadRecord[]>([]);
+  const [selectedThreadId, setSelectedThreadId] = useState<string | null>(null);
+  const [messages, setMessages] = useState<UiMessage[]>([]);
+  const [loadingMessages, setLoadingMessages] = useState(false);
+
+  const [wizardTitle, setWizardTitle] = useState('');
+  const [wizardDocType, setWizardDocType] = useState<string>('free');
+  const [wizardDocTypeInput, setWizardDocTypeInput] = useState('');
+  const [wizardPriority, setWizardPriority] = useState<ThreadPriority>('p2');
+  const [wizardLabelsInput, setWizardLabelsInput] = useState('');
+
+  const [composerText, setComposerText] = useState('');
+  const [replyTo, setReplyTo] = useState<PageMessageRecord | null>(null);
   const [error, setError] = useState('');
   const [pageKey, setPageKey] = useState('');
+  const [buzz, setBuzz] = useState(false);
+  const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
+  const [screenshotStep, setScreenshotStep] = useState<ScreenshotStep>(null);
+  const [screenshotRect, setScreenshotRect] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
+  const [screenshotBaseDataUrl, setScreenshotBaseDataUrl] = useState<string | null>(null);
+  const [screenshotColor, setScreenshotColor] = useState<string>('#ef4444');
 
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const imageInputRef = useRef<HTMLInputElement | null>(null);
+  const pdfInputRef = useRef<HTMLInputElement | null>(null);
+  const screenshotStartRef = useRef<{ x: number; y: number } | null>(null);
+  const drawCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const drawCtxRef = useRef<CanvasRenderingContext2D | null>(null);
+  const drawingRef = useRef(false);
+  const draggingRef = useRef(false);
+  const dragOffsetRef = useRef<{ dx: number; dy: number } | null>(null);
+  const audioElsRef = useRef<Record<string, HTMLAudioElement | null>>({});
+  const recordingVizCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const recordingAudioCtxRef = useRef<AudioContext | null>(null);
+  const recordingAnalyserRef = useRef<AnalyserNode | null>(null);
+  const recordingRafRef = useRef<number | null>(null);
 
-  const selectedDoc = useMemo(() => docs.find((item) => item.id === selectedId) ?? null, [docs, selectedId]);
-  const sortedDocs = useMemo(() => sortDocs(docs, sortMode), [docs, sortMode]);
+  const selectedThread = useMemo(
+    () => threads.find((thread) => thread.id === selectedThreadId) ?? null,
+    [selectedThreadId, threads],
+  );
+
+  const parsedLabels = useMemo(() => {
+    return Array.from(
+      new Set(
+        wizardLabelsInput
+          .split(',')
+          .map((value) => value.trim())
+          .filter(Boolean)
+          .slice(0, 12),
+      ),
+    );
+  }, [wizardLabelsInput]);
 
   useEffect(() => {
     setOpen(false);
-    setMode('list');
+    setMode('threads');
     setError('');
+    setSelectedThreadId(null);
+    setMessages([]);
+    setReplyTo(null);
+    setMaximized(false);
   }, [pathname]);
+
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      setBuzz(true);
+      window.setTimeout(() => setBuzz(false), 600);
+    }, 9000);
+    return () => window.clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const raw = window.localStorage.getItem('devDocsWidgetPos:v1');
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as { x?: unknown; y?: unknown };
+      if (typeof parsed?.x === 'number' && typeof parsed?.y === 'number') {
+        setWidgetPos({ x: parsed.x, y: parsed.y });
+      }
+    } catch {
+      return;
+    }
+  }, []);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setOpen(false);
+      if (event.key === 'Escape' && screenshotStep) {
+        setScreenshotStep(null);
+        setOpen(true);
+      }
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, []);
+  }, [screenshotStep]);
 
-  const fetchDocs = async () => {
-    const response = await fetch(`/api/page-docs?pagePath=${encodeURIComponent(pathname)}`, { cache: 'no-store' });
-    const payload = (await response.json().catch(() => null)) as PageDocsResponse | { message?: string } | null;
-    if (!response.ok) throw new Error((payload as { message?: string } | null)?.message || 'بارگذاری مستندات انجام نشد.');
-    return payload as PageDocsResponse;
+  const fetchThreads = async () => {
+    const response = await fetch(`/api/page-threads?pagePath=${encodeURIComponent(pathname)}`, { cache: 'no-store' });
+    const payload = (await response.json().catch(() => null)) as ThreadsResponse | { message?: string } | null;
+    if (!response.ok) throw new Error((payload as { message?: string } | null)?.message || 'بارگذاری گفتگوها انجام نشد.');
+    return payload as ThreadsResponse;
   };
 
-  const loadDocs = async () => {
+  const loadThreads = async () => {
     setLoading(true);
     setError('');
     try {
-      const payload = await fetchDocs();
-      setDocs(payload.docs);
+      const payload = await fetchThreads();
+      setThreads(payload.threads);
       setPageKey(payload.pageKey);
-      setSelectedId((current) => (current && payload.docs.some((doc) => doc.id === current) ? current : payload.docs[0]?.id ?? null));
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : 'بارگذاری مستندات انجام نشد.');
+      setError(loadError instanceof Error ? loadError.message : 'بارگذاری گفتگوها انجام نشد.');
     } finally {
       setLoading(false);
     }
@@ -202,88 +210,312 @@ export default function PageDocsWidget() {
   const openDrawer = async () => {
     if (open) {
       setOpen(false);
-      setMode('list');
+      setMode('threads');
       return;
     }
     setOpen(true);
-    setMode('list');
-    await loadDocs();
+    setMode('threads');
+    await loadThreads();
   };
 
-  const resetForm = () => {
-    setTitle('');
-    setDocType('free');
-    setLabelsInput('');
-    setContentHtml('');
-    setAudioDataUrl(null);
-    setAudioMimeType(null);
+  const resetWizard = () => {
+    setWizardTitle('');
+    setWizardDocType('free');
+    setWizardDocTypeInput('');
+    setWizardPriority('p2');
+    setWizardLabelsInput('');
     setError('');
   };
 
-  const openCreateMode = () => {
-    resetForm();
-    setMode('create');
+  const openWizard = () => {
+    resetWizard();
+    setMode('wizard');
   };
 
-  const openEditMode = (doc: PageDocRecord) => {
-    setSelectedId(doc.id);
-    setTitle(doc.title);
-    setDocType(doc.docType);
-    setLabelsInput(doc.labels.join(', '));
-    setContentHtml(doc.contentHtml);
-    setAudioDataUrl(doc.audioDataUrl);
-    setAudioMimeType(doc.audioMimeType);
+  const loadMessages = async (threadId: string) => {
+    setLoadingMessages(true);
     setError('');
-    setMode('edit');
-  };
-
-  const toggleDocRead = async (doc: PageDocRecord, nextRead: boolean) => {
     try {
-      const response = await fetch(`/api/page-docs/${doc.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isRead: nextRead }),
+      const response = await fetch(`/api/page-threads/${threadId}/messages`, { cache: 'no-store' });
+      const payload = (await response.json().catch(() => null)) as { messages?: PageMessageRecord[]; message?: string } | null;
+      if (!response.ok) throw new Error(payload?.message || 'بارگذاری پیام‌ها انجام نشد.');
+      setMessages(payload?.messages ?? []);
+      requestAnimationFrame(() => {
+        if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
       });
-      const payload = (await response.json().catch(() => null)) as { message?: string } | null;
-      if (!response.ok) throw new Error(payload?.message || 'بروزرسانی وضعیت مطالعه انجام نشد.');
-      setDocs((current) => current.map((item) => (item.id === doc.id ? { ...item, isRead: nextRead } : item)));
-      if (selectedDoc?.id === doc.id) {
-        setSelectedId(doc.id);
-      }
-    } catch (toggleError) {
-      setError(toggleError instanceof Error ? toggleError.message : 'بروزرسانی وضعیت مطالعه انجام نشد.');
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : 'بارگذاری پیام‌ها انجام نشد.');
+    } finally {
+      setLoadingMessages(false);
     }
   };
 
-  const openViewMode = async (doc: PageDocRecord) => {
-    setSelectedId(doc.id);
-    setMode('view');
-    setError('');
-    if (!doc.isRead) {
-      await toggleDocRead(doc, true);
-    }
+  const upsertOptimisticMessage = (tempId: string, message: PageMessageRecord | null) => {
+    if (!message) return;
+    setMessages((current) => current.map((m) => (m.id === tempId ? ({ ...message, pending: false } as UiMessage) : m)));
   };
 
-  const handleAudioFile = async (file: File) => {
-    const dataUrl = await new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(String(reader.result || ''));
-      reader.onerror = () => reject(new Error('خواندن فایل صوتی انجام نشد.'));
-      reader.readAsDataURL(file);
+  const openChat = async (thread: PageThreadRecord) => {
+    setSelectedThreadId(thread.id);
+    setMode('chat');
+    setReplyTo(null);
+    await loadMessages(thread.id);
+  };
+
+  const sendAttachmentMessage = async (file: File, type: 'image' | 'audio' | 'pdf') => {
+    if (!selectedThreadId) throw new Error('هیچ گفتگویی انتخاب نشده است.');
+
+    const dataUrl = await fileToDataUrl(file);
+    const tempId = `temp-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    const optimistic: UiMessage = {
+      id: tempId,
+      threadId: selectedThreadId,
+      messageType: type,
+      text: null,
+      attachmentDataUrl: dataUrl,
+      attachmentMimeType: file.type || null,
+      attachmentName: file.name || null,
+      attachmentSize: file.size || null,
+      replyToMessageId: replyTo?.id ?? null,
+      createdAt: new Date().toISOString(),
+      author: authContext?.user
+        ? {
+            id: authContext.user.id,
+            fullName: authContext.user.fullName,
+            email: authContext.user.email ?? '',
+          }
+        : null,
+      replyTo: replyTo ? { id: replyTo.id, messageType: replyTo.messageType, text: replyTo.text } : null,
+      pending: true,
+    };
+    setMessages((current) => [...current, optimistic]);
+    requestAnimationFrame(() => {
+      if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     });
-    setAudioDataUrl(dataUrl);
-    setAudioMimeType(file.type || 'audio/webm');
+
+    try {
+      const response = await fetch(`/api/page-threads/${selectedThreadId}/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messageType: type,
+          replyToMessageId: replyTo?.id ?? null,
+          attachment: {
+            dataUrl,
+            mimeType: file.type || (type === 'pdf' ? 'application/pdf' : null),
+            name: file.name,
+            size: file.size,
+          },
+        }),
+      });
+      const payload = (await response.json().catch(() => null)) as { message?: string; message?: PageMessageRecord | null; success?: boolean } | null;
+      if (!response.ok) throw new Error((payload as { message?: string } | null)?.message || 'ارسال فایل انجام نشد.');
+      setReplyTo(null);
+      upsertOptimisticMessage(tempId, (payload as { message?: PageMessageRecord | null } | null)?.message ?? null);
+    } catch (error) {
+      setMessages((current) => current.filter((m) => m.id !== tempId));
+      throw error;
+    }
+  };
+
+  const startScreenshot = () => {
+    if (!selectedThreadId) {
+      setError('برای ارسال اسکرین‌شات، ابتدا یک گفتگو را باز کن.');
+      return;
+    }
+    setError('');
+    setScreenshotRect(null);
+    setScreenshotBaseDataUrl(null);
+    setScreenshotStep('select');
+    setOpen(false);
+  };
+
+  const captureSelectedRect = async (rect: { x: number; y: number; width: number; height: number }) => {
+    const { default: html2canvas } = await import('html2canvas');
+    const options = {
+      backgroundColor: null as string | null,
+      useCORS: true,
+      logging: false,
+      windowWidth: document.documentElement.scrollWidth,
+      windowHeight: document.documentElement.scrollHeight,
+      scrollX: 0,
+      scrollY: -window.scrollY,
+      onclone: (doc: Document) => {
+        // Workaround for html2canvas not supporting oklab/oklch in some CSS.
+        doc.querySelectorAll<HTMLElement>('[style]').forEach((el) => {
+          const style = el.getAttribute('style') || '';
+          if (style.includes('oklab(') || style.includes('oklch(')) {
+            el.removeAttribute('style');
+          }
+        });
+        doc.querySelectorAll('style').forEach((styleEl) => {
+          const text = styleEl.textContent || '';
+          if (text.includes('oklab(') || text.includes('oklch(')) {
+            styleEl.textContent = text
+              .replace(/oklab\([^)]*\)/g, 'rgb(0,0,0)')
+              .replace(/oklch\([^)]*\)/g, 'rgb(0,0,0)');
+          }
+        });
+      },
+    };
+
+    let canvas: HTMLCanvasElement;
+    try {
+      canvas = await html2canvas(document.body, options);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (!message.includes('oklab') && !message.includes('oklch')) throw error;
+
+      // HARD fallback: use Screen Capture API to avoid CSS parsing entirely.
+      const stream = await navigator.mediaDevices.getDisplayMedia({
+        video: { displaySurface: 'browser' as unknown as string },
+        audio: false,
+      });
+      try {
+        const video = document.createElement('video');
+        video.srcObject = stream;
+        await video.play();
+        await new Promise<void>((resolve) => setTimeout(resolve, 200));
+
+        const devicePixelRatio = window.devicePixelRatio || 1;
+        const cropX = Math.floor((rect.x + window.scrollX) * devicePixelRatio);
+        const cropY = Math.floor((rect.y + window.scrollY) * devicePixelRatio);
+        const cropW = Math.floor(rect.width * devicePixelRatio);
+        const cropH = Math.floor(rect.height * devicePixelRatio);
+
+        const full = document.createElement('canvas');
+        full.width = Math.max(1, Math.floor(video.videoWidth));
+        full.height = Math.max(1, Math.floor(video.videoHeight));
+        const fullCtx = full.getContext('2d');
+        if (!fullCtx) throw new Error('Canvas در دسترس نیست.');
+        fullCtx.drawImage(video, 0, 0, full.width, full.height);
+
+        const out = document.createElement('canvas');
+        out.width = Math.max(1, cropW);
+        out.height = Math.max(1, cropH);
+        const outCtx = out.getContext('2d');
+        if (!outCtx) throw new Error('Canvas در دسترس نیست.');
+        outCtx.drawImage(full, cropX, cropY, cropW, cropH, 0, 0, out.width, out.height);
+        return out.toDataURL('image/png');
+      } finally {
+        stream.getTracks().forEach((track) => track.stop());
+      }
+    }
+
+    const devicePixelRatio = window.devicePixelRatio || 1;
+    const cropX = Math.floor((rect.x + window.scrollX) * devicePixelRatio);
+    const cropY = Math.floor((rect.y + window.scrollY) * devicePixelRatio);
+    const cropW = Math.floor(rect.width * devicePixelRatio);
+    const cropH = Math.floor(rect.height * devicePixelRatio);
+
+    const out = document.createElement('canvas');
+    out.width = Math.max(1, cropW);
+    out.height = Math.max(1, cropH);
+    const outCtx = out.getContext('2d');
+    if (!outCtx) throw new Error('Canvas در دسترس نیست.');
+    outCtx.drawImage(canvas, cropX, cropY, cropW, cropH, 0, 0, out.width, out.height);
+    return out.toDataURL('image/png');
+  };
+
+  const openEditorForRect = async (rect: { x: number; y: number; width: number; height: number }) => {
+    setSaving(true);
+    setError('');
+    try {
+      const dataUrl = await captureSelectedRect(rect);
+      setScreenshotBaseDataUrl(dataUrl);
+      setScreenshotStep('edit');
+    } catch (captureError) {
+      setScreenshotStep(null);
+      setError(captureError instanceof Error ? captureError.message : 'اسکرین‌شات انجام نشد.');
+      setOpen(true);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const confirmScreenshot = async () => {
+    if (!screenshotBaseDataUrl) return;
+    try {
+      const baseImg = new Image();
+      baseImg.src = screenshotBaseDataUrl;
+      await new Promise<void>((resolve, reject) => {
+        baseImg.onload = () => resolve();
+        baseImg.onerror = () => reject(new Error('لود تصویر انجام نشد.'));
+      });
+
+      const out = document.createElement('canvas');
+      out.width = baseImg.naturalWidth;
+      out.height = baseImg.naturalHeight;
+      const outCtx = out.getContext('2d');
+      if (!outCtx) throw new Error('Canvas در دسترس نیست.');
+      outCtx.drawImage(baseImg, 0, 0);
+      if (drawCanvasRef.current) {
+        outCtx.drawImage(drawCanvasRef.current, 0, 0);
+      }
+
+      const finalDataUrl = out.toDataURL('image/png');
+      const file = dataUrlToFile(finalDataUrl, 'screenshot.png');
+      setScreenshotStep(null);
+      setOpen(true);
+      await sendAttachmentMessage(file, 'image');
+    } catch (sendError) {
+      setError(sendError instanceof Error ? sendError.message : 'ارسال اسکرین‌شات انجام نشد.');
+      setScreenshotStep(null);
+      setOpen(true);
+    }
   };
 
   const toggleRecording = async () => {
     if (recording) {
       recorderRef.current?.stop();
       setRecording(false);
+      if (recordingRafRef.current) cancelAnimationFrame(recordingRafRef.current);
+      recordingRafRef.current = null;
+      recordingAnalyserRef.current = null;
+      recordingAudioCtxRef.current?.close().catch(() => null);
+      recordingAudioCtxRef.current = null;
       return;
     }
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+      try {
+        const audioCtx = new AudioContext();
+        const source = audioCtx.createMediaStreamSource(stream);
+        const analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 256;
+        source.connect(analyser);
+        recordingAudioCtxRef.current = audioCtx;
+        recordingAnalyserRef.current = analyser;
+
+        const draw = () => {
+          const canvas = recordingVizCanvasRef.current;
+          const an = recordingAnalyserRef.current;
+          if (!canvas || !an) return;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return;
+          const data = new Uint8Array(an.frequencyBinCount);
+          an.getByteFrequencyData(data);
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          const bars = 18;
+          const step = Math.floor(data.length / bars);
+          const gap = 2;
+          const barW = (canvas.width - gap * (bars - 1)) / bars;
+          for (let i = 0; i < bars; i++) {
+            const v = data[i * step] || 0;
+            const h = (v / 255) * canvas.height;
+            const x = i * (barW + gap);
+            ctx.fillStyle = 'rgba(255,255,255,0.9)';
+            ctx.fillRect(x, canvas.height - h, barW, Math.max(2, h));
+          }
+          recordingRafRef.current = requestAnimationFrame(draw);
+        };
+        recordingRafRef.current = requestAnimationFrame(draw);
+      } catch {
+        // ignore visualizer failures
+      }
+
       const recorder = new MediaRecorder(stream);
       chunksRef.current = [];
       recorderRef.current = recorder;
@@ -295,7 +527,11 @@ export default function PageDocsWidget() {
       recorder.onstop = async () => {
         const blob = new Blob(chunksRef.current, { type: recorder.mimeType || 'audio/webm' });
         const file = new File([blob], 'voice-note.webm', { type: blob.type });
-        await handleAudioFile(file);
+        try {
+          await sendAttachmentMessage(file, 'audio');
+        } catch (sendError) {
+          setError(sendError instanceof Error ? sendError.message : 'ارسال ویس انجام نشد.');
+        }
         stream.getTracks().forEach((track) => track.stop());
       };
       recorder.start();
@@ -305,68 +541,310 @@ export default function PageDocsWidget() {
     }
   };
 
-  const handleSave = async () => {
-    if (!title.trim()) {
-      setError('عنوان مستند الزامی است.');
+  const handleCreateThread = async () => {
+    if (!wizardTitle.trim()) {
+      setError('عنوان گفتگو الزامی است.');
       return;
     }
 
     setSaving(true);
     setError('');
     try {
-      const response = await fetch(mode === 'edit' && selectedId ? `/api/page-docs/${selectedId}` : '/api/page-docs', {
-        method: mode === 'edit' && selectedId ? 'PUT' : 'POST',
+      const response = await fetch('/api/page-threads', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           pagePath: pathname,
-          title: title.trim(),
-          docType,
-          labels: normalizeLabels(labelsInput.split(',')),
-          contentHtml,
-          audioDataUrl,
-          audioMimeType,
+          title: wizardTitle.trim(),
+          docType: wizardDocType.trim(),
+          priority: wizardPriority,
+          labels: parsedLabels,
         }),
       });
+      const payload = (await response.json().catch(() => null)) as CreateThreadResponse | null;
+      if (!response.ok) throw new Error((payload as { message?: string } | null)?.message || 'ایجاد گفتگو انجام نشد.');
+      if (!payload || !('threadId' in payload)) throw new Error('ایجاد گفتگو انجام نشد.');
 
-      const payload = (await response.json().catch(() => null)) as { message?: string } | null;
-      if (!response.ok) throw new Error(payload?.message || 'ذخیره مستند انجام نشد.');
-
-      const refreshed = await fetchDocs();
-      setDocs(refreshed.docs);
+      const refreshed = await fetchThreads();
+      setThreads(refreshed.threads);
       setPageKey(refreshed.pageKey);
-      setSelectedId(refreshed.docs[0]?.id ?? null);
-      setMode('list');
-    } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : 'ذخیره مستند انجام نشد.');
+      const createdThread = refreshed.threads.find((t) => t.id === payload.threadId) ?? null;
+      if (createdThread) {
+        await openChat(createdThread);
+      } else {
+        setMode('threads');
+      }
+    } catch (createError) {
+      setError(createError instanceof Error ? createError.message : 'ایجاد گفتگو انجام نشد.');
     } finally {
       setSaving(false);
     }
   };
 
-  const handleDelete = async (doc: PageDocRecord) => {
-    if (!confirm(`مستند "${doc.title}" حذف شود؟`)) return;
+  const sendTextMessage = async () => {
+    if (!selectedThreadId) return;
+    if (!composerText.trim()) return;
+
+    const text = composerText.trim();
+    setComposerText('');
 
     try {
-      const response = await fetch(`/api/page-docs/${doc.id}`, { method: 'DELETE' });
-      const payload = (await response.json().catch(() => null)) as { message?: string } | null;
-      if (!response.ok) throw new Error(payload?.message || 'حذف مستند انجام نشد.');
-      const refreshed = await fetchDocs();
-      setDocs(refreshed.docs);
-      setSelectedId(refreshed.docs[0]?.id ?? null);
-      setMode('list');
-    } catch (deleteError) {
-      setError(deleteError instanceof Error ? deleteError.message : 'حذف مستند انجام نشد.');
+      const tempId = `temp-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      const optimistic: UiMessage = {
+        id: tempId,
+        threadId: selectedThreadId,
+        messageType: 'text',
+        text,
+        attachmentDataUrl: null,
+        attachmentMimeType: null,
+        attachmentName: null,
+        attachmentSize: null,
+        replyToMessageId: replyTo?.id ?? null,
+        createdAt: new Date().toISOString(),
+        author: authContext?.user
+          ? { id: authContext.user.id, fullName: authContext.user.fullName, email: authContext.user.email ?? '' }
+          : null,
+        replyTo: replyTo ? { id: replyTo.id, messageType: replyTo.messageType, text: replyTo.text } : null,
+        pending: true,
+      };
+      setMessages((current) => [...current, optimistic]);
+      requestAnimationFrame(() => {
+        if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      });
+
+      const response = await fetch(`/api/page-threads/${selectedThreadId}/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messageType: 'text',
+          text,
+          replyToMessageId: replyTo?.id ?? null,
+        }),
+      });
+      const payload = (await response.json().catch(() => null)) as { message?: string; message?: PageMessageRecord | null } | null;
+      if (!response.ok) throw new Error((payload as { message?: string } | null)?.message || 'ارسال پیام انجام نشد.');
+      setReplyTo(null);
+      upsertOptimisticMessage(tempId, (payload as { message?: PageMessageRecord | null } | null)?.message ?? null);
+    } catch (sendError) {
+      setComposerText(text);
+      setError(sendError instanceof Error ? sendError.message : 'ارسال پیام انجام نشد.');
     }
   };
 
   return (
-    <div className="pointer-events-none fixed inset-y-0 left-0 z-50 flex items-center">
+    <>
+      <style>{`
+        @keyframes devDocsBuzz {
+          0% { transform: translate(0, 0) rotate(0deg); }
+          18% { transform: translate(-2px, 0) rotate(-3deg); }
+          36% { transform: translate(2px, 0) rotate(3deg); }
+          54% { transform: translate(-2px, 0) rotate(-2deg); }
+          72% { transform: translate(2px, 0) rotate(2deg); }
+          100% { transform: translate(0, 0) rotate(0deg); }
+        }
+        @keyframes devDocsEqualize {
+          0%, 100% { transform: scaleY(0.35); }
+          50% { transform: scaleY(1); }
+        }
+      `}</style>
+
+      {screenshotStep ? (
+        <div
+          className="fixed inset-0 z-[9999] bg-black/40"
+          onPointerDown={(event) => {
+            if (screenshotStep !== 'select') return;
+            const x = clamp(event.clientX, 0, window.innerWidth);
+            const y = clamp(event.clientY, 0, window.innerHeight);
+            screenshotStartRef.current = { x, y };
+            setScreenshotRect({ x, y, width: 1, height: 1 });
+          }}
+          onPointerMove={(event) => {
+            if (screenshotStep !== 'select') return;
+            if (!screenshotStartRef.current) return;
+            const x2 = clamp(event.clientX, 0, window.innerWidth);
+            const y2 = clamp(event.clientY, 0, window.innerHeight);
+            const x1 = screenshotStartRef.current.x;
+            const y1 = screenshotStartRef.current.y;
+            const next = {
+              x: Math.min(x1, x2),
+              y: Math.min(y1, y2),
+              width: Math.abs(x2 - x1),
+              height: Math.abs(y2 - y1),
+            };
+            setScreenshotRect(next);
+          }}
+          onPointerUp={() => {
+            if (screenshotStep !== 'select') return;
+            const rect = screenshotRect;
+            screenshotStartRef.current = null;
+            if (!rect || rect.width < 12 || rect.height < 12) {
+              setScreenshotRect(null);
+              return;
+            }
+            void openEditorForRect(rect);
+          }}
+        >
+          <div className="absolute left-1/2 top-6 -translate-x-1/2 rounded-2xl bg-white/90 px-4 py-2 text-sm font-semibold text-slate-800 shadow">
+            ناحیه را انتخاب کن. (Esc برای خروج)
+          </div>
+          <button
+            type="button"
+            className="absolute left-6 top-6 inline-flex items-center justify-center rounded-2xl bg-white/90 p-2 text-slate-700 shadow"
+            onClick={() => {
+              setScreenshotStep(null);
+              setOpen(true);
+            }}
+            title="انصراف"
+          >
+            <X className="h-5 w-5" />
+          </button>
+
+          {screenshotRect && screenshotStep === 'select' ? (
+            <div
+              className="absolute border-2 border-white bg-white/10"
+              style={{ left: screenshotRect.x, top: screenshotRect.y, width: screenshotRect.width, height: screenshotRect.height }}
+            />
+          ) : null}
+
+          {screenshotStep === 'edit' && screenshotBaseDataUrl ? (
+            <div className="absolute inset-0 flex items-center justify-center p-6">
+              <div className="flex h-[min(92vh,860px)] w-[min(92vw,980px)] flex-col overflow-hidden rounded-[26px] border border-white/30 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.25)]">
+                <div className="flex items-center justify-between gap-3 border-b border-slate-200/80 bg-white px-4 py-3">
+                  <div className="text-sm font-black text-slate-900">ویرایش اسکرین‌شات</div>
+                  <div className="flex items-center gap-2">
+                    {['#ef4444', '#22c55e', '#3b82f6', '#f59e0b', '#a855f7'].map((color) => (
+                      <button
+                        key={color}
+                        type="button"
+                        className={`h-8 w-8 rounded-full border ${screenshotColor === color ? 'border-slate-900' : 'border-slate-200'}`}
+                        style={{ background: color }}
+                        onClick={() => setScreenshotColor(color)}
+                        title="رنگ"
+                      />
+                    ))}
+                    <button type="button" className="ml-2 rounded-2xl bg-slate-100 px-3 py-2 text-sm font-semibold" onClick={() => confirmScreenshot()}>
+                      تایید و ارسال
+                    </button>
+                  </div>
+                </div>
+
+                <div className="relative flex-1 overflow-auto bg-slate-50 p-4">
+                  <div className="relative mx-auto w-fit">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={screenshotBaseDataUrl}
+                      alt="screenshot"
+                      className="max-h-[70vh] max-w-[86vw] rounded-2xl border border-slate-200 bg-white"
+                      onLoad={(event) => {
+                        const img = event.currentTarget;
+                        const canvas = drawCanvasRef.current;
+                        if (!canvas) return;
+                        canvas.width = img.naturalWidth;
+                        canvas.height = img.naturalHeight;
+                        canvas.style.width = `${img.clientWidth}px`;
+                        canvas.style.height = `${img.clientHeight}px`;
+                        const ctx = canvas.getContext('2d');
+                        if (!ctx) return;
+                        ctx.lineCap = 'round';
+                        ctx.lineJoin = 'round';
+                        ctx.lineWidth = 6;
+                        drawCtxRef.current = ctx;
+                      }}
+                    />
+                    <canvas
+                      ref={drawCanvasRef}
+                      className="absolute inset-0 touch-none"
+                      onPointerDown={(event) => {
+                        const canvas = drawCanvasRef.current;
+                        const ctx = drawCtxRef.current;
+                        if (!canvas || !ctx) return;
+                        drawingRef.current = true;
+                        const rect = canvas.getBoundingClientRect();
+                        const x = ((event.clientX - rect.left) / rect.width) * canvas.width;
+                        const y = ((event.clientY - rect.top) / rect.height) * canvas.height;
+                        ctx.strokeStyle = screenshotColor;
+                        ctx.beginPath();
+                        ctx.moveTo(x, y);
+                      }}
+                      onPointerMove={(event) => {
+                        if (!drawingRef.current) return;
+                        const canvas = drawCanvasRef.current;
+                        const ctx = drawCtxRef.current;
+                        if (!canvas || !ctx) return;
+                        const rect = canvas.getBoundingClientRect();
+                        const x = ((event.clientX - rect.left) / rect.width) * canvas.width;
+                        const y = ((event.clientY - rect.top) / rect.height) * canvas.height;
+                        ctx.lineTo(x, y);
+                        ctx.stroke();
+                      }}
+                      onPointerUp={() => {
+                        drawingRef.current = false;
+                      }}
+                      onPointerCancel={() => {
+                        drawingRef.current = false;
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
+      {open ? (
+        <div
+          className="fixed inset-0 z-40"
+          onMouseDown={() => {
+            setOpen(false);
+            setMode('threads');
+          }}
+          onTouchStart={() => {
+            setOpen(false);
+            setMode('threads');
+          }}
+        />
+      ) : null}
+
+      <div className="pointer-events-none fixed inset-0 z-50">
       <button
         type="button"
         onClick={() => void openDrawer()}
-        className="pointer-events-auto ml-4 flex h-11 w-11 items-center justify-center rounded-full border border-[color:var(--border-color)] bg-[color:var(--surface-overlay)] text-[color:var(--theme-accent-strong)] shadow-[0_18px_45px_var(--shadow-soft)] transition"
-        aria-label="مستندات توسعه این صفحه"
-        title="مستندات توسعه این صفحه"
+        className="pointer-events-auto flex h-12 w-12 items-center justify-center rounded-full border border-white/60 bg-[color:var(--theme-accent)] text-white shadow-[0_22px_55px_rgba(0,0,0,0.22)] transition"
+        aria-label="گفتگوی مستندات توسعه این صفحه"
+        title="گفتگوی مستندات توسعه این صفحه"
+        style={{
+          position: 'fixed',
+          left: widgetPos ? widgetPos.x : 16,
+          top: widgetPos ? widgetPos.y : Math.round(window.innerHeight / 2 - 22),
+          touchAction: 'none',
+          animation: buzz ? 'devDocsBuzz 600ms ease-in-out' : undefined,
+        }}
+        onPointerDown={(event) => {
+          draggingRef.current = true;
+          const startX = widgetPos?.x ?? 16;
+          const startY = widgetPos?.y ?? Math.round(window.innerHeight / 2 - 22);
+          dragOffsetRef.current = { dx: event.clientX - startX, dy: event.clientY - startY };
+          (event.currentTarget as HTMLButtonElement).setPointerCapture(event.pointerId);
+        }}
+        onPointerMove={(event) => {
+          if (!draggingRef.current || !dragOffsetRef.current) return;
+          const x = clamp(event.clientX - dragOffsetRef.current.dx, 8, window.innerWidth - 52);
+          const y = clamp(event.clientY - dragOffsetRef.current.dy, 8, window.innerHeight - 52);
+          setWidgetPos({ x, y });
+        }}
+        onPointerUp={() => {
+          if (!draggingRef.current) return;
+          draggingRef.current = false;
+          dragOffsetRef.current = null;
+          if (widgetPos) {
+            try {
+              window.localStorage.setItem('devDocsWidgetPos:v1', JSON.stringify(widgetPos));
+            } catch {
+              return;
+            }
+          }
+        }}
       >
         {open ? <X className="h-5 w-5" /> : <Info className="h-5 w-5" />}
       </button>
@@ -375,285 +853,465 @@ export default function PageDocsWidget() {
         <section
           role="dialog"
           aria-modal="false"
-          className="pointer-events-auto ml-3 flex h-[94vh] w-[min(620px,calc(100vw-88px))] flex-col overflow-hidden rounded-[26px] border border-[color:var(--border-color)] bg-[color:var(--surface)] shadow-[0_24px_70px_var(--shadow-soft)]"
+          className="pointer-events-auto fixed flex flex-col overflow-hidden border border-[color:var(--border-color)] bg-[color:var(--surface)] shadow-[0_24px_70px_var(--shadow-soft)]"
+          onMouseDown={(event) => event.stopPropagation()}
+          onTouchStart={(event) => event.stopPropagation()}
+          style={{
+            left: 16,
+            top: 16,
+            right: maximized ? 16 : undefined,
+            bottom: maximized ? 16 : undefined,
+            height: maximized ? undefined : '94vh',
+            width: maximized ? undefined : 'min(620px, calc(100vw - 88px))',
+            borderRadius: maximized ? 22 : 26,
+          }}
         >
           <div className="border-b border-[color:var(--border-color)] bg-[color:var(--surface)] px-5 py-4">
             <div className="flex items-start justify-between gap-3">
               <div className="space-y-1">
                 <div className="text-xs font-semibold text-[color:var(--text-muted)]">{currentAppConfig.appName}</div>
-                <h2 className="text-lg font-black text-[color:var(--text-strong)]">مستندات توسعه صفحه</h2>
+                <h2 className="text-lg font-black text-[color:var(--text-strong)]">گفتگوی مستندات توسعه</h2>
                 <p className="font-mono text-xs text-[color:var(--text-muted)]">{pageKey || pathname}</p>
               </div>
-              {mode !== 'list' ? (
-                <button type="button" className={actionButtonClass(false)} onClick={() => setMode('list')}>
-                  بازگشت
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[color:var(--border-color)] bg-[color:var(--surface)] text-[color:var(--text-body)]"
+                  onClick={() => setMaximized((v) => !v)}
+                  title={maximized ? 'خروج از حالت تمام‌صفحه' : 'تمام‌صفحه'}
+                >
+                  {maximized ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+                </button>
+              {mode !== 'threads' ? (
+                <button
+                  type="button"
+                  className={actionButtonClass(false)}
+                  onClick={() => {
+                    setMode('threads');
+                    setSelectedThreadId(null);
+                    setMessages([]);
+                    setReplyTo(null);
+                  }}
+                >
+                  برگشت
                 </button>
               ) : null}
+              </div>
             </div>
           </div>
 
-          <div className="flex-1 overflow-auto bg-[color:var(--surface-soft)] p-4">
-            {loading ? (
-              <div className="rounded-[22px] border border-[color:var(--border-color)] bg-[color:var(--surface)] p-8 text-center text-sm text-[color:var(--text-muted)]">
-                <Loader2 className="mx-auto mb-3 h-5 w-5 animate-spin" />
-                در حال بارگذاری مستندات...
-              </div>
-            ) : mode === 'create' || mode === 'edit' ? (
-              <div className="space-y-4">
-                <div className="rounded-[22px] border border-[color:var(--border-color)] bg-[color:var(--surface)] p-4">
-                  <div className="grid gap-4">
-                    <label className="grid gap-2">
-                      <span className="text-sm font-semibold text-[color:var(--text-body)]">عنوان</span>
-                      <Input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="عنوان مستند" />
-                    </label>
-                    <label className="grid gap-2">
-                      <span className="text-sm font-semibold text-[color:var(--text-body)]">نوع مستند</span>
-                      <select
-                        value={docType}
-                        onChange={(event) => setDocType(event.target.value as PageDocType)}
-                        className="h-10 rounded-lg border border-[color:var(--border-color)] bg-[color:var(--surface)] px-3 text-[13px] text-[color:var(--text-body)] outline-none"
-                      >
-                        {PAGE_DOC_TYPES.map((item) => (
-                          <option key={item} value={item}>
-                            {getDocTypeLabel(item)}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                    <label className="grid gap-2">
-                      <span className="text-sm font-semibold text-[color:var(--text-body)]">لیبل‌ها</span>
-                      <Input
-                        value={labelsInput}
-                        onChange={(event) => setLabelsInput(event.target.value)}
-                        placeholder="مثلا: dto, onboarding, validation"
-                      />
-                      <span className="text-xs text-[color:var(--text-muted)]">لیبل‌ها را با ویرگول جدا کن.</span>
-                    </label>
-                    <div className="grid gap-2">
-                      <span className="text-sm font-semibold text-[color:var(--text-body)]">محتوا</span>
-                      <HtmlEditor value={contentHtml} onChange={setContentHtml} />
-                    </div>
-                    <div className="grid gap-3 rounded-[18px] border border-[color:var(--border-color)] bg-[color:var(--surface-soft)] p-3">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <button type="button" className={actionButtonClass(false)} onClick={() => void toggleRecording()}>
-                          {recording ? <Pause className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-                          {recording ? 'پایان ضبط' : 'ضبط ویس'}
-                        </button>
-                        <label className={actionButtonClass(false)}>
-                          <Upload className="h-4 w-4" />
-                          آپلود ویس
-                          <input
-                            type="file"
-                            accept="audio/*"
-                            className="hidden"
-                            onChange={(event) => {
-                              const file = event.target.files?.[0];
-                              if (file) void handleAudioFile(file);
-                            }}
-                          />
-                        </label>
-                        {audioDataUrl ? (
-                          <button
-                            type="button"
-                            className={actionButtonClass(false)}
-                            onClick={() => {
-                              setAudioDataUrl(null);
-                              setAudioMimeType(null);
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                            حذف ویس
-                          </button>
-                        ) : null}
-                      </div>
-                      {audioDataUrl ? <audio controls src={audioDataUrl} className="w-full" /> : <p className="text-sm text-[color:var(--text-muted)]">هنوز ویسی برای این مستند ثبت نشده است.</p>}
-                    </div>
-                  </div>
-                </div>
-
-                {error ? <div className="rounded-[18px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
-
-                <div className="flex justify-end gap-2">
-                  <button type="button" className={actionButtonClass(false)} onClick={() => setMode('list')}>
-                    انصراف
-                  </button>
-                  <button type="button" className={actionButtonClass(true)} disabled={saving} onClick={() => void handleSave()}>
-                    {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                    {mode === 'edit' ? 'ذخیره تغییرات' : 'ثبت مستند'}
-                  </button>
+          {mode === 'chat' ? (
+            <>
+              <div className="border-b border-[color:var(--border-color)] bg-[color:var(--surface-soft)] px-5 py-3">
+                <div className="text-sm font-black text-[color:var(--text-strong)]">{selectedThread?.title || 'گفتگو'}</div>
+                <div className="mt-1 flex flex-wrap gap-2 text-xs text-[color:var(--text-muted)]">
+                  {selectedThread ? (
+                    <>
+                      <span className={chipClass()}>{selectedThread.docType}</span>
+                      <span className={chipClass()}>{PRIORITY_LABELS[selectedThread.priority]}</span>
+                      {selectedThread.labels.map((label) => (
+                        <span key={label} className={chipClass()}>
+                          <Tag className="ml-1 h-3.5 w-3.5" />
+                          {label}
+                        </span>
+                      ))}
+                    </>
+                  ) : null}
                 </div>
               </div>
-            ) : mode === 'view' && selectedDoc ? (
-              <div className="space-y-4">
-                <div className="rounded-[22px] border border-[color:var(--border-color)] bg-[color:var(--surface)] p-4">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div className="space-y-2">
-                      <div className="inline-flex rounded-full bg-[color:var(--surface-soft)] px-3 py-1 text-xs font-bold text-[color:var(--text-body)]">
-                        {getDocTypeLabel(selectedDoc.docType)}
-                      </div>
-                      <h3 className="text-lg font-black text-[color:var(--text-strong)]">{selectedDoc.title}</h3>
-                      {selectedDoc.labels.length ? (
-                        <div className="flex flex-wrap gap-2">
-                          {selectedDoc.labels.map((label) => (
-                            <span key={label} className={chipClass()}>
-                              <Tag className="ml-1 h-3.5 w-3.5" />
-                              {label}
-                            </span>
-                          ))}
-                        </div>
-                      ) : null}
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        className={iconButtonClass(selectedDoc.isRead)}
-                        onClick={() => void toggleDocRead(selectedDoc, !selectedDoc.isRead)}
-                        title={selectedDoc.isRead ? 'مارک به عنوان نخوانده' : 'مارک به عنوان خوانده‌شده'}
-                        aria-label={selectedDoc.isRead ? 'مارک به عنوان نخوانده' : 'مارک به عنوان خوانده‌شده'}
-                      >
-                        {selectedDoc.isRead ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                      </button>
-                      <button type="button" className={iconButtonClass()} onClick={() => openEditMode(selectedDoc)} title="ویرایش" aria-label="ویرایش">
-                        <Pencil className="h-4 w-4" />
-                      </button>
-                      <button
-                        type="button"
-                        className={iconButtonClass(false, true)}
-                        onClick={() => void handleDelete(selectedDoc)}
-                        title="حذف"
-                        aria-label="حذف"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
-                  <div className="mt-4 grid gap-2 text-sm text-[color:var(--text-body)]">
-                    <div className="inline-flex items-center gap-2">
-                      <User2 className="h-4 w-4" />
-                      نویسنده: {selectedDoc.author?.fullName || 'نامشخص'}
-                    </div>
-                    <div className="inline-flex items-center gap-2">
-                      <User2 className="h-4 w-4" />
-                      آخرین ویرایش: {selectedDoc.updatedBy?.fullName || 'نامشخص'}
-                    </div>
-                    <div className="inline-flex items-center gap-2">
-                      <CalendarDays className="h-4 w-4" />
-                      ثبت: {formatDate(selectedDoc.createdAt)}
-                    </div>
-                    <div className="inline-flex items-center gap-2">
-                      <CalendarDays className="h-4 w-4" />
-                      بروزرسانی: {formatDate(selectedDoc.updatedAt)}
-                    </div>
-                  </div>
-                </div>
-                {selectedDoc.audioDataUrl ? (
-                  <div className="rounded-[22px] border border-[color:var(--border-color)] bg-[color:var(--surface)] p-4">
-                    <div className="mb-3 inline-flex items-center gap-2 text-sm font-semibold text-[color:var(--text-body)]">
-                      <FileAudio2 className="h-4 w-4" />
-                      فایل صوتی
-                    </div>
-                    <audio controls src={selectedDoc.audioDataUrl} className="w-full" />
-                  </div>
-                ) : null}
-                <div className="prose prose-slate max-w-none rounded-[22px] border border-[color:var(--border-color)] bg-[color:var(--surface)] p-4 text-right prose-headings:text-[color:var(--text-strong)] prose-p:text-[color:var(--text-body)] prose-li:text-[color:var(--text-body)]">
-                  <div dangerouslySetInnerHTML={{ __html: selectedDoc.contentHtml || '<p>محتوایی ثبت نشده است.</p>' }} />
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="flex flex-wrap items-center justify-between gap-2 rounded-[22px] border border-[color:var(--border-color)] bg-[color:var(--surface)] p-4">
-                  <button type="button" className={actionButtonClass(true)} onClick={openCreateMode}>
-                    <Plus className="h-4 w-4" />
-                    مستند جدید
-                  </button>
-                  <select
-                    value={sortMode}
-                    onChange={(event) => setSortMode(event.target.value as SortMode)}
-                    className="h-10 rounded-lg border border-[color:var(--border-color)] bg-[color:var(--surface)] px-3 text-[13px] text-[color:var(--text-body)] outline-none"
-                  >
-                    {(Object.keys(SORT_LABELS) as SortMode[]).map((item) => (
-                      <option key={item} value={item}>
-                        {SORT_LABELS[item]}
-                      </option>
-                    ))}
-                  </select>
-                </div>
 
-                {error ? <div className="rounded-[18px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
-
-                {sortedDocs.length ? (
-                  <div className="space-y-3">
-                    {sortedDocs.map((doc) => (
-                      <article key={doc.id} className="rounded-[22px] border border-[color:var(--border-color)] bg-[color:var(--surface)] p-4">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0 space-y-2">
-                            <div className="inline-flex rounded-full bg-[color:var(--surface-soft)] px-3 py-1 text-xs font-bold text-[color:var(--text-body)]">
-                              {getDocTypeLabel(doc.docType)}
-                            </div>
-                            <h3 className="truncate text-base font-black text-[color:var(--text-strong)]">{doc.title}</h3>
-                            <div className="flex flex-wrap gap-3 text-xs text-[color:var(--text-muted)]">
-                              <span>{doc.author?.fullName || 'نامشخص'}</span>
-                              <span>{formatDate(doc.updatedAt)}</span>
-                              {doc.audioDataUrl ? <span>دارای ویس</span> : null}
-                            </div>
-                            {doc.labels.length ? (
-                              <div className="flex flex-wrap gap-2">
-                                {doc.labels.map((label) => (
-                                  <span key={label} className={chipClass()}>
-                                    {label}
-                                  </span>
-                                ))}
-                              </div>
-                            ) : null}
-                          </div>
-                          <div className="flex gap-2">
-                            <button
-                              type="button"
-                              className={iconButtonClass(doc.isRead)}
-                              onClick={() => void toggleDocRead(doc, !doc.isRead)}
-                              title={doc.isRead ? 'مارک به عنوان نخوانده' : 'مارک به عنوان خوانده‌شده'}
-                              aria-label={doc.isRead ? 'مارک به عنوان نخوانده' : 'مارک به عنوان خوانده‌شده'}
-                            >
-                              {doc.isRead ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                            </button>
-                            <button type="button" className={iconButtonClass()} onClick={() => void openViewMode(doc)} title="مشاهده" aria-label="مشاهده">
-                              <Eye className="h-4 w-4" />
-                            </button>
-                            <button type="button" className={iconButtonClass()} onClick={() => openEditMode(doc)} title="ویرایش" aria-label="ویرایش">
-                              <Pencil className="h-4 w-4" />
-                            </button>
-                            <button
-                              type="button"
-                              className={iconButtonClass(false, true)}
-                              onClick={() => void handleDelete(doc)}
-                              title="حذف"
-                              aria-label="حذف"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          </div>
-                        </div>
-                      </article>
-                    ))}
+              <div ref={scrollRef} className="flex-1 overflow-auto bg-[color:var(--surface-soft)] p-4">
+                {loadingMessages ? (
+                  <div className="rounded-[22px] border border-[color:var(--border-color)] bg-[color:var(--surface)] p-8 text-center text-sm text-[color:var(--text-muted)]">
+                    <Loader2 className="mx-auto mb-3 h-5 w-5 animate-spin" />
+                    در حال بارگذاری پیام‌ها...
                   </div>
-                ) : (
+                ) : error ? (
+                  <div className="rounded-[18px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div>
+                ) : messages.length === 0 ? (
                   <div className="rounded-[22px] border border-dashed border-[color:var(--border-color)] bg-[color:var(--surface)] px-6 py-10 text-center">
                     <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[color:var(--surface-soft)] text-[color:var(--theme-accent-strong)]">
                       <FileText className="h-6 w-6" />
                     </div>
-                    <h3 className="mt-4 text-base font-black text-[color:var(--text-strong)]">هنوز مستندی برای این صفحه ثبت نشده است</h3>
-                    <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">می‌توانی مستند فنی، بیزینسی، API / DTO، یادداشت یا هر متن آزاد دیگری را برای این صفحه ثبت کنی.</p>
-                    <button type="button" className={`${actionButtonClass(true)} mt-5`} onClick={openCreateMode}>
-                      <Plus className="h-4 w-4" />
-                      ثبت اولین مستند
-                    </button>
+                    <h3 className="mt-4 text-base font-black text-[color:var(--text-strong)]">هنوز پیامی ارسال نشده است</h3>
+                    <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">اولین پیام را بفرست تا گفتگو شروع شود.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {messages.map((message) => {
+                      const mine = Boolean(currentUserId && message.author?.id === currentUserId);
+                      const bubbleBg = mine ? '#ededed' : 'var(--theme-accent)';
+                      const bubbleText = mine ? 'var(--text-body)' : 'white';
+                      return (
+                        <div key={message.id} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
+                          <button
+                            type="button"
+                            className="max-w-[65%] text-right"
+                            onClick={() => setReplyTo(message)}
+                            title="ریپلای به این پیام"
+                          >
+                            <div
+                              className="rounded-[18px] px-4 py-3 shadow-[0_10px_28px_var(--shadow-soft)]"
+                              style={{ background: bubbleBg, color: `var(${bubbleText})` }}
+                            >
+                              {message.replyTo ? (
+                                <div
+                                  className="mb-2 rounded-xl px-3 py-2 text-xs"
+                                  style={{ background: mine ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.15)' }}
+                                >
+                                  <div className="font-bold">ریپلای</div>
+                                  <div className="mt-1 line-clamp-2">{message.replyTo.text || message.replyTo.messageType}</div>
+                                </div>
+                              ) : null}
+
+                              <div className={`text-xs opacity-80 ${mine ? 'text-right' : 'text-right'}`}>{message.author?.fullName || 'نامشخص'}</div>
+
+                              {message.messageType === 'text' ? (
+                                <div className="mt-1 whitespace-pre-wrap text-sm leading-7">{message.text}</div>
+                              ) : message.messageType === 'image' && message.attachmentDataUrl ? (
+                                <div className="mt-2 overflow-hidden rounded-xl bg-white/10">
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img src={message.attachmentDataUrl} alt="attachment" className="h-auto w-full" />
+                                </div>
+                              ) : message.messageType === 'audio' && message.attachmentDataUrl ? (
+                                <div className="mt-2">
+                                  <div className="flex items-center gap-3">
+                                    <audio
+                                      ref={(el) => {
+                                        audioElsRef.current[message.id] = el;
+                                      }}
+                                      controls
+                                      src={message.attachmentDataUrl}
+                                      className="w-full"
+                                      onPlay={() => setPlayingAudioId(message.id)}
+                                      onPause={() => setPlayingAudioId((v) => (v === message.id ? null : v))}
+                                      onEnded={() => {
+                                        setPlayingAudioId((v) => (v === message.id ? null : v));
+                                        const currentIndex = messages.findIndex((m) => m.id === message.id);
+                                        for (let i = currentIndex + 1; i < messages.length; i++) {
+                                          if (messages[i]?.messageType === 'audio') {
+                                            const nextEl = audioElsRef.current[messages[i]!.id];
+                                            if (nextEl) {
+                                              void nextEl.play().catch(() => null);
+                                            }
+                                            break;
+                                          }
+                                          if (messages[i]?.messageType !== 'audio') break;
+                                        }
+                                      }}
+                                    />
+                                  </div>
+                                  {message.pending ? (
+                                    <div className="mt-2 flex items-center gap-2 text-xs opacity-80">
+                                      <Loader2 className="h-4 w-4 animate-spin" />
+                                      در حال ارسال ویس...
+                                    </div>
+                                  ) : null}
+                                </div>
+                              ) : message.messageType === 'pdf' && message.attachmentDataUrl ? (
+                                <div className="mt-2 space-y-2">
+                                  <div className="flex items-center gap-2 rounded-xl bg-white/10 px-3 py-2 text-sm">
+                                    <FileText className="h-4 w-4" />
+                                    <span>PDF</span>
+                                    <a className="mr-auto underline" href={message.attachmentDataUrl} target="_blank" rel="noreferrer">
+                                      مشاهده
+                                    </a>
+                                  </div>
+                                  <div className="overflow-hidden rounded-xl bg-white/10">
+                                    <embed src={message.attachmentDataUrl} type="application/pdf" className="h-72 w-full" />
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="mt-1 text-sm opacity-80">پیام</div>
+                              )}
+
+                              <div className="mt-2 text-[11px] opacity-70">{formatDateTime(message.createdAt)}</div>
+                            </div>
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
-            )}
-          </div>
+
+              <div className="border-t border-[color:var(--border-color)] bg-[color:var(--surface)] p-3">
+                {replyTo ? (
+                  <div className="mb-2 flex items-center justify-between rounded-2xl border border-[color:var(--border-color)] bg-[color:var(--surface-soft)] px-3 py-2 text-xs">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 font-bold">
+                        <Reply className="h-4 w-4" />
+                        ریپلای
+                      </div>
+                      <div className="mt-1 truncate">{replyTo.text || replyTo.messageType}</div>
+                    </div>
+                    <button type="button" className="ml-2 rounded-xl px-2 py-1 text-[color:var(--text-muted)]" onClick={() => setReplyTo(null)}>
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ) : null}
+
+                <div className="flex items-end gap-2">
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[color:var(--border-color)] bg-[color:var(--surface)] text-[color:var(--text-body)]"
+                      onClick={() => imageInputRef.current?.click()}
+                      title="آپلود عکس"
+                    >
+                      <Upload className="h-4 w-4" />
+                    </button>
+                    <input
+                      ref={imageInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(event) => {
+                        const file = event.target.files?.[0];
+                        event.currentTarget.value = '';
+                        if (file) void sendAttachmentMessage(file, 'image');
+                      }}
+                    />
+
+                    <button
+                      type="button"
+                      className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[color:var(--border-color)] bg-[color:var(--surface)] text-[color:var(--text-body)]"
+                      onClick={() => pdfInputRef.current?.click()}
+                      title="آپلود PDF"
+                    >
+                      <FileText className="h-4 w-4" />
+                    </button>
+                    <input
+                      ref={pdfInputRef}
+                      type="file"
+                      accept="application/pdf"
+                      className="hidden"
+                      onChange={(event) => {
+                        const file = event.target.files?.[0];
+                        event.currentTarget.value = '';
+                        if (file) void sendAttachmentMessage(file, 'pdf');
+                      }}
+                    />
+
+                    <button
+                      type="button"
+                      className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[color:var(--border-color)] bg-[color:var(--surface)] text-[color:var(--text-body)]"
+                      onClick={() => void toggleRecording()}
+                      title={recording ? 'پایان ضبط' : 'ضبط ویس'}
+                    >
+                      {recording ? <Pause className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                    </button>
+
+                    <button
+                      type="button"
+                      className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[color:var(--border-color)] bg-[color:var(--surface)] text-[color:var(--text-body)]"
+                      title="اسکرین‌شات"
+                      onClick={() => startScreenshot()}
+                    >
+                      <Camera className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  <div className="flex-1">
+                    {recording ? (
+                      <div className="flex h-12 items-center justify-between gap-3 rounded-2xl border border-[color:var(--border-color)] bg-[color:var(--theme-accent)] px-3">
+                        <div className="text-xs font-bold text-white">در حال ضبط...</div>
+                        <canvas ref={recordingVizCanvasRef} width={220} height={26} className="opacity-95" />
+                        <div className="text-xs text-white/80">برای توقف، دوباره میکروفن را بزن</div>
+                      </div>
+                    ) : (
+                      <textarea
+                        value={composerText}
+                        onChange={(event) => setComposerText(event.target.value)}
+                        placeholder="پیام..."
+                        rows={1}
+                        className="max-h-28 w-full resize-none rounded-2xl border border-[color:var(--border-color)] bg-[color:var(--surface-soft)] px-4 py-3 text-sm text-[color:var(--text-body)] outline-none"
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter' && !event.shiftKey) {
+                            event.preventDefault();
+                            void sendTextMessage();
+                          }
+                        }}
+                      />
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[color:var(--theme-accent)] text-white"
+                    onClick={() => void sendTextMessage()}
+                    title="ارسال"
+                  >
+                    <Send className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="flex-1 overflow-auto bg-[color:var(--surface-soft)] p-4">
+              {loading ? (
+                <div className="rounded-[22px] border border-[color:var(--border-color)] bg-[color:var(--surface)] p-8 text-center text-sm text-[color:var(--text-muted)]">
+                  <Loader2 className="mx-auto mb-3 h-5 w-5 animate-spin" />
+                  در حال بارگذاری گفتگوها...
+                </div>
+              ) : mode === 'wizard' ? (
+                <div className="space-y-4">
+                  <div className="rounded-[22px] border border-[color:var(--border-color)] bg-[color:var(--surface)] p-4">
+                    <div className="grid gap-4">
+                      <label className="grid gap-2">
+                        <span className="text-sm font-semibold text-[color:var(--text-body)]">عنوان</span>
+                        <Input value={wizardTitle} onChange={(event) => setWizardTitle(event.target.value)} placeholder="عنوان گفتگو" />
+                      </label>
+
+                      <div className="grid gap-2">
+                        <span className="text-sm font-semibold text-[color:var(--text-body)]">نوع مستند (Tag)</span>
+                        <div className="flex flex-wrap gap-2">
+                          {DEFAULT_DOC_TYPES.map((type) => (
+                            <button
+                              key={type}
+                              type="button"
+                              className={activeChipClass(wizardDocType === type)}
+                              onClick={() => setWizardDocType(type)}
+                            >
+                              {type}
+                            </button>
+                          ))}
+                          {wizardDocType && !DEFAULT_DOC_TYPES.includes(wizardDocType as (typeof DEFAULT_DOC_TYPES)[number]) ? (
+                            <button type="button" className={activeChipClass(true)} onClick={() => setWizardDocType(wizardDocType)}>
+                              {wizardDocType}
+                            </button>
+                          ) : null}
+                        </div>
+                        <div className="flex gap-2">
+                          <Input value={wizardDocTypeInput} onChange={(event) => setWizardDocTypeInput(event.target.value)} placeholder="افزودن tag جدید..." />
+                          <button
+                            type="button"
+                            className={actionButtonClass(false)}
+                            onClick={() => {
+                              const next = wizardDocTypeInput.trim().toLowerCase();
+                              if (!next) return;
+                              setWizardDocType(next);
+                              setWizardDocTypeInput('');
+                            }}
+                          >
+                            افزودن
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="grid gap-2">
+                        <span className="text-sm font-semibold text-[color:var(--text-body)]">اولویت</span>
+                        <div className="flex flex-wrap gap-2">
+                          {THREAD_PRIORITIES.map((priority) => (
+                            <button
+                              key={priority}
+                              type="button"
+                              className={activeChipClass(wizardPriority === priority)}
+                              onClick={() => setWizardPriority(priority)}
+                            >
+                              {PRIORITY_LABELS[priority]}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <label className="grid gap-2">
+                        <span className="text-sm font-semibold text-[color:var(--text-body)]">لیبل‌ها</span>
+                        <Input
+                          value={wizardLabelsInput}
+                          onChange={(event) => setWizardLabelsInput(event.target.value)}
+                          placeholder="مثلا: dto, onboarding, validation"
+                        />
+                        <span className="text-xs text-[color:var(--text-muted)]">لیبل‌ها را با ویرگول جدا کن.</span>
+                        {parsedLabels.length ? (
+                          <div className="flex flex-wrap gap-2">
+                            {parsedLabels.map((label) => (
+                              <span key={label} className={chipClass()}>
+                                <Tag className="ml-1 h-3.5 w-3.5" />
+                                {label}
+                              </span>
+                            ))}
+                          </div>
+                        ) : null}
+                      </label>
+                    </div>
+                  </div>
+
+                  {error ? <div className="rounded-[18px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
+
+                  <div className="flex justify-end gap-2">
+                    <button type="button" className={actionButtonClass(false)} onClick={() => setMode('threads')}>
+                      انصراف
+                    </button>
+                    <button type="button" className={actionButtonClass(true)} disabled={saving} onClick={() => void handleCreateThread()}>
+                      {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                      ایجاد گفتگو
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-2 rounded-[22px] border border-[color:var(--border-color)] bg-[color:var(--surface)] p-4">
+                    <button type="button" className={actionButtonClass(true)} onClick={openWizard}>
+                      <Plus className="h-4 w-4" />
+                      گفتگوی جدید
+                    </button>
+                    <button type="button" className={actionButtonClass(false)} onClick={() => void loadThreads()}>
+                      بروزرسانی
+                    </button>
+                  </div>
+
+                  {error ? <div className="rounded-[18px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
+
+                  {threads.length ? (
+                    <div className="space-y-3">
+                      {threads.map((thread) => (
+                        <article key={thread.id} className="rounded-[22px] border border-[color:var(--border-color)] bg-[color:var(--surface)] p-4">
+                          <button type="button" className="w-full text-right" onClick={() => void openChat(thread)}>
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0 space-y-2">
+                                <div className="flex flex-wrap gap-2">
+                                  <span className={chipClass()}>{thread.docType}</span>
+                                  <span className={chipClass()}>{PRIORITY_LABELS[thread.priority]}</span>
+                                  {thread.labels.slice(0, 4).map((label) => (
+                                    <span key={label} className={chipClass()}>
+                                      {label}
+                                    </span>
+                                  ))}
+                                </div>
+                                <h3 className="truncate text-base font-black text-[color:var(--text-strong)]">{thread.title}</h3>
+                                <div className="flex flex-wrap gap-3 text-xs text-[color:var(--text-muted)]">
+                                  <span>{thread.createdBy?.fullName || 'نامشخص'}</span>
+                                  <span>{formatDateTime(thread.updatedAt)}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </button>
+                        </article>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="rounded-[22px] border border-dashed border-[color:var(--border-color)] bg-[color:var(--surface)] px-6 py-10 text-center">
+                      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[color:var(--surface-soft)] text-[color:var(--theme-accent-strong)]">
+                        <FileText className="h-6 w-6" />
+                      </div>
+                      <h3 className="mt-4 text-base font-black text-[color:var(--text-strong)]">هنوز گفتگویی برای این صفحه ثبت نشده است</h3>
+                      <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">
+                        با ساختن گفتگو، تیم می‌تواند پیام، عکس، ویس و فایل PDF مرتبط با همین صفحه را ثبت کند.
+                      </p>
+                      <button type="button" className={`${actionButtonClass(true)} mt-5`} onClick={openWizard}>
+                        <Plus className="h-4 w-4" />
+                        ساخت اولین گفتگو
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </section>
       ) : null}
-    </div>
+      </div>
+    </>
   );
 }
+
