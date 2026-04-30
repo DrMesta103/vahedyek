@@ -1,5 +1,5 @@
 import { listPolicies } from '../../lib/data';
-import { DataTable, EmptyState, PageIntro, PrimaryLink } from '../../components/ui';
+import { DataTable, EmptyState, PageIntro, PrimaryLink } from '@repo/ui';
 
 export default async function PoliciesPage() {
   const items = await listPolicies();

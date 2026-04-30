@@ -1,7 +1,7 @@
 'use client';
 
-import type { Share, ShareMode } from '../../types/contract';
-import { formControlStyle } from '../ui/formStyles';
+import type { Share } from '../../types/contract';
+import { formControlStyle, ShareModePills, type ShareMode } from '@repo/ui';
 
 interface ShareInputProps {
   value: Share;
@@ -17,18 +17,7 @@ export default function ShareInput({ value, onChange }: ShareInputProps) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-end' }}>
-      <div style={{ display: 'flex', border: '1px solid #d1d5db', borderRadius: '20px', overflow: 'hidden' }}>
-        {(['percent', 'dang'] as ShareMode[]).map((mode) => (
-          <button key={mode} type="button" onClick={() => handleModeChange(mode)} style={{
-            minHeight: '34px', padding: '0 12px', fontSize: '12px', fontFamily: 'inherit', cursor: 'pointer', border: 'none',
-            background: value.mode === mode ? 'var(--dark-teal)' : '#fff',
-            color: value.mode === mode ? '#fff' : '#6b7280',
-            transition: '0.2s',
-          }}>
-            {mode === 'percent' ? 'درصد' : 'دانگ'}
-          </button>
-        ))}
-      </div>
+      <ShareModePills value={value.mode as ShareMode} onChange={handleModeChange} />
       <input type="number" min={0} max={value.mode === 'percent' ? 100 : 6} step={value.mode === 'dang' ? 0.5 : 1}
         value={value.value === 0 ? '' : value.value} onChange={handleValueChange}
         placeholder="0" style={{

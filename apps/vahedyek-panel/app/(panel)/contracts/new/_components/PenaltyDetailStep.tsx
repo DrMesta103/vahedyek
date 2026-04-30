@@ -9,7 +9,7 @@ import {
   CirclePercent,
   TrendingUp,
 } from 'lucide-react';
-import { StickySubmitBar } from './StickySubmitBar';
+import { StickySubmitBar } from '@repo/ui';
 import { getPenaltyItem } from './penaltiesConfig';
 import { useContractFlowBasePath } from './useContractFlowBasePath';
 

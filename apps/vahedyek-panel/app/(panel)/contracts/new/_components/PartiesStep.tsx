@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { PartySection } from './PartySection';
 import { PartySelectionDialog } from './PartySelectionDialog';
-import { StickySubmitBar } from './StickySubmitBar';
+import { StickySubmitBar } from '@repo/ui';
 import { ContractStepLoader } from './ContractStepLoader';
 import { FieldGroup, TagPills } from './ContractFormPrimitives';
 import { dispatchContractFlowDirty, dispatchContractFlowSaved } from './contractFlowSignals';

@@ -20,7 +20,7 @@ import {
   User2,
   X,
 } from 'lucide-react';
-import { Input } from './ui/input';
+import { Input } from '@repo/ui';
 import { currentAppConfig } from '../config/current';
 import { getDocTypeLabel, normalizeLabels, PAGE_DOC_TYPES, type PageDocRecord, type PageDocType } from '../lib/page-docs';
 

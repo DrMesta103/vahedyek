@@ -1,6 +1,6 @@
 import { listRequestReasons } from '../../lib/data';
 import { requestReasonLabels } from '../../lib/constants';
-import { DataTable, EmptyState, PageIntro, PrimaryLink } from '../../components/ui';
+import { DataTable, EmptyState, PageIntro, PrimaryLink } from '@repo/ui';
 
 export default async function RequestReasonsPage() {
   const items = await listRequestReasons();

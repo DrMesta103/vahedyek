@@ -3,10 +3,9 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plus, Save, X } from 'lucide-react';
-import { Input } from '../../../../components/ui/input';
+import { Input, StickySubmitBar } from '@repo/ui';
 import { ContractStepLoader } from './ContractStepLoader';
 import { FieldLabel } from './FieldLabel';
-import { StickySubmitBar } from './StickySubmitBar';
 import { TagPills } from './ContractFormPrimitives';
 import { DISCOUNT_GROUPS, ITEMIZED_DISCOUNT_ENTRIES, WHOLE_DISCOUNT_ENTRY, getDiscountEntry } from './discountsConfig';
 import { ensureActiveDraftId, getFrontendStepDraft, setFrontendStepDraft } from '../../../../lib/contractDraftClient';

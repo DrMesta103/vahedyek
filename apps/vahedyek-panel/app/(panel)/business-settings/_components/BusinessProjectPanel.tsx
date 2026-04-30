@@ -23,6 +23,7 @@ import {
   Wrench,
   X,
 } from 'lucide-react';
+import { ChoicePillsField } from '@repo/ui';
 import { FieldGroup, FormTextInput, InlineSelect, TagPill, TagPills } from '../../contracts/new/_components/ContractFormPrimitives';
 
 type BlockDto = {
@@ -269,22 +270,24 @@ export function BusinessProjectPanel() {
         </div>
 
         <div className="business-project-section">
-          <h2>نوع مالکیت عرضه</h2>
-          <div className="business-project-tags" role="radiogroup" aria-label="نوع مالکیت">
-            {ownershipOptions.map((option) => (
-              <TagPill key={option.value} label={option.label} active={ownership === option.value} onClick={() => setOwnership(option.value)} />
-            ))}
-          </div>
+          <ChoicePillsField
+            label="نوع مالکیت عرضه"
+            options={ownershipOptions.map((option) => ({ value: option.value, label: option.label }))}
+            value={ownership}
+            onChange={setOwnership}
+            pillsClassName="business-project-tags"
+          />
           <p>وضعیت مالکیت زمین یا بنا را مشخص کنید. این مورد در قراردادها و اسناد رسمی لحاظ می‌شود</p>
         </div>
 
         <div className="business-project-section">
-          <h2>نوع ساخت</h2>
-          <div className="business-project-tags" role="radiogroup" aria-label="نوع ساخت">
-            {structureOptions.map((option) => (
-              <TagPill key={option.value} label={option.label} active={structure === option.value} onClick={() => setStructure(option.value)} />
-            ))}
-          </div>
+          <ChoicePillsField
+            label="نوع ساخت"
+            options={structureOptions.map((option) => ({ value: option.value, label: option.label }))}
+            value={structure}
+            onChange={setStructure}
+            pillsClassName="business-project-tags"
+          />
           <p>شیوه یا نهاد اصلی سازنده پروژه را مشخص کنید</p>
         </div>
 

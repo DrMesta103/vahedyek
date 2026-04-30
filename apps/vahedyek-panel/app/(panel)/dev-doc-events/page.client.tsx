@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { CalendarDays, Eye, EyeOff, Loader2, Search, Tag, User2 } from 'lucide-react';
-import { Input } from '../../components/ui/input';
+import { Input } from '@repo/ui';
 import { currentAppConfig } from '../../config/current';
 import { getDocTypeLabel, getEventTypeLabel, PAGE_DOC_EVENT_TYPES, PAGE_DOC_TYPES, type PageDocEventRecord, type PageDocEventType, type PageDocType } from '../../lib/page-docs';
 

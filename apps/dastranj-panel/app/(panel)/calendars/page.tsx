@@ -1,5 +1,5 @@
 import { listCalendars } from '../../lib/data';
-import { DataTable, EmptyState, PageIntro, PrimaryLink } from '../../components/ui';
+import { DataTable, EmptyState, PageIntro, PrimaryLink } from '@repo/ui';
 
 export default async function CalendarsPage() {
   const items = await listCalendars();

@@ -2,7 +2,7 @@
 
 import { CircleCheck } from 'lucide-react';
 import { FieldGroup, TagPills } from './ContractFormPrimitives';
-import { Input } from '../../../../components/ui/input';
+import { Input } from '@repo/ui';
 import { persianMoneyWords } from '../../../../lib/persianNumberWords';
 import type { PricingType } from '../../../../types/contract';
 

@@ -7,12 +7,13 @@
     "packages/*"
   ],
   "scripts": {
-    "dev:vahedyek": "npm --workspace @apps/vahedyek-panel run dev",
-    "dev:dastranj": "npm --workspace @apps/dastranj-panel run dev",
+    "build:ui": "npm --workspace @repo/ui run build",
+    "dev:vahedyek": "npm run build:ui && npm --workspace @apps/vahedyek-panel run dev",
+    "dev:dastranj": "npm run build:ui && npm --workspace @apps/dastranj-panel run dev",
     "build": "npm run build:vahedyek",
     "build:all": "npm run build:vahedyek && npm run build:dastranj",
-    "build:vahedyek": "npm --workspace @apps/vahedyek-panel run build",
-    "build:dastranj": "npm --workspace @apps/dastranj-panel run build",
+    "build:vahedyek": "npm run build:ui && npm --workspace @apps/vahedyek-panel run build",
+    "build:dastranj": "npm run build:ui && npm --workspace @apps/dastranj-panel run build",
     "start": "npm run start:vahedyek",
     "start:vahedyek": "npm --workspace @apps/vahedyek-panel run start",
     "start:dastranj": "npm --workspace @apps/dastranj-panel run start",

@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { deleteLocationAction } from '../../lib/actions';
 import { listLocations } from '../../lib/data';
-import { DataTable, EmptyState, PageIntro, PrimaryLink } from '../../components/ui';
+import { DataTable, EmptyState, PageIntro, PrimaryLink } from '@repo/ui';
 
 export default async function LocationsPage() {
   const items = await listLocations();

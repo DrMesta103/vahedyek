@@ -1,6 +1,6 @@
 import { createDraftTemplateAction } from '../../../lib/actions';
 import { draftTemplateLabels } from '../../../lib/constants';
-import { FormCard, PageIntro } from '../../../components/ui';
+import { FormCard, PageIntro } from '@repo/ui';
 
 export default function NewDraftTemplatePage() {
   return (

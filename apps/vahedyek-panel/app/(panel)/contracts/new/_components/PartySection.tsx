@@ -2,7 +2,7 @@
 
 import { Plus, Star } from 'lucide-react';
 import { FormBox } from './FormBox';
-import { Input } from '../../../../components/ui/input';
+import { Input } from '@repo/ui';
 import { getTypeLabel, PARTY_TOTALS, type PartyRow, type ShareMode } from './partiesTypes';
 
 export function PartySection({

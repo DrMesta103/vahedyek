@@ -1,6 +1,6 @@
 'use client';
 
-import { Input } from '../../../components/ui/input';
+import { Input } from '@repo/ui';
 import { TagPills } from '../../contracts/new/_components/ContractFormPrimitives';
 
 function cn(...classes: Array<string | false | null | undefined>) {

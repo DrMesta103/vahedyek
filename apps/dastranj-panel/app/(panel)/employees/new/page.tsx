@@ -1,6 +1,6 @@
 import { createEmployeeAction } from '../../../lib/actions';
 import { listOrganizationUnits } from '../../../lib/data';
-import { FormCard, PageIntro } from '../../../components/ui';
+import { FormCard, PageIntro } from '@repo/ui';
 
 export default async function NewEmployeePage() {
   const units = await listOrganizationUnits();

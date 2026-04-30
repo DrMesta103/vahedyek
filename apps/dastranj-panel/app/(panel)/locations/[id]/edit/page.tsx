@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { updateLocationAction } from '../../../../lib/actions';
 import { getLocation } from '../../../../lib/data';
-import { FormCard, PageIntro } from '../../../../components/ui';
+import { FormCard, PageIntro } from '@repo/ui';
 
 type EditLocationPageProps = {
   params: Promise<{

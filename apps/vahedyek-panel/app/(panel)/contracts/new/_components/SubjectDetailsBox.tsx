@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { CalendarClock, Hash } from 'lucide-react';
-import { FieldGroup, FormDateInput, SectionCard, SectionHeader, TagPills } from './ContractFormPrimitives';
+import { ChoicePillsField } from '@repo/ui';
+import { FieldGroup, FormDateInput, SectionCard, SectionHeader } from './ContractFormPrimitives';
 
 type ContractType = 'sale' | 'pre-sale';
 
@@ -61,13 +62,15 @@ export function SubjectDetailsBox({
       <SectionHeader label="مشخصات قرارداد" />
       <div className="space-y-5 p-5">
         <FieldGroup label="نوع قرارداد" required>
-          <TagPills
-            value={selectedContractType}
-            onChange={onContractTypeChange}
+          <ChoicePillsField<ContractType>
+            label="نوع قرارداد"
             options={[
               { value: 'pre-sale', label: 'پیش‌فروش' },
               { value: 'sale', label: 'فروش' },
             ]}
+            value={selectedContractType}
+            onChange={onContractTypeChange}
+            wrap
           />
         </FieldGroup>
 

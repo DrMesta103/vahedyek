@@ -1,7 +1,8 @@
 'use client';
 
 import { User } from 'lucide-react';
-import { FieldGroup, FormTextInput, InlineSelect, SectionCard, SectionHeader, TagPills } from './ContractFormPrimitives';
+import { ChoicePillsField } from '@repo/ui';
+import { FieldGroup, FormTextInput, InlineSelect, SectionCard, SectionHeader } from './ContractFormPrimitives';
 
 export type IssuerType = 'self' | 'former' | 'staff';
 
@@ -28,14 +29,16 @@ export function SubjectContractorBox({
     <SectionCard>
       <SectionHeader label="منعقدکننده قرارداد" description="فردی که این قرارداد را با مشتری منعقد کرده مشخص کنید" />
       <div className="space-y-4 p-5">
-        <TagPills
-          value={issuerType}
-          onChange={onIssuerTypeChange}
+        <ChoicePillsField<IssuerType>
+          label="منعقدکننده قرارداد"
           options={[
             { value: 'self', label: 'خودم' },
             { value: 'former', label: 'کارمند سابق' },
             { value: 'staff', label: 'سایر کارمندان' },
           ]}
+          value={issuerType}
+          onChange={onIssuerTypeChange}
+          wrap
         />
 
         {issuerType === 'former' ? (

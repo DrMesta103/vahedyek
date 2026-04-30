@@ -1,6 +1,6 @@
 import { saveBusinessProfileAction, seedSampleDataAction } from '../../lib/actions';
 import { getBusinessProfile } from '../../lib/data';
-import { FormCard, PageIntro } from '../../components/ui';
+import { FormCard, PageIntro } from '@repo/ui';
 
 export default async function AccountPage() {
   const profile = await getBusinessProfile();

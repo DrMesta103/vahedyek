@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { getEmployee } from '../../../lib/data';
-import { FormCard, PageIntro } from '../../../components/ui';
+import { FormCard, PageIntro } from '@repo/ui';
 
 export default async function EmployeeDetailPage({ params }: { params: { id: string } }) {
   const employee = await getEmployee(params.id);

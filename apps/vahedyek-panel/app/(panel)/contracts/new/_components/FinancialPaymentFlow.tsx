@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { ChevronDown, ChevronUp, ListChecks, Pencil, Plus, Trash2 } from 'lucide-react';
-import { Input } from '../../../../components/ui/input';
+import { Input } from '@repo/ui';
 import { persianMoneyWords } from '../../../../lib/persianNumberWords';
 import type { FinancialCategoryData, FinancialDueItemData } from '../../../../types/contract';
 

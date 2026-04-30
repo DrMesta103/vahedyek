@@ -1,6 +1,6 @@
 'use client';
 
-import { formControlStyle } from '../ui/formStyles';
+import { formControlStyle } from '@repo/ui';
 
 interface ContractSearchProps {
   value: string;

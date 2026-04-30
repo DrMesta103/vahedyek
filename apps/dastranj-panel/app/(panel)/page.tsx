@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { getDashboardData } from '../lib/data';
-import { PageIntro, StatGrid } from '../components/ui';
+import { PageIntro, StatGrid } from '@repo/ui';
 
 export default async function DashboardPage() {
   const data = await getDashboardData();

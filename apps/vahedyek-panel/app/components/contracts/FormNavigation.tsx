@@ -1,6 +1,6 @@
 'use client';
 
-import { outlineButtonStyle, primaryButtonStyle } from '../ui/formStyles';
+import { outlineButtonStyle, primaryButtonStyle } from '@repo/ui';
 
 interface FormNavigationProps {
   currentStep: number;

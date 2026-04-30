@@ -5,7 +5,7 @@ import { Search } from 'lucide-react';
 import { ChoiceCard } from './ChoiceCard';
 import { ContractModal } from './ContractModal';
 import { FieldLabel } from './FieldLabel';
-import { Input } from '../../../../components/ui/input';
+import { Input } from '@repo/ui';
 import { getEntityLabels, getTypeLabel, type DirectoryItem, type EntityKind, type PartyRow, type PersonType } from './partiesTypes';
 
 export function PartySelectionDialog({

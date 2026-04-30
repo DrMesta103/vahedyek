@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, CircleDollarSign, CirclePercent } from 'lucide-react';
-import { StickySubmitBar } from './StickySubmitBar';
+import { StickySubmitBar } from '@repo/ui';
 import {
   getDiscountEntry,
   getDiscountGroup,

@@ -7,9 +7,7 @@ const THEME_INIT_SCRIPT = `
   try {
     const appThemeVariables = ${appThemeVariables};
     const savedTheme = window.localStorage.getItem('app-theme');
-    const theme = savedTheme === 'light' || savedTheme === 'dark'
-      ? savedTheme
-      : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    const theme = savedTheme === 'light' || savedTheme === 'dark' ? savedTheme : 'light';
     const root = document.documentElement;
     root.classList.toggle('dark', theme === 'dark');
     root.dataset.theme = theme;

@@ -17,8 +17,8 @@ import {
   WalletCards,
 } from 'lucide-react';
 import { RULE_CONFIGS, type ContractRuleId, type ContractRuleState, type RuleField } from '../../../lib/businessContractRules';
-import { Input } from '../../../components/ui/input';
-import { FormDateInput, TagPills } from '../../contracts/new/_components/ContractFormPrimitives';
+import { BusinessSwitch, Input, RuleAmountInput, RuleFieldLabel, RuleTabButton, TagPills } from '@repo/ui';
+import { FormDateInput } from '../../contracts/new/_components/ContractFormPrimitives';
 import { AdjustmentRuleSection } from './AdjustmentRuleSection';
 import { DiscountRuleSection } from './DiscountRuleSection';
 import { ForgivenessRuleSection } from './ForgivenessRuleSection';
@@ -35,43 +35,6 @@ function formatInput(value: string) {
   return Number(digits).toLocaleString('en-US');
 }
 
-function SegmentedToggle({
-  checked,
-  onChange,
-  activeLabel = 'فعال',
-  inactiveLabel = 'غیرفعال',
-}: {
-  checked: boolean;
-  onChange: (value: boolean) => void;
-  activeLabel?: string;
-  inactiveLabel?: string;
-}) {
-  return (
-    <div className="inline-flex rounded-full border border-slate-200 bg-slate-100 p-1">
-      <button
-        type="button"
-        onClick={() => onChange(false)}
-        className={cn(
-          'min-w-[92px] rounded-full px-4 py-2.5 text-sm font-black transition-all',
-          !checked ? 'bg-[#a6e8ef] text-[#123b69] shadow-[0_8px_24px_rgba(148,163,184,0.18)]' : 'text-slate-500',
-        )}
-      >
-        {inactiveLabel}
-      </button>
-      <button
-        type="button"
-        onClick={() => onChange(true)}
-        className={cn(
-          'min-w-[92px] rounded-full px-4 py-2.5 text-sm font-black transition-all',
-          checked ? 'bg-[#a6e8ef] text-[#123b69] shadow-[0_8px_24px_rgba(148,163,184,0.18)]' : 'text-slate-500',
-        )}
-      >
-        {activeLabel}
-      </button>
-    </div>
-  );
-}
-
 function ContractRegistrationSwitch({
   checked,
   onChange,
@@ -83,21 +46,11 @@ function ContractRegistrationSwitch({
   activeLabel?: string;
   inactiveLabel?: string;
 }) {
-  return (
-    <button type="button" className="business-switch" aria-pressed={checked} onClick={() => onChange(!checked)}>
-      <span className="business-switch-option is-on">{activeLabel}</span>
-      <span className="business-switch-option is-off">{inactiveLabel}</span>
-    </button>
-  );
+  return <BusinessSwitch checked={checked} onChange={onChange} activeLabel={activeLabel} inactiveLabel={inactiveLabel} />;
 }
 
 function FieldLabel({ label, required = false }: { label: string; required?: boolean }) {
-  return (
-    <label className="mb-3 block text-right text-[15px] font-black text-[color:var(--text-strong)]">
-      {label}
-      {required ? <span className="mr-1 text-[#ff6b7a]">*</span> : null}
-    </label>
-  );
+  return <RuleFieldLabel label={label} required={required} />;
 }
 
 function RuleTextInput({
@@ -114,7 +67,7 @@ function RuleTextInput({
   icon?: ElementType;
 }) {
   if (suffix === 'تومان' || suffix === '%') {
-    return <FinancialAmountInput value={value} onChange={onChange} placeholder={placeholder} suffix={suffix} />;
+    return <RuleAmountInput value={value} onChange={onChange} placeholder={placeholder} suffix={suffix} />;
   }
 
   return (
@@ -137,32 +90,6 @@ function RuleTextInput({
 
 function RuleDateInput({ value, onChange, placeholder }: { value: string; onChange: (value: string) => void; placeholder?: string }) {
   return <FormDateInput value={value} onChange={onChange} placeholder={placeholder} className="h-14 text-right text-sm font-bold" icon={CalendarDays} />;
-}
-
-function FinancialAmountInput({
-  value,
-  onChange,
-  placeholder,
-  suffix = 'تومان',
-}: {
-  value: string;
-  onChange: (value: string) => void;
-  placeholder?: string;
-  suffix?: string;
-}) {
-  return (
-    <div className="relative">
-      <Input
-        value={value}
-        onChange={(event) => onChange(formatInput(event.target.value))}
-        placeholder={placeholder}
-        inputMode="numeric"
-        dir="ltr"
-        className="h-11 rounded-full border-gray-200 bg-[#fcfdfd] pl-20 pr-4 text-right text-[13px] font-semibold shadow-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/10"
-      />
-      <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-xs font-medium text-slate-500">{suffix}</span>
-    </div>
-  );
 }
 
 function RuleSelect({
@@ -243,46 +170,7 @@ function RuleSwitchRow({
   );
 }
 
-function TabButton({
-  title,
-  icon: Icon,
-  active,
-  onClick,
-}: {
-  title: string;
-  icon: ElementType;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        'group relative flex min-w-[168px] flex-1 flex-col items-center justify-center gap-3 px-3 py-5 text-center transition',
-        active ? 'text-[color:var(--text-strong)]' : 'text-[color:var(--text-muted)] hover:text-[color:var(--text-strong)]',
-      )}
-    >
-      <span
-        className={cn(
-          'flex h-14 w-14 items-center justify-center rounded-full border transition',
-          active
-            ? 'border-[color:var(--theme-action-border)] bg-[color:var(--theme-action-bg)] text-[color:var(--theme-action-text)]'
-            : 'border-[color:var(--border-color)] bg-[color:var(--surface)] text-[color:var(--text-muted)]',
-        )}
-      >
-        <Icon className="h-6 w-6" />
-      </span>
-      <span className="text-sm font-bold">{title}</span>
-      <span
-        className={cn(
-          'absolute inset-x-4 bottom-0 h-[2px] transition',
-          active ? 'bg-[color:var(--theme-action-border)]' : 'bg-transparent group-hover:bg-[color:var(--border-color)]',
-        )}
-      />
-    </button>
-  );
-}
+const TabButton = RuleTabButton;
 
 function GenericFieldInput({
   field,

@@ -1,5 +1,5 @@
 import { createLocationAction } from '../../../lib/actions';
-import { FormCard, PageIntro } from '../../../components/ui';
+import { FormCard, PageIntro } from '@repo/ui';
 
 export default function NewLocationPage() {
   return (

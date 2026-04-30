@@ -1,6 +1,6 @@
 import { createPolicyAction } from '../../../lib/actions';
 import { listCalendars } from '../../../lib/data';
-import { FormCard, PageIntro } from '../../../components/ui';
+import { FormCard, PageIntro } from '@repo/ui';
 
 export default async function NewPolicyPage() {
   const calendars = await listCalendars();

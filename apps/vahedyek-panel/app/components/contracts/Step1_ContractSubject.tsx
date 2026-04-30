@@ -1,7 +1,7 @@
 'use client';
 
 import type { ContractSubjectData, ContractorType, ContractType, Employee, Block, Unit } from '../../types/contract';
-import { formControlMutedDisabledStyle, formControlStyle, formErrorStyle, formLabelStyle } from '../ui/formStyles';
+import { formControlMutedDisabledStyle, formControlStyle, formErrorStyle, formLabelStyle } from '@repo/ui';
 
 interface Step1Props {
   data: Partial<ContractSubjectData>;

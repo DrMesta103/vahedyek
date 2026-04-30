@@ -7,10 +7,8 @@ import { TagPills } from './ContractFormPrimitives';
 import { FieldLabel } from './FieldLabel';
 import { FinancialPaymentFlow } from './FinancialPaymentFlow';
 import { FinancialPricingBox } from './FinancialPricingBox';
-import { StickySubmitBar } from './StickySubmitBar';
 import { ContractStepLoader } from './ContractStepLoader';
-import { Input } from '../../../../components/ui/input';
-import { PersianDatePicker } from '../../../../components/ui/PersianDatePicker';
+import { Input, PersianDatePicker, StickySubmitBar } from '@repo/ui';
 import { useContractFlowBasePath } from './useContractFlowBasePath';
 import {
   clearFrontendStepDraft,

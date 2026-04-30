@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Calendar, Check, ChevronDown, ChevronUp, Search, X } from 'lucide-react';
-import { PersianDatePicker } from '../../../../components/ui/PersianDatePicker';
+import { PersianDatePicker } from '@repo/ui';
 
 export function SectionCard({ children, className = '' }: { children: ReactNode; className?: string }) {
   return <div className={`rounded-xl border border-slate-200 bg-white ${className}`}>{children}</div>;
@@ -73,23 +73,24 @@ export function FormDateInput({
   value,
   onChange,
   placeholder,
-  icon: Icon = Calendar,
+  icon: Icon = null,
   className = '',
 }: {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
-  icon?: React.ElementType;
+  icon?: React.ElementType | null;
   className?: string;
 }) {
   return (
     <div className="relative">
-      <Icon className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+      {Icon ? <Icon className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" /> : null}
       <PersianDatePicker
         value={value}
         onChange={onChange}
         placeholder={placeholder ?? 'انتخاب تاریخ'}
-        className={`h-[42px] w-full rounded-xl border border-slate-200 bg-[image:var(--control-bg-gradient)] pr-10 pl-3.5 text-[13px] text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] placeholder:text-slate-400 outline-none transition-all focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10 ${className}`}
+        withCalendarIcon={!Icon}
+        className={`h-[42px] w-full rounded-xl border border-slate-200 bg-[image:var(--control-bg-gradient)] ${Icon ? 'pr-10 pl-3.5' : 'px-3.5'} text-[13px] text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] placeholder:text-slate-400 outline-none transition-all focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10 ${className}`}
       />
     </div>
   );

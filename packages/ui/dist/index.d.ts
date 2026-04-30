@@ -1,0 +1,214 @@
+import * as React from 'react';
+import { ReactNode, CSSProperties, ElementType } from 'react';
+import * as react_jsx_runtime from 'react/jsx-runtime';
+
+interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+}
+declare const Input: React.ForwardRefExoticComponent<InputProps & React.RefAttributes<HTMLInputElement>>;
+
+interface PersianDatePickerProps {
+    value: string;
+    onChange: (val: string) => void;
+    placeholder?: string;
+    className?: string;
+    containerClassName?: string;
+    withCalendarIcon?: boolean;
+    calendarIconAriaLabel?: string;
+}
+declare function PersianDatePicker({ value, onChange, placeholder, className, containerClassName, withCalendarIcon, calendarIconAriaLabel, }: PersianDatePickerProps): react_jsx_runtime.JSX.Element;
+
+declare function SegmentedToggle({ checked, onChange, activeLabel, inactiveLabel, }: {
+    checked: boolean;
+    onChange: (value: boolean) => void;
+    activeLabel?: string;
+    inactiveLabel?: string;
+}): react_jsx_runtime.JSX.Element;
+
+declare function PageIntro({ title, description, action }: {
+    title: string;
+    description: string;
+    action?: ReactNode;
+}): react_jsx_runtime.JSX.Element;
+declare function PrimaryLink({ href, children }: {
+    href: string;
+    children: ReactNode;
+}): react_jsx_runtime.JSX.Element;
+declare function EmptyState({ title, description, action }: {
+    title: string;
+    description: string;
+    action?: ReactNode;
+}): react_jsx_runtime.JSX.Element;
+declare function StatGrid({ items }: {
+    items: Array<{
+        label: string;
+        value: string | number;
+    }>;
+}): react_jsx_runtime.JSX.Element;
+declare function DataTable({ columns, rows }: {
+    columns: string[];
+    rows: ReactNode[][];
+}): react_jsx_runtime.JSX.Element;
+declare function FormCard({ title, description, children }: {
+    title: string;
+    description?: string;
+    children: ReactNode;
+}): react_jsx_runtime.JSX.Element;
+
+declare const formControlStyle: CSSProperties;
+declare const compactTextareaStyle: CSSProperties;
+declare const formControlMutedDisabledStyle: CSSProperties;
+declare const formLabelStyle: CSSProperties;
+declare const formMetaLabelStyle: CSSProperties;
+declare const formErrorStyle: CSSProperties;
+declare const outlineButtonStyle: CSSProperties;
+declare const primaryButtonStyle: CSSProperties;
+
+declare const formStyles_compactTextareaStyle: typeof compactTextareaStyle;
+declare const formStyles_formControlMutedDisabledStyle: typeof formControlMutedDisabledStyle;
+declare const formStyles_formControlStyle: typeof formControlStyle;
+declare const formStyles_formErrorStyle: typeof formErrorStyle;
+declare const formStyles_formLabelStyle: typeof formLabelStyle;
+declare const formStyles_formMetaLabelStyle: typeof formMetaLabelStyle;
+declare const formStyles_outlineButtonStyle: typeof outlineButtonStyle;
+declare const formStyles_primaryButtonStyle: typeof primaryButtonStyle;
+declare namespace formStyles {
+  export { formStyles_compactTextareaStyle as compactTextareaStyle, formStyles_formControlMutedDisabledStyle as formControlMutedDisabledStyle, formStyles_formControlStyle as formControlStyle, formStyles_formErrorStyle as formErrorStyle, formStyles_formLabelStyle as formLabelStyle, formStyles_formMetaLabelStyle as formMetaLabelStyle, formStyles_outlineButtonStyle as outlineButtonStyle, formStyles_primaryButtonStyle as primaryButtonStyle };
+}
+
+declare function BusinessSwitch({ checked, onChange, activeLabel, inactiveLabel, className, }: {
+    checked: boolean;
+    onChange: (value: boolean) => void;
+    activeLabel?: string;
+    inactiveLabel?: string;
+    className?: string;
+}): react_jsx_runtime.JSX.Element;
+
+declare function RuleAmountInput({ value, onChange, placeholder, suffix, }: {
+    value: string;
+    onChange: (value: string) => void;
+    placeholder?: string;
+    suffix?: string;
+}): react_jsx_runtime.JSX.Element;
+
+declare function RuleFieldLabel({ label, required, rightSlot }: {
+    label: ReactNode;
+    required?: boolean;
+    rightSlot?: ReactNode;
+}): react_jsx_runtime.JSX.Element;
+
+declare function RuleTabButton({ title, icon: Icon, active, onClick, }: {
+    title: string;
+    icon: ElementType;
+    active: boolean;
+    onClick: () => void;
+}): react_jsx_runtime.JSX.Element;
+
+declare function TagPills<T extends string>({ options, value, onChange, wrap, className, }: {
+    options: {
+        value: T;
+        label: string;
+    }[];
+    value: T;
+    onChange: (value: T) => void;
+    wrap?: boolean;
+    className?: string;
+}): react_jsx_runtime.JSX.Element;
+
+type ExpandableTagGroupItem = {
+    id: string;
+    name: string;
+    sub?: string;
+};
+declare function ExpandableTagGroup({ label, items, selectedId, onSelect, emptyText, itemsPerRow, required, className, showSearch, }: {
+    label: string;
+    items: ExpandableTagGroupItem[];
+    selectedId: string;
+    onSelect: (id: string) => void;
+    emptyText: string;
+    itemsPerRow?: number;
+    required?: boolean;
+    className?: string;
+    showSearch?: boolean;
+}): react_jsx_runtime.JSX.Element;
+
+type ContractType = 'sale' | 'pre-sale';
+declare function ContractTypeTags({ value, onChange, }: {
+    value: ContractType;
+    onChange: (value: ContractType) => void;
+}): react_jsx_runtime.JSX.Element;
+
+type ContractIssuerType = 'self' | 'former' | 'staff';
+declare function ContractIssuerTags({ value, onChange, }: {
+    value: ContractIssuerType;
+    onChange: (value: ContractIssuerType) => void;
+}): react_jsx_runtime.JSX.Element;
+
+type ShareMode = 'percent' | 'dang';
+declare function ShareModePills({ label, value, onChange, className, }: {
+    label?: string;
+    value: ShareMode;
+    onChange: (value: ShareMode) => void;
+    className?: string;
+}): react_jsx_runtime.JSX.Element;
+
+type SearchableSelectOption = {
+    value: string;
+    label: string;
+};
+declare function SearchableSelect({ options, value, onSelect, placeholder, searchPlaceholder, emptyText, disabled, className, }: {
+    options: SearchableSelectOption[];
+    value: string;
+    onSelect: (value: string) => void;
+    placeholder: string;
+    searchPlaceholder: string;
+    emptyText: string;
+    disabled?: boolean;
+    className?: string;
+}): react_jsx_runtime.JSX.Element;
+
+declare function StickySubmitBar({ label, onClick, disabled, loadingLabel, embedded, submitId, }: {
+    label: string;
+    onClick: () => void;
+    disabled?: boolean;
+    loadingLabel?: string;
+    embedded?: boolean;
+    submitId?: string;
+}): react_jsx_runtime.JSX.Element;
+
+type ChoicePillsOption<T extends string> = {
+    value: T;
+    label: string;
+};
+declare function ChoicePills<T extends string>({ options, value, onChange, ariaLabel, wrap, className, pillClassName, showActiveIndicator, }: {
+    options: Array<ChoicePillsOption<T>>;
+    value: T;
+    onChange: (value: T) => void;
+    ariaLabel?: string;
+    wrap?: boolean;
+    className?: string;
+    pillClassName?: string;
+    showActiveIndicator?: boolean;
+}): react_jsx_runtime.JSX.Element;
+
+declare function ChoicePillsField<T extends string>({ label, labelAs: LabelAs, ariaLabel, options, value, onChange, wrap, className, labelClassName, pillsClassName, pillClassName, showActiveIndicator, }: {
+    label: string;
+    labelAs?: ElementType;
+    ariaLabel?: string;
+    options: Array<ChoicePillsOption<T>>;
+    value: T;
+    onChange: (value: T) => void;
+    wrap?: boolean;
+    className?: string;
+    labelClassName?: string;
+    pillsClassName?: string;
+    pillClassName?: string;
+    showActiveIndicator?: boolean;
+}): react_jsx_runtime.JSX.Element;
+
+type AppThemeTokens = {
+    primary: string;
+    accent: string;
+    radius: string;
+};
+
+export { type AppThemeTokens, BusinessSwitch, ChoicePills, ChoicePillsField, type ChoicePillsOption, ContractIssuerTags, type ContractIssuerType, type ContractType, ContractTypeTags, DataTable, EmptyState, ExpandableTagGroup, type ExpandableTagGroupItem, FormCard, Input, type InputProps, PageIntro, PersianDatePicker, type PersianDatePickerProps, PrimaryLink, RuleAmountInput, RuleFieldLabel, RuleTabButton, SearchableSelect, type SearchableSelectOption, SegmentedToggle, type ShareMode, ShareModePills, StatGrid, StickySubmitBar, TagPills, compactTextareaStyle, formControlMutedDisabledStyle, formControlStyle, formErrorStyle, formLabelStyle, formMetaLabelStyle, formStyles, outlineButtonStyle, primaryButtonStyle };

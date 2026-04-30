@@ -17,9 +17,9 @@ import {
   TimerReset,
   UserRound,
 } from 'lucide-react';
+import { StickySubmitBar } from '@repo/ui';
 import { ContractStepLoader } from './ContractStepLoader';
 import { FieldGroup, FormTextInput, SectionCard, SectionHeader } from './ContractFormPrimitives';
-import { StickySubmitBar } from './StickySubmitBar';
 import {
   ensureActiveDraftId,
   getFrontendStepDraft,

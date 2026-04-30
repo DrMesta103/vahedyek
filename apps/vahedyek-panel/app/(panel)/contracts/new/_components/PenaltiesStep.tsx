@@ -3,10 +3,9 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { LoaderCircle, Plus, Save, X } from 'lucide-react';
-import { Input } from '../../../../components/ui/input';
+import { Input, StickySubmitBar } from '@repo/ui';
 import { ContractStepLoader } from './ContractStepLoader';
 import { FieldLabel } from './FieldLabel';
-import { StickySubmitBar } from './StickySubmitBar';
 import { PENALTY_ITEMS, getPenaltyItem } from './penaltiesConfig';
 import { useContractFlowBasePath } from './useContractFlowBasePath';
 import { TagPills } from './ContractFormPrimitives';

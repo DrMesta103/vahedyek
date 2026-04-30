@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { StickySubmitBar } from './StickySubmitBar';
+import { StickySubmitBar } from '@repo/ui';
 import { ContractStepLoader } from './ContractStepLoader';
 import { SubjectContractorBox, type IssuerType } from './SubjectContractorBox';
 import { SubjectDetailsBox } from './SubjectDetailsBox';

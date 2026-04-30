@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { listEmployees } from '../../lib/data';
-import { EmptyState, PageIntro, PrimaryLink } from '../../components/ui';
+import { EmptyState, PageIntro, PrimaryLink } from '@repo/ui';
 
 export default async function EmployeesPage() {
   const items = await listEmployees();

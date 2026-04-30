@@ -1,6 +1,7 @@
 'use client';
 
-import { ExpandableTagGroup, SectionCard, SectionHeader } from './ContractFormPrimitives';
+import { ExpandableTagGroup } from '@repo/ui';
+import { SectionCard, SectionHeader } from './ContractFormPrimitives';
 
 export type SubjectUnitOption = {
   id: string;
@@ -52,25 +53,33 @@ function UnitSelector({
 
   return (
     <div className="space-y-4">
-      <ExpandableTagGroup
-        label="بلوک"
-        items={blocks.map((block) => ({ id: block.id, name: block.name }))}
-        selectedId={selectedBlock}
-        onSelect={(id) => {
-          onBlockChange(id);
-          onUnitChange('');
-        }}
-        emptyText="بلوکی تعریف نشده است"
-      />
+      <div className="space-y-2">
+        <ExpandableTagGroup
+          label="بلوک"
+          required
+          items={blocks.map((block) => ({ id: block.id, name: block.name }))}
+          selectedId={selectedBlock}
+          onSelect={(id) => {
+            onBlockChange(id);
+            onUnitChange('');
+          }}
+          emptyText="بلوک‌ای وجود ندارد"
+          itemsPerRow={8}
+        />
+      </div>
 
       {blockData ? (
-        <ExpandableTagGroup
-          label="واحد"
-          items={selectableUnits.map((unit) => ({ id: unit.id, name: unit.name, sub: unit.floorName }))}
-          selectedId={selectedUnit}
-          onSelect={onUnitChange}
-          emptyText="واحدی در این بلوک وجود ندارد"
-        />
+        <div className="space-y-2">
+          <ExpandableTagGroup
+            label="واحد"
+            required
+            items={selectableUnits.map((unit) => ({ id: unit.id, name: unit.name, sub: unit.floorName }))}
+            selectedId={selectedUnit}
+            onSelect={onUnitChange}
+            emptyText="واحدی یافت نشد"
+            itemsPerRow={8}
+          />
+        </div>
       ) : null}
 
       {selectedUnitData ? (

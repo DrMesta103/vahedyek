@@ -1,5 +1,5 @@
 import { getBusinessSettingsData } from '../../lib/data';
-import { PageIntro, PrimaryLink } from '../../components/ui';
+import { PageIntro, PrimaryLink } from '@repo/ui';
 
 export default async function BusinessSettingsPage() {
   const items = await getBusinessSettingsData();

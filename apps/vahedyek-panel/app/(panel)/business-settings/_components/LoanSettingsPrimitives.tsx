@@ -3,8 +3,7 @@
 import Link from 'next/link';
 import { ChevronDown, Save, type LucideIcon } from 'lucide-react';
 import { useState } from 'react';
-import { Input } from '../../../components/ui/input';
-import { PersianDatePicker } from '../../../components/ui/PersianDatePicker';
+import { Input, PersianDatePicker } from '@repo/ui';
 import { TagPills } from '../../contracts/new/_components/ContractFormPrimitives';
 
 export function cn(...classes: Array<string | false | null | undefined>) {

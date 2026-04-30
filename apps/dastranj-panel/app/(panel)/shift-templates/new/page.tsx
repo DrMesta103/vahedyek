@@ -1,6 +1,6 @@
 import { createShiftTemplateAction } from '../../../lib/actions';
 import { shiftTypeLabels } from '../../../lib/constants';
-import { FormCard, PageIntro } from '../../../components/ui';
+import { FormCard, PageIntro } from '@repo/ui';
 
 export default function NewShiftTemplatePage() {
   return (
