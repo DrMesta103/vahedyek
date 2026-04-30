@@ -130,9 +130,11 @@ export type ProfileStore = {
   ownershipKind: OwnershipKind;
   legal: LegalOwnershipForm;
   natural: NaturalOwnershipForm;
+  principalPartners: NaturalShareholderRecord[];
   naturalShareholders: NaturalShareholderRecord[];
   legalShareholders: LegalShareholderRecord[];
   representatives: RepresentativeRecord[];
+  boardMembers: RepresentativeRecord[];
   directory: RepresentativeCandidate[];
   bankAccounts: BankAccountRecord[];
   branding: BrandingSettings;
@@ -169,6 +171,28 @@ const defaultStore: ProfileStore = {
     taxFileNumber: '22',
     economicCode: '45454',
   },
+  principalPartners: [
+    {
+      id: 'principal-partner-1',
+      fullName: 'رضا محمدی',
+      mobile: '+989121000101',
+      email: 'reza.mohammadi@example.com',
+      avatarMode: 'badge',
+      avatarText: 'ر',
+      avatarImage: '',
+      sharePercent: '40',
+    },
+    {
+      id: 'principal-partner-2',
+      fullName: 'زهرا صالحی',
+      mobile: '+989121000102',
+      email: '',
+      avatarMode: 'ghost',
+      avatarText: 'ز',
+      avatarImage: '',
+      sharePercent: '35',
+    },
+  ],
   naturalShareholders: [
     {
       id: 'natural-shareholder-1',
@@ -315,6 +339,30 @@ const defaultStore: ProfileStore = {
       linkedUser: false,
     },
   ],
+  boardMembers: [
+    {
+      id: 'board-1',
+      fullName: 'محمدرضا زارعی',
+      mobile: '+989137477540',
+      email: 'ahmad.zare@example.com',
+      avatarMode: 'ghost',
+      avatarText: 'م',
+      avatarImage: '',
+      isPrimary: false,
+      linkedUser: true,
+    },
+    {
+      id: 'board-2',
+      fullName: 'عباس عباسی',
+      mobile: '+989121111111',
+      email: 'abbas.abbasi@example.com',
+      avatarMode: 'image',
+      avatarText: 'ع',
+      avatarImage: '',
+      isPrimary: false,
+      linkedUser: true,
+    },
+  ],
   directory: [
     {
       id: 'rep-1',
@@ -458,6 +506,9 @@ function mergeProfileStore(parsed: unknown): ProfileStore {
     ownershipKind: (parsed as { ownershipKind?: string })?.ownershipKind === 'natural' ? 'natural' : 'legal',
     legal: { ...base.legal, ...(((parsed as { legal?: LegalOwnershipForm })?.legal ?? {}) as Partial<LegalOwnershipForm>) },
     natural: { ...base.natural, ...(((parsed as { natural?: NaturalOwnershipForm })?.natural ?? {}) as Partial<NaturalOwnershipForm>) },
+    principalPartners: Array.isArray((parsed as { principalPartners?: unknown[] })?.principalPartners)
+      ? ((parsed as { principalPartners: NaturalShareholderRecord[] }).principalPartners ?? base.principalPartners)
+      : base.principalPartners,
     naturalShareholders: Array.isArray((parsed as { naturalShareholders?: unknown[] })?.naturalShareholders)
       ? ((parsed as { naturalShareholders: NaturalShareholderRecord[] }).naturalShareholders ?? base.naturalShareholders)
       : base.naturalShareholders,
@@ -467,6 +518,9 @@ function mergeProfileStore(parsed: unknown): ProfileStore {
     representatives: Array.isArray((parsed as { representatives?: unknown[] })?.representatives)
       ? ((parsed as { representatives: RepresentativeRecord[] }).representatives ?? base.representatives)
       : base.representatives,
+    boardMembers: Array.isArray((parsed as { boardMembers?: unknown[] })?.boardMembers)
+      ? ((parsed as { boardMembers: RepresentativeRecord[] }).boardMembers ?? base.boardMembers)
+      : base.boardMembers,
     directory: Array.isArray((parsed as { directory?: unknown[] })?.directory)
       ? ((parsed as { directory: RepresentativeCandidate[] }).directory ?? base.directory)
       : base.directory,
@@ -605,6 +659,22 @@ export function upsertNaturalShareholder(store: ProfileStore, shareholder: Natur
   };
 }
 
+export function upsertPrincipalPartner(store: ProfileStore, partner: NaturalShareholderRecord) {
+  const exists = store.principalPartners.some((item) => item.id === partner.id);
+  return {
+    ...store,
+    principalPartners: exists ? store.principalPartners.map((item) => (item.id === partner.id ? partner : item)) : [partner, ...store.principalPartners],
+  };
+}
+
+export function upsertBoardMember(store: ProfileStore, boardMember: RepresentativeRecord) {
+  const exists = store.boardMembers.some((item) => item.id === boardMember.id);
+  return {
+    ...store,
+    boardMembers: exists ? store.boardMembers.map((item) => (item.id === boardMember.id ? { ...item, ...boardMember } : item)) : [boardMember, ...store.boardMembers],
+  };
+}
+
 export function linkRepresentativeToLegalShareholder(store: ProfileStore, shareholderId: string, representative: RepresentativeRecord) {
   return {
     ...store,
@@ -628,6 +698,7 @@ export function syncRepresentativeAcrossStore(store: ProfileStore, representativ
   const next = upsertRepresentative(store, representative);
   return {
     ...next,
+    boardMembers: next.boardMembers.map((item) => (item.id === representative.id ? { ...item, ...representative } : item)),
     legalShareholders: next.legalShareholders.map((shareholder) => ({
       ...shareholder,
       representatives: shareholder.representatives.map((item) => (item.id === representative.id ? { ...item, ...representative } : item)),

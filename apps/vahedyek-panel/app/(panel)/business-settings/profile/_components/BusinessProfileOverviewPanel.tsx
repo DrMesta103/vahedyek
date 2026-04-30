@@ -19,15 +19,25 @@ const baseSections: ProfileSection[] = [
   {
     title: 'سهامداران اصلی',
     description: 'مدیریت و تنظیم قراردادها، فرم‌های رسمی و اطلاعیه‌ها',
-    span: 'half',
     onlyFor: 'legal',
     href: '/business-settings/profile/shareholders',
   },
   {
+    title: 'شرکای اصلی',
+    description: 'مدیریت و ثبت شرکای اصلی برای کسب‌وکار حقیقی',
+    onlyFor: 'natural',
+    href: '/business-settings/profile/partners',
+  },
+  {
     title: 'نماینده قانونی',
     description: 'مدیریت و تنظیم قراردادها، فرم‌های رسمی و اطلاعیه‌ها',
-    span: 'half',
     href: '/business-settings/profile/representatives',
+  },
+  {
+    title: 'هیئت مدیره',
+    description: 'مدیریت اعضای هیئت مدیره با همان فلو افزودن نماینده',
+    onlyFor: 'legal',
+    href: '/business-settings/profile/board-members',
   },
   {
     title: 'شماره حساب',
@@ -87,14 +97,7 @@ export function BusinessProfileOverviewPanel() {
     };
   }, []);
 
-  const sections = baseSections
-    .filter((section) => !section.onlyFor || section.onlyFor === ownershipKind)
-    .map((section) => {
-      if (section.title === 'نماینده قانونی' && ownershipKind !== 'legal') {
-        return { ...section, span: 'full' as const };
-      }
-      return section;
-    });
+  const sections = baseSections.filter((section) => !section.onlyFor || section.onlyFor === ownershipKind);
 
   return (
     <section className="business-profile-page">

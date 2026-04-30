@@ -12,6 +12,8 @@ import {
   persistProfileStore,
   syncRepresentativeAcrossStore,
   upsertNaturalShareholder,
+  upsertPrincipalPartner,
+  upsertBoardMember,
   type RepresentativeCandidate,
   type RepresentativeRecord,
   upsertRepresentativeCandidate,
@@ -100,7 +102,7 @@ function normalizeRepresentativeForm(candidate: RepresentativeCandidate | null, 
 export function BusinessRepresentativePickerPanel({
   mode = 'representative',
 }: {
-  mode?: 'representative' | 'natural-shareholder';
+  mode?: 'representative' | 'natural-shareholder' | 'partner' | 'board-member';
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -120,15 +122,25 @@ export function BusinessRepresentativePickerPanel({
   const [naturalStep, setNaturalStep] = useState<NaturalShareholderStep>('user');
   const [naturalShareholderId, setNaturalShareholderId] = useState<string | null>(null);
   const [naturalExtra, setNaturalExtra] = useState<NaturalShareholderExtraState>(emptyNaturalExtra);
+  const isPersonStepperMode = mode === 'natural-shareholder' || mode === 'partner';
   const title =
     searchParams.get('title') ||
-    (mode === 'natural-shareholder' ? 'ثبت سهامدار' : searchParams.get('shareholderId') ? 'لیست نماینده' : 'لیست نماینده');
+    (mode === 'natural-shareholder'
+      ? '\u062b\u0628\u062a \u0633\u0647\u0627\u0645\u062f\u0627\u0631'
+      : mode === 'partner'
+        ? '\u062b\u0628\u062a \u0634\u0631\u06cc\u06a9'
+        : mode === 'board-member'
+          ? '\u0644\u06cc\u0633\u062a \u0647\u06cc\u0626\u062a \u0645\u062f\u06cc\u0631\u0647'
+          : searchParams.get('shareholderId')
+            ? '\u0644\u06cc\u0633\u062a \u0646\u0645\u0627\u06cc\u0646\u062f\u0647'
+            : '\u0644\u06cc\u0633\u062a \u0646\u0645\u0627\u06cc\u0646\u062f\u0647');
   const subtitle =
     step === 'lookup'
-      ? 'در این بخش می‌توانید اطلاعات تماس نماینده را وارد کنید'
-      : mode === 'natural-shareholder' && naturalStep === 'extra'
-        ? 'در این بخش می‌توانید اطلاعات تکمیلی سهامدار را وارد کنید'
-        : 'در این بخش می‌توانید اطلاعات تماس و نام و نام خانوادگی را تغییر دهید';
+      ? '\u062f\u0631 \u0627\u06cc\u0646 \u0628\u062e\u0634 \u0645\u06cc\u200c\u062a\u0648\u0627\u0646\u06cc\u062f \u0627\u0637\u0644\u0627\u0639\u0627\u062a \u062a\u0645\u0627\u0633 \u0646\u0645\u0627\u06cc\u0646\u062f\u0647 \u0631\u0627 \u0648\u0627\u0631\u062f \u06a9\u0646\u06cc\u062f'
+      : isPersonStepperMode && naturalStep === 'extra'
+        ? '\u062f\u0631 \u0627\u06cc\u0646 \u0628\u062e\u0634 \u0645\u06cc\u200c\u062a\u0648\u0627\u0646\u06cc\u062f \u0627\u0637\u0644\u0627\u0639\u0627\u062a \u062a\u06a9\u0645\u06cc\u0644\u06cc \u0633\u0647\u0627\u0645\u062f\u0627\u0631 \u0631\u0627 \u0648\u0627\u0631\u062f \u06a9\u0646\u06cc\u062f'
+        : '\u062f\u0631 \u0627\u06cc\u0646 \u0628\u062e\u0634 \u0645\u06cc\u200c\u062a\u0648\u0627\u0646\u06cc\u062f \u0627\u0637\u0644\u0627\u0639\u0627\u062a \u062a\u0645\u0627\u0633 \u0648 \u0646\u0627\u0645 \u0648 \u0646\u0627\u0645 \u062e\u0627\u0646\u0648\u0627\u062f\u06af\u06cc \u0631\u0627 \u062a\u063a\u06cc\u06cc\u0631 \u062f\u0647\u06cc\u062f';
+
 
   useEffect(() => {
     let ignore = false;
@@ -244,39 +256,45 @@ export function BusinessRepresentativePickerPanel({
       const withDirectory = upsertRepresentativeCandidate(store, candidate);
       const withRepresentative = syncRepresentativeAcrossStore(withDirectory, candidate);
 
-      if (mode === 'natural-shareholder') {
-        const shareholderId = naturalShareholderId ?? `natural-shareholder-${Date.now()}`;
-        await persistProfileStore(
-          upsertNaturalShareholder(withRepresentative, {
-            id: shareholderId,
-            fullName,
-            mobile: candidate.mobile,
-            email: candidate.email,
-            avatarMode: candidate.avatarMode,
-            avatarText,
-            avatarImage: candidate.avatarImage,
-            sharePercent: '0',
-            mandateEndDate: naturalExtra.mandateEndDate,
-            signatureAvatarMode: naturalExtra.signatureAvatarMode,
-            signatureAvatarText: naturalExtra.signatureAvatarText || avatarText,
-            signatureAvatarImage: naturalExtra.signatureAvatarImage,
-          }),
-        );
+      if (isPersonStepperMode) {
+        const shareholderId = naturalShareholderId ?? ((mode === 'partner' ? 'principal-partner' : 'natural-shareholder') + '-' + Date.now());
+        const personRecord = {
+          id: shareholderId,
+          fullName,
+          mobile: candidate.mobile,
+          email: candidate.email,
+          avatarMode: candidate.avatarMode,
+          avatarText,
+          avatarImage: candidate.avatarImage,
+          sharePercent: '0',
+          mandateEndDate: naturalExtra.mandateEndDate,
+          signatureAvatarMode: naturalExtra.signatureAvatarMode,
+          signatureAvatarText: naturalExtra.signatureAvatarText || avatarText,
+          signatureAvatarImage: naturalExtra.signatureAvatarImage,
+        };
+        const nextStore =
+          mode === 'partner' ? upsertPrincipalPartner(withRepresentative, personRecord) : upsertNaturalShareholder(withRepresentative, personRecord);
+        await persistProfileStore(nextStore);
         setNaturalShareholderId(shareholderId);
 
         if (naturalStep === 'user') {
           setNaturalStep('extra');
         } else {
-          router.push(searchParams.get('returnTo') || '/business-settings/profile/shareholders?tab=natural');
+          router.push(searchParams.get('returnTo') || (mode === 'partner' ? '/business-settings/profile/partners' : '/business-settings/profile/shareholders?tab=natural'));
           router.refresh();
         }
         return;
       }
 
       const shareholderId = searchParams.get('shareholderId');
-      const finalStore = shareholderId ? linkRepresentativeToLegalShareholder(withRepresentative, shareholderId, candidate) : withRepresentative;
+      const finalStore =
+        mode === 'board-member'
+          ? upsertBoardMember(withRepresentative, candidate)
+          : shareholderId
+            ? linkRepresentativeToLegalShareholder(withRepresentative, shareholderId, candidate)
+            : withRepresentative;
       await persistProfileStore(finalStore);
-      router.push(searchParams.get('returnTo') || '/business-settings/profile/representatives');
+      router.push(searchParams.get('returnTo') || (mode === 'board-member' ? '/business-settings/profile/board-members' : '/business-settings/profile/representatives'));
       router.refresh();
     } finally {
       setSaving(false);
@@ -422,7 +440,7 @@ export function BusinessRepresentativePickerPanel({
         </>
       ) : (
         <div className="representative-details-stage">
-          {mode === 'natural-shareholder' ? (
+          {isPersonStepperMode ? (
             <NaturalShareholderSteps activeStep={naturalStep} />
           ) : (
             <div className="representative-flow-steps" aria-label="مراحل افزودن کاربر">
@@ -441,7 +459,7 @@ export function BusinessRepresentativePickerPanel({
             </div>
           )}
 
-          {mode !== 'natural-shareholder' || naturalStep === 'user' ? (
+          {!isPersonStepperMode || naturalStep === 'user' ? (
             <div className="representative-details-card">
               <div className="representative-contact-board">
                 <ContactRow

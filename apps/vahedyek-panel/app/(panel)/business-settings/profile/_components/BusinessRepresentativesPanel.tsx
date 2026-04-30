@@ -7,7 +7,11 @@ import { fetchProfileStore, type RepresentativeRecord } from './profileStorage';
 import { FormTextInput } from '../../../contracts/new/_components/ContractFormPrimitives';
 import { PersonAvatar, PersonRowCard } from './ProfilePeoplePrimitives';
 
-export function BusinessRepresentativesPanel() {
+export function BusinessRepresentativesPanel({
+  kind = 'representative',
+}: {
+  kind?: 'representative' | 'board-member';
+}) {
   const [query, setQuery] = useState('');
   const [representatives, setRepresentatives] = useState<RepresentativeRecord[]>([]);
 
@@ -16,28 +20,33 @@ export function BusinessRepresentativesPanel() {
 
     fetchProfileStore().then((store) => {
       if (ignore) return;
-      setRepresentatives(store.representatives);
+      setRepresentatives(kind === 'board-member' ? store.boardMembers : store.representatives);
     });
 
     return () => {
       ignore = true;
     };
-  }, []);
+  }, [kind]);
 
   const normalizedQuery = query.trim();
-  const filtered = representatives.filter((item) =>
-    !normalizedQuery ||
-    item.fullName.includes(normalizedQuery) ||
-    item.mobile.includes(normalizedQuery) ||
-    item.email.includes(normalizedQuery)
+  const filtered = representatives.filter(
+    (item) => !normalizedQuery || item.fullName.includes(normalizedQuery) || item.mobile.includes(normalizedQuery) || item.email.includes(normalizedQuery),
   );
 
+  const addTitle = kind === 'board-member' ? 'ثبت عضو هیئت مدیره' : 'ثبت نماینده';
+  const addHref =
+    kind === 'board-member'
+      ? `/business-settings/profile/board-members/new?title=${encodeURIComponent(addTitle)}`
+      : `/business-settings/profile/representatives/new?title=${encodeURIComponent(addTitle)}`;
+  const pageLabel = kind === 'board-member' ? 'لیست هیئت مدیره' : 'لیست نماینده قانونی';
+  const addLabel = kind === 'board-member' ? 'افزودن عضو هیئت مدیره' : 'افزودن نماینده';
+
   return (
-    <section className="representative-list-page" aria-label="لیست نماینده قانونی">
+    <section className="representative-list-page" aria-label={pageLabel}>
       <div className="representative-toolbar">
-        <Link href={`/business-settings/profile/representatives/new?title=${encodeURIComponent('ثبت نماینده')}`} className="representative-add-button">
+        <Link href={addHref} className="representative-add-button">
           <Plus />
-          افزودن نماینده
+          {addLabel}
         </Link>
 
         <label className="representative-search">
