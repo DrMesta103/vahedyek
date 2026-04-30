@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
-import { Camera, FileText, Info, Loader2, Maximize2, Mic, Minimize2, Pause, Plus, Reply, Send, Tag, Upload, X } from 'lucide-react';
+import { Camera, Download, FileText, Info, Loader2, Maximize2, Mic, Minimize2, Pause, Plus, Reply, Send, Smile, Tag, Upload, X } from 'lucide-react';
 import { Input } from '@repo/ui';
 import { currentAppConfig } from '../config/current';
 import { useAuthContext } from '../hooks/useAuthContext';
@@ -98,11 +98,13 @@ export default function PageDocsWidget() {
   const [wizardLabelsInput, setWizardLabelsInput] = useState('');
 
   const [composerText, setComposerText] = useState('');
+  const [emojiOpen, setEmojiOpen] = useState(false);
   const [replyTo, setReplyTo] = useState<PageMessageRecord | null>(null);
   const [error, setError] = useState('');
   const [pageKey, setPageKey] = useState('');
   const [buzz, setBuzz] = useState(false);
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
+  const [audioProgress, setAudioProgress] = useState<Record<string, number>>({});
   const [screenshotStep, setScreenshotStep] = useState<ScreenshotStep>(null);
   const [screenshotRect, setScreenshotRect] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
   const [screenshotBaseDataUrl, setScreenshotBaseDataUrl] = useState<string | null>(null);
@@ -124,6 +126,7 @@ export default function PageDocsWidget() {
   const recordingAudioCtxRef = useRef<AudioContext | null>(null);
   const recordingAnalyserRef = useRef<AnalyserNode | null>(null);
   const recordingRafRef = useRef<number | null>(null);
+  const emojiPopoverRef = useRef<HTMLDivElement | null>(null);
 
   const selectedThread = useMemo(
     () => threads.find((thread) => thread.id === selectedThreadId) ?? null,
@@ -185,6 +188,19 @@ export default function PageDocsWidget() {
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [screenshotStep]);
+
+  useEffect(() => {
+    if (!emojiOpen) return;
+    const onDown = (event: MouseEvent) => {
+      const node = emojiPopoverRef.current;
+      if (!node) return;
+      if (event.target instanceof Node && !node.contains(event.target)) {
+        setEmojiOpen(false);
+      }
+    };
+    window.addEventListener('mousedown', onDown);
+    return () => window.removeEventListener('mousedown', onDown);
+  }, [emojiOpen]);
 
   const fetchThreads = async () => {
     const response = await fetch(`/api/page-threads?pagePath=${encodeURIComponent(pathname)}`, { cache: 'no-store' });
@@ -907,14 +923,18 @@ export default function PageDocsWidget() {
                 <div className="mt-1 flex flex-wrap gap-2 text-xs text-[color:var(--text-muted)]">
                   {selectedThread ? (
                     <>
-                      <span className={chipClass()}>{selectedThread.docType}</span>
-                      <span className={chipClass()}>{PRIORITY_LABELS[selectedThread.priority]}</span>
-                      {selectedThread.labels.map((label) => (
-                        <span key={label} className={chipClass()}>
-                          <Tag className="ml-1 h-3.5 w-3.5" />
-                          {label}
-                        </span>
-                      ))}
+                      <span className={chipClass()}>
+                        <strong className="ml-1">موضوع:</strong>
+                        {selectedThread.title}
+                      </span>
+                      <span className={chipClass()}>
+                        <strong className="ml-1">نوع:</strong>
+                        {selectedThread.docType}
+                      </span>
+                      <span className={chipClass()}>
+                        <strong className="ml-1">اولویت:</strong>
+                        {PRIORITY_LABELS[selectedThread.priority]}
+                      </span>
                     </>
                   ) : null}
                 </div>
@@ -942,11 +962,12 @@ export default function PageDocsWidget() {
                       const mine = Boolean(currentUserId && message.author?.id === currentUserId);
                       const bubbleBg = mine ? '#ededed' : 'var(--theme-accent)';
                       const bubbleText = mine ? 'var(--text-body)' : 'white';
+                      const bubbleMaxW = message.messageType === 'audio' ? 'max-w-[60%]' : 'max-w-[65%]';
                       return (
                         <div key={message.id} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
                           <button
                             type="button"
-                            className="max-w-[65%] text-right"
+                            className={`${bubbleMaxW} text-right`}
                             onClick={() => setReplyTo(message)}
                             title="ریپلای به این پیام"
                           >
@@ -969,12 +990,49 @@ export default function PageDocsWidget() {
                               {message.messageType === 'text' ? (
                                 <div className="mt-1 whitespace-pre-wrap text-sm leading-7">{message.text}</div>
                               ) : message.messageType === 'image' && message.attachmentDataUrl ? (
-                                <div className="mt-2 overflow-hidden rounded-xl bg-white/10">
-                                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                                  <img src={message.attachmentDataUrl} alt="attachment" className="h-auto w-full" />
+                                <div className="mt-2 space-y-2">
+                                  <div className="overflow-hidden rounded-xl bg-white/10">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img src={message.attachmentDataUrl} alt="attachment" className="h-auto w-full" />
+                                  </div>
+                                  <div className="flex justify-end">
+                                    <a
+                                      className="inline-flex items-center gap-2 rounded-xl bg-white/10 px-3 py-2 text-xs underline"
+                                      href={message.attachmentDataUrl}
+                                      download={message.attachmentName || 'image.png'}
+                                    >
+                                      <Download className="h-4 w-4" />
+                                      دانلود
+                                    </a>
+                                  </div>
                                 </div>
                               ) : message.messageType === 'audio' && message.attachmentDataUrl ? (
                                 <div className="mt-2">
+                                  <div className="mb-2 overflow-hidden rounded-xl bg-white/10 px-3 py-2">
+                                    <div className="relative h-8">
+                                      <div className="absolute inset-0 flex items-end justify-between gap-1">
+                                        {Array.from({ length: 34 }).map((_, idx) => {
+                                          const progress = audioProgress[message.id] ?? 0;
+                                          const played = idx / 34 <= progress;
+                                          return (
+                                            <div
+                                              key={idx}
+                                              className="w-1 rounded"
+                                              style={{
+                                                height: 6 + ((idx * 11) % 18),
+                                                background: played ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.35)',
+                                                animation:
+                                                  playingAudioId === message.id
+                                                    ? `devDocsEqualize 650ms ease-in-out ${idx * 18}ms infinite`
+                                                    : undefined,
+                                                transformOrigin: 'bottom',
+                                              }}
+                                            />
+                                          );
+                                        })}
+                                      </div>
+                                    </div>
+                                  </div>
                                   <div className="flex items-center gap-3">
                                     <audio
                                       ref={(el) => {
@@ -985,6 +1043,11 @@ export default function PageDocsWidget() {
                                       className="w-full"
                                       onPlay={() => setPlayingAudioId(message.id)}
                                       onPause={() => setPlayingAudioId((v) => (v === message.id ? null : v))}
+                                      onTimeUpdate={(event) => {
+                                        const el = event.currentTarget;
+                                        const ratio = el.duration ? el.currentTime / el.duration : 0;
+                                        setAudioProgress((current) => ({ ...current, [message.id]: clamp(ratio, 0, 1) }));
+                                      }}
                                       onEnded={() => {
                                         setPlayingAudioId((v) => (v === message.id ? null : v));
                                         const currentIndex = messages.findIndex((m) => m.id === message.id);
@@ -1013,9 +1076,15 @@ export default function PageDocsWidget() {
                                   <div className="flex items-center gap-2 rounded-xl bg-white/10 px-3 py-2 text-sm">
                                     <FileText className="h-4 w-4" />
                                     <span>PDF</span>
-                                    <a className="mr-auto underline" href={message.attachmentDataUrl} target="_blank" rel="noreferrer">
-                                      مشاهده
-                                    </a>
+                                    <div className="mr-auto flex items-center gap-3">
+                                      <a className="underline" href={message.attachmentDataUrl} target="_blank" rel="noreferrer">
+                                        مشاهده
+                                      </a>
+                                      <a className="inline-flex items-center gap-2 underline" href={message.attachmentDataUrl} download={message.attachmentName || 'document.pdf'}>
+                                        <Download className="h-4 w-4" />
+                                        دانلود
+                                      </a>
+                                    </div>
                                   </div>
                                   <div className="overflow-hidden rounded-xl bg-white/10">
                                     <embed src={message.attachmentDataUrl} type="application/pdf" className="h-72 w-full" />
@@ -1051,11 +1120,11 @@ export default function PageDocsWidget() {
                   </div>
                 ) : null}
 
-                <div className="flex items-end gap-2">
-                  <div className="flex gap-2">
+                <div className="flex items-center gap-2">
+                  <div className="relative flex items-center gap-2">
                     <button
                       type="button"
-                      className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[color:var(--border-color)] bg-[color:var(--surface)] text-[color:var(--text-body)]"
+                      className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-[color:var(--border-color)] bg-[color:var(--surface)] text-[color:var(--text-body)]"
                       onClick={() => imageInputRef.current?.click()}
                       title="آپلود عکس"
                     >
@@ -1075,7 +1144,7 @@ export default function PageDocsWidget() {
 
                     <button
                       type="button"
-                      className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[color:var(--border-color)] bg-[color:var(--surface)] text-[color:var(--text-body)]"
+                      className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-[color:var(--border-color)] bg-[color:var(--surface)] text-[color:var(--text-body)]"
                       onClick={() => pdfInputRef.current?.click()}
                       title="آپلود PDF"
                     >
@@ -1095,7 +1164,7 @@ export default function PageDocsWidget() {
 
                     <button
                       type="button"
-                      className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[color:var(--border-color)] bg-[color:var(--surface)] text-[color:var(--text-body)]"
+                      className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-[color:var(--border-color)] bg-[color:var(--surface)] text-[color:var(--text-body)]"
                       onClick={() => void toggleRecording()}
                       title={recording ? 'پایان ضبط' : 'ضبط ویس'}
                     >
@@ -1104,20 +1173,50 @@ export default function PageDocsWidget() {
 
                     <button
                       type="button"
-                      className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[color:var(--border-color)] bg-[color:var(--surface)] text-[color:var(--text-body)]"
+                      className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-[color:var(--border-color)] bg-[color:var(--surface)] text-[color:var(--text-body)]"
                       title="اسکرین‌شات"
                       onClick={() => startScreenshot()}
                     >
                       <Camera className="h-4 w-4" />
                     </button>
+
+                    <button
+                      type="button"
+                      className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-[color:var(--border-color)] bg-[color:var(--surface)] text-[color:var(--text-body)]"
+                      title="ایموجی"
+                      onClick={() => setEmojiOpen((v) => !v)}
+                    >
+                      <Smile className="h-4 w-4" />
+                    </button>
+
+                    {emojiOpen ? (
+                      <div
+                        ref={emojiPopoverRef}
+                        className="absolute bottom-[56px] right-0 w-56 rounded-2xl border border-[color:var(--border-color)] bg-[color:var(--surface)] p-3 shadow-[0_24px_70px_var(--shadow-soft)]"
+                      >
+                        <div className="grid grid-cols-8 gap-2 text-lg">
+                          {['😀', '😂', '😍', '🥲', '😡', '👍', '🙏', '🎯', '✅', '❌', '🔥', '💡', '📌', '🧩', '📝', '📎'].map((emoji) => (
+                            <button
+                              key={emoji}
+                              type="button"
+                              className="h-8 w-8 rounded-xl hover:bg-[color:var(--surface-soft)]"
+                              onClick={() => {
+                                setComposerText((v) => `${v}${emoji}`);
+                                setEmojiOpen(false);
+                              }}
+                            >
+                              {emoji}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
                   </div>
 
                   <div className="flex-1">
                     {recording ? (
-                      <div className="flex h-12 items-center justify-between gap-3 rounded-2xl border border-[color:var(--border-color)] bg-[color:var(--theme-accent)] px-3">
-                        <div className="text-xs font-bold text-white">در حال ضبط...</div>
-                        <canvas ref={recordingVizCanvasRef} width={220} height={26} className="opacity-95" />
-                        <div className="text-xs text-white/80">برای توقف، دوباره میکروفن را بزن</div>
+                      <div className="flex h-12 items-center rounded-2xl border border-[color:var(--border-color)] bg-[color:var(--theme-accent)] px-3">
+                        <canvas ref={recordingVizCanvasRef} width={420} height={26} className="w-full opacity-95" />
                       </div>
                     ) : (
                       <textarea
@@ -1125,7 +1224,7 @@ export default function PageDocsWidget() {
                         onChange={(event) => setComposerText(event.target.value)}
                         placeholder="پیام..."
                         rows={1}
-                        className="max-h-28 w-full resize-none rounded-2xl border border-[color:var(--border-color)] bg-[color:var(--surface-soft)] px-4 py-3 text-sm text-[color:var(--text-body)] outline-none"
+                        className="h-12 max-h-28 w-full resize-none rounded-2xl border border-[color:var(--border-color)] bg-[color:var(--surface-soft)] px-4 py-3 text-sm leading-6 text-[color:var(--text-body)] outline-none"
                         onKeyDown={(event) => {
                           if (event.key === 'Enter' && !event.shiftKey) {
                             event.preventDefault();
@@ -1137,7 +1236,7 @@ export default function PageDocsWidget() {
                   </div>
                   <button
                     type="button"
-                    className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[color:var(--theme-accent)] text-white"
+                    className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-[color:var(--theme-accent)] text-white"
                     onClick={() => void sendTextMessage()}
                     title="ارسال"
                   >
