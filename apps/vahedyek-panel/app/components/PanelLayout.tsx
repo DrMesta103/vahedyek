@@ -7,6 +7,7 @@ import { getDiscountEntry, getDiscountGroup } from '../(panel)/contracts/new/_co
 import { getPenaltyItem } from '../(panel)/contracts/new/_components/penaltiesConfig';
 import { currentAppConfig } from '../config/current';
 import OrbitMenu from './OrbitMenu';
+import PageDocsWidget from './PageDocsWidget';
 import Sidebar from './Sidebar';
 
 interface PanelLayoutProps {
@@ -307,6 +308,7 @@ export default function PanelLayout({ children }: PanelLayoutProps) {
 
   return (
     <div className="app-shell">
+      <PageDocsWidget />
       <Sidebar activeItem={activeItem} forceCollapsed={isContractsNewHub} lockCollapsed={isContractsNewHub} />
       {showOrbitMenu ? (
         <main className="main-content home-main-content">

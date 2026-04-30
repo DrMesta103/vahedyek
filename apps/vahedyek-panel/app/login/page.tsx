@@ -1,9 +1,9 @@
 'use client';
 
-import { Suspense, useEffect } from 'react';
-import { useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { parseAuthIdentifier, sanitizeIranMobileInput } from '../lib/contact';
 
 async function readJsonResponse(response: Response) {
   const contentType = response.headers.get('content-type') ?? '';
@@ -23,18 +23,29 @@ async function readJsonResponse(response: Response) {
 function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const registered = searchParams.get('registered') === '1';
+  const identifierType = parseAuthIdentifier(identifier).type;
+  const showIranPrefix = identifierType !== 'email';
 
   useEffect(() => {
-    const initialEmail = searchParams.get('email');
-    if (initialEmail) {
-      setEmail(initialEmail);
+    const initialIdentifier = searchParams.get('identifier');
+    if (initialIdentifier) {
+      setIdentifier(initialIdentifier);
     }
   }, [searchParams]);
+
+  const handleIdentifierChange = (value: string) => {
+    if (value.includes('@')) {
+      setIdentifier(value.trim());
+      return;
+    }
+
+    setIdentifier(sanitizeIranMobileInput(value));
+  };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -45,7 +56,7 @@ function LoginPageContent() {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ identifier, password }),
       });
 
       const payload = await readJsonResponse(response);
@@ -54,7 +65,7 @@ function LoginPageContent() {
       }
 
       const next = searchParams.get('next') || '/';
-      router.push(`/select-tenant?userId=${payload.user.id}&next=${encodeURIComponent(next)}`);
+      router.push(`/select-tenant?userId=${payload.user?.id ?? ''}&next=${encodeURIComponent(next)}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'خطا در ورود به سامانه');
     } finally {
@@ -70,25 +81,37 @@ function LoginPageContent() {
             ورود به سامانه قرارداد
           </div>
           <h1 className="text-3xl font-bold text-slate-900">ورود</h1>
-          <p className="mt-2 text-sm leading-6 text-slate-500">با ایمیل و رمز عبور خود وارد شوید.</p>
+          <p className="mt-2 text-sm leading-6 text-slate-500">با ایمیل یا شماره موبایل ۱۰ رقمی و رمز عبور وارد شوید.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 text-right">
           {registered ? (
             <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-              ثبت‌نام انجام شد. برای ورود، ایمیل و رمز عبور خود را وارد کنید.
+              ثبت‌نام انجام شد. حالا با ایمیل یا شماره موبایل و رمز عبور وارد شوید.
             </div>
           ) : null}
 
           <label className="block">
-            <span className="mb-2 block text-sm font-semibold text-slate-700">ایمیل</span>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="app-control app-auth-control w-full transition focus:border-emerald-500"
-            />
+            <span className="mb-2 block text-sm font-semibold text-slate-700">ایمیل یا شماره موبایل</span>
+            <div className="flex items-center gap-2 rounded-[14px] border border-slate-200 bg-slate-50 px-3 focus-within:border-emerald-500">
+              {showIranPrefix ? (
+                <span className="shrink-0 text-sm font-semibold text-slate-500" dir="ltr">
+                  🇮🇷 +98
+                </span>
+              ) : null}
+              <input
+                type={identifierType === 'email' ? 'email' : 'text'}
+                value={identifier}
+                onChange={(e) => handleIdentifierChange(e.target.value)}
+                required
+                dir="ltr"
+                inputMode={identifierType === 'email' ? 'email' : 'numeric'}
+                maxLength={identifierType === 'email' ? undefined : 10}
+                placeholder={identifierType === 'email' ? 'example@email.com' : '9352720114'}
+                className="h-12 w-full border-0 bg-transparent px-0 text-left text-[13px] text-slate-800 outline-none"
+              />
+            </div>
+            {showIranPrefix ? <span className="mt-1 block text-xs text-slate-400">فقط ۱۰ رقم و بدون `0` یا `+98`</span> : null}
           </label>
 
           <label className="block">

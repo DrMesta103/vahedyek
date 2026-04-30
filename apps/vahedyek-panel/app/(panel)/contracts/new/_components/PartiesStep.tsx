@@ -23,6 +23,14 @@ import {
 } from './partiesTypes';
 import { useContractFlowBasePath } from './useContractFlowBasePath';
 import {
+  fetchProfileStore,
+  type OwnershipKind,
+  type ProfileStore,
+  type RepresentativeRecord,
+  type LegalShareholderRecord,
+  type NaturalShareholderRecord,
+} from '../../../business-settings/profile/_components/profileStorage';
+import {
   createDirectoryPerson,
   ensureActiveDraftId,
   getReferenceData,
@@ -31,6 +39,136 @@ import {
   type ReferenceDataResponse,
 } from '../../../../lib/contractDraftClient';
 import type { ContractPartiesData } from '../../../../types/contract';
+
+type AuthMePayload = {
+  user: {
+    id: string;
+    fullName: string;
+    email: string;
+  };
+  tenant: {
+    id: string;
+    name: string;
+    slug: string;
+    brandCode: string;
+  } | null;
+  membership: {
+    id: string;
+    role: string;
+    roleLabels: string[];
+    roleKeys: string[];
+  } | null;
+  access: {
+    isOwner: boolean;
+    roleLabels: string[];
+    roleKeys: string[];
+    permissionKeys: string[];
+    allowedMenuItemIds: string[];
+  } | null;
+} | null;
+
+function normalizeName(value: string | undefined | null) {
+  return value?.trim().replace(/\s+/g, ' ') ?? '';
+}
+
+function hasAnyRole(roleKeys: Set<string>, keys: string[]) {
+  return keys.some((key) => roleKeys.has(key));
+}
+
+function buildLegalPartyOneName(companyName: string, actorName: string, title?: string) {
+  const segments = [companyName, actorName].filter(Boolean);
+  if (title) segments.push(`سمت: ${title}`);
+  return segments.join(' - ');
+}
+
+function buildDefaultPartyOneRow(
+  shareMode: ShareMode,
+  profileStore: ProfileStore,
+  auth: AuthMePayload,
+): PartyRow {
+  const shareValue = PARTY_TOTALS[shareMode];
+  const userId = auth?.user.id ?? 'anonymous';
+  const userFullName = normalizeName(auth?.user.fullName);
+  const roleKeys = new Set([...(auth?.membership?.roleKeys ?? []), ...(auth?.access?.roleKeys ?? [])]);
+  const ownershipKind: OwnershipKind = profileStore.ownershipKind === 'natural' ? 'natural' : 'legal';
+
+  const matchingNaturalShareholder =
+    userFullName &&
+    profileStore.naturalShareholders.find((item: NaturalShareholderRecord) => normalizeName(item.fullName) === userFullName);
+
+  if (ownershipKind === 'natural') {
+    const displayName = matchingNaturalShareholder?.fullName || userFullName || 'صاحب کسب و کار';
+    return {
+      id: matchingNaturalShareholder ? `default-natural-shareholder:${matchingNaturalShareholder.id}` : `default-owner:${userId}`,
+      directoryId: null,
+      personType: 'natural',
+      name: displayName,
+      shareValue,
+      isPrimary: true,
+    };
+  }
+
+  const companyName = normalizeName(profileStore.legal.companyName) || normalizeName(auth?.tenant?.name) || 'شخص حقوقی';
+  const matchingLegalRepresentative = userFullName
+    ? profileStore.legalShareholders
+        .map((shareholder: LegalShareholderRecord) => ({
+          shareholder,
+          representative: shareholder.representatives.find((item: RepresentativeRecord) => normalizeName(item.fullName) === userFullName) ?? null,
+        }))
+        .find((item) => item.representative)
+    : undefined;
+  const matchingRepresentative =
+    userFullName &&
+    (profileStore.representatives.find((item: RepresentativeRecord) => normalizeName(item.fullName) === userFullName) ?? null);
+
+  if (matchingLegalRepresentative?.representative && hasAnyRole(roleKeys, ['legal_shareholder_representative'])) {
+    return {
+      id: `default-legal-shareholder-representative:${matchingLegalRepresentative.shareholder.id}:${matchingLegalRepresentative.representative.id}`,
+      directoryId: null,
+      personType: 'legal',
+      name: buildLegalPartyOneName(companyName, matchingLegalRepresentative.representative.fullName, 'نماینده سهام دار حقوقی'),
+      shareValue,
+      isPrimary: true,
+    };
+  }
+
+  if (matchingRepresentative && hasAnyRole(roleKeys, ['representative', 'partner_representative'])) {
+    return {
+      id: `default-representative:${matchingRepresentative.id}`,
+      directoryId: null,
+      personType: 'legal',
+      name: buildLegalPartyOneName(companyName, matchingRepresentative.fullName, roleKeys.has('partner_representative') ? 'نماینده شریک' : 'نماینده'),
+      shareValue,
+      isPrimary: true,
+    };
+  }
+
+  if (matchingNaturalShareholder && hasAnyRole(roleKeys, ['shareholder'])) {
+    return {
+      id: `default-shareholder:${matchingNaturalShareholder.id}`,
+      directoryId: null,
+      personType: 'legal',
+      name: buildLegalPartyOneName(companyName, matchingNaturalShareholder.fullName, 'سهام دار'),
+      shareValue,
+      isPrimary: true,
+    };
+  }
+
+  return {
+    id: `default-legal-owner:${userId}`,
+    directoryId: null,
+    personType: 'legal',
+    name: buildLegalPartyOneName(companyName, userFullName || 'صاحب کسب و کار'),
+    shareValue,
+    isPrimary: true,
+  };
+}
+
+async function getAuthMe() {
+  const response = await fetch('/api/auth/me', { cache: 'no-store' });
+  if (!response.ok) return null;
+  return (await response.json()) as AuthMePayload;
+}
 
 export function PartiesStep({ stepId, title, embedded = false }: { stepId: string; title: string; embedded?: boolean }) {
   const router = useRouter();
@@ -44,6 +182,7 @@ export function PartiesStep({ stepId, title, embedded = false }: { stepId: strin
   const [shareMode, setShareMode] = useState<ShareMode>('dang');
   const [partyOneRows, setPartyOneRows] = useState<PartyRow[]>([]);
   const [partyTwoRows, setPartyTwoRows] = useState<PartyRow[]>([]);
+  const [defaultPartyOneRow, setDefaultPartyOneRow] = useState<PartyRow | null>(null);
   const [partnerNaturals, setPartnerNaturals] = useState<DirectoryItem[]>([]);
   const [partnerLegals, setPartnerLegals] = useState<DirectoryItem[]>([]);
   const [buyerNaturals, setBuyerNaturals] = useState<DirectoryItem[]>([]);
@@ -83,27 +222,42 @@ export function PartiesStep({ stepId, title, embedded = false }: { stepId: strin
     const load = async () => {
       try {
         const id = await ensureActiveDraftId();
-        const [referenceData, partiesData] = await Promise.all([
+        const [referenceData, partiesData, profileStore, auth] = await Promise.all([
           getReferenceData(),
           getStepData<ContractPartiesData>(id, 'parties'),
+          fetchProfileStore(),
+          getAuthMe(),
         ]);
 
         if (!mounted) return;
 
         setDraftId(id);
         applyReferenceData(referenceData);
+        const computedDefaultPartyOneRow = buildDefaultPartyOneRow('dang', profileStore, auth);
+        setDefaultPartyOneRow(computedDefaultPartyOneRow);
 
         if (partiesData) {
-          setShareMode(partiesData.partyOneMode ?? partiesData.partyTwoMode ?? 'dang');
+          const nextShareMode = partiesData.partyOneMode ?? partiesData.partyTwoMode ?? 'dang';
+          setShareMode(nextShareMode);
+          const nextDefaultPartyOneRow =
+            nextShareMode === 'dang'
+              ? computedDefaultPartyOneRow
+              : {
+                  ...computedDefaultPartyOneRow,
+                  shareValue: PARTY_TOTALS[nextShareMode],
+                };
+          setDefaultPartyOneRow(nextDefaultPartyOneRow);
           setPartyOneRows(
-            partiesData.partyOne.map((item) => ({
-              id: item.personId,
-              directoryId: item.directoryId ?? null,
-              personType: item.personType,
-              name: item.name,
-              shareValue: item.share.value,
-              isPrimary: Boolean(item.isPrimary),
-            })),
+            partiesData.partyOne.length
+              ? partiesData.partyOne.map((item) => ({
+                  id: item.personId,
+                  directoryId: item.directoryId ?? null,
+                  personType: item.personType,
+                  name: item.name,
+                  shareValue: item.share.value,
+                  isPrimary: Boolean(item.isPrimary),
+                }))
+              : [nextDefaultPartyOneRow],
           );
           setPartyTwoRows(
             partiesData.partyTwo.map((item) => ({
@@ -115,6 +269,8 @@ export function PartiesStep({ stepId, title, embedded = false }: { stepId: strin
               isPrimary: Boolean(item.isPrimary),
             })),
           );
+        } else {
+          setPartyOneRows([computedDefaultPartyOneRow]);
         }
       } finally {
         if (mounted) setLoading(false);
@@ -163,6 +319,14 @@ export function PartiesStep({ stepId, title, embedded = false }: { stepId: strin
     if (nextMode === shareMode) return;
     setPartyOneRows((current) => convertRows(current, shareMode, nextMode));
     setPartyTwoRows((current) => convertRows(current, shareMode, nextMode));
+    setDefaultPartyOneRow((current) =>
+      current
+        ? {
+            ...current,
+            shareValue: PARTY_TOTALS[nextMode],
+          }
+        : current,
+    );
     setShareMode(nextMode);
   };
 
@@ -178,7 +342,13 @@ export function PartiesStep({ stepId, title, embedded = false }: { stepId: strin
         })),
     ]);
 
-  const removeRow = (rows: PartyRow[], id: string) => normalizePrimary(rows.filter((row) => row.id !== id));
+  const removeRow = (rows: PartyRow[], id: string, fallbackRow?: PartyRow | null) => {
+    const nextRows = rows.filter((row) => row.id !== id);
+    if (!nextRows.length && fallbackRow) {
+      return [fallbackRow];
+    }
+    return normalizePrimary(nextRows);
+  };
 
   const createDirectoryItem = async (kind: EntityKind, personType: PersonType, name: string) => {
     const created = await createDirectoryPerson({
@@ -295,7 +465,7 @@ export function PartiesStep({ stepId, title, embedded = false }: { stepId: strin
         shareMode={shareMode}
         onShareChange={(id, value) => setPartyOneRows((current) => updateRowShare(current, id, value, shareMode))}
         onPrimaryChange={(id) => setPartyOneRows((current) => setPrimaryRow(current, id))}
-        onRemove={(id) => setPartyOneRows((current) => removeRow(current, id))}
+        onRemove={(id) => setPartyOneRows((current) => removeRow(current, id, defaultPartyOneRow))}
         addButtonLabel={partyOneLabels.addButton}
         onOpenDialog={() => {
           void reloadReferenceData();

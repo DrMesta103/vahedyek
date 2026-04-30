@@ -34,13 +34,19 @@ async function main() {
   const user = await prisma.appUser.upsert({
     where: { email: 'admin@lind.ir' },
     update: {
+      firstName: 'علی',
+      lastName: 'علی‌نقی پور',
       fullName: 'علی علی‌نقی پور',
+      mobile: '9121000001',
       passwordHash,
       passwordSalt,
     },
     create: {
+      firstName: 'علی',
+      lastName: 'علی‌نقی پور',
       fullName: 'علی علی‌نقی پور',
       email: 'admin@lind.ir',
+      mobile: '9121000001',
       passwordHash,
       passwordSalt,
     },

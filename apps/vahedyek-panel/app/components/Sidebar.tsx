@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { useAuthContext } from '../hooks/useAuthContext';
+import { formatIdentityLabel } from '../lib/contact';
 import { getSidebarMenuItems } from '../lib/navigation';
 import { ThemeToggle } from './theme/ThemeToggle';
 
@@ -58,6 +59,7 @@ export default function Sidebar({ activeItem = 'home', forceCollapsed = false, l
   const allowedMenuItemIds = data?.access?.allowedMenuItemIds;
   const canSeeSettings = !allowedMenuItemIds || allowedMenuItemIds.includes('settings');
   const visibleMenuItems = getSidebarMenuItems().filter((item) => !allowedMenuItemIds || allowedMenuItemIds.includes(item.id));
+  const identityLabel = formatIdentityLabel(data?.user?.email, data?.user?.mobile);
 
   const settingsButton = (className?: string) =>
     canSeeSettings ? (
@@ -74,7 +76,7 @@ export default function Sidebar({ activeItem = 'home', forceCollapsed = false, l
         </div>
         <div className="name">
           <div>{data?.user?.fullName ?? 'در حال بارگذاری...'}</div>
-          <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '2px' }}>{data?.user?.email ?? ''}</div>
+          <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '2px' }}>{identityLabel}</div>
         </div>
         <div className="back-btn" style={{ visibility: 'hidden' }} aria-hidden="true">
           <i className="fa fa-chevron-left"></i>
