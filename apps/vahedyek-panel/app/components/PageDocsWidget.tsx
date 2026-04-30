@@ -164,24 +164,18 @@ export default function PageDocsWidget() {
   const sortedDocs = useMemo(() => sortDocs(docs, sortMode), [docs, sortMode]);
 
   useEffect(() => {
-    if (process.env.NODE_ENV !== 'development') return;
     setOpen(false);
     setMode('list');
     setError('');
   }, [pathname]);
 
   useEffect(() => {
-    if (process.env.NODE_ENV !== 'development') return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setOpen(false);
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
-
-  if (process.env.NODE_ENV !== 'development') {
-    return null;
-  }
 
   const fetchDocs = async () => {
     const response = await fetch(`/api/page-docs?pagePath=${encodeURIComponent(pathname)}`, { cache: 'no-store' });
