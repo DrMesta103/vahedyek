@@ -24,9 +24,9 @@ export function ChoicePillsField<T extends string>({
   label: string;
   labelAs?: ElementType;
   ariaLabel?: string;
-  options: Array<ChoicePillsOption<T>>;
+  options: ReadonlyArray<ChoicePillsOption<T>>;
   value: T;
-  onChange: (value: T) => void;
+  onChange: (value: NoInfer<T>) => void;
   wrap?: boolean;
   className?: string;
   labelClassName?: string;
@@ -50,4 +50,3 @@ export function ChoicePillsField<T extends string>({
     </div>
   );
 }
-

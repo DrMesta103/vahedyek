@@ -324,7 +324,7 @@ export default function PageDocsWidget() {
           },
         }),
       });
-      const payload = (await response.json().catch(() => null)) as { message?: string; message?: PageMessageRecord | null; success?: boolean } | null;
+      const payload = (await response.json().catch(() => null)) as { message?: string | PageMessageRecord | null; success?: boolean } | null;
       if (!response.ok) throw new Error((payload as { message?: string } | null)?.message || 'ارسال فایل انجام نشد.');
       setReplyTo(null);
       upsertOptimisticMessage(tempId, (payload as { message?: PageMessageRecord | null } | null)?.message ?? null);
@@ -637,7 +637,7 @@ export default function PageDocsWidget() {
           replyToMessageId: replyTo?.id ?? null,
         }),
       });
-      const payload = (await response.json().catch(() => null)) as { message?: string; message?: PageMessageRecord | null } | null;
+      const payload = (await response.json().catch(() => null)) as { message?: string | PageMessageRecord | null } | null;
       if (!response.ok) throw new Error((payload as { message?: string } | null)?.message || 'ارسال پیام انجام نشد.');
       setReplyTo(null);
       upsertOptimisticMessage(tempId, (payload as { message?: PageMessageRecord | null } | null)?.message ?? null);
@@ -646,6 +646,8 @@ export default function PageDocsWidget() {
       setError(sendError instanceof Error ? sendError.message : 'ارسال پیام انجام نشد.');
     }
   };
+
+  const fallbackWidgetTop = typeof window === 'undefined' ? 120 : Math.round(window.innerHeight / 2 - 22);
 
   return (
     <>
@@ -832,14 +834,14 @@ export default function PageDocsWidget() {
         style={{
           position: 'fixed',
           left: widgetPos ? widgetPos.x : 16,
-          top: widgetPos ? widgetPos.y : Math.round(window.innerHeight / 2 - 22),
+          top: widgetPos ? widgetPos.y : fallbackWidgetTop,
           touchAction: 'none',
           animation: buzz ? 'devDocsBuzz 600ms ease-in-out' : undefined,
         }}
         onPointerDown={(event) => {
           draggingRef.current = true;
           const startX = widgetPos?.x ?? 16;
-          const startY = widgetPos?.y ?? Math.round(window.innerHeight / 2 - 22);
+          const startY = widgetPos?.y ?? fallbackWidgetTop;
           dragOffsetRef.current = { dx: event.clientX - startX, dy: event.clientY - startY };
           (event.currentTarget as HTMLButtonElement).setPointerCapture(event.pointerId);
         }}
@@ -1413,4 +1415,3 @@ export default function PageDocsWidget() {
     </>
   );
 }
-

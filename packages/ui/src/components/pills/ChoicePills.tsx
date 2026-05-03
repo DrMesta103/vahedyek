@@ -16,9 +16,9 @@ export function ChoicePills<T extends string>({
   pillClassName = '',
   showActiveIndicator = true,
 }: {
-  options: Array<ChoicePillsOption<T>>;
+  options: ReadonlyArray<ChoicePillsOption<T>>;
   value: T;
-  onChange: (value: T) => void;
+  onChange: (value: NoInfer<T>) => void;
   ariaLabel?: string;
   wrap?: boolean;
   className?: string;
@@ -83,4 +83,3 @@ export function ChoicePills<T extends string>({
     </div>
   );
 }
-
