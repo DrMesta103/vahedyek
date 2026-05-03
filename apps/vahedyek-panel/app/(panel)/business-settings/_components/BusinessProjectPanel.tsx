@@ -270,9 +270,9 @@ export function BusinessProjectPanel() {
         </div>
 
         <div className="business-project-section">
-          <ChoicePillsField
+          <ChoicePillsField<(typeof ownershipOptions)[number]['value']>
             label="نوع مالکیت عرضه"
-            options={ownershipOptions.map((option) => ({ value: option.value, label: option.label }))}
+            options={ownershipOptions}
             value={ownership}
             onChange={setOwnership}
             pillsClassName="business-project-tags"
@@ -281,9 +281,9 @@ export function BusinessProjectPanel() {
         </div>
 
         <div className="business-project-section">
-          <ChoicePillsField
+          <ChoicePillsField<(typeof structureOptions)[number]['value']>
             label="نوع ساخت"
-            options={structureOptions.map((option) => ({ value: option.value, label: option.label }))}
+            options={structureOptions}
             value={structure}
             onChange={setStructure}
             pillsClassName="business-project-tags"

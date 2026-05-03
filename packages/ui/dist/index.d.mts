@@ -180,9 +180,9 @@ type ChoicePillsOption<T extends string> = {
     label: string;
 };
 declare function ChoicePills<T extends string>({ options, value, onChange, ariaLabel, wrap, className, pillClassName, showActiveIndicator, }: {
-    options: Array<ChoicePillsOption<T>>;
+    options: ReadonlyArray<ChoicePillsOption<T>>;
     value: T;
-    onChange: (value: T) => void;
+    onChange: (value: NoInfer<T>) => void;
     ariaLabel?: string;
     wrap?: boolean;
     className?: string;
@@ -194,9 +194,9 @@ declare function ChoicePillsField<T extends string>({ label, labelAs: LabelAs, a
     label: string;
     labelAs?: ElementType;
     ariaLabel?: string;
-    options: Array<ChoicePillsOption<T>>;
+    options: ReadonlyArray<ChoicePillsOption<T>>;
     value: T;
-    onChange: (value: T) => void;
+    onChange: (value: NoInfer<T>) => void;
     wrap?: boolean;
     className?: string;
     labelClassName?: string;
