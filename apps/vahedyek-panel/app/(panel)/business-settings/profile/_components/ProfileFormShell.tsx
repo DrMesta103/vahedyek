@@ -3,7 +3,8 @@
 import type { ReactNode } from 'react';
 import { useRef } from 'react';
 import { Camera } from 'lucide-react';
-import { FieldGroup, FormDateInput, FormTextInput, SectionCard, TagPill, TagPills } from '../../../contracts/new/_components/ContractFormPrimitives';
+import { ChoicePillsField, Input, PersianDatePicker } from '@repo/ui';
+import { FieldGroup, SectionCard, TagPill } from '../../../contracts/new/_components/ContractFormPrimitives';
 
 export function ProfilePageShell({ children }: { children: ReactNode }) {
   return <section className="profile-workspace-page">{children}</section>;
@@ -39,7 +40,7 @@ export function ProfileTextField({
 }) {
   return (
     <FieldGroup label={label} required={required} hint={hint}>
-      <FormTextInput value={value} onChange={onChange} placeholder={placeholder} />
+      <Input value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} />
     </FieldGroup>
   );
 }
@@ -59,7 +60,7 @@ export function ProfileDateField({
 }) {
   return (
     <FieldGroup label={label} required={required} hint={hint}>
-      <FormDateInput value={value} onChange={onChange} />
+      <PersianDatePicker value={value} onChange={onChange} placeholder="YYYY/MM/DD" containerClassName="w-full" />
     </FieldGroup>
   );
 }
@@ -99,9 +100,10 @@ export function ProfileChipGroup<T extends string>({
 }) {
   if (!multiple && !Array.isArray(value) && value !== null) {
     return (
-      <FieldGroup label={label} hint={hint}>
-        <TagPills options={items} value={value} onChange={onChange} className="profile-chip-row" />
-      </FieldGroup>
+      <div className="space-y-1.5">
+        <ChoicePillsField label={label} options={items} value={value} onChange={onChange} wrap />
+        {hint ? <p className="text-[11px] text-[color:var(--text-muted)]">{hint}</p> : null}
+      </div>
     );
   }
 
