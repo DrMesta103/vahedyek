@@ -1,0 +1,1359 @@
+'use client';
+
+import Link from 'next/link';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useRouter } from 'next/navigation';
+import {
+  Building2,
+  ClipboardList,
+  FileText,
+  Grid2X2,
+  MapPin,
+  Pencil,
+  Plus,
+  Search,
+  Trash2,
+  Wrench,
+} from 'lucide-react';
+import {
+  FieldGroup,
+  FormDateInput,
+  InlineSelect,
+  TagPill,
+  TagPills,
+} from '../../contracts/new/_components/ContractFormPrimitives';
+
+type ProjectUnitTypeRecord = {
+  id: string;
+  title: string;
+  unitCount: number;
+  bedroomCount: number;
+  balconyCount: number;
+  area: number;
+  usage: 'residential' | 'commercial' | 'office' | 'parking';
+  createdAt: string;
+  updatedAt: string;
+};
+
+type ProjectPlateDto = {
+  id: string;
+  mainPlate: string;
+  subPlates: string[];
+};
+
+type ProjectReportData = {
+  projectStatus: string;
+  permitStatus: string;
+  physicalProgressPercent: number;
+  financialProgressPercent: number;
+  startDate: string;
+  expectedDeliveryDate: string;
+  activeWorkers: number;
+  soldUnits: number;
+  reservedUnits: number;
+  reportNotes: string;
+};
+
+type ProjectReportSummary = {
+  blockCount: number;
+  floorCount: number;
+  unitCount: number;
+  parkingCount: number;
+  storageCount: number;
+  amenityCount: number;
+  plateCount: number;
+};
+
+type ProjectTechnicalSpecs = {
+  structureSystem: string;
+  facadeMaterial: string;
+  cabinetType: string;
+  floorMaterial: string;
+  coolingSystem: string;
+  heatingSystem: string;
+  windowType: string;
+  elevatorCount: number;
+  securitySystem: string;
+  fireSystem: string;
+  internetStatus: string;
+  parkingAccess: string;
+  technicalNotes: string;
+};
+
+type ProjectAddressData = {
+  province: string;
+  city: string;
+  district: string;
+  neighborhood: string;
+  street: string;
+  alley: string;
+  plaque: string;
+  postalCode: string;
+  addressNotes: string;
+  latitude: number;
+  longitude: number;
+};
+type AddressDistrictMap = Record<string, readonly string[]>;
+type AddressCityMap = Record<string, AddressDistrictMap>;
+
+type MapPointTuple = [number, number];
+
+type ProjectMapInstance = {
+  on(event: string, handler: (event: { latlng?: { lat: number; lng: number } }) => void): void;
+  setView(center: MapPointTuple, zoom: number): void;
+  remove(): void;
+  invalidateSize(): void;
+};
+
+type ProjectMapMarker = {
+  setLatLng(center: MapPointTuple): void;
+  addTo(map: ProjectMapInstance): ProjectMapMarker;
+  remove(): void;
+};
+
+type ProjectMapSdk = {
+  map(
+    element: HTMLElement,
+    options: {
+      key: string;
+      maptype: 'dreamy' | 'standard-day';
+      poi: boolean;
+      traffic: boolean;
+      center: MapPointTuple;
+      zoom: number;
+    },
+  ): ProjectMapInstance;
+  circleMarker(
+    center: MapPointTuple,
+    options: {
+      radius: number;
+      weight: number;
+      color: string;
+      fillColor: string;
+      fillOpacity: number;
+    },
+  ): ProjectMapMarker;
+};
+
+const usageOptions = [
+  { value: 'residential', label: 'مسکونی' },
+  { value: 'office', label: 'اداری' },
+  { value: 'commercial', label: 'تجاری' },
+  { value: 'parking', label: 'پارکینگ' },
+] as const;
+
+const unitCountOptions = Array.from({ length: 13 }, (_, index) => ({
+  value: String(index),
+  label: index === 0 ? 'تعیین نشده' : `${index} واحد`,
+}));
+
+const projectStatusOptions = ['در حال تجهیز کارگاه', 'در حال اجرا', 'در حال نازک کاری', 'در مرحله تحویل', 'متوقف شده'] as const;
+const permitStatusOptions = ['پروانه کامل', 'پروانه در حال تمدید', 'در انتظار تایید', 'نیازمند پیگیری'] as const;
+
+const structureSystemOptions = ['اسکلت بتنی', 'اسکلت فلزی', 'قاب خمشی', 'دیوار باربر', 'سازه ترکیبی'] as const;
+const facadeOptions = ['سنگ', 'آجر نسوز', 'سرامیک خشک', 'کامپوزیت', 'ترکیبی'] as const;
+const cabinetOptions = ['MDF', 'های‌گلاس', 'ممبران', 'فلزی', 'سفارشی'] as const;
+const floorMaterialOptions = ['سرامیک', 'پارکت', 'سنگ', 'لمینت', 'ترکیبی'] as const;
+const coolingOptions = ['اسپلیت', 'چیلر', 'داکت اسپلیت', 'فن کویل', 'بدون سیستم'] as const;
+const heatingOptions = ['پکیج', 'موتورخانه', 'گرمایش از کف', 'فن کویل', 'بدون سیستم'] as const;
+const windowOptions = ['UPVC دوجداره', 'آلومینیومی', 'ترمال بریک', 'چوبی', 'ترکیبی'] as const;
+const securityOptions = ['نگهبانی ۲۴ ساعته', 'دوربین مدار بسته', 'کنترل تردد', 'سیستم هوشمند', 'فاقد سیستم'] as const;
+const fireSystemOptions = ['اعلام حریق', 'اعلام و اطفا', 'اسپرینکلر', 'خاموش کننده دستی', 'فاقد سیستم'] as const;
+const internetOptions = ['فیبر نوری', 'ADSL', 'وایرلس', 'زیرساخت آماده', 'فاقد زیرساخت'] as const;
+const parkingAccessOptions = ['رمپ مستقیم', 'رمپ مارپیچ', 'آسانسور خودرو', 'دسترسی همکف', 'ندارد'] as const;
+const projectAddressDirectory = {
+  تهران: {
+    تهران: {
+      'منطقه 1': ['زعفرانیه', 'ولنجک', 'نیاوران'],
+      'منطقه 2': ['سعادت آباد', 'شهرک غرب', 'گیشا'],
+      'منطقه 5': ['پونک', 'جنت آباد', 'صادقیه'],
+    },
+    'پردیس': {
+      'فاز 1': ['محله گلستان', 'محله بوستان'],
+      'فاز 2': ['محله سرو', 'محله باران'],
+    },
+  },
+  'البرز': {
+    کرج: {
+      'منطقه 1': ['عظیمیه', 'جهانشهر', 'مهرشهر'],
+      'منطقه 2': ['گوهردشت', 'حصارک', 'شاهین ویلا'],
+    },
+  },
+  اصفهان: {
+    اصفهان: {
+      'منطقه 3': ['عباس آباد', 'مرداویج', 'چهارباغ بالا'],
+      'منطقه 6': ['خانه اصفهان', 'سپاهان شهر', 'بهارستان'],
+    },
+  },
+} as const;
+
+const defaultReportData: ProjectReportData = {
+  projectStatus: '',
+  permitStatus: '',
+  physicalProgressPercent: 0,
+  financialProgressPercent: 0,
+  startDate: '',
+  expectedDeliveryDate: '',
+  activeWorkers: 0,
+  soldUnits: 0,
+  reservedUnits: 0,
+  reportNotes: '',
+};
+
+const defaultTechnicalSpecs: ProjectTechnicalSpecs = {
+  structureSystem: '',
+  facadeMaterial: '',
+  cabinetType: '',
+  floorMaterial: '',
+  coolingSystem: '',
+  heatingSystem: '',
+  windowType: '',
+  elevatorCount: 0,
+  securitySystem: '',
+  fireSystem: '',
+  internetStatus: '',
+  parkingAccess: '',
+  technicalNotes: '',
+};
+
+const defaultAddressData: ProjectAddressData = {
+  province: '',
+  city: '',
+  district: '',
+  neighborhood: '',
+  street: '',
+  alley: '',
+  plaque: '',
+  postalCode: '',
+  addressNotes: '',
+  latitude: 0,
+  longitude: 0,
+};
+
+const defaultProjectMapCenter: [number, number] = [35.7219, 51.3347];
+const neshanMapKey = process.env.NEXT_PUBLIC_NESHAN_MAP_KEY ?? '';
+let mapAssetsPromise: Promise<ProjectMapSdk> | null = null;
+
+async function ensureLeafletAssets() {
+  if (typeof window === 'undefined') {
+    throw new Error('مپ فقط در مرورگر قابل بارگذاری است.');
+  }
+
+  if (!neshanMapKey) {
+    throw new Error('کلید وب‌سرویس نشان تنظیم نشده است.');
+  }
+
+  if (!document.querySelector('link[data-project-neshan="true"]')) {
+    const stylesheet = document.createElement('link');
+    stylesheet.rel = 'stylesheet';
+    stylesheet.href = '/neshan-leaflet/leaflet.css';
+    stylesheet.dataset.projectNeshan = 'true';
+    document.head.appendChild(stylesheet);
+  }
+
+  if (!mapAssetsPromise) {
+    mapAssetsPromise = import('@neshan-maps-platform/leaflet').then((module) => module.default as unknown as ProjectMapSdk);
+  }
+  return mapAssetsPromise;
+}
+
+function ProjectHero({
+  icon: Icon,
+  title,
+  description,
+  actions,
+}: {
+  icon: React.ElementType;
+  title: string;
+  description: string;
+  actions?: ReactNode;
+}) {
+  return (
+    <div className="project-flow-hero">
+      <div className="project-flow-hero-icon">
+        <Icon />
+      </div>
+      <div className="project-flow-hero-copy">
+        <h1>{title}</h1>
+        <p>{description}</p>
+      </div>
+      {actions ? <div className="project-flow-hero-actions">{actions}</div> : null}
+    </div>
+  );
+}
+
+function ProjectStatCard({ label, value, accent = 'teal' }: { label: string; value: string; accent?: 'teal' | 'amber' | 'slate' }) {
+  return (
+    <div className={`project-stat-card is-${accent}`}>
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  );
+}
+
+function ProjectField({ label, required, hint, children }: { label: string; required?: boolean; hint?: string; children: ReactNode }) {
+  return (
+    <label className="business-block-form-field">
+      <span>
+        {label}
+        {required ? <i>*</i> : null}
+      </span>
+      {children}
+      {hint ? <small>{hint}</small> : null}
+    </label>
+  );
+}
+
+function ProjectTextarea({
+  value,
+  onChange,
+  placeholder,
+  rows = 5,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+  rows?: number;
+}) {
+  return (
+    <textarea
+      rows={rows}
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+      placeholder={placeholder}
+      className="project-flow-textarea"
+    />
+  );
+}
+
+export function ProjectUnitTypesPanel() {
+  const [unitTypes, setUnitTypes] = useState<ProjectUnitTypeRecord[]>([]);
+  const [query, setQuery] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState('');
+  const router = useRouter();
+
+  const filtered = useMemo(() => {
+    const text = query.trim();
+    return text ? unitTypes.filter((item) => item.title.includes(text)) : unitTypes;
+  }, [query, unitTypes]);
+
+  async function loadUnitTypes() {
+    setLoading(true);
+    setMessage('');
+    try {
+      const response = await fetch('/api/business-settings/project/unit-types', { cache: 'no-store' });
+      const data = (await response.json()) as { unitTypes?: ProjectUnitTypeRecord[]; message?: string };
+      if (!response.ok) throw new Error(data.message ?? 'دریافت تیپ‌های واحد ناموفق بود.');
+      setUnitTypes(data.unitTypes ?? []);
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'دریافت تیپ‌های واحد ناموفق بود.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadUnitTypes();
+  }, []);
+
+  async function removeUnitType(id: string) {
+    if (!window.confirm('این تیپ واحد حذف شود؟')) return;
+    const response = await fetch(`/api/business-settings/project/unit-types/${id}`, { method: 'DELETE' });
+    const data = (await response.json()) as { message?: string; unitTypes?: ProjectUnitTypeRecord[] };
+    if (!response.ok) {
+      setMessage(data.message ?? 'حذف تیپ واحد ناموفق بود.');
+      return;
+    }
+    setUnitTypes(data.unitTypes ?? []);
+  }
+
+  return (
+    <section className="business-blocks-page" aria-label="تیپ‌های واحد">
+      <div className="business-blocks-shell">
+        <ProjectHero
+          icon={Building2}
+          title="تیپ‌های واحد"
+          description="تیپ‌های تکرارشونده مجتمع را یک‌بار ثبت کنید تا در مراحل قیمت‌گذاری و ثبت واحد، ساختار دقیق‌تری داشته باشید."
+          actions={
+            <Link href="/business-settings/project/unit-types/new" className="business-blocks-add">
+              <Plus />
+              افزودن تیپ واحد
+            </Link>
+          }
+        />
+
+        <div className="business-blocks-toolbar">
+          <label className="business-blocks-search">
+            <Search />
+            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="جستجو در تیپ‌ها..." />
+          </label>
+        </div>
+
+        {message ? <div className="business-blocks-state is-error">{message}</div> : null}
+        {loading ? <div className="business-blocks-state">در حال دریافت تیپ‌های واحد...</div> : null}
+
+        <div className="business-blocks-grid">
+          {!loading && unitTypes.length === 0 ? <div className="business-blocks-state">هنوز تیپ واحدی ثبت نشده است.</div> : null}
+          {!loading && unitTypes.length > 0 && filtered.length === 0 ? <div className="business-blocks-state">مورد مطابق جستجو پیدا نشد.</div> : null}
+          {filtered.map((item) => (
+            <article className="business-block-card" key={item.id}>
+              <div className="business-block-card-cover">
+                <span>{item.title}</span>
+              </div>
+              <div className="business-block-card-body">
+                <div className="business-block-card-meta">
+                  <span>{usageOptions.find((option) => option.value === item.usage)?.label ?? 'مسکونی'}</span>
+                  <div className="project-inline-actions">
+                    <button type="button" className="business-block-card-menu" onClick={() => router.push(`/business-settings/project/unit-types/${item.id}/edit`)}>
+                      <Pencil />
+                    </button>
+                    <button type="button" className="business-block-card-menu" onClick={() => removeUnitType(item.id)}>
+                      <Trash2 />
+                    </button>
+                  </div>
+                </div>
+
+                <h3>{item.title}</h3>
+
+                <div className="business-block-card-stats">
+                  <span>{item.unitCount || 0} واحد</span>
+                  <span>{item.bedroomCount} خواب</span>
+                  <span>{item.balconyCount} بالکن</span>
+                  <span>{item.area} متر مربع</span>
+                </div>
+
+                <div className="business-block-report">
+                  <div>
+                    <h4>ساختار این تیپ</h4>
+                    <p>برای واحدهای هم‌الگو با مشخصات یکسان قابل استفاده است و در ثبت واحد سرعت کار را بالا می‌برد.</p>
+                  </div>
+                  <span className="business-block-report-status">
+                    <i>i</i>
+                    آماده استفاده
+                  </span>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+export function ProjectUnitTypeForm({ typeId }: { typeId?: string }) {
+  const isEdit = Boolean(typeId);
+  const router = useRouter();
+  const [title, setTitle] = useState('');
+  const [unitCount, setUnitCount] = useState('0');
+  const [bedroomCount, setBedroomCount] = useState('');
+  const [balconyCount, setBalconyCount] = useState('');
+  const [area, setArea] = useState('');
+  const [usage, setUsage] = useState<(typeof usageOptions)[number]['value']>('residential');
+  const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(isEdit);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!typeId) return;
+    let cancelled = false;
+
+    async function loadUnitType() {
+      try {
+        const response = await fetch(`/api/business-settings/project/unit-types/${typeId}`, { cache: 'no-store' });
+        const data = (await response.json()) as { unitType?: ProjectUnitTypeRecord; message?: string };
+        if (!response.ok) throw new Error(data.message ?? 'دریافت تیپ واحد ناموفق بود.');
+        if (cancelled || !data.unitType) return;
+        setTitle(data.unitType.title);
+        setUnitCount(String(data.unitType.unitCount));
+        setBedroomCount(String(data.unitType.bedroomCount));
+        setBalconyCount(String(data.unitType.balconyCount));
+        setArea(String(data.unitType.area));
+        setUsage(data.unitType.usage);
+      } catch (err) {
+        if (!cancelled) setMessage(err instanceof Error ? err.message : 'دریافت تیپ واحد ناموفق بود.');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    loadUnitType();
+    return () => {
+      cancelled = true;
+    };
+  }, [typeId]);
+
+  async function submit() {
+    setSaving(true);
+    setMessage('');
+    try {
+      const response = await fetch(isEdit ? `/api/business-settings/project/unit-types/${typeId}` : '/api/business-settings/project/unit-types', {
+        method: isEdit ? 'PATCH' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title,
+          unitCount,
+          bedroomCount,
+          balconyCount,
+          area,
+          usage,
+        }),
+      });
+      const data = (await response.json()) as { message?: string };
+      if (!response.ok) throw new Error(data.message ?? 'ذخیره تیپ واحد ناموفق بود.');
+      router.push('/business-settings/project/unit-types');
+      router.refresh();
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'ذخیره تیپ واحد ناموفق بود.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <section className="business-block-form-page" aria-label={isEdit ? 'ویرایش تیپ واحد' : 'افزودن تیپ واحد'}>
+      <div className="business-block-form-card project-flow-form-card">
+        <ProjectHero
+          icon={Building2}
+          title={isEdit ? 'ویرایش تیپ واحد' : 'افزودن تیپ واحد'}
+          description="ساختار تیپ را ثبت کنید تا در تعریف واحدها از آن استفاده شود."
+        />
+
+        {message ? <div className="business-blocks-state is-error">{message}</div> : null}
+        {loading ? <div className="business-blocks-state">در حال دریافت اطلاعات تیپ واحد...</div> : null}
+
+        {!loading ? (
+          <div className="business-unit-form-grid">
+            <ProjectField label="عنوان" required>
+              <input value={title} onChange={(event) => setTitle(event.target.value.slice(0, 60))} placeholder="مثلاً تیپ A شرقی" />
+            </ProjectField>
+
+            <FieldGroup label="چند واحد" required>
+              <InlineSelect
+                value={unitCount}
+                onSelect={setUnitCount}
+                options={unitCountOptions}
+                placeholder="تعداد واحد"
+                searchPlaceholder="جستجو در تعدادها..."
+                emptyText="موردی پیدا نشد"
+              />
+            </FieldGroup>
+
+            <ProjectField label="تعداد خواب" required>
+              <input value={bedroomCount} onChange={(event) => setBedroomCount(event.target.value)} inputMode="numeric" placeholder="مثلاً 3" />
+            </ProjectField>
+
+            <ProjectField label="تعداد بالکن" required>
+              <input value={balconyCount} onChange={(event) => setBalconyCount(event.target.value)} inputMode="numeric" placeholder="مثلاً 1" />
+            </ProjectField>
+
+            <p className="project-flow-hint">متراژ واحد، بدون انباری و پارکینگ و سایر الحاقات ثبت می‌شود.</p>
+
+            <ProjectField label="متراژ" required>
+              <input value={area} onChange={(event) => setArea(event.target.value)} inputMode="decimal" placeholder="مثلاً 120" />
+            </ProjectField>
+
+            <div className="business-unit-form-fieldset">
+              <span>کاربری تیپ</span>
+              <div className="business-unit-choice-tags">
+                {usageOptions.map((option) => (
+                  <TagPill key={option.value} label={option.label} active={usage === option.value} onClick={() => setUsage(option.value)} />
+                ))}
+              </div>
+            </div>
+
+            <div className="project-flow-actions">
+              <button type="button" className="business-dialog-secondary" onClick={() => router.push('/business-settings/project/unit-types')}>
+                لغو
+              </button>
+              <button type="button" className="business-block-form-submit" onClick={submit} disabled={saving}>
+                {saving ? 'در حال ذخیره...' : 'ذخیره'}
+              </button>
+            </div>
+          </div>
+        ) : null}
+      </div>
+    </section>
+  );
+}
+
+export function ProjectPlatesPanel() {
+  const [plates, setPlates] = useState<ProjectPlateDto[]>([]);
+  const [mainPlate, setMainPlate] = useState('');
+  const [subPlate, setSubPlate] = useState('');
+  const [draftSubPlates, setDraftSubPlates] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState('');
+
+  async function loadPlates() {
+    setLoading(true);
+    setMessage('');
+    try {
+      const response = await fetch('/api/business-settings/project/plates', { cache: 'no-store' });
+      const data = (await response.json()) as { plates?: ProjectPlateDto[]; message?: string };
+      if (!response.ok) throw new Error(data.message ?? 'دریافت پلاک‌ها ناموفق بود.');
+      setPlates(data.plates ?? []);
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'دریافت پلاک‌ها ناموفق بود.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadPlates();
+  }, []);
+
+  function addSubPlate() {
+    const value = subPlate.trim();
+    if (!value || draftSubPlates.includes(value)) return;
+    setDraftSubPlates((current) => [...current, value]);
+    setSubPlate('');
+  }
+
+  async function submit() {
+    setSaving(true);
+    setMessage('');
+    try {
+      const response = await fetch('/api/business-settings/project/plates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mainPlate, subPlates: draftSubPlates }),
+      });
+      const data = (await response.json()) as { plates?: ProjectPlateDto[]; message?: string };
+      if (!response.ok) throw new Error(data.message ?? 'ثبت پلاک ناموفق بود.');
+      setPlates(data.plates ?? []);
+      setMainPlate('');
+      setSubPlate('');
+      setDraftSubPlates([]);
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'ثبت پلاک ناموفق بود.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <section className="business-blocks-page" aria-label="پلاک اصلی و فرعی">
+      <div className="business-blocks-shell">
+        <ProjectHero
+          icon={Grid2X2}
+          title="پلاک اصلی و فرعی"
+          description="پلاک‌های ثبتی پروژه را یک‌جا نگه دارید تا در تعریف بلوک‌ها و گزارش‌ها از داده یکسان استفاده شود."
+        />
+
+        <div className="project-flow-layout">
+          <div className="business-block-form-card">
+            <div className="business-block-form-section">
+              <h2>افزودن پلاک</h2>
+              <div className="business-block-form-row">
+                <ProjectField label="پلاک اصلی" required>
+                  <input value={mainPlate} onChange={(event) => setMainPlate(event.target.value)} inputMode="numeric" placeholder="مثلاً 125" />
+                </ProjectField>
+                <ProjectField label="پلاک فرعی" required>
+                  <input value={subPlate} onChange={(event) => setSubPlate(event.target.value)} inputMode="numeric" placeholder="مثلاً 10" />
+                </ProjectField>
+              </div>
+              <div className="business-dialog-actions project-inline-actions-row">
+                <button type="button" className="business-dialog-secondary" onClick={addSubPlate}>
+                  افزودن پلاک فرعی
+                </button>
+              </div>
+              <div className="business-unit-selected-tags">
+                {draftSubPlates.map((item) => (
+                  <span key={item}>{item}</span>
+                ))}
+              </div>
+            </div>
+
+            <div className="business-block-form-actions">
+              <button type="button" className="business-block-form-submit" onClick={submit} disabled={saving}>
+                {saving ? 'در حال ذخیره...' : 'ذخیره'}
+              </button>
+            </div>
+          </div>
+
+          <div className="business-block-form-card">
+            <div className="business-block-form-section">
+              <h2>فهرست پلاک‌ها</h2>
+              {message ? <div className="business-blocks-state is-error">{message}</div> : null}
+              {loading ? <div className="business-blocks-state">در حال دریافت پلاک‌ها...</div> : null}
+              {!loading && plates.length === 0 ? <div className="business-blocks-state">هنوز پلاکی ثبت نشده است.</div> : null}
+              <div className="project-plate-list">
+                {plates.map((plate) => (
+                  <div key={plate.id} className="project-plate-item">
+                    <strong>پلاک اصلی {plate.mainPlate}</strong>
+                    <div className="business-unit-selected-tags">
+                      {plate.subPlates.map((sub) => (
+                        <span key={sub}>فرعی {sub}</span>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+export function ProjectReportsPanel() {
+  const [summary, setSummary] = useState<ProjectReportSummary | null>(null);
+  const [report, setReport] = useState<ProjectReportData>(defaultReportData);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState('');
+
+  async function loadReport() {
+    setLoading(true);
+    setMessage('');
+    try {
+      const response = await fetch('/api/business-settings/project/reports', { cache: 'no-store' });
+      const data = (await response.json()) as { report?: ProjectReportData; summary?: ProjectReportSummary; message?: string };
+      if (!response.ok) throw new Error(data.message ?? 'دریافت گزارش پروژه ناموفق بود.');
+      setReport({ ...defaultReportData, ...data.report });
+      setSummary(data.summary ?? null);
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'دریافت گزارش پروژه ناموفق بود.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadReport();
+  }, []);
+
+  async function submit() {
+    setSaving(true);
+    setMessage('');
+    try {
+      const response = await fetch('/api/business-settings/project/reports', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(report),
+      });
+      const data = (await response.json()) as { report?: ProjectReportData; summary?: ProjectReportSummary; message?: string };
+      if (!response.ok) throw new Error(data.message ?? 'ذخیره گزارش پروژه ناموفق بود.');
+      setReport({ ...defaultReportData, ...data.report });
+      setSummary(data.summary ?? null);
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'ذخیره گزارش پروژه ناموفق بود.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <section className="business-block-form-page" aria-label="گزارش اطلاعات مجتمع">
+      <div className="business-block-form-card project-flow-form-card">
+        <ProjectHero
+          icon={ClipboardList}
+          title="گزارش اطلاعات مجتمع"
+          description="وضعیت اجرایی، پیشرفت پروژه و خلاصه داده‌های ثبتی مجتمع را در یک صفحه نگه دارید."
+        />
+
+        {message ? <div className="business-blocks-state is-error">{message}</div> : null}
+        {loading ? <div className="business-blocks-state">در حال دریافت گزارش پروژه...</div> : null}
+
+        {!loading ? (
+          <>
+            <div className="project-stats-grid">
+              <ProjectStatCard label="بلوک‌های ثبت‌شده" value={String(summary?.blockCount ?? 0)} />
+              <ProjectStatCard label="طبقات ثبت‌شده" value={String(summary?.floorCount ?? 0)} accent="amber" />
+              <ProjectStatCard label="واحدهای اصلی" value={String(summary?.unitCount ?? 0)} />
+              <ProjectStatCard label="پارکینگ‌ها" value={String(summary?.parkingCount ?? 0)} accent="slate" />
+              <ProjectStatCard label="انباری‌ها" value={String(summary?.storageCount ?? 0)} accent="slate" />
+              <ProjectStatCard label="فضاهای رفاهی" value={String(summary?.amenityCount ?? 0)} accent="amber" />
+              <ProjectStatCard label="پلاک‌های اصلی" value={String(summary?.plateCount ?? 0)} />
+            </div>
+
+            <div className="project-flow-grid">
+              <FieldGroup label="وضعیت کلی پروژه">
+                <TagPills
+                  options={projectStatusOptions.map((option) => ({ value: option, label: option }))}
+                  value={report.projectStatus}
+                  onChange={(value) => setReport((current) => ({ ...current, projectStatus: value }))}
+                />
+              </FieldGroup>
+              <FieldGroup label="وضعیت پروانه">
+                <TagPills
+                  options={permitStatusOptions.map((option) => ({ value: option, label: option }))}
+                  value={report.permitStatus}
+                  onChange={(value) => setReport((current) => ({ ...current, permitStatus: value }))}
+                />
+              </FieldGroup>
+              <ProjectField label="پیشرفت فیزیکی (%)">
+                <input
+                  value={String(report.physicalProgressPercent)}
+                  onChange={(event) => setReport((current) => ({ ...current, physicalProgressPercent: Number(event.target.value) || 0 }))}
+                  inputMode="numeric"
+                  placeholder="0"
+                />
+              </ProjectField>
+              <ProjectField label="پیشرفت مالی (%)">
+                <input
+                  value={String(report.financialProgressPercent)}
+                  onChange={(event) => setReport((current) => ({ ...current, financialProgressPercent: Number(event.target.value) || 0 }))}
+                  inputMode="numeric"
+                  placeholder="0"
+                />
+              </ProjectField>
+              <FieldGroup label="تاریخ شروع پروژه">
+                <FormDateInput value={report.startDate} onChange={(value) => setReport((current) => ({ ...current, startDate: value }))} />
+              </FieldGroup>
+              <FieldGroup label="تاریخ پیش‌بینی تحویل">
+                <FormDateInput value={report.expectedDeliveryDate} onChange={(value) => setReport((current) => ({ ...current, expectedDeliveryDate: value }))} />
+              </FieldGroup>
+              <ProjectField label="نیروی فعال کارگاه">
+                <input
+                  value={String(report.activeWorkers)}
+                  onChange={(event) => setReport((current) => ({ ...current, activeWorkers: Number(event.target.value) || 0 }))}
+                  inputMode="numeric"
+                  placeholder="0"
+                />
+              </ProjectField>
+              <ProjectField label="واحدهای فروخته‌شده">
+                <input
+                  value={String(report.soldUnits)}
+                  onChange={(event) => setReport((current) => ({ ...current, soldUnits: Number(event.target.value) || 0 }))}
+                  inputMode="numeric"
+                  placeholder="0"
+                />
+              </ProjectField>
+              <ProjectField label="واحدهای رزروشده">
+                <input
+                  value={String(report.reservedUnits)}
+                  onChange={(event) => setReport((current) => ({ ...current, reservedUnits: Number(event.target.value) || 0 }))}
+                  inputMode="numeric"
+                  placeholder="0"
+                />
+              </ProjectField>
+            </div>
+
+            <ProjectField label="یادداشت گزارش">
+              <ProjectTextarea
+                value={report.reportNotes}
+                onChange={(value) => setReport((current) => ({ ...current, reportNotes: value.slice(0, 800) }))}
+                placeholder="خلاصه اجرایی، ریسک‌ها، موانع، وضعیت فروش یا هر نکته مهم گزارش را وارد کنید."
+              />
+            </ProjectField>
+
+            <div className="business-block-form-actions">
+              <button type="button" className="business-block-form-submit" onClick={submit} disabled={saving}>
+                {saving ? 'در حال ذخیره...' : 'ذخیره گزارش'}
+              </button>
+            </div>
+          </>
+        ) : null}
+      </div>
+    </section>
+  );
+}
+
+export function ProjectTechnicalSpecsPanel() {
+  const [specs, setSpecs] = useState<ProjectTechnicalSpecs>(defaultTechnicalSpecs);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState('');
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadSpecs() {
+      setLoading(true);
+      setMessage('');
+      try {
+        const response = await fetch('/api/business-settings/project/technical-specs', { cache: 'no-store' });
+        const data = (await response.json()) as { technicalSpecs?: ProjectTechnicalSpecs; message?: string };
+        if (!response.ok) throw new Error(data.message ?? 'دریافت مشخصات فنی ناموفق بود.');
+        if (!cancelled) setSpecs({ ...defaultTechnicalSpecs, ...data.technicalSpecs });
+      } catch (err) {
+        if (!cancelled) setMessage(err instanceof Error ? err.message : 'دریافت مشخصات فنی ناموفق بود.');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    loadSpecs();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  async function submit() {
+    setSaving(true);
+    setMessage('');
+    try {
+      const response = await fetch('/api/business-settings/project/technical-specs', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(specs),
+      });
+      const data = (await response.json()) as { technicalSpecs?: ProjectTechnicalSpecs; message?: string };
+      if (!response.ok) throw new Error(data.message ?? 'ذخیره مشخصات فنی ناموفق بود.');
+      setSpecs({ ...defaultTechnicalSpecs, ...data.technicalSpecs });
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'ذخیره مشخصات فنی ناموفق بود.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <section className="business-block-form-page" aria-label="مشخصات فنی پروژه">
+      <div className="business-block-form-card project-flow-form-card">
+        <ProjectHero
+          icon={Wrench}
+          title="مشخصات فنی پروژه"
+          description="مشخصات اجرایی، متریال و زیرساخت‌های فنی پروژه را ثبت کنید تا در بررسی، فروش و گزارش‌ها مرجع واحد داشته باشید."
+        />
+
+        {message ? <div className="business-blocks-state is-error">{message}</div> : null}
+        {loading ? <div className="business-blocks-state">در حال دریافت مشخصات فنی...</div> : null}
+
+        {!loading ? (
+          <>
+            <div className="project-flow-grid">
+              <FieldGroup label="سیستم سازه">
+                <TagPills
+                  options={structureSystemOptions.map((option) => ({ value: option, label: option }))}
+                  value={specs.structureSystem}
+                  onChange={(value) => setSpecs((current) => ({ ...current, structureSystem: value }))}
+                />
+              </FieldGroup>
+              <FieldGroup label="نمای ساختمان">
+                <TagPills
+                  options={facadeOptions.map((option) => ({ value: option, label: option }))}
+                  value={specs.facadeMaterial}
+                  onChange={(value) => setSpecs((current) => ({ ...current, facadeMaterial: value }))}
+                />
+              </FieldGroup>
+              <FieldGroup label="کابینت">
+                <TagPills
+                  options={cabinetOptions.map((option) => ({ value: option, label: option }))}
+                  value={specs.cabinetType}
+                  onChange={(value) => setSpecs((current) => ({ ...current, cabinetType: value }))}
+                />
+              </FieldGroup>
+              <FieldGroup label="کف‌پوش">
+                <TagPills
+                  options={floorMaterialOptions.map((option) => ({ value: option, label: option }))}
+                  value={specs.floorMaterial}
+                  onChange={(value) => setSpecs((current) => ({ ...current, floorMaterial: value }))}
+                />
+              </FieldGroup>
+              <FieldGroup label="سیستم سرمایش">
+                <TagPills
+                  options={coolingOptions.map((option) => ({ value: option, label: option }))}
+                  value={specs.coolingSystem}
+                  onChange={(value) => setSpecs((current) => ({ ...current, coolingSystem: value }))}
+                />
+              </FieldGroup>
+              <FieldGroup label="سیستم گرمایش">
+                <TagPills
+                  options={heatingOptions.map((option) => ({ value: option, label: option }))}
+                  value={specs.heatingSystem}
+                  onChange={(value) => setSpecs((current) => ({ ...current, heatingSystem: value }))}
+                />
+              </FieldGroup>
+              <FieldGroup label="نوع پنجره">
+                <TagPills
+                  options={windowOptions.map((option) => ({ value: option, label: option }))}
+                  value={specs.windowType}
+                  onChange={(value) => setSpecs((current) => ({ ...current, windowType: value }))}
+                />
+              </FieldGroup>
+              <ProjectField label="تعداد آسانسور">
+                <input
+                  value={String(specs.elevatorCount)}
+                  onChange={(event) => setSpecs((current) => ({ ...current, elevatorCount: Number(event.target.value) || 0 }))}
+                  inputMode="numeric"
+                  placeholder="0"
+                />
+              </ProjectField>
+              <FieldGroup label="سیستم امنیتی">
+                <TagPills
+                  options={securityOptions.map((option) => ({ value: option, label: option }))}
+                  value={specs.securitySystem}
+                  onChange={(value) => setSpecs((current) => ({ ...current, securitySystem: value }))}
+                />
+              </FieldGroup>
+              <FieldGroup label="سیستم اطفا / اعلام حریق">
+                <TagPills
+                  options={fireSystemOptions.map((option) => ({ value: option, label: option }))}
+                  value={specs.fireSystem}
+                  onChange={(value) => setSpecs((current) => ({ ...current, fireSystem: value }))}
+                />
+              </FieldGroup>
+              <FieldGroup label="زیرساخت اینترنت">
+                <TagPills
+                  options={internetOptions.map((option) => ({ value: option, label: option }))}
+                  value={specs.internetStatus}
+                  onChange={(value) => setSpecs((current) => ({ ...current, internetStatus: value }))}
+                />
+              </FieldGroup>
+              <FieldGroup label="دسترسی پارکینگ">
+                <TagPills
+                  options={parkingAccessOptions.map((option) => ({ value: option, label: option }))}
+                  value={specs.parkingAccess}
+                  onChange={(value) => setSpecs((current) => ({ ...current, parkingAccess: value }))}
+                />
+              </FieldGroup>
+            </div>
+
+            <ProjectField label="یادداشت فنی">
+              <ProjectTextarea
+                value={specs.technicalNotes}
+                onChange={(value) => setSpecs((current) => ({ ...current, technicalNotes: value.slice(0, 800) }))}
+                placeholder="جزئیات تکمیلی مثل برند تجهیزات، کیفیت اجرا، آیتم‌های خاص پروژه یا محدودیت‌های فنی را وارد کنید."
+              />
+            </ProjectField>
+
+            <div className="business-block-form-actions">
+              <button type="button" className="business-block-form-submit" onClick={submit} disabled={saving}>
+                {saving ? 'در حال ذخیره...' : 'ذخیره مشخصات فنی'}
+              </button>
+            </div>
+          </>
+        ) : null}
+      </div>
+    </section>
+  );
+}
+
+export function ProjectAddressPanel() {
+  const [address, setAddress] = useState<ProjectAddressData>(defaultAddressData);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState('');
+  const [mapStatus, setMapStatus] = useState(neshanMapKey ? 'در حال آماده‌سازی مپ نشان...' : 'کلید وب‌سرویس نشان تنظیم نشده است.');
+  const mapElementRef = useRef<HTMLDivElement | null>(null);
+  const mapInstanceRef = useRef<ProjectMapInstance | null>(null);
+  const markerRef = useRef<ProjectMapMarker | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadAddress() {
+      setLoading(true);
+      setMessage('');
+      try {
+        const response = await fetch('/api/business-settings/project/address', { cache: 'no-store' });
+        const data = (await response.json()) as { address?: ProjectAddressData; message?: string };
+        if (!response.ok) throw new Error(data.message ?? 'دریافت آدرس پروژه ناموفق بود.');
+        if (!cancelled) setAddress({ ...defaultAddressData, ...data.address });
+      } catch (err) {
+        if (!cancelled) setMessage(err instanceof Error ? err.message : 'دریافت آدرس پروژه ناموفق بود.');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    loadAddress();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+
+    async function initializeMap() {
+      if (!mapElementRef.current) return;
+      try {
+        const L = await ensureLeafletAssets();
+        if (!active || !mapElementRef.current) return;
+
+        const hasCoordinates = Boolean(address.latitude && address.longitude);
+        const initialCenter: [number, number] = hasCoordinates ? [address.latitude, address.longitude] : defaultProjectMapCenter;
+        const map = L.map(mapElementRef.current, {
+          key: neshanMapKey,
+          maptype: 'dreamy',
+          poi: true,
+          traffic: false,
+          center: initialCenter,
+          zoom: hasCoordinates ? 15 : 12,
+        });
+
+        if (hasCoordinates) {
+          markerRef.current = L.circleMarker(initialCenter, {
+            radius: 10,
+            weight: 3,
+            color: '#0f766e',
+            fillColor: '#14b8a6',
+            fillOpacity: 0.28,
+          }).addTo(map);
+          setMapStatus('موقعیت انتخاب‌شده روی مپ نمایش داده می‌شود.');
+        } else {
+          setMapStatus('برای ثبت لوکیشن، روی مپ کلیک کنید.');
+        }
+
+        map.on('click', (event) => {
+          if (!event.latlng) return;
+          const nextLat = Number(event.latlng.lat.toFixed(6));
+          const nextLng = Number(event.latlng.lng.toFixed(6));
+
+          setAddress((current) => ({
+            ...current,
+            latitude: nextLat,
+            longitude: nextLng,
+          }));
+          setMapStatus('لوکیشن پروژه روی مپ ثبت شد.');
+
+          if (markerRef.current) markerRef.current.setLatLng([nextLat, nextLng]);
+          else {
+            markerRef.current = L.circleMarker([nextLat, nextLng], {
+              radius: 10,
+              weight: 3,
+              color: '#0f766e',
+              fillColor: '#14b8a6',
+              fillOpacity: 0.28,
+            }).addTo(map);
+          }
+        });
+
+        mapInstanceRef.current = map;
+        window.setTimeout(() => {
+          map.invalidateSize();
+        }, 80);
+      } catch (error) {
+        if (!active) return;
+        setMapStatus(error instanceof Error ? error.message : 'بارگذاری مپ ناموفق بود.');
+      }
+    }
+
+    initializeMap();
+
+    return () => {
+      active = false;
+      markerRef.current = null;
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    const hasCoordinates = Boolean(address.latitude && address.longitude);
+    if (!mapInstanceRef.current) return;
+
+    if (!hasCoordinates) {
+      if (markerRef.current) {
+        markerRef.current.remove();
+        markerRef.current = null;
+      }
+      mapInstanceRef.current.setView(defaultProjectMapCenter, 12);
+      setMapStatus('برای ثبت لوکیشن، روی مپ کلیک کنید.');
+      return;
+    }
+
+    const nextCenter: [number, number] = [address.latitude, address.longitude];
+    mapInstanceRef.current.setView(nextCenter, 15);
+    if (markerRef.current) markerRef.current.setLatLng(nextCenter);
+    setMapStatus('موقعیت انتخاب‌شده روی مپ نمایش داده می‌شود.');
+  }, [address.latitude, address.longitude]);
+
+  async function submit() {
+    setSaving(true);
+    setMessage('');
+    try {
+      const response = await fetch('/api/business-settings/project/address', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(address),
+      });
+      const data = (await response.json()) as { address?: ProjectAddressData; message?: string };
+      if (!response.ok) throw new Error(data.message ?? 'ذخیره آدرس پروژه ناموفق بود.');
+      setAddress({ ...defaultAddressData, ...data.address });
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'ذخیره آدرس پروژه ناموفق بود.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const addressPreview = [address.province, address.city, address.district, address.neighborhood, address.street, address.alley, address.plaque].filter(Boolean);
+  const coordinatesReady = Boolean(address.latitude && address.longitude);
+  const provinceData = address.province ? (projectAddressDirectory[address.province as keyof typeof projectAddressDirectory] as unknown as AddressCityMap | undefined) : undefined;
+  const cityData = address.city && provinceData ? provinceData[address.city] : undefined;
+  const provinceOptions = Object.keys(projectAddressDirectory).map((item) => ({ value: item, label: item }));
+  const cityOptions = provinceData ? Object.keys(provinceData).map((item) => ({ value: item, label: item })) : [];
+  const districtOptions = cityData ? Object.keys(cityData).map((item) => ({ value: item, label: item })) : [];
+  const neighborhoodOptions =
+    cityData && address.district
+      ? (cityData[address.district] ?? []).map((item) => ({ value: item, label: item }))
+      : [];
+
+  function selectProvince(value: string) {
+    setAddress((current) => ({ ...current, province: value, city: '', district: '', neighborhood: '' }));
+  }
+
+  function selectCity(value: string) {
+    setAddress((current) => ({ ...current, city: value, district: '', neighborhood: '' }));
+  }
+
+  function selectDistrict(value: string) {
+    setAddress((current) => ({ ...current, district: value, neighborhood: '' }));
+  }
+
+  return (
+    <section className="business-block-form-page" aria-label="آدرس پروژه">
+      <div className="business-block-form-card project-flow-form-card">
+        <ProjectHero
+          icon={MapPin}
+          title="آدرس پروژه"
+          description="آدرس کامل پروژه را برای قراردادها، مکاتبات و گزارش‌ها ثبت کنید."
+        />
+
+        {message ? <div className="business-blocks-state is-error">{message}</div> : null}
+        {loading ? <div className="business-blocks-state">در حال دریافت آدرس پروژه...</div> : null}
+
+        {!loading ? (
+          <>
+            <div className="project-stats-grid">
+              <ProjectStatCard label="استان" value={address.province || '---'} />
+              <ProjectStatCard label="شهر" value={address.city || '---'} accent="amber" />
+              <ProjectStatCard label="مختصات" value={coordinatesReady ? 'ثبت شده' : 'ثبت نشده'} accent="slate" />
+              <ProjectStatCard label="پلاک" value={address.plaque || '---'} />
+            </div>
+
+            <div className="project-address-map-card">
+              <div className="project-address-map-head">
+                <div>
+                  <strong>انتخاب موقعیت روی مپ نشان</strong>
+                  <p>{mapStatus}</p>
+                </div>
+                {coordinatesReady ? (
+                  <button
+                    type="button"
+                    className="business-block-form-cancel"
+                    onClick={() =>
+                      setAddress((current) => ({
+                        ...current,
+                        latitude: 0,
+                        longitude: 0,
+                      }))
+                    }
+                  >
+                    حذف لوکیشن
+                  </button>
+                ) : null}
+              </div>
+              <div ref={mapElementRef} className="project-address-map" />
+              <div className="business-unit-selected-tags">
+                <span>عرض جغرافیایی: {coordinatesReady ? address.latitude.toFixed(6) : '---'}</span>
+                <span>طول جغرافیایی: {coordinatesReady ? address.longitude.toFixed(6) : '---'}</span>
+              </div>
+            </div>
+
+            <div className="project-flow-grid">
+              <FieldGroup label="استان">
+                <InlineSelect
+                  value={address.province}
+                  onSelect={selectProvince}
+                  options={provinceOptions}
+                  placeholder="انتخاب استان"
+                  searchPlaceholder="جستجو در استان‌ها..."
+                  emptyText="استانی پیدا نشد"
+                />
+              </FieldGroup>
+              <FieldGroup label="شهر">
+                <InlineSelect
+                  value={address.city}
+                  onSelect={selectCity}
+                  options={cityOptions}
+                  placeholder={address.province ? 'انتخاب شهر' : 'ابتدا استان را انتخاب کنید'}
+                  searchPlaceholder="جستجو در شهرها..."
+                  emptyText="شهری پیدا نشد"
+                />
+              </FieldGroup>
+              <FieldGroup label="منطقه">
+                <InlineSelect
+                  value={address.district}
+                  onSelect={selectDistrict}
+                  options={districtOptions}
+                  placeholder={address.city ? 'انتخاب منطقه' : 'ابتدا شهر را انتخاب کنید'}
+                  searchPlaceholder="جستجو در منطقه‌ها..."
+                  emptyText="منطقه‌ای پیدا نشد"
+                />
+              </FieldGroup>
+              <FieldGroup label="محله">
+                <InlineSelect
+                  value={address.neighborhood}
+                  onSelect={(value) => setAddress((current) => ({ ...current, neighborhood: value }))}
+                  options={neighborhoodOptions}
+                  placeholder={address.district ? 'انتخاب محله' : 'ابتدا منطقه را انتخاب کنید'}
+                  searchPlaceholder="جستجو در محله‌ها..."
+                  emptyText="محله‌ای پیدا نشد"
+                />
+              </FieldGroup>
+              <ProjectField label="خیابان">
+                <input value={address.street} onChange={(event) => setAddress((current) => ({ ...current, street: event.target.value.slice(0, 120) }))} placeholder="مثلاً بلوار سرو" />
+              </ProjectField>
+              <ProjectField label="کوچه">
+                <input value={address.alley} onChange={(event) => setAddress((current) => ({ ...current, alley: event.target.value.slice(0, 120) }))} placeholder="مثلاً کوچه گلستان" />
+              </ProjectField>
+              <ProjectField label="پلاک">
+                <input value={address.plaque} onChange={(event) => setAddress((current) => ({ ...current, plaque: event.target.value.slice(0, 30) }))} placeholder="مثلاً 14" />
+              </ProjectField>
+              <ProjectField label="کد پستی">
+                <input value={address.postalCode} onChange={(event) => setAddress((current) => ({ ...current, postalCode: event.target.value.slice(0, 20) }))} inputMode="numeric" placeholder="مثلاً 1998712345" />
+              </ProjectField>
+            </div>
+
+            <ProjectField label="شرح تکمیلی آدرس">
+              <ProjectTextarea
+                value={address.addressNotes}
+                onChange={(value) => setAddress((current) => ({ ...current, addressNotes: value.slice(0, 800) }))}
+                placeholder="ورودی، دسترسی، توضیحات تکمیلی محل پروژه یا هر نکته آدرس را وارد کنید."
+              />
+            </ProjectField>
+
+            {addressPreview.length ? (
+              <div className="business-unit-selected-tags">
+                {addressPreview.map((item) => (
+                  <span key={item}>{item}</span>
+                ))}
+              </div>
+            ) : null}
+
+            <div className="business-block-form-actions">
+              <button type="button" className="business-block-form-submit" onClick={submit} disabled={saving}>
+                {saving ? 'در حال ذخیره...' : 'ذخیره آدرس'}
+              </button>
+            </div>
+          </>
+        ) : null}
+      </div>
+    </section>
+  );
+}
+
+export function ProjectFilesPanel() {
+  return (
+    <section className="business-block-form-page" aria-label="فایل‌های پروژه">
+      <div className="business-block-form-card project-flow-form-card">
+        <ProjectHero
+          icon={FileText}
+          title="فایل‌های پروژه"
+          description="اسناد، نقشه‌ها، تصاویر رسمی و فایل‌های تکمیلی پروژه را از این بخش مدیریت کنید."
+        />
+
+        <div className="project-stats-grid">
+          <ProjectStatCard label="نقشه معماری" value="در انتظار" accent="slate" />
+          <ProjectStatCard label="پروانه ساخت" value="در انتظار" accent="amber" />
+          <ProjectStatCard label="گزارش فنی" value="در انتظار" accent="slate" />
+          <ProjectStatCard label="آلبوم تصاویر" value="در انتظار" accent="teal" />
+        </div>
+
+        <div className="business-blocks-state">
+          برای این بخش route مستقل ایجاد شد. اگر بخواهی، در مرحله بعدی آپلود واقعی فایل، پیش‌نمایش و دسته‌بندی اسناد را هم روی همین صفحه اضافه می‌کنم.
+        </div>
+      </div>
+    </section>
+  );
+}

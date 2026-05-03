@@ -7,6 +7,29 @@ import { handlePrismaApiError } from '../../../lib/prismaApiError';
 const TABLE_NAME = '"TenantBusinessProfileSettings"';
 const INDEX_NAME = '"TenantBusinessProfileSettings_tenantId_idx"';
 
+async function getProfileMeta(tenantId: string, fallbackUser: { fullName: string; mobile: string | null }, businessName: string) {
+  const ownerMembership = await prisma.userTenantMembership.findFirst({
+    where: { tenantId, role: 'owner' },
+    include: {
+      user: {
+        select: {
+          fullName: true,
+          mobile: true,
+        },
+      },
+    },
+    orderBy: { createdAt: 'asc' },
+  });
+
+  return {
+    businessName,
+    owner: {
+      fullName: ownerMembership?.user.fullName ?? fallbackUser.fullName,
+      mobile: ownerMembership?.user.mobile ?? fallbackUser.mobile,
+    },
+  };
+}
+
 async function ensureProfileSettingsTable() {
   await prisma.$executeRawUnsafe(`
     CREATE TABLE IF NOT EXISTS ${TABLE_NAME} (
@@ -40,7 +63,13 @@ export async function GET() {
       session.tenantId,
     );
 
-    return NextResponse.json({ store: rows[0]?.profilePayload ?? null });
+    const meta = await getProfileMeta(
+      session.tenantId,
+      { fullName: session.user.fullName, mobile: session.user.mobile },
+      session.tenant.name,
+    );
+
+    return NextResponse.json({ store: rows[0]?.profilePayload ?? null, meta });
   } catch (error) {
     return handlePrismaApiError(error);
   }
@@ -70,7 +99,13 @@ export async function PUT(request: Request) {
       JSON.stringify(store),
     );
 
-    return NextResponse.json({ success: true, store });
+    const meta = await getProfileMeta(
+      session.tenantId,
+      { fullName: session.user.fullName, mobile: session.user.mobile },
+      session.tenant.name,
+    );
+
+    return NextResponse.json({ success: true, store, meta });
   } catch (error) {
     return handlePrismaApiError(error);
   }

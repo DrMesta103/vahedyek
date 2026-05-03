@@ -144,8 +144,23 @@ export type ProfileStore = {
   calendar: CalendarSettings;
 };
 
+export type ProfileMeta = {
+  businessName: string;
+  owner: {
+    fullName: string;
+    mobile: string | null;
+  };
+};
+
 export const PROFILE_STORAGE_KEY = 'vahedyek.business-profile.v1';
 const PROFILE_API_ENDPOINT = '/api/business-settings/profile';
+const defaultProfileMeta: ProfileMeta = {
+  businessName: '',
+  owner: {
+    fullName: '',
+    mobile: null,
+  },
+};
 
 export const LEGAL_TYPE_OPTIONS = [
   'شرکت سهامی خاص',
@@ -562,6 +577,11 @@ export function saveProfileStore(store: ProfileStore) {
 }
 
 export async function fetchProfileStore() {
+  const payload = await fetchProfilePayload();
+  return payload.store;
+}
+
+export async function fetchProfilePayload() {
   try {
     const response = await fetch(PROFILE_API_ENDPOINT, {
       cache: 'no-store',
@@ -572,12 +592,24 @@ export async function fetchProfileStore() {
       throw new Error(`profile_fetch_failed:${response.status}`);
     }
 
-    const payload = (await response.json()) as { store?: unknown };
+    const payload = (await response.json()) as { store?: unknown; meta?: Partial<ProfileMeta> };
     const merged = mergeProfileStore(payload.store ?? {});
     saveProfileStore(merged);
-    return merged;
+    return {
+      store: merged,
+      meta: {
+        businessName: typeof payload.meta?.businessName === 'string' ? payload.meta.businessName : defaultProfileMeta.businessName,
+        owner: {
+          fullName: typeof payload.meta?.owner?.fullName === 'string' ? payload.meta.owner.fullName : defaultProfileMeta.owner.fullName,
+          mobile: typeof payload.meta?.owner?.mobile === 'string' ? payload.meta.owner.mobile : defaultProfileMeta.owner.mobile,
+        },
+      },
+    };
   } catch {
-    return loadProfileStore();
+    return {
+      store: loadProfileStore(),
+      meta: defaultProfileMeta,
+    };
   }
 }
 

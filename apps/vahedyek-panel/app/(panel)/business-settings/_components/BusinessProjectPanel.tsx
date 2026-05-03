@@ -25,12 +25,14 @@ import {
 } from 'lucide-react';
 import { ChoicePillsField } from '@repo/ui';
 import { FieldGroup, FormTextInput, InlineSelect, TagPill, TagPills } from '../../contracts/new/_components/ContractFormPrimitives';
+import { fetchProfilePayload } from '../profile/_components/profileStorage';
 
 type BlockDto = {
   id: string;
   name: string;
   mainPlate: string;
   subPlate: string;
+  usageCounts?: UsageCounts;
   unitCount?: number;
   floorCount?: number;
 };
@@ -45,6 +47,7 @@ type FloorDto = {
   id: string;
   name: string;
   unitCount: number;
+  usageCounts?: UsageCounts;
 };
 
 type UnitDto = {
@@ -78,6 +81,23 @@ type AmenityItem = {
 };
 
 type UnitCategory = 'unit' | 'storage' | 'parking' | 'amenity';
+type UsageCounts = {
+  residential: number;
+  commercial: number;
+  office: number;
+  parking: number;
+  storage: number;
+  amenity: number;
+};
+
+const DEFAULT_USAGE_COUNTS: UsageCounts = {
+  residential: 0,
+  commercial: 0,
+  office: 0,
+  parking: 0,
+  storage: 0,
+  amenity: 0,
+};
 
 const ownershipOptions = [
   { value: 'rental', label: 'استیجاری' },
@@ -106,11 +126,13 @@ const infoItems: {
     title: 'گزارشات اطلاعات مجتمع',
     description: 'نمایش کلی از اطلاعات مجتمع مانند ثبت واحدها و طبقات مجتمع',
     icon: ClipboardList,
+    href: '/business-settings/project/reports',
   },
   {
     title: 'مشخصات فنی پروژه',
     description: 'کابینت، سرامیک، سیستم سرمایش و گرمایش',
     icon: Wrench,
+    href: '/business-settings/project/technical-specs',
   },
   {
     title: 'فهرست بلوک‌ها',
@@ -122,35 +144,36 @@ const infoItems: {
     title: 'فایل‌ها',
     description: 'بارگذاری اسناد تکمیلی مانند نقشه‌ها، پروانه ساخت، گزارش‌های فنی و عکس‌های رسمی',
     icon: FileText,
+    href: '/business-settings/project/files',
   },
   {
     title: 'پلاک اصلی / پلاک فرعی',
     description: 'پلاک اصلی: ۱۲۵ (پلاک فرعی ۱۰)، پلاک اصلی: ۱ ... بیشتر',
     icon: Grid2X2,
+    href: '/business-settings/project/plates',
   },
   {
     title: 'آدرس',
     description: 'پونک گلزار سوم',
     icon: MapPin,
+    href: '/business-settings/project/address',
   },
   {
     title: 'تیپ‌های واحد',
     description: 'فهرست تیپ‌های واحد مجتمع',
     icon: Building2,
+    href: '/business-settings/project/unit-types',
   },
 ] as const;
 
 const usageFilterOptions = [
-  { value: 'residential', label: '۹ مسکونی' },
-  { value: 'commercial', label: '۱ تجاری' },
-  { value: 'office', label: '۰ اداری' },
-  { value: 'parking', label: '۸ پارکینگ' },
-  { value: 'storage', label: '۶ انباری' },
-  { value: 'welfare', label: '۸ رفاهی' },
+  { value: 'residential', label: '\u0645\u0633\u06a9\u0648\u0646\u06cc' },
+  { value: 'commercial', label: '\u062a\u062c\u0627\u0631\u06cc' },
+  { value: 'office', label: '\u0627\u062f\u0627\u0631\u06cc' },
+  { value: 'parking', label: '\u067e\u0627\u0631\u06a9\u06cc\u0646\u06af' },
+  { value: 'storage', label: '\u0627\u0646\u0628\u0627\u0631\u06cc' },
+  { value: 'welfare', label: '\u0631\u0641\u0627\u0647\u06cc' },
 ] as const;
-
-const blockUsageTags = ['رفاهی', 'پارکینگ', 'اداری', 'تجاری', 'مسکونی'];
-const floorUsageTags = ['مسکونی', 'تجاری', 'اداری', 'پارکینگ', 'انباری', 'رفاهی'];
 
 const unitTypeTabs = [
   { value: 'unit', label: 'واحد', count: 7, icon: Home },
@@ -165,6 +188,65 @@ const unitCategoryLabels: Record<UnitCategory, string> = {
   parking: 'پارکینگ',
   amenity: 'واحد رفاهی',
 };
+
+const usageTagMeta: ReadonlyArray<{ key: keyof UsageCounts; label: string }> = [
+  { key: 'amenity', label: '\u0631\u0641\u0627\u0647\u06cc' },
+  { key: 'parking', label: '\u067e\u0627\u0631\u06a9\u06cc\u0646\u06af' },
+  { key: 'storage', label: '\u0627\u0646\u0628\u0627\u0631\u06cc' },
+  { key: 'office', label: '\u0627\u062f\u0627\u0631\u06cc' },
+  { key: 'commercial', label: '\u062a\u062c\u0627\u0631\u06cc' },
+  { key: 'residential', label: '\u0645\u0633\u06a9\u0648\u0646\u06cc' },
+];
+
+function getUsageKey(value: string): keyof UsageCounts {
+  return value === 'welfare' ? 'amenity' : (value as keyof UsageCounts);
+}
+
+function getUsageDisplayLabel(value: string) {
+  const key = getUsageKey(value);
+  return usageTagMeta.find((item) => item.key === key)?.label ?? value;
+}
+
+function formatCountLabel(count: number, label: string) {
+  return `${count} ${label}`;
+}
+
+function getUsageCounts(input?: Partial<UsageCounts>) {
+  return { ...DEFAULT_USAGE_COUNTS, ...input };
+}
+
+function countUnitsByUsage(units: UnitDto[]) {
+  return units.reduce<UsageCounts>((acc, unit) => {
+    const category = unit.category ?? 'unit';
+    if (category === 'parking') acc.parking += 1;
+    else if (category === 'storage') acc.storage += 1;
+    else if (category === 'amenity') acc.amenity += 1;
+    else if (unit.usage === 'commercial') acc.commercial += 1;
+    else if (unit.usage === 'office') acc.office += 1;
+    else acc.residential += 1;
+    return acc;
+  }, { ...DEFAULT_USAGE_COUNTS });
+}
+
+function getUnitStatTags(unit: UnitDto, display: ReturnType<typeof getUnitDisplayData>) {
+  const category = unit.category ?? 'unit';
+  if (category === 'parking') {
+    return [];
+  }
+  if (category === 'storage') {
+    return [];
+  }
+  if (category === 'amenity') {
+    return [];
+  }
+
+  return [
+    { className: 'is-orange', label: `اتاق خواب ${display.bedrooms}` },
+    { className: 'is-blue', label: `بالکن ${display.balconies}` },
+    { className: 'is-sky', label: `پارکینگ ${display.parking}` },
+    { className: 'is-blue', label: `انباری ${display.storage}` },
+  ];
+}
 
 const unitAreaPricingOptions = [
   {
@@ -197,6 +279,22 @@ const unitUsageFilters = [
 
 const unitUsageLabels = ['مسکونی', 'مسکونی', 'مسکونی', 'اداری', 'تجاری', 'مسکونی'];
 const unitTypeOptions = ['تیپ A', 'تیپ B', 'تیپ C', 'بدون تیپ'];
+const amenitySpaceTypeOptions = [
+  'فضای سبز',
+  'سالن ورزشی',
+  'استخر',
+  'باشگاه',
+  'نگار خانه هنر',
+  'سوئیت مهمان',
+  'سینما',
+  'اتاق بازی',
+  'سالن اجتماعات',
+  'کارگاه هنری',
+  'سالن اسپا',
+  'کتاب خانه',
+  'کافی شاپ',
+  'سرویس بهداشتی عمومی',
+] as const;
 const unitUsageOptions = [
   { value: 'residential', label: 'مسکونی' },
   { value: 'commercial', label: 'تجاری' },
@@ -254,6 +352,20 @@ function getUnitDisplayData(unit: UnitDto, index: number) {
 export function BusinessProjectPanel() {
   const [ownership, setOwnership] = useState<(typeof ownershipOptions)[number]['value']>('registered');
   const [structure, setStructure] = useState<(typeof structureOptions)[number]['value']>('cooperative');
+  const [businessName, setBusinessName] = useState('');
+
+  useEffect(() => {
+    let cancelled = false;
+
+    fetchProfilePayload().then(({ store, meta }) => {
+      if (cancelled) return;
+      setBusinessName(meta.businessName || store.legal.companyName || '');
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <section className="business-project-page" aria-label="پروفایل مجتمع">
@@ -266,7 +378,7 @@ export function BusinessProjectPanel() {
           <button type="button" className="business-project-edit" aria-label="ویرایش" title="ویرایش">
             <Pencil />
           </button>
-          <h1>آسمان شب</h1>
+          <h1>{businessName || '---'}</h1>
         </div>
 
         <div className="business-project-section">
@@ -274,7 +386,7 @@ export function BusinessProjectPanel() {
             label="نوع مالکیت عرضه"
             options={ownershipOptions.map((option) => ({ value: option.value, label: option.label }))}
             value={ownership}
-            onChange={setOwnership}
+            onChange={(value) => setOwnership(value as (typeof ownershipOptions)[number]['value'])}
             pillsClassName="business-project-tags"
           />
           <p>وضعیت مالکیت زمین یا بنا را مشخص کنید. این مورد در قراردادها و اسناد رسمی لحاظ می‌شود</p>
@@ -285,7 +397,7 @@ export function BusinessProjectPanel() {
             label="نوع ساخت"
             options={structureOptions.map((option) => ({ value: option.value, label: option.label }))}
             value={structure}
-            onChange={setStructure}
+            onChange={(value) => setStructure(value as (typeof structureOptions)[number]['value'])}
             pillsClassName="business-project-tags"
           />
           <p>شیوه یا نهاد اصلی سازنده پروژه را مشخص کنید</p>
@@ -365,9 +477,20 @@ export function BusinessBlocksPanel() {
   }, []);
 
   const normalizedQuery = query.trim();
+  const blockFilterCounts = blocks.reduce<UsageCounts>((acc, block) => {
+    const counts = getUsageCounts(block.usageCounts);
+    acc.residential += counts.residential;
+    acc.commercial += counts.commercial;
+    acc.office += counts.office;
+    acc.parking += counts.parking;
+    acc.storage += counts.storage;
+    acc.amenity += counts.amenity;
+    return acc;
+  }, { ...DEFAULT_USAGE_COUNTS });
   const filteredBlocks = blocks.filter((block) => {
     const matchesQuery = normalizedQuery ? block.name.includes(normalizedQuery) || getPlateText(block).includes(normalizedQuery) : true;
-    return matchesQuery;
+    const matchesUsage = activeUsage ? getUsageCounts(block.usageCounts)[getUsageKey(activeUsage)] > 0 : true;
+    return matchesQuery && matchesUsage;
   });
 
   const reloadBlocks = async () => {
@@ -414,14 +537,22 @@ export function BusinessBlocksPanel() {
           <h2>فیلتر بر اساس نوع کاربری طبقات</h2>
           <div className="business-blocks-filter-pills" aria-label="فیلتر نوع کاربری">
             {usageFilterOptions.map((option) => (
-              <button
-                type="button"
-                key={option.value}
-                aria-pressed={activeUsage === option.value}
-                onClick={() => setActiveUsage((current) => (current === option.value ? '' : option.value))}
-              >
-                {option.label}
-              </button>
+              (() => {
+                const count = blockFilterCounts[getUsageKey(option.value)];
+                return (
+                  <button
+                    type="button"
+                    key={option.value}
+                    aria-pressed={activeUsage === option.value}
+                    aria-disabled={count === 0}
+                    className={count === 0 ? 'is-disabled' : undefined}
+                    disabled={count === 0}
+                    onClick={() => setActiveUsage((current) => (current === option.value ? '' : option.value))}
+                  >
+                    {formatCountLabel(count, getUsageDisplayLabel(option.value))}
+                  </button>
+                );
+              })()
             ))}
           </div>
           <p>با انتخاب نوع کاربری، بلوک‌هایی که با این نوع کاربری مطابقت دارند نمایش داده می‌شوند. اعداد نشان‌دهنده تعداد واحدهای ثبت شده برای هر نوع کاربری هستند.</p>
@@ -430,7 +561,7 @@ export function BusinessBlocksPanel() {
         <div className="business-blocks-toolbar">
           <Link href="/business-settings/project/blocks/new" className="business-blocks-add">
             <Plus />
-            ثبت بلوک
+            افزودن بلوک
           </Link>
 
           <label className="business-blocks-search">
@@ -498,9 +629,14 @@ export function BusinessBlocksPanel() {
                 </div>
 
                 <div className="business-block-card-stats">
-                  {blockUsageTags.map((tag) => (
-                    <span key={tag}>o {tag}</span>
-                  ))}
+                  {usageTagMeta.map((tag) => {
+                    const count = getUsageCounts(block.usageCounts)[tag.key];
+                    return (
+                      <span key={tag.key} aria-disabled={count === 0} className={count === 0 ? 'is-disabled' : undefined}>
+                        {formatCountLabel(count, tag.label)}
+                      </span>
+                    );
+                  })}
                 </div>
 
                 <div className="business-block-report">
@@ -665,11 +801,11 @@ export function BusinessBlockForm({ blockId }: { blockId?: string }) {
         <div className="business-block-form-tabs">
           <button type="button" className={activeTab === 'single' ? 'active' : ''} onClick={() => setActiveTab('single')} disabled={isEdit}>
             <Square />
-            ثبت تکی
+            افزودن تکی
           </button>
           <button type="button" className={activeTab === 'bulk' ? 'active' : ''} onClick={() => setActiveTab('bulk')} disabled={isEdit}>
             <Table2 />
-            ثبت تجمیعی
+            افزودن تجمیعی
           </button>
         </div>
 
@@ -709,7 +845,7 @@ export function BusinessBlockForm({ blockId }: { blockId?: string }) {
                 <h2>پلاک اصلی</h2>
                 <button type="button" className="business-block-form-soft-button" onClick={() => setPlateDialogOpen(true)}>
                   <Plus />
-                  ثبت پلاک
+                  افزودن پلاک
                 </button>
               </div>
               <div className="business-block-form-pills">
@@ -747,7 +883,7 @@ export function BusinessBlockForm({ blockId }: { blockId?: string }) {
 
             <div className="business-block-form-actions">
               <button type="button" className="business-block-form-submit" onClick={submit} disabled={saving}>
-                {saving ? 'در حال ثبت...' : 'ثبت'}
+                {saving ? '\u062f\u0631 \u062d\u0627\u0644 \u0627\u0641\u0632\u0648\u062f\u0646...' : '\u0627\u0641\u0632\u0648\u062f\u0646'}
               </button>
             </div>
           </>
@@ -800,7 +936,7 @@ export function BusinessBlockForm({ blockId }: { blockId?: string }) {
           </div>
           <div className="business-dialog-actions">
             <button type="button" className="business-dialog-plain-action" onClick={submitPlate}>
-              ثبت
+              افزودن
             </button>
             <button type="button" className="business-dialog-plain-action" onClick={() => setPlateDialogOpen(false)}>
               لغو
@@ -835,7 +971,21 @@ export function BusinessBlockDetail({ blockId }: { blockId: string }) {
   }, [blockId]);
 
   const normalizedQuery = query.trim();
-  const filteredFloors = normalizedQuery ? floors.filter((floor) => floor.name.includes(normalizedQuery)) : floors;
+  const floorFilterCounts = floors.reduce<UsageCounts>((acc, floor) => {
+    const counts = getUsageCounts(floor.usageCounts);
+    acc.residential += counts.residential;
+    acc.commercial += counts.commercial;
+    acc.office += counts.office;
+    acc.parking += counts.parking;
+    acc.storage += counts.storage;
+    acc.amenity += counts.amenity;
+    return acc;
+  }, { ...DEFAULT_USAGE_COUNTS });
+  const filteredFloors = floors.filter((floor) => {
+    const matchesQuery = normalizedQuery ? floor.name.includes(normalizedQuery) : true;
+    const matchesUsage = activeUsage ? getUsageCounts(floor.usageCounts)[getUsageKey(activeUsage)] > 0 : true;
+    return matchesQuery && matchesUsage;
+  });
 
   return (
     <section className="business-blocks-page business-blocks-page-yellow" aria-label="جزئیات بلوک">
@@ -844,14 +994,22 @@ export function BusinessBlockDetail({ blockId }: { blockId: string }) {
           <h2>فیلتر بر اساس نوع کاربری طبقات</h2>
           <div className="business-blocks-filter-pills" aria-label="فیلتر نوع کاربری طبقات">
             {usageFilterOptions.map((option) => (
-              <button
-                type="button"
-                key={option.value}
-                aria-pressed={activeUsage === option.value}
-                onClick={() => setActiveUsage((current) => (current === option.value ? '' : option.value))}
-              >
-                {option.label}
-              </button>
+              (() => {
+                const count = floorFilterCounts[getUsageKey(option.value)];
+                return (
+                  <button
+                    type="button"
+                    key={option.value}
+                    aria-pressed={activeUsage === option.value}
+                    aria-disabled={count === 0}
+                    className={count === 0 ? 'is-disabled' : undefined}
+                    disabled={count === 0}
+                    onClick={() => setActiveUsage((current) => (current === option.value ? '' : option.value))}
+                  >
+                    {formatCountLabel(count, getUsageDisplayLabel(option.value))}
+                  </button>
+                );
+              })()
             ))}
           </div>
           <p>با انتخاب نوع کاربری، طبقه‌هایی که با این نوع کاربری مطابقت دارند نمایش داده می‌شوند. اعداد نشان‌دهنده تعداد واحدهای ثبت شده برای هر نوع کاربری هستند.</p>
@@ -860,7 +1018,7 @@ export function BusinessBlockDetail({ blockId }: { blockId: string }) {
         <div className="business-blocks-toolbar">
           <Link href={`/business-settings/project/blocks/${blockId}/floors/new`} className="business-blocks-add">
             <Plus />
-            ثبت طبقه
+            افزودن طبقه
           </Link>
           <label className="business-blocks-search">
             <Search />
@@ -890,9 +1048,14 @@ export function BusinessBlockDetail({ blockId }: { blockId: string }) {
 
               <h3>نوع کاربری</h3>
               <div className="business-block-card-stats">
-                {floorUsageTags.map((tag) => (
-                  <span key={tag}>o {tag}</span>
-                ))}
+                {usageTagMeta.map((tag) => {
+                  const count = getUsageCounts(floor.usageCounts)[tag.key];
+                  return (
+                    <span key={tag.key} aria-disabled={count === 0} className={count === 0 ? 'is-disabled' : undefined}>
+                      {formatCountLabel(count, tag.label)}
+                    </span>
+                  );
+                })}
               </div>
 
               <div className="business-block-report">
@@ -952,11 +1115,11 @@ export function BusinessFloorForm({ blockId }: { blockId: string }) {
         <div className="business-block-form-tabs">
           <button type="button" className={activeTab === 'single' ? 'active' : ''} onClick={() => setActiveTab('single')}>
             <Square />
-            ثبت تکی طبقه
+            افزودن تکی طبقه
           </button>
           <button type="button" className={activeTab === 'bulk' ? 'active' : ''} onClick={() => setActiveTab('bulk')}>
             <Table2 />
-            ثبت تجمیعی طبقه
+            افزودن تجمیعی طبقه
           </button>
         </div>
 
@@ -986,7 +1149,7 @@ export function BusinessFloorForm({ blockId }: { blockId: string }) {
 
         <div className="business-block-form-actions">
           <button type="button" className="business-block-form-submit" onClick={submitFloor} disabled={saving}>
-            {saving ? 'در حال ثبت...' : 'ثبت طبقه'}
+            {saving ? 'در حال افزودن...' : 'افزودن طبقه'}
           </button>
         </div>
       </div>
@@ -1019,8 +1182,17 @@ export function BusinessFloorDetail({ blockId, floorId }: { blockId: string; flo
   }, [blockId, floorId]);
 
   const normalizedQuery = query.trim();
+  const floorUsageCounts = countUnitsByUsage(units);
+  const unitTypeCounts = {
+    unit: units.filter((unit) => (unit.category ?? 'unit') === 'unit').length,
+    storage: units.filter((unit) => unit.category === 'storage').length,
+    parking: units.filter((unit) => unit.category === 'parking').length,
+    amenity: units.filter((unit) => unit.category === 'amenity').length,
+  } satisfies Record<UnitCategory, number>;
   const categoryUnits = units.filter((unit) => (unit.category ?? 'unit') === activeUnitType);
-  const filteredUnits = normalizedQuery ? categoryUnits.filter((unit) => unit.name.includes(normalizedQuery)) : categoryUnits;
+  const usageFilteredUnits =
+    activeUnitType === 'unit' && activeUsage ? categoryUnits.filter((unit) => (unit.usage ?? 'residential') === activeUsage) : categoryUnits;
+  const filteredUnits = normalizedQuery ? usageFilteredUnits.filter((unit) => unit.name.includes(normalizedQuery)) : usageFilteredUnits;
   const plateText = [floor?.mainPlate ? `پلاک اصلی ${floor.mainPlate}` : null, floor?.subPlate ? `پلاک فرعی ${floor.subPlate}` : null].filter(Boolean).join(' | ');
 
   return (
@@ -1040,7 +1212,7 @@ export function BusinessFloorDetail({ blockId, floorId }: { blockId: string; flo
               return (
                 <button type="button" key={tab.value} className={activeUnitType === tab.value ? 'active' : ''} onClick={() => setActiveUnitType(tab.value)}>
                   <span className="business-units-type-icon">
-                    <b>{tab.count}</b>
+                    <b>{unitTypeCounts[tab.value]}</b>
                     <Icon />
                   </span>
                   <span>{tab.label}</span>
@@ -1056,14 +1228,22 @@ export function BusinessFloorDetail({ blockId, floorId }: { blockId: string; flo
           <h2>فیلتر بر اساس نوع کاربری واحدها</h2>
           <div className="business-units-filter-tags" aria-label="فیلتر نوع کاربری">
             {unitUsageFilters.map((option) => (
-              <button
-                type="button"
-                key={option.value}
-                aria-pressed={activeUsage === option.value}
-                onClick={() => setActiveUsage((current) => (current === option.value ? '' : option.value))}
-              >
-                {option.label}
-              </button>
+              (() => {
+                const count = floorUsageCounts[getUsageKey(option.value)];
+                return (
+                  <button
+                    type="button"
+                    key={option.value}
+                    aria-pressed={activeUsage === option.value}
+                    aria-disabled={count === 0}
+                    className={count === 0 ? 'is-disabled' : undefined}
+                    disabled={count === 0}
+                    onClick={() => setActiveUsage((current) => (current === option.value ? '' : option.value))}
+                  >
+                    {formatCountLabel(count, getUsageDisplayLabel(option.value))}
+                  </button>
+                );
+              })()
             ))}
           </div>
         </div>
@@ -1071,7 +1251,7 @@ export function BusinessFloorDetail({ blockId, floorId }: { blockId: string; flo
         <div className="business-units-toolbar">
           <Link href={`/business-settings/project/blocks/${blockId}/floors/${floorId}/units/new?category=${activeUnitType}`} className="business-units-add">
             <Plus />
-            ثبت {unitCategoryLabels[activeUnitType]}
+            افزودن {unitCategoryLabels[activeUnitType]}
           </Link>
           <label className="business-units-search">
             <Search />
@@ -1087,6 +1267,7 @@ export function BusinessFloorDetail({ blockId, floorId }: { blockId: string; flo
         {categoryUnits.length > 0 && filteredUnits.length === 0 ? <div className="business-blocks-state">مورد مطابق جستجو پیدا نشد.</div> : null}
         {filteredUnits.map((unit, index) => {
           const display = getUnitDisplayData(unit, index);
+          const statTags = getUnitStatTags(unit, display);
           return (
             <article className="business-unit-card" key={unit.id}>
               <div className="business-unit-card-cover">
@@ -1117,10 +1298,11 @@ export function BusinessFloorDetail({ blockId, floorId }: { blockId: string; flo
                   </div>
                 </div>
                 <div className="business-unit-tags">
-                  <span className="is-orange">اتاق خواب {display.bedrooms}</span>
-                  <span className="is-blue">بالکن {display.balconies}</span>
-                  <span className="is-sky">پارکینگ {display.parking}</span>
-                  <span className="is-blue">انباری {display.storage}</span>
+                  {statTags.map((tag) => (
+                    <span key={tag.label} className={tag.className}>
+                      {tag.label}
+                    </span>
+                  ))}
                 </div>
                 <div className="business-unit-status-tags">
                   <span className="is-red">{display.saleStatus} ×</span>
@@ -1145,7 +1327,7 @@ export function BusinessUnitForm({ blockId, floorId, category, unitId }: { block
   const isSimpleAsset = unitCategory === 'storage' || unitCategory === 'parking';
   const isAmenityUnit = unitCategory === 'amenity';
   const [activeTab, setActiveTab] = useState<'single' | 'bulk'>('single');
-  const [unitType, setUnitType] = useState(unitTypeOptions[0]);
+  const [unitType, setUnitType] = useState(initialCategory === 'unit' ? unitTypeOptions[0] : '');
   const [usage, setUsage] = useState<(typeof unitUsageOptions)[number]['value'] | ''>('');
   const [name, setName] = useState('');
   const [prefix, setPrefix] = useState('');
@@ -1175,6 +1357,7 @@ export function BusinessUnitForm({ blockId, floorId, category, unitId }: { block
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(isEdit);
   const usageSelected = !isMainUnit || Boolean(usage);
+  const amenityTypeSelected = !isAmenityUnit || Boolean(unitType);
 
   useEffect(() => {
     let cancelled = false;
@@ -1204,7 +1387,7 @@ export function BusinessUnitForm({ blockId, floorId, category, unitId }: { block
         if (data.unit) {
           const nextCategory = (data.unit.category ?? 'unit') as UnitCategory;
           setUnitCategory(nextCategory);
-          setUnitType(data.unit.unitType ?? unitTypeOptions[0]);
+          setUnitType(data.unit.unitType ?? (nextCategory === 'unit' ? unitTypeOptions[0] : ''));
           setUsage((data.unit.usage as (typeof unitUsageOptions)[number]['value'] | '') ?? '');
           setName(data.unit.name ?? '');
           setSaleEnabled(data.unit.saleEnabled !== false);
@@ -1325,11 +1508,11 @@ export function BusinessUnitForm({ blockId, floorId, category, unitId }: { block
         <div className="business-block-form-tabs">
           <button type="button" className={activeTab === 'single' ? 'active' : ''} onClick={() => setActiveTab('single')}>
             <Square />
-            {isEdit ? 'ویرایش تکی' : 'ثبت تکی'}
+            {isEdit ? 'ویرایش تکی' : 'افزودن تکی'}
           </button>
           <button type="button" className={activeTab === 'bulk' ? 'active' : ''} onClick={() => setActiveTab('bulk')} disabled={isEdit}>
             <Table2 />
-            ثبت تجمیعی
+            افزودن تجمیعی
           </button>
         </div>
 
@@ -1350,7 +1533,7 @@ export function BusinessUnitForm({ blockId, floorId, category, unitId }: { block
             </FieldGroup>
           ) : null}
 
-          {isMainUnit || isAmenityUnit ? (
+          {isMainUnit ? (
             <div className="business-unit-form-fieldset">
               <span>نوع کاربری</span>
               <div className="business-unit-choice-tags">
@@ -1361,7 +1544,19 @@ export function BusinessUnitForm({ blockId, floorId, category, unitId }: { block
             </div>
           ) : null}
 
+          {isAmenityUnit ? (
+            <div className="business-unit-form-fieldset">
+              <span>نوع فضا</span>
+              <div className="business-unit-choice-tags">
+                {amenitySpaceTypeOptions.map((option) => (
+                  <TagPill key={option} label={option} active={unitType === option} onClick={() => setUnitType(option)} />
+                ))}
+              </div>
+            </div>
+          ) : null}
+
           {isMainUnit && !usageSelected ? <p className="business-unit-form-hint">برای نمایش ادامه فرم، نوع کاربری واحد را انتخاب کنید.</p> : null}
+          {isAmenityUnit && !amenityTypeSelected ? <p className="business-unit-form-hint">برای ثبت واحد رفاهی، نوع فضا را انتخاب کنید.</p> : null}
 
           {usageSelected ? (
             <>
@@ -1438,7 +1633,7 @@ export function BusinessUnitForm({ blockId, floorId, category, unitId }: { block
 
                   <div className="business-unit-form-fieldset">
                     <button type="button" className="business-unit-next-action" onClick={() => setAmenityDialogOpen(true)}>
-                      ثبت امکانات واحد
+                      افزودن امکانات واحد
                       <ChevronLeft />
                     </button>
                     <div className="business-unit-selected-tags">
@@ -1486,7 +1681,18 @@ export function BusinessUnitForm({ blockId, floorId, category, unitId }: { block
                       افزودن اطلاعات پایه
                       <ChevronLeft />
                     </button>
-                    <p className="business-unit-assignment-summary">{baseInfo || 'توضیحاتی ثبت نشده است.'}</p>
+                    {baseInfo ? (
+                      <div className="business-unit-selected-tags">
+                        <span>
+                          {baseInfo}
+                          <button type="button" onClick={() => setBaseInfo('')}>
+                            <X />
+                          </button>
+                        </span>
+                      </div>
+                    ) : (
+                      <p className="business-unit-assignment-summary">توضیحاتی ثبت نشده است.</p>
+                    )}
                   </div>
                 </>
               ) : null}
@@ -1501,9 +1707,9 @@ export function BusinessUnitForm({ blockId, floorId, category, unitId }: { block
           ) : null}
         </div>
 
-        {usageSelected && !loading ? <div className="business-block-form-actions">
+        {usageSelected && amenityTypeSelected && !loading ? <div className="business-block-form-actions">
           <button type="button" className="business-block-form-submit" onClick={submitUnit} disabled={saving}>
-            {saving ? (isEdit ? 'در حال ذخیره...' : 'در حال ثبت...') : isEdit ? `ذخیره ${categoryLabel}` : activeTab === 'bulk' ? `ثبت تجمیعی ${categoryLabel}` : `ثبت ${categoryLabel}`}
+            {saving ? (isEdit ? 'در حال ذخیره...' : 'در حال افزودن...') : isEdit ? `ذخیره ${categoryLabel}` : activeTab === 'bulk' ? `افزودن تجمیعی ${categoryLabel}` : `افزودن ${categoryLabel}`}
           </button>
         </div> : null}
       </div>
@@ -1518,7 +1724,7 @@ export function BusinessUnitForm({ blockId, floorId, category, unitId }: { block
           </FieldGroup>
           <div className="business-dialog-actions">
             <button type="button" className="business-block-form-submit" onClick={addAmenity}>
-              ثبت
+              افزودن
             </button>
           </div>
         </Dialog>
@@ -1566,7 +1772,7 @@ export function BusinessUnitForm({ blockId, floorId, category, unitId }: { block
                 setBaseInfoDialogOpen(false);
               }}
             >
-              ثبت
+              افزودن
             </button>
           </div>
         </Dialog>
