@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState, type ElementType, type ReactNode } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useRef, useState, type ElementType, type ReactNode } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
   Building2,
   ChevronLeft,
@@ -78,6 +78,30 @@ type AssignmentOption = {
 type AmenityItem = {
   title: string;
   count: number;
+};
+
+type UnitFormDraft = {
+  unitCategory: UnitCategory;
+  activeTab: 'single' | 'bulk';
+  unitType: string;
+  usage: (typeof unitUsageOptions)[number]['value'] | '';
+  name: string;
+  prefix: string;
+  from: string;
+  to: string;
+  saleEnabled: boolean;
+  deliveryStatus: 'ready' | 'presale';
+  area: string;
+  balconyCount: string;
+  bedroomCount: string;
+  postalCode: string;
+  direction: (typeof directionOptions)[number]['value'];
+  areaPricingMode: (typeof unitAreaPricingOptions)[number]['value'];
+  amenities: AmenityItem[];
+  baseInfo: string;
+  baseInfoDraft: string;
+  selectedParkingIds: string[];
+  selectedStorageIds: string[];
 };
 
 type UnitCategory = 'unit' | 'storage' | 'parking' | 'amenity';
@@ -657,7 +681,7 @@ export function BusinessBlocksPanel() {
       </div>
       {copySource ? (
         <Dialog title="کپی بلوک" subtitle="یک مشخصه جدید برای نسخه کپی‌شده وارد کنید." onClose={() => setCopySource(null)}>
-          <FormField label="مشخصه بلوک" required>
+          <FormField label="نام/مشخصه/شماره" required>
             <input value={copyName} onChange={(event) => setCopyName(event.target.value.slice(0, 30))} />
           </FormField>
           <div className="business-dialog-actions">
@@ -817,8 +841,8 @@ export function BusinessBlockForm({ blockId }: { blockId?: string }) {
             {activeTab === 'single' || isEdit ? (
               <div className="business-block-form-section">
                 <p className="business-block-form-help">{isEdit ? 'اطلاعات بلوک را ویرایش کنید.' : 'برای تعریف یک بلوک به‌صورت جداگانه استفاده کنید.'}</p>
-                <FormField label="مشخصه بلوک" required>
-                  <input value={name} onChange={(event) => setName(event.target.value.slice(0, 30))} placeholder="مشخصه بلوک را وارد کنید." />
+                <FormField label="نام/مشخصه/شماره" required>
+                  <input value={name} onChange={(event) => setName(event.target.value.slice(0, 30))} placeholder="نام، مشخصه یا شماره بلوک را وارد کنید." />
                   <span className="business-block-form-counter">{name.length} / ۳۰</span>
                 </FormField>
               </div>
@@ -1127,8 +1151,8 @@ export function BusinessFloorForm({ blockId }: { blockId: string }) {
 
         {activeTab === 'single' ? (
           <div className="business-block-form-section">
-            <FormField label="مشخصه طبقه" required>
-              <input value={name} onChange={(event) => setName(event.target.value.slice(0, 30))} placeholder="مثلا طبقه اول" />
+            <FormField label="نام/مشخصه/شماره" required>
+              <input value={name} onChange={(event) => setName(event.target.value.slice(0, 30))} placeholder="مثلا طبقه اول یا ۱" />
             </FormField>
           </div>
         ) : (
@@ -1158,6 +1182,7 @@ export function BusinessFloorForm({ blockId }: { blockId: string }) {
 }
 
 export function BusinessFloorDetail({ blockId, floorId }: { blockId: string; floorId: string }) {
+  const searchParams = useSearchParams();
   const [floor, setFloor] = useState<{ name: string; blockName: string; mainPlate?: string | null; subPlate?: string | null } | null>(null);
   const [units, setUnits] = useState<UnitDto[]>([]);
   const [message, setMessage] = useState('');
@@ -1180,6 +1205,13 @@ export function BusinessFloorDetail({ blockId, floorId }: { blockId: string; flo
       })
       .catch((err) => setMessage(err instanceof Error ? err.message : 'دریافت جزئیات طبقه ناموفق بود.'));
   }, [blockId, floorId]);
+
+  useEffect(() => {
+    const requestedTab = searchParams.get('tab');
+    if (requestedTab === 'unit' || requestedTab === 'parking' || requestedTab === 'storage' || requestedTab === 'amenity') {
+      setActiveUnitType(requestedTab);
+    }
+  }, [searchParams]);
 
   const normalizedQuery = query.trim();
   const floorUsageCounts = countUnitsByUsage(units);
@@ -1319,6 +1351,8 @@ export function BusinessFloorDetail({ blockId, floorId }: { blockId: string; flo
 
 export function BusinessUnitForm({ blockId, floorId, category, unitId }: { blockId: string; floorId: string; category?: string; unitId?: string }) {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const isEdit = Boolean(unitId);
   const initialCategory: UnitCategory = category === 'storage' || category === 'parking' || category === 'amenity' ? category : 'unit';
   const [unitCategory, setUnitCategory] = useState<UnitCategory>(initialCategory);
@@ -1358,6 +1392,66 @@ export function BusinessUnitForm({ blockId, floorId, category, unitId }: { block
   const [loading, setLoading] = useState(isEdit);
   const usageSelected = !isMainUnit || Boolean(usage);
   const amenityTypeSelected = !isAmenityUnit || Boolean(unitType);
+  const pendingAssignmentDialog = searchParams.get('assignment');
+  const returnTarget = searchParams.get('returnTo');
+  const draftStorageKey = `business-unit-form-draft:${blockId}:${floorId}:${unitId ?? 'new'}:${searchParams.get('category') ?? 'unit'}`;
+  const draftRestoredRef = useRef(false);
+
+  const resetQuickAssetForm = () => {
+    return;
+  };
+
+  const persistDraft = () => {
+    if (typeof window === 'undefined') return;
+    const draft: UnitFormDraft = {
+      unitCategory,
+      activeTab,
+      unitType,
+      usage,
+      name,
+      prefix,
+      from,
+      to,
+      saleEnabled,
+      deliveryStatus,
+      area,
+      balconyCount,
+      bedroomCount,
+      postalCode,
+      direction,
+      areaPricingMode,
+      amenities,
+      baseInfo,
+      baseInfoDraft,
+      selectedParkingIds,
+      selectedStorageIds,
+    };
+    window.sessionStorage.setItem(draftStorageKey, JSON.stringify(draft));
+  };
+
+  const clearDraft = () => {
+    if (typeof window === 'undefined') return;
+    window.sessionStorage.removeItem(draftStorageKey);
+  };
+
+  const loadAssignmentOptions = async (selectedUnitId?: string) => {
+    const response = await fetch(`/api/business-settings/project/blocks/${blockId}/floors/${floorId}/units`, { cache: 'no-store' });
+    const data = (await response.json()) as {
+      options?: { parking?: AssignmentOption[]; storage?: AssignmentOption[] };
+      message?: string;
+    };
+    if (!response.ok) throw new Error(data.message ?? 'دریافت لیست پارکینگ و انباری ناموفق بود.');
+
+    const nextParking = data.options?.parking ?? [];
+    const nextStorage = data.options?.storage ?? [];
+    setParkingOptions(nextParking);
+    setStorageOptions(nextStorage);
+
+    if (selectedUnitId) {
+      setSelectedParkingIds(nextParking.filter((item) => item.assignedToUnitId === selectedUnitId).map((item) => item.id));
+      setSelectedStorageIds(nextStorage.filter((item) => item.assignedToUnitId === selectedUnitId).map((item) => item.id));
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -1418,6 +1512,78 @@ export function BusinessUnitForm({ blockId, floorId, category, unitId }: { block
     };
   }, [blockId, floorId, isEdit, unitId]);
 
+  useEffect(() => {
+    if (assignmentDialog) resetQuickAssetForm();
+  }, [assignmentDialog]);
+
+  useEffect(() => {
+    if (pendingAssignmentDialog !== 'parking' && pendingAssignmentDialog !== 'storage') return;
+    setAssignmentDialog(pendingAssignmentDialog);
+    loadAssignmentOptions(isEdit ? unitId : undefined).catch((err) => {
+      setMessage(err instanceof Error ? err.message : 'دریافت لیست پارکینگ و انباری ناموفق بود.');
+    });
+  }, [pendingAssignmentDialog]);
+
+  useEffect(() => {
+    if (loading || draftRestoredRef.current || !pendingAssignmentDialog) return;
+    if (typeof window === 'undefined') return;
+    const raw = window.sessionStorage.getItem(draftStorageKey);
+    if (!raw) return;
+
+    try {
+      const draft = JSON.parse(raw) as UnitFormDraft;
+      setUnitCategory(draft.unitCategory);
+      setActiveTab(draft.activeTab);
+      setUnitType(draft.unitType);
+      setUsage(draft.usage);
+      setName(draft.name);
+      setPrefix(draft.prefix);
+      setFrom(draft.from);
+      setTo(draft.to);
+      setSaleEnabled(draft.saleEnabled);
+      setDeliveryStatus(draft.deliveryStatus);
+      setArea(draft.area);
+      setBalconyCount(draft.balconyCount);
+      setBedroomCount(draft.bedroomCount);
+      setPostalCode(draft.postalCode);
+      setDirection(draft.direction);
+      setAreaPricingMode(draft.areaPricingMode);
+      setAmenities(Array.isArray(draft.amenities) ? draft.amenities : []);
+      setBaseInfo(draft.baseInfo);
+      setBaseInfoDraft(draft.baseInfoDraft);
+      setSelectedParkingIds(Array.isArray(draft.selectedParkingIds) ? draft.selectedParkingIds : []);
+      setSelectedStorageIds(Array.isArray(draft.selectedStorageIds) ? draft.selectedStorageIds : []);
+      draftRestoredRef.current = true;
+    } catch {
+      window.sessionStorage.removeItem(draftStorageKey);
+    }
+  }, [draftStorageKey, loading, pendingAssignmentDialog]);
+
+  useEffect(() => {
+    if (isEdit || draftRestoredRef.current || Boolean(pendingAssignmentDialog)) return;
+    setUnitCategory(initialCategory);
+    setUnitType(initialCategory === 'unit' ? unitTypeOptions[0] : '');
+    setUsage('');
+    setName('');
+    setPrefix('');
+    setFrom('');
+    setTo('');
+    setSaleEnabled(true);
+    setDeliveryStatus('ready');
+    setArea('');
+    setBalconyCount('0');
+    setBedroomCount('0');
+    setPostalCode('');
+    setDirection('unknown');
+    setAreaPricingMode('unit-only');
+    setAmenities([]);
+    setBaseInfo('');
+    setBaseInfoDraft('');
+    setSelectedParkingIds([]);
+    setSelectedStorageIds([]);
+    setMessage('');
+  }, [initialCategory, isEdit, pendingAssignmentDialog]);
+
   const applyUnitType = (value: string) => {
     setUnitType(value);
     if (value === 'تیپ A') {
@@ -1451,6 +1617,10 @@ export function BusinessUnitForm({ blockId, floorId, category, unitId }: { block
     if (option.assignedToUnitId) return;
     const setter = kind === 'parking' ? setSelectedParkingIds : setSelectedStorageIds;
     setter((current) => (current.includes(option.id) ? current.filter((id) => id !== option.id) : [...current, option.id]));
+  };
+
+  const submitQuickAsset = async () => {
+    return;
   };
 
   const submitUnit = async () => {
@@ -1488,7 +1658,12 @@ export function BusinessUnitForm({ blockId, floorId, category, unitId }: { block
       });
       const data = (await response.json()) as { message?: string };
       if (!response.ok) throw new Error(data.message ?? (isEdit ? 'ویرایش واحد ناموفق بود.' : 'ثبت واحد ناموفق بود.'));
-      router.push(`/business-settings/project/blocks/${blockId}/floors/${floorId}`);
+      clearDraft();
+      router.push(
+        isSimpleAsset && returnTarget
+          ? returnTarget
+          : `/business-settings/project/blocks/${blockId}/floors/${floorId}?tab=${unitCategory}`,
+      );
       router.refresh();
     } catch (err) {
       setMessage(err instanceof Error ? err.message : isEdit ? 'ویرایش واحد ناموفق بود.' : 'ثبت واحد ناموفق بود.');
@@ -1501,6 +1676,22 @@ export function BusinessUnitForm({ blockId, floorId, category, unitId }: { block
   const selectedAssignmentIds = assignmentDialog === 'parking' ? selectedParkingIds : selectedStorageIds;
   const selectedParkingNames = parkingOptions.filter((item) => selectedParkingIds.includes(item.id)).map((item) => item.name);
   const selectedStorageNames = storageOptions.filter((item) => selectedStorageIds.includes(item.id)).map((item) => item.name);
+  const returnToAssignmentUrl = (kind: 'parking' | 'storage') => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('assignment', kind);
+    return `${pathname}?${params.toString()}`;
+  };
+  const hideAssignmentDialog = () => {
+    setAssignmentDialog(null);
+  };
+  const closeAssignmentDialog = () => {
+    setAssignmentDialog(null);
+    if (!searchParams.get('assignment')) return;
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete('assignment');
+    const nextQuery = params.toString();
+    router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname);
+  };
 
   return (
     <section className="business-unit-form-page" aria-label={`${isEdit ? 'ویرایش' : 'ثبت'} ${categoryLabel}`}>
@@ -1561,8 +1752,12 @@ export function BusinessUnitForm({ blockId, floorId, category, unitId }: { block
           {usageSelected ? (
             <>
               {activeTab === 'single' ? (
-                <FieldGroup label={`مشخصه ${categoryLabel}`} required>
-                  <FormTextInput value={name} onChange={(value) => setName(value.slice(0, 30))} placeholder={unitCategory === 'unit' ? 'مثلا A1' : `مشخصه ${categoryLabel}`} />
+                <FieldGroup label="نام/مشخصه/شماره" required>
+                  <FormTextInput
+                    value={name}
+                    onChange={(value) => setName(value.slice(0, 30))}
+                    placeholder={unitCategory === 'unit' ? 'مثلا A1 یا ۱۰۱' : `نام، مشخصه یا شماره ${categoryLabel}`}
+                  />
                 </FieldGroup>
               ) : (
                 <div className="business-unit-bulk-row">
@@ -1731,7 +1926,26 @@ export function BusinessUnitForm({ blockId, floorId, category, unitId }: { block
       ) : null}
 
       {assignmentDialog ? (
-        <Dialog title={assignmentDialog === 'parking' ? 'انتخاب پارکینگ واحد' : 'انتخاب انباری واحد'} onClose={() => setAssignmentDialog(null)}>
+        <Dialog title={assignmentDialog === 'parking' ? 'انتخاب پارکینگ واحد' : 'انتخاب انباری واحد'} onClose={closeAssignmentDialog}>
+          <div className="business-unit-form-fieldset">
+            <Link
+              href={`/business-settings/project/blocks/${blockId}/floors/${floorId}/units/new?category=${assignmentDialog}&returnTo=${encodeURIComponent(returnToAssignmentUrl(assignmentDialog))}`}
+              className="business-unit-next-action"
+              onClick={() => {
+                persistDraft();
+                draftRestoredRef.current = false;
+                hideAssignmentDialog();
+              }}
+            >
+              {assignmentDialog === 'parking' ? 'افزودن پارکینگ جدید' : 'افزودن انباری جدید'}
+              <ChevronLeft />
+            </Link>
+            <p className="business-unit-assignment-summary">
+              {assignmentDialog === 'parking'
+                ? 'اگر پارکینگ موردنظر در لیست نیست، به صفحه ثبت بروید و بعد از ذخیره به همین فرم برگردید.'
+                : 'اگر انباری موردنظر در لیست نیست، به صفحه ثبت بروید و بعد از ذخیره به همین فرم برگردید.'}
+            </p>
+          </div>
           <div className="business-unit-assignment-tags">
             {assignmentOptions.length ? (
               assignmentOptions.map((option) => (
@@ -1750,7 +1964,7 @@ export function BusinessUnitForm({ blockId, floorId, category, unitId }: { block
             )}
           </div>
           <div className="business-dialog-actions">
-            <button type="button" className="business-block-form-submit" onClick={() => setAssignmentDialog(null)}>
+            <button type="button" className="business-block-form-submit" onClick={closeAssignmentDialog}>
               تایید
             </button>
           </div>
