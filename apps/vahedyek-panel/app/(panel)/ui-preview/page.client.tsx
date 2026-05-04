@@ -14,7 +14,6 @@ import {
   RuleAmountInput,
   RuleFieldLabel,
   RuleTabButton,
-  SegmentedToggle,
   StatGrid,
 } from '@repo/ui';
 import { BadgePercent, CircleDollarSign, SlidersHorizontal, UserRoundCog } from 'lucide-react';
@@ -41,7 +40,6 @@ export default function UiPreviewPageClient() {
         title: 'Form Controls',
         items: [
           { id: 'input', title: 'Input' },
-          { id: 'segmented-toggle', title: 'SegmentedToggle' },
           { id: 'date', title: 'PersianDatePicker' },
           { id: 'rule-amount', title: 'RuleAmountInput (تومان / %)' },
           { id: 'business-switch', title: 'BusinessSwitch' },
@@ -135,13 +133,6 @@ export default function UiPreviewPageClient() {
                   <Input value={text} onChange={(e) => setText(e.target.value)} placeholder="متن نمونه..." />
                 </div>
                 <div className="space-y-2">
-                  <div className="text-xs font-semibold text-[color:var(--text-muted)]">SegmentedToggle</div>
-                  <div className="flex items-center gap-4">
-                    <SegmentedToggle checked={toggle} onChange={setToggle} activeLabel="فعال" inactiveLabel="غیرفعال" />
-                    <span className="text-sm text-[color:var(--text-muted)]">{toggle ? 'فعال' : 'غیرفعال'}</span>
-                  </div>
-                </div>
-                <div className="space-y-2">
                   <div className="text-xs font-semibold text-[color:var(--text-muted)]">PersianDatePicker</div>
                   <PersianDatePicker value={date} onChange={setDate} placeholder="YYYY/MM/DD" containerClassName="w-full" />
                 </div>
@@ -153,9 +144,18 @@ export default function UiPreviewPageClient() {
                     <RuleAmountInput value={percent} onChange={setPercent} suffix="%" />
                   </div>
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-2 md:col-span-2">
                   <div className="text-xs font-semibold text-[color:var(--text-muted)]">BusinessSwitch</div>
-                  <BusinessSwitch checked={salesEnabled} onChange={setSalesEnabled} />
+                  <div className="flex flex-wrap items-center gap-6">
+                    <div className="flex items-center gap-4">
+                      <BusinessSwitch checked={toggle} onChange={setToggle} />
+                      <span className="text-sm text-[color:var(--text-muted)]">{toggle ? 'فعال' : 'غیرفعال'}</span>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <BusinessSwitch checked={salesEnabled} onChange={setSalesEnabled} />
+                      <span className="text-sm text-[color:var(--text-muted)]">{salesEnabled ? 'فعال' : 'غیرفعال'} (حالت ثانویه)</span>
+                    </div>
+                  </div>
                 </div>
                 <div className="space-y-2 md:col-span-2">
                   <div className="text-xs font-semibold text-[color:var(--text-muted)]">ChoicePillsField</div>

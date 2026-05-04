@@ -111,8 +111,17 @@ function PersianDatePicker({
     }
   );
 }
-function cn(...classes) {
-  return classes.filter(Boolean).join(" ");
+function BusinessSwitch({
+  checked,
+  onChange,
+  activeLabel = "\u0641\u0639\u0627\u0644",
+  inactiveLabel = "\u063A\u06CC\u0631\u0641\u0639\u0627\u0644",
+  className = "business-switch"
+}) {
+  return /* @__PURE__ */ jsxs("button", { type: "button", className, "aria-pressed": checked, onClick: () => onChange(!checked), children: [
+    /* @__PURE__ */ jsx("span", { className: "business-switch-option is-on", children: activeLabel }),
+    /* @__PURE__ */ jsx("span", { className: "business-switch-option is-off", children: inactiveLabel })
+  ] });
 }
 function SegmentedToggle({
   checked,
@@ -120,32 +129,7 @@ function SegmentedToggle({
   activeLabel = "\u0641\u0639\u0627\u0644",
   inactiveLabel = "\u063A\u06CC\u0631\u0641\u0639\u0627\u0644"
 }) {
-  return /* @__PURE__ */ jsxs("div", { className: "inline-flex rounded-full border border-slate-200 bg-slate-100 p-1", children: [
-    /* @__PURE__ */ jsx(
-      "button",
-      {
-        type: "button",
-        onClick: () => onChange(false),
-        className: cn(
-          "min-w-[92px] rounded-full px-4 py-2.5 text-sm font-black transition-all",
-          !checked ? "bg-[#a6e8ef] text-[#123b69] shadow-[0_8px_24px_rgba(148,163,184,0.18)]" : "text-slate-500"
-        ),
-        children: inactiveLabel
-      }
-    ),
-    /* @__PURE__ */ jsx(
-      "button",
-      {
-        type: "button",
-        onClick: () => onChange(true),
-        className: cn(
-          "min-w-[92px] rounded-full px-4 py-2.5 text-sm font-black transition-all",
-          checked ? "bg-[#a6e8ef] text-[#123b69] shadow-[0_8px_24px_rgba(148,163,184,0.18)]" : "text-slate-500"
-        ),
-        children: activeLabel
-      }
-    )
-  ] });
+  return /* @__PURE__ */ jsx(BusinessSwitch, { checked, onChange, activeLabel, inactiveLabel });
 }
 function PageIntro({ title, description, action }) {
   return /* @__PURE__ */ jsxs("section", { className: "page-intro", children: [
@@ -265,17 +249,22 @@ var primaryButtonStyle = {
   color: "#fff",
   boxShadow: "0 4px 12px rgba(0, 128, 128, 0.18)"
 };
-function BusinessSwitch({
-  checked,
-  onChange,
-  activeLabel = "\u0641\u0639\u0627\u0644",
-  inactiveLabel = "\u063A\u06CC\u0631\u0641\u0639\u0627\u0644",
-  className = "business-switch"
-}) {
-  return /* @__PURE__ */ jsxs("button", { type: "button", className, "aria-pressed": checked, onClick: () => onChange(!checked), children: [
-    /* @__PURE__ */ jsx("span", { className: "business-switch-option is-on", children: activeLabel }),
-    /* @__PURE__ */ jsx("span", { className: "business-switch-option is-off", children: inactiveLabel })
-  ] });
+
+// src/components/rules/rulePanelClassNames.ts
+var RULE_PANEL_FIELD_FOCUS = "focus:!border-[color:var(--theme-action-border)] focus:!ring-2 focus:!ring-[color:var(--theme-action-bg)]/20";
+var RULE_PANEL_TEXT_INPUT_CLASSNAME = [
+  "!h-14 w-full !rounded-xl !border-[color:var(--border-color)] !bg-[color:var(--surface)] !px-4 !py-0 !text-right",
+  "!text-lg !font-bold !text-[color:var(--text-strong)] !shadow-none !outline-none transition",
+  RULE_PANEL_FIELD_FOCUS
+].join(" ");
+var RULE_PANEL_SELECT_CLASSNAME = "h-14 w-full rounded-xl border border-[color:var(--border-color)] bg-[color:var(--surface)] px-4 py-0 text-right text-lg font-bold text-[color:var(--text-strong)] outline-none transition focus:border-[color:var(--theme-action-border)] focus:ring-2 focus:ring-[color:var(--theme-action-bg)]/20";
+function rulePanelNumericInputClassName(hasLeadingSuffixLabel) {
+  return [
+    "!h-14 w-full !rounded-xl !border-[color:var(--border-color)] !bg-[color:var(--surface)]",
+    hasLeadingSuffixLabel ? "!pl-20 !pr-4" : "!px-4",
+    "!text-right !text-lg !font-bold !text-[color:var(--text-strong)] !shadow-none !outline-none transition",
+    RULE_PANEL_FIELD_FOCUS
+  ].join(" ");
 }
 function formatNumericInput(value) {
   const digits = value.replace(/\D/g, "");
@@ -286,9 +275,11 @@ function RuleAmountInput({
   value,
   onChange,
   placeholder,
-  suffix = "\u062A\u0648\u0645\u0627\u0646"
+  suffix
 }) {
-  const isNumeric = suffix === "\u062A\u0648\u0645\u0627\u0646" || suffix === "%";
+  const resolvedSuffix = suffix === void 0 ? "\u062A\u0648\u0645\u0627\u0646" : suffix;
+  const showSuffixChip = resolvedSuffix.length > 0;
+  const isNumeric = resolvedSuffix === "\u062A\u0648\u0645\u0627\u0646" || resolvedSuffix === "%" || suffix === "";
   return /* @__PURE__ */ jsxs("div", { className: "relative", children: [
     /* @__PURE__ */ jsx(
       Input,
@@ -298,10 +289,10 @@ function RuleAmountInput({
         placeholder,
         inputMode: isNumeric ? "numeric" : void 0,
         dir: isNumeric ? "ltr" : void 0,
-        className: "h-11 rounded-full border-gray-200 bg-[#fcfdfd] pl-20 pr-4 text-right text-[13px] font-semibold shadow-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/10"
+        className: rulePanelNumericInputClassName(showSuffixChip)
       }
     ),
-    suffix ? /* @__PURE__ */ jsx("span", { className: "pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-xs font-medium text-slate-500", children: suffix }) : null
+    showSuffixChip ? /* @__PURE__ */ jsx("span", { className: "pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-xs font-bold text-[color:var(--text-muted)]", children: resolvedSuffix }) : null
   ] });
 }
 function RuleFieldLabel({ label, required = false, rightSlot }) {
@@ -313,7 +304,7 @@ function RuleFieldLabel({ label, required = false, rightSlot }) {
     rightSlot
   ] });
 }
-function cn2(...classes) {
+function cn(...classes) {
   return classes.filter(Boolean).join(" ");
 }
 function RuleTabButton({
@@ -327,7 +318,7 @@ function RuleTabButton({
     {
       type: "button",
       onClick,
-      className: cn2(
+      className: cn(
         "group relative flex min-w-[168px] flex-1 flex-col items-center justify-center gap-3 px-3 py-5 text-center transition",
         active ? "text-[color:var(--text-strong)]" : "text-[color:var(--text-muted)] hover:text-[color:var(--text-strong)]"
       ),
@@ -335,7 +326,7 @@ function RuleTabButton({
         /* @__PURE__ */ jsx(
           "span",
           {
-            className: cn2(
+            className: cn(
               "flex h-14 w-14 items-center justify-center rounded-full border transition",
               active ? "border-[color:var(--theme-action-border)] bg-[color:var(--theme-action-bg)] text-[color:var(--theme-action-text)]" : "border-[color:var(--border-color)] bg-[color:var(--surface)] text-[color:var(--text-muted)]"
             ),
@@ -346,7 +337,7 @@ function RuleTabButton({
         /* @__PURE__ */ jsx(
           "span",
           {
-            className: cn2(
+            className: cn(
               "absolute inset-x-4 bottom-0 h-[2px] transition",
               active ? "bg-[color:var(--theme-action-border)]" : "bg-transparent group-hover:bg-[color:var(--border-color)]"
             )
@@ -356,7 +347,7 @@ function RuleTabButton({
     }
   );
 }
-function cn3(...classes) {
+function cn2(...classes) {
   return classes.filter(Boolean).join(" ");
 }
 function TagPills({
@@ -366,7 +357,7 @@ function TagPills({
   wrap = true,
   className = ""
 }) {
-  return /* @__PURE__ */ jsx("div", { className: cn3("flex gap-2", wrap ? "flex-wrap" : "flex-nowrap overflow-x-auto pb-1", className), children: options.map((option) => {
+  return /* @__PURE__ */ jsx("div", { className: cn2("flex gap-2", wrap ? "flex-wrap" : "flex-nowrap overflow-x-auto pb-1", className), children: options.map((option) => {
     const active = value === option.value;
     return /* @__PURE__ */ jsx(
       "button",
@@ -375,7 +366,7 @@ function TagPills({
         onClick: () => onChange(option.value),
         "data-tag-pill": "true",
         "data-active": active ? "true" : "false",
-        className: cn3(
+        className: cn2(
           "inline-flex h-[36px] items-center rounded-full border px-4 text-[12px] font-bold whitespace-nowrap transition-all",
           active ? "border-[color:var(--theme-action-border)] bg-[color:var(--theme-action-bg)] text-[color:var(--theme-action-text)] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.25)]" : "border-[color:var(--border-color)] bg-[color:var(--surface)] text-[color:var(--text-muted)] hover:bg-[color:var(--surface-soft)] hover:text-[color:var(--text-strong)]"
         ),
@@ -385,7 +376,7 @@ function TagPills({
     );
   }) });
 }
-function cn4(...classes) {
+function cn3(...classes) {
   return classes.filter(Boolean).join(" ");
 }
 function SearchIcon({ className = "" }) {
@@ -444,7 +435,7 @@ function ExpandableTagGroup({
   useEffect(() => {
     if (!showSearch && searchOpen) closeSearch();
   }, [showSearch]);
-  return /* @__PURE__ */ jsxs("div", { className: cn4("space-y-2", className), children: [
+  return /* @__PURE__ */ jsxs("div", { className: cn3("space-y-2", className), children: [
     /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-2", children: [
       /* @__PURE__ */ jsxs("label", { className: "text-[13px] font-bold text-slate-700", children: [
         label,
@@ -463,7 +454,7 @@ function ExpandableTagGroup({
       showSearch ? /* @__PURE__ */ jsxs(
         "div",
         {
-          className: cn4(
+          className: cn3(
             "relative flex items-center overflow-hidden rounded-md border bg-white transition-[max-width,opacity,border-color] duration-200 ease-out",
             searchOpen ? "max-w-[176px] border-slate-300 opacity-100" : "max-w-0 border-transparent opacity-0"
           ),
@@ -507,7 +498,7 @@ function ExpandableTagGroup({
               onClick: () => onSelect(item.id),
               "data-tag-pill": "true",
               "data-active": active ? "true" : "false",
-              className: cn4(
+              className: cn3(
                 "inline-flex h-[34px] items-center rounded-full border px-4 text-[12px] font-medium whitespace-nowrap transition-all",
                 active ? "border-[color:var(--theme-action-border)] bg-[color:var(--theme-action-bg)] text-[color:var(--theme-action-text)] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.25)]" : "border-[color:var(--border-color)] bg-[color:var(--surface)] text-[color:var(--text-muted)] hover:bg-[color:var(--surface-soft)] hover:text-[color:var(--text-strong)]"
               ),
@@ -571,7 +562,7 @@ function ContractIssuerTags({
     }
   );
 }
-function cn5(...classes) {
+function cn4(...classes) {
   return classes.filter(Boolean).join(" ");
 }
 function ShareModePills({
@@ -580,7 +571,7 @@ function ShareModePills({
   onChange,
   className = ""
 }) {
-  return /* @__PURE__ */ jsxs("div", { className: cn5("flex items-center gap-3", className), children: [
+  return /* @__PURE__ */ jsxs("div", { className: cn4("flex items-center gap-3", className), children: [
     /* @__PURE__ */ jsx("div", { className: "text-[12px] font-bold text-slate-700", children: label }),
     /* @__PURE__ */ jsxs("div", { className: "inline-flex overflow-hidden rounded-full border border-slate-200 bg-white", children: [
       /* @__PURE__ */ jsx(
@@ -588,7 +579,7 @@ function ShareModePills({
         {
           type: "button",
           onClick: () => onChange("percent"),
-          className: cn5(
+          className: cn4(
             "min-w-[78px] px-4 py-2 text-[12px] font-bold transition",
             value === "percent" ? "bg-[color:var(--theme-accent-soft)] text-[color:var(--theme-accent-strong)]" : "text-slate-600 hover:bg-slate-50"
           ),
@@ -600,7 +591,7 @@ function ShareModePills({
         {
           type: "button",
           onClick: () => onChange("dang"),
-          className: cn5(
+          className: cn4(
             "min-w-[78px] px-4 py-2 text-[12px] font-bold transition",
             value === "dang" ? "bg-[color:var(--theme-accent-soft)] text-[color:var(--theme-accent-strong)]" : "text-slate-600 hover:bg-slate-50"
           ),
@@ -707,7 +698,7 @@ function StickySubmitBar({
     }
   );
 }
-function cn6(...classes) {
+function cn5(...classes) {
   return classes.filter(Boolean).join(" ");
 }
 function ChoicePills({
@@ -725,7 +716,7 @@ function ChoicePills({
     {
       role: "radiogroup",
       "aria-label": ariaLabel,
-      className: cn6("flex gap-2", wrap ? "flex-wrap" : "flex-nowrap overflow-x-auto pb-1", className),
+      className: cn5("flex gap-2", wrap ? "flex-wrap" : "flex-nowrap overflow-x-auto pb-1", className),
       children: options.map((option) => {
         const active = value === option.value;
         return /* @__PURE__ */ jsxs(
@@ -736,7 +727,7 @@ function ChoicePills({
             "aria-pressed": active,
             "data-tag-pill": "true",
             "data-active": active ? "true" : "false",
-            className: cn6(
+            className: cn5(
               "inline-flex h-[34px] items-center gap-1.5 rounded-full border px-4 text-[12px] whitespace-nowrap transition-all",
               active ? "border-[var(--theme-action-border)] bg-[var(--theme-action-bg)] font-semibold text-[#292929] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.25)]" : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50",
               pillClassName
@@ -772,7 +763,7 @@ function ChoicePills({
     }
   );
 }
-function cn7(...classes) {
+function cn6(...classes) {
   return classes.filter(Boolean).join(" ");
 }
 function ChoicePillsField({
@@ -789,8 +780,8 @@ function ChoicePillsField({
   pillClassName = "",
   showActiveIndicator
 }) {
-  return /* @__PURE__ */ jsxs("div", { className: cn7("space-y-2", className), children: [
-    /* @__PURE__ */ jsx(LabelAs, { className: cn7("text-[12px] font-bold text-[color:var(--text-strong)]", labelClassName), children: label }),
+  return /* @__PURE__ */ jsxs("div", { className: cn6("space-y-2", className), children: [
+    /* @__PURE__ */ jsx(LabelAs, { className: cn6("text-[12px] font-bold text-[color:var(--text-strong)]", labelClassName), children: label }),
     /* @__PURE__ */ jsx(
       ChoicePills,
       {
@@ -807,6 +798,6 @@ function ChoicePillsField({
   ] });
 }
 
-export { BusinessSwitch, ChoicePills, ChoicePillsField, ContractIssuerTags, ContractTypeTags, DataTable, EmptyState, ExpandableTagGroup, FormCard, Input, PageIntro, PersianDatePicker, PrimaryLink, RuleAmountInput, RuleFieldLabel, RuleTabButton, SearchableSelect, SegmentedToggle, ShareModePills, StatGrid, StickySubmitBar, TagPills, compactTextareaStyle, formControlMutedDisabledStyle, formControlStyle, formErrorStyle, formLabelStyle, formMetaLabelStyle, formStyles_exports as formStyles, outlineButtonStyle, primaryButtonStyle };
+export { BusinessSwitch, ChoicePills, ChoicePillsField, ContractIssuerTags, ContractTypeTags, DataTable, EmptyState, ExpandableTagGroup, FormCard, Input, PageIntro, PersianDatePicker, PrimaryLink, RULE_PANEL_SELECT_CLASSNAME, RULE_PANEL_TEXT_INPUT_CLASSNAME, RuleAmountInput, RuleFieldLabel, RuleTabButton, SearchableSelect, SegmentedToggle, ShareModePills, StatGrid, StickySubmitBar, TagPills, compactTextareaStyle, formControlMutedDisabledStyle, formControlStyle, formErrorStyle, formLabelStyle, formMetaLabelStyle, formStyles_exports as formStyles, outlineButtonStyle, primaryButtonStyle, rulePanelNumericInputClassName };
 //# sourceMappingURL=index.mjs.map
 //# sourceMappingURL=index.mjs.map

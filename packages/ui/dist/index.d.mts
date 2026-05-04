@@ -17,6 +17,7 @@ interface PersianDatePickerProps {
 }
 declare function PersianDatePicker({ value, onChange, placeholder, className, containerClassName, withCalendarIcon, calendarIconAriaLabel, }: PersianDatePickerProps): react_jsx_runtime.JSX.Element;
 
+/** @deprecated Use `BusinessSwitch` — this export wraps it for backwards compatibility. */
 declare function SegmentedToggle({ checked, onChange, activeLabel, inactiveLabel, }: {
     checked: boolean;
     onChange: (value: boolean) => void;
@@ -87,8 +88,18 @@ declare function RuleAmountInput({ value, onChange, placeholder, suffix, }: {
     value: string;
     onChange: (value: string) => void;
     placeholder?: string;
+    /** `undefined`: default chip `تومان`. Empty string: no chip (numeric grouping). `%`/`تومان`: chip + grouping. */
     suffix?: string;
 }): react_jsx_runtime.JSX.Element;
+
+/** Single-line text fields without a leading suffix chip. */
+declare const RULE_PANEL_TEXT_INPUT_CLASSNAME: string;
+/** Native `<select>` in the same panels. */
+declare const RULE_PANEL_SELECT_CLASSNAME = "h-14 w-full rounded-xl border border-[color:var(--border-color)] bg-[color:var(--surface)] px-4 py-0 text-right text-lg font-bold text-[color:var(--text-strong)] outline-none transition focus:border-[color:var(--theme-action-border)] focus:ring-2 focus:ring-[color:var(--theme-action-bg)]/20";
+/**
+ * Numeric / formatted amount fields; optional gutter on the physical left (`left-4`) for `%` / `تومان` chip text.
+ */
+declare function rulePanelNumericInputClassName(hasLeadingSuffixLabel: boolean): string;
 
 declare function RuleFieldLabel({ label, required, rightSlot }: {
     label: ReactNode;
@@ -211,4 +222,4 @@ type AppThemeTokens = {
     radius: string;
 };
 
-export { type AppThemeTokens, BusinessSwitch, ChoicePills, ChoicePillsField, type ChoicePillsOption, ContractIssuerTags, type ContractIssuerType, type ContractType, ContractTypeTags, DataTable, EmptyState, ExpandableTagGroup, type ExpandableTagGroupItem, FormCard, Input, type InputProps, PageIntro, PersianDatePicker, type PersianDatePickerProps, PrimaryLink, RuleAmountInput, RuleFieldLabel, RuleTabButton, SearchableSelect, type SearchableSelectOption, SegmentedToggle, type ShareMode, ShareModePills, StatGrid, StickySubmitBar, TagPills, compactTextareaStyle, formControlMutedDisabledStyle, formControlStyle, formErrorStyle, formLabelStyle, formMetaLabelStyle, formStyles, outlineButtonStyle, primaryButtonStyle };
+export { type AppThemeTokens, BusinessSwitch, ChoicePills, ChoicePillsField, type ChoicePillsOption, ContractIssuerTags, type ContractIssuerType, type ContractType, ContractTypeTags, DataTable, EmptyState, ExpandableTagGroup, type ExpandableTagGroupItem, FormCard, Input, type InputProps, PageIntro, PersianDatePicker, type PersianDatePickerProps, PrimaryLink, RULE_PANEL_SELECT_CLASSNAME, RULE_PANEL_TEXT_INPUT_CLASSNAME, RuleAmountInput, RuleFieldLabel, RuleTabButton, SearchableSelect, type SearchableSelectOption, SegmentedToggle, type ShareMode, ShareModePills, StatGrid, StickySubmitBar, TagPills, compactTextareaStyle, formControlMutedDisabledStyle, formControlStyle, formErrorStyle, formLabelStyle, formMetaLabelStyle, formStyles, outlineButtonStyle, primaryButtonStyle, rulePanelNumericInputClassName };

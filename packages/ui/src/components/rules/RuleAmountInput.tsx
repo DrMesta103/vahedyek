@@ -1,4 +1,5 @@
 import { Input } from '../Input';
+import { rulePanelNumericInputClassName } from './rulePanelClassNames';
 
 function formatNumericInput(value: string) {
   const digits = value.replace(/\D/g, '');
@@ -10,14 +11,17 @@ export function RuleAmountInput({
   value,
   onChange,
   placeholder,
-  suffix = 'تومان',
+  suffix,
 }: {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
+  /** `undefined`: default chip `تومان`. Empty string: no chip (numeric grouping). `%`/`تومان`: chip + grouping. */
   suffix?: string;
 }) {
-  const isNumeric = suffix === 'تومان' || suffix === '%';
+  const resolvedSuffix = suffix === undefined ? 'تومان' : suffix;
+  const showSuffixChip = resolvedSuffix.length > 0;
+  const isNumeric = resolvedSuffix === 'تومان' || resolvedSuffix === '%' || suffix === '';
 
   return (
     <div className="relative">
@@ -27,10 +31,11 @@ export function RuleAmountInput({
         placeholder={placeholder}
         inputMode={isNumeric ? 'numeric' : undefined}
         dir={isNumeric ? 'ltr' : undefined}
-        className="h-11 rounded-full border-gray-200 bg-[#fcfdfd] pl-20 pr-4 text-right text-[13px] font-semibold shadow-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/10"
+        className={rulePanelNumericInputClassName(showSuffixChip)}
       />
-      {suffix ? <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-xs font-medium text-slate-500">{suffix}</span> : null}
+      {showSuffixChip ? (
+        <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-xs font-bold text-[color:var(--text-muted)]">{resolvedSuffix}</span>
+      ) : null}
     </div>
   );
 }
-

@@ -22,6 +22,11 @@ export {
 
 export { BusinessSwitch } from './components/rules/BusinessSwitch';
 export { RuleAmountInput } from './components/rules/RuleAmountInput';
+export {
+  RULE_PANEL_SELECT_CLASSNAME,
+  RULE_PANEL_TEXT_INPUT_CLASSNAME,
+  rulePanelNumericInputClassName,
+} from './components/rules/rulePanelClassNames';
 export { RuleFieldLabel } from './components/rules/RuleFieldLabel';
 export { RuleTabButton } from './components/rules/RuleTabButton';
 export { TagPills } from './components/rules/TagPills';

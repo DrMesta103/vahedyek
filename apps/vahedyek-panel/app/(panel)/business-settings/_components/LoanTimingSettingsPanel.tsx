@@ -121,6 +121,7 @@ export function LoanTimingSettingsPanel() {
               icon={CalendarDays}
             />
             <LoanChoicePills
+              ariaLabel="وضعیت دریافت وام"
               options={LOAN_TIMING_OPTIONS.map((option) => ({ value: option.id, label: option.label }))}
               value={state.loanTiming}
               onChange={handleTimingChange}

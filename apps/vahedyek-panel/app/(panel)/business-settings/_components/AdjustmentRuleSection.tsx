@@ -2,20 +2,11 @@
 
 import { BadgePercent, ChartNoAxesCombined, SlidersHorizontal } from 'lucide-react';
 import type { ContractRuleState } from '../../../lib/businessContractRules';
-import { TagPills } from '../../contracts/new/_components/ContractFormPrimitives';
-import { MiniToggle as SharedMiniToggle, RuleTextInput as SharedRuleTextInput } from './RuleStylePrimitives';
+import { BusinessSwitch, ChoicePills as UiChoicePills, RuleFieldLabel, RuleTabButton } from '@repo/ui';
+import { RuleTextInput as SharedRuleTextInput } from './RuleStylePrimitives';
 
 function cn(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ');
-}
-
-function FieldLabel({ label, required = false }: { label: string; required?: boolean }) {
-  return (
-    <label className="mb-3 block text-right text-[15px] font-black text-[color:var(--text-strong)]">
-      {label}
-      {required ? <span className="mr-1 text-[#ff6b7a]">*</span> : null}
-    </label>
-  );
 }
 
 function RuleTextInput({
@@ -32,58 +23,7 @@ function RuleTextInput({
   return <SharedRuleTextInput value={value} onChange={onChange} suffix={suffix} placeholder={placeholder} />;
 }
 
-function MiniToggle({
-  checked,
-  onChange,
-}: {
-  checked: boolean;
-  onChange: (checked: boolean) => void;
-}) {
-  return <SharedMiniToggle checked={checked} onChange={onChange} />;
-}
-
-function AdjustmentTabButton({
-  title,
-  icon: Icon,
-  active,
-  onClick,
-}: {
-  title: string;
-  icon: React.ElementType;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        'group relative flex min-w-[170px] flex-1 flex-col items-center justify-center gap-3 px-3 py-5 text-center transition',
-        active ? 'text-[color:var(--text-strong)]' : 'text-[color:var(--text-muted)] hover:text-[color:var(--text-strong)]',
-      )}
-    >
-      <span
-        className={cn(
-          'flex h-14 w-14 items-center justify-center rounded-full border transition',
-          active
-            ? 'border-[color:var(--theme-action-border)] bg-[color:var(--theme-action-bg)] text-[color:var(--theme-action-text)]'
-            : 'border-[color:var(--border-color)] bg-[color:var(--surface)] text-[color:var(--text-muted)]',
-        )}
-      >
-        <Icon className="h-6 w-6" />
-      </span>
-      <span className="text-sm font-bold">{title}</span>
-      <span
-        className={cn(
-          'absolute inset-x-4 bottom-0 h-[2px] transition',
-          active ? 'bg-[color:var(--theme-action-border)]' : 'bg-transparent group-hover:bg-[color:var(--border-color)]',
-        )}
-      />
-    </button>
-  );
-}
-
-function ChoicePills({
+function AdjustmentChoicePills({
   options,
   value,
   onChange,
@@ -93,10 +33,11 @@ function ChoicePills({
   onChange: (value: string) => void;
 }) {
   return (
-    <TagPills
+    <UiChoicePills
       options={options.map((option) => ({ value: option, label: option }))}
       value={value}
-      onChange={(nextValue) => onChange(nextValue === value ? '' : nextValue)}
+      onChange={(next) => onChange(next === value ? '' : next)}
+      wrap
       className="justify-end flex-row-reverse"
     />
   );
@@ -126,7 +67,7 @@ function WeightRow({
           <h4 className="text-[17px] font-black text-[color:var(--text-strong)]">{label}</h4>
           <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">وزن این شاخص در محاسبه تعدیل</p>
         </div>
-        <MiniToggle checked={enabled} onChange={onToggle} />
+        <BusinessSwitch checked={enabled} onChange={onToggle} />
       </div>
 
       <RuleTextInput value={value} onChange={onChange} suffix="%" placeholder="۰" />
@@ -175,15 +116,15 @@ export function AdjustmentRuleSection({
             </p>
           </div>
 
-          <ChoicePills options={periodOptions} value={selectedPeriod} onChange={(value) => onValueChange('activeChip', value)} />
+          <AdjustmentChoicePills options={periodOptions} value={selectedPeriod} onChange={(value) => onValueChange('activeChip', value)} />
         </div>
       </section>
 
       <section className="overflow-visible rounded-[24px] border border-[color:var(--border-soft)] bg-[color:var(--surface)]">
         <div className="flex flex-wrap border-b border-[color:var(--border-soft)]">
-          <AdjustmentTabButton title="درصد ثابت" icon={BadgePercent} active={activeTab === 'fixed-percent'} onClick={() => onValueChange('activeTab', 'fixed-percent')} />
-          <AdjustmentTabButton title="یک شاخص مشخص" icon={ChartNoAxesCombined} active={activeTab === 'specific-indicator'} onClick={() => onValueChange('activeTab', 'specific-indicator')} />
-          <AdjustmentTabButton title="چند شاخص" icon={SlidersHorizontal} active={activeTab === 'multi-indicator'} onClick={() => onValueChange('activeTab', 'multi-indicator')} />
+          <RuleTabButton title="درصد ثابت" icon={BadgePercent} active={activeTab === 'fixed-percent'} onClick={() => onValueChange('activeTab', 'fixed-percent')} />
+          <RuleTabButton title="یک شاخص مشخص" icon={ChartNoAxesCombined} active={activeTab === 'specific-indicator'} onClick={() => onValueChange('activeTab', 'specific-indicator')} />
+          <RuleTabButton title="چند شاخص" icon={SlidersHorizontal} active={activeTab === 'multi-indicator'} onClick={() => onValueChange('activeTab', 'multi-indicator')} />
         </div>
 
         <div className="space-y-8 p-5">
@@ -193,7 +134,7 @@ export function AdjustmentRuleSection({
           {activeTab === 'fixed-percent' ? (
             <>
               <div className="space-y-4">
-                <FieldLabel label="درصد ثابت تعدیل قیمت" required />
+                <RuleFieldLabel label="درصد ثابت تعدیل قیمت" required />
                 <RuleTextInput value={String(state.values.adjustFixedPercent ?? '')} onChange={(value) => onValueChange('adjustFixedPercent', value)} suffix="%" placeholder="۱۰" />
                 <p className="text-sm leading-7 text-[color:var(--text-muted)]">درصدی که به‌عنوان مبنای محاسبه تعدیل در هر دوره در نظر گرفته می‌شود را در این بخش وارد کنید.</p>
               </div>
@@ -204,7 +145,7 @@ export function AdjustmentRuleSection({
                   <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">در صورت نیاز، یک قاعده گرد کردن برای مبلغ تعدیل انتخاب کنید. با کلیک دوباره روی تگ فعال، انتخاب برداشته می‌شود.</p>
                 </div>
 
-                <ChoicePills options={roundRuleOptions} value={selectedRoundRule} onChange={(value) => onValueChange('adjustFixedRound', value)} />
+                <AdjustmentChoicePills options={roundRuleOptions} value={selectedRoundRule} onChange={(value) => onValueChange('adjustFixedRound', value)} />
               </div>
             </>
           ) : null}
@@ -217,7 +158,7 @@ export function AdjustmentRuleSection({
                   <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">منبع داده‌ای که مبنای محاسبه تعدیل قیمت است را مشخص کنید.</p>
                 </div>
 
-                <ChoicePills options={sourceOptions} value={String(state.values.adjustIndicatorSource || '')} onChange={(value) => onValueChange('adjustIndicatorSource', value)} />
+                <AdjustmentChoicePills options={sourceOptions} value={String(state.values.adjustIndicatorSource || '')} onChange={(value) => onValueChange('adjustIndicatorSource', value)} />
               </div>
 
               <div className="space-y-5 border-t border-[color:var(--border-soft)] pt-6">
@@ -226,7 +167,7 @@ export function AdjustmentRuleSection({
                   <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">شاخصی که بر اساس آن تعدیل قیمت محاسبه می‌شود را انتخاب کنید.</p>
                 </div>
 
-                <ChoicePills options={indicatorOptions} value={String(state.values.adjustIndicatorName || '')} onChange={(value) => onValueChange('adjustIndicatorName', value)} />
+                <AdjustmentChoicePills options={indicatorOptions} value={String(state.values.adjustIndicatorName || '')} onChange={(value) => onValueChange('adjustIndicatorName', value)} />
               </div>
 
               <div className="space-y-5 border-t border-[color:var(--border-soft)] pt-6">
@@ -235,7 +176,7 @@ export function AdjustmentRuleSection({
                   <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">در صورت نیاز، یک قاعده گرد کردن برای مبلغ تعدیل انتخاب کنید. با کلیک دوباره روی تگ فعال، انتخاب برداشته می‌شود.</p>
                 </div>
 
-                <ChoicePills options={roundRuleOptions} value={selectedRoundRule} onChange={(value) => onValueChange('adjustFixedRound', value)} />
+                <AdjustmentChoicePills options={roundRuleOptions} value={selectedRoundRule} onChange={(value) => onValueChange('adjustFixedRound', value)} />
               </div>
             </>
           ) : null}
@@ -321,7 +262,7 @@ export function AdjustmentRuleSection({
                   <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">در صورت نیاز، یک قاعده گرد کردن برای مبلغ تعدیل انتخاب کنید. با کلیک دوباره روی تگ فعال، انتخاب برداشته می‌شود.</p>
                 </div>
 
-                <ChoicePills options={roundRuleOptions} value={selectedRoundRule} onChange={(value) => onValueChange('adjustFixedRound', value)} />
+                <AdjustmentChoicePills options={roundRuleOptions} value={selectedRoundRule} onChange={(value) => onValueChange('adjustFixedRound', value)} />
               </div>
             </>
           ) : null}

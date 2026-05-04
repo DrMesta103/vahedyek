@@ -123,6 +123,7 @@ export function LoanRepaymentSettingsPanel() {
               </div>
 
               <LoanChoicePills
+                ariaLabel="زمان شروع بازپرداخت"
                 options={REPAYMENT_OPTIONS.map((option) => ({ value: option.value, label: option.label }))}
                 value={state.repaymentTiming}
                 onChange={(repaymentTiming) => {

@@ -17,8 +17,18 @@ import {
   WalletCards,
 } from 'lucide-react';
 import { RULE_CONFIGS, type ContractRuleId, type ContractRuleState, type RuleField } from '../../../lib/businessContractRules';
-import { BusinessSwitch, Input, RuleAmountInput, RuleFieldLabel, RuleTabButton, TagPills } from '@repo/ui';
-import { FormDateInput } from '../../contracts/new/_components/ContractFormPrimitives';
+import {
+  BusinessSwitch,
+  ChoicePills as UiChoicePills,
+  Input,
+  PersianDatePicker,
+  RULE_PANEL_SELECT_CLASSNAME,
+  RULE_PANEL_TEXT_INPUT_CLASSNAME,
+  RuleAmountInput,
+  RuleFieldLabel,
+  RuleTabButton,
+  TagPills,
+} from '@repo/ui';
 import { AdjustmentRuleSection } from './AdjustmentRuleSection';
 import { DiscountRuleSection } from './DiscountRuleSection';
 import { ForgivenessRuleSection } from './ForgivenessRuleSection';
@@ -27,12 +37,6 @@ import { PenaltyRuleSection } from './PenaltyRuleSection';
 
 function cn(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ');
-}
-
-function formatInput(value: string) {
-  const digits = value.replace(/\D/g, '');
-  if (!digits) return '';
-  return Number(digits).toLocaleString('en-US');
 }
 
 function ContractRegistrationSwitch({
@@ -72,24 +76,17 @@ function RuleTextInput({
 
   return (
     <div className="relative">
-      <input
+      <Input
         type="text"
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
-        className={cn(
-          'h-14 w-full rounded-xl border border-[color:var(--border-color)] bg-[color:var(--surface)] text-right text-lg font-bold text-[color:var(--text-strong)] outline-none transition focus:border-[color:var(--theme-action-border)] focus:ring-2 focus:ring-[color:var(--theme-action-bg)]/20',
-          suffix || Icon ? 'pr-12 pl-4' : 'px-4',
-        )}
+        className={cn(RULE_PANEL_TEXT_INPUT_CLASSNAME, suffix || Icon ? '!pr-12' : '')}
       />
       {Icon ? <Icon className="pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[color:var(--text-muted)]" /> : null}
       {suffix ? <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xl font-black text-[color:var(--text-strong)]">{suffix}</span> : null}
     </div>
   );
-}
-
-function RuleDateInput({ value, onChange, placeholder }: { value: string; onChange: (value: string) => void; placeholder?: string }) {
-  return <FormDateInput value={value} onChange={onChange} placeholder={placeholder} className="h-14 text-right text-sm font-bold" icon={CalendarDays} />;
 }
 
 function RuleSelect({
@@ -105,7 +102,7 @@ function RuleSelect({
     <select
       value={value}
       onChange={(event) => onChange(event.target.value)}
-      className="h-14 w-full rounded-xl border border-[color:var(--border-color)] bg-[color:var(--surface)] px-4 text-right text-base font-bold text-[color:var(--text-strong)] outline-none transition focus:border-[color:var(--theme-action-border)] focus:ring-2 focus:ring-[color:var(--theme-action-bg)]/20"
+      className={RULE_PANEL_SELECT_CLASSNAME}
     >
       {options.map((option) => (
         <option key={option} value={option} className="bg-[color:var(--surface)] text-[color:var(--text-strong)]">
@@ -113,36 +110,6 @@ function RuleSelect({
         </option>
       ))}
     </select>
-  );
-}
-
-function ChoicePills({
-  options,
-  value,
-  onChange,
-}: {
-  options: string[];
-  value: string;
-  onChange: (value: string) => void;
-}) {
-  return (
-    <div className="flex flex-wrap justify-end gap-3">
-      {options.map((option) => (
-        <button
-          key={option}
-          type="button"
-          onClick={() => onChange(option)}
-          className={cn(
-            'rounded-full border px-5 py-2 text-sm font-bold transition',
-            value === option
-              ? 'border-[color:var(--theme-action-border)] bg-[color:var(--theme-action-bg)] text-[color:var(--theme-action-text)]'
-              : 'border-[color:var(--border-color)] bg-[color:var(--surface)] text-[color:var(--text-muted)] hover:border-[color:var(--theme-action-border)] hover:text-[color:var(--text-strong)]',
-          )}
-        >
-          {option}
-        </button>
-      ))}
-    </div>
   );
 }
 
@@ -405,10 +372,11 @@ function InstallmentsTabContent({
               <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">فاصله زمانی پیشنهادی بین اقساط منظم را مشخص کنید.</p>
             </div>
 
-            <TagPills
+            <UiChoicePills
               options={intervalTagOptions}
               value={String(state.values.regularInterval || intervalOptions[0])}
               onChange={(value) => onValueChange('regularInterval', value)}
+              wrap
               className="justify-end flex-row-reverse"
             />
           </div>
@@ -424,10 +392,12 @@ function InstallmentsTabContent({
 
       <div className="space-y-4">
         <FieldLabel label="تاریخ آخرین قسط" />
-        <RuleDateInput
+        <PersianDatePicker
           value={String(state.values[lastDueKey] ?? '')}
           onChange={(value) => onValueChange(lastDueKey, value)}
-          placeholder={isRegular ? '۰۲ / ۱۱ / ۱۴۰۴' : '۰۱ / ۲۶ / ۱۴۰۴'}
+          placeholder="YYYY/MM/DD"
+          containerClassName="w-full"
+          className={cn(RULE_PANEL_TEXT_INPUT_CLASSNAME, '!pr-11')}
         />
         <p className="text-right text-sm leading-7 text-[color:var(--text-muted)]">تاریخی که اقساط باید تا آن زمان به پایان برسند. تعداد و مبلغ اقساط بر اساس این تاریخ محاسبه می‌شود.</p>
       </div>
@@ -451,10 +421,11 @@ function InstallmentsTabContent({
               <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">این بازه فاصله زمانی پیشنهادی پرداخت بالونی را مشخص می‌کند.</p>
             </div>
 
-            <TagPills
+            <UiChoicePills
               options={balloonTagOptions}
               value={String(state.values[balloonWindowKey] || balloonOptions[0])}
               onChange={(value) => onValueChange(balloonWindowKey, value)}
+              wrap
               className="justify-end flex-row-reverse"
             />
           </div>
@@ -737,6 +708,13 @@ export function ContractRuleDetailsPanel({ ruleId }: { ruleId: ContractRuleId })
     return rule.tabs.find((tab) => tab.id === state.activeTab) ?? rule.tabs[0] ?? null;
   }, [rule, state]);
   const hasSelectedAdditionalCost = ruleId === 'additional-costs' && Boolean(state?.activeChip);
+  const activationHeaderLgRow =
+    ruleId === 'prepayment' ||
+    ruleId === 'installments' ||
+    ruleId === 'adjustment' ||
+    ruleId === 'discount' ||
+    ruleId === 'forgiveness' ||
+    ruleId === 'interest';
 
   const handleSave = async () => {
     if (!state) return;
@@ -779,19 +757,24 @@ export function ContractRuleDetailsPanel({ ruleId }: { ruleId: ContractRuleId })
       <div className="space-y-5 rounded-[28px] border border-[color:var(--border-color)] bg-[color:var(--surface-overlay)] p-5 shadow-[0_18px_45px_var(--shadow-soft)] backdrop-blur sm:p-6">
         {!hasSelectedAdditionalCost ? (
           <section className="rounded-[24px] border border-[color:var(--border-soft)] bg-[color:var(--surface)] p-5">
-            <div className={cn('flex flex-col gap-5 lg:items-center lg:justify-between', ruleId === 'prepayment' || ruleId === 'installments' || ruleId === 'adjustment' ? 'lg:flex-row' : 'lg:flex-row-reverse')}>
-              <div className={cn('space-y-3 text-right', ruleId === 'prepayment' || ruleId === 'installments' || ruleId === 'adjustment' ? 'w-full' : '')}>
-                <div className={cn('flex flex-wrap items-center gap-3 text-right', ruleId === 'prepayment' || ruleId === 'installments' || ruleId === 'adjustment' ? 'w-full' : 'justify-end')}>
-                  {rule.detailsLabel && ruleId !== 'prepayment' && ruleId !== 'installments' && ruleId !== 'adjustment' ? (
+            <div className="flex w-full flex-col gap-5 lg:flex-row lg:items-center lg:justify-between lg:[direction:rtl]">
+              <div className="flex min-w-0 flex-1 flex-col justify-center space-y-3 text-right [direction:rtl] lg:items-start">
+                <div className={cn('flex flex-nowrap items-end justify-start gap-3 text-right', activationHeaderLgRow ? 'w-full' : '')}>
+                  {rule.detailsLabel &&
+                  ruleId !== 'prepayment' &&
+                  ruleId !== 'installments' &&
+                  ruleId !== 'adjustment' &&
+                  ruleId !== 'discount' &&
+                  ruleId !== 'interest' ? (
                     <span className="rounded-xl bg-[color:var(--theme-accent-softer)] px-4 py-2 text-sm font-bold text-[color:var(--text-muted)]">{rule.detailsLabel}</span>
                   ) : null}
                   <h2 className="text-xl font-black text-[color:var(--text-strong)]">{rule.activationTitle}</h2>
                 </div>
-                <p className="text-sm leading-7 text-[color:var(--text-muted)]">{rule.activationDescription}</p>
-                {!state.active ? <p className="text-sm text-[color:var(--text-muted)]">با فعال کردن این گزینه، جزئیات این بخش برای کاربر نمایش داده می‌شود.</p> : null}
+                <p className="w-full text-sm leading-7 text-[color:var(--text-muted)]">{rule.activationDescription}</p>
+                {!state.active ? <p className="w-full text-sm text-[color:var(--text-muted)]">با فعال کردن این گزینه، جزئیات این بخش برای کاربر نمایش داده می‌شود.</p> : null}
               </div>
 
-              <div className={cn('self-end lg:self-auto', ruleId === 'prepayment' || ruleId === 'installments' || ruleId === 'adjustment' ? 'self-start lg:self-start' : '')}>
+              <div className="shrink-0 self-end lg:self-auto">
                 <ContractRegistrationSwitch checked={state.active} onChange={(value) => applyPanelValue(setState, 'active', value)} />
               </div>
             </div>
@@ -803,10 +786,12 @@ export function ContractRuleDetailsPanel({ ruleId }: { ruleId: ContractRuleId })
             {rule.chips?.length && ruleId !== 'adjustment' ? (
               <section className="rounded-[24px] border border-[color:var(--border-soft)] bg-[color:var(--surface)] p-5">
                 <div className="mb-4 text-right text-base font-black text-[color:var(--text-strong)]">بازه اثرگذاری</div>
-                <ChoicePills
-                  options={rule.chips}
+                <UiChoicePills
+                  options={rule.chips.map((chip) => ({ value: chip, label: chip }))}
                   value={String(state.activeChip || rule.chips[0])}
                   onChange={(value) => applyPanelValue(setState, 'activeChip', value)}
+                  wrap
+                  className="justify-end flex-row-reverse"
                 />
               </section>
             ) : null}

@@ -3,17 +3,10 @@
 import Link from 'next/link';
 import { ChevronDown, Save, type LucideIcon } from 'lucide-react';
 import { useState } from 'react';
-import { Input, PersianDatePicker } from '@repo/ui';
-import { TagPills } from '../../contracts/new/_components/ContractFormPrimitives';
+import { ChoicePills as UiChoicePills, PersianDatePicker, RULE_PANEL_TEXT_INPUT_CLASSNAME, RuleAmountInput } from '@repo/ui';
 
 export function cn(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ');
-}
-
-export function formatInput(value: string) {
-  const digits = value.replace(/\D/g, '');
-  if (!digits) return '';
-  return Number(digits).toLocaleString('en-US');
 }
 
 export function LoanPageShell({
@@ -192,19 +185,7 @@ export function FinancialAmountInput({
   placeholder?: string;
   suffix: string;
 }) {
-  return (
-    <div className="relative">
-      <Input
-        value={value}
-        onChange={(event) => onChange(formatInput(event.target.value))}
-        placeholder={placeholder}
-        inputMode="numeric"
-        dir="ltr"
-        className="h-11 rounded-full border-gray-200 bg-[#fcfdfd] pl-20 pr-4 text-right text-[13px] font-semibold shadow-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/10"
-      />
-      <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-xs font-medium text-slate-500">{suffix}</span>
-    </div>
-  );
+  return <RuleAmountInput value={value} onChange={onChange} placeholder={placeholder} suffix={suffix} />;
 }
 
 export function LoanDateInput({
@@ -221,7 +202,8 @@ export function LoanDateInput({
       value={value}
       onChange={onChange}
       placeholder={placeholder ?? 'انتخاب تاریخ'}
-      className="h-14 rounded-xl border border-[color:var(--border-color)] bg-[color:var(--surface)] pr-4 pl-4 text-right text-sm font-bold text-[color:var(--text-strong)] shadow-none focus:border-[color:var(--theme-action-border)] focus:ring-2 focus:ring-[color:var(--theme-action-bg)]/20"
+      containerClassName="w-full"
+      className={`${RULE_PANEL_TEXT_INPUT_CLASSNAME} !pr-11`}
     />
   );
 }
@@ -230,12 +212,23 @@ export function LoanChoicePills<T extends string>({
   options,
   value,
   onChange,
+  ariaLabel,
 }: {
   options: { value: T; label: string }[];
   value: T;
   onChange: (value: T) => void;
+  ariaLabel?: string;
 }) {
-  return <TagPills options={options} value={value} onChange={onChange} className="justify-end flex-row-reverse" />;
+  return (
+    <UiChoicePills
+      ariaLabel={ariaLabel}
+      options={options}
+      value={value}
+      onChange={onChange}
+      wrap
+      className="justify-end flex-row-reverse"
+    />
+  );
 }
 
 export function CollapsibleTagSelector<T extends string>({
@@ -278,6 +271,7 @@ export function CollapsibleTagSelector<T extends string>({
       {expanded ? (
         <div className="border-t border-[color:var(--border-soft)] px-3 py-4">
           <LoanChoicePills
+            ariaLabel={title}
             options={options}
             value={(value ?? options[0]?.value) as T}
             onChange={(nextValue) => {

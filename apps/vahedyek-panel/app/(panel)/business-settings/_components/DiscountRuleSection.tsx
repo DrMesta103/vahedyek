@@ -78,7 +78,6 @@ function TopCard({
       onClick={onClick}
       className="flex items-start justify-between gap-4 rounded-[20px] border border-[color:var(--border-soft)] bg-[color:var(--surface)] px-5 py-5 text-right transition hover:border-[color:var(--theme-action-border)] hover:bg-[color:var(--surface-soft)]"
     >
-      <ChevronLeft className="mt-1 h-5 w-5 text-[color:var(--text-muted)]" />
       <div className="flex-1">
         <div className="flex flex-wrap items-center justify-end gap-3">
           <h3 className="text-lg font-black text-[color:var(--text-strong)]">{title}</h3>
@@ -86,6 +85,7 @@ function TopCard({
         </div>
         <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">{description}</p>
       </div>
+      <ChevronLeft className="mt-1 h-5 w-5 shrink-0 text-[color:var(--text-muted)]" />
     </button>
   );
 }
@@ -169,6 +169,7 @@ export function DiscountRuleSection({
   const entryId = String(state.values.discountEntryId || '');
   const valueMode = String(state.values.discountValueMode || 'percent') as DiscountValueMode;
   const managerApproval = Boolean(state.values.discountManagerApproval);
+  const discountConditionConfigured = Boolean(state.values.discountConditionConfigured);
 
   useEffect(() => {
     if (!state.values.discountScope) onValueChange('discountScope', 'whole');
@@ -226,6 +227,9 @@ export function DiscountRuleSection({
         <div className="space-y-5">
           <section className="rounded-[24px] border border-[color:var(--border-soft)] bg-[color:var(--surface)] p-5">
             <div className="flex items-center justify-between gap-4">
+              <div className="text-right">
+                <h3 className="text-xl font-black text-[color:var(--text-strong)]">اعمال تخفیف روی مبلغ پایه قرارداد</h3>
+              </div>
               <button
                 type="button"
                 onClick={() => onValueChange('activeChip', '')}
@@ -234,9 +238,6 @@ export function DiscountRuleSection({
                 <ChevronLeft className="h-4 w-4" />
                 بازگشت
               </button>
-              <div className="text-right">
-                <h3 className="text-xl font-black text-[color:var(--text-strong)]">اعمال تخفیف روی مبلغ پایه قرارداد</h3>
-              </div>
             </div>
           </section>
 
@@ -292,6 +293,10 @@ export function DiscountRuleSection({
     <div className="space-y-5">
       <section className="rounded-[24px] border border-[color:var(--border-soft)] bg-[color:var(--surface)] p-5">
         <div className="flex items-center justify-between gap-4">
+          <div className="text-right">
+            <h3 className="text-xl font-black text-[color:var(--text-strong)]">{detailTitle}</h3>
+            {selectedEntry?.description ? <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">{selectedEntry.description}</p> : null}
+          </div>
           <button
             type="button"
             onClick={() => {
@@ -306,10 +311,6 @@ export function DiscountRuleSection({
             <ChevronLeft className="h-4 w-4" />
             بازگشت
           </button>
-          <div className="text-right">
-            <h3 className="text-xl font-black text-[color:var(--text-strong)]">{detailTitle}</h3>
-            {selectedEntry?.description ? <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">{selectedEntry.description}</p> : null}
-          </div>
         </div>
       </section>
 
@@ -351,27 +352,31 @@ export function DiscountRuleSection({
           <div className="border-t border-[#415769] pt-6">
             <button
               type="button"
-              onClick={() => onValueChange('discountConditionConfigured', !Boolean(state.values.discountConditionConfigured))}
+              onClick={() => onValueChange('discountConditionConfigured', !discountConditionConfigured)}
               className="flex w-full items-center justify-between rounded-[20px] border border-[color:var(--border-soft)] bg-[color:var(--surface)] px-5 py-5 text-right transition hover:border-[color:var(--theme-action-border)] hover:bg-[color:var(--surface-soft)]"
             >
-              <ChevronLeft className="h-5 w-5 text-[color:var(--text-muted)]" />
               <div className="flex-1">
                 <div className="flex flex-wrap items-center justify-between gap-4">
-                  <span className="rounded-full border border-[color:var(--theme-action-border)] px-3 py-1 text-xs font-bold text-[color:var(--theme-action-text)]">تنظیمات انجام‌شده</span>
+                  {discountConditionConfigured ? (
+                    <span className="rounded-full border border-[color:var(--theme-action-border)] px-3 py-1 text-xs font-bold text-[color:var(--theme-action-text)]">
+                      تنظیمات انجام‌شده
+                    </span>
+                  ) : null}
                   <h3 className="text-lg font-black text-[color:var(--text-strong)]">شرط تخفیف و خوش‌حسابی تخفیف</h3>
                 </div>
                 <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">در این بخش می‌توانید مشخص کنید که تحت چه شرایطی می‌خواهید تخفیف برای کاربر در نظر بگیرید.</p>
               </div>
+              <ChevronLeft className="h-5 w-5 shrink-0 text-[color:var(--text-muted)]" />
             </button>
           </div>
 
           <div className="space-y-5 border-t border-[#415769] pt-6">
             <div className="flex items-start justify-between gap-4">
-              <MiniToggle checked={managerApproval} onChange={(value) => onValueChange('discountManagerApproval', value)} />
               <div className="text-right">
                 <h3 className="text-[18px] font-black text-[color:var(--text-strong)]">تایید مدیر برای تخفیف‌های بزرگ</h3>
                 <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">در صورت فعال بودن، تخفیف‌های بالاتر از یک حد مشخص فقط با تایید نقش‌های مدیریتی انجام می‌شود.</p>
               </div>
+              <MiniToggle checked={managerApproval} onChange={(value) => onValueChange('discountManagerApproval', value)} />
             </div>
 
             {managerApproval ? (

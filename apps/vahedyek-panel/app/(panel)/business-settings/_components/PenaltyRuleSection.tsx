@@ -8,9 +8,9 @@ import {
   CircleDollarSign,
   CirclePercent,
 } from 'lucide-react';
+import { BusinessSwitch, ChoicePills, Input, RULE_PANEL_TEXT_INPUT_CLASSNAME, RuleAmountInput, RuleFieldLabel, RuleTabButton } from '@repo/ui';
 import type { ContractRuleState } from '../../../lib/businessContractRules';
 import { PENALTY_ITEMS } from '../../contracts/new/_components/penaltiesConfig';
-import { RuleTextInput as SharedRuleTextInput, SegmentedToggle as SharedSegmentedToggle } from './RuleStylePrimitives';
 
 type PenaltyMode = 'fixed' | 'debt-percent' | 'contract-percent' | 'progressive';
 type RoundRule = '0.0' | '0.00' | 'کسر 100' | 'کسر 1000';
@@ -19,6 +19,26 @@ type ExtraFeeType = 'درصد' | 'مبلغ ثابت';
 const PERIOD_OPTIONS = ['روزانه', 'ماهانه', 'سالانه'] as const;
 const ROUND_RULE_OPTIONS: RoundRule[] = ['0.0', '0.00', 'کسر 100', 'کسر 1000'];
 const EXTRA_FEE_TYPES: ExtraFeeType[] = ['درصد', 'مبلغ ثابت'];
+
+function RulePlainTextInput({
+  value,
+  onChange,
+  placeholder,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+}) {
+  return (
+    <Input
+      type="text"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      className={RULE_PANEL_TEXT_INPUT_CLASSNAME}
+    />
+  );
+}
 
 const MODE_OPTIONS: Array<{
   id: PenaltyMode;
@@ -56,112 +76,8 @@ const PROGRESSIVE_DEFAULT_ROWS = [
   { fromKey: 'penaltyProgressiveRow1From', toKey: 'penaltyProgressiveRow1To', rateKey: 'penaltyProgressiveRow1Rate', from: '1', to: '4', rate: '0.5' },
   { fromKey: 'penaltyProgressiveRow2From', toKey: 'penaltyProgressiveRow2To', rateKey: 'penaltyProgressiveRow2Rate', from: '5', to: '6', rate: '0.5' },
   { fromKey: 'penaltyProgressiveRow3From', toKey: 'penaltyProgressiveRow3To', rateKey: 'penaltyProgressiveRow3Rate', from: '7', to: '45', rate: '3.3' },
-  { fromKey: 'penaltyProgressiveRow4From', toKey: 'penaltyProgressiveRow4To', rateKey: 'penaltyProgressiveRow4Rate', from: '', to: '', rate: '' },
+  { fromKey: 'penaltyProgressiveRow4From', toKey: 'penaltyProgressiveRow4To', rateKey: 'penaltyProgressiveRow4Rate', from: '', to: '', rate: ''   },
 ];
-
-function cn(...classes: Array<string | false | null | undefined>) {
-  return classes.filter(Boolean).join(' ');
-}
-
-function FieldLabel({ label, required = true }: { label: string; required?: boolean }) {
-  return (
-    <label className="mb-3 block text-right text-[13px] font-bold text-slate-700">
-      {label}
-      {required ? <span className="mr-1 text-[#ff6b7a]">*</span> : null}
-    </label>
-  );
-}
-
-function RuleTextInput({
-  value,
-  onChange,
-  placeholder,
-  suffix,
-}: {
-  value: string;
-  onChange: (value: string) => void;
-  placeholder?: string;
-  suffix?: string;
-}) {
-  return <SharedRuleTextInput value={value} onChange={onChange} placeholder={placeholder} suffix={suffix} />;
-}
-
-function SegmentedToggle({
-  checked,
-  onChange,
-  activeLabel = 'فعال',
-  inactiveLabel = 'غیرفعال',
-}: {
-  checked: boolean;
-  onChange: (value: boolean) => void;
-  activeLabel?: string;
-  inactiveLabel?: string;
-}) {
-  return <SharedSegmentedToggle checked={checked} onChange={onChange} activeLabel={activeLabel} inactiveLabel={inactiveLabel} />;
-}
-
-function ChoicePills({
-  options,
-  value,
-  onChange,
-}: {
-  options: readonly string[];
-  value: string;
-  onChange: (value: string) => void;
-}) {
-  return (
-    <div className="flex flex-wrap justify-end gap-3">
-      {options.map((option) => (
-        <button
-          key={option}
-          type="button"
-          onClick={() => onChange(option)}
-          className={cn(
-            'rounded-full border px-5 py-2 text-sm font-bold transition',
-            value === option ? 'border-[#a6e8ef] bg-[#a6e8ef] text-[#123b69]' : 'border-[#6e86a3] bg-white text-[#314a67] hover:bg-slate-50',
-          )}
-        >
-          {value === option ? <span className="ml-2">✓</span> : null}
-          {option}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-function PenaltyModeTab({
-  title,
-  icon: Icon,
-  active,
-  onClick,
-}: {
-  title: string;
-  icon: ElementType;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        'group relative flex min-w-[168px] flex-1 flex-col items-center justify-center gap-3 px-3 py-5 text-center transition',
-        active ? 'text-slate-800' : 'text-slate-500 hover:text-slate-800',
-      )}
-    >
-      <span
-        className={cn(
-          'flex h-14 w-14 items-center justify-center rounded-full border transition',
-          active ? 'border-[#a6e8ef] bg-[#a6e8ef] text-[#123b69]' : 'border-slate-200 bg-white text-slate-500',
-        )}
-      >
-        <Icon className="h-6 w-6" />
-      </span>
-      <span className="text-sm font-bold">{title}</span>
-      <span className={cn('absolute inset-x-4 bottom-0 h-[2px] transition', active ? 'bg-[#a6e8ef]' : 'bg-transparent group-hover:bg-slate-200')} />
-    </button>
-  );
-}
 
 function ProgressRow({
   from,
@@ -177,19 +93,19 @@ function ProgressRow({
   return (
     <div className="grid gap-4 lg:grid-cols-[1fr_24px_170px_170px] lg:items-end">
       <div className="space-y-3">
-        <FieldLabel label="نرخ جریمه" />
-        <RuleTextInput value={rate} onChange={(value) => onChange('rate', value)} suffix="%" />
+        <RuleFieldLabel label="نرخ جریمه" required />
+        <RuleAmountInput value={rate} onChange={(value) => onChange('rate', value)} suffix="%" />
         <p className="text-right text-xs text-[color:var(--text-muted)]">مثال: ۰.۵٪</p>
       </div>
       <div className="hidden pb-8 text-center text-2xl text-[color:var(--text-muted)] lg:block">-</div>
       <div className="space-y-3">
-        <FieldLabel label="تا" />
-        <RuleTextInput value={to} onChange={(value) => onChange('to', value)} placeholder="تا روز" />
+        <RuleFieldLabel label="تا" required />
+        <RulePlainTextInput value={to} onChange={(value) => onChange('to', value)} placeholder="تا روز" />
         <p className="text-right text-xs text-[color:var(--text-muted)]">مثال: تا ۵۰ روز تاخیر</p>
       </div>
       <div className="space-y-3">
-        <FieldLabel label="از" />
-        <RuleTextInput value={from} onChange={(value) => onChange('from', value)} placeholder="از روز" />
+        <RuleFieldLabel label="از" required />
+        <RulePlainTextInput value={from} onChange={(value) => onChange('from', value)} placeholder="از روز" />
         <p className="text-right text-xs text-[color:var(--text-muted)]">مثال: از ۱ روز تاخیر</p>
       </div>
     </div>
@@ -223,14 +139,14 @@ function ExtraFeeCard({
           <p className="text-sm leading-7 text-[color:var(--text-muted)]">مبلغ یا درصد ثابتی که علاوه بر جریمه تاخیر برای هر شرط معوق اعمال می‌شود.</p>
         </div>
 
-        <SegmentedToggle checked={enabled} onChange={onEnabledChange} />
+        <BusinessSwitch checked={enabled} onChange={onEnabledChange} />
       </div>
 
       {enabled ? (
         <div className="space-y-5">
           <div className="space-y-4">
             <h4 className="text-right text-lg font-black text-[color:var(--text-strong)]">مشخص کنید بر اساس درصد می‌باشد یا مبلغ ثابت</h4>
-            <SegmentedToggle
+            <BusinessSwitch
               checked={feeType === 'درصد'}
               onChange={(value) => onFeeTypeChange(value ? 'درصد' : 'مبلغ ثابت')}
               activeLabel="درصد"
@@ -239,14 +155,21 @@ function ExtraFeeCard({
           </div>
 
           <div className="space-y-4">
-            <FieldLabel label="جریمه بالاسری" />
-            <RuleTextInput value={amount} onChange={onAmountChange} suffix={feeType === 'درصد' ? '%' : 'تومان'} />
+            <RuleFieldLabel label="جریمه بالاسری" required />
+            <RuleAmountInput value={amount} onChange={onAmountChange} suffix={feeType === 'درصد' ? '%' : 'تومان'} />
             <p className="text-right text-sm text-[color:var(--text-muted)]">این مبلغ یک‌بار هنگام اولین تاخیر برای هر سررسید اعمال می‌شود.</p>
           </div>
 
           <div className="space-y-4 border-t border-[color:var(--border-soft)] pt-5">
             <h4 className="text-right text-lg font-black text-[color:var(--text-strong)]">قاعده گرد کردن مبلغ هزینه دیرکرد</h4>
-            <ChoicePills options={ROUND_RULE_OPTIONS} value={roundRule} onChange={onRoundRuleChange} />
+            <ChoicePills
+              options={ROUND_RULE_OPTIONS.map((option) => ({ value: option, label: option }))}
+              value={roundRule as RoundRule}
+              onChange={(value) => onRoundRuleChange(value)}
+              wrap
+              className="justify-end flex-row-reverse"
+              aria-label="قاعده گرد کردن هزینه دیرکرد"
+            />
             <p className="text-right text-sm text-[color:var(--text-muted)]">مشخص می‌کند عدد نهایی هزینه دیرکرد به چه واحدی گرد شود، مثل گرد کردن به ۱۰۰ یا ۱۰۰۰ تومان.</p>
           </div>
         </div>
@@ -327,7 +250,7 @@ export function PenaltyRuleSection({
 
   if (!selectedPenalty) {
     return (
-      <section className="space-y-5 rounded-[24px] border border-slate-200 bg-white p-5">
+      <section className="space-y-5 rounded-[24px] border border-[color:var(--border-soft)] bg-[color:var(--surface)] p-5">
         <div className="grid gap-3 lg:grid-cols-2">
           {PENALTY_ITEMS.map((item) => (
             <button
@@ -339,14 +262,14 @@ export function PenaltyRuleSection({
               }}
               className="flex items-start justify-between gap-4 rounded-[20px] border border-[color:var(--border-soft)] bg-[color:var(--surface)] px-5 py-5 text-right transition hover:border-[color:var(--theme-action-border)] hover:bg-[color:var(--surface-soft)]"
             >
-              <ChevronLeft className="mt-1 h-5 w-5 text-[color:var(--text-muted)]" />
               <div className="flex-1">
-                <div className="flex flex-wrap items-center justify-end gap-3">
+                <div className="flex flex-col flex-nowrap items-start justify-center gap-3">
                   <h3 className="text-lg font-black text-[color:var(--text-strong)]">{item.title}</h3>
-                  <span className="rounded-full border border-[#11b5c9] px-3 py-1 text-xs font-bold text-[#11d1e6]">تنظیمات انجام‌شده</span>
+                  <span className="rounded-xl bg-[color:var(--theme-accent-softer)] px-3 py-1 text-xs font-bold text-[color:var(--text-muted)]">تنظیمات انجام‌شده</span>
                 </div>
                 <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">{item.description}</p>
               </div>
+              <ChevronLeft className="mt-1 h-5 w-5 shrink-0 text-[color:var(--text-muted)]" />
             </button>
           ))}
         </div>
@@ -356,8 +279,13 @@ export function PenaltyRuleSection({
 
   return (
     <div className="space-y-5">
-      <section className="rounded-[24px] border border-slate-200 bg-white p-5">
+      <section className="rounded-[24px] border border-[color:var(--border-soft)] bg-[color:var(--surface)] p-5">
         <div className="flex items-center justify-between gap-4">
+          <div className="text-right">
+            <h3 className="text-xl font-black text-[color:var(--text-strong)]">{selectedPenalty.title}</h3>
+            <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">{selectedPenalty.description}</p>
+          </div>
+
           <button
             type="button"
             onClick={() => onValueChange('activeChip', '')}
@@ -366,18 +294,13 @@ export function PenaltyRuleSection({
             <ChevronLeft className="h-4 w-4" />
             بازگشت به لیست جرایم
           </button>
-
-          <div className="text-right">
-            <h3 className="text-xl font-black text-[color:var(--text-strong)]">{selectedPenalty.title}</h3>
-            <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">{selectedPenalty.description}</p>
-          </div>
         </div>
       </section>
 
-      <section className="overflow-hidden rounded-[24px] border border-slate-200 bg-white">
-        <div className="flex flex-wrap border-b border-slate-100">
+      <section className="overflow-hidden rounded-[24px] border border-[color:var(--border-soft)] bg-[color:var(--surface)]">
+        <div className="flex flex-wrap border-b border-[color:var(--border-soft)]">
           {MODE_OPTIONS.map((mode) => (
-            <PenaltyModeTab
+            <RuleTabButton
               key={mode.id}
               title={mode.title}
               icon={mode.icon}
@@ -397,23 +320,26 @@ export function PenaltyRuleSection({
             </div>
 
             <ChoicePills
-              options={PERIOD_OPTIONS}
-              value={String(state.values[keys.periodKey] || PERIOD_OPTIONS[0])}
+              options={PERIOD_OPTIONS.map((option) => ({ value: option, label: option }))}
+              value={String(state.values[keys.periodKey] || PERIOD_OPTIONS[0]) as (typeof PERIOD_OPTIONS)[number]}
               onChange={(value) => onValueChange(keys.periodKey, value)}
+              wrap
+              className="justify-end flex-row-reverse"
+              aria-label="دوره محاسبه جریمه"
             />
           </section>
 
           {currentMode.id === 'fixed' ? (
             <div className="space-y-6">
               <div className="space-y-4">
-                <FieldLabel label="مبلغ ثابت جریمه" />
-                <RuleTextInput value={String(state.values[keys.amountKey!] ?? '')} onChange={(value) => onValueChange(keys.amountKey!, value)} suffix="تومان" />
+                <RuleFieldLabel label="مبلغ ثابت جریمه" required />
+                <RuleAmountInput value={String(state.values[keys.amountKey!] ?? '')} onChange={(value) => onValueChange(keys.amountKey!, value)} suffix="تومان" />
                 <p className="text-right text-sm text-[color:var(--text-muted)]">مبلغی که برای هر دوره تاخیر به‌عنوان جریمه در نظر گرفته می‌شود.</p>
               </div>
 
               <div className="space-y-4">
-                <FieldLabel label="مهلت تنفس (بدون جریمه)" />
-                <RuleTextInput value={String(state.values[keys.graceKey] ?? '')} onChange={(value) => onValueChange(keys.graceKey, value)} />
+                <RuleFieldLabel label="مهلت تنفس (بدون جریمه)" required />
+                <RulePlainTextInput value={String(state.values[keys.graceKey] ?? '')} onChange={(value) => onValueChange(keys.graceKey, value)} />
                 <p className="text-right text-sm text-[color:var(--text-muted)]">تعداد روزهایی که پس از سررسید بدون محاسبه جریمه به خریدار مهلت داده می‌شود.</p>
               </div>
             </div>
@@ -422,26 +348,33 @@ export function PenaltyRuleSection({
           {currentMode.id === 'debt-percent' || currentMode.id === 'contract-percent' ? (
             <div className="space-y-6">
               <div className="space-y-4">
-                <FieldLabel label="درصد جریمه" />
-                <RuleTextInput value={String(state.values[keys.percentKey!] ?? '')} onChange={(value) => onValueChange(keys.percentKey!, value)} suffix="%" />
+                <RuleFieldLabel label="درصد جریمه" required />
+                <RuleAmountInput value={String(state.values[keys.percentKey!] ?? '')} onChange={(value) => onValueChange(keys.percentKey!, value)} suffix="%" />
                 <p className="text-right text-sm text-[color:var(--text-muted)]">درصد جریمه‌ای که برای دوره انتخاب‌شده اعمال می‌شود.</p>
               </div>
 
               <div className="space-y-4">
-                <FieldLabel label="درصد سود بانکی" />
-                <RuleTextInput value={String(state.values[keys.bankKey!] ?? '')} onChange={(value) => onValueChange(keys.bankKey!, value)} suffix="%" />
+                <RuleFieldLabel label="درصد سود بانکی" required />
+                <RuleAmountInput value={String(state.values[keys.bankKey!] ?? '')} onChange={(value) => onValueChange(keys.bankKey!, value)} suffix="%" />
                 <p className="text-right text-sm text-[color:var(--text-muted)]">در این بخش منظور سود بانکی‌ای که می‌خواهید به درصد جریمه اضافه شود را وارد کنید.</p>
               </div>
 
               <div className="space-y-4">
-                <FieldLabel label="مهلت تنفس (بدون جریمه)" />
-                <RuleTextInput value={String(state.values[keys.graceKey] ?? '')} onChange={(value) => onValueChange(keys.graceKey, value)} />
+                <RuleFieldLabel label="مهلت تنفس (بدون جریمه)" required />
+                <RulePlainTextInput value={String(state.values[keys.graceKey] ?? '')} onChange={(value) => onValueChange(keys.graceKey, value)} />
                 <p className="text-right text-sm text-[color:var(--text-muted)]">تعداد روزهایی که پس از سررسید قسط بدون محاسبه جریمه مهلت داده می‌شود.</p>
               </div>
 
               <div className="space-y-4 border-t border-[color:var(--border-soft)] pt-5">
                 <h3 className="text-right text-[17px] font-black text-[color:var(--text-strong)]">قاعده گرد کردن مبلغ جریمه</h3>
-                <ChoicePills options={ROUND_RULE_OPTIONS} value={String(state.values[keys.roundKey!] || ROUND_RULE_OPTIONS[0])} onChange={(value) => onValueChange(keys.roundKey!, value)} />
+                <ChoicePills
+                  options={ROUND_RULE_OPTIONS.map((option) => ({ value: option, label: option }))}
+                  value={String(state.values[keys.roundKey!] || ROUND_RULE_OPTIONS[0]) as RoundRule}
+                  onChange={(value) => onValueChange(keys.roundKey!, value)}
+                  wrap
+                  className="justify-end flex-row-reverse"
+                  aria-label="قاعده گرد کردن مبلغ جریمه"
+                />
                 <p className="text-right text-sm text-[color:var(--text-muted)]">مشخص می‌کند عدد نهایی جریمه پس از محاسبه به چه واحدی گرد شود، مثل گرد کردن به ۱۰۰ یا ۱۰۰۰ تومان.</p>
               </div>
             </div>
@@ -450,14 +383,14 @@ export function PenaltyRuleSection({
           {currentMode.id === 'progressive' ? (
             <div className="space-y-6">
               <div className="space-y-4">
-                <FieldLabel label="درصد سود بانکی" />
-                <RuleTextInput value={String(state.values[keys.bankKey!] ?? '')} onChange={(value) => onValueChange(keys.bankKey!, value)} suffix="%" />
+                <RuleFieldLabel label="درصد سود بانکی" required />
+                <RuleAmountInput value={String(state.values[keys.bankKey!] ?? '')} onChange={(value) => onValueChange(keys.bankKey!, value)} suffix="%" />
                 <p className="text-right text-sm text-[color:var(--text-muted)]">در این بخش مقدار سود بانکی که به درصد جریمه اضافه شود را وارد کنید تا به صورت جداگانه محاسبه شود.</p>
               </div>
 
               <div className="space-y-4">
-                <FieldLabel label="مهلت تنفس (بدون جریمه)" />
-                <RuleTextInput value={String(state.values[keys.graceKey] ?? '')} onChange={(value) => onValueChange(keys.graceKey, value)} />
+                <RuleFieldLabel label="مهلت تنفس (بدون جریمه)" required />
+                <RulePlainTextInput value={String(state.values[keys.graceKey] ?? '')} onChange={(value) => onValueChange(keys.graceKey, value)} />
                 <p className="text-right text-sm text-[color:var(--text-muted)]">تعداد روزهایی که پس از سررسید بدون محاسبه جریمه به خریدار مهلت داده می‌شود.</p>
               </div>
 
@@ -494,7 +427,14 @@ export function PenaltyRuleSection({
 
               <div className="space-y-4 border-t border-[color:var(--border-soft)] pt-5">
                 <h3 className="text-right text-[17px] font-black text-[color:var(--text-strong)]">قاعده گرد کردن مبلغ جریمه</h3>
-                <ChoicePills options={ROUND_RULE_OPTIONS} value={String(state.values[keys.roundKey!] || ROUND_RULE_OPTIONS[0])} onChange={(value) => onValueChange(keys.roundKey!, value)} />
+                <ChoicePills
+                  options={ROUND_RULE_OPTIONS.map((option) => ({ value: option, label: option }))}
+                  value={String(state.values[keys.roundKey!] || ROUND_RULE_OPTIONS[0]) as RoundRule}
+                  onChange={(value) => onValueChange(keys.roundKey!, value)}
+                  wrap
+                  className="justify-end flex-row-reverse"
+                  aria-label="قاعده گرد کردن مبلغ جریمه — تصاعدی"
+                />
                 <p className="text-right text-sm text-[color:var(--text-muted)]">مشخص می‌کند عدد نهایی جریمه پس از محاسبه به چه واحدی گرد شود، مثل گرد کردن به ۱۰۰ یا ۱۰۰۰ تومان.</p>
               </div>
             </div>
