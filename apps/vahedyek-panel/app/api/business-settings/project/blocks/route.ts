@@ -34,7 +34,12 @@ type DbBlock = {
   mainPlate: string | null;
   subPlate: string | null;
   status: string;
-  usageCounts: unknown;
+  residentialCount: number;
+  commercialCount: number;
+  officeCount: number;
+  parkingCount: number;
+  storageCount: number;
+  amenityCount: number;
   unitCount: number;
   floorCount: number;
 };
@@ -72,8 +77,12 @@ function mapBlock(block: DbBlock) {
     subPlate: block.subPlate ?? '',
     status: block.status,
     usageCounts: {
-      ...DEFAULT_USAGE_COUNTS,
-      ...(typeof block.usageCounts === 'object' && block.usageCounts ? block.usageCounts : {}),
+      residential: Number(block.residentialCount ?? 0),
+      commercial: Number(block.commercialCount ?? 0),
+      office: Number(block.officeCount ?? 0),
+      parking: Number(block.parkingCount ?? 0),
+      storage: Number(block.storageCount ?? 0),
+      amenity: Number(block.amenityCount ?? 0),
     },
     unitCount: Number(block.unitCount ?? 0),
     floorCount: Number(block.floorCount ?? 0),
@@ -88,14 +97,19 @@ async function getBlocks(tenantId: string) {
       b."mainPlate",
       b."subPlate",
       b."status",
-      b."usageCounts",
+      COUNT(DISTINCT u."id") FILTER (WHERE u."category" = 'unit' AND u."usage" = 'residential')::int AS "residentialCount",
+      COUNT(DISTINCT u."id") FILTER (WHERE u."category" = 'unit' AND u."usage" = 'commercial')::int AS "commercialCount",
+      COUNT(DISTINCT u."id") FILTER (WHERE u."category" = 'unit' AND u."usage" = 'office')::int AS "officeCount",
+      COUNT(DISTINCT u."id") FILTER (WHERE u."category" = 'parking')::int AS "parkingCount",
+      COUNT(DISTINCT u."id") FILTER (WHERE u."category" = 'storage')::int AS "storageCount",
+      COUNT(DISTINCT u."id") FILTER (WHERE u."category" = 'amenity')::int AS "amenityCount",
       COUNT(DISTINCT u."id")::int AS "unitCount",
       COUNT(DISTINCT f."id")::int AS "floorCount"
     FROM "Block" b
     LEFT JOIN "Unit" u ON u."blockId" = b."id" AND u."tenantId" = b."tenantId"
     LEFT JOIN "BlockFloor" f ON f."blockId" = b."id" AND f."tenantId" = b."tenantId"
     WHERE b."tenantId" = ${tenantId}
-    GROUP BY b."id", b."name", b."mainPlate", b."subPlate", b."status", b."usageCounts"
+    GROUP BY b."id", b."name", b."mainPlate", b."subPlate", b."status"
     ORDER BY b."name" ASC
   `);
 

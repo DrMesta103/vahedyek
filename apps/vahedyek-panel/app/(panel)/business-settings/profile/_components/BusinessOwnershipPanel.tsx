@@ -5,10 +5,11 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   LEGAL_TYPE_OPTIONS,
-  fetchProfileStore,
+  fetchProfilePayload,
   type LegalOwnershipForm,
   type NaturalOwnershipForm,
   type OwnershipKind,
+  type ProfileMeta,
   persistProfileStore,
 } from './profileStorage';
 import {
@@ -28,9 +29,25 @@ const kindOptions: Array<{ value: OwnershipKind; label: string }> = [
 
 const legalTypeOptions = LEGAL_TYPE_OPTIONS.map((item) => ({ value: item, label: item }));
 
+function formatOwnerMobile(value: string | null) {
+  if (!value) return '';
+  if (value.startsWith('+')) return value;
+  if (/^9\d{9}$/.test(value)) return `+98 ${value}`;
+  return value;
+}
+
+const emptyProfileMeta: ProfileMeta = {
+  businessName: '',
+  owner: {
+    fullName: '',
+    mobile: null,
+  },
+};
+
 export function BusinessOwnershipPanel() {
   const router = useRouter();
   const [ownershipKind, setOwnershipKind] = useState<OwnershipKind>('legal');
+  const [profileMeta, setProfileMeta] = useState<ProfileMeta>(emptyProfileMeta);
   const [legalForm, setLegalForm] = useState<LegalOwnershipForm>({
     legalType: LEGAL_TYPE_OPTIONS[0],
     companyName: '',
@@ -49,11 +66,12 @@ export function BusinessOwnershipPanel() {
   useEffect(() => {
     let ignore = false;
 
-    fetchProfileStore().then((store) => {
+    fetchProfilePayload().then(({ store, meta }) => {
       if (ignore) return;
       setOwnershipKind(store.ownershipKind);
       setLegalForm(store.legal);
       setNaturalForm(store.natural);
+      setProfileMeta(meta);
     });
 
     return () => {
@@ -62,7 +80,7 @@ export function BusinessOwnershipPanel() {
   }, []);
 
   const save = async () => {
-    const store = await fetchProfileStore();
+    const { store } = await fetchProfilePayload();
     await persistProfileStore({
       ...store,
       ownershipKind,
@@ -98,8 +116,8 @@ export function BusinessOwnershipPanel() {
               </button>
             </div>
             <div className="profile-owner-meta">
-              <strong>محمد کاظم عباسی</strong>
-              <span dir="ltr">+98 9334442511</span>
+              <strong>{profileMeta.owner.fullName || '---'}</strong>
+              <span dir="ltr">{formatOwnerMobile(profileMeta.owner.mobile) || '---'}</span>
             </div>
             <div className="profile-owner-logo">
               <Building2 />

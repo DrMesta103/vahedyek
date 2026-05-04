@@ -8,6 +8,12 @@ type FloorRow = {
   id: string;
   name: string;
   unitCount: number;
+  residentialCount: number;
+  commercialCount: number;
+  officeCount: number;
+  parkingCount: number;
+  storageCount: number;
+  amenityCount: number;
 };
 
 function normalizeDigits(value: string) {
@@ -34,7 +40,16 @@ async function ensureBlock(tenantId: string, blockId: string) {
 
 async function getFloors(tenantId: string, blockId: string) {
   const rows = await prisma.$queryRaw<FloorRow[]>(Prisma.sql`
-    SELECT f."id", f."name", COUNT(u."id")::int AS "unitCount"
+    SELECT
+      f."id",
+      f."name",
+      COUNT(u."id")::int AS "unitCount",
+      COUNT(u."id") FILTER (WHERE u."category" = 'unit' AND u."usage" = 'residential')::int AS "residentialCount",
+      COUNT(u."id") FILTER (WHERE u."category" = 'unit' AND u."usage" = 'commercial')::int AS "commercialCount",
+      COUNT(u."id") FILTER (WHERE u."category" = 'unit' AND u."usage" = 'office')::int AS "officeCount",
+      COUNT(u."id") FILTER (WHERE u."category" = 'parking')::int AS "parkingCount",
+      COUNT(u."id") FILTER (WHERE u."category" = 'storage')::int AS "storageCount",
+      COUNT(u."id") FILTER (WHERE u."category" = 'amenity')::int AS "amenityCount"
     FROM "BlockFloor" f
     LEFT JOIN "Unit" u ON u."tenantId" = f."tenantId" AND u."blockId" = f."blockId" AND u."floorName" = f."name"
     WHERE f."tenantId" = ${tenantId} AND f."blockId" = ${blockId}
@@ -42,7 +57,19 @@ async function getFloors(tenantId: string, blockId: string) {
     ORDER BY f."createdAt" ASC
   `);
 
-  return rows.map((row) => ({ id: row.id, name: row.name, unitCount: Number(row.unitCount ?? 0) }));
+  return rows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    unitCount: Number(row.unitCount ?? 0),
+    usageCounts: {
+      residential: Number(row.residentialCount ?? 0),
+      commercial: Number(row.commercialCount ?? 0),
+      office: Number(row.officeCount ?? 0),
+      parking: Number(row.parkingCount ?? 0),
+      storage: Number(row.storageCount ?? 0),
+      amenity: Number(row.amenityCount ?? 0),
+    },
+  }));
 }
 
 export async function GET(_: Request, { params }: { params: Promise<{ blockId: string }> }) {

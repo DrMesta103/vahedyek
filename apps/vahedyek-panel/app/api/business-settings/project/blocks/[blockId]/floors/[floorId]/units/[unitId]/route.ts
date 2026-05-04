@@ -24,6 +24,7 @@ type UnitPayload = {
 };
 
 const unitTypes = ['تیپ A', 'تیپ B', 'تیپ C', 'بدون تیپ'];
+const amenitySpaceTypes = ['فضای سبز', 'سالن ورزشی', 'استخر', 'باشگاه', 'نگار خانه هنر', 'سوئیت مهمان', 'سینما', 'اتاق بازی', 'سالن اجتماعات', 'کارگاه هنری', 'سالن اسپا', 'کتاب خانه', 'کافی شاپ', 'سرویس بهداشتی عمومی'];
 const categories = new Set(['unit', 'storage', 'parking', 'amenity']);
 const usages = new Set(['residential', 'commercial', 'office']);
 const deliveryStatuses = new Set(['ready', 'presale']);
@@ -122,7 +123,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ blockId: s
       `),
     ]);
 
-    return NextResponse.json({ unit, options: { unitTypes, parking, storage } });
+    return NextResponse.json({ unit, options: { unitTypes, amenitySpaceTypes, parking, storage } });
   } catch (error) {
     return handlePrismaApiError(error);
   }
@@ -145,7 +146,16 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ bl
     const payload = (await request.json()) as UnitPayload;
     const category = categories.has(cleanText(payload.category)) ? cleanText(payload.category) : existingUnit.category;
     const name = cleanText(payload.name, 30);
-    const unitType = category === 'unit' && unitTypes.includes(cleanText(payload.unitType)) ? cleanText(payload.unitType) : null;
+    const unitTypeValue = cleanText(payload.unitType);
+    const unitType = category === 'unit'
+      ? unitTypes.includes(unitTypeValue)
+        ? unitTypeValue
+        : null
+      : category === 'amenity'
+        ? amenitySpaceTypes.includes(unitTypeValue)
+          ? unitTypeValue
+          : null
+        : null;
     const usage = usages.has(cleanText(payload.usage)) ? cleanText(payload.usage) : 'residential';
     const deliveryStatus = deliveryStatuses.has(cleanText(payload.deliveryStatus)) ? cleanText(payload.deliveryStatus) : 'ready';
     const direction = directions.has(cleanText(payload.direction)) ? cleanText(payload.direction) : 'unknown';
@@ -164,6 +174,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ bl
 
     if (!name) return NextResponse.json({ message: 'مشخصه الزامی است.' }, { status: 400 });
     if (category !== 'amenity' && (area === null || area <= 0)) return NextResponse.json({ message: 'متراژ الزامی است.' }, { status: 400 });
+
+    if (category === 'amenity' && !unitType) return NextResponse.json({ message: 'نوع فضا الزامی است.' }, { status: 400 });
 
     const duplicate = await prisma.$queryRaw<Array<{ name: string }>>(Prisma.sql`
       SELECT "name"

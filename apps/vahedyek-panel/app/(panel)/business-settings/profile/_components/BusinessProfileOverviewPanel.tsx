@@ -38,6 +38,7 @@ const baseSections: ProfileSection[] = [
     description: 'مدیریت اعضای هیئت مدیره با همان فلو افزودن نماینده',
     onlyFor: 'legal',
     href: '/business-settings/profile/board-members',
+    span: 'full'
   },
   {
     title: 'شماره حساب',
