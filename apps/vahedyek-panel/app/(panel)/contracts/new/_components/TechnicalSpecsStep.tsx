@@ -7,18 +7,9 @@ import { ensureActiveDraftId } from '../../../../lib/contractDraftClient';
 import { FieldGroup, SectionCard, SectionHeader } from './ContractFormPrimitives';
 import { getContractTechnicalSpecs, upsertContractTechnicalSpecs, type TechnicalSpecItem } from '../../../../actions/contractSteps789';
 
-const DEFAULT_SPECS: TechnicalSpecItem[] = [
-  { id: 'structure', systemKey: 'structure', title: 'نوع سازه', standard: '', location: '' },
-  { id: 'facade', systemKey: 'facade', title: 'متریال نما', standard: '', location: '' },
-  { id: 'flooring', systemKey: 'flooring', title: 'کف‌پوش', standard: '', location: '' },
-  { id: 'hvac', systemKey: 'hvac', title: 'سیستم سرمایش/گرمایش', standard: '', location: '' },
-];
-
 function normalizeInitial(items: TechnicalSpecItem[] | null) {
-  const base = items?.length ? items : DEFAULT_SPECS;
-  const seen = new Set(base.map((i) => i.systemKey).filter(Boolean));
-  const missing = DEFAULT_SPECS.filter((i) => i.systemKey && !seen.has(i.systemKey));
-  return [...base, ...missing].map((item, idx) => ({
+  const base = items?.length ? items : [];
+  return base.map((item, idx) => ({
     ...item,
     id: item.id || `${item.systemKey ?? 'custom'}-${idx + 1}`,
     title: item.title ?? '',
@@ -34,11 +25,11 @@ export function TechnicalSpecsStep({ title }: { title: string }) {
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState('');
 
-  const [specs, setSpecs] = useState<TechnicalSpecItem[]>(DEFAULT_SPECS);
+  const [specs, setSpecs] = useState<TechnicalSpecItem[]>([]);
   const [adding, setAdding] = useState(false);
   const [newTitle, setNewTitle] = useState('');
-  const [newStandard, setNewStandard] = useState('');
-  const [newLocation, setNewLocation] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState('');
 
   useEffect(() => {
     let mounted = true;
@@ -69,7 +60,7 @@ export function TechnicalSpecsStep({ title }: { title: string }) {
   const payload = useMemo(
     () =>
       specs
-        .map((s) => ({ ...s, title: s.title.trim(), standard: s.standard.trim(), location: s.location.trim() }))
+        .map((s) => ({ ...s, title: s.title.trim(), standard: (s.standard ?? '').trim(), location: (s.location ?? '').trim() }))
         .filter((s) => s.title),
     [specs],
   );
@@ -77,8 +68,11 @@ export function TechnicalSpecsStep({ title }: { title: string }) {
   const startAdd = () => {
     setAdding(true);
     setNewTitle('');
-    setNewStandard('');
-    setNewLocation('');
+  };
+
+  const startEdit = (spec: TechnicalSpecItem) => {
+    setEditingId(spec.id);
+    setEditTitle(spec.title ?? '');
   };
 
   const confirmAdd = () => {
@@ -89,14 +83,21 @@ export function TechnicalSpecsStep({ title }: { title: string }) {
       {
         id: `custom-${crypto.randomUUID()}`,
         title,
-        standard: newStandard.trim(),
-        location: newLocation.trim(),
+        standard: '',
+        location: '',
       },
     ]);
     setAdding(false);
     setNewTitle('');
-    setNewStandard('');
-    setNewLocation('');
+  };
+
+  const confirmEdit = () => {
+    if (!editingId) return;
+    const title = editTitle.trim();
+    if (!title) return;
+    setSpecs((current) => current.map((s) => (s.id === editingId ? { ...s, title } : s)));
+    setEditingId(null);
+    setEditTitle('');
   };
 
   const handleSubmit = async () => {
@@ -154,75 +155,115 @@ export function TechnicalSpecsStep({ title }: { title: string }) {
           </div>
 
           {adding ? (
-            <div className="rounded-2xl border border-slate-100 bg-slate-50/60 p-4">
-              <div className="grid gap-4 md:grid-cols-3">
-                <FieldGroup label="عنوان مشخصه">
-                  <Input value={newTitle} onChange={(e) => setNewTitle(e.target.value)} placeholder="مثال: متریال نما" />
-                </FieldGroup>
-                <FieldGroup label="شرح/استاندارد فنی">
-                  <Input value={newStandard} onChange={(e) => setNewStandard(e.target.value)} placeholder="مثال: سنگ تراورتن" />
-                </FieldGroup>
-                <FieldGroup label="محل اجرا">
-                  <Input value={newLocation} onChange={(e) => setNewLocation(e.target.value)} placeholder="مثال: پذیرایی" />
-                </FieldGroup>
-              </div>
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4" onClick={() => setAdding(false)}>
+              <div
+                className="w-full max-w-lg rounded-3xl border border-slate-200 bg-white shadow-2xl"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <div className="border-b border-slate-100 px-5 py-4">
+                  <div className="text-[14px] font-extrabold text-slate-900">ثبت مشخصات فنی</div>
+                  <div className="mt-1 text-[12px] text-slate-500">فقط عنوان مشخصه را وارد کنید.</div>
+                </div>
 
-              <div className="mt-4 flex flex-wrap justify-end gap-2">
-                <button
-                  type="button"
-                  className="app-button rounded-xl border border-slate-200 bg-white px-4 py-2 text-[13px] font-bold text-slate-700 hover:bg-slate-50"
-                  onClick={() => setAdding(false)}
-                >
-                  انصراف
-                </button>
-                <button
-                  type="button"
-                  className="app-button app-button-primary rounded-xl px-4 py-2 text-[13px] font-bold"
-                  onClick={confirmAdd}
-                >
-                  افزودن
-                </button>
+                <div className="px-5 py-4">
+                  <FieldGroup label="عنوان مشخصه">
+                    <Input
+                      value={newTitle}
+                      onChange={(e) => setNewTitle(e.target.value)}
+                      placeholder="مثال: متریال نما"
+                      autoFocus
+                    />
+                  </FieldGroup>
+                </div>
+
+                <div className="flex flex-wrap justify-end gap-2 border-t border-slate-100 px-5 py-4">
+                  <button
+                    type="button"
+                    className="app-button rounded-xl border border-slate-200 bg-white px-4 py-2 text-[13px] font-bold text-slate-700 hover:bg-slate-50"
+                    onClick={() => setAdding(false)}
+                  >
+                    انصراف
+                  </button>
+                  <button
+                    type="button"
+                    className="app-button app-button-primary rounded-xl px-4 py-2 text-[13px] font-bold"
+                    onClick={confirmAdd}
+                    disabled={!newTitle.trim()}
+                  >
+                    ثبت
+                  </button>
+                </div>
               </div>
             </div>
           ) : null}
 
-          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-            <table className="w-full text-right text-[13px]">
-              <thead className="bg-slate-50">
-                <tr>
-                  <th className="px-4 py-3 font-bold text-slate-600">عنوان مشخصه</th>
-                  <th className="px-4 py-3 font-bold text-slate-600">شرح/استاندارد فنی</th>
-                  <th className="px-4 py-3 font-bold text-slate-600">محل اجرا</th>
-                  <th className="w-16 px-4 py-3 text-left font-bold text-slate-600"> </th>
-                </tr>
-              </thead>
-              <tbody>
-                {specs.length ? (
-                  specs.map((spec) => (
+          {editingId ? (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4" onClick={() => setEditingId(null)}>
+              <div
+                className="w-full max-w-lg rounded-3xl border border-slate-200 bg-white shadow-2xl"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <div className="border-b border-slate-100 px-5 py-4">
+                  <div className="text-[14px] font-extrabold text-slate-900">ویرایش مشخصه</div>
+                  <div className="mt-1 text-[12px] text-slate-500">عنوان مشخصه را ویرایش کنید.</div>
+                </div>
+
+                <div className="px-5 py-4">
+                  <FieldGroup label="عنوان مشخصه">
+                    <Input
+                      value={editTitle}
+                      onChange={(e) => setEditTitle(e.target.value)}
+                      placeholder="عنوان..."
+                      autoFocus
+                    />
+                  </FieldGroup>
+                </div>
+
+                <div className="flex flex-wrap justify-end gap-2 border-t border-slate-100 px-5 py-4">
+                  <button
+                    type="button"
+                    className="app-button rounded-xl border border-slate-200 bg-white px-4 py-2 text-[13px] font-bold text-slate-700 hover:bg-slate-50"
+                    onClick={() => setEditingId(null)}
+                  >
+                    انصراف
+                  </button>
+                  <button
+                    type="button"
+                    className="app-button app-button-primary rounded-xl px-4 py-2 text-[13px] font-bold"
+                    onClick={confirmEdit}
+                    disabled={!editTitle.trim()}
+                  >
+                    ذخیره
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : null}
+
+          {specs.length ? (
+            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+              <table className="w-full text-right text-[13px]">
+                <thead className="bg-slate-50">
+                  <tr>
+                    <th className="px-4 py-3 font-bold text-slate-600">عنوان مشخصه</th>
+                    <th className="w-52 px-4 py-3 text-left font-bold text-slate-600"> </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {specs.map((spec) => (
                     <tr key={spec.id} className="border-t border-slate-100">
                       <td className="px-4 py-3">
-                        <Input
-                          value={spec.title}
-                          onChange={(e) => setSpecs((c) => c.map((s) => (s.id === spec.id ? { ...s, title: e.target.value } : s)))}
-                          placeholder="عنوان..."
-                        />
-                      </td>
-                      <td className="px-4 py-3">
-                        <Input
-                          value={spec.standard}
-                          onChange={(e) => setSpecs((c) => c.map((s) => (s.id === spec.id ? { ...s, standard: e.target.value } : s)))}
-                          placeholder="شرح..."
-                        />
-                      </td>
-                      <td className="px-4 py-3">
-                        <Input
-                          value={spec.location}
-                          onChange={(e) => setSpecs((c) => c.map((s) => (s.id === spec.id ? { ...s, location: e.target.value } : s)))}
-                          placeholder="محل..."
-                        />
+                        <div className="font-bold text-slate-800">{spec.title}</div>
                       </td>
                       <td className="px-4 py-3 text-left">
-                        {spec.systemKey ? null : (
+                        <div className="flex items-center justify-end gap-2 space-x-reverse">
+                          <button
+                            type="button"
+                            className="app-button rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50"
+                            onClick={() => startEdit(spec)}
+                          >
+                            ویرایش
+                          </button>
                           <button
                             type="button"
                             className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700 hover:bg-rose-100"
@@ -230,20 +271,19 @@ export function TechnicalSpecsStep({ title }: { title: string }) {
                           >
                             حذف
                           </button>
-                        )}
+                        </div>
                       </td>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={4} className="px-4 py-8 text-center text-slate-400">
-                      هنوز مشخصه‌ای ثبت نشده است.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/40 px-6 py-10 text-center">
+              <p className="text-[13px] font-bold text-slate-600">هنوز مشخصه‌ای ثبت نشده است.</p>
+              <p className="mt-1 text-[12px] text-slate-400">برای شروع روی «ثبت مشخصات فنی» کلیک کنید.</p>
+            </div>
+          )}
         </div>
       </SectionCard>
 

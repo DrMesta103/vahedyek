@@ -88,7 +88,7 @@ const SECTION_PREREQUISITES: Record<ContractFlowSectionId, ContractFlowSectionId
   parties: ['subject'],
   financial: ['subject', 'parties'],
   penalties: ['subject', 'parties', 'financial'],
-  discounts: ['subject', 'parties', 'financial'],
+  discounts: ['subject', 'parties', 'financial', 'penalties'],
   termination: ['subject', 'parties', 'financial', 'penalties', 'discounts'],
   extraCosts: ['termination'],
   technicalSpecs: ['termination'],
@@ -428,7 +428,8 @@ export function ContractFlowHub() {
     SECTION_ORDER.forEach((sectionId) => {
       const requirements = SECTION_PREREQUISITES[sectionId].map((requiredId) => {
         const dirty = Boolean(dirtyMap[requiredId]);
-        const complete = Boolean(completionMap[requiredId]) && !dirty;
+        const saved = Boolean(lastUpdatedMap[requiredId]);
+        const complete = Boolean(completionMap[requiredId]) && saved && !dirty;
         return {
           id: requiredId,
           title: SECTION_TITLES[requiredId],
@@ -455,7 +456,7 @@ export function ContractFlowHub() {
     };
 
     return result;
-  }, [completionMap, dirtyMap]);
+  }, [completionMap, dirtyMap, lastUpdatedMap]);
 
   useEffect(() => {
     const renderedSections = Array.from(document.querySelectorAll<HTMLElement>('[data-contract-section]'));
@@ -613,6 +614,8 @@ export function ContractFlowHub() {
       render: () => <ContractAttachmentsStep title="پیوست و اسناد قرارداد" />,
     },
   ];
+
+  const visibleSections = useMemo(() => sections.filter((section) => !accessMap[section.id]?.locked), [accessMap, sections]);
 
   const reportData = financialLiveData ?? financialData;
   const contractTotal = getContractTotal(reportData);
@@ -849,10 +852,12 @@ export function ContractFlowHub() {
         allocatedAmount={allocatedAmount}
         dueAmount={dueAmount}
         remainder={remainder}
+        contractNumber={subjectData?.contractNumber}
+        contractStatus="draft"
       />
 
       <div className="contract-flow-content min-w-0 flex-1 space-y-6">
-        {sections.filter((section) => !accessMap[section.id].locked).map((section) => {
+        {visibleSections.map((section) => {
           const status = statusMap[section.id];
           const isSubjectSection = section.id === 'subject';
           const isTerminationSection = section.id === 'termination';

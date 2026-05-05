@@ -760,6 +760,70 @@ textarea::placeholder {
   border-bottom: 1px solid var(--theme-accent-border);
 }
 
+.contract-flow-report-meta-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--theme-accent-border);
+  background: color-mix(in srgb, var(--surface) 75%, var(--theme-accent-softer));
+}
+
+.contract-flow-report-meta-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.contract-flow-report-meta-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.contract-flow-report-meta-value {
+  font-size: 12px;
+  font-weight: 900;
+  color: var(--text-body);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  direction: ltr;
+}
+
+.contract-flow-report-status-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  border: 1px solid var(--border-soft);
+  white-space: nowrap;
+}
+
+.contract-flow-report-status-pill.is-draft {
+  background: color-mix(in srgb, #94a3b8 18%, var(--surface));
+  border-color: color-mix(in srgb, #94a3b8 40%, var(--border-soft));
+  color: #475569;
+}
+
+.contract-flow-report-status-pill.is-pending_approval {
+  background: color-mix(in srgb, #f59e0b 18%, var(--surface));
+  border-color: color-mix(in srgb, #f59e0b 40%, var(--border-soft));
+  color: #92400e;
+}
+
+.contract-flow-report-status-pill.is-completed {
+  background: color-mix(in srgb, #22c55e 18%, var(--surface));
+  border-color: color-mix(in srgb, #22c55e 40%, var(--border-soft));
+  color: #166534;
+}
+
 .contract-flow-report-header h2 {
   margin: 0;
   font-size: 20px;
@@ -1158,7 +1222,8 @@ textarea::placeholder {
 
 .main-stage-content-wide {
   width: 100%;
-  max-width: none;
+  max-width: 1280px;
+  margin: 0 auto;
 }
 
 .contract-flow-stage-content {
@@ -1186,7 +1251,12 @@ textarea::placeholder {
   color: var(--text-muted);
   font-weight: 700;
   text-align: right;
-  width: 100%;
+  width: fit-content;
+  max-width: 100%;
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
 }
 
 .breadcrumb i {
@@ -7477,13 +7547,13 @@ gap: 16px;
 }
 
 .contract-reference-ribbon {
-  width: 30px;
+  width: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 12px 6px;
+  padding: 10px 4px;
   color: #fff;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 900;
   letter-spacing: -0.01em;
   writing-mode: vertical-rl;
