@@ -334,7 +334,7 @@ export function DiscountsStep({ stepId, title, embedded = false }: { stepId: str
       initialSnapshotRef.current = serializePayload(payload);
       setDirty(false);
       dispatchContractFlowDirty(stepId as ContractFlowSectionId, false);
-      dispatchContractFlowSaved(stepId as ContractFlowSectionId);
+      dispatchContractFlowSaved(stepId as ContractFlowSectionId, Date.now(), payload);
     } catch (error) {
       setFormError(error instanceof Error ? error.message : 'ذخیره تخفیف‌ها انجام نشد.');
     } finally {

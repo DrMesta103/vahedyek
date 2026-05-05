@@ -275,79 +275,89 @@ test('validateDiscountsStep rejects invalid discount ranges and empty approval t
 function makeValidTerminationData(overrides: Partial<ContractTerminationData> = {}): ContractTerminationData {
   return {
     terminationEnabled: true,
-    activeMainTab: 'builder',
-    builder: {
-      enabled: true,
-      activeForm: 'installment-delay',
-      installmentDelay: {
-        enabled: true,
-        allowedDelayPreset: '7',
-        allowedDelayDays: '',
-        delayBasis: 'debt-amount',
+    terminationPartyTab: 'seller',
+    terminationConstructorPanel: 'list',
+    terminationBuyerPanel: 'list',
+    sellerTerminationEngaged: true,
+    buyerTerminationEngaged: false,
+    buyerCompletion: {
+      lateDelivery: false,
+      specificationChanges: false,
+      breachOfObligations: false,
+      areaDiscrepancy: false,
+      notification: false,
+    },
+    constructorCompletion: {
+      lateInstallment: true,
+      financialObligations: true,
+      documentDeficiencies: true,
+      otherBreach: true,
+      notifications: true,
+    },
+    constructorTerms: {
+      lateInstallment: {
+        ruleEnabled: true,
+        gracePreset: '7',
+        graceDaysCustom: '',
+        detectionBasis: 'total-debt',
         minDebtAmount: '5000000',
-        partialPaymentMode: 'decide-by-balance',
+        partialHandling: 'by-remaining-debt',
       },
-      financialDefault: {
-        enabled: true,
-        obligationTypes: ['contract-costs', 'installments'],
-        gracePeriodPreset: '7',
-        gracePeriodDays: '',
-        officialNoticeRequired: true,
+      financialObligations: {
+        ruleEnabled: true,
+        obligationTypes: ['contract-costs', 'penalties'],
+        gracePreset: '7',
+        graceDaysCustom: '',
+        officialDemandRequired: true,
       },
-      documentDefect: {
-        enabled: true,
-        requiredItems: ['identity-documents'],
-        gracePeriodPreset: '10',
-        gracePeriodDays: '',
-        reminderBeforeTermination: true,
+      documentDeficiencies: {
+        ruleEnabled: true,
+        mandatoryItems: ['identity'],
+        completionDeadlineDays: '10',
+        autoReminderEnabled: true,
       },
       otherBreach: {
-        enabled: true,
-        breachTypes: ['false-information'],
-        gracePeriodPreset: '15',
-        gracePeriodDays: '',
-        managerApprovalRequired: true,
+        ruleEnabled: true,
+        violationTypes: ['false-information'],
+        rectificationDays: '15',
+        rectificationDaysCustom: '',
+        requiresContractManagerApproval: true,
       },
       notifications: {
-        notifyBuilderOnActivation: true,
-        notifyContractManager: true,
-        showTerminationSectionInDetails: true,
+        ruleEnabled: true,
+        notifyConstructor: true,
+        notifyManager: true,
+        showTerminationActionInContractDetails: true,
       },
     },
-    buyer: {
-      enabled: true,
-      activeForm: 'delivery-delay',
-      deliveryDelay: {
-        enabled: true,
-        deliveryBasis: 'contract-delivery-date',
-        allowedDelayPreset: '30',
-        allowedDelayDays: '',
-        expertApprovalRequired: true,
+    buyerTerms: {
+      lateDelivery: {
+        ruleEnabled: true,
+        calculationBasis: 'contract-date',
+        gracePreset: '30',
+        graceDaysCustom: '',
+        expertApprovalRequired: false,
       },
-      specChange: {
-        enabled: true,
-        changeTypes: ['materials'],
-        tolerancePercent: '5',
-        allowCompensationBeforeTermination: true,
-        managerReviewRequired: true,
+      specificationChanges: { ruleEnabled: false, includedTypes: [], priorApprovalRequired: false },
+      breachOfObligations: {
+        ruleEnabled: false,
+        obligationTypes: [],
+        rectificationPreset: '30',
+        rectificationDaysCustom: '',
       },
       areaDiscrepancy: {
-        enabled: true,
-        discrepancyBasis: 'official-survey',
-        toleranceMode: 'percent',
-        toleranceValue: '3',
-        allowPriceAdjustmentFirst: true,
-        expertApprovalRequired: true,
+        ruleEnabled: false,
+        thresholdPreset: '2',
+        thresholdPercentCustom: '',
+        referenceSources: [],
+        financialSettlementInsteadOfTermination: false,
       },
-      notifications: {
-        notifyBuyerOnActivation: true,
-        notifyContractManager: true,
-        showTerminationSectionInDetails: true,
+      notification: {
+        ruleEnabled: false,
+        notifyBuyer: false,
+        notifyContractManager: false,
+        showManagementOptionInGrid: false,
       },
-    },
-    draftUsage: {
-      useAsDefault: true,
-      allowPerContractOverride: true,
     },
     ...overrides,
   };
@@ -360,51 +370,26 @@ test('validateTerminationStep accepts a complete termination payload', () => {
   assert.deepEqual(result.errors, {});
 });
 
-test('validateTerminationStep rejects conditional fields for custom presets and dependent inputs', () => {
+test('validateTerminationStep rejects termination when neither seller nor buyer path was engaged', () => {
   const result = validateTerminationStep(
     makeValidTerminationData({
-      builder: {
-        ...makeValidTerminationData().builder,
-        installmentDelay: {
-          ...makeValidTerminationData().builder.installmentDelay,
-          allowedDelayPreset: 'other',
-          allowedDelayDays: '',
-          minDebtAmount: '',
-        },
-        financialDefault: {
-          ...makeValidTerminationData().builder.financialDefault,
-          obligationTypes: [],
-          gracePeriodPreset: 'other',
-          gracePeriodDays: '',
-        },
-      },
-      buyer: {
-        ...makeValidTerminationData().buyer,
-        deliveryDelay: {
-          ...makeValidTerminationData().buyer.deliveryDelay,
-          allowedDelayPreset: 'other',
-          allowedDelayDays: '',
-        },
-        specChange: {
-          ...makeValidTerminationData().buyer.specChange,
-          changeTypes: [],
-          tolerancePercent: '0',
-        },
-        areaDiscrepancy: {
-          ...makeValidTerminationData().buyer.areaDiscrepancy,
-          toleranceValue: '',
-        },
-      },
+      sellerTerminationEngaged: false,
+      buyerTerminationEngaged: false,
     }),
   );
 
   assert.equal(result.valid, false);
-  assert.ok(result.errors['builder.installmentDelay.allowedDelayDays']);
-  assert.ok(result.errors['builder.installmentDelay.minDebtAmount']);
-  assert.ok(result.errors['builder.financialDefault.obligationTypes']);
-  assert.ok(result.errors['builder.financialDefault.gracePeriodDays']);
-  assert.ok(result.errors['buyer.deliveryDelay.allowedDelayDays']);
-  assert.ok(result.errors['buyer.specChange.changeTypes']);
-  assert.ok(result.errors['buyer.specChange.tolerancePercent']);
-  assert.ok(result.errors['buyer.areaDiscrepancy.toleranceValue']);
+  assert.ok(result.errors['termination.partyEngagement']);
+});
+
+test('validateTerminationStep accepts termination when buyer path was engaged', () => {
+  const result = validateTerminationStep(
+    makeValidTerminationData({
+      sellerTerminationEngaged: false,
+      buyerTerminationEngaged: true,
+    }),
+  );
+
+  assert.equal(result.valid, true);
+  assert.deepEqual(result.errors, {});
 });

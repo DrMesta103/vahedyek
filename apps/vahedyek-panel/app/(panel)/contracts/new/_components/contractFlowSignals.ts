@@ -1,6 +1,15 @@
 'use client';
 
-export type ContractFlowSectionId = 'subject' | 'parties' | 'financial' | 'penalties' | 'discounts' | 'termination';
+export type ContractFlowSectionId =
+  | 'subject'
+  | 'parties'
+  | 'financial'
+  | 'penalties'
+  | 'discounts'
+  | 'termination'
+  | 'extraCosts'
+  | 'technicalSpecs'
+  | 'contractAttachments';
 
 type DirtyDetail = {
   sectionId: ContractFlowSectionId;
@@ -10,6 +19,8 @@ type DirtyDetail = {
 type SavedDetail = {
   sectionId: ContractFlowSectionId;
   savedAt: number;
+  /** When set (e.g. right after a successful PUT), the hub can update state synchronously before any follow-up navigation/refresh. */
+  payload?: unknown;
 };
 
 type FinancialSnapshotDetail<T> = {
@@ -27,14 +38,16 @@ export function dispatchContractFlowDirty(sectionId: ContractFlowSectionId, dirt
   window.dispatchEvent(new CustomEvent<DirtyDetail>(CONTRACT_FLOW_DIRTY_EVENT, { detail: { sectionId, dirty } }));
 }
 
-export function dispatchContractFlowSaved(sectionId: ContractFlowSectionId, savedAt = Date.now()) {
+export function dispatchContractFlowSaved(sectionId: ContractFlowSectionId, savedAt = Date.now(), payload?: unknown) {
   if (typeof window === 'undefined') return;
 
   const current = getStoredLastUpdated();
   current[sectionId] = savedAt;
   window.localStorage.setItem(LAST_UPDATED_KEY, JSON.stringify(current));
 
-  window.dispatchEvent(new CustomEvent<SavedDetail>(CONTRACT_FLOW_SAVED_EVENT, { detail: { sectionId, savedAt } }));
+  window.dispatchEvent(
+    new CustomEvent<SavedDetail>(CONTRACT_FLOW_SAVED_EVENT, { detail: { sectionId, savedAt, payload } }),
+  );
 }
 
 export function getStoredLastUpdated(): Partial<Record<ContractFlowSectionId, number>> {

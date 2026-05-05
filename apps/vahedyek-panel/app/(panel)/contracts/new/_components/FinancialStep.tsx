@@ -545,7 +545,7 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
       clearFrontendStepDraft(draftId, 'financial');
       setDirty(false);
       dispatchContractFlowDirty(stepId as 'financial', false);
-      dispatchContractFlowSaved(stepId as 'financial');
+      dispatchContractFlowSaved(stepId as 'financial', Date.now(), payload);
       return true;
     } catch (error) {
       setFormError(error instanceof Error ? error.message : 'ثبت اطلاعات مالی انجام نشد.');

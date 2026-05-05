@@ -154,7 +154,7 @@ export function SubjectStep({ stepId, title, embedded = false }: { stepId: strin
       await saveStepData(draftId, 'subject', payload);
       initialSnapshotRef.current = JSON.stringify(payload);
       dispatchContractFlowDirty(stepId as 'subject', false);
-      dispatchContractFlowSaved(stepId as 'subject');
+      dispatchContractFlowSaved(stepId as 'subject', Date.now(), payload);
       router.push(basePath);
       router.refresh();
     } catch (error) {

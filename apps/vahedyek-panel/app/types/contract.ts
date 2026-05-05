@@ -143,82 +143,145 @@ export interface ContractDiscountsData {
   rules: DiscountRuleData[];
 }
 
+/** Sub-views after opening «تنظیمات فسخ سازنده» */
+export type ConstructorTerminationSubsectionId =
+  | 'lateInstallment'
+  | 'financialObligations'
+  | 'documentDeficiencies'
+  | 'otherBreach'
+  | 'notifications';
+
+/** تب اصلی: فسخ سازنده/فروشنده در برابر فسخ خریدار */
+export type TerminationPartyTab = 'seller' | 'buyer';
+
+/** محتوای تب فسخ سازنده: فهرست زیربخش‌ها یا یک زیربخش باز شده */
+export type TerminationConstructorPanel = 'list' | ConstructorTerminationSubsectionId;
+
+/** زیربخش‌های فسخ خریدار */
+export type BuyerTerminationSubsectionId =
+  | 'lateDelivery'
+  | 'specificationChanges'
+  | 'breachOfObligations'
+  | 'areaDiscrepancy'
+  | 'notification';
+
+export type TerminationBuyerPanel = 'list' | BuyerTerminationSubsectionId;
+
+export interface BuyerTerminationCompletion {
+  lateDelivery: boolean;
+  specificationChanges: boolean;
+  breachOfObligations: boolean;
+  areaDiscrepancy: boolean;
+  notification: boolean;
+}
+
+export interface BuyerTerminationTerms {
+  lateDelivery: {
+    ruleEnabled: boolean;
+    calculationBasis: 'last-addendum' | 'project-end' | 'contract-date';
+    gracePreset: '10' | '30' | '60' | '90' | '180' | 'other';
+    graceDaysCustom: string;
+    expertApprovalRequired: boolean;
+  };
+  specificationChanges: {
+    ruleEnabled: boolean;
+    includedTypes: Array<'unit-plan' | 'floor-change' | 'facility-reduction' | 'block-change' | 'material-quality'>;
+    priorApprovalRequired: boolean;
+  };
+  breachOfObligations: {
+    ruleEnabled: boolean;
+    obligationTypes: Array<
+      'construction-progress' | 'quality-standards' | 'infrastructure-delivery' | 'legal-docs' | 'service-connections'
+    >;
+    rectificationPreset: '7' | '14' | '21' | '30' | '45' | '60' | 'other';
+    rectificationDaysCustom: string;
+  };
+  areaDiscrepancy: {
+    ruleEnabled: boolean;
+    thresholdPreset: '1' | '2' | '3' | 'other';
+    thresholdPercentCustom: string;
+    referenceSources: Array<'title-deed' | 'final-survey' | 'property-registration'>;
+    financialSettlementInsteadOfTermination: boolean;
+  };
+  notification: {
+    ruleEnabled: boolean;
+    notifyBuyer: boolean;
+    notifyContractManager: boolean;
+    showManagementOptionInGrid: boolean;
+  };
+}
+
+/** ذخیره در ستون JSONB «buyerRules» جدول TerminationRules */
+export interface BuyerRulesPersisted {
+  buyerTerms: BuyerTerminationTerms;
+  buyerCompletion: BuyerTerminationCompletion;
+  terminationBuyerPanel?: TerminationBuyerPanel;
+}
+
+export interface TerminationConstructorCompletion {
+  lateInstallment: boolean;
+  financialObligations: boolean;
+  documentDeficiencies: boolean;
+  otherBreach: boolean;
+  notifications: boolean;
+}
+
 export interface ContractTerminationData {
   terminationEnabled: boolean;
-  activeMainTab: 'builder' | 'buyer' | 'draft';
-  builder: {
-    enabled: boolean;
-    activeForm: 'installment-delay' | 'financial-default' | 'document-defect' | 'other-breach' | 'notifications';
-    installmentDelay: {
-      enabled: boolean;
-      allowedDelayPreset: '3' | '7' | '10' | '15' | '30' | 'other';
-      allowedDelayDays: string;
-      delayBasis: 'unpaid-installment' | 'debt-amount' | 'consecutive-unpaid-installments';
+  terminationPartyTab: TerminationPartyTab;
+  terminationConstructorPanel: TerminationConstructorPanel;
+  /** محتوای تب فسخ خریدار: فهرست یا جزئیات یک زیربخش */
+  terminationBuyerPanel: TerminationBuyerPanel;
+  /** باز کردن مسیر «فسخ سازنده» (حداقل یک‌بار تا ثبت کل مرحله معتبر شود). */
+  sellerTerminationEngaged: boolean;
+  /** باز کردن مسیر «فسخ خریدار» (حداقل یک‌بار تا ثبت کل مرحله معتبر شود). */
+  buyerTerminationEngaged: boolean;
+  constructorCompletion: TerminationConstructorCompletion;
+  buyerCompletion: BuyerTerminationCompletion;
+  /** تنظیمات فسخ سازنده؛ نام عمداً غیر از `constructor` است تا با نمونهٔ آبجکت جاوااسکریپت تداخل نداشته باشد. */
+  constructorTerms: {
+    lateInstallment: {
+      ruleEnabled: boolean;
+      gracePreset: '3' | '7' | '10' | '15' | '30' | 'other';
+      graceDaysCustom: string;
+      detectionBasis: 'per-installment' | 'total-debt' | 'consecutive-installments';
       minDebtAmount: string;
-      partialPaymentMode: 'activate-on-incomplete' | 'ignore-partial' | 'decide-by-balance';
+      partialHandling: 'if-not-full' | 'if-partial' | 'by-remaining-debt';
     };
-    financialDefault: {
-      enabled: boolean;
-      obligationTypes: Array<'contract-costs' | 'contract-penalties' | 'custom-financial' | 'extra-costs' | 'side-costs' | 'installments'>;
-      gracePeriodPreset: '3' | '7' | '15' | '30' | 'other';
-      gracePeriodDays: string;
-      officialNoticeRequired: boolean;
+    financialObligations: {
+      ruleEnabled: boolean;
+      obligationTypes: Array<
+        'contract-costs' | 'penalties' | 'custom-commitments' | 'extra-costs' | 'side-costs'
+      >;
+      gracePreset: '3' | '7' | '15' | '30' | 'other';
+      graceDaysCustom: string;
+      officialDemandRequired: boolean;
     };
-    documentDefect: {
-      enabled: boolean;
-      requiredItems: Array<'identity-documents' | 'signature-completion' | 'legal-permits' | 'payment-documents' | 'physical-attendance'>;
-      gracePeriodPreset: '3' | '7' | '10' | '15' | '30' | 'other';
-      gracePeriodDays: string;
-      reminderBeforeTermination: boolean;
+    documentDeficiencies: {
+      ruleEnabled: boolean;
+      mandatoryItems: Array<
+        'identity' | 'legal-permits' | 'signing-docs' | 'payment-docs' | 'physical-presence'
+      >;
+      completionDeadlineDays: '3' | '7' | '10' | '15' | '20' | '25' | '30';
+      autoReminderEnabled: boolean;
     };
     otherBreach: {
-      enabled: boolean;
-      breachTypes: Array<'transfer-restriction' | 'refusal-to-sign' | 'false-information' | 'non-cooperation'>;
-      gracePeriodPreset: '3' | '7' | '15' | '30' | 'other';
-      gracePeriodDays: string;
-      managerApprovalRequired: boolean;
+      ruleEnabled: boolean;
+      violationTypes: Array<
+        'transfer-restrictions' | 'refusal-to-sign' | 'lack-cooperation' | 'false-information'
+      >;
+      rectificationDays: '3' | '7' | '10' | '15' | '20' | '25' | '30' | 'other';
+      rectificationDaysCustom: string;
+      requiresContractManagerApproval: boolean;
     };
     notifications: {
-      notifyBuilderOnActivation: boolean;
-      notifyContractManager: boolean;
-      showTerminationSectionInDetails: boolean;
+      ruleEnabled: boolean;
+      notifyConstructor: boolean;
+      notifyManager: boolean;
+      showTerminationActionInContractDetails: boolean;
     };
   };
-  buyer: {
-    enabled: boolean;
-    activeForm: 'delivery-delay' | 'spec-change' | 'area-discrepancy' | 'notifications';
-    deliveryDelay: {
-      enabled: boolean;
-      deliveryBasis: 'latest-addendum-date' | 'official-project-end-date' | 'contract-delivery-date';
-      allowedDelayPreset: '10' | '30' | '60' | '90' | '180' | 'other';
-      allowedDelayDays: string;
-      expertApprovalRequired: boolean;
-    };
-    specChange: {
-      enabled: boolean;
-      changeTypes: Array<'unit-area' | 'materials' | 'layout' | 'shared-spaces' | 'parking-storage'>;
-      tolerancePercent: string;
-      allowCompensationBeforeTermination: boolean;
-      managerReviewRequired: boolean;
-    };
-    areaDiscrepancy: {
-      enabled: boolean;
-      discrepancyBasis: 'contract-area' | 'official-survey' | 'delivery-session';
-      toleranceMode: 'percent' | 'meter';
-      toleranceValue: string;
-      allowPriceAdjustmentFirst: boolean;
-      expertApprovalRequired: boolean;
-    };
-    notifications: {
-      notifyBuyerOnActivation: boolean;
-      notifyContractManager: boolean;
-      showTerminationSectionInDetails: boolean;
-    };
-  };
-  draftUsage: {
-    useAsDefault: boolean;
-    allowPerContractOverride: boolean;
-  };
+  buyerTerms: BuyerTerminationTerms;
 }
 
 export interface ContractFormData {

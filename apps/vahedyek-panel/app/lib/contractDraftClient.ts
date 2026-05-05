@@ -121,6 +121,15 @@ export async function saveStepData<T>(draftId: string, step: 'subject' | 'partie
   });
 }
 
+/** بارگذاری قواعد فسخ خریدار از ستون buyerRules در پایگاه. */
+export async function fetchTerminationBuyerRules(draftId: string): Promise<{ buyerRules: unknown } | null> {
+  try {
+    return await readJson<{ buyerRules: unknown }>(`/api/contracts/drafts/${draftId}/termination`);
+  } catch {
+    return null;
+  }
+}
+
 export async function getReferenceData() {
   return readJson<ReferenceDataResponse>('/api/contracts/reference-data');
 }

@@ -181,8 +181,58 @@ model ContractDraft {
   parties   ContractParties?
   financial ContractFinancial?
   penalties ContractPenalties?
+  terminationRules TerminationRules?
+  extraCosts ContractExtraCosts?
+  technicalSpecs ContractTechnicalSpecs?
+  attachments ContractAttachments?
 
   @@index([tenantId, updatedAt])
+}
+
+/// قواعد فسخ ذخیره‌شده برای هر پیش‌نویس؛ خریدار به‌صورت JSONB در `buyerRules`.
+model TerminationRules {
+  id         String        @id @default(cuid())
+  draftId    String        @unique
+  buyerRules Json          @default("{}")
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  draft      ContractDraft @relation(fields: [draftId], references: [id], onDelete: Cascade)
+
+  @@index([draftId])
+}
+
+model ContractExtraCosts {
+  id        String        @id @default(cuid())
+  draftId   String        @unique
+  payload   Json          @default("[]")
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  draft     ContractDraft @relation(fields: [draftId], references: [id], onDelete: Cascade)
+
+  @@index([draftId])
+}
+
+model ContractTechnicalSpecs {
+  id        String        @id @default(cuid())
+  draftId   String        @unique
+  specs     Json          @default("[]")
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  draft     ContractDraft @relation(fields: [draftId], references: [id], onDelete: Cascade)
+
+  @@index([draftId])
+}
+
+model ContractAttachments {
+  id        String        @id @default(cuid())
+  draftId   String        @unique
+  documents Json          @default("[]")
+  notes     String?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  draft     ContractDraft @relation(fields: [draftId], references: [id], onDelete: Cascade)
+
+  @@index([draftId])
 }
 
 model ContractSubject {

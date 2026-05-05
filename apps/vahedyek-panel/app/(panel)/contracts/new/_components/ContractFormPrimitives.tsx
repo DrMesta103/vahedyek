@@ -47,6 +47,8 @@ export function FormTextInput({
   icon: Icon,
   disabled,
   className = '',
+  inputMode,
+  dir,
 }: {
   value: string;
   onChange: (value: string) => void;
@@ -54,6 +56,8 @@ export function FormTextInput({
   icon?: React.ElementType;
   disabled?: boolean;
   className?: string;
+  inputMode?: React.HTMLAttributes<HTMLInputElement>['inputMode'];
+  dir?: 'ltr' | 'rtl';
 }) {
   return (
     <div className="relative">
@@ -63,6 +67,8 @@ export function FormTextInput({
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         disabled={disabled}
+        inputMode={inputMode}
+        dir={dir}
         className={`h-[42px] w-full rounded-xl border border-slate-200 bg-[image:var(--control-bg-gradient)] text-[13px] text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] placeholder:text-slate-400 outline-none transition-all focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10 disabled:bg-slate-50 disabled:text-slate-400 ${Icon ? 'pr-10 pl-3.5' : 'px-3.5'} ${className}`}
       />
     </div>
@@ -144,6 +150,62 @@ export function TagPills<T extends string>({
         <TagPill key={option.value} label={option.label} active={value === option.value} onClick={() => onChange(option.value)} />
       ))}
     </div>
+  );
+}
+
+export function MultiTagPills<T extends string>({
+  options,
+  values,
+  onChange,
+  wrap = true,
+  className = '',
+}: {
+  options: { value: T; label: string }[];
+  values: T[];
+  onChange: (values: T[]) => void;
+  wrap?: boolean;
+  className?: string;
+}) {
+  return (
+    <div className={`flex gap-1.5 ${wrap ? 'flex-wrap' : 'flex-nowrap overflow-x-auto pb-1'} ${className}`}>
+      {options.map((option) => {
+        const active = values.includes(option.value);
+        return (
+          <TagPill
+            key={option.value}
+            label={option.label}
+            active={active}
+            onClick={() => onChange(active ? values.filter((v) => v !== option.value) : [...values, option.value])}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+export function BusinessSwitch({
+  checked,
+  onChange,
+  onLabel = 'فعال',
+  offLabel = 'غیرفعال',
+  className = '',
+}: {
+  checked: boolean;
+  onChange: (next: boolean) => void;
+  onLabel?: string;
+  offLabel?: string;
+  className?: string;
+}) {
+  return (
+    <button
+      type="button"
+      className={`business-switch shrink-0 ${className}`}
+      aria-pressed={checked}
+      onClick={() => onChange(!checked)}
+    >
+      <span className="business-switch-option is-on">{onLabel}</span>
+      <span className="business-switch-option is-off">{offLabel}</span>
+    </button>
   );
 }
 

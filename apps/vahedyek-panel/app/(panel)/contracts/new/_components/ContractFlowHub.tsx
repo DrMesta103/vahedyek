@@ -14,6 +14,10 @@ import { PenaltiesStep } from './PenaltiesStep';
 import { RightNavSidebar } from './RightNavSidebar';
 import { SubjectStep } from './SubjectStep';
 import { TerminationStep } from './TerminationStep';
+import { ExtraCostsStep } from './ExtraCostsStep';
+import { TechnicalSpecsStep } from './TechnicalSpecsStep';
+import { ContractAttachmentsStep } from './ContractAttachmentsStep';
+import { getContractAttachments, getContractExtraCosts, getContractTechnicalSpecs } from '../../../../actions/contractSteps789';
 import {
   CONTRACT_FLOW_DIRTY_EVENT,
   CONTRACT_FLOW_FINANCIAL_SNAPSHOT_EVENT,
@@ -57,8 +61,28 @@ type SectionItem = {
   render: () => JSX.Element;
 };
 
-const SAVEABLE_SECTIONS: ContractFlowSectionId[] = ['subject', 'parties', 'financial', 'penalties', 'discounts', 'termination'];
-const SECTION_ORDER: ContractFlowSectionId[] = ['subject', 'parties', 'financial', 'penalties', 'discounts', 'termination'];
+const SAVEABLE_SECTIONS: ContractFlowSectionId[] = [
+  'subject',
+  'parties',
+  'financial',
+  'penalties',
+  'discounts',
+  'termination',
+  'extraCosts',
+  'technicalSpecs',
+  'contractAttachments',
+];
+const SECTION_ORDER: ContractFlowSectionId[] = [
+  'subject',
+  'parties',
+  'financial',
+  'penalties',
+  'discounts',
+  'termination',
+  'extraCosts',
+  'technicalSpecs',
+  'contractAttachments',
+];
 const SECTION_PREREQUISITES: Record<ContractFlowSectionId, ContractFlowSectionId[]> = {
   subject: [],
   parties: ['subject'],
@@ -66,6 +90,9 @@ const SECTION_PREREQUISITES: Record<ContractFlowSectionId, ContractFlowSectionId
   penalties: ['subject', 'parties', 'financial'],
   discounts: ['subject', 'parties', 'financial'],
   termination: ['subject', 'parties', 'financial', 'penalties', 'discounts'],
+  extraCosts: ['termination'],
+  technicalSpecs: ['termination'],
+  contractAttachments: ['termination'],
 };
 const SECTION_TITLES: Record<ContractFlowSectionId, string> = {
   subject: 'اطلاعات پایه',
@@ -74,6 +101,9 @@ const SECTION_TITLES: Record<ContractFlowSectionId, string> = {
   penalties: 'جرایم',
   discounts: 'تخفیف‌ها',
   termination: 'شرایط فسخ',
+  extraCosts: 'سایر هزینه‌های قرارداد',
+  technicalSpecs: 'مشخصات فنی پروژه',
+  contractAttachments: 'پیوست و اسناد قرارداد',
 };
 
 const FIXED_FINANCIAL_COLORS = {
@@ -211,6 +241,9 @@ export function ContractFlowHub() {
   const [penaltiesData, setPenaltiesData] = useState<ContractPenaltiesData | null>(null);
   const [discountsData, setDiscountsData] = useState<ContractDiscountsData | null>(null);
   const [terminationData, setTerminationData] = useState<ContractTerminationData | null>(null);
+  const [extraCostsExists, setExtraCostsExists] = useState(false);
+  const [technicalSpecsExists, setTechnicalSpecsExists] = useState(false);
+  const [attachmentsExists, setAttachmentsExists] = useState(false);
   const [dirtyMap, setDirtyMap] = useState<Partial<Record<ContractFlowSectionId, boolean>>>({});
   const [savingMap, setSavingMap] = useState<Partial<Record<ContractFlowSectionId, boolean>>>({});
   const [lastUpdatedMap, setLastUpdatedMap] = useState<Partial<Record<ContractFlowSectionId, number>>>({});
@@ -231,11 +264,14 @@ export function ContractFlowHub() {
       }
 
       try {
-        const [subject, parties, financial, penalties] = await Promise.all([
+        const [subject, parties, financial, penalties, extraCosts, technicalSpecs, attachments] = await Promise.all([
           getStepData<ContractSubjectData>(draftId, 'subject'),
           getStepData<ContractPartiesData>(draftId, 'parties'),
           getStepData<ContractFinancialData>(draftId, 'financial'),
           getStepData<ContractPenaltiesData>(draftId, 'penalties'),
+          getContractExtraCosts(draftId).catch(() => ({ ok: false as const, message: 'خطا' })),
+          getContractTechnicalSpecs(draftId).catch(() => ({ ok: false as const, message: 'خطا' })),
+          getContractAttachments(draftId).catch(() => ({ ok: false as const, message: 'خطا' })),
         ]);
         const financialFrontendDraft = getFrontendStepDraft<ContractFinancialData>(draftId, 'financial');
         const penaltiesFrontendDraft = getFrontendStepDraft<ContractPenaltiesData>(draftId, 'penalties');
@@ -250,6 +286,9 @@ export function ContractFlowHub() {
         setPenaltiesData(penaltiesFrontendDraft ?? penalties);
         setDiscountsData(discountsFrontendDraft);
         setTerminationData(terminationFrontendDraft);
+        setExtraCostsExists(Boolean(extraCosts.ok && extraCosts.exists));
+        setTechnicalSpecsExists(Boolean(technicalSpecs.ok && technicalSpecs.exists));
+        setAttachmentsExists(Boolean(attachments.ok && attachments.exists));
       } finally {
         if (mounted) setLoading(false);
       }
@@ -285,8 +324,9 @@ export function ContractFlowHub() {
     };
 
     const handleSaved = async (event: Event) => {
-      const customEvent = event as CustomEvent<{ sectionId: ContractFlowSectionId; savedAt: number }>;
+      const customEvent = event as CustomEvent<{ sectionId: ContractFlowSectionId; savedAt: number; payload?: unknown }>;
       const savedSectionId = customEvent.detail.sectionId;
+      const inlinePayload = customEvent.detail.payload;
       setDirtyMap((current) => ({ ...current, [customEvent.detail.sectionId]: false }));
       setSavingMap((current) => ({ ...current, [customEvent.detail.sectionId]: false }));
       setLastUpdatedMap((current) => ({ ...current, [customEvent.detail.sectionId]: customEvent.detail.savedAt }));
@@ -295,29 +335,53 @@ export function ContractFlowHub() {
       if (!draftId) return;
 
       if (savedSectionId === 'subject') {
-        const subject = await getStepData<ContractSubjectData>(draftId, 'subject');
+        const subject =
+          inlinePayload !== undefined
+            ? (inlinePayload as ContractSubjectData)
+            : await getStepData<ContractSubjectData>(draftId, 'subject');
         setSubjectData(subject);
         if (subject && validateStep1(subject).valid) setPendingScrollSection('parties');
       } else if (savedSectionId === 'parties') {
-        const parties = await getStepData<ContractPartiesData>(draftId, 'parties');
+        const parties =
+          inlinePayload !== undefined
+            ? (inlinePayload as ContractPartiesData)
+            : await getStepData<ContractPartiesData>(draftId, 'parties');
         setPartiesData(parties);
         if (parties && validateStep2(parties).valid) setPendingScrollSection('financial');
       } else if (savedSectionId === 'financial') {
-        const financial = await getStepData<ContractFinancialData>(draftId, 'financial');
+        const financial =
+          inlinePayload !== undefined
+            ? (inlinePayload as ContractFinancialData)
+            : await getStepData<ContractFinancialData>(draftId, 'financial');
         setFinancialData(financial);
         setFinancialLiveData(financial);
         if (financial && validateFinancialStep(financial).valid) setPendingScrollSection('penalties');
       } else if (savedSectionId === 'penalties') {
-        const penalties = await getStepData<ContractPenaltiesData>(draftId, 'penalties');
+        const penalties =
+          inlinePayload !== undefined
+            ? (inlinePayload as ContractPenaltiesData)
+            : await getStepData<ContractPenaltiesData>(draftId, 'penalties');
         setPenaltiesData(penalties);
         if (penalties && validatePenaltiesStep(penalties).valid) setPendingScrollSection('discounts');
       } else if (savedSectionId === 'discounts') {
-        const discounts = getFrontendStepDraft<ContractDiscountsData>(draftId, 'discounts');
+        const discounts =
+          inlinePayload !== undefined
+            ? (inlinePayload as ContractDiscountsData)
+            : getFrontendStepDraft<ContractDiscountsData>(draftId, 'discounts');
         setDiscountsData(discounts);
         if (discounts && validateDiscountsStep(discounts).valid) setPendingScrollSection('termination');
       } else if (savedSectionId === 'termination') {
-        const termination = getFrontendStepDraft<ContractTerminationData>(draftId, 'termination');
+        const termination =
+          inlinePayload !== undefined
+            ? (inlinePayload as ContractTerminationData)
+            : getFrontendStepDraft<ContractTerminationData>(draftId, 'termination');
         setTerminationData(termination);
+      } else if (savedSectionId === 'extraCosts') {
+        setExtraCostsExists(true);
+      } else if (savedSectionId === 'technicalSpecs') {
+        setTechnicalSpecsExists(true);
+      } else if (savedSectionId === 'contractAttachments') {
+        setAttachmentsExists(true);
       }
     };
 
@@ -343,6 +407,9 @@ export function ContractFlowHub() {
   const penaltiesComplete = Boolean(penaltiesData && validatePenaltiesStep(penaltiesData).valid);
   const discountsComplete = Boolean(discountsData && validateDiscountsStep(discountsData).valid);
   const terminationComplete = Boolean(terminationData && validateTerminationStep(terminationData).valid);
+  const extraCostsComplete = extraCostsExists;
+  const technicalSpecsComplete = technicalSpecsExists;
+  const attachmentsComplete = attachmentsExists;
   const completionMap: Record<ContractFlowSectionId, boolean> = {
     subject: subjectComplete,
     parties: partiesComplete,
@@ -350,6 +417,9 @@ export function ContractFlowHub() {
     penalties: penaltiesComplete,
     discounts: discountsComplete,
     termination: terminationComplete,
+    extraCosts: extraCostsComplete,
+    technicalSpecs: technicalSpecsComplete,
+    contractAttachments: attachmentsComplete,
   };
 
   const accessMap = useMemo<Record<ContractFlowSectionId, SectionAccess>>(() => {
@@ -453,8 +523,38 @@ export function ContractFlowHub() {
           : terminationData
             ? { label: 'Incomplete', detail: 'Termination clauses were reviewed but are not confirmed yet.', tone: 'amber' }
             : { label: 'Ready', detail: 'Balanced termination clauses are ready for review.', tone: 'blue' },
+      extraCosts: terminationComplete
+        ? extraCostsComplete
+          ? { label: 'تکمیل شده', detail: 'هزینه‌های مرتبط با قرارداد ذخیره شده است.', tone: 'green' }
+          : { label: 'آماده تنظیم', detail: 'هزینه‌ها و مسئول پرداخت را مشخص و ذخیره کنید.', tone: 'blue' }
+        : { label: 'قفل', detail: 'برای دسترسی ابتدا مرحله «شرایط فسخ» را تکمیل کنید.', tone: 'amber' },
+      technicalSpecs: terminationComplete
+        ? technicalSpecsComplete
+          ? { label: 'تکمیل شده', detail: 'مشخصات فنی پروژه ذخیره شده است.', tone: 'green' }
+          : { label: 'آماده تنظیم', detail: 'مشخصات فنی پروژه را ثبت و ذخیره کنید.', tone: 'blue' }
+        : { label: 'قفل', detail: 'برای دسترسی ابتدا مرحله «شرایط فسخ» را تکمیل کنید.', tone: 'amber' },
+      contractAttachments: terminationComplete
+        ? attachmentsComplete
+          ? { label: 'تکمیل شده', detail: 'پیوست‌ها و اسناد قرارداد ذخیره شده است.', tone: 'green' }
+          : { label: 'آماده تنظیم', detail: 'اسناد موردنیاز را بارگذاری و ذخیره کنید.', tone: 'blue' }
+        : { label: 'قفل', detail: 'برای دسترسی ابتدا مرحله «شرایط فسخ» را تکمیل کنید.', tone: 'amber' },
     }),
-    [discountsComplete, discountsData, financialComplete, financialData, loading, partiesComplete, partiesData, subjectComplete, subjectData, terminationComplete, terminationData],
+    [
+      attachmentsComplete,
+      discountsComplete,
+      discountsData,
+      extraCostsComplete,
+      financialComplete,
+      financialData,
+      loading,
+      partiesComplete,
+      partiesData,
+      subjectComplete,
+      subjectData,
+      technicalSpecsComplete,
+      terminationComplete,
+      terminationData,
+    ],
   );
 
   const sections: SectionItem[] = [
@@ -493,6 +593,24 @@ export function ContractFlowHub() {
       title: 'شرایط فسخ',
       navLabel: 'Termination Terms',
       render: () => <TerminationStep stepId="termination" title="شرایط فسخ" embedded />,
+    },
+    {
+      id: 'extraCosts',
+      title: 'سایر هزینه‌های قرارداد',
+      navLabel: 'Extra Costs',
+      render: () => <ExtraCostsStep title="سایر هزینه‌های قرارداد" />,
+    },
+    {
+      id: 'technicalSpecs',
+      title: 'مشخصات فنی پروژه',
+      navLabel: 'Technical Specs',
+      render: () => <TechnicalSpecsStep title="مشخصات فنی پروژه" />,
+    },
+    {
+      id: 'contractAttachments',
+      title: 'پیوست و اسناد قرارداد',
+      navLabel: 'Attachments',
+      render: () => <ContractAttachmentsStep title="پیوست و اسناد قرارداد" />,
     },
   ];
 
@@ -737,6 +855,7 @@ export function ContractFlowHub() {
         {sections.filter((section) => !accessMap[section.id].locked).map((section) => {
           const status = statusMap[section.id];
           const isSubjectSection = section.id === 'subject';
+          const isTerminationSection = section.id === 'termination';
           return (
             <section
               key={section.id}
@@ -750,13 +869,19 @@ export function ContractFlowHub() {
                 isSubjectSection ? 'px-4 pb-4 pt-4 md:px-5 md:pt-5' : 'mb-5 pb-4'
               }`}>
                 <div>
-                  <div className="flex flex-wrap items-center gap-2">
+                  {isTerminationSection ? (
                     <h2 className="text-xl font-bold text-gray-900">{section.title}</h2>
-                    <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium ${getToneClasses(status.tone)}`}>
-                      {status.label}
-                    </span>
-                  </div>
-                  <p className="mt-2 text-sm leading-6 text-gray-500">{status.detail}</p>
+                  ) : (
+                    <>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h2 className="text-xl font-bold text-gray-900">{section.title}</h2>
+                        <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium ${getToneClasses(status.tone)}`}>
+                          {status.label}
+                        </span>
+                      </div>
+                      <p className="mt-2 text-sm leading-6 text-gray-500">{status.detail}</p>
+                    </>
+                  )}
                 </div>
               </div>
 

@@ -392,7 +392,7 @@ export function PartiesStep({ stepId, title, embedded = false }: { stepId: strin
       await saveStepData(draftId, 'parties', payload);
       initialSnapshotRef.current = JSON.stringify(payload);
       dispatchContractFlowDirty(stepId as 'parties', false);
-      dispatchContractFlowSaved(stepId as 'parties');
+      dispatchContractFlowSaved(stepId as 'parties', Date.now(), payload);
       router.push(basePath);
     } finally {
       setSaving(false);
