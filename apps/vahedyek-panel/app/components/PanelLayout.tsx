@@ -187,12 +187,32 @@ function buildBusinessSettingsBreadcrumb(pathname: string): Crumb[] {
         'additional-costs': 'هزینه های جانبی',
         discount: 'تنظیمات تخفیف',
         penalty: 'تنظیمات جریمه',
+        'builder-penalty': 'جریمه سازنده',
         forgiveness: 'تنظیمات بخشودگی',
         interest: 'سود دریافتی',
       };
 
       if (ruleSegment && ruleTitleMap[ruleSegment]) {
-        trail.push({ label: ruleTitleMap[ruleSegment] });
+        const rulePath = `/business-settings/contract-rules/${ruleSegment}`;
+        const isDeeperThanRuleRoot = pathname !== rulePath;
+
+        trail.push({
+          label: ruleTitleMap[ruleSegment],
+          href: isDeeperThanRuleRoot ? rulePath : undefined,
+        });
+
+        if (ruleSegment === 'builder-penalty') {
+          const builderPenaltySection = pathname.split('/')[4];
+          const builderPenaltyMap: Record<string, string> = {
+            'unit-delivery-delay': 'تاخیر در تحویل واحد',
+            'material-specs-change': 'تغییر مصالح / مشخصات',
+            'area-difference': 'اختلاف متراژ',
+          };
+
+          if (builderPenaltySection && builderPenaltyMap[builderPenaltySection]) {
+            trail.push({ label: builderPenaltyMap[builderPenaltySection] });
+          }
+        }
       }
     }
   }

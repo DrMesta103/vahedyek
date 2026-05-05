@@ -7,6 +7,7 @@ export type ContractRuleId =
   | 'additional-costs'
   | 'discount'
   | 'penalty'
+  | 'builder-penalty'
   | 'forgiveness'
   | 'interest';
 
@@ -138,6 +139,11 @@ export const CONTRACT_RULE_ITEMS: Array<{ id: ContractRuleId; title: string; des
     id: 'penalty',
     title: 'تنظیمات جریمه',
     description: 'میزان جریمه تاخیر، مبنای محاسبه و دوره محاسبه جریمه را در این بخش مشخص کنید.',
+  },
+  {
+    id: 'builder-penalty',
+    title: 'جریمه سازنده',
+    description: 'فعال‌سازی و تنظیم جریمه‌های مرتبط با تعهدات سازنده مانند تاخیر در تحویل، تغییر مشخصات و اختلاف متراژ.',
   },
   {
     id: 'forgiveness',
@@ -485,6 +491,70 @@ export const RULE_CONFIGS: Record<ContractRuleId, RuleConfig> = fixMojibakeDeep(
       },
     ],
   },
+  'builder-penalty': {
+    id: 'builder-penalty',
+    title: 'جریمه سازنده',
+    description: 'فعال‌سازی و مدیریت جریمه‌های مربوط به تعهدات سازنده در قرارداد.',
+    activationTitle: 'فعال‌سازی جرائم سازنده',
+    activationDescription: 'با فعال‌سازی این بخش، تنظیمات جریمه سازنده بر اساس پیکربندی برای قراردادهای جدید اعمال خواهد شد.',
+    tabs: [
+      {
+        id: 'builder-penalty-overview',
+        title: 'جرائم سازنده',
+        description: 'مرور و مدیریت جریمه‌های سازنده.',
+        fields: [
+          { key: 'unitDeliveryDelayEnabled', label: 'تاخیر در تحویل واحد', type: 'switch' },
+          { key: 'materialSpecsChangeEnabled', label: 'تغییر مصالح / مشخصات', type: 'switch' },
+          { key: 'areaDifferenceEnabled', label: 'اختلاف متراژ', type: 'switch' },
+          { key: 'unitDeliveryDelayMode', label: 'روش محاسبه تاخیر در تحویل واحد', type: 'select', options: ['fixed', 'percent', 'progressive'] },
+          { key: 'unitDeliveryDelayPeriod', label: 'دوره محاسبه تاخیر در تحویل واحد', type: 'select', options: ['روزانه', 'ماهانه', 'سالانه'] },
+          { key: 'unitDeliveryDelayFixedAmount', label: 'مبلغ ثابت جریمه تاخیر در تحویل واحد', type: 'number', placeholder: '100000' },
+          { key: 'unitDeliveryDelayPercentAmount', label: 'درصد جریمه تاخیر در تحویل واحد', type: 'number', placeholder: '2.5' },
+          { key: 'unitDeliveryDelayPenaltyCap', label: 'سقف جریمه تاخیر در تحویل واحد', type: 'number', placeholder: '50000000' },
+          { key: 'unitDeliveryDelayGraceDays', label: 'مهلت تنفس تاخیر در تحویل واحد', type: 'number', placeholder: '2' },
+          { key: 'unitDeliveryDelayProgressiveRow1From', label: 'از روز ۱ تاخیر در تحویل واحد', type: 'number', placeholder: '1' },
+          { key: 'unitDeliveryDelayProgressiveRow1To', label: 'تا روز ۱ تاخیر در تحویل واحد', type: 'number', placeholder: '4' },
+          { key: 'unitDeliveryDelayProgressiveRow1Rate', label: 'نرخ ۱ تاخیر در تحویل واحد', type: 'number', placeholder: '0.5' },
+          { key: 'unitDeliveryDelayProgressiveRow2From', label: 'از روز ۲ تاخیر در تحویل واحد', type: 'number', placeholder: '5' },
+          { key: 'unitDeliveryDelayProgressiveRow2To', label: 'تا روز ۲ تاخیر در تحویل واحد', type: 'number', placeholder: '10' },
+          { key: 'unitDeliveryDelayProgressiveRow2Rate', label: 'نرخ ۲ تاخیر در تحویل واحد', type: 'number', placeholder: '1' },
+          { key: 'unitDeliveryDelayProgressiveRow3From', label: 'از روز ۳ تاخیر در تحویل واحد', type: 'number', placeholder: '11' },
+          { key: 'unitDeliveryDelayProgressiveRow3To', label: 'تا روز ۳ تاخیر در تحویل واحد', type: 'number', placeholder: '30' },
+          { key: 'unitDeliveryDelayProgressiveRow3Rate', label: 'نرخ ۳ تاخیر در تحویل واحد', type: 'number', placeholder: '2' },
+          { key: 'materialSpecsChangeMode', label: 'روش محاسبه تغییر مصالح / مشخصات', type: 'select', options: ['fixed', 'percent', 'progressive'] },
+          { key: 'materialSpecsChangePeriod', label: 'دوره محاسبه تغییر مصالح / مشخصات', type: 'select', options: ['روزانه', 'ماهانه', 'سالانه'] },
+          { key: 'materialSpecsChangeFixedAmount', label: 'مبلغ ثابت جریمه تغییر مصالح / مشخصات', type: 'number', placeholder: '100000' },
+          { key: 'materialSpecsChangePercentAmount', label: 'درصد جریمه تغییر مصالح / مشخصات', type: 'number', placeholder: '2.5' },
+          { key: 'materialSpecsChangePenaltyCap', label: 'سقف جریمه تغییر مصالح / مشخصات', type: 'number', placeholder: '50000000' },
+          { key: 'materialSpecsChangeSubject', label: 'مشخصات محتمل تغییر مصالح / مشخصات', type: 'select', options: ['گرمایش از کف', 'شیرآلات با کیفیت'] },
+          { key: 'materialSpecsChangeProgressiveRow1From', label: 'از بازه ۱ تغییر مصالح / مشخصات', type: 'number', placeholder: '1' },
+          { key: 'materialSpecsChangeProgressiveRow1To', label: 'تا بازه ۱ تغییر مصالح / مشخصات', type: 'number', placeholder: '4' },
+          { key: 'materialSpecsChangeProgressiveRow1Rate', label: 'نرخ ۱ تغییر مصالح / مشخصات', type: 'number', placeholder: '0.5' },
+          { key: 'materialSpecsChangeProgressiveRow2From', label: 'از بازه ۲ تغییر مصالح / مشخصات', type: 'number', placeholder: '5' },
+          { key: 'materialSpecsChangeProgressiveRow2To', label: 'تا بازه ۲ تغییر مصالح / مشخصات', type: 'number', placeholder: '10' },
+          { key: 'materialSpecsChangeProgressiveRow2Rate', label: 'نرخ ۲ تغییر مصالح / مشخصات', type: 'number', placeholder: '1' },
+          { key: 'materialSpecsChangeProgressiveRow3From', label: 'از بازه ۳ تغییر مصالح / مشخصات', type: 'number', placeholder: '11' },
+          { key: 'materialSpecsChangeProgressiveRow3To', label: 'تا بازه ۳ تغییر مصالح / مشخصات', type: 'number', placeholder: '30' },
+          { key: 'materialSpecsChangeProgressiveRow3Rate', label: 'نرخ ۳ تغییر مصالح / مشخصات', type: 'number', placeholder: '2' },
+          { key: 'areaDifferenceMode', label: 'روش محاسبه اختلاف متراژ', type: 'select', options: ['fixed', 'percent', 'progressive'] },
+          { key: 'areaDifferencePeriod', label: 'دوره محاسبه اختلاف متراژ', type: 'select', options: ['روزانه', 'ماهانه', 'سالانه'] },
+          { key: 'areaDifferenceFixedAmount', label: 'مبلغ ثابت جریمه اختلاف متراژ', type: 'number', placeholder: '100000' },
+          { key: 'areaDifferencePercentAmount', label: 'درصد جریمه اختلاف متراژ', type: 'number', placeholder: '2.5' },
+          { key: 'areaDifferencePenaltyCap', label: 'سقف جریمه اختلاف متراژ', type: 'number', placeholder: '50000000' },
+          { key: 'areaDifferenceAllowedChange', label: 'میزان مجاز تغییر در متراژ', type: 'number', placeholder: '2' },
+          { key: 'areaDifferenceProgressiveRow1From', label: 'از بازه ۱ اختلاف متراژ', type: 'number', placeholder: '1' },
+          { key: 'areaDifferenceProgressiveRow1To', label: 'تا بازه ۱ اختلاف متراژ', type: 'number', placeholder: '4' },
+          { key: 'areaDifferenceProgressiveRow1Rate', label: 'نرخ ۱ اختلاف متراژ', type: 'number', placeholder: '0.5' },
+          { key: 'areaDifferenceProgressiveRow2From', label: 'از بازه ۲ اختلاف متراژ', type: 'number', placeholder: '5' },
+          { key: 'areaDifferenceProgressiveRow2To', label: 'تا بازه ۲ اختلاف متراژ', type: 'number', placeholder: '10' },
+          { key: 'areaDifferenceProgressiveRow2Rate', label: 'نرخ ۲ اختلاف متراژ', type: 'number', placeholder: '1' },
+          { key: 'areaDifferenceProgressiveRow3From', label: 'از بازه ۳ اختلاف متراژ', type: 'number', placeholder: '11' },
+          { key: 'areaDifferenceProgressiveRow3To', label: 'تا بازه ۳ اختلاف متراژ', type: 'number', placeholder: '30' },
+          { key: 'areaDifferenceProgressiveRow3Rate', label: 'نرخ ۳ اختلاف متراژ', type: 'number', placeholder: '2' },
+        ],
+      },
+    ],
+  },
   forgiveness: {
     id: 'forgiveness',
     title: 'تنظیمات بخشودگی',
@@ -592,7 +662,8 @@ export function createInitialRuleState(ruleId: ContractRuleId): ContractRuleStat
       ruleId === 'additional-costs' ||
       ruleId === 'adjustment' ||
       ruleId === 'discount' ||
-      ruleId === 'penalty'
+      ruleId === 'penalty' ||
+      ruleId === 'builder-penalty'
         ? false
         : true,
     activeTab: rule.tabs[0]?.id ?? '',
