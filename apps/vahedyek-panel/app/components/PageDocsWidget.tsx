@@ -167,14 +167,17 @@ export default function PageDocsWidget() {
     if (typeof window === 'undefined') return;
     try {
       const raw = window.localStorage.getItem('devDocsWidgetPos:v1');
-      if (!raw) return;
-      const parsed = JSON.parse(raw) as { x?: unknown; y?: unknown };
-      if (typeof parsed?.x === 'number' && typeof parsed?.y === 'number') {
-        setWidgetPos({ x: parsed.x, y: parsed.y });
+      if (raw) {
+        const parsed = JSON.parse(raw) as { x?: unknown; y?: unknown };
+        if (typeof parsed?.x === 'number' && typeof parsed?.y === 'number') {
+          setWidgetPos({ x: parsed.x, y: parsed.y });
+          return;
+        }
       }
     } catch {
-      return;
+      /* ignore */
     }
+    setWidgetPos({ x: 16, y: Math.round(window.innerHeight / 2 - 22) });
   }, []);
 
   useEffect(() => {
@@ -647,7 +650,8 @@ export default function PageDocsWidget() {
     }
   };
 
-  const fallbackWidgetTop = typeof window === 'undefined' ? 120 : Math.round(window.innerHeight / 2 - 22);
+  /** Same default on server and first client paint to avoid hydration mismatch; real position comes from state after mount. */
+  const defaultWidgetTop = 120;
 
   return (
     <>
@@ -834,14 +838,14 @@ export default function PageDocsWidget() {
         style={{
           position: 'fixed',
           left: widgetPos ? widgetPos.x : 16,
-          top: widgetPos ? widgetPos.y : fallbackWidgetTop,
+          top: widgetPos ? widgetPos.y : defaultWidgetTop,
           touchAction: 'none',
-          animation: buzz ? 'devDocsBuzz 600ms ease-in-out' : undefined,
+          ...(buzz ? { animation: 'devDocsBuzz 600ms ease-in-out' as const } : {}),
         }}
         onPointerDown={(event) => {
           draggingRef.current = true;
           const startX = widgetPos?.x ?? 16;
-          const startY = widgetPos?.y ?? fallbackWidgetTop;
+          const startY = widgetPos?.y ?? defaultWidgetTop;
           dragOffsetRef.current = { dx: event.clientX - startX, dy: event.clientY - startY };
           (event.currentTarget as HTMLButtonElement).setPointerCapture(event.pointerId);
         }}
