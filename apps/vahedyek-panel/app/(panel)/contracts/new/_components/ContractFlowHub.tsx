@@ -91,8 +91,8 @@ const SECTION_PREREQUISITES: Record<ContractFlowSectionId, ContractFlowSectionId
   discounts: ['subject', 'parties', 'financial', 'penalties'],
   termination: ['subject', 'parties', 'financial', 'penalties', 'discounts'],
   extraCosts: ['termination'],
-  technicalSpecs: ['termination'],
-  contractAttachments: ['termination'],
+  technicalSpecs: ['extraCosts'],
+  contractAttachments: ['technicalSpecs'],
 };
 const SECTION_TITLES: Record<ContractFlowSectionId, string> = {
   subject: 'اطلاعات پایه',
@@ -313,7 +313,7 @@ export function ContractFlowHub() {
   }, []);
 
   useEffect(() => {
-    setLastUpdatedMap(getStoredLastUpdated());
+    setLastUpdatedMap(getStoredLastUpdated(getActiveDraftId()));
 
     const handleDirty = (event: Event) => {
       const customEvent = event as CustomEvent<{ sectionId: ContractFlowSectionId; dirty: boolean }>;

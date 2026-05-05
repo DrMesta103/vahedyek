@@ -7,7 +7,7 @@ import { PartySelectionDialog } from './PartySelectionDialog';
 import { StickySubmitBar } from '@repo/ui';
 import { ContractStepLoader } from './ContractStepLoader';
 import { FieldGroup, TagPills } from './ContractFormPrimitives';
-import { dispatchContractFlowDirty, dispatchContractFlowSaved } from './contractFlowSignals';
+import { dispatchContractFlowDirty, dispatchContractFlowSavedForDraft } from './contractFlowSignals';
 import {
   clampShare,
   convertShare,
@@ -392,7 +392,7 @@ export function PartiesStep({ stepId, title, embedded = false }: { stepId: strin
       await saveStepData(draftId, 'parties', payload);
       initialSnapshotRef.current = JSON.stringify(payload);
       dispatchContractFlowDirty(stepId as 'parties', false);
-      dispatchContractFlowSaved(stepId as 'parties', Date.now(), payload);
+      dispatchContractFlowSavedForDraft(draftId, stepId as 'parties', Date.now(), payload);
       router.push(basePath);
     } finally {
       setSaving(false);

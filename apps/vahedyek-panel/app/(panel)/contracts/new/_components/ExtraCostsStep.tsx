@@ -5,7 +5,7 @@ import { Input, StickySubmitBar } from '@repo/ui';
 import { ensureActiveDraftId, getStepData } from '../../../../lib/contractDraftClient';
 import type { ContractFinancialData } from '../../../../types/contract';
 import { getContractExtraCosts, upsertContractExtraCosts, type ContractRelatedExpense, type ContractRelatedExpenseCalculationMethod, type ContractRelatedExpenseType } from '../../../../actions/contractSteps789';
-import { dispatchContractFlowDirty, dispatchContractFlowSaved } from './contractFlowSignals';
+import { dispatchContractFlowDirty, dispatchContractFlowSavedForDraft } from './contractFlowSignals';
 import { BusinessSwitch, FieldGroup, SectionCard, SectionHeader, TagPills } from './ContractFormPrimitives';
 
 type ExpenseUiState = ContractRelatedExpense & { enabled: boolean };
@@ -263,7 +263,7 @@ export function ExtraCostsStep({ title }: { title: string }) {
       if (!remote.ok) throw new Error('message' in remote ? remote.message : 'ذخیره اطلاعات انجام نشد.');
       initialSnapshotRef.current = snapshot;
       dispatchContractFlowDirty('extraCosts', false);
-      dispatchContractFlowSaved('extraCosts', Date.now(), payload);
+      dispatchContractFlowSavedForDraft(draftId, 'extraCosts', Date.now(), payload);
     } catch (error) {
       setFormError(error instanceof Error ? error.message : 'ذخیره اطلاعات انجام نشد.');
     } finally {

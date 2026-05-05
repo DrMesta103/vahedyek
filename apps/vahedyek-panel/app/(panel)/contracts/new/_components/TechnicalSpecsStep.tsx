@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { StickySubmitBar, Input } from '@repo/ui';
-import { dispatchContractFlowDirty, dispatchContractFlowSaved } from './contractFlowSignals';
+import { dispatchContractFlowDirty, dispatchContractFlowSavedForDraft } from './contractFlowSignals';
 import { ensureActiveDraftId } from '../../../../lib/contractDraftClient';
 import { FieldGroup, SectionCard, SectionHeader } from './ContractFormPrimitives';
 import { getContractTechnicalSpecs, upsertContractTechnicalSpecs, type TechnicalSpecItem } from '../../../../actions/contractSteps789';
@@ -109,7 +109,7 @@ export function TechnicalSpecsStep({ title }: { title: string }) {
       if (!remote.ok) throw new Error('message' in remote ? remote.message : 'ذخیره اطلاعات انجام نشد.');
       initialSnapshotRef.current = JSON.stringify(payload);
       dispatchContractFlowDirty('technicalSpecs', false);
-      dispatchContractFlowSaved('technicalSpecs', Date.now(), payload);
+      dispatchContractFlowSavedForDraft(draftId, 'technicalSpecs', Date.now(), payload);
     } catch (error) {
       setFormError(error instanceof Error ? error.message : 'ذخیره اطلاعات انجام نشد.');
     } finally {

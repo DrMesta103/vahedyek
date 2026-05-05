@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { Building2, Circle, Pencil, Square, UserRound } from 'lucide-react';
 import type { Block, Contract, ContractType, Unit } from '../../types/contract';
 
@@ -34,6 +35,7 @@ function DetailRow({ label, value, accent = false }: { label: string; value: str
 }
 
 export default function ContractTable({ contracts, blocks, units, onEdit, loading = false }: ContractTableProps) {
+  const router = useRouter();
   const blockMap = new Map(blocks.map((block) => [block.id, block.name]));
   const unitMap = new Map(units.map((unit) => [unit.id, unit]));
 
@@ -75,7 +77,16 @@ export default function ContractTable({ contracts, blocks, units, onEdit, loadin
           contract.status === 'draft' ? 'پیش‌نویس قرارداد' : contract.status === 'pending_approval' ? 'آماده بررسی' : 'تکمیل شده';
 
         return (
-          <article key={contract.id} className="contract-reference-card">
+          <article
+            key={contract.id}
+            className="contract-reference-card"
+            role="button"
+            tabIndex={0}
+            onClick={() => router.push(`/contracts/${contract.id}`)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') router.push(`/contracts/${contract.id}`);
+            }}
+          >
             <div className="contract-reference-ribbon is-left">{leftRibbonLabel}</div>
 
             <div className="contract-reference-main">
@@ -120,7 +131,14 @@ export default function ContractTable({ contracts, blocks, units, onEdit, loadin
                     <span className="contract-reference-status-pill">
                       {CONTRACT_TYPE_LABEL[subject.contractType] ?? subject.contractType}
                     </span>
-                    <button type="button" className="contract-reference-edit-button" onClick={() => onEdit(contract.id)}>
+                    <button
+                      type="button"
+                      className="contract-reference-edit-button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        onEdit(contract.id);
+                      }}
+                    >
                       <Pencil className="h-3.5 w-3.5" />
                       ویرایش
                     </button>

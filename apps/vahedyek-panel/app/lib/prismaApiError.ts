@@ -37,6 +37,18 @@ export function handlePrismaApiError(error: unknown) {
     }
   }
 
+  if (process.env.NODE_ENV === 'development') {
+    const message = error instanceof Error ? error.message : String(error);
+    return NextResponse.json(
+      {
+        error: 'internal_server_error',
+        message: 'خطایی در ارتباط با دیتابیس رخ داده است.',
+        debug: message,
+      },
+      { status: 500 },
+    );
+  }
+
   return NextResponse.json(
     {
       error: 'internal_server_error',

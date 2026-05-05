@@ -28,7 +28,7 @@ import type {
   PenaltyRuleData,
   PenaltyTypeStateData,
 } from '../../../../types/contract';
-import { dispatchContractFlowDirty, dispatchContractFlowSaved } from './contractFlowSignals';
+import { dispatchContractFlowDirty, dispatchContractFlowSavedForDraft } from './contractFlowSignals';
 import type { ContractFlowSectionId } from './contractFlowSignals';
 
 const MODE_OPTIONS: Array<{
@@ -420,7 +420,7 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
       initialSnapshotRef.current = serializePayload(payload);
       setDirty(false);
       dispatchContractFlowDirty(stepId as ContractFlowSectionId, false);
-      dispatchContractFlowSaved(stepId as ContractFlowSectionId, Date.now(), payload);
+      dispatchContractFlowSavedForDraft(draftId, stepId as ContractFlowSectionId, Date.now(), payload);
     } catch (error) {
       setFormError(error instanceof Error ? error.message : 'ذخیره جرایم انجام نشد.');
     } finally {
