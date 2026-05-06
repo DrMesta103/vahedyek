@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import {
   APP_PERMISSION_ITEMS,
   MENU_PERMISSION_ITEMS,
+  ensureEmployeeMembershipRoles,
   ensureOwnerMembershipRole,
   ensureTenantDefaultRoles,
   filterMenuByPermissions,
@@ -36,6 +37,7 @@ function legacyMenuIdsToPermissionKeys(menuItemIds: string[]) {
 
 async function getAccessPayload(tenantId: string) {
   await ensureTenantDefaultRoles(tenantId);
+  await ensureEmployeeMembershipRoles(tenantId);
 
   const [roles, memberships, representatives] = await Promise.all([
     prisma.tenantRole.findMany({

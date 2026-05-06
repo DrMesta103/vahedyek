@@ -15,6 +15,10 @@ import { PersonAvatar, PersonRowCard } from './ProfilePeoplePrimitives';
 
 type ShareholderTab = 'natural' | 'legal';
 
+function getNaturalPersonName(item: NaturalShareholderRecord) {
+  return item.fullName.trim() || item.mobile || item.email || 'کاربر جدید';
+}
+
 export function BusinessShareholdersPanel() {
   const searchParams = useSearchParams();
   const [query, setQuery] = useState('');
@@ -88,7 +92,7 @@ export function BusinessShareholdersPanel() {
             <PersonRowCard
               key={item.id}
               className="shareholder-card"
-              name={item.fullName}
+              name={getNaturalPersonName(item)}
               subtitle={`${item.sharePercent}%`}
               email={item.email}
               avatar={<PersonAvatar avatarMode={item.avatarMode} avatarText={item.avatarText} avatarImage={item.avatarImage} kind="person" />}

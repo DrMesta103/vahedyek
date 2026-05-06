@@ -1,6 +1,638 @@
-⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
-[@locator/webpack-loader] Failed to transform C:\Users\s.roosta\Desktop\Project\vahedyek\apps\vahedyek-panel\app\components\ui\PersianDatePicker.tsx: C:\Users\s.roosta\Desktop\Project\vahedyek\apps\vahedyek-panel\app\components\ui\PersianDatePicker.tsx: Bad character escape sequence. (4:118)
-[@locator/webpack-loader] Failed to transform C:\Users\s.roosta\Desktop\Project\vahedyek\apps\vahedyek-panel\app\components\ui\input.tsx: C:\Users\s.roosta\Desktop\Project\vahedyek\apps\vahedyek-panel\app\components\ui\input.tsx: Bad character escape sequence. (4:118)
+warn The configuration property `package.json#prisma` is deprecated and will be removed in Prisma 7. Please migrate to a Prisma config file (e.g., `prisma.config.ts`).
+For more information, see: https://pris.ly/prisma-config
+
+Environment variables loaded from .env
+[browser] [locator-js] React instance (react-dom v19.3.0-canary-3f0b9e61-20260317) is not supported (chrome-extension://npbfdllefekhdplbkdigpncggmojpefi/hook.bundle.js:1:27759)
+[browser] [locator-js] React instance (react-dom v19.3.0-canary-3f0b9e61-20260317) is not supported (chrome-extension://npbfdllefekhdplbkdigpncggmojpefi/hook.bundle.js:1:27759)
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <InnerScrollAndFocusHandlerOld focusAndScrollRef={{scrollRef:null, ...}} cacheNode={{rsc:{...}, ...}}>
+      <ErrorBoundary errorComponent={undefined} errorStyles={undefined} errorScripts={undefined}>
+        <LoadingBoundary name="/" loading={null}>
+          <HTTPAccessFallbackBoundary notFound={{...}} forbidden={undefined} unauthorized={undefined}>
+            <HTTPAccessFallbackErrorBoundary pathname="/" notFound={{...}} forbidden={undefined} unauthorized={undefined} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <InnerLayoutRouter url="/" tree={[...]} params={{}} cacheNode={{rsc:{...}, ...}} segmentPath={[...]} ...>
+                    <SegmentViewNode type="page" pagePath="page.tsx">
+                      <SegmentTrieNode>
+                      <Home>
+                        <PanelLayout>
+                          <div className="app-shell">
+                            <PageDocsWidget>
+                              <style>
+                              <div className="pointer-ev...">
+                                <button
+                                  type="button"
+                                  onClick={function onClick}
+                                  className="pointer-events-auto flex h-12 w-12 items-center justify-center rounded-fu..."
+                                  aria-label="گفتگوی مستندات توسعه این صفحه"
+                                  title="گفتگوی مستندات توسعه این صفحه"
+                                  style={{
++                                   position: "fixed"
+-                                   position: "fixed"
++                                   left: 16
+-                                   left: "16px"
++                                   top: 434
+-                                   top: "120px"
++                                   touchAction: "none"
++                                   animation: undefined
+-                                   touch-action: "none"
+                                  }}
+                                  onPointerDown={function onPointerDown}
+                                  onPointerMove={function onPointerMove}
+                                  onPointerUp={function onPointerUp}
+                                >
+                            <Sidebar>
+                            ...
+                              <div className="main-wrapper">
+                                <div ref={{current:null}} className="gear-system" onMouseDown={function handleMouseDown}>
+                                  <div className="orbit-line" style={{...}}>
+                                    <button>
+                                    <button>
+                                    <button>
+                                    <button>
+                                    <button>
+                                    <button>
+                                    <button
+                                      type="button"
+                                      className="node"
+                                      style={{
++                                       left: "22.655581462513624px"
+-                                       left: "22.6556px"
++                                       top: "80.17583440395703px"
+-                                       top: "80.1758px"
++                                       transform: "rotate(0rad)"
+-                                       transform: "rotate(0rad)"
+                                      }}
+                                      onMouseDown={function handleMouseDown}
+                                      onClick={function onClick}
+                                      disabled={true}
+                                    >
+                                    ...
+                    ...
+                  ...
+      ...
+ 
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <ScrollAndMaybeFocusHandler cacheNode={{rsc:{...}, ...}}>
+      <InnerScrollAndFocusHandlerOld focusAndScrollRef={{scrollRef:null, ...}} cacheNode={{rsc:{...}, ...}}>
+        <ErrorBoundary errorComponent={undefined} errorStyles={undefined} errorScripts={undefined}>
+          <LoadingBoundary name="settings/" loading={null}>
+            <HTTPAccessFallbackBoundary notFound={undefined} forbidden={undefined} unauthorized={undefined}>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <InnerLayoutRouter url="/settings" tree={[...]} params={{}} cacheNode={{rsc:{...}, ...}} ...>
+                    <SegmentViewNode type="page" pagePath="(panel)/se...">
+                      <SegmentTrieNode>
+                      <SettingsPage>
+                        <PanelLayout>
+                          <div className="app-shell">
+                            <PageDocsWidget>
+                              <style>
+                              <div className="pointer-ev...">
+                                <button
+                                  type="button"
+                                  onClick={function onClick}
+                                  className="pointer-events-auto flex h-12 w-12 items-center justify-center rounded-fu..."
+                                  aria-label="گفتگوی مستندات توسعه این صفحه"
+                                  title="گفتگوی مستندات توسعه این صفحه"
+                                  style={{
++                                   position: "fixed"
+-                                   position: "fixed"
++                                   left: 16
+-                                   left: "16px"
++                                   top: 434
+-                                   top: "120px"
++                                   touchAction: "none"
++                                   animation: undefined
+-                                   touch-action: "none"
+                                  }}
+                                  onPointerDown={function onPointerDown}
+                                  onPointerMove={function onPointerMove}
+                                  onPointerUp={function onPointerUp}
+                                >
+                            ...
+                    ...
+                  ...
+        ...
+ 
+[browser] [locatorjs]: ok (chrome-extension://npbfdllefekhdplbkdigpncggmojpefi/hook.bundle.js:1:36200)
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <InnerScrollAndFocusHandlerOld focusAndScrollRef={{scrollRef:null, ...}} cacheNode={{rsc:{...}, ...}}>
+      <ErrorBoundary errorComponent={undefined} errorStyles={undefined} errorScripts={undefined}>
+        <LoadingBoundary name="/" loading={null}>
+          <HTTPAccessFallbackBoundary notFound={{...}} forbidden={undefined} unauthorized={undefined}>
+            <HTTPAccessFallbackErrorBoundary pathname="/" notFound={{...}} forbidden={undefined} unauthorized={undefined} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <InnerLayoutRouter url="/" tree={[...]} params={{}} cacheNode={{rsc:{...}, ...}} segmentPath={[...]} ...>
+                    <SegmentViewNode type="page" pagePath="page.tsx">
+                      <SegmentTrieNode>
+                      <Home>
+                        <PanelLayout>
+                          <div className="app-shell">
+                            <PageDocsWidget>
+                              <style>
+                              <div className="pointer-ev...">
+                                <button
+                                  type="button"
+                                  onClick={function onClick}
+                                  className="pointer-events-auto flex h-12 w-12 items-center justify-center rounded-fu..."
+                                  aria-label="گفتگوی مستندات توسعه این صفحه"
+                                  title="گفتگوی مستندات توسعه این صفحه"
+                                  style={{
++                                   position: "fixed"
+-                                   position: "fixed"
++                                   left: 16
+-                                   left: "16px"
++                                   top: 434
+-                                   top: "120px"
++                                   touchAction: "none"
++                                   animation: undefined
+-                                   touch-action: "none"
+                                  }}
+                                  onPointerDown={function onPointerDown}
+                                  onPointerMove={function onPointerMove}
+                                  onPointerUp={function onPointerUp}
+                                >
+                            <Sidebar>
+                            ...
+                              <div className="main-wrapper">
+                                <div ref={{current:null}} className="gear-system" onMouseDown={function handleMouseDown}>
+                                  <div className="orbit-line" style={{...}}>
+                                    <button>
+                                    <button>
+                                    <button>
+                                    <button>
+                                    <button>
+                                    <button>
+                                    <button
+                                      type="button"
+                                      className="node"
+                                      style={{
++                                       left: "22.655581462513624px"
+-                                       left: "22.6556px"
++                                       top: "80.17583440395703px"
+-                                       top: "80.1758px"
++                                       transform: "rotate(0rad)"
+-                                       transform: "rotate(0rad)"
+                                      }}
+                                      onMouseDown={function handleMouseDown}
+                                      onClick={function onClick}
+                                      disabled={true}
+                                    >
+                                    ...
+                    ...
+                  ...
+      ...
+ 
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/employees..." notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="layout.tsx">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <script>
+                      <script>
+                      <RootLayout>
+                        <html lang="fa" dir="rtl" suppressHydrationWarning={true}>
+                          <head
+-                           data-locator-hook-status-message="loading: No valid renderers found."
+                          >
+                          ...
+                            <div className="app-shell">
+                              <PageDocsWidget>
+                                <style>
+                                <div className="pointer-ev...">
+                                  <button
+                                    type="button"
+                                    onClick={function onClick}
+                                    className="pointer-events-auto flex h-12 w-12 items-center justify-center rounded-..."
+                                    aria-label="گفتگوی مستندات توسعه این صفحه"
+                                    title="گفتگوی مستندات توسعه این صفحه"
+                                    style={{
++                                     position: "fixed"
+-                                     position: "fixed"
++                                     left: 16
+-                                     left: "16px"
++                                     top: 434
+-                                     top: "120px"
++                                     touchAction: "none"
++                                     animation: undefined
+-                                     touch-action: "none"
+                                    }}
+                                    onPointerDown={function onPointerDown}
+                                    onPointerMove={function onPointerMove}
+                                    onPointerUp={function onPointerUp}
+                                  >
+                              ...
+                  ...
+ 
+[browser] [locatorjs]: ok (chrome-extension://npbfdllefekhdplbkdigpncggmojpefi/hook.bundle.js:1:36200)
+⨯ ./apps/vahedyek-panel/app/(panel)/settings/page.tsx:2:1
+Module not found: Can't resolve '../business-settings/_components/AccessManagementPanel'
+  [90m1 |[0m ...[36mort[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+[31m[1m>[0m [90m2 |[0m ...[36mort[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m3 |[0m ...
+  [90m4 |[0m ...[36mort[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m5 |[0m ...[36meturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./apps/vahedyek-panel/app/(panel)/settings/page.tsx:2:1
+Module not found: Can't resolve '../business-settings/_components/AccessManagementPanel'
+  [90m1 |[0m ...[36mort[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+[31m[1m>[0m [90m2 |[0m ...[36mort[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m3 |[0m ...
+  [90m4 |[0m ...[36mort[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m5 |[0m ...[36meturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./apps/vahedyek-panel/app/(panel)/settings/page.tsx:2:1
+Module not found: Can't resolve '../business-settings/_components/AccessManagementPanel'
+  [90m1 |[0m ...[36mort[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+[31m[1m>[0m [90m2 |[0m ...[36mort[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m3 |[0m ...
+  [90m4 |[0m ...[36mort[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m5 |[0m ...[36meturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./apps/vahedyek-panel/app/(panel)/settings/page.tsx:2:1
+Module not found: Can't resolve '../business-settings/_components/AccessManagementPanel'
+  [90m1 |[0m ...[36mort[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+[31m[1m>[0m [90m2 |[0m ...[36mort[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m3 |[0m ...
+  [90m4 |[0m ...[36mort[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m5 |[0m ...[36meturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./apps/vahedyek-panel/app/(panel)/settings/page.tsx:2:1
+Module not found: Can't resolve '../business-settings/_components/AccessManagementPanel'
+  [90m1 |[0m ...[36mort[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+[31m[1m>[0m [90m2 |[0m ...[36mort[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m3 |[0m ...
+  [90m4 |[0m ...[36mort[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m5 |[0m ...[36meturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./apps/vahedyek-panel/app/(panel)/settings/page.tsx:2:1
+Module not found: Can't resolve '../business-settings/_components/AccessManagementPanel'
+  [90m1 |[0m ...[36mort[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+[31m[1m>[0m [90m2 |[0m ...[36mort[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m3 |[0m ...
+  [90m4 |[0m ...[36mort[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m5 |[0m ...[36meturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./apps/vahedyek-panel/app/(panel)/settings/page.tsx:2:1
+Module not found: Can't resolve '../business-settings/_components/AccessManagementPanel'
+  [90m1 |[0m ...[36mort[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+[31m[1m>[0m [90m2 |[0m ...[36mort[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m3 |[0m ...
+  [90m4 |[0m ...[36mort[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m5 |[0m ...[36meturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./apps/vahedyek-panel/app/(panel)/settings/page.tsx:2:1
+Module not found: Can't resolve '../business-settings/_components/AccessManagementPanel'
+  [90m1 |[0m ...[36mort[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+[31m[1m>[0m [90m2 |[0m ...[36mort[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m3 |[0m ...
+  [90m4 |[0m ...[36mort[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m5 |[0m ...[36meturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./apps/vahedyek-panel/app/(panel)/settings/page.tsx:2:1
+Module not found: Can't resolve '../business-settings/_components/AccessManagementPanel'
+  [90m1 |[0m ...[36mort[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+[31m[1m>[0m [90m2 |[0m ...[36mort[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m3 |[0m ...
+  [90m4 |[0m ...[36mort[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m5 |[0m ...[36meturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./apps/vahedyek-panel/app/(panel)/settings/page.tsx:2:1
+Module not found: Can't resolve '../business-settings/_components/AccessManagementPanel'
+  [90m1 |[0m ...[36mort[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+[31m[1m>[0m [90m2 |[0m ...[36mort[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m3 |[0m ...
+  [90m4 |[0m ...[36mort[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m5 |[0m ...[36meturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+[browser] ./apps/vahedyek-panel/app/(panel)/settings/page.tsx:2:1
+Module not found: Can't resolve '../business-settings/_components/AccessManagementPanel'
+  1 | ...ort PanelLayout from '../../components/PanelLayout';
+> 2 | ...ort { AccessManagementPanel } from '../business-settings/_components/AccessManagementPan...
+    |    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  3 | ...
+  4 | ...ort default function SettingsPage() {
+  5 | ...eturn (
+
+https://nextjs.org/docs/messages/module-not-found 
+⨯ ./apps/vahedyek-panel/app/(panel)/settings/page.tsx:2:1
+Module not found: Can't resolve '../business-settings/_components/AccessManagementPanel'
+  [90m1 |[0m ...[36mort[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+[31m[1m>[0m [90m2 |[0m ...[36mort[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m3 |[0m ...
+  [90m4 |[0m ...[36mort[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m5 |[0m ...[36meturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./apps/vahedyek-panel/app/(panel)/settings/page.tsx:2:1
+Module not found: Can't resolve '../business-settings/_components/AccessManagementPanel'
+  [90m1 |[0m ...[36mort[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+[31m[1m>[0m [90m2 |[0m ...[36mort[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m3 |[0m ...
+  [90m4 |[0m ...[36mort[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m5 |[0m ...[36meturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+[browser] ./apps/vahedyek-panel/app/(panel)/settings/page.tsx:2:1
+Module not found: Can't resolve '../business-settings/_components/AccessManagementPanel'
+  1 | ...ort PanelLayout from '../../components/PanelLayout';
+> 2 | ...ort { AccessManagementPanel } from '../business-settings/_components/AccessManagementPan...
+    |    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  3 | ...
+  4 | ...ort default function SettingsPage() {
+  5 | ...eturn (
+
+https://nextjs.org/docs/messages/module-not-found 
+⨯ ./apps/vahedyek-panel/app/(panel)/settings/page.tsx:2:1
+Module not found: Can't resolve '../business-settings/_components/AccessManagementPanel'
+  [90m1 |[0m ...[36mort[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+[31m[1m>[0m [90m2 |[0m ...[36mort[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m3 |[0m ...
+  [90m4 |[0m ...[36mort[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m5 |[0m ...[36meturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./apps/vahedyek-panel/app/(panel)/settings/page.tsx:2:1
+Module not found: Can't resolve '../business-settings/_components/AccessManagementPanel'
+  [90m1 |[0m ...[36mort[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+[31m[1m>[0m [90m2 |[0m ...[36mort[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m3 |[0m ...
+  [90m4 |[0m ...[36mort[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m5 |[0m ...[36meturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./apps/vahedyek-panel/app/(panel)/settings/page.tsx:2:1
+Module not found: Can't resolve '../business-settings/_components/AccessManagementPanel'
+  [90m1 |[0m ...[36mort[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+[31m[1m>[0m [90m2 |[0m ...[36mort[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m3 |[0m ...
+  [90m4 |[0m ...[36mort[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m5 |[0m ...[36meturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./apps/vahedyek-panel/app/(panel)/settings/page.tsx:2:1
+Module not found: Can't resolve '../business-settings/_components/AccessManagementPanel'
+  [90m1 |[0m ...[36mort[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+[31m[1m>[0m [90m2 |[0m ...[36mort[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m3 |[0m ...
+  [90m4 |[0m ...[36mort[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m5 |[0m ...[36meturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./apps/vahedyek-panel/app/(panel)/settings/page.tsx:2:1
+Module not found: Can't resolve '../business-settings/_components/AccessManagementPanel'
+  [90m1 |[0m ...[36mort[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+[31m[1m>[0m [90m2 |[0m ...[36mort[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m3 |[0m ...
+  [90m4 |[0m ...[36mort[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m5 |[0m ...[36meturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./apps/vahedyek-panel/app/(panel)/settings/page.tsx:2:1
+Module not found: Can't resolve '../business-settings/_components/AccessManagementPanel'
+  [90m1 |[0m ...[36mort[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+[31m[1m>[0m [90m2 |[0m ...[36mort[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m3 |[0m ...
+  [90m4 |[0m ...[36mort[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m5 |[0m ...[36meturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+[browser] [locatorjs]: ok (chrome-extension://npbfdllefekhdplbkdigpncggmojpefi/hook.bundle.js:1:36200)
+[browser] Uncaught Error: ./apps/vahedyek-panel/app/(panel)/settings/page.tsx:2:1
+Module not found: Can't resolve '../business-settings/_components/AccessManagementPanel'
+  1 | ...ort PanelLayout from '../../components/PanelLayout';
+> 2 | ...ort { AccessManagementPanel } from '../business-settings/_components/AccessManagementPan...
+    |    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  3 | ...
+  4 | ...ort default function SettingsPage() {
+  5 | ...eturn (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+    at <unknown> (Error: ./apps/vahedyek-panel/app/(panel)/settings/page.tsx:2:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (Error: (./apps/vahedyek-panel/app/(panel)/settings/page.tsx:2:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+[browser] ./apps/vahedyek-panel/app/(panel)/settings/page.tsx:2:1
+Module not found: Can't resolve '../business-settings/_components/AccessManagementPanel'
+  1 | ...ort PanelLayout from '../../components/PanelLayout';
+> 2 | ...ort { AccessManagementPanel } from '../business-settings/_components/AccessManagementPan...
+    |    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  3 | ...
+  4 | ...ort default function SettingsPage() {
+  5 | ...eturn (
+
+https://nextjs.org/docs/messages/module-not-found 
+[browser] Uncaught Error: ./apps/vahedyek-panel/app/(panel)/settings/page.tsx:2:1
+Module not found: Can't resolve '../business-settings/_components/AccessManagementPanel'
+  1 | ...ort PanelLayout from '../../components/PanelLayout';
+> 2 | ...ort { AccessManagementPanel } from '../business-settings/_components/AccessManagementPan...
+    |    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  3 | ...
+  4 | ...ort default function SettingsPage() {
+  5 | ...eturn (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+    at <unknown> (Error: ./apps/vahedyek-panel/app/(panel)/settings/page.tsx:2:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (Error: (./apps/vahedyek-panel/app/(panel)/settings/page.tsx:2:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+[browser] Uncaught Error: ./apps/vahedyek-panel/app/(panel)/settings/page.tsx:2:1
+Module not found: Can't resolve '../business-settings/_components/AccessManagementPanel'
+  1 | ...ort PanelLayout from '../../components/PanelLayout';
+> 2 | ...ort { AccessManagementPanel } from '../business-settings/_components/AccessManagementPan...
+    |    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  3 | ...
+  4 | ...ort default function SettingsPage() {
+  5 | ...eturn (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+    at <unknown> (Error: ./apps/vahedyek-panel/app/(panel)/settings/page.tsx:2:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (Error: (./apps/vahedyek-panel/app/(panel)/settings/page.tsx:2:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+[browser] ./apps/vahedyek-panel/app/(panel)/settings/page.tsx:2:1
+Module not found: Can't resolve '../business-settings/_components/AccessManagementPanel'
+  1 | ...ort PanelLayout from '../../components/PanelLayout';
+> 2 | ...ort { AccessManagementPanel } from '../business-settings/_components/AccessManagementPan...
+    |    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  3 | ...
+  4 | ...ort default function SettingsPage() {
+  5 | ...eturn (
+
+https://nextjs.org/docs/messages/module-not-found 
 [browser] [locator-js] React instance (react-dom v19.3.0-canary-3f0b9e61-20260317) is not supported (chrome-extension://npbfdllefekhdplbkdigpncggmojpefi/hook.bundle.js:1:27759)
 [browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
 
@@ -20,7 +652,7 @@ https://react.dev/link/hydration-mismatch
         <ReplaySsrOnlyErrors>
         <DevRootHTTPAccessFallbackBoundary>
           <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
-            <HTTPAccessFallbackErrorBoundary pathname="/login" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+            <HTTPAccessFallbackErrorBoundary pathname="/settings" notFound={<NotAllowedRootHTTPFallbackError>} ...>
               <RedirectBoundary>
                 <RedirectErrorBoundary router={{...}}>
                   <Head>
@@ -32,19 +664,38 @@ https://react.dev/link/hydration-mismatch
                       <script>
                       <script>
                       <RootLayout>
-                        <html lang="fa" dir="rtl" suppressHydrationWarning={true} data-locatorjs="C:\Users\s...">
+                        <html lang="fa" dir="rtl" suppressHydrationWarning={true}>
                           <head
-                            data-locatorjs="C:\Users\s.roosta\Desktop\Project\vahedyek\apps\vahedyek-panel\app\layout...."
 -                           data-locator-hook-status-message="loading: No valid renderers found."
                           >
                           ...
+                            <div className="app-shell">
+                              <PageDocsWidget>
+                                <style>
+                                <div className="pointer-ev...">
+                                  <button
+                                    type="button"
+                                    onClick={function onClick}
+                                    className="pointer-events-auto flex h-12 w-12 items-center justify-center rounded-..."
+                                    aria-label="گفتگوی مستندات توسعه این صفحه"
+                                    title="گفتگوی مستندات توسعه این صفحه"
+                                    style={{
++                                     position: "fixed"
+-                                     position: "fixed"
++                                     left: 16
+-                                     left: "16px"
++                                     top: 434
+-                                     top: "120px"
++                                     touchAction: "none"
++                                     animation: undefined
+-                                     touch-action: "none"
+                                    }}
+                                    onPointerDown={function onPointerDown}
+                                    onPointerMove={function onPointerMove}
+                                    onPointerUp={function onPointerUp}
+                                  >
+                              ...
                   ...
  
+[browser] [locator-js] React instance (react-dom v19.3.0-canary-3f0b9e61-20260317) is not supported (chrome-extension://npbfdllefekhdplbkdigpncggmojpefi/hook.bundle.js:1:27759)
 [browser] [locatorjs]: ok (chrome-extension://npbfdllefekhdplbkdigpncggmojpefi/hook.bundle.js:1:36200)
-npm error Lifecycle script `dev` failed with error:
-npm error code 1
-npm error path C:\Users\s.roosta\Desktop\Project\vahedyek\apps\vahedyek-panel
-npm error workspace @apps/vahedyek-panel@0.1.0
-npm error location C:\Users\s.roosta\Desktop\Project\vahedyek\apps\vahedyek-panel
-npm error command failed
-npm error command C:\WINDOWS\system32\cmd.exe /d /s /c next dev

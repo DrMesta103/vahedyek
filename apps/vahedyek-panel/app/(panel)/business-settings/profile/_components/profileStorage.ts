@@ -126,6 +126,37 @@ export type CalendarSettings = {
   format: 'yyyy/mm/dd' | 'dd/mm/yyyy' | 'yyyy/mm/dd-short' | 'month-title';
 };
 
+export type ContactOfficeAddress = {
+  country: string;
+  province: string;
+  city: string;
+  mainStreet: string;
+  sideStreet: string;
+  alley: string;
+  plaque: string;
+  floor: string;
+  unit: string;
+  postalCode: string;
+  fullAddress: string;
+};
+
+export type ContactOfficeChannels = {
+  mobiles: string[];
+  phones: string[];
+  faxes: string[];
+  websites: string[];
+  emails: string[];
+  socialNetworks: string[];
+};
+
+export type ContactOfficeRecord = {
+  id: string;
+  title: string;
+  kind: 'head-office' | 'branch';
+  address: ContactOfficeAddress;
+  channels: ContactOfficeChannels;
+};
+
 export type ProfileStore = {
   ownershipKind: OwnershipKind;
   legal: LegalOwnershipForm;
@@ -142,6 +173,7 @@ export type ProfileStore = {
   currency: CurrencySettings;
   measurement: MeasurementSettings;
   calendar: CalendarSettings;
+  contactOffices: ContactOfficeRecord[];
 };
 
 export type ProfileMeta = {
@@ -482,6 +514,34 @@ const defaultStore: ProfileStore = {
     system: 'jalali',
     format: 'yyyy/mm/dd-short',
   },
+  contactOffices: [
+    {
+      id: 'office-head',
+      title: 'دفتر مرکزی سازمان',
+      kind: 'head-office',
+      address: {
+        country: 'ایران',
+        province: 'فارس',
+        city: 'شیراز',
+        mainStreet: '',
+        sideStreet: '',
+        alley: '',
+        plaque: '',
+        floor: '',
+        unit: '',
+        postalCode: '',
+        fullAddress: '',
+      },
+      channels: {
+        mobiles: [],
+        phones: [],
+        faxes: [],
+        websites: [],
+        emails: [],
+        socialNetworks: [],
+      },
+    },
+  ],
 };
 
 function safeParse(value: string | null) {
@@ -558,6 +618,9 @@ function mergeProfileStore(parsed: unknown): ProfileStore {
       ...(((parsed as { measurement?: MeasurementSettings })?.measurement ?? {}) as Partial<MeasurementSettings>),
     },
     calendar: { ...base.calendar, ...(((parsed as { calendar?: CalendarSettings })?.calendar ?? {}) as Partial<CalendarSettings>) },
+    contactOffices: Array.isArray((parsed as { contactOffices?: unknown[] })?.contactOffices)
+      ? ((parsed as { contactOffices: ContactOfficeRecord[] }).contactOffices ?? base.contactOffices)
+      : base.contactOffices,
   };
 }
 

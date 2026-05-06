@@ -5,9 +5,10 @@ export type BusinessSettingsCardProps = {
   description: string;
   href?: string;
   className?: string;
+  onClick?: () => void;
 };
 
-export function BusinessSettingsCard({ title, description, href, className = '' }: BusinessSettingsCardProps) {
+export function BusinessSettingsCard({ title, description, href, className = '', onClick }: BusinessSettingsCardProps) {
   const cardClassName = ['business-settings-card', className].filter(Boolean).join(' ');
 
   const content = (
@@ -28,6 +29,14 @@ export function BusinessSettingsCard({ title, description, href, className = '' 
       <Link href={href} className={`${cardClassName} business-settings-card-link`}>
         {content}
       </Link>
+    );
+  }
+
+  if (onClick) {
+    return (
+      <button type="button" onClick={onClick} className={`${cardClassName} business-settings-card-link text-right`}>
+        {content}
+      </button>
     );
   }
 

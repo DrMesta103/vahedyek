@@ -98,6 +98,81 @@ export async function ensureOwnerMembershipRole(membershipId: string, tenantId: 
   });
 }
 
+export async function ensureMembershipRoleByKey(membershipId: string, tenantId: string, roleKey: string) {
+  await ensureTenantDefaultRoles(tenantId);
+
+  const role = await prisma.tenantRole.findUnique({
+    where: { tenantId_key: { tenantId, key: roleKey } },
+  });
+
+  if (!role) return;
+
+  await prisma.userTenantMembershipRole.upsert({
+    where: { membershipId_roleId: { membershipId, roleId: role.id } },
+    update: {},
+    create: { membershipId, roleId: role.id },
+  });
+}
+
+export async function ensureEmployeeMembershipRoles(tenantId: string) {
+  await ensureTenantDefaultRoles(tenantId);
+
+  const employeeRole = await prisma.tenantRole.findUnique({
+    where: { tenantId_key: { tenantId, key: 'employee' } },
+  });
+
+  if (!employeeRole) return;
+
+  const employees = await prisma.employee.findMany({
+    where: { tenantId, isActive: true },
+    select: { id: true },
+  });
+
+  if (!employees.length) return;
+
+  const employeeUserIds = employees.map((employee) => employee.id);
+  const users = await prisma.appUser.findMany({
+    where: { id: { in: employeeUserIds } },
+    select: { id: true },
+  });
+
+  if (!users.length) return;
+
+  await Promise.all(
+    users.map((user) =>
+      prisma.userTenantMembership.upsert({
+        where: {
+          userId_tenantId: {
+            userId: user.id,
+            tenantId,
+          },
+        },
+        update: {},
+        create: {
+          userId: user.id,
+          tenantId,
+          role: 'member',
+        },
+      }),
+    ),
+  );
+
+  const memberships = await prisma.userTenantMembership.findMany({
+    where: {
+      tenantId,
+      userId: { in: users.map((user) => user.id) },
+    },
+    select: { id: true },
+  });
+
+  if (!memberships.length) return;
+
+  await prisma.userTenantMembershipRole.createMany({
+    data: memberships.map((membership) => ({ membershipId: membership.id, roleId: employeeRole.id })),
+    skipDuplicates: true,
+  });
+}
+
 async function getMembershipWithPermissions(userId: string, tenantId: string) {
   return prisma.userTenantMembership.findUnique({
     where: { userId_tenantId: { userId, tenantId } },

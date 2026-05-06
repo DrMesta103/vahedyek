@@ -7,6 +7,10 @@ import { FormTextInput } from '../../../contracts/new/_components/ContractFormPr
 import { fetchProfileStore, type NaturalShareholderRecord } from './profileStorage';
 import { PersonAvatar, PersonRowCard } from './ProfilePeoplePrimitives';
 
+function getPartnerName(item: NaturalShareholderRecord) {
+  return item.fullName.trim() || item.mobile || item.email || 'کاربر جدید';
+}
+
 export function BusinessPartnersPanel() {
   const [query, setQuery] = useState('');
   const [partners, setPartners] = useState<NaturalShareholderRecord[]>([]);
@@ -54,7 +58,7 @@ export function BusinessPartnersPanel() {
           <PersonRowCard
             key={item.id}
             className="shareholder-card"
-            name={item.fullName}
+            name={getPartnerName(item)}
             subtitle={`${item.sharePercent}%`}
             email={item.email}
             avatar={<PersonAvatar avatarMode={item.avatarMode} avatarText={item.avatarText} avatarImage={item.avatarImage} kind="person" />}

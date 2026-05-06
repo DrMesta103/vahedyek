@@ -1,8 +1,9 @@
 'use client';
 
-import { CalendarDays, Camera, ChevronLeft, FileText, Mail, Pencil, Phone, Plus, Search, UserRound, X } from 'lucide-react';
+import { CalendarDays, Camera, Check, ChevronLeft, FileText, Mail, Pencil, Phone, Plus, Search, UserRound, X } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { ChoicePillsField, Input } from '@repo/ui';
 import {
   buildRepresentativeFullName,
   fetchProfileStore,
@@ -18,12 +19,13 @@ import {
   type RepresentativeRecord,
   upsertRepresentativeCandidate,
 } from './profileStorage';
-import { FormTextInput, TagPill } from '../../../contracts/new/_components/ContractFormPrimitives';
+import { FormTextInput } from '../../../contracts/new/_components/ContractFormPrimitives';
 import { PersonAvatar } from './ProfilePeoplePrimitives';
 
 type FlowStep = 'lookup' | 'details';
 type GenderValue = 'male' | 'female';
 type NaturalShareholderStep = 'user' | 'extra';
+type ContactFieldKey = 'mobile' | 'secondaryMobile' | 'email';
 
 type RepresentativeFormState = {
   firstName: string;
@@ -65,6 +67,11 @@ const emptyNaturalExtra: NaturalShareholderExtraState = {
   signatureAvatarImage: '',
 };
 
+const genderOptions = [
+  { value: 'male' as const, label: 'مرد' },
+  { value: 'female' as const, label: 'زن' },
+];
+
 function isValidEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizeEmail(value));
 }
@@ -72,6 +79,79 @@ function isValidEmail(value: string) {
 function isValidMobile(value: string) {
   const normalized = normalizePhone(value).replace(/^\+/, '');
   return normalized.length >= 10;
+}
+
+async function ensureUserAccount(payload: {
+  firstName?: string;
+  lastName?: string;
+  fullName?: string;
+  mobile?: string;
+  email?: string;
+}) {
+  const response = await fetch('/api/business-settings/profile/directory/ensure-user', {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const result = (await response.json().catch(() => null)) as {
+    message?: string;
+    user?: {
+      id: string;
+      fullName: string;
+      firstName: string;
+      lastName: string;
+      email: string | null;
+      mobile: string | null;
+    };
+  } | null;
+  if (!response.ok) {
+    throw new Error(result?.message ?? 'user_creation_failed');
+  }
+
+  if (!result?.user) {
+    throw new Error('user_creation_failed');
+  }
+
+  return result.user;
+}
+
+function buildCandidateFromUser(user: {
+  id: string;
+  fullName: string;
+  firstName: string;
+  lastName: string;
+  email: string | null;
+  mobile: string | null;
+}): RepresentativeCandidate {
+  return {
+    id: user.id,
+    fullName: user.fullName,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    gender: 'male',
+    nationalId: '',
+    mobile: user.mobile ?? '',
+    secondaryMobile: '',
+    email: user.email ?? '',
+    avatarMode: 'ghost',
+    avatarText: user.firstName.trim().slice(0, 1) || user.lastName.trim().slice(0, 1) || user.fullName.trim().slice(0, 1) || 'U',
+    avatarImage: '',
+    isPrimary: false,
+    linkedUser: true,
+    canEmail: Boolean(user.email),
+  };
+}
+
+function getCandidateDisplayName(candidate: Pick<RepresentativeCandidate, 'fullName' | 'firstName' | 'lastName'> | null) {
+  if (!candidate) return 'کاربر جدید';
+  const fullName = candidate.fullName.trim();
+  if (fullName) return fullName;
+  const composedName = `${candidate.firstName?.trim() ?? ''} ${candidate.lastName?.trim() ?? ''}`.trim();
+  return composedName || 'کاربر جدید';
 }
 
 function normalizeRepresentativeForm(candidate: RepresentativeCandidate | null, identity: string): RepresentativeFormState {
@@ -117,8 +197,10 @@ export function BusinessRepresentativePickerPanel({
   const [form, setForm] = useState<RepresentativeFormState>(emptyForm);
   const [showSecondaryMobile, setShowSecondaryMobile] = useState(false);
   const [showEmailField, setShowEmailField] = useState(false);
-  const [allowPrimaryMobileEdit, setAllowPrimaryMobileEdit] = useState(true);
+  const [editingContact, setEditingContact] = useState<ContactFieldKey | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [creatingLookupUser, setCreatingLookupUser] = useState(false);
   const [naturalStep, setNaturalStep] = useState<NaturalShareholderStep>('user');
   const [naturalShareholderId, setNaturalShareholderId] = useState<string | null>(null);
   const [naturalExtra, setNaturalExtra] = useState<NaturalShareholderExtraState>(emptyNaturalExtra);
@@ -207,14 +289,41 @@ export function BusinessRepresentativePickerPanel({
       (item) => normalizePhone(item.mobile) === normalizedQuery || normalizeEmail(item.email) === normalizedEmailQuery,
     ) ?? null;
   const activeCandidate = selected ?? exactCandidate;
+  const isLookupCreateAction = isPersonStepperMode && !activeCandidate && (isValidMobile(query.trim()) || isValidEmail(query.trim()));
 
-  const openDetailsStep = () => {
-    const source = activeCandidate;
+  const openDetailsStep = async () => {
+    let source = activeCandidate;
+    if (!source) {
+      const raw = query.trim();
+      if (!isValidMobile(raw) && !isValidEmail(raw)) return;
+      setCreatingLookupUser(true);
+      try {
+        const user = await ensureUserAccount({
+          mobile: isValidMobile(raw) ? normalizePhone(raw) : '',
+          email: isValidEmail(raw) ? normalizeEmail(raw) : '',
+        });
+        source = buildCandidateFromUser(user);
+        setDirectory((current) => {
+          const exists = current.some((item) => item.id === source?.id);
+          return exists ? current.map((item) => (item.id === source?.id ? { ...item, ...source! } : item)) : [...current, source!];
+        });
+        setSearchResults((current) => [source!, ...current.filter((item) => item.id !== source?.id)]);
+        setSelected(source);
+      } catch (error) {
+        setSubmitError(error instanceof Error ? error.message : 'ساخت کاربر انجام نشد.');
+        setCreatingLookupUser(false);
+        return;
+      } finally {
+        setCreatingLookupUser(false);
+      }
+    }
+
     const nextForm = normalizeRepresentativeForm(source, query.trim());
+    setSubmitError(null);
     setForm(nextForm);
     setShowSecondaryMobile(Boolean(nextForm.secondaryMobile));
     setShowEmailField(Boolean(nextForm.email));
-    setAllowPrimaryMobileEdit(!source);
+    setEditingContact(null);
     setNaturalStep('user');
     setNaturalExtra((current) => ({
       ...current,
@@ -224,33 +333,66 @@ export function BusinessRepresentativePickerPanel({
   };
 
   const saveRepresentative = async () => {
-    if (!form.firstName.trim() || !form.lastName.trim() || !form.nationalId.trim()) return;
-    if (!form.mobile.trim() && !form.email.trim()) return;
-    if (form.mobile.trim() && !isValidMobile(form.mobile)) return;
-    if (form.secondaryMobile.trim() && !isValidMobile(form.secondaryMobile)) return;
-    if (form.email.trim() && !isValidEmail(form.email)) return;
+    setSubmitError(null);
+    if (!form.mobile.trim() && !form.email.trim()) {
+      setSubmitError('حداقل یک راه ارتباطی وارد کنید.');
+      return;
+    }
+    if (form.mobile.trim() && !isValidMobile(form.mobile)) {
+      setSubmitError('شماره موبایل 1 معتبر نیست.');
+      return;
+    }
+    if (form.secondaryMobile.trim() && !isValidMobile(form.secondaryMobile)) {
+      setSubmitError('شماره موبایل 2 معتبر نیست.');
+      return;
+    }
+    if (form.email.trim() && !isValidEmail(form.email)) {
+      setSubmitError('ایمیل معتبر نیست.');
+      return;
+    }
 
-    const fullName = buildRepresentativeFullName(form.firstName, form.lastName, selected?.fullName);
+    const normalizedMobileValue = normalizePhone(form.mobile);
+    const normalizedEmailValue = normalizeEmail(form.email);
+    const firstName = form.firstName.trim();
+    const lastName = form.lastName.trim();
+    const fullName = buildRepresentativeFullName(firstName, lastName, selected?.fullName);
     const avatarText = fullName.trim().slice(0, 1) || 'ن';
+    let ensuredUser: Awaited<ReturnType<typeof ensureUserAccount>> | null = null;
+    setSaving(true);
+    try {
+      ensuredUser = await ensureUserAccount({
+        firstName,
+        lastName,
+        fullName,
+        mobile: normalizedMobileValue,
+        email: normalizedEmailValue,
+      });
+      if (!selected || selected.id !== ensuredUser.id) {
+        setSelected(buildCandidateFromUser(ensuredUser));
+      }
+    } catch (error) {
+      setSaving(false);
+      setSubmitError(error instanceof Error ? error.message : 'ساخت کاربر انجام نشد.');
+      return;
+    }
+
     const candidate: RepresentativeCandidate = {
-      id: selected?.id ?? `rep-${Date.now()}`,
+      id: ensuredUser?.id ?? selected?.id ?? `rep-${Date.now()}`,
       fullName,
-      firstName: form.firstName.trim(),
-      lastName: form.lastName.trim(),
+      firstName,
+      lastName,
       gender: form.gender,
       nationalId: form.nationalId.trim(),
-      mobile: normalizePhone(form.mobile),
+      mobile: normalizedMobileValue,
       secondaryMobile: form.secondaryMobile ? normalizePhone(form.secondaryMobile) : '',
-      email: normalizeEmail(form.email),
+      email: normalizedEmailValue,
       avatarMode: form.avatarMode,
       avatarText,
       avatarImage: form.avatarImage,
       isPrimary: selected?.isPrimary ?? false,
-      linkedUser: selected?.linkedUser ?? false,
+      linkedUser: true,
       canEmail: Boolean(form.email.trim()),
     };
-
-    setSaving(true);
     try {
       const store = await fetchProfileStore();
       const withDirectory = upsertRepresentativeCandidate(store, candidate);
@@ -354,6 +496,7 @@ export function BusinessRepresentativePickerPanel({
                   onChange={(value) => {
                     setQuery(value.slice(0, 50));
                     setSelected(null);
+                    setSubmitError(null);
                   }}
                   icon={Search}
                 />
@@ -365,6 +508,7 @@ export function BusinessRepresentativePickerPanel({
                     onClick={() => {
                       setQuery('');
                       setSelected(null);
+                      setSubmitError(null);
                     }}
                   >
                     <X />
@@ -392,6 +536,8 @@ export function BusinessRepresentativePickerPanel({
               </div>
             ) : null}
             {searching ? <div className="representative-picker-search-status">در حال جستجو...</div> : null}
+            {creatingLookupUser ? <div className="representative-picker-search-status">در حال ساخت کاربر...</div> : null}
+            {submitError ? <p className="representative-submit-error">{submitError}</p> : null}
           </div>
 
           {activeCandidate ? (
@@ -410,7 +556,7 @@ export function BusinessRepresentativePickerPanel({
                   />
                 </div>
                 <div className="representative-picker-selection-meta">
-                  <strong>{activeCandidate.fullName}</strong>
+                  <strong>{getCandidateDisplayName(activeCandidate)}</strong>
                   <span dir="ltr">{activeCandidate.mobile}</span>
                   <div className="representative-picker-selection-contact">
                     <span dir="ltr">
@@ -433,8 +579,8 @@ export function BusinessRepresentativePickerPanel({
           ) : null}
 
           <div className="representative-picker-submit">
-            <button type="button" className="profile-primary-button is-wide" disabled={!canContinueLookup} onClick={openDetailsStep}>
-              انتخاب و تایید
+            <button type="button" className="profile-primary-button is-wide" disabled={!canContinueLookup || creatingLookupUser} onClick={openDetailsStep}>
+              {isLookupCreateAction ? 'ثبت جدید' : 'انتخاب و تایید'}
             </button>
           </div>
         </>
@@ -465,10 +611,11 @@ export function BusinessRepresentativePickerPanel({
                 <ContactRow
                   label="موبایل 1"
                   value={form.mobile}
-                  editable={allowPrimaryMobileEdit}
+                  editing={editingContact === 'mobile'}
                   placeholder="+989123456789"
-                  actionIcon={allowPrimaryMobileEdit ? undefined : Pencil}
-                  onAction={() => setAllowPrimaryMobileEdit(true)}
+                  visualIcon={Phone}
+                  actionIcon={editingContact === 'mobile' ? Check : Pencil}
+                  onAction={() => setEditingContact((current) => (current === 'mobile' ? null : 'mobile'))}
                   onChange={(value) => setForm((current) => ({ ...current, mobile: value }))}
                 />
 
@@ -476,25 +623,48 @@ export function BusinessRepresentativePickerPanel({
                   <ContactRow
                     label="موبایل 2"
                     value={form.secondaryMobile}
-                    editable
+                    editing={editingContact === 'secondaryMobile'}
                     placeholder="+989123456780"
-                    countryCode="+98"
+                    visualIcon={Phone}
+                    actionIcon={editingContact === 'secondaryMobile' ? Check : Pencil}
+                    onAction={() => setEditingContact((current) => (current === 'secondaryMobile' ? null : 'secondaryMobile'))}
+                    secondaryActionIcon={X}
+                    onSecondaryAction={() => {
+                      setEditingContact((current) => (current === 'secondaryMobile' ? null : current));
+                      setShowSecondaryMobile(false);
+                      setForm((current) => ({ ...current, secondaryMobile: '' }));
+                    }}
                     onChange={(value) => setForm((current) => ({ ...current, secondaryMobile: value }))}
                   />
                 ) : (
-                  <ContactAdder label="موبایل 2" onClick={() => setShowSecondaryMobile(true)} />
+                  <ContactAdder
+                    label="موبایل 2"
+                    onClick={() => {
+                      setShowSecondaryMobile(true);
+                      setEditingContact('secondaryMobile');
+                    }}
+                  />
                 )}
 
                 {showEmailField ? (
                   <ContactRow
                     label="ایمیل"
                     value={form.email}
-                    editable
+                    editing={editingContact === 'email'}
                     placeholder="name@example.com"
+                    visualIcon={Mail}
+                    actionIcon={editingContact === 'email' ? Check : Pencil}
+                    onAction={() => setEditingContact((current) => (current === 'email' ? null : 'email'))}
                     onChange={(value) => setForm((current) => ({ ...current, email: value }))}
                   />
                 ) : (
-                  <ContactAdder label="ایمیل" onClick={() => setShowEmailField(true)} />
+                  <ContactAdder
+                    label="ایمیل"
+                    onClick={() => {
+                      setShowEmailField(true);
+                      setEditingContact('email');
+                    }}
+                  />
                 )}
               </div>
 
@@ -513,13 +683,17 @@ export function BusinessRepresentativePickerPanel({
                   <input ref={fileInputRef} type="file" accept="image/*" hidden onChange={(event) => readAvatarFile(event.target.files?.[0] ?? null)} />
                 </div>
 
-                <div className="representative-gender-field">
-                  <span>جنسیت</span>
-                  <div className="representative-gender-chips">
-                    <TagPill label="مرد" active={form.gender === 'male'} onClick={() => setForm((current) => ({ ...current, gender: 'male' }))} />
-                    <TagPill label="زن" active={form.gender === 'female'} onClick={() => setForm((current) => ({ ...current, gender: 'female' }))} />
-                  </div>
-                </div>
+                <ChoicePillsField<GenderValue>
+                  label="جنسیت"
+                  options={genderOptions}
+                  value={form.gender}
+                  onChange={(value) => setForm((current) => ({ ...current, gender: value }))}
+                  className="representative-gender-field"
+                  labelClassName="representative-gender-label"
+                  pillsClassName="representative-gender-pills"
+                  pillClassName="representative-gender-pill"
+                  showActiveIndicator
+                />
 
                 <div className="representative-details-grid">
                   <FieldInput label="نام" required value={form.firstName} onChange={(value) => setForm((current) => ({ ...current, firstName: value }))} />
@@ -607,6 +781,7 @@ export function BusinessRepresentativePickerPanel({
               ثبت اطلاعات
             </button>
           </div>
+          {submitError ? <p className="representative-submit-error">{submitError}</p> : null}
         </div>
       )}
     </section>
@@ -631,25 +806,51 @@ function NaturalShareholderSteps({ activeStep }: { activeStep: NaturalShareholde
 function ContactRow({
   label,
   value,
-  editable,
+  editing,
   placeholder,
-  countryCode,
+  visualIcon: VisualIcon,
   actionIcon: ActionIcon,
   onAction,
+  secondaryActionIcon: SecondaryActionIcon,
+  onSecondaryAction,
   onChange,
 }: {
   label: string;
   value: string;
-  editable?: boolean;
+  editing?: boolean;
   placeholder?: string;
-  countryCode?: string;
+  visualIcon: typeof Phone | typeof Mail;
   actionIcon?: typeof Pencil;
   onAction?: () => void;
+  secondaryActionIcon?: typeof X;
+  onSecondaryAction?: () => void;
   onChange: (value: string) => void;
 }) {
   return (
     <div className="representative-contact-row">
-      <div className="representative-contact-value">
+      <span className="representative-contact-visual" aria-hidden="true">
+        <VisualIcon />
+      </span>
+      <div className="representative-contact-content">
+        <div className="representative-contact-label">{label}</div>
+        {editing ? (
+          <div className="representative-contact-editor">
+            <Input
+              className="representative-contact-input"
+              value={value}
+              onChange={(event) => onChange(event.target.value)}
+              placeholder={placeholder}
+              dir="ltr"
+              autoFocus
+            />
+          </div>
+        ) : (
+          <div className="representative-contact-value" dir="ltr">
+            {value || '-'}
+          </div>
+        )}
+      </div>
+      <div className="representative-contact-side">
         {ActionIcon ? (
           <button type="button" className="representative-contact-action" onClick={onAction}>
             <ActionIcon />
@@ -657,17 +858,12 @@ function ContactRow({
         ) : (
           <span className="representative-contact-action-placeholder" />
         )}
-        {countryCode ? <span className="representative-contact-prefix">{countryCode}</span> : null}
-        <input
-          className="representative-contact-input"
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          readOnly={!editable}
-          placeholder={placeholder}
-          dir="ltr"
-        />
+        {SecondaryActionIcon ? (
+          <button type="button" className="representative-contact-action is-danger" onClick={onSecondaryAction}>
+            <SecondaryActionIcon />
+          </button>
+        ) : null}
       </div>
-      <div className="representative-contact-label">{label}</div>
     </div>
   );
 }
@@ -675,11 +871,16 @@ function ContactRow({
 function ContactAdder({ label, onClick }: { label: string; onClick: () => void }) {
   return (
     <button type="button" className="representative-contact-adder" onClick={onClick}>
+      <span className="representative-contact-visual" aria-hidden="true">
+        <Plus />
+      </span>
+      <div className="representative-contact-content">
+        <strong className="representative-contact-label">{label}</strong>
+        <span className="representative-contact-placeholder">-</span>
+      </div>
       <span className="representative-contact-adder-icon">
         <Plus />
       </span>
-      <span className="representative-contact-adder-dash">---</span>
-      <strong>{label}</strong>
     </button>
   );
 }
@@ -701,12 +902,7 @@ function FieldInput({
         {label}
         {required ? <i>*</i> : null}
       </span>
-      <div className="representative-inline-input-shell">
-        <button type="button" className="representative-inline-input-clear" aria-label="پاک کردن" onClick={() => onChange('')}>
-          <X />
-        </button>
-        <input className="app-control" value={value} onChange={(event) => onChange(event.target.value)} />
-      </div>
+      <Input className="representative-inline-input" value={value} onChange={(event) => onChange(event.target.value)} />
     </label>
   );
 }

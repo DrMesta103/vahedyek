@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requireSessionContext } from '../../../../lib/auth';
+import { normalizeEmail as normalizeAuthEmail, parseAuthIdentifier, sanitizeIranMobileInput } from '../../../../lib/contact';
 import { prisma } from '../../../../lib/prisma';
 import { handlePrismaApiError } from '../../../../lib/prismaApiError';
 
@@ -26,8 +27,8 @@ type DirectoryCandidate = {
 function normalizePhone(value: string) {
   return value
     .trim()
-    .replace(/[۰-۹]/g, (digit) => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(digit)))
-    .replace(/[٠-٩]/g, (digit) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(digit)))
+    .replace(/[\u06f0-\u06f9]/g, (digit) => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(digit)))
+    .replace(/[\u0660-\u0669]/g, (digit) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(digit)))
     .replace(/[^\d+]/g, '');
 }
 
@@ -65,6 +66,49 @@ export async function GET(request: Request) {
         return phoneMatch || emailMatch || nameMatch;
       })
       .slice(0, 5);
+
+    const identifier = parseAuthIdentifier(query);
+    const appUsers =
+      identifier.type === 'email'
+        ? await prisma.appUser.findMany({
+            where: { email: identifier.value },
+            select: { id: true, firstName: true, lastName: true, fullName: true, email: true, mobile: true },
+            take: 5,
+          })
+        : identifier.type === 'mobile'
+          ? await prisma.appUser.findMany({
+              where: { mobile: sanitizeIranMobileInput(identifier.value) },
+              select: { id: true, firstName: true, lastName: true, fullName: true, email: true, mobile: true },
+              take: 5,
+            })
+          : [];
+
+    for (const user of appUsers) {
+      const formattedMobile = user.mobile ? `+98${user.mobile}` : '';
+      const matchesExisting = items.some(
+        (item) =>
+          item.id === user.id ||
+          normalizeEmail(item.email) === normalizeAuthEmail(user.email ?? '') ||
+          normalizePhone(item.mobile) === normalizePhone(formattedMobile),
+      );
+      if (matchesExisting) continue;
+
+      items.push({
+        id: user.id,
+        fullName: user.fullName,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        mobile: formattedMobile,
+        secondaryMobile: '',
+        email: user.email ?? '',
+        avatarMode: 'ghost',
+        avatarText: user.firstName.trim().slice(0, 1) || user.lastName.trim().slice(0, 1) || user.fullName.trim().slice(0, 1) || 'U',
+        avatarImage: '',
+        isPrimary: false,
+        linkedUser: true,
+        canEmail: Boolean(user.email),
+      });
+    }
 
     return NextResponse.json({ items });
   } catch (error) {
