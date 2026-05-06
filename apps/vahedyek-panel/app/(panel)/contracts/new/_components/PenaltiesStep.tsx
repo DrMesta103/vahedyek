@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { LoaderCircle, Plus, Save, X } from 'lucide-react';
+import { Building2, LoaderCircle, Plus, Save, Scale, X } from 'lucide-react';
 import { Input, StickySubmitBar } from '@repo/ui';
 import { ContractStepLoader } from './ContractStepLoader';
 import { FieldLabel } from './FieldLabel';
@@ -30,6 +30,9 @@ import type {
 } from '../../../../types/contract';
 import { dispatchContractFlowDirty, dispatchContractFlowSavedForDraft } from './contractFlowSignals';
 import type { ContractFlowSectionId } from './contractFlowSignals';
+import { BuilderPenaltyInFlow, type BuilderPenaltyInFlowHandle } from './penalties/BuilderPenaltyInFlow';
+
+type PenaltyPartyTab = 'buyer' | 'seller';
 
 const MODE_OPTIONS: Array<{
   id: PenaltyMode;
@@ -249,6 +252,93 @@ function FieldBlock({
   );
 }
 
+function PenaltiesPartyTabBar({
+  activeTab,
+  buyerProgressLabel,
+  sellerProgressLabel,
+  onSelect,
+}: {
+  activeTab: PenaltyPartyTab;
+  buyerProgressLabel: string;
+  sellerProgressLabel: string;
+  onSelect: (tab: PenaltyPartyTab) => void;
+}) {
+  const tabBase =
+    'relative flex min-h-[88px] w-full flex-row items-start gap-3 rounded-2xl border-2 p-4 text-right transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/40 focus-visible:ring-offset-2';
+
+  return (
+    <div className="border-b border-slate-200 bg-gradient-to-b from-slate-50/90 to-white px-4 py-5 sm:px-6 sm:py-6" role="tablist" aria-label="جرایم خریدار یا سازنده">
+      <div className="mx-auto grid max-w-3xl grid-cols-1 gap-4 sm:grid-cols-2">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'seller'}
+          onClick={() => onSelect('seller')}
+          className={`${tabBase} ${
+            activeTab === 'seller'
+              ? 'border-cyan-500 bg-white shadow-[0_4px_20px_rgba(6,182,212,0.12)] ring-1 ring-cyan-500/20'
+              : 'border-slate-200 bg-white/90 hover:border-slate-300 hover:bg-white hover:shadow-sm'
+          }`}
+        >
+          <span
+            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border ${
+              activeTab === 'seller' ? 'border-cyan-200 bg-cyan-50 text-cyan-700' : 'border-slate-200 bg-slate-50 text-slate-600'
+            }`}
+          >
+            <Scale className="h-5 w-5" aria-hidden />
+          </span>
+          <span className="min-w-0 flex-1 space-y-1.5">
+            <span className={`block text-sm font-bold leading-tight ${activeTab === 'seller' ? 'text-cyan-900' : 'text-slate-800'}`}>جرایم سازنده</span>
+            <span
+              className={`inline-flex rounded-lg border px-2 py-0.5 text-[11px] font-semibold ${
+                activeTab === 'seller' ? 'border-cyan-200 bg-cyan-50/80 text-cyan-800' : 'border-slate-200 bg-slate-50 text-slate-600'
+              }`}
+            >
+              {sellerProgressLabel}
+            </span>
+          </span>
+          {activeTab === 'seller' ? (
+            <span className="absolute start-3 top-3 h-2 w-2 rounded-full bg-cyan-500 shadow-[0_0_0_3px_rgba(6,182,212,0.25)] sm:start-4 sm:top-4" aria-hidden />
+          ) : null}
+        </button>
+
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'buyer'}
+          onClick={() => onSelect('buyer')}
+          className={`${tabBase} ${
+            activeTab === 'buyer'
+              ? 'border-cyan-500 bg-white shadow-[0_4px_20px_rgba(6,182,212,0.12)] ring-1 ring-cyan-500/20'
+              : 'border-slate-200 bg-white/90 hover:border-slate-300 hover:bg-white hover:shadow-sm'
+          }`}
+        >
+          <span
+            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border ${
+              activeTab === 'buyer' ? 'border-cyan-200 bg-cyan-50 text-cyan-700' : 'border-slate-200 bg-slate-50 text-slate-600'
+            }`}
+          >
+            <Building2 className="h-5 w-5" aria-hidden />
+          </span>
+          <span className="min-w-0 flex-1 space-y-1.5">
+            <span className={`block text-sm font-bold leading-tight ${activeTab === 'buyer' ? 'text-cyan-900' : 'text-slate-800'}`}>جرایم خریدار</span>
+            <span
+              className={`inline-flex rounded-lg border px-2 py-0.5 text-[11px] font-semibold ${
+                activeTab === 'buyer' ? 'border-cyan-200 bg-cyan-50/80 text-cyan-800' : 'border-slate-200 bg-slate-50 text-slate-600'
+              }`}
+            >
+              {buyerProgressLabel}
+            </span>
+          </span>
+          {activeTab === 'buyer' ? (
+            <span className="absolute start-3 top-3 h-2 w-2 rounded-full bg-cyan-500 shadow-[0_0_0_3px_rgba(6,182,212,0.25)] sm:start-4 sm:top-4" aria-hidden />
+          ) : null}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: string; title: string; embedded?: boolean }) {
   const router = useRouter();
   const basePath = useContractFlowBasePath();
@@ -259,6 +349,13 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [formError, setFormError] = useState('');
+  const [partyTab, setPartyTab] = useState<PenaltyPartyTab>('buyer');
+  const sellerPenaltyRef = useRef<BuilderPenaltyInFlowHandle | null>(null);
+  const [sellerStatus, setSellerStatus] = useState<{ loading: boolean; saving: boolean; dirty: boolean }>({
+    loading: true,
+    saving: false,
+    dirty: false,
+  });
 
   const [types, setTypes] = useState<PenaltyTypeStateData[]>(INITIAL_TYPES);
   const [rules, setRules] = useState<PenaltyRuleData[]>([]);
@@ -281,6 +378,10 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
 
   const validation = useMemo(() => validatePenaltiesStep(payload), [payload]);
   const activeTypes = useMemo(() => types.filter((item) => item.active), [types]);
+  const configuredActiveTypesCount = useMemo(
+    () => activeTypes.filter((t) => rules.some((r) => r.penaltyTypeId === t.id)).length,
+    [activeTypes, rules],
+  );
 
   useEffect(() => {
     if (!expandedPenaltyTypeId) {
@@ -344,9 +445,11 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
   }, [dirty, draftId, loading, payload, stepId]);
 
   const openRuleDialog = (penaltyTypeId: string, rule?: PenaltyRuleData) => {
+    const existingRule = rules.find((item) => item.penaltyTypeId === penaltyTypeId);
+    const resolvedRule = rule ?? existingRule;
     setActivePenaltyTypeId(penaltyTypeId);
-    setEditingRuleId(rule?.id ?? null);
-    setRuleForm(rule ? normalizeRule(rule) : makeEmptyRule(penaltyTypeId));
+    setEditingRuleId(resolvedRule?.id ?? null);
+    setRuleForm(resolvedRule ? normalizeRule(resolvedRule) : makeEmptyRule(penaltyTypeId));
     setDialogError('');
     setDialogOpen(true);
   };
@@ -392,11 +495,12 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
     }
 
     setRules((current) => {
-      if (editingRuleId) {
-        return current.map((item) => (item.id === editingRuleId ? normalizeRule(ruleForm) : item));
-      }
-
-      return [...current, normalizeRule(ruleForm)];
+      const normalized = normalizeRule(ruleForm);
+      // Only one rule per penalty type is allowed.
+      const withoutType = current.filter((item) => item.penaltyTypeId !== normalized.penaltyTypeId);
+      return editingRuleId
+        ? withoutType.concat(normalized)
+        : withoutType.concat({ ...normalized, id: normalized.id || `rule-${Math.random().toString(36).slice(2, 10)}` });
     });
 
     closeDialog();
@@ -415,6 +519,10 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
     setFormError('');
 
     try {
+      if (partyTab === 'seller') {
+        await sellerPenaltyRef.current?.saveIfDirty();
+      }
+
       await saveStepData(draftId, 'penalties', payload);
       clearFrontendStepDraft(draftId, 'penalties');
       initialSnapshotRef.current = serializePayload(payload);
@@ -450,14 +558,29 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
         </div>
       ) : null}
 
-      <div className="rounded-xl border border-slate-200 bg-white">
-        <div className="border-b border-slate-100 px-5 py-4">
-          <p className="text-[13px] font-semibold uppercase tracking-widest text-slate-400">تعریف جرایم قرارداد</p>
-          <p className="mt-0.5 text-[13px] text-slate-500">نوع جریمه را فعال کنید، سپس برای همان نوع یک یا چند rule ثبت کنید.</p>
+      <div className="overflow-hidden rounded-[30px] border border-gray-200 bg-white text-right shadow-sm" dir="rtl">
+        <PenaltiesPartyTabBar
+          activeTab={partyTab}
+          buyerProgressLabel={`${configuredActiveTypesCount}/${Math.max(activeTypes.length, 1)} ثبت‌شده`}
+          sellerProgressLabel="تنظیمات"
+          onSelect={setPartyTab}
+        />
+
+        {/* Keep both tabs mounted to prevent layout "jump" on switch */}
+        <div className={partyTab === 'seller' ? 'block' : 'hidden'} aria-hidden={partyTab !== 'seller'}>
+          <div className="p-6 sm:p-8">
+            <BuilderPenaltyInFlow ref={sellerPenaltyRef} onStatusChange={setSellerStatus} />
+          </div>
         </div>
 
-        <div className="space-y-6 p-5">
-          <section className="space-y-3">
+        <div className={partyTab === 'seller' ? 'hidden' : 'block'} aria-hidden={partyTab === 'seller'}>
+          <div className="space-y-6 p-5 sm:p-8">
+            <div className="border-b border-slate-100 pb-5">
+              <p className="text-[13px] font-semibold uppercase tracking-widest text-slate-400">تعریف جرایم خریدار</p>
+              <p className="mt-0.5 text-[13px] text-slate-500">نوع جریمه را فعال کنید، سپس برای همان نوع یک یا چند rule ثبت کنید.</p>
+            </div>
+
+            <section className="space-y-3">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-bold text-slate-700">فهرست انواع جریمه</h2>
               <span className="text-xs text-slate-400">{activeTypes.length} مورد فعال</span>
@@ -466,6 +589,7 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
             <div className="space-y-3">
               {types.map((type) => {
                 const typeRules = rules.filter((rule) => rule.penaltyTypeId === type.id);
+                const typeRule = typeRules[0] ?? null;
                 const isExpanded = type.active && expandedPenaltyTypeId === type.id;
 
                 return (
@@ -490,7 +614,7 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
                               <h3 className="text-sm font-bold text-slate-800">{type.title}</h3>
                               {type.active ? (
                                 <span className="rounded-full border border-cyan-200 bg-white px-2 py-0.5 text-[11px] font-medium text-cyan-700">
-                                  {typeRules.length} جریمه
+                                  {typeRule ? 'تنظیم شده' : 'تنظیم نشده'}
                                 </span>
                               ) : null}
                             </div>
@@ -529,51 +653,47 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
                             className="mt-2 inline-flex h-8 items-center gap-2 rounded-lg border border-[#14a7ad] bg-white/65 px-3 text-xs font-bold text-[#0e989d] transition hover:bg-[#dff4f3]"
                           >
                             <Plus className="h-4 w-4" />
-                            افزودن جریمه
+                            {typeRule ? 'ویرایش جریمه' : 'افزودن جریمه'}
                           </button>
                         </div>
 
-                        {typeRules.length === 0 ? (
+                        {!typeRule ? (
                           <div className="mt-4 rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-center text-sm text-slate-500">
                             هنوز جریمه‌ای برای این نوع ثبت نشده است.
                           </div>
                         ) : (
                           <div className="mt-4 grid gap-3">
-                            {typeRules.map((rule, index) => (
-                              <div key={rule.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                                  <div className="space-y-2">
-                                    <div className="flex items-center gap-2">
-                                      <span className="rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-xs font-medium text-cyan-700">
-                                        جریمه {index + 1}
-                                      </span>
-                                      <span className="text-xs text-slate-400">{MODE_OPTIONS.find((item) => item.id === rule.mode)?.title}</span>
-                                    </div>
-                                    <p className="text-sm font-medium text-slate-700">{formatRuleSummary(rule)}</p>
-                                    <p className="text-xs text-slate-500">
-                                      مهلت تنفس: {rule.graceDays || '0'} روز
-                                      {rule.extraFeeEnabled ? ' · هزینه دیرکرد فعال' : ''}
-                                    </p>
-                                  </div>
+                            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                                <div className="space-y-2">
                                   <div className="flex items-center gap-2">
-                                    <button
-                                      type="button"
-                                      onClick={() => openRuleDialog(type.id, rule)}
-                                      className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
-                                    >
-                                      ویرایش
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => setRules((current) => current.filter((item) => item.id !== rule.id))}
-                                      className="rounded-lg border border-rose-200 px-3 py-1.5 text-sm text-rose-600 hover:bg-rose-50"
-                                    >
-                                      حذف
-                                    </button>
+                                    <span className="rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-xs font-medium text-cyan-700">جریمه</span>
+                                    <span className="text-xs text-slate-400">{MODE_OPTIONS.find((item) => item.id === typeRule.mode)?.title}</span>
                                   </div>
+                                  <p className="text-sm font-medium text-slate-700">{formatRuleSummary(typeRule)}</p>
+                                  <p className="text-xs text-slate-500">
+                                    مهلت تنفس: {typeRule.graceDays || '0'} روز
+                                    {typeRule.extraFeeEnabled ? ' · هزینه دیرکرد فعال' : ''}
+                                  </p>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => openRuleDialog(type.id, typeRule)}
+                                    className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
+                                  >
+                                    ویرایش
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setRules((current) => current.filter((item) => item.penaltyTypeId !== type.id))}
+                                    className="rounded-lg border border-rose-200 px-3 py-1.5 text-sm text-rose-600 hover:bg-rose-50"
+                                  >
+                                    حذف
+                                  </button>
                                 </div>
                               </div>
-                            ))}
+                            </div>
                           </div>
                         )}
                       </div>
@@ -669,13 +789,26 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
           {formError ? (
             <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{formError}</div>
           ) : null}
+          </div>
         </div>
       </div>
 
       <StickySubmitBar
         label="ثبت جرایم"
-        loadingLabel={loading ? 'در حال بارگذاری...' : 'در حال ذخیره...'}
-        disabled={loading || saving}
+        loadingLabel={
+          partyTab === 'seller'
+            ? sellerStatus.loading
+              ? 'در حال بارگذاری...'
+              : sellerStatus.saving || saving
+                ? 'در حال ذخیره...'
+                : undefined
+            : loading
+              ? 'در حال بارگذاری...'
+              : saving
+                ? 'در حال ذخیره...'
+                : undefined
+        }
+        disabled={partyTab === 'seller' ? sellerStatus.loading || sellerStatus.saving || saving : loading || saving}
         onClick={handleSubmit}
         embedded={embedded}
         submitId={stepId}
