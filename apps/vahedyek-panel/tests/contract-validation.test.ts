@@ -286,6 +286,7 @@ function makeValidTerminationData(overrides: Partial<ContractTerminationData> = 
       breachOfObligations: false,
       areaDiscrepancy: false,
       notification: false,
+      draftTemplateUsage: false,
     },
     constructorCompletion: {
       lateInstallment: true,
@@ -314,6 +315,7 @@ function makeValidTerminationData(overrides: Partial<ContractTerminationData> = 
         ruleEnabled: true,
         mandatoryItems: ['identity'],
         completionDeadlineDays: '10',
+        completionDeadlineDaysCustom: '',
         autoReminderEnabled: true,
       },
       otherBreach: {
@@ -357,6 +359,10 @@ function makeValidTerminationData(overrides: Partial<ContractTerminationData> = 
         notifyBuyer: false,
         notifyContractManager: false,
         showManagementOptionInGrid: false,
+      },
+      draftTemplateUsage: {
+        ruleEnabled: false,
+        allowPerContractOverride: false,
       },
     },
     ...overrides,

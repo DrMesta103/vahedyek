@@ -8,6 +8,8 @@ export type ContractRuleId =
   | 'discount'
   | 'penalty'
   | 'builder-penalty'
+  | 'builder-cancellation'
+  | 'buyer-cancellation'
   | 'forgiveness'
   | 'interest';
 
@@ -144,6 +146,16 @@ export const CONTRACT_RULE_ITEMS: Array<{ id: ContractRuleId; title: string; des
     id: 'builder-penalty',
     title: 'جریمه سازنده',
     description: 'فعال‌سازی و تنظیم جریمه‌های مرتبط با تعهدات سازنده مانند تاخیر در تحویل، تغییر مشخصات و اختلاف متراژ.',
+  },
+  {
+    id: 'builder-cancellation',
+    title: 'تنظیمات فسخ سازنده',
+    description: 'فعال‌سازی و تنظیم اختیارات فسخ سازنده در شرایطی مانند تاخیر در پرداخت، عدم انجام تعهدات مالی و نقص مدارک خریدار.',
+  },
+  {
+    id: 'buyer-cancellation',
+    title: 'تنظیمات فسخ خریدار',
+    description: 'فعال‌سازی و تنظیم اختیارات فسخ خریدار در شرایطی مانند تاخیر در تحویل، تغییر مشخصات و اختلاف متراژ.',
   },
   {
     id: 'forgiveness',
@@ -555,6 +567,97 @@ export const RULE_CONFIGS: Record<ContractRuleId, RuleConfig> = fixMojibakeDeep(
       },
     ],
   },
+  'builder-cancellation': {
+    id: 'builder-cancellation',
+    title: 'تنظیمات فسخ سازنده',
+    description: 'فعال‌سازی و مدیریت اختیارات فسخ قرارداد برای سازنده در سناریوهای مختلف.',
+    activationTitle: 'فعال‌سازی اختیارات فسخ سازنده',
+    activationDescription: 'با فعال‌سازی این بخش، تنظیمات فسخ سازنده بر اساس پیکربندی برای قراردادهای جدید اعمال خواهد شد.',
+    tabs: [
+      {
+        id: 'builder-cancellation-overview',
+        title: 'فسخ سازنده',
+        description: 'مرور و مدیریت سناریوهای فسخ سازنده.',
+        fields: [
+          { key: 'builderCancellationPaymentDelayEnabled', label: 'تاخیر در پرداخت اقساط', type: 'switch' },
+          { key: 'builderCancellationUnpaidFinancialEnabled', label: 'عدم انجام تعهدات مالی', type: 'switch' },
+          { key: 'builderCancellationMissingDocumentsEnabled', label: 'نقص مدارک / تعهدات', type: 'switch' },
+          { key: 'builderCancellationOtherBreachEnabled', label: 'نقض سایر تعهدات قراردادی', type: 'switch' },
+          { key: 'builderCancellationNotificationEnabled', label: 'اطلاع رسانی', type: 'switch' },
+          { key: 'builderCancellationDraftUsageEnabled', label: 'استفاده از پیش نویس', type: 'switch' },
+          {
+            key: 'builderCancellationPaymentDelayPreset',
+            label: 'مهلت مجاز تاخیر در پرداخت',
+            type: 'select',
+            options: ['3 روز', '7 روز', '10 روز', '15 روز', '30 روز', 'روزانه'],
+          },
+          { key: 'builderCancellationPaymentDelayCustomDays', label: 'تعداد روز مجاز تاخیر در پرداخت', type: 'number', placeholder: '10' },
+          {
+            key: 'builderCancellationPaymentDelayBasis',
+            label: 'مبنای تشخیص تاخیر در پرداخت',
+            type: 'select',
+            options: ['هر قسط پرداخت نشده'],
+          },
+          {
+            key: 'builderCancellationPaymentDelayMinDebt',
+            label: 'حداقل مبلغ بدهی برای فعال شدن فسخ',
+            type: 'number',
+            placeholder: '10000000',
+          },
+          {
+            key: 'builderCancellationPaymentDelayPartialPaymentBehavior',
+            label: 'نحوه برخورد با پرداخت ناقص',
+            type: 'select',
+            options: ['اگر قسط کامل نشده، فسخ فعال شود', 'اگر پرداخت ناقص باشد، فسخ فعال نشود', 'بر اساس مانده بدهی تصمیم گرفته شود'],
+          },
+          { key: 'builderCancellationUnpaidFinancialContractFees', label: 'تعهد مالی: هزینه‌های قراردادی', type: 'switch' },
+          { key: 'builderCancellationUnpaidFinancialPenalties', label: 'تعهد مالی: جریمه‌های قراردادی', type: 'switch' },
+          { key: 'builderCancellationUnpaidFinancialCustom', label: 'تعهد مالی: تعهد مالی سفارشی', type: 'switch' },
+          {
+            key: 'builderCancellationUnpaidFinancialGracePreset',
+            label: 'مهلت مجاز برای ایفای تعهدات مالی',
+            type: 'select',
+            options: ['روزانه', '7 روز', '15 روز', '30 روز'],
+          },
+          { key: 'builderCancellationUnpaidFinancialGraceDays', label: 'تعداد روز مجاز برای ایفای تعهدات مالی', type: 'number', placeholder: '7' },
+          { key: 'builderCancellationFormalDemandEnabled', label: 'مطالبه رسمی قبل از فسخ', type: 'switch' },
+          { key: 'builderCancellationMissingDocsIdentity', label: 'نقص مدارک: مدارک هویتی', type: 'switch' },
+          { key: 'builderCancellationMissingDocsSignature', label: 'نقص مدارک: تکمیل امضا', type: 'switch' },
+          { key: 'builderCancellationMissingDocsLegal', label: 'نقص مدارک: مجوزهای حقوقی', type: 'switch' },
+          {
+            key: 'builderCancellationMissingDocsGracePreset',
+            label: 'مهلت تکمیل مدارک / تعهدات',
+            type: 'select',
+            options: ['روزانه', '7 روز', '10 روز', '15 روز', '30 روز'],
+          },
+          { key: 'builderCancellationMissingDocsGraceDays', label: 'تعداد روز مجاز برای تکمیل مدارک / تعهدات', type: 'number', placeholder: '10' },
+          { key: 'builderCancellationReminderEnabled', label: 'ارسال یادآوری قبل از فسخ', type: 'switch' },
+        ],
+      },
+    ],
+  },
+  'buyer-cancellation': {
+    id: 'buyer-cancellation',
+    title: 'تنظیمات فسخ خریدار',
+    description: 'فعال‌سازی و مدیریت اختیارات فسخ قرارداد برای خریدار در سناریوهای مختلف.',
+    activationTitle: 'فعال‌سازی اختیارات فسخ خریدار',
+    activationDescription: 'با فعال‌سازی این بخش، تنظیمات فسخ خریدار بر اساس پیکربندی برای قراردادهای جدید اعمال خواهد شد.',
+    tabs: [
+      {
+        id: 'buyer-cancellation-overview',
+        title: 'فسخ خریدار',
+        description: 'مرور و مدیریت سناریوهای فسخ خریدار.',
+        fields: [
+          { key: 'buyerCancellationLateDeliveryEnabled', label: 'تاخیر در تحویل', type: 'switch' },
+          { key: 'buyerCancellationSpecificationChangesEnabled', label: 'تغییر مشخصات', type: 'switch' },
+          { key: 'buyerCancellationBreachEnabled', label: 'نقض تعهدات', type: 'switch' },
+          { key: 'buyerCancellationAreaDiscrepancyEnabled', label: 'اختلاف متراژ', type: 'switch' },
+          { key: 'buyerCancellationNotificationEnabled', label: 'اطلاع رسانی', type: 'switch' },
+          { key: 'buyerCancellationDraftTemplateUsageEnabled', label: 'استفاده در پیش نویس', type: 'switch' },
+        ],
+      },
+    ],
+  },
   forgiveness: {
     id: 'forgiveness',
     title: 'تنظیمات بخشودگی',
@@ -663,7 +766,9 @@ export function createInitialRuleState(ruleId: ContractRuleId): ContractRuleStat
       ruleId === 'adjustment' ||
       ruleId === 'discount' ||
       ruleId === 'penalty' ||
-      ruleId === 'builder-penalty'
+      ruleId === 'builder-penalty' ||
+      ruleId === 'builder-cancellation' ||
+      ruleId === 'buyer-cancellation'
         ? false
         : true,
     activeTab: rule.tabs[0]?.id ?? '',

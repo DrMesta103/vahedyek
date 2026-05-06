@@ -188,6 +188,8 @@ function buildBusinessSettingsBreadcrumb(pathname: string): Crumb[] {
         discount: 'تنظیمات تخفیف',
         penalty: 'تنظیمات جریمه',
         'builder-penalty': 'جریمه سازنده',
+        'builder-cancellation': 'تنظیمات فسخ سازنده',
+        'buyer-cancellation': 'تنظیمات فسخ خریدار',
         forgiveness: 'تنظیمات بخشودگی',
         interest: 'سود دریافتی',
       };
@@ -211,6 +213,37 @@ function buildBusinessSettingsBreadcrumb(pathname: string): Crumb[] {
 
           if (builderPenaltySection && builderPenaltyMap[builderPenaltySection]) {
             trail.push({ label: builderPenaltyMap[builderPenaltySection] });
+          }
+        }
+
+        if (ruleSegment === 'builder-cancellation') {
+          const builderCancellationSection = pathname.split('/')[4];
+          const builderCancellationMap: Record<string, string> = {
+            'late-installment': 'تاخیر در پرداخت اقساط',
+            'financial-obligations': 'عدم انجام تعهدات مالی',
+            'document-deficiencies': 'نقص مدارک / تعهدات',
+            'other-breach': 'نقض سایر تعهدات قراردادی',
+            notifications: 'اطلاع رسانی',
+          };
+
+          if (builderCancellationSection && builderCancellationMap[builderCancellationSection]) {
+            trail.push({ label: builderCancellationMap[builderCancellationSection] });
+          }
+        }
+
+        if (ruleSegment === 'buyer-cancellation') {
+          const buyerCancellationSection = pathname.split('/')[4];
+          const buyerCancellationMap: Record<string, string> = {
+            'late-delivery': 'تاخیر در تحویل',
+            'specification-changes': 'تغییر مشخصات',
+            'breach-of-obligations': 'نقض تعهدات',
+            'area-discrepancy': 'اختلاف متراژ',
+            notification: 'اطلاع رسانی',
+            'draft-template-usage': 'استفاده در پیش نویس',
+          };
+
+          if (buyerCancellationSection && buyerCancellationMap[buyerCancellationSection]) {
+            trail.push({ label: buyerCancellationMap[buyerCancellationSection] });
           }
         }
       }
@@ -342,20 +375,16 @@ export default function PanelLayout({ children }: PanelLayoutProps) {
               {!isContractsNewHub ? (
                 <div className={`top-header${isContractsListPage ? ' top-header-compact' : ''}`}>
                   <div className="breadcrumb">
-                    <Link href="/" className="breadcrumb-link">
-                      خانه
-                    </Link>
-                    {trail.map((item, index) => (
-                      <span key={`${item.label}-${index}`}>
-                        {' '}
-                        <i className="fa fa-chevron-left"></i>{' '}
-                        {item.href && index < trail.length - 1 ? (
+                    {[{ label: 'خانه', href: '/' }, ...trail].reverse().map((item, index, items) => (
+                      <span key={`${item.label}-${index}`} className="breadcrumb-item">
+                        {item.href && index < items.length - 1 ? (
                           <Link href={item.href} className="breadcrumb-link">
                             {item.label}
                           </Link>
                         ) : (
                           <span>{item.label}</span>
                         )}
+                        {index < items.length - 1 ? <i className="fa fa-chevron-left"></i> : null}
                       </span>
                     ))}
                   </div>

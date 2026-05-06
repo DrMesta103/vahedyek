@@ -16,7 +16,7 @@ export default async function BusinessContractRuleDetailPage({
 
   return (
     <PanelLayout>
-      <ContractRuleDetailsPanel ruleId={ruleId as ContractRuleId} />
+      <ContractRuleDetailsPanel key={ruleId} ruleId={ruleId as ContractRuleId} />
     </PanelLayout>
   );
 }

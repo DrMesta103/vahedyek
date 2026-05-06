@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { Landmark, ChevronLeft } from 'lucide-react';
 import { CONTRACT_RULE_ITEMS } from '../../../lib/businessContractRules';
+import { RuleStatusTag } from './RuleStatusTag';
 
 const RULE_DISPLAY_ORDER: Record<string, number> = {
   prepayment: 0,
@@ -12,28 +13,28 @@ const RULE_DISPLAY_ORDER: Record<string, number> = {
   discount: 4,
   penalty: 5,
   'builder-penalty': 6,
-  forgiveness: 7,
-  interest: 8,
-  'loan-settings': 9,
+  'builder-cancellation': 7,
+  'buyer-cancellation': 8,
+  forgiveness: 9,
+  interest: 10,
+  'loan-settings': 11,
 };
 
 function MenuCard({ title, description, href }: { title: string; description: string; href: string }) {
   return (
     <Link
       href={href}
-      className="group flex min-h-[148px] flex-col justify-between rounded-2xl border border-[color:var(--theme-accent-border)] bg-[color:var(--surface)] p-5 shadow-[0_10px_24px_var(--shadow-soft)] transition duration-200 hover:-translate-y-0.5 hover:border-[color:var(--theme-action-border)] hover:bg-[color:var(--theme-accent-softer)]"
+      className="group flex min-h-[136px] flex-col justify-between rounded-[20px] border border-[color:var(--theme-accent-border)] bg-[color:var(--surface)] p-4 transition duration-200 hover:border-[color:var(--theme-action-border)]"
     >
-      <div className="flex flex-row-reverse items-start gap-4">
+      <div className="flex flex-row-reverse items-start gap-3">
         <ChevronLeft className="mt-1 h-4 w-4 shrink-0 text-[color:var(--text-faint)] transition group-hover:text-[color:var(--theme-action-text)]" />
-        <div className="flex-1 space-y-2 text-right">
-          <h3 className="text-lg font-black text-[color:var(--text-strong)]">{title}</h3>
-          <p className="text-sm leading-7 text-[color:var(--text-muted)]">{description}</p>
+        <div className="flex-1 space-y-1.5 text-right">
+          <h3 className="text-base font-black text-[color:var(--text-strong)]">{title}</h3>
+          <p className="text-sm leading-6 text-[color:var(--text-muted)]">{description}</p>
         </div>
       </div>
       <div className="flex justify-start [direction:ltr]">
-        <span className="rounded-full border border-[color:var(--theme-action-border)] bg-[color:var(--theme-action-bg)] px-3 py-1 text-xs font-bold text-[color:var(--theme-action-text)]">
-          انجام شده
-        </span>
+        <RuleStatusTag label="انجام شده" />
       </div>
     </Link>
   );

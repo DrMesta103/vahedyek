@@ -17,7 +17,7 @@ export default async function BuilderPenaltySectionPage({
 
   return (
     <PanelLayout>
-      <BuilderPenaltyDetailPanel sectionId={sectionId as (typeof VALID_SECTION_IDS)[number]} />
+      <BuilderPenaltyDetailPanel key={sectionId} sectionId={sectionId as (typeof VALID_SECTION_IDS)[number]} />
     </PanelLayout>
   );
 }

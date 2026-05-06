@@ -7,13 +7,13 @@ import { type ContractRuleState } from '../../../lib/businessContractRules';
 import {
   ContractRegistrationSwitch,
   LoanError,
-  LoanIntroCard,
   LoanLoadingState,
   LoanPageShell,
   LoanSaveBar,
   LoanSectionCard,
   LoanSuccess,
 } from './LoanSettingsPrimitives';
+import { RuleStatusTag } from './RuleStatusTag';
 
 type BuilderPenaltySection = {
   id: 'unit-delivery-delay' | 'material-specs-change' | 'area-difference';
@@ -61,27 +61,23 @@ function NextPageCard({
       className={`flex flex-col gap-4 rounded-[20px] border px-5 py-5 transition ${
         disabled
           ? 'cursor-not-allowed border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] opacity-55'
-          : 'group border-[color:var(--border-soft)] bg-[color:var(--surface)] hover:border-[color:var(--theme-action-border)] hover:bg-[color:var(--surface-soft)]'
+          : 'group border-[color:var(--border-soft)] bg-[color:var(--surface)] hover:border-[color:var(--theme-action-border)]'
       }`}
     >
-      <div className="flex w-full flex-row-reverse items-start gap-4">
+      <div className="flex w-full flex-row-reverse items-start gap-3">
         <ChevronLeft
           className={`mt-1 h-5 w-5 shrink-0 ${
             disabled ? 'text-[color:var(--text-faint)]' : 'text-[color:var(--text-muted)] transition group-hover:-translate-x-0.5 group-hover:text-[color:var(--theme-action-text)]'
           }`}
         />
         <div className="flex-1 text-right">
-          <div className="flex items-center justify-between gap-3">
-            <h3 className="text-lg font-black text-[color:var(--text-strong)] sm:text-xl">{title}</h3>
-          </div>
-          <p className="mt-3 text-sm leading-7 text-[color:var(--text-muted)]">{description}</p>
+          <h3 className="text-base font-black text-[color:var(--text-strong)] sm:text-lg">{title}</h3>
+          <p className="mt-2 text-sm leading-6 text-[color:var(--text-muted)]">{description}</p>
         </div>
       </div>
       {active ? (
         <div className="flex justify-start [direction:ltr]">
-          <span className="rounded-full border border-[color:var(--theme-action-border)] bg-[color:var(--theme-action-bg)] px-3 py-1 text-xs font-bold text-[color:var(--theme-action-text)]">
-            تنظیم شده
-          </span>
+          <RuleStatusTag label="تنظیم شده" />
         </div>
       ) : null}
     </div>
@@ -164,7 +160,7 @@ export function BuilderPenaltySettingsPanel() {
   return (
     <>
       <LoanPageShell title="جریمه سازنده" description="در این بخش می‌توانید فعال‌سازی و زیرآیتم‌های جریمه مرتبط با تعهدات سازنده را مدیریت کنید.">
-        <LoanSectionCard className="p-5">
+        <LoanSectionCard className="p-4">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <div className="space-y-3 text-right">
               <h2 className="text-xl font-black text-[color:var(--text-strong)]">فعال‌سازی جرائم سازنده</h2>
@@ -187,13 +183,11 @@ export function BuilderPenaltySettingsPanel() {
           </div>
         </LoanSectionCard>
 
-        <LoanSectionCard className="p-5">
-          <div className="space-y-5 text-right">
-            <LoanIntroCard
-              title="فلو جرائم سازنده"
-              description="هر آیتم شما را به صفحه تنظیمات همان جریمه هدایت می‌کند تا وضعیت فعال‌سازی و جزئیات آن را مستقل ذخیره کنید."
-            />
-
+        <LoanSectionCard className="p-4">
+          <div className="space-y-4 text-right">
+            <p className="text-sm leading-6 text-[color:var(--text-muted)]">
+              هر آیتم شما را به صفحه تنظیمات همان جریمه هدایت می‌کند تا وضعیت فعال‌سازی و جزئیات آن را مستقل ذخیره کنید.
+            </p>
             <div className="space-y-3">
               {BUILDER_PENALTY_SECTIONS.map((section) => (
                 <NextPageCard

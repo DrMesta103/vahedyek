@@ -46,7 +46,7 @@ import {
   BuyerNotificationPanel,
   BuyerSpecificationChangesPanel,
 } from './termination/BuyerSubsectionPanels';
-import { BUYER_SUBSECTION_IDS, isBuyerTerminationSubsectionPanel } from './termination/buyerSubsections';
+import { BUYER_SUBSECTION_IDS, isBuyerTerminationSubsectionPanel, type DraftBuyerTerminationSubsectionId } from './termination/buyerSubsections';
 import {
   DocumentDeficienciesPanel,
   FinancialObligationsPanel,
@@ -91,7 +91,7 @@ const SUBSECTION_META: Record<ConstructorTerminationSubsectionId, { title: strin
   },
 };
 
-const BUYER_SUBSECTION_META: Record<BuyerTerminationSubsectionId, { title: string; description: string; icon: ReactNode }> = {
+const BUYER_SUBSECTION_META: Record<DraftBuyerTerminationSubsectionId, { title: string; description: string; icon: ReactNode }> = {
   lateDelivery: {
     title: 'تأخیر در تحویل',
     description: 'مبنا، مهلت ارفاقی و الزام تأیید ناظر.',

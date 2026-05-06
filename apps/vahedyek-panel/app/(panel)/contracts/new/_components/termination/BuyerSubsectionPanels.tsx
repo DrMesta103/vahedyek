@@ -7,21 +7,20 @@ import { SubsectionSubmitRow, ToggleRow } from './TerminationPrimitives';
 type B = ContractTerminationData['buyerTerms'];
 
 const LATE_GRACE: ReadonlyArray<{ value: B['lateDelivery']['gracePreset']; label: string }> = [
+  { value: '3', label: '۳ روز' },
+  { value: '7', label: '۷ روز' },
   { value: '10', label: '۱۰ روز' },
+  { value: '15', label: '۱۵ روز' },
   { value: '30', label: '۳۰ روز' },
-  { value: '60', label: '۶۰ روز' },
-  { value: '90', label: '۹۰ روز' },
-  { value: '180', label: '۱۸۰ روز' },
   { value: 'other', label: 'سایر' },
 ];
 
 const RECT_OPTS: ReadonlyArray<{ value: B['breachOfObligations']['rectificationPreset']; label: string }> = [
+  { value: '3', label: '۳ روز' },
   { value: '7', label: '۷ روز' },
-  { value: '14', label: '۱۴ روز' },
-  { value: '21', label: '۲۱ روز' },
+  { value: '10', label: '۱۰ روز' },
+  { value: '15', label: '۱۵ روز' },
   { value: '30', label: '۳۰ روز' },
-  { value: '45', label: '۴۵ روز' },
-  { value: '60', label: '۶۰ روز' },
   { value: 'other', label: 'سایر' },
 ];
 

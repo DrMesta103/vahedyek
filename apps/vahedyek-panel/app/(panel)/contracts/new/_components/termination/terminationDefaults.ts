@@ -53,6 +53,7 @@ export const DEFAULT_TERMINATION_DATA: ContractTerminationData = {
       ruleEnabled: false,
       mandatoryItems: [],
       completionDeadlineDays: '7',
+      completionDeadlineDaysCustom: '',
       autoReminderEnabled: false,
     },
     otherBreach: {
@@ -148,6 +149,10 @@ function mergeTerminationPayload(partial: Partial<ContractTerminationData>): Con
       referenceSources: partialBt?.areaDiscrepancy?.referenceSources ?? buyerCoerced.buyerTerms.areaDiscrepancy.referenceSources,
     },
     notification: { ...defBt.notification, ...buyerCoerced.buyerTerms.notification, ...partialBt?.notification },
+    draftTemplateUsage: {
+      ...defBt.draftTemplateUsage,
+      ...partialBt?.draftTemplateUsage,
+    },
   };
 
   return {

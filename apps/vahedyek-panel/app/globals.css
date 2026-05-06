@@ -1251,12 +1251,20 @@ textarea::placeholder {
   color: var(--text-muted);
   font-weight: 700;
   text-align: right;
-  width: fit-content;
+  width: 100%;
   max-width: 100%;
-  display: inline-flex;
+  display: flex;
+  flex-direction: row-reverse;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: flex-start;
   gap: 2px;
+}
+
+.breadcrumb-item {
+  display: inline-flex;
+  flex-direction: row-reverse;
+  align-items: center;
 }
 
 .breadcrumb i {

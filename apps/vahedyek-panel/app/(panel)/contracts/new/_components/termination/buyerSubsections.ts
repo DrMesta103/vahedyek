@@ -1,6 +1,8 @@
 import type { BuyerTerminationSubsectionId, TerminationBuyerPanel } from '../../../../../types/contract';
 
-export const BUYER_SUBSECTION_IDS: BuyerTerminationSubsectionId[] = [
+export type DraftBuyerTerminationSubsectionId = Exclude<BuyerTerminationSubsectionId, 'draftTemplateUsage'>;
+
+export const BUYER_SUBSECTION_IDS: DraftBuyerTerminationSubsectionId[] = [
   'lateDelivery',
   'specificationChanges',
   'breachOfObligations',
@@ -8,6 +10,6 @@ export const BUYER_SUBSECTION_IDS: BuyerTerminationSubsectionId[] = [
   'notification',
 ];
 
-export function isBuyerTerminationSubsectionPanel(panel: TerminationBuyerPanel): panel is BuyerTerminationSubsectionId {
-  return panel !== 'list';
+export function isBuyerTerminationSubsectionPanel(panel: TerminationBuyerPanel): panel is DraftBuyerTerminationSubsectionId {
+  return panel !== 'list' && panel !== 'draftTemplateUsage';
 }

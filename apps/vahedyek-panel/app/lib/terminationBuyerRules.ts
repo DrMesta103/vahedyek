@@ -12,6 +12,7 @@ const BUYER_PANEL_IDS = [
   'breachOfObligations',
   'areaDiscrepancy',
   'notification',
+  'draftTemplateUsage',
 ] as const satisfies readonly BuyerTerminationSubsectionId[];
 
 const DEFAULT_BUYER_COMPLETION: BuyerTerminationCompletion = {
@@ -20,6 +21,7 @@ const DEFAULT_BUYER_COMPLETION: BuyerTerminationCompletion = {
   breachOfObligations: false,
   areaDiscrepancy: false,
   notification: false,
+  draftTemplateUsage: false,
 };
 
 export function defaultBuyerTerminationTerms(): BuyerTerminationTerms {
@@ -55,6 +57,10 @@ export function defaultBuyerTerminationTerms(): BuyerTerminationTerms {
       notifyContractManager: false,
       showManagementOptionInGrid: false,
     },
+    draftTemplateUsage: {
+      ruleEnabled: false,
+      allowPerContractOverride: false,
+    },
   };
 }
 
@@ -62,9 +68,9 @@ export function defaultBuyerTerminationCompletion(): BuyerTerminationCompletion 
   return { ...DEFAULT_BUYER_COMPLETION };
 }
 
-const GRACE: BuyerTerminationTerms['lateDelivery']['gracePreset'][] = ['10', '30', '60', '90', '180', 'other'];
+const GRACE: BuyerTerminationTerms['lateDelivery']['gracePreset'][] = ['3', '7', '10', '15', '30', 'other'];
 
-const RECT: BuyerTerminationTerms['breachOfObligations']['rectificationPreset'][] = ['7', '14', '21', '30', '45', '60', 'other'];
+const RECT: BuyerTerminationTerms['breachOfObligations']['rectificationPreset'][] = ['3', '7', '10', '15', '30', 'other'];
 
 const THRESH: BuyerTerminationTerms['areaDiscrepancy']['thresholdPreset'][] = ['1', '2', '3', 'other'];
 
@@ -173,6 +179,12 @@ export function normalizePersistedBuyerRules(raw: unknown): BuyerRulesPersisted 
       notifyContractManager: Boolean(no.notifyContractManager),
       showManagementOptionInGrid: Boolean(no.showManagementOptionInGrid),
     };
+
+    const du = (t.draftTemplateUsage && typeof t.draftTemplateUsage === 'object' ? t.draftTemplateUsage : {}) as Record<string, unknown>;
+    buyerTerms.draftTemplateUsage = {
+      ruleEnabled: Boolean(du.ruleEnabled),
+      allowPerContractOverride: Boolean(du.allowPerContractOverride),
+    };
   }
 
   let buyerCompletion = defaultBuyerTerminationCompletion();
@@ -185,6 +197,7 @@ export function normalizePersistedBuyerRules(raw: unknown): BuyerRulesPersisted 
       breachOfObligations: Boolean(c.breachOfObligations),
       areaDiscrepancy: Boolean(c.areaDiscrepancy),
       notification: Boolean(c.notification),
+      draftTemplateUsage: Boolean(c.draftTemplateUsage),
     };
   }
 

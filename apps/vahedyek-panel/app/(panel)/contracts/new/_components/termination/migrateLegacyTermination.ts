@@ -14,27 +14,23 @@ const DEFAULT_COMPLETION: TerminationConstructorCompletion = {
   notifications: false,
 };
 
-const DEADLINE_DAYS = new Set(['3', '7', '10', '15', '20', '25', '30']);
+const DEADLINE_DAYS = new Set(['3', '7', '10', '15', '30']);
 
-function coerceDeadlinePreset(preset: string | undefined, customDays: string | undefined): ContractTerminationData['constructorTerms']['documentDeficiencies']['completionDeadlineDays'] {
-  if (preset && DEADLINE_DAYS.has(preset)) return preset as ContractTerminationData['constructorTerms']['documentDeficiencies']['completionDeadlineDays'];
-  const n = Number(String(customDays ?? '').replace(/\D/g, '') || NaN);
-  if (Number.isFinite(n)) {
-    const allowed: ContractTerminationData['constructorTerms']['documentDeficiencies']['completionDeadlineDays'][] = [
-      '3',
-      '7',
-      '10',
-      '15',
-      '20',
-      '25',
-      '30',
-    ];
-    const closest = allowed.reduce((best, cur) =>
-      Math.abs(Number(cur) - n) < Math.abs(Number(best) - n) ? cur : best,
-    allowed[2]);
-    return closest;
+function coerceDeadlinePreset(preset: string | undefined, customDays: string | undefined): {
+  completionDeadlineDays: ContractTerminationData['constructorTerms']['documentDeficiencies']['completionDeadlineDays'];
+  completionDeadlineDaysCustom: string;
+} {
+  if (preset && DEADLINE_DAYS.has(preset)) {
+    return {
+      completionDeadlineDays: preset as ContractTerminationData['constructorTerms']['documentDeficiencies']['completionDeadlineDays'],
+      completionDeadlineDaysCustom: '',
+    };
   }
-  return '7';
+  const digits = String(customDays ?? '').replace(/\D/g, '');
+  return {
+    completionDeadlineDays: digits ? 'other' : '7',
+    completionDeadlineDaysCustom: digits,
+  };
 }
 
 function coerceOtherBreachRectification(preset: string | undefined, days: string | undefined): {
@@ -157,7 +153,7 @@ export function migrateLegacyTerminationPayload(raw: Record<string, unknown>): C
           .filter((v): v is NonNullable<typeof v> => Boolean(v)),
         ...(function resolveFinancialGrace() {
           const preset = String(fin.gracePeriodPreset ?? '');
-          if (preset === '3' || preset === '7' || preset === '15' || preset === '30') {
+          if (preset === '3' || preset === '7' || preset === '10' || preset === '15' || preset === '30') {
             return {
               gracePreset: preset as ContractTerminationData['constructorTerms']['financialObligations']['gracePreset'],
               graceDaysCustom: '',
@@ -181,7 +177,7 @@ export function migrateLegacyTerminationPayload(raw: Record<string, unknown>): C
         mandatoryItems: (doc.requiredItems ?? [])
           .map((code) => docItemMap[String(code)])
           .filter(Boolean) as ContractTerminationData['constructorTerms']['documentDeficiencies']['mandatoryItems'],
-        completionDeadlineDays: coerceDeadlinePreset(
+        ...coerceDeadlinePreset(
           String(doc.gracePeriodPreset),
           String(doc.gracePeriodDays ?? ''),
         ),

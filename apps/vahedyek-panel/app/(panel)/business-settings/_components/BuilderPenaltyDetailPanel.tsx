@@ -244,7 +244,7 @@ export function BuilderPenaltyDetailPanel({ sectionId }: { sectionId: BuilderPen
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [sectionId]);
 
   const persistState = async (nextState: ContractRuleState, options?: { silent?: boolean }) => {
     try {

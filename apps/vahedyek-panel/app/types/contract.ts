@@ -163,7 +163,8 @@ export type BuyerTerminationSubsectionId =
   | 'specificationChanges'
   | 'breachOfObligations'
   | 'areaDiscrepancy'
-  | 'notification';
+  | 'notification'
+  | 'draftTemplateUsage';
 
 export type TerminationBuyerPanel = 'list' | BuyerTerminationSubsectionId;
 
@@ -173,13 +174,14 @@ export interface BuyerTerminationCompletion {
   breachOfObligations: boolean;
   areaDiscrepancy: boolean;
   notification: boolean;
+  draftTemplateUsage: boolean;
 }
 
 export interface BuyerTerminationTerms {
   lateDelivery: {
     ruleEnabled: boolean;
     calculationBasis: 'last-addendum' | 'project-end' | 'contract-date';
-    gracePreset: '10' | '30' | '60' | '90' | '180' | 'other';
+    gracePreset: '3' | '7' | '10' | '15' | '30' | 'other';
     graceDaysCustom: string;
     expertApprovalRequired: boolean;
   };
@@ -193,7 +195,7 @@ export interface BuyerTerminationTerms {
     obligationTypes: Array<
       'construction-progress' | 'quality-standards' | 'infrastructure-delivery' | 'legal-docs' | 'service-connections'
     >;
-    rectificationPreset: '7' | '14' | '21' | '30' | '45' | '60' | 'other';
+    rectificationPreset: '3' | '7' | '10' | '15' | '30' | 'other';
     rectificationDaysCustom: string;
   };
   areaDiscrepancy: {
@@ -208,6 +210,10 @@ export interface BuyerTerminationTerms {
     notifyBuyer: boolean;
     notifyContractManager: boolean;
     showManagementOptionInGrid: boolean;
+  };
+  draftTemplateUsage: {
+    ruleEnabled: boolean;
+    allowPerContractOverride: boolean;
   };
 }
 
@@ -253,7 +259,7 @@ export interface ContractTerminationData {
       obligationTypes: Array<
         'contract-costs' | 'penalties' | 'custom-commitments' | 'extra-costs' | 'side-costs'
       >;
-      gracePreset: '3' | '7' | '15' | '30' | 'other';
+      gracePreset: '3' | '7' | '10' | '15' | '30' | 'other';
       graceDaysCustom: string;
       officialDemandRequired: boolean;
     };
@@ -262,7 +268,8 @@ export interface ContractTerminationData {
       mandatoryItems: Array<
         'identity' | 'legal-permits' | 'signing-docs' | 'payment-docs' | 'physical-presence'
       >;
-      completionDeadlineDays: '3' | '7' | '10' | '15' | '20' | '25' | '30';
+      completionDeadlineDays: '3' | '7' | '10' | '15' | '30' | 'other';
+      completionDeadlineDaysCustom: string;
       autoReminderEnabled: boolean;
     };
     otherBreach: {
@@ -270,7 +277,7 @@ export interface ContractTerminationData {
       violationTypes: Array<
         'transfer-restrictions' | 'refusal-to-sign' | 'lack-cooperation' | 'false-information'
       >;
-      rectificationDays: '3' | '7' | '10' | '15' | '20' | '25' | '30' | 'other';
+      rectificationDays: '3' | '7' | '10' | '15' | '30' | 'other';
       rectificationDaysCustom: string;
       requiresContractManagerApproval: boolean;
     };

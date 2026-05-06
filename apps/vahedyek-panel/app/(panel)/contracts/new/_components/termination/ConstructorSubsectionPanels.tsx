@@ -19,6 +19,7 @@ const GRACE_A: ReadonlyArray<{ value: C['lateInstallment']['gracePreset']; label
 const GRACE_B: ReadonlyArray<{ value: C['financialObligations']['gracePreset']; label: string }> = [
   { value: '3', label: '۳ روز' },
   { value: '7', label: '۷ روز' },
+  { value: '10', label: '۱۰ روز' },
   { value: '15', label: '۱۵ روز' },
   { value: '30', label: '۳۰ روز' },
   { value: 'other', label: 'سایر' },
@@ -32,9 +33,8 @@ const DAYS_3_30: ReadonlyArray<{
   { value: '7', label: '۷ روز' },
   { value: '10', label: '۱۰ روز' },
   { value: '15', label: '۱۵ روز' },
-  { value: '20', label: '۲۰ روز' },
-  { value: '25', label: '۲۵ روز' },
   { value: '30', label: '۳۰ روز' },
+  { value: 'other', label: 'سایر' },
 ];
 
 const DAYS_3_30_WITH_OTHER: ReadonlyArray<{
@@ -45,8 +45,6 @@ const DAYS_3_30_WITH_OTHER: ReadonlyArray<{
   { value: '7', label: '۷ روز' },
   { value: '10', label: '۱۰ روز' },
   { value: '15', label: '۱۵ روز' },
-  { value: '20', label: '۲۰ روز' },
-  { value: '25', label: '۲۵ روز' },
   { value: '30', label: '۳۰ روز' },
   { value: 'other', label: 'سایر' },
 ];
@@ -196,10 +194,10 @@ export function FinancialObligationsPanel({
 
       <div className={`transition-all duration-200 ${value.ruleEnabled ? 'opacity-100' : 'max-h-0 overflow-hidden opacity-0'}`}>
       <FieldGroup label="انواع تعهدات مالی مشمول" hint="با فعال‌سازی این گزینه، جرایم براساس پیکربندی به تمام قراردادهای جدید اعمال خواهند شد">
-        <TagPills<C['financialObligations']['obligationTypes'][number] | ''>
-          value={value.obligationTypes[0] ?? ''}
-          onChange={(v) => onChange({ ...value, obligationTypes: v ? [v] : [] })}
-          options={[{ value: '', label: 'هیچ‌کدام' }, ...(FIN_OPTS as { value: C['financialObligations']['obligationTypes'][number]; label: string }[])]}
+        <MultiTagPills<C['financialObligations']['obligationTypes'][number]>
+          values={value.obligationTypes}
+          onChange={(values) => onChange({ ...value, obligationTypes: values })}
+          options={FIN_OPTS as { value: C['financialObligations']['obligationTypes'][number]; label: string }[]}
         />
       </FieldGroup>
 
@@ -267,10 +265,30 @@ export function DocumentDeficienciesPanel({
         <p className="text-[11px] text-slate-400">پس از اعلام نقص، چند روز برای تکمیل مدارک/تعهدات فرصت داده می‌شود.</p>
         <TagPills
           value={value.completionDeadlineDays}
-          onChange={(v) => onChange({ ...value, completionDeadlineDays: v })}
+          onChange={(v) =>
+            onChange({
+              ...value,
+              completionDeadlineDays: v,
+              completionDeadlineDaysCustom: v === 'other' ? value.completionDeadlineDaysCustom : '',
+            })
+          }
           options={DAYS_3_30 as { value: C['documentDeficiencies']['completionDeadlineDays']; label: string }[]}
         />
       </FieldGroup>
+
+      {value.completionDeadlineDays === 'other' ? (
+        <FieldGroup label="تعداد روز مجاز (سفارشی)" required>
+          <FormTextInput
+            value={value.completionDeadlineDaysCustom}
+            onChange={(v) => onChange({ ...value, completionDeadlineDaysCustom: normalizeDigits(v) })}
+            placeholder="مثال: ۱۲"
+            inputMode="numeric"
+            dir="ltr"
+            className="text-left"
+          />
+        </FieldGroup>
+      ) : null}
+
 
       <ToggleRow
         checked={value.autoReminderEnabled}
