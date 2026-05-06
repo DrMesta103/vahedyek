@@ -1615,7 +1615,7 @@ textarea::placeholder {
   flex-direction: row-reverse;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: flex-end !important;
   gap: 2px;
 }
 
@@ -1750,6 +1750,44 @@ textarea::placeholder {
   font-size: 14px;
   line-height: 2;
   text-align: justify;
+}
+
+.approval-process-selection-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.approval-process-selection-card {
+  min-height: 250px;
+  box-shadow: 0 14px 32px var(--shadow-soft);
+}
+
+.approval-process-selection-card .business-settings-card-header {
+  height: 92px;
+}
+
+.approval-process-selection-card .business-settings-card-title {
+  right: 22px;
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.approval-process-selection-card .business-settings-card-arrow {
+  left: 22px;
+}
+
+.approval-process-selection-card .business-settings-card-body {
+  min-height: 158px;
+  padding: 22px 22px 24px;
+  display: flex;
+  align-items: flex-start;
+}
+
+.approval-process-selection-card .business-settings-card-body p {
+  width: 100%;
+  text-align: right;
+  line-height: 2.15;
 }
 
 .business-profile-page {
@@ -6435,6 +6473,10 @@ textarea::placeholder {
   .business-settings-grid {
     grid-template-columns: 1fr;
   }
+
+  .approval-process-selection-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 1024px) {
@@ -6489,6 +6531,18 @@ textarea::placeholder {
     min-height: auto;
     align-items: flex-start;
     padding: 20px 0;
+  }
+
+  .approval-process-selection-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .approval-process-selection-card {
+    min-height: 0;
+  }
+
+  .approval-process-selection-card .business-settings-card-body {
+    min-height: 132px;
   }
 
   .business-profile-page {

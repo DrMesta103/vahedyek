@@ -21,6 +21,12 @@ const settingCards: BusinessSettingsCardProps[] = [
     href: '/business-settings/contract-rules',
   },
   {
+    title: 'فرآیند تایید',
+    description:
+      'در این بخش می‌توانید مسیر تایید پیش‌نویس قرارداد را بر اساس نوع کاربری واحد تعریف کنید و تعیین کنید قبل از نهایی شدن، چه نقش‌هایی باید آن را بررسی کنند.',
+    href: '/business-settings/approval-process',
+  },
+  {
     title: 'بلوک / برج - طبقه - واحد',
     description:
       'در این بخش اطلاعات بلوک، برج، طبقات، واحدها و انواع کاربری‌های مختلف هر واحد را ثبت و مدیریت می‌کنید.',
