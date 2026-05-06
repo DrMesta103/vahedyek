@@ -1,6 +1,8 @@
 export const THREAD_PRIORITIES = ['p0', 'p1', 'p2', 'p3'] as const;
+export const THREAD_STATUSES = ['todo', 'in_progress', 'done'] as const;
 
 export type ThreadPriority = (typeof THREAD_PRIORITIES)[number];
+export type ThreadStatus = (typeof THREAD_STATUSES)[number];
 
 export type PageThreadRecord = {
   id: string;
@@ -10,6 +12,7 @@ export type PageThreadRecord = {
   title: string;
   docType: string;
   priority: ThreadPriority;
+  status: ThreadStatus;
   labels: string[];
   createdAt: string;
   updatedAt: string;
@@ -66,6 +69,12 @@ export function normalizePriority(value: unknown): ThreadPriority {
   return typeof value === 'string' && (THREAD_PRIORITIES as readonly string[]).includes(value)
     ? (value as ThreadPriority)
     : 'p2';
+}
+
+export function normalizeThreadStatus(value: unknown): ThreadStatus {
+  return typeof value === 'string' && (THREAD_STATUSES as readonly string[]).includes(value)
+    ? (value as ThreadStatus)
+    : 'todo';
 }
 
 export function normalizeLabels(input: unknown) {

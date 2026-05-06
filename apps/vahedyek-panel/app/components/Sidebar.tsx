@@ -55,6 +55,10 @@ export default function Sidebar({ activeItem = 'home', forceCollapsed = false, l
     router.refresh();
   };
 
+  const handleOpenTenantDocs = () => {
+    router.push('/dev-doc-threads');
+  };
+
   const effectiveCollapsed = forceCollapsed || collapsed;
   const allowedMenuItemIds = data?.access?.allowedMenuItemIds;
   const canSeeSettings = !allowedMenuItemIds || allowedMenuItemIds.includes('settings');
@@ -172,7 +176,12 @@ export default function Sidebar({ activeItem = 'home', forceCollapsed = false, l
         )}
       </nav>
 
-      <div className="invite-section">
+      <div className="invite-section" onClick={handleOpenTenantDocs} role="button" tabIndex={0} onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          handleOpenTenantDocs();
+        }
+      }}>
         <p>tenant فعال</p>
         <button className="invite-btn">{data?.tenant?.name ?? 'در حال بارگذاری...'}</button>
       </div>

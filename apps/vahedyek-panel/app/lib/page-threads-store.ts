@@ -6,12 +6,14 @@ import {
   normalizeLabels,
   normalizeMessageType,
   normalizePriority,
+  normalizeThreadStatus,
   sanitizeDataUrl,
   sanitizeText,
   type MessageType,
   type PageMessageRecord,
   type PageThreadRecord,
   type ThreadPriority,
+  type ThreadStatus,
 } from './page-threads';
 import { normalizePagePath } from './page-docs';
 
@@ -29,6 +31,7 @@ type ThreadRow = {
   title: string;
   docType: string;
   priority: string;
+  status: string;
   labelsJson: string | null;
   createdAt: Date;
   updatedAt: Date;
@@ -69,6 +72,7 @@ export async function ensurePageThreadsTables() {
       "title" TEXT NOT NULL,
       "docType" TEXT NOT NULL DEFAULT 'free',
       "priority" TEXT NOT NULL DEFAULT 'p2',
+      "status" TEXT NOT NULL DEFAULT 'todo',
       "labelsJson" TEXT NOT NULL DEFAULT '[]',
       "createdById" TEXT NOT NULL,
       "updatedById" TEXT NOT NULL,
@@ -87,6 +91,7 @@ export async function ensurePageThreadsTables() {
 
   await prisma.$executeRawUnsafe(`ALTER TABLE ${THREADS_TABLE} ADD COLUMN IF NOT EXISTS "appId" TEXT NOT NULL DEFAULT '${currentAppConfig.appId}';`);
   await prisma.$executeRawUnsafe(`ALTER TABLE ${THREADS_TABLE} ADD COLUMN IF NOT EXISTS "priority" TEXT NOT NULL DEFAULT 'p2';`);
+  await prisma.$executeRawUnsafe(`ALTER TABLE ${THREADS_TABLE} ADD COLUMN IF NOT EXISTS "status" TEXT NOT NULL DEFAULT 'todo';`);
   await prisma.$executeRawUnsafe(`ALTER TABLE ${THREADS_TABLE} ADD COLUMN IF NOT EXISTS "labelsJson" TEXT NOT NULL DEFAULT '[]';`);
   await prisma.$executeRawUnsafe(`ALTER TABLE ${THREADS_TABLE} ADD COLUMN IF NOT EXISTS "pagePathSample" TEXT NOT NULL DEFAULT '/';`);
 
@@ -143,6 +148,7 @@ function safeJsonParseStringArray(input: unknown) {
 
 export function mapThreadRow(row: ThreadRow): PageThreadRecord {
   const priority = normalizePriority(row.priority);
+  const status = normalizeThreadStatus(row.status);
   return {
     id: row.id,
     appId: row.appId,
@@ -151,6 +157,7 @@ export function mapThreadRow(row: ThreadRow): PageThreadRecord {
     title: row.title,
     docType: normalizeDocTypeTag(row.docType),
     priority,
+    status,
     labels: safeJsonParseStringArray(row.labelsJson),
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
@@ -187,6 +194,45 @@ export function mapMessageRow(row: MessageRow): PageMessageRecord {
   };
 }
 
+export async function listThreadsForApp() {
+  await ensurePageThreadsTables();
+
+  const rows = await prisma.$queryRawUnsafe<ThreadRow[]>(
+    `
+      SELECT
+        t."id",
+        t."appId",
+        t."pageKey",
+        t."pagePathSample",
+        t."title",
+        t."docType",
+        t."priority",
+        t."status",
+        t."labelsJson",
+        t."createdAt",
+        t."updatedAt",
+        author."id" AS "authorId",
+        author."fullName" AS "authorFullName",
+        author."email" AS "authorEmail",
+        updater."id" AS "updaterId",
+        updater."fullName" AS "updaterFullName",
+        updater."email" AS "updaterEmail"
+      FROM ${THREADS_TABLE} t
+      LEFT JOIN "AppUser" author ON author."id" = t."createdById"
+      LEFT JOIN "AppUser" updater ON updater."id" = t."updatedById"
+      WHERE t."appId" = $1
+      ORDER BY t."updatedAt" DESC, t."createdAt" DESC
+    `,
+    currentAppConfig.appId,
+  );
+
+  return {
+    pagePath: '/',
+    pageKey: '/all-pages',
+    threads: rows.map(mapThreadRow),
+  };
+}
+
 export async function listThreadsForPage(input: { pagePath: string }) {
   const { pagePath, pageKey } = normalizePagePath(input.pagePath);
   await ensurePageThreadsTables();
@@ -201,6 +247,7 @@ export async function listThreadsForPage(input: { pagePath: string }) {
         t."title",
         t."docType",
         t."priority",
+        t."status",
         t."labelsJson",
         t."createdAt",
         t."updatedAt",
@@ -239,6 +286,7 @@ export async function createThread(input: {
   const { pagePath, pageKey } = normalizePagePath(input.pagePath);
   const docType = normalizeDocTypeTag(input.docType);
   const priority: ThreadPriority = normalizePriority(input.priority);
+  const status: ThreadStatus = 'todo';
   const labels = normalizeLabels(input.labels);
   const id = crypto.randomUUID();
 
@@ -247,9 +295,9 @@ export async function createThread(input: {
   await prisma.$executeRawUnsafe(
     `
       INSERT INTO ${THREADS_TABLE} (
-        "id","appId","pageKey","pagePathSample","title","docType","priority","labelsJson","createdById","updatedById"
+        "id","appId","pageKey","pagePathSample","title","docType","priority","status","labelsJson","createdById","updatedById"
       )
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
     `,
     id,
     currentAppConfig.appId,
@@ -258,6 +306,7 @@ export async function createThread(input: {
     title,
     docType,
     priority,
+    status,
     JSON.stringify(labels),
     input.actorUserId,
     input.actorUserId,
@@ -272,6 +321,7 @@ export async function updateThreadMeta(input: {
   title?: unknown;
   docType?: unknown;
   priority?: unknown;
+  status?: unknown;
   labels?: unknown;
 }) {
   await ensurePageThreadsTables();
@@ -279,6 +329,7 @@ export async function updateThreadMeta(input: {
   const title = typeof input.title === 'string' ? input.title.trim() : null;
   const docType = input.docType !== undefined ? normalizeDocTypeTag(input.docType) : null;
   const priority = input.priority !== undefined ? normalizePriority(input.priority) : null;
+  const status = input.status !== undefined ? normalizeThreadStatus(input.status) : null;
   const labels = input.labels !== undefined ? normalizeLabels(input.labels) : null;
 
   await prisma.$executeRawUnsafe(
@@ -288,14 +339,16 @@ export async function updateThreadMeta(input: {
         "title" = COALESCE($1, "title"),
         "docType" = COALESCE($2, "docType"),
         "priority" = COALESCE($3, "priority"),
-        "labelsJson" = COALESCE($4, "labelsJson"),
-        "updatedById" = $5,
+        "status" = COALESCE($4, "status"),
+        "labelsJson" = COALESCE($5, "labelsJson"),
+        "updatedById" = $6,
         "updatedAt" = CURRENT_TIMESTAMP
-      WHERE "id" = $6 AND "appId" = $7
+      WHERE "id" = $7 AND "appId" = $8
     `,
     title && title.length ? title : null,
     docType,
     priority,
+    status,
     labels ? JSON.stringify(labels) : null,
     input.actorUserId,
     input.threadId,

@@ -9,6 +9,7 @@ import { useAuthContext } from '../hooks/useAuthContext';
 import { DEFAULT_DOC_TYPES, THREAD_PRIORITIES, type PageMessageRecord, type PageThreadRecord, type ThreadPriority } from '../lib/page-threads';
 
 type WidgetMode = 'threads' | 'wizard' | 'chat';
+type ThreadScope = 'page' | 'app';
 
 type ThreadsResponse = {
   pagePath: string;
@@ -27,6 +28,10 @@ const PRIORITY_LABELS: Record<ThreadPriority, string> = {
 
 function formatDateTime(value: string) {
   return new Intl.DateTimeFormat('fa-IR', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
+}
+
+function getThreadScopeLabel(scope: ThreadScope) {
+  return scope === 'app' ? 'همه گفتگوهای اپ' : 'گفتگوهای همین صفحه';
 }
 
 function actionButtonClass(primary = false) {
@@ -86,6 +91,7 @@ export default function PageDocsWidget() {
   const [recording, setRecording] = useState(false);
   const [maximized, setMaximized] = useState(false);
   const [mode, setMode] = useState<WidgetMode>('threads');
+  const [threadScope, setThreadScope] = useState<ThreadScope>('page');
   const [threads, setThreads] = useState<PageThreadRecord[]>([]);
   const [selectedThreadId, setSelectedThreadId] = useState<string | null>(null);
   const [messages, setMessages] = useState<UiMessage[]>([]);
@@ -148,6 +154,7 @@ export default function PageDocsWidget() {
   useEffect(() => {
     setOpen(false);
     setMode('threads');
+    setThreadScope('page');
     setError('');
     setSelectedThreadId(null);
     setMessages([]);
@@ -205,18 +212,40 @@ export default function PageDocsWidget() {
     return () => window.removeEventListener('mousedown', onDown);
   }, [emojiOpen]);
 
-  const fetchThreads = async () => {
-    const response = await fetch(`/api/page-threads?pagePath=${encodeURIComponent(pathname)}`, { cache: 'no-store' });
+  useEffect(() => {
+    const handleOpenRequest = (event: Event) => {
+      const detail = event instanceof CustomEvent ? (event.detail as { scope?: ThreadScope } | undefined) : undefined;
+      const nextScope = detail?.scope === 'app' ? 'app' : 'page';
+
+      setOpen(true);
+      setMode('threads');
+      setThreadScope(nextScope);
+      setSelectedThreadId(null);
+      setMessages([]);
+      setReplyTo(null);
+      setError('');
+    };
+
+    window.addEventListener('vahedyek:page-docs-open', handleOpenRequest);
+    return () => window.removeEventListener('vahedyek:page-docs-open', handleOpenRequest);
+  }, []);
+
+  const fetchThreads = async (scope: ThreadScope) => {
+    const query =
+      scope === 'app'
+        ? '/api/page-threads?scope=app'
+        : `/api/page-threads?pagePath=${encodeURIComponent(pathname)}`;
+    const response = await fetch(query, { cache: 'no-store' });
     const payload = (await response.json().catch(() => null)) as ThreadsResponse | { message?: string } | null;
     if (!response.ok) throw new Error((payload as { message?: string } | null)?.message || 'بارگذاری گفتگوها انجام نشد.');
     return payload as ThreadsResponse;
   };
 
-  const loadThreads = async () => {
+  const loadThreads = async (scope: ThreadScope = threadScope) => {
     setLoading(true);
     setError('');
     try {
-      const payload = await fetchThreads();
+      const payload = await fetchThreads(scope);
       setThreads(payload.threads);
       setPageKey(payload.pageKey);
     } catch (loadError) {
@@ -226,6 +255,11 @@ export default function PageDocsWidget() {
     }
   };
 
+  useEffect(() => {
+    if (!open || mode !== 'threads') return;
+    void loadThreads(threadScope);
+  }, [open, mode, threadScope]);
+
   const openDrawer = async () => {
     if (open) {
       setOpen(false);
@@ -234,7 +268,7 @@ export default function PageDocsWidget() {
     }
     setOpen(true);
     setMode('threads');
-    await loadThreads();
+    setThreadScope('page');
   };
 
   const resetWizard = () => {
@@ -584,7 +618,7 @@ export default function PageDocsWidget() {
       if (!response.ok) throw new Error((payload as { message?: string } | null)?.message || 'ایجاد گفتگو انجام نشد.');
       if (!payload || !('threadId' in payload)) throw new Error('ایجاد گفتگو انجام نشد.');
 
-      const refreshed = await fetchThreads();
+      const refreshed = await fetchThreads(threadScope);
       setThreads(refreshed.threads);
       setPageKey(refreshed.pageKey);
       const createdThread = refreshed.threads.find((t) => t.id === payload.threadId) ?? null;
@@ -893,7 +927,9 @@ export default function PageDocsWidget() {
               <div className="space-y-1">
                 <div className="text-xs font-semibold text-[color:var(--text-muted)]">{currentAppConfig.appName}</div>
                 <h2 className="text-lg font-black text-[color:var(--text-strong)]">گفتگوی مستندات توسعه</h2>
-                <p className="font-mono text-xs text-[color:var(--text-muted)]">{pageKey || pathname}</p>
+                <p className="font-mono text-xs text-[color:var(--text-muted)]">
+                  {threadScope === 'app' ? getThreadScopeLabel(threadScope) : pageKey || pathname}
+                </p>
               </div>
               <div className="flex items-center gap-2">
                 <button
@@ -1340,6 +1376,22 @@ export default function PageDocsWidget() {
                       </label>
                     </div>
                   </div>
+                  <div className="flex flex-wrap gap-2">
+                    <button type="button" className={activeChipClass(threadScope === 'page')} onClick={() => setThreadScope('page')}>
+                      همین صفحه
+                    </button>
+                    <button type="button" className={activeChipClass(threadScope === 'app')} onClick={() => setThreadScope('app')}>
+                      کل اپ
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <button type="button" className={activeChipClass(threadScope === 'page')} onClick={() => setThreadScope('page')}>
+                      همین صفحه
+                    </button>
+                    <button type="button" className={activeChipClass(threadScope === 'app')} onClick={() => setThreadScope('app')}>
+                      کل اپ
+                    </button>
+                  </div>
 
                   {error ? <div className="rounded-[18px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
 
@@ -1387,6 +1439,7 @@ export default function PageDocsWidget() {
                                 <div className="flex flex-wrap gap-3 text-xs text-[color:var(--text-muted)]">
                                   <span>{thread.createdBy?.fullName || 'نامشخص'}</span>
                                   <span>{formatDateTime(thread.updatedAt)}</span>
+                                  {threadScope === 'app' ? <span className="font-mono">{thread.pagePathSample}</span> : null}
                                 </div>
                               </div>
                             </div>

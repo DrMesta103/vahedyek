@@ -345,6 +345,13 @@ export default function PanelLayout({ children }: PanelLayoutProps) {
       };
     }
 
+    if (pathname.startsWith('/dev-doc-threads')) {
+      return {
+        activeItem: 'home',
+        trail: [{ label: 'برد گفت‌وگوهای مستندات' }],
+      };
+    }
+
     const matchedModule = currentAppConfig.modules.find((module) => pathname.startsWith(module.routePrefix));
     if (matchedModule) {
       return {
