@@ -19,6 +19,7 @@ export async function PATCH(request: Request, context: RouteContext) {
       title?: unknown;
       docType?: unknown;
       priority?: unknown;
+      status?: unknown;
       labels?: unknown;
     };
 
@@ -28,6 +29,7 @@ export async function PATCH(request: Request, context: RouteContext) {
       title: body.title,
       docType: body.docType,
       priority: body.priority,
+      status: body.status,
       labels: body.labels,
     });
 

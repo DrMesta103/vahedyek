@@ -17,7 +17,7 @@ import type {
   DiscountTypeStateData,
   DiscountValueMode,
 } from '../../../../types/contract';
-import { dispatchContractFlowDirty, dispatchContractFlowSaved } from './contractFlowSignals';
+import { dispatchContractFlowDirty, dispatchContractFlowSavedForDraft } from './contractFlowSignals';
 import type { ContractFlowSectionId } from './contractFlowSignals';
 import { useContractFlowBasePath } from './useContractFlowBasePath';
 
@@ -334,7 +334,7 @@ export function DiscountsStep({ stepId, title, embedded = false }: { stepId: str
       initialSnapshotRef.current = serializePayload(payload);
       setDirty(false);
       dispatchContractFlowDirty(stepId as ContractFlowSectionId, false);
-      dispatchContractFlowSaved(stepId as ContractFlowSectionId);
+      dispatchContractFlowSavedForDraft(draftId, stepId as ContractFlowSectionId, Date.now(), payload);
     } catch (error) {
       setFormError(error instanceof Error ? error.message : 'ذخیره تخفیف‌ها انجام نشد.');
     } finally {

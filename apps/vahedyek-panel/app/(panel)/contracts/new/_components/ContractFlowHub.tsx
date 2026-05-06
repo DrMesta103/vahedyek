@@ -14,6 +14,10 @@ import { PenaltiesStep } from './PenaltiesStep';
 import { RightNavSidebar } from './RightNavSidebar';
 import { SubjectStep } from './SubjectStep';
 import { TerminationStep } from './TerminationStep';
+import { ExtraCostsStep } from './ExtraCostsStep';
+import { TechnicalSpecsStep } from './TechnicalSpecsStep';
+import { ContractAttachmentsStep } from './ContractAttachmentsStep';
+import { getContractAttachments, getContractExtraCosts, getContractTechnicalSpecs } from '../../../../actions/contractSteps789';
 import {
   CONTRACT_FLOW_DIRTY_EVENT,
   CONTRACT_FLOW_FINANCIAL_SNAPSHOT_EVENT,
@@ -57,15 +61,38 @@ type SectionItem = {
   render: () => JSX.Element;
 };
 
-const SAVEABLE_SECTIONS: ContractFlowSectionId[] = ['subject', 'parties', 'financial', 'penalties', 'discounts', 'termination'];
-const SECTION_ORDER: ContractFlowSectionId[] = ['subject', 'parties', 'financial', 'penalties', 'discounts', 'termination'];
+const SAVEABLE_SECTIONS: ContractFlowSectionId[] = [
+  'subject',
+  'parties',
+  'financial',
+  'penalties',
+  'discounts',
+  'termination',
+  'extraCosts',
+  'technicalSpecs',
+  'contractAttachments',
+];
+const SECTION_ORDER: ContractFlowSectionId[] = [
+  'subject',
+  'parties',
+  'financial',
+  'penalties',
+  'discounts',
+  'termination',
+  'extraCosts',
+  'technicalSpecs',
+  'contractAttachments',
+];
 const SECTION_PREREQUISITES: Record<ContractFlowSectionId, ContractFlowSectionId[]> = {
   subject: [],
   parties: ['subject'],
   financial: ['subject', 'parties'],
   penalties: ['subject', 'parties', 'financial'],
-  discounts: ['subject', 'parties', 'financial'],
+  discounts: ['subject', 'parties', 'financial', 'penalties'],
   termination: ['subject', 'parties', 'financial', 'penalties', 'discounts'],
+  extraCosts: ['termination'],
+  technicalSpecs: ['extraCosts'],
+  contractAttachments: ['technicalSpecs'],
 };
 const SECTION_TITLES: Record<ContractFlowSectionId, string> = {
   subject: 'اطلاعات پایه',
@@ -74,6 +101,9 @@ const SECTION_TITLES: Record<ContractFlowSectionId, string> = {
   penalties: 'جرایم',
   discounts: 'تخفیف‌ها',
   termination: 'شرایط فسخ',
+  extraCosts: 'سایر هزینه‌های قرارداد',
+  technicalSpecs: 'مشخصات فنی پروژه',
+  contractAttachments: 'پیوست و اسناد قرارداد',
 };
 
 const FIXED_FINANCIAL_COLORS = {
@@ -202,6 +232,7 @@ function FinancialDonut({ slices }: { slices: Array<{ id: string; name: string; 
 export function ContractFlowHub() {
   const router = useRouter();
   const leavingRef = useRef(false);
+  const dirtyMapRef = useRef<Partial<Record<ContractFlowSectionId, boolean>>>({});
   const [activeSection, setActiveSection] = useState<SectionItem['id']>('subject');
   const [loading, setLoading] = useState(true);
   const [subjectData, setSubjectData] = useState<ContractSubjectData | null>(null);
@@ -211,12 +242,17 @@ export function ContractFlowHub() {
   const [penaltiesData, setPenaltiesData] = useState<ContractPenaltiesData | null>(null);
   const [discountsData, setDiscountsData] = useState<ContractDiscountsData | null>(null);
   const [terminationData, setTerminationData] = useState<ContractTerminationData | null>(null);
+  const [extraCostsExists, setExtraCostsExists] = useState(false);
+  const [technicalSpecsExists, setTechnicalSpecsExists] = useState(false);
+  const [attachmentsExists, setAttachmentsExists] = useState(false);
   const [dirtyMap, setDirtyMap] = useState<Partial<Record<ContractFlowSectionId, boolean>>>({});
   const [savingMap, setSavingMap] = useState<Partial<Record<ContractFlowSectionId, boolean>>>({});
   const [lastUpdatedMap, setLastUpdatedMap] = useState<Partial<Record<ContractFlowSectionId, number>>>({});
   const [lockedDialogSection, setLockedDialogSection] = useState<ContractFlowSectionId | null>(null);
   const [pendingScrollSection, setPendingScrollSection] = useState<ContractFlowSectionId | null>(null);
   const [pendingLeave, setPendingLeave] = useState<{ mode: 'route' | 'back'; href?: string } | null>(null);
+  const [leaveSaving, setLeaveSaving] = useState(false);
+  const [leaveSaveError, setLeaveSaveError] = useState<string>('');
 
   useEffect(() => {
     let mounted = true;
@@ -231,11 +267,14 @@ export function ContractFlowHub() {
       }
 
       try {
-        const [subject, parties, financial, penalties] = await Promise.all([
+        const [subject, parties, financial, penalties, extraCosts, technicalSpecs, attachments] = await Promise.all([
           getStepData<ContractSubjectData>(draftId, 'subject'),
           getStepData<ContractPartiesData>(draftId, 'parties'),
           getStepData<ContractFinancialData>(draftId, 'financial'),
           getStepData<ContractPenaltiesData>(draftId, 'penalties'),
+          getContractExtraCosts(draftId).catch(() => ({ ok: false as const, message: 'خطا' })),
+          getContractTechnicalSpecs(draftId).catch(() => ({ ok: false as const, message: 'خطا' })),
+          getContractAttachments(draftId).catch(() => ({ ok: false as const, message: 'خطا' })),
         ]);
         const financialFrontendDraft = getFrontendStepDraft<ContractFinancialData>(draftId, 'financial');
         const penaltiesFrontendDraft = getFrontendStepDraft<ContractPenaltiesData>(draftId, 'penalties');
@@ -250,6 +289,9 @@ export function ContractFlowHub() {
         setPenaltiesData(penaltiesFrontendDraft ?? penalties);
         setDiscountsData(discountsFrontendDraft);
         setTerminationData(terminationFrontendDraft);
+        setExtraCostsExists(Boolean(extraCosts.ok && extraCosts.exists));
+        setTechnicalSpecsExists(Boolean(technicalSpecs.ok && technicalSpecs.exists));
+        setAttachmentsExists(Boolean(attachments.ok && attachments.exists));
       } finally {
         if (mounted) setLoading(false);
       }
@@ -274,7 +316,7 @@ export function ContractFlowHub() {
   }, []);
 
   useEffect(() => {
-    setLastUpdatedMap(getStoredLastUpdated());
+    setLastUpdatedMap(getStoredLastUpdated(getActiveDraftId()));
 
     const handleDirty = (event: Event) => {
       const customEvent = event as CustomEvent<{ sectionId: ContractFlowSectionId; dirty: boolean }>;
@@ -285,8 +327,9 @@ export function ContractFlowHub() {
     };
 
     const handleSaved = async (event: Event) => {
-      const customEvent = event as CustomEvent<{ sectionId: ContractFlowSectionId; savedAt: number }>;
+      const customEvent = event as CustomEvent<{ sectionId: ContractFlowSectionId; savedAt: number; payload?: unknown }>;
       const savedSectionId = customEvent.detail.sectionId;
+      const inlinePayload = customEvent.detail.payload;
       setDirtyMap((current) => ({ ...current, [customEvent.detail.sectionId]: false }));
       setSavingMap((current) => ({ ...current, [customEvent.detail.sectionId]: false }));
       setLastUpdatedMap((current) => ({ ...current, [customEvent.detail.sectionId]: customEvent.detail.savedAt }));
@@ -295,29 +338,53 @@ export function ContractFlowHub() {
       if (!draftId) return;
 
       if (savedSectionId === 'subject') {
-        const subject = await getStepData<ContractSubjectData>(draftId, 'subject');
+        const subject =
+          inlinePayload !== undefined
+            ? (inlinePayload as ContractSubjectData)
+            : await getStepData<ContractSubjectData>(draftId, 'subject');
         setSubjectData(subject);
         if (subject && validateStep1(subject).valid) setPendingScrollSection('parties');
       } else if (savedSectionId === 'parties') {
-        const parties = await getStepData<ContractPartiesData>(draftId, 'parties');
+        const parties =
+          inlinePayload !== undefined
+            ? (inlinePayload as ContractPartiesData)
+            : await getStepData<ContractPartiesData>(draftId, 'parties');
         setPartiesData(parties);
         if (parties && validateStep2(parties).valid) setPendingScrollSection('financial');
       } else if (savedSectionId === 'financial') {
-        const financial = await getStepData<ContractFinancialData>(draftId, 'financial');
+        const financial =
+          inlinePayload !== undefined
+            ? (inlinePayload as ContractFinancialData)
+            : await getStepData<ContractFinancialData>(draftId, 'financial');
         setFinancialData(financial);
         setFinancialLiveData(financial);
         if (financial && validateFinancialStep(financial).valid) setPendingScrollSection('penalties');
       } else if (savedSectionId === 'penalties') {
-        const penalties = await getStepData<ContractPenaltiesData>(draftId, 'penalties');
+        const penalties =
+          inlinePayload !== undefined
+            ? (inlinePayload as ContractPenaltiesData)
+            : await getStepData<ContractPenaltiesData>(draftId, 'penalties');
         setPenaltiesData(penalties);
         if (penalties && validatePenaltiesStep(penalties).valid) setPendingScrollSection('discounts');
       } else if (savedSectionId === 'discounts') {
-        const discounts = getFrontendStepDraft<ContractDiscountsData>(draftId, 'discounts');
+        const discounts =
+          inlinePayload !== undefined
+            ? (inlinePayload as ContractDiscountsData)
+            : getFrontendStepDraft<ContractDiscountsData>(draftId, 'discounts');
         setDiscountsData(discounts);
         if (discounts && validateDiscountsStep(discounts).valid) setPendingScrollSection('termination');
       } else if (savedSectionId === 'termination') {
-        const termination = getFrontendStepDraft<ContractTerminationData>(draftId, 'termination');
+        const termination =
+          inlinePayload !== undefined
+            ? (inlinePayload as ContractTerminationData)
+            : getFrontendStepDraft<ContractTerminationData>(draftId, 'termination');
         setTerminationData(termination);
+      } else if (savedSectionId === 'extraCosts') {
+        setExtraCostsExists(true);
+      } else if (savedSectionId === 'technicalSpecs') {
+        setTechnicalSpecsExists(true);
+      } else if (savedSectionId === 'contractAttachments') {
+        setAttachmentsExists(true);
       }
     };
 
@@ -337,12 +404,19 @@ export function ContractFlowHub() {
     };
   }, []);
 
+  useEffect(() => {
+    dirtyMapRef.current = dirtyMap;
+  }, [dirtyMap]);
+
   const subjectComplete = Boolean(subjectData && validateStep1(subjectData).valid);
   const partiesComplete = Boolean(partiesData && validateStep2(partiesData).valid);
   const financialComplete = Boolean(financialData && validateFinancialStep(financialData).valid);
   const penaltiesComplete = Boolean(penaltiesData && validatePenaltiesStep(penaltiesData).valid);
   const discountsComplete = Boolean(discountsData && validateDiscountsStep(discountsData).valid);
   const terminationComplete = Boolean(terminationData && validateTerminationStep(terminationData).valid);
+  const extraCostsComplete = extraCostsExists;
+  const technicalSpecsComplete = technicalSpecsExists;
+  const attachmentsComplete = attachmentsExists;
   const completionMap: Record<ContractFlowSectionId, boolean> = {
     subject: subjectComplete,
     parties: partiesComplete,
@@ -350,6 +424,9 @@ export function ContractFlowHub() {
     penalties: penaltiesComplete,
     discounts: discountsComplete,
     termination: terminationComplete,
+    extraCosts: extraCostsComplete,
+    technicalSpecs: technicalSpecsComplete,
+    contractAttachments: attachmentsComplete,
   };
 
   const accessMap = useMemo<Record<ContractFlowSectionId, SectionAccess>>(() => {
@@ -358,7 +435,8 @@ export function ContractFlowHub() {
     SECTION_ORDER.forEach((sectionId) => {
       const requirements = SECTION_PREREQUISITES[sectionId].map((requiredId) => {
         const dirty = Boolean(dirtyMap[requiredId]);
-        const complete = Boolean(completionMap[requiredId]) && !dirty;
+        const saved = Boolean(lastUpdatedMap[requiredId]);
+        const complete = Boolean(completionMap[requiredId]) && saved && !dirty;
         return {
           id: requiredId,
           title: SECTION_TITLES[requiredId],
@@ -385,7 +463,7 @@ export function ContractFlowHub() {
     };
 
     return result;
-  }, [completionMap, dirtyMap]);
+  }, [completionMap, dirtyMap, lastUpdatedMap]);
 
   useEffect(() => {
     const renderedSections = Array.from(document.querySelectorAll<HTMLElement>('[data-contract-section]'));
@@ -453,8 +531,38 @@ export function ContractFlowHub() {
           : terminationData
             ? { label: 'Incomplete', detail: 'Termination clauses were reviewed but are not confirmed yet.', tone: 'amber' }
             : { label: 'Ready', detail: 'Balanced termination clauses are ready for review.', tone: 'blue' },
+      extraCosts: terminationComplete
+        ? extraCostsComplete
+          ? { label: 'تکمیل شده', detail: 'هزینه‌های مرتبط با قرارداد ذخیره شده است.', tone: 'green' }
+          : { label: 'آماده تنظیم', detail: 'هزینه‌ها و مسئول پرداخت را مشخص و ذخیره کنید.', tone: 'blue' }
+        : { label: 'قفل', detail: 'برای دسترسی ابتدا مرحله «شرایط فسخ» را تکمیل کنید.', tone: 'amber' },
+      technicalSpecs: terminationComplete
+        ? technicalSpecsComplete
+          ? { label: 'تکمیل شده', detail: 'مشخصات فنی پروژه ذخیره شده است.', tone: 'green' }
+          : { label: 'آماده تنظیم', detail: 'مشخصات فنی پروژه را ثبت و ذخیره کنید.', tone: 'blue' }
+        : { label: 'قفل', detail: 'برای دسترسی ابتدا مرحله «شرایط فسخ» را تکمیل کنید.', tone: 'amber' },
+      contractAttachments: terminationComplete
+        ? attachmentsComplete
+          ? { label: 'تکمیل شده', detail: 'پیوست‌ها و اسناد قرارداد ذخیره شده است.', tone: 'green' }
+          : { label: 'آماده تنظیم', detail: 'اسناد موردنیاز را بارگذاری و ذخیره کنید.', tone: 'blue' }
+        : { label: 'قفل', detail: 'برای دسترسی ابتدا مرحله «شرایط فسخ» را تکمیل کنید.', tone: 'amber' },
     }),
-    [discountsComplete, discountsData, financialComplete, financialData, loading, partiesComplete, partiesData, subjectComplete, subjectData, terminationComplete, terminationData],
+    [
+      attachmentsComplete,
+      discountsComplete,
+      discountsData,
+      extraCostsComplete,
+      financialComplete,
+      financialData,
+      loading,
+      partiesComplete,
+      partiesData,
+      subjectComplete,
+      subjectData,
+      technicalSpecsComplete,
+      terminationComplete,
+      terminationData,
+    ],
   );
 
   const sections: SectionItem[] = [
@@ -494,7 +602,27 @@ export function ContractFlowHub() {
       navLabel: 'Termination Terms',
       render: () => <TerminationStep stepId="termination" title="شرایط فسخ" embedded />,
     },
+    {
+      id: 'extraCosts',
+      title: 'سایر هزینه‌های قرارداد',
+      navLabel: 'Extra Costs',
+      render: () => <ExtraCostsStep title="سایر هزینه‌های قرارداد" />,
+    },
+    {
+      id: 'technicalSpecs',
+      title: 'مشخصات فنی پروژه',
+      navLabel: 'Technical Specs',
+      render: () => <TechnicalSpecsStep title="مشخصات فنی پروژه" />,
+    },
+    {
+      id: 'contractAttachments',
+      title: 'پیوست و اسناد قرارداد',
+      navLabel: 'Attachments',
+      render: () => <ContractAttachmentsStep title="پیوست و اسناد قرارداد" />,
+    },
   ];
+
+  const visibleSections = useMemo(() => sections.filter((section) => !accessMap[section.id]?.locked), [accessMap, sections]);
 
   const reportData = financialLiveData ?? financialData;
   const contractTotal = getContractTotal(reportData);
@@ -504,61 +632,28 @@ export function ContractFlowHub() {
   const remainder = Math.max(contractTotal - allocatedAmount, 0);
   const leaveIssues = useMemo<LeaveIssue[]>(() => {
     const issues: LeaveIssue[] = [];
-    const financialLiveComplete = Boolean(reportData && validateFinancialStep(reportData).valid);
-    const penaltiesValid = Boolean(penaltiesData && validatePenaltiesStep(penaltiesData).valid);
-    const discountsValid = Boolean(discountsData && validateDiscountsStep(discountsData).valid);
-    const terminationValid = Boolean(terminationData && validateTerminationStep(terminationData).valid);
-
-    if (!subjectComplete || dirtyMap.subject) {
-      issues.push({
-        id: 'subject',
-        title: SECTION_TITLES.subject,
-        status: dirtyMap.subject ? 'تغییر کرده و ذخیره نشده است' : 'تکمیل نشده است',
-      });
-    }
-
-    if (!partiesComplete || dirtyMap.parties) {
-      issues.push({
-        id: 'parties',
-        title: SECTION_TITLES.parties,
-        status: dirtyMap.parties ? 'تغییر کرده و ذخیره نشده است' : 'تکمیل نشده است',
-      });
-    }
-
-    if (!financialLiveComplete || dirtyMap.financial) {
-      issues.push({
-        id: 'financial',
-        title: SECTION_TITLES.financial,
-        status: dirtyMap.financial ? 'تغییر کرده و ذخیره نشده است' : 'تکمیل نشده است',
-      });
-    }
-
-    if (!penaltiesValid || dirtyMap.penalties) {
-      issues.push({
-        id: 'penalties',
-        title: SECTION_TITLES.penalties,
-        status: dirtyMap.penalties ? 'تغییر کرده و ذخیره نشده است' : 'تکمیل نشده است',
-      });
-    }
-
-    if (!discountsValid || dirtyMap.discounts) {
-      issues.push({
-        id: 'discounts',
-        title: SECTION_TITLES.discounts,
-        status: dirtyMap.discounts ? 'تغییر کرده و ذخیره نشده است' : 'تکمیل نشده است',
-      });
-    }
-
-    if (!terminationValid || dirtyMap.termination) {
-      issues.push({
-        id: 'termination',
-        title: SECTION_TITLES.termination,
-        status: dirtyMap.termination ? 'تغییر کرده و ذخیره نشده است' : 'تکمیل نشده است',
-      });
-    }
-
+    (['subject', 'parties', 'financial', 'penalties', 'discounts', 'termination', 'extraCosts', 'technicalSpecs', 'contractAttachments'] as const).forEach(
+      (sectionId) => {
+        if (!dirtyMap[sectionId]) return;
+        issues.push({
+          id: sectionId,
+          title: SECTION_TITLES[sectionId],
+          status: 'تغییر کرده و ذخیره نشده است',
+        });
+      },
+    );
     return issues;
-  }, [discountsData, dirtyMap.discounts, dirtyMap.financial, dirtyMap.parties, dirtyMap.penalties, dirtyMap.subject, dirtyMap.termination, partiesComplete, penaltiesData, reportData, subjectComplete, terminationData]);
+  }, [
+    dirtyMap.contractAttachments,
+    dirtyMap.discounts,
+    dirtyMap.extraCosts,
+    dirtyMap.financial,
+    dirtyMap.parties,
+    dirtyMap.penalties,
+    dirtyMap.subject,
+    dirtyMap.technicalSpecs,
+    dirtyMap.termination,
+  ]);
   const shouldBlockContractLeave = !loading && leaveIssues.length > 0;
 
   const requestSectionSave = (sectionId: ContractFlowSectionId) => {
@@ -567,6 +662,116 @@ export function ContractFlowHub() {
 
     setSavingMap((current) => ({ ...current, [sectionId]: true }));
     trigger.click();
+  };
+
+  const waitForNavigation = (fromHref: string, timeoutMs = 1200) => {
+    return new Promise<boolean>((resolve) => {
+      const startedAt = Date.now();
+      const tick = () => {
+        if (window.location.href !== fromHref) return resolve(true);
+        if (Date.now() - startedAt >= timeoutMs) return resolve(false);
+        window.setTimeout(tick, 60);
+      };
+      tick();
+    });
+  };
+
+  const waitForSectionSaved = (sectionId: ContractFlowSectionId, timeoutMs = 15000) => {
+    return new Promise<void>((resolve, reject) => {
+      const timer = window.setTimeout(() => {
+        cleanup();
+        reject(new Error('timeout'));
+      }, timeoutMs);
+
+      const onSaved = (event: Event) => {
+        const customEvent = event as CustomEvent<{ sectionId: ContractFlowSectionId }>;
+        if (customEvent.detail.sectionId !== sectionId) return;
+        cleanup();
+        resolve();
+      };
+
+      const cleanup = () => {
+        window.clearTimeout(timer);
+        window.removeEventListener(CONTRACT_FLOW_SAVED_EVENT, onSaved as EventListener);
+      };
+
+      window.addEventListener(CONTRACT_FLOW_SAVED_EVENT, onSaved as EventListener);
+    });
+  };
+
+  const saveDirtyThenLeave = async () => {
+    if (!pendingLeave || leaveSaving) return;
+
+    setLeaveSaveError('');
+    setLeaveSaving(true);
+
+    const target = pendingLeave;
+    const fromHref = window.location.href;
+
+    try {
+      const dirtySections = SAVEABLE_SECTIONS.filter((id) => Boolean(dirtyMapRef.current[id]));
+      for (const sectionId of dirtySections) {
+        requestSectionSave(sectionId);
+        await waitForSectionSaved(sectionId);
+      }
+
+      leavingRef.current = true;
+
+      if (target.mode === 'back') {
+        window.history.go(-2);
+        window.setTimeout(() => {
+          if (window.location.href === fromHref) {
+            window.history.go(-1);
+          }
+        }, 60);
+      } else {
+        if (!target.href) throw new Error('missing-target');
+        const nextUrl = new URL(target.href, window.location.href);
+        const nextHref = `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`;
+
+        if (nextUrl.origin === window.location.origin) {
+          router.push(nextHref);
+        } else {
+          window.location.assign(nextUrl.href);
+        }
+      }
+
+      const navigated = await waitForNavigation(fromHref);
+      if (!navigated) {
+        throw new Error('navigation-failed');
+      }
+
+      setPendingLeave(null);
+    } catch {
+      setLeaveSaveError('ذخیره تغییرات با خطا مواجه شد. لطفاً دوباره تلاش کنید.');
+      leavingRef.current = false;
+    } finally {
+      setLeaveSaving(false);
+    }
+  };
+
+  const performLeave = (target: { mode: 'route' | 'back'; href?: string }) => {
+    if (target.mode === 'back') {
+      const currentHref = window.location.href;
+      window.history.go(-2);
+      window.setTimeout(() => {
+        if (window.location.href === currentHref) {
+          window.history.go(-1);
+        }
+      }, 60);
+      return;
+    }
+
+    if (!target.href) return;
+    const nextUrl = new URL(target.href, window.location.href);
+    const nextHref = `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`;
+
+    if (nextUrl.origin === window.location.origin) {
+      router.push(nextHref);
+      return;
+    }
+
+    window.location.assign(nextUrl.href);
   };
 
   const scrollToSection = (sectionId: SectionItem['id']) => {
@@ -587,21 +792,7 @@ export function ContractFlowHub() {
     const target = pendingLeave;
     setPendingLeave(null);
 
-    if (target.mode === 'back') {
-      router.back();
-      return;
-    }
-
-    if (!target.href) return;
-    const nextUrl = new URL(target.href, window.location.href);
-    const nextHref = `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`;
-
-    if (nextUrl.origin === window.location.origin) {
-      router.push(nextHref);
-      return;
-    }
-
-    window.location.assign(nextUrl.href);
+    performLeave(target);
   };
 
   useEffect(() => {
@@ -731,12 +922,15 @@ export function ContractFlowHub() {
         allocatedAmount={allocatedAmount}
         dueAmount={dueAmount}
         remainder={remainder}
+        contractNumber={subjectData?.contractNumber}
+        contractStatus="draft"
       />
 
       <div className="contract-flow-content min-w-0 flex-1 space-y-6">
-        {sections.filter((section) => !accessMap[section.id].locked).map((section) => {
+        {visibleSections.map((section) => {
           const status = statusMap[section.id];
           const isSubjectSection = section.id === 'subject';
+          const isTerminationSection = section.id === 'termination';
           return (
             <section
               key={section.id}
@@ -750,13 +944,19 @@ export function ContractFlowHub() {
                 isSubjectSection ? 'px-4 pb-4 pt-4 md:px-5 md:pt-5' : 'mb-5 pb-4'
               }`}>
                 <div>
-                  <div className="flex flex-wrap items-center gap-2">
+                  {isTerminationSection ? (
                     <h2 className="text-xl font-bold text-gray-900">{section.title}</h2>
-                    <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium ${getToneClasses(status.tone)}`}>
-                      {status.label}
-                    </span>
-                  </div>
-                  <p className="mt-2 text-sm leading-6 text-gray-500">{status.detail}</p>
+                  ) : (
+                    <>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h2 className="text-xl font-bold text-gray-900">{section.title}</h2>
+                        <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium ${getToneClasses(status.tone)}`}>
+                          {status.label}
+                        </span>
+                      </div>
+                      <p className="mt-2 text-sm leading-6 text-gray-500">{status.detail}</p>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -767,16 +967,18 @@ export function ContractFlowHub() {
       </div>
 
       {pendingLeave ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4" onClick={() => setPendingLeave(null)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4 backdrop-blur-sm" onClick={() => setPendingLeave(null)}>
           <div
-            className="w-full max-w-xl rounded-3xl border border-[var(--border-color)] bg-[var(--surface)] shadow-2xl"
+            className="w-full max-w-xl overflow-hidden rounded-3xl border border-[var(--border-color)] bg-[var(--surface)] shadow-2xl"
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="flex items-start justify-between gap-4 border-b border-[var(--border-color)] px-5 py-4">
+            <div className="flex items-start justify-between gap-4 border-b border-[var(--border-color)] bg-[var(--surface-soft)] px-5 py-4">
               <div>
                 <div className="flex items-center gap-2 text-[var(--text-strong)]">
-                  <AlertCircle className="h-5 w-5 text-[var(--theme-warning-text)]" />
-                  <h3 className="text-base font-bold">خروج از صفحه قرارداد</h3>
+                  <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-[var(--theme-warning-border)] bg-[var(--theme-warning-bg)] text-[var(--theme-warning-text)]">
+                    <AlertCircle className="h-5 w-5" />
+                  </span>
+                  <h3 className="text-base font-extrabold">خروج از صفحه قرارداد</h3>
                 </div>
                 <p className="mt-2 text-sm leading-6 text-[var(--text-muted)]">
                   قبل از خروج، وضعیت بخش‌های ناقص یا ذخیره‌نشده را بررسی کنید.
@@ -792,12 +994,22 @@ export function ContractFlowHub() {
             </div>
 
             <div className="space-y-3 px-5 py-4">
+              {leaveSaveError ? (
+                <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">{leaveSaveError}</div>
+              ) : null}
+
               <div className="rounded-2xl border border-[var(--theme-warning-border)] bg-[var(--theme-warning-bg)] px-4 py-3">
-                <div className="mb-3 text-sm font-bold text-[var(--theme-warning-text)]">بخش‌های نیازمند تکمیل</div>
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <div className="text-sm font-extrabold text-[var(--theme-warning-text)]">تغییرات ذخیره‌نشده</div>
+                  {leaveSaving ? <div className="text-xs font-bold text-[var(--theme-warning-text)]">در حال ذخیره…</div> : null}
+                </div>
                 <div className="grid gap-2">
                   {leaveIssues.map((item) => (
                     <div key={item.id} className="flex items-center justify-between gap-3 rounded-xl bg-[var(--surface)] px-3 py-2 text-sm">
-                      <span className="font-bold text-[var(--text-body)]">{item.title}</span>
+                      <span className="flex items-center gap-2 font-bold text-[var(--text-body)]">
+                        <span className="h-1.5 w-1.5 rounded-full bg-[var(--theme-warning-text)]" />
+                        {item.title}
+                      </span>
                       <span className="rounded-full border border-[var(--theme-warning-border)] bg-[var(--theme-warning-bg)] px-2.5 py-1 text-xs font-bold text-[var(--theme-warning-text)]">
                         {item.status}
                       </span>
@@ -807,20 +1019,35 @@ export function ContractFlowHub() {
               </div>
             </div>
 
-            <div className="flex flex-wrap justify-end gap-3 border-t border-[var(--border-color)] px-5 py-4">
+            <div className="flex flex-nowrap justify-end gap-2 border-t border-[var(--border-color)] px-5 py-4">
               <button
                 type="button"
                 onClick={() => setPendingLeave(null)}
-                className="rounded-lg border border-[var(--border-color)] px-4 py-2 text-sm font-bold text-[var(--text-body)] transition-colors hover:bg-[var(--surface-soft)]"
+                disabled={leaveSaving}
+                className="whitespace-nowrap rounded-lg border border-[var(--border-color)] px-3 py-2 text-xs font-bold text-[var(--text-body)] transition-colors hover:bg-[var(--surface-soft)]"
               >
                 ماندن در صفحه
               </button>
+              {leaveIssues.length ? (
+                <button
+                  type="button"
+                  onClick={saveDirtyThenLeave}
+                  disabled={leaveSaving}
+                  className="whitespace-nowrap rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700 transition-colors hover:bg-emerald-100 disabled:opacity-60"
+                >
+                  {leaveSaving ? (
+                    <span className="ml-2 inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-emerald-700/25 border-t-emerald-700" />
+                  ) : null}
+                  خروج و ذخیره تغییرات
+                </button>
+              ) : null}
               <button
                 type="button"
                 onClick={continueContractLeave}
-                className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-bold text-rose-700 transition-colors hover:bg-rose-100"
+                disabled={leaveSaving}
+                className="whitespace-nowrap rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700 transition-colors hover:bg-rose-100"
               >
-                خروج بدون تکمیل
+                خروج بدون ذخیره تغییرات
               </button>
             </div>
           </div>

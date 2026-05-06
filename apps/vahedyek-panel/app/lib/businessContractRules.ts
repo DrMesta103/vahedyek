@@ -7,6 +7,9 @@ export type ContractRuleId =
   | 'additional-costs'
   | 'discount'
   | 'penalty'
+  | 'builder-penalty'
+  | 'builder-cancellation'
+  | 'buyer-cancellation'
   | 'forgiveness'
   | 'interest';
 
@@ -138,6 +141,21 @@ export const CONTRACT_RULE_ITEMS: Array<{ id: ContractRuleId; title: string; des
     id: 'penalty',
     title: 'تنظیمات جریمه',
     description: 'میزان جریمه تاخیر، مبنای محاسبه و دوره محاسبه جریمه را در این بخش مشخص کنید.',
+  },
+  {
+    id: 'builder-penalty',
+    title: 'جریمه سازنده',
+    description: 'فعال‌سازی و تنظیم جریمه‌های مرتبط با تعهدات سازنده مانند تاخیر در تحویل، تغییر مشخصات و اختلاف متراژ.',
+  },
+  {
+    id: 'builder-cancellation',
+    title: 'تنظیمات فسخ سازنده',
+    description: 'فعال‌سازی و تنظیم اختیارات فسخ سازنده در شرایطی مانند تاخیر در پرداخت، عدم انجام تعهدات مالی و نقص مدارک خریدار.',
+  },
+  {
+    id: 'buyer-cancellation',
+    title: 'تنظیمات فسخ خریدار',
+    description: 'فعال‌سازی و تنظیم اختیارات فسخ خریدار در شرایطی مانند تاخیر در تحویل، تغییر مشخصات و اختلاف متراژ.',
   },
   {
     id: 'forgiveness',
@@ -485,6 +503,161 @@ export const RULE_CONFIGS: Record<ContractRuleId, RuleConfig> = fixMojibakeDeep(
       },
     ],
   },
+  'builder-penalty': {
+    id: 'builder-penalty',
+    title: 'جریمه سازنده',
+    description: 'فعال‌سازی و مدیریت جریمه‌های مربوط به تعهدات سازنده در قرارداد.',
+    activationTitle: 'فعال‌سازی جرائم سازنده',
+    activationDescription: 'با فعال‌سازی این بخش، تنظیمات جریمه سازنده بر اساس پیکربندی برای قراردادهای جدید اعمال خواهد شد.',
+    tabs: [
+      {
+        id: 'builder-penalty-overview',
+        title: 'جرائم سازنده',
+        description: 'مرور و مدیریت جریمه‌های سازنده.',
+        fields: [
+          { key: 'unitDeliveryDelayEnabled', label: 'تاخیر در تحویل واحد', type: 'switch' },
+          { key: 'materialSpecsChangeEnabled', label: 'تغییر مصالح / مشخصات', type: 'switch' },
+          { key: 'areaDifferenceEnabled', label: 'اختلاف متراژ', type: 'switch' },
+          { key: 'unitDeliveryDelayMode', label: 'روش محاسبه تاخیر در تحویل واحد', type: 'select', options: ['fixed', 'percent', 'progressive'] },
+          { key: 'unitDeliveryDelayPeriod', label: 'دوره محاسبه تاخیر در تحویل واحد', type: 'select', options: ['روزانه', 'ماهانه', 'سالانه'] },
+          { key: 'unitDeliveryDelayFixedAmount', label: 'مبلغ ثابت جریمه تاخیر در تحویل واحد', type: 'number', placeholder: '100000' },
+          { key: 'unitDeliveryDelayPercentAmount', label: 'درصد جریمه تاخیر در تحویل واحد', type: 'number', placeholder: '2.5' },
+          { key: 'unitDeliveryDelayPenaltyCap', label: 'سقف جریمه تاخیر در تحویل واحد', type: 'number', placeholder: '50000000' },
+          { key: 'unitDeliveryDelayGraceDays', label: 'مهلت تنفس تاخیر در تحویل واحد', type: 'number', placeholder: '2' },
+          { key: 'unitDeliveryDelayProgressiveRow1From', label: 'از روز ۱ تاخیر در تحویل واحد', type: 'number', placeholder: '1' },
+          { key: 'unitDeliveryDelayProgressiveRow1To', label: 'تا روز ۱ تاخیر در تحویل واحد', type: 'number', placeholder: '4' },
+          { key: 'unitDeliveryDelayProgressiveRow1Rate', label: 'نرخ ۱ تاخیر در تحویل واحد', type: 'number', placeholder: '0.5' },
+          { key: 'unitDeliveryDelayProgressiveRow2From', label: 'از روز ۲ تاخیر در تحویل واحد', type: 'number', placeholder: '5' },
+          { key: 'unitDeliveryDelayProgressiveRow2To', label: 'تا روز ۲ تاخیر در تحویل واحد', type: 'number', placeholder: '10' },
+          { key: 'unitDeliveryDelayProgressiveRow2Rate', label: 'نرخ ۲ تاخیر در تحویل واحد', type: 'number', placeholder: '1' },
+          { key: 'unitDeliveryDelayProgressiveRow3From', label: 'از روز ۳ تاخیر در تحویل واحد', type: 'number', placeholder: '11' },
+          { key: 'unitDeliveryDelayProgressiveRow3To', label: 'تا روز ۳ تاخیر در تحویل واحد', type: 'number', placeholder: '30' },
+          { key: 'unitDeliveryDelayProgressiveRow3Rate', label: 'نرخ ۳ تاخیر در تحویل واحد', type: 'number', placeholder: '2' },
+          { key: 'materialSpecsChangeMode', label: 'روش محاسبه تغییر مصالح / مشخصات', type: 'select', options: ['fixed', 'percent', 'progressive'] },
+          { key: 'materialSpecsChangePeriod', label: 'دوره محاسبه تغییر مصالح / مشخصات', type: 'select', options: ['روزانه', 'ماهانه', 'سالانه'] },
+          { key: 'materialSpecsChangeFixedAmount', label: 'مبلغ ثابت جریمه تغییر مصالح / مشخصات', type: 'number', placeholder: '100000' },
+          { key: 'materialSpecsChangePercentAmount', label: 'درصد جریمه تغییر مصالح / مشخصات', type: 'number', placeholder: '2.5' },
+          { key: 'materialSpecsChangePenaltyCap', label: 'سقف جریمه تغییر مصالح / مشخصات', type: 'number', placeholder: '50000000' },
+          { key: 'materialSpecsChangeSubject', label: 'مشخصات محتمل تغییر مصالح / مشخصات', type: 'select', options: ['گرمایش از کف', 'شیرآلات با کیفیت'] },
+          { key: 'materialSpecsChangeProgressiveRow1From', label: 'از بازه ۱ تغییر مصالح / مشخصات', type: 'number', placeholder: '1' },
+          { key: 'materialSpecsChangeProgressiveRow1To', label: 'تا بازه ۱ تغییر مصالح / مشخصات', type: 'number', placeholder: '4' },
+          { key: 'materialSpecsChangeProgressiveRow1Rate', label: 'نرخ ۱ تغییر مصالح / مشخصات', type: 'number', placeholder: '0.5' },
+          { key: 'materialSpecsChangeProgressiveRow2From', label: 'از بازه ۲ تغییر مصالح / مشخصات', type: 'number', placeholder: '5' },
+          { key: 'materialSpecsChangeProgressiveRow2To', label: 'تا بازه ۲ تغییر مصالح / مشخصات', type: 'number', placeholder: '10' },
+          { key: 'materialSpecsChangeProgressiveRow2Rate', label: 'نرخ ۲ تغییر مصالح / مشخصات', type: 'number', placeholder: '1' },
+          { key: 'materialSpecsChangeProgressiveRow3From', label: 'از بازه ۳ تغییر مصالح / مشخصات', type: 'number', placeholder: '11' },
+          { key: 'materialSpecsChangeProgressiveRow3To', label: 'تا بازه ۳ تغییر مصالح / مشخصات', type: 'number', placeholder: '30' },
+          { key: 'materialSpecsChangeProgressiveRow3Rate', label: 'نرخ ۳ تغییر مصالح / مشخصات', type: 'number', placeholder: '2' },
+          { key: 'areaDifferenceMode', label: 'روش محاسبه اختلاف متراژ', type: 'select', options: ['fixed', 'percent', 'progressive'] },
+          { key: 'areaDifferencePeriod', label: 'دوره محاسبه اختلاف متراژ', type: 'select', options: ['روزانه', 'ماهانه', 'سالانه'] },
+          { key: 'areaDifferenceFixedAmount', label: 'مبلغ ثابت جریمه اختلاف متراژ', type: 'number', placeholder: '100000' },
+          { key: 'areaDifferencePercentAmount', label: 'درصد جریمه اختلاف متراژ', type: 'number', placeholder: '2.5' },
+          { key: 'areaDifferencePenaltyCap', label: 'سقف جریمه اختلاف متراژ', type: 'number', placeholder: '50000000' },
+          { key: 'areaDifferenceAllowedChange', label: 'میزان مجاز تغییر در متراژ', type: 'number', placeholder: '2' },
+          { key: 'areaDifferenceProgressiveRow1From', label: 'از بازه ۱ اختلاف متراژ', type: 'number', placeholder: '1' },
+          { key: 'areaDifferenceProgressiveRow1To', label: 'تا بازه ۱ اختلاف متراژ', type: 'number', placeholder: '4' },
+          { key: 'areaDifferenceProgressiveRow1Rate', label: 'نرخ ۱ اختلاف متراژ', type: 'number', placeholder: '0.5' },
+          { key: 'areaDifferenceProgressiveRow2From', label: 'از بازه ۲ اختلاف متراژ', type: 'number', placeholder: '5' },
+          { key: 'areaDifferenceProgressiveRow2To', label: 'تا بازه ۲ اختلاف متراژ', type: 'number', placeholder: '10' },
+          { key: 'areaDifferenceProgressiveRow2Rate', label: 'نرخ ۲ اختلاف متراژ', type: 'number', placeholder: '1' },
+          { key: 'areaDifferenceProgressiveRow3From', label: 'از بازه ۳ اختلاف متراژ', type: 'number', placeholder: '11' },
+          { key: 'areaDifferenceProgressiveRow3To', label: 'تا بازه ۳ اختلاف متراژ', type: 'number', placeholder: '30' },
+          { key: 'areaDifferenceProgressiveRow3Rate', label: 'نرخ ۳ اختلاف متراژ', type: 'number', placeholder: '2' },
+        ],
+      },
+    ],
+  },
+  'builder-cancellation': {
+    id: 'builder-cancellation',
+    title: 'تنظیمات فسخ سازنده',
+    description: 'فعال‌سازی و مدیریت اختیارات فسخ قرارداد برای سازنده در سناریوهای مختلف.',
+    activationTitle: 'فعال‌سازی اختیارات فسخ سازنده',
+    activationDescription: 'با فعال‌سازی این بخش، تنظیمات فسخ سازنده بر اساس پیکربندی برای قراردادهای جدید اعمال خواهد شد.',
+    tabs: [
+      {
+        id: 'builder-cancellation-overview',
+        title: 'فسخ سازنده',
+        description: 'مرور و مدیریت سناریوهای فسخ سازنده.',
+        fields: [
+          { key: 'builderCancellationPaymentDelayEnabled', label: 'تاخیر در پرداخت اقساط', type: 'switch' },
+          { key: 'builderCancellationUnpaidFinancialEnabled', label: 'عدم انجام تعهدات مالی', type: 'switch' },
+          { key: 'builderCancellationMissingDocumentsEnabled', label: 'نقص مدارک / تعهدات', type: 'switch' },
+          { key: 'builderCancellationOtherBreachEnabled', label: 'نقض سایر تعهدات قراردادی', type: 'switch' },
+          { key: 'builderCancellationNotificationEnabled', label: 'اطلاع رسانی', type: 'switch' },
+          { key: 'builderCancellationDraftUsageEnabled', label: 'استفاده از پیش نویس', type: 'switch' },
+          {
+            key: 'builderCancellationPaymentDelayPreset',
+            label: 'مهلت مجاز تاخیر در پرداخت',
+            type: 'select',
+            options: ['3 روز', '7 روز', '10 روز', '15 روز', '30 روز', 'روزانه'],
+          },
+          { key: 'builderCancellationPaymentDelayCustomDays', label: 'تعداد روز مجاز تاخیر در پرداخت', type: 'number', placeholder: '10' },
+          {
+            key: 'builderCancellationPaymentDelayBasis',
+            label: 'مبنای تشخیص تاخیر در پرداخت',
+            type: 'select',
+            options: ['هر قسط پرداخت نشده'],
+          },
+          {
+            key: 'builderCancellationPaymentDelayMinDebt',
+            label: 'حداقل مبلغ بدهی برای فعال شدن فسخ',
+            type: 'number',
+            placeholder: '10000000',
+          },
+          {
+            key: 'builderCancellationPaymentDelayPartialPaymentBehavior',
+            label: 'نحوه برخورد با پرداخت ناقص',
+            type: 'select',
+            options: ['اگر قسط کامل نشده، فسخ فعال شود', 'اگر پرداخت ناقص باشد، فسخ فعال نشود', 'بر اساس مانده بدهی تصمیم گرفته شود'],
+          },
+          { key: 'builderCancellationUnpaidFinancialContractFees', label: 'تعهد مالی: هزینه‌های قراردادی', type: 'switch' },
+          { key: 'builderCancellationUnpaidFinancialPenalties', label: 'تعهد مالی: جریمه‌های قراردادی', type: 'switch' },
+          { key: 'builderCancellationUnpaidFinancialCustom', label: 'تعهد مالی: تعهد مالی سفارشی', type: 'switch' },
+          {
+            key: 'builderCancellationUnpaidFinancialGracePreset',
+            label: 'مهلت مجاز برای ایفای تعهدات مالی',
+            type: 'select',
+            options: ['روزانه', '7 روز', '15 روز', '30 روز'],
+          },
+          { key: 'builderCancellationUnpaidFinancialGraceDays', label: 'تعداد روز مجاز برای ایفای تعهدات مالی', type: 'number', placeholder: '7' },
+          { key: 'builderCancellationFormalDemandEnabled', label: 'مطالبه رسمی قبل از فسخ', type: 'switch' },
+          { key: 'builderCancellationMissingDocsIdentity', label: 'نقص مدارک: مدارک هویتی', type: 'switch' },
+          { key: 'builderCancellationMissingDocsSignature', label: 'نقص مدارک: تکمیل امضا', type: 'switch' },
+          { key: 'builderCancellationMissingDocsLegal', label: 'نقص مدارک: مجوزهای حقوقی', type: 'switch' },
+          {
+            key: 'builderCancellationMissingDocsGracePreset',
+            label: 'مهلت تکمیل مدارک / تعهدات',
+            type: 'select',
+            options: ['روزانه', '7 روز', '10 روز', '15 روز', '30 روز'],
+          },
+          { key: 'builderCancellationMissingDocsGraceDays', label: 'تعداد روز مجاز برای تکمیل مدارک / تعهدات', type: 'number', placeholder: '10' },
+          { key: 'builderCancellationReminderEnabled', label: 'ارسال یادآوری قبل از فسخ', type: 'switch' },
+        ],
+      },
+    ],
+  },
+  'buyer-cancellation': {
+    id: 'buyer-cancellation',
+    title: 'تنظیمات فسخ خریدار',
+    description: 'فعال‌سازی و مدیریت اختیارات فسخ قرارداد برای خریدار در سناریوهای مختلف.',
+    activationTitle: 'فعال‌سازی اختیارات فسخ خریدار',
+    activationDescription: 'با فعال‌سازی این بخش، تنظیمات فسخ خریدار بر اساس پیکربندی برای قراردادهای جدید اعمال خواهد شد.',
+    tabs: [
+      {
+        id: 'buyer-cancellation-overview',
+        title: 'فسخ خریدار',
+        description: 'مرور و مدیریت سناریوهای فسخ خریدار.',
+        fields: [
+          { key: 'buyerCancellationLateDeliveryEnabled', label: 'تاخیر در تحویل', type: 'switch' },
+          { key: 'buyerCancellationSpecificationChangesEnabled', label: 'تغییر مشخصات', type: 'switch' },
+          { key: 'buyerCancellationBreachEnabled', label: 'نقض تعهدات', type: 'switch' },
+          { key: 'buyerCancellationAreaDiscrepancyEnabled', label: 'اختلاف متراژ', type: 'switch' },
+          { key: 'buyerCancellationNotificationEnabled', label: 'اطلاع رسانی', type: 'switch' },
+          { key: 'buyerCancellationDraftTemplateUsageEnabled', label: 'استفاده در پیش نویس', type: 'switch' },
+        ],
+      },
+    ],
+  },
   forgiveness: {
     id: 'forgiveness',
     title: 'تنظیمات بخشودگی',
@@ -592,7 +765,10 @@ export function createInitialRuleState(ruleId: ContractRuleId): ContractRuleStat
       ruleId === 'additional-costs' ||
       ruleId === 'adjustment' ||
       ruleId === 'discount' ||
-      ruleId === 'penalty'
+      ruleId === 'penalty' ||
+      ruleId === 'builder-penalty' ||
+      ruleId === 'builder-cancellation' ||
+      ruleId === 'buyer-cancellation'
         ? false
         : true,
     activeTab: rule.tabs[0]?.id ?? '',

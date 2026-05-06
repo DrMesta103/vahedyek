@@ -27,7 +27,14 @@ function isDraftReadyForApproval(draft: Awaited<ReturnType<typeof prisma.contrac
   );
   const hasFinancial = Boolean(draft.financial);
 
-  return hasSubject && hasParties && hasFinancial;
+  const hasPenalties = Boolean(draft.penalties?.rules?.length);
+  const hasTermination = Boolean(draft.terminationRules);
+  const hasExtraCosts = Boolean(draft.extraCosts);
+  const hasTechnicalSpecs = Boolean(draft.technicalSpecs);
+  const hasAttachments = Boolean(draft.attachments);
+
+  // Only mark "pending approval" once the last step (attachments) is saved.
+  return hasSubject && hasParties && hasFinancial && hasPenalties && hasTermination && hasExtraCosts && hasTechnicalSpecs && hasAttachments;
 }
 
 export async function GET(request: Request) {
@@ -55,6 +62,16 @@ export async function GET(request: Request) {
             dueItems: true,
           },
         },
+        penalties: {
+          include: {
+            types: true,
+            rules: true,
+          },
+        },
+        terminationRules: true,
+        extraCosts: true,
+        technicalSpecs: true,
+        attachments: true,
       },
     });
 

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requireSessionContext } from '../../lib/auth';
-import { createThread, listThreadsForPage } from '../../lib/page-threads-store';
+import { createThread, listThreadsForApp, listThreadsForPage } from '../../lib/page-threads-store';
 import { handlePrismaApiError } from '../../lib/prismaApiError';
 
 export async function GET(request: Request) {
@@ -9,8 +9,9 @@ export async function GET(request: Request) {
     if (session instanceof NextResponse) return session;
 
     const { searchParams } = new URL(request.url);
+    const scope = searchParams.get('scope');
     const pagePath = searchParams.get('pagePath') || '/';
-    const payload = await listThreadsForPage({ pagePath });
+    const payload = scope === 'app' ? await listThreadsForApp() : await listThreadsForPage({ pagePath });
     return NextResponse.json(payload);
   } catch (error) {
     return handlePrismaApiError(error);

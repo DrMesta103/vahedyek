@@ -1,18 +1,21 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import PanelLayout from '../../components/PanelLayout';
 import ContractList from '../../components/contracts/ContractList';
 import { getReferenceData } from '../../lib/contractDraftClient';
 import type { Block, Buyer, Employee, Partner, Unit } from '../../types/contract';
 
 export default function ContractsPage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [units, setUnits] = useState<Unit[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [partners, setPartners] = useState<Partner[]>([]);
   const [buyers, setBuyers] = useState<Buyer[]>([]);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     let mounted = true;
@@ -45,6 +48,13 @@ export default function ContractsPage() {
           ...data.directory.buyer.natural.map((item) => ({ ...item, personType: 'natural' as const })),
           ...data.directory.buyer.legal.map((item) => ({ ...item, personType: 'legal' as const })),
         ]);
+      } catch (e) {
+        const message = e instanceof Error ? e.message : 'خطا در دریافت اطلاعات.';
+        if (message.includes('باید وارد شوید')) {
+          router.push(`/login?next=${encodeURIComponent('/contracts')}`);
+          return;
+        }
+        if (mounted) setError(message);
       } finally {
         if (mounted) setLoading(false);
       }
@@ -62,6 +72,10 @@ export default function ContractsPage() {
       {loading ? (
         <div className="rounded-xl border border-gray-200 bg-white p-10 text-center text-sm text-gray-500">
           در حال دریافت اطلاعات قراردادها...
+        </div>
+      ) : error ? (
+        <div className="rounded-xl border border-rose-200 bg-rose-50 p-10 text-center text-sm text-rose-700">
+          {error}
         </div>
       ) : (
         <ContractList blocks={blocks} units={units} employees={employees} partners={partners} buyers={buyers} />

@@ -8,6 +8,14 @@ type OrbitMenuProps = {
   activeItem?: string;
 };
 
+/** Stable px/angle strings so SSR and browser hydration match (avoids float serialization drift). */
+function orbitPx(n: number) {
+  return `${Math.round(n * 10_000) / 10_000}px`;
+}
+function orbitRad(r: number) {
+  return `${Math.round(r * 1e12) / 1e12}rad`;
+}
+
 export default function OrbitMenu({ activeItem }: OrbitMenuProps) {
   const router = useRouter();
   const gearRef = useRef<HTMLDivElement | null>(null);
@@ -88,7 +96,7 @@ export default function OrbitMenu({ activeItem }: OrbitMenuProps) {
   return (
     <div className="main-wrapper">
       <div ref={gearRef} className="gear-system" onMouseDown={handleMouseDown}>
-        <div className="orbit-line" style={{ transform: `rotate(${currentRotation}rad)` }}>
+        <div className="orbit-line" style={{ transform: `rotate(${orbitRad(currentRotation)})` }}>
           {APP_MENU_ITEMS.map((item, index) => {
             const angle = index * stepAngle;
             const x = Math.cos(angle) * 260 + 260 - 27;
@@ -101,7 +109,7 @@ export default function OrbitMenu({ activeItem }: OrbitMenuProps) {
                 key={item.id}
                 type="button"
                 className={`node${isActive ? ' active' : ''}${isNeighbor ? ' neighbor' : ''}`}
-                style={{ left: `${x}px`, top: `${y}px`, transform: `rotate(${-currentRotation}rad)` }}
+                style={{ left: orbitPx(x), top: orbitPx(y), transform: `rotate(${orbitRad(-currentRotation)})` }}
                 onMouseDown={handleMouseDown}
                 onClick={() => navigateTo(index)}
                 disabled={item.disabled}

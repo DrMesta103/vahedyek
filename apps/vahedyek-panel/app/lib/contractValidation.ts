@@ -6,6 +6,8 @@ import type {
   ContractPenaltiesData,
   ContractSubjectData,
   ContractTerminationData,
+  ConstructorTerminationSubsectionId,
+  BuyerTerminationSubsectionId,
   ShareMode,
 } from '../types/contract';
 
@@ -189,80 +191,135 @@ export function validateDiscountsStep(data: Partial<ContractDiscountsData>): Val
   return { valid: Object.keys(errors).length === 0, errors };
 }
 
-export function validateTerminationStep(data: Partial<ContractTerminationData>): ValidationResult {
+/** Validates one constructor subsection before marking it completed (ثبت). */
+export function validateTerminationSubsection(
+  subsection: ConstructorTerminationSubsectionId,
+  data: ContractTerminationData,
+): ValidationResult {
   const errors: Record<string, string> = {};
-  const isPositive = (value: string | undefined) => Number(value ?? 0) > 0;
-  const builder = data.builder;
-  const buyer = data.buyer;
+  const isPositive = (value: string | undefined) => Number(String(value ?? '').replace(/,/g, '')) > 0;
+  const c = data.constructorTerms;
 
-  if (builder?.enabled) {
-    const installmentDelay = builder.installmentDelay;
-    if (installmentDelay?.enabled) {
-      if (installmentDelay.allowedDelayPreset === 'other' && !isPositive(installmentDelay.allowedDelayDays)) {
-        errors['builder.installmentDelay.allowedDelayDays'] = REQUIRED_MSG;
+  switch (subsection) {
+    case 'lateInstallment': {
+      const li = c.lateInstallment;
+      if (!li.ruleEnabled) return { valid: true, errors: {} };
+      if (li.gracePreset === 'other' && !isPositive(li.graceDaysCustom)) {
+        errors['constructorTerms.lateInstallment.graceDaysCustom'] = REQUIRED_MSG;
       }
-
-      if (installmentDelay.delayBasis === 'debt-amount' && !isPositive(installmentDelay.minDebtAmount)) {
-        errors['builder.installmentDelay.minDebtAmount'] = REQUIRED_MSG;
+      if (li.detectionBasis === 'total-debt' && !isPositive(li.minDebtAmount)) {
+        errors['constructorTerms.lateInstallment.minDebtAmount'] = 'حداقل مبلغ بدهی را وارد کنید.';
       }
+      break;
     }
-
-    const financialDefault = builder.financialDefault;
-    if (financialDefault?.enabled) {
-      if (!financialDefault.obligationTypes?.length) {
-        errors['builder.financialDefault.obligationTypes'] = 'حداقل یک تعهد مالی را انتخاب کنید.';
+    case 'financialObligations': {
+      const fin = c.financialObligations;
+      if (!fin.ruleEnabled) return { valid: true, errors: {} };
+      if (fin.gracePreset === 'other' && !isPositive(fin.graceDaysCustom)) {
+        errors['constructorTerms.financialObligations.graceDaysCustom'] = REQUIRED_MSG;
       }
-
-      if (financialDefault.gracePeriodPreset === 'other' && !isPositive(financialDefault.gracePeriodDays)) {
-        errors['builder.financialDefault.gracePeriodDays'] = REQUIRED_MSG;
-      }
+      break;
     }
-
-    const documentDefect = builder.documentDefect;
-    if (documentDefect?.enabled) {
-      if (!documentDefect.requiredItems?.length) {
-        errors['builder.documentDefect.requiredItems'] = 'حداقل یک مورد الزامی را انتخاب کنید.';
+    case 'documentDeficiencies':
+      if (!c.documentDeficiencies.ruleEnabled) return { valid: true, errors: {} };
+      if (!c.documentDeficiencies.mandatoryItems.length) {
+        errors['constructorTerms.documentDeficiencies.mandatoryItems'] = 'حداقل یک مورد اجباری را انتخاب کنید.';
       }
-
-      if (documentDefect.gracePeriodPreset === 'other' && !isPositive(documentDefect.gracePeriodDays)) {
-        errors['builder.documentDefect.gracePeriodDays'] = REQUIRED_MSG;
+      break;
+    case 'otherBreach':
+      if (!c.otherBreach.ruleEnabled) return { valid: true, errors: {} };
+      if (!c.otherBreach.violationTypes.length) {
+        errors['constructorTerms.otherBreach.violationTypes'] = 'حداقل یک نوع تخلف را انتخاب کنید.';
       }
-    }
-
-    const otherBreach = builder.otherBreach;
-    if (otherBreach?.enabled) {
-      if (!otherBreach.breachTypes?.length) {
-        errors['builder.otherBreach.breachTypes'] = 'حداقل یک مورد تخلف را انتخاب کنید.';
+      if (c.otherBreach.rectificationDays === 'other' && !isPositiveIntString(c.otherBreach.rectificationDaysCustom)) {
+        errors['constructorTerms.otherBreach.rectificationDaysCustom'] = REQUIRED_MSG;
       }
-
-      if (otherBreach.gracePeriodPreset === 'other' && !isPositive(otherBreach.gracePeriodDays)) {
-        errors['builder.otherBreach.gracePeriodDays'] = REQUIRED_MSG;
-      }
-    }
-  }
-
-  if (buyer?.enabled) {
-    const deliveryDelay = buyer.deliveryDelay;
-    if (deliveryDelay?.enabled && deliveryDelay.allowedDelayPreset === 'other' && !isPositive(deliveryDelay.allowedDelayDays)) {
-      errors['buyer.deliveryDelay.allowedDelayDays'] = REQUIRED_MSG;
-    }
-
-    const specChange = buyer.specChange;
-    if (specChange?.enabled) {
-      if (!specChange.changeTypes?.length) {
-        errors['buyer.specChange.changeTypes'] = 'حداقل یک نوع تغییر را انتخاب کنید.';
-      }
-
-      if (!isPositive(specChange.tolerancePercent)) {
-        errors['buyer.specChange.tolerancePercent'] = REQUIRED_MSG;
-      }
-    }
-
-    const areaDiscrepancy = buyer.areaDiscrepancy;
-    if (areaDiscrepancy?.enabled && !isPositive(areaDiscrepancy.toleranceValue)) {
-      errors['buyer.areaDiscrepancy.toleranceValue'] = REQUIRED_MSG;
-    }
+      break;
+    default:
+      break;
   }
 
   return { valid: Object.keys(errors).length === 0, errors };
+}
+
+function isPositiveIntString(value: string | undefined) {
+  const n = Number(String(value ?? '').replace(/\D/g, ''));
+  return Number.isFinite(n) && n > 0;
+}
+
+function isPositivePercentString(value: string | undefined) {
+  const n = Number(String(value ?? '').replace(/,/g, '').trim());
+  return Number.isFinite(n) && n > 0 && n <= 100;
+}
+
+/** اعتبارسنجی یک زیربخش فسخ خریدار پیش از علامت «ثبت شده». */
+export function validateBuyerTerminationSubsection(
+  subsection: BuyerTerminationSubsectionId,
+  data: ContractTerminationData,
+): ValidationResult {
+  const errors: Record<string, string> = {};
+  const b = data.buyerTerms;
+
+  switch (subsection) {
+    case 'lateDelivery': {
+      if (!b.lateDelivery.ruleEnabled) return { valid: true, errors: {} };
+      if (b.lateDelivery.gracePreset === 'other' && !isPositiveIntString(b.lateDelivery.graceDaysCustom)) {
+        errors['buyerTerms.lateDelivery.graceDaysCustom'] = REQUIRED_MSG;
+      }
+      break;
+    }
+    case 'specificationChanges': {
+      if (!b.specificationChanges.ruleEnabled) return { valid: true, errors: {} };
+      if (!b.specificationChanges.includedTypes.length) {
+        errors['buyerTerms.specificationChanges.includedTypes'] = 'حداقل یک نوع تغییر مشخصات انتخاب کنید.';
+      }
+      break;
+    }
+    case 'breachOfObligations': {
+      if (!b.breachOfObligations.ruleEnabled) return { valid: true, errors: {} };
+      if (!b.breachOfObligations.obligationTypes.length) {
+        errors['buyerTerms.breachOfObligations.obligationTypes'] = 'حداقل یک تعهد سازنده انتخاب کنید.';
+      }
+      if (b.breachOfObligations.rectificationPreset === 'other' && !isPositiveIntString(b.breachOfObligations.rectificationDaysCustom)) {
+        errors['buyerTerms.breachOfObligations.rectificationDaysCustom'] = REQUIRED_MSG;
+      }
+      break;
+    }
+    case 'areaDiscrepancy': {
+      if (!b.areaDiscrepancy.ruleEnabled) return { valid: true, errors: {} };
+      if (b.areaDiscrepancy.thresholdPreset === 'other' && !isPositivePercentString(b.areaDiscrepancy.thresholdPercentCustom)) {
+        errors['buyerTerms.areaDiscrepancy.thresholdPercentCustom'] = 'درصد معتبر (۰–۱۰۰) وارد کنید.';
+      }
+      if (!b.areaDiscrepancy.referenceSources.length) {
+        errors['buyerTerms.areaDiscrepancy.referenceSources'] = 'حداقل یک مرجع رسمی انتخاب کنید.';
+      }
+      break;
+    }
+    case 'notification':
+      if (!b.notification.ruleEnabled) return { valid: true, errors: {} };
+      break;
+    default:
+      break;
+  }
+
+  return { valid: Object.keys(errors).length === 0, errors };
+}
+
+export function validateTerminationStep(data: Partial<ContractTerminationData>): ValidationResult {
+  const errors: Record<string, string> = {};
+
+  if (!data.terminationEnabled) {
+    return { valid: true, errors: {} };
+  }
+
+  const seller = Boolean(data.sellerTerminationEngaged);
+  const buyer = Boolean(data.buyerTerminationEngaged);
+
+  if (!seller && !buyer) {
+    errors['termination.partyEngagement'] =
+      'با فعال بودن فسخ، ابتدا یکی از گزینه‌های «تنظیمات فسخ سازنده» یا «تنظیمات فسخ خریدار» را باز کنید، سپس «ثبت شرایط فسخ» را بزنید.';
+    return { valid: false, errors };
+  }
+
+  return { valid: true, errors: {} };
 }

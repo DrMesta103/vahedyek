@@ -1,10 +1,21 @@
 'use client';
 
 import type { CSSProperties } from 'react';
-import type { ContractFinancialData } from '../../../../types/contract';
+import type { ContractFinancialData, ContractStatus } from '../../../../types/contract';
 
 function formatCurrency(value: number) {
   return `${Math.round(value || 0).toLocaleString('fa-IR')} تومان`;
+}
+
+function getContractStatusLabel(status: ContractStatus) {
+  switch (status) {
+    case 'pending_approval':
+      return 'در انتظار تایید';
+    case 'completed':
+      return 'تکمیل شده';
+    default:
+      return 'پیش نویس';
+  }
 }
 
 function buildRingGradient(slices: Array<{ value: number; color: string }>) {
@@ -106,6 +117,8 @@ interface LeftReportSidebarProps {
   allocatedAmount: number;
   dueAmount: number;
   remainder: number;
+  contractNumber?: string | null;
+  contractStatus?: ContractStatus | null;
 }
 
 export function LeftReportSidebar({
@@ -115,14 +128,26 @@ export function LeftReportSidebar({
   allocatedAmount,
   dueAmount,
   remainder,
+  contractNumber,
+  contractStatus,
 }: LeftReportSidebarProps) {
   void reportData;
   void dueAmount;
+
+  const status = contractStatus ?? 'draft';
+  const contractNumberText = contractNumber?.trim() ? contractNumber.trim() : '—';
 
   return (
     <aside className="contract-flow-report-sidebar shrink-0">
       <div className="contract-flow-report-panel">
         <div className="contract-flow-report-header">
+          <div className="contract-flow-report-meta-card">
+            <div className="contract-flow-report-meta-row">
+              <span className="contract-flow-report-meta-label">شماره</span>
+              <strong className="contract-flow-report-meta-value">{contractNumberText}</strong>
+            </div>
+            <span className={`contract-flow-report-status-pill is-${status}`}>{getContractStatusLabel(status)}</span>
+          </div>
           <h2>گزارش زنده مالی</h2>
           <p>خلاصه‌ی لحظه‌ای از مبلغ قرارداد، تخصیص‌ها و سررسیدها</p>
         </div>

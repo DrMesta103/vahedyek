@@ -1,7 +1,7 @@
 ﻿'use client';
 
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Calendar, Check, ChevronDown, ChevronUp, Search, X } from 'lucide-react';
+import { Calendar, ChevronDown, ChevronUp, Search, X } from 'lucide-react';
 import { PersianDatePicker } from '@repo/ui';
 
 export function SectionCard({ children, className = '' }: { children: ReactNode; className?: string }) {
@@ -47,6 +47,8 @@ export function FormTextInput({
   icon: Icon,
   disabled,
   className = '',
+  inputMode,
+  dir,
 }: {
   value: string;
   onChange: (value: string) => void;
@@ -54,6 +56,8 @@ export function FormTextInput({
   icon?: React.ElementType;
   disabled?: boolean;
   className?: string;
+  inputMode?: React.HTMLAttributes<HTMLInputElement>['inputMode'];
+  dir?: 'ltr' | 'rtl';
 }) {
   return (
     <div className="relative">
@@ -63,6 +67,8 @@ export function FormTextInput({
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         disabled={disabled}
+        inputMode={inputMode}
+        dir={dir}
         className={`h-[42px] w-full rounded-xl border border-slate-200 bg-[image:var(--control-bg-gradient)] text-[13px] text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] placeholder:text-slate-400 outline-none transition-all focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10 disabled:bg-slate-50 disabled:text-slate-400 ${Icon ? 'pr-10 pl-3.5' : 'px-3.5'} ${className}`}
       />
     </div>
@@ -111,15 +117,42 @@ export function TagPill({
     <button
       type="button"
       onClick={onClick}
+      aria-pressed={active}
       data-tag-pill="true"
       data-active={active ? 'true' : 'false'}
       className={`inline-flex h-[34px] items-center gap-1.5 rounded-full border px-4 text-[12px] whitespace-nowrap transition-all ${
         active
-          ? 'border-[var(--theme-action-border)] bg-[var(--theme-action-bg)] font-semibold text-[var(--theme-action-text)] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.25)]'
+          ? 'border-[var(--theme-action-border)] bg-[var(--theme-action-bg)] font-semibold text-[#292929] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.25)]'
           : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
       } ${className}`}
     >
-      {active ? <Check className="h-3 w-3 shrink-0 stroke-[2.75]" /> : null}
+      {active ? (
+        <span aria-hidden="true" className="choice-pill__check inline-flex h-3 w-3 shrink-0 items-center justify-center">
+          <style>
+            {`
+              .choice-pill__check {
+                transform-origin: center;
+                animation: choice-pill-check-appear 120ms ease-out both;
+              }
+              @keyframes choice-pill-check-appear {
+                from { opacity: 0; transform: scale(0.95); }
+                to { opacity: 1; transform: scale(1); }
+              }
+              .choice-pill__check-path {
+                stroke-dasharray: 30;
+                stroke-dashoffset: 30;
+                animation: choice-pill-check-draw 360ms cubic-bezier(0.22, 1, 0.36, 1) 60ms both;
+              }
+              @keyframes choice-pill-check-draw {
+                to { stroke-dashoffset: 0; }
+              }
+            `}
+          </style>
+          <svg viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+            <path className="choice-pill__check-path" d="M20 6 9 17l-5-5" />
+          </svg>
+        </span>
+      ) : null}
       {label}
     </button>
   );
@@ -139,11 +172,67 @@ export function TagPills<T extends string>({
   className?: string;
 }) {
   return (
-    <div className={`flex gap-1.5 ${wrap ? 'flex-wrap' : 'flex-nowrap overflow-x-auto pb-1'} ${className}`}>
+    <div className={`flex gap-2 ${wrap ? 'flex-wrap' : 'flex-nowrap overflow-x-auto pb-1'} ${className}`}>
       {options.map((option) => (
         <TagPill key={option.value} label={option.label} active={value === option.value} onClick={() => onChange(option.value)} />
       ))}
     </div>
+  );
+}
+
+export function MultiTagPills<T extends string>({
+  options,
+  values,
+  onChange,
+  wrap = true,
+  className = '',
+}: {
+  options: { value: T; label: string }[];
+  values: T[];
+  onChange: (values: T[]) => void;
+  wrap?: boolean;
+  className?: string;
+}) {
+  return (
+    <div className={`flex gap-2 ${wrap ? 'flex-wrap' : 'flex-nowrap overflow-x-auto pb-1'} ${className}`}>
+      {options.map((option) => {
+        const active = values.includes(option.value);
+        return (
+          <TagPill
+            key={option.value}
+            label={option.label}
+            active={active}
+            onClick={() => onChange(active ? values.filter((v) => v !== option.value) : [...values, option.value])}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+export function BusinessSwitch({
+  checked,
+  onChange,
+  onLabel = 'فعال',
+  offLabel = 'غیرفعال',
+  className = '',
+}: {
+  checked: boolean;
+  onChange: (next: boolean) => void;
+  onLabel?: string;
+  offLabel?: string;
+  className?: string;
+}) {
+  return (
+    <button
+      type="button"
+      className={`business-switch shrink-0 ${className}`}
+      aria-pressed={checked}
+      onClick={() => onChange(!checked)}
+    >
+      <span className="business-switch-option is-on">{onLabel}</span>
+      <span className="business-switch-option is-off">{offLabel}</span>
+    </button>
   );
 }
 

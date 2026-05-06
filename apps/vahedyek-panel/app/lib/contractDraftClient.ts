@@ -43,7 +43,15 @@ async function readJson<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
       ...(init?.headers ?? {}),
     },
     cache: 'no-store',
+    redirect: 'manual',
   });
+
+  if (response.status >= 300 && response.status < 400) {
+    const location = response.headers.get('location') ?? '';
+    if (location.startsWith('/login')) {
+      throw new Error('برای استفاده از سامانه باید وارد شوید.');
+    }
+  }
 
   if (!response.ok) {
     const contentType = response.headers.get('content-type') ?? '';
@@ -110,6 +118,16 @@ export async function ensureActiveDraftId() {
   return result.id;
 }
 
+export async function createDraftId() {
+  const result = await readJson<{ id: string }>('/api/contracts/drafts', {
+    method: 'POST',
+    body: JSON.stringify({}),
+  });
+
+  localStorage.setItem(ACTIVE_DRAFT_KEY, result.id);
+  return result.id;
+}
+
 export async function getStepData<T>(draftId: string, step: 'subject' | 'parties' | 'financial' | 'penalties') {
   return readJson<T | null>(`/api/contracts/drafts/${draftId}/${step}`);
 }
@@ -119,6 +137,15 @@ export async function saveStepData<T>(draftId: string, step: 'subject' | 'partie
     method: 'PUT',
     body: JSON.stringify(payload),
   });
+}
+
+/** بارگذاری قواعد فسخ خریدار از ستون buyerRules در پایگاه. */
+export async function fetchTerminationBuyerRules(draftId: string): Promise<{ buyerRules: unknown } | null> {
+  try {
+    return await readJson<{ buyerRules: unknown }>(`/api/contracts/drafts/${draftId}/termination`);
+  } catch {
+    return null;
+  }
 }
 
 export async function getReferenceData() {
@@ -141,4 +168,8 @@ export async function createDirectoryPerson(payload: {
 
 export async function getContractsList(status: ContractStatus) {
   return readJson<ContractsListResponse>(`/api/contracts?status=${status}`);
+}
+
+export async function getContractDetails(contractId: string) {
+  return readJson<any>(`/api/contracts/${contractId}`);
 }
