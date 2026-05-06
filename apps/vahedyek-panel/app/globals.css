@@ -147,7 +147,7 @@ body {
 .contract-details-profile {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 16px;
   padding: 10px 14px;
 }
@@ -226,6 +226,16 @@ body {
   font-weight: 700;
   color: #5b636d;
   white-space: nowrap;
+}
+
+/* Utility: hide scrollbars (used for buyer cards horizontal scroll) */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }
 .contract-details-summary {
   margin-top: 10px;
@@ -323,10 +333,31 @@ body {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  width: 100%;
+  text-align: right;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    border-color 160ms ease;
 }
 
 .contract-details-action-card.is-dim {
   opacity: 0.48;
+  filter: grayscale(0.95);
+}
+
+.contract-details-action-card:not(.is-dim):hover {
+  transform: translateY(-2px);
+  border-color: rgba(21, 167, 173, 0.28);
+  box-shadow: 0 14px 28px rgba(145, 151, 160, 0.12);
+}
+
+.contract-details-action-card:focus-visible {
+  outline: 2px solid rgba(21, 167, 173, 0.35);
+  outline-offset: 2px;
 }
 
 .contract-details-action-head {

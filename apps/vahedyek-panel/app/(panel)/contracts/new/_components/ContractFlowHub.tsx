@@ -232,6 +232,7 @@ function FinancialDonut({ slices }: { slices: Array<{ id: string; name: string; 
 export function ContractFlowHub() {
   const router = useRouter();
   const leavingRef = useRef(false);
+  const dirtyMapRef = useRef<Partial<Record<ContractFlowSectionId, boolean>>>({});
   const [activeSection, setActiveSection] = useState<SectionItem['id']>('subject');
   const [loading, setLoading] = useState(true);
   const [subjectData, setSubjectData] = useState<ContractSubjectData | null>(null);
@@ -250,6 +251,8 @@ export function ContractFlowHub() {
   const [lockedDialogSection, setLockedDialogSection] = useState<ContractFlowSectionId | null>(null);
   const [pendingScrollSection, setPendingScrollSection] = useState<ContractFlowSectionId | null>(null);
   const [pendingLeave, setPendingLeave] = useState<{ mode: 'route' | 'back'; href?: string } | null>(null);
+  const [leaveSaving, setLeaveSaving] = useState(false);
+  const [leaveSaveError, setLeaveSaveError] = useState<string>('');
 
   useEffect(() => {
     let mounted = true;
@@ -400,6 +403,10 @@ export function ContractFlowHub() {
       window.removeEventListener(CONTRACT_FLOW_FINANCIAL_SNAPSHOT_EVENT, handleFinancialSnapshot as EventListener);
     };
   }, []);
+
+  useEffect(() => {
+    dirtyMapRef.current = dirtyMap;
+  }, [dirtyMap]);
 
   const subjectComplete = Boolean(subjectData && validateStep1(subjectData).valid);
   const partiesComplete = Boolean(partiesData && validateStep2(partiesData).valid);
@@ -625,61 +632,28 @@ export function ContractFlowHub() {
   const remainder = Math.max(contractTotal - allocatedAmount, 0);
   const leaveIssues = useMemo<LeaveIssue[]>(() => {
     const issues: LeaveIssue[] = [];
-    const financialLiveComplete = Boolean(reportData && validateFinancialStep(reportData).valid);
-    const penaltiesValid = Boolean(penaltiesData && validatePenaltiesStep(penaltiesData).valid);
-    const discountsValid = Boolean(discountsData && validateDiscountsStep(discountsData).valid);
-    const terminationValid = Boolean(terminationData && validateTerminationStep(terminationData).valid);
-
-    if (!subjectComplete || dirtyMap.subject) {
-      issues.push({
-        id: 'subject',
-        title: SECTION_TITLES.subject,
-        status: dirtyMap.subject ? 'تغییر کرده و ذخیره نشده است' : 'تکمیل نشده است',
-      });
-    }
-
-    if (!partiesComplete || dirtyMap.parties) {
-      issues.push({
-        id: 'parties',
-        title: SECTION_TITLES.parties,
-        status: dirtyMap.parties ? 'تغییر کرده و ذخیره نشده است' : 'تکمیل نشده است',
-      });
-    }
-
-    if (!financialLiveComplete || dirtyMap.financial) {
-      issues.push({
-        id: 'financial',
-        title: SECTION_TITLES.financial,
-        status: dirtyMap.financial ? 'تغییر کرده و ذخیره نشده است' : 'تکمیل نشده است',
-      });
-    }
-
-    if (!penaltiesValid || dirtyMap.penalties) {
-      issues.push({
-        id: 'penalties',
-        title: SECTION_TITLES.penalties,
-        status: dirtyMap.penalties ? 'تغییر کرده و ذخیره نشده است' : 'تکمیل نشده است',
-      });
-    }
-
-    if (!discountsValid || dirtyMap.discounts) {
-      issues.push({
-        id: 'discounts',
-        title: SECTION_TITLES.discounts,
-        status: dirtyMap.discounts ? 'تغییر کرده و ذخیره نشده است' : 'تکمیل نشده است',
-      });
-    }
-
-    if (!terminationValid || dirtyMap.termination) {
-      issues.push({
-        id: 'termination',
-        title: SECTION_TITLES.termination,
-        status: dirtyMap.termination ? 'تغییر کرده و ذخیره نشده است' : 'تکمیل نشده است',
-      });
-    }
-
+    (['subject', 'parties', 'financial', 'penalties', 'discounts', 'termination', 'extraCosts', 'technicalSpecs', 'contractAttachments'] as const).forEach(
+      (sectionId) => {
+        if (!dirtyMap[sectionId]) return;
+        issues.push({
+          id: sectionId,
+          title: SECTION_TITLES[sectionId],
+          status: 'تغییر کرده و ذخیره نشده است',
+        });
+      },
+    );
     return issues;
-  }, [discountsData, dirtyMap.discounts, dirtyMap.financial, dirtyMap.parties, dirtyMap.penalties, dirtyMap.subject, dirtyMap.termination, partiesComplete, penaltiesData, reportData, subjectComplete, terminationData]);
+  }, [
+    dirtyMap.contractAttachments,
+    dirtyMap.discounts,
+    dirtyMap.extraCosts,
+    dirtyMap.financial,
+    dirtyMap.parties,
+    dirtyMap.penalties,
+    dirtyMap.subject,
+    dirtyMap.technicalSpecs,
+    dirtyMap.termination,
+  ]);
   const shouldBlockContractLeave = !loading && leaveIssues.length > 0;
 
   const requestSectionSave = (sectionId: ContractFlowSectionId) => {
@@ -688,6 +662,116 @@ export function ContractFlowHub() {
 
     setSavingMap((current) => ({ ...current, [sectionId]: true }));
     trigger.click();
+  };
+
+  const waitForNavigation = (fromHref: string, timeoutMs = 1200) => {
+    return new Promise<boolean>((resolve) => {
+      const startedAt = Date.now();
+      const tick = () => {
+        if (window.location.href !== fromHref) return resolve(true);
+        if (Date.now() - startedAt >= timeoutMs) return resolve(false);
+        window.setTimeout(tick, 60);
+      };
+      tick();
+    });
+  };
+
+  const waitForSectionSaved = (sectionId: ContractFlowSectionId, timeoutMs = 15000) => {
+    return new Promise<void>((resolve, reject) => {
+      const timer = window.setTimeout(() => {
+        cleanup();
+        reject(new Error('timeout'));
+      }, timeoutMs);
+
+      const onSaved = (event: Event) => {
+        const customEvent = event as CustomEvent<{ sectionId: ContractFlowSectionId }>;
+        if (customEvent.detail.sectionId !== sectionId) return;
+        cleanup();
+        resolve();
+      };
+
+      const cleanup = () => {
+        window.clearTimeout(timer);
+        window.removeEventListener(CONTRACT_FLOW_SAVED_EVENT, onSaved as EventListener);
+      };
+
+      window.addEventListener(CONTRACT_FLOW_SAVED_EVENT, onSaved as EventListener);
+    });
+  };
+
+  const saveDirtyThenLeave = async () => {
+    if (!pendingLeave || leaveSaving) return;
+
+    setLeaveSaveError('');
+    setLeaveSaving(true);
+
+    const target = pendingLeave;
+    const fromHref = window.location.href;
+
+    try {
+      const dirtySections = SAVEABLE_SECTIONS.filter((id) => Boolean(dirtyMapRef.current[id]));
+      for (const sectionId of dirtySections) {
+        requestSectionSave(sectionId);
+        await waitForSectionSaved(sectionId);
+      }
+
+      leavingRef.current = true;
+
+      if (target.mode === 'back') {
+        window.history.go(-2);
+        window.setTimeout(() => {
+          if (window.location.href === fromHref) {
+            window.history.go(-1);
+          }
+        }, 60);
+      } else {
+        if (!target.href) throw new Error('missing-target');
+        const nextUrl = new URL(target.href, window.location.href);
+        const nextHref = `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`;
+
+        if (nextUrl.origin === window.location.origin) {
+          router.push(nextHref);
+        } else {
+          window.location.assign(nextUrl.href);
+        }
+      }
+
+      const navigated = await waitForNavigation(fromHref);
+      if (!navigated) {
+        throw new Error('navigation-failed');
+      }
+
+      setPendingLeave(null);
+    } catch {
+      setLeaveSaveError('ذخیره تغییرات با خطا مواجه شد. لطفاً دوباره تلاش کنید.');
+      leavingRef.current = false;
+    } finally {
+      setLeaveSaving(false);
+    }
+  };
+
+  const performLeave = (target: { mode: 'route' | 'back'; href?: string }) => {
+    if (target.mode === 'back') {
+      const currentHref = window.location.href;
+      window.history.go(-2);
+      window.setTimeout(() => {
+        if (window.location.href === currentHref) {
+          window.history.go(-1);
+        }
+      }, 60);
+      return;
+    }
+
+    if (!target.href) return;
+    const nextUrl = new URL(target.href, window.location.href);
+    const nextHref = `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`;
+
+    if (nextUrl.origin === window.location.origin) {
+      router.push(nextHref);
+      return;
+    }
+
+    window.location.assign(nextUrl.href);
   };
 
   const scrollToSection = (sectionId: SectionItem['id']) => {
@@ -708,21 +792,7 @@ export function ContractFlowHub() {
     const target = pendingLeave;
     setPendingLeave(null);
 
-    if (target.mode === 'back') {
-      router.back();
-      return;
-    }
-
-    if (!target.href) return;
-    const nextUrl = new URL(target.href, window.location.href);
-    const nextHref = `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`;
-
-    if (nextUrl.origin === window.location.origin) {
-      router.push(nextHref);
-      return;
-    }
-
-    window.location.assign(nextUrl.href);
+    performLeave(target);
   };
 
   useEffect(() => {
@@ -897,16 +967,18 @@ export function ContractFlowHub() {
       </div>
 
       {pendingLeave ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4" onClick={() => setPendingLeave(null)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4 backdrop-blur-sm" onClick={() => setPendingLeave(null)}>
           <div
-            className="w-full max-w-xl rounded-3xl border border-[var(--border-color)] bg-[var(--surface)] shadow-2xl"
+            className="w-full max-w-xl overflow-hidden rounded-3xl border border-[var(--border-color)] bg-[var(--surface)] shadow-2xl"
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="flex items-start justify-between gap-4 border-b border-[var(--border-color)] px-5 py-4">
+            <div className="flex items-start justify-between gap-4 border-b border-[var(--border-color)] bg-[var(--surface-soft)] px-5 py-4">
               <div>
                 <div className="flex items-center gap-2 text-[var(--text-strong)]">
-                  <AlertCircle className="h-5 w-5 text-[var(--theme-warning-text)]" />
-                  <h3 className="text-base font-bold">خروج از صفحه قرارداد</h3>
+                  <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-[var(--theme-warning-border)] bg-[var(--theme-warning-bg)] text-[var(--theme-warning-text)]">
+                    <AlertCircle className="h-5 w-5" />
+                  </span>
+                  <h3 className="text-base font-extrabold">خروج از صفحه قرارداد</h3>
                 </div>
                 <p className="mt-2 text-sm leading-6 text-[var(--text-muted)]">
                   قبل از خروج، وضعیت بخش‌های ناقص یا ذخیره‌نشده را بررسی کنید.
@@ -922,12 +994,22 @@ export function ContractFlowHub() {
             </div>
 
             <div className="space-y-3 px-5 py-4">
+              {leaveSaveError ? (
+                <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">{leaveSaveError}</div>
+              ) : null}
+
               <div className="rounded-2xl border border-[var(--theme-warning-border)] bg-[var(--theme-warning-bg)] px-4 py-3">
-                <div className="mb-3 text-sm font-bold text-[var(--theme-warning-text)]">بخش‌های نیازمند تکمیل</div>
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <div className="text-sm font-extrabold text-[var(--theme-warning-text)]">تغییرات ذخیره‌نشده</div>
+                  {leaveSaving ? <div className="text-xs font-bold text-[var(--theme-warning-text)]">در حال ذخیره…</div> : null}
+                </div>
                 <div className="grid gap-2">
                   {leaveIssues.map((item) => (
                     <div key={item.id} className="flex items-center justify-between gap-3 rounded-xl bg-[var(--surface)] px-3 py-2 text-sm">
-                      <span className="font-bold text-[var(--text-body)]">{item.title}</span>
+                      <span className="flex items-center gap-2 font-bold text-[var(--text-body)]">
+                        <span className="h-1.5 w-1.5 rounded-full bg-[var(--theme-warning-text)]" />
+                        {item.title}
+                      </span>
                       <span className="rounded-full border border-[var(--theme-warning-border)] bg-[var(--theme-warning-bg)] px-2.5 py-1 text-xs font-bold text-[var(--theme-warning-text)]">
                         {item.status}
                       </span>
@@ -937,20 +1019,35 @@ export function ContractFlowHub() {
               </div>
             </div>
 
-            <div className="flex flex-wrap justify-end gap-3 border-t border-[var(--border-color)] px-5 py-4">
+            <div className="flex flex-nowrap justify-end gap-2 border-t border-[var(--border-color)] px-5 py-4">
               <button
                 type="button"
                 onClick={() => setPendingLeave(null)}
-                className="rounded-lg border border-[var(--border-color)] px-4 py-2 text-sm font-bold text-[var(--text-body)] transition-colors hover:bg-[var(--surface-soft)]"
+                disabled={leaveSaving}
+                className="whitespace-nowrap rounded-lg border border-[var(--border-color)] px-3 py-2 text-xs font-bold text-[var(--text-body)] transition-colors hover:bg-[var(--surface-soft)]"
               >
                 ماندن در صفحه
               </button>
+              {leaveIssues.length ? (
+                <button
+                  type="button"
+                  onClick={saveDirtyThenLeave}
+                  disabled={leaveSaving}
+                  className="whitespace-nowrap rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700 transition-colors hover:bg-emerald-100 disabled:opacity-60"
+                >
+                  {leaveSaving ? (
+                    <span className="ml-2 inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-emerald-700/25 border-t-emerald-700" />
+                  ) : null}
+                  خروج و ذخیره تغییرات
+                </button>
+              ) : null}
               <button
                 type="button"
                 onClick={continueContractLeave}
-                className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-bold text-rose-700 transition-colors hover:bg-rose-100"
+                disabled={leaveSaving}
+                className="whitespace-nowrap rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700 transition-colors hover:bg-rose-100"
               >
-                خروج بدون تکمیل
+                خروج بدون ذخیره تغییرات
               </button>
             </div>
           </div>

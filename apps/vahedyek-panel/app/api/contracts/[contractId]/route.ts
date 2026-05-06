@@ -14,6 +14,40 @@ function serializePricingType(value: PricingType) {
   return value === PricingType.metered ? 'metered' : 'fixed';
 }
 
+function serializePenalties(penalties: any) {
+  if (!penalties) return null;
+
+  return {
+    activeTab: '',
+    types: Array.isArray(penalties.types)
+      ? penalties.types.map((item: any) => ({
+          id: String(item.id),
+          title: String(item.title ?? ''),
+          description: '',
+          active: Boolean(item.active),
+        }))
+      : [],
+    rules: Array.isArray(penalties.rules)
+      ? penalties.rules.map((rule: any) => ({
+          id: String(rule.id),
+          penaltyTypeId: String(rule.penaltyTypeId),
+          mode: String(rule.mode ?? 'fixed'),
+          period: String(rule.period ?? 'daily'),
+          fixedAmount: rule.fixedAmount != null ? String(Number(rule.fixedAmount)) : '',
+          penaltyPercent: rule.penaltyPercent != null ? String(Number(rule.penaltyPercent)) : '',
+          bankInterestPercent: rule.bankInterestPercent != null ? String(Number(rule.bankInterestPercent)) : '',
+          graceDays: rule.graceDays != null ? String(Number(rule.graceDays)) : '',
+          roundRule: String(rule.roundRule ?? '0'),
+          extraFeeEnabled: Boolean(rule.extraFeeEnabled),
+          extraFeeType: String(rule.extraFeeType ?? 'fixed'),
+          extraFeeAmount: rule.extraFeeAmount != null ? String(Number(rule.extraFeeAmount)) : '',
+          extraFeeRoundRule: String(rule.extraFeeRoundRule ?? '0'),
+          progressiveRows: Array.isArray(rule.progressiveRows) ? rule.progressiveRows : [],
+        }))
+      : [],
+  };
+}
+
 function computeStatus(draft: any): ContractStatus {
   const hasSubject = Boolean(draft.subject?.contractNumber && draft.subject?.contractDate && draft.subject?.blockId && draft.subject?.unitId);
   const hasParties = Boolean(
@@ -136,6 +170,11 @@ export async function GET(request: Request, context: { params: Promise<{ contrac
               })),
             }
           : null,
+        penalties: serializePenalties(draft.penalties),
+        terminationRules: draft.terminationRules ? { buyerRules: draft.terminationRules.buyerRules ?? {} } : null,
+        extraCosts: draft.extraCosts ? { payload: draft.extraCosts.payload ?? [] } : null,
+        technicalSpecs: draft.technicalSpecs ? { specs: draft.technicalSpecs.specs ?? [] } : null,
+        attachments: draft.attachments ? { documents: draft.attachments.documents ?? [], notes: draft.attachments.notes ?? '' } : null,
       },
     });
   } catch (error) {
