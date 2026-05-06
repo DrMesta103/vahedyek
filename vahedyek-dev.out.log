@@ -85,3 +85,186 @@ Creating turbopack project {
  GET /api/auth/me 200 in 11.9s (next.js: 5ms, proxy.ts: 3ms, application-code: 11.9s)
  GET /login?next=%2Femployees 200 in 47ms (next.js: 15ms, proxy.ts: 2ms, application-code: 30ms)
  GET /api/settings/access 200 in 13.7s (next.js: 24ms, proxy.ts: 4ms, application-code: 13.7s)
+ POST /api/auth/logout 200 in 34ms (next.js: 26ms, proxy.ts: 5ms, application-code: 3ms)
+ GET /login 200 in 13ms (next.js: 1544µs, proxy.ts: 2ms, application-code: 9ms)
+ GET /login 200 in 13ms (next.js: 1801µs, proxy.ts: 2ms, application-code: 9ms)
+ GET /employees 200 in 2.9s (next.js: 26ms, proxy.ts: 4ms, application-code: 2.9s)
+ GET /employees/new 200 in 21ms (next.js: 4ms, proxy.ts: 4ms, application-code: 13ms)
+ GET /api/auth/me 200 in 9.4s (next.js: 4ms, proxy.ts: 4ms, application-code: 9.4s)
+ GET /api/auth/me 200 in 9.4s (next.js: 12ms, proxy.ts: 4ms, application-code: 9.4s)
+ GET /api/auth/me 200 in 10.4s (next.js: 8ms, proxy.ts: 4ms, application-code: 10.3s)
+ GET /api/auth/me 200 in 10.8s (next.js: 6ms, proxy.ts: 4ms, application-code: 10.8s)
+ GET /api/auth/me 200 in 5.3s (next.js: 12ms, proxy.ts: 8ms, application-code: 5.2s)
+ GET /api/auth/me 200 in 5.3s (next.js: 10ms, proxy.ts: 8ms, application-code: 5.3s)
+ GET /api/auth/me 200 in 5.9s (next.js: 7ms, proxy.ts: 7ms, application-code: 5.9s)
+ GET /api/auth/me 200 in 6.5s (next.js: 13ms, proxy.ts: 8ms, application-code: 6.5s)
+ GET /api/business-settings/profile/directory?q=9 200 in 1992ms (next.js: 21ms, proxy.ts: 3ms, application-code: 1969ms)
+ GET /api/business-settings/profile/directory?q=99 200 in 1701ms (next.js: 2ms, proxy.ts: 5ms, application-code: 1693ms)
+ GET /api/business-settings/profile/directory?q=935272011 200 in 840ms (next.js: 1422µs, proxy.ts: 3ms, application-code: 836ms)
+ GET /api/business-settings/profile/directory?q=9352720117 200 in 1044ms (next.js: 2ms, proxy.ts: 5ms, application-code: 1036ms)
+ POST /api/business-settings/profile/directory/ensure-user 200 in 3.0s (next.js: 24ms, proxy.ts: 4ms, application-code: 2.9s)
+ POST /api/business-settings/profile/directory/ensure-user 200 in 2.7s (next.js: 3ms, proxy.ts: 4ms, application-code: 2.7s)
+ POST /api/employees 201 in 1345ms (next.js: 18ms, proxy.ts: 3ms, application-code: 1323ms)
+ GET /employees 200 in 1387ms (next.js: 2ms, proxy.ts: 4ms, application-code: 1381ms)
+ GET /employees 200 in 1853ms (next.js: 11ms, proxy.ts: 4ms, application-code: 1838ms)
+ GET /api/auth/me 200 in 5.4s (next.js: 7ms, proxy.ts: 4ms, application-code: 5.3s)
+ GET /api/auth/me 200 in 6.2s (next.js: 9ms, proxy.ts: 4ms, application-code: 6.2s)
+ GET /api/auth/me 200 in 6.6s (next.js: 5ms, proxy.ts: 4ms, application-code: 6.5s)
+ GET /api/auth/me 200 in 7.3s (next.js: 10ms, proxy.ts: 4ms, application-code: 7.3s)
+ POST /api/auth/login 200 in 431ms (next.js: 26ms, proxy.ts: 5ms, application-code: 400ms)
+ GET /select-tenant?userId=cmotvxq7500nuotwsyk2418yo&next=%2F 200 in 25ms (next.js: 13ms, proxy.ts: 1943µs, application-code: 10ms)
+ GET /api/auth/me 200 in 193ms (next.js: 24ms, proxy.ts: 4ms, application-code: 165ms)
+ GET /api/auth/me 200 in 347ms (next.js: 3ms, proxy.ts: 4ms, application-code: 340ms)
+ GET /api/auth/tenants 200 in 935ms (next.js: 20ms, proxy.ts: 4ms, application-code: 912ms)
+ GET /api/auth/tenants 200 in 1148ms (next.js: 22ms, proxy.ts: 4ms, application-code: 1122ms)
+ POST /api/auth/select-tenant 200 in 479ms (next.js: 21ms, proxy.ts: 3ms, application-code: 455ms)
+ GET / 200 in 12ms (next.js: 1515µs, proxy.ts: 2ms, application-code: 9ms)
+ GET / 200 in 12ms (next.js: 1243µs, proxy.ts: 1878µs, application-code: 9ms)
+ GET /api/auth/me 200 in 3.5s (next.js: 7ms, proxy.ts: 5ms, application-code: 3.5s)
+ GET /api/auth/me 200 in 4.6s (next.js: 5ms, proxy.ts: 5ms, application-code: 4.6s)
+ GET /api/auth/me 200 in 4.8s (next.js: 9ms, proxy.ts: 5ms, application-code: 4.8s)
+ GET /api/auth/me 200 in 5.7s (next.js: 9ms, proxy.ts: 6ms, application-code: 5.7s)
+ GET /settings 200 in 25ms (next.js: 3ms, proxy.ts: 8ms, application-code: 13ms)
+ GET /api/auth/me 200 in 9.0s (next.js: 13ms, proxy.ts: 8ms, application-code: 9.0s)
+ GET /api/auth/me 200 in 9.5s (next.js: 14ms, proxy.ts: 8ms, application-code: 9.5s)
+ GET /api/auth/me 200 in 11.9s (next.js: 7ms, proxy.ts: 8ms, application-code: 11.9s)
+ GET /api/auth/me 200 in 12.6s (next.js: 10ms, proxy.ts: 8ms, application-code: 12.6s)
+ GET /api/settings/access 200 in 14.4s (next.js: 18ms, proxy.ts: 10ms, application-code: 14.3s)
+ GET /api/settings/access 200 in 15.3s (next.js: 21ms, proxy.ts: 9ms, application-code: 15.3s)
+ PUT /api/settings/access 200 in 10.3s (next.js: 1933µs, proxy.ts: 2ms, application-code: 10.3s)
+ GET / 200 in 39ms (next.js: 2ms, proxy.ts: 4ms, application-code: 32ms)
+ GET /api/auth/me 200 in 3.5s (next.js: 5ms, proxy.ts: 3ms, application-code: 3.5s)
+ GET /api/auth/me 200 in 4.3s (next.js: 4ms, proxy.ts: 3ms, application-code: 4.3s)
+ GET /settings 200 in 17ms (next.js: 3ms, proxy.ts: 3ms, application-code: 11ms)
+ GET /api/auth/me 200 in 12.7s (next.js: 12ms, proxy.ts: 11ms, application-code: 12.7s)
+ GET /api/auth/me 200 in 13.0s (next.js: 17ms, proxy.ts: 11ms, application-code: 12.9s)
+ GET /api/auth/me 200 in 13.2s (next.js: 9ms, proxy.ts: 11ms, application-code: 13.2s)
+ GET /api/auth/me 200 in 13.9s (next.js: 14ms, proxy.ts: 11ms, application-code: 13.9s)
+ GET /api/settings/access 200 in 15.7s (next.js: 29ms, proxy.ts: 13ms, application-code: 15.7s)
+ GET /api/settings/access 200 in 15.7s (next.js: 18ms, proxy.ts: 14ms, application-code: 15.7s)
+ GET / 200 in 115ms (next.js: 31ms, proxy.ts: 28ms, application-code: 56ms)
+ GET /settings 200 in 130ms (next.js: 60ms, proxy.ts: 28ms, application-code: 42ms)
+ GET / 200 in 34ms (next.js: 3ms, proxy.ts: 5ms, application-code: 27ms)
+ GET /settings 200 in 55ms (next.js: 12ms, proxy.ts: 4ms, application-code: 40ms)
+ GET /settings 200 in 29ms (next.js: 3ms, proxy.ts: 5ms, application-code: 22ms)
+ GET /settings 200 in 30ms (next.js: 14ms, proxy.ts: 4ms, application-code: 11ms)
+ GET / 200 in 108ms (next.js: 57ms, proxy.ts: 26ms, application-code: 25ms)
+ GET /settings 200 in 109ms (next.js: 30ms, proxy.ts: 26ms, application-code: 53ms)
+ GET /settings 200 in 17ms (next.js: 1833µs, proxy.ts: 2ms, application-code: 13ms)
+ GET / 200 in 114ms (next.js: 52ms, proxy.ts: 28ms, application-code: 34ms)
+ GET /settings 200 in 131ms (next.js: 31ms, proxy.ts: 28ms, application-code: 72ms)
+ GET / 200 in 99ms (next.js: 22ms, proxy.ts: 5ms, application-code: 72ms)
+ GET /settings 200 in 101ms (next.js: 3ms, proxy.ts: 5ms, application-code: 94ms)
+ GET / 200 in 64ms (next.js: 47ms, proxy.ts: 7ms, application-code: 10ms)
+ GET /settings 200 in 68ms (next.js: 4ms, proxy.ts: 9ms, application-code: 56ms)
+ GET /settings 200 in 68ms (next.js: 25ms, proxy.ts: 8ms, application-code: 35ms)
+ GET /settings 200 in 69ms (next.js: 14ms, proxy.ts: 8ms, application-code: 47ms)
+ GET /settings 200 in 69ms (next.js: 36ms, proxy.ts: 8ms, application-code: 25ms)
+ GET / 200 in 126ms (next.js: 51ms, proxy.ts: 31ms, application-code: 43ms)
+ GET /settings 200 in 143ms (next.js: 30ms, proxy.ts: 32ms, application-code: 82ms)
+ GET / 200 in 102ms (next.js: 19ms, proxy.ts: 4ms, application-code: 79ms)
+ GET /settings 200 in 105ms (next.js: 3ms, proxy.ts: 4ms, application-code: 97ms)
+ GET / 200 in 60ms (next.js: 43ms, proxy.ts: 7ms, application-code: 10ms)
+ GET /settings 200 in 63ms (next.js: 13ms, proxy.ts: 8ms, application-code: 42ms)
+ GET /settings 200 in 64ms (next.js: 4ms, proxy.ts: 8ms, application-code: 52ms)
+ GET /settings 200 in 63ms (next.js: 32ms, proxy.ts: 8ms, application-code: 23ms)
+ GET /settings 200 in 65ms (next.js: 23ms, proxy.ts: 8ms, application-code: 34ms)
+✓ Compiled in 83ms
+ GET /settings 500 in 172ms (next.js: 73ms, proxy.ts: 26ms, application-code: 73ms)
+ GET / 500 in 173ms (next.js: 140ms, proxy.ts: 27ms, application-code: 6ms)
+ GET / 500 in 29ms (next.js: 16ms, proxy.ts: 4ms, application-code: 9ms)
+ GET /settings 500 in 30ms (next.js: 21ms, proxy.ts: 4ms, application-code: 5ms)
+ GET /settings 500 in 25ms (next.js: 9ms, proxy.ts: 10ms, application-code: 6ms)
+ GET / 500 in 25ms (next.js: 12ms, proxy.ts: 9ms, application-code: 4ms)
+ GET / 500 in 32ms (next.js: 16ms, proxy.ts: 6ms, application-code: 10ms)
+ GET /settings 500 in 33ms (next.js: 16ms, proxy.ts: 7ms, application-code: 10ms)
+ GET /settings 500 in 46ms (next.js: 18ms, proxy.ts: 19ms, application-code: 8ms)
+ GET /settings 500 in 36ms (next.js: 16ms, proxy.ts: 13ms, application-code: 7ms)
+ GET /settings 500 in 34ms (next.js: 17ms, proxy.ts: 14ms, application-code: 3ms)
+ GET /settings 500 in 11ms (next.js: 5ms, proxy.ts: 1804µs, application-code: 4ms)
+✓ Compiled in 99ms
+ GET / 200 in 230ms (next.js: 32ms, proxy.ts: 8ms, application-code: 190ms)
+ GET /settings 200 in 232ms (next.js: 125ms, proxy.ts: 9ms, application-code: 99ms)
+ GET /settings 200 in 33ms (next.js: 3ms, proxy.ts: 5ms, application-code: 24ms)
+ GET /api/auth/me 200 in 6.8s (next.js: 2ms, proxy.ts: 3ms, application-code: 6.8s)
+ GET /api/auth/me 200 in 7.7s (next.js: 24ms, proxy.ts: 9ms, application-code: 7.6s)
+ GET /api/auth/me 200 in 8.1s (next.js: 4ms, proxy.ts: 3ms, application-code: 8.1s)
+ GET /api/auth/me 200 in 8.9s (next.js: 4ms, proxy.ts: 7ms, application-code: 8.9s)
+ GET /api/auth/me 200 in 8.9s (next.js: 4ms, proxy.ts: 3ms, application-code: 8.9s)
+ GET /api/auth/me 200 in 9.3s (next.js: 27ms, proxy.ts: 9ms, application-code: 9.2s)
+ GET /api/settings/access 200 in 16.3s (next.js: 51ms, proxy.ts: 10ms, application-code: 16.2s)
+ GET /api/settings/access 200 in 16.2s (next.js: 4ms, proxy.ts: 5ms, application-code: 16.2s)
+✓ Compiled in 176ms
+ GET / 200 in 97ms (next.js: 52ms, proxy.ts: 26ms, application-code: 19ms)
+ GET /settings 200 in 136ms (next.js: 30ms, proxy.ts: 26ms, application-code: 80ms)
+ GET / 200 in 104ms (next.js: 17ms, proxy.ts: 5ms, application-code: 82ms)
+ GET /settings 200 in 106ms (next.js: 5ms, proxy.ts: 5ms, application-code: 96ms)
+ GET / 200 in 66ms (next.js: 4ms, proxy.ts: 8ms, application-code: 54ms)
+ GET /settings 200 in 66ms (next.js: 22ms, proxy.ts: 7ms, application-code: 36ms)
+ GET /settings 200 in 67ms (next.js: 13ms, proxy.ts: 8ms, application-code: 46ms)
+ GET /settings 200 in 66ms (next.js: 33ms, proxy.ts: 7ms, application-code: 27ms)
+ GET /settings 200 in 66ms (next.js: 43ms, proxy.ts: 7ms, application-code: 16ms)
+ PUT /api/settings/access 200 in 20.0s (next.js: 23ms, proxy.ts: 4ms, application-code: 20.0s)
+ GET /contracts 200 in 41ms (next.js: 27ms, proxy.ts: 3ms, application-code: 10ms)
+ GET /api/contracts/reference-data 200 in 4.0s (next.js: 75ms, proxy.ts: 11ms, application-code: 3.9s)
+ GET /api/contracts/reference-data 200 in 4.0s (next.js: 72ms, proxy.ts: 11ms, application-code: 4.0s)
+ GET /api/contracts?status=draft 200 in 3.1s (next.js: 22ms, proxy.ts: 3ms, application-code: 3.1s)
+ GET /api/contracts?status=draft 200 in 3.5s (next.js: 26ms, proxy.ts: 3ms, application-code: 3.5s)
+ GET /api/auth/me 200 in 10.6s (next.js: 52ms, proxy.ts: 9ms, application-code: 10.5s)
+ GET /api/auth/me 200 in 11.2s (next.js: 50ms, proxy.ts: 7ms, application-code: 11.1s)
+ GET /api/auth/me 200 in 11.6s (next.js: 45ms, proxy.ts: 7ms, application-code: 11.6s)
+ GET /api/auth/me 200 in 11.6s (next.js: 50ms, proxy.ts: 9ms, application-code: 11.6s)
+ GET /contracts/new 200 in 50ms (next.js: 23ms, proxy.ts: 3ms, application-code: 24ms)
+ POST /api/contracts/drafts 201 in 1358ms (next.js: 112ms, proxy.ts: 20ms, application-code: 1226ms)
+ POST /api/contracts/drafts 201 in 1371ms (next.js: 108ms, proxy.ts: 22ms, application-code: 1241ms)
+ GET /api/contracts/reference-data 200 in 2.2s (next.js: 3ms, proxy.ts: 3ms, application-code: 2.2s)
+ GET /api/contracts/drafts/88f2111d-e5c7-4216-903f-a3d3ee409ce7/subject 200 in 3.3s (next.js: 505ms, proxy.ts: 3ms, application-code: 2.8s)
+ GET /api/contracts/reference-data 200 in 1274ms (next.js: 1233µs, proxy.ts: 2ms, application-code: 1270ms)
+ GET /api/contracts/drafts/347683ff-6a23-4fa8-8318-46ad02bb4105/subject 200 in 986ms (next.js: 7ms, proxy.ts: 3ms, application-code: 975ms)
+ GET /api/contracts/generate-number 200 in 1041ms (next.js: 25ms, proxy.ts: 2ms, application-code: 1014ms)
+ GET /api/auth/me 200 in 6.5s (next.js: 20ms, proxy.ts: 18ms, application-code: 6.5s)
+ GET /api/auth/me 200 in 6.7s (next.js: 17ms, proxy.ts: 18ms, application-code: 6.6s)
+ GET /api/contracts/generate-number 200 in 772ms (next.js: 1898µs, proxy.ts: 3ms, application-code: 767ms)
+ GET /api/auth/me 200 in 6.8s (next.js: 13ms, proxy.ts: 18ms, application-code: 6.8s)
+ GET /api/auth/me 200 in 8.2s (next.js: 11ms, proxy.ts: 18ms, application-code: 8.2s)
+prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
+prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
+prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
+prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
+prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
+prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
+prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
+prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
+prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
+prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
+prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
+prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
+prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
+prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
+prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
+prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
+prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
+prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
+prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
+prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
+prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
+prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
+prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
+prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
+prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
+prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
+prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
+prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
+prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
+prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
+prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
+prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
+prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
+prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
+prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
+prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
+prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
+prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
+prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
+prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
+prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
