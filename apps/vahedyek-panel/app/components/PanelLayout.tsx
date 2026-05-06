@@ -257,6 +257,26 @@ function buildBusinessSettingsBreadcrumb(pathname: string): Crumb[] {
     });
   }
 
+  if (pathname.startsWith('/business-settings/approval-process')) {
+    trail.push({
+      label: 'فرآیند تایید',
+      href: pathname === '/business-settings/approval-process' ? undefined : '/business-settings/approval-process',
+    });
+
+    const usageSegment = pathname.split('/')[3];
+    const usageTitleMap: Record<string, string> = {
+      residential: 'نوع کاربری مسکونی',
+      commercial: 'نوع کاربری تجاری',
+      office: 'نوع کاربری اداری',
+      parking: 'نوع کاربری پارکینگ',
+      storage: 'نوع کاربری انباری',
+    };
+
+    if (usageSegment && usageTitleMap[usageSegment]) {
+      trail.push({ label: usageTitleMap[usageSegment] });
+    }
+  }
+
   if (pathname.startsWith('/business-settings/project/blocks')) {
     trail.push({
       label: 'فهرست بلوک',
