@@ -173,3 +173,14 @@ export async function getContractsList(status: ContractStatus) {
 export async function getContractDetails(contractId: string) {
   return readJson<any>(`/api/contracts/${contractId}`);
 }
+
+export type ContractApprovalAction =
+  | { action: 'returnForRevision'; reason: string }
+  | { action: 'clearReturnPending' };
+
+export async function postContractApprovalAction(contractId: string, body: ContractApprovalAction) {
+  return readJson<{ ok: boolean }>(`/api/contracts/${encodeURIComponent(contractId)}/approval`, {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+}

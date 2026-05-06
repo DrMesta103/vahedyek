@@ -1,7 +1,7 @@
 import { defineConfig } from 'tsup';
 
 export default defineConfig({
-  entry: ['src/index.ts'],
+  entry: ['src/index.ts', 'src/server.ts'],
   outDir: 'dist',
   format: ['esm', 'cjs'],
   dts: true,
@@ -20,4 +20,3 @@ export default defineConfig({
     'react-date-object/*',
   ],
 });
-

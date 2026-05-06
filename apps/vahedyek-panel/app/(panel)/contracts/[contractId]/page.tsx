@@ -1,7 +1,9 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import PanelLayout from '../../../components/PanelLayout';
+import { ContractApprovalFlowBanner } from '../../../components/contracts/ContractApprovalFlowBanner';
 import { getContractDetails, setActiveDraftId } from '../../../lib/contractDraftClient';
 
 function formatMoneyRial(value: number) {
@@ -142,22 +144,43 @@ export default function ContractDetailsPage() {
 
   if (loading) {
     return (
-      <div className="contract-details-page">
-        <div className="contract-details-panel contract-details-skeleton">در حال بارگذاری...</div>
-      </div>
+      <PanelLayout>
+        <div className="contract-details-page">
+          <div className="contract-details-panel contract-details-skeleton">در حال بارگذاری...</div>
+        </div>
+      </PanelLayout>
     );
   }
 
   if (error) {
     return (
-      <div className="contract-details-page">
-        <div className="contract-details-panel contract-details-error">{error}</div>
-      </div>
+      <PanelLayout>
+        <div className="contract-details-page">
+          <div className="contract-details-panel contract-details-error">{error}</div>
+        </div>
+      </PanelLayout>
     );
   }
 
   return (
+    <PanelLayout>
     <main className="contract-details-page" dir="rtl" lang="fa">
+      {contractId ? (
+        <Suspense fallback={null}>
+          <ContractApprovalFlowBanner contractId={String(contractId)} canDecide={Boolean(contract?.approvalDecision?.canDecide)} />
+        </Suspense>
+      ) : null}
+
+      {contract?.approvalReturn?.reason ? (
+        <div dir="rtl" className="mb-6 rounded-2xl border border-amber-200/90 bg-[color-mix(in_srgb,var(--theme-warning-bg)_55%,white)] px-4 py-3 text-right shadow-sm">
+          <div className="text-[13px] font-black text-[var(--theme-warning-text)]">اصلاح پیش‌نویس پس از عدم تأیید</div>
+          <p className="mt-2 text-[12px] font-semibold leading-6 text-[var(--text-body)]">
+            <span className="font-bold text-[var(--text-strong)]">آخرین علت ثبت‌شده در سامانه:</span>{' '}
+            {String(contract.approvalReturn.reason)}
+          </p>
+        </div>
+      ) : null}
+
       <section className="contract-details-panel contract-details-profile">
         <div className="min-w-0 flex-1">
           {view.buyers.length ? (
@@ -256,7 +279,6 @@ export default function ContractDetailsPage() {
                   onClick={onClick}
                   className={`contract-details-action-card text-right${dim ? ' is-dim' : ''}`}
                 >
-                  {item.badge ? <div className="contract-details-badge-note">{item.badge}</div> : null}
                   <div className="contract-details-action-head">
                     <span className="contract-details-action-illustration">
                       <i className={item.icon} />
@@ -282,6 +304,7 @@ export default function ContractDetailsPage() {
         </div>
       ) : null}
     </main>
+    </PanelLayout>
   );
 }
 

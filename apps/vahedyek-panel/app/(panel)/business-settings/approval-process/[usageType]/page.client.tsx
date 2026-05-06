@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Info, Pencil, Plus, ShieldCheck, Trash2, UserRound, Workflow, X } from 'lucide-react';
 import { FieldGroup, FormTextInput, InlineSelect, TagPill } from '../../../contracts/new/_components/ContractFormPrimitives';
 import { ContractRegistrationSwitch, LoanPageShell, LoanSectionCard } from '../../_components/LoanSettingsPrimitives';
@@ -15,12 +15,13 @@ type ApprovalStage = {
   employeeId: string;
 };
 
-const mockEmployees = [
-  { value: 'employee-1', label: 'علی محمدی' },
-  { value: 'employee-2', label: 'سمیه رضایی' },
-  { value: 'employee-3', label: 'حامد شریفی' },
-  { value: 'employee-4', label: 'نرگس حسینی' },
-];
+type SelectOption = { value: string; label: string };
+
+function normalizeStageRole(value: unknown): StageRole {
+  const s = String(value ?? '');
+  if (s === 'intermediate' || s === 'final' || s === 'controller') return s;
+  return 'controller';
+}
 
 const roleOptions: Array<{ value: StageRole; label: string }> = [
   { value: 'controller', label: 'کنترل کننده قرارداد' },
@@ -41,6 +42,8 @@ const roleBadgeLabels: Record<StageRole, string> = {
 };
 
 export default function ApprovalUsageTypePageClient({ usage }: { usage: ApprovalUsageOption }) {
+  const hydrateRef = useRef(true);
+  const [employeeOptions, setEmployeeOptions] = useState<SelectOption[]>([]);
   const [buyerShouldApprove, setBuyerShouldApprove] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [stageRole, setStageRole] = useState<StageRole>('controller');
@@ -50,9 +53,90 @@ export default function ApprovalUsageTypePageClient({ usage }: { usage: Approval
   const [editingStageId, setEditingStageId] = useState<string | null>(null);
 
   const selectedEmployee = useMemo(
-    () => mockEmployees.find((employee) => employee.value === selectedEmployeeId) ?? null,
-    [selectedEmployeeId],
+    () => employeeOptions.find((employee) => employee.value === selectedEmployeeId) ?? null,
+    [employeeOptions, selectedEmployeeId],
   );
+
+  useEffect(() => {
+    let cancelled = false;
+    hydrateRef.current = true;
+
+    const load = async () => {
+      try {
+        const [refRes, cfgRes] = await Promise.all([fetch('/api/contracts/reference-data'), fetch('/api/settings/approval-process')]);
+
+        if (!refRes.ok || !cfgRes.ok) return;
+
+        const refJson = (await refRes.json()) as { employees?: Array<{ id: string; firstName: string; lastName: string }> };
+        const cfgJson = (await cfgRes.json()) as { config?: Record<string, { buyerShouldApprove?: boolean; stages?: unknown[] }> };
+
+        if (cancelled) return;
+
+        const opts = (refJson.employees ?? []).map((e) => ({
+          value: e.id,
+          label: `${e.firstName ?? ''} ${e.lastName ?? ''}`.trim() || e.id,
+        }));
+        setEmployeeOptions(opts);
+
+        const block = cfgJson.config?.[usage.id];
+        if (block) {
+          setBuyerShouldApprove(Boolean(block.buyerShouldApprove));
+          const rawStages = Array.isArray(block.stages) ? block.stages : [];
+          setStages(
+            rawStages
+              .map((s: unknown, i: number) => {
+                if (!s || typeof s !== 'object') return null;
+                const o = s as Record<string, unknown>;
+                const employeeId = String(o.employeeId ?? '').trim();
+                const title = String(o.title ?? '').trim();
+                if (!employeeId || !title) return null;
+                return {
+                  id: String(o.id ?? `stage-${i}-${Date.now()}`),
+                  title,
+                  role: normalizeStageRole(o.role),
+                  employeeId,
+                } satisfies ApprovalStage;
+              })
+              .filter(Boolean) as ApprovalStage[],
+          );
+        } else {
+          setBuyerShouldApprove(true);
+          setStages([]);
+        }
+      } finally {
+        if (!cancelled) {
+          window.setTimeout(() => {
+            hydrateRef.current = false;
+          }, 0);
+        }
+      }
+    };
+
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, [usage.id]);
+
+  useEffect(() => {
+    if (hydrateRef.current) return;
+
+    const t = window.setTimeout(() => {
+      void fetch('/api/settings/approval-process', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          usageType: usage.id,
+          block: {
+            buyerShouldApprove,
+            stages,
+          },
+        }),
+      });
+    }, 900);
+
+    return () => window.clearTimeout(t);
+  }, [usage.id, buyerShouldApprove, stages]);
 
   const resetDialog = () => {
     setStageRole('controller');
@@ -169,7 +253,7 @@ export default function ApprovalUsageTypePageClient({ usage }: { usage: Approval
             <div className="text-right">
               <h2 className="text-lg font-black text-[color:var(--text-strong)]">مراحل تایید تعریف‌شده</h2>
               <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">
-                تاییدکننده‌ها فعلاً از لیست کارمندان آزمایشی انتخاب می‌شوند و پس از توسعه ماژول کارمندان به داده واقعی متصل خواهند شد.
+                تاییدکننده از بین کارمندان ثبت‌شده در سامانه انتخاب می‌شود؛ شناسهٔ کاربری همان کارمند در صفحهٔ تأیید قرارداد برای اعطای دسترسی استفاده می‌شود. مالک کسب‌وکار همیشه اختیار تأیید/عدم تأیید را دارد.
               </p>
             </div>
             <span className="rounded-full border border-[color:var(--theme-accent-border)] bg-[color:var(--theme-accent-softer)] px-4 py-2 text-xs font-black text-[color:var(--theme-action-text)]">
@@ -180,7 +264,7 @@ export default function ApprovalUsageTypePageClient({ usage }: { usage: Approval
           {stages.length ? (
             <div className="mt-5 grid gap-3">
               {stages.map((stage, index) => {
-                const employee = mockEmployees.find((item) => item.value === stage.employeeId);
+                const employee = employeeOptions.find((item) => item.value === stage.employeeId);
 
                 return (
                   <div
@@ -287,10 +371,10 @@ export default function ApprovalUsageTypePageClient({ usage }: { usage: Approval
                 <InlineSelect
                   value={selectedEmployeeId}
                   onSelect={setSelectedEmployeeId}
-                  options={mockEmployees}
+                  options={employeeOptions}
                   placeholder="انتخاب از بین کارمندان"
                   searchPlaceholder="جستجو در بین کارمندان"
-                  emptyText="کارمندی پیدا نشد"
+                  emptyText={employeeOptions.length ? 'کارمندی پیدا نشد' : 'ابتدا کارمند در بخش کارکنان ثبت کنید'}
                 />
               </FieldGroup>
             </div>

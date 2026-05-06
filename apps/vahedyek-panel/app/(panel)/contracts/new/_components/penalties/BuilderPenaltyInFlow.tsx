@@ -1,7 +1,7 @@
 'use client';
 
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Save, X } from 'lucide-react';
+import { ChevronLeft } from 'lucide-react';
 import type { ContractRuleState } from '../../../../../lib/businessContractRules';
 import {
   ContractRegistrationSwitch,
@@ -146,42 +146,6 @@ const SECTION_META: Record<BuilderPenaltySectionId, SectionConfig> = {
   },
 };
 
-function Modal({
-  open,
-  onClose,
-  title,
-  description,
-  children,
-  footer,
-}: {
-  open: boolean;
-  onClose: () => void;
-  title: string;
-  description?: string;
-  children: ReactNode;
-  footer: ReactNode;
-}) {
-  if (!open) return null;
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
-      <div className="w-full max-w-3xl rounded-2xl border border-gray-200 bg-white shadow-2xl" onClick={(event) => event.stopPropagation()} dir="rtl">
-        <div className="flex items-start justify-between border-b border-gray-100 p-5">
-          <div className="text-right">
-            <h3 className="text-base font-bold text-gray-800">{title}</h3>
-            {description ? <p className="mt-1 text-sm text-gray-500">{description}</p> : null}
-          </div>
-          <button type="button" onClick={onClose} className="rounded-lg p-1 text-gray-400 hover:bg-gray-100">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-        <div className="space-y-5 p-5">{children}</div>
-        <div className="flex justify-end gap-3 border-t border-gray-100 p-4">{footer}</div>
-      </div>
-    </div>
-  );
-}
-
 function NumericField({
   label,
   value,
@@ -248,10 +212,7 @@ export const BuilderPenaltyInFlow = forwardRef<
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [state, setState] = useState<ContractRuleState | null>(null);
-  const [expandedSectionId, setExpandedSectionId] = useState<BuilderPenaltySectionId>('unit-delivery-delay');
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingSectionId, setEditingSectionId] = useState<BuilderPenaltySectionId>('unit-delivery-delay');
-  const [dialogError, setDialogError] = useState('');
+  const [expandedSectionId, setExpandedSectionId] = useState<BuilderPenaltySectionId | null>('unit-delivery-delay');
   const initialSnapshotRef = useRef('');
   const stateRef = useRef<ContractRuleState | null>(null);
   const dirtyRef = useRef(false);
@@ -377,19 +338,10 @@ export const BuilderPenaltyInFlow = forwardRef<
     return <LoanLoadingState label="در حال بارگذاری تنظیمات جریمه سازنده..." />;
   }
 
-  const openEditDialog = (sectionId: BuilderPenaltySectionId) => {
-    setEditingSectionId(sectionId);
-    setDialogError('');
-    setDialogOpen(true);
+  const saveCurrent = async () => {
+    if (!stateRef.current) return;
+    await persistState(stateRef.current);
   };
-
-  const closeDialog = () => {
-    setDialogOpen(false);
-    setDialogError('');
-  };
-
-  const configForDialog = SECTION_META[editingSectionId];
-  const dialogActiveMode = String(state.values[configForDialog.modeKey] || 'fixed') as BuilderPenaltyMode;
 
   return (
     <div className="space-y-5" dir="rtl">
@@ -428,11 +380,11 @@ export const BuilderPenaltyInFlow = forwardRef<
                           type="button"
                           onClick={() => {
                             if (!sectionOwnEnabled) return;
-                            setExpandedSectionId((current) => (current === item.id ? current : item.id));
+                            setExpandedSectionId((current) => (current === item.id ? null : item.id));
                           }}
-                          className="flex-1 text-right"
+                          className="flex min-w-0 flex-1 flex-col gap-3 text-right sm:flex-row-reverse sm:items-center sm:gap-4"
                         >
-                          <div className="space-y-1">
+                          <div className="min-w-0 flex-1 space-y-1">
                             <div className="flex items-center gap-2">
                               <h3 className="text-sm font-bold text-slate-800">{item.title}</h3>
                               <span
@@ -452,6 +404,7 @@ export const BuilderPenaltyInFlow = forwardRef<
                               </div>
                             ) : null}
                           </div>
+                          <ChevronLeft className={`h-5 w-5 shrink-0 text-slate-400 transition ${isExpanded ? '-rotate-90' : ''}`} aria-hidden />
                         </button>
 
                         <ContractRegistrationSwitch
@@ -472,7 +425,7 @@ export const BuilderPenaltyInFlow = forwardRef<
                             if (value) {
                               setExpandedSectionId(item.id);
                             } else if (expandedSectionId === item.id) {
-                              setExpandedSectionId('unit-delivery-delay');
+                              setExpandedSectionId(null);
                             }
                           }}
                         />
@@ -481,20 +434,120 @@ export const BuilderPenaltyInFlow = forwardRef<
 
                     {isExpanded && sectionOwnEnabled ? (
                       <div className="border-t border-cyan-100 bg-white/80 p-4">
-                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                          <div className="text-right">
+                        <section className="space-y-4">
+                          <div className="space-y-2 text-right">
                             <h4 className="text-sm font-bold text-slate-700">تنظیمات این آیتم</h4>
-                            <p className="mt-1 text-xs leading-6 text-slate-500">{config.activationDescription}</p>
+                            <p className="text-xs leading-6 text-slate-500">{config.activationDescription}</p>
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => openEditDialog(item.id)}
-                            className="mt-2 inline-flex h-8 items-center gap-2 rounded-lg border border-[#14a7ad] bg-white/65 px-3 text-xs font-bold text-[#0e989d] transition hover:bg-[#dff4f3] sm:mt-0"
-                          >
-                            <Save className="h-4 w-4" />
-                            تنظیمات
-                          </button>
-                        </div>
+
+                          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                            <div className="space-y-6 p-4">
+                              <div className="space-y-3">
+                                <div className="text-right">
+                                  <h5 className="text-sm font-extrabold text-slate-800">روش محاسبه</h5>
+                                  <p className="mt-1 text-xs leading-6 text-slate-500">یکی از روش‌ها را انتخاب کنید.</p>
+                                </div>
+                                <LoanChoicePills
+                                  ariaLabel="روش محاسبه جریمه"
+                                  options={MODE_OPTIONS}
+                                  value={activeMode}
+                                  onChange={(value) => setValue(config.modeKey, value)}
+                                />
+                              </div>
+
+                              <div className="space-y-3">
+                                <div className="text-right">
+                                  <h5 className="text-sm font-extrabold text-slate-800">دوره محاسبه جریمه</h5>
+                                  <p className="mt-1 text-xs leading-6 text-slate-500">دوره را انتخاب کنید.</p>
+                                </div>
+                                <LoanChoicePills
+                                  ariaLabel="دوره محاسبه جریمه"
+                                  options={PERIOD_OPTIONS.map((option) => ({ value: option.value, label: option.label }))}
+                                  value={periodLabel}
+                                  onChange={(value) => setValue(config.periodKey, value)}
+                                />
+                              </div>
+
+                              {activeMode === 'fixed' ? (
+                                <>
+                                  <div className="border-t border-slate-200" />
+                                  <NumericField
+                                    label="مبلغ ثابت جریمه"
+                                    value={String(state.values[config.fixedAmountKey] ?? '')}
+                                    onChange={(value) => setValue(config.fixedAmountKey, value)}
+                                    helper="مبلغی که به ازای هر دوره تاخیر به عنوان جریمه درنظر گرفته می‌شود"
+                                  />
+                                </>
+                              ) : null}
+
+                              {activeMode === 'percent' ? (
+                                <>
+                                  <div className="border-t border-slate-200" />
+                                  <NumericField
+                                    label="درصد جریمه"
+                                    value={String(state.values[config.percentAmountKey] ?? '')}
+                                    onChange={(value) => setValue(config.percentAmountKey, value)}
+                                    helper="درصدی که به عنوان جریمه برای این مورد اعمال می‌شود"
+                                  />
+                                </>
+                              ) : null}
+
+                              {activeMode === 'progressive' ? (
+                                <>
+                                  <div className="border-t border-slate-200" />
+                                  <div className="space-y-2 text-right">
+                                    <h5 className="text-sm font-extrabold text-slate-800">جدول جریمه‌های تصاعدی</h5>
+                                    <p className="text-xs leading-6 text-slate-500">نرخ جریمه را برای بازه‌های مختلف ثبت کنید.</p>
+                                  </div>
+                                  <ProgressiveRateGrid rows={config.progressiveRows} state={state} onValueChange={(k, v) => setValue(k, v)} />
+                                </>
+                              ) : null}
+
+                              <div className="border-t border-slate-200" />
+                              <NumericField
+                                label="سقف جریمه"
+                                value={String(state.values[config.capKey] ?? '')}
+                                onChange={(value) => setValue(config.capKey, value)}
+                                helper="حداکثر مبلغ جریمه‌ای که قابل اعمال است"
+                              />
+
+                              <div className="border-t border-slate-200" />
+
+                              {config.trailingField.type === 'number' ? (
+                                <NumericField
+                                  label={config.trailingField.label}
+                                  value={String(state.values[config.trailingField.key] ?? '')}
+                                  onChange={(value) => setValue(config.trailingField.key, value)}
+                                  helper={config.trailingField.helper}
+                                />
+                              ) : (
+                                <div className="space-y-3">
+                                  <div className="text-right">
+                                    <FieldLabel label={config.trailingField.label} />
+                                    <p className="-mt-2 text-sm leading-7 text-slate-500">{config.trailingField.helper}</p>
+                                  </div>
+                                  <LoanChoicePills
+                                    ariaLabel={config.trailingField.label}
+                                    options={(config.trailingField.options ?? []).map((o) => ({ value: o, label: o }))}
+                                    value={String(state.values[config.trailingField.key] || config.trailingField.options?.[0] || '')}
+                                    onChange={(value) => setValue(config.trailingField.key, value)}
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="flex justify-end">
+                            <button
+                              type="button"
+                              onClick={saveCurrent}
+                              disabled={saving}
+                              className="inline-flex items-center gap-2 rounded-lg bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-60"
+                            >
+                              {saving ? 'در حال ذخیره…' : 'ثبت'}
+                            </button>
+                          </div>
+                        </section>
                       </div>
                     ) : null}
                   </div>
@@ -507,125 +560,6 @@ export const BuilderPenaltyInFlow = forwardRef<
           {error ? <LoanError error={error} /> : null}
         </div>
       </div>
-
-      <Modal
-        open={dialogOpen}
-        onClose={closeDialog}
-        title={`تنظیمات ${SECTION_META[editingSectionId].title}`}
-        description="روش محاسبه، دوره و پارامترهای جریمه را مشخص کنید."
-        footer={
-          <>
-            <button type="button" onClick={closeDialog} className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">
-              بستن
-            </button>
-            <button type="button" onClick={closeDialog} className="inline-flex items-center gap-2 rounded-lg bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800">
-              <Save className="h-4 w-4" />
-              ثبت تنظیمات
-            </button>
-          </>
-        }
-      >
-        {dialogError ? <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{dialogError}</div> : null}
-
-        <section className="space-y-4">
-          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-            <div className="space-y-6 p-4">
-              <div className="space-y-3">
-                <div className="text-right">
-                  <h5 className="text-sm font-extrabold text-slate-800">روش محاسبه</h5>
-                  <p className="mt-1 text-xs leading-6 text-slate-500">یکی از روش‌ها را انتخاب کنید.</p>
-                </div>
-                <LoanChoicePills
-                  ariaLabel="روش محاسبه جریمه"
-                  options={MODE_OPTIONS}
-                  value={dialogActiveMode}
-                  onChange={(value) => setValue(configForDialog.modeKey, value)}
-                />
-              </div>
-
-              <div className="space-y-3">
-                <div className="text-right">
-                  <h5 className="text-sm font-extrabold text-slate-800">دوره محاسبه جریمه</h5>
-                  <p className="mt-1 text-xs leading-6 text-slate-500">دوره را انتخاب کنید.</p>
-                </div>
-                <LoanChoicePills
-                  ariaLabel="دوره محاسبه جریمه"
-                  options={PERIOD_OPTIONS.map((option) => ({ value: option.value, label: option.label }))}
-                  value={String(state.values[configForDialog.periodKey] || PERIOD_OPTIONS[0].value)}
-                  onChange={(value) => setValue(configForDialog.periodKey, value)}
-                />
-              </div>
-
-              {dialogActiveMode === 'fixed' ? (
-                <>
-                  <div className="border-t border-slate-200" />
-                  <NumericField
-                    label="مبلغ ثابت جریمه"
-                    value={String(state.values[configForDialog.fixedAmountKey] ?? '')}
-                    onChange={(value) => setValue(configForDialog.fixedAmountKey, value)}
-                    helper="مبلغی که به ازای هر دوره تاخیر به عنوان جریمه درنظر گرفته می‌شود"
-                  />
-                </>
-              ) : null}
-
-              {dialogActiveMode === 'percent' ? (
-                <>
-                  <div className="border-t border-slate-200" />
-                  <NumericField
-                    label="درصد جریمه"
-                    value={String(state.values[configForDialog.percentAmountKey] ?? '')}
-                    onChange={(value) => setValue(configForDialog.percentAmountKey, value)}
-                    helper="درصدی که به عنوان جریمه برای این مورد اعمال می‌شود"
-                  />
-                </>
-              ) : null}
-
-              {dialogActiveMode === 'progressive' ? (
-                <>
-                  <div className="border-t border-slate-200" />
-                  <div className="space-y-2 text-right">
-                    <h5 className="text-sm font-extrabold text-slate-800">جدول جریمه‌های تصاعدی</h5>
-                    <p className="text-xs leading-6 text-slate-500">نرخ جریمه را برای بازه‌های مختلف ثبت کنید.</p>
-                  </div>
-                  <ProgressiveRateGrid rows={configForDialog.progressiveRows} state={state} onValueChange={(k, v) => setValue(k, v)} />
-                </>
-              ) : null}
-
-              <div className="border-t border-slate-200" />
-              <NumericField
-                label="سقف جریمه"
-                value={String(state.values[configForDialog.capKey] ?? '')}
-                onChange={(value) => setValue(configForDialog.capKey, value)}
-                helper="حداکثر مبلغ جریمه‌ای که قابل اعمال است"
-              />
-
-              <div className="border-t border-slate-200" />
-
-              {configForDialog.trailingField.type === 'number' ? (
-                <NumericField
-                  label={configForDialog.trailingField.label}
-                  value={String(state.values[configForDialog.trailingField.key] ?? '')}
-                  onChange={(value) => setValue(configForDialog.trailingField.key, value)}
-                  helper={configForDialog.trailingField.helper}
-                />
-              ) : (
-                <div className="space-y-3">
-                  <div className="text-right">
-                    <FieldLabel label={configForDialog.trailingField.label} />
-                    <p className="-mt-2 text-sm leading-7 text-slate-500">{configForDialog.trailingField.helper}</p>
-                  </div>
-                  <LoanChoicePills
-                    ariaLabel={configForDialog.trailingField.label}
-                    options={(configForDialog.trailingField.options ?? []).map((o) => ({ value: o, label: o }))}
-                    value={String(state.values[configForDialog.trailingField.key] || configForDialog.trailingField.options?.[0] || '')}
-                    onChange={(value) => setValue(configForDialog.trailingField.key, value)}
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-        </section>
-      </Modal>
     </div>
   );
 });

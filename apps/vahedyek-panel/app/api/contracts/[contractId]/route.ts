@@ -4,6 +4,10 @@ import { requireSessionContext } from '../../../lib/auth';
 import { serializeContractorType, serializeContractType } from '../../../lib/subjectUtils';
 import { prisma } from '../../../lib/prisma';
 import { handlePrismaApiError } from '../../../lib/prismaApiError';
+import { getMembershipAccess } from '../../../lib/access-control';
+import { userCanDecideApprovalOnContract } from '../../../lib/contractApprovalAccess';
+import { fetchDraftApprovalFlagsRaw } from '../../../lib/contractDraftApprovalRaw';
+import { fetchTenantApprovalProcessConfigRaw } from '../../../lib/tenantApprovalProcessDb';
 import type { ContractStatus } from '../../../types/contract';
 
 function serializeShareMode(value: ShareMode) {
@@ -49,6 +53,7 @@ function serializePenalties(penalties: any) {
 }
 
 function computeStatus(draft: any): ContractStatus {
+  if (draft.approvalReturnedPending) return 'draft';
   const hasSubject = Boolean(draft.subject?.contractNumber && draft.subject?.contractDate && draft.subject?.blockId && draft.subject?.unitId);
   const hasParties = Boolean(
     draft.parties?.members?.some((member: any) => member.side === PartySide.party_one) &&
@@ -90,13 +95,39 @@ export async function GET(request: Request, context: { params: Promise<{ contrac
       return NextResponse.json({ message: 'قرارداد یافت نشد.' }, { status: 404 });
     }
 
-    const status = computeStatus(draft);
+    const approvalFlags =
+      (await fetchDraftApprovalFlagsRaw(session.tenantId, contractId)) ?? {
+        approvalReturnedPending: false,
+        approvalLastRejectionReason: null,
+        approvalLastRejectedAt: null,
+      };
+    const status = computeStatus({ ...draft, ...approvalFlags });
+
+    const membershipAccess = await getMembershipAccess(session.userId, session.tenantId);
+    const approvalProcessConfig = await fetchTenantApprovalProcessConfigRaw(session.tenantId);
+
+    const approvalDecision = {
+      canDecide: userCanDecideApprovalOnContract({
+        userId: session.userId,
+        access: membershipAccess,
+        unitUsage: draft.subject?.unit?.usage ?? null,
+        approvalProcessConfig,
+      }),
+    };
 
     return NextResponse.json({
       id: draft.id,
       status,
+      approvalDecision,
       createdAt: draft.createdAt.toISOString(),
       updatedAt: draft.updatedAt.toISOString(),
+      approvalReturn:
+        approvalFlags.approvalReturnedPending && approvalFlags.approvalLastRejectionReason
+          ? {
+              reason: approvalFlags.approvalLastRejectionReason,
+              rejectedAt: approvalFlags.approvalLastRejectedAt?.toISOString() ?? null,
+            }
+          : null,
       data: {
         subject: draft.subject
           ? {

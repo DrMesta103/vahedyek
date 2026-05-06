@@ -10,7 +10,6 @@ import {
   FileCheck2,
   HandCoins,
   Layers,
-  Plus,
   Ruler,
   Scale,
   ShieldAlert,
@@ -187,7 +186,6 @@ function ConstructorMenuCard({
               checked={enabled}
               onChange={(next) => {
                 onToggle(next);
-                if (next) onExpand();
               }}
             />
           </div>
@@ -311,21 +309,6 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
   const [formError, setFormError] = useState('');
   const [expandedSellerId, setExpandedSellerId] = useState<ConstructorTerminationSubsectionId | null>('lateInstallment');
   const [expandedBuyerId, setExpandedBuyerId] = useState<BuyerTerminationSubsectionId | null>('lateDelivery');
-  const [sellerFormOpen, setSellerFormOpen] = useState<Record<ConstructorTerminationSubsectionId, boolean>>(() => ({
-    lateInstallment: false,
-    financialObligations: false,
-    documentDeficiencies: false,
-    otherBreach: false,
-    notifications: false,
-  }));
-  const [buyerFormOpen, setBuyerFormOpen] = useState<Record<BuyerTerminationSubsectionId, boolean>>(() => ({
-    lateDelivery: false,
-    specificationChanges: false,
-    breachOfObligations: false,
-    areaDiscrepancy: false,
-    notification: false,
-    draftTemplateUsage: false,
-  }));
 
   useEffect(() => {
     let mounted = true;
@@ -566,21 +549,10 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
   };
 
   const renderBuyerSubsectionPanel = (id: DraftBuyerTerminationSubsectionId) => {
-    const meta = BUYER_SUBSECTION_META[id];
     const b = payload.buyerTerms;
 
     return (
       <div className="space-y-5">
-        <div className="flex w-full flex-wrap items-center gap-3 border-b border-slate-100 pb-4">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-cyan-200 bg-cyan-50 text-cyan-700">
-            {meta.icon}
-          </span>
-          <div className="min-w-0 flex-1 text-right">
-            <h3 className="text-base font-bold text-slate-900">{meta.title}</h3>
-            <p className="mt-0.5 text-sm text-slate-500">{meta.description}</p>
-          </div>
-        </div>
-
         {id === 'lateDelivery' ? (
           <BuyerLateDeliveryPanel
             value={b.lateDelivery}
@@ -635,19 +607,10 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
   };
 
   const renderSubsectionPanel = (id: ConstructorTerminationSubsectionId) => {
-    const meta = SUBSECTION_META[id];
     const c = payload.constructorTerms;
 
     return (
       <div className="space-y-5">
-        <div className="flex w-full flex-wrap items-center gap-3 border-b border-slate-100 pb-4">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-cyan-200 bg-cyan-50 text-cyan-700">{meta.icon}</span>
-          <div className="min-w-0 flex-1 text-right">
-            <h3 className="text-base font-bold text-slate-900">{meta.title}</h3>
-            <p className="mt-0.5 text-sm text-slate-500">{meta.description}</p>
-          </div>
-        </div>
-
         {id === 'lateInstallment' ? (
           <LateInstallmentPanel
             value={c.lateInstallment}
@@ -774,8 +737,6 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
                     const meta = SUBSECTION_META[sid];
                     const enabled = payload.constructorTerms[sid].ruleEnabled;
                     const expanded = enabled && expandedSellerId === sid;
-                    const isCompleted = Boolean(payload.constructorCompletion[completionProp(sid)]);
-                    const formOpen = sellerFormOpen[sid];
                     return (
                       <div key={sid} className="space-y-0">
                         <ConstructorMenuCard
@@ -798,40 +759,15 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
                             }));
                             if (next) {
                               setExpandedSellerId(sid);
-                              setSellerFormOpen((current) => ({ ...current, [sid]: isCompleted ? true : false }));
                             } else {
                               setExpandedSellerId((current) => (current === sid ? null : current));
-                              setSellerFormOpen((current) => ({ ...current, [sid]: false }));
                             }
                           }}
                         />
 
                         {expanded ? (
                           <div className="border-t border-cyan-100 bg-white/80 p-4">
-                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                              <div className="text-right">
-                                <h4 className="text-sm font-bold text-slate-700">شرایط این ردیف</h4>
-                                <p className="mt-1 text-xs text-slate-500">برای این زیربخش، تنظیمات را ثبت کنید.</p>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => setSellerFormOpen((current) => ({ ...current, [sid]: true }))}
-                                className="inline-flex h-9 items-center gap-2 rounded-lg border border-[#14a7ad] bg-white/65 px-3 text-xs font-bold text-[#0e989d] transition hover:bg-[#dff4f3]"
-                              >
-                                <Plus className="h-4 w-4" />
-                                {formOpen || isCompleted ? 'ویرایش شرط' : 'افزودن شرط'}
-                              </button>
-                            </div>
-
-                            {!formOpen ? (
-                              <div className="mt-4 rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-center text-sm text-slate-500">
-                                هنوز شرطی برای این مورد ثبت نشده است.
-                              </div>
-                            ) : (
-                              <div className="mt-4">
-                                {renderSubsectionPanel(sid)}
-                              </div>
-                            )}
+                            {renderSubsectionPanel(sid)}
                           </div>
                         ) : null}
                       </div>
@@ -850,8 +786,6 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
                     const meta = BUYER_SUBSECTION_META[sid];
                     const enabled = payload.buyerTerms[sid].ruleEnabled;
                     const expanded = enabled && expandedBuyerId === sid;
-                    const isCompleted = Boolean(payload.buyerCompletion[buyerCompletionProp(sid)]);
-                    const formOpen = buyerFormOpen[sid];
                     return (
                       <div key={sid} className="space-y-0">
                         <ConstructorMenuCard
@@ -874,40 +808,15 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
                             }));
                             if (next) {
                               setExpandedBuyerId(sid);
-                              setBuyerFormOpen((current) => ({ ...current, [sid]: isCompleted ? true : false }));
                             } else {
                               setExpandedBuyerId((current) => (current === sid ? null : current));
-                              setBuyerFormOpen((current) => ({ ...current, [sid]: false }));
                             }
                           }}
                         />
 
                         {expanded ? (
                           <div className="border-t border-cyan-100 bg-white/80 p-4">
-                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                              <div className="text-right">
-                                <h4 className="text-sm font-bold text-slate-700">شرایط این ردیف</h4>
-                                <p className="mt-1 text-xs text-slate-500">برای این زیربخش، تنظیمات را ثبت کنید.</p>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => setBuyerFormOpen((current) => ({ ...current, [sid]: true }))}
-                                className="inline-flex h-9 items-center gap-2 rounded-lg border border-[#14a7ad] bg-white/65 px-3 text-xs font-bold text-[#0e989d] transition hover:bg-[#dff4f3]"
-                              >
-                                <Plus className="h-4 w-4" />
-                                {formOpen || isCompleted ? 'ویرایش شرط' : 'افزودن شرط'}
-                              </button>
-                            </div>
-
-                            {!formOpen ? (
-                              <div className="mt-4 rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-center text-sm text-slate-500">
-                                هنوز شرطی برای این مورد ثبت نشده است.
-                              </div>
-                            ) : (
-                              <div className="mt-4">
-                                {renderBuyerSubsectionPanel(sid as DraftBuyerTerminationSubsectionId)}
-                              </div>
-                            )}
+                            {renderBuyerSubsectionPanel(sid as DraftBuyerTerminationSubsectionId)}
                           </div>
                         ) : null}
                       </div>

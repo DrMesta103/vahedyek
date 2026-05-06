@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { PartySide, PersonType, PricingType, ShareMode } from '@prisma/client';
 import { requireSessionContext } from '../../lib/auth';
 import { serializeContractorType, serializeContractType } from '../../lib/subjectUtils';
+import { fetchAllDraftApprovalFlagsByTenantRaw } from '../../lib/contractDraftApprovalRaw';
 import { prisma } from '../../lib/prisma';
 import { handlePrismaApiError } from '../../lib/prismaApiError';
 import type { ContractStatus } from '../../types/contract';
@@ -75,9 +76,17 @@ export async function GET(request: Request) {
       },
     });
 
+    const approvalFlagMap = await fetchAllDraftApprovalFlagsByTenantRaw(session.tenantId);
+
     const contracts = drafts.map((draft) => ({
       id: draft.id,
-      status: (isDraftReadyForApproval(draft) ? 'pending_approval' : 'draft') as ContractStatus,
+      status: (
+        approvalFlagMap.get(draft.id)?.approvalReturnedPending
+          ? 'draft'
+          : isDraftReadyForApproval(draft)
+            ? 'pending_approval'
+            : 'draft'
+      ) as ContractStatus,
       createdAt: draft.createdAt.toISOString(),
       updatedAt: draft.updatedAt.toISOString(),
       data: {

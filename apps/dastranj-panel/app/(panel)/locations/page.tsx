@@ -1,7 +1,8 @@
 import Link from 'next/link';
+import { CardMenu } from '../../components/CardMenu';
 import { deleteLocationAction } from '../../lib/actions';
 import { listLocations } from '../../lib/data';
-import { DataTable, EmptyState, PageIntro, PrimaryLink } from '@repo/ui';
+import { EmptyState, PageIntro, PrimaryLink } from '@repo/ui/server';
 
 export default async function LocationsPage() {
   const items = await listLocations();
@@ -10,7 +11,7 @@ export default async function LocationsPage() {
     <div className="page-stack">
       <PageIntro
         title="محل‌های کار"
-        description="مدیریت موقعیت‌های جغرافیایی مجاز برای ثبت حضور و غیاب."
+        description="موقعیت‌های مجاز حضور را به‌صورت کارت‌های گریدی مدیریت کنید."
         action={<PrimaryLink href="/locations/new">افزودن محل کار</PrimaryLink>}
       />
       {items.length === 0 ? (
@@ -20,26 +21,33 @@ export default async function LocationsPage() {
           action={<PrimaryLink href="/locations/new">شروع</PrimaryLink>}
         />
       ) : (
-        <DataTable
-          columns={['عنوان', 'آدرس', 'شعاع', 'توضیح', 'عملیات']}
-          rows={items.map((item) => [
-            item.title,
-            item.address,
-            `${item.radius} متر`,
-            item.description ?? '-',
-            <div className="table-actions" key={item.id}>
-              <Link href={`/locations/${item.id}/edit`} className="table-action-link">
-                ویرایش
-              </Link>
-              <form action={deleteLocationAction}>
-                <input type="hidden" name="id" value={item.id} />
-                <button type="submit" className="table-action-delete">
-                  حذف
-                </button>
-              </form>
-            </div>,
-          ])}
-        />
+        <div className="locations-grid">
+          {items.map((item) => (
+            <article key={item.id} className="location-card">
+              <div className="location-card-head">
+                <div>
+                  <h3>{item.title}</h3>
+                  <p>{item.address}</p>
+                </div>
+                <div className="location-card-controls">
+                  <span className="location-card-radius">{item.radius} متر</span>
+                  <CardMenu
+                    items={[
+                      { kind: 'link', href: `/locations/${item.id}/edit`, label: 'ویرایش' },
+                      { kind: 'submit', label: 'حذف', tone: 'danger', action: deleteLocationAction, hiddenFields: { id: item.id } },
+                    ]}
+                  />
+                </div>
+              </div>
+
+              <div className="location-card-map">
+                <div className="location-card-pin">●</div>
+              </div>
+
+              <p className="location-card-description">{item.description ?? 'توضیحی برای این محل ثبت نشده است.'}</p>
+            </article>
+          ))}
+        </div>
       )}
     </div>
   );

@@ -1,7 +1,7 @@
 import { createWorkGroupAction } from '../../../lib/actions';
 import { listEmployees, listLocations, listPolicies } from '../../../lib/data';
 import { workGroupAccessLabels } from '../../../lib/constants';
-import { FormCard, PageIntro } from '@repo/ui';
+import { FormCard, PageIntro } from '@repo/ui/server';
 
 export default async function NewWorkGroupPage() {
   const [employees, locations, policies] = await Promise.all([listEmployees(), listLocations(), listPolicies()]);

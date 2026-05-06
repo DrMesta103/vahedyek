@@ -1,8 +1,9 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { LocationForm } from '../../../../components/LocationForm';
 import { updateLocationAction } from '../../../../lib/actions';
 import { getLocation } from '../../../../lib/data';
-import { FormCard, PageIntro } from '@repo/ui';
+import { FormCard, PageIntro } from '@repo/ui/server';
 
 type EditLocationPageProps = {
   params: Promise<{
@@ -22,7 +23,7 @@ export default async function EditLocationPage({ params }: EditLocationPageProps
     <div className="page-stack">
       <PageIntro
         title="ویرایش محل کار"
-        description="مشخصات این محل را به‌روزرسانی کنید."
+        description="مشخصات محل و نقطه‌ی انتخاب‌شده را به‌روزرسانی کنید."
         action={
           <Link href="/locations" className="secondary-link">
             بازگشت به لیست
@@ -30,30 +31,19 @@ export default async function EditLocationPage({ params }: EditLocationPageProps
         }
       />
       <FormCard title="مشخصات محل">
-        <form action={updateLocationAction} className="form-grid">
-          <input type="hidden" name="id" value={location.id} />
-          <label>
-            <span>عنوان</span>
-            <input name="title" defaultValue={location.title} required />
-          </label>
-          <label>
-            <span>شعاع مجاز (متر)</span>
-            <input name="radius" type="number" defaultValue={location.radius} required />
-          </label>
-          <label className="full-span">
-            <span>آدرس</span>
-            <input name="address" defaultValue={location.address} required />
-          </label>
-          <label className="full-span">
-            <span>توضیح</span>
-            <textarea name="description" rows={4} defaultValue={location.description ?? ''} />
-          </label>
-          <div className="full-span">
-            <button type="submit" className="primary-button">
-              ذخیره تغییرات
-            </button>
-          </div>
-        </form>
+        <LocationForm
+          action={updateLocationAction}
+          submitLabel="ذخیره تغییرات"
+          initialValues={{
+            id: location.id,
+            title: location.title,
+            radius: location.radius,
+            address: location.address,
+            description: location.description,
+            latitude: location.latitude?.toString() ?? null,
+            longitude: location.longitude?.toString() ?? null,
+          }}
+        />
       </FormCard>
     </div>
   );

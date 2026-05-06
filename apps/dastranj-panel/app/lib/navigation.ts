@@ -1,41 +1,27 @@
-import type { LucideIcon } from 'lucide-react';
-import {
-  Building2,
-  CalendarDays,
-  CircleUserRound,
-  FileSpreadsheet,
-  FileText,
-  GitBranch,
-  LayoutDashboard,
-  MapPinned,
-  Settings2,
-  ShieldCheck,
-  Users,
-  Waypoints,
-  Workflow,
-} from 'lucide-react';
-
 export type NavigationItem = {
   id: string;
-  href: string;
   label: string;
-  icon: LucideIcon;
+  icon: string;
+  href: string;
+  disabled?: boolean;
+  toolbarOnly?: boolean;
 };
 
 export const APP_MENU_ITEMS: NavigationItem[] = [
-  { id: 'home', href: '/', label: 'داشبورد', icon: LayoutDashboard },
-  { id: 'quick-setup', href: '/quick-setup', label: 'راه‌اندازی سریع', icon: Workflow },
-  { id: 'business-settings', href: '/business-settings', label: 'تنظیمات کسب و کار', icon: Settings2 },
-  { id: 'locations', href: '/locations', label: 'محل کار', icon: MapPinned },
-  { id: 'calendars', href: '/calendars', label: 'تقویم‌ها', icon: CalendarDays },
-  { id: 'policies', href: '/policies', label: 'سیاست‌ها', icon: ShieldCheck },
-  { id: 'employees', href: '/employees', label: 'کارمندان', icon: Users },
-  { id: 'work-groups', href: '/work-groups', label: 'گروه‌های کاری', icon: GitBranch },
-  { id: 'organization-units', href: '/organization-units', label: 'واحدهای سازمانی', icon: Waypoints },
-  { id: 'shift-templates', href: '/shift-templates', label: 'قالب‌های شیفت', icon: Building2 },
-  { id: 'draft-templates', href: '/draft-templates', label: 'پیش‌نویس‌ها', icon: FileSpreadsheet },
-  { id: 'request-reasons', href: '/request-reasons', label: 'دلایل درخواست', icon: FileText },
-  { id: 'account', href: '/account', label: 'حساب کسب و کار', icon: CircleUserRound },
+  { id: 'home', href: '/', label: 'داشبورد', icon: 'fa-home', toolbarOnly: true },
+  { id: 'quick-setup', href: '/quick-setup', label: 'راه‌اندازی سریع', icon: 'fa-bolt' },
+  { id: 'business-settings', href: '/business-settings', label: 'تنظیمات کسب و کار', icon: 'fa-briefcase' },
+  { id: 'locations', href: '/locations', label: 'محل کار', icon: 'fa-map-marker-alt' },
+  { id: 'calendars', href: '/calendars', label: 'تقویم‌ها', icon: 'fa-calendar-alt' },
+  { id: 'policies', href: '/policies', label: 'سیاست‌ها', icon: 'fa-shield-alt' },
+  { id: 'employees', href: '/employees', label: 'کارمندان', icon: 'fa-users' },
+  { id: 'work-groups', href: '/work-groups', label: 'گروه‌های کاری', icon: 'fa-code-branch' },
+  { id: 'organization-units', href: '/organization-units', label: 'واحدهای سازمانی', icon: 'fa-sitemap' },
+  { id: 'shift-templates', href: '/shift-templates', label: 'قالب‌های شیفت', icon: 'fa-building' },
+  { id: 'draft-templates', href: '/draft-templates', label: 'پیش‌نویس‌ها', icon: 'fa-copy' },
+  { id: 'request-reasons', href: '/request-reasons', label: 'دلایل درخواست', icon: 'fa-file-alt' },
+  { id: 'account', href: '/account', label: 'حساب کسب و کار', icon: 'fa-user-circle' },
+  { id: 'settings', href: '/settings', label: 'تنظیمات کلی', icon: 'fa-cog', toolbarOnly: true, disabled: true },
 ];
 
 export function getActiveNavigationItem(pathname: string) {
@@ -43,4 +29,12 @@ export function getActiveNavigationItem(pathname: string) {
     APP_MENU_ITEMS.find((item) => pathname === item.href || (item.href !== '/' && pathname.startsWith(`${item.href}/`))) ??
     APP_MENU_ITEMS[0]
   );
+}
+
+export function getSidebarMenuItems() {
+  return APP_MENU_ITEMS.filter((item) => !item.toolbarOnly);
+}
+
+export function getToolbarMenuItems() {
+  return APP_MENU_ITEMS.filter((item) => item.toolbarOnly);
 }

@@ -1,13 +1,57 @@
 import { saveBusinessProfileAction, seedSampleDataAction } from '../../lib/actions';
 import { getBusinessProfile } from '../../lib/data';
-import { FormCard, PageIntro } from '@repo/ui';
+import { FormCard, PageIntro } from '@repo/ui/server';
 
 export default async function AccountPage() {
   const profile = await getBusinessProfile();
+  const setupStatus = profile?.quickSetupStatus ?? 'in_progress';
+  const setupStatusLabel =
+    setupStatus === 'completed' ? 'تکمیل شده' : setupStatus === 'pending' ? 'شروع نشده' : 'در حال انجام';
 
   return (
     <div className="page-stack">
       <PageIntro title="حساب کسب و کار" description="تنظیمات پایه برند، اطلاعات تماس و وضعیت راه‌اندازی." />
+
+      <section className="dashboard-grid">
+        <article className="profile-summary-card">
+          <div className="dashboard-spotlight-head">
+            <div>
+              <p className="eyebrow">هویت جاری</p>
+              <h3>{profile?.brandName ?? 'دسترنج'}</h3>
+            </div>
+            <span className={`status-chip status-chip-${setupStatus}`}>{setupStatusLabel}</span>
+          </div>
+          <div className="detail-grid">
+            <div>
+              <span>نام حقوقی</span>
+              <strong>{profile?.legalName ?? 'ثبت نشده'}</strong>
+            </div>
+            <div>
+              <span>ایمیل</span>
+              <strong>{profile?.contactEmail ?? 'ثبت نشده'}</strong>
+            </div>
+            <div>
+              <span>تلفن</span>
+              <strong>{profile?.phone ?? 'ثبت نشده'}</strong>
+            </div>
+            <div>
+              <span>پکیج حقوق</span>
+              <strong>{profile?.payrollPackageEnabled ? 'فعال' : 'غیرفعال'}</strong>
+            </div>
+          </div>
+        </article>
+
+        <article className="profile-summary-card profile-summary-accent">
+          <p className="eyebrow">اقدام سریع</p>
+          <h3>نمونه‌داده و راه‌اندازی اولیه</h3>
+          <p>اگر محیط تازه ساخته شده، از اینجا داده‌ی اولیه را تزریق کنید و بعد فلوهای اصلی را در پنل بررسی کنید.</p>
+          <form action={seedSampleDataAction} className="stack">
+            <button type="submit" className="secondary-button">
+              ساخت داده نمونه
+            </button>
+          </form>
+        </article>
+      </section>
 
       <div className="dual-grid">
         <FormCard title="پروفایل" description="این اطلاعات به‌عنوان هویت پایه دسترنج استفاده می‌شود.">
@@ -52,9 +96,9 @@ export default async function AccountPage() {
           </form>
         </FormCard>
 
-        <FormCard title="نمونه‌داده" description="اگر دیتابیس خالی است، یک بار داده نمونه کامل برای تمام دامنه‌ها تزریق می‌کند.">
+        <FormCard title="راهنمای استقرار" description="برای کنترل وضعیت فعلی و آماده‌سازی محیط می‌توانید از این کارت استفاده کنید.">
           <form action={seedSampleDataAction} className="stack">
-            <p className="muted">این عملیات فقط وقتی داده‌ای در دیتابیس نباشد مؤثر است.</p>
+            <p className="muted">این عملیات فقط وقتی داده‌ای در دیتابیس نباشد مؤثر است. اگر قبلاً داده ساخته شده، این بخش فقط نقش utility دارد.</p>
             <button type="submit" className="secondary-button">
               ساخت داده نمونه
             </button>

@@ -1,6 +1,6 @@
 import { listWorkGroups } from '../../lib/data';
 import { workGroupAccessLabels } from '../../lib/constants';
-import { EmptyState, PageIntro, PrimaryLink } from '@repo/ui';
+import { EmptyState, PageIntro, PrimaryLink } from '@repo/ui/server';
 
 export default async function WorkGroupsPage() {
   const items = await listWorkGroups();

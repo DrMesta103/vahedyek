@@ -1,5 +1,5 @@
 import { listOrganizationUnits } from '../../lib/data';
-import { DataTable, EmptyState, PageIntro, PrimaryLink } from '@repo/ui';
+import { EmptyState, PageIntro, PrimaryLink } from '@repo/ui/server';
 
 export default async function OrganizationUnitsPage() {
   const items = await listOrganizationUnits();
@@ -10,7 +10,17 @@ export default async function OrganizationUnitsPage() {
       {items.length === 0 ? (
         <EmptyState title="واحدی وجود ندارد" description="از این بخش می‌توانید ساختار سازمان را تعریف کنید." action={<PrimaryLink href="/organization-units/new">تعریف واحد</PrimaryLink>} />
       ) : (
-        <DataTable columns={['عنوان', 'توضیح', 'تعداد انتساب']} rows={items.map((item) => [item.title, item.description ?? '-', item.employees.length])} />
+        <div className="catalog-grid">
+          {items.map((item) => (
+            <article key={item.id} className="catalog-card">
+              <div className="catalog-card-head">
+                <span className="catalog-pill">{item.employees.length} انتساب</span>
+                <h3>{item.title}</h3>
+                <p>{item.description ?? 'برای این واحد توضیحی ثبت نشده است.'}</p>
+              </div>
+            </article>
+          ))}
+        </div>
       )}
     </div>
   );

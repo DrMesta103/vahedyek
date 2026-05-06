@@ -12,7 +12,10 @@ datasource db {
 
 model AppUser {
   id           String                 @id @default(cuid())
-  email        String                 @unique
+  email        String?                @unique
+  mobile       String?                @unique
+  firstName    String
+  lastName     String
   fullName     String
   passwordHash String
   passwordSalt String
@@ -26,6 +29,8 @@ model Tenant {
   slug             String                 @unique
   name             String
   brandCode        String                 @default("DS")
+  packageKey       String                 @default("starter")
+  billingCycle     String                 @default("monthly")
   createdAt        DateTime               @default(now())
   updatedAt        DateTime               @updatedAt
   memberships      UserTenantMembership[]
@@ -167,6 +172,8 @@ model Location {
   title       String
   address     String
   radius      Int
+  latitude    Decimal?    @db.Decimal(10, 6)
+  longitude   Decimal?    @db.Decimal(10, 6)
   description String?
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt

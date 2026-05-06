@@ -203,22 +203,64 @@ async function getMembershipWithLegacyPermissions(userId: string, tenantId: stri
   });
 }
 
+async function buildOwnerRowFallbackAccess(userId: string, tenantId: string) {
+  const membership = await prisma.userTenantMembership.findUnique({
+    where: { userId_tenantId: { userId, tenantId } },
+    include: {
+      roles: {
+        include: {
+          role: true,
+        },
+      },
+    },
+  });
+
+  if (!membership || membership.role !== 'owner') return null;
+
+  try {
+    await ensureOwnerMembershipRole(membership.id, tenantId);
+  } catch (error) {
+    console.error('ensureOwnerMembershipRole failed; still treating user as tenant owner.', error);
+  }
+
+  const allKeys = getAllPermissionKeys();
+  return {
+    membership,
+    isOwner: true,
+    roleLabels: ['صاحب کسب‌وکار'],
+    permissionKeys: allKeys,
+    allowedMenuItemIds: toAllowedMenuItemIds({ isOwner: true, permissionKeys: allKeys }),
+  };
+}
+
 export async function getMembershipAccess(userId: string, tenantId: string) {
   await ensureTenantDefaultRoles(tenantId);
 
   try {
     const membership = await getMembershipWithPermissions(userId, tenantId);
-    if (!membership) return null;
-
-    if (membership.role === 'owner') {
-      await ensureOwnerMembershipRole(membership.id, tenantId);
+    if (!membership) {
+      return buildOwnerRowFallbackAccess(userId, tenantId);
     }
 
-    const isOwner = membership.role === 'owner' || membership.roles.some((item) => item.role.key === 'business_owner');
-    const roleLabels = membership.roles.map((item) => item.role.label);
+    if (membership.role === 'owner') {
+      try {
+        await ensureOwnerMembershipRole(membership.id, tenantId);
+      } catch (error) {
+        console.error('ensureOwnerMembershipRole failed on primary RBAC path.', error);
+      }
+    }
+
+    const isOwner =
+      membership.role === 'owner' ||
+      membership.roles.some((item) => item.role && item.role.key === 'business_owner');
+    const roleLabels = membership.roles.map((item) => item.role?.label).filter(Boolean) as string[];
     const permissionKeys = isOwner
       ? getAllPermissionKeys()
-      : unique(membership.roles.flatMap((item) => item.role.permissions.map((permission) => permission.permissionKey)));
+      : unique(
+          membership.roles.flatMap((item) =>
+            (item.role?.permissions ?? []).map((permission) => permission.permissionKey),
+          ),
+        );
     const access = {
       isOwner,
       roleLabels,
@@ -236,19 +278,29 @@ export async function getMembershipAccess(userId: string, tenantId: string) {
 
   try {
     const membership = await getMembershipWithLegacyPermissions(userId, tenantId);
-    if (!membership) return null;
-
-    if (membership.role === 'owner') {
-      await ensureOwnerMembershipRole(membership.id, tenantId);
+    if (!membership) {
+      return buildOwnerRowFallbackAccess(userId, tenantId);
     }
 
-    const isOwner = membership.role === 'owner' || membership.roles.some((item) => item.role.key === 'business_owner');
-    const roleLabels = membership.roles.map((item) => item.role.label);
+    if (membership.role === 'owner') {
+      try {
+        await ensureOwnerMembershipRole(membership.id, tenantId);
+      } catch (error) {
+        console.error('ensureOwnerMembershipRole failed on legacy RBAC path.', error);
+      }
+    }
+
+    const isOwner =
+      membership.role === 'owner' ||
+      membership.roles.some((item) => item.role && item.role.key === 'business_owner');
+    const roleLabels = membership.roles.map((item) => item.role?.label).filter(Boolean) as string[];
     const permissionKeys = isOwner
       ? getAllPermissionKeys()
       : unique(
           membership.roles.flatMap((item) =>
-            item.role.legacyMenuPermissions.map((permission) => LEGACY_MENU_PERMISSION_MAP[permission.menuItemId]),
+            (item.role?.legacyMenuPermissions ?? [])
+              .map((permission) => LEGACY_MENU_PERMISSION_MAP[permission.menuItemId])
+              .filter((key): key is string => Boolean(key)),
           ),
         );
 
@@ -260,7 +312,9 @@ export async function getMembershipAccess(userId: string, tenantId: string) {
       allowedMenuItemIds: toAllowedMenuItemIds({ isOwner, permissionKeys }),
     };
   } catch (error) {
-    console.error('Legacy access lookup failed. Denying non-owner permissions.', error);
+    console.error('Legacy access lookup failed. Trying owner-row fallback.', error);
+    const ownerFallback = await buildOwnerRowFallbackAccess(userId, tenantId);
+    if (ownerFallback) return ownerFallback;
     return null;
   }
 }

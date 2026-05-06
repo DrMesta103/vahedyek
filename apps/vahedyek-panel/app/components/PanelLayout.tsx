@@ -34,6 +34,18 @@ function buildContractsBreadcrumb(pathname: string): Crumb[] {
   const segments = pathname.split('/').filter(Boolean);
   const trail: Crumb[] = [{ label: 'فهرست قراردادها', href: '/contracts' }];
 
+  if (segments[0] === 'contracts' && segments[1] && segments[1] !== 'new' && segments[2] === 'preview') {
+    const contractId = segments[1];
+    trail.push({ label: 'جزئیات قرارداد', href: `/contracts/${contractId}` });
+    trail.push({ label: 'مشاهده پیش‌نویس' });
+    return trail;
+  }
+
+  if (segments[0] === 'contracts' && segments[1] && segments[1] !== 'new' && segments.length === 2) {
+    trail.push({ label: 'جزئیات قرارداد' });
+    return trail;
+  }
+
   if (segments[1] !== 'new') return trail;
 
   trail.push({ label: 'قرارداد جدید', href: '/contracts/new' });

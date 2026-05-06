@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Save, X } from 'lucide-react';
+import { ChevronLeft, Plus, Save, X } from 'lucide-react';
 import { Input, StickySubmitBar } from '@repo/ui';
 import { ContractStepLoader } from './ContractStepLoader';
 import { FieldLabel } from './FieldLabel';
@@ -189,7 +189,6 @@ export function DiscountsStep({ stepId, title, embedded = false }: { stepId: str
   const [types, setTypes] = useState<DiscountTypeStateData[]>(INITIAL_TYPES);
   const [rules, setRules] = useState<DiscountRuleData[]>([]);
 
-  const [dialogOpen, setDialogOpen] = useState(false);
   const [editingRuleId, setEditingRuleId] = useState<string | null>(null);
   const [activeDiscountTypeId, setActiveDiscountTypeId] = useState<string>('');
   const [expandedDiscountTypeId, setExpandedDiscountTypeId] = useState<string>('');
@@ -265,17 +264,10 @@ export function DiscountsStep({ stepId, title, embedded = false }: { stepId: str
     }
   }, [dirty, draftId, loading, payload, stepId]);
 
-  const openRuleDialog = (discountTypeId: string, rule?: DiscountRuleData) => {
+  const loadRuleFormForType = (discountTypeId: string, rule?: DiscountRuleData) => {
     setActiveDiscountTypeId(discountTypeId);
     setEditingRuleId(rule?.id ?? null);
     setRuleForm(rule ? normalizeRule(rule) : makeEmptyRule(discountTypeId));
-    setDialogError('');
-    setDialogOpen(true);
-  };
-
-  const closeDialog = () => {
-    setDialogOpen(false);
-    setEditingRuleId(null);
     setDialogError('');
   };
 
@@ -313,8 +305,7 @@ export function DiscountsStep({ stepId, title, embedded = false }: { stepId: str
 
       return [...current, normalizeRule(ruleForm)];
     });
-
-    closeDialog();
+    setDialogError('');
   };
 
   const handleSubmit = async () => {
@@ -395,31 +386,47 @@ export function DiscountsStep({ stepId, title, embedded = false }: { stepId: str
                           type="button"
                           onClick={() => {
                             if (!type.active) return;
-                            setExpandedDiscountTypeId((current) => (current === type.id ? '' : type.id));
+                            setExpandedDiscountTypeId((current) => {
+                              const next = current === type.id ? '' : type.id;
+                              if (next) loadRuleFormForType(next);
+                              return next;
+                            });
                           }}
-                          className="flex-1 text-right"
+                          className="flex min-w-0 flex-1 flex-col gap-3 text-right sm:flex-row-reverse sm:items-center sm:gap-4"
                         >
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2">
+                          <div className="min-w-0 flex-1 space-y-1">
+                            <div className="flex flex-wrap items-center gap-2">
                               <h3 className="text-sm font-bold text-slate-800">{type.title}</h3>
                               {type.active ? (
                                 <span className="rounded-full border border-cyan-200 bg-white px-2 py-0.5 text-[11px] font-medium text-cyan-700">
                                   {typeRules.length} تخفیف
                                 </span>
-                              ) : null}
+                              ) : (
+                                <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-medium text-slate-500">
+                                  غیرفعال
+                                </span>
+                              )}
                             </div>
                             <p className="text-sm text-slate-500">{type.description}</p>
                           </div>
+                          <ChevronLeft
+                            className={`h-5 w-5 shrink-0 text-slate-400 transition ${isExpanded ? '-rotate-90' : ''}`}
+                            aria-hidden
+                          />
                         </button>
 
                         <div className="flex items-center gap-3">
                           <ToggleSwitch
                             checked={type.active}
-                            onChange={(checked) =>
-                              setTypes((current) =>
-                                current.map((item) => (item.id === type.id ? { ...item, active: checked } : item)),
-                              )
-                            }
+                            onChange={(checked) => {
+                              setTypes((current) => current.map((item) => (item.id === type.id ? { ...item, active: checked } : item)));
+                              if (checked) {
+                                setExpandedDiscountTypeId(type.id);
+                                loadRuleFormForType(type.id);
+                              } else if (expandedDiscountTypeId === type.id) {
+                                setExpandedDiscountTypeId('');
+                              }
+                            }}
                           />
                         </div>
                       </div>
@@ -427,66 +434,179 @@ export function DiscountsStep({ stepId, title, embedded = false }: { stepId: str
 
                     {isExpanded ? (
                       <div className="border-t border-cyan-100 bg-white/80 p-4">
-                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                          <div>
-                            <h4 className="text-sm font-bold text-slate-700">سناریوهای این ردیف</h4>
-                            <p className="mt-1 text-xs text-slate-500">برای این نوع، یک یا چند rule ثبت کنید.</p>
+                        <div className="space-y-4">
+                          <div className="flex flex-wrap items-center justify-between gap-3">
+                            <div className="text-xs font-semibold text-slate-500">سناریوهای ثبت‌شده: {typeRules.length}</div>
+                            <button
+                              type="button"
+                              onClick={() => loadRuleFormForType(type.id)}
+                              className="inline-flex h-8 items-center gap-2 rounded-lg border border-[#14a7ad] bg-white/65 px-3 text-xs font-bold text-[#0e989d] transition hover:bg-[#dff4f3]"
+                            >
+                              <Plus className="h-4 w-4" />
+                              سناریوی جدید
+                            </button>
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => openRuleDialog(type.id)}
-                            className="mt-2 inline-flex h-8 items-center gap-2 rounded-lg border border-[#14a7ad] bg-white/65 px-3 text-xs font-bold text-[#0e989d] transition hover:bg-[#dff4f3]"
-                          >
-                            <Plus className="h-4 w-4" />
-                            افزودن تخفیف
-                          </button>
-                        </div>
 
-                        {typeRules.length === 0 ? (
-                          <div className="mt-4 rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-center text-sm text-slate-500">
-                            هنوز تخفیفی برای این نوع ثبت نشده است.
-                          </div>
-                        ) : (
-                          <div className="mt-4 grid gap-3">
-                            {typeRules.map((rule, index) => (
-                              <div key={rule.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                                  <div className="space-y-2">
-                                    <div className="flex items-center gap-2">
-                                      <span className="rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-xs font-medium text-cyan-700">
-                                        تخفیف {index + 1}
-                                      </span>
-                                      <span className="text-xs text-slate-400">
-                                        {rule.scope === 'whole' ? 'روی کل قرارداد' : 'تخفیف موردی'}
-                                      </span>
-                                    </div>
-                                    <p className="text-sm font-medium text-slate-700">{formatRuleSummary(rule)}</p>
-                                    <p className="text-xs text-slate-500">
-                                      {rule.conditionNote ? rule.conditionNote : 'بدون شرط اضافی'}
-                                      {rule.managerApproval ? ' · نیازمند تایید مدیر' : ''}
-                                    </p>
-                                  </div>
-                                  <div className="flex items-center gap-2">
-                                    <button
-                                      type="button"
-                                      onClick={() => openRuleDialog(type.id, rule)}
-                                      className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
-                                    >
-                                      ویرایش
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => setRules((current) => current.filter((item) => item.id !== rule.id))}
-                                      className="rounded-lg border border-rose-200 px-3 py-1.5 text-sm text-rose-600 hover:bg-rose-50"
-                                    >
-                                      حذف
-                                    </button>
-                                  </div>
-                                </div>
+                          {typeRules.length ? (
+                            <div className="flex flex-wrap gap-2">
+                              {typeRules.map((rule, index) => (
+                                <button
+                                  key={rule.id}
+                                  type="button"
+                                  onClick={() => loadRuleFormForType(type.id, rule)}
+                                  className={`rounded-full border px-3 py-1 text-xs font-bold transition ${
+                                    editingRuleId === rule.id
+                                      ? 'border-cyan-300 bg-cyan-50 text-cyan-800'
+                                      : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                                  }`}
+                                >
+                                  تخفیف {index + 1}
+                                </button>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-5 text-center text-sm text-slate-500">
+                              هنوز تخفیفی برای این نوع ثبت نشده است.
+                            </div>
+                          )}
+
+                          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                            <div className="grid gap-4">
+                              <section className="space-y-3">
+                                <FieldBlock label="دامنه اعمال تخفیف">
+                                  <TagPills
+                                    options={SCOPE_OPTIONS}
+                                    value={ruleForm.scope}
+                                    onChange={(value) =>
+                                      setRuleForm((current) => ({
+                                        ...current,
+                                        discountTypeId: type.id,
+                                        scope: value,
+                                        entryId: value === 'whole' ? WHOLE_DISCOUNT_ENTRY.id : ITEMIZED_DISCOUNT_ENTRIES[0]?.id ?? '',
+                                      }))
+                                    }
+                                  />
+                                </FieldBlock>
+                              </section>
+
+                              {ruleForm.scope === 'itemized' ? (
+                                <FieldBlock label="موضوع تخفیف موردی">
+                                  <TagPills
+                                    options={ITEMIZED_ENTRY_OPTIONS}
+                                    value={ruleForm.entryId}
+                                    onChange={(value) => setRuleForm((current) => ({ ...current, entryId: value, discountTypeId: type.id }))}
+                                  />
+                                </FieldBlock>
+                              ) : null}
+
+                              <FieldBlock label="نوع مقدار تخفیف">
+                                <TagPills
+                                  options={VALUE_MODE_OPTIONS}
+                                  value={ruleForm.valueMode}
+                                  onChange={(value) => setRuleForm((current) => ({ ...current, valueMode: value, discountTypeId: type.id }))}
+                                />
+                              </FieldBlock>
+
+                              <div className="grid gap-4 md:grid-cols-2">
+                                <FieldBlock
+                                  label={ruleForm.valueMode === 'percent' ? 'حداقل درصد تخفیف' : 'حداقل مبلغ تخفیف'}
+                                  hint="در صورت نیاز می‌توانید حداقل را خالی بگذارید یا صفر ثبت کنید."
+                                >
+                                  <Input
+                                    value={ruleForm.minValue}
+                                    onChange={(event) =>
+                                      setRuleForm((current) => ({
+                                        ...current,
+                                        discountTypeId: type.id,
+                                        minValue: current.valueMode === 'amount' ? formatInput(event.target.value) : event.target.value,
+                                      }))
+                                    }
+                                    placeholder={ruleForm.valueMode === 'amount' ? 'مثال: 100,000' : 'مثال: 5'}
+                                  />
+                                </FieldBlock>
+                                <FieldBlock
+                                  label={ruleForm.valueMode === 'percent' ? 'حداکثر درصد تخفیف' : 'حداکثر مبلغ تخفیف'}
+                                  hint="این مقدار برای اعتبار rule الزامی است."
+                                >
+                                  <Input
+                                    value={ruleForm.maxValue}
+                                    onChange={(event) =>
+                                      setRuleForm((current) => ({
+                                        ...current,
+                                        discountTypeId: type.id,
+                                        maxValue: current.valueMode === 'amount' ? formatInput(event.target.value) : event.target.value,
+                                      }))
+                                    }
+                                    placeholder={ruleForm.valueMode === 'amount' ? 'مثال: 250,000' : 'مثال: 12'}
+                                  />
+                                </FieldBlock>
                               </div>
-                            ))}
+
+                              <FieldBlock label="شرط تخفیف" hint="مثلا پرداخت زودتر از موعد، خوش‌حسابی، یا تایید واحد مالی.">
+                                <textarea
+                                  value={ruleForm.conditionNote}
+                                  onChange={(event) => setRuleForm((current) => ({ ...current, discountTypeId: type.id, conditionNote: event.target.value }))}
+                                  rows={4}
+                                  className="w-full rounded-2xl border border-slate-200 px-3.5 py-3 text-sm text-slate-800 outline-none transition-all focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10"
+                                  placeholder="شرط اعمال این تخفیف را بنویسید."
+                                />
+                              </FieldBlock>
+
+                              <div className="space-y-4 rounded-2xl border border-cyan-100 bg-cyan-50 p-4">
+                                <div className="flex items-center justify-between gap-4">
+                                  <div>
+                                    <h4 className="text-sm font-bold text-slate-800">تایید مدیر برای تخفیف‌های بزرگ</h4>
+                                    <p className="mt-1 text-xs text-slate-500">در صورت نیاز، برای این rule آستانه تایید مدیریتی تعریف کنید.</p>
+                                  </div>
+                                  <ToggleSwitch
+                                    checked={ruleForm.managerApproval}
+                                    onChange={(checked) => setRuleForm((current) => ({ ...current, discountTypeId: type.id, managerApproval: checked }))}
+                                  />
+                                </div>
+
+                                {ruleForm.managerApproval ? (
+                                  <FieldBlock label="آستانه تایید مدیر">
+                                    <Input
+                                      value={ruleForm.approvalThreshold}
+                                      onChange={(event) =>
+                                        setRuleForm((current) => ({
+                                          ...current,
+                                          discountTypeId: type.id,
+                                          approvalThreshold: current.valueMode === 'amount' ? formatInput(event.target.value) : event.target.value,
+                                        }))
+                                      }
+                                      placeholder={ruleForm.valueMode === 'amount' ? 'مثال: 500,000' : 'مثال: 15'}
+                                    />
+                                  </FieldBlock>
+                                ) : null}
+                              </div>
+
+                              {dialogError ? (
+                                <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{dialogError}</div>
+                              ) : null}
+
+                              <div className="flex flex-wrap justify-end gap-2">
+                                {editingRuleId ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => setRules((current) => current.filter((item) => item.id !== editingRuleId))}
+                                    className="rounded-lg border border-rose-200 px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50"
+                                  >
+                                    حذف سناریو
+                                  </button>
+                                ) : null}
+                                <button
+                                  type="button"
+                                  onClick={() => submitRule()}
+                                  className="inline-flex items-center gap-2 rounded-lg bg-teal-700 px-4 py-2 text-xs font-bold text-white hover:bg-teal-800"
+                                >
+                                  <Save className="h-4 w-4" />
+                                  ذخیره سناریو
+                                </button>
+                              </div>
+                            </div>
                           </div>
-                        )}
+                        </div>
                       </div>
                     ) : null}
                   </div>
@@ -509,125 +629,6 @@ export function DiscountsStep({ stepId, title, embedded = false }: { stepId: str
         embedded={embedded}
         submitId={stepId}
       />
-
-      <Modal
-        open={dialogOpen}
-        onClose={closeDialog}
-        title={editingRuleId ? 'ویرایش تخفیف' : 'افزودن تخفیف'}
-        description={`فرم ثبت تخفیف برای ${types.find((item) => item.id === activeDiscountTypeId)?.title ?? 'نوع انتخاب‌شده'}`}
-        footer={
-          <>
-            <button type="button" onClick={closeDialog} className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">
-              لغو
-            </button>
-            <button type="button" onClick={submitRule} className="inline-flex items-center gap-2 rounded-lg bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800">
-              <Save className="h-4 w-4" />
-              {editingRuleId ? 'ذخیره تغییرات' : 'ثبت تخفیف'}
-            </button>
-          </>
-        }
-      >
-        <section className="space-y-3">
-          <FieldBlock label="دامنه اعمال تخفیف">
-            <TagPills
-              options={SCOPE_OPTIONS}
-              value={ruleForm.scope}
-              onChange={(value) =>
-                setRuleForm((current) => ({
-                  ...current,
-                  scope: value,
-                  entryId: value === 'whole' ? WHOLE_DISCOUNT_ENTRY.id : ITEMIZED_DISCOUNT_ENTRIES[0]?.id ?? '',
-                }))
-              }
-            />
-          </FieldBlock>
-        </section>
-
-        {ruleForm.scope === 'itemized' ? (
-          <FieldBlock label="موضوع تخفیف موردی">
-            <TagPills options={ITEMIZED_ENTRY_OPTIONS} value={ruleForm.entryId} onChange={(value) => setRuleForm((current) => ({ ...current, entryId: value }))} />
-          </FieldBlock>
-        ) : null}
-
-        <FieldBlock label="نوع مقدار تخفیف">
-          <TagPills options={VALUE_MODE_OPTIONS} value={ruleForm.valueMode} onChange={(value) => setRuleForm((current) => ({ ...current, valueMode: value }))} />
-        </FieldBlock>
-
-        <div className="grid gap-4 md:grid-cols-2">
-          <FieldBlock
-            label={ruleForm.valueMode === 'percent' ? 'حداقل درصد تخفیف' : 'حداقل مبلغ تخفیف'}
-            hint="در صورت نیاز می‌توانید حداقل را خالی بگذارید یا صفر ثبت کنید."
-          >
-            <Input
-              value={ruleForm.minValue}
-              onChange={(event) =>
-                setRuleForm((current) => ({
-                  ...current,
-                  minValue: current.valueMode === 'amount' ? formatInput(event.target.value) : event.target.value,
-                }))
-              }
-              placeholder={ruleForm.valueMode === 'amount' ? 'مثال: 100,000' : 'مثال: 5'}
-            />
-          </FieldBlock>
-          <FieldBlock
-            label={ruleForm.valueMode === 'percent' ? 'حداکثر درصد تخفیف' : 'حداکثر مبلغ تخفیف'}
-            hint="این مقدار برای اعتبار rule الزامی است."
-          >
-            <Input
-              value={ruleForm.maxValue}
-              onChange={(event) =>
-                setRuleForm((current) => ({
-                  ...current,
-                  maxValue: current.valueMode === 'amount' ? formatInput(event.target.value) : event.target.value,
-                }))
-              }
-              placeholder={ruleForm.valueMode === 'amount' ? 'مثال: 250,000' : 'مثال: 12'}
-            />
-          </FieldBlock>
-        </div>
-
-        <FieldBlock label="شرط تخفیف" hint="مثلا پرداخت زودتر از موعد، خوش‌حسابی، یا تایید واحد مالی.">
-          <textarea
-            value={ruleForm.conditionNote}
-            onChange={(event) => setRuleForm((current) => ({ ...current, conditionNote: event.target.value }))}
-            rows={4}
-            className="w-full rounded-2xl border border-slate-200 px-3.5 py-3 text-sm text-slate-800 outline-none transition-all focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10"
-            placeholder="شرط اعمال این تخفیف را بنویسید."
-          />
-        </FieldBlock>
-
-        <div className="space-y-4 rounded-2xl border border-cyan-100 bg-cyan-50 p-4">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <h4 className="text-sm font-bold text-slate-800">تایید مدیر برای تخفیف‌های بزرگ</h4>
-              <p className="mt-1 text-xs text-slate-500">در صورت نیاز، برای این rule آستانه تایید مدیریتی تعریف کنید.</p>
-            </div>
-            <ToggleSwitch
-              checked={ruleForm.managerApproval}
-              onChange={(checked) => setRuleForm((current) => ({ ...current, managerApproval: checked }))}
-            />
-          </div>
-
-          {ruleForm.managerApproval ? (
-            <FieldBlock label="آستانه تایید مدیر">
-              <Input
-                value={ruleForm.approvalThreshold}
-                onChange={(event) =>
-                  setRuleForm((current) => ({
-                    ...current,
-                    approvalThreshold: current.valueMode === 'amount' ? formatInput(event.target.value) : event.target.value,
-                  }))
-                }
-                placeholder={ruleForm.valueMode === 'amount' ? 'مثال: 500,000' : 'مثال: 15'}
-              />
-            </FieldBlock>
-          ) : null}
-        </div>
-
-        {dialogError ? (
-          <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{dialogError}</div>
-        ) : null}
-      </Modal>
     </div>
   );
 }
