@@ -1,23 +1,87 @@
 
 > vahedyek-monorepo@0.1.0 dev:vahedyek
-> npm --workspace @apps/vahedyek-panel run dev
+> npm run build:ui && npm --workspace @apps/vahedyek-panel run dev
 
+
+> vahedyek-monorepo@0.1.0 build:ui
+> npm --workspace @repo/ui run build
+
+
+> @repo/ui@0.1.0 build
+> tsup
+
+[34mCLI[39m Building entry: src/index.ts
+[34mCLI[39m Using tsconfig: tsconfig.json
+[34mCLI[39m tsup v8.5.1
+[34mCLI[39m Using tsup config: C:\Users\s.roosta\Desktop\Project\vahedyek\packages\ui\tsup.config.ts
+[34mCLI[39m Target: es2020
+[34mESM[39m Build start
+[34mCJS[39m Build start
+[32mCJS[39m [1mdist\index.js     [22m[32m34.87 KB[39m
+[32mCJS[39m [1mdist\index.js.map [22m[32m60.51 KB[39m
+[32mCJS[39m ⚡️ Build success in 97ms
+[32mESM[39m [1mdist\index.mjs     [22m[32m31.86 KB[39m
+[32mESM[39m [1mdist\index.mjs.map [22m[32m60.41 KB[39m
+[32mESM[39m ⚡️ Build success in 97ms
+[34mDTS[39m Build start
+[32mDTS[39m ⚡️ Build success in 803ms
+[32mDTS[39m [1mdist\index.d.mts [22m[32m9.16 KB[39m
+[32mDTS[39m [1mdist\index.d.ts  [22m[32m9.16 KB[39m
+
+> @apps/vahedyek-panel@0.1.0 predev
+> prisma generate && npm --workspace @repo/ui run build
+
+Prisma schema loaded from prisma\schema.prisma
+
+✔ Generated Prisma Client (v6.19.3) to .\..\..\node_modules\@prisma\client in 90ms
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+Tip: Want to turn off tips and other hints? https://pris.ly/tip-4-nohints
+
+
+> @repo/ui@0.1.0 build
+> tsup
+
+[34mCLI[39m Building entry: src/index.ts
+[34mCLI[39m Using tsconfig: tsconfig.json
+[34mCLI[39m tsup v8.5.1
+[34mCLI[39m Using tsup config: C:\Users\s.roosta\Desktop\Project\vahedyek\packages\ui\tsup.config.ts
+[34mCLI[39m Target: es2020
+[34mESM[39m Build start
+[34mCJS[39m Build start
+[32mESM[39m [1mdist\index.mjs     [22m[32m31.86 KB[39m
+[32mESM[39m [1mdist\index.mjs.map [22m[32m60.41 KB[39m
+[32mESM[39m ⚡️ Build success in 78ms
+[32mCJS[39m [1mdist\index.js     [22m[32m34.87 KB[39m
+[32mCJS[39m [1mdist\index.js.map [22m[32m60.51 KB[39m
+[32mCJS[39m ⚡️ Build success in 79ms
+[34mDTS[39m Build start
+[32mDTS[39m ⚡️ Build success in 821ms
+[32mDTS[39m [1mdist\index.d.mts [22m[32m9.16 KB[39m
+[32mDTS[39m [1mdist\index.d.ts  [22m[32m9.16 KB[39m
 
 > @apps/vahedyek-panel@0.1.0 dev
 > next dev
 
 ▲ Next.js 16.2.4 (Turbopack)
 - Local:         http://localhost:3000
-- Network:       http://192.168.55.214:3000
+- Network:       http://10.0.28.93:3000
 - Environments: .env
-✓ Ready in 284ms
+✓ Ready in 278ms
 Creating turbopack project {
   dir: 'C:\\Users\\s.roosta\\Desktop\\Project\\vahedyek\\apps\\vahedyek-panel',
   testMode: true
 }
 
- GET /login?next=%2F 200 in 825ms (next.js: 678ms, proxy.ts: 38ms, application-code: 109ms)
- GET /login?next=%2F 200 in 24ms (next.js: 2ms, proxy.ts: 1505µs, application-code: 20ms)
- GET /login?next=%2F 200 in 22ms (next.js: 3ms, proxy.ts: 1743µs, application-code: 17ms)
- GET /login?next=%2F 200 in 76ms (next.js: 30ms, proxy.ts: 17ms, application-code: 29ms)
-[?25h
+ GET / 200 in 338ms (next.js: 133ms, proxy.ts: 80ms, application-code: 125ms)
+ GET /employees/new 200 in 317ms (next.js: 267ms, proxy.ts: 4ms, application-code: 46ms)
+ GET /settings 200 in 45ms (next.js: 11ms, proxy.ts: 3ms, application-code: 30ms)
+ GET /api/auth/me 200 in 8.3s (next.js: 2ms, proxy.ts: 4ms, application-code: 8.3s)
+ GET /api/auth/me 200 in 8.3s (next.js: 4ms, proxy.ts: 4ms, application-code: 8.3s)
+ GET /api/auth/me 200 in 11.5s (next.js: 49ms, proxy.ts: 4ms, application-code: 11.5s)
+ GET /api/auth/me 200 in 11.0s (next.js: 3ms, proxy.ts: 3ms, application-code: 11.0s)
+ GET /api/auth/me 200 in 12.5s (next.js: 65ms, proxy.ts: 4ms, application-code: 12.5s)
+ GET /api/auth/me 200 in 11.9s (next.js: 5ms, proxy.ts: 3ms, application-code: 11.9s)
+ GET /login?next=%2Femployees 200 in 47ms (next.js: 15ms, proxy.ts: 2ms, application-code: 30ms)
+ GET /api/settings/access 200 in 13.7s (next.js: 24ms, proxy.ts: 4ms, application-code: 13.7s)

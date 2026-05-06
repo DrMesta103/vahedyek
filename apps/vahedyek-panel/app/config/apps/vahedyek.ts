@@ -121,9 +121,8 @@ export const currentAppConfig: AppConfig = {
       id: 'employees',
       label: 'کارمندان',
       icon: 'fa-users',
-      href: '#',
+      href: '/employees',
       requiredPermission: 'platform.users.view',
-      disabled: true,
     },
     {
       id: 'account',

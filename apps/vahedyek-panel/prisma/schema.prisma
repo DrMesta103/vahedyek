@@ -319,15 +319,17 @@ model FinancialDueItem {
 }
 
 model Employee {
-  id        String            @id
-  tenantId  String
-  firstName String
-  lastName  String
-  isActive  Boolean           @default(true)
-  tenant    Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  subjects  ContractSubject[]
+  id           String            @id
+  tenantId     String
+  firstName    String
+  lastName     String
+  nationalCode String?
+  isActive     Boolean           @default(true)
+  tenant       Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  subjects     ContractSubject[]
 
   @@index([tenantId])
+  @@unique([tenantId, nationalCode])
 }
 
 model FormerEmployee {

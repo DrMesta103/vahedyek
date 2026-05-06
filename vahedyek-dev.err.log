@@ -1,50 +1,6 @@
-⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
-[@locator/webpack-loader] Failed to transform C:\Users\s.roosta\Desktop\Project\vahedyek\apps\vahedyek-panel\app\components\ui\PersianDatePicker.tsx: C:\Users\s.roosta\Desktop\Project\vahedyek\apps\vahedyek-panel\app\components\ui\PersianDatePicker.tsx: Bad character escape sequence. (4:118)
-[@locator/webpack-loader] Failed to transform C:\Users\s.roosta\Desktop\Project\vahedyek\apps\vahedyek-panel\app\components\ui\input.tsx: C:\Users\s.roosta\Desktop\Project\vahedyek\apps\vahedyek-panel\app\components\ui\input.tsx: Bad character escape sequence. (4:118)
+warn The configuration property `package.json#prisma` is deprecated and will be removed in Prisma 7. Please migrate to a Prisma config file (e.g., `prisma.config.ts`).
+For more information, see: https://pris.ly/prisma-config
+
+Environment variables loaded from .env
 [browser] [locator-js] React instance (react-dom v19.3.0-canary-3f0b9e61-20260317) is not supported (chrome-extension://npbfdllefekhdplbkdigpncggmojpefi/hook.bundle.js:1:27759)
-[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
-
-- A server/client branch `if (typeof window !== 'undefined')`.
-- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
-- Date formatting in a user's locale which doesn't match the server.
-- External changing data without sending a snapshot of it along with the HTML.
-- Invalid HTML tag nesting.
-
-It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
-
-https://react.dev/link/hydration-mismatch
-
-  ...
-    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
-      <AppDevOverlayErrorBoundary globalError={[...]}>
-        <ReplaySsrOnlyErrors>
-        <DevRootHTTPAccessFallbackBoundary>
-          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
-            <HTTPAccessFallbackErrorBoundary pathname="/login" notFound={<NotAllowedRootHTTPFallbackError>} ...>
-              <RedirectBoundary>
-                <RedirectErrorBoundary router={{...}}>
-                  <Head>
-                  <__next_root_layout_boundary__>
-                    <SegmentViewNode type="layout" pagePath="layout.tsx">
-                      <SegmentTrieNode>
-                      <link>
-                      <script>
-                      <script>
-                      <script>
-                      <RootLayout>
-                        <html lang="fa" dir="rtl" suppressHydrationWarning={true} data-locatorjs="C:\Users\s...">
-                          <head
-                            data-locatorjs="C:\Users\s.roosta\Desktop\Project\vahedyek\apps\vahedyek-panel\app\layout...."
--                           data-locator-hook-status-message="loading: No valid renderers found."
-                          >
-                          ...
-                  ...
- 
-[browser] [locatorjs]: ok (chrome-extension://npbfdllefekhdplbkdigpncggmojpefi/hook.bundle.js:1:36200)
-npm error Lifecycle script `dev` failed with error:
-npm error code 1
-npm error path C:\Users\s.roosta\Desktop\Project\vahedyek\apps\vahedyek-panel
-npm error workspace @apps/vahedyek-panel@0.1.0
-npm error location C:\Users\s.roosta\Desktop\Project\vahedyek\apps\vahedyek-panel
-npm error command failed
-npm error command C:\WINDOWS\system32\cmd.exe /d /s /c next dev
+[browser] [locator-js] React instance (react-dom v19.3.0-canary-3f0b9e61-20260317) is not supported (chrome-extension://npbfdllefekhdplbkdigpncggmojpefi/hook.bundle.js:1:27759)
