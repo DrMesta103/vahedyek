@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Input, StickySubmitBar } from '@repo/ui';
 import { Camera, FileAudio, FileImage, FileText, Plus, Upload, X } from 'lucide-react';
-import { dispatchContractFlowDirty, dispatchContractFlowSaved } from './contractFlowSignals';
+import { useRouter } from 'next/navigation';
+import { dispatchContractFlowDirty, dispatchContractFlowSavedForDraft } from './contractFlowSignals';
 import { ensureActiveDraftId } from '../../../../lib/contractDraftClient';
 import { FieldGroup, SectionCard, SectionHeader, TagPill, FormDateInput } from './ContractFormPrimitives';
 import { getContractAttachments, upsertContractAttachments, type AttachmentItem } from '../../../../actions/contractSteps789';
@@ -96,6 +97,7 @@ function FilePreview({ file }: { file: NonNullable<NonNullable<AttachmentItem['f
 }
 
 export function ContractAttachmentsStep({ title }: { title: string }) {
+  const router = useRouter();
   const initialSnapshotRef = useRef('');
   const [draftId, setDraftId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -172,7 +174,9 @@ export function ContractAttachmentsStep({ title }: { title: string }) {
       if (!remote.ok) throw new Error('message' in remote ? remote.message : 'ذخیره اطلاعات انجام نشد.');
       initialSnapshotRef.current = payloadSnapshot;
       dispatchContractFlowDirty('contractAttachments', false);
-      dispatchContractFlowSaved('contractAttachments', Date.now(), { documents: payloadDocuments, notes });
+      dispatchContractFlowSavedForDraft(draftId, 'contractAttachments', Date.now(), { documents: payloadDocuments, notes });
+      router.push(`/contracts/${draftId}`);
+      router.refresh();
     } catch (error) {
       setFormError(error instanceof Error ? error.message : 'ذخیره اطلاعات انجام نشد.');
     } finally {

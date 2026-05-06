@@ -37,7 +37,7 @@ import type {
   TerminationConstructorPanel,
   TerminationPartyTab,
 } from '../../../../types/contract';
-import { dispatchContractFlowDirty, dispatchContractFlowSaved } from './contractFlowSignals';
+import { dispatchContractFlowDirty, dispatchContractFlowSavedForDraft } from './contractFlowSignals';
 import type { ContractFlowSectionId } from './contractFlowSignals';
 import {
   BuyerAreaDiscrepancyPanel,
@@ -353,7 +353,7 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
     if (syncSnapshot) {
       initialSnapshotRef.current = serializePayload(next);
       dispatchContractFlowDirty(stepId as ContractFlowSectionId, false);
-      dispatchContractFlowSaved(stepId as ContractFlowSectionId, Date.now(), next);
+      if (draftId) dispatchContractFlowSavedForDraft(draftId, stepId as ContractFlowSectionId, Date.now(), next);
     }
   };
 

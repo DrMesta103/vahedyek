@@ -51,7 +51,12 @@ export function useContracts(): UseContractsReturn {
       const result = await getContractsList(activeTab);
       setContracts(result.items as Contract[]);
       setCounts(result.counts);
-    } catch {
+    } catch (e) {
+      const message = e instanceof Error ? e.message : '';
+      if (message.includes('باید وارد شوید') && typeof window !== 'undefined') {
+        window.location.assign(`/login?next=${encodeURIComponent('/contracts')}`);
+        return;
+      }
       setContracts([]);
       setCounts({ draft: 0, pending_approval: 0, completed: 0 });
     } finally {

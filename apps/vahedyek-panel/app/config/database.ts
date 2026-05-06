@@ -41,7 +41,23 @@ export function getCurrentDatabaseUrl() {
 }
 
 export function applyCurrentDatabaseUrl() {
-  process.env.DATABASE_URL = getCurrentDatabaseUrl();
+  const url = getCurrentDatabaseUrl();
+
+  // In local dev we prefer a very small pool to avoid exhausting Postgres connections
+  // (Turbopack/fast refresh can otherwise create spikes).
+  if (process.env.NODE_ENV === 'development') {
+    try {
+      const parsed = new URL(url);
+      const hasLimit = parsed.searchParams.has('connection_limit');
+      if (!hasLimit) parsed.searchParams.set('connection_limit', '1');
+      process.env.DATABASE_URL = parsed.toString();
+      return;
+    } catch {
+      // Non-standard connection string; fallback to raw.
+    }
+  }
+
+  process.env.DATABASE_URL = url;
 }
 
 export const databaseIsolationNote = 'vahedyek-panel reads DATABASE_URL from apps/vahedyek-panel/.env first.';

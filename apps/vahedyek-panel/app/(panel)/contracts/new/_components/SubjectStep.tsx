@@ -7,9 +7,9 @@ import { ContractStepLoader } from './ContractStepLoader';
 import { SubjectContractorBox, type IssuerType } from './SubjectContractorBox';
 import { SubjectDetailsBox } from './SubjectDetailsBox';
 import { SubjectUnitBox } from './SubjectUnitBox';
-import { dispatchContractFlowDirty, dispatchContractFlowSaved } from './contractFlowSignals';
+import { dispatchContractFlowDirty, dispatchContractFlowSavedForDraft } from './contractFlowSignals';
 import { useContractFlowBasePath } from './useContractFlowBasePath';
-import { ensureActiveDraftId, getReferenceData, getStepData, saveStepData } from '../../../../lib/contractDraftClient';
+import { createDraftId, getActiveDraftId, getReferenceData, getStepData, saveStepData } from '../../../../lib/contractDraftClient';
 import { validateStep1 } from '../../../../lib/contractValidation';
 import type { ContractSubjectData } from '../../../../types/contract';
 
@@ -66,14 +66,12 @@ export function SubjectStep({ stepId, title, embedded = false }: { stepId: strin
     let mounted = true;
     const load = async () => {
       try {
-        const id = await ensureActiveDraftId();
-        const [referenceData, subjectData] = await Promise.all([
-          getReferenceData(),
-          getStepData<ContractSubjectData>(id, 'subject'),
-        ]);
+        const existingId = getActiveDraftId();
+        const referenceData = await getReferenceData();
+        const subjectData = existingId ? await getStepData<ContractSubjectData>(existingId, 'subject') : null;
         if (!mounted) return;
 
-        setDraftId(id);
+        setDraftId(existingId);
         setEmployees(referenceData.employees);
         setFormerEmployees(referenceData.formerEmployees);
         setBlocks(referenceData.blocks);
@@ -129,7 +127,6 @@ export function SubjectStep({ stepId, title, embedded = false }: { stepId: strin
   };
 
   const handleSubmit = async () => {
-    if (!draftId) return;
     const payload = buildPayload();
     const validation = validateStep1(payload);
     if (!validation.valid) {
@@ -151,10 +148,12 @@ export function SubjectStep({ stepId, title, embedded = false }: { stepId: strin
     setSaving(true);
     setFormError('');
     try {
-      await saveStepData(draftId, 'subject', payload);
+      const id = draftId ?? (await createDraftId());
+      if (!draftId) setDraftId(id);
+      await saveStepData(id, 'subject', payload);
       initialSnapshotRef.current = JSON.stringify(payload);
       dispatchContractFlowDirty(stepId as 'subject', false);
-      dispatchContractFlowSaved(stepId as 'subject', Date.now(), payload);
+      dispatchContractFlowSavedForDraft(id, stepId as 'subject', Date.now(), payload);
       router.push(basePath);
       router.refresh();
     } catch (error) {

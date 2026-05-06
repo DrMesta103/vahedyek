@@ -33,6 +33,10 @@ export const CONTRACT_FLOW_FINANCIAL_SNAPSHOT_EVENT = 'contract-flow:financial-s
 
 const LAST_UPDATED_KEY = 'contract-flow:last-updated';
 
+function buildLastUpdatedStorageKey(draftId?: string | null) {
+  return draftId ? `${LAST_UPDATED_KEY}:${draftId}` : LAST_UPDATED_KEY;
+}
+
 export function dispatchContractFlowDirty(sectionId: ContractFlowSectionId, dirty: boolean) {
   if (typeof window === 'undefined') return;
   window.dispatchEvent(new CustomEvent<DirtyDetail>(CONTRACT_FLOW_DIRTY_EVENT, { detail: { sectionId, dirty } }));
@@ -50,11 +54,28 @@ export function dispatchContractFlowSaved(sectionId: ContractFlowSectionId, save
   );
 }
 
-export function getStoredLastUpdated(): Partial<Record<ContractFlowSectionId, number>> {
+export function dispatchContractFlowSavedForDraft(
+  draftId: string,
+  sectionId: ContractFlowSectionId,
+  savedAt = Date.now(),
+  payload?: unknown,
+) {
+  if (typeof window === 'undefined') return;
+
+  const current = getStoredLastUpdated(draftId);
+  current[sectionId] = savedAt;
+  window.localStorage.setItem(buildLastUpdatedStorageKey(draftId), JSON.stringify(current));
+
+  window.dispatchEvent(
+    new CustomEvent<SavedDetail>(CONTRACT_FLOW_SAVED_EVENT, { detail: { sectionId, savedAt, payload } }),
+  );
+}
+
+export function getStoredLastUpdated(draftId?: string | null): Partial<Record<ContractFlowSectionId, number>> {
   if (typeof window === 'undefined') return {};
 
   try {
-    const raw = window.localStorage.getItem(LAST_UPDATED_KEY);
+    const raw = window.localStorage.getItem(buildLastUpdatedStorageKey(draftId));
     if (!raw) return {};
     return JSON.parse(raw) as Partial<Record<ContractFlowSectionId, number>>;
   } catch {

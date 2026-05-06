@@ -23,7 +23,7 @@ import {
 import { validateFinancialStep } from '../../../../lib/contractValidation';
 import { addIntervalToDate, buildRegularDueItems, distributeAmount, type DueFrequency } from '../../../../lib/financialUtils';
 import type { ContractFinancialData, ContractSubjectData, FinancialCategoryData, FinancialDueItemData, PricingType } from '../../../../types/contract';
-import { dispatchContractFlowDirty, dispatchContractFlowFinancialSnapshot, dispatchContractFlowSaved } from './contractFlowSignals';
+import { dispatchContractFlowDirty, dispatchContractFlowFinancialSnapshot, dispatchContractFlowSavedForDraft } from './contractFlowSignals';
 
 type FinancialCategory = FinancialCategoryData;
 type DueItem = FinancialDueItemData;
@@ -545,7 +545,7 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
       clearFrontendStepDraft(draftId, 'financial');
       setDirty(false);
       dispatchContractFlowDirty(stepId as 'financial', false);
-      dispatchContractFlowSaved(stepId as 'financial', Date.now(), payload);
+      dispatchContractFlowSavedForDraft(draftId, stepId as 'financial', Date.now(), payload);
       return true;
     } catch (error) {
       setFormError(error instanceof Error ? error.message : 'ثبت اطلاعات مالی انجام نشد.');

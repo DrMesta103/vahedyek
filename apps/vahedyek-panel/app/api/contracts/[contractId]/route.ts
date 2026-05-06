@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
 import { PartySide, PersonType, PricingType, ShareMode } from '@prisma/client';
-import { requireSessionContext } from '../../lib/auth';
-import { serializeContractorType, serializeContractType } from '../../lib/subjectUtils';
-import { prisma } from '../../lib/prisma';
-import { handlePrismaApiError } from '../../lib/prismaApiError';
-import type { ContractStatus } from '../../types/contract';
+import { requireSessionContext } from '../../../lib/auth';
+import { serializeContractorType, serializeContractType } from '../../../lib/subjectUtils';
+import { prisma } from '../../../lib/prisma';
+import { handlePrismaApiError } from '../../../lib/prismaApiError';
+import type { ContractStatus } from '../../../types/contract';
 
 function serializeShareMode(value: ShareMode) {
   return value === ShareMode.percent ? 'percent' : 'dang';
@@ -14,60 +14,37 @@ function serializePricingType(value: PricingType) {
   return value === PricingType.metered ? 'metered' : 'fixed';
 }
 
-function isDraftReadyForApproval(draft: Awaited<ReturnType<typeof prisma.contractDraft.findMany>>[number] & any) {
-  const hasSubject = Boolean(
-    draft.subject?.contractNumber &&
-      draft.subject?.contractDate &&
-      draft.subject?.blockId &&
-      draft.subject?.unitId,
-  );
+function computeStatus(draft: any): ContractStatus {
+  const hasSubject = Boolean(draft.subject?.contractNumber && draft.subject?.contractDate && draft.subject?.blockId && draft.subject?.unitId);
   const hasParties = Boolean(
     draft.parties?.members?.some((member: any) => member.side === PartySide.party_one) &&
       draft.parties?.members?.some((member: any) => member.side === PartySide.party_two),
   );
   const hasFinancial = Boolean(draft.financial);
-
   const hasPenalties = Boolean(draft.penalties?.rules?.length);
   const hasTermination = Boolean(draft.terminationRules);
   const hasExtraCosts = Boolean(draft.extraCosts);
   const hasTechnicalSpecs = Boolean(draft.technicalSpecs);
   const hasAttachments = Boolean(draft.attachments);
 
-  // Only mark "pending approval" once the last step (attachments) is saved.
-  return hasSubject && hasParties && hasFinancial && hasPenalties && hasTermination && hasExtraCosts && hasTechnicalSpecs && hasAttachments;
+  return hasSubject && hasParties && hasFinancial && hasPenalties && hasTermination && hasExtraCosts && hasTechnicalSpecs && hasAttachments
+    ? 'pending_approval'
+    : 'draft';
 }
 
-export async function GET(request: Request) {
+export async function GET(request: Request, context: { params: Promise<{ contractId: string }> }) {
   try {
     const session = await requireSessionContext();
     if (session instanceof NextResponse) return session;
-    const { searchParams } = new URL(request.url);
-    const status = (searchParams.get('status') as ContractStatus | null) ?? 'draft';
 
-    const drafts = await prisma.contractDraft.findMany({
-      where: { tenantId: session.tenantId },
-      orderBy: { updatedAt: 'desc' },
+    const { contractId } = await context.params;
+    const draft = await prisma.contractDraft.findFirst({
+      where: { id: contractId, tenantId: session.tenantId },
       include: {
-        subject: true,
-        parties: {
-          include: {
-            members: {
-              orderBy: { createdAt: 'asc' },
-            },
-          },
-        },
-        financial: {
-          include: {
-            categories: true,
-            dueItems: true,
-          },
-        },
-        penalties: {
-          include: {
-            types: true,
-            rules: true,
-          },
-        },
+        subject: { include: { block: true, unit: true } },
+        parties: { include: { members: { orderBy: { createdAt: 'asc' } } } },
+        financial: { include: { categories: true, dueItems: true } },
+        penalties: { include: { types: true, rules: true } },
         terminationRules: true,
         extraCosts: true,
         technicalSpecs: true,
@@ -75,9 +52,15 @@ export async function GET(request: Request) {
       },
     });
 
-    const contracts = drafts.map((draft) => ({
+    if (!draft) {
+      return NextResponse.json({ message: 'قرارداد یافت نشد.' }, { status: 404 });
+    }
+
+    const status = computeStatus(draft);
+
+    return NextResponse.json({
       id: draft.id,
-      status: (isDraftReadyForApproval(draft) ? 'pending_approval' : 'draft') as ContractStatus,
+      status,
       createdAt: draft.createdAt.toISOString(),
       updatedAt: draft.updatedAt.toISOString(),
       data: {
@@ -95,48 +78,36 @@ export async function GET(request: Request) {
               deliveryDate: draft.subject.deliveryDate,
               blockId: draft.subject.blockId,
               unitId: draft.subject.unitId,
+              blockName: draft.subject.block?.name ?? null,
+              unitName: draft.subject.unit?.name ?? null,
+              floorName: draft.subject.unit?.floorName ?? null,
+              unitUsage: draft.subject.unit?.usage ?? null,
             }
-          : {
-              contractor: { type: 'self' },
-              contractType: 'pre-sale',
-              contractDate: '',
-              contractNumber: '',
-              deliveryDate: '',
-              blockId: '',
-              unitId: '',
-            },
-        parties: {
-          partyOneMode: draft.parties ? serializeShareMode(draft.parties.partyOneMode) : 'dang',
-          partyTwoMode: draft.parties ? serializeShareMode(draft.parties.partyTwoMode) : 'dang',
-          partyOne: draft.parties
-            ? draft.parties.members
+          : null,
+        parties: draft.parties
+          ? {
+              partyOneMode: serializeShareMode(draft.parties.partyOneMode),
+              partyTwoMode: serializeShareMode(draft.parties.partyTwoMode),
+              partyOne: draft.parties.members
                 .filter((member) => member.side === PartySide.party_one)
                 .map((member) => ({
                   personId: member.personId,
                   personType: member.personType === PersonType.legal ? 'legal' : 'natural',
                   name: member.name,
                   isPrimary: member.isPrimary,
-                  share: {
-                    value: Number(member.shareValue),
-                    mode: draft.parties ? serializeShareMode(draft.parties.partyOneMode) : 'dang',
-                  },
-                }))
-            : [],
-          partyTwo: draft.parties
-            ? draft.parties.members
+                  share: { value: Number(member.shareValue), mode: serializeShareMode(draft.parties.partyOneMode) },
+                })),
+              partyTwo: draft.parties.members
                 .filter((member) => member.side === PartySide.party_two)
                 .map((member) => ({
                   personId: member.personId,
                   personType: member.personType === PersonType.legal ? 'legal' : 'natural',
                   name: member.name,
                   isPrimary: member.isPrimary,
-                  share: {
-                    value: Number(member.shareValue),
-                    mode: draft.parties ? serializeShareMode(draft.parties.partyTwoMode) : 'dang',
-                  },
-                }))
-            : [],
-        },
+                  share: { value: Number(member.shareValue), mode: serializeShareMode(draft.parties.partyTwoMode) },
+                })),
+            }
+          : null,
         financial: draft.financial
           ? {
               pricingType: serializePricingType(draft.financial.pricingType),
@@ -164,20 +135,12 @@ export async function GET(request: Request) {
                 dueDate: item.dueDate,
               })),
             }
-          : undefined,
+          : null,
       },
-    }));
-
-    const counts = {
-      draft: contracts.filter((contract) => contract.status === 'draft').length,
-      pending_approval: contracts.filter((contract) => contract.status === 'pending_approval').length,
-      completed: 0,
-    } satisfies Record<ContractStatus, number>;
-
-    const items = status === 'completed' ? [] : contracts.filter((contract) => contract.status === status);
-
-    return NextResponse.json({ items, counts });
+    });
   } catch (error) {
+    void request;
     return handlePrismaApiError(error);
   }
 }
+
