@@ -1,5 +1,5 @@
 import { getDashboardData } from '../../lib/data';
-import { PageIntro, StatGrid } from '@repo/ui';
+import { PageIntro, StatGrid } from '@repo/ui/server';
 
 export default async function PayrollContractPage() {
   const data = await getDashboardData();

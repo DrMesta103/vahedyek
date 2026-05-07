@@ -8,6 +8,8 @@ import { StickySubmitBar } from '@repo/ui';
 import { ContractStepLoader } from './ContractStepLoader';
 import { FieldGroup, TagPills } from './ContractFormPrimitives';
 import { dispatchContractFlowDirty, dispatchContractFlowSavedForDraft } from './contractFlowSignals';
+import { validateStep2 } from '../../../../lib/contractValidation';
+import { buildValidationSummary } from './validationPresentation';
 import {
   clampShare,
   convertShare,
@@ -178,6 +180,8 @@ export function PartiesStep({ stepId, title, embedded = false }: { stepId: strin
   const [draftId, setDraftId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState('');
+  const [showValidation, setShowValidation] = useState(false);
 
   const [shareMode, setShareMode] = useState<ShareMode>('dang');
   const [partyOneRows, setPartyOneRows] = useState<PartyRow[]>([]);
@@ -383,12 +387,28 @@ export function PartiesStep({ stepId, title, embedded = false }: { stepId: strin
     partyTwo: mapRowsToPayload(partyTwoRows, shareMode),
   });
 
+  const payload = buildPayload();
+  const validation = validateStep2(payload);
+  const visibleErrors = showValidation ? validation.errors : {};
+
   const handleSubmit = async () => {
     if (!draftId) return;
 
+    if (!validation.valid) {
+      setShowValidation(true);
+      setFormError(buildValidationSummary(validation.errors, {
+        partyOne: 'طرف اول',
+        partyTwo: 'طرف دوم',
+        shares: 'سهم طرف اول',
+        partyTwoShares: 'سهم طرف دوم',
+      }, 'اطلاعات طرفین کامل نیست.'));
+      return;
+    }
+
     setSaving(true);
+    setFormError('');
+    setShowValidation(false);
     try {
-      const payload = buildPayload();
       await saveStepData(draftId, 'parties', payload);
       initialSnapshotRef.current = JSON.stringify(payload);
       dispatchContractFlowDirty(stepId as 'parties', false);
@@ -401,7 +421,7 @@ export function PartiesStep({ stepId, title, embedded = false }: { stepId: strin
 
   useEffect(() => {
     if (loading || !draftId) return;
-    const snapshot = JSON.stringify(buildPayload());
+    const snapshot = JSON.stringify(payload);
     if (!initialSnapshotRef.current) {
       initialSnapshotRef.current = snapshot;
       dispatchContractFlowDirty(stepId as 'parties', false);
@@ -429,6 +449,10 @@ export function PartiesStep({ stepId, title, embedded = false }: { stepId: strin
 
   return (
     <div className="space-y-5">
+      {formError ? (
+        <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{formError}</div>
+      ) : null}
+
       {!embedded ? (
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -471,6 +495,7 @@ export function PartiesStep({ stepId, title, embedded = false }: { stepId: strin
           void reloadReferenceData();
           setPartyOneDialogOpen(true);
         }}
+        invalid={Boolean(visibleErrors.partyOne || visibleErrors.shares)}
       />
 
       {sectionDivider('طرف دوم')}
@@ -488,6 +513,7 @@ export function PartiesStep({ stepId, title, embedded = false }: { stepId: strin
           void reloadReferenceData();
           setPartyTwoDialogOpen(true);
         }}
+        invalid={Boolean(visibleErrors.partyTwo || visibleErrors.partyTwoShares)}
       />
 
       <StickySubmitBar

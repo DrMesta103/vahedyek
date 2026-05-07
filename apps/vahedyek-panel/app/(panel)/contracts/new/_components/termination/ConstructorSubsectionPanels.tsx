@@ -102,14 +102,6 @@ export function LateInstallmentPanel({
 }) {
   return (
     <div className="space-y-5">
-      <ToggleRow
-        checked={value.ruleEnabled}
-        onChange={(checked) => onChange({ ...value, ruleEnabled: checked })}
-        label="فعال‌سازی فسخ به دلیل تأخیر در پرداخت اقساط"
-        description="در صورت فعال‌سازی، تنظیمات این بخش برای تشخیص تأخیر اقساط استفاده می‌شود."
-      />
-
-      <div className={`transition-all duration-200 ${value.ruleEnabled ? 'opacity-100' : 'max-h-0 overflow-hidden opacity-0'}`}>
       <FieldGroup
         label="مهلت ارفاقی (Grace period)"
         hint="پس از سررسید، چند روز پیش از ارجاع به فرایند فسخ صبر می‌شود."
@@ -167,7 +159,6 @@ export function LateInstallmentPanel({
       </FieldGroup>
 
       <SubsectionSubmitRow onSave={onSubmit} saving={saving} />
-      </div>
     </div>
   );
 }
@@ -185,14 +176,6 @@ export function FinancialObligationsPanel({
 }) {
   return (
     <div className="space-y-5">
-      <ToggleRow
-        checked={value.ruleEnabled}
-        onChange={(checked) => onChange({ ...value, ruleEnabled: checked })}
-        label="فعال‌سازی فسخ به دلیل عدم انجام تعهدات مالی"
-        description="در صورت فعال‌سازی، تعهدات مالی انتخاب‌شده با مهلت ارفاقی برای ورود به جریان فسخ لحاظ می‌شوند."
-      />
-
-      <div className={`transition-all duration-200 ${value.ruleEnabled ? 'opacity-100' : 'max-h-0 overflow-hidden opacity-0'}`}>
       <FieldGroup label="انواع تعهدات مالی مشمول" hint="با فعال‌سازی این گزینه، جرایم براساس پیکربندی به تمام قراردادهای جدید اعمال خواهند شد">
         <MultiTagPills<C['financialObligations']['obligationTypes'][number]>
           values={value.obligationTypes}
@@ -227,7 +210,6 @@ export function FinancialObligationsPanel({
       />
 
       <SubsectionSubmitRow onSave={onSubmit} saving={saving} />
-      </div>
     </div>
   );
 }
@@ -245,14 +227,6 @@ export function DocumentDeficienciesPanel({
 }) {
   return (
     <div className="space-y-5">
-      <ToggleRow
-        checked={value.ruleEnabled}
-        onChange={(checked) => onChange({ ...value, ruleEnabled: checked })}
-        label="فعال‌سازی فسخ به دلیل نقص مدارک / تعهدات"
-        description="در صورت فعال‌سازی، موارد اجباری و مهلت تکمیل برای بررسی امکان فسخ لحاظ می‌شود."
-      />
-
-      <div className={`transition-all duration-200 ${value.ruleEnabled ? 'opacity-100' : 'max-h-0 overflow-hidden opacity-0'}`}>
       <FieldGroup label="موارد الزامی" hint="کدام مدارک یا تعهدات باید کامل باشند تا جریان ادامه یابد.">
         <MultiTagPills<C['documentDeficiencies']['mandatoryItems'][number]>
           values={value.mandatoryItems}
@@ -298,7 +272,6 @@ export function DocumentDeficienciesPanel({
       />
 
       <SubsectionSubmitRow onSave={onSubmit} saving={saving} />
-      </div>
     </div>
   );
 }
@@ -316,14 +289,6 @@ export function OtherBreachPanel({
 }) {
   return (
     <div className="space-y-5">
-      <ToggleRow
-        checked={value.ruleEnabled}
-        onChange={(checked) => onChange({ ...value, ruleEnabled: checked })}
-        label="فعال‌سازی فسخ به دلیل نقض سایر تعهدات"
-        description="در صورت فعال‌سازی، نوع تخلف و مهلت اصلاح برای ورود به جریان فسخ لحاظ می‌شود."
-      />
-
-      <div className={`transition-all duration-200 ${value.ruleEnabled ? 'opacity-100' : 'max-h-0 overflow-hidden opacity-0'}`}>
       <FieldGroup label="نوع نقض‌ها">
         <MultiTagPills<C['otherBreach']['violationTypes'][number]>
           values={value.violationTypes}
@@ -361,7 +326,6 @@ export function OtherBreachPanel({
       />
 
       <SubsectionSubmitRow onSave={onSubmit} saving={saving} />
-      </div>
     </div>
   );
 }
@@ -379,14 +343,6 @@ export function NotificationsPanel({
 }) {
   return (
     <div className="space-y-5">
-      <ToggleRow
-        checked={value.ruleEnabled}
-        onChange={(checked) => onChange({ ...value, ruleEnabled: checked })}
-        label="فعال‌سازی اطلاع‌رسانی فسخ"
-        description="در صورت فعال‌سازی، تنظیمات ارسال اعلان‌ها در زمان فعال شدن اختیار فسخ اعمال می‌شود."
-      />
-
-      <div className={`transition-all duration-200 ${value.ruleEnabled ? 'opacity-100' : 'max-h-0 overflow-hidden opacity-0'}`}>
       <ToggleRow
         checked={value.notifyConstructor}
         onChange={(checked) => {
@@ -415,7 +371,6 @@ export function NotificationsPanel({
         description="با فعال‌سازی، بخش فسخ در جزئیات قرارداد نمایش داده می‌شود تا دسترسی سریع برای بررسی/اقدام فراهم باشد."
       />
       <SubsectionSubmitRow onSave={onSubmit} saving={saving} />
-      </div>
     </div>
   );
 }

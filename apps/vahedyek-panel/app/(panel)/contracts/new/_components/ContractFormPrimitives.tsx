@@ -22,11 +22,13 @@ export function FieldGroup({
   required,
   hint,
   children,
+  invalid = false,
 }: {
   label: string;
   required?: boolean;
   hint?: string;
   children: ReactNode;
+  invalid?: boolean;
 }) {
   return (
     <div className="space-y-1.5">
@@ -34,7 +36,7 @@ export function FieldGroup({
         {label}
         {required ? <span className="text-rose-500">*</span> : null}
       </label>
-      {children}
+      <div className={invalid ? 'rounded-xl border border-rose-300 bg-rose-50/40 p-2' : ''}>{children}</div>
       {hint ? <p className="text-[11px] text-slate-400">{hint}</p> : null}
     </div>
   );
@@ -49,6 +51,7 @@ export function FormTextInput({
   className = '',
   inputMode,
   dir,
+  invalid = false,
 }: {
   value: string;
   onChange: (value: string) => void;
@@ -58,6 +61,7 @@ export function FormTextInput({
   className?: string;
   inputMode?: React.HTMLAttributes<HTMLInputElement>['inputMode'];
   dir?: 'ltr' | 'rtl';
+  invalid?: boolean;
 }) {
   return (
     <div className="relative">
@@ -69,7 +73,10 @@ export function FormTextInput({
         disabled={disabled}
         inputMode={inputMode}
         dir={dir}
-        className={`h-[42px] w-full rounded-xl border border-slate-200 bg-[image:var(--control-bg-gradient)] text-[13px] text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] placeholder:text-slate-400 outline-none transition-all focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10 disabled:bg-slate-50 disabled:text-slate-400 ${Icon ? 'pr-10 pl-3.5' : 'px-3.5'} ${className}`}
+        aria-invalid={invalid}
+        className={`h-[42px] w-full rounded-xl border bg-[image:var(--control-bg-gradient)] text-[13px] text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] placeholder:text-slate-400 outline-none transition-all disabled:bg-slate-50 disabled:text-slate-400 ${
+          invalid ? 'border-rose-400 focus:border-rose-500 focus:ring-4 focus:ring-rose-500/10' : 'border-slate-200 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10'
+        } ${Icon ? 'pr-10 pl-3.5' : 'px-3.5'} ${className}`}
       />
     </div>
   );
@@ -81,12 +88,14 @@ export function FormDateInput({
   placeholder,
   icon: Icon = null,
   className = '',
+  invalid = false,
 }: {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
   icon?: React.ElementType | null;
   className?: string;
+  invalid?: boolean;
 }) {
   return (
     <div className="relative">
@@ -96,7 +105,9 @@ export function FormDateInput({
         onChange={onChange}
         placeholder={placeholder ?? 'انتخاب تاریخ'}
         withCalendarIcon={!Icon}
-        className={`h-[42px] w-full rounded-xl border border-slate-200 bg-[image:var(--control-bg-gradient)] ${Icon ? 'pr-10 pl-3.5' : 'px-3.5'} text-[13px] text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] placeholder:text-slate-400 outline-none transition-all focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10 ${className}`}
+        className={`h-[42px] w-full rounded-xl border bg-[image:var(--control-bg-gradient)] ${Icon ? 'pr-10 pl-3.5' : 'px-3.5'} text-[13px] text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] placeholder:text-slate-400 outline-none transition-all ${
+          invalid ? 'border-rose-400 focus:border-rose-500 focus:ring-4 focus:ring-rose-500/10' : 'border-slate-200 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10'
+        } ${className}`}
       />
     </div>
   );
@@ -243,6 +254,7 @@ export function InlineSelect({
   placeholder,
   searchPlaceholder,
   emptyText,
+  invalid = false,
 }: {
   value: string;
   onSelect: (value: string) => void;
@@ -250,6 +262,7 @@ export function InlineSelect({
   placeholder: string;
   searchPlaceholder: string;
   emptyText: string;
+  invalid?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -271,7 +284,9 @@ export function InlineSelect({
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
-        className="flex h-[42px] w-full items-center justify-between rounded-xl border border-slate-200 bg-[image:var(--control-bg-gradient)] px-3.5 text-[13px] text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] outline-none transition-all hover:border-slate-300 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10"
+        className={`flex h-[42px] w-full items-center justify-between rounded-xl border bg-[image:var(--control-bg-gradient)] px-3.5 text-[13px] text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] outline-none transition-all ${
+          invalid ? 'border-rose-400 focus:border-rose-500 focus:ring-4 focus:ring-rose-500/10' : 'border-slate-200 hover:border-slate-300 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10'
+        }`}
       >
         <span className={selected ? 'text-slate-800' : 'text-slate-400'}>{selected?.label ?? placeholder}</span>
         <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform ${open ? 'rotate-180' : ''}`} />
@@ -330,6 +345,7 @@ export function ExpandableTagGroup({
   onSelect,
   emptyText,
   itemsPerRow = 8,
+  invalid = false,
 }: {
   label: string;
   items: { id: string; name: string; sub?: string }[];
@@ -337,6 +353,7 @@ export function ExpandableTagGroup({
   onSelect: (id: string) => void;
   emptyText: string;
   itemsPerRow?: number;
+  invalid?: boolean;
 }) {
   const [query, setQuery] = useState('');
   const [expanded, setExpanded] = useState(false);
@@ -360,7 +377,7 @@ export function ExpandableTagGroup({
   };
 
   return (
-    <div className="space-y-2">
+    <div className={`space-y-2 ${invalid ? 'rounded-xl border border-rose-300 bg-rose-50/40 p-3' : ''}`}>
       <div className="flex items-center gap-2">
         <label className="text-[13px] font-bold text-slate-700">
           {label}

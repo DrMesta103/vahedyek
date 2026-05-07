@@ -71,6 +71,8 @@ model Tenant {
   roles         TenantRole[]
   representatives DirectoryRepresentative[]
   contractRuleSettings TenantContractRuleSettings?
+  /// پیکربندی مسیر تأیید قرارداد به تفکیک نوع کاربری واحد (JSON — ساختار قرارداد در `TenantApprovalProcessConfig`)
+  approvalProcessConfig Json             @default("{}")
 }
 
 model AppUser {
@@ -176,6 +178,10 @@ model ContractDraft {
   tenantId  String
   createdAt DateTime           @default(now())
   updatedAt DateTime           @updatedAt
+  /// پس از «عدم تأیید»، تا زمان پاک‌شدن، قرارداد در لیست پیش‌نویس می‌ماند حتی با تکمیل ظاهری مراحل.
+  approvalReturnedPending     Boolean   @default(false)
+  approvalLastRejectionReason String?
+  approvalLastRejectedAt      DateTime?
   tenant    Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   subject   ContractSubject?
   parties   ContractParties?

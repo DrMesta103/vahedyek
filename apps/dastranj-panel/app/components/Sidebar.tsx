@@ -1,44 +1,37 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { Bell, Building2, ChevronLeft, ChevronsLeft, ChevronsRight, Ellipsis, Home, LogOut, MoonStar, Settings, Sun } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
-import { APP_MENU_ITEMS, getActiveNavigationItem } from '../lib/navigation';
+import { useAuthContext } from '../hooks/useAuthContext';
+import { formatIdentityLabel } from '../lib/contact';
+import { getSidebarMenuItems } from '../lib/navigation';
+import { ThemeToggle } from './theme/ThemeToggle';
 
-export function Sidebar() {
-  const pathname = usePathname();
+interface SidebarProps {
+  activeItem?: string;
+  forceCollapsed?: boolean;
+  lockCollapsed?: boolean;
+}
+
+export function Sidebar({ activeItem = 'home', forceCollapsed = false, lockCollapsed = false }: SidebarProps) {
   const router = useRouter();
+  const { data } = useAuthContext();
   const [collapsed, setCollapsed] = useState(false);
   const [toolbarMenuOpen, setToolbarMenuOpen] = useState(false);
   const toolbarMenuRef = useRef<HTMLDivElement | null>(null);
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
 
   useEffect(() => {
-    const saved = window.localStorage.getItem('dastranj-theme') as 'dark' | 'light' | null;
-    if (saved) {
-      setTheme(saved);
-      document.documentElement.setAttribute('data-theme', saved);
-    }
-  }, []);
-
-  const toggleTheme = () => {
-    const next = theme === 'dark' ? 'light' : 'dark';
-    setTheme(next);
-    window.localStorage.setItem('dastranj-theme', next);
-    document.documentElement.setAttribute('data-theme', next);
-  };
-
-  useEffect(() => {
-    const savedState = window.localStorage.getItem('dastranj-sidebar-collapsed');
-    if (savedState === 'true') {
+    const savedState = window.localStorage.getItem('app-sidebar-collapsed');
+    if (forceCollapsed || savedState === 'true') {
       setCollapsed(true);
     }
-  }, []);
+  }, [forceCollapsed]);
 
   useEffect(() => {
-    window.localStorage.setItem('dastranj-sidebar-collapsed', String(collapsed));
-  }, [collapsed]);
+    if (forceCollapsed) return;
+    window.localStorage.setItem('app-sidebar-collapsed', String(collapsed));
+  }, [collapsed, forceCollapsed]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -51,59 +44,70 @@ export function Sidebar() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const activeItem = getActiveNavigationItem(pathname);
+  const handleLogout = async () => {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    router.push('/login');
+    router.refresh();
+  };
 
-  const toolbarActions = (
-    <>
-      <button type="button" title="خروج">
-        <LogOut size={18} className="toolbar-icon mirrored-icon" />
+  const handleSwitchTenant = async () => {
+    router.push('/select-tenant?next=%2F');
+    router.refresh();
+  };
+
+  const handleOpenTenantDocs = () => {
+    router.push('/quick-setup');
+  };
+
+  const effectiveCollapsed = forceCollapsed || collapsed;
+  const allowedMenuItemIds = data?.access?.allowedMenuItemIds;
+  const canSeeSettings = !allowedMenuItemIds || allowedMenuItemIds.includes('settings');
+  const visibleMenuItems = getSidebarMenuItems().filter((item) => !allowedMenuItemIds || allowedMenuItemIds.includes(item.id));
+  const identityLabel = formatIdentityLabel(data?.user?.email, data?.user?.mobile);
+
+  const settingsButton = (className?: string) =>
+    canSeeSettings ? (
+      <button type="button" onClick={() => router.push('/settings')} className={className} style={{ background: 'transparent', border: 'none' }} title="تنظیمات کلی">
+        <i className={`fa fa-cog${activeItem === 'settings' ? ' active-toolbar-icon' : ''}`}></i>
       </button>
-      <button type="button" title="اعلان‌ها">
-        <span className="toolbar-badge-wrap">
-          <Bell size={18} className="toolbar-icon" />
-          <span className="badge">1</span>
-        </span>
-      </button>
-      <button type="button" onClick={() => router.push('/business-settings')} title="تنظیمات کسب و کار">
-        <Settings size={18} className={`toolbar-icon${activeItem.id === 'business-settings' ? ' active-toolbar-icon' : ''}`} />
-      </button>
-      <button type="button" onClick={() => router.push('/')} title="خانه">
-        <Home size={18} className={`toolbar-icon${activeItem.id === 'home' ? ' active-toolbar-icon' : ''}`} />
-      </button>
-      <button type="button" title="تم دسترنج" onClick={toggleTheme}>
-        {theme === 'dark' ? <MoonStar size={18} className="toolbar-icon" /> : <Sun size={18} className="toolbar-icon" />}
-      </button>
-    </>
-  );
+    ) : null;
 
   return (
-    <aside className={`sidebar dastranj-sidebar${collapsed ? ' collapsed' : ''}`}>
+    <aside className={`sidebar${effectiveCollapsed ? ' collapsed' : ''}${lockCollapsed ? ' locked-collapsed' : ''}`}>
       <div className="profile-item">
-        <div className="avatar-small dastranj-user-avatar">
-          <Building2 size={18} />
+        <div className="avatar-small" style={{ background: '#fb923c' }}>
+          <i className="fa fa-user"></i>
         </div>
         <div className="name">
-          <div>دسترنج</div>
-          <div className="sidebar-subtitle">پنل مدیریت منابع انسانی</div>
+          <div>{data?.user?.fullName ?? 'در حال بارگذاری...'}</div>
+          <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '2px' }}>{identityLabel}</div>
         </div>
         <div className="back-btn" style={{ visibility: 'hidden' }} aria-hidden="true">
-          <ChevronLeft size={14} />
+          <i className="fa fa-chevron-left"></i>
         </div>
       </div>
 
       <div className="profile-item">
-        <div className="avatar-small dastranj-tenant-avatar">HR</div>
-        <div className="name">
-          <div>دسترنج پنل</div>
-          <div className="sidebar-subtitle">Next.js + Prisma</div>
+        <div className="avatar-small" style={{ background: '#111', fontSize: '10px' }}>
+          {data?.tenant?.brandCode ?? 'TEN'}
         </div>
-        <button type="button" onClick={() => router.push('/account')} title="حساب کسب و کار" className="back-btn tenant-switch-btn">
-          <ChevronLeft size={14} />
+        <div className="name" style={{ color: '#6b7280' }}>
+          <div>{data?.tenant?.name ?? 'tenant'}</div>
+          <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '2px' }}>{data?.tenant?.slug ?? ''}</div>
+        </div>
+        <button
+          type="button"
+          onClick={handleSwitchTenant}
+          title="تغییر کسب و کار"
+          style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}
+          className="back-btn tenant-switch-btn"
+        >
+          <i className="fa fa-exchange-alt"></i>
         </button>
       </div>
 
       <div className="sidebar-toolbar">
-        {collapsed ? (
+        {effectiveCollapsed ? (
           <div className="toolbar-menu-wrap" ref={toolbarMenuRef}>
             <button
               type="button"
@@ -111,34 +115,81 @@ export function Sidebar() {
               onClick={() => setToolbarMenuOpen((current) => !current)}
               title="گزینه‌های بیشتر"
             >
-              <Ellipsis size={18} />
+              <i className="fa fa-ellipsis-h"></i>
             </button>
-            {toolbarMenuOpen ? <div className="toolbar-menu-dropdown">{toolbarActions}</div> : null}
+            {toolbarMenuOpen ? (
+              <div className="toolbar-menu-dropdown">
+                <button type="button" onClick={handleLogout} className="toolbar-menu-item">
+                  <i className="fa fa-sign-out-alt" style={{ transform: 'scaleX(-1)' }}></i>
+                </button>
+                <button type="button" className="toolbar-menu-item">
+                  <span className="toolbar-badge-wrap">
+                    <i className="fa fa-bell"></i>
+                    <span className="badge">1</span>
+                  </span>
+                </button>
+                {settingsButton('toolbar-menu-item')}
+                <button type="button" onClick={() => router.push('/')} className="toolbar-menu-item">
+                  <i className={`fa fa-home${activeItem === 'home' ? ' active-toolbar-icon' : ''}`}></i>
+                </button>
+                <ThemeToggle collapsed />
+              </div>
+            ) : null}
           </div>
         ) : (
-          toolbarActions
+          <>
+            <button type="button" onClick={handleLogout} style={{ background: 'transparent', border: 'none' }}>
+              <i className="fa fa-sign-out-alt" style={{ transform: 'scaleX(-1)' }}></i>
+            </button>
+            <i className="fa fa-bell" style={{ position: 'relative' }}>
+              <span className="badge">1</span>
+            </i>
+            {settingsButton()}
+            <button type="button" onClick={() => router.push('/')} style={{ background: 'transparent', border: 'none' }}>
+              <i className={`fa fa-home${activeItem === 'home' ? ' active-toolbar-icon' : ''}`}></i>
+            </button>
+            <ThemeToggle />
+          </>
         )}
       </div>
 
       <nav className="menu-list">
-        {APP_MENU_ITEMS.map((item) => {
-          const Icon = item.icon;
-          const active = pathname === item.href || (item.href !== '/' && pathname.startsWith(`${item.href}/`));
-
-          return (
-            <Link key={item.href} href={item.href} className={`menu-link${active ? ' active' : ''}`} title={item.label}>
-              <Icon size={18} />
+        {visibleMenuItems.map((item) =>
+          item.disabled ? (
+            <div
+              key={item.id}
+              className="menu-link"
+              aria-disabled="true"
+              title={item.label}
+              style={{ opacity: 0.5, cursor: 'not-allowed', pointerEvents: 'none' }}
+            >
+              <i className={`fa ${item.icon}`}></i>
+              <span>{item.label}</span>
+              <i className="fa fa-lock" style={{ marginRight: 'auto', fontSize: '12px' }}></i>
+            </div>
+          ) : (
+            <Link key={item.id} href={item.href} title={item.label} className={`menu-link${activeItem === item.id ? ' active' : ''}`}>
+              <i className={`fa ${item.icon}`}></i>
               <span>{item.label}</span>
             </Link>
-          );
-        })}
+          ),
+        )}
       </nav>
 
-      <div className="invite-section dastranj-invite-section">
-        <p>سیستم فعال</p>
-        <button type="button" className="invite-btn" onClick={() => router.push('/quick-setup')}>
-          راه‌اندازی و پیکربندی
-        </button>
+      <div
+        className="invite-section"
+        onClick={handleOpenTenantDocs}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            handleOpenTenantDocs();
+          }
+        }}
+      >
+        <p>tenant فعال</p>
+        <button className="invite-btn">{data?.tenant?.name ?? 'در حال بارگذاری...'}</button>
       </div>
 
       <div className="version-footer">
@@ -146,11 +197,12 @@ export function Sidebar() {
           type="button"
           className="version-toggle"
           onClick={() => setCollapsed((current) => !current)}
-          title={collapsed ? 'باز کردن سایدبار' : 'جمع کردن سایدبار'}
+          title={effectiveCollapsed ? 'باز کردن سایدبار' : 'جمع کردن سایدبار'}
+          disabled={lockCollapsed}
         >
-          {collapsed ? <ChevronsLeft size={18} /> : <ChevronsRight size={18} />}
+          <i className={`fa ${effectiveCollapsed ? 'fa-angle-double-left' : 'fa-angle-double-right'}`}></i>
         </button>
-        <span>0.1.0</span>
+        <span>0.8.0</span>
       </div>
     </aside>
   );

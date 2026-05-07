@@ -13,7 +13,16 @@ export async function GET() {
     const [memberships, suggestedBusinessNames] = await Promise.all([
       prisma.userTenantMembership.findMany({
         where: { userId: session.userId },
-        include: { tenant: true },
+        include: {
+          tenant: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+              brandCode: true,
+            },
+          },
+        },
         orderBy: { createdAt: 'asc' },
       }),
       prisma.tenant.findMany({

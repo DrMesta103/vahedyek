@@ -15,6 +15,7 @@ export function PartySection({
   onRemove,
   addButtonLabel,
   onOpenDialog,
+  invalid = false,
 }: {
   title: string;
   description: string;
@@ -25,10 +26,11 @@ export function PartySection({
   onRemove: (id: string) => void;
   addButtonLabel: string;
   onOpenDialog: () => void;
+  invalid?: boolean;
 }) {
   return (
     <div className="space-y-4">
-      <FormBox title={title} description={description}>
+      <FormBox title={title} description={description} invalid={invalid}>
         <div className="space-y-4">
           {rows.length ? (
             rows.map((row) => (

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { LoaderCircle, Plus, Save, X } from 'lucide-react';
+import { Building2, ChevronLeft, LoaderCircle, Plus, Save, Scale, X } from 'lucide-react';
 import { Input, StickySubmitBar } from '@repo/ui';
 import { ContractStepLoader } from './ContractStepLoader';
 import { FieldLabel } from './FieldLabel';
@@ -18,6 +18,7 @@ import {
   setFrontendStepDraft,
 } from '../../../../lib/contractDraftClient';
 import { validatePenaltiesStep } from '../../../../lib/contractValidation';
+import { buildValidationSummary } from './validationPresentation';
 import type {
   ContractPenaltiesData,
   PenaltyExtraFeeType,
@@ -30,6 +31,9 @@ import type {
 } from '../../../../types/contract';
 import { dispatchContractFlowDirty, dispatchContractFlowSavedForDraft } from './contractFlowSignals';
 import type { ContractFlowSectionId } from './contractFlowSignals';
+import { BuilderPenaltyInFlow, type BuilderPenaltyInFlowHandle } from './penalties/BuilderPenaltyInFlow';
+
+type PenaltyPartyTab = 'buyer' | 'seller';
 
 const MODE_OPTIONS: Array<{
   id: PenaltyMode;
@@ -249,6 +253,93 @@ function FieldBlock({
   );
 }
 
+function PenaltiesPartyTabBar({
+  activeTab,
+  buyerProgressLabel,
+  sellerProgressLabel,
+  onSelect,
+}: {
+  activeTab: PenaltyPartyTab;
+  buyerProgressLabel: string;
+  sellerProgressLabel: string;
+  onSelect: (tab: PenaltyPartyTab) => void;
+}) {
+  const tabBase =
+    'relative flex min-h-[88px] w-full flex-row items-start gap-3 rounded-2xl border-2 p-4 text-right transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/40 focus-visible:ring-offset-2';
+
+  return (
+    <div className="border-b border-slate-200 bg-gradient-to-b from-slate-50/90 to-white px-4 py-5 sm:px-6 sm:py-6" role="tablist" aria-label="جرایم خریدار یا سازنده">
+      <div className="mx-auto grid max-w-3xl grid-cols-1 gap-4 sm:grid-cols-2">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'seller'}
+          onClick={() => onSelect('seller')}
+          className={`${tabBase} ${
+            activeTab === 'seller'
+              ? 'border-cyan-500 bg-white shadow-[0_4px_20px_rgba(6,182,212,0.12)] ring-1 ring-cyan-500/20'
+              : 'border-slate-200 bg-white/90 hover:border-slate-300 hover:bg-white hover:shadow-sm'
+          }`}
+        >
+          <span
+            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border ${
+              activeTab === 'seller' ? 'border-cyan-200 bg-cyan-50 text-cyan-700' : 'border-slate-200 bg-slate-50 text-slate-600'
+            }`}
+          >
+            <Scale className="h-5 w-5" aria-hidden />
+          </span>
+          <span className="min-w-0 flex-1 space-y-1.5">
+            <span className={`block text-sm font-bold leading-tight ${activeTab === 'seller' ? 'text-cyan-900' : 'text-slate-800'}`}>جرایم سازنده</span>
+            <span
+              className={`inline-flex rounded-lg border px-2 py-0.5 text-[11px] font-semibold ${
+                activeTab === 'seller' ? 'border-cyan-200 bg-cyan-50/80 text-cyan-800' : 'border-slate-200 bg-slate-50 text-slate-600'
+              }`}
+            >
+              {sellerProgressLabel}
+            </span>
+          </span>
+          {activeTab === 'seller' ? (
+            <span className="absolute start-3 top-3 h-2 w-2 rounded-full bg-cyan-500 shadow-[0_0_0_3px_rgba(6,182,212,0.25)] sm:start-4 sm:top-4" aria-hidden />
+          ) : null}
+        </button>
+
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'buyer'}
+          onClick={() => onSelect('buyer')}
+          className={`${tabBase} ${
+            activeTab === 'buyer'
+              ? 'border-cyan-500 bg-white shadow-[0_4px_20px_rgba(6,182,212,0.12)] ring-1 ring-cyan-500/20'
+              : 'border-slate-200 bg-white/90 hover:border-slate-300 hover:bg-white hover:shadow-sm'
+          }`}
+        >
+          <span
+            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border ${
+              activeTab === 'buyer' ? 'border-cyan-200 bg-cyan-50 text-cyan-700' : 'border-slate-200 bg-slate-50 text-slate-600'
+            }`}
+          >
+            <Building2 className="h-5 w-5" aria-hidden />
+          </span>
+          <span className="min-w-0 flex-1 space-y-1.5">
+            <span className={`block text-sm font-bold leading-tight ${activeTab === 'buyer' ? 'text-cyan-900' : 'text-slate-800'}`}>جرایم خریدار</span>
+            <span
+              className={`inline-flex rounded-lg border px-2 py-0.5 text-[11px] font-semibold ${
+                activeTab === 'buyer' ? 'border-cyan-200 bg-cyan-50/80 text-cyan-800' : 'border-slate-200 bg-slate-50 text-slate-600'
+              }`}
+            >
+              {buyerProgressLabel}
+            </span>
+          </span>
+          {activeTab === 'buyer' ? (
+            <span className="absolute start-3 top-3 h-2 w-2 rounded-full bg-cyan-500 shadow-[0_0_0_3px_rgba(6,182,212,0.25)] sm:start-4 sm:top-4" aria-hidden />
+          ) : null}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: string; title: string; embedded?: boolean }) {
   const router = useRouter();
   const basePath = useContractFlowBasePath();
@@ -259,11 +350,18 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [formError, setFormError] = useState('');
+  const [showValidation, setShowValidation] = useState(false);
+  const [partyTab, setPartyTab] = useState<PenaltyPartyTab>('buyer');
+  const sellerPenaltyRef = useRef<BuilderPenaltyInFlowHandle | null>(null);
+  const [sellerStatus, setSellerStatus] = useState<{ loading: boolean; saving: boolean; dirty: boolean }>({
+    loading: true,
+    saving: false,
+    dirty: false,
+  });
 
   const [types, setTypes] = useState<PenaltyTypeStateData[]>(INITIAL_TYPES);
   const [rules, setRules] = useState<PenaltyRuleData[]>([]);
 
-  const [dialogOpen, setDialogOpen] = useState(false);
   const [editingRuleId, setEditingRuleId] = useState<string | null>(null);
   const [activePenaltyTypeId, setActivePenaltyTypeId] = useState<string>('');
   const [expandedPenaltyTypeId, setExpandedPenaltyTypeId] = useState<string>('');
@@ -280,7 +378,12 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
   );
 
   const validation = useMemo(() => validatePenaltiesStep(payload), [payload]);
+  const visibleErrors = showValidation ? validation.errors : {};
   const activeTypes = useMemo(() => types.filter((item) => item.active), [types]);
+  const configuredActiveTypesCount = useMemo(
+    () => activeTypes.filter((t) => rules.some((r) => r.penaltyTypeId === t.id)).length,
+    [activeTypes, rules],
+  );
 
   useEffect(() => {
     if (!expandedPenaltyTypeId) {
@@ -343,18 +446,26 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
     }
   }, [dirty, draftId, loading, payload, stepId]);
 
-  const openRuleDialog = (penaltyTypeId: string, rule?: PenaltyRuleData) => {
+  const loadRuleFormForType = (penaltyTypeId: string) => {
+    const existingRule = rules.find((item) => item.penaltyTypeId === penaltyTypeId);
     setActivePenaltyTypeId(penaltyTypeId);
-    setEditingRuleId(rule?.id ?? null);
-    setRuleForm(rule ? normalizeRule(rule) : makeEmptyRule(penaltyTypeId));
+    setEditingRuleId(existingRule?.id ?? null);
+    setRuleForm(existingRule ? normalizeRule(existingRule) : makeEmptyRule(penaltyTypeId));
     setDialogError('');
-    setDialogOpen(true);
   };
 
-  const closeDialog = () => {
-    setDialogOpen(false);
-    setEditingRuleId(null);
+  const openRuleDialog = (penaltyTypeId: string, rule?: PenaltyRuleData) => {
+    setExpandedPenaltyTypeId(penaltyTypeId);
+    setActivePenaltyTypeId(penaltyTypeId);
     setDialogError('');
+
+    if (rule) {
+      setEditingRuleId(rule.id);
+      setRuleForm(normalizeRule(rule));
+      return;
+    }
+
+    loadRuleFormForType(penaltyTypeId);
   };
 
   const validateRuleForm = (rule: PenaltyRuleData) => {
@@ -392,14 +503,14 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
     }
 
     setRules((current) => {
-      if (editingRuleId) {
-        return current.map((item) => (item.id === editingRuleId ? normalizeRule(ruleForm) : item));
-      }
-
-      return [...current, normalizeRule(ruleForm)];
+      const normalized = normalizeRule(ruleForm);
+      // Only one rule per penalty type is allowed.
+      const withoutType = current.filter((item) => item.penaltyTypeId !== normalized.penaltyTypeId);
+      return editingRuleId
+        ? withoutType.concat(normalized)
+        : withoutType.concat({ ...normalized, id: normalized.id || `rule-${Math.random().toString(36).slice(2, 10)}` });
     });
-
-    closeDialog();
+    setDialogError('');
   };
 
   const handleSubmit = async () => {
@@ -407,14 +518,20 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
 
     const result = validatePenaltiesStep(payload);
     if (!result.valid) {
-      setFormError(Object.values(result.errors)[0] ?? 'اطلاعات جرایم کامل نیست.');
+      setShowValidation(true);
+      setFormError(buildValidationSummary(result.errors, {}, 'اطلاعات جرایم کامل نیست.'));
       return;
     }
 
     setSaving(true);
     setFormError('');
+    setShowValidation(false);
 
     try {
+      if (partyTab === 'seller') {
+        await sellerPenaltyRef.current?.saveIfDirty();
+      }
+
       await saveStepData(draftId, 'penalties', payload);
       clearFrontendStepDraft(draftId, 'penalties');
       initialSnapshotRef.current = serializePayload(payload);
@@ -450,14 +567,29 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
         </div>
       ) : null}
 
-      <div className="rounded-xl border border-slate-200 bg-white">
-        <div className="border-b border-slate-100 px-5 py-4">
-          <p className="text-[13px] font-semibold uppercase tracking-widest text-slate-400">تعریف جرایم قرارداد</p>
-          <p className="mt-0.5 text-[13px] text-slate-500">نوع جریمه را فعال کنید، سپس برای همان نوع یک یا چند rule ثبت کنید.</p>
+      <div className="overflow-hidden rounded-[30px] border border-gray-200 bg-white text-right shadow-sm" dir="rtl">
+        <PenaltiesPartyTabBar
+          activeTab={partyTab}
+          buyerProgressLabel={`${configuredActiveTypesCount}/${Math.max(activeTypes.length, 1)} ثبت‌شده`}
+          sellerProgressLabel="تنظیمات"
+          onSelect={setPartyTab}
+        />
+
+        {/* Keep both tabs mounted to prevent layout "jump" on switch */}
+        <div className={partyTab === 'seller' ? 'block' : 'hidden'} aria-hidden={partyTab !== 'seller'}>
+          <div className="p-6 sm:p-8">
+            <BuilderPenaltyInFlow ref={sellerPenaltyRef} onStatusChange={setSellerStatus} />
+          </div>
         </div>
 
-        <div className="space-y-6 p-5">
-          <section className="space-y-3">
+        <div className={partyTab === 'seller' ? 'hidden' : 'block'} aria-hidden={partyTab === 'seller'}>
+          <div className="space-y-6 p-5 sm:p-8">
+            <div className="border-b border-slate-100 pb-5">
+              <p className="text-[13px] font-semibold uppercase tracking-widest text-slate-400">تعریف جرایم خریدار</p>
+              <p className="mt-0.5 text-[13px] text-slate-500">نوع جریمه را فعال کنید، سپس برای همان نوع یک یا چند rule ثبت کنید.</p>
+            </div>
+
+            <section className="space-y-3">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-bold text-slate-700">فهرست انواع جریمه</h2>
               <span className="text-xs text-slate-400">{activeTypes.length} مورد فعال</span>
@@ -466,6 +598,7 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
             <div className="space-y-3">
               {types.map((type) => {
                 const typeRules = rules.filter((rule) => rule.penaltyTypeId === type.id);
+                const typeRule = typeRules[0] ?? null;
                 const isExpanded = type.active && expandedPenaltyTypeId === type.id;
 
                 return (
@@ -481,21 +614,33 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
                           type="button"
                           onClick={() => {
                             if (!type.active) return;
-                            setExpandedPenaltyTypeId((current) => (current === type.id ? '' : type.id));
+                            setExpandedPenaltyTypeId((current) => {
+                              const next = current === type.id ? '' : type.id;
+                              if (next) loadRuleFormForType(next);
+                              return next;
+                            });
                           }}
-                          className="flex-1 text-right"
+                          className="flex min-w-0 flex-1 flex-col gap-3 text-right sm:flex-row-reverse sm:items-center sm:gap-4"
                         >
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2">
+                          <div className="min-w-0 flex-1 space-y-1">
+                            <div className="flex flex-wrap items-center gap-2">
                               <h3 className="text-sm font-bold text-slate-800">{type.title}</h3>
                               {type.active ? (
                                 <span className="rounded-full border border-cyan-200 bg-white px-2 py-0.5 text-[11px] font-medium text-cyan-700">
-                                  {typeRules.length} جریمه
+                                  {typeRule ? 'تنظیم شده' : 'تنظیم نشده'}
                                 </span>
-                              ) : null}
+                              ) : (
+                                <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-medium text-slate-500">
+                                  غیرفعال
+                                </span>
+                              )}
                             </div>
                             <p className="text-xs leading-6 text-slate-500">{type.description}</p>
                           </div>
+                          <ChevronLeft
+                            className={`h-5 w-5 shrink-0 text-slate-400 transition ${isExpanded ? '-rotate-90' : ''}`}
+                            aria-hidden
+                          />
                         </button>
                         <PenaltySwitch
                           checked={type.active}
@@ -503,79 +648,257 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
                             setTypes((current) => current.map((item) => (item.id === type.id ? { ...item, active: checked } : item)));
                             if (checked) {
                               setExpandedPenaltyTypeId(type.id);
+                              loadRuleFormForType(type.id);
                             } else if (expandedPenaltyTypeId === type.id) {
                               setExpandedPenaltyTypeId('');
                             }
                           }}
                         />
                       </div>
-                      {validation.errors[`type:${type.id}`] ? (
-                        <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
-                          {validation.errors[`type:${type.id}`]}
-                        </p>
-                      ) : null}
                     </div>
 
                     {isExpanded ? (
                       <div className="border-t border-cyan-100 bg-white/80 p-4">
-                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                          <div>
-                            <h4 className="text-sm font-bold text-slate-700">جرایم این ردیف</h4>
-                            <p className="mt-1 text-xs text-slate-500">برای این نوع، یک یا چند rule ثبت کنید.</p>
+                        <div className="space-y-4">
+                          <div className="flex flex-wrap items-center justify-between gap-3">
+                            <div className="text-xs font-semibold text-slate-500">
+                              {typeRule ? `خلاصه: ${formatRuleSummary(typeRule)}` : 'هنوز جریمه‌ای ثبت نشده است.'}
+                            </div>
+                            {typeRule ? (
+                              <button
+                                type="button"
+                                onClick={() => setRules((current) => current.filter((item) => item.penaltyTypeId !== type.id))}
+                                className="rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-bold text-rose-600 hover:bg-rose-50"
+                              >
+                                حذف جریمه
+                              </button>
+                            ) : null}
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => openRuleDialog(type.id)}
-                            className="mt-2 inline-flex h-8 items-center gap-2 rounded-lg border border-[#14a7ad] bg-white/65 px-3 text-xs font-bold text-[#0e989d] transition hover:bg-[#dff4f3]"
-                          >
-                            <Plus className="h-4 w-4" />
-                            افزودن جریمه
-                          </button>
-                        </div>
 
-                        {typeRules.length === 0 ? (
-                          <div className="mt-4 rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-center text-sm text-slate-500">
-                            هنوز جریمه‌ای برای این نوع ثبت نشده است.
-                          </div>
-                        ) : (
-                          <div className="mt-4 grid gap-3">
-                            {typeRules.map((rule, index) => (
-                              <div key={rule.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                                  <div className="space-y-2">
-                                    <div className="flex items-center gap-2">
-                                      <span className="rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-xs font-medium text-cyan-700">
-                                        جریمه {index + 1}
-                                      </span>
-                                      <span className="text-xs text-slate-400">{MODE_OPTIONS.find((item) => item.id === rule.mode)?.title}</span>
+                          <section className="space-y-3">
+                            <FieldBlock label="روش محاسبه جریمه">
+                              <TagPills
+                                options={MODE_OPTIONS.map((item) => ({ value: item.id, label: item.title }))}
+                                value={ruleForm.mode}
+                                onChange={(value) => setRuleForm((current) => ({ ...current, mode: value, penaltyTypeId: type.id }))}
+                              />
+                              <p className="text-xs text-slate-500">
+                                {MODE_OPTIONS.find((item) => item.id === ruleForm.mode)?.description}
+                              </p>
+                            </FieldBlock>
+                          </section>
+
+                          <FieldBlock label="دوره محاسبه جریمه">
+                            <TagPills
+                              options={PERIOD_OPTIONS}
+                              value={ruleForm.period}
+                              onChange={(value) => setRuleForm((current) => ({ ...current, period: value, penaltyTypeId: type.id }))}
+                            />
+                          </FieldBlock>
+
+                          {ruleForm.mode === 'fixed' ? (
+                            <FieldBlock label="مبلغ ثابت جریمه" hint="مبلغی که برای هر دوره تاخیر اعمال می‌شود.">
+                              <Input
+                                value={ruleForm.fixedAmount}
+                                onChange={(event) =>
+                                  setRuleForm((current) => ({ ...current, fixedAmount: formatInput(event.target.value), penaltyTypeId: type.id }))
+                                }
+                                placeholder="مثال: 100,000"
+                              />
+                            </FieldBlock>
+                          ) : null}
+
+                          {ruleForm.mode === 'overdue' || ruleForm.mode === 'contract' ? (
+                            <div className="grid gap-4 md:grid-cols-2">
+                              <FieldBlock label="درصد جریمه">
+                                <Input
+                                  value={ruleForm.penaltyPercent}
+                                  onChange={(event) => setRuleForm((current) => ({ ...current, penaltyPercent: event.target.value, penaltyTypeId: type.id }))}
+                                  placeholder="مثال: 0.5"
+                                />
+                              </FieldBlock>
+                              <FieldBlock label="درصد سود بانکی">
+                                <Input
+                                  value={ruleForm.bankInterestPercent}
+                                  onChange={(event) =>
+                                    setRuleForm((current) => ({ ...current, bankInterestPercent: event.target.value, penaltyTypeId: type.id }))
+                                  }
+                                  placeholder="در صورت نیاز"
+                                />
+                              </FieldBlock>
+                            </div>
+                          ) : null}
+
+                          {ruleForm.mode === 'progressive' ? (
+                            <div className="space-y-4">
+                              <FieldBlock label="درصد سود بانکی">
+                                <Input
+                                  value={ruleForm.bankInterestPercent}
+                                  onChange={(event) =>
+                                    setRuleForm((current) => ({ ...current, bankInterestPercent: event.target.value, penaltyTypeId: type.id }))
+                                  }
+                                  placeholder="در صورت نیاز"
+                                />
+                              </FieldBlock>
+                              <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                                <div className="flex items-center justify-between">
+                                  <h4 className="text-sm font-bold text-slate-700">بازه‌های جریمه تصاعدی</h4>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setRuleForm((current) => ({
+                                        ...current,
+                                        penaltyTypeId: type.id,
+                                        progressiveRows: [...current.progressiveRows, { id: `row-${Date.now()}`, fromDay: '', toDay: '', rate: '' }],
+                                      }))
+                                    }
+                                    className="inline-flex items-center gap-1 text-sm font-medium text-cyan-700 hover:text-cyan-800"
+                                  >
+                                    <Plus className="h-4 w-4" />
+                                    افزودن بازه
+                                  </button>
+                                </div>
+                                <div className="space-y-3">
+                                  {ruleForm.progressiveRows.map((row) => (
+                                    <div key={row.id} className="grid gap-3 md:grid-cols-[1fr_1fr_1fr_auto]">
+                                      <Input
+                                        value={row.fromDay}
+                                        onChange={(event) =>
+                                          setRuleForm((current) => ({
+                                            ...current,
+                                            penaltyTypeId: type.id,
+                                            progressiveRows: current.progressiveRows.map((item) =>
+                                              item.id === row.id ? { ...item, fromDay: event.target.value } : item,
+                                            ),
+                                          }))
+                                        }
+                                        placeholder="از روز"
+                                      />
+                                      <Input
+                                        value={row.toDay}
+                                        onChange={(event) =>
+                                          setRuleForm((current) => ({
+                                            ...current,
+                                            penaltyTypeId: type.id,
+                                            progressiveRows: current.progressiveRows.map((item) =>
+                                              item.id === row.id ? { ...item, toDay: event.target.value } : item,
+                                            ),
+                                          }))
+                                        }
+                                        placeholder="تا روز"
+                                      />
+                                      <Input
+                                        value={row.rate}
+                                        onChange={(event) =>
+                                          setRuleForm((current) => ({
+                                            ...current,
+                                            penaltyTypeId: type.id,
+                                            progressiveRows: current.progressiveRows.map((item) =>
+                                              item.id === row.id ? { ...item, rate: event.target.value } : item,
+                                            ),
+                                          }))
+                                        }
+                                        placeholder="نرخ جریمه"
+                                      />
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          setRuleForm((current) => ({
+                                            ...current,
+                                            penaltyTypeId: type.id,
+                                            progressiveRows: current.progressiveRows.filter((item) => item.id !== row.id),
+                                          }))
+                                        }
+                                        className="rounded-lg border border-rose-200 px-3 text-sm text-rose-600 hover:bg-rose-50"
+                                      >
+                                        حذف
+                                      </button>
                                     </div>
-                                    <p className="text-sm font-medium text-slate-700">{formatRuleSummary(rule)}</p>
-                                    <p className="text-xs text-slate-500">
-                                      مهلت تنفس: {rule.graceDays || '0'} روز
-                                      {rule.extraFeeEnabled ? ' · هزینه دیرکرد فعال' : ''}
-                                    </p>
-                                  </div>
-                                  <div className="flex items-center gap-2">
-                                    <button
-                                      type="button"
-                                      onClick={() => openRuleDialog(type.id, rule)}
-                                      className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
-                                    >
-                                      ویرایش
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => setRules((current) => current.filter((item) => item.id !== rule.id))}
-                                      className="rounded-lg border border-rose-200 px-3 py-1.5 text-sm text-rose-600 hover:bg-rose-50"
-                                    >
-                                      حذف
-                                    </button>
-                                  </div>
+                                  ))}
                                 </div>
                               </div>
-                            ))}
+                            </div>
+                          ) : null}
+
+                          <div className="grid gap-4 md:grid-cols-2">
+                            <FieldBlock label="مهلت تنفس (روز)">
+                              <Input
+                                value={ruleForm.graceDays}
+                                onChange={(event) => setRuleForm((current) => ({ ...current, graceDays: event.target.value, penaltyTypeId: type.id }))}
+                                placeholder="مثال: 2"
+                              />
+                            </FieldBlock>
+                            <FieldBlock label="قاعده گرد کردن">
+                              <TagPills
+                                options={ROUND_RULE_OPTIONS}
+                                value={ruleForm.roundRule}
+                                onChange={(value) => setRuleForm((current) => ({ ...current, roundRule: value, penaltyTypeId: type.id }))}
+                              />
+                            </FieldBlock>
                           </div>
-                        )}
+
+                          <div className="space-y-4 rounded-2xl border border-cyan-100 bg-cyan-50 p-4">
+                            <div className="flex items-center justify-between gap-4">
+                              <div>
+                                <h4 className="text-sm font-bold text-slate-800">هزینه دیرکرد</h4>
+                                <p className="mt-1 text-xs text-slate-500">در صورت نیاز، علاوه بر جریمه اصلی یک هزینه دیرکرد هم ثبت کنید.</p>
+                              </div>
+                              <PenaltySwitch
+                                checked={ruleForm.extraFeeEnabled}
+                                onChange={(checked) => setRuleForm((current) => ({ ...current, extraFeeEnabled: checked, penaltyTypeId: type.id }))}
+                              />
+                            </div>
+
+                            {ruleForm.extraFeeEnabled ? (
+                              <>
+                                <FieldBlock label="نوع هزینه دیرکرد">
+                                  <TagPills
+                                    options={EXTRA_FEE_OPTIONS}
+                                    value={ruleForm.extraFeeType}
+                                    onChange={(value) => setRuleForm((current) => ({ ...current, extraFeeType: value, penaltyTypeId: type.id }))}
+                                  />
+                                </FieldBlock>
+                                <div className="grid gap-4 md:grid-cols-2">
+                                  <FieldBlock label="مقدار هزینه دیرکرد">
+                                    <Input
+                                      value={ruleForm.extraFeeAmount}
+                                      onChange={(event) =>
+                                        setRuleForm((current) => ({
+                                          ...current,
+                                          penaltyTypeId: type.id,
+                                          extraFeeAmount: current.extraFeeType === 'fixed' ? formatInput(event.target.value) : event.target.value,
+                                        }))
+                                      }
+                                      placeholder={ruleForm.extraFeeType === 'fixed' ? 'مثال: 100,000' : 'مثال: 0.6'}
+                                    />
+                                  </FieldBlock>
+                                  <FieldBlock label="قاعده گرد کردن هزینه دیرکرد">
+                                    <TagPills
+                                      options={ROUND_RULE_OPTIONS}
+                                      value={ruleForm.extraFeeRoundRule}
+                                      onChange={(value) => setRuleForm((current) => ({ ...current, extraFeeRoundRule: value, penaltyTypeId: type.id }))}
+                                    />
+                                  </FieldBlock>
+                                </div>
+                              </>
+                            ) : null}
+                          </div>
+
+                          {dialogError ? (
+                            <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{dialogError}</div>
+                          ) : null}
+
+                          <div className="flex justify-end">
+                            <button
+                              type="button"
+                              onClick={() => submitRule()}
+                              className="inline-flex items-center gap-2 rounded-lg bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800"
+                            >
+                              <Save className="h-4 w-4" />
+                              ذخیره جریمه
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     ) : null}
                   </div>
@@ -669,196 +992,30 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
           {formError ? (
             <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{formError}</div>
           ) : null}
+          </div>
         </div>
       </div>
 
       <StickySubmitBar
         label="ثبت جرایم"
-        loadingLabel={loading ? 'در حال بارگذاری...' : 'در حال ذخیره...'}
-        disabled={loading || saving}
+        loadingLabel={
+          partyTab === 'seller'
+            ? sellerStatus.loading
+              ? 'در حال بارگذاری...'
+              : sellerStatus.saving || saving
+                ? 'در حال ذخیره...'
+                : undefined
+            : loading
+              ? 'در حال بارگذاری...'
+              : saving
+                ? 'در حال ذخیره...'
+                : undefined
+        }
+        disabled={partyTab === 'seller' ? sellerStatus.loading || sellerStatus.saving || saving : loading || saving}
         onClick={handleSubmit}
         embedded={embedded}
         submitId={stepId}
       />
-
-      <Modal
-        open={dialogOpen}
-        onClose={closeDialog}
-        title={editingRuleId ? 'ویرایش جریمه' : 'افزودن جریمه'}
-        description={`فرم ثبت جریمه برای ${getPenaltyItem(activePenaltyTypeId)?.title ?? 'نوع انتخاب‌شده'}`}
-        footer={
-          <>
-            <button type="button" onClick={closeDialog} className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">
-              لغو
-            </button>
-            <button type="button" onClick={submitRule} className="inline-flex items-center gap-2 rounded-lg bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800">
-              <Save className="h-4 w-4" />
-              {editingRuleId ? 'ذخیره تغییرات' : 'ثبت جریمه'}
-            </button>
-          </>
-        }
-      >
-        <section className="space-y-3">
-          <FieldBlock label="روش محاسبه جریمه">
-            <TagPills
-              options={MODE_OPTIONS.map((item) => ({ value: item.id, label: item.title }))}
-              value={ruleForm.mode}
-              onChange={(value) => setRuleForm((current) => ({ ...current, mode: value }))}
-            />
-            <p className="text-xs text-slate-500">{MODE_OPTIONS.find((item) => item.id === ruleForm.mode)?.description}</p>
-          </FieldBlock>
-        </section>
-
-        <FieldBlock label="دوره محاسبه جریمه">
-          <TagPills options={PERIOD_OPTIONS} value={ruleForm.period} onChange={(value) => setRuleForm((current) => ({ ...current, period: value }))} />
-        </FieldBlock>
-
-        {ruleForm.mode === 'fixed' ? (
-          <FieldBlock label="مبلغ ثابت جریمه" hint="مبلغی که برای هر دوره تاخیر اعمال می‌شود.">
-            <Input value={ruleForm.fixedAmount} onChange={(event) => setRuleForm((current) => ({ ...current, fixedAmount: formatInput(event.target.value) }))} placeholder="مثال: 100,000" />
-          </FieldBlock>
-        ) : null}
-
-        {ruleForm.mode === 'overdue' || ruleForm.mode === 'contract' ? (
-          <div className="grid gap-4 md:grid-cols-2">
-            <FieldBlock label="درصد جریمه">
-              <Input value={ruleForm.penaltyPercent} onChange={(event) => setRuleForm((current) => ({ ...current, penaltyPercent: event.target.value }))} placeholder="مثال: 0.5" />
-            </FieldBlock>
-            <FieldBlock label="درصد سود بانکی">
-              <Input value={ruleForm.bankInterestPercent} onChange={(event) => setRuleForm((current) => ({ ...current, bankInterestPercent: event.target.value }))} placeholder="در صورت نیاز" />
-            </FieldBlock>
-          </div>
-        ) : null}
-
-        {ruleForm.mode === 'progressive' ? (
-          <div className="space-y-4">
-            <FieldBlock label="درصد سود بانکی">
-              <Input value={ruleForm.bankInterestPercent} onChange={(event) => setRuleForm((current) => ({ ...current, bankInterestPercent: event.target.value }))} placeholder="در صورت نیاز" />
-            </FieldBlock>
-            <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <div className="flex items-center justify-between">
-                <h4 className="text-sm font-bold text-slate-700">بازه‌های جریمه تصاعدی</h4>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setRuleForm((current) => ({
-                      ...current,
-                      progressiveRows: [...current.progressiveRows, { id: `row-${Date.now()}`, fromDay: '', toDay: '', rate: '' }],
-                    }))
-                  }
-                  className="inline-flex items-center gap-1 text-sm font-medium text-cyan-700 hover:text-cyan-800"
-                >
-                  <Plus className="h-4 w-4" />
-                  افزودن بازه
-                </button>
-              </div>
-              <div className="space-y-3">
-                {ruleForm.progressiveRows.map((row) => (
-                  <div key={row.id} className="grid gap-3 md:grid-cols-[1fr_1fr_1fr_auto]">
-                    <Input
-                      value={row.fromDay}
-                      onChange={(event) =>
-                        setRuleForm((current) => ({
-                          ...current,
-                          progressiveRows: current.progressiveRows.map((item) => (item.id === row.id ? { ...item, fromDay: event.target.value } : item)),
-                        }))
-                      }
-                      placeholder="از روز"
-                    />
-                    <Input
-                      value={row.toDay}
-                      onChange={(event) =>
-                        setRuleForm((current) => ({
-                          ...current,
-                          progressiveRows: current.progressiveRows.map((item) => (item.id === row.id ? { ...item, toDay: event.target.value } : item)),
-                        }))
-                      }
-                      placeholder="تا روز"
-                    />
-                    <Input
-                      value={row.rate}
-                      onChange={(event) =>
-                        setRuleForm((current) => ({
-                          ...current,
-                          progressiveRows: current.progressiveRows.map((item) => (item.id === row.id ? { ...item, rate: event.target.value } : item)),
-                        }))
-                      }
-                      placeholder="نرخ جریمه"
-                    />
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setRuleForm((current) => ({
-                          ...current,
-                          progressiveRows: current.progressiveRows.filter((item) => item.id !== row.id),
-                        }))
-                      }
-                      className="rounded-lg border border-rose-200 px-3 text-sm text-rose-600 hover:bg-rose-50"
-                    >
-                      حذف
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        ) : null}
-
-        <div className="grid gap-4 md:grid-cols-2">
-          <FieldBlock label="مهلت تنفس (روز)">
-            <Input value={ruleForm.graceDays} onChange={(event) => setRuleForm((current) => ({ ...current, graceDays: event.target.value }))} placeholder="مثال: 2" />
-          </FieldBlock>
-          <FieldBlock label="قاعده گرد کردن">
-            <TagPills options={ROUND_RULE_OPTIONS} value={ruleForm.roundRule} onChange={(value) => setRuleForm((current) => ({ ...current, roundRule: value }))} />
-          </FieldBlock>
-        </div>
-
-        <div className="space-y-4 rounded-2xl border border-cyan-100 bg-cyan-50 p-4">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <h4 className="text-sm font-bold text-slate-800">هزینه دیرکرد</h4>
-              <p className="mt-1 text-xs text-slate-500">در صورت نیاز، علاوه بر جریمه اصلی یک هزینه دیرکرد هم ثبت کنید.</p>
-            </div>
-            <PenaltySwitch
-              checked={ruleForm.extraFeeEnabled}
-              onChange={(checked) => setRuleForm((current) => ({ ...current, extraFeeEnabled: checked }))}
-            />
-          </div>
-
-          {ruleForm.extraFeeEnabled ? (
-            <>
-              <FieldBlock label="نوع هزینه دیرکرد">
-                <TagPills options={EXTRA_FEE_OPTIONS} value={ruleForm.extraFeeType} onChange={(value) => setRuleForm((current) => ({ ...current, extraFeeType: value }))} />
-              </FieldBlock>
-              <div className="grid gap-4 md:grid-cols-2">
-                <FieldBlock label="مقدار هزینه دیرکرد">
-                  <Input
-                    value={ruleForm.extraFeeAmount}
-                    onChange={(event) =>
-                      setRuleForm((current) => ({
-                        ...current,
-                        extraFeeAmount: current.extraFeeType === 'fixed' ? formatInput(event.target.value) : event.target.value,
-                      }))
-                    }
-                    placeholder={ruleForm.extraFeeType === 'fixed' ? 'مثال: 100,000' : 'مثال: 0.6'}
-                  />
-                </FieldBlock>
-                <FieldBlock label="قاعده گرد کردن هزینه دیرکرد">
-                  <TagPills
-                    options={ROUND_RULE_OPTIONS}
-                    value={ruleForm.extraFeeRoundRule}
-                    onChange={(value) => setRuleForm((current) => ({ ...current, extraFeeRoundRule: value }))}
-                  />
-                </FieldBlock>
-              </div>
-            </>
-          ) : null}
-        </div>
-
-        {dialogError ? (
-          <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{dialogError}</div>
-        ) : null}
-      </Modal>
     </div>
   );
 }

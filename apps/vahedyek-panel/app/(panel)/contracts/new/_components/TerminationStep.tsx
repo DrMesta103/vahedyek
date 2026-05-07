@@ -28,6 +28,7 @@ import {
   setFrontendStepDraft,
 } from '../../../../lib/contractDraftClient';
 import { validateTerminationStep, validateTerminationSubsection, validateBuyerTerminationSubsection } from '../../../../lib/contractValidation';
+import { buildValidationSummary } from './validationPresentation';
 import { normalizePersistedBuyerRules } from '../../../../lib/terminationBuyerRules';
 import type {
   BuyerTerminationSubsectionId,
@@ -136,37 +137,62 @@ function ConstructorMenuCard({
   description,
   enabled,
   icon,
-  onOpen,
+  onToggle,
+  expanded,
+  onExpand,
 }: {
   title: string;
   description: string;
   enabled: boolean;
   icon: ReactNode;
-  onOpen: () => void;
+  onToggle: (next: boolean) => void;
+  expanded: boolean;
+  onExpand: () => void;
 }) {
   return (
-    <button
-      type="button"
-      onClick={onOpen}
-      className="flex w-full flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 text-right shadow-sm transition hover:border-cyan-300 hover:shadow-md sm:flex-row sm:items-center sm:justify-between sm:gap-4"
+    <div
+      className={`w-full overflow-hidden rounded-2xl border transition ${
+        enabled ? 'border-cyan-200 bg-cyan-50/40' : 'border-slate-200 bg-white'
+      }`}
     >
-      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-cyan-100 bg-cyan-50 text-cyan-700">{icon}</span>
-      <div className="min-w-0 flex-1 space-y-1">
-        <div className="flex flex-wrap items-center gap-2">
-          <h4 className="text-sm font-bold text-slate-900">{title}</h4>
-          <span
-            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-              enabled ? 'border border-emerald-200 bg-emerald-50 text-emerald-800' : 'border border-slate-200 bg-slate-50 text-slate-500'
-            }`}
+      <div className="p-4">
+        <div className="flex items-start justify-between gap-4">
+          <button
+            type="button"
+            onClick={() => {
+              if (!enabled) return;
+              onExpand();
+            }}
+            className="flex min-w-0 flex-1 flex-col gap-3 text-right sm:flex-row-reverse sm:items-center sm:gap-4"
           >
-            <span className={`h-1.5 w-1.5 rounded-full ${enabled ? 'bg-emerald-500' : 'bg-slate-400'}`} aria-hidden />
-            {enabled ? 'فعال' : 'غیرفعال'}
-          </span>
+            <div className="min-w-0 flex-1 space-y-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <h4 className="text-sm font-bold text-slate-900">{title}</h4>
+                <span
+                  className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                    enabled ? 'border border-emerald-200 bg-emerald-50 text-emerald-800' : 'border border-slate-200 bg-slate-50 text-slate-500'
+                  }`}
+                >
+                  <span className={`h-1.5 w-1.5 rounded-full ${enabled ? 'bg-emerald-500' : 'bg-slate-400'}`} aria-hidden />
+                  {enabled ? 'فعال' : 'غیرفعال'}
+                </span>
+              </div>
+              <p className="text-xs leading-6 text-slate-600">{description}</p>
+            </div>
+            <ChevronLeft className={`h-5 w-5 shrink-0 text-slate-400 transition ${expanded ? '-rotate-90' : ''}`} aria-hidden />
+          </button>
+
+          <div className="flex shrink-0 items-center justify-end gap-3 sm:justify-start">
+            <BusinessSwitch
+              checked={enabled}
+              onChange={(next) => {
+                onToggle(next);
+              }}
+            />
+          </div>
         </div>
-        <p className="text-xs leading-6 text-slate-600">{description}</p>
       </div>
-      <ChevronLeft className="h-5 w-5 shrink-0 text-slate-400 sm:h-6 sm:w-6" aria-hidden />
-    </button>
+    </div>
   );
 }
 
@@ -282,6 +308,8 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
   const [subsectionBusy, setSubsectionBusy] = useState<ConstructorTerminationSubsectionId | null>(null);
   const [subsectionBuyerBusy, setSubsectionBuyerBusy] = useState<BuyerTerminationSubsectionId | null>(null);
   const [formError, setFormError] = useState('');
+  const [expandedSellerId, setExpandedSellerId] = useState<ConstructorTerminationSubsectionId | null>('lateInstallment');
+  const [expandedBuyerId, setExpandedBuyerId] = useState<BuyerTerminationSubsectionId | null>('lateDelivery');
 
   useEffect(() => {
     let mounted = true;
@@ -521,32 +549,11 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
     setSubsectionBuyerBusy(null);
   };
 
-  const renderBuyerSubsectionPanel = () => {
-    const panel = payload.terminationBuyerPanel;
-    if (!isBuyerTerminationSubsectionPanel(panel)) return null;
-    const id = panel;
-    const meta = BUYER_SUBSECTION_META[id];
+  const renderBuyerSubsectionPanel = (id: DraftBuyerTerminationSubsectionId) => {
     const b = payload.buyerTerms;
 
     return (
       <div className="space-y-5">
-        <div className="flex w-full flex-wrap items-center gap-3 border-b border-slate-100 pb-4">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-cyan-200 bg-cyan-50 text-cyan-700">
-            {meta.icon}
-          </span>
-          <div className="min-w-0 flex-1 text-right">
-            <h3 className="text-base font-bold text-slate-900">{meta.title}</h3>
-            <p className="mt-0.5 text-sm text-slate-500">{meta.description}</p>
-          </div>
-          <button
-            type="button"
-            className="shrink-0 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
-            onClick={() => void tryConfirmAndBackBuyer(id)}
-          >
-            بازگشت به فهرست
-          </button>
-        </div>
-
         {id === 'lateDelivery' ? (
           <BuyerLateDeliveryPanel
             value={b.lateDelivery}
@@ -600,30 +607,11 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
     }));
   };
 
-  const renderSubsectionPanel = () => {
-    const panel = payload.terminationConstructorPanel;
-    if (!isConstructorSubsectionPanel(panel)) return null;
-    const id = panel;
-    const meta = SUBSECTION_META[id];
+  const renderSubsectionPanel = (id: ConstructorTerminationSubsectionId) => {
     const c = payload.constructorTerms;
 
     return (
       <div className="space-y-5">
-        <div className="flex w-full flex-wrap items-center gap-3 border-b border-slate-100 pb-4">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-cyan-200 bg-cyan-50 text-cyan-700">{meta.icon}</span>
-          <div className="min-w-0 flex-1 text-right">
-            <h3 className="text-base font-bold text-slate-900">{meta.title}</h3>
-            <p className="mt-0.5 text-sm text-slate-500">{meta.description}</p>
-          </div>
-          <button
-            type="button"
-            className="shrink-0 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
-            onClick={() => tryConfirmAndBackSeller(id)}
-          >
-            بازگشت به فهرست
-          </button>
-        </div>
-
         {id === 'lateInstallment' ? (
           <LateInstallmentPanel
             value={c.lateInstallment}
@@ -740,78 +728,110 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
             />
 
             {payload.terminationPartyTab === 'seller' ? (
-              payload.terminationConstructorPanel === 'list' ? (
-                <div className="space-y-5 p-5 sm:p-8">
-                  <div className="text-right">
-                    <h3 className="text-xl font-bold text-slate-900">زیربخش‌های فسخ {partyLabels.sellerLabel}</h3>
-                    <p className="mt-1 text-sm text-slate-600">۶ دستهٔ قانون؛ هر مورد با دکمهٔ «ثبت» در همان صفحه ذخیره می‌شود.</p>
-                  </div>
-                  <div className="grid gap-4">
-                    {CONSTRUCTOR_SUBSECTION_IDS.map((sid) => {
-                      const meta = SUBSECTION_META[sid];
-                      const enabled = payload.constructorTerms[sid].ruleEnabled;
-                      return (
+              <div className="space-y-5 p-5 sm:p-8">
+                <div className="text-right">
+                  <h3 className="text-xl font-bold text-slate-900">زیربخش‌های فسخ {partyLabels.sellerLabel}</h3>
+                  <p className="mt-1 text-sm text-slate-600">۵ دستهٔ قانون؛ هر مورد پس از فعال‌سازی در همین صفحه باز می‌شود.</p>
+                </div>
+                <div className="grid gap-4">
+                  {CONSTRUCTOR_SUBSECTION_IDS.map((sid) => {
+                    const meta = SUBSECTION_META[sid];
+                    const enabled = payload.constructorTerms[sid].ruleEnabled;
+                    const expanded = enabled && expandedSellerId === sid;
+                    return (
+                      <div key={sid} className="space-y-0">
                         <ConstructorMenuCard
-                          key={sid}
                           title={meta.title}
                           description={meta.description}
                           enabled={enabled}
                           icon={meta.icon}
-                          onOpen={() =>
+                          expanded={expanded}
+                          onExpand={() => setExpandedSellerId((current) => (current === sid ? null : sid))}
+                          onToggle={(next) => {
                             updatePayload((p) => ({
                               ...p,
-                              terminationPartyTab: 'seller',
-                              sellerTerminationEngaged: true,
-                              terminationConstructorPanel: sid,
-                            }))
-                          }
+                              constructorTerms: {
+                                ...p.constructorTerms,
+                                [sid]: {
+                                  ...p.constructorTerms[sid],
+                                  ruleEnabled: next,
+                                },
+                              },
+                            }));
+                            if (next) {
+                              setExpandedSellerId(sid);
+                            } else {
+                              setExpandedSellerId((current) => (current === sid ? null : current));
+                            }
+                          }}
                         />
-                      );
-                    })}
-                  </div>
-                </div>
-              ) : (
-                <div className="p-5 sm:p-8">{renderSubsectionPanel()}</div>
-              )
-            ) : payload.terminationBuyerPanel === 'list' ? (
-              <div className="space-y-5 p-5 sm:p-8">
-                <div className="text-right">
-                  <h3 className="text-xl font-bold text-slate-900">زیربخش‌های فسخ {partyLabels.buyerLabel}</h3>
-                  <p className="mt-1 text-sm text-slate-600">۵ دستهٔ قانون؛ هر مورد پس از «ثبت» در پایگاه و پیش‌نویس محلی ذخیره می‌شود.</p>
-                </div>
-                <div className="grid gap-4">
-                  {BUYER_SUBSECTION_IDS.map((sid) => {
-                    const meta = BUYER_SUBSECTION_META[sid];
-                    const enabled = payload.buyerTerms[sid].ruleEnabled;
-                    return (
-                      <ConstructorMenuCard
-                        key={sid}
-                        title={meta.title}
-                        description={meta.description}
-                        enabled={enabled}
-                        icon={meta.icon}
-                        onOpen={() =>
-                          updatePayload((p) => ({
-                            ...p,
-                            terminationPartyTab: 'buyer',
-                            buyerTerminationEngaged: true,
-                            terminationBuyerPanel: sid,
-                          }))
-                        }
-                      />
+
+                        {expanded ? (
+                          <div className="border-t border-cyan-100 bg-white/80 p-4">
+                            {renderSubsectionPanel(sid)}
+                          </div>
+                        ) : null}
+                      </div>
                     );
                   })}
                 </div>
               </div>
             ) : (
-              <div className="p-5 sm:p-8">{renderBuyerSubsectionPanel()}</div>
+              <div className="space-y-5 p-5 sm:p-8">
+                <div className="text-right">
+                  <h3 className="text-xl font-bold text-slate-900">زیربخش‌های فسخ {partyLabels.buyerLabel}</h3>
+                  <p className="mt-1 text-sm text-slate-600">۵ دستهٔ قانون؛ هر مورد پس از فعال‌سازی در همین صفحه باز می‌شود.</p>
+                </div>
+                <div className="grid gap-4">
+                  {BUYER_SUBSECTION_IDS.map((sid) => {
+                    const meta = BUYER_SUBSECTION_META[sid];
+                    const enabled = payload.buyerTerms[sid].ruleEnabled;
+                    const expanded = enabled && expandedBuyerId === sid;
+                    return (
+                      <div key={sid} className="space-y-0">
+                        <ConstructorMenuCard
+                          title={meta.title}
+                          description={meta.description}
+                          enabled={enabled}
+                          icon={meta.icon}
+                          expanded={expanded}
+                          onExpand={() => setExpandedBuyerId((current) => (current === sid ? null : sid))}
+                          onToggle={(next) => {
+                            updatePayload((p) => ({
+                              ...p,
+                              buyerTerms: {
+                                ...p.buyerTerms,
+                                [sid]: {
+                                  ...p.buyerTerms[sid],
+                                  ruleEnabled: next,
+                                },
+                              },
+                            }));
+                            if (next) {
+                              setExpandedBuyerId(sid);
+                            } else {
+                              setExpandedBuyerId((current) => (current === sid ? null : current));
+                            }
+                          }}
+                        />
+
+                        {expanded ? (
+                          <div className="border-t border-cyan-100 bg-white/80 p-4">
+                            {renderBuyerSubsectionPanel(sid as DraftBuyerTerminationSubsectionId)}
+                          </div>
+                        ) : null}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             )}
           </div>
         )}
       </div>
 
       {formError ? (
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+        <div className={`rounded-2xl border px-4 py-3 text-sm text-rose-700 ${formError ? 'border-rose-300 bg-rose-50' : 'border-rose-200 bg-rose-50'}`}>
           <div className="flex items-center gap-2 font-bold">
             <AlertCircle className="h-4 w-4 shrink-0" />
             پیام اعتبارسنجی

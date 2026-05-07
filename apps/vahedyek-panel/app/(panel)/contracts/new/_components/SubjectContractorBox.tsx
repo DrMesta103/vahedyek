@@ -15,6 +15,8 @@ export function SubjectContractorBox({
   onSelectedStaffChange,
   formerEmployeeOptions,
   staffOptions,
+  formerEmployeeInvalid = false,
+  selectedStaffInvalid = false,
 }: {
   issuerType: IssuerType;
   onIssuerTypeChange: (value: IssuerType) => void;
@@ -24,6 +26,8 @@ export function SubjectContractorBox({
   onSelectedStaffChange: (value: string) => void;
   formerEmployeeOptions: { value: string; label: string }[];
   staffOptions: { value: string; label: string }[];
+  formerEmployeeInvalid?: boolean;
+  selectedStaffInvalid?: boolean;
 }) {
   return (
     <SectionCard>

@@ -1,6 +1,6 @@
 'use server';
 
-import type { PrismaClient } from '@prisma/client';
+import { Prisma, type PrismaClient } from '../../node_modules/.prisma/client';
 
 export async function seedSampleData(prisma: PrismaClient) {
   const businessProfileCount = await prisma.businessProfile.count();
@@ -11,6 +11,8 @@ export async function seedSampleData(prisma: PrismaClient) {
       title: 'دفتر مرکزی',
       address: 'تهران، خیابان ولیعصر، پلاک ۲۱',
       radius: 120,
+      latitude: new Prisma.Decimal('35.725221'),
+      longitude: new Prisma.Decimal('51.391588'),
       description: 'مبدا ثبت تردد تیم ستادی',
     },
   });

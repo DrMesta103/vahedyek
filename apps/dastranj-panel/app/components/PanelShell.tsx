@@ -31,7 +31,7 @@ export function PanelShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="app-shell">
-      <Sidebar />
+      <Sidebar activeItem={activeItem.id} />
       {showOrbitMenu ? (
         <main className="main-content home-main-content">
           <OrbitMenu activeItem={activeItem.id} />
@@ -48,14 +48,17 @@ export function PanelShell({ children }: { children: ReactNode }) {
           <div className="main-stage">
             <div className="main-stage-content">
               <div className="top-header">
+                <div className="top-header-copy">
+                  <div className="top-header-eyebrow">سامانه دسترنج</div>
+                  <strong>{activeItem.label}</strong>
+                </div>
                 <div className="breadcrumb">
                   <Link href="/" className="breadcrumb-link">
                     خانه
                   </Link>
                   {trail.map((item, index) => (
                     <span key={`${item.href}-${index}`}>
-                      {' '}
-                      <ChevronLeft size={12} />{' '}
+                      <ChevronLeft size={12} />
                       {index < trail.length - 1 ? (
                         <Link href={item.href} className="breadcrumb-link">
                           {item.label}

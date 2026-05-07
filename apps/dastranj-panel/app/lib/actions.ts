@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import { Prisma } from '../../node_modules/.prisma/client';
 import { prisma } from './prisma';
 import { getSessionContext } from './auth';
 import { seedSampleData } from './seed';
@@ -14,9 +15,40 @@ function boolValue(formData: FormData, key: string) {
   return formData.get(key) === 'on';
 }
 
+function jsonValue<T extends Prisma.InputJsonValue>(value: T): T {
+  return value;
+}
+
+function decimalValue(formData: FormData, key: string) {
+  const raw = value(formData, key);
+  return raw ? new Prisma.Decimal(raw) : null;
+}
+
 async function getTenantId() {
   const session = await getSessionContext();
   return session?.tenantId ?? null;
+}
+
+function tenantRelation(tenantId: string | null) {
+  return tenantId ? { tenant: { connect: { id: tenantId } } } : {};
+}
+
+function shouldRetryLocationWithoutCoordinates(error: unknown) {
+  return (
+    error instanceof Error &&
+    (error.message.includes('Unknown argument `latitude`') ||
+      error.message.includes('Unknown argument `longitude`'))
+  );
+}
+
+function baseLocationData(formData: FormData, tenantId: string | null) {
+  return {
+    ...tenantRelation(tenantId),
+    title: value(formData, 'title'),
+    address: value(formData, 'address'),
+    radius: Number(value(formData, 'radius') || '100'),
+    description: value(formData, 'description') || null,
+  };
 }
 
 export async function seedSampleDataAction() {
@@ -49,15 +81,19 @@ export async function saveBusinessProfileAction(formData: FormData) {
 
 export async function createLocationAction(formData: FormData) {
   const tenantId = await getTenantId();
-  await prisma.location.create({
-    data: {
-      tenantId,
-      title: value(formData, 'title'),
-      address: value(formData, 'address'),
-      radius: Number(value(formData, 'radius') || '100'),
-      description: value(formData, 'description') || null,
-    },
-  });
+  const data = {
+    ...baseLocationData(formData, tenantId),
+    latitude: decimalValue(formData, 'latitude'),
+    longitude: decimalValue(formData, 'longitude'),
+  };
+
+  try {
+    await prisma.location.create({ data });
+  } catch (error) {
+    if (!shouldRetryLocationWithoutCoordinates(error)) throw error;
+    await prisma.location.create({ data: baseLocationData(formData, tenantId) });
+  }
+
   revalidatePath('/locations');
   revalidatePath('/quick-setup');
   redirect('/locations');
@@ -65,15 +101,19 @@ export async function createLocationAction(formData: FormData) {
 
 export async function createLocationFromQuickSetupAction(formData: FormData) {
   const tenantId = await getTenantId();
-  await prisma.location.create({
-    data: {
-      tenantId,
-      title: value(formData, 'title'),
-      address: value(formData, 'address'),
-      radius: Number(value(formData, 'radius') || '100'),
-      description: value(formData, 'description') || null,
-    },
-  });
+  const data = {
+    ...baseLocationData(formData, tenantId),
+    latitude: decimalValue(formData, 'latitude'),
+    longitude: decimalValue(formData, 'longitude'),
+  };
+
+  try {
+    await prisma.location.create({ data });
+  } catch (error) {
+    if (!shouldRetryLocationWithoutCoordinates(error)) throw error;
+    await prisma.location.create({ data: baseLocationData(formData, tenantId) });
+  }
+
   revalidatePath('/locations');
   revalidatePath('/quick-setup');
   redirect('/quick-setup');
@@ -81,15 +121,27 @@ export async function createLocationFromQuickSetupAction(formData: FormData) {
 
 export async function updateLocationAction(formData: FormData) {
   const id = value(formData, 'id');
-  await prisma.location.update({
-    where: { id },
-    data: {
-      title: value(formData, 'title'),
-      address: value(formData, 'address'),
-      radius: Number(value(formData, 'radius') || '100'),
-      description: value(formData, 'description') || null,
-    },
-  });
+  const baseData = {
+    title: value(formData, 'title'),
+    address: value(formData, 'address'),
+    radius: Number(value(formData, 'radius') || '100'),
+    description: value(formData, 'description') || null,
+  };
+
+  try {
+    await prisma.location.update({
+      where: { id },
+      data: {
+        ...baseData,
+        latitude: decimalValue(formData, 'latitude'),
+        longitude: decimalValue(formData, 'longitude'),
+      },
+    });
+  } catch (error) {
+    if (!shouldRetryLocationWithoutCoordinates(error)) throw error;
+    await prisma.location.update({ where: { id }, data: baseData });
+  }
+
   revalidatePath('/locations');
   revalidatePath(`/locations/${id}/edit`);
   revalidatePath('/quick-setup');
@@ -136,13 +188,13 @@ export async function createShiftTemplateAction(formData: FormData) {
       title: value(formData, 'title'),
       description: value(formData, 'description') || null,
       type: value(formData, 'type') as never,
-      weekDays: value(formData, 'weekDays').split(',').map((item) => item.trim()).filter(Boolean),
-      config: {
+      weekDays: jsonValue(value(formData, 'weekDays').split(',').map((item) => item.trim()).filter(Boolean)),
+      config: jsonValue({
         startTime: value(formData, 'startTime'),
         endTime: value(formData, 'endTime'),
         requiredMinutes: Number(value(formData, 'requiredMinutes') || '0'),
-      },
-      breaks: [],
+      }),
+      breaks: jsonValue([]),
       isActive: boolValue(formData, 'isActive'),
     },
   });
@@ -202,11 +254,11 @@ export async function createCalendarWithShiftAction(data: {
       yearLabel: data.yearLabel,
       startDate: data.startDate,
       endDate: data.endDate,
-      weekends: data.weekends,
-      singleHolidays: data.singleHolidays,
+      weekends: jsonValue(data.weekends),
+      singleHolidays: jsonValue(data.singleHolidays),
       shiftTitle: data.shiftTitle,
       shiftTypeLabel,
-      shiftConfig: data.shiftConfig,
+      shiftConfig: jsonValue(data.shiftConfig as Prisma.InputJsonObject),
       holidayCount,
       totalShiftDays: 0,
       totalEventDays: data.singleHolidays.length,
@@ -229,11 +281,11 @@ export async function createPolicyAction(formData: FormData) {
       description: value(formData, 'description') || null,
       calendarId,
       employeeCount: Number(value(formData, 'employeeCount') || '0'),
-      sectionValues: {
+      sectionValues: jsonValue({
         manualAttendance: boolValue(formData, 'manualAttendance'),
         overtimeFromAttendance: boolValue(formData, 'overtimeFromAttendance'),
         nightWorkStart: value(formData, 'nightWorkStart') || '22:00',
-      },
+      }),
     },
   });
   revalidatePath('/policies');
@@ -252,7 +304,7 @@ export async function createPolicyFromQuickSetupAction(data: {
       tenantId,
       title: data.title,
       calendarId: data.calendarId,
-      sectionValues: { manualAttendance: false, overtimeFromAttendance: true, nightWorkStart: '22:00' },
+      sectionValues: jsonValue({ manualAttendance: false, overtimeFromAttendance: true, nightWorkStart: '22:00' }),
     },
   });
   revalidatePath('/policies');
@@ -318,7 +370,7 @@ export async function createWorkGroupAction(formData: FormData) {
       tenantId,
       title: value(formData, 'title'),
       description: value(formData, 'description') || null,
-      tags: value(formData, 'tags').split(',').map((item) => item.trim()).filter(Boolean),
+      tags: jsonValue(value(formData, 'tags').split(',').map((item) => item.trim()).filter(Boolean)),
       locationId: value(formData, 'locationId') || null,
       policyId: value(formData, 'policyId') || null,
       members: {

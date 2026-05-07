@@ -1,37 +1,71 @@
 'use client';
 
 import { Suspense, useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { parseAuthIdentifier, sanitizeIranMobileInput } from '../lib/contact';
 
-function LoginContent() {
+async function readJsonResponse(response: Response) {
+  const contentType = response.headers.get('content-type') ?? '';
+  const raw = await response.text();
+
+  if (contentType.includes('application/json')) {
+    try {
+      return JSON.parse(raw) as { message?: string; user?: { id: string } };
+    } catch {
+      return { message: 'پاسخ JSON سرور نامعتبر است.' };
+    }
+  }
+
+  return { message: raw || 'پاسخ نامعتبر از سرور دریافت شد.' };
+}
+
+function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const registered = searchParams.get('registered') === '1';
+  const identifierType = parseAuthIdentifier(identifier).type;
+  const showIranPrefix = identifierType !== 'email';
 
   useEffect(() => {
-    const e = searchParams.get('email');
-    if (e) setEmail(e);
+    const initialIdentifier = searchParams.get('identifier');
+    if (initialIdentifier) {
+      setIdentifier(initialIdentifier);
+    }
   }, [searchParams]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleIdentifierChange = (value: string) => {
+    if (value.includes('@')) {
+      setIdentifier(value.trim());
+      return;
+    }
+
+    setIdentifier(sanitizeIranMobileInput(value));
+  };
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     setLoading(true);
     setError('');
+
     try {
-      const res = await fetch('/api/auth/login', {
+      const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ identifier, password }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'ورود انجام نشد.');
+
+      const payload = await readJsonResponse(response);
+      if (!response.ok) {
+        throw new Error(payload.message || 'ورود انجام نشد.');
+      }
+
       const next = searchParams.get('next') || '/';
-      router.push(`/select-tenant?next=${encodeURIComponent(next)}`);
+      router.push(`/select-tenant?userId=${payload.user?.id ?? ''}&next=${encodeURIComponent(next)}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'خطا در ورود به سامانه');
     } finally {
@@ -40,40 +74,69 @@ function LoginContent() {
   };
 
   return (
-    <div className="auth-page">
-      <div className="auth-card">
-        <div className="auth-header">
-          <div className="auth-badge">دسترنج</div>
-          <h1>ورود</h1>
-          <p>با ایمیل و رمز عبور خود وارد شوید.</p>
+    <div className="auth-page auth-page-refresh">
+      <div className="auth-shell">
+        <section className="auth-hero-card">
+          <div className="auth-hero-kicker">سامانه دسترنج</div>
+          <h1>مدیریت منابع انسانی، تقویم و سیاست‌های کاری در یک پنل یکپارچه</h1>
+          <p>ورود به کسب‌وکار، انتخاب tenant و ادامه‌ی راه‌اندازی یا کار روزمره را از همین‌جا انجام دهید.</p>
+          <div className="auth-hero-points">
+            <span>ورود با ایمیل یا موبایل</span>
+            <span>مدیریت چند کسب‌وکار</span>
+            <span>طراحی فارسی و RTL</span>
+          </div>
+        </section>
+
+        <div className="auth-card auth-card-refresh">
+          <div className="auth-header">
+            <div className="auth-badge">ورود به دسترنج</div>
+            <h1>ورود</h1>
+            <p>با ایمیل یا شماره موبایل و رمز عبور وارد شوید.</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="auth-form">
+            {registered ? (
+              <div className="auth-alert auth-alert-success">ثبت‌نام انجام شد. حالا با همان اطلاعات وارد شوید.</div>
+            ) : null}
+
+            <label className="auth-field">
+              <span>ایمیل یا شماره موبایل</span>
+              <div className="auth-input-shell">
+                {showIranPrefix ? (
+                  <span className="auth-prefix" dir="ltr">
+                    IR +98
+                  </span>
+                ) : null}
+                <input
+                  type={identifierType === 'email' ? 'email' : 'text'}
+                  value={identifier}
+                  onChange={(e) => handleIdentifierChange(e.target.value)}
+                  required
+                  dir="ltr"
+                  inputMode={identifierType === 'email' ? 'email' : 'numeric'}
+                  maxLength={identifierType === 'email' ? undefined : 10}
+                  placeholder={identifierType === 'email' ? 'example@email.com' : '9352720114'}
+                />
+              </div>
+            </label>
+
+            <label className="auth-field">
+              <span>رمز عبور</span>
+              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+            </label>
+
+            {error ? <div className="auth-alert auth-alert-error">{error}</div> : null}
+
+            <button type="submit" disabled={loading} className="auth-btn">
+              {loading ? 'در حال ورود...' : 'ورود'}
+            </button>
+          </form>
+
+          <p className="auth-footer">
+            حساب ندارید؟{' '}
+            <Link href="/register">ثبت‌نام کنید</Link>
+          </p>
         </div>
-
-        <form onSubmit={handleSubmit} className="auth-form">
-          {registered ? (
-            <div className="auth-alert auth-alert-success">ثبت‌نام انجام شد. برای ورود، ایمیل و رمز عبور خود را وارد کنید.</div>
-          ) : null}
-
-          <label className="auth-field">
-            <span>ایمیل</span>
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="example@email.com" dir="ltr" />
-          </label>
-
-          <label className="auth-field">
-            <span>رمز عبور</span>
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required placeholder="حداقل ۶ کاراکتر" />
-          </label>
-
-          {error ? <div className="auth-alert auth-alert-error">{error}</div> : null}
-
-          <button type="submit" disabled={loading} className="auth-btn">
-            {loading ? 'در حال ورود...' : 'ورود'}
-          </button>
-        </form>
-
-        <p className="auth-footer">
-          حساب ندارید؟{' '}
-          <Link href="/register">ثبت‌نام کنید</Link>
-        </p>
       </div>
     </div>
   );
@@ -81,8 +144,8 @@ function LoginContent() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="auth-page" />}>
-      <LoginContent />
+    <Suspense fallback={<div className="auth-page auth-page-refresh" />}>
+      <LoginPageContent />
     </Suspense>
   );
 }

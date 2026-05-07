@@ -56,6 +56,7 @@ export function ExpandableTagGroup({
   required,
   className = '',
   showSearch = true,
+  invalid = false,
 }: {
   label: string;
   items: ExpandableTagGroupItem[];
@@ -66,6 +67,7 @@ export function ExpandableTagGroup({
   required?: boolean;
   className?: string;
   showSearch?: boolean;
+  invalid?: boolean;
 }) {
   const [query, setQuery] = useState('');
   const [expanded, setExpanded] = useState(false);
@@ -99,7 +101,7 @@ export function ExpandableTagGroup({
   }, [showSearch]);
 
   return (
-    <div className={cn('space-y-2', className)}>
+    <div className={cn('space-y-2', invalid && 'rounded-xl border border-rose-300 bg-rose-50/40 p-3', className)}>
       <div className="flex items-center gap-2">
         <label className="text-[13px] font-bold text-slate-700">
           {label}

@@ -1,5 +1,5 @@
 import { createOrganizationUnitAction } from '../../../lib/actions';
-import { FormCard, PageIntro } from '@repo/ui';
+import { FormCard, PageIntro } from '@repo/ui/server';
 
 export default function NewOrganizationUnitPage() {
   return (

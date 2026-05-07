@@ -4,7 +4,12 @@ import { requireSessionContext } from '../../../lib/auth';
 import { serializeContractorType, serializeContractType } from '../../../lib/subjectUtils';
 import { prisma } from '../../../lib/prisma';
 import { handlePrismaApiError } from '../../../lib/prismaApiError';
+import { getMembershipAccess } from '../../../lib/access-control';
+import { userCanDecideApprovalOnContract } from '../../../lib/contractApprovalAccess';
+import { fetchDraftApprovalFlagsRaw } from '../../../lib/contractDraftApprovalRaw';
+import { fetchTenantApprovalProcessConfigRaw } from '../../../lib/tenantApprovalProcessDb';
 import type { ContractStatus } from '../../../types/contract';
+import { validatePenaltiesStep } from '../../../lib/contractValidation';
 
 function serializeShareMode(value: ShareMode) {
   return value === ShareMode.percent ? 'percent' : 'dang';
@@ -49,13 +54,21 @@ function serializePenalties(penalties: any) {
 }
 
 function computeStatus(draft: any): ContractStatus {
+  if (draft.approvalReturnedPending) return 'draft';
   const hasSubject = Boolean(draft.subject?.contractNumber && draft.subject?.contractDate && draft.subject?.blockId && draft.subject?.unitId);
   const hasParties = Boolean(
     draft.parties?.members?.some((member: any) => member.side === PartySide.party_one) &&
       draft.parties?.members?.some((member: any) => member.side === PartySide.party_two),
   );
   const hasFinancial = Boolean(draft.financial);
-  const hasPenalties = Boolean(draft.penalties?.rules?.length);
+  const hasPenalties = Boolean(draft.penalties) && validatePenaltiesStep({
+    types: Array.isArray(draft.penalties?.types)
+      ? draft.penalties.types.map((item: any) => ({ id: String(item.id), title: String(item.title ?? ''), active: Boolean(item.active) }))
+      : [],
+    rules: Array.isArray(draft.penalties?.rules)
+      ? draft.penalties.rules.map((rule: any) => ({ id: String(rule.id), penaltyTypeId: String(rule.penaltyTypeId) }))
+      : [],
+  }).valid;
   const hasTermination = Boolean(draft.terminationRules);
   const hasExtraCosts = Boolean(draft.extraCosts);
   const hasTechnicalSpecs = Boolean(draft.technicalSpecs);
@@ -74,7 +87,10 @@ export async function GET(request: Request, context: { params: Promise<{ contrac
     const { contractId } = await context.params;
     const draft = await prisma.contractDraft.findFirst({
       where: { id: contractId, tenantId: session.tenantId },
-      include: {
+      select: {
+        id: true,
+        createdAt: true,
+        updatedAt: true,
         subject: { include: { block: true, unit: true } },
         parties: { include: { members: { orderBy: { createdAt: 'asc' } } } },
         financial: { include: { categories: true, dueItems: true } },
@@ -90,13 +106,39 @@ export async function GET(request: Request, context: { params: Promise<{ contrac
       return NextResponse.json({ message: 'قرارداد یافت نشد.' }, { status: 404 });
     }
 
-    const status = computeStatus(draft);
+    const approvalFlags =
+      (await fetchDraftApprovalFlagsRaw(session.tenantId, contractId)) ?? {
+        approvalReturnedPending: false,
+        approvalLastRejectionReason: null,
+        approvalLastRejectedAt: null,
+      };
+    const status = computeStatus({ ...draft, ...approvalFlags });
+
+    const membershipAccess = await getMembershipAccess(session.userId, session.tenantId);
+    const approvalProcessConfig = await fetchTenantApprovalProcessConfigRaw(session.tenantId);
+
+    const approvalDecision = {
+      canDecide: userCanDecideApprovalOnContract({
+        userId: session.userId,
+        access: membershipAccess,
+        unitUsage: draft.subject?.unit?.usage ?? null,
+        approvalProcessConfig,
+      }),
+    };
 
     return NextResponse.json({
       id: draft.id,
       status,
+      approvalDecision,
       createdAt: draft.createdAt.toISOString(),
       updatedAt: draft.updatedAt.toISOString(),
+      approvalReturn:
+        approvalFlags.approvalReturnedPending && approvalFlags.approvalLastRejectionReason
+          ? {
+              reason: approvalFlags.approvalLastRejectionReason,
+              rejectedAt: approvalFlags.approvalLastRejectedAt?.toISOString() ?? null,
+            }
+          : null,
       data: {
         subject: draft.subject
           ? {

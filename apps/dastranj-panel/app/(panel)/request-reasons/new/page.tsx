@@ -1,6 +1,6 @@
 import { createRequestReasonAction } from '../../../lib/actions';
 import { requestReasonLabels } from '../../../lib/constants';
-import { FormCard, PageIntro } from '@repo/ui';
+import { FormCard, PageIntro } from '@repo/ui/server';
 
 export default function NewRequestReasonPage() {
   return (

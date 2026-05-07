@@ -1,8 +1,9 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { Building2, Circle, Pencil, Square, UserRound } from 'lucide-react';
+import { Building2, Circle, Pencil } from 'lucide-react';
 import type { Block, Contract, ContractType, Unit } from '../../types/contract';
+import { formatDateFa } from '../../lib/dateFormat';
 
 interface ContractTableProps {
   contracts: Contract[];
@@ -25,7 +26,7 @@ function formatCurrency(value: number) {
   return `${Math.round(value).toLocaleString('fa-IR')} ریال`;
 }
 
-function DetailRow({ label, value, accent = false }: { label: string; value: string; accent?: boolean }) {
+function DetailRow({ label, value, accent = false }: { label: string; value: React.ReactNode; accent?: boolean }) {
   return (
     <div className="contract-reference-detail-row">
       <span>{label}</span>
@@ -65,6 +66,8 @@ export default function ContractTable({ contracts, blocks, units, onEdit, loadin
         const unit = unitMap.get(subject.unitId);
         const partyOnePrimary = parties.partyOne.find((party) => party.isPrimary) ?? parties.partyOne[0];
         const partyTwoPrimary = parties.partyTwo.find((party) => party.isPrimary) ?? parties.partyTwo[0];
+        const partyTwoNames = parties.partyTwo.map((party) => party.name).filter(Boolean);
+        const partyTwoLabel = partyTwoNames.length ? partyTwoNames.join('، ') : partyTwoPrimary?.name ?? partyOnePrimary?.name ?? '—';
         const parkingArea = Number(financial?.parkingArea || 0);
         const unitArea = Number(financial?.unitArea || Math.max(Number(financial?.totalArea || 0) - parkingArea, 0));
         const amount =
@@ -91,37 +94,37 @@ export default function ContractTable({ contracts, blocks, units, onEdit, loadin
 
             <div className="contract-reference-main">
               <div className="contract-reference-head">
-                <div className="contract-reference-meta">
-                  <span className="contract-reference-check">
-                    <Square className="h-3.5 w-3.5" />
-                  </span>
-                  <span className="contract-reference-chip">{blockName}</span>
-                  <span className="contract-reference-inline">
-                    <Building2 className="h-3.5 w-3.5" />
-                    بلوک ۱
-                  </span>
-                  <span className="contract-reference-inline">طبقه {unit?.floorName ?? '—'}</span>
-                  <span className="contract-reference-inline">واحد {unit?.name ?? '—'}</span>
-                  <span className="contract-reference-inline">{unit?.category ?? 'مسکونی'}</span>
-                </div>
+                  <div className="contract-reference-owner">
+                    <span className="contract-reference-warning">
+                      <Circle className="h-2.5 w-2.5 fill-current" />
+                      بدهکار
+                    </span>
+                    <strong className="contract-reference-owner-names">{partyTwoLabel}</strong>
+                  </div>
 
-                <div className="contract-reference-owner">
-                  <span className="contract-reference-warning">
-                    <Circle className="h-2.5 w-2.5 fill-current" />
-                    بدهکار
-                  </span>
-                  <strong>{partyTwoPrimary?.name ?? partyOnePrimary?.name ?? '—'}</strong>
-                  <span className="contract-reference-avatar">
-                    <UserRound className="h-4 w-4" />
-                  </span>
-                </div>
+                  <div className="contract-reference-meta">
+                    <span className="contract-reference-inline">
+                      <Building2 className="h-3.5 w-3.5" />
+                      بلوک ۱
+                    </span>
+                    <span className="contract-reference-inline">طبقه {unit?.floorName ?? '—'}</span>
+                    <span className="contract-reference-inline">واحد {unit?.name ?? '—'}</span>
+                    <span className="contract-reference-inline">{unit?.category ?? 'مسکونی'}</span>
+                  </div>
               </div>
 
               <div className="contract-reference-grid">
                 <section className="contract-reference-panel">
                   <DetailRow label="طرف اول" value={partyOnePrimary?.name ?? 'ثبت نشده'} />
                   <DetailRow label="انعقاد قرارداد" value={subject.contractDate || '—'} />
-                  <DetailRow label="ثبت در سامانه" value={contract.updatedAt || '—'} />
+                  <DetailRow
+                    label="ثبت در سامانه"
+                    value={
+                      <span className="contracts-datetime" dir="ltr">
+                        {formatDateFa(contract.updatedAt, { withTime: true })}
+                      </span>
+                    }
+                  />
                 </section>
 
                 <section className="contract-reference-panel">

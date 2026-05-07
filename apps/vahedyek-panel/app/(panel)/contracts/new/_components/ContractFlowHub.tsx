@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { AlertCircle, CheckCircle2, Info, Lock, X } from 'lucide-react';
 import { getActiveDraftId, getFrontendStepDraft, getStepData } from '../../../../lib/contractDraftClient';
 import { validateDiscountsStep, validateFinancialStep, validatePenaltiesStep, validateStep1, validateStep2, validateTerminationStep } from '../../../../lib/contractValidation';
@@ -11,6 +11,7 @@ import { FinancialStep } from './FinancialStep';
 import { LeftReportSidebar } from './LeftReportSidebar';
 import { PartiesStep } from './PartiesStep';
 import { PenaltiesStep } from './PenaltiesStep';
+import { ContractDraftPreviewDialog } from '../../../../components/contracts/ContractDraftPreviewDialog';
 import { RightNavSidebar } from './RightNavSidebar';
 import { SubjectStep } from './SubjectStep';
 import { TerminationStep } from './TerminationStep';
@@ -231,7 +232,11 @@ function FinancialDonut({ slices }: { slices: Array<{ id: string; name: string; 
 
 export function ContractFlowHub() {
   const router = useRouter();
+  const pathname = usePathname();
   const leavingRef = useRef(false);
+  /** Count of pushState \"trap\" layers we added on top of the real history stack (multiple entries can share the same URL). */
+  const leaveTrapPushCountRef = useRef(0);
+  const didAutoScrollRef = useRef(false);
   const dirtyMapRef = useRef<Partial<Record<ContractFlowSectionId, boolean>>>({});
   const [activeSection, setActiveSection] = useState<SectionItem['id']>('subject');
   const [loading, setLoading] = useState(true);
@@ -253,6 +258,7 @@ export function ContractFlowHub() {
   const [pendingLeave, setPendingLeave] = useState<{ mode: 'route' | 'back'; href?: string } | null>(null);
   const [leaveSaving, setLeaveSaving] = useState(false);
   const [leaveSaveError, setLeaveSaveError] = useState<string>('');
+  const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -267,6 +273,7 @@ export function ContractFlowHub() {
       }
 
       try {
+        didAutoScrollRef.current = false;
         const [subject, parties, financial, penalties, extraCosts, technicalSpecs, attachments] = await Promise.all([
           getStepData<ContractSubjectData>(draftId, 'subject'),
           getStepData<ContractPartiesData>(draftId, 'parties'),
@@ -429,6 +436,24 @@ export function ContractFlowHub() {
     contractAttachments: attachmentsComplete,
   };
 
+  const approvalSubmissionBlockers = useMemo(() => {
+    const out: { title: string; detail: string }[] = [];
+    for (const sectionId of SECTION_ORDER) {
+      const dirty = Boolean(dirtyMap[sectionId]);
+      const saved = Boolean(lastUpdatedMap[sectionId]);
+      const contentOk = Boolean(completionMap[sectionId]);
+      if (contentOk && saved && !dirty) continue;
+      let detail = 'این مرحله باید کامل و ذخیره شود.';
+      if (dirty) detail = 'تغییرات ذخیره نشده است؛ ابتدا دکمهٔ «ذخیره» این مرحله را بزنید.';
+      else if (!contentOk) detail = 'اطلاعات این بخش هنوز طبق قواعد سیستم کامل نیست.';
+      else if (!saved) detail = 'این بخش هنوز حداقل یک‌بار ذخیره نشده است.';
+      out.push({ title: SECTION_TITLES[sectionId], detail });
+    }
+    return out;
+  }, [completionMap, dirtyMap, lastUpdatedMap]);
+
+  const approvalSubmissionReady = approvalSubmissionBlockers.length === 0 && !loading;
+
   const accessMap = useMemo<Record<ContractFlowSectionId, SectionAccess>>(() => {
     const result = {} as Record<ContractFlowSectionId, SectionAccess>;
 
@@ -464,6 +489,31 @@ export function ContractFlowHub() {
 
     return result;
   }, [completionMap, dirtyMap, lastUpdatedMap]);
+
+  useEffect(() => {
+    if (loading) return;
+    if (didAutoScrollRef.current) return;
+
+    const draftId = getActiveDraftId();
+    if (!draftId) return;
+
+    // Go to the latest unfinished section (closest to completion).
+    // We prefer the first section in order that's not "done" yet.
+    const firstIncomplete = SECTION_ORDER.find((sectionId) => {
+      if (accessMap[sectionId]?.locked) return false;
+      const dirty = Boolean(dirtyMap[sectionId]);
+      const saved = Boolean(lastUpdatedMap[sectionId]);
+      const complete = Boolean(completionMap[sectionId]) && saved && !dirty;
+      return !complete;
+    });
+
+    const fallback = SECTION_ORDER.find((sectionId) => !accessMap[sectionId]?.locked) ?? 'subject';
+    const target = (firstIncomplete ?? fallback) as ContractFlowSectionId;
+
+    didAutoScrollRef.current = true;
+    setPendingScrollSection(target);
+    setActiveSection(target);
+  }, [accessMap, completionMap, dirtyMap, lastUpdatedMap, loading]);
 
   useEffect(() => {
     const renderedSections = Array.from(document.querySelectorAll<HTMLElement>('[data-contract-section]'));
@@ -676,6 +726,45 @@ export function ContractFlowHub() {
     });
   };
 
+  /** Hub یا هر زیرمسیر فلو قرارداد جدید (مثلاً `/contracts/new/parties`). */
+  const isContractsNewFlowPath = (pathname: string) =>
+    pathname === '/contracts/new' || pathname.startsWith('/contracts/new/');
+
+  /** وقتی تاریخچهٔ طبیعی برنمی‌گرداند، به همان منبع معنادار می‌رویم (جزئیات قرارداد برای فلو معمول، فهرست الگو برای draft-templates). */
+  const getLeaveFallbackAfterBlockedBack = () => {
+    if (pathname?.startsWith('/draft-templates')) return '/draft-templates';
+    const draftId = getActiveDraftId();
+    if (draftId) return `/contracts/${encodeURIComponent(draftId)}`;
+    return '/contracts';
+  };
+
+  const waitForPathLeaveDraft = (timeoutMs = 900) => {
+    return new Promise<boolean>((resolve) => {
+      const startedAt = Date.now();
+      const tick = () => {
+        if (!isContractsNewFlowPath(window.location.pathname)) return resolve(true);
+        if (Date.now() - startedAt >= timeoutMs) return resolve(false);
+        window.setTimeout(tick, 60);
+      };
+      tick();
+    });
+  };
+
+  const navigateBackThroughLeaveTraps = async () => {
+    const depth = Math.max(1, leaveTrapPushCountRef.current);
+    window.history.go(-depth);
+    const left = await waitForPathLeaveDraft(1100);
+    if (left) {
+      leaveTrapPushCountRef.current = 0;
+      return;
+    }
+    if (isContractsNewFlowPath(window.location.pathname)) {
+      router.push(getLeaveFallbackAfterBlockedBack());
+      await waitForPathLeaveDraft(1200);
+    }
+    leaveTrapPushCountRef.current = 0;
+  };
+
   const waitForSectionSaved = (sectionId: ContractFlowSectionId, timeoutMs = 15000) => {
     return new Promise<void>((resolve, reject) => {
       const timer = window.setTimeout(() => {
@@ -718,12 +807,7 @@ export function ContractFlowHub() {
       leavingRef.current = true;
 
       if (target.mode === 'back') {
-        window.history.go(-2);
-        window.setTimeout(() => {
-          if (window.location.href === fromHref) {
-            window.history.go(-1);
-          }
-        }, 60);
+        await navigateBackThroughLeaveTraps();
       } else {
         if (!target.href) throw new Error('missing-target');
         const nextUrl = new URL(target.href, window.location.href);
@@ -750,15 +834,9 @@ export function ContractFlowHub() {
     }
   };
 
-  const performLeave = (target: { mode: 'route' | 'back'; href?: string }) => {
+  const performLeave = async (target: { mode: 'route' | 'back'; href?: string }) => {
     if (target.mode === 'back') {
-      const currentHref = window.location.href;
-      window.history.go(-2);
-      window.setTimeout(() => {
-        if (window.location.href === currentHref) {
-          window.history.go(-1);
-        }
-      }, 60);
+      await navigateBackThroughLeaveTraps();
       return;
     }
 
@@ -792,7 +870,7 @@ export function ContractFlowHub() {
     const target = pendingLeave;
     setPendingLeave(null);
 
-    performLeave(target);
+    void performLeave(target);
   };
 
   useEffect(() => {
@@ -828,10 +906,12 @@ export function ContractFlowHub() {
 
     const handlePopState = () => {
       if (leavingRef.current) return;
+      leaveTrapPushCountRef.current += 1;
       window.history.pushState(null, '', window.location.href);
       setPendingLeave({ mode: 'back' });
     };
 
+    leaveTrapPushCountRef.current += 1;
     window.history.pushState(null, '', window.location.href);
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
@@ -913,6 +993,11 @@ export function ContractFlowHub() {
         onScrollTo={scrollToSection}
         onSave={requestSectionSave}
         onLockedClick={setLockedDialogSection}
+        draftId={getActiveDraftId()}
+        loading={loading}
+        approvalSubmissionReady={approvalSubmissionReady}
+        approvalSubmissionBlockers={approvalSubmissionBlockers}
+        onOpenPreviewDialog={() => setPreviewDialogOpen(true)}
       />
 
       <LeftReportSidebar
@@ -1116,6 +1201,12 @@ export function ContractFlowHub() {
           </div>
         </div>
       ) : null}
+
+      <ContractDraftPreviewDialog
+        open={previewDialogOpen}
+        draftId={getActiveDraftId()}
+        onClose={() => setPreviewDialogOpen(false)}
+      />
     </div>
   );
 }

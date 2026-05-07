@@ -1,4 +1,7 @@
+'use client';
+
 import { getAppThemeVariables } from '../../lib/app-theme';
+import { useServerInsertedHTML } from 'next/navigation';
 
 const appThemeVariables = JSON.stringify(getAppThemeVariables());
 
@@ -18,5 +21,6 @@ const THEME_INIT_SCRIPT = `
 `;
 
 export function ThemeInitScript() {
-  return <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />;
+  useServerInsertedHTML(() => <script id="theme-init" dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />);
+  return null;
 }

@@ -20,6 +20,7 @@ export function ChoicePillsField<T extends string>({
   pillsClassName = '',
   pillClassName = '',
   showActiveIndicator,
+  invalid = false,
 }: {
   label: string;
   labelAs?: ElementType;
@@ -33,9 +34,10 @@ export function ChoicePillsField<T extends string>({
   pillsClassName?: string;
   pillClassName?: string;
   showActiveIndicator?: boolean;
+  invalid?: boolean;
 }) {
   return (
-    <div className={cn('space-y-2', className)}>
+    <div className={cn('space-y-2', invalid && 'rounded-xl border border-rose-300 bg-rose-50/40 p-2', className)}>
       <LabelAs className={cn('text-[12px] font-bold text-[color:var(--text-strong)]', labelClassName)}>{label}</LabelAs>
       <ChoicePills
         ariaLabel={ariaLabel ?? label}

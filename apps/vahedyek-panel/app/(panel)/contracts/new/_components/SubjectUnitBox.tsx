@@ -40,12 +40,16 @@ function UnitSelector({
   selectedUnit,
   onBlockChange,
   onUnitChange,
+  blockInvalid = false,
+  unitInvalid = false,
 }: {
   blocks: BlockOption[];
   selectedBlock: string;
   selectedUnit: string;
   onBlockChange: (id: string) => void;
   onUnitChange: (id: string) => void;
+  blockInvalid?: boolean;
+  unitInvalid?: boolean;
 }) {
   const blockData = blocks.find((block) => block.id === selectedBlock);
   const selectableUnits = blockData?.units.filter((unit) => unit.category === 'unit') ?? [];
@@ -53,7 +57,7 @@ function UnitSelector({
 
   return (
     <div className="space-y-4">
-      <div className="space-y-2">
+      <div className={`space-y-2 ${blockInvalid ? 'rounded-xl border border-rose-300 bg-rose-50/40 p-2' : ''}`}>
         <ExpandableTagGroup
           label="بلوک"
           required
@@ -69,7 +73,7 @@ function UnitSelector({
       </div>
 
       {blockData ? (
-        <div className="space-y-2">
+        <div className={`space-y-2 ${unitInvalid ? 'rounded-xl border border-rose-300 bg-rose-50/40 p-2' : ''}`}>
           <ExpandableTagGroup
             label="واحد"
             required
@@ -132,12 +136,16 @@ export function SubjectUnitBox({
   selectedUnit,
   onBlockChange,
   onUnitChange,
+  blockInvalid = false,
+  unitInvalid = false,
 }: {
   blocks: BlockOption[];
   selectedBlock: string;
   selectedUnit: string;
   onBlockChange: (id: string) => void;
   onUnitChange: (id: string) => void;
+  blockInvalid?: boolean;
+  unitInvalid?: boolean;
 }) {
   return (
     <SectionCard>
@@ -149,6 +157,8 @@ export function SubjectUnitBox({
           selectedUnit={selectedUnit}
           onBlockChange={onBlockChange}
           onUnitChange={onUnitChange}
+          blockInvalid={blockInvalid}
+          unitInvalid={unitInvalid}
         />
       </div>
     </SectionCard>

@@ -986,8 +986,35 @@ export function formatCurrencyBySettings(amount: number, settings?: CurrencySett
 export function formatDateBySettings(input: string, settings?: CalendarSettings) {
   const format = settings?.format ?? 'yyyy/mm/dd-short';
   if (!input) return '';
-  if (format === 'dd/mm/yyyy') return '16/09/1400';
-  if (format === 'yyyy/mm/dd') return '1400/09/16';
-  if (format === 'month-title') return '16 آذر 1400';
-  return '09/16/1400';
+
+  // This is used for preview in settings UI (client). We always render
+  // numbers in Persian locale; calendar system toggles between Jalali/Gregorian.
+  if (format === 'month-title') {
+    const systemLocale = settings?.system === 'gregorian' ? 'fa-IR' : 'fa-IR-u-ca-persian';
+    const date = new Date(input);
+    if (Number.isNaN(date.getTime())) return input;
+    return new Intl.DateTimeFormat(systemLocale, {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+    }).format(date);
+  }
+
+  const systemLocale = settings?.system === 'gregorian' ? 'fa-IR' : 'fa-IR-u-ca-persian';
+  const date = new Date(input);
+  if (Number.isNaN(date.getTime())) return input;
+
+  const parts = new Intl.DateTimeFormat(systemLocale, {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(date);
+
+  const year = parts.find((p) => p.type === 'year')?.value ?? '';
+  const month = parts.find((p) => p.type === 'month')?.value ?? '';
+  const day = parts.find((p) => p.type === 'day')?.value ?? '';
+
+  if (format === 'dd/mm/yyyy') return `${day}/${month}/${year}`;
+  if (format === 'yyyy/mm/dd') return `${year}/${month}/${day}`;
+  return `${month}/${day}/${year}`;
 }

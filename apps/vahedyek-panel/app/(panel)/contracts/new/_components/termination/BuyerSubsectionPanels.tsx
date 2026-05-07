@@ -87,14 +87,6 @@ export function BuyerLateDeliveryPanel({
 }) {
   return (
     <div className="space-y-5">
-      <ToggleRow
-        checked={value.ruleEnabled}
-        onChange={(checked) => onChange({ ...value, ruleEnabled: checked })}
-        label="فعال‌سازی فسخ به دلیل تأخیر در تحویل"
-        description="در صورت فعال‌سازی، مبنا و مهلت ارفاقی برای تأخیر تحویل اعمال می‌شود."
-      />
-
-      <div className={`transition-all duration-200 ${value.ruleEnabled ? 'opacity-100' : 'max-h-0 overflow-hidden opacity-0'}`}>
       <FieldGroup label="مبنای محاسبه تأخیر" hint="سررسید تحویل نسبت به کدام تاریخ سنجیده می‌شود.">
         <TagPills<B['lateDelivery']['calculationBasis']>
           value={value.calculationBasis}
@@ -133,7 +125,6 @@ export function BuyerLateDeliveryPanel({
       />
 
       <SubsectionSubmitRow onSave={onSubmit} saving={saving} />
-      </div>
     </div>
   );
 }
@@ -151,14 +142,6 @@ export function BuyerSpecificationChangesPanel({
 }) {
   return (
     <div className="space-y-5">
-      <ToggleRow
-        checked={value.ruleEnabled}
-        onChange={(checked) => onChange({ ...value, ruleEnabled: checked })}
-        label="فعال‌سازی فسخ به دلیل تغییر مشخصات"
-        description="در صورت فعال‌سازی، تغییرات انتخاب‌شده می‌توانند منجر به حق فسخ خریدار شوند."
-      />
-
-      <div className={`transition-all duration-200 ${value.ruleEnabled ? 'opacity-100' : 'max-h-0 overflow-hidden opacity-0'}`}>
       <FieldGroup label="انواع تغییر مشمول" hint="مواردی که می‌توانند به حق فسخ خریدار بینجامند.">
         <MultiTagPills<B['specificationChanges']['includedTypes'][number]>
           values={value.includedTypes}
@@ -175,7 +158,6 @@ export function BuyerSpecificationChangesPanel({
       />
 
       <SubsectionSubmitRow onSave={onSubmit} saving={saving} />
-      </div>
     </div>
   );
 }
@@ -193,14 +175,6 @@ export function BuyerBreachPanel({
 }) {
   return (
     <div className="space-y-5">
-      <ToggleRow
-        checked={value.ruleEnabled}
-        onChange={(checked) => onChange({ ...value, ruleEnabled: checked })}
-        label="فعال‌سازی فسخ به دلیل نقض تعهدات"
-        description="در صورت فعال‌سازی، تعهدات انتخاب‌شده با مهلت اصلاح برای ورود به جریان فسخ لحاظ می‌شوند."
-      />
-
-      <div className={`transition-all duration-200 ${value.ruleEnabled ? 'opacity-100' : 'max-h-0 overflow-hidden opacity-0'}`}>
       <FieldGroup label="تعهدات سازنده مشمول" hint="حداقل یک مورد را انتخاب کنید.">
         <MultiTagPills<B['breachOfObligations']['obligationTypes'][number]>
           values={value.obligationTypes}
@@ -234,7 +208,6 @@ export function BuyerBreachPanel({
       ) : null}
 
       <SubsectionSubmitRow onSave={onSubmit} saving={saving} />
-      </div>
     </div>
   );
 }
@@ -252,14 +225,6 @@ export function BuyerAreaDiscrepancyPanel({
 }) {
   return (
     <div className="space-y-5">
-      <ToggleRow
-        checked={value.ruleEnabled}
-        onChange={(checked) => onChange({ ...value, ruleEnabled: checked })}
-        label="فعال‌سازی فسخ به دلیل اختلاف متراژ"
-        description="در صورت فعال‌سازی، آستانه اختلاف متراژ و مراجع انتخاب‌شده برای حق فسخ خریدار لحاظ می‌شود."
-      />
-
-      <div className={`transition-all duration-200 ${value.ruleEnabled ? 'opacity-100' : 'max-h-0 overflow-hidden opacity-0'}`}>
       <FieldGroup label="حد مجاز اختلاف متراژ نسبت به مرجع">
         <TagPills
           value={value.thresholdPreset}
@@ -300,7 +265,6 @@ export function BuyerAreaDiscrepancyPanel({
       />
 
       <SubsectionSubmitRow onSave={onSubmit} saving={saving} />
-      </div>
     </div>
   );
 }
@@ -319,14 +283,6 @@ export function BuyerNotificationPanel({
   return (
     <div className="space-y-5">
       <ToggleRow
-        checked={value.ruleEnabled}
-        onChange={(checked) => onChange({ ...value, ruleEnabled: checked })}
-        label="فعال‌سازی اطلاع‌رسانی فسخ"
-        description="در صورت فعال‌سازی، تنظیمات ارسال اعلان‌ها برای مسیر فسخ خریدار اعمال می‌شود."
-      />
-
-      <div className={`transition-all duration-200 ${value.ruleEnabled ? 'opacity-100' : 'max-h-0 overflow-hidden opacity-0'}`}>
-      <ToggleRow
         checked={value.notifyBuyer}
         onChange={(checked) => onChange({ ...value, notifyBuyer: checked })}
         label="اطلاع‌رسانی به خریدار"
@@ -344,7 +300,6 @@ export function BuyerNotificationPanel({
       />
 
       <SubsectionSubmitRow onSave={onSubmit} saving={saving} />
-      </div>
     </div>
   );
 }

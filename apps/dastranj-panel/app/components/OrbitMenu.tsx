@@ -83,7 +83,7 @@ export function OrbitMenu({ activeItem }: OrbitMenuProps) {
     }
 
     const item = APP_MENU_ITEMS[index];
-    if (!item) return;
+    if (!item || item.disabled || item.href === '#') return;
     router.push(item.href);
   };
 
@@ -97,7 +97,6 @@ export function OrbitMenu({ activeItem }: OrbitMenuProps) {
             const y = Math.sin(angle) * 260 + 260 - 27;
             const isActive = index === activeIndex;
             const isNeighbor = index === prevIndex || index === nextIndex;
-            const Icon = item.icon;
 
             return (
               <button
@@ -107,8 +106,9 @@ export function OrbitMenu({ activeItem }: OrbitMenuProps) {
                 style={{ left: `${x}px`, top: `${y}px`, transform: `rotate(${-currentRotation}rad)` }}
                 onMouseDown={handleMouseDown}
                 onClick={() => navigateTo(index)}
+                disabled={item.disabled}
               >
-                <Icon size={isActive ? 26 : 20} strokeWidth={2.2} />
+                <i className={`fa ${item.icon}`}></i>
                 <span className="node-label">{item.label}</span>
               </button>
             );
@@ -118,3 +118,4 @@ export function OrbitMenu({ activeItem }: OrbitMenuProps) {
     </div>
   );
 }
+

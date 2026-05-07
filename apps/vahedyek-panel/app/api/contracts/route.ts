@@ -2,8 +2,10 @@ import { NextResponse } from 'next/server';
 import { PartySide, PersonType, PricingType, ShareMode } from '@prisma/client';
 import { requireSessionContext } from '../../lib/auth';
 import { serializeContractorType, serializeContractType } from '../../lib/subjectUtils';
+import { fetchAllDraftApprovalFlagsByTenantRaw } from '../../lib/contractDraftApprovalRaw';
 import { prisma } from '../../lib/prisma';
 import { handlePrismaApiError } from '../../lib/prismaApiError';
+import { validatePenaltiesStep } from '../../lib/contractValidation';
 import type { ContractStatus } from '../../types/contract';
 
 function serializeShareMode(value: ShareMode) {
@@ -27,7 +29,14 @@ function isDraftReadyForApproval(draft: Awaited<ReturnType<typeof prisma.contrac
   );
   const hasFinancial = Boolean(draft.financial);
 
-  const hasPenalties = Boolean(draft.penalties?.rules?.length);
+  const hasPenalties = Boolean(draft.penalties) && validatePenaltiesStep({
+    types: Array.isArray(draft.penalties?.types)
+      ? draft.penalties.types.map((item: any) => ({ id: String(item.id), title: String(item.title ?? ''), active: Boolean(item.active) }))
+      : [],
+    rules: Array.isArray(draft.penalties?.rules)
+      ? draft.penalties.rules.map((rule: any) => ({ id: String(rule.id), penaltyTypeId: String(rule.penaltyTypeId) }))
+      : [],
+  }).valid;
   const hasTermination = Boolean(draft.terminationRules);
   const hasExtraCosts = Boolean(draft.extraCosts);
   const hasTechnicalSpecs = Boolean(draft.technicalSpecs);
@@ -47,7 +56,10 @@ export async function GET(request: Request) {
     const drafts = await prisma.contractDraft.findMany({
       where: { tenantId: session.tenantId },
       orderBy: { updatedAt: 'desc' },
-      include: {
+      select: {
+        id: true,
+        createdAt: true,
+        updatedAt: true,
         subject: true,
         parties: {
           include: {
@@ -75,9 +87,17 @@ export async function GET(request: Request) {
       },
     });
 
+    const approvalFlagMap = await fetchAllDraftApprovalFlagsByTenantRaw(session.tenantId);
+
     const contracts = drafts.map((draft) => ({
       id: draft.id,
-      status: (isDraftReadyForApproval(draft) ? 'pending_approval' : 'draft') as ContractStatus,
+      status: (
+        approvalFlagMap.get(draft.id)?.approvalReturnedPending
+          ? 'draft'
+          : isDraftReadyForApproval(draft)
+            ? 'pending_approval'
+            : 'draft'
+      ) as ContractStatus,
       createdAt: draft.createdAt.toISOString(),
       updatedAt: draft.updatedAt.toISOString(),
       data: {
