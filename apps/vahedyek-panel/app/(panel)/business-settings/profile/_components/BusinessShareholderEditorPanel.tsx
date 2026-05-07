@@ -11,8 +11,12 @@ import {
   persistProfileStore,
   upsertLegalShareholder,
   upsertNaturalShareholder,
+  upsertLegalBuyer,
+  upsertNaturalBuyer,
   type LegalShareholderRecord,
   type NaturalShareholderRecord,
+  type LegalBuyerRecord,
+  type NaturalBuyerRecord,
   type RepresentativeRecord,
 } from './profileStorage';
 import {
@@ -28,6 +32,34 @@ import { PersonAvatar, PersonRowCard } from './ProfilePeoplePrimitives';
 
 type ShareholderKind = 'natural' | 'legal';
 type EditorStep = 'details' | 'representatives';
+type PeopleEntity = 'shareholder' | 'buyer';
+
+const entityConfig = {
+  shareholder: {
+    basePath: '/business-settings/profile/shareholders',
+    naturalMode: 'natural-shareholder' as const,
+    naturalIdPrefix: 'natural-shareholder',
+    legalIdPrefix: 'legal-shareholder',
+    naturalListPath: '/business-settings/profile/shareholders?tab=natural',
+    legalListPath: '/business-settings/profile/shareholders?tab=legal',
+    naturalTitle: 'اطلاعات سهامدار حقیقی',
+    legalTitle: 'ثبت سهامدار حقوقی',
+    representativeTitle: 'لیست نمایندگان',
+    continueLabel: 'ثبت و ادامه',
+  },
+  buyer: {
+    basePath: '/business-settings/profile/buyers',
+    naturalMode: 'buyer' as const,
+    naturalIdPrefix: 'natural-buyer',
+    legalIdPrefix: 'legal-buyer',
+    naturalListPath: '/business-settings/profile/buyers?tab=natural',
+    legalListPath: '/business-settings/profile/buyers?tab=legal',
+    naturalTitle: 'اطلاعات خریدار حقیقی',
+    legalTitle: 'ثبت خریدار حقوقی',
+    representativeTitle: 'لیست نمایندگان',
+    continueLabel: 'ثبت و ادامه',
+  },
+} as const;
 
 const legalTypeOptions = LEGAL_TYPE_OPTIONS.map((item) => ({ value: item, label: item }));
 
@@ -60,9 +92,10 @@ const emptyNaturalForm: Omit<NaturalShareholderRecord, 'id'> = {
   signatureAvatarImage: '',
 };
 
-export function BusinessShareholderEditorPanel({ shareholderId }: { shareholderId?: string }) {
+export function BusinessShareholderEditorPanel({ shareholderId, entity = 'shareholder' }: { shareholderId?: string; entity?: PeopleEntity }) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const config = entityConfig[entity];
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const requestedKind = searchParams.get('kind');
   const lockedKind = requestedKind === 'legal' || requestedKind === 'natural' ? requestedKind : null;
@@ -81,8 +114,10 @@ export function BusinessShareholderEditorPanel({ shareholderId }: { shareholderI
       if (ignore) return;
 
       const requestedStep = searchParams.get('step');
-      const legalShareholder = shareholderId ? store.legalShareholders.find((item) => item.id === shareholderId) : null;
-      const naturalShareholder = shareholderId ? store.naturalShareholders.find((item) => item.id === shareholderId) : null;
+      const legalPeople = entity === 'buyer' ? store.legalBuyers : store.legalShareholders;
+      const naturalPeople = entity === 'buyer' ? store.naturalBuyers : store.naturalShareholders;
+      const legalShareholder = shareholderId ? legalPeople.find((item) => item.id === shareholderId) : null;
+      const naturalShareholder = shareholderId ? naturalPeople.find((item) => item.id === shareholderId) : null;
 
       if (legalShareholder) {
         setKind('legal');
@@ -129,10 +164,10 @@ export function BusinessShareholderEditorPanel({ shareholderId }: { shareholderI
     return () => {
       ignore = true;
     };
-  }, [lockedKind, searchParams, shareholderId]);
+  }, [entity, lockedKind, searchParams, shareholderId]);
 
   if (!shareholderId && lockedKind === 'natural') {
-    return <BusinessRepresentativePickerPanel mode="natural-shareholder" />;
+    return <BusinessRepresentativePickerPanel mode={config.naturalMode} returnTo={config.naturalListPath} />;
   }
 
   const filteredRepresentatives = useMemo(() => {
@@ -140,7 +175,7 @@ export function BusinessShareholderEditorPanel({ shareholderId }: { shareholderI
     return representatives.filter((item) => !normalizedQuery || item.fullName.includes(normalizedQuery) || item.mobile.includes(normalizedQuery) || item.email.includes(normalizedQuery));
   }, [query, representatives]);
 
-  const activeShareholderId = shareholderId ?? `legal-shareholder-${Date.now()}`;
+  const activeShareholderId = shareholderId ?? `${config.legalIdPrefix}-${Date.now()}`;
 
   const readAvatarFile = (file: File | null) => {
     if (!file) return;
@@ -160,44 +195,50 @@ export function BusinessShareholderEditorPanel({ shareholderId }: { shareholderI
     const store = await fetchProfileStore();
 
     if (kind === 'natural') {
+      const nextNatural = {
+        id: shareholderId ?? `${config.naturalIdPrefix}-${Date.now()}`,
+        ...naturalForm,
+        avatarText: naturalForm.fullName.trim().slice(0, 1) || 'ط´',
+        signatureAvatarText: naturalForm.signatureAvatarText || naturalForm.fullName.trim().slice(0, 1) || 'ط´',
+      };
       await persistProfileStore(
-        upsertNaturalShareholder(store, {
-          id: shareholderId ?? `natural-shareholder-${Date.now()}`,
-          ...naturalForm,
-          avatarText: naturalForm.fullName.trim().slice(0, 1) || 'ش',
-          signatureAvatarText: naturalForm.signatureAvatarText || naturalForm.fullName.trim().slice(0, 1) || 'ش',
-        }),
+        entity === 'buyer'
+          ? upsertNaturalBuyer(store, nextNatural as NaturalBuyerRecord)
+          : upsertNaturalShareholder(store, nextNatural as NaturalShareholderRecord),
       );
-      router.push('/business-settings/profile/shareholders?tab=natural');
+      router.push(config.naturalListPath);
       router.refresh();
       return;
     }
 
-    const nextShareholder: LegalShareholderRecord = {
+    const nextShareholder: LegalShareholderRecord | LegalCustomerRecord = {
       id: activeShareholderId,
       ...legalForm,
-      avatarText: legalForm.companyName.trim().slice(0, 1) || 'ش',
+      avatarText: legalForm.companyName.trim().slice(0, 1) || 'ط´',
       representatives,
     };
 
-    await persistProfileStore(upsertLegalShareholder(store, nextShareholder));
-    router.push(`/business-settings/profile/shareholders/${activeShareholderId}?step=representatives&tab=legal&kind=legal`);
+    await persistProfileStore(
+      entity === 'buyer'
+        ? upsertLegalBuyer(store, nextShareholder as LegalBuyerRecord)
+        : upsertLegalShareholder(store, nextShareholder as LegalShareholderRecord),
+    );
+    router.push(`${config.basePath}/${activeShareholderId}?step=representatives&tab=legal&kind=legal`);
     router.refresh();
   };
 
   const finishLegalFlow = () => {
-    router.push('/business-settings/profile/shareholders?tab=legal');
+    router.push(config.legalListPath);
     router.refresh();
   };
-
   const headingTitle =
     kind === 'legal'
       ? step === 'representatives' && isLegalRegistrationFlow
-        ? 'لیست نمایندگان'
+        ? config.representativeTitle
         : isLegalRegistrationFlow
-          ? 'ثبت سهامدار حقوقی'
-          : 'اطلاعات شرکت'
-      : 'اطلاعات سهامدار حقیقی';
+          ? config.legalTitle
+          : '\u0627\u0637\u0644\u0627\u0639\u0627\u062a \u0634\u0631\u06a9\u062a'
+      : config.naturalTitle;
 
   const headingDescription =
     kind === 'legal'
@@ -343,9 +384,9 @@ export function BusinessShareholderEditorPanel({ shareholderId }: { shareholderI
               </label>
 
               <Link
-                href={`/business-settings/profile/representatives/new?shareholderId=${activeShareholderId}&title=${encodeURIComponent(
+                href={`/business-settings/profile/representatives/new?${entity === 'customer' ? 'customerId' : 'shareholderId'}=${activeShareholderId}&title=${encodeURIComponent(
                   'لیست نماینده',
-                )}&returnTo=${encodeURIComponent(`/business-settings/profile/shareholders/${activeShareholderId}?step=representatives&tab=legal&kind=legal`)}`}
+                )}&returnTo=${encodeURIComponent(`${config.basePath}/${activeShareholderId}?step=representatives&tab=legal&kind=legal`)}`}
                 className="shareholder-representatives-plus"
               >
                 <Plus />
@@ -367,9 +408,9 @@ export function BusinessShareholderEditorPanel({ shareholderId }: { shareholderI
               </div>
             ) : (
               <Link
-                href={`/business-settings/profile/representatives/new?shareholderId=${activeShareholderId}&title=${encodeURIComponent(
+                href={`/business-settings/profile/representatives/new?${entity === 'customer' ? 'customerId' : 'shareholderId'}=${activeShareholderId}&title=${encodeURIComponent(
                   'لیست نماینده',
-                )}&returnTo=${encodeURIComponent(`/business-settings/profile/shareholders/${activeShareholderId}?step=representatives&tab=legal&kind=legal`)}`}
+                )}&returnTo=${encodeURIComponent(`${config.basePath}/${activeShareholderId}?step=representatives&tab=legal&kind=legal`)}`}
                 className="shareholder-representatives-empty"
               >
                 <span className="shareholder-representatives-empty-inner">
@@ -388,10 +429,10 @@ export function BusinessShareholderEditorPanel({ shareholderId }: { shareholderI
               onClick={() => {
                 if (kind === 'legal' && step === 'representatives') {
                   setStep('details');
-                  router.push(`/business-settings/profile/shareholders/${activeShareholderId}?tab=legal&kind=legal`);
+                  router.push(`${config.basePath}/${activeShareholderId}?tab=legal&kind=legal`);
                   return;
                 }
-                router.push(`/business-settings/profile/shareholders?tab=${kind}`);
+                router.push(`${config.basePath}?tab=${kind}`);
               }}
             >
               بازگشت

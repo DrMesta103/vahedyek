@@ -94,6 +94,13 @@ export const currentAppConfig: AppConfig = {
       requiredPermission: 'contracts.view',
     },
     {
+      id: 'buyers',
+      label: 'خریداران',
+      icon: 'fa-shopping-cart',
+      href: '/business-settings/profile/buyers',
+      requiredPermission: 'business.profile.view',
+    },
+    {
       id: 'draft-templates',
       label: 'قالب‌های پیش‌نویس',
       icon: 'fa-copy',

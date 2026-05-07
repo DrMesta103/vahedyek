@@ -73,6 +73,35 @@ export type LegalShareholderRecord = {
   representatives: RepresentativeRecord[];
 };
 
+export type NaturalCustomerRecord = NaturalShareholderRecord;
+export type LegalCustomerRecord = LegalShareholderRecord;
+
+export type NaturalBuyerRecord = NaturalShareholderRecord & {
+  job?: string;
+  contactNumber?: string;
+  acquaintanceMethod?: string;
+  address?: {
+    country: string;
+    province: string;
+    city: string;
+    mainStreet: string;
+    sideStreet: string;
+    alley: string;
+    plaque: string;
+    floor: string;
+    unit: string;
+    postalCode: string;
+    fullAddress: string;
+  };
+  socialNetworks?: Array<{
+    id: string;
+    platform: 'whatsapp' | 'telegram' | 'instagram' | 'linkedin';
+    handle: string;
+    phoneNumber: string;
+  }>;
+};
+export type LegalBuyerRecord = LegalShareholderRecord;
+
 export type BankAccountType = 'current' | 'short' | 'long' | 'loan' | 'foreign';
 export type BankAccountUsage =
   | 'primary'
@@ -164,6 +193,10 @@ export type ProfileStore = {
   principalPartners: NaturalShareholderRecord[];
   naturalShareholders: NaturalShareholderRecord[];
   legalShareholders: LegalShareholderRecord[];
+  naturalCustomers: NaturalCustomerRecord[];
+  legalCustomers: LegalCustomerRecord[];
+  naturalBuyers: NaturalBuyerRecord[];
+  legalBuyers: LegalBuyerRecord[];
   representatives: RepresentativeRecord[];
   boardMembers: RepresentativeRecord[];
   directory: RepresentativeCandidate[];
@@ -351,6 +384,38 @@ const defaultStore: ProfileStore = {
       ],
     },
   ],
+  naturalCustomers: [
+    {
+      id: 'natural-customer-1',
+      fullName: 'سارا محمدی',
+      mobile: '+989121000201',
+      email: 'sara.customer@example.com',
+      avatarMode: 'badge',
+      avatarText: 'س',
+      avatarImage: '',
+      sharePercent: '0',
+    },
+  ],
+  legalCustomers: [
+    {
+      id: 'legal-customer-1',
+      legalType: 'شرکت با مسئولیت محدود',
+      companyName: 'شرکت مشتری نمونه',
+      brandName: '',
+      registrationNumber: '',
+      nationalId: '',
+      taxFileNumber: '',
+      registrationDate: '',
+      economicCode: '',
+      sharePercent: '0',
+      avatarMode: 'badge',
+      avatarText: 'ش',
+      avatarImage: '',
+      representatives: [],
+    },
+  ],
+  naturalBuyers: [],
+  legalBuyers: [],
   representatives: [
     {
       id: 'rep-1',
@@ -590,6 +655,18 @@ function mergeProfileStore(parsed: unknown): ProfileStore {
     legalShareholders: Array.isArray((parsed as { legalShareholders?: unknown[] })?.legalShareholders)
       ? ((parsed as { legalShareholders: LegalShareholderRecord[] }).legalShareholders ?? base.legalShareholders)
       : base.legalShareholders,
+    naturalCustomers: Array.isArray((parsed as { naturalCustomers?: unknown[] })?.naturalCustomers)
+      ? ((parsed as { naturalCustomers: NaturalCustomerRecord[] }).naturalCustomers ?? base.naturalCustomers)
+      : base.naturalCustomers,
+    legalCustomers: Array.isArray((parsed as { legalCustomers?: unknown[] })?.legalCustomers)
+      ? ((parsed as { legalCustomers: LegalCustomerRecord[] }).legalCustomers ?? base.legalCustomers)
+      : base.legalCustomers,
+    naturalBuyers: Array.isArray((parsed as { naturalBuyers?: unknown[] })?.naturalBuyers)
+      ? ((parsed as { naturalBuyers: NaturalBuyerRecord[] }).naturalBuyers ?? base.naturalBuyers)
+      : base.naturalBuyers,
+    legalBuyers: Array.isArray((parsed as { legalBuyers?: unknown[] })?.legalBuyers)
+      ? ((parsed as { legalBuyers: LegalBuyerRecord[] }).legalBuyers ?? base.legalBuyers)
+      : base.legalBuyers,
     representatives: Array.isArray((parsed as { representatives?: unknown[] })?.representatives)
       ? ((parsed as { representatives: RepresentativeRecord[] }).representatives ?? base.representatives)
       : base.representatives,
@@ -754,6 +831,42 @@ export function upsertNaturalShareholder(store: ProfileStore, shareholder: Natur
   };
 }
 
+export function upsertLegalCustomer(store: ProfileStore, customer: LegalCustomerRecord) {
+  const exists = store.legalCustomers.some((item) => item.id === customer.id);
+  return {
+    ...store,
+    legalCustomers: exists ? store.legalCustomers.map((item) => (item.id === customer.id ? customer : item)) : [customer, ...store.legalCustomers],
+  };
+}
+
+export function upsertNaturalCustomer(store: ProfileStore, customer: NaturalCustomerRecord) {
+  const exists = store.naturalCustomers.some((item) => item.id === customer.id);
+  return {
+    ...store,
+    naturalCustomers: exists
+      ? store.naturalCustomers.map((item) => (item.id === customer.id ? customer : item))
+      : [customer, ...store.naturalCustomers],
+  };
+}
+
+export function upsertLegalBuyer(store: ProfileStore, buyer: LegalBuyerRecord) {
+  const exists = store.legalBuyers.some((item) => item.id === buyer.id);
+  return {
+    ...store,
+    legalBuyers: exists ? store.legalBuyers.map((item) => (item.id === buyer.id ? buyer : item)) : [buyer, ...store.legalBuyers],
+  };
+}
+
+export function upsertNaturalBuyer(store: ProfileStore, buyer: NaturalBuyerRecord) {
+  const exists = store.naturalBuyers.some((item) => item.id === buyer.id);
+  return {
+    ...store,
+    naturalBuyers: exists
+      ? store.naturalBuyers.map((item) => (item.id === buyer.id ? buyer : item))
+      : [buyer, ...store.naturalBuyers],
+  };
+}
+
 export function upsertPrincipalPartner(store: ProfileStore, partner: NaturalShareholderRecord) {
   const exists = store.principalPartners.some((item) => item.id === partner.id);
   return {
@@ -789,6 +902,44 @@ export function linkRepresentativeToLegalShareholder(store: ProfileStore, shareh
   };
 }
 
+export function linkRepresentativeToLegalCustomer(store: ProfileStore, customerId: string, representative: RepresentativeRecord) {
+  return {
+    ...store,
+    legalCustomers: store.legalCustomers.map((customer) => {
+      if (customer.id !== customerId) return customer;
+      if (customer.representatives.some((item) => item.id === representative.id)) {
+        return {
+          ...customer,
+          representatives: customer.representatives.map((item) => (item.id === representative.id ? { ...item, ...representative } : item)),
+        };
+      }
+      return {
+        ...customer,
+        representatives: [...customer.representatives, representative],
+      };
+    }),
+  };
+}
+
+export function linkRepresentativeToLegalBuyer(store: ProfileStore, buyerId: string, representative: RepresentativeRecord) {
+  return {
+    ...store,
+    legalBuyers: store.legalBuyers.map((buyer) => {
+      if (buyer.id !== buyerId) return buyer;
+      if (buyer.representatives.some((item) => item.id === representative.id)) {
+        return {
+          ...buyer,
+          representatives: buyer.representatives.map((item) => (item.id === representative.id ? { ...item, ...representative } : item)),
+        };
+      }
+      return {
+        ...buyer,
+        representatives: [...buyer.representatives, representative],
+      };
+    }),
+  };
+}
+
 export function syncRepresentativeAcrossStore(store: ProfileStore, representative: RepresentativeRecord | RepresentativeCandidate) {
   const next = upsertRepresentative(store, representative);
   return {
@@ -797,6 +948,10 @@ export function syncRepresentativeAcrossStore(store: ProfileStore, representativ
     legalShareholders: next.legalShareholders.map((shareholder) => ({
       ...shareholder,
       representatives: shareholder.representatives.map((item) => (item.id === representative.id ? { ...item, ...representative } : item)),
+    })),
+    legalCustomers: next.legalCustomers.map((customer) => ({
+      ...customer,
+      representatives: customer.representatives.map((item) => (item.id === representative.id ? { ...item, ...representative } : item)),
     })),
   };
 }

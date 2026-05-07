@@ -135,6 +135,21 @@ function buildBusinessSettingsBreadcrumb(pathname: string): Crumb[] {
     ) {
       trail.push({ label: 'ویرایش سهامدار حقوقی' });
     }
+    if (pathname.startsWith('/business-settings/profile/buyers')) {
+      trail.push({
+        label: 'خریداران',
+        href: pathname === '/business-settings/profile/buyers' ? undefined : '/business-settings/profile/buyers',
+      });
+    }
+    if (pathname.startsWith('/business-settings/profile/buyers/new')) {
+      trail.push({ label: 'افزودن خریدار' });
+    }
+    if (
+      pathname.startsWith('/business-settings/profile/buyers/') &&
+      !pathname.startsWith('/business-settings/profile/buyers/new')
+    ) {
+      trail.push({ label: 'ویرایش خریدار حقوقی' });
+    }
     if (pathname.startsWith('/business-settings/profile/bank-accounts')) {
       trail.push({
         label: 'شماره حساب',
