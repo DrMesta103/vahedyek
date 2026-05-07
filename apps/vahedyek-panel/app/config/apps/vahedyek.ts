@@ -62,6 +62,19 @@ export const currentAppConfig: AppConfig = {
     { key: 'contracts.delete', label: 'حذف قرارداد', group: 'contracts' },
     { key: 'contracts.sign', label: 'امضای قرارداد', group: 'contracts' },
     { key: 'contracts.export', label: 'خروجی قرارداد', group: 'contracts' },
+    
+    // Customer Portal Permissions
+    { key: 'customer.portal.access', label: 'دسترسی به پنل خریدار', group: 'customer' },
+    { key: 'customer.contracts.view', label: 'مشاهده قراردادهای خود', group: 'customer' },
+    { key: 'customer.contracts.details', label: 'مشاهده جزئیات قرارداد', group: 'customer' },
+    { key: 'customer.financial.view', label: 'مشاهده اطلاعات مالی', group: 'customer' },
+    { key: 'customer.payments.view', label: 'مشاهده پرداخت‌ها', group: 'customer' },
+    { key: 'customer.payments.submit', label: 'ثبت فیش پرداختی', group: 'customer' },
+    { key: 'customer.documents.view', label: 'مشاهده اسناد و مدارک', group: 'customer' },
+    { key: 'customer.support.view', label: 'مشاهده تیکت‌های پشتیبانی', group: 'customer' },
+    { key: 'customer.support.create', label: 'ایجاد تیکت پشتیبانی', group: 'customer' },
+    { key: 'customer.profile.view', label: 'مشاهده پروفایل', group: 'customer' },
+    { key: 'customer.profile.update', label: 'ویرایش پروفایل', group: 'customer' },
   ],
   menuItems: [
     {
@@ -152,5 +165,6 @@ export const currentAppConfig: AppConfig = {
     { id: 'complex', label: 'مجتمع', routePrefix: '/complex', requiredPermission: 'complex.view' },
     { id: 'contracts', label: 'قراردادها', routePrefix: '/contracts', requiredPermission: 'contracts.view' },
     { id: 'settings', label: 'تنظیمات کلی', routePrefix: '/settings', requiredPermission: 'platform.settings.view' },
+    { id: 'customer-portal', label: 'پنل خریدار', routePrefix: '/customer-portal', requiredPermission: 'customer.portal.access' },
   ],
 };

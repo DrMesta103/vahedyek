@@ -17,6 +17,7 @@ import {
   type NaturalShareholderRecord,
   type LegalBuyerRecord,
   type NaturalBuyerRecord,
+  type LegalCustomerRecord,
   type RepresentativeRecord,
 } from './profileStorage';
 import {
@@ -32,7 +33,7 @@ import { PersonAvatar, PersonRowCard } from './ProfilePeoplePrimitives';
 
 type ShareholderKind = 'natural' | 'legal';
 type EditorStep = 'details' | 'representatives';
-type PeopleEntity = 'shareholder' | 'buyer';
+type PeopleEntity = 'shareholder' | 'buyer' | 'customer';
 
 const entityConfig = {
   shareholder: {
