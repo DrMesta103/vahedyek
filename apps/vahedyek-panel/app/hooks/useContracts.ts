@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
 import type { Contract, ContractFormData, ContractStatus, FilterState } from '../types/contract';
 import { getContractsList } from '../lib/contractDraftClient';
 
@@ -33,6 +34,7 @@ export interface UseContractsReturn {
 }
 
 export function useContracts(): UseContractsReturn {
+  const searchParams = useSearchParams();
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<ContractStatus>('draft');
@@ -44,6 +46,17 @@ export function useContracts(): UseContractsReturn {
     pending_approval: 0,
     completed: 0,
   });
+
+  const urlTab = useMemo(() => {
+    const raw = (searchParams.get('tab') ?? searchParams.get('status') ?? '').trim();
+    if (raw === 'draft' || raw === 'pending_approval' || raw === 'completed') return raw satisfies ContractStatus;
+    return null;
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (!urlTab) return;
+    setActiveTab((current) => (current === urlTab ? current : urlTab));
+  }, [urlTab]);
 
   const refresh = useCallback(async () => {
     setLoading(true);

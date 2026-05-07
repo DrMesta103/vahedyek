@@ -40,9 +40,14 @@ const LEGACY_MENU_PERMISSION_MAP: Record<string, string> = {
   business: 'business.profile.view',
   complex: 'complex.view',
   contracts: 'contracts.view',
+  customers: 'customers.view',
   settings: 'platform.settings.view',
   employees: 'platform.users.view',
   reports: 'platform.reports.view',
+};
+
+const DEFAULT_ROLE_PERMISSION_KEYS: Record<string, string[]> = {
+  customer: ['customers.view'],
 };
 
 function unique(values: string[]) {
@@ -79,6 +84,18 @@ export async function ensureTenantDefaultRoles(tenantId: string) {
       console.error('Action permission table is not ready. Owner access will use config fallback until migration runs.', error);
     }
   }
+
+  await Promise.all(
+    roles.flatMap((role) =>
+      (DEFAULT_ROLE_PERMISSION_KEYS[role.key] ?? []).map((permissionKey) =>
+        prisma.tenantRolePermission.upsert({
+          where: { roleId_permissionKey: { roleId: role.id, permissionKey } },
+          update: {},
+          create: { roleId: role.id, permissionKey },
+        }),
+      ),
+    ),
+  );
 
   return roles;
 }

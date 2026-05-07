@@ -5,14 +5,20 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ChoicePillsField, Input } from '@repo/ui';
 import {
+  ProfileTextField,
+  ProfileChipGroup,
+} from './ProfileFormShell';
+import {
   buildRepresentativeFullName,
   fetchProfileStore,
+  linkRepresentativeToLegalBuyer,
   linkRepresentativeToLegalShareholder,
   normalizeEmail,
   normalizePhone,
   persistProfileStore,
   syncRepresentativeAcrossStore,
   upsertNaturalShareholder,
+  upsertNaturalBuyer,
   upsertPrincipalPartner,
   upsertBoardMember,
   type RepresentativeCandidate,
@@ -47,6 +53,31 @@ type NaturalShareholderExtraState = {
   signatureAvatarImage: string;
 };
 
+type NaturalBuyerExtraState = {
+  job: string;
+  contactNumber: string;
+  acquaintanceMethod: string;
+  address: {
+    country: string;
+    province: string;
+    city: string;
+    mainStreet: string;
+    sideStreet: string;
+    alley: string;
+    plaque: string;
+    floor: string;
+    unit: string;
+    postalCode: string;
+    fullAddress: string;
+  };
+  socialNetworks: Array<{
+    id: string;
+    platform: 'whatsapp' | 'telegram' | 'instagram' | 'linkedin';
+    handle: string;
+    phoneNumber: string;
+  }>;
+};
+
 const emptyForm: RepresentativeFormState = {
   firstName: '',
   lastName: '',
@@ -67,9 +98,41 @@ const emptyNaturalExtra: NaturalShareholderExtraState = {
   signatureAvatarImage: '',
 };
 
+const emptyBuyerExtra: NaturalBuyerExtraState = {
+  job: '',
+  contactNumber: '',
+  acquaintanceMethod: 'other-customers',
+  address: {
+    country: 'ایران',
+    province: '',
+    city: '',
+    mainStreet: '',
+    sideStreet: '',
+    alley: '',
+    plaque: '',
+    floor: '',
+    unit: '',
+    postalCode: '',
+    fullAddress: '',
+  },
+  socialNetworks: [],
+};
+
 const genderOptions = [
   { value: 'male' as const, label: 'مرد' },
   { value: 'female' as const, label: 'زن' },
+];
+
+const acquaintanceMethodOptions = [
+  { value: 'other-customers', label: 'سایر مشتریان' },
+  { value: 'social-networks', label: 'شبکه‌های اجتماعی' },
+  { value: 'introduction-with-colleagues', label: 'معرفی توسط مشاور یا همکار' },
+  { value: 'events-exhibitions', label: 'رویدادها و نمایشگاه‌ها' },
+  { value: 'website-group', label: 'وب‌سایت محموعه' },
+  { value: 'local-ads', label: 'تبلیغات محیطی' },
+  { value: 'campaign-ads', label: 'کمپین تبلیغاتی' },
+  { value: 'search-online', label: 'جست‌وجوی اینترنتی' },
+  { value: 'referral-discount', label: 'بازدید حضوری' },
 ];
 
 function isValidEmail(value: string) {
@@ -87,6 +150,7 @@ async function ensureUserAccount(payload: {
   fullName?: string;
   mobile?: string;
   email?: string;
+  roleKey?: string;
 }) {
   const response = await fetch('/api/business-settings/profile/directory/ensure-user', {
     method: 'POST',
@@ -181,8 +245,10 @@ function normalizeRepresentativeForm(candidate: RepresentativeCandidate | null, 
 
 export function BusinessRepresentativePickerPanel({
   mode = 'representative',
+  returnTo,
 }: {
-  mode?: 'representative' | 'natural-shareholder' | 'partner' | 'board-member';
+  mode?: 'representative' | 'natural-shareholder' | 'partner' | 'board-member' | 'buyer';
+  returnTo?: string;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -204,12 +270,29 @@ export function BusinessRepresentativePickerPanel({
   const [naturalStep, setNaturalStep] = useState<NaturalShareholderStep>('user');
   const [naturalShareholderId, setNaturalShareholderId] = useState<string | null>(null);
   const [naturalExtra, setNaturalExtra] = useState<NaturalShareholderExtraState>(emptyNaturalExtra);
-  const isPersonStepperMode = mode === 'natural-shareholder' || mode === 'partner';
+  const [buyerExtra, setBuyerExtra] = useState<NaturalBuyerExtraState>(emptyBuyerExtra);
+  const isPersonStepperMode = mode === 'natural-shareholder' || mode === 'partner' || mode === 'buyer';
+  const userRoleKey =
+    mode === 'natural-shareholder'
+      ? 'shareholder'
+      : mode === 'partner'
+        ? 'partner_representative'
+        : mode === 'buyer'
+          ? 'buyer'
+          : mode === 'board-member'
+            ? 'representative'
+            : searchParams.get('buyerId')
+              ? 'buyer'
+              : searchParams.get('shareholderId')
+                ? 'legal_shareholder_representative'
+                : 'representative';
   const title =
     searchParams.get('title') ||
     (mode === 'natural-shareholder'
       ? '\u062b\u0628\u062a \u0633\u0647\u0627\u0645\u062f\u0627\u0631'
-      : mode === 'partner'
+      : mode === 'buyer'
+        ? 'ثبت خریدار'
+        : mode === 'partner'
         ? '\u062b\u0628\u062a \u0634\u0631\u06cc\u06a9'
         : mode === 'board-member'
           ? '\u0644\u06cc\u0633\u062a \u0647\u06cc\u0626\u062a \u0645\u062f\u06cc\u0631\u0647'
@@ -301,6 +384,7 @@ export function BusinessRepresentativePickerPanel({
         const user = await ensureUserAccount({
           mobile: isValidMobile(raw) ? normalizePhone(raw) : '',
           email: isValidEmail(raw) ? normalizeEmail(raw) : '',
+          roleKey: userRoleKey,
         });
         source = buildCandidateFromUser(user);
         setDirectory((current) => {
@@ -366,6 +450,7 @@ export function BusinessRepresentativePickerPanel({
         fullName,
         mobile: normalizedMobileValue,
         email: normalizedEmailValue,
+        roleKey: userRoleKey,
       });
       if (!selected || selected.id !== ensuredUser.id) {
         setSelected(buildCandidateFromUser(ensuredUser));
@@ -399,8 +484,24 @@ export function BusinessRepresentativePickerPanel({
       const withRepresentative = syncRepresentativeAcrossStore(withDirectory, candidate);
 
       if (isPersonStepperMode) {
-        const shareholderId = naturalShareholderId ?? ((mode === 'partner' ? 'principal-partner' : 'natural-shareholder') + '-' + Date.now());
-        const personRecord = {
+        const shareholderId =
+          naturalShareholderId ??
+          ((mode === 'partner' ? 'principal-partner' : mode === 'buyer' ? 'natural-buyer' : 'natural-shareholder') + '-' + Date.now());
+        const personRecord = mode === 'buyer' ? {
+          id: shareholderId,
+          fullName,
+          mobile: candidate.mobile,
+          email: candidate.email,
+          avatarMode: candidate.avatarMode,
+          avatarText,
+          avatarImage: candidate.avatarImage,
+          sharePercent: '0',
+          job: buyerExtra.job,
+          contactNumber: buyerExtra.contactNumber,
+          acquaintanceMethod: buyerExtra.acquaintanceMethod,
+          address: buyerExtra.address,
+          socialNetworks: buyerExtra.socialNetworks,
+        } : {
           id: shareholderId,
           fullName,
           mobile: candidate.mobile,
@@ -415,28 +516,35 @@ export function BusinessRepresentativePickerPanel({
           signatureAvatarImage: naturalExtra.signatureAvatarImage,
         };
         const nextStore =
-          mode === 'partner' ? upsertPrincipalPartner(withRepresentative, personRecord) : upsertNaturalShareholder(withRepresentative, personRecord);
+          mode === 'partner'
+            ? upsertPrincipalPartner(withRepresentative, personRecord)
+            : mode === 'buyer'
+              ? upsertNaturalBuyer(withRepresentative, personRecord)
+              : upsertNaturalShareholder(withRepresentative, personRecord);
         await persistProfileStore(nextStore);
         setNaturalShareholderId(shareholderId);
 
         if (naturalStep === 'user') {
           setNaturalStep('extra');
         } else {
-          router.push(searchParams.get('returnTo') || (mode === 'partner' ? '/business-settings/profile/partners' : '/business-settings/profile/shareholders?tab=natural'));
+          router.push(returnTo || searchParams.get('returnTo') || (mode === 'partner' ? '/business-settings/profile/partners' : mode === 'buyer' ? '/business-settings/profile/buyers?tab=natural' : '/business-settings/profile/shareholders?tab=natural'));
           router.refresh();
         }
         return;
       }
 
       const shareholderId = searchParams.get('shareholderId');
+      const buyerId = searchParams.get('buyerId');
       const finalStore =
         mode === 'board-member'
           ? upsertBoardMember(withRepresentative, candidate)
-          : shareholderId
-            ? linkRepresentativeToLegalShareholder(withRepresentative, shareholderId, candidate)
-            : withRepresentative;
+          : buyerId
+            ? linkRepresentativeToLegalBuyer(withRepresentative, buyerId, candidate)
+            : shareholderId
+              ? linkRepresentativeToLegalShareholder(withRepresentative, shareholderId, candidate)
+              : withRepresentative;
       await persistProfileStore(finalStore);
-      router.push(searchParams.get('returnTo') || (mode === 'board-member' ? '/business-settings/profile/board-members' : '/business-settings/profile/representatives'));
+      router.push(returnTo || searchParams.get('returnTo') || (mode === 'board-member' ? '/business-settings/profile/board-members' : '/business-settings/profile/representatives'));
       router.refresh();
     } finally {
       setSaving(false);
@@ -712,6 +820,50 @@ export function BusinessRepresentativePickerPanel({
                 </div>
               </div>
             </div>
+          ) : mode === 'buyer' ? (
+            <div className="representative-details-card">
+              <div className="profile-form-grid">
+                <ProfileTextField
+                  label="شغل"
+                  hint="شغل خریدار خود را میتوانید در این بخش وارد کنید"
+                  value={buyerExtra.job}
+                  onChange={(value) => setBuyerExtra((current) => ({ ...current, job: value }))}
+                />
+
+                <ProfileTextField
+                  label="شماره تماس"
+                  hint="در این بخش شماره تلفن ثابت خریدار خود را میتوانید ثبت کنید"
+                  value={buyerExtra.contactNumber}
+                  onChange={(value) => setBuyerExtra((current) => ({ ...current, contactNumber: value }))}
+                />
+              </div>
+
+              <ProfileChipGroup
+                label="نحوه آشنایی"
+                hint="در این بخش میتوانید شیوه آشنایی خریدار با مجموعه خود را وارد کنید"
+                items={acquaintanceMethodOptions}
+                value={buyerExtra.acquaintanceMethod}
+                onChange={(value) => setBuyerExtra((current) => ({ ...current, acquaintanceMethod: value }))}
+              />
+
+              <div className="representative-extra-stack" style={{ marginTop: '24px' }}>
+                <button type="button" className="representative-extra-link-card is-highlighted" onClick={() => router.push(`/business-settings/profile/buyers/${naturalShareholderId}/address`)}>
+                  <div className="representative-extra-link-copy">
+                    <strong>اطلاعات آدرس</strong>
+                    <p>آدرس محل سکونت خریدار را با جزئیات کامل در این بخش وارد کنید تا زمان ثبت قرارداد از این اطلاعات استفاده کنید</p>
+                  </div>
+                  <ChevronLeft />
+                </button>
+
+                <button type="button" className="representative-extra-link-card" onClick={() => router.push(`/business-settings/profile/buyers/${naturalShareholderId}/social-networks`)}>
+                  <div className="representative-extra-link-copy">
+                    <strong>شبکه‌های اجتماعی</strong>
+                    <p>در این بخش می‌توانید شبکه‌های اجتماعی خریدار را ثبت کنید</p>
+                  </div>
+                  <ChevronLeft />
+                </button>
+              </div>
+            </div>
           ) : (
             <div className="representative-details-card">
               <div className="representative-extra-stack">
@@ -737,15 +889,6 @@ export function BusinessRepresentativePickerPanel({
                     <p>تمام راه‌های ارتباطی سهامدار را می‌توانید در این بخش وارد کنید</p>
                   </div>
                   <div className="representative-extra-link-art">CONTACT</div>
-                  <ChevronLeft />
-                </button>
-
-                <button type="button" className="representative-extra-link-card">
-                  <div className="representative-extra-link-copy">
-                    <strong>مدارک</strong>
-                    <p>در این بخش می‌توانید مدارک سهامدار را ثبت و مدیریت کنید</p>
-                  </div>
-                  <FileText />
                   <ChevronLeft />
                 </button>
 

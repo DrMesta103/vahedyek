@@ -9,6 +9,7 @@ import { userCanDecideApprovalOnContract } from '../../../lib/contractApprovalAc
 import { fetchDraftApprovalFlagsRaw } from '../../../lib/contractDraftApprovalRaw';
 import { fetchTenantApprovalProcessConfigRaw } from '../../../lib/tenantApprovalProcessDb';
 import type { ContractStatus } from '../../../types/contract';
+import { validatePenaltiesStep } from '../../../lib/contractValidation';
 
 function serializeShareMode(value: ShareMode) {
   return value === ShareMode.percent ? 'percent' : 'dang';
@@ -60,7 +61,14 @@ function computeStatus(draft: any): ContractStatus {
       draft.parties?.members?.some((member: any) => member.side === PartySide.party_two),
   );
   const hasFinancial = Boolean(draft.financial);
-  const hasPenalties = Boolean(draft.penalties?.rules?.length);
+  const hasPenalties = Boolean(draft.penalties) && validatePenaltiesStep({
+    types: Array.isArray(draft.penalties?.types)
+      ? draft.penalties.types.map((item: any) => ({ id: String(item.id), title: String(item.title ?? ''), active: Boolean(item.active) }))
+      : [],
+    rules: Array.isArray(draft.penalties?.rules)
+      ? draft.penalties.rules.map((rule: any) => ({ id: String(rule.id), penaltyTypeId: String(rule.penaltyTypeId) }))
+      : [],
+  }).valid;
   const hasTermination = Boolean(draft.terminationRules);
   const hasExtraCosts = Boolean(draft.extraCosts);
   const hasTechnicalSpecs = Boolean(draft.technicalSpecs);

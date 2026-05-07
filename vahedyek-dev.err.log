@@ -699,3 +699,300 @@ https://react.dev/link/hydration-mismatch
  
 [browser] [locator-js] React instance (react-dom v19.3.0-canary-3f0b9e61-20260317) is not supported (chrome-extension://npbfdllefekhdplbkdigpncggmojpefi/hook.bundle.js:1:27759)
 [browser] [locatorjs]: ok (chrome-extension://npbfdllefekhdplbkdigpncggmojpefi/hook.bundle.js:1:36200)
+[browser] ⨯ unhandledRejection: Error: اتصال به دیتابیس برقرار نشد. آدرس یا پورت DATABASE_URL را بررسی کنید و مطمئن شوید سرور دیتابیس در دسترس است.
+    at readJson (app/lib/contractDraftClient.ts:61:13)
+    at async ContractFlowHub.useEffect.load (app/(panel)/contracts/new/_components/ContractFlowHub.tsx:270:99)
+  59 |     if (contentType.includes('application/json')) {
+  60 |       const payload = (await response.json()) as { message?: string };
+> 61 |       throw new Error(payload.message || 'خطا در ارتباط با سرور');
+     |             ^
+  62 |     }
+  63 |
+  64 |     const message = await response.text();
+[browser] ⨯ unhandledRejection: Error: اتصال به دیتابیس برقرار نشد. آدرس یا پورت DATABASE_URL را بررسی کنید و مطمئن شوید سرور دیتابیس در دسترس است.
+    at readJson (app/lib/contractDraftClient.ts:61:13)
+    at async ContractFlowHub.useEffect.load (app/(panel)/contracts/new/_components/ContractFlowHub.tsx:270:99)
+  59 |     if (contentType.includes('application/json')) {
+  60 |       const payload = (await response.json()) as { message?: string };
+> 61 |       throw new Error(payload.message || 'خطا در ارتباط با سرور');
+     |             ^
+  62 |     }
+  63 |
+  64 |     const message = await response.text();
+⨯ Error [PrismaClientKnownRequestError]: 
+Invalid `{imported module ./apps/vahedyek-panel/app/lib/prisma.ts}["prisma"].appUser.findUnique()` invocation in
+C:\Users\s.roosta\Desktop\Project\vahedyek\apps\vahedyek-panel\.next\dev\server\chunks\ssr\[root-of-the-server]__0us_qny._.js:281:188
+
+  278     return;
+  279 }
+  280 async function getAuthContextFromPayload(payload) {
+→ 281     const user = await {imported module ./apps/vahedyek-panel/app/lib/prisma.ts}["prisma"].appUser.findUnique(
+Can't reach database server at `65.109.214.67:6060`
+
+Please make sure your database server is running at `65.109.214.67:6060`.
+    at <unknown> (app\lib\auth.ts:42:37)
+    at async getAuthContextFromPayload (app\lib\auth.ts:42:16)
+    at async ensureDraftAccess (app\actions\contractSteps789.ts:56:19)
+    at async getContractExtraCosts (app\actions\contractSteps789.ts:71:18)
+  40 |
+  41 | export async function getAuthContextFromPayload(payload: AuthTokenPayload) {
+> 42 |   const user = await prisma.appUser.findUnique({
+     |                                     ^
+  43 |     where: { id: payload.userId },
+  44 |   });
+  45 | {
+  code: 'P1001',
+  meta: { modelName: 'AppUser', database_location: '65.109.214.67:6060' },
+  clientVersion: '6.19.3',
+  digest: '3248340138'
+}
+⨯ Error [PrismaClientKnownRequestError]: 
+Invalid `{imported module ./apps/vahedyek-panel/app/lib/prisma.ts}["prisma"].appUser.findUnique()` invocation in
+C:\Users\s.roosta\Desktop\Project\vahedyek\apps\vahedyek-panel\.next\dev\server\chunks\ssr\[root-of-the-server]__0vb8-3.._.js:359:188
+
+  356     return;
+  357 }
+  358 async function getAuthContextFromPayload(payload) {
+→ 359     const user = await {imported module ./apps/vahedyek-panel/app/lib/prisma.ts}["prisma"].appUser.findUnique(
+Can't reach database server at `65.109.214.67:6060`
+
+Please make sure your database server is running at `65.109.214.67:6060`.
+    at <unknown> (app\lib\auth.ts:42:37)
+    at async getAuthContextFromPayload (app\lib\auth.ts:42:16)
+    at async getEmployees (app\(panel)\employees\page.tsx:9:19)
+    at async EmployeesPage (app\(panel)\employees\page.tsx:43:21)
+  40 |
+  41 | export async function getAuthContextFromPayload(payload: AuthTokenPayload) {
+> 42 |   const user = await prisma.appUser.findUnique({
+     |                                     ^
+  43 |     where: { id: payload.userId },
+  44 |   });
+  45 | {
+  code: 'P1001',
+  meta: { modelName: 'AppUser', database_location: '65.109.214.67:6060' },
+  clientVersion: '6.19.3',
+  digest: '871939667'
+}
+⨯ Error [PrismaClientKnownRequestError]: 
+Invalid `{imported module ./apps/vahedyek-panel/app/lib/prisma.ts}["prisma"].appUser.findUnique()` invocation in
+C:\Users\s.roosta\Desktop\Project\vahedyek\apps\vahedyek-panel\.next\dev\server\chunks\ssr\[root-of-the-server]__0us_qny._.js:281:188
+
+  278     return;
+  279 }
+  280 async function getAuthContextFromPayload(payload) {
+→ 281     const user = await {imported module ./apps/vahedyek-panel/app/lib/prisma.ts}["prisma"].appUser.findUnique(
+Can't reach database server at `65.109.214.67:6060`
+
+Please make sure your database server is running at `65.109.214.67:6060`.
+    at <unknown> (app\lib\auth.ts:42:37)
+    at async getAuthContextFromPayload (app\lib\auth.ts:42:16)
+    at async ensureDraftAccess (app\actions\contractSteps789.ts:56:19)
+    at async getContractTechnicalSpecs (app\actions\contractSteps789.ts:92:18)
+  40 |
+  41 | export async function getAuthContextFromPayload(payload: AuthTokenPayload) {
+> 42 |   const user = await prisma.appUser.findUnique({
+     |                                     ^
+  43 |     where: { id: payload.userId },
+  44 |   });
+  45 | {
+  code: 'P1001',
+  meta: { modelName: 'AppUser', database_location: '65.109.214.67:6060' },
+  clientVersion: '6.19.3',
+  digest: '2578190891'
+}
+⨯ Error [PrismaClientKnownRequestError]: 
+Invalid `{imported module ./apps/vahedyek-panel/app/lib/prisma.ts}["prisma"].appUser.findUnique()` invocation in
+C:\Users\s.roosta\Desktop\Project\vahedyek\apps\vahedyek-panel\.next\dev\server\chunks\ssr\[root-of-the-server]__0us_qny._.js:281:188
+
+  278     return;
+  279 }
+  280 async function getAuthContextFromPayload(payload) {
+→ 281     const user = await {imported module ./apps/vahedyek-panel/app/lib/prisma.ts}["prisma"].appUser.findUnique(
+Can't reach database server at `65.109.214.67:6060`
+
+Please make sure your database server is running at `65.109.214.67:6060`.
+    at <unknown> (app\lib\auth.ts:42:37)
+    at async getAuthContextFromPayload (app\lib\auth.ts:42:16)
+    at async ensureDraftAccess (app\actions\contractSteps789.ts:56:19)
+    at async getContractAttachments (app\actions\contractSteps789.ts:113:18)
+  40 |
+  41 | export async function getAuthContextFromPayload(payload: AuthTokenPayload) {
+> 42 |   const user = await prisma.appUser.findUnique({
+     |                                     ^
+  43 |     where: { id: payload.userId },
+  44 |   });
+  45 | {
+  code: 'P1001',
+  meta: { modelName: 'AppUser', database_location: '65.109.214.67:6060' },
+  clientVersion: '6.19.3',
+  digest: '205285638'
+}
+[browser] [locator-js] React instance (react-dom v19.3.0-canary-3f0b9e61-20260317) is not supported (chrome-extension://npbfdllefekhdplbkdigpncggmojpefi/hook.bundle.js:1:27759)
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="layout.tsx">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <script>
+                      <script>
+                      <RootLayout>
+                        <html lang="fa" dir="rtl" suppressHydrationWarning={true}>
+                          <head
+-                           data-locator-hook-status-message="loading: No valid renderers found."
+                          >
+                          ...
+                  ...
+ 
+[browser] [locatorjs]: ok (chrome-extension://npbfdllefekhdplbkdigpncggmojpefi/hook.bundle.js:1:36200)
+⨯ Error [PrismaClientKnownRequestError]: 
+Invalid `{imported module ./apps/vahedyek-panel/app/lib/prisma.ts}["prisma"].appUser.findUnique()` invocation in
+C:\Users\s.roosta\Desktop\Project\vahedyek\apps\vahedyek-panel\.next\dev\server\chunks\ssr\[root-of-the-server]__0us_qny._.js:281:188
+
+  278     return;
+  279 }
+  280 async function getAuthContextFromPayload(payload) {
+→ 281     const user = await {imported module ./apps/vahedyek-panel/app/lib/prisma.ts}["prisma"].appUser.findUnique(
+Can't reach database server at `65.109.214.67:6060`
+
+Please make sure your database server is running at `65.109.214.67:6060`.
+    at <unknown> (app\lib\auth.ts:42:37)
+    at async getAuthContextFromPayload (app\lib\auth.ts:42:16)
+    at async ensureDraftAccess (app\actions\contractSteps789.ts:56:19)
+    at async getContractExtraCosts (app\actions\contractSteps789.ts:71:18)
+  40 |
+  41 | export async function getAuthContextFromPayload(payload: AuthTokenPayload) {
+> 42 |   const user = await prisma.appUser.findUnique({
+     |                                     ^
+  43 |     where: { id: payload.userId },
+  44 |   });
+  45 | {
+  code: 'P1001',
+  meta: { modelName: 'AppUser', database_location: '65.109.214.67:6060' },
+  clientVersion: '6.19.3',
+  digest: '3248340138'
+}
+⨯ Error [PrismaClientKnownRequestError]: 
+Invalid `{imported module ./apps/vahedyek-panel/app/lib/prisma.ts}["prisma"].appUser.findUnique()` invocation in
+C:\Users\s.roosta\Desktop\Project\vahedyek\apps\vahedyek-panel\.next\dev\server\chunks\ssr\[root-of-the-server]__0us_qny._.js:281:188
+
+  278     return;
+  279 }
+  280 async function getAuthContextFromPayload(payload) {
+→ 281     const user = await {imported module ./apps/vahedyek-panel/app/lib/prisma.ts}["prisma"].appUser.findUnique(
+Can't reach database server at `65.109.214.67:6060`
+
+Please make sure your database server is running at `65.109.214.67:6060`.
+    at <unknown> (app\lib\auth.ts:42:37)
+    at async getAuthContextFromPayload (app\lib\auth.ts:42:16)
+    at async ensureDraftAccess (app\actions\contractSteps789.ts:56:19)
+    at async getContractAttachments (app\actions\contractSteps789.ts:113:18)
+  40 |
+  41 | export async function getAuthContextFromPayload(payload: AuthTokenPayload) {
+> 42 |   const user = await prisma.appUser.findUnique({
+     |                                     ^
+  43 |     where: { id: payload.userId },
+  44 |   });
+  45 | {
+  code: 'P1001',
+  meta: { modelName: 'AppUser', database_location: '65.109.214.67:6060' },
+  clientVersion: '6.19.3',
+  digest: '205285638'
+}
+⨯ Error [PrismaClientKnownRequestError]: 
+Invalid `{imported module ./apps/vahedyek-panel/app/lib/prisma.ts}["prisma"].appUser.findUnique()` invocation in
+C:\Users\s.roosta\Desktop\Project\vahedyek\apps\vahedyek-panel\.next\dev\server\chunks\ssr\[root-of-the-server]__0us_qny._.js:281:188
+
+  278     return;
+  279 }
+  280 async function getAuthContextFromPayload(payload) {
+→ 281     const user = await {imported module ./apps/vahedyek-panel/app/lib/prisma.ts}["prisma"].appUser.findUnique(
+Can't reach database server at `65.109.214.67:6060`
+
+Please make sure your database server is running at `65.109.214.67:6060`.
+    at <unknown> (app\lib\auth.ts:42:37)
+    at async getAuthContextFromPayload (app\lib\auth.ts:42:16)
+    at async ensureDraftAccess (app\actions\contractSteps789.ts:56:19)
+    at async getContractTechnicalSpecs (app\actions\contractSteps789.ts:92:18)
+  40 |
+  41 | export async function getAuthContextFromPayload(payload: AuthTokenPayload) {
+> 42 |   const user = await prisma.appUser.findUnique({
+     |                                     ^
+  43 |     where: { id: payload.userId },
+  44 |   });
+  45 | {
+  code: 'P1001',
+  meta: { modelName: 'AppUser', database_location: '65.109.214.67:6060' },
+  clientVersion: '6.19.3',
+  digest: '2578190891'
+}
+⨯ Error [PrismaClientKnownRequestError]: 
+Invalid `{imported module ./apps/vahedyek-panel/app/lib/prisma.ts}["prisma"].appUser.findUnique()` invocation in
+C:\Users\s.roosta\Desktop\Project\vahedyek\apps\vahedyek-panel\.next\dev\server\chunks\ssr\[root-of-the-server]__0vb8-3.._.js:359:188
+
+  356     return;
+  357 }
+  358 async function getAuthContextFromPayload(payload) {
+→ 359     const user = await {imported module ./apps/vahedyek-panel/app/lib/prisma.ts}["prisma"].appUser.findUnique(
+Can't reach database server at `65.109.214.67:6060`
+
+Please make sure your database server is running at `65.109.214.67:6060`.
+    at <unknown> (app\lib\auth.ts:42:37)
+    at async getAuthContextFromPayload (app\lib\auth.ts:42:16)
+    at async getEmployees (app\(panel)\employees\page.tsx:9:19)
+    at async EmployeesPage (app\(panel)\employees\page.tsx:43:21)
+  40 |
+  41 | export async function getAuthContextFromPayload(payload: AuthTokenPayload) {
+> 42 |   const user = await prisma.appUser.findUnique({
+     |                                     ^
+  43 |     where: { id: payload.userId },
+  44 |   });
+  45 | {
+  code: 'P1001',
+  meta: { modelName: 'AppUser', database_location: '65.109.214.67:6060' },
+  clientVersion: '6.19.3',
+  digest: '871939667'
+}
+[browser] Uncaught PrismaClientKnownRequestError: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$vahedyek$2d$panel$2f$app$2f$lib$2f$prisma$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["prisma"].appUser.findUnique()` invocation in
+C:\Users\s.roosta\Desktop\Project\vahedyek\apps\vahedyek-panel\.next\dev\server\chunks\ssr\[root-of-the-server]__0vb8-3.._.js:359:188
+
+  356     return;
+  357 }
+  358 async function getAuthContextFromPayload(payload) {
+→ 359     const user = await __TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$vahedyek$2d$panel$2f$app$2f$lib$2f$prisma$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["prisma"].appUser.findUnique(
+Can't reach database server at `65.109.214.67:6060`
+
+Please make sure your database server is running at `65.109.214.67:6060`.
+    at <unknown> (app\lib\auth.ts:42:37)
+    at  getAuthContextFromPayload (app\lib\auth.ts:42:16)
+    at  getEmployees (app\(panel)\employees\page.tsx:9:19)
+    at  EmployeesPage (app\(panel)\employees\page.tsx:43:21)
+  40 |
+  41 | export async function getAuthContextFromPayload(payload: AuthTokenPayload) {
+> 42 |   const user = await prisma.appUser.findUnique({
+     |                                     ^
+  43 |     where: { id: payload.userId },
+  44 |   });
+  45 |

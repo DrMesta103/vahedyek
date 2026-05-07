@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { CheckCircle2, ClipboardList, Loader2, Shield, ShieldOff, XCircle } from 'lucide-react';
 import { postContractApprovalAction } from '../../lib/contractDraftClient';
+import type { ContractStatus } from '../../types/contract';
 
 const REASON_MIN = 15;
 
@@ -11,21 +12,17 @@ type ContractApprovalFlowBannerProps = {
   contractId: string;
   /** مالک tenant یا تأییدکننده تعریف‌شده در مسیر فرایند (هم‌ارز کارمندی با همان شناسهٔ کاربر) */
   canDecide: boolean;
+  contractStatus: ContractStatus;
 };
 
-export function ContractApprovalFlowBanner({ contractId, canDecide }: ContractApprovalFlowBannerProps) {
+export function ContractApprovalFlowBanner({ contractId, canDecide, contractStatus }: ContractApprovalFlowBannerProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [rejectOpen, setRejectOpen] = useState(false);
   const [reason, setReason] = useState('');
   const [busy, setBusy] = useState<'approve' | 'reject' | null>(null);
   const [error, setError] = useState('');
 
-  if (searchParams.get('submitApproval') !== '1') return null;
-
-  const dismissQuery = () => {
-    router.replace(`/contracts/${encodeURIComponent(contractId)}`);
-  };
+  if (contractStatus !== 'pending_approval') return null;
 
   const reasonTrim = reason.trim();
   const reasonOk = reasonTrim.length >= REASON_MIN;
@@ -35,7 +32,7 @@ export function ContractApprovalFlowBanner({ contractId, canDecide }: ContractAp
     try {
       setBusy('approve');
       await postContractApprovalAction(contractId, { action: 'clearReturnPending' });
-      router.push('/business-settings/approval-process');
+      router.push('/contracts?tab=pending_approval');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'ارسال برای فرایند تأیید انجام نشد.');
     } finally {
@@ -52,7 +49,7 @@ export function ContractApprovalFlowBanner({ contractId, canDecide }: ContractAp
     try {
       setBusy('reject');
       await postContractApprovalAction(contractId, { action: 'returnForRevision', reason: reasonTrim });
-      dismissQuery();
+      router.push('/contracts?tab=draft');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'ثبت عدم تأیید انجام نشد.');
     } finally {

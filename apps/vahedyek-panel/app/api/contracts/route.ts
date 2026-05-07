@@ -5,6 +5,7 @@ import { serializeContractorType, serializeContractType } from '../../lib/subjec
 import { fetchAllDraftApprovalFlagsByTenantRaw } from '../../lib/contractDraftApprovalRaw';
 import { prisma } from '../../lib/prisma';
 import { handlePrismaApiError } from '../../lib/prismaApiError';
+import { validatePenaltiesStep } from '../../lib/contractValidation';
 import type { ContractStatus } from '../../types/contract';
 
 function serializeShareMode(value: ShareMode) {
@@ -28,7 +29,14 @@ function isDraftReadyForApproval(draft: Awaited<ReturnType<typeof prisma.contrac
   );
   const hasFinancial = Boolean(draft.financial);
 
-  const hasPenalties = Boolean(draft.penalties?.rules?.length);
+  const hasPenalties = Boolean(draft.penalties) && validatePenaltiesStep({
+    types: Array.isArray(draft.penalties?.types)
+      ? draft.penalties.types.map((item: any) => ({ id: String(item.id), title: String(item.title ?? ''), active: Boolean(item.active) }))
+      : [],
+    rules: Array.isArray(draft.penalties?.rules)
+      ? draft.penalties.rules.map((rule: any) => ({ id: String(rule.id), penaltyTypeId: String(rule.penaltyTypeId) }))
+      : [],
+  }).valid;
   const hasTermination = Boolean(draft.terminationRules);
   const hasExtraCosts = Boolean(draft.extraCosts);
   const hasTechnicalSpecs = Boolean(draft.technicalSpecs);
