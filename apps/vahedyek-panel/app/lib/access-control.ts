@@ -54,28 +54,27 @@ function toAllowedMenuItemIds(access: Pick<AccessSnapshot, 'isOwner' | 'permissi
 }
 
 export async function ensureTenantDefaultRoles(tenantId: string) {
-  const roles = await Promise.all(
-    DEFAULT_TENANT_ROLES.map((role) =>
-      prisma.tenantRole.upsert({
+  const roles = [] as Awaited<ReturnType<typeof prisma.tenantRole.upsert>>[];
+  for (const role of DEFAULT_TENANT_ROLES) {
+    roles.push(
+      await prisma.tenantRole.upsert({
         where: { tenantId_key: { tenantId, key: role.key } },
         update: { label: role.label, system: true },
         create: { tenantId, key: role.key, label: role.label, system: true },
       }),
-    ),
-  );
+    );
+  }
 
   const ownerRole = roles.find((role) => role.key === 'business_owner');
   if (ownerRole) {
     try {
-      await Promise.all(
-        getAllPermissionKeys().map((permissionKey) =>
-          prisma.tenantRolePermission.upsert({
-            where: { roleId_permissionKey: { roleId: ownerRole.id, permissionKey } },
-            update: {},
-            create: { roleId: ownerRole.id, permissionKey },
-          }),
-        ),
-      );
+      await prisma.tenantRolePermission.createMany({
+        data: getAllPermissionKeys().map((permissionKey) => ({
+          roleId: ownerRole.id,
+          permissionKey,
+        })),
+        skipDuplicates: true,
+      });
     } catch (error) {
       console.error('Action permission table is not ready. Owner access will use config fallback until migration runs.', error);
     }
@@ -138,24 +137,14 @@ export async function ensureEmployeeMembershipRoles(tenantId: string) {
 
   if (!users.length) return;
 
-  await Promise.all(
-    users.map((user) =>
-      prisma.userTenantMembership.upsert({
-        where: {
-          userId_tenantId: {
-            userId: user.id,
-            tenantId,
-          },
-        },
-        update: {},
-        create: {
-          userId: user.id,
-          tenantId,
-          role: 'member',
-        },
-      }),
-    ),
-  );
+  await prisma.userTenantMembership.createMany({
+    data: users.map((user) => ({
+      userId: user.id,
+      tenantId,
+      role: 'member',
+    })),
+    skipDuplicates: true,
+  });
 
   const memberships = await prisma.userTenantMembership.findMany({
     where: {

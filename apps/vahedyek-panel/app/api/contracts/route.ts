@@ -48,7 +48,10 @@ export async function GET(request: Request) {
     const drafts = await prisma.contractDraft.findMany({
       where: { tenantId: session.tenantId },
       orderBy: { updatedAt: 'desc' },
-      include: {
+      select: {
+        id: true,
+        createdAt: true,
+        updatedAt: true,
         subject: true,
         parties: {
           include: {

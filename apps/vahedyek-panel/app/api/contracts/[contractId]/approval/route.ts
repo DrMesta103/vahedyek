@@ -23,7 +23,8 @@ export async function POST(request: Request, context: { params: Promise<{ contra
 
     const draft = await prisma.contractDraft.findFirst({
       where: { id: contractId, tenantId: session.tenantId },
-      include: {
+      select: {
+        id: true,
         subject: { include: { unit: true } },
       },
     });

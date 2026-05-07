@@ -48,6 +48,12 @@ export async function getAuthContextFromPayload(payload: AuthTokenPayload) {
   const tenant = payload.tenantId
     ? await prisma.tenant.findUnique({
         where: { id: payload.tenantId },
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          brandCode: true,
+        },
       })
     : null;
 

@@ -79,7 +79,10 @@ export async function GET(request: Request, context: { params: Promise<{ contrac
     const { contractId } = await context.params;
     const draft = await prisma.contractDraft.findFirst({
       where: { id: contractId, tenantId: session.tenantId },
-      include: {
+      select: {
+        id: true,
+        createdAt: true,
+        updatedAt: true,
         subject: { include: { block: true, unit: true } },
         parties: { include: { members: { orderBy: { createdAt: 'asc' } } } },
         financial: { include: { categories: true, dueItems: true } },

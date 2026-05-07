@@ -451,6 +451,20 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
     setDialogError('');
   };
 
+  const openRuleDialog = (penaltyTypeId: string, rule?: PenaltyRuleData) => {
+    setExpandedPenaltyTypeId(penaltyTypeId);
+    setActivePenaltyTypeId(penaltyTypeId);
+    setDialogError('');
+
+    if (rule) {
+      setEditingRuleId(rule.id);
+      setRuleForm(normalizeRule(rule));
+      return;
+    }
+
+    loadRuleFormForType(penaltyTypeId);
+  };
+
   const validateRuleForm = (rule: PenaltyRuleData) => {
     if (rule.mode === 'fixed' && !(Number(rule.fixedAmount.replace(/,/g, '')) > 0)) {
       return 'مبلغ ثابت جریمه را وارد کنید.';
