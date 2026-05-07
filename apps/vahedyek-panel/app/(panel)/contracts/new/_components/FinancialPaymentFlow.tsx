@@ -62,6 +62,7 @@ function PaymentSection({
   onDeleteDueItem,
   formatInput,
   formatMoney,
+  invalid = false,
 }: {
   category: FinancialCategoryData;
   locked: boolean;
@@ -74,6 +75,7 @@ function PaymentSection({
   onDeleteDueItem: (dueItemId: string) => void;
   formatInput: (value: string) => string;
   formatMoney: (value: number) => string;
+  invalid?: boolean;
 }) {
   const requiresDue = category.requiresDue;
   const dueTotal = dueItems.reduce((sum, item) => sum + item.amount, 0);
@@ -82,7 +84,7 @@ function PaymentSection({
   const [showDueItems, setShowDueItems] = useState(requiresDue);
 
   return (
-    <section className="border-t border-[#d9dde4] px-4 py-4 first:border-t-0 md:px-5">
+    <section className={`border-t px-4 py-4 first:border-t-0 md:px-5 ${invalid ? 'border-rose-300 bg-rose-50/30' : 'border-[#d9dde4]'}`}>
       <div className="mb-2 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 text-[13px] font-bold text-[#52575f]">
           <ListChecks className="h-5 w-5 text-[#59606a]" />
@@ -207,6 +209,7 @@ export function FinancialPaymentFlow({
   onDeleteDueItem,
   formatInput,
   formatMoney,
+  invalidCategoryIds = [],
 }: {
   categories: FinancialCategoryData[];
   lockedCategoryIds: string[];
@@ -220,6 +223,7 @@ export function FinancialPaymentFlow({
   onDeleteDueItem: (dueItemId: string) => void;
   formatInput: (value: string) => string;
   formatMoney: (value: number) => string;
+  invalidCategoryIds?: string[];
 }) {
   return (
     <section className="border-b border-[#d9dde4] pb-5">
@@ -239,6 +243,7 @@ export function FinancialPaymentFlow({
           onDeleteDueItem={onDeleteDueItem}
           formatInput={formatInput}
           formatMoney={formatMoney}
+          invalid={invalidCategoryIds.includes(category.id)}
         />
       ))}
 

@@ -28,6 +28,7 @@ import {
   setFrontendStepDraft,
 } from '../../../../lib/contractDraftClient';
 import { validateTerminationStep, validateTerminationSubsection, validateBuyerTerminationSubsection } from '../../../../lib/contractValidation';
+import { buildValidationSummary } from './validationPresentation';
 import { normalizePersistedBuyerRules } from '../../../../lib/terminationBuyerRules';
 import type {
   BuyerTerminationSubsectionId,
@@ -830,7 +831,7 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
       </div>
 
       {formError ? (
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+        <div className={`rounded-2xl border px-4 py-3 text-sm text-rose-700 ${formError ? 'border-rose-300 bg-rose-50' : 'border-rose-200 bg-rose-50'}`}>
           <div className="flex items-center gap-2 font-bold">
             <AlertCircle className="h-4 w-4 shrink-0" />
             پیام اعتبارسنجی

@@ -24,6 +24,7 @@ import { validateFinancialStep } from '../../../../lib/contractValidation';
 import { addIntervalToDate, buildRegularDueItems, distributeAmount, type DueFrequency } from '../../../../lib/financialUtils';
 import type { ContractFinancialData, ContractSubjectData, FinancialCategoryData, FinancialDueItemData, PricingType } from '../../../../types/contract';
 import { dispatchContractFlowDirty, dispatchContractFlowFinancialSnapshot, dispatchContractFlowSavedForDraft } from './contractFlowSignals';
+import { buildValidationSummary } from './validationPresentation';
 
 type FinancialCategory = FinancialCategoryData;
 type DueItem = FinancialDueItemData;
@@ -374,6 +375,7 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [formError, setFormError] = useState('');
+  const [showValidation, setShowValidation] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
   const [pendingNavigation, setPendingNavigation] = useState<{ mode: 'route' | 'back'; href?: string } | null>(null);
 
@@ -526,19 +528,47 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
     dueItems,
   });
 
+  const payload = useMemo<ContractFinancialData>(() => buildPayload(), [
+    activeTab,
+    categories,
+    dueItems,
+    fixedTotalAmount,
+    parkingArea,
+    parkingPricePerMeter,
+    pricePerMeter,
+    pricingType,
+    totalArea,
+    unitArea,
+  ]);
+  const validation = useMemo(() => validateFinancialStep(payload), [payload]);
+  const visibleErrors = showValidation ? validation.errors : {};
+
   const persistCurrentStep = async () => {
     if (!draftId) return false;
 
-    const payload = buildPayload();
-    const validation = validateFinancialStep(payload);
-
     if (!validation.valid) {
-      setFormError(validation.errors.categoriesTotal ?? validation.errors.fixedTotalAmount ?? validation.errors.totalArea ?? validation.errors.pricePerMeter ?? validation.errors.parkingPricePerMeter ?? 'اطلاعات مالی معتبر نیست.');
+      setShowValidation(true);
+      setFormError(
+        buildValidationSummary(
+          validation.errors,
+          {
+            totalArea: 'متراژ کل',
+            pricePerMeter: 'مبلغ هر مترمربع واحد',
+            parkingPricePerMeter: 'مبلغ هر مترمربع پارکینگ',
+            fixedTotalAmount: 'مبلغ کل قرارداد',
+            categories: 'ردیف مالی',
+            categoriesTotal: 'جمع ردیف‌های مالی',
+            dueItems: 'سررسیدها',
+          },
+          'اطلاعات مالی معتبر نیست.',
+        ),
+      );
       return false;
     }
 
     setSaving(true);
     setFormError('');
+    setShowValidation(false);
     try {
       await saveStepData(draftId, 'financial', payload);
       initialSnapshotRef.current = JSON.stringify(payload);
@@ -903,6 +933,7 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
         </button>
       </div> : null}
 
+      <div className={visibleErrors.totalArea || visibleErrors.pricePerMeter || visibleErrors.parkingPricePerMeter || visibleErrors.fixedTotalAmount ? 'rounded-2xl border border-rose-300 bg-rose-50/20 p-1' : ''}>
       <FinancialPricingBox
         pricingType={pricingType}
         onPricingTypeChange={setPricingType}
@@ -918,10 +949,17 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
         meteredTotal={meteredTotal}
         formatInput={formatInput}
         formatMoney={formatMoney}
+        pricingTypeInvalid={Boolean(visibleErrors.totalArea || visibleErrors.pricePerMeter || visibleErrors.parkingPricePerMeter || visibleErrors.fixedTotalAmount)}
+        totalAreaInvalid={Boolean(visibleErrors.totalArea)}
+        pricePerMeterInvalid={Boolean(visibleErrors.pricePerMeter)}
+        parkingPricePerMeterInvalid={Boolean(visibleErrors.parkingPricePerMeter)}
+        fixedTotalAmountInvalid={Boolean(visibleErrors.fixedTotalAmount)}
       />
+      </div>
 
       {formError ? <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{formError}</div> : null}
 
+      <div className={visibleErrors.categories || visibleErrors.categoriesTotal || visibleErrors.dueItems ? 'rounded-2xl border border-rose-300 bg-rose-50/20 p-1' : ''}>
       <FinancialPaymentFlow
         categories={categories}
         lockedCategoryIds={LOCKED_CATEGORY_IDS}
@@ -935,7 +973,9 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
         onDeleteDueItem={(id) => setDueItems((current) => current.filter((dueItem) => dueItem.id !== id))}
         formatInput={formatInput}
         formatMoney={formatMoney}
+        invalidCategoryIds={categories.filter((item) => visibleErrors.categoriesTotal || visibleErrors.categories || (visibleErrors.dueItems && (categoryDueItemsMap[item.id]?.length ?? 0) > 0)).map((item) => item.id)}
       />
+      </div>
 
       <StickySubmitBar
         label="ثبت اطلاعات مالی"
