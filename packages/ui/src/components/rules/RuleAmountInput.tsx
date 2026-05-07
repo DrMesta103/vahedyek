@@ -1,10 +1,21 @@
 import { Input } from '../Input';
 import { rulePanelNumericInputClassName } from './rulePanelClassNames';
 
-function formatNumericInput(value: string) {
+function formatIntegerInput(value: string) {
   const digits = value.replace(/\D/g, '');
   if (!digits) return '';
   return Number(digits).toLocaleString('en-US');
+}
+
+function formatDecimalInput(value: string) {
+  const normalized = value.replace(/[٫,]/g, '.');
+  const cleaned = normalized.replace(/[^\d.]/g, '');
+  if (!cleaned) return '';
+
+  const [integerPart = '', ...fractionParts] = cleaned.split('.');
+  const fractionPart = fractionParts.join('');
+  if (!fractionParts.length) return integerPart;
+  return `${integerPart}.${fractionPart}`;
 }
 
 export function RuleAmountInput({
@@ -16,26 +27,36 @@ export function RuleAmountInput({
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
-  /** `undefined`: default chip `تومان`. Empty string: no chip (numeric grouping). `%`/`تومان`: chip + grouping. */
   suffix?: string;
 }) {
   const resolvedSuffix = suffix === undefined ? 'تومان' : suffix;
   const showSuffixChip = resolvedSuffix.length > 0;
-  const isNumeric = resolvedSuffix === 'تومان' || resolvedSuffix === '%' || suffix === '';
+  const isPercent = resolvedSuffix === '%';
+  const isNumeric = resolvedSuffix === 'تومان' || isPercent || suffix === '';
+  const suffixPosition = !showSuffixChip ? 'none' : isPercent ? 'left' : 'right';
 
   return (
-    <div className="relative">
-      <Input
-        value={value}
-        onChange={(event) => onChange(isNumeric ? formatNumericInput(event.target.value) : event.target.value)}
-        placeholder={placeholder}
-        inputMode={isNumeric ? 'numeric' : undefined}
-        dir={isNumeric ? 'ltr' : undefined}
-        className={rulePanelNumericInputClassName(showSuffixChip)}
-      />
-      {showSuffixChip ? (
-        <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-xs font-bold text-[color:var(--text-muted)]">{resolvedSuffix}</span>
-      ) : null}
-    </div>
+    <Input
+      value={value}
+      onChange={(event) =>
+        onChange(
+          isNumeric
+            ? isPercent
+              ? formatDecimalInput(event.target.value)
+              : formatIntegerInput(event.target.value)
+            : event.target.value,
+        )
+      }
+      placeholder={placeholder}
+      inputMode={isPercent ? 'decimal' : isNumeric ? 'numeric' : undefined}
+      dir={isNumeric ? 'ltr' : undefined}
+      className={`${rulePanelNumericInputClassName(suffixPosition)} ${isPercent ? '!text-left' : ''}`}
+      startAdornment={suffixPosition === 'left' ? resolvedSuffix : undefined}
+      startAdornmentClassName="text-xs font-bold text-[color:var(--text-muted)]"
+      startAdornmentWrapperClassName={suffixPosition === 'left' ? 'w-8' : undefined}
+      endAdornment={suffixPosition === 'right' ? resolvedSuffix : undefined}
+      endAdornmentClassName="text-xs font-bold text-[color:var(--text-muted)]"
+      endAdornmentWrapperClassName={suffixPosition === 'right' ? 'w-8' : undefined}
+    />
   );
 }

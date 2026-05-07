@@ -9,7 +9,7 @@ import {
   CirclePercent,
   TrendingUp,
 } from 'lucide-react';
-import { StickySubmitBar } from '@repo/ui';
+import { Input, RuleAmountInput, StickySubmitBar } from '@repo/ui';
 import { getPenaltyItem } from './penaltiesConfig';
 import { useContractFlowBasePath } from './useContractFlowBasePath';
 
@@ -97,21 +97,16 @@ function LabeledField({
       <span className="block text-base font-bold text-gray-800">
         {label} <span className="text-rose-400">*</span>
       </span>
-      <div className="relative">
-        {suffix && (
-          <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-lg text-gray-400">
-            {suffix}
-          </span>
-        )}
-        <input
+      {suffix ? (
+        <RuleAmountInput value={value} onChange={onChange} placeholder={placeholder} suffix={suffix} />
+      ) : (
+        <Input
           value={value}
           onChange={(event) => onChange(event.target.value)}
           placeholder={placeholder}
-          className={`h-14 w-full rounded-2xl border border-gray-300 bg-white px-4 text-lg text-gray-800 outline-none transition focus:border-cyan-500 ${
-            suffix ? 'pr-12' : ''
-          }`}
+          className="h-14 rounded-2xl border-gray-300 px-4 text-lg text-gray-800 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/10"
         />
-      </div>
+      )}
       {hint && <p className="text-sm text-gray-500">{hint}</p>}
     </label>
   );

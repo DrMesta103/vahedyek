@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { getDiscountEntry, getDiscountGroup } from '../(panel)/contracts/new/_components/discountsConfig';
 import { getPenaltyItem } from '../(panel)/contracts/new/_components/penaltiesConfig';
 import { currentAppConfig } from '../config/current';
+import { MenuIcon } from './MenuIcon';
 import OrbitMenu from './OrbitMenu';
 import PageDocsWidget from './PageDocsWidget';
 import Sidebar from './Sidebar';
@@ -267,6 +268,40 @@ function buildBusinessSettingsBreadcrumb(pathname: string): Crumb[] {
       label: 'تعریف پروژه / مجتمع',
       href: pathname.startsWith('/business-settings/project/') ? '/business-settings/project' : undefined,
     });
+
+    if (pathname.startsWith('/business-settings/project/reports')) {
+      trail.push({ label: 'گزارشات اطلاعات مجتمع' });
+    }
+
+    if (pathname.startsWith('/business-settings/project/technical-specs')) {
+      trail.push({ label: 'مشخصات فنی پروژه' });
+    }
+
+    if (pathname.startsWith('/business-settings/project/files')) {
+      trail.push({ label: 'فایل‌ها' });
+    }
+
+    if (pathname.startsWith('/business-settings/project/plates')) {
+      trail.push({ label: 'پلاک اصلی / پلاک فرعی' });
+    }
+
+    if (pathname.startsWith('/business-settings/project/address')) {
+      trail.push({ label: 'آدرس' });
+    }
+
+    if (pathname.startsWith('/business-settings/project/unit-types')) {
+      const isUnitTypesRoot = pathname === '/business-settings/project/unit-types';
+      trail.push({
+        label: 'تیپ‌های واحد',
+        href: isUnitTypesRoot ? undefined : '/business-settings/project/unit-types',
+      });
+
+      if (pathname === '/business-settings/project/unit-types/new') {
+        trail.push({ label: 'افزودن تیپ واحد' });
+      } else if (pathname.endsWith('/edit')) {
+        trail.push({ label: 'ویرایش تیپ واحد' });
+      }
+    }
   }
 
   if (pathname.startsWith('/business-settings/approval-process')) {
@@ -423,7 +458,7 @@ export default function PanelLayout({ children }: PanelLayoutProps) {
                         ) : (
                           <span>{item.label}</span>
                         )}
-                        {index < items.length - 1 ? <i className="fa fa-chevron-left"></i> : null}
+                        {index < items.length - 1 ? <MenuIcon name="fa-chevron-left" className="breadcrumb-separator" /> : null}
                       </span>
                     ))}
                   </div>

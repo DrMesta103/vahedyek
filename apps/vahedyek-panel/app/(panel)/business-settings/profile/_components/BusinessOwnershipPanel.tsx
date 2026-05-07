@@ -38,9 +38,15 @@ function formatOwnerMobile(value: string | null) {
 
 const emptyProfileMeta: ProfileMeta = {
   businessName: '',
+  slug: '',
+  brandCode: 'VN',
+  packageKey: 'starter',
+  billingCycle: 'monthly',
+  createdAt: null,
   owner: {
     fullName: '',
     mobile: null,
+    email: null,
   },
 };
 

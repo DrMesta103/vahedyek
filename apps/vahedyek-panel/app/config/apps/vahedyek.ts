@@ -75,7 +75,7 @@ export const currentAppConfig: AppConfig = {
       id: 'complex',
       label: 'جزئیات مجتمع',
       icon: 'fa-building',
-      href: '/complex',
+      href: '/business-settings/project/blocks',
       requiredPermission: 'complex.view',
     },
     {

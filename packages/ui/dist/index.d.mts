@@ -4,6 +4,13 @@ import * as react_jsx_runtime from 'react/jsx-runtime';
 export { DataTable, EmptyState, FormCard, PageIntro, PrimaryLink, StatGrid } from './server.mjs';
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+    startAdornment?: React.ReactNode;
+    endAdornment?: React.ReactNode;
+    startAdornmentClassName?: string;
+    endAdornmentClassName?: string;
+    containerClassName?: string;
+    startAdornmentWrapperClassName?: string;
+    endAdornmentWrapperClassName?: string;
 }
 declare const Input: React.ForwardRefExoticComponent<InputProps & React.RefAttributes<HTMLInputElement>>;
 
@@ -59,7 +66,6 @@ declare function RuleAmountInput({ value, onChange, placeholder, suffix, }: {
     value: string;
     onChange: (value: string) => void;
     placeholder?: string;
-    /** `undefined`: default chip `تومان`. Empty string: no chip (numeric grouping). `%`/`تومان`: chip + grouping. */
     suffix?: string;
 }): react_jsx_runtime.JSX.Element;
 
@@ -70,7 +76,7 @@ declare const RULE_PANEL_SELECT_CLASSNAME = "h-14 w-full rounded-xl border borde
 /**
  * Numeric / formatted amount fields; optional gutter on the physical left (`left-4`) for `%` / `تومان` chip text.
  */
-declare function rulePanelNumericInputClassName(hasLeadingSuffixLabel: boolean): string;
+declare function rulePanelNumericInputClassName(suffixPosition: 'left' | 'right' | 'none'): string;
 
 declare function RuleFieldLabel({ label, required, rightSlot }: {
     label: ReactNode;
@@ -101,7 +107,7 @@ type ExpandableTagGroupItem = {
     name: string;
     sub?: string;
 };
-declare function ExpandableTagGroup({ label, items, selectedId, onSelect, emptyText, itemsPerRow, required, className, showSearch, }: {
+declare function ExpandableTagGroup({ label, items, selectedId, onSelect, emptyText, itemsPerRow, required, className, showSearch, invalid, }: {
     label: string;
     items: ExpandableTagGroupItem[];
     selectedId: string;
@@ -111,6 +117,7 @@ declare function ExpandableTagGroup({ label, items, selectedId, onSelect, emptyT
     required?: boolean;
     className?: string;
     showSearch?: boolean;
+    invalid?: boolean;
 }): react_jsx_runtime.JSX.Element;
 
 type ContractType = 'sale' | 'pre-sale';
@@ -172,7 +179,7 @@ declare function ChoicePills<T extends string>({ options, value, onChange, ariaL
     showActiveIndicator?: boolean;
 }): react_jsx_runtime.JSX.Element;
 
-declare function ChoicePillsField<T extends string>({ label, labelAs: LabelAs, ariaLabel, options, value, onChange, wrap, className, labelClassName, pillsClassName, pillClassName, showActiveIndicator, }: {
+declare function ChoicePillsField<T extends string>({ label, labelAs: LabelAs, ariaLabel, options, value, onChange, wrap, className, labelClassName, pillsClassName, pillClassName, showActiveIndicator, invalid, }: {
     label: string;
     labelAs?: ElementType;
     ariaLabel?: string;
@@ -185,6 +192,7 @@ declare function ChoicePillsField<T extends string>({ label, labelAs: LabelAs, a
     pillsClassName?: string;
     pillClassName?: string;
     showActiveIndicator?: boolean;
+    invalid?: boolean;
 }): react_jsx_runtime.JSX.Element;
 
 type AppThemeTokens = {

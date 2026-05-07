@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
-import { requireSessionContext } from '../../lib/auth';
+import { requireActiveAuthPayload } from '../../lib/auth';
 import { createThread, listThreadsForApp, listThreadsForPage } from '../../lib/page-threads-store';
 import { handlePrismaApiError } from '../../lib/prismaApiError';
 
 export async function GET(request: Request) {
   try {
-    const session = await requireSessionContext();
-    if (session instanceof NextResponse) return session;
+    const auth = await requireActiveAuthPayload();
+    if (auth instanceof NextResponse) return auth;
 
     const { searchParams } = new URL(request.url);
     const scope = searchParams.get('scope');
@@ -20,8 +20,8 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const session = await requireSessionContext();
-    if (session instanceof NextResponse) return session;
+    const auth = await requireActiveAuthPayload();
+    if (auth instanceof NextResponse) return auth;
 
     const body = (await request.json()) as {
       pagePath?: string;
@@ -42,7 +42,7 @@ export async function POST(request: Request) {
       docType: body.docType,
       priority: body.priority,
       labels: body.labels,
-      actorUserId: session.user.id,
+      actorUserId: auth.userId,
     });
 
     return NextResponse.json({ success: true, threadId: created.id, pageKey: created.pageKey, pagePath: created.pagePath });

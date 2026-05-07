@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { APP_MENU_ITEMS } from '../lib/navigation';
+import { MenuIcon } from './MenuIcon';
 
 type OrbitMenuProps = {
   activeItem?: string;
@@ -114,7 +115,7 @@ export default function OrbitMenu({ activeItem }: OrbitMenuProps) {
                 onClick={() => navigateTo(index)}
                 disabled={item.disabled}
               >
-                <i className={`fa ${item.icon}`}></i>
+                <MenuIcon name={item.icon} />
                 <span className="node-label">{item.label}</span>
               </button>
             );

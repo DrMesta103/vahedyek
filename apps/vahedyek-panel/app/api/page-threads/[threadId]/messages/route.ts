@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { requireSessionContext } from '../../../../lib/auth';
+import { requireActiveAuthPayload } from '../../../../lib/auth';
 import { createMessage, listThreadMessages } from '../../../../lib/page-threads-store';
 import { handlePrismaApiError } from '../../../../lib/prismaApiError';
 
@@ -11,8 +11,8 @@ type RouteContext = {
 
 export async function GET(_: Request, context: RouteContext) {
   try {
-    const session = await requireSessionContext();
-    if (session instanceof NextResponse) return session;
+    const auth = await requireActiveAuthPayload();
+    if (auth instanceof NextResponse) return auth;
 
     const { threadId } = await context.params;
     const messages = await listThreadMessages({ threadId });
@@ -24,8 +24,8 @@ export async function GET(_: Request, context: RouteContext) {
 
 export async function POST(request: Request, context: RouteContext) {
   try {
-    const session = await requireSessionContext();
-    if (session instanceof NextResponse) return session;
+    const auth = await requireActiveAuthPayload();
+    if (auth instanceof NextResponse) return auth;
 
     const { threadId } = await context.params;
     const body = (await request.json()) as {
@@ -42,7 +42,7 @@ export async function POST(request: Request, context: RouteContext) {
 
     const message = await createMessage({
       threadId,
-      actorUserId: session.user.id,
+      actorUserId: auth.userId,
       messageType: body.messageType,
       text: body.text,
       replyToMessageId: body.replyToMessageId,

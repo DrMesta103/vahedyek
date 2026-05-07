@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import {
+  ArrowRight,
   Building2,
   ClipboardList,
   FileText,
@@ -18,10 +19,12 @@ import {
 import {
   FieldGroup,
   FormDateInput,
+  FormTextInput,
   InlineSelect,
   TagPill,
   TagPills,
 } from '../../contracts/new/_components/ContractFormPrimitives';
+import { buildValidationSummary } from '../../contracts/new/_components/validationPresentation';
 
 type ProjectUnitTypeRecord = {
   id: string;
@@ -262,11 +265,15 @@ function ProjectHero({
   title,
   description,
   actions,
+  backHref = '/business-settings/project',
+  backLabel = 'بازگشت',
 }: {
   icon: React.ElementType;
   title: string;
   description: string;
   actions?: ReactNode;
+  backHref?: string | null;
+  backLabel?: string;
 }) {
   return (
     <div className="project-flow-hero">
@@ -274,6 +281,12 @@ function ProjectHero({
         <Icon />
       </div>
       <div className="project-flow-hero-copy">
+        {backHref ? (
+          <Link href={backHref} className="project-flow-hero-back" aria-label={backLabel}>
+            <ArrowRight />
+            <span>{backLabel}</span>
+          </Link>
+        ) : null}
         <h1>{title}</h1>
         <p>{description}</p>
       </div>
@@ -291,9 +304,21 @@ function ProjectStatCard({ label, value, accent = 'teal' }: { label: string; val
   );
 }
 
-function ProjectField({ label, required, hint, children }: { label: string; required?: boolean; hint?: string; children: ReactNode }) {
+function ProjectField({
+  label,
+  required,
+  hint,
+  children,
+  invalid = false,
+}: {
+  label: string;
+  required?: boolean;
+  hint?: string;
+  children: ReactNode;
+  invalid?: boolean;
+}) {
   return (
-    <label className="business-block-form-field">
+    <label className={`business-block-form-field ${invalid ? 'rounded-xl border border-rose-300 bg-rose-50/30 p-2' : ''}`}>
       <span>
         {label}
         {required ? <i>*</i> : null}
@@ -303,6 +328,8 @@ function ProjectField({ label, required, hint, children }: { label: string; requ
     </label>
   );
 }
+
+const REQUIRED_MESSAGE = 'این فیلد الزامی است';
 
 function ProjectTextarea({
   value,
@@ -454,6 +481,7 @@ export function ProjectUnitTypeForm({ typeId }: { typeId?: string }) {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(isEdit);
   const [saving, setSaving] = useState(false);
+  const [showValidation, setShowValidation] = useState(false);
 
   useEffect(() => {
     if (!typeId) return;
@@ -485,8 +513,20 @@ export function ProjectUnitTypeForm({ typeId }: { typeId?: string }) {
   }, [typeId]);
 
   async function submit() {
+    const errors: Record<string, string> = {};
+    if (!title.trim()) errors.title = REQUIRED_MESSAGE;
+    if (!unitCount.trim() || unitCount === '0') errors.unitCount = REQUIRED_MESSAGE;
+    if (!bedroomCount.trim()) errors.bedroomCount = REQUIRED_MESSAGE;
+    if (!balconyCount.trim()) errors.balconyCount = REQUIRED_MESSAGE;
+    if (!area.trim()) errors.area = REQUIRED_MESSAGE;
+    if (Object.keys(errors).length > 0) {
+      setShowValidation(true);
+      setMessage(buildValidationSummary(errors, { title: 'عنوان', unitCount: 'چند واحد', bedroomCount: 'تعداد خواب', balconyCount: 'تعداد بالکن', area: 'متراژ' }, 'اطلاعات تیپ واحد کامل نیست.'));
+      return;
+    }
     setSaving(true);
     setMessage('');
+    setShowValidation(false);
     try {
       const response = await fetch(isEdit ? `/api/business-settings/project/unit-types/${typeId}` : '/api/business-settings/project/unit-types', {
         method: isEdit ? 'PATCH' : 'POST',
@@ -518,6 +558,8 @@ export function ProjectUnitTypeForm({ typeId }: { typeId?: string }) {
           icon={Building2}
           title={isEdit ? 'ویرایش تیپ واحد' : 'افزودن تیپ واحد'}
           description="ساختار تیپ را ثبت کنید تا در تعریف واحدها از آن استفاده شود."
+          backHref="/business-settings/project/unit-types"
+          backLabel="بازگشت به فهرست تیپ‌ها"
         />
 
         {message ? <div className="business-blocks-state is-error">{message}</div> : null}
@@ -525,12 +567,13 @@ export function ProjectUnitTypeForm({ typeId }: { typeId?: string }) {
 
         {!loading ? (
           <div className="business-unit-form-grid">
-            <ProjectField label="عنوان" required>
+            <ProjectField label="عنوان" required invalid={showValidation && !title.trim()}>
               <input value={title} onChange={(event) => setTitle(event.target.value.slice(0, 60))} placeholder="مثلاً تیپ A شرقی" />
             </ProjectField>
 
-            <FieldGroup label="چند واحد" required>
+            <FieldGroup label="چند واحد" required invalid={showValidation && (!unitCount.trim() || unitCount === '0')}>
               <InlineSelect
+                invalid={showValidation && (!unitCount.trim() || unitCount === '0')}
                 value={unitCount}
                 onSelect={setUnitCount}
                 options={unitCountOptions}
@@ -540,17 +583,17 @@ export function ProjectUnitTypeForm({ typeId }: { typeId?: string }) {
               />
             </FieldGroup>
 
-            <ProjectField label="تعداد خواب" required>
+            <ProjectField label="تعداد خواب" required invalid={showValidation && !bedroomCount.trim()}>
               <input value={bedroomCount} onChange={(event) => setBedroomCount(event.target.value)} inputMode="numeric" placeholder="مثلاً 3" />
             </ProjectField>
 
-            <ProjectField label="تعداد بالکن" required>
+            <ProjectField label="تعداد بالکن" required invalid={showValidation && !balconyCount.trim()}>
               <input value={balconyCount} onChange={(event) => setBalconyCount(event.target.value)} inputMode="numeric" placeholder="مثلاً 1" />
             </ProjectField>
 
             <p className="project-flow-hint">متراژ واحد، بدون انباری و پارکینگ و سایر الحاقات ثبت می‌شود.</p>
 
-            <ProjectField label="متراژ" required>
+            <ProjectField label="متراژ" required invalid={showValidation && !area.trim()}>
               <input value={area} onChange={(event) => setArea(event.target.value)} inputMode="decimal" placeholder="مثلاً 120" />
             </ProjectField>
 
@@ -586,6 +629,7 @@ export function ProjectPlatesPanel() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
+  const [showValidation, setShowValidation] = useState(false);
 
   async function loadPlates() {
     setLoading(true);
@@ -614,8 +658,17 @@ export function ProjectPlatesPanel() {
   }
 
   async function submit() {
+    const errors: Record<string, string> = {};
+    if (!mainPlate.trim()) errors.mainPlate = REQUIRED_MESSAGE;
+    if (!(draftSubPlates.length || subPlate.trim())) errors.subPlate = REQUIRED_MESSAGE;
+    if (Object.keys(errors).length > 0) {
+      setShowValidation(true);
+      setMessage(buildValidationSummary(errors, { mainPlate: 'پلاک اصلی', subPlate: 'پلاک فرعی' }, 'اطلاعات پلاک کامل نیست.'));
+      return;
+    }
     setSaving(true);
     setMessage('');
+    setShowValidation(false);
     try {
       const response = await fetch('/api/business-settings/project/plates', {
         method: 'POST',
@@ -649,10 +702,10 @@ export function ProjectPlatesPanel() {
             <div className="business-block-form-section">
               <h2>افزودن پلاک</h2>
               <div className="business-block-form-row">
-                <ProjectField label="پلاک اصلی" required>
+                <ProjectField label="پلاک اصلی" required invalid={showValidation && !mainPlate.trim()}>
                   <input value={mainPlate} onChange={(event) => setMainPlate(event.target.value)} inputMode="numeric" placeholder="مثلاً 125" />
                 </ProjectField>
-                <ProjectField label="پلاک فرعی" required>
+                <ProjectField label="پلاک فرعی" required invalid={showValidation && !(draftSubPlates.length || subPlate.trim())}>
                   <input value={subPlate} onChange={(event) => setSubPlate(event.target.value)} inputMode="numeric" placeholder="مثلاً 10" />
                 </ProjectField>
               </div>
@@ -855,6 +908,96 @@ export function ProjectReportsPanel() {
   );
 }
 
+export const TECHNICAL_SPEC_NONE_VALUE = 'ندارد';
+
+function TechnicalSpecField({
+  label,
+  options,
+  value,
+  onChange,
+  otherPlaceholder = 'متریال یا گزینه دلخواه را وارد کنید',
+}: {
+  label: string;
+  options: ReadonlyArray<string>;
+  value: string;
+  onChange: (next: string) => void;
+  otherPlaceholder?: string;
+}) {
+  const isKnownOption = options.includes(value);
+  const isNone = value === TECHNICAL_SPEC_NONE_VALUE;
+  const initialOtherActive = Boolean(value) && !isKnownOption && !isNone;
+  const [otherActive, setOtherActive] = useState(initialOtherActive);
+  const [otherDraft, setOtherDraft] = useState(initialOtherActive ? value : '');
+
+  useEffect(() => {
+    const known = options.includes(value);
+    const none = value === TECHNICAL_SPEC_NONE_VALUE;
+    if (!value || known || none) {
+      setOtherActive(false);
+      setOtherDraft('');
+      return;
+    }
+    setOtherActive(true);
+    setOtherDraft(value);
+  }, [value, options]);
+
+  return (
+    <FieldGroup label={label}>
+      <div className="technical-spec-field">
+        <div className="technical-spec-field-pills">
+          {options.map((option) => (
+            <TagPill
+              key={option}
+              label={option}
+              active={value === option}
+              onClick={() => {
+                setOtherActive(false);
+                setOtherDraft('');
+                onChange(option);
+              }}
+            />
+          ))}
+          <TagPill
+            label={TECHNICAL_SPEC_NONE_VALUE}
+            active={isNone}
+            onClick={() => {
+              setOtherActive(false);
+              setOtherDraft('');
+              onChange(TECHNICAL_SPEC_NONE_VALUE);
+            }}
+          />
+          <TagPill
+            label="سایر"
+            active={otherActive}
+            onClick={() => {
+              if (otherActive) {
+                setOtherActive(false);
+                setOtherDraft('');
+                onChange('');
+                return;
+              }
+              setOtherActive(true);
+            }}
+          />
+        </div>
+        {otherActive ? (
+          <div className="technical-spec-field-other">
+            <FormTextInput
+              value={otherDraft}
+              onChange={(next) => {
+                const sliced = next.slice(0, 80);
+                setOtherDraft(sliced);
+                onChange(sliced);
+              }}
+              placeholder={otherPlaceholder}
+            />
+          </div>
+        ) : null}
+      </div>
+    </FieldGroup>
+  );
+}
+
 export function ProjectTechnicalSpecsPanel() {
   const [specs, setSpecs] = useState<ProjectTechnicalSpecs>(defaultTechnicalSpecs);
   const [loading, setLoading] = useState(true);
@@ -917,56 +1060,56 @@ export function ProjectTechnicalSpecsPanel() {
 
         {!loading ? (
           <>
-            <div className="project-flow-grid">
-              <FieldGroup label="سیستم سازه">
-                <TagPills
-                  options={structureSystemOptions.map((option) => ({ value: option, label: option }))}
-                  value={specs.structureSystem}
-                  onChange={(value) => setSpecs((current) => ({ ...current, structureSystem: value }))}
-                />
-              </FieldGroup>
-              <FieldGroup label="نمای ساختمان">
-                <TagPills
-                  options={facadeOptions.map((option) => ({ value: option, label: option }))}
-                  value={specs.facadeMaterial}
-                  onChange={(value) => setSpecs((current) => ({ ...current, facadeMaterial: value }))}
-                />
-              </FieldGroup>
-              <FieldGroup label="کابینت">
-                <TagPills
-                  options={cabinetOptions.map((option) => ({ value: option, label: option }))}
-                  value={specs.cabinetType}
-                  onChange={(value) => setSpecs((current) => ({ ...current, cabinetType: value }))}
-                />
-              </FieldGroup>
-              <FieldGroup label="کف‌پوش">
-                <TagPills
-                  options={floorMaterialOptions.map((option) => ({ value: option, label: option }))}
-                  value={specs.floorMaterial}
-                  onChange={(value) => setSpecs((current) => ({ ...current, floorMaterial: value }))}
-                />
-              </FieldGroup>
-              <FieldGroup label="سیستم سرمایش">
-                <TagPills
-                  options={coolingOptions.map((option) => ({ value: option, label: option }))}
-                  value={specs.coolingSystem}
-                  onChange={(value) => setSpecs((current) => ({ ...current, coolingSystem: value }))}
-                />
-              </FieldGroup>
-              <FieldGroup label="سیستم گرمایش">
-                <TagPills
-                  options={heatingOptions.map((option) => ({ value: option, label: option }))}
-                  value={specs.heatingSystem}
-                  onChange={(value) => setSpecs((current) => ({ ...current, heatingSystem: value }))}
-                />
-              </FieldGroup>
-              <FieldGroup label="نوع پنجره">
-                <TagPills
-                  options={windowOptions.map((option) => ({ value: option, label: option }))}
-                  value={specs.windowType}
-                  onChange={(value) => setSpecs((current) => ({ ...current, windowType: value }))}
-                />
-              </FieldGroup>
+            <div className="project-flow-grid project-tech-grid">
+              <TechnicalSpecField
+                label="سیستم سازه"
+                options={structureSystemOptions}
+                value={specs.structureSystem}
+                onChange={(value) => setSpecs((current) => ({ ...current, structureSystem: value }))}
+                otherPlaceholder="نوع سازه دلخواه را وارد کنید"
+              />
+              <TechnicalSpecField
+                label="نمای ساختمان"
+                options={facadeOptions}
+                value={specs.facadeMaterial}
+                onChange={(value) => setSpecs((current) => ({ ...current, facadeMaterial: value }))}
+                otherPlaceholder="متریال نمای دلخواه را وارد کنید"
+              />
+              <TechnicalSpecField
+                label="کابینت"
+                options={cabinetOptions}
+                value={specs.cabinetType}
+                onChange={(value) => setSpecs((current) => ({ ...current, cabinetType: value }))}
+                otherPlaceholder="متریال کابینت دلخواه را وارد کنید"
+              />
+              <TechnicalSpecField
+                label="کف‌پوش"
+                options={floorMaterialOptions}
+                value={specs.floorMaterial}
+                onChange={(value) => setSpecs((current) => ({ ...current, floorMaterial: value }))}
+                otherPlaceholder="نوع کف‌پوش دلخواه را وارد کنید"
+              />
+              <TechnicalSpecField
+                label="سیستم سرمایش"
+                options={coolingOptions}
+                value={specs.coolingSystem}
+                onChange={(value) => setSpecs((current) => ({ ...current, coolingSystem: value }))}
+                otherPlaceholder="نوع سیستم سرمایش دلخواه را وارد کنید"
+              />
+              <TechnicalSpecField
+                label="سیستم گرمایش"
+                options={heatingOptions}
+                value={specs.heatingSystem}
+                onChange={(value) => setSpecs((current) => ({ ...current, heatingSystem: value }))}
+                otherPlaceholder="نوع سیستم گرمایش دلخواه را وارد کنید"
+              />
+              <TechnicalSpecField
+                label="نوع پنجره"
+                options={windowOptions}
+                value={specs.windowType}
+                onChange={(value) => setSpecs((current) => ({ ...current, windowType: value }))}
+                otherPlaceholder="نوع پنجره دلخواه را وارد کنید"
+              />
               <ProjectField label="تعداد آسانسور">
                 <input
                   value={String(specs.elevatorCount)}
@@ -975,34 +1118,34 @@ export function ProjectTechnicalSpecsPanel() {
                   placeholder="0"
                 />
               </ProjectField>
-              <FieldGroup label="سیستم امنیتی">
-                <TagPills
-                  options={securityOptions.map((option) => ({ value: option, label: option }))}
-                  value={specs.securitySystem}
-                  onChange={(value) => setSpecs((current) => ({ ...current, securitySystem: value }))}
-                />
-              </FieldGroup>
-              <FieldGroup label="سیستم اطفا / اعلام حریق">
-                <TagPills
-                  options={fireSystemOptions.map((option) => ({ value: option, label: option }))}
-                  value={specs.fireSystem}
-                  onChange={(value) => setSpecs((current) => ({ ...current, fireSystem: value }))}
-                />
-              </FieldGroup>
-              <FieldGroup label="زیرساخت اینترنت">
-                <TagPills
-                  options={internetOptions.map((option) => ({ value: option, label: option }))}
-                  value={specs.internetStatus}
-                  onChange={(value) => setSpecs((current) => ({ ...current, internetStatus: value }))}
-                />
-              </FieldGroup>
-              <FieldGroup label="دسترسی پارکینگ">
-                <TagPills
-                  options={parkingAccessOptions.map((option) => ({ value: option, label: option }))}
-                  value={specs.parkingAccess}
-                  onChange={(value) => setSpecs((current) => ({ ...current, parkingAccess: value }))}
-                />
-              </FieldGroup>
+              <TechnicalSpecField
+                label="سیستم امنیتی"
+                options={securityOptions}
+                value={specs.securitySystem}
+                onChange={(value) => setSpecs((current) => ({ ...current, securitySystem: value }))}
+                otherPlaceholder="نوع سیستم امنیتی دلخواه را وارد کنید"
+              />
+              <TechnicalSpecField
+                label="سیستم اطفا / اعلام حریق"
+                options={fireSystemOptions}
+                value={specs.fireSystem}
+                onChange={(value) => setSpecs((current) => ({ ...current, fireSystem: value }))}
+                otherPlaceholder="نوع سیستم اعلام/اطفا دلخواه را وارد کنید"
+              />
+              <TechnicalSpecField
+                label="زیرساخت اینترنت"
+                options={internetOptions}
+                value={specs.internetStatus}
+                onChange={(value) => setSpecs((current) => ({ ...current, internetStatus: value }))}
+                otherPlaceholder="نوع زیرساخت اینترنت دلخواه را وارد کنید"
+              />
+              <TechnicalSpecField
+                label="دسترسی پارکینگ"
+                options={parkingAccessOptions}
+                value={specs.parkingAccess}
+                onChange={(value) => setSpecs((current) => ({ ...current, parkingAccess: value }))}
+                otherPlaceholder="نوع دسترسی پارکینگ دلخواه را وارد کنید"
+              />
             </div>
 
             <ProjectField label="یادداشت فنی">

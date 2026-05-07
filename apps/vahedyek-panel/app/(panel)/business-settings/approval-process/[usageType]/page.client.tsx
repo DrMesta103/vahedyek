@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Info, Pencil, Plus, ShieldCheck, Trash2, UserRound, Workflow, X } from 'lucide-react';
 import { FieldGroup, FormTextInput, InlineSelect, TagPill } from '../../../contracts/new/_components/ContractFormPrimitives';
+import { buildValidationSummary } from '../../../contracts/new/_components/validationPresentation';
 import { ContractRegistrationSwitch, LoanPageShell, LoanSectionCard } from '../../_components/LoanSettingsPrimitives';
 import type { ApprovalUsageOption } from '../../_components/approvalProcessConfig';
 
@@ -51,6 +52,8 @@ export default function ApprovalUsageTypePageClient({ usage }: { usage: Approval
   const [selectedEmployeeId, setSelectedEmployeeId] = useState('');
   const [stages, setStages] = useState<ApprovalStage[]>([]);
   const [editingStageId, setEditingStageId] = useState<string | null>(null);
+  const [dialogError, setDialogError] = useState('');
+  const [showValidation, setShowValidation] = useState(false);
 
   const selectedEmployee = useMemo(
     () => employeeOptions.find((employee) => employee.value === selectedEmployeeId) ?? null,
@@ -142,6 +145,8 @@ export default function ApprovalUsageTypePageClient({ usage }: { usage: Approval
     setStageRole('controller');
     setStageTitle('');
     setSelectedEmployeeId('');
+    setDialogError('');
+    setShowValidation(false);
   };
 
   const closeDialog = () => {
@@ -169,7 +174,23 @@ export default function ApprovalUsageTypePageClient({ usage }: { usage: Approval
   };
 
   const saveStage = () => {
-    if (!stageTitle.trim() || !selectedEmployeeId) return;
+    const errors: Record<string, string> = {};
+    if (!stageTitle.trim()) errors.stageTitle = 'این فیلد الزامی است';
+    if (!selectedEmployeeId) errors.selectedEmployeeId = 'این فیلد الزامی است';
+    if (Object.keys(errors).length > 0) {
+      setShowValidation(true);
+      setDialogError(
+        buildValidationSummary(
+          errors,
+          {
+            stageTitle: 'عنوان مرحله جدید',
+            selectedEmployeeId: 'تایید کننده',
+          },
+          'اطلاعات مرحله تایید کامل نیست.',
+        ),
+      );
+      return;
+    }
 
     if (editingStageId) {
       setStages((current) =>
@@ -349,6 +370,7 @@ export default function ApprovalUsageTypePageClient({ usage }: { usage: Approval
             </div>
 
             <div className="business-dialog-inline-form !gap-5 !rounded-[22px] !border-[color:var(--border-soft)] !bg-white/80 !p-5">
+              {dialogError ? <div className="business-blocks-state is-error">{dialogError}</div> : null}
               <FieldGroup label="نقش مرحله" required>
                 <div className="flex flex-wrap justify-end gap-2">
                   {roleOptions.map((option) => (
@@ -363,12 +385,13 @@ export default function ApprovalUsageTypePageClient({ usage }: { usage: Approval
                 </div>
               </FieldGroup>
 
-              <FieldGroup label="عنوان مرحله جدید" required>
-                <FormTextInput value={stageTitle} onChange={setStageTitle} placeholder="مثلاً بررسی مدیر فروش" className="!h-12 !rounded-[16px] !text-sm" />
+              <FieldGroup label="عنوان مرحله جدید" required invalid={showValidation && !stageTitle.trim()}>
+                <FormTextInput value={stageTitle} onChange={setStageTitle} placeholder="مثلاً بررسی مدیر فروش" className="!h-12 !rounded-[16px] !text-sm" invalid={showValidation && !stageTitle.trim()} />
               </FieldGroup>
 
-              <FieldGroup label="تایید کننده" required>
+              <FieldGroup label="تایید کننده" required invalid={showValidation && !selectedEmployeeId}>
                 <InlineSelect
+                  invalid={showValidation && !selectedEmployeeId}
                   value={selectedEmployeeId}
                   onSelect={setSelectedEmployeeId}
                   options={employeeOptions}
