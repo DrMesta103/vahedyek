@@ -10,6 +10,7 @@ import { TagPills } from './ContractFormPrimitives';
 import { DISCOUNT_GROUPS, ITEMIZED_DISCOUNT_ENTRIES, WHOLE_DISCOUNT_ENTRY, getDiscountEntry } from './discountsConfig';
 import { ensureActiveDraftId, getFrontendStepDraft, setFrontendStepDraft } from '../../../../lib/contractDraftClient';
 import { validateDiscountsStep } from '../../../../lib/contractValidation';
+import { buildValidationSummary } from './validationPresentation';
 import type {
   ContractDiscountsData,
   DiscountRuleData,
@@ -185,6 +186,7 @@ export function DiscountsStep({ stepId, title, embedded = false }: { stepId: str
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [formError, setFormError] = useState('');
+  const [showValidation, setShowValidation] = useState(false);
 
   const [types, setTypes] = useState<DiscountTypeStateData[]>(INITIAL_TYPES);
   const [rules, setRules] = useState<DiscountRuleData[]>([]);
@@ -205,6 +207,7 @@ export function DiscountsStep({ stepId, title, embedded = false }: { stepId: str
   );
 
   const validation = useMemo(() => validateDiscountsStep(payload), [payload]);
+  const visibleErrors = showValidation ? validation.errors : {};
   const activeTypes = useMemo(() => types.filter((item) => item.active), [types]);
 
   useEffect(() => {
@@ -313,12 +316,14 @@ export function DiscountsStep({ stepId, title, embedded = false }: { stepId: str
 
     const result = validateDiscountsStep(payload);
     if (!result.valid) {
-      setFormError(Object.values(result.errors)[0] ?? 'اطلاعات تخفیف‌ها کامل نیست.');
+      setShowValidation(true);
+      setFormError(buildValidationSummary(result.errors, {}, 'اطلاعات تخفیف‌ها کامل نیست.'));
       return;
     }
 
     setSaving(true);
     setFormError('');
+    setShowValidation(false);
 
     try {
       setFrontendStepDraft(draftId, 'discounts', payload);

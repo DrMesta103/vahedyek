@@ -18,6 +18,7 @@ import {
   setFrontendStepDraft,
 } from '../../../../lib/contractDraftClient';
 import { validatePenaltiesStep } from '../../../../lib/contractValidation';
+import { buildValidationSummary } from './validationPresentation';
 import type {
   ContractPenaltiesData,
   PenaltyExtraFeeType,
@@ -349,6 +350,7 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [formError, setFormError] = useState('');
+  const [showValidation, setShowValidation] = useState(false);
   const [partyTab, setPartyTab] = useState<PenaltyPartyTab>('buyer');
   const sellerPenaltyRef = useRef<BuilderPenaltyInFlowHandle | null>(null);
   const [sellerStatus, setSellerStatus] = useState<{ loading: boolean; saving: boolean; dirty: boolean }>({
@@ -376,6 +378,7 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
   );
 
   const validation = useMemo(() => validatePenaltiesStep(payload), [payload]);
+  const visibleErrors = showValidation ? validation.errors : {};
   const activeTypes = useMemo(() => types.filter((item) => item.active), [types]);
   const configuredActiveTypesCount = useMemo(
     () => activeTypes.filter((t) => rules.some((r) => r.penaltyTypeId === t.id)).length,
@@ -515,12 +518,14 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
 
     const result = validatePenaltiesStep(payload);
     if (!result.valid) {
-      setFormError(Object.values(result.errors)[0] ?? 'اطلاعات جرایم کامل نیست.');
+      setShowValidation(true);
+      setFormError(buildValidationSummary(result.errors, {}, 'اطلاعات جرایم کامل نیست.'));
       return;
     }
 
     setSaving(true);
     setFormError('');
+    setShowValidation(false);
 
     try {
       if (partyTab === 'seller') {

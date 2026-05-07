@@ -7,7 +7,7 @@ import { FieldGroup, FormDateInput, SectionCard, SectionHeader } from './Contrac
 
 type ContractType = 'sale' | 'pre-sale';
 
-function ContractNumberInput({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+function ContractNumberInput({ value, onChange, invalid = false }: { value: string; onChange: (value: string) => void; invalid?: boolean }) {
   const [suggestedNumber, setSuggestedNumber] = useState('');
 
   useEffect(() => {
@@ -32,7 +32,8 @@ function ContractNumberInput({ value, onChange }: { value: string; onChange: (va
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={suggestedNumber || 'مثلا ۱۴۰۳-۰۰۱'}
-        className="h-[42px] w-full rounded-xl border border-slate-200 bg-[image:var(--control-bg-gradient)] pr-10 pl-3.5 text-[13px] text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] placeholder:text-slate-400 outline-none transition-all focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10"
+        aria-invalid={invalid || undefined}
+        className={`h-[42px] w-full rounded-xl border bg-[image:var(--control-bg-gradient)] pr-10 pl-3.5 text-[13px] text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] placeholder:text-slate-400 outline-none transition-all ${invalid ? 'border-rose-300 ring-4 ring-rose-500/10 focus:border-rose-400 focus:ring-rose-500/20' : 'border-slate-200 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10'}`}
       />
     </div>
   );
@@ -47,6 +48,10 @@ export function SubjectDetailsBox({
   onContractDateChange,
   deliveryDate,
   onDeliveryDateChange,
+  contractTypeInvalid = false,
+  contractNumberInvalid = false,
+  contractDateInvalid = false,
+  deliveryDateInvalid = false,
 }: {
   selectedContractType: ContractType;
   onContractTypeChange: (value: ContractType) => void;
@@ -56,27 +61,33 @@ export function SubjectDetailsBox({
   onContractDateChange: (value: string) => void;
   deliveryDate: string;
   onDeliveryDateChange: (value: string) => void;
+  contractTypeInvalid?: boolean;
+  contractNumberInvalid?: boolean;
+  contractDateInvalid?: boolean;
+  deliveryDateInvalid?: boolean;
 }) {
   return (
     <SectionCard>
       <SectionHeader label="مشخصات قرارداد" />
       <div className="space-y-5 p-5">
         <FieldGroup label="نوع قرارداد" required>
-          <ChoicePillsField<ContractType>
-            label="نوع قرارداد"
-            options={[
-              { value: 'pre-sale', label: 'پیش‌فروش' },
-              { value: 'sale', label: 'فروش' },
-            ]}
-            value={selectedContractType}
-            onChange={onContractTypeChange}
-            wrap
-          />
+          <div className={contractTypeInvalid ? 'rounded-xl border border-rose-300 bg-rose-50/40 p-2' : ''}>
+            <ChoicePillsField<ContractType>
+              label="نوع قرارداد"
+              options={[
+                { value: 'pre-sale', label: 'پیش‌فروش' },
+                { value: 'sale', label: 'فروش' },
+              ]}
+              value={selectedContractType}
+              onChange={onContractTypeChange}
+              wrap
+            />
+          </div>
         </FieldGroup>
 
         <div className="grid gap-4 md:grid-cols-2">
           <FieldGroup label="شماره قرارداد" required hint="باید یکتا باشد">
-            <ContractNumberInput value={contractNumber} onChange={onContractNumberChange} />
+            <ContractNumberInput value={contractNumber} onChange={onContractNumberChange} invalid={contractNumberInvalid} />
           </FieldGroup>
 
           <FieldGroup label="زمان عقد قرارداد" required>

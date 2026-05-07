@@ -12,6 +12,7 @@ import { useContractFlowBasePath } from './useContractFlowBasePath';
 import { createDraftId, getActiveDraftId, getReferenceData, getStepData, saveStepData } from '../../../../lib/contractDraftClient';
 import { validateStep1 } from '../../../../lib/contractValidation';
 import type { ContractSubjectData } from '../../../../types/contract';
+import { buildValidationSummary } from './validationPresentation';
 
 type EmployeeOption = { id: string; firstName: string; lastName: string };
 type BlockOption = {
@@ -37,6 +38,7 @@ export function SubjectStep({ stepId, title, embedded = false }: { stepId: strin
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState('');
+  const [showValidation, setShowValidation] = useState(false);
 
   const [employees, setEmployees] = useState<EmployeeOption[]>([]);
   const [formerEmployees, setFormerEmployees] = useState<Array<{ id: string; fullName: string }>>([]);
@@ -61,6 +63,20 @@ export function SubjectStep({ stepId, title, embedded = false }: { stepId: strin
     () => formerEmployees.map((employee) => ({ label: employee.fullName, value: employee.fullName })),
     [formerEmployees],
   );
+
+  const payload = useMemo<ContractSubjectData>(() => buildPayload(), [
+    contractDate,
+    contractNumber,
+    deliveryDate,
+    formerEmployeeName,
+    issuerType,
+    selectedBlock,
+    selectedContractType,
+    selectedStaff,
+    selectedUnit,
+  ]);
+  const validation = useMemo(() => validateStep1(payload), [payload]);
+  const visibleErrors = showValidation ? validation.errors : {};
 
   useEffect(() => {
     let mounted = true;
@@ -103,7 +119,7 @@ export function SubjectStep({ stepId, title, embedded = false }: { stepId: strin
     };
   }, []);
 
-  const buildPayload = (): ContractSubjectData => {
+  function buildPayload(): ContractSubjectData {
     const contractor =
       issuerType === 'staff'
         ? { type: 'employee' as const, employeeId: selectedStaff }
@@ -124,29 +140,34 @@ export function SubjectStep({ stepId, title, embedded = false }: { stepId: strin
       blockId: selectedBlock,
       unitId: selectedUnit,
     };
-  };
+  }
 
   const handleSubmit = async () => {
-    const payload = buildPayload();
-    const validation = validateStep1(payload);
     if (!validation.valid) {
+      setShowValidation(true);
       setFormError(
-        validation.errors.contractType ??
-          validation.errors.contractDate ??
-          validation.errors.contractNumber ??
-          validation.errors.deliveryDate ??
-          validation.errors.blockId ??
-          validation.errors.unitId ??
-          validation.errors['contractor.employeeId'] ??
-          validation.errors['contractor.formerFirstName'] ??
-          validation.errors['contractor.formerLastName'] ??
+        buildValidationSummary(
+          validation.errors,
+          {
+            contractType: 'نوع قرارداد',
+            contractDate: 'زمان عقد قرارداد',
+            contractNumber: 'شماره قرارداد',
+            deliveryDate: 'تاریخ تحویل واحد',
+            blockId: 'بلوک',
+            unitId: 'واحد',
+            'contractor.employeeId': 'انتخاب کارمند',
+            'contractor.formerFirstName': 'نام کارمند سابق',
+            'contractor.formerLastName': 'نام خانوادگی کارمند سابق',
+          },
           'اطلاعات پایه معتبر نیست.',
+        ),
       );
       return;
     }
 
     setSaving(true);
     setFormError('');
+    setShowValidation(false);
     try {
       const id = draftId ?? (await createDraftId());
       if (!draftId) setDraftId(id);
@@ -165,14 +186,14 @@ export function SubjectStep({ stepId, title, embedded = false }: { stepId: strin
 
   useEffect(() => {
     if (loading || !draftId) return;
-    const snapshot = JSON.stringify(buildPayload());
+    const snapshot = JSON.stringify(payload);
     if (!initialSnapshotRef.current) {
       initialSnapshotRef.current = snapshot;
       dispatchContractFlowDirty(stepId as 'subject', false);
       return;
     }
     dispatchContractFlowDirty(stepId as 'subject', snapshot !== initialSnapshotRef.current);
-  }, [contractDate, contractNumber, deliveryDate, draftId, formerEmployeeName, issuerType, loading, selectedBlock, selectedContractType, selectedStaff, selectedUnit, stepId]);
+  }, [draftId, loading, payload, stepId]);
 
   if (loading) {
     return <ContractStepLoader title={title} description="در حال بارگذاری اطلاعات پایه قرارداد..." />;
@@ -203,35 +224,49 @@ export function SubjectStep({ stepId, title, embedded = false }: { stepId: strin
         </div>
       ) : null}
 
-      <SubjectContractorBox
-        issuerType={issuerType}
-        onIssuerTypeChange={setIssuerType}
-        formerEmployeeName={formerEmployeeName}
-        onFormerEmployeeNameChange={setFormerEmployeeName}
-        selectedStaff={selectedStaff}
-        onSelectedStaffChange={setSelectedStaff}
-        formerEmployeeOptions={formerEmployeeOptions}
-        staffOptions={staffOptions}
-      />
+      <div className={visibleErrors['contractor.employeeId'] || visibleErrors['contractor.formerFirstName'] || visibleErrors['contractor.formerLastName'] ? 'rounded-xl border border-rose-300 bg-rose-50/20 p-1' : ''}>
+        <SubjectContractorBox
+          issuerType={issuerType}
+          onIssuerTypeChange={setIssuerType}
+          formerEmployeeName={formerEmployeeName}
+          onFormerEmployeeNameChange={setFormerEmployeeName}
+          selectedStaff={selectedStaff}
+          onSelectedStaffChange={setSelectedStaff}
+          formerEmployeeOptions={formerEmployeeOptions}
+          staffOptions={staffOptions}
+          formerEmployeeInvalid={Boolean(visibleErrors['contractor.formerFirstName'] || visibleErrors['contractor.formerLastName'])}
+          selectedStaffInvalid={Boolean(visibleErrors['contractor.employeeId'])}
+        />
+      </div>
 
-      <SubjectDetailsBox
-        selectedContractType={selectedContractType}
-        onContractTypeChange={setSelectedContractType}
-        contractNumber={contractNumber}
-        onContractNumberChange={setContractNumber}
-        contractDate={contractDate}
-        onContractDateChange={setContractDate}
-        deliveryDate={deliveryDate}
-        onDeliveryDateChange={setDeliveryDate}
-      />
+      <div className={visibleErrors.contractType || visibleErrors.contractNumber || visibleErrors.contractDate || visibleErrors.deliveryDate ? 'rounded-xl border border-rose-300 bg-rose-50/20 p-1' : ''}>
+        <SubjectDetailsBox
+          selectedContractType={selectedContractType}
+          onContractTypeChange={setSelectedContractType}
+          contractNumber={contractNumber}
+          onContractNumberChange={setContractNumber}
+          contractDate={contractDate}
+          onContractDateChange={setContractDate}
+          deliveryDate={deliveryDate}
+          onDeliveryDateChange={setDeliveryDate}
+          contractTypeInvalid={Boolean(visibleErrors.contractType)}
+          contractNumberInvalid={Boolean(visibleErrors.contractNumber)}
+          contractDateInvalid={Boolean(visibleErrors.contractDate)}
+          deliveryDateInvalid={Boolean(visibleErrors.deliveryDate)}
+        />
+      </div>
 
-      <SubjectUnitBox
-        blocks={blocks}
-        selectedBlock={selectedBlock}
-        selectedUnit={selectedUnit}
-        onBlockChange={setSelectedBlock}
-        onUnitChange={setSelectedUnit}
-      />
+      <div className={visibleErrors.blockId || visibleErrors.unitId ? 'rounded-xl border border-rose-300 bg-rose-50/20 p-1' : ''}>
+        <SubjectUnitBox
+          blocks={blocks}
+          selectedBlock={selectedBlock}
+          selectedUnit={selectedUnit}
+          onBlockChange={setSelectedBlock}
+          onUnitChange={setSelectedUnit}
+          blockInvalid={Boolean(visibleErrors.blockId)}
+          unitInvalid={Boolean(visibleErrors.unitId)}
+        />
+      </div>
 
       <StickySubmitBar
         label="ذخیره اطلاعات پایه"
