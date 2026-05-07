@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import PanelLayout from '../../../components/PanelLayout';
 import { ContractApprovalFlowBanner } from '../../../components/contracts/ContractApprovalFlowBanner';
 import { getContractDetails, setActiveDraftId } from '../../../lib/contractDraftClient';
+import type { ContractStatus } from '../../../types/contract';
 
 function formatMoneyRial(value: number) {
   if (!value) return '—';
@@ -167,7 +168,11 @@ export default function ContractDetailsPage() {
     <main className="contract-details-page" dir="rtl" lang="fa">
       {contractId ? (
         <Suspense fallback={null}>
-          <ContractApprovalFlowBanner contractId={String(contractId)} canDecide={Boolean(contract?.approvalDecision?.canDecide)} />
+          <ContractApprovalFlowBanner
+            contractId={String(contractId)}
+            canDecide={Boolean(contract?.approvalDecision?.canDecide)}
+            contractStatus={(contract?.status as ContractStatus) ?? 'draft'}
+          />
         </Suspense>
       ) : null}
 

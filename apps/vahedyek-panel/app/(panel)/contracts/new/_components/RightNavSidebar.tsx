@@ -62,6 +62,7 @@ export function RightNavSidebar({
   const [blockersOpen, setBlockersOpen] = useState(false);
   const [approvalNavBusy, setApprovalNavBusy] = useState(false);
   const [approvalNavError, setApprovalNavError] = useState('');
+  const [approvalSubmitted, setApprovalSubmitted] = useState(false);
 
   const goPreview = () => {
     if (!draftId) return;
@@ -78,7 +79,8 @@ export function RightNavSidebar({
     try {
       setApprovalNavBusy(true);
       await postContractApprovalAction(draftId, { action: 'clearReturnPending' });
-      router.push(`/contracts/${encodeURIComponent(draftId)}?submitApproval=1`);
+      setApprovalSubmitted(true);
+      router.push('/contracts?tab=pending_approval');
     } catch (e) {
       setApprovalNavError(e instanceof Error ? e.message : 'امکان ادامهٔ فرایند تأیید نبود.');
     } finally {
@@ -163,12 +165,12 @@ export function RightNavSidebar({
             <button
               type="button"
               onClick={() => void onApprovalClick()}
-              disabled={loading || !draftId || approvalNavBusy}
+              disabled={loading || !draftId || approvalNavBusy || approvalSubmitted}
               className={`contract-flow-sidebar-action contract-flow-sidebar-action--primary${!approvalSubmissionReady ? ' contract-flow-sidebar-action--needs-work' : ''}`}
               title={!approvalSubmissionReady ? 'ابتدا همه مراحل را تکمیل و ذخیره کنید — برای فهرست موارد ناقص کلیک کنید' : undefined}
             >
               <ShieldCheck className="h-4 w-4 shrink-0 opacity-95" aria-hidden />
-              {approvalNavBusy ? 'در حال آماده‌سازی…' : 'رفتن به فرایند تایید'}
+              {approvalNavBusy ? 'در حال آماده‌سازی…' : approvalSubmitted ? 'در انتظار تایید' : 'رفتن به فرایند تایید'}
             </button>
           </div>
         </div>
