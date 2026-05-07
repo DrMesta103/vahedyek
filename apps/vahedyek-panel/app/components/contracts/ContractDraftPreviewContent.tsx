@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   ArrowRight,
@@ -251,7 +251,6 @@ export function ContractDraftPreviewContent({
   onClose?: () => void;
 }) {
   const router = useRouter();
-  const [tab, setTab] = useState<'details' | 'text'>('details');
 
   const slices = useMemo(() => buildFinancialSlices(payload.financial), [payload.financial]);
   const totalRial = useMemo(() => computeContractTotalRial(payload.financial), [payload.financial]);
@@ -326,47 +325,7 @@ export function ContractDraftPreviewContent({
         </div>
       </section>
 
-      <div className="mb-6 flex justify-center gap-3" dir="rtl">
-        <button
-          type="button"
-          onClick={() => setTab('details')}
-          className={`min-w-[160px] rounded-full px-8 py-2.5 text-[13px] font-extrabold transition ${tab === 'details' ? 'text-white shadow-md' : 'border-2 bg-white shadow-sm text-[var(--dark-teal)]'}`}
-          style={
-            tab === 'details'
-              ? { background: 'linear-gradient(100deg, var(--dark-teal), color-mix(in srgb, var(--dark-teal) 70%, #0f766e))' }
-              : { borderColor: 'color-mix(in srgb, var(--dark-teal) 40%, transparent)' }
-          }
-        >
-          جزئیات قرارداد
-        </button>
-        <button
-          type="button"
-          onClick={() => setTab('text')}
-          className={`min-w-[160px] rounded-full px-8 py-2.5 text-[13px] font-extrabold transition ${tab === 'text' ? 'text-white shadow-md' : 'border-2 bg-white shadow-sm text-[var(--dark-teal)]'}`}
-          style={
-            tab === 'text'
-              ? { background: 'linear-gradient(100deg, var(--dark-teal), color-mix(in srgb, var(--dark-teal) 70%, #0f766e))' }
-              : { borderColor: 'color-mix(in srgb, var(--dark-teal) 40%, transparent)' }
-          }
-        >
-          متن قرارداد
-        </button>
-      </div>
-
-      {tab === 'text' ? (
-        <section
-          dir="rtl"
-          className="rounded-[28px] border-2 bg-white/95 px-6 py-16 text-center shadow-sm"
-          style={{ borderColor: 'color-mix(in srgb, var(--dark-teal) 32%, transparent)' }}
-        >
-          <FileText className="mx-auto h-11 w-11 text-[var(--dark-teal)] opacity-80" />
-          <p className="mt-5 text-[15px] font-bold text-slate-700">متن نهایی قرارداد</p>
-          <p className="mx-auto mt-2 max-w-md text-[13px] leading-7 text-slate-500">
-            در این نما فقط پیش‌نویس فیلدها نمایش داده می‌شود. چاپ یا متن ادبی قرارداد در نسخه بعدی افزوده می‌شود.
-          </p>
-        </section>
-      ) : (
-        <section
+      <section
           className="overflow-hidden rounded-[28px] border-2 bg-white/97 shadow-[0_24px_60px_-30px_rgba(15,118,110,0.35)]"
           style={{ borderColor: 'color-mix(in srgb, var(--dark-teal) 38%, transparent)' }}
         >
@@ -521,7 +480,6 @@ export function ContractDraftPreviewContent({
             </details>
           </div>
         </section>
-      )}
     </div>
   );
 
