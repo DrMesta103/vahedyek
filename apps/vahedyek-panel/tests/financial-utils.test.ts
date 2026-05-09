@@ -6,7 +6,9 @@ import {
   distributeAmount,
   normalizeFinancialCategories,
   normalizeFinancialDueItems,
+  sumFinancialCapsCountedAgainstContractTotal,
 } from '../app/lib/financialUtils';
+import { mapFinancialCategoriesForClientApi } from '../app/lib/financialCategoriesApiSerialize';
 
 test('distributeAmount splits total and keeps exact sum', () => {
   const result = distributeAmount(1000, 3);
@@ -100,6 +102,49 @@ test('normalizeFinancialCategories trims values and removes duplicate ids', () =
       requiresDue: false,
     },
   ]);
+});
+
+test('mapFinancialCategoriesForClientApi strips financialId prefix from category ids', () => {
+  const fid = 'fin-test-id';
+  const rows = mapFinancialCategoriesForClientApi(fid, [
+    {
+      id: `${fid}:principal`,
+      name: 'مبلغ اصل قرارداد',
+      capAmount: 10,
+      dueAmount: 0,
+      noDueAmount: 10,
+      system: true,
+      requiresDue: false,
+    },
+    {
+      id: `${fid}:advance`,
+      name: 'پیش پرداخت',
+      capAmount: 4,
+      dueAmount: 4,
+      noDueAmount: 0,
+      system: true,
+      requiresDue: true,
+    },
+  ]);
+
+  assert.deepEqual(
+    rows.map((r) => r.id),
+    ['principal', 'advance'],
+  );
+});
+
+test('sumFinancialCapsCountedAgainstContractTotal counts only principal breakdown and misc rows', () => {
+  const lin = 'fin-line-a';
+  const sum = sumFinancialCapsCountedAgainstContractTotal([
+    { id: 'principal', capAmount: 10_000_000 },
+    { id: 'advance', capAmount: 4_000_000 },
+    { id: 'installment', capAmount: 6_000_000 },
+    { id: lin, capAmount: 9_000_000 },
+    { id: `${lin}:advance`, capAmount: 9_000_000 },
+    { id: 'custom-legacy', capAmount: 7_000_000 },
+  ]);
+
+  assert.equal(sum, 10_000_000);
 });
 
 test('normalizeFinancialDueItems keeps only valid due items', () => {

@@ -129,6 +129,7 @@ function getUnitUsageLabel(usage: string | null | undefined) {
 export default function ContractDetailsPage() {
   const params = useParams<{ contractId: string }>();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const contractId = params?.contractId;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -450,6 +451,11 @@ export default function ContractDetailsPage() {
                 }
                 if (item.id === 'edit-draft' && isFinalizedContract) {
                   setReopenEditDialogOpen(true);
+                  return;
+                }
+                if (item.id === 'reports') {
+                  const q = searchParams?.toString();
+                  router.push(`/contracts/${String(contractId)}/reports${q ? `?${q}` : ''}`);
                   return;
                 }
                 if (item.id === 'build' || item.id === 'annex') {

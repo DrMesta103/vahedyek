@@ -926,6 +926,34 @@ textarea::placeholder {
   width: 100%;
 }
 
+/* گزارشات قرارداد: استفاده از تمام پهنای ناحیهٔ اصلی (سایدبار جمع‌شده) */
+.main-content.reports-page-shell {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+}
+
+.reports-stage-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+}
+
+.reports-stage-content > .content-body.content-body-wide.content-body-contract-reports {
+  width: 100%;
+  max-width: none !important;
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 4px clamp(8px, 1vw, 18px) 28px;
+  box-sizing: border-box;
+}
+
+.top-header.top-header-reports-dense {
+  padding: 10px clamp(12px, 1.6vw, 22px) 6px;
+}
+
 .contracts-content-body {
   width: 100%;
   max-width: none;
