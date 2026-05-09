@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Eye, Lock, ShieldCheck, X } from 'lucide-react';
-import { postContractApprovalAction } from '../../../../lib/contractDraftClient';
+import { submitContractApprovalWorkflowAction } from '../../../../actions/contractApprovalActions';
 import type { ContractFlowSectionId } from './contractFlowSignals';
 
 const SAVEABLE_SECTIONS: ContractFlowSectionId[] = ['subject', 'parties', 'financial', 'penalties', 'discounts', 'termination'];
@@ -78,9 +78,10 @@ export function RightNavSidebar({
     setApprovalNavError('');
     try {
       setApprovalNavBusy(true);
-      await postContractApprovalAction(draftId, { action: 'clearReturnPending' });
+      const res = await submitContractApprovalWorkflowAction(draftId);
+      if (!res.ok) throw new Error(res.message);
       setApprovalSubmitted(true);
-      router.push('/contracts?tab=pending_approval');
+      router.push(`/contracts/${encodeURIComponent(draftId)}`);
     } catch (e) {
       setApprovalNavError(e instanceof Error ? e.message : 'امکان ادامهٔ فرایند تأیید نبود.');
     } finally {

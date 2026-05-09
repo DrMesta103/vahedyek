@@ -12,11 +12,12 @@ var __export = (target, all) => {
     __defProp(target, name, { get: all[name], enumerable: true });
 };
 var Input = React.forwardRef(({ className = "", ...props }, ref) => {
+  const invalid = props["aria-invalid"] === true || props["aria-invalid"] === "true";
   return /* @__PURE__ */ jsx(
     "input",
     {
       ref,
-      className: `h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-[13px] text-slate-800 placeholder:text-slate-400 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400 ${className}`,
+      className: `h-10 w-full rounded-lg border bg-white px-3 text-[13px] text-slate-800 placeholder:text-slate-400 outline-none transition-all disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400 ${invalid ? "border-rose-400 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/10" : "border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10"} ${className}`,
       ...props
     }
   );
@@ -409,7 +410,8 @@ function ExpandableTagGroup({
   itemsPerRow = 8,
   required,
   className = "",
-  showSearch = true
+  showSearch = true,
+  invalid = false
 }) {
   const [query, setQuery] = useState("");
   const [expanded, setExpanded] = useState(false);
@@ -435,7 +437,7 @@ function ExpandableTagGroup({
   useEffect(() => {
     if (!showSearch && searchOpen) closeSearch();
   }, [showSearch]);
-  return /* @__PURE__ */ jsxs("div", { className: cn3("space-y-2", className), children: [
+  return /* @__PURE__ */ jsxs("div", { className: cn3("space-y-2", invalid && "rounded-xl border border-rose-300 bg-rose-50/40 p-3", className), children: [
     /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-2", children: [
       /* @__PURE__ */ jsxs("label", { className: "text-[13px] font-bold text-slate-700", children: [
         label,
@@ -778,9 +780,10 @@ function ChoicePillsField({
   labelClassName = "",
   pillsClassName = "",
   pillClassName = "",
-  showActiveIndicator
+  showActiveIndicator,
+  invalid = false
 }) {
-  return /* @__PURE__ */ jsxs("div", { className: cn6("space-y-2", className), children: [
+  return /* @__PURE__ */ jsxs("div", { className: cn6("space-y-2", invalid && "rounded-xl border border-rose-300 bg-rose-50/40 p-2", className), children: [
     /* @__PURE__ */ jsx(LabelAs, { className: cn6("text-[12px] font-bold text-[color:var(--text-strong)]", labelClassName), children: label }),
     /* @__PURE__ */ jsx(
       ChoicePills,

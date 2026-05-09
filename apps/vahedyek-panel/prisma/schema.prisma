@@ -49,6 +49,20 @@ enum RepresentativePrincipalType {
   legal_shareholder
 }
 
+/// وضعیت اجرای فرایند تأیید روی یک پیش‌نویس قرارداد
+enum ContractApprovalInstanceStatus {
+  IN_REVIEW
+  REVISION_REQUESTED
+  REJECTED_TO_DRAFT
+  APPROVED
+}
+
+enum ContractApprovalDecisionType {
+  APPROVE
+  REQUEST_REVISION
+  REJECT_TO_DRAFT
+}
+
 model Tenant {
   id            String                 @id @default(cuid())
   slug          String                 @unique
@@ -71,8 +85,9 @@ model Tenant {
   roles         TenantRole[]
   representatives DirectoryRepresentative[]
   contractRuleSettings TenantContractRuleSettings?
-  /// پیکربندی مسیر تأیید قرارداد به تفکیک نوع کاربری واحد (JSON — ساختار قرارداد در `TenantApprovalProcessConfig`)
+  /// پیکربندی قدیمی مسیر تأیید (منسوخ — پس از مهاجرت Workflow حذف می‌شود)
   approvalProcessConfig Json             @default("{}")
+  workflows     ApprovalWorkflow[]
 }
 
 model AppUser {
@@ -191,8 +206,70 @@ model ContractDraft {
   extraCosts ContractExtraCosts?
   technicalSpecs ContractTechnicalSpecs?
   attachments ContractAttachments?
+  approvalInstance ContractApprovalInstance?
 
   @@index([tenantId, updatedAt])
+}
+
+/// تعریف یک مسیر تأیید چندمرحله‌ای (Workflow Builder)
+model ApprovalWorkflow {
+  id          String   @id @default(cuid())
+  tenantId    String
+  title       String
+  /// انواع کاربری واحد که این workflow روی آن‌ها اعمال می‌شود (مثلاً residential, commercial)
+  usageTypes  String[]
+  /// تأییدکننده نهایی اختیاری برای کل فرایند؛ رأی این نفر فرایند را فوراً تمام می‌کند.
+  finalApproverUserId String?
+  /// مراحل به‌صورت JSON — ساختار در `app/lib/workflowTypes.ts`
+  steps       Json     @default("[]")
+  /// آیا پیش از ورود به سازمان، خریدار باید تأیید کند (رفتار legacy)
+  buyerShouldApprove Boolean @default(true)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  instances   ContractApprovalInstance[]
+
+  @@index([tenantId])
+  @@index([tenantId, active])
+}
+
+/// یک اجرای فعال/تکمیل‌شدهٔ workflow روی یک پیش‌نویس
+model ContractApprovalInstance {
+  id                 String                         @id @default(cuid())
+  tenantId           String
+  draftId            String                         @unique
+  workflowId         String
+  status             ContractApprovalInstanceStatus @default(IN_REVIEW)
+  currentStepIndex   Int                            @default(0)
+  /// snapshot از تأییدکننده نهایی workflow در لحظهٔ submit/resume
+  finalApproverUserId String?
+  /// کپی immutable از steps در لحظهٔ submit
+  stepsSnapshot      Json
+  /// پس از Request Revision: از این اندیس مرحله ادامه داده می‌شود
+  revisionResumeStepIndex Int?
+  createdAt          DateTime                       @default(now())
+  updatedAt          DateTime                       @updatedAt
+  draft              ContractDraft                  @relation(fields: [draftId], references: [id], onDelete: Cascade)
+  workflow           ApprovalWorkflow               @relation(fields: [workflowId], references: [id], onDelete: Restrict)
+  decisions          ContractApprovalDecision[]
+
+  @@index([tenantId])
+  @@index([tenantId, status])
+}
+
+model ContractApprovalDecision {
+  id               String                     @id @default(cuid())
+  instanceId       String
+  stepId           String
+  approverUserId   String
+  decision         ContractApprovalDecisionType
+  reason           String?
+  createdAt        DateTime                   @default(now())
+  instance         ContractApprovalInstance   @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+
+  @@index([instanceId, stepId])
+  @@index([approverUserId])
 }
 
 /// قواعد فسخ ذخیره‌شده برای هر پیش‌نویس؛ خریدار به‌صورت JSONB در `buyerRules`.

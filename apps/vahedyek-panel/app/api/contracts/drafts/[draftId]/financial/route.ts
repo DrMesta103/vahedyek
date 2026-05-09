@@ -106,11 +106,15 @@ export async function PUT(request: Request, { params }: { params: Promise<{ draf
 
     const draft = await prisma.contractDraft.findFirst({
       where: { id: draftId, tenantId: session.tenantId },
-      select: { id: true },
+      select: { id: true, approvalInstance: { select: { status: true } } },
     });
 
     if (!draft) {
       return NextResponse.json({ message: 'پیش‌نویس موردنظر در این تننت پیدا نشد.' }, { status: 404 });
+    }
+
+    if (draft.approvalInstance?.status === 'IN_REVIEW') {
+      return NextResponse.json({ message: 'این پیش‌نویس در فرایند تأیید است و امکان ویرایش ندارد.' }, { status: 409 });
     }
 
     const body = await request.json();

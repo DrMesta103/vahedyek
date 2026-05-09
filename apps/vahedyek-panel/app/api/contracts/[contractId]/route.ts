@@ -6,10 +6,12 @@ import { prisma } from '../../../lib/prisma';
 import { handlePrismaApiError } from '../../../lib/prismaApiError';
 import { getMembershipAccess } from '../../../lib/access-control';
 import { userCanDecideApprovalOnContract } from '../../../lib/contractApprovalAccess';
+import { resolveDisplayedContractStatus } from '../../../lib/contractApprovalStatus';
 import { fetchDraftApprovalFlagsRaw } from '../../../lib/contractDraftApprovalRaw';
 import { fetchTenantApprovalProcessConfigRaw } from '../../../lib/tenantApprovalProcessDb';
 import type { ContractStatus } from '../../../types/contract';
 import { validatePenaltiesStep } from '../../../lib/contractValidation';
+import { normalizeWorkflowSteps } from '../../../lib/workflowTypes';
 
 function serializeShareMode(value: ShareMode) {
   return value === ShareMode.percent ? 'percent' : 'dang';
@@ -53,8 +55,7 @@ function serializePenalties(penalties: any) {
   };
 }
 
-function computeStatus(draft: any): ContractStatus {
-  if (draft.approvalReturnedPending) return 'draft';
+function isFormCompleteForApprovalGate(draft: any): boolean {
   const hasSubject = Boolean(draft.subject?.contractNumber && draft.subject?.contractDate && draft.subject?.blockId && draft.subject?.unitId);
   const hasParties = Boolean(
     draft.parties?.members?.some((member: any) => member.side === PartySide.party_one) &&
@@ -74,9 +75,16 @@ function computeStatus(draft: any): ContractStatus {
   const hasTechnicalSpecs = Boolean(draft.technicalSpecs);
   const hasAttachments = Boolean(draft.attachments);
 
-  return hasSubject && hasParties && hasFinancial && hasPenalties && hasTermination && hasExtraCosts && hasTechnicalSpecs && hasAttachments
-    ? 'pending_approval'
-    : 'draft';
+  return (
+    hasSubject &&
+    hasParties &&
+    hasFinancial &&
+    hasPenalties &&
+    hasTermination &&
+    hasExtraCosts &&
+    hasTechnicalSpecs &&
+    hasAttachments
+  );
 }
 
 export async function GET(request: Request, context: { params: Promise<{ contractId: string }> }) {
@@ -99,6 +107,7 @@ export async function GET(request: Request, context: { params: Promise<{ contrac
         extraCosts: true,
         technicalSpecs: true,
         attachments: true,
+        approvalInstance: { select: { status: true, currentStepIndex: true, stepsSnapshot: true } },
       },
     });
 
@@ -112,10 +121,18 @@ export async function GET(request: Request, context: { params: Promise<{ contrac
         approvalLastRejectionReason: null,
         approvalLastRejectedAt: null,
       };
-    const status = computeStatus({ ...draft, ...approvalFlags });
+    const formComplete = isFormCompleteForApprovalGate(draft);
+    const instanceStatus = draft.approvalInstance?.status ?? null;
+    const status = resolveDisplayedContractStatus(formComplete, approvalFlags.approvalReturnedPending, instanceStatus);
 
     const membershipAccess = await getMembershipAccess(session.userId, session.tenantId);
     const approvalProcessConfig = await fetchTenantApprovalProcessConfigRaw(session.tenantId);
+
+    const stepsSnap = normalizeWorkflowSteps(draft.approvalInstance?.stepsSnapshot);
+    const workflowCurrentStep =
+      draft.approvalInstance && instanceStatus === 'IN_REVIEW'
+        ? stepsSnap[draft.approvalInstance.currentStepIndex] ?? null
+        : null;
 
     const approvalDecision = {
       canDecide: userCanDecideApprovalOnContract({
@@ -123,6 +140,8 @@ export async function GET(request: Request, context: { params: Promise<{ contrac
         access: membershipAccess,
         unitUsage: draft.subject?.unit?.usage ?? null,
         approvalProcessConfig,
+        workflowCurrentStep,
+        instanceStatus,
       }),
     };
 
@@ -130,6 +149,12 @@ export async function GET(request: Request, context: { params: Promise<{ contrac
       id: draft.id,
       status,
       approvalDecision,
+      approvalInstance: draft.approvalInstance
+        ? {
+            status: draft.approvalInstance.status,
+            currentStepIndex: draft.approvalInstance.currentStepIndex,
+          }
+        : null,
       createdAt: draft.createdAt.toISOString(),
       updatedAt: draft.updatedAt.toISOString(),
       approvalReturn:

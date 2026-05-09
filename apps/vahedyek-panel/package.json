@@ -12,6 +12,7 @@
     "start": "next start",
     "test:financial": "node --test --import tsx tests/financial-utils.test.ts tests/contract-validation.test.ts",
     "test:subject": "node --test --import tsx tests/subject-utils.test.ts",
+    "test:workflow": "node --test --import tsx tests/workflow-runtime.test.ts",
     "lint": "next lint",
     "prisma:generate": "prisma generate",
     "db:prepare-multitenant": "tsx prisma/bootstrap-multitenant.ts",
@@ -21,6 +22,9 @@
     "db:seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@heroicons/react": "^2.2.0",
     "@neshan-maps-platform/leaflet": "^1.0.8",
     "@prisma/client": "^6.7.0",

@@ -9,6 +9,7 @@ import {
 } from '../../../../lib/contractDraftApprovalRaw';
 import { fetchTenantApprovalProcessConfigRaw } from '../../../../lib/tenantApprovalProcessDb';
 import { handlePrismaApiError } from '../../../../lib/prismaApiError';
+import { normalizeWorkflowSteps } from '../../../../lib/workflowTypes';
 
 const REASON_MIN = 15;
 const REASON_MAX = 4000;
@@ -26,6 +27,7 @@ export async function POST(request: Request, context: { params: Promise<{ contra
       select: {
         id: true,
         subject: { include: { unit: true } },
+        approvalInstance: { select: { status: true, currentStepIndex: true, stepsSnapshot: true } },
       },
     });
 
@@ -37,11 +39,19 @@ export async function POST(request: Request, context: { params: Promise<{ contra
     const usage = draft.subject?.unit?.usage ?? null;
     const tenantCfg = await fetchTenantApprovalProcessConfigRaw(session.tenantId);
 
+    const stepsSnap = normalizeWorkflowSteps(draft.approvalInstance?.stepsSnapshot);
+    const instStatus = draft.approvalInstance?.status ?? null;
+    const workflowCurrentStep =
+      draft.approvalInstance && instStatus === 'IN_REVIEW'
+        ? stepsSnap[draft.approvalInstance.currentStepIndex] ?? null
+        : null;
+
     if (body.action === 'clearReturnPending') {
       const clearOk = userCanClearApprovalReturnPending(access, {
         userId: session.userId,
         unitUsage: usage,
         approvalProcessConfig: tenantCfg,
+        workflowCurrentStep,
       });
       if (!clearOk) {
         return NextResponse.json({ message: 'شما مجاز به آماده‌سازی مجدد برای فرایند تأیید نیستید.' }, { status: 403 });
@@ -57,6 +67,8 @@ export async function POST(request: Request, context: { params: Promise<{ contra
         access,
         unitUsage: usage,
         approvalProcessConfig: tenantCfg,
+        workflowCurrentStep,
+        instanceStatus: instStatus,
       });
       if (!decideOk) {
         return NextResponse.json({ message: 'ثبت تأیید یا عدم تأیید فقط برای مالک کسب‌وکار یا تأییدکنندگان تعریف‌شده مجاز است.' }, { status: 403 });

@@ -1535,7 +1535,7 @@ textarea::placeholder {
 
 .main-stage {
   display: flex;
-  direction: ltr;
+  direction: rtl;
   height: 100vh;
 }
 
@@ -1715,6 +1715,8 @@ textarea::placeholder {
   margin: 0 auto;
   width: 100%;
   padding: 10px 28px 40px;
+  direction: rtl;
+  text-align: right;
 }
 
 .business-settings-page {
@@ -9141,4 +9143,41 @@ gap: 16px;
   .contact-ways-actions {
     flex-direction: column-reverse;
   }
+}
+
+/* -------------------------------------------------------
+   RTL enforcement for panel pages (root fix)
+   Some legacy/global rules use LTR for specific flows.
+   We force RTL for the main panel chrome and only
+   keep explicit LTR islands where needed.
+-------------------------------------------------------- */
+html[dir='rtl'] .app-shell,
+html[dir='rtl'] .main-content,
+html[dir='rtl'] .main-stage,
+html[dir='rtl'] .main-stage-content,
+html[dir='rtl'] .content-body {
+  direction: rtl !important;
+  text-align: right !important;
+}
+
+/* Keep contract flow layout LTR where intentionally required */
+html[dir='rtl'] .contract-flow-stage-content {
+  direction: ltr !important;
+  text-align: left !important;
+}
+
+html[dir='rtl'] .contract-flow-stage-content > .content-body-wide {
+  direction: rtl !important;
+  text-align: right !important;
+}
+
+/* Force RTL specifically for workflow editor page */
+.workflow-editor-root {
+  direction: rtl !important;
+  text-align: right !important;
+}
+
+.workflow-editor-root * {
+  direction: inherit;
+  text-align: inherit;
 }

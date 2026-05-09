@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useEffect, useMemo, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import PanelLayout from '../../../components/PanelLayout';
 import { ContractApprovalFlowBanner } from '../../../components/contracts/ContractApprovalFlowBanner';
@@ -46,25 +46,31 @@ export default function ContractDetailsPage() {
   const [contract, setContract] = useState<any>(null);
   const [toast, setToast] = useState<string>('');
 
-  useEffect(() => {
-    let mounted = true;
-    const load = async () => {
-      if (!contractId) return;
-      try {
-        setLoading(true);
-        const data = await getContractDetails(String(contractId));
-        if (mounted) setContract(data);
-      } catch (e) {
-        if (mounted) setError(e instanceof Error ? e.message : 'دریافت جزئیات قرارداد انجام نشد.');
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    };
-    void load();
-    return () => {
-      mounted = false;
-    };
+  const reloadContract = useCallback(async () => {
+    if (!contractId) return;
+    setError('');
+    try {
+      setLoading(true);
+      const data = await getContractDetails(String(contractId));
+      setContract(data);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'دریافت جزئیات قرارداد انجام نشد.');
+    } finally {
+      setLoading(false);
+    }
   }, [contractId]);
+
+  useEffect(() => {
+    void reloadContract();
+  }, [reloadContract]);
+
+  useEffect(() => {
+    const onUpdated = () => {
+      void reloadContract();
+    };
+    window.addEventListener('contract-approval-updated', onUpdated);
+    return () => window.removeEventListener('contract-approval-updated', onUpdated);
+  }, [reloadContract]);
 
   useEffect(() => {
     if (!toast) return;
@@ -77,7 +83,9 @@ export default function ContractDetailsPage() {
   };
 
   const actions = useMemo(() => {
-    const active = new Set(['view-draft', 'edit-draft']);
+    const lockedForApproval = contract?.approvalInstance?.status === 'IN_REVIEW';
+    // Keep "view draft" and "edit draft" visible next to each other; "edit" is disabled during approval.
+    const active = new Set(['view-draft', ...(lockedForApproval ? [] : ['edit-draft'])]);
     return [
       { id: 'annex', title: 'الحاقیه و اظهارنامه', icon: 'fa-solid fa-file-signature' },
       { id: 'build', title: 'ساخت و چاپ قرارداد', icon: 'fa-regular fa-clock' },
@@ -102,7 +110,7 @@ export default function ContractDetailsPage() {
       { id: 'loan', title: 'وام', icon: 'fa-solid fa-building-columns' },
       { id: 'adjust', title: 'تعدیل', icon: 'fa-solid fa-sliders' },
     ].map((item) => ({ ...item, enabled: active.has(item.id) }));
-  }, []);
+  }, [contract?.approvalInstance?.status]);
 
   const view = useMemo(() => {
     const subject = contract?.data?.subject ?? null;
@@ -169,21 +177,11 @@ export default function ContractDetailsPage() {
       {contractId ? (
         <Suspense fallback={null}>
           <ContractApprovalFlowBanner
+            key={String(contractId)}
             contractId={String(contractId)}
-            canDecide={Boolean(contract?.approvalDecision?.canDecide)}
             contractStatus={(contract?.status as ContractStatus) ?? 'draft'}
           />
         </Suspense>
-      ) : null}
-
-      {contract?.approvalReturn?.reason ? (
-        <div dir="rtl" className="mb-6 rounded-2xl border border-amber-200/90 bg-[color-mix(in_srgb,var(--theme-warning-bg)_55%,white)] px-4 py-3 text-right shadow-sm">
-          <div className="text-[13px] font-black text-[var(--theme-warning-text)]">اصلاح پیش‌نویس پس از عدم تأیید</div>
-          <p className="mt-2 text-[12px] font-semibold leading-6 text-[var(--text-body)]">
-            <span className="font-bold text-[var(--text-strong)]">آخرین علت ثبت‌شده در سامانه:</span>{' '}
-            {String(contract.approvalReturn.reason)}
-          </p>
-        </div>
       ) : null}
 
       <section className="contract-details-panel contract-details-profile">
@@ -264,10 +262,24 @@ export default function ContractDetailsPage() {
       <section className="mt-4">
         <div dir="rtl" className="max-h-[60vh] overflow-y-auto">
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-            {[...actions].sort((a, b) => Number(b.enabled) - Number(a.enabled)).map((item) => {
+            {[...actions]
+              .sort((a, b) => {
+                const pin = (id: string) => (id === 'view-draft' ? 0 : id === 'edit-draft' ? 1 : 10);
+                const pa = pin(a.id);
+                const pb = pin(b.id);
+                if (pa !== pb) return pa - pb;
+                // keep remaining items grouped by enabled as before
+                return Number(b.enabled) - Number(a.enabled);
+              })
+              .map((item) => {
               const dim = !item.enabled;
               const onClick = () => {
                 if (!contractId) return;
+                if (item.id === 'edit-draft' && contract?.approvalInstance?.status === 'IN_REVIEW') {
+                  setToast('در فرایند تأیید فقط امکان مشاهدهٔ پیش‌نویس وجود دارد.');
+                  router.push(`/contracts/${String(contractId)}/preview`);
+                  return;
+                }
                 if (!item.enabled) return handleUnderDevelopment();
                 if (item.id === 'view-draft') {
                   router.push(`/contracts/${String(contractId)}/preview`);
@@ -293,7 +305,9 @@ export default function ContractDetailsPage() {
                     </span>
                   </div>
                   <h3 className="contract-details-action-title">{item.title}</h3>
-                  <p className="contract-details-action-text">{item.enabled ? 'فعال' : 'در حال توسعه'}</p>
+                  <p className="contract-details-action-text">
+                    {item.enabled ? 'فعال' : item.id === 'edit-draft' && contract?.approvalInstance?.status === 'IN_REVIEW' ? 'قفل در فرایند تأیید' : 'در حال توسعه'}
+                  </p>
                 </button>
               );
             })}
