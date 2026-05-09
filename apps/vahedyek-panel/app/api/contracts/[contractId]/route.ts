@@ -97,6 +97,7 @@ export async function GET(request: Request, context: { params: Promise<{ contrac
       where: { id: contractId, tenantId: session.tenantId },
       select: {
         id: true,
+        releasedFromApprovedForEdit: true,
         createdAt: true,
         updatedAt: true,
         subject: { include: { block: true, unit: true } },
@@ -123,7 +124,12 @@ export async function GET(request: Request, context: { params: Promise<{ contrac
       };
     const formComplete = isFormCompleteForApprovalGate(draft);
     const instanceStatus = draft.approvalInstance?.status ?? null;
-    const status = resolveDisplayedContractStatus(formComplete, approvalFlags.approvalReturnedPending, instanceStatus);
+    const status = resolveDisplayedContractStatus(
+      formComplete,
+      approvalFlags.approvalReturnedPending,
+      instanceStatus,
+      draft.releasedFromApprovedForEdit,
+    );
 
     const membershipAccess = await getMembershipAccess(session.userId, session.tenantId);
     const approvalProcessConfig = await fetchTenantApprovalProcessConfigRaw(session.tenantId);

@@ -2,9 +2,6 @@
   "name": "@apps/vahedyek-panel",
   "private": true,
   "version": "0.1.0",
-  "prisma": {
-    "seed": "tsx prisma/seed.ts"
-  },
   "scripts": {
     "postinstall": "prisma generate",
     "predev": "npm --workspace @repo/ui run build",
@@ -16,6 +13,8 @@
     "test:workflow": "node --test --import tsx tests/workflow-runtime.test.ts",
     "lint": "next lint",
     "prisma:generate": "prisma generate",
+    "prisma:generate:win": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/prisma-generate-win.ps1",
+    "prisma:generate:win:hard": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/prisma-generate-win.ps1 -KillAllNode",
     "db:prepare-multitenant": "tsx prisma/bootstrap-multitenant.ts",
     "prisma:push": "prisma db push",
     "prisma:migrate": "prisma migrate dev",
@@ -46,6 +45,7 @@
     "@types/react": "^18.3.23",
     "@types/react-dom": "^18.3.7",
     "autoprefixer": "^10.5.0",
+    "dotenv": "^16.6.1",
     "eslint": "^8.57.1",
     "eslint-config-next": "^16.2.4",
     "postcss": "^8.5.10",

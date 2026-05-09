@@ -219,6 +219,10 @@ export async function submitContractApprovalWorkflowAction(draftId: string) {
           revisionResumeStepIndex: null,
         },
       });
+      await tx.contractDraft.update({
+        where: { id: draftId },
+        data: { releasedFromApprovedForEdit: false },
+      });
     });
     await clearContractDraftApprovalReturnRaw(draftId, s.tenantId);
     revalidatePath(`/contracts/${draftId}`);
@@ -234,21 +238,64 @@ export async function submitContractApprovalWorkflowAction(draftId: string) {
     return { ok: false, message: 'پیش‌نویس هنوز برای ارسال به فرایند تأیید کامل نیست.' };
   }
 
-  await prisma.contractApprovalInstance.create({
-    data: {
-      tenantId: s.tenantId,
-      draftId,
-      workflowId: wf.id,
-      status: 'IN_REVIEW',
-      currentStepIndex: 0,
-      finalApproverUserId: wf.finalApproverUserId ?? null,
-      stepsSnapshot: steps as unknown as object[],
-    },
+  await prisma.$transaction(async (tx) => {
+    await tx.contractApprovalInstance.create({
+      data: {
+        tenantId: s.tenantId,
+        draftId,
+        workflowId: wf.id,
+        status: 'IN_REVIEW',
+        currentStepIndex: 0,
+        finalApproverUserId: wf.finalApproverUserId ?? null,
+        stepsSnapshot: steps as unknown as object[],
+      },
+    });
+    await tx.contractDraft.update({
+      where: { id: draftId },
+      data: { releasedFromApprovedForEdit: false },
+    });
   });
 
   revalidatePath(`/contracts/${draftId}`);
   revalidatePath('/contracts');
   return { ok: true };
+}
+
+/** پس از تأیید نهایی: حذف نمونهٔ workflow تا قرارداد به‌عنوان پیش‌نویس قابل ویرایش شود و برای نهایی شدن دوباره باید به فرایند تأیید برود. */
+export async function reopenApprovedContractForEditAction(draftId: string) {
+  const s = await requireActiveTenantSession();
+  if (!s.ok) return { ok: false as const, message: s.message };
+
+  const access = await getMembershipAccess(s.userId, s.tenantId);
+  if (!access?.isOwner && !hasPermission(access, 'contracts.update')) {
+    return { ok: false as const, message: 'شما مجاز به ویرایش این قرارداد نیستید.' };
+  }
+
+  const draft = await prisma.contractDraft.findFirst({
+    where: { id: draftId, tenantId: s.tenantId },
+    select: {
+      id: true,
+      approvalInstance: { select: { id: true, status: true } },
+    },
+  });
+  if (!draft) return { ok: false as const, message: 'قرارداد یافت نشد.' };
+  if (draft.approvalInstance?.status !== 'APPROVED') {
+    return { ok: false as const, message: 'فقط برای قراردادهای تأیید نهایی‌شده قابل انجام است.' };
+  }
+
+  const instanceId = draft.approvalInstance.id;
+
+  await prisma.$transaction(async (tx) => {
+    await tx.contractApprovalInstance.delete({ where: { id: instanceId } });
+    await tx.contractDraft.update({
+      where: { id: draftId },
+      data: { releasedFromApprovedForEdit: true },
+    });
+  });
+
+  revalidatePath(`/contracts/${draftId}`);
+  revalidatePath('/contracts');
+  return { ok: true as const };
 }
 
 export async function recordContractApprovalDecisionAction(

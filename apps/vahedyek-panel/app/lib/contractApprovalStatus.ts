@@ -8,6 +8,8 @@ export function resolveDisplayedContractStatus(
   formComplete: boolean,
   approvalReturnedPending: boolean,
   instanceStatus: ContractApprovalInstanceStatus | null | undefined,
+  /** پس از تأیید نهایی؛ با شروع ویرایش مجدد نمونهٔ workflow حذف می‌شود و این پرچم تا ارسال مجدد «پیش‌نویس» می‌ماند. */
+  releasedFromApprovedForEdit = false,
 ): ContractStatus {
   if (approvalReturnedPending) return 'draft';
 
@@ -19,6 +21,10 @@ export function resolveDisplayedContractStatus(
 
   if (instanceStatus === 'IN_REVIEW') {
     return 'pending_approval';
+  }
+
+  if (!instanceStatus && formComplete && releasedFromApprovedForEdit) {
+    return 'draft';
   }
 
   return formComplete ? 'pending_approval' : 'draft';

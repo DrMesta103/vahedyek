@@ -97,6 +97,8 @@ export function BusinessShareholderEditorPanel({ shareholderId, entity = 'shareh
   const router = useRouter();
   const searchParams = useSearchParams();
   const config = entityConfig[entity];
+  const returnTo = searchParams.get('returnTo');
+  const safeReturnTo = returnTo && returnTo.startsWith('/') ? returnTo : null;
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const requestedKind = searchParams.get('kind');
   const lockedKind = requestedKind === 'legal' || requestedKind === 'natural' ? requestedKind : null;
@@ -168,7 +170,7 @@ export function BusinessShareholderEditorPanel({ shareholderId, entity = 'shareh
   }, [entity, lockedKind, searchParams, shareholderId]);
 
   if (!shareholderId && lockedKind === 'natural') {
-    return <BusinessRepresentativePickerPanel mode={config.naturalMode} returnTo={config.naturalListPath} />;
+    return <BusinessRepresentativePickerPanel mode={config.naturalMode} returnTo={safeReturnTo ?? config.naturalListPath} />;
   }
 
   const filteredRepresentatives = useMemo(() => {
@@ -207,7 +209,7 @@ export function BusinessShareholderEditorPanel({ shareholderId, entity = 'shareh
           ? upsertNaturalBuyer(store, nextNatural as NaturalBuyerRecord)
           : upsertNaturalShareholder(store, nextNatural as NaturalShareholderRecord),
       );
-      router.push(config.naturalListPath);
+      router.push(safeReturnTo ?? config.naturalListPath);
       router.refresh();
       return;
     }
@@ -224,12 +226,12 @@ export function BusinessShareholderEditorPanel({ shareholderId, entity = 'shareh
         ? upsertLegalBuyer(store, nextShareholder as LegalBuyerRecord)
         : upsertLegalShareholder(store, nextShareholder as LegalShareholderRecord),
     );
-    router.push(`${config.basePath}/${activeShareholderId}?step=representatives&tab=legal&kind=legal`);
+    router.push(safeReturnTo ?? `${config.basePath}/${activeShareholderId}?step=representatives&tab=legal&kind=legal`);
     router.refresh();
   };
 
   const finishLegalFlow = () => {
-    router.push(config.legalListPath);
+    router.push(safeReturnTo ?? config.legalListPath);
     router.refresh();
   };
   const headingTitle =

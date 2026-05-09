@@ -90,7 +90,14 @@ export default function ContractList({ blocks, units = [] }: ContractListProps) 
             />
           </section>
 
-          <ContractTable contracts={filteredContracts} blocks={blocks} units={units} onEdit={handleEdit} loading={loading} />
+          <ContractTable
+            contracts={filteredContracts}
+            blocks={blocks}
+            units={units}
+            onEdit={handleEdit}
+            loading={loading}
+            listContext={activeTab}
+          />
         </div>
 
         <aside className="contracts-sidebar-column">

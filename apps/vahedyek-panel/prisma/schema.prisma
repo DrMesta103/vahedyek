@@ -198,6 +198,8 @@ model ContractDraft {
   approvalReturnedPending     Boolean   @default(false)
   approvalLastRejectionReason String?
   approvalLastRejectedAt      DateTime?
+  /// پس از ویرایش قرارداد تأییدشده؛ نمونهٔ workflow حذف شده تا وضعیت «پیش‌نویس» شود تا ارسال مجدد به تأیید.
+  releasedFromApprovedForEdit Boolean   @default(false)
   tenant    Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   subject   ContractSubject?
   parties   ContractParties?
