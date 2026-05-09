@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { PartySide, PersonType, ShareMode } from '@prisma/client';
+import { PartySide, PersonType, ShareMode } from '@/lib/prisma-client';
 import { requireSessionContext } from '../../../../../lib/auth';
 import { prisma } from '../../../../../lib/prisma';
 import { handlePrismaApiError } from '../../../../../lib/prismaApiError';

@@ -22,7 +22,7 @@ export function TooltipContent({
   return (
     <div
       {...props}
-      className={`pointer-events-none absolute right-0 top-full z-50 mt-2 hidden w-[260px] rounded-xl border border-[var(--border-color)] bg-[var(--surface)] px-3 py-2 text-right text-[11px] font-semibold leading-6 text-[var(--text-body)] shadow-sm group-hover:block ${className}`.trim()}
+      className={`pointer-events-none absolute right-0 top-full z-50 mt-2 hidden w-[260px] rounded-xl border border-[var(--border-color)] bg-[var(--surface)] px-3 py-2 text-right text-[12px] font-normal leading-6 text-[var(--text-body)] shadow-sm group-hover:block ${className}`.trim()}
     >
       {children}
     </div>

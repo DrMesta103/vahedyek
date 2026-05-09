@@ -48,7 +48,7 @@ export function AccordionTrigger({
 }>) {
   return (
     <summary
-      className="flex cursor-pointer list-none flex-row-reverse items-center justify-between gap-3 px-4 py-3 text-right"
+      className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-right"
       onClick={(e) => {
         if (!onToggle) return;
         // Prevent native <details> toggling; we control open state.
@@ -58,7 +58,7 @@ export function AccordionTrigger({
     >
       <div className="min-w-0 flex-1">{children}</div>
       <div className="shrink-0">
-        <div className="flex flex-row-reverse items-center gap-2">
+        <div className="flex items-center gap-2">
           {rightSlot}
           <ChevronDown
             className="h-4 w-4 text-[var(--text-faint)] transition-transform group-open:rotate-180"

@@ -22,7 +22,7 @@ export default async function ApprovalProcessDynamicPage(props: { params: Promis
 
   return (
     <PanelLayout>
-      <WorkflowEditorClient workflowId={slug} />
+      <WorkflowEditorClient workflowId={slug === 'new' ? undefined : slug} />
     </PanelLayout>
   );
 }

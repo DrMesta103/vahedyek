@@ -753,6 +753,12 @@ textarea::placeholder {
   background: color-mix(in srgb, var(--dark-teal) 16%, transparent);
 }
 
+[role='tooltip'],
+.leaflet-tooltip {
+  font-size: 12px !important;
+  font-weight: 400 !important;
+}
+
 .toolbar-badge-wrap {
   position: relative;
   display: inline-flex;
@@ -3944,6 +3950,7 @@ textarea::placeholder {
   background: #d1d5db;
   padding: 2px;
   cursor: pointer;
+  transition: background-color 220ms ease, box-shadow 220ms ease, transform 180ms ease;
 }
 
 .bank-account-toggle span {
@@ -3952,15 +3959,17 @@ textarea::placeholder {
   display: block;
   border-radius: 999px;
   background: #fff;
-  transition: transform 0.2s ease;
+  transition: transform 260ms cubic-bezier(0.2, 0.9, 0.2, 1), box-shadow 220ms ease;
 }
 
 .bank-account-toggle.is-on {
   background: #0ea5a8;
+  box-shadow: 0 6px 16px rgba(14, 165, 168, 0.18);
 }
 
 .bank-account-toggle.is-on span {
   transform: translateX(-16px);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.16);
 }
 
 .bank-account-owners {
@@ -6149,6 +6158,7 @@ textarea::placeholder {
   font-size: 12px;
   font-weight: 900;
   cursor: pointer;
+  transition: background-color 220ms ease, border-color 220ms ease, color 220ms ease, box-shadow 220ms ease, transform 180ms ease;
 }
 
 .business-unit-form-hint {
@@ -6176,6 +6186,7 @@ textarea::placeholder {
   padding: 3px !important;
   overflow: hidden;
   box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.16);
+  transition: background-color 220ms ease, border-color 220ms ease, box-shadow 220ms ease, transform 180ms ease;
 }
 
 .business-switch-option {
@@ -6188,7 +6199,9 @@ textarea::placeholder {
   font-size: 12px;
   font-weight: 900;
   line-height: 1;
-  transition: background-color 0.18s ease, color 0.18s ease;
+  transform: scale(0.98);
+  opacity: 0.78;
+  transition: background-color 240ms ease, color 240ms ease, opacity 220ms ease, transform 240ms cubic-bezier(0.2, 0.9, 0.2, 1), box-shadow 240ms ease;
 }
 
 .business-switch[aria-pressed='true'] .is-on,
@@ -6196,6 +6209,8 @@ textarea::placeholder {
   background: linear-gradient(135deg, var(--dark-teal), var(--primary-teal));
   color: #fff;
   box-shadow: 0 2px 5px rgba(0, 128, 128, 0.24);
+  opacity: 1;
+  transform: scale(1);
 }
 
 .financial-due-switch {
@@ -6219,6 +6234,8 @@ textarea::placeholder {
   border-color: var(--theme-action-border);
   background: linear-gradient(135deg, var(--dark-teal), var(--primary-teal));
   color: #fff;
+  box-shadow: 0 8px 18px rgba(0, 128, 128, 0.16);
+  transform: translateY(-1px);
 }
 
 .business-unit-segmented {
@@ -6632,12 +6649,14 @@ textarea::placeholder {
   font-weight: 800;
   text-align: right;
   cursor: pointer;
+  transition: background-color 220ms ease, border-color 220ms ease, color 220ms ease, box-shadow 220ms ease, transform 180ms ease;
 }
 
 .access-permission-toggle.is-checked {
   border-color: color-mix(in srgb, var(--dark-teal) 34%, var(--border-color));
   background: color-mix(in srgb, var(--dark-teal) 9%, var(--surface));
   color: var(--text-strong);
+  box-shadow: 0 8px 20px rgba(0, 128, 128, 0.08);
 }
 
 .access-toggle-box {
@@ -6650,12 +6669,48 @@ textarea::placeholder {
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
+  transition: background-color 220ms ease, border-color 220ms ease, transform 220ms cubic-bezier(0.2, 0.9, 0.2, 1);
 }
 
 .access-toggle-box svg {
   width: 15px;
   height: 15px;
   color: var(--dark-teal);
+  animation: switch-check-pop 180ms cubic-bezier(0.2, 0.9, 0.2, 1);
+}
+
+.access-permission-toggle.is-checked .access-toggle-box {
+  border-color: color-mix(in srgb, var(--dark-teal) 40%, var(--border-color));
+  background: color-mix(in srgb, var(--dark-teal) 10%, var(--surface));
+  transform: scale(1.04);
+}
+
+@keyframes switch-check-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.72);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bank-account-toggle,
+  .bank-account-toggle span,
+  .business-unit-switch-row > button,
+  .business-unit-segmented button,
+  .business-switch,
+  .business-switch-option,
+  .access-permission-toggle,
+  .access-toggle-box,
+  .access-toggle-box svg,
+  .loan-toggle-switch,
+  .loan-toggle-switch span {
+    animation: none !important;
+    transition-duration: 1ms !important;
+  }
 }
 
 .access-menu-preview {
@@ -6865,6 +6920,18 @@ textarea::placeholder {
 .theme-toggle-button:hover {
   background: color-mix(in srgb, var(--dark-teal) 22%, var(--surface));
   transform: translateY(-1px);
+}
+
+.loan-toggle-switch {
+  transition: background-color 240ms ease, border-color 240ms ease, box-shadow 240ms ease, transform 180ms ease;
+}
+
+.loan-toggle-switch span {
+  transition: left 260ms cubic-bezier(0.2, 0.9, 0.2, 1), transform 260ms cubic-bezier(0.2, 0.9, 0.2, 1), box-shadow 220ms ease;
+}
+
+.loan-toggle-switch[aria-pressed='true'] {
+  box-shadow: 0 8px 18px rgba(15, 139, 141, 0.16);
 }
 
 .sidebar-toolbar .theme-toggle-button {
@@ -9439,4 +9506,19 @@ html[dir='rtl'] .contract-flow-stage-content > .content-body-wide {
 .workflow-editor-root * {
   direction: inherit;
   text-align: inherit;
+}
+
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button,
+.no-number-spin::-webkit-outer-spin-button,
+.no-number-spin::-webkit-inner-spin-button {
+  margin: 0;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+input[type='number'],
+.no-number-spin[type='number'] {
+  appearance: textfield;
+  -moz-appearance: textfield;
 }

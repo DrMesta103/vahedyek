@@ -1,7 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
-import Link from 'next/link';
+import { type ReactNode, useCallback, useEffect, useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   DndContext,
@@ -20,15 +19,17 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { ChevronRight, GripVertical, Loader2, Plus, Save, Trash2 } from 'lucide-react';
-import { BusinessSwitch, SectionCard, SectionHeader, TagPills } from '../../../contracts/new/_components/ContractFormPrimitives';
+import { GripVertical, Loader2, Plus, Save, Trash2 } from 'lucide-react';
+import { BusinessSwitch, FormTextInput, SectionCard, SectionHeader, TagPills } from '../../../contracts/new/_components/ContractFormPrimitives';
 
 import { approvalUsageOptions } from '../../_components/approvalProcessConfig';
 import type { ApprovalUsageKey } from '../../../../lib/contractApprovalAccess';
 import type { WorkflowStepDefinition } from '../../../../lib/workflowTypes';
 import {
   getApprovalWorkflowAction,
+  listApprovalWorkflowsAction,
   listTenantMembersForApproversAction,
+  createApprovalWorkflowAction,
   updateApprovalWorkflowAction,
 } from '../../../../actions/workflowActions';
 
@@ -62,6 +63,51 @@ function defaultStep(globalType: 'PARALLEL' | 'SEQUENTIAL'): WorkflowStepDefinit
 
 function HelperText({ text }: { text: string }) {
   return <div className="mt-1 text-right text-[11px] font-semibold leading-6 text-[var(--text-muted)]">{text}</div>;
+}
+
+function InlineGuide({ children, className = '' }: { children: ReactNode; className?: string }) {
+  return <p className={`mt-1 text-right text-[12px] font-normal leading-6 text-[var(--text-muted)] ${className}`.trim()}>{children}</p>;
+}
+
+function LabelWithGuide({ label, guide }: { label: string; guide: ReactNode }) {
+  return (
+    <div className="mb-1.5 text-right">
+      <span className="text-[12px] font-extrabold text-[var(--text-strong)]">{label}</span>
+      <InlineGuide>{guide}</InlineGuide>
+    </div>
+  );
+}
+
+function FieldWithGuide({
+  label,
+  guide,
+  hint,
+  children,
+}: {
+  label: string;
+  guide: ReactNode;
+  hint?: string;
+  children: ReactNode;
+}) {
+  return (
+    <label className="block text-right">
+      <LabelWithGuide label={label} guide={guide} />
+      {children}
+      {hint ? <HelperText text={hint} /> : null}
+    </label>
+  );
+}
+
+function usedUsageTypesFromItems(
+  items: readonly { id: string; usageTypes: ApprovalUsageKey[] }[],
+  currentWorkflowId?: string,
+) {
+  const keys = new Set<ApprovalUsageKey>();
+  for (const item of items) {
+    if (currentWorkflowId && item.id === currentWorkflowId) continue;
+    for (const key of item.usageTypes ?? []) keys.add(key);
+  }
+  return Array.from(keys);
 }
 
 function SortableStepAccordion({
@@ -103,12 +149,12 @@ function SortableStepAccordion({
         <AccordionTrigger
           onToggle={() => onOpenChange(!isOpen)}
           rightSlot={
-            <div className="flex flex-row-reverse items-center gap-2">
+            <div className="flex items-center gap-2">
               {isLast ? <Badge variant="warning">مرحله نهایی</Badge> : null}
               <Badge variant={approverCount ? 'default' : 'muted'}>{approverCount} تأییدکننده</Badge>
               <button
                 type="button"
-                className="inline-flex h-9 items-center justify-center gap-2 rounded-xl border border-[var(--border-color)] bg-[var(--surface)] px-3 text-[12px] font-extrabold text-[var(--text-body)] hover:bg-[var(--surface-soft)]"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-rose-100 bg-white text-rose-600 hover:bg-rose-50"
                 onClick={(e) => {
                   // Keep delete available even when collapsed; don't toggle accordion.
                   e.preventDefault();
@@ -117,7 +163,6 @@ function SortableStepAccordion({
                 }}
               >
                 <Trash2 className="h-4 w-4" aria-hidden />
-                حذف مرحله
               </button>
               <button
                 type="button"
@@ -131,7 +176,7 @@ function SortableStepAccordion({
             </div>
           }
         >
-          <div className="flex flex-row-reverse flex-wrap items-center justify-end gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <span className="text-[12px] font-black text-[var(--text-muted)]">مرحله {index + 1}:</span>
             <span className="truncate text-[14px] font-black text-[var(--text-strong)]">{step.title || '—'}</span>
           </div>
@@ -139,27 +184,29 @@ function SortableStepAccordion({
 
         <AccordionContent>
           <div className="space-y-4 text-right">
-            <div className="flex flex-col gap-2 sm:flex-row-reverse sm:items-end sm:justify-between">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
               <label className="block flex-1">
-                <div className="mb-1 flex flex-row-reverse items-center justify-between gap-2">
-                  <span className="text-right text-[12px] font-extrabold text-[var(--text-strong)]">عنوان مرحله</span>
-                </div>
+                <LabelWithGuide
+                  label="عنوان مرحله"
+                  guide="عنوان کوتاه و قابل فهمی که وقتی مرحله جمع شده باشد، کنار شماره مرحله نمایش داده می‌شود."
+                />
                 <input
                   dir="rtl"
                   value={step.title}
                   onChange={(e) => onChange({ ...step, title: e.target.value })}
                   className="h-11 w-full rounded-xl border border-[var(--border-color)] bg-[var(--surface)] px-3 text-right text-[13px] font-semibold outline-none focus:ring-2 focus:ring-[color-mix(in_srgb,var(--dark-teal)_15%,transparent)]"
                 />
-                <HelperText text="عنوانی کوتاه و قابل فهم برای این مرحله. در حالت جمع‌شده فقط همین عنوان نمایش داده می‌شود." />
               </label>
             </div>
 
             <div className="space-y-3">
               <div className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--surface-soft)]/30 p-3">
-                <div className="mb-2 flex flex-row-reverse items-center justify-between gap-2">
-                  <div className="text-right text-[12px] font-extrabold text-[var(--text-strong)]">تأییدکنندگان</div>
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 text-right text-[12px] font-extrabold text-[var(--text-strong)]">
+                    <span>تأییدکنندگان</span>
+                  </div>
                 </div>
-                <HelperText text="ابتدا خالی است. با جستجو، افراد را اضافه کنید. پس از انتخاب، در لیست زیر نمایش داده می‌شوند." />
+                <InlineGuide>ابتدا خالی است. با جستجو، کارکنان، صاحب کسب‌وکار یا سهامداران ثبت‌شده را اضافه کنید.</InlineGuide>
 
                 <Select
                   options={approverOptions}
@@ -170,21 +217,16 @@ function SortableStepAccordion({
                   emptyText="کاربری مطابق جستجو پیدا نشد."
                 />
 
-                <div className="mt-3 flex flex-row-reverse flex-wrap gap-2">
+                <div className="mt-3 flex flex-wrap gap-2">
                   {step.approvers.length === 0 ? (
                     <span className="text-right text-[12px] font-semibold text-[var(--text-muted)]">هنوز کسی انتخاب نشده است.</span>
                   ) : (
                     step.approvers.map((uid) => {
                       const label = users.find((u) => u.id === uid)?.label ?? uid;
-                      const isFinal = step.finalApproverId === uid;
                       return (
                         <span
                           key={uid}
-                          className={`inline-flex flex-row-reverse items-center gap-2 rounded-full border px-3 py-1 text-[12px] font-bold ${
-                            isFinal
-                              ? 'border-[var(--dark-teal)] bg-[color-mix(in_srgb,var(--dark-teal)_10%,white)] text-[var(--dark-teal)]'
-                              : 'border-[var(--border-color)] bg-[var(--surface)] text-[var(--text-body)]'
-                          }`}
+                          className="inline-flex items-center gap-2 rounded-full border border-[var(--border-color)] bg-[var(--surface)] px-3 py-1 text-[12px] font-bold text-[var(--text-body)]"
                         >
                           <span className="truncate">{label}</span>
                           <button
@@ -210,26 +252,41 @@ function SortableStepAccordion({
               </div>
 
               <div className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--surface-soft)]/30 p-3">
-                <div className="mb-2 flex flex-row-reverse items-center justify-between gap-2">
-                  <div className="text-right text-[12px] font-extrabold text-[var(--text-strong)]">منطق تأیید مرحله</div>
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 text-right text-[12px] font-extrabold text-[var(--text-strong)]">
+                    <span>شرط تکمیل مرحله</span>
+                  </div>
                 </div>
-                <HelperText text="این منطق فقط زمانی استفاده می‌شود که تأییدکنندهٔ نهایی مرحله رأی نداده باشد." />
+                <InlineGuide>اگر تأییدکننده نهایی مرحله رأی نداده باشد، این شرط مشخص می‌کند مرحله با چه تعداد رأی تأیید کامل شود.</InlineGuide>
 
-                <div className="flex flex-row-reverse flex-wrap gap-2">
-                  <Button
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  <button
                     type="button"
-                    size="sm"
-                    variant={step.logic.mode === 'ALL_MUST_APPROVE' ? 'primary' : 'outline'}
-                    className="h-10"
+                    className={`rounded-2xl border p-3 text-right transition ${
+                      step.logic.mode === 'ALL_MUST_APPROVE'
+                        ? 'border-[var(--dark-teal)] bg-[color-mix(in_srgb,var(--dark-teal)_9%,white)] shadow-sm'
+                        : 'border-slate-200 bg-white hover:border-teal-200'
+                    }`}
                     onClick={() => onChange({ ...step, logic: { mode: 'ALL_MUST_APPROVE' } })}
                   >
-                    همه باید تأیید کنند
-                  </Button>
-                  <Button
+                    <span className="flex items-center justify-between gap-3">
+                      <span className="text-[13px] font-black text-[var(--text-strong)]">تأیید کامل</span>
+                      <span
+                        className={`h-4 w-4 rounded-full border ${
+                          step.logic.mode === 'ALL_MUST_APPROVE' ? 'border-[var(--dark-teal)] bg-[var(--dark-teal)] ring-4 ring-teal-50' : 'border-slate-300 bg-white'
+                        }`}
+                        aria-hidden
+                      />
+                    </span>
+                    <span className="mt-2 block text-[12px] font-normal leading-6 text-[var(--text-muted)]">همه تأییدکنندگان این مرحله باید رأی تأیید بدهند.</span>
+                  </button>
+                  <button
                     type="button"
-                    size="sm"
-                    variant={step.logic.mode === 'MINIMUM_COUNT' ? 'primary' : 'outline'}
-                    className="h-10"
+                    className={`rounded-2xl border p-3 text-right transition ${
+                      step.logic.mode === 'MINIMUM_COUNT'
+                        ? 'border-[var(--dark-teal)] bg-[color-mix(in_srgb,var(--dark-teal)_9%,white)] shadow-sm'
+                        : 'border-slate-200 bg-white hover:border-teal-200'
+                    }`}
                     onClick={() =>
                       onChange({
                         ...step,
@@ -237,24 +294,39 @@ function SortableStepAccordion({
                       })
                     }
                   >
-                    حداقل تعداد
-                  </Button>
+                    <span className="flex items-center justify-between gap-3">
+                      <span className="text-[13px] font-black text-[var(--text-strong)]">حد نصاب تأیید</span>
+                      <span
+                        className={`h-4 w-4 rounded-full border ${
+                          step.logic.mode === 'MINIMUM_COUNT' ? 'border-[var(--dark-teal)] bg-[var(--dark-teal)] ring-4 ring-teal-50' : 'border-slate-300 bg-white'
+                        }`}
+                        aria-hidden
+                      />
+                    </span>
+                    <span className="mt-2 block text-[12px] font-normal leading-6 text-[var(--text-muted)]">با رسیدن رأی‌های مثبت به تعداد تعیین‌شده، مرحله کامل می‌شود.</span>
+                  </button>
                 </div>
 
                 {step.logic.mode === 'MINIMUM_COUNT' ? (
-                  <div className="mt-3 flex flex-row-reverse items-center justify-between gap-2">
-                    <span className="text-right text-[12px] font-bold text-[var(--text-muted)]">حداقل تعداد لازم</span>
+                  <div className="mt-3 rounded-2xl border border-teal-100 bg-white p-3">
+                    <div className="mb-2 text-right">
+                      <span className="text-[12px] font-extrabold text-[var(--text-strong)]">تعداد رأی لازم برای تکمیل مرحله</span>
+                      <InlineGuide>این عدد نمی‌تواند بیشتر از تعداد تأییدکنندگان مرحله باشد.</InlineGuide>
+                    </div>
                     <input
                       type="number"
                       min={1}
                       max={Math.max(1, step.approvers.length || 1)}
                       dir="ltr"
-                      className="h-10 w-24 rounded-xl border border-[var(--border-color)] bg-[var(--surface)] px-2 text-center text-[13px] font-bold"
+                      className="no-number-spin h-11 w-28 rounded-xl border border-[var(--border-color)] bg-[var(--surface)] px-2 text-center text-[14px] font-bold outline-none focus:ring-2 focus:ring-[color-mix(in_srgb,var(--dark-teal)_15%,transparent)]"
                       value={step.logic.count}
                       onChange={(e) =>
                         onChange({
                           ...step,
-                          logic: { mode: 'MINIMUM_COUNT', count: Math.max(1, Number(e.target.value) || 1) },
+                          logic: {
+                            mode: 'MINIMUM_COUNT',
+                            count: Math.min(Math.max(1, step.approvers.length || 1), Math.max(1, Number(e.target.value) || 1)),
+                          },
                         })
                       }
                     />
@@ -262,10 +334,12 @@ function SortableStepAccordion({
                 ) : null}
 
                 <div className="mt-4 border-t border-[var(--border-color)] pt-4">
-                  <div className="mb-2 flex flex-row-reverse items-center justify-between gap-2">
-                    <div className="text-right text-[12px] font-extrabold text-[var(--text-strong)]">تأییدکننده نهایی مرحله</div>
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 text-right text-[12px] font-extrabold text-[var(--text-strong)]">
+                      <span>تأییدکننده نهایی مرحله</span>
+                    </div>
                   </div>
-                  <HelperText text="یک نفر می‌تواند به عنوان «نهایی» برای این مرحله انتخاب شود؛ تأیید این شخص مرحله را فوراً تکمیل می‌کند. همچنین اگر «تأییدکننده نهایی کل فرایند» تعریف نشده باشد، فقط تأییدکننده نهایی همین مرحله می‌تواند «رد کامل و بازگشت به پیش‌نویس» انجام دهد." />
+                  <InlineGuide>اگر این شخص رأی تأیید بدهد، مرحله فوری کامل می‌شود. اگر نهایی کل فرآیند تعریف نشده باشد، فقط نهایی همین مرحله می‌تواند رد کامل و بازگشت به پیش‌نویس انجام دهد.</InlineGuide>
                   <Select
                     options={[{ value: '', label: '— (ندارد)' }, ...finalApproverOptions]}
                     value={step.finalApproverId ?? ''}
@@ -288,9 +362,10 @@ function SortableStepAccordion({
   );
 }
 
-export function WorkflowEditorClient({ workflowId }: { workflowId: string }) {
+export function WorkflowEditorClient({ workflowId }: { workflowId?: string }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const isNew = !workflowId;
   const [users, setUsers] = useState<UserOpt[]>([]);
   const [error, setError] = useState('');
   const [saveOk, setSaveOk] = useState('');
@@ -299,9 +374,10 @@ export function WorkflowEditorClient({ workflowId }: { workflowId: string }) {
 
   const [title, setTitle] = useState('');
   const [usageType, setUsageType] = useState<ApprovalUsageKey | ''>('');
+  const [usedUsageTypes, setUsedUsageTypes] = useState<ApprovalUsageKey[]>([]);
   const [finalApproverUserId, setFinalApproverUserId] = useState<string>('');
   const [buyerShouldApprove, setBuyerShouldApprove] = useState(true);
-  const [active, setActive] = useState(true);
+  const [workflowActive, setWorkflowActive] = useState(true);
 
   const [globalType, setGlobalType] = useState<'PARALLEL' | 'SEQUENTIAL'>('PARALLEL');
   // Important: keep deterministic SSR/CSR markup (avoid random ids before hydration).
@@ -315,21 +391,42 @@ export function WorkflowEditorClient({ workflowId }: { workflowId: string }) {
   const load = useCallback(() => {
     startTransition(async () => {
       setError('');
-      const [wfRes, uRes] = await Promise.all([getApprovalWorkflowAction(workflowId), listTenantMembersForApproversAction()]);
+      if (isNew) {
+        const [uRes, wfListRes] = await Promise.all([listTenantMembersForApproversAction(), listApprovalWorkflowsAction()]);
+        if (uRes.ok) setUsers(uRes.users as any);
+        if (wfListRes.ok) setUsedUsageTypes(usedUsageTypesFromItems(wfListRes.items));
+        setTitle('فرایند جدید');
+        setUsageType('');
+        setFinalApproverUserId('');
+        setBuyerShouldApprove(true);
+        setWorkflowActive(true);
+        setGlobalType('PARALLEL');
+        setSteps([]);
+        setOpenStepId(null);
+        setLoaded(true);
+        return;
+      }
+
+      const [wfRes, uRes, wfListRes] = await Promise.all([
+        getApprovalWorkflowAction(workflowId),
+        listTenantMembersForApproversAction(),
+        listApprovalWorkflowsAction(),
+      ]);
       if (!wfRes.ok || !wfRes.item) {
         setError(wfRes.message ?? 'فرایند یافت نشد.');
         setLoaded(true);
         return;
       }
       if (uRes.ok) setUsers(uRes.users as any);
+      if (wfListRes.ok) setUsedUsageTypes(usedUsageTypesFromItems(wfListRes.items, workflowId));
 
       setTitle(wfRes.item.title);
       setUsageType(wfRes.item.usageTypes?.[0] ?? '');
       setFinalApproverUserId(wfRes.item.finalApproverUserId ?? '');
       setBuyerShouldApprove(wfRes.item.buyerShouldApprove);
-      setActive(wfRes.item.active);
+      setWorkflowActive(wfRes.item.active);
 
-      const loadedSteps = (wfRes.item.steps.length ? wfRes.item.steps : [defaultStep('PARALLEL')]).map((s) => ({
+      const loadedSteps = wfRes.item.steps.map((s) => ({
         ...s,
         finalApproverId: s.finalApproverId ?? null,
       }));
@@ -342,13 +439,16 @@ export function WorkflowEditorClient({ workflowId }: { workflowId: string }) {
       });
       setLoaded(true);
     });
-  }, [workflowId]);
+  }, [isNew, workflowId]);
 
   useEffect(() => {
     void load();
   }, [load]);
 
+  const disabledUsageSet = useMemo(() => new Set(usedUsageTypes), [usedUsageTypes]);
+
   const chooseUsageType = (k: ApprovalUsageKey) => {
+    if (disabledUsageSet.has(k)) return;
     setUsageType((prev) => (prev === k ? '' : k));
   };
 
@@ -378,14 +478,17 @@ export function WorkflowEditorClient({ workflowId }: { workflowId: string }) {
         type: globalType,
         isFinal: idx === steps.length - 1,
       }));
-      const res = await updateApprovalWorkflowAction(workflowId, {
+      const payload = {
         title,
         usageTypes: usageType ? [usageType] : [],
         steps: normalizedSteps,
         finalApproverUserId: finalApproverUserId || null,
         buyerShouldApprove,
-        active,
-      });
+        active: isNew ? true : workflowActive,
+      };
+      const res = isNew
+        ? await createApprovalWorkflowAction(payload)
+        : await updateApprovalWorkflowAction(workflowId, payload);
       if (!res.ok) {
         setError('message' in res ? res.message : 'ذخیره انجام نشد.');
         return;
@@ -403,14 +506,7 @@ export function WorkflowEditorClient({ workflowId }: { workflowId: string }) {
   return (
     <div className="workflow-editor-root mx-auto w-full max-w-6xl px-4 pb-28 pt-4 sm:px-6 lg:px-8" dir="rtl" lang="fa">
       <div className="mb-5 text-right">
-        <Link
-          href="/business-settings/approval-process"
-          className="inline-flex flex-row-reverse items-center gap-1 text-[12px] font-bold text-[var(--text-muted)] hover:text-[var(--text-strong)]"
-        >
-          <ChevronRight className="h-4 w-4" />
-          بازگشت به فهرست
-        </Link>
-        <h1 className="mt-2 text-2xl font-black text-[var(--text-strong)]">مدیریت فرایند تأیید</h1>
+        <h1 className="mt-2 text-2xl font-black text-[var(--text-strong)]">{isNew ? 'ثبت فرایند تأیید' : 'مدیریت فرایند تأیید'}</h1>
       </div>
 
       {error ? (
@@ -426,7 +522,7 @@ export function WorkflowEditorClient({ workflowId }: { workflowId: string }) {
 
       {!loaded ? (
         <SectionCard className="p-6 text-right">
-          <div className="flex flex-row-reverse items-center justify-end gap-2 text-[13px] font-bold text-[var(--text-muted)]">
+          <div className="flex items-center gap-2 text-[13px] font-bold text-[var(--text-muted)]">
             <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
             در حال بارگذاری فرایند…
           </div>
@@ -435,58 +531,40 @@ export function WorkflowEditorClient({ workflowId }: { workflowId: string }) {
         <div className="space-y-4">
         <SectionCard>
           <SectionHeader label="فرایند تأیید" description="تنظیمات کلی فرایند" />
-          <div className="p-5 flex flex-col gap-4 sm:flex-row-reverse sm:items-start sm:justify-start">
-            <div className="w-full max-w-[320px] space-y-3">
-              <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--surface-soft)]/30 p-3">
-                <div className="flex flex-row-reverse items-center justify-between">
-                  <span className="text-right text-[12px] font-bold">خریدار در فرایند</span>
-                  <BusinessSwitch
-                    checked={buyerShouldApprove}
-                    onChange={setBuyerShouldApprove}
-                    activeLabel="بله"
-                    inactiveLabel="خیر"
-                  />
-                </div>
-              </div>
+          <div className="space-y-5 p-5">
+            <FieldWithGuide
+              label="عنوان فرایند"
+              guide="نام مسیر تأیید را وارد کنید. همین عنوان در کارت فهرست فرآیندها و هنگام استفاده در قرارداد نمایش داده می‌شود."
+            >
+              <FormTextInput value={title} onChange={setTitle} dir="rtl" placeholder="مثلا فرایند فروش واحد مسکونی" />
+            </FieldWithGuide>
 
-              <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--surface-soft)]/30 p-3">
-                <div className="flex flex-row-reverse items-center justify-between">
-                  <span className="text-right text-[12px] font-bold">وضعیت فرایند</span>
-                  <BusinessSwitch checked={active} onChange={setActive} activeLabel="فعال" inactiveLabel="غیرفعال" />
-                </div>
-              </div>
-            </div>
+            <FieldWithGuide
+              label="نوع پردازش مراحل"
+              guide="بدون ترتیب یعنی مراحل مستقل رأی می‌گیرند. مرحله‌به‌مرحله یعنی ترتیب مراحل باید رعایت شود."
+            >
+              <TagPills
+                options={[
+                  { value: 'PARALLEL', label: 'بدون ترتیب' },
+                  { value: 'SEQUENTIAL', label: 'مرحله‌به‌مرحله' },
+                ]}
+                value={globalType}
+                onChange={(v) => {
+                  setGlobalType(v);
+                  setSteps((prev) => prev.map((s) => ({ ...s, type: v })));
+                }}
+              />
+            </FieldWithGuide>
 
-            <div className="min-w-0 flex-1 space-y-4">
-              <div>
-                <div className="mb-1 flex flex-row-reverse items-center justify-between gap-2">
-                  <span className="text-right text-[12px] font-extrabold text-[var(--text-strong)]">عنوان فرایند</span>
+            <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-3">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="text-right">
+                  <div>
+                    <p className="text-[13px] font-black text-[var(--text-strong)]">خریدار در فرایند</p>
+                    <InlineGuide>اگر فعال باشد، خریدار هم باید در مسیر تأیید قرارداد رأی بدهد.</InlineGuide>
+                  </div>
                 </div>
-                <input
-                  dir="rtl"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  className="h-11 w-full rounded-xl border border-[var(--border-color)] bg-[var(--surface)] px-3 text-right text-[13px] font-semibold"
-                />
-                <HelperText text="عنوانی که در فهرست فرایندها و در قراردادها نمایش داده می‌شود." />
-              </div>
-
-              <div>
-                <div className="mb-2 flex flex-row-reverse items-center justify-between gap-2">
-                  <span className="text-right text-[12px] font-extrabold text-[var(--text-strong)]">نوع پردازش مراحل</span>
-                </div>
-                <HelperText text="موازی: همه تأییدکنندگان مرحله می‌توانند همزمان رأی دهند. سری: هر مرحله طبق ترتیب تأییدکنندگان پیش می‌رود." />
-                <TagPills
-                  options={[
-                    { value: 'PARALLEL', label: 'موازی' },
-                    { value: 'SEQUENTIAL', label: 'سری' },
-                  ]}
-                  value={globalType}
-                  onChange={(v) => {
-                    setGlobalType(v);
-                    setSteps((prev) => prev.map((s) => ({ ...s, type: v })));
-                  }}
-                />
+                <BusinessSwitch checked={buyerShouldApprove} onChange={setBuyerShouldApprove} onLabel="بله" offLabel="خیر" />
               </div>
             </div>
           </div>
@@ -494,21 +572,35 @@ export function WorkflowEditorClient({ workflowId }: { workflowId: string }) {
 
         <SectionCard>
           <SectionHeader label="انواع کاربری واحد" description="هر فرایند فقط می‌تواند یک نوع کاربری داشته باشد." />
-          <div className="p-5 flex flex-row-reverse flex-wrap justify-end gap-2">
-            {approvalUsageOptions.map((opt) => (
-              <button
-                key={opt.id}
-                type="button"
-                onClick={() => chooseUsageType(opt.id as ApprovalUsageKey)}
-                className={`rounded-full border px-3 py-1.5 text-[11px] font-bold ${
-                  usageType === (opt.id as ApprovalUsageKey)
-                    ? 'border-[var(--dark-teal)] bg-[color-mix(in_srgb,var(--dark-teal)_12%,white)] text-[var(--dark-teal)]'
-                    : 'border-[var(--border-color)] bg-[var(--surface)]'
-                }`}
-              >
-                {opt.shortTitle}
-              </button>
-            ))}
+          <div className="p-5">
+            <div className="mb-3 text-right">
+              <span className="text-[12px] font-extrabold text-[var(--text-strong)]">انتخاب نوع کاربری</span>
+              <InlineGuide>برای هر فرآیند فقط یک نوع کاربری واحد انتخاب می‌شود. نوع‌های دارای فرآیند قبلی غیرفعال هستند.</InlineGuide>
+            </div>
+            <div className="flex flex-wrap gap-2">
+            {approvalUsageOptions.map((opt) => {
+              const key = opt.id as ApprovalUsageKey;
+              const disabled = disabledUsageSet.has(key);
+              return (
+                <button
+                  key={opt.id}
+                  type="button"
+                  disabled={disabled}
+                  onClick={() => chooseUsageType(key)}
+                  className={`rounded-full border px-3 py-1.5 text-[11px] font-bold transition ${
+                    usageType === key
+                      ? 'border-[var(--dark-teal)] bg-[color-mix(in_srgb,var(--dark-teal)_12%,white)] text-[var(--dark-teal)]'
+                      : disabled
+                        ? 'cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400 opacity-70'
+                        : 'border-[var(--border-color)] bg-[var(--surface)] hover:border-teal-200 hover:text-[var(--dark-teal)]'
+                  }`}
+                >
+                  {opt.shortTitle}
+                  {disabled ? <span className="mr-1 text-[10px] font-normal">(ثبت شده)</span> : null}
+                </button>
+              );
+            })}
+            </div>
           </div>
         </SectionCard>
 
@@ -518,6 +610,10 @@ export function WorkflowEditorClient({ workflowId }: { workflowId: string }) {
             description="اگر این شخص رأی بدهد، فرایند فوراً تمام می‌شود و نیازی به طی مراحل نیست. نکته: در صورت انتخاب، فقط همین شخص می‌تواند «رد کامل و بازگشت قرارداد به پیش‌نویس» را انجام دهد."
           />
           <div className="p-5">
+            <div className="mb-3 text-right">
+              <span className="text-[12px] font-extrabold text-[var(--text-strong)]">انتخاب تأییدکننده نهایی کل فرآیند</span>
+              <InlineGuide>رأی این شخص کل فرآیند را فوری تمام می‌کند. در صورت انتخاب، فقط همین شخص اجازه رد کامل و بازگشت قرارداد به پیش‌نویس را دارد.</InlineGuide>
+            </div>
             <Select
               options={[{ value: '', label: '— (ندارد)' }, ...users.map((u) => ({ value: u.id, label: u.label }))]}
               value={finalApproverUserId || ''}
@@ -532,10 +628,15 @@ export function WorkflowEditorClient({ workflowId }: { workflowId: string }) {
         <SectionCard>
           <SectionHeader label="مراحل" description="تعریف مراحل و تأییدکنندگان هر مرحله" />
           <div className="p-5">
-          <div className="mb-4 flex flex-row-reverse items-center justify-between gap-3">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div className="text-right">
+              <span className="text-[12px] font-extrabold text-[var(--text-strong)]">ساخت مسیر مرحله‌ای</span>
+              <InlineGuide>در شروع ثبت فرآیند هیچ مرحله‌ای ساخته نمی‌شود. با افزودن مرحله، عنوان، تأییدکنندگان، منطق رأی و تأییدکننده نهایی همان مرحله را تنظیم کنید.</InlineGuide>
+            </div>
             <Button
               type="button"
               variant="outline"
+              className="h-10 shrink-0 whitespace-nowrap rounded-full border-teal-100 bg-teal-50/70 px-4 text-[12px] font-bold text-[var(--dark-teal)] hover:bg-teal-100"
               onClick={() => {
                 const next = defaultStep(globalType);
                 setSteps((s) => [...s, next]);
@@ -547,6 +648,11 @@ export function WorkflowEditorClient({ workflowId }: { workflowId: string }) {
             </Button>
           </div>
 
+          {steps.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 px-4 py-8 text-center text-[13px] font-semibold leading-7 text-[var(--text-muted)]">
+              هنوز مرحله‌ای تعریف نشده است. برای شروع مسیر تأیید، «افزودن مرحله» را انتخاب کنید.
+            </div>
+          ) : (
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <SortableContext items={steps.map((s) => s.id)} strategy={verticalListSortingStrategy}>
               <Accordion>
@@ -566,6 +672,7 @@ export function WorkflowEditorClient({ workflowId }: { workflowId: string }) {
               </Accordion>
             </SortableContext>
           </DndContext>
+          )}
           </div>
         </SectionCard>
 

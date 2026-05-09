@@ -114,7 +114,7 @@ export function ContractRegistrationSwitch({
       aria-pressed={checked}
       onClick={() => onChange(!checked)}
       className={cn(
-        'relative inline-flex h-8 w-14 shrink-0 rounded-full border transition-colors',
+        'loan-toggle-switch relative inline-flex h-8 w-14 shrink-0 rounded-full border transition-colors',
         checked ? 'border-[#0f8b8d] bg-[#0f8b8d]' : 'border-[#8ea8c5] bg-white',
       )}
     >

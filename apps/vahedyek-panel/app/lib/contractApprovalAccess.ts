@@ -1,4 +1,4 @@
-import type { ContractApprovalInstanceStatus } from '@prisma/client';
+import type { ContractApprovalInstanceStatus } from '@/lib/prisma-client';
 import { hasPermission, type AccessSnapshot } from './permissions';
 import { canUserApproveStep, canUserRejectToDraft, canUserRequestRevision, type DecisionRow } from './workflowRuntime';
 import type { WorkflowStepDefinition } from './workflowTypes';
