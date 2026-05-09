@@ -7,25 +7,48 @@ import { handlePrismaApiError } from '../../../lib/prismaApiError';
 const TABLE_NAME = '"TenantBusinessProfileSettings"';
 const INDEX_NAME = '"TenantBusinessProfileSettings_tenantId_idx"';
 
-async function getProfileMeta(tenantId: string, fallbackUser: { fullName: string; mobile: string | null }, businessName: string) {
-  const ownerMembership = await prisma.userTenantMembership.findFirst({
-    where: { tenantId, role: 'owner' },
-    include: {
-      user: {
-        select: {
-          fullName: true,
-          mobile: true,
+async function getProfileMeta(
+  tenantId: string,
+  fallbackUser: { fullName: string; mobile: string | null; email: string | null },
+  businessName: string,
+) {
+  const [ownerMembership, tenant] = await Promise.all([
+    prisma.userTenantMembership.findFirst({
+      where: { tenantId, role: 'owner' },
+      include: {
+        user: {
+          select: {
+            fullName: true,
+            mobile: true,
+            email: true,
+          },
         },
       },
-    },
-    orderBy: { createdAt: 'asc' },
-  });
+      orderBy: { createdAt: 'asc' },
+    }),
+    prisma.tenant.findUnique({
+      where: { id: tenantId },
+      select: {
+        slug: true,
+        brandCode: true,
+        packageKey: true,
+        billingCycle: true,
+        createdAt: true,
+      },
+    }),
+  ]);
 
   return {
     businessName,
+    slug: tenant?.slug ?? '',
+    brandCode: tenant?.brandCode ?? 'VN',
+    packageKey: tenant?.packageKey ?? 'starter',
+    billingCycle: tenant?.billingCycle ?? 'monthly',
+    createdAt: tenant?.createdAt?.toISOString() ?? null,
     owner: {
       fullName: ownerMembership?.user.fullName ?? fallbackUser.fullName,
       mobile: ownerMembership?.user.mobile ?? fallbackUser.mobile,
+      email: ownerMembership?.user.email ?? fallbackUser.email,
     },
   };
 }
@@ -65,7 +88,7 @@ export async function GET() {
 
     const meta = await getProfileMeta(
       session.tenantId,
-      { fullName: session.user.fullName, mobile: session.user.mobile },
+      { fullName: session.user.fullName, mobile: session.user.mobile, email: session.user.email },
       session.tenant.name,
     );
 
@@ -101,7 +124,7 @@ export async function PUT(request: Request) {
 
     const meta = await getProfileMeta(
       session.tenantId,
-      { fullName: session.user.fullName, mobile: session.user.mobile },
+      { fullName: session.user.fullName, mobile: session.user.mobile, email: session.user.email },
       session.tenant.name,
     );
 

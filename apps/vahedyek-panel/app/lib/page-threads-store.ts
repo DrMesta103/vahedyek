@@ -23,6 +23,11 @@ const THREAD_PAGE_KEY_INDEX = '"DevPageThread_appId_pageKey_idx"';
 const THREAD_UPDATED_AT_INDEX = '"DevPageThread_appId_updatedAt_idx"';
 const MESSAGE_THREAD_INDEX = '"DevPageMessage_threadId_createdAt_idx"';
 
+const globalForPageThreads = globalThis as unknown as {
+  __pageThreadsTablesReady?: boolean;
+  __pageThreadsTablesPromise?: Promise<void>;
+};
+
 type ThreadRow = {
   id: string;
   appId: string;
@@ -63,6 +68,13 @@ type MessageRow = {
 };
 
 export async function ensurePageThreadsTables() {
+  if (globalForPageThreads.__pageThreadsTablesReady) return;
+  if (globalForPageThreads.__pageThreadsTablesPromise) {
+    await globalForPageThreads.__pageThreadsTablesPromise;
+    return;
+  }
+
+  globalForPageThreads.__pageThreadsTablesPromise = (async () => {
   await prisma.$executeRawUnsafe(`
     CREATE TABLE IF NOT EXISTS ${THREADS_TABLE} (
       "id" TEXT PRIMARY KEY,
@@ -132,6 +144,15 @@ export async function ensurePageThreadsTables() {
     CREATE INDEX IF NOT EXISTS ${MESSAGE_THREAD_INDEX}
     ON ${MESSAGES_TABLE} ("threadId", "createdAt" ASC);
   `);
+  })();
+
+  try {
+    await globalForPageThreads.__pageThreadsTablesPromise;
+    globalForPageThreads.__pageThreadsTablesReady = true;
+  } catch (error) {
+    globalForPageThreads.__pageThreadsTablesPromise = undefined;
+    throw error;
+  }
 }
 
 function safeJsonParseStringArray(input: unknown) {

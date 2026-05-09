@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { ensureMembershipRoleByKey } from '../../../../../lib/access-control';
 import { hashPassword, requireSessionContext } from '../../../../../lib/auth';
 import { normalizeEmail, sanitizeIranMobileInput, splitFullName } from '../../../../../lib/contact';
 import { prisma } from '../../../../../lib/prisma';
@@ -21,6 +22,7 @@ export async function POST(request: Request) {
       fullName?: string;
       mobile?: string;
       email?: string;
+      roleKey?: string;
     };
 
     const normalizedEmailValue = normalizeEmail(body.email ?? '');
@@ -72,7 +74,7 @@ export async function POST(request: Request) {
       });
     }
 
-    await prisma.userTenantMembership.upsert({
+    const membership = await prisma.userTenantMembership.upsert({
       where: {
         userId_tenantId: {
           userId: user.id,
@@ -86,6 +88,10 @@ export async function POST(request: Request) {
         role: 'member',
       },
     });
+
+    if (body.roleKey) {
+      await ensureMembershipRoleByKey(membership.id, session.tenantId, body.roleKey);
+    }
 
     return NextResponse.json({
       success: true,

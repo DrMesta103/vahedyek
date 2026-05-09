@@ -30,6 +30,7 @@ const settingCards: BusinessSettingsCardProps[] = [
     title: 'بلوک / برج - طبقه - واحد',
     description:
       'در این بخش اطلاعات بلوک، برج، طبقات، واحدها و انواع کاربری‌های مختلف هر واحد را ثبت و مدیریت می‌کنید.',
+    href: '/business-settings/project/blocks',
   },
 ];
 

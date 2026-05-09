@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useAuthContext } from '../hooks/useAuthContext';
 import { formatIdentityLabel } from '../lib/contact';
 import { getSidebarMenuItems } from '../lib/navigation';
+import { MenuIcon } from './MenuIcon';
 import { ThemeToggle } from './theme/ThemeToggle';
 
 interface SidebarProps {
@@ -68,7 +69,7 @@ export default function Sidebar({ activeItem = 'home', forceCollapsed = false, l
   const settingsButton = (className?: string) =>
     canSeeSettings ? (
       <button type="button" onClick={() => router.push('/settings')} className={className} style={{ background: 'transparent', border: 'none' }} title="تنظیمات کلی">
-        <i className={`fa fa-cog${activeItem === 'settings' ? ' active-toolbar-icon' : ''}`}></i>
+        <MenuIcon name="fa-cog" className={activeItem === 'settings' ? 'active-toolbar-icon' : undefined} />
       </button>
     ) : null;
 
@@ -76,14 +77,14 @@ export default function Sidebar({ activeItem = 'home', forceCollapsed = false, l
     <aside className={`sidebar${effectiveCollapsed ? ' collapsed' : ''}${lockCollapsed ? ' locked-collapsed' : ''}`}>
       <div className="profile-item">
         <div className="avatar-small" style={{ background: '#fb923c' }}>
-          <i className="fa fa-user"></i>
+          <MenuIcon name="fa-user" />
         </div>
         <div className="name">
           <div>{data?.user?.fullName ?? 'در حال بارگذاری...'}</div>
           <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '2px' }}>{identityLabel}</div>
         </div>
         <div className="back-btn" style={{ visibility: 'hidden' }} aria-hidden="true">
-          <i className="fa fa-chevron-left"></i>
+          <MenuIcon name="fa-chevron-left" />
         </div>
       </div>
 
@@ -102,7 +103,7 @@ export default function Sidebar({ activeItem = 'home', forceCollapsed = false, l
           style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}
           className="back-btn tenant-switch-btn"
         >
-          <i className="fa fa-exchange-alt"></i>
+          <MenuIcon name="fa-exchange-alt" />
         </button>
       </div>
 
@@ -115,22 +116,22 @@ export default function Sidebar({ activeItem = 'home', forceCollapsed = false, l
               onClick={() => setToolbarMenuOpen((current) => !current)}
               title="گزینه‌های بیشتر"
             >
-              <i className="fa fa-ellipsis-h"></i>
+              <MenuIcon name="fa-ellipsis-h" />
             </button>
             {toolbarMenuOpen ? (
               <div className="toolbar-menu-dropdown">
                 <button type="button" onClick={handleLogout} className="toolbar-menu-item">
-                  <i className="fa fa-sign-out-alt" style={{ transform: 'scaleX(-1)' }}></i>
+                  <MenuIcon name="fa-sign-out-alt" />
                 </button>
                 <button type="button" className="toolbar-menu-item">
                   <span className="toolbar-badge-wrap">
-                    <i className="fa fa-bell"></i>
+                    <MenuIcon name="fa-bell" />
                     <span className="badge">1</span>
                   </span>
                 </button>
                 {settingsButton('toolbar-menu-item')}
                 <button type="button" onClick={() => router.push('/')} className="toolbar-menu-item">
-                  <i className={`fa fa-home${activeItem === 'home' ? ' active-toolbar-icon' : ''}`}></i>
+                  <MenuIcon name="fa-home" className={activeItem === 'home' ? 'active-toolbar-icon' : undefined} />
                 </button>
                 <ThemeToggle collapsed />
               </div>
@@ -139,14 +140,15 @@ export default function Sidebar({ activeItem = 'home', forceCollapsed = false, l
         ) : (
           <>
             <button type="button" onClick={handleLogout} style={{ background: 'transparent', border: 'none' }}>
-              <i className="fa fa-sign-out-alt" style={{ transform: 'scaleX(-1)' }}></i>
+              <MenuIcon name="fa-sign-out-alt" />
             </button>
-            <i className="fa fa-bell" style={{ position: 'relative' }}>
+            <span className="toolbar-badge-wrap">
+              <MenuIcon name="fa-bell" />
               <span className="badge">1</span>
-            </i>
+            </span>
             {settingsButton()}
             <button type="button" onClick={() => router.push('/')} style={{ background: 'transparent', border: 'none' }}>
-              <i className={`fa fa-home${activeItem === 'home' ? ' active-toolbar-icon' : ''}`}></i>
+              <MenuIcon name="fa-home" className={activeItem === 'home' ? 'active-toolbar-icon' : undefined} />
             </button>
             <ThemeToggle />
           </>
@@ -163,13 +165,13 @@ export default function Sidebar({ activeItem = 'home', forceCollapsed = false, l
               title={item.label}
               style={{ opacity: 0.5, cursor: 'not-allowed', pointerEvents: 'none' }}
             >
-              <i className={`fa ${item.icon}`}></i>
+              <MenuIcon name={item.icon} className="menu-link-icon" />
               <span>{item.label}</span>
-              <i className="fa fa-lock" style={{ marginRight: 'auto', fontSize: '12px' }}></i>
+              <MenuIcon name="fa-lock" className="menu-lock-icon" />
             </div>
           ) : (
             <Link key={item.id} href={item.href} title={item.label} className={`menu-link${activeItem === item.id ? ' active' : ''}`}>
-              <i className={`fa ${item.icon}`}></i>
+              <MenuIcon name={item.icon} className="menu-link-icon" />
               <span>{item.label}</span>
             </Link>
           ),
@@ -194,7 +196,7 @@ export default function Sidebar({ activeItem = 'home', forceCollapsed = false, l
           title={effectiveCollapsed ? 'باز کردن سایدبار' : 'جمع کردن سایدبار'}
           disabled={lockCollapsed}
         >
-          <i className={`fa ${effectiveCollapsed ? 'fa-angle-double-left' : 'fa-angle-double-right'}`}></i>
+          <MenuIcon name={effectiveCollapsed ? 'fa-angle-double-left' : 'fa-angle-double-right'} />
         </button>
         <span>0.8.0</span>
       </div>

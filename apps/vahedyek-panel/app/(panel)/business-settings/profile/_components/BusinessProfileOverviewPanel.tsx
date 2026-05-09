@@ -4,7 +4,14 @@ import { X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { BusinessSettingsCard, type BusinessSettingsCardProps } from '../../_components/BusinessSettingsCard';
-import { fetchProfileStore, persistProfileStore, type ContactOfficeRecord, type OwnershipKind } from './profileStorage';
+import {
+  fetchProfilePayload,
+  fetchProfileStore,
+  persistProfileStore,
+  type ContactOfficeRecord,
+  type OwnershipKind,
+  type ProfileMeta,
+} from './profileStorage';
 
 type ProfileSection = BusinessSettingsCardProps & {
   span?: 'full' | 'half';
@@ -87,6 +94,10 @@ const baseSections: ProfileSection[] = [
 export function BusinessProfileOverviewPanel() {
   const router = useRouter();
   const [ownershipKind, setOwnershipKind] = useState<OwnershipKind>('legal');
+  const [meta, setMeta] = useState<ProfileMeta | null>(null);
+  const [companyName, setCompanyName] = useState('');
+  const [brandName, setBrandName] = useState('');
+  const [logoImage, setLogoImage] = useState('');
   const [contactWaysDialogOpen, setContactWaysDialogOpen] = useState(false);
   const [selectedTitles, setSelectedTitles] = useState<string[]>(['دفتر فنی']);
 
@@ -95,9 +106,13 @@ export function BusinessProfileOverviewPanel() {
   useEffect(() => {
     let ignore = false;
 
-    fetchProfileStore().then((store) => {
+    fetchProfilePayload().then(({ store, meta }) => {
       if (ignore) return;
       setOwnershipKind(store.ownershipKind);
+      setCompanyName(store.legal.companyName.trim());
+      setBrandName(store.legal.brandName.trim());
+      setLogoImage(store.branding.logoImage.trim());
+      setMeta(meta);
     });
 
     return () => {
@@ -106,6 +121,13 @@ export function BusinessProfileOverviewPanel() {
   }, []);
 
   const sections = baseSections.filter((section) => !section.onlyFor || section.onlyFor === ownershipKind);
+  const displayBusinessName = companyName || brandName || meta?.businessName || 'کسب‌وکار';
+  const displayAvatarText = brandName?.[0] || companyName?.[0] || meta?.brandCode || 'VN';
+  const summaryItems = [
+    { label: 'نام شرکت', value: displayBusinessName },
+    { label: 'مالک tenant', value: meta?.owner.fullName || 'ثبت نشده' },
+    { label: 'موبایل مالک', value: meta?.owner.mobile || 'ثبت نشده' },
+  ];
 
   async function submitContactWaysTitles() {
     const store = await fetchProfileStore();
@@ -158,6 +180,35 @@ export function BusinessProfileOverviewPanel() {
 
   return (
     <section className="business-profile-page">
+      <section className="business-profile-summary">
+        <div className="business-profile-summary-head">
+          <div className="business-profile-summary-avatar">
+            {logoImage ? (
+              <img src={logoImage} alt={displayBusinessName} />
+            ) : (
+              <span>{displayAvatarText}</span>
+            )}
+          </div>
+
+          <div className="business-profile-summary-copy">
+            <strong>{displayBusinessName}</strong>
+            <p>
+              این بخش خلاصه اطلاعات پایه کسب‌وکار، مالک tenant و داده‌هایی را نشان می‌دهد که در ثبت‌نام، خرید و تنظیمات پروفایل ثبت
+              شده‌اند.
+            </p>
+          </div>
+        </div>
+
+        <div className="business-profile-summary-grid">
+          {summaryItems.map((item) => (
+            <div key={item.label} className="business-profile-summary-item">
+              <span>{item.label}</span>
+              <strong>{item.value}</strong>
+            </div>
+          ))}
+        </div>
+      </section>
+
       <header className="business-profile-intro">
         <p>در پروفایل کسب‌وکار اطلاعات هویتی، حقوقی، مالی و تماس شرکت ثبت می‌شود تا مبنای قراردادها، پروژه‌ها و ارتباطات رسمی در سیستم باشد.</p>
       </header>

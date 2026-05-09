@@ -17,10 +17,10 @@ export const RULE_PANEL_SELECT_CLASSNAME =
 /**
  * Numeric / formatted amount fields; optional gutter on the physical left (`left-4`) for `%` / `تومان` chip text.
  */
-export function rulePanelNumericInputClassName(hasLeadingSuffixLabel: boolean): string {
+export function rulePanelNumericInputClassName(suffixPosition: 'left' | 'right' | 'none'): string {
   return [
     '!h-14 w-full !rounded-xl !border-[color:var(--border-color)] !bg-[color:var(--surface)]',
-    hasLeadingSuffixLabel ? '!pl-20 !pr-4' : '!px-4',
+    suffixPosition === 'left' ? '!pl-24 !pr-4' : suffixPosition === 'right' ? '!pr-16 !pl-4' : '!px-4',
     '!text-right !text-lg !font-bold !text-[color:var(--text-strong)] !shadow-none !outline-none transition',
     RULE_PANEL_FIELD_FOCUS,
   ].join(' ');

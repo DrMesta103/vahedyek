@@ -38,17 +38,43 @@ var __export = (target, all) => {
   for (var name in all)
     __defProp(target, name, { get: all[name], enumerable: true });
 };
-var Input = React__namespace.forwardRef(({ className = "", ...props }, ref) => {
-  const invalid = props["aria-invalid"] === true || props["aria-invalid"] === "true";
-  return /* @__PURE__ */ jsxRuntime.jsx(
-    "input",
-    {
-      ref,
-      className: `h-10 w-full rounded-lg border bg-white px-3 text-[13px] text-slate-800 placeholder:text-slate-400 outline-none transition-all disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400 ${invalid ? "border-rose-400 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/10" : "border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10"} ${className}`,
-      ...props
+var Input = React__namespace.forwardRef(
+  ({
+    className = "",
+    startAdornment,
+    endAdornment,
+    startAdornmentClassName = "",
+    endAdornmentClassName = "",
+    containerClassName = "",
+    startAdornmentWrapperClassName = "",
+    endAdornmentWrapperClassName = "",
+    ...props
+  }, ref) => {
+    const invalid = props["aria-invalid"] === true || props["aria-invalid"] === "true";
+    const baseClassName = `h-10 w-full rounded-lg border bg-white px-3 text-[13px] text-slate-800 placeholder:text-slate-400 outline-none transition-all disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400 ${invalid ? "border-rose-400 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/10" : "border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10"}`;
+    const inputClassName = `${baseClassName} ${startAdornment ? "pl-11" : ""} ${endAdornment ? "pr-11" : ""} ${className}`;
+    if (!startAdornment && !endAdornment) {
+      return /* @__PURE__ */ jsxRuntime.jsx("input", { ref, className: inputClassName, ...props });
     }
-  );
-});
+    return /* @__PURE__ */ jsxRuntime.jsxs("div", { className: `relative w-full ${containerClassName}`, children: [
+      startAdornment ? /* @__PURE__ */ jsxRuntime.jsx(
+        "span",
+        {
+          className: `pointer-events-none absolute left-3 top-1/2 z-10 inline-flex -translate-y-1/2 items-center justify-center ${startAdornmentWrapperClassName} ${startAdornmentClassName}`,
+          children: startAdornment
+        }
+      ) : null,
+      /* @__PURE__ */ jsxRuntime.jsx("input", { ref, className: inputClassName, ...props }),
+      endAdornment ? /* @__PURE__ */ jsxRuntime.jsx(
+        "span",
+        {
+          className: `pointer-events-none absolute right-3 top-1/2 z-10 inline-flex -translate-y-1/2 items-center justify-center ${endAdornmentWrapperClassName} ${endAdornmentClassName}`,
+          children: endAdornment
+        }
+      ) : null
+    ] });
+  }
+);
 Input.displayName = "Input";
 var DatePicker = dynamic__default.default(() => import('react-multi-date-picker').then((mod) => mod?.default ?? mod), { ssr: false });
 function PersianDatePicker({
@@ -286,18 +312,27 @@ var RULE_PANEL_TEXT_INPUT_CLASSNAME = [
   RULE_PANEL_FIELD_FOCUS
 ].join(" ");
 var RULE_PANEL_SELECT_CLASSNAME = "h-14 w-full rounded-xl border border-[color:var(--border-color)] bg-[color:var(--surface)] px-4 py-0 text-right text-lg font-bold text-[color:var(--text-strong)] outline-none transition focus:border-[color:var(--theme-action-border)] focus:ring-2 focus:ring-[color:var(--theme-action-bg)]/20";
-function rulePanelNumericInputClassName(hasLeadingSuffixLabel) {
+function rulePanelNumericInputClassName(suffixPosition) {
   return [
     "!h-14 w-full !rounded-xl !border-[color:var(--border-color)] !bg-[color:var(--surface)]",
-    hasLeadingSuffixLabel ? "!pl-20 !pr-4" : "!px-4",
+    suffixPosition === "left" ? "!pl-24 !pr-4" : suffixPosition === "right" ? "!pr-16 !pl-4" : "!px-4",
     "!text-right !text-lg !font-bold !text-[color:var(--text-strong)] !shadow-none !outline-none transition",
     RULE_PANEL_FIELD_FOCUS
   ].join(" ");
 }
-function formatNumericInput(value) {
+function formatIntegerInput(value) {
   const digits = value.replace(/\D/g, "");
   if (!digits) return "";
   return Number(digits).toLocaleString("en-US");
+}
+function formatDecimalInput(value) {
+  const normalized = value.replace(/[٫,]/g, ".");
+  const cleaned = normalized.replace(/[^\d.]/g, "");
+  if (!cleaned) return "";
+  const [integerPart = "", ...fractionParts] = cleaned.split(".");
+  const fractionPart = fractionParts.join("");
+  if (!fractionParts.length) return integerPart;
+  return `${integerPart}.${fractionPart}`;
 }
 function RuleAmountInput({
   value,
@@ -307,21 +342,28 @@ function RuleAmountInput({
 }) {
   const resolvedSuffix = suffix === void 0 ? "\u062A\u0648\u0645\u0627\u0646" : suffix;
   const showSuffixChip = resolvedSuffix.length > 0;
-  const isNumeric = resolvedSuffix === "\u062A\u0648\u0645\u0627\u0646" || resolvedSuffix === "%" || suffix === "";
-  return /* @__PURE__ */ jsxRuntime.jsxs("div", { className: "relative", children: [
-    /* @__PURE__ */ jsxRuntime.jsx(
-      Input,
-      {
-        value,
-        onChange: (event) => onChange(isNumeric ? formatNumericInput(event.target.value) : event.target.value),
-        placeholder,
-        inputMode: isNumeric ? "numeric" : void 0,
-        dir: isNumeric ? "ltr" : void 0,
-        className: rulePanelNumericInputClassName(showSuffixChip)
-      }
-    ),
-    showSuffixChip ? /* @__PURE__ */ jsxRuntime.jsx("span", { className: "pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-xs font-bold text-[color:var(--text-muted)]", children: resolvedSuffix }) : null
-  ] });
+  const isPercent = resolvedSuffix === "%";
+  const isNumeric = resolvedSuffix === "\u062A\u0648\u0645\u0627\u0646" || isPercent || suffix === "";
+  const suffixPosition = !showSuffixChip ? "none" : isPercent ? "left" : "right";
+  return /* @__PURE__ */ jsxRuntime.jsx(
+    Input,
+    {
+      value,
+      onChange: (event) => onChange(
+        isNumeric ? isPercent ? formatDecimalInput(event.target.value) : formatIntegerInput(event.target.value) : event.target.value
+      ),
+      placeholder,
+      inputMode: isPercent ? "decimal" : isNumeric ? "numeric" : void 0,
+      dir: isNumeric ? "ltr" : void 0,
+      className: `${rulePanelNumericInputClassName(suffixPosition)} ${isPercent ? "!text-left" : ""}`,
+      startAdornment: suffixPosition === "left" ? resolvedSuffix : void 0,
+      startAdornmentClassName: "text-xs font-bold text-[color:var(--text-muted)]",
+      startAdornmentWrapperClassName: suffixPosition === "left" ? "w-8" : void 0,
+      endAdornment: suffixPosition === "right" ? resolvedSuffix : void 0,
+      endAdornmentClassName: "text-xs font-bold text-[color:var(--text-muted)]",
+      endAdornmentWrapperClassName: suffixPosition === "right" ? "w-8" : void 0
+    }
+  );
 }
 function RuleFieldLabel({ label, required = false, rightSlot }) {
   return /* @__PURE__ */ jsxRuntime.jsxs("div", { className: "mb-3 flex items-center justify-between gap-3", children: [

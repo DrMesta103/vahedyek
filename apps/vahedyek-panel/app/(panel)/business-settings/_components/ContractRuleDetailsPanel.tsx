@@ -75,17 +75,14 @@ function RuleTextInput({
   }
 
   return (
-    <div className="relative">
-      <Input
-        type="text"
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        placeholder={placeholder}
-        className={cn(RULE_PANEL_TEXT_INPUT_CLASSNAME, suffix || Icon ? '!pr-12' : '')}
-      />
-      {Icon ? <Icon className="pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[color:var(--text-muted)]" /> : null}
-      {suffix ? <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xl font-black text-[color:var(--text-strong)]">{suffix}</span> : null}
-    </div>
+    <Input
+      type="text"
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+      placeholder={placeholder}
+      className={cn(RULE_PANEL_TEXT_INPUT_CLASSNAME, suffix || Icon ? '!pr-12' : '')}
+      endAdornment={suffix ? <span className="text-xl font-black text-[color:var(--text-strong)]">{suffix}</span> : Icon ? <Icon className="h-5 w-5 text-[color:var(--text-muted)]" /> : undefined}
+    />
   );
 }
 
@@ -214,6 +211,24 @@ function getAdditionalCostsLead(tabId: string) {
     default:
       return '';
   }
+}
+
+function parsePercentValue(value: string | boolean | undefined) {
+  if (typeof value !== 'string') return 0;
+  const normalized = Number(value.replace(/[^\d.-]/g, ''));
+  return Number.isFinite(normalized) && normalized > 0 ? normalized : 0;
+}
+
+function getAdjustmentWeightsTotal(state: ContractRuleState) {
+  return (
+    parsePercentValue(state.values.adjustMultiHousingWeight) +
+    parsePercentValue(state.values.adjustMultiLaborWeight) +
+    parsePercentValue(state.values.adjustMultiMaterialWeight) +
+    parsePercentValue(state.values.adjustMultiMaterialsOtherWeight) +
+    parsePercentValue(state.values.adjustMultiWageWeight) +
+    parsePercentValue(state.values.adjustMultiEnergyWeight) +
+    parsePercentValue(state.values.adjustMultiGeneralPriceWeight)
+  );
 }
 
 function applyPanelValue(
@@ -719,6 +734,15 @@ export function ContractRuleDetailsPanel({ ruleId }: { ruleId: ContractRuleId })
   const handleSave = async () => {
     if (!state) return;
 
+    if (ruleId === 'adjustment' && state.activeTab === 'multi-indicator') {
+      const total = getAdjustmentWeightsTotal(state);
+      if (total > 100) {
+        setError(`جمع درصد شاخص‌های تعدیل ${total}٪ است و نباید از ۱۰۰٪ بیشتر باشد.`);
+        setMessage('');
+        return;
+      }
+    }
+
     try {
       setSaving(true);
       setError('');
@@ -808,17 +832,19 @@ export function ContractRuleDetailsPanel({ ruleId }: { ruleId: ContractRuleId })
               <PenaltyRuleSection state={state} onValueChange={(key, value) => applyPanelValue(setState, key, value)} />
             ) : (
               <section className="overflow-hidden rounded-[24px] border border-[color:var(--border-soft)] bg-[color:var(--surface)]">
-                <div className="flex flex-wrap border-b border-[color:var(--border-soft)]">
-                  {rule.tabs.map((tab) => (
-                    <TabButton
-                      key={tab.id}
-                      title={tab.title}
-                      icon={getTabIcon(ruleId, tab.id)}
-                      active={state.activeTab === tab.id}
-                      onClick={() => applyPanelValue(setState, 'activeTab', tab.id)}
-                    />
-                  ))}
-                </div>
+                {ruleId !== 'adjustment' ? (
+                  <div className="flex flex-wrap border-b border-[color:var(--border-soft)]">
+                    {rule.tabs.map((tab) => (
+                      <TabButton
+                        key={tab.id}
+                        title={tab.title}
+                        icon={getTabIcon(ruleId, tab.id)}
+                        active={state.activeTab === tab.id}
+                        onClick={() => applyPanelValue(setState, 'activeTab', tab.id)}
+                      />
+                    ))}
+                  </div>
+                ) : null}
 
                 <div className="space-y-8 p-5">
                   {ruleId === 'prepayment' ? (

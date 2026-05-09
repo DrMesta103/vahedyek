@@ -60,6 +60,7 @@ const GROUP_LABELS: Record<string, string> = {
   business: 'کسب و کار',
   complex: 'مجتمع',
   contracts: 'قراردادها',
+  customer: 'پنل خریدار',
 };
 
 function getRoleTone(role: RoleItem) {

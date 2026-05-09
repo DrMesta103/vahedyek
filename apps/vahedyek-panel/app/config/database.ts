@@ -43,13 +43,15 @@ export function getCurrentDatabaseUrl() {
 export function applyCurrentDatabaseUrl() {
   const url = getCurrentDatabaseUrl();
 
-  // In local dev we prefer a very small pool to avoid exhausting Postgres connections
-  // (Turbopack/fast refresh can otherwise create spikes).
+  // In local dev we still keep the pool small, but `1` is too restrictive for
+  // concurrent page widgets plus route handlers and causes frequent timeouts.
   if (process.env.NODE_ENV === 'development') {
     try {
       const parsed = new URL(url);
-      const hasLimit = parsed.searchParams.has('connection_limit');
-      if (!hasLimit) parsed.searchParams.set('connection_limit', '1');
+      const currentLimit = Number(parsed.searchParams.get('connection_limit') || '0');
+      if (!Number.isFinite(currentLimit) || currentLimit < 5) {
+        parsed.searchParams.set('connection_limit', '5');
+      }
       process.env.DATABASE_URL = parsed.toString();
       return;
     } catch {

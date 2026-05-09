@@ -7,32 +7,55 @@ import { useSearchParams } from 'next/navigation';
 import { FormTextInput } from '../../../contracts/new/_components/ContractFormPrimitives';
 import {
   fetchProfileStore,
+  type LegalCustomerRecord,
   type LegalShareholderRecord,
+  type NaturalCustomerRecord,
   type NaturalShareholderRecord,
   type RepresentativeRecord,
 } from './profileStorage';
 import { PersonAvatar, PersonRowCard } from './ProfilePeoplePrimitives';
 
 type ShareholderTab = 'natural' | 'legal';
+type PeopleEntity = 'shareholder' | 'customer';
+type NaturalPersonRecord = NaturalShareholderRecord | NaturalCustomerRecord;
+type LegalPersonRecord = LegalShareholderRecord | LegalCustomerRecord;
 
-function getNaturalPersonName(item: NaturalShareholderRecord) {
-  return item.fullName.trim() || item.mobile || item.email || 'کاربر جدید';
+const entityConfig = {
+  shareholder: {
+    basePath: '/business-settings/profile/shareholders',
+    ariaLabel: 'لیست سهامداران اصلی',
+    tabLabel: 'نوع سهامدار',
+    addLabel: 'افزودن سهامدار',
+    fallbackName: 'سهامدار جدید',
+  },
+  customer: {
+    basePath: '/customers',
+    ariaLabel: 'لیست مشتریان',
+    tabLabel: 'نوع مشتری',
+    addLabel: 'افزودن مشتری',
+    fallbackName: 'مشتری جدید',
+  },
+} as const;
+
+function getNaturalPersonName(item: NaturalPersonRecord, fallbackName: string) {
+  return item.fullName.trim() || item.mobile || item.email || fallbackName;
 }
 
-export function BusinessShareholdersPanel() {
+export function BusinessShareholdersPanel({ entity = 'shareholder' }: { entity?: PeopleEntity }) {
   const searchParams = useSearchParams();
+  const config = entityConfig[entity];
   const [query, setQuery] = useState('');
   const [activeTab, setActiveTab] = useState<ShareholderTab>('natural');
-  const [naturalShareholders, setNaturalShareholders] = useState<NaturalShareholderRecord[]>([]);
-  const [legalShareholders, setLegalShareholders] = useState<LegalShareholderRecord[]>([]);
+  const [naturalPeople, setNaturalPeople] = useState<NaturalPersonRecord[]>([]);
+  const [legalPeople, setLegalPeople] = useState<LegalPersonRecord[]>([]);
 
   useEffect(() => {
     let ignore = false;
 
     fetchProfileStore().then((store) => {
       if (ignore) return;
-      setNaturalShareholders(store.naturalShareholders);
-      setLegalShareholders(store.legalShareholders);
+      setNaturalPeople(entity === 'customer' ? store.naturalCustomers : store.naturalShareholders);
+      setLegalPeople(entity === 'customer' ? store.legalCustomers : store.legalShareholders);
       const tab = searchParams.get('tab');
       setActiveTab(tab === 'legal' ? 'legal' : 'natural');
     });
@@ -40,31 +63,33 @@ export function BusinessShareholdersPanel() {
     return () => {
       ignore = true;
     };
-  }, [searchParams]);
+  }, [entity, searchParams]);
 
   const normalizedQuery = query.trim();
   const filteredNatural = useMemo(
     () =>
-      naturalShareholders.filter((item) =>
-        !normalizedQuery || item.fullName.includes(normalizedQuery) || item.mobile.includes(normalizedQuery) || item.email.includes(normalizedQuery)
+      naturalPeople.filter(
+        (item) =>
+          !normalizedQuery || item.fullName.includes(normalizedQuery) || item.mobile.includes(normalizedQuery) || item.email.includes(normalizedQuery),
       ),
-    [naturalShareholders, normalizedQuery]
+    [naturalPeople, normalizedQuery],
   );
   const filteredLegal = useMemo(
     () =>
-      legalShareholders.filter((item) =>
-        !normalizedQuery ||
-        item.companyName.includes(normalizedQuery) ||
-        item.brandName.includes(normalizedQuery) ||
-        item.sharePercent.includes(normalizedQuery) ||
-        item.representatives.some((representative) => representative.fullName.includes(normalizedQuery))
+      legalPeople.filter(
+        (item) =>
+          !normalizedQuery ||
+          item.companyName.includes(normalizedQuery) ||
+          item.brandName.includes(normalizedQuery) ||
+          item.sharePercent.includes(normalizedQuery) ||
+          item.representatives.some((representative) => representative.fullName.includes(normalizedQuery)),
       ),
-    [legalShareholders, normalizedQuery]
+    [legalPeople, normalizedQuery],
   );
 
   return (
-    <section className="shareholders-page" aria-label="لیست سهامداران اصلی">
-      <div className="shareholders-top-tabs" role="tablist" aria-label="نوع سهامدار">
+    <section className="shareholders-page" aria-label={config.ariaLabel}>
+      <div className="shareholders-top-tabs" role="tablist" aria-label={config.tabLabel}>
         <button type="button" role="tab" aria-selected={activeTab === 'legal'} className={activeTab === 'legal' ? 'is-active' : ''} onClick={() => setActiveTab('legal')}>
           <Users />
           <span>حقوقی</span>
@@ -76,9 +101,9 @@ export function BusinessShareholdersPanel() {
       </div>
 
       <div className="representative-toolbar shareholders-toolbar">
-        <Link href={`/business-settings/profile/shareholders/new?kind=${activeTab}&tab=${activeTab}`} className="representative-add-button">
+        <Link href={`${config.basePath}/new?kind=${activeTab}&tab=${activeTab}`} className="representative-add-button">
           <Plus />
-          افزودن سهامدار
+          {config.addLabel}
         </Link>
 
         <label className="representative-search">
@@ -92,7 +117,7 @@ export function BusinessShareholdersPanel() {
             <PersonRowCard
               key={item.id}
               className="shareholder-card"
-              name={getNaturalPersonName(item)}
+              name={getNaturalPersonName(item, config.fallbackName)}
               subtitle={`${item.sharePercent}%`}
               email={item.email}
               avatar={<PersonAvatar avatarMode={item.avatarMode} avatarText={item.avatarText} avatarImage={item.avatarImage} kind="person" />}
@@ -102,7 +127,7 @@ export function BusinessShareholdersPanel() {
       ) : (
         <div className="shareholders-grid">
           {filteredLegal.map((item) => (
-            <Link key={item.id} href={`/business-settings/profile/shareholders/${item.id}?tab=legal`} className="shareholder-card shareholder-card-link">
+            <Link key={item.id} href={`${config.basePath}/${item.id}?tab=legal`} className="shareholder-card shareholder-card-link">
               <PersonRowCard
                 className="shareholder-card-inner"
                 name={item.companyName}
@@ -134,7 +159,7 @@ function RepresentativeStack({ representatives }: { representatives: Representat
           {representative.avatarMode === 'image' && representative.avatarImage ? (
             <img src={representative.avatarImage} alt="" className="shareholder-representative-stack-image" />
           ) : representative.avatarMode === 'ghost' ? (
-            '•'
+            '.'
           ) : (
             representative.avatarText
           )}
