@@ -1,4 +1,4 @@
-import type { ContractApprovalInstanceStatus } from '@prisma/client';
+import type { ContractApprovalInstanceStatus } from '@/lib/prisma-client';
 import type { ContractStatus } from '../types/contract';
 
 /**

@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   DndContext,
@@ -20,8 +19,8 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { ChevronRight, GripVertical, Loader2, Plus, Save, Trash2 } from 'lucide-react';
-import { BusinessSwitch, SectionCard, SectionHeader, TagPills } from '../../../contracts/new/_components/ContractFormPrimitives';
+import { GripVertical, Loader2, Plus, Save, Trash2 } from 'lucide-react';
+import { BusinessSwitch, FieldGroup, FormTextInput, SectionCard, SectionHeader, TagPills } from '../../../contracts/new/_components/ContractFormPrimitives';
 
 import { approvalUsageOptions } from '../../_components/approvalProcessConfig';
 import type { ApprovalUsageKey } from '../../../../lib/contractApprovalAccess';
@@ -29,6 +28,7 @@ import type { WorkflowStepDefinition } from '../../../../lib/workflowTypes';
 import {
   getApprovalWorkflowAction,
   listTenantMembersForApproversAction,
+  createApprovalWorkflowAction,
   updateApprovalWorkflowAction,
 } from '../../../../actions/workflowActions';
 
@@ -103,7 +103,7 @@ function SortableStepAccordion({
         <AccordionTrigger
           onToggle={() => onOpenChange(!isOpen)}
           rightSlot={
-            <div className="flex flex-row-reverse items-center gap-2">
+            <div className="flex items-center gap-2">
               {isLast ? <Badge variant="warning">مرحله نهایی</Badge> : null}
               <Badge variant={approverCount ? 'default' : 'muted'}>{approverCount} تأییدکننده</Badge>
               <button
@@ -131,7 +131,7 @@ function SortableStepAccordion({
             </div>
           }
         >
-          <div className="flex flex-row-reverse flex-wrap items-center justify-end gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <span className="text-[12px] font-black text-[var(--text-muted)]">مرحله {index + 1}:</span>
             <span className="truncate text-[14px] font-black text-[var(--text-strong)]">{step.title || '—'}</span>
           </div>
@@ -139,9 +139,9 @@ function SortableStepAccordion({
 
         <AccordionContent>
           <div className="space-y-4 text-right">
-            <div className="flex flex-col gap-2 sm:flex-row-reverse sm:items-end sm:justify-between">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
               <label className="block flex-1">
-                <div className="mb-1 flex flex-row-reverse items-center justify-between gap-2">
+                <div className="mb-1 flex items-center justify-between gap-2">
                   <span className="text-right text-[12px] font-extrabold text-[var(--text-strong)]">عنوان مرحله</span>
                 </div>
                 <input
@@ -156,7 +156,7 @@ function SortableStepAccordion({
 
             <div className="space-y-3">
               <div className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--surface-soft)]/30 p-3">
-                <div className="mb-2 flex flex-row-reverse items-center justify-between gap-2">
+                <div className="mb-2 flex items-center justify-between gap-2">
                   <div className="text-right text-[12px] font-extrabold text-[var(--text-strong)]">تأییدکنندگان</div>
                 </div>
                 <HelperText text="ابتدا خالی است. با جستجو، افراد را اضافه کنید. پس از انتخاب، در لیست زیر نمایش داده می‌شوند." />
@@ -170,7 +170,7 @@ function SortableStepAccordion({
                   emptyText="کاربری مطابق جستجو پیدا نشد."
                 />
 
-                <div className="mt-3 flex flex-row-reverse flex-wrap gap-2">
+                <div className="mt-3 flex flex-wrap gap-2">
                   {step.approvers.length === 0 ? (
                     <span className="text-right text-[12px] font-semibold text-[var(--text-muted)]">هنوز کسی انتخاب نشده است.</span>
                   ) : (
@@ -180,7 +180,7 @@ function SortableStepAccordion({
                       return (
                         <span
                           key={uid}
-                          className={`inline-flex flex-row-reverse items-center gap-2 rounded-full border px-3 py-1 text-[12px] font-bold ${
+                          className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[12px] font-bold ${
                             isFinal
                               ? 'border-[var(--dark-teal)] bg-[color-mix(in_srgb,var(--dark-teal)_10%,white)] text-[var(--dark-teal)]'
                               : 'border-[var(--border-color)] bg-[var(--surface)] text-[var(--text-body)]'
@@ -210,12 +210,12 @@ function SortableStepAccordion({
               </div>
 
               <div className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--surface-soft)]/30 p-3">
-                <div className="mb-2 flex flex-row-reverse items-center justify-between gap-2">
+                <div className="mb-2 flex items-center justify-between gap-2">
                   <div className="text-right text-[12px] font-extrabold text-[var(--text-strong)]">منطق تأیید مرحله</div>
                 </div>
                 <HelperText text="این منطق فقط زمانی استفاده می‌شود که تأییدکنندهٔ نهایی مرحله رأی نداده باشد." />
 
-                <div className="flex flex-row-reverse flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2">
                   <Button
                     type="button"
                     size="sm"
@@ -242,7 +242,7 @@ function SortableStepAccordion({
                 </div>
 
                 {step.logic.mode === 'MINIMUM_COUNT' ? (
-                  <div className="mt-3 flex flex-row-reverse items-center justify-between gap-2">
+                  <div className="mt-3 flex items-center justify-between gap-2">
                     <span className="text-right text-[12px] font-bold text-[var(--text-muted)]">حداقل تعداد لازم</span>
                     <input
                       type="number"
@@ -262,7 +262,7 @@ function SortableStepAccordion({
                 ) : null}
 
                 <div className="mt-4 border-t border-[var(--border-color)] pt-4">
-                  <div className="mb-2 flex flex-row-reverse items-center justify-between gap-2">
+                  <div className="mb-2 flex items-center justify-between gap-2">
                     <div className="text-right text-[12px] font-extrabold text-[var(--text-strong)]">تأییدکننده نهایی مرحله</div>
                   </div>
                   <HelperText text="یک نفر می‌تواند به عنوان «نهایی» برای این مرحله انتخاب شود؛ تأیید این شخص مرحله را فوراً تکمیل می‌کند. همچنین اگر «تأییدکننده نهایی کل فرایند» تعریف نشده باشد، فقط تأییدکننده نهایی همین مرحله می‌تواند «رد کامل و بازگشت به پیش‌نویس» انجام دهد." />
@@ -288,9 +288,10 @@ function SortableStepAccordion({
   );
 }
 
-export function WorkflowEditorClient({ workflowId }: { workflowId: string }) {
+export function WorkflowEditorClient({ workflowId }: { workflowId?: string }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const isNew = !workflowId;
   const [users, setUsers] = useState<UserOpt[]>([]);
   const [error, setError] = useState('');
   const [saveOk, setSaveOk] = useState('');
@@ -301,7 +302,7 @@ export function WorkflowEditorClient({ workflowId }: { workflowId: string }) {
   const [usageType, setUsageType] = useState<ApprovalUsageKey | ''>('');
   const [finalApproverUserId, setFinalApproverUserId] = useState<string>('');
   const [buyerShouldApprove, setBuyerShouldApprove] = useState(true);
-  const [active, setActive] = useState(true);
+  const [workflowActive, setWorkflowActive] = useState(true);
 
   const [globalType, setGlobalType] = useState<'PARALLEL' | 'SEQUENTIAL'>('PARALLEL');
   // Important: keep deterministic SSR/CSR markup (avoid random ids before hydration).
@@ -315,6 +316,22 @@ export function WorkflowEditorClient({ workflowId }: { workflowId: string }) {
   const load = useCallback(() => {
     startTransition(async () => {
       setError('');
+      if (isNew) {
+        const uRes = await listTenantMembersForApproversAction();
+        if (uRes.ok) setUsers(uRes.users as any);
+        const initialStep = defaultStep('PARALLEL');
+        setTitle('فرایند جدید');
+        setUsageType('');
+        setFinalApproverUserId('');
+        setBuyerShouldApprove(true);
+        setWorkflowActive(true);
+        setGlobalType('PARALLEL');
+        setSteps([initialStep]);
+        setOpenStepId(initialStep.id);
+        setLoaded(true);
+        return;
+      }
+
       const [wfRes, uRes] = await Promise.all([getApprovalWorkflowAction(workflowId), listTenantMembersForApproversAction()]);
       if (!wfRes.ok || !wfRes.item) {
         setError(wfRes.message ?? 'فرایند یافت نشد.');
@@ -327,7 +344,7 @@ export function WorkflowEditorClient({ workflowId }: { workflowId: string }) {
       setUsageType(wfRes.item.usageTypes?.[0] ?? '');
       setFinalApproverUserId(wfRes.item.finalApproverUserId ?? '');
       setBuyerShouldApprove(wfRes.item.buyerShouldApprove);
-      setActive(wfRes.item.active);
+      setWorkflowActive(wfRes.item.active);
 
       const loadedSteps = (wfRes.item.steps.length ? wfRes.item.steps : [defaultStep('PARALLEL')]).map((s) => ({
         ...s,
@@ -342,7 +359,7 @@ export function WorkflowEditorClient({ workflowId }: { workflowId: string }) {
       });
       setLoaded(true);
     });
-  }, [workflowId]);
+  }, [isNew, workflowId]);
 
   useEffect(() => {
     void load();
@@ -378,14 +395,17 @@ export function WorkflowEditorClient({ workflowId }: { workflowId: string }) {
         type: globalType,
         isFinal: idx === steps.length - 1,
       }));
-      const res = await updateApprovalWorkflowAction(workflowId, {
+      const payload = {
         title,
         usageTypes: usageType ? [usageType] : [],
         steps: normalizedSteps,
         finalApproverUserId: finalApproverUserId || null,
         buyerShouldApprove,
-        active,
-      });
+        active: isNew ? true : workflowActive,
+      };
+      const res = isNew
+        ? await createApprovalWorkflowAction(payload)
+        : await updateApprovalWorkflowAction(workflowId, payload);
       if (!res.ok) {
         setError('message' in res ? res.message : 'ذخیره انجام نشد.');
         return;
@@ -403,14 +423,7 @@ export function WorkflowEditorClient({ workflowId }: { workflowId: string }) {
   return (
     <div className="workflow-editor-root mx-auto w-full max-w-6xl px-4 pb-28 pt-4 sm:px-6 lg:px-8" dir="rtl" lang="fa">
       <div className="mb-5 text-right">
-        <Link
-          href="/business-settings/approval-process"
-          className="inline-flex flex-row-reverse items-center gap-1 text-[12px] font-bold text-[var(--text-muted)] hover:text-[var(--text-strong)]"
-        >
-          <ChevronRight className="h-4 w-4" />
-          بازگشت به فهرست
-        </Link>
-        <h1 className="mt-2 text-2xl font-black text-[var(--text-strong)]">مدیریت فرایند تأیید</h1>
+        <h1 className="mt-2 text-2xl font-black text-[var(--text-strong)]">{isNew ? 'ثبت فرایند تأیید' : 'مدیریت فرایند تأیید'}</h1>
       </div>
 
       {error ? (
@@ -426,7 +439,7 @@ export function WorkflowEditorClient({ workflowId }: { workflowId: string }) {
 
       {!loaded ? (
         <SectionCard className="p-6 text-right">
-          <div className="flex flex-row-reverse items-center justify-end gap-2 text-[13px] font-bold text-[var(--text-muted)]">
+          <div className="flex items-center gap-2 text-[13px] font-bold text-[var(--text-muted)]">
             <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
             در حال بارگذاری فرایند…
           </div>
@@ -435,58 +448,32 @@ export function WorkflowEditorClient({ workflowId }: { workflowId: string }) {
         <div className="space-y-4">
         <SectionCard>
           <SectionHeader label="فرایند تأیید" description="تنظیمات کلی فرایند" />
-          <div className="p-5 flex flex-col gap-4 sm:flex-row-reverse sm:items-start sm:justify-start">
-            <div className="w-full max-w-[320px] space-y-3">
-              <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--surface-soft)]/30 p-3">
-                <div className="flex flex-row-reverse items-center justify-between">
-                  <span className="text-right text-[12px] font-bold">خریدار در فرایند</span>
-                  <BusinessSwitch
-                    checked={buyerShouldApprove}
-                    onChange={setBuyerShouldApprove}
-                    activeLabel="بله"
-                    inactiveLabel="خیر"
-                  />
-                </div>
-              </div>
+          <div className="space-y-5 p-5">
+            <FieldGroup label="عنوان فرایند" hint="عنوانی که در فهرست فرایندها و در قراردادها نمایش داده می‌شود.">
+              <FormTextInput value={title} onChange={setTitle} dir="rtl" placeholder="مثلا فرایند فروش واحد مسکونی" />
+            </FieldGroup>
 
-              <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--surface-soft)]/30 p-3">
-                <div className="flex flex-row-reverse items-center justify-between">
-                  <span className="text-right text-[12px] font-bold">وضعیت فرایند</span>
-                  <BusinessSwitch checked={active} onChange={setActive} activeLabel="فعال" inactiveLabel="غیرفعال" />
-                </div>
-              </div>
-            </div>
+            <FieldGroup label="نوع پردازش مراحل" hint="موازی: همه تأییدکنندگان مرحله می‌توانند همزمان رأی دهند. سری: هر مرحله طبق ترتیب تأییدکنندگان پیش می‌رود.">
+              <TagPills
+                options={[
+                  { value: 'PARALLEL', label: 'موازی' },
+                  { value: 'SEQUENTIAL', label: 'سری' },
+                ]}
+                value={globalType}
+                onChange={(v) => {
+                  setGlobalType(v);
+                  setSteps((prev) => prev.map((s) => ({ ...s, type: v })));
+                }}
+              />
+            </FieldGroup>
 
-            <div className="min-w-0 flex-1 space-y-4">
-              <div>
-                <div className="mb-1 flex flex-row-reverse items-center justify-between gap-2">
-                  <span className="text-right text-[12px] font-extrabold text-[var(--text-strong)]">عنوان فرایند</span>
+            <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-3">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="text-right">
+                  <p className="text-[13px] font-black text-[var(--text-strong)]">خریدار در فرایند</p>
+                  <p className="mt-1 text-[11px] font-semibold leading-6 text-[var(--text-muted)]">اگر فعال باشد، خریدار قبل از ورود فرایند به سازمان باید تأیید کند.</p>
                 </div>
-                <input
-                  dir="rtl"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  className="h-11 w-full rounded-xl border border-[var(--border-color)] bg-[var(--surface)] px-3 text-right text-[13px] font-semibold"
-                />
-                <HelperText text="عنوانی که در فهرست فرایندها و در قراردادها نمایش داده می‌شود." />
-              </div>
-
-              <div>
-                <div className="mb-2 flex flex-row-reverse items-center justify-between gap-2">
-                  <span className="text-right text-[12px] font-extrabold text-[var(--text-strong)]">نوع پردازش مراحل</span>
-                </div>
-                <HelperText text="موازی: همه تأییدکنندگان مرحله می‌توانند همزمان رأی دهند. سری: هر مرحله طبق ترتیب تأییدکنندگان پیش می‌رود." />
-                <TagPills
-                  options={[
-                    { value: 'PARALLEL', label: 'موازی' },
-                    { value: 'SEQUENTIAL', label: 'سری' },
-                  ]}
-                  value={globalType}
-                  onChange={(v) => {
-                    setGlobalType(v);
-                    setSteps((prev) => prev.map((s) => ({ ...s, type: v })));
-                  }}
-                />
+                <BusinessSwitch checked={buyerShouldApprove} onChange={setBuyerShouldApprove} onLabel="بله" offLabel="خیر" />
               </div>
             </div>
           </div>
@@ -494,7 +481,7 @@ export function WorkflowEditorClient({ workflowId }: { workflowId: string }) {
 
         <SectionCard>
           <SectionHeader label="انواع کاربری واحد" description="هر فرایند فقط می‌تواند یک نوع کاربری داشته باشد." />
-          <div className="p-5 flex flex-row-reverse flex-wrap justify-end gap-2">
+          <div className="flex flex-wrap gap-2 p-5">
             {approvalUsageOptions.map((opt) => (
               <button
                 key={opt.id}
@@ -532,7 +519,7 @@ export function WorkflowEditorClient({ workflowId }: { workflowId: string }) {
         <SectionCard>
           <SectionHeader label="مراحل" description="تعریف مراحل و تأییدکنندگان هر مرحله" />
           <div className="p-5">
-          <div className="mb-4 flex flex-row-reverse items-center justify-between gap-3">
+          <div className="mb-4 flex items-center justify-between gap-3">
             <Button
               type="button"
               variant="outline"

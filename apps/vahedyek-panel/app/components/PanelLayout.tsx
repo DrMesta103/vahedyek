@@ -336,6 +336,10 @@ function buildBusinessSettingsBreadcrumb(pathname: string): Crumb[] {
 
     if (usageSegment && usageTitleMap[usageSegment]) {
       trail.push({ label: usageTitleMap[usageSegment] });
+    } else if (usageSegment === 'new') {
+      trail.push({ label: 'ثبت فرایند جدید' });
+    } else if (usageSegment) {
+      trail.push({ label: 'مدیریت فرایند تأیید' });
     }
   }
 

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { Prisma } from '@prisma/client';
+import { Prisma } from '@/lib/prisma-client';
 import { requireSessionContext } from '../../../../../../../../lib/auth';
 import { prisma } from '../../../../../../../../lib/prisma';
 import { handlePrismaApiError } from '../../../../../../../../lib/prismaApiError';

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { PartySide, PersonType, PricingType, ShareMode } from '@prisma/client';
+import { PartySide, PersonType, PricingType, ShareMode } from '@/lib/prisma-client';
 import { requireSessionContext } from '../../lib/auth';
 import { serializeContractorType, serializeContractType } from '../../lib/subjectUtils';
 import { fetchAllDraftApprovalFlagsByTenantRaw } from '../../lib/contractDraftApprovalRaw';

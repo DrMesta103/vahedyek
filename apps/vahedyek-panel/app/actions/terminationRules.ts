@@ -1,6 +1,6 @@
 'use server';
 
-import type { Prisma } from '@prisma/client';
+import type { Prisma } from '@/lib/prisma-client';
 import { getSessionContext } from '../lib/auth';
 import { prisma } from '../lib/prisma';
 import { buyerRulesPersistedFromTerminationPayload, normalizePersistedBuyerRules } from '../lib/terminationBuyerRules';

@@ -1,4 +1,4 @@
-import { ContractType, ContractorType } from '@prisma/client';
+import { ContractType, ContractorType } from '@/lib/prisma-client';
 
 export function parseContractorType(value: string) {
   switch (value) {

@@ -1,4 +1,4 @@
-import { Prisma } from '@prisma/client';
+import { Prisma } from '@/lib/prisma-client';
 import { NextResponse } from 'next/server';
 import { requireSessionContext } from '../../../../lib/auth';
 import { prisma } from '../../../../lib/prisma';

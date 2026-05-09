@@ -1,4 +1,4 @@
-import type { ContractApprovalDecisionType } from '@prisma/client';
+import type { ContractApprovalDecisionType } from '@/lib/prisma-client';
 import type { WorkflowStepDefinition } from './workflowTypes';
 import { approverAllowedForPermission } from './workflowTypes';
 

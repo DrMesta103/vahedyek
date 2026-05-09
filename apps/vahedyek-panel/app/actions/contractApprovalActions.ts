@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import type { ContractApprovalDecisionType, ContractApprovalInstanceStatus } from '@prisma/client';
+import type { ContractApprovalDecisionType, ContractApprovalInstanceStatus } from '@/lib/prisma-client';
 import { prisma } from '../lib/prisma';
 import { getSessionContext } from '../lib/auth';
 import { getMembershipAccess, hasPermission } from '../lib/access-control';

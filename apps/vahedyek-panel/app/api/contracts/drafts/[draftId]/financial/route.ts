@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { PricingType } from '@prisma/client';
+import { PricingType } from '@/lib/prisma-client';
 import { requireSessionContext } from '../../../../../lib/auth';
 import { normalizeFinancialCategories, normalizeFinancialDueItems, toNumber } from '../../../../../lib/financialUtils';
 import { prisma } from '../../../../../lib/prisma';

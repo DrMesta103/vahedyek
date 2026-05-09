@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Check, ChevronsUpDown, Search, X } from 'lucide-react';
+import { Check, ChevronDown, ChevronUp, Search, X } from 'lucide-react';
 import { Button } from './button';
 
 export type SelectOption = { value: string; label: string; disabled?: boolean };
@@ -52,17 +52,21 @@ export function Select({
         type="button"
         disabled={disabled}
         onClick={() => setOpen((v) => !v)}
-        className="flex h-11 w-full flex-row-reverse items-center justify-between gap-2 rounded-xl border border-[var(--border-color)] bg-[var(--surface)] px-3 text-right text-[13px] font-semibold text-[var(--text-body)] disabled:opacity-55"
+        className="flex h-11 w-full items-center justify-between gap-2 rounded-xl border border-[var(--border-color)] bg-[var(--surface)] px-3 text-right text-[13px] font-semibold text-[var(--text-body)] disabled:opacity-55"
       >
         <span className={`min-w-0 truncate ${selected ? 'text-[var(--text-body)]' : 'text-[var(--text-muted)]'}`}>
           {renderSelected ? renderSelected(selected) : selected?.label ?? placeholder}
         </span>
-        <ChevronsUpDown className="h-4 w-4 shrink-0 text-[var(--text-faint)]" aria-hidden />
+        {open ? (
+          <ChevronUp className="h-4 w-4 shrink-0 text-[var(--text-faint)]" aria-hidden />
+        ) : (
+          <ChevronDown className="h-4 w-4 shrink-0 text-[var(--text-faint)]" aria-hidden />
+        )}
       </button>
 
       {open && !disabled ? (
         <div className="absolute right-0 z-50 mt-2 w-full overflow-hidden rounded-2xl border border-[var(--border-color)] bg-[var(--surface)] shadow-sm">
-          <div className="flex flex-row-reverse items-center gap-2 border-b border-[var(--border-color)] px-3 py-2">
+          <div className="flex items-center gap-2 border-b border-[var(--border-color)] px-3 py-2">
             <Search className="h-4 w-4 text-[var(--text-faint)]" aria-hidden />
             <input
               dir="rtl"
@@ -97,7 +101,7 @@ export function Select({
                       setOpen(false);
                       setQ('');
                     }}
-                    className="flex w-full flex-row-reverse items-center justify-between gap-2 px-3 py-2 text-right text-[12px] font-semibold text-[var(--text-body)] hover:bg-[var(--surface-soft)] disabled:opacity-50"
+                    className="flex w-full items-center justify-between gap-2 px-3 py-2 text-right text-[12px] font-semibold text-[var(--text-body)] hover:bg-[var(--surface-soft)] disabled:opacity-50"
                   >
                     <span className="min-w-0 truncate">{opt.label}</span>
                     {selected?.value === opt.value ? (

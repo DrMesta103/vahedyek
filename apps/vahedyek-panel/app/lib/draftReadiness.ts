@@ -1,4 +1,4 @@
-import { PartySide } from '@prisma/client';
+import { PartySide } from '@/lib/prisma-client';
 import type { ContractPenaltiesData } from '../types/contract';
 import { validatePenaltiesStep } from './contractValidation';
 
