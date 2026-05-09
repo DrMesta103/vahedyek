@@ -18,6 +18,14 @@ import {
   setFrontendStepDraft,
 } from '../../../../lib/contractDraftClient';
 import { validatePenaltiesStep } from '../../../../lib/contractValidation';
+import {
+  canAddProgressiveRow,
+  getNextProgressiveFromDay,
+  normalizeProgressiveRows,
+  sanitizeDecimalInput,
+  sanitizePositiveIntegerInput,
+  validateProgressiveRows,
+} from '../../../../lib/progressivePenalty';
 import { buildValidationSummary } from './validationPresentation';
 import type {
   ContractPenaltiesData,
@@ -84,7 +92,7 @@ const DEFAULT_PROGRESSIVE_ROWS: PenaltyProgressiveRowData[] = [
   { id: 'row-1', fromDay: '1', toDay: '4', rate: '0.5' },
   { id: 'row-2', fromDay: '5', toDay: '6', rate: '0.5' },
   { id: 'row-3', fromDay: '7', toDay: '65', rate: '3.3' },
-  { id: 'row-4', fromDay: '', toDay: '', rate: '' },
+  { id: 'row-4', fromDay: '66', toDay: '', rate: '', openEnded: false },
 ];
 
 const INITIAL_TYPES: PenaltyTypeStateData[] = PENALTY_ITEMS.map((item) => ({
@@ -130,12 +138,13 @@ function normalizeRule(rule: PenaltyRuleData): PenaltyRuleData {
     roundRule: normalizeRoundRuleValue(rule.roundRule),
     extraFeeAmount: String(rule.extraFeeAmount ?? ''),
     extraFeeRoundRule: normalizeRoundRuleValue(rule.extraFeeRoundRule),
-    progressiveRows: (rule.progressiveRows?.length ? rule.progressiveRows : DEFAULT_PROGRESSIVE_ROWS).map((row, index) => ({
+    progressiveRows: normalizeProgressiveRows((rule.progressiveRows?.length ? rule.progressiveRows : DEFAULT_PROGRESSIVE_ROWS).map((row, index) => ({
       id: row.id || `row-${index + 1}`,
       fromDay: String(row.fromDay ?? ''),
       toDay: String(row.toDay ?? ''),
       rate: String(row.rate ?? ''),
-    })),
+      openEnded: Boolean(row.openEnded),
+    }))),
   };
 }
 
@@ -482,10 +491,8 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
     }
 
     if (rule.mode === 'progressive') {
-      const hasConfiguredRow = rule.progressiveRows.some((item) => item.rate && item.fromDay && item.toDay);
-      if (!hasConfiguredRow) {
-        return 'حداقل یک بازه تصاعدی کامل ثبت کنید.';
-      }
+      const validation = validateProgressiveRows(rule.progressiveRows);
+      if (!validation.ok) return validation.message;
     }
 
     if (rule.extraFeeEnabled && !(Number(rule.extraFeeAmount.replace(/,/g, '')) > 0)) {
@@ -504,11 +511,14 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
 
     setRules((current) => {
       const normalized = normalizeRule(ruleForm);
+      const progressiveValidation = normalized.mode === 'progressive' ? validateProgressiveRows(normalized.progressiveRows) : null;
+      const readyRule =
+        progressiveValidation?.ok ? { ...normalized, progressiveRows: progressiveValidation.rows } : normalized;
       // Only one rule per penalty type is allowed.
-      const withoutType = current.filter((item) => item.penaltyTypeId !== normalized.penaltyTypeId);
+      const withoutType = current.filter((item) => item.penaltyTypeId !== readyRule.penaltyTypeId);
       return editingRuleId
-        ? withoutType.concat(normalized)
-        : withoutType.concat({ ...normalized, id: normalized.id || `rule-${Math.random().toString(36).slice(2, 10)}` });
+        ? withoutType.concat(readyRule)
+        : withoutType.concat({ ...readyRule, id: readyRule.id || `rule-${Math.random().toString(36).slice(2, 10)}` });
     });
     setDialogError('');
   };
@@ -742,74 +752,106 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
                               </FieldBlock>
                               <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
                                 <div className="flex items-center justify-between">
-                                  <h4 className="text-sm font-bold text-slate-700">بازه‌های جریمه تصاعدی</h4>
+                                  <div>
+                                    <h4 className="text-sm font-bold text-slate-700">بازه‌های جریمه تصاعدی</h4>
+                                    <p className="mt-1 text-xs leading-6 text-slate-500">شروع هر ردیف خودکار است؛ فقط پایان بازه و نرخ را وارد کنید.</p>
+                                  </div>
                                   <button
                                     type="button"
+                                    disabled={!canAddProgressiveRow(ruleForm.progressiveRows)}
                                     onClick={() =>
                                       setRuleForm((current) => ({
                                         ...current,
                                         penaltyTypeId: type.id,
-                                        progressiveRows: [...current.progressiveRows, { id: `row-${Date.now()}`, fromDay: '', toDay: '', rate: '' }],
+                                        progressiveRows: normalizeProgressiveRows([
+                                          ...current.progressiveRows,
+                                          {
+                                            id: `row-${Date.now()}`,
+                                            fromDay: getNextProgressiveFromDay(current.progressiveRows),
+                                            toDay: '',
+                                            rate: '',
+                                            openEnded: false,
+                                          },
+                                        ]),
                                       }))
                                     }
-                                    className="inline-flex items-center gap-1 text-sm font-medium text-cyan-700 hover:text-cyan-800"
+                                    className="inline-flex items-center gap-1 text-sm font-medium text-cyan-700 hover:text-cyan-800 disabled:cursor-not-allowed disabled:text-slate-400"
                                   >
                                     <Plus className="h-4 w-4" />
                                     افزودن بازه
                                   </button>
                                 </div>
                                 <div className="space-y-3">
-                                  {ruleForm.progressiveRows.map((row) => (
-                                    <div key={row.id} className="grid gap-3 md:grid-cols-[1fr_1fr_1fr_auto]">
-                                      <Input
-                                        value={row.fromDay}
-                                        onChange={(event) =>
-                                          setRuleForm((current) => ({
-                                            ...current,
-                                            penaltyTypeId: type.id,
-                                            progressiveRows: current.progressiveRows.map((item) =>
-                                              item.id === row.id ? { ...item, fromDay: event.target.value } : item,
-                                            ),
-                                          }))
-                                        }
-                                        placeholder="از روز"
-                                      />
-                                      <Input
-                                        value={row.toDay}
-                                        onChange={(event) =>
-                                          setRuleForm((current) => ({
-                                            ...current,
-                                            penaltyTypeId: type.id,
-                                            progressiveRows: current.progressiveRows.map((item) =>
-                                              item.id === row.id ? { ...item, toDay: event.target.value } : item,
-                                            ),
-                                          }))
-                                        }
-                                        placeholder="تا روز"
-                                      />
-                                      <Input
-                                        value={row.rate}
-                                        onChange={(event) =>
-                                          setRuleForm((current) => ({
-                                            ...current,
-                                            penaltyTypeId: type.id,
-                                            progressiveRows: current.progressiveRows.map((item) =>
-                                              item.id === row.id ? { ...item, rate: event.target.value } : item,
-                                            ),
-                                          }))
-                                        }
-                                        placeholder="نرخ جریمه"
-                                      />
+                                  {normalizeProgressiveRows(ruleForm.progressiveRows).map((row, index) => (
+                                    <div key={row.id} className="grid gap-3 rounded-xl border border-slate-200 bg-white p-3 md:grid-cols-[110px_1fr_150px_140px_auto] md:items-end">
+                                      <FieldBlock label="از روز">
+                                        <Input value={row.fromDay} disabled className="bg-slate-50 text-slate-500" />
+                                      </FieldBlock>
+                                      <FieldBlock label="پایان بازه">
+                                        <div className="flex items-center gap-2">
+                                          <Input
+                                            value={row.toDay}
+                                            disabled={row.openEnded}
+                                            onChange={(event) =>
+                                              setRuleForm((current) => ({
+                                                ...current,
+                                                penaltyTypeId: type.id,
+                                                progressiveRows: normalizeProgressiveRows(current.progressiveRows.map((item) =>
+                                                  item.id === row.id ? { ...item, toDay: sanitizePositiveIntegerInput(event.target.value), openEnded: false } : item,
+                                                )),
+                                              }))
+                                            }
+                                            placeholder="تا روز"
+                                          />
+                                          <label className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                                            <input
+                                              type="checkbox"
+                                              checked={Boolean(row.openEnded)}
+                                              onChange={(event) =>
+                                                setRuleForm((current) => {
+                                                  const checked = event.target.checked;
+                                                  const currentRows = normalizeProgressiveRows(current.progressiveRows);
+                                                  const idx = currentRows.findIndex((item) => item.id === row.id);
+                                                  const nextRows = currentRows
+                                                    .slice(0, checked ? idx + 1 : currentRows.length)
+                                                    .map((item) => (item.id === row.id ? { ...item, openEnded: checked, toDay: checked ? '' : item.toDay } : item));
+                                                  return { ...current, penaltyTypeId: type.id, progressiveRows: normalizeProgressiveRows(nextRows) };
+                                                })
+                                              }
+                                            />
+                                            به بعد
+                                          </label>
+                                        </div>
+                                      </FieldBlock>
+                                      <FieldBlock label="نرخ جریمه">
+                                        <Input
+                                          value={row.rate}
+                                          onChange={(event) =>
+                                            setRuleForm((current) => ({
+                                              ...current,
+                                              penaltyTypeId: type.id,
+                                              progressiveRows: normalizeProgressiveRows(current.progressiveRows.map((item) =>
+                                                item.id === row.id ? { ...item, rate: sanitizeDecimalInput(event.target.value) } : item,
+                                              )),
+                                            }))
+                                          }
+                                          placeholder="مثلا 1.25"
+                                        />
+                                      </FieldBlock>
+                                      <div className="rounded-xl bg-slate-50 px-3 py-2 text-xs leading-6 text-slate-500">
+                                        {row.openEnded ? `از روز ${row.fromDay} به بعد` : row.toDay ? `${row.fromDay} تا ${row.toDay} روز` : 'پایان بازه را وارد کنید'}
+                                      </div>
                                       <button
                                         type="button"
+                                        disabled={index === 0}
                                         onClick={() =>
                                           setRuleForm((current) => ({
                                             ...current,
                                             penaltyTypeId: type.id,
-                                            progressiveRows: current.progressiveRows.filter((item) => item.id !== row.id),
+                                            progressiveRows: normalizeProgressiveRows(current.progressiveRows.filter((item) => item.id !== row.id)),
                                           }))
                                         }
-                                        className="rounded-lg border border-rose-200 px-3 text-sm text-rose-600 hover:bg-rose-50"
+                                        className="h-10 rounded-lg border border-rose-200 px-3 text-sm text-rose-600 hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-40"
                                       >
                                         حذف
                                       </button>

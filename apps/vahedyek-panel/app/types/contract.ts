@@ -85,6 +85,7 @@ export interface PenaltyProgressiveRowData {
   fromDay: string;
   toDay: string;
   rate: string;
+  openEnded?: boolean;
 }
 
 export interface PenaltyTypeStateData {

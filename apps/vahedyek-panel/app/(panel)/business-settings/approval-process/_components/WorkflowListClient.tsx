@@ -2,17 +2,22 @@
 
 import { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { CalendarClock, Layers3, MoreVertical, Plus, Settings2, ShieldCheck, Trash2, UsersRound } from 'lucide-react';
+import { CalendarClock, MoreVertical, Plus, Settings2, ShieldCheck, Trash2, UsersRound } from 'lucide-react';
 import type { ApprovalUsageKey } from '../../../../lib/contractApprovalAccess';
+import type { WorkflowStepDefinition } from '../../../../lib/workflowTypes';
 import { approvalUsageOptions } from '../../_components/approvalProcessConfig';
 import { SectionCard } from '../../../contracts/new/_components/ContractFormPrimitives';
 import {
   deleteApprovalWorkflowAction,
   listApprovalWorkflowsAction,
+  listTenantMembersForApproversAction,
 } from '../../../../actions/workflowActions';
 
-function usageLabel(key: string) {
-  return approvalUsageOptions.find((x) => x.id === key)?.shortTitle ?? key;
+type UserOpt = { id: string; label: string };
+
+function uniqueLabels(ids: string[], users: UserOpt[]) {
+  const labels = ids.map((id) => users.find((u) => u.id === id)?.label ?? id);
+  return Array.from(new Set(labels));
 }
 
 export function WorkflowListClient() {
@@ -25,20 +30,22 @@ export function WorkflowListClient() {
       usageTypes: ApprovalUsageKey[];
       finalApproverUserId: string | null;
       buyerShouldApprove: boolean;
-      steps: unknown[];
+      steps: WorkflowStepDefinition[];
       updatedAt: string;
     }>
   >([]);
+  const [users, setUsers] = useState<UserOpt[]>([]);
   const [error, setError] = useState('');
   const [openMenuId, setOpenMenuId] = useState('');
 
   const refresh = useCallback(() => {
     startTransition(async () => {
-      const res = await listApprovalWorkflowsAction();
+      const [res, usersRes] = await Promise.all([listApprovalWorkflowsAction(), listTenantMembersForApproversAction()]);
       if (!res.ok) {
         setError(res.message ?? 'خطا در دریافت فهرست.');
         return;
       }
+      if (usersRes.ok) setUsers(usersRes.users as UserOpt[]);
       setError('');
       setItems(res.items as any);
     });
@@ -47,8 +54,6 @@ export function WorkflowListClient() {
   useEffect(() => {
     void refresh();
   }, [refresh]);
-
-  const empty = items.length === 0;
 
   const usedUsageKeys = useMemo(() => {
     const set = new Set<string>();
@@ -86,19 +91,49 @@ export function WorkflowListClient() {
 
   const cards = useMemo(
     () =>
-      items.map((w) => ({
-        ...w,
-        usageText: (w.usageTypes ?? []).map((k) => usageLabel(k)).join('، ') || '—',
-        stepCount: Array.isArray(w.steps) ? w.steps.length : 0,
-        processingText: Array.isArray(w.steps) && (w.steps as any[])[0]?.type === 'SEQUENTIAL' ? 'سری' : 'موازی',
-        approverCount: Array.isArray(w.steps)
-          ? (w.steps as any[]).reduce((sum, step) => sum + (Array.isArray(step?.approvers) ? step.approvers.length : 0), 0)
-          : 0,
-        buyerText: w.buyerShouldApprove ? 'با تأیید خریدار' : 'بدون تأیید خریدار',
-        finalText: w.finalApproverUserId ? 'نهایی کل دارد' : 'نهایی کل ندارد',
-        updatedText: new Intl.DateTimeFormat('fa-IR', { month: 'short', day: 'numeric' }).format(new Date(w.updatedAt)),
-      })),
-    [items],
+      approvalUsageOptions.flatMap((usage) => {
+        const usageKey = usage.id as ApprovalUsageKey;
+        const w = items.find((item) => (item.usageTypes ?? []).includes(usageKey));
+        if (!w) return [];
+
+        const steps = Array.isArray(w.steps) ? w.steps : [];
+        const allApproverIds = steps.flatMap((step) => (Array.isArray(step.approvers) ? step.approvers : []));
+        const approverNames = uniqueLabels(allApproverIds, users);
+        const finalStepNames = uniqueLabels(
+          steps.map((step) => step.finalApproverId).filter(Boolean) as string[],
+          users,
+        );
+        const finalProcessName = w.finalApproverUserId ? users.find((u) => u.id === w.finalApproverUserId)?.label ?? w.finalApproverUserId : '';
+        return [{
+          isConfigured: true as const,
+          ...w,
+          usageKey,
+          usageText: usage.shortTitle,
+          stepCount: steps.length,
+          processingText: steps[0]?.type === 'SEQUENTIAL' ? 'مرحله‌به‌مرحله' : 'بدون ترتیب',
+          processingHint: steps[0]?.type === 'SEQUENTIAL' ? 'ترتیب مراحل رعایت می‌شود' : 'مراحل مستقل از ترتیب رأی می‌گیرند',
+          approverCount: allApproverIds.length,
+          approverNames,
+          approverPreview: approverNames.slice(0, 4),
+          hasMoreApprovers: approverNames.length > 4,
+          incompleteStepCount: steps.filter((step) => !step.approvers?.length).length,
+          finalStepApproverCount: steps.filter((step) => Boolean(step.finalApproverId)).length,
+          finalStepNames,
+          minimumLogicCount: steps.filter((step) => step.logic?.mode === 'MINIMUM_COUNT').length,
+          allMustApproveCount: steps.filter((step) => step.logic?.mode !== 'MINIMUM_COUNT').length,
+          stepPreview: steps.length
+            ? steps
+                .slice(0, 3)
+                .map((step, index) => step.title?.trim() || `مرحله ${index + 1}`)
+                .join('، ')
+            : 'بدون مرحله',
+          hasMoreSteps: steps.length > 3,
+          buyerText: w.buyerShouldApprove ? 'خریدار هم رأی می‌دهد' : 'بدون رأی خریدار',
+          finalText: finalProcessName ? `نهایی کل: ${finalProcessName}` : 'بدون نهایی کل',
+          updatedText: new Intl.DateTimeFormat('fa-IR', { month: 'short', day: 'numeric' }).format(new Date(w.updatedAt)),
+        }];
+      }),
+    [items, users],
   );
 
   return (
@@ -127,42 +162,33 @@ export function WorkflowListClient() {
         </div>
       ) : null}
 
-      {empty ? (
-        <SectionCard className="p-10 text-center">
-          <p className="text-[14px] font-semibold text-[var(--text-muted)]">هنوز هیچ فرایندی تعریف نشده است.</p>
-          <button
-            type="button"
-            onClick={createNew}
-            disabled={isPending || !firstUnusedUsageKey}
-            className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[var(--dark-teal)] px-5 py-2.5 text-[13px] font-extrabold text-white disabled:opacity-60"
-          >
-            <Plus className="h-4 w-4" />
-            ساخت اولین فرایند
-          </button>
-        </SectionCard>
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {cards.map((w) => (
+      <div className="space-y-4">
+        {cards.map((w) => {
+          return (
             <SectionCard key={w.id} className="group overflow-visible border-slate-200 bg-white shadow-sm transition hover:border-teal-200 hover:shadow-md">
-              <div className="h-1 bg-gradient-to-l from-[var(--dark-teal)] via-teal-300 to-transparent" />
-              <div className="p-4">
-                <div className="flex items-start gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-[var(--dark-teal)]">
-                    <Layers3 className="h-5 w-5" aria-hidden />
-                  </div>
+              <div className="p-3">
+                <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1 text-right">
-                    <h2 className="truncate text-[14px] font-black text-[var(--text-strong)]">{w.title}</h2>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-bold text-slate-600">{w.usageText}</span>
-                      <span className="rounded-full border border-teal-100 bg-teal-50 px-2.5 py-1 text-[11px] font-bold text-teal-700">
-                        {w.stepCount} مرحله
+                    <h2 className="text-[15px] font-black leading-6 text-[var(--text-strong)]">{w.title}</h2>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="inline-flex rounded-full border border-teal-100 bg-teal-50 px-3 py-1 text-[11px] font-bold text-teal-700">{w.usageText}</span>
+                      <span className="rounded-full bg-slate-50 px-3 py-1 text-[11px] font-normal text-slate-500">{w.processingText}</span>
+                      <span className="rounded-full bg-slate-50 px-3 py-1 text-[11px] font-normal text-slate-500">{w.buyerText}</span>
+                      <span className="rounded-full bg-slate-50 px-2.5 py-1 text-[10px] font-normal text-slate-500">
+                        <b className="text-[var(--text-strong)]">{w.stepCount}</b> مرحله
+                      </span>
+                      <span className="rounded-full bg-slate-50 px-2.5 py-1 text-[10px] font-normal text-slate-500">
+                        <b className="text-[var(--text-strong)]">{w.approverCount}</b> رأی‌دهنده
+                      </span>
+                      <span className="rounded-full bg-slate-50 px-2.5 py-1 text-[10px] font-normal text-slate-500">
+                        <b className="text-[var(--text-strong)]">{w.finalStepApproverCount}</b> نهایی
                       </span>
                     </div>
                   </div>
                   <div className="relative shrink-0">
                     <button
                       type="button"
-                      className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-50"
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-50"
                       aria-label={`گزینه‌های ${w.title}`}
                       onClick={() => setOpenMenuId((current) => (current === w.id ? '' : w.id))}
                     >
@@ -193,25 +219,63 @@ export function WorkflowListClient() {
                   </div>
                 </div>
 
-                <div className="mt-4 grid gap-2 text-[11px] font-bold text-slate-600">
-                  <div className="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2">
-                    <UsersRound className="h-4 w-4 text-slate-400" aria-hidden />
-                    <span>{w.approverCount} تأییدکننده، پردازش {w.processingText}</span>
+                <div className="mt-2 grid gap-2 md:grid-cols-2">
+                  <div className="grid gap-2 text-right text-[11px] font-normal text-slate-600">
+                  <div className="rounded-xl border border-slate-100 px-3 py-1.5">
+                    <span className="block text-[10px] font-bold text-slate-400">مراحل</span>
+                    <span className="mt-0.5 block truncate leading-5 text-slate-700">
+                      {w.stepPreview}
+                      {w.hasMoreSteps ? ' و مراحل دیگر' : ''}
+                    </span>
                   </div>
-                  <div className="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2">
-                    <ShieldCheck className="h-4 w-4 text-slate-400" aria-hidden />
-                    <span>{w.buyerText}، {w.finalText}</span>
+                  <div className="rounded-xl border border-slate-100 px-3 py-1.5">
+                    <span className="block text-[10px] font-bold text-slate-400">تأییدکنندگان</span>
+                    <div className="mt-1.5 flex flex-wrap gap-1.5">
+                      {w.approverPreview.length ? (
+                        w.approverPreview.map((name) => (
+                          <span key={name} className="max-w-full truncate rounded-full border border-slate-200 bg-white px-2 py-1 text-[10px] font-normal text-slate-600">
+                            {name}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-[11px] text-slate-400">ثبت نشده</span>
+                      )}
+                      {w.hasMoreApprovers ? <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] text-slate-500">+{w.approverNames.length - 4}</span> : null}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2">
-                    <CalendarClock className="h-4 w-4 text-slate-400" aria-hidden />
-                    <span>آخرین تغییر: {w.updatedText}</span>
+                  </div>
+                  <div className="grid gap-2 text-right text-[11px] font-normal text-slate-600">
+                  <div className="rounded-xl bg-slate-50/80 px-3 py-1.5">
+                    <div className="flex items-center gap-2">
+                      <UsersRound className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
+                      <span className="truncate">{w.processingHint}</span>
+                    </div>
+                    <div className="mt-1.5 flex items-center gap-2">
+                      <ShieldCheck className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
+                      <span className="truncate">{w.finalText}</span>
+                    </div>
+                    {w.finalStepNames.length ? (
+                      <div className="mt-1.5 truncate text-[10px] leading-5 text-slate-500">
+                        نهایی مرحله: {w.finalStepNames.slice(0, 2).join('، ')}
+                        {w.finalStepNames.length > 2 ? ' و دیگران' : ''}
+                      </div>
+                    ) : null}
+                    <div className="mt-1.5 truncate text-[10px] leading-5 text-slate-500">
+                      {w.allMustApproveCount} تأیید کامل، {w.minimumLogicCount} حد نصاب
+                      {w.incompleteStepCount ? `، ${w.incompleteStepCount} ناقص` : ''}
+                    </div>
+                  </div>
+                    <div className="flex items-center gap-2 rounded-xl border border-slate-100 px-3 py-1.5 text-[10px] font-normal text-slate-400">
+                      <CalendarClock className="h-3.5 w-3.5" aria-hidden />
+                      <span>آخرین تغییر: {w.updatedText}</span>
+                    </div>
                   </div>
                 </div>
               </div>
             </SectionCard>
-          ))}
-        </div>
-      )}
+          );
+        })}
+      </div>
     </div>
   );
 }

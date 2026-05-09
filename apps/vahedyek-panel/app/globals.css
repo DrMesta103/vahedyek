@@ -9474,3 +9474,18 @@ html[dir='rtl'] .contract-flow-stage-content > .content-body-wide {
   direction: inherit;
   text-align: inherit;
 }
+
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button,
+.no-number-spin::-webkit-outer-spin-button,
+.no-number-spin::-webkit-inner-spin-button {
+  margin: 0;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+input[type='number'],
+.no-number-spin[type='number'] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
