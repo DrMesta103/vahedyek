@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { Building2, Circle, Pencil } from 'lucide-react';
-import type { Block, Contract, ContractType, Unit } from '../../types/contract';
+import type { Block, Contract, ContractStatus, ContractType, Unit } from '../../types/contract';
 import { formatDateFa } from '../../lib/dateFormat';
 
 interface ContractTableProps {
@@ -11,6 +11,8 @@ interface ContractTableProps {
   units: Unit[];
   onEdit: (id: string) => void;
   loading?: boolean;
+  /** تب فعال فهرست قراردادها — برای نمایش زمینهٔ ورود در صفحهٔ جزئیات */
+  listContext?: ContractStatus;
 }
 
 const CONTRACT_TYPE_LABEL: Record<ContractType, string> = {
@@ -35,7 +37,7 @@ function DetailRow({ label, value, accent = false }: { label: string; value: Rea
   );
 }
 
-export default function ContractTable({ contracts, blocks, units, onEdit, loading = false }: ContractTableProps) {
+export default function ContractTable({ contracts, blocks, units, onEdit, loading = false, listContext }: ContractTableProps) {
   const router = useRouter();
   const blockMap = new Map(blocks.map((block) => [block.id, block.name]));
   const unitMap = new Map(units.map((unit) => [unit.id, unit]));
@@ -79,15 +81,20 @@ export default function ContractTable({ contracts, blocks, units, onEdit, loadin
         const leftRibbonLabel =
           contract.status === 'draft' ? 'پیش‌نویس قرارداد' : contract.status === 'pending_approval' ? 'آماده بررسی' : 'تکمیل شده';
 
+        const detailsHref =
+          listContext != null
+            ? `/contracts/${contract.id}?list=${encodeURIComponent(listContext)}`
+            : `/contracts/${contract.id}`;
+
         return (
           <article
             key={contract.id}
             className="contract-reference-card"
             role="button"
             tabIndex={0}
-            onClick={() => router.push(`/contracts/${contract.id}`)}
+            onClick={() => router.push(detailsHref)}
             onKeyDown={(event) => {
-              if (event.key === 'Enter' || event.key === ' ') router.push(`/contracts/${contract.id}`);
+              if (event.key === 'Enter' || event.key === ' ') router.push(detailsHref);
             }}
           >
             <div className="contract-reference-ribbon is-left">{leftRibbonLabel}</div>

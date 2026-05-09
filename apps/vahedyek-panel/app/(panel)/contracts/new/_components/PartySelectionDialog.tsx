@@ -1,10 +1,9 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Search } from 'lucide-react';
-import { ChoiceCard } from './ChoiceCard';
+import { useRouter } from 'next/navigation';
+import { MoreVertical, Search, UserRound } from 'lucide-react';
 import { ContractModal } from './ContractModal';
-import { FieldLabel } from './FieldLabel';
 import { Input } from '@repo/ui';
 import { getEntityLabels, getTypeLabel, type DirectoryItem, type EntityKind, type PartyRow, type PersonType } from './partiesTypes';
 
@@ -12,6 +11,7 @@ export function PartySelectionDialog({
   open,
   onClose,
   kind,
+  partnerSource,
   rows,
   naturalItems,
   legalItems,
@@ -22,6 +22,8 @@ export function PartySelectionDialog({
   open: boolean;
   onClose: () => void;
   kind: EntityKind;
+  /** فقط برای `kind="partner"`: منبع لیست طرف اول. */
+  partnerSource?: 'partners' | 'shareholders';
   rows: PartyRow[];
   naturalItems: DirectoryItem[];
   legalItems: DirectoryItem[];
@@ -29,7 +31,9 @@ export function PartySelectionDialog({
   onAddSelected: (items: DirectoryItem[]) => void;
   loading: boolean;
 }) {
+  const router = useRouter();
   const labels = getEntityLabels(kind);
+  const partnerLabel = kind !== 'partner' ? null : partnerSource === 'partners' ? 'شرکا' : 'سهام‌داران';
   const [personTab, setPersonTab] = useState<PersonType>('natural');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -83,118 +87,180 @@ export function PartySelectionDialog({
     <ContractModal
       open={open}
       onClose={resetAndClose}
-      title={labels.modalTitle}
-      description={`از بین ${labels.plural} حقیقی یا حقوقی انتخاب کنید یا ${labels.singular} جدید بسازید.`}
-      maxWidthClass="max-w-4xl"
+      title={`افزودن ${kind === 'buyer' ? 'طرف دوم' : kind === 'partner' ? 'طرف اول' : labels.singular}`}
+      description={undefined}
+      maxWidthClass="max-w-xl"
       centeredTitle
       footer={
         <>
           <button
             type="button"
+            onClick={resetAndClose}
+            className="min-w-[120px] rounded-full border border-[color-mix(in_srgb,var(--dark-teal)_45%,transparent)] bg-white px-6 py-2.5 text-sm font-bold text-[color-mix(in_srgb,var(--dark-teal)_92%,black)] transition hover:bg-slate-50"
+          >
+            لغو
+          </button>
+          <button
+            type="button"
             onClick={handleAddSelected}
             disabled={!selectedIds.length}
-            className="rounded-lg bg-blue-500 px-4 py-2 text-sm font-medium text-white hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-40"
+            className="min-w-[140px] rounded-full bg-[color-mix(in_srgb,var(--dark-teal)_92%,black)] px-7 py-2.5 text-sm font-black text-white shadow-sm transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {labels.addSelected}
-          </button>
-          <button type="button" onClick={resetAndClose} className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">
-            انصراف
+            ذخیره
           </button>
         </>
       }
     >
-      <div className="space-y-5">
-        <div className="grid gap-3 md:grid-cols-2">
-          <ChoiceCard title="حقیقی" active={personTab === 'natural'} onClick={() => setPersonTab('natural')} />
-          <ChoiceCard title="حقوقی" active={personTab === 'legal'} onClick={() => setPersonTab('legal')} />
+      <div className="space-y-5" dir="rtl" lang="fa">
+        <div className="flex flex-col items-center justify-center gap-2 pt-1">
+          <span className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500">
+            <UserRound className="h-7 w-7" aria-hidden />
+          </span>
         </div>
 
-        <div className="mx-auto w-full max-w-2xl rounded-2xl border border-gray-200 bg-gray-50 p-4">
-          <div className="mb-4 flex items-start justify-between gap-4">
-            <div className="text-right">
-              <p className="font-semibold text-gray-800">{labels.listTitle}</p>
-              <p className="mt-1 text-xs text-gray-500">
-                از بین {labels.plural} {personTab === 'natural' ? 'حقیقی' : 'حقوقی'} چند نفر را انتخاب کنید.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                setNewItemMode((current) => !current);
-                setNewName('');
-              }}
-              className="rounded-xl bg-white px-4 py-2 text-sm text-gray-700 shadow-sm hover:bg-gray-100"
-            >
-              افزودن {labels.singular} جدید
-            </button>
-          </div>
+        <div className="flex items-center justify-center gap-6">
+          <label className="inline-flex items-center gap-2 text-sm font-bold text-slate-700">
+            <input
+              type="radio"
+              name="party-person-type"
+              checked={personTab === 'natural'}
+              onChange={() => setPersonTab('natural')}
+              className="h-4 w-4 accent-[color-mix(in_srgb,var(--dark-teal)_92%,black)]"
+            />
+            حقیقی
+          </label>
+          <label className="inline-flex items-center gap-2 text-sm font-bold text-slate-700">
+            <input
+              type="radio"
+              name="party-person-type"
+              checked={personTab === 'legal'}
+              onChange={() => setPersonTab('legal')}
+              className="h-4 w-4 accent-[color-mix(in_srgb,var(--dark-teal)_92%,black)]"
+            />
+            حقوقی
+          </label>
+        </div>
 
-          {newItemMode ? (
-            <div className="mb-4 rounded-2xl border border-gray-200 bg-white p-4">
-              <FieldLabel label={`نام ${labels.singular} جدید`} />
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <Input
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            className="h-11 rounded-2xl pl-10"
+            placeholder="جستجو"
+          />
+        </div>
+
+        <div className="space-y-3">
+          {loading ? (
+            <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm font-semibold text-slate-400">
+              در حال بارگذاری…
+            </div>
+          ) : availableItems.length ? (
+            availableItems.map((item) => {
+              const checked = selectedIds.includes(item.id);
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() =>
+                    setSelectedIds((current) => (current.includes(item.id) ? current.filter((itemId) => itemId !== item.id) : [...current, item.id]))
+                  }
+                  className={`relative flex w-full flex-row-reverse items-center justify-between gap-4 rounded-2xl border px-4 py-4 text-right shadow-sm transition-colors ${
+                    checked
+                      ? 'border-[color-mix(in_srgb,var(--dark-teal)_40%,transparent)] bg-[color-mix(in_srgb,var(--dark-teal)_18%,white)]'
+                      : 'border-slate-200 bg-white hover:bg-slate-50'
+                  }`}
+                >
+                  <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#ff9d72] text-white">
+                    <UserRound className="h-6 w-6" aria-hidden />
+                  </span>
+
+                  <div className="min-w-0 flex-1 text-right">
+                    <div className="truncate text-[14px] font-extrabold text-slate-800">{item.name}</div>
+                    <div className="mt-1 text-[12px] font-semibold text-slate-600">
+                      {getTypeLabel(item.personType)}
+                    </div>
+                  </div>
+
+                  <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-200/70 text-slate-600">
+                    <MoreVertical className="h-5 w-5" aria-hidden />
+                  </span>
+                  {checked ? (
+                    <span
+                      className="absolute left-3 top-3 inline-flex h-5 w-5 items-center justify-center rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700"
+                      aria-hidden
+                    >
+                      <svg viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M20 6 9 17l-5-5" />
+                      </svg>
+                    </span>
+                  ) : null}
+                </button>
+              );
+            })
+          ) : (
+            <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center text-sm font-semibold text-slate-400">
+              موردی پیدا نشد.
+            </div>
+          )}
+        </div>
+
+        {newItemMode ? (
+          <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
+            <div className="text-right text-[12px] font-bold text-slate-700">
+              نام {personTab === 'natural' ? 'شخص حقیقی' : 'شخص حقوقی'}
+            </div>
+            <div className="mt-2 flex items-center gap-2">
               <Input
                 value={newName}
                 onChange={(event) => setNewName(event.target.value)}
-                className="mt-2"
-                placeholder={personTab === 'natural' ? 'مثلا محمد قاسمی' : `مثلا ${labels.singular} نوین`}
+                className="h-11 flex-1 rounded-2xl"
+                placeholder={personTab === 'natural' ? 'مثلا مهدی علینقی پور' : 'مثلا شرکت نمونه'}
               />
-              <div className="mt-3 flex justify-end">
-                <button
-                  type="button"
-                  onClick={handleCreate}
-                  disabled={!newName.trim() || creating}
-                  className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  {creating ? 'در حال ثبت...' : `ثبت ${labels.singular} جدید`}
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={() => void handleCreate()}
+                disabled={!newName.trim() || creating}
+                className="shrink-0 rounded-2xl bg-[color-mix(in_srgb,var(--dark-teal)_92%,black)] px-4 py-3 text-[12px] font-black text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {creating ? '...' : 'ثبت'}
+              </button>
             </div>
-          ) : null}
-
-          <div className="relative mb-4">
-            <Search className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-            <Input value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} className="pr-10" placeholder={`جستجو در ${labels.plural}...`} />
           </div>
+        ) : null}
 
-          <div className="space-y-3">
-            {loading ? (
-              <div className="rounded-2xl border border-gray-200 bg-white p-8 text-center text-sm text-gray-400">
-                در حال بارگذاری اشخاص...
-              </div>
-            ) : availableItems.length ? (
-              availableItems.map((item) => {
-                const checked = selectedIds.includes(item.id);
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => setSelectedIds((current) => (current.includes(item.id) ? current.filter((itemId) => itemId !== item.id) : [...current, item.id]))}
-                    className={`flex w-full items-center justify-between rounded-2xl border px-4 py-4 text-right transition-colors ${
-                      checked ? 'border-blue-400 bg-blue-50' : 'border-gray-200 bg-white hover:bg-gray-100'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <span
-                        className={`flex h-5 w-5 items-center justify-center rounded-full border ${
-                          checked ? 'border-blue-600 bg-blue-600 text-white' : 'border-gray-400 bg-white text-transparent'
-                        }`}
-                      >
-                        <span className="h-2.5 w-2.5 rounded-full bg-current" />
-                      </span>
-                      <p className="font-medium text-gray-800">{item.name}</p>
-                    </div>
-                    <span className="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs text-gray-500">
-                      {getTypeLabel(item.personType)}
-                    </span>
-                  </button>
-                );
-              })
-            ) : (
-              <div className="rounded-2xl border-2 border-dashed border-gray-200 bg-white p-8 text-center text-sm text-gray-400">
-                موردی برای نمایش پیدا نشد.
-              </div>
-            )}
-          </div>
+        <div className="flex items-center justify-start pt-2">
+          <button
+            type="button"
+            onClick={() => {
+              if (kind === 'buyer') {
+                const returnTo = '/contracts/new?buyerDialog=1';
+                router.push(`/business-settings/profile/buyers/new?kind=${personTab}&tab=${personTab}&returnTo=${encodeURIComponent(returnTo)}`);
+                return;
+              }
+              if (kind === 'partner') {
+                const returnTo = '/contracts/new?partnerDialog=1';
+                if (partnerSource === 'partners') {
+                  router.push(
+                    `/business-settings/profile/partners/new?title=${encodeURIComponent('ثبت شریک')}&returnTo=${encodeURIComponent(returnTo)}`,
+                  );
+                } else {
+                  router.push(
+                    `/business-settings/profile/shareholders/new?kind=${personTab}&tab=${personTab}&returnTo=${encodeURIComponent(returnTo)}`,
+                  );
+                }
+                return;
+              }
+              setNewItemMode(true);
+            }}
+            className="inline-flex items-center gap-3 rounded-full bg-[color-mix(in_srgb,var(--dark-teal)_92%,black)] px-5 py-2.5 text-sm font-black text-white shadow-sm transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <span className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-white/35 bg-white/10 text-xl leading-none">
+              +
+            </span>
+            افزودن {kind === 'buyer' ? 'خریدار' : kind === 'partner' ? partnerLabel ?? labels.plural : labels.singular}
+          </button>
         </div>
       </div>
     </ContractModal>

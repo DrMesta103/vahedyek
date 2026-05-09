@@ -59,6 +59,7 @@ export async function GET(request: Request) {
       orderBy: { updatedAt: 'desc' },
       select: {
         id: true,
+        releasedFromApprovedForEdit: true,
         createdAt: true,
         updatedAt: true,
         subject: true,
@@ -102,6 +103,7 @@ export async function GET(request: Request) {
         isDraftReadyForApproval(draft),
         Boolean(approvalFlagMap.get(draft.id)?.approvalReturnedPending),
         instanceStatusByDraft.get(draft.id),
+        Boolean(draft.releasedFromApprovedForEdit),
       ) as ContractStatus,
       createdAt: draft.createdAt.toISOString(),
       updatedAt: draft.updatedAt.toISOString(),

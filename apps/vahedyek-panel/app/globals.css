@@ -8294,6 +8294,11 @@ gap: 16px;
   color: #b45309;
 }
 
+.contract-status-badge.is-pending {
+  background: color-mix(in srgb, #3b82f6 14%, var(--surface));
+  color: #1d4ed8;
+}
+
 .contract-status-badge.is-finalized {
   background: color-mix(in srgb, #16a34a 14%, var(--surface));
   color: #166534;
