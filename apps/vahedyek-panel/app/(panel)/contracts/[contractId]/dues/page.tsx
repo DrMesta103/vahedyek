@@ -21,7 +21,7 @@ const TT_CONTRACT_BASE_EX_PENALTY =
   'سقف مالی قرارداد بر پایه مبلغ اصل ثبت‌شده یا محاسبه متراژ/مبلغ ثابت است؛ جریمه در این رقم لحاظ نشده است.';
 
 const TT_PAID_EX_PENALTY =
-  'جمع پرداخت‌های قراردادی به‌استثنای جریمه؛ پس از اتصال API از سرور خوانده می‌شود.';
+  'جمع مبلغ فیش‌های ثبت‌شده برای این قرارداد؛ جریمه در مدل فعلی فیش تفکیک نشده و این رقم عملاً «پرداخت غیرجریمه‌ای» محسوب می‌شود.';
 
 const TT_PENALTY_TOTAL =
   'جمع پیشنهادی از روی قوانین فعال ذخیره‌شده برای این قرارداد؛ محاسبه قطعی روزشمار نیست.';
@@ -30,7 +30,7 @@ const TT_PENALTY_PAID =
   'مجموع پرداخت‌های مربوط به جریمه؛ پس از اتصال API از سرور بارگذاری می‌شود.';
 
 const TT_TOTAL_DEBT =
-  'جمع مانده تخمینی شامل مانده اصل قرارداد و مانده جریمه است؛ پس از اتصال سیستم پرداخت دقیق می‌شود.';
+  'جمع مانده سررسیدها پس از تخصیص فیش‌ها به علاوهٔ ماندهٔ جریمهٔ تخمینی؛ با ماندهٔ هر ردیف در همین صفحه هم‌راستا است.';
 
 type ReceiptDetailsState = {
   payload: DueRegisterReceiptPayload;
@@ -171,14 +171,13 @@ export default function ContractDuesPage() {
       penaltiesPayload,
     );
 
-    const paidExPenaltyRial = null as number | null;
+    /** Same source as row-level «پرداختی»: registered receipts (local until persisted to server). */
+    const paidExPenaltyRial = receiptAllocation.totalPaidRial;
     const penaltyPaidRial = null as number | null;
 
-    const paidEx = paidExPenaltyRial ?? 0;
     const penaltyPaid = penaltyPaidRial ?? 0;
-    const remainingBaseExPenalty = Math.max(0, contractBaseExPenaltyRial - paidEx);
     const remainingPenalty = Math.max(0, penaltyTotalRial - penaltyPaid);
-    const totalDebtRial = remainingBaseExPenalty + remainingPenalty;
+    const totalDebtRial = receiptAllocation.totalRemainingRial + remainingPenalty;
 
     return {
       contractBaseExPenaltyRial,
@@ -187,7 +186,7 @@ export default function ContractDuesPage() {
       penaltyPaidRial,
       totalDebtRial,
     };
-  }, [contract?.data?.financial, contract?.data?.penalties, financialCategories]);
+  }, [contract?.data?.financial, contract?.data?.penalties, financialCategories, receiptAllocation]);
 
   const contractNumber =
     contract?.data?.subject && typeof contract.data.subject.contractNumber === 'string'
@@ -306,7 +305,7 @@ export default function ContractDuesPage() {
                     کل پرداختی <span className="font-black text-slate-600">(به جز جریمه)</span>
                   </div>
                   <div className="mt-1.5 text-[15px] font-black tabular-nums text-slate-900">
-                    {formatMoneyRial(duesTotals.paidExPenaltyRial ?? 0)}
+                    {formatMoneyRial(duesTotals.paidExPenaltyRial)}
                   </div>
                 </div>
                 <div
