@@ -2,7 +2,10 @@ import { Prisma } from '@/lib/prisma-client';
 import { NextResponse } from 'next/server';
 
 const SETUP_MESSAGE =
-  'جدول‌های دیتابیس هنوز ساخته نشده‌اند. این دستورها را اجرا کنید: npm run prisma:generate سپس npm run prisma:push و در آخر npm run db:seed';
+  'جدول‌های دیتابیس هنوز ساخته نشده‌اند. در ریشه پروژه اجرا کنید: npm --workspace @apps/vahedyek-panel run prisma:generate سپس npm --workspace @apps/vahedyek-panel run prisma:push و در آخر npm --workspace @apps/vahedyek-panel run db:seed';
+
+const DATABASE_UNREACHABLE_MESSAGE =
+  'اتصال به دیتابیس برقرار نشد. آدرس، پورت و دسترسی شبکه DATABASE_URL را بررسی کنید. تا وقتی دیتابیس از این محیط در دسترس نباشد، prisma:push و db:seed قابل اجرا نیستند.';
 
 export function handlePrismaApiError(error: unknown) {
   if (error instanceof Error && error.message.includes('Missing DATABASE_URL')) {
@@ -15,11 +18,17 @@ export function handlePrismaApiError(error: unknown) {
     );
   }
 
-  if (error instanceof Error && error.message.includes("Can't reach database server")) {
+  if (
+    error instanceof Error &&
+    (error.message.includes("Can't reach database server") ||
+      error.message.includes('Timed out fetching a new connection') ||
+      error.message.includes('connect ETIMEDOUT') ||
+      error.message.includes('ECONNREFUSED'))
+  ) {
     return NextResponse.json(
       {
         error: 'database_unreachable',
-        message: 'اتصال به دیتابیس برقرار نشد. آدرس یا پورت DATABASE_URL را بررسی کنید و مطمئن شوید سرور دیتابیس در دسترس است.',
+        message: DATABASE_UNREACHABLE_MESSAGE,
       },
       { status: 500 },
     );
@@ -31,6 +40,16 @@ export function handlePrismaApiError(error: unknown) {
         {
           error: 'database_not_initialized',
           message: SETUP_MESSAGE,
+        },
+        { status: 500 },
+      );
+    }
+
+    if (error.code === 'P1001' || error.code === 'P1002') {
+      return NextResponse.json(
+        {
+          error: 'database_unreachable',
+          message: DATABASE_UNREACHABLE_MESSAGE,
         },
         { status: 500 },
       );

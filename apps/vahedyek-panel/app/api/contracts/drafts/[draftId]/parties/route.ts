@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { PartySide, PersonType, ShareMode } from '@/lib/prisma-client';
+import { getActorName, recordAuditLog } from '../../../../../lib/audit-log';
 import { requireSessionContext } from '../../../../../lib/auth';
 import { prisma } from '../../../../../lib/prisma';
 import { handlePrismaApiError } from '../../../../../lib/prismaApiError';
@@ -137,6 +138,21 @@ export async function PUT(request: Request, { params }: { params: Promise<{ draf
         data: items,
       });
     }
+    await recordAuditLog({
+      tenantId: session.tenantId,
+      actorUserId: session.userId,
+      actorName: getActorName(session),
+      action: 'contract.parties.update',
+      entityType: 'contract_draft',
+      entityId: draftId,
+      entityLabel: `پیش‌نویس ${draftId}`,
+      summary: `${getActorName(session)} طرفین قرارداد را ویرایش کرد.`,
+      details: { membersCount: items.length },
+      diff: [
+        { field: 'membersCount', label: 'تعداد طرفین', before: 'نامشخص', after: String(items.length) },
+      ],
+      request,
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {

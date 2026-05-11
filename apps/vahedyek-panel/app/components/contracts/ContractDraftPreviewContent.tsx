@@ -19,6 +19,7 @@ import type {
   ShareMode,
 } from '../../types/contract';
 import { buildFinancialSlices, computeContractTotalRial, type FinancialSlice } from '../../lib/contractDraftPreviewFinancial';
+import { getAreaPricingModePresentation, normalizeAreaPricingMode } from '../../lib/contractFinancialPricing';
 
 export type PreviewContractPayload = {
   subject: ContractSubjectData & {
@@ -458,8 +459,13 @@ export function ContractDraftPreviewContent({
               <div className="border-t border-slate-100 pb-5 pt-4">
                 <div className="mb-6 grid gap-3 sm:grid-cols-2">
                   <PreviewField label="نوع قیمت‌گذاری" value={payload.financial?.pricingType === 'metered' ? 'متری' : payload.financial ? 'ثابت' : '—'} />
+                  <PreviewField
+                    label="مبنای فروش"
+                    value={payload.financial ? getAreaPricingModePresentation(normalizeAreaPricingMode(payload.financial.areaPricingMode)).label : '—'}
+                  />
                   <PreviewField label="زیربنا (متر)" value={payload.financial?.unitArea || '—'} />
                   <PreviewField label="پارکینگ (متر)" value={payload.financial?.parkingArea ?? '—'} />
+                  <PreviewField label="انباری (متر)" value={payload.financial?.storageArea ?? '—'} />
                 </div>
 
                 <div className="space-y-3 text-[12px] font-semibold text-slate-600">

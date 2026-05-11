@@ -22,10 +22,16 @@ import {
   type ContractReceiptAllocationResult,
   type DueReceiptAllocationSummary,
 } from '../../../../lib/contractReceiptAllocation';
+import { computeContractTotalRialFromFinancial } from '../../../../lib/contractFinancialPricing';
 import { getReceiptsStorageKey, normalizeReceiptRecords, type RegisteredReceiptRecord } from '../../../../lib/contractReceipts';
 import { buildPaymentHistoryMonthBuckets } from '../../../../lib/contractPaymentMonthBuckets';
 import { estimateContractPenaltiesTotalRial } from '../../../../lib/estimateContractPenalties';
-import { isFinancialLineHeaderCategoryId, isFinancialLineSubtreeCategoryId } from '../../../../lib/financialUtils';
+import {
+  isFinancialLineHeaderCategoryId,
+  isFinancialLineSubtreeCategoryId,
+  parseDueDateFlexible,
+  toComparableDateFromDueString,
+} from '../../../../lib/financialUtils';
 
 type ReceiptDetailsState = {
   payload: DueRegisterReceiptPayload;
@@ -380,12 +386,7 @@ export default function ContractReportsPage() {
       parties?.partyOne?.[0] ??
       null;
 
-    const parkingArea = Number(financial?.parkingArea || 0);
-    const unitArea = Number(financial?.unitArea || Math.max(Number(financial?.totalArea || 0) - parkingArea, 0));
-    const amountRial =
-      financial?.pricingType === 'metered'
-        ? unitArea * Number(financial?.pricePerMeter || 0) + parkingArea * Number(financial?.parkingPricePerMeter || 0)
-        : Number(financial?.fixedTotalAmount || 0);
+    const amountRial = computeContractTotalRialFromFinancial(financial);
 
     return {
       contractNumber: subject?.contractNumber ?? '—',

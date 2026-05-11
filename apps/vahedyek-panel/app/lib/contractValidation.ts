@@ -1,4 +1,5 @@
 import { sumFinancialCapsCountedAgainstContractTotal } from './financialUtils';
+import { computeFixedContractTotal, computeMeteredContractTotal, getAreaPricingModeConfig, normalizeAreaPricingMode } from './contractFinancialPricing';
 import type {
   ContractDiscountsData,
   ContractFinancialData,
@@ -104,28 +105,60 @@ export function validateFinancialStep(data: Partial<ContractFinancialData>): Val
   const errors: Record<string, string> = {};
 
   const pricingType = data.pricingType ?? 'fixed';
+  const areaPricingMode = normalizeAreaPricingMode(data.areaPricingMode);
   const totalArea = Number(data.totalArea ?? 0);
   const parkingArea = Number(data.parkingArea ?? 0);
+  const storageArea = Number(data.storageArea ?? 0);
   const pricePerMeter = Number(data.pricePerMeter ?? 0);
   const parkingPricePerMeter = Number(data.parkingPricePerMeter ?? 0);
+  const storagePricePerMeter = Number(data.storagePricePerMeter ?? 0);
   const fixedTotalAmount = Number(data.fixedTotalAmount ?? 0);
+  const parkingFixedAmount = Number(data.parkingFixedAmount ?? 0);
+  const storageFixedAmount = Number(data.storageFixedAmount ?? 0);
   const categories = data.categories ?? [];
   const dueItems = data.dueItems ?? [];
+  const areaPricingConfig = getAreaPricingModeConfig(areaPricingMode);
 
   if (pricingType === 'metered') {
     if (totalArea <= 0) errors.totalArea = REQUIRED_MSG;
     if (pricePerMeter <= 0) errors.pricePerMeter = REQUIRED_MSG;
-    if (parkingArea > 0 && parkingPricePerMeter <= 0) errors.parkingPricePerMeter = REQUIRED_MSG;
-  } else if (fixedTotalAmount <= 0) {
-    errors.fixedTotalAmount = REQUIRED_MSG;
+    if (parkingArea > 0 && !areaPricingConfig.includeParkingInBase && parkingPricePerMeter <= 0) {
+      errors.parkingPricePerMeter = REQUIRED_MSG;
+    }
+    if (storageArea > 0 && !areaPricingConfig.includeStorageInBase && storagePricePerMeter <= 0) {
+      errors.storagePricePerMeter = REQUIRED_MSG;
+    }
+  } else {
+    if (fixedTotalAmount <= 0) errors.fixedTotalAmount = REQUIRED_MSG;
+    if (parkingArea > 0 && !areaPricingConfig.includeParkingInBase && parkingFixedAmount <= 0) {
+      errors.parkingFixedAmount = REQUIRED_MSG;
+    }
+    if (storageArea > 0 && !areaPricingConfig.includeStorageInBase && storageFixedAmount <= 0) {
+      errors.storageFixedAmount = REQUIRED_MSG;
+    }
   }
 
   if (!categories.length) {
     errors.categories = 'حداقل یک ردیف مالی باید ثبت شود';
   }
 
-  const unitArea = Number(data.unitArea ?? Math.max(totalArea - parkingArea, 0));
-  const totalContractAmount = pricingType === 'metered' ? unitArea * pricePerMeter + parkingArea * parkingPricePerMeter : fixedTotalAmount;
+  const totalContractAmount =
+    pricingType === 'metered'
+      ? computeMeteredContractTotal({
+          areaPricingMode,
+          unitArea: data.unitArea ?? Math.max(totalArea - parkingArea - storageArea, 0),
+          parkingArea,
+          storageArea,
+          pricePerMeter,
+          parkingPricePerMeter,
+          storagePricePerMeter,
+        })
+      : computeFixedContractTotal({
+          areaPricingMode,
+          fixedTotalAmount,
+          parkingFixedAmount,
+          storageFixedAmount,
+        });
   const categoriesTotal = sumFinancialCapsCountedAgainstContractTotal(categories);
   if (totalContractAmount > 0 && categoriesTotal > totalContractAmount) {
     errors.categoriesTotal = 'جمع ردیف‌های مالی از مبلغ قرارداد بیشتر است.';

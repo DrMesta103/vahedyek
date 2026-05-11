@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Input, StickySubmitBar } from '@repo/ui';
 import { ensureActiveDraftId, getStepData } from '../../../../lib/contractDraftClient';
+import { computeContractTotalRialFromFinancial } from '../../../../lib/contractFinancialPricing';
 import type { ContractFinancialData } from '../../../../types/contract';
 import { getContractExtraCosts, upsertContractExtraCosts, type ContractRelatedExpense, type ContractRelatedExpenseCalculationMethod, type ContractRelatedExpenseType } from '../../../../actions/contractSteps789';
 import { dispatchContractFlowDirty, dispatchContractFlowSavedForDraft } from './contractFlowSignals';
@@ -27,16 +28,7 @@ function toNumberOrZero(raw: string) {
 }
 
 function computeContractTotal(financial: ContractFinancialData | null) {
-  if (!financial) return 0;
-  if (financial.pricingType === 'metered') {
-    const parkingArea = Number(financial.parkingArea || 0);
-    const totalArea = Number(financial.totalArea || 0);
-    const unitArea = Number(financial.unitArea || Math.max(totalArea - parkingArea, 0));
-    const pricePerMeter = Number(financial.pricePerMeter || 0);
-    const parkingPricePerMeter = Number(financial.parkingPricePerMeter || 0);
-    return unitArea * pricePerMeter + parkingArea * parkingPricePerMeter;
-  }
-  return Number(financial.fixedTotalAmount || 0);
+  return computeContractTotalRialFromFinancial(financial);
 }
 
 function formatFaNumber(value: number) {

@@ -45,6 +45,7 @@ export const currentAppConfig: AppConfig = {
     radius: '18px',
   },
   permissions: [
+    { key: 'audit.logs.view', label: 'مشاهده لاگ‌های سیستم', group: 'platform' },
     { key: 'platform.settings.view', label: 'مشاهده تنظیمات کلی', group: 'platform' },
     { key: 'platform.settings.manageAccess', label: 'مدیریت نقش‌ها و دسترسی‌ها', group: 'platform' },
     { key: 'platform.users.view', label: 'مشاهده کاربران', group: 'platform' },
@@ -138,6 +139,13 @@ export const currentAppConfig: AppConfig = {
       disabled: true,
     },
     {
+      id: 'audit-logs',
+      label: 'لاگ‌ها',
+      icon: 'fa-clipboard-list',
+      href: '/audit-logs',
+      requiredPermission: 'audit.logs.view',
+    },
+    {
       id: 'employees',
       label: 'کارمندان',
       icon: 'fa-users',
@@ -161,6 +169,7 @@ export const currentAppConfig: AppConfig = {
     },
   ],
   modules: [
+    { id: 'audit-logs', label: 'لاگ‌ها', routePrefix: '/audit-logs', requiredPermission: 'audit.logs.view' },
     { id: 'business', label: 'تنظیمات کسب و کار', routePrefix: '/business-settings', requiredPermission: 'business.profile.view' },
     { id: 'complex', label: 'مجتمع', routePrefix: '/complex', requiredPermission: 'complex.view' },
     { id: 'contracts', label: 'قراردادها', routePrefix: '/contracts', requiredPermission: 'contracts.view' },

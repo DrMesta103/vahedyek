@@ -22,6 +22,11 @@ import {
 } from '../../../../lib/contractDraftClient';
 import { validateFinancialStep } from '../../../../lib/contractValidation';
 import {
+  computeFixedContractTotal,
+  computeMeteredContractTotal,
+  normalizeAreaPricingMode,
+} from '../../../../lib/contractFinancialPricing';
+import {
   FINANCIAL_LINE_PREFIX,
   addIntervalToDate,
   buildRegularDueItems,
@@ -31,7 +36,7 @@ import {
   sumFinancialCapsCountedAgainstContractTotal,
   type DueFrequency,
 } from '../../../../lib/financialUtils';
-import type { ContractFinancialData, ContractSubjectData, FinancialCategoryData, FinancialDueItemData, PricingType } from '../../../../types/contract';
+import type { AreaPricingMode, ContractFinancialData, ContractSubjectData, FinancialCategoryData, FinancialDueItemData, PricingType } from '../../../../types/contract';
 import { dispatchContractFlowDirty, dispatchContractFlowFinancialSnapshot, dispatchContractFlowSavedForDraft } from './contractFlowSignals';
 import { buildValidationSummary } from './validationPresentation';
 
@@ -285,12 +290,17 @@ function normalizeFinancialPayload(data: ContractFinancialData | null): Contract
 
   return {
     pricingType: data?.pricingType ?? 'fixed',
+    areaPricingMode: normalizeAreaPricingMode(data?.areaPricingMode),
     unitArea: String(Number(data?.unitArea || data?.totalArea || 0)),
     parkingArea: String(Number(data?.parkingArea || 0)),
+    storageArea: String(Number(data?.storageArea || 0)),
     totalArea: String(Number(data?.totalArea || 0)),
     pricePerMeter: String(Number(data?.pricePerMeter || 0)),
     parkingPricePerMeter: String(Number(data?.parkingPricePerMeter || 0)),
+    storagePricePerMeter: String(Number(data?.storagePricePerMeter || 0)),
     fixedTotalAmount: String(Number(data?.fixedTotalAmount || 0)),
+    parkingFixedAmount: String(Number(data?.parkingFixedAmount || 0)),
+    storageFixedAmount: String(Number(data?.storageFixedAmount || 0)),
     activeTab: safeActiveTab,
     categories,
     dueItems: migrated.dueItems,
@@ -314,10 +324,6 @@ function formatMoney(value: number) {
 function formatArea(value: number) {
   if (!value) return '';
   return value.toLocaleString('en-US', { maximumFractionDigits: 2 });
-}
-
-function getMeteredTotal(unitArea: number, parkingArea: number, unitPrice: number, parkingPrice: number) {
-  return unitArea * unitPrice + parkingArea * parkingPrice;
 }
 
 function TwoOptionSwitch<T extends string>({
@@ -544,12 +550,17 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
   const [pendingNavigation, setPendingNavigation] = useState<{ mode: 'route' | 'back'; href?: string } | null>(null);
 
   const [pricingType, setPricingType] = useState<PricingType>('fixed');
+  const [areaPricingMode, setAreaPricingMode] = useState<AreaPricingMode>('unit-only');
   const [totalArea, setTotalArea] = useState('');
   const [unitArea, setUnitArea] = useState('');
   const [parkingArea, setParkingArea] = useState('');
+  const [storageArea, setStorageArea] = useState('');
   const [pricePerMeter, setPricePerMeter] = useState('');
   const [parkingPricePerMeter, setParkingPricePerMeter] = useState('');
+  const [storagePricePerMeter, setStoragePricePerMeter] = useState('');
   const [fixedTotalAmount, setFixedTotalAmount] = useState('');
+  const [parkingFixedAmount, setParkingFixedAmount] = useState('');
+  const [storageFixedAmount, setStorageFixedAmount] = useState('');
   const [categories, setCategories] = useState<FinancialCategory[]>(INITIAL_CATEGORIES);
   const [activeTab, setActiveTab] = useState('advance');
   const [dueItems, setDueItems] = useState<DueItem[]>([]);
@@ -613,33 +624,45 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
           allUnits.find((unit) => unit.id === subjectData?.unitId && unit.category === 'unit') ??
           allUnits.find((unit) => unit.id === subjectData?.unitId);
         const assignedParking = allUnits.filter((unit) => unit.category === 'parking' && unit.assignedToUnitId === subjectData?.unitId);
+        const assignedStorage = allUnits.filter((unit) => unit.category === 'storage' && unit.assignedToUnitId === subjectData?.unitId);
+        const derivedAreaPricingMode = normalizeAreaPricingMode(selectedUnit?.areaPricingMode);
         const derivedUnitArea = selectedUnit?.area ?? 0;
         const derivedParkingArea = assignedParking.reduce((sum, unit) => sum + (unit.area ?? 0), 0);
-        const derivedTotalArea = derivedUnitArea + derivedParkingArea;
+        const derivedStorageArea = assignedStorage.reduce((sum, unit) => sum + (unit.area ?? 0), 0);
+        const derivedTotalArea = derivedUnitArea + derivedParkingArea + derivedStorageArea;
 
         if (!mounted) return;
 
         setDraftId(id);
         initialSnapshotRef.current = JSON.stringify({
           ...normalizeFinancialPayload(financialData),
+          areaPricingMode: derivedAreaPricingMode,
           unitArea: String(derivedUnitArea),
           parkingArea: String(derivedParkingArea),
+          storageArea: String(derivedStorageArea),
           totalArea: String(derivedTotalArea),
         });
 
+        setAreaPricingMode(derivedAreaPricingMode);
         setUnitArea(formatArea(derivedUnitArea));
         setParkingArea(formatArea(derivedParkingArea));
+        setStorageArea(formatArea(derivedStorageArea));
         setTotalArea(formatArea(derivedTotalArea));
 
         if (sourceData) {
           const normalizedSourceData = normalizeFinancialPayload(sourceData);
           setPricingType(sourceData.pricingType);
+          setAreaPricingMode(derivedAreaPricingMode);
           setUnitArea(formatArea(derivedUnitArea));
           setParkingArea(formatArea(derivedParkingArea));
+          setStorageArea(formatArea(derivedStorageArea));
           setTotalArea(formatArea(derivedTotalArea));
           setPricePerMeter(sourceData.pricePerMeter ? Number(sourceData.pricePerMeter).toLocaleString('en-US') : '');
           setParkingPricePerMeter(sourceData.parkingPricePerMeter ? Number(sourceData.parkingPricePerMeter).toLocaleString('en-US') : '');
+          setStoragePricePerMeter(sourceData.storagePricePerMeter ? Number(sourceData.storagePricePerMeter).toLocaleString('en-US') : '');
           setFixedTotalAmount(sourceData.fixedTotalAmount ? Number(sourceData.fixedTotalAmount).toLocaleString('en-US') : '');
+          setParkingFixedAmount(sourceData.parkingFixedAmount ? Number(sourceData.parkingFixedAmount).toLocaleString('en-US') : '');
+          setStorageFixedAmount(sourceData.storageFixedAmount ? Number(sourceData.storageFixedAmount).toLocaleString('en-US') : '');
           setCategories(normalizedSourceData.categories);
         setActiveTab(normalizedSourceData.activeTab || normalizedSourceData.categories[0]?.id || 'advance');
         setPrincipalExpanded(true);
@@ -657,8 +680,22 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
     };
   }, []);
 
-  const meteredTotal = getMeteredTotal(parseNum(unitArea), parseNum(parkingArea), parseNum(pricePerMeter), parseNum(parkingPricePerMeter));
-  const totalContractAmount = pricingType === 'metered' ? meteredTotal : parseNum(fixedTotalAmount);
+  const meteredTotal = computeMeteredContractTotal({
+    areaPricingMode,
+    unitArea: parseNum(unitArea),
+    parkingArea: parseNum(parkingArea),
+    storageArea: parseNum(storageArea),
+    pricePerMeter: parseNum(pricePerMeter),
+    parkingPricePerMeter: parseNum(parkingPricePerMeter),
+    storagePricePerMeter: parseNum(storagePricePerMeter),
+  });
+  const fixedTotal = computeFixedContractTotal({
+    areaPricingMode,
+    fixedTotalAmount: parseNum(fixedTotalAmount),
+    parkingFixedAmount: parseNum(parkingFixedAmount),
+    storageFixedAmount: parseNum(storageFixedAmount),
+  });
+  const totalContractAmount = pricingType === 'metered' ? meteredTotal : fixedTotal;
 
   const overall = useMemo(
     () => ({
@@ -693,12 +730,17 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
 
   const buildPayload = (): ContractFinancialData => ({
     pricingType,
+    areaPricingMode,
     unitArea: String(parseNum(unitArea)),
     parkingArea: String(parseNum(parkingArea)),
+    storageArea: String(parseNum(storageArea)),
     totalArea: String(parseNum(totalArea)),
     pricePerMeter: String(parseNum(pricePerMeter)),
     parkingPricePerMeter: String(parseNum(parkingPricePerMeter)),
+    storagePricePerMeter: String(parseNum(storagePricePerMeter)),
     fixedTotalAmount: String(parseNum(fixedTotalAmount)),
+    parkingFixedAmount: String(parseNum(parkingFixedAmount)),
+    storageFixedAmount: String(parseNum(storageFixedAmount)),
     activeTab,
     categories: categories.map((item) => normalizeCategory(item)),
     dueItems,
@@ -709,10 +751,15 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
     categories,
     dueItems,
     fixedTotalAmount,
+    parkingFixedAmount,
+    storageFixedAmount,
+    areaPricingMode,
     parkingArea,
     parkingPricePerMeter,
     pricePerMeter,
     pricingType,
+    storageArea,
+    storagePricePerMeter,
     totalArea,
     unitArea,
   ]);
@@ -731,7 +778,10 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
             totalArea: 'متراژ کل',
             pricePerMeter: 'مبلغ هر مترمربع واحد',
             parkingPricePerMeter: 'مبلغ هر مترمربع پارکینگ',
-            fixedTotalAmount: 'مبلغ کل قرارداد',
+            storagePricePerMeter: 'مبلغ هر مترمربع انباری',
+            fixedTotalAmount: 'مبلغ کلی پایه',
+            parkingFixedAmount: 'مبلغ کلی پارکینگ',
+            storageFixedAmount: 'مبلغ کلی انباری',
             categories: 'ردیف مالی',
             categoriesTotal: 'جمع ردیف‌های مالی',
             dueItems: 'سررسیدها',
@@ -1071,7 +1121,7 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
     }
     setDirty(hasChanges);
     dispatchContractFlowDirty(stepId as 'financial', hasChanges);
-  }, [activeTab, categories, draftId, dueItems, fixedTotalAmount, loading, parkingArea, parkingPricePerMeter, pricePerMeter, pricingType, stepId, totalArea, unitArea]);
+  }, [activeTab, areaPricingMode, categories, draftId, dueItems, fixedTotalAmount, loading, parkingArea, parkingFixedAmount, parkingPricePerMeter, pricePerMeter, pricingType, stepId, storageArea, storageFixedAmount, storagePricePerMeter, totalArea, unitArea]);
 
   // Sync principal row amount from pricing box (read-only in UI)
   useEffect(() => {
@@ -1201,27 +1251,39 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
         </button>
       </div> : null}
 
-      <div className={visibleErrors.totalArea || visibleErrors.pricePerMeter || visibleErrors.parkingPricePerMeter || visibleErrors.fixedTotalAmount ? 'rounded-2xl border border-rose-300 bg-rose-50/20 p-1' : ''}>
+      <div className={visibleErrors.totalArea || visibleErrors.pricePerMeter || visibleErrors.parkingPricePerMeter || visibleErrors.storagePricePerMeter || visibleErrors.fixedTotalAmount || visibleErrors.parkingFixedAmount || visibleErrors.storageFixedAmount ? 'rounded-2xl border border-rose-300 bg-rose-50/20 p-1' : ''}>
       <FinancialPricingBox
         pricingType={pricingType}
         onPricingTypeChange={setPricingType}
+        areaPricingMode={areaPricingMode}
         totalArea={totalArea}
         unitArea={unitArea}
         parkingArea={parkingArea}
+        storageArea={storageArea}
         pricePerMeter={pricePerMeter}
         onPricePerMeterChange={setPricePerMeter}
         parkingPricePerMeter={parkingPricePerMeter}
         onParkingPricePerMeterChange={setParkingPricePerMeter}
+        storagePricePerMeter={storagePricePerMeter}
+        onStoragePricePerMeterChange={setStoragePricePerMeter}
         fixedTotalAmount={fixedTotalAmount}
         onFixedTotalAmountChange={setFixedTotalAmount}
+        parkingFixedAmount={parkingFixedAmount}
+        onParkingFixedAmountChange={setParkingFixedAmount}
+        storageFixedAmount={storageFixedAmount}
+        onStorageFixedAmountChange={setStorageFixedAmount}
         meteredTotal={meteredTotal}
+        fixedTotal={fixedTotal}
         formatInput={formatInput}
         formatMoney={formatMoney}
-        pricingTypeInvalid={Boolean(visibleErrors.totalArea || visibleErrors.pricePerMeter || visibleErrors.parkingPricePerMeter || visibleErrors.fixedTotalAmount)}
+        pricingTypeInvalid={Boolean(visibleErrors.totalArea || visibleErrors.pricePerMeter || visibleErrors.parkingPricePerMeter || visibleErrors.storagePricePerMeter || visibleErrors.fixedTotalAmount || visibleErrors.parkingFixedAmount || visibleErrors.storageFixedAmount)}
         totalAreaInvalid={Boolean(visibleErrors.totalArea)}
         pricePerMeterInvalid={Boolean(visibleErrors.pricePerMeter)}
         parkingPricePerMeterInvalid={Boolean(visibleErrors.parkingPricePerMeter)}
+        storagePricePerMeterInvalid={Boolean(visibleErrors.storagePricePerMeter)}
         fixedTotalAmountInvalid={Boolean(visibleErrors.fixedTotalAmount)}
+        parkingFixedAmountInvalid={Boolean(visibleErrors.parkingFixedAmount)}
+        storageFixedAmountInvalid={Boolean(visibleErrors.storageFixedAmount)}
       />
       </div>
 

@@ -10,1480 +10,204 @@
 > @repo/ui@0.1.0 build
 > tsup
 
-[34mCLI[39m Building entry: src/index.ts
+[34mCLI[39m Building entry: src/index.ts, src/server.ts
 [34mCLI[39m Using tsconfig: tsconfig.json
 [34mCLI[39m tsup v8.5.1
-[34mCLI[39m Using tsup config: C:\Users\s.roosta\Desktop\Project\vahedyek\packages\ui\tsup.config.ts
+[34mCLI[39m Using tsup config: C:\Users\Administrator\Desktop\vahedyek\packages\ui\tsup.config.ts
 [34mCLI[39m Target: es2020
 [34mESM[39m Build start
 [34mCJS[39m Build start
-[32mCJS[39m [1mdist\index.js     [22m[32m34.87 KB[39m
-[32mCJS[39m [1mdist\index.js.map [22m[32m60.51 KB[39m
-[32mCJS[39m ⚡️ Build success in 97ms
-[32mESM[39m [1mdist\index.mjs     [22m[32m31.86 KB[39m
-[32mESM[39m [1mdist\index.mjs.map [22m[32m60.41 KB[39m
-[32mESM[39m ⚡️ Build success in 97ms
+[32mESM[39m [1mdist\server.mjs     [22m[32m2.22 KB[39m
+[32mESM[39m [1mdist\index.mjs      [22m[32m34.22 KB[39m
+[32mESM[39m [1mdist\server.mjs.map [22m[32m4.54 KB[39m
+[32mESM[39m [1mdist\index.mjs.map  [22m[32m64.98 KB[39m
+[32mESM[39m ⚡️ Build success in 141ms
+[32mCJS[39m [1mdist\index.js      [22m[32m37.25 KB[39m
+[32mCJS[39m [1mdist\server.js     [22m[32m2.75 KB[39m
+[32mCJS[39m [1mdist\index.js.map  [22m[32m65.09 KB[39m
+[32mCJS[39m [1mdist\server.js.map [22m[32m4.59 KB[39m
+[32mCJS[39m ⚡️ Build success in 141ms
 [34mDTS[39m Build start
-[32mDTS[39m ⚡️ Build success in 803ms
-[32mDTS[39m [1mdist\index.d.mts [22m[32m9.16 KB[39m
-[32mDTS[39m [1mdist\index.d.ts  [22m[32m9.16 KB[39m
+[32mDTS[39m ⚡️ Build success in 1720ms
+[32mDTS[39m [1mdist\index.d.mts  [22m[32m8.52 KB[39m
+[32mDTS[39m [1mdist\server.d.mts [22m[32m1.06 KB[39m
+[32mDTS[39m [1mdist\index.d.ts   [22m[32m8.52 KB[39m
+[32mDTS[39m [1mdist\server.d.ts  [22m[32m1.06 KB[39m
 
 > @apps/vahedyek-panel@0.1.0 predev
-> prisma generate && npm --workspace @repo/ui run build
-
-Prisma schema loaded from prisma\schema.prisma
-
-✔ Generated Prisma Client (v6.19.3) to .\..\..\node_modules\@prisma\client in 90ms
-
-Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
-
-Tip: Want to turn off tips and other hints? https://pris.ly/tip-4-nohints
+> npm --workspace @repo/ui run build
 
 
 > @repo/ui@0.1.0 build
 > tsup
 
-[34mCLI[39m Building entry: src/index.ts
+[34mCLI[39m Building entry: src/index.ts, src/server.ts
 [34mCLI[39m Using tsconfig: tsconfig.json
 [34mCLI[39m tsup v8.5.1
-[34mCLI[39m Using tsup config: C:\Users\s.roosta\Desktop\Project\vahedyek\packages\ui\tsup.config.ts
+[34mCLI[39m Using tsup config: C:\Users\Administrator\Desktop\vahedyek\packages\ui\tsup.config.ts
 [34mCLI[39m Target: es2020
 [34mESM[39m Build start
 [34mCJS[39m Build start
-[32mESM[39m [1mdist\index.mjs     [22m[32m31.86 KB[39m
-[32mESM[39m [1mdist\index.mjs.map [22m[32m60.41 KB[39m
-[32mESM[39m ⚡️ Build success in 78ms
-[32mCJS[39m [1mdist\index.js     [22m[32m34.87 KB[39m
-[32mCJS[39m [1mdist\index.js.map [22m[32m60.51 KB[39m
-[32mCJS[39m ⚡️ Build success in 79ms
+[32mESM[39m [1mdist\server.mjs     [22m[32m2.22 KB[39m
+[32mESM[39m [1mdist\index.mjs      [22m[32m34.22 KB[39m
+[32mESM[39m [1mdist\server.mjs.map [22m[32m4.54 KB[39m
+[32mESM[39m [1mdist\index.mjs.map  [22m[32m64.98 KB[39m
+[32mESM[39m ⚡️ Build success in 134ms
+[32mCJS[39m [1mdist\index.js      [22m[32m37.25 KB[39m
+[32mCJS[39m [1mdist\server.js     [22m[32m2.75 KB[39m
+[32mCJS[39m [1mdist\index.js.map  [22m[32m65.09 KB[39m
+[32mCJS[39m [1mdist\server.js.map [22m[32m4.59 KB[39m
+[32mCJS[39m ⚡️ Build success in 134ms
 [34mDTS[39m Build start
-[32mDTS[39m ⚡️ Build success in 821ms
-[32mDTS[39m [1mdist\index.d.mts [22m[32m9.16 KB[39m
-[32mDTS[39m [1mdist\index.d.ts  [22m[32m9.16 KB[39m
+[32mDTS[39m ⚡️ Build success in 1727ms
+[32mDTS[39m [1mdist\index.d.mts  [22m[32m8.52 KB[39m
+[32mDTS[39m [1mdist\server.d.mts [22m[32m1.06 KB[39m
+[32mDTS[39m [1mdist\index.d.ts   [22m[32m8.52 KB[39m
+[32mDTS[39m [1mdist\server.d.ts  [22m[32m1.06 KB[39m
 
 > @apps/vahedyek-panel@0.1.0 dev
 > next dev
 
 ▲ Next.js 16.2.4 (Turbopack)
 - Local:         http://localhost:3000
-- Network:       http://10.0.28.93:3000
+- Network:       http://172.19.0.1:3000
 - Environments: .env
-✓ Ready in 278ms
+✓ Ready in 285ms
 Creating turbopack project {
-  dir: 'C:\\Users\\s.roosta\\Desktop\\Project\\vahedyek\\apps\\vahedyek-panel',
+  dir: 'C:\\Users\\Administrator\\Desktop\\vahedyek\\apps\\vahedyek-panel',
   testMode: true
 }
 
- GET / 200 in 338ms (next.js: 133ms, proxy.ts: 80ms, application-code: 125ms)
- GET /employees/new 200 in 317ms (next.js: 267ms, proxy.ts: 4ms, application-code: 46ms)
- GET /settings 200 in 45ms (next.js: 11ms, proxy.ts: 3ms, application-code: 30ms)
- GET /api/auth/me 200 in 8.3s (next.js: 2ms, proxy.ts: 4ms, application-code: 8.3s)
- GET /api/auth/me 200 in 8.3s (next.js: 4ms, proxy.ts: 4ms, application-code: 8.3s)
- GET /api/auth/me 200 in 11.5s (next.js: 49ms, proxy.ts: 4ms, application-code: 11.5s)
- GET /api/auth/me 200 in 11.0s (next.js: 3ms, proxy.ts: 3ms, application-code: 11.0s)
- GET /api/auth/me 200 in 12.5s (next.js: 65ms, proxy.ts: 4ms, application-code: 12.5s)
- GET /api/auth/me 200 in 11.9s (next.js: 5ms, proxy.ts: 3ms, application-code: 11.9s)
- GET /login?next=%2Femployees 200 in 47ms (next.js: 15ms, proxy.ts: 2ms, application-code: 30ms)
- GET /api/settings/access 200 in 13.7s (next.js: 24ms, proxy.ts: 4ms, application-code: 13.7s)
- POST /api/auth/logout 200 in 34ms (next.js: 26ms, proxy.ts: 5ms, application-code: 3ms)
- GET /login 200 in 13ms (next.js: 1544µs, proxy.ts: 2ms, application-code: 9ms)
- GET /login 200 in 13ms (next.js: 1801µs, proxy.ts: 2ms, application-code: 9ms)
- GET /employees 200 in 2.9s (next.js: 26ms, proxy.ts: 4ms, application-code: 2.9s)
- GET /employees/new 200 in 21ms (next.js: 4ms, proxy.ts: 4ms, application-code: 13ms)
- GET /api/auth/me 200 in 9.4s (next.js: 4ms, proxy.ts: 4ms, application-code: 9.4s)
- GET /api/auth/me 200 in 9.4s (next.js: 12ms, proxy.ts: 4ms, application-code: 9.4s)
- GET /api/auth/me 200 in 10.4s (next.js: 8ms, proxy.ts: 4ms, application-code: 10.3s)
- GET /api/auth/me 200 in 10.8s (next.js: 6ms, proxy.ts: 4ms, application-code: 10.8s)
- GET /api/auth/me 200 in 5.3s (next.js: 12ms, proxy.ts: 8ms, application-code: 5.2s)
- GET /api/auth/me 200 in 5.3s (next.js: 10ms, proxy.ts: 8ms, application-code: 5.3s)
- GET /api/auth/me 200 in 5.9s (next.js: 7ms, proxy.ts: 7ms, application-code: 5.9s)
- GET /api/auth/me 200 in 6.5s (next.js: 13ms, proxy.ts: 8ms, application-code: 6.5s)
- GET /api/business-settings/profile/directory?q=9 200 in 1992ms (next.js: 21ms, proxy.ts: 3ms, application-code: 1969ms)
- GET /api/business-settings/profile/directory?q=99 200 in 1701ms (next.js: 2ms, proxy.ts: 5ms, application-code: 1693ms)
- GET /api/business-settings/profile/directory?q=935272011 200 in 840ms (next.js: 1422µs, proxy.ts: 3ms, application-code: 836ms)
- GET /api/business-settings/profile/directory?q=9352720117 200 in 1044ms (next.js: 2ms, proxy.ts: 5ms, application-code: 1036ms)
- POST /api/business-settings/profile/directory/ensure-user 200 in 3.0s (next.js: 24ms, proxy.ts: 4ms, application-code: 2.9s)
- POST /api/business-settings/profile/directory/ensure-user 200 in 2.7s (next.js: 3ms, proxy.ts: 4ms, application-code: 2.7s)
- POST /api/employees 201 in 1345ms (next.js: 18ms, proxy.ts: 3ms, application-code: 1323ms)
- GET /employees 200 in 1387ms (next.js: 2ms, proxy.ts: 4ms, application-code: 1381ms)
- GET /employees 200 in 1853ms (next.js: 11ms, proxy.ts: 4ms, application-code: 1838ms)
- GET /api/auth/me 200 in 5.4s (next.js: 7ms, proxy.ts: 4ms, application-code: 5.3s)
- GET /api/auth/me 200 in 6.2s (next.js: 9ms, proxy.ts: 4ms, application-code: 6.2s)
- GET /api/auth/me 200 in 6.6s (next.js: 5ms, proxy.ts: 4ms, application-code: 6.5s)
- GET /api/auth/me 200 in 7.3s (next.js: 10ms, proxy.ts: 4ms, application-code: 7.3s)
- POST /api/auth/login 200 in 431ms (next.js: 26ms, proxy.ts: 5ms, application-code: 400ms)
- GET /select-tenant?userId=cmotvxq7500nuotwsyk2418yo&next=%2F 200 in 25ms (next.js: 13ms, proxy.ts: 1943µs, application-code: 10ms)
- GET /api/auth/me 200 in 193ms (next.js: 24ms, proxy.ts: 4ms, application-code: 165ms)
- GET /api/auth/me 200 in 347ms (next.js: 3ms, proxy.ts: 4ms, application-code: 340ms)
- GET /api/auth/tenants 200 in 935ms (next.js: 20ms, proxy.ts: 4ms, application-code: 912ms)
- GET /api/auth/tenants 200 in 1148ms (next.js: 22ms, proxy.ts: 4ms, application-code: 1122ms)
- POST /api/auth/select-tenant 200 in 479ms (next.js: 21ms, proxy.ts: 3ms, application-code: 455ms)
- GET / 200 in 12ms (next.js: 1515µs, proxy.ts: 2ms, application-code: 9ms)
- GET / 200 in 12ms (next.js: 1243µs, proxy.ts: 1878µs, application-code: 9ms)
- GET /api/auth/me 200 in 3.5s (next.js: 7ms, proxy.ts: 5ms, application-code: 3.5s)
- GET /api/auth/me 200 in 4.6s (next.js: 5ms, proxy.ts: 5ms, application-code: 4.6s)
- GET /api/auth/me 200 in 4.8s (next.js: 9ms, proxy.ts: 5ms, application-code: 4.8s)
- GET /api/auth/me 200 in 5.7s (next.js: 9ms, proxy.ts: 6ms, application-code: 5.7s)
- GET /settings 200 in 25ms (next.js: 3ms, proxy.ts: 8ms, application-code: 13ms)
- GET /api/auth/me 200 in 9.0s (next.js: 13ms, proxy.ts: 8ms, application-code: 9.0s)
- GET /api/auth/me 200 in 9.5s (next.js: 14ms, proxy.ts: 8ms, application-code: 9.5s)
- GET /api/auth/me 200 in 11.9s (next.js: 7ms, proxy.ts: 8ms, application-code: 11.9s)
- GET /api/auth/me 200 in 12.6s (next.js: 10ms, proxy.ts: 8ms, application-code: 12.6s)
- GET /api/settings/access 200 in 14.4s (next.js: 18ms, proxy.ts: 10ms, application-code: 14.3s)
- GET /api/settings/access 200 in 15.3s (next.js: 21ms, proxy.ts: 9ms, application-code: 15.3s)
- PUT /api/settings/access 200 in 10.3s (next.js: 1933µs, proxy.ts: 2ms, application-code: 10.3s)
- GET / 200 in 39ms (next.js: 2ms, proxy.ts: 4ms, application-code: 32ms)
- GET /api/auth/me 200 in 3.5s (next.js: 5ms, proxy.ts: 3ms, application-code: 3.5s)
- GET /api/auth/me 200 in 4.3s (next.js: 4ms, proxy.ts: 3ms, application-code: 4.3s)
- GET /settings 200 in 17ms (next.js: 3ms, proxy.ts: 3ms, application-code: 11ms)
- GET /api/auth/me 200 in 12.7s (next.js: 12ms, proxy.ts: 11ms, application-code: 12.7s)
- GET /api/auth/me 200 in 13.0s (next.js: 17ms, proxy.ts: 11ms, application-code: 12.9s)
- GET /api/auth/me 200 in 13.2s (next.js: 9ms, proxy.ts: 11ms, application-code: 13.2s)
- GET /api/auth/me 200 in 13.9s (next.js: 14ms, proxy.ts: 11ms, application-code: 13.9s)
- GET /api/settings/access 200 in 15.7s (next.js: 29ms, proxy.ts: 13ms, application-code: 15.7s)
- GET /api/settings/access 200 in 15.7s (next.js: 18ms, proxy.ts: 14ms, application-code: 15.7s)
- GET / 200 in 115ms (next.js: 31ms, proxy.ts: 28ms, application-code: 56ms)
- GET /settings 200 in 130ms (next.js: 60ms, proxy.ts: 28ms, application-code: 42ms)
- GET / 200 in 34ms (next.js: 3ms, proxy.ts: 5ms, application-code: 27ms)
- GET /settings 200 in 55ms (next.js: 12ms, proxy.ts: 4ms, application-code: 40ms)
- GET /settings 200 in 29ms (next.js: 3ms, proxy.ts: 5ms, application-code: 22ms)
- GET /settings 200 in 30ms (next.js: 14ms, proxy.ts: 4ms, application-code: 11ms)
- GET / 200 in 108ms (next.js: 57ms, proxy.ts: 26ms, application-code: 25ms)
- GET /settings 200 in 109ms (next.js: 30ms, proxy.ts: 26ms, application-code: 53ms)
- GET /settings 200 in 17ms (next.js: 1833µs, proxy.ts: 2ms, application-code: 13ms)
- GET / 200 in 114ms (next.js: 52ms, proxy.ts: 28ms, application-code: 34ms)
- GET /settings 200 in 131ms (next.js: 31ms, proxy.ts: 28ms, application-code: 72ms)
- GET / 200 in 99ms (next.js: 22ms, proxy.ts: 5ms, application-code: 72ms)
- GET /settings 200 in 101ms (next.js: 3ms, proxy.ts: 5ms, application-code: 94ms)
- GET / 200 in 64ms (next.js: 47ms, proxy.ts: 7ms, application-code: 10ms)
- GET /settings 200 in 68ms (next.js: 4ms, proxy.ts: 9ms, application-code: 56ms)
- GET /settings 200 in 68ms (next.js: 25ms, proxy.ts: 8ms, application-code: 35ms)
- GET /settings 200 in 69ms (next.js: 14ms, proxy.ts: 8ms, application-code: 47ms)
- GET /settings 200 in 69ms (next.js: 36ms, proxy.ts: 8ms, application-code: 25ms)
- GET / 200 in 126ms (next.js: 51ms, proxy.ts: 31ms, application-code: 43ms)
- GET /settings 200 in 143ms (next.js: 30ms, proxy.ts: 32ms, application-code: 82ms)
- GET / 200 in 102ms (next.js: 19ms, proxy.ts: 4ms, application-code: 79ms)
- GET /settings 200 in 105ms (next.js: 3ms, proxy.ts: 4ms, application-code: 97ms)
- GET / 200 in 60ms (next.js: 43ms, proxy.ts: 7ms, application-code: 10ms)
- GET /settings 200 in 63ms (next.js: 13ms, proxy.ts: 8ms, application-code: 42ms)
- GET /settings 200 in 64ms (next.js: 4ms, proxy.ts: 8ms, application-code: 52ms)
- GET /settings 200 in 63ms (next.js: 32ms, proxy.ts: 8ms, application-code: 23ms)
- GET /settings 200 in 65ms (next.js: 23ms, proxy.ts: 8ms, application-code: 34ms)
-✓ Compiled in 83ms
- GET /settings 500 in 172ms (next.js: 73ms, proxy.ts: 26ms, application-code: 73ms)
- GET / 500 in 173ms (next.js: 140ms, proxy.ts: 27ms, application-code: 6ms)
- GET / 500 in 29ms (next.js: 16ms, proxy.ts: 4ms, application-code: 9ms)
- GET /settings 500 in 30ms (next.js: 21ms, proxy.ts: 4ms, application-code: 5ms)
- GET /settings 500 in 25ms (next.js: 9ms, proxy.ts: 10ms, application-code: 6ms)
- GET / 500 in 25ms (next.js: 12ms, proxy.ts: 9ms, application-code: 4ms)
- GET / 500 in 32ms (next.js: 16ms, proxy.ts: 6ms, application-code: 10ms)
- GET /settings 500 in 33ms (next.js: 16ms, proxy.ts: 7ms, application-code: 10ms)
- GET /settings 500 in 46ms (next.js: 18ms, proxy.ts: 19ms, application-code: 8ms)
- GET /settings 500 in 36ms (next.js: 16ms, proxy.ts: 13ms, application-code: 7ms)
- GET /settings 500 in 34ms (next.js: 17ms, proxy.ts: 14ms, application-code: 3ms)
- GET /settings 500 in 11ms (next.js: 5ms, proxy.ts: 1804µs, application-code: 4ms)
-✓ Compiled in 99ms
- GET / 200 in 230ms (next.js: 32ms, proxy.ts: 8ms, application-code: 190ms)
- GET /settings 200 in 232ms (next.js: 125ms, proxy.ts: 9ms, application-code: 99ms)
- GET /settings 200 in 33ms (next.js: 3ms, proxy.ts: 5ms, application-code: 24ms)
- GET /api/auth/me 200 in 6.8s (next.js: 2ms, proxy.ts: 3ms, application-code: 6.8s)
- GET /api/auth/me 200 in 7.7s (next.js: 24ms, proxy.ts: 9ms, application-code: 7.6s)
- GET /api/auth/me 200 in 8.1s (next.js: 4ms, proxy.ts: 3ms, application-code: 8.1s)
- GET /api/auth/me 200 in 8.9s (next.js: 4ms, proxy.ts: 7ms, application-code: 8.9s)
- GET /api/auth/me 200 in 8.9s (next.js: 4ms, proxy.ts: 3ms, application-code: 8.9s)
- GET /api/auth/me 200 in 9.3s (next.js: 27ms, proxy.ts: 9ms, application-code: 9.2s)
- GET /api/settings/access 200 in 16.3s (next.js: 51ms, proxy.ts: 10ms, application-code: 16.2s)
- GET /api/settings/access 200 in 16.2s (next.js: 4ms, proxy.ts: 5ms, application-code: 16.2s)
-✓ Compiled in 176ms
- GET / 200 in 97ms (next.js: 52ms, proxy.ts: 26ms, application-code: 19ms)
- GET /settings 200 in 136ms (next.js: 30ms, proxy.ts: 26ms, application-code: 80ms)
- GET / 200 in 104ms (next.js: 17ms, proxy.ts: 5ms, application-code: 82ms)
- GET /settings 200 in 106ms (next.js: 5ms, proxy.ts: 5ms, application-code: 96ms)
- GET / 200 in 66ms (next.js: 4ms, proxy.ts: 8ms, application-code: 54ms)
- GET /settings 200 in 66ms (next.js: 22ms, proxy.ts: 7ms, application-code: 36ms)
- GET /settings 200 in 67ms (next.js: 13ms, proxy.ts: 8ms, application-code: 46ms)
- GET /settings 200 in 66ms (next.js: 33ms, proxy.ts: 7ms, application-code: 27ms)
- GET /settings 200 in 66ms (next.js: 43ms, proxy.ts: 7ms, application-code: 16ms)
- PUT /api/settings/access 200 in 20.0s (next.js: 23ms, proxy.ts: 4ms, application-code: 20.0s)
- GET /contracts 200 in 41ms (next.js: 27ms, proxy.ts: 3ms, application-code: 10ms)
- GET /api/contracts/reference-data 200 in 4.0s (next.js: 75ms, proxy.ts: 11ms, application-code: 3.9s)
- GET /api/contracts/reference-data 200 in 4.0s (next.js: 72ms, proxy.ts: 11ms, application-code: 4.0s)
- GET /api/contracts?status=draft 200 in 3.1s (next.js: 22ms, proxy.ts: 3ms, application-code: 3.1s)
- GET /api/contracts?status=draft 200 in 3.5s (next.js: 26ms, proxy.ts: 3ms, application-code: 3.5s)
- GET /api/auth/me 200 in 10.6s (next.js: 52ms, proxy.ts: 9ms, application-code: 10.5s)
- GET /api/auth/me 200 in 11.2s (next.js: 50ms, proxy.ts: 7ms, application-code: 11.1s)
- GET /api/auth/me 200 in 11.6s (next.js: 45ms, proxy.ts: 7ms, application-code: 11.6s)
- GET /api/auth/me 200 in 11.6s (next.js: 50ms, proxy.ts: 9ms, application-code: 11.6s)
- GET /contracts/new 200 in 50ms (next.js: 23ms, proxy.ts: 3ms, application-code: 24ms)
- POST /api/contracts/drafts 201 in 1358ms (next.js: 112ms, proxy.ts: 20ms, application-code: 1226ms)
- POST /api/contracts/drafts 201 in 1371ms (next.js: 108ms, proxy.ts: 22ms, application-code: 1241ms)
- GET /api/contracts/reference-data 200 in 2.2s (next.js: 3ms, proxy.ts: 3ms, application-code: 2.2s)
- GET /api/contracts/drafts/88f2111d-e5c7-4216-903f-a3d3ee409ce7/subject 200 in 3.3s (next.js: 505ms, proxy.ts: 3ms, application-code: 2.8s)
- GET /api/contracts/reference-data 200 in 1274ms (next.js: 1233µs, proxy.ts: 2ms, application-code: 1270ms)
- GET /api/contracts/drafts/347683ff-6a23-4fa8-8318-46ad02bb4105/subject 200 in 986ms (next.js: 7ms, proxy.ts: 3ms, application-code: 975ms)
- GET /api/contracts/generate-number 200 in 1041ms (next.js: 25ms, proxy.ts: 2ms, application-code: 1014ms)
- GET /api/auth/me 200 in 6.5s (next.js: 20ms, proxy.ts: 18ms, application-code: 6.5s)
- GET /api/auth/me 200 in 6.7s (next.js: 17ms, proxy.ts: 18ms, application-code: 6.6s)
- GET /api/contracts/generate-number 200 in 772ms (next.js: 1898µs, proxy.ts: 3ms, application-code: 767ms)
- GET /api/auth/me 200 in 6.8s (next.js: 13ms, proxy.ts: 18ms, application-code: 6.8s)
- GET /api/auth/me 200 in 8.2s (next.js: 11ms, proxy.ts: 18ms, application-code: 8.2s)
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-✓ Compiled in 611ms
- GET / 200 in 252ms (next.js: 165ms, proxy.ts: 31ms, application-code: 56ms)
- GET /settings 200 in 257ms (next.js: 62ms, proxy.ts: 31ms, application-code: 164ms)
- GET /contracts/new 200 in 260ms (next.js: 118ms, proxy.ts: 32ms, application-code: 111ms)
- GET / 200 in 74ms (next.js: 25ms, proxy.ts: 5ms, application-code: 44ms)
- GET /settings 200 in 79ms (next.js: 3ms, proxy.ts: 5ms, application-code: 71ms)
- GET /contracts/new 200 in 103ms (next.js: 14ms, proxy.ts: 5ms, application-code: 84ms)
- GET / 200 in 74ms (next.js: 5ms, proxy.ts: 6ms, application-code: 63ms)
- GET /settings 200 in 94ms (next.js: 6ms, proxy.ts: 28ms, application-code: 60ms)
- GET /settings 200 in 101ms (next.js: 15ms, proxy.ts: 29ms, application-code: 57ms)
- GET / 200 in 75ms (next.js: 4ms, proxy.ts: 26ms, application-code: 45ms)
- GET /settings 200 in 67ms (next.js: 5ms, proxy.ts: 23ms, application-code: 39ms)
- GET / 200 in 62ms (next.js: 12ms, proxy.ts: 14ms, application-code: 36ms)
- GET /settings 200 in 85ms (next.js: 13ms, proxy.ts: 13ms, application-code: 60ms)
- GET / 200 in 66ms (next.js: 13ms, proxy.ts: 4ms, application-code: 49ms)
- GET /settings 200 in 79ms (next.js: 3ms, proxy.ts: 5ms, application-code: 71ms)
- GET /settings 200 in 81ms (next.js: 23ms, proxy.ts: 4ms, application-code: 54ms)
- GET / 200 in 47ms (next.js: 13ms, proxy.ts: 5ms, application-code: 28ms)
- GET /settings 200 in 82ms (next.js: 4ms, proxy.ts: 16ms, application-code: 62ms)
- GET /settings 200 in 71ms (next.js: 23ms, proxy.ts: 4ms, application-code: 44ms)
- GET / 200 in 59ms (next.js: 4ms, proxy.ts: 5ms, application-code: 50ms)
- GET /settings 200 in 76ms (next.js: 13ms, proxy.ts: 5ms, application-code: 58ms)
- GET / 200 in 71ms (next.js: 5ms, proxy.ts: 16ms, application-code: 50ms)
- GET /settings 200 in 95ms (next.js: 5ms, proxy.ts: 25ms, application-code: 65ms)
- GET /settings 200 in 84ms (next.js: 13ms, proxy.ts: 16ms, application-code: 56ms)
- GET / 200 in 69ms (next.js: 3ms, proxy.ts: 18ms, application-code: 48ms)
- GET /settings 200 in 94ms (next.js: 7ms, proxy.ts: 25ms, application-code: 62ms)
- GET / 200 in 64ms (next.js: 14ms, proxy.ts: 4ms, application-code: 47ms)
- GET /settings 200 in 78ms (next.js: 4ms, proxy.ts: 13ms, application-code: 61ms)
- GET /settings 200 in 80ms (next.js: 12ms, proxy.ts: 13ms, application-code: 55ms)
- GET / 200 in 55ms (next.js: 13ms, proxy.ts: 5ms, application-code: 37ms)
- GET /settings 200 in 82ms (next.js: 5ms, proxy.ts: 17ms, application-code: 61ms)
- GET /settings 200 in 80ms (next.js: 12ms, proxy.ts: 14ms, application-code: 54ms)
- GET / 200 in 68ms (next.js: 3ms, proxy.ts: 15ms, application-code: 49ms)
- GET /settings 200 in 80ms (next.js: 13ms, proxy.ts: 5ms, application-code: 62ms)
- GET / 200 in 75ms (next.js: 14ms, proxy.ts: 5ms, application-code: 56ms)
- GET /settings 200 in 98ms (next.js: 4ms, proxy.ts: 23ms, application-code: 70ms)
- GET /settings 200 in 89ms (next.js: 5ms, proxy.ts: 23ms, application-code: 60ms)
- GET / 200 in 74ms (next.js: 15ms, proxy.ts: 22ms, application-code: 37ms)
- GET /settings 200 in 88ms (next.js: 4ms, proxy.ts: 23ms, application-code: 61ms)
- GET / 200 in 64ms (next.js: 14ms, proxy.ts: 4ms, application-code: 46ms)
- GET /settings 200 in 77ms (next.js: 4ms, proxy.ts: 14ms, application-code: 60ms)
- GET /settings 200 in 77ms (next.js: 12ms, proxy.ts: 14ms, application-code: 51ms)
- GET / 200 in 45ms (next.js: 13ms, proxy.ts: 5ms, application-code: 27ms)
- GET /settings 200 in 79ms (next.js: 4ms, proxy.ts: 16ms, application-code: 59ms)
- GET /settings 200 in 78ms (next.js: 12ms, proxy.ts: 13ms, application-code: 53ms)
- GET / 200 in 66ms (next.js: 4ms, proxy.ts: 14ms, application-code: 48ms)
- GET /settings 200 in 80ms (next.js: 13ms, proxy.ts: 5ms, application-code: 62ms)
- GET / 200 in 82ms (next.js: 14ms, proxy.ts: 16ms, application-code: 52ms)
- GET /settings 200 in 94ms (next.js: 4ms, proxy.ts: 24ms, application-code: 66ms)
- GET /settings 200 in 76ms (next.js: 13ms, proxy.ts: 15ms, application-code: 48ms)
- GET / 200 in 75ms (next.js: 19ms, proxy.ts: 13ms, application-code: 43ms)
- GET /settings 200 in 90ms (next.js: 2ms, proxy.ts: 15ms, application-code: 73ms)
- GET / 200 in 70ms (next.js: 16ms, proxy.ts: 5ms, application-code: 50ms)
- GET /settings 200 in 85ms (next.js: 4ms, proxy.ts: 6ms, application-code: 74ms)
- GET /settings 200 in 83ms (next.js: 27ms, proxy.ts: 5ms, application-code: 51ms)
- GET / 200 in 54ms (next.js: 13ms, proxy.ts: 5ms, application-code: 36ms)
- GET /settings 200 in 81ms (next.js: 4ms, proxy.ts: 27ms, application-code: 50ms)
- GET /settings 200 in 79ms (next.js: 12ms, proxy.ts: 13ms, application-code: 53ms)
- GET / 200 in 67ms (next.js: 3ms, proxy.ts: 15ms, application-code: 49ms)
- GET /settings 200 in 79ms (next.js: 5ms, proxy.ts: 12ms, application-code: 62ms)
- GET / 200 in 76ms (next.js: 14ms, proxy.ts: 16ms, application-code: 47ms)
- GET /settings 200 in 88ms (next.js: 14ms, proxy.ts: 14ms, application-code: 60ms)
- GET /settings 200 in 76ms (next.js: 4ms, proxy.ts: 23ms, application-code: 48ms)
- GET / 200 in 70ms (next.js: 13ms, proxy.ts: 14ms, application-code: 43ms)
- GET /settings 200 in 85ms (next.js: 3ms, proxy.ts: 15ms, application-code: 67ms)
- GET / 200 in 64ms (next.js: 13ms, proxy.ts: 5ms, application-code: 45ms)
- GET /settings 200 in 84ms (next.js: 4ms, proxy.ts: 10ms, application-code: 69ms)
- GET /settings 200 in 79ms (next.js: 22ms, proxy.ts: 5ms, application-code: 52ms)
- GET / 200 in 56ms (next.js: 13ms, proxy.ts: 5ms, application-code: 38ms)
- GET /settings 200 in 71ms (next.js: 4ms, proxy.ts: 15ms, application-code: 52ms)
- GET /settings 200 in 82ms (next.js: 21ms, proxy.ts: 4ms, application-code: 57ms)
- GET / 200 in 51ms (next.js: 4ms, proxy.ts: 6ms, application-code: 41ms)
- GET /settings 200 in 84ms (next.js: 14ms, proxy.ts: 6ms, application-code: 64ms)
- GET /settings 200 in 82ms (next.js: 15ms, proxy.ts: 14ms, application-code: 53ms)
- GET / 200 in 68ms (next.js: 5ms, proxy.ts: 27ms, application-code: 37ms)
- GET /settings 200 in 71ms (next.js: 13ms, proxy.ts: 6ms, application-code: 52ms)
- GET /settings 200 in 86ms (next.js: 13ms, proxy.ts: 13ms, application-code: 60ms)
- GET / 200 in 82ms (next.js: 4ms, proxy.ts: 24ms, application-code: 54ms)
- GET /settings 200 in 95ms (next.js: 4ms, proxy.ts: 14ms, application-code: 77ms)
- GET / 200 in 82ms (next.js: 21ms, proxy.ts: 14ms, application-code: 47ms)
- GET /settings 200 in 86ms (next.js: 19ms, proxy.ts: 5ms, application-code: 62ms)
- GET / 200 in 45ms (next.js: 23ms, proxy.ts: 4ms, application-code: 18ms)
- GET /settings 200 in 79ms (next.js: 3ms, proxy.ts: 14ms, application-code: 62ms)
- GET /settings 200 in 81ms (next.js: 13ms, proxy.ts: 4ms, application-code: 64ms)
- GET / 200 in 59ms (next.js: 5ms, proxy.ts: 5ms, application-code: 50ms)
- GET /settings 200 in 84ms (next.js: 12ms, proxy.ts: 5ms, application-code: 67ms)
- GET /settings 200 in 84ms (next.js: 24ms, proxy.ts: 5ms, application-code: 56ms)
- GET / 200 in 70ms (next.js: 4ms, proxy.ts: 17ms, application-code: 50ms)
- GET /settings 200 in 63ms (next.js: 13ms, proxy.ts: 5ms, application-code: 45ms)
- GET /settings 200 in 87ms (next.js: 25ms, proxy.ts: 4ms, application-code: 58ms)
- GET / 200 in 79ms (next.js: 5ms, proxy.ts: 15ms, application-code: 60ms)
- GET /settings 200 in 91ms (next.js: 4ms, proxy.ts: 15ms, application-code: 71ms)
- GET / 200 in 86ms (next.js: 22ms, proxy.ts: 16ms, application-code: 49ms)
- GET /settings 200 in 91ms (next.js: 16ms, proxy.ts: 6ms, application-code: 69ms)
- GET /settings 200 in 78ms (next.js: 4ms, proxy.ts: 32ms, application-code: 41ms)
- GET / 200 in 57ms (next.js: 14ms, proxy.ts: 14ms, application-code: 30ms)
- GET /settings 200 in 70ms (next.js: 13ms, proxy.ts: 5ms, application-code: 52ms)
- GET / 200 in 77ms (next.js: 16ms, proxy.ts: 5ms, application-code: 56ms)
- GET /settings 200 in 82ms (next.js: 4ms, proxy.ts: 5ms, application-code: 73ms)
- GET /settings 200 in 82ms (next.js: 25ms, proxy.ts: 4ms, application-code: 54ms)
- GET / 200 in 48ms (next.js: 13ms, proxy.ts: 4ms, application-code: 31ms)
- GET /settings 200 in 82ms (next.js: 3ms, proxy.ts: 24ms, application-code: 54ms)
- GET /settings 200 in 80ms (next.js: 21ms, proxy.ts: 4ms, application-code: 55ms)
- GET / 200 in 69ms (next.js: 5ms, proxy.ts: 8ms, application-code: 57ms)
- GET /settings 200 in 97ms (next.js: 21ms, proxy.ts: 6ms, application-code: 70ms)
- GET /settings 200 in 96ms (next.js: 23ms, proxy.ts: 14ms, application-code: 59ms)
- GET / 200 in 82ms (next.js: 3ms, proxy.ts: 34ms, application-code: 44ms)
- GET /settings 200 in 78ms (next.js: 18ms, proxy.ts: 16ms, application-code: 44ms)
- GET /settings 200 in 96ms (next.js: 15ms, proxy.ts: 19ms, application-code: 63ms)
- GET / 200 in 71ms (next.js: 5ms, proxy.ts: 14ms, application-code: 53ms)
- GET / 200 in 79ms (next.js: 24ms, proxy.ts: 4ms, application-code: 51ms)
- GET /settings 200 in 84ms (next.js: 5ms, proxy.ts: 5ms, application-code: 74ms)
- GET /settings 200 in 83ms (next.js: 14ms, proxy.ts: 5ms, application-code: 64ms)
- GET / 200 in 56ms (next.js: 13ms, proxy.ts: 5ms, application-code: 38ms)
- GET /settings 200 in 83ms (next.js: 3ms, proxy.ts: 29ms, application-code: 51ms)
- GET /settings 200 in 84ms (next.js: 21ms, proxy.ts: 4ms, application-code: 58ms)
- GET / 200 in 62ms (next.js: 4ms, proxy.ts: 6ms, application-code: 51ms)
- GET /settings 200 in 91ms (next.js: 14ms, proxy.ts: 6ms, application-code: 72ms)
- GET /settings 200 in 91ms (next.js: 25ms, proxy.ts: 5ms, application-code: 61ms)
- GET / 200 in 86ms (next.js: 3ms, proxy.ts: 29ms, application-code: 54ms)
- GET /settings 200 in 67ms (next.js: 13ms, proxy.ts: 5ms, application-code: 49ms)
- GET /settings 200 in 88ms (next.js: 9ms, proxy.ts: 24ms, application-code: 55ms)
- GET / 200 in 73ms (next.js: 4ms, proxy.ts: 20ms, application-code: 49ms)
- GET / 200 in 75ms (next.js: 25ms, proxy.ts: 5ms, application-code: 45ms)
- GET /settings 200 in 79ms (next.js: 15ms, proxy.ts: 4ms, application-code: 60ms)
- GET /settings 200 in 81ms (next.js: 4ms, proxy.ts: 5ms, application-code: 71ms)
- GET /settings 200 in 58ms (next.js: 4ms, proxy.ts: 14ms, application-code: 40ms)
- GET / 200 in 53ms (next.js: 23ms, proxy.ts: 4ms, application-code: 27ms)
- GET /settings 200 in 78ms (next.js: 13ms, proxy.ts: 4ms, application-code: 61ms)
- GET / 200 in 66ms (next.js: 4ms, proxy.ts: 6ms, application-code: 56ms)
- GET /settings 200 in 82ms (next.js: 23ms, proxy.ts: 4ms, application-code: 55ms)
- GET /settings 200 in 83ms (next.js: 13ms, proxy.ts: 4ms, application-code: 66ms)
- GET / 200 in 70ms (next.js: 13ms, proxy.ts: 25ms, application-code: 31ms)
- GET /settings 200 in 82ms (next.js: 3ms, proxy.ts: 25ms, application-code: 54ms)
- GET /settings 200 in 83ms (next.js: 12ms, proxy.ts: 13ms, application-code: 58ms)
- GET / 200 in 73ms (next.js: 5ms, proxy.ts: 18ms, application-code: 50ms)
- GET / 200 in 76ms (next.js: 26ms, proxy.ts: 5ms, application-code: 45ms)
- GET /settings 200 in 89ms (next.js: 4ms, proxy.ts: 14ms, application-code: 71ms)
- GET /settings 200 in 89ms (next.js: 14ms, proxy.ts: 14ms, application-code: 62ms)
- GET /settings 200 in 81ms (next.js: 13ms, proxy.ts: 27ms, application-code: 41ms)
- GET / 200 in 54ms (next.js: 12ms, proxy.ts: 14ms, application-code: 28ms)
- GET /settings 200 in 91ms (next.js: 3ms, proxy.ts: 24ms, application-code: 63ms)
- GET / 200 in 68ms (next.js: 5ms, proxy.ts: 4ms, application-code: 59ms)
- GET /settings 200 in 81ms (next.js: 14ms, proxy.ts: 4ms, application-code: 63ms)
- GET /settings 200 in 81ms (next.js: 24ms, proxy.ts: 4ms, application-code: 54ms)
- GET / 200 in 55ms (next.js: 14ms, proxy.ts: 5ms, application-code: 37ms)
- GET /settings 200 in 88ms (next.js: 4ms, proxy.ts: 26ms, application-code: 57ms)
- GET /settings 200 in 86ms (next.js: 12ms, proxy.ts: 14ms, application-code: 60ms)
- GET / 200 in 73ms (next.js: 3ms, proxy.ts: 14ms, application-code: 56ms)
- GET /settings 200 in 93ms (next.js: 4ms, proxy.ts: 19ms, application-code: 69ms)
- GET / 200 in 77ms (next.js: 14ms, proxy.ts: 16ms, application-code: 46ms)
- GET /settings 200 in 95ms (next.js: 16ms, proxy.ts: 19ms, application-code: 60ms)
- GET /settings 200 in 69ms (next.js: 4ms, proxy.ts: 23ms, application-code: 41ms)
- GET / 200 in 65ms (next.js: 12ms, proxy.ts: 14ms, application-code: 39ms)
- GET /settings 200 in 81ms (next.js: 3ms, proxy.ts: 15ms, application-code: 63ms)
- GET / 200 in 68ms (next.js: 4ms, proxy.ts: 4ms, application-code: 60ms)
- GET /settings 200 in 81ms (next.js: 12ms, proxy.ts: 4ms, application-code: 65ms)
- GET /settings 200 in 81ms (next.js: 24ms, proxy.ts: 4ms, application-code: 54ms)
- GET / 200 in 55ms (next.js: 14ms, proxy.ts: 6ms, application-code: 36ms)
- GET /settings 200 in 61ms (next.js: 3ms, proxy.ts: 6ms, application-code: 51ms)
- GET /settings 200 in 85ms (next.js: 23ms, proxy.ts: 4ms, application-code: 58ms)
- GET / 200 in 72ms (next.js: 3ms, proxy.ts: 14ms, application-code: 55ms)
- GET /settings 200 in 94ms (next.js: 3ms, proxy.ts: 14ms, application-code: 77ms)
- GET / 200 in 82ms (next.js: 20ms, proxy.ts: 15ms, application-code: 47ms)
- GET /settings 200 in 95ms (next.js: 14ms, proxy.ts: 14ms, application-code: 67ms)
- GET /settings 200 in 59ms (next.js: 4ms, proxy.ts: 15ms, application-code: 41ms)
- GET / 200 in 65ms (next.js: 13ms, proxy.ts: 14ms, application-code: 39ms)
- GET /settings 200 in 81ms (next.js: 13ms, proxy.ts: 5ms, application-code: 63ms)
- GET / 200 in 68ms (next.js: 3ms, proxy.ts: 4ms, application-code: 60ms)
- GET /settings 200 in 82ms (next.js: 12ms, proxy.ts: 4ms, application-code: 65ms)
- GET /settings 200 in 82ms (next.js: 24ms, proxy.ts: 4ms, application-code: 55ms)
- GET / 200 in 57ms (next.js: 14ms, proxy.ts: 5ms, application-code: 37ms)
- GET /settings 200 in 61ms (next.js: 4ms, proxy.ts: 5ms, application-code: 52ms)
- GET /settings 200 in 83ms (next.js: 12ms, proxy.ts: 15ms, application-code: 56ms)
- GET / 200 in 74ms (next.js: 3ms, proxy.ts: 15ms, application-code: 55ms)
- GET /settings 200 in 86ms (next.js: 4ms, proxy.ts: 14ms, application-code: 69ms)
- GET / 200 in 83ms (next.js: 14ms, proxy.ts: 16ms, application-code: 53ms)
- GET /settings 200 in 96ms (next.js: 16ms, proxy.ts: 14ms, application-code: 67ms)
- GET /settings 200 in 76ms (next.js: 10ms, proxy.ts: 23ms, application-code: 43ms)
- GET / 200 in 58ms (next.js: 14ms, proxy.ts: 14ms, application-code: 30ms)
- GET /settings 200 in 76ms (next.js: 3ms, proxy.ts: 21ms, application-code: 52ms)
- GET / 200 in 67ms (next.js: 15ms, proxy.ts: 4ms, application-code: 47ms)
- GET /settings 200 in 83ms (next.js: 4ms, proxy.ts: 4ms, application-code: 74ms)
- GET /settings 200 in 82ms (next.js: 25ms, proxy.ts: 4ms, application-code: 53ms)
- GET / 200 in 48ms (next.js: 14ms, proxy.ts: 4ms, application-code: 29ms)
- GET /settings 200 in 81ms (next.js: 3ms, proxy.ts: 24ms, application-code: 54ms)
- GET /settings 200 in 87ms (next.js: 12ms, proxy.ts: 14ms, application-code: 60ms)
- GET / 200 in 62ms (next.js: 4ms, proxy.ts: 5ms, application-code: 53ms)
- GET /settings 200 in 92ms (next.js: 5ms, proxy.ts: 16ms, application-code: 71ms)
- GET /settings 200 in 91ms (next.js: 16ms, proxy.ts: 16ms, application-code: 60ms)
- GET / 200 in 84ms (next.js: 4ms, proxy.ts: 28ms, application-code: 52ms)
- GET /settings 200 in 90ms (next.js: 13ms, proxy.ts: 28ms, application-code: 49ms)
- GET /settings 200 in 96ms (next.js: 9ms, proxy.ts: 23ms, application-code: 64ms)
- GET / 200 in 73ms (next.js: 3ms, proxy.ts: 20ms, application-code: 49ms)
- GET / 200 in 84ms (next.js: 24ms, proxy.ts: 5ms, application-code: 55ms)
- GET /settings 200 in 88ms (next.js: 4ms, proxy.ts: 5ms, application-code: 79ms)
- GET /settings 200 in 87ms (next.js: 14ms, proxy.ts: 5ms, application-code: 68ms)
- GET / 200 in 52ms (next.js: 18ms, proxy.ts: 4ms, application-code: 31ms)
- GET /settings 200 in 86ms (next.js: 4ms, proxy.ts: 25ms, application-code: 57ms)
- GET /settings 200 in 91ms (next.js: 28ms, proxy.ts: 3ms, application-code: 59ms)
- GET / 200 in 71ms (next.js: 4ms, proxy.ts: 5ms, application-code: 62ms)
- GET /settings 200 in 102ms (next.js: 17ms, proxy.ts: 5ms, application-code: 81ms)
- GET /settings 200 in 107ms (next.js: 29ms, proxy.ts: 4ms, application-code: 75ms)
- GET / 200 in 89ms (next.js: 3ms, proxy.ts: 15ms, application-code: 71ms)
- GET /settings 200 in 93ms (next.js: 12ms, proxy.ts: 14ms, application-code: 67ms)
- GET /settings 200 in 113ms (next.js: 20ms, proxy.ts: 24ms, application-code: 69ms)
- GET / 200 in 91ms (next.js: 4ms, proxy.ts: 37ms, application-code: 50ms)
- GET /settings 200 in 78ms (next.js: 3ms, proxy.ts: 15ms, application-code: 60ms)
- GET / 200 in 65ms (next.js: 14ms, proxy.ts: 15ms, application-code: 36ms)
- GET /settings 200 in 81ms (next.js: 15ms, proxy.ts: 5ms, application-code: 62ms)
- GET /settings 200 in 79ms (next.js: 3ms, proxy.ts: 24ms, application-code: 51ms)
- GET / 200 in 55ms (next.js: 2ms, proxy.ts: 14ms, application-code: 39ms)
- GET /settings 200 in 86ms (next.js: 13ms, proxy.ts: 14ms, application-code: 59ms)
- GET / 200 in 61ms (next.js: 3ms, proxy.ts: 5ms, application-code: 52ms)
- GET /settings 200 in 73ms (next.js: 12ms, proxy.ts: 4ms, application-code: 56ms)
- GET /settings 200 in 84ms (next.js: 26ms, proxy.ts: 4ms, application-code: 54ms)
- GET / 200 in 75ms (next.js: 4ms, proxy.ts: 19ms, application-code: 52ms)
- GET /settings 200 in 78ms (next.js: 13ms, proxy.ts: 18ms, application-code: 48ms)
- GET / 200 in 74ms (next.js: 14ms, proxy.ts: 4ms, application-code: 56ms)
- GET /settings 200 in 98ms (next.js: 3ms, proxy.ts: 23ms, application-code: 72ms)
- GET / 200 in 69ms (next.js: 26ms, proxy.ts: 4ms, application-code: 39ms)
- GET /settings 200 in 87ms (next.js: 5ms, proxy.ts: 19ms, application-code: 64ms)
- GET /settings 200 in 89ms (next.js: 15ms, proxy.ts: 11ms, application-code: 63ms)
- GET / 200 in 57ms (next.js: 14ms, proxy.ts: 5ms, application-code: 38ms)
- GET /settings 200 in 83ms (next.js: 3ms, proxy.ts: 16ms, application-code: 63ms)
- GET /settings 200 in 82ms (next.js: 12ms, proxy.ts: 14ms, application-code: 56ms)
- GET / 200 in 58ms (next.js: 4ms, proxy.ts: 5ms, application-code: 50ms)
- GET /settings 200 in 71ms (next.js: 13ms, proxy.ts: 4ms, application-code: 54ms)
- GET /settings 200 in 72ms (next.js: 26ms, proxy.ts: 4ms, application-code: 42ms)
- GET / 200 in 69ms (next.js: 4ms, proxy.ts: 14ms, application-code: 50ms)
- GET /settings 200 in 74ms (next.js: 13ms, proxy.ts: 4ms, application-code: 57ms)
- GET / 200 in 76ms (next.js: 15ms, proxy.ts: 4ms, application-code: 56ms)
- GET /settings 200 in 98ms (next.js: 4ms, proxy.ts: 24ms, application-code: 71ms)
- GET /settings 200 in 79ms (next.js: 4ms, proxy.ts: 15ms, application-code: 60ms)
- GET / 200 in 83ms (next.js: 20ms, proxy.ts: 15ms, application-code: 48ms)
- GET /settings 200 in 97ms (next.js: 15ms, proxy.ts: 15ms, application-code: 67ms)
- GET / 200 in 75ms (next.js: 14ms, proxy.ts: 4ms, application-code: 57ms)
- GET /settings 200 in 90ms (next.js: 4ms, proxy.ts: 14ms, application-code: 72ms)
- GET /settings 200 in 78ms (next.js: 22ms, proxy.ts: 3ms, application-code: 52ms)
- GET / 200 in 58ms (next.js: 14ms, proxy.ts: 4ms, application-code: 40ms)
- GET /settings 200 in 72ms (next.js: 3ms, proxy.ts: 4ms, application-code: 64ms)
- GET /settings 200 in 83ms (next.js: 22ms, proxy.ts: 4ms, application-code: 58ms)
- GET / 200 in 51ms (next.js: 4ms, proxy.ts: 6ms, application-code: 41ms)
- GET /settings 200 in 83ms (next.js: 14ms, proxy.ts: 5ms, application-code: 63ms)
- GET /settings 200 in 83ms (next.js: 15ms, proxy.ts: 14ms, application-code: 53ms)
- GET / 200 in 66ms (next.js: 5ms, proxy.ts: 16ms, application-code: 46ms)
- GET /settings 200 in 77ms (next.js: 12ms, proxy.ts: 5ms, application-code: 60ms)
- GET /settings 200 in 97ms (next.js: 13ms, proxy.ts: 13ms, application-code: 70ms)
- GET / 200 in 74ms (next.js: 4ms, proxy.ts: 14ms, application-code: 56ms)
- GET /settings 200 in 77ms (next.js: 3ms, proxy.ts: 19ms, application-code: 54ms)
- GET / 200 in 78ms (next.js: 15ms, proxy.ts: 16ms, application-code: 48ms)
- GET /settings 200 in 90ms (next.js: 16ms, proxy.ts: 11ms, application-code: 63ms)
- GET / 200 in 67ms (next.js: 14ms, proxy.ts: 5ms, application-code: 49ms)
- GET /settings 200 in 80ms (next.js: 4ms, proxy.ts: 14ms, application-code: 62ms)
- GET /settings 200 in 81ms (next.js: 22ms, proxy.ts: 4ms, application-code: 55ms)
- GET / 200 in 57ms (next.js: 14ms, proxy.ts: 5ms, application-code: 39ms)
- GET /settings 200 in 71ms (next.js: 3ms, proxy.ts: 5ms, application-code: 63ms)
- GET /settings 200 in 81ms (next.js: 5ms, proxy.ts: 23ms, application-code: 53ms)
- GET / 200 in 67ms (next.js: 4ms, proxy.ts: 16ms, application-code: 47ms)
- GET /settings 200 in 70ms (next.js: 12ms, proxy.ts: 5ms, application-code: 53ms)
- GET /settings 200 in 87ms (next.js: 14ms, proxy.ts: 13ms, application-code: 60ms)
- GET / 200 in 73ms (next.js: 3ms, proxy.ts: 15ms, application-code: 55ms)
- GET /settings 200 in 87ms (next.js: 4ms, proxy.ts: 14ms, application-code: 69ms)
- GET / 200 in 82ms (next.js: 16ms, proxy.ts: 20ms, application-code: 46ms)
- GET /settings 200 in 86ms (next.js: 10ms, proxy.ts: 15ms, application-code: 61ms)
- GET /settings 200 in 80ms (next.js: 4ms, proxy.ts: 25ms, application-code: 51ms)
- GET / 200 in 55ms (next.js: 13ms, proxy.ts: 14ms, application-code: 28ms)
- GET /settings 200 in 80ms (next.js: 3ms, proxy.ts: 14ms, application-code: 63ms)
- GET / 200 in 67ms (next.js: 15ms, proxy.ts: 4ms, application-code: 47ms)
- GET /settings 200 in 80ms (next.js: 3ms, proxy.ts: 5ms, application-code: 73ms)
- GET /settings 200 in 80ms (next.js: 24ms, proxy.ts: 4ms, application-code: 53ms)
- GET / 200 in 47ms (next.js: 13ms, proxy.ts: 5ms, application-code: 29ms)
- GET /settings 200 in 70ms (next.js: 3ms, proxy.ts: 5ms, application-code: 61ms)
- GET /settings 200 in 87ms (next.js: 22ms, proxy.ts: 4ms, application-code: 62ms)
- GET / 200 in 65ms (next.js: 4ms, proxy.ts: 5ms, application-code: 56ms)
- GET /settings 200 in 79ms (next.js: 14ms, proxy.ts: 5ms, application-code: 60ms)
- GET /settings 200 in 88ms (next.js: 15ms, proxy.ts: 13ms, application-code: 59ms)
- GET / 200 in 74ms (next.js: 3ms, proxy.ts: 22ms, application-code: 48ms)
- GET /settings 200 in 78ms (next.js: 13ms, proxy.ts: 22ms, application-code: 44ms)
- GET / 200 in 66ms (next.js: 15ms, proxy.ts: 3ms, application-code: 47ms)
- GET /settings 200 in 89ms (next.js: 4ms, proxy.ts: 24ms, application-code: 62ms)
- GET / 200 in 56ms (next.js: 24ms, proxy.ts: 4ms, application-code: 27ms)
- GET /settings 200 in 89ms (next.js: 4ms, proxy.ts: 14ms, application-code: 71ms)
- GET /settings 200 in 81ms (next.js: 15ms, proxy.ts: 4ms, application-code: 62ms)
- GET /settings 200 in 69ms (next.js: 4ms, proxy.ts: 23ms, application-code: 42ms)
- GET / 200 in 69ms (next.js: 3ms, proxy.ts: 15ms, application-code: 51ms)
- GET /settings 200 in 83ms (next.js: 11ms, proxy.ts: 15ms, application-code: 57ms)
- GET / 200 in 67ms (next.js: 3ms, proxy.ts: 5ms, application-code: 59ms)
- GET /settings 200 in 76ms (next.js: 13ms, proxy.ts: 4ms, application-code: 59ms)
- GET /settings 200 in 87ms (next.js: 25ms, proxy.ts: 4ms, application-code: 58ms)
- GET / 200 in 72ms (next.js: 13ms, proxy.ts: 15ms, application-code: 44ms)
- GET /settings 200 in 76ms (next.js: 3ms, proxy.ts: 15ms, application-code: 58ms)
- GET /settings 200 in 96ms (next.js: 4ms, proxy.ts: 29ms, application-code: 63ms)
- GET / 200 in 68ms (next.js: 15ms, proxy.ts: 3ms, application-code: 50ms)
- GET /settings 200 in 70ms (next.js: 3ms, proxy.ts: 14ms, application-code: 52ms)
- GET / 200 in 58ms (next.js: 14ms, proxy.ts: 15ms, application-code: 29ms)
- GET /settings 200 in 83ms (next.js: 15ms, proxy.ts: 5ms, application-code: 63ms)
- GET /settings 200 in 72ms (next.js: 3ms, proxy.ts: 24ms, application-code: 44ms)
- GET / 200 in 69ms (next.js: 4ms, proxy.ts: 15ms, application-code: 50ms)
- GET /settings 200 in 83ms (next.js: 13ms, proxy.ts: 15ms, application-code: 56ms)
- GET / 200 in 66ms (next.js: 15ms, proxy.ts: 5ms, application-code: 47ms)
- GET /settings 200 in 71ms (next.js: 4ms, proxy.ts: 5ms, application-code: 62ms)
- GET /settings 200 in 70ms (next.js: 25ms, proxy.ts: 4ms, application-code: 41ms)
- GET / 200 in 62ms (next.js: 13ms, proxy.ts: 4ms, application-code: 45ms)
- GET /settings 200 in 78ms (next.js: 4ms, proxy.ts: 14ms, application-code: 60ms)
- GET / 200 in 76ms (next.js: 22ms, proxy.ts: 4ms, application-code: 50ms)
- GET /contracts/new 200 in 101ms (next.js: 4ms, proxy.ts: 23ms, application-code: 73ms)
- GET / 200 in 66ms (next.js: 15ms, proxy.ts: 16ms, application-code: 36ms)
- GET /contracts/new 200 in 88ms (next.js: 4ms, proxy.ts: 20ms, application-code: 64ms)
- GET /contracts/new 200 in 82ms (next.js: 16ms, proxy.ts: 14ms, application-code: 52ms)
- GET / 200 in 57ms (next.js: 3ms, proxy.ts: 15ms, application-code: 39ms)
- GET /contracts/new 200 in 83ms (next.js: 3ms, proxy.ts: 24ms, application-code: 56ms)
- GET / 200 in 59ms (next.js: 3ms, proxy.ts: 18ms, application-code: 39ms)
- GET /contracts/new 200 in 73ms (next.js: 13ms, proxy.ts: 3ms, application-code: 58ms)
- GET /contracts/new 200 in 73ms (next.js: 13ms, proxy.ts: 5ms, application-code: 55ms)
- GET /contracts/new 200 in 73ms (next.js: 25ms, proxy.ts: 4ms, application-code: 44ms)
- GET / 200 in 73ms (next.js: 3ms, proxy.ts: 15ms, application-code: 55ms)
- GET /contracts/new 200 in 79ms (next.js: 12ms, proxy.ts: 3ms, application-code: 64ms)
- GET / 200 in 75ms (next.js: 14ms, proxy.ts: 4ms, application-code: 57ms)
- GET /contracts/new 200 in 92ms (next.js: 4ms, proxy.ts: 16ms, application-code: 72ms)
- GET / 200 in 67ms (next.js: 26ms, proxy.ts: 4ms, application-code: 36ms)
- GET /contracts/new 200 in 79ms (next.js: 4ms, proxy.ts: 11ms, application-code: 64ms)
- GET /contracts/new 200 in 73ms (next.js: 15ms, proxy.ts: 4ms, application-code: 54ms)
- GET / 200 in 54ms (next.js: 14ms, proxy.ts: 3ms, application-code: 38ms)
- GET /contracts/new 200 in 60ms (next.js: 3ms, proxy.ts: 3ms, application-code: 54ms)
- GET / 200 in 67ms (next.js: 14ms, proxy.ts: 3ms, application-code: 49ms)
- GET /contracts/new 200 in 73ms (next.js: 4ms, proxy.ts: 4ms, application-code: 65ms)
- GET / 200 in 66ms (next.js: 26ms, proxy.ts: 4ms, application-code: 36ms)
- GET /contracts/new 200 in 82ms (next.js: 4ms, proxy.ts: 14ms, application-code: 64ms)
- GET /contracts/new 200 in 72ms (next.js: 14ms, proxy.ts: 5ms, application-code: 54ms)
- GET / 200 in 64ms (next.js: 14ms, proxy.ts: 4ms, application-code: 47ms)
- GET /contracts/new 200 in 79ms (next.js: 3ms, proxy.ts: 13ms, application-code: 63ms)
- GET / 200 in 75ms (next.js: 22ms, proxy.ts: 4ms, application-code: 48ms)
- GET /contracts/new 200 in 89ms (next.js: 4ms, proxy.ts: 13ms, application-code: 72ms)
- GET / 200 in 56ms (next.js: 3ms, proxy.ts: 26ms, application-code: 27ms)
- GET /contracts/new 200 in 77ms (next.js: 3ms, proxy.ts: 21ms, application-code: 53ms)
- GET /contracts/new 200 in 77ms (next.js: 14ms, proxy.ts: 20ms, application-code: 42ms)
- GET /contracts/new 200 in 81ms (next.js: 4ms, proxy.ts: 12ms, application-code: 66ms)
- GET / 200 in 78ms (next.js: 4ms, proxy.ts: 15ms, application-code: 59ms)
- GET /contracts/new 200 in 72ms (next.js: 14ms, proxy.ts: 4ms, application-code: 54ms)
- GET / 200 in 68ms (next.js: 25ms, proxy.ts: 4ms, application-code: 38ms)
- GET /contracts/new 200 in 83ms (next.js: 2ms, proxy.ts: 16ms, application-code: 65ms)
- GET /contracts/new 200 in 84ms (next.js: 13ms, proxy.ts: 16ms, application-code: 55ms)
- GET / 200 in 64ms (next.js: 15ms, proxy.ts: 4ms, application-code: 46ms)
- GET /contracts/new 200 in 93ms (next.js: 3ms, proxy.ts: 4ms, application-code: 86ms)
- GET / 200 in 75ms (next.js: 16ms, proxy.ts: 4ms, application-code: 55ms)
- GET /contracts/new 200 in 82ms (next.js: 5ms, proxy.ts: 4ms, application-code: 72ms)
- GET / 200 in 66ms (next.js: 25ms, proxy.ts: 4ms, application-code: 36ms)
- GET /contracts/new 200 in 99ms (next.js: 4ms, proxy.ts: 32ms, application-code: 64ms)
- GET /contracts/new 200 in 88ms (next.js: 14ms, proxy.ts: 20ms, application-code: 54ms)
- GET / 200 in 59ms (next.js: 15ms, proxy.ts: 3ms, application-code: 41ms)
- GET /contracts/new 200 in 87ms (next.js: 4ms, proxy.ts: 4ms, application-code: 79ms)
- GET / 200 in 61ms (next.js: 15ms, proxy.ts: 6ms, application-code: 40ms)
- GET /contracts/new 200 in 84ms (next.js: 4ms, proxy.ts: 14ms, application-code: 65ms)
- GET /contracts/new 200 in 86ms (next.js: 14ms, proxy.ts: 16ms, application-code: 56ms)
- GET /contracts/new 200 in 94ms (next.js: 15ms, proxy.ts: 26ms, application-code: 53ms)
- GET / 200 in 68ms (next.js: 3ms, proxy.ts: 26ms, application-code: 39ms)
- GET / 200 in 74ms (next.js: 3ms, proxy.ts: 16ms, application-code: 55ms)
- GET /contracts/new 200 in 100ms (next.js: 4ms, proxy.ts: 12ms, application-code: 84ms)
- GET /contracts/new 200 in 78ms (next.js: 14ms, proxy.ts: 3ms, application-code: 61ms)
- GET / 200 in 72ms (next.js: 14ms, proxy.ts: 22ms, application-code: 36ms)
- GET /contracts/new 200 in 90ms (next.js: 3ms, proxy.ts: 22ms, application-code: 65ms)
- GET /contracts/new 200 in 79ms (next.js: 23ms, proxy.ts: 10ms, application-code: 46ms)
- GET / 200 in 58ms (next.js: 3ms, proxy.ts: 4ms, application-code: 51ms)
- GET /contracts/new 200 in 88ms (next.js: 13ms, proxy.ts: 3ms, application-code: 71ms)
- GET / 200 in 71ms (next.js: 15ms, proxy.ts: 4ms, application-code: 52ms)
- GET /contracts/new 200 in 89ms (next.js: 5ms, proxy.ts: 15ms, application-code: 68ms)
- GET / 200 in 68ms (next.js: 26ms, proxy.ts: 4ms, application-code: 38ms)
- GET /contracts/new 200 in 97ms (next.js: 3ms, proxy.ts: 28ms, application-code: 66ms)
- GET /contracts/new 200 in 77ms (next.js: 15ms, proxy.ts: 7ms, application-code: 55ms)
- GET / 200 in 63ms (next.js: 16ms, proxy.ts: 3ms, application-code: 44ms)
- GET /contracts/new 200 in 90ms (next.js: 4ms, proxy.ts: 3ms, application-code: 83ms)
- GET / 200 in 73ms (next.js: 20ms, proxy.ts: 4ms, application-code: 49ms)
- GET /contracts/new 200 in 87ms (next.js: 4ms, proxy.ts: 13ms, application-code: 70ms)
- GET / 200 in 65ms (next.js: 15ms, proxy.ts: 14ms, application-code: 36ms)
- GET /contracts/new 200 in 98ms (next.js: 4ms, proxy.ts: 30ms, application-code: 64ms)
- GET /contracts/new 200 in 87ms (next.js: 15ms, proxy.ts: 20ms, application-code: 53ms)
- GET / 200 in 57ms (next.js: 14ms, proxy.ts: 4ms, application-code: 40ms)
- GET /contracts/new 200 in 96ms (next.js: 4ms, proxy.ts: 13ms, application-code: 79ms)
- GET / 200 in 62ms (next.js: 16ms, proxy.ts: 6ms, application-code: 40ms)
- GET /contracts/new 200 in 85ms (next.js: 6ms, proxy.ts: 13ms, application-code: 66ms)
- GET /contracts/new 200 in 84ms (next.js: 13ms, proxy.ts: 16ms, application-code: 56ms)
- GET /contracts/new 200 in 74ms (next.js: 15ms, proxy.ts: 13ms, application-code: 45ms)
- GET / 200 in 60ms (next.js: 4ms, proxy.ts: 27ms, application-code: 28ms)
- GET /contracts/new 200 in 100ms (next.js: 4ms, proxy.ts: 12ms, application-code: 85ms)
- GET / 200 in 88ms (next.js: 5ms, proxy.ts: 15ms, application-code: 67ms)
- GET /contracts/new 200 in 80ms (next.js: 13ms, proxy.ts: 4ms, application-code: 62ms)
- GET / 200 in 73ms (next.js: 26ms, proxy.ts: 10ms, application-code: 37ms)
- GET /contracts/new 200 in 91ms (next.js: 4ms, proxy.ts: 22ms, application-code: 65ms)
- GET /contracts/new 200 in 80ms (next.js: 15ms, proxy.ts: 10ms, application-code: 55ms)
- GET / 200 in 56ms (next.js: 3ms, proxy.ts: 3ms, application-code: 50ms)
- GET /contracts/new 200 in 74ms (next.js: 11ms, proxy.ts: 3ms, application-code: 59ms)
- GET / 200 in 70ms (next.js: 16ms, proxy.ts: 4ms, application-code: 50ms)
- GET /contracts/new 200 in 84ms (next.js: 5ms, proxy.ts: 4ms, application-code: 75ms)
- GET / 200 in 75ms (next.js: 14ms, proxy.ts: 16ms, application-code: 45ms)
- GET /contracts/new 200 in 103ms (next.js: 4ms, proxy.ts: 26ms, application-code: 74ms)
- GET /contracts/new 200 in 91ms (next.js: 16ms, proxy.ts: 15ms, application-code: 61ms)
- GET / 200 in 63ms (next.js: 3ms, proxy.ts: 15ms, application-code: 45ms)
- GET /contracts/new 200 in 108ms (next.js: 3ms, proxy.ts: 21ms, application-code: 84ms)
- GET / 200 in 64ms (next.js: 3ms, proxy.ts: 22ms, application-code: 39ms)
- GET /contracts/new 200 in 87ms (next.js: 4ms, proxy.ts: 12ms, application-code: 70ms)
- GET /contracts/new 200 in 128ms (next.js: 13ms, proxy.ts: 21ms, application-code: 93ms)
- GET /contracts/new 200 in 117ms (next.js: 25ms, proxy.ts: 10ms, application-code: 83ms)
- GET / 200 in 94ms (next.js: 3ms, proxy.ts: 15ms, application-code: 76ms)
- GET /contracts/new 200 in 114ms (next.js: 12ms, proxy.ts: 3ms, application-code: 98ms)
- GET / 200 in 121ms (next.js: 5ms, proxy.ts: 54ms, application-code: 62ms)
- GET /contracts/new 200 in 75ms (next.js: 13ms, proxy.ts: 5ms, application-code: 57ms)
- GET / 200 in 67ms (next.js: 24ms, proxy.ts: 6ms, application-code: 36ms)
- GET /contracts/new 200 in 95ms (next.js: 4ms, proxy.ts: 28ms, application-code: 64ms)
- GET /contracts/new 200 in 73ms (next.js: 14ms, proxy.ts: 6ms, application-code: 53ms)
- GET / 200 in 59ms (next.js: 13ms, proxy.ts: 3ms, application-code: 42ms)
- GET /contracts/new 200 in 66ms (next.js: 2ms, proxy.ts: 3ms, application-code: 60ms)
- GET / 200 in 73ms (next.js: 15ms, proxy.ts: 4ms, application-code: 54ms)
- GET /contracts/new 200 in 77ms (next.js: 4ms, proxy.ts: 4ms, application-code: 69ms)
- GET / 200 in 65ms (next.js: 25ms, proxy.ts: 4ms, application-code: 37ms)
- GET /contracts/new 200 in 97ms (next.js: 5ms, proxy.ts: 29ms, application-code: 63ms)
- GET /contracts/new 200 in 88ms (next.js: 15ms, proxy.ts: 19ms, application-code: 54ms)
- GET / 200 in 57ms (next.js: 15ms, proxy.ts: 4ms, application-code: 39ms)
- GET /contracts/new 200 in 89ms (next.js: 4ms, proxy.ts: 13ms, application-code: 72ms)
- GET / 200 in 86ms (next.js: 4ms, proxy.ts: 16ms, application-code: 66ms)
- GET /contracts/new 200 in 101ms (next.js: 4ms, proxy.ts: 14ms, application-code: 83ms)
- GET / 200 in 93ms (next.js: 23ms, proxy.ts: 24ms, application-code: 46ms)
- GET / 200 in 76ms (next.js: 21ms, proxy.ts: 5ms, application-code: 50ms)
- GET / 200 in 43ms (next.js: 26ms, proxy.ts: 3ms, application-code: 14ms)
- GET / 200 in 17ms (next.js: 3ms, proxy.ts: 2ms, application-code: 12ms)
- GET / 200 in 19ms (next.js: 4ms, proxy.ts: 3ms, application-code: 13ms)
- GET / 200 in 19ms (next.js: 3ms, proxy.ts: 3ms, application-code: 12ms)
- GET / 200 in 18ms (next.js: 5ms, proxy.ts: 2ms, application-code: 12ms)
- GET / 200 in 18ms (next.js: 2ms, proxy.ts: 2ms, application-code: 14ms)
- GET / 200 in 16ms (next.js: 2ms, proxy.ts: 2ms, application-code: 12ms)
- GET / 200 in 16ms (next.js: 2ms, proxy.ts: 1943µs, application-code: 12ms)
- GET / 200 in 19ms (next.js: 6ms, proxy.ts: 2ms, application-code: 11ms)
- GET / 200 in 14ms (next.js: 1922µs, proxy.ts: 2ms, application-code: 10ms)
- GET / 200 in 16ms (next.js: 1295µs, proxy.ts: 3ms, application-code: 11ms)
- GET / 200 in 16ms (next.js: 2ms, proxy.ts: 1858µs, application-code: 12ms)
- GET / 200 in 15ms (next.js: 1757µs, proxy.ts: 1914µs, application-code: 12ms)
- GET / 200 in 20ms (next.js: 1893µs, proxy.ts: 1871µs, application-code: 16ms)
- GET / 200 in 20ms (next.js: 1949µs, proxy.ts: 7ms, application-code: 11ms)
- GET / 200 in 14ms (next.js: 1792µs, proxy.ts: 1827µs, application-code: 10ms)
- GET / 200 in 14ms (next.js: 1749µs, proxy.ts: 1821µs, application-code: 10ms)
- GET / 200 in 14ms (next.js: 1824µs, proxy.ts: 1592µs, application-code: 11ms)
- GET / 200 in 15ms (next.js: 2ms, proxy.ts: 1680µs, application-code: 11ms)
- GET / 200 in 14ms (next.js: 1849µs, proxy.ts: 1646µs, application-code: 10ms)
- GET / 200 in 17ms (next.js: 1968µs, proxy.ts: 1681µs, application-code: 13ms)
- GET / 200 in 14ms (next.js: 2ms, proxy.ts: 1693µs, application-code: 10ms)
- GET / 200 in 15ms (next.js: 2ms, proxy.ts: 1718µs, application-code: 11ms)
- GET / 200 in 16ms (next.js: 2ms, proxy.ts: 1848µs, application-code: 12ms)
- GET / 200 in 15ms (next.js: 2ms, proxy.ts: 1963µs, application-code: 11ms)
- GET / 200 in 16ms (next.js: 2ms, proxy.ts: 1945µs, application-code: 11ms)
- GET / 200 in 16ms (next.js: 2ms, proxy.ts: 2ms, application-code: 11ms)
- GET / 200 in 17ms (next.js: 2ms, proxy.ts: 2ms, application-code: 13ms)
- GET / 200 in 16ms (next.js: 1988µs, proxy.ts: 2ms, application-code: 12ms)
- GET / 200 in 18ms (next.js: 2ms, proxy.ts: 1824µs, application-code: 14ms)
- GET / 200 in 24ms (next.js: 2ms, proxy.ts: 2ms, application-code: 20ms)
- GET / 200 in 17ms (next.js: 3ms, proxy.ts: 2ms, application-code: 13ms)
- GET / 200 in 20ms (next.js: 1878µs, proxy.ts: 2ms, application-code: 16ms)
- GET / 200 in 16ms (next.js: 1897µs, proxy.ts: 2ms, application-code: 12ms)
- GET / 200 in 20ms (next.js: 1920µs, proxy.ts: 2ms, application-code: 16ms)
- GET / 200 in 24ms (next.js: 1863µs, proxy.ts: 2ms, application-code: 20ms)
- GET / 200 in 14ms (next.js: 1437µs, proxy.ts: 1638µs, application-code: 11ms)
- GET / 200 in 14ms (next.js: 1641µs, proxy.ts: 1651µs, application-code: 11ms)
- GET / 200 in 15ms (next.js: 1706µs, proxy.ts: 1952µs, application-code: 11ms)
- GET /api/contracts/reference-data 200 in 711ms (next.js: 26ms, proxy.ts: 15ms, application-code: 670ms)
- GET / 200 in 19ms (next.js: 1898µs, proxy.ts: 1874µs, application-code: 15ms)
- GET / 200 in 37ms (next.js: 3ms, proxy.ts: 3ms, application-code: 32ms)
- GET / 200 in 34ms (next.js: 2ms, proxy.ts: 21ms, application-code: 11ms)
- GET / 200 in 15ms (next.js: 2ms, proxy.ts: 2ms, application-code: 11ms)
- GET / 200 in 14ms (next.js: 1856µs, proxy.ts: 1677µs, application-code: 11ms)
- GET / 200 in 15ms (next.js: 1848µs, proxy.ts: 1956µs, application-code: 11ms)
- GET / 200 in 20ms (next.js: 1931µs, proxy.ts: 1982µs, application-code: 16ms)
- GET / 200 in 14ms (next.js: 1886µs, proxy.ts: 1900µs, application-code: 10ms)
- GET / 200 in 15ms (next.js: 2ms, proxy.ts: 2ms, application-code: 10ms)
- GET / 200 in 15ms (next.js: 1923µs, proxy.ts: 1789µs, application-code: 11ms)
- GET / 200 in 15ms (next.js: 1801µs, proxy.ts: 1778µs, application-code: 11ms)
- GET / 200 in 15ms (next.js: 1267µs, proxy.ts: 3ms, application-code: 11ms)
- GET / 200 in 16ms (next.js: 1963µs, proxy.ts: 2ms, application-code: 12ms)
- GET / 200 in 15ms (next.js: 2ms, proxy.ts: 1827µs, application-code: 11ms)
- GET / 200 in 15ms (next.js: 2ms, proxy.ts: 1856µs, application-code: 10ms)
- GET / 200 in 16ms (next.js: 1705µs, proxy.ts: 1777µs, application-code: 13ms)
- GET / 200 in 14ms (next.js: 1767µs, proxy.ts: 1815µs, application-code: 10ms)
- GET / 200 in 15ms (next.js: 1987µs, proxy.ts: 1737µs, application-code: 11ms)
- GET / 200 in 14ms (next.js: 1562µs, proxy.ts: 1809µs, application-code: 10ms)
- GET / 200 in 15ms (next.js: 1535µs, proxy.ts: 3ms, application-code: 10ms)
- GET / 200 in 14ms (next.js: 1749µs, proxy.ts: 1850µs, application-code: 11ms)
- GET / 200 in 15ms (next.js: 2ms, proxy.ts: 1559µs, application-code: 11ms)
- GET / 200 in 29ms (next.js: 1762µs, proxy.ts: 1632µs, application-code: 26ms)
- GET / 200 in 16ms (next.js: 1208µs, proxy.ts: 1840µs, application-code: 12ms)
- GET / 200 in 21ms (next.js: 2ms, proxy.ts: 1885µs, application-code: 17ms)
- GET / 200 in 19ms (next.js: 1521µs, proxy.ts: 4ms, application-code: 13ms)
- GET / 200 in 16ms (next.js: 2ms, proxy.ts: 1717µs, application-code: 12ms)
- GET / 200 in 17ms (next.js: 1822µs, proxy.ts: 3ms, application-code: 12ms)
- GET / 200 in 14ms (next.js: 1907µs, proxy.ts: 1967µs, application-code: 11ms)
- GET / 200 in 14ms (next.js: 1689µs, proxy.ts: 1753µs, application-code: 10ms)
- GET / 200 in 15ms (next.js: 1668µs, proxy.ts: 1592µs, application-code: 12ms)
- GET / 200 in 15ms (next.js: 2ms, proxy.ts: 3ms, application-code: 11ms)
- GET / 200 in 14ms (next.js: 1854µs, proxy.ts: 1777µs, application-code: 11ms)
- GET / 200 in 16ms (next.js: 2ms, proxy.ts: 1756µs, application-code: 12ms)
- GET / 200 in 17ms (next.js: 1342µs, proxy.ts: 4ms, application-code: 12ms)
- GET / 200 in 20ms (next.js: 2ms, proxy.ts: 2ms, application-code: 15ms)
- GET / 200 in 20ms (next.js: 3ms, proxy.ts: 3ms, application-code: 14ms)
- GET / 200 in 16ms (next.js: 3ms, proxy.ts: 1930µs, application-code: 12ms)
- GET / 200 in 25ms (next.js: 1915µs, proxy.ts: 1857µs, application-code: 21ms)
- GET / 200 in 27ms (next.js: 2ms, proxy.ts: 8ms, application-code: 17ms)
- GET / 200 in 17ms (next.js: 2ms, proxy.ts: 4ms, application-code: 10ms)
- GET / 200 in 14ms (next.js: 1922µs, proxy.ts: 1615µs, application-code: 11ms)
- GET / 200 in 14ms (next.js: 1981µs, proxy.ts: 2ms, application-code: 10ms)
- GET / 200 in 15ms (next.js: 1476µs, proxy.ts: 3ms, application-code: 10ms)
- GET / 200 in 14ms (next.js: 1814µs, proxy.ts: 1620µs, application-code: 11ms)
- GET / 200 in 14ms (next.js: 1812µs, proxy.ts: 1606µs, application-code: 10ms)
- GET / 200 in 13ms (next.js: 1764µs, proxy.ts: 1589µs, application-code: 10ms)
- GET / 200 in 14ms (next.js: 2ms, proxy.ts: 2ms, application-code: 10ms)
- GET / 200 in 17ms (next.js: 1148µs, proxy.ts: 2ms, application-code: 13ms)
- GET / 200 in 16ms (next.js: 1785µs, proxy.ts: 2ms, application-code: 12ms)
- GET / 200 in 15ms (next.js: 1844µs, proxy.ts: 1807µs, application-code: 11ms)
- GET / 200 in 15ms (next.js: 1748µs, proxy.ts: 1778µs, application-code: 12ms)
- GET / 200 in 15ms (next.js: 3ms, proxy.ts: 1782µs, application-code: 11ms)
- GET / 200 in 16ms (next.js: 1908µs, proxy.ts: 1729µs, application-code: 13ms)
- GET / 200 in 16ms (next.js: 2ms, proxy.ts: 2ms, application-code: 12ms)
- GET / 200 in 23ms (next.js: 8ms, proxy.ts: 2ms, application-code: 13ms)
- GET / 200 in 14ms (next.js: 1847µs, proxy.ts: 1829µs, application-code: 11ms)
- GET / 200 in 14ms (next.js: 1818µs, proxy.ts: 1755µs, application-code: 11ms)
- GET / 200 in 14ms (next.js: 1805µs, proxy.ts: 1909µs, application-code: 10ms)
- GET / 200 in 15ms (next.js: 1793µs, proxy.ts: 1598µs, application-code: 11ms)
- GET / 200 in 23ms (next.js: 2ms, proxy.ts: 1592µs, application-code: 19ms)
- GET / 200 in 15ms (next.js: 1185µs, proxy.ts: 1621µs, application-code: 12ms)
- GET / 200 in 16ms (next.js: 2ms, proxy.ts: 2ms, application-code: 12ms)
- GET /api/contracts/drafts/347683ff-6a23-4fa8-8318-46ad02bb4105/subject 200 in 1577ms (next.js: 43ms, proxy.ts: 13ms, application-code: 1520ms)
- GET / 200 in 38ms (next.js: 2ms, proxy.ts: 1689µs, application-code: 34ms)
- GET / 200 in 27ms (next.js: 1841µs, proxy.ts: 3ms, application-code: 22ms)
- GET / 200 in 15ms (next.js: 1693µs, proxy.ts: 2ms, application-code: 11ms)
- GET / 200 in 15ms (next.js: 2ms, proxy.ts: 1825µs, application-code: 12ms)
- GET / 200 in 14ms (next.js: 1846µs, proxy.ts: 1670µs, application-code: 11ms)
- GET / 200 in 14ms (next.js: 1726µs, proxy.ts: 1696µs, application-code: 10ms)
- GET / 200 in 15ms (next.js: 1842µs, proxy.ts: 1791µs, application-code: 11ms)
- GET / 200 in 21ms (next.js: 3ms, proxy.ts: 2ms, application-code: 17ms)
- GET / 200 in 15ms (next.js: 1972µs, proxy.ts: 3ms, application-code: 10ms)
- GET / 200 in 14ms (next.js: 1616µs, proxy.ts: 1615µs, application-code: 11ms)
- GET / 200 in 14ms (next.js: 1704µs, proxy.ts: 1634µs, application-code: 11ms)
- GET / 200 in 14ms (next.js: 2ms, proxy.ts: 1605µs, application-code: 10ms)
- GET / 200 in 14ms (next.js: 2ms, proxy.ts: 1535µs, application-code: 11ms)
- GET / 200 in 15ms (next.js: 2ms, proxy.ts: 1941µs, application-code: 11ms)
- GET / 200 in 14ms (next.js: 2ms, proxy.ts: 1708µs, application-code: 11ms)
- GET / 200 in 14ms (next.js: 1894µs, proxy.ts: 1783µs, application-code: 11ms)
- GET / 200 in 15ms (next.js: 2ms, proxy.ts: 1913µs, application-code: 10ms)
- GET / 200 in 15ms (next.js: 1800µs, proxy.ts: 1770µs, application-code: 11ms)
- GET / 200 in 14ms (next.js: 1791µs, proxy.ts: 1889µs, application-code: 11ms)
- GET / 200 in 23ms (next.js: 1789µs, proxy.ts: 1805µs, application-code: 19ms)
- GET / 200 in 14ms (next.js: 1180µs, proxy.ts: 1660µs, application-code: 12ms)
- GET / 200 in 15ms (next.js: 1661µs, proxy.ts: 1663µs, application-code: 12ms)
- GET / 200 in 17ms (next.js: 2ms, proxy.ts: 1930µs, application-code: 13ms)
- GET / 200 in 22ms (next.js: 2ms, proxy.ts: 2ms, application-code: 18ms)
- GET / 200 in 24ms (next.js: 1993µs, proxy.ts: 8ms, application-code: 14ms)
- GET / 200 in 15ms (next.js: 1789µs, proxy.ts: 3ms, application-code: 11ms)
- GET / 200 in 15ms (next.js: 2ms, proxy.ts: 2ms, application-code: 11ms)
- GET / 200 in 14ms (next.js: 1865µs, proxy.ts: 1766µs, application-code: 11ms)
- GET / 200 in 15ms (next.js: 1814µs, proxy.ts: 1680µs, application-code: 11ms)
- GET / 200 in 14ms (next.js: 1721µs, proxy.ts: 1678µs, application-code: 11ms)
- GET / 200 in 15ms (next.js: 1939µs, proxy.ts: 2ms, application-code: 10ms)
- GET / 200 in 14ms (next.js: 1681µs, proxy.ts: 1671µs, application-code: 11ms)
- GET / 200 in 15ms (next.js: 1896µs, proxy.ts: 1726µs, application-code: 11ms)
- GET / 200 in 15ms (next.js: 1865µs, proxy.ts: 2ms, application-code: 11ms)
- GET / 200 in 15ms (next.js: 2ms, proxy.ts: 1891µs, application-code: 11ms)
- GET /api/auth/me 200 in 8.3s (next.js: 30ms, proxy.ts: 29ms, application-code: 8.2s)
- GET / 200 in 17ms (next.js: 1765µs, proxy.ts: 1642µs, application-code: 14ms)
- GET / 200 in 14ms (next.js: 1863µs, proxy.ts: 1763µs, application-code: 11ms)
- GET / 200 in 14ms (next.js: 1789µs, proxy.ts: 1775µs, application-code: 10ms)
- GET / 200 in 15ms (next.js: 2ms, proxy.ts: 1798µs, application-code: 11ms)
- GET / 200 in 15ms (next.js: 1925µs, proxy.ts: 1836µs, application-code: 11ms)
- GET / 200 in 20ms (next.js: 1760µs, proxy.ts: 1855µs, application-code: 17ms)
- GET / 200 in 15ms (next.js: 2ms, proxy.ts: 1784µs, application-code: 11ms)
- GET / 200 in 12ms (next.js: 1819µs, proxy.ts: 1741µs, application-code: 8ms)
- GET /api/auth/me 200 in 8.6s (next.js: 28ms, proxy.ts: 29ms, application-code: 8.5s)
- GET /settings 200 in 15ms (next.js: 1609µs, proxy.ts: 2ms, application-code: 11ms)
- GET /api/contracts/drafts/347683ff-6a23-4fa8-8318-46ad02bb4105/financial 200 in 2.4s (next.js: 535ms, proxy.ts: 22ms, application-code: 1852ms)
- GET /api/contracts/drafts/347683ff-6a23-4fa8-8318-46ad02bb4105/parties 200 in 2.4s (next.js: 542ms, proxy.ts: 23ms, application-code: 1885ms)
- GET /settings 200 in 17ms (next.js: 2ms, proxy.ts: 2ms, application-code: 13ms)
- GET /settings 200 in 17ms (next.js: 1361µs, proxy.ts: 1974µs, application-code: 14ms)
- GET /settings 200 in 17ms (next.js: 2ms, proxy.ts: 1802µs, application-code: 13ms)
- GET /settings 200 in 15ms (next.js: 1252µs, proxy.ts: 2ms, application-code: 11ms)
- GET /settings 200 in 14ms (next.js: 1500µs, proxy.ts: 2ms, application-code: 11ms)
- GET /settings 200 in 16ms (next.js: 1364µs, proxy.ts: 2ms, application-code: 13ms)
- GET /settings 200 in 30ms (next.js: 1341µs, proxy.ts: 2ms, application-code: 26ms)
- GET /settings 200 in 18ms (next.js: 1325µs, proxy.ts: 1823µs, application-code: 15ms)
- GET /settings 200 in 35ms (next.js: 1964µs, proxy.ts: 2ms, application-code: 31ms)
- GET /settings 200 in 24ms (next.js: 1399µs, proxy.ts: 8ms, application-code: 15ms)
- GET /settings 200 in 27ms (next.js: 1735µs, proxy.ts: 1703µs, application-code: 24ms)
- GET /settings 200 in 17ms (next.js: 1295µs, proxy.ts: 2ms, application-code: 13ms)
- GET /settings 200 in 26ms (next.js: 1840µs, proxy.ts: 1756µs, application-code: 23ms)
- GET /settings 200 in 16ms (next.js: 1166µs, proxy.ts: 1549µs, application-code: 14ms)
- GET /settings 200 in 27ms (next.js: 1731µs, proxy.ts: 1738µs, application-code: 24ms)
- GET /settings 200 in 17ms (next.js: 1279µs, proxy.ts: 1671µs, application-code: 14ms)
- GET /settings 200 in 33ms (next.js: 3ms, proxy.ts: 1849µs, application-code: 28ms)
- GET /settings 200 in 33ms (next.js: 1839µs, proxy.ts: 14ms, application-code: 17ms)
- GET /settings 200 in 30ms (next.js: 2ms, proxy.ts: 1969µs, application-code: 25ms)
- GET /settings 200 in 19ms (next.js: 1304µs, proxy.ts: 2ms, application-code: 15ms)
- GET /settings 200 in 35ms (next.js: 2ms, proxy.ts: 2ms, application-code: 30ms)
- GET /settings 200 in 23ms (next.js: 1628µs, proxy.ts: 2ms, application-code: 19ms)
- GET /settings 200 in 30ms (next.js: 2ms, proxy.ts: 1836µs, application-code: 26ms)
- GET /settings 200 in 19ms (next.js: 1505µs, proxy.ts: 3ms, application-code: 14ms)
- GET /settings 200 in 27ms (next.js: 1804µs, proxy.ts: 1836µs, application-code: 23ms)
- GET /settings 200 in 16ms (next.js: 1267µs, proxy.ts: 1994µs, application-code: 13ms)
- GET /settings 200 in 27ms (next.js: 2ms, proxy.ts: 1920µs, application-code: 23ms)
- GET /settings 200 in 16ms (next.js: 1189µs, proxy.ts: 1675µs, application-code: 13ms)
- POST /contracts/new 200 in 1366ms (next.js: 11ms, proxy.ts: 3ms, application-code: 1353ms)
-  └─ ƒ getContractExtraCosts("347683ff-6a23-4fa8-8318-46ad02bb4105") in 1344ms app/actions/contractSteps789.ts
- GET /settings 200 in 32ms (next.js: 2ms, proxy.ts: 2ms, application-code: 27ms)
- GET /settings 200 in 43ms (next.js: 3ms, proxy.ts: 13ms, application-code: 27ms)
- GET /settings 200 in 32ms (next.js: 2ms, proxy.ts: 2ms, application-code: 27ms)
- GET /settings 200 in 31ms (next.js: 3ms, proxy.ts: 1769µs, application-code: 26ms)
- GET /api/contracts/drafts/347683ff-6a23-4fa8-8318-46ad02bb4105/subject 200 in 645ms (next.js: 5ms, proxy.ts: 1591µs, application-code: 638ms)
- GET /api/contracts/drafts/347683ff-6a23-4fa8-8318-46ad02bb4105/penalties 200 in 2.3s (next.js: 533ms, proxy.ts: 3ms, application-code: 1781ms)
- GET /settings 200 in 48ms (next.js: 2ms, proxy.ts: 13ms, application-code: 32ms)
- GET /settings 200 in 64ms (next.js: 2ms, proxy.ts: 1903µs, application-code: 60ms)
- GET /settings 200 in 65ms (next.js: 4ms, proxy.ts: 7ms, application-code: 54ms)
- GET /settings 200 in 62ms (next.js: 19ms, proxy.ts: 5ms, application-code: 38ms)
- GET /settings 200 in 63ms (next.js: 30ms, proxy.ts: 5ms, application-code: 28ms)
- GET /settings 200 in 63ms (next.js: 3ms, proxy.ts: 30ms, application-code: 31ms)
- GET /settings 200 in 59ms (next.js: 5ms, proxy.ts: 2ms, application-code: 52ms)
- GET /settings 200 in 68ms (next.js: 5ms, proxy.ts: 16ms, application-code: 48ms)
- GET /settings 200 in 58ms (next.js: 13ms, proxy.ts: 5ms, application-code: 40ms)
- GET /settings 200 in 59ms (next.js: 24ms, proxy.ts: 4ms, application-code: 30ms)
- GET /settings 200 in 71ms (next.js: 2ms, proxy.ts: 24ms, application-code: 44ms)
- GET /settings 200 in 62ms (next.js: 4ms, proxy.ts: 4ms, application-code: 54ms)
- GET /settings 200 in 61ms (next.js: 3ms, proxy.ts: 15ms, application-code: 43ms)
- GET /settings 200 in 61ms (next.js: 15ms, proxy.ts: 15ms, application-code: 31ms)
- GET /settings 200 in 77ms (next.js: 15ms, proxy.ts: 15ms, application-code: 47ms)
- GET /settings 200 in 74ms (next.js: 4ms, proxy.ts: 4ms, application-code: 67ms)
- GET /settings 200 in 75ms (next.js: 15ms, proxy.ts: 3ms, application-code: 57ms)
- GET /settings 200 in 75ms (next.js: 4ms, proxy.ts: 31ms, application-code: 40ms)
- GET /settings 200 in 64ms (next.js: 15ms, proxy.ts: 21ms, application-code: 28ms)
- GET /settings 200 in 69ms (next.js: 24ms, proxy.ts: 3ms, application-code: 41ms)
- GET /settings 200 in 69ms (next.js: 4ms, proxy.ts: 3ms, application-code: 62ms)
- GET /settings 200 in 69ms (next.js: 14ms, proxy.ts: 3ms, application-code: 52ms)
- GET /settings 200 in 69ms (next.js: 3ms, proxy.ts: 27ms, application-code: 39ms)
- GET /settings 200 in 48ms (next.js: 13ms, proxy.ts: 6ms, application-code: 29ms)
- GET /settings 200 in 68ms (next.js: 23ms, proxy.ts: 3ms, application-code: 42ms)
- GET /settings 200 in 74ms (next.js: 3ms, proxy.ts: 3ms, application-code: 67ms)
- GET /settings 200 in 75ms (next.js: 15ms, proxy.ts: 3ms, application-code: 57ms)
- GET /settings 200 in 63ms (next.js: 2ms, proxy.ts: 16ms, application-code: 45ms)
- GET /settings 200 in 64ms (next.js: 13ms, proxy.ts: 16ms, application-code: 35ms)
- GET /settings 200 in 74ms (next.js: 24ms, proxy.ts: 3ms, application-code: 47ms)
- GET /settings 200 in 68ms (next.js: 4ms, proxy.ts: 3ms, application-code: 61ms)
- GET /settings 200 in 68ms (next.js: 15ms, proxy.ts: 3ms, application-code: 50ms)
- GET /settings 200 in 68ms (next.js: 3ms, proxy.ts: 27ms, application-code: 38ms)
- GET /settings 200 in 57ms (next.js: 13ms, proxy.ts: 16ms, application-code: 28ms)
- GET /settings 200 in 68ms (next.js: 23ms, proxy.ts: 3ms, application-code: 41ms)
- GET /settings 200 in 73ms (next.js: 4ms, proxy.ts: 3ms, application-code: 66ms)
- GET /settings 200 in 74ms (next.js: 16ms, proxy.ts: 3ms, application-code: 55ms)
- GET /settings 200 in 51ms (next.js: 13ms, proxy.ts: 4ms, application-code: 34ms)
- GET /settings 200 in 77ms (next.js: 3ms, proxy.ts: 28ms, application-code: 46ms)
- GET /settings 200 in 356ms (next.js: 26ms, proxy.ts: 4ms, application-code: 327ms)
- GET /api/auth/me 200 in 10.1s (next.js: 24ms, proxy.ts: 29ms, application-code: 10.1s)
- GET /settings 200 in 373ms (next.js: 18ms, proxy.ts: 6ms, application-code: 350ms)
- GET /settings 200 in 375ms (next.js: 6ms, proxy.ts: 5ms, application-code: 364ms)
- GET /settings 200 in 369ms (next.js: 3ms, proxy.ts: 314ms, application-code: 52ms)
- GET /settings 200 in 371ms (next.js: 17ms, proxy.ts: 313ms, application-code: 40ms)
- GET /settings 200 in 62ms (next.js: 28ms, proxy.ts: 4ms, application-code: 30ms)
- GET /settings 200 in 84ms (next.js: 12ms, proxy.ts: 29ms, application-code: 42ms)
- GET /settings 200 in 78ms (next.js: 15ms, proxy.ts: 4ms, application-code: 60ms)
- GET /settings 200 in 79ms (next.js: 4ms, proxy.ts: 4ms, application-code: 71ms)
- GET /settings 200 in 78ms (next.js: 4ms, proxy.ts: 26ms, application-code: 48ms)
- GET /settings 200 in 79ms (next.js: 14ms, proxy.ts: 26ms, application-code: 39ms)
- GET /settings 200 in 79ms (next.js: 12ms, proxy.ts: 15ms, application-code: 52ms)
- GET /settings 200 in 79ms (next.js: 12ms, proxy.ts: 24ms, application-code: 43ms)
- GET /settings 200 in 84ms (next.js: 3ms, proxy.ts: 4ms, application-code: 77ms)
- GET /settings 200 in 85ms (next.js: 14ms, proxy.ts: 4ms, application-code: 67ms)
- GET /settings 200 in 84ms (next.js: 4ms, proxy.ts: 27ms, application-code: 53ms)
- GET /settings 200 in 62ms (next.js: 14ms, proxy.ts: 6ms, application-code: 43ms)
- GET /settings 200 in 84ms (next.js: 12ms, proxy.ts: 15ms, application-code: 57ms)
- GET /settings 200 in 83ms (next.js: 22ms, proxy.ts: 14ms, application-code: 47ms)
- GET /settings 200 in 81ms (next.js: 4ms, proxy.ts: 4ms, application-code: 73ms)
- GET /settings 200 in 81ms (next.js: 14ms, proxy.ts: 4ms, application-code: 63ms)
- GET /settings 200 in 80ms (next.js: 5ms, proxy.ts: 25ms, application-code: 50ms)
- GET /settings 200 in 59ms (next.js: 3ms, proxy.ts: 16ms, application-code: 40ms)
- GET /settings 200 in 78ms (next.js: 13ms, proxy.ts: 14ms, application-code: 51ms)
- GET /settings 200 in 69ms (next.js: 13ms, proxy.ts: 14ms, application-code: 42ms)
- GET /settings 200 in 78ms (next.js: 3ms, proxy.ts: 4ms, application-code: 71ms)
- GET /settings 200 in 78ms (next.js: 13ms, proxy.ts: 4ms, application-code: 61ms)
- GET /settings 200 in 85ms (next.js: 4ms, proxy.ts: 25ms, application-code: 56ms)
- GET /settings 200 in 64ms (next.js: 14ms, proxy.ts: 5ms, application-code: 45ms)
- GET /settings 200 in 84ms (next.js: 12ms, proxy.ts: 14ms, application-code: 57ms)
- GET /settings 200 in 75ms (next.js: 11ms, proxy.ts: 13ms, application-code: 51ms)
- GET /settings 200 in 76ms (next.js: 4ms, proxy.ts: 11ms, application-code: 62ms)
- GET /settings 200 in 80ms (next.js: 13ms, proxy.ts: 4ms, application-code: 63ms)
- GET /settings 200 in 78ms (next.js: 3ms, proxy.ts: 26ms, application-code: 49ms)
- GET /settings 200 in 57ms (next.js: 14ms, proxy.ts: 5ms, application-code: 38ms)
- GET /settings 200 in 69ms (next.js: 13ms, proxy.ts: 15ms, application-code: 41ms)
- GET /settings 200 in 68ms (next.js: 1889µs, proxy.ts: 23ms, application-code: 43ms)
- GET /settings 200 in 81ms (next.js: 3ms, proxy.ts: 4ms, application-code: 73ms)
- GET /settings 200 in 82ms (next.js: 15ms, proxy.ts: 4ms, application-code: 63ms)
- GET /settings 200 in 81ms (next.js: 4ms, proxy.ts: 26ms, application-code: 51ms)
- GET /settings 200 in 81ms (next.js: 14ms, proxy.ts: 25ms, application-code: 41ms)
- GET /settings 200 in 87ms (next.js: 3ms, proxy.ts: 26ms, application-code: 57ms)
- GET /settings 200 in 86ms (next.js: 11ms, proxy.ts: 25ms, application-code: 49ms)
- GET /settings 200 in 75ms (next.js: 4ms, proxy.ts: 3ms, application-code: 69ms)
- GET /settings 200 in 85ms (next.js: 14ms, proxy.ts: 3ms, application-code: 68ms)
- GET /settings 200 in 84ms (next.js: 4ms, proxy.ts: 31ms, application-code: 50ms)
- GET /settings 200 in 75ms (next.js: 15ms, proxy.ts: 21ms, application-code: 39ms)
- GET /settings 200 in 79ms (next.js: 2ms, proxy.ts: 25ms, application-code: 52ms)
- GET /settings 200 in 68ms (next.js: 12ms, proxy.ts: 14ms, application-code: 42ms)
- GET /settings 200 in 53ms (next.js: 4ms, proxy.ts: 3ms, application-code: 45ms)
- GET /settings 200 in 53ms (next.js: 14ms, proxy.ts: 3ms, application-code: 35ms)
- GET /api/contracts/generate-number 200 in 781ms (next.js: 18ms, proxy.ts: 24ms, application-code: 739ms)
- POST /contracts/new 200 in 1217ms (next.js: 3ms, proxy.ts: 24ms, application-code: 1191ms)
-  └─ ƒ getContractTechnicalSpecs("347683ff-6a23-4fa8-8318-46ad02bb4105") in 1187ms app/actions/contractSteps789.ts
- GET /api/contracts/generate-number 200 in 684ms (next.js: 1208µs, proxy.ts: 2ms, application-code: 681ms)
- POST /contracts/new 200 in 1315ms (next.js: 1830µs, proxy.ts: 2ms, application-code: 1311ms)
-  └─ ƒ getContractAttachments("347683ff-6a23-4fa8-8318-46ad02bb4105") in 1307ms app/actions/contractSteps789.ts
- GET /contracts/new 200 in 32ms (next.js: 1595µs, proxy.ts: 2ms, application-code: 28ms)
- GET /contracts/new 200 in 96ms (next.js: 1569µs, proxy.ts: 1673µs, application-code: 93ms)
- GET /contracts/new 200 in 85ms (next.js: 3ms, proxy.ts: 7ms, application-code: 74ms)
- GET /contracts/new 200 in 86ms (next.js: 14ms, proxy.ts: 7ms, application-code: 64ms)
- GET /contracts/new 200 in 85ms (next.js: 25ms, proxy.ts: 6ms, application-code: 54ms)
- GET /contracts/new 200 in 149ms (next.js: 43ms, proxy.ts: 6ms, application-code: 101ms)
- GET /contracts/new 200 in 151ms (next.js: 47ms, proxy.ts: 15ms, application-code: 89ms)
- GET /contracts/new 200 in 142ms (next.js: 4ms, proxy.ts: 2ms, application-code: 136ms)
- GET /contracts/new 200 in 77ms (next.js: 4ms, proxy.ts: 7ms, application-code: 65ms)
- GET /contracts/new 200 in 76ms (next.js: 19ms, proxy.ts: 6ms, application-code: 51ms)
- GET /contracts/new 200 in 75ms (next.js: 30ms, proxy.ts: 6ms, application-code: 40ms)
- GET /contracts/new 200 in 87ms (next.js: 40ms, proxy.ts: 6ms, application-code: 41ms)
- GET /contracts/new 200 in 88ms (next.js: 13ms, proxy.ts: 41ms, application-code: 33ms)
- GET /contracts/new 200 in 72ms (next.js: 4ms, proxy.ts: 1968µs, application-code: 67ms)
- GET /contracts/new 200 in 82ms (next.js: 4ms, proxy.ts: 16ms, application-code: 62ms)
- GET /contracts/new 200 in 71ms (next.js: 16ms, proxy.ts: 6ms, application-code: 50ms)
- GET /contracts/new 200 in 82ms (next.js: 26ms, proxy.ts: 5ms, application-code: 51ms)
- GET /contracts/new 200 in 83ms (next.js: 24ms, proxy.ts: 16ms, application-code: 43ms)
- GET /contracts/new 200 in 73ms (next.js: 2ms, proxy.ts: 36ms, application-code: 35ms)
- GET /contracts/new 200 in 76ms (next.js: 4ms, proxy.ts: 1941µs, application-code: 71ms)
- GET /contracts/new 200 in 86ms (next.js: 4ms, proxy.ts: 16ms, application-code: 65ms)
- GET /contracts/new 200 in 75ms (next.js: 14ms, proxy.ts: 6ms, application-code: 56ms)
- GET /contracts/new 200 in 74ms (next.js: 29ms, proxy.ts: 5ms, application-code: 41ms)
- GET /contracts/new 200 in 86ms (next.js: 18ms, proxy.ts: 26ms, application-code: 43ms)
- GET /contracts/new 200 in 76ms (next.js: 2ms, proxy.ts: 28ms, application-code: 46ms)
- GET /contracts/new 200 in 73ms (next.js: 4ms, proxy.ts: 2ms, application-code: 66ms)
- GET /contracts/new 200 in 83ms (next.js: 4ms, proxy.ts: 17ms, application-code: 61ms)
- GET /contracts/new 200 in 70ms (next.js: 14ms, proxy.ts: 6ms, application-code: 51ms)
- GET /contracts/new 200 in 70ms (next.js: 25ms, proxy.ts: 5ms, application-code: 40ms)
- GET /contracts/new 200 in 81ms (next.js: 14ms, proxy.ts: 25ms, application-code: 42ms)
- GET /contracts/new 200 in 71ms (next.js: 2ms, proxy.ts: 24ms, application-code: 45ms)
- GET /contracts/new 200 in 81ms (next.js: 4ms, proxy.ts: 2ms, application-code: 75ms)
- GET /contracts/new 200 in 91ms (next.js: 4ms, proxy.ts: 17ms, application-code: 71ms)
- GET /contracts/new 200 in 80ms (next.js: 14ms, proxy.ts: 6ms, application-code: 60ms)
- GET /contracts/new 200 in 80ms (next.js: 25ms, proxy.ts: 6ms, application-code: 49ms)
- GET /contracts/new 200 in 90ms (next.js: 33ms, proxy.ts: 14ms, application-code: 44ms)
- GET /contracts/new 200 in 92ms (next.js: 2ms, proxy.ts: 22ms, application-code: 68ms)
- GET /contracts/new 200 in 73ms (next.js: 4ms, proxy.ts: 3ms, application-code: 66ms)
- GET /contracts/new 200 in 84ms (next.js: 4ms, proxy.ts: 17ms, application-code: 63ms)
- GET /contracts/new 200 in 73ms (next.js: 14ms, proxy.ts: 5ms, application-code: 54ms)
- GET /contracts/new 200 in 72ms (next.js: 25ms, proxy.ts: 5ms, application-code: 43ms)
- GET /contracts/new 200 in 83ms (next.js: 3ms, proxy.ts: 36ms, application-code: 44ms)
- GET /contracts/new 200 in 84ms (next.js: 3ms, proxy.ts: 13ms, application-code: 68ms)
- GET /contracts/new 200 in 81ms (next.js: 4ms, proxy.ts: 4ms, application-code: 73ms)
- GET /contracts/new 200 in 90ms (next.js: 4ms, proxy.ts: 15ms, application-code: 71ms)
- GET /contracts/new 200 in 89ms (next.js: 14ms, proxy.ts: 15ms, application-code: 59ms)
- GET /contracts/new 200 in 80ms (next.js: 14ms, proxy.ts: 16ms, application-code: 50ms)
- GET /contracts/new 200 in 79ms (next.js: 10ms, proxy.ts: 25ms, application-code: 44ms)
- GET /contracts/new 200 in 74ms (next.js: 1812µs, proxy.ts: 14ms, application-code: 58ms)
- GET /contracts/new 200 in 74ms (next.js: 4ms, proxy.ts: 3ms, application-code: 67ms)
- GET /contracts/new 200 in 84ms (next.js: 4ms, proxy.ts: 15ms, application-code: 65ms)
- GET /contracts/new 200 in 85ms (next.js: 15ms, proxy.ts: 16ms, application-code: 54ms)
- GET /contracts/new 200 in 74ms (next.js: 15ms, proxy.ts: 15ms, application-code: 43ms)
- GET /contracts/new 200 in 75ms (next.js: 3ms, proxy.ts: 27ms, application-code: 46ms)
- GET /contracts/new 200 in 76ms (next.js: 3ms, proxy.ts: 14ms, application-code: 60ms)
- GET /contracts/new 200 in 83ms (next.js: 4ms, proxy.ts: 4ms, application-code: 74ms)
- GET /contracts/new 200 in 93ms (next.js: 16ms, proxy.ts: 5ms, application-code: 72ms)
- GET /contracts/new 200 in 93ms (next.js: 15ms, proxy.ts: 16ms, application-code: 61ms)
- GET /contracts/new 200 in 82ms (next.js: 15ms, proxy.ts: 16ms, application-code: 51ms)
- GET /contracts/new 200 in 80ms (next.js: 9ms, proxy.ts: 26ms, application-code: 46ms)
- GET /contracts/new 200 in 75ms (next.js: 1971µs, proxy.ts: 14ms, application-code: 59ms)
- GET /contracts/new 200 in 73ms (next.js: 4ms, proxy.ts: 4ms, application-code: 64ms)
- GET /contracts/new 200 in 73ms (next.js: 15ms, proxy.ts: 5ms, application-code: 52ms)
- GET /contracts/new 200 in 84ms (next.js: 14ms, proxy.ts: 16ms, application-code: 53ms)
- GET /contracts/new 200 in 73ms (next.js: 3ms, proxy.ts: 25ms, application-code: 45ms)
- GET /contracts/new 200 in 61ms (next.js: 14ms, proxy.ts: 14ms, application-code: 34ms)
- GET /contracts/new 200 in 75ms (next.js: 3ms, proxy.ts: 2ms, application-code: 70ms)
- GET /contracts/new 200 in 82ms (next.js: 4ms, proxy.ts: 5ms, application-code: 73ms)
- GET /contracts/new 200 in 81ms (next.js: 17ms, proxy.ts: 5ms, application-code: 60ms)
- GET /contracts/new 200 in 90ms (next.js: 15ms, proxy.ts: 16ms, application-code: 59ms)
- GET /contracts/new 200 in 79ms (next.js: 14ms, proxy.ts: 15ms, application-code: 50ms)
- GET /contracts/new 200 in 68ms (next.js: 20ms, proxy.ts: 15ms, application-code: 34ms)
- GET /contracts/new 200 in 74ms (next.js: 3ms, proxy.ts: 3ms, application-code: 68ms)
- GET /contracts/new 200 in 73ms (next.js: 4ms, proxy.ts: 5ms, application-code: 64ms)
- GET /contracts/new 200 in 83ms (next.js: 15ms, proxy.ts: 5ms, application-code: 63ms)
- GET /contracts/new 200 in 83ms (next.js: 15ms, proxy.ts: 15ms, application-code: 53ms)
- GET /contracts/new 200 in 71ms (next.js: 2ms, proxy.ts: 26ms, application-code: 43ms)
- GET /contracts/new 200 in 60ms (next.js: 14ms, proxy.ts: 14ms, application-code: 32ms)
- GET /contracts/new 200 in 79ms (next.js: 2ms, proxy.ts: 2ms, application-code: 75ms)
- GET /contracts/new 200 in 81ms (next.js: 4ms, proxy.ts: 6ms, application-code: 71ms)
- GET /contracts/new 200 in 80ms (next.js: 15ms, proxy.ts: 6ms, application-code: 59ms)
- GET /contracts/new 200 in 79ms (next.js: 26ms, proxy.ts: 6ms, application-code: 48ms)
- GET /contracts/new 200 in 90ms (next.js: 14ms, proxy.ts: 26ms, application-code: 50ms)
- GET /contracts/new 200 in 82ms (next.js: 20ms, proxy.ts: 26ms, application-code: 37ms)
- GET /contracts/new 200 in 77ms (next.js: 4ms, proxy.ts: 2ms, application-code: 71ms)
- GET /contracts/new 200 in 75ms (next.js: 5ms, proxy.ts: 6ms, application-code: 64ms)
- GET /contracts/new 200 in 75ms (next.js: 16ms, proxy.ts: 6ms, application-code: 53ms)
- GET /contracts/new 200 in 74ms (next.js: 28ms, proxy.ts: 7ms, application-code: 40ms)
- GET /contracts/new 200 in 85ms (next.js: 14ms, proxy.ts: 28ms, application-code: 43ms)
- GET /contracts/new 200 in 63ms (next.js: 13ms, proxy.ts: 15ms, application-code: 35ms)
- GET /contracts/new 200 in 81ms (next.js: 3ms, proxy.ts: 2ms, application-code: 76ms)
- GET /contracts/new 200 in 80ms (next.js: 4ms, proxy.ts: 5ms, application-code: 70ms)
- GET /contracts/new 200 in 80ms (next.js: 15ms, proxy.ts: 5ms, application-code: 59ms)
- GET /contracts/new 200 in 79ms (next.js: 28ms, proxy.ts: 5ms, application-code: 45ms)
- GET /contracts/new 200 in 90ms (next.js: 3ms, proxy.ts: 39ms, application-code: 48ms)
- GET /contracts/new 200 in 66ms (next.js: 19ms, proxy.ts: 13ms, application-code: 34ms)
- GET /contracts/new 200 in 84ms (next.js: 5ms, proxy.ts: 2ms, application-code: 77ms)
- GET /contracts/new 200 in 82ms (next.js: 4ms, proxy.ts: 16ms, application-code: 62ms)
- GET /contracts/new 200 in 71ms (next.js: 26ms, proxy.ts: 5ms, application-code: 40ms)
- GET /contracts/new 200 in 83ms (next.js: 15ms, proxy.ts: 16ms, application-code: 52ms)
- GET /contracts/new 200 in 82ms (next.js: 3ms, proxy.ts: 37ms, application-code: 42ms)
- GET /contracts/new 200 in 71ms (next.js: 2ms, proxy.ts: 36ms, application-code: 34ms)
- GET /contracts/new 200 in 90ms (next.js: 5ms, proxy.ts: 2ms, application-code: 82ms)
- GET /contracts/new 200 in 88ms (next.js: 5ms, proxy.ts: 16ms, application-code: 68ms)
- GET /contracts/new 200 in 88ms (next.js: 25ms, proxy.ts: 16ms, application-code: 47ms)
- GET /contracts/new 200 in 89ms (next.js: 15ms, proxy.ts: 16ms, application-code: 58ms)
- GET /contracts/new 200 in 89ms (next.js: 3ms, proxy.ts: 37ms, application-code: 49ms)
- GET /contracts/new 200 in 56ms (next.js: 7ms, proxy.ts: 14ms, application-code: 35ms)
- GET /contracts/new 200 in 84ms (next.js: 4ms, proxy.ts: 3ms, application-code: 77ms)
- GET /contracts/new 200 in 81ms (next.js: 4ms, proxy.ts: 16ms, application-code: 62ms)
- GET /contracts/new 200 in 82ms (next.js: 26ms, proxy.ts: 16ms, application-code: 39ms)
- GET /contracts/new 200 in 83ms (next.js: 15ms, proxy.ts: 16ms, application-code: 52ms)
- GET /contracts/new 200 in 83ms (next.js: 2ms, proxy.ts: 37ms, application-code: 44ms)
- GET /contracts/new 200 in 62ms (next.js: 1598µs, proxy.ts: 14ms, application-code: 46ms)
- GET /contracts/new 200 in 90ms (next.js: 4ms, proxy.ts: 3ms, application-code: 83ms)
- GET /contracts/new 200 in 88ms (next.js: 4ms, proxy.ts: 16ms, application-code: 69ms)
- GET /contracts/new 200 in 89ms (next.js: 15ms, proxy.ts: 16ms, application-code: 58ms)
- GET /contracts/new 200 in 90ms (next.js: 26ms, proxy.ts: 16ms, application-code: 47ms)
- GET /contracts/new 200 in 90ms (next.js: 3ms, proxy.ts: 37ms, application-code: 50ms)
- GET /contracts/new 200 in 68ms (next.js: 18ms, proxy.ts: 2ms, application-code: 47ms)
- GET /contracts/new 200 in 85ms (next.js: 4ms, proxy.ts: 5ms, application-code: 76ms)
- GET /contracts/new 200 in 84ms (next.js: 15ms, proxy.ts: 5ms, application-code: 64ms)
- GET /contracts/new 200 in 84ms (next.js: 15ms, proxy.ts: 16ms, application-code: 53ms)
- GET /contracts/new 200 in 85ms (next.js: 25ms, proxy.ts: 17ms, application-code: 43ms)
- GET /contracts/new 200 in 73ms (next.js: 3ms, proxy.ts: 27ms, application-code: 44ms)
- GET /contracts/new 200 in 74ms (next.js: 13ms, proxy.ts: 2ms, application-code: 59ms)
- GET /contracts/new 200 in 92ms (next.js: 4ms, proxy.ts: 5ms, application-code: 84ms)
- GET /contracts/new 200 in 93ms (next.js: 15ms, proxy.ts: 5ms, application-code: 73ms)
- GET /contracts/new 200 in 91ms (next.js: 16ms, proxy.ts: 15ms, application-code: 60ms)
- GET /contracts/new 200 in 93ms (next.js: 17ms, proxy.ts: 27ms, application-code: 49ms)
- GET /contracts/new 200 in 91ms (next.js: 3ms, proxy.ts: 27ms, application-code: 61ms)
- GET /contracts/new 200 in 80ms (next.js: 18ms, proxy.ts: 3ms, application-code: 59ms)
- GET /contracts/new 200 in 75ms (next.js: 5ms, proxy.ts: 4ms, application-code: 66ms)
- GET /contracts/new 200 in 85ms (next.js: 14ms, proxy.ts: 5ms, application-code: 66ms)
- GET /contracts/new 200 in 85ms (next.js: 15ms, proxy.ts: 16ms, application-code: 55ms)
- GET /contracts/new 200 in 85ms (next.js: 16ms, proxy.ts: 26ms, application-code: 43ms)
- GET /contracts/new 200 in 74ms (next.js: 2ms, proxy.ts: 15ms, application-code: 56ms)
- GET /contracts/new 200 in 73ms (next.js: 2ms, proxy.ts: 13ms, application-code: 57ms)
- GET /contracts/new 200 in 91ms (next.js: 3ms, proxy.ts: 4ms, application-code: 83ms)
- GET /contracts/new 200 in 91ms (next.js: 15ms, proxy.ts: 4ms, application-code: 71ms)
- GET /contracts/new 200 in 91ms (next.js: 14ms, proxy.ts: 16ms, application-code: 61ms)
- GET /contracts/new 200 in 80ms (next.js: 3ms, proxy.ts: 26ms, application-code: 51ms)
- GET /contracts/new 200 in 93ms (next.js: 3ms, proxy.ts: 15ms, application-code: 75ms)
- GET /contracts/new 200 in 81ms (next.js: 18ms, proxy.ts: 2ms, application-code: 60ms)
- GET /contracts/new 200 in 74ms (next.js: 4ms, proxy.ts: 4ms, application-code: 66ms)
- GET /contracts/new 200 in 85ms (next.js: 15ms, proxy.ts: 4ms, application-code: 66ms)
- GET /contracts/new 200 in 86ms (next.js: 15ms, proxy.ts: 15ms, application-code: 56ms)
- GET /contracts/new 200 in 75ms (next.js: 3ms, proxy.ts: 26ms, application-code: 46ms)
- GET /contracts/new 200 in 75ms (next.js: 2ms, proxy.ts: 15ms, application-code: 57ms)
- GET /contracts/new 200 in 77ms (next.js: 3ms, proxy.ts: 14ms, application-code: 60ms)
- GET /contracts/new 200 in 81ms (next.js: 4ms, proxy.ts: 5ms, application-code: 72ms)
- GET /contracts/new 200 in 92ms (next.js: 16ms, proxy.ts: 5ms, application-code: 71ms)
- GET /contracts/new 200 in 91ms (next.js: 15ms, proxy.ts: 16ms, application-code: 60ms)
- GET /contracts/new 200 in 79ms (next.js: 3ms, proxy.ts: 27ms, application-code: 49ms)
- GET /contracts/new 200 in 78ms (next.js: 13ms, proxy.ts: 3ms, application-code: 61ms)
- GET /contracts/new 200 in 76ms (next.js: 3ms, proxy.ts: 19ms, application-code: 55ms)
- GET /contracts/new 200 in 47ms (next.js: 3ms, proxy.ts: 4ms, application-code: 39ms)
- GET /contracts/new 200 in 58ms (next.js: 14ms, proxy.ts: 4ms, application-code: 40ms)
- GET /contracts/new 200 in 60ms (next.js: 2ms, proxy.ts: 25ms, application-code: 32ms)
- GET /contracts/new 200 in 72ms (next.js: 1820µs, proxy.ts: 2ms, application-code: 68ms)
- GET /contracts/new 200 in 71ms (next.js: 4ms, proxy.ts: 5ms, application-code: 62ms)
- GET /contracts/new 200 in 71ms (next.js: 15ms, proxy.ts: 5ms, application-code: 50ms)
- GET /contracts/new 200 in 71ms (next.js: 27ms, proxy.ts: 5ms, application-code: 39ms)
- GET /contracts/new 200 in 84ms (next.js: 37ms, proxy.ts: 5ms, application-code: 43ms)
- GET /contracts/new 200 in 84ms (next.js: 2ms, proxy.ts: 48ms, application-code: 34ms)
- GET /contracts/new 200 in 79ms (next.js: 3ms, proxy.ts: 1937µs, application-code: 74ms)
- GET /contracts/new 200 in 78ms (next.js: 4ms, proxy.ts: 5ms, application-code: 68ms)
- GET /contracts/new 200 in 77ms (next.js: 15ms, proxy.ts: 5ms, application-code: 57ms)
- GET /contracts/new 200 in 77ms (next.js: 32ms, proxy.ts: 5ms, application-code: 41ms)
- GET /contracts/new 200 in 89ms (next.js: 31ms, proxy.ts: 15ms, application-code: 42ms)
- GET /contracts/new 200 in 62ms (next.js: 2ms, proxy.ts: 25ms, application-code: 35ms)
- GET /contracts/new 200 in 74ms (next.js: 3ms, proxy.ts: 1933µs, application-code: 69ms)
- GET /contracts/new 200 in 73ms (next.js: 5ms, proxy.ts: 5ms, application-code: 63ms)
- GET /contracts/new 200 in 74ms (next.js: 15ms, proxy.ts: 5ms, application-code: 54ms)
- GET /contracts/new 200 in 84ms (next.js: 27ms, proxy.ts: 5ms, application-code: 53ms)
- GET /contracts/new 200 in 84ms (next.js: 14ms, proxy.ts: 27ms, application-code: 43ms)
- GET /contracts/new 200 in 62ms (next.js: 2ms, proxy.ts: 25ms, application-code: 35ms)
- GET /contracts/new 200 in 83ms (next.js: 3ms, proxy.ts: 1941µs, application-code: 78ms)
- GET /contracts/new 200 in 81ms (next.js: 4ms, proxy.ts: 5ms, application-code: 72ms)
- GET /contracts/new 200 in 81ms (next.js: 16ms, proxy.ts: 5ms, application-code: 60ms)
- GET /contracts/new 200 in 82ms (next.js: 35ms, proxy.ts: 5ms, application-code: 42ms)
- GET /contracts/new 200 in 92ms (next.js: 22ms, proxy.ts: 28ms, application-code: 42ms)
- GET /contracts/new 200 in 74ms (next.js: 2ms, proxy.ts: 32ms, application-code: 40ms)
- GET /contracts/new 200 in 79ms (next.js: 4ms, proxy.ts: 2ms, application-code: 73ms)
- GET /contracts/new 200 in 89ms (next.js: 21ms, proxy.ts: 17ms, application-code: 52ms)
- GET /contracts/new 200 in 91ms (next.js: 10ms, proxy.ts: 16ms, application-code: 64ms)
- GET /contracts/new 200 in 77ms (next.js: 26ms, proxy.ts: 9ms, application-code: 41ms)
- GET /contracts/new 200 in 84ms (next.js: 14ms, proxy.ts: 27ms, application-code: 43ms)
- GET /contracts/new 200 in 84ms (next.js: 2ms, proxy.ts: 24ms, application-code: 58ms)
- GET /contracts/new 200 in 81ms (next.js: 4ms, proxy.ts: 3ms, application-code: 75ms)
- GET /contracts/new 200 in 93ms (next.js: 4ms, proxy.ts: 16ms, application-code: 73ms)
- GET /contracts/new 200 in 93ms (next.js: 15ms, proxy.ts: 16ms, application-code: 62ms)
- GET /contracts/new 200 in 93ms (next.js: 21ms, proxy.ts: 16ms, application-code: 56ms)
- GET /contracts/new 200 in 93ms (next.js: 15ms, proxy.ts: 33ms, application-code: 45ms)
- GET /contracts/new 200 in 86ms (next.js: 3ms, proxy.ts: 26ms, application-code: 57ms)
- GET /contracts/new 200 in 73ms (next.js: 4ms, proxy.ts: 3ms, application-code: 66ms)
- GET /contracts/new 200 in 82ms (next.js: 4ms, proxy.ts: 16ms, application-code: 63ms)
- GET /contracts/new 200 in 83ms (next.js: 14ms, proxy.ts: 16ms, application-code: 53ms)
- GET /contracts/new 200 in 83ms (next.js: 3ms, proxy.ts: 26ms, application-code: 54ms)
- GET /contracts/new 200 in 83ms (next.js: 13ms, proxy.ts: 26ms, application-code: 44ms)
- GET /contracts/new 200 in 82ms (next.js: 2ms, proxy.ts: 24ms, application-code: 56ms)
- GET /contracts/new 200 in 80ms (next.js: 4ms, proxy.ts: 3ms, application-code: 73ms)
- GET /contracts/new 200 in 89ms (next.js: 5ms, proxy.ts: 14ms, application-code: 71ms)
- GET /contracts/new 200 in 90ms (next.js: 15ms, proxy.ts: 15ms, application-code: 60ms)
- GET /contracts/new 200 in 90ms (next.js: 3ms, proxy.ts: 32ms, application-code: 55ms)
- GET /contracts/new 200 in 80ms (next.js: 14ms, proxy.ts: 21ms, application-code: 45ms)
- GET /contracts/new 200 in 85ms (next.js: 3ms, proxy.ts: 25ms, application-code: 58ms)
- GET /contracts/new 200 in 86ms (next.js: 4ms, proxy.ts: 4ms, application-code: 79ms)
- GET /contracts/new 200 in 85ms (next.js: 16ms, proxy.ts: 3ms, application-code: 66ms)
- GET /contracts/new 200 in 86ms (next.js: 15ms, proxy.ts: 16ms, application-code: 55ms)
- GET /contracts/new 200 in 73ms (next.js: 3ms, proxy.ts: 16ms, application-code: 54ms)
- GET /contracts/new 200 in 75ms (next.js: 14ms, proxy.ts: 5ms, application-code: 56ms)
- GET /contracts/new 200 in 89ms (next.js: 13ms, proxy.ts: 14ms, application-code: 62ms)
- GET /contracts/new 200 in 90ms (next.js: 4ms, proxy.ts: 4ms, application-code: 82ms)
- GET /contracts/new 200 in 90ms (next.js: 15ms, proxy.ts: 4ms, application-code: 71ms)
- GET /contracts/new 200 in 89ms (next.js: 15ms, proxy.ts: 15ms, application-code: 59ms)
- GET /contracts/new 200 in 78ms (next.js: 3ms, proxy.ts: 21ms, application-code: 54ms)
- GET /contracts/new 200 in 82ms (next.js: 2ms, proxy.ts: 14ms, application-code: 65ms)
- GET /contracts/new 200 in 82ms (next.js: 13ms, proxy.ts: 14ms, application-code: 55ms)
- GET /contracts/new 200 in 84ms (next.js: 3ms, proxy.ts: 4ms, application-code: 76ms)
- GET /contracts/new 200 in 83ms (next.js: 14ms, proxy.ts: 4ms, application-code: 65ms)
- GET /contracts/new 200 in 82ms (next.js: 13ms, proxy.ts: 14ms, application-code: 54ms)
- GET /contracts/new 200 in 74ms (next.js: 3ms, proxy.ts: 16ms, application-code: 54ms)
- GET /contracts/new 200 in 83ms (next.js: 13ms, proxy.ts: 4ms, application-code: 65ms)
- GET /contracts/new 200 in 89ms (next.js: 13ms, proxy.ts: 14ms, application-code: 62ms)
- GET /contracts/new 200 in 79ms (next.js: 3ms, proxy.ts: 4ms, application-code: 72ms)
- GET /contracts/new 200 in 89ms (next.js: 3ms, proxy.ts: 15ms, application-code: 71ms)
- GET /contracts/new 200 in 89ms (next.js: 13ms, proxy.ts: 15ms, application-code: 61ms)
- GET /contracts/new 200 in 69ms (next.js: 4ms, proxy.ts: 10ms, application-code: 55ms)
- GET /contracts/new 200 in 85ms (next.js: 14ms, proxy.ts: 4ms, application-code: 66ms)
- GET /contracts/new 200 in 84ms (next.js: 13ms, proxy.ts: 14ms, application-code: 57ms)
- GET /contracts/new 200 in 75ms (next.js: 4ms, proxy.ts: 5ms, application-code: 66ms)
- GET /contracts/new 200 in 84ms (next.js: 14ms, proxy.ts: 4ms, application-code: 67ms)
- GET /contracts/new 200 in 85ms (next.js: 24ms, proxy.ts: 4ms, application-code: 56ms)
- GET /contracts/new 200 in 49ms (next.js: 3ms, proxy.ts: 4ms, application-code: 43ms)
- GET /contracts/new 200 in 71ms (next.js: 15ms, proxy.ts: 4ms, application-code: 52ms)
- GET /contracts/new 200 in 68ms (next.js: 2ms, proxy.ts: 26ms, application-code: 40ms)
- GET /contracts/new 200 in 30ms (next.js: 3ms, proxy.ts: 5ms, application-code: 23ms)
- GET /contracts/new 200 in 28ms (next.js: 12ms, proxy.ts: 3ms, application-code: 12ms)
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
-prisma:error 
-Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$vahedyek$2d$panel$2f$app$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].appUser.findUnique()` invocation in
-C:\Users\s.roosta\Desktop\Project\vahedyek\apps\vahedyek-panel\.next\dev\server\chunks\[root-of-the-server]__0kq_87r._.js:323:190
-
-  320     return;
-  321 }
-  322 async function getAuthContextFromPayload(payload) {
-→ 323     const user = await __TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$vahedyek$2d$panel$2f$app$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].appUser.findUnique(
-Can't reach database server at `65.109.214.67:6060`
-
-Please make sure your database server is running at `65.109.214.67:6060`.
- GET /api/contracts/drafts/347683ff-6a23-4fa8-8318-46ad02bb4105/parties 500 in 5.2s (next.js: 89ms, proxy.ts: 15ms, application-code: 5.0s)
-prisma:error 
-Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$vahedyek$2d$panel$2f$app$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].appUser.findUnique()` invocation in
-C:\Users\s.roosta\Desktop\Project\vahedyek\apps\vahedyek-panel\.next\dev\server\chunks\[root-of-the-server]__0kq_87r._.js:323:190
-
-  320     return;
-  321 }
-  322 async function getAuthContextFromPayload(payload) {
-→ 323     const user = await __TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$vahedyek$2d$panel$2f$app$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].appUser.findUnique(
-Can't reach database server at `65.109.214.67:6060`
-
-Please make sure your database server is running at `65.109.214.67:6060`.
- GET /api/contracts/drafts/347683ff-6a23-4fa8-8318-46ad02bb4105/subject 500 in 5.2s (next.js: 82ms, proxy.ts: 16ms, application-code: 5.1s)
-prisma:error 
-Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$vahedyek$2d$panel$2f$app$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].appUser.findUnique()` invocation in
-C:\Users\s.roosta\Desktop\Project\vahedyek\apps\vahedyek-panel\.next\dev\server\chunks\[root-of-the-server]__0kq_87r._.js:323:190
-
-  320     return;
-  321 }
-  322 async function getAuthContextFromPayload(payload) {
-→ 323     const user = await __TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$vahedyek$2d$panel$2f$app$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].appUser.findUnique(
-Can't reach database server at `65.109.214.67:6060`
-
-Please make sure your database server is running at `65.109.214.67:6060`.
- GET /api/contracts/drafts/347683ff-6a23-4fa8-8318-46ad02bb4105/subject 500 in 5.2s (next.js: 105ms, proxy.ts: 16ms, application-code: 5.0s)
-prisma:error 
-Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$vahedyek$2d$panel$2f$app$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].appUser.findUnique()` invocation in
-C:\Users\s.roosta\Desktop\Project\vahedyek\apps\vahedyek-panel\.next\dev\server\chunks\[root-of-the-server]__0kq_87r._.js:323:190
-
-  320     return;
-  321 }
-  322 async function getAuthContextFromPayload(payload) {
-→ 323     const user = await __TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$vahedyek$2d$panel$2f$app$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].appUser.findUnique(
-Can't reach database server at `65.109.214.67:6060`
-
-Please make sure your database server is running at `65.109.214.67:6060`.
- GET /api/contracts/drafts/347683ff-6a23-4fa8-8318-46ad02bb4105/parties 500 in 5.2s (next.js: 108ms, proxy.ts: 16ms, application-code: 5.0s)
-prisma:error 
-Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$vahedyek$2d$panel$2f$app$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].appUser.findUnique()` invocation in
-C:\Users\s.roosta\Desktop\Project\vahedyek\apps\vahedyek-panel\.next\dev\server\chunks\[root-of-the-server]__0kq_87r._.js:323:190
-
-  320     return;
-  321 }
-  322 async function getAuthContextFromPayload(payload) {
-→ 323     const user = await __TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$vahedyek$2d$panel$2f$app$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].appUser.findUnique(
-Can't reach database server at `65.109.214.67:6060`
-
-Please make sure your database server is running at `65.109.214.67:6060`.
- GET /api/contracts/drafts/347683ff-6a23-4fa8-8318-46ad02bb4105/financial 500 in 5.2s (next.js: 94ms, proxy.ts: 16ms, application-code: 5.0s)
-prisma:error 
-Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$vahedyek$2d$panel$2f$app$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].appUser.findUnique()` invocation in
-C:\Users\s.roosta\Desktop\Project\vahedyek\apps\vahedyek-panel\.next\dev\server\chunks\[root-of-the-server]__0kq_87r._.js:323:190
-
-  320     return;
-  321 }
-  322 async function getAuthContextFromPayload(payload) {
-→ 323     const user = await __TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$vahedyek$2d$panel$2f$app$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].appUser.findUnique(
-Can't reach database server at `65.109.214.67:6060`
-
-Please make sure your database server is running at `65.109.214.67:6060`.
- GET /api/contracts/drafts/347683ff-6a23-4fa8-8318-46ad02bb4105/penalties 500 in 5.2s (next.js: 102ms, proxy.ts: 16ms, application-code: 5.0s)
- GET /contracts 200 in 168ms (next.js: 119ms, proxy.ts: 10ms, application-code: 39ms)
-prisma:error 
-Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$vahedyek$2d$panel$2f$app$2f$lib$2f$prisma$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["prisma"].appUser.findUnique()` invocation in
-C:\Users\s.roosta\Desktop\Project\vahedyek\apps\vahedyek-panel\.next\dev\server\chunks\ssr\[root-of-the-server]__0us_qny._.js:281:188
-
-  278     return;
-  279 }
-  280 async function getAuthContextFromPayload(payload) {
-→ 281     const user = await __TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$vahedyek$2d$panel$2f$app$2f$lib$2f$prisma$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["prisma"].appUser.findUnique(
-Can't reach database server at `65.109.214.67:6060`
-
-Please make sure your database server is running at `65.109.214.67:6060`.
-prisma:error 
-Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$vahedyek$2d$panel$2f$app$2f$lib$2f$prisma$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["prisma"].appUser.findUnique()` invocation in
-C:\Users\s.roosta\Desktop\Project\vahedyek\apps\vahedyek-panel\.next\dev\server\chunks\ssr\[root-of-the-server]__0vb8-3.._.js:359:188
-
-  356     return;
-  357 }
-  358 async function getAuthContextFromPayload(payload) {
-→ 359     const user = await __TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$vahedyek$2d$panel$2f$app$2f$lib$2f$prisma$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["prisma"].appUser.findUnique(
-Can't reach database server at `65.109.214.67:6060`
-
-Please make sure your database server is running at `65.109.214.67:6060`.
-prisma:error 
-Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$vahedyek$2d$panel$2f$app$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].appUser.findUnique()` invocation in
-C:\Users\s.roosta\Desktop\Project\vahedyek\apps\vahedyek-panel\.next\dev\server\chunks\[root-of-the-server]__0kq_87r._.js:323:190
-
-  320     return;
-  321 }
-  322 async function getAuthContextFromPayload(payload) {
-→ 323     const user = await __TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$vahedyek$2d$panel$2f$app$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].appUser.findUnique(
-Can't reach database server at `65.109.214.67:6060`
-
-Please make sure your database server is running at `65.109.214.67:6060`.
- GET /api/contracts/drafts/347683ff-6a23-4fa8-8318-46ad02bb4105/penalties 500 in 5.4s (next.js: 152ms, proxy.ts: 10ms, application-code: 5.2s)
-prisma:error 
-Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$vahedyek$2d$panel$2f$app$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].appUser.findUnique()` invocation in
-C:\Users\s.roosta\Desktop\Project\vahedyek\apps\vahedyek-panel\.next\dev\server\chunks\[root-of-the-server]__0kq_87r._.js:323:190
-
-  320     return;
-  321 }
-  322 async function getAuthContextFromPayload(payload) {
-→ 323     const user = await __TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$vahedyek$2d$panel$2f$app$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].appUser.findUnique(
-Can't reach database server at `65.109.214.67:6060`
-
-Please make sure your database server is running at `65.109.214.67:6060`.
- GET /api/contracts/drafts/347683ff-6a23-4fa8-8318-46ad02bb4105/financial 500 in 5.4s (next.js: 147ms, proxy.ts: 10ms, application-code: 5.2s)
-prisma:error 
-Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$vahedyek$2d$panel$2f$app$2f$lib$2f$prisma$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["prisma"].appUser.findUnique()` invocation in
-C:\Users\s.roosta\Desktop\Project\vahedyek\apps\vahedyek-panel\.next\dev\server\chunks\ssr\[root-of-the-server]__0us_qny._.js:281:188
-
-  278     return;
-  279 }
-  280 async function getAuthContextFromPayload(payload) {
-→ 281     const user = await __TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$vahedyek$2d$panel$2f$app$2f$lib$2f$prisma$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["prisma"].appUser.findUnique(
-Can't reach database server at `65.109.214.67:6060`
-
-Please make sure your database server is running at `65.109.214.67:6060`.
-prisma:error 
-Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$vahedyek$2d$panel$2f$app$2f$lib$2f$prisma$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["prisma"].appUser.findUnique()` invocation in
-C:\Users\s.roosta\Desktop\Project\vahedyek\apps\vahedyek-panel\.next\dev\server\chunks\ssr\[root-of-the-server]__0us_qny._.js:281:188
-
-  278     return;
-  279 }
-  280 async function getAuthContextFromPayload(payload) {
-→ 281     const user = await __TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$vahedyek$2d$panel$2f$app$2f$lib$2f$prisma$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["prisma"].appUser.findUnique(
-Can't reach database server at `65.109.214.67:6060`
-
-Please make sure your database server is running at `65.109.214.67:6060`.
- POST /contracts/new 500 in 5.8s (next.js: 5ms, proxy.ts: 9ms, application-code: 5.8s)
-  └─ ƒ getContractExtraCosts("347683ff-6a23-4fa8-8318-46ad02bb4105") in 5135ms app/actions/contractSteps789.ts
- GET /employees 200 in 5.8s (next.js: 56ms, proxy.ts: 10ms, application-code: 5.7s)
- POST /contracts/new 500 in 5.6s (next.js: 43ms, proxy.ts: 4ms, application-code: 5.6s)
-  └─ ƒ getContractAttachments("347683ff-6a23-4fa8-8318-46ad02bb4105") in 5338ms app/actions/contractSteps789.ts
- POST /contracts/new 500 in 5.6s (next.js: 4ms, proxy.ts: 4ms, application-code: 5.6s)
-  └─ ƒ getContractTechnicalSpecs("347683ff-6a23-4fa8-8318-46ad02bb4105") in 5193ms app/actions/contractSteps789.ts
- POST /contracts 200 in 5.7s (next.js: 15ms, proxy.ts: 3ms, application-code: 5.6s)
- POST /contracts 200 in 5.7s (next.js: 3ms, proxy.ts: 4ms, application-code: 5.6s)
- GET / 200 in 91ms (next.js: 5ms, proxy.ts: 10ms, application-code: 77ms)
- GET / 200 in 113ms (next.js: 14ms, proxy.ts: 10ms, application-code: 89ms)
- POST /contracts 200 in 401ms (next.js: 4ms, proxy.ts: 12ms, application-code: 384ms)
- POST /contracts 200 in 469ms (next.js: 8ms, proxy.ts: 69ms, application-code: 393ms)
- POST /contracts 200 in 401ms (next.js: 8ms, proxy.ts: 11ms, application-code: 382ms)
-prisma:error 
-Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$vahedyek$2d$panel$2f$app$2f$lib$2f$prisma$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["prisma"].appUser.findUnique()` invocation in
-C:\Users\s.roosta\Desktop\Project\vahedyek\apps\vahedyek-panel\.next\dev\server\chunks\ssr\[root-of-the-server]__0us_qny._.js:281:188
-
-  278     return;
-  279 }
-  280 async function getAuthContextFromPayload(payload) {
-→ 281     const user = await __TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$vahedyek$2d$panel$2f$app$2f$lib$2f$prisma$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["prisma"].appUser.findUnique(
-Can't reach database server at `65.109.214.67:6060`
-
-Please make sure your database server is running at `65.109.214.67:6060`.
-prisma:error 
-Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$vahedyek$2d$panel$2f$app$2f$lib$2f$prisma$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["prisma"].appUser.findUnique()` invocation in
-C:\Users\s.roosta\Desktop\Project\vahedyek\apps\vahedyek-panel\.next\dev\server\chunks\ssr\[root-of-the-server]__0us_qny._.js:281:188
-
-  278     return;
-  279 }
-  280 async function getAuthContextFromPayload(payload) {
-→ 281     const user = await __TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$vahedyek$2d$panel$2f$app$2f$lib$2f$prisma$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["prisma"].appUser.findUnique(
-Can't reach database server at `65.109.214.67:6060`
-
-Please make sure your database server is running at `65.109.214.67:6060`.
-prisma:error 
-Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$vahedyek$2d$panel$2f$app$2f$lib$2f$prisma$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["prisma"].appUser.findUnique()` invocation in
-C:\Users\s.roosta\Desktop\Project\vahedyek\apps\vahedyek-panel\.next\dev\server\chunks\ssr\[root-of-the-server]__0us_qny._.js:281:188
-
-  278     return;
-  279 }
-  280 async function getAuthContextFromPayload(payload) {
-→ 281     const user = await __TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$vahedyek$2d$panel$2f$app$2f$lib$2f$prisma$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["prisma"].appUser.findUnique(
-Can't reach database server at `65.109.214.67:6060`
-
-Please make sure your database server is running at `65.109.214.67:6060`.
-prisma:error 
-Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$vahedyek$2d$panel$2f$app$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].appUser.findUnique()` invocation in
-C:\Users\s.roosta\Desktop\Project\vahedyek\apps\vahedyek-panel\.next\dev\server\chunks\[root-of-the-server]__0b.mttq._.js:536:190
-
-  533     return;
-  534 }
-  535 async function getAuthContextFromPayload(payload) {
-→ 536     const user = await __TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$vahedyek$2d$panel$2f$app$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].appUser.findUnique(
-Can't reach database server at `65.109.214.67:6060`
-
-Please make sure your database server is running at `65.109.214.67:6060`.
- GET /api/auth/me 500 in 5.1s (next.js: 4ms, proxy.ts: 6ms, application-code: 5.1s)
-prisma:error 
-Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$vahedyek$2d$panel$2f$app$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].appUser.findUnique()` invocation in
-C:\Users\s.roosta\Desktop\Project\vahedyek\apps\vahedyek-panel\.next\dev\server\chunks\[root-of-the-server]__0b.mttq._.js:536:190
-
-  533     return;
-  534 }
-  535 async function getAuthContextFromPayload(payload) {
-→ 536     const user = await __TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$vahedyek$2d$panel$2f$app$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].appUser.findUnique(
-Can't reach database server at `65.109.214.67:6060`
-
-Please make sure your database server is running at `65.109.214.67:6060`.
- GET /api/auth/me 500 in 5.1s (next.js: 8ms, proxy.ts: 5ms, application-code: 5.1s)
- POST /contracts/new 500 in 5.6s (next.js: 5ms, proxy.ts: 11ms, application-code: 5.5s)
-  └─ ƒ getContractExtraCosts("347683ff-6a23-4fa8-8318-46ad02bb4105") in 5020ms app/actions/contractSteps789.ts
- POST /contracts/new 500 in 5.5s (next.js: 6ms, proxy.ts: 10ms, application-code: 5.5s)
-  └─ ƒ getContractAttachments("347683ff-6a23-4fa8-8318-46ad02bb4105") in 5165ms app/actions/contractSteps789.ts
- POST /contracts/new 500 in 5.6s (next.js: 5ms, proxy.ts: 9ms, application-code: 5.5s)
-  └─ ƒ getContractTechnicalSpecs("347683ff-6a23-4fa8-8318-46ad02bb4105") in 5329ms app/actions/contractSteps789.ts
-prisma:error 
-Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$vahedyek$2d$panel$2f$app$2f$lib$2f$prisma$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["prisma"].appUser.findUnique()` invocation in
-C:\Users\s.roosta\Desktop\Project\vahedyek\apps\vahedyek-panel\.next\dev\server\chunks\ssr\[root-of-the-server]__0vb8-3.._.js:359:188
-
-  356     return;
-  357 }
-  358 async function getAuthContextFromPayload(payload) {
-→ 359     const user = await __TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$vahedyek$2d$panel$2f$app$2f$lib$2f$prisma$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["prisma"].appUser.findUnique(
-Can't reach database server at `65.109.214.67:6060`
-
-Please make sure your database server is running at `65.109.214.67:6060`.
- GET /employees 200 in 5.1s (next.js: 3ms, proxy.ts: 5ms, application-code: 5.1s)
+ GET /audit-logs 200 in 427ms (next.js: 76ms, proxy.ts: 138ms, application-code: 213ms)
+ GET /api/auth/me 200 in 9.4s (next.js: 86ms, proxy.ts: 6ms, application-code: 9.3s)
+ GET /api/auth/me 200 in 10.4s (next.js: 106ms, proxy.ts: 6ms, application-code: 10.3s)
+ GET /api/audit-logs?page=1&pageSize=25 200 in 11.1s (next.js: 35ms, proxy.ts: 104ms, application-code: 10.9s)
+ GET /contracts 200 in 56ms (next.js: 26ms, proxy.ts: 6ms, application-code: 23ms)
+ GET /api/contracts/reference-data 200 in 1736ms (next.js: 44ms, proxy.ts: 19ms, application-code: 1672ms)
+ GET /api/contracts/reference-data 200 in 2.2s (next.js: 44ms, proxy.ts: 17ms, application-code: 2.1s)
+ GET /api/contracts?status=draft 200 in 6.4s (next.js: 24ms, proxy.ts: 4ms, application-code: 6.3s)
+ GET /api/auth/me 200 in 8.2s (next.js: 13ms, proxy.ts: 14ms, application-code: 8.2s)
+ GET /api/auth/me 200 in 8.2s (next.js: 16ms, proxy.ts: 15ms, application-code: 8.2s)
+ GET /api/auth/me 200 in 8.3s (next.js: 17ms, proxy.ts: 15ms, application-code: 8.3s)
+ GET /api/auth/me 200 in 8.6s (next.js: 11ms, proxy.ts: 14ms, application-code: 8.5s)
+ GET /api/contracts?status=draft 200 in 6.4s (next.js: 2ms, proxy.ts: 4ms, application-code: 6.4s)
+ GET /api/contracts?status=pending_approval 200 in 7.8s (next.js: 3ms, proxy.ts: 6ms, application-code: 7.8s)
+ GET /contracts/959073a8-a0e5-4f58-b4ed-c6bf4e772d83?list=pending_approval 200 in 399ms (next.js: 360ms, proxy.ts: 5ms, application-code: 33ms)
+ GET /api/auth/me 200 in 6.0s (next.js: 18ms, proxy.ts: 11ms, application-code: 6.0s)
+ GET /api/auth/me 200 in 6.2s (next.js: 12ms, proxy.ts: 14ms, application-code: 6.1s)
+ GET /api/auth/me 200 in 6.2s (next.js: 10ms, proxy.ts: 15ms, application-code: 6.2s)
+ GET /api/auth/me 200 in 7.4s (next.js: 19ms, proxy.ts: 12ms, application-code: 7.3s)
+ GET /api/contracts/959073a8-a0e5-4f58-b4ed-c6bf4e772d83 200 in 12.1s (next.js: 601ms, proxy.ts: 18ms, application-code: 11.5s)
+ GET /api/contracts/959073a8-a0e5-4f58-b4ed-c6bf4e772d83 200 in 12.9s (next.js: 609ms, proxy.ts: 16ms, application-code: 12.3s)
+ GET /contracts/new 200 in 96ms (next.js: 61ms, proxy.ts: 5ms, application-code: 30ms)
+ GET /api/contracts/reference-data 200 in 1031ms (next.js: 17ms, proxy.ts: 9ms, application-code: 1005ms)
+ GET /api/contracts/drafts/959073a8-a0e5-4f58-b4ed-c6bf4e772d83/subject 200 in 1537ms (next.js: 592ms, proxy.ts: 8ms, application-code: 937ms)
+ GET /api/contracts/drafts/959073a8-a0e5-4f58-b4ed-c6bf4e772d83/parties 200 in 1615ms (next.js: 574ms, proxy.ts: 2ms, application-code: 1039ms)
+ GET /api/contracts/drafts/959073a8-a0e5-4f58-b4ed-c6bf4e772d83/financial 200 in 1924ms (next.js: 564ms, proxy.ts: 3ms, application-code: 1357ms)
+ GET /api/contracts/drafts/959073a8-a0e5-4f58-b4ed-c6bf4e772d83/penalties 200 in 1915ms (next.js: 567ms, proxy.ts: 3ms, application-code: 1346ms)
+ GET /api/auth/me 200 in 5.4s (next.js: 9ms, proxy.ts: 7ms, application-code: 5.4s)
+ POST /contracts/959073a8-a0e5-4f58-b4ed-c6bf4e772d83?list=pending_approval 200 in 7.8s (next.js: 9ms, proxy.ts: 5ms, application-code: 7.8s)
+  └─ ƒ getContractApprovalStateAction("959073a8-a0e5-4f58-b4ed-c6bf4e772d83") in 7746ms app/actions/contractApprovalActions.ts
+ GET /api/auth/me 200 in 5.6s (next.js: 6ms, proxy.ts: 7ms, application-code: 5.6s)
+ GET /api/contracts/reference-data 200 in 596ms (next.js: 2ms, proxy.ts: 3ms, application-code: 590ms)
+ GET /api/contracts/drafts/959073a8-a0e5-4f58-b4ed-c6bf4e772d83/subject 200 in 1026ms (next.js: 9ms, proxy.ts: 6ms, application-code: 1011ms)
+ GET /api/contracts/drafts/959073a8-a0e5-4f58-b4ed-c6bf4e772d83/financial 200 in 804ms (next.js: 9ms, proxy.ts: 3ms, application-code: 792ms)
+ GET /api/contracts/drafts/959073a8-a0e5-4f58-b4ed-c6bf4e772d83/parties 200 in 1232ms (next.js: 15ms, proxy.ts: 5ms, application-code: 1212ms)
+ POST /contracts/[contractId] 200 in 7.1s (next.js: 9ms, proxy.ts: 7ms, application-code: 7.1s)
+  └─ ƒ getContractApprovalStateAction("959073a8-a0e5-4f58-b4ed-c6bf4e772d83") in 7090ms app/actions/contractApprovalActions.ts
+ POST /contracts/new 200 in 7.2s (next.js: 7ms, proxy.ts: 20ms, application-code: 7.1s)
+ POST /contracts/new 200 in 526ms (next.js: 3ms, proxy.ts: 4ms, application-code: 520ms)
+  └─ ƒ listApprovalWorkflowsAction() in 513ms app/actions/workflowActions.ts
+ GET /api/contracts/drafts/959073a8-a0e5-4f58-b4ed-c6bf4e772d83/subject 200 in 590ms (next.js: 6ms, proxy.ts: 3ms, application-code: 581ms)
+ GET /api/contracts/drafts/959073a8-a0e5-4f58-b4ed-c6bf4e772d83/subject 200 in 861ms (next.js: 3ms, proxy.ts: 3ms, application-code: 855ms)
+ POST /contracts/new 200 in 656ms (next.js: 1835µs, proxy.ts: 3ms, application-code: 652ms)
+  └─ ƒ getContractExtraCosts("959073a8-a0e5-4f58-b4ed-c6bf4e772d83") in 646ms app/actions/contractSteps789.ts
+ GET /api/contracts/drafts/959073a8-a0e5-4f58-b4ed-c6bf4e772d83/penalties 200 in 1432ms (next.js: 8ms, proxy.ts: 3ms, application-code: 1421ms)
+ POST /contracts/new 200 in 818ms (next.js: 1555µs, proxy.ts: 2ms, application-code: 814ms)
+  └─ ƒ getContractTechnicalSpecs("959073a8-a0e5-4f58-b4ed-c6bf4e772d83") in 809ms app/actions/contractSteps789.ts
+ GET /api/contracts/generate-number 200 in 456ms (next.js: 25ms, proxy.ts: 7ms, application-code: 424ms)
+ GET /api/contracts/generate-number 200 in 174ms (next.js: 1613µs, proxy.ts: 3ms, application-code: 170ms)
+ POST /contracts/new 200 in 552ms (next.js: 2ms, proxy.ts: 4ms, application-code: 546ms)
+  └─ ƒ getContractAttachments("959073a8-a0e5-4f58-b4ed-c6bf4e772d83") in 540ms app/actions/contractSteps789.ts
+ POST /contracts/new 200 in 393ms (next.js: 1682µs, proxy.ts: 3ms, application-code: 388ms)
+  └─ ƒ listApprovalWorkflowsAction() in 382ms app/actions/workflowActions.ts
+ POST /contracts/new 200 in 373ms (next.js: 2ms, proxy.ts: 7ms, application-code: 364ms)
+  └─ ƒ getContractTechnicalSpecs("959073a8-a0e5-4f58-b4ed-c6bf4e772d83") in 356ms app/actions/contractSteps789.ts
+ POST /contracts/new 200 in 536ms (next.js: 1871µs, proxy.ts: 3ms, application-code: 531ms)
+  └─ ƒ getContractExtraCosts("959073a8-a0e5-4f58-b4ed-c6bf4e772d83") in 526ms app/actions/contractSteps789.ts
+ POST /contracts/new 200 in 551ms (next.js: 1886µs, proxy.ts: 3ms, application-code: 547ms)
+  └─ ƒ getContractAttachments("959073a8-a0e5-4f58-b4ed-c6bf4e772d83") in 542ms app/actions/contractSteps789.ts
+ GET /api/auth/me 200 in 6.2s (next.js: 2ms, proxy.ts: 3ms, application-code: 6.2s)
+ GET /api/auth/me 200 in 5.8s (next.js: 2ms, proxy.ts: 3ms, application-code: 5.8s)
+ PUT /api/contracts/drafts/959073a8-a0e5-4f58-b4ed-c6bf4e772d83/subject 200 in 2.2s (next.js: 7ms, proxy.ts: 3ms, application-code: 2.2s)
+ GET /contracts/new 200 in 93ms (next.js: 2ms, proxy.ts: 3ms, application-code: 88ms)
+ GET /contracts/new 200 in 86ms (next.js: 10ms, proxy.ts: 10ms, application-code: 66ms)
+ GET /api/contracts/reference-data 200 in 713ms (next.js: 8ms, proxy.ts: 10ms, application-code: 695ms)
+ GET /api/contracts/reference-data 200 in 1008ms (next.js: 1546µs, proxy.ts: 4ms, application-code: 1003ms)
+ GET /api/contracts/drafts/959073a8-a0e5-4f58-b4ed-c6bf4e772d83/parties 200 in 1270ms (next.js: 64ms, proxy.ts: 10ms, application-code: 1196ms)
+ GET /api/contracts/drafts/959073a8-a0e5-4f58-b4ed-c6bf4e772d83/parties 200 in 1612ms (next.js: 3ms, proxy.ts: 2ms, application-code: 1607ms)
+ GET /api/business-settings/profile 200 in 2.3s (next.js: 51ms, proxy.ts: 10ms, application-code: 2.2s)
+ GET /api/business-settings/profile 200 in 2.1s (next.js: 2ms, proxy.ts: 4ms, application-code: 2.1s)
+ GET /api/auth/me 200 in 5.8s (next.js: 7ms, proxy.ts: 7ms, application-code: 5.8s)
+ GET /api/auth/me 200 in 4.9s (next.js: 3ms, proxy.ts: 3ms, application-code: 4.9s)
+ GET / 200 in 128ms (next.js: 35ms, proxy.ts: 5ms, application-code: 87ms)
+ GET /api/contracts/drafts/959073a8-a0e5-4f58-b4ed-c6bf4e772d83/subject 200 in 45ms (next.js: 25ms, proxy.ts: 5ms, application-code: 15ms)
+ GET /audit-logs 200 in 32ms (next.js: 4ms, proxy.ts: 5ms, application-code: 24ms)
+ GET /api/auth/me 200 in 5.2s (next.js: 9ms, proxy.ts: 5ms, application-code: 5.2s)
+ GET /api/auth/me 200 in 5.8s (next.js: 7ms, proxy.ts: 5ms, application-code: 5.7s)
+ GET /api/auth/me 200 in 5.2s (next.js: 8ms, proxy.ts: 10ms, application-code: 5.2s)
+ GET /api/auth/me 200 in 5.2s (next.js: 6ms, proxy.ts: 10ms, application-code: 5.2s)
+ GET /api/audit-logs?page=1&pageSize=25 200 in 5.7s (next.js: 9ms, proxy.ts: 12ms, application-code: 5.6s)
+ GET /api/auth/me 200 in 6.0s (next.js: 7ms, proxy.ts: 10ms, application-code: 6.0s)
+ GET /api/auth/me 200 in 6.1s (next.js: 1580µs, proxy.ts: 2ms, application-code: 6.0s)
+ GET /api/audit-logs?page=1&pageSize=25 200 in 6.0s (next.js: 1480µs, proxy.ts: 2ms, application-code: 6.0s)
+ GET /business-settings/profile/buyers 200 in 55ms (next.js: 25ms, proxy.ts: 3ms, application-code: 27ms)
+ GET /api/business-settings/profile 200 in 2.4s (next.js: 14ms, proxy.ts: 16ms, application-code: 2.3s)
+ GET /api/business-settings/profile 200 in 2.9s (next.js: 13ms, proxy.ts: 15ms, application-code: 2.8s)
+ GET /api/auth/me 200 in 5.8s (next.js: 18ms, proxy.ts: 10ms, application-code: 5.8s)
+ GET /api/auth/me 200 in 6.2s (next.js: 14ms, proxy.ts: 11ms, application-code: 6.2s)
+ GET /api/auth/me 200 in 6.6s (next.js: 9ms, proxy.ts: 14ms, application-code: 6.5s)
+ GET /api/auth/me 200 in 7.1s (next.js: 11ms, proxy.ts: 13ms, application-code: 7.0s)
+ GET /business-settings/profile/buyers/new?kind=natural&tab=natural 200 in 881ms (next.js: 855ms, proxy.ts: 6ms, application-code: 20ms)
+ GET /api/business-settings/profile 200 in 1007ms (next.js: 12ms, proxy.ts: 12ms, application-code: 983ms)
+ GET /api/business-settings/profile 200 in 1181ms (next.js: 13ms, proxy.ts: 12ms, application-code: 1155ms)
+ GET /api/business-settings/profile 200 in 1107ms (next.js: 1454µs, proxy.ts: 3ms, application-code: 1103ms)
+ GET /api/business-settings/profile 200 in 1639ms (next.js: 2ms, proxy.ts: 4ms, application-code: 1633ms)
+ GET /api/auth/me 200 in 5.4s (next.js: 16ms, proxy.ts: 11ms, application-code: 5.4s)
+ GET /api/auth/me 200 in 5.4s (next.js: 11ms, proxy.ts: 10ms, application-code: 5.4s)
+ GET /api/business-settings/profile/directory?q=zareahmadreza12%40gmail.com 200 in 1265ms (next.js: 22ms, proxy.ts: 3ms, application-code: 1240ms)
+ GET /api/auth/me 200 in 5.6s (next.js: 15ms, proxy.ts: 10ms, application-code: 5.6s)
+ GET /api/auth/me 200 in 6.3s (next.js: 8ms, proxy.ts: 10ms, application-code: 6.3s)
+ POST /api/business-settings/profile/directory/ensure-user 200 in 7.0s (next.js: 45ms, proxy.ts: 5ms, application-code: 7.0s)
+ POST /api/business-settings/profile/directory/ensure-user 200 in 6.2s (next.js: 1990µs, proxy.ts: 5ms, application-code: 6.2s)
+ GET /api/business-settings/profile 200 in 1219ms (next.js: 1534µs, proxy.ts: 3ms, application-code: 1215ms)
+ PUT /api/business-settings/profile 200 in 1056ms (next.js: 1902µs, proxy.ts: 3ms, application-code: 1051ms)
+ GET /contracts 200 in 34ms (next.js: 5ms, proxy.ts: 6ms, application-code: 24ms)
+ GET /api/contracts/reference-data 200 in 1083ms (next.js: 18ms, proxy.ts: 14ms, application-code: 1051ms)
+ GET /api/contracts/reference-data 200 in 1316ms (next.js: 10ms, proxy.ts: 19ms, application-code: 1286ms)
+ GET /api/contracts?status=draft 200 in 3.9s (next.js: 4ms, proxy.ts: 7ms, application-code: 3.9s)
+ GET /api/auth/me 200 in 5.9s (next.js: 11ms, proxy.ts: 11ms, application-code: 5.9s)
+ GET /api/auth/me 200 in 6.0s (next.js: 16ms, proxy.ts: 10ms, application-code: 6.0s)
+ GET /api/auth/me 200 in 6.4s (next.js: 12ms, proxy.ts: 11ms, application-code: 6.3s)
+ GET /api/auth/me 200 in 7.3s (next.js: 16ms, proxy.ts: 11ms, application-code: 7.3s)
+ GET /api/contracts?status=draft 200 in 6.0s (next.js: 8ms, proxy.ts: 7ms, application-code: 6.0s)
+✓ Compiled in 319ms
+ GET /contracts 200 in 168ms (next.js: 49ms, proxy.ts: 42ms, application-code: 77ms)
+ GET /contracts 200 in 51ms (next.js: 3ms, proxy.ts: 5ms, application-code: 43ms)
+ GET /contracts 200 in 25ms (next.js: 2ms, proxy.ts: 5ms, application-code: 18ms)
+ GET /login?next=%2Faudit-logs 200 in 126ms (next.js: 26ms, proxy.ts: 3ms, application-code: 98ms)
+ GET /audit-logs 200 in 89ms (next.js: 52ms, proxy.ts: 4ms, application-code: 33ms)
+ GET /api/auth/me 200 in 2.1s (next.js: 75ms, proxy.ts: 9ms, application-code: 1993ms)
+ GET /api/auth/me 200 in 2.1s (next.js: 63ms, proxy.ts: 9ms, application-code: 2.0s)
+ GET /api/auth/me 200 in 2.1s (next.js: 71ms, proxy.ts: 9ms, application-code: 2.0s)
+ GET /api/auth/me 200 in 2.1s (next.js: 68ms, proxy.ts: 9ms, application-code: 2.0s)
+ GET /api/audit-logs?page=1&pageSize=25 200 in 2.1s (next.js: 35ms, proxy.ts: 71ms, application-code: 1972ms)
+ GET /audit-logs 200 in 129ms (next.js: 1858µs, proxy.ts: 4ms, application-code: 123ms)
+ GET /api/auth/me 200 in 10.2s (next.js: 7ms, proxy.ts: 6ms, application-code: 10.2s)
+ GET /api/auth/me 200 in 10.5s (next.js: 5ms, proxy.ts: 6ms, application-code: 10.5s)
+ GET /api/audit-logs?page=1&pageSize=25 200 in 11.5s (next.js: 10ms, proxy.ts: 6ms, application-code: 11.5s)
+ GET /audit-logs 200 in 63ms (next.js: 3ms, proxy.ts: 5ms, application-code: 55ms)
+ GET /api/auth/me 200 in 5.9s (next.js: 5ms, proxy.ts: 8ms, application-code: 5.8s)
+ GET /api/auth/me 200 in 6.1s (next.js: 7ms, proxy.ts: 8ms, application-code: 6.1s)
+ GET /api/audit-logs?page=1&pageSize=25 200 in 6.6s (next.js: 11ms, proxy.ts: 9ms, application-code: 6.6s)
+[?25h

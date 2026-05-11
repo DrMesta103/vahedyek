@@ -7,6 +7,7 @@ import { reopenApprovedContractForEditAction } from '../../../actions/contractAp
 import PanelLayout from '../../../components/PanelLayout';
 import { ContractApprovalFlowBanner } from '../../../components/contracts/ContractApprovalFlowBanner';
 import { getContractDetails, setActiveDraftId } from '../../../lib/contractDraftClient';
+import { computeContractTotalRialFromFinancial } from '../../../lib/contractFinancialPricing';
 import type { ContractStatus } from '../../../types/contract';
 
 function formatMoneyRial(value: number) {
@@ -284,12 +285,7 @@ export default function ContractDetailsPage() {
       parties?.partyOne?.[0] ??
       null;
 
-    const parkingArea = Number(financial?.parkingArea || 0);
-    const unitArea = Number(financial?.unitArea || Math.max(Number(financial?.totalArea || 0) - parkingArea, 0));
-    const amount =
-      financial?.pricingType === 'metered'
-        ? unitArea * Number(financial?.pricePerMeter || 0) + parkingArea * Number(financial?.parkingPricePerMeter || 0)
-        : Number(financial?.fixedTotalAmount || 0);
+    const amount = computeContractTotalRialFromFinancial(financial);
 
     const unitName = subject?.unitName ?? '—';
     const unitUsageLabel = getUnitUsageLabel(subject?.unitUsage ?? null);
