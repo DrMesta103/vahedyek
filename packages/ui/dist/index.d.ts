@@ -101,7 +101,7 @@ type ExpandableTagGroupItem = {
     name: string;
     sub?: string;
 };
-declare function ExpandableTagGroup({ label, items, selectedId, onSelect, emptyText, itemsPerRow, required, className, showSearch, }: {
+declare function ExpandableTagGroup({ label, items, selectedId, onSelect, emptyText, itemsPerRow, required, className, showSearch, invalid, }: {
     label: string;
     items: ExpandableTagGroupItem[];
     selectedId: string;
@@ -111,6 +111,7 @@ declare function ExpandableTagGroup({ label, items, selectedId, onSelect, emptyT
     required?: boolean;
     className?: string;
     showSearch?: boolean;
+    invalid?: boolean;
 }): react_jsx_runtime.JSX.Element;
 
 type ContractType = 'sale' | 'pre-sale';
@@ -172,7 +173,7 @@ declare function ChoicePills<T extends string>({ options, value, onChange, ariaL
     showActiveIndicator?: boolean;
 }): react_jsx_runtime.JSX.Element;
 
-declare function ChoicePillsField<T extends string>({ label, labelAs: LabelAs, ariaLabel, options, value, onChange, wrap, className, labelClassName, pillsClassName, pillClassName, showActiveIndicator, }: {
+declare function ChoicePillsField<T extends string>({ label, labelAs: LabelAs, ariaLabel, options, value, onChange, wrap, className, labelClassName, pillsClassName, pillClassName, showActiveIndicator, invalid, }: {
     label: string;
     labelAs?: ElementType;
     ariaLabel?: string;
@@ -185,6 +186,7 @@ declare function ChoicePillsField<T extends string>({ label, labelAs: LabelAs, a
     pillsClassName?: string;
     pillClassName?: string;
     showActiveIndicator?: boolean;
+    invalid?: boolean;
 }): react_jsx_runtime.JSX.Element;
 
 type AppThemeTokens = {

@@ -159,6 +159,35 @@ export const currentAppConfig: AppConfig = {
       requiredPermission: 'platform.settings.view',
       toolbarOnly: true,
     },
+    // Customer Portal Menu Items (4 گزینه اصلی)
+    {
+      id: 'customer-contracts',
+      label: 'قراردادهای من',
+      icon: 'fa-file-contract',
+      href: '/customer-portal/contracts',
+      requiredPermission: 'customer.contracts.view',
+    },
+    {
+      id: 'customer-payment-methods',
+      label: 'روش‌های پرداخت بدهی',
+      icon: 'fa-credit-card',
+      href: '/customer-portal/payment-methods',
+      requiredPermission: 'customer.payments.view',
+    },
+    {
+      id: 'customer-due-dates',
+      label: 'سررسیدهای من',
+      icon: 'fa-calendar-check',
+      href: '/customer-portal/due-dates',
+      requiredPermission: 'customer.payments.view',
+    },
+    {
+      id: 'customer-account',
+      label: 'حساب کاربری',
+      icon: 'fa-user-circle',
+      href: '/customer-portal/account',
+      requiredPermission: 'customer.profile.view',
+    },
   ],
   modules: [
     { id: 'business', label: 'تنظیمات کسب و کار', routePrefix: '/business-settings', requiredPermission: 'business.profile.view' },
