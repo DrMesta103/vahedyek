@@ -20,6 +20,7 @@
     "prisma:generate:vahedyek": "npm --workspace @apps/vahedyek-panel run prisma:generate",
     "prisma:migrate:vahedyek": "npm --workspace @apps/vahedyek-panel run prisma:migrate",
     "prisma:deploy:vahedyek": "npm --workspace @apps/vahedyek-panel run prisma:deploy",
+    "db:purge-contracts:vahedyek": "npm --workspace @apps/vahedyek-panel run db:purge-contracts",
     "db:seed:vahedyek": "npm --workspace @apps/vahedyek-panel run db:seed",
     "test:financial": "npm --workspace @apps/vahedyek-panel run test:financial",
     "test:subject": "npm --workspace @apps/vahedyek-panel run test:subject"
