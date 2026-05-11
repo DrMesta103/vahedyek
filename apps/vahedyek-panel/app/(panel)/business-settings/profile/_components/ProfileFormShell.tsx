@@ -30,6 +30,7 @@ export function ProfileTextField({
   required,
   hint,
   placeholder,
+  invalid,
 }: {
   label: string;
   value: string;
@@ -37,9 +38,10 @@ export function ProfileTextField({
   required?: boolean;
   hint?: string;
   placeholder?: string;
+  invalid?: boolean;
 }) {
   return (
-    <FieldGroup label={label} required={required} hint={hint}>
+    <FieldGroup label={label} required={required} hint={hint} invalid={invalid}>
       <Input value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} />
     </FieldGroup>
   );
@@ -51,16 +53,18 @@ export function ProfileDateField({
   onChange,
   required,
   hint,
+  invalid,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   required?: boolean;
   hint?: string;
+  invalid?: boolean;
 }) {
   return (
-    <FieldGroup label={label} required={required} hint={hint}>
-      <PersianDatePicker value={value} onChange={onChange} placeholder="YYYY/MM/DD" containerClassName="w-full" />
+    <FieldGroup label={label} required={required} hint={hint} invalid={invalid}>
+      <PersianDatePicker value={value} onChange={onChange} placeholder="YYYY/MM/DD" containerClassName="w-full" className={invalid ? 'border-rose-400 focus:border-rose-500 focus:ring-4 focus:ring-rose-500/10' : undefined} />
     </FieldGroup>
   );
 }
@@ -90,6 +94,7 @@ export function ProfileChipGroup<T extends string>({
   value,
   onChange,
   multiple,
+  invalid,
 }: {
   label: string;
   hint?: string;
@@ -97,6 +102,7 @@ export function ProfileChipGroup<T extends string>({
   value: T | T[] | null;
   onChange: (value: T) => void;
   multiple?: boolean;
+  invalid?: boolean;
 }) {
   if (!multiple && !Array.isArray(value) && value !== null) {
     return (
@@ -108,7 +114,7 @@ export function ProfileChipGroup<T extends string>({
   }
 
   return (
-    <FieldGroup label={label} hint={hint}>
+    <FieldGroup label={label} hint={hint} invalid={invalid}>
       <div className="profile-chip-row">
         {items.map((item) => {
           const active = Array.isArray(value) ? value.includes(item.value) : value === item.value;

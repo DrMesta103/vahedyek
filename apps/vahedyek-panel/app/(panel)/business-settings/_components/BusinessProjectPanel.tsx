@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { ChoicePillsField } from '@repo/ui';
 import { FieldGroup, FormTextInput, InlineSelect, TagPill, TagPills } from '../../contracts/new/_components/ContractFormPrimitives';
+import { buildValidationSummary } from '../../contracts/new/_components/validationPresentation';
 import { fetchProfilePayload } from '../profile/_components/profileStorage';
 
 type BlockDto = {
@@ -42,6 +43,8 @@ type ProjectPlateDto = {
   mainPlate: string;
   subPlates: string[];
 };
+
+const REQUIRED_MESSAGE = 'این فیلد الزامی است';
 
 type FloorDto = {
   id: string;
@@ -472,6 +475,8 @@ export function BusinessBlocksPanel() {
   const [openMenuId, setOpenMenuId] = useState('');
   const [copySource, setCopySource] = useState<BlockDto | null>(null);
   const [copyName, setCopyName] = useState('');
+  const [copyDialogError, setCopyDialogError] = useState('');
+  const [showCopyValidation, setShowCopyValidation] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -526,6 +531,11 @@ export function BusinessBlocksPanel() {
 
   const copyBlock = async () => {
     if (!copySource) return;
+    if (!copyName.trim()) {
+      setShowCopyValidation(true);
+      setCopyDialogError(buildValidationSummary({ copyName: REQUIRED_MESSAGE }, { copyName: 'نام/مشخصه/شماره' }, 'اطلاعات کپی بلوک کامل نیست.'));
+      return;
+    }
     const response = await fetch(`/api/business-settings/project/blocks/${copySource.id}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -538,6 +548,8 @@ export function BusinessBlocksPanel() {
     }
     setCopySource(null);
     setCopyName('');
+    setCopyDialogError('');
+    setShowCopyValidation(false);
     await reloadBlocks();
   };
 
@@ -681,7 +693,8 @@ export function BusinessBlocksPanel() {
       </div>
       {copySource ? (
         <Dialog title="کپی بلوک" subtitle="یک مشخصه جدید برای نسخه کپی‌شده وارد کنید." onClose={() => setCopySource(null)}>
-          <FormField label="نام/مشخصه/شماره" required>
+          {copyDialogError ? <div className="business-blocks-state is-error">{copyDialogError}</div> : null}
+          <FormField label="نام/مشخصه/شماره" required invalid={showCopyValidation && !copyName.trim()}>
             <input value={copyName} onChange={(event) => setCopyName(event.target.value.slice(0, 30))} />
           </FormField>
           <div className="business-dialog-actions">
@@ -716,6 +729,8 @@ export function BusinessBlockForm({ blockId }: { blockId?: string }) {
   const [loading, setLoading] = useState(isEdit);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
+  const [showValidation, setShowValidation] = useState(false);
+  const [showPlateValidation, setShowPlateValidation] = useState(false);
 
   const selectedPlate = plates.find((plate) => plate.mainPlate === mainPlate);
   const availableSubPlates = selectedPlate?.subPlates ?? [];
@@ -764,8 +779,38 @@ export function BusinessBlockForm({ blockId }: { blockId?: string }) {
   }, [blockId]);
 
   const submit = async () => {
+    const errors: Record<string, string> = {};
+    if (activeTab === 'bulk' && !isEdit) {
+      if (!prefix.trim()) errors.prefix = REQUIRED_MESSAGE;
+      if (!from.trim()) errors.from = REQUIRED_MESSAGE;
+      if (!to.trim()) errors.to = REQUIRED_MESSAGE;
+    } else if (!name.trim()) {
+      errors.name = REQUIRED_MESSAGE;
+    }
+    if (!mainPlate.trim()) errors.mainPlate = REQUIRED_MESSAGE;
+    if (!subPlate.trim()) errors.subPlate = REQUIRED_MESSAGE;
+    if (Object.keys(errors).length > 0) {
+      setShowValidation(true);
+      setMessage(
+        buildValidationSummary(
+          errors,
+          {
+            name: 'نام/مشخصه/شماره',
+            prefix: 'پیشوند نام‌گذاری',
+            from: 'از',
+            to: 'تا',
+            mainPlate: 'پلاک اصلی',
+            subPlate: 'پلاک فرعی',
+          },
+          'اطلاعات بلوک کامل نیست.',
+        ),
+      );
+      return;
+    }
+
     setSaving(true);
     setMessage('');
+    setShowValidation(false);
 
     const payload =
       activeTab === 'bulk' && !isEdit
@@ -793,6 +838,14 @@ export function BusinessBlockForm({ blockId }: { blockId?: string }) {
   const submitPlate = async () => {
     setMessage('');
     const subPlates = newSubPlate.trim() ? [...newSubPlates, newSubPlate.trim()] : newSubPlates;
+    const plateErrors: Record<string, string> = {};
+    if (!newMainPlate.trim()) plateErrors.newMainPlate = REQUIRED_MESSAGE;
+    if (subPlates.length === 0) plateErrors.newSubPlate = REQUIRED_MESSAGE;
+    if (Object.keys(plateErrors).length > 0) {
+      setShowPlateValidation(true);
+      setMessage(buildValidationSummary(plateErrors, { newMainPlate: 'پلاک اصلی', newSubPlate: 'پلاک فرعی' }, 'اطلاعات پلاک کامل نیست.'));
+      return;
+    }
     const response = await fetch('/api/business-settings/project/plates', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -809,6 +862,7 @@ export function BusinessBlockForm({ blockId }: { blockId?: string }) {
     setNewMainPlate('');
     setNewSubPlate('');
     setNewSubPlates([]);
+    setShowPlateValidation(false);
     setPlateDialogOpen(false);
   };
 
@@ -841,7 +895,7 @@ export function BusinessBlockForm({ blockId }: { blockId?: string }) {
             {activeTab === 'single' || isEdit ? (
               <div className="business-block-form-section">
                 <p className="business-block-form-help">{isEdit ? 'اطلاعات بلوک را ویرایش کنید.' : 'برای تعریف یک بلوک به‌صورت جداگانه استفاده کنید.'}</p>
-                <FormField label="نام/مشخصه/شماره" required>
+                <FormField label="نام/مشخصه/شماره" required invalid={showValidation && !name.trim()}>
                   <input value={name} onChange={(event) => setName(event.target.value.slice(0, 30))} placeholder="نام، مشخصه یا شماره بلوک را وارد کنید." />
                   <span className="business-block-form-counter">{name.length} / ۳۰</span>
                 </FormField>
@@ -850,14 +904,14 @@ export function BusinessBlockForm({ blockId }: { blockId?: string }) {
               <div className="business-block-form-section">
                 <p className="business-block-form-help">این حالت برای ایجاد و نام‌گذاری چند بلوک به‌صورت همزمان استفاده می‌شود.</p>
                 <div className="business-block-form-row">
-                  <FormField label="پیشوند نام‌گذاری" required>
+                  <FormField label="پیشوند نام‌گذاری" required invalid={showValidation && !prefix.trim()}>
                     <input value={prefix} onChange={(event) => setPrefix(event.target.value.slice(0, 30))} placeholder="مانند A" />
                     <span className="business-block-form-counter">{prefix.length} / ۳۰</span>
                   </FormField>
-                  <FormField label="از" required hint="شماره‌گذاری مانند از ۲ تا ۵">
+                  <FormField label="از" required hint="شماره‌گذاری مانند از ۲ تا ۵" invalid={showValidation && !from.trim()}>
                     <input value={from} onChange={(event) => setFrom(event.target.value)} placeholder="مثلا ۲" />
                   </FormField>
-                  <FormField label="تا" required>
+                  <FormField label="تا" required invalid={showValidation && !to.trim()}>
                     <input value={to} onChange={(event) => setTo(event.target.value)} placeholder="مثلا ۵" />
                   </FormField>
                 </div>
@@ -872,7 +926,7 @@ export function BusinessBlockForm({ blockId }: { blockId?: string }) {
                   افزودن پلاک
                 </button>
               </div>
-              <div className="business-block-form-pills">
+              <div className={`business-block-form-pills ${showValidation && !mainPlate.trim() ? 'rounded-xl border border-rose-300 bg-rose-50/30 p-2' : ''}`}>
                 {plates.map((plate) => (
                   <button
                     type="button"
@@ -892,7 +946,7 @@ export function BusinessBlockForm({ blockId }: { blockId?: string }) {
               <div className="business-block-form-subplates">
                 <h3>پلاک فرعی</h3>
                 {availableSubPlates.length ? (
-                  <div className="business-block-form-pills">
+                  <div className={`business-block-form-pills ${showValidation && !subPlate.trim() ? 'rounded-xl border border-rose-300 bg-rose-50/30 p-2' : ''}`}>
                     {availableSubPlates.map((plate) => (
                       <button type="button" key={plate} aria-pressed={subPlate === plate} onClick={() => setSubPlate(plate)}>
                         {plate}
@@ -916,7 +970,7 @@ export function BusinessBlockForm({ blockId }: { blockId?: string }) {
       {plateDialogOpen ? (
         <Dialog title="پلاک‌های اصلی و فرعی" subtitle="برای هر پلاک اصلی می‌توانید چند پلاک فرعی ثبت کنید." onClose={() => setPlateDialogOpen(false)}>
           <div className="business-plate-dialog-fields">
-            <FormField label="پلاک اصلی" required>
+            <FormField label="پلاک اصلی" required invalid={showPlateValidation && !newMainPlate.trim()}>
               <input value={newMainPlate} onChange={(event) => setNewMainPlate(event.target.value)} inputMode="numeric" placeholder="مثلا ۴۳" />
               {plates.length ? (
                 <div className="business-plate-suggestions" aria-label="پلاک‌های اصلی قبلی">
@@ -928,7 +982,7 @@ export function BusinessBlockForm({ blockId }: { blockId?: string }) {
                 </div>
               ) : null}
             </FormField>
-            <FormField label="پلاک فرعی" required>
+            <FormField label="پلاک فرعی" required invalid={showPlateValidation && !(newSubPlate.trim() || newSubPlates.length)}>
               <div className="business-tag-input">
                 <input
                   value={newSubPlate}
@@ -1110,10 +1164,26 @@ export function BusinessFloorForm({ blockId }: { blockId: string }) {
   const [to, setTo] = useState('');
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
+  const [showValidation, setShowValidation] = useState(false);
 
   const submitFloor = async () => {
+    const errors: Record<string, string> = {};
+    if (activeTab === 'bulk') {
+      if (!prefix.trim()) errors.prefix = REQUIRED_MESSAGE;
+      if (!from.trim()) errors.from = REQUIRED_MESSAGE;
+      if (!to.trim()) errors.to = REQUIRED_MESSAGE;
+    } else if (!name.trim()) {
+      errors.name = REQUIRED_MESSAGE;
+    }
+    if (Object.keys(errors).length > 0) {
+      setShowValidation(true);
+      setMessage(buildValidationSummary(errors, { name: 'نام/مشخصه/شماره', prefix: 'پیشوند نام‌گذاری', from: 'از', to: 'تا' }, 'اطلاعات طبقه کامل نیست.'));
+      return;
+    }
+
     setSaving(true);
     setMessage('');
+    setShowValidation(false);
     const payload = activeTab === 'bulk' ? { mode: 'bulk', prefix, from, to } : { mode: 'single', name };
 
     try {
@@ -1151,20 +1221,20 @@ export function BusinessFloorForm({ blockId }: { blockId: string }) {
 
         {activeTab === 'single' ? (
           <div className="business-block-form-section">
-            <FormField label="نام/مشخصه/شماره" required>
+            <FormField label="نام/مشخصه/شماره" required invalid={showValidation && !name.trim()}>
               <input value={name} onChange={(event) => setName(event.target.value.slice(0, 30))} placeholder="مثلا طبقه اول یا ۱" />
             </FormField>
           </div>
         ) : (
           <div className="business-block-form-section">
             <div className="business-block-form-row">
-              <FormField label="پیشوند نام‌گذاری" required>
+              <FormField label="پیشوند نام‌گذاری" required invalid={showValidation && !prefix.trim()}>
                 <input value={prefix} onChange={(event) => setPrefix(event.target.value.slice(0, 30))} placeholder="مثلا طبقه" />
               </FormField>
-              <FormField label="از" required>
+              <FormField label="از" required invalid={showValidation && !from.trim()}>
                 <input value={from} onChange={(event) => setFrom(event.target.value)} placeholder="مثلا ۱" />
               </FormField>
-              <FormField label="تا" required>
+              <FormField label="تا" required invalid={showValidation && !to.trim()}>
                 <input value={to} onChange={(event) => setTo(event.target.value)} placeholder="مثلا ۵" />
               </FormField>
             </div>
@@ -1390,6 +1460,9 @@ export function BusinessUnitForm({ blockId, floorId, category, unitId }: { block
   const [message, setMessage] = useState('');
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(isEdit);
+  const [showValidation, setShowValidation] = useState(false);
+  const [amenityDialogError, setAmenityDialogError] = useState('');
+  const [showAmenityValidation, setShowAmenityValidation] = useState(false);
   const usageSelected = !isMainUnit || Boolean(usage);
   const amenityTypeSelected = !isAmenityUnit || Boolean(unitType);
   const pendingAssignmentDialog = searchParams.get('assignment');
@@ -1606,10 +1679,19 @@ export function BusinessUnitForm({ blockId, floorId, category, unitId }: { block
   const addAmenity = () => {
     const title = amenityTitle.trim();
     const count = Math.max(1, Math.floor(Number(amenityCount) || 1));
-    if (!title) return;
+    const errors: Record<string, string> = {};
+    if (!title) errors.amenityTitle = REQUIRED_MESSAGE;
+    if (!amenityCount.trim()) errors.amenityCount = REQUIRED_MESSAGE;
+    if (Object.keys(errors).length > 0) {
+      setShowAmenityValidation(true);
+      setAmenityDialogError(buildValidationSummary(errors, { amenityTitle: 'عنوان امکانات', amenityCount: 'تعداد' }, 'اطلاعات امکانات واحد کامل نیست.'));
+      return;
+    }
     setAmenities((current) => [...current, { title, count }]);
     setAmenityTitle('');
     setAmenityCount('1');
+    setAmenityDialogError('');
+    setShowAmenityValidation(false);
     setAmenityDialogOpen(false);
   };
 
@@ -1624,8 +1706,27 @@ export function BusinessUnitForm({ blockId, floorId, category, unitId }: { block
   };
 
   const submitUnit = async () => {
+    const errors: Record<string, string> = {};
+    if (activeTab === 'single') {
+      if (!name.trim()) errors.name = REQUIRED_MESSAGE;
+      if (!area.trim()) errors.area = REQUIRED_MESSAGE;
+      if (isMainUnit && !unitType.trim()) errors.unitType = REQUIRED_MESSAGE;
+      if (isMainUnit && !usage.trim()) errors.usage = REQUIRED_MESSAGE;
+      if (isAmenityUnit && !unitType.trim()) errors.amenityType = REQUIRED_MESSAGE;
+    } else {
+      if (!prefix.trim()) errors.prefix = REQUIRED_MESSAGE;
+      if (!from.trim()) errors.from = REQUIRED_MESSAGE;
+      if (!to.trim()) errors.to = REQUIRED_MESSAGE;
+    }
+    if (Object.keys(errors).length > 0) {
+      setShowValidation(true);
+      setMessage(buildValidationSummary(errors, { name: 'نام/مشخصه/شماره', area: `متراژ ${categoryLabel}`, unitType: 'تیپ واحد', usage: 'نوع کاربری', amenityType: 'نوع فضا', prefix: 'پیشوند نام‌گذاری', from: 'از', to: 'تا' }, 'اطلاعات واحد کامل نیست.'));
+      return;
+    }
+
     setSaving(true);
     setMessage('');
+    setShowValidation(false);
 
     const payload = {
       mode: activeTab,
@@ -1674,8 +1775,12 @@ export function BusinessUnitForm({ blockId, floorId, category, unitId }: { block
 
   const assignmentOptions = assignmentDialog === 'parking' ? parkingOptions : storageOptions;
   const selectedAssignmentIds = assignmentDialog === 'parking' ? selectedParkingIds : selectedStorageIds;
-  const selectedParkingNames = parkingOptions.filter((item) => selectedParkingIds.includes(item.id)).map((item) => item.name);
-  const selectedStorageNames = storageOptions.filter((item) => selectedStorageIds.includes(item.id)).map((item) => item.name);
+  const selectedParkingItems = parkingOptions
+    .filter((item) => selectedParkingIds.includes(item.id))
+    .map((item) => ({ id: item.id, name: item.name }));
+  const selectedStorageItems = storageOptions
+    .filter((item) => selectedStorageIds.includes(item.id))
+    .map((item) => ({ id: item.id, name: item.name }));
   const returnToAssignmentUrl = (kind: 'parking' | 'storage') => {
     const params = new URLSearchParams(searchParams.toString());
     params.set('assignment', kind);
@@ -1712,7 +1817,7 @@ export function BusinessUnitForm({ blockId, floorId, category, unitId }: { block
 
         <div className="business-unit-form-grid">
           {isMainUnit ? (
-            <FieldGroup label="تیپ واحد">
+            <FieldGroup label="تیپ واحد" required invalid={showValidation && isMainUnit && !unitType.trim()}>
               <InlineSelect
                 value={unitType}
                 onSelect={applyUnitType}
@@ -1725,7 +1830,7 @@ export function BusinessUnitForm({ blockId, floorId, category, unitId }: { block
           ) : null}
 
           {isMainUnit ? (
-            <div className="business-unit-form-fieldset">
+            <div className={`business-unit-form-fieldset ${showValidation && isMainUnit && !usage.trim() ? 'rounded-xl border border-rose-300 bg-rose-50/30 p-2' : ''}`}>
               <span>نوع کاربری</span>
               <div className="business-unit-choice-tags">
                 {unitUsageOptions.map((option) => (
@@ -1736,7 +1841,7 @@ export function BusinessUnitForm({ blockId, floorId, category, unitId }: { block
           ) : null}
 
           {isAmenityUnit ? (
-            <div className="business-unit-form-fieldset">
+            <div className={`business-unit-form-fieldset ${showValidation && isAmenityUnit && !unitType.trim() ? 'rounded-xl border border-rose-300 bg-rose-50/30 p-2' : ''}`}>
               <span>نوع فضا</span>
               <div className="business-unit-choice-tags">
                 {amenitySpaceTypeOptions.map((option) => (
@@ -1752,8 +1857,9 @@ export function BusinessUnitForm({ blockId, floorId, category, unitId }: { block
           {usageSelected ? (
             <>
               {activeTab === 'single' ? (
-                <FieldGroup label="نام/مشخصه/شماره" required>
+                <FieldGroup label="نام/مشخصه/شماره" required invalid={showValidation && !name.trim()}>
                   <FormTextInput
+                    invalid={showValidation && !name.trim()}
                     value={name}
                     onChange={(value) => setName(value.slice(0, 30))}
                     placeholder={unitCategory === 'unit' ? 'مثلا A1 یا ۱۰۱' : `نام، مشخصه یا شماره ${categoryLabel}`}
@@ -1761,22 +1867,22 @@ export function BusinessUnitForm({ blockId, floorId, category, unitId }: { block
                 </FieldGroup>
               ) : (
                 <div className="business-unit-bulk-row">
-                  <FieldGroup label="پیشوند نام گذاری" required>
-                    <FormTextInput value={prefix} onChange={(value) => setPrefix(value.slice(0, 30))} placeholder="مثلا A" />
+                  <FieldGroup label="پیشوند نام گذاری" required invalid={showValidation && !prefix.trim()}>
+                    <FormTextInput value={prefix} onChange={(value) => setPrefix(value.slice(0, 30))} placeholder="مثلا A" invalid={showValidation && !prefix.trim()} />
                   </FieldGroup>
-                  <FieldGroup label="از" required>
-                    <FormTextInput value={from} onChange={setFrom} placeholder="1" />
+                  <FieldGroup label="از" required invalid={showValidation && !from.trim()}>
+                    <FormTextInput value={from} onChange={setFrom} placeholder="1" invalid={showValidation && !from.trim()} />
                   </FieldGroup>
-                  <FieldGroup label="تا" required>
-                    <FormTextInput value={to} onChange={setTo} placeholder="10" />
+                  <FieldGroup label="تا" required invalid={showValidation && !to.trim()}>
+                    <FormTextInput value={to} onChange={setTo} placeholder="10" invalid={showValidation && !to.trim()} />
                   </FieldGroup>
                 </div>
               )}
 
               {isSimpleAsset ? (
                 <>
-                  <FieldGroup label={`متراژ ${categoryLabel}`} required>
-                    <FormTextInput value={area} onChange={setArea} placeholder="مثلا 12" />
+                  <FieldGroup label={`متراژ ${categoryLabel}`} required invalid={showValidation && !area.trim()}>
+                    <FormTextInput value={area} onChange={setArea} placeholder="مثلا 12" invalid={showValidation && !area.trim()} />
                   </FieldGroup>
                   <BusinessSwitch label={`این ${categoryLabel} فروشی است؟`} checked={saleEnabled} onChange={setSaleEnabled} onText="فروش" offText="غیر قابل فروش" />
                 </>
@@ -1793,8 +1899,8 @@ export function BusinessUnitForm({ blockId, floorId, category, unitId }: { block
                     offText="پیش فروش"
                   />
 
-                  <FieldGroup label="متراژ" required>
-                    <FormTextInput value={area} onChange={setArea} placeholder="مثلا 100" />
+                  <FieldGroup label="متراژ" required invalid={showValidation && !area.trim()}>
+                    <FormTextInput value={area} onChange={setArea} placeholder="مثلا 100" invalid={showValidation && !area.trim()} />
                   </FieldGroup>
 
                   <div className="business-unit-form-fieldset">
@@ -1894,8 +2000,18 @@ export function BusinessUnitForm({ blockId, floorId, category, unitId }: { block
 
               {activeTab === 'single' && (isMainUnit || isAmenityUnit) ? (
                 <>
-                  <AssignmentSelector title={`انتخاب پارکینگ ${categoryLabel}`} names={selectedParkingNames} onOpen={() => setAssignmentDialog('parking')} />
-                  <AssignmentSelector title={`انتخاب انباری ${categoryLabel}`} names={selectedStorageNames} onOpen={() => setAssignmentDialog('storage')} />
+                  <AssignmentSelector
+                    title={`انتخاب پارکینگ ${categoryLabel}`}
+                    items={selectedParkingItems}
+                    onOpen={() => setAssignmentDialog('parking')}
+                    onRemove={(id) => setSelectedParkingIds((current) => current.filter((item) => item !== id))}
+                  />
+                  <AssignmentSelector
+                    title={`انتخاب انباری ${categoryLabel}`}
+                    items={selectedStorageItems}
+                    onOpen={() => setAssignmentDialog('storage')}
+                    onRemove={(id) => setSelectedStorageIds((current) => current.filter((item) => item !== id))}
+                  />
                 </>
               ) : null}
             </>
@@ -1911,11 +2027,12 @@ export function BusinessUnitForm({ blockId, floorId, category, unitId }: { block
 
       {amenityDialogOpen ? (
         <Dialog title="ثبت امکانات واحد" onClose={() => setAmenityDialogOpen(false)}>
-          <FieldGroup label="عنوان امکانات" required>
-            <FormTextInput value={amenityTitle} onChange={(value) => setAmenityTitle(value.slice(0, 40))} placeholder="مثلا آسانسور اختصاصی" />
+          {amenityDialogError ? <div className="business-blocks-state is-error">{amenityDialogError}</div> : null}
+          <FieldGroup label="عنوان امکانات" required invalid={showAmenityValidation && !amenityTitle.trim()}>
+            <FormTextInput value={amenityTitle} onChange={(value) => setAmenityTitle(value.slice(0, 40))} placeholder="مثلا آسانسور اختصاصی" invalid={showAmenityValidation && !amenityTitle.trim()} />
           </FieldGroup>
-          <FieldGroup label="تعداد" required>
-            <FormTextInput value={amenityCount} onChange={setAmenityCount} />
+          <FieldGroup label="تعداد" required invalid={showAmenityValidation && !amenityCount.trim()}>
+            <FormTextInput value={amenityCount} onChange={setAmenityCount} invalid={showAmenityValidation && !amenityCount.trim()} />
           </FieldGroup>
           <div className="business-dialog-actions">
             <button type="button" className="business-block-form-submit" onClick={addAmenity}>
@@ -2019,21 +2136,55 @@ function BusinessSwitch({
   );
 }
 
-function AssignmentSelector({ title, names, onOpen }: { title: string; names: string[]; onOpen: () => void }) {
+function AssignmentSelector({
+  title,
+  items,
+  onOpen,
+  onRemove,
+}: {
+  title: string;
+  items: Array<{ id: string; name: string }>;
+  onOpen: () => void;
+  onRemove: (id: string) => void;
+}) {
   return (
     <div className="business-unit-form-fieldset">
       <button type="button" className="business-unit-next-action" onClick={onOpen}>
         {title}
         <ChevronLeft />
       </button>
-      <p className="business-unit-assignment-summary">{names.length ? names.join('، ') : 'موردی انتخاب نشده است.'}</p>
+      {items.length ? (
+        <div className="business-unit-selected-tags">
+          {items.map((item) => (
+            <span key={item.id}>
+              {item.name}
+              <button type="button" onClick={() => onRemove(item.id)} aria-label={`حذف ${item.name}`}>
+                <X />
+              </button>
+            </span>
+          ))}
+        </div>
+      ) : (
+        <p className="business-unit-assignment-summary">موردی انتخاب نشده است.</p>
+      )}
     </div>
   );
 }
-
-function FormField({ label, required, hint, children }: { label: string; required?: boolean; hint?: string; children: ReactNode }) {
+function FormField({
+  label,
+  required,
+  hint,
+  children,
+  invalid = false,
+}: {
+  label: string;
+  required?: boolean;
+  hint?: string;
+  children: ReactNode;
+  invalid?: boolean;
+}) {
   return (
-    <label className="business-block-form-field">
+    <label className={`business-block-form-field ${invalid ? 'rounded-xl border border-rose-300 bg-rose-50/30 p-2' : ''}`}>
       <span>
         {label}
         {required ? <i>*</i> : null}

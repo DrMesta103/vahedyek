@@ -89,6 +89,12 @@ function getAdjustmentLead(tabId: string) {
   }
 }
 
+function parsePercent(value: string | boolean | undefined) {
+  if (typeof value !== 'string') return 0;
+  const normalized = Number(value.toString().replace(/[^\d.-]/g, ''));
+  return Number.isFinite(normalized) && normalized > 0 ? normalized : 0;
+}
+
 export function AdjustmentRuleSection({
   state,
   onValueChange,
@@ -104,6 +110,15 @@ export function AdjustmentRuleSection({
   const activeTab = state.activeTab;
   const selectedPeriod = String(state.activeChip || '');
   const selectedRoundRule = String(state.values.adjustFixedRound || '');
+  const multiIndicatorTotal =
+    parsePercent(state.values.adjustMultiHousingWeight) +
+    parsePercent(state.values.adjustMultiLaborWeight) +
+    parsePercent(state.values.adjustMultiMaterialWeight) +
+    parsePercent(state.values.adjustMultiMaterialsOtherWeight) +
+    parsePercent(state.values.adjustMultiWageWeight) +
+    parsePercent(state.values.adjustMultiEnergyWeight) +
+    parsePercent(state.values.adjustMultiGeneralPriceWeight);
+  const multiIndicatorOverflow = multiIndicatorTotal > 100;
 
   return (
     <div className="space-y-8 text-right">
@@ -255,6 +270,13 @@ export function AdjustmentRuleSection({
                   />
                 </div>
               ) : null}
+
+              <div className="rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] px-4 py-4 text-right">
+                <div className="text-sm font-black text-[color:var(--text-strong)]">جمع درصد شاخص‌ها: {multiIndicatorTotal}٪</div>
+                <p className={cn('mt-2 text-sm leading-7', multiIndicatorOverflow ? 'text-rose-600' : 'text-[color:var(--text-muted)]')}>
+                  مجموع وزن همه شاخص‌های فعال نباید از ۱۰۰٪ بیشتر باشد.
+                </p>
+              </div>
 
               <div className="space-y-5 border-t border-[color:var(--border-soft)] pt-6">
                 <div className="text-right">

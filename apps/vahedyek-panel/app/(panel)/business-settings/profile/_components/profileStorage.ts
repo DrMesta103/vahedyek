@@ -211,9 +211,15 @@ export type ProfileStore = {
 
 export type ProfileMeta = {
   businessName: string;
+  slug: string;
+  brandCode: string;
+  packageKey: string;
+  billingCycle: string;
+  createdAt: string | null;
   owner: {
     fullName: string;
     mobile: string | null;
+    email: string | null;
   };
 };
 
@@ -221,9 +227,15 @@ export const PROFILE_STORAGE_KEY = 'vahedyek.business-profile.v1';
 const PROFILE_API_ENDPOINT = '/api/business-settings/profile';
 const defaultProfileMeta: ProfileMeta = {
   businessName: '',
+  slug: '',
+  brandCode: 'VN',
+  packageKey: 'starter',
+  billingCycle: 'monthly',
+  createdAt: null,
   owner: {
     fullName: '',
     mobile: null,
+    email: null,
   },
 };
 
@@ -739,9 +751,15 @@ export async function fetchProfilePayload() {
       store: merged,
       meta: {
         businessName: typeof payload.meta?.businessName === 'string' ? payload.meta.businessName : defaultProfileMeta.businessName,
+        slug: typeof payload.meta?.slug === 'string' ? payload.meta.slug : defaultProfileMeta.slug,
+        brandCode: typeof payload.meta?.brandCode === 'string' ? payload.meta.brandCode : defaultProfileMeta.brandCode,
+        packageKey: typeof payload.meta?.packageKey === 'string' ? payload.meta.packageKey : defaultProfileMeta.packageKey,
+        billingCycle: typeof payload.meta?.billingCycle === 'string' ? payload.meta.billingCycle : defaultProfileMeta.billingCycle,
+        createdAt: typeof payload.meta?.createdAt === 'string' ? payload.meta.createdAt : defaultProfileMeta.createdAt,
         owner: {
           fullName: typeof payload.meta?.owner?.fullName === 'string' ? payload.meta.owner.fullName : defaultProfileMeta.owner.fullName,
           mobile: typeof payload.meta?.owner?.mobile === 'string' ? payload.meta.owner.mobile : defaultProfileMeta.owner.mobile,
+          email: typeof payload.meta?.owner?.email === 'string' ? payload.meta.owner.email : defaultProfileMeta.owner.email,
         },
       },
     };

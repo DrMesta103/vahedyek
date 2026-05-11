@@ -1,8 +1,9 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Info, Pencil, Plus, ShieldCheck, Trash2, UserRound, Workflow, X } from 'lucide-react';
 import { FieldGroup, FormTextInput, InlineSelect, TagPill } from '../../../contracts/new/_components/ContractFormPrimitives';
+import { buildValidationSummary } from '../../../contracts/new/_components/validationPresentation';
 import { ContractRegistrationSwitch, LoanPageShell, LoanSectionCard } from '../../_components/LoanSettingsPrimitives';
 import type { ApprovalUsageOption } from '../../_components/approvalProcessConfig';
 
@@ -24,21 +25,21 @@ function normalizeStageRole(value: unknown): StageRole {
 }
 
 const roleOptions: Array<{ value: StageRole; label: string }> = [
-  { value: 'controller', label: 'کنترل کننده قرارداد' },
-  { value: 'intermediate', label: 'تایید کننده میانی' },
-  { value: 'final', label: 'تایید کننده نهایی' },
+  { value: 'controller', label: '┌⌐┘å╪¬╪▒┘ä ┌⌐┘å┘å╪»┘ç ┘é╪▒╪º╪▒╪»╪º╪»' },
+  { value: 'intermediate', label: '╪¬╪º█î█î╪» ┌⌐┘å┘å╪»┘ç ┘à█î╪º┘å█î' },
+  { value: 'final', label: '╪¬╪º█î█î╪» ┌⌐┘å┘å╪»┘ç ┘å┘ç╪º█î█î' },
 ];
 
 const roleDescriptions: Record<StageRole, string> = {
-  controller: 'این مرحله برای کنترل اولیه و بررسی پیش از ورود قرارداد به روند تایید استفاده می‌شود.',
-  intermediate: 'این مرحله برای بررسی‌های بین‌راهی و عبور قرارداد بین اعضای سازمان تعریف می‌شود.',
-  final: 'این مرحله اختیار نهایی‌سازی قرارداد را دارد و در انتهای فرآیند قرار می‌گیرد.',
+  controller: '╪º█î┘å ┘à╪▒╪¡┘ä┘ç ╪¿╪▒╪º█î ┌⌐┘å╪¬╪▒┘ä ╪º┘ê┘ä█î┘ç ┘ê ╪¿╪▒╪▒╪│█î ┘╛█î╪┤ ╪º╪▓ ┘ê╪▒┘ê╪» ┘é╪▒╪º╪▒╪»╪º╪» ╪¿┘ç ╪▒┘ê┘å╪» ╪¬╪º█î█î╪» ╪º╪│╪¬┘ü╪º╪»┘ç ┘à█îΓÇî╪┤┘ê╪».',
+  intermediate: '╪º█î┘å ┘à╪▒╪¡┘ä┘ç ╪¿╪▒╪º█î ╪¿╪▒╪▒╪│█îΓÇî┘ç╪º█î ╪¿█î┘åΓÇî╪▒╪º┘ç█î ┘ê ╪╣╪¿┘ê╪▒ ┘é╪▒╪º╪▒╪»╪º╪» ╪¿█î┘å ╪º╪╣╪╢╪º█î ╪│╪º╪▓┘à╪º┘å ╪¬╪╣╪▒█î┘ü ┘à█îΓÇî╪┤┘ê╪».',
+  final: '╪º█î┘å ┘à╪▒╪¡┘ä┘ç ╪º╪«╪¬█î╪º╪▒ ┘å┘ç╪º█î█îΓÇî╪│╪º╪▓█î ┘é╪▒╪º╪▒╪»╪º╪» ╪▒╪º ╪»╪º╪▒╪» ┘ê ╪»╪▒ ╪º┘å╪¬┘ç╪º█î ┘ü╪▒╪ó█î┘å╪» ┘é╪▒╪º╪▒ ┘à█îΓÇî┌»█î╪▒╪».',
 };
 
 const roleBadgeLabels: Record<StageRole, string> = {
-  controller: 'کنترل کننده قرارداد',
-  intermediate: 'تایید کننده میانی',
-  final: 'تایید کننده نهایی',
+  controller: '┌⌐┘å╪¬╪▒┘ä ┌⌐┘å┘å╪»┘ç ┘é╪▒╪º╪▒╪»╪º╪»',
+  intermediate: '╪¬╪º█î█î╪» ┌⌐┘å┘å╪»┘ç ┘à█î╪º┘å█î',
+  final: '╪¬╪º█î█î╪» ┌⌐┘å┘å╪»┘ç ┘å┘ç╪º█î█î',
 };
 
 export default function ApprovalUsageTypePageClient({ usage }: { usage: ApprovalUsageOption }) {
@@ -51,6 +52,8 @@ export default function ApprovalUsageTypePageClient({ usage }: { usage: Approval
   const [selectedEmployeeId, setSelectedEmployeeId] = useState('');
   const [stages, setStages] = useState<ApprovalStage[]>([]);
   const [editingStageId, setEditingStageId] = useState<string | null>(null);
+  const [dialogError, setDialogError] = useState('');
+  const [showValidation, setShowValidation] = useState(false);
 
   const selectedEmployee = useMemo(
     () => employeeOptions.find((employee) => employee.value === selectedEmployeeId) ?? null,
@@ -142,6 +145,8 @@ export default function ApprovalUsageTypePageClient({ usage }: { usage: Approval
     setStageRole('controller');
     setStageTitle('');
     setSelectedEmployeeId('');
+    setDialogError('');
+    setShowValidation(false);
   };
 
   const closeDialog = () => {
@@ -169,7 +174,23 @@ export default function ApprovalUsageTypePageClient({ usage }: { usage: Approval
   };
 
   const saveStage = () => {
-    if (!stageTitle.trim() || !selectedEmployeeId) return;
+    const errors: Record<string, string> = {};
+    if (!stageTitle.trim()) errors.stageTitle = '╪º█î┘å ┘ü█î┘ä╪» ╪º┘ä╪▓╪º┘à█î ╪º╪│╪¬';
+    if (!selectedEmployeeId) errors.selectedEmployeeId = '╪º█î┘å ┘ü█î┘ä╪» ╪º┘ä╪▓╪º┘à█î ╪º╪│╪¬';
+    if (Object.keys(errors).length > 0) {
+      setShowValidation(true);
+      setDialogError(
+        buildValidationSummary(
+          errors,
+          {
+            stageTitle: '╪╣┘å┘ê╪º┘å ┘à╪▒╪¡┘ä┘ç ╪¼╪»█î╪»',
+            selectedEmployeeId: '╪¬╪º█î█î╪» ┌⌐┘å┘å╪»┘ç',
+          },
+          '╪º╪╖┘ä╪º╪╣╪º╪¬ ┘à╪▒╪¡┘ä┘ç ╪¬╪º█î█î╪» ┌⌐╪º┘à┘ä ┘å█î╪│╪¬.',
+        ),
+      );
+      return;
+    }
 
     if (editingStageId) {
       setStages((current) =>
@@ -208,10 +229,10 @@ export default function ApprovalUsageTypePageClient({ usage }: { usage: Approval
               <Workflow />
             </div>
             <div className="project-flow-hero-copy">
-              <h1>مسیر تایید برای {usage.shortTitle}</h1>
+              <h1>┘à╪│█î╪▒ ╪¬╪º█î█î╪» ╪¿╪▒╪º█î {usage.shortTitle}</h1>
               <p>
-                همچنین می‌توانید مشخص کنید که پیش‌نویس قبل از ارسال به سازمان، ابتدا توسط خریدار تایید شود یا خیر. تاییدکننده نهایی نیز
-                امکان نهایی کردن قرارداد را بدون نیاز به تایید سایر افراد در فرآیند خواهد داشت.
+                ┘ç┘à┌å┘å█î┘å ┘à█îΓÇî╪¬┘ê╪º┘å█î╪» ┘à╪┤╪«╪╡ ┌⌐┘å█î╪» ┌⌐┘ç ┘╛█î╪┤ΓÇî┘å┘ê█î╪│ ┘é╪¿┘ä ╪º╪▓ ╪º╪▒╪│╪º┘ä ╪¿┘ç ╪│╪º╪▓┘à╪º┘å╪î ╪º╪¿╪¬╪»╪º ╪¬┘ê╪│╪╖ ╪«╪▒█î╪»╪º╪▒ ╪¬╪º█î█î╪» ╪┤┘ê╪» █î╪º ╪«█î╪▒. ╪¬╪º█î█î╪»┌⌐┘å┘å╪»┘ç ┘å┘ç╪º█î█î ┘å█î╪▓
+                ╪º┘à┌⌐╪º┘å ┘å┘ç╪º█î█î ┌⌐╪▒╪»┘å ┘é╪▒╪º╪▒╪»╪º╪» ╪▒╪º ╪¿╪»┘ê┘å ┘å█î╪º╪▓ ╪¿┘ç ╪¬╪º█î█î╪» ╪│╪º█î╪▒ ╪º┘ü╪▒╪º╪» ╪»╪▒ ┘ü╪▒╪ó█î┘å╪» ╪«┘ê╪º┘ç╪» ╪»╪º╪┤╪¬.
               </p>
             </div>
             <div className="project-flow-hero-actions">
@@ -221,7 +242,7 @@ export default function ApprovalUsageTypePageClient({ usage }: { usage: Approval
                 className="app-button app-button-primary inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold"
               >
                 <Plus className="h-4 w-4" />
-                افزودن تاییدکننده به فرآیند
+                ╪º┘ü╪▓┘ê╪»┘å ╪¬╪º█î█î╪»┌⌐┘å┘å╪»┘ç ╪¿┘ç ┘ü╪▒╪ó█î┘å╪»
               </button>
             </div>
           </div>
@@ -230,10 +251,10 @@ export default function ApprovalUsageTypePageClient({ usage }: { usage: Approval
         <LoanSectionCard className="p-5 sm:p-6">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
             <div className="space-y-2 text-right">
-              <h2 className="text-lg font-black text-[color:var(--text-strong)]">خریدار در فرآیند تایید باشد</h2>
+              <h2 className="text-lg font-black text-[color:var(--text-strong)]">╪«╪▒█î╪»╪º╪▒ ╪»╪▒ ┘ü╪▒╪ó█î┘å╪» ╪¬╪º█î█î╪» ╪¿╪º╪┤╪»</h2>
               <p className="text-sm leading-8 text-[color:var(--text-muted)]">
-                در صورت فعال‌سازی، خریدار باید پیش از بررسی توسط کارمندان سازمان، پیش‌نویس قرارداد را تایید کند. در غیر این صورت، قرارداد
-                مستقیماً برای بررسی به کاربران تعیین‌شده در فرآیند ارسال خواهد شد.
+                ╪»╪▒ ╪╡┘ê╪▒╪¬ ┘ü╪╣╪º┘äΓÇî╪│╪º╪▓█î╪î ╪«╪▒█î╪»╪º╪▒ ╪¿╪º█î╪» ┘╛█î╪┤ ╪º╪▓ ╪¿╪▒╪▒╪│█î ╪¬┘ê╪│╪╖ ┌⌐╪º╪▒┘à┘å╪»╪º┘å ╪│╪º╪▓┘à╪º┘å╪î ┘╛█î╪┤ΓÇî┘å┘ê█î╪│ ┘é╪▒╪º╪▒╪»╪º╪» ╪▒╪º ╪¬╪º█î█î╪» ┌⌐┘å╪». ╪»╪▒ ╪║█î╪▒ ╪º█î┘å ╪╡┘ê╪▒╪¬╪î ┘é╪▒╪º╪▒╪»╪º╪»
+                ┘à╪│╪¬┘é█î┘à╪º┘ï ╪¿╪▒╪º█î ╪¿╪▒╪▒╪│█î ╪¿┘ç ┌⌐╪º╪▒╪¿╪▒╪º┘å ╪¬╪╣█î█î┘åΓÇî╪┤╪»┘ç ╪»╪▒ ┘ü╪▒╪ó█î┘å╪» ╪º╪▒╪│╪º┘ä ╪«┘ê╪º┘ç╪» ╪┤╪».
               </p>
             </div>
             <div className="shrink-0">
@@ -241,8 +262,8 @@ export default function ApprovalUsageTypePageClient({ usage }: { usage: Approval
                 checked={buyerShouldApprove}
                 onChange={setBuyerShouldApprove}
                 variant="segmented"
-                activeLabel="فعال"
-                inactiveLabel="غیرفعال"
+                activeLabel="┘ü╪╣╪º┘ä"
+                inactiveLabel="╪║█î╪▒┘ü╪╣╪º┘ä"
               />
             </div>
           </div>
@@ -251,13 +272,13 @@ export default function ApprovalUsageTypePageClient({ usage }: { usage: Approval
         <LoanSectionCard className="p-5 sm:p-6">
           <div className="flex items-start justify-between gap-4 border-b border-[color:var(--border-soft)] pb-4">
             <div className="text-right">
-              <h2 className="text-lg font-black text-[color:var(--text-strong)]">مراحل تایید تعریف‌شده</h2>
+              <h2 className="text-lg font-black text-[color:var(--text-strong)]">┘à╪▒╪º╪¡┘ä ╪¬╪º█î█î╪» ╪¬╪╣╪▒█î┘üΓÇî╪┤╪»┘ç</h2>
               <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">
-                تاییدکننده از بین کارمندان ثبت‌شده در سامانه انتخاب می‌شود؛ شناسهٔ کاربری همان کارمند در صفحهٔ تأیید قرارداد برای اعطای دسترسی استفاده می‌شود. مالک کسب‌وکار همیشه اختیار تأیید/عدم تأیید را دارد.
+                ╪¬╪º█î█î╪»┌⌐┘å┘å╪»┘ç ╪º╪▓ ╪¿█î┘å ┌⌐╪º╪▒┘à┘å╪»╪º┘å ╪½╪¿╪¬ΓÇî╪┤╪»┘ç ╪»╪▒ ╪│╪º┘à╪º┘å┘ç ╪º┘å╪¬╪«╪º╪¿ ┘à█îΓÇî╪┤┘ê╪»╪¢ ╪┤┘å╪º╪│┘ç┘ö ┌⌐╪º╪▒╪¿╪▒█î ┘ç┘à╪º┘å ┌⌐╪º╪▒┘à┘å╪» ╪»╪▒ ╪╡┘ü╪¡┘ç┘ö ╪¬╪ú█î█î╪» ┘é╪▒╪º╪▒╪»╪º╪» ╪¿╪▒╪º█î ╪º╪╣╪╖╪º█î ╪»╪│╪¬╪▒╪│█î ╪º╪│╪¬┘ü╪º╪»┘ç ┘à█îΓÇî╪┤┘ê╪». ┘à╪º┘ä┌⌐ ┌⌐╪│╪¿ΓÇî┘ê┌⌐╪º╪▒ ┘ç┘à█î╪┤┘ç ╪º╪«╪¬█î╪º╪▒ ╪¬╪ú█î█î╪»/╪╣╪»┘à ╪¬╪ú█î█î╪» ╪▒╪º ╪»╪º╪▒╪».
               </p>
             </div>
             <span className="rounded-full border border-[color:var(--theme-accent-border)] bg-[color:var(--theme-accent-softer)] px-4 py-2 text-xs font-black text-[color:var(--theme-action-text)]">
-              {stages.length} مرحله
+              {stages.length} ┘à╪▒╪¡┘ä┘ç
             </span>
           </div>
 
@@ -279,7 +300,7 @@ export default function ApprovalUsageTypePageClient({ usage }: { usage: Approval
                         <div className="flex h-10 w-10 items-center justify-center rounded-[14px] bg-[#fff3ec] text-[#ff8d5f]">
                           <UserRound className="h-5 w-5" />
                         </div>
-                        <h3 className="text-lg font-black text-[color:var(--text-strong)]">{employee?.label ?? 'تاییدکننده انتخاب نشده'}</h3>
+                        <h3 className="text-lg font-black text-[color:var(--text-strong)]">{employee?.label ?? '╪¬╪º█î█î╪»┌⌐┘å┘å╪»┘ç ╪º┘å╪¬╪«╪º╪¿ ┘å╪┤╪»┘ç'}</h3>
                         <span className="rounded-full bg-[#ffe8dd] px-5 py-2 text-sm font-black text-[#6b4b3c]">{stage.title}</span>
                       </div>
                       <div className="flex items-center justify-start gap-3">
@@ -290,7 +311,7 @@ export default function ApprovalUsageTypePageClient({ usage }: { usage: Approval
                           type="button"
                           onClick={() => openEditDialog(stage)}
                           className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[color:var(--surface-soft)] text-[color:var(--theme-action-text)] transition hover:opacity-80"
-                          aria-label="ویرایش مرحله"
+                          aria-label="┘ê█î╪▒╪º█î╪┤ ┘à╪▒╪¡┘ä┘ç"
                         >
                           <Pencil className="h-4 w-4" />
                         </button>
@@ -298,7 +319,7 @@ export default function ApprovalUsageTypePageClient({ usage }: { usage: Approval
                           type="button"
                           onClick={() => removeStage(stage.id)}
                           className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#fff1f2] text-[#ff6b7a] transition hover:opacity-80"
-                          aria-label="حذف مرحله"
+                          aria-label="╪¡╪░┘ü ┘à╪▒╪¡┘ä┘ç"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -314,7 +335,7 @@ export default function ApprovalUsageTypePageClient({ usage }: { usage: Approval
             </div>
           ) : (
             <div className="mt-5 rounded-2xl border border-dashed border-[color:var(--border-color)] bg-[color:var(--surface-soft)] px-4 py-8 text-center text-sm leading-7 text-[color:var(--text-muted)]">
-              هنوز مرحله‌ای برای این نوع کاربری ثبت نشده است. با دکمه افزودن تاییدکننده به فرآیند، اولین مرحله را ایجاد کنید.
+              ┘ç┘å┘ê╪▓ ┘à╪▒╪¡┘ä┘çΓÇî╪º█î ╪¿╪▒╪º█î ╪º█î┘å ┘å┘ê╪╣ ┌⌐╪º╪▒╪¿╪▒█î ╪½╪¿╪¬ ┘å╪┤╪»┘ç ╪º╪│╪¬. ╪¿╪º ╪»┌⌐┘à┘ç ╪º┘ü╪▓┘ê╪»┘å ╪¬╪º█î█î╪»┌⌐┘å┘å╪»┘ç ╪¿┘ç ┘ü╪▒╪ó█î┘å╪»╪î ╪º┘ê┘ä█î┘å ┘à╪▒╪¡┘ä┘ç ╪▒╪º ╪º█î╪¼╪º╪» ┌⌐┘å█î╪».
             </div>
           )}
         </LoanSectionCard>
@@ -329,27 +350,28 @@ export default function ApprovalUsageTypePageClient({ usage }: { usage: Approval
             aria-labelledby="approval-stage-dialog-title"
             onClick={(event) => event.stopPropagation()}
           >
-            <button type="button" className="business-dialog-close" onClick={closeDialog} aria-label="بستن">
+            <button type="button" className="business-dialog-close" onClick={closeDialog} aria-label="╪¿╪│╪¬┘å">
               <X />
             </button>
 
             <div className="space-y-4 text-right">
               <h2 id="approval-stage-dialog-title" className="!text-[32px] !font-black sm:!text-[36px]">
-                {editingStageId ? 'ویرایش تاییدکننده فرآیند' : 'افزودن تاییدکننده به فرآیند'}
+                {editingStageId ? '┘ê█î╪▒╪º█î╪┤ ╪¬╪º█î█î╪»┌⌐┘å┘å╪»┘ç ┘ü╪▒╪ó█î┘å╪»' : '╪º┘ü╪▓┘ê╪»┘å ╪¬╪º█î█î╪»┌⌐┘å┘å╪»┘ç ╪¿┘ç ┘ü╪▒╪ó█î┘å╪»'}
               </h2>
               <div className="rounded-[22px] border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] px-5 py-5">
                 <div className="flex items-start justify-between gap-3">
                   <Info className="mt-1 h-5 w-5 shrink-0 text-[color:var(--text-muted)]" />
                   <p className="!m-0 text-sm leading-8 text-[color:var(--text-muted)]">
-                    برای تکمیل فرآیند تایید قرارداد، تاییدکنندگان را به ترتیب بررسی مشخص کنید. هر تاییدکننده می‌تواند نقش کنترل کننده
-                    قرارداد، تایید کننده میانی یا تایید کننده نهایی را داشته باشد.
+                    ╪¿╪▒╪º█î ╪¬┌⌐┘à█î┘ä ┘ü╪▒╪ó█î┘å╪» ╪¬╪º█î█î╪» ┘é╪▒╪º╪▒╪»╪º╪»╪î ╪¬╪º█î█î╪»┌⌐┘å┘å╪»┌»╪º┘å ╪▒╪º ╪¿┘ç ╪¬╪▒╪¬█î╪¿ ╪¿╪▒╪▒╪│█î ┘à╪┤╪«╪╡ ┌⌐┘å█î╪». ┘ç╪▒ ╪¬╪º█î█î╪»┌⌐┘å┘å╪»┘ç ┘à█îΓÇî╪¬┘ê╪º┘å╪» ┘å┘é╪┤ ┌⌐┘å╪¬╪▒┘ä ┌⌐┘å┘å╪»┘ç
+                    ┘é╪▒╪º╪▒╪»╪º╪»╪î ╪¬╪º█î█î╪» ┌⌐┘å┘å╪»┘ç ┘à█î╪º┘å█î █î╪º ╪¬╪º█î█î╪» ┌⌐┘å┘å╪»┘ç ┘å┘ç╪º█î█î ╪▒╪º ╪»╪º╪┤╪¬┘ç ╪¿╪º╪┤╪».
                   </p>
                 </div>
               </div>
             </div>
 
             <div className="business-dialog-inline-form !gap-5 !rounded-[22px] !border-[color:var(--border-soft)] !bg-white/80 !p-5">
-              <FieldGroup label="نقش مرحله" required>
+              {dialogError ? <div className="business-blocks-state is-error">{dialogError}</div> : null}
+              <FieldGroup label="┘å┘é╪┤ ┘à╪▒╪¡┘ä┘ç" required>
                 <div className="flex flex-wrap justify-end gap-2">
                   {roleOptions.map((option) => (
                     <TagPill
@@ -363,35 +385,36 @@ export default function ApprovalUsageTypePageClient({ usage }: { usage: Approval
                 </div>
               </FieldGroup>
 
-              <FieldGroup label="عنوان مرحله جدید" required>
-                <FormTextInput value={stageTitle} onChange={setStageTitle} placeholder="مثلاً بررسی مدیر فروش" className="!h-12 !rounded-[16px] !text-sm" />
+              <FieldGroup label="╪╣┘å┘ê╪º┘å ┘à╪▒╪¡┘ä┘ç ╪¼╪»█î╪»" required invalid={showValidation && !stageTitle.trim()}>
+                <FormTextInput value={stageTitle} onChange={setStageTitle} placeholder="┘à╪½┘ä╪º┘ï ╪¿╪▒╪▒╪│█î ┘à╪»█î╪▒ ┘ü╪▒┘ê╪┤" className="!h-12 !rounded-[16px] !text-sm" invalid={showValidation && !stageTitle.trim()} />
               </FieldGroup>
 
-              <FieldGroup label="تایید کننده" required>
+              <FieldGroup label="╪¬╪º█î█î╪» ┌⌐┘å┘å╪»┘ç" required invalid={showValidation && !selectedEmployeeId}>
                 <InlineSelect
+                  invalid={showValidation && !selectedEmployeeId}
                   value={selectedEmployeeId}
                   onSelect={setSelectedEmployeeId}
                   options={employeeOptions}
-                  placeholder="انتخاب از بین کارمندان"
-                  searchPlaceholder="جستجو در بین کارمندان"
-                  emptyText={employeeOptions.length ? 'کارمندی پیدا نشد' : 'ابتدا کارمند در بخش کارکنان ثبت کنید'}
+                  placeholder="╪º┘å╪¬╪«╪º╪¿ ╪º╪▓ ╪¿█î┘å ┌⌐╪º╪▒┘à┘å╪»╪º┘å"
+                  searchPlaceholder="╪¼╪│╪¬╪¼┘ê ╪»╪▒ ╪¿█î┘å ┌⌐╪º╪▒┘à┘å╪»╪º┘å"
+                  emptyText={employeeOptions.length ? '┌⌐╪º╪▒┘à┘å╪»█î ┘╛█î╪»╪º ┘å╪┤╪»' : '╪º╪¿╪¬╪»╪º ┌⌐╪º╪▒┘à┘å╪» ╪»╪▒ ╪¿╪«╪┤ ┌⌐╪º╪▒┌⌐┘å╪º┘å ╪½╪¿╪¬ ┌⌐┘å█î╪»'}
                 />
               </FieldGroup>
             </div>
 
             <div className="business-dialog-actions !justify-start !gap-3">
               <button type="button" className="profile-primary-button" disabled={!stageTitle.trim() || !selectedEmployeeId} onClick={saveStage}>
-                {editingStageId ? 'بروزرسانی' : 'ذخیره'}
+                {editingStageId ? '╪¿╪▒┘ê╪▓╪▒╪│╪º┘å█î' : '╪░╪«█î╪▒┘ç'}
               </button>
               <button type="button" className="profile-primary-button is-secondary" onClick={closeDialog}>
-                انصراف و بازگشت
+                ╪º┘å╪╡╪▒╪º┘ü ┘ê ╪¿╪º╪▓┌»╪┤╪¬
               </button>
             </div>
 
             {selectedEmployee ? (
               <div className="rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] px-4 py-3 text-right text-sm text-[color:var(--text-muted)]">
-                این مرحله برای <span className="font-black text-[color:var(--text-strong)]">{selectedEmployee.label}</span> با نقش{' '}
-                <span className="font-black text-[color:var(--text-strong)]">{roleBadgeLabels[stageRole]}</span> ثبت می‌شود.
+                ╪º█î┘å ┘à╪▒╪¡┘ä┘ç ╪¿╪▒╪º█î <span className="font-black text-[color:var(--text-strong)]">{selectedEmployee.label}</span> ╪¿╪º ┘å┘é╪┤{' '}
+                <span className="font-black text-[color:var(--text-strong)]">{roleBadgeLabels[stageRole]}</span> ╪½╪¿╪¬ ┘à█îΓÇî╪┤┘ê╪».
               </div>
             ) : null}
           </div>

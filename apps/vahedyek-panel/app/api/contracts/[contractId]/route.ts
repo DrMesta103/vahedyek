@@ -1,15 +1,22 @@
 import { NextResponse } from 'next/server';
-import { PartySide, PersonType, PricingType, ShareMode } from '@prisma/client';
+import { PartySide, PersonType, PricingType, ShareMode } from '@/lib/prisma-client';
 import { requireSessionContext } from '../../../lib/auth';
 import { serializeContractorType, serializeContractType } from '../../../lib/subjectUtils';
 import { prisma } from '../../../lib/prisma';
 import { handlePrismaApiError } from '../../../lib/prismaApiError';
 import { getMembershipAccess } from '../../../lib/access-control';
 import { userCanDecideApprovalOnContract } from '../../../lib/contractApprovalAccess';
+import { resolveDisplayedContractStatus } from '../../../lib/contractApprovalStatus';
 import { fetchDraftApprovalFlagsRaw } from '../../../lib/contractDraftApprovalRaw';
 import { fetchTenantApprovalProcessConfigRaw } from '../../../lib/tenantApprovalProcessDb';
 import type { ContractStatus } from '../../../types/contract';
 import { validatePenaltiesStep } from '../../../lib/contractValidation';
+import { normalizeWorkflowSteps } from '../../../lib/workflowTypes';
+import {
+  mapFinancialCategoriesForClientApi,
+  mapFinancialDueItemsForClientApi,
+  resolveFinancialActiveTabForClientApi,
+} from '../../../lib/financialCategoriesApiSerialize';
 
 function serializeShareMode(value: ShareMode) {
   return value === ShareMode.percent ? 'percent' : 'dang';
@@ -53,8 +60,7 @@ function serializePenalties(penalties: any) {
   };
 }
 
-function computeStatus(draft: any): ContractStatus {
-  if (draft.approvalReturnedPending) return 'draft';
+function isFormCompleteForApprovalGate(draft: any): boolean {
   const hasSubject = Boolean(draft.subject?.contractNumber && draft.subject?.contractDate && draft.subject?.blockId && draft.subject?.unitId);
   const hasParties = Boolean(
     draft.parties?.members?.some((member: any) => member.side === PartySide.party_one) &&
@@ -74,9 +80,16 @@ function computeStatus(draft: any): ContractStatus {
   const hasTechnicalSpecs = Boolean(draft.technicalSpecs);
   const hasAttachments = Boolean(draft.attachments);
 
-  return hasSubject && hasParties && hasFinancial && hasPenalties && hasTermination && hasExtraCosts && hasTechnicalSpecs && hasAttachments
-    ? 'pending_approval'
-    : 'draft';
+  return (
+    hasSubject &&
+    hasParties &&
+    hasFinancial &&
+    hasPenalties &&
+    hasTermination &&
+    hasExtraCosts &&
+    hasTechnicalSpecs &&
+    hasAttachments
+  );
 }
 
 export async function GET(request: Request, context: { params: Promise<{ contractId: string }> }) {
@@ -89,6 +102,7 @@ export async function GET(request: Request, context: { params: Promise<{ contrac
       where: { id: contractId, tenantId: session.tenantId },
       select: {
         id: true,
+        releasedFromApprovedForEdit: true,
         createdAt: true,
         updatedAt: true,
         subject: { include: { block: true, unit: true } },
@@ -99,6 +113,7 @@ export async function GET(request: Request, context: { params: Promise<{ contrac
         extraCosts: true,
         technicalSpecs: true,
         attachments: true,
+        approvalInstance: { select: { status: true, currentStepIndex: true, stepsSnapshot: true } },
       },
     });
 
@@ -112,10 +127,23 @@ export async function GET(request: Request, context: { params: Promise<{ contrac
         approvalLastRejectionReason: null,
         approvalLastRejectedAt: null,
       };
-    const status = computeStatus({ ...draft, ...approvalFlags });
+    const formComplete = isFormCompleteForApprovalGate(draft);
+    const instanceStatus = draft.approvalInstance?.status ?? null;
+    const status = resolveDisplayedContractStatus(
+      formComplete,
+      approvalFlags.approvalReturnedPending,
+      instanceStatus,
+      draft.releasedFromApprovedForEdit,
+    );
 
     const membershipAccess = await getMembershipAccess(session.userId, session.tenantId);
     const approvalProcessConfig = await fetchTenantApprovalProcessConfigRaw(session.tenantId);
+
+    const stepsSnap = normalizeWorkflowSteps(draft.approvalInstance?.stepsSnapshot);
+    const workflowCurrentStep =
+      draft.approvalInstance && instanceStatus === 'IN_REVIEW'
+        ? stepsSnap[draft.approvalInstance.currentStepIndex] ?? null
+        : null;
 
     const approvalDecision = {
       canDecide: userCanDecideApprovalOnContract({
@@ -123,6 +151,8 @@ export async function GET(request: Request, context: { params: Promise<{ contrac
         access: membershipAccess,
         unitUsage: draft.subject?.unit?.usage ?? null,
         approvalProcessConfig,
+        workflowCurrentStep,
+        instanceStatus,
       }),
     };
 
@@ -130,6 +160,12 @@ export async function GET(request: Request, context: { params: Promise<{ contrac
       id: draft.id,
       status,
       approvalDecision,
+      approvalInstance: draft.approvalInstance
+        ? {
+            status: draft.approvalInstance.status,
+            currentStepIndex: draft.approvalInstance.currentStepIndex,
+          }
+        : null,
       createdAt: draft.createdAt.toISOString(),
       updatedAt: draft.updatedAt.toISOString(),
       approvalReturn:
@@ -185,32 +221,34 @@ export async function GET(request: Request, context: { params: Promise<{ contrac
             }
           : null,
         financial: draft.financial
-          ? {
-              pricingType: serializePricingType(draft.financial.pricingType),
-              unitArea: draft.financial.unitArea ? String(Number(draft.financial.unitArea)) : '',
-              parkingArea: draft.financial.parkingArea ? String(Number(draft.financial.parkingArea)) : '',
-              totalArea: draft.financial.totalArea ? String(Number(draft.financial.totalArea)) : '',
-              pricePerMeter: draft.financial.pricePerMeter ? String(Number(draft.financial.pricePerMeter)) : '',
-              parkingPricePerMeter: draft.financial.parkingPricePerMeter ? String(Number(draft.financial.parkingPricePerMeter)) : '',
-              fixedTotalAmount: draft.financial.fixedTotalAmount ? String(Number(draft.financial.fixedTotalAmount)) : '',
-              activeTab: draft.financial.activeTab ?? '',
-              categories: draft.financial.categories.map((item) => ({
-                id: item.id,
-                name: item.name,
-                capAmount: Number(item.capAmount),
-                dueAmount: Number(item.dueAmount),
-                noDueAmount: Number(item.noDueAmount),
-                system: item.system,
-                requiresDue: item.requiresDue,
-              })),
-              dueItems: draft.financial.dueItems.map((item) => ({
-                id: item.id,
-                categoryId: item.categoryId,
-                title: item.title,
-                amount: Number(item.amount),
-                dueDate: item.dueDate,
-              })),
-            }
+          ? (() => {
+              const fid = draft.financial.id;
+              const categories = mapFinancialCategoriesForClientApi(fid, draft.financial.categories);
+              const categoryLogicalIds = new Set(categories.map((c) => c.id));
+              // گزارش و تاریخچه پرداخت: همهٔ سررسیدهای ذخیره‌شده (حتی در صورت ناهماهنگی موقت categoryId با لیست دسته‌ها)
+              const dueItems = mapFinancialDueItemsForClientApi(fid, draft.financial.dueItems);
+              const activeTab = resolveFinancialActiveTabForClientApi(
+                fid,
+                draft.financial.activeTab,
+                categoryLogicalIds,
+                categories[0]?.id ?? '',
+              );
+
+              return {
+                pricingType: serializePricingType(draft.financial.pricingType),
+                unitArea: draft.financial.unitArea ? String(Number(draft.financial.unitArea)) : '',
+                parkingArea: draft.financial.parkingArea ? String(Number(draft.financial.parkingArea)) : '',
+                totalArea: draft.financial.totalArea ? String(Number(draft.financial.totalArea)) : '',
+                pricePerMeter: draft.financial.pricePerMeter ? String(Number(draft.financial.pricePerMeter)) : '',
+                parkingPricePerMeter: draft.financial.parkingPricePerMeter
+                  ? String(Number(draft.financial.parkingPricePerMeter))
+                  : '',
+                fixedTotalAmount: draft.financial.fixedTotalAmount ? String(Number(draft.financial.fixedTotalAmount)) : '',
+                activeTab,
+                categories,
+                dueItems,
+              };
+            })()
           : null,
         penalties: serializePenalties(draft.penalties),
         terminationRules: draft.terminationRules ? { buyerRules: draft.terminationRules.buyerRules ?? {} } : null,

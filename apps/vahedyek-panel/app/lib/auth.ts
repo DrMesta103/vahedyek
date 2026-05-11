@@ -38,7 +38,33 @@ export async function destroySession(_: string) {
   return;
 }
 
-export async function getAuthContextFromPayload(payload: AuthTokenPayload) {
+type AuthContext = Awaited<ReturnType<typeof getAuthContextFromPayloadUncached>>;
+
+const AUTH_CONTEXT_TTL_MS = process.env.NODE_ENV === 'development' ? 15_000 : 60_000;
+const globalForAuthCache = globalThis as unknown as {
+  __authContextCache?: Map<string, { expiresAt: number; value: NonNullable<AuthContext> | null }>;
+  __authContextPending?: Map<string, Promise<AuthContext>>;
+};
+
+function getAuthCacheKey(payload: AuthTokenPayload) {
+  return `${payload.userId}:${payload.tenantId ?? 'no-tenant'}:${payload.state}`;
+}
+
+function getAuthContextCache() {
+  if (!globalForAuthCache.__authContextCache) {
+    globalForAuthCache.__authContextCache = new Map();
+  }
+  return globalForAuthCache.__authContextCache;
+}
+
+function getAuthPendingCache() {
+  if (!globalForAuthCache.__authContextPending) {
+    globalForAuthCache.__authContextPending = new Map();
+  }
+  return globalForAuthCache.__authContextPending;
+}
+
+async function getAuthContextFromPayloadUncached(payload: AuthTokenPayload) {
   const user = await prisma.appUser.findUnique({
     where: { id: payload.userId },
   });
@@ -66,6 +92,34 @@ export async function getAuthContextFromPayload(payload: AuthTokenPayload) {
   };
 }
 
+export async function getAuthContextFromPayload(payload: AuthTokenPayload) {
+  const key = getAuthCacheKey(payload);
+  const now = Date.now();
+  const cache = getAuthContextCache();
+  const cached = cache.get(key);
+  if (cached && cached.expiresAt > now) {
+    return cached.value;
+  }
+
+  const pendingCache = getAuthPendingCache();
+  const pending = pendingCache.get(key);
+  if (pending) {
+    return pending;
+  }
+
+  const request = getAuthContextFromPayloadUncached(payload)
+    .then((value) => {
+      cache.set(key, { expiresAt: Date.now() + AUTH_CONTEXT_TTL_MS, value });
+      return value;
+    })
+    .finally(() => {
+      pendingCache.delete(key);
+    });
+
+  pendingCache.set(key, request);
+  return request;
+}
+
 export async function getTokenPayloadFromCookies() {
   const cookieStore = await cookies();
   const token = cookieStore.get(AUTH_COOKIE)?.value;
@@ -86,4 +140,13 @@ export async function requireSessionContext() {
   }
 
   return session as typeof session & { tenantId: string; tenant: NonNullable<typeof session.tenant> };
+}
+
+export async function requireActiveAuthPayload() {
+  const payload = await getTokenPayloadFromCookies();
+  if (!payload || !payload.tenantId || payload.state !== 'active') {
+    return NextResponse.json({ message: 'برای استفاده از سامانه باید وارد شوید.' }, { status: 401 });
+  }
+
+  return payload as AuthTokenPayload & { tenantId: string; state: 'active' };
 }

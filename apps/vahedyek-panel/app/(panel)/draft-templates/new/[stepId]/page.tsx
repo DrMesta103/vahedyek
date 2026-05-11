@@ -2,6 +2,7 @@
 
 import { useParams } from 'next/navigation';
 import PanelLayout from '../../../../components/PanelLayout';
+import { ContractFlowExitBackBar } from '../../../contracts/new/_components/ContractFlowExitBackBar';
 import { ContractFlowStepContent } from '../../../contracts/new/_components/ContractFlowStepContent';
 
 const DraftTemplateStepPage = () => {
@@ -10,6 +11,7 @@ const DraftTemplateStepPage = () => {
 
   return (
     <PanelLayout>
+      <ContractFlowExitBackBar layout="page" />
       <ContractFlowStepContent stepId={stepId} />
     </PanelLayout>
   );

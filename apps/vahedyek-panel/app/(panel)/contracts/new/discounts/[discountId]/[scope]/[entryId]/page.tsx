@@ -1,4 +1,5 @@
 import PanelLayout from '../../../../../../../components/PanelLayout';
+import { ContractFlowExitBackBar } from '../../../../_components/ContractFlowExitBackBar';
 import { DiscountEntryDetailStep } from '../../../../_components/DiscountEntryDetailStep';
 
 const DiscountEntryDetailPage = async ({
@@ -10,6 +11,7 @@ const DiscountEntryDetailPage = async ({
 
   return (
     <PanelLayout>
+      <ContractFlowExitBackBar layout="page" />
       <DiscountEntryDetailStep discountId={discountId} scope={scope} entryId={entryId} />
     </PanelLayout>
   );

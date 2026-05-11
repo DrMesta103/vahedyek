@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Info } from 'lucide-react';
 import { PartySection } from './PartySection';
 import { PartySelectionDialog } from './PartySelectionDialog';
 import { StickySubmitBar } from '@repo/ui';
@@ -25,12 +26,10 @@ import {
 } from './partiesTypes';
 import { useContractFlowBasePath } from './useContractFlowBasePath';
 import {
+  fetchProfilePayload,
   fetchProfileStore,
   type OwnershipKind,
   type ProfileStore,
-  type RepresentativeRecord,
-  type LegalShareholderRecord,
-  type NaturalShareholderRecord,
 } from '../../../business-settings/profile/_components/profileStorage';
 import {
   createDirectoryPerson,
@@ -69,12 +68,19 @@ type AuthMePayload = {
   } | null;
 } | null;
 
-function normalizeName(value: string | undefined | null) {
-  return value?.trim().replace(/\s+/g, ' ') ?? '';
+function HelpTip({ text }: { text: string }) {
+  return (
+    <span className="group relative inline-flex h-5 w-5 items-center justify-center align-middle text-slate-400">
+      <Info className="h-4 w-4" aria-hidden />
+      <span className="pointer-events-none absolute right-0 top-6 z-10 hidden w-[min(520px,calc(100vw-48px))] rounded-2xl border border-slate-200 bg-white px-4 py-3 text-right text-[12px] font-semibold leading-6 text-slate-700 shadow-xl group-hover:block">
+        {text}
+      </span>
+    </span>
+  );
 }
 
-function hasAnyRole(roleKeys: Set<string>, keys: string[]) {
-  return keys.some((key) => roleKeys.has(key));
+function normalizeName(value: string | undefined | null) {
+  return value?.trim().replace(/\s+/g, ' ') ?? '';
 }
 
 function buildLegalPartyOneName(companyName: string, actorName: string, title?: string) {
@@ -86,83 +92,41 @@ function buildLegalPartyOneName(companyName: string, actorName: string, title?: 
 function buildDefaultPartyOneRow(
   shareMode: ShareMode,
   profileStore: ProfileStore,
+  profileMetaOwnerName: string,
+  profileMetaBusinessName: string,
   auth: AuthMePayload,
 ): PartyRow {
   const shareValue = PARTY_TOTALS[shareMode];
-  const userId = auth?.user.id ?? 'anonymous';
-  const userFullName = normalizeName(auth?.user.fullName);
-  const roleKeys = new Set([...(auth?.membership?.roleKeys ?? []), ...(auth?.access?.roleKeys ?? [])]);
   const ownershipKind: OwnershipKind = profileStore.ownershipKind === 'natural' ? 'natural' : 'legal';
 
-  const matchingNaturalShareholder =
-    userFullName &&
-    profileStore.naturalShareholders.find((item: NaturalShareholderRecord) => normalizeName(item.fullName) === userFullName);
-
   if (ownershipKind === 'natural') {
-    const displayName = matchingNaturalShareholder?.fullName || userFullName || 'صاحب کسب و کار';
+    const displayName = normalizeName(profileMetaOwnerName) || 'صاحب کسب و کار';
     return {
-      id: matchingNaturalShareholder ? `default-natural-shareholder:${matchingNaturalShareholder.id}` : `default-owner:${userId}`,
+      id: `default-tenant-owner:natural`,
       directoryId: null,
       personType: 'natural',
       name: displayName,
       shareValue,
       isPrimary: true,
+      locked: true,
+      lockShare: false,
+      tags: ['صاحب کسب‌وکار'],
     };
   }
 
-  const companyName = normalizeName(profileStore.legal.companyName) || normalizeName(auth?.tenant?.name) || 'شخص حقوقی';
-  const matchingLegalRepresentative = userFullName
-    ? profileStore.legalShareholders
-        .map((shareholder: LegalShareholderRecord) => ({
-          shareholder,
-          representative: shareholder.representatives.find((item: RepresentativeRecord) => normalizeName(item.fullName) === userFullName) ?? null,
-        }))
-        .find((item) => item.representative)
-    : undefined;
-  const matchingRepresentative =
-    userFullName &&
-    (profileStore.representatives.find((item: RepresentativeRecord) => normalizeName(item.fullName) === userFullName) ?? null);
-
-  if (matchingLegalRepresentative?.representative && hasAnyRole(roleKeys, ['legal_shareholder_representative'])) {
-    return {
-      id: `default-legal-shareholder-representative:${matchingLegalRepresentative.shareholder.id}:${matchingLegalRepresentative.representative.id}`,
-      directoryId: null,
-      personType: 'legal',
-      name: buildLegalPartyOneName(companyName, matchingLegalRepresentative.representative.fullName, 'نماینده سهام دار حقوقی'),
-      shareValue,
-      isPrimary: true,
-    };
-  }
-
-  if (matchingRepresentative && hasAnyRole(roleKeys, ['representative', 'partner_representative'])) {
-    return {
-      id: `default-representative:${matchingRepresentative.id}`,
-      directoryId: null,
-      personType: 'legal',
-      name: buildLegalPartyOneName(companyName, matchingRepresentative.fullName, roleKeys.has('partner_representative') ? 'نماینده شریک' : 'نماینده'),
-      shareValue,
-      isPrimary: true,
-    };
-  }
-
-  if (matchingNaturalShareholder && hasAnyRole(roleKeys, ['shareholder'])) {
-    return {
-      id: `default-shareholder:${matchingNaturalShareholder.id}`,
-      directoryId: null,
-      personType: 'legal',
-      name: buildLegalPartyOneName(companyName, matchingNaturalShareholder.fullName, 'سهام دار'),
-      shareValue,
-      isPrimary: true,
-    };
-  }
-
+  const companyName =
+    normalizeName(profileStore.legal.companyName) || normalizeName(profileMetaBusinessName) || normalizeName(auth?.tenant?.name) || 'شخص حقوقی';
+  const ownerName = normalizeName(profileMetaOwnerName) || 'صاحب کسب‌وکار';
   return {
-    id: `default-legal-owner:${userId}`,
+    id: `default-tenant-owner:legal`,
     directoryId: null,
     personType: 'legal',
-    name: buildLegalPartyOneName(companyName, userFullName || 'صاحب کسب و کار'),
+    name: buildLegalPartyOneName(companyName, ownerName),
     shareValue,
     isPrimary: true,
+    locked: true,
+    lockShare: false,
+    tags: ['صاحب کسب‌وکار'],
   };
 }
 
@@ -174,6 +138,7 @@ async function getAuthMe() {
 
 export function PartiesStep({ stepId, title, embedded = false }: { stepId: string; title: string; embedded?: boolean }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const basePath = useContractFlowBasePath();
   const initialSnapshotRef = useRef('');
 
@@ -194,6 +159,8 @@ export function PartiesStep({ stepId, title, embedded = false }: { stepId: strin
   const [partyOneDialogOpen, setPartyOneDialogOpen] = useState(false);
   const [partyTwoDialogOpen, setPartyTwoDialogOpen] = useState(false);
   const [directoryLoading, setDirectoryLoading] = useState(false);
+  const [inlineHint, setInlineHint] = useState('');
+  const [partyOneSource, setPartyOneSource] = useState<'partners' | 'shareholders'>('shareholders');
 
   const applyReferenceData = (referenceData: ReferenceDataResponse) => {
     setPartnerNaturals(
@@ -202,19 +169,71 @@ export function PartiesStep({ stepId, title, embedded = false }: { stepId: strin
     setPartnerLegals(
       referenceData.directory.partner.legal.map((item) => ({ ...item, personType: 'legal' as const, directoryId: item.id })),
     );
+  };
+
+  const applyPartnerDirectoryFromProfile = (store: ProfileStore) => {
+    const source = store.ownershipKind === 'natural' ? 'partners' : 'shareholders';
+    setPartyOneSource(source);
+
+    if (source === 'partners') {
+      // کسب‌وکار حقیقی → طرف اول از «شرکا»
+      setPartnerNaturals(
+        (store.principalPartners ?? []).map((item: any) => ({
+          id: String(item.id),
+          directoryId: null,
+          personType: 'natural' as const,
+          name: String(item.fullName || item.mobile || item.email || 'شریک'),
+        })),
+      );
+      setPartnerLegals([]);
+      return;
+    }
+
+    // کسب‌وکار حقوقی → طرف اول از «سهام‌داران»
+    setPartnerNaturals(
+      (store.naturalShareholders ?? []).map((item: any) => ({
+        id: String(item.id),
+        directoryId: null,
+        personType: 'natural' as const,
+        name: String(item.fullName || item.mobile || item.email || 'سهامدار'),
+      })),
+    );
+    setPartnerLegals(
+      (store.legalShareholders ?? []).map((item: any) => ({
+        id: String(item.id),
+        directoryId: null,
+        personType: 'legal' as const,
+        name: String(item.companyName || item.brandName || 'سهامدار حقوقی'),
+      })),
+    );
+  };
+
+  const applyBuyerDirectoryFromProfile = (store: ProfileStore) => {
     setBuyerNaturals(
-      referenceData.directory.buyer.natural.map((item) => ({ ...item, personType: 'natural' as const, directoryId: item.id })),
+      (store.naturalBuyers ?? []).map((item: any) => ({
+        id: String(item.id),
+        directoryId: null,
+        personType: 'natural' as const,
+        name: String(item.fullName || item.mobile || item.email || 'خریدار'),
+      })),
     );
     setBuyerLegals(
-      referenceData.directory.buyer.legal.map((item) => ({ ...item, personType: 'legal' as const, directoryId: item.id })),
+      (store.legalBuyers ?? []).map((item: any) => ({
+        id: String(item.id),
+        directoryId: null,
+        personType: 'legal' as const,
+        name: String(item.companyName || item.brandName || 'خریدار حقوقی'),
+      })),
     );
   };
 
   const reloadReferenceData = async () => {
     setDirectoryLoading(true);
     try {
-      const referenceData = await getReferenceData();
+      const [referenceData, profileStore] = await Promise.all([getReferenceData(), fetchProfileStore()]);
       applyReferenceData(referenceData);
+      applyPartnerDirectoryFromProfile(profileStore);
+      applyBuyerDirectoryFromProfile(profileStore);
     } finally {
       setDirectoryLoading(false);
     }
@@ -226,10 +245,10 @@ export function PartiesStep({ stepId, title, embedded = false }: { stepId: strin
     const load = async () => {
       try {
         const id = await ensureActiveDraftId();
-        const [referenceData, partiesData, profileStore, auth] = await Promise.all([
+        const [referenceData, partiesData, profilePayload, auth] = await Promise.all([
           getReferenceData(),
           getStepData<ContractPartiesData>(id, 'parties'),
-          fetchProfileStore(),
+          fetchProfilePayload(),
           getAuthMe(),
         ]);
 
@@ -237,7 +256,15 @@ export function PartiesStep({ stepId, title, embedded = false }: { stepId: strin
 
         setDraftId(id);
         applyReferenceData(referenceData);
-        const computedDefaultPartyOneRow = buildDefaultPartyOneRow('dang', profileStore, auth);
+        applyPartnerDirectoryFromProfile(profilePayload.store);
+        applyBuyerDirectoryFromProfile(profilePayload.store);
+        const computedDefaultPartyOneRow = buildDefaultPartyOneRow(
+          'dang',
+          profilePayload.store,
+          profilePayload.meta?.owner?.fullName ?? '',
+          profilePayload.meta?.businessName ?? '',
+          auth,
+        );
         setDefaultPartyOneRow(computedDefaultPartyOneRow);
 
         if (partiesData) {
@@ -251,18 +278,17 @@ export function PartiesStep({ stepId, title, embedded = false }: { stepId: strin
                   shareValue: PARTY_TOTALS[nextShareMode],
                 };
           setDefaultPartyOneRow(nextDefaultPartyOneRow);
-          setPartyOneRows(
-            partiesData.partyOne.length
-              ? partiesData.partyOne.map((item) => ({
-                  id: item.personId,
-                  directoryId: item.directoryId ?? null,
-                  personType: item.personType,
-                  name: item.name,
-                  shareValue: item.share.value,
-                  isPrimary: Boolean(item.isPrimary),
-                }))
-              : [nextDefaultPartyOneRow],
-          );
+          const restoredOthers = partiesData.partyOne
+            .filter((item) => String(item.personId) !== String(nextDefaultPartyOneRow.id))
+            .map((item) => ({
+              id: item.personId,
+              directoryId: item.directoryId ?? null,
+              personType: item.personType,
+              name: item.name,
+              shareValue: item.share.value,
+              isPrimary: Boolean(item.isPrimary),
+            })) as PartyRow[];
+          setPartyOneRows(normalizePrimary([nextDefaultPartyOneRow, ...restoredOthers]));
           setPartyTwoRows(
             partiesData.partyTwo.map((item) => ({
               id: item.personId,
@@ -287,6 +313,24 @@ export function PartiesStep({ stepId, title, embedded = false }: { stepId: strin
       mounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    const shouldOpenBuyerDialog = searchParams.get('buyerDialog') === '1';
+    const shouldOpenPartnerDialog = searchParams.get('partnerDialog') === '1';
+    if (!shouldOpenBuyerDialog && !shouldOpenPartnerDialog) return;
+
+    if (shouldOpenBuyerDialog) setPartyTwoDialogOpen(true);
+    if (shouldOpenPartnerDialog) setPartyOneDialogOpen(true);
+
+    void reloadReferenceData();
+    router.replace('/contracts/new');
+  }, [router, searchParams]);
+
+  useEffect(() => {
+    if (!inlineHint) return;
+    const t = window.setTimeout(() => setInlineHint(''), 2800);
+    return () => window.clearTimeout(t);
+  }, [inlineHint]);
 
   const updateRowShare = (rows: PartyRow[], id: string, rawValue: string, mode: ShareMode) => {
     const parsed = rawValue === '' ? 0 : Number(rawValue);
@@ -346,6 +390,21 @@ export function PartiesStep({ stepId, title, embedded = false }: { stepId: strin
         })),
     ]);
 
+  /** برای طرف دوم: به‌صورت پیش‌فرض هیچ‌کدام «طرف اصلی» نیستند (کاربر خودش انتخاب می‌کند). */
+  const addRowsWithoutPrimary = (currentRows: PartyRow[], items: DirectoryItem[]) => {
+    const next = [
+      ...currentRows,
+      ...items
+        .filter((item) => !currentRows.some((row) => row.id === item.id))
+        .map((item) => ({
+          ...item,
+          shareValue: 0,
+          isPrimary: false,
+        })),
+    ];
+    return next;
+  };
+
   const removeRow = (rows: PartyRow[], id: string, fallbackRow?: PartyRow | null) => {
     const nextRows = rows.filter((row) => row.id !== id);
     if (!nextRows.length && fallbackRow) {
@@ -383,7 +442,13 @@ export function PartiesStep({ stepId, title, embedded = false }: { stepId: strin
   const buildPayload = (): ContractPartiesData => ({
     partyOneMode: shareMode,
     partyTwoMode: shareMode,
-    partyOne: mapRowsToPayload(partyOneRows, shareMode),
+    // طرف اول همیشه شامل owner است (حتی اگر داده قدیمی ناقص باشد).
+    partyOne: mapRowsToPayload(
+      defaultPartyOneRow
+        ? normalizePrimary([defaultPartyOneRow, ...partyOneRows.filter((row) => row.id !== defaultPartyOneRow.id)])
+        : partyOneRows,
+      shareMode,
+    ),
     partyTwo: mapRowsToPayload(partyTwoRows, shareMode),
   });
 
@@ -448,7 +513,7 @@ export function PartiesStep({ stepId, title, embedded = false }: { stepId: strin
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5" dir="rtl" lang="fa">
       {formError ? (
         <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{formError}</div>
       ) : null}
@@ -469,6 +534,36 @@ export function PartiesStep({ stepId, title, embedded = false }: { stepId: strin
         </div>
       ) : null}
 
+      {inlineHint ? (
+        <div className="rounded-xl border border-slate-200 bg-white/80 px-4 py-3 text-right text-[12px] font-bold text-slate-700">
+          {inlineHint}
+        </div>
+      ) : null}
+
+      <div className="rounded-2xl border border-slate-200 bg-white/70 px-5 py-4">
+        <div className="mb-3 text-center text-[13px] font-extrabold text-slate-700">طرفین قرارداد</div>
+        <div className="space-y-2 text-right text-[12px] font-semibold leading-6 text-slate-600">
+          <div className="flex items-start gap-2">
+            <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[color-mix(in_srgb,var(--dark-teal)_75%,black)]" aria-hidden />
+            <div className="min-w-0">
+              <span>مشخص کنید که طرف اول و طرف دوم قرارداد چه اشخاصی می‌باشند.</span>
+              <span className="mr-2 inline-block">
+                <HelpTip text="اگر طرف اول سازنده و طرف دوم خریدار است، طرف اول سازنده واحد است و طرف دوم خریدار یا متقاضی واحد خواهد بود. اگر شخصی در لیست وجود ندارد اطلاعات آن‌ها را از پایین ثبت کنید." />
+              </span>
+            </div>
+          </div>
+          <div className="flex items-start gap-2">
+            <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[color-mix(in_srgb,var(--dark-teal)_75%,black)]" aria-hidden />
+            <div className="min-w-0">
+              <span>نوع قدرالسهم را تعیین کنید.</span>
+              <span className="mr-2 inline-block">
+                <HelpTip text="سهم هر شخص می‌تواند بر اساس «دانگ» یا «درصد» باشد. در هر دو حالت مجموع سهم طرف‌ها باید کامل محاسبه شود." />
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <FieldGroup label="نوع سهم">
         <TagPills
           value={shareMode}
@@ -481,6 +576,24 @@ export function PartiesStep({ stepId, title, embedded = false }: { stepId: strin
       </FieldGroup>
 
       {sectionDivider('طرف اول')}
+
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0 text-right text-[12px] font-semibold text-slate-500">
+          طرف اول به‌صورت پیش‌فرض «صاحب کسب‌وکار» است و قابل تغییر نیست.
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            void reloadReferenceData();
+            setPartyOneDialogOpen(true);
+          }}
+          className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[color-mix(in_srgb,var(--dark-teal)_35%,transparent)] bg-[color-mix(in_srgb,var(--dark-teal)_12%,white)] text-[color-mix(in_srgb,var(--dark-teal)_90%,black)] shadow-sm transition hover:bg-[color-mix(in_srgb,var(--dark-teal)_16%,white)]"
+          aria-label="افزودن طرف اول"
+          title="افزودن طرف اول (سهامداران)"
+        >
+          <span className="text-xl leading-none">+</span>
+        </button>
+      </div>
 
       <PartySection
         title={partyOneLabels.formTitle}
@@ -495,10 +608,31 @@ export function PartiesStep({ stepId, title, embedded = false }: { stepId: strin
           void reloadReferenceData();
           setPartyOneDialogOpen(true);
         }}
+        disableAdd
+        layout="grid"
+        primaryControl="switch"
         invalid={Boolean(visibleErrors.partyOne || visibleErrors.shares)}
       />
 
       {sectionDivider('طرف دوم')}
+
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0 text-right text-[12px] font-semibold text-slate-500">
+          برای افزودن خریداران (طرف دوم)، از دکمه + استفاده کنید.
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            void reloadReferenceData();
+            setPartyTwoDialogOpen(true);
+          }}
+          className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[color-mix(in_srgb,var(--dark-teal)_35%,transparent)] bg-[color-mix(in_srgb,var(--dark-teal)_12%,white)] text-[color-mix(in_srgb,var(--dark-teal)_90%,black)] shadow-sm transition hover:bg-[color-mix(in_srgb,var(--dark-teal)_16%,white)]"
+          aria-label="افزودن طرف دوم"
+          title="افزودن طرف دوم"
+        >
+          <span className="text-xl leading-none">+</span>
+        </button>
+      </div>
 
       <PartySection
         title={partyTwoLabels.formTitle}
@@ -513,6 +647,9 @@ export function PartiesStep({ stepId, title, embedded = false }: { stepId: strin
           void reloadReferenceData();
           setPartyTwoDialogOpen(true);
         }}
+        disableAdd
+        layout="grid"
+        primaryControl="switch"
         invalid={Boolean(visibleErrors.partyTwo || visibleErrors.partyTwoShares)}
       />
 
@@ -529,6 +666,7 @@ export function PartiesStep({ stepId, title, embedded = false }: { stepId: strin
         open={partyOneDialogOpen}
         onClose={() => setPartyOneDialogOpen(false)}
         kind="partner"
+        partnerSource={partyOneSource}
         rows={partyOneRows}
         naturalItems={partnerNaturals}
         legalItems={partnerLegals}
@@ -549,7 +687,7 @@ export function PartiesStep({ stepId, title, embedded = false }: { stepId: strin
         legalItems={buyerLegals}
         onCreateItem={(personType, name) => createDirectoryItem('buyer', personType, name)}
         onAddSelected={(items) => {
-          setPartyTwoRows((current) => addRows(current, items));
+          setPartyTwoRows((current) => addRowsWithoutPrimary(current, items));
           setPartyTwoDialogOpen(false);
         }}
         loading={directoryLoading}

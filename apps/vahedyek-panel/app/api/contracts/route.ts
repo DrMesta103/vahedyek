@@ -1,12 +1,18 @@
 import { NextResponse } from 'next/server';
-import { PartySide, PersonType, PricingType, ShareMode } from '@prisma/client';
+import { PartySide, PersonType, PricingType, ShareMode } from '@/lib/prisma-client';
 import { requireSessionContext } from '../../lib/auth';
 import { serializeContractorType, serializeContractType } from '../../lib/subjectUtils';
 import { fetchAllDraftApprovalFlagsByTenantRaw } from '../../lib/contractDraftApprovalRaw';
 import { prisma } from '../../lib/prisma';
 import { handlePrismaApiError } from '../../lib/prismaApiError';
+import { resolveDisplayedContractStatus } from '../../lib/contractApprovalStatus';
 import { validatePenaltiesStep } from '../../lib/contractValidation';
 import type { ContractStatus } from '../../types/contract';
+import {
+  mapFinancialCategoriesForClientApi,
+  mapFinancialDueItemsForClientApiFiltered,
+  resolveFinancialActiveTabForClientApi,
+} from '../../lib/financialCategoriesApiSerialize';
 
 function serializeShareMode(value: ShareMode) {
   return value === ShareMode.percent ? 'percent' : 'dang';
@@ -58,6 +64,7 @@ export async function GET(request: Request) {
       orderBy: { updatedAt: 'desc' },
       select: {
         id: true,
+        releasedFromApprovedForEdit: true,
         createdAt: true,
         updatedAt: true,
         subject: true,
@@ -89,14 +96,19 @@ export async function GET(request: Request) {
 
     const approvalFlagMap = await fetchAllDraftApprovalFlagsByTenantRaw(session.tenantId);
 
+    const instanceRows = await prisma.contractApprovalInstance.findMany({
+      where: { tenantId: session.tenantId, draftId: { in: drafts.map((d) => d.id) } },
+      select: { draftId: true, status: true },
+    });
+    const instanceStatusByDraft = new Map(instanceRows.map((r) => [r.draftId, r.status]));
+
     const contracts = drafts.map((draft) => ({
       id: draft.id,
-      status: (
-        approvalFlagMap.get(draft.id)?.approvalReturnedPending
-          ? 'draft'
-          : isDraftReadyForApproval(draft)
-            ? 'pending_approval'
-            : 'draft'
+      status: resolveDisplayedContractStatus(
+        isDraftReadyForApproval(draft),
+        Boolean(approvalFlagMap.get(draft.id)?.approvalReturnedPending),
+        instanceStatusByDraft.get(draft.id),
+        Boolean(draft.releasedFromApprovedForEdit),
       ) as ContractStatus,
       createdAt: draft.createdAt.toISOString(),
       updatedAt: draft.updatedAt.toISOString(),
@@ -158,32 +170,33 @@ export async function GET(request: Request) {
             : [],
         },
         financial: draft.financial
-          ? {
-              pricingType: serializePricingType(draft.financial.pricingType),
-              unitArea: draft.financial.unitArea ? String(Number(draft.financial.unitArea)) : '',
-              parkingArea: draft.financial.parkingArea ? String(Number(draft.financial.parkingArea)) : '',
-              totalArea: draft.financial.totalArea ? String(Number(draft.financial.totalArea)) : '',
-              pricePerMeter: draft.financial.pricePerMeter ? String(Number(draft.financial.pricePerMeter)) : '',
-              parkingPricePerMeter: draft.financial.parkingPricePerMeter ? String(Number(draft.financial.parkingPricePerMeter)) : '',
-              fixedTotalAmount: draft.financial.fixedTotalAmount ? String(Number(draft.financial.fixedTotalAmount)) : '',
-              activeTab: draft.financial.activeTab ?? '',
-              categories: draft.financial.categories.map((item) => ({
-                id: item.id,
-                name: item.name,
-                capAmount: Number(item.capAmount),
-                dueAmount: Number(item.dueAmount),
-                noDueAmount: Number(item.noDueAmount),
-                system: item.system,
-                requiresDue: item.requiresDue,
-              })),
-              dueItems: draft.financial.dueItems.map((item) => ({
-                id: item.id,
-                categoryId: item.categoryId,
-                title: item.title,
-                amount: Number(item.amount),
-                dueDate: item.dueDate,
-              })),
-            }
+          ? (() => {
+              const fid = draft.financial.id;
+              const categories = mapFinancialCategoriesForClientApi(fid, draft.financial.categories);
+              const categoryLogicalIds = new Set(categories.map((c) => c.id));
+              const dueItems = mapFinancialDueItemsForClientApiFiltered(fid, draft.financial.dueItems, categoryLogicalIds);
+              const activeTab = resolveFinancialActiveTabForClientApi(
+                fid,
+                draft.financial.activeTab,
+                categoryLogicalIds,
+                categories[0]?.id ?? '',
+              );
+
+              return {
+                pricingType: serializePricingType(draft.financial.pricingType),
+                unitArea: draft.financial.unitArea ? String(Number(draft.financial.unitArea)) : '',
+                parkingArea: draft.financial.parkingArea ? String(Number(draft.financial.parkingArea)) : '',
+                totalArea: draft.financial.totalArea ? String(Number(draft.financial.totalArea)) : '',
+                pricePerMeter: draft.financial.pricePerMeter ? String(Number(draft.financial.pricePerMeter)) : '',
+                parkingPricePerMeter: draft.financial.parkingPricePerMeter
+                  ? String(Number(draft.financial.parkingPricePerMeter))
+                  : '',
+                fixedTotalAmount: draft.financial.fixedTotalAmount ? String(Number(draft.financial.fixedTotalAmount)) : '',
+                activeTab,
+                categories,
+                dueItems,
+              };
+            })()
           : undefined,
       },
     }));
@@ -191,10 +204,10 @@ export async function GET(request: Request) {
     const counts = {
       draft: contracts.filter((contract) => contract.status === 'draft').length,
       pending_approval: contracts.filter((contract) => contract.status === 'pending_approval').length,
-      completed: 0,
+      completed: contracts.filter((contract) => contract.status === 'completed').length,
     } satisfies Record<ContractStatus, number>;
 
-    const items = status === 'completed' ? [] : contracts.filter((contract) => contract.status === status);
+    const items = contracts.filter((contract) => contract.status === status);
 
     return NextResponse.json({ items, counts });
   } catch (error) {

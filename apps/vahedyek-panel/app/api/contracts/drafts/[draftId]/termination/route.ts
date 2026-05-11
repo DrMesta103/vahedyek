@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import type { Prisma } from '@prisma/client';
+import type { Prisma } from '@/lib/prisma-client';
 import { requireSessionContext } from '../../../../../lib/auth';
 import { prisma } from '../../../../../lib/prisma';
 import { handlePrismaApiError } from '../../../../../lib/prismaApiError';
@@ -44,11 +44,15 @@ export async function PUT(request: Request, { params }: { params: Promise<{ draf
 
     const draft = await prisma.contractDraft.findFirst({
       where: { id: draftId, tenantId: session.tenantId },
-      select: { id: true },
+      select: { id: true, approvalInstance: { select: { status: true } } },
     });
 
     if (!draft) {
       return NextResponse.json({ message: 'پیش‌نویس موردنظر در این کارپوشه پیدا نشد.' }, { status: 404 });
+    }
+
+    if (draft.approvalInstance?.status === 'IN_REVIEW') {
+      return NextResponse.json({ message: 'این پیش‌نویس در فرایند تأیید است و امکان ویرایش ندارد.' }, { status: 409 });
     }
 
     const body = await request.json();

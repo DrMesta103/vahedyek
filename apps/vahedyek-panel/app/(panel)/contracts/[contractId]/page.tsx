@@ -1,7 +1,9 @@
 'use client';
 
-import { Suspense, useEffect, useMemo, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import { AlertTriangle, ArrowRight, X } from 'lucide-react';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { reopenApprovedContractForEditAction } from '../../../actions/contractApprovalActions';
 import PanelLayout from '../../../components/PanelLayout';
 import { ContractApprovalFlowBanner } from '../../../components/contracts/ContractApprovalFlowBanner';
 import { getContractDetails, setActiveDraftId } from '../../../lib/contractDraftClient';
@@ -16,6 +18,93 @@ function formatMoneyTomanFromRial(valueRial: number) {
   if (!valueRial) return '—';
   const toman = Math.round(valueRial / 10);
   return `${toman.toLocaleString('fa-IR')} تومان`;
+}
+
+function contractListCategoryLabel(status: ContractStatus): string {
+  switch (status) {
+    case 'draft':
+      return 'پیش نویس';
+    case 'pending_approval':
+      return 'در انتظار تایید';
+    case 'completed':
+      return 'تکمیل شده';
+    default:
+      return '—';
+  }
+}
+
+function contractListBadgeClass(status: ContractStatus): string {
+  switch (status) {
+    case 'draft':
+      return 'is-draft';
+    case 'pending_approval':
+      return 'is-pending';
+    case 'completed':
+      return 'is-finalized';
+    default:
+      return 'is-draft';
+  }
+}
+
+function ContractListContextSection({ status }: { status: ContractStatus }) {
+  const searchParams = useSearchParams();
+  const raw = searchParams.get('list');
+  const entryList: ContractStatus | null =
+    raw === 'draft' || raw === 'pending_approval' || raw === 'completed' ? raw : null;
+
+  const badgeClass = contractListBadgeClass(status);
+  const label = contractListCategoryLabel(status);
+
+  let hint: string;
+  if (entryList && entryList === status) {
+    hint = `از فهرست قراردادهای «${contractListCategoryLabel(entryList)}» به این صفحه آمده‌اید.`;
+  } else if (entryList && entryList !== status) {
+    hint = `از فهرست «${contractListCategoryLabel(entryList)}» وارد شده‌اید؛ با توجه به آخرین وضعیت، این قرارداد اکنون در بخش «${label}» طبقه‌بندی می‌شود.`;
+  } else {
+    hint = `طبق آخرین وضعیت، این قرارداد در فهرست قراردادها کنار دیگر موارد همین بخش «${label}» دیده می‌شود (تب‌های پیش نویس، در انتظار تایید، تکمیل شده).`;
+  }
+
+  return (
+    <section
+      dir="rtl"
+      lang="fa"
+      className="contract-details-panel rounded-[22px] border border-slate-200/80 bg-white/90 px-4 py-3.5 shadow-sm"
+      aria-label="دستهٔ فهرست قراردادها"
+    >
+      {/* ترتیب DOM با dir=rtl: اول سمت راست (عنوان + تگ)، دوم سمت چپ (توضیح) */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-4">
+        <div className="flex flex-row flex-wrap items-center gap-2 sm:shrink-0">
+          <span className="text-[13px] font-semibold text-slate-600">دستهٔ فهرست قراردادها</span>
+          <span className={`contract-status-badge ${badgeClass}`}>{label}</span>
+        </div>
+        <p className="m-0 min-w-0 flex-1 text-right text-[12px] leading-relaxed text-slate-500 sm:max-w-[min(520px,100%)]">
+          {hint}
+        </p>
+      </div>
+    </section>
+  );
+}
+
+function ContractDetailsBackToListRow({ fallbackStatus }: { fallbackStatus: ContractStatus }) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const list = searchParams.get('list');
+  const tab: ContractStatus =
+    list === 'draft' || list === 'pending_approval' || list === 'completed' ? list : fallbackStatus;
+  const href = `/contracts?tab=${encodeURIComponent(tab)}`;
+
+  return (
+    <div className="mb-3 flex justify-end px-1" dir="rtl" lang="fa">
+      <button
+        type="button"
+        onClick={() => router.push(href)}
+        className="inline-flex h-10 shrink-0 items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-[13px] font-bold text-slate-700 shadow-sm transition hover:border-[color-mix(in_srgb,var(--dark-teal)_35%,transparent)] hover:bg-slate-50"
+      >
+        بازگشت به فهرست قراردادها
+        <ArrowRight className="h-4 w-4" aria-hidden />
+      </button>
+    </div>
+  );
 }
 
 function getUnitUsageLabel(usage: string | null | undefined) {
@@ -40,31 +129,40 @@ function getUnitUsageLabel(usage: string | null | undefined) {
 export default function ContractDetailsPage() {
   const params = useParams<{ contractId: string }>();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const contractId = params?.contractId;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [contract, setContract] = useState<any>(null);
   const [toast, setToast] = useState<string>('');
+  const [reopenEditDialogOpen, setReopenEditDialogOpen] = useState(false);
+  const [reopenEditBusy, setReopenEditBusy] = useState(false);
+
+  const reloadContract = useCallback(async () => {
+    if (!contractId) return;
+    setError('');
+    try {
+      setLoading(true);
+      const data = await getContractDetails(String(contractId));
+      setContract(data);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'دریافت جزئیات قرارداد انجام نشد.');
+    } finally {
+      setLoading(false);
+    }
+  }, [contractId]);
 
   useEffect(() => {
-    let mounted = true;
-    const load = async () => {
-      if (!contractId) return;
-      try {
-        setLoading(true);
-        const data = await getContractDetails(String(contractId));
-        if (mounted) setContract(data);
-      } catch (e) {
-        if (mounted) setError(e instanceof Error ? e.message : 'دریافت جزئیات قرارداد انجام نشد.');
-      } finally {
-        if (mounted) setLoading(false);
-      }
+    void reloadContract();
+  }, [reloadContract]);
+
+  useEffect(() => {
+    const onUpdated = () => {
+      void reloadContract();
     };
-    void load();
-    return () => {
-      mounted = false;
-    };
-  }, [contractId]);
+    window.addEventListener('contract-approval-updated', onUpdated);
+    return () => window.removeEventListener('contract-approval-updated', onUpdated);
+  }, [reloadContract]);
 
   useEffect(() => {
     if (!toast) return;
@@ -77,32 +175,108 @@ export default function ContractDetailsPage() {
   };
 
   const actions = useMemo(() => {
-    const active = new Set(['view-draft', 'edit-draft']);
+    const lockedForApproval = contract?.approvalInstance?.status === 'IN_REVIEW';
+    const isFinalizedUi = contract?.status === 'completed';
+    const enabledWhenCompleted = new Set([
+      'reports',
+      'dues',
+      'appendix',
+      'history',
+      'court',
+      'cancel',
+      'unit-handover',
+      'deed',
+      'transfer',
+    ]);
+
+    const enabled = (id: string) => {
+      if (id === 'view-draft') return true;
+      if (id === 'edit-draft') return !lockedForApproval;
+      if (id === 'docs') return true;
+      return isFinalizedUi && enabledWhenCompleted.has(id);
+    };
+
+    const hint = (id: string) => {
+      if (id === 'view-draft') {
+        return isFinalizedUi
+          ? 'مشاهدهٔ نسخهٔ تأییدشدهٔ قرارداد و اطلاعات ثبت‌شده.'
+          : 'مشاهدهٔ نسخهٔ فعلی پیش‌نویس و اطلاعات ثبت‌شده.'
+      }
+      if (id === 'edit-draft') {
+        if (lockedForApproval) return 'در فرایند تأیید، امکان ویرایش وجود ندارد و فقط می‌توانید مشاهده کنید.'
+        return isFinalizedUi
+          ? 'با ورود به ویرایش، قرارداد از حالت تأیید نهایی خارج می‌شود و دوباره باید به فرایند تأیید ارسال شود.'
+          : 'ویرایش پیش‌نویس و ادامهٔ تکمیل مراحل قرارداد.'
+      }
+      if (id === 'reports') return 'گزارش‌های مربوط به قرارداد (مالی/عملکردی/وضعیت).'
+      if (id === 'dues') return 'مدیریت سررسیدها و فیش‌های پرداختی/واریزی مرتبط با قرارداد.'
+      if (id === 'appendix') return 'ثبت و مدیریت متمم‌های قرارداد پس از نهایی شدن.'
+      if (id === 'history') return 'نمایش تاریخچهٔ رویدادها، تغییرات و مسیر ثبت/تأیید قرارداد.'
+      if (id === 'docs') return 'بارگذاری و مدیریت مدارک و پیوست‌های قرارداد.'
+      if (id === 'court') return 'ثبت و مدیریت اقاله و تغییر وضعیت‌های مرتبط.'
+      if (id === 'cancel') return 'ثبت فرآیند فسخ و مستندات/رویدادهای مرتبط با آن.'
+      if (id === 'unit-handover') return 'ثبت تحویل واحد و پیگیری وضعیت تحویل.'
+      if (id === 'deed') return 'ثبت تحویل سند و پیگیری مراحل مربوط به آن.'
+      if (id === 'transfer') return 'مدیریت انتقال قرارداد و ثبت رویدادهای مرتبط.'
+      if (id === 'build') return 'ساخت متن قرارداد و چاپ. (این قابلیت به زودی اضافه میشه)'
+      if (id === 'annex') return 'مکاتبات و اظهارنامه. (این قابلیت به زودی اضافه میشه)'
+      return '—'
+    };
+
+    const disabledReason = (id: string) => {
+      if (id === 'edit-draft' && lockedForApproval) return 'قفل در فرایند تأیید'
+      if (id === 'build' || id === 'annex') return 'به زودی'
+      if (!isFinalizedUi && enabledWhenCompleted.has(id)) return 'فقط در حالت تکمیل شده'
+      return 'در حال توسعه'
+    };
+
     return [
-      { id: 'annex', title: 'الحاقیه و اظهارنامه', icon: 'fa-solid fa-file-signature' },
-      { id: 'build', title: 'ساخت و چاپ قرارداد', icon: 'fa-regular fa-clock', badge: undefined },
-      { id: 'build-print', title: 'نسخه ساخت و چاپ قرارداد', icon: 'fa-solid fa-print', badge: undefined },
-      { id: 'reports', title: 'گزارشات', icon: 'fa-solid fa-money-bill-transfer', badge: undefined },
-      { id: 'transfer', title: 'انتقال قرارداد', icon: 'fa-solid fa-right-left', badge: undefined },
-      { id: 'buyer', title: 'مشخصات خریدار', icon: 'fa-solid fa-user-pen', badge: undefined },
-      { id: 'unit', title: 'مشخصات واحد', icon: 'fa-solid fa-city', badge: undefined },
-      { id: 'docs', title: 'مدارک قرارداد', icon: 'fa-solid fa-folder-open', badge: undefined },
-      { id: 'discount', title: 'تخفیف', icon: 'fa-solid fa-tags', badge: undefined },
-      { id: 'cancel', title: 'فسخ قرارداد', icon: 'fa-solid fa-file-circle-xmark', badge: undefined },
-      { id: 'court', title: 'اقاله/رای قضایی', icon: 'fa-regular fa-file-lines', badge: undefined },
-      { id: 'deed', title: 'تحویل سند', icon: 'fa-solid fa-key', badge: undefined },
-      { id: 'builder-penalty', title: 'جرائم کارفرما', icon: 'fa-solid fa-gavel', badge: undefined },
-      { id: 'dues', title: 'سررسید و فیش واریزی', icon: 'fa-solid fa-calendar-check', badge: undefined },
-      { id: 'edit-final', title: 'ویرایش قرارداد نهایی شده', icon: 'fa-solid fa-pen-to-square', badge: undefined },
-      { id: 'edit-draft', title: 'ویرایش پیش نویس', icon: 'fa-regular fa-file', badge: undefined },
-      { id: 'appendix', title: 'متمم قرارداد', icon: 'fa-solid fa-file-circle-plus', badge: undefined },
-      { id: 'view-draft', title: 'مشاهده پیش نویس', icon: 'fa-solid fa-eye', badge: undefined },
-      { id: 'unit-move', title: 'سرک واحد', icon: 'fa-solid fa-truck-ramp-box', badge: undefined },
-      { id: 'relocation', title: 'جابجایی (فروش)', icon: 'fa-solid fa-map-location-dot', badge: undefined },
-      { id: 'loan', title: 'وام', icon: 'fa-solid fa-building-columns', badge: undefined },
-      { id: 'adjust', title: 'تعدیل', icon: 'fa-solid fa-sliders', badge: undefined },
-    ].map((item) => ({ ...item, enabled: active.has(item.id) }));
-  }, []);
+      // 1-2: view/edit
+      { id: 'view-draft', title: isFinalizedUi ? 'مشاهده قرارداد' : 'مشاهده پیش نویس', icon: 'fa-solid fa-eye' },
+      { id: 'edit-draft', title: isFinalizedUi ? 'ویرایش قرارداد' : 'ویرایش پیش نویس', icon: 'fa-regular fa-file' },
+      // 3-6: completed-only
+      { id: 'reports', title: 'گزارشات', icon: 'fa-solid fa-money-bill-transfer' },
+      { id: 'dues', title: 'سر رسید ها و فیش ها', icon: 'fa-solid fa-calendar-check' },
+      { id: 'appendix', title: 'متمم ها', icon: 'fa-solid fa-file-circle-plus' },
+      { id: 'history', title: 'تاریخچه ی قرارداد', icon: 'fa-solid fa-clock-rotate-left' },
+      // 7: always visible (click shows toast until implemented)
+      { id: 'docs', title: 'مدارک قرارداد', icon: 'fa-solid fa-folder-open' },
+      // 8-12: completed-only
+      { id: 'court', title: 'القاله', icon: 'fa-regular fa-file-lines' },
+      { id: 'cancel', title: 'فسخ', icon: 'fa-solid fa-file-circle-xmark' },
+      { id: 'unit-handover', title: 'تحویل واحد', icon: 'fa-solid fa-truck-ramp-box' },
+      { id: 'deed', title: 'تحویل سند', icon: 'fa-solid fa-key' },
+      { id: 'transfer', title: 'انتقال', icon: 'fa-solid fa-right-left' },
+      // 13-14: coming soon
+      { id: 'build', title: 'ساخت متن قرارداد و چاپ', icon: 'fa-solid fa-print' },
+      { id: 'annex', title: 'مکاتبات و اظهارنامه', icon: 'fa-solid fa-file-signature' },
+    ].map((item) => ({
+      ...item,
+      enabled: enabled(item.id),
+      hint: hint(item.id),
+      disabledReason: disabledReason(item.id),
+    }));
+  }, [contract?.approvalInstance?.status, contract?.status]);
+
+  const isFinalizedContract = contract?.status === 'completed';
+
+  const confirmReopenApprovedAndEdit = useCallback(async () => {
+    if (!contractId) return;
+    setReopenEditBusy(true);
+    try {
+      const r = await reopenApprovedContractForEditAction(String(contractId));
+      if (!r.ok) {
+        setToast(r.message);
+        return;
+      }
+      setReopenEditDialogOpen(false);
+      window.dispatchEvent(new Event('contract-approval-updated'));
+      setActiveDraftId(String(contractId));
+      router.push('/contracts/new');
+    } finally {
+      setReopenEditBusy(false);
+    }
+  }, [contractId, router]);
 
   const view = useMemo(() => {
     const subject = contract?.data?.subject ?? null;
@@ -166,25 +340,22 @@ export default function ContractDetailsPage() {
   return (
     <PanelLayout>
     <main className="contract-details-page" dir="rtl" lang="fa">
+      <Suspense fallback={null}>
+        <ContractDetailsBackToListRow fallbackStatus={(contract?.status as ContractStatus) ?? 'draft'} />
+      </Suspense>
       {contractId ? (
         <Suspense fallback={null}>
           <ContractApprovalFlowBanner
+            key={String(contractId)}
             contractId={String(contractId)}
-            canDecide={Boolean(contract?.approvalDecision?.canDecide)}
             contractStatus={(contract?.status as ContractStatus) ?? 'draft'}
           />
         </Suspense>
       ) : null}
 
-      {contract?.approvalReturn?.reason ? (
-        <div dir="rtl" className="mb-6 rounded-2xl border border-amber-200/90 bg-[color-mix(in_srgb,var(--theme-warning-bg)_55%,white)] px-4 py-3 text-right shadow-sm">
-          <div className="text-[13px] font-black text-[var(--theme-warning-text)]">اصلاح پیش‌نویس پس از عدم تأیید</div>
-          <p className="mt-2 text-[12px] font-semibold leading-6 text-[var(--text-body)]">
-            <span className="font-bold text-[var(--text-strong)]">آخرین علت ثبت‌شده در سامانه:</span>{' '}
-            {String(contract.approvalReturn.reason)}
-          </p>
-        </div>
-      ) : null}
+      <Suspense fallback={null}>
+        <ContractListContextSection status={(contract?.status as ContractStatus) ?? 'draft'} />
+      </Suspense>
 
       <section className="contract-details-panel contract-details-profile">
         <div className="min-w-0 flex-1">
@@ -264,13 +435,31 @@ export default function ContractDetailsPage() {
       <section className="mt-4">
         <div dir="rtl" className="max-h-[60vh] overflow-y-auto">
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-            {[...actions].sort((a, b) => Number(b.enabled) - Number(a.enabled)).map((item) => {
+            {actions.map((item) => {
               const dim = !item.enabled;
               const onClick = () => {
                 if (!contractId) return;
+                if (item.id === 'edit-draft' && contract?.approvalInstance?.status === 'IN_REVIEW') {
+                  setToast('در فرایند تأیید فقط امکان مشاهدهٔ پیش‌نویس وجود دارد.');
+                  router.push(`/contracts/${String(contractId)}/preview`);
+                  return;
+                }
                 if (!item.enabled) return handleUnderDevelopment();
                 if (item.id === 'view-draft') {
                   router.push(`/contracts/${String(contractId)}/preview`);
+                  return;
+                }
+                if (item.id === 'edit-draft' && isFinalizedContract) {
+                  setReopenEditDialogOpen(true);
+                  return;
+                }
+                if (item.id === 'reports') {
+                  const q = searchParams?.toString();
+                  router.push(`/contracts/${String(contractId)}/reports${q ? `?${q}` : ''}`);
+                  return;
+                }
+                if (item.id === 'build' || item.id === 'annex') {
+                  setToast('این قابلیت به زودی اضافه میشه');
                   return;
                 }
                 setActiveDraftId(String(contractId));
@@ -293,13 +482,99 @@ export default function ContractDetailsPage() {
                     </span>
                   </div>
                   <h3 className="contract-details-action-title">{item.title}</h3>
-                  <p className="contract-details-action-text">{item.enabled ? 'فعال' : 'در حال توسعه'}</p>
+                  <p className="contract-details-action-text">
+                    {item.hint}
+                    {!item.enabled ? (
+                      <span className="mt-1 block text-[12px] font-semibold text-slate-500">
+                        {item.disabledReason}
+                      </span>
+                    ) : null}
+                  </p>
                 </button>
               );
             })}
           </div>
         </div>
       </section>
+
+      {reopenEditDialogOpen ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4 backdrop-blur-[2px]"
+          dir="rtl"
+          lang="fa"
+          role="presentation"
+          onClick={() => !reopenEditBusy && setReopenEditDialogOpen(false)}
+        >
+          <div
+            className="w-full max-w-lg overflow-hidden rounded-3xl border border-slate-200/90 bg-white shadow-2xl"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="reopen-approved-dialog-title"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="border-b border-slate-100 bg-gradient-to-br from-amber-50/90 to-white px-5 py-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex min-w-0 flex-1 items-start gap-3">
+                  <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-amber-200 bg-amber-100 text-amber-800">
+                    <AlertTriangle className="h-5 w-5" aria-hidden />
+                  </span>
+                  <div className="min-w-0 text-right">
+                    <h2 id="reopen-approved-dialog-title" className="text-base font-black text-slate-900">
+                      ویرایش قرارداد تأییدشده
+                    </h2>
+                    <p className="mt-1.5 text-sm font-medium leading-6 text-slate-600">
+                      با ورود به ویرایش، این قرارداد از حالت تأیید نهایی خارج می‌شود تا بتوانید تغییر دهید.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  disabled={reopenEditBusy}
+                  className="shrink-0 rounded-xl p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 disabled:opacity-40"
+                  aria-label="بستن"
+                  onClick={() => setReopenEditDialogOpen(false)}
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+            <ul className="space-y-2.5 px-5 py-4 text-right text-[13px] leading-6 text-slate-700">
+              <li className="flex gap-2">
+                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-teal-600" aria-hidden />
+                <span>
+                  قرارداد در فهرست به‌عنوان <strong className="text-slate-900">پیش‌نویس</strong> دیده می‌شود؛ وضعیت «تأیید
+                  نهایی» قبلی برای همین نسخه از بین می‌رود.
+                </span>
+              </li>
+              <li className="flex gap-2">
+                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-teal-600" aria-hidden />
+                <span>
+                  پس از ثبت تغییرات، برای <strong className="text-slate-900">نهایی شدن مجدد</strong> باید دوباره قرارداد
+                  را به <strong className="text-slate-900">فرایند تأیید</strong> بفرستید.
+                </span>
+              </li>
+            </ul>
+            <div className="flex flex-wrap-reverse items-center justify-end gap-2 border-t border-slate-100 px-5 py-4">
+              <button
+                type="button"
+                disabled={reopenEditBusy}
+                onClick={() => setReopenEditDialogOpen(false)}
+                className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
+              >
+                انصراف
+              </button>
+              <button
+                type="button"
+                disabled={reopenEditBusy}
+                onClick={() => void confirmReopenApprovedAndEdit()}
+                className="rounded-xl bg-[color-mix(in_srgb,var(--dark-teal)_92%,black)] px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:opacity-95 disabled:opacity-60"
+              >
+                {reopenEditBusy ? 'در حال آماده‌سازی…' : 'تأیید و رفتن به ویرایش'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {toast ? (
         <div className="fixed inset-x-0 bottom-5 z-50 flex justify-center px-4" dir="rtl">

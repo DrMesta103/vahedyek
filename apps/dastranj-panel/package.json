@@ -2,9 +2,6 @@
   "name": "@apps/dastranj-panel",
   "private": true,
   "version": "0.1.0",
-  "prisma": {
-    "seed": "tsx prisma/seed.ts"
-  },
   "scripts": {
     "predev": "npm --workspace @repo/ui run build",
     "dev": "next dev -p 3030",
@@ -12,6 +9,8 @@
     "start": "next start -p 3030",
     "lint": "next lint",
     "prisma:generate": "prisma generate",
+    "prisma:generate:win": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/prisma-generate-win.ps1",
+    "prisma:generate:win:hard": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/prisma-generate-win.ps1 -KillAllNode",
     "prisma:push": "prisma db push",
     "prisma:migrate": "prisma migrate dev",
     "prisma:deploy": "prisma migrate deploy",
@@ -26,6 +25,7 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "dotenv": "^16.6.1",
     "@types/node": "^22.15.3",
     "@types/react": "^18.3.23",
     "@types/react-dom": "^18.3.7",

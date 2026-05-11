@@ -8,7 +8,7 @@ import {
   PersonType,
   PricingType,
   ShareMode,
-} from '@prisma/client';
+} from '../node_modules/.prisma/client';
 
 const prisma = new PrismaClient();
 

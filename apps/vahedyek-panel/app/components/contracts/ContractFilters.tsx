@@ -1,5 +1,6 @@
 'use client';
 
+import { PersianDatePicker } from '@repo/ui';
 import type { Block, ContractType, FilterState, Unit } from '../../types/contract';
 
 interface ContractFiltersProps {
@@ -55,19 +56,17 @@ export default function ContractFilters({ filters, blocks, units, onFilterChange
             <div className="contracts-filter-section">
               <label className="contracts-filter-label">بازه تاریخ قرارداد</label>
               <div className="contracts-filter-date-grid">
-                <input
-                  type="text"
+                <PersianDatePicker
                   value={filters.dateFrom ?? ''}
-                  onChange={(e) => handleChange('dateFrom', e.target.value)}
+                  onChange={(value) => handleChange('dateFrom', value)}
                   placeholder="از تاریخ"
-                  className="app-control contracts-filter-control"
+                  className="contracts-filter-control"
                 />
-                <input
-                  type="text"
+                <PersianDatePicker
                   value={filters.dateTo ?? ''}
-                  onChange={(e) => handleChange('dateTo', e.target.value)}
+                  onChange={(value) => handleChange('dateTo', value)}
                   placeholder="تا تاریخ"
-                  className="app-control contracts-filter-control"
+                  className="contracts-filter-control"
                 />
               </div>
             </div>

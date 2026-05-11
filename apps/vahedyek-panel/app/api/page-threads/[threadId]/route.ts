@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { requireSessionContext } from '../../../lib/auth';
+import { requireActiveAuthPayload } from '../../../lib/auth';
 import { updateThreadMeta } from '../../../lib/page-threads-store';
 import { handlePrismaApiError } from '../../../lib/prismaApiError';
 
@@ -11,8 +11,8 @@ type RouteContext = {
 
 export async function PATCH(request: Request, context: RouteContext) {
   try {
-    const session = await requireSessionContext();
-    if (session instanceof NextResponse) return session;
+    const auth = await requireActiveAuthPayload();
+    if (auth instanceof NextResponse) return auth;
 
     const { threadId } = await context.params;
     const body = (await request.json()) as {
@@ -25,7 +25,7 @@ export async function PATCH(request: Request, context: RouteContext) {
 
     await updateThreadMeta({
       threadId,
-      actorUserId: session.user.id,
+      actorUserId: auth.userId,
       title: body.title,
       docType: body.docType,
       priority: body.priority,

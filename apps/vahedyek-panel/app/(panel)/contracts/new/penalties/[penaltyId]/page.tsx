@@ -1,4 +1,5 @@
 import PanelLayout from '../../../../../components/PanelLayout';
+import { ContractFlowExitBackBar } from '../../_components/ContractFlowExitBackBar';
 import { PenaltyDetailStep } from '../../_components/PenaltyDetailStep';
 
 const PenaltyDetailPage = async ({ params }: { params: Promise<{ penaltyId: string }> }) => {
@@ -6,6 +7,7 @@ const PenaltyDetailPage = async ({ params }: { params: Promise<{ penaltyId: stri
 
   return (
     <PanelLayout>
+      <ContractFlowExitBackBar layout="page" />
       <PenaltyDetailStep penaltyId={penaltyId} />
     </PanelLayout>
   );

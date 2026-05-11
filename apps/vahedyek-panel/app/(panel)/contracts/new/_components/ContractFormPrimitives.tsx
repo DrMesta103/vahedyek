@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Calendar, ChevronDown, ChevronUp, Search, X } from 'lucide-react';
-import { PersianDatePicker } from '@repo/ui';
+import { Input, PersianDatePicker } from '@repo/ui';
 
 export function SectionCard({ children, className = '' }: { children: ReactNode; className?: string }) {
   return <div className={`rounded-xl border border-slate-200 bg-white ${className}`}>{children}</div>;
@@ -64,21 +64,19 @@ export function FormTextInput({
   invalid?: boolean;
 }) {
   return (
-    <div className="relative">
-      {Icon ? <Icon className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" /> : null}
-      <input
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        placeholder={placeholder}
-        disabled={disabled}
-        inputMode={inputMode}
-        dir={dir}
-        aria-invalid={invalid}
-        className={`h-[42px] w-full rounded-xl border bg-[image:var(--control-bg-gradient)] text-[13px] text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] placeholder:text-slate-400 outline-none transition-all disabled:bg-slate-50 disabled:text-slate-400 ${
-          invalid ? 'border-rose-400 focus:border-rose-500 focus:ring-4 focus:ring-rose-500/10' : 'border-slate-200 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10'
-        } ${Icon ? 'pr-10 pl-3.5' : 'px-3.5'} ${className}`}
-      />
-    </div>
+    <Input
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+      placeholder={placeholder}
+      disabled={disabled}
+      inputMode={inputMode}
+      dir={dir}
+      aria-invalid={invalid}
+      endAdornment={Icon ? <Icon className="h-4 w-4 text-slate-400" /> : undefined}
+      className={`h-[42px] rounded-xl border bg-[image:var(--control-bg-gradient)] text-[13px] text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] placeholder:text-slate-400 focus:ring-4 ${
+        invalid ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500/10' : 'border-slate-200 focus:border-cyan-500 focus:ring-cyan-500/10'
+      } ${Icon ? 'pr-10 pl-3.5' : 'px-3.5'} ${className}`}
+    />
   );
 }
 

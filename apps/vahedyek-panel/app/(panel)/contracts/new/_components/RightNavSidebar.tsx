@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Eye, Lock, ShieldCheck, X } from 'lucide-react';
-import { postContractApprovalAction } from '../../../../lib/contractDraftClient';
+import { Eye, Lock, Plus, ShieldCheck, X } from 'lucide-react';
+import { submitContractApprovalWorkflowAction } from '../../../../actions/contractApprovalActions';
+import { listApprovalWorkflowsAction } from '../../../../actions/workflowActions';
 import type { ContractFlowSectionId } from './contractFlowSignals';
 
 const SAVEABLE_SECTIONS: ContractFlowSectionId[] = ['subject', 'parties', 'financial', 'penalties', 'discounts', 'termination'];
@@ -63,6 +64,38 @@ export function RightNavSidebar({
   const [approvalNavBusy, setApprovalNavBusy] = useState(false);
   const [approvalNavError, setApprovalNavError] = useState('');
   const [approvalSubmitted, setApprovalSubmitted] = useState(false);
+  const [workflowReady, setWorkflowReady] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      try {
+        const res = await listApprovalWorkflowsAction();
+        if (!mounted) return;
+        if (!res.ok) {
+          setWorkflowReady(false);
+          return;
+        }
+        const hasActive = (res.items ?? []).some((w: any) => Boolean(w?.active));
+        setWorkflowReady(hasActive);
+      } catch {
+        if (!mounted) return;
+        setWorkflowReady(false);
+      }
+    };
+    void load();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const isApprovalWorkflowMissing = workflowReady === false;
+  const isApprovalWorkflowLoading = workflowReady === null;
+  const canAttemptApproval = useMemo(() => {
+    if (isApprovalWorkflowLoading) return false;
+    if (isApprovalWorkflowMissing) return false;
+    return true;
+  }, [isApprovalWorkflowLoading, isApprovalWorkflowMissing]);
 
   const goPreview = () => {
     if (!draftId) return;
@@ -71,6 +104,7 @@ export function RightNavSidebar({
 
   const onApprovalClick = async () => {
     if (loading || !draftId || approvalNavBusy) return;
+    if (!canAttemptApproval) return;
     if (!approvalSubmissionReady) {
       setBlockersOpen(true);
       return;
@@ -78,9 +112,10 @@ export function RightNavSidebar({
     setApprovalNavError('');
     try {
       setApprovalNavBusy(true);
-      await postContractApprovalAction(draftId, { action: 'clearReturnPending' });
+      const res = await submitContractApprovalWorkflowAction(draftId);
+      if (!res.ok) throw new Error(res.message);
       setApprovalSubmitted(true);
-      router.push('/contracts?tab=pending_approval');
+      router.push(`/contracts/${encodeURIComponent(draftId)}`);
     } catch (e) {
       setApprovalNavError(e instanceof Error ? e.message : 'امکان ادامهٔ فرایند تأیید نبود.');
     } finally {
@@ -165,13 +200,42 @@ export function RightNavSidebar({
             <button
               type="button"
               onClick={() => void onApprovalClick()}
-              disabled={loading || !draftId || approvalNavBusy || approvalSubmitted}
-              className={`contract-flow-sidebar-action contract-flow-sidebar-action--primary${!approvalSubmissionReady ? ' contract-flow-sidebar-action--needs-work' : ''}`}
-              title={!approvalSubmissionReady ? 'ابتدا همه مراحل را تکمیل و ذخیره کنید — برای فهرست موارد ناقص کلیک کنید' : undefined}
+              disabled={loading || !draftId || approvalNavBusy || approvalSubmitted || !canAttemptApproval}
+              className={`contract-flow-sidebar-action contract-flow-sidebar-action--primary${
+                !approvalSubmissionReady || !canAttemptApproval ? ' contract-flow-sidebar-action--needs-work' : ''
+              }`}
+              title={
+                isApprovalWorkflowMissing
+                  ? 'ابتدا در تنظیمات، فرایند تایید را تعریف کنید.'
+                  : !approvalSubmissionReady
+                    ? 'ابتدا همه مراحل را تکمیل و ذخیره کنید — برای فهرست موارد ناقص کلیک کنید'
+                    : undefined
+              }
             >
               <ShieldCheck className="h-4 w-4 shrink-0 opacity-95" aria-hidden />
-              {approvalNavBusy ? 'در حال آماده‌سازی…' : approvalSubmitted ? 'در انتظار تایید' : 'رفتن به فرایند تایید'}
+              {approvalNavBusy
+                ? 'در حال آماده‌سازی…'
+                : approvalSubmitted
+                  ? 'در انتظار تایید'
+                  : isApprovalWorkflowLoading
+                    ? 'بررسی تنظیمات تایید…'
+                    : 'رفتن به فرایند تایید'}
             </button>
+            {isApprovalWorkflowMissing ? (
+              <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-right">
+                <div className="text-[11px] font-extrabold leading-relaxed text-amber-900">
+                  برای ارسال قرارداد به فرایند تایید، ابتدا باید «فرایند تایید» را در تنظیمات ثبت کنید.
+                </div>
+                <button
+                  type="button"
+                  onClick={() => router.push('/business-settings/approval-process')}
+                  className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-amber-200 bg-white px-2.5 py-1.5 text-[11px] font-bold text-amber-900 transition hover:bg-amber-100/50"
+                >
+                  <Plus className="h-3.5 w-3.5" aria-hidden />
+                  ساخت فرایند تایید
+                </button>
+              </div>
+            ) : null}
           </div>
         </div>
       </div>
