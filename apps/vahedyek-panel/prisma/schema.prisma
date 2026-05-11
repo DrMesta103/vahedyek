@@ -210,6 +210,8 @@ model ContractDraft {
   technicalSpecs ContractTechnicalSpecs?
   attachments ContractAttachments?
   approvalInstance ContractApprovalInstance?
+  receipts ContractReceipt[]
+  walletLedger ContractCustomerWalletLedger[]
 
   @@index([tenantId, updatedAt])
 }
@@ -452,6 +454,49 @@ model FinancialDueItem {
   category    FinancialCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
   @@index([financialId, categoryId])
+}
+
+model ContractReceipt {
+  id                 String        @id @default(cuid())
+  tenantId           String
+  draftId            String
+  allocationMode     String
+  allocationDate     String
+  transferKind       String
+  depositorName      String
+  paidAmountRial     Decimal       @db.Decimal(18, 2)
+  depositDate        String
+  depositTime        String?
+  destinationValue   String?
+  destinationHolder  String?
+  destinationHolders Json          @default("[]")
+  trackingNumber     String?
+  referenceNumber    String?
+  receiptNumber      String?
+  notes              String?
+  documents          Json          @default("[]")
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  draft              ContractDraft @relation(fields: [draftId], references: [id], onDelete: Cascade)
+  walletLedger       ContractCustomerWalletLedger[]
+
+  @@index([tenantId, draftId])
+  @@index([draftId, allocationDate])
+}
+
+model ContractCustomerWalletLedger {
+  id         String          @id @default(cuid())
+  tenantId   String
+  draftId    String
+  receiptId  String?
+  amountRial Decimal         @db.Decimal(18, 2)
+  reason     String          @default("overpayment")
+  createdAt  DateTime        @default(now())
+  draft      ContractDraft   @relation(fields: [draftId], references: [id], onDelete: Cascade)
+  receipt    ContractReceipt? @relation(fields: [receiptId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, draftId])
+  @@index([receiptId])
 }
 
 model Employee {

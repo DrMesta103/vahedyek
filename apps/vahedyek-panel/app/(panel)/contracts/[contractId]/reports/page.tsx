@@ -1,16 +1,25 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { CalendarDays, ChevronDown, FileText, ReceiptText, Upload } from 'lucide-react';
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import { createPortal } from 'react-dom';
+import type { LucideIcon } from 'lucide-react';
+import { Layers, Wallet } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import PanelLayout from '../../../../components/PanelLayout';
+import { DueMonthAccordionList } from '../../../../components/contracts/DueMonthAccordionList';
+import { FieldHint } from '../../../../components/ui/field-hint';
 import { getContractDetails } from '../../../../lib/contractDraftClient';
-import {
-  isFinancialLineHeaderCategoryId,
-  isFinancialLineSubtreeCategoryId,
-  parseDueDateFlexible,
-  toComparableDateFromDueString,
-} from '../../../../lib/financialUtils';
+import { buildPaymentHistoryMonthBuckets } from '../../../../lib/contractPaymentMonthBuckets';
+import { estimateContractPenaltiesTotalRial } from '../../../../lib/estimateContractPenalties';
+import { isFinancialLineHeaderCategoryId, isFinancialLineSubtreeCategoryId } from '../../../../lib/financialUtils';
 
 const PRINCIPAL_SUB_IDS = ['advance', 'installment', 'loan', 'handover', 'document'] as const;
 
@@ -80,310 +89,110 @@ function buildFinancialReportGroups(categoriesRaw: unknown[]): FinancialReportGr
   return groups;
 }
 
-function formatMoneyTomanFromRial(valueRial: number) {
-  if (!valueRial) return '—';
-  const toman = Math.round(valueRial / 10);
-  return `${toman.toLocaleString('fa-IR')} تومان`;
-}
-
 function formatMoneyRial(valueRial: number) {
   if (!valueRial) return '۰ ریال';
   return `${Math.round(valueRial).toLocaleString('fa-IR')} ریال`;
 }
 
-const JALALI_MONTH_NAMES_FA = [
-  '',
-  'فروردین',
-  'اردیبهشت',
-  'خرداد',
-  'تیر',
-  'مرداد',
-  'شهریور',
-  'مهر',
-  'آبان',
-  'آذر',
-  'دی',
-  'بهمن',
-  'اسفند',
-];
-
-function jalaliYearMonthHeading(year: number, month: number) {
-  const name = JALALI_MONTH_NAMES_FA[month] ?? '—';
-  /** سال را بدون گروه‌بندی هزار تا چهار رقم پیوسته (مثل ۱۴۰۵) نمایش بدهیم */
-  return `${name} ${year.toLocaleString('fa-IR', { useGrouping: false })}`;
-}
-
-const PAYMENT_HISTORY_UNKNOWN_MONTH_KEY = '__UNKNOWN_DUE_MONTH__';
-
-function paymentHistoryUnknownMonthHeading() {
-  return 'بدون تاریخ سررسید قابل دسته‌بندی';
-}
-
-type PaymentHistoryDueRow = {
-  id: string;
-  categoryId: string;
-  categoryTitle: string;
-  title: string;
-  amount: number;
-  dueDate: string;
-  isOverdueUnpaid: boolean;
-};
-
-type PaymentHistoryMonthBucket = {
-  key: string;
-  sortKey: number;
-  jalaliYear: number;
-  jalaliMonth: number;
-  heading: string;
-  items: PaymentHistoryDueRow[];
-  totalRial: number;
-  overdueRial: number;
-  penaltyEstimateRial: number;
-};
-
-function buildPaymentHistoryMonthBuckets(params: {
-  dueItems: any[];
-  categoryById: Map<string, string>;
-  contractTotalRial: number;
-  penaltyPoolRial: number;
-}): PaymentHistoryMonthBucket[] {
-  const { dueItems, categoryById, contractTotalRial, penaltyPoolRial } = params;
-  type Acc = {
-    jalaliYear: number;
-    jalaliMonth: number;
-    sortKey: number;
-    items: PaymentHistoryDueRow[];
-    totalRial: number;
-    overdueRial: number;
-  };
-
-  const byKey = new Map<string, Acc>();
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  for (const raw of dueItems) {
-    if (!raw || typeof raw !== 'object') continue;
-
-    const amountNum = Number((raw as any).amount ?? 0);
-    const amount = Number.isFinite(amountNum) ? Math.round(amountNum) : 0;
-
-    const dueDateRaw = String((raw as any).dueDate ?? '').trim();
-    const parsedYm = dueDateRaw ? parseDueDateFlexible(dueDateRaw) : null;
-
-    const key = parsedYm
-      ? `${parsedYm.year}-${String(parsedYm.month).padStart(2, '0')}`
-      : PAYMENT_HISTORY_UNKNOWN_MONTH_KEY;
-
-    const dueEnd = dueDateRaw ? toComparableDateFromDueString(dueDateRaw) : null;
-    const isOverdue = Boolean(dueEnd && dueEnd < today);
-
-    let acc = byKey.get(key);
-    if (!acc) {
-      acc = parsedYm
-        ? {
-            jalaliYear: parsedYm.year,
-            jalaliMonth: parsedYm.month,
-            sortKey: parsedYm.year * 100 + parsedYm.month,
-            items: [],
-            totalRial: 0,
-            overdueRial: 0,
-          }
-        : {
-            jalaliYear: 0,
-            jalaliMonth: 0,
-            sortKey: 9_999_999,
-            items: [],
-            totalRial: 0,
-            overdueRial: 0,
-          };
-      byKey.set(key, acc);
-    }
-
-    acc.totalRial += amount;
-    if (isOverdue) acc.overdueRial += Math.max(amount, 0);
-
-    acc.items.push({
-      id: String((raw as any).id ?? ''),
-      categoryId: String((raw as any).categoryId ?? ''),
-      categoryTitle: categoryById.get(String((raw as any).categoryId ?? '')) ?? String((raw as any).categoryId ?? '—'),
-      title: String((raw as any).title ?? '').trim() || '—',
-      amount,
-      dueDate: dueDateRaw || '—',
-      isOverdueUnpaid: isOverdue,
-    });
-  }
-
-  const sorted = [...byKey.entries()].sort((a, b) => {
-    if (a[0] === PAYMENT_HISTORY_UNKNOWN_MONTH_KEY) return 1;
-    if (b[0] === PAYMENT_HISTORY_UNKNOWN_MONTH_KEY) return -1;
-    return a[1].sortKey - b[1].sortKey;
-  });
-
-  return sorted.map(([key, acc]) => {
-    const penaltyEstimateRial =
-      contractTotalRial > 0 && penaltyPoolRial > 0
-        ? Math.round((penaltyPoolRial * acc.totalRial) / contractTotalRial)
-        : 0;
-
-    acc.items.sort((a, b) => {
-      const da = toComparableDateFromDueString(a.dueDate)?.getTime() ?? 9e12;
-      const db = toComparableDateFromDueString(b.dueDate)?.getTime() ?? 9e12;
-      return da - db;
-    });
-
-    return {
-      key,
-      sortKey: acc.sortKey,
-      jalaliYear: acc.jalaliYear,
-      jalaliMonth: acc.jalaliMonth,
-      heading:
-        key === PAYMENT_HISTORY_UNKNOWN_MONTH_KEY
-          ? paymentHistoryUnknownMonthHeading()
-          : jalaliYearMonthHeading(acc.jalaliYear, acc.jalaliMonth),
-      items: acc.items,
-      totalRial: acc.totalRial,
-      overdueRial: acc.overdueRial,
-      penaltyEstimateRial,
-    };
-  });
-}
-
-function DueMonthAccordionList({
-  buckets,
-  collapsedMonths,
-  toggleMonth,
-}: {
-  buckets: PaymentHistoryMonthBucket[];
-  collapsedMonths: Set<string>;
-  toggleMonth: (monthKey: string) => void;
-}) {
-  return (
-    <>
-      {buckets.map((bucket) => {
-        const isOpen = !collapsedMonths.has(bucket.key);
-        const debtRial = bucket.totalRial;
-        const showPenalty = bucket.penaltyEstimateRial > 0;
-        return (
-          <div
-            key={bucket.key}
-            className="overflow-hidden rounded-[18px] border border-slate-200/90 bg-white shadow-[0_8px_30px_-18px_rgba(15,23,42,0.12)]"
-          >
-            <button
-              type="button"
-              onClick={() => toggleMonth(bucket.key)}
-              aria-expanded={isOpen}
-              className="flex w-full items-start gap-3 px-4 py-3.5 text-right transition hover:bg-slate-50/80 sm:items-center sm:px-5 sm:py-4"
-            >
-              <div className="order-1 flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
-                <div className="flex shrink-0 items-center gap-2">
-                  <CalendarDays
-                    className="h-5 w-5 shrink-0 text-[color-mix(in_srgb,var(--dark-teal)_85%,black)]"
-                    aria-hidden
-                  />
-                  <span className="text-[14px] font-black text-slate-900 sm:text-[15px]">{bucket.heading}</span>
-                </div>
-                <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1.5 text-[11px] font-bold text-slate-600 sm:gap-x-4 sm:text-[12px]">
-                  <span>
-                    مبلغ کل: <span className="font-black text-slate-900">{formatMoneyRial(bucket.totalRial)}</span>
-                  </span>
-                  <span>
-                    بدهی: <span className="font-black text-slate-900">{formatMoneyRial(debtRial)}</span>
-                  </span>
-                  <span>
-                    جریمه:{' '}
-                    <span className="font-black text-slate-900">
-                      {showPenalty ? formatMoneyRial(bucket.penaltyEstimateRial) : '—'}
-                    </span>
-                  </span>
-                  <span>
-                    بدهی معوق:{' '}
-                    <span className={`font-black ${bucket.overdueRial > 0 ? 'text-rose-600' : 'text-slate-900'}`}>
-                      {bucket.overdueRial > 0 ? formatMoneyRial(bucket.overdueRial) : '—'}
-                    </span>
-                  </span>
-                </div>
-              </div>
-              <ChevronDown
-                className={`order-2 h-5 w-5 shrink-0 text-slate-400 transition-transform duration-200 ${
-                  isOpen ? 'rotate-180' : ''
-                }`}
-                aria-hidden
-              />
-            </button>
-
-            {isOpen ? (
-              <div className="border-t border-slate-100 bg-slate-50/40 px-4 py-4 sm:px-5">
-                <div className="text-[11px] font-black uppercase tracking-wide text-slate-500">فیش‌ها و سررسید</div>
-                <div className="mt-3 space-y-2.5">
-                  {bucket.items.map((row, rowIdx) => (
-                    <div
-                      key={row.id.trim() ? row.id : `${bucket.key}-${rowIdx}-${row.dueDate}`}
-                      className="rounded-2xl border border-slate-200/90 bg-white px-3.5 py-3 shadow-sm sm:px-4"
-                    >
-                      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
-                        <div className="min-w-0 flex-1">
-                          <div className="text-[13px] font-black text-slate-900">{row.title}</div>
-                          <div className="mt-1 flex flex-wrap gap-x-2 gap-y-0.5 text-[11px] font-semibold text-slate-500">
-                            <span>{row.categoryTitle}</span>
-                            <span className="text-slate-300">·</span>
-                            <span>سررسید: {row.dueDate}</span>
-                            {row.isOverdueUnpaid ? (
-                              <>
-                                <span className="text-slate-300">·</span>
-                                <span className="font-bold text-rose-600">سررسید گذشته</span>
-                              </>
-                            ) : null}
-                          </div>
-                          <div className="mt-2 text-[11px] font-semibold text-slate-500">
-                            فیش واریزی ثبت‌شده: <span className="font-bold text-slate-400">—</span>{' '}
-                            <span className="font-normal text-slate-400">(اتصال به ماژول پرداخت)</span>
-                          </div>
-                        </div>
-                        <div className="shrink-0 text-left sm:text-right">
-                          <div className="text-[10px] font-bold text-slate-500">مبلغ سررسید</div>
-                          <div className="mt-0.5 text-[14px] font-black tabular-nums text-[color-mix(in_srgb,var(--dark-teal)_90%,black)]">
-                            {formatMoneyRial(row.amount)}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-          </div>
-        );
-      })}
-    </>
-  );
+/** مقدار تهی یعنی سرور هنوز این فیلد را برنمی‌گرداند؛ صفر معتبر است. */
+function formatMoneyRialNullable(valueRial: number | null | undefined) {
+  if (valueRial == null) return '—';
+  return formatMoneyRial(valueRial);
 }
 
 const TOOLTIP_LINE_BASE =
   'مبلغ این ردیف بر اساس سقف زیربخش‌ها؛ بدون لحاظ جریمه‌ها و تخفیف قرارداد.';
 
-/** تخمین ناخالص جریمه از روی قرارداد (قوانین فعال؛ تقسیط واقعی هر ردیف در سیستم پرداخت بعداً ثبت می‌شود). */
-function estimateContractPenaltiesTotalRial(contractTotal: number, penalties: any): number {
-  if (!(contractTotal > 0) || !penalties?.rules?.length) return 0;
-  const activeTypes = new Set(
-    (Array.isArray(penalties.types) ? penalties.types : [])
-      .filter((t: any) => Boolean(t.active))
-      .map((t: any) => String(t.id)),
+const TT_LEDGER_PAID_TOTAL =
+  'جمع پرداخت اصل و پرداخت جریمه؛ فقط وقتی هر دو مقدار از API موجود باشد محاسبه می‌شود؛ در غیر این صورت «—».';
+
+function LedgerDetailPopover({
+  icon: Icon,
+  ariaLabel,
+  children,
+}: {
+  icon: LucideIcon;
+  ariaLabel: string;
+  children: ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+
+  const syncPos = useCallback(() => {
+    const el = btnRef.current;
+    if (!el || typeof window === 'undefined') return;
+    const r = el.getBoundingClientRect();
+    const width = 280;
+    const left = Math.max(8, Math.min(r.left, window.innerWidth - width - 8));
+    setPos({ top: r.bottom + 8, left });
+  }, []);
+
+  useLayoutEffect(() => {
+    if (!open) {
+      setPos(null);
+      return;
+    }
+    syncPos();
+    const onMove = () => syncPos();
+    window.addEventListener('scroll', onMove, true);
+    window.addEventListener('resize', onMove);
+    return () => {
+      window.removeEventListener('scroll', onMove, true);
+      window.removeEventListener('resize', onMove);
+    };
+  }, [open, syncPos]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e: MouseEvent) => {
+      const t = e.target as Node;
+      if (btnRef.current?.contains(t) || panelRef.current?.contains(t)) return;
+      setOpen(false);
+    };
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [open]);
+
+  return (
+    <>
+      <button
+        ref={btnRef}
+        type="button"
+        aria-label={ariaLabel}
+        aria-expanded={open}
+        aria-haspopup="dialog"
+        onClick={() => setOpen((v) => !v)}
+        className="inline-flex shrink-0 rounded-lg p-1.5 text-slate-500 transition hover:bg-slate-100 hover:text-[color-mix(in_srgb,var(--dark-teal)_85%,black)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color-mix(in_srgb,var(--dark-teal)_35%,transparent)]"
+      >
+        <Icon className="h-4 w-4" aria-hidden />
+      </button>
+      {open && pos && typeof document !== 'undefined'
+        ? createPortal(
+            <div
+              ref={panelRef}
+              role="dialog"
+              aria-label={ariaLabel}
+              className="fixed z-[120] w-[min(280px,calc(100vw-16px))] rounded-xl border border-[var(--border-color)] bg-[var(--surface)] px-3 py-2.5 text-[var(--text-body)] shadow-lg"
+              style={{ top: pos.top, left: pos.left }}
+            >
+              {children}
+            </div>,
+            document.body,
+          )
+        : null}
+    </>
   );
-
-  let sum = 0;
-  for (const rule of penalties.rules) {
-    const typeId = String(rule.penaltyTypeId ?? '');
-    if (activeTypes.size && typeId && !activeTypes.has(typeId)) continue;
-    const pct = Number(rule.penaltyPercent ?? 0);
-    const fixed = Number(String(rule.fixedAmount ?? '').replace(/,/g, '') || 0);
-    const bankPct = Number(rule.bankInterestPercent ?? 0);
-
-    if (pct > 0) sum += Math.round((contractTotal * pct) / 100);
-    if (bankPct > 0) sum += Math.round((contractTotal * bankPct) / 100);
-    if (fixed > 0) sum += fixed;
-  }
-
-  return Math.max(0, sum);
 }
 
 function reportGroupLineBaseRial(group: FinancialReportGroup): number {
@@ -395,76 +204,43 @@ type SummaryFinancialRowMetrics = {
   id: string;
   title: string;
   lineBaseRial: number;
-  penaltyTotalRial: number;
-  penaltyPaidRial: number;
-  paidTotalRial: number;
+  /** تا وقتی API جمع جریمه/پرداخت به‌تفکیک ردیف را برنگرداند، تهی است. */
+  penaltyTotalRial: number | null;
+  penaltyPaidRial: number | null;
+  paidTotalRial: number | null;
 };
 
-function buildSummaryFinancialRows(
-  groups: FinancialReportGroup[],
-  contractTotalForPenaltyEstimate: number,
-  penalties: any,
-  globalPaidPlaceholder: number,
-): SummaryFinancialRowMetrics[] {
-  const penaltyPool = estimateContractPenaltiesTotalRial(contractTotalForPenaltyEstimate, penalties);
-
-  const bases = groups.map((g) => ({
+function buildSummaryFinancialRows(groups: FinancialReportGroup[]): SummaryFinancialRowMetrics[] {
+  return groups.map((g) => ({
     id: g.id,
     title: g.title,
     lineBaseRial: reportGroupLineBaseRial(g),
+    penaltyTotalRial: null,
+    penaltyPaidRial: null,
+    paidTotalRial: null,
   }));
-
-  const totalBase = bases.reduce((s, b) => s + b.lineBaseRial, 0);
-
-  const rows = bases.map((b) => {
-    const penaltyTotalRial =
-      totalBase > 0 ? Math.round((penaltyPool * b.lineBaseRial) / totalBase) : 0;
-    const paidShare =
-      totalBase > 0 && globalPaidPlaceholder > 0
-        ? Math.round((globalPaidPlaceholder * b.lineBaseRial) / totalBase)
-        : 0;
-    return {
-      id: b.id,
-      title: b.title,
-      lineBaseRial: b.lineBaseRial,
-      penaltyTotalRial,
-      penaltyPaidRial: 0,
-      paidTotalRial: paidShare,
-    };
-  });
-
-  if (rows.length && penaltyPool > 0) {
-    const alloc = rows.reduce((s, r) => s + r.penaltyTotalRial, 0);
-    const drift = penaltyPool - alloc;
-    if (drift !== 0) rows[rows.length - 1].penaltyTotalRial += drift;
-  }
-
-  if (rows.length && globalPaidPlaceholder > 0) {
-    const paidAlloc = rows.reduce((s, r) => s + r.paidTotalRial, 0);
-    const driftP = globalPaidPlaceholder - paidAlloc;
-    if (driftP !== 0) rows[rows.length - 1].paidTotalRial += driftP;
-  }
-
-  return rows;
 }
 
 type SubgroupDetailRow = {
   id: string;
   label: string;
   lineBaseRial: number;
-  penaltyTotalRial: number;
-  penaltyPaidRial: number;
-  paidTotalRial: number;
+  penaltyTotalRial: number | null;
+  penaltyPaidRial: number | null;
+  paidTotalRial: number | null;
 };
 
-/** تقسیم جریمه و پرداخت سطح گروه بین زیربخش‌ها به‌نسبت سقف هر زیربخش */
 function buildSubgroupDetailRows(
   group: FinancialReportGroup,
   groupMetrics: SummaryFinancialRowMetrics | undefined,
 ): SubgroupDetailRow[] {
-  const penaltyPool = groupMetrics?.penaltyTotalRial ?? 0;
-  const penaltyPaidPool = groupMetrics?.penaltyPaidRial ?? 0;
-  const paidPool = groupMetrics?.paidTotalRial ?? 0;
+  const penaltyPool = groupMetrics?.penaltyTotalRial ?? null;
+  const penaltyPaidPool = groupMetrics?.penaltyPaidRial ?? null;
+  const paidPool = groupMetrics?.paidTotalRial ?? null;
+  const canSplit =
+    typeof penaltyPool === 'number' &&
+    typeof penaltyPaidPool === 'number' &&
+    typeof paidPool === 'number';
 
   if (!group.subRows.length) {
     const base = reportGroupLineBaseRial(group);
@@ -478,6 +254,17 @@ function buildSubgroupDetailRows(
         paidTotalRial: paidPool,
       },
     ];
+  }
+
+  if (!canSplit) {
+    return group.subRows.map((s) => ({
+      id: s.id,
+      label: s.label,
+      lineBaseRial: Math.max(0, s.capRial),
+      penaltyTotalRial: null,
+      penaltyPaidRial: null,
+      paidTotalRial: null,
+    }));
   }
 
   const caps = group.subRows.map((s) => Math.max(0, s.capRial));
@@ -494,11 +281,20 @@ function buildSubgroupDetailRows(
     paidTotalRial: Math.round(paidPool * (weights[idx] ?? 0)),
   }));
 
-  const fixDrift = (key: keyof Pick<SubgroupDetailRow, 'penaltyTotalRial' | 'penaltyPaidRial' | 'paidTotalRial'>, pool: number) => {
+  const fixDrift = (
+    key: keyof Pick<SubgroupDetailRow, 'penaltyTotalRial' | 'penaltyPaidRial' | 'paidTotalRial'>,
+    pool: number,
+  ) => {
     if (!rows.length || pool <= 0) return;
-    const alloc = rows.reduce((s, r) => s + r[key], 0);
+    const alloc = rows.reduce((s, r) => {
+      const v = r[key];
+      return s + (typeof v === 'number' ? v : 0);
+    }, 0);
     const drift = pool - alloc;
-    if (drift !== 0) rows[rows.length - 1][key] += drift;
+    if (drift !== 0) {
+      const last = rows[rows.length - 1]![key];
+      if (typeof last === 'number') (rows[rows.length - 1]![key] as number) = last + drift;
+    }
   };
 
   fixDrift('penaltyTotalRial', penaltyPool);
@@ -506,6 +302,16 @@ function buildSubgroupDetailRows(
   fixDrift('paidTotalRial', paidPool);
 
   return rows;
+}
+
+function sumFinancialNullableColumn<
+  T extends { penaltyTotalRial?: number | null; penaltyPaidRial?: number | null; paidTotalRial?: number | null },
+>(
+  rows: readonly T[],
+  key: 'penaltyTotalRial' | 'penaltyPaidRial' | 'paidTotalRial',
+): number | null {
+  const nums = rows.map((r) => r[key]).filter((v): v is number => typeof v === 'number');
+  return nums.length ? nums.reduce((a, b) => a + b, 0) : null;
 }
 
 function formatSubjectUnitLocation(subject: { unitName?: string; floorName?: string; blockName?: string } | null) {
@@ -575,7 +381,6 @@ export default function ContractReportsPage() {
       unitName: subject?.unitName ?? '—',
       unitMeta: formatSubjectUnitLocation(subject),
       buyerName: buyer?.name ?? '—',
-      amountLabel: formatMoneyTomanFromRial(amountRial),
       amountRial,
       status: contract?.status ?? '—',
       contractTypeLabel,
@@ -591,37 +396,59 @@ export default function ContractReportsPage() {
   const financialDueItems = Array.isArray(view.financial?.dueItems) ? view.financial.dueItems : [];
 
   const totals = useMemo(() => {
-    const paid = 0; // اتصال به فیش‌ها/پرداخت‌ها مرحله بعد
     const principal = financialCategories.find((c: any) => c.id === 'principal');
-    const rows = financialCategories.filter((c: any) => c.id !== 'principal');
-    const rowsTotal = rows.reduce((sum: number, c: any) => sum + Number(c.capAmount || 0), 0);
     const contractTotal = principal ? Number(principal.capAmount || 0) : view.amountRial;
-    return { paid, rowsTotal, contractTotal };
+    return { contractTotal };
   }, [financialCategories, view.amountRial]);
 
   const reportGroups = useMemo(() => buildFinancialReportGroups(financialCategories), [financialCategories]);
 
-  const penaltiesData = contract?.data?.penalties ?? null;
-  const summaryFinancialRows = useMemo(
-    () =>
-      buildSummaryFinancialRows(
-        reportGroups,
-        totals.contractTotal > 0 ? totals.contractTotal : view.amountRial,
-        penaltiesData,
-        totals.paid,
-      ),
-    [reportGroups, totals.contractTotal, totals.paid, view.amountRial, penaltiesData],
-  );
+  const summaryFinancialRows = useMemo(() => buildSummaryFinancialRows(reportGroups), [reportGroups]);
 
   const summaryFooter = useMemo(() => {
     if (!summaryFinancialRows.length) return null;
     return {
       lineBase: summaryFinancialRows.reduce((s, r) => s + r.lineBaseRial, 0),
-      penaltyTotal: summaryFinancialRows.reduce((s, r) => s + r.penaltyTotalRial, 0),
-      penaltyPaid: summaryFinancialRows.reduce((s, r) => s + r.penaltyPaidRial, 0),
-      paidTotal: summaryFinancialRows.reduce((s, r) => s + r.paidTotalRial, 0),
+      penaltyTotal: sumFinancialNullableColumn(summaryFinancialRows, 'penaltyTotalRial'),
+      penaltyPaid: sumFinancialNullableColumn(summaryFinancialRows, 'penaltyPaidRial'),
+      paidTotal: sumFinancialNullableColumn(summaryFinancialRows, 'paidTotalRial'),
     };
   }, [summaryFinancialRows]);
+
+  const ledgerSnapshot = useMemo(() => {
+    const contractTotalRial = totals.contractTotal;
+    const penaltiesPayload = contract?.data?.penalties ?? null;
+    const apiPenaltyTotal = summaryFooter?.penaltyTotal;
+
+    const penaltyTotalRial =
+      typeof apiPenaltyTotal === 'number'
+        ? apiPenaltyTotal
+        : estimateContractPenaltiesTotalRial(
+            contractTotalRial > 0 ? contractTotalRial : 1,
+            penaltiesPayload,
+          );
+    const penaltyFromApi = typeof apiPenaltyTotal === 'number';
+
+    const paidPrincipalRial = summaryFooter?.paidTotal;
+    const paidPenaltyRial = summaryFooter?.penaltyPaid;
+
+    const paidCombinedRial =
+      typeof paidPrincipalRial === 'number' && typeof paidPenaltyRial === 'number'
+        ? paidPrincipalRial + paidPenaltyRial
+        : null;
+
+    const liabilityTotalRial = contractTotalRial + penaltyTotalRial;
+
+    return {
+      contractTotalRial,
+      penaltyTotalRial,
+      penaltyFromApi,
+      liabilityTotalRial,
+      paidPrincipalRial: typeof paidPrincipalRial === 'number' ? paidPrincipalRial : null,
+      paidPenaltyRial: typeof paidPenaltyRial === 'number' ? paidPenaltyRial : null,
+      paidCombinedRial,
+    };
+  }, [totals.contractTotal, summaryFooter, contract?.data?.penalties]);
 
   const defaultSummaryGroupId = useMemo(
     () => reportGroups.find((g) => g.id === 'group-principal')?.id ?? reportGroups[0]?.id ?? null,
@@ -653,9 +480,9 @@ export default function ContractReportsPage() {
     if (!subgroupDetailRows.length) return null;
     return {
       lineBase: subgroupDetailRows.reduce((s, r) => s + r.lineBaseRial, 0),
-      penaltyTotal: subgroupDetailRows.reduce((s, r) => s + r.penaltyTotalRial, 0),
-      penaltyPaid: subgroupDetailRows.reduce((s, r) => s + r.penaltyPaidRial, 0),
-      paidTotal: subgroupDetailRows.reduce((s, r) => s + r.paidTotalRial, 0),
+      penaltyTotal: sumFinancialNullableColumn(subgroupDetailRows, 'penaltyTotalRial'),
+      penaltyPaid: sumFinancialNullableColumn(subgroupDetailRows, 'penaltyPaidRial'),
+      paidTotal: sumFinancialNullableColumn(subgroupDetailRows, 'paidTotalRial'),
     };
   }, [subgroupDetailRows]);
 
@@ -675,30 +502,16 @@ export default function ContractReportsPage() {
     return m;
   }, [financialCategories]);
 
-  const contractTotalForPenalty = totals.contractTotal > 0 ? totals.contractTotal : Math.max(Math.round(view.amountRial), 0);
-  const penaltyPoolForPaymentHistory = estimateContractPenaltiesTotalRial(contractTotalForPenalty, penaltiesData);
-
   const paymentMonthBuckets = useMemo(
-    () =>
-      buildPaymentHistoryMonthBuckets({
-        dueItems: financialDueItems,
-        categoryById: categoryTitleById,
-        contractTotalRial: Math.max(contractTotalForPenalty, 1),
-        penaltyPoolRial: penaltyPoolForPaymentHistory,
-      }),
-    [financialDueItems, categoryTitleById, contractTotalForPenalty, penaltyPoolForPaymentHistory],
+    () => buildPaymentHistoryMonthBuckets({ dueItems: financialDueItems, categoryById: categoryTitleById }),
+    [financialDueItems, categoryTitleById],
   );
 
   /** سررسیدهای همان گروه مالی انتخاب‌شده در خلاصه (برای ستون جزئیات) */
   const summaryDetailMonthBuckets = useMemo(
     () =>
-      buildPaymentHistoryMonthBuckets({
-        dueItems: selectedGroupDueMeta.dues,
-        categoryById: categoryTitleById,
-        contractTotalRial: Math.max(contractTotalForPenalty, 1),
-        penaltyPoolRial: penaltyPoolForPaymentHistory,
-      }),
-    [selectedGroupDueMeta.dues, categoryTitleById, contractTotalForPenalty, penaltyPoolForPaymentHistory],
+      buildPaymentHistoryMonthBuckets({ dueItems: selectedGroupDueMeta.dues, categoryById: categoryTitleById }),
+    [selectedGroupDueMeta.dues, categoryTitleById],
   );
 
   const [collapsedPaymentMonths, setCollapsedPaymentMonths] = useState<Set<string>>(() => new Set());
@@ -741,35 +554,124 @@ export default function ContractReportsPage() {
             </section>
           ) : (
             <>
-              {/* ردیف اول: ستون راست (RTL) خریدار و قرارداد */}
-              <div className="grid gap-4 text-right lg:grid-cols-2 lg:gap-6">
-                <section className="rounded-[18px] border border-slate-200/80 bg-white/90 px-5 py-4 shadow-sm lg:py-5">
-                  <div className="text-[11px] font-black uppercase tracking-wide text-[color-mix(in_srgb,var(--dark-teal)_70%,black)]">
-                    خریدار و قرارداد
-                  </div>
-                  <div className="mt-3 flex flex-col gap-3 text-[13px] font-black text-slate-800">
-                    <div className="flex flex-wrap items-center gap-2 border-b border-slate-100 pb-2">
-                      <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
-                        <i className="fa-regular fa-user" aria-hidden />
+              <div className="flex flex-wrap items-start justify-start gap-3">
+                <section className="w-fit max-w-full rounded-2xl border border-slate-200/70 bg-white/90 px-4 py-3 shadow-sm sm:px-5 sm:py-3.5">
+                  <div className="flex flex-col gap-2.5 text-right">
+                    <div className="flex flex-wrap items-center justify-start gap-x-2 gap-y-1 text-[12px] leading-relaxed text-slate-700">
+                      <span className="rounded-md bg-amber-50 px-2 py-0.5 text-[11px] font-black text-amber-900">
+                        {view.contractTypeLabel}
                       </span>
-                      <span>خریدار: {view.buyerName}</span>
+                      <span className="text-[13px] font-black text-slate-900">{view.unitMeta}</span>
                     </div>
-                    <div className="flex flex-wrap items-center gap-2 text-[13px]">
-                      <FileText className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
-                      شماره قرارداد: {view.contractNumber}
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2 text-[13px]">
-                      <CalendarDays className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
-                      تاریخ قرارداد: {view.contractDate}
+                    <div className="h-px bg-slate-100" />
+                    <div className="flex flex-wrap items-center justify-start gap-x-3 gap-y-1 text-[12px] text-slate-600">
+                      <span>
+                        خریدار: <span className="font-bold text-slate-900">{view.buyerName}</span>
+                      </span>
+                      <span className="text-slate-300" aria-hidden>
+                        ·
+                      </span>
+                      <span className="tabular-nums">
+                        شماره قرارداد: <span className="font-bold text-slate-900">{view.contractNumber}</span>
+                      </span>
+                      <span className="text-slate-300" aria-hidden>
+                        ·
+                      </span>
+                      <span className="tabular-nums">
+                        تاریخ قرارداد: <span className="font-bold text-slate-900">{view.contractDate}</span>
+                      </span>
                     </div>
                   </div>
                 </section>
-                <section className="rounded-[18px] border border-slate-200/80 bg-white/90 px-5 py-4 text-center shadow-sm lg:py-5 lg:text-right">
-                  <div className="inline-block text-[12px] font-bold text-amber-700 lg:block">{view.contractTypeLabel}</div>
-                  <div className="mt-3 text-[11px] font-bold tracking-wide text-slate-500">موقعیت واحد</div>
-                  <div className="mt-1 text-[14px] font-black leading-7 text-slate-900">{view.unitMeta}</div>
-                  <div className="mt-3 text-[12px] font-semibold text-slate-600">
-                    مبلغ در قرارداد: <span className="font-black text-slate-800">{view.amountLabel}</span>
+
+                <section className="w-fit max-w-full rounded-2xl border border-slate-200/70 bg-white/90 px-3 py-2 shadow-sm sm:px-4 sm:py-2.5">
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                    <div className="flex shrink-0 items-center gap-1">
+                      <span className="text-[11px] font-black text-slate-800">خلاصه مالی</span>
+                      <FieldHint
+                        label="خلاصه مالی"
+                        text="دو عدد اصلی: جمع تعهد (اصل قرارداد + جریمه) و جمع پرداخت ثبت‌شده. برای جزئیات روی آیکن‌ها بزنید."
+                      />
+                      <span className="text-[10px] font-semibold text-slate-400">ریال</span>
+                    </div>
+
+                    <div className="flex flex-wrap items-stretch gap-3 sm:gap-4">
+                      <div className="grid min-w-[7.5rem] gap-0.5 text-right">
+                        <span className="text-[10px] font-semibold leading-tight text-slate-500">تعهد کل (اصل + جریمه)</span>
+                        <span className="text-[13px] font-black tabular-nums leading-tight text-slate-900">
+                          {formatMoneyRial(ledgerSnapshot.liabilityTotalRial)}
+                        </span>
+                      </div>
+
+                      <div className="hidden w-px shrink-0 bg-slate-200 sm:block" aria-hidden />
+
+                      <div className="grid min-w-[7.5rem] gap-0.5 text-right">
+                        <span className="text-[10px] font-semibold leading-tight text-slate-500">پرداختی کل (با جریمه)</span>
+                        <span className="text-[13px] font-black tabular-nums leading-tight text-[color-mix(in_srgb,var(--dark-teal)_88%,black)]">
+                          {ledgerSnapshot.paidCombinedRial != null
+                            ? formatMoneyRial(ledgerSnapshot.paidCombinedRial)
+                            : '—'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex shrink-0 items-center gap-0.5 border-s border-slate-200 ps-2">
+                      <LedgerDetailPopover icon={Layers} ariaLabel="جزئیات تعهد (قرارداد و جریمه)">
+                        <div className="space-y-2 text-[11px] leading-relaxed">
+                          <div className="border-b border-slate-100 pb-2 font-black text-slate-900">تفکیک تعهد</div>
+                          <div className="flex justify-between gap-3">
+                            <span className="text-slate-500">قرارداد (بدون جریمه)</span>
+                            <span className="tabular-nums font-black text-slate-900">
+                              {formatMoneyRial(ledgerSnapshot.contractTotalRial)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between gap-3">
+                            <span className="text-slate-500">
+                              جریمه
+                              {!ledgerSnapshot.penaltyFromApi ? (
+                                <span className="ms-1 text-[10px] font-bold text-amber-800">(تخمین)</span>
+                              ) : null}
+                            </span>
+                            <span className="tabular-nums font-black text-slate-900">
+                              {formatMoneyRial(ledgerSnapshot.penaltyTotalRial)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between gap-3 border-t border-slate-100 pt-2 font-black text-slate-900">
+                            <span>جمع تعهد</span>
+                            <span className="tabular-nums">{formatMoneyRial(ledgerSnapshot.liabilityTotalRial)}</span>
+                          </div>
+                        </div>
+                      </LedgerDetailPopover>
+
+                      <LedgerDetailPopover icon={Wallet} ariaLabel="جزئیات پرداخت‌ها">
+                        <div className="space-y-2 text-[11px] leading-relaxed">
+                          <div className="border-b border-slate-100 pb-2 font-black text-slate-900">تفکیک پرداخت</div>
+                          <div className="flex justify-between gap-3">
+                            <span className="text-slate-500">پرداخت اصل</span>
+                            <span className="tabular-nums font-black text-slate-900">
+                              {formatMoneyRialNullable(ledgerSnapshot.paidPrincipalRial)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between gap-3">
+                            <span className="text-slate-500">پرداخت جریمه</span>
+                            <span className="tabular-nums font-black text-slate-900">
+                              {formatMoneyRialNullable(ledgerSnapshot.paidPenaltyRial)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between gap-3 border-t border-slate-100 pt-2 font-black text-[color-mix(in_srgb,var(--dark-teal)_90%,black)]">
+                            <span>جمع پرداخت</span>
+                            <span className="tabular-nums">
+                              {ledgerSnapshot.paidCombinedRial != null
+                                ? formatMoneyRial(ledgerSnapshot.paidCombinedRial)
+                                : '—'}
+                            </span>
+                          </div>
+                          <p className="border-t border-slate-100 pt-2 text-[10px] font-semibold leading-snug text-slate-500">
+                            {TT_LEDGER_PAID_TOTAL}
+                          </p>
+                        </div>
+                      </LedgerDetailPopover>
+                    </div>
                   </div>
                 </section>
               </div>
@@ -803,35 +705,13 @@ export default function ContractReportsPage() {
                 </div>
               </div>
 
-              <div className="mt-4 flex justify-center px-3" dir="rtl">
-                <div className="flex w-full max-w-2xl flex-wrap items-center justify-center gap-3 sm:gap-4">
-                  <button
-                    type="button"
-                    title="اتصال به فرم ثبت فیش — به‌زودی"
-                    className="inline-flex min-h-[44px] flex-1 basis-[min(100%,280px)] items-center justify-center gap-2 rounded-full border-2 border-[color-mix(in_srgb,var(--dark-teal)_45%,transparent)] bg-white px-5 py-2.5 text-[13px] font-black leading-snug text-[color-mix(in_srgb,var(--dark-teal)_88%,black)] shadow-sm transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color-mix(in_srgb,var(--dark-teal)_40%,transparent)] focus-visible:ring-offset-2 sm:flex-none sm:basis-auto"
-                  >
-                    ثبت فیش های واریزی
-                    <ReceiptText className="h-[18px] w-[18px] shrink-0 opacity-90" aria-hidden />
-                  </button>
-                  <button
-                    type="button"
-                    title="بارگذاری فایل برای استخراج فیش‌ها — به‌زودی"
-                    className="inline-flex min-h-[44px] flex-1 basis-[min(100%,280px)] items-center justify-center gap-2 rounded-full border-2 border-[color-mix(in_srgb,var(--dark-teal)_45%,transparent)] bg-white px-5 py-2.5 text-[13px] font-black leading-snug text-[color-mix(in_srgb,var(--dark-teal)_88%,black)] shadow-sm transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color-mix(in_srgb,var(--dark-teal)_40%,transparent)] focus-visible:ring-offset-2 sm:flex-none sm:basis-auto"
-                  >
-                    استخراج فیش پرداختی از فایل
-                    <Upload className="h-[18px] w-[18px] shrink-0 opacity-90" aria-hidden />
-                  </button>
-                </div>
-              </div>
-
               {tab === 'payments' ? (
                 <section className="mt-6 rounded-[22px] border border-slate-200/80 bg-white/90 p-5 text-right shadow-sm md:p-7">
                   <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 pb-4">
                     <div>
                       <div className="text-[15px] font-black text-slate-900">تاریخچه پرداخت</div>
                       <p className="mt-1.5 text-[11px] font-semibold leading-5 text-slate-500">
-                        به‌ترتیب تاریخ، بر اساس ماه سررسید. فقرات زیر هر ماه شامل سررسیدهای ثبت‌شده است؛ فیش واقعی با اتصال ماژول
-                        پرداخت نمایش داده می‌شود.
+                        به‌ترتیب تاریخ، بر اساس ماه سررسید؛ فقط ردیف‌های سررسید ذخیره‌شده در قرارداد از سرور بارگذاری شده‌اند.
                       </p>
                     </div>
                   </div>
@@ -857,8 +737,8 @@ export default function ContractReportsPage() {
                     <section className="rounded-[22px] border border-slate-200/80 bg-white/95 p-4 text-right shadow-sm md:p-5">
                       <div className="text-[13px] font-black text-slate-900">خلاصه گزارشات</div>
                       <p className="mt-2 text-[10px] font-semibold leading-5 text-slate-500">
-                        روی هر ردیف کلیک کنید تا همان بخش در «جزئیات مالی» باز شود. جریمه تخمینی است؛ پرداخت با اتصال فیش
-                        تکمیل می‌شود.
+                        روی هر ردیف کلیک کنید تا همان بخش در «جزئیات مالی» باز شود. ستون‌های جریمه و پرداخت فقط وقتی مقدار دارند که API
+                        قرارداد آن‌ها را برگرداند.
                       </p>
 
                       {summaryFinancialRows.length === 0 ? (
@@ -869,8 +749,11 @@ export default function ContractReportsPage() {
                             <thead>
                               <tr className="border-b border-slate-200 bg-slate-50/90 text-slate-500">
                                 <th className="min-w-[7rem] px-2 py-2 text-right font-bold">عنوان ردیف</th>
-                                <th className="px-1 py-2 text-center font-bold" title={TOOLTIP_LINE_BASE}>
-                                  مبلغ کل
+                                <th className="px-1 py-2 text-center font-bold">
+                                  <div className="flex items-center justify-center gap-1">
+                                    <span>مبلغ کل</span>
+                                    <FieldHint label="مبلغ کل" text={TOOLTIP_LINE_BASE} />
+                                  </div>
                                 </th>
                                 <th className="px-1 py-2 text-center font-bold whitespace-nowrap">مبلغ کل جریمه</th>
                                 <th className="px-1 py-2 text-center font-bold whitespace-nowrap">جریمه پرداخت‌شده</th>
@@ -912,20 +795,17 @@ export default function ContractReportsPage() {
                                         {row.title}
                                       </span>
                                     </td>
-                                    <td
-                                      className="px-1 py-2 text-center tabular-nums font-black text-slate-900 align-middle underline decoration-dotted decoration-slate-300 underline-offset-2"
-                                      title={TOOLTIP_LINE_BASE}
-                                    >
+                                    <td className="px-1 py-2 text-center tabular-nums font-black text-slate-900 align-middle">
                                       {formatMoneyRial(row.lineBaseRial)}
                                     </td>
                                     <td className="px-1 py-2 text-center tabular-nums font-bold text-slate-800 align-middle">
-                                      {formatMoneyRial(row.penaltyTotalRial)}
+                                      {formatMoneyRialNullable(row.penaltyTotalRial)}
                                     </td>
                                     <td className="px-1 py-2 text-center tabular-nums font-bold text-slate-800 align-middle">
-                                      {formatMoneyRial(row.penaltyPaidRial)}
+                                      {formatMoneyRialNullable(row.penaltyPaidRial)}
                                     </td>
                                     <td className="px-1 py-2 text-center tabular-nums font-bold text-emerald-900 align-middle">
-                                      {formatMoneyRial(row.paidTotalRial)}
+                                      {formatMoneyRialNullable(row.paidTotalRial)}
                                     </td>
                                   </tr>
                                 );
@@ -935,17 +815,17 @@ export default function ContractReportsPage() {
                               <tfoot>
                                 <tr className="border-t-2 border-dashed border-slate-300 bg-slate-50/80">
                                   <td className="px-2 py-2 font-black text-slate-900">جمع کل</td>
-                                  <td className="px-1 py-2 text-center tabular-nums font-black text-slate-900" title={TOOLTIP_LINE_BASE}>
+                                  <td className="px-1 py-2 text-center tabular-nums font-black text-slate-900">
                                     {formatMoneyRial(summaryFooter.lineBase)}
                                   </td>
                                   <td className="px-1 py-2 text-center tabular-nums font-black text-slate-900">
-                                    {formatMoneyRial(summaryFooter.penaltyTotal)}
+                                    {formatMoneyRialNullable(summaryFooter.penaltyTotal)}
                                   </td>
                                   <td className="px-1 py-2 text-center tabular-nums font-black text-slate-900">
-                                    {formatMoneyRial(summaryFooter.penaltyPaid)}
+                                    {formatMoneyRialNullable(summaryFooter.penaltyPaid)}
                                   </td>
                                   <td className="px-1 py-2 text-center tabular-nums font-black text-emerald-950">
-                                    {formatMoneyRial(summaryFooter.paidTotal)}
+                                    {formatMoneyRialNullable(summaryFooter.paidTotal)}
                                   </td>
                                 </tr>
                               </tfoot>
@@ -972,81 +852,20 @@ export default function ContractReportsPage() {
                     ) : (
                       <div className="space-y-5">
                         <section className="rounded-[22px] border border-slate-200/80 bg-white/90 p-4 text-right shadow-sm md:p-6 lg:p-8">
-                          <div className="flex flex-wrap items-end justify-between gap-3 rounded-2xl border border-slate-200/90 bg-[linear-gradient(135deg,rgba(14,152,157,0.06),rgba(15,23,42,0.02))] px-4 py-4 md:px-5">
-                            <div>
-                              <div className="text-[11px] font-bold uppercase tracking-wide text-slate-500">ردیف انتخاب‌شده</div>
-                              <div className="mt-1 text-[18px] font-black text-slate-900">{selectedReportGroup.title}</div>
-                            </div>
-                            <div className="flex flex-wrap gap-x-5 gap-y-2 text-[11px] font-semibold text-slate-600">
-                              <span>
-                                سقف چتری:{' '}
-                                <span className="font-black text-slate-900">{formatMoneyRial(selectedReportGroup.umbrellaCapRial)}</span>
-                              </span>
-                              <span aria-hidden className="hidden text-slate-300 sm:inline">
-                                |
-                              </span>
-                              <span>
-                                سررسیدها:{' '}
-                                <span className="font-black text-slate-900">{selectedGroupDueMeta.dues.length}</span> مورد ، جمع{' '}
-                                <span className="font-black text-[color-mix(in_srgb,var(--dark-teal)_85%,black)]">
-                                  {formatMoneyRial(selectedGroupDueMeta.sum)}
-                                </span>
-                              </span>
-                            </div>
-                          </div>
-                        </section>
-
-                        <section className="rounded-[22px] border border-slate-200/80 bg-white/90 p-4 text-right shadow-sm md:p-6 lg:p-8">
-                          <h3 className="text-[13px] font-black text-slate-800">خلاصه مالی</h3>
-                          <p className="mt-1 text-[11px] font-semibold text-slate-500">
-                            جمع و جریمهٔ تخمینی همان ردیف انتخاب‌شده مطابق جدول «خلاصه گزارشات».
-                          </p>
-                          {selectedGroupSummary ? (
-                            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                              <div className="rounded-2xl border border-slate-200/90 bg-slate-50/50 px-3 py-3">
-                                <div className="text-[10px] font-bold text-slate-500" title={TOOLTIP_LINE_BASE}>
-                                  مبلغ کل (سقف ردیف)
-                                </div>
-                                <div className="mt-1 text-[14px] font-black tabular-nums text-slate-900">
-                                  {formatMoneyRial(selectedGroupSummary.lineBaseRial)}
-                                </div>
-                              </div>
-                              <div className="rounded-2xl border border-slate-200/90 bg-slate-50/50 px-3 py-3">
-                                <div className="text-[10px] font-bold text-slate-500">مبلغ کل جریمه (تخمین)</div>
-                                <div className="mt-1 text-[14px] font-black tabular-nums text-slate-900">
-                                  {formatMoneyRial(selectedGroupSummary.penaltyTotalRial)}
-                                </div>
-                              </div>
-                              <div className="rounded-2xl border border-slate-200/90 bg-slate-50/50 px-3 py-3">
-                                <div className="text-[10px] font-bold text-slate-500">جریمه پرداخت‌شده</div>
-                                <div className="mt-1 text-[14px] font-black tabular-nums text-slate-800">
-                                  {formatMoneyRial(selectedGroupSummary.penaltyPaidRial)}
-                                </div>
-                              </div>
-                              <div className="rounded-2xl border border-slate-200/90 bg-slate-50/50 px-3 py-3">
-                                <div className="text-[10px] font-bold text-slate-500">پرداخت‌شده</div>
-                                <div className="mt-1 text-[14px] font-black tabular-nums text-emerald-900">
-                                  {formatMoneyRial(selectedGroupSummary.paidTotalRial)}
-                                </div>
-                              </div>
-                            </div>
-                          ) : (
-                            <p className="mt-3 text-[12px] font-semibold text-slate-500">داده‌ای برای این ردیف در خلاصه نیست.</p>
-                          )}
-                        </section>
-
-                        <section className="rounded-[22px] border border-slate-200/80 bg-white/90 p-4 text-right shadow-sm md:p-6 lg:p-8">
                           <h3 className="text-[13px] font-black text-slate-800">تفکیک زیربخش‌ها</h3>
                           <p className="mt-1 text-[11px] font-semibold text-slate-500">
-                            جریمه هر زیربخش از سهم تخمینی همان ردیف در خلاصه، به‌نسبت سقف زیربخش تقسیم شده است.
+                            مبالغ کل زیربخش از قرارداد است؛ جریمه و پرداخت زیربخش تنها با دادهٔ برگشتی از API پر می‌شود.
                           </p>
                           <div className="mt-3 overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-[0_1px_0_rgba(15,23,42,0.04)]">
                             <table className="w-full min-w-[640px] border-collapse text-[11px] md:min-w-[720px] md:text-[12px]" dir="rtl">
                               <thead>
                                 <tr className="border-b border-slate-200 bg-slate-50 text-slate-600">
                                   <th className="min-w-[8rem] px-3 py-3 text-right font-black">عنوان</th>
-                                  <th className="px-2 py-3 text-center font-black" title={TOOLTIP_LINE_BASE}>
-                                    مبلغ کل
+                                  <th className="px-2 py-3 text-center font-black">
+                                    <div className="flex items-center justify-center gap-1">
+                                      <span>مبلغ کل</span>
+                                      <FieldHint label="مبلغ کل" text={TOOLTIP_LINE_BASE} />
+                                    </div>
                                   </th>
                                   <th className="px-2 py-3 text-center font-black whitespace-nowrap">مبلغ جریمه</th>
                                   <th className="px-2 py-3 text-center font-black whitespace-nowrap">مبلغ پرداختی جریمه</th>
@@ -1066,13 +885,13 @@ export default function ContractReportsPage() {
                                       {formatMoneyRial(row.lineBaseRial)}
                                     </td>
                                     <td className="px-2 py-2.5 text-center tabular-nums font-bold text-slate-800">
-                                      {formatMoneyRial(row.penaltyTotalRial)}
+                                      {formatMoneyRialNullable(row.penaltyTotalRial)}
                                     </td>
                                     <td className="px-2 py-2.5 text-center tabular-nums font-bold text-slate-700">
-                                      {formatMoneyRial(row.penaltyPaidRial)}
+                                      {formatMoneyRialNullable(row.penaltyPaidRial)}
                                     </td>
                                     <td className="px-2 py-2.5 text-center tabular-nums font-bold text-emerald-900">
-                                      {formatMoneyRial(row.paidTotalRial)}
+                                      {formatMoneyRialNullable(row.paidTotalRial)}
                                     </td>
                                   </tr>
                                 ))}
@@ -1085,13 +904,13 @@ export default function ContractReportsPage() {
                                       {formatMoneyRial(subgroupDetailFooter.lineBase)}
                                     </td>
                                     <td className="px-2 py-3 text-center tabular-nums font-black text-slate-900">
-                                      {formatMoneyRial(subgroupDetailFooter.penaltyTotal)}
+                                      {formatMoneyRialNullable(subgroupDetailFooter.penaltyTotal)}
                                     </td>
                                     <td className="px-2 py-3 text-center tabular-nums font-black text-slate-900">
-                                      {formatMoneyRial(subgroupDetailFooter.penaltyPaid)}
+                                      {formatMoneyRialNullable(subgroupDetailFooter.penaltyPaid)}
                                     </td>
                                     <td className="px-2 py-3 text-center tabular-nums font-black text-emerald-950">
-                                      {formatMoneyRial(subgroupDetailFooter.paidTotal)}
+                                      {formatMoneyRialNullable(subgroupDetailFooter.paidTotal)}
                                     </td>
                                   </tr>
                                 </tfoot>

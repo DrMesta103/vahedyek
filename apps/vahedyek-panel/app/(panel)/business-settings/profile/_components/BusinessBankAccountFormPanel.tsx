@@ -1,7 +1,8 @@
 'use client';
 
-import { Building2, Plus } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { ArrowRight, Building2, Plus } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import {
   addBankAccount,
@@ -49,10 +50,12 @@ const titleOptions = ['وجه التزام', 'دیرکرد', 'تعدیل', 'خس
 
 export function BusinessBankAccountFormPanel({ accountId }: { accountId?: string }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnTo = searchParams?.get('returnTo') ?? '';
   const [accountType, setAccountType] = useState<BankAccountType | null>(null);
   const [usage, setUsage] = useState<BankAccountUsage | null>(null);
   const [title, setTitle] = useState('');
-  const [showInContracts, setShowInContracts] = useState(false);
+  const [showInContracts, setShowInContracts] = useState(Boolean(returnTo));
   const [owners, setOwners] = useState<string[]>([]);
   const [ownerDraft, setOwnerDraft] = useState('');
   const [cardParts, setCardParts] = useState(['', '', '', '']);
@@ -102,12 +105,18 @@ export function BusinessBankAccountFormPanel({ accountId }: { accountId?: string
 
     const store = await fetchProfileStore();
     await persistProfileStore(accountId ? updateBankAccount(store, accountId, bankAccount) : addBankAccount(store, bankAccount));
-    router.push('/business-settings/profile/bank-accounts');
+    router.push(returnTo || '/business-settings/profile/bank-accounts');
     router.refresh();
   };
 
   return (
     <ProfilePageShell>
+      {returnTo ? (
+        <Link href={returnTo} className="bank-account-return-link">
+          <ArrowRight />
+          {'\u0628\u0627\u0632\u06af\u0634\u062a \u0628\u0647 \u062b\u0628\u062a \u0641\u06cc\u0634'}
+        </Link>
+      ) : null}
       <ProfileCard>
         <ProfileHeading title={accountId ? 'ویرایش حساب بانکی' : 'افزودن حساب بانکی'} description="حساب بانکی مورد استفاده در قراردادها و گزارش‌ها را ثبت کنید." />
 
