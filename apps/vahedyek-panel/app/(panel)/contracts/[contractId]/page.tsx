@@ -454,6 +454,16 @@ export default function ContractDetailsPage() {
                   router.push(`/contracts/${String(contractId)}/reports${q ? `?${q}` : ''}`);
                   return;
                 }
+                if (item.id === 'dues') {
+                  const q = searchParams?.toString();
+                  router.push(`/contracts/${String(contractId)}/dues${q ? `?${q}` : ''}`);
+                  return;
+                }
+                if (item.id === 'dues') {
+                  const q = searchParams?.toString();
+                  router.push(`/contracts/${String(contractId)}/dues${q ? `?${q}` : ''}`);
+                  return;
+                }
                 if (item.id === 'build' || item.id === 'annex') {
                   setToast('این قابلیت به زودی اضافه میشه');
                   return;
