@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { PricingType } from '@/lib/prisma-client';
+import { buildFieldDiffs, getActorName, recordAuditLog } from '../../../../../lib/audit-log';
 import { requireSessionContext } from '../../../../../lib/auth';
 import {
   normalizeFinancialCategories,
@@ -113,6 +114,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ draf
     }
 
     const body = await request.json();
+    const previous = await prisma.contractFinancial.findUnique({ where: { draftId } });
     const categories = normalizeFinancialCategories(body.categories ?? []);
     const categoryIds = new Set(categories.map((item) => item.id));
     const dueItems = normalizeFinancialDueItems(body.dueItems ?? [], categoryIds);
@@ -204,6 +206,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ draf
       },
       select: { id: true },
     });
+    const updatedFinancial = await prisma.contractFinancial.findUnique({ where: { draftId } });
 
     await prisma.financialDueItem.deleteMany({
       where: { financialId: financial.id },
@@ -240,6 +243,34 @@ export async function PUT(request: Request, { params }: { params: Promise<{ draf
         })),
       });
     }
+    const diff = buildFieldDiffs(previous, updatedFinancial, {
+      pricingType: 'نوع قیمت‌گذاری',
+      areaPricingMode: 'مدل متراژ',
+      unitArea: 'متراژ واحد',
+      parkingArea: 'متراژ پارکینگ',
+      storageArea: 'متراژ انباری',
+      totalArea: 'متراژ کل',
+      pricePerMeter: 'قیمت هر متر',
+      parkingPricePerMeter: 'قیمت هر متر پارکینگ',
+      storagePricePerMeter: 'قیمت هر متر انباری',
+      fixedTotalAmount: 'مبلغ ثابت قرارداد',
+      parkingFixedAmount: 'مبلغ ثابت پارکینگ',
+      storageFixedAmount: 'مبلغ ثابت انباری',
+      activeTab: 'تب فعال مالی',
+    });
+    await recordAuditLog({
+      tenantId: session.tenantId,
+      actorUserId: session.userId,
+      actorName: getActorName(session),
+      action: 'contract.financial.update',
+      entityType: 'contract_draft',
+      entityId: draftId,
+      entityLabel: `پیش‌نویس ${draftId}`,
+      summary: `${getActorName(session)} اطلاعات مالی قرارداد را ویرایش کرد.`,
+      details: { categoriesCount: categories.length, dueItemsCount: dueItems.length },
+      diff,
+      request,
+    });
 
     return NextResponse.json({
       success: true,

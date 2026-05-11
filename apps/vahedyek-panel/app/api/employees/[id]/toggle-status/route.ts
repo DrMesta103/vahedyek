@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '../../../../lib/prisma';
+import { getActorName, recordAuditLog } from '../../../../lib/audit-log';
 import { getSessionContext } from '../../../../lib/auth';
 import { handlePrismaApiError } from '../../../../lib/prismaApiError';
 
@@ -12,6 +13,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
     const { id } = await params;
     const { isActive } = await request.json();
+    const previous = await prisma.employee.findFirst({ where: { id, tenantId: session.tenantId } });
 
     const employee = await prisma.employee.update({
       where: {
@@ -19,6 +21,18 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         tenantId: session.tenantId,
       },
       data: { isActive },
+    });
+    await recordAuditLog({
+      tenantId: session.tenantId,
+      actorUserId: session.userId,
+      actorName: getActorName(session),
+      action: 'employee.update',
+      entityType: 'employee',
+      entityId: employee.id,
+      entityLabel: `${employee.firstName} ${employee.lastName}`.trim(),
+      summary: `${getActorName(session)} وضعیت کارمند ${`${employee.firstName} ${employee.lastName}`.trim()} را تغییر داد.`,
+      diff: [{ field: 'isActive', label: 'وضعیت فعال', before: previous?.isActive ? 'بله' : 'خیر', after: employee.isActive ? 'بله' : 'خیر' }],
+      request,
     });
 
     return NextResponse.json(employee);

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { recordAuditLog } from '../../../lib/audit-log';
 import { parseAuthIdentifier } from '../../../lib/contact';
 import { handlePrismaApiError } from '../../../lib/prismaApiError';
 
@@ -37,12 +38,31 @@ export async function POST(request: Request) {
     }
 
     const session = await createPendingSession(user.id);
+    const membership = await prisma.userTenantMembership.findFirst({
+      where: { userId: user.id },
+      orderBy: { createdAt: 'asc' },
+      select: { tenantId: true },
+    });
 
     const response = NextResponse.json({
       success: true,
       user: { id: user.id, fullName: user.fullName, email: user.email, mobile: user.mobile },
     });
     setAuthCookie(response, session);
+    if (membership?.tenantId) {
+      await recordAuditLog({
+        tenantId: membership.tenantId,
+        actorUserId: user.id,
+        actorName: user.fullName,
+        action: 'auth.login',
+        entityType: 'auth',
+        entityId: user.id,
+        entityLabel: user.fullName,
+        summary: `${user.fullName} وارد سامانه شد.`,
+        details: { identifierType: identifier.type },
+        request,
+      });
+    }
 
     return response;
   } catch (error) {

@@ -21,14 +21,14 @@
 [32mESM[39m [1mdist\index.mjs      [22m[32m34.22 KB[39m
 [32mESM[39m [1mdist\server.mjs.map [22m[32m4.54 KB[39m
 [32mESM[39m [1mdist\index.mjs.map  [22m[32m64.98 KB[39m
-[32mESM[39m ⚡️ Build success in 148ms
-[32mCJS[39m [1mdist\server.js     [22m[32m2.75 KB[39m
+[32mESM[39m ⚡️ Build success in 141ms
 [32mCJS[39m [1mdist\index.js      [22m[32m37.25 KB[39m
-[32mCJS[39m [1mdist\server.js.map [22m[32m4.59 KB[39m
+[32mCJS[39m [1mdist\server.js     [22m[32m2.75 KB[39m
 [32mCJS[39m [1mdist\index.js.map  [22m[32m65.09 KB[39m
-[32mCJS[39m ⚡️ Build success in 149ms
+[32mCJS[39m [1mdist\server.js.map [22m[32m4.59 KB[39m
+[32mCJS[39m ⚡️ Build success in 141ms
 [34mDTS[39m Build start
-[32mDTS[39m ⚡️ Build success in 1755ms
+[32mDTS[39m ⚡️ Build success in 1720ms
 [32mDTS[39m [1mdist\index.d.mts  [22m[32m8.52 KB[39m
 [32mDTS[39m [1mdist\server.d.mts [22m[32m1.06 KB[39m
 [32mDTS[39m [1mdist\index.d.ts   [22m[32m8.52 KB[39m
@@ -52,14 +52,14 @@
 [32mESM[39m [1mdist\index.mjs      [22m[32m34.22 KB[39m
 [32mESM[39m [1mdist\server.mjs.map [22m[32m4.54 KB[39m
 [32mESM[39m [1mdist\index.mjs.map  [22m[32m64.98 KB[39m
-[32mESM[39m ⚡️ Build success in 142ms
-[32mCJS[39m [1mdist\server.js     [22m[32m2.75 KB[39m
+[32mESM[39m ⚡️ Build success in 134ms
 [32mCJS[39m [1mdist\index.js      [22m[32m37.25 KB[39m
-[32mCJS[39m [1mdist\server.js.map [22m[32m4.59 KB[39m
+[32mCJS[39m [1mdist\server.js     [22m[32m2.75 KB[39m
 [32mCJS[39m [1mdist\index.js.map  [22m[32m65.09 KB[39m
-[32mCJS[39m ⚡️ Build success in 144ms
+[32mCJS[39m [1mdist\server.js.map [22m[32m4.59 KB[39m
+[32mCJS[39m ⚡️ Build success in 134ms
 [34mDTS[39m Build start
-[32mDTS[39m ⚡️ Build success in 1665ms
+[32mDTS[39m ⚡️ Build success in 1727ms
 [32mDTS[39m [1mdist\index.d.mts  [22m[32m8.52 KB[39m
 [32mDTS[39m [1mdist\server.d.mts [22m[32m1.06 KB[39m
 [32mDTS[39m [1mdist\index.d.ts   [22m[32m8.52 KB[39m
@@ -72,285 +72,142 @@
 - Local:         http://localhost:3000
 - Network:       http://172.19.0.1:3000
 - Environments: .env
-✓ Ready in 328ms
+✓ Ready in 285ms
 Creating turbopack project {
   dir: 'C:\\Users\\Administrator\\Desktop\\vahedyek\\apps\\vahedyek-panel',
   testMode: true
 }
 
- GET /contracts 200 in 387ms (next.js: 74ms, proxy.ts: 123ms, application-code: 190ms)
- GET /api/contracts/reference-data 200 in 4.3s (next.js: 270ms, proxy.ts: 9ms, application-code: 4.1s)
- GET /api/auth/me 200 in 10.3s (next.js: 83ms, proxy.ts: 10ms, application-code: 10.2s)
- GET /api/contracts?status=draft 200 in 6.0s (next.js: 43ms, proxy.ts: 6ms, application-code: 6.0s)
- GET /api/auth/me 200 in 10.6s (next.js: 242ms, proxy.ts: 6ms, application-code: 10.4s)
- GET /api/contracts?status=draft 200 in 6.4s (next.js: 39ms, proxy.ts: 7ms, application-code: 6.3s)
- GET /contracts/new 200 in 87ms (next.js: 43ms, proxy.ts: 5ms, application-code: 39ms)
- GET /api/contracts/reference-data 200 in 1971ms (next.js: 14ms, proxy.ts: 13ms, application-code: 1943ms)
- GET /api/contracts/drafts/28caf05f-cb44-4b4e-be8d-10bc0be92dbb/subject 200 in 2.1s (next.js: 627ms, proxy.ts: 17ms, application-code: 1497ms)
- GET /api/contracts/drafts/28caf05f-cb44-4b4e-be8d-10bc0be92dbb/parties 200 in 2.5s (next.js: 654ms, proxy.ts: 17ms, application-code: 1837ms)
- GET /api/contracts/drafts/28caf05f-cb44-4b4e-be8d-10bc0be92dbb/financial 200 in 2.9s (next.js: 670ms, proxy.ts: 17ms, application-code: 2.2s)
- GET /api/contracts/drafts/28caf05f-cb44-4b4e-be8d-10bc0be92dbb/penalties 200 in 2.2s (next.js: 582ms, proxy.ts: 2ms, application-code: 1578ms)
- GET /api/contracts/reference-data 200 in 1310ms (next.js: 2ms, proxy.ts: 3ms, application-code: 1304ms)
- GET /api/contracts/drafts/28caf05f-cb44-4b4e-be8d-10bc0be92dbb/subject 200 in 445ms (next.js: 6ms, proxy.ts: 4ms, application-code: 434ms)
- GET /api/contracts/drafts/28caf05f-cb44-4b4e-be8d-10bc0be92dbb/parties 200 in 1010ms (next.js: 7ms, proxy.ts: 3ms, application-code: 1001ms)
- GET /api/contracts/drafts/28caf05f-cb44-4b4e-be8d-10bc0be92dbb/financial 200 in 1476ms (next.js: 8ms, proxy.ts: 3ms, application-code: 1466ms)
- GET /api/contracts/drafts/28caf05f-cb44-4b4e-be8d-10bc0be92dbb/penalties 200 in 1370ms (next.js: 8ms, proxy.ts: 3ms, application-code: 1359ms)
- POST /contracts/new 200 in 734ms (next.js: 1976µs, proxy.ts: 4ms, application-code: 729ms)
-  └─ ƒ listApprovalWorkflowsAction() in 687ms app/actions/workflowActions.ts
- GET /api/contracts/drafts/28caf05f-cb44-4b4e-be8d-10bc0be92dbb/subject 200 in 559ms (next.js: 7ms, proxy.ts: 3ms, application-code: 549ms)
- GET /api/contracts/drafts/28caf05f-cb44-4b4e-be8d-10bc0be92dbb/subject 200 in 911ms (next.js: 4ms, proxy.ts: 2ms, application-code: 905ms)
- POST /contracts/new 200 in 667ms (next.js: 4ms, proxy.ts: 5ms, application-code: 658ms)
-  └─ ƒ getContractExtraCosts("28caf05f-cb44-4b4e-be8d-10bc0be92dbb") in 646ms app/actions/contractSteps789.ts
- GET /api/auth/me 200 in 8.1s (next.js: 14ms, proxy.ts: 12ms, application-code: 8.0s)
- GET /api/contracts/generate-number 200 in 462ms (next.js: 27ms, proxy.ts: 8ms, application-code: 427ms)
- GET /api/auth/me 200 in 8.4s (next.js: 10ms, proxy.ts: 12ms, application-code: 8.3s)
- GET /api/contracts/generate-number 200 in 208ms (next.js: 2ms, proxy.ts: 6ms, application-code: 200ms)
- POST /contracts/new 200 in 619ms (next.js: 2ms, proxy.ts: 6ms, application-code: 611ms)
-  └─ ƒ getContractTechnicalSpecs("28caf05f-cb44-4b4e-be8d-10bc0be92dbb") in 599ms app/actions/contractSteps789.ts
- GET /api/auth/me 200 in 6.6s (next.js: 1691µs, proxy.ts: 2ms, application-code: 6.6s)
- POST /contracts/new 200 in 763ms (next.js: 5ms, proxy.ts: 6ms, application-code: 753ms)
-  └─ ƒ getContractAttachments("28caf05f-cb44-4b4e-be8d-10bc0be92dbb") in 743ms app/actions/contractSteps789.ts
- GET /api/auth/me 200 in 7.3s (next.js: 1868µs, proxy.ts: 2ms, application-code: 7.3s)
- POST /contracts/new 200 in 388ms (next.js: 2ms, proxy.ts: 4ms, application-code: 382ms)
-  └─ ƒ listApprovalWorkflowsAction() in 367ms app/actions/workflowActions.ts
- POST /contracts/new 200 in 571ms (next.js: 3ms, proxy.ts: 12ms, application-code: 555ms)
-  └─ ƒ getContractExtraCosts("28caf05f-cb44-4b4e-be8d-10bc0be92dbb") in 534ms app/actions/contractSteps789.ts
- POST /contracts/new 200 in 384ms (next.js: 1739µs, proxy.ts: 5ms, application-code: 377ms)
-  └─ ƒ getContractTechnicalSpecs("28caf05f-cb44-4b4e-be8d-10bc0be92dbb") in 366ms app/actions/contractSteps789.ts
- POST /contracts/new 200 in 390ms (next.js: 2ms, proxy.ts: 6ms, application-code: 382ms)
-  └─ ƒ getContractAttachments("28caf05f-cb44-4b4e-be8d-10bc0be92dbb") in 373ms app/actions/contractSteps789.ts
- GET /api/contracts/reference-data 200 in 880ms (next.js: 8ms, proxy.ts: 13ms, application-code: 859ms)
- GET /api/contracts/reference-data 200 in 912ms (next.js: 36ms, proxy.ts: 13ms, application-code: 863ms)
- GET /api/contracts/drafts/28caf05f-cb44-4b4e-be8d-10bc0be92dbb/subject 200 in 1048ms (next.js: 54ms, proxy.ts: 13ms, application-code: 982ms)
- GET /api/contracts/drafts/28caf05f-cb44-4b4e-be8d-10bc0be92dbb/parties 200 in 1137ms (next.js: 49ms, proxy.ts: 13ms, application-code: 1074ms)
- GET /api/contracts/reference-data 200 in 574ms (next.js: 1501µs, proxy.ts: 2ms, application-code: 570ms)
- GET /api/contracts/drafts/28caf05f-cb44-4b4e-be8d-10bc0be92dbb/parties 200 in 1151ms (next.js: 7ms, proxy.ts: 3ms, application-code: 1141ms)
- GET /api/contracts/drafts/28caf05f-cb44-4b4e-be8d-10bc0be92dbb/financial 200 in 1478ms (next.js: 7ms, proxy.ts: 4ms, application-code: 1468ms)
- GET /api/business-settings/profile 200 in 2.4s (next.js: 31ms, proxy.ts: 13ms, application-code: 2.4s)
- GET /api/contracts/reference-data 200 in 541ms (next.js: 1265µs, proxy.ts: 3ms, application-code: 537ms)
- GET /api/business-settings/profile 200 in 1821ms (next.js: 1463µs, proxy.ts: 3ms, application-code: 1816ms)
- GET /api/contracts/drafts/28caf05f-cb44-4b4e-be8d-10bc0be92dbb/subject 200 in 691ms (next.js: 7ms, proxy.ts: 6ms, application-code: 678ms)
- GET /api/contracts/drafts/28caf05f-cb44-4b4e-be8d-10bc0be92dbb/financial 200 in 1026ms (next.js: 7ms, proxy.ts: 2ms, application-code: 1017ms)
- GET /api/contracts/drafts/28caf05f-cb44-4b4e-be8d-10bc0be92dbb/penalties 200 in 1699ms (next.js: 6ms, proxy.ts: 3ms, application-code: 1690ms)
- GET /api/auth/me 200 in 5.7s (next.js: 1545µs, proxy.ts: 2ms, application-code: 5.7s)
- GET /api/auth/me 200 in 7.4s (next.js: 7ms, proxy.ts: 10ms, application-code: 7.4s)
- POST /contracts/new 200 in 1242ms (next.js: 5ms, proxy.ts: 9ms, application-code: 1228ms)
-  └─ ƒ getContractExtraCosts("28caf05f-cb44-4b4e-be8d-10bc0be92dbb") in 1218ms app/actions/contractSteps789.ts
- GET /api/contracts/drafts/28caf05f-cb44-4b4e-be8d-10bc0be92dbb/parties 200 in 1503ms (next.js: 22ms, proxy.ts: 9ms, application-code: 1472ms)
- GET /api/contracts/drafts/28caf05f-cb44-4b4e-be8d-10bc0be92dbb/subject 200 in 1507ms (next.js: 16ms, proxy.ts: 10ms, application-code: 1481ms)
- GET /api/contracts/drafts/28caf05f-cb44-4b4e-be8d-10bc0be92dbb/penalties 200 in 1440ms (next.js: 4ms, proxy.ts: 5ms, application-code: 1432ms)
- GET /api/contracts/drafts/28caf05f-cb44-4b4e-be8d-10bc0be92dbb/financial 200 in 1666ms (next.js: 29ms, proxy.ts: 8ms, application-code: 1628ms)
- POST /contracts/new 200 in 712ms (next.js: 3ms, proxy.ts: 4ms, application-code: 705ms)
-  └─ ƒ getContractTechnicalSpecs("28caf05f-cb44-4b4e-be8d-10bc0be92dbb") in 698ms app/actions/contractSteps789.ts
- GET /api/contracts/drafts/28caf05f-cb44-4b4e-be8d-10bc0be92dbb/penalties 200 in 2.3s (next.js: 41ms, proxy.ts: 8ms, application-code: 2.3s)
- POST /contracts/new 200 in 533ms (next.js: 3ms, proxy.ts: 4ms, application-code: 526ms)
-  └─ ƒ getContractAttachments("28caf05f-cb44-4b4e-be8d-10bc0be92dbb") in 520ms app/actions/contractSteps789.ts
- GET /api/contracts/drafts/28caf05f-cb44-4b4e-be8d-10bc0be92dbb/penalties 200 in 1220ms (next.js: 9ms, proxy.ts: 3ms, application-code: 1207ms)
- GET /api/business-settings/contract-rules/builder-penalty 200 in 940ms (next.js: 577ms, proxy.ts: 4ms, application-code: 359ms)
- GET /api/business-settings/contract-rules/builder-penalty 200 in 945ms (next.js: 578ms, proxy.ts: 4ms, application-code: 363ms)
- GET /business-settings/project/blocks/abc70019-251c-41da-af22-60db051cf7ad/floors/820917ae-50eb-47c9-8610-f0b7d3bbd6dc?tab=unit 200 in 286ms (proxy.ts: 5ms)
- GET / 200 in 102ms (next.js: 37ms, proxy.ts: 4ms, application-code: 61ms)
- GET / 200 in 51ms (next.js: 6ms, proxy.ts: 7ms, application-code: 38ms)
- GET /business-settings 200 in 44ms (next.js: 18ms, proxy.ts: 4ms, application-code: 22ms)
- GET /api/auth/me 200 in 5.1s (next.js: 3ms, proxy.ts: 3ms, application-code: 5.1s)
- GET /business-settings/project 200 in 51ms (next.js: 30ms, proxy.ts: 4ms, application-code: 16ms)
- GET /business-settings/project 200 in 19ms (next.js: 1950µs, proxy.ts: 2ms, application-code: 14ms)
- GET /api/auth/me 200 in 5.7s (next.js: 6ms, proxy.ts: 4ms, application-code: 5.7s)
- GET /api/auth/me 200 in 5.4s (next.js: 6ms, proxy.ts: 9ms, application-code: 5.3s)
- GET /api/auth/me 200 in 5.6s (next.js: 10ms, proxy.ts: 8ms, application-code: 5.6s)
- GET /api/auth/me 200 in 5.9s (next.js: 5ms, proxy.ts: 9ms, application-code: 5.8s)
- GET /api/auth/me 200 in 6.7s (next.js: 7ms, proxy.ts: 8ms, application-code: 6.7s)
- GET /api/business-settings/profile 200 in 2.9s (next.js: 3ms, proxy.ts: 3ms, application-code: 2.9s)
- GET /business-settings/project/reports 200 in 46ms (next.js: 19ms, proxy.ts: 4ms, application-code: 22ms)
- GET /business-settings/project/blocks 200 in 38ms (next.js: 17ms, proxy.ts: 3ms, application-code: 18ms)
- GET /business-settings/project/blocks 200 in 19ms (next.js: 1569µs, proxy.ts: 3ms, application-code: 15ms)
- GET /api/business-settings/profile 200 in 1865ms (next.js: 2ms, proxy.ts: 3ms, application-code: 1860ms)
- GET /api/auth/me 200 in 5.9s (next.js: 2ms, proxy.ts: 3ms, application-code: 5.9s)
- GET /api/auth/me 200 in 5.9s (next.js: 2ms, proxy.ts: 3ms, application-code: 5.9s)
- GET /api/business-settings/project/blocks 200 in 546ms (next.js: 25ms, proxy.ts: 4ms, application-code: 517ms)
- GET /api/auth/me 200 in 6.2s (next.js: 1440µs, proxy.ts: 1829µs, application-code: 6.2s)
- GET /api/auth/me 200 in 6.7s (next.js: 1867µs, proxy.ts: 2ms, application-code: 6.7s)
- GET /api/business-settings/project/blocks 200 in 385ms (next.js: 1941µs, proxy.ts: 5ms, application-code: 378ms)
- GET /business-settings/project/blocks/abc70019-251c-41da-af22-60db051cf7ad 200 in 330ms (next.js: 302ms, proxy.ts: 5ms, application-code: 22ms)
- GET /api/auth/me 200 in 5.8s (next.js: 1967µs, proxy.ts: 2ms, application-code: 5.8s)
- GET /api/auth/me 200 in 5.8s (next.js: 1675µs, proxy.ts: 3ms, application-code: 5.8s)
- GET /api/business-settings/project/blocks/abc70019-251c-41da-af22-60db051cf7ad/floors 200 in 1315ms (next.js: 566ms, proxy.ts: 3ms, application-code: 746ms)
- GET /api/auth/me 200 in 5.5s (next.js: 2ms, proxy.ts: 3ms, application-code: 5.5s)
- GET /api/auth/me 200 in 5.7s (next.js: 1912µs, proxy.ts: 3ms, application-code: 5.7s)
- GET /api/business-settings/project/blocks/abc70019-251c-41da-af22-60db051cf7ad/floors 200 in 774ms (next.js: 6ms, proxy.ts: 2ms, application-code: 766ms)
- GET /business-settings/project/blocks/abc70019-251c-41da-af22-60db051cf7ad/floors/820917ae-50eb-47c9-8610-f0b7d3bbd6dc 200 in 50ms (next.js: 11ms, proxy.ts: 6ms, application-code: 34ms)
- GET /api/auth/me 200 in 5.2s (next.js: 3ms, proxy.ts: 4ms, application-code: 5.2s)
- GET /api/auth/me 200 in 5.6s (next.js: 6ms, proxy.ts: 3ms, application-code: 5.6s)
- GET /api/auth/me 200 in 5.2s (next.js: 1748µs, proxy.ts: 3ms, application-code: 5.2s)
- GET /api/business-settings/project/blocks/abc70019-251c-41da-af22-60db051cf7ad/floors/820917ae-50eb-47c9-8610-f0b7d3bbd6dc 200 in 1357ms (next.js: 556ms, proxy.ts: 2ms, application-code: 799ms)
+ GET /audit-logs 200 in 427ms (next.js: 76ms, proxy.ts: 138ms, application-code: 213ms)
+ GET /api/auth/me 200 in 9.4s (next.js: 86ms, proxy.ts: 6ms, application-code: 9.3s)
+ GET /api/auth/me 200 in 10.4s (next.js: 106ms, proxy.ts: 6ms, application-code: 10.3s)
+ GET /api/audit-logs?page=1&pageSize=25 200 in 11.1s (next.js: 35ms, proxy.ts: 104ms, application-code: 10.9s)
+ GET /contracts 200 in 56ms (next.js: 26ms, proxy.ts: 6ms, application-code: 23ms)
+ GET /api/contracts/reference-data 200 in 1736ms (next.js: 44ms, proxy.ts: 19ms, application-code: 1672ms)
+ GET /api/contracts/reference-data 200 in 2.2s (next.js: 44ms, proxy.ts: 17ms, application-code: 2.1s)
+ GET /api/contracts?status=draft 200 in 6.4s (next.js: 24ms, proxy.ts: 4ms, application-code: 6.3s)
+ GET /api/auth/me 200 in 8.2s (next.js: 13ms, proxy.ts: 14ms, application-code: 8.2s)
+ GET /api/auth/me 200 in 8.2s (next.js: 16ms, proxy.ts: 15ms, application-code: 8.2s)
+ GET /api/auth/me 200 in 8.3s (next.js: 17ms, proxy.ts: 15ms, application-code: 8.3s)
+ GET /api/auth/me 200 in 8.6s (next.js: 11ms, proxy.ts: 14ms, application-code: 8.5s)
+ GET /api/contracts?status=draft 200 in 6.4s (next.js: 2ms, proxy.ts: 4ms, application-code: 6.4s)
+ GET /api/contracts?status=pending_approval 200 in 7.8s (next.js: 3ms, proxy.ts: 6ms, application-code: 7.8s)
+ GET /contracts/959073a8-a0e5-4f58-b4ed-c6bf4e772d83?list=pending_approval 200 in 399ms (next.js: 360ms, proxy.ts: 5ms, application-code: 33ms)
+ GET /api/auth/me 200 in 6.0s (next.js: 18ms, proxy.ts: 11ms, application-code: 6.0s)
+ GET /api/auth/me 200 in 6.2s (next.js: 12ms, proxy.ts: 14ms, application-code: 6.1s)
+ GET /api/auth/me 200 in 6.2s (next.js: 10ms, proxy.ts: 15ms, application-code: 6.2s)
+ GET /api/auth/me 200 in 7.4s (next.js: 19ms, proxy.ts: 12ms, application-code: 7.3s)
+ GET /api/contracts/959073a8-a0e5-4f58-b4ed-c6bf4e772d83 200 in 12.1s (next.js: 601ms, proxy.ts: 18ms, application-code: 11.5s)
+ GET /api/contracts/959073a8-a0e5-4f58-b4ed-c6bf4e772d83 200 in 12.9s (next.js: 609ms, proxy.ts: 16ms, application-code: 12.3s)
+ GET /contracts/new 200 in 96ms (next.js: 61ms, proxy.ts: 5ms, application-code: 30ms)
+ GET /api/contracts/reference-data 200 in 1031ms (next.js: 17ms, proxy.ts: 9ms, application-code: 1005ms)
+ GET /api/contracts/drafts/959073a8-a0e5-4f58-b4ed-c6bf4e772d83/subject 200 in 1537ms (next.js: 592ms, proxy.ts: 8ms, application-code: 937ms)
+ GET /api/contracts/drafts/959073a8-a0e5-4f58-b4ed-c6bf4e772d83/parties 200 in 1615ms (next.js: 574ms, proxy.ts: 2ms, application-code: 1039ms)
+ GET /api/contracts/drafts/959073a8-a0e5-4f58-b4ed-c6bf4e772d83/financial 200 in 1924ms (next.js: 564ms, proxy.ts: 3ms, application-code: 1357ms)
+ GET /api/contracts/drafts/959073a8-a0e5-4f58-b4ed-c6bf4e772d83/penalties 200 in 1915ms (next.js: 567ms, proxy.ts: 3ms, application-code: 1346ms)
+ GET /api/auth/me 200 in 5.4s (next.js: 9ms, proxy.ts: 7ms, application-code: 5.4s)
+ POST /contracts/959073a8-a0e5-4f58-b4ed-c6bf4e772d83?list=pending_approval 200 in 7.8s (next.js: 9ms, proxy.ts: 5ms, application-code: 7.8s)
+  └─ ƒ getContractApprovalStateAction("959073a8-a0e5-4f58-b4ed-c6bf4e772d83") in 7746ms app/actions/contractApprovalActions.ts
+ GET /api/auth/me 200 in 5.6s (next.js: 6ms, proxy.ts: 7ms, application-code: 5.6s)
+ GET /api/contracts/reference-data 200 in 596ms (next.js: 2ms, proxy.ts: 3ms, application-code: 590ms)
+ GET /api/contracts/drafts/959073a8-a0e5-4f58-b4ed-c6bf4e772d83/subject 200 in 1026ms (next.js: 9ms, proxy.ts: 6ms, application-code: 1011ms)
+ GET /api/contracts/drafts/959073a8-a0e5-4f58-b4ed-c6bf4e772d83/financial 200 in 804ms (next.js: 9ms, proxy.ts: 3ms, application-code: 792ms)
+ GET /api/contracts/drafts/959073a8-a0e5-4f58-b4ed-c6bf4e772d83/parties 200 in 1232ms (next.js: 15ms, proxy.ts: 5ms, application-code: 1212ms)
+ POST /contracts/[contractId] 200 in 7.1s (next.js: 9ms, proxy.ts: 7ms, application-code: 7.1s)
+  └─ ƒ getContractApprovalStateAction("959073a8-a0e5-4f58-b4ed-c6bf4e772d83") in 7090ms app/actions/contractApprovalActions.ts
+ POST /contracts/new 200 in 7.2s (next.js: 7ms, proxy.ts: 20ms, application-code: 7.1s)
+ POST /contracts/new 200 in 526ms (next.js: 3ms, proxy.ts: 4ms, application-code: 520ms)
+  └─ ƒ listApprovalWorkflowsAction() in 513ms app/actions/workflowActions.ts
+ GET /api/contracts/drafts/959073a8-a0e5-4f58-b4ed-c6bf4e772d83/subject 200 in 590ms (next.js: 6ms, proxy.ts: 3ms, application-code: 581ms)
+ GET /api/contracts/drafts/959073a8-a0e5-4f58-b4ed-c6bf4e772d83/subject 200 in 861ms (next.js: 3ms, proxy.ts: 3ms, application-code: 855ms)
+ POST /contracts/new 200 in 656ms (next.js: 1835µs, proxy.ts: 3ms, application-code: 652ms)
+  └─ ƒ getContractExtraCosts("959073a8-a0e5-4f58-b4ed-c6bf4e772d83") in 646ms app/actions/contractSteps789.ts
+ GET /api/contracts/drafts/959073a8-a0e5-4f58-b4ed-c6bf4e772d83/penalties 200 in 1432ms (next.js: 8ms, proxy.ts: 3ms, application-code: 1421ms)
+ POST /contracts/new 200 in 818ms (next.js: 1555µs, proxy.ts: 2ms, application-code: 814ms)
+  └─ ƒ getContractTechnicalSpecs("959073a8-a0e5-4f58-b4ed-c6bf4e772d83") in 809ms app/actions/contractSteps789.ts
+ GET /api/contracts/generate-number 200 in 456ms (next.js: 25ms, proxy.ts: 7ms, application-code: 424ms)
+ GET /api/contracts/generate-number 200 in 174ms (next.js: 1613µs, proxy.ts: 3ms, application-code: 170ms)
+ POST /contracts/new 200 in 552ms (next.js: 2ms, proxy.ts: 4ms, application-code: 546ms)
+  └─ ƒ getContractAttachments("959073a8-a0e5-4f58-b4ed-c6bf4e772d83") in 540ms app/actions/contractSteps789.ts
+ POST /contracts/new 200 in 393ms (next.js: 1682µs, proxy.ts: 3ms, application-code: 388ms)
+  └─ ƒ listApprovalWorkflowsAction() in 382ms app/actions/workflowActions.ts
+ POST /contracts/new 200 in 373ms (next.js: 2ms, proxy.ts: 7ms, application-code: 364ms)
+  └─ ƒ getContractTechnicalSpecs("959073a8-a0e5-4f58-b4ed-c6bf4e772d83") in 356ms app/actions/contractSteps789.ts
+ POST /contracts/new 200 in 536ms (next.js: 1871µs, proxy.ts: 3ms, application-code: 531ms)
+  └─ ƒ getContractExtraCosts("959073a8-a0e5-4f58-b4ed-c6bf4e772d83") in 526ms app/actions/contractSteps789.ts
+ POST /contracts/new 200 in 551ms (next.js: 1886µs, proxy.ts: 3ms, application-code: 547ms)
+  └─ ƒ getContractAttachments("959073a8-a0e5-4f58-b4ed-c6bf4e772d83") in 542ms app/actions/contractSteps789.ts
+ GET /api/auth/me 200 in 6.2s (next.js: 2ms, proxy.ts: 3ms, application-code: 6.2s)
+ GET /api/auth/me 200 in 5.8s (next.js: 2ms, proxy.ts: 3ms, application-code: 5.8s)
+ PUT /api/contracts/drafts/959073a8-a0e5-4f58-b4ed-c6bf4e772d83/subject 200 in 2.2s (next.js: 7ms, proxy.ts: 3ms, application-code: 2.2s)
+ GET /contracts/new 200 in 93ms (next.js: 2ms, proxy.ts: 3ms, application-code: 88ms)
+ GET /contracts/new 200 in 86ms (next.js: 10ms, proxy.ts: 10ms, application-code: 66ms)
+ GET /api/contracts/reference-data 200 in 713ms (next.js: 8ms, proxy.ts: 10ms, application-code: 695ms)
+ GET /api/contracts/reference-data 200 in 1008ms (next.js: 1546µs, proxy.ts: 4ms, application-code: 1003ms)
+ GET /api/contracts/drafts/959073a8-a0e5-4f58-b4ed-c6bf4e772d83/parties 200 in 1270ms (next.js: 64ms, proxy.ts: 10ms, application-code: 1196ms)
+ GET /api/contracts/drafts/959073a8-a0e5-4f58-b4ed-c6bf4e772d83/parties 200 in 1612ms (next.js: 3ms, proxy.ts: 2ms, application-code: 1607ms)
+ GET /api/business-settings/profile 200 in 2.3s (next.js: 51ms, proxy.ts: 10ms, application-code: 2.2s)
+ GET /api/business-settings/profile 200 in 2.1s (next.js: 2ms, proxy.ts: 4ms, application-code: 2.1s)
+ GET /api/auth/me 200 in 5.8s (next.js: 7ms, proxy.ts: 7ms, application-code: 5.8s)
  GET /api/auth/me 200 in 4.9s (next.js: 3ms, proxy.ts: 3ms, application-code: 4.9s)
- GET /api/business-settings/project/blocks/abc70019-251c-41da-af22-60db051cf7ad/floors/820917ae-50eb-47c9-8610-f0b7d3bbd6dc 200 in 901ms (next.js: 11ms, proxy.ts: 3ms, application-code: 888ms)
- GET /api/auth/me 200 in 5.2s (next.js: 5ms, proxy.ts: 6ms, application-code: 5.2s)
- GET /api/auth/me 200 in 5.4s (next.js: 6ms, proxy.ts: 6ms, application-code: 5.4s)
- GET /business-settings/project/blocks/abc70019-251c-41da-af22-60db051cf7ad/floors/820917ae-50eb-47c9-8610-f0b7d3bbd6dc/units/1f72910f-f7e8-4c45-abd3-b5677520f8db/edit 200 in 342ms (next.js: 311ms, proxy.ts: 4ms, application-code: 28ms)
- GET /api/auth/me 200 in 5.1s (next.js: 1808µs, proxy.ts: 3ms, application-code: 5.1s)
- GET /api/auth/me 200 in 5.4s (next.js: 1794µs, proxy.ts: 3ms, application-code: 5.4s)
- GET /api/business-settings/project/blocks/abc70019-251c-41da-af22-60db051cf7ad/floors/820917ae-50eb-47c9-8610-f0b7d3bbd6dc/units/1f72910f-f7e8-4c45-abd3-b5677520f8db 200 in 2.2s (next.js: 564ms, proxy.ts: 8ms, application-code: 1679ms)
- GET /api/business-settings/project/blocks/abc70019-251c-41da-af22-60db051cf7ad/floors/820917ae-50eb-47c9-8610-f0b7d3bbd6dc/units/1f72910f-f7e8-4c45-abd3-b5677520f8db 200 in 1322ms (next.js: 12ms, proxy.ts: 3ms, application-code: 1306ms)
- GET /api/auth/me 200 in 5.3s (next.js: 6ms, proxy.ts: 7ms, application-code: 5.3s)
- GET /api/auth/me 200 in 5.6s (next.js: 5ms, proxy.ts: 6ms, application-code: 5.6s)
- GET /api/auth/me 200 in 5.6s (next.js: 7ms, proxy.ts: 6ms, application-code: 5.6s)
- GET /api/auth/me 200 in 5.2s (next.js: 1805µs, proxy.ts: 2ms, application-code: 5.2s)
- PATCH /api/business-settings/project/blocks/abc70019-251c-41da-af22-60db051cf7ad/floors/820917ae-50eb-47c9-8610-f0b7d3bbd6dc/units/1f72910f-f7e8-4c45-abd3-b5677520f8db 200 in 2.7s (next.js: 11ms, proxy.ts: 5ms, application-code: 2.7s)
- GET /business-settings/project/blocks/abc70019-251c-41da-af22-60db051cf7ad/floors/820917ae-50eb-47c9-8610-f0b7d3bbd6dc?tab=unit 200 in 33ms (next.js: 7ms, proxy.ts: 3ms, application-code: 22ms)
- GET /business-settings/project/blocks/abc70019-251c-41da-af22-60db051cf7ad/floors/820917ae-50eb-47c9-8610-f0b7d3bbd6dc?tab=unit 200 in 31ms (next.js: 4ms, proxy.ts: 3ms, application-code: 24ms)
- GET /api/business-settings/project/blocks/abc70019-251c-41da-af22-60db051cf7ad/floors/820917ae-50eb-47c9-8610-f0b7d3bbd6dc 200 in 716ms (next.js: 23ms, proxy.ts: 10ms, application-code: 683ms)
- GET /api/business-settings/project/blocks/abc70019-251c-41da-af22-60db051cf7ad/floors/820917ae-50eb-47c9-8610-f0b7d3bbd6dc 200 in 742ms (next.js: 25ms, proxy.ts: 9ms, application-code: 709ms)
- GET /api/auth/me 200 in 4.9s (next.js: 7ms, proxy.ts: 9ms, application-code: 4.8s)
- GET /api/auth/me 200 in 4.9s (next.js: 9ms, proxy.ts: 9ms, application-code: 4.9s)
- GET /api/auth/me 200 in 5.3s (next.js: 10ms, proxy.ts: 8ms, application-code: 5.3s)
- GET /api/auth/me 200 in 5.5s (next.js: 12ms, proxy.ts: 8ms, application-code: 5.4s)
- GET /api/contracts/drafts/28caf05f-cb44-4b4e-be8d-10bc0be92dbb/subject 200 in 408ms (next.js: 14ms, proxy.ts: 8ms, application-code: 386ms)
- POST /contracts/new 200 in 518ms (next.js: 6ms, proxy.ts: 10ms, application-code: 502ms)
-  └─ ƒ getContractExtraCosts("28caf05f-cb44-4b4e-be8d-10bc0be92dbb") in 490ms app/actions/contractSteps789.ts
- GET /api/contracts/drafts/28caf05f-cb44-4b4e-be8d-10bc0be92dbb/subject 200 in 524ms (next.js: 20ms, proxy.ts: 9ms, application-code: 496ms)
- GET /api/contracts/drafts/28caf05f-cb44-4b4e-be8d-10bc0be92dbb/parties 200 in 604ms (next.js: 20ms, proxy.ts: 7ms, application-code: 577ms)
- GET /api/contracts/drafts/28caf05f-cb44-4b4e-be8d-10bc0be92dbb/financial 200 in 766ms (next.js: 26ms, proxy.ts: 8ms, application-code: 731ms)
- GET /api/contracts/drafts/28caf05f-cb44-4b4e-be8d-10bc0be92dbb/penalties 200 in 769ms (next.js: 38ms, proxy.ts: 8ms, application-code: 723ms)
- GET /api/contracts/drafts/28caf05f-cb44-4b4e-be8d-10bc0be92dbb/parties 200 in 697ms (next.js: 3ms, proxy.ts: 3ms, application-code: 691ms)
- POST /contracts/new 200 in 636ms (next.js: 4ms, proxy.ts: 20ms, application-code: 611ms)
-  └─ ƒ getContractTechnicalSpecs("28caf05f-cb44-4b4e-be8d-10bc0be92dbb") in 604ms app/actions/contractSteps789.ts
- GET /api/contracts/drafts/28caf05f-cb44-4b4e-be8d-10bc0be92dbb/penalties 200 in 746ms (next.js: 20ms, proxy.ts: 8ms, application-code: 719ms)
- GET /api/contracts/drafts/28caf05f-cb44-4b4e-be8d-10bc0be92dbb/financial 200 in 1297ms (next.js: 15ms, proxy.ts: 13ms, application-code: 1269ms)
- POST /contracts/new 200 in 1237ms (next.js: 2ms, proxy.ts: 4ms, application-code: 1231ms)
-  └─ ƒ getContractAttachments("28caf05f-cb44-4b4e-be8d-10bc0be92dbb") in 1223ms app/actions/contractSteps789.ts
- POST /contracts/new 200 in 367ms (next.js: 3ms, proxy.ts: 4ms, application-code: 361ms)
-  └─ ƒ getContractExtraCosts("28caf05f-cb44-4b4e-be8d-10bc0be92dbb") in 355ms app/actions/contractSteps789.ts
- POST /contracts/new 200 in 383ms (next.js: 2ms, proxy.ts: 5ms, application-code: 375ms)
-  └─ ƒ getContractTechnicalSpecs("28caf05f-cb44-4b4e-be8d-10bc0be92dbb") in 370ms app/actions/contractSteps789.ts
- POST /contracts/new 200 in 368ms (next.js: 4ms, proxy.ts: 2ms, application-code: 362ms)
-  └─ ƒ getContractAttachments("28caf05f-cb44-4b4e-be8d-10bc0be92dbb") in 357ms app/actions/contractSteps789.ts
- GET /api/contracts/drafts/28caf05f-cb44-4b4e-be8d-10bc0be92dbb/penalties 200 in 733ms (next.js: 11ms, proxy.ts: 4ms, application-code: 719ms)
- GET /api/business-settings/contract-rules/builder-penalty 200 in 217ms (next.js: 24ms, proxy.ts: 6ms, application-code: 187ms)
- GET /api/business-settings/contract-rules/builder-penalty 200 in 404ms (next.js: 12ms, proxy.ts: 6ms, application-code: 387ms)
- GET /contracts/new 200 in 212ms (next.js: 2ms, proxy.ts: 4ms, application-code: 206ms)
- GET /api/contracts/drafts/28caf05f-cb44-4b4e-be8d-10bc0be92dbb/subject 200 in 562ms (next.js: 20ms, proxy.ts: 11ms, application-code: 531ms)
- GET /api/contracts/reference-data 200 in 867ms (next.js: 12ms, proxy.ts: 11ms, application-code: 844ms)
- GET /api/contracts/drafts/28caf05f-cb44-4b4e-be8d-10bc0be92dbb/financial 200 in 1076ms (next.js: 33ms, proxy.ts: 11ms, application-code: 1032ms)
- GET /api/contracts/drafts/28caf05f-cb44-4b4e-be8d-10bc0be92dbb/parties 200 in 1222ms (next.js: 27ms, proxy.ts: 11ms, application-code: 1184ms)
- POST /contracts/new 200 in 393ms (next.js: 2ms, proxy.ts: 4ms, application-code: 387ms)
-  └─ ƒ listApprovalWorkflowsAction() in 381ms app/actions/workflowActions.ts
- GET /api/contracts/drafts/28caf05f-cb44-4b4e-be8d-10bc0be92dbb/subject 200 in 478ms (next.js: 7ms, proxy.ts: 2ms, application-code: 468ms)
- POST /contracts/new 200 in 362ms (next.js: 1725µs, proxy.ts: 3ms, application-code: 358ms)
-  └─ ƒ getContractExtraCosts("28caf05f-cb44-4b4e-be8d-10bc0be92dbb") in 354ms app/actions/contractSteps789.ts
- GET /api/contracts/generate-number 200 in 355ms (next.js: 3ms, proxy.ts: 3ms, application-code: 349ms)
- GET /api/contracts/drafts/28caf05f-cb44-4b4e-be8d-10bc0be92dbb/penalties 200 in 1418ms (next.js: 7ms, proxy.ts: 4ms, application-code: 1408ms)
- GET /api/contracts/generate-number 200 in 190ms (next.js: 1970µs, proxy.ts: 3ms, application-code: 185ms)
- POST /contracts/new 200 in 534ms (next.js: 2ms, proxy.ts: 3ms, application-code: 529ms)
-  └─ ƒ getContractTechnicalSpecs("28caf05f-cb44-4b4e-be8d-10bc0be92dbb") in 524ms app/actions/contractSteps789.ts
- POST /contracts/new 200 in 550ms (next.js: 3ms, proxy.ts: 4ms, application-code: 543ms)
-  └─ ƒ getContractAttachments("28caf05f-cb44-4b4e-be8d-10bc0be92dbb") in 538ms app/actions/contractSteps789.ts
- GET /api/contracts/reference-data 200 in 663ms (next.js: 5ms, proxy.ts: 8ms, application-code: 650ms)
- GET /api/contracts/drafts/28caf05f-cb44-4b4e-be8d-10bc0be92dbb/parties 200 in 928ms (next.js: 18ms, proxy.ts: 9ms, application-code: 901ms)
- GET /api/contracts/reference-data 200 in 704ms (next.js: 1791µs, proxy.ts: 3ms, application-code: 699ms)
- GET /api/contracts/drafts/28caf05f-cb44-4b4e-be8d-10bc0be92dbb/subject 200 in 731ms (next.js: 7ms, proxy.ts: 3ms, application-code: 721ms)
- GET /api/business-settings/profile 200 in 1978ms (next.js: 7ms, proxy.ts: 9ms, application-code: 1962ms)
- GET /api/auth/me 200 in 5.3s (next.js: 9ms, proxy.ts: 8ms, application-code: 5.2s)
- GET /api/auth/me 200 in 5.3s (next.js: 11ms, proxy.ts: 8ms, application-code: 5.2s)
- GET /api/contracts/reference-data 200 in 985ms (next.js: 1860µs, proxy.ts: 3ms, application-code: 980ms)
- GET /api/contracts/drafts/28caf05f-cb44-4b4e-be8d-10bc0be92dbb/financial 200 in 1323ms (next.js: 6ms, proxy.ts: 3ms, application-code: 1314ms)
- GET /api/contracts/reference-data 200 in 464ms (next.js: 1855µs, proxy.ts: 3ms, application-code: 458ms)
- GET /api/contracts/drafts/28caf05f-cb44-4b4e-be8d-10bc0be92dbb/parties 200 in 1245ms (next.js: 6ms, proxy.ts: 3ms, application-code: 1236ms)
- GET /api/contracts/drafts/28caf05f-cb44-4b4e-be8d-10bc0be92dbb/subject 200 in 706ms (next.js: 8ms, proxy.ts: 6ms, application-code: 692ms)
- GET /api/contracts/drafts/28caf05f-cb44-4b4e-be8d-10bc0be92dbb/financial 200 in 759ms (next.js: 6ms, proxy.ts: 2ms, application-code: 751ms)
- GET /api/contracts/drafts/28caf05f-cb44-4b4e-be8d-10bc0be92dbb/penalties 200 in 834ms (next.js: 7ms, proxy.ts: 3ms, application-code: 824ms)
- GET /api/business-settings/profile 200 in 1598ms (next.js: 5ms, proxy.ts: 5ms, application-code: 1588ms)
- GET /api/business-settings/contract-rules/builder-penalty 200 in 220ms (next.js: 11ms, proxy.ts: 4ms, application-code: 205ms)
- GET /api/business-settings/contract-rules/builder-penalty 200 in 407ms (next.js: 8ms, proxy.ts: 4ms, application-code: 395ms)
- GET /api/auth/me 200 in 6.9s (next.js: 6ms, proxy.ts: 7ms, application-code: 6.9s)
- GET /api/auth/me 200 in 5.1s (next.js: 3ms, proxy.ts: 3ms, application-code: 5.1s)
- POST /contracts/new 200 in 828ms (next.js: 4ms, proxy.ts: 8ms, application-code: 816ms)
-  └─ ƒ getContractExtraCosts("28caf05f-cb44-4b4e-be8d-10bc0be92dbb") in 809ms app/actions/contractSteps789.ts
- GET /api/contracts/drafts/28caf05f-cb44-4b4e-be8d-10bc0be92dbb/subject 200 in 1098ms (next.js: 17ms, proxy.ts: 12ms, application-code: 1069ms)
- POST /contracts/new 200 in 361ms (next.js: 2ms, proxy.ts: 4ms, application-code: 355ms)
-  └─ ƒ getContractTechnicalSpecs("28caf05f-cb44-4b4e-be8d-10bc0be92dbb") in 348ms app/actions/contractSteps789.ts
- GET /api/contracts/drafts/28caf05f-cb44-4b4e-be8d-10bc0be92dbb/parties 200 in 1267ms (next.js: 22ms, proxy.ts: 10ms, application-code: 1235ms)
- GET /api/contracts/drafts/28caf05f-cb44-4b4e-be8d-10bc0be92dbb/financial 200 in 1425ms (next.js: 30ms, proxy.ts: 11ms, application-code: 1385ms)
- GET /api/contracts/drafts/28caf05f-cb44-4b4e-be8d-10bc0be92dbb/penalties 200 in 1427ms (next.js: 38ms, proxy.ts: 11ms, application-code: 1378ms)
- GET / 200 in 49ms (next.js: 3ms, proxy.ts: 3ms, application-code: 44ms)
- POST /contracts/new 200 in 371ms (next.js: 2ms, proxy.ts: 7ms, application-code: 362ms)
-  └─ ƒ getContractAttachments("28caf05f-cb44-4b4e-be8d-10bc0be92dbb") in 358ms app/actions/contractSteps789.ts
- GET /api/contracts/drafts/28caf05f-cb44-4b4e-be8d-10bc0be92dbb/financial 200 in 191ms (next.js: 29ms, proxy.ts: 8ms, application-code: 154ms)
- GET /api/contracts/drafts/28caf05f-cb44-4b4e-be8d-10bc0be92dbb/subject 200 in 194ms (next.js: 12ms, proxy.ts: 8ms, application-code: 174ms)
- POST /contracts/new 200 in 126ms (next.js: 4ms, proxy.ts: 3ms, application-code: 120ms)
- GET /api/contracts/drafts/28caf05f-cb44-4b4e-be8d-10bc0be92dbb/parties 200 in 195ms (next.js: 21ms, proxy.ts: 8ms, application-code: 165ms)
- GET /api/contracts/drafts/28caf05f-cb44-4b4e-be8d-10bc0be92dbb/penalties 200 in 194ms (next.js: 41ms, proxy.ts: 8ms, application-code: 145ms)
- GET /contracts 200 in 35ms (next.js: 5ms, proxy.ts: 5ms, application-code: 25ms)
- GET /api/contracts/reference-data 200 in 879ms (next.js: 16ms, proxy.ts: 8ms, application-code: 854ms)
- GET /api/auth/me 200 in 5.0s (next.js: 6ms, proxy.ts: 9ms, application-code: 5.0s)
- GET /api/auth/me 200 in 5.0s (next.js: 3ms, proxy.ts: 5ms, application-code: 5.0s)
- GET /api/contracts/reference-data 200 in 580ms (next.js: 1399µs, proxy.ts: 3ms, application-code: 576ms)
- GET /api/auth/me 200 in 6.0s (next.js: 13ms, proxy.ts: 7ms, application-code: 5.9s)
- GET /api/auth/me 200 in 6.0s (next.js: 9ms, proxy.ts: 7ms, application-code: 6.0s)
- GET /api/auth/me 200 in 6.0s (next.js: 6ms, proxy.ts: 8ms, application-code: 6.0s)
- GET /api/contracts?status=draft 200 in 4.0s (next.js: 7ms, proxy.ts: 5ms, application-code: 3.9s)
- GET /api/auth/me 200 in 6.5s (next.js: 1431µs, proxy.ts: 3ms, application-code: 6.5s)
- GET /api/contracts?status=draft 200 in 6.0s (next.js: 3ms, proxy.ts: 7ms, application-code: 6.0s)
- GET /api/contracts?status=pending_approval 200 in 3.4s (next.js: 3ms, proxy.ts: 5ms, application-code: 3.4s)
- GET /contracts/959073a8-a0e5-4f58-b4ed-c6bf4e772d83?list=pending_approval 200 in 386ms (next.js: 364ms, proxy.ts: 4ms, application-code: 18ms)
- GET /api/auth/me 200 in 6.2s (next.js: 18ms, proxy.ts: 14ms, application-code: 6.1s)
- GET /api/auth/me 200 in 6.3s (next.js: 17ms, proxy.ts: 17ms, application-code: 6.3s)
- GET /api/auth/me 200 in 6.7s (next.js: 21ms, proxy.ts: 16ms, application-code: 6.7s)
- GET /api/auth/me 200 in 7.0s (next.js: 22ms, proxy.ts: 17ms, application-code: 6.9s)
- GET /api/contracts/959073a8-a0e5-4f58-b4ed-c6bf4e772d83 200 in 11.8s (next.js: 608ms, proxy.ts: 21ms, application-code: 11.2s)
- GET /api/contracts/959073a8-a0e5-4f58-b4ed-c6bf4e772d83 200 in 12.4s (next.js: 590ms, proxy.ts: 30ms, application-code: 11.8s)
- GET /contracts/new 200 in 32ms (next.js: 4ms, proxy.ts: 4ms, application-code: 24ms)
- POST /contracts/959073a8-a0e5-4f58-b4ed-c6bf4e772d83?list=pending_approval 200 in 6.4s (next.js: 7ms, proxy.ts: 4ms, application-code: 6.4s)
-  └─ ƒ getContractApprovalStateAction("959073a8-a0e5-4f58-b4ed-c6bf4e772d83") in 6348ms app/actions/contractApprovalActions.ts
- GET /api/contracts/reference-data 200 in 1174ms (next.js: 19ms, proxy.ts: 10ms, application-code: 1145ms)
- GET /api/contracts/drafts/959073a8-a0e5-4f58-b4ed-c6bf4e772d83/subject 200 in 1283ms (next.js: 30ms, proxy.ts: 10ms, application-code: 1244ms)
- GET /api/contracts/drafts/959073a8-a0e5-4f58-b4ed-c6bf4e772d83/parties 200 in 1234ms (next.js: 6ms, proxy.ts: 2ms, application-code: 1225ms)
- GET /api/contracts/drafts/959073a8-a0e5-4f58-b4ed-c6bf4e772d83/financial 200 in 816ms (next.js: 7ms, proxy.ts: 3ms, application-code: 807ms)
- GET /api/contracts/drafts/959073a8-a0e5-4f58-b4ed-c6bf4e772d83/penalties 200 in 778ms (next.js: 6ms, proxy.ts: 5ms, application-code: 767ms)
- GET /api/contracts/reference-data 200 in 628ms (next.js: 1729µs, proxy.ts: 3ms, application-code: 624ms)
- GET /api/contracts/drafts/959073a8-a0e5-4f58-b4ed-c6bf4e772d83/subject 200 in 405ms (next.js: 9ms, proxy.ts: 6ms, application-code: 390ms)
- GET /api/contracts/drafts/959073a8-a0e5-4f58-b4ed-c6bf4e772d83/parties 200 in 630ms (next.js: 8ms, proxy.ts: 3ms, application-code: 619ms)
- GET /api/contracts/drafts/959073a8-a0e5-4f58-b4ed-c6bf4e772d83/financial 200 in 873ms (next.js: 7ms, proxy.ts: 3ms, application-code: 863ms)
- GET /api/contracts/drafts/959073a8-a0e5-4f58-b4ed-c6bf4e772d83/penalties 200 in 909ms (next.js: 8ms, proxy.ts: 3ms, application-code: 898ms)
- POST /contracts/new 200 in 415ms (next.js: 2ms, proxy.ts: 3ms, application-code: 410ms)
-  └─ ƒ listApprovalWorkflowsAction() in 404ms app/actions/workflowActions.ts
- GET /api/auth/me 200 in 6.4s (next.js: 13ms, proxy.ts: 7ms, application-code: 6.4s)
- GET /api/auth/me 200 in 6.4s (next.js: 9ms, proxy.ts: 6ms, application-code: 6.4s)
- GET /api/contracts/drafts/959073a8-a0e5-4f58-b4ed-c6bf4e772d83/subject 200 in 752ms (next.js: 5ms, proxy.ts: 3ms, application-code: 744ms)
- POST /contracts/new 200 in 444ms (next.js: 3ms, proxy.ts: 4ms, application-code: 436ms)
-  └─ ƒ getContractExtraCosts("959073a8-a0e5-4f58-b4ed-c6bf4e772d83") in 432ms app/actions/contractSteps789.ts
- GET /api/contracts/drafts/959073a8-a0e5-4f58-b4ed-c6bf4e772d83/subject 200 in 479ms (next.js: 8ms, proxy.ts: 4ms, application-code: 467ms)
- GET /api/contracts/generate-number 200 in 192ms (next.js: 3ms, proxy.ts: 3ms, application-code: 186ms)
- POST /contracts/new 200 in 357ms (next.js: 3ms, proxy.ts: 3ms, application-code: 352ms)
-  └─ ƒ getContractTechnicalSpecs("959073a8-a0e5-4f58-b4ed-c6bf4e772d83") in 347ms app/actions/contractSteps789.ts
- GET /api/auth/me 200 in 5.8s (next.js: 1465µs, proxy.ts: 3ms, application-code: 5.8s)
- GET /api/contracts/generate-number 200 in 186ms (next.js: 1832µs, proxy.ts: 2ms, application-code: 182ms)
- POST /contracts/new 200 in 350ms (next.js: 2ms, proxy.ts: 3ms, application-code: 345ms)
-  └─ ƒ getContractAttachments("959073a8-a0e5-4f58-b4ed-c6bf4e772d83") in 340ms app/actions/contractSteps789.ts
- GET /api/auth/me 200 in 5.6s (next.js: 1691µs, proxy.ts: 2ms, application-code: 5.6s)
- POST /contracts/new 200 in 194ms (next.js: 2ms, proxy.ts: 4ms, application-code: 188ms)
-  └─ ƒ listApprovalWorkflowsAction() in 182ms app/actions/workflowActions.ts
- POST /contracts/[contractId] 200 in 8.1s (next.js: 8ms, proxy.ts: 4ms, application-code: 8.1s)
-  └─ ƒ getContractApprovalStateAction("959073a8-a0e5-4f58-b4ed-c6bf4e772d83") in 8102ms app/actions/contractApprovalActions.ts
- POST /contracts/new 200 in 8.2s (next.js: 5ms, proxy.ts: 10ms, application-code: 8.1s)
- POST /contracts/new 200 in 348ms (next.js: 1721µs, proxy.ts: 3ms, application-code: 344ms)
-  └─ ƒ getContractExtraCosts("959073a8-a0e5-4f58-b4ed-c6bf4e772d83") in 339ms app/actions/contractSteps789.ts
- POST /contracts/new 200 in 355ms (next.js: 1681µs, proxy.ts: 3ms, application-code: 350ms)
-  └─ ƒ getContractTechnicalSpecs("959073a8-a0e5-4f58-b4ed-c6bf4e772d83") in 345ms app/actions/contractSteps789.ts
- POST /contracts/new 200 in 368ms (next.js: 4ms, proxy.ts: 2ms, application-code: 362ms)
-  └─ ƒ getContractAttachments("959073a8-a0e5-4f58-b4ed-c6bf4e772d83") in 356ms app/actions/contractSteps789.ts
- GET /api/auth/me 200 in 5.8s (next.js: 10ms, proxy.ts: 12ms, application-code: 5.8s)
- GET /api/auth/me 200 in 5.8s (next.js: 11ms, proxy.ts: 12ms, application-code: 5.8s)
- GET /api/auth/me 200 in 6.2s (next.js: 11ms, proxy.ts: 13ms, application-code: 6.1s)
- GET /api/auth/me 200 in 6.5s (next.js: 12ms, proxy.ts: 12ms, application-code: 6.5s)
- GET /contracts 200 in 21ms (next.js: 4ms, proxy.ts: 6ms, application-code: 12ms)
- GET /api/contracts/reference-data 200 in 1328ms (next.js: 10ms, proxy.ts: 10ms, application-code: 1308ms)
- GET /api/contracts/959073a8-a0e5-4f58-b4ed-c6bf4e772d83 200 in 10.1s (next.js: 22ms, proxy.ts: 16ms, application-code: 10.0s)
- GET /api/contracts/reference-data 200 in 663ms (next.js: 1937µs, proxy.ts: 3ms, application-code: 657ms)
- GET /api/contracts/959073a8-a0e5-4f58-b4ed-c6bf4e772d83 200 in 11.1s (next.js: 22ms, proxy.ts: 14ms, application-code: 11.1s)
- GET /api/auth/me 200 in 6.2s (next.js: 8ms, proxy.ts: 9ms, application-code: 6.2s)
- GET /api/auth/me 200 in 6.3s (next.js: 8ms, proxy.ts: 8ms, application-code: 6.3s)
- GET /api/contracts?status=draft 200 in 3.6s (next.js: 2ms, proxy.ts: 5ms, application-code: 3.6s)
- GET /api/contracts?status=draft 200 in 3.3s (next.js: 2ms, proxy.ts: 4ms, application-code: 3.3s)
- GET /api/auth/me 200 in 7.0s (next.js: 7ms, proxy.ts: 7ms, application-code: 6.9s)
- GET /api/auth/me 200 in 6.5s (next.js: 1858µs, proxy.ts: 2ms, application-code: 6.5s)
+ GET / 200 in 128ms (next.js: 35ms, proxy.ts: 5ms, application-code: 87ms)
+ GET /api/contracts/drafts/959073a8-a0e5-4f58-b4ed-c6bf4e772d83/subject 200 in 45ms (next.js: 25ms, proxy.ts: 5ms, application-code: 15ms)
+ GET /audit-logs 200 in 32ms (next.js: 4ms, proxy.ts: 5ms, application-code: 24ms)
+ GET /api/auth/me 200 in 5.2s (next.js: 9ms, proxy.ts: 5ms, application-code: 5.2s)
+ GET /api/auth/me 200 in 5.8s (next.js: 7ms, proxy.ts: 5ms, application-code: 5.7s)
+ GET /api/auth/me 200 in 5.2s (next.js: 8ms, proxy.ts: 10ms, application-code: 5.2s)
+ GET /api/auth/me 200 in 5.2s (next.js: 6ms, proxy.ts: 10ms, application-code: 5.2s)
+ GET /api/audit-logs?page=1&pageSize=25 200 in 5.7s (next.js: 9ms, proxy.ts: 12ms, application-code: 5.6s)
+ GET /api/auth/me 200 in 6.0s (next.js: 7ms, proxy.ts: 10ms, application-code: 6.0s)
+ GET /api/auth/me 200 in 6.1s (next.js: 1580µs, proxy.ts: 2ms, application-code: 6.0s)
+ GET /api/audit-logs?page=1&pageSize=25 200 in 6.0s (next.js: 1480µs, proxy.ts: 2ms, application-code: 6.0s)
+ GET /business-settings/profile/buyers 200 in 55ms (next.js: 25ms, proxy.ts: 3ms, application-code: 27ms)
+ GET /api/business-settings/profile 200 in 2.4s (next.js: 14ms, proxy.ts: 16ms, application-code: 2.3s)
+ GET /api/business-settings/profile 200 in 2.9s (next.js: 13ms, proxy.ts: 15ms, application-code: 2.8s)
+ GET /api/auth/me 200 in 5.8s (next.js: 18ms, proxy.ts: 10ms, application-code: 5.8s)
+ GET /api/auth/me 200 in 6.2s (next.js: 14ms, proxy.ts: 11ms, application-code: 6.2s)
+ GET /api/auth/me 200 in 6.6s (next.js: 9ms, proxy.ts: 14ms, application-code: 6.5s)
+ GET /api/auth/me 200 in 7.1s (next.js: 11ms, proxy.ts: 13ms, application-code: 7.0s)
+ GET /business-settings/profile/buyers/new?kind=natural&tab=natural 200 in 881ms (next.js: 855ms, proxy.ts: 6ms, application-code: 20ms)
+ GET /api/business-settings/profile 200 in 1007ms (next.js: 12ms, proxy.ts: 12ms, application-code: 983ms)
+ GET /api/business-settings/profile 200 in 1181ms (next.js: 13ms, proxy.ts: 12ms, application-code: 1155ms)
+ GET /api/business-settings/profile 200 in 1107ms (next.js: 1454µs, proxy.ts: 3ms, application-code: 1103ms)
+ GET /api/business-settings/profile 200 in 1639ms (next.js: 2ms, proxy.ts: 4ms, application-code: 1633ms)
+ GET /api/auth/me 200 in 5.4s (next.js: 16ms, proxy.ts: 11ms, application-code: 5.4s)
+ GET /api/auth/me 200 in 5.4s (next.js: 11ms, proxy.ts: 10ms, application-code: 5.4s)
+ GET /api/business-settings/profile/directory?q=zareahmadreza12%40gmail.com 200 in 1265ms (next.js: 22ms, proxy.ts: 3ms, application-code: 1240ms)
+ GET /api/auth/me 200 in 5.6s (next.js: 15ms, proxy.ts: 10ms, application-code: 5.6s)
+ GET /api/auth/me 200 in 6.3s (next.js: 8ms, proxy.ts: 10ms, application-code: 6.3s)
+ POST /api/business-settings/profile/directory/ensure-user 200 in 7.0s (next.js: 45ms, proxy.ts: 5ms, application-code: 7.0s)
+ POST /api/business-settings/profile/directory/ensure-user 200 in 6.2s (next.js: 1990µs, proxy.ts: 5ms, application-code: 6.2s)
+ GET /api/business-settings/profile 200 in 1219ms (next.js: 1534µs, proxy.ts: 3ms, application-code: 1215ms)
+ PUT /api/business-settings/profile 200 in 1056ms (next.js: 1902µs, proxy.ts: 3ms, application-code: 1051ms)
+ GET /contracts 200 in 34ms (next.js: 5ms, proxy.ts: 6ms, application-code: 24ms)
+ GET /api/contracts/reference-data 200 in 1083ms (next.js: 18ms, proxy.ts: 14ms, application-code: 1051ms)
+ GET /api/contracts/reference-data 200 in 1316ms (next.js: 10ms, proxy.ts: 19ms, application-code: 1286ms)
+ GET /api/contracts?status=draft 200 in 3.9s (next.js: 4ms, proxy.ts: 7ms, application-code: 3.9s)
+ GET /api/auth/me 200 in 5.9s (next.js: 11ms, proxy.ts: 11ms, application-code: 5.9s)
+ GET /api/auth/me 200 in 6.0s (next.js: 16ms, proxy.ts: 10ms, application-code: 6.0s)
+ GET /api/auth/me 200 in 6.4s (next.js: 12ms, proxy.ts: 11ms, application-code: 6.3s)
+ GET /api/auth/me 200 in 7.3s (next.js: 16ms, proxy.ts: 11ms, application-code: 7.3s)
+ GET /api/contracts?status=draft 200 in 6.0s (next.js: 8ms, proxy.ts: 7ms, application-code: 6.0s)
+✓ Compiled in 319ms
+ GET /contracts 200 in 168ms (next.js: 49ms, proxy.ts: 42ms, application-code: 77ms)
+ GET /contracts 200 in 51ms (next.js: 3ms, proxy.ts: 5ms, application-code: 43ms)
+ GET /contracts 200 in 25ms (next.js: 2ms, proxy.ts: 5ms, application-code: 18ms)
+ GET /login?next=%2Faudit-logs 200 in 126ms (next.js: 26ms, proxy.ts: 3ms, application-code: 98ms)
+ GET /audit-logs 200 in 89ms (next.js: 52ms, proxy.ts: 4ms, application-code: 33ms)
+ GET /api/auth/me 200 in 2.1s (next.js: 75ms, proxy.ts: 9ms, application-code: 1993ms)
+ GET /api/auth/me 200 in 2.1s (next.js: 63ms, proxy.ts: 9ms, application-code: 2.0s)
+ GET /api/auth/me 200 in 2.1s (next.js: 71ms, proxy.ts: 9ms, application-code: 2.0s)
+ GET /api/auth/me 200 in 2.1s (next.js: 68ms, proxy.ts: 9ms, application-code: 2.0s)
+ GET /api/audit-logs?page=1&pageSize=25 200 in 2.1s (next.js: 35ms, proxy.ts: 71ms, application-code: 1972ms)
+ GET /audit-logs 200 in 129ms (next.js: 1858µs, proxy.ts: 4ms, application-code: 123ms)
+ GET /api/auth/me 200 in 10.2s (next.js: 7ms, proxy.ts: 6ms, application-code: 10.2s)
+ GET /api/auth/me 200 in 10.5s (next.js: 5ms, proxy.ts: 6ms, application-code: 10.5s)
+ GET /api/audit-logs?page=1&pageSize=25 200 in 11.5s (next.js: 10ms, proxy.ts: 6ms, application-code: 11.5s)
+ GET /audit-logs 200 in 63ms (next.js: 3ms, proxy.ts: 5ms, application-code: 55ms)
+ GET /api/auth/me 200 in 5.9s (next.js: 5ms, proxy.ts: 8ms, application-code: 5.8s)
+ GET /api/auth/me 200 in 6.1s (next.js: 7ms, proxy.ts: 8ms, application-code: 6.1s)
+ GET /api/audit-logs?page=1&pageSize=25 200 in 6.6s (next.js: 11ms, proxy.ts: 9ms, application-code: 6.6s)
+[?25h

@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { Prisma } from '@/lib/prisma-client';
+import { getActorName, recordAuditLog } from '../../../../../lib/audit-log';
+import { buildContractSubjectAuditDiff } from '../../../../../lib/audit-log-presenters';
 import { requireSessionContext } from '../../../../../lib/auth';
 import { prisma } from '../../../../../lib/prisma';
 import { handlePrismaApiError } from '../../../../../lib/prismaApiError';
@@ -7,6 +9,51 @@ import { parseContractorType, parseContractType, serializeContractorType, serial
 
 function normalizeFormerEmployeeName(value: string) {
   return value.trim().replace(/\s+/g, ' ');
+}
+
+async function buildSubjectAuditLookup(
+  tenantId: string,
+  tenantName: string,
+  before: { contractorEmployeeId?: string | null; blockId?: string | null; unitId?: string | null } | null,
+  after: { contractorEmployeeId?: string | null; blockId?: string | null; unitId?: string | null } | null,
+) {
+  const employeeIds = Array.from(new Set([before?.contractorEmployeeId, after?.contractorEmployeeId].filter((id): id is string => Boolean(id))));
+  const blockIds = Array.from(new Set([before?.blockId, after?.blockId].filter((id): id is string => Boolean(id))));
+  const unitIds = Array.from(new Set([before?.unitId, after?.unitId].filter((id): id is string => Boolean(id))));
+
+  const [employees, blocks, units] = await Promise.all([
+    employeeIds.length
+      ? prisma.employee.findMany({
+          where: { tenantId, id: { in: employeeIds } },
+          select: { id: true, firstName: true, lastName: true, nationalCode: true },
+        })
+      : Promise.resolve([]),
+    blockIds.length
+      ? prisma.block.findMany({
+          where: { tenantId, id: { in: blockIds } },
+          select: { id: true, name: true, mainPlate: true, subPlate: true },
+        })
+      : Promise.resolve([]),
+    unitIds.length
+      ? prisma.unit.findMany({
+          where: { tenantId, id: { in: unitIds } },
+          select: {
+            id: true,
+            name: true,
+            floorName: true,
+            blockId: true,
+            block: { select: { id: true, name: true, mainPlate: true, subPlate: true } },
+          },
+        })
+      : Promise.resolve([]),
+  ]);
+
+  return {
+    tenantName,
+    employeesById: new Map(employees.map((employee) => [employee.id, employee])),
+    blocksById: new Map([...blocks, ...units.map((unit) => unit.block)].filter(Boolean).map((block) => [block.id, block])),
+    unitsById: new Map(units.map((unit) => [unit.id, unit])),
+  };
 }
 
 export async function GET(_: Request, { params }: { params: Promise<{ draftId: string }> }) {
@@ -71,6 +118,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ draf
     }
 
     const body = await request.json();
+    const previous = await prisma.contractSubject.findUnique({ where: { draftId } });
     const contractor = body.contractor ?? {};
     const formerEmployeeName =
       contractor.type === 'former-employee'
@@ -120,7 +168,32 @@ export async function PUT(request: Request, { params }: { params: Promise<{ draf
         blockId: body.blockId,
         unitId: body.unitId,
       },
-      select: { id: true },
+      select: {
+        id: true,
+        contractorType: true,
+        contractorEmployeeId: true,
+        contractorFormerName: true,
+        contractType: true,
+        contractDate: true,
+        contractNumber: true,
+        deliveryDate: true,
+        blockId: true,
+        unitId: true,
+      },
+    });
+    const lookup = await buildSubjectAuditLookup(session.tenantId, session.tenant?.name ?? 'سازنده اصلی', previous, result);
+    const diff = buildContractSubjectAuditDiff(previous, result, lookup);
+    await recordAuditLog({
+      tenantId: session.tenantId,
+      actorUserId: session.userId,
+      actorName: getActorName(session),
+      action: 'contract.subject.update',
+      entityType: 'contract_draft',
+      entityId: draftId,
+      entityLabel: result.contractNumber || `پیش‌نویس ${draftId}`,
+      summary: `${getActorName(session)} اطلاعات پایه قرارداد را ویرایش کرد.`,
+      diff,
+      request,
     });
 
     return NextResponse.json({ success: true, id: result.id });

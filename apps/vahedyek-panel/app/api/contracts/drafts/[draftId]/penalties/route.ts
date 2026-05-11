@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { getActorName, recordAuditLog } from '../../../../../lib/audit-log';
 import { requireSessionContext } from '../../../../../lib/auth';
 import { prisma } from '../../../../../lib/prisma';
 import { handlePrismaApiError } from '../../../../../lib/prismaApiError';
@@ -300,6 +301,22 @@ export async function PUT(request: Request, { params }: { params: Promise<{ draf
         })),
       });
     }
+    await recordAuditLog({
+      tenantId: session.tenantId,
+      actorUserId: session.userId,
+      actorName: getActorName(session),
+      action: 'contract.penalties.update',
+      entityType: 'contract_draft',
+      entityId: draftId,
+      entityLabel: `پیش‌نویس ${draftId}`,
+      summary: `${getActorName(session)} جرائم قرارداد را ویرایش کرد.`,
+      details: { typesCount: types.length, rulesCount: rules.length },
+      diff: [
+        { field: 'typesCount', label: 'تعداد انواع جریمه', before: 'نامشخص', after: String(types.length) },
+        { field: 'rulesCount', label: 'تعداد قواعد جریمه', before: 'نامشخص', after: String(rules.length) },
+      ],
+      request,
+    });
 
     return NextResponse.json({
       success: true,
