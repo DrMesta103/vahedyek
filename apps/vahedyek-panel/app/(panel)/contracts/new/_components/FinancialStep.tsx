@@ -21,7 +21,16 @@ import {
   type ReferenceUnit,
 } from '../../../../lib/contractDraftClient';
 import { validateFinancialStep } from '../../../../lib/contractValidation';
-import { addIntervalToDate, buildRegularDueItems, distributeAmount, type DueFrequency } from '../../../../lib/financialUtils';
+import {
+  FINANCIAL_LINE_PREFIX,
+  addIntervalToDate,
+  buildRegularDueItems,
+  distributeAmount,
+  isFinancialLineHeaderCategoryId,
+  isFinancialLineSubtreeCategoryId,
+  sumFinancialCapsCountedAgainstContractTotal,
+  type DueFrequency,
+} from '../../../../lib/financialUtils';
 import type { ContractFinancialData, ContractSubjectData, FinancialCategoryData, FinancialDueItemData, PricingType } from '../../../../types/contract';
 import { dispatchContractFlowDirty, dispatchContractFlowFinancialSnapshot, dispatchContractFlowSavedForDraft } from './contractFlowSignals';
 import { buildValidationSummary } from './validationPresentation';
@@ -31,6 +40,7 @@ type DueItem = FinancialDueItemData;
 type DueMode = 'irregular' | 'regular';
 
 const SYSTEM_FINANCIAL_CATEGORIES = [
+  { id: 'principal', name: 'مبلغ اصل قرارداد', requiresDue: false },
   { id: 'advance', name: 'پیش پرداخت', requiresDue: true },
   { id: 'installment', name: 'اقساط ثابت', requiresDue: true },
   { id: 'loan', name: 'وام بانکی', requiresDue: false },
@@ -38,8 +48,22 @@ const SYSTEM_FINANCIAL_CATEGORIES = [
   { id: 'document', name: 'تحویل سند', requiresDue: false },
 ] as const;
 const LOCKED_CATEGORY_IDS = SYSTEM_FINANCIAL_CATEGORIES.map((item) => item.id);
+const FINANCIAL_SUB_CATEGORY_IDS = ['advance', 'installment', 'loan', 'handover', 'document'] as const;
 const DUE_TAG_OPTIONS = SYSTEM_FINANCIAL_CATEGORIES.map((item) => item.name);
 const REGULAR_DUE_CATEGORY_ID = 'installment';
+
+function structuralFinancialSubSuffix(categoryId: string): string | undefined {
+  if ((FINANCIAL_SUB_CATEGORY_IDS as readonly string[]).includes(categoryId)) return categoryId;
+  const sep = categoryId.lastIndexOf(':');
+  if (sep < 0) return undefined;
+  const suf = categoryId.slice(sep + 1);
+  return (FINANCIAL_SUB_CATEGORY_IDS as readonly string[]).includes(suf) ? suf : undefined;
+}
+
+function isStructuralLockedCategoryId(categoryId: string): boolean {
+  if ((LOCKED_CATEGORY_IDS as readonly string[]).includes(categoryId)) return true;
+  return isFinancialLineSubtreeCategoryId(categoryId);
+}
 const PIE_CHART_COLORS = ['#0f766e', '#14b8a6', '#0ea5e9', '#6366f1', '#f59e0b', '#ef4444', '#84cc16', '#8b5cf6'];
 
 const INITIAL_CATEGORIES: FinancialCategory[] = SYSTEM_FINANCIAL_CATEGORIES.map((item) => ({
@@ -52,8 +76,11 @@ const INITIAL_CATEGORIES: FinancialCategory[] = SYSTEM_FINANCIAL_CATEGORIES.map(
   requiresDue: item.requiresDue,
 }));
 
-function getCategoryRequiresDue(categoryId: string) {
-  return SYSTEM_FINANCIAL_CATEGORIES.find((item) => item.id === (categoryId as (typeof SYSTEM_FINANCIAL_CATEGORIES)[number]['id']))?.requiresDue ?? true;
+function getCategoryRequiresDue(categoryId: string): boolean {
+  if (categoryId === 'principal') return false;
+  const suffix = structuralFinancialSubSuffix(categoryId);
+  if (suffix) return SYSTEM_FINANCIAL_CATEGORIES.find((item) => item.id === suffix)?.requiresDue ?? true;
+  return SYSTEM_FINANCIAL_CATEGORIES.find((item) => item.id === categoryId)?.requiresDue ?? true;
 }
 
 function normalizeCategory(item: FinancialCategory) {
@@ -66,36 +93,90 @@ function normalizeCategory(item: FinancialCategory) {
   };
 }
 
-function mergeWithSystemCategories(categories: FinancialCategory[]) {
-  const normalizedCategories = categories.map(normalizeCategory);
-  const existingById = new Map(normalizedCategories.map((item) => [item.id, item]));
-  const merged = SYSTEM_FINANCIAL_CATEGORIES.map((item) => existingById.get(item.id) ?? normalizeCategory({
-    id: item.id,
-    name: item.name,
-    capAmount: 0,
-    dueAmount: 0,
-    noDueAmount: 0,
-    system: true,
-    requiresDue: item.requiresDue,
-  }));
+function orderFinancialCategories(items: FinancialCategory[]): FinancialCategory[] {
+  const byId = new Map(items.map((item) => [item.id, item]));
+  const out: FinancialCategory[] = [];
 
-  const customCategories = normalizedCategories.filter((item) => !LOCKED_CATEGORY_IDS.includes(item.id as any));
-  return [...merged, ...customCategories];
+  for (const tpl of SYSTEM_FINANCIAL_CATEGORIES) {
+    const row = byId.get(tpl.id);
+    out.push(
+      row ??
+        normalizeCategory({
+          id: tpl.id,
+          name: tpl.name,
+          capAmount: 0,
+          dueAmount: 0,
+          noDueAmount: 0,
+          system: true,
+          requiresDue: tpl.requiresDue,
+        }),
+    );
+  }
+
+  const emitted = new Set(out.map((row) => row.id));
+  const headerIds: string[] = [];
+  for (const c of items) {
+    if (isFinancialLineHeaderCategoryId(c.id) && !headerIds.includes(c.id)) headerIds.push(c.id);
+  }
+
+  for (const hid of headerIds) {
+    const header = byId.get(hid);
+    if (!header) continue;
+    if (!emitted.has(hid)) {
+      out.push(normalizeCategory(header));
+      emitted.add(hid);
+    }
+    for (const subKey of FINANCIAL_SUB_CATEGORY_IDS) {
+      const sid = `${hid}:${subKey}`;
+      if (emitted.has(sid)) continue;
+      const tpl = SYSTEM_FINANCIAL_CATEGORIES.find((entry) => entry.id === subKey)!;
+      const existing = byId.get(sid);
+      const row =
+        existing ??
+        normalizeCategory({
+          id: sid,
+          name: tpl.name,
+          capAmount: 0,
+          dueAmount: 0,
+          noDueAmount: 0,
+          system: true,
+          requiresDue: tpl.requiresDue,
+        });
+      out.push(row);
+      emitted.add(sid);
+    }
+  }
+
+  for (const item of items) {
+    if (emitted.has(item.id)) continue;
+    if (isFinancialLineSubtreeCategoryId(item.id)) continue;
+    out.push(normalizeCategory(item));
+    emitted.add(item.id);
+  }
+
+  return out;
 }
 
-function orderCategories(categories: FinancialCategory[]) {
-  const systemOrder = new Map<string, number>(SYSTEM_FINANCIAL_CATEGORIES.map((item, index) => [item.id, index]));
-  return categories
-    .map((item, index) => ({ item, index }))
-    .sort((a, b) => {
-      const aIndex = systemOrder.get(a.item.id);
-      const bIndex = systemOrder.get(b.item.id);
-      if (aIndex !== undefined && bIndex !== undefined) return aIndex - bIndex;
-      if (aIndex !== undefined) return -1;
-      if (bIndex !== undefined) return 1;
-      return a.index - b.index;
-    })
-    .map(({ item }) => item);
+function mergeWithSystemCategories(categories: FinancialCategory[]): FinancialCategory[] {
+  const normalizedCategories = categories.map(normalizeCategory);
+  const coreIds = new Set<string>(SYSTEM_FINANCIAL_CATEGORIES.map((entry) => entry.id));
+  const extras = normalizedCategories.filter((entry) => !coreIds.has(entry.id));
+  const coreRows = SYSTEM_FINANCIAL_CATEGORIES.map((tpl) => {
+    const existing = normalizedCategories.find((entry) => entry.id === tpl.id);
+    return (
+      existing ??
+      normalizeCategory({
+        id: tpl.id,
+        name: tpl.name,
+        capAmount: 0,
+        dueAmount: 0,
+        noDueAmount: 0,
+        system: true,
+        requiresDue: tpl.requiresDue,
+      })
+    );
+  });
+  return orderFinancialCategories([...coreRows, ...extras]);
 }
 
 function splitTaggedTitle(title: string) {
@@ -116,8 +197,91 @@ function buildDueTitle(category: FinancialCategory | null, title: string, dueTag
   return `${dueTag.trim()} ${trimmedTitle}`;
 }
 
+const TAG_NAME_TO_SUB_ID = Object.fromEntries(
+  SYSTEM_FINANCIAL_CATEGORIES.filter((x) => x.id !== 'principal').map((x) => [x.name, x.id]),
+) as Record<string, string>;
+
+/** ردیف‌های قدیمی custom-* را به ساختار fin-line-migr-… + ۵ زیرردیف تبدیل می‌کند (شناسه پایدار). اگر درخت همان خط از قبل وجود داشته باشد، فقط ردیف و سررسیدها اصلاح می‌شود. */
+function migrateLegacyCustomFinancialRows(
+  categories: FinancialCategory[],
+  dueItems: DueItem[],
+): { categories: FinancialCategory[]; dueItems: DueItem[] } {
+  const legacyRoots = categories.filter((c) => c.id.startsWith('custom-') && !c.id.includes(':'));
+  if (!legacyRoots.length) return { categories, dueItems };
+
+  let nextCategories = [...categories];
+  let nextDue = dueItems.map((d) => ({ ...d }));
+
+  for (const legacy of legacyRoots) {
+    const tail = legacy.id.startsWith('custom-') ? legacy.id.slice('custom-'.length) : legacy.id;
+    const safeTail = tail.replace(/[^a-zA-Z0-9_-]/g, '-') || 'row';
+    const lineId = `${FINANCIAL_LINE_PREFIX}migr-${safeTail}`;
+
+    const duesOnLegacy = nextDue.filter((d) => d.categoryId === legacy.id);
+    const sumBySub = new Map<string, number>();
+    for (const d of duesOnLegacy) {
+      const { dueTag } = splitTaggedTitle(d.title);
+      const subKey = dueTag && TAG_NAME_TO_SUB_ID[dueTag] ? TAG_NAME_TO_SUB_ID[dueTag] : 'advance';
+      sumBySub.set(subKey, (sumBySub.get(subKey) ?? 0) + d.amount);
+    }
+
+    const treeExists = categories.some(
+      (c) =>
+        c.id === lineId ||
+        (c.id.startsWith(`${lineId}:`) && isFinancialLineSubtreeCategoryId(c.id)),
+    );
+
+    nextCategories = nextCategories.filter((c) => c.id !== legacy.id);
+    nextDue = nextDue.map((item) => {
+      if (item.categoryId !== legacy.id) return item;
+      const { dueTag } = splitTaggedTitle(item.title);
+      const subKey = dueTag && TAG_NAME_TO_SUB_ID[dueTag] ? TAG_NAME_TO_SUB_ID[dueTag] : 'advance';
+      return { ...item, categoryId: `${lineId}:${subKey}` };
+    });
+
+    if (treeExists) continue;
+
+    const legacyCap = Number(legacy.capAmount) || 0;
+    const header = normalizeCategory({
+      id: lineId,
+      name: legacy.name,
+      capAmount: legacyCap,
+      dueAmount: 0,
+      noDueAmount: legacyCap,
+      system: false,
+      requiresDue: false,
+    });
+
+    const subs: FinancialCategory[] = FINANCIAL_SUB_CATEGORY_IDS.map((subKey) => {
+      const tpl = SYSTEM_FINANCIAL_CATEGORIES.find((e) => e.id === subKey)!;
+      const fromDues = sumBySub.get(subKey) ?? 0;
+      return normalizeCategory({
+        id: `${lineId}:${subKey}`,
+        name: tpl.name,
+        capAmount: fromDues,
+        dueAmount: 0,
+        noDueAmount: 0,
+        system: true,
+        requiresDue: tpl.requiresDue,
+      });
+    });
+
+    nextCategories.push(header, ...subs);
+  }
+
+  return { categories: nextCategories, dueItems: nextDue };
+}
+
 function normalizeFinancialPayload(data: ContractFinancialData | null): ContractFinancialData {
-  const categories = orderCategories(mergeWithSystemCategories(data?.categories?.length ? data.categories : INITIAL_CATEGORIES));
+  const baseCategories = (data?.categories?.length ? data.categories : INITIAL_CATEGORIES) as FinancialCategory[];
+  const baseDue = (data?.dueItems ?? []) as DueItem[];
+  const migrated = migrateLegacyCustomFinancialRows(baseCategories, baseDue);
+  const categories = mergeWithSystemCategories(migrated.categories);
+  const safeActiveTab =
+    (data?.activeTab && categories.some((item) => item.id === data.activeTab) ? data.activeTab : '') ||
+    categories.find((item) => item.id !== 'principal')?.id ||
+    categories[0]?.id ||
+    'advance';
 
   return {
     pricingType: data?.pricingType ?? 'fixed',
@@ -127,9 +291,9 @@ function normalizeFinancialPayload(data: ContractFinancialData | null): Contract
     pricePerMeter: String(Number(data?.pricePerMeter || 0)),
     parkingPricePerMeter: String(Number(data?.parkingPricePerMeter || 0)),
     fixedTotalAmount: String(Number(data?.fixedTotalAmount || 0)),
-    activeTab: data?.activeTab || categories[0]?.id || 'advance',
+    activeTab: safeActiveTab,
     categories,
-    dueItems: data?.dueItems ?? [],
+    dueItems: migrated.dueItems,
   };
 }
 
@@ -413,11 +577,22 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
   const [regularCount, setRegularCount] = useState('');
   const [regularStartDate, setRegularStartDate] = useState('');
   const [dueFormError, setDueFormError] = useState('');
+  const [principalExpanded, setPrincipalExpanded] = useState(true);
+  const [expandedCustomCategoryId, setExpandedCustomCategoryId] = useState<string | null>(null);
+  const [pendingDeleteCategoryId, setPendingDeleteCategoryId] = useState<string | null>(null);
 
   const editingCategory = editingId ? categories.find((item) => item.id === editingId) ?? null : null;
-  const editingLockedCategory = editingCategory ? (LOCKED_CATEGORY_IDS as readonly string[]).includes(editingCategory.id) : false;
+  const editingLockedCategory = editingCategory ? isStructuralLockedCategoryId(editingCategory.id) : false;
   const activeCategory = useMemo(() => categories.find((item) => item.id === activeTab) ?? null, [activeTab, categories]);
-  const activeCategorySupportsRegular = activeCategory?.id === REGULAR_DUE_CATEGORY_ID;
+  const activeCategorySupportsRegular =
+    activeCategory?.id === REGULAR_DUE_CATEGORY_ID || Boolean(activeCategory?.id.endsWith(':installment'));
+  const structuralLockedCategoryIds = useMemo(() => {
+    const merged = new Set<string>(LOCKED_CATEGORY_IDS as unknown as string[]);
+    categories.forEach((c) => {
+      if (isFinancialLineSubtreeCategoryId(c.id)) merged.add(c.id);
+    });
+    return Array.from(merged);
+  }, [categories]);
   const activeCategoryIsCustom = activeCategory ? !activeCategory.system : false;
 
   useEffect(() => {
@@ -466,7 +641,8 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
           setParkingPricePerMeter(sourceData.parkingPricePerMeter ? Number(sourceData.parkingPricePerMeter).toLocaleString('en-US') : '');
           setFixedTotalAmount(sourceData.fixedTotalAmount ? Number(sourceData.fixedTotalAmount).toLocaleString('en-US') : '');
           setCategories(normalizedSourceData.categories);
-          setActiveTab(normalizedSourceData.activeTab || normalizedSourceData.categories[0]?.id || 'advance');
+        setActiveTab(normalizedSourceData.activeTab || normalizedSourceData.categories[0]?.id || 'advance');
+        setPrincipalExpanded(true);
           setDueItems(normalizedSourceData.dueItems);
         }
       } finally {
@@ -486,7 +662,7 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
 
   const overall = useMemo(
     () => ({
-      cap: categories.reduce((sum, item) => sum + item.capAmount, 0),
+      cap: sumFinancialCapsCountedAgainstContractTotal(categories),
     }),
     [categories],
   );
@@ -609,7 +785,7 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
   };
 
   const maybeWarnOnExcess = (nextCategories: FinancialCategory[], nextActiveTab: string) => {
-    const nextTotal = nextCategories.reduce((sum, item) => sum + item.capAmount, 0);
+    const nextTotal = sumFinancialCapsCountedAgainstContractTotal(nextCategories);
     if (totalContractAmount > 0 && nextTotal > totalContractAmount) {
       setPendingCategoryApply({
         categories: nextCategories,
@@ -641,50 +817,123 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
     if (!name) return;
 
     const amount = parseNum(capAmount);
-    const nextCategory: FinancialCategory = {
-      id: editingId ?? `custom-${Date.now()}`,
-      name,
-      capAmount: amount,
-      dueAmount: editingLockedCategory ? (editingCategory?.requiresDue === false ? 0 : amount) : amount,
-      noDueAmount: editingLockedCategory && editingCategory?.requiresDue === false ? amount : 0,
-      system: Boolean(editingLockedCategory),
-      requiresDue: editingLockedCategory ? editingCategory?.requiresDue !== false : true,
-    };
 
-    const nextCategories = orderCategories(editingId
-      ? categories.map((item) => (item.id === editingId ? nextCategory : item))
-      : [...categories, nextCategory]);
+    if (!editingId) {
+      const uuid =
+        typeof globalThis.crypto !== 'undefined' && 'randomUUID' in globalThis.crypto
+          ? globalThis.crypto.randomUUID()
+          : `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+      const lineId = `${FINANCIAL_LINE_PREFIX}${uuid}`;
+      const header: FinancialCategory = {
+        id: lineId,
+        name: customName.trim(),
+        capAmount: amount,
+        dueAmount: 0,
+        noDueAmount: amount,
+        system: false,
+        requiresDue: false,
+      };
+      const subs: FinancialCategory[] = FINANCIAL_SUB_CATEGORY_IDS.map((subKey) => {
+        const tpl = SYSTEM_FINANCIAL_CATEGORIES.find((entry) => entry.id === subKey)!;
+        return normalizeCategory({
+          id: `${lineId}:${subKey}`,
+          name: tpl.name,
+          capAmount: 0,
+          dueAmount: 0,
+          noDueAmount: 0,
+          system: true,
+          requiresDue: tpl.requiresDue,
+        });
+      });
+      const nextCategories = orderFinancialCategories([...categories, normalizeCategory(header), ...subs]);
+      const firstSubId = `${lineId}:${FINANCIAL_SUB_CATEGORY_IDS[0]}`;
+      if (!maybeWarnOnExcess(nextCategories, firstSubId)) return;
+      setCategories(nextCategories);
+      setActiveTab(firstSubId);
+      setExpandedCustomCategoryId(lineId);
+      setPrincipalExpanded(false);
+      setCatDialogOpen(false);
+      return;
+    }
 
-    if (!maybeWarnOnExcess(nextCategories, nextCategory.id)) return;
+    const nextCategories = orderFinancialCategories(
+      categories.map((item) => {
+        if (item.id !== editingId) return item;
+        if (editingLockedCategory) {
+          return normalizeCategory({
+            ...item,
+            capAmount: amount,
+          });
+        }
+        return normalizeCategory({
+          ...item,
+          name,
+          capAmount: amount,
+        });
+      }),
+    );
+
+    if (!maybeWarnOnExcess(nextCategories, editingId)) return;
 
     setCategories(nextCategories);
-    setActiveTab(nextCategory.id);
+    setActiveTab(editingId);
+    if (isFinancialLineHeaderCategoryId(editingId)) {
+      setExpandedCustomCategoryId(editingId);
+      setPrincipalExpanded(false);
+    }
     setCatDialogOpen(false);
   };
 
-  const deleteCategory = (categoryId: string) => {
+  const performDeleteCategory = (categoryId: string) => {
     if ((LOCKED_CATEGORY_IDS as readonly string[]).includes(categoryId)) return;
+    if (isFinancialLineSubtreeCategoryId(categoryId)) return;
 
-    const nextCategories = orderCategories(categories.filter((item) => item.id !== categoryId));
+    const nextCategories = orderFinancialCategories(
+      isFinancialLineHeaderCategoryId(categoryId)
+        ? categories.filter((item) => item.id !== categoryId && !item.id.startsWith(`${categoryId}:`))
+        : categories.filter((item) => item.id !== categoryId),
+    );
     setCategories(nextCategories);
-    setDueItems((current) => current.filter((item) => item.categoryId !== categoryId));
-    if (activeTab === categoryId) {
-      setActiveTab(nextCategories[0]?.id ?? 'advance');
+    if (isFinancialLineHeaderCategoryId(categoryId)) {
+      const prefix = `${categoryId}:`;
+      setDueItems((current) =>
+        current.filter((item) => item.categoryId !== categoryId && !item.categoryId.startsWith(prefix)),
+      );
+    } else {
+      setDueItems((current) => current.filter((item) => item.categoryId !== categoryId));
+    }
+
+    const nextTabIfRemoved =
+      activeTab === categoryId ||
+      (isFinancialLineHeaderCategoryId(categoryId) && activeTab.startsWith(`${categoryId}:`));
+    if (nextTabIfRemoved) {
+      setActiveTab(nextCategories.find((row) => row.id !== 'principal')?.id ?? nextCategories[0]?.id ?? 'advance');
+    }
+    if (expandedCustomCategoryId === categoryId) {
+      setExpandedCustomCategoryId(null);
     }
     setOpenMenuId(null);
     setOpenInfoId(null);
   };
 
+  const requestDeleteCategory = (categoryId: string) => {
+    if ((LOCKED_CATEGORY_IDS as readonly string[]).includes(categoryId)) return;
+    if (isFinancialLineSubtreeCategoryId(categoryId)) return;
+    setPendingDeleteCategoryId(categoryId);
+  };
+
   const updateCategoryAmount = (categoryId: string, value: string) => {
     const amount = parseNum(value);
-    const nextCategories = orderCategories(categories.map((item) =>
-      item.id === categoryId
-        ? normalizeCategory({
-            ...item,
-            capAmount: amount,
-          })
-        : item,
-    ));
+    const nextCategories = orderFinancialCategories(
+      categories.map((item) =>
+        item.id === categoryId
+          ? normalizeCategory({
+              ...item,
+              capAmount: amount,
+            })
+          : item,
+      ),
+    );
 
     setCategories(nextCategories);
   };
@@ -704,6 +953,8 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
     setDueFormError('');
     setDueDialogOpen(true);
   };
+
+  // (no-op) previously used for grouped UI
 
   const openEditDueItem = (item: DueItem) => {
     setActiveTab(item.categoryId);
@@ -821,6 +1072,23 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
     setDirty(hasChanges);
     dispatchContractFlowDirty(stepId as 'financial', hasChanges);
   }, [activeTab, categories, draftId, dueItems, fixedTotalAmount, loading, parkingArea, parkingPricePerMeter, pricePerMeter, pricingType, stepId, totalArea, unitArea]);
+
+  // Sync principal row amount from pricing box (read-only in UI)
+  useEffect(() => {
+    if (loading) return;
+    setCategories((current) =>
+      orderFinancialCategories(
+        current.map((item) =>
+          item.id === 'principal'
+            ? normalizeCategory({
+                ...item,
+                capAmount: totalContractAmount,
+              })
+            : item,
+        ),
+      ),
+    );
+  }, [loading, totalContractAmount]);
 
   useEffect(() => {
     if (embedded) return;
@@ -962,12 +1230,20 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
       <div className={visibleErrors.categories || visibleErrors.categoriesTotal || visibleErrors.dueItems ? 'rounded-2xl border border-rose-300 bg-rose-50/20 p-1' : ''}>
       <FinancialPaymentFlow
         categories={categories}
-        lockedCategoryIds={LOCKED_CATEGORY_IDS}
+        lockedCategoryIds={structuralLockedCategoryIds}
         categoryDueItemsMap={categoryDueItemsMap}
+        principalAmount={totalContractAmount}
+        principalExpanded={principalExpanded}
+        onTogglePrincipal={() => setPrincipalExpanded((current) => !current)}
+        expandedCustomCategoryId={expandedCustomCategoryId}
+        onToggleCustomCategory={(categoryId) => {
+          setExpandedCustomCategoryId((current) => (current === categoryId ? null : categoryId));
+          setPrincipalExpanded(false);
+        }}
         onCategoryAmountChange={updateCategoryAmount}
         onOpenAddCategory={openAdd}
         onOpenEditCategory={openEdit}
-        onDeleteCategory={deleteCategory}
+        onDeleteCategory={requestDeleteCategory}
         onOpenDueDialog={openDueForCategory}
         onEditDueItem={openEditDueItem}
         onDeleteDueItem={(id) => setDueItems((current) => current.filter((dueItem) => dueItem.id !== id))}
@@ -976,6 +1252,45 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
         invalidCategoryIds={categories.filter((item) => visibleErrors.categoriesTotal || visibleErrors.categories || (visibleErrors.dueItems && (categoryDueItemsMap[item.id]?.length ?? 0) > 0)).map((item) => item.id)}
       />
       </div>
+
+      <Modal
+        open={Boolean(pendingDeleteCategoryId)}
+        onClose={() => setPendingDeleteCategoryId(null)}
+        title="حذف ردیف مالی"
+        description={(() => {
+          if (!pendingDeleteCategoryId) return undefined;
+          const label =
+            categories.find((row) => row.id === pendingDeleteCategoryId)?.name?.trim() || 'این ردیف';
+          return isFinancialLineHeaderCategoryId(pendingDeleteCategoryId)
+            ? `آیا از حذف «${label}» و تمام زیربخش‌های آن مطمئن هستید؟ سررسیدهای این ردیف نیز حذف می‌شوند.`
+            : `آیا از حذف «${label}» مطمئن هستید؟ سررسیدهای مرتبط نیز حذف می‌شوند.`;
+        })()}
+        footer={
+          <>
+            <button
+              type="button"
+              onClick={() => setPendingDeleteCategoryId(null)}
+              className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50"
+            >
+              انصراف
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (!pendingDeleteCategoryId) return;
+                performDeleteCategory(pendingDeleteCategoryId);
+                setPendingDeleteCategoryId(null);
+              }}
+              className="rounded-lg border border-rose-200 bg-rose-600 px-4 py-2 text-sm font-medium text-white hover:bg-rose-700"
+            >
+              حذف
+            </button>
+          </>
+        }
+        footerClassName="justify-end gap-2"
+      >
+        {null}
+      </Modal>
 
       <StickySubmitBar
         label="ثبت اطلاعات مالی"

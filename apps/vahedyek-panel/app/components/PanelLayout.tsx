@@ -42,6 +42,13 @@ function buildContractsBreadcrumb(pathname: string): Crumb[] {
     return trail;
   }
 
+  if (segments[0] === 'contracts' && segments[1] && segments[1] !== 'new' && segments[2] === 'reports') {
+    const contractId = segments[1];
+    trail.push({ label: 'جزئیات قرارداد', href: `/contracts/${contractId}` });
+    trail.push({ label: 'گزارشات قرارداد' });
+    return trail;
+  }
+
   if (segments[0] === 'contracts' && segments[1] && segments[1] !== 'new' && segments.length === 2) {
     trail.push({ label: 'جزئیات قرارداد' });
     return trail;
@@ -387,6 +394,7 @@ export default function PanelLayout({ children }: PanelLayoutProps) {
   const showOrbitMenu = pathname === '/';
   const isContractsNewHub = pathname === '/contracts/new';
   const isContractsListPage = pathname === '/contracts';
+  const isContractReportsPage = /^\/contracts\/[^/]+\/reports(?:\/|$)/.test(pathname);
 
   const { activeItem, trail } = useMemo(() => {
     if (pathname === '/') {
@@ -455,18 +463,28 @@ export default function PanelLayout({ children }: PanelLayoutProps) {
   return (
     <div className="app-shell">
       <PageDocsWidget />
-      <Sidebar activeItem={activeItem} forceCollapsed={isContractsNewHub} lockCollapsed={isContractsNewHub} />
+      <Sidebar
+        activeItem={activeItem}
+        forceCollapsed={isContractsNewHub || isContractReportsPage}
+        lockCollapsed={isContractsNewHub}
+      />
       {showOrbitMenu ? (
         <main className="main-content home-main-content">
           <OrbitMenu activeItem={activeItem} />
           {children}
         </main>
       ) : (
-        <main className={`main-content${isContractsListPage ? ' contracts-page-main' : ''}`}>
-          <div className={`main-stage${isContractsListPage ? ' main-stage-wide' : ''}`}>
-            <div className={`main-stage-content${isContractsNewHub ? ' contract-flow-stage-content' : ''}${isContractsListPage ? ' main-stage-content-wide' : ''}`}>
+        <main
+          className={`main-content${isContractsListPage ? ' contracts-page-main' : ''}${isContractReportsPage ? ' reports-page-shell' : ''}`}
+        >
+          <div className={`main-stage${isContractsListPage || isContractReportsPage ? ' main-stage-wide' : ''}`}>
+            <div
+              className={`main-stage-content${isContractsNewHub ? ' contract-flow-stage-content' : ''}${isContractsListPage ? ' main-stage-content-wide' : ''}${isContractReportsPage ? ' reports-stage-content' : ''}`}
+            >
               {!isContractsNewHub ? (
-                <div className={`top-header${isContractsListPage ? ' top-header-compact' : ''}`}>
+                <div
+                  className={`top-header${isContractsListPage ? ' top-header-compact' : ''}${isContractReportsPage ? ' top-header-reports-dense' : ''}`}
+                >
                   <div className="breadcrumb">
                     {[{ label: 'خانه', href: '/' }, ...trail].reverse().map((item, index, items) => (
                       <span key={`${item.label}-${index}`} className="breadcrumb-item">
@@ -486,7 +504,11 @@ export default function PanelLayout({ children }: PanelLayoutProps) {
               {isContractsListPage ? (
                 children
               ) : (
-                <div className={`content-body${isContractsNewHub ? ' content-body-wide' : ''}`}>{children}</div>
+                <div
+                  className={`content-body${isContractsNewHub || isContractReportsPage ? ' content-body-wide' : ''}${isContractReportsPage ? ' content-body-contract-reports' : ''}`}
+                >
+                  {children}
+                </div>
               )}
             </div>
           </div>

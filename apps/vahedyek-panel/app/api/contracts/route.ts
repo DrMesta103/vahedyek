@@ -8,6 +8,11 @@ import { handlePrismaApiError } from '../../lib/prismaApiError';
 import { resolveDisplayedContractStatus } from '../../lib/contractApprovalStatus';
 import { validatePenaltiesStep } from '../../lib/contractValidation';
 import type { ContractStatus } from '../../types/contract';
+import {
+  mapFinancialCategoriesForClientApi,
+  mapFinancialDueItemsForClientApiFiltered,
+  resolveFinancialActiveTabForClientApi,
+} from '../../lib/financialCategoriesApiSerialize';
 
 function serializeShareMode(value: ShareMode) {
   return value === ShareMode.percent ? 'percent' : 'dang';
@@ -165,32 +170,33 @@ export async function GET(request: Request) {
             : [],
         },
         financial: draft.financial
-          ? {
-              pricingType: serializePricingType(draft.financial.pricingType),
-              unitArea: draft.financial.unitArea ? String(Number(draft.financial.unitArea)) : '',
-              parkingArea: draft.financial.parkingArea ? String(Number(draft.financial.parkingArea)) : '',
-              totalArea: draft.financial.totalArea ? String(Number(draft.financial.totalArea)) : '',
-              pricePerMeter: draft.financial.pricePerMeter ? String(Number(draft.financial.pricePerMeter)) : '',
-              parkingPricePerMeter: draft.financial.parkingPricePerMeter ? String(Number(draft.financial.parkingPricePerMeter)) : '',
-              fixedTotalAmount: draft.financial.fixedTotalAmount ? String(Number(draft.financial.fixedTotalAmount)) : '',
-              activeTab: draft.financial.activeTab ?? '',
-              categories: draft.financial.categories.map((item) => ({
-                id: item.id,
-                name: item.name,
-                capAmount: Number(item.capAmount),
-                dueAmount: Number(item.dueAmount),
-                noDueAmount: Number(item.noDueAmount),
-                system: item.system,
-                requiresDue: item.requiresDue,
-              })),
-              dueItems: draft.financial.dueItems.map((item) => ({
-                id: item.id,
-                categoryId: item.categoryId,
-                title: item.title,
-                amount: Number(item.amount),
-                dueDate: item.dueDate,
-              })),
-            }
+          ? (() => {
+              const fid = draft.financial.id;
+              const categories = mapFinancialCategoriesForClientApi(fid, draft.financial.categories);
+              const categoryLogicalIds = new Set(categories.map((c) => c.id));
+              const dueItems = mapFinancialDueItemsForClientApiFiltered(fid, draft.financial.dueItems, categoryLogicalIds);
+              const activeTab = resolveFinancialActiveTabForClientApi(
+                fid,
+                draft.financial.activeTab,
+                categoryLogicalIds,
+                categories[0]?.id ?? '',
+              );
+
+              return {
+                pricingType: serializePricingType(draft.financial.pricingType),
+                unitArea: draft.financial.unitArea ? String(Number(draft.financial.unitArea)) : '',
+                parkingArea: draft.financial.parkingArea ? String(Number(draft.financial.parkingArea)) : '',
+                totalArea: draft.financial.totalArea ? String(Number(draft.financial.totalArea)) : '',
+                pricePerMeter: draft.financial.pricePerMeter ? String(Number(draft.financial.pricePerMeter)) : '',
+                parkingPricePerMeter: draft.financial.parkingPricePerMeter
+                  ? String(Number(draft.financial.parkingPricePerMeter))
+                  : '',
+                fixedTotalAmount: draft.financial.fixedTotalAmount ? String(Number(draft.financial.fixedTotalAmount)) : '',
+                activeTab,
+                categories,
+                dueItems,
+              };
+            })()
           : undefined,
       },
     }));

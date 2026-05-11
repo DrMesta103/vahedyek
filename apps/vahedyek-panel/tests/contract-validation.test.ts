@@ -106,6 +106,96 @@ test('validateFinancialStep rejects category totals above contract amount', () =
   assert.equal(result.errors.categoriesTotal, 'جمع ردیف‌های مالی از مبلغ قرارداد بیشتر است.');
 });
 
+test('validateFinancialStep ignores fin-line supplementary rows vs contract amount', () => {
+  const lin = 'fin-line-test';
+  const result = validateFinancialStep(
+    makeValidFinancialData({
+      fixedTotalAmount: '10000000',
+      categories: [
+        {
+          id: 'advance',
+          name: 'پیش پرداخت',
+          capAmount: 4000000,
+          dueAmount: 4000000,
+          noDueAmount: 0,
+          system: true,
+          requiresDue: true,
+        },
+        {
+          id: 'installment',
+          name: 'اقساط',
+          capAmount: 6000000,
+          dueAmount: 6000000,
+          noDueAmount: 0,
+          system: true,
+          requiresDue: true,
+        },
+        {
+          id: lin,
+          name: 'خط پرداخت اضافه',
+          capAmount: 5000000,
+          dueAmount: 0,
+          noDueAmount: 5000000,
+          system: false,
+          requiresDue: false,
+        },
+        {
+          id: `${lin}:advance`,
+          name: 'پیش پرداخت',
+          capAmount: 5000000,
+          dueAmount: 0,
+          noDueAmount: 0,
+          system: true,
+          requiresDue: false,
+        },
+      ],
+    }),
+  );
+
+  assert.equal(result.valid, true);
+  assert.equal(result.errors.categoriesTotal, undefined);
+});
+
+test('validateFinancialStep ignores legacy custom-* root row vs contract amount', () => {
+  const result = validateFinancialStep(
+    makeValidFinancialData({
+      fixedTotalAmount: '10000000',
+      categories: [
+        {
+          id: 'advance',
+          name: 'پیش پرداخت',
+          capAmount: 4000000,
+          dueAmount: 4000000,
+          noDueAmount: 0,
+          system: true,
+          requiresDue: true,
+        },
+        {
+          id: 'installment',
+          name: 'اقساط',
+          capAmount: 6000000,
+          dueAmount: 6000000,
+          noDueAmount: 0,
+          system: true,
+          requiresDue: true,
+        },
+        {
+          id: 'custom-xyz',
+          name: 'هزینه جانبی',
+          capAmount: 8000000,
+          dueAmount: 0,
+          noDueAmount: 8000000,
+          system: false,
+          requiresDue: false,
+        },
+      ],
+    }),
+  );
+
+  assert.equal(result.valid, true);
+  assert.equal(result.errors.categoriesTotal, undefined);
+});
+
 test('validateFinancialStep rejects due items linked to invalid categories', () => {
   const result = validateFinancialStep(
     makeValidFinancialData({

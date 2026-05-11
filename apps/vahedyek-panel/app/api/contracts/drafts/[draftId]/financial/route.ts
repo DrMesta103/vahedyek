@@ -1,9 +1,23 @@
 import { NextResponse } from 'next/server';
 import { PricingType } from '@/lib/prisma-client';
 import { requireSessionContext } from '../../../../../lib/auth';
-import { normalizeFinancialCategories, normalizeFinancialDueItems, toNumber } from '../../../../../lib/financialUtils';
+import {
+  normalizeFinancialCategories,
+  normalizeFinancialDueItems,
+  sortFinancialCategoriesForPersistence,
+  sumFinancialCapsCountedAgainstContractTotal,
+  toNumber,
+} from '../../../../../lib/financialUtils';
 import { prisma } from '../../../../../lib/prisma';
 import { handlePrismaApiError } from '../../../../../lib/prismaApiError';
+import { buildFinancialScopedId } from '../../../../../lib/financialScopedIds';
+import {
+  mapFinancialCategoriesForClientApi,
+  mapFinancialDueItemsForClientApiFiltered,
+  resolveFinancialActiveTabForClientApi,
+} from '../../../../../lib/financialCategoriesApiSerialize';
+
+const PRINCIPAL_CATEGORY_ID = 'principal';
 
 function parsePricingType(value: string) {
   return value === 'metered' ? PricingType.metered : PricingType.fixed;
@@ -11,15 +25,6 @@ function parsePricingType(value: string) {
 
 function serializePricingType(value: PricingType) {
   return value === PricingType.metered ? 'metered' : 'fixed';
-}
-
-function buildScopedId(financialId: string, rawId: string) {
-  return `${financialId}:${rawId}`;
-}
-
-function unwrapScopedId(financialId: string, rawId: string) {
-  const prefix = `${financialId}:`;
-  return rawId.startsWith(prefix) ? rawId.slice(prefix.length) : rawId;
 }
 
 export async function GET(_: Request, { params }: { params: Promise<{ draftId: string }> }) {
@@ -40,9 +45,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ draftId: s
     const financial = await prisma.contractFinancial.findUnique({
       where: { draftId },
       include: {
-        categories: {
-          orderBy: { name: 'asc' },
-        },
+        categories: true,
         dueItems: {
           orderBy: [{ dueDate: 'asc' }, { id: 'asc' }],
         },
@@ -53,33 +56,15 @@ export async function GET(_: Request, { params }: { params: Promise<{ draftId: s
       return NextResponse.json(null);
     }
 
-    const categories = financial.categories.map((item) => ({
-      id: unwrapScopedId(financial.id, item.id),
-      name: item.name,
-      capAmount: Number(item.capAmount),
-      dueAmount: Number(item.dueAmount),
-      noDueAmount: Number(item.noDueAmount),
-      system: item.system,
-      requiresDue: item.requiresDue,
-    }));
-
+    const categories = mapFinancialCategoriesForClientApi(financial.id, financial.categories);
     const categoryIds = new Set(categories.map((item) => item.id));
-    const dueItems = financial.dueItems
-      .map((item) => ({
-        id: unwrapScopedId(financial.id, item.id),
-        categoryId: unwrapScopedId(financial.id, item.categoryId),
-        title: item.title,
-        amount: Number(item.amount),
-        dueDate: item.dueDate,
-      }))
-      .filter((item) => categoryIds.has(item.categoryId))
-      .map((item) => ({
-        id: item.id,
-        categoryId: item.categoryId,
-        title: item.title,
-        amount: item.amount,
-        dueDate: item.dueDate,
-      }));
+    const dueItems = mapFinancialDueItemsForClientApiFiltered(financial.id, financial.dueItems, categoryIds);
+    const activeTab = resolveFinancialActiveTabForClientApi(
+      financial.id,
+      financial.activeTab,
+      categoryIds,
+      categories[0]?.id ?? '',
+    );
 
     return NextResponse.json({
       pricingType: serializePricingType(financial.pricingType),
@@ -89,7 +74,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ draftId: s
       pricePerMeter: financial.pricePerMeter ? String(Number(financial.pricePerMeter)) : '',
       parkingPricePerMeter: financial.parkingPricePerMeter ? String(Number(financial.parkingPricePerMeter)) : '',
       fixedTotalAmount: financial.fixedTotalAmount ? String(Number(financial.fixedTotalAmount)) : '',
-      activeTab: categoryIds.has(financial.activeTab ?? '') ? financial.activeTab : categories[0]?.id ?? '',
+      activeTab,
       categories,
       dueItems,
     });
@@ -134,7 +119,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ draf
         ? (unitArea ?? Math.max((totalArea ?? 0) - (parkingArea ?? 0), 0)) * (pricePerMeter ?? 0) +
           (parkingArea ?? 0) * (parkingPricePerMeter ?? 0)
         : (fixedTotalAmount ?? 0);
-    const categoriesTotal = categories.reduce((sum, item) => sum + item.capAmount, 0);
+    const categoriesTotal = sumFinancialCapsCountedAgainstContractTotal(categories);
 
     if (totalContractAmount > 0 && categoriesTotal > totalContractAmount) {
       return NextResponse.json(
@@ -142,6 +127,20 @@ export async function PUT(request: Request, { params }: { params: Promise<{ draf
         { status: 400 },
       );
     }
+
+    const categoriesWithPrincipal = (() => {
+      const principal = {
+        id: PRINCIPAL_CATEGORY_ID,
+        name: 'مبلغ اصل قرارداد',
+        capAmount: totalContractAmount,
+        dueAmount: 0,
+        noDueAmount: totalContractAmount,
+        system: true,
+        requiresDue: false,
+      };
+      const rest = categories.filter((c) => c.id !== PRINCIPAL_CATEGORY_ID);
+      return sortFinancialCategoriesForPersistence([principal, ...rest]);
+    })();
 
     const financial = await prisma.contractFinancial.upsert({
       where: { draftId },
@@ -177,10 +176,10 @@ export async function PUT(request: Request, { params }: { params: Promise<{ draf
       where: { financialId: financial.id },
     });
 
-    if (categories.length) {
+    if (categoriesWithPrincipal.length) {
       await prisma.financialCategory.createMany({
-        data: categories.map((item) => ({
-          id: buildScopedId(financial.id, item.id),
+        data: categoriesWithPrincipal.map((item) => ({
+          id: buildFinancialScopedId(financial.id, item.id),
           name: item.name,
           capAmount: item.capAmount,
           dueAmount: item.dueAmount,
@@ -195,8 +194,8 @@ export async function PUT(request: Request, { params }: { params: Promise<{ draf
     if (dueItems.length) {
       await prisma.financialDueItem.createMany({
         data: dueItems.map((item) => ({
-          id: buildScopedId(financial.id, item.id),
-          categoryId: buildScopedId(financial.id, item.categoryId),
+          id: buildFinancialScopedId(financial.id, item.id),
+          categoryId: buildFinancialScopedId(financial.id, item.categoryId),
           title: item.title,
           amount: item.amount,
           dueDate: item.dueDate,

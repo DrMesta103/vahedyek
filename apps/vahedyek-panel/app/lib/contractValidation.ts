@@ -1,3 +1,4 @@
+import { sumFinancialCapsCountedAgainstContractTotal } from './financialUtils';
 import type {
   ContractDiscountsData,
   ContractFinancialData,
@@ -125,7 +126,7 @@ export function validateFinancialStep(data: Partial<ContractFinancialData>): Val
 
   const unitArea = Number(data.unitArea ?? Math.max(totalArea - parkingArea, 0));
   const totalContractAmount = pricingType === 'metered' ? unitArea * pricePerMeter + parkingArea * parkingPricePerMeter : fixedTotalAmount;
-  const categoriesTotal = categories.reduce((sum, item) => sum + Number(item.capAmount ?? 0), 0);
+  const categoriesTotal = sumFinancialCapsCountedAgainstContractTotal(categories);
   if (totalContractAmount > 0 && categoriesTotal > totalContractAmount) {
     errors.categoriesTotal = 'جمع ردیف‌های مالی از مبلغ قرارداد بیشتر است.';
   }
