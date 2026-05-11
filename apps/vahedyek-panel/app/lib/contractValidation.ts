@@ -10,6 +10,7 @@ import type {
   BuyerTerminationSubsectionId,
   ShareMode,
 } from '../types/contract';
+import { validateProgressiveRows } from './progressivePenalty';
 
 export interface ValidationResult {
   valid: boolean;
@@ -149,6 +150,14 @@ export function validatePenaltiesStep(data: Partial<ContractPenaltiesData>): Val
       errors[`type:${type.id}`] = `برای «${type.title}» باید حداقل یک جریمه ثبت شود.`;
     }
   }
+
+  rules.forEach((rule, index) => {
+    if (rule.mode !== 'progressive') return;
+    const validation = validateProgressiveRows(rule.progressiveRows ?? []);
+    if (!validation.ok) {
+      errors[`rule:${rule.id || index}:progressiveRows`] = validation.message;
+    }
+  });
 
   return { valid: Object.keys(errors).length === 0, errors };
 }
