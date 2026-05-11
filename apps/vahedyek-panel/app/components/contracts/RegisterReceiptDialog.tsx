@@ -5,7 +5,14 @@ import { ArrowRight, Banknote, Building2, Camera, Check, ChevronDown, FileAudio,
 import { useRouter } from 'next/navigation';
 import { Input, PersianDatePicker } from '@repo/ui';
 import type { DueRegisterReceiptPayload } from './DueMonthAccordionList';
-import type { ReceiptAllocationMode, ReceiptDocument, ReceiptDocumentFile, ReceiptTransferKind, RegisteredReceiptRecord } from '../../lib/contractReceipts';
+import type {
+  ReceiptAllocationMode,
+  ReceiptDocument,
+  ReceiptDocumentFile,
+  ReceiptPaymentFieldsPersisted,
+  ReceiptTransferKind,
+  RegisteredReceiptRecord,
+} from '../../lib/contractReceipts';
 import { fetchProfileStore, type BankAccountRecord } from '../../(panel)/business-settings/profile/_components/profileStorage';
 import { fixMojibake } from '../../lib/fixMojibake';
 import { FieldHint } from '../ui/field-hint';
@@ -74,6 +81,7 @@ export function RegisterReceiptDialog({
   context,
   contractId,
   allocationMode = 'direct',
+  editReceipt = null,
   onClose,
   onSubmitted,
 }: {
@@ -81,6 +89,8 @@ export function RegisterReceiptDialog({
   context: DueRegisterReceiptPayload | null;
   contractId?: string;
   allocationMode?: ReceiptAllocationMode;
+  /** When set, dialog loads this record and submit overwrites the same id. */
+  editReceipt?: RegisteredReceiptRecord | null;
   onClose: () => void;
   onSubmitted?: (receipt: RegisteredReceiptRecord) => void;
 }) {
@@ -132,7 +142,42 @@ export function RegisterReceiptDialog({
   const [submitting, setSubmitting] = useState(false);
 
   const getDraftKey = useCallback((rowId: string) => `${RECEIPT_DIALOG_DRAFT_PREFIX}.${rowId}`, []);
-  const activeDraftId = context?.row.id ?? `auto.${contractId ?? 'unknown'}`;
+  const activeDraftId = editReceipt
+    ? `edit.${editReceipt.id}`
+    : context?.row.id ?? `auto.${contractId ?? 'unknown'}`;
+
+  const effectiveAllocationMode = editReceipt?.allocationMode ?? allocationMode;
+
+  const applyReceiptFromRecord = useCallback((receipt: RegisteredReceiptRecord) => {
+    const pf: ReceiptPaymentFieldsPersisted | undefined = receipt.paymentFields;
+    setTransferKind(receipt.transferKind);
+    if (pf?.sourceCardParts?.length) {
+      setSourceCardParts(pf.sourceCardParts.concat(['', '', '', '']).slice(0, 4));
+    } else {
+      setSourceCardParts(['', '', '', '']);
+    }
+    setSourceCardHolder(pf?.sourceCardHolder ?? '');
+    setSourceAccount(pf?.sourceAccount ?? '');
+    setSourceAccountHolder(pf?.sourceAccountHolder ?? '');
+    setSourceSheba(pf?.sourceSheba ?? '');
+    setSourceShebaHolder(pf?.sourceShebaHolder ?? '');
+    setChequeOwner(pf?.chequeOwner ?? '');
+    setChequeBank(pf?.chequeBank ?? '');
+    setChequeSayadi(pf?.chequeSayadi ?? '');
+    setChequeSeries(pf?.chequeSeries ?? '');
+    setChequeSerial(pf?.chequeSerial ?? '');
+    setDepositorName(receipt.depositorName);
+    setPaidAmount(formatAmountInput(String(Math.max(0, Math.round(Number(receipt.paidAmountRial) || 0)))));
+    setDepositDate(receipt.depositDate);
+    setDepositTime(receipt.depositTime);
+    setDestinationSelect(receipt.destinationValue);
+    setDestinationHolder(receipt.destinationHolder);
+    setDestinationHolders(Array.isArray(receipt.destinationHolders) ? receipt.destinationHolders : []);
+    setTrackingNumber(receipt.trackingNumber);
+    setReferenceNumber(receipt.referenceNumber);
+    setReceiptNumber(receipt.receiptNumber);
+    setReceiptDocuments(Array.isArray(receipt.documents) ? receipt.documents : []);
+  }, []);
 
   const resetDocumentDialog = useCallback(() => {
     setDocCategoryInput('');
@@ -240,9 +285,15 @@ export function RegisterReceiptDialog({
 
   useEffect(() => {
     if (!open) return;
+    if (editReceipt) {
+      resetForm();
+      applyReceiptFromRecord(editReceipt);
+      setSubmitError('');
+      return;
+    }
     resetForm();
     restoreDraft(activeDraftId);
-  }, [activeDraftId, open, resetForm, restoreDraft]);
+  }, [activeDraftId, applyReceiptFromRecord, editReceipt, open, resetForm, restoreDraft]);
 
   useEffect(() => {
     if (!open) return;
@@ -267,12 +318,17 @@ export function RegisterReceiptDialog({
   }, [open]);
 
   const dueHint = useMemo(() => {
+    if (editReceipt) {
+      return editReceipt.allocationMode === 'auto'
+        ? 'ویرایش فیش اتوماتیک؛ پس از ذخیره، تخصیص دوباره از روی تاریخ و مبلغ محاسبه می‌شود.'
+        : 'ویرایش فیش؛ پس از ذخیره، تخصیص بر اساس سررسید و ترتیب پرداخت به‌روز می‌شود.';
+    }
     if (!context) return 'ثبت فیش اتوماتیک؛ مبلغ پرداختی از قدیمی‌ترین بدهی سررسیدها تخصیص داده می‌شود.';
     const { row, monthHeading } = context;
     return `${monthHeading} — ${row.title || 'سررسید'} · سررسید ${row.dueDate} · مبلغ ${Math.round(
       Number(row.amount) || 0,
     ).toLocaleString('fa-IR')} ریال`;
-  }, [context]);
+  }, [context, editReceipt]);
 
   const destinationOptions = useMemo(() => {
     const removeSpaces = (value: string) => value.replace(/\s+/g, '').trim();
@@ -415,15 +471,30 @@ export function RegisterReceiptDialog({
     window.setTimeout(() => {
       setSubmitting(false);
       if (typeof window !== 'undefined') window.sessionStorage.removeItem(getDraftKey(activeDraftId));
+      const mode = editReceipt?.allocationMode ?? allocationMode;
+      const baseDirect = mode === 'direct' && context;
+      const paymentFields: ReceiptPaymentFieldsPersisted = {
+        sourceCardParts: [...sourceCardParts],
+        sourceCardHolder,
+        sourceAccount,
+        sourceAccountHolder,
+        sourceSheba,
+        sourceShebaHolder,
+        chequeOwner,
+        chequeBank,
+        chequeSayadi,
+        chequeSeries,
+        chequeSerial,
+      };
       onSubmitted?.({
-        id: createLocalId('receipt'),
+        id: editReceipt?.id ?? createLocalId('receipt'),
         contractId,
-        allocationMode,
-        allocationDate: allocationMode === 'direct' && context ? context.row.dueDate : depositDate,
-        dueRowId: undefined,
-        dueTitle: undefined,
-        dueDate: undefined,
-        dueAmount: 0,
+        allocationMode: mode,
+        allocationDate: baseDirect ? context!.row.dueDate : depositDate,
+        dueRowId: baseDirect ? context!.row.id : editReceipt?.dueRowId,
+        dueTitle: baseDirect ? context!.row.title : editReceipt?.dueTitle,
+        dueDate: baseDirect ? context!.row.dueDate : editReceipt?.dueDate,
+        dueAmount: baseDirect ? Number(context!.row.amount) || 0 : editReceipt?.dueAmount ?? 0,
         transferKind,
         depositorName,
         paidAmountRial: Number(paidAmount.replace(/\D/g, '')) || 0,
@@ -437,7 +508,8 @@ export function RegisterReceiptDialog({
         receiptNumber,
         notes: '',
         documents: receiptDocuments,
-        createdAt: new Date().toISOString(),
+        createdAt: editReceipt?.createdAt ?? new Date().toISOString(),
+        paymentFields,
       });
       onClose();
     }, 520);
@@ -557,11 +629,12 @@ export function RegisterReceiptDialog({
     );
     const returnUrl = new URL(`${window.location.pathname}${window.location.search}`, window.location.origin);
     if (context) returnUrl.searchParams.set('receiptRowId', context.row.id);
+    else if (editReceipt?.dueRowId) returnUrl.searchParams.set('receiptRowId', editReceipt.dueRowId);
     const q = new URLSearchParams({ returnTo: `${returnUrl.pathname}${returnUrl.search}` });
     router.push(`/business-settings/profile/bank-accounts?${q.toString()}`);
   };
 
-  if (!open || (allocationMode === 'direct' && !context)) return null;
+  if (!open || (effectiveAllocationMode === 'direct' && !context)) return null;
 
   const showTrackingRef = transferKind !== 'cash';
 
@@ -592,7 +665,7 @@ export function RegisterReceiptDialog({
           </button>
           <div className="min-w-0 flex-1 text-right">
             <h2 id={titleId} className="text-[15px] font-black leading-tight text-slate-900">
-              ثبت فیش واریزی
+              {editReceipt ? 'ویرایش فیش واریزی' : 'ثبت فیش واریزی'}
             </h2>
             <p className="mt-0.5 line-clamp-2 text-[11px] font-semibold text-slate-500">{dueHint}</p>
           </div>

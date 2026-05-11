@@ -19,6 +19,21 @@ export type ReceiptDocument = {
   files: ReceiptDocumentFile[];
 };
 
+/** Optional snapshot of source-side fields for round-trip edit in RegisterReceiptDialog. */
+export type ReceiptPaymentFieldsPersisted = {
+  sourceCardParts?: string[];
+  sourceCardHolder?: string;
+  sourceAccount?: string;
+  sourceAccountHolder?: string;
+  sourceSheba?: string;
+  sourceShebaHolder?: string;
+  chequeOwner?: string;
+  chequeBank?: string;
+  chequeSayadi?: string;
+  chequeSeries?: string;
+  chequeSerial?: string;
+};
+
 export type RegisteredReceiptRecord = {
   id: string;
   contractId?: string;
@@ -42,6 +57,7 @@ export type RegisteredReceiptRecord = {
   notes: string;
   documents: ReceiptDocument[];
   createdAt: string;
+  paymentFields?: ReceiptPaymentFieldsPersisted;
 };
 
 export function getReceiptsStorageKey(contractId: string) {
@@ -82,7 +98,26 @@ export function normalizeReceiptRecord(raw: unknown): RegisteredReceiptRecord | 
     notes: String(item.notes ?? ''),
     documents: Array.isArray(item.documents) ? item.documents : [],
     createdAt: String(item.createdAt ?? new Date().toISOString()),
+    paymentFields:
+      item.paymentFields && typeof item.paymentFields === 'object'
+        ? (item.paymentFields as ReceiptPaymentFieldsPersisted)
+        : undefined,
   };
+}
+
+export function upsertReceiptInList(
+  list: RegisteredReceiptRecord[],
+  receipt: RegisteredReceiptRecord,
+): RegisteredReceiptRecord[] {
+  const index = list.findIndex((row) => row.id === receipt.id);
+  if (index < 0) return [receipt, ...list];
+  const next = [...list];
+  next[index] = receipt;
+  return next;
+}
+
+export function removeReceiptFromList(list: RegisteredReceiptRecord[], id: string): RegisteredReceiptRecord[] {
+  return list.filter((row) => row.id !== id);
 }
 
 export function normalizeReceiptRecords(raw: unknown): RegisteredReceiptRecord[] {

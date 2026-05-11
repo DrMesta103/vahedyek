@@ -1,15 +1,21 @@
 ﻿'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowRight, FileText, ReceiptText, X } from 'lucide-react';
+import { ArrowRight, FileText, Pencil, ReceiptText, Trash2, X } from 'lucide-react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import PanelLayout from '../../../../components/PanelLayout';
 import { DueMonthAccordionList, type DueRegisterReceiptPayload } from '../../../../components/contracts/DueMonthAccordionList';
 import { RegisterReceiptDialog } from '../../../../components/contracts/RegisterReceiptDialog';
 import { buildReceiptAllocation, type DueReceiptAllocationSummary } from '../../../../lib/contractReceiptAllocation';
-import { getReceiptsStorageKey, normalizeReceiptRecords, type RegisteredReceiptRecord } from '../../../../lib/contractReceipts';
+import {
+  getReceiptsStorageKey,
+  normalizeReceiptRecords,
+  removeReceiptFromList,
+  upsertReceiptInList,
+  type RegisteredReceiptRecord,
+} from '../../../../lib/contractReceipts';
 import { getContractDetails } from '../../../../lib/contractDraftClient';
-import { buildPaymentHistoryMonthBuckets } from '../../../../lib/contractPaymentMonthBuckets';
+import { buildPaymentHistoryMonthBuckets, resolveDueRegisterPayload } from '../../../../lib/contractPaymentMonthBuckets';
 import { estimateContractPenaltiesTotalRial } from '../../../../lib/estimateContractPenalties';
 
 function formatMoneyRial(valueRial: number) {
@@ -52,6 +58,8 @@ export default function ContractDuesPage() {
   const [autoReceiptOpen, setAutoReceiptOpen] = useState(false);
   const [registeredReceipts, setRegisteredReceipts] = useState<RegisteredReceiptRecord[]>([]);
   const [receiptDetails, setReceiptDetails] = useState<ReceiptDetailsState>(null);
+  const [editingReceipt, setEditingReceipt] = useState<RegisteredReceiptRecord | null>(null);
+  const [editingDueContext, setEditingDueContext] = useState<DueRegisterReceiptPayload | null>(null);
 
   const listQuery = searchParams?.toString();
   const receiptRowId = searchParams?.get('receiptRowId') ?? '';
@@ -117,6 +125,21 @@ export default function ContractDuesPage() {
     () => buildReceiptAllocation({ buckets: paymentMonthBuckets, receipts: registeredReceipts }),
     [paymentMonthBuckets, registeredReceipts],
   );
+
+  const editReceiptContextResolved = useMemo((): DueRegisterReceiptPayload | null => {
+    if (!editingReceipt) return null;
+    if (editingReceipt.allocationMode !== 'direct') return null;
+    if (editingDueContext) return editingDueContext;
+    return resolveDueRegisterPayload(editingReceipt, paymentMonthBuckets);
+  }, [editingReceipt, editingDueContext, paymentMonthBuckets]);
+
+  useEffect(() => {
+    if (!editingReceipt || editingReceipt.allocationMode !== 'direct') return;
+    if (editReceiptContextResolved) return;
+    setToast('سررسید این فیش در قرارداد نیست؛ امکان ویرایش نیست.');
+    setEditingReceipt(null);
+    setEditingDueContext(null);
+  }, [editingReceipt, editReceiptContextResolved]);
 
   useEffect(() => {
     if (!receiptRowId || registerReceiptContext || paymentMonthBuckets.length === 0) return;
@@ -208,15 +231,37 @@ export default function ContractDuesPage() {
     });
   };
 
-  const handleRegisteredReceipt = (receipt: RegisteredReceiptRecord) => {
+  const handleReceiptUpsert = (receipt: RegisteredReceiptRecord) => {
     setRegisteredReceipts((current) => {
-      const next = [receipt, ...current];
+      const existed = current.some((r) => r.id === receipt.id);
+      const next = upsertReceiptInList(current, receipt);
+      if (contractId && typeof window !== 'undefined') {
+        window.localStorage.setItem(getReceiptsStorageKey(String(contractId)), JSON.stringify(next));
+      }
+      queueMicrotask(() =>
+        setToast(existed ? 'فیش به‌روزرسانی شد.' : 'فیش ثبت شد و تخصیص آن بر اساس تاریخ و مبلغ محاسبه شد.'),
+      );
+      return next;
+    });
+    setEditingReceipt(null);
+    setEditingDueContext(null);
+    setRegisterReceiptContext(null);
+    setAutoReceiptOpen(false);
+  };
+
+  const handleDeleteReceipt = (receiptId: string) => {
+    if (typeof window !== 'undefined' && !window.confirm('این فیش حذف شود؟')) return;
+    setRegisteredReceipts((current) => {
+      const next = removeReceiptFromList(current, receiptId);
       if (contractId && typeof window !== 'undefined') {
         window.localStorage.setItem(getReceiptsStorageKey(String(contractId)), JSON.stringify(next));
       }
       return next;
     });
-    setToast('فیش ثبت شد و تخصیص آن بر اساس تاریخ و مبلغ محاسبه شد.');
+    setReceiptDetails(null);
+    setEditingReceipt(null);
+    setEditingDueContext(null);
+    setToast('فیش حذف شد.');
   };
 
   const backHref = contractId ? `/contracts/${contractId}${listQuery ? `?${listQuery}` : ''}` : '/contracts';
@@ -409,7 +454,7 @@ export default function ContractDuesPage() {
           contractId={contractId ? String(contractId) : undefined}
           allocationMode="direct"
           onClose={() => setRegisterReceiptContext(null)}
-          onSubmitted={handleRegisteredReceipt}
+          onSubmitted={handleReceiptUpsert}
         />
 
         <RegisterReceiptDialog
@@ -418,10 +463,36 @@ export default function ContractDuesPage() {
           contractId={contractId ? String(contractId) : undefined}
           allocationMode="auto"
           onClose={() => setAutoReceiptOpen(false)}
-          onSubmitted={handleRegisteredReceipt}
+          onSubmitted={handleReceiptUpsert}
         />
 
-        <ReceiptDetailsDialog state={receiptDetails} onClose={() => setReceiptDetails(null)} />
+        <RegisterReceiptDialog
+          open={
+            editingReceipt !== null &&
+            (editingReceipt.allocationMode === 'auto' || editReceiptContextResolved !== null)
+          }
+          context={editReceiptContextResolved}
+          contractId={contractId ? String(contractId) : undefined}
+          allocationMode={editingReceipt?.allocationMode ?? 'direct'}
+          editReceipt={editingReceipt}
+          onClose={() => {
+            setEditingReceipt(null);
+            setEditingDueContext(null);
+          }}
+          onSubmitted={handleReceiptUpsert}
+        />
+
+        <ReceiptDetailsDialog
+          state={receiptDetails}
+          onClose={() => setReceiptDetails(null)}
+          onEditReceipt={(receipt) => {
+            if (!receiptDetails?.payload) return;
+            setEditingDueContext(receiptDetails.payload);
+            setEditingReceipt(receipt);
+            setReceiptDetails(null);
+          }}
+          onDeleteReceipt={handleDeleteReceipt}
+        />
 
         {toast ? (
           <div className="fixed inset-x-0 bottom-5 z-50 flex justify-center px-4" dir="rtl">
@@ -461,7 +532,17 @@ function ReceiptSummaryCard({ label, value, tone }: { label: string; value: stri
   );
 }
 
-function ReceiptDetailsDialog({ state, onClose }: { state: ReceiptDetailsState; onClose: () => void }) {
+function ReceiptDetailsDialog({
+  state,
+  onClose,
+  onEditReceipt,
+  onDeleteReceipt,
+}: {
+  state: ReceiptDetailsState;
+  onClose: () => void;
+  onEditReceipt?: (receipt: RegisteredReceiptRecord) => void;
+  onDeleteReceipt?: (receiptId: string) => void;
+}) {
   if (!state) return null;
   const totalPaid = state.receipts.reduce((sum, receipt) => sum + (Number(receipt.paidAmountRial) || 0), 0);
   const allocatedPaid = state.summary?.paidAmountRial ?? totalPaid;
@@ -509,7 +590,29 @@ function ReceiptDetailsDialog({ state, onClose }: { state: ReceiptDetailsState; 
                       ثبت: {new Date(receipt.createdAt).toLocaleDateString('fa-IR')} · واریز: {receipt.depositDate || '-'}
                     </div>
                   </div>
-                  <div className="text-[15px] font-black text-emerald-700">{formatMoneyRial(allocatedToDue)}</div>
+                  <div className="flex flex-col items-end gap-2 sm:flex-row sm:items-start sm:gap-3">
+                    <div className="text-[15px] font-black text-emerald-700">{formatMoneyRial(allocatedToDue)}</div>
+                    {onEditReceipt && onDeleteReceipt ? (
+                      <div className="flex flex-wrap justify-end gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => onEditReceipt(receipt)}
+                          className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 py-[5px] text-[10px] font-black text-slate-700 shadow-sm transition hover:bg-slate-50"
+                        >
+                          <Pencil className="h-3 w-3 shrink-0" aria-hidden />
+                          ویرایش
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => onDeleteReceipt(receipt.id)}
+                          className="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-white px-2.5 py-[5px] text-[10px] font-black text-rose-700 shadow-sm transition hover:bg-rose-50"
+                        >
+                          <Trash2 className="h-3 w-3 shrink-0" aria-hidden />
+                          حذف
+                        </button>
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
                 <div className="mt-3 grid gap-2 text-[11px] font-semibold text-slate-600 sm:grid-cols-2">
                   <div className="rounded-2xl bg-slate-50 px-3 py-2">واریزکننده: {receipt.depositorName || '-'}</div>

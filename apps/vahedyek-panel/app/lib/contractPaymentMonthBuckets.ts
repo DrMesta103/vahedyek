@@ -1,4 +1,5 @@
 import { parseDueDateFlexible, toComparableDateFromDueString } from './financialUtils';
+import type { RegisteredReceiptRecord } from './contractReceipts';
 
 export const PAYMENT_HISTORY_UNKNOWN_MONTH_KEY = '__UNKNOWN_DUE_MONTH__';
 
@@ -146,4 +147,19 @@ export function buildPaymentHistoryMonthBuckets(params: {
       overdueRial: acc.overdueRial,
     };
   });
+}
+
+/** Resolve UI payload for «ثبت فیش مستقیم» when editing a receipt that has `dueRowId`. */
+export function resolveDueRegisterPayload(
+  receipt: RegisteredReceiptRecord,
+  buckets: PaymentHistoryMonthBucket[],
+): { bucketKey: string; monthHeading: string; row: PaymentHistoryDueRow } | null {
+  if (receipt.allocationMode !== 'direct') return null;
+  const dueId = receipt.dueRowId?.trim();
+  if (!dueId) return null;
+  for (const bucket of buckets) {
+    const row = bucket.items.find((item) => item.id === dueId);
+    if (row) return { bucketKey: bucket.key, monthHeading: bucket.heading, row };
+  }
+  return null;
 }
