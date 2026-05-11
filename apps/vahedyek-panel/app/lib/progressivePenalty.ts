@@ -53,7 +53,8 @@ export function normalizeProgressiveRows<T extends ProgressivePenaltyRow>(rows: 
 }
 
 export function canAddProgressiveRow(rows: ProgressivePenaltyRow[]) {
-  return rows.length === 0 || !rows[rows.length - 1]?.openEnded;
+  const normalized = normalizeProgressiveRows(rows);
+  return normalized.length === 0 || !normalized[normalized.length - 1]?.openEnded;
 }
 
 export function getNextProgressiveFromDay(rows: ProgressivePenaltyRow[]) {
@@ -99,4 +100,68 @@ export function validateProgressiveRows(rows: ProgressivePenaltyRow[]) {
   }
 
   return { ok: true as const, rows: normalized };
+}
+
+export type ProgressiveRangeValues = Record<string, string | boolean | number | null | undefined>;
+
+export function normalizeProgressiveRangeValues<T extends ProgressiveRangeValues>(
+  values: T,
+  rows: Array<{ fromKey: string; toKey: string; openEndedKey: string }>,
+) {
+  const nextValues: ProgressiveRangeValues = { ...values };
+  let nextFrom = 1;
+  let closed = false;
+
+  rows.forEach((row) => {
+    nextValues[row.fromKey] = String(nextFrom);
+
+    if (closed) {
+      nextValues[row.openEndedKey] = false;
+      nextValues[row.toKey] = '';
+      return;
+    }
+
+    const openEnded = Boolean(nextValues[row.openEndedKey]);
+    nextValues[row.openEndedKey] = openEnded;
+
+    if (openEnded) {
+      nextValues[row.toKey] = '';
+      closed = true;
+      return;
+    }
+
+    const toValue = sanitizePositiveIntegerInput(String(nextValues[row.toKey] ?? ''));
+    nextValues[row.toKey] = toValue;
+    const to = Number(toValue);
+    if (Number.isFinite(to) && to >= nextFrom) {
+      nextFrom = to + 1;
+    }
+  });
+
+  return nextValues as T;
+}
+
+export function normalizeKnownProgressivePenaltyValues<T extends ProgressiveRangeValues>(values: T) {
+  const rowSets = [
+    { prefix: 'penaltyProgressive', count: 4 },
+    { prefix: 'unitDeliveryDelayProgressive', count: 3 },
+    { prefix: 'materialSpecsChangeProgressive', count: 3 },
+    { prefix: 'areaDifferenceProgressive', count: 3 },
+  ];
+
+  return rowSets.reduce(
+    (current, set) =>
+      normalizeProgressiveRangeValues(
+        current,
+        Array.from({ length: set.count }, (_, index) => {
+          const row = index + 1;
+          return {
+            fromKey: `${set.prefix}Row${row}From`,
+            toKey: `${set.prefix}Row${row}To`,
+            openEndedKey: `${set.prefix}Row${row}OpenEnded`,
+          };
+        }),
+      ),
+    values,
+  );
 }

@@ -12,6 +12,14 @@ import {
 import { Input, RuleAmountInput, StickySubmitBar } from '@repo/ui';
 import { getPenaltyItem } from './penaltiesConfig';
 import { useContractFlowBasePath } from './useContractFlowBasePath';
+import {
+  canAddProgressiveRow,
+  getNextProgressiveFromDay,
+  normalizeProgressiveRows,
+  sanitizeDecimalInput,
+  sanitizePositiveIntegerInput,
+  validateProgressiveRows,
+} from '../../../../lib/progressivePenalty';
 
 type PenaltyMode = 'fixed' | 'overdue' | 'contract' | 'progressive';
 type PenaltyPeriod = 'daily' | 'monthly' | 'yearly';
@@ -23,6 +31,7 @@ type ProgressiveRow = {
   fromDay: string;
   toDay: string;
   rate: string;
+  openEnded?: boolean;
 };
 
 const MODE_OPTIONS: Array<{
@@ -74,7 +83,7 @@ const DEFAULT_PROGRESSIVE_ROWS: ProgressiveRow[] = [
   { id: 'row-1', fromDay: '1', toDay: '4', rate: '0.5' },
   { id: 'row-2', fromDay: '5', toDay: '6', rate: '0.5' },
   { id: 'row-3', fromDay: '7', toDay: '65', rate: '3.3' },
-  { id: 'row-4', fromDay: '', toDay: '', rate: '' },
+  { id: 'row-4', fromDay: '66', toDay: '', rate: '', openEnded: false },
 ];
 
 function LabeledField({
@@ -84,6 +93,7 @@ function LabeledField({
   value,
   onChange,
   placeholder,
+  disabled = false,
 }: {
   label: string;
   hint?: string;
@@ -91,6 +101,7 @@ function LabeledField({
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
+  disabled?: boolean;
 }) {
   return (
     <label className="block space-y-3">
@@ -102,9 +113,10 @@ function LabeledField({
       ) : (
         <Input
           value={value}
+          disabled={disabled}
           onChange={(event) => onChange(event.target.value)}
           placeholder={placeholder}
-          className="h-14 rounded-2xl border-gray-300 px-4 text-lg text-gray-800 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/10"
+          className="h-14 rounded-2xl border-gray-300 px-4 text-lg text-gray-800 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/10 disabled:bg-slate-50 disabled:text-slate-500"
         />
       )}
       {hint && <p className="text-sm text-gray-500">{hint}</p>}
@@ -210,13 +222,47 @@ export function PenaltyDetailStep({
   const [extraFeeAmount, setExtraFeeAmount] = useState('');
   const [extraFeeRoundRule, setExtraFeeRoundRule] = useState<RoundRule>('100');
   const [progressiveRows, setProgressiveRows] =
-    useState<ProgressiveRow[]>(DEFAULT_PROGRESSIVE_ROWS);
+    useState<ProgressiveRow[]>(normalizeProgressiveRows(DEFAULT_PROGRESSIVE_ROWS));
+  const [formError, setFormError] = useState('');
 
   const activeMode = useMemo(() => MODE_OPTIONS.find((item) => item.id === mode)!, [mode]);
 
   const updateProgressiveRow = (rowId: string, key: keyof ProgressiveRow, value: string) => {
     setProgressiveRows((current) =>
-      current.map((row) => (row.id === rowId ? { ...row, [key]: value } : row)),
+      normalizeProgressiveRows(
+        current.map((row) => {
+          if (row.id !== rowId) return row;
+          if (key === 'rate') return { ...row, rate: sanitizeDecimalInput(value) };
+          if (key === 'toDay') return { ...row, toDay: sanitizePositiveIntegerInput(value), openEnded: false };
+          return { ...row, [key]: value };
+        }),
+      ),
+    );
+  };
+
+  const toggleOpenEnded = (rowId: string, checked: boolean) => {
+    setProgressiveRows((current) => {
+      const normalized = normalizeProgressiveRows(current);
+      const index = normalized.findIndex((row) => row.id === rowId);
+      const rows = normalized
+        .slice(0, checked ? index + 1 : normalized.length)
+        .map((row) => (row.id === rowId ? { ...row, openEnded: checked, toDay: checked ? '' : row.toDay } : row));
+      return normalizeProgressiveRows(rows);
+    });
+  };
+
+  const addProgressiveRow = () => {
+    setProgressiveRows((current) =>
+      normalizeProgressiveRows([
+        ...current,
+        {
+          id: `row-${Date.now()}`,
+          fromDay: getNextProgressiveFromDay(current),
+          toDay: '',
+          rate: '',
+          openEnded: false,
+        },
+      ]),
     );
   };
 
@@ -230,6 +276,17 @@ export function PenaltyDetailStep({
   };
 
   const handleSubmit = () => {
+    if (mode === 'progressive') {
+      const validation = validateProgressiveRows(progressiveRows);
+      if (!validation.ok) {
+        setFormError(validation.message);
+        return;
+      }
+      setProgressiveRows(validation.rows);
+    }
+
+    setFormError('');
+
     if (embedded) {
       onBack?.();
       return;
@@ -381,14 +438,25 @@ export function PenaltyDetailStep({
                       توجه داشته باشید که میزان نرخ جریمه با هم‌پوشانی نداشته باشد.
                     </p>
                   </div>
-                  <button type="button" className="text-sm font-semibold text-cyan-600 hover:text-cyan-700">
-                    تنظیمات پیشنهادی
+                  <button
+                    type="button"
+                    onClick={addProgressiveRow}
+                    disabled={!canAddProgressiveRow(progressiveRows)}
+                    className="rounded-full border border-cyan-200 bg-cyan-50 px-5 py-2 text-sm font-semibold text-cyan-700 transition hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    افزودن بازه
                   </button>
                 </div>
 
+                {formError && (
+                  <p className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                    {formError}
+                  </p>
+                )}
+
                 <div className="space-y-5">
-                  {progressiveRows.map((row) => (
-                    <div key={row.id} className="grid gap-4 md:grid-cols-[1fr_28px_160px_160px] md:items-end">
+                  {normalizeProgressiveRows(progressiveRows).map((row, index) => (
+                    <div key={row.id} className="grid gap-4 md:grid-cols-[1fr_120px_28px_160px_160px_auto] md:items-end">
                       <LabeledField
                         label="نرخ جریمه"
                         value={row.rate}
@@ -397,9 +465,19 @@ export function PenaltyDetailStep({
                         hint="مثال: ۰.۵٪"
                       />
                       <div className="hidden pb-7 text-center text-2xl text-gray-300 md:block">-</div>
+                      <label className="flex items-center gap-2 pb-7 text-xs text-gray-500">
+                        <input
+                          type="checkbox"
+                          checked={Boolean(row.openEnded)}
+                          onChange={(event) => toggleOpenEnded(row.id, event.target.checked)}
+                          className="h-4 w-4 rounded border-gray-300 text-cyan-600"
+                        />
+                        به بعد
+                      </label>
                       <LabeledField
                         label="تا"
                         value={row.toDay}
+                        disabled={row.openEnded}
                         onChange={(value) => updateProgressiveRow(row.id, 'toDay', value)}
                         placeholder="تا روز"
                         hint="مثال: تا ۵۰ روز تاخیر"
@@ -407,10 +485,19 @@ export function PenaltyDetailStep({
                       <LabeledField
                         label="از"
                         value={row.fromDay}
-                        onChange={(value) => updateProgressiveRow(row.id, 'fromDay', value)}
+                        disabled
+                        onChange={() => undefined}
                         placeholder="از روز"
                         hint="مثال: از ۱ روز تا ۵۰ روز تاخیر"
                       />
+                      <button
+                        type="button"
+                        onClick={() => setProgressiveRows((current) => normalizeProgressiveRows(current.filter((item) => item.id !== row.id)))}
+                        disabled={index === 0}
+                        className="h-12 rounded-xl border border-rose-200 px-3 text-sm text-rose-600 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        حذف
+                      </button>
                     </div>
                   ))}
                 </div>
