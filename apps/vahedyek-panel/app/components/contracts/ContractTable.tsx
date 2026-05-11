@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { Building2, Circle, Pencil } from 'lucide-react';
 import type { Block, Contract, ContractStatus, ContractType, Unit } from '../../types/contract';
+import { computeContractTotalRialFromFinancial } from '../../lib/contractFinancialPricing';
 import { formatDateFa } from '../../lib/dateFormat';
 
 interface ContractTableProps {
@@ -70,12 +71,7 @@ export default function ContractTable({ contracts, blocks, units, onEdit, loadin
         const partyTwoPrimary = parties.partyTwo.find((party) => party.isPrimary) ?? parties.partyTwo[0];
         const partyTwoNames = parties.partyTwo.map((party) => party.name).filter(Boolean);
         const partyTwoLabel = partyTwoNames.length ? partyTwoNames.join('، ') : partyTwoPrimary?.name ?? partyOnePrimary?.name ?? '—';
-        const parkingArea = Number(financial?.parkingArea || 0);
-        const unitArea = Number(financial?.unitArea || Math.max(Number(financial?.totalArea || 0) - parkingArea, 0));
-        const amount =
-          financial?.pricingType === 'metered'
-            ? unitArea * Number(financial.pricePerMeter || 0) + parkingArea * Number(financial.parkingPricePerMeter || 0)
-            : Number(financial?.fixedTotalAmount || 0);
+        const amount = computeContractTotalRialFromFinancial(financial ?? null);
         const rightRibbonLabel =
           contract.status === 'draft' ? 'قابل تکمیل' : contract.status === 'pending_approval' ? 'در انتظار تایید' : 'بزودی';
         const leftRibbonLabel =

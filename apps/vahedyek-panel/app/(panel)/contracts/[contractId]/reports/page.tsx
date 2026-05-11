@@ -5,6 +5,7 @@ import { CalendarDays, ChevronDown, FileText, ReceiptText, Upload } from 'lucide
 import { useParams } from 'next/navigation';
 import PanelLayout from '../../../../components/PanelLayout';
 import { getContractDetails } from '../../../../lib/contractDraftClient';
+import { computeContractTotalRialFromFinancial } from '../../../../lib/contractFinancialPricing';
 import {
   isFinancialLineHeaderCategoryId,
   isFinancialLineSubtreeCategoryId,
@@ -562,12 +563,7 @@ export default function ContractReportsPage() {
       parties?.partyOne?.[0] ??
       null;
 
-    const parkingArea = Number(financial?.parkingArea || 0);
-    const unitArea = Number(financial?.unitArea || Math.max(Number(financial?.totalArea || 0) - parkingArea, 0));
-    const amountRial =
-      financial?.pricingType === 'metered'
-        ? unitArea * Number(financial?.pricePerMeter || 0) + parkingArea * Number(financial?.parkingPricePerMeter || 0)
-        : Number(financial?.fixedTotalAmount || 0);
+    const amountRial = computeContractTotalRialFromFinancial(financial);
 
     return {
       contractNumber: subject?.contractNumber ?? '—',

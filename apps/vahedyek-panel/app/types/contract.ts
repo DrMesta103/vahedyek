@@ -4,6 +4,7 @@ export type ContractorType = 'self' | 'employee' | 'former-employee';
 export type ShareMode = 'percent' | 'dang';
 export type PersonType = 'natural' | 'legal';
 export type PricingType = 'fixed' | 'metered';
+export type AreaPricingMode = 'unit-only' | 'unit-plus-parking' | 'unit-plus-storage' | 'unit-plus-storage-parking';
 export type PenaltyMode = 'fixed' | 'overdue' | 'contract' | 'progressive';
 export type PenaltyPeriod = 'daily' | 'monthly' | 'yearly';
 export type PenaltyExtraFeeType = 'percent' | 'fixed';
@@ -69,12 +70,17 @@ export interface FinancialDueItemData {
 
 export interface ContractFinancialData {
   pricingType: PricingType;
+  areaPricingMode?: AreaPricingMode;
   unitArea?: string;
   parkingArea?: string;
+  storageArea?: string;
   totalArea: string;
   pricePerMeter: string;
   parkingPricePerMeter?: string;
+  storagePricePerMeter?: string;
   fixedTotalAmount: string;
+  parkingFixedAmount?: string;
+  storageFixedAmount?: string;
   activeTab: string;
   categories: FinancialCategoryData[];
   dueItems: FinancialDueItemData[];

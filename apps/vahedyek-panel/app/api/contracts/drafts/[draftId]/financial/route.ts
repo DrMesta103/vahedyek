@@ -12,6 +12,11 @@ import { prisma } from '../../../../../lib/prisma';
 import { handlePrismaApiError } from '../../../../../lib/prismaApiError';
 import { buildFinancialScopedId } from '../../../../../lib/financialScopedIds';
 import {
+  computeFixedContractTotal,
+  computeMeteredContractTotal,
+  normalizeAreaPricingMode,
+} from '../../../../../lib/contractFinancialPricing';
+import {
   mapFinancialCategoriesForClientApi,
   mapFinancialDueItemsForClientApiFiltered,
   resolveFinancialActiveTabForClientApi,
@@ -68,12 +73,17 @@ export async function GET(_: Request, { params }: { params: Promise<{ draftId: s
 
     return NextResponse.json({
       pricingType: serializePricingType(financial.pricingType),
+      areaPricingMode: normalizeAreaPricingMode(financial.areaPricingMode),
       unitArea: financial.unitArea ? String(Number(financial.unitArea)) : '',
       parkingArea: financial.parkingArea ? String(Number(financial.parkingArea)) : '',
+      storageArea: financial.storageArea ? String(Number(financial.storageArea)) : '',
       totalArea: financial.totalArea ? String(Number(financial.totalArea)) : '',
       pricePerMeter: financial.pricePerMeter ? String(Number(financial.pricePerMeter)) : '',
       parkingPricePerMeter: financial.parkingPricePerMeter ? String(Number(financial.parkingPricePerMeter)) : '',
+      storagePricePerMeter: financial.storagePricePerMeter ? String(Number(financial.storagePricePerMeter)) : '',
       fixedTotalAmount: financial.fixedTotalAmount ? String(Number(financial.fixedTotalAmount)) : '',
+      parkingFixedAmount: financial.parkingFixedAmount ? String(Number(financial.parkingFixedAmount)) : '',
+      storageFixedAmount: financial.storageFixedAmount ? String(Number(financial.storageFixedAmount)) : '',
       activeTab,
       categories,
       dueItems,
@@ -108,17 +118,34 @@ export async function PUT(request: Request, { params }: { params: Promise<{ draf
     const dueItems = normalizeFinancialDueItems(body.dueItems ?? [], categoryIds);
     const activeTab = categoryIds.has(body.activeTab) ? body.activeTab : categories[0]?.id ?? null;
     const pricingType = parsePricingType(body.pricingType);
+    const areaPricingMode = normalizeAreaPricingMode(body.areaPricingMode);
     const unitArea = body.unitArea ? toNumber(body.unitArea) : null;
     const parkingArea = body.parkingArea ? toNumber(body.parkingArea) : null;
+    const storageArea = body.storageArea ? toNumber(body.storageArea) : null;
     const totalArea = body.totalArea ? toNumber(body.totalArea) : null;
     const pricePerMeter = body.pricePerMeter ? toNumber(body.pricePerMeter) : null;
     const parkingPricePerMeter = body.parkingPricePerMeter ? toNumber(body.parkingPricePerMeter) : null;
+    const storagePricePerMeter = body.storagePricePerMeter ? toNumber(body.storagePricePerMeter) : null;
     const fixedTotalAmount = body.fixedTotalAmount ? toNumber(body.fixedTotalAmount) : null;
+    const parkingFixedAmount = body.parkingFixedAmount ? toNumber(body.parkingFixedAmount) : null;
+    const storageFixedAmount = body.storageFixedAmount ? toNumber(body.storageFixedAmount) : null;
     const totalContractAmount =
       pricingType === PricingType.metered
-        ? (unitArea ?? Math.max((totalArea ?? 0) - (parkingArea ?? 0), 0)) * (pricePerMeter ?? 0) +
-          (parkingArea ?? 0) * (parkingPricePerMeter ?? 0)
-        : (fixedTotalAmount ?? 0);
+        ? computeMeteredContractTotal({
+            areaPricingMode,
+            unitArea: unitArea ?? Math.max((totalArea ?? 0) - (parkingArea ?? 0) - (storageArea ?? 0), 0),
+            parkingArea,
+            storageArea,
+            pricePerMeter,
+            parkingPricePerMeter,
+            storagePricePerMeter,
+          })
+        : computeFixedContractTotal({
+            areaPricingMode,
+            fixedTotalAmount,
+            parkingFixedAmount,
+            storageFixedAmount,
+          });
     const categoriesTotal = sumFinancialCapsCountedAgainstContractTotal(categories);
 
     if (totalContractAmount > 0 && categoriesTotal > totalContractAmount) {
@@ -146,23 +173,33 @@ export async function PUT(request: Request, { params }: { params: Promise<{ draf
       where: { draftId },
       update: {
         pricingType,
+        areaPricingMode,
         unitArea,
         parkingArea,
+        storageArea,
         totalArea,
         pricePerMeter,
         parkingPricePerMeter,
+        storagePricePerMeter,
         fixedTotalAmount,
+        parkingFixedAmount,
+        storageFixedAmount,
         activeTab,
       },
       create: {
         draftId,
         pricingType,
+        areaPricingMode,
         unitArea,
         parkingArea,
+        storageArea,
         totalArea,
         pricePerMeter,
         parkingPricePerMeter,
+        storagePricePerMeter,
         fixedTotalAmount,
+        parkingFixedAmount,
+        storageFixedAmount,
         activeTab,
       },
       select: { id: true },

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { AlertCircle, CheckCircle2, Info, Lock, X } from 'lucide-react';
 import { getActiveDraftId, getFrontendStepDraft, getStepData } from '../../../../lib/contractDraftClient';
+import { computeContractTotalRialFromFinancial } from '../../../../lib/contractFinancialPricing';
 import { validateDiscountsStep, validateFinancialStep, validatePenaltiesStep, validateStep1, validateStep2, validateTerminationStep } from '../../../../lib/contractValidation';
 import type { ContractDiscountsData, ContractFinancialData, ContractPartiesData, ContractPenaltiesData, ContractSubjectData, ContractTerminationData } from '../../../../types/contract';
 import { DiscountsStep } from './DiscountsStep';
@@ -152,6 +153,7 @@ function hasFinancialData(data: ContractFinancialData | null) {
       data.totalArea ||
       data.pricePerMeter ||
       data.parkingPricePerMeter ||
+      data.storagePricePerMeter ||
       (data.categories?.length ?? 0) ||
       (data.dueItems?.length ?? 0),
   );
@@ -171,13 +173,7 @@ function getToneClasses(tone: StatusTone) {
 }
 
 function getContractTotal(data: ContractFinancialData | null) {
-  if (!data) return 0;
-  if (data.pricingType === 'metered') {
-    const parkingArea = Number(data.parkingArea || 0);
-    const unitArea = Number(data.unitArea || Math.max(Number(data.totalArea || 0) - parkingArea, 0));
-    return unitArea * Number(data.pricePerMeter || 0) + parkingArea * Number(data.parkingPricePerMeter || 0);
-  }
-  return Number(data.fixedTotalAmount || 0);
+  return computeContractTotalRialFromFinancial(data);
 }
 
 function getFinancialSlices(data: ContractFinancialData | null) {

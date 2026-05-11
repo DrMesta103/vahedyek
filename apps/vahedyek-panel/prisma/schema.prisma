@@ -371,12 +371,17 @@ model ContractFinancial {
   id               String               @id @default(cuid())
   draftId          String               @unique
   pricingType      PricingType          @default(fixed)
+  areaPricingMode  String               @default("unit-only")
   unitArea         Decimal?             @db.Decimal(18, 2)
   parkingArea      Decimal?             @db.Decimal(18, 2)
+  storageArea      Decimal?             @db.Decimal(18, 2)
   totalArea        Decimal?             @db.Decimal(18, 2)
   pricePerMeter    Decimal?             @db.Decimal(18, 2)
   parkingPricePerMeter Decimal?         @db.Decimal(18, 2)
+  storagePricePerMeter Decimal?         @db.Decimal(18, 2)
   fixedTotalAmount Decimal?             @db.Decimal(18, 2)
+  parkingFixedAmount Decimal?           @db.Decimal(18, 2)
+  storageFixedAmount Decimal?           @db.Decimal(18, 2)
   activeTab        String?
   draft            ContractDraft        @relation(fields: [draftId], references: [id], onDelete: Cascade)
   categories       FinancialCategory[]
