@@ -153,6 +153,8 @@ const unitCountOptions = Array.from({ length: 13 }, (_, index) => ({
 const projectStatusOptions = ['در حال تجهیز کارگاه', 'در حال اجرا', 'در حال نازک کاری', 'در مرحله تحویل', 'متوقف شده'] as const;
 const permitStatusOptions = ['پروانه کامل', 'پروانه در حال تمدید', 'در انتظار تایید', 'نیازمند پیگیری'] as const;
 
+export const TECHNICAL_SPEC_NONE_VALUE = 'ندارد';
+
 const structureSystemOptions = ['اسکلت بتنی', 'اسکلت فلزی', 'قاب خمشی', 'دیوار باربر', 'سازه ترکیبی'] as const;
 const facadeOptions = ['سنگ', 'آجر نسوز', 'سرامیک خشک', 'کامپوزیت', 'ترکیبی'] as const;
 const cabinetOptions = ['MDF', 'های‌گلاس', 'ممبران', 'فلزی', 'سفارشی'] as const;
@@ -204,18 +206,18 @@ const defaultReportData: ProjectReportData = {
 };
 
 const defaultTechnicalSpecs: ProjectTechnicalSpecs = {
-  structureSystem: '',
-  facadeMaterial: '',
-  cabinetType: '',
-  floorMaterial: '',
-  coolingSystem: '',
-  heatingSystem: '',
-  windowType: '',
+  structureSystem: TECHNICAL_SPEC_NONE_VALUE,
+  facadeMaterial: TECHNICAL_SPEC_NONE_VALUE,
+  cabinetType: TECHNICAL_SPEC_NONE_VALUE,
+  floorMaterial: TECHNICAL_SPEC_NONE_VALUE,
+  coolingSystem: TECHNICAL_SPEC_NONE_VALUE,
+  heatingSystem: TECHNICAL_SPEC_NONE_VALUE,
+  windowType: TECHNICAL_SPEC_NONE_VALUE,
   elevatorCount: 0,
-  securitySystem: '',
-  fireSystem: '',
-  internetStatus: '',
-  parkingAccess: '',
+  securitySystem: TECHNICAL_SPEC_NONE_VALUE,
+  fireSystem: TECHNICAL_SPEC_NONE_VALUE,
+  internetStatus: TECHNICAL_SPEC_NONE_VALUE,
+  parkingAccess: TECHNICAL_SPEC_NONE_VALUE,
   technicalNotes: '',
 };
 
@@ -908,8 +910,6 @@ export function ProjectReportsPanel() {
   );
 }
 
-export const TECHNICAL_SPEC_NONE_VALUE = 'ندارد';
-
 function TechnicalSpecField({
   label,
   options,
@@ -923,15 +923,19 @@ function TechnicalSpecField({
   onChange: (next: string) => void;
   otherPlaceholder?: string;
 }) {
-  const isKnownOption = options.includes(value);
-  const isNone = value === TECHNICAL_SPEC_NONE_VALUE;
+  const displayedOptions = useMemo(
+    () => [TECHNICAL_SPEC_NONE_VALUE, ...options.filter((option) => option !== TECHNICAL_SPEC_NONE_VALUE)],
+    [options],
+  );
+  const isKnownOption = displayedOptions.includes(value);
+  const isNone = !value || value === TECHNICAL_SPEC_NONE_VALUE;
   const initialOtherActive = Boolean(value) && !isKnownOption && !isNone;
   const [otherActive, setOtherActive] = useState(initialOtherActive);
   const [otherDraft, setOtherDraft] = useState(initialOtherActive ? value : '');
 
   useEffect(() => {
-    const known = options.includes(value);
-    const none = value === TECHNICAL_SPEC_NONE_VALUE;
+    const known = displayedOptions.includes(value);
+    const none = !value || value === TECHNICAL_SPEC_NONE_VALUE;
     if (!value || known || none) {
       setOtherActive(false);
       setOtherDraft('');
@@ -939,17 +943,17 @@ function TechnicalSpecField({
     }
     setOtherActive(true);
     setOtherDraft(value);
-  }, [value, options]);
+  }, [value, displayedOptions]);
 
   return (
     <FieldGroup label={label}>
       <div className="technical-spec-field">
         <div className="technical-spec-field-pills">
-          {options.map((option) => (
+          {displayedOptions.map((option) => (
             <TagPill
               key={option}
               label={option}
-              active={value === option}
+              active={option === TECHNICAL_SPEC_NONE_VALUE ? isNone : value === option}
               onClick={() => {
                 setOtherActive(false);
                 setOtherDraft('');
@@ -958,22 +962,13 @@ function TechnicalSpecField({
             />
           ))}
           <TagPill
-            label={TECHNICAL_SPEC_NONE_VALUE}
-            active={isNone}
-            onClick={() => {
-              setOtherActive(false);
-              setOtherDraft('');
-              onChange(TECHNICAL_SPEC_NONE_VALUE);
-            }}
-          />
-          <TagPill
             label="سایر"
             active={otherActive}
             onClick={() => {
               if (otherActive) {
                 setOtherActive(false);
                 setOtherDraft('');
-                onChange('');
+                onChange(TECHNICAL_SPEC_NONE_VALUE);
                 return;
               }
               setOtherActive(true);

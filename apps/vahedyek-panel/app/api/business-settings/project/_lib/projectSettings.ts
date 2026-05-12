@@ -177,21 +177,27 @@ export function normalizeProjectReport(input: unknown): Required<ProjectReportPa
   };
 }
 
+const technicalSpecNoneValue = 'ندارد';
+
+function normalizeTechnicalSpecChoice(value: unknown) {
+  return normalizeText(value, 80) || technicalSpecNoneValue;
+}
+
 export function normalizeTechnicalSpecs(input: unknown): Required<ProjectTechnicalSpecsPayload> {
   const raw = typeof input === 'object' && input ? (input as ProjectTechnicalSpecsPayload) : {};
   return {
-    structureSystem: normalizeText(raw.structureSystem, 80),
-    facadeMaterial: normalizeText(raw.facadeMaterial, 80),
-    cabinetType: normalizeText(raw.cabinetType, 80),
-    floorMaterial: normalizeText(raw.floorMaterial, 80),
-    coolingSystem: normalizeText(raw.coolingSystem, 80),
-    heatingSystem: normalizeText(raw.heatingSystem, 80),
-    windowType: normalizeText(raw.windowType, 80),
+    structureSystem: normalizeTechnicalSpecChoice(raw.structureSystem),
+    facadeMaterial: normalizeTechnicalSpecChoice(raw.facadeMaterial),
+    cabinetType: normalizeTechnicalSpecChoice(raw.cabinetType),
+    floorMaterial: normalizeTechnicalSpecChoice(raw.floorMaterial),
+    coolingSystem: normalizeTechnicalSpecChoice(raw.coolingSystem),
+    heatingSystem: normalizeTechnicalSpecChoice(raw.heatingSystem),
+    windowType: normalizeTechnicalSpecChoice(raw.windowType),
     elevatorCount: Math.max(0, Math.floor(normalizeNumber(raw.elevatorCount, 0))),
-    securitySystem: normalizeText(raw.securitySystem, 80),
-    fireSystem: normalizeText(raw.fireSystem, 80),
-    internetStatus: normalizeText(raw.internetStatus, 80),
-    parkingAccess: normalizeText(raw.parkingAccess, 80),
+    securitySystem: normalizeTechnicalSpecChoice(raw.securitySystem),
+    fireSystem: normalizeTechnicalSpecChoice(raw.fireSystem),
+    internetStatus: normalizeTechnicalSpecChoice(raw.internetStatus),
+    parkingAccess: normalizeTechnicalSpecChoice(raw.parkingAccess),
     technicalNotes: normalizeText(raw.technicalNotes, 800),
   };
 }

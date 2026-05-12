@@ -7,27 +7,47 @@ import {
   ChevronLeft,
   CircleDollarSign,
   CirclePercent,
+  Plus,
 } from 'lucide-react';
-import { BusinessSwitch, ChoicePills, Input, RULE_PANEL_TEXT_INPUT_CLASSNAME, RuleAmountInput, RuleFieldLabel, RuleTabButton } from '@repo/ui';
+import {
+  BusinessSwitch,
+  ChoicePills,
+  Input,
+  RULE_PANEL_TEXT_INPUT_CLASSNAME,
+  RuleAmountInput,
+  RuleFieldLabel,
+  RuleTabButton,
+} from '@repo/ui';
 import type { ContractRuleState } from '../../../lib/businessContractRules';
 import { PENALTY_ITEMS } from '../../contracts/new/_components/penaltiesConfig';
 
 type PenaltyMode = 'fixed' | 'debt-percent' | 'contract-percent' | 'progressive';
 type RoundRule = '0.0' | '0.00' | 'کسر 100' | 'کسر 1000';
 type ExtraFeeType = 'درصد' | 'مبلغ ثابت';
+type ProgressiveRowConfig = {
+  fromKey: string;
+  toKey: string;
+  rateKey: string;
+  from: string;
+  to: string;
+  rate: string;
+};
 
 const PERIOD_OPTIONS = ['روزانه', 'ماهانه', 'سالانه'] as const;
 const ROUND_RULE_OPTIONS: RoundRule[] = ['0.0', '0.00', 'کسر 100', 'کسر 1000'];
 const EXTRA_FEE_TYPES: ExtraFeeType[] = ['درصد', 'مبلغ ثابت'];
+const MAX_PROGRESSIVE_ROWS = 4;
 
 function RulePlainTextInput({
   value,
   onChange,
   placeholder,
+  disabled = false,
 }: {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
+  disabled?: boolean;
 }) {
   return (
     <Input
@@ -35,6 +55,7 @@ function RulePlainTextInput({
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
+      disabled={disabled}
       className={RULE_PANEL_TEXT_INPUT_CLASSNAME}
     />
   );
@@ -72,26 +93,56 @@ const MODE_OPTIONS: Array<{
   },
 ];
 
-const PROGRESSIVE_DEFAULT_ROWS = [
-  { fromKey: 'penaltyProgressiveRow1From', toKey: 'penaltyProgressiveRow1To', rateKey: 'penaltyProgressiveRow1Rate', from: '1', to: '4', rate: '0.5' },
-  { fromKey: 'penaltyProgressiveRow2From', toKey: 'penaltyProgressiveRow2To', rateKey: 'penaltyProgressiveRow2Rate', from: '5', to: '6', rate: '0.5' },
-  { fromKey: 'penaltyProgressiveRow3From', toKey: 'penaltyProgressiveRow3To', rateKey: 'penaltyProgressiveRow3Rate', from: '7', to: '45', rate: '3.3' },
-  { fromKey: 'penaltyProgressiveRow4From', toKey: 'penaltyProgressiveRow4To', rateKey: 'penaltyProgressiveRow4Rate', from: '', to: '', rate: ''   },
+const PROGRESSIVE_DEFAULT_ROWS: ProgressiveRowConfig[] = [
+  { fromKey: 'penaltyProgressiveRow1From', toKey: 'penaltyProgressiveRow1To', rateKey: 'penaltyProgressiveRow1Rate', from: '1', to: '30', rate: '' },
+  { fromKey: 'penaltyProgressiveRow2From', toKey: 'penaltyProgressiveRow2To', rateKey: 'penaltyProgressiveRow2Rate', from: '', to: '', rate: '' },
+  { fromKey: 'penaltyProgressiveRow3From', toKey: 'penaltyProgressiveRow3To', rateKey: 'penaltyProgressiveRow3Rate', from: '', to: '', rate: '' },
+  { fromKey: 'penaltyProgressiveRow4From', toKey: 'penaltyProgressiveRow4To', rateKey: 'penaltyProgressiveRow4Rate', from: '', to: '', rate: '' },
 ];
+
+function getStringValue(value: unknown) {
+  return String(value ?? '').trim();
+}
+
+function hasRowContent(values: ContractRuleState['values'], row: ProgressiveRowConfig) {
+  return Boolean(
+    getStringValue(values[row.fromKey]) ||
+      getStringValue(values[row.toKey]) ||
+      getStringValue(values[row.rateKey]),
+  );
+}
+
+function getVisibleProgressiveRowCount(values: ContractRuleState['values']) {
+  let count = 1;
+  for (let index = 1; index < PROGRESSIVE_DEFAULT_ROWS.length; index += 1) {
+    if (hasRowContent(values, PROGRESSIVE_DEFAULT_ROWS[index])) {
+      count = index + 1;
+    }
+  }
+  return count;
+}
+
+function getNextFromValue(previousTo: string) {
+  const parsed = Number(previousTo);
+  if (!previousTo || !Number.isFinite(parsed)) return '';
+  return String(parsed + 1);
+}
 
 function ProgressRow({
   from,
   to,
   rate,
+  fromDisabled,
   onChange,
 }: {
   from: string;
   to: string;
   rate: string;
+  fromDisabled: boolean;
   onChange: (field: 'from' | 'to' | 'rate', value: string) => void;
 }) {
   return (
-    <div className="grid gap-4 lg:grid-cols-[1fr_24px_170px_170px] lg:items-end">
+    <div className="grid gap-4 rounded-[18px] border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] p-4 lg:grid-cols-[1fr_24px_170px_170px] lg:items-end">
       <div className="space-y-3">
         <RuleFieldLabel label="نرخ جریمه" required />
         <RuleAmountInput value={rate} onChange={(value) => onChange('rate', value)} suffix="%" />
@@ -99,14 +150,16 @@ function ProgressRow({
       </div>
       <div className="hidden pb-8 text-center text-2xl text-[color:var(--text-muted)] lg:block">-</div>
       <div className="space-y-3">
-        <RuleFieldLabel label="تا" required />
-        <RulePlainTextInput value={to} onChange={(value) => onChange('to', value)} placeholder="تا روز" />
-        <p className="text-right text-xs text-[color:var(--text-muted)]">مثال: تا ۵۰ روز تاخیر</p>
+        <RuleFieldLabel label="از" required />
+        <RulePlainTextInput value={from} onChange={(value) => onChange('from', value)} placeholder="از روز" disabled={fromDisabled} />
+        <p className="text-right text-xs text-[color:var(--text-muted)]">
+          {fromDisabled ? 'این مقدار بر اساس بازه قبلی به‌صورت خودکار تعیین می‌شود.' : 'مثال: از ۱ روز تاخیر'}
+        </p>
       </div>
       <div className="space-y-3">
-        <RuleFieldLabel label="از" required />
-        <RulePlainTextInput value={from} onChange={(value) => onChange('from', value)} placeholder="از روز" />
-        <p className="text-right text-xs text-[color:var(--text-muted)]">مثال: از ۱ روز تاخیر</p>
+        <RuleFieldLabel label="تا" required />
+        <RulePlainTextInput value={to} onChange={(value) => onChange('to', value)} placeholder="تا روز" />
+        <p className="text-right text-xs text-[color:var(--text-muted)]">مثال: تا ۳۰ روز تاخیر</p>
       </div>
     </div>
   );
@@ -136,7 +189,9 @@ function ExtraFeeCard({
       <div className="flex items-center justify-between gap-4">
         <div className="space-y-2 text-right">
           <h3 className="text-xl font-black text-[color:var(--text-strong)]">هزینه دیرکرد</h3>
-          <p className="text-sm leading-7 text-[color:var(--text-muted)]">مبلغ یا درصد ثابتی که علاوه بر جریمه تاخیر برای هر شرط معوق اعمال می‌شود.</p>
+          <p className="text-sm leading-7 text-[color:var(--text-muted)]">
+            مبلغ یا درصد ثابتی که علاوه بر جریمه تاخیر برای هر شرط معوق اعمال می‌شود.
+          </p>
         </div>
 
         <BusinessSwitch checked={enabled} onChange={onEnabledChange} />
@@ -145,7 +200,9 @@ function ExtraFeeCard({
       {enabled ? (
         <div className="space-y-5">
           <div className="space-y-4">
-            <h4 className="text-right text-lg font-black text-[color:var(--text-strong)]">مشخص کنید بر اساس درصد می‌باشد یا مبلغ ثابت</h4>
+            <h4 className="text-right text-lg font-black text-[color:var(--text-strong)]">
+              مشخص کنید بر اساس درصد می‌باشد یا مبلغ ثابت
+            </h4>
             <BusinessSwitch
               checked={feeType === 'درصد'}
               onChange={(value) => onFeeTypeChange(value ? 'درصد' : 'مبلغ ثابت')}
@@ -157,7 +214,9 @@ function ExtraFeeCard({
           <div className="space-y-4">
             <RuleFieldLabel label="جریمه بالاسری" required />
             <RuleAmountInput value={amount} onChange={onAmountChange} suffix={feeType === 'درصد' ? '%' : 'تومان'} />
-            <p className="text-right text-sm text-[color:var(--text-muted)]">این مبلغ یک‌بار هنگام اولین تاخیر برای هر سررسید اعمال می‌شود.</p>
+            <p className="text-right text-sm text-[color:var(--text-muted)]">
+              این مبلغ یک‌بار هنگام اولین تاخیر برای هر سررسید اعمال می‌شود.
+            </p>
           </div>
 
           <div className="space-y-4 border-t border-[color:var(--border-soft)] pt-5">
@@ -170,7 +229,9 @@ function ExtraFeeCard({
               className="justify-end flex-row-reverse"
               aria-label="قاعده گرد کردن هزینه دیرکرد"
             />
-            <p className="text-right text-sm text-[color:var(--text-muted)]">مشخص می‌کند عدد نهایی هزینه دیرکرد به چه واحدی گرد شود، مثل گرد کردن به ۱۰۰ یا ۱۰۰۰ تومان.</p>
+            <p className="text-right text-sm text-[color:var(--text-muted)]">
+              مشخص می‌کند عدد نهایی هزینه دیرکرد به چه واحدی گرد شود، مثل گرد کردن به ۱۰۰ یا ۱۰۰۰ تومان.
+            </p>
           </div>
         </div>
       ) : null}
@@ -239,13 +300,51 @@ export function PenaltyRuleSection({
   const selectedPenalty = PENALTY_ITEMS.find((item) => item.id === state.activeChip);
   const currentMode = MODE_OPTIONS.find((item) => item.id === activeMode) ?? MODE_OPTIONS[0];
   const keys = getModeValues(currentMode.id);
+  const progressiveRowCount = getVisibleProgressiveRowCount(state.values);
+  const visibleProgressiveRows = PROGRESSIVE_DEFAULT_ROWS.slice(0, progressiveRowCount);
+  const canAddProgressiveRow = progressiveRowCount < MAX_PROGRESSIVE_ROWS;
+  const activeRateCountLabel = `${progressiveRowCount} از ${MAX_PROGRESSIVE_ROWS} نرخ`;
 
-  const applyProgressiveSuggestion = () => {
-    PROGRESSIVE_DEFAULT_ROWS.forEach((row) => {
-      onValueChange(row.fromKey, row.from);
-      onValueChange(row.toKey, row.to);
-      onValueChange(row.rateKey, row.rate);
-    });
+  const syncNextRowFrom = (rowIndex: number, toValue: string) => {
+    const nextRow = PROGRESSIVE_DEFAULT_ROWS[rowIndex + 1];
+    if (!nextRow) return;
+    if (!hasRowContent(state.values, nextRow)) return;
+    onValueChange(nextRow.fromKey, getNextFromValue(toValue.trim()));
+  };
+
+  const handleProgressiveRowChange = (rowIndex: number, field: 'from' | 'to' | 'rate', value: string) => {
+    const row = PROGRESSIVE_DEFAULT_ROWS[rowIndex];
+    if (!row) return;
+
+    if (field === 'rate') {
+      onValueChange(row.rateKey, value);
+      return;
+    }
+
+    if (field === 'to') {
+      onValueChange(row.toKey, value);
+      syncNextRowFrom(rowIndex, value);
+      return;
+    }
+
+    if (rowIndex > 0) return;
+    onValueChange(row.fromKey, value.trim());
+  };
+
+  const handleAddProgressiveRow = () => {
+    if (!canAddProgressiveRow) return;
+
+    const previousRow = PROGRESSIVE_DEFAULT_ROWS[progressiveRowCount - 1];
+    const nextRow = PROGRESSIVE_DEFAULT_ROWS[progressiveRowCount];
+    if (!previousRow || !nextRow) return;
+
+    const previousTo = getStringValue(state.values[previousRow.toKey]);
+    const nextFrom = getNextFromValue(previousTo);
+    if (!nextFrom) return;
+
+    onValueChange(nextRow.fromKey, nextFrom);
+    onValueChange(nextRow.toKey, '');
+    onValueChange(nextRow.rateKey, '');
   };
 
   if (!selectedPenalty) {
@@ -265,7 +364,9 @@ export function PenaltyRuleSection({
               <div className="flex-1">
                 <div className="flex flex-col flex-nowrap items-start justify-center gap-3">
                   <h3 className="text-lg font-black text-[color:var(--text-strong)]">{item.title}</h3>
-                  <span className="rounded-xl bg-[color:var(--theme-accent-softer)] px-3 py-1 text-xs font-bold text-[color:var(--text-muted)]">تنظیمات انجام‌شده</span>
+                  <span className="rounded-xl bg-[color:var(--theme-accent-softer)] px-3 py-1 text-xs font-bold text-[color:var(--text-muted)]">
+                    تنظیمات انجام‌شده
+                  </span>
                 </div>
                 <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">{item.description}</p>
               </div>
@@ -316,7 +417,9 @@ export function PenaltyRuleSection({
           <section className="space-y-5">
             <div className="text-right">
               <h2 className="text-[17px] font-black text-[color:var(--text-strong)]">دوره محاسبه جریمه</h2>
-              <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">مشخص می‌کند جریمه بر اساس تاخیر روزانه، ماهانه یا سالانه محاسبه شود.</p>
+              <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">
+                مشخص می‌کند جریمه بر اساس تاخیر روزانه، ماهانه یا سالانه محاسبه شود.
+              </p>
             </div>
 
             <ChoicePills
@@ -333,14 +436,25 @@ export function PenaltyRuleSection({
             <div className="space-y-6">
               <div className="space-y-4">
                 <RuleFieldLabel label="مبلغ ثابت جریمه" required />
-                <RuleAmountInput value={String(state.values[keys.amountKey!] ?? '')} onChange={(value) => onValueChange(keys.amountKey!, value)} suffix="تومان" />
-                <p className="text-right text-sm text-[color:var(--text-muted)]">مبلغی که برای هر دوره تاخیر به‌عنوان جریمه در نظر گرفته می‌شود.</p>
+                <RuleAmountInput
+                  value={String(state.values[keys.amountKey!] ?? '')}
+                  onChange={(value) => onValueChange(keys.amountKey!, value)}
+                  suffix="تومان"
+                />
+                <p className="text-right text-sm text-[color:var(--text-muted)]">
+                  مبلغی که برای هر دوره تاخیر به‌عنوان جریمه در نظر گرفته می‌شود.
+                </p>
               </div>
 
               <div className="space-y-4">
                 <RuleFieldLabel label="مهلت تنفس (بدون جریمه)" required />
-                <RulePlainTextInput value={String(state.values[keys.graceKey] ?? '')} onChange={(value) => onValueChange(keys.graceKey, value)} />
-                <p className="text-right text-sm text-[color:var(--text-muted)]">تعداد روزهایی که پس از سررسید بدون محاسبه جریمه به خریدار مهلت داده می‌شود.</p>
+                <RulePlainTextInput
+                  value={String(state.values[keys.graceKey] ?? '')}
+                  onChange={(value) => onValueChange(keys.graceKey, value)}
+                />
+                <p className="text-right text-sm text-[color:var(--text-muted)]">
+                  تعداد روزهایی که پس از سررسید بدون محاسبه جریمه به خریدار مهلت داده می‌شود.
+                </p>
               </div>
             </div>
           ) : null}
@@ -349,20 +463,37 @@ export function PenaltyRuleSection({
             <div className="space-y-6">
               <div className="space-y-4">
                 <RuleFieldLabel label="درصد جریمه" required />
-                <RuleAmountInput value={String(state.values[keys.percentKey!] ?? '')} onChange={(value) => onValueChange(keys.percentKey!, value)} suffix="%" />
-                <p className="text-right text-sm text-[color:var(--text-muted)]">درصد جریمه‌ای که برای دوره انتخاب‌شده اعمال می‌شود.</p>
+                <RuleAmountInput
+                  value={String(state.values[keys.percentKey!] ?? '')}
+                  onChange={(value) => onValueChange(keys.percentKey!, value)}
+                  suffix="%"
+                />
+                <p className="text-right text-sm text-[color:var(--text-muted)]">
+                  درصد جریمه‌ای که برای دوره انتخاب‌شده اعمال می‌شود.
+                </p>
               </div>
 
               <div className="space-y-4">
                 <RuleFieldLabel label="درصد سود بانکی" required />
-                <RuleAmountInput value={String(state.values[keys.bankKey!] ?? '')} onChange={(value) => onValueChange(keys.bankKey!, value)} suffix="%" />
-                <p className="text-right text-sm text-[color:var(--text-muted)]">در این بخش منظور سود بانکی‌ای که می‌خواهید به درصد جریمه اضافه شود را وارد کنید.</p>
+                <RuleAmountInput
+                  value={String(state.values[keys.bankKey!] ?? '')}
+                  onChange={(value) => onValueChange(keys.bankKey!, value)}
+                  suffix="%"
+                />
+                <p className="text-right text-sm text-[color:var(--text-muted)]">
+                  در این بخش منظور سود بانکی‌ای که می‌خواهید به درصد جریمه اضافه شود را وارد کنید.
+                </p>
               </div>
 
               <div className="space-y-4">
                 <RuleFieldLabel label="مهلت تنفس (بدون جریمه)" required />
-                <RulePlainTextInput value={String(state.values[keys.graceKey] ?? '')} onChange={(value) => onValueChange(keys.graceKey, value)} />
-                <p className="text-right text-sm text-[color:var(--text-muted)]">تعداد روزهایی که پس از سررسید قسط بدون محاسبه جریمه مهلت داده می‌شود.</p>
+                <RulePlainTextInput
+                  value={String(state.values[keys.graceKey] ?? '')}
+                  onChange={(value) => onValueChange(keys.graceKey, value)}
+                />
+                <p className="text-right text-sm text-[color:var(--text-muted)]">
+                  تعداد روزهایی که پس از سررسید قسط بدون محاسبه جریمه مهلت داده می‌شود.
+                </p>
               </div>
 
               <div className="space-y-4 border-t border-[color:var(--border-soft)] pt-5">
@@ -375,7 +506,9 @@ export function PenaltyRuleSection({
                   className="justify-end flex-row-reverse"
                   aria-label="قاعده گرد کردن مبلغ جریمه"
                 />
-                <p className="text-right text-sm text-[color:var(--text-muted)]">مشخص می‌کند عدد نهایی جریمه پس از محاسبه به چه واحدی گرد شود، مثل گرد کردن به ۱۰۰ یا ۱۰۰۰ تومان.</p>
+                <p className="text-right text-sm text-[color:var(--text-muted)]">
+                  مشخص می‌کند عدد نهایی جریمه پس از محاسبه به چه واحدی گرد شود، مثل گرد کردن به ۱۰۰ یا ۱۰۰۰ تومان.
+                </p>
               </div>
             </div>
           ) : null}
@@ -384,44 +517,79 @@ export function PenaltyRuleSection({
             <div className="space-y-6">
               <div className="space-y-4">
                 <RuleFieldLabel label="درصد سود بانکی" required />
-                <RuleAmountInput value={String(state.values[keys.bankKey!] ?? '')} onChange={(value) => onValueChange(keys.bankKey!, value)} suffix="%" />
-                <p className="text-right text-sm text-[color:var(--text-muted)]">در این بخش مقدار سود بانکی که به درصد جریمه اضافه شود را وارد کنید تا به صورت جداگانه محاسبه شود.</p>
+                <RuleAmountInput
+                  value={String(state.values[keys.bankKey!] ?? '')}
+                  onChange={(value) => onValueChange(keys.bankKey!, value)}
+                  suffix="%"
+                />
+                <p className="text-right text-sm text-[color:var(--text-muted)]">
+                  در این بخش مقدار سود بانکی که به درصد جریمه اضافه شود را وارد کنید تا به صورت جداگانه محاسبه شود.
+                </p>
               </div>
 
               <div className="space-y-4">
                 <RuleFieldLabel label="مهلت تنفس (بدون جریمه)" required />
-                <RulePlainTextInput value={String(state.values[keys.graceKey] ?? '')} onChange={(value) => onValueChange(keys.graceKey, value)} />
-                <p className="text-right text-sm text-[color:var(--text-muted)]">تعداد روزهایی که پس از سررسید بدون محاسبه جریمه به خریدار مهلت داده می‌شود.</p>
+                <RulePlainTextInput
+                  value={String(state.values[keys.graceKey] ?? '')}
+                  onChange={(value) => onValueChange(keys.graceKey, value)}
+                />
+                <p className="text-right text-sm text-[color:var(--text-muted)]">
+                  تعداد روزهایی که پس از سررسید بدون محاسبه جریمه به خریدار مهلت داده می‌شود.
+                </p>
               </div>
 
               <div className="space-y-5 border-t border-[color:var(--border-soft)] pt-5">
-                <div className="flex items-start justify-between gap-4">
-                  <button
-                    type="button"
-                    onClick={applyProgressiveSuggestion}
-                    className="text-sm font-bold text-[#11d1e6] transition hover:text-[#5de6f4]"
-                  >
-                    تنظیمات پیشنهادی
-                  </button>
-
+                <div className="flex flex-col gap-4 lg:flex-row-reverse lg:items-start lg:justify-between">
                   <div className="text-right">
-                    <h3 className="text-[17px] font-black text-[color:var(--text-strong)]">جدول جریمه‌های تصاعدی</h3>
-                    <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">توجه داشته باشید که میزان نرخ جریمه با هم‌پوشانی نداشته باشد.</p>
+                    <div className="flex items-center justify-end gap-2">
+                      <h3 className="text-[17px] font-black text-[color:var(--text-strong)]">جدول جریمه‌های تصاعدی</h3>
+                      <span className="rounded-full border border-[color:var(--border-soft)] px-3 py-1 text-xs font-bold text-[color:var(--text-muted)]">
+                        {activeRateCountLabel}
+                      </span>
+                    </div>
+                    <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">
+                      حداکثر ۴ نرخ قابل تعریف است. برای هر نرخ جدید، مقدار «از» بر اساس «تا» ردیف قبلی به‌صورت خودکار قفل می‌شود.
+                    </p>
+                    <div className="mt-3 flex items-center justify-end gap-2">
+                      {Array.from({ length: MAX_PROGRESSIVE_ROWS }, (_, index) => (
+                        <span
+                          key={index}
+                          className={`h-2.5 w-10 rounded-full transition ${
+                            index < progressiveRowCount ? 'bg-[color:var(--theme-action-border)]' : 'bg-[color:var(--border-soft)]'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-start lg:self-center">
+                    <button
+                      type="button"
+                      onClick={handleAddProgressiveRow}
+                      disabled={!canAddProgressiveRow || !getNextFromValue(getStringValue(state.values[visibleProgressiveRows[visibleProgressiveRows.length - 1].toKey]))}
+                      className="inline-flex items-center gap-2 rounded-full border border-[color:var(--theme-action-border)] bg-[color:var(--theme-action-bg)] px-4 py-2 text-sm font-bold text-[color:var(--theme-action-text)] transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      <Plus className="h-4 w-4" />
+                      افزودن نرخ
+                    </button>
                   </div>
                 </div>
 
                 <div className="space-y-5">
-                  {PROGRESSIVE_DEFAULT_ROWS.map((row) => (
-                    <ProgressRow
-                      key={row.fromKey}
-                      from={String(state.values[row.fromKey] ?? '')}
-                      to={String(state.values[row.toKey] ?? '')}
-                      rate={String(state.values[row.rateKey] ?? '')}
-                      onChange={(field, value) =>
-                        onValueChange(field === 'from' ? row.fromKey : field === 'to' ? row.toKey : row.rateKey, value)
-                      }
-                    />
-                  ))}
+                  {visibleProgressiveRows.map((row, rowIndex) => {
+                    const previousTo = rowIndex > 0 ? getStringValue(state.values[visibleProgressiveRows[rowIndex - 1].toKey]) : '';
+                    const lockedFrom = rowIndex === 0 ? String(state.values[row.fromKey] || row.from || '1') : getNextFromValue(previousTo);
+                    return (
+                      <ProgressRow
+                        key={row.fromKey}
+                        from={lockedFrom}
+                        to={String(state.values[row.toKey] ?? '')}
+                        rate={String(state.values[row.rateKey] ?? '')}
+                        fromDisabled={rowIndex > 0}
+                        onChange={(field, value) => handleProgressiveRowChange(rowIndex, field, value)}
+                      />
+                    );
+                  })}
                 </div>
               </div>
 
@@ -433,9 +601,11 @@ export function PenaltyRuleSection({
                   onChange={(value) => onValueChange(keys.roundKey!, value)}
                   wrap
                   className="justify-end flex-row-reverse"
-                  aria-label="قاعده گرد کردن مبلغ جریمه — تصاعدی"
+                  aria-label="قاعده گرد کردن مبلغ جریمه - تصاعدی"
                 />
-                <p className="text-right text-sm text-[color:var(--text-muted)]">مشخص می‌کند عدد نهایی جریمه پس از محاسبه به چه واحدی گرد شود، مثل گرد کردن به ۱۰۰ یا ۱۰۰۰ تومان.</p>
+                <p className="text-right text-sm text-[color:var(--text-muted)]">
+                  مشخص می‌کند عدد نهایی جریمه پس از محاسبه به چه واحدی گرد شود، مثل گرد کردن به ۱۰۰ یا ۱۰۰۰ تومان.
+                </p>
               </div>
             </div>
           ) : null}
