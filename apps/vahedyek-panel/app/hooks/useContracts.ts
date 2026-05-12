@@ -20,6 +20,7 @@ export interface UseContractsReturn {
   searchQuery: string;
   activeTab: ContractStatus;
   draftCount: number;
+  appendixDraftCount: number;
   pendingApprovalCount: number;
   completedCount: number;
   loading: boolean;
@@ -43,13 +44,14 @@ export function useContracts(): UseContractsReturn {
   const [filters, setFilters] = useState<FilterState>(EMPTY_FILTERS);
   const [counts, setCounts] = useState<Record<ContractStatus, number>>({
     draft: 0,
+    appendix_draft: 0,
     pending_approval: 0,
     completed: 0,
   });
 
   const urlTab = useMemo(() => {
     const raw = (searchParams.get('tab') ?? searchParams.get('status') ?? '').trim();
-    if (raw === 'draft' || raw === 'pending_approval' || raw === 'completed') return raw satisfies ContractStatus;
+    if (raw === 'draft' || raw === 'appendix_draft' || raw === 'pending_approval' || raw === 'completed') return raw satisfies ContractStatus;
     return null;
   }, [searchParams]);
 
@@ -71,7 +73,7 @@ export function useContracts(): UseContractsReturn {
         return;
       }
       setContracts([]);
-      setCounts({ draft: 0, pending_approval: 0, completed: 0 });
+      setCounts({ draft: 0, appendix_draft: 0, pending_approval: 0, completed: 0 });
     } finally {
       setLoading(false);
     }
@@ -139,6 +141,7 @@ export function useContracts(): UseContractsReturn {
     searchQuery,
     activeTab,
     draftCount: counts.draft,
+    appendixDraftCount: counts.appendix_draft,
     pendingApprovalCount: counts.pending_approval,
     completedCount: counts.completed,
     loading,

@@ -111,8 +111,12 @@ export async function GET(request: Request) {
         instanceStatusByDraft.get(draft.id),
         Boolean(draft.releasedFromApprovedForEdit),
       ) as ContractStatus,
+      entityKind: 'contract' as const,
       createdAt: draft.createdAt.toISOString(),
       updatedAt: draft.updatedAt.toISOString(),
+      hasApprovedAppendix: false,
+      latestApprovedAppendixId: null,
+      appendixStatusBadge: null,
       data: {
         subject: draft.subject
           ? {
@@ -209,13 +213,149 @@ export async function GET(request: Request) {
       },
     }));
 
+    const approvedAppendices = await prisma.contractAppendix.findMany({
+      where: { tenantId: session.tenantId, status: 'APPROVED' },
+      select: { id: true, draftId: true, appendixNumber: true },
+      orderBy: { appendixNumber: 'desc' },
+    });
+    const appendixDrafts = await prisma.contractAppendix.findMany({
+      where: { tenantId: session.tenantId, status: 'DRAFT' },
+      include: {
+        draft: {
+          select: {
+            id: true,
+            createdAt: true,
+            updatedAt: true,
+            subject: true,
+            parties: { include: { members: { orderBy: { createdAt: 'asc' } } } },
+            financial: { include: { categories: true, dueItems: true } },
+          },
+        },
+      },
+      orderBy: { updatedAt: 'desc' },
+    });
+    const appendixInReview = await prisma.contractAppendix.findMany({
+      where: { tenantId: session.tenantId, status: 'IN_REVIEW' },
+      include: {
+        draft: {
+          select: {
+            id: true,
+            createdAt: true,
+            updatedAt: true,
+            subject: true,
+            parties: { include: { members: { orderBy: { createdAt: 'asc' } } } },
+            financial: { include: { categories: true, dueItems: true } },
+          },
+        },
+      },
+      orderBy: { updatedAt: 'desc' },
+    });
+
+    const latestApprovedByDraft = new Map<string, { id: string; appendixNumber: number }>();
+    for (const appendix of approvedAppendices) {
+      if (!latestApprovedByDraft.has(appendix.draftId)) {
+        latestApprovedByDraft.set(appendix.draftId, { id: appendix.id, appendixNumber: appendix.appendixNumber });
+      }
+    }
+
+    for (const contract of contracts) {
+      const latestApproved = latestApprovedByDraft.get(contract.id);
+      if (latestApproved) {
+        contract.hasApprovedAppendix = true;
+        contract.latestApprovedAppendixId = latestApproved.id;
+        contract.appendixStatusBadge = `متمم ${latestApproved.appendixNumber.toLocaleString('fa-IR')}`;
+      }
+    }
+
+    const mapAppendixToListItem = (appendix: (typeof appendixDrafts)[number], appendixStatus: ContractStatus) => ({
+      id: appendix.id,
+      baseContractId: appendix.draftId,
+      sourceAppendixId: appendix.id,
+      appendixNumber: appendix.appendixNumber,
+      status: appendixStatus,
+      entityKind: 'appendix' as const,
+      createdAt: appendix.createdAt.toISOString(),
+      updatedAt: appendix.updatedAt.toISOString(),
+      appendixStatusBadge: `متمم ${appendix.appendixNumber.toLocaleString('fa-IR')}`,
+      data: {
+        subject: appendix.draft.subject
+          ? {
+              contractor: { type: serializeContractorType(appendix.draft.subject.contractorType) },
+              contractType: serializeContractType(appendix.draft.subject.contractType),
+              contractDate: appendix.draft.subject.contractDate,
+              contractNumber: appendix.draft.subject.contractNumber,
+              deliveryDate: appendix.draft.subject.deliveryDate,
+              blockId: appendix.draft.subject.blockId,
+              unitId: appendix.draft.subject.unitId,
+            }
+          : {
+              contractor: { type: 'self' },
+              contractType: 'pre-sale',
+              contractDate: '',
+              contractNumber: '',
+              deliveryDate: '',
+              blockId: '',
+              unitId: '',
+            },
+        parties: {
+          partyOneMode: appendix.draft.parties ? serializeShareMode(appendix.draft.parties.partyOneMode) : 'dang',
+          partyTwoMode: appendix.draft.parties ? serializeShareMode(appendix.draft.parties.partyTwoMode) : 'dang',
+          partyOne: appendix.draft.parties
+            ? appendix.draft.parties.members
+                .filter((member) => member.side === PartySide.party_one)
+                .map((member) => ({
+                  personId: member.personId,
+                  personType: member.personType === PersonType.legal ? 'legal' : 'natural',
+                  name: member.name,
+                  isPrimary: member.isPrimary,
+                  share: { value: Number(member.shareValue), mode: serializeShareMode(appendix.draft.parties.partyOneMode) },
+                }))
+            : [],
+          partyTwo: appendix.draft.parties
+            ? appendix.draft.parties.members
+                .filter((member) => member.side === PartySide.party_two)
+                .map((member) => ({
+                  personId: member.personId,
+                  personType: member.personType === PersonType.legal ? 'legal' : 'natural',
+                  name: member.name,
+                  isPrimary: member.isPrimary,
+                  share: { value: Number(member.shareValue), mode: serializeShareMode(appendix.draft.parties.partyTwoMode) },
+                }))
+            : [],
+        },
+        financial: appendix.draft.financial
+          ? {
+              pricingType: serializePricingType(appendix.draft.financial.pricingType),
+              areaPricingMode: normalizeAreaPricingMode(appendix.draft.financial.areaPricingMode),
+              unitArea: appendix.draft.financial.unitArea ? String(Number(appendix.draft.financial.unitArea)) : '',
+              parkingArea: appendix.draft.financial.parkingArea ? String(Number(appendix.draft.financial.parkingArea)) : '',
+              storageArea: appendix.draft.financial.storageArea ? String(Number(appendix.draft.financial.storageArea)) : '',
+              totalArea: appendix.draft.financial.totalArea ? String(Number(appendix.draft.financial.totalArea)) : '',
+              pricePerMeter: appendix.draft.financial.pricePerMeter ? String(Number(appendix.draft.financial.pricePerMeter)) : '',
+              fixedTotalAmount: appendix.draft.financial.fixedTotalAmount ? String(Number(appendix.draft.financial.fixedTotalAmount)) : '',
+              activeTab: '',
+              categories: [],
+              dueItems: [],
+            }
+          : undefined,
+      },
+    });
+
     const counts = {
       draft: contracts.filter((contract) => contract.status === 'draft').length,
+      appendix_draft: appendixDrafts.length,
       pending_approval: contracts.filter((contract) => contract.status === 'pending_approval').length,
       completed: contracts.filter((contract) => contract.status === 'completed').length,
     } satisfies Record<ContractStatus, number>;
-
-    const items = contracts.filter((contract) => contract.status === status);
+    const items =
+      status === 'appendix_draft'
+        ? appendixDrafts.map((appendix) => mapAppendixToListItem(appendix, 'appendix_draft'))
+        : status === 'pending_approval'
+          ? [
+              ...contracts.filter((contract) => contract.status === 'pending_approval'),
+              ...appendixInReview.map((appendix) => mapAppendixToListItem(appendix as (typeof appendixDrafts)[number], 'pending_approval')),
+            ]
+          : contracts.filter((contract) => contract.status === status);
 
     return NextResponse.json({ items, counts });
   } catch (error) {

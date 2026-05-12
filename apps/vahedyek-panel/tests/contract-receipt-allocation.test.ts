@@ -14,6 +14,7 @@ function bucket(rows: Array<{ id: string; amount: number; dueDate: string }>): P
       heading: 'فروردین ۱۴۰۵',
       totalRial: rows.reduce((sum, row) => sum + row.amount, 0),
       overdueRial: 0,
+      penaltyRial: 0,
       items: rows.map((row) => ({
         id: row.id,
         categoryId: 'principal',

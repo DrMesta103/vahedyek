@@ -453,7 +453,8 @@ function ExpandableTagGroup({
   required,
   className = "",
   showSearch = true,
-  invalid = false
+  invalid = false,
+  onDisabledSelect
 }) {
   const [query, setQuery] = useState("");
   const [expanded, setExpanded] = useState(false);
@@ -539,11 +540,19 @@ function ExpandableTagGroup({
             "button",
             {
               type: "button",
-              onClick: () => onSelect(item.id),
+              onClick: () => {
+                if (item.disabled) {
+                  onDisabledSelect?.(item.id);
+                  return;
+                }
+                onSelect(item.id);
+              },
               "data-tag-pill": "true",
               "data-active": active ? "true" : "false",
+              "aria-disabled": item.disabled || void 0,
               className: cn3(
                 "inline-flex h-[34px] items-center rounded-full border px-4 text-[12px] font-medium whitespace-nowrap transition-all",
+                item.disabled ? "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400 hover:bg-slate-100 hover:text-slate-400" : "",
                 active ? "border-[color:var(--theme-action-border)] bg-[color:var(--theme-action-bg)] text-[color:var(--theme-action-text)] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.25)]" : "border-[color:var(--border-color)] bg-[color:var(--surface)] text-[color:var(--text-muted)] hover:bg-[color:var(--surface-soft)] hover:text-[color:var(--text-strong)]"
               ),
               children: item.sub ? `${item.name} \xB7 ${item.sub}` : item.name

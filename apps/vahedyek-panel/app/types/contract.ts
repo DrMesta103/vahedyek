@@ -1,6 +1,28 @@
-export type ContractStatus = 'draft' | 'pending_approval' | 'completed';
+export type ContractStatus = 'draft' | 'appendix_draft' | 'pending_approval' | 'completed';
 export type ContractType = 'sale' | 'pre-sale';
 export type ContractorType = 'self' | 'employee' | 'former-employee';
+export type AppendixIssuerType = 'self' | 'employee' | 'former-employee';
+export type AppendixStatus = 'draft' | 'pending_approval' | 'completed';
+export type ContractEntityKind = 'contract' | 'appendix';
+export type AppendixSourceKind = 'contract' | 'appendix';
+export type AppendixTagGroupKey = 'financial' | 'conditions' | 'parties' | 'dates';
+export type AppendixTagKey =
+  | 'loan'
+  | 'adjustment'
+  | 'side-costs'
+  | 'installments'
+  | 'prepayment'
+  | 'unit-delivery'
+  | 'forgiveness'
+  | 'contract-costs'
+  | 'penalty-waiver'
+  | 'workshop-conditions'
+  | 'arbitration'
+  | 'first-party'
+  | 'second-party'
+  | 'due-dates'
+  | 'commitment-date'
+  | 'unit-delivery-date';
 export type ShareMode = 'percent' | 'dang';
 export type PersonType = 'natural' | 'legal';
 export type PricingType = 'fixed' | 'metered';
@@ -310,9 +332,97 @@ export interface ContractFormData {
 export interface Contract {
   id: string;
   status: ContractStatus;
+  entityKind?: ContractEntityKind;
+  baseContractId?: string;
+  sourceAppendixId?: string | null;
+  appendixStatusBadge?: string | null;
+  latestApprovedAppendixId?: string | null;
+  hasApprovedAppendix?: boolean;
+  appendixDraftId?: string | null;
+  appendixNumber?: number | null;
   createdAt: string;
   updatedAt: string;
   data: ContractFormData;
+}
+
+export interface ContractAppendixTagDefinition {
+  key: AppendixTagKey;
+  groupKey: AppendixTagGroupKey;
+  title: string;
+  description: string;
+}
+
+export interface ContractAppendixItem {
+  id: string;
+  tagKey: AppendixTagKey;
+  groupKey: AppendixTagGroupKey;
+  title: string;
+  description: string;
+  payload: Record<string, unknown>;
+}
+
+export interface ContractAppendix {
+  id: string;
+  draftId: string;
+  status: AppendixStatus;
+  appendixNumber: number;
+  title: string;
+  summary: string;
+  effectiveDate: string;
+  issuerType: AppendixIssuerType;
+  issuerName: string;
+  notes: string;
+  previousAppendixId?: string | null;
+  sourceKind?: AppendixSourceKind;
+  sourceId?: string | null;
+  canEdit?: boolean;
+  canDelete?: boolean;
+  canSubmit?: boolean;
+  approvalSummary?: {
+    status: AppendixStatus;
+    currentStepIndex?: number;
+  } | null;
+  createdAt: string;
+  updatedAt: string;
+  items: ContractAppendixItem[];
+}
+
+export interface ContractAppendixReferenceData {
+  currentUserName: string;
+  employees: Array<{ id: string; label: string }>;
+  formerEmployees: Array<{ id: string; label: string }>;
+}
+
+export interface ContractAppendixListResponse {
+  items: ContractAppendix[];
+  nextAppendixNumber: number;
+  reference: ContractAppendixReferenceData;
+}
+
+export interface ContractAppendixDetailResponse {
+  item: ContractAppendix;
+  contract: Contract;
+  compareBase: {
+    sourceKind: AppendixSourceKind;
+    sourceId: string | null;
+    sourceLabel: string;
+  };
+}
+
+export interface CreateContractAppendixItemInput {
+  tagKey: AppendixTagKey;
+  payload: Record<string, unknown>;
+}
+
+export interface CreateContractAppendixInput {
+  appendixNumber: number;
+  effectiveDate: string;
+  issuerType: AppendixIssuerType;
+  issuerEmployeeId?: string | null;
+  issuerFormerEmployeeId?: string | null;
+  notes?: string;
+  submitMode?: 'draft' | 'pending_approval';
+  items: CreateContractAppendixItemInput[];
 }
 
 export interface FilterState {

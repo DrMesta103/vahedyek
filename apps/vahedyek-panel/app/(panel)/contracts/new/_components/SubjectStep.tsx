@@ -26,6 +26,10 @@ type BlockOption = {
     category: string;
     area: number | null;
     assignedToUnitId: string | null;
+    isLocked: boolean;
+    lockedByDraftId: string | null;
+    lockedByContractNumber: string | null;
+    lockedByStatus: 'draft' | 'pending_approval' | 'completed' | null;
   }>;
 };
 
@@ -83,7 +87,7 @@ export function SubjectStep({ stepId, title, embedded = false }: { stepId: strin
     const load = async () => {
       try {
         const existingId = getActiveDraftId();
-        const referenceData = await getReferenceData();
+        const referenceData = await getReferenceData(existingId);
         const subjectData = existingId ? await getStepData<ContractSubjectData>(existingId, 'subject') : null;
         if (!mounted) return;
 

@@ -1,15 +1,19 @@
 import { NextResponse } from 'next/server';
 import { DirectoryRole, PersonType, Prisma } from '@/lib/prisma-client';
 import { requireSessionContext } from '../../../lib/auth';
+import { getLockedUnitMapForTenant } from '../../../lib/contractUnitLocks';
 import { prisma } from '../../../lib/prisma';
 import { handlePrismaApiError } from '../../../lib/prismaApiError';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const session = await requireSessionContext();
     if (session instanceof NextResponse) return session;
 
-    const [employees, formerEmployees, blocks, directory] = await Promise.all([
+    const url = new URL(request.url);
+    const currentDraftId = url.searchParams.get('draftId')?.trim() || null;
+
+    const [employees, formerEmployees, blocks, directory, lockedUnits] = await Promise.all([
       prisma.employee.findMany({
         where: { tenantId: session.tenantId, isActive: true },
         orderBy: [{ firstName: 'asc' }, { lastName: 'asc' }],
@@ -33,6 +37,7 @@ export async function GET() {
         where: { tenantId: session.tenantId },
         orderBy: { name: 'asc' },
       }),
+      getLockedUnitMapForTenant(session.tenantId),
     ]);
 
     const byRole = (role: DirectoryRole, personType: PersonType) =>
@@ -52,16 +57,25 @@ export async function GET() {
       blocks: blocks.map((block) => ({
         id: block.id,
         name: block.name,
-        units: block.units.map((unit) => ({
-          id: unit.id,
-          floorName: unit.floorName,
-          name: unit.name,
-          title: `${unit.floorName} - ${unit.name}`,
-          category: unit.category,
-          area: unit.area,
-          assignedToUnitId: unit.assignedToUnitId,
-          areaPricingMode: unit.areaPricingMode,
-        })),
+        units: block.units.map((unit) => {
+          const locked = lockedUnits.get(unit.id);
+          const isCurrentDraft = Boolean(currentDraftId && locked?.draftId === currentDraftId);
+
+          return {
+            id: unit.id,
+            floorName: unit.floorName,
+            name: unit.name,
+            title: `${unit.floorName} - ${unit.name}`,
+            category: unit.category,
+            area: unit.area,
+            assignedToUnitId: unit.assignedToUnitId,
+            areaPricingMode: unit.areaPricingMode,
+            isLocked: Boolean(locked && !isCurrentDraft),
+            lockedByDraftId: !locked || isCurrentDraft ? null : locked.draftId,
+            lockedByContractNumber: !locked || isCurrentDraft ? null : locked.contractNumber,
+            lockedByStatus: !locked || isCurrentDraft ? null : locked.status,
+          };
+        }),
       })),
       directory: {
         partner: {

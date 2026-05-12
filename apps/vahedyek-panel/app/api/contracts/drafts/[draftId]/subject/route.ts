@@ -3,6 +3,7 @@ import { Prisma } from '@/lib/prisma-client';
 import { getActorName, recordAuditLog } from '../../../../../lib/audit-log';
 import { buildContractSubjectAuditDiff } from '../../../../../lib/audit-log-presenters';
 import { requireSessionContext } from '../../../../../lib/auth';
+import { findLockedUnitForTenant } from '../../../../../lib/contractUnitLocks';
 import { prisma } from '../../../../../lib/prisma';
 import { handlePrismaApiError } from '../../../../../lib/prismaApiError';
 import { parseContractorType, parseContractType, serializeContractorType, serializeContractType } from '../../../../../lib/subjectUtils';
@@ -119,6 +120,20 @@ export async function PUT(request: Request, { params }: { params: Promise<{ draf
 
     const body = await request.json();
     const previous = await prisma.contractSubject.findUnique({ where: { draftId } });
+    const lockedUnit = body.unitId ? await findLockedUnitForTenant(session.tenantId, String(body.unitId), draftId) : null;
+
+    if (lockedUnit) {
+      return NextResponse.json(
+        {
+          message: `این واحد برای قرارداد شماره ${lockedUnit.contractNumber} ثبت شده است.`,
+          contractNumber: lockedUnit.contractNumber,
+          existingDraftId: lockedUnit.draftId,
+          status: lockedUnit.status,
+        },
+        { status: 409 },
+      );
+    }
+
     const contractor = body.contractor ?? {};
     const formerEmployeeName =
       contractor.type === 'former-employee'

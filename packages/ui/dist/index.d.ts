@@ -106,8 +106,9 @@ type ExpandableTagGroupItem = {
     id: string;
     name: string;
     sub?: string;
+    disabled?: boolean;
 };
-declare function ExpandableTagGroup({ label, items, selectedId, onSelect, emptyText, itemsPerRow, required, className, showSearch, invalid, }: {
+declare function ExpandableTagGroup({ label, items, selectedId, onSelect, emptyText, itemsPerRow, required, className, showSearch, invalid, onDisabledSelect, }: {
     label: string;
     items: ExpandableTagGroupItem[];
     selectedId: string;
@@ -118,6 +119,7 @@ declare function ExpandableTagGroup({ label, items, selectedId, onSelect, emptyT
     className?: string;
     showSearch?: boolean;
     invalid?: boolean;
+    onDisabledSelect?: (id: string) => void;
 }): react_jsx_runtime.JSX.Element;
 
 type ContractType = 'sale' | 'pre-sale';

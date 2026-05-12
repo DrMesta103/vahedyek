@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo, useState } from 'react';
 import { ExpandableTagGroup } from '@repo/ui';
 import { SectionCard, SectionHeader } from './ContractFormPrimitives';
 
@@ -11,6 +12,10 @@ export type SubjectUnitOption = {
   category: string;
   area: number | null;
   assignedToUnitId: string | null;
+  isLocked: boolean;
+  lockedByDraftId: string | null;
+  lockedByContractNumber: string | null;
+  lockedByStatus: 'draft' | 'pending_approval' | 'completed' | null;
 };
 
 type BlockOption = {
@@ -34,6 +39,17 @@ function toCategoryLabel(category: string) {
   }
 }
 
+function toStatusLabel(status: SubjectUnitOption['lockedByStatus']) {
+  switch (status) {
+    case 'completed':
+      return 'تکمیل‌شده';
+    case 'pending_approval':
+      return 'در انتظار تایید';
+    default:
+      return 'پیش‌نویس';
+  }
+}
+
 function UnitSelector({
   blocks,
   selectedBlock,
@@ -54,6 +70,11 @@ function UnitSelector({
   const blockData = blocks.find((block) => block.id === selectedBlock);
   const selectableUnits = blockData?.units.filter((unit) => unit.category === 'unit') ?? [];
   const selectedUnitData = selectableUnits.find((unit) => unit.id === selectedUnit);
+  const [lockedUnitDialogId, setLockedUnitDialogId] = useState<string | null>(null);
+  const lockedUnit = useMemo(
+    () => selectableUnits.find((unit) => unit.id === lockedUnitDialogId) ?? null,
+    [lockedUnitDialogId, selectableUnits],
+  );
 
   return (
     <div className="space-y-4">
@@ -67,7 +88,7 @@ function UnitSelector({
             onBlockChange(id);
             onUnitChange('');
           }}
-          emptyText="بلوک‌ای وجود ندارد"
+          emptyText="بلوکی وجود ندارد"
           itemsPerRow={8}
         />
       </div>
@@ -77,9 +98,15 @@ function UnitSelector({
           <ExpandableTagGroup
             label="واحد"
             required
-            items={selectableUnits.map((unit) => ({ id: unit.id, name: unit.name, sub: unit.floorName }))}
+            items={selectableUnits.map((unit) => ({
+              id: unit.id,
+              name: unit.name,
+              sub: unit.isLocked ? `${unit.floorName} · ثبت‌شده` : unit.floorName,
+              disabled: unit.isLocked,
+            }))}
             selectedId={selectedUnit}
             onSelect={onUnitChange}
+            onDisabledSelect={setLockedUnitDialogId}
             emptyText="واحدی یافت نشد"
             itemsPerRow={8}
           />
@@ -124,6 +151,29 @@ function UnitSelector({
               این واحد به یک رکورد دیگر متصل است: <span className="font-bold">{selectedUnitData.assignedToUnitId}</span>
             </div>
           ) : null}
+        </div>
+      ) : null}
+
+      {lockedUnit ? (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/45 p-4" dir="rtl" role="dialog" aria-modal="true">
+          <div className="w-full max-w-md rounded-[24px] border border-slate-200 bg-white p-5 text-right shadow-2xl">
+            <h3 className="text-[16px] font-black text-slate-900">واحد غیرقابل انتخاب است</h3>
+            <p className="mt-2 text-[13px] font-semibold leading-6 text-slate-600">
+              این واحد برای قرارداد شماره <span className="font-black text-slate-900">{lockedUnit.lockedByContractNumber || '—'}</span> ثبت شده است.
+            </p>
+            <p className="mt-2 text-[12px] font-semibold text-slate-500">
+              وضعیت قرارداد: {toStatusLabel(lockedUnit.lockedByStatus)}
+            </p>
+            <div className="mt-5 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setLockedUnitDialogId(null)}
+                className="rounded-full bg-[color-mix(in_srgb,var(--dark-teal)_88%,black)] px-5 py-2 text-[12px] font-black text-white transition hover:brightness-105"
+              >
+                متوجه شدم
+              </button>
+            </div>
+          </div>
         </div>
       ) : null}
     </div>

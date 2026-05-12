@@ -6,6 +6,7 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { reopenApprovedContractForEditAction } from '../../../actions/contractApprovalActions';
 import PanelLayout from '../../../components/PanelLayout';
 import { ContractApprovalFlowBanner } from '../../../components/contracts/ContractApprovalFlowBanner';
+import { useAppToast } from '../../../components/feedback/AppToastProvider';
 import { getContractDetails, setActiveDraftId } from '../../../lib/contractDraftClient';
 import { computeContractTotalRialFromFinancial } from '../../../lib/contractFinancialPricing';
 import type { ContractStatus } from '../../../types/contract';
@@ -51,7 +52,7 @@ function ContractListContextSection({ status }: { status: ContractStatus }) {
   const searchParams = useSearchParams();
   const raw = searchParams.get('list');
   const entryList: ContractStatus | null =
-    raw === 'draft' || raw === 'pending_approval' || raw === 'completed' ? raw : null;
+    raw === 'draft' || raw === 'appendix_draft' || raw === 'pending_approval' || raw === 'completed' ? raw : null;
 
   const badgeClass = contractListBadgeClass(status);
   const label = contractListCategoryLabel(status);
@@ -91,7 +92,7 @@ function ContractDetailsBackToListRow({ fallbackStatus }: { fallbackStatus: Cont
   const searchParams = useSearchParams();
   const list = searchParams.get('list');
   const tab: ContractStatus =
-    list === 'draft' || list === 'pending_approval' || list === 'completed' ? list : fallbackStatus;
+    list === 'draft' || list === 'appendix_draft' || list === 'pending_approval' || list === 'completed' ? list : fallbackStatus;
   const href = `/contracts?tab=${encodeURIComponent(tab)}`;
 
   return (
@@ -135,9 +136,9 @@ export default function ContractDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [contract, setContract] = useState<any>(null);
-  const [toast, setToast] = useState<string>('');
   const [reopenEditDialogOpen, setReopenEditDialogOpen] = useState(false);
   const [reopenEditBusy, setReopenEditBusy] = useState(false);
+  const { showError } = useAppToast();
 
   const reloadContract = useCallback(async () => {
     if (!contractId) return;
@@ -165,21 +166,15 @@ export default function ContractDetailsPage() {
     return () => window.removeEventListener('contract-approval-updated', onUpdated);
   }, [reloadContract]);
 
-  useEffect(() => {
-    if (!toast) return;
-    const t = window.setTimeout(() => setToast(''), 2200);
-    return () => window.clearTimeout(t);
-  }, [toast]);
-
   const handleUnderDevelopment = () => {
-    setToast('این بخش در حال توسعه است و به‌زودی اضافه می‌شود.');
+    showError('این بخش در حال توسعه است و به‌زودی اضافه می‌شود.');
   };
 
   const actions = useMemo(() => {
     const lockedForApproval = contract?.approvalInstance?.status === 'IN_REVIEW';
     const isFinalizedUi = contract?.status === 'completed';
     /** در قرارداد تکمیل‌شده فقط این موارد فعال می‌مانند؛ بقیه پیام «در حال توسعه». */
-    const enabledWhenCompleted = new Set(['reports', 'dues']);
+    const enabledWhenCompleted = new Set(['reports', 'dues', 'appendix']);
 
     const enabled = (id: string) => {
       if (id === 'view-draft') return true;
@@ -260,7 +255,7 @@ export default function ContractDetailsPage() {
     try {
       const r = await reopenApprovedContractForEditAction(String(contractId));
       if (!r.ok) {
-        setToast(r.message);
+        showError(r.message);
         return;
       }
       setReopenEditDialogOpen(false);
@@ -429,7 +424,7 @@ export default function ContractDetailsPage() {
               const onClick = () => {
                 if (!contractId) return;
                 if (item.id === 'edit-draft' && contract?.approvalInstance?.status === 'IN_REVIEW') {
-                  setToast('در فرایند تأیید فقط امکان مشاهدهٔ پیش‌نویس وجود دارد.');
+                  showError('در فرایند تأیید فقط امکان مشاهدهٔ پیش‌نویس وجود دارد.');
                   router.push(`/contracts/${String(contractId)}/preview`);
                   return;
                 }
@@ -450,6 +445,11 @@ export default function ContractDetailsPage() {
                 if (item.id === 'dues') {
                   const q = searchParams?.toString();
                   router.push(`/contracts/${String(contractId)}/dues${q ? `?${q}` : ''}`);
+                  return;
+                }
+                if (item.id === 'appendix') {
+                  const q = searchParams?.toString();
+                  router.push(`/contracts/${String(contractId)}/appendices${q ? `?${q}` : ''}`);
                   return;
                 }
                 setActiveDraftId(String(contractId));
@@ -562,14 +562,6 @@ export default function ContractDetailsPage() {
                 {reopenEditBusy ? 'در حال آماده‌سازی…' : 'تأیید و رفتن به ویرایش'}
               </button>
             </div>
-          </div>
-        </div>
-      ) : null}
-
-      {toast ? (
-        <div className="fixed inset-x-0 bottom-5 z-50 flex justify-center px-4" dir="rtl">
-          <div className="rounded-2xl border border-slate-200 bg-white/95 px-4 py-3 text-sm font-bold text-slate-700 shadow-lg">
-            {toast}
           </div>
         </div>
       ) : null}
