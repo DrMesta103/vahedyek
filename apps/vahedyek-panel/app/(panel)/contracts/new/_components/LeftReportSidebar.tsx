@@ -1,6 +1,7 @@
 'use client';
 
 import type { CSSProperties } from 'react';
+import { isFinancialLineHeaderCategoryId } from '../../../../lib/financialUtils';
 import type { ContractFinancialData, ContractStatus } from '../../../../types/contract';
 
 function formatCurrency(value: number) {
@@ -131,11 +132,13 @@ export function LeftReportSidebar({
   contractNumber,
   contractStatus,
 }: LeftReportSidebarProps) {
-  void reportData;
   void dueAmount;
 
   const status = contractStatus ?? 'draft';
   const contractNumberText = contractNumber?.trim() ? contractNumber.trim() : '—';
+  const financialLineRows = (reportData?.categories ?? []).filter(
+    (item) => isFinancialLineHeaderCategoryId(item.id) && item.capAmount > 0,
+  );
 
   return (
     <aside className="contract-flow-report-sidebar shrink-0">
@@ -188,6 +191,24 @@ export function LeftReportSidebar({
               ))}
               {!paidSlices.length ? (
                 <div className="contract-flow-report-empty">بعد از ورود اطلاعات مالی، گزارش اینجا کامل می‌شود.</div>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="contract-flow-report-card">
+            <div className="contract-flow-report-card-head">
+              <span>ردیف‌های مالی</span>
+              <strong>{financialLineRows.length ? `${new Intl.NumberFormat('fa-IR').format(financialLineRows.length)} مورد` : 'بدون داده'}</strong>
+            </div>
+            <div className="contract-flow-report-legend">
+              {financialLineRows.map((item) => (
+                <div key={item.id} className="contract-flow-report-legend-row">
+                  <span className="contract-flow-report-legend-name">{item.name}</span>
+                  <strong>{formatCurrency(item.capAmount)}</strong>
+                </div>
+              ))}
+              {!financialLineRows.length ? (
+                <div className="contract-flow-report-empty">ردیف مالی اضافه‌شده‌ای هنوز ثبت نشده است.</div>
               ) : null}
             </div>
           </div>

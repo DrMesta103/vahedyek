@@ -1126,6 +1126,21 @@ textarea::placeholder {
   opacity: 0.92;
 }
 
+.contract-flow-nav-item--financial-line {
+  min-height: 52px;
+  background: color-mix(in srgb, var(--surface) 82%, var(--theme-action-bg) 18%);
+  border-color: color-mix(in srgb, var(--theme-action-border) 34%, transparent);
+}
+
+.contract-flow-nav-item--financial-line .contract-flow-nav-title {
+  font-size: 13px;
+}
+
+.contract-flow-nav-item--financial-line .contract-flow-nav-updated {
+  color: var(--theme-action-text);
+  opacity: 0.72;
+}
+
 .contract-flow-nav-main {
   display: flex;
   align-items: flex-start;

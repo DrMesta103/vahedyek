@@ -1,6 +1,7 @@
 ﻿'use client';
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { CalendarDays, Plus, X } from 'lucide-react';
 import { TagPills } from './ContractFormPrimitives';
@@ -56,6 +57,30 @@ const LOCKED_CATEGORY_IDS = SYSTEM_FINANCIAL_CATEGORIES.map((item) => item.id);
 const FINANCIAL_SUB_CATEGORY_IDS = ['advance', 'installment', 'loan', 'handover', 'document'] as const;
 const DUE_TAG_OPTIONS = SYSTEM_FINANCIAL_CATEGORIES.map((item) => item.name);
 const REGULAR_DUE_CATEGORY_ID = 'installment';
+const PRIMARY_FINANCIAL_CATEGORY_IDS = ['principal', ...FINANCIAL_SUB_CATEGORY_IDS] as const;
+
+function isPrimaryFinancialCategoryId(categoryId: string) {
+  return (PRIMARY_FINANCIAL_CATEGORY_IDS as readonly string[]).includes(categoryId);
+}
+
+function splitFinancialPayloadSections(payload: ContractFinancialData) {
+  const primaryCategories = payload.categories.filter((item) => isPrimaryFinancialCategoryId(item.id));
+  const additionalCategories = payload.categories.filter((item) => !isPrimaryFinancialCategoryId(item.id));
+  const primaryDueItems = payload.dueItems.filter((item) => isPrimaryFinancialCategoryId(item.categoryId));
+  const additionalDueItems = payload.dueItems.filter((item) => !isPrimaryFinancialCategoryId(item.categoryId));
+
+  return {
+    primaryCategories,
+    additionalCategories,
+    primaryDueItems,
+    additionalDueItems,
+  };
+}
+
+function resolveActiveFinancialTab(activeTab: string, categories: FinancialCategoryData[]) {
+  if (categories.some((item) => item.id === activeTab)) return activeTab;
+  return categories.find((item) => item.id !== 'principal')?.id ?? categories[0]?.id ?? 'advance';
+}
 
 function structuralFinancialSubSuffix(categoryId: string): string | undefined {
   if ((FINANCIAL_SUB_CATEGORY_IDS as readonly string[]).includes(categoryId)) return categoryId;
@@ -541,11 +566,14 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
   const initialSnapshotRef = useRef('');
 
   const [draftId, setDraftId] = useState<string | null>(null);
+  const [savedPayloadState, setSavedPayloadState] = useState<ContractFinancialData | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [formError, setFormError] = useState('');
+  const [additionalFormError, setAdditionalFormError] = useState('');
   const [showValidation, setShowValidation] = useState(false);
+  const [activeSaveTarget, setActiveSaveTarget] = useState<'main' | 'additional' | null>(null);
   const [isLeaving, setIsLeaving] = useState(false);
   const [pendingNavigation, setPendingNavigation] = useState<{ mode: 'route' | 'back'; href?: string } | null>(null);
 
@@ -587,6 +615,7 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
   const [regularPeriod, setRegularPeriod] = useState('1');
   const [regularCount, setRegularCount] = useState('');
   const [regularStartDate, setRegularStartDate] = useState('');
+  const [externalSectionsRoot, setExternalSectionsRoot] = useState<HTMLElement | null>(null);
   const [dueFormError, setDueFormError] = useState('');
   const [principalExpanded, setPrincipalExpanded] = useState(true);
   const [expandedCustomCategoryId, setExpandedCustomCategoryId] = useState<string | null>(null);
@@ -634,14 +663,16 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
         if (!mounted) return;
 
         setDraftId(id);
-        initialSnapshotRef.current = JSON.stringify({
+        const savedPayload = {
           ...normalizeFinancialPayload(financialData),
           areaPricingMode: derivedAreaPricingMode,
           unitArea: String(derivedUnitArea),
           parkingArea: String(derivedParkingArea),
           storageArea: String(derivedStorageArea),
           totalArea: String(derivedTotalArea),
-        });
+        };
+        initialSnapshotRef.current = JSON.stringify(savedPayload);
+        setSavedPayloadState(savedPayload);
 
         setAreaPricingMode(derivedAreaPricingMode);
         setUnitArea(formatArea(derivedUnitArea));
@@ -763,17 +794,74 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
     totalArea,
     unitArea,
   ]);
-  const validation = useMemo(() => validateFinancialStep(payload), [payload]);
-  const visibleErrors = showValidation ? validation.errors : {};
+  const buildMainSavePayload = (currentPayload: ContractFinancialData) => {
+    const savedPayload = savedPayloadState ?? currentPayload;
+    const currentSections = splitFinancialPayloadSections(currentPayload);
+    const savedSections = splitFinancialPayloadSections(savedPayload);
+    const categories = [...currentSections.primaryCategories, ...savedSections.additionalCategories].map((item) =>
+      normalizeCategory(item as FinancialCategory),
+    );
+    const dueItems = [...currentSections.primaryDueItems, ...savedSections.additionalDueItems];
 
-  const persistCurrentStep = async () => {
+    return {
+      ...currentPayload,
+      categories,
+      dueItems,
+      activeTab: resolveActiveFinancialTab(currentPayload.activeTab, categories),
+    } satisfies ContractFinancialData;
+  };
+
+  const buildAdditionalSavePayload = (currentPayload: ContractFinancialData) => {
+    const savedPayload = savedPayloadState ?? currentPayload;
+    const currentSections = splitFinancialPayloadSections(currentPayload);
+    const savedSections = splitFinancialPayloadSections(savedPayload);
+    const categories = [...savedSections.primaryCategories, ...currentSections.additionalCategories].map((item) =>
+      normalizeCategory(item as FinancialCategory),
+    );
+    const dueItems = [...savedSections.primaryDueItems, ...currentSections.additionalDueItems];
+
+    return {
+      ...savedPayload,
+      categories,
+      dueItems,
+      activeTab: resolveActiveFinancialTab(currentPayload.activeTab, categories),
+    } satisfies ContractFinancialData;
+  };
+
+  const mainSavePayload = useMemo(() => buildMainSavePayload(payload), [payload, savedPayloadState]);
+  const mainValidation = useMemo(() => validateFinancialStep(mainSavePayload), [mainSavePayload]);
+  const fullValidation = useMemo(() => validateFinancialStep(payload), [payload]);
+  const visibleErrors = showValidation ? mainValidation.errors : {};
+
+  const finalizePersistedPayload = (savedPayload: ContractFinancialData) => {
+    if (!draftId) return;
+    const currentPayload = buildPayload();
+    const savedSnapshot = JSON.stringify(savedPayload);
+    const currentSnapshot = JSON.stringify(currentPayload);
+    const hasChanges = currentSnapshot !== savedSnapshot;
+
+    initialSnapshotRef.current = savedSnapshot;
+    setSavedPayloadState(savedPayload);
+
+    if (hasChanges) {
+      setFrontendStepDraft(draftId, 'financial', currentPayload);
+    } else {
+      clearFrontendStepDraft(draftId, 'financial');
+    }
+
+    setDirty(hasChanges);
+    dispatchContractFlowDirty(stepId as 'financial', hasChanges);
+    dispatchContractFlowSavedForDraft(draftId, stepId as 'financial', Date.now(), savedPayload);
+  };
+
+  const persistMainSection = async () => {
     if (!draftId) return false;
 
-    if (!validation.valid) {
+    if (!mainValidation.valid) {
       setShowValidation(true);
       setFormError(
         buildValidationSummary(
-          validation.errors,
+          mainValidation.errors,
           {
             totalArea: 'متراژ کل',
             pricePerMeter: 'مبلغ هر مترمربع واحد',
@@ -793,11 +881,94 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
     }
 
     setSaving(true);
+    setActiveSaveTarget('main');
     setFormError('');
+    setAdditionalFormError('');
+    setShowValidation(false);
+    try {
+      await saveStepData(draftId, 'financial', mainSavePayload);
+      finalizePersistedPayload(mainSavePayload);
+      return true;
+    } catch (error) {
+      setFormError(error instanceof Error ? error.message : 'ثبت اطلاعات مالی انجام نشد.');
+      return false;
+    } finally {
+      setSaving(false);
+      setActiveSaveTarget(null);
+    }
+  };
+
+  const persistAdditionalCosts = async () => {
+    if (!draftId) return false;
+
+    const additionalPayload = buildAdditionalSavePayload(payload);
+    const additionalValidation = validateFinancialStep(additionalPayload);
+    if (!additionalValidation.valid) {
+      setAdditionalFormError(
+        buildValidationSummary(
+          additionalValidation.errors,
+          {
+            categories: 'سایر هزینه‌ها',
+            categoriesTotal: 'جمع ردیف‌های مالی',
+            dueItems: 'سررسیدهای سایر هزینه‌ها',
+          },
+          'ذخیره سایر هزینه‌ها انجام نشد.',
+        ),
+      );
+      return false;
+    }
+
+    setSaving(true);
+    setActiveSaveTarget('additional');
+    setAdditionalFormError('');
+    try {
+      await saveStepData(draftId, 'financial', additionalPayload);
+      finalizePersistedPayload(additionalPayload);
+      return true;
+    } catch (error) {
+      setAdditionalFormError(error instanceof Error ? error.message : 'ثبت سایر هزینه‌ها انجام نشد.');
+      return false;
+    } finally {
+      setSaving(false);
+      setActiveSaveTarget(null);
+    }
+  };
+
+  const persistEntireStep = async () => {
+    if (!draftId) return false;
+
+    if (!fullValidation.valid) {
+      setShowValidation(true);
+      setFormError(
+        buildValidationSummary(
+          fullValidation.errors,
+          {
+            totalArea: 'متراژ کل',
+            pricePerMeter: 'مبلغ هر مترمربع واحد',
+            parkingPricePerMeter: 'مبلغ هر مترمربع پارکینگ',
+            storagePricePerMeter: 'مبلغ هر مترمربع انباری',
+            fixedTotalAmount: 'مبلغ کلی پایه',
+            parkingFixedAmount: 'مبلغ کلی پارکینگ',
+            storageFixedAmount: 'مبلغ کلی انباری',
+            categories: 'ردیف مالی',
+            categoriesTotal: 'جمع ردیف‌های مالی',
+            dueItems: 'سررسیدها',
+          },
+          'اطلاعات مالی معتبر نیست.',
+        ),
+      );
+      return false;
+    }
+
+    setSaving(true);
+    setActiveSaveTarget('main');
+    setFormError('');
+    setAdditionalFormError('');
     setShowValidation(false);
     try {
       await saveStepData(draftId, 'financial', payload);
       initialSnapshotRef.current = JSON.stringify(payload);
+      setSavedPayloadState(payload);
       clearFrontendStepDraft(draftId, 'financial');
       setDirty(false);
       dispatchContractFlowDirty(stepId as 'financial', false);
@@ -808,6 +979,7 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
       return false;
     } finally {
       setSaving(false);
+      setActiveSaveTarget(null);
     }
   };
 
@@ -1141,6 +1313,25 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
   }, [loading, totalContractAmount]);
 
   useEffect(() => {
+    setExternalSectionsRoot(document.getElementById('contract-financial-line-sections-root'));
+  }, []);
+
+  useEffect(() => {
+    const handleFocusFinancialLine = (event: Event) => {
+      const lineId = (event as CustomEvent<{ lineId?: string }>).detail?.lineId;
+      if (!lineId) return;
+      setExpandedCustomCategoryId(lineId);
+      setPrincipalExpanded(false);
+      window.setTimeout(() => {
+        document.getElementById(`financial-line-${lineId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 80);
+    };
+
+    window.addEventListener('contract-flow:focus-financial-line', handleFocusFinancialLine as EventListener);
+    return () => window.removeEventListener('contract-flow:focus-financial-line', handleFocusFinancialLine as EventListener);
+  }, []);
+
+  useEffect(() => {
     if (embedded) return;
     if (!dirty) return;
 
@@ -1228,11 +1419,15 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
   }, [dirty, embedded, isLeaving]);
 
   const handleSubmit = async () => {
-    const saved = await persistCurrentStep();
+    const saved = await persistMainSection();
     if (saved) {
       setIsLeaving(true);
       router.push(basePath);
     }
+  };
+
+  const handleAdditionalCostsSubmit = async () => {
+    await persistAdditionalCosts();
   };
 
   if (loading) {
@@ -1252,68 +1447,123 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
       </div> : null}
 
       <div className={visibleErrors.totalArea || visibleErrors.pricePerMeter || visibleErrors.parkingPricePerMeter || visibleErrors.storagePricePerMeter || visibleErrors.fixedTotalAmount || visibleErrors.parkingFixedAmount || visibleErrors.storageFixedAmount ? 'rounded-2xl border border-rose-300 bg-rose-50/20 p-1' : ''}>
-      <FinancialPricingBox
-        pricingType={pricingType}
-        onPricingTypeChange={setPricingType}
-        areaPricingMode={areaPricingMode}
-        totalArea={totalArea}
-        unitArea={unitArea}
-        parkingArea={parkingArea}
-        storageArea={storageArea}
-        pricePerMeter={pricePerMeter}
-        onPricePerMeterChange={setPricePerMeter}
-        parkingPricePerMeter={parkingPricePerMeter}
-        onParkingPricePerMeterChange={setParkingPricePerMeter}
-        storagePricePerMeter={storagePricePerMeter}
-        onStoragePricePerMeterChange={setStoragePricePerMeter}
-        fixedTotalAmount={fixedTotalAmount}
-        onFixedTotalAmountChange={setFixedTotalAmount}
-        parkingFixedAmount={parkingFixedAmount}
-        onParkingFixedAmountChange={setParkingFixedAmount}
-        storageFixedAmount={storageFixedAmount}
-        onStorageFixedAmountChange={setStorageFixedAmount}
-        meteredTotal={meteredTotal}
-        fixedTotal={fixedTotal}
-        formatInput={formatInput}
-        formatMoney={formatMoney}
-        pricingTypeInvalid={Boolean(visibleErrors.totalArea || visibleErrors.pricePerMeter || visibleErrors.parkingPricePerMeter || visibleErrors.storagePricePerMeter || visibleErrors.fixedTotalAmount || visibleErrors.parkingFixedAmount || visibleErrors.storageFixedAmount)}
-        totalAreaInvalid={Boolean(visibleErrors.totalArea)}
-        pricePerMeterInvalid={Boolean(visibleErrors.pricePerMeter)}
-        parkingPricePerMeterInvalid={Boolean(visibleErrors.parkingPricePerMeter)}
-        storagePricePerMeterInvalid={Boolean(visibleErrors.storagePricePerMeter)}
-        fixedTotalAmountInvalid={Boolean(visibleErrors.fixedTotalAmount)}
-        parkingFixedAmountInvalid={Boolean(visibleErrors.parkingFixedAmount)}
-        storageFixedAmountInvalid={Boolean(visibleErrors.storageFixedAmount)}
-      />
+        <FinancialPricingBox
+          pricingType={pricingType}
+          onPricingTypeChange={setPricingType}
+          areaPricingMode={areaPricingMode}
+          totalArea={totalArea}
+          unitArea={unitArea}
+          parkingArea={parkingArea}
+          storageArea={storageArea}
+          pricePerMeter={pricePerMeter}
+          onPricePerMeterChange={setPricePerMeter}
+          parkingPricePerMeter={parkingPricePerMeter}
+          onParkingPricePerMeterChange={setParkingPricePerMeter}
+          storagePricePerMeter={storagePricePerMeter}
+          onStoragePricePerMeterChange={setStoragePricePerMeter}
+          fixedTotalAmount={fixedTotalAmount}
+          onFixedTotalAmountChange={setFixedTotalAmount}
+          parkingFixedAmount={parkingFixedAmount}
+          onParkingFixedAmountChange={setParkingFixedAmount}
+          storageFixedAmount={storageFixedAmount}
+          onStorageFixedAmountChange={setStorageFixedAmount}
+          meteredTotal={meteredTotal}
+          fixedTotal={fixedTotal}
+          formatInput={formatInput}
+          formatMoney={formatMoney}
+          pricingTypeInvalid={Boolean(visibleErrors.totalArea || visibleErrors.pricePerMeter || visibleErrors.parkingPricePerMeter || visibleErrors.storagePricePerMeter || visibleErrors.fixedTotalAmount || visibleErrors.parkingFixedAmount || visibleErrors.storageFixedAmount)}
+          totalAreaInvalid={Boolean(visibleErrors.totalArea)}
+          pricePerMeterInvalid={Boolean(visibleErrors.pricePerMeter)}
+          parkingPricePerMeterInvalid={Boolean(visibleErrors.parkingPricePerMeter)}
+          storagePricePerMeterInvalid={Boolean(visibleErrors.storagePricePerMeter)}
+          fixedTotalAmountInvalid={Boolean(visibleErrors.fixedTotalAmount)}
+          parkingFixedAmountInvalid={Boolean(visibleErrors.parkingFixedAmount)}
+          storageFixedAmountInvalid={Boolean(visibleErrors.storageFixedAmount)}
+        />
       </div>
 
       {formError ? <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{formError}</div> : null}
 
-      <div className={visibleErrors.categories || visibleErrors.categoriesTotal || visibleErrors.dueItems ? 'rounded-2xl border border-rose-300 bg-rose-50/20 p-1' : ''}>
-      <FinancialPaymentFlow
-        categories={categories}
-        lockedCategoryIds={structuralLockedCategoryIds}
-        categoryDueItemsMap={categoryDueItemsMap}
-        principalAmount={totalContractAmount}
-        principalExpanded={principalExpanded}
-        onTogglePrincipal={() => setPrincipalExpanded((current) => !current)}
-        expandedCustomCategoryId={expandedCustomCategoryId}
-        onToggleCustomCategory={(categoryId) => {
-          setExpandedCustomCategoryId((current) => (current === categoryId ? null : categoryId));
-          setPrincipalExpanded(false);
-        }}
-        onCategoryAmountChange={updateCategoryAmount}
-        onOpenAddCategory={openAdd}
-        onOpenEditCategory={openEdit}
-        onDeleteCategory={requestDeleteCategory}
-        onOpenDueDialog={openDueForCategory}
-        onEditDueItem={openEditDueItem}
-        onDeleteDueItem={(id) => setDueItems((current) => current.filter((dueItem) => dueItem.id !== id))}
-        formatInput={formatInput}
-        formatMoney={formatMoney}
-        invalidCategoryIds={categories.filter((item) => visibleErrors.categoriesTotal || visibleErrors.categories || (visibleErrors.dueItems && (categoryDueItemsMap[item.id]?.length ?? 0) > 0)).map((item) => item.id)}
-      />
+      <div>
+        <FinancialPaymentFlow
+          categories={categories}
+          lockedCategoryIds={structuralLockedCategoryIds}
+          categoryDueItemsMap={categoryDueItemsMap}
+          principalAmount={totalContractAmount}
+          principalExpanded={principalExpanded}
+          onTogglePrincipal={() => setPrincipalExpanded((current) => !current)}
+          expandedCustomCategoryId={expandedCustomCategoryId}
+          onToggleCustomCategory={(categoryId) => {
+            setExpandedCustomCategoryId((current) => (current === categoryId ? null : categoryId));
+            setPrincipalExpanded(false);
+          }}
+          onCategoryAmountChange={updateCategoryAmount}
+          onOpenAddCategory={openAdd}
+          onOpenEditCategory={openEdit}
+          onDeleteCategory={requestDeleteCategory}
+          onOpenDueDialog={openDueForCategory}
+          onEditDueItem={openEditDueItem}
+          onDeleteDueItem={(id) => setDueItems((current) => current.filter((dueItem) => dueItem.id !== id))}
+          formatInput={formatInput}
+          formatMoney={formatMoney}
+          invalidCategoryIds={categories.filter((item) => visibleErrors.categoriesTotal || visibleErrors.categories || (visibleErrors.dueItems && (categoryDueItemsMap[item.id]?.length ?? 0) > 0)).map((item) => item.id)}
+          showAdditionalCostsSection={false}
+        />
       </div>
+
+      <StickySubmitBar
+        label="ثبت اطلاعات مالی"
+        loadingLabel={loading ? 'در حال بارگذاری...' : activeSaveTarget === 'main' ? 'در حال ذخیره...' : undefined}
+        disabled={loading || saving}
+        onClick={handleSubmit}
+        embedded={embedded}
+        submitId={stepId}
+      />
+
+      {externalSectionsRoot
+        ? createPortal(
+            <div className="space-y-4">
+              <FinancialPaymentFlow
+                categories={categories}
+                lockedCategoryIds={structuralLockedCategoryIds}
+                categoryDueItemsMap={categoryDueItemsMap}
+                principalAmount={totalContractAmount}
+                principalExpanded={principalExpanded}
+                onTogglePrincipal={() => setPrincipalExpanded((current) => !current)}
+                expandedCustomCategoryId={expandedCustomCategoryId}
+                onToggleCustomCategory={(categoryId) => {
+                  setExpandedCustomCategoryId((current) => (current === categoryId ? null : categoryId));
+                  setPrincipalExpanded(false);
+                }}
+                onCategoryAmountChange={updateCategoryAmount}
+                onOpenAddCategory={openAdd}
+                onOpenEditCategory={openEdit}
+                onDeleteCategory={requestDeleteCategory}
+                onOpenDueDialog={openDueForCategory}
+                onEditDueItem={openEditDueItem}
+                onDeleteDueItem={(id) => setDueItems((current) => current.filter((dueItem) => dueItem.id !== id))}
+                formatInput={formatInput}
+                formatMoney={formatMoney}
+                invalidCategoryIds={categories.filter((item) => visibleErrors.categoriesTotal || visibleErrors.categories || (visibleErrors.dueItems && (categoryDueItemsMap[item.id]?.length ?? 0) > 0)).map((item) => item.id)}
+                showPrincipalSection={false}
+                additionalCostsFooter={
+                  <>
+                    {additionalFormError ? <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{additionalFormError}</div> : null}
+
+                    <StickySubmitBar
+                      label="ثبت سایر هزینه‌ها"
+                      loadingLabel={activeSaveTarget === 'additional' ? 'در حال ذخیره...' : undefined}
+                      disabled={loading || saving}
+                      onClick={handleAdditionalCostsSubmit}
+                      embedded
+                    />
+                  </>
+                }
+              />
+            </div>,
+            externalSectionsRoot,
+          )
+        : null}
 
       <Modal
         open={Boolean(pendingDeleteCategoryId)}
@@ -1354,15 +1604,6 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
         {null}
       </Modal>
 
-      <StickySubmitBar
-        label="ثبت اطلاعات مالی"
-        loadingLabel={loading ? 'در حال بارگذاری...' : 'در حال ذخیره...'}
-        disabled={loading || saving}
-        onClick={handleSubmit}
-        embedded={embedded}
-        submitId={stepId}
-      />
-
       <Modal
         open={Boolean(pendingNavigation)}
         onClose={() => setPendingNavigation(null)}
@@ -1384,7 +1625,7 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
               type="button"
               onClick={async () => {
                 if (!pendingNavigation) return;
-                const saved = await persistCurrentStep();
+                const saved = await persistEntireStep();
                 if (saved) {
                   continueNavigation(pendingNavigation);
                 }

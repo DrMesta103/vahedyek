@@ -1,12 +1,10 @@
-import { fixMojibakeDeep } from '../../../../lib/fixMojibake';
-
 export type PenaltyItem = {
   id: string;
   title: string;
   description: string;
 };
 
-export const PENALTY_ITEMS: PenaltyItem[] = fixMojibakeDeep([
+export const PENALTY_ITEMS: PenaltyItem[] = [
   {
     id: 'unit-handover-delay',
     title: 'جریمه تاخیر در تحویل واحد',
@@ -49,8 +47,8 @@ export const PENALTY_ITEMS: PenaltyItem[] = fixMojibakeDeep([
   },
   {
     id: 'lawsuit-cost',
-    title: 'هزینه تشکیل پرونده دادرسی بابت بدهی',
-    description: 'تنظیمات محاسبه هزینه در صورت تشکیل پرونده قضایی بابت بدهی را مشخص می‌کند.',
+    title: 'جریمه تشکیل پرونده دادرسی بابت بدهی',
+    description: 'تنظیمات محاسبه جریمه در صورت تشکیل پرونده قضایی بابت بدهی را مشخص می‌کند.',
   },
   {
     id: 'document-transfer-followup',
@@ -62,7 +60,7 @@ export const PENALTY_ITEMS: PenaltyItem[] = fixMojibakeDeep([
     title: 'جریمه تخفیف لغو شده',
     description: 'تنظیمات محاسبه جریمه در صورت لغو تخفیف به دلیل عدم رعایت شرایط قرارداد را مشخص می‌کند.',
   },
-]);
+];
 
 export function getPenaltyItem(penaltyId: string) {
   return PENALTY_ITEMS.find((item) => item.id === penaltyId);

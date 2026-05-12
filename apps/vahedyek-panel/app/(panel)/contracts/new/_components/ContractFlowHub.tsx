@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { AlertCircle, CheckCircle2, Info, Lock, X } from 'lucide-react';
 import { getActiveDraftId, getFrontendStepDraft, getStepData } from '../../../../lib/contractDraftClient';
 import { computeContractTotalRialFromFinancial } from '../../../../lib/contractFinancialPricing';
+import { isFinancialLineHeaderCategoryId, isFinancialLineSubtreeCategoryId } from '../../../../lib/financialUtils';
 import { validateDiscountsStep, validateFinancialStep, validatePenaltiesStep, validateStep1, validateStep2, validateTerminationStep } from '../../../../lib/contractValidation';
 import type { ContractDiscountsData, ContractFinancialData, ContractPartiesData, ContractPenaltiesData, ContractSubjectData, ContractTerminationData } from '../../../../types/contract';
 import { DiscountsStep } from './DiscountsStep';
@@ -181,7 +182,13 @@ function getFinancialSlices(data: ContractFinancialData | null) {
   let otherColorIndex = 0;
 
   return data.categories
-    .filter((item) => item.capAmount > 0)
+    .filter((item) => {
+      if (item.capAmount <= 0) return false;
+      if (item.id === 'principal') return false;
+      if (isFinancialLineHeaderCategoryId(item.id)) return false;
+      if (isFinancialLineSubtreeCategoryId(item.id)) return false;
+      return true;
+    })
     .map((item) => {
       const kind = getFinancialSliceKind(item);
       const color =
@@ -671,6 +678,13 @@ export function ContractFlowHub() {
   const visibleSections = useMemo(() => sections.filter((section) => !accessMap[section.id]?.locked), [accessMap, sections]);
 
   const reportData = financialLiveData ?? financialData;
+  const financialLineSections = useMemo(
+    () =>
+      (reportData?.categories ?? [])
+        .filter((item) => isFinancialLineHeaderCategoryId(item.id) || (!item.system && item.id !== 'principal'))
+        .map((item) => ({ id: item.id, title: item.name || 'ردیف مالی' })),
+    [reportData],
+  );
   const contractTotal = getContractTotal(reportData);
   const paidSlices = getFinancialSlices(reportData);
   const allocatedAmount = paidSlices.reduce((sum, item) => sum + item.value, 0);
@@ -993,6 +1007,11 @@ export function ContractFlowHub() {
         loading={loading}
         approvalSubmissionReady={approvalSubmissionReady}
         approvalSubmissionBlockers={approvalSubmissionBlockers}
+        financialLineSections={financialLineSections}
+        onFinancialLineClick={(lineId) => {
+          scrollToSection('financial');
+          window.dispatchEvent(new CustomEvent('contract-flow:focus-financial-line', { detail: { lineId } }));
+        }}
         onOpenPreviewDialog={() => setPreviewDialogOpen(true)}
       />
 
@@ -1013,36 +1032,38 @@ export function ContractFlowHub() {
           const isSubjectSection = section.id === 'subject';
           const isTerminationSection = section.id === 'termination';
           return (
-            <section
-              key={section.id}
-              id={section.id}
-              data-contract-section
-              className={`scroll-mt-24 rounded-3xl border border-gray-200/80 bg-white/50 shadow-[0_10px_35px_rgba(15,23,42,0.04)] ${
-                isSubjectSection ? 'p-0' : 'p-4 md:p-5'
-              }`}
-            >
-              <div className={`flex flex-col gap-3 border-b border-gray-200/80 sm:flex-row sm:items-start sm:justify-between ${
-                isSubjectSection ? 'px-4 pb-4 pt-4 md:px-5 md:pt-5' : 'mb-5 pb-4'
-              }`}>
-                <div>
-                  {isTerminationSection ? (
-                    <h2 className="text-xl font-bold text-gray-900">{section.title}</h2>
-                  ) : (
-                    <>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h2 className="text-xl font-bold text-gray-900">{section.title}</h2>
-                        <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium ${getToneClasses(status.tone)}`}>
-                          {status.label}
-                        </span>
-                      </div>
-                      <p className="mt-2 text-sm leading-6 text-gray-500">{status.detail}</p>
-                    </>
-                  )}
+            <Fragment key={section.id}>
+              <section
+                id={section.id}
+                data-contract-section
+                className={`scroll-mt-24 rounded-3xl border border-gray-200/80 bg-white/50 shadow-[0_10px_35px_rgba(15,23,42,0.04)] ${
+                  isSubjectSection ? 'p-0' : 'p-4 md:p-5'
+                }`}
+              >
+                <div className={`flex flex-col gap-3 border-b border-gray-200/80 sm:flex-row sm:items-start sm:justify-between ${
+                  isSubjectSection ? 'px-4 pb-4 pt-4 md:px-5 md:pt-5' : 'mb-5 pb-4'
+                }`}>
+                  <div>
+                    {isTerminationSection ? (
+                      <h2 className="text-xl font-bold text-gray-900">{section.title}</h2>
+                    ) : (
+                      <>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h2 className="text-xl font-bold text-gray-900">{section.title}</h2>
+                          <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium ${getToneClasses(status.tone)}`}>
+                            {status.label}
+                          </span>
+                        </div>
+                        <p className="mt-2 text-sm leading-6 text-gray-500">{status.detail}</p>
+                      </>
+                    )}
+                  </div>
                 </div>
-              </div>
 
-              <div className={isSubjectSection ? 'px-4 pb-4 md:px-5 md:pb-5' : ''}>{section.render()}</div>
-            </section>
+                <div className={isSubjectSection ? 'px-4 pb-4 md:px-5 md:pb-5' : ''}>{section.render()}</div>
+              </section>
+              {section.id === 'financial' ? <div id="contract-financial-line-sections-root" className="space-y-6" /> : null}
+            </Fragment>
           );
         })}
       </div>
