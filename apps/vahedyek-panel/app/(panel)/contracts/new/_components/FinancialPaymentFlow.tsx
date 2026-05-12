@@ -1,7 +1,7 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { ChevronDown, ChevronUp, ListChecks, Pencil, Plus, Trash2 } from 'lucide-react';
+import { useMemo, useState, type ReactNode } from 'react';
+import { ChevronDown, ChevronUp, EllipsisVertical, ListChecks, Pencil, Plus, Trash2 } from 'lucide-react';
 import { Input } from '@repo/ui';
 import { persianMoneyWords } from '../../../../lib/persianNumberWords';
 import { isFinancialLineHeaderCategoryId, isFinancialLineSubtreeCategoryId } from '../../../../lib/financialUtils';
@@ -129,6 +129,7 @@ function PaymentSection({
   const remainingAmount = category.capAmount - dueTotal;
   const progressPercent = category.capAmount > 0 ? Math.min(Math.round((dueTotal / category.capAmount) * 100), 100) : 0;
   const [showDueItems, setShowDueItems] = useState(requiresDue);
+  const [actionsOpen, setActionsOpen] = useState(false);
 
   return (
     <section className={`border-t px-4 py-4 first:border-t-0 md:px-5 ${invalid ? 'border-rose-300 bg-rose-50/30' : 'border-[#d9dde4]'}`}>
@@ -155,13 +156,41 @@ function PaymentSection({
           </div>
         )}
         {!locked ? (
-          <div className="flex items-center gap-1.5">
-            <button type="button" onClick={() => onEdit(category)} className="rounded-lg p-2 text-gray-500 transition hover:bg-white">
-              <Pencil className="h-4 w-4" />
+          <div className="relative shrink-0">
+            <button
+              type="button"
+              onClick={() => setActionsOpen((current) => !current)}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/75 text-[#607080] shadow-sm transition hover:bg-white"
+              aria-label={`عملیات ${category.name}`}
+            >
+              <EllipsisVertical className="h-4 w-4" />
             </button>
-            <button type="button" onClick={() => onDelete(category.id)} className="rounded-lg p-2 text-rose-500 transition hover:bg-rose-50">
-              <Trash2 className="h-4 w-4" />
-            </button>
+            {actionsOpen ? (
+              <div className="absolute left-0 top-9 z-20 min-w-32 rounded-xl border border-gray-200 bg-white p-1.5 text-sm shadow-lg">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActionsOpen(false);
+                    onEdit(category);
+                  }}
+                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-right text-gray-700 hover:bg-gray-50"
+                >
+                  <Pencil className="h-4 w-4" />
+                  ویرایش
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActionsOpen(false);
+                    onDelete(category.id);
+                  }}
+                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-right text-rose-600 hover:bg-rose-50"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  حذف
+                </button>
+              </div>
+            ) : null}
           </div>
         ) : null}
       </div>
@@ -292,6 +321,9 @@ export function FinancialPaymentFlow({
   formatInput,
   formatMoney,
   invalidCategoryIds = [],
+  showPrincipalSection = true,
+  showAdditionalCostsSection = true,
+  additionalCostsFooter,
 }: {
   categories: FinancialCategoryData[];
   lockedCategoryIds: string[];
@@ -311,7 +343,11 @@ export function FinancialPaymentFlow({
   formatInput: (value: string) => string;
   formatMoney: (value: number) => string;
   invalidCategoryIds?: string[];
+  showPrincipalSection?: boolean;
+  showAdditionalCostsSection?: boolean;
+  additionalCostsFooter?: ReactNode;
 }) {
+  const [openLineActionMenuId, setOpenLineActionMenuId] = useState<string | null>(null);
   const principal = categories.find((c) => c.id === 'principal') ?? null;
   const subCategoryOrder = PRINCIPAL_SUB_CATEGORY_IDS;
   const visibleCategories = subCategoryOrder
@@ -331,11 +367,14 @@ export function FinancialPaymentFlow({
     [categoryDueItemsMap],
   );
 
-  return (
-    <section className="border-b border-[#d9dde4] pb-5">
-      <div className="mb-3 text-[13px] font-bold text-[#4c5259]">پرداخت قرارداد</div>
+  const principalSection = (
+    <section className="border-t border-gray-200/80 pt-6">
+      <div className="mb-5 border-b border-gray-200/80 pb-4">
+        <div className="text-xl font-bold text-gray-900">پرداخت قرارداد</div>
+        <p className="mt-1 text-sm text-gray-500">مبلغ اصل قرارداد و بخش‌های پرداخت اصلی را در این بخش تنظیم کنید.</p>
+      </div>
 
-      <section className="border-t border-[#d9dde4] px-4 py-4 first:border-t-0 md:px-5">
+      <section className="rounded-2xl border border-[#d9dde4] bg-white/45 px-4 py-4 md:px-5">
         <button
           type="button"
           onClick={onTogglePrincipal}
@@ -373,149 +412,195 @@ export function FinancialPaymentFlow({
               </div>
             </div>
 
-            <div className="mt-3 rounded-2xl border border-[#d9dde4] bg-white/70">
+            <div className="mt-4 space-y-4 border-t border-[#d9dde4] pt-4">
               {visibleCategories.map((category) => (
-                <PaymentSection
-                  key={category.id}
-                  category={category}
-                  locked={lockedCategoryIds.includes(category.id)}
-                  dueItems={categoryDueItemsMap[category.id] ?? []}
-                  expanded={true}
-                  onAmountChange={onCategoryAmountChange}
-                  onEdit={onOpenEditCategory}
-                  onDelete={onDeleteCategory}
-                  onOpenDueDialog={onOpenDueDialog}
-                  onEditDueItem={onEditDueItem}
-                  onDeleteDueItem={onDeleteDueItem}
-                  formatInput={formatInput}
-                  formatMoney={formatMoney}
-                  invalid={invalidCategoryIds.includes(category.id)}
-                />
+                <div key={category.id} className="overflow-visible rounded-2xl border border-[#d9dde4] bg-white/70 shadow-[0_8px_18px_rgba(15,23,42,0.025)]">
+                  <PaymentSection
+                    category={category}
+                    locked={lockedCategoryIds.includes(category.id)}
+                    dueItems={categoryDueItemsMap[category.id] ?? []}
+                    expanded={true}
+                    onAmountChange={onCategoryAmountChange}
+                    onEdit={onOpenEditCategory}
+                    onDelete={onDeleteCategory}
+                    onOpenDueDialog={onOpenDueDialog}
+                    onEditDueItem={onEditDueItem}
+                    onDeleteDueItem={onDeleteDueItem}
+                    formatInput={formatInput}
+                    formatMoney={formatMoney}
+                    invalid={invalidCategoryIds.includes(category.id)}
+                  />
+                </div>
               ))}
             </div>
           </div>
         </div>
       </section>
+    </section>
+  );
 
-      {financialLineRoots.map((lineHeader) => {
-        const lineSubs = subCategoryOrder
-          .map((subId) => categories.find((c) => c.id === `${lineHeader.id}:${subId}`))
-          .filter(Boolean) as FinancialCategoryData[];
-        const lineExpanded = expandedCustomCategoryId === lineHeader.id;
+  return (
+    <div className="space-y-6">
+      {showPrincipalSection ? principalSection : null}
 
-        return (
-          <section key={lineHeader.id} className="border-t border-[#d9dde4] px-4 py-4 first:border-t-0 md:px-5">
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => onToggleCustomCategory(lineHeader.id)}
-                className="flex min-w-0 flex-1 items-center justify-between gap-3 rounded-xl px-2 py-2 text-right transition hover:bg-white/70"
-                aria-expanded={lineExpanded}
-              >
-                <span className="flex items-center gap-2 text-[13px] font-bold text-[#52575f]">
-                  <ListChecks className="h-5 w-5 shrink-0 text-[#59606a]" />
-                  <span className="truncate">{lineHeader.name}</span>
-                </span>
-                <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/70 text-[#0e989d] shadow-sm transition">
-                  {lineExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                </span>
-              </button>
-              <div className="flex shrink-0 items-center gap-0.5">
-                <button
-                  type="button"
-                  onClick={() => onOpenEditCategory(lineHeader)}
-                  className="rounded-lg p-2 text-gray-500 transition hover:bg-white"
-                  aria-label={`ویرایش ${lineHeader.name}`}
+      {showAdditionalCostsSection && (financialLineRoots.length || legacySingleCustomCategories.length) ? (
+        <section className="rounded-3xl border border-gray-200/80 bg-white/50 p-4 shadow-[0_10px_35px_rgba(15,23,42,0.04)] md:p-5">
+          <div className="mb-5 border-b border-gray-200/80 pb-4">
+            <div className="text-xl font-bold text-gray-900">سایر هزینه‌ها</div>
+            <p className="mt-1 text-sm text-gray-500">تمام ردیف‌های مالی اضافه‌شده و سررسیدهای مرتبط را در این بخش مدیریت کنید.</p>
+          </div>
+
+          <div className="space-y-6">
+            {financialLineRoots.map((lineHeader) => {
+              const lineSubs = subCategoryOrder
+                .map((subId) => categories.find((c) => c.id === `${lineHeader.id}:${subId}`))
+                .filter(Boolean) as FinancialCategoryData[];
+              const lineExpanded = expandedCustomCategoryId === lineHeader.id;
+
+              return (
+                <section
+                  key={lineHeader.id}
+                  id={`financial-line-${lineHeader.id}`}
+                  className="rounded-2xl border border-[#d9dde4] bg-white/45 px-4 py-4 shadow-[0_10px_24px_rgba(15,23,42,0.035)] md:px-5"
                 >
-                  <Pencil className="h-4 w-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onDeleteCategory(lineHeader.id)}
-                  className="rounded-lg p-2 text-rose-500 transition hover:bg-rose-50"
-                  aria-label={`حذف ${lineHeader.name}`}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-
-            {!lineExpanded ? (
-              <CollapsedLineSummary
-                totalLabel="مبلغ کل این ردیف مالی:"
-                lineTotal={lineHeader.capAmount}
-                dueRegistered={sumRegisteredDuesForCategories(
-                  categoryDueItemsMap,
-                  lineSubs.map((c) => c.id),
-                )}
-                formatMoney={formatMoney}
-              />
-            ) : null}
-
-            <div className={`grid transition-all duration-500 ease-out ${lineExpanded ? 'mt-2 grid-rows-[1fr] opacity-100' : 'mt-0 grid-rows-[0fr] opacity-0'}`}>
-              <div className="overflow-hidden">
-                <div className="grid gap-3 lg:grid-cols-[1fr_minmax(280px,420px)] lg:items-start">
-                  <div>
-                    <p className="text-[13px] leading-7 text-[#666b73]">
-                      سقف کل این ردیف مالی را مشخص کنید؛ پرداخت‌ها در پنج بخش زیر جزئی‌تر ثبت می‌شوند (مثل «مبلغ اصل قرارداد»).
-                    </p>
+                  <div className="mb-4 flex items-center gap-2 border-b border-[#d9dde4] pb-4">
+                    <button
+                      type="button"
+                      onClick={() => onToggleCustomCategory(lineHeader.id)}
+                      className="flex min-w-0 flex-1 items-center justify-between gap-3 rounded-xl px-2 py-2 text-right transition hover:bg-white/70"
+                      aria-expanded={lineExpanded}
+                    >
+                      <span className="flex items-center gap-2 text-[13px] font-bold text-[#52575f]">
+                        <ListChecks className="h-5 w-5 shrink-0 text-[#59606a]" />
+                        <span className="truncate">{lineHeader.name}</span>
+                      </span>
+                      <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/70 text-[#0e989d] shadow-sm transition">
+                        {lineExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                      </span>
+                    </button>
+                    <div className="relative shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setOpenLineActionMenuId((current) => (current === lineHeader.id ? null : lineHeader.id))}
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/75 text-[#607080] shadow-sm transition hover:bg-white"
+                        aria-label={`عملیات ${lineHeader.name}`}
+                      >
+                        <EllipsisVertical className="h-4 w-4" />
+                      </button>
+                      {openLineActionMenuId === lineHeader.id ? (
+                        <div className="absolute left-0 top-9 z-20 min-w-32 rounded-xl border border-gray-200 bg-white p-1.5 text-sm shadow-lg">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setOpenLineActionMenuId(null);
+                              onOpenEditCategory(lineHeader);
+                            }}
+                            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-right text-gray-700 hover:bg-gray-50"
+                          >
+                            <Pencil className="h-4 w-4" />
+                            ویرایش
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setOpenLineActionMenuId(null);
+                              onDeleteCategory(lineHeader.id);
+                            }}
+                            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-right text-rose-600 hover:bg-rose-50"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            حذف
+                          </button>
+                        </div>
+                      ) : null}
+                    </div>
                   </div>
-                  <div>
-                    <MoneyInput value={lineHeader.capAmount} onChange={(value) => onCategoryAmountChange(lineHeader.id, value)} />
-                  </div>
-                </div>
 
-                <div className="mt-3 rounded-2xl border border-[#d9dde4] bg-white/70">
-                  {lineSubs.map((category) => (
-                    <PaymentSection
-                      key={category.id}
-                      category={category}
-                      locked={lockedCategoryIds.includes(category.id)}
-                      dueItems={categoryDueItemsMap[category.id] ?? []}
-                      expanded={true}
-                      onAmountChange={onCategoryAmountChange}
-                      onEdit={onOpenEditCategory}
-                      onDelete={onDeleteCategory}
-                      onOpenDueDialog={onOpenDueDialog}
-                      onEditDueItem={onEditDueItem}
-                      onDeleteDueItem={onDeleteDueItem}
-                      formatInput={formatInput}
+                  {!lineExpanded ? (
+                    <CollapsedLineSummary
+                      totalLabel="مبلغ کل این ردیف مالی:"
+                      lineTotal={lineHeader.capAmount}
+                      dueRegistered={sumRegisteredDuesForCategories(
+                        categoryDueItemsMap,
+                        lineSubs.map((c) => c.id),
+                      )}
                       formatMoney={formatMoney}
-                      invalid={invalidCategoryIds.includes(category.id)}
                     />
-                  ))}
+                  ) : null}
+
+                  <div className={`grid transition-all duration-500 ease-out ${lineExpanded ? 'mt-2 grid-rows-[1fr] opacity-100' : 'mt-0 grid-rows-[0fr] opacity-0'}`}>
+                    <div className="overflow-hidden">
+                      <div className="grid gap-3 lg:grid-cols-[1fr_minmax(280px,420px)] lg:items-start">
+                        <div>
+                          <p className="text-[13px] leading-7 text-[#666b73]">
+                            سقف کل این ردیف مالی را مشخص کنید؛ پرداخت‌ها و سررسیدها برای همین ردیف در ادامه تنظیم می‌شوند.
+                          </p>
+                        </div>
+                        <div>
+                          <MoneyInput value={lineHeader.capAmount} onChange={(value) => onCategoryAmountChange(lineHeader.id, value)} />
+                        </div>
+                      </div>
+
+                      <div className="mt-4 space-y-4 border-t border-[#d9dde4] pt-4">
+                        {lineSubs.map((category) => (
+                          <div key={category.id} className="overflow-visible rounded-2xl border border-[#d9dde4] bg-white/70 shadow-[0_8px_18px_rgba(15,23,42,0.025)]">
+                            <PaymentSection
+                              category={category}
+                              locked={lockedCategoryIds.includes(category.id)}
+                              dueItems={categoryDueItemsMap[category.id] ?? []}
+                              expanded={true}
+                              onAmountChange={onCategoryAmountChange}
+                              onEdit={onOpenEditCategory}
+                              onDelete={onDeleteCategory}
+                              onOpenDueDialog={onOpenDueDialog}
+                              onEditDueItem={onEditDueItem}
+                              onDeleteDueItem={onDeleteDueItem}
+                              formatInput={formatInput}
+                              formatMoney={formatMoney}
+                              invalid={invalidCategoryIds.includes(category.id)}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              );
+            })}
+
+            {legacySingleCustomCategories.map((category) => (
+              <div key={category.id} id={`financial-line-${category.id}`} className="rounded-2xl border border-[#d9dde4] bg-white/45 p-4 shadow-[0_10px_24px_rgba(15,23,42,0.035)] md:p-5">
+                <div className="mb-4 border-b border-[#d9dde4] pb-4">
+                  <div className="text-lg font-bold text-gray-900">{category.name}</div>
+                  <p className="mt-1 text-sm text-gray-500">پرداخت‌ها و سررسیدهای این ردیف مالی را در همین بخش تنظیم کنید.</p>
+                </div>
+                <div className="rounded-2xl border border-[#d9dde4] bg-white/45 shadow-[0_10px_24px_rgba(15,23,42,0.035)]">
+                  <PaymentSection
+                    category={category}
+                    locked={lockedCategoryIds.includes(category.id)}
+                    dueItems={categoryDueItemsMap[category.id] ?? []}
+                    expanded={expandedCustomCategoryId === category.id}
+                    onToggle={onToggleCustomCategory}
+                    onAmountChange={onCategoryAmountChange}
+                    onEdit={onOpenEditCategory}
+                    onDelete={onDeleteCategory}
+                    onOpenDueDialog={onOpenDueDialog}
+                    onEditDueItem={onEditDueItem}
+                    onDeleteDueItem={onDeleteDueItem}
+                    formatInput={formatInput}
+                    formatMoney={formatMoney}
+                    invalid={invalidCategoryIds.includes(category.id)}
+                  />
                 </div>
               </div>
-            </div>
-          </section>
-        );
-      })}
+            ))}
+          </div>
 
-      {legacySingleCustomCategories.length ? (
-        <section className="mt-3 rounded-2xl border border-[#d9dde4] bg-white/70">
-          {legacySingleCustomCategories.map((category) => (
-            <PaymentSection
-              key={category.id}
-              category={category}
-              locked={lockedCategoryIds.includes(category.id)}
-              dueItems={categoryDueItemsMap[category.id] ?? []}
-              expanded={expandedCustomCategoryId === category.id}
-              onToggle={onToggleCustomCategory}
-              onAmountChange={onCategoryAmountChange}
-              onEdit={onOpenEditCategory}
-              onDelete={onDeleteCategory}
-              onOpenDueDialog={onOpenDueDialog}
-              onEditDueItem={onEditDueItem}
-              onDeleteDueItem={onDeleteDueItem}
-              formatInput={formatInput}
-              formatMoney={formatMoney}
-              invalid={invalidCategoryIds.includes(category.id)}
-            />
-          ))}
+          {additionalCostsFooter ? <div className="mt-4 border-t border-[#d9dde4] pt-4">{additionalCostsFooter}</div> : null}
         </section>
       ) : null}
 
-      <div className="border-t border-[#d9dde4] py-4">
+      {showAdditionalCostsSection ? <div className="flex justify-end border-t border-[#d9dde4] py-4">
         <button
           type="button"
           onClick={onOpenAddCategory}
@@ -524,7 +609,7 @@ export function FinancialPaymentFlow({
           <Plus className="h-4 w-4" />
           افزودن ردیف مالی
         </button>
-      </div>
-    </section>
+      </div> : null}
+    </div>
   );
 }
