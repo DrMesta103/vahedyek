@@ -6,12 +6,17 @@ import type { ContractDiscountsData, ContractFinancialData, ContractPenaltiesDat
 function makeValidFinancialData(overrides: Partial<ContractFinancialData> = {}): ContractFinancialData {
   return {
     pricingType: 'fixed',
+    areaPricingMode: 'unit-only',
     unitArea: '0',
     parkingArea: '0',
+    storageArea: '0',
     totalArea: '0',
     pricePerMeter: '0',
     parkingPricePerMeter: '0',
+    storagePricePerMeter: '0',
     fixedTotalAmount: '10000000',
+    parkingFixedAmount: '0',
+    storageFixedAmount: '0',
     activeTab: 'advance',
     categories: [
       {
@@ -60,15 +65,46 @@ test('validateFinancialStep rejects fixed pricing without total amount', () => {
   assert.equal(result.errors.fixedTotalAmount, 'این فیلد الزامی است');
 });
 
+test('validateFinancialStep rejects split fixed pricing without parking amount', () => {
+  const result = validateFinancialStep(
+    makeValidFinancialData({
+      areaPricingMode: 'unit-only',
+      fixedTotalAmount: '8000000',
+      parkingArea: '12',
+      parkingFixedAmount: '0',
+    }),
+  );
+
+  assert.equal(result.valid, false);
+  assert.ok(result.errors.parkingFixedAmount);
+});
+
+test('validateFinancialStep accepts grouped fixed pricing with separate storage only when required', () => {
+  const result = validateFinancialStep(
+    makeValidFinancialData({
+      areaPricingMode: 'unit-plus-parking',
+      fixedTotalAmount: '9000000',
+      parkingArea: '12',
+      storageArea: '8',
+      storageFixedAmount: '1000000',
+      parkingFixedAmount: '0',
+    }),
+  );
+
+  assert.equal(result.valid, true);
+});
+
 test('validateFinancialStep rejects metered pricing without area or price-per-meter', () => {
   const result = validateFinancialStep(
     makeValidFinancialData({
       pricingType: 'metered',
       unitArea: '0',
       parkingArea: '0',
+      storageArea: '0',
       totalArea: '0',
       pricePerMeter: '0',
       parkingPricePerMeter: '0',
+      storagePricePerMeter: '0',
       fixedTotalAmount: '0',
     }),
   );
@@ -84,15 +120,67 @@ test('validateFinancialStep rejects metered pricing with parking area but withou
       pricingType: 'metered',
       unitArea: '100',
       parkingArea: '12',
+      storageArea: '0',
       totalArea: '112',
       pricePerMeter: '1000000',
       parkingPricePerMeter: '0',
+      storagePricePerMeter: '0',
       fixedTotalAmount: '0',
     }),
   );
 
   assert.equal(result.valid, false);
   assert.ok(result.errors.parkingPricePerMeter);
+});
+
+test('validateFinancialStep rejects metered pricing with storage area but without storage price in unit-only mode', () => {
+  const result = validateFinancialStep(
+    makeValidFinancialData({
+      pricingType: 'metered',
+      areaPricingMode: 'unit-only',
+      unitArea: '100',
+      parkingArea: '0',
+      storageArea: '8',
+      totalArea: '108',
+      pricePerMeter: '1000000',
+      parkingPricePerMeter: '0',
+      storagePricePerMeter: '0',
+      fixedTotalAmount: '0',
+    }),
+  );
+
+  assert.equal(result.valid, false);
+  assert.ok(result.errors.storagePricePerMeter);
+});
+
+test('validateFinancialStep accepts storage area without separate price when area pricing mode aggregates storage', () => {
+  const result = validateFinancialStep(
+    makeValidFinancialData({
+      pricingType: 'metered',
+      areaPricingMode: 'unit-plus-storage',
+      unitArea: '100',
+      parkingArea: '0',
+      storageArea: '8',
+      totalArea: '108',
+      pricePerMeter: '1000000',
+      parkingPricePerMeter: '0',
+      storagePricePerMeter: '0',
+      fixedTotalAmount: '0',
+      categories: [
+        {
+          id: 'advance',
+          name: 'پیش پرداخت',
+          capAmount: 4000000,
+          dueAmount: 4000000,
+          noDueAmount: 0,
+          system: true,
+          requiresDue: true,
+        },
+      ],
+    }),
+  );
+
+  assert.equal(result.valid, true);
 });
 
 test('validateFinancialStep rejects category totals above contract amount', () => {

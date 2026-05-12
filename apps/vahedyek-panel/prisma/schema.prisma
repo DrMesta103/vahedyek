@@ -89,6 +89,7 @@ model Tenant {
   /// پیکربندی قدیمی مسیر تأیید (منسوخ — پس از مهاجرت Workflow حذف می‌شود)
   approvalProcessConfig Json             @default("{}")
   workflows     ApprovalWorkflow[]
+  auditLogs     AuditLog[]
 }
 
 model AppUser {
@@ -105,6 +106,32 @@ model AppUser {
   memberships  UserTenantMembership[]
   sessions     Session[]
   representatives DirectoryRepresentative[]
+  auditLogs    AuditLog[]
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  tenantId    String
+  actorUserId String?
+  actorName   String
+  action      String
+  entityType  String
+  entityId    String?
+  entityLabel String?
+  summary     String
+  details     Json     @default("{}")
+  diff        Json     @default("[]")
+  metadata    Json     @default("{}")
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  actor       AppUser? @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, createdAt])
+  @@index([tenantId, action])
+  @@index([tenantId, entityType])
+  @@index([tenantId, actorUserId])
 }
 
 model UserTenantMembership {
@@ -210,6 +237,8 @@ model ContractDraft {
   technicalSpecs ContractTechnicalSpecs?
   attachments ContractAttachments?
   approvalInstance ContractApprovalInstance?
+  receipts ContractReceipt[]
+  walletLedger ContractCustomerWalletLedger[]
 
   @@index([tenantId, updatedAt])
 }
@@ -371,12 +400,17 @@ model ContractFinancial {
   id               String               @id @default(cuid())
   draftId          String               @unique
   pricingType      PricingType          @default(fixed)
+  areaPricingMode  String               @default("unit-only")
   unitArea         Decimal?             @db.Decimal(18, 2)
   parkingArea      Decimal?             @db.Decimal(18, 2)
+  storageArea      Decimal?             @db.Decimal(18, 2)
   totalArea        Decimal?             @db.Decimal(18, 2)
   pricePerMeter    Decimal?             @db.Decimal(18, 2)
   parkingPricePerMeter Decimal?         @db.Decimal(18, 2)
+  storagePricePerMeter Decimal?         @db.Decimal(18, 2)
   fixedTotalAmount Decimal?             @db.Decimal(18, 2)
+  parkingFixedAmount Decimal?           @db.Decimal(18, 2)
+  storageFixedAmount Decimal?           @db.Decimal(18, 2)
   activeTab        String?
   draft            ContractDraft        @relation(fields: [draftId], references: [id], onDelete: Cascade)
   categories       FinancialCategory[]
@@ -452,6 +486,49 @@ model FinancialDueItem {
   category    FinancialCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
   @@index([financialId, categoryId])
+}
+
+model ContractReceipt {
+  id                 String        @id @default(cuid())
+  tenantId           String
+  draftId            String
+  allocationMode     String
+  allocationDate     String
+  transferKind       String
+  depositorName      String
+  paidAmountRial     Decimal       @db.Decimal(18, 2)
+  depositDate        String
+  depositTime        String?
+  destinationValue   String?
+  destinationHolder  String?
+  destinationHolders Json          @default("[]")
+  trackingNumber     String?
+  referenceNumber    String?
+  receiptNumber      String?
+  notes              String?
+  documents          Json          @default("[]")
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  draft              ContractDraft @relation(fields: [draftId], references: [id], onDelete: Cascade)
+  walletLedger       ContractCustomerWalletLedger[]
+
+  @@index([tenantId, draftId])
+  @@index([draftId, allocationDate])
+}
+
+model ContractCustomerWalletLedger {
+  id         String          @id @default(cuid())
+  tenantId   String
+  draftId    String
+  receiptId  String?
+  amountRial Decimal         @db.Decimal(18, 2)
+  reason     String          @default("overpayment")
+  createdAt  DateTime        @default(now())
+  draft      ContractDraft   @relation(fields: [draftId], references: [id], onDelete: Cascade)
+  receipt    ContractReceipt? @relation(fields: [receiptId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, draftId])
+  @@index([receiptId])
 }
 
 model Employee {

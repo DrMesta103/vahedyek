@@ -60,6 +60,7 @@ export async function GET() {
           category: unit.category,
           area: unit.area,
           assignedToUnitId: unit.assignedToUnitId,
+          areaPricingMode: unit.areaPricingMode,
         })),
       })),
       directory: {

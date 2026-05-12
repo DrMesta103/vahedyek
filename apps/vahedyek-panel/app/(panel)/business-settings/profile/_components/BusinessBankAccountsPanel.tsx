@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { MoreVertical, Pencil, Trash2 } from 'lucide-react';
+import { ArrowRight, MoreVertical, Pencil, Trash2 } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import {
   fetchProfileStore,
@@ -11,6 +12,9 @@ import {
 } from './profileStorage';
 
 export function BusinessBankAccountsPanel() {
+  const searchParams = useSearchParams();
+  const returnTo = searchParams?.get('returnTo') ?? '';
+  const returnQuery = returnTo ? `?${new URLSearchParams({ returnTo }).toString()}` : '';
   const [accounts, setAccounts] = useState<BankAccountRecord[]>([]);
 
   useEffect(() => {
@@ -42,7 +46,13 @@ export function BusinessBankAccountsPanel() {
   return (
     <section className="profile-workspace-page" aria-label="لیست حساب های بانکی">
       <div className="bank-accounts-toolbar">
-        <Link href="/business-settings/profile/bank-accounts/new" className="representative-add-button bank-accounts-add">
+        {returnTo ? (
+          <Link href={returnTo} className="bank-account-return-link">
+            <ArrowRight />
+            {'\u0628\u0627\u0632\u06af\u0634\u062a \u0628\u0647 \u062b\u0628\u062a \u0641\u06cc\u0634'}
+          </Link>
+        ) : null}
+        <Link href={`/business-settings/profile/bank-accounts/new${returnQuery}`} className="representative-add-button bank-accounts-add">
           افزودن حساب بانکی جدید
         </Link>
       </div>
@@ -60,7 +70,7 @@ export function BusinessBankAccountsPanel() {
                   <div className="bank-account-bank">
                     <strong>{account.bankName}</strong>
                     <div className="bank-account-actions">
-                      <Link href={`/business-settings/profile/bank-accounts/${account.id}/edit`}>
+                      <Link href={`/business-settings/profile/bank-accounts/${account.id}/edit${returnQuery}`}>
                         <Pencil />
                         ویرایش
                       </Link>

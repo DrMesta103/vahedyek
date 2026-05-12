@@ -8,6 +8,7 @@ import {
   filterMenuByPermissions,
   requireBusinessOwner,
 } from '../../../lib/access-control';
+import { getActorName, recordAuditLog } from '../../../lib/audit-log';
 import { requireSessionContext } from '../../../lib/auth';
 import { prisma } from '../../../lib/prisma';
 import { handlePrismaApiError } from '../../../lib/prismaApiError';
@@ -142,13 +143,24 @@ export async function POST(request: Request) {
     const existing = await prisma.tenantRole.findUnique({ where: { tenantId_key: { tenantId: session.tenantId, key } } });
     if (existing) key = `${key}_${Date.now()}`;
 
-    await prisma.tenantRole.create({
+    const role = await prisma.tenantRole.create({
       data: {
         tenantId: session.tenantId,
         key,
         label,
         system: false,
       },
+    });
+    await recordAuditLog({
+      tenantId: session.tenantId,
+      actorUserId: session.userId,
+      actorName: getActorName(session),
+      action: 'access.role.create',
+      entityType: 'tenant_role',
+      entityId: role.id,
+      entityLabel: role.label,
+      summary: `${getActorName(session)} نقش ${role.label} را ساخت.`,
+      request,
     });
 
     const payload = await getAccessPayload(session.tenantId);
@@ -183,6 +195,10 @@ export async function PUT(request: Request) {
       const validPermissionKeys = new Set(APP_PERMISSION_ITEMS.map((permission) => permission.key));
       const requestedPermissionKeys = body.permissionKeys ?? legacyMenuIdsToPermissionKeys(body.menuItemIds ?? []);
       const permissionKeys = Array.from(new Set(requestedPermissionKeys.filter((key) => validPermissionKeys.has(key))));
+      const previousPermissions = await prisma.tenantRolePermission.findMany({
+        where: { roleId: role.id },
+        select: { permissionKey: true },
+      });
 
       await prisma.$transaction([
         prisma.tenantRolePermission.deleteMany({ where: { roleId: role.id } }),
@@ -191,15 +207,38 @@ export async function PUT(request: Request) {
           skipDuplicates: true,
         }),
       ]);
+      await recordAuditLog({
+        tenantId: session.tenantId,
+        actorUserId: session.userId,
+        actorName: getActorName(session),
+        action: 'access.role.update',
+        entityType: 'tenant_role',
+        entityId: role.id,
+        entityLabel: role.label,
+        summary: `${getActorName(session)} دسترسی‌های نقش ${role.label} را ویرایش کرد.`,
+        diff: [
+          {
+            field: 'permissionKeys',
+            label: 'دسترسی‌ها',
+            before: previousPermissions.map((item) => item.permissionKey).join(', ') || 'خالی',
+            after: permissionKeys.join(', ') || 'خالی',
+          },
+        ],
+        request,
+      });
     }
 
     if (body.membershipId) {
       const membership = await prisma.userTenantMembership.findFirst({ where: { id: body.membershipId, tenantId: session.tenantId } });
       if (!membership) return NextResponse.json({ message: 'عضو پیدا نشد.' }, { status: 404 });
+      const previousRoles = await prisma.userTenantMembershipRole.findMany({
+        where: { membershipId: membership.id },
+        include: { role: { select: { label: true } } },
+      });
 
       const roles = await prisma.tenantRole.findMany({
         where: { tenantId: session.tenantId, id: { in: body.roleIds ?? [] } },
-        select: { id: true },
+        select: { id: true, label: true },
       });
 
       await prisma.$transaction([
@@ -213,6 +252,25 @@ export async function PUT(request: Request) {
       if (membership.role === 'owner') {
         await ensureOwnerMembershipRole(membership.id, session.tenantId);
       }
+      await recordAuditLog({
+        tenantId: session.tenantId,
+        actorUserId: session.userId,
+        actorName: getActorName(session),
+        action: 'access.member.update',
+        entityType: 'membership',
+        entityId: membership.id,
+        entityLabel: membership.userId,
+        summary: `${getActorName(session)} نقش‌های یک کاربر را ویرایش کرد.`,
+        diff: [
+          {
+            field: 'roleIds',
+            label: 'نقش‌ها',
+            before: previousRoles.map((item) => item.role.label).join(', ') || 'خالی',
+            after: roles.map((item) => item.label).join(', ') || 'خالی',
+          },
+        ],
+        request,
+      });
     }
 
     const payload = await getAccessPayload(session.tenantId);

@@ -3,6 +3,7 @@
 import { useEffect, useState, type ElementType } from 'react';
 import { ArrowUpRight, BadgePercent, CircleDollarSign } from 'lucide-react';
 import { type ContractRuleState } from '../../../lib/businessContractRules';
+import { normalizeKnownProgressivePenaltyValues } from '../../../lib/progressivePenalty';
 import {
   ContractRegistrationSwitch,
   FieldLabel,
@@ -210,6 +211,103 @@ function ProgressiveRateGrid({
   );
 }
 
+function SmartProgressiveRateGrid({
+  rows,
+  state,
+  onValueChange,
+}: {
+  rows: SectionConfig['progressiveRows'];
+  state: ContractRuleState;
+  onValueChange: (key: string, value: string | boolean) => void;
+}) {
+  const getOpenEndedKey = (toKey: string) => toKey.replace(/To$/, 'OpenEnded');
+  let nextFrom = 1;
+  const normalizedRows = rows.map((row) => {
+    const openEndedKey = getOpenEndedKey(row.toKey);
+    const from = String(nextFrom);
+    const to = String(state.values[row.toKey] || '');
+    const openEnded = Boolean(state.values[openEndedKey]);
+    const toNumber = Number(to.replace(/\D/g, ''));
+
+    if (!openEnded && Number.isFinite(toNumber) && toNumber >= nextFrom) {
+      nextFrom = toNumber + 1;
+    }
+
+    return {
+      ...row,
+      openEndedKey,
+      from,
+      to,
+      rate: String(state.values[row.rateKey] || ''),
+      openEnded,
+    };
+  });
+  const firstOpenEndedIndex = normalizedRows.findIndex((row) => row.openEnded);
+  const visibleRows = firstOpenEndedIndex >= 0 ? normalizedRows.slice(0, firstOpenEndedIndex + 1) : normalizedRows;
+
+  const syncRanges = (updates: Partial<Record<string, string | boolean>>) => {
+    let nextFrom = 1;
+    let closed = false;
+
+    normalizedRows.forEach((row) => {
+      onValueChange(row.fromKey, String(nextFrom));
+      if (closed) return;
+
+      const openEnded = Boolean(updates[row.openEndedKey] ?? row.openEnded);
+      onValueChange(row.openEndedKey, openEnded);
+      if (openEnded) {
+        onValueChange(row.toKey, '');
+        closed = true;
+        return;
+      }
+
+      const to = Number(String(updates[row.toKey] ?? row.to).replace(/\D/g, ''));
+      if (Number.isFinite(to) && to >= nextFrom) nextFrom = to + 1;
+    });
+  };
+
+  return (
+    <div className="space-y-5">
+      {visibleRows.map((row, index) => (
+        <div key={row.fromKey} className="grid gap-4 rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] p-4 lg:grid-cols-[1fr_120px_1fr_1fr]">
+          <div className="space-y-3">
+            <FieldLabel label={`از بازه ${index + 1}`} />
+            <input value={row.from} disabled className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-right text-slate-500" />
+            <p className="text-right text-xs text-[color:var(--text-muted)]">شروع خودکار است.</p>
+          </div>
+          <label className="flex items-center justify-end gap-2 pt-9 text-xs font-bold text-[color:var(--text-muted)]">
+            <input
+              type="checkbox"
+              checked={row.openEnded}
+              onChange={(event) => syncRanges({ [row.openEndedKey]: event.target.checked, [row.toKey]: '' })}
+              className="h-4 w-4 rounded border-slate-300 text-cyan-600"
+            />
+            به بعد
+          </label>
+          <div className="space-y-3">
+            <FieldLabel label={`تا بازه ${index + 1}`} />
+            <input
+              value={row.to}
+              disabled={row.openEnded}
+              onChange={(event) => {
+                const value = event.target.value.replace(/\D/g, '');
+                onValueChange(row.toKey, value);
+                syncRanges({ [row.toKey]: value, [row.openEndedKey]: false });
+              }}
+              placeholder={row.openEnded ? 'به بعد' : 'تا روز'}
+              className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-right disabled:bg-slate-50 disabled:text-slate-500"
+            />
+          </div>
+          <div className="space-y-3">
+            <FieldLabel label={`نرخ جریمه ${index + 1}`} />
+            <FinancialAmountInput value={row.rate} onChange={(value) => onValueChange(row.rateKey, value)} suffix="%" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function BuilderPenaltyDetailPanel({ sectionId }: { sectionId: BuilderPenaltySectionId }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -251,11 +349,16 @@ export function BuilderPenaltyDetailPanel({ sectionId }: { sectionId: BuilderPen
       setSaving(true);
       setError('');
       if (!options?.silent) setMessage('');
+      const normalizedState = {
+        ...nextState,
+        values: normalizeKnownProgressivePenaltyValues(nextState.values),
+      };
+      setState(normalizedState);
 
       const response = await fetch('/api/business-settings/contract-rules/builder-penalty', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(nextState),
+        body: JSON.stringify(normalizedState),
       });
 
       if (!response.ok) {
@@ -278,10 +381,10 @@ export function BuilderPenaltyDetailPanel({ sectionId }: { sectionId: BuilderPen
       current
         ? {
             ...current,
-            values: {
+            values: normalizeKnownProgressivePenaltyValues({
               ...current.values,
               [key]: value,
-            },
+            }),
           }
         : current,
     );
@@ -392,7 +495,7 @@ export function BuilderPenaltyDetailPanel({ sectionId }: { sectionId: BuilderPen
                     <h3 className="text-right text-[17px] font-black text-[color:var(--text-strong)]">جدول جریمه‌های تصاعدی</h3>
                     <p className="text-right text-sm text-[color:var(--text-muted)]">نرخ جریمه را برای بازه‌های مختلف ثبت کنید.</p>
                   </div>
-                  <ProgressiveRateGrid rows={section.progressiveRows} state={state} onValueChange={(key, value) => setValue(key, value)} />
+                  <SmartProgressiveRateGrid rows={section.progressiveRows} state={state} onValueChange={(key, value) => setValue(key, value)} />
                 </>
               ) : null}
 

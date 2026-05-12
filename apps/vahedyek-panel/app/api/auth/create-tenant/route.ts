@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { NextResponse } from 'next/server';
 import { ensureOwnerMembershipRole, ensureTenantDefaultRoles } from '../../../lib/access-control';
+import { getActorName, recordAuditLog } from '../../../lib/audit-log';
 import { createSession, getSessionContext, setAuthCookie } from '../../../lib/auth';
 import { prisma } from '../../../lib/prisma';
 import { handlePrismaApiError } from '../../../lib/prismaApiError';
@@ -90,6 +91,18 @@ export async function POST(request: Request) {
       },
     });
     setAuthCookie(response, newSession);
+    await recordAuditLog({
+      tenantId: tenant.id,
+      actorUserId: session.userId,
+      actorName: getActorName(session),
+      action: 'tenant.create',
+      entityType: 'tenant',
+      entityId: tenant.id,
+      entityLabel: tenant.name,
+      summary: `${getActorName(session)} کسب‌وکار ${tenant.name} را ساخت.`,
+      details: { packageKey: tenant.packageKey, billingCycle: tenant.billingCycle },
+      request,
+    });
 
     return response;
   } catch (error) {

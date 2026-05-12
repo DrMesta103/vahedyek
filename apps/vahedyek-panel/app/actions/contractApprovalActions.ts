@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import type { ContractApprovalDecisionType, ContractApprovalInstanceStatus } from '@/lib/prisma-client';
 import { prisma } from '../lib/prisma';
 import { getSessionContext } from '../lib/auth';
+import { recordAuditLog } from '../lib/audit-log';
 import { getMembershipAccess, hasPermission } from '../lib/access-control';
 import { normalizeApprovalUsageKey, type ApprovalUsageKey } from '../lib/contractApprovalAccess';
 import { normalizeWorkflowSteps, type WorkflowStepDefinition } from '../lib/workflowTypes';
@@ -23,7 +24,12 @@ async function requireActiveTenantSession() {
   if (!session?.tenantId || session.state !== 'active') {
     return { ok: false as const, message: 'برای ادامه باید وارد شوید.' };
   }
-  return { ok: true as const, tenantId: session.tenantId, userId: session.userId };
+  return {
+    ok: true as const,
+    tenantId: session.tenantId,
+    userId: session.userId,
+    actorName: session.user.fullName || session.user.email || session.user.mobile || 'کاربر ناشناس',
+  };
 }
 
 async function pickWorkflow(tenantId: string, usage: ApprovalUsageKey) {
@@ -255,6 +261,17 @@ export async function submitContractApprovalWorkflowAction(draftId: string) {
       data: { releasedFromApprovedForEdit: false },
     });
   });
+  await recordAuditLog({
+    tenantId: s.tenantId,
+    actorUserId: s.userId,
+    actorName: s.actorName,
+    action: 'contract.approval.submit',
+    entityType: 'contract_draft',
+    entityId: draftId,
+    entityLabel: `پیش‌نویس ${draftId}`,
+    summary: `${s.actorName} قرارداد را به فرآیند تایید ارسال کرد.`,
+    details: { workflowId: wf.id, workflowTitle: wf.title },
+  });
 
   revalidatePath(`/contracts/${draftId}`);
   revalidatePath('/contracts');
@@ -357,13 +374,24 @@ export async function recordContractApprovalDecisionAction(
 
   if (body.decision === 'APPROVE') {
     if (!caps.canApprove) return { ok: false, message: 'شما مجاز به تأیید این مرحله نیستید.' };
-    await prisma.contractApprovalDecision.create({
+      await prisma.contractApprovalDecision.create({
       data: {
         instanceId: inst.id,
         stepId: currentStep.id,
         approverUserId: s.userId,
         decision: 'APPROVE',
       },
+    });
+    await recordAuditLog({
+      tenantId: s.tenantId,
+      actorUserId: s.userId,
+      actorName: s.actorName,
+      action: 'contract.approval.decision',
+      entityType: 'contract_draft',
+      entityId: draftId,
+      entityLabel: `پیش‌نویس ${draftId}`,
+      summary: `${s.actorName} رای تایید قرارداد را ثبت کرد.`,
+      details: { decision: 'APPROVE', stepId: currentStep.id },
     });
     if (isWorkflowFinalApprover) {
       await prisma.contractApprovalInstance.update({
@@ -416,6 +444,17 @@ export async function recordContractApprovalDecisionAction(
         reason,
       },
     });
+    await recordAuditLog({
+      tenantId: s.tenantId,
+      actorUserId: s.userId,
+      actorName: s.actorName,
+      action: 'contract.approval.decision',
+      entityType: 'contract_draft',
+      entityId: draftId,
+      entityLabel: `پیش‌نویس ${draftId}`,
+      summary: `${s.actorName} درخواست اصلاح قرارداد را ثبت کرد.`,
+      details: { decision: 'REQUEST_REVISION', stepId: currentStep.id, reason },
+    });
     revalidatePath(`/contracts/${draftId}`);
     revalidatePath('/contracts');
     return { ok: true };
@@ -442,6 +481,17 @@ export async function recordContractApprovalDecisionAction(
           revisionResumeStepIndex: 0,
         },
       });
+    });
+    await recordAuditLog({
+      tenantId: s.tenantId,
+      actorUserId: s.userId,
+      actorName: s.actorName,
+      action: 'contract.approval.decision',
+      entityType: 'contract_draft',
+      entityId: draftId,
+      entityLabel: `پیش‌نویس ${draftId}`,
+      summary: `${s.actorName} قرارداد را به پیش‌نویس رد کرد.`,
+      details: { decision: 'REJECT_TO_DRAFT', stepId: currentStep.id, reason },
     });
     await setContractDraftReturnForRevisionRaw(draftId, s.tenantId, reason);
     revalidatePath(`/contracts/${draftId}`);

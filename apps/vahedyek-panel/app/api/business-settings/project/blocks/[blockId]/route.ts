@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { Prisma } from '@/lib/prisma-client';
+import { buildFieldDiffs, getActorName, recordAuditLog } from '../../../../../lib/audit-log';
 import { requireSessionContext } from '../../../../../lib/auth';
 import { prisma } from '../../../../../lib/prisma';
 import { handlePrismaApiError } from '../../../../../lib/prismaApiError';
@@ -127,7 +128,26 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ bl
       WHERE "tenantId" = ${session.tenantId} AND "id" = ${blockId}
     `);
 
-    return NextResponse.json({ block: await getBlock(session.tenantId, blockId) });
+    const block = await getBlock(session.tenantId, blockId);
+    await recordAuditLog({
+      tenantId: session.tenantId,
+      actorUserId: session.userId,
+      actorName: getActorName(session),
+      action: 'project.block.update',
+      entityType: 'block',
+      entityId: blockId,
+      entityLabel: block?.name ?? name,
+      summary: `${getActorName(session)} بلوک ${block?.name ?? name} را ویرایش کرد.`,
+      diff: buildFieldDiffs(existing, block, {
+        name: 'نام بلوک',
+        mainPlate: 'پلاک اصلی',
+        subPlate: 'پلاک فرعی',
+        status: 'وضعیت',
+      }),
+      request,
+    });
+
+    return NextResponse.json({ block });
   } catch (error) {
     return handlePrismaApiError(error);
   }
@@ -154,6 +174,18 @@ export async function POST(request: Request, { params }: { params: Promise<{ blo
       INSERT INTO "Block" ("id", "tenantId", "name", "mainPlate", "subPlate", "status", "usageCounts")
       VALUES (${newId}, ${session.tenantId}, ${name}, ${source.mainPlate || null}, ${source.subPlate || null}, ${source.status}, ${usageJson}::jsonb)
     `);
+    await recordAuditLog({
+      tenantId: session.tenantId,
+      actorUserId: session.userId,
+      actorName: getActorName(session),
+      action: 'project.block.create',
+      entityType: 'block',
+      entityId: newId,
+      entityLabel: name,
+      summary: `${getActorName(session)} از بلوک ${source.name} کپی ساخت.`,
+      details: { sourceBlockId: blockId },
+      request,
+    });
 
     return NextResponse.json({ block: await getBlock(session.tenantId, newId) }, { status: 201 });
   } catch (error) {
@@ -161,7 +193,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ blo
   }
 }
 
-export async function DELETE(_: Request, { params }: { params: Promise<{ blockId: string }> }) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ blockId: string }> }) {
   try {
     const { blockId } = await params;
     const session = await requireSessionContext();
@@ -174,6 +206,17 @@ export async function DELETE(_: Request, { params }: { params: Promise<{ blockId
       DELETE FROM "Block"
       WHERE "tenantId" = ${session.tenantId} AND "id" = ${blockId}
     `);
+    await recordAuditLog({
+      tenantId: session.tenantId,
+      actorUserId: session.userId,
+      actorName: getActorName(session),
+      action: 'project.block.delete',
+      entityType: 'block',
+      entityId: blockId,
+      entityLabel: existing.name,
+      summary: `${getActorName(session)} بلوک ${existing.name} را حذف کرد.`,
+      request,
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {

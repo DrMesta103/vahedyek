@@ -12,6 +12,7 @@ export type ReferenceUnit = {
   category: string;
   area: number | null;
   assignedToUnitId: string | null;
+  areaPricingMode: string | null;
 };
 
 export type ReferenceDataResponse = {

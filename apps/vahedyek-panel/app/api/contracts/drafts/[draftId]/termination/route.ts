@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { Prisma } from '@/lib/prisma-client';
+import { getActorName, recordAuditLog } from '../../../../../lib/audit-log';
 import { requireSessionContext } from '../../../../../lib/auth';
 import { prisma } from '../../../../../lib/prisma';
 import { handlePrismaApiError } from '../../../../../lib/prismaApiError';
@@ -64,6 +65,18 @@ export async function PUT(request: Request, { params }: { params: Promise<{ draf
     const buyerRules = normalized as unknown as Prisma.InputJsonValue;
 
     await upsertTerminationBuyerRulesRow(draftId, buyerRules);
+    await recordAuditLog({
+      tenantId: session.tenantId,
+      actorUserId: session.userId,
+      actorName: getActorName(session),
+      action: 'contract.termination.update',
+      entityType: 'contract_draft',
+      entityId: draftId,
+      entityLabel: `پیش‌نویس ${draftId}`,
+      summary: `${getActorName(session)} شرایط فسخ قرارداد را ویرایش کرد.`,
+      details: { buyerRules: normalized as unknown as Prisma.InputJsonValue },
+      request,
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {

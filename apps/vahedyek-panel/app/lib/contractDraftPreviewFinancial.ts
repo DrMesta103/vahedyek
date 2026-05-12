@@ -1,4 +1,5 @@
 import type { ContractFinancialData } from '../types/contract';
+import { computeContractTotalRialFromFinancial } from './contractFinancialPricing';
 
 const FIXED_FINANCIAL_COLORS = {
   advance: '#f2c94c',
@@ -22,13 +23,7 @@ function getFinancialSliceKind(item: { id: string; name: string }) {
 }
 
 export function computeContractTotalRial(data: ContractFinancialData | null): number {
-  if (!data) return 0;
-  if (data.pricingType === 'metered') {
-    const parkingArea = Number(data.parkingArea || 0);
-    const unitArea = Number(data.unitArea || Math.max(Number(data.totalArea || 0) - parkingArea, 0));
-    return unitArea * Number(data.pricePerMeter || 0) + parkingArea * Number(data.parkingPricePerMeter || 0);
-  }
-  return Number(data.fixedTotalAmount || 0);
+  return computeContractTotalRialFromFinancial(data);
 }
 
 export function buildFinancialSlices(data: ContractFinancialData | null): FinancialSlice[] {

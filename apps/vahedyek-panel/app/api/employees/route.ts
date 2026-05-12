@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '../../lib/prisma';
+import { buildFieldDiffs, getActorName, recordAuditLog } from '../../lib/audit-log';
 import { getSessionContext, hashPassword } from '../../lib/auth';
 import { ensureMembershipRoleByKey, ensureTenantDefaultRoles } from '../../lib/access-control';
 import { normalizeEmail, sanitizeIranMobileInput } from '../../lib/contact';
@@ -129,6 +130,23 @@ export async function POST(request: NextRequest) {
             isActive: true,
           },
         });
+    await recordAuditLog({
+      tenantId: session.tenantId,
+      actorUserId: session.userId,
+      actorName: getActorName(session),
+      action: existing ? 'employee.update' : 'employee.create',
+      entityType: 'employee',
+      entityId: employee.id,
+      entityLabel: `${employee.firstName} ${employee.lastName}`.trim(),
+      summary: `${getActorName(session)} کارمند ${`${employee.firstName} ${employee.lastName}`.trim()} را ${existing ? 'ویرایش' : 'ثبت'} کرد.`,
+      diff: buildFieldDiffs(existing, employee, {
+        firstName: 'نام',
+        lastName: 'نام خانوادگی',
+        nationalCode: 'کد ملی',
+        isActive: 'وضعیت فعال',
+      }),
+      request,
+    });
 
     return NextResponse.json(
       {

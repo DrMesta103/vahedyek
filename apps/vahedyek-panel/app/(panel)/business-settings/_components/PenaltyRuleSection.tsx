@@ -53,10 +53,15 @@ function RulePlainTextInput({
     <Input
       type="text"
       value={value}
+      disabled={disabled}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
+<<<<<<< HEAD
       disabled={disabled}
       className={RULE_PANEL_TEXT_INPUT_CLASSNAME}
+=======
+      className={`${RULE_PANEL_TEXT_INPUT_CLASSNAME} disabled:bg-slate-50 disabled:text-slate-500`}
+>>>>>>> f7ea53b9eaec84e098c6e3fe3ac41e200306db87
     />
   );
 }
@@ -93,11 +98,19 @@ const MODE_OPTIONS: Array<{
   },
 ];
 
+<<<<<<< HEAD
 const PROGRESSIVE_DEFAULT_ROWS: ProgressiveRowConfig[] = [
   { fromKey: 'penaltyProgressiveRow1From', toKey: 'penaltyProgressiveRow1To', rateKey: 'penaltyProgressiveRow1Rate', from: '1', to: '30', rate: '' },
   { fromKey: 'penaltyProgressiveRow2From', toKey: 'penaltyProgressiveRow2To', rateKey: 'penaltyProgressiveRow2Rate', from: '', to: '', rate: '' },
   { fromKey: 'penaltyProgressiveRow3From', toKey: 'penaltyProgressiveRow3To', rateKey: 'penaltyProgressiveRow3Rate', from: '', to: '', rate: '' },
   { fromKey: 'penaltyProgressiveRow4From', toKey: 'penaltyProgressiveRow4To', rateKey: 'penaltyProgressiveRow4Rate', from: '', to: '', rate: '' },
+=======
+const PROGRESSIVE_DEFAULT_ROWS = [
+  { fromKey: 'penaltyProgressiveRow1From', toKey: 'penaltyProgressiveRow1To', rateKey: 'penaltyProgressiveRow1Rate', openEndedKey: 'penaltyProgressiveRow1OpenEnded', from: '1', to: '4', rate: '0.5' },
+  { fromKey: 'penaltyProgressiveRow2From', toKey: 'penaltyProgressiveRow2To', rateKey: 'penaltyProgressiveRow2Rate', openEndedKey: 'penaltyProgressiveRow2OpenEnded', from: '5', to: '6', rate: '0.5' },
+  { fromKey: 'penaltyProgressiveRow3From', toKey: 'penaltyProgressiveRow3To', rateKey: 'penaltyProgressiveRow3Rate', openEndedKey: 'penaltyProgressiveRow3OpenEnded', from: '7', to: '45', rate: '3.3' },
+  { fromKey: 'penaltyProgressiveRow4From', toKey: 'penaltyProgressiveRow4To', rateKey: 'penaltyProgressiveRow4Rate', openEndedKey: 'penaltyProgressiveRow4OpenEnded', from: '46', to: '', rate: '' },
+>>>>>>> f7ea53b9eaec84e098c6e3fe3ac41e200306db87
 ];
 
 function getStringValue(value: unknown) {
@@ -160,6 +173,54 @@ function ProgressRow({
         <RuleFieldLabel label="تا" required />
         <RulePlainTextInput value={to} onChange={(value) => onChange('to', value)} placeholder="تا روز" />
         <p className="text-right text-xs text-[color:var(--text-muted)]">مثال: تا ۳۰ روز تاخیر</p>
+      </div>
+    </div>
+  );
+}
+
+function SmartProgressRow({
+  from,
+  to,
+  rate,
+  openEnded,
+  onChange,
+}: {
+  from: string;
+  to: string;
+  rate: string;
+  openEnded: boolean;
+  onChange: (field: 'to' | 'rate' | 'openEnded', value: string | boolean) => void;
+}) {
+  return (
+    <div className="grid gap-4 rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] p-4 lg:grid-cols-[1fr_120px_170px_170px] lg:items-end">
+      <div className="space-y-3">
+        <RuleFieldLabel label="نرخ جریمه" required />
+        <RuleAmountInput value={rate} onChange={(value) => onChange('rate', value)} suffix="%" />
+        <p className="text-right text-xs text-[color:var(--text-muted)]">مثال: 0.5٪ یا 1.25٪</p>
+      </div>
+      <label className="flex items-center justify-end gap-2 pb-8 text-xs font-bold text-[color:var(--text-muted)]">
+        <input
+          type="checkbox"
+          checked={openEnded}
+          onChange={(event) => onChange('openEnded', event.target.checked)}
+          className="h-4 w-4 rounded border-slate-300 text-cyan-600"
+        />
+        به بعد
+      </label>
+      <div className="space-y-3">
+        <RuleFieldLabel label="تا" required />
+        <RulePlainTextInput
+          value={to}
+          disabled={openEnded}
+          onChange={(value) => onChange('to', value.replace(/\D/g, ''))}
+          placeholder={openEnded ? 'به بعد' : 'تا روز'}
+        />
+        <p className="text-right text-xs text-[color:var(--text-muted)]">{openEnded ? 'این بازه آخرین ردیف است.' : 'فقط پایان بازه را وارد کنید.'}</p>
+      </div>
+      <div className="space-y-3">
+        <RuleFieldLabel label="از" required />
+        <RulePlainTextInput value={from} disabled onChange={() => undefined} placeholder="از روز" />
+        <p className="text-right text-xs text-[color:var(--text-muted)]">شروع بازه خودکار محاسبه می‌شود.</p>
       </div>
     </div>
   );
@@ -300,6 +361,7 @@ export function PenaltyRuleSection({
   const selectedPenalty = PENALTY_ITEMS.find((item) => item.id === state.activeChip);
   const currentMode = MODE_OPTIONS.find((item) => item.id === activeMode) ?? MODE_OPTIONS[0];
   const keys = getModeValues(currentMode.id);
+<<<<<<< HEAD
   const progressiveRowCount = getVisibleProgressiveRowCount(state.values);
   const visibleProgressiveRows = PROGRESSIVE_DEFAULT_ROWS.slice(0, progressiveRowCount);
   const canAddProgressiveRow = progressiveRowCount < MAX_PROGRESSIVE_ROWS;
@@ -345,6 +407,64 @@ export function PenaltyRuleSection({
     onValueChange(nextRow.fromKey, nextFrom);
     onValueChange(nextRow.toKey, '');
     onValueChange(nextRow.rateKey, '');
+=======
+  let progressiveNextFrom = 1;
+  const progressiveRows = PROGRESSIVE_DEFAULT_ROWS.map((row) => {
+    const from = String(progressiveNextFrom);
+    const to = String(state.values[row.toKey] ?? '');
+    const openEnded = Boolean(state.values[row.openEndedKey]);
+    const toNumber = Number(to.replace(/\D/g, ''));
+
+    if (!openEnded && Number.isFinite(toNumber) && toNumber >= progressiveNextFrom) {
+      progressiveNextFrom = toNumber + 1;
+    }
+
+    return {
+      ...row,
+      from,
+      to,
+      rate: String(state.values[row.rateKey] ?? ''),
+      openEnded,
+    };
+  });
+  const firstOpenEndedIndex = progressiveRows.findIndex((row) => row.openEnded);
+  const visibleProgressiveRows =
+    firstOpenEndedIndex >= 0 ? progressiveRows.slice(0, firstOpenEndedIndex + 1) : progressiveRows;
+
+  const syncProgressiveRows = (updates: Partial<Record<string, string | boolean>>) => {
+    const nextRows = PROGRESSIVE_DEFAULT_ROWS.map((row, index) => ({
+      ...row,
+      from: index === 0 ? '1' : String(updates[row.fromKey] ?? state.values[row.fromKey] ?? row.from ?? ''),
+      to: String(updates[row.toKey] ?? state.values[row.toKey] ?? ''),
+      rate: String(updates[row.rateKey] ?? state.values[row.rateKey] ?? ''),
+      openEnded: Boolean(updates[row.openEndedKey] ?? state.values[row.openEndedKey]),
+    }));
+
+    let nextFrom = 1;
+    let closed = false;
+    nextRows.forEach((row) => {
+      onValueChange(row.fromKey, String(nextFrom));
+      if (closed) return;
+      const isOpenEnded = Boolean(row.openEnded);
+      onValueChange(row.openEndedKey, isOpenEnded);
+      if (isOpenEnded) {
+        onValueChange(row.toKey, '');
+        closed = true;
+        return;
+      }
+      const to = Number(String(row.to).replace(/\D/g, ''));
+      if (Number.isFinite(to) && to >= nextFrom) nextFrom = to + 1;
+    });
+  };
+
+  const applyProgressiveSuggestion = () => {
+    PROGRESSIVE_DEFAULT_ROWS.forEach((row) => {
+      onValueChange(row.fromKey, row.from);
+      onValueChange(row.toKey, row.to);
+      onValueChange(row.rateKey, row.rate);
+      onValueChange(row.openEndedKey, false);
+    });
+>>>>>>> f7ea53b9eaec84e098c6e3fe3ac41e200306db87
   };
 
   if (!selectedPenalty) {
@@ -576,6 +696,7 @@ export function PenaltyRuleSection({
                 </div>
 
                 <div className="space-y-5">
+<<<<<<< HEAD
                   {visibleProgressiveRows.map((row, rowIndex) => {
                     const previousTo = rowIndex > 0 ? getStringValue(state.values[visibleProgressiveRows[rowIndex - 1].toKey]) : '';
                     const lockedFrom = rowIndex === 0 ? String(state.values[row.fromKey] || row.from || '1') : getNextFromValue(previousTo);
@@ -590,6 +711,28 @@ export function PenaltyRuleSection({
                       />
                     );
                   })}
+=======
+                  {visibleProgressiveRows.map((row) => (
+                    <SmartProgressRow
+                      key={row.fromKey}
+                      from={row.from}
+                      to={row.to}
+                      rate={row.rate}
+                      openEnded={row.openEnded}
+                      onChange={(field, value) => {
+                        if (field === 'rate') {
+                          onValueChange(row.rateKey, String(value));
+                          return;
+                        }
+                        if (field === 'openEnded') {
+                          syncProgressiveRows({ [row.openEndedKey]: Boolean(value), [row.toKey]: '' });
+                          return;
+                        }
+                        syncProgressiveRows({ [row.toKey]: String(value), [row.openEndedKey]: false });
+                      }}
+                    />
+                  ))}
+>>>>>>> f7ea53b9eaec84e098c6e3fe3ac41e200306db87
                 </div>
               </div>
 

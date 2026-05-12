@@ -22,6 +22,7 @@ import {
   Bell,
   List,
   ArrowRightLeft,
+  ClipboardList,
 } from 'lucide-react';
 
 const iconMap: Record<string, LucideIcon> = {
@@ -45,6 +46,7 @@ const iconMap: Record<string, LucideIcon> = {
   'fa-lock': Lock,
   'fa-angle-double-left': ChevronsLeft,
   'fa-angle-double-right': ChevronsRight,
+  'fa-clipboard-list': ClipboardList,
 };
 
 type MenuIconProps = {

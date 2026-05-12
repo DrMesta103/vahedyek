@@ -11,6 +11,7 @@ import { fetchDraftApprovalFlagsRaw } from '../../../lib/contractDraftApprovalRa
 import { fetchTenantApprovalProcessConfigRaw } from '../../../lib/tenantApprovalProcessDb';
 import type { ContractStatus } from '../../../types/contract';
 import { validatePenaltiesStep } from '../../../lib/contractValidation';
+import { normalizeAreaPricingMode } from '../../../lib/contractFinancialPricing';
 import { normalizeWorkflowSteps } from '../../../lib/workflowTypes';
 import {
   mapFinancialCategoriesForClientApi,
@@ -236,14 +237,21 @@ export async function GET(request: Request, context: { params: Promise<{ contrac
 
               return {
                 pricingType: serializePricingType(draft.financial.pricingType),
+                areaPricingMode: normalizeAreaPricingMode(draft.financial.areaPricingMode),
                 unitArea: draft.financial.unitArea ? String(Number(draft.financial.unitArea)) : '',
                 parkingArea: draft.financial.parkingArea ? String(Number(draft.financial.parkingArea)) : '',
+                storageArea: draft.financial.storageArea ? String(Number(draft.financial.storageArea)) : '',
                 totalArea: draft.financial.totalArea ? String(Number(draft.financial.totalArea)) : '',
                 pricePerMeter: draft.financial.pricePerMeter ? String(Number(draft.financial.pricePerMeter)) : '',
                 parkingPricePerMeter: draft.financial.parkingPricePerMeter
                   ? String(Number(draft.financial.parkingPricePerMeter))
                   : '',
+                storagePricePerMeter: draft.financial.storagePricePerMeter
+                  ? String(Number(draft.financial.storagePricePerMeter))
+                  : '',
                 fixedTotalAmount: draft.financial.fixedTotalAmount ? String(Number(draft.financial.fixedTotalAmount)) : '',
+                parkingFixedAmount: draft.financial.parkingFixedAmount ? String(Number(draft.financial.parkingFixedAmount)) : '',
+                storageFixedAmount: draft.financial.storageFixedAmount ? String(Number(draft.financial.storageFixedAmount)) : '',
                 activeTab,
                 categories,
                 dueItems,

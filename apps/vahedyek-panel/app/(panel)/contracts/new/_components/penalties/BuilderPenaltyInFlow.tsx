@@ -3,6 +3,7 @@
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState, type ReactNode } from 'react';
 import { ChevronLeft } from 'lucide-react';
 import type { ContractRuleState } from '../../../../../lib/businessContractRules';
+import { normalizeKnownProgressivePenaltyValues } from '../../../../../lib/progressivePenalty';
 import {
   ContractRegistrationSwitch,
   FieldLabel,
@@ -197,6 +198,102 @@ function ProgressiveRateGrid({
   );
 }
 
+function SmartProgressiveRateGrid({
+  rows,
+  state,
+  onValueChange,
+}: {
+  rows: SectionConfig['progressiveRows'];
+  state: ContractRuleState;
+  onValueChange: (key: string, value: string | boolean) => void;
+}) {
+  const getOpenEndedKey = (toKey: string) => toKey.replace(/To$/, 'OpenEnded');
+  let nextFrom = 1;
+  const normalizedRows = rows.map((row) => {
+    const openEndedKey = getOpenEndedKey(row.toKey);
+    const from = String(nextFrom);
+    const to = String(state.values[row.toKey] || '');
+    const openEnded = Boolean(state.values[openEndedKey]);
+    const toNumber = Number(to.replace(/\D/g, ''));
+
+    if (!openEnded && Number.isFinite(toNumber) && toNumber >= nextFrom) {
+      nextFrom = toNumber + 1;
+    }
+
+    return {
+      ...row,
+      openEndedKey,
+      from,
+      to,
+      rate: String(state.values[row.rateKey] || ''),
+      openEnded,
+    };
+  });
+  const firstOpenEndedIndex = normalizedRows.findIndex((row) => row.openEnded);
+  const visibleRows = firstOpenEndedIndex >= 0 ? normalizedRows.slice(0, firstOpenEndedIndex + 1) : normalizedRows;
+
+  const syncRanges = (updates: Partial<Record<string, string | boolean>>) => {
+    let nextFrom = 1;
+    let closed = false;
+
+    normalizedRows.forEach((row) => {
+      onValueChange(row.fromKey, String(nextFrom));
+      if (closed) return;
+
+      const openEnded = Boolean(updates[row.openEndedKey] ?? row.openEnded);
+      onValueChange(row.openEndedKey, openEnded);
+      if (openEnded) {
+        onValueChange(row.toKey, '');
+        closed = true;
+        return;
+      }
+
+      const to = Number(String(updates[row.toKey] ?? row.to).replace(/\D/g, ''));
+      if (Number.isFinite(to) && to >= nextFrom) nextFrom = to + 1;
+    });
+  };
+
+  return (
+    <div className="space-y-4">
+      {visibleRows.map((row, index) => (
+        <div key={row.fromKey} className="grid gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3 lg:grid-cols-[1fr_100px_1fr_1fr]">
+          <div className="space-y-2">
+            <FieldLabel label={`از بازه ${index + 1}`} />
+            <input value={row.from} disabled className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-right text-slate-500" />
+          </div>
+          <label className="flex items-center justify-end gap-2 pt-8 text-xs font-bold text-slate-500">
+            <input
+              type="checkbox"
+              checked={row.openEnded}
+              onChange={(event) => syncRanges({ [row.openEndedKey]: event.target.checked, [row.toKey]: '' })}
+              className="h-4 w-4 rounded border-slate-300 text-cyan-600"
+            />
+            به بعد
+          </label>
+          <div className="space-y-2">
+            <FieldLabel label={`تا بازه ${index + 1}`} />
+            <input
+              value={row.to}
+              disabled={row.openEnded}
+              onChange={(event) => {
+                const value = event.target.value.replace(/\D/g, '');
+                onValueChange(row.toKey, value);
+                syncRanges({ [row.toKey]: value, [row.openEndedKey]: false });
+              }}
+              placeholder={row.openEnded ? 'به بعد' : 'تا روز'}
+              className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-right disabled:bg-slate-50 disabled:text-slate-500"
+            />
+          </div>
+          <div className="space-y-2">
+            <FieldLabel label={`نرخ جریمه ${index + 1}`} />
+            <FinancialAmountInput value={row.rate} onChange={(value) => onValueChange(row.rateKey, value)} suffix="%" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export type BuilderPenaltyInFlowHandle = {
   saveIfDirty: () => Promise<void>;
 };
@@ -263,11 +360,17 @@ export const BuilderPenaltyInFlow = forwardRef<
       setSaving(true);
       setError('');
       if (!options?.silent) setMessage('');
+      const normalizedState = {
+        ...nextState,
+        values: normalizeKnownProgressivePenaltyValues(nextState.values),
+      };
+      setState(normalizedState);
+      stateRef.current = normalizedState;
 
       const response = await fetchWithTimeout('/api/business-settings/contract-rules/builder-penalty', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(nextState),
+        body: JSON.stringify(normalizedState),
         timeoutMs: 25_000,
       });
 
@@ -276,7 +379,7 @@ export const BuilderPenaltyInFlow = forwardRef<
         throw new Error(payload.message || 'ذخیره تنظیمات جریمه سازنده انجام نشد.');
       }
 
-      initialSnapshotRef.current = JSON.stringify(nextState);
+      initialSnapshotRef.current = JSON.stringify(normalizedState);
       if (!options?.silent) setMessage('تنظیمات جرایم سازنده ذخیره شد.');
     } catch (saveError) {
       if (saveError instanceof DOMException && saveError.name === 'AbortError') {
@@ -294,10 +397,10 @@ export const BuilderPenaltyInFlow = forwardRef<
       current
         ? {
             ...current,
-            values: {
+            values: normalizeKnownProgressivePenaltyValues({
               ...current.values,
               [key]: value,
-            },
+            }),
           }
         : current,
     );
@@ -499,7 +602,7 @@ export const BuilderPenaltyInFlow = forwardRef<
                                     <h5 className="text-sm font-extrabold text-slate-800">جدول جریمه‌های تصاعدی</h5>
                                     <p className="text-xs leading-6 text-slate-500">نرخ جریمه را برای بازه‌های مختلف ثبت کنید.</p>
                                   </div>
-                                  <ProgressiveRateGrid rows={config.progressiveRows} state={state} onValueChange={(k, v) => setValue(k, v)} />
+                                  <SmartProgressiveRateGrid rows={config.progressiveRows} state={state} onValueChange={(k, v) => setValue(k, v)} />
                                 </>
                               ) : null}
 

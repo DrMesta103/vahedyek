@@ -59,7 +59,6 @@ export async function POST(request: Request) {
         passwordSalt,
       },
     });
-
     return NextResponse.json({
       success: true,
       user: { id: user.id, fullName: user.fullName, email: user.email, mobile: user.mobile },

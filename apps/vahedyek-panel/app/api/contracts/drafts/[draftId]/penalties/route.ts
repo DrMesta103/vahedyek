@@ -1,7 +1,12 @@
 import { NextResponse } from 'next/server';
+import { getActorName, recordAuditLog } from '../../../../../lib/audit-log';
 import { requireSessionContext } from '../../../../../lib/auth';
 import { prisma } from '../../../../../lib/prisma';
 import { handlePrismaApiError } from '../../../../../lib/prismaApiError';
+import {
+  normalizeProgressiveRows as normalizeProgressivePenaltyRows,
+  validateProgressiveRows,
+} from '../../../../../lib/progressivePenalty';
 import { PENALTY_ITEMS } from '../../../../../(panel)/contracts/new/_components/penaltiesConfig';
 
 type PenaltyMode = 'fixed' | 'overdue' | 'contract' | 'progressive';
@@ -14,6 +19,7 @@ type ProgressiveRow = {
   fromDay: string;
   toDay: string;
   rate: string;
+  openEnded?: boolean;
 };
 
 function buildScopedId(penaltiesId: string, rawId: string) {
@@ -62,15 +68,18 @@ function normalizeRoundRule(value: unknown): RoundRule {
 function normalizeProgressiveRows(rows: unknown): ProgressiveRow[] {
   if (!Array.isArray(rows)) return [];
 
-  return rows.map((row, index) => {
-    const current = row && typeof row === 'object' ? (row as Record<string, unknown>) : {};
-    return {
-      id: typeof current.id === 'string' && current.id.trim() ? current.id : `row-${index + 1}`,
-      fromDay: String(current.fromDay ?? ''),
-      toDay: String(current.toDay ?? ''),
-      rate: String(current.rate ?? ''),
-    };
-  });
+  return normalizeProgressivePenaltyRows(
+    rows.map((row, index) => {
+      const current = row && typeof row === 'object' ? (row as Record<string, unknown>) : {};
+      return {
+        id: typeof current.id === 'string' && current.id.trim() ? current.id : `row-${index + 1}`,
+        fromDay: String(current.fromDay ?? ''),
+        toDay: String(current.toDay ?? ''),
+        rate: String(current.rate ?? ''),
+        openEnded: Boolean(current.openEnded),
+      };
+    }),
+  );
 }
 
 function normalizeTypes(rawTypes: unknown) {
@@ -236,6 +245,15 @@ export async function PUT(request: Request, { params }: { params: Promise<{ draf
       }
     }
 
+    for (const rule of rules) {
+      if (rule.mode !== 'progressive') continue;
+      const validation = validateProgressiveRows(rule.progressiveRows);
+      if (!validation.ok) {
+        return NextResponse.json({ message: validation.message }, { status: 400 });
+      }
+      rule.progressiveRows = validation.rows;
+    }
+
     const penalties = await prisma.contractPenalties.upsert({
       where: { draftId },
       update: {},
@@ -283,6 +301,22 @@ export async function PUT(request: Request, { params }: { params: Promise<{ draf
         })),
       });
     }
+    await recordAuditLog({
+      tenantId: session.tenantId,
+      actorUserId: session.userId,
+      actorName: getActorName(session),
+      action: 'contract.penalties.update',
+      entityType: 'contract_draft',
+      entityId: draftId,
+      entityLabel: `پیش‌نویس ${draftId}`,
+      summary: `${getActorName(session)} جرائم قرارداد را ویرایش کرد.`,
+      details: { typesCount: types.length, rulesCount: rules.length },
+      diff: [
+        { field: 'typesCount', label: 'تعداد انواع جریمه', before: 'نامشخص', after: String(types.length) },
+        { field: 'rulesCount', label: 'تعداد قواعد جریمه', before: 'نامشخص', after: String(rules.length) },
+      ],
+      request,
+    });
 
     return NextResponse.json({
       success: true,

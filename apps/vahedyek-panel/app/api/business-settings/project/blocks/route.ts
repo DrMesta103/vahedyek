@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { Prisma } from '@/lib/prisma-client';
+import { getActorName, recordAuditLog } from '../../../../lib/audit-log';
 import { requireSessionContext } from '../../../../lib/auth';
 import { prisma } from '../../../../lib/prisma';
 import { handlePrismaApiError } from '../../../../lib/prismaApiError';
@@ -144,10 +145,23 @@ export async function POST(request: Request) {
       const name = body.name?.trim();
       if (!name) return NextResponse.json({ message: 'مشخصه بلوک الزامی است.' }, { status: 400 });
 
+      const blockId = crypto.randomUUID();
       await prisma.$executeRaw(Prisma.sql`
         INSERT INTO "Block" ("id", "tenantId", "name", "mainPlate", "subPlate", "status", "usageCounts")
-        VALUES (${crypto.randomUUID()}, ${session.tenantId}, ${name}, ${mainPlate}, ${subPlate}, ${status}, ${usageJson}::jsonb)
+        VALUES (${blockId}, ${session.tenantId}, ${name}, ${mainPlate}, ${subPlate}, ${status}, ${usageJson}::jsonb)
       `);
+      await recordAuditLog({
+        tenantId: session.tenantId,
+        actorUserId: session.userId,
+        actorName: getActorName(session),
+        action: 'project.block.create',
+        entityType: 'block',
+        entityId: blockId,
+        entityLabel: name,
+        summary: `${getActorName(session)} بلوک ${name} را ثبت کرد.`,
+        details: { mode: 'single' },
+        request,
+      });
 
       return NextResponse.json({ blocks: await getBlocks(session.tenantId) }, { status: 201 });
     }
@@ -161,12 +175,27 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: 'بازه شماره‌گذاری معتبر نیست.' }, { status: 400 });
     }
 
+    const createdBlocks: Array<{ id: string; name: string }> = [];
     for (let index = from; index <= to; index += 1) {
+      const blockId = crypto.randomUUID();
+      const name = `${prefix}-${index}`;
       await prisma.$executeRaw(Prisma.sql`
         INSERT INTO "Block" ("id", "tenantId", "name", "mainPlate", "subPlate", "status", "usageCounts")
-        VALUES (${crypto.randomUUID()}, ${session.tenantId}, ${`${prefix}-${index}`}, ${mainPlate}, ${subPlate}, ${status}, ${usageJson}::jsonb)
+        VALUES (${blockId}, ${session.tenantId}, ${name}, ${mainPlate}, ${subPlate}, ${status}, ${usageJson}::jsonb)
       `);
+      createdBlocks.push({ id: blockId, name });
     }
+    await recordAuditLog({
+      tenantId: session.tenantId,
+      actorUserId: session.userId,
+      actorName: getActorName(session),
+      action: 'project.block.create',
+      entityType: 'block',
+      entityLabel: `${prefix} ${from}-${to}`,
+      summary: `${getActorName(session)} ${createdBlocks.length} بلوک را به‌صورت گروهی ثبت کرد.`,
+      details: { mode: 'bulk', createdBlocks },
+      request,
+    });
 
     return NextResponse.json({ blocks: await getBlocks(session.tenantId) }, { status: 201 });
   } catch (error) {

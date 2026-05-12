@@ -17,6 +17,7 @@ import {
   WalletCards,
 } from 'lucide-react';
 import { RULE_CONFIGS, type ContractRuleId, type ContractRuleState, type RuleField } from '../../../lib/businessContractRules';
+import { normalizeKnownProgressivePenaltyValues } from '../../../lib/progressivePenalty';
 import {
   BusinessSwitch,
   ChoicePills as UiChoicePills,
@@ -235,18 +236,20 @@ function applyPanelValue(
   setState: React.Dispatch<React.SetStateAction<ContractRuleState | null>>,
   key: string,
   value: string | boolean,
+  options?: { normalizePenaltyRanges?: boolean },
 ) {
   setState((current) => {
     if (!current) return current;
     if (key === 'active') return { ...current, active: Boolean(value) };
     if (key === 'activeTab' && typeof value === 'string') return { ...current, activeTab: value };
     if (key === 'activeChip' && typeof value === 'string') return { ...current, activeChip: value };
+    const values = {
+      ...current.values,
+      [key]: value,
+    };
     return {
       ...current,
-      values: {
-        ...current.values,
-        [key]: value,
-      },
+      values: options?.normalizePenaltyRanges ? normalizeKnownProgressivePenaltyValues(values) : values,
     };
   });
 }
@@ -747,10 +750,16 @@ export function ContractRuleDetailsPanel({ ruleId }: { ruleId: ContractRuleId })
       setSaving(true);
       setError('');
       setMessage('');
+      const normalizedState =
+        ruleId === 'penalty'
+          ? { ...state, values: normalizeKnownProgressivePenaltyValues(state.values) }
+          : state;
+      setState(normalizedState);
+
       const response = await fetch(`/api/business-settings/contract-rules/${ruleId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(state),
+        body: JSON.stringify(normalizedState),
       });
 
       if (!response.ok) {
@@ -829,7 +838,10 @@ export function ContractRuleDetailsPanel({ ruleId }: { ruleId: ContractRuleId })
             ) : ruleId === 'interest' ? (
               <InterestRuleSection state={state} onValueChange={(key, value) => applyPanelValue(setState, key, value)} />
             ) : ruleId === 'penalty' ? (
-              <PenaltyRuleSection state={state} onValueChange={(key, value) => applyPanelValue(setState, key, value)} />
+              <PenaltyRuleSection
+                state={state}
+                onValueChange={(key, value) => applyPanelValue(setState, key, value, { normalizePenaltyRanges: true })}
+              />
             ) : (
               <section className="overflow-hidden rounded-[24px] border border-[color:var(--border-soft)] bg-[color:var(--surface)]">
                 {ruleId !== 'adjustment' ? (

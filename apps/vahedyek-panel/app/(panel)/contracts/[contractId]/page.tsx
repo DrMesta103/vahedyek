@@ -7,6 +7,7 @@ import { reopenApprovedContractForEditAction } from '../../../actions/contractAp
 import PanelLayout from '../../../components/PanelLayout';
 import { ContractApprovalFlowBanner } from '../../../components/contracts/ContractApprovalFlowBanner';
 import { getContractDetails, setActiveDraftId } from '../../../lib/contractDraftClient';
+import { computeContractTotalRialFromFinancial } from '../../../lib/contractFinancialPricing';
 import type { ContractStatus } from '../../../types/contract';
 
 function formatMoneyRial(value: number) {
@@ -171,28 +172,19 @@ export default function ContractDetailsPage() {
   }, [toast]);
 
   const handleUnderDevelopment = () => {
-    setToast('این بخش در حال توسعه است');
+    setToast('این بخش در حال توسعه است و به‌زودی اضافه می‌شود.');
   };
 
   const actions = useMemo(() => {
     const lockedForApproval = contract?.approvalInstance?.status === 'IN_REVIEW';
     const isFinalizedUi = contract?.status === 'completed';
-    const enabledWhenCompleted = new Set([
-      'reports',
-      'dues',
-      'appendix',
-      'history',
-      'court',
-      'cancel',
-      'unit-handover',
-      'deed',
-      'transfer',
-    ]);
+    /** در قرارداد تکمیل‌شده فقط این موارد فعال می‌مانند؛ بقیه پیام «در حال توسعه». */
+    const enabledWhenCompleted = new Set(['reports', 'dues']);
 
     const enabled = (id: string) => {
       if (id === 'view-draft') return true;
       if (id === 'edit-draft') return !lockedForApproval;
-      if (id === 'docs') return true;
+      if (id === 'docs') return !isFinalizedUi;
       return isFinalizedUi && enabledWhenCompleted.has(id);
     };
 
@@ -224,10 +216,12 @@ export default function ContractDetailsPage() {
     };
 
     const disabledReason = (id: string) => {
-      if (id === 'edit-draft' && lockedForApproval) return 'قفل در فرایند تأیید'
-      if (id === 'build' || id === 'annex') return 'به زودی'
-      if (!isFinalizedUi && enabledWhenCompleted.has(id)) return 'فقط در حالت تکمیل شده'
-      return 'در حال توسعه'
+      if (id === 'edit-draft' && lockedForApproval) return 'قفل در فرایند تأیید';
+      if (id === 'docs' && isFinalizedUi) return 'به‌زودی';
+      if (id === 'build' || id === 'annex') return 'به زودی';
+      if (!isFinalizedUi && enabledWhenCompleted.has(id)) return 'فقط در حالت تکمیل شده';
+      if (isFinalizedUi && !enabled(id)) return 'به‌زودی';
+      return 'در حال توسعه';
     };
 
     return [
@@ -291,12 +285,7 @@ export default function ContractDetailsPage() {
       parties?.partyOne?.[0] ??
       null;
 
-    const parkingArea = Number(financial?.parkingArea || 0);
-    const unitArea = Number(financial?.unitArea || Math.max(Number(financial?.totalArea || 0) - parkingArea, 0));
-    const amount =
-      financial?.pricingType === 'metered'
-        ? unitArea * Number(financial?.pricePerMeter || 0) + parkingArea * Number(financial?.parkingPricePerMeter || 0)
-        : Number(financial?.fixedTotalAmount || 0);
+    const amount = computeContractTotalRialFromFinancial(financial);
 
     const unitName = subject?.unitName ?? '—';
     const unitUsageLabel = getUnitUsageLabel(subject?.unitUsage ?? null);
@@ -458,8 +447,9 @@ export default function ContractDetailsPage() {
                   router.push(`/contracts/${String(contractId)}/reports${q ? `?${q}` : ''}`);
                   return;
                 }
-                if (item.id === 'build' || item.id === 'annex') {
-                  setToast('این قابلیت به زودی اضافه میشه');
+                if (item.id === 'dues') {
+                  const q = searchParams?.toString();
+                  router.push(`/contracts/${String(contractId)}/dues${q ? `?${q}` : ''}`);
                   return;
                 }
                 setActiveDraftId(String(contractId));
