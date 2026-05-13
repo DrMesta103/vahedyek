@@ -5,6 +5,8 @@ import { prisma } from '../../../../lib/prisma';
 import { fetchContractViewForAppendix, resolveAppendixCompareBase, serializeAppendixRecord } from '../../../../lib/appendixServer';
 import type { AppendixTagKey } from '../../../../types/contract';
 import { CONTRACT_APPENDIX_TAG_MAP } from '../../../../lib/contractAppendixConfig';
+import { getContractComparePayload } from '../../../../lib/appendixLifecycle';
+import type { SupportedAppendixTagKey } from '../../../../types/contract';
 
 export async function GET(request: Request, context: { params: Promise<{ appendixId: string }> }) {
   try {
@@ -34,20 +36,13 @@ export async function GET(request: Request, context: { params: Promise<{ appendi
       });
     }
 
-    const payload =
-      tag === 'unit-delivery-date'
-        ? { deliveryDate: contract.data.subject.deliveryDate ?? '' }
-        : tag === 'first-party'
-          ? { parties: contract.data.parties.partyOne ?? [] }
-          : { parties: contract.data.parties.partyTwo ?? [] };
-
     return NextResponse.json({
       sourceKind: 'contract',
       sourceLabel: compareBase.sourceLabel,
       item: {
         tagKey: tag,
         title: CONTRACT_APPENDIX_TAG_MAP.get(tag)?.title ?? tag,
-        payload,
+        payload: getContractComparePayload(contract, tag as SupportedAppendixTagKey),
       },
     });
   } catch (error) {

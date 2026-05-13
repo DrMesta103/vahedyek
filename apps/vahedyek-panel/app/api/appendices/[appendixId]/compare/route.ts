@@ -3,7 +3,8 @@ import { requireSessionContext } from '../../../../lib/auth';
 import { handlePrismaApiError } from '../../../../lib/prismaApiError';
 import { prisma } from '../../../../lib/prisma';
 import { fetchContractViewForAppendix, resolveAppendixCompareBase, serializeAppendixRecord } from '../../../../lib/appendixServer';
-import { buildAppendixCompareRows } from '../../../../lib/appendixLifecycle';
+import { buildAppendixCompareRows, getContractComparePayload } from '../../../../lib/appendixLifecycle';
+import type { SupportedAppendixTagKey } from '../../../../types/contract';
 
 export async function GET(_: Request, context: { params: Promise<{ appendixId: string }> }) {
   try {
@@ -44,16 +45,9 @@ export async function GET(_: Request, context: { params: Promise<{ appendixId: s
         };
       }
 
-      const contractValue =
-        row.tagKey === 'unit-delivery-date'
-          ? contract.data.subject.deliveryDate ?? ''
-          : row.tagKey === 'first-party'
-            ? contract.data.parties.partyOne ?? []
-            : contract.data.parties.partyTwo ?? [];
-
       return {
         ...row,
-        previousPayload: row.tagKey === 'unit-delivery-date' ? { deliveryDate: contractValue } : { parties: contractValue },
+        previousPayload: getContractComparePayload(contract, row.tagKey as SupportedAppendixTagKey),
       };
     });
 

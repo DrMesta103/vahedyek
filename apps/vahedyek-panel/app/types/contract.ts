@@ -10,6 +10,7 @@ export type AppendixTagKey =
   | 'loan'
   | 'adjustment'
   | 'side-costs'
+  | 'contract-base-costs'
   | 'installments'
   | 'prepayment'
   | 'unit-delivery'
@@ -63,6 +64,10 @@ export interface ContractSubjectData {
   deliveryDate: string;
   blockId: string;
   unitId: string;
+  blockName?: string | null;
+  unitName?: string | null;
+  floorName?: string | null;
+  unitUsage?: string | null;
 }
 
 export interface ContractPartiesData {
@@ -88,6 +93,35 @@ export interface FinancialDueItemData {
   title: string;
   amount: number;
   dueDate: string;
+}
+
+export interface AppendixDeliveryDatePayload {
+  previousDate: string;
+  nextDate: string;
+  reason: string;
+}
+
+export interface AppendixPartiesPayload {
+  shareMode: ShareMode;
+  parties: ContractParty[];
+}
+
+export interface AppendixAdjustmentPayload {
+  activeTab: string;
+  categories: FinancialCategoryData[];
+  dueItems: FinancialDueItemData[];
+}
+
+export interface AppendixContractBaseCostsPayload {
+  activeTab: string;
+  categories: FinancialCategoryData[];
+  dueItems: FinancialDueItemData[];
+}
+
+export interface AppendixSideCostsPayload {
+  activeTab: string;
+  categories: FinancialCategoryData[];
+  dueItems: FinancialDueItemData[];
 }
 
 export interface ContractFinancialData {
@@ -360,6 +394,14 @@ export interface ContractAppendixItem {
   description: string;
   payload: Record<string, unknown>;
 }
+
+export type SupportedAppendixTagKey =
+  | 'first-party'
+  | 'second-party'
+  | 'unit-delivery-date'
+  | 'adjustment'
+  | 'contract-base-costs'
+  | 'side-costs';
 
 export interface ContractAppendix {
   id: string;

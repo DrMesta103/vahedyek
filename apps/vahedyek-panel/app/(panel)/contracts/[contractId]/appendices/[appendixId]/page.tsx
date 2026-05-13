@@ -6,6 +6,7 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import PanelLayout from '../../../../../components/PanelLayout';
 import { AppendixApprovalFlowBanner } from '../../../../../components/contracts/appendices/AppendixApprovalFlowBanner';
 import { appendixItemValueText, appendixStatusLabel } from '../../../../../lib/appendixLifecycle';
+import { filterSupportedAppendixTags } from '../../../../../lib/appendixTagSupport';
 import { getAppendixDetails } from '../../../../../lib/contractDraftClient';
 
 export default function AppendixDetailsPage() {
@@ -69,7 +70,11 @@ export default function AppendixDetailsPage() {
                 {data.item.canEdit ? (
                   <button
                     type="button"
-                    onClick={() => router.push(`/contracts/${params.contractId}/appendices/new?appendixId=${encodeURIComponent(String(params.appendixId))}${searchParams?.get('list') ? `&list=${encodeURIComponent(searchParams.get('list') as string)}` : ''}`)}
+                    onClick={() => {
+                      const firstTag = filterSupportedAppendixTags(data.item.items.map((item: any) => item.tagKey))[0];
+                      if (!firstTag) return;
+                      router.push(`/contracts/${params.contractId}/appendices/new/${firstTag}?appendixId=${encodeURIComponent(String(params.appendixId))}${searchParams?.get('list') ? `&list=${encodeURIComponent(searchParams.get('list') as string)}` : ''}`);
+                    }}
                     className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-[12px] font-extrabold text-slate-700"
                   >
                     ویرایش پیش‌نویس

@@ -324,6 +324,10 @@ export function FinancialPaymentFlow({
   showPrincipalSection = true,
   showAdditionalCostsSection = true,
   additionalCostsFooter,
+  showRootCategoryActions = true,
+  showAddCategoryButton = true,
+  additionalSectionTitle = 'سایر هزینه‌ها',
+  additionalSectionDescription = 'تمام ردیف‌های مالی اضافه‌شده و سررسیدهای مرتبط را در این بخش مدیریت کنید.',
 }: {
   categories: FinancialCategoryData[];
   lockedCategoryIds: string[];
@@ -346,6 +350,10 @@ export function FinancialPaymentFlow({
   showPrincipalSection?: boolean;
   showAdditionalCostsSection?: boolean;
   additionalCostsFooter?: ReactNode;
+  showRootCategoryActions?: boolean;
+  showAddCategoryButton?: boolean;
+  additionalSectionTitle?: string;
+  additionalSectionDescription?: string;
 }) {
   const [openLineActionMenuId, setOpenLineActionMenuId] = useState<string | null>(null);
   const principal = categories.find((c) => c.id === 'principal') ?? null;
@@ -446,8 +454,8 @@ export function FinancialPaymentFlow({
       {showAdditionalCostsSection && (financialLineRoots.length || legacySingleCustomCategories.length) ? (
         <section className="rounded-3xl border border-gray-200/80 bg-white/50 p-4 shadow-[0_10px_35px_rgba(15,23,42,0.04)] md:p-5">
           <div className="mb-5 border-b border-gray-200/80 pb-4">
-            <div className="text-xl font-bold text-gray-900">سایر هزینه‌ها</div>
-            <p className="mt-1 text-sm text-gray-500">تمام ردیف‌های مالی اضافه‌شده و سررسیدهای مرتبط را در این بخش مدیریت کنید.</p>
+            <div className="text-xl font-bold text-gray-900">{additionalSectionTitle}</div>
+            <p className="mt-1 text-sm text-gray-500">{additionalSectionDescription}</p>
           </div>
 
           <div className="space-y-6">
@@ -478,7 +486,7 @@ export function FinancialPaymentFlow({
                         {lineExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                       </span>
                     </button>
-                    <div className="relative shrink-0">
+                    {showRootCategoryActions ? <div className="relative shrink-0">
                       <button
                         type="button"
                         onClick={() => setOpenLineActionMenuId((current) => (current === lineHeader.id ? null : lineHeader.id))}
@@ -513,7 +521,7 @@ export function FinancialPaymentFlow({
                           </button>
                         </div>
                       ) : null}
-                    </div>
+                    </div> : null}
                   </div>
 
                   {!lineExpanded ? (
@@ -600,7 +608,7 @@ export function FinancialPaymentFlow({
         </section>
       ) : null}
 
-      {showAdditionalCostsSection ? <div className="flex justify-end border-t border-[#d9dde4] py-4">
+      {showAdditionalCostsSection && showAddCategoryButton ? <div className="flex justify-end border-t border-[#d9dde4] py-4">
         <button
           type="button"
           onClick={onOpenAddCategory}

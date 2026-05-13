@@ -1,13 +1,13 @@
 import type { ContractAppendixStatus as PrismaAppendixStatus } from '@/lib/prisma-client';
 import { CONTRACT_APPENDIX_TAG_MAP } from './contractAppendixConfig';
-import type {
-  AppendixSourceKind,
-  AppendixStatus,
-  AppendixTagKey,
-  ContractAppendix,
-  ContractAppendixItem,
-  ContractPartiesData,
-} from '../types/contract';
+import {
+  APPENDIX_ADJUSTMENT_LINE_ID,
+  APPENDIX_ADJUSTMENT_TITLE,
+  APPENDIX_CONTRACT_BASE_TITLE,
+  createInitialAppendixPayload,
+  getContractBaselinePayload,
+} from './appendixPayloads';
+import type { AppendixSourceKind, AppendixStatus, AppendixTagKey, ContractAppendix, ContractAppendixItem, ContractPartiesData, SupportedAppendixTagKey } from '../types/contract';
 
 type ContractLike = {
   id: string;
@@ -56,14 +56,35 @@ export function buildAppendixSummary(tagKeys: AppendixTagKey[]) {
   return `این متمم برای ${titles.slice(0, -1).join('، ')} و ${titles[titles.length - 1]} ثبت شده است.`;
 }
 
+function summarizeFinancialPayload(item: ContractAppendixItem, headerId: string, defaultTitle: string) {
+  const categories = Array.isArray(item.payload.categories) ? item.payload.categories : [];
+  const dueItems = Array.isArray(item.payload.dueItems) ? item.payload.dueItems : [];
+  const header = categories.find((entry: any) => entry?.id === headerId);
+  const amount = Number(header?.capAmount ?? 0);
+  return [
+    `ردیف مالی ${String(header?.name ?? defaultTitle)}`,
+    amount > 0 ? `سقف مبلغ: ${Math.round(amount).toLocaleString('fa-IR')} تومان` : '',
+    dueItems.length ? `${dueItems.length.toLocaleString('fa-IR')} سررسید ثبت شده` : 'بدون سررسید ثبت‌شده',
+  ]
+    .filter(Boolean)
+    .join(' • ');
+}
+
+function summarizeSideCostsPayload(item: ContractAppendixItem) {
+  const categories = Array.isArray(item.payload.categories) ? item.payload.categories : [];
+  const dueItems = Array.isArray(item.payload.dueItems) ? item.payload.dueItems : [];
+  const roots = categories.filter((entry: any) => typeof entry?.id === 'string' && !String(entry.id).includes(':'));
+  return [
+    `${roots.length.toLocaleString('fa-IR')} ردیف مالی جانبی`,
+    dueItems.length ? `${dueItems.length.toLocaleString('fa-IR')} سررسید ثبت شده` : 'بدون سررسید ثبت‌شده',
+  ].join(' • ');
+}
+
 export function appendixItemValueText(item: ContractAppendixItem) {
   if (item.tagKey === 'unit-delivery-date') {
     const previousDate = String(item.payload.previousDate ?? '').trim();
     const nextDate = String(item.payload.nextDate ?? '').trim();
-    const reason = String(item.payload.reason ?? '').trim();
-    return [previousDate ? `تاریخ قبلی: ${previousDate}` : '', nextDate ? `تاریخ جدید: ${nextDate}` : '', reason ? `شرح: ${reason}` : '']
-      .filter(Boolean)
-      .join(' • ');
+    return [previousDate ? `تاریخ قبلی: ${previousDate}` : '', nextDate ? `تاریخ جدید: ${nextDate}` : ''].filter(Boolean).join(' • ');
   }
 
   if (item.tagKey === 'first-party' || item.tagKey === 'second-party') {
@@ -76,6 +97,18 @@ export function appendixItemValueText(item: ContractAppendixItem) {
         return `${party?.name ?? '—'} (${String(share).replace(/\.0$/, '')} ${mode})`;
       })
       .join(' • ');
+  }
+
+  if (item.tagKey === 'adjustment') {
+    return summarizeFinancialPayload(item, APPENDIX_ADJUSTMENT_LINE_ID, APPENDIX_ADJUSTMENT_TITLE);
+  }
+
+  if (item.tagKey === 'contract-base-costs') {
+    return summarizeFinancialPayload(item, 'principal', APPENDIX_CONTRACT_BASE_TITLE);
+  }
+
+  if (item.tagKey === 'side-costs') {
+    return summarizeSideCostsPayload(item);
   }
 
   return String(item.payload.detailText ?? '').trim() || item.description;
@@ -110,6 +143,33 @@ export function buildContractBaseline(contract: ContractLike) {
       }),
       value: contract.data?.parties?.partyTwo ?? [],
     },
+    adjustment: {
+      sourceKind: 'contract' as const,
+      sourceId: contract.id,
+      sourceLabel: getAppendixPreviousSourceLabel({
+        sourceKind: 'contract',
+        contractNumber: contract.data?.subject?.contractNumber ?? null,
+      }),
+      value: null,
+    },
+    'contract-base-costs': {
+      sourceKind: 'contract' as const,
+      sourceId: contract.id,
+      sourceLabel: getAppendixPreviousSourceLabel({
+        sourceKind: 'contract',
+        contractNumber: contract.data?.subject?.contractNumber ?? null,
+      }),
+      value: null,
+    },
+    'side-costs': {
+      sourceKind: 'contract' as const,
+      sourceId: contract.id,
+      sourceLabel: getAppendixPreviousSourceLabel({
+        sourceKind: 'contract',
+        contractNumber: contract.data?.subject?.contractNumber ?? null,
+      }),
+      value: null,
+    },
   };
 }
 
@@ -135,7 +195,9 @@ export function buildAppendixCompareRows(params: {
       params.previous.sourceItem?.payload ??
       (item.tagKey === 'unit-delivery-date'
         ? { deliveryDate: params.previous.contractValue ?? '' }
-        : { parties: Array.isArray(params.previous.contractValue) ? params.previous.contractValue : [] });
+        : item.tagKey === 'first-party' || item.tagKey === 'second-party'
+          ? { parties: Array.isArray(params.previous.contractValue) ? params.previous.contractValue : [] }
+          : createInitialAppendixPayload(item.tagKey as SupportedAppendixTagKey));
 
     return {
       tagKey: item.tagKey,
@@ -145,4 +207,15 @@ export function buildAppendixCompareRows(params: {
       currentPayload: item.payload,
     };
   });
+}
+
+export function getContractComparePayload(contract: any, tagKey: SupportedAppendixTagKey) {
+  const payload = getContractBaselinePayload(tagKey, contract);
+  if (tagKey === 'unit-delivery-date') {
+    return { deliveryDate: (payload as any).previousDate ?? '' };
+  }
+  if (tagKey === 'first-party' || tagKey === 'second-party') {
+    return { parties: (payload as any).parties ?? [] };
+  }
+  return payload;
 }

@@ -8,6 +8,7 @@ import { AppendixTagPickerDialog } from '../../../../components/contracts/append
 import { AppendixTimelineCard } from '../../../../components/contracts/appendices/AppendixTimelineCard';
 import { useAppToast } from '../../../../components/feedback/AppToastProvider';
 import { deleteContractAppendix, getContractAppendices, getContractDetails } from '../../../../lib/contractDraftClient';
+import { filterSupportedAppendixTags } from '../../../../lib/appendixTagSupport';
 import type { AppendixTagKey, ContractAppendix, ContractAppendixReferenceData } from '../../../../types/contract';
 
 function getBuyerName(parties: any) {
@@ -95,9 +96,10 @@ export default function ContractAppendicesPage() {
   };
 
   const goToCreate = () => {
-    if (!contractId || selectedTags.length === 0) return;
+    const supportedTags = filterSupportedAppendixTags(selectedTags);
+    if (!contractId || supportedTags.length === 0) return;
     const next = new URLSearchParams();
-    next.set('tags', selectedTags.join(','));
+    next.set('tags', supportedTags.join(','));
     const list = searchParams?.get('list');
     if (list) next.set('list', list);
     router.push(`/contracts/${contractId}/appendices/new?${next.toString()}`);

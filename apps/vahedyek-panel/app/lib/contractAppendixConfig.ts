@@ -13,9 +13,13 @@ export const CONTRACT_APPENDIX_TAG_GROUPS: Array<{
     tags: [
       { key: 'loan', groupKey: 'financial', title: 'وام', description: 'تغییر یا ثبت اطلاعات وام' },
       { key: 'adjustment', groupKey: 'financial', title: 'تعدیل', description: 'اعمال تعدیل در ارقام قرارداد' },
+      {
+        key: 'contract-base-costs',
+        groupKey: 'financial',
+        title: 'هزینه های اصل قرارداد',
+        description: 'اصلاح ردیف مالی مبلغ اصل قرارداد',
+      },
       { key: 'side-costs', groupKey: 'financial', title: 'هزینه های جانبی', description: 'افزودن یا اصلاح هزینه‌های جانبی' },
-      { key: 'installments', groupKey: 'financial', title: 'اقساط', description: 'بازتنظیم برنامه اقساط' },
-      { key: 'prepayment', groupKey: 'financial', title: 'پیش پرداخت', description: 'تغییر مبلغ یا شرایط پیش‌پرداخت' },
       { key: 'unit-delivery', groupKey: 'financial', title: 'تحویل واحد', description: 'تغییرات مالی مرتبط با تحویل واحد' },
       { key: 'forgiveness', groupKey: 'financial', title: 'بخشودگی', description: 'بخشودگی اقلام قرارداد' },
       { key: 'contract-costs', groupKey: 'financial', title: 'هزینه مربوط به قرارداد', description: 'هزینه‌های جدید مربوط به قرارداد' },
@@ -25,7 +29,7 @@ export const CONTRACT_APPENDIX_TAG_GROUPS: Array<{
   {
     key: 'conditions',
     title: 'انتخاب نوع الحاقیه های شرایط',
-    helper: 'در این بخش می‌توانید مشخص کنید که چه الحاقیه شرایطی را می‌خواهید به قرارداد خود اضافه کنید',
+    helper: 'در این بخش می‌توانید مشخص کنید که چه الحاقیه شرطی را می‌خواهید به قرارداد خود اضافه کنید',
     tags: [
       { key: 'workshop-conditions', groupKey: 'conditions', title: 'شرایط ساخت', description: 'اصلاح شرایط ساخت و تعهدات پروژه' },
       { key: 'arbitration', groupKey: 'conditions', title: 'داوری', description: 'تغییر در بندهای داوری و حل اختلاف' },

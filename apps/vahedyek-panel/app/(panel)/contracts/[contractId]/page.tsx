@@ -1,13 +1,13 @@
 'use client';
 
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
-import { AlertTriangle, ArrowRight, X } from 'lucide-react';
+import { AlertTriangle, ArrowRight, History, X } from 'lucide-react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { reopenApprovedContractForEditAction } from '../../../actions/contractApprovalActions';
 import PanelLayout from '../../../components/PanelLayout';
 import { ContractApprovalFlowBanner } from '../../../components/contracts/ContractApprovalFlowBanner';
 import { useAppToast } from '../../../components/feedback/AppToastProvider';
-import { getContractDetails, setActiveDraftId } from '../../../lib/contractDraftClient';
+import { getContractAppendices, getContractDetails, setActiveDraftId } from '../../../lib/contractDraftClient';
 import { computeContractTotalRialFromFinancial } from '../../../lib/contractFinancialPricing';
 import type { ContractStatus } from '../../../types/contract';
 
@@ -128,6 +128,150 @@ function getUnitUsageLabel(usage: string | null | undefined) {
   }
 }
 
+type ContractHistoryStage = {
+  id: string;
+  kind: 'contract' | 'appendix';
+  order: number;
+  title: string;
+  subtitle: string;
+  tags: string[];
+  href: string;
+  label: string;
+};
+
+function buildHistoryStages(contractId: string, contract: any, appendices: any[]): ContractHistoryStage[] {
+  const contractStage: ContractHistoryStage = {
+    id: `contract-${contractId}`,
+    kind: 'contract',
+    order: 1,
+    title: 'اصل قرارداد',
+    subtitle: 'نسخه اولیه و اصلی قرارداد',
+    tags: ['قرارداد پایه'],
+    href: `/contracts/${contractId}/preview`,
+    label: contract?.data?.subject?.contractNumber ? `نسخه: ${contract.data.subject.contractNumber}` : 'نسخه پایه قرارداد',
+  };
+
+  const appendixStages = appendices
+    .filter((item) => item?.status === 'completed')
+    .sort((a, b) => Number(a.appendixNumber ?? 0) - Number(b.appendixNumber ?? 0))
+    .map((item, index) => ({
+      id: item.id,
+      kind: 'appendix' as const,
+      order: index + 2,
+      title: `متمم ${Number(item.appendixNumber ?? index + 1).toLocaleString('fa-IR')}`,
+      subtitle: String(item.summary ?? 'نسخه الحاقیه تاییدشده'),
+      tags: Array.isArray(item.items) ? item.items.map((entry: any) => String(entry.title ?? entry.tagKey ?? '—')).filter(Boolean) : [],
+      href: `/contracts/${contractId}/appendices/${item.id}`,
+      label: `شماره متمم: ${Number(item.appendixNumber ?? index + 1).toLocaleString('fa-IR')}`,
+    }));
+
+  return [contractStage, ...appendixStages];
+}
+
+function ContractHistorySection({
+  stages,
+  selectedStageId,
+  onSelect,
+}: {
+  stages: ContractHistoryStage[];
+  selectedStageId: string | null;
+  onSelect: (stageId: string) => void;
+}) {
+  if (!stages.length) return null;
+
+  const selectedStage = stages.find((stage) => stage.id === selectedStageId) ?? stages[stages.length - 1] ?? stages[0];
+  const isSingleStage = stages.length === 1;
+
+  return (
+    <section className="contract-details-panel mt-4 overflow-hidden rounded-[34px] border border-slate-200/80 bg-white/95 p-5 shadow-[0_24px_64px_-36px_rgba(15,23,42,0.24)] sm:p-6">
+      <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+          <div className="order-1 text-right lg:order-2">
+            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-white px-5 py-2.5 text-[14px] font-black text-emerald-700 shadow-sm">
+              <span className="h-3 w-3 rounded-full bg-emerald-600" />
+              وضعیت فعلی: {selectedStage.title}
+            </div>
+          </div>
+          <div className="order-2 text-right lg:order-1">
+            <div className="flex items-center justify-end gap-3">
+              <History className="h-7 w-7 text-[color:var(--dark-teal)]" aria-hidden />
+              <h2 className="text-[28px] font-black text-slate-900">تاریخچه‌ی قرارداد</h2>
+            </div>
+            <p className="mt-2 text-[15px] font-medium leading-7 text-slate-500">وضعیت فعلی قرارداد و نسخه‌های آن را در اینجا مشاهده کنید.</p>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto pb-1">
+          <div
+            className={`mx-auto flex items-start ${isSingleStage ? 'justify-center px-2' : 'min-w-[820px] justify-between gap-6 px-4 lg:px-8'}`}
+            dir="rtl"
+          >
+            {stages.map((stage, index) => {
+              const selected = stage.id === selectedStage.id;
+              const nextStage = stages[index + 1] ?? null;
+              const connectorActive = selected || nextStage?.id === selectedStage.id;
+
+              return (
+                <div key={stage.id} className={`flex items-start ${isSingleStage ? 'w-full max-w-[280px] justify-center' : 'flex-1 gap-4'}`}>
+                  <div className="flex flex-1 flex-col items-center text-center">
+                    <button type="button" onClick={() => onSelect(stage.id)} className="group flex w-full flex-col items-center text-center">
+                      <span
+                        className={`relative inline-flex h-[74px] w-[74px] items-center justify-center rounded-full border-2 text-[24px] font-black transition ${
+                          selected
+                            ? 'border-emerald-500 bg-white text-slate-900 shadow-[0_16px_34px_rgba(13,148,136,0.18)]'
+                            : 'border-slate-200 bg-white text-slate-800 group-hover:border-emerald-300'
+                        }`}
+                      >
+                        {selected ? <span className="absolute inset-[3px] rounded-full border border-emerald-300" /> : null}
+                        <span className="relative z-[1]">{stage.order.toLocaleString('fa-IR')}</span>
+                      </span>
+                      {selected ? (
+                        <span className="mt-[-1px] h-0 w-0 border-x-[11px] border-t-[18px] border-x-transparent border-t-emerald-600" aria-hidden />
+                      ) : (
+                        <span className="mt-3 block h-[14px]" aria-hidden />
+                      )}
+                      <div className="mt-3 text-[17px] font-black text-slate-900">{stage.title}</div>
+                      <p className={`mt-2 max-w-[250px] text-[14px] leading-7 text-slate-500 ${isSingleStage ? '' : 'min-h-[48px]'}`}>{stage.subtitle}</p>
+                    </button>
+
+                    <div className={`mt-4 flex flex-wrap items-center justify-center gap-2 ${isSingleStage ? '' : 'min-h-[36px]'}`}>
+                      {stage.tags.slice(0, 3).map((tag, tagIndex) => {
+                        const accentClass =
+                          tagIndex % 3 === 0
+                            ? 'border-emerald-100 bg-emerald-50 text-emerald-700'
+                            : tagIndex % 3 === 1
+                              ? 'border-rose-100 bg-rose-50 text-rose-600'
+                              : 'border-slate-200 bg-slate-100 text-slate-600';
+
+                        return (
+                          <span key={`${stage.id}-${tag}`} className={`rounded-full border px-4 py-1.5 text-[12px] font-black ${accentClass}`}>
+                            {tag}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {index < stages.length - 1 ? (
+                    <div className="mt-[36px] flex min-w-[120px] flex-1 items-center" aria-hidden>
+                      <div
+                        className={`h-[3px] w-full rounded-full ${
+                          connectorActive ? 'bg-emerald-600' : 'border-t-2 border-dashed border-slate-300 bg-transparent'
+                        }`}
+                      />
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+      </div>
+    </section>
+  );
+}
+
 export default function ContractDetailsPage() {
   const params = useParams<{ contractId: string }>();
   const router = useRouter();
@@ -136,6 +280,8 @@ export default function ContractDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [contract, setContract] = useState<any>(null);
+  const [appendices, setAppendices] = useState<any[]>([]);
+  const [selectedHistoryStageId, setSelectedHistoryStageId] = useState<string | null>(null);
   const [reopenEditDialogOpen, setReopenEditDialogOpen] = useState(false);
   const [reopenEditBusy, setReopenEditBusy] = useState(false);
   const { showError } = useAppToast();
@@ -145,8 +291,9 @@ export default function ContractDetailsPage() {
     setError('');
     try {
       setLoading(true);
-      const data = await getContractDetails(String(contractId));
+      const [data, appendixData] = await Promise.all([getContractDetails(String(contractId)), getContractAppendices(String(contractId))]);
       setContract(data);
+      setAppendices(appendixData.items.filter((item) => item.status === 'completed'));
     } catch (e) {
       setError(e instanceof Error ? e.message : 'دریافت جزئیات قرارداد انجام نشد.');
     } finally {
@@ -165,6 +312,16 @@ export default function ContractDetailsPage() {
     window.addEventListener('contract-approval-updated', onUpdated);
     return () => window.removeEventListener('contract-approval-updated', onUpdated);
   }, [reloadContract]);
+
+  const historyStages = useMemo(() => (contractId && contract ? buildHistoryStages(String(contractId), contract, appendices) : []), [appendices, contract, contractId]);
+
+  useEffect(() => {
+    if (!historyStages.length) {
+      setSelectedHistoryStageId(null);
+      return;
+    }
+    setSelectedHistoryStageId((current) => (current && historyStages.some((stage) => stage.id === current) ? current : historyStages[historyStages.length - 1]?.id ?? historyStages[0]?.id ?? null));
+  }, [historyStages]);
 
   const handleUnderDevelopment = () => {
     showError('این بخش در حال توسعه است و به‌زودی اضافه می‌شود.');
@@ -337,9 +494,11 @@ export default function ContractDetailsPage() {
         </Suspense>
       ) : null}
 
-      <Suspense fallback={null}>
-        <ContractListContextSection status={(contract?.status as ContractStatus) ?? 'draft'} />
-      </Suspense>
+      <ContractHistorySection
+        stages={historyStages}
+        selectedStageId={selectedHistoryStageId}
+        onSelect={setSelectedHistoryStageId}
+      />
 
       <section className="contract-details-panel contract-details-profile">
         <div className="min-w-0 flex-1">

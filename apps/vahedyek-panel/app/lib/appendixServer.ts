@@ -1,10 +1,20 @@
 import { ContractType, PartySide, PersonType, PricingType, ShareMode, type Prisma } from '@/lib/prisma-client';
 import { prisma } from './prisma';
 import { buildAppendixSummary, getAppendixPreviousSourceLabel, serializeAppendixStatus } from './appendixLifecycle';
+import { normalizeAreaPricingMode } from './contractFinancialPricing';
+import {
+  mapFinancialCategoriesForClientApi,
+  mapFinancialDueItemsForClientApi,
+  resolveFinancialActiveTabForClientApi,
+} from './financialCategoriesApiSerialize';
 import type { AppendixSourceKind, AppendixTagKey, ContractAppendix, ContractPartiesData } from '../types/contract';
 
 function serializeShareMode(value: ShareMode) {
   return value === ShareMode.percent ? 'percent' : 'dang';
+}
+
+function serializePricingType(value: PricingType) {
+  return value === PricingType.metered ? 'metered' : 'fixed';
 }
 
 export async function fetchContractViewForAppendix(tenantId: string, contractId: string) {
@@ -16,7 +26,7 @@ export async function fetchContractViewForAppendix(tenantId: string, contractId:
       updatedAt: true,
       subject: { include: { block: true, unit: true } },
       parties: { include: { members: { orderBy: { createdAt: 'asc' } } } },
-      financial: true,
+      financial: { include: { categories: true, dueItems: true } },
       appendices: {
         where: { status: 'APPROVED' },
         orderBy: { appendixNumber: 'desc' },
@@ -55,6 +65,39 @@ export async function fetchContractViewForAppendix(tenantId: string, contractId:
       }
     : null;
 
+  const financial = draft.financial
+    ? (() => {
+        const financialId = draft.financial.id;
+        const categories = mapFinancialCategoriesForClientApi(financialId, draft.financial.categories);
+        const categoryLogicalIds = new Set(categories.map((item) => item.id));
+        const dueItems = mapFinancialDueItemsForClientApi(financialId, draft.financial.dueItems);
+        const activeTab = resolveFinancialActiveTabForClientApi(
+          financialId,
+          draft.financial.activeTab,
+          categoryLogicalIds,
+          categories[0]?.id ?? '',
+        );
+
+        return {
+          pricingType: serializePricingType(draft.financial.pricingType),
+          areaPricingMode: normalizeAreaPricingMode(draft.financial.areaPricingMode),
+          unitArea: draft.financial.unitArea ? String(Number(draft.financial.unitArea)) : '',
+          parkingArea: draft.financial.parkingArea ? String(Number(draft.financial.parkingArea)) : '',
+          storageArea: draft.financial.storageArea ? String(Number(draft.financial.storageArea)) : '',
+          totalArea: draft.financial.totalArea ? String(Number(draft.financial.totalArea)) : '',
+          pricePerMeter: draft.financial.pricePerMeter ? String(Number(draft.financial.pricePerMeter)) : '',
+          parkingPricePerMeter: draft.financial.parkingPricePerMeter ? String(Number(draft.financial.parkingPricePerMeter)) : '',
+          storagePricePerMeter: draft.financial.storagePricePerMeter ? String(Number(draft.financial.storagePricePerMeter)) : '',
+          fixedTotalAmount: draft.financial.fixedTotalAmount ? String(Number(draft.financial.fixedTotalAmount)) : '',
+          parkingFixedAmount: draft.financial.parkingFixedAmount ? String(Number(draft.financial.parkingFixedAmount)) : '',
+          storageFixedAmount: draft.financial.storageFixedAmount ? String(Number(draft.financial.storageFixedAmount)) : '',
+          activeTab,
+          categories,
+          dueItems,
+        };
+      })()
+    : null;
+
   return {
     id: draft.id,
     status: 'completed' as const,
@@ -80,7 +123,7 @@ export async function fetchContractViewForAppendix(tenantId: string, contractId:
           }
         : null,
       parties,
-      financial: null,
+      financial,
     },
   };
 }

@@ -2,6 +2,7 @@
 
 import { X } from 'lucide-react';
 import { CONTRACT_APPENDIX_TAG_GROUPS } from '../../../lib/contractAppendixConfig';
+import { isSupportedAppendixTag } from '../../../lib/appendixTagSupport';
 import type { AppendixTagKey } from '../../../types/contract';
 import { Button } from '../../ui/button';
 
@@ -67,15 +68,19 @@ export function AppendixTagPickerDialog({
                 <div className="mt-4 flex flex-wrap justify-end gap-2.5">
                   {group.tags.map((tag) => {
                     const active = selectedTags.includes(tag.key);
+                    const supported = isSupportedAppendixTag(tag.key);
                     return (
                       <button
                         key={tag.key}
                         type="button"
-                        onClick={() => onToggleTag(tag.key)}
+                        onClick={() => supported && onToggleTag(tag.key)}
+                        disabled={!supported}
                         className={`inline-flex min-h-[40px] items-center gap-2 rounded-full border px-4 py-2 text-[13px] font-bold transition ${
                           active
                             ? 'border-[color-mix(in_srgb,var(--dark-teal)_50%,transparent)] bg-[color-mix(in_srgb,var(--dark-teal)_12%,white)] text-[color-mix(in_srgb,var(--dark-teal)_95%,black)]'
-                            : 'border-slate-300 bg-white text-slate-700 hover:border-slate-400'
+                            : supported
+                              ? 'border-slate-300 bg-white text-slate-700 hover:border-slate-400'
+                              : 'cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400'
                         }`}
                         aria-pressed={active}
                       >
@@ -85,6 +90,7 @@ export function AppendixTagPickerDialog({
                           </span>
                         ) : null}
                         {tag.title}
+                        {!supported ? <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-black text-slate-500">به‌زودی</span> : null}
                       </button>
                     );
                   })}

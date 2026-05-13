@@ -2,13 +2,13 @@ import { NextResponse } from 'next/server';
 import type { Prisma } from '@/lib/prisma-client';
 import { requireSessionContext } from '../../../../lib/auth';
 import { getAppendixTagDefinition } from '../../../../lib/contractAppendixConfig';
-import { validateShares } from '../../../../lib/contractValidation';
 import { prisma } from '../../../../lib/prisma';
 import { handlePrismaApiError } from '../../../../lib/prismaApiError';
 import type { CreateContractAppendixInput } from '../../../../types/contract';
 import { buildAppendixSummary } from '../../../../lib/appendixLifecycle';
 import { fetchContractViewForAppendix, findPreviousApprovedAppendix, sanitizeAppendixPayload, serializeAppendixRecord } from '../../../../lib/appendixServer';
 import { submitAppendixApprovalWorkflow } from '../../../../lib/appendixApprovalCore';
+import { isSupportedAppendixPayloadTag, normalizeAppendixPayload, validateAppendixPayload } from '../../../../lib/appendixPayloads';
 
 function resolveIssuerName(params: {
   issuerType: string;
@@ -139,15 +139,18 @@ export async function POST(request: Request, context: { params: Promise<{ contra
       seen.add(item.tagKey);
 
       const cleanPayload = item.payload && typeof item.payload === 'object' ? item.payload : {};
-      if (item.tagKey === 'unit-delivery-date') {
-        const previousDate = String((cleanPayload as any).previousDate ?? '').trim();
-        const nextDate = String((cleanPayload as any).nextDate ?? '').trim();
-        if (!previousDate || !nextDate) throw new Error('INVALID_DELIVERY_DATE_PAYLOAD');
-      }
-      if (item.tagKey === 'first-party' || item.tagKey === 'second-party') {
-        const shareMode = ((cleanPayload as any).shareMode ?? 'dang') as 'dang' | 'percent';
-        const parties = Array.isArray((cleanPayload as any).parties) ? (cleanPayload as any).parties : [];
-        if (!parties.length || !validateShares(parties, shareMode).valid) throw new Error('INVALID_PARTIES_APPENDIX_PAYLOAD');
+      let payloadToStore = cleanPayload;
+      if (isSupportedAppendixPayloadTag(item.tagKey)) {
+        const normalizedPayload = normalizeAppendixPayload(item.tagKey, cleanPayload);
+        const validationMessage = validateAppendixPayload(item.tagKey, normalizedPayload);
+        if (validationMessage) {
+          if (item.tagKey === 'unit-delivery-date') throw new Error('INVALID_DELIVERY_DATE_PAYLOAD');
+          if (item.tagKey === 'first-party' || item.tagKey === 'second-party') throw new Error('INVALID_PARTIES_APPENDIX_PAYLOAD');
+          if (item.tagKey === 'adjustment') throw new Error('INVALID_ADJUSTMENT_APPENDIX_PAYLOAD');
+          if (item.tagKey === 'contract-base-costs') throw new Error('INVALID_CONTRACT_BASE_COSTS_APPENDIX_PAYLOAD');
+          if (item.tagKey === 'side-costs') throw new Error('INVALID_SIDE_COSTS_APPENDIX_PAYLOAD');
+        }
+        payloadToStore = normalizedPayload as unknown as Record<string, unknown>;
       }
 
       return {
@@ -155,7 +158,7 @@ export async function POST(request: Request, context: { params: Promise<{ contra
         groupKey: def.groupKey,
         title: def.title,
         description: def.description,
-        payload: sanitizeAppendixPayload(cleanPayload) as Prisma.InputJsonValue,
+        payload: sanitizeAppendixPayload(payloadToStore) as Prisma.InputJsonValue,
       };
     });
 
@@ -200,6 +203,9 @@ export async function POST(request: Request, context: { params: Promise<{ contra
       if (error.message === 'DUPLICATE_APPENDIX_TAG') return NextResponse.json({ message: 'تگ تکراری برای متمم ارسال شده است.' }, { status: 400 });
       if (error.message === 'INVALID_DELIVERY_DATE_PAYLOAD') return NextResponse.json({ message: 'برای متمم تاریخ تحویل واحد باید تاریخ قبلی و جدید ثبت شود.' }, { status: 400 });
       if (error.message === 'INVALID_PARTIES_APPENDIX_PAYLOAD') return NextResponse.json({ message: 'اطلاعات طرفین متمم کامل یا معتبر نیست.' }, { status: 400 });
+      if (error.message === 'INVALID_ADJUSTMENT_APPENDIX_PAYLOAD') return NextResponse.json({ message: 'اطلاعات ردیف مالی تعدیل معتبر نیست.' }, { status: 400 });
+      if (error.message === 'INVALID_CONTRACT_BASE_COSTS_APPENDIX_PAYLOAD') return NextResponse.json({ message: 'اطلاعات ردیف مالی اصل قرارداد معتبر نیست.' }, { status: 400 });
+      if (error.message === 'INVALID_SIDE_COSTS_APPENDIX_PAYLOAD') return NextResponse.json({ message: 'اطلاعات ردیف های مالی جانبی معتبر نیست.' }, { status: 400 });
     }
     return handlePrismaApiError(error);
   }
