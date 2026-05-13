@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '../../../lib/prisma';
 import { getSessionContext } from '../../../lib/auth';
 import { sanitizeIranMobileInput } from '../../../lib/contact';
+import { getEmployeeIdsForUser } from '../../../lib/employeeIdentity';
 
 export async function POST(request: NextRequest) {
   try {
@@ -26,7 +27,7 @@ export async function POST(request: NextRequest) {
       ? await prisma.employee.findFirst({
           where: {
             tenantId: session.tenantId,
-            id: existingUser.id,
+            id: { in: getEmployeeIdsForUser(session.tenantId, existingUser.id) },
           },
         })
       : null;

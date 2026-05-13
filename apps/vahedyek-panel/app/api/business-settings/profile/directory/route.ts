@@ -55,8 +55,30 @@ export async function GET(request: Request) {
     const directory = Array.isArray(rows[0]?.profilePayload?.directory) ? rows[0]?.profilePayload?.directory ?? [] : [];
     const normalizedPhoneQuery = normalizePhone(query);
     const normalizedEmailQuery = normalizeEmail(query);
+    const tenantMembers = await prisma.userTenantMembership.findMany({
+      where: { tenantId: session.tenantId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            mobile: true,
+          },
+        },
+      },
+    });
+    const tenantUserIds = new Set(tenantMembers.map((membership) => membership.userId));
+    const tenantUserEmails = new Set(tenantMembers.map((membership) => normalizeAuthEmail(membership.user.email ?? '')).filter(Boolean));
+    const tenantUserMobiles = new Set(tenantMembers.map((membership) => normalizePhone(membership.user.mobile ? `+98${membership.user.mobile}` : '')).filter(Boolean));
+    const isTenantDirectoryCandidate = (item: DirectoryCandidate) => {
+      if (!item.linkedUser) return true;
+      if (tenantUserIds.has(item.id)) return true;
+      if (item.email && tenantUserEmails.has(normalizeAuthEmail(item.email))) return true;
+      return Boolean(item.mobile && tenantUserMobiles.has(normalizePhone(item.mobile)));
+    };
 
     const items = directory
+      .filter(isTenantDirectoryCandidate)
       .filter((item) => {
         const phoneMatch =
           Boolean(normalizedPhoneQuery) &&
@@ -71,13 +93,27 @@ export async function GET(request: Request) {
     const appUsers =
       identifier.type === 'email'
         ? await prisma.appUser.findMany({
-            where: { email: identifier.value },
+            where: {
+              email: identifier.value,
+              memberships: {
+                some: {
+                  tenantId: session.tenantId,
+                },
+              },
+            },
             select: { id: true, firstName: true, lastName: true, fullName: true, email: true, mobile: true },
             take: 5,
           })
         : identifier.type === 'mobile'
           ? await prisma.appUser.findMany({
-              where: { mobile: sanitizeIranMobileInput(identifier.value) },
+              where: {
+                mobile: sanitizeIranMobileInput(identifier.value),
+                memberships: {
+                  some: {
+                    tenantId: session.tenantId,
+                  },
+                },
+              },
               select: { id: true, firstName: true, lastName: true, fullName: true, email: true, mobile: true },
               take: 5,
             })

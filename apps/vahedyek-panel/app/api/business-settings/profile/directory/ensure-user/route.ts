@@ -47,6 +47,20 @@ export async function POST(request: Request) {
     }
 
     let user = emailOwner ?? mobileOwner;
+    const existingMembership = user
+      ? await prisma.userTenantMembership.findUnique({
+          where: {
+            userId_tenantId: {
+              userId: user.id,
+              tenantId: session.tenantId,
+            },
+          },
+        })
+      : null;
+
+    if (user && !existingMembership && !hasExplicitName && !body.roleKey) {
+      return NextResponse.json({ message: 'Ú©Ø§Ø±Ø¨Ø±ÛŒ Ø¨Ø±Ø§ÛŒ Ø§ÛŒÙ† ØªÙ†Ù†Øª ÛŒØ§ÙØª Ù†Ø´Ø¯.' }, { status: 404 });
+    }
 
     if (!user) {
       const { passwordHash, passwordSalt } = hashPassword(DEFAULT_PASSWORD);

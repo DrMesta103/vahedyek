@@ -10,27 +10,20 @@ export async function GET() {
       return NextResponse.json({ message: 'احراز هویت نشده.' }, { status: 401 });
     }
 
-    const [memberships, suggestedBusinessNames] = await Promise.all([
-      prisma.userTenantMembership.findMany({
-        where: { userId: session.userId },
-        include: {
-          tenant: {
-            select: {
-              id: true,
-              name: true,
-              slug: true,
-              brandCode: true,
-            },
+    const memberships = await prisma.userTenantMembership.findMany({
+      where: { userId: session.userId },
+      include: {
+        tenant: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            brandCode: true,
           },
         },
-        orderBy: { createdAt: 'asc' },
-      }),
-      prisma.tenant.findMany({
-        select: { name: true },
-        orderBy: { createdAt: 'desc' },
-        take: 18,
-      }),
-    ]);
+      },
+      orderBy: { createdAt: 'asc' },
+    });
 
     return NextResponse.json({
       tenants: memberships.map((m) => ({
@@ -40,7 +33,7 @@ export async function GET() {
         brandCode: m.tenant.brandCode,
         role: m.role,
       })),
-      suggestedBusinessNames: Array.from(new Set(suggestedBusinessNames.map((item) => item.name))).slice(0, 12),
+      suggestedBusinessNames: memberships.map((membership) => membership.tenant.name),
     });
   } catch (error) {
     return handlePrismaApiError(error);

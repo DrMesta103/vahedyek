@@ -272,6 +272,7 @@ type SubgroupDetailRow = {
 function buildSubgroupDetailRows(
   group: FinancialReportGroup,
   groupMetrics: SummaryFinancialRowMetrics | undefined,
+  paidByCategoryId: Map<string, number>,
 ): SubgroupDetailRow[] {
   const penaltyPool = groupMetrics?.penaltyTotalRial ?? null;
   const penaltyPaidPool = groupMetrics?.penaltyPaidRial ?? null;
@@ -310,7 +311,6 @@ function buildSubgroupDetailRows(
 
   const penParts = splitPool(penaltyPool);
   const penPaidParts = splitPool(penaltyPaidPool);
-  const paidParts = splitPool(paidPool);
 
   return group.subRows.map((s, idx) => ({
     id: s.id,
@@ -318,7 +318,7 @@ function buildSubgroupDetailRows(
     lineBaseRial: Math.max(0, s.capRial),
     penaltyTotalRial: penParts[idx] ?? null,
     penaltyPaidRial: penPaidParts[idx] ?? null,
-    paidTotalRial: paidParts[idx] ?? null,
+    paidTotalRial: Math.round(paidByCategoryId.get(String(s.id)) ?? 0),
   }));
 }
 
@@ -523,8 +523,8 @@ export default function ContractReportsPage() {
   );
 
   const subgroupDetailRows = useMemo(
-    () => (selectedReportGroup ? buildSubgroupDetailRows(selectedReportGroup, selectedGroupSummary) : []),
-    [selectedReportGroup, selectedGroupSummary],
+    () => (selectedReportGroup ? buildSubgroupDetailRows(selectedReportGroup, selectedGroupSummary, paidByCategoryId) : []),
+    [selectedReportGroup, selectedGroupSummary, paidByCategoryId],
   );
 
   const subgroupDetailFooter = useMemo(() => {

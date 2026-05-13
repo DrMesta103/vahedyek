@@ -224,7 +224,16 @@ export function EmployeeManagementPanel() {
     if (!source) {
       const raw = query.trim();
       if (!isValidMobile(raw) && !isValidEmail(raw)) return;
+      const nextForm = normalizeForm(null, raw);
+      setForm(nextForm);
+      setShowSecondaryMobile(Boolean(nextForm.secondaryMobile));
+      setShowEmailField(Boolean(nextForm.email));
+      setEditingContact(null);
+      setSubmitError(null);
+      setStep('details');
+      return;
 
+      /*
       setCreatingLookupUser(true);
       try {
         const user = await ensureUserAccount({
@@ -241,6 +250,7 @@ export function EmployeeManagementPanel() {
       } finally {
         setCreatingLookupUser(false);
       }
+      */
     }
 
     const nextForm = normalizeForm(source, query.trim());
@@ -368,6 +378,7 @@ export function EmployeeManagementPanel() {
                   onChange={(value) => {
                     setQuery(value.slice(0, 80));
                     setSelected(null);
+                    setResults([]);
                     setSubmitError(null);
                   }}
                   icon={Search}

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, type ElementType } from 'react';
+import { useRouter } from 'next/navigation';
 import { ChevronLeft, CircleDollarSign, CirclePercent, Filter, Layers3 } from 'lucide-react';
 import type { ContractRuleState } from '../../../lib/businessContractRules';
 import { DISCOUNT_GROUPS, ITEMIZED_DISCOUNT_ENTRIES, WHOLE_DISCOUNT_ENTRY } from '../../contracts/new/_components/discountsConfig';
@@ -162,6 +163,7 @@ export function DiscountRuleSection({
   state: ContractRuleState;
   onValueChange: (key: string, value: string | boolean) => void;
 }) {
+  const router = useRouter();
   const [pendingScope, setPendingScope] = useState<DiscountScope | null>(null);
 
   const selectedGroup = (state.activeChip || '') as DiscountGroupId | '';
@@ -349,10 +351,10 @@ export function DiscountRuleSection({
             </div>
           )}
 
-          <div className="border-t border-[#415769] pt-6">
+          <div>
             <button
               type="button"
-              onClick={() => onValueChange('discountConditionConfigured', !discountConditionConfigured)}
+              onClick={() => router.push('/business-settings/contract-rules/discount/condition')}
               className="flex w-full items-center justify-between rounded-[20px] border border-[color:var(--border-soft)] bg-[color:var(--surface)] px-5 py-5 text-right transition hover:border-[color:var(--theme-action-border)] hover:bg-[color:var(--surface-soft)]"
             >
               <div className="flex-1">

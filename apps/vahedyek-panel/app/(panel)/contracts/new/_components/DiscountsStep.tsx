@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { ChevronLeft, Plus, Save, X } from 'lucide-react';
 import { Input, StickySubmitBar } from '@repo/ui';
 import { ContractStepLoader } from './ContractStepLoader';
+import { DiscountConditionPanel, type DiscountConditionValues } from './DiscountConditionPanel';
 import { FieldLabel } from './FieldLabel';
 import { TagPills } from './ContractFormPrimitives';
 import { DISCOUNT_GROUPS, ITEMIZED_DISCOUNT_ENTRIES, WHOLE_DISCOUNT_ENTRY, getDiscountEntry } from './discountsConfig';
@@ -54,6 +55,13 @@ function makeEmptyRule(discountTypeId: string): DiscountRuleData {
     minValue: '',
     maxValue: '',
     conditionNote: '',
+    conditionConfigured: true,
+    conditionMaxDelayCount: '',
+    conditionGraceDays: '',
+    conditionDueBasis: ['all-payment-types'],
+    conditionKeepOnDelay: false,
+    conditionPenaltyOnDiscount: false,
+    conditionSettlementTiming: 'unit-handover',
     managerApproval: false,
     approvalThreshold: '',
   };
@@ -68,6 +76,13 @@ function normalizeRule(rule: DiscountRuleData): DiscountRuleData {
     minValue: String(rule.minValue ?? ''),
     maxValue: String(rule.maxValue ?? ''),
     conditionNote: String(rule.conditionNote ?? ''),
+    conditionConfigured: Boolean(rule.conditionConfigured),
+    conditionMaxDelayCount: String(rule.conditionMaxDelayCount ?? ''),
+    conditionGraceDays: String(rule.conditionGraceDays ?? ''),
+    conditionDueBasis: Array.isArray(rule.conditionDueBasis) && rule.conditionDueBasis.length ? rule.conditionDueBasis : ['all-payment-types'],
+    conditionKeepOnDelay: Boolean(rule.conditionKeepOnDelay),
+    conditionPenaltyOnDiscount: Boolean(rule.conditionPenaltyOnDiscount),
+    conditionSettlementTiming: String(rule.conditionSettlementTiming ?? 'unit-handover'),
     approvalThreshold: String(rule.approvalThreshold ?? ''),
   };
 }
@@ -105,6 +120,25 @@ function formatRuleSummary(rule: DiscountRuleData) {
       : getDiscountEntry('itemized', rule.entryId)?.title ?? 'تخفیف موردی';
   const range = `${rule.minValue || '0'} تا ${rule.maxValue || '0'} ${unit}`;
   return `${target} - ${range}`;
+}
+
+function getConditionValues(rule: DiscountRuleData): DiscountConditionValues {
+  return {
+    maxDelayCount: String(rule.conditionMaxDelayCount ?? ''),
+    graceDays: String(rule.conditionGraceDays ?? ''),
+    dueBasis: Array.isArray(rule.conditionDueBasis) && rule.conditionDueBasis.length ? rule.conditionDueBasis : ['all-payment-types'],
+    keepOnDelay: Boolean(rule.conditionKeepOnDelay),
+    penaltyOnDiscount: Boolean(rule.conditionPenaltyOnDiscount),
+    settlementTiming: String(rule.conditionSettlementTiming ?? 'unit-handover'),
+  };
+}
+
+function describeCondition(values: DiscountConditionValues) {
+  const pieces = [];
+  if (values.maxDelayCount) pieces.push(`حداکثر ${values.maxDelayCount} تاخیر`);
+  if (values.graceDays) pieces.push(`${values.graceDays} روز مهلت تنفس`);
+  if (values.dueBasis.length) pieces.push(`${values.dueBasis.length} مبنای سررسید`);
+  return pieces.join('، ');
 }
 
 function ToggleSwitch({
@@ -289,6 +323,25 @@ export function DiscountsStep({ stepId, title, embedded = false }: { stepId: str
 
     if (rule.managerApproval && !(threshold > 0)) {
       return 'آستانه تایید مدیر را وارد کنید.';
+    }
+
+    if (rule.conditionConfigured) {
+      const maxDelayCountRaw = String(rule.conditionMaxDelayCount ?? '').trim();
+      const graceDaysRaw = String(rule.conditionGraceDays ?? '').trim();
+      const maxDelayCount = Number(maxDelayCountRaw.replace(/,/g, ''));
+      const graceDays = Number(graceDaysRaw.replace(/,/g, ''));
+      if (!maxDelayCountRaw || !Number.isFinite(maxDelayCount) || maxDelayCount < 0) {
+        return 'حداکثر تعداد دفعات تاخیر را وارد کنید.';
+      }
+      if (!graceDaysRaw || !Number.isFinite(graceDays) || graceDays < 0) {
+        return 'مهلت تنفس شرط تخفیف را وارد کنید.';
+      }
+      if (!Array.isArray(rule.conditionDueBasis) || rule.conditionDueBasis.length === 0) {
+        return 'حداقل یک سررسید متاثر از شرط تخفیف را انتخاب کنید.';
+      }
+      if (!String(rule.conditionSettlementTiming ?? '').trim()) {
+        return 'زمان تسویه تخفیف را انتخاب کنید.';
+      }
     }
 
     return '';
@@ -556,6 +609,28 @@ export function DiscountsStep({ stepId, title, embedded = false }: { stepId: str
                                   placeholder="شرط اعمال این تخفیف را بنویسید."
                                 />
                               </FieldBlock>
+
+                              <DiscountConditionPanel
+                                compact
+                                values={getConditionValues(ruleForm)}
+                                onChange={(patch) =>
+                                  setRuleForm((current) => {
+                                    const nextCondition = { ...getConditionValues(current), ...patch };
+                                    return {
+                                      ...current,
+                                      discountTypeId: type.id,
+                                      conditionConfigured: true,
+                                      conditionMaxDelayCount: nextCondition.maxDelayCount,
+                                      conditionGraceDays: nextCondition.graceDays,
+                                      conditionDueBasis: nextCondition.dueBasis,
+                                      conditionKeepOnDelay: nextCondition.keepOnDelay,
+                                      conditionPenaltyOnDiscount: nextCondition.penaltyOnDiscount,
+                                      conditionSettlementTiming: nextCondition.settlementTiming,
+                                      conditionNote: describeCondition(nextCondition),
+                                    };
+                                  })
+                                }
+                              />
 
                               <div className="space-y-4 rounded-2xl border border-cyan-100 bg-cyan-50 p-4">
                                 <div className="flex items-center justify-between gap-4">

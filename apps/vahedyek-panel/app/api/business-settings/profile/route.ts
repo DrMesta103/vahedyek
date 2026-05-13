@@ -39,6 +39,7 @@ async function getProfileMeta(
   ]);
 
   return {
+    tenantId,
     businessName,
     slug: tenant?.slug ?? '',
     brandCode: tenant?.brandCode ?? 'VN',
