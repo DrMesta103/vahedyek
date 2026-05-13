@@ -831,6 +831,22 @@ export function normalizeRuleState(ruleId: ContractRuleId, payload: unknown): Co
     });
   });
 
+  if (ruleId === 'discount') {
+    const extraDiscountKeys = [
+      'discountConditionMaxDelayCount',
+      'discountConditionGraceDays',
+      'discountConditionDueBasis',
+      'discountConditionSettlementTiming',
+    ];
+    extraDiscountKeys.forEach((key) => {
+      const rawValue = valuesInput[key];
+      values[key] = typeof rawValue === 'string' ? rawValue : '';
+    });
+    ['discountConditionKeepOnDelay', 'discountConditionPenaltyOnDiscount'].forEach((key) => {
+      values[key] = Boolean(valuesInput[key]);
+    });
+  }
+
   const activeTab = typeof input.activeTab === 'string' && rule.tabs.some((tab) => tab.id === input.activeTab) ? input.activeTab : initial.activeTab;
   const activeChip =
     rule.chips && typeof input.activeChip === 'string' && rule.chips.includes(input.activeChip)

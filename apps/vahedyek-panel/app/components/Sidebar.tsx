@@ -160,7 +160,7 @@ export default function Sidebar({ activeItem = 'home', forceCollapsed = false, l
           item.disabled ? (
             <div
               key={item.id}
-              className="menu-link"
+              className={`menu-link${activeItem === item.id ? ' active' : ''}`}
               aria-disabled="true"
               title={item.label}
               style={{ opacity: 0.5, cursor: 'not-allowed', pointerEvents: 'none' }}

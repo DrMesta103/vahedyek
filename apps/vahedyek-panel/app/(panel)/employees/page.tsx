@@ -3,6 +3,7 @@ import PanelLayout from '../../components/PanelLayout';
 import { EmployeeList } from './_components/EmployeeList';
 import { prisma } from '../../lib/prisma';
 import { getSessionContext } from '../../lib/auth';
+import { getEmployeeUserId } from '../../lib/employeeIdentity';
 import './employees.css';
 
 async function getEmployees() {
@@ -17,7 +18,7 @@ async function getEmployees() {
   const users = await prisma.appUser.findMany({
     where: {
       id: {
-        in: employees.map((item) => item.id),
+        in: employees.map((item) => getEmployeeUserId(item.id, session.tenantId)),
       },
     },
     select: {
@@ -28,15 +29,18 @@ async function getEmployees() {
   });
   const usersById = new Map(users.map((item) => [item.id, item]));
 
-  return employees.map((emp) => ({
-    id: emp.id,
-    firstName: emp.firstName,
-    lastName: emp.lastName,
-    nationalCode: emp.nationalCode ?? '',
-    mobile: usersById.get(emp.id)?.mobile ? `+98${usersById.get(emp.id)?.mobile}` : '',
-    email: usersById.get(emp.id)?.email ?? '',
-    isActive: emp.isActive,
-  }));
+  return employees.map((emp) => {
+    const user = usersById.get(getEmployeeUserId(emp.id, session.tenantId));
+    return {
+      id: emp.id,
+      firstName: emp.firstName,
+      lastName: emp.lastName,
+      nationalCode: emp.nationalCode ?? '',
+      mobile: user?.mobile ? `+98${user.mobile}` : '',
+      email: user?.email ?? '',
+      isActive: emp.isActive,
+    };
+  });
 }
 
 export default async function EmployeesPage() {

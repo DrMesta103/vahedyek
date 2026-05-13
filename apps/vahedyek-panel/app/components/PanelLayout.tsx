@@ -20,6 +20,23 @@ type Crumb = {
   href?: string;
 };
 
+function pathnameMatchesHref(pathname: string, href: string) {
+  return href !== '#' && (pathname === href || pathname.startsWith(`${href}/`));
+}
+
+function resolveActiveItem(pathname: string) {
+  if (pathname === '/') return 'home';
+
+  const matchedMenuItem = currentAppConfig.menuItems
+    .filter((item) => pathnameMatchesHref(pathname, item.href))
+    .sort((a, b) => b.href.length - a.href.length)[0];
+
+  if (matchedMenuItem) return matchedMenuItem.id;
+
+  const matchedModule = currentAppConfig.modules.find((module) => pathname.startsWith(module.routePrefix));
+  return matchedModule?.id ?? 'home';
+}
+
 const STEP_LABELS: Record<string, string> = {
   subject: 'اطلاعات پایه',
   parties: 'طرفین',
@@ -410,51 +427,53 @@ export default function PanelLayout({ children }: PanelLayoutProps) {
   const isContractReportsPage = /^\/contracts\/[^/]+\/reports(?:\/|$)/.test(pathname);
 
   const { activeItem, trail } = useMemo(() => {
+    const resolvedActiveItem = resolveActiveItem(pathname);
+
     if (pathname === '/') {
       return {
-        activeItem: 'home',
+        activeItem: resolvedActiveItem,
         trail: [{ label: 'خانه اپ' }],
       };
     }
 
     if (pathname.startsWith('/draft-templates')) {
       return {
-        activeItem: 'draft-templates',
+        activeItem: resolvedActiveItem,
         trail: buildDraftTemplateBreadcrumb(pathname),
       };
     }
 
     if (pathname.startsWith('/contracts')) {
       return {
-        activeItem: 'contracts',
+        activeItem: resolvedActiveItem,
         trail: buildContractsBreadcrumb(pathname),
       };
     }
 
     if (pathname.startsWith('/complex')) {
       return {
-        activeItem: 'complex',
+        activeItem: resolvedActiveItem,
         trail: [{ label: 'جزئیات مجتمع' }],
       };
     }
 
     if (pathname.startsWith('/business-settings')) {
       return {
-        activeItem: 'business',
+        activeItem: resolvedActiveItem,
         trail: buildBusinessSettingsBreadcrumb(pathname),
       };
     }
 
     if (pathname.startsWith('/settings')) {
       return {
-        activeItem: 'settings',
+        activeItem: resolvedActiveItem,
         trail: [{ label: 'تنظیمات کلی' }],
       };
     }
 
     if (pathname.startsWith('/dev-doc-threads')) {
       return {
-        activeItem: 'home',
+        activeItem: resolvedActiveItem,
         trail: [{ label: 'برد گفت‌وگوهای مستندات' }],
       };
     }
@@ -462,13 +481,13 @@ export default function PanelLayout({ children }: PanelLayoutProps) {
     const matchedModule = currentAppConfig.modules.find((module) => pathname.startsWith(module.routePrefix));
     if (matchedModule) {
       return {
-        activeItem: matchedModule.id,
+        activeItem: resolvedActiveItem,
         trail: [{ label: matchedModule.label, href: matchedModule.routePrefix }],
       };
     }
 
     return {
-      activeItem: 'home',
+      activeItem: resolvedActiveItem,
       trail: [{ label: 'خانه اپ' }],
     };
   }, [pathname]);

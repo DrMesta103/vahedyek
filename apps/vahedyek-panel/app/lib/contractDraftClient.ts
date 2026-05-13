@@ -73,7 +73,16 @@ async function readJson<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
     }
 
     const message = await response.text();
-    throw new Error(message || 'خطا در ارتباط با سرور');
+    const normalizedMessage = message.trim();
+    const isHtmlError =
+      normalizedMessage.startsWith('<!DOCTYPE html') ||
+      normalizedMessage.startsWith('<html') ||
+      contentType.includes('text/html');
+
+    if (isHtmlError) {
+      throw new Error(response.status === 404 ? 'صفحه یا مسیر درخواستی یافت نشد.' : 'خطا در ارتباط با سرور');
+    }
+    throw new Error(normalizedMessage || 'خطا در ارتباط با سرور');
   }
 
   return response.json() as Promise<T>;

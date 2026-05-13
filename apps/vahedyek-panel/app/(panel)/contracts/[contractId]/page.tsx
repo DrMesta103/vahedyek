@@ -455,7 +455,7 @@ export default function ContractDetailsPage() {
       setReopenEditDialogOpen(false);
       window.dispatchEvent(new Event('contract-approval-updated'));
       setActiveDraftId(String(contractId));
-      router.push('/contracts/new');
+      router.push(`/contracts/${encodeURIComponent(String(contractId))}/edit`);
     } finally {
       setReopenEditBusy(false);
     }
@@ -650,7 +650,7 @@ export default function ContractDetailsPage() {
                   return;
                 }
                 setActiveDraftId(String(contractId));
-                router.push('/contracts/new');
+                router.push(`/contracts/${encodeURIComponent(String(contractId))}/edit`);
               };
 
               return (

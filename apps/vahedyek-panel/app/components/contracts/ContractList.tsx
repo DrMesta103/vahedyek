@@ -39,7 +39,7 @@ export default function ContractList({ blocks, units = [] }: ContractListProps) 
 
   const handleEdit = (id: string) => {
     setActiveDraftId(id);
-    router.push('/contracts/new');
+    router.push(`/contracts/${encodeURIComponent(id)}/edit`);
   };
 
   const hasScopedResults = Boolean(

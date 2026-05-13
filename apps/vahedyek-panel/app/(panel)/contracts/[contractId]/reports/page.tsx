@@ -293,13 +293,13 @@ function buildSubgroupDetailRows(group: FinancialReportGroup, summaryByCategoryI
   return group.subRows.map((s) => {
     const metrics = summaryByCategoryId.get(s.id);
     return {
-    id: s.id,
-    label: s.label,
-    lineBaseRial: Math.max(0, s.capRial),
-    penaltyTotalRial: metrics?.penaltyTotalRial ?? null,
-    penaltyPaidRial: metrics?.penaltyPaidRial ?? null,
-    paidTotalRial: metrics?.paidTotalRial ?? null,
-  };
+      id: s.id,
+      label: s.label,
+      lineBaseRial: Math.max(0, s.capRial),
+      penaltyTotalRial: metrics?.penaltyTotalRial ?? null,
+      penaltyPaidRial: metrics?.penaltyPaidRial ?? null,
+      paidTotalRial: metrics?.paidTotalRial ?? null,
+    };
   });
 }
 

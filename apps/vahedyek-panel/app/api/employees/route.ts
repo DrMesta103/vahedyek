@@ -4,6 +4,7 @@ import { buildFieldDiffs, getActorName, recordAuditLog } from '../../lib/audit-l
 import { getSessionContext, hashPassword } from '../../lib/auth';
 import { ensureMembershipRoleByKey, ensureTenantDefaultRoles } from '../../lib/access-control';
 import { normalizeEmail, sanitizeIranMobileInput } from '../../lib/contact';
+import { buildTenantEmployeeId, getEmployeeIdsForUser } from '../../lib/employeeIdentity';
 import { handlePrismaApiError } from '../../lib/prismaApiError';
 
 const DEFAULT_EMPLOYEE_PASSWORD = '123456';
@@ -94,42 +95,59 @@ export async function POST(request: NextRequest) {
 
     await ensureMembershipRoleByKey(membership.id, session.tenantId, 'employee');
 
-    const employeeId = user.id;
-
-    const existing = await prisma.employee.findFirst({
+    const employeeIdsForUser = getEmployeeIdsForUser(session.tenantId, user.id);
+    const existingUserEmployeeInCurrentTenant = await prisma.employee.findFirst({
       where: {
         tenantId: session.tenantId,
-        OR: [{ id: employeeId }, { nationalCode }],
+        id: { in: employeeIdsForUser },
       },
     });
+    const existingUserEmployeeInOtherTenant = await prisma.employee.findFirst({
+      where: {
+        tenantId: { not: session.tenantId },
+        id: user.id,
+      },
+      select: { id: true },
+    });
+    const employeeId = existingUserEmployeeInCurrentTenant?.id ?? (existingUserEmployeeInOtherTenant ? buildTenantEmployeeId(session.tenantId, user.id) : user.id);
 
-    if (existing && existing.id !== employeeId) {
+    const [existingById, existingByNationalCode] = await Promise.all([
+      prisma.employee.findFirst({
+        where: {
+          tenantId: session.tenantId,
+          id: employeeId,
+        },
+      }),
+      prisma.employee.findFirst({
+        where: {
+          tenantId: session.tenantId,
+          nationalCode,
+        },
+      }),
+    ]);
+
+    if (existingByNationalCode && existingByNationalCode.id !== employeeId) {
       return NextResponse.json({ error: 'Employee already exists' }, { status: 409 });
     }
 
-    const employee = existing
-      ? await prisma.employee.update({
-          where: {
-            id: existing.id,
-            tenantId: session.tenantId,
-          },
-          data: {
-            firstName,
-            lastName,
-            nationalCode,
-            isActive: true,
-          },
-        })
-      : await prisma.employee.create({
-          data: {
-            id: employeeId,
-            tenantId: session.tenantId,
-            firstName,
-            lastName,
-            nationalCode,
-            isActive: true,
-          },
-        });
+    const existing = existingById ?? existingByNationalCode;
+    const employee = await prisma.employee.upsert({
+      where: { id: employeeId },
+      update: {
+        firstName,
+        lastName,
+        nationalCode,
+        isActive: true,
+      },
+      create: {
+        id: employeeId,
+        tenantId: session.tenantId,
+        firstName,
+        lastName,
+        nationalCode,
+        isActive: true,
+      },
+    });
     await recordAuditLog({
       tenantId: session.tenantId,
       actorUserId: session.userId,

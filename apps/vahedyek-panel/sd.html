@@ -114,6 +114,10 @@
             font-weight: bold; color: #111827;
         }
 
+        .menu-link.active i {
+            color: #111827;
+        }
+
         /* باکس دعوت سایدبار */
         .invite-section {
             background: linear-gradient(to bottom, #a7f3d0, #6ee7b7);
@@ -386,6 +390,16 @@
 
         </div>
     </main>
+
+    <script>
+        document.querySelectorAll('.menu-link').forEach((link) => {
+            link.addEventListener('click', (event) => {
+                event.preventDefault();
+                document.querySelectorAll('.menu-link.active').forEach((item) => item.classList.remove('active'));
+                link.classList.add('active');
+            });
+        });
+    </script>
 
 </body>
 </html>

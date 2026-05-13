@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import { currentAppConfig } from '../config/current';
 import { requireSessionContext } from './auth';
+import { getEmployeeUserId } from './employeeIdentity';
 import { prisma } from './prisma';
+import { PartySide } from './prisma-client';
 import {
   filterMenuByPermissions,
   getAllPermissionKeys,
@@ -50,12 +52,108 @@ const DEFAULT_ROLE_PERMISSION_KEYS: Record<string, string[]> = {
   customer: ['customers.view'],
 };
 
+const CUSTOMER_CONTRACTS_MENU_ID = 'customer-contracts';
+const BUSINESS_PROFILE_TABLE_NAME = '"TenantBusinessProfileSettings"';
+
 function unique(values: string[]) {
   return Array.from(new Set(values.filter(Boolean)));
 }
 
 function toAllowedMenuItemIds(access: Pick<AccessSnapshot, 'isOwner' | 'permissionKeys'>) {
   return filterMenuByPermissions(currentAppConfig.menuItems, access).map((item) => item.id);
+}
+
+function normalizeText(value: unknown) {
+  return typeof value === 'string' ? value.trim().toLowerCase() : '';
+}
+
+function normalizePhone(value: unknown) {
+  return typeof value === 'string' ? value.trim().replace(/[^\d]/g, '') : '';
+}
+
+function collectBuyerIdsForUser(profilePayload: unknown, user: { email: string | null; mobile: string | null }) {
+  const payload = profilePayload && typeof profilePayload === 'object' ? (profilePayload as Record<string, unknown>) : {};
+  const targetEmail = normalizeText(user.email);
+  const targetPhone = normalizePhone(user.mobile);
+  const matchesUser = (record: Record<string, unknown>) => {
+    const email = normalizeText(record.email);
+    const phones = [record.mobile, record.secondaryMobile, record.contactNumber].map(normalizePhone);
+    return Boolean((targetEmail && email && targetEmail === email) || (targetPhone && phones.includes(targetPhone)));
+  };
+
+  const buyerIds: string[] = [];
+
+  for (const item of Array.isArray(payload.naturalBuyers) ? payload.naturalBuyers : []) {
+    if (item && typeof item === 'object' && matchesUser(item as Record<string, unknown>)) {
+      buyerIds.push(String((item as { id?: unknown }).id ?? ''));
+    }
+  }
+
+  for (const item of Array.isArray(payload.legalBuyers) ? payload.legalBuyers : []) {
+    if (!item || typeof item !== 'object') continue;
+    const buyer = item as Record<string, unknown>;
+    const representatives = Array.isArray(buyer.representatives) ? buyer.representatives : [];
+    if (representatives.some((rep) => rep && typeof rep === 'object' && matchesUser(rep as Record<string, unknown>))) {
+      buyerIds.push(String((buyer as { id?: unknown }).id ?? ''));
+    }
+  }
+
+  return unique(buyerIds);
+}
+
+async function getBuyerIdsForUserProfile(tenantId: string, user: { email: string | null; mobile: string | null }) {
+  try {
+    const rows = await prisma.$queryRawUnsafe<Array<{ profilePayload: unknown }>>(
+      `SELECT "profilePayload" FROM ${BUSINESS_PROFILE_TABLE_NAME} WHERE "tenantId" = $1 LIMIT 1`,
+      tenantId,
+    );
+
+    return collectBuyerIdsForUser(rows[0]?.profilePayload, user);
+  } catch {
+    return [];
+  }
+}
+
+async function hasPartyTwoContract(userId: string, tenantId: string) {
+  const user = await prisma.appUser.findUnique({
+    where: { id: userId },
+    select: { id: true, fullName: true, email: true, mobile: true },
+  });
+
+  if (!user) return false;
+
+  const profileBuyerIds = await getBuyerIdsForUserProfile(tenantId, user);
+  const partyIds = unique([user.id, ...profileBuyerIds]);
+  const partyNames = unique([user.fullName.trim()]);
+  const partyConditions = [
+    ...partyIds.flatMap((id) => [{ personId: id }, { directoryId: id }]),
+    ...partyNames.map((name) => ({ name })),
+  ];
+
+  if (!partyConditions.length) return false;
+
+  const count = await prisma.contractDraft.count({
+    where: {
+      tenantId,
+      parties: {
+        members: {
+          some: {
+            side: PartySide.party_two,
+            OR: partyConditions,
+          },
+        },
+      },
+    },
+  });
+
+  return count > 0;
+}
+
+async function applyContextualMenuAccess(userId: string, tenantId: string, allowedMenuItemIds: string[]) {
+  const canSeeCustomerContracts = await hasPartyTwoContract(userId, tenantId);
+  if (canSeeCustomerContracts) return unique([...allowedMenuItemIds, CUSTOMER_CONTRACTS_MENU_ID]);
+
+  return allowedMenuItemIds.filter((id) => id !== CUSTOMER_CONTRACTS_MENU_ID);
 }
 
 export async function ensureTenantDefaultRoles(tenantId: string) {
@@ -146,7 +244,7 @@ export async function ensureEmployeeMembershipRoles(tenantId: string) {
 
   if (!employees.length) return;
 
-  const employeeUserIds = employees.map((employee) => employee.id);
+  const employeeUserIds = employees.map((employee) => getEmployeeUserId(employee.id, tenantId));
   const users = await prisma.appUser.findMany({
     where: { id: { in: employeeUserIds } },
     select: { id: true },
@@ -230,12 +328,17 @@ async function buildOwnerRowFallbackAccess(userId: string, tenantId: string) {
   }
 
   const allKeys = getAllPermissionKeys();
+  const allowedMenuItemIds = await applyContextualMenuAccess(
+    userId,
+    tenantId,
+    toAllowedMenuItemIds({ isOwner: true, permissionKeys: allKeys }),
+  );
   return {
     membership,
     isOwner: true,
     roleLabels: ['صاحب کسب‌وکار'],
     permissionKeys: allKeys,
-    allowedMenuItemIds: toAllowedMenuItemIds({ isOwner: true, permissionKeys: allKeys }),
+    allowedMenuItemIds,
   };
 }
 
@@ -271,7 +374,11 @@ export async function getMembershipAccess(userId: string, tenantId: string) {
       isOwner,
       roleLabels,
       permissionKeys,
-      allowedMenuItemIds: toAllowedMenuItemIds({ isOwner, permissionKeys }),
+      allowedMenuItemIds: await applyContextualMenuAccess(
+        userId,
+        tenantId,
+        toAllowedMenuItemIds({ isOwner, permissionKeys }),
+      ),
     };
 
     return {
@@ -315,7 +422,11 @@ export async function getMembershipAccess(userId: string, tenantId: string) {
       isOwner,
       roleLabels,
       permissionKeys,
-      allowedMenuItemIds: toAllowedMenuItemIds({ isOwner, permissionKeys }),
+      allowedMenuItemIds: await applyContextualMenuAccess(
+        userId,
+        tenantId,
+        toAllowedMenuItemIds({ isOwner, permissionKeys }),
+      ),
     };
   } catch (error) {
     console.error('Legacy access lookup failed. Trying owner-row fallback.', error);

@@ -210,6 +210,7 @@ export type ProfileStore = {
 };
 
 export type ProfileMeta = {
+  tenantId?: string;
   businessName: string;
   slug: string;
   brandCode: string;
@@ -649,7 +650,21 @@ export function buildRepresentativeFullName(firstName?: string, lastName?: strin
 }
 
 export function getDefaultProfileStore(): ProfileStore {
-  return JSON.parse(JSON.stringify(defaultStore)) as ProfileStore;
+  const store = JSON.parse(JSON.stringify(defaultStore)) as ProfileStore;
+  return {
+    ...store,
+    principalPartners: [],
+    naturalShareholders: [],
+    legalShareholders: [],
+    naturalCustomers: [],
+    legalCustomers: [],
+    naturalBuyers: [],
+    legalBuyers: [],
+    representatives: [],
+    boardMembers: [],
+    directory: [],
+    bankAccounts: [],
+  };
 }
 
 function mergeProfileStore(parsed: unknown): ProfileStore {
@@ -718,14 +733,19 @@ export function loadProfileStore(): ProfileStore {
     return getDefaultProfileStore();
   }
 
-  const parsed = safeParse(window.localStorage.getItem(PROFILE_STORAGE_KEY));
+  const parsed = safeParse(window.localStorage.getItem(getProfileStorageKey()));
   if (!parsed) return getDefaultProfileStore();
   return mergeProfileStore(parsed);
 }
 
 export function saveProfileStore(store: ProfileStore) {
   if (typeof window === 'undefined') return;
-  window.localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(store));
+  window.localStorage.setItem(getProfileStorageKey(), JSON.stringify(store));
+}
+
+function getProfileStorageKey(tenantId?: string | null) {
+  const effectiveTenantId = tenantId || (typeof window !== 'undefined' ? window.sessionStorage.getItem('active-tenant-id') : null);
+  return effectiveTenantId ? `${PROFILE_STORAGE_KEY}:${effectiveTenantId}` : `${PROFILE_STORAGE_KEY}:unscoped`;
 }
 
 export async function fetchProfileStore() {
@@ -744,7 +764,10 @@ export async function fetchProfilePayload() {
       throw new Error(`profile_fetch_failed:${response.status}`);
     }
 
-    const payload = (await response.json()) as { store?: unknown; meta?: Partial<ProfileMeta> };
+    const payload = (await response.json()) as { store?: unknown; meta?: Partial<ProfileMeta> & { tenantId?: string } };
+    if (payload.meta?.tenantId && typeof window !== 'undefined') {
+      window.sessionStorage.setItem('active-tenant-id', payload.meta.tenantId);
+    }
     const merged = mergeProfileStore(payload.store ?? {});
     saveProfileStore(merged);
     return {

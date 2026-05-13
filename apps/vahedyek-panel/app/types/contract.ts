@@ -196,6 +196,13 @@ export interface DiscountRuleData {
   minValue: string;
   maxValue: string;
   conditionNote: string;
+  conditionConfigured?: boolean;
+  conditionMaxDelayCount?: string;
+  conditionGraceDays?: string;
+  conditionDueBasis?: string[];
+  conditionKeepOnDelay?: boolean;
+  conditionPenaltyOnDiscount?: boolean;
+  conditionSettlementTiming?: string;
   managerApproval: boolean;
   approvalThreshold: string;
 }
