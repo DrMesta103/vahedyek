@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { ContractType, ContractorType } from '@prisma/client';
+import { ContractType, ContractorType } from '../app/lib/prisma-client';
 import { validateStep1 } from '../app/lib/contractValidation';
 import { parseContractorType, parseContractType, serializeContractorType, serializeContractType } from '../app/lib/subjectUtils';
 import type { ContractSubjectData } from '../app/types/contract';

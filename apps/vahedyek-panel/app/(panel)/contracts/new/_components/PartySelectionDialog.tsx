@@ -18,6 +18,7 @@ export function PartySelectionDialog({
   onCreateItem,
   onAddSelected,
   loading,
+  returnToOverride,
 }: {
   open: boolean;
   onClose: () => void;
@@ -30,6 +31,7 @@ export function PartySelectionDialog({
   onCreateItem: (personType: PersonType, name: string) => Promise<DirectoryItem | null>;
   onAddSelected: (items: DirectoryItem[]) => void;
   loading: boolean;
+  returnToOverride?: string;
 }) {
   const router = useRouter();
   const labels = getEntityLabels(kind);
@@ -235,12 +237,12 @@ export function PartySelectionDialog({
             type="button"
             onClick={() => {
               if (kind === 'buyer') {
-                const returnTo = '/contracts/new?buyerDialog=1';
+                const returnTo = returnToOverride ?? '/contracts/new?buyerDialog=1';
                 router.push(`/business-settings/profile/buyers/new?kind=${personTab}&tab=${personTab}&returnTo=${encodeURIComponent(returnTo)}`);
                 return;
               }
               if (kind === 'partner') {
-                const returnTo = '/contracts/new?partnerDialog=1';
+                const returnTo = returnToOverride ?? '/contracts/new?partnerDialog=1';
                 if (partnerSource === 'partners') {
                   router.push(
                     `/business-settings/profile/partners/new?title=${encodeURIComponent('ثبت شریک')}&returnTo=${encodeURIComponent(returnTo)}`,

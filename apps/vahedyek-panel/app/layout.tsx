@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { currentAppConfig } from './config/current';
+import { AppToastProvider } from './components/feedback/AppToastProvider';
 import { ThemeInitScript } from './components/theme/ThemeInitScript';
 import { ThemeProvider } from './components/theme/ThemeProvider';
 import { LocatorRuntime } from './components/LocatorRuntime';
@@ -23,7 +24,9 @@ export default function RootLayout({
       </head>
       <body>
         <LocatorRuntime />
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <AppToastProvider>{children}</AppToastProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

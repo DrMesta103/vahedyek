@@ -6,6 +6,7 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import PanelLayout from '../../../../components/PanelLayout';
 import { DueMonthAccordionList, type DueRegisterReceiptPayload } from '../../../../components/contracts/DueMonthAccordionList';
 import { RegisterReceiptDialog } from '../../../../components/contracts/RegisterReceiptDialog';
+import { useAppToast } from '../../../../components/feedback/AppToastProvider';
 import { buildReceiptAllocation, type DueReceiptAllocationSummary } from '../../../../lib/contractReceiptAllocation';
 import {
   getReceiptsStorageKey,
@@ -15,8 +16,8 @@ import {
   type RegisteredReceiptRecord,
 } from '../../../../lib/contractReceipts';
 import { getContractDetails } from '../../../../lib/contractDraftClient';
-import { buildPaymentHistoryMonthBuckets, resolveDueRegisterPayload } from '../../../../lib/contractPaymentMonthBuckets';
-import { estimateContractPenaltiesTotalRial } from '../../../../lib/estimateContractPenalties';
+import { resolveDueRegisterPayload } from '../../../../lib/contractPaymentMonthBuckets';
+import { buildContractPenaltyTimeline } from '../../../../lib/contractPenaltyEngine';
 
 function formatMoneyRial(valueRial: number) {
   if (!valueRial) return '۰ ریال';
@@ -27,16 +28,16 @@ const TT_CONTRACT_BASE_EX_PENALTY =
   'سقف مالی قرارداد بر پایه مبلغ اصل ثبت‌شده یا محاسبه متراژ/مبلغ ثابت است؛ جریمه در این رقم لحاظ نشده است.';
 
 const TT_PAID_EX_PENALTY =
-  'جمع مبلغ فیش‌های ثبت‌شده برای این قرارداد؛ جریمه در مدل فعلی فیش تفکیک نشده و این رقم عملاً «پرداخت غیرجریمه‌ای» محسوب می‌شود.';
+  'جمع پرداخت‌هایی که روی ردیف‌های اصل بدهی تخصیص یافته‌اند؛ پرداخت‌های تخصیص‌یافته به جریمه از این عدد جدا شده‌اند.';
 
 const TT_PENALTY_TOTAL =
-  'جمع پیشنهادی از روی قوانین فعال ذخیره‌شده برای این قرارداد؛ محاسبه قطعی روزشمار نیست.';
+  'جمع جریمه‌های محاسبه‌شده از روی قوانین فعال قرارداد تا تاریخ امروز، بر اساس سررسیدهای واقعی و مهلت تنفس.';
 
 const TT_PENALTY_PAID =
-  'مجموع پرداخت‌های مربوط به جریمه؛ پس از اتصال API از سرور بارگذاری می‌شود.';
+  'مجموع پرداخت‌هایی که در تخصیص زمانی روی ردیف‌های جریمه نشسته‌اند.';
 
 const TT_TOTAL_DEBT =
-  'جمع مانده سررسیدها پس از تخصیص فیش‌ها به علاوهٔ ماندهٔ جریمهٔ تخمینی؛ با ماندهٔ هر ردیف در همین صفحه هم‌راستا است.';
+  'جمع مانده همه ردیف‌های اصل بدهی و جریمه پس از تخصیص فیش‌ها روی timeline مشترک.';
 
 type ReceiptDetailsState = {
   payload: DueRegisterReceiptPayload;
@@ -53,13 +54,13 @@ export default function ContractDuesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [contract, setContract] = useState<any>(null);
-  const [toast, setToast] = useState('');
   const [registerReceiptContext, setRegisterReceiptContext] = useState<DueRegisterReceiptPayload | null>(null);
   const [autoReceiptOpen, setAutoReceiptOpen] = useState(false);
   const [registeredReceipts, setRegisteredReceipts] = useState<RegisteredReceiptRecord[]>([]);
   const [receiptDetails, setReceiptDetails] = useState<ReceiptDetailsState>(null);
   const [editingReceipt, setEditingReceipt] = useState<RegisteredReceiptRecord | null>(null);
   const [editingDueContext, setEditingDueContext] = useState<DueRegisterReceiptPayload | null>(null);
+  const { showError, showSuccess } = useAppToast();
 
   const listQuery = searchParams?.toString();
   const receiptRowId = searchParams?.get('receiptRowId') ?? '';
@@ -86,12 +87,6 @@ export default function ContractDuesPage() {
   }, [contractId]);
 
   useEffect(() => {
-    if (!toast) return;
-    const t = window.setTimeout(() => setToast(''), 2400);
-    return () => window.clearTimeout(t);
-  }, [toast]);
-
-  useEffect(() => {
     if (!contractId || typeof window === 'undefined') return;
     try {
       const raw = window.localStorage.getItem(getReceiptsStorageKey(String(contractId)));
@@ -101,25 +96,17 @@ export default function ContractDuesPage() {
     }
   }, [contractId]);
 
-  const financialCategories = Array.isArray(contract?.data?.financial?.categories)
-    ? contract.data.financial.categories
-    : [];
-  const financialDueItems = Array.isArray(contract?.data?.financial?.dueItems)
-    ? contract.data.financial.dueItems
-    : [];
-
-  const categoryTitleById = useMemo(() => {
-    const m = new Map<string, string>();
-    for (const c of financialCategories as { id?: string; name?: string }[]) {
-      m.set(String(c.id ?? ''), String(c.name ?? c.id ?? ''));
-    }
-    return m;
-  }, [financialCategories]);
-
-  const paymentMonthBuckets = useMemo(
-    () => buildPaymentHistoryMonthBuckets({ dueItems: financialDueItems, categoryById: categoryTitleById }),
-    [financialDueItems, categoryTitleById],
+  const penaltyTimeline = useMemo(
+    () =>
+      buildContractPenaltyTimeline({
+        financial: contract?.data?.financial ?? null,
+        penalties: contract?.data?.penalties ?? null,
+        receipts: registeredReceipts,
+      }),
+    [contract?.data?.financial, contract?.data?.penalties, registeredReceipts],
   );
+
+  const paymentMonthBuckets = penaltyTimeline.combinedBuckets;
 
   const receiptAllocation = useMemo(
     () => buildReceiptAllocation({ buckets: paymentMonthBuckets, receipts: registeredReceipts }),
@@ -136,10 +123,10 @@ export default function ContractDuesPage() {
   useEffect(() => {
     if (!editingReceipt || editingReceipt.allocationMode !== 'direct') return;
     if (editReceiptContextResolved) return;
-    setToast('سررسید این فیش در قرارداد نیست؛ امکان ویرایش نیست.');
+    showError('سررسید این فیش در قرارداد نیست؛ امکان ویرایش نیست.');
     setEditingReceipt(null);
     setEditingDueContext(null);
-  }, [editingReceipt, editReceiptContextResolved]);
+  }, [editingReceipt, editReceiptContextResolved, showError]);
 
   useEffect(() => {
     if (!receiptRowId || registerReceiptContext || paymentMonthBuckets.length === 0) return;
@@ -158,58 +145,22 @@ export default function ContractDuesPage() {
   }, [contractId, paymentMonthBuckets, receiptRowId, registerReceiptContext, router, searchParams]);
 
   const duesTotals = useMemo(() => {
-    const financial = contract?.data?.financial as
-      | {
-          pricingType?: string;
-          unitArea?: string;
-          parkingArea?: string;
-          totalArea?: string;
-          pricePerMeter?: string;
-          parkingPricePerMeter?: string;
-          fixedTotalAmount?: string;
-        }
-      | null
-      | undefined;
-
-    const parkingArea = Number(financial?.parkingArea || 0);
-    const unitArea = Number(
-      financial?.unitArea || Math.max(Number(financial?.totalArea || 0) - parkingArea, 0),
-    );
-    const amountFromPricing =
-      financial?.pricingType === 'metered'
-        ? unitArea * Number(financial?.pricePerMeter || 0) +
-          parkingArea * Number(financial?.parkingPricePerMeter || 0)
-        : Number(financial?.fixedTotalAmount || 0);
-
-    const principal = (financialCategories as { id?: string; capAmount?: unknown }[]).find(
-      (c) => c.id === 'principal',
-    );
-    const contractBaseExPenaltyRial = principal
-      ? Number(principal.capAmount || 0)
-      : Math.max(Math.round(amountFromPricing), 0);
-
-    const penaltiesPayload = contract?.data?.penalties ?? null;
-    const penaltyTotalRial = estimateContractPenaltiesTotalRial(
-      contractBaseExPenaltyRial > 0 ? contractBaseExPenaltyRial : Math.max(Math.round(amountFromPricing), 1),
-      penaltiesPayload,
-    );
-
-    /** Same source as row-level «پرداختی»: registered receipts (local until persisted to server). */
-    const paidExPenaltyRial = receiptAllocation.totalPaidRial;
-    const penaltyPaidRial = null as number | null;
-
-    const penaltyPaid = penaltyPaidRial ?? 0;
-    const remainingPenalty = Math.max(0, penaltyTotalRial - penaltyPaid);
-    const totalDebtRial = receiptAllocation.totalRemainingRial + remainingPenalty;
+    const principalPaidRial = Object.values(receiptAllocation.dueById)
+      .filter((summary) => summary.row.sourceKind !== 'penalty')
+      .reduce((sum, summary) => sum + summary.paidAmountRial, 0);
+    const penaltyPaidRial = Object.values(receiptAllocation.dueById)
+      .filter((summary) => summary.row.sourceKind === 'penalty')
+      .reduce((sum, summary) => sum + summary.paidAmountRial, 0);
+    const penaltyTotalRial = penaltyTimeline.penaltyRows.reduce((sum, row) => sum + row.amount, 0);
 
     return {
-      contractBaseExPenaltyRial,
+      contractBaseExPenaltyRial: penaltyTimeline.contractBaseTotalRial,
       penaltyTotalRial,
-      paidExPenaltyRial,
+      paidExPenaltyRial: principalPaidRial,
       penaltyPaidRial,
-      totalDebtRial,
+      totalDebtRial: receiptAllocation.totalRemainingRial,
     };
-  }, [contract?.data?.financial, contract?.data?.penalties, financialCategories, receiptAllocation]);
+  }, [penaltyTimeline, receiptAllocation]);
 
   const contractNumber =
     contract?.data?.subject && typeof contract.data.subject.contractNumber === 'string'
@@ -239,7 +190,7 @@ export default function ContractDuesPage() {
         window.localStorage.setItem(getReceiptsStorageKey(String(contractId)), JSON.stringify(next));
       }
       queueMicrotask(() =>
-        setToast(existed ? 'فیش به‌روزرسانی شد.' : 'فیش ثبت شد و تخصیص آن بر اساس تاریخ و مبلغ محاسبه شد.'),
+        showSuccess(existed ? 'فیش به‌روزرسانی شد.' : 'فیش ثبت شد و تخصیص آن بر اساس تاریخ و مبلغ محاسبه شد.'),
       );
       return next;
     });
@@ -261,7 +212,7 @@ export default function ContractDuesPage() {
     setReceiptDetails(null);
     setEditingReceipt(null);
     setEditingDueContext(null);
-    setToast('فیش حذف شد.');
+    showSuccess('فیش حذف شد.');
   };
 
   const backHref = contractId ? `/contracts/${contractId}${listQuery ? `?${listQuery}` : ''}` : '/contracts';
@@ -493,14 +444,6 @@ export default function ContractDuesPage() {
           }}
           onDeleteReceipt={handleDeleteReceipt}
         />
-
-        {toast ? (
-          <div className="fixed inset-x-0 bottom-5 z-50 flex justify-center px-4" dir="rtl">
-            <div className="max-w-md rounded-2xl border border-slate-200 bg-white/95 px-4 py-3 text-center text-sm font-bold text-slate-700 shadow-lg">
-              {toast}
-            </div>
-          </div>
-        ) : null}
       </main>
     </PanelLayout>
   );
@@ -644,4 +587,3 @@ function ReceiptDetailsDialog({
     </div>
   );
 }
-

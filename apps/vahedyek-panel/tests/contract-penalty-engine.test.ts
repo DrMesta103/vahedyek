@@ -1,0 +1,197 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { buildContractPenaltyTimeline } from '../app/lib/contractPenaltyEngine';
+import { buildReceiptAllocation } from '../app/lib/contractReceiptAllocation';
+import type { ContractFinancialData, ContractPenaltiesData } from '../app/types/contract';
+
+function buildFinancial(dueItems: ContractFinancialData['dueItems']): ContractFinancialData {
+  return {
+    pricingType: 'fixed',
+    totalArea: '',
+    pricePerMeter: '',
+    fixedTotalAmount: '100000',
+    activeTab: 'principal',
+    categories: [
+      { id: 'principal', name: 'مبلغ اصل قرارداد', capAmount: 100000, dueAmount: 100000, noDueAmount: 0, system: true, requiresDue: true },
+      { id: 'installment', name: 'قسط', capAmount: 100000, dueAmount: 100000, noDueAmount: 0, system: true, requiresDue: true },
+    ],
+    dueItems,
+  };
+}
+
+test('fixed penalty applies grace days, periods, and extra fee', () => {
+  const financial = buildFinancial([
+    { id: 'due-1', categoryId: 'installment', title: 'قسط اول', amount: 1000, dueDate: '1405/01/01' },
+  ]);
+  const penalties: ContractPenaltiesData = {
+    activeTab: '',
+    types: [{ id: 'late', title: 'تاخیر', description: '', active: true }],
+    rules: [
+      {
+        id: 'rule-fixed',
+        penaltyTypeId: 'late',
+        mode: 'fixed',
+        period: 'daily',
+        fixedAmount: '100',
+        penaltyPercent: '',
+        bankInterestPercent: '',
+        graceDays: '1',
+        roundRule: '0',
+        extraFeeEnabled: true,
+        extraFeeType: 'fixed',
+        extraFeeAmount: '50',
+        extraFeeRoundRule: '0',
+        progressiveRows: [],
+      },
+    ],
+  };
+
+  const result = buildContractPenaltyTimeline({
+    financial,
+    penalties,
+    asOfDate: new Date(2026, 2, 23),
+  });
+
+  assert.equal(result.penaltyRows.length, 1);
+  assert.equal(result.penaltyRows[0]?.amount, 250);
+});
+
+test('contract percent penalty uses contract base total', () => {
+  const financial = buildFinancial([
+    { id: 'due-1', categoryId: 'installment', title: 'قسط اول', amount: 1000, dueDate: '1405/01/01' },
+  ]);
+  const penalties: ContractPenaltiesData = {
+    activeTab: '',
+    types: [{ id: 'late', title: 'تاخیر', description: '', active: true }],
+    rules: [
+      {
+        id: 'rule-contract',
+        penaltyTypeId: 'late',
+        mode: 'contract',
+        period: 'monthly',
+        fixedAmount: '',
+        penaltyPercent: '1',
+        bankInterestPercent: '',
+        graceDays: '0',
+        roundRule: '0',
+        extraFeeEnabled: false,
+        extraFeeType: 'fixed',
+        extraFeeAmount: '',
+        extraFeeRoundRule: '0',
+        progressiveRows: [],
+      },
+    ],
+  };
+
+  const result = buildContractPenaltyTimeline({
+    financial,
+    penalties,
+    asOfDate: new Date(2026, 2, 22),
+  });
+
+  assert.equal(result.penaltyRows[0]?.amount, 1000);
+});
+
+test('progressive penalty ignores dues without valid due date', () => {
+  const financial = buildFinancial([
+    { id: 'due-1', categoryId: 'installment', title: 'قسط اول', amount: 2000, dueDate: '' },
+    { id: 'due-2', categoryId: 'installment', title: 'قسط دوم', amount: 2000, dueDate: '1405/01/01' },
+  ]);
+  const penalties: ContractPenaltiesData = {
+    activeTab: '',
+    types: [{ id: 'late', title: 'تاخیر', description: '', active: true }],
+    rules: [
+      {
+        id: 'rule-progressive',
+        penaltyTypeId: 'late',
+        mode: 'progressive',
+        period: 'daily',
+        fixedAmount: '',
+        penaltyPercent: '',
+        bankInterestPercent: '',
+        graceDays: '0',
+        roundRule: '0',
+        extraFeeEnabled: false,
+        extraFeeType: 'fixed',
+        extraFeeAmount: '',
+        extraFeeRoundRule: '0',
+        progressiveRows: [
+          { id: 'p1', fromDay: '1', toDay: '2', rate: '1' },
+          { id: 'p2', fromDay: '3', toDay: '', rate: '2', openEnded: true },
+        ],
+      },
+    ],
+  };
+
+  const result = buildContractPenaltyTimeline({
+    financial,
+    penalties,
+    asOfDate: new Date(2026, 2, 24),
+  });
+
+  assert.equal(result.penaltyRows.length, 1);
+  assert.equal(result.penaltyRows[0]?.principalDueRowId, 'due-2');
+});
+
+test('receipt allocation works on shared timeline of principal and penalty', () => {
+  const financial = buildFinancial([
+    { id: 'due-1', categoryId: 'installment', title: 'قسط اول', amount: 1000, dueDate: '1405/01/01' },
+  ]);
+  const penalties: ContractPenaltiesData = {
+    activeTab: '',
+    types: [{ id: 'late', title: 'تاخیر', description: '', active: true }],
+    rules: [
+      {
+        id: 'rule-fixed',
+        penaltyTypeId: 'late',
+        mode: 'fixed',
+        period: 'daily',
+        fixedAmount: '100',
+        penaltyPercent: '',
+        bankInterestPercent: '',
+        graceDays: '0',
+        roundRule: '0',
+        extraFeeEnabled: false,
+        extraFeeType: 'fixed',
+        extraFeeAmount: '',
+        extraFeeRoundRule: '0',
+        progressiveRows: [],
+      },
+    ],
+  };
+
+  const timeline = buildContractPenaltyTimeline({
+    financial,
+    penalties,
+    asOfDate: new Date(2026, 2, 22),
+  });
+  const allocation = buildReceiptAllocation({
+    buckets: timeline.combinedBuckets,
+    receipts: [
+      {
+        id: 'receipt-1',
+        allocationMode: 'auto',
+        allocationDate: '1405/01/02',
+        transferKind: 'cash',
+        depositorName: 'خریدار',
+        paidAmountRial: 1100,
+        depositDate: '1405/01/02',
+        depositTime: '',
+        destinationValue: '',
+        destinationHolder: '',
+        destinationHolders: [],
+        trackingNumber: '',
+        referenceNumber: '',
+        receiptNumber: '',
+        notes: '',
+        documents: [],
+        createdAt: new Date().toISOString(),
+      },
+    ],
+  });
+
+  const penaltyRow = timeline.penaltyRows[0];
+  assert.ok(penaltyRow);
+  assert.equal(allocation.dueById['due-1']?.paidAmountRial, 1000);
+  assert.equal(allocation.dueById[penaltyRow.id]?.paidAmountRial, 100);
+});

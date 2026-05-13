@@ -3,7 +3,6 @@
 import { CalendarDays, ChevronDown, Eye, ReceiptText } from 'lucide-react';
 import type { DueReceiptAllocationSummary } from '../../lib/contractReceiptAllocation';
 import type { PaymentHistoryDueRow, PaymentHistoryMonthBucket } from '../../lib/contractPaymentMonthBuckets';
-import type { RegisteredReceiptRecord } from '../../lib/contractReceipts';
 
 function formatMoneyRial(valueRial: number) {
   if (!valueRial) return '۰ ریال';
@@ -59,7 +58,7 @@ export function DueMonthAccordionList({
                     مبلغ کل: <span className="font-black text-slate-900">{formatMoneyRial(bucket.totalRial)}</span>
                   </span>
                   <span>
-                    جریمه: <span className="font-black text-slate-900">-</span>
+                    جریمه: <span className="font-black text-slate-900">{bucket.penaltyRial > 0 ? formatMoneyRial(bucket.penaltyRial) : '-'}</span>
                   </span>
                   <span>
                     بدهی معوق:{' '}
@@ -98,6 +97,12 @@ export function DueMonthAccordionList({
                             <div className="text-[13px] font-black text-slate-900">{row.title}</div>
                             <div className="mt-1 flex flex-wrap gap-x-2 gap-y-0.5 text-[11px] font-semibold text-slate-500">
                               <span>{row.categoryTitle}</span>
+                              {row.sourceKind === 'penalty' ? (
+                                <>
+                                  <span className="text-slate-300">·</span>
+                                  <span className="font-bold text-rose-600">جریمه</span>
+                                </>
+                              ) : null}
                               <span className="text-slate-300">·</span>
                               <span>سررسید: {row.dueDate}</span>
                               {row.isOverdueUnpaid ? (

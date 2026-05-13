@@ -27,6 +27,7 @@ export default function ContractList({ blocks, units = [] }: ContractListProps) 
     searchQuery,
     activeTab,
     draftCount,
+    appendixDraftCount,
     pendingApprovalCount,
     completedCount,
     loading,
@@ -84,6 +85,7 @@ export default function ContractList({ blocks, units = [] }: ContractListProps) 
             <ContractStatusSummary
               activeTab={activeTab}
               draftCount={draftCount}
+              appendixDraftCount={appendixDraftCount}
               pendingApprovalCount={pendingApprovalCount}
               completedCount={completedCount}
               onChange={setActiveTab}

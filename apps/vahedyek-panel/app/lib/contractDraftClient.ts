@@ -1,6 +1,12 @@
 'use client';
 
-import type { ContractStatus } from '../types/contract';
+import type {
+  AppendixTagKey,
+  ContractAppendixDetailResponse,
+  ContractAppendixListResponse,
+  ContractStatus,
+  CreateContractAppendixInput,
+} from '../types/contract';
 
 const ACTIVE_DRAFT_KEY = 'active-contract-draft-id';
 const FRONTEND_STEP_DRAFT_PREFIX = 'contract-flow:frontend-step-draft';
@@ -13,6 +19,10 @@ export type ReferenceUnit = {
   area: number | null;
   assignedToUnitId: string | null;
   areaPricingMode: string | null;
+  isLocked: boolean;
+  lockedByDraftId: string | null;
+  lockedByContractNumber: string | null;
+  lockedByStatus: 'draft' | 'pending_approval' | 'completed' | null;
 };
 
 export type ReferenceDataResponse = {
@@ -158,8 +168,9 @@ export async function fetchTerminationBuyerRules(draftId: string): Promise<{ buy
   }
 }
 
-export async function getReferenceData() {
-  return readJson<ReferenceDataResponse>('/api/contracts/reference-data');
+export async function getReferenceData(draftId?: string | null) {
+  const query = draftId ? `?draftId=${encodeURIComponent(draftId)}` : '';
+  return readJson<ReferenceDataResponse>(`/api/contracts/reference-data${query}`);
 }
 
 export async function createDirectoryPerson(payload: {
@@ -182,6 +193,49 @@ export async function getContractsList(status: ContractStatus) {
 
 export async function getContractDetails(contractId: string) {
   return readJson<any>(`/api/contracts/${contractId}`);
+}
+
+export async function getContractAppendices(contractId: string) {
+  return readJson<ContractAppendixListResponse>(`/api/contracts/${encodeURIComponent(contractId)}/appendices`);
+}
+
+export async function createContractAppendix(contractId: string, payload: CreateContractAppendixInput) {
+  return readJson<{ id: string }>(`/api/contracts/${encodeURIComponent(contractId)}/appendices`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function getAppendixDetails(appendixId: string) {
+  return readJson<ContractAppendixDetailResponse>(`/api/appendices/${encodeURIComponent(appendixId)}`);
+}
+
+export async function updateContractAppendix(appendixId: string, payload: CreateContractAppendixInput) {
+  return readJson<{ id: string }>(`/api/appendices/${encodeURIComponent(appendixId)}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function deleteContractAppendix(appendixId: string) {
+  return readJson<{ ok: boolean }>(`/api/appendices/${encodeURIComponent(appendixId)}`, {
+    method: 'DELETE',
+  });
+}
+
+export async function submitContractAppendix(appendixId: string) {
+  return readJson<{ ok: boolean }>(`/api/appendices/${encodeURIComponent(appendixId)}/submit`, {
+    method: 'POST',
+    body: JSON.stringify({}),
+  });
+}
+
+export async function getAppendixCompare(appendixId: string) {
+  return readJson<any>(`/api/appendices/${encodeURIComponent(appendixId)}/compare`);
+}
+
+export async function getAppendixPreviousValues(appendixId: string, tag: AppendixTagKey) {
+  return readJson<any>(`/api/appendices/${encodeURIComponent(appendixId)}/previous-values?tag=${encodeURIComponent(tag)}`);
 }
 
 export type ContractApprovalAction =

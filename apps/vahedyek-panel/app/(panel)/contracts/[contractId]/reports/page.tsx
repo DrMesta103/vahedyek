@@ -24,12 +24,11 @@ import {
 } from '../../../../lib/contractReceiptAllocation';
 import { computeContractTotalRialFromFinancial } from '../../../../lib/contractFinancialPricing';
 import { getReceiptsStorageKey, normalizeReceiptRecords, type RegisteredReceiptRecord } from '../../../../lib/contractReceipts';
-import { buildPaymentHistoryMonthBuckets } from '../../../../lib/contractPaymentMonthBuckets';
-import { estimateContractPenaltiesTotalRial } from '../../../../lib/estimateContractPenalties';
+import { buildPaymentHistoryMonthBucketsFromRows } from '../../../../lib/contractPaymentMonthBuckets';
+import { buildContractPenaltyTimeline } from '../../../../lib/contractPenaltyEngine';
 import {
   isFinancialLineHeaderCategoryId,
   isFinancialLineSubtreeCategoryId,
-  parseDueDateFlexible,
   toComparableDateFromDueString,
 } from '../../../../lib/financialUtils';
 
@@ -228,9 +227,13 @@ type SummaryFinancialRowMetrics = {
   paidTotalRial: number | null;
 };
 
-function buildPaidByCategoryIdFromAllocation(allocation: ContractReceiptAllocationResult): Map<string, number> {
+function buildPaidByCategoryIdFromAllocation(
+  allocation: ContractReceiptAllocationResult,
+  sourceKind: 'principal' | 'penalty',
+): Map<string, number> {
   const m = new Map<string, number>();
   for (const ds of allocation.dueSummaries) {
+    if ((ds.row.sourceKind ?? 'principal') !== sourceKind) continue;
     const cid = String(ds.row.categoryId ?? '').trim();
     if (!cid) continue;
     m.set(cid, (m.get(cid) ?? 0) + ds.paidAmountRial);
@@ -248,15 +251,17 @@ function computePaidTotalForGroup(group: FinancialReportGroup, paidByCategoryId:
 
 function buildSummaryFinancialRows(
   groups: FinancialReportGroup[],
-  paidByCategoryId: Map<string, number>,
+  paidPrincipalByCategoryId: Map<string, number>,
+  penaltyTotalByCategoryId: Map<string, number>,
+  penaltyPaidByCategoryId: Map<string, number>,
 ): SummaryFinancialRowMetrics[] {
   return groups.map((g) => ({
     id: g.id,
     title: g.title,
     lineBaseRial: reportGroupLineBaseRial(g),
-    penaltyTotalRial: null,
-    penaltyPaidRial: null,
-    paidTotalRial: computePaidTotalForGroup(g, paidByCategoryId),
+    penaltyTotalRial: computePaidTotalForGroup(g, penaltyTotalByCategoryId),
+    penaltyPaidRial: computePaidTotalForGroup(g, penaltyPaidByCategoryId),
+    paidTotalRial: computePaidTotalForGroup(g, paidPrincipalByCategoryId),
   }));
 }
 
@@ -269,57 +274,33 @@ type SubgroupDetailRow = {
   paidTotalRial: number | null;
 };
 
-function buildSubgroupDetailRows(
-  group: FinancialReportGroup,
-  groupMetrics: SummaryFinancialRowMetrics | undefined,
-  paidByCategoryId: Map<string, number>,
-): SubgroupDetailRow[] {
-  const penaltyPool = groupMetrics?.penaltyTotalRial ?? null;
-  const penaltyPaidPool = groupMetrics?.penaltyPaidRial ?? null;
-  const paidPool = groupMetrics?.paidTotalRial ?? null;
-
-  const weightCaps = group.subRows.length
-    ? group.subRows.map((s) => Math.max(0, s.capRial))
-    : [Math.max(0, reportGroupLineBaseRial(group))];
-  const sumCap = weightCaps.reduce((a, b) => a + b, 0);
-  const n = weightCaps.length;
-  const weights = weightCaps.map((c) => (sumCap > 0 ? c / sumCap : n > 0 ? 1 / n : 0));
-
-  const splitPool = (pool: number | null): (number | null)[] => {
-    if (typeof pool !== 'number') return weightCaps.map(() => null);
-    const parts = weightCaps.map((_, idx) => Math.round(pool * (weights[idx] ?? 0)));
-    const drift = pool - parts.reduce((s, v) => s + v, 0);
-    if (drift !== 0 && parts.length) {
-      parts[parts.length - 1] = (parts[parts.length - 1] ?? 0) + drift;
-    }
-    return parts;
-  };
-
+function buildSubgroupDetailRows(group: FinancialReportGroup, summaryByCategoryId: Map<string, SummaryFinancialRowMetrics>): SubgroupDetailRow[] {
   if (!group.subRows.length) {
     const base = reportGroupLineBaseRial(group);
+    const metrics = summaryByCategoryId.get(group.dueCategoryIds[0] ?? group.id);
     return [
       {
         id: `${group.id}-aggregate`,
         label: group.title,
         lineBaseRial: base,
-        penaltyTotalRial: penaltyPool,
-        penaltyPaidRial: penaltyPaidPool,
-        paidTotalRial: paidPool,
+        penaltyTotalRial: metrics?.penaltyTotalRial ?? null,
+        penaltyPaidRial: metrics?.penaltyPaidRial ?? null,
+        paidTotalRial: metrics?.paidTotalRial ?? null,
       },
     ];
   }
 
-  const penParts = splitPool(penaltyPool);
-  const penPaidParts = splitPool(penaltyPaidPool);
-
-  return group.subRows.map((s, idx) => ({
-    id: s.id,
-    label: s.label,
-    lineBaseRial: Math.max(0, s.capRial),
-    penaltyTotalRial: penParts[idx] ?? null,
-    penaltyPaidRial: penPaidParts[idx] ?? null,
-    paidTotalRial: Math.round(paidByCategoryId.get(String(s.id)) ?? 0),
-  }));
+  return group.subRows.map((s) => {
+    const metrics = summaryByCategoryId.get(s.id);
+    return {
+      id: s.id,
+      label: s.label,
+      lineBaseRial: Math.max(0, s.capRial),
+      penaltyTotalRial: metrics?.penaltyTotalRial ?? null,
+      penaltyPaidRial: metrics?.penaltyPaidRial ?? null,
+      paidTotalRial: metrics?.paidTotalRial ?? null,
+    };
+  });
 }
 
 function sumFinancialNullableColumn<
@@ -418,43 +399,77 @@ export default function ContractReportsPage() {
 
   const canUseCompletedOnly = contract?.status === 'completed';
   const financialCategories = Array.isArray(view.financial?.categories) ? view.financial.categories : [];
-  const financialDueItems = Array.isArray(view.financial?.dueItems) ? view.financial.dueItems : [];
-
-  const totals = useMemo(() => {
-    const principal = financialCategories.find((c: any) => c.id === 'principal');
-    const contractTotal = principal ? Number(principal.capAmount || 0) : view.amountRial;
-    return { contractTotal };
-  }, [financialCategories, view.amountRial]);
-
   const reportGroups = useMemo(() => buildFinancialReportGroups(financialCategories), [financialCategories]);
 
-  const categoryTitleById = useMemo(() => {
-    const m = new Map<string, string>();
-    for (const c of financialCategories as any[]) {
-      m.set(String(c.id), String(c.name ?? c.id));
-    }
-    return m;
-  }, [financialCategories]);
-
-  const paymentMonthBuckets = useMemo(
-    () => buildPaymentHistoryMonthBuckets({ dueItems: financialDueItems, categoryById: categoryTitleById }),
-    [financialDueItems, categoryTitleById],
+  const penaltyTimeline = useMemo(
+    () =>
+      buildContractPenaltyTimeline({
+        financial: view.financial,
+        penalties: contract?.data?.penalties ?? null,
+        receipts: registeredReceipts,
+      }),
+    [view.financial, contract?.data?.penalties, registeredReceipts],
   );
+
+  const paymentMonthBuckets = penaltyTimeline.combinedBuckets;
 
   const receiptAllocation = useMemo(
     () => buildReceiptAllocation({ buckets: paymentMonthBuckets, receipts: registeredReceipts }),
     [paymentMonthBuckets, registeredReceipts],
   );
 
-  const paidByCategoryId = useMemo(
-    () => buildPaidByCategoryIdFromAllocation(receiptAllocation),
+  const paidPrincipalByCategoryId = useMemo(
+    () => buildPaidByCategoryIdFromAllocation(receiptAllocation, 'principal'),
     [receiptAllocation],
   );
 
-  const summaryFinancialRows = useMemo(
-    () => buildSummaryFinancialRows(reportGroups, paidByCategoryId),
-    [reportGroups, paidByCategoryId],
+  const paidPenaltyByCategoryId = useMemo(
+    () => buildPaidByCategoryIdFromAllocation(receiptAllocation, 'penalty'),
+    [receiptAllocation],
   );
+
+  const penaltyTotalByCategoryId = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const row of penaltyTimeline.penaltyRows) {
+      const categoryId = String(row.categoryId ?? '').trim();
+      if (!categoryId) continue;
+      map.set(categoryId, (map.get(categoryId) ?? 0) + row.amount);
+    }
+    return map;
+  }, [penaltyTimeline.penaltyRows]);
+
+  const summaryFinancialRows = useMemo(
+    () => buildSummaryFinancialRows(reportGroups, paidPrincipalByCategoryId, penaltyTotalByCategoryId, paidPenaltyByCategoryId),
+    [reportGroups, paidPrincipalByCategoryId, penaltyTotalByCategoryId, paidPenaltyByCategoryId],
+  );
+
+  const summaryByCategoryId = useMemo(() => {
+    const map = new Map<string, SummaryFinancialRowMetrics>();
+    for (const group of reportGroups) {
+      for (const subRow of group.subRows) {
+        map.set(subRow.id, {
+          id: subRow.id,
+          title: subRow.label,
+          lineBaseRial: Math.max(0, subRow.capRial),
+          penaltyTotalRial: penaltyTotalByCategoryId.get(subRow.id) ?? 0,
+          penaltyPaidRial: paidPenaltyByCategoryId.get(subRow.id) ?? 0,
+          paidTotalRial: paidPrincipalByCategoryId.get(subRow.id) ?? 0,
+        });
+      }
+      if (!group.subRows.length && group.dueCategoryIds[0]) {
+        const categoryId = group.dueCategoryIds[0];
+        map.set(categoryId, {
+          id: categoryId,
+          title: group.title,
+          lineBaseRial: reportGroupLineBaseRial(group),
+          penaltyTotalRial: penaltyTotalByCategoryId.get(categoryId) ?? 0,
+          penaltyPaidRial: paidPenaltyByCategoryId.get(categoryId) ?? 0,
+          paidTotalRial: paidPrincipalByCategoryId.get(categoryId) ?? 0,
+        });
+      }
+    }
+    return map;
+  }, [reportGroups, penaltyTotalByCategoryId, paidPenaltyByCategoryId, paidPrincipalByCategoryId]);
 
   const summaryFooter = useMemo(() => {
     if (!summaryFinancialRows.length) return null;
@@ -467,19 +482,8 @@ export default function ContractReportsPage() {
   }, [summaryFinancialRows]);
 
   const ledgerSnapshot = useMemo(() => {
-    const contractTotalRial = totals.contractTotal;
-    const penaltiesPayload = contract?.data?.penalties ?? null;
-    const apiPenaltyTotal = summaryFooter?.penaltyTotal;
-
-    const penaltyTotalRial =
-      typeof apiPenaltyTotal === 'number'
-        ? apiPenaltyTotal
-        : estimateContractPenaltiesTotalRial(
-            contractTotalRial > 0 ? contractTotalRial : 1,
-            penaltiesPayload,
-          );
-    const penaltyFromApi = typeof apiPenaltyTotal === 'number';
-
+    const contractTotalRial = penaltyTimeline.contractBaseTotalRial;
+    const penaltyTotalRial = penaltyTimeline.penaltyRows.reduce((sum, row) => sum + row.amount, 0);
     const paidPrincipalRial = summaryFooter?.paidTotal;
     const paidPenaltyRial = summaryFooter?.penaltyPaid;
 
@@ -493,13 +497,12 @@ export default function ContractReportsPage() {
     return {
       contractTotalRial,
       penaltyTotalRial,
-      penaltyFromApi,
       liabilityTotalRial,
       paidPrincipalRial: typeof paidPrincipalRial === 'number' ? paidPrincipalRial : null,
       paidPenaltyRial: typeof paidPenaltyRial === 'number' ? paidPenaltyRial : null,
       paidCombinedRial,
     };
-  }, [totals.contractTotal, summaryFooter, contract?.data?.penalties]);
+  }, [penaltyTimeline, summaryFooter]);
 
   const defaultSummaryGroupId = useMemo(
     () => reportGroups.find((g) => g.id === 'group-principal')?.id ?? reportGroups[0]?.id ?? null,
@@ -516,15 +519,9 @@ export default function ContractReportsPage() {
     [reportGroups, activeSummaryGroupId],
   );
 
-  const selectedGroupSummary = useMemo(
-    () =>
-      activeSummaryGroupId ? summaryFinancialRows.find((r) => r.id === activeSummaryGroupId) : undefined,
-    [summaryFinancialRows, activeSummaryGroupId],
-  );
-
   const subgroupDetailRows = useMemo(
-    () => (selectedReportGroup ? buildSubgroupDetailRows(selectedReportGroup, selectedGroupSummary, paidByCategoryId) : []),
-    [selectedReportGroup, selectedGroupSummary, paidByCategoryId],
+    () => (selectedReportGroup ? buildSubgroupDetailRows(selectedReportGroup, summaryByCategoryId) : []),
+    [selectedReportGroup, summaryByCategoryId],
   );
 
   const subgroupDetailFooter = useMemo(() => {
@@ -538,18 +535,17 @@ export default function ContractReportsPage() {
   }, [subgroupDetailRows]);
 
   const selectedGroupDueMeta = useMemo(() => {
-    if (!selectedReportGroup) return { dues: [] as typeof financialDueItems, sum: 0 };
+    if (!selectedReportGroup) return { dues: [] as typeof penaltyTimeline.combinedRows, sum: 0 };
     const idSet = new Set(selectedReportGroup.dueCategoryIds.map(String));
-    const dues = financialDueItems.filter((d: any) => idSet.has(String(d.categoryId)));
-    const sum = dues.reduce((s: number, d: any) => s + Number(d?.amount ?? 0), 0);
+    const dues = penaltyTimeline.combinedRows.filter((d) => idSet.has(String(d.categoryId)));
+    const sum = dues.reduce((s: number, d) => s + Number(d?.amount ?? 0), 0);
     return { dues, sum };
-  }, [selectedReportGroup, financialDueItems]);
+  }, [selectedReportGroup, penaltyTimeline.combinedRows]);
 
   /** سررسیدهای همان گروه مالی انتخاب‌شده در خلاصه (برای ستون جزئیات) */
   const summaryDetailMonthBuckets = useMemo(
-    () =>
-      buildPaymentHistoryMonthBuckets({ dueItems: selectedGroupDueMeta.dues, categoryById: categoryTitleById }),
-    [selectedGroupDueMeta.dues, categoryTitleById],
+    () => buildPaymentHistoryMonthBucketsFromRows(selectedGroupDueMeta.dues),
+    [selectedGroupDueMeta.dues],
   );
 
   const [collapsedPaymentMonths, setCollapsedPaymentMonths] = useState<Set<string>>(() => new Set());
@@ -664,12 +660,7 @@ export default function ContractReportsPage() {
                             </span>
                           </div>
                           <div className="flex justify-between gap-3">
-                            <span className="text-slate-500">
-                              جریمه
-                              {!ledgerSnapshot.penaltyFromApi ? (
-                                <span className="ms-1 text-[10px] font-bold text-amber-800">(تخمین)</span>
-                              ) : null}
-                            </span>
+                            <span className="text-slate-500">جریمه</span>
                             <span className="tabular-nums font-black text-slate-900">
                               {formatMoneyRial(ledgerSnapshot.penaltyTotalRial)}
                             </span>

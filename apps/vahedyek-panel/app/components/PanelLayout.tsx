@@ -66,6 +66,19 @@ function buildContractsBreadcrumb(pathname: string): Crumb[] {
     return trail;
   }
 
+  if (segments[0] === 'contracts' && segments[1] && segments[1] !== 'new' && segments[2] === 'appendices') {
+    const contractId = segments[1];
+    trail.push({ label: 'جزئیات قرارداد', href: `/contracts/${contractId}` });
+    trail.push({
+      label: 'فهرست الحاقیه‌ها',
+      href: segments[3] === 'new' ? `/contracts/${contractId}/appendices` : undefined,
+    });
+    if (segments[3] === 'new') {
+      trail.push({ label: 'ثبت الحاقیه' });
+    }
+    return trail;
+  }
+
   if (segments[0] === 'contracts' && segments[1] && segments[1] !== 'new' && segments.length === 2) {
     trail.push({ label: 'جزئیات قرارداد' });
     return trail;

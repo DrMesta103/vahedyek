@@ -5,6 +5,7 @@ import type { ContractStatus } from '../../types/contract';
 interface ContractStatusSummaryProps {
   activeTab: ContractStatus;
   draftCount: number;
+  appendixDraftCount: number;
   pendingApprovalCount: number;
   completedCount: number;
   onChange: (status: ContractStatus) => void;
@@ -13,30 +14,16 @@ interface ContractStatusSummaryProps {
 export default function ContractStatusSummary({
   activeTab,
   draftCount,
+  appendixDraftCount,
   pendingApprovalCount,
   completedCount,
   onChange,
 }: ContractStatusSummaryProps) {
   const items = [
-    {
-      key: 'draft' as const,
-      label: 'پیش نویس',
-      count: draftCount,
-      className: 'is-draft',
-    },
-    {
-      key: 'pending_approval' as const,
-      label: 'در انتظار تایید',
-      count: pendingApprovalCount,
-      className: 'is-pending',
-    },
-    {
-      key: 'completed' as const,
-      label: 'تکمیل شده',
-      count: completedCount,
-      className: 'is-complete',
-      hint: 'بزودی',
-    },
+    { key: 'draft' as const, label: 'پیش نویس', count: draftCount, className: 'is-draft' },
+    { key: 'appendix_draft' as const, label: 'پیش‌نویس متمم', count: appendixDraftCount, className: 'is-pending' },
+    { key: 'pending_approval' as const, label: 'در انتظار تایید', count: pendingApprovalCount, className: 'is-pending' },
+    { key: 'completed' as const, label: 'تکمیل شده', count: completedCount, className: 'is-complete', hint: 'به‌روز' },
   ];
 
   return (

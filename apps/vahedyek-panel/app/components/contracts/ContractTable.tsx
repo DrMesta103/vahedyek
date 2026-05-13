@@ -12,7 +12,6 @@ interface ContractTableProps {
   units: Unit[];
   onEdit: (id: string) => void;
   loading?: boolean;
-  /** تب فعال فهرست قراردادها — برای نمایش زمینهٔ ورود در صفحهٔ جزئیات */
   listContext?: ContractStatus;
 }
 
@@ -22,10 +21,7 @@ const CONTRACT_TYPE_LABEL: Record<ContractType, string> = {
 };
 
 function formatCurrency(value: number) {
-  if (!value) {
-    return '—';
-  }
-
+  if (!value) return '—';
   return `${Math.round(value).toLocaleString('fa-IR')} ریال`;
 }
 
@@ -36,6 +32,33 @@ function DetailRow({ label, value, accent = false }: { label: string; value: Rea
       <strong className={accent ? 'is-accent' : ''}>{value}</strong>
     </div>
   );
+}
+
+function getRibbonLabels(contract: Contract) {
+  const isAppendix = contract.entityKind === 'appendix';
+  const right =
+    contract.status === 'draft'
+      ? 'قابل تکمیل'
+      : contract.status === 'appendix_draft'
+        ? 'پیش‌نویس متمم'
+        : contract.status === 'pending_approval'
+          ? 'در انتظار تایید'
+          : contract.appendixStatusBadge ?? 'تکمیل شده';
+
+  const left =
+    contract.status === 'draft'
+      ? 'پیش‌نویس قرارداد'
+      : contract.status === 'appendix_draft'
+        ? 'متمم در حال تدوین'
+        : contract.status === 'pending_approval'
+          ? isAppendix
+            ? 'متمم در انتظار تایید'
+            : 'آماده بررسی'
+          : contract.hasApprovedAppendix
+            ? 'قرارداد متمم‌خورده'
+            : 'تکمیل شده';
+
+  return { left, right };
 }
 
 export default function ContractTable({ contracts, blocks, units, onEdit, loading = false, listContext }: ContractTableProps) {
@@ -65,6 +88,7 @@ export default function ContractTable({ contracts, blocks, units, onEdit, loadin
     <div className="contracts-list-grid">
       {contracts.map((contract) => {
         const { subject, parties, financial } = contract.data;
+        const isAppendix = contract.entityKind === 'appendix';
         const blockName = blockMap.get(subject.blockId) ?? '—';
         const unit = unitMap.get(subject.unitId);
         const partyOnePrimary = parties.partyOne.find((party) => party.isPrimary) ?? parties.partyOne[0];
@@ -72,15 +96,10 @@ export default function ContractTable({ contracts, blocks, units, onEdit, loadin
         const partyTwoNames = parties.partyTwo.map((party) => party.name).filter(Boolean);
         const partyTwoLabel = partyTwoNames.length ? partyTwoNames.join('، ') : partyTwoPrimary?.name ?? partyOnePrimary?.name ?? '—';
         const amount = computeContractTotalRialFromFinancial(financial ?? null);
-        const rightRibbonLabel =
-          contract.status === 'draft' ? 'قابل تکمیل' : contract.status === 'pending_approval' ? 'در انتظار تایید' : 'بزودی';
-        const leftRibbonLabel =
-          contract.status === 'draft' ? 'پیش‌نویس قرارداد' : contract.status === 'pending_approval' ? 'آماده بررسی' : 'تکمیل شده';
-
-        const detailsHref =
-          listContext != null
-            ? `/contracts/${contract.id}?list=${encodeURIComponent(listContext)}`
-            : `/contracts/${contract.id}`;
+        const ribbons = getRibbonLabels(contract);
+        const detailsHref = isAppendix
+          ? `/contracts/${contract.baseContractId}/appendices/${contract.id}${listContext ? `?list=${encodeURIComponent(listContext)}` : ''}`
+          : `/contracts/${contract.id}${listContext ? `?list=${encodeURIComponent(listContext)}` : ''}`;
 
         return (
           <article
@@ -93,33 +112,34 @@ export default function ContractTable({ contracts, blocks, units, onEdit, loadin
               if (event.key === 'Enter' || event.key === ' ') router.push(detailsHref);
             }}
           >
-            <div className="contract-reference-ribbon is-left">{leftRibbonLabel}</div>
+            <div className="contract-reference-ribbon is-left">{ribbons.left}</div>
 
             <div className="contract-reference-main">
               <div className="contract-reference-head">
-                  <div className="contract-reference-owner">
-                    <span className="contract-reference-warning">
-                      <Circle className="h-2.5 w-2.5 fill-current" />
-                      بدهکار
-                    </span>
-                    <strong className="contract-reference-owner-names">{partyTwoLabel}</strong>
-                  </div>
+                <div className="contract-reference-owner">
+                  <span className="contract-reference-warning">
+                    <Circle className="h-2.5 w-2.5 fill-current" />
+                    {isAppendix ? 'متمم' : 'بدهکار'}
+                  </span>
+                  <strong className="contract-reference-owner-names">{partyTwoLabel}</strong>
+                </div>
 
-                  <div className="contract-reference-meta">
-                    <span className="contract-reference-inline">
-                      <Building2 className="h-3.5 w-3.5" />
-                      بلوک ۱
-                    </span>
-                    <span className="contract-reference-inline">طبقه {unit?.floorName ?? '—'}</span>
-                    <span className="contract-reference-inline">واحد {unit?.name ?? '—'}</span>
-                    <span className="contract-reference-inline">{unit?.category ?? 'مسکونی'}</span>
-                  </div>
+                <div className="contract-reference-meta">
+                  <span className="contract-reference-inline">
+                    <Building2 className="h-3.5 w-3.5" />
+                    {blockName}
+                  </span>
+                  <span className="contract-reference-inline">طبقه {unit?.floorName ?? '—'}</span>
+                  <span className="contract-reference-inline">واحد {unit?.name ?? '—'}</span>
+                  <span className="contract-reference-inline">{unit?.category ?? 'مسکونی'}</span>
+                </div>
               </div>
 
               <div className="contract-reference-grid">
                 <section className="contract-reference-panel">
                   <DetailRow label="طرف اول" value={partyOnePrimary?.name ?? 'ثبت نشده'} />
                   <DetailRow label="انعقاد قرارداد" value={subject.contractDate || '—'} />
+                  {isAppendix ? <DetailRow label="وضعیت آیتم" value={contract.appendixStatusBadge ?? 'متمم'} accent /> : null}
                   <DetailRow
                     label="ثبت در سامانه"
                     value={
@@ -131,29 +151,33 @@ export default function ContractTable({ contracts, blocks, units, onEdit, loadin
                 </section>
 
                 <section className="contract-reference-panel">
-                  <DetailRow label="شماره قرارداد" value={subject.contractNumber || '—'} />
+                  <DetailRow label={isAppendix ? 'شماره قرارداد پایه' : 'شماره قرارداد'} value={subject.contractNumber || '—'} />
                   <DetailRow label="مبلغ قرارداد" value={formatCurrency(amount)} />
                   <div className="contract-reference-actions">
                     <span className="contract-reference-status-pill">
-                      {CONTRACT_TYPE_LABEL[subject.contractType] ?? subject.contractType}
+                      {isAppendix ? `متمم ${contract.appendixNumber?.toLocaleString('fa-IR') ?? ''}` : CONTRACT_TYPE_LABEL[subject.contractType] ?? subject.contractType}
                     </span>
                     <button
                       type="button"
                       className="contract-reference-edit-button"
                       onClick={(event) => {
                         event.stopPropagation();
+                        if (isAppendix) {
+                          router.push(detailsHref);
+                          return;
+                        }
                         onEdit(contract.id);
                       }}
                     >
                       <Pencil className="h-3.5 w-3.5" />
-                      ویرایش
+                      {isAppendix ? 'جزئیات' : 'ویرایش'}
                     </button>
                   </div>
                 </section>
               </div>
             </div>
 
-            <div className={`contract-reference-ribbon is-right${contract.status === 'completed' ? ' is-finalized' : ''}`}>{rightRibbonLabel}</div>
+            <div className={`contract-reference-ribbon is-right${contract.status === 'completed' ? ' is-finalized' : ''}`}>{ribbons.right}</div>
           </article>
         );
       })}

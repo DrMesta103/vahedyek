@@ -6,6 +6,7 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import PanelLayout from '../../../../../components/PanelLayout';
 import type { DueRegisterReceiptPayload } from '../../../../../components/contracts/DueMonthAccordionList';
 import { RegisterReceiptDialog } from '../../../../../components/contracts/RegisterReceiptDialog';
+import { useAppToast } from '../../../../../components/feedback/AppToastProvider';
 import { buildReceiptAllocation, type DueReceiptAllocationSummary } from '../../../../../lib/contractReceiptAllocation';
 import {
   getReceiptsStorageKey,
@@ -15,7 +16,8 @@ import {
   type RegisteredReceiptRecord,
 } from '../../../../../lib/contractReceipts';
 import { getContractDetails } from '../../../../../lib/contractDraftClient';
-import { buildPaymentHistoryMonthBuckets, resolveDueRegisterPayload } from '../../../../../lib/contractPaymentMonthBuckets';
+import { resolveDueRegisterPayload } from '../../../../../lib/contractPaymentMonthBuckets';
+import { buildContractPenaltyTimeline } from '../../../../../lib/contractPenaltyEngine';
 
 type ReceiptDetailsState = {
   payload: DueRegisterReceiptPayload;
@@ -59,7 +61,7 @@ export default function CustomerReceiptsPage() {
   const [autoReceiptOpen, setAutoReceiptOpen] = useState(false);
   const [editingReceipt, setEditingReceipt] = useState<RegisteredReceiptRecord | null>(null);
   const [editingDueContext, setEditingDueContext] = useState<DueRegisterReceiptPayload | null>(null);
-  const [toast, setToast] = useState('');
+  const { showError, showSuccess } = useAppToast();
 
   const listQuery = searchParams?.toString();
   const duesHref = contractId ? `/contracts/${contractId}/dues${listQuery ? `?${listQuery}` : ''}` : '/contracts';
@@ -95,31 +97,17 @@ export default function CustomerReceiptsPage() {
     }
   }, [contractId]);
 
-  useEffect(() => {
-    if (!toast) return;
-    const t = window.setTimeout(() => setToast(''), 2400);
-    return () => window.clearTimeout(t);
-  }, [toast]);
-
-  const financialCategories = Array.isArray(contract?.data?.financial?.categories)
-    ? contract.data.financial.categories
-    : [];
-  const financialDueItems = Array.isArray(contract?.data?.financial?.dueItems)
-    ? contract.data.financial.dueItems
-    : [];
-
-  const categoryTitleById = useMemo(() => {
-    const m = new Map<string, string>();
-    for (const c of financialCategories as { id?: string; name?: string }[]) {
-      m.set(String(c.id ?? ''), String(c.name ?? c.id ?? ''));
-    }
-    return m;
-  }, [financialCategories]);
-
-  const paymentMonthBuckets = useMemo(
-    () => buildPaymentHistoryMonthBuckets({ dueItems: financialDueItems, categoryById: categoryTitleById }),
-    [financialDueItems, categoryTitleById],
+  const penaltyTimeline = useMemo(
+    () =>
+      buildContractPenaltyTimeline({
+        financial: contract?.data?.financial ?? null,
+        penalties: contract?.data?.penalties ?? null,
+        receipts: registeredReceipts,
+      }),
+    [contract?.data?.financial, contract?.data?.penalties, registeredReceipts],
   );
+
+  const paymentMonthBuckets = penaltyTimeline.combinedBuckets;
 
   const receiptAllocation = useMemo(
     () => buildReceiptAllocation({ buckets: paymentMonthBuckets, receipts: registeredReceipts }),
@@ -136,10 +124,10 @@ export default function CustomerReceiptsPage() {
   useEffect(() => {
     if (!editingReceipt || editingReceipt.allocationMode !== 'direct') return;
     if (editReceiptContextResolved) return;
-    setToast('سررسید این فیش در قرارداد نیست؛ امکان ویرایش نیست.');
+    showError('سررسید این فیش در قرارداد نیست؛ امکان ویرایش نیست.');
     setEditingReceipt(null);
     setEditingDueContext(null);
-  }, [editingReceipt, editReceiptContextResolved]);
+  }, [editingReceipt, editReceiptContextResolved, showError]);
 
   const handleReceiptUpsert = (receipt: RegisteredReceiptRecord) => {
     setRegisteredReceipts((current) => {
@@ -149,7 +137,7 @@ export default function CustomerReceiptsPage() {
         window.localStorage.setItem(getReceiptsStorageKey(String(contractId)), JSON.stringify(next));
       }
       queueMicrotask(() =>
-        setToast(existed ? 'فیش به‌روزرسانی شد.' : 'فیش ثبت شد و تخصیص آن بر اساس تاریخ و مبلغ محاسبه شد.'),
+        showSuccess(existed ? 'فیش به‌روزرسانی شد.' : 'فیش ثبت شد و تخصیص آن بر اساس تاریخ و مبلغ محاسبه شد.'),
       );
       return next;
     });
@@ -170,7 +158,7 @@ export default function CustomerReceiptsPage() {
     setReceiptDetails(null);
     setEditingReceipt(null);
     setEditingDueContext(null);
-    setToast('فیش حذف شد.');
+    showSuccess('فیش حذف شد.');
   };
 
   const startEditReceipt = (receipt: RegisteredReceiptRecord) => {
@@ -381,14 +369,6 @@ export default function CustomerReceiptsPage() {
           }}
           onDeleteReceipt={handleDeleteReceipt}
         />
-
-        {toast ? (
-          <div className="fixed inset-x-0 bottom-5 z-50 flex justify-center px-4" dir="rtl">
-            <div className="max-w-md rounded-2xl border border-slate-200 bg-white/95 px-4 py-3 text-center text-sm font-bold text-slate-700 shadow-lg">
-              {toast}
-            </div>
-          </div>
-        ) : null}
       </main>
     </PanelLayout>
   );

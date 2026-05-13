@@ -1,0 +1,133 @@
+(node:9968) Warning: Setting the NODE_TLS_REJECT_UNAUTHORIZED environment variable to '0' makes TLS connections and HTTPS requests insecure by disabling certificate verification.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[browser] Uncaught ReferenceError: CalendarDays is not defined
+    at ContractAppendixNewPage (app/(panel)/contracts/[contractId]/appendices/new/page.tsx:392:24)
+  390 |                     <input value={appendixNumber != null ? appendixNumber.toLocaleString(...
+  391 |                     <div className="relative">
+> 392 |                       <CalendarDays className="pointer-events-none absolute right-3 top-1...
+      |                        ^
+  393 |                       <input value={effectiveDate} onChange={(event) => setEffectiveDate(...
+  394 |                     </div>
+  395 |                   </div>
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[browser] Uncaught ReferenceError: toast is not defined
+    at ContractAppendixNewPage (app/(panel)/contracts/[contractId]/appendices/new/page.tsx:554:10)
+  552 |         <AppendixPreviousValueDialog open={previousDialogOpen} tag={activeTag} data={prev...
+  553 |
+> 554 |         {toast ? (
+      |          ^
+  555 |           <div className="fixed inset-x-0 bottom-5 z-50 flex justify-center px-4">
+  556 |             <div className="rounded-2xl border border-slate-200 bg-white/95 px-4 py-3 tex...
+  557 |           </div>
+[browser] Uncaught ReferenceError: toast is not defined
+    at ContractAppendixNewPage (app/(panel)/contracts/[contractId]/appendices/new/page.tsx:554:10)
+  552 |         <AppendixPreviousValueDialog open={previousDialogOpen} tag={activeTag} data={prev...
+  553 |
+> 554 |         {toast ? (
+      |          ^
+  555 |           <div className="fixed inset-x-0 bottom-5 z-50 flex justify-center px-4">
+  556 |             <div className="rounded-2xl border border-slate-200 bg-white/95 px-4 py-3 tex...
+  557 |           </div>
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[browser] Uncaught ReferenceError: toast is not defined
+    at ContractAppendixNewPage (app/(panel)/contracts/[contractId]/appendices/new/page.tsx:554:10)
+    at Set.forEach (<anonymous>)
+  552 |         <AppendixPreviousValueDialog open={previousDialogOpen} tag={activeTag} data={prev...
+  553 |
+> 554 |         {toast ? (
+      |          ^
+  555 |           <div className="fixed inset-x-0 bottom-5 z-50 flex justify-center px-4">
+  556 |             <div className="rounded-2xl border border-slate-200 bg-white/95 px-4 py-3 tex...
+  557 |           </div>
+[browser] Uncaught ReferenceError: toast is not defined
+    at ContractAppendixNewPage (app/(panel)/contracts/[contractId]/appendices/new/page.tsx:554:10)
+    at Set.forEach (<anonymous>)
+  552 |         <AppendixPreviousValueDialog open={previousDialogOpen} tag={activeTag} data={prev...
+  553 |
+> 554 |         {toast ? (
+      |          ^
+  555 |           <div className="fixed inset-x-0 bottom-5 z-50 flex justify-center px-4">
+  556 |             <div className="rounded-2xl border border-slate-200 bg-white/95 px-4 py-3 tex...
+  557 |           </div>
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⨯ ReferenceError: toast is not defined
+    at ContractAppendixNewPage (app\(panel)\contracts\[contractId]\appendices\new\page.tsx:554:10)
+  552 |         <AppendixPreviousValueDialog open={previousDialogOpen} tag={activeTag} data={prev...
+  553 |
+> 554 |         {toast ? (
+      |          ^
+  555 |           <div className="fixed inset-x-0 bottom-5 z-50 flex justify-center px-4">
+  556 |             <div className="rounded-2xl border border-slate-200 bg-white/95 px-4 py-3 tex...
+  557 |           </div> {
+  digest: '1912888621'
+}
+⨯ ReferenceError: toast is not defined
+    at ContractAppendixNewPage (app\(panel)\contracts\[contractId]\appendices\new\page.tsx:554:10)
+  552 |         <AppendixPreviousValueDialog open={previousDialogOpen} tag={activeTag} data={prev...
+  553 |
+> 554 |         {toast ? (
+      |          ^
+  555 |           <div className="fixed inset-x-0 bottom-5 z-50 flex justify-center px-4">
+  556 |             <div className="rounded-2xl border border-slate-200 bg-white/95 px-4 py-3 tex...
+  557 |           </div> {
+  digest: '1912888621'
+}
+⨯ ReferenceError: toast is not defined
+    at ContractAppendixNewPage (app\(panel)\contracts\[contractId]\appendices\new\page.tsx:554:10)
+  552 |         <AppendixPreviousValueDialog open={previousDialogOpen} tag={activeTag} data={prev...
+  553 |
+> 554 |         {toast ? (
+      |          ^
+  555 |           <div className="fixed inset-x-0 bottom-5 z-50 flex justify-center px-4">
+  556 |             <div className="rounded-2xl border border-slate-200 bg-white/95 px-4 py-3 tex...
+  557 |           </div> {
+  digest: '1912888621'
+}
+⨯ ReferenceError: toast is not defined
+    at ContractAppendixNewPage (app\(panel)\contracts\[contractId]\appendices\new\page.tsx:554:10)
+  552 |         <AppendixPreviousValueDialog open={previousDialogOpen} tag={activeTag} data={prev...
+  553 |
+> 554 |         {toast ? (
+      |          ^
+  555 |           <div className="fixed inset-x-0 bottom-5 z-50 flex justify-center px-4">
+  556 |             <div className="rounded-2xl border border-slate-200 bg-white/95 px-4 py-3 tex...
+  557 |           </div> {
+  digest: '1912888621'
+}
+[browser] Uncaught ReferenceError: toast is not defined
+    at ContractAppendixNewPage (app/(panel)/contracts/[contractId]/appendices/new/page.tsx:554:10)
+  552 |         <AppendixPreviousValueDialog open={previousDialogOpen} tag={activeTag} data={prev...
+  553 |
+> 554 |         {toast ? (
+      |          ^
+  555 |           <div className="fixed inset-x-0 bottom-5 z-50 flex justify-center px-4">
+  556 |             <div className="rounded-2xl border border-slate-200 bg-white/95 px-4 py-3 tex...
+  557 |           </div>
+[browser] Uncaught ReferenceError: toast is not defined
+    at ContractAppendixNewPage (app/(panel)/contracts/[contractId]/appendices/new/page.tsx:554:10)
+  552 |         <AppendixPreviousValueDialog open={previousDialogOpen} tag={activeTag} data={prev...
+  553 |
+> 554 |         {toast ? (
+      |          ^
+  555 |           <div className="fixed inset-x-0 bottom-5 z-50 flex justify-center px-4">
+  556 |             <div className="rounded-2xl border border-slate-200 bg-white/95 px-4 py-3 tex...
+  557 |           </div>
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload when ./apps/vahedyek-panel/app/config/apps/vahedyek.ts changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+⚠ Fast Refresh had to perform a full reload when ./apps/vahedyek-panel/app/config/apps/vahedyek.ts changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+⚠ Fast Refresh had to perform a full reload when ./apps/vahedyek-panel/app/config/apps/vahedyek.ts changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+⚠ Fast Refresh had to perform a full reload when ./apps/vahedyek-panel/app/config/apps/vahedyek.ts changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+⚠ Fast Refresh had to perform a full reload when ./apps/vahedyek-panel/app/config/apps/vahedyek.ts changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+⚠ Fast Refresh had to perform a full reload when ./apps/vahedyek-panel/app/config/apps/vahedyek.ts changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+⚠ Fast Refresh had to perform a full reload when ./apps/vahedyek-panel/app/config/apps/vahedyek.ts changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+⚠ Fast Refresh had to perform a full reload when ./apps/vahedyek-panel/app/config/apps/vahedyek.ts changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+⚠ Fast Refresh had to perform a full reload when ./apps/vahedyek-panel/app/config/apps/vahedyek.ts changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+⚠ Fast Refresh had to perform a full reload when ./apps/vahedyek-panel/app/config/apps/vahedyek.ts changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+⚠ Fast Refresh had to perform a full reload when ./apps/vahedyek-panel/app/config/apps/vahedyek.ts changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+⚠ Fast Refresh had to perform a full reload when ./apps/vahedyek-panel/app/config/apps/vahedyek.ts changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload

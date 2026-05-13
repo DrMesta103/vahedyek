@@ -36,6 +36,11 @@ export type PaymentHistoryDueRow = {
   amount: number;
   dueDate: string;
   isOverdueUnpaid: boolean;
+  sourceKind?: 'principal' | 'penalty';
+  sourceId?: string;
+  principalDueRowId?: string | null;
+  penaltyRuleId?: string | null;
+  penaltyTypeId?: string | null;
 };
 
 export type PaymentHistoryMonthBucket = {
@@ -47,40 +52,29 @@ export type PaymentHistoryMonthBucket = {
   items: PaymentHistoryDueRow[];
   totalRial: number;
   overdueRial: number;
+  penaltyRial: number;
 };
 
-export function buildPaymentHistoryMonthBuckets(params: {
-  dueItems: unknown[];
-  categoryById: Map<string, string>;
-}): PaymentHistoryMonthBucket[] {
-  const { dueItems, categoryById } = params;
+type BucketAcc = {
+  jalaliYear: number;
+  jalaliMonth: number;
+  sortKey: number;
+  items: PaymentHistoryDueRow[];
+  totalRial: number;
+  overdueRial: number;
+  penaltyRial: number;
+};
 
-  type Acc = {
-    jalaliYear: number;
-    jalaliMonth: number;
-    sortKey: number;
-    items: PaymentHistoryDueRow[];
-    totalRial: number;
-    overdueRial: number;
-  };
-
-  const byKey = new Map<string, Acc>();
+function buildMonthBucketsFromRows(rows: PaymentHistoryDueRow[]) {
+  const byKey = new Map<string, BucketAcc>();
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  for (const raw of dueItems) {
-    if (!raw || typeof raw !== 'object') continue;
-
-    const amountNum = Number((raw as any).amount ?? 0);
-    const amount = Number.isFinite(amountNum) ? Math.round(amountNum) : 0;
-
-    const dueDateRaw = String((raw as any).dueDate ?? '').trim();
+  for (const row of rows) {
+    const amount = Math.max(0, Math.round(Number(row.amount) || 0));
+    const dueDateRaw = String(row.dueDate ?? '').trim();
     const parsedYm = dueDateRaw ? parseDueDateFlexible(dueDateRaw) : null;
-
-    const key = parsedYm
-      ? `${parsedYm.year}-${String(parsedYm.month).padStart(2, '0')}`
-      : PAYMENT_HISTORY_UNKNOWN_MONTH_KEY;
-
+    const key = parsedYm ? `${parsedYm.year}-${String(parsedYm.month).padStart(2, '0')}` : PAYMENT_HISTORY_UNKNOWN_MONTH_KEY;
     const dueEnd = dueDateRaw ? toComparableDateFromDueString(dueDateRaw) : null;
     const isOverdue = Boolean(dueEnd && dueEnd < today);
 
@@ -94,6 +88,7 @@ export function buildPaymentHistoryMonthBuckets(params: {
             items: [],
             totalRial: 0,
             overdueRial: 0,
+            penaltyRial: 0,
           }
         : {
             jalaliYear: 0,
@@ -102,22 +97,22 @@ export function buildPaymentHistoryMonthBuckets(params: {
             items: [],
             totalRial: 0,
             overdueRial: 0,
+            penaltyRial: 0,
           };
       byKey.set(key, acc);
     }
 
-    acc.totalRial += amount;
-    if (isOverdue) acc.overdueRial += Math.max(amount, 0);
-
-    acc.items.push({
-      id: String((raw as any).id ?? ''),
-      categoryId: String((raw as any).categoryId ?? ''),
-      categoryTitle: categoryById.get(String((raw as any).categoryId ?? '')) ?? String((raw as any).categoryId ?? '—'),
-      title: String((raw as any).title ?? '').trim() || '—',
+    const normalizedRow: PaymentHistoryDueRow = {
+      ...row,
       amount,
       dueDate: dueDateRaw || '—',
-      isOverdueUnpaid: isOverdue,
-    });
+      isOverdueUnpaid: row.isOverdueUnpaid ?? isOverdue,
+    };
+
+    acc.items.push(normalizedRow);
+    acc.totalRial += amount;
+    if (normalizedRow.isOverdueUnpaid) acc.overdueRial += amount;
+    if (normalizedRow.sourceKind === 'penalty') acc.penaltyRial += amount;
   }
 
   const sorted = [...byKey.entries()].sort((a, b) => {
@@ -130,7 +125,11 @@ export function buildPaymentHistoryMonthBuckets(params: {
     acc.items.sort((a, b) => {
       const da = toComparableDateFromDueString(a.dueDate)?.getTime() ?? 9e12;
       const db = toComparableDateFromDueString(b.dueDate)?.getTime() ?? 9e12;
-      return da - db;
+      if (da !== db) return da - db;
+      if ((a.sourceKind ?? 'principal') !== (b.sourceKind ?? 'principal')) {
+        return (a.sourceKind ?? 'principal') === 'principal' ? -1 : 1;
+      }
+      return String(a.id).localeCompare(String(b.id));
     });
 
     return {
@@ -145,11 +144,51 @@ export function buildPaymentHistoryMonthBuckets(params: {
       items: acc.items,
       totalRial: acc.totalRial,
       overdueRial: acc.overdueRial,
-    };
+      penaltyRial: acc.penaltyRial,
+    } satisfies PaymentHistoryMonthBucket;
   });
 }
 
-/** Resolve UI payload for «ثبت فیش مستقیم» when editing a receipt that has `dueRowId`. */
+export function buildPaymentHistoryMonthBuckets(params: {
+  dueItems: unknown[];
+  categoryById: Map<string, string>;
+}) {
+  const rows: PaymentHistoryDueRow[] = [];
+
+  for (const raw of params.dueItems) {
+    if (!raw || typeof raw !== 'object') continue;
+    const amountNum = Number((raw as { amount?: unknown }).amount ?? 0);
+    const amount = Number.isFinite(amountNum) ? Math.round(amountNum) : 0;
+    const dueDateRaw = String((raw as { dueDate?: unknown }).dueDate ?? '').trim();
+    const dueEnd = dueDateRaw ? toComparableDateFromDueString(dueDateRaw) : null;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    rows.push({
+      id: String((raw as { id?: unknown }).id ?? ''),
+      categoryId: String((raw as { categoryId?: unknown }).categoryId ?? ''),
+      categoryTitle:
+        params.categoryById.get(String((raw as { categoryId?: unknown }).categoryId ?? '')) ??
+        String((raw as { categoryId?: unknown }).categoryId ?? '—'),
+      title: String((raw as { title?: unknown }).title ?? '').trim() || '—',
+      amount,
+      dueDate: dueDateRaw || '—',
+      isOverdueUnpaid: Boolean(dueEnd && dueEnd < today),
+      sourceKind: 'principal',
+      sourceId: String((raw as { id?: unknown }).id ?? ''),
+      principalDueRowId: null,
+      penaltyRuleId: null,
+      penaltyTypeId: null,
+    });
+  }
+
+  return buildMonthBucketsFromRows(rows);
+}
+
+export function buildPaymentHistoryMonthBucketsFromRows(rows: PaymentHistoryDueRow[]) {
+  return buildMonthBucketsFromRows(rows);
+}
+
 export function resolveDueRegisterPayload(
   receipt: RegisteredReceiptRecord,
   buckets: PaymentHistoryMonthBucket[],
