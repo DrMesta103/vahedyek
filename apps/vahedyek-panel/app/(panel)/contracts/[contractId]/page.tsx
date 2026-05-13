@@ -172,100 +172,137 @@ function ContractHistorySection({
   stages,
   selectedStageId,
   onSelect,
+  contractStatus,
 }: {
   stages: ContractHistoryStage[];
   selectedStageId: string | null;
   onSelect: (stageId: string) => void;
+  contractStatus: ContractStatus;
 }) {
   if (!stages.length) return null;
 
   const selectedStage = stages.find((stage) => stage.id === selectedStageId) ?? stages[stages.length - 1] ?? stages[0];
   const isSingleStage = stages.length === 1;
+  const useCompactSingleStage = isSingleStage && contractStatus === 'completed';
 
   return (
-    <section className="contract-details-panel mt-4 overflow-hidden rounded-[34px] border border-slate-200/80 bg-white/95 p-5 shadow-[0_24px_64px_-36px_rgba(15,23,42,0.24)] sm:p-6">
-      <div className="flex flex-col gap-5">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+    <section className="contract-details-panel mt-4 overflow-hidden rounded-[30px] border border-slate-200/80 bg-white/95 px-4 py-4 shadow-[0_18px_42px_-34px_rgba(15,23,42,0.2)] sm:px-5 sm:py-5">
+      <div className={`flex flex-col ${useCompactSingleStage ? 'gap-3' : 'gap-4'}`}>
+        <div className="flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between">
           <div className="order-1 text-right lg:order-2">
-            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-white px-5 py-2.5 text-[14px] font-black text-emerald-700 shadow-sm">
+            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-white px-4 py-2 text-[13px] font-black text-emerald-700 shadow-sm">
               <span className="h-3 w-3 rounded-full bg-emerald-600" />
               وضعیت فعلی: {selectedStage.title}
             </div>
           </div>
           <div className="order-2 text-right lg:order-1">
-            <div className="flex items-center justify-end gap-3">
-              <History className="h-7 w-7 text-[color:var(--dark-teal)]" aria-hidden />
-              <h2 className="text-[28px] font-black text-slate-900">تاریخچه‌ی قرارداد</h2>
+            <div className="flex items-center justify-start gap-3">
+              <History className="h-6 w-6 text-[color:var(--dark-teal)]" aria-hidden />
+              <h2 className="text-[24px] font-black text-slate-900">تاریخچه‌ی قرارداد</h2>
             </div>
-            <p className="mt-2 text-[15px] font-medium leading-7 text-slate-500">وضعیت فعلی قرارداد و نسخه‌های آن را در اینجا مشاهده کنید.</p>
+            <p className="mt-1.5 text-[13px] font-medium leading-6 text-slate-500">وضعیت فعلی قرارداد و نسخه‌های آن را در اینجا مشاهده کنید.</p>
           </div>
         </div>
 
-        <div className="overflow-x-auto pb-1">
-          <div
-            className={`mx-auto flex items-start ${isSingleStage ? 'justify-center px-2' : 'min-w-[820px] justify-between gap-6 px-4 lg:px-8'}`}
-            dir="rtl"
-          >
-            {stages.map((stage, index) => {
-              const selected = stage.id === selectedStage.id;
-              const nextStage = stages[index + 1] ?? null;
-              const connectorActive = selected || nextStage?.id === selectedStage.id;
+        {useCompactSingleStage ? (
+          <div className="flex justify-start pt-1" dir="rtl">
+            <button
+              type="button"
+              onClick={() => onSelect(selectedStage.id)}
+              className="group flex w-[360px] max-w-full items-center justify-between gap-4 rounded-[24px] border border-emerald-100 bg-[linear-gradient(180deg,rgba(236,253,245,0.75),rgba(255,255,255,0.96))] px-4 py-3 text-right shadow-sm transition hover:border-emerald-200"
+              dir="rtl"
+            >
+              <div className="min-w-0 flex-1 text-right">
+                <div className="text-[15px] font-black text-slate-900">{selectedStage.title}</div>
+                <p className="mt-1 text-[12px] leading-5 text-slate-500">{selectedStage.subtitle}</p>
+                <div className="mt-2 flex flex-wrap items-center justify-end gap-1.5">
+                  {selectedStage.tags.slice(0, 3).map((tag, tagIndex) => {
+                    const accentClass =
+                      tagIndex % 3 === 0
+                        ? 'border-emerald-100 bg-emerald-50 text-emerald-700'
+                        : tagIndex % 3 === 1
+                          ? 'border-rose-100 bg-rose-50 text-rose-600'
+                          : 'border-slate-200 bg-slate-100 text-slate-600';
 
-              return (
-                <div key={stage.id} className={`flex items-start ${isSingleStage ? 'w-full max-w-[280px] justify-center' : 'flex-1 gap-4'}`}>
-                  <div className="flex flex-1 flex-col items-center text-center">
-                    <button type="button" onClick={() => onSelect(stage.id)} className="group flex w-full flex-col items-center text-center">
-                      <span
-                        className={`relative inline-flex h-[74px] w-[74px] items-center justify-center rounded-full border-2 text-[24px] font-black transition ${
-                          selected
-                            ? 'border-emerald-500 bg-white text-slate-900 shadow-[0_16px_34px_rgba(13,148,136,0.18)]'
-                            : 'border-slate-200 bg-white text-slate-800 group-hover:border-emerald-300'
-                        }`}
-                      >
-                        {selected ? <span className="absolute inset-[3px] rounded-full border border-emerald-300" /> : null}
-                        <span className="relative z-[1]">{stage.order.toLocaleString('fa-IR')}</span>
+                    return (
+                      <span key={`${selectedStage.id}-${tag}`} className={`rounded-full border px-3 py-1 text-[11px] font-black ${accentClass}`}>
+                        {tag}
                       </span>
-                      {selected ? (
-                        <span className="mt-[-1px] h-0 w-0 border-x-[11px] border-t-[18px] border-x-transparent border-t-emerald-600" aria-hidden />
-                      ) : (
-                        <span className="mt-3 block h-[14px]" aria-hidden />
-                      )}
-                      <div className="mt-3 text-[17px] font-black text-slate-900">{stage.title}</div>
-                      <p className={`mt-2 max-w-[250px] text-[14px] leading-7 text-slate-500 ${isSingleStage ? '' : 'min-h-[48px]'}`}>{stage.subtitle}</p>
-                    </button>
-
-                    <div className={`mt-4 flex flex-wrap items-center justify-center gap-2 ${isSingleStage ? '' : 'min-h-[36px]'}`}>
-                      {stage.tags.slice(0, 3).map((tag, tagIndex) => {
-                        const accentClass =
-                          tagIndex % 3 === 0
-                            ? 'border-emerald-100 bg-emerald-50 text-emerald-700'
-                            : tagIndex % 3 === 1
-                              ? 'border-rose-100 bg-rose-50 text-rose-600'
-                              : 'border-slate-200 bg-slate-100 text-slate-600';
-
-                        return (
-                          <span key={`${stage.id}-${tag}`} className={`rounded-full border px-4 py-1.5 text-[12px] font-black ${accentClass}`}>
-                            {tag}
-                          </span>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {index < stages.length - 1 ? (
-                    <div className="mt-[36px] flex min-w-[120px] flex-1 items-center" aria-hidden>
-                      <div
-                        className={`h-[3px] w-full rounded-full ${
-                          connectorActive ? 'bg-emerald-600' : 'border-t-2 border-dashed border-slate-300 bg-transparent'
-                        }`}
-                      />
-                    </div>
-                  ) : null}
+                    );
+                  })}
                 </div>
-              );
-            })}
+              </div>
+
+              <span className="relative order-first inline-flex h-[56px] w-[56px] shrink-0 items-center justify-center rounded-full border-2 border-emerald-500 bg-white text-[20px] font-black text-slate-900 shadow-[0_10px_20px_rgba(13,148,136,0.12)]">
+                <span className="absolute inset-[3px] rounded-full border border-emerald-300" />
+                <span className="relative z-[1]">{selectedStage.order.toLocaleString('fa-IR')}</span>
+              </span>
+            </button>
           </div>
-        </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <div className="mx-auto flex min-w-[620px] items-start justify-between gap-4 px-2 lg:min-w-[720px] lg:px-4" dir="rtl">
+              {stages.map((stage, index) => {
+                const selected = stage.id === selectedStage.id;
+                const nextStage = stages[index + 1] ?? null;
+                const connectorActive = selected || nextStage?.id === selectedStage.id;
+
+                return (
+                  <div key={stage.id} className="flex flex-1 items-start gap-3">
+                    <div className="flex flex-1 flex-col items-center text-center">
+                      <button type="button" onClick={() => onSelect(stage.id)} className="group flex w-full flex-col items-center text-center">
+                        <span
+                          className={`relative inline-flex h-[58px] w-[58px] items-center justify-center rounded-full border-2 text-[21px] font-black transition ${
+                            selected
+                              ? 'border-emerald-500 bg-white text-slate-900 shadow-[0_12px_24px_rgba(13,148,136,0.14)]'
+                              : 'border-slate-200 bg-white text-slate-800 group-hover:border-emerald-300'
+                          }`}
+                        >
+                          {selected ? <span className="absolute inset-[3px] rounded-full border border-emerald-300" /> : null}
+                          <span className="relative z-[1]">{stage.order.toLocaleString('fa-IR')}</span>
+                        </span>
+                        {selected ? (
+                          <span className="mt-[-1px] h-0 w-0 border-x-[9px] border-t-[14px] border-x-transparent border-t-emerald-600" aria-hidden />
+                        ) : (
+                          <span className="mt-2 block h-[12px]" aria-hidden />
+                        )}
+                        <div className="mt-2 text-[15px] font-black text-slate-900">{stage.title}</div>
+                        <p className="mt-1.5 min-h-[36px] max-w-[220px] text-[12px] leading-6 text-slate-500">{stage.subtitle}</p>
+                      </button>
+
+                      <div className="mt-3 flex min-h-[28px] flex-wrap items-center justify-center gap-1.5">
+                        {stage.tags.slice(0, 3).map((tag, tagIndex) => {
+                          const accentClass =
+                            tagIndex % 3 === 0
+                              ? 'border-emerald-100 bg-emerald-50 text-emerald-700'
+                              : tagIndex % 3 === 1
+                                ? 'border-rose-100 bg-rose-50 text-rose-600'
+                                : 'border-slate-200 bg-slate-100 text-slate-600';
+
+                          return (
+                            <span key={`${stage.id}-${tag}`} className={`rounded-full border px-3 py-1 text-[11px] font-black ${accentClass}`}>
+                              {tag}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {index < stages.length - 1 ? (
+                      <div className="mt-[28px] flex min-w-[72px] flex-1 items-center lg:min-w-[96px]" aria-hidden>
+                        <div
+                          className={`h-[2px] w-full rounded-full ${
+                            connectorActive ? 'bg-emerald-600' : 'border-t-2 border-dashed border-slate-300 bg-transparent'
+                          }`}
+                        />
+                      </div>
+                    ) : null}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
       </div>
     </section>
@@ -498,6 +535,7 @@ export default function ContractDetailsPage() {
         stages={historyStages}
         selectedStageId={selectedHistoryStageId}
         onSelect={setSelectedHistoryStageId}
+        contractStatus={(contract?.status as ContractStatus) ?? 'draft'}
       />
 
       <section className="contract-details-panel contract-details-profile">
