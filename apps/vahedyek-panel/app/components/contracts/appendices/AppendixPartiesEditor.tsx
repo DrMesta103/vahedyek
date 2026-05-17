@@ -151,6 +151,23 @@ function applyPartnerDirectoryFromProfile(store: ProfileStore) {
   return { source, partnerNaturals, partnerLegals };
 }
 
+function applyBuyerDirectoryFromProfile(store: ProfileStore) {
+  return {
+    buyerNaturals: (store.naturalBuyers ?? []).map((item: any) => ({
+      id: String(item.id),
+      directoryId: null,
+      personType: 'natural' as const,
+      name: String(item.fullName || item.mobile || item.email || 'خریدار'),
+    })),
+    buyerLegals: (store.legalBuyers ?? []).map((item: any) => ({
+      id: String(item.id),
+      directoryId: null,
+      personType: 'legal' as const,
+      name: String(item.companyName || item.brandName || 'خریدار حقوقی'),
+    })),
+  };
+}
+
 function toPartyRows(parties: ContractParty[]) {
   return normalizePrimary(
     parties.map((item) => ({
@@ -216,12 +233,13 @@ export function AppendixPartiesEditor({
       const [referenceData, profileStore] = await Promise.all([getReferenceData(), fetchProfileStore()]);
       const apiDirectory = applyReferenceData(referenceData);
       const profilePartners = applyPartnerDirectoryFromProfile(profileStore);
+      const profileBuyers = applyBuyerDirectoryFromProfile(profileStore);
 
       setPartnerSource(profilePartners.source);
       setPartnerNaturals(profilePartners.partnerNaturals.length ? profilePartners.partnerNaturals : apiDirectory.partnerNaturals);
       setPartnerLegals(profilePartners.partnerLegals.length ? profilePartners.partnerLegals : apiDirectory.partnerLegals);
-      setBuyerNaturals(apiDirectory.buyerNaturals);
-      setBuyerLegals(apiDirectory.buyerLegals);
+      setBuyerNaturals(profileBuyers.buyerNaturals.length ? profileBuyers.buyerNaturals : apiDirectory.buyerNaturals);
+      setBuyerLegals(profileBuyers.buyerLegals.length ? profileBuyers.buyerLegals : apiDirectory.buyerLegals);
     } finally {
       setDirectoryLoading(false);
     }

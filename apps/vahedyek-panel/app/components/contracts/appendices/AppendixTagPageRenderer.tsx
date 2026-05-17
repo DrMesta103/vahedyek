@@ -6,12 +6,14 @@ import { AppendixDeliveryDateEditor } from './AppendixDeliveryDateEditor';
 import { AppendixPartiesEditor } from './AppendixPartiesEditor';
 import { AppendixAdjustmentEditor } from './AppendixAdjustmentEditor';
 import { AppendixContractBaseCostsEditor } from './AppendixContractBaseCostsEditor';
+import { AppendixLoanEditor } from './AppendixLoanEditor';
 import { AppendixSideCostsEditor } from './AppendixSideCostsEditor';
 import { useAppendixEditor } from './AppendixEditorContext';
 import type {
   AppendixAdjustmentPayload,
   AppendixContractBaseCostsPayload,
   AppendixDeliveryDatePayload,
+  AppendixLoanPayload,
   AppendixPartiesPayload,
   AppendixSideCostsPayload,
   SupportedAppendixTagKey,
@@ -19,6 +21,8 @@ import type {
 
 function getTagTitle(tag: SupportedAppendixTagKey) {
   switch (tag) {
+    case 'loan':
+      return 'وام';
     case 'adjustment':
       return 'تعدیل';
     case 'contract-base-costs':
@@ -36,6 +40,8 @@ function getTagTitle(tag: SupportedAppendixTagKey) {
 
 function getTagDescription(tag: SupportedAppendixTagKey) {
   switch (tag) {
+    case 'loan':
+      return 'ثبت وضعیت پرداخت و تنظیمات الحاقیه وام';
     case 'adjustment':
       return 'اعمال تعدیل در قالب یک ردیف مالی ثابت';
     case 'contract-base-costs':
@@ -88,6 +94,13 @@ export function AppendixTagPageRenderer({ tag }: { tag: SupportedAppendixTagKey 
     [tag, updateTagPayload],
   );
 
+  const handleLoanChange = useCallback(
+    (value: AppendixLoanPayload) => {
+      updateTagPayload(tag, value);
+    },
+    [tag, updateTagPayload],
+  );
+
   if (!payload) {
     return <div className="rounded-2xl border border-slate-200 bg-slate-50/70 px-4 py-6 text-center text-sm font-semibold text-slate-500">داده این بخش هنوز آماده نشده است.</div>;
   }
@@ -131,6 +144,12 @@ export function AppendixTagPageRenderer({ tag }: { tag: SupportedAppendixTagKey 
       {tag === 'adjustment' ? (
         <div className="mt-6">
           <AppendixAdjustmentEditor value={payload as AppendixAdjustmentPayload} onChange={handleAdjustmentChange} />
+        </div>
+      ) : null}
+
+      {tag === 'loan' ? (
+        <div className="mt-6">
+          <AppendixLoanEditor value={payload as AppendixLoanPayload} onChange={handleLoanChange} />
         </div>
       ) : null}
 

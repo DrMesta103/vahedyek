@@ -1,6 +1,7 @@
 import type { AppendixTagKey, SupportedAppendixTagKey } from '../types/contract';
 
 export const SUPPORTED_APPENDIX_TAGS: SupportedAppendixTagKey[] = [
+  'loan',
   'first-party',
   'second-party',
   'unit-delivery-date',

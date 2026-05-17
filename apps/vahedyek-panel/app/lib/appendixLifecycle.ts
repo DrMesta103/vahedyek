@@ -80,7 +80,35 @@ function summarizeSideCostsPayload(item: ContractAppendixItem) {
   ].join(' • ');
 }
 
+function summarizeLoanPayload(item: ContractAppendixItem) {
+  const status = String(item.payload.paymentStatus ?? 'unselected');
+  const amount = Number(item.payload.loanAmount ?? 0);
+  const bank = String(item.payload.selectedBank ?? '').trim();
+  const statusLabel =
+    status === 'full'
+      ? 'پرداخت کامل'
+      : status === 'less'
+        ? 'پرداخت کمتر از مبلغ قرارداد'
+        : status === 'more'
+          ? 'پرداخت بیشتر از مبلغ قرارداد'
+          : status === 'none'
+            ? 'بدون پرداخت'
+            : 'وضعیت نامشخص';
+
+  return [
+    `وضعیت: ${statusLabel}`,
+    amount > 0 ? `مبلغ وام: ${Math.round(amount).toLocaleString('fa-IR')} ریال` : '',
+    bank ? `بانک عامل: ${bank}` : '',
+  ]
+    .filter(Boolean)
+    .join(' • ');
+}
+
 export function appendixItemValueText(item: ContractAppendixItem) {
+  if (item.tagKey === 'loan') {
+    return summarizeLoanPayload(item);
+  }
+
   if (item.tagKey === 'unit-delivery-date') {
     const previousDate = String(item.payload.previousDate ?? '').trim();
     const nextDate = String(item.payload.nextDate ?? '').trim();
@@ -116,6 +144,15 @@ export function appendixItemValueText(item: ContractAppendixItem) {
 
 export function buildContractBaseline(contract: ContractLike) {
   return {
+    loan: {
+      sourceKind: 'contract' as const,
+      sourceId: contract.id,
+      sourceLabel: getAppendixPreviousSourceLabel({
+        sourceKind: 'contract',
+        contractNumber: contract.data?.subject?.contractNumber ?? null,
+      }),
+      value: null,
+    },
     'unit-delivery-date': {
       sourceKind: 'contract' as const,
       sourceId: contract.id,
