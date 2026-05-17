@@ -15,6 +15,7 @@ export function Select({
   emptyText = 'موردی یافت نشد.',
   disabled = false,
   renderSelected,
+  footerAction,
 }: {
   options: SelectOption[];
   value: string | null | undefined;
@@ -24,6 +25,7 @@ export function Select({
   emptyText?: string;
   disabled?: boolean;
   renderSelected?: (opt: SelectOption | null) => ReactNode;
+  footerAction?: { label: string; onClick: () => void };
 }) {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState('');
@@ -116,9 +118,24 @@ export function Select({
               <li className="px-3 py-3 text-right text-[12px] font-semibold text-[var(--text-muted)]">{emptyText}</li>
             )}
           </ul>
+
+          {footerAction ? (
+            <div className="border-t border-[var(--border-color)] p-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  setQ('');
+                  footerAction.onClick();
+                }}
+                className="flex w-full items-center justify-center rounded-xl bg-[var(--surface-soft)] px-3 py-2 text-[12px] font-bold text-[var(--dark-teal)] transition hover:bg-[color-mix(in_srgb,var(--dark-teal)_10%,white)]"
+              >
+                {footerAction.label}
+              </button>
+            </div>
+          ) : null}
         </div>
       ) : null}
     </div>
   );
 }
-

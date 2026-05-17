@@ -2,7 +2,7 @@
 
 import { Camera, Check, Mail, Pencil, Phone, Search, UserRound, X } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Input } from '@repo/ui';
 import { FormTextInput } from '../../contracts/new/_components/ContractFormPrimitives';
 import { PersonAvatar } from '../../business-settings/profile/_components/ProfilePeoplePrimitives';
@@ -112,28 +112,6 @@ async function ensureUserAccount(payload: {
   return result.user;
 }
 
-function buildCandidateFromUser(user: {
-  id: string;
-  fullName: string;
-  firstName: string;
-  lastName: string;
-  email: string | null;
-  mobile: string | null;
-}): DirectoryCandidate {
-  return {
-    id: user.id,
-    fullName: user.fullName,
-    firstName: user.firstName,
-    lastName: user.lastName,
-    mobile: user.mobile ?? '',
-    secondaryMobile: '',
-    email: user.email ?? '',
-    avatarMode: 'ghost',
-    avatarText: user.firstName.trim().slice(0, 1) || user.lastName.trim().slice(0, 1) || user.fullName.trim().slice(0, 1) || 'ک',
-    avatarImage: '',
-  };
-}
-
 function normalizeForm(candidate: DirectoryCandidate | null, identity: string): EmployeeFormState {
   if (candidate) {
     const nameParts = candidate.fullName.trim().split(/\s+/);
@@ -161,6 +139,7 @@ function normalizeForm(candidate: DirectoryCandidate | null, identity: string): 
 
 export function EmployeeManagementPanel() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [step, setStep] = useState<FlowStep>('lookup');
   const [query, setQuery] = useState('');
@@ -174,6 +153,9 @@ export function EmployeeManagementPanel() {
   const [creatingLookupUser, setCreatingLookupUser] = useState(false);
   const [saving, setSaving] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const returnTo = searchParams.get('returnTo');
+  const approvalStageId = searchParams.get('approvalStageId');
 
   useEffect(() => {
     const raw = query.trim();
@@ -220,7 +202,7 @@ export function EmployeeManagementPanel() {
   const isLookupCreateAction = !activeCandidate && (isValidMobile(query.trim()) || isValidEmail(query.trim()));
 
   const openDetailsStep = async () => {
-    let source = activeCandidate;
+    const source = activeCandidate;
     if (!source) {
       const raw = query.trim();
       if (!isValidMobile(raw) && !isValidEmail(raw)) return;
@@ -232,25 +214,6 @@ export function EmployeeManagementPanel() {
       setSubmitError(null);
       setStep('details');
       return;
-
-      /*
-      setCreatingLookupUser(true);
-      try {
-        const user = await ensureUserAccount({
-          mobile: isValidMobile(raw) ? normalizePhone(raw) : '',
-          email: isValidEmail(raw) ? normalizeEmail(raw) : '',
-        });
-        source = buildCandidateFromUser(user);
-        setSelected(source);
-        setResults((current) => [source!, ...current.filter((item) => item.id !== source!.id)]);
-      } catch (error) {
-        setSubmitError(error instanceof Error ? error.message : 'ساخت کاربر انجام نشد.');
-        setCreatingLookupUser(false);
-        return;
-      } finally {
-        setCreatingLookupUser(false);
-      }
-      */
     }
 
     const nextForm = normalizeForm(source, query.trim());
@@ -325,12 +288,21 @@ export function EmployeeManagementPanel() {
         }),
       });
 
-      const payload = (await response.json().catch(() => null)) as { error?: string; message?: string } | null;
+      const payload = (await response.json().catch(() => null)) as { error?: string; message?: string; id?: string; firstName?: string; lastName?: string } | null;
       if (!response.ok) {
         throw new Error(payload?.error ?? payload?.message ?? 'ثبت کارمند انجام نشد.');
       }
 
-      router.push('/employees');
+      if (returnTo && returnTo.startsWith('/')) {
+        const params = new URLSearchParams();
+        params.set('createdEmployeeId', payload?.id || user.id);
+        params.set('createdEmployeeLabel', `${payload?.firstName ?? firstName} ${payload?.lastName ?? lastName}`.trim());
+        if (approvalStageId) params.set('approvalStageId', approvalStageId);
+        const nextUrl = returnTo.includes('?') ? `${returnTo}&${params.toString()}` : `${returnTo}?${params.toString()}`;
+        router.push(nextUrl);
+      } else {
+        router.push('/employees');
+      }
       router.refresh();
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : 'ثبت کارمند انجام نشد.');
