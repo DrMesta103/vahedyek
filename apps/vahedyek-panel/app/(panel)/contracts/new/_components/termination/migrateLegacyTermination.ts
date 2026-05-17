@@ -144,6 +144,7 @@ export function migrateLegacyTerminationPayload(raw: Record<string, unknown>): C
         graceDaysCustom: String(inst.allowedDelayDays ?? ''),
         detectionBasis,
         minDebtAmount: String(inst.minDebtAmount ?? ''),
+        consecutiveInstallmentsCount: String(inst.consecutiveInstallmentsCount ?? inst.maxConsecutiveUnpaidInstallments ?? ''),
         partialHandling,
       },
       financialObligations: {

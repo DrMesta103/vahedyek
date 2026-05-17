@@ -40,6 +40,7 @@ export const DEFAULT_TERMINATION_DATA: ContractTerminationData = {
       graceDaysCustom: '',
       detectionBasis: 'per-installment',
       minDebtAmount: '',
+      consecutiveInstallmentsCount: '',
       partialHandling: 'if-not-full',
     },
     financialObligations: {

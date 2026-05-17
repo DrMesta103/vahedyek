@@ -67,7 +67,7 @@ function serializePayload(payload: ContractTerminationData) {
 const SUBSECTION_META: Record<ConstructorTerminationSubsectionId, { title: string; description: string; icon: ReactNode }> = {
   lateInstallment: {
     title: 'تأخیر در پرداخت اقساط',
-    description: 'مهلت تشخیص تأخیر، مبنا و برخورد با پرداخت جزئی.',
+    description: 'مهلت ارفاقی و مبنای تشخیص تاخیر در پرداخت اقساط.',
     icon: <TimerReset className="h-5 w-5" />,
   },
   financialObligations: {
