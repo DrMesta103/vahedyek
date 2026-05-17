@@ -100,6 +100,9 @@ export function LateInstallmentPanel({
   onSubmit: () => void;
   saving: boolean;
 }) {
+  const showMinDebtAmount = value.detectionBasis === 'total-debt';
+  const showConsecutiveInstallmentsCount = value.detectionBasis === 'consecutive-installments';
+
   return (
     <div className="space-y-5">
       <FieldGroup
@@ -118,45 +121,64 @@ export function LateInstallmentPanel({
           <FormTextInput
             value={value.graceDaysCustom}
             onChange={(v) => onChange({ ...value, graceDaysCustom: normalizeDigits(v) })}
-            placeholder="مثال: ۱۲"
+            placeholder="مثال: 12"
           />
         </FieldGroup>
       ) : null}
 
-      <FieldGroup label="مبنای تشخیص تأخیر" hint="نوع سوابق پرداخت که برای ارزیابی تأخیر اقساط لحاظ می‌شود.">
+      <FieldGroup label="مبنای تشخیص تأخیر" hint="نوع سابقه پرداختی که برای ارزیابی تأخیر اقساط لحاظ می‌شود.">
         <div className="grid gap-2 md:grid-cols-3">
-          <RadioRow checked={value.detectionBasis === 'per-installment'} onChange={() => onChange({ ...value, detectionBasis: 'per-installment' })} label="هر قسط پرداخت نشده" />
-          <RadioRow checked={value.detectionBasis === 'total-debt'} onChange={() => onChange({ ...value, detectionBasis: 'total-debt' })} label="مجموع مبلغ بدهی" />
+          <RadioRow
+            checked={value.detectionBasis === 'per-installment'}
+            onChange={() => onChange({ ...value, detectionBasis: 'per-installment', minDebtAmount: '', consecutiveInstallmentsCount: '' })}
+            label="هر قسط پرداخت‌نشده"
+          />
+          <RadioRow
+            checked={value.detectionBasis === 'total-debt'}
+            onChange={() => onChange({ ...value, detectionBasis: 'total-debt', consecutiveInstallmentsCount: '' })}
+            label="مجموع مبلغ بدهی"
+          />
           <RadioRow
             checked={value.detectionBasis === 'consecutive-installments'}
-            onChange={() => onChange({ ...value, detectionBasis: 'consecutive-installments' })}
-            label="اقساط متوالی پرداخت نشده"
+            onChange={() => onChange({ ...value, detectionBasis: 'consecutive-installments', minDebtAmount: '' })}
+            label="اقساط متوالی پرداخت‌نشده"
           />
         </div>
       </FieldGroup>
 
-      <FieldGroup
-        label="حداقل مبلغ بدهی"
-        required={value.detectionBasis === 'total-debt'}
-        hint="زمانی که مبنا «مجموع مبلغ بدهی» است، این آستانه برای ورود به جریان فسخ الزامی می‌شود."
-      >
-        <FormTextInput
-          value={value.minDebtAmount}
-          onChange={(v) => onChange({ ...value, minDebtAmount: formatThousandsGroupedInput(v) })}
-          placeholder="مثال: ۱۰٬۰۰۰٬۰۰۰"
-          inputMode="numeric"
-          dir="ltr"
-          className="text-left"
-        />
-      </FieldGroup>
+      {showMinDebtAmount ? (
+        <FieldGroup
+          label="مجموع مبلغ بدهی"
+          required
+          hint="زمانی که مبنا «مجموع مبلغ بدهی» است، این آستانه برای ورود به جریان فسخ الزامی می‌شود."
+        >
+          <FormTextInput
+            value={value.minDebtAmount}
+            onChange={(v) => onChange({ ...value, minDebtAmount: formatThousandsGroupedInput(v) })}
+            placeholder="مثال: 10,000,000"
+            inputMode="numeric"
+            dir="ltr"
+            className="text-left"
+          />
+        </FieldGroup>
+      ) : null}
 
-      <FieldGroup label="برخورد با پرداخت جزئی">
-        <div className="grid gap-2">
-          <RadioRow checked={value.partialHandling === 'if-not-full'} onChange={() => onChange({ ...value, partialHandling: 'if-not-full' })} label="اگر قسط کامل نشده، فسخ فعال می‌شود" />
-          <RadioRow checked={value.partialHandling === 'if-partial'} onChange={() => onChange({ ...value, partialHandling: 'if-partial' })} label="اگر پرداخت ناقص باشد، فسخ فعال نشود" />
-          <RadioRow checked={value.partialHandling === 'by-remaining-debt'} onChange={() => onChange({ ...value, partialHandling: 'by-remaining-debt' })} label="بر اساس مانده بدهی تصمیم گرفته شود" />
-        </div>
-      </FieldGroup>
+      {showConsecutiveInstallmentsCount ? (
+        <FieldGroup
+          label="تعداد اقساط متوالی مجاز"
+          required
+          hint="تعیین کنید چند قسط پشت‌سرهم باید پرداخت نشود تا اختیار فسخ فعال شود."
+        >
+          <FormTextInput
+            value={value.consecutiveInstallmentsCount}
+            onChange={(v) => onChange({ ...value, consecutiveInstallmentsCount: normalizeDigits(v) })}
+            placeholder="مثال: 2"
+            inputMode="numeric"
+            dir="ltr"
+            className="text-left"
+          />
+        </FieldGroup>
+      ) : null}
 
       <SubsectionSubmitRow onSave={onSubmit} saving={saving} />
     </div>

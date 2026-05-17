@@ -253,6 +253,9 @@ export function validateTerminationSubsection(
       if (li.detectionBasis === 'total-debt' && !isPositive(li.minDebtAmount)) {
         errors['constructorTerms.lateInstallment.minDebtAmount'] = 'حداقل مبلغ بدهی را وارد کنید.';
       }
+      if (li.detectionBasis === 'consecutive-installments' && !isPositiveIntString(li.consecutiveInstallmentsCount)) {
+        errors['constructorTerms.lateInstallment.consecutiveInstallmentsCount'] = 'تعداد اقساط متوالی را وارد کنید.';
+      }
       break;
     }
     case 'financialObligations': {

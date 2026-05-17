@@ -26,7 +26,7 @@ const BUILDER_CANCELLATION_SECTIONS: BuilderCancellationSection[] = [
   {
     id: 'late-installment',
     title: 'تاخیر در پرداخت اقساط',
-    description: 'مهلت تشخیص تاخیر، مبنا و برخورد با پرداخت جزئی.',
+    description: 'مهلت ارفاقی و مبنای تشخیص تاخیر در پرداخت اقساط.',
     stateKey: 'lateInstallment',
   },
   {

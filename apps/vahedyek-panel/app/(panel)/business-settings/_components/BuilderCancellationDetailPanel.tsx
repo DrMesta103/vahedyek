@@ -17,7 +17,7 @@ type BuilderCancellationSectionId = 'late-installment' | 'financial-obligations'
 const SECTION_META: Record<BuilderCancellationSectionId, { title: string; description: string }> = {
   'late-installment': {
     title: 'تاخیر در پرداخت اقساط',
-    description: 'مهلت تشخیص تاخیر، مبنا و برخورد با پرداخت جزئی.',
+    description: 'مهلت ارفاقی و مبنای تشخیص تاخیر در پرداخت اقساط.',
   },
   'financial-obligations': {
     title: 'عدم انجام تعهدات مالی',

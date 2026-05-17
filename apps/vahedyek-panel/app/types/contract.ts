@@ -322,6 +322,7 @@ export interface ContractTerminationData {
       graceDaysCustom: string;
       detectionBasis: 'per-installment' | 'total-debt' | 'consecutive-installments';
       minDebtAmount: string;
+      consecutiveInstallmentsCount: string;
       partialHandling: 'if-not-full' | 'if-partial' | 'by-remaining-debt';
     };
     financialObligations: {

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { validateDiscountsStep, validateFinancialStep, validatePenaltiesStep, validateTerminationStep } from '../app/lib/contractValidation';
+import { validateDiscountsStep, validateFinancialStep, validatePenaltiesStep, validateTerminationStep, validateTerminationSubsection } from '../app/lib/contractValidation';
 import type { ContractDiscountsData, ContractFinancialData, ContractPenaltiesData, ContractTerminationData } from '../app/types/contract';
 
 function makeValidFinancialData(overrides: Partial<ContractFinancialData> = {}): ContractFinancialData {
@@ -480,6 +480,7 @@ function makeValidTerminationData(overrides: Partial<ContractTerminationData> = 
         graceDaysCustom: '',
         detectionBasis: 'total-debt',
         minDebtAmount: '5000000',
+        consecutiveInstallmentsCount: '',
         partialHandling: 'by-remaining-debt',
       },
       financialObligations: {
@@ -576,4 +577,27 @@ test('validateTerminationStep accepts termination when buyer path was engaged', 
 
   assert.equal(result.valid, true);
   assert.deepEqual(result.errors, {});
+});
+
+
+test('validateTerminationSubsection requires minimum debt only for total debt basis', () => {
+  const data = makeValidTerminationData();
+  data.constructorTerms.lateInstallment.minDebtAmount = '';
+
+  const result = validateTerminationSubsection('lateInstallment', data);
+
+  assert.equal(result.valid, false);
+  assert.ok(result.errors['constructorTerms.lateInstallment.minDebtAmount']);
+});
+
+test('validateTerminationSubsection requires consecutive installment count for consecutive basis', () => {
+  const data = makeValidTerminationData();
+  data.constructorTerms.lateInstallment.detectionBasis = 'consecutive-installments';
+  data.constructorTerms.lateInstallment.minDebtAmount = '';
+  data.constructorTerms.lateInstallment.consecutiveInstallmentsCount = '';
+
+  const result = validateTerminationSubsection('lateInstallment', data);
+
+  assert.equal(result.valid, false);
+  assert.ok(result.errors['constructorTerms.lateInstallment.consecutiveInstallmentsCount']);
 });
