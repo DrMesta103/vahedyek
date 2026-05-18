@@ -234,6 +234,10 @@ export async function getAppendixCompare(appendixId: string) {
   return readJson<any>(`/api/appendices/${encodeURIComponent(appendixId)}/compare`);
 }
 
+export async function getContractHistory(contractId: string) {
+  return readJson<any>(`/api/contracts/${encodeURIComponent(contractId)}/history`);
+}
+
 export async function getAppendixPreviousValues(appendixId: string, tag: AppendixTagKey) {
   return readJson<any>(`/api/appendices/${encodeURIComponent(appendixId)}/previous-values?tag=${encodeURIComponent(tag)}`);
 }
