@@ -285,6 +285,10 @@ function PartySection({ tag, payload }: { tag: AppendixTagKey; payload: Record<s
 }
 
 function DeliveryDateSection({ payload }: { payload: Record<string, unknown> }) {
+  const resolvedDate = [payload.deliveryDate, payload.previousDate, payload.nextDate]
+    .map((item) => String(item ?? '').trim())
+    .find(Boolean) ?? '—';
+
   return (
     <section className="rounded-3xl border border-slate-200 bg-slate-50/70 p-4">
       <div className="flex items-center justify-between gap-3">
@@ -300,7 +304,51 @@ function DeliveryDateSection({ payload }: { payload: Record<string, unknown> }) 
       <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white">
         <div className="grid gap-2 px-4 py-3 text-right sm:grid-cols-[140px_minmax(0,1fr)]">
           <div className="text-[11px] font-black text-slate-500">تاریخ تحویل ثبت‌شده</div>
-          <div className="text-[13px] font-semibold leading-7 text-slate-700">{String(payload.deliveryDate ?? payload.nextDate ?? payload.previousDate ?? '—')}</div>
+          <div className="text-[13px] font-semibold leading-7 text-slate-700">{resolvedDate}</div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function LoanSection({ payload }: { payload: Record<string, unknown> }) {
+  const paymentStatus = String(payload.paymentStatus ?? 'unselected');
+  const paymentStatusLabel =
+    paymentStatus === 'full'
+      ? 'بانک تمام مبلغ وام را پرداخت کرده'
+      : paymentStatus === 'less'
+        ? 'بانک مبلغ کمتری از قرارداد پرداخت کرده'
+        : paymentStatus === 'more'
+          ? 'بانک مبلغ بیشتری از قرارداد پرداخت کرده'
+          : paymentStatus === 'none'
+            ? 'بانک هیچ مبلغی پرداخت نکرده است'
+            : 'هنوز وضعیتی ثبت نشده است';
+  const loanAmount = Number(payload.loanAmount ?? 0);
+
+  return (
+    <section className="rounded-3xl border border-slate-200 bg-slate-50/70 p-4">
+      <div className="flex items-center justify-between gap-3">
+        <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-slate-700 shadow-sm">
+          <WalletCards className="h-4 w-4" />
+        </span>
+        <div className="text-right">
+          <div className="text-[15px] font-black text-slate-900">اطلاعات وام</div>
+          <div className="text-[11px] font-semibold text-slate-500">نمایش نزدیک‌ترین داده معتبر قبلی برای این بخش</div>
+        </div>
+      </div>
+
+      <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+        <div className="grid gap-2 px-4 py-3 text-right sm:grid-cols-[180px_minmax(0,1fr)]">
+          <div className="text-[11px] font-black text-slate-500">وضعیت پرداخت</div>
+          <div className="text-[13px] font-semibold leading-7 text-slate-700">{paymentStatusLabel}</div>
+        </div>
+        <div className="grid gap-2 border-t border-slate-100 px-4 py-3 text-right sm:grid-cols-[180px_minmax(0,1fr)]">
+          <div className="text-[11px] font-black text-slate-500">مبلغ وام</div>
+          <div className="text-[13px] font-semibold leading-7 text-slate-700">{loanAmount > 0 ? `${loanAmount.toLocaleString('fa-IR')} ریال` : '—'}</div>
+        </div>
+        <div className="grid gap-2 border-t border-slate-100 px-4 py-3 text-right sm:grid-cols-[180px_minmax(0,1fr)]">
+          <div className="text-[11px] font-black text-slate-500">بانک عامل</div>
+          <div className="text-[13px] font-semibold leading-7 text-slate-700">{String(payload.selectedBank ?? '—')}</div>
         </div>
       </div>
     </section>
@@ -349,6 +397,7 @@ export function AppendixPreviousValueDialog({
         </div>
 
         <div className="mt-6 max-h-[70vh] overflow-y-auto pr-1">
+          {tag === 'loan' ? <LoanSection payload={data.payload} /> : null}
           {tag === 'adjustment' ? <FinancialPreviewSection title="اطلاعات تعدیل" payload={data.payload} mode="adjustment" /> : null}
           {tag === 'contract-base-costs' ? <FinancialPreviewSection title="اطلاعات اصل قرارداد" payload={data.payload} mode="contract-base-costs" /> : null}
           {tag === 'side-costs' ? <FinancialPreviewSection title="اطلاعات هزینه های جانبی" payload={data.payload} mode="side-costs" /> : null}

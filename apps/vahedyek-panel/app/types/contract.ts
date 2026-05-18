@@ -124,6 +124,27 @@ export interface AppendixSideCostsPayload {
   dueItems: FinancialDueItemData[];
 }
 
+export type AppendixLoanPaymentStatus = 'unselected' | 'full' | 'less' | 'more' | 'none';
+export type AppendixLoanFlowStep = 'status' | 'details';
+export type AppendixLoanTiming = 'undated' | 'contract-date' | 'before-contract' | 'dated';
+export type AppendixLoanRepaymentTiming = 'next-month' | 'after-two-months' | 'custom';
+
+export interface AppendixLoanPayload {
+  flowStep: AppendixLoanFlowStep;
+  paymentStatus: AppendixLoanPaymentStatus;
+  contractLoanAmount: string;
+  allocations: {
+    adjustment: string;
+    landscaping: string;
+    utilities: string;
+  };
+  loanAmount: string;
+  loanTiming: AppendixLoanTiming;
+  loanReceivedDate: string;
+  repaymentTiming: AppendixLoanRepaymentTiming;
+  selectedBank: string;
+}
+
 export interface ContractFinancialData {
   pricingType: PricingType;
   areaPricingMode?: AreaPricingMode;
@@ -404,6 +425,7 @@ export interface ContractAppendixItem {
 }
 
 export type SupportedAppendixTagKey =
+  | 'loan'
   | 'first-party'
   | 'second-party'
   | 'unit-delivery-date'

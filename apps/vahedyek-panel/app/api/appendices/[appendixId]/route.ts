@@ -27,6 +27,7 @@ function resolveIssuerName(params: {
 
 function validationMessageByTag(tagKey: string) {
   if (tagKey === 'unit-delivery-date') return 'برای متمم تاریخ تحویل واحد باید تاریخ قبلی و جدید ثبت شود.';
+  if (tagKey === 'loan') return 'اطلاعات الحاقیه وام کامل یا معتبر نیست.';
   if (tagKey === 'first-party' || tagKey === 'second-party') return 'اطلاعات طرفین متمم معتبر نیست.';
   if (tagKey === 'adjustment') return 'اطلاعات ردیف مالی تعدیل معتبر نیست.';
   if (tagKey === 'contract-base-costs') return 'اطلاعات ردیف مالی اصل قرارداد معتبر نیست.';

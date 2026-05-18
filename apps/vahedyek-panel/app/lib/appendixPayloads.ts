@@ -19,6 +19,7 @@ import type {
   AppendixAdjustmentPayload,
   AppendixContractBaseCostsPayload,
   AppendixDeliveryDatePayload,
+  AppendixLoanPayload,
   AppendixPartiesPayload,
   AppendixSideCostsPayload,
   AppendixTagKey,
@@ -37,6 +38,7 @@ export const APPENDIX_ADJUSTMENT_TITLE = 'تعدیل';
 export const APPENDIX_CONTRACT_BASE_TITLE = 'مبلغ اصل قرارداد';
 
 export type SupportedAppendixPayload =
+  | AppendixLoanPayload
   | AppendixDeliveryDatePayload
   | AppendixPartiesPayload
   | AppendixAdjustmentPayload
@@ -47,6 +49,11 @@ type FinancialAppendixPayload =
   | AppendixAdjustmentPayload
   | AppendixContractBaseCostsPayload
   | AppendixSideCostsPayload;
+
+const APPENDIX_LOAN_PAYMENT_STATUSES = new Set<AppendixLoanPayload['paymentStatus']>(['unselected', 'full', 'less', 'more', 'none']);
+const APPENDIX_LOAN_TIMINGS = new Set<AppendixLoanPayload['loanTiming']>(['undated', 'contract-date', 'before-contract', 'dated']);
+const APPENDIX_LOAN_REPAYMENT_TIMINGS = new Set<AppendixLoanPayload['repaymentTiming']>(['next-month', 'after-two-months', 'custom']);
+const DEFAULT_LOAN_BANK = 'ملت';
 
 const PRIMARY_CATEGORY_IDS = ['principal', ...FINANCIAL_SUB_CATEGORY_IDS] as const;
 const PRIMARY_CATEGORY_ID_SET = new Set<string>(PRIMARY_CATEGORY_IDS);
@@ -183,6 +190,66 @@ function normalizeDeliveryDatePayload(input: unknown): AppendixDeliveryDatePaylo
   };
 }
 
+function sanitizeMoneyString(value: unknown) {
+  if (typeof value === 'number' && Number.isFinite(value)) return String(Math.max(0, Math.round(value)));
+  if (typeof value !== 'string') return '';
+  const digits = value.replace(/\D/g, '');
+  return digits ? String(Number(digits)) : '';
+}
+
+function createInitialLoanPayload(contractLoanAmount = ''): AppendixLoanPayload {
+  return {
+    flowStep: 'status',
+    paymentStatus: 'unselected',
+    contractLoanAmount,
+    allocations: {
+      adjustment: '',
+      landscaping: '',
+      utilities: '',
+    },
+    loanAmount: '',
+    loanTiming: 'undated',
+    loanReceivedDate: '',
+    repaymentTiming: 'next-month',
+    selectedBank: DEFAULT_LOAN_BANK,
+  };
+}
+
+function extractContractLoanAmount(contract: Contract | null | undefined) {
+  const categories = Array.isArray(contract?.data?.financial?.categories) ? contract?.data?.financial?.categories : [];
+  const loanCategory = categories.find((item) => item.id === 'loan');
+  return sanitizeMoneyString(loanCategory?.capAmount ?? 0);
+}
+
+function normalizeLoanPayload(input: unknown): AppendixLoanPayload {
+  const row = input && typeof input === 'object' ? (input as Record<string, unknown>) : {};
+  const initial = createInitialLoanPayload();
+  const paymentStatus = APPENDIX_LOAN_PAYMENT_STATUSES.has(row.paymentStatus as AppendixLoanPayload['paymentStatus'])
+    ? (row.paymentStatus as AppendixLoanPayload['paymentStatus'])
+    : initial.paymentStatus;
+  const requestedFlowStep = row.flowStep === 'details' ? 'details' : 'status';
+
+  return {
+    flowStep: paymentStatus === 'less' && requestedFlowStep === 'details' ? 'details' : 'status',
+    paymentStatus,
+    contractLoanAmount: sanitizeMoneyString(row.contractLoanAmount),
+    allocations: {
+      adjustment: sanitizeMoneyString((row.allocations as Record<string, unknown> | undefined)?.adjustment),
+      landscaping: sanitizeMoneyString((row.allocations as Record<string, unknown> | undefined)?.landscaping),
+      utilities: sanitizeMoneyString((row.allocations as Record<string, unknown> | undefined)?.utilities),
+    },
+    loanAmount: sanitizeMoneyString(row.loanAmount),
+    loanTiming: APPENDIX_LOAN_TIMINGS.has(row.loanTiming as AppendixLoanPayload['loanTiming'])
+      ? (row.loanTiming as AppendixLoanPayload['loanTiming'])
+      : initial.loanTiming,
+    loanReceivedDate: String(row.loanReceivedDate ?? ''),
+    repaymentTiming: APPENDIX_LOAN_REPAYMENT_TIMINGS.has(row.repaymentTiming as AppendixLoanPayload['repaymentTiming'])
+      ? (row.repaymentTiming as AppendixLoanPayload['repaymentTiming'])
+      : initial.repaymentTiming,
+    selectedBank: typeof row.selectedBank === 'string' && row.selectedBank.trim() ? row.selectedBank.trim() : initial.selectedBank,
+  };
+}
+
 function normalizePartiesPayload(input: unknown): AppendixPartiesPayload {
   const row = input && typeof input === 'object' ? (input as Record<string, unknown>) : {};
   return {
@@ -294,6 +361,8 @@ function validateSideCostsPayload(payload: AppendixSideCostsPayload) {
 
 export function createInitialAppendixPayload(tag: SupportedAppendixTagKey): SupportedAppendixPayload {
   switch (tag) {
+    case 'loan':
+      return createInitialLoanPayload();
     case 'unit-delivery-date':
       return { previousDate: '', nextDate: '', reason: '' };
     case 'first-party':
@@ -310,6 +379,8 @@ export function createInitialAppendixPayload(tag: SupportedAppendixTagKey): Supp
 
 export function normalizeAppendixPayload(tag: SupportedAppendixTagKey, input: unknown): SupportedAppendixPayload {
   switch (tag) {
+    case 'loan':
+      return normalizeLoanPayload(input);
     case 'unit-delivery-date':
       return normalizeDeliveryDatePayload(input);
     case 'first-party':
@@ -329,6 +400,10 @@ export function isSupportedAppendixPayloadTag(tag: AppendixTagKey): tag is Suppo
 }
 
 export function getContractBaselinePayload(tag: SupportedAppendixTagKey, contract: Contract): SupportedAppendixPayload {
+  if (tag === 'loan') {
+    return createInitialLoanPayload(extractContractLoanAmount(contract));
+  }
+
   if (tag === 'unit-delivery-date') {
     return {
       previousDate: String(contract.data.subject?.deliveryDate ?? ''),
@@ -365,7 +440,39 @@ export function validateAdjustmentPayload(payload: AppendixAdjustmentPayload): s
   return validateFixedLinePayload(payload, APPENDIX_ADJUSTMENT_LINE_ID, APPENDIX_ADJUSTMENT_TITLE);
 }
 
+function validateLoanPayload(payload: AppendixLoanPayload): string {
+  if (payload.paymentStatus === 'unselected') {
+    return 'وضعیت پرداخت بانک در زمان عقد قرارداد را مشخص کنید.';
+  }
+
+  if (payload.paymentStatus !== 'less') return '';
+
+  if (payload.flowStep !== 'details') {
+    return 'جزئیات وام را برای حالت پرداخت کمتر از مبلغ قرارداد تکمیل کنید.';
+  }
+
+  if (!sanitizeMoneyString(payload.loanAmount)) {
+    return 'مبلغ وام دریافتی در الحاقیه وام را وارد کنید.';
+  }
+
+  if (!payload.selectedBank.trim()) {
+    return 'بانک عامل وام را انتخاب کنید.';
+  }
+
+  if (payload.loanTiming === 'before-contract' || payload.loanTiming === 'dated') {
+    if (!payload.loanReceivedDate.trim()) {
+      return 'برای زمان دریافت انتخاب‌شده، تاریخ دریافت وام را ثبت کنید.';
+    }
+  }
+
+  return '';
+}
+
 export function validateAppendixPayload(tag: SupportedAppendixTagKey, payload: SupportedAppendixPayload): string {
+  if (tag === 'loan') {
+    return validateLoanPayload(payload as AppendixLoanPayload);
+  }
+
   if (tag === 'unit-delivery-date') {
     const row = payload as AppendixDeliveryDatePayload;
     if (!row.previousDate.trim() || !row.nextDate.trim()) {

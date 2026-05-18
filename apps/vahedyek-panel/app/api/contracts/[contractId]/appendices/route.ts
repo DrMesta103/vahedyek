@@ -145,6 +145,7 @@ export async function POST(request: Request, context: { params: Promise<{ contra
         const validationMessage = validateAppendixPayload(item.tagKey, normalizedPayload);
         if (validationMessage) {
           if (item.tagKey === 'unit-delivery-date') throw new Error('INVALID_DELIVERY_DATE_PAYLOAD');
+          if (item.tagKey === 'loan') throw new Error('INVALID_LOAN_APPENDIX_PAYLOAD');
           if (item.tagKey === 'first-party' || item.tagKey === 'second-party') throw new Error('INVALID_PARTIES_APPENDIX_PAYLOAD');
           if (item.tagKey === 'adjustment') throw new Error('INVALID_ADJUSTMENT_APPENDIX_PAYLOAD');
           if (item.tagKey === 'contract-base-costs') throw new Error('INVALID_CONTRACT_BASE_COSTS_APPENDIX_PAYLOAD');
@@ -202,6 +203,7 @@ export async function POST(request: Request, context: { params: Promise<{ contra
       if (error.message === 'INVALID_APPENDIX_TAG') return NextResponse.json({ message: 'یکی از تگ‌های متمم معتبر نیست.' }, { status: 400 });
       if (error.message === 'DUPLICATE_APPENDIX_TAG') return NextResponse.json({ message: 'تگ تکراری برای متمم ارسال شده است.' }, { status: 400 });
       if (error.message === 'INVALID_DELIVERY_DATE_PAYLOAD') return NextResponse.json({ message: 'برای متمم تاریخ تحویل واحد باید تاریخ قبلی و جدید ثبت شود.' }, { status: 400 });
+      if (error.message === 'INVALID_LOAN_APPENDIX_PAYLOAD') return NextResponse.json({ message: 'اطلاعات الحاقیه وام کامل یا معتبر نیست.' }, { status: 400 });
       if (error.message === 'INVALID_PARTIES_APPENDIX_PAYLOAD') return NextResponse.json({ message: 'اطلاعات طرفین متمم کامل یا معتبر نیست.' }, { status: 400 });
       if (error.message === 'INVALID_ADJUSTMENT_APPENDIX_PAYLOAD') return NextResponse.json({ message: 'اطلاعات ردیف مالی تعدیل معتبر نیست.' }, { status: 400 });
       if (error.message === 'INVALID_CONTRACT_BASE_COSTS_APPENDIX_PAYLOAD') return NextResponse.json({ message: 'اطلاعات ردیف مالی اصل قرارداد معتبر نیست.' }, { status: 400 });

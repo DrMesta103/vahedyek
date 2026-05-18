@@ -129,6 +129,10 @@ export async function ensurePageThreadsTables() {
       "attachmentName" TEXT,
       "attachmentSize" INTEGER,
       "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+
+
+      
       CONSTRAINT "DevPageMessage_threadId_fkey"
         FOREIGN KEY ("threadId") REFERENCES ${THREADS_TABLE}("id")
         ON DELETE CASCADE
