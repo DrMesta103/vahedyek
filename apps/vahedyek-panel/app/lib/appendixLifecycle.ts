@@ -256,3 +256,91 @@ export function getContractComparePayload(contract: any, tagKey: SupportedAppend
   }
   return payload;
 }
+
+export type AppendixHistoryEntry = {
+  sourceType: 'contract' | 'appendix';
+  sourceLabel: string;
+  appendixNumber: number | null;
+  effectiveDate: string | null;
+  createdAt: string | null;
+  isCurrent: boolean;
+  status: AppendixStatus | 'completed';
+  payload: Record<string, unknown>;
+};
+
+export type AppendixHistorySection = {
+  tagKey: AppendixTagKey;
+  title: string;
+  entries: AppendixHistoryEntry[];
+};
+
+function cloneHistoryPayload(payload: Record<string, unknown>) {
+  return JSON.parse(JSON.stringify(payload ?? {})) as Record<string, unknown>;
+}
+
+export function buildAppendixHistorySections(params: {
+  current: ContractAppendix;
+  approvedAppendices: ContractAppendix[];
+  contract: any;
+}): AppendixHistorySection[] {
+  const contractLabel = getAppendixPreviousSourceLabel({
+    sourceKind: 'contract',
+    contractNumber: params.contract?.data?.subject?.contractNumber ?? null,
+  });
+
+  return params.current.items.map((currentItem) => {
+    const tagKey = currentItem.tagKey;
+    const title = currentItem.title || CONTRACT_APPENDIX_TAG_MAP.get(tagKey)?.title || tagKey;
+    const contractPayload = getContractComparePayload(params.contract, tagKey as SupportedAppendixTagKey) as Record<string, unknown>;
+    const entries: AppendixHistoryEntry[] = [
+      {
+        sourceType: 'contract',
+        sourceLabel: contractLabel,
+        appendixNumber: null,
+        effectiveDate: null,
+        createdAt: params.contract?.createdAt ?? null,
+        isCurrent: false,
+        status: 'completed',
+        payload: cloneHistoryPayload(contractPayload),
+      },
+    ];
+    let lastPayload = cloneHistoryPayload(contractPayload);
+
+    for (const appendix of params.approvedAppendices) {
+      const appendixItem = appendix.items.find((item) => item.tagKey === tagKey);
+      const payload =
+        appendix.id === params.current.id
+          ? cloneHistoryPayload(currentItem.payload)
+          : appendixItem
+            ? cloneHistoryPayload(appendixItem.payload)
+            : cloneHistoryPayload(lastPayload);
+
+      entries.push({
+        sourceType: 'appendix',
+        sourceLabel: `متمم شماره ${appendix.appendixNumber.toLocaleString('fa-IR')}`,
+        appendixNumber: appendix.appendixNumber,
+        effectiveDate: appendix.effectiveDate || null,
+        createdAt: appendix.createdAt || null,
+        isCurrent: appendix.id === params.current.id,
+        status: appendix.status,
+        payload,
+      });
+      lastPayload = cloneHistoryPayload(payload);
+    }
+
+    if (!entries.some((entry) => entry.sourceType === 'appendix' && entry.appendixNumber === params.current.appendixNumber)) {
+      entries.push({
+        sourceType: 'appendix',
+        sourceLabel: `متمم شماره ${params.current.appendixNumber.toLocaleString('fa-IR')}`,
+        appendixNumber: params.current.appendixNumber,
+        effectiveDate: params.current.effectiveDate || null,
+        createdAt: params.current.createdAt || null,
+        isCurrent: true,
+        status: params.current.status,
+        payload: cloneHistoryPayload(currentItem.payload),
+      });
+    }
+
+    return { tagKey, title, entries };
+  });
+}

@@ -355,8 +355,24 @@ export function AppendixFinancialPayloadEditor({
         lockedCategoryIds={lockedCategoryIds}
         categoryDueItemsMap={categoryDueItemsMap}
         principalAmount={principalAmount}
+        principalEditable={mode === 'contract-base-costs'}
         principalExpanded={true}
         onTogglePrincipal={() => {}}
+        onPrincipalAmountChange={(rawValue) => {
+          const amount = parseMoneyInput(rawValue);
+          setCategories((current) =>
+            current.map((item) =>
+              item.id === 'principal'
+                ? {
+                    ...item,
+                    capAmount: amount,
+                    dueAmount: 0,
+                    noDueAmount: amount,
+                  }
+                : item,
+            ),
+          );
+        }}
         expandedCustomCategoryId={expandedRootId}
         onToggleCustomCategory={(categoryId) => setExpandedRootId((current) => (current === categoryId ? null : categoryId))}
         onCategoryAmountChange={(categoryId, rawValue) => {

@@ -2,9 +2,8 @@ import { NextResponse } from 'next/server';
 import { requireSessionContext } from '../../../../lib/auth';
 import { handlePrismaApiError } from '../../../../lib/prismaApiError';
 import { prisma } from '../../../../lib/prisma';
-import { fetchContractViewForAppendix, resolveAppendixCompareBase, serializeAppendixRecord } from '../../../../lib/appendixServer';
-import { buildAppendixCompareRows, getContractComparePayload } from '../../../../lib/appendixLifecycle';
-import type { SupportedAppendixTagKey } from '../../../../types/contract';
+import { fetchContractViewForAppendix, serializeAppendixRecord } from '../../../../lib/appendixServer';
+import { buildAppendixHistorySections } from '../../../../lib/appendixLifecycle';
 
 export async function GET(_: Request, context: { params: Promise<{ appendixId: string }> }) {
   try {
@@ -14,51 +13,41 @@ export async function GET(_: Request, context: { params: Promise<{ appendixId: s
 
     const appendix = await prisma.contractAppendix.findFirst({
       where: { id: appendixId, tenantId: session.tenantId },
-      include: { items: { orderBy: [{ groupKey: 'asc' }, { createdAt: 'asc' }] }, approvalInstance: { select: { currentStepIndex: true } } },
+      include: {
+        items: { orderBy: [{ groupKey: 'asc' }, { createdAt: 'asc' }] },
+        approvalInstance: { select: { currentStepIndex: true } },
+      },
     });
     if (!appendix) return NextResponse.json({ message: 'متمم یافت نشد.' }, { status: 404 });
 
     const contract = await fetchContractViewForAppendix(session.tenantId, appendix.draftId);
     if (!contract) return NextResponse.json({ message: 'قرارداد پایه یافت نشد.' }, { status: 404 });
 
-    const compareBase = await resolveAppendixCompareBase(session.tenantId, appendix, contract);
-    const current = serializeAppendixRecord(appendix);
-    const rows = buildAppendixCompareRows({
-      current,
-      previous: compareBase.appendix
-        ? {
-            sourceKind: 'appendix',
-            sourceLabel: compareBase.sourceLabel,
-            sourceItem: null,
-          }
-        : {
-            sourceKind: 'contract',
-            sourceLabel: compareBase.sourceLabel,
-            contractValue: null,
-          },
-    }).map((row) => {
-      if (compareBase.appendix) {
-        const previousItem = compareBase.appendix.items.find((item: any) => item.tagKey === row.tagKey) ?? null;
-        return {
-          ...row,
-          previousPayload: previousItem?.payload ?? {},
-        };
-      }
+    const approvedAppendicesRaw = await prisma.contractAppendix.findMany({
+      where: {
+        tenantId: session.tenantId,
+        draftId: appendix.draftId,
+        status: 'APPROVED',
+        appendixNumber: { lte: appendix.appendixNumber },
+      },
+      orderBy: { appendixNumber: 'asc' },
+      include: {
+        items: { orderBy: [{ groupKey: 'asc' }, { createdAt: 'asc' }] },
+        approvalInstance: { select: { currentStepIndex: true } },
+      },
+    });
 
-      return {
-        ...row,
-        previousPayload: getContractComparePayload(contract, row.tagKey as SupportedAppendixTagKey),
-      };
+    const current = serializeAppendixRecord(appendix);
+    const approvedAppendices = approvedAppendicesRaw.map(serializeAppendixRecord);
+    const sections = buildAppendixHistorySections({
+      current,
+      approvedAppendices,
+      contract,
     });
 
     return NextResponse.json({
       current,
-      compareBase: {
-        sourceKind: compareBase.sourceKind,
-        sourceId: compareBase.sourceId,
-        sourceLabel: compareBase.sourceLabel,
-      },
-      rows,
+      sections,
     });
   } catch (error) {
     return handlePrismaApiError(error);

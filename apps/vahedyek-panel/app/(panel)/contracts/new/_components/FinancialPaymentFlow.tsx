@@ -307,8 +307,10 @@ export function FinancialPaymentFlow({
   lockedCategoryIds,
   categoryDueItemsMap,
   principalAmount,
+  principalEditable = false,
   principalExpanded,
   onTogglePrincipal,
+  onPrincipalAmountChange,
   expandedCustomCategoryId,
   onToggleCustomCategory,
   onCategoryAmountChange,
@@ -333,8 +335,10 @@ export function FinancialPaymentFlow({
   lockedCategoryIds: string[];
   categoryDueItemsMap: Record<string, FinancialDueItemData[]>;
   principalAmount: number;
+  principalEditable?: boolean;
   principalExpanded: boolean;
   onTogglePrincipal: () => void;
+  onPrincipalAmountChange?: (value: string) => void;
   expandedCustomCategoryId: string | null;
   onToggleCustomCategory: (categoryId: string) => void;
   onCategoryAmountChange: (categoryId: string, value: string) => void;
@@ -412,11 +416,13 @@ export function FinancialPaymentFlow({
             <div className="grid gap-3 lg:grid-cols-[1fr_minmax(280px,420px)] lg:items-start">
               <div>
                 <p className="text-[13px] leading-7 text-[#666b73]">
-                  مبلغ کل قرارداد از بخش قیمت‌گذاری (بالای همین صفحه) خوانده می‌شود و قابل ویرایش مستقیم نیست.
+                  {principalEditable
+                    ? 'در متمم می‌توانید مبلغ اصل قرارداد را متناسب با اصلاحات این بخش افزایش یا کاهش دهید.'
+                    : 'مبلغ کل قرارداد از بخش قیمت‌گذاری (بالای همین صفحه) خوانده می‌شود و قابل ویرایش مستقیم نیست.'}
                 </p>
               </div>
-              <div className="opacity-70">
-                <MoneyInput value={principalAmount} onChange={() => {}} />
+              <div className={principalEditable ? '' : 'opacity-70'}>
+                <MoneyInput value={principalAmount} onChange={(value) => onPrincipalAmountChange?.(value)} />
               </div>
             </div>
 

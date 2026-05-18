@@ -26,7 +26,7 @@ function resolveIssuerName(params: {
 }
 
 function validationMessageByTag(tagKey: string) {
-  if (tagKey === 'unit-delivery-date') return 'برای متمم تاریخ تحویل واحد باید تاریخ قبلی و جدید ثبت شود.';
+  if (tagKey === 'unit-delivery-date') return 'برای متمم تاریخ تحویل واحد باید تاریخ جدید ثبت شود.';
   if (tagKey === 'loan') return 'اطلاعات الحاقیه وام کامل یا معتبر نیست.';
   if (tagKey === 'first-party' || tagKey === 'second-party') return 'اطلاعات طرفین متمم معتبر نیست.';
   if (tagKey === 'adjustment') return 'اطلاعات ردیف مالی تعدیل معتبر نیست.';
@@ -84,6 +84,9 @@ export async function PUT(request: Request, context: { params: Promise<{ appendi
     if (!payload || !Array.isArray(payload.items) || payload.items.length === 0) {
       return NextResponse.json({ message: 'حداقل یک نوع متمم باید انتخاب شود.' }, { status: 400 });
     }
+    if (payload.submitMode === 'pending_approval' && !String(payload.effectiveDate ?? '').trim()) {
+      return NextResponse.json({ message: 'زمان متمم الزامی است.' }, { status: 400 });
+    }
 
     const [employees, formerEmployees] = await Promise.all([
       prisma.employee.findMany({
@@ -114,9 +117,11 @@ export async function PUT(request: Request, context: { params: Promise<{ appendi
       if (!isSupportedAppendixPayloadTag(item.tagKey)) continue;
 
       const normalizedPayload = normalizeAppendixPayload(item.tagKey, item.payload);
-      const validationMessage = validateAppendixPayload(item.tagKey, normalizedPayload);
-      if (validationMessage) {
-        return NextResponse.json({ message: validationMessageByTag(item.tagKey) }, { status: 400 });
+      if (payload.submitMode === 'pending_approval') {
+        const validationMessage = validateAppendixPayload(item.tagKey, normalizedPayload);
+        if (validationMessage) {
+          return NextResponse.json({ message: validationMessageByTag(item.tagKey) }, { status: 400 });
+        }
       }
 
       normalizedItemPayloads.set(item.tagKey, normalizedPayload);
