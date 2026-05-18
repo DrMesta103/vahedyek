@@ -8,7 +8,6 @@ import PanelLayout from '../../../components/PanelLayout';
 import { ContractApprovalFlowBanner } from '../../../components/contracts/ContractApprovalFlowBanner';
 import { useAppToast } from '../../../components/feedback/AppToastProvider';
 import { getContractDetails, setActiveDraftId } from '../../../lib/contractDraftClient';
-import { ContractHistoryPanel } from '../../../components/contracts/history/ContractHistoryPanel';
 import { computeContractTotalRialFromFinancial } from '../../../lib/contractFinancialPricing';
 import type { ContractStatus } from '../../../types/contract';
 
@@ -175,7 +174,7 @@ export default function ContractDetailsPage() {
     const lockedForApproval = contract?.approvalInstance?.status === 'IN_REVIEW';
     const isFinalizedUi = contract?.status === 'completed';
     /** در قرارداد تکمیل‌شده فقط این موارد فعال می‌مانند؛ بقیه پیام «در حال توسعه». */
-    const enabledWhenCompleted = new Set(['reports', 'dues', 'appendix']);
+    const enabledWhenCompleted = new Set(['reports', 'dues', 'appendix', 'history']);
 
     const enabled = (id: string) => {
       if (id === 'view-draft') return true;
@@ -199,7 +198,7 @@ export default function ContractDetailsPage() {
       if (id === 'reports') return 'گزارش‌های مربوط به قرارداد (مالی/عملکردی/وضعیت).'
       if (id === 'dues') return 'مدیریت سررسیدها و فیش‌های پرداختی/واریزی مرتبط با قرارداد.'
       if (id === 'appendix') return 'ثبت و مدیریت متمم‌های قرارداد پس از نهایی شدن.'
-      if (id === 'history') return 'نمایش تاریخچهٔ رویدادها، تغییرات و مسیر ثبت/تأیید قرارداد.'
+      if (id === 'history') return 'مشاهده سیر تغییرات قرارداد از نسخه اصلی تا آخرین متمم تاییدشده.'
       if (id === 'docs') return 'بارگذاری و مدیریت مدارک و پیوست‌های قرارداد.'
       if (id === 'court') return 'ثبت و مدیریت اقاله و تغییر وضعیت‌های مرتبط.'
       if (id === 'cancel') return 'ثبت فرآیند فسخ و مستندات/رویدادهای مرتبط با آن.'
@@ -338,8 +337,6 @@ export default function ContractDetailsPage() {
         </Suspense>
       ) : null}
 
-      {contractId ? <ContractHistoryPanel contractId={String(contractId)} /> : null}
-
       <section className="contract-details-panel contract-details-profile">
         <div className="min-w-0 flex-1">
           {view.buyers.length ? (
@@ -449,6 +446,11 @@ export default function ContractDetailsPage() {
                 if (item.id === 'appendix') {
                   const q = searchParams?.toString();
                   router.push(`/contracts/${String(contractId)}/appendices${q ? `?${q}` : ''}`);
+                  return;
+                }
+                if (item.id === 'history') {
+                  const q = searchParams?.toString();
+                  router.push(`/contracts/${String(contractId)}/history${q ? `?${q}` : ''}`);
                   return;
                 }
                 setActiveDraftId(String(contractId));

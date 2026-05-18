@@ -5,7 +5,7 @@ import { getContractHistory } from '../../../lib/contractDraftClient';
 import type { ContractHistoryResponse } from '../../../lib/contractHistory';
 import { HistoryTimelineView } from './HistoryTimelineView';
 
-export function ContractHistoryPanel({ contractId }: { contractId: string }) {
+export function ContractHistoryPanel({ contractId, embedded = true }: { contractId: string; embedded?: boolean }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [data, setData] = useState<ContractHistoryResponse | null>(null);
@@ -75,7 +75,7 @@ export function ContractHistoryPanel({ contractId }: { contractId: string }) {
   return (
     <div className="mt-4">
       <HistoryTimelineView
-        embedded
+        embedded={embedded}
         meta={meta}
         sections={data.sections}
         versions={data.versions}

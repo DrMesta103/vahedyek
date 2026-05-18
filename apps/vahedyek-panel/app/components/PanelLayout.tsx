@@ -66,6 +66,13 @@ function buildContractsBreadcrumb(pathname: string): Crumb[] {
     return trail;
   }
 
+  if (segments[0] === 'contracts' && segments[1] && segments[1] !== 'new' && segments[2] === 'history') {
+    const contractId = segments[1];
+    trail.push({ label: 'جزئیات قرارداد', href: `/contracts/${contractId}` });
+    trail.push({ label: 'تاریخچه قرارداد' });
+    return trail;
+  }
+
   if (segments[0] === 'contracts' && segments[1] && segments[1] !== 'new' && segments[2] === 'appendices') {
     const contractId = segments[1];
     trail.push({ label: 'جزئیات قرارداد', href: `/contracts/${contractId}` });
