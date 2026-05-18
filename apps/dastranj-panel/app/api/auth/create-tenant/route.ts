@@ -42,7 +42,7 @@ export async function POST(request: Request) {
     const billingCycle = body.billingCycle?.trim();
 
     if (!businessName || !packageId || !billingCycle) {
-      return NextResponse.json({ message: 'نام کسب‌وکار، پکیج و دوره پرداخت الزامی است.' }, { status: 400 });
+      return NextResponse.json({ message: 'نام کسب و کار، پکیج و دوره پرداخت الزامی است.' }, { status: 400 });
     }
 
     if (!ALLOWED_PACKAGES.has(packageId) || !ALLOWED_BILLING_CYCLES.has(billingCycle)) {
@@ -65,14 +65,6 @@ export async function POST(request: Request) {
       where: { userId_tenantId: { userId: session.userId, tenantId: tenant.id } },
     });
     if (membership) await ensureOwnerMembershipRole(membership.id, tenant.id);
-
-    await prisma.workPolicy.createMany({
-      data: [
-        { tenantId: tenant.id, title: 'سیاست استاندارد اداری', description: 'مناسب برای کارمندان اداری با ساعت کاری ثابت', isDefault: true, sectionValues: { manualAttendance: false, overtimeFromAttendance: true, nightWorkStart: '22:00' } },
-        { tenantId: tenant.id, title: 'سیاست شیفتی', description: 'مناسب برای کارمندان با شیفت‌های متغیر', isDefault: true, sectionValues: { manualAttendance: false, overtimeFromAttendance: true, nightWorkStart: '22:00' } },
-        { tenantId: tenant.id, title: 'سیاست دورکاری', description: 'مناسب برای کارمندان دورکار', isDefault: true, sectionValues: { manualAttendance: true, overtimeFromAttendance: false, nightWorkStart: '22:00' } },
-      ],
-    });
 
     const newSession = await createSession(session.userId, tenant.id);
     const response = NextResponse.json({

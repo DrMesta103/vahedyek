@@ -2,6 +2,14 @@
 
 import Link from 'next/link';
 import { useEffect, useId, useRef, useState } from 'react';
+import { ConfirmDialog } from './ConfirmDialog';
+
+type ConfirmConfig = {
+  title: string;
+  description: string;
+  confirmLabel?: string;
+  cancelLabel?: string;
+};
 
 type CardMenuItem =
   | {
@@ -16,6 +24,7 @@ type CardMenuItem =
       tone?: 'default' | 'danger';
       action: (formData: FormData) => void | Promise<void>;
       hiddenFields?: Record<string, string>;
+      confirm?: ConfirmConfig;
     };
 
 type CardMenuProps = {
@@ -26,7 +35,9 @@ const OPEN_EVENT = 'dastranj:card-menu-open';
 
 export function CardMenu({ items }: CardMenuProps) {
   const [open, setOpen] = useState(false);
+  const [pendingItemIndex, setPendingItemIndex] = useState<number | null>(null);
   const rootRef = useRef<HTMLDivElement | null>(null);
+  const confirmFormRef = useRef<HTMLFormElement | null>(null);
   const menuId = useId();
 
   useEffect(() => {
@@ -62,36 +73,75 @@ export function CardMenu({ items }: CardMenuProps) {
     setOpen(next);
   };
 
+  const pendingItem = pendingItemIndex === null ? null : items[pendingItemIndex];
+
   return (
-    <div className="card-menu" ref={rootRef}>
-      <button type="button" className="card-menu-trigger" aria-label="منوی عملیات" onClick={toggleMenu}>
-        ⋮
-      </button>
-      {open ? (
-        <div className="card-menu-dropdown">
-          {items.map((item) =>
-            item.kind === 'link' ? (
-              <Link
-                key={`${item.kind}-${item.href}-${item.label}`}
-                href={item.href}
-                className={item.tone === 'danger' ? 'card-menu-delete' : 'card-menu-link'}
-                onClick={() => setOpen(false)}
-              >
-                {item.label}
-              </Link>
-            ) : (
-              <form key={`${item.kind}-${item.label}`} action={item.action}>
-                {Object.entries(item.hiddenFields ?? {}).map(([name, value]) => (
-                  <input key={name} type="hidden" name={name} value={value} />
-                ))}
-                <button type="submit" className={item.tone === 'danger' ? 'card-menu-delete' : 'card-menu-link'}>
+    <>
+      <div className="card-menu" ref={rootRef}>
+        <button type="button" className="card-menu-trigger" aria-label="منوی عملیات" onClick={toggleMenu}>
+          ⋮
+        </button>
+        {open ? (
+          <div className="card-menu-dropdown">
+            {items.map((item, index) =>
+              item.kind === 'link' ? (
+                <Link
+                  key={`${item.kind}-${item.href}-${item.label}`}
+                  href={item.href}
+                  className={item.tone === 'danger' ? 'card-menu-delete' : 'card-menu-link'}
+                  onClick={() => setOpen(false)}
+                >
+                  {item.label}
+                </Link>
+              ) : item.confirm ? (
+                <button
+                  key={`${item.kind}-${item.label}`}
+                  type="button"
+                  className={item.tone === 'danger' ? 'card-menu-delete' : 'card-menu-link'}
+                  onClick={() => {
+                    setOpen(false);
+                    setPendingItemIndex(index);
+                  }}
+                >
                   {item.label}
                 </button>
-              </form>
-            ),
-          )}
-        </div>
+              ) : (
+                <form key={`${item.kind}-${item.label}`} action={item.action}>
+                  {Object.entries(item.hiddenFields ?? {}).map(([name, value]) => (
+                    <input key={name} type="hidden" name={name} value={value} />
+                  ))}
+                  <button type="submit" className={item.tone === 'danger' ? 'card-menu-delete' : 'card-menu-link'}>
+                    {item.label}
+                  </button>
+                </form>
+              ),
+            )}
+          </div>
+        ) : null}
+      </div>
+
+      {pendingItem && pendingItem.kind === 'submit' && pendingItem.confirm ? (
+        <>
+          <form ref={confirmFormRef} action={pendingItem.action}>
+            {Object.entries(pendingItem.hiddenFields ?? {}).map(([name, value]) => (
+              <input key={name} type="hidden" name={name} value={value} />
+            ))}
+          </form>
+          <ConfirmDialog
+            open
+            title={pendingItem.confirm.title}
+            description={pendingItem.confirm.description}
+            confirmLabel={pendingItem.confirm.confirmLabel}
+            cancelLabel={pendingItem.confirm.cancelLabel}
+            tone={pendingItem.tone}
+            onCancel={() => setPendingItemIndex(null)}
+            onConfirm={() => {
+              confirmFormRef.current?.requestSubmit();
+              setPendingItemIndex(null);
+            }}
+          />
+        </>
       ) : null}
-    </div>
+    </>
   );
 }

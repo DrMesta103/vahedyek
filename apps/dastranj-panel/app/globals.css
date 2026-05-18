@@ -1142,6 +1142,19 @@ textarea {
   margin: 0;
 }
 
+.location-card-label {
+  display: inline-flex;
+  margin-bottom: 6px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.location-card-inline-label {
+  color: var(--text);
+  font-weight: 700;
+}
+
 .location-map-header > div {
   display: grid;
   gap: 6px;
@@ -1322,6 +1335,67 @@ textarea {
 
 .card-menu-delete:hover {
   background: rgba(255, 111, 145, 0.16);
+}
+
+.confirm-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(3, 10, 20, 0.58);
+  backdrop-filter: blur(10px);
+}
+
+.confirm-dialog {
+  width: min(100%, 440px);
+  display: grid;
+  gap: 18px;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 24px 80px rgba(2, 6, 23, 0.42);
+}
+
+[data-theme="dark"] .confirm-dialog {
+  background: rgba(12, 20, 34, 0.94);
+}
+
+.confirm-dialog-copy {
+  display: grid;
+  gap: 8px;
+}
+
+.confirm-dialog-copy strong {
+  font-size: 20px;
+}
+
+.confirm-dialog-copy p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.9;
+}
+
+.confirm-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.confirm-dialog-danger-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 16px;
+  background: rgba(239, 68, 68, 0.14);
+  color: #ef4444;
+  font-weight: 700;
 }
 
 .location-card-map {
@@ -2032,49 +2106,63 @@ textarea {
 
 .quick-setup-location-layout {
   display: grid;
-  grid-template-columns: minmax(320px, 0.95fr) minmax(360px, 1fr);
-  gap: 14px;
+  grid-template-columns: minmax(300px, 0.96fr) minmax(460px, 1fr);
+  gap: 18px;
+  direction: ltr;
+  min-height: 390px;
 }
 
 .quick-setup-location-form,
 .quick-setup-map-panel {
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 18px;
-  background: rgba(14, 20, 38, 0.94);
-  padding: 18px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+  box-shadow: none;
 }
 
 .quick-setup-location-form {
   display: grid;
   align-content: start;
-  gap: 18px;
+  gap: 38px;
+  direction: rtl;
+  padding-top: 6px;
 }
 
 .quick-setup-field {
   display: grid;
-  gap: 8px;
+  gap: 7px;
 }
 
 .quick-setup-field > span {
   color: #f1f4ff;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 800;
+  line-height: 1;
+}
+
+.quick-setup-field > span b {
+  color: #ff6b91;
+  margin-left: 4px;
 }
 
 .quick-setup-field input,
 .quick-setup-map-search input {
   width: 100%;
-  min-height: 38px;
+  min-height: 42px;
   border: 1px solid rgba(126, 142, 187, 0.38);
-  border-radius: 10px;
+  border-radius: 9px;
   background: rgba(18, 25, 46, 0.96);
   color: #ffffff;
   padding: 0 14px;
+  outline: none;
+  font-weight: 800;
+  text-align: right;
 }
 
 .quick-setup-field-inline {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: auto 1fr;
   align-items: center;
   gap: 12px;
 }
@@ -2096,46 +2184,54 @@ textarea {
 }
 
 .quick-setup-map-panel {
-  display: grid;
-  gap: 12px;
+  display: contents;
+  direction: rtl;
 }
 
 .quick-setup-map-shell {
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.03);
-  padding: 10px;
-  display: grid;
-  gap: 10px;
+  grid-column: 2;
+  border: 10px solid #eef1f6;
+  border-radius: 14px;
+  background: #eef1f6;
+  padding: 0;
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.08);
 }
 
 .quick-setup-map-search {
-  position: relative;
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  z-index: 2;
 }
 
 .quick-setup-map-search input {
-  padding-right: 42px;
+  min-height: 37px;
+  border: 0;
   border-radius: 999px;
+  background: #10182b;
+  color: #fff;
+  padding: 0 42px 0 18px;
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .quick-setup-map-search svg {
   position: absolute;
   top: 50%;
-  right: 14px;
+  right: 15px;
   transform: translateY(-50%);
-  color: #dbe1ff;
+  color: #e8ecff;
 }
 
 .quick-setup-map-canvas {
   position: relative;
-  min-height: 220px;
-  border-radius: 14px;
+  min-height: 270px;
+  border-radius: 8px;
   background:
-    linear-gradient(rgba(136, 144, 168, 0.12) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(136, 144, 168, 0.12) 1px, transparent 1px),
-    radial-gradient(circle at 50% 50%, rgba(122, 109, 255, 0.08), transparent 18%),
-    linear-gradient(180deg, #f0efec 0%, #e5e3de 100%);
-  background-size: 28px 28px, 28px 28px, auto, auto;
+    repeating-linear-gradient(45deg, rgba(150, 160, 180, 0.14) 0 1px, transparent 1px 34px),
+    repeating-linear-gradient(-45deg, rgba(150, 160, 180, 0.14) 0 1px, transparent 1px 34px),
+    linear-gradient(180deg, #f5f5f3 0%, #e9e9e6 100%);
   overflow: hidden;
 }
 
@@ -2154,40 +2250,78 @@ textarea {
 
 .quick-setup-map-marker {
   position: absolute;
-  top: 44%;
+  top: 45%;
   left: 50%;
-  width: 34px;
-  height: 34px;
+  width: 38px;
+  height: 38px;
   transform: translate(-50%, -50%);
+  background: transparent;
+  color: #5545ff;
+  box-shadow: none;
 }
 
 .quick-setup-map-controls {
   position: absolute;
-  left: 14px;
-  bottom: 14px;
+  right: 14px;
+  bottom: 15px;
   display: grid;
   gap: 10px;
 }
 
 .quick-setup-map-controls button,
 .quick-setup-map-locate {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
 }
 
 .quick-setup-map-locate {
   position: absolute;
-  right: 14px;
-  bottom: 14px;
+  left: 15px;
+  bottom: 15px;
 }
 
 .quick-setup-map-footer {
+  grid-column: 1 / -1;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 12px;
+  min-height: 52px;
+  padding-top: 13px;
+  border-top: 1px solid rgba(126, 142, 187, 0.16);
   color: #aeb8d9;
   font-size: 12px;
+  direction: ltr;
+}
+
+.quick-setup-map-footer span {
+  margin-right: auto;
+}
+
+.quick-setup-location-completed {
+  display: grid;
+  gap: 12px;
+}
+
+.quick-setup-location-card {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  background: rgba(14, 20, 38, 0.94);
+  padding: 16px;
+  text-align: right;
+}
+
+.quick-setup-location-card div {
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.quick-setup-location-card span {
+  display: block;
+  color: #aeb8d9;
+  font-size: 13px;
+  margin-top: 7px;
 }
 
 @media (max-width: 1100px) {
@@ -2224,6 +2358,10 @@ textarea {
 
   .quick-setup-location-layout {
     grid-template-columns: 1fr;
+  }
+
+  .quick-setup-map-shell {
+    grid-column: 1;
   }
 
   .quick-setup-page {
@@ -2997,6 +3135,44 @@ body {
 [data-theme="dark"] .quick-setup-location-form,
 [data-theme="dark"] .quick-setup-map-panel {
   background: rgba(255, 255, 255, 0.04);
+}
+
+.quick-setup-location-form,
+.quick-setup-map-panel,
+[data-theme="light"] .quick-setup-location-form,
+[data-theme="light"] .quick-setup-map-panel,
+[data-theme="dark"] .quick-setup-location-form,
+[data-theme="dark"] .quick-setup-map-panel {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+[data-theme="light"] .quick-setup-field > span,
+[data-theme="dark"] .quick-setup-field > span {
+  color: #f1f4ff;
+}
+
+[data-theme="light"] .quick-setup-field input,
+[data-theme="dark"] .quick-setup-field input {
+  border-color: rgba(126, 142, 187, 0.38);
+  background: rgba(18, 25, 46, 0.96);
+  color: #fff;
+}
+
+[data-theme="light"] .quick-setup-map-search input,
+[data-theme="dark"] .quick-setup-map-search input {
+  border: 0;
+  background: #10182b;
+  color: #fff;
+}
+
+[data-theme="light"] .quick-setup-map-canvas,
+[data-theme="dark"] .quick-setup-map-canvas {
+  background:
+    repeating-linear-gradient(45deg, rgba(150, 160, 180, 0.14) 0 1px, transparent 1px 34px),
+    repeating-linear-gradient(-45deg, rgba(150, 160, 180, 0.14) 0 1px, transparent 1px 34px),
+    linear-gradient(180deg, #f5f5f3 0%, #e9e9e6 100%);
 }
 
 .quick-setup-stage-header,

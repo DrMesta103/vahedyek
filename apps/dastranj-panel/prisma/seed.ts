@@ -4,7 +4,9 @@ import { seedSampleData } from '../app/lib/seed';
 const prisma = new PrismaClient();
 
 async function main() {
-  await seedSampleData(prisma);
+  const tenantId = process.env.SEED_TENANT_ID;
+  if (!tenantId) throw new Error('SEED_TENANT_ID is required for tenant-scoped seed data.');
+  await seedSampleData(prisma, tenantId);
 }
 
 main()

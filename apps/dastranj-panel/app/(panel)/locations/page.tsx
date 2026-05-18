@@ -4,6 +4,10 @@ import { deleteLocationAction } from '../../lib/actions';
 import { listLocations } from '../../lib/data';
 import { EmptyState, PageIntro, PrimaryLink } from '@repo/ui/server';
 
+function presentLocationAddress(address: string) {
+  return address.startsWith('مختصات انتخابی:') ? 'آدرس از روی نقشه انتخاب شده است.' : address;
+}
+
 export default async function LocationsPage() {
   const items = await listLocations();
 
@@ -26,15 +30,30 @@ export default async function LocationsPage() {
             <article key={item.id} className="location-card">
               <div className="location-card-head">
                 <div>
+                  <span className="location-card-label">عنوان</span>
                   <h3>{item.title}</h3>
-                  <p>{item.address}</p>
+                  <p>
+                    <span className="location-card-inline-label">آدرس:</span> {presentLocationAddress(item.address)}
+                  </p>
                 </div>
                 <div className="location-card-controls">
                   <span className="location-card-radius">{item.radius} متر</span>
                   <CardMenu
                     items={[
                       { kind: 'link', href: `/locations/${item.id}/edit`, label: 'ویرایش' },
-                      { kind: 'submit', label: 'حذف', tone: 'danger', action: deleteLocationAction, hiddenFields: { id: item.id } },
+                      {
+                        kind: 'submit',
+                        label: 'حذف',
+                        tone: 'danger',
+                        action: deleteLocationAction,
+                        hiddenFields: { id: item.id },
+                        confirm: {
+                          title: 'حذف محل کار',
+                          description: `آیا از حذف محل «${item.title}» مطمئن هستید؟ این عملیات قابل بازگشت نیست.`,
+                          confirmLabel: 'بله، حذف شود',
+                          cancelLabel: 'انصراف',
+                        },
+                      },
                     ]}
                   />
                 </div>
@@ -43,8 +62,6 @@ export default async function LocationsPage() {
               <div className="location-card-map">
                 <div className="location-card-pin">●</div>
               </div>
-
-              <p className="location-card-description">{item.description ?? 'توضیحی برای این محل ثبت نشده است.'}</p>
             </article>
           ))}
         </div>

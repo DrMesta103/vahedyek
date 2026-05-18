@@ -41,6 +41,10 @@ model Tenant {
   policies         WorkPolicy[]
   employees        Employee[]
   workGroups       WorkGroup[]
+  organizationUnits OrganizationUnit[]
+  requestReasons    RequestReason[]
+  shiftTemplates    ShiftTemplate[]
+  draftTemplates    DraftTemplate[]
 }
 
 model UserTenantMembership {
@@ -183,15 +187,20 @@ model Location {
 
 model OrganizationUnit {
   id          String                    @id @default(cuid())
+  tenantId    String?
   title       String
   description String?
   createdAt   DateTime                  @default(now())
   updatedAt   DateTime                  @updatedAt
+  tenant      Tenant?                   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   employees   EmployeeOrganizationUnit[]
+
+  @@index([tenantId])
 }
 
 model RequestReason {
   id           String                @id @default(cuid())
+  tenantId     String?
   title        String
   description  String?
   category     RequestReasonCategory
@@ -199,10 +208,14 @@ model RequestReason {
   displayOrder Int                   @default(0)
   createdAt    DateTime              @default(now())
   updatedAt    DateTime              @updatedAt
+  tenant       Tenant?               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
 }
 
 model ShiftTemplate {
   id          String            @id @default(cuid())
+  tenantId    String?
   title       String
   description String?
   type        ShiftTemplateType
@@ -212,6 +225,9 @@ model ShiftTemplate {
   isActive    Boolean           @default(true)
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
+  tenant      Tenant?           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
 }
 
 model Calendar {
@@ -318,6 +334,7 @@ model WorkGroupMember {
 
 model DraftTemplate {
   id          String                @id @default(cuid())
+  tenantId    String?
   title       String
   description String?
   category    DraftTemplateCategory @default(hr)
@@ -326,4 +343,7 @@ model DraftTemplate {
   isActive    Boolean               @default(true)
   createdAt   DateTime              @default(now())
   updatedAt   DateTime              @updatedAt
+  tenant      Tenant?               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
 }
