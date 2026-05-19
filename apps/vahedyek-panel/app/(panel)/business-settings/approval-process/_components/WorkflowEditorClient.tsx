@@ -24,7 +24,7 @@ import { BusinessSwitch, FormTextInput, SectionCard, SectionHeader, TagPills } f
 
 import { approvalUsageOptions } from '../../_components/approvalProcessConfig';
 import type { ApprovalUsageKey } from '../../../../lib/contractApprovalAccess';
-import type { WorkflowStepDefinition } from '../../../../lib/workflowTypes';
+import type { WorkflowDefinitionPayload, WorkflowStepDefinition } from '../../../../lib/workflowTypes';
 import {
   getApprovalWorkflowAction,
   listApprovalWorkflowsAction,
@@ -39,6 +39,15 @@ import { Button } from '@/components/ui/button';
 import { Select } from '@/components/ui/select';
 
 type UserOpt = { id: string; label: string };
+
+type ProcessSnapshot = {
+  title: string;
+  usageType: ApprovalUsageKey | '';
+  finalApproverUserId: string;
+  buyerShouldApprove: boolean;
+  workflowActive: boolean;
+  globalType: 'PARALLEL' | 'SEQUENTIAL';
+};
 
 function newStepId() {
   try {
@@ -58,6 +67,17 @@ function defaultStep(globalType: 'PARALLEL' | 'SEQUENTIAL'): WorkflowStepDefinit
     type: globalType,
     permissions: { rejectToDraftApproverIds: 'ALL_APPROVERS', requestRevisionApproverIds: 'ALL_APPROVERS' },
     isFinal: false,
+  };
+}
+
+function emptySnapshot(): ProcessSnapshot {
+  return {
+    title: 'فرآیند جدید',
+    usageType: '',
+    finalApproverUserId: '',
+    buyerShouldApprove: true,
+    workflowActive: true,
+    globalType: 'PARALLEL',
   };
 }
 
@@ -110,24 +130,67 @@ function usedUsageTypesFromItems(
   return Array.from(keys);
 }
 
+function validateStep(step: WorkflowStepDefinition) {
+  if (!step.title.trim()) return 'عنوان مرحله الزامی است.';
+  if (step.approvers.length === 0) return `برای مرحله «${step.title || 'جدید'}» حداقل یک تاییدکننده انتخاب کنید.`;
+  if (step.finalApproverId && !step.approvers.includes(step.finalApproverId)) {
+    return `مرحله «${step.title || 'جدید'}»: تاییدکننده نهایی باید یکی از تاییدکنندگان همین مرحله باشد.`;
+  }
+  if (step.logic.mode === 'MINIMUM_COUNT' && step.logic.count > step.approvers.length) {
+    return `مرحله «${step.title || 'جدید'}»: حداقل تایید نمی‌تواند بیشتر از تعداد تاییدکنندگان باشد.`;
+  }
+  return '';
+}
+
+function buildPayload(params: {
+  title: string;
+  usageType: ApprovalUsageKey | '';
+  finalApproverUserId: string;
+  buyerShouldApprove: boolean;
+  workflowActive: boolean;
+  steps: WorkflowStepDefinition[];
+  globalType: 'PARALLEL' | 'SEQUENTIAL';
+}): WorkflowDefinitionPayload {
+  const normalizedSteps = params.steps.map((step, index) => ({
+    ...step,
+    type: params.globalType,
+    isFinal: index === params.steps.length - 1,
+  }));
+
+  return {
+    title: params.title,
+    usageTypes: params.usageType ? [params.usageType] : [],
+    steps: normalizedSteps,
+    finalApproverUserId: params.finalApproverUserId || null,
+    buyerShouldApprove: params.buyerShouldApprove,
+    active: params.workflowActive,
+  };
+}
+
 function SortableStepAccordion({
   step,
   index,
   isLast,
   isOpen,
   users,
+  isDirty,
+  isSaving,
   onChange,
   onOpenChange,
   onRemove,
+  onSave,
 }: {
   step: WorkflowStepDefinition;
   index: number;
   isLast: boolean;
   isOpen: boolean;
   users: UserOpt[];
+  isDirty: boolean;
+  isSaving: boolean;
   onChange: (next: WorkflowStepDefinition) => void;
   onOpenChange: (open: boolean) => void;
   onRemove: () => void;
+  onSave: () => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: step.id });
 
@@ -151,12 +214,12 @@ function SortableStepAccordion({
           rightSlot={
             <div className="flex items-center gap-2">
               {isLast ? <Badge variant="warning">مرحله نهایی</Badge> : null}
-              <Badge variant={approverCount ? 'default' : 'muted'}>{approverCount} تأییدکننده</Badge>
+              <Badge variant={approverCount ? 'default' : 'muted'}>{approverCount} تاییدکننده</Badge>
+              {isDirty ? <Badge variant="warning">ثبت نشده</Badge> : <Badge variant="default">ثبت شده</Badge>}
               <button
                 type="button"
                 className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-rose-100 bg-white text-rose-600 hover:bg-rose-50"
                 onClick={(e) => {
-                  // Keep delete available even when collapsed; don't toggle accordion.
                   e.preventDefault();
                   e.stopPropagation();
                   onRemove();
@@ -170,6 +233,10 @@ function SortableStepAccordion({
                 aria-label="جابجایی مرحله"
                 {...attributes}
                 {...listeners}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
               >
                 <GripVertical className="h-4 w-4" aria-hidden />
               </button>
@@ -178,7 +245,7 @@ function SortableStepAccordion({
         >
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-[12px] font-black text-[var(--text-muted)]">مرحله {index + 1}:</span>
-            <span className="truncate text-[14px] font-black text-[var(--text-strong)]">{step.title || '—'}</span>
+            <span className="truncate text-[14px] font-black text-[var(--text-strong)]">{step.title || '---'}</span>
           </div>
         </AccordionTrigger>
 
@@ -203,7 +270,7 @@ function SortableStepAccordion({
               <div className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--surface-soft)]/30 p-3">
                 <div className="mb-2 flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2 text-right text-[12px] font-extrabold text-[var(--text-strong)]">
-                    <span>تأییدکنندگان</span>
+                    <span>تاییدکنندگان</span>
                   </div>
                 </div>
                 <InlineGuide>ابتدا خالی است. با جستجو، کارکنان، صاحب کسب‌وکار یا سهامداران ثبت‌شده را اضافه کنید.</InlineGuide>
@@ -212,8 +279,8 @@ function SortableStepAccordion({
                   options={approverOptions}
                   value={null}
                   onValueChange={(v) => onChange({ ...step, approvers: [...step.approvers, v] })}
-                  placeholder="افزودن تأییدکننده…"
-                  searchPlaceholder="جستجوی کارمند…"
+                  placeholder="افزودن تاییدکننده..."
+                  searchPlaceholder="جستجوی کارمند..."
                   emptyText="کاربری مطابق جستجو پیدا نشد."
                 />
 
@@ -232,7 +299,7 @@ function SortableStepAccordion({
                           <button
                             type="button"
                             className="rounded-full px-1 text-[var(--text-faint)] hover:text-rose-700"
-                            aria-label="حذف تأییدکننده"
+                            aria-label="حذف تاییدکننده"
                             onClick={() => {
                               const next = step.approvers.filter((x) => x !== uid);
                               onChange({
@@ -257,7 +324,7 @@ function SortableStepAccordion({
                     <span>شرط تکمیل مرحله</span>
                   </div>
                 </div>
-                <InlineGuide>اگر تأییدکننده نهایی مرحله رأی نداده باشد، این شرط مشخص می‌کند مرحله با چه تعداد رأی تأیید کامل شود.</InlineGuide>
+                <InlineGuide>اگر تاییدکننده نهایی مرحله رای نداده باشد، این شرط مشخص می‌کند مرحله با چه تعداد رای تایید کامل شود.</InlineGuide>
 
                 <div className="mt-3 grid gap-3 sm:grid-cols-2">
                   <button
@@ -270,7 +337,7 @@ function SortableStepAccordion({
                     onClick={() => onChange({ ...step, logic: { mode: 'ALL_MUST_APPROVE' } })}
                   >
                     <span className="flex items-center justify-between gap-3">
-                      <span className="text-[13px] font-black text-[var(--text-strong)]">تأیید کامل</span>
+                      <span className="text-[13px] font-black text-[var(--text-strong)]">تایید کامل</span>
                       <span
                         className={`h-4 w-4 rounded-full border ${
                           step.logic.mode === 'ALL_MUST_APPROVE' ? 'border-[var(--dark-teal)] bg-[var(--dark-teal)] ring-4 ring-teal-50' : 'border-slate-300 bg-white'
@@ -278,7 +345,7 @@ function SortableStepAccordion({
                         aria-hidden
                       />
                     </span>
-                    <span className="mt-2 block text-[12px] font-normal leading-6 text-[var(--text-muted)]">همه تأییدکنندگان این مرحله باید رأی تأیید بدهند.</span>
+                    <span className="mt-2 block text-[12px] font-normal leading-6 text-[var(--text-muted)]">همه تاییدکنندگان این مرحله باید رای تایید بدهند.</span>
                   </button>
                   <button
                     type="button"
@@ -295,7 +362,7 @@ function SortableStepAccordion({
                     }
                   >
                     <span className="flex items-center justify-between gap-3">
-                      <span className="text-[13px] font-black text-[var(--text-strong)]">حد نصاب تأیید</span>
+                      <span className="text-[13px] font-black text-[var(--text-strong)]">حد نصاب تایید</span>
                       <span
                         className={`h-4 w-4 rounded-full border ${
                           step.logic.mode === 'MINIMUM_COUNT' ? 'border-[var(--dark-teal)] bg-[var(--dark-teal)] ring-4 ring-teal-50' : 'border-slate-300 bg-white'
@@ -303,15 +370,15 @@ function SortableStepAccordion({
                         aria-hidden
                       />
                     </span>
-                    <span className="mt-2 block text-[12px] font-normal leading-6 text-[var(--text-muted)]">با رسیدن رأی‌های مثبت به تعداد تعیین‌شده، مرحله کامل می‌شود.</span>
+                    <span className="mt-2 block text-[12px] font-normal leading-6 text-[var(--text-muted)]">با رسیدن رای‌های مثبت به تعداد تعیین‌شده، مرحله کامل می‌شود.</span>
                   </button>
                 </div>
 
                 {step.logic.mode === 'MINIMUM_COUNT' ? (
                   <div className="mt-3 rounded-2xl border border-teal-100 bg-white p-3">
                     <div className="mb-2 text-right">
-                      <span className="text-[12px] font-extrabold text-[var(--text-strong)]">تعداد رأی لازم برای تکمیل مرحله</span>
-                      <InlineGuide>این عدد نمی‌تواند بیشتر از تعداد تأییدکنندگان مرحله باشد.</InlineGuide>
+                      <span className="text-[12px] font-extrabold text-[var(--text-strong)]">تعداد رای لازم برای تکمیل مرحله</span>
+                      <InlineGuide>این عدد نمی‌تواند بیشتر از تعداد تاییدکنندگان مرحله باشد.</InlineGuide>
                     </div>
                     <input
                       type="number"
@@ -336,24 +403,37 @@ function SortableStepAccordion({
                 <div className="mt-4 border-t border-[var(--border-color)] pt-4">
                   <div className="mb-2 flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2 text-right text-[12px] font-extrabold text-[var(--text-strong)]">
-                      <span>تأییدکننده نهایی مرحله</span>
+                      <span>تاییدکننده نهایی مرحله</span>
                     </div>
                   </div>
-                  <InlineGuide>اگر این شخص رأی تأیید بدهد، مرحله فوری کامل می‌شود. اگر نهایی کل فرآیند تعریف نشده باشد، فقط نهایی همین مرحله می‌تواند رد کامل و بازگشت به پیش‌نویس انجام دهد.</InlineGuide>
+                  <InlineGuide>اگر این شخص رای تایید بدهد، مرحله فوری کامل می‌شود.</InlineGuide>
                   <Select
                     options={[{ value: '', label: '— (ندارد)' }, ...finalApproverOptions]}
                     value={step.finalApproverId ?? ''}
                     onValueChange={(v) => onChange({ ...step, finalApproverId: v ? v : null })}
-                    placeholder="انتخاب کنید…"
-                    searchPlaceholder="جستجو…"
+                    placeholder="انتخاب کنید..."
+                    searchPlaceholder="جستجو..."
                     emptyText="—"
                     disabled={finalApproverOptions.length === 0}
                   />
                   <div className="mt-2 text-right text-[11px] font-semibold text-[var(--text-muted)]">
-                    نکته: تأییدکننده نهایی باید جزو تأییدکنندگان همین مرحله باشد.
+                    نکته: تاییدکننده نهایی باید جزو تاییدکنندگان همین مرحله باشد.
                   </div>
                 </div>
               </div>
+            </div>
+
+            <div className="flex justify-end border-t border-[var(--border-color)] pt-4">
+              <Button
+                type="button"
+                variant={isDirty ? 'primary' : 'outline'}
+                className="h-11 min-w-[160px] rounded-xl px-4 text-[12px] font-bold"
+                disabled={isSaving || !isDirty}
+                onClick={onSave}
+              >
+                {isSaving ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <Save className="h-4 w-4" aria-hidden />}
+                {isSaving ? 'در حال ثبت...' : 'ثبت مرحله'}
+              </Button>
             </div>
           </div>
         </AccordionContent>
@@ -365,12 +445,16 @@ function SortableStepAccordion({
 export function WorkflowEditorClient({ workflowId }: { workflowId?: string }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const isNew = !workflowId;
+  const [createdWorkflowId, setCreatedWorkflowId] = useState<string | null>(workflowId ?? null);
+  const effectiveWorkflowId = workflowId ?? createdWorkflowId ?? undefined;
+  const isNew = !effectiveWorkflowId;
+
   const [users, setUsers] = useState<UserOpt[]>([]);
   const [error, setError] = useState('');
   const [saveOk, setSaveOk] = useState('');
   const [loaded, setLoaded] = useState(false);
   const [openStepId, setOpenStepId] = useState<string | null>(null);
+  const [busyTarget, setBusyTarget] = useState('');
 
   const [title, setTitle] = useState('');
   const [usageType, setUsageType] = useState<ApprovalUsageKey | ''>('');
@@ -378,68 +462,105 @@ export function WorkflowEditorClient({ workflowId }: { workflowId?: string }) {
   const [finalApproverUserId, setFinalApproverUserId] = useState<string>('');
   const [buyerShouldApprove, setBuyerShouldApprove] = useState(true);
   const [workflowActive, setWorkflowActive] = useState(true);
-
   const [globalType, setGlobalType] = useState<'PARALLEL' | 'SEQUENTIAL'>('PARALLEL');
-  // Important: keep deterministic SSR/CSR markup (avoid random ids before hydration).
   const [steps, setSteps] = useState<WorkflowStepDefinition[]>([]);
+  const [persistedSteps, setPersistedSteps] = useState<WorkflowStepDefinition[]>([]);
+  const [dirtyStepIds, setDirtyStepIds] = useState<string[]>([]);
+  const [processSnapshot, setProcessSnapshot] = useState<ProcessSnapshot>(emptySnapshot);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
+  useEffect(() => {
+    setCreatedWorkflowId(workflowId ?? null);
+  }, [workflowId]);
+
+  const showSuccess = (message: string) => {
+    setSaveOk(message);
+    window.setTimeout(() => setSaveOk(''), 1800);
+  };
+
+  const markStepDirty = (stepId: string) => {
+    setDirtyStepIds((current) => (current.includes(stepId) ? current : [...current, stepId]));
+  };
+
+  const clearStepDirty = (stepId: string) => {
+    setDirtyStepIds((current) => current.filter((id) => id !== stepId));
+  };
+
   const load = useCallback(() => {
     startTransition(async () => {
       setError('');
-      if (isNew) {
+
+      if (!effectiveWorkflowId) {
         const [uRes, wfListRes] = await Promise.all([listTenantMembersForApproversAction(), listApprovalWorkflowsAction()]);
-        if (uRes.ok) setUsers(uRes.users as any);
+        if (uRes.ok) setUsers(uRes.users as UserOpt[]);
         if (wfListRes.ok) setUsedUsageTypes(usedUsageTypesFromItems(wfListRes.items));
-        setTitle('فرایند جدید');
-        setUsageType('');
-        setFinalApproverUserId('');
-        setBuyerShouldApprove(true);
-        setWorkflowActive(true);
-        setGlobalType('PARALLEL');
+
+        const snapshot = emptySnapshot();
+        setTitle(snapshot.title);
+        setUsageType(snapshot.usageType);
+        setFinalApproverUserId(snapshot.finalApproverUserId);
+        setBuyerShouldApprove(snapshot.buyerShouldApprove);
+        setWorkflowActive(snapshot.workflowActive);
+        setGlobalType(snapshot.globalType);
         setSteps([]);
+        setPersistedSteps([]);
+        setDirtyStepIds([]);
         setOpenStepId(null);
+        setProcessSnapshot(snapshot);
         setLoaded(true);
         return;
       }
 
       const [wfRes, uRes, wfListRes] = await Promise.all([
-        getApprovalWorkflowAction(workflowId),
+        getApprovalWorkflowAction(effectiveWorkflowId),
         listTenantMembersForApproversAction(),
         listApprovalWorkflowsAction(),
       ]);
+
       if (!wfRes.ok || !wfRes.item) {
-        setError(wfRes.message ?? 'فرایند یافت نشد.');
+        setError(wfRes.message ?? 'فرآیند یافت نشد.');
         setLoaded(true);
         return;
       }
-      if (uRes.ok) setUsers(uRes.users as any);
-      if (wfListRes.ok) setUsedUsageTypes(usedUsageTypesFromItems(wfListRes.items, workflowId));
+
+      if (uRes.ok) setUsers(uRes.users as UserOpt[]);
+      if (wfListRes.ok) setUsedUsageTypes(usedUsageTypesFromItems(wfListRes.items, effectiveWorkflowId));
+
+      const loadedSteps = wfRes.item.steps.map((step) => ({
+        ...step,
+        finalApproverId: step.finalApproverId ?? null,
+      }));
+      const distinctTypes = new Set(loadedSteps.map((step) => step.type));
+      const nextGlobalType = distinctTypes.size === 1 ? (loadedSteps[0]?.type ?? 'PARALLEL') : 'PARALLEL';
 
       setTitle(wfRes.item.title);
       setUsageType(wfRes.item.usageTypes?.[0] ?? '');
       setFinalApproverUserId(wfRes.item.finalApproverUserId ?? '');
       setBuyerShouldApprove(wfRes.item.buyerShouldApprove);
       setWorkflowActive(wfRes.item.active);
-
-      const loadedSteps = wfRes.item.steps.map((s) => ({
-        ...s,
-        finalApproverId: s.finalApproverId ?? null,
-      }));
-      const distinct = new Set(loadedSteps.map((s) => s.type));
-      setGlobalType(distinct.size === 1 ? (loadedSteps[0]!.type as any) : 'PARALLEL');
+      setGlobalType(nextGlobalType);
       setSteps(loadedSteps);
+      setPersistedSteps(loadedSteps);
+      setDirtyStepIds([]);
       setOpenStepId((prev) => {
-        if (prev && loadedSteps.some((s) => s.id === prev)) return prev;
+        if (prev && loadedSteps.some((step) => step.id === prev)) return prev;
         return loadedSteps[0]?.id ?? null;
+      });
+      setProcessSnapshot({
+        title: wfRes.item.title,
+        usageType: wfRes.item.usageTypes?.[0] ?? '',
+        finalApproverUserId: wfRes.item.finalApproverUserId ?? '',
+        buyerShouldApprove: wfRes.item.buyerShouldApprove,
+        workflowActive: wfRes.item.active,
+        globalType: nextGlobalType,
       });
       setLoaded(true);
     });
-  }, [isNew, workflowId]);
+  }, [effectiveWorkflowId]);
 
   useEffect(() => {
     void load();
@@ -447,66 +568,192 @@ export function WorkflowEditorClient({ workflowId }: { workflowId?: string }) {
 
   const disabledUsageSet = useMemo(() => new Set(usedUsageTypes), [usedUsageTypes]);
 
-  const chooseUsageType = (k: ApprovalUsageKey) => {
-    if (disabledUsageSet.has(k)) return;
-    setUsageType((prev) => (prev === k ? '' : k));
+  const processDirty = useMemo(() => {
+    return (
+      title !== processSnapshot.title ||
+      usageType !== processSnapshot.usageType ||
+      finalApproverUserId !== processSnapshot.finalApproverUserId ||
+      buyerShouldApprove !== processSnapshot.buyerShouldApprove ||
+      workflowActive !== processSnapshot.workflowActive ||
+      globalType !== processSnapshot.globalType
+    );
+  }, [title, usageType, finalApproverUserId, buyerShouldApprove, workflowActive, globalType, processSnapshot]);
+
+  const chooseUsageType = (key: ApprovalUsageKey) => {
+    if (disabledUsageSet.has(key)) return;
+    setUsageType((prev) => (prev === key ? '' : key));
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
-    const oldIndex = steps.findIndex((s) => s.id === active.id);
-    const newIndex = steps.findIndex((s) => s.id === over.id);
+    const oldIndex = steps.findIndex((step) => step.id === active.id);
+    const newIndex = steps.findIndex((step) => step.id === over.id);
     if (oldIndex < 0 || newIndex < 0) return;
-    setSteps(arrayMove(steps, oldIndex, newIndex));
+    setSteps((current) => arrayMove(current, oldIndex, newIndex));
+    markStepDirty(String(active.id));
+    markStepDirty(String(over.id));
   };
 
-  const tasks = useMemo(() => {
-    const titleOk = title.trim().length > 0;
-    const usageOk = Boolean(usageType);
-    const stepsOk = steps.length > 0 && steps.every((s) => s.title.trim().length > 0 && s.approvers.length > 0);
-    const finalApproverOk = steps.every((s) => !s.finalApproverId || s.approvers.includes(s.finalApproverId));
-    return { ok: titleOk && usageOk && stepsOk && finalApproverOk, finalApproverOk };
-  }, [title, usageType, steps]);
+  const processReady = title.trim().length > 0 && Boolean(usageType);
 
-  const saveNow = () => {
+  const saveProcess = () => {
     startTransition(async () => {
+      setBusyTarget('process');
       setError('');
       setSaveOk('');
-      const normalizedSteps = steps.map((s, idx) => ({
-        ...s,
-        type: globalType,
-        isFinal: idx === steps.length - 1,
-      }));
-      const payload = {
+
+      const payload = buildPayload({
         title,
-        usageTypes: usageType ? [usageType] : [],
-        steps: normalizedSteps,
-        finalApproverUserId: finalApproverUserId || null,
+        usageType,
+        finalApproverUserId,
         buyerShouldApprove,
-        active: isNew ? true : workflowActive,
-      };
-      const res = isNew
-        ? await createApprovalWorkflowAction(payload)
-        : await updateApprovalWorkflowAction(workflowId, payload);
+        workflowActive,
+        steps: persistedSteps,
+        globalType,
+      });
+
+      const res = effectiveWorkflowId
+        ? await updateApprovalWorkflowAction(effectiveWorkflowId, payload)
+        : await createApprovalWorkflowAction(payload);
+
       if (!res.ok) {
+        setBusyTarget('');
         setError('message' in res ? res.message : 'ذخیره انجام نشد.');
         return;
       }
-      setSaveOk('ذخیره شد.');
-      window.setTimeout(() => setSaveOk(''), 1500);
+
+      const nextWorkflowId = effectiveWorkflowId ?? (typeof res === 'object' && res && 'id' in res ? String(res.id) : undefined);
+      if (!effectiveWorkflowId && nextWorkflowId) {
+        setCreatedWorkflowId(nextWorkflowId);
+        router.replace(`/business-settings/approval-process/${nextWorkflowId}`);
+      } else {
+        router.refresh();
+      }
+
+      if (!effectiveWorkflowId && usageType) {
+        setUsedUsageTypes((current) => (current.includes(usageType) ? current : [...current, usageType]));
+      }
+
+      setPersistedSteps(payload.steps);
+      setProcessSnapshot({
+        title,
+        usageType,
+        finalApproverUserId,
+        buyerShouldApprove,
+        workflowActive,
+        globalType,
+      });
+      setBusyTarget('');
+      showSuccess(isNew ? 'فرآیند ثبت شد. اکنون می‌توانید مرحله اضافه کنید.' : 'اطلاعات فرآیند ذخیره شد.');
+    });
+  };
+
+  const saveStep = (stepId: string) => {
+    if (!effectiveWorkflowId) return;
+
+    const currentStep = steps.find((step) => step.id === stepId);
+    if (!currentStep) return;
+
+    const validationMessage = validateStep(currentStep);
+    if (validationMessage) {
+      setError(validationMessage);
+      return;
+    }
+
+    startTransition(async () => {
+      setBusyTarget(`step:${stepId}`);
+      setError('');
+      setSaveOk('');
+
+      const persistedMap = new Map(persistedSteps.map((step) => [step.id, step] as const));
+      const currentMap = new Map(steps.map((step) => [step.id, step] as const));
+      const candidateIds = new Set([...persistedSteps.map((step) => step.id), stepId]);
+      const orderedSteps = steps
+        .filter((step) => candidateIds.has(step.id))
+        .map((step) => {
+          if (step.id === stepId) return currentMap.get(step.id) ?? step;
+          return persistedMap.get(step.id) ?? step;
+        });
+
+      const payload = buildPayload({
+        title,
+        usageType,
+        finalApproverUserId,
+        buyerShouldApprove,
+        workflowActive,
+        steps: orderedSteps,
+        globalType,
+      });
+
+      const res = await updateApprovalWorkflowAction(effectiveWorkflowId, payload);
+      if (!res.ok) {
+        setBusyTarget('');
+        setError('message' in res ? res.message : 'ثبت مرحله انجام نشد.');
+        return;
+      }
+
+      setPersistedSteps(payload.steps);
+      clearStepDirty(stepId);
+      setBusyTarget('');
       router.refresh();
-      // After successful save, return to workflows list.
-      window.setTimeout(() => {
-        router.push('/business-settings/approval-process');
-      }, 350);
+      showSuccess(`مرحله «${currentStep.title || `مرحله ${steps.findIndex((step) => step.id === stepId) + 1}` }» ثبت شد.`);
+    });
+  };
+
+  const removeStep = (stepId: string) => {
+    if (!window.confirm('این مرحله حذف شود؟')) return;
+
+    const savedStepExists = persistedSteps.some((step) => step.id === stepId);
+    if (!effectiveWorkflowId || !savedStepExists) {
+      setSteps((current) => current.filter((step) => step.id !== stepId));
+      clearStepDirty(stepId);
+      setOpenStepId((current) => (current === stepId ? null : current));
+      return;
+    }
+
+    startTransition(async () => {
+      setBusyTarget(`delete:${stepId}`);
+      setError('');
+      setSaveOk('');
+
+      const persistedMap = new Map(persistedSteps.map((step) => [step.id, step] as const));
+      const remainingSteps = steps
+        .filter((step) => step.id !== stepId && persistedMap.has(step.id))
+        .map((step) => persistedMap.get(step.id)!)
+        .filter(Boolean);
+
+      const payload = buildPayload({
+        title,
+        usageType,
+        finalApproverUserId,
+        buyerShouldApprove,
+        workflowActive,
+        steps: remainingSteps,
+        globalType,
+      });
+
+      const res = await updateApprovalWorkflowAction(effectiveWorkflowId, payload);
+      if (!res.ok) {
+        setBusyTarget('');
+        setError('message' in res ? res.message : 'حذف مرحله انجام نشد.');
+        return;
+      }
+
+      setPersistedSteps(payload.steps);
+      setSteps((current) => current.filter((step) => step.id !== stepId));
+      clearStepDirty(stepId);
+      setOpenStepId((current) => (current === stepId ? payload.steps[0]?.id ?? null : current));
+      setBusyTarget('');
+      router.refresh();
+      showSuccess('مرحله حذف شد.');
     });
   };
 
   return (
-    <div className="workflow-editor-root mx-auto w-full max-w-6xl px-4 pb-28 pt-4 sm:px-6 lg:px-8" dir="rtl" lang="fa">
+    <div className="workflow-editor-root mx-auto w-full max-w-6xl px-4 pb-24 pt-4 sm:px-6 lg:px-8" dir="rtl" lang="fa">
       <div className="mb-5 text-right">
-        <h1 className="mt-2 text-2xl font-black text-[var(--text-strong)]">{isNew ? 'ثبت فرایند تأیید' : 'مدیریت فرایند تأیید'}</h1>
+        <h1 className="mt-2 text-2xl font-black text-[var(--text-strong)]">{isNew ? 'ثبت فرآیند تایید' : 'مدیریت فرآیند تایید'}</h1>
       </div>
 
       {error ? (
@@ -524,174 +771,190 @@ export function WorkflowEditorClient({ workflowId }: { workflowId?: string }) {
         <SectionCard className="p-6 text-right">
           <div className="flex items-center gap-2 text-[13px] font-bold text-[var(--text-muted)]">
             <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
-            در حال بارگذاری فرایند…
+            در حال بارگذاری فرآیند...
           </div>
         </SectionCard>
       ) : (
         <div className="space-y-4">
-        <SectionCard>
-          <SectionHeader label="فرایند تأیید" description="تنظیمات کلی فرایند" />
-          <div className="space-y-5 p-5">
-            <FieldWithGuide
-              label="عنوان فرایند"
-              guide="نام مسیر تأیید را وارد کنید. همین عنوان در کارت فهرست فرآیندها و هنگام استفاده در قرارداد نمایش داده می‌شود."
-            >
-              <FormTextInput value={title} onChange={setTitle} dir="rtl" placeholder="مثلا فرایند فروش واحد مسکونی" />
-            </FieldWithGuide>
+          <SectionCard>
+            <SectionHeader label="فرآیند تایید" description="ابتدا خود فرآیند را ثبت کنید. بعد از آن امکان ثبت مرحله فعال می‌شود." />
+            <div className="space-y-5 p-5">
+              <FieldWithGuide
+                label="عنوان فرآیند"
+                guide="نام مسیر تایید را وارد کنید. همین عنوان در کارت فهرست فرآیندها و هنگام استفاده در قرارداد نمایش داده می‌شود."
+              >
+                <FormTextInput value={title} onChange={setTitle} dir="rtl" placeholder="مثلا فرآیند فروش واحد مسکونی" />
+              </FieldWithGuide>
 
-            <FieldWithGuide
-              label="نوع پردازش مراحل"
-              guide="بدون ترتیب یعنی مراحل مستقل رأی می‌گیرند. مرحله‌به‌مرحله یعنی ترتیب مراحل باید رعایت شود."
-            >
-              <TagPills
-                options={[
-                  { value: 'PARALLEL', label: 'بدون ترتیب' },
-                  { value: 'SEQUENTIAL', label: 'مرحله‌به‌مرحله' },
-                ]}
-                value={globalType}
-                onChange={(v) => {
-                  setGlobalType(v);
-                  setSteps((prev) => prev.map((s) => ({ ...s, type: v })));
-                }}
-              />
-            </FieldWithGuide>
+              <FieldWithGuide
+                label="نوع پردازش مراحل"
+                guide="بدون ترتیب یعنی مراحل مستقل رای می‌گیرند. مرحله‌به‌مرحله یعنی ترتیب مراحل باید رعایت شود."
+              >
+                <TagPills
+                  options={[
+                    { value: 'PARALLEL', label: 'بدون ترتیب' },
+                    { value: 'SEQUENTIAL', label: 'مرحله‌به‌مرحله' },
+                  ]}
+                  value={globalType}
+                  onChange={(value) => {
+                    setGlobalType(value);
+                    setSteps((current) => current.map((step) => ({ ...step, type: value })));
+                    if (persistedSteps.length > 0) {
+                      setDirtyStepIds((current) =>
+                        Array.from(new Set([...current, ...persistedSteps.map((step) => step.id)])),
+                      );
+                    }
+                  }}
+                />
+              </FieldWithGuide>
 
-            <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-3">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="text-right">
-                  <div>
-                    <p className="text-[13px] font-black text-[var(--text-strong)]">خریدار در فرایند</p>
-                    <InlineGuide>اگر فعال باشد، خریدار هم باید در مسیر تأیید قرارداد رأی بدهد.</InlineGuide>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-3">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="text-right">
+                    <div>
+                      <p className="text-[13px] font-black text-[var(--text-strong)]">خریدار در فرآیند</p>
+                      <InlineGuide>اگر فعال باشد، خریدار هم باید در مسیر تایید قرارداد رای بدهد.</InlineGuide>
+                    </div>
+                  </div>
+                  <BusinessSwitch checked={buyerShouldApprove} onChange={setBuyerShouldApprove} onLabel="بله" offLabel="خیر" />
+                </div>
+              </div>
+
+              {!isNew ? (
+                <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-3">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="text-right">
+                      <div>
+                        <p className="text-[13px] font-black text-[var(--text-strong)]">وضعیت فرآیند</p>
+                        <InlineGuide>برای نگه داشتن فرآیند بدون استفاده، آن را غیرفعال کنید.</InlineGuide>
+                      </div>
+                    </div>
+                    <BusinessSwitch checked={workflowActive} onChange={setWorkflowActive} onLabel="فعال" offLabel="غیرفعال" />
                   </div>
                 </div>
-                <BusinessSwitch checked={buyerShouldApprove} onChange={setBuyerShouldApprove} onLabel="بله" offLabel="خیر" />
+              ) : null}
+
+              <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-3">
+                <div className="mb-3 text-right">
+                  <span className="text-[12px] font-extrabold text-[var(--text-strong)]">انتخاب نوع کاربری</span>
+                  <InlineGuide>برای هر فرآیند فقط یک نوع کاربری واحد انتخاب می‌شود. نوع‌های دارای فرآیند قبلی غیرفعال هستند.</InlineGuide>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {approvalUsageOptions.map((opt) => {
+                    const key = opt.id as ApprovalUsageKey;
+                    const disabled = disabledUsageSet.has(key);
+                    return (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        disabled={disabled}
+                        onClick={() => chooseUsageType(key)}
+                        className={`rounded-full border px-3 py-1.5 text-[11px] font-bold transition ${
+                          usageType === key
+                            ? 'border-[var(--dark-teal)] bg-[color-mix(in_srgb,var(--dark-teal)_12%,white)] text-[var(--dark-teal)]'
+                            : disabled
+                              ? 'cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400 opacity-70'
+                              : 'border-[var(--border-color)] bg-[var(--surface)] hover:border-teal-200 hover:text-[var(--dark-teal)]'
+                        }`}
+                      >
+                        {opt.shortTitle}
+                        {disabled ? <span className="mr-1 text-[10px] font-normal">(ثبت شده)</span> : null}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <FieldWithGuide
+                label="تاییدکننده نهایی کل فرآیند"
+                guide="اگر این شخص رای بدهد، کل فرآیند فورا تمام می‌شود و نیازی به طی مراحل نیست."
+              >
+                <Select
+                  options={[{ value: '', label: '— (ندارد)' }, ...users.map((user) => ({ value: user.id, label: user.label }))]}
+                  value={finalApproverUserId || ''}
+                  onValueChange={(value) => setFinalApproverUserId(value || '')}
+                  placeholder="انتخاب کنید..."
+                  searchPlaceholder="جستجو..."
+                  emptyText="—"
+                />
+              </FieldWithGuide>
+
+              <div className="flex justify-end">
+                <Button type="button" variant="primary" onClick={saveProcess} disabled={isPending || !processReady || !processDirty} className="min-w-[180px]">
+                  {busyTarget === 'process' ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <Save className="h-4 w-4" aria-hidden />}
+                  {isNew ? 'ثبت فرآیند' : 'ذخیره فرآیند'}
+                </Button>
               </div>
             </div>
-          </div>
-        </SectionCard>
+          </SectionCard>
 
-        <SectionCard>
-          <SectionHeader label="انواع کاربری واحد" description="هر فرایند فقط می‌تواند یک نوع کاربری داشته باشد." />
-          <div className="p-5">
-            <div className="mb-3 text-right">
-              <span className="text-[12px] font-extrabold text-[var(--text-strong)]">انتخاب نوع کاربری</span>
-              <InlineGuide>برای هر فرآیند فقط یک نوع کاربری واحد انتخاب می‌شود. نوع‌های دارای فرآیند قبلی غیرفعال هستند.</InlineGuide>
-            </div>
-            <div className="flex flex-wrap gap-2">
-            {approvalUsageOptions.map((opt) => {
-              const key = opt.id as ApprovalUsageKey;
-              const disabled = disabledUsageSet.has(key);
-              return (
-                <button
-                  key={opt.id}
-                  type="button"
-                  disabled={disabled}
-                  onClick={() => chooseUsageType(key)}
-                  className={`rounded-full border px-3 py-1.5 text-[11px] font-bold transition ${
-                    usageType === key
-                      ? 'border-[var(--dark-teal)] bg-[color-mix(in_srgb,var(--dark-teal)_12%,white)] text-[var(--dark-teal)]'
-                      : disabled
-                        ? 'cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400 opacity-70'
-                        : 'border-[var(--border-color)] bg-[var(--surface)] hover:border-teal-200 hover:text-[var(--dark-teal)]'
-                  }`}
-                >
-                  {opt.shortTitle}
-                  {disabled ? <span className="mr-1 text-[10px] font-normal">(ثبت شده)</span> : null}
-                </button>
-              );
-            })}
-            </div>
-          </div>
-        </SectionCard>
-
-        <SectionCard>
-          <SectionHeader
-            label="تأییدکننده نهایی (اختیاری)"
-            description="اگر این شخص رأی بدهد، فرایند فوراً تمام می‌شود و نیازی به طی مراحل نیست. نکته: در صورت انتخاب، فقط همین شخص می‌تواند «رد کامل و بازگشت قرارداد به پیش‌نویس» را انجام دهد."
-          />
-          <div className="p-5">
-            <div className="mb-3 text-right">
-              <span className="text-[12px] font-extrabold text-[var(--text-strong)]">انتخاب تأییدکننده نهایی کل فرآیند</span>
-              <InlineGuide>رأی این شخص کل فرآیند را فوری تمام می‌کند. در صورت انتخاب، فقط همین شخص اجازه رد کامل و بازگشت قرارداد به پیش‌نویس را دارد.</InlineGuide>
-            </div>
-            <Select
-              options={[{ value: '', label: '— (ندارد)' }, ...users.map((u) => ({ value: u.id, label: u.label }))]}
-              value={finalApproverUserId || ''}
-              onValueChange={(v) => setFinalApproverUserId(v || '')}
-              placeholder="انتخاب کنید…"
-              searchPlaceholder="جستجو…"
-              emptyText="—"
-            />
-          </div>
-        </SectionCard>
-
-        <SectionCard>
-          <SectionHeader label="مراحل" description="تعریف مراحل و تأییدکنندگان هر مرحله" />
-          <div className="p-5">
-          <div className="mb-4 flex items-center justify-between gap-3">
-            <div className="text-right">
-              <span className="text-[12px] font-extrabold text-[var(--text-strong)]">ساخت مسیر مرحله‌ای</span>
-              <InlineGuide>در شروع ثبت فرآیند هیچ مرحله‌ای ساخته نمی‌شود. با افزودن مرحله، عنوان، تأییدکنندگان، منطق رأی و تأییدکننده نهایی همان مرحله را تنظیم کنید.</InlineGuide>
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              className="h-10 shrink-0 whitespace-nowrap rounded-full border-teal-100 bg-teal-50/70 px-4 text-[12px] font-bold text-[var(--dark-teal)] hover:bg-teal-100"
-              onClick={() => {
-                const next = defaultStep(globalType);
-                setSteps((s) => [...s, next]);
-                setOpenStepId(next.id);
-              }}
-            >
-              <Plus className="h-4 w-4" aria-hidden />
-              افزودن مرحله
-            </Button>
-          </div>
-
-          {steps.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 px-4 py-8 text-center text-[13px] font-semibold leading-7 text-[var(--text-muted)]">
-              هنوز مرحله‌ای تعریف نشده است. برای شروع مسیر تأیید، «افزودن مرحله» را انتخاب کنید.
-            </div>
-          ) : (
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <SortableContext items={steps.map((s) => s.id)} strategy={verticalListSortingStrategy}>
-              <Accordion>
-                {steps.map((step, index) => (
-                  <SortableStepAccordion
-                    key={step.id}
-                    step={step}
-                    index={index}
-                    isLast={index === steps.length - 1}
-                    isOpen={openStepId === step.id}
-                    users={users}
-                    onChange={(next) => setSteps((prev) => prev.map((x) => (x.id === step.id ? next : x)))}
-                    onOpenChange={(open) => setOpenStepId(open ? step.id : null)}
-                    onRemove={() => setSteps((prev) => prev.filter((x) => x.id !== step.id))}
-                  />
-                ))}
-              </Accordion>
-            </SortableContext>
-          </DndContext>
-          )}
-          </div>
-        </SectionCard>
-
-        {/* Sticky Save Button (inside content width; doesn't cover sidebar) */}
-        <div className="sticky bottom-4 z-30">
-          <div className="mx-auto flex max-w-6xl justify-end bg-transparent px-3 py-3">
-            <Button variant="primary" onClick={saveNow} disabled={isPending || !tasks.ok} className="min-w-[180px]">
-              {isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+          <SectionCard className={!effectiveWorkflowId ? 'opacity-70' : ''}>
+            <SectionHeader label="مراحل" description="هر مرحله را جداگانه ثبت کنید. تا قبل از ثبت فرآیند، این بخش قفل است." />
+            <div className="p-5">
+              {!effectiveWorkflowId ? (
+                <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 px-4 py-8 text-center text-[13px] font-semibold leading-7 text-[var(--text-muted)]">
+                  ابتدا اطلاعات فرآیند را با دکمه «ثبت فرآیند» ذخیره کنید. بعد از ثبت، امکان افزودن و ثبت مرحله فعال می‌شود.
+                </div>
               ) : (
-                <Save className="h-4 w-4" aria-hidden />
+                <>
+                  <div className="mb-4 flex items-center justify-between gap-3">
+                    <div className="text-right">
+                      <span className="text-[12px] font-extrabold text-[var(--text-strong)]">ساخت مسیر مرحله‌ای</span>
+                      <InlineGuide>هر مرحله پس از تکمیل اطلاعات خودش باید با دکمه «ثبت مرحله» همان کارت ذخیره شود.</InlineGuide>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="h-10 shrink-0 whitespace-nowrap rounded-full border-teal-100 bg-teal-50/70 px-4 text-[12px] font-bold text-[var(--dark-teal)] hover:bg-teal-100"
+                      onClick={() => {
+                        const next = defaultStep(globalType);
+                        setSteps((current) => [...current, next]);
+                        markStepDirty(next.id);
+                        setOpenStepId(next.id);
+                      }}
+                    >
+                      <Plus className="h-4 w-4" aria-hidden />
+                      افزودن مرحله
+                    </Button>
+                  </div>
+
+                  {steps.length === 0 ? (
+                    <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 px-4 py-8 text-center text-[13px] font-semibold leading-7 text-[var(--text-muted)]">
+                      هنوز مرحله‌ای تعریف نشده است. برای شروع، «افزودن مرحله» را انتخاب کنید.
+                    </div>
+                  ) : (
+                    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                      <SortableContext items={steps.map((step) => step.id)} strategy={verticalListSortingStrategy}>
+                        <Accordion>
+                          {steps.map((step, index) => (
+                            <SortableStepAccordion
+                              key={step.id}
+                              step={step}
+                              index={index}
+                              isLast={index === steps.length - 1}
+                              isOpen={openStepId === step.id}
+                              users={users}
+                              isDirty={dirtyStepIds.includes(step.id)}
+                              isSaving={busyTarget === `step:${step.id}` || busyTarget === `delete:${step.id}`}
+                              onChange={(next) => {
+                                setSteps((current) => current.map((item) => (item.id === step.id ? next : item)));
+                                markStepDirty(step.id);
+                              }}
+                              onOpenChange={(open) => setOpenStepId(open ? step.id : null)}
+                              onRemove={() => removeStep(step.id)}
+                              onSave={() => saveStep(step.id)}
+                            />
+                          ))}
+                        </Accordion>
+                      </SortableContext>
+                    </DndContext>
+                  )}
+                </>
               )}
-              ذخیره
-            </Button>
-          </div>
+            </div>
+          </SectionCard>
         </div>
-      </div>
       )}
     </div>
   );
 }
-

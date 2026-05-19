@@ -14,6 +14,7 @@ import {
   LoanSuccess,
 } from './LoanSettingsPrimitives';
 import { RuleStatusTag } from './RuleStatusTag';
+import { readApiErrorMessage } from './readApiErrorMessage';
 
 type BuyerCancellationSection = {
   id: 'late-delivery' | 'specification-changes' | 'breach-of-obligations' | 'area-discrepancy' | 'notification' | 'draft-template-usage';
@@ -120,7 +121,7 @@ export function BuyerCancellationSettingsPanel() {
         setLoading(true);
         setError('');
         const response = await fetch('/api/business-settings/contract-rules/termination-settings', { cache: 'no-store' });
-        if (!response.ok) throw new Error('بارگذاری تنظیمات فسخ انجام نشد.');
+        if (!response.ok) throw new Error(await readApiErrorMessage(response, 'بارگذاری تنظیمات فسخ انجام نشد.'));
         const payload = normalizeTerminationPayload((await response.json()) as Record<string, unknown>);
         if (mounted) setState(payload);
       } catch (loadError) {
@@ -148,7 +149,7 @@ export function BuyerCancellationSettingsPanel() {
         body: JSON.stringify(nextState),
       });
 
-      if (!response.ok) throw new Error('ذخیره تنظیمات فسخ انجام نشد.');
+      if (!response.ok) throw new Error(await readApiErrorMessage(response, 'ذخیره تنظیمات فسخ انجام نشد.'));
 
       if (!options?.silent) {
         setMessage('تنظیمات فسخ خریدار با موفقیت ذخیره شد.');

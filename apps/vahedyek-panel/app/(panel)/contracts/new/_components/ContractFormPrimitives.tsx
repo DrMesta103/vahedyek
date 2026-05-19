@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Calendar, ChevronDown, ChevronUp, Search, X } from 'lucide-react';
@@ -447,4 +447,3 @@ export function ExpandableTagGroup({
     </div>
   );
 }
-

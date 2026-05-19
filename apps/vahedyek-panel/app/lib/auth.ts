@@ -2,6 +2,7 @@ import { randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { prisma } from './prisma';
+import { isDatabaseUnreachableError } from './prismaApiError';
 import { AUTH_COOKIE, AuthTokenPayload, clearAuthCookie, createAuthToken, setAuthCookie, verifyAuthToken } from './auth-token';
 
 export { AUTH_COOKIE, clearAuthCookie, createAuthToken, setAuthCookie, verifyAuthToken } from './auth-token';
@@ -111,6 +112,13 @@ export async function getAuthContextFromPayload(payload: AuthTokenPayload) {
     .then((value) => {
       cache.set(key, { expiresAt: Date.now() + AUTH_CONTEXT_TTL_MS, value });
       return value;
+    })
+    .catch((error) => {
+      if (isDatabaseUnreachableError(error) && cached) {
+        cache.set(key, { expiresAt: Date.now() + AUTH_CONTEXT_TTL_MS, value: cached.value });
+        return cached.value;
+      }
+      throw error;
     })
     .finally(() => {
       pendingCache.delete(key);

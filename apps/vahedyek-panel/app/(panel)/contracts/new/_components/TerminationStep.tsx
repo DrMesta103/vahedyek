@@ -647,7 +647,33 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
         {id === 'notifications' ? (
           <NotificationsPanel
             value={c.notifications}
+            officialDemandRequired={c.financialObligations.officialDemandRequired}
+            autoReminderEnabled={c.documentDeficiencies.autoReminderEnabled}
             onChange={(next) => updatePayload((p) => ({ ...p, constructorTerms: { ...p.constructorTerms, notifications: next } }))}
+            onOfficialDemandRequiredChange={(checked) =>
+              updatePayload((p) => ({
+                ...p,
+                constructorTerms: {
+                  ...p.constructorTerms,
+                  financialObligations: {
+                    ...p.constructorTerms.financialObligations,
+                    officialDemandRequired: checked,
+                  },
+                },
+              }))
+            }
+            onAutoReminderEnabledChange={(checked) =>
+              updatePayload((p) => ({
+                ...p,
+                constructorTerms: {
+                  ...p.constructorTerms,
+                  documentDeficiencies: {
+                    ...p.constructorTerms.documentDeficiencies,
+                    autoReminderEnabled: checked,
+                  },
+                },
+              }))
+            }
             onSubmit={() => tryConfirmAndBackSeller('notifications')}
             saving={subsectionBusy === 'notifications'}
           />

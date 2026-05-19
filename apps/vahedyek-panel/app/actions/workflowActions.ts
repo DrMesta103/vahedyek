@@ -5,6 +5,7 @@ import { prisma } from '../lib/prisma';
 import { getSessionContext } from '../lib/auth';
 import { requireBusinessOwner } from '../lib/access-control';
 import { APPROVAL_USAGE_KEYS, type ApprovalUsageKey } from '../lib/contractApprovalAccess';
+import { DATABASE_UNREACHABLE_MESSAGE, isDatabaseUnreachableError } from '../lib/prismaApiError';
 import {
   normalizeWorkflowSteps,
   validateWorkflowPayload,
@@ -13,7 +14,17 @@ import {
 } from '../lib/workflowTypes';
 
 async function requireTenantSession() {
-  const session = await getSessionContext();
+  let session;
+
+  try {
+    session = await getSessionContext();
+  } catch (error) {
+    if (isDatabaseUnreachableError(error)) {
+      return { ok: false as const, message: DATABASE_UNREACHABLE_MESSAGE };
+    }
+    throw error;
+  }
+
   if (!session?.tenantId || session.state !== 'active') {
     return { ok: false as const, message: 'برای ادامه باید وارد شوید.' };
   }
@@ -94,7 +105,7 @@ export async function createApprovalWorkflowAction(payload: WorkflowDefinitionPa
   const ownerOk = await requireBusinessOwner(s.userId, s.tenantId);
   if (!ownerOk) return { ok: false, message: 'تنها مالک کسب‌وکار می‌تواند فرایند تأیید را تعریف کند.' };
 
-  const v = validateWorkflowPayload(payload, { allowEmptyApprovers: true });
+  const v = validateWorkflowPayload(payload, { allowEmptyApprovers: true, allowEmptySteps: true });
   if (!v.ok) return v;
 
   const usageTypes = payload.usageTypes.filter((u) => (APPROVAL_USAGE_KEYS as readonly string[]).includes(u)) as ApprovalUsageKey[];
@@ -140,7 +151,7 @@ export async function updateApprovalWorkflowAction(
   });
   if (!existing) return { ok: false, message: 'فرایند یافت نشد.' };
 
-  const v = validateWorkflowPayload(payload);
+  const v = validateWorkflowPayload(payload, { allowEmptySteps: true });
   if (!v.ok) return v;
 
   const usageTypes = payload.usageTypes.filter((u) => (APPROVAL_USAGE_KEYS as readonly string[]).includes(u)) as ApprovalUsageKey[];
