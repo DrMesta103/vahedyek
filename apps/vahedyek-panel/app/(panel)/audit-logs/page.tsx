@@ -3,6 +3,25 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toGregorian } from 'jalaali-js';
+import type { LucideIcon } from 'lucide-react';
+import {
+  Blocks,
+  Building2,
+  CalendarDays,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Eye,
+  FileText,
+  Filter,
+  LogIn,
+  LogOut,
+  PencilLine,
+  Search,
+  Send,
+  ShieldCheck,
+  UserPlus,
+} from 'lucide-react';
 import { PersianDatePicker } from '@repo/ui';
 import PanelLayout from '../../components/PanelLayout';
 import { formatDateFa } from '../../lib/dateFormat';
@@ -42,6 +61,8 @@ type AuditResponse = {
   };
 };
 
+type VisualTone = 'teal' | 'green' | 'blue' | 'violet' | 'amber' | 'slate';
+
 const ACTION_LABELS: Record<string, string> = {
   'auth.login': 'ورود به سامانه',
   'auth.logout': 'خروج از سامانه',
@@ -51,13 +72,13 @@ const ACTION_LABELS: Record<string, string> = {
   'contract.subject.update': 'ویرایش اطلاعات پایه قرارداد',
   'contract.financial.update': 'ویرایش مالی قرارداد',
   'contract.parties.update': 'ویرایش طرفین قرارداد',
-  'contract.penalties.update': 'ویرایش جرائم قرارداد',
+  'contract.penalties.update': 'ویرایش جرایم قرارداد',
   'contract.termination.update': 'ویرایش شرایط فسخ قرارداد',
   'contract.approval.submit': 'ارسال قرارداد برای تایید',
   'contract.approval.decision': 'ثبت تصمیم تایید قرارداد',
   'employee.create': 'ثبت کارمند',
   'employee.update': 'ویرایش کارمند',
-  'employee.delete': 'غیرفعال‌سازی کارمند',
+  'employee.delete': 'غیرفعال سازی کارمند',
   'access.role.create': 'ساخت نقش',
   'access.role.update': 'ویرایش دسترسی نقش',
   'access.member.update': 'ویرایش نقش کاربر',
@@ -89,8 +110,29 @@ function jalaliToIso(value: string) {
 }
 
 function toJsonPreview(value: unknown) {
-  if (!value || (typeof value === 'object' && Object.keys(value as Record<string, unknown>).length === 0)) return 'جزئیاتی ثبت نشده است.';
+  if (!value || (typeof value === 'object' && Object.keys(value as Record<string, unknown>).length === 0)) {
+    return 'جزئیاتی ثبت نشده است.';
+  }
   return JSON.stringify(value, null, 2);
+}
+
+function getActionVisual(action: string): { icon: LucideIcon; tone: VisualTone } {
+  if (action.includes('login')) return { icon: LogIn, tone: 'green' };
+  if (action.includes('logout')) return { icon: LogOut, tone: 'slate' };
+  if (action.includes('approval.decision')) return { icon: CheckCircle2, tone: 'green' };
+  if (action.includes('approval.submit')) return { icon: Send, tone: 'blue' };
+  if (action.includes('employee.create')) return { icon: UserPlus, tone: 'green' };
+  if (action.includes('access.')) return { icon: ShieldCheck, tone: 'violet' };
+  if (action.includes('project.block')) return { icon: Blocks, tone: 'amber' };
+  if (action.includes('create')) return { icon: FileText, tone: 'teal' };
+  if (action.includes('update') || action.includes('edit')) return { icon: PencilLine, tone: 'violet' };
+  return { icon: Building2, tone: 'teal' };
+}
+
+function getInitials(name: string) {
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return '؟';
+  return words.slice(0, 2).map((word) => word[0]).join('');
 }
 
 export default function AuditLogsPage() {
@@ -125,6 +167,7 @@ export default function AuditLogsPage() {
   useEffect(() => {
     let mounted = true;
     setLoading(true);
+
     fetch(`/api/audit-logs?${query}`)
       .then(async (response) => {
         if (response.status === 401) {
@@ -163,26 +206,43 @@ export default function AuditLogsPage() {
     setFilters({ q: '', actorUserId: '', action: '', entityType: '', dateFrom: '', dateTo: '' });
   };
 
+  const total = data?.pagination.total ?? 0;
+  const pageCount = data?.pagination.pageCount ?? 1;
+
   return (
     <PanelLayout>
       <section className="audit-page">
         <div className="audit-hero audit-hero-list">
-          <div>
-            <span className="audit-kicker">گزارش فعالیت‌ها</span>
-            <h1>فهرست لاگ‌های سیستم</h1>
-            <p>هر ردیف نشان می‌دهد چه کاربری، چه اکشنی، در چه تاریخی انجام داده است. جزئیات تغییرات از دکمه «جزئیات» باز می‌شود.</p>
+          <div className="audit-hero-copy">
+            <div className="audit-hero-icon" aria-hidden="true">
+              <FileText size={28} />
+            </div>
+            <div>
+              <span className="audit-kicker">گزارش فعالیت سیستم</span>
+              <h1>فهرست لاگ‌های سیستم</h1>
+              <p>در این بخش می‌توانید تمام رویدادها و تغییرات ثبت‌شده در سیستم را با ظاهر خواناتر و جزئیات کامل مشاهده کنید.</p>
+            </div>
           </div>
           <div className="audit-stat-card">
             <span>کل لاگ‌ها</span>
-            <strong>{new Intl.NumberFormat('fa-IR').format(data?.pagination.total ?? 0)}</strong>
+            <strong>{new Intl.NumberFormat('fa-IR').format(total)}</strong>
           </div>
         </div>
 
         <div className="audit-filters audit-filters-fa">
-          <label>
+          <button type="button" className="audit-filter-tile" onClick={clearFilters}>
+            <Filter size={18} />
+            <span>فیلترها</span>
+          </button>
+
+          <label className="audit-filter-search">
             <span>جستجو</span>
-            <input value={filters.q} onChange={(event) => updateFilter('q', event.target.value)} placeholder="نام کاربر، عنوان اکشن یا توضیح" />
+            <div className="audit-input-shell">
+              <Search size={18} />
+              <input value={filters.q} onChange={(event) => updateFilter('q', event.target.value)} placeholder="نام کاربر، عنوان اکشن یا توضیح" />
+            </div>
           </label>
+
           <label>
             <span>کاربر</span>
             <select value={filters.actorUserId} onChange={(event) => updateFilter('actorUserId', event.target.value)}>
@@ -194,6 +254,7 @@ export default function AuditLogsPage() {
               ))}
             </select>
           </label>
+
           <label>
             <span>اکشن</span>
             <select value={filters.action} onChange={(event) => updateFilter('action', event.target.value)}>
@@ -205,6 +266,7 @@ export default function AuditLogsPage() {
               ))}
             </select>
           </label>
+
           <label>
             <span>موجودیت</span>
             <select value={filters.entityType} onChange={(event) => updateFilter('entityType', event.target.value)}>
@@ -216,73 +278,86 @@ export default function AuditLogsPage() {
               ))}
             </select>
           </label>
+
           <label>
             <span>از تاریخ</span>
             <PersianDatePicker value={filters.dateFrom} onChange={(value) => updateFilter('dateFrom', value)} placeholder="انتخاب تاریخ شروع" />
           </label>
+
           <label>
             <span>تا تاریخ</span>
             <PersianDatePicker value={filters.dateTo} onChange={(value) => updateFilter('dateTo', value)} placeholder="انتخاب تاریخ پایان" />
           </label>
-          <button type="button" className="audit-clear-button" onClick={clearFilters}>
-            پاک کردن فیلترها
-          </button>
         </div>
 
         {error ? <div className="audit-error">{error}</div> : null}
 
         <div className="audit-table-card">
           <div className="audit-table-head">
-            <span>نام</span>
+            <span>کاربر</span>
             <span>اکشن</span>
-            <span>موجودیت</span>
             <span>تاریخ</span>
-            <span>عنوان</span>
+            <span>توضیحات</span>
             <span>جزئیات</span>
           </div>
 
           {loading ? <div className="audit-empty">در حال دریافت لاگ‌ها...</div> : null}
           {!loading && !data?.logs.length ? <div className="audit-empty">لاگی با این فیلترها پیدا نشد.</div> : null}
 
-          {data?.logs.map((log) => (
-            <article key={log.id} className="audit-list-row">
-              <div className="audit-field">
-                <span>نام :</span>
-                <strong>{log.actorName}</strong>
-              </div>
-              <div className="audit-field">
-                <span>اکشن :</span>
-                <strong>{ACTION_LABELS[log.action] ?? log.action}</strong>
-              </div>
-              <div className="audit-field">
-                <span>موجودیت :</span>
-                <strong>{log.entityLabel || ENTITY_LABELS[log.entityType] || log.entityType}</strong>
-              </div>
-              <div className="audit-field">
-                <span>تاریخ :</span>
-                <strong>{formatDateFa(log.createdAt, { withTime: true })}</strong>
-              </div>
-              <div className="audit-row-title">
-                <span>عنوان :</span>
-                <p>{log.summary}</p>
-              </div>
-              <button type="button" className="audit-detail-button" onClick={() => setDetailsLog(log)}>
-                جزئیات
-              </button>
-            </article>
-          ))}
+          {data?.logs.map((log) => {
+            const actionVisual = getActionVisual(log.action);
+            const ActionIcon = actionVisual.icon;
+
+            return (
+              <article key={log.id} className="audit-list-row">
+                <div className="audit-user-cell">
+                  <div className="audit-user-avatar">{getInitials(log.actorName)}</div>
+                  <div className="audit-user-copy">
+                    <strong>{log.actorName}</strong>
+                  </div>
+                </div>
+
+                <div className="audit-action-cell">
+                  <div className={`audit-tone-badge is-${actionVisual.tone}`}>
+                    <ActionIcon size={18} />
+                  </div>
+                  <strong>{ACTION_LABELS[log.action] ?? log.action}</strong>
+                </div>
+
+                <div className="audit-date-cell">
+                  <CalendarDays size={16} />
+                  <div>
+                    <strong>{formatDateFa(log.createdAt)}</strong>
+                    <span>{formatDateFa(log.createdAt, { withTime: true }).split(' - ').slice(-1)[0]}</span>
+                  </div>
+                </div>
+
+                <div className="audit-row-title">
+                  <span>توضیحات</span>
+                  <p>{log.summary}</p>
+                </div>
+
+                <button type="button" className="audit-detail-button is-icon" onClick={() => setDetailsLog(log)} aria-label="نمایش جزئیات">
+                  <Eye size={15} />
+                </button>
+              </article>
+            );
+          })}
 
           {data ? (
             <div className="audit-pagination">
-              <button type="button" disabled={page <= 1} onClick={() => setPage((current) => Math.max(1, current - 1))}>
-                قبلی
-              </button>
-              <span>
-                صفحه {new Intl.NumberFormat('fa-IR').format(data.pagination.page)} از {new Intl.NumberFormat('fa-IR').format(data.pagination.pageCount)}
-              </span>
-              <button type="button" disabled={page >= data.pagination.pageCount} onClick={() => setPage((current) => current + 1)}>
-                بعدی
-              </button>
+              <div className="audit-pagination-status">
+                <span>از {new Intl.NumberFormat('fa-IR').format(total)} مورد</span>
+              </div>
+              <div className="audit-pagination-controls">
+                <button type="button" disabled={page >= pageCount} onClick={() => setPage((current) => current + 1)} aria-label="صفحه بعد">
+                  <ChevronRight size={16} />
+                </button>
+                <span className="audit-pagination-chip">{new Intl.NumberFormat('fa-IR').format(page)}</span>
+                <button type="button" disabled={page <= 1} onClick={() => setPage((current) => Math.max(1, current - 1))} aria-label="صفحه قبل">
+                  <ChevronLeft size={16} />
+                </button>
+              </div>
             </div>
           ) : null}
         </div>
@@ -293,29 +368,44 @@ export default function AuditLogsPage() {
               <button type="button" className="audit-dialog-close" onClick={() => setDetailsLog(null)} aria-label="بستن">
                 ×
               </button>
-              <span className="audit-kicker">{ACTION_LABELS[detailsLog.action] ?? detailsLog.action}</span>
-              <h2>{detailsLog.summary}</h2>
+
+              <div className="audit-dialog-header">
+                <div className={`audit-tone-badge is-${getActionVisual(detailsLog.action).tone}`}>
+                  {(() => {
+                    const Icon = getActionVisual(detailsLog.action).icon;
+                    return <Icon size={20} />;
+                  })()}
+                </div>
+                <div>
+                  <span className="audit-kicker">{ACTION_LABELS[detailsLog.action] ?? detailsLog.action}</span>
+                  <h2>{detailsLog.summary}</h2>
+                </div>
+              </div>
 
               <div className="audit-dialog-meta">
                 <div>
-                  <span>نام :</span>
+                  <span>کاربر</span>
                   <strong>{detailsLog.actorName}</strong>
                 </div>
                 <div>
-                  <span>اکشن :</span>
+                  <span>اکشن</span>
                   <strong>{ACTION_LABELS[detailsLog.action] ?? detailsLog.action}</strong>
                 </div>
                 <div>
-                  <span>تاریخ :</span>
+                  <span>تاریخ</span>
                   <strong>{formatDateFa(detailsLog.createdAt, { withTime: true })}</strong>
                 </div>
                 <div>
-                  <span>موجودیت :</span>
+                  <span>موجودیت</span>
                   <strong>{detailsLog.entityLabel || detailsLog.entityId || ENTITY_LABELS[detailsLog.entityType] || detailsLog.entityType}</strong>
                 </div>
                 <div>
-                  <span>IP :</span>
+                  <span>IP</span>
                   <strong>{detailsLog.ipAddress ?? 'ثبت نشده'}</strong>
+                </div>
+                <div>
+                  <span>عامل کاربری</span>
+                  <strong>{detailsLog.userAgent ?? 'ثبت نشده'}</strong>
                 </div>
               </div>
 
@@ -339,7 +429,7 @@ export default function AuditLogsPage() {
                     </div>
                   ))
                 ) : (
-                  <p>برای این اکشن تغییر فیلدی ثبت نشده است.</p>
+                  <p>برای این اکشن تغییری در سطح فیلد ثبت نشده است.</p>
                 )}
               </div>
 

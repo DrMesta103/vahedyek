@@ -20,6 +20,7 @@ type LocationFormProps = {
 type MapPoint = {
   id: string;
   label: string;
+  address: string;
   lat: string;
   lng: string;
   x: number;
@@ -27,22 +28,29 @@ type MapPoint = {
 };
 
 const MAP_POINTS: MapPoint[] = [
-  { id: 'tehran-center', label: 'مرکز شهر', lat: '35.699739', lng: '51.338097', x: 48, y: 50 },
-  { id: 'north-office', label: 'شمال', lat: '35.783115', lng: '51.425682', x: 66, y: 24 },
-  { id: 'west-hub', label: 'غرب', lat: '35.744251', lng: '51.209943', x: 20, y: 40 },
-  { id: 'south-yard', label: 'جنوب', lat: '35.620421', lng: '51.420112', x: 63, y: 77 },
+  { id: 'tehran-center', label: 'مرکز شهر', address: 'تهران، محدوده مرکز شهر', lat: '35.699739', lng: '51.338097', x: 48, y: 50 },
+  { id: 'north-office', label: 'شمال', address: 'تهران، محدوده شمال شهر', lat: '35.783115', lng: '51.425682', x: 66, y: 24 },
+  { id: 'west-hub', label: 'غرب', address: 'تهران، محدوده غرب شهر', lat: '35.744251', lng: '51.209943', x: 20, y: 40 },
+  { id: 'south-yard', label: 'جنوب', address: 'تهران، محدوده جنوب شهر', lat: '35.620421', lng: '51.420112', x: 63, y: 77 },
 ];
 
-function formatAddress(lat: string, lng: string) {
-  return `مختصات انتخابی: ${lng}, ${lat}`;
+function findMapPoint(lat?: string | null, lng?: string | null) {
+  if (!lat || !lng) return null;
+  return MAP_POINTS.find((point) => point.lat === lat && point.lng === lng) ?? null;
 }
 
 export function LocationForm({ action, submitLabel, initialValues }: LocationFormProps) {
   const initialPoint = useMemo<MapPoint>(() => {
+    const matchedPoint = findMapPoint(initialValues?.latitude, initialValues?.longitude);
+    if (matchedPoint) {
+      return matchedPoint;
+    }
+
     if (initialValues?.latitude && initialValues?.longitude) {
       return {
         id: 'saved-point',
         label: 'نقطه ذخیره‌شده',
+        address: initialValues.address?.trim() || 'آدرس انتخاب‌شده از روی نقشه',
         lat: initialValues.latitude,
         lng: initialValues.longitude,
         x: 48,
@@ -51,17 +59,17 @@ export function LocationForm({ action, submitLabel, initialValues }: LocationFor
     }
 
     return MAP_POINTS[0];
-  }, [initialValues?.latitude, initialValues?.longitude]);
+  }, [initialValues?.address, initialValues?.latitude, initialValues?.longitude]);
 
   const [selectedPoint, setSelectedPoint] = useState(initialPoint);
   const [title, setTitle] = useState(initialValues?.title ?? '');
-  const [address, setAddress] = useState(initialValues?.address ?? formatAddress(initialPoint.lat, initialPoint.lng));
+  const [address, setAddress] = useState(initialValues?.address ?? initialPoint.address);
   const [radius, setRadius] = useState(String(initialValues?.radius ?? 100));
   const [description, setDescription] = useState(initialValues?.description ?? '');
 
   const pickPoint = (point: MapPoint) => {
     setSelectedPoint(point);
-    setAddress(formatAddress(point.lat, point.lng));
+    setAddress(point.address);
   };
 
   return (
@@ -88,17 +96,6 @@ export function LocationForm({ action, submitLabel, initialValues }: LocationFor
             <span>توضیح</span>
             <textarea name="description" rows={4} value={description} onChange={(event) => setDescription(event.target.value)} />
           </label>
-        </div>
-
-        <div className="location-coord-strip">
-          <div>
-            <span>عرض جغرافیایی</span>
-            <strong>{selectedPoint.lat}</strong>
-          </div>
-          <div>
-            <span>طول جغرافیایی</span>
-            <strong>{selectedPoint.lng}</strong>
-          </div>
         </div>
 
         <div className="full-span">

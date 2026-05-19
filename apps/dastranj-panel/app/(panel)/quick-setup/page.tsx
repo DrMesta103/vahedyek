@@ -9,6 +9,10 @@ export default async function QuickSetupPage() {
       profileName={data.profile?.brandName ?? null}
       steps={data.steps}
       locationItems={data.locationItems}
+      calendarItems={data.calendarItems}
+      policyItems={data.policyItems}
+      employeeItems={data.employeeItems}
+      workGroupItems={data.workGroupItems}
       tenantId={data.tenantId}
     />
   );

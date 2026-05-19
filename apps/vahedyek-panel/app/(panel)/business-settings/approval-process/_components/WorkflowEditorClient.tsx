@@ -1,7 +1,7 @@
 'use client';
 
-import { type ReactNode, useCallback, useEffect, useMemo, useState, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
+import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
   DndContext,
   KeyboardSensor,
@@ -19,12 +19,19 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Loader2, Plus, Save, Trash2 } from 'lucide-react';
+import { GripVertical, Loader2, Map as MapIcon, Plus, Save, Trash2, X } from 'lucide-react';
 import { BusinessSwitch, FormTextInput, SectionCard, SectionHeader, TagPills } from '../../../contracts/new/_components/ContractFormPrimitives';
 
 import { approvalUsageOptions } from '../../_components/approvalProcessConfig';
 import type { ApprovalUsageKey } from '../../../../lib/contractApprovalAccess';
 import type { WorkflowDefinitionPayload, WorkflowStepDefinition } from '../../../../lib/workflowTypes';
+import {
+  attachApproverToStep,
+  buildApprovalProcessDraft,
+  buildApprovalRoadmapItems,
+  getApprovalProcessDraftStorageKey,
+  parseApprovalProcessDraft,
+} from '../../../../lib/approvalProcessEditor';
 import {
   getApprovalWorkflowAction,
   listApprovalWorkflowsAction,
@@ -167,6 +174,156 @@ function buildPayload(params: {
   };
 }
 
+function RoadmapModal({
+  open,
+  onClose,
+  steps,
+  users,
+  finalApproverUserId,
+  buyerShouldApprove,
+}: {
+  open: boolean;
+  onClose: () => void;
+  steps: WorkflowStepDefinition[];
+  users: UserOpt[];
+  finalApproverUserId: string;
+  buyerShouldApprove: boolean;
+}) {
+  const userMap = useMemo(() => new Map(users.map((user) => [user.id, user.label])), [users]);
+  const roadmapItems = useMemo(() => buildApprovalRoadmapItems(steps), [steps]);
+  const finalProcessApprover = finalApproverUserId ? userMap.get(finalApproverUserId) ?? finalApproverUserId : '';
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-[110] flex items-center justify-center bg-[#251d2b]/60 p-4" onClick={onClose}>
+      <div
+        className="relative flex max-h-[88vh] w-full max-w-4xl flex-col overflow-hidden rounded-[28px] bg-[#fcfcfb] shadow-[0_30px_90px_rgba(24,24,27,0.24)]"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="relative overflow-hidden bg-[linear-gradient(135deg,#6f5c75_0%,#5a4b63_100%)] px-6 py-6 text-white sm:px-8">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.18),transparent_42%)]" />
+          <button
+            type="button"
+            onClick={onClose}
+            className="absolute left-5 top-5 inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/20 bg-white/10 text-white transition hover:bg-white/20"
+            aria-label="بستن"
+          >
+            <X className="h-5 w-5" aria-hidden />
+          </button>
+          <div className="relative text-right">
+            <div className="text-[28px] font-black tracking-tight sm:text-[40px]">رودمپ فرآیند تایید</div>
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-white/80">
+              عنوان هر مرحله، تاییدکنندگان، شرط تکمیل و تاییدکننده نهایی از داده فعلی فرم خوانده می‌شود.
+            </p>
+            <div className="mt-4 flex flex-wrap justify-end gap-2 text-[11px] font-bold">
+              <span className="rounded-full bg-white/12 px-3 py-1.5">{buyerShouldApprove ? 'خریدار فعال است' : 'بدون تایید خریدار'}</span>
+              {finalProcessApprover ? <span className="rounded-full bg-white/12 px-3 py-1.5">نهایی کل: {finalProcessApprover}</span> : null}
+            </div>
+          </div>
+        </div>
+
+        <div className="overflow-auto px-4 py-5 sm:px-7 sm:py-7">
+          {roadmapItems.length === 0 ? (
+            <div className="rounded-[24px] border border-dashed border-slate-200 bg-white px-6 py-12 text-center text-[14px] font-semibold text-slate-500">
+              هنوز مرحله‌ای برای نمایش رودمپ تعریف نشده است.
+            </div>
+          ) : (
+            <div className="relative space-y-10">
+              <div className="pointer-events-none absolute bottom-8 right-1/2 top-3 hidden w-[3px] translate-x-1/2 rounded-full bg-[linear-gradient(180deg,#9cc7bf_0%,#7daed7_24%,#746989_50%,#df6878_74%,#f2c864_100%)] sm:block" />
+              {roadmapItems.map((item) => {
+                const hue = item.index % 5;
+                const accent = hue === 0 ? '#9cc7bf' : hue === 1 ? '#7daed7' : hue === 2 ? '#746989' : hue === 3 ? '#df6878' : '#f2c864';
+                const alignRight = item.index % 2 === 0;
+
+                return (
+                  <div key={item.id} className="relative sm:min-h-[220px]">
+                    <div className="relative grid items-start gap-4 sm:grid-cols-[1fr,96px,1fr]">
+                      <div className={`${alignRight ? 'sm:order-3' : 'sm:order-1'} order-2`}>
+                        <div className={`rounded-[24px] border border-slate-200 bg-white px-4 py-4 shadow-[0_16px_40px_rgba(15,23,42,0.06)] ${alignRight ? 'sm:ml-8 text-left' : 'sm:mr-8 text-right'}`}>
+                          <div className={`text-[18px] font-black ${alignRight ? 'text-left' : 'text-right'}`} style={{ color: accent }}>
+                            {item.title}
+                          </div>
+                          <div className={`mt-3 flex flex-wrap gap-2 ${alignRight ? 'justify-start' : 'justify-end'}`}>
+                            <span className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-bold text-slate-600">{item.processingLabel}</span>
+                            <span className="rounded-full px-3 py-1 text-[10px] font-bold" style={{ backgroundColor: `${accent}18`, color: accent }}>
+                              {item.completionLabel}
+                            </span>
+                          </div>
+                          <div className={`mt-4 text-[11px] font-bold text-slate-500 ${alignRight ? 'text-left' : 'text-right'}`}>تاییدکنندگان مرحله</div>
+                          {item.approverIds.length ? (
+                            <div className={`mt-2 flex flex-wrap gap-2 ${alignRight ? 'justify-start' : 'justify-end'}`}>
+                              {item.approverIds.map((approverId, approverIndex) => {
+                                const isFinalApprover = approverId === item.finalApproverId;
+                                return (
+                                  <div
+                                    key={`${item.id}:${approverId}`}
+                                    className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-bold text-slate-700"
+                                    style={{
+                                      borderColor: isFinalApprover ? `${accent}66` : '#e2e8f0',
+                                      backgroundColor: isFinalApprover ? `${accent}14` : '#ffffff',
+                                    }}
+                                  >
+                                    <span>{userMap.get(approverId) ?? approverId}</span>
+                                    <span className="text-slate-400">اولویت {approverIndex + 1}</span>
+                                    {isFinalApprover ? <span style={{ color: accent }}>نهایی</span> : null}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          ) : (
+                            <div className={`mt-2 text-[11px] font-semibold text-slate-400 ${alignRight ? 'text-left' : 'text-right'}`}>
+                              تاییدکننده‌ای انتخاب نشده است.
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="order-1 flex flex-col items-center sm:order-2">
+                        <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-[0_18px_36px_rgba(15,23,42,0.08)] ring-1 ring-slate-100">
+                          <div className="absolute inset-[10px] rounded-full opacity-15" style={{ backgroundColor: accent }} />
+                          <span className="relative text-[34px] font-black leading-none" style={{ color: accent }}>
+                            {String(item.index + 1).padStart(2, '0')}
+                          </span>
+                        </div>
+                        <div className="mt-2 text-[12px] font-bold text-slate-400">مرحله</div>
+                        {item.index !== roadmapItems.length - 1 ? <div className="mt-2 hidden h-24 w-[2px] rounded-full bg-slate-200 sm:block" /> : null}
+                      </div>
+
+                      <div className={`${alignRight ? 'sm:order-1' : 'sm:order-3'} order-3`}>
+                        <div className={`rounded-[24px] px-4 py-4 ${alignRight ? 'sm:mr-8 text-right' : 'sm:ml-8 text-left'}`}>
+                          {item.finalApproverId ? (
+                            <div className={`mb-3 flex ${alignRight ? 'justify-end' : 'justify-start'}`}>
+                              <div className="rounded-full px-3 py-1.5 text-[10px] font-black" style={{ backgroundColor: `${accent}18`, color: accent }}>
+                                تاییدکننده نهایی: {userMap.get(item.finalApproverId) ?? item.finalApproverId}
+                              </div>
+                            </div>
+                          ) : null}
+                          <div className="space-y-1 text-[13px] leading-7 text-slate-500">
+                            <div>
+                              عنوان مرحله: <span className="font-bold text-slate-700">{item.title}</span>
+                            </div>
+                            <div>
+                              شرط تکمیل: <span className="font-bold text-slate-700">{item.completionLabel}</span>
+                            </div>
+                            <div>
+                              نوع پیشروی: <span className="font-bold text-slate-700">{item.processingLabel}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function SortableStepAccordion({
   step,
   index,
@@ -179,6 +336,7 @@ function SortableStepAccordion({
   onOpenChange,
   onRemove,
   onSave,
+  onAddEmployee,
 }: {
   step: WorkflowStepDefinition;
   index: number;
@@ -191,6 +349,7 @@ function SortableStepAccordion({
   onOpenChange: (open: boolean) => void;
   onRemove: () => void;
   onSave: () => void;
+  onAddEmployee: () => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: step.id });
 
@@ -282,6 +441,7 @@ function SortableStepAccordion({
                   placeholder="افزودن تاییدکننده..."
                   searchPlaceholder="جستجوی کارمند..."
                   emptyText="کاربری مطابق جستجو پیدا نشد."
+                  footerAction={{ label: 'افزودن کارمند جدید', onClick: onAddEmployee }}
                 />
 
                 <div className="mt-3 flex flex-wrap gap-2">
@@ -444,10 +604,15 @@ function SortableStepAccordion({
 
 export function WorkflowEditorClient({ workflowId }: { workflowId?: string }) {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
   const [createdWorkflowId, setCreatedWorkflowId] = useState<string | null>(workflowId ?? null);
   const effectiveWorkflowId = workflowId ?? createdWorkflowId ?? undefined;
   const isNew = !effectiveWorkflowId;
+  const draftKey = useMemo(() => getApprovalProcessDraftStorageKey(effectiveWorkflowId), [effectiveWorkflowId]);
+  const restoredDraftRef = useRef(false);
+  const appliedCreatedApproverRef = useRef('');
 
   const [users, setUsers] = useState<UserOpt[]>([]);
   const [error, setError] = useState('');
@@ -455,6 +620,7 @@ export function WorkflowEditorClient({ workflowId }: { workflowId?: string }) {
   const [loaded, setLoaded] = useState(false);
   const [openStepId, setOpenStepId] = useState<string | null>(null);
   const [busyTarget, setBusyTarget] = useState('');
+  const [roadmapOpen, setRoadmapOpen] = useState(false);
 
   const [title, setTitle] = useState('');
   const [usageType, setUsageType] = useState<ApprovalUsageKey | ''>('');
@@ -477,6 +643,11 @@ export function WorkflowEditorClient({ workflowId }: { workflowId?: string }) {
     setCreatedWorkflowId(workflowId ?? null);
   }, [workflowId]);
 
+  useEffect(() => {
+    restoredDraftRef.current = false;
+    appliedCreatedApproverRef.current = '';
+  }, [draftKey]);
+
   const showSuccess = (message: string) => {
     setSaveOk(message);
     window.setTimeout(() => setSaveOk(''), 1800);
@@ -490,9 +661,62 @@ export function WorkflowEditorClient({ workflowId }: { workflowId?: string }) {
     setDirtyStepIds((current) => current.filter((id) => id !== stepId));
   };
 
+  const persistDraft = useCallback(
+    (targetStageId: string | null = null) => {
+      if (typeof window === 'undefined') return;
+      const draft = buildApprovalProcessDraft({
+        title,
+        usageType,
+        finalApproverUserId,
+        buyerShouldApprove,
+        workflowActive,
+        globalType,
+        steps,
+        openStepId,
+        targetStageId,
+      });
+      window.sessionStorage.setItem(draftKey, JSON.stringify(draft));
+    },
+    [buyerShouldApprove, draftKey, finalApproverUserId, globalType, openStepId, steps, title, usageType, workflowActive],
+  );
+
+  const clearDraft = useCallback(
+    (targetDraftKey = draftKey) => {
+      if (typeof window === 'undefined') return;
+      window.sessionStorage.removeItem(targetDraftKey);
+    },
+    [draftKey],
+  );
+
+  const buildCleanEditorUrl = useCallback(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete('createdEmployeeId');
+    params.delete('createdEmployeeLabel');
+    params.delete('approvalStageId');
+    params.delete('approvalReturnMode');
+    params.delete('approvalDraftKey');
+    const qs = params.toString();
+    return qs ? `${pathname}?${qs}` : pathname;
+  }, [pathname, searchParams]);
+
+  const pushEmployeeCreation = useCallback(
+    (targetStageId: string) => {
+      persistDraft(targetStageId);
+      const params = new URLSearchParams({
+        returnTo: buildCleanEditorUrl(),
+        approvalDraftKey: draftKey,
+        approvalStageId: targetStageId,
+        approvalReturnMode: 'add-approver',
+      });
+      router.push(`/employees/new?${params.toString()}`);
+    },
+    [buildCleanEditorUrl, draftKey, persistDraft, router],
+  );
+
   const load = useCallback(() => {
     startTransition(async () => {
       setError('');
+      setLoaded(false);
 
       if (!effectiveWorkflowId) {
         const [uRes, wfListRes] = await Promise.all([listTenantMembersForApproversAction(), listApprovalWorkflowsAction()]);
@@ -566,6 +790,63 @@ export function WorkflowEditorClient({ workflowId }: { workflowId?: string }) {
     void load();
   }, [load]);
 
+  useEffect(() => {
+    if (!loaded || restoredDraftRef.current || typeof window === 'undefined') return;
+    restoredDraftRef.current = true;
+
+    const parsed = parseApprovalProcessDraft(window.sessionStorage.getItem(draftKey));
+    if (!parsed) return;
+
+    const persistedMap = new Map(persistedSteps.map((step) => [step.id, JSON.stringify(step)] as const));
+    const nextDirtyStepIds = parsed.steps
+      .filter((step) => {
+        const persisted = persistedMap.get(step.id);
+        return !persisted || persisted !== JSON.stringify(step);
+      })
+      .map((step) => step.id);
+
+    setTitle(parsed.title);
+    setUsageType(parsed.usageType);
+    setFinalApproverUserId(parsed.finalApproverUserId);
+    setBuyerShouldApprove(parsed.buyerShouldApprove);
+    setWorkflowActive(parsed.workflowActive);
+    setGlobalType(parsed.globalType);
+    setSteps(parsed.steps);
+    setDirtyStepIds(nextDirtyStepIds);
+    setOpenStepId(parsed.openStepId ?? parsed.targetStageId ?? parsed.steps[0]?.id ?? null);
+  }, [draftKey, loaded, persistedSteps]);
+
+  useEffect(() => {
+    if (!loaded) return;
+
+    const createdEmployeeId = searchParams.get('createdEmployeeId');
+    const createdEmployeeLabel = searchParams.get('createdEmployeeLabel');
+    const targetStageId = searchParams.get('approvalStageId');
+    if (!createdEmployeeId || !targetStageId) return;
+
+    const applyKey = `${createdEmployeeId}:${targetStageId}`;
+    if (appliedCreatedApproverRef.current === applyKey) return;
+    appliedCreatedApproverRef.current = applyKey;
+
+    setUsers((current) => {
+      if (current.some((user) => user.id === createdEmployeeId)) return current;
+      if (!createdEmployeeLabel) return current;
+      return [...current, { id: createdEmployeeId, label: createdEmployeeLabel }];
+    });
+    setSteps((current) => attachApproverToStep(current, targetStageId, createdEmployeeId));
+    markStepDirty(targetStageId);
+    setOpenStepId(targetStageId);
+
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete('createdEmployeeId');
+    params.delete('createdEmployeeLabel');
+    params.delete('approvalStageId');
+    params.delete('approvalDraftKey');
+    params.delete('approvalReturnMode');
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  }, [loaded, pathname, router, searchParams]);
+
   const disabledUsageSet = useMemo(() => new Set(usedUsageTypes), [usedUsageTypes]);
 
   const processDirty = useMemo(() => {
@@ -613,6 +894,7 @@ export function WorkflowEditorClient({ workflowId }: { workflowId?: string }) {
         globalType,
       });
 
+      const previousDraftKey = draftKey;
       const res = effectiveWorkflowId
         ? await updateApprovalWorkflowAction(effectiveWorkflowId, payload)
         : await createApprovalWorkflowAction(payload);
@@ -625,6 +907,7 @@ export function WorkflowEditorClient({ workflowId }: { workflowId?: string }) {
 
       const nextWorkflowId = effectiveWorkflowId ?? (typeof res === 'object' && res && 'id' in res ? String(res.id) : undefined);
       if (!effectiveWorkflowId && nextWorkflowId) {
+        clearDraft(previousDraftKey);
         setCreatedWorkflowId(nextWorkflowId);
         router.replace(`/business-settings/approval-process/${nextWorkflowId}`);
       } else {
@@ -752,8 +1035,20 @@ export function WorkflowEditorClient({ workflowId }: { workflowId?: string }) {
 
   return (
     <div className="workflow-editor-root mx-auto w-full max-w-6xl px-4 pb-24 pt-4 sm:px-6 lg:px-8" dir="rtl" lang="fa">
-      <div className="mb-5 text-right">
-        <h1 className="mt-2 text-2xl font-black text-[var(--text-strong)]">{isNew ? 'ثبت فرآیند تایید' : 'مدیریت فرآیند تایید'}</h1>
+      <div className="mb-5 flex flex-col gap-3 text-right sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="mt-2 text-2xl font-black text-[var(--text-strong)]">{isNew ? 'ثبت فرآیند تایید' : 'مدیریت فرآیند تایید'}</h1>
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setRoadmapOpen(true)}
+          disabled={steps.length === 0}
+          className="h-11 shrink-0 rounded-full border-slate-200 bg-white px-5 text-[12px] font-bold text-slate-700 disabled:opacity-50"
+        >
+          <MapIcon className="h-4 w-4" aria-hidden />
+          نمایش رودمپ
+        </Button>
       </div>
 
       {error ? (
@@ -897,25 +1192,37 @@ export function WorkflowEditorClient({ workflowId }: { workflowId?: string }) {
                 </div>
               ) : (
                 <>
-                  <div className="mb-4 flex items-center justify-between gap-3">
+                  <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="text-right">
                       <span className="text-[12px] font-extrabold text-[var(--text-strong)]">ساخت مسیر مرحله‌ای</span>
                       <InlineGuide>هر مرحله پس از تکمیل اطلاعات خودش باید با دکمه «ثبت مرحله» همان کارت ذخیره شود.</InlineGuide>
                     </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="h-10 shrink-0 whitespace-nowrap rounded-full border-teal-100 bg-teal-50/70 px-4 text-[12px] font-bold text-[var(--dark-teal)] hover:bg-teal-100"
-                      onClick={() => {
-                        const next = defaultStep(globalType);
-                        setSteps((current) => [...current, next]);
-                        markStepDirty(next.id);
-                        setOpenStepId(next.id);
-                      }}
-                    >
-                      <Plus className="h-4 w-4" aria-hidden />
-                      افزودن مرحله
-                    </Button>
+                    <div className="flex items-center justify-end gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="h-10 shrink-0 whitespace-nowrap rounded-full border-slate-200 bg-white px-4 text-[12px] font-bold text-slate-700"
+                        onClick={() => setRoadmapOpen(true)}
+                        disabled={steps.length === 0}
+                      >
+                        <MapIcon className="h-4 w-4" aria-hidden />
+                        نمایش رودمپ
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="h-10 shrink-0 whitespace-nowrap rounded-full border-teal-100 bg-teal-50/70 px-4 text-[12px] font-bold text-[var(--dark-teal)] hover:bg-teal-100"
+                        onClick={() => {
+                          const next = defaultStep(globalType);
+                          setSteps((current) => [...current, next]);
+                          markStepDirty(next.id);
+                          setOpenStepId(next.id);
+                        }}
+                      >
+                        <Plus className="h-4 w-4" aria-hidden />
+                        افزودن مرحله
+                      </Button>
+                    </div>
                   </div>
 
                   {steps.length === 0 ? (
@@ -943,6 +1250,7 @@ export function WorkflowEditorClient({ workflowId }: { workflowId?: string }) {
                               onOpenChange={(open) => setOpenStepId(open ? step.id : null)}
                               onRemove={() => removeStep(step.id)}
                               onSave={() => saveStep(step.id)}
+                              onAddEmployee={() => pushEmployeeCreation(step.id)}
                             />
                           ))}
                         </Accordion>
@@ -955,6 +1263,15 @@ export function WorkflowEditorClient({ workflowId }: { workflowId?: string }) {
           </SectionCard>
         </div>
       )}
+
+      <RoadmapModal
+        open={roadmapOpen}
+        onClose={() => setRoadmapOpen(false)}
+        steps={steps}
+        users={users}
+        finalApproverUserId={finalApproverUserId}
+        buyerShouldApprove={buyerShouldApprove}
+      />
     </div>
   );
 }

@@ -134,11 +134,18 @@ export function AppendixEditorShell({ children }: { children: React.ReactNode })
         } else {
           nextPayloads = Object.fromEntries(
             nextSelectedTags.map((tag) => {
-              const baselinePayload = getContractBaselinePayload(tag, contractData);
+              const previousApproved = approvedAppendices.find((item) => item.items.some((entry) => entry.tagKey === tag));
+              const contractBaselinePayload = getContractBaselinePayload(tag, contractData);
+              const previousAppendixPayload = previousApproved ? getAppendixBaselinePayload(tag, previousApproved) : null;
               const initialPayload = createInitialAppendixPayload(tag);
-              if (tag === 'unit-delivery-date') return [tag, baselinePayload];
-              if (tag === 'first-party' || tag === 'second-party') return [tag, baselinePayload];
-              if (tag === 'contract-base-costs' || tag === 'side-costs') return [tag, baselinePayload];
+
+              if (previousAppendixPayload) {
+                return [tag, previousAppendixPayload];
+              }
+
+              if (tag === 'unit-delivery-date') return [tag, contractBaselinePayload];
+              if (tag === 'first-party' || tag === 'second-party') return [tag, contractBaselinePayload];
+              if (tag === 'contract-base-costs' || tag === 'side-costs') return [tag, contractBaselinePayload];
               return [tag, initialPayload];
             }),
           ) as Partial<Record<SupportedAppendixTagKey, SupportedAppendixPayload>>;
@@ -238,7 +245,7 @@ export function AppendixEditorShell({ children }: { children: React.ReactNode })
 
   const saveAppendix = async (submitMode: 'draft' | 'pending_approval') => {
     if (!appendixNumber) return;
-    if (!effectiveDate.trim()) {
+    if (submitMode === 'pending_approval' && !effectiveDate.trim()) {
       showError('زمان متمم الزامی است.');
       return;
     }
@@ -257,10 +264,12 @@ export function AppendixEditorShell({ children }: { children: React.ReactNode })
         showError('داده یکی از بخش‌های الحاقیه کامل نیست.');
         return;
       }
-      const validationMessage = validateAppendixPayload(tag, payload);
-      if (validationMessage) {
-        showError(validationMessage);
-        return;
+      if (submitMode === 'pending_approval') {
+        const validationMessage = validateAppendixPayload(tag, payload);
+        if (validationMessage) {
+          showError(validationMessage);
+          return;
+        }
       }
     }
 

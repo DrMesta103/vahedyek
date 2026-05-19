@@ -66,6 +66,13 @@ function buildContractsBreadcrumb(pathname: string): Crumb[] {
     return trail;
   }
 
+  if (segments[0] === 'contracts' && segments[1] && segments[1] !== 'new' && segments[2] === 'history') {
+    const contractId = segments[1];
+    trail.push({ label: 'جزئیات قرارداد', href: `/contracts/${contractId}` });
+    trail.push({ label: 'تاریخچه قرارداد' });
+    return trail;
+  }
+
   if (segments[0] === 'contracts' && segments[1] && segments[1] !== 'new' && segments[2] === 'appendices') {
     const contractId = segments[1];
     trail.push({ label: 'جزئیات قرارداد', href: `/contracts/${contractId}` });
@@ -425,6 +432,7 @@ export default function PanelLayout({ children }: PanelLayoutProps) {
   const isContractsNewHub = pathname === '/contracts/new';
   const isContractsListPage = pathname === '/contracts';
   const isContractReportsPage = /^\/contracts\/[^/]+\/reports(?:\/|$)/.test(pathname);
+  const isAuditLogsPage = pathname === '/audit-logs';
 
   const { activeItem, trail } = useMemo(() => {
     const resolvedActiveItem = resolveActiveItem(pathname);
@@ -507,15 +515,15 @@ export default function PanelLayout({ children }: PanelLayoutProps) {
         </main>
       ) : (
         <main
-          className={`main-content${isContractsListPage ? ' contracts-page-main' : ''}${isContractReportsPage ? ' reports-page-shell' : ''}`}
+          className={`main-content${isContractsListPage ? ' contracts-page-main' : ''}${isContractReportsPage ? ' reports-page-shell' : ''}${isAuditLogsPage ? ' audit-page-shell' : ''}`}
         >
-          <div className={`main-stage${isContractsListPage || isContractReportsPage ? ' main-stage-wide' : ''}`}>
+          <div className={`main-stage${isContractsListPage || isContractReportsPage || isAuditLogsPage ? ' main-stage-wide' : ''}`}>
             <div
-              className={`main-stage-content${isContractsNewHub ? ' contract-flow-stage-content' : ''}${isContractsListPage ? ' main-stage-content-wide' : ''}${isContractReportsPage ? ' reports-stage-content' : ''}`}
+              className={`main-stage-content${isContractsNewHub ? ' contract-flow-stage-content' : ''}${isContractsListPage || isAuditLogsPage ? ' main-stage-content-wide' : ''}${isContractReportsPage ? ' reports-stage-content' : ''}${isAuditLogsPage ? ' audit-stage-content' : ''}`}
             >
               {!isContractsNewHub ? (
                 <div
-                  className={`top-header${isContractsListPage ? ' top-header-compact' : ''}${isContractReportsPage ? ' top-header-reports-dense' : ''}`}
+                  className={`top-header${isContractsListPage || isAuditLogsPage ? ' top-header-compact' : ''}${isContractReportsPage ? ' top-header-reports-dense' : ''}${isAuditLogsPage ? ' top-header-audit-dense' : ''}`}
                 >
                   <div className="breadcrumb">
                     {[{ label: 'خانه', href: '/' }, ...trail].reverse().map((item, index, items) => (
@@ -537,7 +545,7 @@ export default function PanelLayout({ children }: PanelLayoutProps) {
                 children
               ) : (
                 <div
-                  className={`content-body${isContractsNewHub || isContractReportsPage ? ' content-body-wide' : ''}${isContractReportsPage ? ' content-body-contract-reports' : ''}`}
+                  className={`content-body${isContractsNewHub || isContractReportsPage || isAuditLogsPage ? ' content-body-wide' : ''}${isContractReportsPage ? ' content-body-contract-reports' : ''}${isAuditLogsPage ? ' content-body-audit' : ''}`}
                 >
                   {children}
                 </div>

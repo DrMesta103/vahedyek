@@ -26,11 +26,12 @@ function decimalValue(formData: FormData, key: string) {
 
 async function getTenantId() {
   const session = await getSessionContext();
-  return session?.tenantId ?? null;
+  if (!session?.tenantId) redirect('/select-tenant');
+  return session.tenantId;
 }
 
-function tenantRelation(tenantId: string | null) {
-  return tenantId ? { tenant: { connect: { id: tenantId } } } : {};
+function tenantRelation(tenantId: string) {
+  return { tenant: { connect: { id: tenantId } } };
 }
 
 function shouldRetryLocationWithoutCoordinates(error: unknown) {
@@ -41,7 +42,7 @@ function shouldRetryLocationWithoutCoordinates(error: unknown) {
   );
 }
 
-function baseLocationData(formData: FormData, tenantId: string | null) {
+function baseLocationData(formData: FormData, tenantId: string) {
   return {
     ...tenantRelation(tenantId),
     title: value(formData, 'title'),
@@ -52,16 +53,17 @@ function baseLocationData(formData: FormData, tenantId: string | null) {
 }
 
 export async function seedSampleDataAction() {
-  await seedSampleData(prisma);
+  const tenantId = await getTenantId();
+  await seedSampleData(prisma, tenantId);
   revalidatePath('/');
   redirect('/quick-setup');
 }
 
 export async function saveBusinessProfileAction(formData: FormData) {
   const tenantId = await getTenantId();
-  const current = await prisma.businessProfile.findFirst({ where: tenantId ? { tenantId } : {} });
+  const current = await prisma.businessProfile.findFirst({ where: { tenantId } });
   const data = {
-    tenantId: tenantId ?? undefined,
+    tenantId,
     brandName: value(formData, 'brandName'),
     legalName: value(formData, 'legalName') || null,
     contactEmail: value(formData, 'contactEmail') || null,
@@ -119,8 +121,33 @@ export async function createLocationFromQuickSetupAction(formData: FormData) {
   redirect('/quick-setup');
 }
 
+export async function saveLocationFromQuickSetupAction(formData: FormData) {
+  const tenantId = await getTenantId();
+  const data = {
+    ...baseLocationData(formData, tenantId),
+    latitude: decimalValue(formData, 'latitude'),
+    longitude: decimalValue(formData, 'longitude'),
+  };
+
+  try {
+    const location = await prisma.location.create({ data });
+    revalidatePath('/locations');
+    revalidatePath('/quick-setup');
+    return { id: location.id, title: location.title, radius: location.radius, description: location.description };
+  } catch (error) {
+    if (!shouldRetryLocationWithoutCoordinates(error)) throw error;
+    const location = await prisma.location.create({ data: baseLocationData(formData, tenantId) });
+    revalidatePath('/locations');
+    revalidatePath('/quick-setup');
+    return { id: location.id, title: location.title, radius: location.radius, description: location.description };
+  }
+}
+
 export async function updateLocationAction(formData: FormData) {
+  const tenantId = await getTenantId();
   const id = value(formData, 'id');
+  const current = await prisma.location.findFirst({ where: { id, tenantId }, select: { id: true } });
+  if (!current) throw new Error('Location not found for active tenant.');
   const baseData = {
     title: value(formData, 'title'),
     address: value(formData, 'address'),
@@ -149,17 +176,20 @@ export async function updateLocationAction(formData: FormData) {
 }
 
 export async function deleteLocationAction(formData: FormData) {
+  const tenantId = await getTenantId();
   const id = value(formData, 'id');
-  await prisma.location.delete({ where: { id } });
+  await prisma.location.deleteMany({ where: { id, tenantId } });
   revalidatePath('/locations');
   revalidatePath('/quick-setup');
   redirect('/locations');
 }
 
 export async function createRequestReasonAction(formData: FormData) {
-  const lastOrder = await prisma.requestReason.aggregate({ _max: { displayOrder: true } });
+  const tenantId = await getTenantId();
+  const lastOrder = await prisma.requestReason.aggregate({ where: { tenantId }, _max: { displayOrder: true } });
   await prisma.requestReason.create({
     data: {
+      tenantId,
       title: value(formData, 'title'),
       description: value(formData, 'description') || null,
       category: value(formData, 'category') as never,
@@ -172,8 +202,10 @@ export async function createRequestReasonAction(formData: FormData) {
 }
 
 export async function createOrganizationUnitAction(formData: FormData) {
+  const tenantId = await getTenantId();
   await prisma.organizationUnit.create({
     data: {
+      tenantId,
       title: value(formData, 'title'),
       description: value(formData, 'description') || null,
     },
@@ -183,8 +215,10 @@ export async function createOrganizationUnitAction(formData: FormData) {
 }
 
 export async function createShiftTemplateAction(formData: FormData) {
+  const tenantId = await getTenantId();
   await prisma.shiftTemplate.create({
     data: {
+      tenantId,
       title: value(formData, 'title'),
       description: value(formData, 'description') || null,
       type: value(formData, 'type') as never,
@@ -274,6 +308,10 @@ export async function createCalendarWithShiftAction(data: {
 export async function createPolicyAction(formData: FormData) {
   const tenantId = await getTenantId();
   const calendarId = value(formData, 'calendarId') || null;
+  if (calendarId) {
+    const calendar = await prisma.calendar.findFirst({ where: { id: calendarId, tenantId }, select: { id: true } });
+    if (!calendar) throw new Error('Calendar not found for active tenant.');
+  }
   await prisma.workPolicy.create({
     data: {
       tenantId,
@@ -297,24 +335,41 @@ export async function createPolicyFromQuickSetupAction(data: {
   calendarId: string;
   policyTemplateId: string;
   title: string;
+  description?: string;
+  templateTitle?: string;
+  year?: string;
 }) {
   const tenantId = await getTenantId();
+  const calendar = await prisma.calendar.findFirst({ where: { id: data.calendarId, tenantId }, select: { id: true } });
+  if (!calendar) throw new Error('Calendar not found for active tenant.');
   const policy = await prisma.workPolicy.create({
     data: {
       tenantId,
       title: data.title,
+      description: data.description ?? null,
       calendarId: data.calendarId,
-      sectionValues: jsonValue({ manualAttendance: false, overtimeFromAttendance: true, nightWorkStart: '22:00' }),
+      sectionValues: jsonValue({
+        manualAttendance: false,
+        overtimeFromAttendance: true,
+        nightWorkStart: '22:00',
+        templateId: data.policyTemplateId,
+        templateTitle: data.templateTitle ?? data.title,
+        year: data.year ?? '',
+      }),
     },
   });
   revalidatePath('/policies');
   revalidatePath('/quick-setup');
-  return { id: policy.id, title: policy.title };
+  return { id: policy.id, title: policy.title, description: policy.description ?? '', calendarId: data.calendarId };
 }
 
 export async function createEmployeeAction(formData: FormData) {
   const tenantId = await getTenantId();
   const unitIds = formData.getAll('organizationUnitIds').map(String);
+  const validUnits = unitIds.length
+    ? await prisma.organizationUnit.findMany({ where: { id: { in: unitIds }, tenantId }, select: { id: true } })
+    : [];
+  if (validUnits.length !== unitIds.length) throw new Error('Organization unit not found for active tenant.');
   await prisma.employee.create({
     data: {
       tenantId,
@@ -330,7 +385,7 @@ export async function createEmployeeAction(formData: FormData) {
       isActive: boolValue(formData, 'isActive'),
       canEditIdentityPhoto: boolValue(formData, 'canEditIdentityPhoto'),
       organizationUnits: {
-        create: unitIds.map((organizationUnitId) => ({ organizationUnitId })),
+        create: validUnits.map(({ id: organizationUnitId }) => ({ organizationUnitId })),
       },
     },
   });
@@ -340,41 +395,65 @@ export async function createEmployeeAction(formData: FormData) {
 }
 
 export async function createEmployeeFromQuickSetupAction(data: {
+  id?: string;
   firstName: string;
   lastName: string;
   nationalId?: string;
   mobile?: string;
   email?: string;
+  avatarUrl?: string;
 }) {
   const tenantId = await getTenantId();
-  const employee = await prisma.employee.create({
-    data: {
-      tenantId,
+  const payload = {
       firstName: data.firstName,
       lastName: data.lastName,
       nationalId: data.nationalId || null,
       mobile1: data.mobile || null,
       email: data.email || null,
-    },
-  });
+      avatarUrl: data.avatarUrl || null,
+  };
+  const employee = data.id
+    ? await prisma.employee.update({ where: { id: (await prisma.employee.findFirstOrThrow({ where: { id: data.id, tenantId }, select: { id: true } })).id }, data: payload })
+    : await prisma.employee.create({ data: { tenantId, ...payload } });
   revalidatePath('/employees');
   revalidatePath('/quick-setup');
-  return { id: employee.id, firstName: employee.firstName, lastName: employee.lastName };
+  return { id: employee.id, firstName: employee.firstName, lastName: employee.lastName, nationalId: employee.nationalId ?? '', mobile: employee.mobile1 ?? '', email: employee.email ?? '', avatarUrl: employee.avatarUrl ?? undefined };
+}
+
+export async function deleteEmployeeFromQuickSetupAction(id: string) {
+  const tenantId = await getTenantId();
+  await prisma.employee.deleteMany({ where: { id, tenantId } });
+  revalidatePath('/employees');
+  revalidatePath('/quick-setup');
 }
 
 export async function createWorkGroupAction(formData: FormData) {
   const tenantId = await getTenantId();
   const employeeIds = formData.getAll('employeeIds').map(String);
+  const locationId = value(formData, 'locationId') || null;
+  const policyId = value(formData, 'policyId') || null;
+  if (locationId) {
+    const location = await prisma.location.findFirst({ where: { id: locationId, tenantId }, select: { id: true } });
+    if (!location) throw new Error('Location not found for active tenant.');
+  }
+  if (policyId) {
+    const policy = await prisma.workPolicy.findFirst({ where: { id: policyId, tenantId }, select: { id: true } });
+    if (!policy) throw new Error('Policy not found for active tenant.');
+  }
+  const validEmployees = employeeIds.length
+    ? await prisma.employee.findMany({ where: { id: { in: employeeIds }, tenantId }, select: { id: true } })
+    : [];
+  if (validEmployees.length !== employeeIds.length) throw new Error('Employee not found for active tenant.');
   await prisma.workGroup.create({
     data: {
       tenantId,
       title: value(formData, 'title'),
       description: value(formData, 'description') || null,
       tags: jsonValue(value(formData, 'tags').split(',').map((item) => item.trim()).filter(Boolean)),
-      locationId: value(formData, 'locationId') || null,
-      policyId: value(formData, 'policyId') || null,
+      locationId,
+      policyId,
       members: {
-        create: employeeIds.map((employeeId) => ({
+        create: validEmployees.map(({ id: employeeId }) => ({
           employeeId,
           accessLevel: (value(formData, `accessLevel:${employeeId}`) || 'employee') as never,
         })),
@@ -387,8 +466,10 @@ export async function createWorkGroupAction(formData: FormData) {
 }
 
 export async function createDraftTemplateAction(formData: FormData) {
+  const tenantId = await getTenantId();
   await prisma.draftTemplate.create({
     data: {
+      tenantId,
       title: value(formData, 'title'),
       description: value(formData, 'description') || null,
       category: (value(formData, 'category') || 'hr') as never,
@@ -399,4 +480,37 @@ export async function createDraftTemplateAction(formData: FormData) {
   });
   revalidatePath('/draft-templates');
   redirect('/draft-templates');
+}
+
+export async function createWorkGroupFromQuickSetupAction(data: {
+  title: string;
+  tags: string[];
+  locationId: string;
+  employeeIds: string[];
+  policyIds: string[];
+}) {
+  const tenantId = await getTenantId();
+  const location = await prisma.location.findFirst({ where: { id: data.locationId, tenantId }, select: { id: true } });
+  if (!location) throw new Error('Location not found for active tenant.');
+  const employees = await prisma.employee.findMany({ where: { id: { in: data.employeeIds }, tenantId }, select: { id: true } });
+  if (employees.length !== data.employeeIds.length) throw new Error('Employee not found for active tenant.');
+  const policies = await prisma.workPolicy.findMany({ where: { id: { in: data.policyIds }, tenantId }, select: { id: true } });
+  if (policies.length !== data.policyIds.length) throw new Error('Policy not found for active tenant.');
+
+  const workGroup = await prisma.workGroup.create({
+    data: {
+      tenantId,
+      title: data.title,
+      tags: jsonValue(data.tags),
+      locationId: data.locationId,
+      policyId: data.policyIds[0] ?? null,
+      members: {
+        create: employees.map((employee) => ({ employeeId: employee.id, accessLevel: 'employee' })),
+      },
+    },
+  });
+
+  revalidatePath('/work-groups');
+  revalidatePath('/quick-setup');
+  return { id: workGroup.id, title: workGroup.title };
 }

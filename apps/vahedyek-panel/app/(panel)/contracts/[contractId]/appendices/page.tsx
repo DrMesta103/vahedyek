@@ -1,15 +1,16 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { ArrowRight, FileText, Plus } from 'lucide-react';
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { ArrowRight, Check, ChevronDown, FileText, Filter, Plus, X } from 'lucide-react';
+import { useParams, usePathname, useRouter, useSearchParams } from 'next/navigation';
 import PanelLayout from '../../../../components/PanelLayout';
 import { AppendixTagPickerDialog } from '../../../../components/contracts/appendices/AppendixTagPickerDialog';
 import { AppendixTimelineCard } from '../../../../components/contracts/appendices/AppendixTimelineCard';
 import { useAppToast } from '../../../../components/feedback/AppToastProvider';
+import { CONTRACT_APPENDIX_TAG_MAP } from '../../../../lib/contractAppendixConfig';
 import { deleteContractAppendix, getContractAppendices, getContractDetails } from '../../../../lib/contractDraftClient';
-import { filterSupportedAppendixTags } from '../../../../lib/appendixTagSupport';
 import type { AppendixTagKey, ContractAppendix, ContractAppendixReferenceData } from '../../../../types/contract';
+import { filterSupportedAppendixTags } from '../../../../lib/appendixTagSupport';
 
 function getBuyerName(parties: any) {
   return (
@@ -22,13 +23,28 @@ function getBuyerName(parties: any) {
 }
 
 function formatContractHeader(subject: any) {
-  const parts = [subject?.unitName ? `واحد ${subject.unitName}` : '', subject?.unitUsage === 'residential' ? 'مسکونی' : '', subject?.floorName ? `طبقه ${subject.floorName}` : '', subject?.blockName ? `بلوک ${subject.blockName}` : ''];
+  const parts = [
+    subject?.unitName ? `واحد ${subject.unitName}` : '',
+    subject?.unitUsage === 'residential' ? 'مسکونی' : '',
+    subject?.floorName ? `طبقه ${subject.floorName}` : '',
+    subject?.blockName ? `بلوک ${subject.blockName}` : '',
+  ];
   return parts.filter(Boolean).join(' • ') || '—';
+}
+
+function getValidFilterTags(raw: string | null): AppendixTagKey[] {
+  if (!raw) return [];
+  return raw
+    .split(',')
+    .map((item) => item.trim())
+    .filter((item): item is AppendixTagKey => CONTRACT_APPENDIX_TAG_MAP.has(item as AppendixTagKey))
+    .filter((tag, index, arr) => arr.indexOf(tag) === index);
 }
 
 export default function ContractAppendicesPage() {
   const params = useParams<{ contractId: string }>();
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const contractId = params?.contractId ? String(params.contractId) : '';
 
@@ -38,9 +54,12 @@ export default function ContractAppendicesPage() {
   const [appendices, setAppendices] = useState<ContractAppendix[]>([]);
   const [reference, setReference] = useState<ContractAppendixReferenceData | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [selectedTags, setSelectedTags] = useState<AppendixTagKey[]>([]);
-  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  const [selectedCreateTags, setSelectedCreateTags] = useState<AppendixTagKey[]>([]);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const filterRef = useRef<HTMLDivElement | null>(null);
   const { showError, showSuccess } = useAppToast();
+
+  const selectedFilterTags = useMemo(() => getValidFilterTags(searchParams?.get('types') ?? null), [searchParams]);
 
   useEffect(() => {
     let mounted = true;
@@ -54,7 +73,6 @@ export default function ContractAppendicesPage() {
         setContract(contractData);
         setAppendices(appendixData.items);
         setReference(appendixData.reference);
-        setExpandedIds(new Set(appendixData.items[0]?.id ? [appendixData.items[0].id] : []));
       } catch (err) {
         if (!mounted) return;
         setError(err instanceof Error ? err.message : 'دریافت اطلاعات الحاقیه‌ها انجام نشد.');
@@ -67,6 +85,27 @@ export default function ContractAppendicesPage() {
       mounted = false;
     };
   }, [contractId]);
+
+  useEffect(() => {
+    if (!filterOpen) return;
+
+    const handlePointerDown = (event: MouseEvent) => {
+      if (!filterRef.current?.contains(event.target as Node)) {
+        setFilterOpen(false);
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setFilterOpen(false);
+    };
+
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [filterOpen]);
 
   const listQuery = searchParams?.toString() ?? '';
   const backHref = contractId ? `/contracts/${contractId}${listQuery ? `?${listQuery}` : ''}` : '/contracts';
@@ -82,27 +121,44 @@ export default function ContractAppendicesPage() {
     };
   }, [contract]);
 
-  const toggleExpanded = (id: string) => {
-    setExpandedIds((current) => {
-      const next = new Set(current);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
+  const availableFilterTags = useMemo(() => {
+    return Array.from(CONTRACT_APPENDIX_TAG_MAP.entries()).map(([key, def]) => ({ key, title: def.title }));
+  }, []);
 
-  const toggleTag = (tag: AppendixTagKey) => {
-    setSelectedTags((current) => (current.includes(tag) ? current.filter((item) => item !== tag) : [...current, tag]));
+  const filteredAppendices = useMemo(() => {
+    if (!selectedFilterTags.length) return appendices;
+    return appendices.filter((appendix) => appendix.items.some((item) => selectedFilterTags.includes(item.tagKey)));
+  }, [appendices, selectedFilterTags]);
+
+  const toggleCreateTag = (tag: AppendixTagKey) => {
+    setSelectedCreateTags((current) => (current.includes(tag) ? current.filter((item) => item !== tag) : [...current, tag]));
   };
 
   const goToCreate = () => {
-    const supportedTags = filterSupportedAppendixTags(selectedTags);
+    const supportedTags = filterSupportedAppendixTags(selectedCreateTags);
     if (!contractId || supportedTags.length === 0) return;
     const next = new URLSearchParams();
     next.set('tags', supportedTags.join(','));
     const list = searchParams?.get('list');
+    const types = searchParams?.get('types');
     if (list) next.set('list', list);
+    if (types) next.set('types', types);
     router.push(`/contracts/${contractId}/appendices/new?${next.toString()}`);
+  };
+
+  const updateFilterTags = (nextTags: AppendixTagKey[]) => {
+    const next = new URLSearchParams(searchParams?.toString() ?? '');
+    if (nextTags.length) next.set('types', nextTags.join(','));
+    else next.delete('types');
+    const query = next.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  };
+
+  const toggleFilterTag = (tag: AppendixTagKey) => {
+    const nextTags = selectedFilterTags.includes(tag)
+      ? selectedFilterTags.filter((item) => item !== tag)
+      : [...selectedFilterTags, tag];
+    updateFilterTags(nextTags);
   };
 
   const handleDelete = async (appendixId: string) => {
@@ -146,11 +202,9 @@ export default function ContractAppendicesPage() {
                     <FileText className="h-6 w-6" />
                   </span>
                   <div className="min-w-0 flex-1 text-right">
-                    <h1 className="text-[20px] font-black text-slate-900">لیست الحاقیه ها</h1>
+                    <h1 className="text-[20px] font-black text-slate-900">لیست متمم‌ها</h1>
                     <div className="mt-2 text-[14px] font-extrabold text-slate-800">{contractView.buyerName}</div>
-                    <div className="mt-1 text-[12px] font-semibold leading-6 text-slate-500">
-                      {contractView.subjectMeta}
-                    </div>
+                    <div className="mt-1 text-[12px] font-semibold leading-6 text-slate-500">{contractView.subjectMeta}</div>
                     <div className="mt-3 flex flex-wrap items-center justify-end gap-2 text-[12px] font-semibold text-slate-500">
                       <span>قرارداد {contractView.contractNumber}</span>
                       <span>•</span>
@@ -170,24 +224,97 @@ export default function ContractAppendicesPage() {
                   onClick={() => setPickerOpen(true)}
                   className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-2xl bg-[linear-gradient(180deg,color-mix(in_srgb,var(--dark-teal)_92%,black),color-mix(in_srgb,var(--dark-teal)_78%,#0f766e))] px-5 py-3 text-[13px] font-black text-white shadow-sm transition hover:brightness-105"
                 >
-                  افزودن الحاقیه
+                  افزودن متمم
                   <Plus className="h-4 w-4" />
                 </button>
               </div>
             </section>
 
             <section className="space-y-4">
-              {appendices.length === 0 ? (
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  {selectedFilterTags.map((tag) => (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => toggleFilterTag(tag)}
+                      className="inline-flex h-9 items-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--dark-teal)_28%,transparent)] bg-[color-mix(in_srgb,var(--dark-teal)_08%,white)] px-3 text-[12px] font-black text-[color-mix(in_srgb,var(--dark-teal)_92%,black)]"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                      <span>{CONTRACT_APPENDIX_TAG_MAP.get(tag)?.title ?? tag}</span>
+                    </button>
+                  ))}
+                </div>
+
+                <div ref={filterRef} className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setFilterOpen((current) => !current)}
+                    className="inline-flex h-11 items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-[12px] font-extrabold text-slate-700 shadow-sm transition hover:bg-slate-50"
+                  >
+                    <ChevronDown className={`h-4 w-4 transition ${filterOpen ? 'rotate-180' : ''}`} />
+                    <span>{selectedFilterTags.length ? `نوع متمم (${selectedFilterTags.length.toLocaleString('fa-IR')})` : 'فیلتر نوع متمم'}</span>
+                    <Filter className="h-4 w-4" />
+                  </button>
+
+                  {filterOpen ? (
+                    <div className="absolute left-0 top-[calc(100%+10px)] z-20 w-[290px] rounded-[22px] border border-slate-200 bg-white p-3 shadow-[0_24px_60px_-26px_rgba(15,23,42,0.28)]">
+                      <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-3">
+                        <button
+                          type="button"
+                          onClick={() => updateFilterTags([])}
+                          className="text-[11px] font-black text-slate-400 transition hover:text-slate-700"
+                        >
+                          پاک کردن
+                        </button>
+                        <div className="text-right">
+                          <div className="text-[13px] font-black text-slate-900">نوع متمم</div>
+                          <div className="text-[11px] font-semibold text-slate-500">چند گزینه را هم‌زمان انتخاب کنید.</div>
+                        </div>
+                      </div>
+
+                      <div className="mt-3 max-h-72 space-y-2 overflow-y-auto pr-1">
+                        {availableFilterTags.length === 0 ? (
+                          <div className="rounded-2xl bg-slate-50 px-4 py-6 text-center text-[12px] font-semibold text-slate-500">
+                            نوعی برای فیلتر موجود نیست.
+                          </div>
+                        ) : (
+                          availableFilterTags.map((option) => {
+                            const active = selectedFilterTags.includes(option.key);
+                            return (
+                              <button
+                                key={option.key}
+                                type="button"
+                                onClick={() => toggleFilterTag(option.key)}
+                                className={`flex min-h-[46px] w-full items-center justify-between rounded-2xl border px-3 text-right text-[12px] font-bold transition ${
+                                  active
+                                    ? 'border-[color-mix(in_srgb,var(--dark-teal)_35%,transparent)] bg-[color-mix(in_srgb,var(--dark-teal)_08%,white)] text-slate-900'
+                                    : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                                }`}
+                              >
+                                <span className={`inline-flex h-5 w-5 items-center justify-center rounded-full ${active ? 'bg-[color-mix(in_srgb,var(--dark-teal)_92%,black)] text-white' : 'bg-slate-100 text-transparent'}`}>
+                                  <Check className="h-3.5 w-3.5" />
+                                </span>
+                                <span>{option.title}</span>
+                              </button>
+                            );
+                          })
+                        )}
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+
+              {filteredAppendices.length === 0 ? (
                 <div className="rounded-[28px] border border-dashed border-slate-200 bg-white/80 px-5 py-14 text-center text-[13px] font-semibold text-slate-500">
-                  هنوز الحاقیه‌ای برای این قرارداد ثبت نشده است.
+                  {appendices.length === 0 ? 'هنوز متممی برای این قرارداد ثبت نشده است.' : 'متممی با فیلتر انتخاب‌شده یافت نشد.'}
                 </div>
               ) : (
-                appendices.map((appendix) => (
+                filteredAppendices.map((appendix) => (
                   <AppendixTimelineCard
                     key={appendix.id}
                     appendix={appendix}
-                    expanded={expandedIds.has(appendix.id)}
-                    onToggle={() => toggleExpanded(appendix.id)}
                     onView={() => router.push(`/contracts/${contractId}/appendices/${appendix.id}${listQuery ? `?${listQuery}` : ''}`)}
                     onCompare={() => router.push(`/contracts/${contractId}/appendices/${appendix.id}/compare${listQuery ? `?${listQuery}` : ''}`)}
                     onDelete={() => void handleDelete(appendix.id)}
@@ -200,8 +327,8 @@ export default function ContractAppendicesPage() {
 
         <AppendixTagPickerDialog
           open={pickerOpen}
-          selectedTags={selectedTags}
-          onToggleTag={toggleTag}
+          selectedTags={selectedCreateTags}
+          onToggleTag={toggleCreateTag}
           onClose={() => setPickerOpen(false)}
           onConfirm={goToCreate}
         />

@@ -475,8 +475,8 @@ export function validateAppendixPayload(tag: SupportedAppendixTagKey, payload: S
 
   if (tag === 'unit-delivery-date') {
     const row = payload as AppendixDeliveryDatePayload;
-    if (!row.previousDate.trim() || !row.nextDate.trim()) {
-      return 'برای تاریخ تحویل واحد، تاریخ قبلی و تاریخ جدید را کامل کنید.';
+    if (!row.nextDate.trim()) {
+      return 'برای تاریخ تحویل واحد، تاریخ جدید را وارد کنید.';
     }
     return '';
   }
