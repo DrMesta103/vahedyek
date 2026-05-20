@@ -1,43 +1,16 @@
 services:
   vahedyek-panel:
+    image: vahedyek-panel:latest
     container_name: vahedyek-panel
     build:
       context: .
       dockerfile: apps/vahedyek-panel/Dockerfile
-    env_file: .env
-    labels:
-      - "traefik.enable=true"
-      - "traefik.docker.network=web_net"
-      - "traefik.http.routers.vahedyek-panel.entrypoints=http"
-      - "traefik.http.routers.vahedyek-panel.rule=Host(`${WebsiteDomainVahedyek}`)"
-      - "traefik.http.routers.vahedyek-panel.middlewares=https-redirect"
-      - "traefik.http.middlewares.https-redirect.redirectscheme.scheme=https"
-      - "traefik.http.routers.vahedyek-panel-secure.entrypoints=https"
-      - "traefik.http.routers.vahedyek-panel-secure.rule=Host(`${WebsiteDomainVahedyek}`)"
-      - "traefik.http.routers.vahedyek-panel-secure.tls=true"
-      - "traefik.http.routers.vahedyek-panel-secure.tls.options=default"
-      - "traefik.http.routers.vahedyek-panel-secure.tls.certresolver=mycert"
-      - "traefik.http.services.vahedyek-panel.loadbalancer.server.port=8000"
-
     restart: unless-stopped
 
   dastranj-panel:
+    image: dastranj-panel:latest
     container_name: dastranj-panel
     build:
       context: .
       dockerfile: apps/dastranj-panel/Dockerfile
-    env_file: .env
-    labels:
-      - "traefik.enable=true"
-      - "traefik.docker.network=web_net"
-      - "traefik.http.routers.dastranj-panel.entrypoints=http"
-      - "traefik.http.routers.dastranj-panel.rule=Host(`${WebsiteDomainDastranj}`)"
-      - "traefik.http.routers.dastranj-panel.middlewares=https-redirect"
-      - "traefik.http.middlewares.https-redirect.redirectscheme.scheme=https"
-      - "traefik.http.routers.dastranj-panel-secure.entrypoints=https"
-      - "traefik.http.routers.dastranj-panel-secure.rule=Host(`${WebsiteDomainDastranj}`)"
-      - "traefik.http.routers.dastranj-panel-secure.tls=true"
-      - "traefik.http.routers.dastranj-panel-secure.tls.options=default"
-      - "traefik.http.routers.dastranj-panel-secure.tls.certresolver=mycert"
-      - "traefik.http.services.dastranj-panel.loadbalancer.server.port=8000"
     restart: unless-stopped
