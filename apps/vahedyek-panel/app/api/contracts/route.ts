@@ -8,6 +8,7 @@ import { handlePrismaApiError } from '../../lib/prismaApiError';
 import { resolveDisplayedContractStatus } from '../../lib/contractApprovalStatus';
 import { validatePenaltiesStep } from '../../lib/contractValidation';
 import { normalizeAreaPricingMode } from '../../lib/contractFinancialPricing';
+import { normalizeTerminationPayload } from '../../(panel)/contracts/new/_components/termination/terminationDefaults';
 import type { ContractStatus } from '../../types/contract';
 import {
   mapFinancialCategoriesForClientApi,
@@ -209,6 +210,9 @@ export async function GET(request: Request) {
                 dueItems,
               };
             })()
+          : undefined,
+        termination: draft.terminationRules
+          ? normalizeTerminationPayload((draft.terminationRules.buyerRules ?? {}) as Record<string, unknown>)
           : undefined,
       },
     }));

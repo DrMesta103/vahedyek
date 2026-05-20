@@ -14,9 +14,17 @@ import {
   LoanSuccess,
 } from './LoanSettingsPrimitives';
 import { RuleStatusTag } from './RuleStatusTag';
+import { readApiErrorMessage } from './readApiErrorMessage';
 
 type BuyerCancellationSection = {
-  id: 'late-delivery' | 'specification-changes' | 'breach-of-obligations' | 'area-discrepancy' | 'notification' | 'draft-template-usage';
+  id:
+    | 'late-delivery'
+    | 'specification-changes'
+    | 'breach-of-obligations'
+    | 'physical-progress-delay'
+    | 'area-discrepancy'
+    | 'notification'
+    | 'draft-template-usage';
   title: string;
   description: string;
   stateKey: BuyerTerminationSubsectionId;
@@ -25,8 +33,8 @@ type BuyerCancellationSection = {
 const BUYER_CANCELLATION_SECTIONS: BuyerCancellationSection[] = [
   {
     id: 'late-delivery',
-    title: 'تاخیر در تحویل',
-    description: 'مبنا، مهلت ارفاقی و الزام تایید ناظر.',
+    title: 'حق فسخ خریدار به دلیل تأخیر در تحویل واحد',
+    description: 'مبنای محاسبه تأخیر، حد آستانه مجاز و شرط ایجاد حق فسخ برای خریدار.',
     stateKey: 'lateDelivery',
   },
   {
@@ -37,25 +45,31 @@ const BUYER_CANCELLATION_SECTIONS: BuyerCancellationSection[] = [
   },
   {
     id: 'breach-of-obligations',
-    title: 'نقض تعهدات',
-    description: 'تعهدات سازنده و مهلت اصلاح.',
+    title: 'حق فسخ خریدار به دلیل نقض تعهدات سازنده',
+    description: 'انتخاب انواع نقض تعهد سازنده که در صورت وقوع، حق فسخ خریدار را فعال می‌کند.',
     stateKey: 'breachOfObligations',
   },
   {
+    id: 'physical-progress-delay',
+    title: 'حق فسخ خریدار به دلیل تأخیر در تحقق مراحل پیشرفت پروژه',
+    description: 'تنظیم زمان هدف، مهلت مجاز تأخیر و مرجع سنجش برای هر مرحله پیشرفت.',
+    stateKey: 'physicalProgressDelay',
+  },
+  {
     id: 'area-discrepancy',
-    title: 'اختلاف متراژ',
-    description: 'آستانه، مراجع و گزینه تسویه مالی.',
+    title: 'حق فسخ ناشی از اختلاف متراژ واحد',
+    description: 'شرط فعال‌سازی فسخ بر اساس اختلاف متراژ نهایی واحد نسبت به متراژ قراردادی.',
     stateKey: 'areaDiscrepancy',
   },
   {
     id: 'notification',
-    title: 'اطلاع رسانی',
+    title: 'اطلاع‌رسانی',
     description: 'خریدار، مدیر قرارداد و نمایش در جدول.',
     stateKey: 'notification',
   },
   {
     id: 'draft-template-usage',
-    title: 'استفاده در پیش نویس',
+    title: 'استفاده در پیش‌نویس',
     description: 'مشخص می‌کند این تنظیمات به عنوان پیش‌فرض در پیش‌نویس قرارداد اعمال شوند و آیا برای قرارداد خاص قابل تغییر باشند یا خیر.',
     stateKey: 'draftTemplateUsage',
   },
@@ -120,7 +134,7 @@ export function BuyerCancellationSettingsPanel() {
         setLoading(true);
         setError('');
         const response = await fetch('/api/business-settings/contract-rules/termination-settings', { cache: 'no-store' });
-        if (!response.ok) throw new Error('بارگذاری تنظیمات فسخ انجام نشد.');
+        if (!response.ok) throw new Error(await readApiErrorMessage(response, 'بارگذاری تنظیمات فسخ انجام نشد.'));
         const payload = normalizeTerminationPayload((await response.json()) as Record<string, unknown>);
         if (mounted) setState(payload);
       } catch (loadError) {
@@ -148,7 +162,7 @@ export function BuyerCancellationSettingsPanel() {
         body: JSON.stringify(nextState),
       });
 
-      if (!response.ok) throw new Error('ذخیره تنظیمات فسخ انجام نشد.');
+      if (!response.ok) throw new Error(await readApiErrorMessage(response, 'ذخیره تنظیمات فسخ انجام نشد.'));
 
       if (!options?.silent) {
         setMessage('تنظیمات فسخ خریدار با موفقیت ذخیره شد.');

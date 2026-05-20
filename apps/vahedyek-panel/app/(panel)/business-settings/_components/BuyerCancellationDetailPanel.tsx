@@ -8,41 +8,48 @@ import {
   BuyerBreachPanel,
   BuyerLateDeliveryPanel,
   BuyerNotificationPanel,
+  BuyerPhysicalProgressDelayPanel,
   BuyerSpecificationChangesPanel,
 } from '../../contracts/new/_components/termination/BuyerSubsectionPanels';
 import { ContractRegistrationSwitch, LoanError, LoanLoadingState, LoanPageShell, LoanSectionCard, LoanSuccess } from './LoanSettingsPrimitives';
+import { readApiErrorMessage } from './readApiErrorMessage';
 
 type BuyerCancellationSectionId =
   | 'late-delivery'
   | 'specification-changes'
   | 'breach-of-obligations'
+  | 'physical-progress-delay'
   | 'area-discrepancy'
   | 'notification'
   | 'draft-template-usage';
 
 const SECTION_META: Record<BuyerCancellationSectionId, { title: string; description: string }> = {
   'late-delivery': {
-    title: 'تاخیر در تحویل',
-    description: 'مبنا، مهلت ارفاقی و الزام تایید ناظر.',
+    title: 'حق فسخ خریدار به دلیل تأخیر در تحویل واحد',
+    description: 'مبنای محاسبه تأخیر، حد آستانه مجاز و شرط ایجاد حق فسخ برای خریدار.',
   },
   'specification-changes': {
     title: 'تغییر مشخصات',
     description: 'انواع تغییر و الزام رضایت پیشین خریدار.',
   },
   'breach-of-obligations': {
-    title: 'نقض تعهدات',
-    description: 'تعهدات سازنده و مهلت اصلاح.',
+    title: 'حق فسخ خریدار به دلیل نقض تعهدات سازنده',
+    description: 'انتخاب انواع نقض تعهد سازنده که در صورت وقوع، حق فسخ خریدار را فعال می‌کند.',
+  },
+  'physical-progress-delay': {
+    title: 'حق فسخ خریدار به دلیل تأخیر در تحقق مراحل پیشرفت پروژه',
+    description: 'تنظیم زمان هدف، مهلت مجاز تأخیر و مرجع سنجش برای هر مرحله پیشرفت.',
   },
   'area-discrepancy': {
-    title: 'اختلاف متراژ',
-    description: 'آستانه، مراجع و گزینه تسویه مالی.',
+    title: 'حق فسخ ناشی از اختلاف متراژ واحد',
+    description: 'شرط فعال‌سازی فسخ بر اساس اختلاف متراژ نهایی واحد نسبت به متراژ قراردادی.',
   },
   notification: {
-    title: 'اطلاع رسانی',
+    title: 'اطلاع‌رسانی',
     description: 'خریدار، مدیر قرارداد و نمایش در جدول.',
   },
   'draft-template-usage': {
-    title: 'استفاده در پیش نویس',
+    title: 'استفاده در پیش‌نویس',
     description: 'اعمال تنظیمات فسخ خریدار به عنوان پیش‌فرض در پیش‌نویس قرارداد و امکان تغییر آن برای قرارداد خاص.',
   },
 };
@@ -65,7 +72,7 @@ export function BuyerCancellationDetailPanel({ sectionId }: { sectionId: BuyerCa
         setLoading(true);
         setError('');
         const response = await fetch('/api/business-settings/contract-rules/termination-settings', { cache: 'no-store' });
-        if (!response.ok) throw new Error('بارگذاری تنظیمات فسخ انجام نشد.');
+        if (!response.ok) throw new Error(await readApiErrorMessage(response, 'بارگذاری تنظیمات فسخ انجام نشد.'));
         const payload = normalizeTerminationPayload((await response.json()) as Record<string, unknown>);
         if (mounted) {
           stateRef.current = payload;
@@ -96,7 +103,7 @@ export function BuyerCancellationDetailPanel({ sectionId }: { sectionId: BuyerCa
         body: JSON.stringify(nextState),
       });
 
-      if (!response.ok) throw new Error('ذخیره تنظیمات فسخ انجام نشد.');
+      if (!response.ok) throw new Error(await readApiErrorMessage(response, 'ذخیره تنظیمات فسخ انجام نشد.'));
       setMessage(successMessage);
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : 'ذخیره تنظیمات فسخ انجام نشد.');
@@ -146,7 +153,7 @@ export function BuyerCancellationDetailPanel({ sectionId }: { sectionId: BuyerCa
         <BuyerLateDeliveryPanel
           value={state.buyerTerms.lateDelivery}
           onChange={(next) => updateState((current) => ({ ...current, buyerTerms: { ...current.buyerTerms, lateDelivery: next } }))}
-          onSubmit={() => void persistState(stateRef.current ?? state, 'تنظیمات «تاخیر در تحویل» با موفقیت ذخیره شد.')}
+          onSubmit={() => void persistState(stateRef.current ?? state, 'تنظیمات «تأخیر در تحویل» با موفقیت ذخیره شد.')}
           saving={saving}
         />
       ) : null}
@@ -169,11 +176,20 @@ export function BuyerCancellationDetailPanel({ sectionId }: { sectionId: BuyerCa
         />
       ) : null}
 
+      {rootEnabled && sectionId === 'physical-progress-delay' ? (
+        <BuyerPhysicalProgressDelayPanel
+          value={state.buyerTerms.physicalProgressDelay}
+          onChange={(next) => updateState((current) => ({ ...current, buyerTerms: { ...current.buyerTerms, physicalProgressDelay: next } }))}
+          onSubmit={() => void persistState(stateRef.current ?? state, 'تنظیمات «حق فسخ خریدار به دلیل تأخیر در تحقق مراحل پیشرفت پروژه» با موفقیت ذخیره شد.')}
+          saving={saving}
+        />
+      ) : null}
+
       {rootEnabled && sectionId === 'area-discrepancy' ? (
         <BuyerAreaDiscrepancyPanel
           value={state.buyerTerms.areaDiscrepancy}
           onChange={(next) => updateState((current) => ({ ...current, buyerTerms: { ...current.buyerTerms, areaDiscrepancy: next } }))}
-          onSubmit={() => void persistState(stateRef.current ?? state, 'تنظیمات «اختلاف متراژ» با موفقیت ذخیره شد.')}
+          onSubmit={() => void persistState(stateRef.current ?? state, 'تنظیمات «حق فسخ ناشی از اختلاف متراژ واحد» با موفقیت ذخیره شد.')}
           saving={saving}
         />
       ) : null}
@@ -182,7 +198,7 @@ export function BuyerCancellationDetailPanel({ sectionId }: { sectionId: BuyerCa
         <BuyerNotificationPanel
           value={state.buyerTerms.notification}
           onChange={(next) => updateState((current) => ({ ...current, buyerTerms: { ...current.buyerTerms, notification: next } }))}
-          onSubmit={() => void persistState(stateRef.current ?? state, 'تنظیمات «اطلاع رسانی» با موفقیت ذخیره شد.')}
+          onSubmit={() => void persistState(stateRef.current ?? state, 'تنظیمات «اطلاع‌رسانی» با موفقیت ذخیره شد.')}
           saving={saving}
         />
       ) : null}
@@ -256,3 +272,4 @@ export function BuyerCancellationDetailPanel({ sectionId }: { sectionId: BuyerCa
     </LoanPageShell>
   );
 }
+

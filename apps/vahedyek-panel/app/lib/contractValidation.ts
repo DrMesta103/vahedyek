@@ -10,6 +10,7 @@ import type {
   ContractTerminationData,
   ConstructorTerminationSubsectionId,
   BuyerTerminationSubsectionId,
+  BuyerTerminationTerms,
   ShareMode,
 } from '../types/contract';
 import { validateProgressiveRows } from './progressivePenalty';
@@ -20,6 +21,31 @@ export interface ValidationResult {
 }
 
 const REQUIRED_MSG = 'این فیلد الزامی است';
+
+function addPhysicalProgressMilestoneErrors(
+  errors: Record<string, string>,
+  physicalProgressDelay: BuyerTerminationTerms['physicalProgressDelay'],
+) {
+  for (const milestone of physicalProgressDelay.milestoneTypes) {
+    const setting = physicalProgressDelay.milestoneSettings[milestone] ?? {
+      timelinePreset: physicalProgressDelay.timelinePreset,
+      timelineMonthsCustom: physicalProgressDelay.timelineMonthsCustom,
+      timelineSpecificDate: physicalProgressDelay.timelineSpecificDate,
+      gracePreset: physicalProgressDelay.gracePreset,
+      graceDaysCustom: physicalProgressDelay.graceDaysCustom,
+    };
+
+    if (setting.timelinePreset === 'other' && !isPositiveIntString(setting.timelineMonthsCustom)) {
+      errors[`buyerTerms.physicalProgressDelay.milestoneSettings.${milestone}.timelineMonthsCustom`] = 'تعداد ماه معتبر را وارد کنید.';
+    }
+    if (setting.timelinePreset === 'specific-date' && !String(setting.timelineSpecificDate ?? '').trim()) {
+      errors[`buyerTerms.physicalProgressDelay.milestoneSettings.${milestone}.timelineSpecificDate`] = 'تاریخ هدف را مشخص کنید.';
+    }
+    if (setting.gracePreset === 'other' && !isPositiveIntString(setting.graceDaysCustom)) {
+      errors[`buyerTerms.physicalProgressDelay.milestoneSettings.${milestone}.graceDaysCustom`] = 'مهلت مجاز تأخیر را وارد کنید.';
+    }
+  }
+}
 
 export function validateStep1(data: Partial<ContractSubjectData>): ValidationResult {
   const errors: Record<string, string> = {};
@@ -309,8 +335,11 @@ export function validateBuyerTerminationSubsection(
   switch (subsection) {
     case 'lateDelivery': {
       if (!b.lateDelivery.ruleEnabled) return { valid: true, errors: {} };
-      if (b.lateDelivery.gracePreset === 'other' && !isPositiveIntString(b.lateDelivery.graceDaysCustom)) {
-        errors['buyerTerms.lateDelivery.graceDaysCustom'] = REQUIRED_MSG;
+      if (!b.lateDelivery.calculationBasis.length) {
+        errors['buyerTerms.lateDelivery.calculationBasis'] = 'حداقل یک مبنای محاسبه تأخیر را انتخاب کنید.';
+      }
+      if (b.lateDelivery.gracePreset === 'other' && !isPositiveIntString(b.lateDelivery.graceMonthsCustom)) {
+        errors['buyerTerms.lateDelivery.graceMonthsCustom'] = REQUIRED_MSG;
       }
       break;
     }
@@ -322,12 +351,37 @@ export function validateBuyerTerminationSubsection(
       break;
     }
     case 'breachOfObligations': {
-      if (!b.breachOfObligations.ruleEnabled) return { valid: true, errors: {} };
-      if (!b.breachOfObligations.obligationTypes.length) {
-        errors['buyerTerms.breachOfObligations.obligationTypes'] = 'حداقل یک تعهد سازنده انتخاب کنید.';
+      if (!b.breachOfObligations.ruleEnabled && !b.physicalProgressDelay.ruleEnabled) return { valid: true, errors: {} };
+      if (b.breachOfObligations.ruleEnabled && !b.breachOfObligations.obligationTypes.length) {
+        errors['buyerTerms.breachOfObligations.obligationTypes'] = 'حداقل یک نوع نقض تعهد انتخاب کنید.';
       }
-      if (b.breachOfObligations.rectificationPreset === 'other' && !isPositiveIntString(b.breachOfObligations.rectificationDaysCustom)) {
-        errors['buyerTerms.breachOfObligations.rectificationDaysCustom'] = REQUIRED_MSG;
+      if (b.physicalProgressDelay.ruleEnabled) {
+        if (!b.physicalProgressDelay.milestoneTypes.length) {
+          errors['buyerTerms.physicalProgressDelay.milestoneTypes'] = 'حداقل یک مرحله پیشرفت برای سنجش تأخیر انتخاب کنید.';
+        }
+        addPhysicalProgressMilestoneErrors(errors, b.physicalProgressDelay);
+      }
+      break;
+    }
+    case 'physicalProgressDelay': {
+      if (!b.physicalProgressDelay.ruleEnabled) return { valid: true, errors: {} };
+      if (!b.physicalProgressDelay.milestoneTypes.length) {
+        errors['buyerTerms.physicalProgressDelay.milestoneTypes'] = 'حداقل یک مرحله پیشرفت برای سنجش تأخیر انتخاب کنید.';
+      }
+      addPhysicalProgressMilestoneErrors(errors, b.physicalProgressDelay);
+      if (!['any-milestone', 'all-milestones'].includes(b.physicalProgressDelay.triggerCondition)) {
+        errors['buyerTerms.physicalProgressDelay.triggerCondition'] = 'شرط فعال‌سازی اختیار فسخ را انتخاب کنید.';
+      }
+      if (
+        ![
+          'project-supervisor-report',
+          'official-expert-report',
+          'constructor-reported-progress',
+          'contract-manager-approval',
+          'parties-agreement',
+        ].includes(b.physicalProgressDelay.progressCertificationSource)
+      ) {
+        errors['buyerTerms.physicalProgressDelay.progressCertificationSource'] = 'مرجع تأیید پیشرفت پروژه را انتخاب کنید.';
       }
       break;
     }
@@ -338,6 +392,19 @@ export function validateBuyerTerminationSubsection(
       }
       if (!b.areaDiscrepancy.referenceSources.length) {
         errors['buyerTerms.areaDiscrepancy.referenceSources'] = 'حداقل یک مرجع رسمی انتخاب کنید.';
+      }
+      if (
+        !Array.isArray(b.areaDiscrepancy.discrepancyScopes) ||
+        b.areaDiscrepancy.discrepancyScopes.length === 0 ||
+        b.areaDiscrepancy.discrepancyScopes.some((item) => item !== 'deficit-only' && item !== 'surplus-only')
+      ) {
+        errors['buyerTerms.areaDiscrepancy.discrepancyScopes'] = 'حداقل یک نوع اختلاف مشمول فسخ را انتخاب کنید.';
+      }
+      if (
+        b.areaDiscrepancy.financialSettlementInsteadOfTermination &&
+        !['contract-price', 'market-price', 'official-expert'].includes(b.areaDiscrepancy.settlementPricingBasis)
+      ) {
+        errors['buyerTerms.areaDiscrepancy.settlementPricingBasis'] = 'مبنای قیمت‌گذاری اختلاف متراژ را انتخاب کنید.';
       }
       break;
     }

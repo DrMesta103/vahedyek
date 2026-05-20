@@ -9,6 +9,7 @@ import {
   defaultBuyerTerminationCompletion,
   defaultBuyerTerminationTerms,
   mergeBuyerFieldsFromDraftRecord,
+  normalizePersistedBuyerRules,
 } from '../../../../../lib/terminationBuyerRules';
 import { normalizeStoredMoneyGrouped } from '../../../../../lib/moneyInputFormat';
 import { BUYER_SUBSECTION_IDS } from './buyerSubsections';
@@ -128,6 +129,15 @@ function mergeTerminationPayload(partial: Partial<ContractTerminationData>): Con
     : buyerCoerced.terminationBuyerPanel;
 
   const defBt = DEFAULT_TERMINATION_DATA.buyerTerms;
+  const areaDiscrepancy = normalizePersistedBuyerRules({
+    buyerTerms: {
+      areaDiscrepancy: {
+        ...defBt.areaDiscrepancy,
+        ...buyerCoerced.buyerTerms.areaDiscrepancy,
+        ...partialBt?.areaDiscrepancy,
+      },
+    },
+  })?.buyerTerms.areaDiscrepancy ?? defBt.areaDiscrepancy;
   const buyerTerms: ContractTerminationData['buyerTerms'] = {
     lateDelivery: { ...defBt.lateDelivery, ...buyerCoerced.buyerTerms.lateDelivery, ...partialBt?.lateDelivery },
     specificationChanges: {
@@ -143,11 +153,19 @@ function mergeTerminationPayload(partial: Partial<ContractTerminationData>): Con
       obligationTypes:
         partialBt?.breachOfObligations?.obligationTypes ?? buyerCoerced.buyerTerms.breachOfObligations.obligationTypes,
     },
+    physicalProgressDelay: {
+      ...defBt.physicalProgressDelay,
+      ...buyerCoerced.buyerTerms.physicalProgressDelay,
+      ...partialBt?.physicalProgressDelay,
+      milestoneTypes:
+        partialBt?.physicalProgressDelay?.milestoneTypes ?? buyerCoerced.buyerTerms.physicalProgressDelay.milestoneTypes,
+      milestoneSettings: {
+        ...buyerCoerced.buyerTerms.physicalProgressDelay.milestoneSettings,
+        ...partialBt?.physicalProgressDelay?.milestoneSettings,
+      },
+    },
     areaDiscrepancy: {
-      ...defBt.areaDiscrepancy,
-      ...buyerCoerced.buyerTerms.areaDiscrepancy,
-      ...partialBt?.areaDiscrepancy,
-      referenceSources: partialBt?.areaDiscrepancy?.referenceSources ?? buyerCoerced.buyerTerms.areaDiscrepancy.referenceSources,
+      ...areaDiscrepancy,
     },
     notification: { ...defBt.notification, ...buyerCoerced.buyerTerms.notification, ...partialBt?.notification },
     draftTemplateUsage: {

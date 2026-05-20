@@ -125,8 +125,95 @@ function renderLoanPayload(payload: Record<string, unknown>) {
       {renderValueRow('مبلغ وام قرارداد', formatHistoryMoney(row.contractLoanAmount))}
       {renderValueRow('مبلغ وام', formatHistoryMoney(row.loanAmount))}
       {renderValueRow('بانک عامل', row.selectedBank || '—')}
-      {renderValueRow('زمان دریافت', row.loanTiming || '—')}
+      {renderValueRow(
+        'زمان دریافت',
+        row.loanTiming === 'before-contract'
+          ? 'تاریخ دریافت وام قبل از انعقاد قرارداد است'
+          : row.loanTiming === 'dated'
+            ? 'وام دریافت نشده اما تاریخ مشخص دارد'
+            : 'تاریخ وام همزمان با عقد قرارداد الحاقیه میباشد',
+      )}
       {row.loanReceivedDate ? renderValueRow('تاریخ دریافت', row.loanReceivedDate) : null}
+      {row.loanGracePeriodValue
+        ? renderValueRow('مهلت تنفس', `${row.loanGracePeriodValue} ${row.loanGracePeriodUnit === 'day' ? 'روز' : 'ماه'}`)
+        : null}
+      {renderValueRow(
+        'نرخ سود وام',
+        row.loanBankInterestEnabled ? 'برابر سیاست های بانکی در زمان دریافت وام' : row.loanBankInterestRate ? `${row.loanBankInterestRate}%` : '—',
+      )}
+      {renderValueRow(
+        'کارمزد وام بانکی',
+        row.loanBankFeeBankPolicyEnabled
+          ? 'برابر سیاست های بانکی در زمان دریافت وام'
+          : row.loanBankFeeValue
+            ? row.loanBankFeeMode === 'percent'
+              ? `${row.loanBankFeeValue}%`
+              : row.loanBankFeeMode === 'combined'
+                ? `${row.loanBankFeeValue} ترکیبی`
+                : `${row.loanBankFeeValue} مبلغ ثابت`
+            : '—',
+      )}
+      {renderValueRow('پرداخت کارمزد وام بانکی', row.loanBankFeePayer === 'seller' ? 'با سازنده است' : 'با خریدار است')}
+      {renderValueRow(
+        'سود دوران مشارکت',
+        row.loanParticipationBankPolicyEnabled ? 'برابر سیاست های بانکی در زمان دریافت وام' : row.loanParticipationRate ? `${row.loanParticipationRate}%` : '—',
+      )}
+      {renderValueRow('پرداخت سود دوران مشارکت', row.loanParticipationPayer === 'seller' ? 'با سازنده است' : 'با خریدار است')}
+      {renderValueRow(
+        'هزینه کارشناسی',
+        row.loanExpertBankPolicyEnabled ? 'برابر سیاست های بانکی در زمان دریافت وام' : row.loanExpertRate ? `${row.loanExpertRate}%` : '—',
+      )}
+      {renderValueRow('پرداخت هزینه کارشناسی', row.loanExpertPayer === 'seller' ? 'با سازنده است' : 'با خریدار است')}
+      {renderValueRow(
+        'هزینه اوراق حق تقدم',
+        row.loanPriorityBondBankPolicyEnabled ? 'برابر سیاست های بانکی در زمان دریافت وام' : row.loanPriorityBondRate ? `${row.loanPriorityBondRate}%` : '—',
+      )}
+      {renderValueRow('پرداخت هزینه اوراق حق تقدم', row.loanPriorityBondPayer === 'seller' ? 'با سازنده است' : 'با خریدار است')}
+      {renderValueRow(
+        'تخفیف وام',
+        row.loanDiscountEnabled
+          ? row.loanDiscountMode === 'percent'
+            ? `${row.loanDiscountMinValue || '0'} تا ${row.loanDiscountMaxValue || '0'} درصد`
+            : `${row.loanDiscountMinValue || '0'} تا ${row.loanDiscountMaxValue || '0'} مبلغ`
+          : 'غیر مجاز',
+      )}
+      {row.loanDiscountConditionEnabled ? renderValueRow('شرط تخفیف', 'فعال') : null}
+      {renderValueRow(
+        'بخشودگی وام',
+        row.loanForgivenessEnabled
+          ? row.loanForgivenessMode === 'percent'
+            ? `${row.loanForgivenessMinValue || '0'} تا ${row.loanForgivenessMaxValue || '0'} درصد`
+            : `${row.loanForgivenessMinValue || '0'} تا ${row.loanForgivenessMaxValue || '0'} مبلغ`
+          : 'غیر مجاز',
+      )}
+      {row.loanRemainingDebtPrepaymentAmount
+        ? renderValueRow('پیش پرداخت مانده بدهی وام', `${row.loanRemainingDebtPrepaymentAmount} ریال`)
+        : null}
+      {row.loanRemainingDebtInstallmentAmount
+        ? renderValueRow('اقساط مانده بدهی وام', `${row.loanRemainingDebtInstallmentAmount} ریال`)
+        : null}
+      {row.loanRemainingDebtUnitDeliveryAmount
+        ? renderValueRow('مانده بدهی در تحویل واحد', `${row.loanRemainingDebtUnitDeliveryAmount} ریال`)
+        : null}
+      {row.loanRemainingDebtDocumentDeliveryAmount
+        ? renderValueRow('مانده بدهی در تحویل سند', `${row.loanRemainingDebtDocumentDeliveryAmount} ریال`)
+        : null}
+      {renderValueRow(
+        'زمان بازپرداخت',
+        row.repaymentTiming === 'before-contract-started'
+          ? 'قبل از عقد قرارداد، بازپرداخت وام شروع شده'
+          : row.repaymentTiming === 'with-appendix-contract'
+            ? 'همزمان با عقد الحاقیه قرارداد شروع میشود'
+            : row.repaymentTiming === 'with-contract-bank-installments'
+              ? 'همزمان با عقد قرارداد وام با بانک پرداخت اقساط شروع میشود'
+              : 'تاریخ مشخصی ندارد',
+      )}
+      {row.repaymentTiming === 'before-contract-started'
+        ? renderValueRow('اقساط پرداخت شده تا زمان عقد قرارداد', row.repaymentSettledBy === 'buyer' ? 'با خریدار است' : 'با سازنده است')
+        : null}
+      {row.repaymentTiming === 'before-contract-started' && row.repaymentFirstInstallmentDate
+        ? renderValueRow('تاریخ شروع اولین قسط', row.repaymentFirstInstallmentDate)
+        : null}
     </div>
   );
 }

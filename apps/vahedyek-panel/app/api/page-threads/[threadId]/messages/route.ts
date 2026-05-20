@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requireActiveAuthPayload } from '../../../../lib/auth';
-import { createMessage, listThreadMessages } from '../../../../lib/page-threads-store';
+import { createMessage, listThreadMessages, upsertThreadOpenState } from '../../../../lib/page-threads-store';
 import { handlePrismaApiError } from '../../../../lib/prismaApiError';
 
 type RouteContext = {
@@ -15,6 +15,12 @@ export async function GET(_: Request, context: RouteContext) {
     if (auth instanceof NextResponse) return auth;
 
     const { threadId } = await context.params;
+    await upsertThreadOpenState({
+      tenantId: auth.tenantId,
+      userId: auth.userId,
+      threadId,
+      isOpened: true,
+    });
     const messages = await listThreadMessages({ threadId });
     return NextResponse.json({ messages });
   } catch (error) {
@@ -47,6 +53,13 @@ export async function POST(request: Request, context: RouteContext) {
       text: body.text,
       replyToMessageId: body.replyToMessageId,
       attachment: body.attachment ?? null,
+    });
+
+    await upsertThreadOpenState({
+      tenantId: auth.tenantId,
+      userId: auth.userId,
+      threadId,
+      isOpened: true,
     });
 
     return NextResponse.json({ success: true, message });

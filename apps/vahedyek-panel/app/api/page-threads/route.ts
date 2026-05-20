@@ -11,7 +11,10 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const scope = searchParams.get('scope');
     const pagePath = searchParams.get('pagePath') || '/';
-    const payload = scope === 'app' ? await listThreadsForApp() : await listThreadsForPage({ pagePath });
+    const payload =
+      scope === 'app'
+        ? await listThreadsForApp({ tenantId: auth.tenantId, userId: auth.userId })
+        : await listThreadsForPage({ pagePath, tenantId: auth.tenantId, userId: auth.userId });
     return NextResponse.json(payload);
   } catch (error) {
     return handlePrismaApiError(error);

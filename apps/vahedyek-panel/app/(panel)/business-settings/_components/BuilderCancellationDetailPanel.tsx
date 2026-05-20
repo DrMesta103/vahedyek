@@ -11,6 +11,7 @@ import {
   OtherBreachPanel,
 } from '../../contracts/new/_components/termination/ConstructorSubsectionPanels';
 import { LoanError, LoanLoadingState, LoanPageShell, LoanSectionCard, LoanSuccess } from './LoanSettingsPrimitives';
+import { readApiErrorMessage } from './readApiErrorMessage';
 
 type BuilderCancellationSectionId = 'late-installment' | 'financial-obligations' | 'document-deficiencies' | 'other-breach' | 'notifications';
 
@@ -55,7 +56,7 @@ export function BuilderCancellationDetailPanel({ sectionId }: { sectionId: Build
         setLoading(true);
         setError('');
         const response = await fetch('/api/business-settings/contract-rules/termination-settings', { cache: 'no-store' });
-        if (!response.ok) throw new Error('بارگذاری تنظیمات فسخ انجام نشد.');
+        if (!response.ok) throw new Error(await readApiErrorMessage(response, 'بارگذاری تنظیمات فسخ انجام نشد.'));
         const payload = normalizeTerminationPayload((await response.json()) as Record<string, unknown>);
         if (mounted) {
           stateRef.current = payload;
@@ -86,7 +87,7 @@ export function BuilderCancellationDetailPanel({ sectionId }: { sectionId: Build
         body: JSON.stringify(nextState),
       });
 
-      if (!response.ok) throw new Error('ذخیره تنظیمات فسخ انجام نشد.');
+      if (!response.ok) throw new Error(await readApiErrorMessage(response, 'ذخیره تنظیمات فسخ انجام نشد.'));
       setMessage(successMessage);
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : 'ذخیره تنظیمات فسخ انجام نشد.');
@@ -159,7 +160,33 @@ export function BuilderCancellationDetailPanel({ sectionId }: { sectionId: Build
       {rootEnabled && sectionId === 'notifications' ? (
         <NotificationsPanel
           value={state.constructorTerms.notifications}
+          officialDemandRequired={state.constructorTerms.financialObligations.officialDemandRequired}
+          autoReminderEnabled={state.constructorTerms.documentDeficiencies.autoReminderEnabled}
           onChange={(next) => updateState((current) => ({ ...current, constructorTerms: { ...current.constructorTerms, notifications: next } }))}
+          onOfficialDemandRequiredChange={(checked) =>
+            updateState((current) => ({
+              ...current,
+              constructorTerms: {
+                ...current.constructorTerms,
+                financialObligations: {
+                  ...current.constructorTerms.financialObligations,
+                  officialDemandRequired: checked,
+                },
+              },
+            }))
+          }
+          onAutoReminderEnabledChange={(checked) =>
+            updateState((current) => ({
+              ...current,
+              constructorTerms: {
+                ...current.constructorTerms,
+                documentDeficiencies: {
+                  ...current.constructorTerms.documentDeficiencies,
+                  autoReminderEnabled: checked,
+                },
+              },
+            }))
+          }
           onSubmit={() => void persistState(stateRef.current ?? state, 'تنظیمات «اطلاع رسانی» با موفقیت ذخیره شد.')}
           saving={saving}
         />

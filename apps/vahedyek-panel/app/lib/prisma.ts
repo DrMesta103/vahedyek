@@ -5,6 +5,7 @@ applyCurrentDatabaseUrl();
 
 const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient;
+  prismaDatabaseUrl?: string;
 };
 
 function createPrismaClient() {
@@ -19,9 +20,11 @@ function isCompatiblePrismaClient(client: PrismaClient | undefined): client is P
 }
 
 export const prisma = isCompatiblePrismaClient(globalForPrisma.prisma)
+  && globalForPrisma.prismaDatabaseUrl === process.env.DATABASE_URL
   ? globalForPrisma.prisma
   : createPrismaClient();
 
 if (process.env.NODE_ENV !== 'production') {
   globalForPrisma.prisma = prisma;
+  globalForPrisma.prismaDatabaseUrl = process.env.DATABASE_URL;
 }

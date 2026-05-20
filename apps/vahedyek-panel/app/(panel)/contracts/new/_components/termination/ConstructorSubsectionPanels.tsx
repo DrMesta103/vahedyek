@@ -224,13 +224,6 @@ export function FinancialObligationsPanel({
         </FieldGroup>
       ) : null}
 
-      <ToggleRow
-        checked={value.officialDemandRequired}
-        onChange={(checked) => onChange({ ...value, officialDemandRequired: checked })}
-        label="مطالبه رسمی قبل از فسخ"
-        description="تعیین می‌کند که آیا پیش از اعمال فسخ، ارسال اخطار یا مطالبه رسمی الزامی باشد."
-      />
-
       <SubsectionSubmitRow onSave={onSubmit} saving={saving} />
     </div>
   );
@@ -284,15 +277,6 @@ export function DocumentDeficienciesPanel({
           />
         </FieldGroup>
       ) : null}
-
-
-      <ToggleRow
-        checked={value.autoReminderEnabled}
-        onChange={(checked) => onChange({ ...value, autoReminderEnabled: checked })}
-        label="ارسال یادآوری قبل از فسخ"
-        description="تعیین می‌کند که آیا سیستم پیش از اعمال فسخ، یک پیام یادآوری به خریدار ارسال کند. با فعال‌سازی، خریدار قبل از انقضای مهلت از وضعیت نقص مدارک یا تعهدات خود مطلع می‌شود و فرصت رفع آن را خواهد داشت."
-      />
-
       <SubsectionSubmitRow onSave={onSubmit} saving={saving} />
     </div>
   );
@@ -354,12 +338,20 @@ export function OtherBreachPanel({
 
 export function NotificationsPanel({
   value,
+  officialDemandRequired,
+  autoReminderEnabled,
   onChange,
+  onOfficialDemandRequiredChange,
+  onAutoReminderEnabledChange,
   onSubmit,
   saving,
 }: {
   value: C['notifications'];
+  officialDemandRequired: boolean;
+  autoReminderEnabled: boolean;
   onChange: (next: C['notifications']) => void;
+  onOfficialDemandRequiredChange: (checked: boolean) => void;
+  onAutoReminderEnabledChange: (checked: boolean) => void;
   onSubmit: () => void;
   saving: boolean;
 }) {
@@ -384,16 +376,24 @@ export function NotificationsPanel({
         description="در صورت فعال‌سازی، مدیر قرارداد از فعال شدن اختیار فسخ مطلع می‌شود."
       />
       <ToggleRow
-        checked={value.showTerminationActionInContractDetails}
+        checked={officialDemandRequired}
         onChange={(checked) => {
-          onChange({ ...value, showTerminationActionInContractDetails: checked });
+          onOfficialDemandRequiredChange(checked);
           onSubmit();
         }}
-        label="نمایش بخش فسخ در جزئیات قرارداد"
-        description="با فعال‌سازی، بخش فسخ در جزئیات قرارداد نمایش داده می‌شود تا دسترسی سریع برای بررسی/اقدام فراهم باشد."
+        label="مطالبه رسمی قبل از فسخ"
+        description="تعیین می‌کند که آیا پیش از اعمال فسخ، ارسال اخطار یا مطالبه رسمی الزامی باشد."
+      />
+      <ToggleRow
+        checked={autoReminderEnabled}
+        onChange={(checked) => {
+          onAutoReminderEnabledChange(checked);
+          onSubmit();
+        }}
+        label="ارسال یادآوری قبل از فسخ"
+        description="تعیین می‌کند که آیا سیستم پیش از اعمال فسخ، یک پیام یادآوری به خریدار ارسال کند. با فعال‌سازی، خریدار قبل از انقضای مهلت از وضعیت نقص مدارک یا تعهدات خود مطلع می‌شود و فرصت رفع آن را خواهد داشت."
       />
       <SubsectionSubmitRow onSave={onSubmit} saving={saving} />
     </div>
   );
 }
-

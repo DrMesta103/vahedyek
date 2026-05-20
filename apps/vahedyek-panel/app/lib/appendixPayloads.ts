@@ -52,7 +52,12 @@ type FinancialAppendixPayload =
 
 const APPENDIX_LOAN_PAYMENT_STATUSES = new Set<AppendixLoanPayload['paymentStatus']>(['unselected', 'full', 'less', 'more', 'none']);
 const APPENDIX_LOAN_TIMINGS = new Set<AppendixLoanPayload['loanTiming']>(['undated', 'contract-date', 'before-contract', 'dated']);
-const APPENDIX_LOAN_REPAYMENT_TIMINGS = new Set<AppendixLoanPayload['repaymentTiming']>(['next-month', 'after-two-months', 'custom']);
+const APPENDIX_LOAN_REPAYMENT_TIMINGS = new Set<AppendixLoanPayload['repaymentTiming']>([
+  'before-contract-started',
+  'with-appendix-contract',
+  'undated',
+  'with-contract-bank-installments',
+]);
 const DEFAULT_LOAN_BANK = 'ملت';
 
 const PRIMARY_CATEGORY_IDS = ['principal', ...FINANCIAL_SUB_CATEGORY_IDS] as const;
@@ -208,9 +213,78 @@ function createInitialLoanPayload(contractLoanAmount = ''): AppendixLoanPayload 
       utilities: '',
     },
     loanAmount: '',
-    loanTiming: 'undated',
+    loanTiming: 'contract-date',
     loanReceivedDate: '',
-    repaymentTiming: 'next-month',
+    repaymentTiming: 'undated',
+    repaymentSettledBy: 'seller',
+    repaymentFirstInstallmentDate: '',
+    loanGracePeriodUnit: 'month',
+    loanGracePeriodValue: '',
+    loanBankInterestEnabled: false,
+    loanBankInterestRate: '',
+    loanBankFeePayer: 'buyer',
+    loanBankFeeBankPolicyEnabled: false,
+    loanBankFeeMode: 'fixed',
+    loanBankFeeValue: '',
+    loanParticipationPayer: 'buyer',
+    loanParticipationBankPolicyEnabled: false,
+    loanParticipationRate: '',
+    loanExpertPayer: 'buyer',
+    loanExpertBankPolicyEnabled: false,
+    loanExpertRate: '',
+    loanPriorityBondPayer: 'buyer',
+    loanPriorityBondBankPolicyEnabled: false,
+    loanPriorityBondRate: '',
+    loanPenaltyEnabled: false,
+    loanPenaltyMode: 'progressive',
+    loanPenaltyPeriod: 'daily',
+    loanPenaltyFixedAmount: '',
+    loanPenaltyPercent: '',
+    loanPenaltyBankPercent: '',
+    loanPenaltyGraceDays: '',
+    loanPenaltyRoundingMode: '0.0',
+    loanPenaltyExtraFeeEnabled: false,
+    loanPenaltyExtraFeeMode: 'percent',
+    loanPenaltyExtraFeeValue: '',
+    loanPenaltyProgressiveRows: [
+      { fromDay: '1', toDay: '30', rate: '0.5' },
+      { fromDay: '31', toDay: '60', rate: '1' },
+      { fromDay: '61', toDay: '120', rate: '1.5' },
+      { fromDay: '121', toDay: '999', rate: '2' },
+    ],
+    loanDiscountEnabled: false,
+    loanDiscountMode: 'amount',
+    loanDiscountMinValue: '',
+    loanDiscountMaxValue: '',
+    loanDiscountConditionEnabled: true,
+    loanDiscountConditionMaxDelayCount: '',
+    loanDiscountConditionGraceDays: '10',
+    loanDiscountConditionDueKeys: ['all-dues'],
+    loanDiscountConditionInstallmentAllowed: false,
+    loanDiscountConditionPenaltyEnabled: false,
+    loanDiscountSettlementTargets: ['unit-handover'],
+    loanDiscountManagerApprovalEnabled: false,
+    loanDiscountApprovalThreshold: '',
+    loanForgivenessEnabled: true,
+    loanForgivenessMode: 'amount',
+    loanForgivenessMinValue: '',
+    loanForgivenessMaxValue: '',
+    loanForgivenessOutsideBuyerControlEnabled: true,
+    loanForgivenessManagerApprovalEnabled: true,
+    loanForgivenessApprovalThreshold: '',
+    loanRemainingDebtPrepaymentDueItems: [],
+    loanRemainingDebtInstallmentDueItems: [],
+    loanRemainingDebtLateInstallmentDueItems: [],
+    loanRemainingDebtPrepaymentAmount: '',
+    loanRemainingDebtPrepaymentCount: '',
+    loanRemainingDebtPrepaymentTotal: '',
+    loanRemainingDebtInstallmentAmount: '',
+    loanRemainingDebtInstallmentCount: '',
+    loanRemainingDebtInstallmentTotal: '',
+    loanRemainingDebtLateInstallmentCount: '',
+    loanRemainingDebtLateInstallmentTotal: '',
+    loanRemainingDebtUnitDeliveryAmount: '',
+    loanRemainingDebtDocumentDeliveryAmount: '',
     selectedBank: DEFAULT_LOAN_BANK,
   };
 }
@@ -246,6 +320,154 @@ function normalizeLoanPayload(input: unknown): AppendixLoanPayload {
     repaymentTiming: APPENDIX_LOAN_REPAYMENT_TIMINGS.has(row.repaymentTiming as AppendixLoanPayload['repaymentTiming'])
       ? (row.repaymentTiming as AppendixLoanPayload['repaymentTiming'])
       : initial.repaymentTiming,
+    repaymentSettledBy: row.repaymentSettledBy === 'buyer' ? 'buyer' : 'seller',
+    repaymentFirstInstallmentDate: String(row.repaymentFirstInstallmentDate ?? ''),
+    loanGracePeriodUnit: row.loanGracePeriodUnit === 'day' ? 'day' : 'month',
+    loanGracePeriodValue: sanitizeMoneyString(row.loanGracePeriodValue),
+    loanBankInterestEnabled: typeof row.loanBankInterestEnabled === 'boolean' ? row.loanBankInterestEnabled : initial.loanBankInterestEnabled,
+    loanBankInterestRate: sanitizeMoneyString(row.loanBankInterestRate),
+    loanBankFeePayer: row.loanBankFeePayer === 'seller' ? 'seller' : 'buyer',
+    loanBankFeeBankPolicyEnabled:
+      typeof row.loanBankFeeBankPolicyEnabled === 'boolean' ? row.loanBankFeeBankPolicyEnabled : initial.loanBankFeeBankPolicyEnabled,
+    loanBankFeeMode: row.loanBankFeeMode === 'percent' || row.loanBankFeeMode === 'combined' ? row.loanBankFeeMode : 'fixed',
+    loanBankFeeValue: sanitizeMoneyString(row.loanBankFeeValue),
+    loanParticipationPayer: row.loanParticipationPayer === 'seller' ? 'seller' : 'buyer',
+    loanParticipationBankPolicyEnabled:
+      typeof row.loanParticipationBankPolicyEnabled === 'boolean'
+        ? row.loanParticipationBankPolicyEnabled
+        : initial.loanParticipationBankPolicyEnabled,
+    loanParticipationRate: sanitizeMoneyString(row.loanParticipationRate),
+    loanExpertPayer: row.loanExpertPayer === 'seller' ? 'seller' : 'buyer',
+    loanExpertBankPolicyEnabled:
+      typeof row.loanExpertBankPolicyEnabled === 'boolean' ? row.loanExpertBankPolicyEnabled : initial.loanExpertBankPolicyEnabled,
+    loanExpertRate: sanitizeMoneyString(row.loanExpertRate),
+    loanPriorityBondPayer: row.loanPriorityBondPayer === 'seller' ? 'seller' : 'buyer',
+    loanPriorityBondBankPolicyEnabled:
+      typeof row.loanPriorityBondBankPolicyEnabled === 'boolean'
+        ? row.loanPriorityBondBankPolicyEnabled
+        : initial.loanPriorityBondBankPolicyEnabled,
+    loanPriorityBondRate: sanitizeMoneyString(row.loanPriorityBondRate),
+    loanPenaltyEnabled: typeof row.loanPenaltyEnabled === 'boolean' ? row.loanPenaltyEnabled : initial.loanPenaltyEnabled,
+    loanPenaltyMode:
+      row.loanPenaltyMode === 'progressive' ||
+      row.loanPenaltyMode === 'contract-percent' ||
+      row.loanPenaltyMode === 'debt-percent' ||
+      row.loanPenaltyMode === 'fixed'
+        ? row.loanPenaltyMode
+        : initial.loanPenaltyMode,
+    loanPenaltyPeriod: row.loanPenaltyPeriod === 'monthly' ? 'monthly' : 'daily',
+    loanPenaltyFixedAmount: sanitizeMoneyString(row.loanPenaltyFixedAmount),
+    loanPenaltyPercent: sanitizeMoneyString(row.loanPenaltyPercent),
+    loanPenaltyBankPercent: sanitizeMoneyString(row.loanPenaltyBankPercent),
+    loanPenaltyGraceDays: sanitizeMoneyString(row.loanPenaltyGraceDays),
+    loanPenaltyRoundingMode: typeof row.loanPenaltyRoundingMode === 'string' && row.loanPenaltyRoundingMode.trim() ? row.loanPenaltyRoundingMode : initial.loanPenaltyRoundingMode,
+    loanPenaltyExtraFeeEnabled:
+      typeof row.loanPenaltyExtraFeeEnabled === 'boolean' ? row.loanPenaltyExtraFeeEnabled : initial.loanPenaltyExtraFeeEnabled,
+    loanPenaltyExtraFeeMode: row.loanPenaltyExtraFeeMode === 'fixed' ? 'fixed' : 'percent',
+    loanPenaltyExtraFeeValue: sanitizeMoneyString(row.loanPenaltyExtraFeeValue),
+    loanPenaltyProgressiveRows: Array.isArray(row.loanPenaltyProgressiveRows)
+      ? row.loanPenaltyProgressiveRows.slice(0, 4).map((item, index) => {
+          const source = item && typeof item === 'object' ? (item as Record<string, unknown>) : {};
+          const fallback = initial.loanPenaltyProgressiveRows[index] ?? { fromDay: '', toDay: '', rate: '' };
+          return {
+            fromDay: sanitizeMoneyString(source.fromDay ?? fallback.fromDay),
+            toDay: sanitizeMoneyString(source.toDay ?? fallback.toDay),
+            rate: sanitizeMoneyString(source.rate ?? fallback.rate),
+          };
+        })
+      : initial.loanPenaltyProgressiveRows,
+    loanDiscountEnabled: typeof row.loanDiscountEnabled === 'boolean' ? row.loanDiscountEnabled : initial.loanDiscountEnabled,
+    loanDiscountMode: row.loanDiscountMode === 'percent' ? 'percent' : 'amount',
+    loanDiscountMinValue: sanitizeMoneyString(row.loanDiscountMinValue),
+    loanDiscountMaxValue: sanitizeMoneyString(row.loanDiscountMaxValue),
+    loanDiscountConditionEnabled:
+      typeof row.loanDiscountConditionEnabled === 'boolean' ? row.loanDiscountConditionEnabled : initial.loanDiscountConditionEnabled,
+    loanDiscountConditionMaxDelayCount: sanitizeMoneyString(row.loanDiscountConditionMaxDelayCount),
+    loanDiscountConditionGraceDays: sanitizeMoneyString(row.loanDiscountConditionGraceDays),
+    loanDiscountConditionDueKeys: Array.isArray(row.loanDiscountConditionDueKeys)
+      ? row.loanDiscountConditionDueKeys.map((item) => String(item)).filter(Boolean)
+      : initial.loanDiscountConditionDueKeys,
+    loanDiscountConditionInstallmentAllowed:
+      typeof row.loanDiscountConditionInstallmentAllowed === 'boolean'
+        ? row.loanDiscountConditionInstallmentAllowed
+        : initial.loanDiscountConditionInstallmentAllowed,
+    loanDiscountConditionPenaltyEnabled:
+      typeof row.loanDiscountConditionPenaltyEnabled === 'boolean'
+        ? row.loanDiscountConditionPenaltyEnabled
+        : initial.loanDiscountConditionPenaltyEnabled,
+    loanDiscountSettlementTargets: Array.isArray(row.loanDiscountSettlementTargets)
+      ? row.loanDiscountSettlementTargets.map((item) => String(item)).filter(Boolean)
+      : initial.loanDiscountSettlementTargets,
+    loanDiscountManagerApprovalEnabled:
+      typeof row.loanDiscountManagerApprovalEnabled === 'boolean'
+        ? row.loanDiscountManagerApprovalEnabled
+        : initial.loanDiscountManagerApprovalEnabled,
+    loanDiscountApprovalThreshold: sanitizeMoneyString(row.loanDiscountApprovalThreshold),
+    loanForgivenessEnabled: typeof row.loanForgivenessEnabled === 'boolean' ? row.loanForgivenessEnabled : initial.loanForgivenessEnabled,
+    loanForgivenessMode: row.loanForgivenessMode === 'percent' ? 'percent' : 'amount',
+    loanForgivenessMinValue: sanitizeMoneyString(row.loanForgivenessMinValue),
+    loanForgivenessMaxValue: sanitizeMoneyString(row.loanForgivenessMaxValue),
+    loanForgivenessOutsideBuyerControlEnabled:
+      typeof row.loanForgivenessOutsideBuyerControlEnabled === 'boolean'
+        ? row.loanForgivenessOutsideBuyerControlEnabled
+        : initial.loanForgivenessOutsideBuyerControlEnabled,
+    loanForgivenessManagerApprovalEnabled:
+      typeof row.loanForgivenessManagerApprovalEnabled === 'boolean'
+        ? row.loanForgivenessManagerApprovalEnabled
+        : initial.loanForgivenessManagerApprovalEnabled,
+    loanForgivenessApprovalThreshold: sanitizeMoneyString(row.loanForgivenessApprovalThreshold),
+    loanRemainingDebtPrepaymentDueItems: Array.isArray(row.loanRemainingDebtPrepaymentDueItems)
+      ? row.loanRemainingDebtPrepaymentDueItems
+          .map((item) => {
+            const source = item && typeof item === 'object' ? (item as Record<string, unknown>) : {};
+            return {
+              id: String(source.id ?? ''),
+              categoryId: String(source.categoryId ?? 'loan-remaining-prepayment'),
+              title: String(source.title ?? ''),
+              amount: Number(source.amount ?? 0),
+              dueDate: String(source.dueDate ?? ''),
+            };
+          })
+          .filter((item) => item.id && item.title)
+      : [],
+    loanRemainingDebtInstallmentDueItems: Array.isArray(row.loanRemainingDebtInstallmentDueItems)
+      ? row.loanRemainingDebtInstallmentDueItems
+          .map((item) => {
+            const source = item && typeof item === 'object' ? (item as Record<string, unknown>) : {};
+            return {
+              id: String(source.id ?? ''),
+              categoryId: String(source.categoryId ?? 'loan-remaining-installment'),
+              title: String(source.title ?? ''),
+              amount: Number(source.amount ?? 0),
+              dueDate: String(source.dueDate ?? ''),
+            };
+          })
+          .filter((item) => item.id && item.title)
+      : [],
+    loanRemainingDebtLateInstallmentDueItems: Array.isArray(row.loanRemainingDebtLateInstallmentDueItems)
+      ? row.loanRemainingDebtLateInstallmentDueItems
+          .map((item) => {
+            const source = item && typeof item === 'object' ? (item as Record<string, unknown>) : {};
+            return {
+              id: String(source.id ?? ''),
+              categoryId: String(source.categoryId ?? 'loan-remaining-late-installment'),
+              title: String(source.title ?? ''),
+              amount: Number(source.amount ?? 0),
+              dueDate: String(source.dueDate ?? ''),
+            };
+          })
+          .filter((item) => item.id && item.title)
+      : [],
+    loanRemainingDebtPrepaymentAmount: sanitizeMoneyString(row.loanRemainingDebtPrepaymentAmount),
+    loanRemainingDebtPrepaymentCount: sanitizeMoneyString(row.loanRemainingDebtPrepaymentCount),
+    loanRemainingDebtPrepaymentTotal: sanitizeMoneyString(row.loanRemainingDebtPrepaymentTotal),
+    loanRemainingDebtInstallmentAmount: sanitizeMoneyString(row.loanRemainingDebtInstallmentAmount),
+    loanRemainingDebtInstallmentCount: sanitizeMoneyString(row.loanRemainingDebtInstallmentCount),
+    loanRemainingDebtInstallmentTotal: sanitizeMoneyString(row.loanRemainingDebtInstallmentTotal),
+    loanRemainingDebtLateInstallmentCount: sanitizeMoneyString(row.loanRemainingDebtLateInstallmentCount),
+    loanRemainingDebtLateInstallmentTotal: sanitizeMoneyString(row.loanRemainingDebtLateInstallmentTotal),
+    loanRemainingDebtUnitDeliveryAmount: sanitizeMoneyString(row.loanRemainingDebtUnitDeliveryAmount),
+    loanRemainingDebtDocumentDeliveryAmount: sanitizeMoneyString(row.loanRemainingDebtDocumentDeliveryAmount),
     selectedBank: typeof row.selectedBank === 'string' && row.selectedBank.trim() ? row.selectedBank.trim() : initial.selectedBank,
   };
 }
@@ -462,6 +684,16 @@ function validateLoanPayload(payload: AppendixLoanPayload): string {
   if (payload.loanTiming === 'before-contract' || payload.loanTiming === 'dated') {
     if (!payload.loanReceivedDate.trim()) {
       return 'برای زمان دریافت انتخاب‌شده، تاریخ دریافت وام را ثبت کنید.';
+    }
+  }
+
+  if (
+    payload.repaymentTiming === 'before-contract-started' ||
+    payload.repaymentTiming === 'with-appendix-contract' ||
+    payload.repaymentTiming === 'with-contract-bank-installments'
+  ) {
+    if (!payload.repaymentFirstInstallmentDate.trim()) {
+      return 'برای این حالت، تاریخ شروع اولین قسط را ثبت کنید.';
     }
   }
 

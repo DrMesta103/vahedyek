@@ -6,6 +6,7 @@ export const BUYER_SUBSECTION_IDS: DraftBuyerTerminationSubsectionId[] = [
   'lateDelivery',
   'specificationChanges',
   'breachOfObligations',
+  'physicalProgressDelay',
   'areaDiscrepancy',
   'notification',
 ];

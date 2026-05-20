@@ -14,6 +14,7 @@ export type PageThreadRecord = {
   priority: ThreadPriority;
   status: ThreadStatus;
   labels: string[];
+  isOpened: boolean;
   createdAt: string;
   updatedAt: string;
   createdBy: {

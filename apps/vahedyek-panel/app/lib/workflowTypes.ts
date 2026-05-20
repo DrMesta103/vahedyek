@@ -118,13 +118,13 @@ export function normalizeWorkflowSteps(raw: unknown): WorkflowStepDefinition[] {
 
 export function validateWorkflowPayload(
   payload: WorkflowDefinitionPayload,
-  options?: { allowEmptyApprovers?: boolean },
+  options?: { allowEmptyApprovers?: boolean; allowEmptySteps?: boolean },
 ): { ok: true } | { ok: false; message: string } {
   if (!payload.title?.trim()) return { ok: false, message: 'عنوان فرایند الزامی است.' };
   if (!payload.usageTypes?.length) return { ok: false, message: 'حداقل یک نوع کاربری انتخاب کنید.' };
   if (payload.usageTypes.length !== 1) return { ok: false, message: 'هر فرایند فقط می‌تواند یک نوع کاربری داشته باشد.' };
   const steps = normalizeWorkflowSteps(payload.steps);
-  if (!steps.length) return { ok: false, message: 'حداقل یک مرحله تعریف کنید.' };
+  if (!steps.length && !options?.allowEmptySteps) return { ok: false, message: 'حداقل یک مرحله تعریف کنید.' };
   if (!options?.allowEmptyApprovers) {
     for (const s of steps) {
       if (s.approvers.length === 0) {

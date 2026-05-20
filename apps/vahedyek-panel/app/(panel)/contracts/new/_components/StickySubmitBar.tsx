@@ -34,7 +34,7 @@ export const StickySubmitBar: React.FC<StickySubmitBarProps> = ({
           type="button"
           onClick={onClick}
           disabled={disabled}
-          data-contract-save-trigger={submitId}
+          data-contract-save-button={submitId}
           className="inline-flex h-9 items-center gap-2 rounded-lg bg-teal-700 px-5 text-[13px] font-semibold text-white transition-all hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-600/30 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isLoading ? (

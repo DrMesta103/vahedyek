@@ -8,113 +8,68 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum ContractType {
-  sale
-  pre_sale
-}
-
-enum ContractorType {
-  self
-  employee
-  former_employee
-}
-
-enum ShareMode {
-  percent
-  dang
-}
-
-enum PersonType {
-  natural
-  legal
-}
-
-enum PricingType {
-  fixed
-  metered
-}
-
-enum PartySide {
-  party_one
-  party_two
-}
-
-enum DirectoryRole {
-  partner
-  buyer
-  shareholder
-}
-
-enum RepresentativePrincipalType {
-  partner
-  legal_shareholder
-}
-
-/// وضعیت اجرای فرایند تأیید روی یک پیش‌نویس قرارداد
-enum ContractApprovalInstanceStatus {
-  IN_REVIEW
-  REVISION_REQUESTED
-  REJECTED_TO_DRAFT
-  APPROVED
-}
-
-enum ContractApprovalDecisionType {
-  APPROVE
-  REQUEST_REVISION
-  REJECT_TO_DRAFT
-}
-
-enum ContractAppendixStatus {
-  DRAFT
-  IN_REVIEW
-  APPROVED
-}
-
 model Tenant {
-  id            String                 @id @default(cuid())
-  slug          String                 @unique
-  name          String
-  brandCode     String                 @default("VN")
-  packageKey    String                 @default("starter")
-  billingCycle  String                 @default("monthly")
-  createdAt     DateTime               @default(now())
-  updatedAt     DateTime               @updatedAt
-  memberships   UserTenantMembership[]
-  sessions      Session[]
-  drafts        ContractDraft[]
-  employees     Employee[]
-  formerEmployees FormerEmployee[]
-  blocks        Block[]
-  blockFloors   BlockFloor[]
-  projectPlates ProjectPlate[]
-  units         Unit[]
-  directory     DirectoryPerson[]
-  roles         TenantRole[]
-  representatives DirectoryRepresentative[]
-  contractRuleSettings TenantContractRuleSettings?
+  id                            String                         @id @default(cuid())
+  slug                          String                         @unique
+  name                          String
+  brandCode                     String                         @default("VN")
+  createdAt                     DateTime                       @default(now())
+  updatedAt                     DateTime                       @updatedAt
+  packageKey                    String                         @default("starter")
+  billingCycle                  String                         @default("monthly")
+  projectUnitTypes              Json                           @default("[]")
+  projectReportData             Json                           @default("{}")
+  projectTechnicalSpecs         Json                           @default("{}")
+  projectAddressData            Json                           @default("{}")
   /// پیکربندی قدیمی مسیر تأیید (منسوخ — پس از مهاجرت Workflow حذف می‌شود)
-  approvalProcessConfig Json             @default("{}")
-  workflows     ApprovalWorkflow[]
-  auditLogs     AuditLog[]
-  appendices    ContractAppendix[]
+  approvalProcessConfig         Json                           @default("{}")
+  workflows                     ApprovalWorkflow[]
+  auditLogs                     AuditLog[]
+  blocks                        Block[]
+  blockFloors                   BlockFloor[]
+  appendices                    ContractAppendix[]
+  drafts                        ContractDraft[]
+  DevPageDocument               DevPageDocument[]
+  DevPageDocumentEvent          DevPageDocumentEvent[]
+  DevPageDocumentReadState      DevPageDocumentReadState[]
+  DevPageThreadReadState        DevPageThreadReadState[]
+  directory                     DirectoryPerson[]
+  representatives               DirectoryRepresentative[]
+  employees                     Employee[]
+  formerEmployees               FormerEmployee[]
+  projectPlates                 ProjectPlate[]
+  sessions                      Session[]
+  TenantBusinessProfileSettings TenantBusinessProfileSettings?
+  contractRuleSettings          TenantContractRuleSettings?
+  roles                         TenantRole[]
+  units                         Unit[]
+  memberships                   UserTenantMembership[]
 }
 
 model AppUser {
-  id           String                @id @default(cuid())
-  email        String?               @unique
-  mobile       String?               @unique
-  firstName    String
-  lastName     String
-  fullName     String
-  passwordHash String
-  passwordSalt String
-  createdAt    DateTime              @default(now())
-  updatedAt    DateTime              @updatedAt
-  memberships  UserTenantMembership[]
-  sessions     Session[]
-  representatives DirectoryRepresentative[]
-  auditLogs    AuditLog[]
-  contractAppendices ContractAppendix[]
+  id                                                   String                     @id @default(cuid())
+  email                                                String?                    @unique
+  fullName                                             String
+  passwordHash                                         String
+  passwordSalt                                         String
+  createdAt                                            DateTime                   @default(now())
+  updatedAt                                            DateTime                   @updatedAt
+  mobile                                               String?                    @unique
+  firstName                                            String?
+  lastName                                             String?
+  auditLogs                                            AuditLog[]
+  contractAppendices                                   ContractAppendix[]
+  DevPageDocument_DevPageDocument_createdByIdToAppUser DevPageDocument[]          @relation("DevPageDocument_createdByIdToAppUser")
+  DevPageDocument_DevPageDocument_updatedByIdToAppUser DevPageDocument[]          @relation("DevPageDocument_updatedByIdToAppUser")
+  DevPageDocumentEvent                                 DevPageDocumentEvent[]
+  DevPageDocumentReadState                             DevPageDocumentReadState[]
+  DevPageMessage                                       DevPageMessage[]
+  DevPageThreadReadState                               DevPageThreadReadState[]
+  DevPageThread_DevPageThread_createdByIdToAppUser     DevPageThread[]            @relation("DevPageThread_createdByIdToAppUser")
+  DevPageThread_DevPageThread_updatedByIdToAppUser     DevPageThread[]            @relation("DevPageThread_updatedByIdToAppUser")
+  representatives                                      DirectoryRepresentative[]
+  sessions                                             Session[]
+  memberships                                          UserTenantMembership[]
 }
 
 model AuditLog {
@@ -133,8 +88,8 @@ model AuditLog {
   ipAddress   String?
   userAgent   String?
   createdAt   DateTime @default(now())
+  actor       AppUser? @relation(fields: [actorUserId], references: [id])
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  actor       AppUser? @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
 
   @@index([tenantId, createdAt])
   @@index([tenantId, action])
@@ -143,13 +98,13 @@ model AuditLog {
 }
 
 model UserTenantMembership {
-  id        String   @id @default(cuid())
+  id        String                     @id @default(cuid())
   userId    String
   tenantId  String
-  role      String   @default("member")
-  createdAt DateTime @default(now())
-  user      AppUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  role      String                     @default("member")
+  createdAt DateTime                   @default(now())
+  tenant    Tenant                     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user      AppUser                    @relation(fields: [userId], references: [id], onDelete: Cascade)
   roles     UserTenantMembershipRole[]
 
   @@unique([userId, tenantId])
@@ -158,17 +113,17 @@ model UserTenantMembership {
 }
 
 model TenantRole {
-  id          String                     @id @default(cuid())
-  tenantId    String
-  key         String
-  label       String
-  system      Boolean                    @default(false)
-  createdAt   DateTime                   @default(now())
-  updatedAt   DateTime                   @updatedAt
-  tenant      Tenant                     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  memberships UserTenantMembershipRole[]
-  permissions TenantRolePermission[]
+  id                    String                     @id @default(cuid())
+  tenantId              String
+  key                   String
+  label                 String
+  system                Boolean                    @default(false)
+  createdAt             DateTime                   @default(now())
+  updatedAt             DateTime                   @updatedAt
+  tenant                Tenant                     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   legacyMenuPermissions TenantRoleMenuPermission[]
+  permissions           TenantRolePermission[]
+  memberships           UserTenantMembershipRole[]
 
   @@unique([tenantId, key])
   @@index([tenantId])
@@ -214,8 +169,8 @@ model TenantRoleMenuPermission {
 model Session {
   id        String   @id @default(cuid())
   token     String   @unique
-  tenantId   String?
-  userId     String
+  tenantId  String?
+  userId    String
   expiresAt DateTime
   createdAt DateTime @default(now())
   tenant    Tenant?  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
@@ -225,62 +180,62 @@ model Session {
 }
 
 model ContractDraft {
-  id        String             @id @default(uuid())
-  tenantId  String
-  createdAt DateTime           @default(now())
-  updatedAt DateTime           @updatedAt
+  id                          String                         @id @default(uuid())
+  tenantId                    String
+  createdAt                   DateTime                       @default(now())
+  updatedAt                   DateTime                       @updatedAt
   /// پس از «عدم تأیید»، تا زمان پاک‌شدن، قرارداد در لیست پیش‌نویس می‌ماند حتی با تکمیل ظاهری مراحل.
-  approvalReturnedPending     Boolean   @default(false)
+  approvalReturnedPending     Boolean                        @default(false)
   approvalLastRejectionReason String?
   approvalLastRejectedAt      DateTime?
   /// پس از ویرایش قرارداد تأییدشده؛ نمونهٔ workflow حذف شده تا وضعیت «پیش‌نویس» شود تا ارسال مجدد به تأیید.
-  releasedFromApprovedForEdit Boolean   @default(false)
-  tenant    Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  subject   ContractSubject?
-  parties   ContractParties?
-  financial ContractFinancial?
-  penalties ContractPenalties?
-  terminationRules TerminationRules?
-  extraCosts ContractExtraCosts?
-  technicalSpecs ContractTechnicalSpecs?
-  attachments ContractAttachments?
-  approvalInstance ContractApprovalInstance?
-  receipts ContractReceipt[]
-  walletLedger ContractCustomerWalletLedger[]
-  appendices ContractAppendix[]
+  releasedFromApprovedForEdit Boolean                        @default(false)
+  appendices                  ContractAppendix[]
+  approvalInstance            ContractApprovalInstance?
+  attachments                 ContractAttachments?
+  walletLedger                ContractCustomerWalletLedger[]
+  tenant                      Tenant                         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  extraCosts                  ContractExtraCosts?
+  financial                   ContractFinancial?
+  parties                     ContractParties?
+  penalties                   ContractPenalties?
+  receipts                    ContractReceipt[]
+  subject                     ContractSubject?
+  technicalSpecs              ContractTechnicalSpecs?
+  terminationRules            TerminationRules?
 
   @@index([tenantId, updatedAt])
 }
 
 model ContractAppendix {
-  id              String                @id @default(uuid())
-  tenantId        String
-  draftId         String
-  previousAppendixId String?
-  sourceKind      String                @default("contract")
-  sourceId        String?
-  status          ContractAppendixStatus @default(DRAFT)
-  appendixNumber  Int
-  title           String
-  summary         String?
-  effectiveDate   String
-  issuerType      String
-  issuerName      String
-  notes           String?
-  approvalReturnedPending     Boolean   @default(false)
+  id                          String                            @id @default(uuid())
+  tenantId                    String
+  draftId                     String
+  previousAppendixId          String?
+  sourceKind                  String                            @default("contract")
+  sourceId                    String?
+  status                      ContractAppendixStatus            @default(DRAFT)
+  appendixNumber              Int
+  title                       String
+  summary                     String?
+  effectiveDate               String
+  issuerType                  String
+  issuerName                  String
+  notes                       String?
+  approvalReturnedPending     Boolean                           @default(false)
   approvalLastRejectionReason String?
   approvalLastRejectedAt      DateTime?
-  releasedFromApprovedForEdit Boolean   @default(false)
-  createdByUserId String?
-  createdAt       DateTime              @default(now())
-  updatedAt       DateTime              @updatedAt
-  tenant          Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  draft           ContractDraft         @relation(fields: [draftId], references: [id], onDelete: Cascade)
-  createdByUser   AppUser?              @relation(fields: [createdByUserId], references: [id], onDelete: SetNull)
-  previousAppendix ContractAppendix?    @relation("AppendixChain", fields: [previousAppendixId], references: [id], onDelete: SetNull)
-  nextAppendices  ContractAppendix[]    @relation("AppendixChain")
-  items           ContractAppendixItem[]
-  approvalInstance ContractAppendixApprovalInstance?
+  releasedFromApprovedForEdit Boolean                           @default(false)
+  createdByUserId             String?
+  createdAt                   DateTime                          @default(now())
+  updatedAt                   DateTime                          @updatedAt
+  createdByUser               AppUser?                          @relation(fields: [createdByUserId], references: [id])
+  draft                       ContractDraft                     @relation(fields: [draftId], references: [id], onDelete: Cascade)
+  previousAppendix            ContractAppendix?                 @relation("AppendixChain", fields: [previousAppendixId], references: [id])
+  nextAppendices              ContractAppendix[]                @relation("AppendixChain")
+  tenant                      Tenant                            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  approvalInstance            ContractAppendixApprovalInstance?
+  items                       ContractAppendixItem[]
 
   @@unique([draftId, appendixNumber])
   @@index([tenantId, draftId, createdAt])
@@ -289,50 +244,50 @@ model ContractAppendix {
 }
 
 model ContractAppendixItem {
-  id          String            @id @default(cuid())
+  id          String           @id @default(cuid())
   appendixId  String
   tagKey      String
   groupKey    String
   title       String
   description String?
-  payload     Json              @default("{}")
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
-  appendix    ContractAppendix  @relation(fields: [appendixId], references: [id], onDelete: Cascade)
+  payload     Json             @default("{}")
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  appendix    ContractAppendix @relation(fields: [appendixId], references: [id], onDelete: Cascade)
 
   @@index([appendixId, groupKey])
   @@index([appendixId, tagKey])
 }
 
 model ContractAppendixApprovalInstance {
-  id                 String                         @id @default(cuid())
-  tenantId           String
-  appendixId         String                         @unique
-  workflowId         String
-  status             ContractApprovalInstanceStatus @default(IN_REVIEW)
-  currentStepIndex   Int                            @default(0)
-  finalApproverUserId String?
-  stepsSnapshot      Json
+  id                      String                             @id @default(cuid())
+  tenantId                String
+  appendixId              String                             @unique
+  workflowId              String
+  status                  ContractApprovalInstanceStatus     @default(IN_REVIEW)
+  currentStepIndex        Int                                @default(0)
+  finalApproverUserId     String?
+  stepsSnapshot           Json
   revisionResumeStepIndex Int?
-  createdAt          DateTime                       @default(now())
-  updatedAt          DateTime                       @updatedAt
-  appendix           ContractAppendix               @relation(fields: [appendixId], references: [id], onDelete: Cascade)
-  workflow           ApprovalWorkflow               @relation(fields: [workflowId], references: [id], onDelete: Restrict)
-  decisions          ContractAppendixApprovalDecision[]
+  createdAt               DateTime                           @default(now())
+  updatedAt               DateTime                           @updatedAt
+  decisions               ContractAppendixApprovalDecision[]
+  appendix                ContractAppendix                   @relation(fields: [appendixId], references: [id], onDelete: Cascade)
+  workflow                ApprovalWorkflow                   @relation(fields: [workflowId], references: [id])
 
   @@index([tenantId])
   @@index([tenantId, status])
 }
 
 model ContractAppendixApprovalDecision {
-  id               String                     @id @default(cuid())
-  instanceId       String
-  stepId           String
-  approverUserId   String
-  decision         ContractApprovalDecisionType
-  reason           String?
-  createdAt        DateTime                   @default(now())
-  instance         ContractAppendixApprovalInstance   @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+  id             String                           @id @default(cuid())
+  instanceId     String
+  stepId         String
+  approverUserId String
+  decision       ContractApprovalDecisionType
+  reason         String?
+  createdAt      DateTime                         @default(now())
+  instance       ContractAppendixApprovalInstance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
 
   @@index([instanceId, stepId])
   @@index([approverUserId])
@@ -340,61 +295,62 @@ model ContractAppendixApprovalDecision {
 
 /// تعریف یک مسیر تأیید چندمرحله‌ای (Workflow Builder)
 model ApprovalWorkflow {
-  id          String   @id @default(cuid())
-  tenantId    String
-  title       String
+  id                  String                             @id @default(cuid())
+  tenantId            String
+  title               String
   /// انواع کاربری واحد که این workflow روی آن‌ها اعمال می‌شود (مثلاً residential, commercial)
-  usageTypes  String[]
+  usageTypes          String[]                           @default([])
+  /// مراحل به‌صورت JSON — ساختار در `app/lib/workflowTypes.ts`
+  steps               Json                               @default("[]")
+  /// آیا پیش از ورود به سازمان، خریدار باید تأیید کند (رفتار legacy)
+  buyerShouldApprove  Boolean                            @default(true)
+  active              Boolean                            @default(true)
+  createdAt           DateTime                           @default(now())
+  updatedAt           DateTime                           @updatedAt
   /// تأییدکننده نهایی اختیاری برای کل فرایند؛ رأی این نفر فرایند را فوراً تمام می‌کند.
   finalApproverUserId String?
-  /// مراحل به‌صورت JSON — ساختار در `app/lib/workflowTypes.ts`
-  steps       Json     @default("[]")
-  /// آیا پیش از ورود به سازمان، خریدار باید تأیید کند (رفتار legacy)
-  buyerShouldApprove Boolean @default(true)
-  active      Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  instances   ContractApprovalInstance[]
-  appendixInstances ContractAppendixApprovalInstance[]
+  tenant              Tenant                             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  appendixInstances   ContractAppendixApprovalInstance[]
+  instances           ContractApprovalInstance[]
 
   @@index([tenantId])
   @@index([tenantId, active])
+  @@index([tenantId], map: "ApprovalWorkflow_tenantId_usageTypes_idx")
 }
 
 /// یک اجرای فعال/تکمیل‌شدهٔ workflow روی یک پیش‌نویس
 model ContractApprovalInstance {
-  id                 String                         @id @default(cuid())
-  tenantId           String
-  draftId            String                         @unique
-  workflowId         String
-  status             ContractApprovalInstanceStatus @default(IN_REVIEW)
-  currentStepIndex   Int                            @default(0)
-  /// snapshot از تأییدکننده نهایی workflow در لحظهٔ submit/resume
-  finalApproverUserId String?
+  id                      String                         @id @default(cuid())
+  tenantId                String
+  draftId                 String                         @unique
+  workflowId              String
+  status                  ContractApprovalInstanceStatus @default(IN_REVIEW)
+  currentStepIndex        Int                            @default(0)
   /// کپی immutable از steps در لحظهٔ submit
-  stepsSnapshot      Json
+  stepsSnapshot           Json
   /// پس از Request Revision: از این اندیس مرحله ادامه داده می‌شود
   revisionResumeStepIndex Int?
-  createdAt          DateTime                       @default(now())
-  updatedAt          DateTime                       @updatedAt
-  draft              ContractDraft                  @relation(fields: [draftId], references: [id], onDelete: Cascade)
-  workflow           ApprovalWorkflow               @relation(fields: [workflowId], references: [id], onDelete: Restrict)
-  decisions          ContractApprovalDecision[]
+  createdAt               DateTime                       @default(now())
+  updatedAt               DateTime                       @updatedAt
+  /// snapshot از تأییدکننده نهایی workflow در لحظهٔ submit/resume
+  finalApproverUserId     String?
+  decisions               ContractApprovalDecision[]
+  draft                   ContractDraft                  @relation(fields: [draftId], references: [id], onDelete: Cascade)
+  workflow                ApprovalWorkflow               @relation(fields: [workflowId], references: [id])
 
   @@index([tenantId])
   @@index([tenantId, status])
 }
 
 model ContractApprovalDecision {
-  id               String                     @id @default(cuid())
-  instanceId       String
-  stepId           String
-  approverUserId   String
-  decision         ContractApprovalDecisionType
-  reason           String?
-  createdAt        DateTime                   @default(now())
-  instance         ContractApprovalInstance   @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+  id             String                       @id @default(cuid())
+  instanceId     String
+  stepId         String
+  approverUserId String
+  decision       ContractApprovalDecisionType
+  reason         String?
+  createdAt      DateTime                     @default(now())
+  instance       ContractApprovalInstance     @relation(fields: [instanceId], references: [id], onDelete: Cascade)
 
   @@index([instanceId, stepId])
   @@index([approverUserId])
@@ -458,13 +414,12 @@ model ContractSubject {
   deliveryDate         String
   blockId              String
   unitId               String
+  block                Block          @relation(fields: [blockId], references: [id])
+  contractorEmployee   Employee?      @relation(fields: [contractorEmployeeId], references: [id])
   draft                ContractDraft  @relation(fields: [draftId], references: [id], onDelete: Cascade)
-  contractorEmployee   Employee?      @relation(fields: [contractorEmployeeId], references: [id], onDelete: SetNull)
-  block                Block          @relation(fields: [blockId], references: [id], onDelete: Restrict)
-  unit                 Unit           @relation(fields: [unitId], references: [id], onDelete: Restrict)
+  unit                 Unit           @relation(fields: [unitId], references: [id])
 
   @@index([contractNumber])
-  @@unique([unitId])
 }
 
 model ContractParties {
@@ -487,86 +442,86 @@ model ContractPartyMember {
   shareValue  Decimal          @db.Decimal(18, 2)
   isPrimary   Boolean          @default(false)
   createdAt   DateTime         @default(now())
+  directory   DirectoryPerson? @relation(fields: [directoryId], references: [id])
   parties     ContractParties  @relation(fields: [partiesId], references: [id], onDelete: Cascade)
-  directory   DirectoryPerson? @relation(fields: [directoryId], references: [id], onDelete: SetNull)
 
   @@index([partiesId, side])
 }
 
 model ContractFinancial {
-  id               String               @id @default(cuid())
-  draftId          String               @unique
-  pricingType      PricingType          @default(fixed)
-  areaPricingMode  String               @default("unit-only")
-  unitArea         Decimal?             @db.Decimal(18, 2)
-  parkingArea      Decimal?             @db.Decimal(18, 2)
-  storageArea      Decimal?             @db.Decimal(18, 2)
-  totalArea        Decimal?             @db.Decimal(18, 2)
-  pricePerMeter    Decimal?             @db.Decimal(18, 2)
-  parkingPricePerMeter Decimal?         @db.Decimal(18, 2)
-  storagePricePerMeter Decimal?         @db.Decimal(18, 2)
-  fixedTotalAmount Decimal?             @db.Decimal(18, 2)
-  parkingFixedAmount Decimal?           @db.Decimal(18, 2)
-  storageFixedAmount Decimal?           @db.Decimal(18, 2)
-  activeTab        String?
-  draft            ContractDraft        @relation(fields: [draftId], references: [id], onDelete: Cascade)
-  categories       FinancialCategory[]
-  dueItems         FinancialDueItem[]
+  id                   String              @id @default(cuid())
+  draftId              String              @unique
+  pricingType          PricingType         @default(fixed)
+  totalArea            Decimal?            @db.Decimal(18, 2)
+  pricePerMeter        Decimal?            @db.Decimal(18, 2)
+  fixedTotalAmount     Decimal?            @db.Decimal(18, 2)
+  activeTab            String?
+  unitArea             Decimal?            @db.Decimal(18, 2)
+  parkingArea          Decimal?            @db.Decimal(18, 2)
+  parkingPricePerMeter Decimal?            @db.Decimal(18, 2)
+  areaPricingMode      String              @default("unit-only")
+  storageArea          Decimal?            @db.Decimal(18, 2)
+  storagePricePerMeter Decimal?            @db.Decimal(18, 2)
+  parkingFixedAmount   Decimal?            @db.Decimal(18, 2)
+  storageFixedAmount   Decimal?            @db.Decimal(18, 2)
+  draft                ContractDraft       @relation(fields: [draftId], references: [id], onDelete: Cascade)
+  categories           FinancialCategory[]
+  dueItems             FinancialDueItem[]
 }
 
 model ContractPenalties {
-  id        String                @id @default(cuid())
-  draftId   String                @unique
-  draft     ContractDraft         @relation(fields: [draftId], references: [id], onDelete: Cascade)
-  types     ContractPenaltyType[]
-  rules     ContractPenaltyRule[]
+  id      String                @id @default(cuid())
+  draftId String                @unique
+  draft   ContractDraft         @relation(fields: [draftId], references: [id], onDelete: Cascade)
+  rules   ContractPenaltyRule[]
+  types   ContractPenaltyType[]
 }
 
 model ContractPenaltyType {
-  id          String             @id
+  id          String                @id
   penaltiesId String
   title       String
-  active      Boolean            @default(false)
-  penalties   ContractPenalties  @relation(fields: [penaltiesId], references: [id], onDelete: Cascade)
+  active      Boolean               @default(false)
   rules       ContractPenaltyRule[]
+  penalties   ContractPenalties     @relation(fields: [penaltiesId], references: [id], onDelete: Cascade)
 
   @@index([penaltiesId])
 }
 
 model ContractPenaltyRule {
-  id                 String               @id
-  penaltiesId        String
-  penaltyTypeId      String
-  mode               String
-  period             String
-  fixedAmount        Decimal?             @db.Decimal(18, 2)
-  penaltyPercent     Decimal?             @db.Decimal(18, 2)
+  id                  String              @id
+  penaltiesId         String
+  penaltyTypeId       String
+  mode                String
+  period              String
+  fixedAmount         Decimal?            @db.Decimal(18, 2)
+  penaltyPercent      Decimal?            @db.Decimal(18, 2)
   bankInterestPercent Decimal?            @db.Decimal(18, 2)
-  graceDays          Int?
-  roundRule          String?
-  extraFeeEnabled    Boolean              @default(false)
-  extraFeeType       String?
-  extraFeeAmount     Decimal?             @db.Decimal(18, 2)
-  extraFeeRoundRule  String?
-  progressiveRows    Json?
-  createdAt          DateTime             @default(now())
-  updatedAt          DateTime             @updatedAt
-  penalties          ContractPenalties    @relation(fields: [penaltiesId], references: [id], onDelete: Cascade)
-  penaltyType        ContractPenaltyType  @relation(fields: [penaltyTypeId], references: [id], onDelete: Cascade)
+  graceDays           Int?
+  roundRule           String?
+  extraFeeEnabled     Boolean             @default(false)
+  extraFeeType        String?
+  extraFeeAmount      Decimal?            @db.Decimal(18, 2)
+  extraFeeRoundRule   String?
+  progressiveRows     Json?
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  penalties           ContractPenalties   @relation(fields: [penaltiesId], references: [id], onDelete: Cascade)
+  penaltyType         ContractPenaltyType @relation(fields: [penaltyTypeId], references: [id], onDelete: Cascade)
 
   @@index([penaltiesId, penaltyTypeId])
 }
 
 model FinancialCategory {
-  id          String            @id
+  id          String             @id
   financialId String
   name        String
-  capAmount   Decimal           @db.Decimal(18, 2)
-  dueAmount   Decimal           @db.Decimal(18, 2)
-  noDueAmount Decimal           @db.Decimal(18, 2)
-  system      Boolean           @default(false)
-  requiresDue Boolean           @default(true)
-  financial   ContractFinancial @relation(fields: [financialId], references: [id], onDelete: Cascade)
+  capAmount   Decimal            @db.Decimal(18, 2)
+  dueAmount   Decimal            @db.Decimal(18, 2)
+  noDueAmount Decimal            @db.Decimal(18, 2)
+  system      Boolean            @default(false)
+  requiresDue Boolean            @default(true)
+  financial   ContractFinancial  @relation(fields: [financialId], references: [id], onDelete: Cascade)
   dueItems    FinancialDueItem[]
 
   @@index([financialId])
@@ -576,53 +531,53 @@ model FinancialDueItem {
   id          String            @id
   financialId String
   categoryId  String
-  title       String            @default("")
   amount      Decimal           @db.Decimal(18, 2)
   dueDate     String
-  financial   ContractFinancial @relation(fields: [financialId], references: [id], onDelete: Cascade)
+  title       String            @default("")
   category    FinancialCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  financial   ContractFinancial @relation(fields: [financialId], references: [id], onDelete: Cascade)
 
   @@index([financialId, categoryId])
 }
 
 model ContractReceipt {
-  id                 String        @id @default(cuid())
+  id                 String                         @id @default(cuid())
   tenantId           String
   draftId            String
   allocationMode     String
   allocationDate     String
   transferKind       String
   depositorName      String
-  paidAmountRial     Decimal       @db.Decimal(18, 2)
+  paidAmountRial     Decimal                        @db.Decimal(18, 2)
   depositDate        String
   depositTime        String?
   destinationValue   String?
   destinationHolder  String?
-  destinationHolders Json          @default("[]")
+  destinationHolders Json                           @default("[]")
   trackingNumber     String?
   referenceNumber    String?
   receiptNumber      String?
   notes              String?
-  documents          Json          @default("[]")
-  createdAt          DateTime      @default(now())
-  updatedAt          DateTime      @updatedAt
-  draft              ContractDraft @relation(fields: [draftId], references: [id], onDelete: Cascade)
+  documents          Json                           @default("[]")
+  createdAt          DateTime                       @default(now())
+  updatedAt          DateTime                       @updatedAt
   walletLedger       ContractCustomerWalletLedger[]
+  draft              ContractDraft                  @relation(fields: [draftId], references: [id], onDelete: Cascade)
 
   @@index([tenantId, draftId])
   @@index([draftId, allocationDate])
 }
 
 model ContractCustomerWalletLedger {
-  id         String          @id @default(cuid())
+  id         String           @id @default(cuid())
   tenantId   String
   draftId    String
   receiptId  String?
-  amountRial Decimal         @db.Decimal(18, 2)
-  reason     String          @default("overpayment")
-  createdAt  DateTime        @default(now())
-  draft      ContractDraft   @relation(fields: [draftId], references: [id], onDelete: Cascade)
-  receipt    ContractReceipt? @relation(fields: [receiptId], references: [id], onDelete: SetNull)
+  amountRial Decimal          @db.Decimal(18, 2)
+  reason     String           @default("overpayment")
+  createdAt  DateTime         @default(now())
+  draft      ContractDraft    @relation(fields: [draftId], references: [id], onDelete: Cascade)
+  receipt    ContractReceipt? @relation(fields: [receiptId], references: [id])
 
   @@index([tenantId, draftId])
   @@index([receiptId])
@@ -633,13 +588,13 @@ model Employee {
   tenantId     String
   firstName    String
   lastName     String
-  nationalCode String?
   isActive     Boolean           @default(true)
-  tenant       Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  nationalCode String?
   subjects     ContractSubject[]
+  tenant       Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
-  @@index([tenantId])
   @@unique([tenantId, nationalCode])
+  @@index([tenantId])
 }
 
 model FormerEmployee {
@@ -656,17 +611,17 @@ model FormerEmployee {
 }
 
 model Block {
-  id        String            @id
-  tenantId  String
-  name      String
-  mainPlate String?
-  subPlate  String?
-  status    String            @default("incomplete")
-  usageCounts Json            @default("{\"residential\":0,\"commercial\":0,\"office\":0,\"parking\":0,\"storage\":0,\"amenity\":0}")
-  tenant    Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  floors    BlockFloor[]
-  units     Unit[]
-  subjects  ContractSubject[]
+  id          String            @id
+  tenantId    String
+  name        String
+  mainPlate   String?
+  subPlate    String?
+  status      String            @default("incomplete")
+  usageCounts Json              @default("{\"office\": 0, \"amenity\": 0, \"parking\": 0, \"storage\": 0, \"commercial\": 0, \"residential\": 0}")
+  tenant      Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  floors      BlockFloor[]
+  subjects    ContractSubject[]
+  units       Unit[]
 
   @@index([tenantId])
 }
@@ -677,11 +632,11 @@ model BlockFloor {
   blockId   String
   name      String
   createdAt DateTime @default(now())
-  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   block     Block    @relation(fields: [blockId], references: [id], onDelete: Cascade)
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
-  @@index([tenantId, blockId])
   @@unique([tenantId, blockId, name])
+  @@index([tenantId, blockId])
 }
 
 model ProjectPlate {
@@ -712,15 +667,15 @@ model Unit {
   bedroomCount     Int               @default(0)
   postalCode       String?
   amenities        Json              @default("[]")
-  baseInfo         String?
   direction        String            @default("unknown")
-  areaPricingMode  String            @default("unit-only")
   assignedToUnitId String?
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
-  tenant           Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  block            Block             @relation(fields: [blockId], references: [id], onDelete: Cascade)
+  baseInfo         String?
+  areaPricingMode  String            @default("unit-only")
   subjects         ContractSubject[]
+  block            Block             @relation(fields: [blockId], references: [id], onDelete: Cascade)
+  tenant           Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId, blockId])
   @@index([tenantId, blockId, category])
@@ -728,33 +683,33 @@ model Unit {
 }
 
 model DirectoryPerson {
-  id         String               @id
-  tenantId   String
-  name       String
-  role       DirectoryRole
-  personType PersonType
-  tenant     Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  parties    ContractPartyMember[]
+  id              String                    @id
+  tenantId        String
+  name            String
+  role            DirectoryRole
+  personType      PersonType
+  parties         ContractPartyMember[]
+  tenant          Tenant                    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   representatives DirectoryRepresentative[]
 
   @@index([tenantId, role, personType])
 }
 
 model DirectoryRepresentative {
-  id                    String                      @id @default(cuid())
-  tenantId              String
-  principalId           String
-  userId                String?
-  principalType         RepresentativePrincipalType
-  fullName              String
-  email                 String?
-  hasSigningAuthority   Boolean                     @default(false)
-  panelAccessEnabled    Boolean                     @default(false)
-  createdAt             DateTime                    @default(now())
-  updatedAt             DateTime                    @updatedAt
-  tenant                Tenant                      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  principal             DirectoryPerson             @relation(fields: [principalId], references: [id], onDelete: Cascade)
-  user                  AppUser?                    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  id                  String                      @id @default(cuid())
+  tenantId            String
+  principalId         String
+  userId              String?
+  principalType       RepresentativePrincipalType
+  fullName            String
+  email               String?
+  hasSigningAuthority Boolean                     @default(false)
+  panelAccessEnabled  Boolean                     @default(false)
+  createdAt           DateTime                    @default(now())
+  updatedAt           DateTime                    @updatedAt
+  principal           DirectoryPerson             @relation(fields: [principalId], references: [id], onDelete: Cascade)
+  tenant              Tenant                      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user                AppUser?                    @relation(fields: [userId], references: [id])
 
   @@index([tenantId, principalType])
   @@index([principalId])
@@ -771,4 +726,193 @@ model TenantContractRuleSettings {
   tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
+}
+
+model DevPageDocument {
+  id                                           String   @id
+  tenantId                                     String
+  pagePath                                     String
+  pageKey                                      String
+  title                                        String
+  docType                                      String   @default("free")
+  contentHtml                                  String   @default("")
+  createdById                                  String
+  updatedById                                  String
+  createdAt                                    DateTime @default(now())
+  updatedAt                                    DateTime @default(now())
+  appId                                        String   @default("vahedyek")
+  audioDataUrl                                 String?
+  audioMimeType                                String?
+  labelsJson                                   String   @default("[]")
+  AppUser_DevPageDocument_createdByIdToAppUser AppUser  @relation("DevPageDocument_createdByIdToAppUser", fields: [createdById], references: [id])
+  Tenant                                       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  AppUser_DevPageDocument_updatedByIdToAppUser AppUser  @relation("DevPageDocument_updatedByIdToAppUser", fields: [updatedById], references: [id])
+
+  @@index([tenantId, appId, pageKey])
+  @@index([tenantId, appId, updatedAt(sort: Desc)])
+  @@index([tenantId, pageKey])
+  @@index([tenantId, updatedAt(sort: Desc)])
+}
+
+model DevPageDocumentEvent {
+  id          String   @id
+  tenantId    String
+  appId       String   @default("vahedyek")
+  pagePath    String
+  pageKey     String
+  docId       String?
+  docTitle    String?
+  eventType   String
+  details     String?
+  actorUserId String
+  createdAt   DateTime @default(now())
+  docType     String?
+  labelsJson  String   @default("[]")
+  AppUser     AppUser  @relation(fields: [actorUserId], references: [id])
+  Tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, appId, createdAt(sort: Desc)])
+}
+
+model DevPageDocumentReadState {
+  id         String   @id
+  tenantId   String
+  appId      String   @default("vahedyek")
+  userId     String
+  documentId String
+  isRead     Boolean  @default(false)
+  updatedAt  DateTime @default(now())
+  Tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  AppUser    AppUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, appId, userId, documentId])
+}
+
+model DevPageMessage {
+  id                 String        @id
+  threadId           String
+  authorUserId       String
+  replyToMessageId   String?
+  messageType        String        @default("text")
+  text               String?
+  attachmentDataUrl  String?
+  attachmentMimeType String?
+  attachmentName     String?
+  attachmentSize     Int?
+  createdAt          DateTime      @default(now())
+  AppUser            AppUser       @relation(fields: [authorUserId], references: [id])
+  DevPageThread      DevPageThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  @@index([threadId, createdAt])
+}
+
+model DevPageThread {
+  id                                         String                   @id
+  appId                                      String                   @default("vahedyek")
+  pageKey                                    String
+  pagePathSample                             String                   @default("/")
+  title                                      String
+  docType                                    String                   @default("free")
+  priority                                   String                   @default("p2")
+  labelsJson                                 String                   @default("[]")
+  createdById                                String
+  updatedById                                String
+  createdAt                                  DateTime                 @default(now())
+  updatedAt                                  DateTime                 @default(now())
+  status                                     String                   @default("todo")
+  DevPageMessage                             DevPageMessage[]
+  DevPageThreadReadState                     DevPageThreadReadState[]
+  AppUser_DevPageThread_createdByIdToAppUser AppUser                  @relation("DevPageThread_createdByIdToAppUser", fields: [createdById], references: [id])
+  AppUser_DevPageThread_updatedByIdToAppUser AppUser                  @relation("DevPageThread_updatedByIdToAppUser", fields: [updatedById], references: [id])
+
+  @@index([appId, pageKey])
+  @@index([appId, updatedAt(sort: Desc)])
+}
+
+model DevPageThreadReadState {
+  id        String        @id
+  tenantId  String
+  appId     String        @default("vahedyek")
+  userId    String
+  threadId  String
+  isOpened  Boolean       @default(false)
+  updatedAt DateTime      @default(now())
+  Tenant    Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  AppUser   AppUser       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  Thread    DevPageThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, appId, userId, threadId])
+}
+
+model TenantBusinessProfileSettings {
+  id             String   @id
+  tenantId       String   @unique
+  profilePayload Json     @default("{}")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now())
+  Tenant         Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+}
+
+enum ContractType {
+  sale
+  pre_sale
+}
+
+enum ContractorType {
+  self
+  employee
+  former_employee
+}
+
+enum ShareMode {
+  percent
+  dang
+}
+
+enum PersonType {
+  natural
+  legal
+}
+
+enum PricingType {
+  fixed
+  metered
+}
+
+enum PartySide {
+  party_one
+  party_two
+}
+
+enum DirectoryRole {
+  partner
+  buyer
+  shareholder
+}
+
+enum RepresentativePrincipalType {
+  partner
+  legal_shareholder
+}
+
+/// وضعیت اجرای فرایند تأیید روی یک پیش‌نویس قرارداد
+enum ContractApprovalInstanceStatus {
+  IN_REVIEW
+  REVISION_REQUESTED
+  REJECTED_TO_DRAFT
+  APPROVED
+}
+
+enum ContractApprovalDecisionType {
+  APPROVE
+  REQUEST_REVISION
+  REJECT_TO_DRAFT
+}
+
+enum ContractAppendixStatus {
+  DRAFT
+  IN_REVIEW
+  APPROVED
 }
