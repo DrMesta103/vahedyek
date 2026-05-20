@@ -16,7 +16,7 @@ COPY packages/access-control/package.json packages/access-control/package.json
 COPY packages/database-core/package.json packages/database-core/package.json
 COPY packages/ui/package.json packages/ui/package.json
 
-RUN npm ci
+RUN npm install
 
 FROM deps AS builder
 
