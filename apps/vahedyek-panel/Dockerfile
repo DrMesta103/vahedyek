@@ -4,7 +4,11 @@ ENV NEXT_TELEMETRY_DISABLED=1
 
 WORKDIR /app
 
+RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+
 FROM base AS builder
+
+ENV DATABASE_URL="postgres://postgres:postgres@172.19.0.8:5432/vahedyek"
 
 COPY . .
 
