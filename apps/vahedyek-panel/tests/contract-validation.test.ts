@@ -1,6 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { validateDiscountsStep, validateFinancialStep, validatePenaltiesStep, validateTerminationStep, validateTerminationSubsection } from '../app/lib/contractValidation';
+import {
+  validateBuyerTerminationSubsection,
+  validateDiscountsStep,
+  validateFinancialStep,
+  validatePenaltiesStep,
+  validateTerminationStep,
+  validateTerminationSubsection,
+} from '../app/lib/contractValidation';
+import { evaluateAreaDiscrepancyActivation } from '../app/lib/areaDiscrepancyActivation';
 import type { ContractDiscountsData, ContractFinancialData, ContractPenaltiesData, ContractTerminationData } from '../app/types/contract';
 
 function makeValidFinancialData(overrides: Partial<ContractFinancialData> = {}): ContractFinancialData {
@@ -462,6 +470,7 @@ function makeValidTerminationData(overrides: Partial<ContractTerminationData> = 
       lateDelivery: false,
       specificationChanges: false,
       breachOfObligations: false,
+      physicalProgressDelay: false,
       areaDiscrepancy: false,
       notification: false,
       draftTemplateUsage: false,
@@ -514,10 +523,9 @@ function makeValidTerminationData(overrides: Partial<ContractTerminationData> = 
     buyerTerms: {
       lateDelivery: {
         ruleEnabled: true,
-        calculationBasis: 'contract-date',
-        gracePreset: '30',
-        graceDaysCustom: '',
-        expertApprovalRequired: false,
+        calculationBasis: ['contract-delivery-date', 'last-addendum', 'mutual-adjusted-date'],
+        gracePreset: '6',
+        graceMonthsCustom: '',
       },
       specificationChanges: { ruleEnabled: false, includedTypes: [], priorApprovalRequired: false },
       breachOfObligations: {
@@ -526,12 +534,26 @@ function makeValidTerminationData(overrides: Partial<ContractTerminationData> = 
         rectificationPreset: '30',
         rectificationDaysCustom: '',
       },
+      physicalProgressDelay: {
+        ruleEnabled: false,
+        milestoneTypes: [],
+        timelinePreset: '6',
+        timelineMonthsCustom: '',
+        timelineSpecificDate: '',
+        gracePreset: '30',
+        graceDaysCustom: '',
+        milestoneSettings: {},
+        triggerCondition: 'any-milestone',
+        progressCertificationSource: 'project-supervisor-report',
+      },
       areaDiscrepancy: {
         ruleEnabled: false,
         thresholdPreset: '2',
         thresholdPercentCustom: '',
+        discrepancyScopes: ['deficit-only', 'surplus-only'],
         referenceSources: [],
         financialSettlementInsteadOfTermination: false,
+        settlementPricingBasis: 'contract-price',
       },
       notification: {
         ruleEnabled: false,
@@ -579,6 +601,79 @@ test('validateTerminationStep accepts termination when buyer path was engaged', 
   assert.deepEqual(result.errors, {});
 });
 
+test('validateBuyerTerminationSubsection accepts area discrepancy with new threshold, references, and settlement basis', () => {
+  const data = makeValidTerminationData();
+  data.buyerTerms.areaDiscrepancy = {
+    ruleEnabled: true,
+    thresholdPreset: '10',
+    thresholdPercentCustom: '',
+    discrepancyScopes: ['deficit-only', 'surplus-only'],
+    referenceSources: ['official-title-deed', 'partition-statement', 'official-expert-report'],
+    financialSettlementInsteadOfTermination: true,
+    settlementPricingBasis: 'official-expert',
+  };
+
+  const result = validateBuyerTerminationSubsection('areaDiscrepancy', data);
+
+  assert.equal(result.valid, true);
+  assert.deepEqual(result.errors, {});
+});
+
+test('validateBuyerTerminationSubsection requires settlement pricing basis when financial settlement is enabled', () => {
+  const data = makeValidTerminationData();
+  data.buyerTerms.areaDiscrepancy = {
+    ruleEnabled: true,
+    thresholdPreset: '5',
+    thresholdPercentCustom: '',
+    discrepancyScopes: ['deficit-only'],
+    referenceSources: ['court-or-arbitration-award'],
+    financialSettlementInsteadOfTermination: true,
+    settlementPricingBasis: '' as ContractTerminationData['buyerTerms']['areaDiscrepancy']['settlementPricingBasis'],
+  };
+
+  const result = validateBuyerTerminationSubsection('areaDiscrepancy', data);
+
+  assert.equal(result.valid, false);
+  assert.equal(result.errors['buyerTerms.areaDiscrepancy.settlementPricingBasis'], 'مبنای قیمت‌گذاری اختلاف متراژ را انتخاب کنید.');
+});
+
+test('evaluateAreaDiscrepancyActivation stays inactive below the configured threshold', () => {
+  const rule = makeValidTerminationData().buyerTerms.areaDiscrepancy;
+  rule.ruleEnabled = true;
+  rule.thresholdPreset = '5';
+  rule.discrepancyScopes = ['deficit-only', 'surplus-only'];
+
+  const result = evaluateAreaDiscrepancyActivation({ rule, contractArea: '100', finalArea: '104' });
+
+  assert.equal(result.status, 'below-threshold');
+});
+
+test('evaluateAreaDiscrepancyActivation activates buyer termination when threshold and scope match', () => {
+  const rule = makeValidTerminationData().buyerTerms.areaDiscrepancy;
+  rule.ruleEnabled = true;
+  rule.thresholdPreset = '5';
+  rule.discrepancyScopes = ['deficit-only'];
+  rule.financialSettlementInsteadOfTermination = false;
+
+  const result = evaluateAreaDiscrepancyActivation({ rule, contractArea: '100', finalArea: '94' });
+
+  assert.equal(result.status, 'termination-active');
+  assert.equal(result.direction, 'deficit');
+});
+
+test('evaluateAreaDiscrepancyActivation suggests financial settlement when enabled', () => {
+  const rule = makeValidTerminationData().buyerTerms.areaDiscrepancy;
+  rule.ruleEnabled = true;
+  rule.thresholdPreset = '5';
+  rule.discrepancyScopes = ['surplus-only'];
+  rule.financialSettlementInsteadOfTermination = true;
+  rule.settlementPricingBasis = 'market-price';
+
+  const result = evaluateAreaDiscrepancyActivation({ rule, contractArea: '100', finalArea: '107' });
+
+  assert.equal(result.status, 'financial-settlement-suggested');
+  assert.equal(result.direction, 'surplus');
+});
 
 test('validateTerminationSubsection requires minimum debt only for total debt basis', () => {
   const data = makeValidTerminationData();

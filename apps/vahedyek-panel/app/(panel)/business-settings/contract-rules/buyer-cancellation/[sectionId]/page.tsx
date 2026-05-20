@@ -2,7 +2,15 @@ import { notFound } from 'next/navigation';
 import PanelLayout from '../../../../../components/PanelLayout';
 import { BuyerCancellationDetailPanel } from '../../../_components/BuyerCancellationDetailPanel';
 
-const VALID_SECTION_IDS = ['late-delivery', 'specification-changes', 'breach-of-obligations', 'area-discrepancy', 'notification', 'draft-template-usage'] as const;
+const VALID_SECTION_IDS = [
+  'late-delivery',
+  'specification-changes',
+  'breach-of-obligations',
+  'physical-progress-delay',
+  'area-discrepancy',
+  'notification',
+  'draft-template-usage',
+] as const;
 
 export default async function BuyerCancellationSectionPage({
   params,

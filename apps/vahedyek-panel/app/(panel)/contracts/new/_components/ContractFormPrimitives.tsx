@@ -115,17 +115,20 @@ export function TagPill({
   label,
   active,
   onClick,
+  title,
   className = '',
 }: {
   label: string;
   active: boolean;
   onClick: () => void;
+  title?: string;
   className?: string;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
+      title={title ?? label}
       aria-pressed={active}
       data-tag-pill="true"
       data-active={active ? 'true' : 'false'}
@@ -174,7 +177,7 @@ export function TagPills<T extends string>({
   wrap = true,
   className = '',
 }: {
-  options: { value: T; label: string }[];
+  options: { value: T; label: string; tooltip?: string }[];
   value: T;
   onChange: (value: T) => void;
   wrap?: boolean;
@@ -183,7 +186,13 @@ export function TagPills<T extends string>({
   return (
     <div className={`flex gap-2 ${wrap ? 'flex-wrap' : 'flex-nowrap overflow-x-auto pb-1'} ${className}`}>
       {options.map((option) => (
-        <TagPill key={option.value} label={option.label} active={value === option.value} onClick={() => onChange(option.value)} />
+        <TagPill
+          key={option.value}
+          label={option.label}
+          active={value === option.value}
+          title={option.tooltip}
+          onClick={() => onChange(option.value)}
+        />
       ))}
     </div>
   );
@@ -196,7 +205,7 @@ export function MultiTagPills<T extends string>({
   wrap = true,
   className = '',
 }: {
-  options: { value: T; label: string }[];
+  options: { value: T; label: string; tooltip?: string }[];
   values: T[];
   onChange: (values: T[]) => void;
   wrap?: boolean;
@@ -211,6 +220,7 @@ export function MultiTagPills<T extends string>({
             key={option.value}
             label={option.label}
             active={active}
+            title={option.tooltip}
             onClick={() => onChange(active ? values.filter((v) => v !== option.value) : [...values, option.value])}
           />
         );

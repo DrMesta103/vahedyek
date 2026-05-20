@@ -309,7 +309,7 @@ function buildBusinessSettingsBreadcrumb(pathname: string): Crumb[] {
             'late-delivery': 'تاخیر در تحویل',
             'specification-changes': 'تغییر مشخصات',
             'breach-of-obligations': 'نقض تعهدات',
-            'area-discrepancy': 'اختلاف متراژ',
+            'area-discrepancy': 'حق فسخ ناشی از اختلاف متراژ واحد',
             notification: 'اطلاع رسانی',
             'draft-template-usage': 'استفاده در پیش نویس',
           };

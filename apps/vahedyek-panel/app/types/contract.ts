@@ -127,7 +127,24 @@ export interface AppendixSideCostsPayload {
 export type AppendixLoanPaymentStatus = 'unselected' | 'full' | 'less' | 'more' | 'none';
 export type AppendixLoanFlowStep = 'status' | 'details';
 export type AppendixLoanTiming = 'undated' | 'contract-date' | 'before-contract' | 'dated';
-export type AppendixLoanRepaymentTiming = 'next-month' | 'after-two-months' | 'custom';
+export type AppendixLoanRepaymentTiming =
+  | 'before-contract-started'
+  | 'with-appendix-contract'
+  | 'undated'
+  | 'with-contract-bank-installments';
+export type AppendixLoanRepaymentSettledBy = 'buyer' | 'seller';
+export type AppendixLoanGracePeriodUnit = 'month' | 'day';
+export type AppendixLoanBankFeeMode = 'fixed' | 'percent' | 'combined';
+export type AppendixLoanPenaltyMode = 'progressive' | 'contract-percent' | 'debt-percent' | 'fixed';
+export type AppendixLoanPenaltyPeriod = 'daily' | 'monthly';
+export type AppendixLoanPenaltyExtraFeeMode = 'percent' | 'fixed';
+export type AppendixLoanDiscountMode = 'amount' | 'percent';
+
+export interface AppendixLoanPenaltyProgressiveRow {
+  fromDay: string;
+  toDay: string;
+  rate: string;
+}
 
 export interface AppendixLoanPayload {
   flowStep: AppendixLoanFlowStep;
@@ -142,6 +159,70 @@ export interface AppendixLoanPayload {
   loanTiming: AppendixLoanTiming;
   loanReceivedDate: string;
   repaymentTiming: AppendixLoanRepaymentTiming;
+  repaymentSettledBy: AppendixLoanRepaymentSettledBy;
+  repaymentFirstInstallmentDate: string;
+  loanGracePeriodUnit: AppendixLoanGracePeriodUnit;
+  loanGracePeriodValue: string;
+  loanBankInterestEnabled: boolean;
+  loanBankInterestRate: string;
+  loanBankFeePayer: 'buyer' | 'seller';
+  loanBankFeeBankPolicyEnabled: boolean;
+  loanBankFeeMode: AppendixLoanBankFeeMode;
+  loanBankFeeValue: string;
+  loanParticipationPayer: 'buyer' | 'seller';
+  loanParticipationBankPolicyEnabled: boolean;
+  loanParticipationRate: string;
+  loanExpertPayer: 'buyer' | 'seller';
+  loanExpertBankPolicyEnabled: boolean;
+  loanExpertRate: string;
+  loanPriorityBondPayer: 'buyer' | 'seller';
+  loanPriorityBondBankPolicyEnabled: boolean;
+  loanPriorityBondRate: string;
+  loanPenaltyEnabled: boolean;
+  loanPenaltyMode: AppendixLoanPenaltyMode;
+  loanPenaltyPeriod: AppendixLoanPenaltyPeriod;
+  loanPenaltyFixedAmount: string;
+  loanPenaltyPercent: string;
+  loanPenaltyBankPercent: string;
+  loanPenaltyGraceDays: string;
+  loanPenaltyRoundingMode: string;
+  loanPenaltyExtraFeeEnabled: boolean;
+  loanPenaltyExtraFeeMode: AppendixLoanPenaltyExtraFeeMode;
+  loanPenaltyExtraFeeValue: string;
+  loanPenaltyProgressiveRows: AppendixLoanPenaltyProgressiveRow[];
+  loanDiscountEnabled: boolean;
+  loanDiscountMode: AppendixLoanDiscountMode;
+  loanDiscountMinValue: string;
+  loanDiscountMaxValue: string;
+  loanDiscountConditionEnabled: boolean;
+  loanDiscountConditionMaxDelayCount: string;
+  loanDiscountConditionGraceDays: string;
+  loanDiscountConditionDueKeys: string[];
+  loanDiscountConditionInstallmentAllowed: boolean;
+  loanDiscountConditionPenaltyEnabled: boolean;
+  loanDiscountSettlementTargets: string[];
+  loanDiscountManagerApprovalEnabled: boolean;
+  loanDiscountApprovalThreshold: string;
+  loanForgivenessEnabled: boolean;
+  loanForgivenessMode: AppendixLoanDiscountMode;
+  loanForgivenessMinValue: string;
+  loanForgivenessMaxValue: string;
+  loanForgivenessOutsideBuyerControlEnabled: boolean;
+  loanForgivenessManagerApprovalEnabled: boolean;
+  loanForgivenessApprovalThreshold: string;
+  loanRemainingDebtPrepaymentDueItems: FinancialDueItemData[];
+  loanRemainingDebtInstallmentDueItems: FinancialDueItemData[];
+  loanRemainingDebtLateInstallmentDueItems: FinancialDueItemData[];
+  loanRemainingDebtPrepaymentAmount: string;
+  loanRemainingDebtPrepaymentCount: string;
+  loanRemainingDebtPrepaymentTotal: string;
+  loanRemainingDebtInstallmentAmount: string;
+  loanRemainingDebtInstallmentCount: string;
+  loanRemainingDebtInstallmentTotal: string;
+  loanRemainingDebtLateInstallmentCount: string;
+  loanRemainingDebtLateInstallmentTotal: string;
+  loanRemainingDebtUnitDeliveryAmount: string;
+  loanRemainingDebtDocumentDeliveryAmount: string;
   selectedBank: string;
 }
 
@@ -253,6 +334,7 @@ export type BuyerTerminationSubsectionId =
   | 'lateDelivery'
   | 'specificationChanges'
   | 'breachOfObligations'
+  | 'physicalProgressDelay'
   | 'areaDiscrepancy'
   | 'notification'
   | 'draftTemplateUsage';
@@ -263,18 +345,50 @@ export interface BuyerTerminationCompletion {
   lateDelivery: boolean;
   specificationChanges: boolean;
   breachOfObligations: boolean;
+  physicalProgressDelay: boolean;
   areaDiscrepancy: boolean;
   notification: boolean;
   draftTemplateUsage: boolean;
 }
 
+export type PhysicalProgressMilestoneType =
+  | 'progress-20'
+  | 'progress-30'
+  | 'progress-50'
+  | 'progress-70'
+  | 'progress-90'
+  | 'skeleton-complete'
+  | 'shell-complete'
+  | 'finishing-complete'
+  | 'mep-complete'
+  | 'final-delivery'
+  | 'other';
+
+export type PhysicalProgressTimelinePreset = '1' | '3' | '6' | '9' | '12' | '18' | '24' | 'specific-date' | 'other';
+
+export type PhysicalProgressGracePreset = '15' | '30' | '45' | '60' | '90' | 'other';
+
+/**
+ * پیکربندی مستقل هر مرحله پیشرفت برای سناریوی فسخ بر مبنای تأخیر.
+ * هر مرحله باید هم زمان هدف داشته باشد و هم مهلت مجاز تأخیر.
+ */
+export interface MilestoneTerminationConfig {
+  milestoneType?: PhysicalProgressMilestoneType;
+  timelinePreset: PhysicalProgressTimelinePreset;
+  timelineMonthsCustom: string;
+  timelineSpecificDate: string;
+  gracePreset: PhysicalProgressGracePreset;
+  graceDaysCustom: string;
+}
+
+export interface PhysicalProgressMilestoneSetting extends MilestoneTerminationConfig {}
+
 export interface BuyerTerminationTerms {
   lateDelivery: {
     ruleEnabled: boolean;
-    calculationBasis: 'last-addendum' | 'project-end' | 'contract-date';
-    gracePreset: '3' | '7' | '10' | '15' | '30' | 'other';
-    graceDaysCustom: string;
-    expertApprovalRequired: boolean;
+    calculationBasis: Array<'contract-delivery-date' | 'last-addendum' | 'mutual-adjusted-date'>;
+    gracePreset: '1' | '3' | '6' | '9' | '12' | '18' | '24' | 'other';
+    graceMonthsCustom: string;
   };
   specificationChanges: {
     ruleEnabled: boolean;
@@ -284,17 +398,38 @@ export interface BuyerTerminationTerms {
   breachOfObligations: {
     ruleEnabled: boolean;
     obligationTypes: Array<
-      'construction-progress' | 'quality-standards' | 'infrastructure-delivery' | 'legal-docs' | 'service-connections'
+      'construction-progress' | 'quality-standards' | 'infrastructure-delivery' | 'legal-docs' | 'service-connections' | 'other'
     >;
     rectificationPreset: '3' | '7' | '10' | '15' | '30' | 'other';
     rectificationDaysCustom: string;
   };
+  physicalProgressDelay: {
+    ruleEnabled: boolean;
+    milestoneTypes: PhysicalProgressMilestoneType[];
+    timelinePreset: PhysicalProgressTimelinePreset;
+    timelineMonthsCustom: string;
+    timelineSpecificDate: string;
+    gracePreset: PhysicalProgressGracePreset;
+    graceDaysCustom: string;
+    milestoneSettings: Partial<Record<PhysicalProgressMilestoneType, PhysicalProgressMilestoneSetting>>;
+    triggerCondition: 'any-milestone' | 'all-milestones';
+    progressCertificationSource:
+      | 'project-supervisor-report'
+      | 'official-expert-report'
+      | 'constructor-reported-progress'
+      | 'contract-manager-approval'
+      | 'parties-agreement';
+  };
   areaDiscrepancy: {
     ruleEnabled: boolean;
-    thresholdPreset: '1' | '2' | '3' | 'other';
+    thresholdPreset: '1' | '2' | '3' | '5' | '10' | 'other';
     thresholdPercentCustom: string;
-    referenceSources: Array<'title-deed' | 'final-survey' | 'property-registration'>;
+    discrepancyScopes: Array<'deficit-only' | 'surplus-only'>;
+    referenceSources: Array<
+      'official-title-deed' | 'partition-statement' | 'official-expert-report' | 'parties-agreement' | 'court-or-arbitration-award'
+    >;
     financialSettlementInsteadOfTermination: boolean;
+    settlementPricingBasis: 'contract-price' | 'market-price' | 'official-expert';
   };
   notification: {
     ruleEnabled: boolean;

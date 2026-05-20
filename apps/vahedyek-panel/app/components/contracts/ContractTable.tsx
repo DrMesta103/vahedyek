@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { Building2, Circle, Pencil } from 'lucide-react';
 import type { Block, Contract, ContractStatus, ContractType, Unit } from '../../types/contract';
+import { evaluateAreaDiscrepancyActivation } from '../../lib/areaDiscrepancyActivation';
 import { computeContractTotalRialFromFinancial } from '../../lib/contractFinancialPricing';
 import { formatDateFa } from '../../lib/dateFormat';
 
@@ -32,6 +33,27 @@ function DetailRow({ label, value, accent = false }: { label: string; value: Rea
       <strong className={accent ? 'is-accent' : ''}>{value}</strong>
     </div>
   );
+}
+
+function getAreaDiscrepancyGridLabel(contract: Contract) {
+  const rule = contract.data.termination?.buyerTerms.areaDiscrepancy;
+  if (!rule?.ruleEnabled) return null;
+
+  const threshold = rule.thresholdPreset === 'other' ? rule.thresholdPercentCustom : rule.thresholdPreset;
+  const thresholdLabel = threshold ? `حد ${threshold}%` : 'حد ثبت‌شده';
+  const result = evaluateAreaDiscrepancyActivation({
+    rule,
+    contractArea: contract.data.financial?.unitArea,
+    finalArea: null,
+  });
+
+  if (result.status === 'termination-active') return 'حق فسخ برای خریدار فعال شد';
+  if (result.status === 'financial-settlement-suggested') return 'مسیر تسویه مالی اختلاف متراژ پیشنهاد شد';
+  if (result.status === 'below-threshold') return `بدون فعال‌سازی / ${thresholdLabel}`;
+  if (result.status === 'scope-excluded') return `خارج از نوع اختلاف مشمول فسخ / ${thresholdLabel}`;
+
+  const resolutionLabel = rule.financialSettlementInsteadOfTermination ? 'تسویه مالی جایگزین' : 'حق فسخ خریدار';
+  return `در انتظار متراژ نهایی / ${thresholdLabel} / ${resolutionLabel}`;
 }
 
 function getRibbonLabels(contract: Contract) {
@@ -97,6 +119,7 @@ export default function ContractTable({ contracts, blocks, units, onEdit, loadin
         const partyTwoLabel = partyTwoNames.length ? partyTwoNames.join('، ') : partyTwoPrimary?.name ?? partyOnePrimary?.name ?? '—';
         const amount = computeContractTotalRialFromFinancial(financial ?? null);
         const ribbons = getRibbonLabels(contract);
+        const areaDiscrepancyGridLabel = getAreaDiscrepancyGridLabel(contract);
         const detailsHref = isAppendix
           ? `/contracts/${contract.baseContractId}/appendices/${contract.id}${listContext ? `?list=${encodeURIComponent(listContext)}` : ''}`
           : `/contracts/${contract.id}${listContext ? `?list=${encodeURIComponent(listContext)}` : ''}`;
@@ -139,6 +162,9 @@ export default function ContractTable({ contracts, blocks, units, onEdit, loadin
                 <section className="contract-reference-panel">
                   <DetailRow label="طرف اول" value={partyOnePrimary?.name ?? 'ثبت نشده'} />
                   <DetailRow label="انعقاد قرارداد" value={subject.contractDate || '—'} />
+                  {areaDiscrepancyGridLabel ? (
+                    <DetailRow label="فسخ اختلاف متراژ" value={areaDiscrepancyGridLabel} accent />
+                  ) : null}
                   {isAppendix ? <DetailRow label="وضعیت آیتم" value={contract.appendixStatusBadge ?? 'متمم'} accent /> : null}
                   <DetailRow
                     label="ثبت در سامانه"

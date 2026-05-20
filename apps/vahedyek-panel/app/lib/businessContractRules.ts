@@ -651,7 +651,7 @@ export const RULE_CONFIGS: Record<ContractRuleId, RuleConfig> = fixMojibakeDeep(
           { key: 'buyerCancellationLateDeliveryEnabled', label: 'تاخیر در تحویل', type: 'switch' },
           { key: 'buyerCancellationSpecificationChangesEnabled', label: 'تغییر مشخصات', type: 'switch' },
           { key: 'buyerCancellationBreachEnabled', label: 'نقض تعهدات', type: 'switch' },
-          { key: 'buyerCancellationAreaDiscrepancyEnabled', label: 'اختلاف متراژ', type: 'switch' },
+          { key: 'buyerCancellationAreaDiscrepancyEnabled', label: 'حق فسخ ناشی از اختلاف متراژ واحد', type: 'switch' },
           { key: 'buyerCancellationNotificationEnabled', label: 'اطلاع رسانی', type: 'switch' },
           { key: 'buyerCancellationDraftTemplateUsageEnabled', label: 'استفاده در پیش نویس', type: 'switch' },
         ],

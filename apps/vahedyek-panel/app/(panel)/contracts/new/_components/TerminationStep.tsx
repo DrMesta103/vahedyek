@@ -45,6 +45,7 @@ import {
   BuyerBreachPanel,
   BuyerLateDeliveryPanel,
   BuyerNotificationPanel,
+  BuyerPhysicalProgressDelayPanel,
   BuyerSpecificationChangesPanel,
 } from './termination/BuyerSubsectionPanels';
 import { BUYER_SUBSECTION_IDS, isBuyerTerminationSubsectionPanel, type DraftBuyerTerminationSubsectionId } from './termination/buyerSubsections';
@@ -67,7 +68,7 @@ function serializePayload(payload: ContractTerminationData) {
 const SUBSECTION_META: Record<ConstructorTerminationSubsectionId, { title: string; description: string; icon: ReactNode }> = {
   lateInstallment: {
     title: 'تأخیر در پرداخت اقساط',
-    description: 'مهلت ارفاقی و مبنای تشخیص تاخیر در پرداخت اقساط.',
+    description: 'مهلت ارفاقی و مبنای تشخیص تأخیر در پرداخت اقساط.',
     icon: <TimerReset className="h-5 w-5" />,
   },
   financialObligations: {
@@ -94,8 +95,8 @@ const SUBSECTION_META: Record<ConstructorTerminationSubsectionId, { title: strin
 
 const BUYER_SUBSECTION_META: Record<DraftBuyerTerminationSubsectionId, { title: string; description: string; icon: ReactNode }> = {
   lateDelivery: {
-    title: 'تأخیر در تحویل',
-    description: 'مبنا، مهلت ارفاقی و الزام تأیید ناظر.',
+    title: 'حق فسخ خریدار به دلیل تأخیر در تحویل واحد',
+    description: 'مبنای محاسبه تأخیر، حد آستانه مجاز و شرط ایجاد حق فسخ برای خریدار.',
     icon: <Truck className="h-5 w-5" />,
   },
   specificationChanges: {
@@ -104,13 +105,18 @@ const BUYER_SUBSECTION_META: Record<DraftBuyerTerminationSubsectionId, { title: 
     icon: <Layers className="h-5 w-5" />,
   },
   breachOfObligations: {
-    title: 'نقض تعهدات',
-    description: 'تعهدات سازنده و مهلت اصلاح.',
+    title: 'حق فسخ خریدار به دلیل نقض تعهدات سازنده',
+    description: 'انتخاب انواع نقض تعهد سازنده که در صورت وقوع، حق فسخ خریدار را فعال می‌کند.',
     icon: <ShieldAlert className="h-5 w-5" />,
   },
+  physicalProgressDelay: {
+    title: 'حق فسخ خریدار به دلیل تأخیر در تحقق مراحل پیشرفت پروژه',
+    description: 'تنظیم زمان هدف، مهلت مجاز تأخیر و مرجع سنجش برای هر مرحله پیشرفت.',
+    icon: <TimerReset className="h-5 w-5" />,
+  },
   areaDiscrepancy: {
-    title: 'اختلاف متراژ',
-    description: 'آستانه، مراجع و گزینهٔ تسویه مالی.',
+    title: 'حق فسخ ناشی از اختلاف متراژ واحد',
+    description: 'شرط فعال‌سازی فسخ بر اساس اختلاف متراژ نهایی واحد نسبت به متراژ قراردادی.',
     icon: <Ruler className="h-5 w-5" />,
   },
   notification: {
@@ -364,6 +370,7 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
     dispatchContractFlowDirty(stepId as ContractFlowSectionId, serializePayload(payload) !== initialSnapshotRef.current);
   }, [loading, payload, stepId]);
 
+
   const partyLabels = useMemo(() => {
     if (subjectData?.contractType === 'pre-sale') {
       return { sellerLabel: 'سازنده', buyerLabel: 'خریدار' };
@@ -375,6 +382,7 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
     setFormError('');
     setPayload((current) => updater(current));
   };
+
 
   const persistDraft = (next: ContractTerminationData, syncSnapshot?: boolean) => {
     if (draftId) setFrontendStepDraft(draftId, 'termination', next);
@@ -472,8 +480,15 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
 
   const buyerProgress = useMemo(() => {
     const bc = payload.buyerCompletion;
-    const done = [bc.lateDelivery, bc.specificationChanges, bc.breachOfObligations, bc.areaDiscrepancy, bc.notification].filter(Boolean).length;
-    return { done, total: 5 };
+    const done = [
+      bc.lateDelivery,
+      bc.specificationChanges,
+      bc.breachOfObligations,
+      bc.physicalProgressDelay,
+      bc.areaDiscrepancy,
+      bc.notification,
+    ].filter(Boolean).length;
+    return { done, total: 6 };
   }, [payload.buyerCompletion]);
 
   const handleConfirmBuyerSubsection = async (subsection: BuyerTerminationSubsectionId) => {
@@ -576,6 +591,14 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
             onChange={(next) => updatePayload((p) => ({ ...p, buyerTerms: { ...p.buyerTerms, breachOfObligations: next } }))}
             onSubmit={() => void tryConfirmAndBackBuyer('breachOfObligations')}
             saving={subsectionBuyerBusy === 'breachOfObligations'}
+          />
+        ) : null}
+        {id === 'physicalProgressDelay' ? (
+          <BuyerPhysicalProgressDelayPanel
+            value={b.physicalProgressDelay}
+            onChange={(next) => updatePayload((p) => ({ ...p, buyerTerms: { ...p.buyerTerms, physicalProgressDelay: next } }))}
+            onSubmit={() => void tryConfirmAndBackBuyer('physicalProgressDelay')}
+            saving={subsectionBuyerBusy === 'physicalProgressDelay'}
           />
         ) : null}
         {id === 'areaDiscrepancy' ? (

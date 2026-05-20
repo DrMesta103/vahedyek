@@ -17,7 +17,14 @@ import { RuleStatusTag } from './RuleStatusTag';
 import { readApiErrorMessage } from './readApiErrorMessage';
 
 type BuyerCancellationSection = {
-  id: 'late-delivery' | 'specification-changes' | 'breach-of-obligations' | 'area-discrepancy' | 'notification' | 'draft-template-usage';
+  id:
+    | 'late-delivery'
+    | 'specification-changes'
+    | 'breach-of-obligations'
+    | 'physical-progress-delay'
+    | 'area-discrepancy'
+    | 'notification'
+    | 'draft-template-usage';
   title: string;
   description: string;
   stateKey: BuyerTerminationSubsectionId;
@@ -26,8 +33,8 @@ type BuyerCancellationSection = {
 const BUYER_CANCELLATION_SECTIONS: BuyerCancellationSection[] = [
   {
     id: 'late-delivery',
-    title: 'تاخیر در تحویل',
-    description: 'مبنا، مهلت ارفاقی و الزام تایید ناظر.',
+    title: 'حق فسخ خریدار به دلیل تأخیر در تحویل واحد',
+    description: 'مبنای محاسبه تأخیر، حد آستانه مجاز و شرط ایجاد حق فسخ برای خریدار.',
     stateKey: 'lateDelivery',
   },
   {
@@ -38,25 +45,31 @@ const BUYER_CANCELLATION_SECTIONS: BuyerCancellationSection[] = [
   },
   {
     id: 'breach-of-obligations',
-    title: 'نقض تعهدات',
-    description: 'تعهدات سازنده و مهلت اصلاح.',
+    title: 'حق فسخ خریدار به دلیل نقض تعهدات سازنده',
+    description: 'انتخاب انواع نقض تعهد سازنده که در صورت وقوع، حق فسخ خریدار را فعال می‌کند.',
     stateKey: 'breachOfObligations',
   },
   {
+    id: 'physical-progress-delay',
+    title: 'حق فسخ خریدار به دلیل تأخیر در تحقق مراحل پیشرفت پروژه',
+    description: 'تنظیم زمان هدف، مهلت مجاز تأخیر و مرجع سنجش برای هر مرحله پیشرفت.',
+    stateKey: 'physicalProgressDelay',
+  },
+  {
     id: 'area-discrepancy',
-    title: 'اختلاف متراژ',
-    description: 'آستانه، مراجع و گزینه تسویه مالی.',
+    title: 'حق فسخ ناشی از اختلاف متراژ واحد',
+    description: 'شرط فعال‌سازی فسخ بر اساس اختلاف متراژ نهایی واحد نسبت به متراژ قراردادی.',
     stateKey: 'areaDiscrepancy',
   },
   {
     id: 'notification',
-    title: 'اطلاع رسانی',
+    title: 'اطلاع‌رسانی',
     description: 'خریدار، مدیر قرارداد و نمایش در جدول.',
     stateKey: 'notification',
   },
   {
     id: 'draft-template-usage',
-    title: 'استفاده در پیش نویس',
+    title: 'استفاده در پیش‌نویس',
     description: 'مشخص می‌کند این تنظیمات به عنوان پیش‌فرض در پیش‌نویس قرارداد اعمال شوند و آیا برای قرارداد خاص قابل تغییر باشند یا خیر.',
     stateKey: 'draftTemplateUsage',
   },

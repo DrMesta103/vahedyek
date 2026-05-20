@@ -717,11 +717,11 @@ export function ContractFlowHub() {
   const shouldBlockContractLeave = !loading && leaveIssues.length > 0;
 
   const requestSectionSave = (sectionId: ContractFlowSectionId) => {
-    const trigger = document.querySelector<HTMLButtonElement>(`[data-contract-save-trigger="${sectionId}"]`);
-    if (!trigger || trigger.disabled) return;
+    const saveButton = document.querySelector<HTMLButtonElement>(`[data-contract-save-button="${sectionId}"]`);
+    if (!saveButton || saveButton.disabled) return;
 
     setSavingMap((current) => ({ ...current, [sectionId]: true }));
-    trigger.click();
+    saveButton.click();
   };
 
   const waitForNavigation = (fromHref: string, timeoutMs = 1200) => {
