@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
-import { Camera, Download, FileText, Info, Loader2, Maximize2, Mic, Minimize2, Pause, Plus, Reply, Send, Smile, Tag, Upload, X } from 'lucide-react';
+import { Camera, CheckCircle2, Download, FileText, Info, Loader2, Maximize2, Mic, Minimize2, Pause, Plus, Reply, Send, Smile, Tag, Upload, X } from 'lucide-react';
 import { Input } from '@repo/ui';
 import { currentAppConfig } from '../config/current';
 import { useAuthContext } from '../hooks/useAuthContext';
@@ -94,6 +94,7 @@ export default function PageDocsWidget() {
   const [threadScope, setThreadScope] = useState<ThreadScope>('page');
   const [threads, setThreads] = useState<PageThreadRecord[]>([]);
   const [selectedThreadId, setSelectedThreadId] = useState<string | null>(null);
+  const [requestedThreadId, setRequestedThreadId] = useState<string | null>(null);
   const [messages, setMessages] = useState<UiMessage[]>([]);
   const [loadingMessages, setLoadingMessages] = useState(false);
 
@@ -157,6 +158,7 @@ export default function PageDocsWidget() {
     setThreadScope('page');
     setError('');
     setSelectedThreadId(null);
+    setRequestedThreadId(null);
     setMessages([]);
     setReplyTo(null);
     setMaximized(false);
@@ -214,12 +216,16 @@ export default function PageDocsWidget() {
 
   useEffect(() => {
     const handleOpenRequest = (event: Event) => {
-      const detail = event instanceof CustomEvent ? (event.detail as { scope?: ThreadScope } | undefined) : undefined;
+      const detail =
+        event instanceof CustomEvent
+          ? (event.detail as { scope?: ThreadScope; threadId?: string } | undefined)
+          : undefined;
       const nextScope = detail?.scope === 'app' ? 'app' : 'page';
 
       setOpen(true);
       setMode('threads');
       setThreadScope(nextScope);
+      setRequestedThreadId(typeof detail?.threadId === 'string' ? detail.threadId : null);
       setSelectedThreadId(null);
       setMessages([]);
       setReplyTo(null);
@@ -248,6 +254,14 @@ export default function PageDocsWidget() {
       const payload = await fetchThreads(scope);
       setThreads(payload.threads);
       setPageKey(payload.pageKey);
+      if (requestedThreadId) {
+        const requestedThread = payload.threads.find((thread) => thread.id === requestedThreadId) ?? null;
+        setRequestedThreadId(null);
+        if (requestedThread) {
+          await openChat(requestedThread);
+          return;
+        }
+      }
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : 'بارگذاری گفتگوها انجام نشد.');
     } finally {
@@ -258,7 +272,7 @@ export default function PageDocsWidget() {
   useEffect(() => {
     if (!open || mode !== 'threads') return;
     void loadThreads(threadScope);
-  }, [open, mode, threadScope]);
+  }, [open, mode, threadScope, requestedThreadId]);
 
   const openDrawer = async () => {
     if (open) {
@@ -310,6 +324,7 @@ export default function PageDocsWidget() {
 
   const openChat = async (thread: PageThreadRecord) => {
     setSelectedThreadId(thread.id);
+    setThreads((current) => current.map((item) => (item.id === thread.id ? { ...item, isOpened: true } : item)));
     setMode('chat');
     setReplyTo(null);
     await loadMessages(thread.id);
@@ -1429,6 +1444,17 @@ export default function PageDocsWidget() {
                                 <div className="flex flex-wrap gap-2">
                                   <span className={chipClass()}>{thread.docType}</span>
                                   <span className={chipClass()}>{PRIORITY_LABELS[thread.priority]}</span>
+                                  {thread.status === 'in_progress' ? (
+                                    <span className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-700">
+                                      در حال انجام
+                                    </span>
+                                  ) : null}
+                                  {thread.status === 'done' ? (
+                                    <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700">
+                                      <CheckCircle2 className="ml-1 h-3.5 w-3.5" />
+                                      انجام شده
+                                    </span>
+                                  ) : null}
                                   {thread.labels.slice(0, 4).map((label) => (
                                     <span key={label} className={chipClass()}>
                                       {label}

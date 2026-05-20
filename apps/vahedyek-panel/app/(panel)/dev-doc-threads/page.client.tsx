@@ -1,8 +1,8 @@
-'use client';
+﻿'use client';
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowUpRight, GripVertical, Loader2, RefreshCw, Search } from 'lucide-react';
+import { ArrowUpRight, CheckCircle2, Circle, GripVertical, Loader2, RefreshCw, Search } from 'lucide-react';
 import { Input } from '@repo/ui';
 import { currentAppConfig } from '../../config/current';
 import { type PageThreadRecord, type ThreadStatus } from '../../lib/page-threads';
@@ -14,9 +14,9 @@ type ThreadsResponse = {
 };
 
 const STATUS_COLUMNS: Array<{ id: ThreadStatus; title: string; description: string }> = [
-  { id: 'todo', title: 'انجام نشده', description: 'گفتگوهایی که هنوز شروع نشده‌اند' },
-  { id: 'in_progress', title: 'در حال انجام', description: 'مواردی که تیم روی آن‌ها کار می‌کند' },
-  { id: 'done', title: 'انجام شده', description: 'موارد نهایی‌شده و بسته‌شده' },
+  { id: 'todo', title: 'انجام‌نشده', description: 'گفتگوهایی که هنوز شروع نشده‌اند' },
+  { id: 'in_progress', title: 'در حال انجام', description: 'مواردی که تیم روی آن‌ها در حال کار است' },
+  { id: 'done', title: 'انجام‌شده', description: 'موارد نهایی شده و بسته شده' },
 ];
 
 const PRIORITY_LABELS: Record<PageThreadRecord['priority'], string> = {
@@ -49,10 +49,10 @@ export default function DevDocThreadsPageClient() {
     try {
       const response = await fetch('/api/page-threads?scope=app', { cache: 'no-store' });
       const payload = (await response.json().catch(() => null)) as ThreadsResponse | { message?: string } | null;
-      if (!response.ok) throw new Error((payload as { message?: string } | null)?.message || 'بارگذاری گفتگوها انجام نشد.');
+      if (!response.ok) throw new Error((payload as { message?: string } | null)?.message || 'بارگذاری گفتگوها با خطا مواجه شد.');
       setThreads((payload as ThreadsResponse).threads);
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : 'بارگذاری گفتگوها انجام نشد.');
+      setError(loadError instanceof Error ? loadError.message : 'بارگذاری گفتگوها با خطا مواجه شد.');
     } finally {
       setLoading(false);
     }
@@ -100,10 +100,10 @@ export default function DevDocThreadsPageClient() {
         body: JSON.stringify({ status: nextStatus }),
       });
       const payload = (await response.json().catch(() => null)) as { message?: string } | null;
-      if (!response.ok) throw new Error(payload?.message || 'بروزرسانی وضعیت گفتگو انجام نشد.');
+      if (!response.ok) throw new Error(payload?.message || 'به‌روزرسانی وضعیت با خطا مواجه شد.');
     } catch (updateError) {
       setThreads(previousThreads);
-      setError(updateError instanceof Error ? updateError.message : 'بروزرسانی وضعیت گفتگو انجام نشد.');
+      setError(updateError instanceof Error ? updateError.message : 'به‌روزرسانی وضعیت با خطا مواجه شد.');
     } finally {
       setSavingThreadId(null);
       setDraggingThreadId(null);
@@ -117,9 +117,9 @@ export default function DevDocThreadsPageClient() {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[color:var(--text-muted)]">{currentAppConfig.appName}</div>
-            <h1 className="mt-2 text-[28px] font-black leading-tight text-[color:var(--text-strong)]">برد پیگیری گفتگوهای مستندات</h1>
+            <h1 className="mt-2 text-[28px] font-black leading-tight text-[color:var(--text-strong)]">برد گفت‌وگوهای مستندات</h1>
             <p className="mt-3 max-w-4xl text-sm leading-7 text-[color:var(--text-muted)]">
-              همه گفتگوهای ثبت‌شده در این اپ را یک‌جا ببین، بین ستون‌ها جابه‌جا کن و وقتی کاری تمام شد آن را به ستون انجام‌شده منتقل کن.
+              در این بخش می‌توانید گفتگوها و نظرات مربوط به مستندات را مدیریت و دنبال کنید. از جستجو، مرتب‌سازی و کشیدن کارت‌ها برای تغییر وضعیت استفاده کنید.
             </p>
           </div>
           <button
@@ -134,7 +134,7 @@ export default function DevDocThreadsPageClient() {
 
         <div className="mt-6 grid gap-4 xl:grid-cols-[minmax(0,1fr)_280px]">
           <label className="grid gap-2">
-            <span className="text-xs font-semibold text-[color:var(--text-muted)]">جستجو بین عنوان، مسیر صفحه، لیبل و نویسنده</span>
+            <span className="text-xs font-semibold text-[color:var(--text-muted)]">جستجو بین عناوین، مستندات، مسیرها و برچسب‌ها</span>
             <div className="relative">
               <Search className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[color:var(--text-muted)]" />
               <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="مثلا قرارداد، financial، /business-settings/..." className="pr-10" />
@@ -188,7 +188,7 @@ export default function DevDocThreadsPageClient() {
                     <h2 className="text-xl font-black text-[color:var(--text-strong)]">{column.title}</h2>
                     <p className="mt-1 text-xs leading-6 text-[color:var(--text-muted)]">{column.description}</p>
                   </div>
-                  <div className="rounded-full border border-[color:var(--border-color)] px-3 py-1.5 text-xs font-bold text-[color:var(--text-body)]">{column.threads.length}</div>
+                  <div className="rounded-full border border-[color:var(--border-color)] px-3 py-1.5 text-xs font-bold text-[color:var(--text-body]">{column.threads.length}</div>
                 </div>
 
                 {column.threads.length ? (
@@ -211,17 +211,40 @@ export default function DevDocThreadsPageClient() {
                         }`}
                       >
                         <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <div className="mb-3 flex flex-wrap gap-2">
-                              <span className={chipClass()}>{thread.docType}</span>
-                              <span className={chipClass()}>{PRIORITY_LABELS[thread.priority]}</span>
-                              {thread.labels.slice(0, 3).map((label) => (
-                                <span key={`${thread.id}-${label}`} className={chipClass()}>
-                                  {label}
-                                </span>
-                              ))}
+                          <div className="flex min-w-0 gap-3">
+                            <span
+                              className={`mt-1 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border ${
+                                thread.isOpened
+                                  ? 'border-emerald-200 bg-emerald-50 text-emerald-600'
+                                  : 'border-[color:var(--border-color)] bg-white text-[color:var(--text-muted)]'
+                              }`}
+                              title={thread.isOpened ? 'باز شده' : 'بسته شده'}
+                              aria-label={thread.isOpened ? 'باز شده' : 'بسته شده'}
+                            >
+                              {thread.isOpened ? <CheckCircle2 className="h-4 w-4" /> : <Circle className="h-4 w-4" />}
+                            </span>
+                            <div className="min-w-0">
+                              <div className="mb-3 flex flex-wrap gap-2">
+                                <span className={chipClass()}>{thread.docType}</span>
+                                <span className={chipClass()}>{PRIORITY_LABELS[thread.priority]}</span>
+                                {thread.status === 'in_progress' ? (
+                                  <span className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-700">
+                                    در حال انجام
+                                  </span>
+                                ) : null}
+                                {thread.status === 'done' ? (
+                                  <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700">
+                                    انجام‌شده
+                                  </span>
+                                ) : null}
+                                {thread.labels.slice(0, 3).map((label) => (
+                                  <span key={`${thread.id}-${label}`} className={chipClass()}>
+                                    {label}
+                                  </span>
+                                ))}
+                              </div>
+                              <h3 className="text-[15px] font-black leading-7 text-[color:var(--text-strong)]">{thread.title}</h3>
                             </div>
-                            <h3 className="text-[15px] font-black leading-7 text-[color:var(--text-strong)]">{thread.title}</h3>
                           </div>
                           <div className="flex items-center gap-2">
                             {savingThreadId === thread.id ? <Loader2 className="h-4 w-4 animate-spin text-[color:var(--theme-accent)]" /> : null}

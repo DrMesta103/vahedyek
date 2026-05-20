@@ -32,6 +32,7 @@ model Tenant {
   DevPageDocument               DevPageDocument[]
   DevPageDocumentEvent          DevPageDocumentEvent[]
   DevPageDocumentReadState      DevPageDocumentReadState[]
+  DevPageThreadReadState        DevPageThreadReadState[]
   directory                     DirectoryPerson[]
   representatives               DirectoryRepresentative[]
   employees                     Employee[]
@@ -63,6 +64,7 @@ model AppUser {
   DevPageDocumentEvent                                 DevPageDocumentEvent[]
   DevPageDocumentReadState                             DevPageDocumentReadState[]
   DevPageMessage                                       DevPageMessage[]
+  DevPageThreadReadState                               DevPageThreadReadState[]
   DevPageThread_DevPageThread_createdByIdToAppUser     DevPageThread[]            @relation("DevPageThread_createdByIdToAppUser")
   DevPageThread_DevPageThread_updatedByIdToAppUser     DevPageThread[]            @relation("DevPageThread_updatedByIdToAppUser")
   representatives                                      DirectoryRepresentative[]
@@ -805,25 +807,41 @@ model DevPageMessage {
 }
 
 model DevPageThread {
-  id                                         String           @id
-  appId                                      String           @default("vahedyek")
+  id                                         String                   @id
+  appId                                      String                   @default("vahedyek")
   pageKey                                    String
-  pagePathSample                             String           @default("/")
+  pagePathSample                             String                   @default("/")
   title                                      String
-  docType                                    String           @default("free")
-  priority                                   String           @default("p2")
-  labelsJson                                 String           @default("[]")
+  docType                                    String                   @default("free")
+  priority                                   String                   @default("p2")
+  labelsJson                                 String                   @default("[]")
   createdById                                String
   updatedById                                String
-  createdAt                                  DateTime         @default(now())
-  updatedAt                                  DateTime         @default(now())
-  status                                     String           @default("todo")
+  createdAt                                  DateTime                 @default(now())
+  updatedAt                                  DateTime                 @default(now())
+  status                                     String                   @default("todo")
   DevPageMessage                             DevPageMessage[]
-  AppUser_DevPageThread_createdByIdToAppUser AppUser          @relation("DevPageThread_createdByIdToAppUser", fields: [createdById], references: [id])
-  AppUser_DevPageThread_updatedByIdToAppUser AppUser          @relation("DevPageThread_updatedByIdToAppUser", fields: [updatedById], references: [id])
+  DevPageThreadReadState                     DevPageThreadReadState[]
+  AppUser_DevPageThread_createdByIdToAppUser AppUser                  @relation("DevPageThread_createdByIdToAppUser", fields: [createdById], references: [id])
+  AppUser_DevPageThread_updatedByIdToAppUser AppUser                  @relation("DevPageThread_updatedByIdToAppUser", fields: [updatedById], references: [id])
 
   @@index([appId, pageKey])
   @@index([appId, updatedAt(sort: Desc)])
+}
+
+model DevPageThreadReadState {
+  id        String        @id
+  tenantId  String
+  appId     String        @default("vahedyek")
+  userId    String
+  threadId  String
+  isOpened  Boolean       @default(false)
+  updatedAt DateTime      @default(now())
+  Tenant    Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  AppUser   AppUser       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  Thread    DevPageThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, appId, userId, threadId])
 }
 
 model TenantBusinessProfileSettings {
