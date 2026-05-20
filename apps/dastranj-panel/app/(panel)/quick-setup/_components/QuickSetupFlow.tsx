@@ -9,6 +9,7 @@ import Step4Employees from './Step4Employees';
 import Step5WorkGroup from './Step5WorkGroup';
 import type {
   CompletedCalendarItem,
+  DefaultCalendarTemplate,
   LocationSummaryItem,
   QuickEmployeeSummary,
   QuickPolicySummary,
@@ -73,6 +74,7 @@ type QuickSetupFlowProps = {
   steps: QuickSetupStep[];
   locationItems?: LocationSummaryItem[];
   calendarItems?: CompletedCalendarItem[];
+  defaultCalendarTemplate?: DefaultCalendarTemplate | null;
   policyItems?: QuickPolicySummary[];
   employeeItems?: QuickEmployeeSummary[];
   workGroupItems?: QuickWorkGroupSummary[];
@@ -84,6 +86,7 @@ export function QuickSetupFlow({
   steps,
   locationItems = [],
   calendarItems = [],
+  defaultCalendarTemplate = null,
   policyItems = [],
   employeeItems = [],
   workGroupItems = [],
@@ -99,6 +102,7 @@ export function QuickSetupFlow({
   const [completedOpen, setCompletedOpen] = useState(false);
   const [location, setLocation] = useState<LocationSummaryItem | null>(locationItems[0] ?? null);
   const [calendar, setCalendar] = useState<CompletedCalendarItem | null>(calendarItems[0] ?? null);
+  const [calendars, setCalendars] = useState<CompletedCalendarItem[]>(calendarItems);
   const [policy, setPolicy] = useState<QuickPolicySummary | null>(policyItems[0] ?? null);
   const [employees, setEmployees] = useState<QuickEmployeeSummary[]>(employeeItems);
   const [workGroup, setWorkGroup] = useState<QuickWorkGroupSummary | null>(workGroupItems[0] ?? null);
@@ -212,8 +216,10 @@ export function QuickSetupFlow({
             <Step2CalendarShift
               isCompleted={completedSteps.includes(2)}
               initialCalendar={calendar}
+              defaultCalendarTemplate={defaultCalendarTemplate}
               onComplete={(value) => {
                 setCalendar(value);
+                setCalendars((prev) => [value, ...prev.filter((item) => item.id !== value.id)]);
                 markStepCompleted(2);
                 setStep(3);
               }}
@@ -225,6 +231,7 @@ export function QuickSetupFlow({
             <Step3Policy
               isCompleted={completedSteps.includes(3)}
               calendar={calendar}
+              calendars={calendars}
               policy={policy}
               onPolicyChange={setPolicy}
               onComplete={(value) => {

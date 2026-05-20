@@ -5,6 +5,8 @@ import { redirect } from 'next/navigation';
 import { Prisma } from '../../node_modules/.prisma/client';
 import { prisma } from './prisma';
 import { getSessionContext } from './auth';
+import { ensureGlobalDefaultCalendar } from './calendar-defaults';
+import { getPolicyFamilyMeta } from './policy-workspaces';
 import { seedSampleData } from './seed';
 
 function value(formData: FormData, key: string) {
@@ -32,6 +34,21 @@ async function getTenantId() {
 
 function tenantRelation(tenantId: string) {
   return { tenant: { connect: { id: tenantId } } };
+}
+
+function getShiftTypeLabel(shiftType: string) {
+  if (shiftType === 'fixed') return 'شیفت ثابت';
+  if (shiftType === 'float-day') return 'شیفت شناور (شروع روز)';
+  if (shiftType === 'float-abs') return 'شیفت شناور مطلق';
+  if (shiftType === 'split') return 'شیفت دو تکه';
+  if (shiftType === 'rotate') return 'شیفت چرخشی';
+  return shiftType;
+}
+
+function getPolicyFamilyKey(sectionValues: Prisma.JsonValue | null | undefined) {
+  if (!sectionValues || typeof sectionValues !== 'object' || Array.isArray(sectionValues)) return null;
+  const familyKey = (sectionValues as Record<string, unknown>).familyKey;
+  return typeof familyKey === 'string' ? familyKey : null;
 }
 
 function shouldRetryLocationWithoutCoordinates(error: unknown) {
@@ -186,19 +203,77 @@ export async function deleteLocationAction(formData: FormData) {
 
 export async function createRequestReasonAction(formData: FormData) {
   const tenantId = await getTenantId();
-  const lastOrder = await prisma.requestReason.aggregate({ where: { tenantId }, _max: { displayOrder: true } });
+  const category = value(formData, 'category') as never;
+  const lastOrder = await prisma.requestReason.aggregate({
+    where: { tenantId, category },
+    _max: { displayOrder: true },
+  });
   await prisma.requestReason.create({
     data: {
       tenantId,
       title: value(formData, 'title'),
       description: value(formData, 'description') || null,
-      category: value(formData, 'category') as never,
+      category,
       isActive: boolValue(formData, 'isActive'),
       displayOrder: (lastOrder._max.displayOrder ?? 0) + 1,
     },
   });
   revalidatePath('/request-reasons');
-  redirect('/request-reasons');
+  redirect(`/request-reasons?category=${value(formData, 'category')}`);
+}
+
+export async function updateRequestReasonAction(formData: FormData) {
+  const tenantId = await getTenantId();
+  const id = value(formData, 'id');
+  const category = value(formData, 'category') as never;
+  const current = await prisma.requestReason.findFirst({ where: { id, tenantId }, select: { id: true } });
+  if (!current) throw new Error('Request reason not found for active tenant.');
+
+  await prisma.requestReason.update({
+    where: { id },
+    data: {
+      title: value(formData, 'title'),
+      description: value(formData, 'description') || null,
+      category,
+      isActive: boolValue(formData, 'isActive'),
+    },
+  });
+  revalidatePath('/request-reasons');
+  redirect(`/request-reasons?category=${category}`);
+}
+
+export async function deleteRequestReasonAction(formData: FormData) {
+  const tenantId = await getTenantId();
+  const id = value(formData, 'id');
+  const category = value(formData, 'category');
+  await prisma.requestReason.deleteMany({ where: { id, tenantId } });
+  revalidatePath('/request-reasons');
+  redirect(category ? `/request-reasons?category=${category}` : '/request-reasons');
+}
+
+export async function toggleRequestReasonActiveAction(formData: FormData) {
+  const tenantId = await getTenantId();
+  const id = value(formData, 'id');
+  const isActive = value(formData, 'isActive') === 'true';
+  await prisma.requestReason.updateMany({ where: { id, tenantId }, data: { isActive } });
+  revalidatePath('/request-reasons');
+}
+
+export async function reorderRequestReasonsAction(formData: FormData) {
+  const tenantId = await getTenantId();
+  const category = value(formData, 'category') as never;
+  const orderedIds = JSON.parse(value(formData, 'orderedIds')) as string[];
+  if (!Array.isArray(orderedIds) || orderedIds.length === 0) return;
+
+  await prisma.$transaction(
+    orderedIds.map((id, index) =>
+      prisma.requestReason.updateMany({
+        where: { id, tenantId, category },
+        data: { displayOrder: index },
+      }),
+    ),
+  );
+  revalidatePath('/request-reasons');
 }
 
 export async function createOrganizationUnitAction(formData: FormData) {
@@ -210,6 +285,31 @@ export async function createOrganizationUnitAction(formData: FormData) {
       description: value(formData, 'description') || null,
     },
   });
+  revalidatePath('/organization-units');
+  redirect('/organization-units');
+}
+
+export async function updateOrganizationUnitAction(formData: FormData) {
+  const tenantId = await getTenantId();
+  const id = value(formData, 'id');
+  const current = await prisma.organizationUnit.findFirst({ where: { id, tenantId }, select: { id: true } });
+  if (!current) throw new Error('Organization unit not found for active tenant.');
+
+  await prisma.organizationUnit.update({
+    where: { id },
+    data: {
+      title: value(formData, 'title'),
+      description: value(formData, 'description') || null,
+    },
+  });
+  revalidatePath('/organization-units');
+  redirect('/organization-units');
+}
+
+export async function deleteOrganizationUnitAction(formData: FormData) {
+  const tenantId = await getTenantId();
+  const id = value(formData, 'id');
+  await prisma.organizationUnit.deleteMany({ where: { id, tenantId } });
   revalidatePath('/organization-units');
   redirect('/organization-units');
 }
@@ -259,6 +359,15 @@ export async function createCalendarAction(formData: FormData) {
   redirect('/calendars');
 }
 
+export async function deleteCalendarAction(formData: FormData) {
+  const tenantId = await getTenantId();
+  const id = value(formData, 'id');
+  await prisma.calendar.deleteMany({ where: { id, tenantId } });
+  revalidatePath('/calendars');
+  revalidatePath('/quick-setup');
+  redirect('/calendars');
+}
+
 export async function createCalendarWithShiftAction(data: {
   title: string;
   yearLabel: string;
@@ -291,7 +400,7 @@ export async function createCalendarWithShiftAction(data: {
       weekends: jsonValue(data.weekends),
       singleHolidays: jsonValue(data.singleHolidays),
       shiftTitle: data.shiftTitle,
-      shiftTypeLabel,
+      shiftTypeLabel: getShiftTypeLabel(data.shiftType),
       shiftConfig: jsonValue(data.shiftConfig as Prisma.InputJsonObject),
       holidayCount,
       totalShiftDays: 0,
@@ -303,6 +412,106 @@ export async function createCalendarWithShiftAction(data: {
   revalidatePath('/calendars');
   revalidatePath('/quick-setup');
   return { id: calendar.id, title: calendar.title, yearLabel: calendar.yearLabel };
+}
+
+export async function createCalendarDraftFromDefaultAction(data: {
+  title: string;
+  description?: string;
+  yearLabel: string;
+}) {
+  const tenantId = await getTenantId();
+  const source = await ensureGlobalDefaultCalendar();
+
+  const draft = await prisma.calendar.create({
+    data: {
+      tenantId,
+      title: data.title,
+      description: data.description ?? source.description ?? null,
+      yearLabel: data.yearLabel,
+      startDate: source.startDate,
+      endDate: source.endDate,
+      weekends: source.weekends,
+      singleHolidays: source.singleHolidays,
+      shiftTitle: source.shiftTitle,
+      shiftTypeLabel: source.shiftTypeLabel,
+      shiftConfig: source.shiftConfig,
+      holidayCount: source.holidayCount,
+      totalShiftDays: source.totalShiftDays,
+      totalEventDays: source.totalEventDays,
+      status: 'active',
+    },
+  });
+
+  revalidatePath('/calendars');
+  revalidatePath('/quick-setup');
+  return {
+    id: draft.id,
+    title: draft.title,
+    yearLabel: draft.yearLabel,
+    description: draft.description,
+    shiftTitle: draft.shiftTitle,
+    shiftTypeLabel: draft.shiftTypeLabel,
+    holidayCount: draft.holidayCount,
+  };
+}
+
+export async function updateCalendarFromQuickSetupAction(data: {
+  calendarId: string;
+  title: string;
+  description?: string;
+  yearLabel: string;
+  startDate: string;
+  endDate: string;
+  weekends: string[];
+  singleHolidays: { id: string; title: string; date: string }[];
+  shiftType: string;
+  shiftTitle: string;
+  shiftConfig: Record<string, unknown>;
+}) {
+  const tenantId = await getTenantId();
+  const current = await prisma.calendar.findFirst({
+    where: { id: data.calendarId, tenantId },
+    select: { id: true },
+  });
+  if (!current) throw new Error('Calendar not found for active tenant.');
+
+  const holidayCount = data.weekends.length + data.singleHolidays.length;
+  const shiftTypeLabel =
+    data.shiftType === 'fixed' ? 'شیفت ثابت' :
+    data.shiftType === 'float-day' ? 'شیفت شناور (شروع روز)' :
+    data.shiftType === 'float-abs' ? 'شیفت شناور مطلق' :
+    data.shiftType === 'split' ? 'شیفت دوتکه' :
+    data.shiftType === 'rotate' ? 'شیفت چرخشی' : data.shiftType;
+
+  const calendar = await prisma.calendar.update({
+    where: { id: data.calendarId },
+    data: {
+      title: data.title,
+      description: data.description ?? null,
+      yearLabel: data.yearLabel,
+      startDate: data.startDate,
+      endDate: data.endDate,
+      weekends: jsonValue(data.weekends),
+      singleHolidays: jsonValue(data.singleHolidays),
+      shiftTitle: data.shiftTitle,
+      shiftTypeLabel: getShiftTypeLabel(data.shiftType),
+      shiftConfig: jsonValue(data.shiftConfig as Prisma.InputJsonObject),
+      holidayCount,
+      totalEventDays: data.singleHolidays.length,
+    },
+  });
+
+  revalidatePath('/calendars');
+  revalidatePath('/quick-setup');
+  return {
+    id: calendar.id,
+    title: calendar.title,
+    yearLabel: calendar.yearLabel,
+    description: calendar.description,
+    shiftTitle: calendar.shiftTitle,
+    shiftTypeLabel: calendar.shiftTypeLabel,
+    holidayCount: calendar.holidayCount,
+  };
 }
 
 export async function createPolicyAction(formData: FormData) {
@@ -331,6 +540,106 @@ export async function createPolicyAction(formData: FormData) {
   redirect('/policies');
 }
 
+export async function savePolicyWorkspaceAction(formData: FormData) {
+  const tenantId = await getTenantId();
+  const familyKey = value(formData, 'familyKey');
+  const variant = value(formData, 'variant') || 'default';
+  const policyId = value(formData, 'policyId') || null;
+  const calendarId = value(formData, 'calendarId') || null;
+
+  if (!familyKey) throw new Error('Policy family is required.');
+  const family = getPolicyFamilyMeta(familyKey);
+  if (!family) throw new Error('Policy family is not supported.');
+
+  if (calendarId) {
+    const calendar = await prisma.calendar.findFirst({ where: { id: calendarId, tenantId }, select: { id: true } });
+    if (!calendar) throw new Error('Calendar not found for active tenant.');
+  }
+
+  const title = value(formData, 'title') || family.title;
+  const description = value(formData, 'description') || null;
+  const sectionValues = jsonValue({
+    familyKey,
+    variant,
+    title,
+    description,
+    calendarId,
+    startTime: value(formData, 'startTime') || null,
+    endTime: value(formData, 'endTime') || null,
+    requiredMinutes: Number(value(formData, 'requiredMinutes') || '0'),
+    workStartWindow: value(formData, 'workStartWindow') || null,
+    workEndWindow: value(formData, 'workEndWindow') || null,
+    corePresence: value(formData, 'corePresence') || null,
+    maxDelayMinutes: Number(value(formData, 'maxDelayMinutes') || '0'),
+    breakMode: value(formData, 'breakMode') || null,
+    breakStart: value(formData, 'breakStart') || null,
+    breakEnd: value(formData, 'breakEnd') || null,
+    breakDuration: Number(value(formData, 'breakDuration') || '0'),
+    endsNextDay: boolValue(formData, 'endsNextDay'),
+    breakDeduct: boolValue(formData, 'breakDeduct'),
+    bufferMinutes: Number(value(formData, 'bufferMinutes') || '0'),
+    monthlyLimit: Number(value(formData, 'monthlyLimit') || '0'),
+    approvalMode: value(formData, 'approvalMode') || null,
+    requireAttachment: boolValue(formData, 'requireAttachment'),
+    geofenceRadius: Number(value(formData, 'geofenceRadius') || '0'),
+    allowRemote: boolValue(formData, 'allowRemote'),
+    allowManualApproval: boolValue(formData, 'allowManualApproval'),
+    allowOutsideShift: boolValue(formData, 'allowOutsideShift'),
+    manualEntryEnabled: boolValue(formData, 'manualEntryEnabled'),
+    requiresManagerApproval: boolValue(formData, 'requiresManagerApproval'),
+    maxMissionHours: Number(value(formData, 'maxMissionHours') || '0'),
+    nightStart: value(formData, 'nightStart') || null,
+    nightEnd: value(formData, 'nightEnd') || null,
+    cycleCount: Number(value(formData, 'cycleCount') || '0'),
+    cycleType: value(formData, 'cycleType') || null,
+    note: value(formData, 'note') || null,
+  });
+
+  const existing = policyId
+    ? await prisma.workPolicy.findFirst({ where: { id: policyId, tenantId }, select: { id: true } })
+    : null;
+
+  let savedId = existing?.id ?? '';
+
+  if (existing) {
+    await prisma.workPolicy.update({
+      where: { id: existing.id },
+      data: {
+        title,
+        description,
+        calendarId,
+        sectionValues,
+      },
+    });
+    savedId = existing.id;
+  } else {
+    const created = await prisma.workPolicy.create({
+      data: {
+        tenantId,
+        title,
+        description,
+        calendarId,
+        employeeCount: 0,
+        sectionValues,
+      },
+    });
+    savedId = created.id;
+  }
+
+  revalidatePath('/policies');
+  revalidatePath(`/policies/${familyKey}`);
+  redirect(`/policies/${familyKey}?policyId=${savedId}${variant && variant !== 'default' ? `&variant=${variant}` : ''}`);
+}
+
+export async function deletePolicyAction(formData: FormData) {
+  const tenantId = await getTenantId();
+  const id = value(formData, 'id');
+  await prisma.workPolicy.deleteMany({ where: { id, tenantId } });
+  revalidatePath('/policies');
+  revalidatePath('/quick-setup');
+  redirect('/policies');
+}
+
 export async function createPolicyFromQuickSetupAction(data: {
   calendarId: string;
   policyTemplateId: string;
@@ -349,6 +658,8 @@ export async function createPolicyFromQuickSetupAction(data: {
       description: data.description ?? null,
       calendarId: data.calendarId,
       sectionValues: jsonValue({
+        familyKey: 'work',
+        variant: 'default',
         manualAttendance: false,
         overtimeFromAttendance: true,
         nightWorkStart: '22:00',
@@ -380,6 +691,8 @@ export async function createEmployeeAction(formData: FormData) {
       mobile2: value(formData, 'mobile2') || null,
       email: value(formData, 'email') || null,
       personnelCode: value(formData, 'personnelCode') || null,
+      avatarUrl: value(formData, 'avatarUrl') || null,
+      identityPhotoUrl: value(formData, 'identityPhotoUrl') || null,
       maritalStatus: (value(formData, 'maritalStatus') || 'single') as never,
       childrenCount: Number(value(formData, 'childrenCount') || '0'),
       isActive: boolValue(formData, 'isActive'),
@@ -425,6 +738,46 @@ export async function deleteEmployeeFromQuickSetupAction(id: string) {
   await prisma.employee.deleteMany({ where: { id, tenantId } });
   revalidatePath('/employees');
   revalidatePath('/quick-setup');
+}
+
+export async function deleteEmployeeAction(formData: FormData) {
+  const tenantId = await getTenantId();
+  const id = value(formData, 'id');
+  await prisma.employee.deleteMany({ where: { id, tenantId } });
+  revalidatePath('/employees');
+  redirect('/employees');
+}
+
+export async function toggleEmployeeActiveAction(formData: FormData) {
+  const tenantId = await getTenantId();
+  const id = value(formData, 'id');
+  const isActive = value(formData, 'isActive') === 'true';
+  await prisma.employee.updateMany({ where: { id, tenantId }, data: { isActive } });
+  revalidatePath('/employees');
+}
+
+export async function saveEmployeeBankAccountsAction(formData: FormData) {
+  const tenantId = await getTenantId();
+  const employeeId = value(formData, 'employeeId');
+  const accounts = JSON.parse(value(formData, 'accounts')) as Prisma.InputJsonValue;
+  await prisma.employee.updateMany({
+    where: { id: employeeId, tenantId },
+    data: { bankAccounts: accounts },
+  });
+  revalidatePath(`/employees/${employeeId}`);
+  revalidatePath(`/employees/${employeeId}/bank-accounts`);
+}
+
+export async function saveEmployeeGuaranteesAction(formData: FormData) {
+  const tenantId = await getTenantId();
+  const employeeId = value(formData, 'employeeId');
+  const guarantees = JSON.parse(value(formData, 'guarantees')) as Prisma.InputJsonValue;
+  await prisma.employee.updateMany({
+    where: { id: employeeId, tenantId },
+    data: { guarantees },
+  });
+  revalidatePath(`/employees/${employeeId}`);
+  revalidatePath(`/employees/${employeeId}/guarantee`);
 }
 
 export async function createWorkGroupAction(formData: FormData) {

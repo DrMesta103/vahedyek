@@ -41,6 +41,16 @@ export type CompletedCalendarItem = {
   holidayCount?: number;
 };
 
+export type DefaultCalendarTemplate = CompletedCalendarItem & {
+  startDate: string;
+  endDate: string;
+  weekends: string[];
+  singleHolidays: Array<{ id: string; title: string; date: string }>;
+  shiftConfig: Record<string, unknown>;
+  totalShiftDays: number;
+  totalEventDays: number;
+};
+
 export type QuickPolicySummary = {
   id: string;
   title: string;

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { ConfirmDialog } from './ConfirmDialog';
 
 type ConfirmConfig = {
@@ -16,11 +16,13 @@ type CardMenuItem =
       kind: 'link';
       href: string;
       label: string;
+      icon?: ReactNode;
       tone?: 'default' | 'danger';
     }
   | {
       kind: 'submit';
       label: string;
+      icon?: ReactNode;
       tone?: 'default' | 'danger';
       action: (formData: FormData) => void | Promise<void>;
       hiddenFields?: Record<string, string>;
@@ -79,7 +81,7 @@ export function CardMenu({ items }: CardMenuProps) {
     <>
       <div className="card-menu" ref={rootRef}>
         <button type="button" className="card-menu-trigger" aria-label="منوی عملیات" onClick={toggleMenu}>
-          ⋮
+          <span aria-hidden>⋮</span>
         </button>
         {open ? (
           <div className="card-menu-dropdown">
@@ -91,7 +93,8 @@ export function CardMenu({ items }: CardMenuProps) {
                   className={item.tone === 'danger' ? 'card-menu-delete' : 'card-menu-link'}
                   onClick={() => setOpen(false)}
                 >
-                  {item.label}
+                  {item.icon ? <span className="card-menu-item-icon">{item.icon}</span> : null}
+                  <span>{item.label}</span>
                 </Link>
               ) : item.confirm ? (
                 <button
@@ -103,7 +106,8 @@ export function CardMenu({ items }: CardMenuProps) {
                     setPendingItemIndex(index);
                   }}
                 >
-                  {item.label}
+                  {item.icon ? <span className="card-menu-item-icon">{item.icon}</span> : null}
+                  <span>{item.label}</span>
                 </button>
               ) : (
                 <form key={`${item.kind}-${item.label}`} action={item.action}>
@@ -111,7 +115,8 @@ export function CardMenu({ items }: CardMenuProps) {
                     <input key={name} type="hidden" name={name} value={value} />
                   ))}
                   <button type="submit" className={item.tone === 'danger' ? 'card-menu-delete' : 'card-menu-link'}>
-                    {item.label}
+                    {item.icon ? <span className="card-menu-item-icon">{item.icon}</span> : null}
+                    <span>{item.label}</span>
                   </button>
                 </form>
               ),

@@ -1,38 +1,45 @@
+import { ModulePageHeader } from '../../components/module-page/ModulePageHeader';
+import { panelBreadcrumbs } from '../../components/module-page/module-breadcrumbs';
+import { requestReasonCategories } from '../../lib/constants';
 import { listRequestReasons } from '../../lib/data';
-import { requestReasonLabels } from '../../lib/constants';
-import { EmptyState, PageIntro, PrimaryLink } from '@repo/ui/server';
+import { RequestReasonsClient } from './_components/RequestReasonsClient';
 
-export default async function RequestReasonsPage() {
+type RequestReasonsPageProps = {
+  searchParams?: Promise<{
+    category?: string;
+  }>;
+};
+
+export default async function RequestReasonsPage({ searchParams }: RequestReasonsPageProps) {
   const items = await listRequestReasons();
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
+  const categoryParam = resolvedSearchParams?.category;
+  const activeCategory =
+    categoryParam && requestReasonCategories.includes(categoryParam as (typeof requestReasonCategories)[number])
+      ? (categoryParam as (typeof requestReasonCategories)[number])
+      : 'attendance';
 
   return (
-    <div className="page-stack">
-      <PageIntro title="دلایل درخواست" description="مدیریت دسته‌بندی و دلایل قابل‌استفاده در فرایندهای سازمانی." action={<PrimaryLink href="/request-reasons/new">افزودن دلیل</PrimaryLink>} />
-      {items.length === 0 ? (
-        <EmptyState title="لیست خالی است" description="هنوز دلیلی ثبت نشده است." action={<PrimaryLink href="/request-reasons/new">افزودن</PrimaryLink>} />
-      ) : (
-        <div className="catalog-grid">
-          {items.map((item) => (
-            <article key={item.id} className="catalog-card">
-              <div className="catalog-card-head">
-                <span className={`catalog-pill ${item.isActive ? 'is-success' : 'is-muted'}`}>{item.isActive ? 'فعال' : 'غیرفعال'}</span>
-                <h3>{item.title}</h3>
-                <p>{item.description ?? 'بدون توضیح تکمیلی'}</p>
-              </div>
-              <div className="catalog-card-metrics">
-                <div>
-                  <span>دسته</span>
-                  <strong>{requestReasonLabels[item.category]}</strong>
-                </div>
-                <div>
-                  <span>ترتیب</span>
-                  <strong>{item.displayOrder}</strong>
-                </div>
-              </div>
-            </article>
-          ))}
-        </div>
-      )}
+    <div className="page-stack module-page request-reasons-page" dir="rtl" lang="fa">
+      <ModulePageHeader
+        breadcrumbs={panelBreadcrumbs('دلایل درخواست')}
+        title="دلایل درخواست"
+        subtitle="مدیریت علت‌ها با ترتیب‌دهی، فعال‌سازی و ویرایش سریع."
+        addHref={`/request-reasons/new?category=${activeCategory}`}
+        addLabel="افزودن علت درخواست"
+      />
+
+      <RequestReasonsClient
+        items={items.map((item) => ({
+          id: item.id,
+          title: item.title,
+          description: item.description,
+          category: item.category,
+          isActive: item.isActive,
+          displayOrder: item.displayOrder,
+        }))}
+        activeCategory={activeCategory}
+      />
     </div>
   );
 }

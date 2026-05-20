@@ -1,7 +1,10 @@
 import { CalendarYearFilter } from '../../components/CalendarYearFilter';
 import { CardMenu } from '../../components/CardMenu';
+import { ModuleAddTile } from '../../components/module-page/ModuleAddTile';
+import { ModulePageHeader } from '../../components/module-page/ModulePageHeader';
+import { panelBreadcrumbs } from '../../components/module-page/module-breadcrumbs';
+import { deleteCalendarAction } from '../../lib/actions';
 import { listCalendars } from '../../lib/data';
-import { EmptyState, PageIntro, PrimaryLink } from '@repo/ui/server';
 
 function statusMeta(status: string) {
   if (status === 'active') {
@@ -9,6 +12,11 @@ function statusMeta(status: string) {
   }
 
   return { label: 'غیرفعال', className: 'is-inactive' };
+}
+
+function metricProgress(value: number, max: number) {
+  if (max <= 0) return 8;
+  return Math.min(100, Math.max(8, Math.round((value / max) * 100)));
 }
 
 type CalendarsPageProps = {
@@ -20,102 +28,85 @@ type CalendarsPageProps = {
 export default async function CalendarsPage({ searchParams }: CalendarsPageProps) {
   const items = await listCalendars();
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
-  const selectedYear = resolvedSearchParams?.year ?? '1405';
-  const yearOptions = Array.from({ length: 6 }, (_, index) => String(1405 - index));
+  const yearOptions = Array.from(new Set(items.map((item) => item.yearLabel).filter(Boolean)));
+  const fallbackYear = yearOptions[0] ?? 'all';
+  const selectedYear = resolvedSearchParams?.year ?? fallbackYear;
   const filteredItems = selectedYear === 'all' ? items : items.filter((item) => item.yearLabel === selectedYear);
 
   return (
-    <div className="page-stack">
-      <PageIntro
+    <div className="page-stack module-page" dir="rtl" lang="fa">
+      <ModulePageHeader
+        breadcrumbs={panelBreadcrumbs('تقویم')}
         title="تقویم‌های کاری"
-        description="تقویم‌ها، بازه‌های زمانی و الگوهای شیفت را در یک نمای جمع‌وجور و خوانا مرور کنید."
-        action={<PrimaryLink href="/calendars/new">افزودن تقویم</PrimaryLink>}
+        subtitle="مدیریت شیفت‌ها و رویدادها برای سازمان شما."
+        addHref="/calendars/new"
+        addLabel="افزودن تقویم کاری"
       />
 
-      <section className="calendar-filter-bar">
-        <CalendarYearFilter value={selectedYear} options={yearOptions} />
-      </section>
-
-      {filteredItems.length === 0 ? (
-        <EmptyState
-          title={selectedYear === 'all' ? 'تقویمی ثبت نشده' : `برای سال ${selectedYear} تقویمی ثبت نشده`}
-          description={selectedYear === 'all' ? 'هنوز تقویمی برای این کسب‌وکار ثبت نشده است.' : 'فیلتر سال را تغییر دهید یا یک تقویم جدید برای این سال ثبت کنید.'}
-          action={<PrimaryLink href="/calendars/new">تعریف تقویم</PrimaryLink>}
-        />
-      ) : (
-        <div className="calendar-grid">
-          {filteredItems.map((item) => {
-            const status = statusMeta(item.status);
-
-            return (
-              <article key={item.id} className="calendar-card">
-                <div className="calendar-card-top">
-                  <div className="calendar-card-top-copy">
-                    <div className="calendar-card-kicker">سال کاری {item.yearLabel}</div>
-                    <h3>{item.title}</h3>
-                    <p>{item.description ?? 'برای این تقویم توضیحی ثبت نشده است.'}</p>
-                  </div>
-
-                  <div className="calendar-card-top-actions">
-                    <span className={`calendar-status-pill ${status.className}`}>{status.label}</span>
-                    <CardMenu
-                      items={[
-                        { kind: 'link', href: '/calendars/new', label: 'تقویم جدید' },
-                        { kind: 'link', href: '/policies', label: 'سیاست‌ها' },
-                      ]}
-                    />
-                  </div>
-                </div>
-
-                <div className="calendar-card-hero">
-                  <div className="calendar-card-hero-main">
-                    <span>شیفت پایه</span>
-                    <strong>{item.shiftTitle || 'بدون شیفت پیش‌فرض'}</strong>
-                    <small>{item.shiftTypeLabel || 'الگوی شیفت مشخص نشده است.'}</small>
-                  </div>
-
-                  <div className="calendar-card-badges">
-                    <span className="calendar-metric-badge">{item.holidayCount} تعطیلی</span>
-                    <span className="calendar-metric-badge">{item.totalEventDays} رویداد</span>
-                    <span className="calendar-metric-badge">{item.totalShiftDays} روز کاری</span>
-                  </div>
-                </div>
-
-                <div className="calendar-date-rail">
-                  <div className="calendar-date-node">
-                    <span>شروع</span>
-                    <strong>{item.startDate}</strong>
-                  </div>
-                  <div className="calendar-date-line" />
-                  <div className="calendar-date-node">
-                    <span>پایان</span>
-                    <strong>{item.endDate}</strong>
-                  </div>
-                </div>
-
-                <div className="calendar-card-body">
-                  <div className="calendar-card-stat">
-                    <span>نوع شیفت</span>
-                    <strong>{item.shiftTypeLabel || '-'}</strong>
-                  </div>
-                  <div className="calendar-card-stat">
-                    <span>آخرین وضعیت</span>
-                    <strong>{status.label}</strong>
-                  </div>
-                  <div className="calendar-card-stat">
-                    <span>تعطیلات هفتگی</span>
-                    <strong>{Array.isArray(item.weekends) ? item.weekends.length : 0}</strong>
-                  </div>
-                  <div className="calendar-card-stat">
-                    <span>بازه ثبت‌شده</span>
-                    <strong>{item.yearLabel}</strong>
-                  </div>
-                </div>
-              </article>
-            );
-          })}
+      {yearOptions.length > 0 ? (
+        <div className="module-page-toolbar">
+          <CalendarYearFilter value={selectedYear} options={yearOptions} />
         </div>
-      )}
+      ) : null}
+
+      <div className="module-page-grid">
+        {filteredItems.map((item) => {
+          const status = statusMeta(item.status);
+
+          return (
+            <article key={item.id} className="module-grid-card">
+              <div className="module-grid-card-top">
+                <div className="module-grid-card-body">
+                  <h3>{item.title}</h3>
+                  <p>توضیحات : {item.description ?? 'ثبت نشده'}</p>
+                </div>
+
+                <div className="module-grid-card-top-actions">
+                  <span className={`module-status-pill ${status.className}`}>{status.label}</span>
+                  <CardMenu
+                    items={[
+                      { kind: 'link', href: '/calendars/new', label: 'تقویم جدید' },
+                      { kind: 'link', href: '/policies', label: 'سیاست‌ها' },
+                      {
+                        kind: 'submit',
+                        label: 'حذف تقویم',
+                        tone: 'danger',
+                        action: deleteCalendarAction,
+                        hiddenFields: { id: item.id },
+                        confirm: {
+                          title: 'حذف تقویم کاری',
+                          description: `آیا از حذف «${item.title}» مطمئن هستید؟ این تقویم از فهرست شما حذف می‌شود.`,
+                          confirmLabel: 'بله، حذف شود',
+                          cancelLabel: 'انصراف',
+                        },
+                      },
+                    ]}
+                  />
+                </div>
+              </div>
+
+              <div className="module-card-metrics">
+                <div className="module-metric-panel">
+                  <span>روز های کاری / شیفت ها</span>
+                  <strong>{item.totalShiftDays}</strong>
+                  <div className="module-metric-progress" aria-hidden>
+                    <span style={{ width: `${metricProgress(item.totalShiftDays, 365)}%` }} />
+                  </div>
+                </div>
+
+                <div className="module-metric-panel">
+                  <span>رویداد ها / روز های تعطیل</span>
+                  <strong>{item.totalEventDays}</strong>
+                  <div className="module-metric-progress" aria-hidden>
+                    <span style={{ width: `${metricProgress(item.totalEventDays, 50)}%` }} />
+                  </div>
+                </div>
+              </div>
+            </article>
+          );
+        })}
+        <ModuleAddTile href="/calendars/new" label="برای افزودن تقویم کاری کلیک کنید." />
+      </div>
     </div>
   );
 }

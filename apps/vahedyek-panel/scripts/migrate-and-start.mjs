@@ -84,5 +84,5 @@ if (migrate.status !== 0) {
   }
 }
 
-const next = run('next start');
+const next = run('next start --hostname 0.0.0.0');
 process.exit(next.status ?? 1);

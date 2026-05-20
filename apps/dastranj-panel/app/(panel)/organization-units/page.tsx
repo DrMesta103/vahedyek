@@ -1,27 +1,36 @@
+import { ModuleListRow } from '../../components/module-page/ModuleListRow';
+import { ModulePageHeader } from '../../components/module-page/ModulePageHeader';
+import { panelBreadcrumbs } from '../../components/module-page/module-breadcrumbs';
+import { deleteOrganizationUnitAction } from '../../lib/actions';
 import { listOrganizationUnits } from '../../lib/data';
-import { EmptyState, PageIntro, PrimaryLink } from '@repo/ui/server';
 
 export default async function OrganizationUnitsPage() {
   const items = await listOrganizationUnits();
 
   return (
-    <div className="page-stack">
-      <PageIntro title="واحدهای سازمانی" description="تعریف ساختار سازمان برای اتصال کارمندان به واحدها." action={<PrimaryLink href="/organization-units/new">افزودن واحد</PrimaryLink>} />
-      {items.length === 0 ? (
-        <EmptyState title="واحدی وجود ندارد" description="از این بخش می‌توانید ساختار سازمان را تعریف کنید." action={<PrimaryLink href="/organization-units/new">تعریف واحد</PrimaryLink>} />
-      ) : (
-        <div className="catalog-grid">
-          {items.map((item) => (
-            <article key={item.id} className="catalog-card">
-              <div className="catalog-card-head">
-                <span className="catalog-pill">{item.employees.length} انتساب</span>
-                <h3>{item.title}</h3>
-                <p>{item.description ?? 'برای این واحد توضیحی ثبت نشده است.'}</p>
-              </div>
-            </article>
-          ))}
-        </div>
-      )}
+    <div className="page-stack module-page" dir="rtl" lang="fa">
+      <ModulePageHeader
+        breadcrumbs={panelBreadcrumbs('واحد سازمانی')}
+        title="واحدهای سازمانی"
+        subtitle="فهرست ساده‌ای واحدهای سازمانی برای مدیریت سریع‌تر."
+        addHref="/organization-units/new"
+        addLabel="افزودن واحد سازمانی"
+      />
+
+      <div className="module-page-list">
+        {items.map((item) => (
+          <ModuleListRow
+            key={item.id}
+            title={item.title}
+            description={item.description?.trim() ? `توضیحات : ${item.description}` : undefined}
+            editHref={`/organization-units/${item.id}/edit`}
+            deleteAction={deleteOrganizationUnitAction}
+            deleteId={item.id}
+            deleteTitle="حذف واحد سازمانی"
+            deleteDescription={`آیا از حذف واحد «${item.title}» مطمئن هستید؟`}
+          />
+        ))}
+      </div>
     </div>
   );
 }

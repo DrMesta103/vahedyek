@@ -1,7 +1,7 @@
 'use client';
 
-import { FileSpreadsheet, Pencil, Plus, Trash2, User } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { FileSpreadsheet, Pencil, Plus, Trash2, User, MoreVertical } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import { createEmployeeFromQuickSetupAction, deleteEmployeeFromQuickSetupAction } from '../../../lib/actions';
 import type { QuickEmployeeSummary } from './quick-setup.types';
 
@@ -47,7 +47,26 @@ function EmployeeDialog({
   const parsedContact = useMemo(() => parseContactInput(contactInput), [contactInput]);
   const nationalIdError = nationalId.trim() && !isNationalIdValid(nationalId) ? 'کد ملی باید 10 رقم باشد.' : '';
 
+  useEffect(() => {
+    if (!open) return;
+    setStep(1);
+    setContactInput(initialEmployee?.contact.value ?? '');
+    setFirstName(initialEmployee?.firstName ?? '');
+    setLastName(initialEmployee?.lastName ?? '');
+    setNationalId(initialEmployee?.nationalId ?? '');
+    setAvatarUrl(initialEmployee?.avatarUrl ?? '');
+  }, [open, initialEmployee]);
+
   if (!open) return null;
+
+  const handleAvatarUpload = (file: File | null) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      setAvatarUrl(String(reader.result ?? ''));
+    };
+    reader.readAsDataURL(file);
+  };
 
   const save = async () => {
     if (!parsedContact.isValid || !parsedContact.type || !parsedContact.normalizedValue || !firstName.trim() || !lastName.trim() || nationalIdError) return;
@@ -89,12 +108,15 @@ function EmployeeDialog({
 
         {step === 1 ? (
           <div className="mt-6 space-y-4">
+            <div className="rounded-2xl border border-amber-400/30 bg-amber-500/10 px-4 py-3 text-right text-sm leading-7 text-amber-100">
+              این فلو به صورت شبیه‌سازی‌شده برای مدیریت کاربرها پیاده‌سازی شده است. فعلاً فقط موبایل یا ایمیل را وارد کنید تا به مرحله بعد بروید.
+            </div>
             <label className="space-y-2 block">
               <span className="text-sm font-bold text-white">ایمیل یا موبایل</span>
               <input value={contactInput} onChange={(event) => setContactInput(event.target.value)} placeholder="0912... یا name@example.com" className="w-full rounded-xl border border-slate-600 bg-slate-950/60 px-4 py-3 text-white outline-none focus:border-indigo-400" />
             </label>
             {contactInput.trim() && parsedContact.error ? <div className="text-xs text-rose-300">{parsedContact.error}</div> : null}
-            <div className="flex justify-start"><button type="button" onClick={() => setStep(2)} disabled={!parsedContact.isValid} className="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-bold text-white disabled:opacity-50">ادامه</button></div>
+            <div className="flex justify-end"><button type="button" onClick={() => setStep(2)} disabled={!parsedContact.isValid} className="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-bold text-white disabled:opacity-50">ادامه</button></div>
           </div>
         ) : (
           <div className="mt-6 space-y-4">
@@ -102,7 +124,19 @@ function EmployeeDialog({
               <label className="space-y-2"><span className="text-sm font-bold text-white">نام</span><input value={firstName} onChange={(e) => setFirstName(e.target.value)} className="w-full rounded-xl border border-slate-600 bg-slate-950/60 px-4 py-3 text-white outline-none focus:border-indigo-400" /></label>
               <label className="space-y-2"><span className="text-sm font-bold text-white">نام خانوادگی</span><input value={lastName} onChange={(e) => setLastName(e.target.value)} className="w-full rounded-xl border border-slate-600 bg-slate-950/60 px-4 py-3 text-white outline-none focus:border-indigo-400" /></label>
               <label className="space-y-2"><span className="text-sm font-bold text-white">کد ملی</span><input value={nationalId} onChange={(e) => setNationalId(e.target.value)} className="w-full rounded-xl border border-slate-600 bg-slate-950/60 px-4 py-3 text-white outline-none focus:border-indigo-400" /></label>
-              <label className="space-y-2"><span className="text-sm font-bold text-white">آدرس تصویر پروفایل</span><input value={avatarUrl} onChange={(e) => setAvatarUrl(e.target.value)} className="w-full rounded-xl border border-slate-600 bg-slate-950/60 px-4 py-3 text-white outline-none focus:border-indigo-400" /></label>
+              <div className="space-y-2">
+                <span className="text-sm font-bold text-white">بارگذاری عکس پروفایل</span>
+                <div className="flex items-center gap-3">
+                  <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-slate-600 bg-slate-950/60 px-4 py-3 text-sm font-bold text-slate-100 transition-colors hover:border-indigo-400">
+                    <input type="file" accept="image/*" className="hidden" onChange={(event) => handleAvatarUpload(event.target.files?.[0] ?? null)} />
+                    انتخاب فایل
+                  </label>
+                  <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-slate-900 text-slate-300">
+                    {avatarUrl ? <img src={avatarUrl} alt="" className="h-full w-full object-cover" /> : <User className="h-5 w-5" />}
+                  </div>
+                </div>
+                <div className="text-xs leading-6 text-slate-400">برای این مرحله، عکس به صورت محلی شبیه‌سازی می‌شود و نیازی به وارد کردن آدرس نیست.</div>
+              </div>
             </div>
             {nationalIdError ? <div className="text-xs text-rose-300">{nationalIdError}</div> : null}
             <div className="flex justify-between gap-3">
@@ -120,6 +154,7 @@ export default function Step4Employees({ employees, onChange }: Step4EmployeesPr
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isExcelOpen, setIsExcelOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<QuickEmployeeSummary | null>(null);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
   const upsert = (employee: QuickEmployeeSummary) => {
     onChange(employees.some((item) => item.id === employee.id) ? employees.map((item) => item.id === employee.id ? employee : item) : [...employees, employee]);
@@ -154,13 +189,51 @@ export default function Step4Employees({ employees, onChange }: Step4EmployeesPr
           ) : (
             employees.map((employee) => (
               <div key={employee.id} className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-slate-900/60 p-3">
-                <div className="flex gap-2">
-                  <button type="button" onClick={() => { setEditingEmployee(employee); setIsAddOpen(true); }} className="rounded-lg border border-white/10 p-2 text-slate-200"><Pencil className="h-4 w-4" /></button>
-                  <button type="button" onClick={() => remove(employee.id)} className="rounded-lg border border-rose-400/30 p-2 text-rose-300"><Trash2 className="h-4 w-4" /></button>
-                </div>
                 <div className="flex items-center gap-3 text-right">
-                  <div><div className="font-bold text-white">{employee.firstName} {employee.lastName}</div><div className="text-xs text-slate-400">{employee.contact.value}</div></div>
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-500/20 text-indigo-200"><User className="h-5 w-5" /></div>
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-500/20 text-indigo-200">
+                    <User className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <div className="font-bold text-white">{employee.firstName} {employee.lastName}</div>
+                    <div className="text-xs text-slate-400">{employee.contact.value}</div>
+                  </div>
+                </div>
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setOpenMenuId((prev) => (prev === employee.id ? null : employee.id))}
+                    className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 text-slate-300 transition-colors hover:border-white/20 hover:text-white"
+                    aria-label="اکشن‌های کارمند"
+                  >
+                    <MoreVertical className="h-4 w-4" />
+                  </button>
+                  {openMenuId === employee.id ? (
+                    <div className="absolute left-0 top-12 z-20 w-36 overflow-hidden rounded-2xl border border-white/10 bg-slate-950 shadow-2xl">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingEmployee(employee);
+                          setIsAddOpen(true);
+                          setOpenMenuId(null);
+                        }}
+                        className="flex w-full items-center gap-2 px-3 py-3 text-right text-sm text-slate-100 transition-colors hover:bg-slate-800"
+                      >
+                        <Pencil className="h-4 w-4" />
+                        ویرایش
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          remove(employee.id);
+                          setOpenMenuId(null);
+                        }}
+                        className="flex w-full items-center gap-2 border-t border-white/5 px-3 py-3 text-right text-sm text-rose-300 transition-colors hover:bg-rose-500/10"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        حذف
+                      </button>
+                    </div>
+                  ) : null}
                 </div>
               </div>
             ))

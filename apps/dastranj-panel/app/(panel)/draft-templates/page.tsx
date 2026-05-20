@@ -1,38 +1,46 @@
-import { listDraftTemplates } from '../../lib/data';
+import { ModuleAddTile } from '../../components/module-page/ModuleAddTile';
+import { ModulePageHeader } from '../../components/module-page/ModulePageHeader';
+import { panelBreadcrumbs } from '../../components/module-page/module-breadcrumbs';
 import { draftTemplateLabels } from '../../lib/constants';
-import { EmptyState, PageIntro, PrimaryLink } from '@repo/ui/server';
+import { listDraftTemplates } from '../../lib/data';
 
 export default async function DraftTemplatesPage() {
   const items = await listDraftTemplates();
 
   return (
-    <div className="page-stack">
-      <PageIntro title="قالب‌های پیش‌نویس" description="مدیریت قالب‌های قرارداد و فرایندهای منابع انسانی." action={<PrimaryLink href="/draft-templates/new">افزودن قالب</PrimaryLink>} />
-      {items.length === 0 ? (
-        <EmptyState title="قالبی ثبت نشده" description="برای قراردادها و فرایندهای تکراری از این بخش استفاده کنید." action={<PrimaryLink href="/draft-templates/new">ایجاد قالب</PrimaryLink>} />
-      ) : (
-        <div className="catalog-grid">
-          {items.map((item) => (
-            <article key={item.id} className="catalog-card">
-              <div className="catalog-card-head">
-                <span className={`catalog-pill ${item.isActive ? 'is-success' : 'is-muted'}`}>{item.isActive ? 'فعال' : 'غیرفعال'}</span>
+    <div className="page-stack module-page" dir="rtl" lang="fa">
+      <ModulePageHeader
+        breadcrumbs={panelBreadcrumbs('پیش‌نویس')}
+        title="قالب‌های پیش‌نویس"
+        subtitle="مدیریت قالب‌های قرارداد و فرایندهای منابع انسانی."
+        addHref="/draft-templates/new"
+        addLabel="افزودن قالب"
+      />
+
+      <div className="module-page-grid">
+        {items.map((item) => (
+          <article key={item.id} className="module-grid-card">
+            <div className="module-grid-card-top">
+              <div className="module-grid-card-body">
                 <h3>{item.title}</h3>
                 <p>{item.description ?? 'بدنه و نسخه این قالب آماده توسعه و استفاده مجدد است.'}</p>
               </div>
-              <div className="catalog-card-metrics">
-                <div>
-                  <span>دسته</span>
-                  <strong>{draftTemplateLabels[item.category]}</strong>
-                </div>
-                <div>
-                  <span>نسخه</span>
-                  <strong>{item.version}</strong>
-                </div>
+              <span className={`module-status-pill ${item.isActive ? 'is-active' : 'is-inactive'}`}>{item.isActive ? 'فعال' : 'غیرفعال'}</span>
+            </div>
+            <div className="module-card-metrics">
+              <div className="module-metric-panel">
+                <span>دسته</span>
+                <strong>{draftTemplateLabels[item.category]}</strong>
               </div>
-            </article>
-          ))}
-        </div>
-      )}
+              <div className="module-metric-panel">
+                <span>نسخه</span>
+                <strong>{item.version}</strong>
+              </div>
+            </div>
+          </article>
+        ))}
+        <ModuleAddTile href="/draft-templates/new" label="برای افزودن قالب پیش‌نویس کلیک کنید." />
+      </div>
     </div>
   );
 }

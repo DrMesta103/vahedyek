@@ -118,7 +118,7 @@ export default function Step1Location({ isCompleted, initialLocation, onBack, on
           </div>
         </div>
         <div className="mt-4 text-right text-xs text-slate-400">{selectedLocationLabel}</div>
-        <div className="mt-5 flex justify-start">
+        <div className="mt-5 flex justify-end">
           <button type="button" onClick={save} disabled={!title.trim() || saving} className="rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50">
             {saving ? 'در حال ثبت...' : 'مرحله بعد'}
           </button>

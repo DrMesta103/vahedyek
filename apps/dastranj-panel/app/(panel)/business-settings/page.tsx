@@ -1,27 +1,12 @@
-import { getBusinessSettingsData } from '../../lib/data';
-import { PageIntro, PrimaryLink } from '@repo/ui/server';
+import { BUSINESS_SETTINGS_CATALOG } from '../../lib/business-settings';
+import { BusinessSettingsCard } from './_components/BusinessSettingsCard';
 
-export default async function BusinessSettingsPage() {
-  const items = await getBusinessSettingsData();
-
+export default function BusinessSettingsPage() {
   return (
-    <div className="page-stack">
-      <PageIntro title="تنظیمات کسب و کار" description="درگاه مرکزی برای تمام ماژول‌های مدیریتی دسترنج." />
-
-      <div className="catalog-grid">
-        {items.map((item) => (
-          <article key={item.href} className="catalog-card settings-catalog-card">
-            <div className="catalog-card-head">
-              <span className="catalog-pill">{item.count} مورد</span>
-              <h3>{item.title}</h3>
-              <p>{item.description}</p>
-            </div>
-            <div className="catalog-card-footer">
-              <PrimaryLink href={item.href}>ورود</PrimaryLink>
-            </div>
-          </article>
-        ))}
-      </div>
+    <div className="flex w-full flex-col gap-3" dir="rtl" lang="fa">
+      {BUSINESS_SETTINGS_CATALOG.map((item) => (
+        <BusinessSettingsCard key={item.icon} {...item} />
+      ))}
     </div>
   );
 }

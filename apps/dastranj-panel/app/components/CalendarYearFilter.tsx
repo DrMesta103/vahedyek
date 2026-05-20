@@ -18,16 +18,14 @@ export function CalendarYearFilter({ value, options }: CalendarYearFilterProps) 
   };
 
   return (
-    <label className="calendar-filter-dropdown">
-      <span>سال کاری</span>
-      <select value={value} onChange={(event) => handleChange(event.target.value)}>
-        <option value="all">همه</option>
+    <div className="module-year-filter">
+      <select value={value} onChange={(event) => handleChange(event.target.value)} aria-label="سال کاری">
         {options.map((year) => (
           <option key={year} value={year}>
             {year}
           </option>
         ))}
       </select>
-    </label>
+    </div>
   );
 }

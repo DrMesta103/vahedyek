@@ -1,4 +1,5 @@
 import { getSessionContext } from './auth';
+import { getGlobalDefaultCalendarTemplate } from './calendar-defaults';
 import { prisma } from './prisma';
 import type { QuickSetupStep } from '../(panel)/quick-setup/_components/quick-setup.types';
 
@@ -54,7 +55,7 @@ export async function getQuickSetupChecklist() {
   const tenantId = await requireTenantId();
   const where = { tenantId };
 
-  const [profile, locationList, calendarList, policyList, employeeList, workGroupList, calendars, policies, employees, workGroups] = await Promise.all([
+  const [profile, locationList, calendarList, policyList, employeeList, workGroupList, calendars, policies, employees, workGroups, defaultCalendarTemplate] = await Promise.all([
     getBusinessProfile(),
     prisma.location.findMany({ where, orderBy: { createdAt: 'desc' }, take: 10 }),
     prisma.calendar.findMany({ where, orderBy: { updatedAt: 'desc' }, take: 20 }),
@@ -65,6 +66,7 @@ export async function getQuickSetupChecklist() {
     prisma.workPolicy.count({ where }),
     prisma.employee.count({ where }),
     prisma.workGroup.count({ where }),
+    getGlobalDefaultCalendarTemplate(),
   ]);
 
   const locations = locationList.length;
@@ -107,42 +109,16 @@ export async function getQuickSetupChecklist() {
       avatarUrl: item.avatarUrl ?? undefined,
     })),
     workGroupItems: workGroupList.map((item) => ({ id: item.id, title: item.title })),
+    defaultCalendarTemplate,
     tenantId,
     steps: [
       { key: 'location', title: 'محل کار', subtitle: 'ثبت محل کار و شعاع مجاز', done: locations > 0, href: '/locations/new', manageHref: '/locations', count: locations },
       { key: 'calendar', title: 'تقویم کاری', subtitle: 'تقویم، تعطیلات و شیفت', done: calendars > 0, href: '/calendars/new', manageHref: '/calendars', count: calendars },
-      { key: 'policy', title: 'سیاست‌های کاری', subtitle: 'قوانین حضور و غیاب', done: policies > 0, href: '/policies/new', manageHref: '/policies', count: policies },
+      { key: 'policy', title: 'سیاست‌های کاری', subtitle: 'قوانین حضور و غیاب', done: policies > 0, href: '/policies', manageHref: '/policies', count: policies },
       { key: 'employee', title: 'مدیریت کارکنان', subtitle: 'ساخت پرونده پرسنلی', done: employees > 0, href: '/employees/new', manageHref: '/employees', count: employees },
       { key: 'work-group', title: 'گروه‌های کاری', subtitle: 'اتصال افراد، محل و سیاست', done: workGroups > 0, href: '/work-groups/new', manageHref: '/work-groups', count: workGroups },
     ] satisfies QuickSetupStep[],
   };
-}
-
-export async function getBusinessSettingsData() {
-  const tenantId = await requireTenantId();
-  const where = { tenantId };
-
-  const [locations, requestReasons, organizationUnits, shiftTemplates, calendars, policies, draftTemplates, employees] = await Promise.all([
-    prisma.location.count({ where }),
-    prisma.requestReason.count({ where }),
-    prisma.organizationUnit.count({ where }),
-    prisma.shiftTemplate.count({ where }),
-    prisma.calendar.count({ where }),
-    prisma.workPolicy.count({ where }),
-    prisma.draftTemplate.count({ where }),
-    prisma.employee.count({ where }),
-  ]);
-
-  return [
-    { title: 'محل کار', description: 'مدیریت موقعیت‌ها و شعاع مجاز', href: '/locations', count: locations },
-    { title: 'دلایل درخواست', description: 'مدیریت درخواست‌های سازمانی', href: '/request-reasons', count: requestReasons },
-    { title: 'واحدهای سازمانی', description: 'تعریف ساختار سازمان', href: '/organization-units', count: organizationUnits },
-    { title: 'قالب شیفت', description: 'مدیریت الگوهای شیفت', href: '/shift-templates', count: shiftTemplates },
-    { title: 'تقویم کاری', description: 'تقویم‌ها و تعطیلات', href: '/calendars', count: calendars },
-    { title: 'سیاست کاری', description: 'قوانین حضور و غیاب', href: '/policies', count: policies },
-    { title: 'کارمندان', description: 'مدیریت تیم و اطلاعات پرسنلی', href: '/employees', count: employees },
-    { title: 'پیش‌نویس قرارداد', description: 'قالب‌های قرارداد و حقوق', href: '/draft-templates', count: draftTemplates },
-  ];
 }
 
 export async function listLocations() {
@@ -160,12 +136,23 @@ export async function listRequestReasons() {
   return prisma.requestReason.findMany({ where: { tenantId }, orderBy: [{ displayOrder: 'asc' }, { createdAt: 'asc' }] });
 }
 
+export async function getRequestReason(id: string) {
+  const tenantId = await requireTenantId();
+  return prisma.requestReason.findFirst({ where: { id, tenantId } });
+}
+
 export async function listOrganizationUnits() {
   const tenantId = await requireTenantId();
   return prisma.organizationUnit.findMany({
     where: { tenantId },
-    include: { employees: { where: { employee: { tenantId } } } },
-    orderBy: { createdAt: 'desc' },
+    orderBy: { createdAt: 'asc' },
+  });
+}
+
+export async function getOrganizationUnit(id: string) {
+  const tenantId = await requireTenantId();
+  return prisma.organizationUnit.findFirst({
+    where: { id, tenantId },
   });
 }
 

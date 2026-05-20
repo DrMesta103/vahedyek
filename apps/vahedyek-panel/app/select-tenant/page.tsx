@@ -79,6 +79,7 @@ function SelectTenantPageContent() {
   const [selecting, setSelecting] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState('');
+  const [loadError, setLoadError] = useState('');
   const [billingCycle, setBillingCycle] = useState<BillingCycle>('monthly');
   const [selectedPackageId, setSelectedPackageId] = useState<string>('growth');
   const [businessName, setBusinessName] = useState('');
@@ -99,23 +100,35 @@ function SelectTenantPageContent() {
           fetch('/api/auth/me', { cache: 'no-store' }),
         ]);
 
-        if (tenantsResponse.status === 401 || !meResponse.ok) {
+        if (tenantsResponse.status === 401 || meResponse.status === 401) {
+          setLoadError('نشست کاربری بعد از ورود حفظ نشد. اگر از IP شبکه وارد شده‌اید، کوکی یا آدرس دسترسی را بررسی کنید.');
           router.replace('/login');
           return;
         }
 
         const [tenantsPayload, mePayload] = await Promise.all([tenantsResponse.json(), meResponse.json()]);
+
+        if (!tenantsResponse.ok) {
+          throw new Error(tenantsPayload.message || 'بارگذاری لیست کسب‌وکارها انجام نشد.');
+        }
+
+        if (!meResponse.ok) {
+          throw new Error(mePayload.message || 'اطلاعات کاربر دریافت نشد.');
+        }
+
         if (!mounted) return;
 
         const loadedTenants = tenantsPayload.tenants ?? [];
         setTenants(loadedTenants);
         setSuggestedBusinessNames(tenantsPayload.suggestedBusinessNames ?? []);
         setUser(mePayload.user ?? null);
+        setLoadError('');
         setStep(loadedTenants.length ? 'list' : 'packages');
-      } catch {
+      } catch (error) {
         if (!mounted) return;
         setTenants([]);
-        setStep('packages');
+        setLoadError(error instanceof Error ? error.message : 'بارگذاری اطلاعات ورود انجام نشد.');
+        setStep('list');
       }
     };
 
@@ -145,10 +158,14 @@ function SelectTenantPageContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tenantId }),
       });
-      if (!res.ok) throw new Error();
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.message || 'انتخاب کسب‌وکار انجام نشد.');
+      }
       router.push(next);
       router.refresh();
-    } catch {
+    } catch (error) {
+      setLoadError(error instanceof Error ? error.message : 'انتخاب کسب‌وکار انجام نشد.');
       setSelecting(null);
     }
   };
@@ -243,6 +260,10 @@ function SelectTenantPageContent() {
             </section>
 
             <section className="rounded-[28px] border border-slate-200 bg-white p-6 text-right shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
+              {loadError ? (
+                <div className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{loadError}</div>
+              ) : null}
+
               {step === 'list' ? (
                 <>
                   <div className="mb-6">

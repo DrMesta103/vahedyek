@@ -1,71 +1,35 @@
-import Link from 'next/link';
-import { CardMenu } from '../../components/CardMenu';
-import { deleteLocationAction } from '../../lib/actions';
 import { listLocations } from '../../lib/data';
-import { EmptyState, PageIntro, PrimaryLink } from '@repo/ui/server';
-
-function presentLocationAddress(address: string) {
-  return address.startsWith('مختصات انتخابی:') ? 'آدرس از روی نقشه انتخاب شده است.' : address;
-}
+import { ModuleAddTile } from '../../components/module-page/ModuleAddTile';
+import { ModulePageHeader } from '../../components/module-page/ModulePageHeader';
+import { businessSettingsBreadcrumbs } from '../../components/module-page/module-breadcrumbs';
+import { LocationWorkplaceCard } from './_components/LocationWorkplaceCard';
 
 export default async function LocationsPage() {
   const items = await listLocations();
 
   return (
-    <div className="page-stack">
-      <PageIntro
+    <div className="page-stack module-page" dir="rtl" lang="fa">
+      <ModulePageHeader
+        breadcrumbs={businessSettingsBreadcrumbs('محل کار')}
         title="محل‌های کار"
-        description="موقعیت‌های مجاز حضور را به‌صورت کارت‌های گریدی مدیریت کنید."
-        action={<PrimaryLink href="/locations/new">افزودن محل کار</PrimaryLink>}
+        subtitle="مدیریت محل‌های جغرافیایی مجاز برای ثبت حضور و غیاب"
+        addHref="/locations/new"
+        addLabel="افزودن محل کار"
       />
-      {items.length === 0 ? (
-        <EmptyState
-          title="هنوز محلی ثبت نشده"
-          description="از فرم افزودن محل کار برای شروع استفاده کنید."
-          action={<PrimaryLink href="/locations/new">شروع</PrimaryLink>}
-        />
-      ) : (
-        <div className="locations-grid">
-          {items.map((item) => (
-            <article key={item.id} className="location-card">
-              <div className="location-card-head">
-                <div>
-                  <span className="location-card-label">عنوان</span>
-                  <h3>{item.title}</h3>
-                  <p>
-                    <span className="location-card-inline-label">آدرس:</span> {presentLocationAddress(item.address)}
-                  </p>
-                </div>
-                <div className="location-card-controls">
-                  <span className="location-card-radius">{item.radius} متر</span>
-                  <CardMenu
-                    items={[
-                      { kind: 'link', href: `/locations/${item.id}/edit`, label: 'ویرایش' },
-                      {
-                        kind: 'submit',
-                        label: 'حذف',
-                        tone: 'danger',
-                        action: deleteLocationAction,
-                        hiddenFields: { id: item.id },
-                        confirm: {
-                          title: 'حذف محل کار',
-                          description: `آیا از حذف محل «${item.title}» مطمئن هستید؟ این عملیات قابل بازگشت نیست.`,
-                          confirmLabel: 'بله، حذف شود',
-                          cancelLabel: 'انصراف',
-                        },
-                      },
-                    ]}
-                  />
-                </div>
-              </div>
 
-              <div className="location-card-map">
-                <div className="location-card-pin">●</div>
-              </div>
-            </article>
-          ))}
-        </div>
-      )}
+      <div className="module-page-grid locations-workplace-grid">
+        {items.map((item) => (
+          <LocationWorkplaceCard
+            key={item.id}
+            id={item.id}
+            title={item.title}
+            radius={item.radius}
+            latitude={item.latitude}
+            longitude={item.longitude}
+          />
+        ))}
+        <ModuleAddTile href="/locations/new" label="برای افزودن محل کار کلیک کنید." />
+      </div>
     </div>
   );
 }
