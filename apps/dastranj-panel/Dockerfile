@@ -4,25 +4,13 @@ ENV NEXT_TELEMETRY_DISABLED=1
 
 WORKDIR /app
 
-FROM base AS deps
-
-COPY package.json package-lock.json ./
-COPY apps/vahedyek-panel/package.json apps/vahedyek-panel/package.json
-COPY apps/dastranj-panel/package.json apps/dastranj-panel/package.json
-COPY packages/auth/package.json packages/auth/package.json
-COPY packages/layout/package.json packages/layout/package.json
-COPY packages/utils/package.json packages/utils/package.json
-COPY packages/access-control/package.json packages/access-control/package.json
-COPY packages/database-core/package.json packages/database-core/package.json
-COPY packages/ui/package.json packages/ui/package.json
-
-RUN npm install
-
-FROM deps AS builder
+FROM base AS builder
 
 COPY . .
 
-RUN npm --workspace @repo/ui run build && npm --workspace @apps/dastranj-panel run build
+RUN npm ci && \
+    npm --workspace @repo/ui run build && \
+    npm --workspace @apps/dastranj-panel run build
 
 FROM base AS runner
 
