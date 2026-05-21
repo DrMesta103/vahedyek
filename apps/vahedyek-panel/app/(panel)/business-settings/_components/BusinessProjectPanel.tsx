@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, type ElementType, type ReactNode } from 'r
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
   Building2,
+  CalendarRange,
   ChevronLeft,
   ClipboardList,
   Copy,
@@ -166,6 +167,12 @@ const infoItems: {
     description: 'نمایش لیست بلوک‌های مجتمع',
     icon: Home,
     href: '/business-settings/project/blocks',
+  },
+  {
+    title: 'برنامه زمان‌بندی پیشرفت فیزیکی',
+    description: 'تعریف برنامه کلان مراحل ساخت برای هر بلوک و نسخه‌بندی آن برای قراردادهای آینده',
+    icon: CalendarRange,
+    href: '/business-settings/project/physical-progress-schedules',
   },
   {
     title: 'فایل‌ها',
