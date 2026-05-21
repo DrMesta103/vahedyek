@@ -18,6 +18,9 @@ export type PhysicalProgressScheduleStageInput = {
   plannedEndDate?: string;
   description?: string;
   order?: number;
+  isCompleted?: boolean;
+  completedAt?: string | null;
+  libraryTag?: string | null;
 };
 
 export type PhysicalProgressScheduleInput = {
@@ -34,6 +37,9 @@ export type PhysicalProgressScheduleStage = {
   plannedEndDate: string;
   description: string;
   order: number;
+  isCompleted: boolean;
+  completedAt: string | null;
+  libraryTag: string | null;
 };
 
 export type PhysicalProgressScheduleVersion = {
@@ -111,6 +117,9 @@ function normalizeStage(raw: PhysicalProgressScheduleStageInput, index: number):
   const plannedStartDate = normalizeDate(raw.plannedStartDate);
   const plannedEndDate = normalizeDate(raw.plannedEndDate);
   const description = normalizeText(raw.description, 500);
+  const libraryTag = normalizeText(raw.libraryTag, 80) || null;
+  const isCompleted = raw.isCompleted === true;
+  const completedAt = isCompleted ? normalizeText(raw.completedAt, 40) || new Date().toISOString() : null;
 
   return {
     id: crypto.randomUUID(),
@@ -120,6 +129,9 @@ function normalizeStage(raw: PhysicalProgressScheduleStageInput, index: number):
     plannedEndDate,
     description,
     order: Number.isFinite(raw.order as number) ? Number(raw.order) : index,
+    isCompleted,
+    completedAt,
+    libraryTag,
   };
 }
 

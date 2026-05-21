@@ -22,6 +22,25 @@ type UpdatePayload = {
   }>;
 };
 
+export async function GET(_: Request, context: { params: Promise<{ scheduleKey: string }> }) {
+  try {
+    const session = await requireSessionContext();
+    if (session instanceof NextResponse) return session;
+
+    const { scheduleKey } = await context.params;
+    const versions = await getTenantPhysicalProgressScheduleVersions(session.tenantId);
+    const schedule = buildScheduleSummaries(versions).find((item) => item.scheduleKey === scheduleKey);
+
+    if (!schedule) {
+      return NextResponse.json({ message: 'برنامه زمان‌بندی پیدا نشد.' }, { status: 404 });
+    }
+
+    return NextResponse.json({ schedule });
+  } catch (error) {
+    return handlePrismaApiError(error);
+  }
+}
+
 export async function PUT(request: Request, context: { params: Promise<{ scheduleKey: string }> }) {
   try {
     const session = await requireSessionContext();

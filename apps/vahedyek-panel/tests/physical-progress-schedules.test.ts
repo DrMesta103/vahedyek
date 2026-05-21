@@ -14,6 +14,21 @@ test('buildNormalizedStages rejects totals other than 100 and invalid date order
 });
 
 test('buildScheduleSummaries returns latest non-archived version per schedule lineage', () => {
+  const stages = [
+    {
+      id: 's1',
+      title: 'اسکلت',
+      weight: 100,
+      plannedStartDate: '1404/01/01',
+      plannedEndDate: '1404/03/01',
+      description: '',
+      order: 0,
+      isCompleted: false,
+      completedAt: null,
+      libraryTag: 'اسکلت',
+    },
+  ];
+
   const versions: PhysicalProgressScheduleVersion[] = [
     {
       id: 'v1',
@@ -26,7 +41,7 @@ test('buildScheduleSummaries returns latest non-archived version per schedule li
       updatedAt: '2026-05-21T08:00:00.000Z',
       createdByUserId: 'u1',
       createdByName: 'مدیر پروژه',
-      stages: [{ id: 's1', title: 'اسکلت', weight: 100, plannedStartDate: '1404/01/01', plannedEndDate: '1404/03/01', description: '', order: 0 }],
+      stages,
       sourceVersionId: null,
       archivedAt: null,
       archivedByUserId: null,
@@ -43,7 +58,7 @@ test('buildScheduleSummaries returns latest non-archived version per schedule li
       updatedAt: '2026-05-21T09:00:00.000Z',
       createdByUserId: 'u2',
       createdByName: 'مدیر پروژه',
-      stages: [{ id: 's2', title: 'اسکلت', weight: 60, plannedStartDate: '1404/01/01', plannedEndDate: '1404/02/01', description: '', order: 0 }],
+      stages: [{ ...stages[0], id: 's2', weight: 60, plannedEndDate: '1404/02/01' }],
       sourceVersionId: 'v1',
       archivedAt: null,
       archivedByUserId: null,
@@ -60,7 +75,7 @@ test('buildScheduleSummaries returns latest non-archived version per schedule li
       updatedAt: '2026-05-21T07:00:00.000Z',
       createdByUserId: 'u1',
       createdByName: 'مدیر پروژه',
-      stages: [{ id: 's3', title: 'اسکلت', weight: 100, plannedStartDate: '1404/01/01', plannedEndDate: '1404/02/01', description: '', order: 0 }],
+      stages: [{ ...stages[0], id: 's3', plannedEndDate: '1404/02/01' }],
       sourceVersionId: null,
       archivedAt: '2026-05-21T10:00:00.000Z',
       archivedByUserId: 'u1',
