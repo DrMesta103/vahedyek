@@ -214,7 +214,7 @@ export function DevDocThreadsBoard({
                           setDraggingThreadId(null);
                           setActiveDropZone(null);
                         }}
-                        className={`rounded-[24px] border border-[color:var(--border-color)] bg-white p-4 transition ${
+                        className={`rounded-[24px] border border-[color:var(--border-color)] bg-[color:var(--surface-soft)] p-4 transition ${
                           draggingThreadId === thread.id ? 'opacity-60' : ''
                         }`}
                       >
@@ -224,7 +224,7 @@ export function DevDocThreadsBoard({
                               className={`mt-1 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border ${
                                 thread.isOpened
                                   ? 'border-emerald-200 bg-emerald-50 text-emerald-600'
-                                  : 'border-[color:var(--border-color)] bg-white text-[color:var(--text-muted)]'
+                                  : 'border-[color:var(--border-color)] bg-[color:var(--surface)] text-[color:var(--text-muted)]'
                               }`}
                               title={thread.isOpened ? 'باز شده' : 'بسته شده'}
                               aria-label={thread.isOpened ? 'باز شده' : 'بسته شده'}

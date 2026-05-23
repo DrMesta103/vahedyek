@@ -1159,14 +1159,14 @@ function DevDocThreadsBoard({
                   setDraggingThreadId(null);
                   setActiveDropZone(null);
                 },
-                className: `rounded-[24px] border border-[color:var(--border-color)] bg-white p-4 transition ${draggingThreadId === thread.id ? "opacity-60" : ""}`,
+                className: `rounded-[24px] border border-[color:var(--border-color)] bg-[color:var(--surface-soft)] p-4 transition ${draggingThreadId === thread.id ? "opacity-60" : ""}`,
                 children: [
                   /* @__PURE__ */ jsxs("div", { className: "flex items-start justify-between gap-3", children: [
                     /* @__PURE__ */ jsxs("div", { className: "flex min-w-0 gap-3", children: [
                       /* @__PURE__ */ jsx(
                         "span",
                         {
-                          className: `mt-1 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border ${thread.isOpened ? "border-emerald-200 bg-emerald-50 text-emerald-600" : "border-[color:var(--border-color)] bg-white text-[color:var(--text-muted)]"}`,
+                          className: `mt-1 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border ${thread.isOpened ? "border-emerald-200 bg-emerald-50 text-emerald-600" : "border-[color:var(--border-color)] bg-[color:var(--surface)] text-[color:var(--text-muted)]"}`,
                           title: thread.isOpened ? "\u0628\u0627\u0632 \u0634\u062F\u0647" : "\u0628\u0633\u062A\u0647 \u0634\u062F\u0647",
                           "aria-label": thread.isOpened ? "\u0628\u0627\u0632 \u0634\u062F\u0647" : "\u0628\u0633\u062A\u0647 \u0634\u062F\u0647",
                           children: thread.isOpened ? /* @__PURE__ */ jsx(CircleCheck, { className: "h-4 w-4" }) : /* @__PURE__ */ jsx(Circle, { className: "h-4 w-4" })

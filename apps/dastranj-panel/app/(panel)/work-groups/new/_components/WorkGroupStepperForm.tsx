@@ -126,35 +126,35 @@ function ConfirmEmployeeDialog({
   return (
     <div className="work-group-modal-backdrop">
       <div className="work-group-modal" dir="rtl">
-        <h3>Ø§ÙØ²ÙˆØ¯Ù† {employee.name}</h3>
+        <h3>افزودن {employee.name}</h3>
         {employee.currentGroupName ? (
           <div className="work-group-modal-warning">
             <AlertTriangle />
             <span>
-              Ø§ÛŒÙ† Ú©Ø§Ø±Ù…Ù†Ø¯ Ø¯Ø± Ø­Ø§Ù„ Ø­Ø§Ø¶Ø± Ø¹Ø¶Ùˆ Â«{employee.currentGroupName}Â» Ø§Ø³Øª. Ø¨Ø§ Ø§ÙØ²ÙˆØ¯Ù† Ø¯Ø± Ø²Ù…Ø§Ù† Ø§Ù†ØªØ®Ø§Ø¨â€ŒØ´Ø¯Ù‡ØŒ Ø§Ø² Ú¯Ø±ÙˆÙ‡ Ù‚Ø¨Ù„ÛŒ Ø®Ø§Ø±Ø¬ Ù…ÛŒâ€ŒØ´ÙˆØ¯ Ùˆ
-              Ø³ÛŒØ§Ø³Øª Ú©Ø§Ø±ÛŒ Ø§ÛŒÙ† Ú¯Ø±ÙˆÙ‡ Ø¨Ø±Ø§ÛŒ Ø§Ùˆ Ø§Ø¹Ù…Ø§Ù„ Ù…ÛŒâ€ŒØ´ÙˆØ¯.
+              این کارمند در حال حاضر عضو «{employee.currentGroupName}» است. با افزودن در زمان انتخاب‌شده، از گروه قبلی خارج می‌شود و
+              سیاست کاری این گروه برای او اعمال می‌شود.
             </span>
           </div>
         ) : null}
         <input type="date" value={date} onChange={(event) => setDate(event.target.value)} />
         <div className="work-group-modal-presets">
           <button type="button" className="is-active" onClick={() => setDate(today)}>
-            Ø§Ù…Ø±ÙˆØ²
+            امروز
             <Check />
           </button>
           <button type="button" onClick={() => setDate(`${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-01`)}>
-            Ø´Ø±ÙˆØ¹ Ù…Ø§Ù‡
+            شروع ماه
           </button>
           <button type="button" onClick={() => setDate(`${new Date().getFullYear()}-01-01`)}>
-            Ø´Ø±ÙˆØ¹ Ø³Ø§Ù„
+            شروع سال
           </button>
         </div>
         <div className="work-group-modal-actions">
           <button type="button" className="work-group-modal-submit" onClick={() => onConfirm(date)}>
-            ØªØ§ÛŒÛŒØ¯ Ùˆ Ø§ÙØ²ÙˆØ¯Ù†
+            تایید و افزودن
           </button>
           <button type="button" className="work-group-modal-cancel" onClick={onCancel}>
-            Ø§Ù†ØµØ±Ø§Ù
+            انصراف
           </button>
         </div>
       </div>
@@ -274,28 +274,28 @@ export function WorkGroupStepperForm({
             </span>
           </div>
           <label className="work-group-field">
-            <span>Ø¹Ù†ÙˆØ§Ù† <b>*</b></span>
-            <input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Ú¯Ø±ÙˆÙ‡ Ø§Ø¯Ø§Ø±ÛŒ" />
-            <small>Ø¹Ù†ÙˆØ§Ù† Ú¯Ø±ÙˆÙ‡ Ú©Ø§Ø±ÛŒ Ø±Ø§ ÙˆØ§Ø±Ø¯ Ú©Ù†ÛŒØ¯</small>
+            <span>عنوان <b>*</b></span>
+            <input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="گروه اداری" />
+            <small>عنوان گروه کاری را وارد کنید</small>
           </label>
           <label className="work-group-field">
-            <span>ØªÙˆØ¶ÛŒØ­Ø§Øª</span>
+            <span>توضیحات</span>
             <textarea value={description} onChange={(event) => setDescription(event.target.value)} rows={4} />
-            <small>ØªÙˆØ¶ÛŒØ­Ø§Øª Ú©ÙˆØªØ§Ù‡ Ø¨Ø±Ø§ÛŒ Ú¯Ø±ÙˆÙ‡ Ú©Ø§Ø±ÛŒ</small>
+            <small>توضیحات کوتاه برای گروه کاری</small>
           </label>
           <label className="work-group-field">
-            <span>ØªÚ¯ Ù‡Ø§</span>
+            <span>تگ‌ها</span>
             <div className="work-group-tag-row" dir="rtl">
               <input
                 dir="rtl"
                 value={tagInput}
                 onChange={(event) => setTagInput(event.target.value)}
                 onKeyDown={(event) => event.key === 'Enter' && (event.preventDefault(), addTag())}
-                placeholder="Ø§ÙØ²ÙˆØ¯Ù† ØªÚ¯ Ø¬Ø¯ÛŒØ¯"
+                placeholder="افزودن تگ جدید"
               />
               <button type="button" onClick={addTag}>
                 <Plus />
-                Ø§ÙØ²ÙˆØ¯Ù†
+                افزودن
               </button>
             </div>
           </label>
@@ -316,7 +316,7 @@ export function WorkGroupStepperForm({
               setStep(2);
             }}
           >
-            ØªØ§ÛŒÛŒØ¯ Ùˆ Ø§Ø¯Ø§Ù…Ù‡
+            تایید و ادامه
             <Check />
           </button>
         </section>
@@ -324,13 +324,13 @@ export function WorkGroupStepperForm({
 
       {step === 2 ? (
         <section className="work-group-step-panel">
-          <h2>Ù…Ø­Ù„ Ù‡Ø§ÛŒ Ú©Ø§Ø± Ú¯Ø±ÙˆÙ‡</h2>
+          <h2>محل‌های کار گروه</h2>
           <div className="work-group-location-grid">
             {locations.map((location) => (
               <button key={location.id} type="button" className={cn('work-group-location-card', locationId === location.id && 'is-selected')} onClick={() => setLocationId(location.id)}>
-                <strong>Ø¹Ù†ÙˆØ§Ù†: {location.title}</strong>
-                <span>ØªÙˆØ¶ÛŒØ­Ø§Øª: {location.description || 'Ø«Ø¨Øª Ù†Ø´Ø¯Ù‡ Ø§Ø³Øª'}</span>
-                <span>Ø´Ø¹Ø§Ø¹ Ù…Ø¬Ø§Ø²: {location.radius}</span>
+                <strong>عنوان: {location.title}</strong>
+                <span>توضیحات: {location.description || 'ثبت نشده است'}</span>
+                <span>شعاع مجاز: {location.radius}</span>
                 <MapPin />
               </button>
             ))}
@@ -344,7 +344,7 @@ export function WorkGroupStepperForm({
               setStep(3);
             }}
           >
-            ØªØ§ÛŒÛŒØ¯ Ùˆ Ø§Ø¯Ø§Ù…Ù‡
+            تایید و ادامه
             <Check />
           </button>
         </section>
@@ -354,13 +354,13 @@ export function WorkGroupStepperForm({
         <section className="work-group-step-panel">
           <div className="work-group-dual-board">
             <div className="work-group-board">
-              <h2>Ú¯Ø±ÙˆÙ‡ Ù‡Ø§ÛŒ Ú©Ø§Ø±ÛŒ</h2>
+              <h2>گروه‌های کاری</h2>
               <div className="work-group-board-tabs">
-                <span>Ú¯Ø±ÙˆÙ‡ Ø§Ø¯Ø§Ø±ÛŒ ({selectedEmployees.length.toLocaleString('fa-IR')})</span>
-                <span>Ú©Ø§Ø±Ù…Ù†Ø¯Ø§Ù† ({availableEmployees.length.toLocaleString('fa-IR')})</span>
+                <span>گروه اداری ({selectedEmployees.length.toLocaleString('fa-IR')})</span>
+                <span>کارمندان ({availableEmployees.length.toLocaleString('fa-IR')})</span>
               </div>
-              <h3>Ú©Ø§Ø±Ù…Ù†Ø¯Ø§Ù†</h3>
-              <SearchBox value={employeeSearch} onChange={setEmployeeSearch} placeholder="Ø¬Ø³ØªØ¬Ùˆ Ø¯Ø± Ú©Ø§Ø±Ù…Ù†Ø¯Ø§Ù†" />
+              <h3>کارمندان</h3>
+              <SearchBox value={employeeSearch} onChange={setEmployeeSearch} placeholder="جستجو در کارمندان" />
               <div
                 className="work-group-person-list"
                 onDragOver={(event) => event.preventDefault()}
@@ -381,7 +381,7 @@ export function WorkGroupStepperForm({
                     <Plus />
                     <div>
                       <strong>{employee.name}</strong>
-                      <span>{employee.currentGroupName ? `Ø¹Ø¶Ùˆ ${employee.currentGroupName}` : 'Ø¨Ø¯ÙˆÙ† Ú¯Ø±ÙˆÙ‡ Ú©Ø§Ø±ÛŒ'}</span>
+                      <span>{employee.currentGroupName ? `عضو ${employee.currentGroupName}` : 'بدون گروه کاری'}</span>
                     </div>
                     <UserRound />
                   </button>
@@ -397,8 +397,8 @@ export function WorkGroupStepperForm({
                 if (employee) requestEmployee(employee);
               }}
             >
-              <h2>Ú©Ø§Ø±Ù…Ù†Ø¯Ø§Ù† Ø§Ù†ØªØ®Ø§Ø¨ Ø´Ø¯Ù‡</h2>
-              <SearchBox value={selectedEmployeeSearch} onChange={setSelectedEmployeeSearch} placeholder="Ø¬Ø³ØªØ¬Ùˆ Ø¯Ø± Ú©Ø§Ø±Ù…Ù†Ø¯Ø§Ù†" />
+              <h2>کارمندان انتخاب‌شده</h2>
+              <SearchBox value={selectedEmployeeSearch} onChange={setSelectedEmployeeSearch} placeholder="جستجو در کارمندان" />
               {visibleSelectedEmployees.length ? (
                 visibleSelectedEmployees.map((employee) => (
                   <div key={employee.id} className="work-group-selected-person-card">
@@ -406,18 +406,18 @@ export function WorkGroupStepperForm({
                       <Trash2 />
                     </button>
                     <select value={employee.accessLevel} onChange={(event) => setSelectedEmployees((current) => current.map((item) => item.id === employee.id ? { ...item, accessLevel: event.target.value as SelectedEmployee['accessLevel'] } : item))}>
-                      <option value="employee">Ú©Ø§Ø±Ù…Ù†Ø¯</option>
-                      <option value="lead">Ø³Ø±Ú¯Ø±ÙˆÙ‡</option>
-                      <option value="manager">Ù…Ø¯ÛŒØ±</option>
+                      <option value="employee">کارمند</option>
+                      <option value="lead">سرگروه</option>
+                      <option value="manager">مدیر</option>
                     </select>
                     <div>
                       <strong>{employee.name}</strong>
-                      <span>ØªØ§Ø±ÛŒØ® Ø¹Ø¶ÙˆÛŒØª: {employee.joinedAt}</span>
+                      <span>تاریخ عضویت: {employee.joinedAt}</span>
                     </div>
                   </div>
                 ))
               ) : (
-                <div className="work-group-board-empty">Ú©Ø§Ø±Ù…Ù†Ø¯ÛŒ Ø¨Ø±Ø§ÛŒ Ø§ÛŒÙ† Ú¯Ø±ÙˆÙ‡ Ú©Ø§Ø±ÛŒ Ø§Ù†ØªØ®Ø§Ø¨ Ù†Ú©Ø±Ø¯Ù‡ Ø§ÛŒØ¯.</div>
+                <div className="work-group-board-empty">کارمندی برای این گروه کاری انتخاب نکرده‌اید.</div>
               )}
             </div>
           </div>
@@ -430,7 +430,7 @@ export function WorkGroupStepperForm({
               setStep(4);
             }}
           >
-            ØªØ§ÛŒÛŒØ¯ Ùˆ Ø§Ø¯Ø§Ù…Ù‡
+            تایید و ادامه
             <Check />
           </button>
         </section>
@@ -440,12 +440,12 @@ export function WorkGroupStepperForm({
         <section className="work-group-step-panel">
           <div className="work-group-dual-board">
             <div className="work-group-board">
-              <h2>Ù‡Ù…Ù‡ Ø³ÛŒØ§Ø³Øª Ù‡Ø§ÛŒ Ú©Ø§Ø±ÛŒ</h2>
-              <SearchBox value={policySearch} onChange={setPolicySearch} placeholder="Ø¬Ø³ØªØ¬Ùˆ Ø¯Ø± Ø³ÛŒØ§Ø³Øª Ù‡Ø§ÛŒ Ú©Ø§Ø±ÛŒ" />
+              <h2>همه سیاست‌های کاری</h2>
+              <SearchBox value={policySearch} onChange={setPolicySearch} placeholder="جستجو در سیاست‌های کاری" />
               <div className="work-group-policy-filters">
-                <span>Ø³Ø§Ù„ Ù‚Ø¨Ù„</span>
-                <span>Ø§Ù…Ø³Ø§Ù„</span>
-                <span>Ø³Ø§Ù„ Ø¨Ø¹Ø¯</span>
+                <span>سال قبل</span>
+                <span>امسال</span>
+                <span>سال بعد</span>
               </div>
               <div className="work-group-person-list">
                 {visiblePolicies.map((policy) => (
@@ -460,8 +460,8 @@ export function WorkGroupStepperForm({
                     <Plus />
                     <div>
                       <strong>{policy.title}</strong>
-                      <span>Ø³Ø§Ù„ Ú©Ø§Ø±ÛŒ: {policy.calendarYearLabel || 'Ù†Ø§Ù…Ø´Ø®Øµ'}</span>
-                      <span>ØªÙˆØ¶ÛŒØ­Ø§Øª: {policy.description || 'Ø«Ø¨Øª Ù†Ø´Ø¯Ù‡ Ø§Ø³Øª'}</span>
+                      <span>سال کاری: {policy.calendarYearLabel || 'نامشخص'}</span>
+                      <span>توضیحات: {policy.description || 'ثبت نشده است'}</span>
                     </div>
                   </button>
                 ))}
@@ -472,8 +472,8 @@ export function WorkGroupStepperForm({
               onDragOver={(event) => event.preventDefault()}
               onDrop={(event) => setSelectedPolicyId(event.dataTransfer.getData('text/plain'))}
             >
-              <h2>Ø³ÛŒØ§Ø³Øª Ù‡Ø§ÛŒ Ø§Ù†ØªØ®Ø§Ø¨ Ø´Ø¯Ù‡</h2>
-              <SearchBox value="" onChange={() => undefined} placeholder="Ø¬Ø³ØªØ¬Ùˆ Ø¯Ø± Ø³ÛŒØ§Ø³Øª Ù‡Ø§ÛŒ Ú©Ø§Ø±ÛŒ" />
+              <h2>سیاست‌های انتخاب‌شده</h2>
+              <SearchBox value="" onChange={() => undefined} placeholder="جستجو در سیاست‌های کاری" />
               {selectedPolicy ? (
                 <div className="work-group-policy-card is-selected">
                   <button type="button" onClick={() => setSelectedPolicyId('')}>
@@ -481,12 +481,12 @@ export function WorkGroupStepperForm({
                   </button>
                   <div>
                     <strong>{selectedPolicy.title}</strong>
-                    <span>Ø³Ø§Ù„ Ú©Ø§Ø±ÛŒ: {selectedPolicy.calendarYearLabel || 'Ù†Ø§Ù…Ø´Ø®Øµ'}</span>
-                    <span>ØªÙˆØ¶ÛŒØ­Ø§Øª: {selectedPolicy.description || 'Ø«Ø¨Øª Ù†Ø´Ø¯Ù‡ Ø§Ø³Øª'}</span>
+                    <span>سال کاری: {selectedPolicy.calendarYearLabel || 'نامشخص'}</span>
+                    <span>توضیحات: {selectedPolicy.description || 'ثبت نشده است'}</span>
                   </div>
                 </div>
               ) : (
-                <div className="work-group-board-empty">Ù‡Ù†ÙˆØ² Ø³ÛŒØ§Ø³ØªÛŒ Ø§Ù†ØªØ®Ø§Ø¨ Ù†Ø´Ø¯Ù‡ Ø§Ø³Øª.</div>
+                <div className="work-group-board-empty">هنوز سیاستی انتخاب نشده است.</div>
               )}
             </div>
           </div>
@@ -498,7 +498,7 @@ export function WorkGroupStepperForm({
               markStepCompleted(4);
             }}
           >
-            Ø«Ø¨Øª Ù†Ù‡Ø§ÛŒÛŒ
+            ثبت نهایی
             <Grid3X3 />
           </button>
         </section>

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
-import { Camera, CheckCircle2, Download, FileText, Info, Loader2, Maximize2, Mic, Minimize2, Pause, Plus, Reply, Send, Smile, Tag, Upload, X } from 'lucide-react';
+import { Camera, CheckCircle2, Download, FileText, Loader2, Maximize2, Mic, Minimize2, Pause, Plus, Reply, Send, Smile, Tag, Upload, X } from 'lucide-react';
 import { Input } from '@repo/ui';
 import { currentAppConfig } from '../config/current';
 import { useAuthContext } from '../hooks/useAuthContext';
@@ -200,7 +200,9 @@ export default function PageDocsWidget() {
       if (raw) {
         const parsed = JSON.parse(raw) as { x?: unknown; y?: unknown };
         if (typeof parsed?.x === 'number' && typeof parsed?.y === 'number') {
-          setWidgetPos({ x: parsed.x, y: parsed.y });
+          const x = clamp(parsed.x, 12, window.innerWidth - 60);
+          const y = clamp(parsed.y, 12, window.innerHeight - 60);
+          setWidgetPos({ x, y });
           return;
         }
       }
@@ -898,17 +900,19 @@ export default function PageDocsWidget() {
         />
       ) : null}
 
-      <div className="pointer-events-none fixed inset-0 z-50">
+      <div className="pointer-events-none fixed inset-0 z-[9998]">
       <button
         type="button"
         onClick={() => void openDrawer()}
-        className="pointer-events-auto flex h-9 w-9 items-center justify-center rounded-full border border-white/60 bg-[color:var(--theme-accent)] text-white shadow-[0_22px_55px_rgba(0,0,0,0.22)] transition"
+        className="pointer-events-auto flex h-12 w-12 items-center justify-center rounded-full border border-white/70 bg-[color:var(--theme-accent)] text-white shadow-[0_22px_55px_rgba(0,0,0,0.35)] transition hover:scale-105"
         aria-label="گفتگوی مستندات توسعه این صفحه"
         title="گفتگوی مستندات توسعه این صفحه"
         style={{
           position: 'fixed',
           left: widgetPos ? widgetPos.x : 16,
           top: widgetPos ? widgetPos.y : defaultWidgetTop,
+          zIndex: 9998,
+          backgroundColor: 'var(--theme-accent, #14b8a6)',
           touchAction: 'none',
           ...(buzz ? { animation: 'devDocsBuzz 600ms ease-in-out' as const } : {}),
         }}
@@ -921,8 +925,8 @@ export default function PageDocsWidget() {
         }}
         onPointerMove={(event) => {
           if (!draggingRef.current || !dragOffsetRef.current) return;
-          const x = clamp(event.clientX - dragOffsetRef.current.dx, 8, window.innerWidth - 52);
-          const y = clamp(event.clientY - dragOffsetRef.current.dy, 8, window.innerHeight - 52);
+          const x = clamp(event.clientX - dragOffsetRef.current.dx, 12, window.innerWidth - 60);
+          const y = clamp(event.clientY - dragOffsetRef.current.dy, 12, window.innerHeight - 60);
           setWidgetPos({ x, y });
         }}
         onPointerUp={() => {
@@ -938,7 +942,7 @@ export default function PageDocsWidget() {
           }
         }}
       >
-        {open ? <X className="h-5 w-5" /> : <Info className="h-5 w-5" />}
+        {open ? <X className="h-5 w-5" /> : <FileText className="h-5 w-5" />}
       </button>
 
       {open ? (

@@ -1,5 +1,8 @@
 ﻿@import "tailwindcss";
 
+@source "../app/**/*.{js,ts,jsx,tsx,mdx}";
+@source "../../../packages/ui/src/**/*.{js,ts,jsx,tsx}";
+
 @font-face {
   font-family: 'IRANSans';
   src: url('/fonts/iran.woff2') format('woff2'),
@@ -3753,7 +3756,10 @@ body {
 /* Sidebar parity with vahedyek-panel */
 :root {
   --dark-teal: #008080;
+  --theme-accent: #14b8a6;
+  --theme-accent-strong: #0f766e;
   --surface: #ffffff;
+  --surface-soft: #f8fafc;
   --surface-overlay: rgba(255, 255, 255, 0.92);
   --surface-muted: #f1f5f9;
   --border-color: #e5e7eb;
@@ -3770,7 +3776,10 @@ body {
 
 [data-theme="dark"] {
   --dark-teal: #5eead4;
+  --theme-accent: #14b8a6;
+  --theme-accent-strong: #5eead4;
   --surface: #111827;
+  --surface-soft: #16212d;
   --surface-overlay: rgba(15, 23, 42, 0.9);
   --surface-muted: #1f2937;
   --border-color: #263444;
