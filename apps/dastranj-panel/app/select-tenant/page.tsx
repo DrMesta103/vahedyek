@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -53,10 +53,10 @@ const PACKAGE_OPTIONS = [
 function ProvisioningScreen() {
   return (
     <div className="w-full max-w-2xl rounded-[32px] border border-white/70 bg-white/90 p-10 text-center shadow-[0_30px_90px_rgba(15,23,42,0.12)] backdrop-blur">
-      <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100 text-3xl text-emerald-700">
+      <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100 text-xl text-emerald-700">
         <i className="fa fa-building" />
       </div>
-      <h1 className="text-3xl font-black text-slate-900">کسب‌وکار شما در حال ساخته شدن می‌باشد</h1>
+      <h1 className="text-xl font-black text-slate-900">کسب‌وکار شما در حال ساخته شدن می‌باشد</h1>
       <p className="mt-3 text-sm leading-7 text-slate-500">
         داریم فضای tenant را آماده می‌کنیم، مالک را روی همان حساب فعلی ثبت می‌کنیم و شما را مستقیم وارد داشبورد می‌کنیم.
       </p>
@@ -195,7 +195,7 @@ function SelectTenantPageContent() {
   const frameClassName =
     step === 'provisioning'
       ? 'w-full max-w-2xl'
-      : 'w-full max-w-6xl rounded-[32px] border border-white/70 bg-white/90 p-6 shadow-[0_30px_90px_rgba(15,23,42,0.12)] backdrop-blur md:p-8';
+      : 'w-full max-w-6xl rounded-[32px] border border-white/70 bg-white/90 p-4 shadow-[0_30px_90px_rgba(15,23,42,0.12)] backdrop-blur md:p-8';
 
   return (
     <div className="relative z-[80] isolate flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top,#d8fff4,transparent_35%),linear-gradient(135deg,#f7fbfa,#eef6f4)] px-4 py-8">
@@ -207,12 +207,12 @@ function SelectTenantPageContent() {
         {step === 'provisioning' ? <ProvisioningScreen /> : null}
 
         {step !== 'loading' && step !== 'provisioning' ? (
-          <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+          <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
             <section className="rounded-[28px] bg-[linear-gradient(160deg,#0f172a,#134e4a_55%,#0f766e)] p-7 text-white">
               <div className="inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold">
                 ساخت کسب‌وکار چند tenant
               </div>
-              <h1 className="mt-4 text-3xl font-black leading-tight">
+              <h1 className="mt-4 text-xl font-black leading-tight">
                 {step === 'list' ? 'کسب‌وکار فعلی را انتخاب کنید یا یک tenant جدید بسازید.' : 'پکیج را انتخاب کنید و در چند قدم کوتاه tenant جدید را بسازید.'}
               </h1>
               <p className="mt-4 text-sm leading-7 text-emerald-50/85">
@@ -220,13 +220,13 @@ function SelectTenantPageContent() {
               </p>
 
               <div className="mt-8 space-y-3">
-                <div className={`rounded-2xl border px-4 py-3 text-sm ${step === 'packages' ? 'border-white/35 bg-white/14' : 'border-white/10 bg-white/5'}`}>
+                <div className={`rounded-xl border px-4 py-3 text-sm ${step === 'packages' ? 'border-white/35 bg-white/14' : 'border-white/10 bg-white/5'}`}>
                   ۱. انتخاب پکیج و دوره
                 </div>
-                <div className={`rounded-2xl border px-4 py-3 text-sm ${step === 'profile' ? 'border-white/35 bg-white/14' : 'border-white/10 bg-white/5'}`}>
+                <div className={`rounded-xl border px-4 py-3 text-sm ${step === 'profile' ? 'border-white/35 bg-white/14' : 'border-white/10 bg-white/5'}`}>
                   ۲. تایید مالک و نام کسب‌وکار
                 </div>
-                <div className={`rounded-2xl border px-4 py-3 text-sm ${step === 'payment' ? 'border-white/35 bg-white/14' : 'border-white/10 bg-white/5'}`}>
+                <div className={`rounded-xl border px-4 py-3 text-sm ${step === 'payment' ? 'border-white/35 bg-white/14' : 'border-white/10 bg-white/5'}`}>
                   ۳. پرداخت ماک و ورود به داشبورد
                 </div>
               </div>
@@ -234,7 +234,7 @@ function SelectTenantPageContent() {
               {selectedPackage ? (
                 <div className="mt-8 rounded-[24px] border border-white/15 bg-black/15 p-5">
                   <div className="text-sm text-emerald-100">پکیج انتخاب‌شده</div>
-                  <div className="mt-2 text-2xl font-bold">{selectedPackage.title}</div>
+                  <div className="mt-2 text-xl font-bold">{selectedPackage.title}</div>
                   <div className="mt-1 text-sm text-emerald-100/80">
                     {billingCycle === 'monthly' ? selectedPackage.monthlyPrice : selectedPackage.yearlyPrice}
                   </div>
@@ -242,11 +242,11 @@ function SelectTenantPageContent() {
               ) : null}
             </section>
 
-            <section className="rounded-[28px] border border-slate-200 bg-white p-6 text-right shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
+            <section className="rounded-[28px] border border-slate-200 bg-white p-4 text-right shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
               {step === 'list' ? (
                 <>
                   <div className="mb-6">
-                    <h2 className="text-2xl font-bold text-slate-900">انتخاب کسب‌وکار</h2>
+                    <h2 className="text-xl font-bold text-slate-900">انتخاب کسب‌وکار</h2>
                     <p className="mt-1 text-sm text-slate-500">می‌توانید وارد tenant فعلی شوید یا ساخت tenant جدید را شروع کنید.</p>
                   </div>
 
@@ -258,7 +258,7 @@ function SelectTenantPageContent() {
                         disabled={selecting === tenant.id}
                         className="flex w-full items-center gap-4 rounded-[16px] border border-slate-200 bg-slate-50 px-4 py-3 text-right transition hover:border-emerald-400 hover:bg-emerald-50 disabled:opacity-60"
                       >
-                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-800 text-xs font-bold text-white">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-800 text-xs font-bold text-white">
                           {tenant.brandCode}
                         </div>
                         <div className="flex-1">
@@ -287,7 +287,7 @@ function SelectTenantPageContent() {
                 <>
                   <div className="mb-6 flex items-start justify-between gap-4">
                     <div>
-                      <h2 className="text-2xl font-bold text-slate-900">انتخاب پکیج</h2>
+                      <h2 className="text-xl font-bold text-slate-900">انتخاب پکیج</h2>
                       <p className="mt-1 text-sm text-slate-500">قبل از ساخت tenant، دوره ماهیانه یا سالیانه و یکی از ۳ پکیج استاتیک را انتخاب کنید.</p>
                     </div>
                     {tenants.length ? (
@@ -351,7 +351,7 @@ function SelectTenantPageContent() {
                 <>
                   <div className="mb-6 flex items-start justify-between gap-4">
                     <div>
-                      <h2 className="text-2xl font-bold text-slate-900">اطلاعات مالک و کسب‌وکار</h2>
+                      <h2 className="text-xl font-bold text-slate-900">اطلاعات مالک و کسب‌وکار</h2>
                       <p className="mt-1 text-sm text-slate-500">نام و موبایل از جدول کاربر خوانده می‌شود و در این مرحله قابل ویرایش نیست.</p>
                     </div>
                     <button onClick={() => setStep('packages')} className="text-sm font-semibold text-slate-500 hover:text-slate-700">
@@ -370,7 +370,7 @@ function SelectTenantPageContent() {
                           value={user?.mobile ?? ''}
                           disabled
                           dir="ltr"
-                          className="h-12 w-full border-0 bg-transparent px-0 text-left text-[13px] text-slate-700 outline-none"
+                          className="h-9 w-full border-0 bg-transparent px-0 text-left text-[13px] text-slate-700 outline-none"
                         />
                       </div>
                     </label>
@@ -409,7 +409,7 @@ function SelectTenantPageContent() {
                   </div>
 
                   {createError ? (
-                    <div className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{createError}</div>
+                    <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{createError}</div>
                   ) : null}
 
                   <button
@@ -432,7 +432,7 @@ function SelectTenantPageContent() {
                 <>
                   <div className="mb-6 flex items-start justify-between gap-4">
                     <div>
-                      <h2 className="text-2xl font-bold text-slate-900">درگاه پرداخت ظاهری</h2>
+                      <h2 className="text-xl font-bold text-slate-900">درگاه پرداخت ظاهری</h2>
                       <p className="mt-1 text-sm text-slate-500">این بخش ماک است. بعد از تکمیل، صفحه لودینگ نمایش داده می‌شود و سپس وارد داشبورد tenant می‌شوید.</p>
                     </div>
                     <button onClick={() => setStep('profile')} className="text-sm font-semibold text-slate-500 hover:text-slate-700">
@@ -503,7 +503,7 @@ function SelectTenantPageContent() {
                     </div>
 
                     {createError ? (
-                      <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{createError}</div>
+                      <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{createError}</div>
                     ) : null}
 
                     <button type="submit" disabled={creating} className="w-full rounded-[16px] bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed">

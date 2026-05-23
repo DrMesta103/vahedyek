@@ -21,6 +21,8 @@ export const APP_MENU_ITEMS: NavigationItem[] = [
   { id: 'draft-templates', href: '/draft-templates', label: 'پیش‌نویس‌ها', icon: 'fa-copy' },
   { id: 'request-reasons', href: '/request-reasons', label: 'دلایل درخواست', icon: 'fa-file-alt' },
   { id: 'account', href: '/account', label: 'حساب کسب و کار', icon: 'fa-user-circle' },
+  { id: 'dev-doc-threads', href: '/dev-doc-threads', label: 'گفتگوی مستندات توسعه', icon: 'fa-comments' },
+  { id: 'dev-doc-events', href: '/dev-doc-events', label: 'لاگ مستندات توسعه', icon: 'fa-clipboard-list' },
   { id: 'settings', href: '/settings', label: 'تنظیمات کلی', icon: 'fa-cog', toolbarOnly: true, disabled: true },
 ];
 

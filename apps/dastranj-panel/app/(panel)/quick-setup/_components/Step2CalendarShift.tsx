@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import {
   ArrowLeft,
@@ -289,7 +289,7 @@ function SectionShell({
   children: ReactNode;
 }) {
   return (
-    <section className="rounded-2xl border border-white/10 bg-slate-950/25">
+    <section className="rounded-xl border border-white/10 bg-slate-950/25">
       <div className="flex flex-row-reverse items-center justify-between gap-4 px-4 py-4 text-right sm:px-5">
         <button
           type="button"
@@ -305,7 +305,7 @@ function SectionShell({
         </button>
         <div className="flex flex-row-reverse items-center gap-3 text-right">
           <div className="text-base font-bold text-white">{title}</div>
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-500/30 text-indigo-200">{icon}</div>
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-500/30 text-indigo-200">{icon}</div>
         </div>
       </div>
       {isOpen ? <div className="border-t border-white/10 px-4 pb-4 pt-4 sm:px-5">{children}</div> : null}
@@ -349,7 +349,7 @@ function ShiftHelpChip({
       >
         <CircleHelp className="h-4 w-4" />
       </button>
-      <div className="pointer-events-none absolute right-0 top-10 z-20 hidden w-72 rounded-2xl border border-white/10 bg-slate-900 p-4 text-right text-slate-100 shadow-2xl group-hover:block">
+      <div className="pointer-events-none absolute right-0 top-10 z-20 hidden w-72 rounded-xl border border-white/10 bg-slate-900 p-4 text-right text-slate-100 shadow-2xl group-hover:block">
         <div className="text-sm font-black text-white">{option.hintTitle}</div>
         <div className="mt-2 text-sm leading-6 text-slate-300">{option.hintDescription}</div>
         <div className="mt-2 rounded-xl bg-slate-800 px-3 py-2 text-xs leading-5 text-indigo-200">{option.hintExample}</div>
@@ -364,7 +364,7 @@ function FieldTooltip({ text }: { text: string }) {
       <button type="button" className="flex h-6 w-6 items-center justify-center rounded-full border border-white/10 bg-slate-950/50 text-slate-300">
         <CircleHelp className="h-3.5 w-3.5" />
       </button>
-      <span className="pointer-events-none absolute right-0 top-8 z-30 hidden w-72 rounded-2xl border border-white/10 bg-slate-900 p-3 text-right text-xs leading-6 text-slate-200 shadow-2xl group-hover:block">
+      <span className="pointer-events-none absolute right-0 top-8 z-30 hidden w-72 rounded-xl border border-white/10 bg-slate-900 p-3 text-right text-xs leading-6 text-slate-200 shadow-2xl group-hover:block">
         {text}
       </span>
     </span>
@@ -382,7 +382,7 @@ function TimeField({ label, value, onChange, hint }: { label: string; value: str
         type="time"
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="w-full rounded-2xl border border-slate-600 bg-slate-900/60 px-4 py-3 text-right text-sm font-bold text-white outline-none transition-colors focus:border-indigo-400"
+        className="w-full rounded-xl border border-slate-600 bg-slate-900/60 px-4 py-3 text-right text-sm font-bold text-white outline-none transition-colors focus:border-indigo-400"
       />
     </label>
   );
@@ -390,9 +390,9 @@ function TimeField({ label, value, onChange, hint }: { label: string; value: str
 
 function InlineToggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: (checked: boolean) => void }) {
   return (
-    <label className="flex w-fit cursor-pointer flex-row-reverse items-center gap-3 rounded-2xl border border-white/10 bg-slate-950/45 px-3 py-2 text-right transition-colors hover:border-indigo-400/40">
+    <label className="flex w-fit cursor-pointer flex-row-reverse items-center gap-3 rounded-xl border border-white/10 bg-slate-950/45 px-3 py-2 text-right transition-colors hover:border-indigo-400/40">
       <span className="whitespace-nowrap text-sm font-bold text-slate-200">{label}</span>
-      <span className={cn('relative h-6 w-11 rounded-full transition-colors', checked ? 'bg-indigo-500' : 'bg-slate-700')}>
+      <span className={cn('relative h-6 w-9 rounded-full transition-colors', checked ? 'bg-indigo-500' : 'bg-slate-700')}>
         <input type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} className="peer sr-only" />
         <span className={cn('absolute top-1 h-4 w-4 rounded-full bg-white transition-all', checked ? 'right-6' : 'right-1')} />
       </span>
@@ -419,7 +419,7 @@ function TitleCard({ title, setTitle }: { title: string; setTitle: (value: strin
     <div className="rounded-[22px] border border-white/10 p-5">
       <div className="flex flex-row-reverse items-center justify-between gap-3 border-b border-white/10 pb-4 text-right">
         <div className="flex h-8 w-8 items-center justify-center rounded-full border border-indigo-500 text-indigo-300">i</div>
-        <div className="text-2xl font-black text-white">اطلاعات پایه شیفت</div>
+        <div className="text-xl font-black text-white">اطلاعات پایه شیفت</div>
       </div>
       <label className="mt-6 block space-y-2 text-right">
         <span className="text-sm font-bold text-white">
@@ -428,7 +428,7 @@ function TitleCard({ title, setTitle }: { title: string; setTitle: (value: strin
         <input
           value={title}
           onChange={(event) => setTitle(event.target.value)}
-          className="w-full rounded-2xl border border-slate-600 bg-slate-900/60 px-4 py-3 text-right text-sm text-white outline-none transition-colors focus:border-indigo-400"
+          className="w-full rounded-xl border border-slate-600 bg-slate-900/60 px-4 py-3 text-right text-sm text-white outline-none transition-colors focus:border-indigo-400"
         />
       </label>
     </div>
@@ -491,7 +491,7 @@ function BreakTypeSelect({
 }) {
   if (floatingOnly) {
     return (
-      <div className="rounded-2xl border border-slate-600 bg-slate-700/40 px-4 py-3 text-right text-sm font-bold text-slate-200">
+      <div className="rounded-xl border border-slate-600 bg-slate-700/40 px-4 py-3 text-right text-sm font-bold text-slate-200">
         شناور
       </div>
     );
@@ -503,7 +503,7 @@ function BreakTypeSelect({
       <select
         value={value}
         onChange={(event) => onChange(event.target.value as RestType)}
-        className="w-full rounded-2xl border border-slate-600 bg-slate-800 px-4 py-3 text-right text-sm font-bold text-white [color-scheme:dark] outline-none transition-colors focus:border-indigo-400 [&>option]:bg-slate-900 [&>option]:text-white"
+        className="w-full rounded-xl border border-slate-600 bg-slate-800 px-4 py-3 text-right text-sm font-bold text-white [color-scheme:dark] outline-none transition-colors focus:border-indigo-400 [&>option]:bg-slate-900 [&>option]:text-white"
       >
         <option value="fixed">بازه ثابت</option>
         <option value="floating">شناور</option>
@@ -537,7 +537,7 @@ function BreakEditor({
         <button
           type="button"
           onClick={() => onChange([...items, createRest(floatingOnly ? 'floating' : 'fixed')])}
-          className="flex h-12 w-12 items-center justify-center rounded-full bg-indigo-600 text-white transition-colors hover:bg-indigo-500"
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-600 text-white transition-colors hover:bg-indigo-500"
         >
           <Plus className="h-5 w-5" />
         </button>
@@ -558,7 +558,7 @@ function BreakEditor({
             <button
               type="button"
               onClick={() => onChange(items.filter((entry) => entry.id !== item.id))}
-              className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 text-indigo-300 transition-colors hover:border-rose-400/40 hover:text-rose-300 md:mt-6"
+              className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 text-indigo-300 transition-colors hover:border-rose-400/40 hover:text-rose-300 md:mt-6"
               aria-label="حذف استراحت"
             >
               <Trash2 className="h-5 w-5" />
@@ -598,7 +598,7 @@ function BreakEditor({
                   min={0}
                   value={item.duration}
                   onChange={(event) => updateItem(item.id, { duration: Number(event.target.value) || 0 })}
-                  className="w-full rounded-2xl border border-slate-600 bg-slate-700/40 px-4 py-3 text-right text-sm font-bold text-white outline-none"
+                  className="w-full rounded-xl border border-slate-600 bg-slate-700/40 px-4 py-3 text-right text-sm font-bold text-white outline-none"
                 />
               </label>
               <div className="flex justify-start">
@@ -867,7 +867,7 @@ export default function Step2CalendarShift({
 
   if (isCompleted && initialCalendar) {
     return (
-      <section className="rounded-2xl border border-white/10 bg-slate-800/65 p-3.5 sm:p-4">
+      <section className="rounded-xl border border-white/10 bg-slate-800/65 p-3.5 sm:p-4">
         <div className="rounded-xl border border-white/10 bg-slate-950/45 p-4 sm:p-5">
           <div className="mx-auto w-full rounded-xl border border-white/10 bg-slate-900/70 p-4 text-right lg:max-w-[320px]">
             <div className="text-lg font-bold text-white">عنوان: {initialCalendar.title}</div>
@@ -880,7 +880,7 @@ export default function Step2CalendarShift({
           </a>
         </div>
         <div className="mt-5 flex">
-          <button type="button" onClick={onBack} className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-600 text-white transition-colors hover:bg-indigo-500">
+          <button type="button" onClick={onBack} className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-600 text-white transition-colors hover:bg-indigo-500">
             <ArrowLeft className="h-4 w-4" />
           </button>
         </div>
@@ -889,10 +889,10 @@ export default function Step2CalendarShift({
   }
 
   return (
-    <section className="rounded-2xl border border-white/10 bg-slate-800/65 p-3.5 sm:p-4" dir="rtl">
+    <section className="rounded-xl border border-white/10 bg-slate-800/65 p-3.5 sm:p-4" dir="rtl">
       <div className="space-y-3 rounded-xl border border-white/10 bg-slate-950/45 p-4 sm:p-5">
         <SectionShell title="تقویم کاری را تعریف کنید" icon={<CalendarDays className="h-5 w-5" />} isOpen={activeSection === 'calendar'} onToggle={() => setActiveSection('calendar')}>
-          <div className="w-full rounded-2xl border border-indigo-500/70 bg-[linear-gradient(135deg,rgba(71,85,255,0.18),rgba(40,48,116,0.22))] p-5 text-right">
+          <div className="w-full rounded-xl border border-indigo-500/70 bg-[linear-gradient(135deg,rgba(71,85,255,0.18),rgba(40,48,116,0.22))] p-5 text-right">
             <div className="text-sm font-bold text-slate-300">
               عنوان: <span className="text-lg text-white">{title}</span>
             </div>
@@ -925,7 +925,7 @@ export default function Step2CalendarShift({
                 ))}
               </div>
             </div>
-            <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-4">
+            <div className="rounded-xl border border-white/10 bg-slate-900/40 p-4">
               <div className="flex flex-row-reverse items-center justify-between gap-3">
                 <div className="text-base font-bold text-white">تعطیلات تکی</div>
                 <button type="button" onClick={() => setSingleHolidayDialogOpen(true)} className="inline-flex flex-row-reverse items-center gap-2 rounded-full bg-indigo-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-indigo-500">
@@ -991,7 +991,7 @@ export default function Step2CalendarShift({
                 <div className="rounded-[22px] border border-white/10 p-5">
                   <div className="flex flex-row-reverse items-center justify-between gap-3 border-b border-white/10 pb-4 text-right">
                     <SlidersHorizontal className="h-5 w-5 text-indigo-300" />
-                    <div className="text-2xl font-black text-white">تعریف شیفت ثابت</div>
+                    <div className="text-xl font-black text-white">تعریف شیفت ثابت</div>
                   </div>
                   <ModeSwitch mode={shiftMode} setMode={setShiftMode} />
                   <div className="mt-6 space-y-5">
@@ -1050,7 +1050,7 @@ export default function Step2CalendarShift({
                 <div className="rounded-[22px] border border-white/10 p-5">
                   <div className="flex flex-row-reverse items-center justify-between gap-3 border-b border-white/10 pb-4 text-right">
                     <SlidersHorizontal className="h-5 w-5 text-indigo-300" />
-                    <div className="text-2xl font-black text-white">تعریف شیفت شناور - شروع روز</div>
+                    <div className="text-xl font-black text-white">تعریف شیفت شناور - شروع روز</div>
                   </div>
                   <ModeSwitch mode={shiftMode} setMode={setShiftMode} noTemplateMessage />
                   <div className="mt-6 space-y-5">
@@ -1086,13 +1086,13 @@ export default function Step2CalendarShift({
                     <div className="rounded-[18px] border border-indigo-400/25 bg-indigo-950/50 p-4 text-right">
                       <div className="text-sm font-bold text-slate-300">پایان بازه خروج</div>
                       <div className="mt-3 grid gap-3 md:grid-cols-2">
-                        <div className="rounded-2xl bg-slate-950/45 px-4 py-3">
+                        <div className="rounded-xl bg-slate-950/45 px-4 py-3">
                           <div className="text-xs text-slate-400">زودترین خروج</div>
-                          <div className="mt-1 text-2xl font-black text-indigo-300">{floatDayExitRange.start}</div>
+                          <div className="mt-1 text-xl font-black text-indigo-300">{floatDayExitRange.start}</div>
                         </div>
-                        <div className="rounded-2xl bg-slate-950/45 px-4 py-3">
+                        <div className="rounded-xl bg-slate-950/45 px-4 py-3">
                           <div className="text-xs text-slate-400">دیرترین خروج</div>
-                          <div className="mt-1 text-2xl font-black text-indigo-300">{floatDayExitRange.end}</div>
+                          <div className="mt-1 text-xl font-black text-indigo-300">{floatDayExitRange.end}</div>
                         </div>
                       </div>
                     </div>
@@ -1101,7 +1101,7 @@ export default function Step2CalendarShift({
                       <DurationCard minutes={floatDayTotalMinutes} />
                       <div className="rounded-[18px] bg-slate-900/60 px-5 py-4 text-right">
                         <div className="text-sm text-slate-300">ساعت موظفی</div>
-                        <div className="mt-2 text-4xl font-black text-emerald-400">{formatDuration(floatDayRequiredMinutes)}</div>
+                        <div className="mt-2 text-xl font-black text-emerald-400">{formatDuration(floatDayRequiredMinutes)}</div>
                       </div>
                     </div>
                   </div>
@@ -1115,7 +1115,7 @@ export default function Step2CalendarShift({
                 <div className="rounded-[22px] border border-white/10 p-5">
                   <div className="flex flex-row-reverse items-center justify-between gap-3 border-b border-white/10 pb-4 text-right">
                     <SlidersHorizontal className="h-5 w-5 text-indigo-300" />
-                    <div className="text-2xl font-black text-white">تعریف شیفت شناور - مطلق</div>
+                    <div className="text-xl font-black text-white">تعریف شیفت شناور - مطلق</div>
                   </div>
                   <ModeSwitch mode={shiftMode} setMode={setShiftMode} noTemplateMessage />
                   <div className="mt-6 space-y-5">
@@ -1137,7 +1137,7 @@ export default function Step2CalendarShift({
                       <DurationCard minutes={floatAbsTotalMinutes} />
                       <div className="rounded-[18px] bg-slate-900/60 px-5 py-4 text-right">
                         <div className="text-sm text-slate-300">ساعت موظفی</div>
-                        <div className="mt-2 text-4xl font-black text-emerald-400">{formatDuration(floatAbsRequiredMinutes)}</div>
+                        <div className="mt-2 text-xl font-black text-emerald-400">{formatDuration(floatAbsRequiredMinutes)}</div>
                       </div>
                     </div>
                   </div>
@@ -1151,7 +1151,7 @@ export default function Step2CalendarShift({
                 <div className="rounded-[22px] border border-white/10 p-5">
                   <div className="flex flex-row-reverse items-center justify-between gap-3 border-b border-white/10 pb-4 text-right">
                     <SlidersHorizontal className="h-5 w-5 text-indigo-300" />
-                    <div className="text-2xl font-black text-white">تعریف شیفت دو تکه</div>
+                    <div className="text-xl font-black text-white">تعریف شیفت دو تکه</div>
                   </div>
                   <ModeSwitch mode={shiftMode} setMode={setShiftMode} noTemplateMessage />
                   <div className="mt-6 space-y-5">
@@ -1189,7 +1189,7 @@ export default function Step2CalendarShift({
                 <div className="rounded-[22px] border border-white/10 p-5">
                   <div className="flex flex-row-reverse items-center justify-between gap-3 border-b border-white/10 pb-4 text-right">
                     <SlidersHorizontal className="h-5 w-5 text-indigo-300" />
-                    <div className="text-2xl font-black text-white">تعریف شیفت چرخشی</div>
+                    <div className="text-xl font-black text-white">تعریف شیفت چرخشی</div>
                   </div>
                   <ModeSwitch mode={shiftMode} setMode={setShiftMode} noTemplateMessage />
                   <div className="mt-6 space-y-4">
@@ -1227,7 +1227,7 @@ export default function Step2CalendarShift({
                               <select
                                 value={segment.kind}
                                 onChange={(event) => setRotateKind(segment.id, event.target.value as RotateKind)}
-                                className="block rounded-2xl border border-slate-600 bg-slate-700/40 px-3 py-2 text-right text-sm text-white [color-scheme:dark] outline-none [&>option]:bg-slate-900 [&>option]:text-white"
+                                className="block rounded-xl border border-slate-600 bg-slate-700/40 px-3 py-2 text-right text-sm text-white [color-scheme:dark] outline-none [&>option]:bg-slate-900 [&>option]:text-white"
                               >
                                 {(Object.keys(ROTATE_KIND_LABELS) as RotateKind[]).map((kind) => (
                                   <option key={kind} value={kind}>
@@ -1247,13 +1247,13 @@ export default function Step2CalendarShift({
                                 max={30}
                                 value={segment.repeat}
                                 onChange={(event) => setRotateSegments((prev) => prev.map((item) => (item.id === segment.id ? { ...item, repeat: Math.max(1, Number(event.target.value) || 1) } : item)))}
-                                className="block w-20 rounded-2xl border border-slate-600 bg-slate-700/40 px-3 py-2 text-center text-sm text-white outline-none"
+                                className="block w-20 rounded-xl border border-slate-600 bg-slate-700/40 px-3 py-2 text-center text-sm text-white outline-none"
                               />
                             </label>
                           </div>
                         </div>
                         {segment.kind === 'off' ? (
-                          <div className="rounded-2xl border border-white/10 bg-slate-950/40 px-4 py-3 text-sm text-slate-300">برای آیتم آف فقط تعداد تکرار لازم است.</div>
+                          <div className="rounded-xl border border-white/10 bg-slate-950/40 px-4 py-3 text-sm text-slate-300">برای آیتم آف فقط تعداد تکرار لازم است.</div>
                         ) : (
                           <>
                             <div className="grid grid-cols-2 gap-4">
@@ -1298,7 +1298,7 @@ export default function Step2CalendarShift({
       {singleHolidayDialogOpen ? (
         <div className="fixed inset-0 z-[100] bg-black/65" onClick={() => setSingleHolidayDialogOpen(false)}>
           <div
-            className="fixed left-1/2 top-1/2 z-[101] w-[min(100%-2rem,32rem)] -translate-x-1/2 -translate-y-1/2 rounded-3xl border border-white/10 bg-slate-900 p-6 text-right text-slate-100 shadow-[0_24px_80px_rgba(0,0,0,0.45)]"
+            className="fixed left-1/2 top-1/2 z-[101] w-[min(100%-2rem,32rem)] -translate-x-1/2 -translate-y-1/2 rounded-xl border border-white/10 bg-slate-900 p-4 text-right text-slate-100 shadow-[0_24px_80px_rgba(0,0,0,0.45)]"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="text-xl font-black text-white">افزودن تعطیلات تکی</div>

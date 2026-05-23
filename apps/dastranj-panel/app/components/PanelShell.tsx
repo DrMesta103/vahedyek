@@ -1,18 +1,23 @@
 'use client';
 
 import type { ReactNode } from 'react';
+import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { ChevronLeft } from 'lucide-react';
 import { getActiveNavigationItem } from '../lib/navigation';
 import { OrbitMenu } from './OrbitMenu';
+import PageDocsWidget from './PageDocsWidget';
 import { Sidebar } from './Sidebar';
 
 export function PanelShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const activeItem = getActiveNavigationItem(pathname);
   const showOrbitMenu = pathname === '/';
+  const isDevDocThreadsPage = pathname.startsWith('/dev-doc-threads');
 
   return (
     <div className="app-shell">
+      <PageDocsWidget />
       <Sidebar activeItem={activeItem.id} />
       {showOrbitMenu ? (
         <main className="main-content home-main-content">
@@ -26,8 +31,27 @@ export function PanelShell({ children }: { children: ReactNode }) {
           ) : null}
         </main>
       ) : (
-        <main className="main-content panel-route-main">
-          <div className="content-body panel-route-body">{children}</div>
+        <main className={`main-content${isDevDocThreadsPage ? '' : ' panel-route-main'}`}>
+          {isDevDocThreadsPage ? (
+            <div className="main-stage">
+              <div className="main-stage-content">
+                <div className="top-header">
+                  <div className="breadcrumb">
+                    <span className="breadcrumb-item">
+                      <Link href="/" className="breadcrumb-link">
+                        خانه
+                      </Link>
+                      <ChevronLeft className="breadcrumb-separator h-3.5 w-3.5" />
+                    </span>
+                    <span className="breadcrumb-item">برد گفت‌وگوهای مستندات</span>
+                  </div>
+                </div>
+                <div className="content-body">{children}</div>
+              </div>
+            </div>
+          ) : (
+            <div className="content-body panel-route-body">{children}</div>
+          )}
         </main>
       )}
     </div>
