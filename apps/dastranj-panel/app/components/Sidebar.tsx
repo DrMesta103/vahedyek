@@ -56,7 +56,7 @@ export function Sidebar({ activeItem = 'home', forceCollapsed = false, lockColla
   };
 
   const handleOpenTenantDocs = () => {
-    router.push('/quick-setup');
+    router.push('/dev-doc-threads');
   };
 
   const effectiveCollapsed = forceCollapsed || collapsed;

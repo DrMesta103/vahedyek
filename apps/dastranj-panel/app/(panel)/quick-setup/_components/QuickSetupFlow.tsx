@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Check, CheckCircle2 } from 'lucide-react';
@@ -56,7 +56,7 @@ function StepHeader({
     >
       <div
         className={cn(
-          'flex h-11 w-11 items-center justify-center rounded-full border text-sm font-black transition-all',
+          'flex h-9 w-9 items-center justify-center rounded-full border text-sm font-black transition-all',
           active && 'border-indigo-400 bg-indigo-500 text-white shadow-[0_0_20px_rgba(99,102,241,0.35)]',
           complete && !active && 'border-emerald-500 bg-emerald-600 text-white',
           !active && !complete && 'border-slate-500/70 bg-transparent text-slate-300 group-hover:border-slate-400',
@@ -140,11 +140,11 @@ export function QuickSetupFlow({
   };
 
   return (
-    <div className="min-h-[calc(100vh-5rem)] p-4 sm:p-6 lg:p-8" dir="rtl">
-      <div className="mx-auto max-w-6xl space-y-6">
-        <section className="rounded-[28px] border border-indigo-500/20 bg-[radial-gradient(circle_at_top_right,rgba(99,102,241,0.28),transparent_35%),linear-gradient(135deg,rgba(27,36,62,0.96),rgba(35,29,79,0.92))] p-5 sm:p-6">
+    <div className="min-h-[calc(100vh-5rem)] p-4 sm:p-4 lg:p-4" dir="rtl">
+      <div className="mx-auto max-w-6xl space-y-4">
+        <section className="rounded-[28px] border border-indigo-500/20 bg-[radial-gradient(circle_at_top_right,rgba(99,102,241,0.28),transparent_35%),linear-gradient(135deg,rgba(27,36,62,0.96),rgba(35,29,79,0.92))] p-5 sm:p-4">
           <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
-            <div className="order-2 rounded-3xl border border-white/10 bg-slate-950/35 p-4 lg:order-1">
+            <div className="order-2 rounded-xl border border-white/10 bg-slate-950/35 p-4 lg:order-1">
               <div className="flex items-center justify-between gap-3">
                 <div className="text-sm font-bold text-white">پیشرفت کل</div>
                 <div className="text-lg font-black text-white">{Math.round(progress)}%</div>
@@ -158,7 +158,7 @@ export function QuickSetupFlow({
               <button
                 type="button"
                 onClick={() => setExitOpen(true)}
-                className="mt-5 inline-flex items-center justify-center rounded-2xl border border-rose-400/60 px-4 py-2 text-sm text-rose-300 transition-colors hover:bg-rose-500/10"
+                className="mt-5 inline-flex items-center justify-center rounded-xl border border-rose-400/60 px-4 py-2 text-sm text-rose-300 transition-colors hover:bg-rose-500/10"
               >
                 خروج از راه اندازی سریع
               </button>
@@ -169,7 +169,7 @@ export function QuickSetupFlow({
                 <CheckCircle2 className="h-4 w-4 text-indigo-300" />
                 وضعیت راه اندازی سیستم
               </div>
-              <h1 className="text-3xl font-black text-white sm:text-4xl">خوش آمدید</h1>
+              <h1 className="text-xl font-black text-white sm:text-xl">خوش آمدید</h1>
               <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-300">
                 برای استفاده کامل از امکانات پنل{profileName ? ` ${profileName}` : ''}، این مراحل را به ترتیب تکمیل کنید. اطلاعات این بخش ها برای محاسبه دقیق حضور و دستمزد ضروری است.
               </p>
@@ -177,7 +177,7 @@ export function QuickSetupFlow({
           </div>
         </section>
 
-        <section className="rounded-[28px] border border-white/10 bg-slate-800/65 px-4 py-5 sm:px-6">
+        <section className="rounded-[28px] border border-white/10 bg-slate-800/65 px-4 py-5 sm:px-5">
           <div className="overflow-x-auto">
             <div className="mx-auto flex min-w-max items-start justify-center gap-5">
               {STEPS.map((item) => (
@@ -198,7 +198,7 @@ export function QuickSetupFlow({
           </div>
         </section>
 
-        <div className="space-y-6">
+        <div className="space-y-4">
           <div className={step === 1 ? 'block' : 'hidden'}>
             <Step1Location
               isCompleted={completedSteps.includes(1)}
@@ -271,7 +271,7 @@ export function QuickSetupFlow({
         </div>
 
         {showFooterNavigation ? (
-          <section className="rounded-2xl border border-white/10 bg-slate-900/60 p-4">
+          <section className="rounded-xl border border-white/10 bg-slate-900/60 p-4">
             <div className="flex items-center justify-between gap-3">
               <button type="button" onClick={goBack} className="rounded-xl border border-white/10 bg-slate-800 px-5 py-2.5 text-sm text-slate-100 transition-colors hover:border-white/20">
                 مرحله قبل
@@ -286,7 +286,7 @@ export function QuickSetupFlow({
 
       {exitOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 p-4" onClick={() => setExitOpen(false)}>
-          <div className="w-full max-w-md rounded-3xl border border-white/10 bg-slate-900 p-6 text-right text-slate-100" onClick={(event) => event.stopPropagation()}>
+          <div className="w-full max-w-md rounded-xl border border-white/10 bg-slate-900 p-4 text-right text-slate-100" onClick={(event) => event.stopPropagation()}>
             <div className="text-xl font-black text-white">خروج از راه اندازی سریع</div>
             <p className="mt-3 text-sm leading-7 text-slate-300">این اطلاعات برای راه اندازی اولیه لازم است. در صورت خروج، می توانید بعدا از بخش های مختلف آن ها را تکمیل کنید.</p>
             <div className="mt-6 flex justify-end gap-3">
@@ -299,10 +299,10 @@ export function QuickSetupFlow({
 
       {completedOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 p-4">
-          <div className="w-full max-w-[500px] rounded-3xl border border-white/10 bg-[#0b1228] px-6 py-8 text-center text-slate-100">
-            <div className="text-3xl font-black text-white">راه اندازی سریع تکمیل شد</div>
+          <div className="w-full max-w-[500px] rounded-xl border border-white/10 bg-[#0b1228] px-5 py-8 text-center text-slate-100">
+            <div className="text-xl font-black text-white">راه اندازی سریع تکمیل شد</div>
             <p className="mx-auto mt-5 max-w-[360px] text-base leading-8 text-slate-200">تنظیمات پایه انجام شد و حالا می توانید کار را از صفحه اصلی ادامه دهید.</p>
-            <a href="/business-settings" className="mt-8 inline-flex w-full justify-center rounded-2xl bg-indigo-600 px-4 py-3 text-base font-bold text-white transition-colors hover:bg-indigo-500">
+            <a href="/business-settings" className="mt-8 inline-flex w-full justify-center rounded-xl bg-indigo-600 px-4 py-3 text-base font-bold text-white transition-colors hover:bg-indigo-500">
               ورود به خانه
             </a>
           </div>

@@ -50,7 +50,7 @@ export default async function EmployeeDetailPage({ params }: { params: Promise<{
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={employee.identityPhotoUrl} alt="" />
               ) : (
-                <CreditCard className="h-10 w-10" strokeWidth={1.8} />
+                <CreditCard className="h-9 w-9" strokeWidth={1.8} />
               )}
             </div>
           </div>
@@ -61,7 +61,7 @@ export default async function EmployeeDetailPage({ params }: { params: Promise<{
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={employee.avatarUrl} alt="" />
               ) : (
-                <User className="h-10 w-10" strokeWidth={1.8} />
+                <User className="h-9 w-9" strokeWidth={1.8} />
               )}
             </div>
           </div>

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { forwardRef, createElement, useState, useEffect, useMemo, useRef } from 'react';
 import { jsx, jsxs, Fragment } from 'react/jsx-runtime';
 import dynamic from 'next/dynamic';
 import persian from 'react-date-object/calendars/persian';
@@ -352,7 +352,7 @@ function cn(...classes) {
 }
 function RuleTabButton({
   title,
-  icon: Icon,
+  icon: Icon2,
   active,
   onClick
 }) {
@@ -373,7 +373,7 @@ function RuleTabButton({
               "flex h-14 w-14 items-center justify-center rounded-full border transition",
               active ? "border-[color:var(--theme-action-border)] bg-[color:var(--theme-action-bg)] text-[color:var(--theme-action-text)]" : "border-[color:var(--border-color)] bg-[color:var(--surface)] text-[color:var(--text-muted)]"
             ),
-            children: /* @__PURE__ */ jsx(Icon, { className: "h-6 w-6" })
+            children: /* @__PURE__ */ jsx(Icon2, { className: "h-6 w-6" })
           }
         ),
         /* @__PURE__ */ jsx("span", { className: "text-sm font-bold", children: title }),
@@ -852,6 +852,403 @@ function ChoicePillsField({
   ] });
 }
 
-export { BusinessSwitch, ChoicePills, ChoicePillsField, ContractIssuerTags, ContractTypeTags, DataTable, EmptyState, ExpandableTagGroup, FormCard, Input, PageIntro, PersianDatePicker, PrimaryLink, RULE_PANEL_SELECT_CLASSNAME, RULE_PANEL_TEXT_INPUT_CLASSNAME, RuleAmountInput, RuleFieldLabel, RuleTabButton, SearchableSelect, SegmentedToggle, ShareModePills, StatGrid, StickySubmitBar, TagPills, compactTextareaStyle, formControlMutedDisabledStyle, formControlStyle, formErrorStyle, formLabelStyle, formMetaLabelStyle, formStyles_exports as formStyles, outlineButtonStyle, primaryButtonStyle, rulePanelNumericInputClassName };
+// src/components/dev-docs/dev-doc.types.ts
+var DEV_DOC_THREAD_PRIORITIES = ["p0", "p1", "p2", "p3"];
+var DEV_DOC_THREAD_STATUSES = ["todo", "in_progress", "done"];
+var DEV_DOC_PRIORITY_LABELS = {
+  p0: "\u062E\u06CC\u0644\u06CC \u0641\u0648\u0631\u06CC",
+  p1: "\u0641\u0648\u0631\u06CC",
+  p2: "\u0639\u0627\u062F\u06CC",
+  p3: "\u06A9\u0645\u200C\u0627\u0647\u0645\u06CC\u062A"
+};
+function normalizeDevDocThreadPriority(value) {
+  return typeof value === "string" && DEV_DOC_THREAD_PRIORITIES.includes(value) ? value : "p2";
+}
+function normalizeDevDocThreadStatus(value) {
+  return typeof value === "string" && DEV_DOC_THREAD_STATUSES.includes(value) ? value : "todo";
+}
+function normalizeDevDocLabels(input) {
+  if (!Array.isArray(input)) return [];
+  return Array.from(
+    new Set(
+      input.map((value) => typeof value === "string" ? value.trim() : "").filter(Boolean).slice(0, 12)
+    )
+  );
+}
+
+// ../../node_modules/lucide-react/dist/esm/shared/src/utils.js
+var toKebabCase = (string) => string.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();
+var toCamelCase = (string) => string.replace(
+  /^([A-Z])|[\s-_]+(\w)/g,
+  (match, p1, p2) => p2 ? p2.toUpperCase() : p1.toLowerCase()
+);
+var toPascalCase = (string) => {
+  const camelCase = toCamelCase(string);
+  return camelCase.charAt(0).toUpperCase() + camelCase.slice(1);
+};
+var mergeClasses = (...classes) => classes.filter((className, index, array) => {
+  return Boolean(className) && className.trim() !== "" && array.indexOf(className) === index;
+}).join(" ").trim();
+
+// ../../node_modules/lucide-react/dist/esm/defaultAttributes.js
+var defaultAttributes = {
+  xmlns: "http://www.w3.org/2000/svg",
+  width: 24,
+  height: 24,
+  viewBox: "0 0 24 24",
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 2,
+  strokeLinecap: "round",
+  strokeLinejoin: "round"
+};
+
+// ../../node_modules/lucide-react/dist/esm/Icon.js
+var Icon = forwardRef(
+  ({
+    color = "currentColor",
+    size = 24,
+    strokeWidth = 2,
+    absoluteStrokeWidth,
+    className = "",
+    children,
+    iconNode,
+    ...rest
+  }, ref) => {
+    return createElement(
+      "svg",
+      {
+        ref,
+        ...defaultAttributes,
+        width: size,
+        height: size,
+        stroke: color,
+        strokeWidth: absoluteStrokeWidth ? Number(strokeWidth) * 24 / Number(size) : strokeWidth,
+        className: mergeClasses("lucide", className),
+        ...rest
+      },
+      [
+        ...iconNode.map(([tag, attrs]) => createElement(tag, attrs)),
+        ...Array.isArray(children) ? children : [children]
+      ]
+    );
+  }
+);
+
+// ../../node_modules/lucide-react/dist/esm/createLucideIcon.js
+var createLucideIcon = (iconName, iconNode) => {
+  const Component = forwardRef(
+    ({ className, ...props }, ref) => createElement(Icon, {
+      ref,
+      iconNode,
+      className: mergeClasses(
+        `lucide-${toKebabCase(toPascalCase(iconName))}`,
+        `lucide-${iconName}`,
+        className
+      ),
+      ...props
+    })
+  );
+  Component.displayName = toPascalCase(iconName);
+  return Component;
+};
+
+// ../../node_modules/lucide-react/dist/esm/icons/arrow-up-right.js
+var __iconNode = [
+  ["path", { d: "M7 7h10v10", key: "1tivn9" }],
+  ["path", { d: "M7 17 17 7", key: "1vkiza" }]
+];
+var ArrowUpRight = createLucideIcon("arrow-up-right", __iconNode);
+
+// ../../node_modules/lucide-react/dist/esm/icons/circle-check.js
+var __iconNode2 = [
+  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
+  ["path", { d: "m9 12 2 2 4-4", key: "dzmm74" }]
+];
+var CircleCheck = createLucideIcon("circle-check", __iconNode2);
+
+// ../../node_modules/lucide-react/dist/esm/icons/circle.js
+var __iconNode3 = [["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }]];
+var Circle = createLucideIcon("circle", __iconNode3);
+
+// ../../node_modules/lucide-react/dist/esm/icons/grip-vertical.js
+var __iconNode4 = [
+  ["circle", { cx: "9", cy: "12", r: "1", key: "1vctgf" }],
+  ["circle", { cx: "9", cy: "5", r: "1", key: "hp0tcf" }],
+  ["circle", { cx: "9", cy: "19", r: "1", key: "fkjjf6" }],
+  ["circle", { cx: "15", cy: "12", r: "1", key: "1tmaij" }],
+  ["circle", { cx: "15", cy: "5", r: "1", key: "19l28e" }],
+  ["circle", { cx: "15", cy: "19", r: "1", key: "f4zoj3" }]
+];
+var GripVertical = createLucideIcon("grip-vertical", __iconNode4);
+
+// ../../node_modules/lucide-react/dist/esm/icons/loader-circle.js
+var __iconNode5 = [["path", { d: "M21 12a9 9 0 1 1-6.219-8.56", key: "13zald" }]];
+var LoaderCircle = createLucideIcon("loader-circle", __iconNode5);
+
+// ../../node_modules/lucide-react/dist/esm/icons/refresh-cw.js
+var __iconNode6 = [
+  ["path", { d: "M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8", key: "v9h5vc" }],
+  ["path", { d: "M21 3v5h-5", key: "1q7to0" }],
+  ["path", { d: "M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16", key: "3uifl3" }],
+  ["path", { d: "M8 16H3v5", key: "1cv678" }]
+];
+var RefreshCw = createLucideIcon("refresh-cw", __iconNode6);
+
+// ../../node_modules/lucide-react/dist/esm/icons/search.js
+var __iconNode7 = [
+  ["circle", { cx: "11", cy: "11", r: "8", key: "4ej97u" }],
+  ["path", { d: "m21 21-4.3-4.3", key: "1qie3q" }]
+];
+var Search = createLucideIcon("search", __iconNode7);
+var STATUS_COLUMNS = [
+  { id: "todo", title: "\u0627\u0646\u062C\u0627\u0645\u200C\u0646\u0634\u062F\u0647", description: "\u06AF\u0641\u062A\u06AF\u0648\u0647\u0627\u06CC\u06CC \u06A9\u0647 \u0647\u0646\u0648\u0632 \u0634\u0631\u0648\u0639 \u0646\u0634\u062F\u0647\u200C\u0627\u0646\u062F" },
+  { id: "in_progress", title: "\u062F\u0631 \u062D\u0627\u0644 \u0627\u0646\u062C\u0627\u0645", description: "\u0645\u0648\u0627\u0631\u062F\u06CC \u06A9\u0647 \u062A\u06CC\u0645 \u0631\u0648\u06CC \u0622\u0646\u200C\u0647\u0627 \u062F\u0631 \u062D\u0627\u0644 \u06A9\u0627\u0631 \u0627\u0633\u062A" },
+  { id: "done", title: "\u0627\u0646\u062C\u0627\u0645\u200C\u0634\u062F\u0647", description: "\u0645\u0648\u0627\u0631\u062F \u0646\u0647\u0627\u06CC\u06CC \u0634\u062F\u0647 \u0648 \u0628\u0633\u062A\u0647 \u0634\u062F\u0647" }
+];
+function formatDateTime(value) {
+  return new Intl.DateTimeFormat("fa-IR", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
+}
+function chipClass() {
+  return "inline-flex items-center rounded-full border border-[color:var(--border-color)] bg-transparent px-2 py-1 text-[11px] font-medium text-[color:var(--text-muted)]";
+}
+function DevDocThreadsBoard({
+  appName,
+  listEndpoint,
+  updateEndpoint,
+  title = "\u0628\u0631\u062F \u06AF\u0641\u062A\u200C\u0648\u06AF\u0648\u0647\u0627\u06CC \u0645\u0633\u062A\u0646\u062F\u0627\u062A",
+  description = "\u062F\u0631 \u0627\u06CC\u0646 \u0628\u062E\u0634 \u0645\u06CC\u200C\u062A\u0648\u0627\u0646\u06CC\u062F \u06AF\u0641\u062A\u06AF\u0648\u0647\u0627 \u0648 \u0646\u0638\u0631\u0627\u062A \u0645\u0631\u0628\u0648\u0637 \u0628\u0647 \u0645\u0633\u062A\u0646\u062F\u0627\u062A \u0631\u0627 \u0645\u062F\u06CC\u0631\u06CC\u062A \u0648 \u062F\u0646\u0628\u0627\u0644 \u06A9\u0646\u06CC\u062F. \u0627\u0632 \u062C\u0633\u062A\u062C\u0648\u060C \u0645\u0631\u062A\u0628\u200C\u0633\u0627\u0632\u06CC \u0648 \u06A9\u0634\u06CC\u062F\u0646 \u06A9\u0627\u0631\u062A\u200C\u0647\u0627 \u0628\u0631\u0627\u06CC \u062A\u063A\u06CC\u06CC\u0631 \u0648\u0636\u0639\u06CC\u062A \u0627\u0633\u062A\u0641\u0627\u062F\u0647 \u06A9\u0646\u06CC\u062F."
+}) {
+  const [threads, setThreads] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [savingThreadId, setSavingThreadId] = useState(null);
+  const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
+  const [draggingThreadId, setDraggingThreadId] = useState(null);
+  const [activeDropZone, setActiveDropZone] = useState(null);
+  const loadThreads = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch(listEndpoint, { cache: "no-store" });
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(payload?.message || "\u0628\u0627\u0631\u06AF\u0630\u0627\u0631\u06CC \u06AF\u0641\u062A\u06AF\u0648\u0647\u0627 \u0628\u0627 \u062E\u0637\u0627 \u0645\u0648\u0627\u062C\u0647 \u0634\u062F.");
+      setThreads(payload.threads);
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : "\u0628\u0627\u0631\u06AF\u0630\u0627\u0631\u06CC \u06AF\u0641\u062A\u06AF\u0648\u0647\u0627 \u0628\u0627 \u062E\u0637\u0627 \u0645\u0648\u0627\u062C\u0647 \u0634\u062F.");
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    void loadThreads();
+  }, []);
+  const filteredThreads = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    if (!query) return threads;
+    return threads.filter(
+      (thread) => [thread.title, thread.docType, thread.pagePathSample, thread.pageKey, thread.createdBy?.fullName, ...thread.labels].filter(Boolean).join(" ").toLowerCase().includes(query)
+    );
+  }, [search, threads]);
+  const columns = useMemo(
+    () => STATUS_COLUMNS.map((column) => ({
+      ...column,
+      threads: filteredThreads.filter((thread) => thread.status === column.id)
+    })),
+    [filteredThreads]
+  );
+  const moveThread = async (threadId, nextStatus) => {
+    const currentThread = threads.find((thread) => thread.id === threadId);
+    if (!currentThread || currentThread.status === nextStatus) return;
+    const previousThreads = threads;
+    setThreads((current) => current.map((thread) => thread.id === threadId ? { ...thread, status: nextStatus } : thread));
+    setSavingThreadId(threadId);
+    setError("");
+    try {
+      const response = await fetch(updateEndpoint(threadId), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: nextStatus })
+      });
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(payload?.message || "\u0628\u0647\u200C\u0631\u0648\u0632\u0631\u0633\u0627\u0646\u06CC \u0648\u0636\u0639\u06CC\u062A \u0628\u0627 \u062E\u0637\u0627 \u0645\u0648\u0627\u062C\u0647 \u0634\u062F.");
+    } catch (updateError) {
+      setThreads(previousThreads);
+      setError(updateError instanceof Error ? updateError.message : "\u0628\u0647\u200C\u0631\u0648\u0632\u0631\u0633\u0627\u0646\u06CC \u0648\u0636\u0639\u06CC\u062A \u0628\u0627 \u062E\u0637\u0627 \u0645\u0648\u0627\u062C\u0647 \u0634\u062F.");
+    } finally {
+      setSavingThreadId(null);
+      setDraggingThreadId(null);
+      setActiveDropZone(null);
+    }
+  };
+  return /* @__PURE__ */ jsxs("section", { className: "mx-auto max-w-[1880px] p-4 sm:p-6 lg:px-8", children: [
+    /* @__PURE__ */ jsxs("div", { className: "rounded-[32px] border border-[color:var(--border-color)] bg-[color:var(--surface)] p-6 shadow-[0_10px_30px_var(--shadow-soft)]", children: [
+      /* @__PURE__ */ jsxs("div", { className: "flex flex-wrap items-start justify-between gap-4", children: [
+        /* @__PURE__ */ jsxs("div", { children: [
+          /* @__PURE__ */ jsx("div", { className: "text-[11px] font-semibold uppercase tracking-[0.24em] text-[color:var(--text-muted)]", children: appName }),
+          /* @__PURE__ */ jsx("h1", { className: "mt-2 text-[28px] font-black leading-tight text-[color:var(--text-strong)]", children: title }),
+          /* @__PURE__ */ jsx("p", { className: "mt-3 max-w-4xl text-sm leading-7 text-[color:var(--text-muted)]", children: description })
+        ] }),
+        /* @__PURE__ */ jsxs(
+          "button",
+          {
+            type: "button",
+            className: "inline-flex items-center gap-2 rounded-full border border-[color:var(--border-color)] bg-transparent px-4 py-2 text-sm font-medium text-[color:var(--text-body)]",
+            onClick: () => void loadThreads(),
+            children: [
+              /* @__PURE__ */ jsx(RefreshCw, { className: "h-4 w-4" }),
+              "\u0628\u0631\u0648\u0632\u0631\u0633\u0627\u0646\u06CC"
+            ]
+          }
+        )
+      ] }),
+      /* @__PURE__ */ jsxs("div", { className: "mt-6 grid gap-4 xl:grid-cols-[minmax(0,1fr)_280px]", children: [
+        /* @__PURE__ */ jsxs("label", { className: "grid gap-2", children: [
+          /* @__PURE__ */ jsx("span", { className: "text-xs font-semibold text-[color:var(--text-muted)]", children: "\u062C\u0633\u062A\u062C\u0648 \u0628\u06CC\u0646 \u0639\u0646\u0627\u0648\u06CC\u0646\u060C \u0645\u0633\u062A\u0646\u062F\u0627\u062A\u060C \u0645\u0633\u06CC\u0631\u0647\u0627 \u0648 \u0628\u0631\u0686\u0633\u0628\u200C\u0647\u0627" }),
+          /* @__PURE__ */ jsxs("div", { className: "relative", children: [
+            /* @__PURE__ */ jsx(Search, { className: "pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[color:var(--text-muted)]" }),
+            /* @__PURE__ */ jsx(Input, { value: search, onChange: (event) => setSearch(event.target.value), placeholder: "\u0645\u062B\u0644\u0627 \u0642\u0631\u0627\u0631\u062F\u0627\u062F\u060C financial\u060C /business-settings/...", className: "pr-10" })
+          ] })
+        ] }),
+        /* @__PURE__ */ jsx("div", { className: "grid grid-cols-3 gap-2", children: STATUS_COLUMNS.map((column) => /* @__PURE__ */ jsxs("div", { className: "rounded-[22px] border border-[color:var(--border-color)] bg-transparent px-3 py-3 text-center text-sm text-[color:var(--text-body)]", children: [
+          /* @__PURE__ */ jsx("div", { className: "text-lg font-black text-[color:var(--text-strong)]", children: columns.find((item) => item.id === column.id)?.threads.length ?? 0 }),
+          /* @__PURE__ */ jsx("div", { className: "mt-1 text-xs text-[color:var(--text-muted)]", children: column.title })
+        ] }, column.id)) })
+      ] })
+    ] }),
+    loading ? /* @__PURE__ */ jsxs("div", { className: "mt-6 rounded-[28px] border border-[color:var(--border-color)] bg-[color:var(--surface)] p-10 text-center text-sm text-[color:var(--text-muted)]", children: [
+      /* @__PURE__ */ jsx(LoaderCircle, { className: "mx-auto mb-3 h-5 w-5 animate-spin" }),
+      "\u062F\u0631 \u062D\u0627\u0644 \u0628\u0627\u0631\u06AF\u0630\u0627\u0631\u06CC \u06AF\u0641\u062A\u06AF\u0648\u0647\u0627..."
+    ] }) : /* @__PURE__ */ jsxs(Fragment, { children: [
+      error ? /* @__PURE__ */ jsx("div", { className: "mt-6 rounded-[22px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700", children: error }) : null,
+      /* @__PURE__ */ jsx("div", { className: "mt-6 grid gap-5 xl:grid-cols-3", children: columns.map((column) => /* @__PURE__ */ jsxs(
+        "div",
+        {
+          className: `min-h-[520px] rounded-[30px] border p-5 transition ${activeDropZone === column.id ? "border-[color:var(--theme-accent)] bg-[color:var(--surface)] shadow-[0_14px_36px_var(--shadow-soft)]" : "border-[color:var(--border-color)] bg-[color:var(--surface)]"}`,
+          onDragOver: (event) => {
+            event.preventDefault();
+            if (draggingThreadId) setActiveDropZone(column.id);
+          },
+          onDragLeave: (event) => {
+            if (event.currentTarget.contains(event.relatedTarget)) return;
+            setActiveDropZone((current) => current === column.id ? null : current);
+          },
+          onDrop: (event) => {
+            event.preventDefault();
+            const threadId = event.dataTransfer.getData("text/plain") || draggingThreadId;
+            if (threadId) void moveThread(threadId, column.id);
+          },
+          children: [
+            /* @__PURE__ */ jsxs("div", { className: "mb-5 flex items-start justify-between gap-3 border-b border-[color:var(--border-color)] pb-4", children: [
+              /* @__PURE__ */ jsxs("div", { children: [
+                /* @__PURE__ */ jsx("h2", { className: "text-xl font-black text-[color:var(--text-strong)]", children: column.title }),
+                /* @__PURE__ */ jsx("p", { className: "mt-1 text-xs leading-6 text-[color:var(--text-muted)]", children: column.description })
+              ] }),
+              /* @__PURE__ */ jsx("div", { className: "rounded-full border border-[color:var(--border-color)] px-3 py-1.5 text-xs font-bold text-[color:var(--text-body)]", children: column.threads.length })
+            ] }),
+            column.threads.length ? /* @__PURE__ */ jsx("div", { className: "space-y-3", children: column.threads.map((thread) => /* @__PURE__ */ jsxs(
+              "article",
+              {
+                draggable: true,
+                onDragStart: (event) => {
+                  event.dataTransfer.effectAllowed = "move";
+                  event.dataTransfer.setData("text/plain", thread.id);
+                  setDraggingThreadId(thread.id);
+                },
+                onDragEnd: () => {
+                  setDraggingThreadId(null);
+                  setActiveDropZone(null);
+                },
+                className: `rounded-[24px] border border-[color:var(--border-color)] bg-white p-4 transition ${draggingThreadId === thread.id ? "opacity-60" : ""}`,
+                children: [
+                  /* @__PURE__ */ jsxs("div", { className: "flex items-start justify-between gap-3", children: [
+                    /* @__PURE__ */ jsxs("div", { className: "flex min-w-0 gap-3", children: [
+                      /* @__PURE__ */ jsx(
+                        "span",
+                        {
+                          className: `mt-1 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border ${thread.isOpened ? "border-emerald-200 bg-emerald-50 text-emerald-600" : "border-[color:var(--border-color)] bg-white text-[color:var(--text-muted)]"}`,
+                          title: thread.isOpened ? "\u0628\u0627\u0632 \u0634\u062F\u0647" : "\u0628\u0633\u062A\u0647 \u0634\u062F\u0647",
+                          "aria-label": thread.isOpened ? "\u0628\u0627\u0632 \u0634\u062F\u0647" : "\u0628\u0633\u062A\u0647 \u0634\u062F\u0647",
+                          children: thread.isOpened ? /* @__PURE__ */ jsx(CircleCheck, { className: "h-4 w-4" }) : /* @__PURE__ */ jsx(Circle, { className: "h-4 w-4" })
+                        }
+                      ),
+                      /* @__PURE__ */ jsxs("div", { className: "min-w-0", children: [
+                        /* @__PURE__ */ jsxs("div", { className: "mb-3 flex flex-wrap gap-2", children: [
+                          /* @__PURE__ */ jsx("span", { className: chipClass(), children: thread.docType }),
+                          /* @__PURE__ */ jsx("span", { className: chipClass(), children: DEV_DOC_PRIORITY_LABELS[thread.priority] }),
+                          thread.status === "in_progress" ? /* @__PURE__ */ jsx("span", { className: "inline-flex items-center rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-700", children: "\u062F\u0631 \u062D\u0627\u0644 \u0627\u0646\u062C\u0627\u0645" }) : null,
+                          thread.status === "done" ? /* @__PURE__ */ jsx("span", { className: "inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700", children: "\u0627\u0646\u062C\u0627\u0645\u200C\u0634\u062F\u0647" }) : null,
+                          thread.labels.slice(0, 3).map((label) => /* @__PURE__ */ jsx("span", { className: chipClass(), children: label }, `${thread.id}-${label}`))
+                        ] }),
+                        /* @__PURE__ */ jsx("h3", { className: "text-[15px] font-black leading-7 text-[color:var(--text-strong)]", children: thread.title })
+                      ] })
+                    ] }),
+                    /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-2", children: [
+                      savingThreadId === thread.id ? /* @__PURE__ */ jsx(LoaderCircle, { className: "h-4 w-4 animate-spin text-[color:var(--theme-accent)]" }) : null,
+                      /* @__PURE__ */ jsx(GripVertical, { className: "h-4 w-4 text-[color:var(--text-muted)]" })
+                    ] })
+                  ] }),
+                  /* @__PURE__ */ jsxs("div", { className: "mt-4 space-y-2 text-xs text-[color:var(--text-muted)]", children: [
+                    /* @__PURE__ */ jsx("div", { className: "truncate font-mono", children: thread.pagePathSample }),
+                    /* @__PURE__ */ jsxs("div", { className: "flex flex-wrap gap-x-3 gap-y-1", children: [
+                      /* @__PURE__ */ jsxs("span", { children: [
+                        "\u0627\u06CC\u062C\u0627\u062F\u06A9\u0646\u0646\u062F\u0647: ",
+                        thread.createdBy?.fullName || "\u0646\u0627\u0645\u0634\u062E\u0635"
+                      ] }),
+                      /* @__PURE__ */ jsxs("span", { children: [
+                        "\u0622\u062E\u0631\u06CC\u0646 \u0628\u0631\u0648\u0632\u0631\u0633\u0627\u0646\u06CC: ",
+                        formatDateTime(thread.updatedAt)
+                      ] })
+                    ] })
+                  ] }),
+                  /* @__PURE__ */ jsxs("div", { className: "mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-[color:var(--border-color)] pt-4", children: [
+                    /* @__PURE__ */ jsxs(
+                      Link,
+                      {
+                        href: thread.pagePathSample,
+                        target: "_blank",
+                        className: "inline-flex items-center gap-2 rounded-full border border-[color:var(--border-color)] px-3 py-2 text-xs font-medium text-[color:var(--text-body)]",
+                        children: [
+                          "\u0628\u0627\u0632 \u06A9\u0631\u062F\u0646 \u0635\u0641\u062D\u0647",
+                          /* @__PURE__ */ jsx(ArrowUpRight, { className: "h-3.5 w-3.5" })
+                        ]
+                      }
+                    ),
+                    /* @__PURE__ */ jsx("span", { className: "text-[11px] text-[color:var(--text-muted)]", children: "\u06A9\u0627\u0631\u062A \u0631\u0627 \u0628\u06A9\u0634 \u0648 \u062F\u0631 \u0633\u062A\u0648\u0646 \u062C\u062F\u06CC\u062F \u0631\u0647\u0627 \u06A9\u0646." })
+                  ] })
+                ]
+              },
+              thread.id
+            )) }) : /* @__PURE__ */ jsx("div", { className: "flex min-h-[360px] items-center justify-center rounded-[24px] border border-dashed border-[color:var(--border-color)] bg-[color:var(--surface)] px-6 text-center text-sm leading-7 text-[color:var(--text-muted)]", children: "\u062F\u0631 \u0627\u06CC\u0646 \u0633\u062A\u0648\u0646 \u0645\u0648\u0631\u062F\u06CC \u0648\u062C\u0648\u062F \u0646\u062F\u0627\u0631\u062F." })
+          ]
+        },
+        column.id
+      )) })
+    ] })
+  ] });
+}
+/*! Bundled license information:
+
+lucide-react/dist/esm/shared/src/utils.js:
+lucide-react/dist/esm/defaultAttributes.js:
+lucide-react/dist/esm/Icon.js:
+lucide-react/dist/esm/createLucideIcon.js:
+lucide-react/dist/esm/icons/arrow-up-right.js:
+lucide-react/dist/esm/icons/circle-check.js:
+lucide-react/dist/esm/icons/circle.js:
+lucide-react/dist/esm/icons/grip-vertical.js:
+lucide-react/dist/esm/icons/loader-circle.js:
+lucide-react/dist/esm/icons/refresh-cw.js:
+lucide-react/dist/esm/icons/search.js:
+lucide-react/dist/esm/lucide-react.js:
+  (**
+   * @license lucide-react v0.487.0 - ISC
+   *
+   * This source code is licensed under the ISC license.
+   * See the LICENSE file in the root directory of this source tree.
+   *)
+*/
+
+export { BusinessSwitch, ChoicePills, ChoicePillsField, ContractIssuerTags, ContractTypeTags, DEV_DOC_PRIORITY_LABELS, DEV_DOC_THREAD_PRIORITIES, DEV_DOC_THREAD_STATUSES, DataTable, DevDocThreadsBoard, EmptyState, ExpandableTagGroup, FormCard, Input, PageIntro, PersianDatePicker, PrimaryLink, RULE_PANEL_SELECT_CLASSNAME, RULE_PANEL_TEXT_INPUT_CLASSNAME, RuleAmountInput, RuleFieldLabel, RuleTabButton, SearchableSelect, SegmentedToggle, ShareModePills, StatGrid, StickySubmitBar, TagPills, compactTextareaStyle, formControlMutedDisabledStyle, formControlStyle, formErrorStyle, formLabelStyle, formMetaLabelStyle, formStyles_exports as formStyles, normalizeDevDocLabels, normalizeDevDocThreadPriority, normalizeDevDocThreadStatus, outlineButtonStyle, primaryButtonStyle, rulePanelNumericInputClassName };
 //# sourceMappingURL=index.mjs.map
 //# sourceMappingURL=index.mjs.map

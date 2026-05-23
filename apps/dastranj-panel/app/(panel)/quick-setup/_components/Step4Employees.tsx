@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { FileSpreadsheet, Pencil, Plus, Trash2, User, MoreVertical } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
@@ -97,7 +97,7 @@ function EmployeeDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 p-4" onClick={onClose}>
-      <div className="w-full max-w-xl rounded-3xl border border-white/10 bg-slate-900 p-6 text-right text-slate-100" onClick={(event) => event.stopPropagation()}>
+      <div className="w-full max-w-xl rounded-xl border border-white/10 bg-slate-900 p-4 text-right text-slate-100" onClick={(event) => event.stopPropagation()}>
         <div className="flex items-start justify-between gap-4">
           <button type="button" onClick={onClose} className="text-xl text-slate-400">×</button>
           <div>
@@ -108,7 +108,7 @@ function EmployeeDialog({
 
         {step === 1 ? (
           <div className="mt-6 space-y-4">
-            <div className="rounded-2xl border border-amber-400/30 bg-amber-500/10 px-4 py-3 text-right text-sm leading-7 text-amber-100">
+            <div className="rounded-xl border border-amber-400/30 bg-amber-500/10 px-4 py-3 text-right text-sm leading-7 text-amber-100">
               این فلو به صورت شبیه‌سازی‌شده برای مدیریت کاربرها پیاده‌سازی شده است. فعلاً فقط موبایل یا ایمیل را وارد کنید تا به مرحله بعد بروید.
             </div>
             <label className="space-y-2 block">
@@ -131,7 +131,7 @@ function EmployeeDialog({
                     <input type="file" accept="image/*" className="hidden" onChange={(event) => handleAvatarUpload(event.target.files?.[0] ?? null)} />
                     انتخاب فایل
                   </label>
-                  <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-slate-900 text-slate-300">
+                  <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-slate-900 text-slate-300">
                     {avatarUrl ? <img src={avatarUrl} alt="" className="h-full w-full object-cover" /> : <User className="h-5 w-5" />}
                   </div>
                 </div>
@@ -166,7 +166,7 @@ export default function Step4Employees({ employees, onChange }: Step4EmployeesPr
   };
 
   return (
-    <section className="space-y-5 rounded-2xl border border-white/10 bg-slate-900/60 p-4 sm:p-5">
+    <section className="space-y-5 rounded-xl border border-white/10 bg-slate-900/60 p-4 sm:p-5">
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-base font-bold text-white">مرحله 4: ثبت کارمندان</h2>
         <span className="rounded-full border border-fuchsia-400/30 bg-fuchsia-500/10 px-3 py-1.5 text-xs text-fuchsia-200">Step 4</span>
@@ -185,12 +185,12 @@ export default function Step4Employees({ employees, onChange }: Step4EmployeesPr
 
         <div className="mt-4 space-y-3">
           {employees.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-white/15 bg-slate-900/40 p-6 text-center text-sm text-slate-400">هنوز کارمندی ثبت نشده است.</div>
+            <div className="rounded-xl border border-dashed border-white/15 bg-slate-900/40 p-4 text-center text-sm text-slate-400">هنوز کارمندی ثبت نشده است.</div>
           ) : (
             employees.map((employee) => (
               <div key={employee.id} className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-slate-900/60 p-3">
                 <div className="flex items-center gap-3 text-right">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-500/20 text-indigo-200">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-500/20 text-indigo-200">
                     <User className="h-5 w-5" />
                   </div>
                   <div>
@@ -202,13 +202,13 @@ export default function Step4Employees({ employees, onChange }: Step4EmployeesPr
                   <button
                     type="button"
                     onClick={() => setOpenMenuId((prev) => (prev === employee.id ? null : employee.id))}
-                    className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 text-slate-300 transition-colors hover:border-white/20 hover:text-white"
+                    className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 text-slate-300 transition-colors hover:border-white/20 hover:text-white"
                     aria-label="اکشن‌های کارمند"
                   >
                     <MoreVertical className="h-4 w-4" />
                   </button>
                   {openMenuId === employee.id ? (
-                    <div className="absolute left-0 top-12 z-20 w-36 overflow-hidden rounded-2xl border border-white/10 bg-slate-950 shadow-2xl">
+                    <div className="absolute left-0 top-12 z-20 w-36 overflow-hidden rounded-xl border border-white/10 bg-slate-950 shadow-2xl">
                       <button
                         type="button"
                         onClick={() => {
@@ -244,7 +244,7 @@ export default function Step4Employees({ employees, onChange }: Step4EmployeesPr
       <EmployeeDialog open={isAddOpen} initialEmployee={editingEmployee} onClose={() => { setIsAddOpen(false); setEditingEmployee(null); }} onSubmit={upsert} />
       {isExcelOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 p-4" onClick={() => setIsExcelOpen(false)}>
-          <div className="w-full max-w-md rounded-3xl border border-white/10 bg-slate-900 p-6 text-right" onClick={(event) => event.stopPropagation()}>
+          <div className="w-full max-w-md rounded-xl border border-white/10 bg-slate-900 p-4 text-right" onClick={(event) => event.stopPropagation()}>
             <div className="text-xl font-black text-white">افزودن با اکسل</div>
             <p className="mt-3 text-sm leading-7 text-slate-300">این قابلیت در مرحله بعدی فعال می شود.</p>
             <button type="button" onClick={() => setIsExcelOpen(false)} className="mt-6 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-bold text-white">متوجه شدم</button>

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { ArrowLeft, MapPin, Plus, Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
@@ -55,7 +55,7 @@ export default function Step1Location({ isCompleted, initialLocation, onBack, on
 
   if (isCompleted && initialLocation) {
     return (
-      <section className="rounded-2xl border border-white/10 bg-slate-800/65 p-3.5 sm:p-4">
+      <section className="rounded-xl border border-white/10 bg-slate-800/65 p-3.5 sm:p-4">
         <div className="rounded-xl border border-white/10 bg-slate-950/45 p-4 sm:p-5">
           <div className="flex flex-col items-center gap-4">
             <div className="w-full rounded-xl border border-white/10 bg-slate-900/70 p-4 text-right lg:max-w-[260px]">
@@ -69,7 +69,7 @@ export default function Step1Location({ isCompleted, initialLocation, onBack, on
           </a>
         </div>
         <div className="mt-5 flex">
-          <button type="button" onClick={onBack} className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-600 text-white transition-colors hover:bg-indigo-500">
+          <button type="button" onClick={onBack} className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-600 text-white transition-colors hover:bg-indigo-500">
             <ArrowLeft className="h-4 w-4" />
           </button>
         </div>
@@ -78,7 +78,7 @@ export default function Step1Location({ isCompleted, initialLocation, onBack, on
   }
 
   return (
-    <section className="rounded-2xl border border-white/10 bg-slate-800/65 p-3.5 sm:p-4">
+    <section className="rounded-xl border border-white/10 bg-slate-800/65 p-3.5 sm:p-4">
       <div className="rounded-xl border border-white/10 bg-slate-950/45 p-4 sm:p-5">
         <div className="grid gap-5 lg:grid-cols-[1.05fr_1fr]">
           <div className="order-2 rounded-xl bg-stone-200 p-2.5 lg:order-1">
@@ -94,8 +94,8 @@ export default function Step1Location({ isCompleted, initialLocation, onBack, on
                   <MapPin className="h-4 w-4" />
                 </div>
                 <div className="absolute bottom-4 right-4 flex flex-col gap-2">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg"><Plus className="h-4 w-4" /></div>
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg"><Search className="h-4 w-4" /></div>
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg"><Plus className="h-4 w-4" /></div>
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg"><Search className="h-4 w-4" /></div>
                 </div>
               </button>
             </div>

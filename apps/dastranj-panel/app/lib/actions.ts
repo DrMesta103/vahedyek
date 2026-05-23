@@ -6,7 +6,7 @@ import { Prisma } from '../../node_modules/.prisma/client';
 import { prisma } from './prisma';
 import { getSessionContext } from './auth';
 import { ensureGlobalDefaultCalendar } from './calendar-defaults';
-import { getPolicyFamilyMeta } from './policy-workspaces';
+import { getPolicyFamilyMeta, getPolicySectionValues } from './policy-workspaces';
 import { seedSampleData } from './seed';
 
 function value(formData: FormData, key: string) {
@@ -540,6 +540,39 @@ export async function createPolicyAction(formData: FormData) {
   redirect('/policies');
 }
 
+export async function updatePolicyBasicInfoAction(formData: FormData) {
+  const tenantId = await getTenantId();
+  const policyId = value(formData, 'policyId');
+  const title = value(formData, 'title');
+  const description = value(formData, 'description') || null;
+
+  if (!policyId) throw new Error('شناسه سیاست الزامی است.');
+  if (!title) throw new Error('عنوان سیاست الزامی است.');
+
+  const existing = await prisma.workPolicy.findFirst({ where: { id: policyId, tenantId } });
+  if (!existing) throw new Error('سیاست برای tenant فعال یافت نشد.');
+
+  const sectionValues = getPolicySectionValues(existing);
+  const mergedSectionValues = jsonValue({
+    ...sectionValues,
+    title,
+    description,
+  });
+
+  await prisma.workPolicy.update({
+    where: { id: policyId },
+    data: {
+      title,
+      description,
+      sectionValues: mergedSectionValues,
+    },
+  });
+
+  revalidatePath('/policies');
+  revalidatePath('/policies/work');
+  redirect(`/policies/work?policyId=${policyId}`);
+}
+
 export async function savePolicyWorkspaceAction(formData: FormData) {
   const tenantId = await getTenantId();
   const familyKey = value(formData, 'familyKey');
@@ -556,48 +589,124 @@ export async function savePolicyWorkspaceAction(formData: FormData) {
     if (!calendar) throw new Error('Calendar not found for active tenant.');
   }
 
-  const title = value(formData, 'title') || family.title;
-  const description = value(formData, 'description') || null;
-  const sectionValues = jsonValue({
-    familyKey,
-    variant,
-    title,
-    description,
-    calendarId,
-    startTime: value(formData, 'startTime') || null,
-    endTime: value(formData, 'endTime') || null,
-    requiredMinutes: Number(value(formData, 'requiredMinutes') || '0'),
-    workStartWindow: value(formData, 'workStartWindow') || null,
-    workEndWindow: value(formData, 'workEndWindow') || null,
-    corePresence: value(formData, 'corePresence') || null,
-    maxDelayMinutes: Number(value(formData, 'maxDelayMinutes') || '0'),
-    breakMode: value(formData, 'breakMode') || null,
-    breakStart: value(formData, 'breakStart') || null,
-    breakEnd: value(formData, 'breakEnd') || null,
-    breakDuration: Number(value(formData, 'breakDuration') || '0'),
-    endsNextDay: boolValue(formData, 'endsNextDay'),
-    breakDeduct: boolValue(formData, 'breakDeduct'),
-    bufferMinutes: Number(value(formData, 'bufferMinutes') || '0'),
-    monthlyLimit: Number(value(formData, 'monthlyLimit') || '0'),
-    approvalMode: value(formData, 'approvalMode') || null,
-    requireAttachment: boolValue(formData, 'requireAttachment'),
-    geofenceRadius: Number(value(formData, 'geofenceRadius') || '0'),
-    allowRemote: boolValue(formData, 'allowRemote'),
-    allowManualApproval: boolValue(formData, 'allowManualApproval'),
-    allowOutsideShift: boolValue(formData, 'allowOutsideShift'),
-    manualEntryEnabled: boolValue(formData, 'manualEntryEnabled'),
-    requiresManagerApproval: boolValue(formData, 'requiresManagerApproval'),
-    maxMissionHours: Number(value(formData, 'maxMissionHours') || '0'),
-    nightStart: value(formData, 'nightStart') || null,
-    nightEnd: value(formData, 'nightEnd') || null,
-    cycleCount: Number(value(formData, 'cycleCount') || '0'),
-    cycleType: value(formData, 'cycleType') || null,
-    note: value(formData, 'note') || null,
-  });
+  const workSection = value(formData, 'workSection');
+  const returnPath = value(formData, 'returnPath');
 
-  const existing = policyId
-    ? await prisma.workPolicy.findFirst({ where: { id: policyId, tenantId }, select: { id: true } })
+  const existingPolicy = policyId
+    ? await prisma.workPolicy.findFirst({
+        where: { id: policyId, tenantId },
+        select: { id: true, title: true, description: true, sectionValues: true },
+      })
     : null;
+  const previousSectionValues =
+    existingPolicy?.sectionValues &&
+    typeof existingPolicy.sectionValues === 'object' &&
+    !Array.isArray(existingPolicy.sectionValues)
+      ? (existingPolicy.sectionValues as Record<string, unknown>)
+      : {};
+
+  const preserveWorkMeta = familyKey === 'work' && workSection === 'overtime' && existingPolicy;
+  const title = preserveWorkMeta
+    ? existingPolicy.title
+    : value(formData, 'title') || family.title;
+  const description = preserveWorkMeta ? existingPolicy.description : value(formData, 'description') || null;
+
+  const monthlyLimitInput = value(formData, 'monthlyLimit');
+  const monthlyLimit =
+    variant === 'annual' || variant === 'unpaid'
+      ? Number(monthlyLimitInput || '0')
+      : typeof previousSectionValues.monthlyLimit === 'number'
+        ? previousSectionValues.monthlyLimit
+        : Number(monthlyLimitInput || '0');
+
+  const preservedBool = (key: string) =>
+    typeof previousSectionValues[key] === 'boolean' ? (previousSectionValues[key] as boolean) : false;
+  const previousCalendarId = typeof previousSectionValues.calendarId === 'string' ? previousSectionValues.calendarId : null;
+
+  const sectionValues =
+    familyKey === 'work' && workSection === 'overtime'
+      ? jsonValue({
+          ...previousSectionValues,
+          familyKey,
+          variant,
+          title,
+          description,
+          calendarId: calendarId || previousCalendarId,
+          overtimeFromAttendance: boolValue(formData, 'overtimeFromAttendance'),
+          overtimeRequireAttachment: boolValue(formData, 'overtimeRequireAttachment'),
+          overtimeBeforeShift: boolValue(formData, 'overtimeBeforeShift'),
+          overtimeAfterShift: boolValue(formData, 'overtimeAfterShift'),
+        })
+      : familyKey === 'work' && workSection === 'base'
+        ? jsonValue({
+            ...previousSectionValues,
+            familyKey,
+            variant,
+            title,
+            description,
+            calendarId: calendarId || previousCalendarId,
+            startTime: value(formData, 'startTime') || null,
+            endTime: value(formData, 'endTime') || null,
+            maxDelayMinutes: Number(value(formData, 'maxDelayMinutes') || '0'),
+            requireAttachment: boolValue(formData, 'requireAttachment'),
+            allowManualApproval: boolValue(formData, 'allowManualApproval'),
+            breakDeduct: boolValue(formData, 'breakDeduct'),
+            overtimeFromAttendance: preservedBool('overtimeFromAttendance'),
+            overtimeRequireAttachment: preservedBool('overtimeRequireAttachment'),
+            overtimeBeforeShift: preservedBool('overtimeBeforeShift'),
+            overtimeAfterShift: preservedBool('overtimeAfterShift'),
+          })
+        : jsonValue({
+            familyKey,
+            variant,
+            title,
+            description,
+            calendarId,
+            startTime: value(formData, 'startTime') || null,
+            endTime: value(formData, 'endTime') || null,
+            requiredMinutes: Number(value(formData, 'requiredMinutes') || '0'),
+            workStartWindow: value(formData, 'workStartWindow') || null,
+            workEndWindow: value(formData, 'workEndWindow') || null,
+            corePresence: value(formData, 'corePresence') || null,
+            maxDelayMinutes: Number(value(formData, 'maxDelayMinutes') || '0'),
+            breakMode: value(formData, 'breakMode') || null,
+            breakStart: value(formData, 'breakStart') || null,
+            breakEnd: value(formData, 'breakEnd') || null,
+            breakDuration: Number(value(formData, 'breakDuration') || '0'),
+            endsNextDay: boolValue(formData, 'endsNextDay'),
+            breakDeduct: boolValue(formData, 'breakDeduct'),
+            bufferMinutes: Number(value(formData, 'bufferMinutes') || '0'),
+            monthlyLimit,
+            approvalMode: value(formData, 'approvalMode') || null,
+            requireAttachment: boolValue(formData, 'requireAttachment'),
+            geofenceRadius: Number(value(formData, 'geofenceRadius') || '0'),
+            allowRemote: boolValue(formData, 'allowRemote'),
+            allowManualApproval: boolValue(formData, 'allowManualApproval'),
+            allowOutsideShift: boolValue(formData, 'allowOutsideShift'),
+            manualEntryEnabled: boolValue(formData, 'manualEntryEnabled'),
+            requiresManagerApproval: boolValue(formData, 'requiresManagerApproval'),
+            maxMissionHours: Number(value(formData, 'maxMissionHours') || '0'),
+            nightEnabled: boolValue(formData, 'nightEnabled'),
+            nightStart: boolValue(formData, 'nightEnabled') ? value(formData, 'nightStart') || null : null,
+            nightEnd: boolValue(formData, 'nightEnabled') ? value(formData, 'nightEnd') || null : null,
+            cycleCount: Number(value(formData, 'cycleCount') || '0'),
+            cycleType: value(formData, 'cycleType') || null,
+            note: value(formData, 'note') || null,
+            entryGraceMinutes: Number(value(formData, 'entryGraceMinutes') || '0'),
+            exitGraceMinutes: Number(value(formData, 'exitGraceMinutes') || '0'),
+            maxEarlyLeaveMinutes: Number(value(formData, 'maxEarlyLeaveMinutes') || '0'),
+            delayCalculationMode: value(formData, 'delayCalculationMode') || null,
+            earlyLeaveCalculationMode: value(formData, 'earlyLeaveCalculationMode') || null,
+            bufferOverflowPolicy: value(formData, 'bufferOverflowPolicy') || null,
+            requiredHours: Number(value(formData, 'requiredHours') || '0'),
+            dailyEntryExitLimit: value(formData, 'dailyEntryExitLimit') || null,
+            overtimeFromAttendance: boolValue(formData, 'overtimeFromAttendance'),
+            overtimeRequireAttachment: boolValue(formData, 'overtimeRequireAttachment'),
+            overtimeBeforeShift: boolValue(formData, 'overtimeBeforeShift'),
+            overtimeAfterShift: boolValue(formData, 'overtimeAfterShift'),
+          });
+
+  const existing = existingPolicy;
 
   let savedId = existing?.id ?? '';
 
@@ -628,6 +737,13 @@ export async function savePolicyWorkspaceAction(formData: FormData) {
 
   revalidatePath('/policies');
   revalidatePath(`/policies/${familyKey}`);
+  revalidatePath('/policies/work');
+  revalidatePath('/policies/work/base');
+
+  if (returnPath) {
+    redirect(returnPath);
+  }
+
   redirect(`/policies/${familyKey}?policyId=${savedId}${variant && variant !== 'default' ? `&variant=${variant}` : ''}`);
 }
 
@@ -785,6 +901,7 @@ export async function createWorkGroupAction(formData: FormData) {
   const employeeIds = formData.getAll('employeeIds').map(String);
   const locationId = value(formData, 'locationId') || null;
   const policyId = value(formData, 'policyId') || null;
+  const transferEmployeeIds = formData.getAll('transferEmployeeIds').map(String);
   if (locationId) {
     const location = await prisma.location.findFirst({ where: { id: locationId, tenantId }, select: { id: true } });
     if (!location) throw new Error('Location not found for active tenant.');
@@ -797,6 +914,14 @@ export async function createWorkGroupAction(formData: FormData) {
     ? await prisma.employee.findMany({ where: { id: { in: employeeIds }, tenantId }, select: { id: true } })
     : [];
   if (validEmployees.length !== employeeIds.length) throw new Error('Employee not found for active tenant.');
+  if (transferEmployeeIds.length) {
+    await prisma.workGroupMember.deleteMany({
+      where: {
+        employeeId: { in: transferEmployeeIds },
+        workGroup: { tenantId },
+      },
+    });
+  }
   await prisma.workGroup.create({
     data: {
       tenantId,
@@ -809,6 +934,7 @@ export async function createWorkGroupAction(formData: FormData) {
         create: validEmployees.map(({ id: employeeId }) => ({
           employeeId,
           accessLevel: (value(formData, `accessLevel:${employeeId}`) || 'employee') as never,
+          joinedAt: value(formData, `joinedAt:${employeeId}`) ? new Date(value(formData, `joinedAt:${employeeId}`)) : undefined,
         })),
       },
     },

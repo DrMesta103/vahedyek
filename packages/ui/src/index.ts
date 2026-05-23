@@ -39,3 +39,15 @@ export { SearchableSelect, type SearchableSelectOption } from './components/inpu
 export { StickySubmitBar } from './components/layout/StickySubmitBar';
 export { ChoicePills, type ChoicePillsOption } from './components/pills/ChoicePills';
 export { ChoicePillsField } from './components/pills/ChoicePillsField';
+export {
+  DEV_DOC_PRIORITY_LABELS,
+  DEV_DOC_THREAD_PRIORITIES,
+  DEV_DOC_THREAD_STATUSES,
+  type DevDocThreadPriority,
+  type DevDocThreadRecord,
+  type DevDocThreadStatus,
+  normalizeDevDocLabels,
+  normalizeDevDocThreadPriority,
+  normalizeDevDocThreadStatus,
+} from './components/dev-docs/dev-doc.types';
+export { DevDocThreadsBoard, type DevDocThreadsBoardProps } from './components/dev-docs/DevDocThreadsBoard';

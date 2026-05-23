@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 import { getActiveNavigationItem } from '../lib/navigation';
 import { OrbitMenu } from './OrbitMenu';
+import PageDocsWidget from './PageDocsWidget';
 import { Sidebar } from './Sidebar';
 
 export function PanelShell({ children }: { children: ReactNode }) {
@@ -13,6 +14,7 @@ export function PanelShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="app-shell">
+      <PageDocsWidget />
       <Sidebar activeItem={activeItem.id} />
       {showOrbitMenu ? (
         <main className="main-content home-main-content">

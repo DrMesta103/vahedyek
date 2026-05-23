@@ -1,6 +1,6 @@
 import type { WorkPolicy } from '../../node_modules/.prisma/client';
 
-export type PolicyFamilyKey = 'work' | 'shift' | 'leave' | 'mission' | 'manual' | 'night';
+export type PolicyFamilyKey = 'work' | 'shift' | 'leave' | 'manual' | 'night';
 
 export type PolicyVariantKey =
   | 'fixed'
@@ -55,15 +55,6 @@ export const POLICY_FAMILIES: PolicyFamilyMeta[] = [
     route: '/policies/leave',
   },
   {
-    key: 'mission',
-    title: 'سیاست های ماموریت',
-    subtitle: 'تایید و محدودیت‌های زمانی ماموریت سازمانی',
-    pageTitle: 'ویرایش سیاست‌های ماموریت',
-    pageHint: 'تعریف قوانین ثبت، تایید و محدوده ماموریت',
-    infoBanner: 'در ماموریت، بازه زمانی، محدوده مکانی و الزام پیوست فایل قابل تنظیم است.',
-    route: '/policies/mission',
-  },
-  {
     key: 'manual',
     title: 'سیاست های تردد دستی',
     subtitle: 'ثبت دستی ورود و خروج و قواعد جایگزین',
@@ -87,23 +78,22 @@ export const POLICY_VARIANTS: Record<PolicyFamilyKey, Array<{ key: PolicyVariant
   work: [{ key: 'default', title: 'سیاست کاری', subtitle: 'قواعد پایه و سطح سازمان' }],
   shift: [
     { key: 'fixed', title: 'شیفت ثابت', subtitle: 'ساعت شروع و پایان ثابت' },
-    { key: 'floating-day', title: 'شناور شروع روز', subtitle: 'بازه ورود در ابتدای روز' },
-    { key: 'floating-absolute', title: 'شناور مطلق', subtitle: 'بازه ورود و خروج بدون قید ثابت' },
-    { key: 'split', title: 'شیفت دو تکه', subtitle: 'دو بازه کاری جداگانه' },
+    { key: 'split', title: 'شیفت دوتیکه', subtitle: 'دو بازه کاری جداگانه' },
     { key: 'rotate', title: 'شیفت چرخشی', subtitle: 'چرخش روزانه یا هفتگی' },
+    { key: 'floating-day', title: 'شیفت شناور شروع روز', subtitle: 'بازه ورود در ابتدای روز' },
+    { key: 'floating-absolute', title: 'شیفت شناور مطلق', subtitle: 'حداقل ساعات حضور روزانه' },
   ],
   leave: [
-    { key: 'annual', title: 'استحقاقی', subtitle: 'مناسب برای مرخصی سالانه' },
-    { key: 'sick', title: 'استعلاجی', subtitle: 'مناسب برای گواهی پزشکی' },
-    { key: 'unpaid', title: 'بدون حقوق', subtitle: 'کسر از حقوق و بیمه' },
-    { key: 'bonus', title: 'تشویقی', subtitle: 'مرخصی تشویقی و پاداشی' },
+    { key: 'annual', title: 'استحقاقی', subtitle: 'مرخصی‌های سالانه و قانونی' },
+    { key: 'sick', title: 'استعلاجی', subtitle: 'نیازمند گواهی پزشکی' },
+    { key: 'unpaid', title: 'بدون حقوق', subtitle: 'کسر از حقوق' },
+    { key: 'bonus', title: 'تشویقی', subtitle: 'مناسبت، تشویق و ...' },
   ],
-  mission: [{ key: 'default', title: 'ماموریت سازمانی', subtitle: 'یک قالب پایه برای ماموریت' }],
   manual: [{ key: 'default', title: 'تردد دستی', subtitle: 'قواعد ثبت دستی و تایید' }],
   night: [{ key: 'default', title: 'شب‌کاری', subtitle: 'ورود و خروج شبانه' }],
 };
 
-export const POLICY_FAMILY_ORDER: PolicyFamilyKey[] = ['work', 'shift', 'leave', 'mission', 'manual', 'night'];
+export const POLICY_FAMILY_ORDER: PolicyFamilyKey[] = ['work', 'shift', 'leave', 'manual', 'night'];
 
 export function getPolicyFamilyMeta(key: string) {
   return POLICY_FAMILIES.find((item) => item.key === key) ?? null;

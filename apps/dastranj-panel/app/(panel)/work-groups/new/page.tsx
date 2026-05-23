@@ -1,44 +1,38 @@
-import { createWorkGroupAction } from '../../../lib/actions';
+import { ModulePageHeader } from '../../../components/module-page/ModulePageHeader';
+import { panelBreadcrumbs } from '../../../components/module-page/module-breadcrumbs';
 import { listEmployees, listLocations, listPolicies } from '../../../lib/data';
-import { workGroupAccessLabels } from '../../../lib/constants';
-import { FormCard, PageIntro } from '@repo/ui/server';
+import { WorkGroupStepperForm } from './_components/WorkGroupStepperForm';
 
 export default async function NewWorkGroupPage() {
   const [employees, locations, policies] = await Promise.all([listEmployees(), listLocations(), listPolicies()]);
 
   return (
-    <div className="page-stack">
-      <PageIntro title="افزودن گروه کاری" description="گروه کاری با اعضا، محل و سیاست متناظر." />
-      <FormCard title="فرم گروه کاری">
-        <form action={createWorkGroupAction} className="form-grid">
-          <label><span>عنوان</span><input name="title" required /></label>
-          <label><span>محل کار</span><select name="locationId" defaultValue=""><option value="">بدون محل</option>{locations.map((item) => <option key={item.id} value={item.id}>{item.title}</option>)}</select></label>
-          <label><span>سیاست</span><select name="policyId" defaultValue=""><option value="">بدون سیاست</option>{policies.map((item) => <option key={item.id} value={item.id}>{item.title}</option>)}</select></label>
-          <label className="full-span"><span>توضیح</span><textarea name="description" rows={4} /></label>
-          <label className="full-span"><span>تگ‌ها</span><input name="tags" placeholder="ستاد, منابع انسانی, شیفت اداری" /></label>
-          <div className="full-span fieldset">
-            <span>اعضا</span>
-            <div className="checkbox-list">
-              {employees.map((employee) => (
-                <div key={employee.id} className="member-pick">
-                  <label className="checkbox-row">
-                    <input name="employeeIds" type="checkbox" value={employee.id} />
-                    <span>{`${employee.firstName} ${employee.lastName}`}</span>
-                  </label>
-                  <select name={`accessLevel:${employee.id}`} defaultValue="employee">
-                    {Object.entries(workGroupAccessLabels).map(([key, label]) => (
-                      <option key={key} value={key}>
-                        {label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="full-span"><button type="submit" className="primary-button">ثبت گروه کاری</button></div>
-        </form>
-      </FormCard>
+    <div className="work-group-create-page module-page" dir="rtl" lang="fa">
+      <ModulePageHeader
+        breadcrumbs={panelBreadcrumbs('افزودن گروه کاری')}
+        title="افزودن گروه کاری"
+      />
+
+      <WorkGroupStepperForm
+        locations={locations.map((item) => ({
+          id: item.id,
+          title: item.title,
+          description: item.description ?? '',
+          radius: item.radius,
+        }))}
+        employees={employees.map((item) => ({
+          id: item.id,
+          name: `${item.firstName} ${item.lastName}`.trim() || item.mobile1 || item.email || 'کارمند',
+          currentGroupName: item.workGroupMemberships[0]?.workGroup.title ?? null,
+        }))}
+        policies={policies.map((item) => ({
+          id: item.id,
+          title: item.title,
+          description: item.description ?? '',
+          calendarTitle: item.calendar?.title ?? '',
+          calendarYearLabel: item.calendar?.yearLabel ?? '',
+        }))}
+      />
     </div>
   );
 }
