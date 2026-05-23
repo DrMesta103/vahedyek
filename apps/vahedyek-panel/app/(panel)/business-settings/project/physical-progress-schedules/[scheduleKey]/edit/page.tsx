@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import PanelLayout from '../../../../../../components/PanelLayout';
 import { ProjectPhysicalProgressScheduleForm } from '../../../../_components/ProjectPhysicalProgressScheduleForm';
 
@@ -6,7 +7,9 @@ export default async function EditProjectPhysicalProgressSchedulePage({ params }
 
   return (
     <PanelLayout>
-      <ProjectPhysicalProgressScheduleForm scheduleKey={scheduleKey} />
+      <Suspense fallback={null}>
+        <ProjectPhysicalProgressScheduleForm scheduleKey={scheduleKey} />
+      </Suspense>
     </PanelLayout>
   );
 }

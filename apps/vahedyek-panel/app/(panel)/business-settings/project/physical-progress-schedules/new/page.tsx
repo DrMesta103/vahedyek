@@ -1,10 +1,13 @@
+import { Suspense } from 'react';
 import PanelLayout from '../../../../../components/PanelLayout';
 import { ProjectPhysicalProgressScheduleForm } from '../../../_components/ProjectPhysicalProgressScheduleForm';
 
 export default function NewProjectPhysicalProgressSchedulePage() {
   return (
     <PanelLayout>
-      <ProjectPhysicalProgressScheduleForm />
+      <Suspense fallback={null}>
+        <ProjectPhysicalProgressScheduleForm />
+      </Suspense>
     </PanelLayout>
   );
 }
