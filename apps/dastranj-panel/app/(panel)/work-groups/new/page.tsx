@@ -23,7 +23,7 @@ export default async function NewWorkGroupPage() {
         employees={employees.map((item) => ({
           id: item.id,
           name: `${item.firstName} ${item.lastName}`.trim() || item.mobile1 || item.email || 'کارمند',
-          currentGroupName: item.workGroupMemberships[0]?.workGroup.title ?? null,
+          currentGroupName: item.workGroupMemberships.find((membership) => membership.isCurrent)?.workGroup.title ?? null,
         }))}
         policies={policies.map((item) => ({
           id: item.id,

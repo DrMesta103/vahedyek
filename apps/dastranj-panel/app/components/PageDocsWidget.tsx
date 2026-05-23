@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { Camera, CheckCircle2, Download, FileText, Loader2, Maximize2, Mic, Minimize2, Pause, Plus, Reply, Send, Smile, Tag, Upload, X } from 'lucide-react';
 import { Input } from '@repo/ui';
+import { MinimalScroll } from './MinimalScroll';
 import { currentAppConfig } from '../config/current';
 import { useAuthContext } from '../hooks/useAuthContext';
 import { DEFAULT_DOC_TYPES, THREAD_PRIORITIES, type PageMessageRecord, type PageThreadRecord, type ThreadPriority } from '../lib/page-threads';
@@ -822,7 +823,7 @@ export default function PageDocsWidget() {
                   </div>
                 </div>
 
-                <div className="relative flex-1 overflow-auto bg-slate-50 p-4">
+                <MinimalScroll variant="both" className="relative flex-1 bg-slate-50 p-4">
                   <div className="relative mx-auto w-fit">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
@@ -879,7 +880,7 @@ export default function PageDocsWidget() {
                       }}
                     />
                   </div>
-                </div>
+                </MinimalScroll>
               </div>
             </div>
           ) : null}
@@ -1022,7 +1023,7 @@ export default function PageDocsWidget() {
                 </div>
               </div>
 
-              <div ref={scrollRef} className="flex-1 overflow-auto bg-[color:var(--surface-soft)] p-4">
+              <MinimalScroll ref={scrollRef} variant="both" className="flex-1 bg-[color:var(--surface-soft)] p-4">
                 {loadingMessages ? (
                   <div className="rounded-[22px] border border-[color:var(--border-color)] bg-[color:var(--surface)] p-8 text-center text-sm text-[color:var(--text-muted)]">
                     <Loader2 className="mx-auto mb-3 h-5 w-5 animate-spin" />
@@ -1177,7 +1178,7 @@ export default function PageDocsWidget() {
                     })}
                   </div>
                 )}
-              </div>
+              </MinimalScroll>
 
               <div className="border-t border-[color:var(--border-color)] bg-[color:var(--surface)] p-3">
                 {replyTo ? (
@@ -1321,7 +1322,7 @@ export default function PageDocsWidget() {
               </div>
             </>
           ) : (
-            <div className="flex-1 overflow-auto bg-[color:var(--surface-soft)] p-4">
+            <MinimalScroll variant="both" className="flex-1 bg-[color:var(--surface-soft)] p-4">
               {loading ? (
                 <div className="rounded-[22px] border border-[color:var(--border-color)] bg-[color:var(--surface)] p-8 text-center text-sm text-[color:var(--text-muted)]">
                   <Loader2 className="mx-auto mb-3 h-5 w-5 animate-spin" />
@@ -1519,7 +1520,7 @@ export default function PageDocsWidget() {
                   )}
                 </div>
               )}
-            </div>
+            </MinimalScroll>
           )}
         </section>
       ) : null}

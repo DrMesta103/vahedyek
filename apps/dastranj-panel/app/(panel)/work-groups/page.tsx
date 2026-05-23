@@ -1,10 +1,10 @@
 import Link from 'next/link';
-import { MoreVertical, Plus, Search, UsersRound } from 'lucide-react';
+import { Plus, Search, UsersRound } from 'lucide-react';
 import { ModulePageHeader } from '../../components/module-page/ModulePageHeader';
 import { panelBreadcrumbs } from '../../components/module-page/module-breadcrumbs';
-import { workGroupAccessLabels } from '../../lib/constants';
 import { listCalendars, listEmployees, listLocations, listPolicies, listWorkGroups } from '../../lib/data';
 import { WorkGroupFiltersSidebar } from './_components/WorkGroupFiltersSidebar';
+import { WorkGroupCardActions } from './_components/WorkGroupCardActions';
 
 type WorkGroupsPageProps = {
   searchParams?: Promise<{
@@ -71,7 +71,8 @@ export default async function WorkGroupsPage({ searchParams }: WorkGroupsPagePro
   }));
 
   const filteredItems = items.filter((item) => {
-    if (employeeId && !item.members.some((member) => member.employee.id === employeeId)) return false;
+    const currentMembers = item.members.filter((member) => member.isCurrent);
+    if (employeeId && !currentMembers.some((member) => member.employee.id === employeeId)) return false;
     if (locationId && item.location?.id !== locationId) return false;
     if (policyId && item.policy?.id !== policyId) return false;
     if (calendarId && item.policy?.calendar?.id !== calendarId) return false;
@@ -103,27 +104,44 @@ export default async function WorkGroupsPage({ searchParams }: WorkGroupsPagePro
 
         <div className="work-groups-list">
           {filteredItems.map((item) => {
-            const memberNames = item.members
-              .map((member) => `${member.employee.firstName} ${member.employee.lastName} (${workGroupAccessLabels[member.accessLevel]})`)
-              .join('، ');
+            const currentMembers = item.members.filter((member) => member.isCurrent);
 
             return (
               <article key={item.id} className="work-group-card">
-                <button type="button" className="work-group-card-menu" aria-label="منوی عملیات">
-                  <MoreVertical />
-                </button>
-
                 <div className="work-group-card-body">
                   <h3>{item.title}</h3>
                   <p>توضیحات: {item.description?.trim() ? item.description : 'ثبت نشده است'}</p>
-                  <p>محل های کاری: {item.location?.title ?? 'ثبت نشده است'}</p>
-                  <p>سیاست های کاری: {item.policy?.title ?? 'ثبت نشده است'}{item.policy?.calendar?.yearLabel ? ` (تقویم ${item.policy.calendar.yearLabel})` : ''}</p>
-                  {memberNames ? <p>اعضا: {memberNames}</p> : null}
+                  <p>محل‌های کاری: {item.location?.title ?? 'ثبت نشده است'}</p>
+                  <p>
+                    سیاست‌های کاری: {item.policy?.title ?? 'ثبت نشده است'}
+                    {item.policy?.calendar?.yearLabel ? ` (تقویم ${item.policy.calendar.yearLabel})` : ''}
+                  </p>
                 </div>
+
+                <WorkGroupCardActions
+                  id={item.id}
+                  title={item.title}
+                  members={item.members.map((member) => ({
+                    id: member.id,
+                    isCurrent: member.isCurrent,
+                    joinedAt: member.joinedAt.toISOString(),
+                    leftAt: member.leftAt ? member.leftAt.toISOString() : null,
+                    accessLevel: member.accessLevel,
+                    employee: {
+                      id: member.employee.id,
+                      firstName: member.employee.firstName,
+                      lastName: member.employee.lastName,
+                      avatarUrl: member.employee.avatarUrl ?? null,
+                      mobile1: member.employee.mobile1 ?? null,
+                      email: member.employee.email ?? null,
+                      personnelCode: member.employee.personnelCode ?? null,
+                    },
+                  }))}
+                />
 
                 <div className="work-group-card-avatar">
                   <UsersRound />
-                  <span>{formatMemberCount(item.members.length)}</span>
+                  <span>{formatMemberCount(currentMembers.length)}</span>
                 </div>
               </article>
             );

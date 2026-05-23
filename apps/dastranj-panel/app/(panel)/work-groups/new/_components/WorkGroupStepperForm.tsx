@@ -2,7 +2,8 @@
 
 import { AlertTriangle, Camera, Check, Grid3X3, MapPin, Plus, Search, Trash2, UserRound, UsersRound } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { createWorkGroupAction } from '../../../../lib/actions';
+import { useRouter } from 'next/navigation';
+import { saveWorkGroupDraftAction } from '../../../../lib/actions';
 
 type LocationOption = {
   id: string;
@@ -31,6 +32,18 @@ type SelectedEmployee = EmployeeOption & {
   transferFromGroup: boolean;
 };
 
+type WorkGroupStepperFormMode = 'create' | 'edit';
+
+type WorkGroupStepperFormInitialValues = {
+  id?: string;
+  title?: string;
+  description?: string;
+  tags?: string[];
+  locationId?: string;
+  selectedPolicyId?: string;
+  selectedEmployees?: SelectedEmployee[];
+};
+
 const today = new Date().toISOString().slice(0, 10);
 
 const criticalStyles = `
@@ -54,9 +67,9 @@ const criticalStyles = `
 .work-group-field input,.work-group-tag-row input,.work-group-modal input{min-height:38px}
 .work-group-field textarea{min-height:76px;padding-block:12px}
 .work-group-field small{color:#94a3b8;font-size:11px;font-weight:500;text-align:left}
-.work-group-tag-row{display:grid!important;grid-template-columns:92px minmax(0,1fr);gap:8px}
+.work-group-tag-row{display:grid!important;grid-template-columns:minmax(0,1fr) auto;gap:8px}
 .work-group-tag-row button,.work-group-step-next{display:inline-flex!important;align-items:center;justify-content:center;gap:6px;min-height:34px;border:0;border-radius:999px;background:#5b50f2;color:#fff;padding:0 16px;font-size:12px;font-weight:800}
-.work-group-tag-row button{border:1px solid rgba(91,80,242,.8);background:rgba(91,80,242,.12);color:#8b80ff}
+.work-group-tag-row button{min-width:76px;white-space:nowrap;border:1px solid rgba(91,80,242,.8);background:rgba(91,80,242,.12);color:#8b80ff;padding-inline:10px}
 .work-group-step-next{align-self:end;justify-self:end}
 .work-group-step-next:disabled{cursor:not-allowed;opacity:.45}
 `;
@@ -86,11 +99,12 @@ function Stepper({
     <div className="work-group-stepper">
       {steps.map((item) => {
         const disabled = item.index > accessibleUntil && !completedSteps.includes(item.index);
+        const isActive = item.index === step;
         return (
           <button
             key={item.index}
             type="button"
-            className={cn('work-group-step', item.index === step && 'is-active', completedSteps.includes(item.index) && 'is-done', disabled && 'is-locked')}
+            className={cn('work-group-step', isActive && 'is-active', !isActive && completedSteps.includes(item.index) && 'is-done', disabled && 'is-locked')}
             disabled={disabled}
             onClick={() => onStepClick(item.index)}
           >
@@ -109,6 +123,24 @@ function SearchBox({ value, onChange, placeholder }: { value: string; onChange: 
       <Search />
       <input value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} />
     </label>
+  );
+}
+
+function RoleSelectTooltip() {
+  return (
+    <div className="work-group-role-tooltip-wrap">
+      <button type="button" className="work-group-role-tooltip-trigger" aria-label="راهنمای نقش" aria-describedby="work-group-role-tooltip">
+        ?
+      </button>
+      <div className="work-group-role-tooltip" id="work-group-role-tooltip" role="tooltip">
+        <strong>عضو عادی</strong>
+        <span>عضو عادی فقط وظایف پایه گروه را دنبال می‌کند.</span>
+        <strong>مدیر</strong>
+        <span>مدیر مسئول تصمیم های اصلی و نظارت کلی روی گروه است.</span>
+        <strong>سرگروه</strong>
+        <span>سرگروه وظایف اجرایی و هماهنگی های جزئی تر را دنبال می‌کند.</span>
+      </div>
+    </div>
   );
 }
 
@@ -166,24 +198,46 @@ export function WorkGroupStepperForm({
   locations,
   employees,
   policies,
+  mode = 'create',
+  initialValues,
 }: {
   locations: LocationOption[];
   employees: EmployeeOption[];
   policies: PolicyOption[];
+  mode?: WorkGroupStepperFormMode;
+  initialValues?: WorkGroupStepperFormInitialValues;
 }) {
+  const router = useRouter();
   const [step, setStep] = useState(1);
-  const [completedSteps, setCompletedSteps] = useState<number[]>([]);
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
+  const [completedSteps, setCompletedSteps] = useState<number[]>(() => {
+    const initial = initialValues ?? {};
+    const steps: number[] = [];
+    if (initial.title?.trim() || initial.description?.trim() || initial.tags?.length) steps.push(1);
+    if (initial.locationId) steps.push(2);
+    if ((initial.selectedEmployees?.length ?? 0) > 0) steps.push(3);
+    if (initial.selectedPolicyId) steps.push(4);
+    return steps;
+  });
+  const [title, setTitle] = useState(initialValues?.title ?? '');
+  const [description, setDescription] = useState(initialValues?.description ?? '');
   const [tagInput, setTagInput] = useState('');
-  const [tags, setTags] = useState<string[]>([]);
-  const [locationId, setLocationId] = useState('');
-  const [selectedEmployees, setSelectedEmployees] = useState<SelectedEmployee[]>([]);
-  const [selectedPolicyId, setSelectedPolicyId] = useState('');
+  const [tags, setTags] = useState<string[]>(initialValues?.tags ?? []);
+  const [locationId, setLocationId] = useState(initialValues?.locationId ?? '');
+  const normalizeAccessLevel = (value: SelectedEmployee['accessLevel']) =>
+    value === 'employee' || value === 'lead' || value === 'manager' ? value : 'employee';
+  const [workGroupId, setWorkGroupId] = useState(initialValues?.id ?? '');
+  const [selectedEmployees, setSelectedEmployees] = useState<SelectedEmployee[]>(
+    (initialValues?.selectedEmployees ?? []).map((employee) => ({
+      ...employee,
+      accessLevel: normalizeAccessLevel(employee.accessLevel),
+    })),
+  );
+  const [selectedPolicyId, setSelectedPolicyId] = useState(initialValues?.selectedPolicyId ?? '');
   const [employeeSearch, setEmployeeSearch] = useState('');
   const [selectedEmployeeSearch, setSelectedEmployeeSearch] = useState('');
   const [policySearch, setPolicySearch] = useState('');
   const [pendingEmployee, setPendingEmployee] = useState<EmployeeOption | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const availableEmployees = useMemo(() => {
     const selectedIds = new Set(selectedEmployees.map((item) => item.id));
@@ -204,7 +258,49 @@ export function WorkGroupStepperForm({
   }, [policies, policySearch]);
 
   const selectedPolicy = policies.find((item) => item.id === selectedPolicyId) ?? null;
-  const accessibleUntil = Math.min(4, completedSteps.length + 1);
+  const accessibleUntil = mode === 'edit' ? 4 : Math.min(4, completedSteps.length + 1);
+  const submitLabel = mode === 'edit' ? 'ذخیره تغییرات' : 'ثبت نهایی';
+
+  const buildFormData = () => {
+    const formData = new FormData();
+    const currentWorkGroupId = workGroupId || initialValues?.id;
+    if (currentWorkGroupId) formData.set('id', currentWorkGroupId);
+    formData.set('title', title);
+    formData.set('description', description);
+    formData.set('tags', tags.join(','));
+    formData.set('locationId', locationId);
+    formData.set('policyId', selectedPolicyId);
+    selectedEmployees.forEach((employee) => {
+      formData.append('employeeIds', employee.id);
+      formData.set(`accessLevel:${employee.id}`, normalizeAccessLevel(employee.accessLevel));
+      formData.set(`joinedAt:${employee.id}`, employee.joinedAt);
+    });
+    return formData;
+  };
+
+  const saveDraftStep = async () => {
+    setSaving(true);
+    try {
+      const result = await saveWorkGroupDraftAction(buildFormData());
+      if (result?.id && result.id !== workGroupId) {
+        setWorkGroupId(result.id);
+      }
+      return result;
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const goToNextStep = async (targetStep: number) => {
+    await saveDraftStep();
+    markStepCompleted(step);
+    setStep(targetStep);
+  };
+
+  const saveAndExit = async () => {
+    await saveDraftStep();
+    router.push('/work-groups');
+  };
 
   const addTag = () => {
     const next = tagInput.trim();
@@ -231,6 +327,11 @@ export function WorkGroupStepperForm({
 
   const requestEmployee = (employee: EmployeeOption) => setPendingEmployee(employee);
 
+  const updateEmployeeAccessLevel = (employeeId: string, accessLevel: SelectedEmployee['accessLevel']) => {
+    const normalized = normalizeAccessLevel(accessLevel);
+    setSelectedEmployees((current) => current.map((item) => (item.id === employeeId ? { ...item, accessLevel: normalized } : item)));
+  };
+
   const markStepCompleted = (targetStep: number) => {
     setCompletedSteps((current) => (current.includes(targetStep) ? current : [...current, targetStep].sort((a, b) => a - b)));
   };
@@ -245,8 +346,9 @@ export function WorkGroupStepperForm({
   const canSubmit = canContinueBase && canContinueLocation && canContinueEmployees && Boolean(selectedPolicyId);
 
   return (
-    <form action={createWorkGroupAction} className="work-group-create-shell" dir="rtl">
+    <form className="work-group-create-shell" dir="rtl" onSubmit={(event) => event.preventDefault()}>
       <style dangerouslySetInnerHTML={{ __html: criticalStyles }} />
+      {workGroupId || initialValues?.id ? <input type="hidden" name="id" value={workGroupId || initialValues?.id} readOnly /> : null}
       <input type="hidden" name="title" value={title} readOnly />
       <input type="hidden" name="description" value={description} readOnly />
       <input type="hidden" name="tags" value={tags.join(',')} readOnly />
@@ -257,7 +359,6 @@ export function WorkGroupStepperForm({
           <input name="employeeIds" value={employee.id} readOnly />
           <input name={`accessLevel:${employee.id}`} value={employee.accessLevel} readOnly />
           <input name={`joinedAt:${employee.id}`} value={employee.joinedAt} readOnly />
-          {employee.transferFromGroup ? <input name="transferEmployeeIds" value={employee.id} readOnly /> : null}
         </div>
       ))}
 
@@ -310,10 +411,9 @@ export function WorkGroupStepperForm({
           <button
             type="button"
             className="work-group-step-next"
-            disabled={!canContinueBase}
-            onClick={() => {
-              markStepCompleted(1);
-              setStep(2);
+            disabled={!canContinueBase || saving}
+            onClick={async () => {
+              await goToNextStep(2);
             }}
           >
             تایید و ادامه
@@ -338,10 +438,9 @@ export function WorkGroupStepperForm({
           <button
             type="button"
             className="work-group-step-next"
-            disabled={!canContinueLocation}
-            onClick={() => {
-              markStepCompleted(2);
-              setStep(3);
+            disabled={!canContinueLocation || saving}
+            onClick={async () => {
+              await goToNextStep(3);
             }}
           >
             تایید و ادامه
@@ -405,11 +504,17 @@ export function WorkGroupStepperForm({
                     <button type="button" onClick={() => setSelectedEmployees((current) => current.filter((item) => item.id !== employee.id))}>
                       <Trash2 />
                     </button>
-                    <select value={employee.accessLevel} onChange={(event) => setSelectedEmployees((current) => current.map((item) => item.id === employee.id ? { ...item, accessLevel: event.target.value as SelectedEmployee['accessLevel'] } : item))}>
-                      <option value="employee">کارمند</option>
-                      <option value="lead">سرگروه</option>
-                      <option value="manager">مدیر</option>
-                    </select>
+                    <div className="work-group-role-select-shell">
+                      <select
+                        value={employee.accessLevel}
+                        onChange={(event) => updateEmployeeAccessLevel(employee.id, event.target.value as SelectedEmployee['accessLevel'])}
+                      >
+                        <option value="employee">عضو عادی</option>
+                        <option value="lead">سرگروه</option>
+                        <option value="manager">مدیر</option>
+                      </select>
+                      <RoleSelectTooltip />
+                    </div>
                     <div>
                       <strong>{employee.name}</strong>
                       <span>تاریخ عضویت: {employee.joinedAt}</span>
@@ -424,10 +529,9 @@ export function WorkGroupStepperForm({
           <button
             type="button"
             className="work-group-step-next"
-            disabled={!canContinueEmployees}
-            onClick={() => {
-              markStepCompleted(3);
-              setStep(4);
+            disabled={!canContinueEmployees || saving}
+            onClick={async () => {
+              await goToNextStep(4);
             }}
           >
             تایید و ادامه
@@ -491,14 +595,15 @@ export function WorkGroupStepperForm({
             </div>
           </div>
           <button
-            type="submit"
+            type="button"
             className="work-group-step-next"
-            disabled={!canSubmit}
-            onClick={() => {
+            disabled={!canSubmit || saving}
+            onClick={async () => {
               markStepCompleted(4);
+              await saveAndExit();
             }}
           >
-            ثبت نهایی
+            {submitLabel}
             <Grid3X3 />
           </button>
         </section>

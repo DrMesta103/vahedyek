@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   useCallback,
@@ -30,7 +29,8 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, Pencil, Trash2 } from 'lucide-react';
-import { ConfirmDialog } from '../../../components/ConfirmDialog';
+import { CardMenu } from '../../../components/CardMenu';
+import { MinimalScroll } from '../../../components/MinimalScroll';
 import { requestReasonCategories, requestReasonTabLabels } from '../../../lib/constants';
 import {
   deleteRequestReasonAction,
@@ -50,6 +50,7 @@ export type RequestReasonListItem = {
 type RequestReasonsClientProps = {
   items: RequestReasonListItem[];
   activeCategory: keyof typeof requestReasonTabLabels;
+  onAddClick?: () => void;
 };
 
 function RequestReasonRowShell({
@@ -71,8 +72,6 @@ function RequestReasonRowShell({
   articleStyle?: React.CSSProperties;
   articleClassName?: string;
 }) {
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const deleteFormRef = useRef<HTMLFormElement>(null);
   const description = item.description?.trim() ? item.description : 'توضیحات ثبت نشده است';
 
   return (
@@ -99,28 +98,29 @@ function RequestReasonRowShell({
       </div>
 
       <div className="request-reason-row-actions">
-        <Link href={`/request-reasons/${item.id}/edit`} className="request-reason-icon-btn" aria-label={`ویرایش ${item.title}`}>
-          <Pencil className="h-4 w-4" strokeWidth={2.2} />
-        </Link>
-        <button type="button" className="request-reason-icon-btn is-danger" aria-label={`حذف ${item.title}`} onClick={() => setDeleteOpen(true)}>
-          <Trash2 className="h-4 w-4" strokeWidth={2.2} />
-        </button>
-        <form ref={deleteFormRef} action={deleteRequestReasonAction} hidden>
-          <input type="hidden" name="id" value={item.id} />
-          <input type="hidden" name="category" value={category} />
-        </form>
-        <ConfirmDialog
-          open={deleteOpen}
-          title="حذف علت درخواست"
-          description={`آیا از حذف «${item.title}» مطمئن هستید؟`}
-          confirmLabel="بله، حذف شود"
-          cancelLabel="انصراف"
-          tone="danger"
-          onCancel={() => setDeleteOpen(false)}
-          onConfirm={() => {
-            deleteFormRef.current?.requestSubmit();
-            setDeleteOpen(false);
-          }}
+        <CardMenu
+          items={[
+            {
+              kind: 'link' as const,
+              href: `/request-reasons/${item.id}/edit`,
+              label: 'ویرایش',
+              icon: <Pencil className="h-4 w-4" strokeWidth={2.2} />,
+            },
+            {
+              kind: 'submit' as const,
+              label: 'حذف',
+              tone: 'danger' as const,
+              icon: <Trash2 className="h-4 w-4" strokeWidth={2.2} />,
+              action: deleteRequestReasonAction,
+              hiddenFields: { id: item.id, category },
+              confirm: {
+                title: 'حذف علت درخواست',
+                description: `آیا از حذف «${item.title}» مطمئن هستید؟`,
+                confirmLabel: 'بله، حذف شود',
+                cancelLabel: 'انصراف',
+              },
+            },
+          ]}
         />
       </div>
     </article>
@@ -190,7 +190,7 @@ function StaticRequestReasonRow({
   );
 }
 
-export function RequestReasonsClient({ items, activeCategory }: RequestReasonsClientProps) {
+export function RequestReasonsClient({ items, activeCategory, onAddClick }: RequestReasonsClientProps) {
   const router = useRouter();
   const categoriesScrollRef = useRef<HTMLDivElement>(null);
   const [dndReady, setDndReady] = useState(false);
@@ -250,8 +250,6 @@ export function RequestReasonsClient({ items, activeCategory }: RequestReasonsCl
     });
   };
 
-  const addHref = `/request-reasons/new?category=${activeCategory}`;
-
   const handleCategoriesWheel = useCallback((event: WheelEvent<HTMLDivElement>) => {
     const el = categoriesScrollRef.current;
     if (!el || el.scrollWidth <= el.clientWidth) return;
@@ -283,8 +281,9 @@ export function RequestReasonsClient({ items, activeCategory }: RequestReasonsCl
   return (
     <>
       <div className="request-reason-categories-clip">
-        <div
+        <MinimalScroll
           ref={categoriesScrollRef}
+          variant="horizontalHidden"
           className="request-reason-categories-scroll"
           onWheel={handleCategoriesWheel}
         >
@@ -305,17 +304,19 @@ export function RequestReasonsClient({ items, activeCategory }: RequestReasonsCl
             );
           })}
           </div>
-        </div>
+        </MinimalScroll>
       </div>
 
       {listContent}
 
-      <div className="request-reasons-footer">
-        <Link href={addHref} className="module-page-add-btn request-reasons-add-btn">
-          <span aria-hidden>+</span>
-          افزودن علت درخواست
-        </Link>
-      </div>
+      {onAddClick ? (
+        <div className="request-reasons-footer">
+          <button type="button" className="module-page-add-btn request-reasons-add-btn" onClick={onAddClick}>
+            <span aria-hidden>+</span>
+            افزودن علت درخواست
+          </button>
+        </div>
+      ) : null}
     </>
   );
 }

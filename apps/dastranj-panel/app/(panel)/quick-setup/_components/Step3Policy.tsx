@@ -2,6 +2,7 @@
 
 import { ArrowLeft, BriefcaseBusiness, CalendarDays, Check, ChevronDown, ChevronUp } from 'lucide-react';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { MinimalScroll } from '../../../components/MinimalScroll';
 import { createPolicyFromQuickSetupAction } from '../../../lib/actions';
 import type { CompletedCalendarItem, QuickPolicySummary } from './quick-setup.types';
 
@@ -176,7 +177,7 @@ export default function Step3Policy({
         <SectionShell title="تقویم کاری سیاست را انتخاب کنید" icon={<CalendarDays className="h-5 w-5" />} isOpen={activeSection === 'calendar'} onToggle={() => setActiveSection('calendar')}>
           {calendarOptions.length > 0 ? (
             <>
-              <div className="max-h-[360px] overflow-y-auto rounded-xl border border-white/10 bg-slate-950/25 p-3">
+              <MinimalScroll className="max-h-[360px] rounded-xl border border-white/10 bg-slate-950/25 p-3">
                 <div className="grid gap-3 md:grid-cols-2">
                   {calendarOptions.map((item) => {
                     const selected = selectedCalendarId === item.id;
@@ -208,7 +209,7 @@ export default function Step3Policy({
                     );
                   })}
                 </div>
-              </div>
+              </MinimalScroll>
               <div className="mt-4 flex justify-end">
                 <button
                   type="button"

@@ -1,0 +1,135 @@
+import type { ShiftTemplateType } from '../../node_modules/.prisma/client';
+import type { CalendarShiftType } from './calendar-shifts';
+
+export type ShiftTemplateCategory = CalendarShiftType;
+
+export const SHIFT_TEMPLATE_CATEGORIES: Array<{
+  id: ShiftTemplateCategory;
+  label: string;
+  description: string;
+  tone: 'green' | 'blue' | 'cyan' | 'amber' | 'purple';
+}> = [
+  {
+    id: 'fixed',
+    label: 'شیفت ثابت',
+    description: 'شروع و پایان ثابت در روزهای مشخص هفته',
+    tone: 'green',
+  },
+  {
+    id: 'float-day',
+    label: 'شیفت شناور - شروع روز',
+    description: 'ساعت ورود شناور با الزام کاری و بازه الزام حضور',
+    tone: 'blue',
+  },
+  {
+    id: 'float-abs',
+    label: 'شیفت شناور - مطلق',
+    description: 'بازه زمانی شناور مطلق با موظفی مشخص',
+    tone: 'cyan',
+  },
+  {
+    id: 'split',
+    label: 'شیفت دو تکه',
+    description: 'دو بازه کاری جداگانه در یک روز',
+    tone: 'amber',
+  },
+  {
+    id: 'rotate',
+    label: 'شیفت چرخشی',
+    description: 'الگوی چرخشی صبح، عصر و شب با تکرار مشخص',
+    tone: 'purple',
+  },
+];
+
+const TEMPLATE_TO_CALENDAR: Record<ShiftTemplateType, CalendarShiftType> = {
+  fixed: 'fixed',
+  floating_day_start: 'float-day',
+  floating_absolute: 'float-abs',
+  split: 'split',
+  rotate: 'rotate',
+};
+
+const CALENDAR_TO_TEMPLATE: Record<CalendarShiftType, ShiftTemplateType> = {
+  fixed: 'fixed',
+  'float-day': 'floating_day_start',
+  'float-abs': 'floating_absolute',
+  split: 'split',
+  rotate: 'rotate',
+};
+
+function stringArray(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [];
+}
+
+function asObject(value: unknown): Record<string, unknown> {
+  return value && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
+}
+
+export function templateTypeToCalendarShiftType(type: ShiftTemplateType): CalendarShiftType {
+  return TEMPLATE_TO_CALENDAR[type] ?? 'fixed';
+}
+
+export function calendarShiftTypeToTemplateType(type: CalendarShiftType): ShiftTemplateType {
+  return CALENDAR_TO_TEMPLATE[type];
+}
+
+export function extractTemplateWeekDays(shiftType: CalendarShiftType, shiftConfig: Record<string, unknown>) {
+  switch (shiftType) {
+    case 'float-day':
+      return stringArray(shiftConfig.floatDayWorkingDays ?? shiftConfig.workingDays);
+    case 'float-abs':
+      return stringArray(shiftConfig.floatAbsWorkingDays ?? shiftConfig.workingDays);
+    case 'split':
+      return stringArray(shiftConfig.splitWorkingDays ?? shiftConfig.workingDays);
+    case 'rotate':
+      return stringArray(shiftConfig.workingDays);
+    default:
+      return stringArray(shiftConfig.workingDays);
+  }
+}
+
+export function extractTemplateBreaks(shiftType: CalendarShiftType, shiftConfig: Record<string, unknown>) {
+  switch (shiftType) {
+    case 'float-day': {
+      const floatDay = asObject(shiftConfig.floatingShiftStartOfDay);
+      return Array.isArray(floatDay.rests) ? floatDay.rests : [];
+    }
+    case 'float-abs': {
+      const floatAbs = asObject(shiftConfig.absoluteFloatingShift);
+      return Array.isArray(floatAbs.rests) ? floatAbs.rests : [];
+    }
+    case 'split': {
+      const split = asObject(shiftConfig.splitShift);
+      return [...(Array.isArray(split.segment1Breaks) ? split.segment1Breaks : []), ...(Array.isArray(split.segment2Breaks) ? split.segment2Breaks : [])];
+    }
+    case 'rotate':
+      return [];
+    default:
+      return Array.isArray(shiftConfig.rests) ? shiftConfig.rests : [];
+  }
+}
+
+export function serializeShiftTemplateFromWizard(input: {
+  shiftType: CalendarShiftType;
+  shiftTitle: string;
+  shiftConfig: Record<string, unknown>;
+  description?: string;
+  isActive?: boolean;
+}) {
+  const weekDays = extractTemplateWeekDays(input.shiftType, input.shiftConfig);
+  const breaks = extractTemplateBreaks(input.shiftType, input.shiftConfig);
+
+  return {
+    title: input.shiftTitle.trim(),
+    description: input.description?.trim() || null,
+    type: calendarShiftTypeToTemplateType(input.shiftType),
+    weekDays,
+    config: {
+      ...input.shiftConfig,
+      shiftType: input.shiftType,
+      title: input.shiftTitle.trim(),
+    },
+    breaks,
+    isActive: input.isActive ?? true,
+  };
+}
