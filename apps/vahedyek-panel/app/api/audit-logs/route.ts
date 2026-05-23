@@ -7,6 +7,7 @@ import { prisma } from '../../lib/prisma';
 import { handlePrismaApiError } from '../../lib/prismaApiError';
 
 const MAX_PAGE_SIZE = 100;
+const HIDDEN_AUDIT_ACTIONS = ['api.get'];
 
 function parsePositiveInt(value: string | null, fallback: number) {
   const parsed = Number.parseInt(value ?? '', 10);
@@ -115,6 +116,7 @@ export async function GET(request: Request) {
       tenantId: session.tenantId,
       ...(actorUserId ? { actorUserId } : {}),
       ...(action ? { action } : {}),
+      NOT: { action: { in: HIDDEN_AUDIT_ACTIONS } },
       ...(entityType ? { entityType } : {}),
       ...(dateFrom || dateTo
         ? {
@@ -146,7 +148,7 @@ export async function GET(request: Request) {
         take: pageSize,
       }),
       prisma.auditLog.findMany({
-        where: { tenantId: session.tenantId },
+        where: { tenantId: session.tenantId, NOT: { action: { in: HIDDEN_AUDIT_ACTIONS } } },
         select: { actorUserId: true, actorName: true, action: true, entityType: true },
         orderBy: { createdAt: 'desc' },
         take: 500,

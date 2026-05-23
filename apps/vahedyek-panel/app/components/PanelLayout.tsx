@@ -9,6 +9,7 @@ import { currentAppConfig } from '../config/current';
 import { MenuIcon } from './MenuIcon';
 import OrbitMenu from './OrbitMenu';
 import PageDocsWidget from './PageDocsWidget';
+import ReminderWidget from './ReminderWidget';
 import Sidebar from './Sidebar';
 
 interface PanelLayoutProps {
@@ -503,6 +504,7 @@ export default function PanelLayout({ children }: PanelLayoutProps) {
   return (
     <div className="app-shell">
       <PageDocsWidget />
+      <ReminderWidget />
       <Sidebar
         activeItem={activeItem}
         forceCollapsed={isContractsNewHub || isContractReportsPage}

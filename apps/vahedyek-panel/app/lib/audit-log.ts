@@ -36,6 +36,54 @@ function getIpAddress(request: Request | undefined) {
   return getHeader(request, 'x-real-ip');
 }
 
+function isJsonObject(value: Prisma.InputJsonValue | undefined): value is Prisma.InputJsonObject {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function getRequestPageContext(request: Request | undefined) {
+  const headerPath = getHeader(request, 'x-audit-page-path');
+  const headerSearch = getHeader(request, 'x-audit-page-search');
+  const headerTitle = getHeader(request, 'x-audit-page-title');
+
+  if (headerPath?.startsWith('/')) {
+    return {
+      path: headerPath,
+      search: headerSearch?.startsWith('?') ? headerSearch : '',
+      title: headerTitle || headerPath,
+    };
+  }
+
+  const referer = getHeader(request, 'referer');
+  if (!referer) return null;
+
+  try {
+    const requestUrl = request ? new URL(request.url) : null;
+    const refererUrl = new URL(referer);
+    if (requestUrl && refererUrl.origin !== requestUrl.origin) return null;
+    return {
+      path: refererUrl.pathname,
+      search: refererUrl.search,
+      title: refererUrl.pathname,
+    };
+  } catch {
+    return null;
+  }
+}
+
+function buildAuditMetadata(input: AuditLogInput): Prisma.InputJsonValue {
+  const pageContext = getRequestPageContext(input.request);
+  if (!pageContext) return input.metadata ?? {};
+
+  if (isJsonObject(input.metadata)) {
+    return {
+      ...input.metadata,
+      pageContext,
+    };
+  }
+
+  return { pageContext };
+}
+
 export function formatAuditValue(value: unknown): string {
   if (value === null || value === undefined || value === '') return 'خالی';
   if (typeof value === 'number') return new Intl.NumberFormat('fa-IR').format(value);
@@ -74,6 +122,8 @@ export function buildFieldDiffs<T extends Record<string, unknown>>(
 }
 
 export async function recordAuditLogTx(tx: AuditClient, input: AuditLogInput) {
+  const metadata = buildAuditMetadata(input);
+
   return tx.auditLog.create({
     data: {
       tenantId: input.tenantId,
@@ -86,7 +136,7 @@ export async function recordAuditLogTx(tx: AuditClient, input: AuditLogInput) {
       summary: input.summary,
       details: input.details ?? {},
       diff: input.diff ?? [],
-      metadata: input.metadata ?? {},
+      metadata,
       ipAddress: getIpAddress(input.request),
       userAgent: getHeader(input.request, 'user-agent'),
     },

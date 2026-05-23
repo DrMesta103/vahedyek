@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toGregorian } from 'jalaali-js';
@@ -85,6 +86,7 @@ const ACTION_LABELS: Record<string, string> = {
   'project.block.create': 'ثبت بلوک',
   'project.block.update': 'ویرایش بلوک',
   'project.block.delete': 'حذف بلوک',
+  'page.view': 'بازدید صفحه',
 };
 
 const ENTITY_LABELS: Record<string, string> = {
@@ -96,6 +98,7 @@ const ENTITY_LABELS: Record<string, string> = {
   tenant_role: 'نقش',
   membership: 'عضویت کاربر',
   block: 'بلوک',
+  page: 'صفحه',
 };
 
 function asDiff(value: AuditLog['diff']): AuditDiff[] {
@@ -116,7 +119,45 @@ function toJsonPreview(value: unknown) {
   return JSON.stringify(value, null, 2);
 }
 
+function asRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
+}
+
+function getPageLogHref(log: AuditLog) {
+  if (log.action !== 'page.view') return null;
+  const path = log.entityId?.startsWith('/') ? log.entityId : null;
+  if (!path) return null;
+
+  const details = asRecord(log.details);
+  const search = typeof details.search === 'string' && details.search.startsWith('?') ? details.search : '';
+  return `${path}${search}`;
+}
+
+function getPageLogTitle(log: AuditLog) {
+  return log.entityLabel || log.entityId || 'صفحه';
+}
+
+function getLogPageContext(log: AuditLog) {
+  const metadata = asRecord(log.metadata);
+  const pageContext = asRecord(metadata.pageContext);
+  const path = typeof pageContext.path === 'string' && pageContext.path.startsWith('/') ? pageContext.path : null;
+  if (!path) return null;
+
+  const search = typeof pageContext.search === 'string' && pageContext.search.startsWith('?') ? pageContext.search : '';
+  const title = typeof pageContext.title === 'string' && pageContext.title.trim() ? pageContext.title : path;
+  return {
+    href: `${path}${search}`,
+    title,
+  };
+}
+
+function getLogActionLabel(log: AuditLog) {
+  if (log.action === 'page.view') return `بازدید صفحه ${getPageLogTitle(log)}`;
+  return ACTION_LABELS[log.action] ?? log.summary ?? log.action;
+}
+
 function getActionVisual(action: string): { icon: LucideIcon; tone: VisualTone } {
+  if (action === 'page.view') return { icon: Eye, tone: 'blue' };
   if (action.includes('login')) return { icon: LogIn, tone: 'green' };
   if (action.includes('logout')) return { icon: LogOut, tone: 'slate' };
   if (action.includes('approval.decision')) return { icon: CheckCircle2, tone: 'green' };
@@ -180,7 +221,15 @@ export default function AuditLogsPage() {
       })
       .then((payload) => {
         if (!mounted || !payload) return;
-        setData(payload);
+        setData({
+          ...payload,
+          logs: payload.logs.filter((log) => log.action !== 'api.get'),
+          filters: {
+            ...payload.filters,
+            actions: payload.filters.actions.filter((action) => action !== 'api.get'),
+            entityTypes: payload.filters.entityTypes.filter((entityType) => entityType !== 'api_request'),
+          },
+        });
         setError('');
       })
       .catch((err) => {
@@ -208,6 +257,7 @@ export default function AuditLogsPage() {
 
   const total = data?.pagination.total ?? 0;
   const pageCount = data?.pagination.pageCount ?? 1;
+  const detailsPageContext = detailsLog ? getLogPageContext(detailsLog) : null;
 
   return (
     <PanelLayout>
@@ -307,6 +357,8 @@ export default function AuditLogsPage() {
           {data?.logs.map((log) => {
             const actionVisual = getActionVisual(log.action);
             const ActionIcon = actionVisual.icon;
+            const pageHref = getPageLogHref(log);
+            const pageTitle = getPageLogTitle(log);
 
             return (
               <article key={log.id} className="audit-list-row">
@@ -321,7 +373,7 @@ export default function AuditLogsPage() {
                   <div className={`audit-tone-badge is-${actionVisual.tone}`}>
                     <ActionIcon size={18} />
                   </div>
-                  <strong>{ACTION_LABELS[log.action] ?? log.action}</strong>
+                  <strong>{getLogActionLabel(log)}</strong>
                 </div>
 
                 <div className="audit-date-cell">
@@ -334,7 +386,15 @@ export default function AuditLogsPage() {
 
                 <div className="audit-row-title">
                   <span>توضیحات</span>
-                  <p>{log.summary}</p>
+                  {pageHref ? (
+                    <p>
+                      <Link href={pageHref} className="audit-page-link">
+                        {pageTitle}
+                      </Link>
+                    </p>
+                  ) : (
+                    <p>{log.summary}</p>
+                  )}
                 </div>
 
                 <button type="button" className="audit-detail-button is-icon" onClick={() => setDetailsLog(log)} aria-label="نمایش جزئیات">
@@ -377,7 +437,7 @@ export default function AuditLogsPage() {
                   })()}
                 </div>
                 <div>
-                  <span className="audit-kicker">{ACTION_LABELS[detailsLog.action] ?? detailsLog.action}</span>
+                  <span className="audit-kicker">{getLogActionLabel(detailsLog)}</span>
                   <h2>{detailsLog.summary}</h2>
                 </div>
               </div>
@@ -389,7 +449,7 @@ export default function AuditLogsPage() {
                 </div>
                 <div>
                   <span>اکشن</span>
-                  <strong>{ACTION_LABELS[detailsLog.action] ?? detailsLog.action}</strong>
+                  <strong>{getLogActionLabel(detailsLog)}</strong>
                 </div>
                 <div>
                   <span>تاریخ</span>
@@ -399,6 +459,16 @@ export default function AuditLogsPage() {
                   <span>موجودیت</span>
                   <strong>{detailsLog.entityLabel || detailsLog.entityId || ENTITY_LABELS[detailsLog.entityType] || detailsLog.entityType}</strong>
                 </div>
+                {detailsPageContext ? (
+                  <div>
+                    <span>صفحه انجام عملیات</span>
+                    <strong>
+                      <Link href={detailsPageContext.href} className="audit-page-link">
+                        {detailsPageContext.title}
+                      </Link>
+                    </strong>
+                  </div>
+                ) : null}
                 <div>
                   <span>IP</span>
                   <strong>{detailsLog.ipAddress ?? 'ثبت نشده'}</strong>
