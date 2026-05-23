@@ -1,7 +1,8 @@
-'use client';
+﻿'use client';
 
 import { BriefcaseBusiness, Camera, CheckCircle2, MapPin, Shield, Users, Plus, Search, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { MinimalScroll } from '../../../components/MinimalScroll';
 import { createWorkGroupFromQuickSetupAction } from '../../../lib/actions';
 import type { QuickWorkGroupSummary } from './quick-setup.types';
 
@@ -40,12 +41,12 @@ function FlowSection({
   children: React.ReactNode;
 }) {
   return (
-    <section className={cn('rounded-2xl border bg-slate-950/25', enabled ? 'border-white/10' : 'border-white/5 opacity-55')}>
+    <section className={cn('rounded-xl border bg-slate-950/25', enabled ? 'border-white/10' : 'border-white/5 opacity-55')}>
       <button type="button" onClick={onToggle} disabled={!enabled} className="flex w-full flex-row-reverse items-center justify-between gap-4 px-4 py-4 text-right sm:px-5">
         <span className="text-xs text-slate-400">{expanded ? 'بستن' : 'مشاهده جزئیات'}</span>
         <span className="flex items-center gap-3">
           <span className="text-base font-bold text-white">{title}</span>
-          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-500/30 text-indigo-200">{icon}</span>
+          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-500/30 text-indigo-200">{icon}</span>
           <span className="flex h-7 w-7 items-center justify-center rounded-full border border-white/10 text-xs text-slate-300">{index}</span>
         </span>
       </button>
@@ -137,7 +138,7 @@ export default function Step5WorkGroup({
   };
 
   return (
-    <section className="space-y-5 rounded-2xl border border-white/10 bg-slate-900/60 p-4 sm:p-5">
+    <section className="space-y-5 rounded-xl border border-white/10 bg-slate-900/60 p-4 sm:p-5">
       <div className="text-right">
         <h2 className="text-base font-bold text-white">مرحله 5: ثبت گروه کاری</h2>
         <p className="mt-1 text-sm text-slate-400">عنوان، محل کار، اعضا و سیاست کاری گروه را به ترتیب تکمیل کنید.</p>
@@ -148,7 +149,7 @@ export default function Step5WorkGroup({
           <div className="flex justify-center">
             <div className="relative">
               <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-slate-800 text-slate-300 shadow-inner">
-                {groupLogoUrl ? <img src={groupLogoUrl} alt="" className="h-full w-full object-cover" /> : <Users className="h-10 w-10" />}
+                {groupLogoUrl ? <img src={groupLogoUrl} alt="" className="h-full w-full object-cover" /> : <Users className="h-9 w-9" />}
               </div>
               <label className="absolute -bottom-1 -right-1 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg transition-colors hover:bg-indigo-500">
                 <Camera className="h-4 w-4" />
@@ -189,7 +190,7 @@ export default function Step5WorkGroup({
       <FlowSection title="انتخاب محل های کار گروه" index={2} enabled={titleConfirmed} expanded={activeSection === 2} onToggle={() => titleConfirmed && setActiveSection(2)} icon={<MapPin className="h-5 w-5" />}>
         <div className="space-y-4">
           {locations.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-white/15 bg-slate-900/40 p-6 text-center text-sm text-amber-300">هنوز محل کاری در راه اندازی سریع ثبت نشده است.</div>
+            <div className="rounded-xl border border-dashed border-white/15 bg-slate-900/40 p-4 text-center text-sm text-amber-300">هنوز محل کاری در راه اندازی سریع ثبت نشده است.</div>
           ) : (
             locations.map((location) => (
               <button
@@ -197,7 +198,7 @@ export default function Step5WorkGroup({
                 type="button"
                 onClick={() => setDraft((prev) => ({ ...prev, selectedLocationId: location.id }))}
                 className={cn(
-                  'w-full rounded-2xl border p-4 text-right transition-colors',
+                  'w-full rounded-xl border p-4 text-right transition-colors',
                   draft.selectedLocationId === location.id ? 'border-indigo-400 bg-indigo-500/15' : 'border-white/10 bg-slate-800/40 hover:border-white/20',
                 )}
               >
@@ -207,7 +208,7 @@ export default function Step5WorkGroup({
                     <div className="mt-1 text-xs text-slate-400">{location.description}</div>
                     <div className="mt-2 text-xs text-slate-400">شعاع مجاز: {location.radius} متر</div>
                   </div>
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-500/25 text-indigo-200">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-500/25 text-indigo-200">
                     <MapPin className="h-5 w-5" />
                   </div>
                 </div>
@@ -224,7 +225,7 @@ export default function Step5WorkGroup({
 
       <FlowSection title="افزودن اعضای گروه کاری" index={3} enabled={locationConfirmed} expanded={activeSection === 3} onToggle={() => locationConfirmed && setActiveSection(3)} icon={<Users className="h-5 w-5" />}>
         <div className="space-y-4 text-right">
-          <div className="rounded-2xl border border-white/10 bg-slate-900/45 p-4">
+          <div className="rounded-xl border border-white/10 bg-slate-900/45 p-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <div className="text-base font-black text-white">فهرست کارمندان</div>
@@ -237,17 +238,17 @@ export default function Step5WorkGroup({
             </div>
           </div>
 
-          <div className="overflow-x-auto pb-2">
+          <MinimalScroll variant="horizontal" className="pb-2">
             <div className="flex min-w-max flex-nowrap gap-3">
             {filteredEmployees.map((employee) => (
               <button
                 key={employee.id}
                 type="button"
                 onClick={() => addEmployee(employee, 'employee')}
-                className="group relative flex w-28 flex-none flex-col items-center gap-2 rounded-2xl border border-white/10 bg-slate-800/40 p-3 text-right transition-colors hover:border-indigo-400/40 hover:bg-indigo-500/10"
+                className="group relative flex w-28 flex-none flex-col items-center gap-2 rounded-xl border border-white/10 bg-slate-800/40 p-3 text-right transition-colors hover:border-indigo-400/40 hover:bg-indigo-500/10"
               >
                 <div className="relative">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-indigo-500/20 text-indigo-200">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-500/20 text-indigo-200">
                     <Users className="h-6 w-6" />
                   </div>
                   <div className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg">
@@ -258,25 +259,25 @@ export default function Step5WorkGroup({
               </button>
             ))}
             </div>
-          </div>
+          </MinimalScroll>
 
           {draft.selectedEmployees.length ? (
             <div className="space-y-3">
               {draft.selectedEmployees.map((employee) => (
-                <div key={employee.id} className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-slate-900/60 px-4 py-3">
+                <div key={employee.id} className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-slate-900/60 px-4 py-3">
                   <div className="flex items-center gap-3 text-right">
                     <div>
                       <div className="font-bold text-white">{employee.name}</div>
                       <div className="text-xs text-slate-400">{employee.selectedRole === 'employee' ? 'بدون گروه کاری' : employee.selectedRole === 'lead' ? 'سرگروه' : 'مدیر'}</div>
                     </div>
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-800 text-slate-300">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-800 text-slate-300">
                       <Users className="h-4 w-4" />
                     </div>
                   </div>
                   <button
                     type="button"
                     onClick={() => setDraft((prev) => ({ ...prev, selectedEmployees: prev.selectedEmployees.filter((item) => item.id !== employee.id) }))}
-                    className="flex h-10 w-10 items-center justify-center rounded-full border border-rose-400/30 text-rose-300 transition-colors hover:bg-rose-500/10"
+                    className="flex h-9 w-9 items-center justify-center rounded-full border border-rose-400/30 text-rose-300 transition-colors hover:bg-rose-500/10"
                     aria-label="حذف عضو"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -312,7 +313,7 @@ export default function Step5WorkGroup({
                   }))
                 }
                 className={cn(
-                  'w-full rounded-2xl border p-4 text-right transition-colors',
+                  'w-full rounded-xl border p-4 text-right transition-colors',
                   draft.selectedPolicyIds.includes(policy.id) ? 'border-indigo-400 bg-indigo-500/15' : 'border-white/10 bg-slate-800/40 hover:border-white/20',
                 )}
               >
@@ -322,7 +323,7 @@ export default function Step5WorkGroup({
                     <div className="mt-1 text-xs text-slate-400">تقویم: {policy.calendarName} - سال {policy.yearUsed}</div>
                     <div className="mt-1 text-xs text-slate-500">{policy.isActive ? 'سیاست فعال' : 'سیاست غیرفعال'}</div>
                   </div>
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-500/25 text-indigo-200">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-500/25 text-indigo-200">
                     <Shield className="h-5 w-5" />
                   </div>
                 </div>

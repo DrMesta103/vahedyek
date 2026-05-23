@@ -1,8 +1,6 @@
-import { ModulePageHeader } from '../../components/module-page/ModulePageHeader';
-import { panelBreadcrumbs } from '../../components/module-page/module-breadcrumbs';
 import { requestReasonCategories } from '../../lib/constants';
 import { listRequestReasons } from '../../lib/data';
-import { RequestReasonsClient } from './_components/RequestReasonsClient';
+import { RequestReasonsPageClient } from './_components/RequestReasonsPageClient';
 
 type RequestReasonsPageProps = {
   searchParams?: Promise<{
@@ -21,15 +19,7 @@ export default async function RequestReasonsPage({ searchParams }: RequestReason
 
   return (
     <div className="page-stack module-page request-reasons-page" dir="rtl" lang="fa">
-      <ModulePageHeader
-        breadcrumbs={panelBreadcrumbs('دلایل درخواست')}
-        title="دلایل درخواست"
-        subtitle="مدیریت علت‌ها با ترتیب‌دهی، فعال‌سازی و ویرایش سریع."
-        addHref={`/request-reasons/new?category=${activeCategory}`}
-        addLabel="افزودن علت درخواست"
-      />
-
-      <RequestReasonsClient
+      <RequestReasonsPageClient
         items={items.map((item) => ({
           id: item.id,
           title: item.title,

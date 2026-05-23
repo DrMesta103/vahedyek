@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useMemo, useRef, useState, useTransition } from 'react';
 import { Camera, Layers, Pencil, Plus, Search, Square, X } from 'lucide-react';
@@ -43,7 +43,7 @@ function PhotoUploadCircle({
             // eslint-disable-next-line @next/next/no-img-element
             <img src={imageUrl} alt="" />
           ) : (
-            <Layers className="h-10 w-10 opacity-80" strokeWidth={1.6} />
+            <Layers className="h-9 w-9 opacity-80" strokeWidth={1.6} />
           )}
         </div>
         <label htmlFor={inputId} className="employee-add-photo-camera" aria-label={`بارگذاری ${label}`}>
@@ -151,7 +151,7 @@ export function AddEmployeeFlow() {
         <div className="employee-add-lookup-shell">
           <div className="employee-add-card employee-add-lookup-card">
             <div className="employee-add-brand" aria-hidden>
-              <Layers className="h-12 w-12" strokeWidth={1.5} />
+              <Layers className="h-9 w-9" strokeWidth={1.5} />
             </div>
 
             <label className="employee-add-lookup-field">

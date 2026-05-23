@@ -1,4 +1,5 @@
 import { Prisma, type Calendar } from '../../node_modules/.prisma/client';
+import { getOfficialHolidaysForYear } from './calendar-official-holidays';
 import { prisma } from './prisma';
 
 export type DefaultHolidayItem = { id: string; title: string; date: string };
@@ -28,14 +29,14 @@ function jsonObject(value: Prisma.JsonValue | null | undefined): Record<string, 
   return value && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
 }
 
-function currentJalaliYear() {
+export function currentJalaliYearLabel() {
   const year = new Intl.DateTimeFormat('en-US-u-ca-persian', { year: 'numeric' }).format(new Date());
   return year.replace(/[^\d]/g, '');
 }
 
 function buildFallbackTemplate(yearLabel: string): Omit<DefaultCalendarTemplate, 'id'> {
   const weekends = ['جمعه'];
-  const singleHolidays: DefaultHolidayItem[] = [];
+  const singleHolidays = getOfficialHolidaysForYear(yearLabel);
   const shiftConfig = {
     shiftType: 'fixed',
     mode: 'template',
@@ -84,7 +85,7 @@ function mapCalendarToTemplate(calendar: Calendar): DefaultCalendarTemplate {
   };
 }
 
-export async function ensureGlobalDefaultCalendar(yearLabel = currentJalaliYear()) {
+export async function ensureGlobalDefaultCalendar(yearLabel = currentJalaliYearLabel()) {
   const existing = await prisma.calendar.findFirst({
     where: { tenantId: null, yearLabel },
     orderBy: { createdAt: 'asc' },

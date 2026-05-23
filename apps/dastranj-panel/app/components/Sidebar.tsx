@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useAuthContext } from '../hooks/useAuthContext';
 import { formatIdentityLabel } from '../lib/contact';
 import { getSidebarMenuItems } from '../lib/navigation';
+import { minimalScrollClass } from './MinimalScroll';
 import { ThemeToggle } from './theme/ThemeToggle';
 
 interface SidebarProps {
@@ -22,10 +23,13 @@ export function Sidebar({ activeItem = 'home', forceCollapsed = false, lockColla
   const toolbarMenuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    const savedState = window.localStorage.getItem('app-sidebar-collapsed');
-    if (forceCollapsed || savedState === 'true') {
+    if (forceCollapsed) {
       setCollapsed(true);
+      return;
     }
+
+    const savedState = window.localStorage.getItem('app-sidebar-collapsed');
+    setCollapsed(savedState === 'true');
   }, [forceCollapsed]);
 
   useEffect(() => {
@@ -56,7 +60,7 @@ export function Sidebar({ activeItem = 'home', forceCollapsed = false, lockColla
   };
 
   const handleOpenTenantDocs = () => {
-    router.push('/quick-setup');
+    router.push('/dev-doc-threads');
   };
 
   const effectiveCollapsed = forceCollapsed || collapsed;
@@ -153,7 +157,7 @@ export function Sidebar({ activeItem = 'home', forceCollapsed = false, lockColla
         )}
       </div>
 
-      <nav className="menu-list">
+      <nav className={minimalScrollClass('vertical', 'menu-list')}>
         {visibleMenuItems.map((item) =>
           item.disabled ? (
             <div

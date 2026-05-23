@@ -1,5 +1,6 @@
 import PanelLayout from '../../components/PanelLayout';
 import { AccessManagementPanel } from '../business-settings/_components/AccessManagementPanel';
+import { ReminderSettingsPanel } from './_components/ReminderSettingsPanel';
 
 export default function SettingsPage() {
   return (
@@ -9,6 +10,7 @@ export default function SettingsPage() {
           <h1>تنظیمات کلی</h1>
           <p>تنظیمات عمومی پنل، نقش‌ها و دسترسی اعضای کسب و کار از این بخش مدیریت می‌شود.</p>
         </div>
+        <ReminderSettingsPanel />
         <AccessManagementPanel />
       </section>
     </PanelLayout>

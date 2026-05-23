@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, type ElementType, type ReactNode } from 'r
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
   Building2,
+  CalendarRange,
   ChevronLeft,
   ClipboardList,
   Copy,
@@ -166,6 +167,12 @@ const infoItems: {
     description: 'نمایش لیست بلوک‌های مجتمع',
     icon: Home,
     href: '/business-settings/project/blocks',
+  },
+  {
+    title: 'برنامه زمان‌بندی پیشرفت فیزیکی',
+    description: 'تعریف برنامه کلان مراحل ساخت برای هر بلوک و نسخه‌بندی آن برای قراردادهای آینده',
+    icon: CalendarRange,
+    href: '/business-settings/project/physical-progress-schedules',
   },
   {
     title: 'فایل‌ها',
@@ -676,15 +683,24 @@ export function BusinessBlocksPanel() {
                 </div>
 
                 <div className="business-block-report">
-                  <div>
-                    <h4>گزارش مالی و پیشرفت فیزیکی پروژه</h4>
-                    <p>برای شروع می‌توانید اطلاعات پیشرفت را ثبت کنید.</p>
-                    <span className="business-block-report-status">
-                      <i>i</i>
-                      تکمیل نشده
-                    </span>
-                  </div>
-                  <ChevronLeft aria-hidden="true" />
+                  <button
+                    type="button"
+                    className="flex w-full items-center justify-between gap-3 text-right"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      router.push(`/business-settings/project/physical-progress-schedules?blockId=${encodeURIComponent(block.id)}`);
+                    }}
+                  >
+                    <div>
+                      <h4>گزارش مالی و پیشرفت فیزیکی پروژه</h4>
+                      <p>برای همین بلوک، برنامه زمان‌بندی و مبنای گزارش پیشرفت فیزیکی را مدیریت کنید.</p>
+                      <span className="business-block-report-status">
+                        <i>i</i>
+                        ورود به گزارش بلوک
+                      </span>
+                    </div>
+                    <ChevronLeft aria-hidden="true" />
+                  </button>
                 </div>
               </div>
             </article>
@@ -2209,3 +2225,4 @@ function Dialog({ title, subtitle, children, onClose }: { title: string; subtitl
     </div>
   );
 }
+

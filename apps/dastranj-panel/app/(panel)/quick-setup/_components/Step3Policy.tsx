@@ -1,7 +1,8 @@
-'use client';
+﻿'use client';
 
 import { ArrowLeft, BriefcaseBusiness, CalendarDays, Check, ChevronDown, ChevronUp } from 'lucide-react';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { MinimalScroll } from '../../../components/MinimalScroll';
 import { createPolicyFromQuickSetupAction } from '../../../lib/actions';
 import type { CompletedCalendarItem, QuickPolicySummary } from './quick-setup.types';
 
@@ -24,7 +25,7 @@ function FieldTooltip({ text }: { text: string }) {
       <span className="flex h-6 w-6 items-center justify-center rounded-full border border-white/10 bg-slate-950/50 text-slate-300" aria-hidden="true">
         ?
       </span>
-      <span className="pointer-events-none absolute right-0 top-8 z-30 hidden w-72 rounded-2xl border border-white/10 bg-slate-900 p-3 text-right text-xs leading-6 text-slate-200 shadow-2xl group-hover:block">
+      <span className="pointer-events-none absolute right-0 top-8 z-30 hidden w-72 rounded-xl border border-white/10 bg-slate-900 p-3 text-right text-xs leading-6 text-slate-200 shadow-2xl group-hover:block">
         {text}
       </span>
     </span>
@@ -56,7 +57,7 @@ function SectionShell({
   children: ReactNode;
 }) {
   return (
-    <section className="rounded-2xl border border-white/10 bg-slate-950/25">
+    <section className="rounded-xl border border-white/10 bg-slate-950/25">
       <div className="flex flex-row-reverse items-center justify-between gap-4 px-4 py-4 text-right sm:px-5">
         <button
           type="button"
@@ -72,7 +73,7 @@ function SectionShell({
         </button>
         <div className="flex flex-row-reverse items-center gap-3 text-right">
           <div className="text-base font-bold text-white">{title}</div>
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-500/30 text-indigo-200">{icon}</div>
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-500/30 text-indigo-200">{icon}</div>
         </div>
       </div>
       {isOpen ? <div className="border-t border-white/10 px-4 pb-4 pt-4 sm:px-5">{children}</div> : null}
@@ -149,7 +150,7 @@ export default function Step3Policy({
 
   if (isCompleted && policy) {
     return (
-      <section className="rounded-2xl border border-white/10 bg-slate-800/65 p-3.5 sm:p-4">
+      <section className="rounded-xl border border-white/10 bg-slate-800/65 p-3.5 sm:p-4">
         <div className="rounded-xl border border-white/10 bg-slate-950/45 p-4 sm:p-5">
           <div className="mx-auto w-full rounded-xl border border-white/10 bg-slate-900/70 p-4 text-right lg:max-w-[300px]">
             <div className="text-lg font-bold text-white">عنوان: {policy.title}</div>
@@ -162,7 +163,7 @@ export default function Step3Policy({
           </a>
         </div>
         <div className="mt-5 flex">
-          <button type="button" onClick={onBack} className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-600 text-white transition-colors hover:bg-indigo-500">
+          <button type="button" onClick={onBack} className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-600 text-white transition-colors hover:bg-indigo-500">
             <ArrowLeft className="h-4 w-4" />
           </button>
         </div>
@@ -171,12 +172,12 @@ export default function Step3Policy({
   }
 
   return (
-    <section className="rounded-2xl border border-white/10 bg-slate-800/65 p-3.5 sm:p-4" dir="rtl">
+    <section className="rounded-xl border border-white/10 bg-slate-800/65 p-3.5 sm:p-4" dir="rtl">
       <div className="space-y-3 rounded-xl border border-white/10 bg-slate-950/45 p-4 sm:p-5">
         <SectionShell title="تقویم کاری سیاست را انتخاب کنید" icon={<CalendarDays className="h-5 w-5" />} isOpen={activeSection === 'calendar'} onToggle={() => setActiveSection('calendar')}>
           {calendarOptions.length > 0 ? (
             <>
-              <div className="max-h-[360px] overflow-y-auto rounded-2xl border border-white/10 bg-slate-950/25 p-3">
+              <MinimalScroll className="max-h-[360px] rounded-xl border border-white/10 bg-slate-950/25 p-3">
                 <div className="grid gap-3 md:grid-cols-2">
                   {calendarOptions.map((item) => {
                     const selected = selectedCalendarId === item.id;
@@ -208,7 +209,7 @@ export default function Step3Policy({
                     );
                   })}
                 </div>
-              </div>
+              </MinimalScroll>
               <div className="mt-4 flex justify-end">
                 <button
                   type="button"
@@ -238,7 +239,7 @@ export default function Step3Policy({
           canOpen={calendarConfirmed}
           onToggle={() => setActiveSection('template')}
         >
-          <div className="mb-4 rounded-2xl border border-indigo-400/20 bg-indigo-500/10 px-4 py-3 text-right text-sm leading-7 text-slate-200">
+          <div className="mb-4 rounded-xl border border-indigo-400/20 bg-indigo-500/10 px-4 py-3 text-right text-sm leading-7 text-slate-200">
             <span className="inline-flex flex-row-reverse items-center gap-2 font-bold text-white">
               سیاست کاری
               <FieldTooltip text="سیاست کاری مجموعه تنظیمات پیش‌فرض حضور، مرخصی، اضافه‌کاری و قواعد اجرایی سازمان است. این قالب نقطه شروع است و بعدا می‌توان آن را مطابق نیاز هر سازمان ویرایش کرد." />

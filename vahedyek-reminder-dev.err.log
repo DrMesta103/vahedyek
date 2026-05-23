@@ -1,0 +1,918 @@
+⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of C:\Users\Administrator\package-lock.json as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * C:\Users\Administrator\Desktop\vahedyek\package-lock.json
+
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⨯ ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  [90m1 |[0m [36mimport[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+  [90m2 |[0m [36mimport[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+[31m[1m>[0m [90m3 |[0m [36mimport[0m { [33mReminderSettingsPanel[0m } [36mfrom[0m [32m'./_components/ReminderSettingsPanel'[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m4 |[0m
+  [90m5 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m6 |[0m   [36mreturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  [90m1 |[0m [36mimport[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+  [90m2 |[0m [36mimport[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+[31m[1m>[0m [90m3 |[0m [36mimport[0m { [33mReminderSettingsPanel[0m } [36mfrom[0m [32m'./_components/ReminderSettingsPanel'[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m4 |[0m
+  [90m5 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m6 |[0m   [36mreturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  [90m1 |[0m [36mimport[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+  [90m2 |[0m [36mimport[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+[31m[1m>[0m [90m3 |[0m [36mimport[0m { [33mReminderSettingsPanel[0m } [36mfrom[0m [32m'./_components/ReminderSettingsPanel'[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m4 |[0m
+  [90m5 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m6 |[0m   [36mreturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  [90m1 |[0m [36mimport[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+  [90m2 |[0m [36mimport[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+[31m[1m>[0m [90m3 |[0m [36mimport[0m { [33mReminderSettingsPanel[0m } [36mfrom[0m [32m'./_components/ReminderSettingsPanel'[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m4 |[0m
+  [90m5 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m6 |[0m   [36mreturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  [90m1 |[0m [36mimport[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+  [90m2 |[0m [36mimport[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+[31m[1m>[0m [90m3 |[0m [36mimport[0m { [33mReminderSettingsPanel[0m } [36mfrom[0m [32m'./_components/ReminderSettingsPanel'[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m4 |[0m
+  [90m5 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m6 |[0m   [36mreturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  [90m1 |[0m [36mimport[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+  [90m2 |[0m [36mimport[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+[31m[1m>[0m [90m3 |[0m [36mimport[0m { [33mReminderSettingsPanel[0m } [36mfrom[0m [32m'./_components/ReminderSettingsPanel'[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m4 |[0m
+  [90m5 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m6 |[0m   [36mreturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+[browser] ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  1 | import PanelLayout from '../../components/PanelLayout';
+  2 | import { AccessManagementPanel } from '../business-settings/_components/AccessManagementPan...
+> 3 | import { ReminderSettingsPanel } from './_components/ReminderSettingsPanel';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  4 |
+  5 | export default function SettingsPage() {
+  6 |   return (
+
+https://nextjs.org/docs/messages/module-not-found 
+[browser] ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  1 | import PanelLayout from '../../components/PanelLayout';
+  2 | import { AccessManagementPanel } from '../business-settings/_components/AccessManagementPan...
+> 3 | import { ReminderSettingsPanel } from './_components/ReminderSettingsPanel';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  4 |
+  5 | export default function SettingsPage() {
+  6 |   return (
+
+https://nextjs.org/docs/messages/module-not-found 
+[browser] ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  1 | import PanelLayout from '../../components/PanelLayout';
+  2 | import { AccessManagementPanel } from '../business-settings/_components/AccessManagementPan...
+> 3 | import { ReminderSettingsPanel } from './_components/ReminderSettingsPanel';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  4 |
+  5 | export default function SettingsPage() {
+  6 |   return (
+
+https://nextjs.org/docs/messages/module-not-found 
+[browser] ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  1 | import PanelLayout from '../../components/PanelLayout';
+  2 | import { AccessManagementPanel } from '../business-settings/_components/AccessManagementPan...
+> 3 | import { ReminderSettingsPanel } from './_components/ReminderSettingsPanel';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  4 |
+  5 | export default function SettingsPage() {
+  6 |   return (
+
+https://nextjs.org/docs/messages/module-not-found 
+[browser] ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  1 | import PanelLayout from '../../components/PanelLayout';
+  2 | import { AccessManagementPanel } from '../business-settings/_components/AccessManagementPan...
+> 3 | import { ReminderSettingsPanel } from './_components/ReminderSettingsPanel';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  4 |
+  5 | export default function SettingsPage() {
+  6 |   return (
+
+https://nextjs.org/docs/messages/module-not-found 
+[browser] ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  1 | import PanelLayout from '../../components/PanelLayout';
+  2 | import { AccessManagementPanel } from '../business-settings/_components/AccessManagementPan...
+> 3 | import { ReminderSettingsPanel } from './_components/ReminderSettingsPanel';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  4 |
+  5 | export default function SettingsPage() {
+  6 |   return (
+
+https://nextjs.org/docs/messages/module-not-found 
+[browser] ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  1 | import PanelLayout from '../../components/PanelLayout';
+  2 | import { AccessManagementPanel } from '../business-settings/_components/AccessManagementPan...
+> 3 | import { ReminderSettingsPanel } from './_components/ReminderSettingsPanel';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  4 |
+  5 | export default function SettingsPage() {
+  6 |   return (
+
+https://nextjs.org/docs/messages/module-not-found 
+⨯ ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  [90m1 |[0m [36mimport[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+  [90m2 |[0m [36mimport[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+[31m[1m>[0m [90m3 |[0m [36mimport[0m { [33mReminderSettingsPanel[0m } [36mfrom[0m [32m'./_components/ReminderSettingsPanel'[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m4 |[0m
+  [90m5 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m6 |[0m   [36mreturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  [90m1 |[0m [36mimport[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+  [90m2 |[0m [36mimport[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+[31m[1m>[0m [90m3 |[0m [36mimport[0m { [33mReminderSettingsPanel[0m } [36mfrom[0m [32m'./_components/ReminderSettingsPanel'[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m4 |[0m
+  [90m5 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m6 |[0m   [36mreturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  [90m1 |[0m [36mimport[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+  [90m2 |[0m [36mimport[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+[31m[1m>[0m [90m3 |[0m [36mimport[0m { [33mReminderSettingsPanel[0m } [36mfrom[0m [32m'./_components/ReminderSettingsPanel'[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m4 |[0m
+  [90m5 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m6 |[0m   [36mreturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  [90m1 |[0m [36mimport[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+  [90m2 |[0m [36mimport[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+[31m[1m>[0m [90m3 |[0m [36mimport[0m { [33mReminderSettingsPanel[0m } [36mfrom[0m [32m'./_components/ReminderSettingsPanel'[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m4 |[0m
+  [90m5 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m6 |[0m   [36mreturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  [90m1 |[0m [36mimport[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+  [90m2 |[0m [36mimport[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+[31m[1m>[0m [90m3 |[0m [36mimport[0m { [33mReminderSettingsPanel[0m } [36mfrom[0m [32m'./_components/ReminderSettingsPanel'[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m4 |[0m
+  [90m5 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m6 |[0m   [36mreturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  [90m1 |[0m [36mimport[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+  [90m2 |[0m [36mimport[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+[31m[1m>[0m [90m3 |[0m [36mimport[0m { [33mReminderSettingsPanel[0m } [36mfrom[0m [32m'./_components/ReminderSettingsPanel'[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m4 |[0m
+  [90m5 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m6 |[0m   [36mreturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  [90m1 |[0m [36mimport[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+  [90m2 |[0m [36mimport[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+[31m[1m>[0m [90m3 |[0m [36mimport[0m { [33mReminderSettingsPanel[0m } [36mfrom[0m [32m'./_components/ReminderSettingsPanel'[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m4 |[0m
+  [90m5 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m6 |[0m   [36mreturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+[browser] ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  1 | import PanelLayout from '../../components/PanelLayout';
+  2 | import { AccessManagementPanel } from '../business-settings/_components/AccessManagementPan...
+> 3 | import { ReminderSettingsPanel } from './_components/ReminderSettingsPanel';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  4 |
+  5 | export default function SettingsPage() {
+  6 |   return (
+
+https://nextjs.org/docs/messages/module-not-found 
+⨯ ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  [90m1 |[0m [36mimport[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+  [90m2 |[0m [36mimport[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+[31m[1m>[0m [90m3 |[0m [36mimport[0m { [33mReminderSettingsPanel[0m } [36mfrom[0m [32m'./_components/ReminderSettingsPanel'[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m4 |[0m
+  [90m5 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m6 |[0m   [36mreturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  [90m1 |[0m [36mimport[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+  [90m2 |[0m [36mimport[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+[31m[1m>[0m [90m3 |[0m [36mimport[0m { [33mReminderSettingsPanel[0m } [36mfrom[0m [32m'./_components/ReminderSettingsPanel'[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m4 |[0m
+  [90m5 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m6 |[0m   [36mreturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  [90m1 |[0m [36mimport[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+  [90m2 |[0m [36mimport[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+[31m[1m>[0m [90m3 |[0m [36mimport[0m { [33mReminderSettingsPanel[0m } [36mfrom[0m [32m'./_components/ReminderSettingsPanel'[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m4 |[0m
+  [90m5 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m6 |[0m   [36mreturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  [90m1 |[0m [36mimport[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+  [90m2 |[0m [36mimport[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+[31m[1m>[0m [90m3 |[0m [36mimport[0m { [33mReminderSettingsPanel[0m } [36mfrom[0m [32m'./_components/ReminderSettingsPanel'[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m4 |[0m
+  [90m5 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m6 |[0m   [36mreturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  [90m1 |[0m [36mimport[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+  [90m2 |[0m [36mimport[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+[31m[1m>[0m [90m3 |[0m [36mimport[0m { [33mReminderSettingsPanel[0m } [36mfrom[0m [32m'./_components/ReminderSettingsPanel'[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m4 |[0m
+  [90m5 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m6 |[0m   [36mreturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  [90m1 |[0m [36mimport[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+  [90m2 |[0m [36mimport[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+[31m[1m>[0m [90m3 |[0m [36mimport[0m { [33mReminderSettingsPanel[0m } [36mfrom[0m [32m'./_components/ReminderSettingsPanel'[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m4 |[0m
+  [90m5 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m6 |[0m   [36mreturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  [90m1 |[0m [36mimport[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+  [90m2 |[0m [36mimport[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+[31m[1m>[0m [90m3 |[0m [36mimport[0m { [33mReminderSettingsPanel[0m } [36mfrom[0m [32m'./_components/ReminderSettingsPanel'[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m4 |[0m
+  [90m5 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m6 |[0m   [36mreturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  [90m1 |[0m [36mimport[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+  [90m2 |[0m [36mimport[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+[31m[1m>[0m [90m3 |[0m [36mimport[0m { [33mReminderSettingsPanel[0m } [36mfrom[0m [32m'./_components/ReminderSettingsPanel'[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m4 |[0m
+  [90m5 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m6 |[0m   [36mreturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  [90m1 |[0m [36mimport[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+  [90m2 |[0m [36mimport[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+[31m[1m>[0m [90m3 |[0m [36mimport[0m { [33mReminderSettingsPanel[0m } [36mfrom[0m [32m'./_components/ReminderSettingsPanel'[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m4 |[0m
+  [90m5 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m6 |[0m   [36mreturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+[browser] ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  1 | import PanelLayout from '../../components/PanelLayout';
+  2 | import { AccessManagementPanel } from '../business-settings/_components/AccessManagementPan...
+> 3 | import { ReminderSettingsPanel } from './_components/ReminderSettingsPanel';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  4 |
+  5 | export default function SettingsPage() {
+  6 |   return (
+
+https://nextjs.org/docs/messages/module-not-found 
+[browser] Uncaught Error: ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  1 | import PanelLayout from '../../components/PanelLayout';
+  2 | import { AccessManagementPanel } from '../business-settings/_components/AccessManagementPan...
+> 3 | import { ReminderSettingsPanel } from './_components/ReminderSettingsPanel';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  4 |
+  5 | export default function SettingsPage() {
+  6 |   return (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+    at <unknown> (Error: ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (Error: (./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+[browser] Uncaught Error: ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  1 | import PanelLayout from '../../components/PanelLayout';
+  2 | import { AccessManagementPanel } from '../business-settings/_components/AccessManagementPan...
+> 3 | import { ReminderSettingsPanel } from './_components/ReminderSettingsPanel';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  4 |
+  5 | export default function SettingsPage() {
+  6 |   return (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+    at <unknown> (Error: ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (Error: (./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+[browser] ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  1 | import PanelLayout from '../../components/PanelLayout';
+  2 | import { AccessManagementPanel } from '../business-settings/_components/AccessManagementPan...
+> 3 | import { ReminderSettingsPanel } from './_components/ReminderSettingsPanel';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  4 |
+  5 | export default function SettingsPage() {
+  6 |   return (
+
+https://nextjs.org/docs/messages/module-not-found 
+[browser] ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  1 | import PanelLayout from '../../components/PanelLayout';
+  2 | import { AccessManagementPanel } from '../business-settings/_components/AccessManagementPan...
+> 3 | import { ReminderSettingsPanel } from './_components/ReminderSettingsPanel';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  4 |
+  5 | export default function SettingsPage() {
+  6 |   return (
+
+https://nextjs.org/docs/messages/module-not-found 
+⨯ ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  [90m1 |[0m [36mimport[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+  [90m2 |[0m [36mimport[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+[31m[1m>[0m [90m3 |[0m [36mimport[0m { [33mReminderSettingsPanel[0m } [36mfrom[0m [32m'./_components/ReminderSettingsPanel'[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m4 |[0m
+  [90m5 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m6 |[0m   [36mreturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  [90m1 |[0m [36mimport[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+  [90m2 |[0m [36mimport[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+[31m[1m>[0m [90m3 |[0m [36mimport[0m { [33mReminderSettingsPanel[0m } [36mfrom[0m [32m'./_components/ReminderSettingsPanel'[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m4 |[0m
+  [90m5 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m6 |[0m   [36mreturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  [90m1 |[0m [36mimport[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+  [90m2 |[0m [36mimport[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+[31m[1m>[0m [90m3 |[0m [36mimport[0m { [33mReminderSettingsPanel[0m } [36mfrom[0m [32m'./_components/ReminderSettingsPanel'[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m4 |[0m
+  [90m5 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m6 |[0m   [36mreturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  [90m1 |[0m [36mimport[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+  [90m2 |[0m [36mimport[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+[31m[1m>[0m [90m3 |[0m [36mimport[0m { [33mReminderSettingsPanel[0m } [36mfrom[0m [32m'./_components/ReminderSettingsPanel'[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m4 |[0m
+  [90m5 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m6 |[0m   [36mreturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  [90m1 |[0m [36mimport[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+  [90m2 |[0m [36mimport[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+[31m[1m>[0m [90m3 |[0m [36mimport[0m { [33mReminderSettingsPanel[0m } [36mfrom[0m [32m'./_components/ReminderSettingsPanel'[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m4 |[0m
+  [90m5 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m6 |[0m   [36mreturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  [90m1 |[0m [36mimport[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+  [90m2 |[0m [36mimport[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+[31m[1m>[0m [90m3 |[0m [36mimport[0m { [33mReminderSettingsPanel[0m } [36mfrom[0m [32m'./_components/ReminderSettingsPanel'[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m4 |[0m
+  [90m5 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m6 |[0m   [36mreturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  [90m1 |[0m [36mimport[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+  [90m2 |[0m [36mimport[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+[31m[1m>[0m [90m3 |[0m [36mimport[0m { [33mReminderSettingsPanel[0m } [36mfrom[0m [32m'./_components/ReminderSettingsPanel'[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m4 |[0m
+  [90m5 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m6 |[0m   [36mreturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  [90m1 |[0m [36mimport[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+  [90m2 |[0m [36mimport[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+[31m[1m>[0m [90m3 |[0m [36mimport[0m { [33mReminderSettingsPanel[0m } [36mfrom[0m [32m'./_components/ReminderSettingsPanel'[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m4 |[0m
+  [90m5 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m6 |[0m   [36mreturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  [90m1 |[0m [36mimport[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+  [90m2 |[0m [36mimport[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+[31m[1m>[0m [90m3 |[0m [36mimport[0m { [33mReminderSettingsPanel[0m } [36mfrom[0m [32m'./_components/ReminderSettingsPanel'[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m4 |[0m
+  [90m5 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m6 |[0m   [36mreturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  [90m1 |[0m [36mimport[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+  [90m2 |[0m [36mimport[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+[31m[1m>[0m [90m3 |[0m [36mimport[0m { [33mReminderSettingsPanel[0m } [36mfrom[0m [32m'./_components/ReminderSettingsPanel'[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m4 |[0m
+  [90m5 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m6 |[0m   [36mreturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  [90m1 |[0m [36mimport[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+  [90m2 |[0m [36mimport[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+[31m[1m>[0m [90m3 |[0m [36mimport[0m { [33mReminderSettingsPanel[0m } [36mfrom[0m [32m'./_components/ReminderSettingsPanel'[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m4 |[0m
+  [90m5 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m6 |[0m   [36mreturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  [90m1 |[0m [36mimport[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+  [90m2 |[0m [36mimport[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+[31m[1m>[0m [90m3 |[0m [36mimport[0m { [33mReminderSettingsPanel[0m } [36mfrom[0m [32m'./_components/ReminderSettingsPanel'[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m4 |[0m
+  [90m5 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m6 |[0m   [36mreturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  [90m1 |[0m [36mimport[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+  [90m2 |[0m [36mimport[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+[31m[1m>[0m [90m3 |[0m [36mimport[0m { [33mReminderSettingsPanel[0m } [36mfrom[0m [32m'./_components/ReminderSettingsPanel'[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m4 |[0m
+  [90m5 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m6 |[0m   [36mreturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+[browser] Uncaught Error: ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  1 | import PanelLayout from '../../components/PanelLayout';
+  2 | import { AccessManagementPanel } from '../business-settings/_components/AccessManagementPan...
+> 3 | import { ReminderSettingsPanel } from './_components/ReminderSettingsPanel';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  4 |
+  5 | export default function SettingsPage() {
+  6 |   return (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+    at <unknown> (Error: ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (Error: (./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+[browser] Uncaught Error: ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  1 | import PanelLayout from '../../components/PanelLayout';
+  2 | import { AccessManagementPanel } from '../business-settings/_components/AccessManagementPan...
+> 3 | import { ReminderSettingsPanel } from './_components/ReminderSettingsPanel';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  4 |
+  5 | export default function SettingsPage() {
+  6 |   return (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+    at <unknown> (Error: ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (Error: (./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+⨯ ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  [90m1 |[0m [36mimport[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+  [90m2 |[0m [36mimport[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+[31m[1m>[0m [90m3 |[0m [36mimport[0m { [33mReminderSettingsPanel[0m } [36mfrom[0m [32m'./_components/ReminderSettingsPanel'[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m4 |[0m
+  [90m5 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m6 |[0m   [36mreturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  [90m1 |[0m [36mimport[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+  [90m2 |[0m [36mimport[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+[31m[1m>[0m [90m3 |[0m [36mimport[0m { [33mReminderSettingsPanel[0m } [36mfrom[0m [32m'./_components/ReminderSettingsPanel'[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m4 |[0m
+  [90m5 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m6 |[0m   [36mreturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  [90m1 |[0m [36mimport[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+  [90m2 |[0m [36mimport[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+[31m[1m>[0m [90m3 |[0m [36mimport[0m { [33mReminderSettingsPanel[0m } [36mfrom[0m [32m'./_components/ReminderSettingsPanel'[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m4 |[0m
+  [90m5 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m6 |[0m   [36mreturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  [90m1 |[0m [36mimport[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+  [90m2 |[0m [36mimport[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+[31m[1m>[0m [90m3 |[0m [36mimport[0m { [33mReminderSettingsPanel[0m } [36mfrom[0m [32m'./_components/ReminderSettingsPanel'[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m4 |[0m
+  [90m5 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m6 |[0m   [36mreturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  [90m1 |[0m [36mimport[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+  [90m2 |[0m [36mimport[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+[31m[1m>[0m [90m3 |[0m [36mimport[0m { [33mReminderSettingsPanel[0m } [36mfrom[0m [32m'./_components/ReminderSettingsPanel'[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m4 |[0m
+  [90m5 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m6 |[0m   [36mreturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  [90m1 |[0m [36mimport[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+  [90m2 |[0m [36mimport[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+[31m[1m>[0m [90m3 |[0m [36mimport[0m { [33mReminderSettingsPanel[0m } [36mfrom[0m [32m'./_components/ReminderSettingsPanel'[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m4 |[0m
+  [90m5 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m6 |[0m   [36mreturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  [90m1 |[0m [36mimport[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+  [90m2 |[0m [36mimport[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+[31m[1m>[0m [90m3 |[0m [36mimport[0m { [33mReminderSettingsPanel[0m } [36mfrom[0m [32m'./_components/ReminderSettingsPanel'[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m4 |[0m
+  [90m5 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m6 |[0m   [36mreturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  [90m1 |[0m [36mimport[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+  [90m2 |[0m [36mimport[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+[31m[1m>[0m [90m3 |[0m [36mimport[0m { [33mReminderSettingsPanel[0m } [36mfrom[0m [32m'./_components/ReminderSettingsPanel'[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m4 |[0m
+  [90m5 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m6 |[0m   [36mreturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  [90m1 |[0m [36mimport[0m [33mPanelLayout[0m [36mfrom[0m [32m'../../components/PanelLayout'[0m;
+  [90m2 |[0m [36mimport[0m { [33mAccessManagementPanel[0m } [36mfrom[0m [32m'../business-settings/_components/AccessManagementPan...[0m
+[31m[1m>[0m [90m3 |[0m [36mimport[0m { [33mReminderSettingsPanel[0m } [36mfrom[0m [32m'./_components/ReminderSettingsPanel'[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m4 |[0m
+  [90m5 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mSettingsPage[0m() {
+  [90m6 |[0m   [36mreturn[0m (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+[browser] Uncaught Error: ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  1 | import PanelLayout from '../../components/PanelLayout';
+  2 | import { AccessManagementPanel } from '../business-settings/_components/AccessManagementPan...
+> 3 | import { ReminderSettingsPanel } from './_components/ReminderSettingsPanel';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  4 |
+  5 | export default function SettingsPage() {
+  6 |   return (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+    at <unknown> (Error: ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (Error: (./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+[browser] Uncaught Error: ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1
+Module not found: Can't resolve './_components/ReminderSettingsPanel'
+  1 | import PanelLayout from '../../components/PanelLayout';
+  2 | import { AccessManagementPanel } from '../business-settings/_components/AccessManagementPan...
+> 3 | import { ReminderSettingsPanel } from './_components/ReminderSettingsPanel';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  4 |
+  5 | export default function SettingsPage() {
+  6 |   return (
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+    at <unknown> (Error: ./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (Error: (./Desktop/vahedyek/apps/vahedyek-panel/app/(panel)/settings/page.tsx:3:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)

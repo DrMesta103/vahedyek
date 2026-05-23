@@ -197,10 +197,52 @@ declare function ChoicePillsField<T extends string>({ label, labelAs: LabelAs, a
     invalid?: boolean;
 }): react_jsx_runtime.JSX.Element;
 
+declare const DEV_DOC_THREAD_PRIORITIES: readonly ["p0", "p1", "p2", "p3"];
+declare const DEV_DOC_THREAD_STATUSES: readonly ["todo", "in_progress", "done"];
+type DevDocThreadPriority = (typeof DEV_DOC_THREAD_PRIORITIES)[number];
+type DevDocThreadStatus = (typeof DEV_DOC_THREAD_STATUSES)[number];
+type DevDocThreadRecord = {
+    id: string;
+    appId: string;
+    pageKey: string;
+    pagePathSample: string;
+    title: string;
+    docType: string;
+    priority: DevDocThreadPriority;
+    status: DevDocThreadStatus;
+    labels: string[];
+    isOpened: boolean;
+    createdAt: string;
+    updatedAt: string;
+    createdBy: {
+        id: string;
+        fullName: string;
+        email: string;
+    } | null;
+    updatedBy: {
+        id: string;
+        fullName: string;
+        email: string;
+    } | null;
+};
+declare const DEV_DOC_PRIORITY_LABELS: Record<DevDocThreadPriority, string>;
+declare function normalizeDevDocThreadPriority(value: unknown): DevDocThreadPriority;
+declare function normalizeDevDocThreadStatus(value: unknown): DevDocThreadStatus;
+declare function normalizeDevDocLabels(input: unknown): string[];
+
+type DevDocThreadsBoardProps = {
+    appName: string;
+    listEndpoint: string;
+    updateEndpoint: (threadId: string) => string;
+    title?: string;
+    description?: string;
+};
+declare function DevDocThreadsBoard({ appName, listEndpoint, updateEndpoint, title, description, }: DevDocThreadsBoardProps): react_jsx_runtime.JSX.Element;
+
 type AppThemeTokens = {
     primary: string;
     accent: string;
     radius: string;
 };
 
-export { type AppThemeTokens, BusinessSwitch, ChoicePills, ChoicePillsField, type ChoicePillsOption, ContractIssuerTags, type ContractIssuerType, type ContractType, ContractTypeTags, ExpandableTagGroup, type ExpandableTagGroupItem, Input, type InputProps, PersianDatePicker, type PersianDatePickerProps, RULE_PANEL_SELECT_CLASSNAME, RULE_PANEL_TEXT_INPUT_CLASSNAME, RuleAmountInput, RuleFieldLabel, RuleTabButton, SearchableSelect, type SearchableSelectOption, SegmentedToggle, type ShareMode, ShareModePills, StickySubmitBar, TagPills, compactTextareaStyle, formControlMutedDisabledStyle, formControlStyle, formErrorStyle, formLabelStyle, formMetaLabelStyle, formStyles, outlineButtonStyle, primaryButtonStyle, rulePanelNumericInputClassName };
+export { type AppThemeTokens, BusinessSwitch, ChoicePills, ChoicePillsField, type ChoicePillsOption, ContractIssuerTags, type ContractIssuerType, type ContractType, ContractTypeTags, DEV_DOC_PRIORITY_LABELS, DEV_DOC_THREAD_PRIORITIES, DEV_DOC_THREAD_STATUSES, type DevDocThreadPriority, type DevDocThreadRecord, type DevDocThreadStatus, DevDocThreadsBoard, type DevDocThreadsBoardProps, ExpandableTagGroup, type ExpandableTagGroupItem, Input, type InputProps, PersianDatePicker, type PersianDatePickerProps, RULE_PANEL_SELECT_CLASSNAME, RULE_PANEL_TEXT_INPUT_CLASSNAME, RuleAmountInput, RuleFieldLabel, RuleTabButton, SearchableSelect, type SearchableSelectOption, SegmentedToggle, type ShareMode, ShareModePills, StickySubmitBar, TagPills, compactTextareaStyle, formControlMutedDisabledStyle, formControlStyle, formErrorStyle, formLabelStyle, formMetaLabelStyle, formStyles, normalizeDevDocLabels, normalizeDevDocThreadPriority, normalizeDevDocThreadStatus, outlineButtonStyle, primaryButtonStyle, rulePanelNumericInputClassName };

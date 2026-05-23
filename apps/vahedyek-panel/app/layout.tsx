@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import './globals.css';
 import { currentAppConfig } from './config/current';
+import AuditActivityTracker from './components/AuditActivityTracker';
 import { AppToastProvider } from './components/feedback/AppToastProvider';
 import { ThemeInitScript } from './components/theme/ThemeInitScript';
 import { ThemeProvider } from './components/theme/ThemeProvider';
@@ -24,6 +26,9 @@ export default function RootLayout({
       </head>
       <body>
         <LocatorRuntime />
+        <Suspense fallback={null}>
+          <AuditActivityTracker />
+        </Suspense>
         <ThemeProvider>
           <AppToastProvider>{children}</AppToastProvider>
         </ThemeProvider>

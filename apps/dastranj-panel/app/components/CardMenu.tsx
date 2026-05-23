@@ -27,6 +27,13 @@ type CardMenuItem =
       action: (formData: FormData) => void | Promise<void>;
       hiddenFields?: Record<string, string>;
       confirm?: ConfirmConfig;
+    }
+  | {
+      kind: 'action';
+      label: string;
+      icon?: ReactNode;
+      tone?: 'default' | 'danger';
+      onClick: () => void;
     };
 
 type CardMenuProps = {
@@ -96,7 +103,7 @@ export function CardMenu({ items }: CardMenuProps) {
                   {item.icon ? <span className="card-menu-item-icon">{item.icon}</span> : null}
                   <span>{item.label}</span>
                 </Link>
-              ) : item.confirm ? (
+              ) : item.kind === 'submit' && item.confirm ? (
                 <button
                   key={`${item.kind}-${item.label}`}
                   type="button"
@@ -104,6 +111,19 @@ export function CardMenu({ items }: CardMenuProps) {
                   onClick={() => {
                     setOpen(false);
                     setPendingItemIndex(index);
+                  }}
+                >
+                  {item.icon ? <span className="card-menu-item-icon">{item.icon}</span> : null}
+                  <span>{item.label}</span>
+                </button>
+              ) : item.kind === 'action' ? (
+                <button
+                  key={`${item.kind}-${item.label}`}
+                  type="button"
+                  className={item.tone === 'danger' ? 'card-menu-delete' : 'card-menu-link'}
+                  onClick={() => {
+                    setOpen(false);
+                    item.onClick();
                   }}
                 >
                   {item.icon ? <span className="card-menu-item-icon">{item.icon}</span> : null}

@@ -18,9 +18,11 @@ model Tenant {
   packageKey                    String                         @default("starter")
   billingCycle                  String                         @default("monthly")
   projectUnitTypes              Json                           @default("[]")
+  projectPhysicalProgressSchedules Json                        @default("[]")
   projectReportData             Json                           @default("{}")
   projectTechnicalSpecs         Json                           @default("{}")
   projectAddressData            Json                           @default("{}")
+  reminderSettings              TenantReminderSettings?
   /// پیکربندی قدیمی مسیر تأیید (منسوخ — پس از مهاجرت Workflow حذف می‌شود)
   approvalProcessConfig         Json                           @default("{}")
   workflows                     ApprovalWorkflow[]
@@ -39,6 +41,8 @@ model Tenant {
   formerEmployees               FormerEmployee[]
   projectPlates                 ProjectPlate[]
   sessions                      Session[]
+  reminderActivities            UserReminderActivity[]
+  reminderPageActivities        UserReminderPageActivity[]
   TenantBusinessProfileSettings TenantBusinessProfileSettings?
   contractRuleSettings          TenantContractRuleSettings?
   roles                         TenantRole[]
@@ -68,8 +72,62 @@ model AppUser {
   DevPageThread_DevPageThread_createdByIdToAppUser     DevPageThread[]            @relation("DevPageThread_createdByIdToAppUser")
   DevPageThread_DevPageThread_updatedByIdToAppUser     DevPageThread[]            @relation("DevPageThread_updatedByIdToAppUser")
   representatives                                      DirectoryRepresentative[]
+  reminderActivities                                  UserReminderActivity[]
+  reminderPageActivities                              UserReminderPageActivity[]
   sessions                                             Session[]
   memberships                                          UserTenantMembership[]
+}
+
+model TenantReminderSettings {
+  id           String   @id
+  tenantId     String   @unique
+  settingsJson String   @default("{}")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+}
+
+model UserReminderActivity {
+  id                     String   @id
+  tenantId               String
+  userId                 String
+  previousPath           String?
+  lastPath               String   @default("/")
+  lastSeenAt             DateTime @default(now())
+  lastInputAt            DateTime?
+  lastReminderShownAt    DateTime?
+  lastTourAcknowledgedAt DateTime?
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+  tenant                 Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user                   AppUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, userId])
+  @@index([userId])
+}
+
+model UserReminderPageActivity {
+  id             String   @id
+  tenantId       String
+  userId         String
+  pagePath       String
+  pageTitle      String?
+  firstVisitedAt DateTime @default(now())
+  lastVisitedAt  DateTime @default(now())
+  lastInputAt    DateTime?
+  inputCount     Int      @default(0)
+  lastMeaningfulActionAt DateTime?
+  meaningfulActionCount  Int      @default(0)
+  lastActionSummary      String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  tenant         Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user           AppUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, userId, pagePath])
+  @@index([userId, lastVisitedAt])
 }
 
 model AuditLog {

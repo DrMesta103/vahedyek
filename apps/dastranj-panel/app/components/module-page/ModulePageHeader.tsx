@@ -12,12 +12,22 @@ type ModulePageHeaderProps = {
   title: string;
   subtitle?: string;
   addHref?: string;
+  onAddClick?: () => void;
   addLabel?: string;
   titleHref?: string;
   onTitleClick?: () => void;
 };
 
-export function ModulePageHeader({ breadcrumbs, title, subtitle, addHref, addLabel, titleHref, onTitleClick }: ModulePageHeaderProps) {
+export function ModulePageHeader({
+  breadcrumbs,
+  title,
+  subtitle,
+  addHref,
+  onAddClick,
+  addLabel,
+  titleHref,
+  onTitleClick,
+}: ModulePageHeaderProps) {
   return (
     <header className="module-page-header">
       <div className="module-page-header-copy">
@@ -47,7 +57,12 @@ export function ModulePageHeader({ breadcrumbs, title, subtitle, addHref, addLab
         )}
         {subtitle ? <p className="module-page-subtitle">{subtitle}</p> : null}
       </div>
-      {addHref && addLabel ? (
+      {addLabel && onAddClick ? (
+        <button type="button" className="module-page-add-btn" onClick={onAddClick}>
+          <span aria-hidden>+</span>
+          {addLabel}
+        </button>
+      ) : addHref && addLabel ? (
         <Link href={addHref} className="module-page-add-btn">
           <span aria-hidden>+</span>
           {addLabel}
