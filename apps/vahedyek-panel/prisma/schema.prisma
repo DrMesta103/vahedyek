@@ -18,6 +18,7 @@ model Tenant {
   packageKey                    String                         @default("starter")
   billingCycle                  String                         @default("monthly")
   projectUnitTypes              Json                           @default("[]")
+  projectPhysicalProgressSchedules Json                        @default("[]")
   projectReportData             Json                           @default("{}")
   projectTechnicalSpecs         Json                           @default("{}")
   projectAddressData            Json                           @default("{}")
