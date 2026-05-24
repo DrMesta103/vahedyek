@@ -2,9 +2,10 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { CheckCircle2, ChevronRight, Save } from 'lucide-react';
+import { CheckCircle2, ChevronRight } from 'lucide-react';
 import type { ContractRuleState } from '../../../lib/businessContractRules';
 import { DiscountConditionPanel, type DiscountConditionValues } from '../../contracts/new/_components/DiscountConditionPanel';
+import { BusinessSettingsSubmitButton } from './BusinessSettingsSubmitButton';
 
 function parseListValue(value: string | boolean | undefined) {
   if (typeof value !== 'string') return ['all-payment-types'];
@@ -158,19 +159,13 @@ export function DiscountConditionSettingsPanel() {
         {error ? <div className="rounded-2xl border border-[#fecdd3] bg-[#fff1f2] px-4 py-3 text-sm text-[#be123c]">{error}</div> : null}
       </div>
 
-      <div className="pointer-events-none fixed inset-x-0 bottom-3 z-20 px-4 sm:px-6 lg:px-8">
-        <div className="mx-auto flex max-w-5xl justify-center">
-          <button
-            type="button"
-            onClick={() => void handleSave()}
-            disabled={saving}
-            className="pointer-events-auto inline-flex min-w-[54px] items-center justify-center gap-1 rounded-lg bg-[#11b5c9] px-3.5 py-1.5 text-sm font-black text-[#123b69] shadow-[0_10px_24px_rgba(17,181,201,0.28)] transition hover:bg-[#0da5b7] disabled:opacity-60"
-          >
-            <Save className="h-3 w-3" />
-            {saving ? 'در حال ذخیره...' : 'ثبت'}
-          </button>
+      <div className="pointer-events-none fixed inset-x-0 bottom-6 z-20 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-5xl justify-end">
+          <BusinessSettingsSubmitButton saving={saving} onClick={() => void handleSave()} />
         </div>
       </div>
     </section>
   );
 }
+
+

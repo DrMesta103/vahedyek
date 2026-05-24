@@ -1,9 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { ChevronDown, Save, type LucideIcon } from 'lucide-react';
+import { ChevronDown, type LucideIcon } from 'lucide-react';
 import { useState } from 'react';
 import { ChoicePills as UiChoicePills, PersianDatePicker, RULE_PANEL_TEXT_INPUT_CLASSNAME, RuleAmountInput } from '@repo/ui';
+import { BusinessSettingsSubmitButton } from './BusinessSettingsSubmitButton';
 
 export function cn(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ');
@@ -295,18 +296,13 @@ export function LoanError({ error }: { error: string }) {
 
 export function LoanSaveBar({ saving, onSave }: { saving: boolean; onSave: () => void }) {
   return (
-    <div className="fixed inset-x-0 bottom-3 z-20 px-4 pointer-events-none sm:px-6 lg:px-8">
-      <div className="mx-auto flex max-w-6xl justify-center">
-        <button
-          type="button"
-          onClick={onSave}
-          disabled={saving}
-          className="pointer-events-auto inline-flex min-w-[54px] items-center justify-center gap-1 rounded-lg bg-[#11b5c9] px-3.5 py-1.5 text-sm font-black text-[#123b69] shadow-[0_10px_24px_rgba(17,181,201,0.28)] transition hover:bg-[#0da5b7] disabled:opacity-60"
-        >
-          <Save className="h-3 w-3" />
-          {saving ? 'در حال ذخیره...' : 'ثبت'}
-        </button>
+    <div className="fixed inset-x-0 bottom-6 z-20 px-4 pointer-events-none sm:px-6 lg:px-8">
+      <div className="mx-auto flex max-w-6xl justify-end">
+        <BusinessSettingsSubmitButton saving={saving} onClick={onSave} />
       </div>
     </div>
   );
 }
+
+
+

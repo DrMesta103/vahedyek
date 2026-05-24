@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { PersianDatePicker } from '@repo/ui';
+import { BusinessSettingsSubmitButton } from './BusinessSettingsSubmitButton';
 import {
   DndContext,
   PointerSensor,
@@ -24,14 +25,11 @@ import {
   ArrowRight,
   CalendarRange,
   Check,
-  CheckCircle2,
-  Circle,
   Square,
   GripVertical,
   MoreVertical,
   Pencil,
   Plus,
-  TimerOff,
   Trash2,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -99,23 +97,6 @@ function compareDateText(left: string, right: string) {
 
 function formatWeight(value: number) {
   return `${new Intl.NumberFormat('fa-IR').format(value)}٪`;
-}
-
-function getTodayPersianDate() {
-  const formatter = new Intl.DateTimeFormat('en-CA-u-ca-persian', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  });
-
-  return formatter.format(new Date()).replace(/-/g, '/');
-}
-
-function getStageStatus(stage: PhysicalProgressScheduleStage) {
-  const today = getTodayPersianDate();
-  if (stage.isCompleted) return 'completed';
-  if (stage.plannedEndDate && compareDateText(stage.plannedEndDate, today) < 0) return 'overdue';
-  return 'planned';
 }
 
 function getAutoNumberedStageTitle(title: string, stages: PhysicalProgressScheduleStage[], editingIndex: number | null) {
@@ -322,29 +303,17 @@ function StageCard({
   stage,
   onEdit,
   onDelete,
-  onToggleComplete,
   menuOpen,
   onToggleMenu,
 }: {
   stage: PhysicalProgressScheduleStage;
   onEdit: () => void;
   onDelete: () => void;
-  onToggleComplete: () => void;
   menuOpen: boolean;
   onToggleMenu: () => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: stage.id });
   const style = { transform: CSS.Transform.toString(transform), transition };
-
-  const status = getStageStatus(stage);
-  const statusBadgeClass =
-    status === 'completed'
-      ? 'bg-emerald-50 text-emerald-700'
-      : status === 'overdue'
-        ? 'bg-rose-50 text-rose-700'
-        : 'bg-slate-100 text-slate-600';
-
-  const statusLabel = status === 'completed' ? 'انجام‌شده' : status === 'overdue' ? 'گذشته از زمان' : 'برنامه‌ریزی‌شده';
 
   return (
     <div
@@ -367,7 +336,6 @@ function StageCard({
           <div className="space-y-2">
             <div className="flex flex-wrap items-center gap-2">
               <strong className="text-sm text-slate-900">{stage.title}</strong>
-              <span className={`rounded-full px-2 py-1 text-[11px] font-bold ${statusBadgeClass}`}>{statusLabel}</span>
               <span className="rounded-full bg-slate-100 px-2 py-1 text-[11px] font-bold text-slate-700">{formatWeight(stage.weight)}</span>
             </div>
             <div className="text-xs text-slate-500">
@@ -378,16 +346,6 @@ function StageCard({
         </div>
 
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={onToggleComplete}
-            className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold ${stage.isCompleted ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}
-            title={stage.isCompleted ? 'این مرحله انجام‌شده ثبت شده و در پیشرفت تحقق‌یافته لحاظ می‌شود' : 'با انجام‌شده کردن این مرحله، وزن آن در پیشرفت تحقق‌یافته لحاظ می‌شود'}
-          >
-            {stage.isCompleted ? <CheckCircle2 className="h-4 w-4" /> : <Circle className="h-4 w-4" />}
-            {stage.isCompleted ? 'انجام شده' : 'انجام نشده'}
-          </button>
-
           <div className="relative">
             <button
               type="button"
@@ -442,10 +400,6 @@ export function ProjectPhysicalProgressScheduleForm({ scheduleKey }: { scheduleK
     [builder.stages],
   );
   const remainingWeight = Math.max(0, Math.round((100 - completedWeight) * 100) / 100);
-  const overdueCount = useMemo(
-    () => builder.stages.filter((stage) => getStageStatus(stage) === 'overdue').length,
-    [builder.stages],
-  );
   const focusedBlock = useMemo(() => blocks.find((block) => block.id === focusedBlockId) ?? null, [blocks, focusedBlockId]);
   const backHref = focusedBlockId
     ? `/business-settings/project/physical-progress-schedules?blockId=${encodeURIComponent(focusedBlockId)}`
@@ -597,21 +551,6 @@ export function ProjectPhysicalProgressScheduleForm({ scheduleKey }: { scheduleK
     setBuilder((current) => ({ ...current, stages: sortStages(current.stages, mode) }));
   }
 
-  function toggleStageCompletion(stageId: string) {
-    setBuilder((current) => ({
-      ...current,
-      stages: current.stages.map((stage) =>
-        stage.id === stageId
-          ? {
-              ...stage,
-              isCompleted: !stage.isCompleted,
-              completedAt: !stage.isCompleted ? new Date().toISOString() : null,
-            }
-          : stage,
-      ),
-    }));
-  }
-
   async function submitBuilder() {
     setSaving(true);
     setMessage('');
@@ -722,13 +661,6 @@ export function ProjectPhysicalProgressScheduleForm({ scheduleKey }: { scheduleK
                 <div className="text-xs text-slate-500">مانده پروژه</div>
                 <div className="mt-2 text-lg font-black text-slate-900">{formatWeight(remainingWeight)}</div>
               </div>
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                <div className="text-xs text-slate-500">مراحل خارج از زمان</div>
-                <div className="mt-2 flex items-center gap-2 text-lg font-black text-rose-700">
-                  <TimerOff className="h-4 w-4" />
-                  {new Intl.NumberFormat('fa-IR').format(overdueCount)}
-                </div>
-              </div>
             </div>
 
             <div className="rounded-3xl border border-slate-200 bg-white p-4">
@@ -774,7 +706,6 @@ export function ProjectPhysicalProgressScheduleForm({ scheduleKey }: { scheduleK
                           }));
                           setOpenStageMenuId('');
                         }}
-                        onToggleComplete={() => toggleStageCompletion(stage.id)}
                       />
                     ))}
                   </div>
@@ -829,22 +760,6 @@ export function ProjectPhysicalProgressScheduleForm({ scheduleKey }: { scheduleK
                     {stageDialogOpen ? (
                       <>
                         {stageError ? <div className="business-blocks-state is-error">{stageError}</div> : null}
-
-                      <div className="mb-4 flex items-start justify-between gap-4">
-                        <div className="text-right">
-                          <div className="text-sm font-black text-slate-800">وضعیت مرحله</div>
-                          <p className="mt-1 text-xs text-slate-500 whitespace-nowrap">اگر مرحله تکمیل شده است، آن را انجام‌شده ثبت کنید تا در پیشرفت تحقق‌یافته اثر بگذارد.</p>
-                        </div>
-                        <button
-                          type="button"
-                          className="business-switch financial-due-switch mt-1 shrink-0"
-                          aria-pressed={stageDraft.isCompleted}
-                          onClick={() => setStageDraft((current) => ({ ...current, isCompleted: !current.isCompleted }))}
-                        >
-                          <span className="business-switch-option is-on">انجام شده</span>
-                          <span className="business-switch-option is-off">انجام نشده</span>
-                        </button>
-                      </div>
 
                       {stageDraft.title === OTHER_STAGE_VALUE ? (
                         <Field label="عنوان سفارشی مرحله" required tooltip="برای مرحله‌ای که در فهرست پیشنهادی نیست، عنوان سفارشی وارد کنید.">
@@ -912,9 +827,13 @@ export function ProjectPhysicalProgressScheduleForm({ scheduleKey }: { scheduleK
               <Link href={backHref}>
                 <Button variant="outline">انصراف</Button>
               </Link>
-              <Button variant="primary" onClick={submitBuilder} disabled={saveDisabled}>
-                {saving ? 'در حال ذخیره...' : isEditing ? 'ثبت نسخه جدید' : 'ذخیره برنامه'}
-              </Button>
+              <BusinessSettingsSubmitButton
+                saving={saving}
+                disabled={saveDisabled && !saving}
+                onClick={submitBuilder}
+                label={isEditing ? 'ثبت نسخه جدید' : 'ذخیره برنامه مبنا'}
+                widthClass="w-[140px]"
+              />
             </div>
           </div>
         ) : null}
@@ -922,3 +841,5 @@ export function ProjectPhysicalProgressScheduleForm({ scheduleKey }: { scheduleK
     </section>
   );
 }
+
+

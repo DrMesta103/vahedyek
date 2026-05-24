@@ -9,73 +9,76 @@ datasource db {
 }
 
 model Tenant {
-  id                            String                         @id @default(cuid())
-  slug                          String                         @unique
-  name                          String
-  brandCode                     String                         @default("VN")
-  createdAt                     DateTime                       @default(now())
-  updatedAt                     DateTime                       @updatedAt
-  packageKey                    String                         @default("starter")
-  billingCycle                  String                         @default("monthly")
-  projectUnitTypes              Json                           @default("[]")
-  projectPhysicalProgressSchedules Json                        @default("[]")
-  projectReportData             Json                           @default("{}")
-  projectTechnicalSpecs         Json                           @default("{}")
-  projectAddressData            Json                           @default("{}")
-  reminderSettings              TenantReminderSettings?
+  id                               String                         @id @default(cuid())
+  slug                             String                         @unique
+  name                             String
+  brandCode                        String                         @default("VN")
+  createdAt                        DateTime                       @default(now())
+  updatedAt                        DateTime                       @updatedAt
+  packageKey                       String                         @default("starter")
+  billingCycle                     String                         @default("monthly")
+  projectUnitTypes                 Json                           @default("[]")
+  projectReportData                Json                           @default("{}")
+  projectTechnicalSpecs            Json                           @default("{}")
+  projectAddressData               Json                           @default("{}")
   /// پیکربندی قدیمی مسیر تأیید (منسوخ — پس از مهاجرت Workflow حذف می‌شود)
-  approvalProcessConfig         Json                           @default("{}")
-  workflows                     ApprovalWorkflow[]
-  auditLogs                     AuditLog[]
-  blocks                        Block[]
-  blockFloors                   BlockFloor[]
-  appendices                    ContractAppendix[]
-  drafts                        ContractDraft[]
-  DevPageDocument               DevPageDocument[]
-  DevPageDocumentEvent          DevPageDocumentEvent[]
-  DevPageDocumentReadState      DevPageDocumentReadState[]
-  DevPageThreadReadState        DevPageThreadReadState[]
-  directory                     DirectoryPerson[]
-  representatives               DirectoryRepresentative[]
-  employees                     Employee[]
-  formerEmployees               FormerEmployee[]
-  projectPlates                 ProjectPlate[]
-  sessions                      Session[]
-  reminderActivities            UserReminderActivity[]
-  reminderPageActivities        UserReminderPageActivity[]
-  TenantBusinessProfileSettings TenantBusinessProfileSettings?
-  contractRuleSettings          TenantContractRuleSettings?
-  roles                         TenantRole[]
-  units                         Unit[]
-  memberships                   UserTenantMembership[]
+  approvalProcessConfig            Json                           @default("{}")
+  projectPhysicalProgressSchedules Json                           @default("[]")
+  workflows                        ApprovalWorkflow[]
+  auditLogs                        AuditLog[]
+  blocks                           Block[]
+  blockFloors                      BlockFloor[]
+  appendices                       ContractAppendix[]
+  drafts                           ContractDraft[]
+  DevPageDocument                  DevPageDocument[]
+  DevPageDocumentEvent             DevPageDocumentEvent[]
+  DevPageDocumentReadState         DevPageDocumentReadState[]
+  DevPageThreadReadState           DevPageThreadReadState[]
+  directory                        DirectoryPerson[]
+  representatives                  DirectoryRepresentative[]
+  employees                        Employee[]
+  formerEmployees                  FormerEmployee[]
+  projectPlates                    ProjectPlate[]
+  sessions                         Session[]
+  TenantBusinessProfileSettings    TenantBusinessProfileSettings?
+  contractRuleSettings             TenantContractRuleSettings?
+  TenantReminderNotification       TenantReminderNotification[]
+  reminderSettings                 TenantReminderSettings?
+  roles                            TenantRole[]
+  units                            Unit[]
+  reminderActivities               UserReminderActivity[]
+  reminderPageActivities           UserReminderPageActivity[]
+  memberships                      UserTenantMembership[]
 }
 
 model AppUser {
-  id                                                   String                     @id @default(cuid())
-  email                                                String?                    @unique
-  fullName                                             String
-  passwordHash                                         String
-  passwordSalt                                         String
-  createdAt                                            DateTime                   @default(now())
-  updatedAt                                            DateTime                   @updatedAt
-  mobile                                               String?                    @unique
-  firstName                                            String?
-  lastName                                             String?
-  auditLogs                                            AuditLog[]
-  contractAppendices                                   ContractAppendix[]
-  DevPageDocument_DevPageDocument_createdByIdToAppUser DevPageDocument[]          @relation("DevPageDocument_createdByIdToAppUser")
-  DevPageDocument_DevPageDocument_updatedByIdToAppUser DevPageDocument[]          @relation("DevPageDocument_updatedByIdToAppUser")
-  DevPageDocumentEvent                                 DevPageDocumentEvent[]
-  DevPageDocumentReadState                             DevPageDocumentReadState[]
-  DevPageMessage                                       DevPageMessage[]
-  DevPageThreadReadState                               DevPageThreadReadState[]
-  DevPageThread_DevPageThread_createdByIdToAppUser     DevPageThread[]            @relation("DevPageThread_createdByIdToAppUser")
-  DevPageThread_DevPageThread_updatedByIdToAppUser     DevPageThread[]            @relation("DevPageThread_updatedByIdToAppUser")
-  representatives                                      DirectoryRepresentative[]
-  reminderActivities                                  UserReminderActivity[]
-  reminderPageActivities                              UserReminderPageActivity[]
-  sessions                                             Session[]
-  memberships                                          UserTenantMembership[]
+  id                                                                             String                       @id @default(cuid())
+  email                                                                          String?                      @unique
+  fullName                                                                       String
+  passwordHash                                                                   String
+  passwordSalt                                                                   String
+  createdAt                                                                      DateTime                     @default(now())
+  updatedAt                                                                      DateTime                     @updatedAt
+  mobile                                                                         String?                      @unique
+  firstName                                                                      String?
+  lastName                                                                       String?
+  auditLogs                                                                      AuditLog[]
+  contractAppendices                                                             ContractAppendix[]
+  DevPageDocument_DevPageDocument_createdByIdToAppUser                           DevPageDocument[]            @relation("DevPageDocument_createdByIdToAppUser")
+  DevPageDocument_DevPageDocument_updatedByIdToAppUser                           DevPageDocument[]            @relation("DevPageDocument_updatedByIdToAppUser")
+  DevPageDocumentEvent                                                           DevPageDocumentEvent[]
+  DevPageDocumentReadState                                                       DevPageDocumentReadState[]
+  DevPageMessage                                                                 DevPageMessage[]
+  DevPageThread_DevPageThread_createdByIdToAppUser                               DevPageThread[]              @relation("DevPageThread_createdByIdToAppUser")
+  DevPageThread_DevPageThread_updatedByIdToAppUser                               DevPageThread[]              @relation("DevPageThread_updatedByIdToAppUser")
+  DevPageThreadReadState                                                         DevPageThreadReadState[]
+  representatives                                                                DirectoryRepresentative[]
+  sessions                                                                       Session[]
+  TenantReminderNotification_TenantReminderNotification_createdByUserIdToAppUser TenantReminderNotification[] @relation("TenantReminderNotification_createdByUserIdToAppUser")
+  TenantReminderNotification_TenantReminderNotification_userIdToAppUser          TenantReminderNotification[] @relation("TenantReminderNotification_userIdToAppUser")
+  reminderActivities                                                             UserReminderActivity[]
+  reminderPageActivities                                                         UserReminderPageActivity[]
+  memberships                                                                    UserTenantMembership[]
 }
 
 model TenantReminderSettings {
@@ -83,51 +86,49 @@ model TenantReminderSettings {
   tenantId     String   @unique
   settingsJson String   @default("{}")
   createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  updatedAt    DateTime @default(now()) @updatedAt
   tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-
-  @@index([tenantId])
 }
 
 model UserReminderActivity {
-  id                     String   @id
+  id                     String    @id
   tenantId               String
   userId                 String
   previousPath           String?
-  lastPath               String   @default("/")
-  lastSeenAt             DateTime @default(now())
+  lastPath               String    @default("/")
+  lastSeenAt             DateTime  @default(now())
   lastInputAt            DateTime?
   lastReminderShownAt    DateTime?
   lastTourAcknowledgedAt DateTime?
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
-  tenant                 Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  user                   AppUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @default(now()) @updatedAt
+  tenant                 Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user                   AppUser   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([tenantId, userId])
   @@index([userId])
 }
 
 model UserReminderPageActivity {
-  id             String   @id
-  tenantId       String
-  userId         String
-  pagePath       String
-  pageTitle      String?
-  firstVisitedAt DateTime @default(now())
-  lastVisitedAt  DateTime @default(now())
-  lastInputAt    DateTime?
-  inputCount     Int      @default(0)
+  id                     String    @id
+  tenantId               String
+  userId                 String
+  pagePath               String
+  pageTitle              String?
+  firstVisitedAt         DateTime  @default(now())
+  lastVisitedAt          DateTime  @default(now())
+  lastInputAt            DateTime?
+  inputCount             Int       @default(0)
   lastMeaningfulActionAt DateTime?
-  meaningfulActionCount  Int      @default(0)
+  meaningfulActionCount  Int       @default(0)
   lastActionSummary      String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  tenant         Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  user           AppUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @default(now()) @updatedAt
+  tenant                 Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user                   AppUser   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([tenantId, userId, pagePath])
-  @@index([userId, lastVisitedAt])
+  @@index([userId, lastVisitedAt(sort: Desc)])
 }
 
 model AuditLog {
@@ -879,9 +880,9 @@ model DevPageThread {
   updatedAt                                  DateTime                 @default(now())
   status                                     String                   @default("todo")
   DevPageMessage                             DevPageMessage[]
-  DevPageThreadReadState                     DevPageThreadReadState[]
   AppUser_DevPageThread_createdByIdToAppUser AppUser                  @relation("DevPageThread_createdByIdToAppUser", fields: [createdById], references: [id])
   AppUser_DevPageThread_updatedByIdToAppUser AppUser                  @relation("DevPageThread_updatedByIdToAppUser", fields: [updatedById], references: [id])
+  DevPageThreadReadState                     DevPageThreadReadState[]
 
   @@index([appId, pageKey])
   @@index([appId, updatedAt(sort: Desc)])
@@ -896,8 +897,8 @@ model DevPageThreadReadState {
   isOpened  Boolean       @default(false)
   updatedAt DateTime      @default(now())
   Tenant    Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  AppUser   AppUser       @relation(fields: [userId], references: [id], onDelete: Cascade)
   Thread    DevPageThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  AppUser   AppUser       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([tenantId, appId, userId, threadId])
 }
@@ -911,6 +912,26 @@ model TenantBusinessProfileSettings {
   Tenant         Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
+}
+
+model TenantReminderNotification {
+  id                                                          String    @id
+  tenantId                                                    String
+  userId                                                      String
+  createdByUserId                                             String
+  title                                                       String
+  messageText                                                 String
+  targetEmail                                                 String?
+  emailStatus                                                 String    @default("missing")
+  pushStatus                                                  String    @default("queued")
+  acknowledgedAt                                              DateTime?
+  createdAt                                                   DateTime  @default(now())
+  updatedAt                                                   DateTime  @default(now())
+  AppUser_TenantReminderNotification_createdByUserIdToAppUser AppUser   @relation("TenantReminderNotification_createdByUserIdToAppUser", fields: [createdByUserId], references: [id], onDelete: Cascade)
+  Tenant                                                      Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  AppUser_TenantReminderNotification_userIdToAppUser          AppUser   @relation("TenantReminderNotification_userIdToAppUser", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, userId, acknowledgedAt, createdAt(sort: Desc)], map: "TenantReminderNotification_tenantId_userId_ack_idx")
 }
 
 enum ContractType {

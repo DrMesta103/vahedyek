@@ -17,6 +17,7 @@ import {
   StatGrid,
 } from '@repo/ui';
 import { BadgePercent, CircleDollarSign, SlidersHorizontal, UserRoundCog } from 'lucide-react';
+import { BusinessSettingsSubmitButton } from '../business-settings/_components/BusinessSettingsSubmitButton';
 
 export default function UiPreviewPageClient() {
   const [toggle, setToggle] = useState(false);
@@ -32,6 +33,7 @@ export default function UiPreviewPageClient() {
   const [salesEnabled, setSalesEnabled] = useState(false);
   const [tagSample, setTagSample] = useState<'opt-1' | 'opt-2' | 'opt-3'>('opt-2');
   const [expandableTagSelected, setExpandableTagSelected] = useState('2');
+  const [buttonSaving, setButtonSaving] = useState(false);
 
   const catalog = useMemo(
     () => [
@@ -192,6 +194,24 @@ export default function UiPreviewPageClient() {
                     emptyText="موردی وجود ندارد"
                     itemsPerRow={8}
                   />
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <div className="text-xs font-semibold text-[color:var(--text-muted)]">BusinessSettingsSubmitButton</div>
+                  <div className="flex flex-wrap items-center gap-4 rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] p-4">
+                    <BusinessSettingsSubmitButton
+                      saving={buttonSaving}
+                      onClick={() => {
+                        setButtonSaving(true);
+                        window.setTimeout(() => setButtonSaving(false), 1800);
+                      }}
+                    />
+                    <BusinessSettingsSubmitButton
+                      saving={false}
+                      minimal
+                      label="ذخیره"
+                      onClick={() => {}}
+                    />
+                  </div>
                 </div>
               </div>
             </section>

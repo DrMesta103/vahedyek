@@ -5,6 +5,7 @@ import { useRef } from 'react';
 import { Camera } from 'lucide-react';
 import { ChoicePillsField, Input, PersianDatePicker } from '@repo/ui';
 import { FieldGroup, SectionCard, TagPill } from '../../../contracts/new/_components/ContractFormPrimitives';
+import { BusinessSettingsSubmitButton } from '../../_components/BusinessSettingsSubmitButton';
 
 export function ProfilePageShell({ children }: { children: ReactNode }) {
   return <section className="profile-workspace-page">{children}</section>;
@@ -136,9 +137,7 @@ export function ProfileSubmitBar({
 }) {
   return (
     <div className="profile-submit-bar">
-      <button type="button" className="profile-primary-button" onClick={onClick} disabled={disabled}>
-        {label}
-      </button>
+      <BusinessSettingsSubmitButton saving={false} disabled={disabled} label={label} onClick={onClick} minimal />
     </div>
   );
 }

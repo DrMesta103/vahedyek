@@ -194,9 +194,10 @@ export const RULE_CONFIGS: Record<ContractRuleId, RuleConfig> = fixMojibakeDeep(
   installments: {
     id: 'installments',
     title: 'تنظیمات اقساط',
-    description: 'فلو تنظیم اقساط منظم، نامنظم و بالونی مطابق نمونه مرجع.',
-    activationTitle: 'می‌توانید چارچوب پیشنهادی پرداخت اقساط را مشخص کنید.',
-    activationDescription: 'در صورت فعال بودن، پرداخت اقساطی به‌عنوان گزینه پیشنهادی در زمان ثبت قرارداد نمایش داده می‌شود. در صورت غیرفعال بودن، پرداخت یکجا بعنوان پیشنهاد نمایش داده می‌شود.',
+    description: 'تعریف سیاست پرداخت پروژه برای مدل‌های منظم، نامنظم و مبتنی بر پیشرفت فیزیکی.',
+    activationTitle: 'سیاست پرداخت اقساط پروژه را تعریف کنید.',
+    activationDescription:
+      'این بخش محل تعریف سیاست پروژه است؛ کارشناسان در زمان عقد قرارداد از این چارچوب استفاده می‌کنند و در صورت داشتن دسترسی می‌توانند آن را در سطح قرارداد تغییر دهند. در مدل مبتنی بر پیشرفت فیزیکی، این سیاست می‌تواند از برنامه پیشرفت فیزیکی پروژه نیز تغذیه شود.',
     detailsLabel: 'جزئیات تنظیمات اقساط',
     tabs: [
       {
@@ -220,6 +221,22 @@ export const RULE_CONFIGS: Record<ContractRuleId, RuleConfig> = fixMojibakeDeep(
           { key: 'irregularBalloonEnabled', label: 'پرداخت بالونی', type: 'switch' },
           { key: 'irregularBalloonWindow', label: 'بازه زمانی پیشنهادی پرداخت بالونی', type: 'select', options: ['ماه آخر', '۳ ماه آخر', '۵ ماه آخر', '۷ ماه آخر'] },
           { key: 'irregularBalloonPercent', label: 'درصد پیشنهادی سهم پرداخت بالونی', type: 'number', placeholder: '۲۰' },
+        ],
+      },
+      {
+        id: 'progress-based',
+        title: 'اقساط مبتنی بر پیشرفت فیزیکی',
+        description: 'فعال‌سازی اقساطی که محرک آن به درصد پیشرفت یا تحقق مراحل فیزیکی پروژه وابسته است و در صورت نیاز از برنامه پیشرفت فیزیکی پروژه تغذیه می‌شود.',
+        fields: [
+          { key: 'progressAmountMode', label: 'روش محاسبه مبلغ', type: 'select', options: ['درصدی از مبلغ قرارداد', 'مبلغ ثابت'] },
+          { key: 'progressCompletionAuthority', label: 'مرجع اعلام/تأیید پیشرفت', type: 'select', options: ['کارشناس پروژه', 'مدیر پروژه', 'گزارش رسمی پروژه'] },
+          { key: 'progressMeasurementBasis', label: 'مبنای سنجش پیشرفت', type: 'select', options: ['پروژه', 'بلوک', 'برنامه', 'مرحله'] },
+          { key: 'progressSelectedBlockId', label: 'بلوک منتخب', type: 'text', placeholder: 'block-id' },
+          { key: 'progressSelectedScheduleKeys', label: 'برنامه‌های منتخب پیشرفت فیزیکی', type: 'text', placeholder: '[]' },
+          { key: 'progressSelectedScheduleKey', label: 'برنامه منتخب پیشرفت فیزیکی', type: 'text', placeholder: 'schedule-key' },
+          { key: 'progressPercentageRows', label: 'ردیف‌های مبتنی بر درصد پیشرفت', type: 'text', placeholder: '[]' },
+          { key: 'progressMilestoneRows', label: 'ردیف‌های مبتنی بر مرحله فیزیکی', type: 'text', placeholder: '[]' },
+          { key: 'progressAllowContractOverride', label: 'اجازه تغییر در سطح قرارداد', type: 'switch' },
         ],
       },
     ],

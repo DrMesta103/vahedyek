@@ -292,13 +292,13 @@ export function LoanAmountSettingsPanel() {
       {message ? <div className="mt-4"><LoanSuccess message={message} /></div> : null}
       {error ? <div className="mt-4"><LoanError error={error} /></div> : null}
 
-      <div className="fixed inset-x-0 bottom-3 z-20 px-4 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-4xl">
+      <div className="fixed inset-x-0 bottom-6 z-20 px-4 sm:px-6 lg:px-8 pointer-events-none">
+        <div className="mx-auto flex max-w-4xl justify-end">
           <button
             type="button"
             onClick={() => void handleSave()}
             disabled={saving}
-            className="w-full rounded-xl bg-[#0f8b8d] px-4 py-3 text-base font-black text-white shadow-[0_10px_24px_rgba(15,139,141,0.22)] transition hover:bg-[#0c7b7d] disabled:opacity-60"
+            className="pointer-events-auto inline-flex h-10 w-[120px] whitespace-nowrap items-center justify-center rounded-md border border-[#065f46] bg-[#065f46] px-3 py-1.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(6,95,70,0.28)] transition-all duration-200 ease-out hover:-translate-y-0.5 hover:bg-[#054e39] hover:shadow-[0_10px_20px_rgba(6,95,70,0.16)] active:translate-y-0 active:shadow-none disabled:cursor-wait disabled:hover:translate-y-0 disabled:opacity-60"
           >
             {saving ? 'در حال ذخیره...' : 'ثبت'}
           </button>
@@ -307,3 +307,5 @@ export function LoanAmountSettingsPanel() {
     </section>
   );
 }
+
+
