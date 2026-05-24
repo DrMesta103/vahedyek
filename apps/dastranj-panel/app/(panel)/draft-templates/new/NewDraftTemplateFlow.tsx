@@ -1,12 +1,29 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, Clock3, Eye, FileText, Info, Save, ShieldCheck } from 'lucide-react';
+import { ChevronDown, ChevronLeft, Clock3, Eye, FileText, Info, Save, ShieldCheck, X } from 'lucide-react';
+import { parseDraftTemplateBody } from '../../../lib/draft-template-display';
+import { formatFaNumber, toPersianDigits } from '../../../lib/format-fa';
 import { MinimalScroll } from '../../../components/MinimalScroll';
+import { FixedAdjustmentsSection } from './_components/FixedAdjustmentsSection';
+import { parseFixedAdjustments, type FixedAdjustmentItem } from './_components/fixed-adjustment-types';
+import { TimeCoefficientsSection, type TimeCoefficientItem } from './_components/TimeCoefficientsSection';
+import { NightShiftRulesSection, type NightShiftRules } from './_components/NightShiftRulesSection';
+import { LegalLimitsSection, type LegalLimits } from './_components/LegalLimitsSection';
 
-type StepId = 'base' | 'attendance' | 'payroll' | 'components' | 'jobBenefits';
+type StepId =
+  | 'base'
+  | 'attendance'
+  | 'payroll'
+  | 'components'
+  | 'jobBenefits'
+  | 'otherBenefits'
+  | 'fixedAdjustments'
+  | 'timeCoefficients'
+  | 'nightShiftRules'
+  | 'legalLimits';
 
 type StepState = {
   dirty: boolean;
@@ -45,6 +62,11 @@ type DraftTemplateBody = {
     includeTax?: boolean;
     components?: Record<string, { amount?: string; insurance?: boolean; tax?: boolean; inBase?: boolean } | undefined>;
     jobBenefits?: Record<string, { amount?: string; insurance?: boolean; tax?: boolean; inBase?: boolean } | undefined>;
+    otherBenefits?: Record<string, { amount?: string; insurance?: boolean; inBase?: boolean } | undefined>;
+    fixedAdjustments?: FixedAdjustmentItem[];
+    timeCoefficients?: Record<string, TimeCoefficientItem | undefined>;
+    nightShiftRules?: NightShiftRules | null;
+    legalLimits?: LegalLimits | null;
     monthlyDutyHours?: string;
     hourlyRateFormula?: string;
   } | null;
@@ -68,12 +90,47 @@ const jobBenefitsStep = {
   detail: 'آیتم‌های مرتبط با شغل',
 } satisfies { id: StepId; title: string; detail: string };
 
+const otherBenefitsStep = {
+  id: 'otherBenefits',
+  title: 'سایر مزایا',
+  detail: 'مزایای مستقل خارج از گروه شغلی',
+} satisfies { id: StepId; title: string; detail: string };
+
+const fixedAdjustmentsStep = {
+  id: 'fixedAdjustments',
+  title: 'اضافات و کسورات ثابت',
+  detail: 'مبلغ ثابت یا ضریب مزد مبنا',
+} satisfies { id: StepId; title: string; detail: string };
+
+const timeCoefficientsStep = {
+  id: 'timeCoefficients',
+  title: 'فوق‌العاده ضرایب زمانی',
+  detail: 'ضرایب اضافه‌کاری و شب‌کاری',
+} satisfies { id: StepId; title: string; detail: string };
+
+const nightShiftRulesStep = {
+  id: 'nightShiftRules',
+  title: 'فوق‌العاده نوبت کاری',
+  detail: 'درصدها، شیفت‌های نوبت‌کاری',
+} satisfies { id: StepId; title: string; detail: string };
+
+const legalLimitsStep = {
+  id: 'legalLimits',
+  title: 'کسورات قانونی و حدود بیمه / مالیات',
+  detail: 'نرخ‌های بیمه و مالیات',
+} satisfies { id: StepId; title: string; detail: string };
+
 const defaultStepState: Record<StepId, StepState> = {
   base: { dirty: false, saving: false, savedAt: null },
   attendance: { dirty: false, saving: false, savedAt: null },
   payroll: { dirty: false, saving: false, savedAt: null },
   components: { dirty: false, saving: false, savedAt: null },
   jobBenefits: { dirty: false, saving: false, savedAt: null },
+  otherBenefits: { dirty: false, saving: false, savedAt: null },
+  fixedAdjustments: { dirty: false, saving: false, savedAt: null },
+  timeCoefficients: { dirty: false, saving: false, savedAt: null },
+  nightShiftRules: { dirty: false, saving: false, savedAt: null },
+  legalLimits: { dirty: false, saving: false, savedAt: null },
 };
 
 const payrollComponentItems = [
@@ -142,14 +199,17 @@ const jobBenefitItems = [
   },
 ];
 
+const otherBenefitItems = [
+  {
+    id: 'miscBenefit',
+    title: 'سایر مزایا',
+    description: 'مزایای خارج از گروه‌های اصلی',
+    placeholder: '۰',
+  },
+];
+
 function parseInitialBody(value: string | null | undefined): DraftTemplateBody {
-  if (!value) return {};
-  try {
-    const parsed = JSON.parse(value);
-    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? (parsed as DraftTemplateBody) : {};
-  } catch {
-    return {};
-  }
+  return parseDraftTemplateBody(value);
 }
 
 function getSavedTimestamp(value: string | null | undefined) {
@@ -166,6 +226,15 @@ function buildInitialStepState(body: DraftTemplateBody, updatedAt: string | null
     payroll: { dirty: false, saving: false, savedAt: body.payroll ? savedAt : null },
     components: { dirty: false, saving: false, savedAt: body.payroll?.components ? savedAt : null },
     jobBenefits: { dirty: false, saving: false, savedAt: body.payroll?.jobBenefits ? savedAt : null },
+    otherBenefits: { dirty: false, saving: false, savedAt: body.payroll?.otherBenefits ? savedAt : null },
+    fixedAdjustments: {
+      dirty: false,
+      saving: false,
+      savedAt: Array.isArray(body.payroll?.fixedAdjustments) ? savedAt : null,
+    },
+    timeCoefficients: { dirty: false, saving: false, savedAt: body.payroll?.timeCoefficients ? savedAt : null },
+    nightShiftRules: { dirty: false, saving: false, savedAt: body.payroll?.nightShiftRules ? savedAt : null },
+    legalLimits: { dirty: false, saving: false, savedAt: body.payroll?.legalLimits ? savedAt : null },
   } satisfies Record<StepId, StepState>;
 }
 
@@ -173,19 +242,27 @@ function getInitialActiveStep(body: DraftTemplateBody, hasTemplate: boolean): St
   if (!hasTemplate) return 'base';
   if (!body.attendance) return 'attendance';
   if (!body.payroll) return 'payroll';
-  if (body.payroll.enabled && body.payroll.entryMode === 'manual' && !body.payroll.components) return 'components';
-  if (body.payroll.enabled && body.payroll.entryMode === 'manual' && !body.payroll.jobBenefits) return 'jobBenefits';
+  if (body.payroll?.enabled && body.payroll.entryMode === 'manual' && !body.payroll.components) return 'components';
+  if (body.payroll?.enabled && body.payroll.entryMode === 'manual' && !body.payroll.jobBenefits) return 'jobBenefits';
+  if (body.payroll?.enabled && body.payroll.entryMode === 'manual' && !body.payroll.otherBenefits) return 'otherBenefits';
+  if (body.payroll?.enabled && body.payroll.entryMode === 'manual' && !Array.isArray(body.payroll.fixedAdjustments))
+    return 'fixedAdjustments';
+  if (body.payroll?.enabled && body.payroll.entryMode === 'manual' && !body.payroll.timeCoefficients) return 'timeCoefficients';
+  if (body.payroll?.enabled && body.payroll.entryMode === 'manual' && !body.payroll.nightShiftRules) return 'nightShiftRules';
+  if (body.payroll?.enabled && body.payroll.entryMode === 'manual' && !body.payroll.legalLimits) return 'legalLimits';
   return 'payroll';
 }
 
 function formatStepTime(timestamp: number | null) {
   if (!timestamp) return 'وارد نشده';
-  return new Intl.DateTimeFormat('fa-IR', {
-    hour: '2-digit',
-    minute: '2-digit',
-    month: 'short',
-    day: 'numeric',
-  }).format(timestamp);
+  return toPersianDigits(
+    new Intl.DateTimeFormat('fa-IR', {
+      hour: '2-digit',
+      minute: '2-digit',
+      month: 'short',
+      day: 'numeric',
+    }).format(timestamp),
+  );
 }
 
 function normalizeDigitsOnly(value: string) {
@@ -203,8 +280,55 @@ function keepDigitsOnly(event: FormEvent<HTMLInputElement>) {
   }
 }
 
+type OtherBenefitAmountFieldProps = {
+  name: string;
+  defaultValue?: string;
+  placeholder: string;
+  onDirty: () => void;
+};
+
+function OtherBenefitAmountField({ name, defaultValue = '', placeholder, onDirty }: OtherBenefitAmountFieldProps) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [hasValue, setHasValue] = useState(Boolean(defaultValue));
+
+  return (
+    <div className="draft-template-flow-other-benefit-input">
+      <input
+        ref={inputRef}
+        name={name}
+        defaultValue={defaultValue}
+        inputMode="numeric"
+        pattern="[0-9]*"
+        placeholder={placeholder}
+        onInput={(event) => {
+          keepDigitsOnly(event);
+          setHasValue(Boolean(event.currentTarget.value));
+          onDirty();
+        }}
+      />
+      {hasValue ? (
+        <button
+          type="button"
+          className="draft-template-flow-other-benefit-clear"
+          aria-label="پاک کردن مبلغ"
+          onClick={() => {
+            if (inputRef.current) inputRef.current.value = '';
+            setHasValue(false);
+            onDirty();
+          }}
+        >
+          <X className="h-4 w-4" strokeWidth={2.1} />
+        </button>
+      ) : (
+        <ChevronDown className="draft-template-flow-other-benefit-caret h-4 w-4" strokeWidth={2.1} aria-hidden />
+      )}
+    </div>
+  );
+}
+
 export function NewDraftTemplateFlow({ createAction, saveStepAction, initialTemplate = null }: NewDraftTemplateFlowProps) {
   const router = useRouter();
+  const contentRef = useRef<HTMLElement>(null);
   const initialBody = useMemo(() => parseInitialBody(initialTemplate?.body), [initialTemplate?.body]);
   const initialActiveStep = useMemo(
     () => getInitialActiveStep(initialBody, Boolean(initialTemplate?.id)),
@@ -224,10 +348,24 @@ export function NewDraftTemplateFlow({ createAction, saveStepAction, initialTemp
   );
   const [includeInsurance, setIncludeInsurance] = useState(initialBody.payroll?.includeInsurance ?? true);
   const [includeTax, setIncludeTax] = useState(initialBody.payroll?.includeTax ?? true);
-  const payrollType = initialBody.payroll?.type ?? 'monthly_fixed';
+  const [fixedAdjustments, setFixedAdjustments] = useState<FixedAdjustmentItem[]>(() =>
+    parseFixedAdjustments(initialBody.payroll?.fixedAdjustments),
+  );
   const showComponentsStep = payrollEnabled === 'yes' && payrollEntryMode === 'manual';
   const steps = useMemo(
-    () => (showComponentsStep ? [...baseSteps, componentStep, jobBenefitsStep] : baseSteps),
+    () =>
+      showComponentsStep
+        ? [
+            ...baseSteps,
+            componentStep,
+            jobBenefitsStep,
+            otherBenefitsStep,
+            fixedAdjustmentsStep,
+            timeCoefficientsStep,
+            nightShiftRulesStep,
+            legalLimitsStep,
+          ]
+        : baseSteps,
     [showComponentsStep],
   );
   const savedCount = useMemo(
@@ -243,16 +381,50 @@ export function NewDraftTemplateFlow({ createAction, saveStepAction, initialTemp
   const payrollCompleted = Boolean(attendanceCompleted && stepState.payroll.savedAt);
   const componentsCompleted = Boolean(payrollCompleted && stepState.components.savedAt);
   const jobBenefitsCompleted = Boolean(componentsCompleted && stepState.jobBenefits.savedAt);
+  const otherBenefitsCompleted = Boolean(jobBenefitsCompleted && stepState.otherBenefits.savedAt);
+  const fixedAdjustmentsCompleted = Boolean(otherBenefitsCompleted && stepState.fixedAdjustments.savedAt != null);
+  const timeCoefficientsCompleted = Boolean(fixedAdjustmentsCompleted && stepState.timeCoefficients.savedAt);
+  const nightShiftRulesCompleted = Boolean(timeCoefficientsCompleted && stepState.nightShiftRules.savedAt);
+  const legalLimitsCompleted = Boolean(nightShiftRulesCompleted && stepState.legalLimits.savedAt);
   const baseSaved = Boolean(baseCompleted && !stepState.base.dirty);
   const attendanceSaved = Boolean(attendanceCompleted && !stepState.attendance.dirty);
   const payrollSaved = Boolean(payrollCompleted && !stepState.payroll.dirty);
   const componentsSaved = Boolean(componentsCompleted && !stepState.components.dirty);
   const jobBenefitsSaved = Boolean(jobBenefitsCompleted && !stepState.jobBenefits.dirty);
-  const finalReady = Boolean(baseSaved && attendanceSaved && payrollSaved && (!showComponentsStep || (componentsSaved && jobBenefitsSaved)));
+  const otherBenefitsSaved = Boolean(otherBenefitsCompleted && !stepState.otherBenefits.dirty);
+  const fixedAdjustmentsSaved = Boolean(fixedAdjustmentsCompleted && !stepState.fixedAdjustments.dirty);
+  const timeCoefficientsSaved = Boolean(timeCoefficientsCompleted && !stepState.timeCoefficients.dirty);
+  const nightShiftRulesSaved = Boolean(nightShiftRulesCompleted && !stepState.nightShiftRules.dirty);
+  const legalLimitsSaved = Boolean(legalLimitsCompleted && !stepState.legalLimits.dirty);
+  const finalReady = Boolean(
+    baseSaved &&
+      attendanceSaved &&
+      payrollSaved &&
+      (!showComponentsStep ||
+        (componentsSaved &&
+          jobBenefitsSaved &&
+          otherBenefitsSaved &&
+          fixedAdjustmentsSaved &&
+          timeCoefficientsSaved &&
+          nightShiftRulesSaved &&
+          legalLimitsSaved)),
+  );
+
+  const scrollStepIntoView = (stepId: StepId, behavior: ScrollBehavior = 'smooth') => {
+    const container = contentRef.current;
+    const target = document.getElementById(stepId);
+    if (!container || !target) return;
+
+    const containerRect = container.getBoundingClientRect();
+    const targetRect = target.getBoundingClientRect();
+    const top = container.scrollTop + targetRect.top - containerRect.top - 18;
+    container.scrollTo({ top: Math.max(0, top), behavior });
+  };
 
   useEffect(() => {
     if (!initialTemplate?.id) return;
-    window.setTimeout(() => document.getElementById(initialActiveStep)?.scrollIntoView({ behavior: 'auto', block: 'start' }), 80);
+    setActiveStep(initialActiveStep);
+    window.setTimeout(() => scrollStepIntoView(initialActiveStep, 'auto'), 80);
   }, [initialActiveStep, initialTemplate?.id]);
 
   const markDirty = (stepId: StepId) => {
@@ -279,6 +451,26 @@ export function NewDraftTemplateFlow({ createAction, saveStepAction, initialTemp
       setSaveError('ابتدا مولفه‌های اصلی حکمی را ذخیره کنید.');
       return;
     }
+    if (stepId === 'otherBenefits' && !jobBenefitsCompleted) {
+      setSaveError('ابتدا مزایای به تبع شغل را ذخیره کنید.');
+      return;
+    }
+    if (stepId === 'fixedAdjustments' && !otherBenefitsCompleted) {
+      setSaveError('ابتدا سایر مزایا را ذخیره کنید.');
+      return;
+    }
+    if (stepId === 'timeCoefficients' && !fixedAdjustmentsCompleted) {
+      setSaveError('ابتدا اضافات و کسورات ثابت را ذخیره کنید.');
+      return;
+    }
+    if (stepId === 'nightShiftRules' && !timeCoefficientsCompleted) {
+      setSaveError('ابتدا ضرایب زمانی را ذخیره کنید.');
+      return;
+    }
+    if (stepId === 'legalLimits' && !nightShiftRulesCompleted) {
+      setSaveError('ابتدا فوق‌العاده نوبت کاری را ذخیره کنید.');
+      return;
+    }
     if (stepId === 'payroll' && payrollEnabled === 'unset') {
       setSaveError('وضعیت محاسبات حقوق و دستمزد را مشخص کنید.');
       return;
@@ -301,19 +493,39 @@ export function NewDraftTemplateFlow({ createAction, saveStepAction, initialTemp
       setStepState((current) => ({ ...current, [stepId]: { dirty: false, saving: false, savedAt: Date.now() } }));
       if (stepId === 'base') {
         setActiveStep('attendance');
-        window.setTimeout(() => document.getElementById('attendance')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+        window.setTimeout(() => scrollStepIntoView('attendance'), 80);
       }
       if (stepId === 'attendance') {
         setActiveStep('payroll');
-        window.setTimeout(() => document.getElementById('payroll')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+        window.setTimeout(() => scrollStepIntoView('payroll'), 80);
       }
       if (stepId === 'payroll' && payrollEnabled === 'yes' && payrollEntryMode === 'manual') {
         setActiveStep('components');
-        window.setTimeout(() => document.getElementById('components')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+        window.setTimeout(() => scrollStepIntoView('components'), 80);
       }
       if (stepId === 'components') {
         setActiveStep('jobBenefits');
-        window.setTimeout(() => document.getElementById('jobBenefits')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+        window.setTimeout(() => scrollStepIntoView('jobBenefits'), 80);
+      }
+      if (stepId === 'jobBenefits') {
+        setActiveStep('otherBenefits');
+        window.setTimeout(() => scrollStepIntoView('otherBenefits'), 80);
+      }
+      if (stepId === 'otherBenefits') {
+        setActiveStep('fixedAdjustments');
+        window.setTimeout(() => scrollStepIntoView('fixedAdjustments'), 80);
+      }
+      if (stepId === 'fixedAdjustments') {
+        setActiveStep('timeCoefficients');
+        window.setTimeout(() => scrollStepIntoView('timeCoefficients'), 80);
+      }
+      if (stepId === 'timeCoefficients') {
+        setActiveStep('nightShiftRules');
+        window.setTimeout(() => scrollStepIntoView('nightShiftRules'), 80);
+      }
+      if (stepId === 'nightShiftRules') {
+        setActiveStep('legalLimits');
+        window.setTimeout(() => scrollStepIntoView('legalLimits'), 80);
       }
     } catch (error) {
       setSaveError(error instanceof Error ? error.message : 'ذخیره مرحله انجام نشد.');
@@ -327,7 +539,12 @@ export function NewDraftTemplateFlow({ createAction, saveStepAction, initialTemp
     if (stepId === 'payroll' && !attendanceCompleted) return;
     if (stepId === 'components' && !payrollCompleted) return;
     if (stepId === 'jobBenefits' && !componentsCompleted) return;
-    document.getElementById(stepId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (stepId === 'otherBenefits' && !jobBenefitsCompleted) return;
+    if (stepId === 'fixedAdjustments' && !otherBenefitsCompleted) return;
+    if (stepId === 'timeCoefficients' && !fixedAdjustmentsCompleted) return;
+    if (stepId === 'nightShiftRules' && !timeCoefficientsCompleted) return;
+    if (stepId === 'legalLimits' && !nightShiftRulesCompleted) return;
+    scrollStepIntoView(stepId);
   };
 
   return (
@@ -346,11 +563,16 @@ export function NewDraftTemplateFlow({ createAction, saveStepAction, initialTemp
                 (step.id === 'attendance' && !baseCompleted) ||
                 (step.id === 'payroll' && !attendanceCompleted) ||
                 (step.id === 'components' && !payrollCompleted) ||
-                (step.id === 'jobBenefits' && !componentsCompleted);
+                (step.id === 'jobBenefits' && !componentsCompleted) ||
+                (step.id === 'otherBenefits' && !jobBenefitsCompleted) ||
+                (step.id === 'fixedAdjustments' && !otherBenefitsCompleted) ||
+                (step.id === 'timeCoefficients' && !fixedAdjustmentsCompleted) ||
+                (step.id === 'nightShiftRules' && !timeCoefficientsCompleted) ||
+                (step.id === 'legalLimits' && !nightShiftRulesCompleted);
               return (
                 <div key={step.id} className={`draft-template-flow-nav-item ${activeStep === step.id ? 'is-active' : ''} ${state.dirty ? 'is-dirty' : ''} ${locked ? 'is-locked' : ''}`}>
                   <button type="button" className="draft-template-flow-nav-main" disabled={locked} onClick={() => scrollToStep(step.id)}>
-                    <span className="draft-template-flow-nav-number">{new Intl.NumberFormat('fa-IR').format(index + 1)}</span>
+                    <span className="draft-template-flow-nav-number">{formatFaNumber(index + 1, { useGrouping: false })}</span>
                     <span className="draft-template-flow-nav-copy">
                       <strong>{step.title}</strong>
                       <small>{locked ? 'پس از ذخیره مرحله قبل' : state.dirty ? 'تغییرات ذخیره نشده' : formatStepTime(state.savedAt)}</small>
@@ -393,26 +615,26 @@ export function NewDraftTemplateFlow({ createAction, saveStepAction, initialTemp
           <MinimalScroll className="draft-template-flow-report-body">
             <div className="draft-template-flow-report-card">
               <span>نسخه قالب</span>
-              <strong>۱</strong>
+              <strong>{formatFaNumber(1, { useGrouping: false })}</strong>
             </div>
             <div className="draft-template-flow-report-grid">
               <div>
                 <span>استپ‌ها</span>
-                <strong>{new Intl.NumberFormat('fa-IR').format(steps.length)}</strong>
+                <strong>{formatFaNumber(steps.length, { useGrouping: false })}</strong>
               </div>
               <div>
                 <span>ذخیره‌شده</span>
-                <strong>{new Intl.NumberFormat('fa-IR').format(savedCount)}</strong>
+                <strong>{formatFaNumber(savedCount, { useGrouping: false })}</strong>
               </div>
             </div>
             <div className="draft-template-flow-report-card">
               <div className="draft-template-flow-report-card-head">
                 <span>پراکندگی اطلاعات</span>
-                <strong>{dirtyCount ? `${new Intl.NumberFormat('fa-IR').format(dirtyCount)} تغییر` : 'شروع'}</strong>
+                <strong>{dirtyCount ? `${formatFaNumber(dirtyCount, { useGrouping: false })} تغییر` : 'شروع'}</strong>
               </div>
               <div className="draft-template-flow-ring" aria-hidden>
                 <div>
-                  <strong>{new Intl.NumberFormat('fa-IR').format(steps.length)}</strong>
+                  <strong>{formatFaNumber(steps.length, { useGrouping: false })}</strong>
                   <span>بخش</span>
                 </div>
               </div>
@@ -420,7 +642,7 @@ export function NewDraftTemplateFlow({ createAction, saveStepAction, initialTemp
             <div className="draft-template-flow-report-card">
               <div className="draft-template-flow-report-card-head">
                 <span>موارد ثبت‌شده</span>
-                <strong>{savedCount ? `${new Intl.NumberFormat('fa-IR').format(savedCount)} بخش` : 'بدون داده'}</strong>
+                <strong>{savedCount ? `${formatFaNumber(savedCount, { useGrouping: false })} بخش` : 'بدون داده'}</strong>
               </div>
               <p className="draft-template-flow-report-empty">بعد از ذخیره اطلاعات، خلاصه مقادیر قالب اینجا کامل می‌شود.</p>
             </div>
@@ -428,7 +650,7 @@ export function NewDraftTemplateFlow({ createAction, saveStepAction, initialTemp
         </div>
       </aside>
 
-      <main className="draft-template-flow-content">
+      <main ref={contentRef} className="draft-template-flow-content">
         <header className="draft-template-flow-page-header">
           <nav className="draft-template-flow-breadcrumb" aria-label="مسیر صفحه">
             <Link href="/">دسترنج</Link>
@@ -446,6 +668,7 @@ export function NewDraftTemplateFlow({ createAction, saveStepAction, initialTemp
           <input type="hidden" name="body" value="draft-template-flow-v1" />
           <input type="hidden" name="id" value={draftId} />
           <input type="hidden" name="payrollEnabled" value={payrollEnabled} />
+          <input type="hidden" name="fixedAdjustmentsJson" value={JSON.stringify(fixedAdjustments)} readOnly />
 
           {saveError ? <div className="draft-template-flow-error">{saveError}</div> : null}
 
@@ -458,8 +681,14 @@ export function NewDraftTemplateFlow({ createAction, saveStepAction, initialTemp
             </header>
 
             <div className="draft-template-flow-field">
-              <label htmlFor="draft-template-title">عنوان <span>*</span></label>
-              <input id="draft-template-title" name="title" required defaultValue={initialBody.base?.title ?? initialTemplate?.title ?? 'قالب اداری'} onChange={() => markDirty('base')} />
+              <label htmlFor="draft-template-title">عنوان</label>
+              <input
+                id="draft-template-title"
+                name="title"
+                defaultValue={initialBody.base?.title ?? initialTemplate?.title ?? ''}
+                placeholder="عنوان قالب را وارد کنید"
+                onChange={() => markDirty('base')}
+              />
               <p>عنوان قالب برای شناسایی نسخه پیش‌نویس قرارداد در سیستم استفاده می‌شود.</p>
             </div>
 
@@ -589,18 +818,20 @@ export function NewDraftTemplateFlow({ createAction, saveStepAction, initialTemp
               {payrollEnabled === 'yes' ? (
                 <>
                   <div className="draft-template-flow-payroll-types">
-                    <label className={payrollType === 'monthly_fixed' ? 'is-active' : ''}>
-                      <input type="radio" name="payrollType" value="monthly_fixed" defaultChecked={payrollType === 'monthly_fixed'} onChange={() => markDirty('payroll')} />
+                    <label className="is-active">
+                      <input type="radio" name="payrollType" value="monthly_fixed" defaultChecked onChange={() => markDirty('payroll')} />
                       <strong>ثابت ماهیانه</strong>
                       <span>پرداخت ثابت ماهانه با مزد مبنا و مزایا</span>
                     </label>
-                    <label className={payrollType === 'daily' ? 'is-active' : ''}>
-                      <input type="radio" name="payrollType" value="daily" defaultChecked={payrollType === 'daily'} onChange={() => markDirty('payroll')} />
+                    <label className="is-disabled">
+                      <input type="radio" name="payrollType" value="daily" disabled />
+                      <em>در حال توسعه</em>
                       <strong>روز‌مزد</strong>
                       <span>پرداخت بر مبنای روزهای کارکرد</span>
                     </label>
-                    <label className={payrollType === 'hourly' ? 'is-active' : ''}>
-                      <input type="radio" name="payrollType" value="hourly" defaultChecked={payrollType === 'hourly'} onChange={() => markDirty('payroll')} />
+                    <label className="is-disabled">
+                      <input type="radio" name="payrollType" value="hourly" disabled />
+                      <em>در حال توسعه</em>
                       <strong>ساعتی</strong>
                       <span>پرداخت بر مبنای ساعات کارکرد</span>
                     </label>
@@ -684,6 +915,42 @@ export function NewDraftTemplateFlow({ createAction, saveStepAction, initialTemp
                     </div>
                   </div>
 
+                  {payrollEntryMode === 'manual' ? (
+                    <>
+                      <div className="draft-template-flow-field">
+                        <label htmlFor="monthly-duty-hours">ساعت موظفی در ماه (برای محاسبه نرخ ساعتی)</label>
+                        <div className="draft-template-flow-input-icon">
+                          <Clock3 className="h-4 w-4" strokeWidth={2.1} />
+                          <input
+                            id="monthly-duty-hours"
+                            name="monthlyDutyHours"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            defaultValue={initialBody.payroll?.monthlyDutyHours ?? ''}
+                            onInput={keepDigitsOnly}
+                            onChange={() => markDirty('payroll')}
+                          />
+                        </div>
+                        <p>ساعت موظفی ماهانه برای محاسبه نرخ ساعتی و تبدیل‌های روزانه/هفتگی.</p>
+                      </div>
+
+                      <div className="draft-template-flow-field">
+                        <label htmlFor="hourly-rate-formula">نرخ ساعتی (مزد مبنا ماهانه ÷ ساعت موظفی)</label>
+                        <input
+                          id="hourly-rate-formula"
+                          name="hourlyRateFormula"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          placeholder="ریال"
+                          defaultValue={initialBody.payroll?.hourlyRateFormula ?? ''}
+                          onInput={keepDigitsOnly}
+                          onChange={() => markDirty('payroll')}
+                        />
+                        <p>فرمول پیش‌فرض نرخ ساعتی است؛ در صورت نیاز می‌توانید مقدار دستی ثبت کنید.</p>
+                      </div>
+                    </>
+                  ) : null}
+
                   {payrollEntryMode === 'agreement' ? (
                     <div className="draft-template-flow-note">
                       <Info className="h-4 w-4" strokeWidth={2.1} />
@@ -712,14 +979,14 @@ export function NewDraftTemplateFlow({ createAction, saveStepAction, initialTemp
               <header className="draft-template-flow-section-head">
                 <div>
                   <h2>مولفه‌های اصلی حکمی</h2>
-                  <p>حقوق پایه، ساعت موظفی و مزایای اصلی</p>
+                  <p>حقوق پایه و مزایای اصلی</p>
                 </div>
               </header>
 
               <section className="draft-template-flow-payroll-components">
                 <header>
                   <h3>مولفه‌های اصلی حکمی</h3>
-                  <p>ساعت موظفی و مزایای اصلی</p>
+                  <p>حقوق پایه و مزایای اصلی</p>
                 </header>
 
                 {payrollComponentItems.map((item) => {
@@ -749,21 +1016,6 @@ export function NewDraftTemplateFlow({ createAction, saveStepAction, initialTemp
                   );
                 })}
               </section>
-
-              <div className="draft-template-flow-field">
-                <label htmlFor="monthly-duty-hours">ساعت موظفی در ماه (برای محاسبه نرخ ساعتی)</label>
-                <div className="draft-template-flow-input-icon">
-                  <Clock3 className="h-4 w-4" strokeWidth={2.1} />
-                  <input id="monthly-duty-hours" name="monthlyDutyHours" inputMode="numeric" pattern="[0-9]*" defaultValue={initialBody.payroll?.monthlyDutyHours ?? ''} onInput={keepDigitsOnly} onChange={() => markDirty('components')} />
-                </div>
-                <p>ساعت موظفی ماهانه برای محاسبه نرخ ساعتی و تبدیل‌های روزانه/هفتگی.</p>
-              </div>
-
-              <div className="draft-template-flow-field">
-                <label htmlFor="hourly-rate-formula">نرخ ساعتی (مزد مبنا ماهانه ÷ ساعت موظفی)</label>
-                <input id="hourly-rate-formula" name="hourlyRateFormula" inputMode="numeric" pattern="[0-9]*" placeholder="ریال" defaultValue={initialBody.payroll?.hourlyRateFormula ?? ''} onInput={keepDigitsOnly} onChange={() => markDirty('components')} />
-                <p>فرمول پیش‌فرض نرخ ساعتی است؛ در صورت نیاز می‌توانید مقدار دستی ثبت کنید.</p>
-              </div>
 
               <div className="draft-template-flow-section-footer">
                 <button
@@ -834,6 +1086,120 @@ export function NewDraftTemplateFlow({ createAction, saveStepAction, initialTemp
                 </button>
               </div>
             </section>
+          ) : null}
+
+          {jobBenefitsCompleted && showComponentsStep ? (
+            <section id="otherBenefits" className="draft-template-flow-section draft-template-flow-other-benefits-section" onFocus={() => setActiveStep('otherBenefits')}>
+              <header className="draft-template-flow-section-head">
+                <div>
+                  <h2>سایر مزایا</h2>
+                  <p>مزایای مستقل خارج از گروه مزایای شغلی</p>
+                </div>
+              </header>
+
+              <div className="draft-template-flow-other-benefits-list">
+                {otherBenefitItems.map((item) => {
+                  const benefit = initialBody.payroll?.otherBenefits?.[item.id];
+                  return (
+                    <article key={item.id} className="draft-template-flow-other-benefit-card">
+                      <div className="draft-template-flow-other-benefit-copy">
+                        <h3>{item.title}</h3>
+                        <p>{item.description}</p>
+                        <div className="draft-template-flow-other-benefit-pills">
+                          <label onMouseDown={(event) => event.preventDefault()}>
+                            <input
+                              type="checkbox"
+                              name={`${item.id}Insurance`}
+                              defaultChecked={benefit?.insurance ?? false}
+                              onChange={() => markDirty('otherBenefits')}
+                            />
+                            <span aria-hidden />
+                            مشمول بیمه
+                          </label>
+                          <label onMouseDown={(event) => event.preventDefault()}>
+                            <input
+                              type="checkbox"
+                              name={`${item.id}InBase`}
+                              defaultChecked={benefit?.inBase ?? false}
+                              onChange={() => markDirty('otherBenefits')}
+                            />
+                            <span aria-hidden />
+                            قابل احتساب در مزد مبنا
+                          </label>
+                        </div>
+                      </div>
+                      <OtherBenefitAmountField
+                        name={item.id}
+                        defaultValue={benefit?.amount ?? ''}
+                        placeholder={item.placeholder}
+                        onDirty={() => markDirty('otherBenefits')}
+                      />
+                    </article>
+                  );
+                })}
+              </div>
+
+              <div className="draft-template-flow-section-footer">
+                <button
+                  type="button"
+                  className={`draft-template-flow-section-save ${stepState.otherBenefits.dirty ? 'is-dirty' : 'is-saved'}`}
+                  disabled={Boolean(!stepState.otherBenefits.dirty && stepState.otherBenefits.savedAt) || stepState.otherBenefits.saving}
+                  onClick={() => saveStep('otherBenefits')}
+                >
+                  <Save className="h-4 w-4" strokeWidth={2.1} />
+                  {stepState.otherBenefits.saving ? 'در حال ذخیره...' : stepState.otherBenefits.dirty ? 'ذخیره تغییرات' : stepState.otherBenefits.savedAt ? 'ذخیره شده' : 'ذخیره'}
+                </button>
+              </div>
+            </section>
+          ) : null}
+
+          {otherBenefitsCompleted && showComponentsStep ? (
+            <FixedAdjustmentsSection
+              items={fixedAdjustments}
+              onItemsChange={setFixedAdjustments}
+              onFocus={() => setActiveStep('fixedAdjustments')}
+              onDirty={() => markDirty('fixedAdjustments')}
+              stepDirty={stepState.fixedAdjustments.dirty}
+              stepSavedAt={stepState.fixedAdjustments.savedAt}
+              stepSaving={stepState.fixedAdjustments.saving}
+              onSave={() => saveStep('fixedAdjustments')}
+            />
+          ) : null}
+
+          {fixedAdjustmentsCompleted && showComponentsStep ? (
+            <TimeCoefficientsSection
+              values={initialBody.payroll?.timeCoefficients}
+              onFocus={() => setActiveStep('timeCoefficients')}
+              onDirty={() => markDirty('timeCoefficients')}
+              stepDirty={stepState.timeCoefficients.dirty}
+              stepSavedAt={stepState.timeCoefficients.savedAt}
+              stepSaving={stepState.timeCoefficients.saving}
+              onSave={() => saveStep('timeCoefficients')}
+            />
+          ) : null}
+
+          {timeCoefficientsCompleted && showComponentsStep ? (
+            <NightShiftRulesSection
+              values={initialBody.payroll?.nightShiftRules}
+              onFocus={() => setActiveStep('nightShiftRules')}
+              onDirty={() => markDirty('nightShiftRules')}
+              stepDirty={stepState.nightShiftRules.dirty}
+              stepSavedAt={stepState.nightShiftRules.savedAt}
+              stepSaving={stepState.nightShiftRules.saving}
+              onSave={() => saveStep('nightShiftRules')}
+            />
+          ) : null}
+
+          {nightShiftRulesCompleted && showComponentsStep ? (
+            <LegalLimitsSection
+              values={initialBody.payroll?.legalLimits}
+              onFocus={() => setActiveStep('legalLimits')}
+              onDirty={() => markDirty('legalLimits')}
+              stepDirty={stepState.legalLimits.dirty}
+              stepSavedAt={stepState.legalLimits.savedAt}
+              stepSaving={stepState.legalLimits.saving}
+              onSave={() => saveStep('legalLimits')}
+            />
           ) : null}
 
           <div className="draft-template-flow-submit-row">

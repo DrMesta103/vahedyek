@@ -29,7 +29,7 @@ export function ModulePageHeader({
   onTitleClick,
 }: ModulePageHeaderProps) {
   return (
-    <header className="module-page-header">
+    <header className="module-page-header" dir="rtl" lang="fa">
       <div className="module-page-header-copy">
         <nav className="module-breadcrumb" aria-label="مسیر صفحه">
           {breadcrumbs.map((crumb, index) => (

@@ -34,6 +34,15 @@ function jsonValue<T extends Prisma.InputJsonValue>(value: T): T {
   return value;
 }
 
+function decimalStringValue(formData: FormData, key: string) {
+  const latin = value(formData, key)
+    .replace(/[۰-۹]/g, (digit) => String(digit.charCodeAt(0) - 1776))
+    .replace(/[٠-٩]/g, (digit) => String(digit.charCodeAt(0) - 1632))
+    .replace(/[^\d.]/g, '');
+  const [whole, ...rest] = latin.split('.');
+  return rest.length ? `${whole}.${rest.join('')}` : whole;
+}
+
 function parseJsonRecord(value: string | null | undefined) {
   if (!value) return {};
   try {
@@ -1661,8 +1670,7 @@ export async function saveDraftTemplateStepAction(formData: FormData) {
   const id = value(formData, 'id');
 
   if (step === 'base') {
-    const title = value(formData, 'title');
-    if (!title) throw new Error('عنوان قالب الزامی است.');
+    const title = value(formData, 'title').trim();
     const current = id
       ? await prisma.draftTemplate.findFirst({ where: { id, tenantId }, select: { id: true, body: true } })
       : null;
@@ -1762,10 +1770,16 @@ export async function saveDraftTemplateStepAction(formData: FormData) {
           payroll: {
             ...existingPayroll,
             enabled: payrollEnabled === 'yes',
-            type: value(formData, 'payrollType') || null,
+            type: 'monthly_fixed',
             entryMode: value(formData, 'payrollEntryMode') || null,
             includeInsurance: boolValue(formData, 'includeInsurance'),
             includeTax: boolValue(formData, 'includeTax'),
+            ...(value(formData, 'payrollEntryMode') === 'manual'
+              ? {
+                  monthlyDutyHours: digitsOnlyValue(formData, 'monthlyDutyHours'),
+                  hourlyRateFormula: digitsOnlyValue(formData, 'hourlyRateFormula'),
+                }
+              : {}),
           },
         }),
       },
@@ -1836,8 +1850,6 @@ export async function saveDraftTemplateStepAction(formData: FormData) {
                 inBase: boolValue(formData, 'seniorityAllowanceInBase'),
               },
             },
-            monthlyDutyHours: digitsOnlyValue(formData, 'monthlyDutyHours'),
-            hourlyRateFormula: digitsOnlyValue(formData, 'hourlyRateFormula'),
           },
         }),
       },
@@ -1899,6 +1911,270 @@ export async function saveDraftTemplateStepAction(formData: FormData) {
                 inBase: boolValue(formData, 'hardshipAllowanceInBase'),
               },
             },
+          },
+        }),
+      },
+    });
+
+    revalidatePath('/draft-templates');
+    revalidatePath('/draft-templates/new');
+    return { ok: true as const, id: saved.id };
+  }
+
+  if (step === 'otherBenefits') {
+    if (!id) throw new Error('ابتدا مراحل قبلی قالب را ذخیره کنید.');
+    const current = await prisma.draftTemplate.findFirst({ where: { id, tenantId } });
+    if (!current) throw new Error('قالب پیش‌نویس پیدا نشد.');
+
+    const body = parseJsonRecord(current.body);
+    const existingPayroll =
+      body.payroll && typeof body.payroll === 'object' && !Array.isArray(body.payroll)
+        ? (body.payroll as Record<string, unknown>)
+        : {};
+    if (existingPayroll.enabled !== true || existingPayroll.entryMode !== 'manual') {
+      throw new Error('برای ثبت سایر مزایا ابتدا ورود دستی حقوق و دستمزد را ذخیره کنید.');
+    }
+    if (!existingPayroll.jobBenefits) {
+      throw new Error('ابتدا مزایای به تبع شغل را ذخیره کنید.');
+    }
+
+    const saved = await prisma.draftTemplate.update({
+      where: { id },
+      data: {
+        body: JSON.stringify({
+          ...body,
+          version: 1,
+          payroll: {
+            ...existingPayroll,
+            otherBenefits: {
+              miscBenefit: {
+                amount: digitsOnlyValue(formData, 'miscBenefit'),
+                insurance: boolValue(formData, 'miscBenefitInsurance'),
+                inBase: boolValue(formData, 'miscBenefitInBase'),
+              },
+            },
+          },
+        }),
+      },
+    });
+
+    revalidatePath('/draft-templates');
+    revalidatePath('/draft-templates/new');
+    return { ok: true as const, id: saved.id };
+  }
+
+  if (step === 'fixedAdjustments') {
+    if (!id) throw new Error('ابتدا مراحل قبلی قالب را ذخیره کنید.');
+    const current = await prisma.draftTemplate.findFirst({ where: { id, tenantId } });
+    if (!current) throw new Error('قالب پیش‌نویس پیدا نشد.');
+
+    const body = parseJsonRecord(current.body);
+    const existingPayroll =
+      body.payroll && typeof body.payroll === 'object' && !Array.isArray(body.payroll)
+        ? (body.payroll as Record<string, unknown>)
+        : {};
+    if (existingPayroll.enabled !== true || existingPayroll.entryMode !== 'manual') {
+      throw new Error('برای ثبت اضافات و کسورات ثابت ابتدا ورود دستی حقوق و دستمزد را ذخیره کنید.');
+    }
+    if (!existingPayroll.otherBenefits) {
+      throw new Error('ابتدا سایر مزایا را ذخیره کنید.');
+    }
+
+    const rawJson = value(formData, 'fixedAdjustmentsJson');
+    let fixedAdjustments: unknown[] = [];
+    if (rawJson) {
+      try {
+        const parsed = JSON.parse(rawJson);
+        if (!Array.isArray(parsed)) throw new Error('فرمت اضافات و کسورات ثابت معتبر نیست.');
+        fixedAdjustments = parsed;
+      } catch {
+        throw new Error('فرمت اضافات و کسورات ثابت معتبر نیست.');
+      }
+    }
+
+    const saved = await prisma.draftTemplate.update({
+      where: { id },
+      data: {
+        body: JSON.stringify({
+          ...body,
+          version: 1,
+          payroll: {
+            ...existingPayroll,
+            fixedAdjustments,
+          },
+        }),
+      },
+    });
+
+    revalidatePath('/draft-templates');
+    revalidatePath('/draft-templates/new');
+    return { ok: true as const, id: saved.id };
+  }
+
+  if (step === 'timeCoefficients') {
+    if (!id) throw new Error('ابتدا مراحل قبلی قالب را ذخیره کنید.');
+    const current = await prisma.draftTemplate.findFirst({ where: { id, tenantId } });
+    if (!current) throw new Error('قالب پیش‌نویس پیدا نشد.');
+
+    const body = parseJsonRecord(current.body);
+    const existingPayroll =
+      body.payroll && typeof body.payroll === 'object' && !Array.isArray(body.payroll)
+        ? (body.payroll as Record<string, unknown>)
+        : {};
+    if (existingPayroll.enabled !== true || existingPayroll.entryMode !== 'manual') {
+      throw new Error('برای ثبت ضرایب زمانی ابتدا ورود دستی حقوق و دستمزد را ذخیره کنید.');
+    }
+    if (!Array.isArray(existingPayroll.fixedAdjustments)) {
+      throw new Error('ابتدا اضافات و کسورات ثابت را ذخیره کنید.');
+    }
+
+    const timeCoefficients = {
+      overtimeCoefficient: {
+        value: decimalStringValue(formData, 'overtimeCoefficient'),
+        insurance: boolValue(formData, 'overtimeCoefficientInsurance'),
+        tax: boolValue(formData, 'overtimeCoefficientTax'),
+      },
+      nightWorkCoefficient: {
+        value: decimalStringValue(formData, 'nightWorkCoefficient'),
+        insurance: boolValue(formData, 'nightWorkCoefficientInsurance'),
+        tax: boolValue(formData, 'nightWorkCoefficientTax'),
+      },
+      holidayWorkCoefficient: {
+        value: decimalStringValue(formData, 'holidayWorkCoefficient'),
+        insurance: boolValue(formData, 'holidayWorkCoefficientInsurance'),
+        tax: boolValue(formData, 'holidayWorkCoefficientTax'),
+      },
+      fridayWorkCoefficient: {
+        value: decimalStringValue(formData, 'fridayWorkCoefficient'),
+        insurance: boolValue(formData, 'fridayWorkCoefficientInsurance'),
+        tax: boolValue(formData, 'fridayWorkCoefficientTax'),
+      },
+      fridayWorkNoOvertimeCoefficient: {
+        value: decimalStringValue(formData, 'fridayWorkNoOvertimeCoefficient'),
+        insurance: boolValue(formData, 'fridayWorkNoOvertimeCoefficientInsurance'),
+        tax: boolValue(formData, 'fridayWorkNoOvertimeCoefficientTax'),
+      },
+    };
+
+    const saved = await prisma.draftTemplate.update({
+      where: { id },
+      data: {
+        body: JSON.stringify({
+          ...body,
+          version: 1,
+          payroll: {
+            ...existingPayroll,
+            timeCoefficients,
+          },
+        }),
+      },
+    });
+
+    revalidatePath('/draft-templates');
+    revalidatePath('/draft-templates/new');
+    return { ok: true as const, id: saved.id };
+  }
+
+  if (step === 'nightShiftRules') {
+    if (!id) throw new Error('ابتدا مراحل قبلی قالب را ذخیره کنید.');
+    const current = await prisma.draftTemplate.findFirst({ where: { id, tenantId } });
+    if (!current) throw new Error('قالب پیش‌نویس پیدا نشد.');
+
+    const body = parseJsonRecord(current.body);
+    const existingPayroll =
+      body.payroll && typeof body.payroll === 'object' && !Array.isArray(body.payroll)
+        ? (body.payroll as Record<string, unknown>)
+        : {};
+    if (existingPayroll.enabled !== true || existingPayroll.entryMode !== 'manual') {
+      throw new Error('برای ثبت نوبت‌کاری ابتدا ورود دستی حقوق و دستمزد را ذخیره کنید.');
+    }
+    if (!existingPayroll.timeCoefficients) {
+      throw new Error('ابتدا ضرایب زمانی را ذخیره کنید.');
+    }
+
+    const nightShiftRules = {
+      insurance: boolValue(formData, 'nightShiftInsurance'),
+      tax: boolValue(formData, 'nightShiftTax'),
+      morningEveningPercent: decimalStringValue(formData, 'morningEveningPercent'),
+      morningNightPercent: decimalStringValue(formData, 'morningNightPercent'),
+      morningEveningNightPercent: decimalStringValue(formData, 'morningEveningNightPercent'),
+      eveningNightPercent: decimalStringValue(formData, 'eveningNightPercent'),
+    };
+
+    const saved = await prisma.draftTemplate.update({
+      where: { id },
+      data: {
+        body: JSON.stringify({
+          ...body,
+          version: 1,
+          payroll: {
+            ...existingPayroll,
+            nightShiftRules,
+          },
+        }),
+      },
+    });
+
+    revalidatePath('/draft-templates');
+    revalidatePath('/draft-templates/new');
+    return { ok: true as const, id: saved.id };
+  }
+
+  if (step === 'legalLimits') {
+    if (!id) throw new Error('ابتدا مراحل قبلی قالب را ذخیره کنید.');
+    const current = await prisma.draftTemplate.findFirst({ where: { id, tenantId } });
+    if (!current) throw new Error('قالب پیش‌نویس پیدا نشد.');
+
+    const body = parseJsonRecord(current.body);
+    const existingPayroll =
+      body.payroll && typeof body.payroll === 'object' && !Array.isArray(body.payroll)
+        ? (body.payroll as Record<string, unknown>)
+        : {};
+    if (existingPayroll.enabled !== true || existingPayroll.entryMode !== 'manual') {
+      throw new Error('برای ثبت کسورات قانونی ابتدا ورود دستی حقوق و دستمزد را ذخیره کنید.');
+    }
+    if (!existingPayroll.nightShiftRules) {
+      throw new Error('ابتدا فوق‌العاده نوبت کاری را ذخیره کنید.');
+    }
+
+    const rawTaxBracketsJson = value(formData, 'taxBracketsJson');
+    let taxBrackets: unknown[] = [];
+    if (rawTaxBracketsJson) {
+      try {
+        const parsed = JSON.parse(rawTaxBracketsJson);
+        if (!Array.isArray(parsed)) throw new Error('فرمت پله‌های مالیات معتبر نیست.');
+        taxBrackets = parsed
+          .filter((item): item is Record<string, unknown> => item !== null && typeof item === 'object' && !Array.isArray(item))
+          .map((item) => ({
+            id: typeof item.id === 'string' && item.id ? item.id : crypto.randomUUID(),
+            startAmount: typeof item.startAmount === 'string' ? item.startAmount.replace(/[^\d.]/g, '') : '',
+            endAmount: typeof item.endAmount === 'string' ? item.endAmount.replace(/[^\d.]/g, '') : '',
+            percent: typeof item.percent === 'string' ? item.percent.replace(/[^\d.]/g, '') : '',
+          }))
+          .filter((item) => item.startAmount || item.endAmount || item.percent);
+      } catch {
+        throw new Error('فرمت پله‌های مالیات معتبر نیست.');
+      }
+    }
+
+    const legalLimits = {
+      employeeInsuranceShare: decimalStringValue(formData, 'employeeInsuranceShare'),
+      employerInsuranceShare: decimalStringValue(formData, 'employerInsuranceShare'),
+      unemploymentInsuranceShare: decimalStringValue(formData, 'unemploymentInsuranceShare'),
+      insuranceCeilingCoefficient: decimalStringValue(formData, 'insuranceCeilingCoefficient'),
+      monthlyTaxExemption: decimalStringValue(formData, 'monthlyTaxExemption'),
+      taxBrackets,
+    };
+
+    const saved = await prisma.draftTemplate.update({
+      where: { id },
+      data: {
+        body: JSON.stringify({
+          ...body,
+          version: 1,
+          payroll: {
+            ...existingPayroll,
+            legalLimits,
           },
         }),
       },

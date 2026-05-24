@@ -74,69 +74,51 @@ function LoginPageContent() {
   };
 
   return (
-    <div className="auth-page auth-page-refresh">
-      <div className="auth-shell">
-        <section className="auth-hero-card">
-          <div className="auth-hero-kicker">سامانه دسترنج</div>
-          <h1>مدیریت منابع انسانی، تقویم و سیاست‌های کاری در یک پنل یکپارچه</h1>
-          <p>ورود به کسب‌وکار، انتخاب tenant و ادامه‌ی راه‌اندازی یا کار روزمره را از همین‌جا انجام دهید.</p>
-          <div className="auth-hero-points">
-            <span>ورود با ایمیل یا موبایل</span>
-            <span>مدیریت چند کسب‌وکار</span>
-            <span>طراحی فارسی و RTL</span>
-          </div>
-        </section>
-
-        <div className="auth-card auth-card-refresh">
-          <div className="auth-header">
-            <div className="auth-badge">ورود به دسترنج</div>
-            <h1>ورود</h1>
-            <p>با ایمیل یا شماره موبایل و رمز عبور وارد شوید.</p>
-          </div>
-
-          <form onSubmit={handleSubmit} className="auth-form">
-            {registered ? (
-              <div className="auth-alert auth-alert-success">ثبت‌نام انجام شد. حالا با همان اطلاعات وارد شوید.</div>
-            ) : null}
-
-            <label className="auth-field">
-              <span>ایمیل یا شماره موبایل</span>
-              <div className="auth-input-shell">
-                {showIranPrefix ? (
-                  <span className="auth-prefix" dir="ltr">
-                    IR +98
-                  </span>
-                ) : null}
-                <input
-                  type={identifierType === 'email' ? 'email' : 'text'}
-                  value={identifier}
-                  onChange={(e) => handleIdentifierChange(e.target.value)}
-                  required
-                  dir="ltr"
-                  inputMode={identifierType === 'email' ? 'email' : 'numeric'}
-                  maxLength={identifierType === 'email' ? undefined : 10}
-                  placeholder={identifierType === 'email' ? 'example@email.com' : '9352720114'}
-                />
-              </div>
-            </label>
-
-            <label className="auth-field">
-              <span>رمز عبور</span>
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-            </label>
-
-            {error ? <div className="auth-alert auth-alert-error">{error}</div> : null}
-
-            <button type="submit" disabled={loading} className="auth-btn">
-              {loading ? 'در حال ورود...' : 'ورود'}
-            </button>
-          </form>
-
-          <p className="auth-footer">
-            حساب ندارید؟{' '}
-            <Link href="/register">ثبت‌نام کنید</Link>
-          </p>
+    <div className="auth-page auth-page-login">
+      <div className="auth-card auth-card-refresh auth-login-card">
+        <div className="auth-header">
+          <h1>ورود</h1>
         </div>
+
+        <form onSubmit={handleSubmit} className="auth-form">
+          {registered ? <div className="auth-alert auth-alert-success">ثبت‌نام انجام شد. حالا با همان اطلاعات وارد شوید.</div> : null}
+
+          <label className="auth-field">
+            <span>ایمیل یا شماره موبایل</span>
+            <div className="auth-input-shell">
+              {showIranPrefix ? (
+                <span className="auth-prefix" dir="ltr">
+                  IR +98
+                </span>
+              ) : null}
+              <input
+                type={identifierType === 'email' ? 'email' : 'text'}
+                value={identifier}
+                onChange={(e) => handleIdentifierChange(e.target.value)}
+                required
+                dir="ltr"
+                inputMode={identifierType === 'email' ? 'email' : 'numeric'}
+                maxLength={identifierType === 'email' ? undefined : 10}
+                placeholder={identifierType === 'email' ? 'example@email.com' : '9352720114'}
+              />
+            </div>
+          </label>
+
+          <label className="auth-field">
+            <span>رمز عبور</span>
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+          </label>
+
+          {error ? <div className="auth-alert auth-alert-error">{error}</div> : null}
+
+          <button type="submit" disabled={loading} className="auth-btn">
+            {loading ? 'در حال ورود...' : 'ورود'}
+          </button>
+        </form>
+
+        <p className="auth-footer">
+          حساب ندارید؟ <Link href="/register">ثبت‌نام کنید</Link>
+        </p>
       </div>
     </div>
   );
@@ -144,7 +126,7 @@ function LoginPageContent() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="auth-page auth-page-refresh" />}>
+    <Suspense fallback={<div className="auth-page auth-page-login" />}>
       <LoginPageContent />
     </Suspense>
   );
