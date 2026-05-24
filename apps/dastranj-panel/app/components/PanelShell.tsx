@@ -52,7 +52,9 @@ export function PanelShell({ children }: { children: ReactNode }) {
               </div>
             </div>
           ) : (
-            <div className="content-body panel-route-body">{children}</div>
+            <div className="content-body panel-route-body" dir="rtl" lang="fa">
+              {children}
+            </div>
           )}
         </main>
       )}

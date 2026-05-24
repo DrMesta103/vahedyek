@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -52,16 +52,14 @@ const PACKAGE_OPTIONS = [
 
 function ProvisioningScreen() {
   return (
-    <div className="w-full max-w-2xl rounded-[32px] border border-white/70 bg-white/90 p-10 text-center shadow-[0_30px_90px_rgba(15,23,42,0.12)] backdrop-blur">
-      <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100 text-xl text-emerald-700">
+    <div className="tenant-select-minimal-panel">
+      <div className="tenant-select-status-icon">
         <i className="fa fa-building" />
       </div>
-      <h1 className="text-xl font-black text-slate-900">کسب‌وکار شما در حال ساخته شدن می‌باشد</h1>
-      <p className="mt-3 text-sm leading-7 text-slate-500">
-        داریم فضای tenant را آماده می‌کنیم، مالک را روی همان حساب فعلی ثبت می‌کنیم و شما را مستقیم وارد داشبورد می‌کنیم.
-      </p>
-      <div className="mt-8 overflow-hidden rounded-full bg-slate-100">
-        <div className="h-3 w-full animate-pulse rounded-full bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500" />
+      <h1 className="tenant-select-title">کسب‌وکار شما در حال ساخته شدن است</h1>
+      <p className="tenant-select-muted">داریم tenant را آماده می‌کنیم و شما را مستقیم وارد داشبورد می‌کنیم.</p>
+      <div className="tenant-select-progress">
+        <div className="tenant-select-progress-bar" />
       </div>
     </div>
   );
@@ -83,10 +81,10 @@ function SelectTenantPageContent() {
   const [selectedPackageId, setSelectedPackageId] = useState<string>('growth');
   const [businessName, setBusinessName] = useState('');
   const [paymentForm, setPaymentForm] = useState({
-    cardNumber: '',
-    cardHolder: '',
-    expiry: '',
-    cvv2: '',
+    cardNumber: '6219861034567890',
+    cardHolder: 'علی علینقی پور',
+    expiry: '08/06',
+    cvv2: '123',
   });
 
   useEffect(() => {
@@ -136,6 +134,8 @@ function SelectTenantPageContent() {
 
     return pool.filter((item) => item !== businessName.trim()).slice(0, 8);
   }, [businessName, suggestedBusinessNames]);
+
+  const recentBusinessNames = useMemo(() => suggestedBusinessNames.slice(0, 6), [suggestedBusinessNames]);
 
   const selectTenant = async (tenantId: string) => {
     setSelecting(tenantId);
@@ -192,227 +192,171 @@ function SelectTenantPageContent() {
     }
   };
 
-  const frameClassName =
-    step === 'provisioning'
-      ? 'w-full max-w-2xl'
-      : 'w-full max-w-6xl rounded-[32px] border border-white/70 bg-white/90 p-4 shadow-[0_30px_90px_rgba(15,23,42,0.12)] backdrop-blur md:p-8';
-
   return (
-    <div className="relative z-[80] isolate flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top,#d8fff4,transparent_35%),linear-gradient(135deg,#f7fbfa,#eef6f4)] px-4 py-8">
-      <div className={frameClassName}>
-        {step === 'loading' ? (
-          <div className="py-16 text-center text-sm text-slate-400">در حال بارگذاری...</div>
-        ) : null}
+    <div className="tenant-select-page auth-page-refresh">
+      <div className="tenant-select-card auth-card-refresh">
+        {step === 'loading' ? <div className="tenant-select-loading">در حال بارگذاری...</div> : null}
 
         {step === 'provisioning' ? <ProvisioningScreen /> : null}
 
         {step !== 'loading' && step !== 'provisioning' ? (
-          <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
-            <section className="rounded-[28px] bg-[linear-gradient(160deg,#0f172a,#134e4a_55%,#0f766e)] p-7 text-white">
-              <div className="inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold">
-                ساخت کسب‌وکار چند tenant
-              </div>
-              <h1 className="mt-4 text-xl font-black leading-tight">
-                {step === 'list' ? 'کسب‌وکار فعلی را انتخاب کنید یا یک tenant جدید بسازید.' : 'پکیج را انتخاب کنید و در چند قدم کوتاه tenant جدید را بسازید.'}
-              </h1>
-              <p className="mt-4 text-sm leading-7 text-emerald-50/85">
-                مالک این کسب‌وکار همان حساب فعلی شماست و در لحظه ساخت tenant به عنوان owner ثبت می‌شود.
-              </p>
-
-              <div className="mt-8 space-y-3">
-                <div className={`rounded-xl border px-4 py-3 text-sm ${step === 'packages' ? 'border-white/35 bg-white/14' : 'border-white/10 bg-white/5'}`}>
-                  ۱. انتخاب پکیج و دوره
-                </div>
-                <div className={`rounded-xl border px-4 py-3 text-sm ${step === 'profile' ? 'border-white/35 bg-white/14' : 'border-white/10 bg-white/5'}`}>
-                  ۲. تایید مالک و نام کسب‌وکار
-                </div>
-                <div className={`rounded-xl border px-4 py-3 text-sm ${step === 'payment' ? 'border-white/35 bg-white/14' : 'border-white/10 bg-white/5'}`}>
-                  ۳. پرداخت ماک و ورود به داشبورد
-                </div>
+          <>
+            <div className="tenant-select-head">
+              <div>
+                <div className="tenant-select-kicker">انتخاب کسب‌وکار</div>
+                <h1 className="tenant-select-title">
+                  {step === 'list' ? 'tenant فعلی را انتخاب کنید' : 'tenant جدید بسازید'}
+                </h1>
+                <p className="tenant-select-muted">
+                  {step === 'list'
+                    ? 'از بین tenantهای موجود یکی را انتخاب کنید یا ساخت tenant جدید را شروع کنید.'
+                    : 'فرآیند ساخت tenant در همین کارت و بدون باکس توضیحی ادامه پیدا می‌کند.'}
+                </p>
               </div>
 
-              {selectedPackage ? (
-                <div className="mt-8 rounded-[24px] border border-white/15 bg-black/15 p-5">
-                  <div className="text-sm text-emerald-100">پکیج انتخاب‌شده</div>
-                  <div className="mt-2 text-xl font-bold">{selectedPackage.title}</div>
-                  <div className="mt-1 text-sm text-emerald-100/80">
-                    {billingCycle === 'monthly' ? selectedPackage.monthlyPrice : selectedPackage.yearlyPrice}
-                  </div>
+              {step === 'packages' || step === 'profile' || step === 'payment' ? (
+                <div className="tenant-select-step-chip">
+                  {step === 'packages' ? '۱. پکیج' : step === 'profile' ? '۲. مالک' : '۳. پرداخت'}
                 </div>
               ) : null}
-            </section>
+            </div>
 
-            <section className="rounded-[28px] border border-slate-200 bg-white p-4 text-right shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
-              {step === 'list' ? (
-                <>
-                  <div className="mb-6">
-                    <h2 className="text-xl font-bold text-slate-900">انتخاب کسب‌وکار</h2>
-                    <p className="mt-1 text-sm text-slate-500">می‌توانید وارد tenant فعلی شوید یا ساخت tenant جدید را شروع کنید.</p>
-                  </div>
-
-                  <div className="space-y-3">
-                    {tenants.map((tenant) => (
-                      <button
-                        key={tenant.id}
-                        onClick={() => selectTenant(tenant.id)}
-                        disabled={selecting === tenant.id}
-                        className="flex w-full items-center gap-4 rounded-[16px] border border-slate-200 bg-slate-50 px-4 py-3 text-right transition hover:border-emerald-400 hover:bg-emerald-50 disabled:opacity-60"
-                      >
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-800 text-xs font-bold text-white">
-                          {tenant.brandCode}
-                        </div>
-                        <div className="flex-1">
-                          <div className="font-semibold text-slate-800">{tenant.name}</div>
-                          <div className="text-xs text-slate-400">{tenant.slug}</div>
-                        </div>
-                        {selecting === tenant.id ? <span className="text-xs text-emerald-600">در حال ورود...</span> : <i className="fa fa-chevron-left text-slate-300" />}
-                      </button>
-                    ))}
-
+            {step === 'list' ? (
+              <div className="tenant-select-stack">
+                <div className="tenant-select-list">
+                  {tenants.map((tenant) => (
                     <button
-                      onClick={() => {
-                        setCreateError('');
-                        setStep('packages');
-                      }}
-                      className="flex w-full items-center justify-center gap-2 rounded-[16px] border-2 border-dashed border-emerald-300 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700 transition hover:border-emerald-500 hover:bg-emerald-100"
+                      key={tenant.id}
+                      type="button"
+                      onClick={() => selectTenant(tenant.id)}
+                      disabled={selecting === tenant.id}
+                      className="tenant-card tenant-select-item"
                     >
-                      <i className="fa fa-plus" />
-                      ساخت کسب‌وکار جدید
-                    </button>
-                  </div>
-                </>
-              ) : null}
-
-              {step === 'packages' ? (
-                <>
-                  <div className="mb-6 flex items-start justify-between gap-4">
-                    <div>
-                      <h2 className="text-xl font-bold text-slate-900">انتخاب پکیج</h2>
-                      <p className="mt-1 text-sm text-slate-500">قبل از ساخت tenant، دوره ماهیانه یا سالیانه و یکی از ۳ پکیج استاتیک را انتخاب کنید.</p>
-                    </div>
-                    {tenants.length ? (
-                      <button onClick={() => setStep('list')} className="text-sm font-semibold text-slate-500 hover:text-slate-700">
-                        بازگشت
-                      </button>
-                    ) : null}
-                  </div>
-
-                  <div className="mb-5 inline-flex rounded-full border border-slate-200 bg-slate-100 p-1">
-                    {(['monthly', 'yearly'] as BillingCycle[]).map((cycle) => (
-                      <button
-                        key={cycle}
-                        type="button"
-                        onClick={() => setBillingCycle(cycle)}
-                        className={`rounded-full px-4 py-2 text-sm font-semibold transition ${billingCycle === cycle ? 'bg-emerald-600 text-white' : 'text-slate-500'}`}
-                      >
-                        {cycle === 'monthly' ? 'ماهانه' : 'سالانه'}
-                      </button>
-                    ))}
-                  </div>
-
-                  <div className="space-y-3">
-                    {PACKAGE_OPTIONS.map((pkg) => (
-                      <button
-                        key={pkg.id}
-                        type="button"
-                        onClick={() => setSelectedPackageId(pkg.id)}
-                        className={`w-full rounded-[20px] border p-4 text-right transition ${
-                          selectedPackageId === pkg.id ? 'border-emerald-500 bg-emerald-50 shadow-[0_12px_35px_rgba(5,150,105,0.12)]' : 'border-slate-200 bg-slate-50 hover:border-slate-300'
-                        }`}
-                      >
-                        <div className="flex items-start justify-between gap-4">
-                          <div>
-                            <div className="text-lg font-bold text-slate-900">{pkg.title}</div>
-                            <div className="mt-1 text-sm text-slate-500">{pkg.description}</div>
-                          </div>
-                          <div className="text-left">
-                            <div className="text-sm font-bold text-emerald-700">{billingCycle === 'monthly' ? pkg.monthlyPrice : pkg.yearlyPrice}</div>
-                            <div className="mt-1 text-xs text-slate-400">{billingCycle === 'monthly' ? 'صورت‌حساب ماهانه' : 'صورت‌حساب سالانه'}</div>
-                          </div>
-                        </div>
-                        <div className="mt-3 flex flex-wrap gap-2">
-                          {pkg.features.map((feature) => (
-                            <span key={feature} className="rounded-full bg-white px-3 py-1 text-xs text-slate-600">
-                              {feature}
-                            </span>
-                          ))}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-
-                  <button onClick={() => setStep('profile')} className="mt-5 w-full rounded-[16px] bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700">
-                    ادامه و تکمیل اطلاعات مالک
-                  </button>
-                </>
-              ) : null}
-
-              {step === 'profile' ? (
-                <>
-                  <div className="mb-6 flex items-start justify-between gap-4">
-                    <div>
-                      <h2 className="text-xl font-bold text-slate-900">اطلاعات مالک و کسب‌وکار</h2>
-                      <p className="mt-1 text-sm text-slate-500">نام و موبایل از جدول کاربر خوانده می‌شود و در این مرحله قابل ویرایش نیست.</p>
-                    </div>
-                    <button onClick={() => setStep('packages')} className="text-sm font-semibold text-slate-500 hover:text-slate-700">
-                      بازگشت
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <label className="block">
-                      <span className="mb-2 block text-sm font-semibold text-slate-700">شماره موبایل</span>
-                      <div className="flex items-center gap-2 rounded-[14px] border border-slate-200 bg-slate-100 px-3">
-                        <span className="shrink-0 text-sm font-semibold text-slate-500" dir="ltr">
-                          🇮🇷 +98
-                        </span>
-                        <input
-                          value={user?.mobile ?? ''}
-                          disabled
-                          dir="ltr"
-                          className="h-9 w-full border-0 bg-transparent px-0 text-left text-[13px] text-slate-700 outline-none"
-                        />
+                      <div className="tenant-avatar tenant-select-avatar">{tenant.brandCode}</div>
+                      <div className="tenant-select-copy">
+                        <div className="tenant-select-item-title">{tenant.name}</div>
+                        <div className="tenant-select-item-subtitle">{tenant.slug}</div>
                       </div>
-                    </label>
+                      <div className="tenant-select-item-meta">
+                        {selecting === tenant.id ? 'در حال ورود...' : <i className="fa fa-chevron-left" />}
+                      </div>
+                    </button>
+                  ))}
+                </div>
 
-                    <label className="block">
-                      <span className="mb-2 block text-sm font-semibold text-slate-700">نام</span>
-                      <input value={user?.firstName ?? ''} disabled className="w-full rounded-[14px] border border-slate-200 bg-slate-100 px-4 py-3 text-slate-700 outline-none" />
-                    </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCreateError('');
+                    setStep('packages');
+                  }}
+                  className="tenant-create-btn tenant-select-create"
+                >
+                  <i className="fa fa-plus" />
+                  ساخت کسب‌وکار جدید
+                </button>
+              </div>
+            ) : null}
 
-                    <label className="block">
-                      <span className="mb-2 block text-sm font-semibold text-slate-700">نام خانوادگی</span>
-                      <input value={user?.lastName ?? ''} disabled className="w-full rounded-[14px] border border-slate-200 bg-slate-100 px-4 py-3 text-slate-700 outline-none" />
-                    </label>
+            {step === 'packages' ? (
+              <div className="tenant-select-stack">
+                <div className="tenant-select-switch">
+                  {(['monthly', 'yearly'] as BillingCycle[]).map((cycle) => (
+                    <button
+                      key={cycle}
+                      type="button"
+                      onClick={() => setBillingCycle(cycle)}
+                      className={`tenant-select-switch-btn${billingCycle === cycle ? ' is-active' : ''}`}
+                    >
+                      {cycle === 'monthly' ? 'ماهانه' : 'سالانه'}
+                    </button>
+                  ))}
+                </div>
 
-                    <label className="block sm:col-span-2">
-                      <span className="mb-2 block text-sm font-semibold text-slate-700">نام کسب‌وکار</span>
-                      <input
-                        value={businessName}
-                        onChange={(e) => setBusinessName(e.target.value)}
-                        placeholder="مثلا: شرکت منابع انسانی سپهر"
-                        className="w-full rounded-[14px] border border-slate-200 bg-slate-50 px-4 py-3 text-slate-800 outline-none transition focus:border-emerald-500"
-                      />
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        {visibleSuggestions.map((item) => (
-                          <button
-                            key={item}
-                            type="button"
-                            onClick={() => setBusinessName(item)}
-                            className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700"
-                          >
-                            {item}
-                          </button>
+                <div className="tenant-select-packages">
+                  {PACKAGE_OPTIONS.map((pkg) => (
+                    <button
+                      key={pkg.id}
+                      type="button"
+                      onClick={() => setSelectedPackageId(pkg.id)}
+                      className={`tenant-select-package${selectedPackageId === pkg.id ? ' is-selected' : ''}`}
+                    >
+                      <div className="tenant-select-package-head">
+                        <div>
+                          <div className="tenant-select-item-title">{pkg.title}</div>
+                          <div className="tenant-select-muted tenant-select-package-desc">{pkg.description}</div>
+                        </div>
+                        <div className="tenant-select-package-price">
+                          {billingCycle === 'monthly' ? pkg.monthlyPrice : pkg.yearlyPrice}
+                        </div>
+                      </div>
+                      <div className="tenant-select-tags">
+                        {pkg.features.map((feature) => (
+                          <span key={feature} className="tenant-select-tag">
+                            {feature}
+                          </span>
                         ))}
                       </div>
-                    </label>
+                    </button>
+                  ))}
+                </div>
+
+                <button type="button" onClick={() => setStep('profile')} className="auth-btn tenant-select-next-btn">
+                  ادامه
+                </button>
+              </div>
+            ) : null}
+
+            {step === 'profile' ? (
+              <div className="tenant-select-stack">
+                <div className="tenant-select-profile">
+                  <label className="auth-field">
+                    <span>شماره موبایل</span>
+                    <input value={user?.mobile ?? ''} disabled dir="ltr" />
+                  </label>
+
+                  <label className="auth-field">
+                    <span>نام</span>
+                    <input value={user?.firstName ?? ''} disabled />
+                  </label>
+
+                  <label className="auth-field">
+                    <span>نام خانوادگی</span>
+                    <input value={user?.lastName ?? ''} disabled />
+                  </label>
+
+                  <label className="auth-field tenant-select-business">
+                    <span>نام کسب‌وکار</span>
+                    <input
+                      value={businessName}
+                      onChange={(e) => setBusinessName(e.target.value)}
+                      placeholder="نام کسب‌وکار را وارد کنید"
+                    />
+                  </label>
+
+                  <div className="tenant-select-history">
+                    <div className="tenant-select-history-head">
+                      <span>نام‌های قبلی</span>
+                      <span>{recentBusinessNames.length ? `${recentBusinessNames.length} مورد` : 'بدون داده'}</span>
+                    </div>
+                    <div className="tenant-select-suggestions">
+                      {(visibleSuggestions.length ? visibleSuggestions : recentBusinessNames).map((item) => (
+                        <button key={item} type="button" onClick={() => setBusinessName(item)} className="tenant-select-suggestion">
+                          {item}
+                        </button>
+                      ))}
+                    </div>
                   </div>
+                </div>
 
-                  {createError ? (
-                    <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{createError}</div>
-                  ) : null}
+                {createError ? <div className="auth-alert auth-alert-error">{createError}</div> : null}
 
+                <div className="tenant-select-actions">
+                  <button type="button" onClick={() => setStep('packages')} className="tenant-select-back">
+                    بازگشت
+                  </button>
                   <button
+                    type="button"
                     onClick={() => {
                       if (!businessName.trim()) {
                         setCreateError('نام کسب‌وکار الزامی است.');
@@ -421,99 +365,82 @@ function SelectTenantPageContent() {
                       setCreateError('');
                       setStep('payment');
                     }}
-                    className="mt-5 w-full rounded-[16px] bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700"
+                    className="auth-btn tenant-select-next-btn"
                   >
-                    ادامه به پرداخت
+                    ادامه
                   </button>
-                </>
-              ) : null}
+                </div>
+              </div>
+            ) : null}
 
-              {step === 'payment' ? (
-                <>
-                  <div className="mb-6 flex items-start justify-between gap-4">
-                    <div>
-                      <h2 className="text-xl font-bold text-slate-900">درگاه پرداخت ظاهری</h2>
-                      <p className="mt-1 text-sm text-slate-500">این بخش ماک است. بعد از تکمیل، صفحه لودینگ نمایش داده می‌شود و سپس وارد داشبورد tenant می‌شوید.</p>
-                    </div>
-                    <button onClick={() => setStep('profile')} className="text-sm font-semibold text-slate-500 hover:text-slate-700">
-                      بازگشت
-                    </button>
+            {step === 'payment' ? (
+              <form onSubmit={createTenant} className="tenant-select-stack">
+                <div className="tenant-select-summary">
+                  <div className="tenant-select-muted">مبلغ قابل پرداخت</div>
+                  <div className="tenant-select-summary-price">
+                    {billingCycle === 'monthly' ? selectedPackage.monthlyPrice : selectedPackage.yearlyPrice}
                   </div>
+                  <div className="tenant-select-muted">
+                    {selectedPackage.title} - {billingCycle === 'monthly' ? 'ماهانه' : 'سالانه'}
+                  </div>
+                </div>
 
-                  <form onSubmit={createTenant} className="space-y-4">
-                    <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
-                      <div className="flex items-center justify-between gap-4">
-                        <div>
-                          <div className="text-sm text-slate-500">مبلغ قابل پرداخت</div>
-                          <div className="mt-1 text-xl font-black text-slate-900">
-                            {billingCycle === 'monthly' ? selectedPackage.monthlyPrice : selectedPackage.yearlyPrice}
-                          </div>
-                        </div>
-                        <div className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-700">
-                          {selectedPackage.title} - {billingCycle === 'monthly' ? 'ماهانه' : 'سالانه'}
-                        </div>
-                      </div>
-                    </div>
+                <label className="auth-field">
+                  <span>شماره کارت</span>
+                  <input
+                    value={paymentForm.cardNumber}
+                    onChange={(e) => setPaymentForm((current) => ({ ...current, cardNumber: e.target.value.replace(/\D/g, '').slice(0, 16) }))}
+                    placeholder="6219861034567890"
+                    dir="ltr"
+                    inputMode="numeric"
+                  />
+                </label>
 
-                    <label className="block">
-                      <span className="mb-2 block text-sm font-semibold text-slate-700">شماره کارت</span>
-                      <input
-                        value={paymentForm.cardNumber}
-                        onChange={(e) => setPaymentForm((current) => ({ ...current, cardNumber: e.target.value.replace(/\D/g, '').slice(0, 16) }))}
-                        placeholder="6219861034567890"
-                        dir="ltr"
-                        inputMode="numeric"
-                        className="w-full rounded-[14px] border border-slate-200 bg-slate-50 px-4 py-3 text-left text-slate-800 outline-none transition focus:border-emerald-500"
-                      />
-                    </label>
+                <label className="auth-field">
+                  <span>نام دارنده کارت</span>
+                  <input
+                    value={paymentForm.cardHolder}
+                    onChange={(e) => setPaymentForm((current) => ({ ...current, cardHolder: e.target.value }))}
+                    placeholder={user?.fullName ?? 'نام و نام خانوادگی'}
+                  />
+                </label>
 
-                    <label className="block">
-                      <span className="mb-2 block text-sm font-semibold text-slate-700">نام دارنده کارت</span>
-                      <input
-                        value={paymentForm.cardHolder}
-                        onChange={(e) => setPaymentForm((current) => ({ ...current, cardHolder: e.target.value }))}
-                        placeholder={user?.fullName ?? 'نام و نام خانوادگی'}
-                        className="w-full rounded-[14px] border border-slate-200 bg-slate-50 px-4 py-3 text-slate-800 outline-none transition focus:border-emerald-500"
-                      />
-                    </label>
+                <div className="tenant-select-grid-two">
+                  <label className="auth-field">
+                    <span>تاریخ انقضا</span>
+                    <input
+                      value={paymentForm.expiry}
+                      onChange={(e) => setPaymentForm((current) => ({ ...current, expiry: e.target.value.slice(0, 5) }))}
+                      placeholder="08/06"
+                      dir="ltr"
+                    />
+                  </label>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <label className="block">
-                        <span className="mb-2 block text-sm font-semibold text-slate-700">تاریخ انقضا</span>
-                        <input
-                          value={paymentForm.expiry}
-                          onChange={(e) => setPaymentForm((current) => ({ ...current, expiry: e.target.value.slice(0, 5) }))}
-                          placeholder="08/06"
-                          dir="ltr"
-                          className="w-full rounded-[14px] border border-slate-200 bg-slate-50 px-4 py-3 text-left text-slate-800 outline-none transition focus:border-emerald-500"
-                        />
-                      </label>
+                  <label className="auth-field">
+                    <span>CVV2</span>
+                    <input
+                      value={paymentForm.cvv2}
+                      onChange={(e) => setPaymentForm((current) => ({ ...current, cvv2: e.target.value.replace(/\D/g, '').slice(0, 4) }))}
+                      placeholder="123"
+                      dir="ltr"
+                      inputMode="numeric"
+                    />
+                  </label>
+                </div>
 
-                      <label className="block">
-                        <span className="mb-2 block text-sm font-semibold text-slate-700">CVV2</span>
-                        <input
-                          value={paymentForm.cvv2}
-                          onChange={(e) => setPaymentForm((current) => ({ ...current, cvv2: e.target.value.replace(/\D/g, '').slice(0, 4) }))}
-                          placeholder="123"
-                          dir="ltr"
-                          inputMode="numeric"
-                          className="w-full rounded-[14px] border border-slate-200 bg-slate-50 px-4 py-3 text-left text-slate-800 outline-none transition focus:border-emerald-500"
-                        />
-                      </label>
-                    </div>
+                {createError ? <div className="auth-alert auth-alert-error">{createError}</div> : null}
 
-                    {createError ? (
-                      <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{createError}</div>
-                    ) : null}
-
-                    <button type="submit" disabled={creating} className="w-full rounded-[16px] bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed">
-                      {creating ? 'در حال ساخت کسب‌وکار...' : 'پرداخت و ساخت tenant'}
-                    </button>
-                  </form>
-                </>
-              ) : null}
-            </section>
-          </div>
+                <div className="tenant-select-actions">
+                  <button type="button" onClick={() => setStep('profile')} className="tenant-select-back">
+                    بازگشت
+                  </button>
+                  <button type="submit" disabled={creating} className="auth-btn tenant-select-next-btn">
+                    {creating ? 'در حال ساخت...' : 'پرداخت و ساخت tenant'}
+                  </button>
+                </div>
+              </form>
+            ) : null}
+          </>
         ) : null}
       </div>
     </div>

@@ -1,26 +1,10 @@
 import Link from 'next/link';
 import { FileText, Search } from 'lucide-react';
 import { ModulePageHeader } from '../../components/module-page/ModulePageHeader';
+import { getDraftTemplateCategoryLabel, getDraftTemplateSummary } from '../../lib/draft-template-display';
 import { listDraftTemplates } from '../../lib/data';
+import { formatFaNumber, formatPersianJalaliDate } from '../../lib/format-fa';
 import { DraftTemplateActions } from './DraftTemplateActions';
-
-const draftCategoryLabels = {
-  payroll: 'ثابت ماهیانه',
-  attendance: 'حضور و غیاب',
-  hr: 'منابع انسانی',
-} as const;
-
-function toPersianNumber(value: number | string) {
-  return new Intl.NumberFormat('fa-IR', { useGrouping: false }).format(Number(value));
-}
-
-function formatPersianDate(date: Date) {
-  return new Intl.DateTimeFormat('fa-IR-u-ca-persian', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(date);
-}
 
 export default async function DraftTemplatesPage() {
   const items = await listDraftTemplates();
@@ -52,69 +36,80 @@ export default async function DraftTemplatesPage() {
       <section className="draft-template-stats" aria-label="آمار قالب‌های پیش‌نویس">
         <div className="draft-template-stat-card">
           <span>کل نسخه‌ها</span>
-          <strong>{toPersianNumber(items.length)}</strong>
+          <strong>{formatFaNumber(items.length, { useGrouping: false })}</strong>
         </div>
         <div className="draft-template-stat-card is-active">
           <span>فعال</span>
-          <strong>{toPersianNumber(activeCount)}</strong>
+          <strong>{formatFaNumber(activeCount, { useGrouping: false })}</strong>
         </div>
         <div className="draft-template-stat-card is-archived">
           <span>آرشیو</span>
-          <strong>{toPersianNumber(archivedCount)}</strong>
+          <strong>{formatFaNumber(archivedCount, { useGrouping: false })}</strong>
         </div>
       </section>
 
       <div className="draft-template-list">
-        {items.map((item) => (
-          <article key={item.id} className="draft-template-card">
-            <div className="draft-template-card-menu">
-              <DraftTemplateActions templateId={item.id} />
-            </div>
+        {items.map((item) => {
+          const summary = getDraftTemplateSummary(item.body);
+          const categoryLabel = getDraftTemplateCategoryLabel(item.category);
 
-            <div className="draft-template-card-head">
-              <span className="draft-template-file-icon" aria-hidden>
-                <FileText className="h-4 w-4" strokeWidth={2.2} />
-              </span>
-              <div className="draft-template-title-block">
-                <h3>{item.title}</h3>
-                <div className="draft-template-pills">
-                  <span className={`module-status-pill ${item.isActive ? 'is-active' : 'is-inactive'}`}>
-                    {item.isActive ? 'فعال' : 'غیرفعال'}
-                  </span>
-                  <span>ورود دستی همه اطلاعات</span>
-                  <span>بیمه دارد</span>
-                  <span>مالیات دارد</span>
-                  <span>نوع: {draftCategoryLabels[item.category]}</span>
+          return (
+            <article key={item.id} className="draft-template-card">
+              <div className="draft-template-card-menu">
+                <DraftTemplateActions templateId={item.id} />
+              </div>
+
+              <div className="draft-template-card-head">
+                <div className="draft-template-title-block">
+                  <h3>{item.title.trim() || 'بدون عنوان'}</h3>
+                  <div className="draft-template-pills">
+                    <span className={`module-status-pill ${item.isActive ? 'is-active' : 'is-inactive'}`}>
+                      {item.isActive ? 'فعال' : 'غیرفعال'}
+                    </span>
+                    {summary.pills.map((pill) => (
+                      <span key={pill}>{pill}</span>
+                    ))}
+                    <span>نوع: {categoryLabel}</span>
+                  </div>
+                  <p>{item.description ?? 'توضیحی ثبت نشده است.'}</p>
+                  <time dateTime={item.updatedAt.toISOString()}>
+                    آخرین به‌روزرسانی: {formatPersianJalaliDate(item.updatedAt)}
+                  </time>
                 </div>
-                <p>{item.description ?? 'توضیحی ثبت نشده است.'}</p>
-                <time dateTime={item.updatedAt.toISOString()}>آخرین به‌روزرسانی: {formatPersianDate(item.updatedAt)}</time>
+                <span className="draft-template-file-icon" aria-hidden>
+                  <FileText className="h-4 w-4" strokeWidth={2.2} />
+                </span>
               </div>
-            </div>
 
-            <div className="draft-template-fields">
-              <div className="draft-template-field">
-                <span>سقف مرخصی ماهیانه</span>
-                <strong>۰ دقیقه</strong>
+              <div className="draft-template-fields">
+                <div className="draft-template-field">
+                  <span>سقف مرخصی ماهیانه</span>
+                  <strong>{summary.fields.monthlyLeaveLimit}</strong>
+                </div>
+                <div className="draft-template-field">
+                  <span>حداکثر انتقال مرخصی به سال بعد</span>
+                  <strong>{summary.fields.leaveTransferLimit}</strong>
+                </div>
+                <div className="draft-template-field">
+                  <span>سقف ساعت اضافه‌کاری ماهانه</span>
+                  <strong>{summary.fields.monthlyOvertimeLimit}</strong>
+                </div>
+                <div className="draft-template-field">
+                  <span>
+                    ناخالص پرداختی <span className="draft-template-field-hint">(۳۰ روز)</span>
+                  </span>
+                  <strong>{summary.fields.grossPayment}</strong>
+                </div>
+                <div className="draft-template-field">
+                  <span>
+                    خالص پرداختی <span className="draft-template-field-hint">(۳۰ روز)</span>
+                  </span>
+                  <strong>{summary.fields.netPayment}</strong>
+                </div>
               </div>
-              <div className="draft-template-field">
-                <span>حداکثر انتقال مرخصی به سال بعد</span>
-                <strong>۰ دقیقه</strong>
-              </div>
-              <div className="draft-template-field">
-                <span>سقف ساعت اضافه‌کاری ماهانه</span>
-                <strong>۰ دقیقه</strong>
-              </div>
-              <div className="draft-template-field">
-                <span>ناخالص پرداختی (۳۰ روز)</span>
-                <strong>۰</strong>
-              </div>
-              <div className="draft-template-field">
-                <span>خالص پرداختی (۳۰ روز)</span>
-                <strong>۰</strong>
-              </div>
-            </div>
-          </article>
-        ))}
+            </article>
+          );
+        })}
 
         {items.length === 0 ? (
           <div className="draft-template-empty">
