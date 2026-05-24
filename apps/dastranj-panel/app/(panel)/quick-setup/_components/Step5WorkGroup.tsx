@@ -2,6 +2,7 @@
 
 import { BriefcaseBusiness, Camera, CheckCircle2, MapPin, Shield, Users, Plus, Search, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { MinimalScroll } from '../../../components/MinimalScroll';
 import { createWorkGroupFromQuickSetupAction } from '../../../lib/actions';
 import type { QuickWorkGroupSummary } from './quick-setup.types';
 
@@ -237,7 +238,7 @@ export default function Step5WorkGroup({
             </div>
           </div>
 
-          <div className="overflow-x-auto pb-2">
+          <MinimalScroll variant="horizontal" className="pb-2">
             <div className="flex min-w-max flex-nowrap gap-3">
             {filteredEmployees.map((employee) => (
               <button
@@ -258,7 +259,7 @@ export default function Step5WorkGroup({
               </button>
             ))}
             </div>
-          </div>
+          </MinimalScroll>
 
           {draft.selectedEmployees.length ? (
             <div className="space-y-3">

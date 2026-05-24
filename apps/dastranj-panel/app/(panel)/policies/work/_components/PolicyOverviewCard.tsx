@@ -1,5 +1,7 @@
 'use client';
 
+import { MinimalScroll } from '../../../../components/MinimalScroll';
+
 import { useEffect, useState } from 'react';
 import { CalendarDays, Lock, Pencil, X } from 'lucide-react';
 import { updatePolicyBasicInfoAction } from '../../../../lib/actions';
@@ -93,7 +95,7 @@ export function PolicyOverviewCard({
 
       {open ? (
         <div className="policy-basic-dialog-backdrop" role="presentation" onClick={() => setOpen(false)}>
-          <div
+          <MinimalScroll
             className="policy-basic-dialog"
             role="dialog"
             aria-modal="true"
@@ -173,7 +175,7 @@ export function PolicyOverviewCard({
                 </button>
               </div>
             </form>
-          </div>
+          </MinimalScroll>
         </div>
       ) : null}
     </>

@@ -1,0 +1,16 @@
+services:
+  vahedyek-panel:
+    image: vahedyek-panel:latest
+    container_name: vahedyek-panel
+    build:
+      context: .
+      dockerfile: apps/vahedyek-panel/Dockerfile
+    restart: unless-stopped
+
+  dastranj-panel:
+    image: dastranj-panel:latest
+    container_name: dastranj-panel
+    build:
+      context: .
+      dockerfile: apps/dastranj-panel/Dockerfile
+    restart: unless-stopped

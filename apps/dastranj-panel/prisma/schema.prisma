@@ -326,10 +326,14 @@ model WorkGroupMember {
   employeeId  String
   accessLevel WorkGroupAccessLevel @default(employee)
   joinedAt    DateTime             @default(now())
+  leftAt      DateTime?
+  isCurrent   Boolean              @default(true)
   workGroup   WorkGroup            @relation(fields: [workGroupId], references: [id], onDelete: Cascade)
   employee    Employee             @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
-  @@unique([workGroupId, employeeId])
+  @@index([workGroupId, isCurrent])
+  @@index([employeeId, isCurrent])
+  @@index([workGroupId, employeeId])
 }
 
 model DraftTemplate {

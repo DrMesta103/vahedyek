@@ -1,5 +1,24 @@
 import { getSessionContext } from './auth';
 import { getGlobalDefaultCalendarTemplate } from './calendar-defaults';
+import { mapShiftTemplateRecord, type ShiftTemplatePickerItem } from './shift-template-picker';
+import {
+  clampPersianMonth,
+  getPersianPartsFromDate,
+  isPersianYmdInRange,
+  parsePersianYmd,
+  PERSIAN_MONTH_NAMES,
+  resolveDefaultViewMonth,
+} from './calendar-dates';
+import { normalizePersianDateInput, parseCalendarStoredEvents } from './calendar-events';
+import { buildMonthCells } from './calendar-grid';
+import {
+  CALENDAR_SHIFT_LEGEND,
+  countShiftsByType,
+  listCalendarShifts,
+  listExcludedShiftDates,
+  type CalendarShiftType,
+  type StoredCalendarShift,
+} from './calendar-shifts';
 import { prisma } from './prisma';
 import type { QuickSetupStep } from '../(panel)/quick-setup/_components/quick-setup.types';
 
@@ -113,7 +132,7 @@ export async function getQuickSetupChecklist() {
     tenantId,
     steps: [
       { key: 'location', title: 'محل کار', subtitle: 'ثبت محل کار و شعاع مجاز', done: locations > 0, href: '/locations/new', manageHref: '/locations', count: locations },
-      { key: 'calendar', title: 'تقویم کاری', subtitle: 'تقویم، تعطیلات و شیفت', done: calendars > 0, href: '/calendars/new', manageHref: '/calendars', count: calendars },
+      { key: 'calendar', title: 'تقویم کاری', subtitle: 'تقویم، تعطیلات و شیفت', done: calendars > 0, href: '/calendars?create=1', manageHref: '/calendars', count: calendars },
       { key: 'policy', title: 'سیاست‌های کاری', subtitle: 'قوانین حضور و غیاب', done: policies > 0, href: '/policies', manageHref: '/policies', count: policies },
       { key: 'employee', title: 'مدیریت کارکنان', subtitle: 'ساخت پرونده پرسنلی', done: employees > 0, href: '/employees/new', manageHref: '/employees', count: employees },
       { key: 'work-group', title: 'گروه‌های کاری', subtitle: 'اتصال افراد، محل و سیاست', done: workGroups > 0, href: '/work-groups/new', manageHref: '/work-groups', count: workGroups },
@@ -166,6 +185,126 @@ export async function listCalendars() {
   return prisma.calendar.findMany({ where: { tenantId }, orderBy: { updatedAt: 'desc' } });
 }
 
+function jsonArray<T>(value: unknown): T[] {
+  return Array.isArray(value) ? (value as T[]) : [];
+}
+
+export async function getCalendarDetails(
+  calendarId: string,
+  options?: { viewYear?: number; viewMonth?: number },
+) {
+  const tenantId = await requireTenantId();
+  const [calendar, shiftTemplateRows] = await Promise.all([
+    prisma.calendar.findFirst({ where: { id: calendarId, tenantId } }),
+    prisma.shiftTemplate.findMany({ where: { tenantId, isActive: true }, orderBy: { updatedAt: 'desc' } }),
+  ]);
+  if (!calendar) return null;
+
+  const shiftTemplates: ShiftTemplatePickerItem[] = shiftTemplateRows.map((item) =>
+    mapShiftTemplateRecord({
+      id: item.id,
+      title: item.title,
+      description: item.description,
+      type: item.type,
+      weekDays: item.weekDays,
+      config: item.config,
+    }),
+  );
+
+  const weekends = jsonArray<string>(calendar.weekends);
+  const singleHolidays = parseCalendarStoredEvents(calendar.singleHolidays);
+  const shifts = listCalendarShifts(calendar.shiftConfig);
+  const excludedShiftDates = listExcludedShiftDates(calendar.shiftConfig).map((date) =>
+    normalizePersianDateInput(date),
+  );
+  const shiftCounts = countShiftsByType(shifts);
+
+  const start = parsePersianYmd(calendar.startDate);
+  const end = parsePersianYmd(calendar.endDate);
+  if (!start || !end) return null;
+
+  const today = getPersianPartsFromDate();
+  const defaultView = resolveDefaultViewMonth({ start, end }, today);
+  const requestedYear = options?.viewYear;
+  const requestedMonth = options?.viewMonth;
+  const viewYear =
+    requestedYear && requestedMonth
+      ? clampPersianMonth(requestedYear, requestedMonth, { start, end }).year
+      : defaultView.year;
+  const viewMonth =
+    requestedYear && requestedMonth
+      ? clampPersianMonth(requestedYear, requestedMonth, { start, end }).month
+      : defaultView.month;
+
+  const cells = buildMonthCells({
+    year: viewYear,
+    month: viewMonth,
+    bounds: { start, end },
+    weekends,
+    singleHolidays,
+    shifts,
+    excludedShiftDates,
+  });
+
+  const yearNumber = Number(calendar.yearLabel.replace(/[^\d]/g, '')) || viewYear;
+  const defaultSelectedDay =
+    today.year === viewYear && today.month === viewMonth && isPersianYmdInRange(today, start, end)
+      ? today.day
+      : cells.find((cell) => cell.day !== null)?.day ?? 1;
+
+  const prevMonth =
+    viewMonth === 1
+      ? { year: viewYear - 1, month: 12 }
+      : { year: viewYear, month: viewMonth - 1 };
+  const nextMonth =
+    viewMonth === 12
+      ? { year: viewYear + 1, month: 1 }
+      : { year: viewYear, month: viewMonth + 1 };
+
+  const canGoPrev =
+    prevMonth.year > start.year ||
+    (prevMonth.year === start.year && prevMonth.month >= start.month);
+  const canGoNext =
+    nextMonth.year < end.year || (nextMonth.year === end.year && nextMonth.month <= end.month);
+
+  return {
+    id: calendar.id,
+    title: calendar.title,
+    description: calendar.description,
+    status: calendar.status,
+    yearLabel: calendar.yearLabel,
+    yearNumber,
+    viewYear,
+    viewMonth,
+    monthName: PERSIAN_MONTH_NAMES[viewMonth - 1] ?? '',
+    monthNumber: viewMonth,
+    startDate: calendar.startDate,
+    endDate: calendar.endDate,
+    bounds: { start, end },
+    weekends,
+    singleHolidays,
+    shifts: shifts as StoredCalendarShift[],
+    excludedShiftDates,
+    shiftCount: shifts.length,
+    shiftLegend: CALENDAR_SHIFT_LEGEND.map((item) => ({ ...item, count: shiftCounts[item.key] })),
+    eventCount: calendar.totalEventDays,
+    holidayCount: calendar.holidayCount,
+    otherEventCount: singleHolidays.filter((item) => item.isHoliday === false).length,
+    gridLegend: [
+      ...CALENDAR_SHIFT_LEGEND.map((item) => ({ label: item.label, color: item.color })),
+      { label: 'تعطیلات', color: '#ef4444' },
+      { label: 'سایر رویداد ها', color: '#94a3b8' },
+    ],
+    cells,
+    defaultSelectedDay,
+    canGoPrev,
+    canGoNext,
+    prevMonth,
+    nextMonth,
+    shiftTemplates,
+  };
+}
+
 export async function listPolicies() {
   const tenantId = await requireTenantId();
   return prisma.workPolicy.findMany({
@@ -190,7 +329,7 @@ export async function listEmployees() {
     where: { tenantId },
     include: {
       organizationUnits: { where: { organizationUnit: { tenantId } }, include: { organizationUnit: true } },
-      workGroupMemberships: { where: { workGroup: { tenantId } }, include: { workGroup: true } },
+      workGroupMemberships: { where: { workGroup: { tenantId }, isCurrent: true }, include: { workGroup: true } },
     },
     orderBy: { createdAt: 'desc' },
   });
@@ -202,7 +341,7 @@ export async function getEmployee(id: string) {
     where: { id, tenantId },
     include: {
       organizationUnits: { where: { organizationUnit: { tenantId } }, include: { organizationUnit: true } },
-      workGroupMemberships: { where: { workGroup: { tenantId } }, include: { workGroup: true } },
+      workGroupMemberships: { where: { workGroup: { tenantId }, isCurrent: true }, include: { workGroup: true } },
     },
   });
 }
@@ -214,13 +353,38 @@ export async function listWorkGroups() {
     include: {
       location: true,
       policy: { include: { calendar: true } },
-      members: { where: { employee: { tenantId } }, include: { employee: true } },
+      members: {
+        where: { employee: { tenantId } },
+        include: { employee: true },
+        orderBy: { joinedAt: 'desc' },
+      },
     },
     orderBy: { updatedAt: 'desc' },
+  });
+}
+
+export async function getWorkGroup(id: string) {
+  const tenantId = await requireTenantId();
+  return prisma.workGroup.findFirst({
+    where: { id, tenantId },
+    include: {
+      location: true,
+      policy: { include: { calendar: true } },
+      members: {
+        where: { employee: { tenantId } },
+        include: { employee: true },
+        orderBy: { joinedAt: 'desc' },
+      },
+    },
   });
 }
 
 export async function listDraftTemplates() {
   const tenantId = await requireTenantId();
   return prisma.draftTemplate.findMany({ where: { tenantId }, orderBy: { updatedAt: 'desc' } });
+}
+
+export async function getDraftTemplate(id: string) {
+  const tenantId = await requireTenantId();
+  return prisma.draftTemplate.findFirst({ where: { id, tenantId } });
 }

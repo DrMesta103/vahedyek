@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Check, CheckCircle2 } from 'lucide-react';
+import { MinimalScroll } from '../../../components/MinimalScroll';
 import Step1Location from './Step1Location';
 import Step2CalendarShift from './Step2CalendarShift';
 import Step3Policy from './Step3Policy';
@@ -178,7 +179,7 @@ export function QuickSetupFlow({
         </section>
 
         <section className="rounded-[28px] border border-white/10 bg-slate-800/65 px-4 py-5 sm:px-5">
-          <div className="overflow-x-auto">
+          <MinimalScroll variant="horizontal">
             <div className="mx-auto flex min-w-max items-start justify-center gap-5">
               {STEPS.map((item) => (
                 <StepHeader
@@ -191,7 +192,7 @@ export function QuickSetupFlow({
                 />
               ))}
             </div>
-          </div>
+          </MinimalScroll>
           <div className="mt-4 border-t border-white/10 pt-4 text-center">
             <div className="text-sm font-bold text-white">{currentStepMeta.title}</div>
             <div className="mt-1 text-xs text-slate-400">{currentStepMeta.description}</div>

@@ -20,3 +20,12 @@ export function policyBreadcrumbs(...trail: ModuleBreadcrumb[]): ModuleBreadcrum
     ...trail,
   ];
 }
+
+export function calendarBreadcrumbs(...trail: ModuleBreadcrumb[]): ModuleBreadcrumb[] {
+  return [
+    { label: 'دسترنج', href: '/' },
+    { label: 'تنظیمات کسب و کار', href: '/business-settings' },
+    { label: 'تقویم', href: '/calendars' },
+    ...trail,
+  ];
+}

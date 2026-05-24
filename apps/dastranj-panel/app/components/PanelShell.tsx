@@ -7,6 +7,7 @@ import { ChevronLeft } from 'lucide-react';
 import { getActiveNavigationItem } from '../lib/navigation';
 import { OrbitMenu } from './OrbitMenu';
 import PageDocsWidget from './PageDocsWidget';
+import { minimalScrollClass } from './MinimalScroll';
 import { Sidebar } from './Sidebar';
 
 export function PanelShell({ children }: { children: ReactNode }) {
@@ -14,13 +15,14 @@ export function PanelShell({ children }: { children: ReactNode }) {
   const activeItem = getActiveNavigationItem(pathname);
   const showOrbitMenu = pathname === '/';
   const isDevDocThreadsPage = pathname.startsWith('/dev-doc-threads');
+  const lockMainSidebar = pathname === '/draft-templates/new' || pathname.startsWith('/draft-templates/new/');
 
   return (
     <div className="app-shell">
       <PageDocsWidget />
-      <Sidebar activeItem={activeItem.id} />
+      <Sidebar activeItem={activeItem.id} forceCollapsed={lockMainSidebar} lockCollapsed={lockMainSidebar} />
       {showOrbitMenu ? (
-        <main className="main-content home-main-content">
+        <main className={minimalScrollClass('vertical', 'main-content home-main-content')}>
           <OrbitMenu activeItem={activeItem.id} />
           {children ? (
             <div className="main-stage">
@@ -31,7 +33,7 @@ export function PanelShell({ children }: { children: ReactNode }) {
           ) : null}
         </main>
       ) : (
-        <main className={`main-content${isDevDocThreadsPage ? '' : ' panel-route-main'}`}>
+        <main className={minimalScrollClass('vertical', `main-content${isDevDocThreadsPage ? '' : ' panel-route-main'}`)}>
           {isDevDocThreadsPage ? (
             <div className="main-stage">
               <div className="main-stage-content">
