@@ -236,6 +236,7 @@ export const RULE_CONFIGS: Record<ContractRuleId, RuleConfig> = fixMojibakeDeep(
           { key: 'progressSelectedScheduleKey', label: 'برنامه منتخب پیشرفت فیزیکی', type: 'text', placeholder: 'schedule-key' },
           { key: 'progressPercentageRows', label: 'ردیف‌های مبتنی بر درصد پیشرفت', type: 'text', placeholder: '[]' },
           { key: 'progressMilestoneRows', label: 'ردیف‌های مبتنی بر مرحله فیزیکی', type: 'text', placeholder: '[]' },
+          { key: 'progressExpandableGroups', label: 'گروه‌های اقساط مبتنی بر پیشرفت فیزیکی', type: 'text', placeholder: '[]' },
           { key: 'progressAllowContractOverride', label: 'اجازه تغییر در سطح قرارداد', type: 'switch' },
         ],
       },

@@ -1,5 +1,7 @@
 ﻿'use client';
 
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState, type ElementType, type ReactNode } from 'react';
 import {
   BadgePercent,
@@ -10,7 +12,9 @@ import {
   ClipboardPenLine,
   FileText,
   Layers3,
+  MoreVertical,
   Percent,
+  Pencil,
   SlidersHorizontal,
   Trash2,
   UserRoundCog,
@@ -31,6 +35,7 @@ import {
   RuleTabButton,
   TagPills,
 } from '@repo/ui';
+import { TagPill as DraftTagPill } from '../../contracts/new/_components/ContractFormPrimitives';
 import { AdjustmentRuleSection } from './AdjustmentRuleSection';
 import { DiscountRuleSection } from './DiscountRuleSection';
 import { ForgivenessRuleSection } from './ForgivenessRuleSection';
@@ -371,75 +376,145 @@ function PrepaymentTabContent({
   );
 }
 
-type ProgressPercentageRow = {
-  id: string;
-  triggerPercent: string;
-  value: string;
-};
-
-type ProgressMilestoneRow = {
-  id: string;
-  milestoneKey: string;
-  milestoneTitle: string;
-  value: string;
-};
-
 type ProgressBlockOption = {
   id: string;
   name: string;
 };
 
-function createProgressPercentageRow(): ProgressPercentageRow {
+type ProgressExpandableEntry = {
+  scheduleKey: string;
+  scheduleTitle: string;
+  blockId: string;
+  blockName: string;
+  stageId: string;
+  stageTitle: string;
+  progressValue: string;
+  amountMode: 'percent' | 'fixed';
+  value: string;
+};
+
+type ProgressExpandableGroup = {
+  id: string;
+  selectedScheduleKeys: string[];
+  selectedStageIds: string[];
+  entries: ProgressExpandableEntry[];
+};
+
+function createProgressExpandableGroup(): ProgressExpandableGroup {
   return {
     id: crypto.randomUUID(),
-    triggerPercent: '',
-    value: '',
+    selectedScheduleKeys: [],
+    selectedStageIds: [],
+    entries: [],
   };
 }
 
-function createProgressMilestoneRow(title = ''): ProgressMilestoneRow {
-  return {
-    id: crypto.randomUUID(),
-    milestoneKey: title,
-    milestoneTitle: title,
-    value: '',
-  };
-}
-
-function buildPercentageRowsFromSchedule(schedule: PhysicalProgressScheduleSummary): ProgressPercentageRow[] {
-  let cumulativePercent = 0;
-
-  return schedule.stages.map((stage) => {
-    cumulativePercent = Math.min(100, Math.round((cumulativePercent + stage.weight) * 100) / 100);
-    return {
-      id: crypto.randomUUID(),
-      triggerPercent: String(cumulativePercent),
-      value: '',
-    };
-  });
-}
-
-function buildMilestoneRowsFromSchedule(schedule: PhysicalProgressScheduleSummary): ProgressMilestoneRow[] {
-  return schedule.stages.map((stage) => ({
-    id: crypto.randomUUID(),
-    milestoneKey: stage.title,
-    milestoneTitle: stage.title,
-    value: '',
-  }));
-}
-
-function parseStringList(value: string | boolean | undefined) {
-  if (typeof value !== 'string' || !value.trim()) return [] as string[];
+function parseProgressExpandableGroups(value: string | boolean | undefined) {
+  if (typeof value !== 'string' || !value.trim()) return [] as ProgressExpandableGroup[];
   try {
     const parsed = JSON.parse(value);
-    return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === 'string' && item.trim().length > 0) : [];
+    if (!Array.isArray(parsed)) return [] as ProgressExpandableGroup[];
+    return parsed
+      .map((item) => {
+        if (!item || typeof item !== 'object') return null;
+        const group = item as Record<string, unknown>;
+        const selectedScheduleKeys = Array.isArray(group.selectedScheduleKeys)
+          ? group.selectedScheduleKeys.filter((entry): entry is string => typeof entry === 'string' && entry.trim().length > 0)
+          : [];
+        const selectedStageIds = Array.isArray(group.selectedStageIds)
+          ? group.selectedStageIds.filter((entry): entry is string => typeof entry === 'string' && entry.trim().length > 0)
+          : [];
+        const entries = Array.isArray(group.entries)
+          ? group.entries
+              .map((entry) => {
+                if (!entry || typeof entry !== 'object') return null;
+                const row = entry as Record<string, unknown>;
+                return {
+                  scheduleKey: typeof row.scheduleKey === 'string' ? row.scheduleKey : '',
+                  scheduleTitle: typeof row.scheduleTitle === 'string' ? row.scheduleTitle : '',
+                  blockId: typeof row.blockId === 'string' ? row.blockId : '',
+                  blockName: typeof row.blockName === 'string' ? row.blockName : '',
+                  stageId: typeof row.stageId === 'string' ? row.stageId : '',
+                  stageTitle: typeof row.stageTitle === 'string' ? row.stageTitle : '',
+                  progressValue: typeof row.progressValue === 'string' ? row.progressValue : '',
+                  amountMode: row.amountMode === 'fixed' ? 'fixed' : 'percent',
+                  value: typeof row.value === 'string' ? row.value : '',
+                } satisfies ProgressExpandableEntry;
+              })
+              .filter((entry): entry is ProgressExpandableEntry => Boolean(entry))
+          : [];
+
+        return {
+          id: typeof group.id === 'string' && group.id.trim() ? group.id : crypto.randomUUID(),
+          selectedScheduleKeys,
+          selectedStageIds,
+          entries,
+        } satisfies ProgressExpandableGroup;
+      })
+      .filter((item): item is ProgressExpandableGroup => Boolean(item));
   } catch {
-    return [];
+    return [] as ProgressExpandableGroup[];
   }
 }
 
-function serializeStringList(items: string[]) {
-  return JSON.stringify(items);
+function serializeProgressExpandableGroups(groups: ProgressExpandableGroup[]) {
+  return JSON.stringify(groups);
+}
+
+function syncProgressExpandableGroup(
+  group: ProgressExpandableGroup,
+  schedules: PhysicalProgressScheduleSummary[],
+): ProgressExpandableGroup {
+  const selectedScheduleKeys = Array.from(
+    new Set(group.selectedScheduleKeys.filter((scheduleKey) => schedules.some((schedule) => schedule.scheduleKey === scheduleKey))),
+  );
+  const selectedStageIdSet = new Set(group.selectedStageIds);
+  const normalizeStageKey = (value: string) => value.trim().toLocaleLowerCase('fa-IR');
+  const entryMap = new Map(group.entries.map((entry) => [entry.stageId, entry]));
+  const entryByScheduleAndTitle = new Map<string, ProgressExpandableEntry>(
+    group.entries.map((entry) => [`${entry.scheduleKey}::${normalizeStageKey(entry.stageTitle)}`, entry]),
+  );
+  const selectedStageTitleSet = new Set(
+    group.entries.map((entry) => `${entry.scheduleKey}::${normalizeStageKey(entry.stageTitle)}`),
+  );
+  const selectedStageIds: string[] = [];
+  const entries: ProgressExpandableEntry[] = [];
+
+  selectedScheduleKeys.forEach((scheduleKey) => {
+    const schedule = schedules.find((item) => item.scheduleKey === scheduleKey);
+    if (!schedule) return;
+
+    schedule.stages.forEach((stage) => {
+      const stageTitleKey = `${schedule.scheduleKey}::${normalizeStageKey(stage.title)}`;
+      const shouldIncludeStage =
+        schedule.stages.length === 1 || selectedStageIdSet.has(stage.id) || selectedStageTitleSet.has(stageTitleKey);
+      if (!shouldIncludeStage) return;
+      selectedStageIds.push(stage.id);
+      const currentEntry = entryMap.get(stage.id) ?? entryByScheduleAndTitle.get(stageTitleKey);
+      entries.push({
+        scheduleKey: schedule.scheduleKey,
+        scheduleTitle: schedule.title,
+        blockId: schedule.blockId,
+        blockName: schedule.blockName,
+        stageId: stage.id,
+        stageTitle: stage.title,
+        progressValue: currentEntry?.progressValue ?? '',
+        amountMode: currentEntry?.amountMode ?? 'percent',
+        value: currentEntry?.value ?? '',
+      });
+    });
+  });
+
+  return {
+    ...group,
+    selectedScheduleKeys,
+    selectedStageIds,
+    entries,
+  };
+}
+
+function isProgressGroupEmpty(group: ProgressExpandableGroup) {
+  return !group.selectedScheduleKeys.length && !group.selectedStageIds.length && !group.entries.length;
 }
 
 const INSTALLMENT_TOOLTIPS = {
@@ -451,28 +526,12 @@ const INSTALLMENT_TOOLTIPS = {
   progressAmountMode: 'تعیین می‌کند مبلغ هر قسط مبتنی بر پیشرفت، درصدی از مبلغ قرارداد باشد یا یک عدد ثابت.',
   progressCompletionAuthority: 'مرجعی که اعلام یا تایید او برای تحقق پیشرفت پروژه و فعال‌شدن قسط معتبر شناخته می‌شود.',
   progressAllowContractOverride: 'اگر فعال باشد، کارشناس مجاز می‌تواند این سیاست پروژه را در همان قرارداد خاص تغییر دهد.',
-  progressMeasurementBasis: 'مشخص می‌کند سنجش پیشرفت برای فعال‌شدن اقساط بر اساس کل پروژه، یک بلوک، یک یا چند برنامه، یا مرحله‌های یک برنامه انجام شود.',
-  progressSelectedBlockId: 'بلوک مرجعی که پیشرفت آن برای فعال‌سازی اقساط ملاک قرار می‌گیرد.',
-  progressSelectedScheduleKeys: 'برنامه‌هایی که در مبنای سنجش «برنامه» باید به‌عنوان مرجع پیشرفت انتخاب شوند.',
-  progressSelectedScheduleKey: 'برنامه پیشرفت فیزیکی مرجعی که مراحل یا وزن‌های آن برای این سیاست اقساط استفاده می‌شود.',
-  progressTriggerPercent: 'درصد پیشرفتی از پروژه که با رسیدن به آن، قسط متناظر باید فعال شود.',
+  progressSelectedScheduleKeys: 'می‌توانید در هر بخش پرداخت یک یا چند برنامه ثبت‌شده را به‌عنوان مبنای تعریف مرحله‌ها انتخاب کنید.',
+  progressMilestone: 'مرحله‌های هر برنامه به‌صورت جداگانه نمایش داده می‌شوند و انتخاب آن‌ها، فرم ثبت قسط همان مرحله را باز می‌کند.',
+  progressTriggerPercent: 'در این فیلد، درصد پیشرفت یا میزان تحقق مدنظر برای همان مرحله ثبت می‌شود.',
   progressAmountValue: 'مقدار قسطی که در اثر تحقق این شرط فعال می‌شود؛ بسته به روش محاسبه می‌تواند درصدی یا مبلغ ثابت باشد.',
-  progressMilestone: 'مرحله فیزیکی مشخصی از پروژه که تحقق آن، محرک فعال‌شدن این قسط خواهد بود.',
+  progressExpandableGroups: 'هر بخش پرداخت یک بسته مستقل از انتخاب برنامه‌ها، مرحله‌ها و مقادیر اقساط مبتنی بر پیشرفت فیزیکی است.',
 } as const;
-
-function parseGridRows<T>(value: string | boolean | undefined, fallbackFactory: () => T): T[] {
-  if (typeof value !== 'string' || !value.trim()) return [fallbackFactory()];
-  try {
-    const parsed = JSON.parse(value);
-    return Array.isArray(parsed) && parsed.length ? (parsed as T[]) : [fallbackFactory()];
-  } catch {
-    return [fallbackFactory()];
-  }
-}
-
-function serializeGridRows<T>(rows: T[]) {
-  return JSON.stringify(rows);
-}
 
 function SectionTitle({ title, hint }: { title: string; hint?: string }) {
   return (
@@ -480,31 +539,6 @@ function SectionTitle({ title, hint }: { title: string; hint?: string }) {
       <h4 className="text-[17px] font-black text-[color:var(--text-strong)]">{title}</h4>
       {hint ? <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">{hint}</p> : null}
     </div>
-  );
-}
-
-function InlineTabButton({
-  title,
-  active,
-  onClick,
-}: {
-  title: string;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        'relative flex-1 rounded-t-md border-b-2 px-4 py-3 text-center text-sm font-bold transition',
-        active
-          ? 'border-[#065f46] bg-[color-mix(in_srgb,#065f46_10%,white)] text-[#065f46]'
-          : 'border-transparent bg-transparent text-[color:var(--text-muted)] hover:bg-[color:var(--surface-soft)] hover:text-[color:var(--text-strong)]',
-      )}
-    >
-      {title}
-    </button>
   );
 }
 
@@ -539,9 +573,17 @@ function MiniRowButton({
 function InstallmentsTabContent({
   state,
   onValueChange,
+  progressBasedStandaloneHref,
+  standaloneProgressMode = false,
+  standaloneProgressGroupId,
+  onStandaloneProgressSubmit,
 }: {
   state: ContractRuleState;
   onValueChange: (key: string, value: string | boolean) => void;
+  progressBasedStandaloneHref?: string;
+  standaloneProgressMode?: boolean;
+  standaloneProgressGroupId?: string;
+  onStandaloneProgressSubmit?: (serializedGroups: string) => Promise<void>;
 }) {
   const isRegular = state.activeTab === 'regular';
   const isIrregular = state.activeTab === 'irregular';
@@ -555,81 +597,23 @@ function InstallmentsTabContent({
   const balloonEnabled = Boolean(state.values[balloonEnabledKey]);
   const intervalTagOptions = intervalOptions.map((option) => ({ value: option, label: option }));
   const balloonTagOptions = balloonOptions.map((option) => ({ value: option, label: option }));
-  const progressAmountMode = String(state.values.progressAmountMode || 'درصدی از مبلغ قرارداد');
-  const progressMeasurementBasis = String(state.values.progressMeasurementBasis || 'پروژه');
-  const progressSelectedBlockId = String(state.values.progressSelectedBlockId || '');
-  const progressSelectedScheduleKeys = useMemo(
-    () => parseStringList(state.values.progressSelectedScheduleKeys),
-    [state.values.progressSelectedScheduleKeys],
-  );
-  const progressSelectedScheduleKey = String(state.values.progressSelectedScheduleKey || '');
   const [progressBlocks, setProgressBlocks] = useState<ProgressBlockOption[]>([]);
   const [progressSchedules, setProgressSchedules] = useState<PhysicalProgressScheduleSummary[]>([]);
   const [scheduleLoading, setScheduleLoading] = useState(false);
-  const isStageMeasurement = progressMeasurementBasis === 'مرحله';
-  const isProgramMeasurement = progressMeasurementBasis === 'برنامه';
-  const isBlockMeasurement = progressMeasurementBasis === 'بلوک';
-  const isProjectMeasurement = progressMeasurementBasis === 'پروژه';
-  const activeMeasurementTitle = `تنظیمات مبتنی بر ${progressMeasurementBasis}`;
-  const activeMeasurementHint = isProjectMeasurement
-    ? 'تمام بخش‌های زیر بر اساس سنجش پیشرفت در سطح کل پروژه تنظیم می‌شوند.'
-    : isBlockMeasurement
-      ? 'تمام بخش‌های زیر بر اساس سنجش پیشرفت در سطح بلوک منتخب تنظیم می‌شوند.'
-      : isProgramMeasurement
-        ? 'تمام بخش‌های زیر بر اساس سنجش پیشرفت در سطح برنامه‌های منتخب تنظیم می‌شوند.'
-        : 'تمام بخش‌های زیر بر اساس سنجش پیشرفت در سطح مرحله‌های برنامه منتخب تنظیم می‌شوند.';
-
-  const percentageRows = useMemo(
-    () =>
-      parseGridRows<ProgressPercentageRow>(state.values.progressPercentageRows, createProgressPercentageRow).map((row) => ({
-        id: row.id,
-        triggerPercent: row.triggerPercent,
-        value: row.value,
-      })),
-    [state.values.progressPercentageRows],
+  const [openProgressGroupId, setOpenProgressGroupId] = useState('');
+  const [openProgressGroupMenuId, setOpenProgressGroupMenuId] = useState('');
+  const [progressGroupError, setProgressGroupError] = useState('');
+  const progressGroups = useMemo(
+    () => parseProgressExpandableGroups(state.values.progressExpandableGroups),
+    [state.values.progressExpandableGroups],
   );
-  const milestoneRows = useMemo(
-    () =>
-      parseGridRows<ProgressMilestoneRow>(state.values.progressMilestoneRows, createProgressMilestoneRow).map((row) => ({
-        id: row.id,
-        milestoneKey: row.milestoneKey,
-        milestoneTitle: row.milestoneTitle,
-        value: row.value,
-      })),
-    [state.values.progressMilestoneRows],
-  );
-  const blockSchedules = useMemo(
-    () => progressSchedules.filter((item) => item.blockId === progressSelectedBlockId),
-    [progressSchedules, progressSelectedBlockId],
-  );
-  const blockDerivedSchedule = useMemo(
-    () => [...blockSchedules].sort((left, right) => right.updatedAt.localeCompare(left.updatedAt))[0] ?? null,
-    [blockSchedules],
-  );
-  const selectedProgramSchedules = useMemo(
-    () => progressSchedules.filter((item) => progressSelectedScheduleKeys.includes(item.scheduleKey)),
-    [progressSchedules, progressSelectedScheduleKeys],
-  );
-  const selectedSchedule = useMemo(() => {
-    if (isStageMeasurement) {
-      return progressSchedules.find((item) => item.scheduleKey === progressSelectedScheduleKey) ?? null;
-    }
-
-    if (isBlockMeasurement) {
-      return blockDerivedSchedule;
-    }
-
-    return null;
-  }, [blockDerivedSchedule, isBlockMeasurement, isStageMeasurement, progressSchedules, progressSelectedScheduleKey]);
-  const selectedScheduleStagePreview = useMemo(
-    () =>
-      (selectedSchedule?.stages ?? []).map((stage) => ({
-        id: stage.id,
-        title: stage.title,
-        weight: stage.weight,
-      })),
-    [selectedSchedule],
-  );
+  const standaloneWorkingGroup = standaloneProgressMode
+    ? progressGroups.find((group) => group.id === standaloneProgressGroupId) ??
+      progressGroups.find((group) => group.id === openProgressGroupId) ??
+      progressGroups.find((group) => isProgressGroupEmpty(group)) ??
+      null
+    : null;
+  const visibleProgressGroups = standaloneProgressMode ? (standaloneWorkingGroup ? [standaloneWorkingGroup] : []) : progressGroups;
 
   useEffect(() => {
     if (!isProgressBased) return;
@@ -660,11 +644,376 @@ function InstallmentsTabContent({
     };
   }, [isProgressBased]);
 
-  const updatePercentageRows = (rows: ProgressPercentageRow[]) => onValueChange('progressPercentageRows', serializeGridRows(rows));
-  const updateMilestoneRows = (rows: ProgressMilestoneRow[]) => onValueChange('progressMilestoneRows', serializeGridRows(rows));
+  useEffect(() => {
+    if (!isProgressBased) return;
+    if (!progressGroups.length) {
+      if (standaloneProgressMode && !standaloneProgressGroupId) {
+        onValueChange('progressExpandableGroups', serializeProgressExpandableGroups([createProgressExpandableGroup()]));
+      }
+      return;
+    }
 
-  const valueColumnLabel =
-    progressAmountMode === 'درصدی از مبلغ قرارداد' ? 'درصد از مبلغ قرارداد' : 'مبلغ ثابت';
+    if (standaloneProgressMode && !standaloneProgressGroupId && !progressGroups.some((group) => isProgressGroupEmpty(group))) {
+      onValueChange('progressExpandableGroups', serializeProgressExpandableGroups([...progressGroups, createProgressExpandableGroup()]));
+    }
+  }, [isProgressBased, onValueChange, progressGroups, standaloneProgressGroupId, standaloneProgressMode]);
+
+  useEffect(() => {
+    if (!isProgressBased || !progressSchedules.length || !progressGroups.length) return;
+    const syncedGroups = progressGroups.map((group) => syncProgressExpandableGroup(group, progressSchedules));
+    if (JSON.stringify(syncedGroups) !== JSON.stringify(progressGroups)) {
+      onValueChange('progressExpandableGroups', serializeProgressExpandableGroups(syncedGroups));
+    }
+  }, [isProgressBased, onValueChange, progressGroups, progressSchedules]);
+
+  useEffect(() => {
+    if (!isProgressBased || !progressGroups.length) return;
+    if (!progressGroups.some((group) => group.id === openProgressGroupId)) {
+      setOpenProgressGroupId(progressGroups[progressGroups.length - 1]?.id ?? '');
+    }
+  }, [isProgressBased, openProgressGroupId, progressGroups]);
+
+  useEffect(() => {
+    if (!isProgressBased || !standaloneProgressMode || !standaloneWorkingGroup) return;
+    if (openProgressGroupId !== standaloneWorkingGroup.id) {
+      setOpenProgressGroupId(standaloneWorkingGroup.id);
+    }
+  }, [isProgressBased, openProgressGroupId, standaloneProgressMode, standaloneWorkingGroup]);
+
+  const updateProgressGroups = (groups: ProgressExpandableGroup[]) => {
+    onValueChange('progressExpandableGroups', serializeProgressExpandableGroups(groups));
+  };
+
+  const addProgressGroup = () => {
+    const existingEmptyGroup = progressGroups.find((group) => isProgressGroupEmpty(group));
+    if (existingEmptyGroup) {
+      setOpenProgressGroupId(existingEmptyGroup.id);
+      setOpenProgressGroupMenuId('');
+      setProgressGroupError('');
+      return;
+    }
+
+    const nextGroup = createProgressExpandableGroup();
+    updateProgressGroups([...progressGroups, nextGroup]);
+    setOpenProgressGroupId(nextGroup.id);
+    setOpenProgressGroupMenuId('');
+    setProgressGroupError('');
+  };
+
+  const updateSingleProgressGroup = (groupId: string, updater: (group: ProgressExpandableGroup) => ProgressExpandableGroup) => {
+    const nextGroups = progressGroups.map((group) =>
+      group.id === groupId ? syncProgressExpandableGroup(updater(group), progressSchedules) : group,
+    );
+    updateProgressGroups(nextGroups);
+  };
+
+  const removeProgressGroup = (groupId: string) => {
+    const nextGroups = progressGroups.filter((group) => group.id !== groupId);
+    if (!nextGroups.length) {
+      const fallbackGroup = createProgressExpandableGroup();
+      updateProgressGroups([fallbackGroup]);
+      setOpenProgressGroupId(fallbackGroup.id);
+      setOpenProgressGroupMenuId('');
+      return;
+    }
+
+    updateProgressGroups(nextGroups);
+    setOpenProgressGroupMenuId('');
+    if (openProgressGroupId === groupId) {
+      setOpenProgressGroupId(nextGroups[nextGroups.length - 1]?.id ?? '');
+    }
+  };
+
+  const toggleScheduleSelection = (groupId: string, scheduleKey: string) => {
+    updateSingleProgressGroup(groupId, (group) => {
+      const checked = group.selectedScheduleKeys.includes(scheduleKey);
+      return {
+        ...group,
+        selectedScheduleKeys: checked
+          ? group.selectedScheduleKeys.filter((item) => item !== scheduleKey)
+          : [...group.selectedScheduleKeys, scheduleKey],
+      };
+    });
+    setProgressGroupError('');
+  };
+
+  const toggleScheduleStagesSelection = (groupId: string, scheduleKey: string) => {
+    const schedule = progressSchedules.find((item) => item.scheduleKey === scheduleKey);
+    if (!schedule) return;
+
+    updateSingleProgressGroup(groupId, (group) => {
+      const stageIds = schedule.stages.map((stage) => stage.id);
+      const allSelected = stageIds.every((stageId) => group.selectedStageIds.includes(stageId));
+      return {
+        ...group,
+        selectedStageIds: allSelected
+          ? group.selectedStageIds.filter((stageId) => !stageIds.includes(stageId))
+          : Array.from(new Set([...group.selectedStageIds, ...stageIds])),
+      };
+    });
+    setProgressGroupError('');
+  };
+
+  const toggleSingleStageSelection = (groupId: string, stageId: string) => {
+    updateSingleProgressGroup(groupId, (group) => {
+      const checked = group.selectedStageIds.includes(stageId);
+      return {
+        ...group,
+        selectedStageIds: checked
+          ? group.selectedStageIds.filter((item) => item !== stageId)
+          : [...group.selectedStageIds, stageId],
+      };
+    });
+    setProgressGroupError('');
+  };
+
+  const updateProgressEntry = (
+    groupId: string,
+    stageId: string,
+    key: 'progressValue' | 'value' | 'amountMode',
+    value: string,
+  ) => {
+    updateSingleProgressGroup(groupId, (group) => ({
+      ...group,
+      entries: group.entries.map((entry) => (entry.stageId === stageId ? { ...entry, [key]: value } : entry)),
+    }));
+  };
+
+  const validateProgressGroup = (group: ProgressExpandableGroup) => {
+    if (!group.selectedScheduleKeys.length) return 'حداقل یک برنامه باید در این بخش انتخاب شود.';
+    if (!group.selectedStageIds.length) return 'حداقل یک مرحله باید در این بخش انتخاب شود.';
+    const invalidEntry = group.entries.find((entry) => !entry.progressValue.trim() || !entry.value.trim());
+    if (invalidEntry) {
+      return `برای مرحله «${invalidEntry.stageTitle}» هر دو فیلد میزان پیشرفت و مقدار قسط را تکمیل کنید.`;
+    }
+    return '';
+  };
+
+  const submitProgressGroup = async (groupId: string) => {
+    const group = progressGroups.find((item) => item.id === groupId);
+    if (!group) return;
+    const syncedGroup = syncProgressExpandableGroup(group, progressSchedules);
+    const validationError = validateProgressGroup(syncedGroup);
+    if (validationError) {
+      setProgressGroupError(validationError);
+      setOpenProgressGroupId(groupId);
+      return;
+    }
+
+    setProgressGroupError('');
+    const nextGroups = progressGroups.map((item) => (item.id === groupId ? syncedGroup : item));
+    const serializedNextGroups = serializeProgressExpandableGroups(nextGroups);
+
+    if (standaloneProgressMode && onStandaloneProgressSubmit) {
+      updateProgressGroups(nextGroups);
+      await onStandaloneProgressSubmit(serializedNextGroups);
+      return;
+    }
+
+    const existingEmptyGroup = nextGroups.find((item) => item.id !== groupId && isProgressGroupEmpty(item));
+
+    if (existingEmptyGroup) {
+      updateProgressGroups(nextGroups);
+      setOpenProgressGroupMenuId('');
+      setOpenProgressGroupId(existingEmptyGroup.id);
+      return;
+    }
+
+    const nextGroup = createProgressExpandableGroup();
+    updateProgressGroups([...nextGroups, nextGroup]);
+    setOpenProgressGroupMenuId('');
+    setOpenProgressGroupId(nextGroup.id);
+  };
+
+  const renderProgressGroupEditor = (group: ProgressExpandableGroup) => {
+    const selectedSchedules = progressSchedules.filter((schedule) => group.selectedScheduleKeys.includes(schedule.scheduleKey));
+    const canSubmitGroup = group.selectedScheduleKeys.length > 0 && group.selectedStageIds.length > 0;
+
+    return (
+      <div className="space-y-5">
+        <div
+          className={cn(
+            'space-y-4 rounded-2xl p-4',
+            standaloneProgressMode
+              ? 'bg-transparent'
+              : 'bg-transparent',
+          )}
+        >
+          <div className="text-right">
+            <FieldLabel label="برنامه‌های ثبت‌شده" required tooltip={INSTALLMENT_TOOLTIPS.progressSelectedScheduleKeys} />
+          </div>
+          <div
+            className={cn(
+              'flex flex-row-reverse flex-wrap justify-end gap-2 bg-transparent p-3',
+              standaloneProgressMode ? 'rounded-2xl bg-[color:var(--surface-soft)]/55' : 'rounded-2xl bg-[color:var(--surface-soft)]/55',
+            )}
+          >
+            {progressSchedules.map((schedule) => {
+              const checked = group.selectedScheduleKeys.includes(schedule.scheduleKey);
+              return (
+                <DraftTagPill
+                  key={schedule.scheduleKey}
+                  label={`${schedule.title} | ${schedule.blockName}`}
+                  active={checked}
+                  onClick={() => toggleScheduleSelection(group.id, schedule.scheduleKey)}
+                />
+              );
+            })}
+          </div>
+        </div>
+
+        {selectedSchedules.length ? (
+          <div className="space-y-4">
+            <FieldLabel label="مرحله‌های برنامه‌های منتخب" required tooltip={INSTALLMENT_TOOLTIPS.progressMilestone} />
+            <div
+              className={cn(
+                'space-y-4 bg-transparent p-4',
+                standaloneProgressMode ? 'rounded-2xl bg-[color:var(--surface-soft)]/45' : 'rounded-2xl bg-[color:var(--surface-soft)]/45',
+              )}
+            >
+              {selectedSchedules.map((schedule) => {
+                const scheduleStageIds = schedule.stages.map((stage) => stage.id);
+                const reversedStages = [...schedule.stages].reverse();
+                const allStagesSelected =
+                  scheduleStageIds.length > 0 &&
+                  scheduleStageIds.every((stageId) => group.selectedStageIds.includes(stageId));
+
+                return (
+                  <div
+                    key={schedule.scheduleKey}
+                    className={cn(
+                      'space-y-4 rounded-2xl bg-[linear-gradient(180deg,color-mix(in_srgb,var(--dark-teal)_4%,white),white_72%)] p-4 last:border-b-0',
+                      standaloneProgressMode ? 'shadow-[inset_0_0_0_1px_rgba(15,23,42,0.04)]' : 'border border-[color:var(--border-soft)]',
+                    )}
+                  >
+                    <div className="text-right">
+                      <p className="text-sm font-black text-[color:var(--text-strong)]">{schedule.title}</p>
+                      <p className="mt-1 text-xs text-[color:var(--text-muted)]">{schedule.blockName}</p>
+                    </div>
+
+                    <div
+                      className={cn(
+                        'flex flex-wrap justify-end gap-2 p-3 [direction:rtl]',
+                        standaloneProgressMode ? 'rounded-2xl bg-white/65' : 'rounded-2xl bg-white/65',
+                      )}
+                    >
+                      {schedule.stages.length > 1 ? (
+                        <DraftTagPill
+                          label="انتخاب همه"
+                          active={allStagesSelected}
+                          onClick={() => toggleScheduleStagesSelection(group.id, schedule.scheduleKey)}
+                        />
+                      ) : null}
+
+                      {reversedStages.map((stage) => {
+                        const isSingleStageSchedule = schedule.stages.length === 1;
+                        const checked = isSingleStageSchedule || group.selectedStageIds.includes(stage.id);
+                        const entry = group.entries.find((item) => item.stageId === stage.id);
+                        return (
+                          <DraftTagPill
+                            key={stage.id}
+                            label={`${stage.title} | ${stage.weight}٪`}
+                            active={checked}
+                            onClick={() => {
+                              if (!isSingleStageSchedule) toggleSingleStageSelection(group.id, stage.id);
+                            }}
+                          />
+                        );
+                      })}
+                    </div>
+
+                    <div className="space-y-3">
+                      {reversedStages.map((stage) => {
+                        const isSingleStageSchedule = schedule.stages.length === 1;
+                        const checked = isSingleStageSchedule || group.selectedStageIds.includes(stage.id);
+                        const entry = group.entries.find((item) => item.stageId === stage.id);
+                        if (!checked || !entry) return null;
+
+                        return (
+                          <div
+                            key={`${stage.id}-editor`}
+                            className={cn(
+                              'space-y-4 rounded-xl bg-white/70 p-4',
+                              standaloneProgressMode ? 'shadow-[inset_0_0_0_1px_rgba(15,23,42,0.06)]' : 'shadow-[inset_0_0_0_1px_rgba(15,23,42,0.05)]',
+                            )}
+                          >
+                            <div className="flex items-center justify-between gap-4">
+                              <div className="text-right">
+                                <p className="text-sm font-black text-[color:var(--text-strong)]">
+                                  {entry.stageTitle} | {entry.scheduleTitle} | {entry.blockName}
+                                </p>
+                              </div>
+                              <div className="flex flex-nowrap items-center gap-3 whitespace-nowrap">
+                                <span className="text-xs font-bold text-[color:var(--text-muted)]">روش محاسبه مبلغ</span>
+                                <BusinessSwitch
+                                  checked={entry.amountMode === 'percent'}
+                                  onChange={(checked) => updateProgressEntry(group.id, entry.stageId, 'amountMode', checked ? 'percent' : 'fixed')}
+                                  activeLabel="درصدی"
+                                  inactiveLabel="مبلغی"
+                                  className="business-switch progress-amount-mode-switch"
+                                />
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4 [direction:rtl]">
+                              <div className="flex h-full flex-col justify-between gap-3">
+                                <FieldLabel label="میزان پیشرفت" required tooltip={INSTALLMENT_TOOLTIPS.progressTriggerPercent} />
+                                <RuleTextInput
+                                  value={entry.progressValue}
+                                  onChange={(value) => updateProgressEntry(group.id, entry.stageId, 'progressValue', value)}
+                                  suffix="%"
+                                />
+                              </div>
+
+                              <div className="flex h-full flex-col justify-between gap-3">
+                                <FieldLabel
+                                  label={entry.amountMode === 'percent' ? 'درصد از مبلغ قرارداد' : 'مبلغ ثابت'}
+                                  required
+                                  tooltip={INSTALLMENT_TOOLTIPS.progressAmountValue}
+                                />
+                                <RuleTextInput
+                                  value={entry.value}
+                                  onChange={(value) => updateProgressEntry(group.id, entry.stageId, 'value', value)}
+                                  suffix={entry.amountMode === 'percent' ? '%' : 'تومان'}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ) : null}
+
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-[color:var(--text-muted)]">
+              {standaloneProgressMode
+                ? 'پس از ثبت، این بخش به فهرست اقساط مبتنی بر پیشرفت اضافه می‌شود.'
+                : 'ثبت این بخش انجام شد و می‌توانید بخش بعدی را تعریف کنید.'}
+            </span>
+          </div>
+          <button
+            type="button"
+            disabled={!canSubmitGroup}
+            onClick={() => void submitProgressGroup(group.id)}
+            className={cn(
+              'inline-flex min-w-[172px] items-center justify-center rounded-xl px-4 py-2.5 text-sm font-bold transition',
+              canSubmitGroup
+                ? 'bg-[#0f766e] text-white shadow-[0_10px_24px_rgba(15,118,110,0.22)] hover:bg-[#0b5f59]'
+                : 'cursor-not-allowed bg-[#cbd5e1] text-white shadow-none',
+            )}
+          >
+            {standaloneProgressMode ? 'ثبت بخش اقساط مبتنی بر پیشرفت' : 'ثبت و رفتن به بخش بعدی'}
+          </button>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-8 text-right">
@@ -702,348 +1051,141 @@ function InstallmentsTabContent({
       {isProgressBased ? (
         <>
           <p className="text-right text-base leading-8 text-[color:var(--text-strong)]">
-            در این مدل، محرک پرداخت وابسته به زمان نیست و اقساط زمانی فعال می‌شوند که پروژه به درصد مشخصی از پیشرفت یا به یک مرحله فیزیکی برسد.
+            در این مدل، محرک پرداخت وابسته به زمان نیست و اقساط بر اساس انتخاب برنامه‌ها و مرحله‌های ثبت‌شده پروژه تعریف می‌شوند.
           </p>
           <div className="border-t border-[color:var(--border-soft)]" />
 
-          <div className="space-y-4">
-            <FieldLabel label="مبنای سنجش پیشرفت" required tooltip={INSTALLMENT_TOOLTIPS.progressMeasurementBasis} />
-            <div className="overflow-hidden rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--surface)]">
-              <div className="flex w-full items-stretch border-b border-[color:var(--border-soft)]">
-                {['پروژه', 'بلوک', 'برنامه', 'مرحله'].map((item) => (
-                  <InlineTabButton
-                    key={item}
-                    title={item}
-                    active={progressMeasurementBasis === item}
-                    onClick={() => onValueChange('progressMeasurementBasis', item)}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-5 rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--surface)] p-5">
-            <div className="rounded-lg border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] px-4 py-3 text-right">
-              <p className="text-sm font-black text-[#065f46]">{activeMeasurementTitle}</p>
-              <p className="mt-1 text-sm leading-7 text-[color:var(--text-muted)]">{activeMeasurementHint}</p>
-            </div>
-
-            <div className="space-y-4">
-              <FieldLabel label="روش محاسبه مبلغ" required tooltip={INSTALLMENT_TOOLTIPS.progressAmountMode} />
-              <div className="flex justify-end">
-                <BusinessSwitch
-                  checked={progressAmountMode === 'درصدی از مبلغ قرارداد'}
-                  onChange={(checked) => onValueChange('progressAmountMode', checked ? 'درصدی از مبلغ قرارداد' : 'مبلغ ثابت')}
-                  activeLabel="درصدی از مبلغ قرارداد"
-                  inactiveLabel="مبلغ ثابت"
-                  className="business-switch progress-amount-mode-switch"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <FieldLabel label="مرجع اعلام/تأیید پیشرفت" required tooltip={INSTALLMENT_TOOLTIPS.progressCompletionAuthority} />
-              <UiChoicePills
-                options={['کارشناس پروژه', 'مدیر پروژه', 'گزارش رسمی پروژه'].map((item) => ({ value: item, label: item }))}
-                value={String(state.values.progressCompletionAuthority || 'کارشناس پروژه')}
-                onChange={(value) => onValueChange('progressCompletionAuthority', value)}
-                wrap
-                className="justify-end flex-row-reverse"
-              />
-            </div>
-
-            {!isProjectMeasurement ? (
-              <div className="space-y-4 rounded-md border border-[color:var(--border-soft)] bg-transparent p-4">
+          <div
+            className={cn(
+              'space-y-5 bg-[color:var(--surface)]',
+              standaloneProgressMode ? 'p-0' : 'rounded-2xl bg-[linear-gradient(180deg,color-mix(in_srgb,var(--dark-teal)_3%,white),white_78%)] p-5',
+            )}
+          >
+            <div
+              className={cn(
+                'space-y-4 bg-transparent',
+                standaloneProgressMode ? 'p-0' : 'rounded-2xl bg-white/70 p-4 shadow-[inset_0_0_0_1px_rgba(15,23,42,0.04)]',
+              )}
+            >
+              {!standaloneProgressMode && progressBasedStandaloneHref ? (
+                <Link
+                  href={progressBasedStandaloneHref}
+                  className="flex w-full items-center justify-between rounded-[24px] border border-[color:var(--border-soft)] bg-[color:var(--surface)] px-6 py-6 text-right transition hover:bg-[color:var(--surface-soft)]"
+                >
+                  <ChevronLeft className="h-6 w-6 shrink-0 text-[color:var(--text-muted)]" />
+                  <div className="space-y-2">
+                    <h3 className="text-xl font-black text-[color:var(--text-strong)]">افزودن بخش جدید اقساط مبتنی بر پیشرفت</h3>
+                    <p className="text-sm leading-7 text-[color:var(--text-muted)]">
+                      برای تعریف یک بخش جدید، انتخاب برنامه‌ها و مرحله‌های مرتبط را در صفحه بعد انجام دهید.
+                    </p>
+                  </div>
+                </Link>
+              ) : (
                 <SectionTitle
-                  title="اتصال به برنامه پیشرفت فیزیکی"
+                  title={standaloneProgressMode ? 'تعریف بخش جدید اقساط مبتنی بر پیشرفت' : 'بخش‌های پرداخت مبتنی بر پیشرفت'}
                   hint={
-                    isBlockMeasurement
-                      ? 'در این حالت، آخرین برنامه فعال بلوک منتخب به‌عنوان مرجع سنجش پیشرفت و مراحل فیزیکی استفاده می‌شود.'
-                      : isProgramMeasurement
-                        ? 'در این حالت، می‌توانید یک یا چند برنامه را انتخاب کنید و پیشرفت بر اساس همان برنامه‌ها سنجیده می‌شود.'
-                        : 'در این حالت، ابتدا برنامه را انتخاب می‌کنید و سپس مرحله‌های همان برنامه را برای رصد و تعریف اقساط می‌بینید.'
+                    standaloneProgressMode
+                      ? 'ابتدا برنامه‌های مدنظر را انتخاب کنید تا مرحله‌های همان برنامه‌ها نمایش داده شوند.'
+                      : 'بخش‌های ثبت‌شده اقساط مبتنی بر پیشرفت را از اینجا مشاهده و مدیریت کنید.'
                   }
                 />
+              )}
 
-                {isBlockMeasurement ? (
-                  <div className="space-y-4">
-                    <FieldLabel label="بلوک منتخب" required tooltip={INSTALLMENT_TOOLTIPS.progressSelectedBlockId} />
-                    <UiChoicePills
-                      options={progressBlocks.map((block) => ({ value: block.id, label: block.name }))}
-                      value={progressSelectedBlockId}
-                      onChange={(value) => onValueChange('progressSelectedBlockId', value)}
-                      wrap
-                      className="justify-end flex-row-reverse"
-                    />
-                    <p className="text-sm leading-7 text-[color:var(--text-muted)]">
-                      {scheduleLoading
-                        ? 'در حال دریافت بلوک‌ها و برنامه‌های پیشرفت فیزیکی...'
-                        : progressSelectedBlockId
-                          ? blockDerivedSchedule
-                            ? 'آخرین برنامه فعال این بلوک به‌عنوان مرجع اقساط استفاده خواهد شد.'
-                            : 'برای این بلوک هنوز برنامه پیشرفت فیزیکی ثبت نشده است.'
-                          : 'ابتدا بلوک مرجع را انتخاب کنید.'}
-                    </p>
-                  </div>
-                ) : isProgramMeasurement ? (
-                  <div className="space-y-4">
-                    <FieldLabel label="برنامه‌های منتخب" required tooltip={INSTALLMENT_TOOLTIPS.progressSelectedScheduleKeys} />
-                    <div className="flex flex-wrap justify-end gap-2 rounded-md border border-[color:var(--border-soft)] bg-[color:var(--surface)] p-3">
-                      {progressSchedules.map((schedule) => {
-                        const checked = progressSelectedScheduleKeys.includes(schedule.scheduleKey);
-                        return (
-                          <button
-                            key={schedule.scheduleKey}
-                            type="button"
-                            className={cn(
-                              'inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm transition',
-                              checked
-                                ? 'border-[#065f46] bg-[color-mix(in_srgb,#065f46_8%,white)] text-[#065f46]'
-                                : 'border-[color:var(--border-soft)] bg-transparent text-[color:var(--text-strong)] hover:bg-[color:var(--surface-soft)]',
-                            )}
-                            onClick={() => {
-                              const next = checked
-                                ? progressSelectedScheduleKeys.filter((item) => item !== schedule.scheduleKey)
-                                : [...progressSelectedScheduleKeys, schedule.scheduleKey];
-                              onValueChange('progressSelectedScheduleKeys', serializeStringList(next));
-                            }}
-                          >
-                            <span>{schedule.title}</span>
-                            <span className="text-xs opacity-80">{schedule.blockName}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                    <p className="text-sm leading-7 text-[color:var(--text-muted)]">
-                      {scheduleLoading ? 'در حال دریافت برنامه‌های پیشرفت فیزیکی...' : 'هر برنامه منتخب، مرجع درصد پیشرفت خود را خواهد داشت.'}
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    <FieldLabel label="برنامه منتخب" required tooltip={INSTALLMENT_TOOLTIPS.progressSelectedScheduleKey} />
-                    <UiChoicePills
-                      options={progressSchedules.map((schedule) => ({ value: schedule.scheduleKey, label: `${schedule.title} | ${schedule.blockName}` }))}
-                      value={progressSelectedScheduleKey}
-                      onChange={(value) => onValueChange('progressSelectedScheduleKey', value)}
-                      wrap
-                      className="justify-end flex-row-reverse"
-                    />
-                    <p className="text-sm leading-7 text-[color:var(--text-muted)]">
-                      {scheduleLoading ? 'در حال دریافت برنامه‌های پیشرفت فیزیکی...' : 'برنامه‌های پیشرفت فیزیکی از بخش تنظیمات پروژه خوانده می‌شوند.'}
-                    </p>
-                  </div>
-                )}
-
-                {isProgramMeasurement && selectedProgramSchedules.length ? (
-                  <div className="space-y-4 rounded-md border border-[color:var(--border-soft)] bg-transparent p-4">
-                    <div className="text-right">
-                      <p className="text-sm font-black text-[color:var(--text-strong)]">برنامه‌های منتخب</p>
-                      <p className="mt-1 text-xs text-[color:var(--text-muted)]">
-                        {selectedProgramSchedules.length} برنامه برای سنجش پیشرفت این سیاست انتخاب شده است.
-                      </p>
-                    </div>
-                    <div className="flex flex-wrap justify-end gap-2">
-                      {selectedProgramSchedules.map((schedule) => (
-                        <span
-                          key={schedule.scheduleKey}
-                          className="inline-flex items-center gap-2 rounded-full border border-[color:var(--border-soft)] px-3 py-1 text-xs text-[color:var(--text-muted)]"
-                        >
-                          <span>{schedule.title}</span>
-                          <span className="font-black text-[color:var(--text-strong)]">{schedule.blockName}</span>
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
-
-                {selectedSchedule ? (
-                  <div className="space-y-4 rounded-md border border-[color:var(--border-soft)] bg-transparent p-4">
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <div className="text-right">
-                        <p className="text-sm font-black text-[color:var(--text-strong)]">{selectedSchedule.title}</p>
-                        <p className="mt-1 text-xs text-[color:var(--text-muted)]">
-                          {selectedSchedule.stageCount} مرحله برای بلوک {selectedSchedule.blockName} | جمع وزن {selectedSchedule.totalWeight}٪
-                        </p>
-                      </div>
-                      {isStageMeasurement ? (
-                        <MiniRowButton onClick={() => updateMilestoneRows(buildMilestoneRowsFromSchedule(selectedSchedule))}>
-                          همگام‌سازی مراحل
-                        </MiniRowButton>
-                      ) : (
-                        <MiniRowButton onClick={() => updatePercentageRows(buildPercentageRowsFromSchedule(selectedSchedule))}>
-                          ساخت ردیف‌ها از برنامه پروژه
-                        </MiniRowButton>
-                      )}
-                    </div>
-
-                    <div className="flex flex-wrap justify-end gap-2">
-                      {selectedScheduleStagePreview.map((stage) => (
-                        <span
-                          key={stage.id}
-                          className="inline-flex items-center gap-2 rounded-full border border-[color:var(--border-soft)] px-3 py-1 text-xs text-[color:var(--text-muted)]"
-                        >
-                          <span>{stage.title}</span>
-                          <span className="font-black text-[color:var(--text-strong)]">{stage.weight}٪</span>
-                        </span>
-                      ))}
-                    </div>
-
-                    <p className="text-xs leading-7 text-[color:var(--text-muted)]">
-                      {isStageMeasurement
-                        ? 'در این حالت، اقساط از همان مراحل فیزیکی تعریف‌شده در برنامه پروژه تغذیه می‌شوند.'
-                        : 'در این حالت، درصدهای محرک می‌توانند از وزن تجمعی مراحل برنامه پروژه ساخته شوند تا با ساختار واقعی پیشرفت پروژه هم‌خوان بمانند.'}
-                    </p>
-                  </div>
-                ) : (
-                  <div className="rounded-md border border-[color:var(--border-soft)] bg-transparent p-4 text-sm leading-7 text-[color:var(--text-muted)]">
-                    {isBlockMeasurement
-                      ? 'برای اثر گرفتن این سیاست از پیشرفت بلوک، یک بلوک دارای برنامه فعال انتخاب کنید.'
-                      : isProgramMeasurement
-                        ? 'برای اثر گرفتن این سیاست از پیشرفت برنامه، یک یا چند برنامه ثبت‌شده را انتخاب کنید.'
-                        : 'برای اثر گرفتن این سیاست از مرحله، ابتدا برنامه مرجع را انتخاب کنید.'}
-                  </div>
-                )}
-              </div>
-            ) : null}
-
-            {isProjectMeasurement ? (
-              <div className="rounded-md border border-[color:var(--border-soft)] bg-transparent p-4 text-sm leading-7 text-[color:var(--text-muted)]">
-                در این حالت، سنجش پیشرفت بر اساس کل پروژه و مجموع برنامه‌های ثبت‌شده انجام می‌شود؛ بنابراین نیازی به انتخاب برنامه وجود ندارد.
-              </div>
-            ) : null}
-
-            {!isStageMeasurement ? (
-              <div className="space-y-4">
-                <SectionTitle
-                  title="جدول اقساط مبتنی بر درصد پیشرفت"
-                  hint={
-                    !isProjectMeasurement && selectedSchedule
-                      ? 'در هر ردیف مشخص کنید با رسیدن پروژه به چه درصدی از پیشرفت، چه مبلغی فعال شود. در صورت نیاز می‌توانید ردیف‌ها را از وزن تجمعی مراحل برنامه پروژه بسازید.'
-                      : 'در هر ردیف مشخص کنید با رسیدن پروژه به چه درصدی از پیشرفت، چه مبلغی از قرارداد فعال شود.'
-                  }
-                />
-                <div className="space-y-3 rounded-md border border-[color:var(--border-soft)] bg-transparent p-4">
-                  {percentageRows.map((row, index) => (
-                    <div key={row.id} className="space-y-3 rounded-md border border-[color:var(--border-soft)] bg-transparent p-4">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-black text-[color:var(--text-strong)]">مرحله پرداخت {index + 1}</span>
-                        <MiniRowButton
-                          tone="danger"
-                          ariaLabel={`حذف مرحله پرداخت ${index + 1}`}
-                          onClick={() => updatePercentageRows(percentageRows.length > 1 ? percentageRows.filter((item) => item.id !== row.id) : [createProgressPercentageRow()])}
-                        >
-                          <Trash2 className="h-4 w-4" aria-hidden="true" />
-                        </MiniRowButton>
-                      </div>
-
-                      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:[direction:rtl]">
-                        <div className="space-y-2">
-                          <FieldLabel label="درصد پیشرفت محرک" required tooltip={INSTALLMENT_TOOLTIPS.progressTriggerPercent} />
-                          <RuleTextInput
-                            value={row.triggerPercent}
-                            onChange={(value) =>
-                              updatePercentageRows(percentageRows.map((item) => (item.id === row.id ? { ...item, triggerPercent: value } : item)))
-                            }
-                            suffix="%"
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <FieldLabel label={valueColumnLabel} required tooltip={INSTALLMENT_TOOLTIPS.progressAmountValue} />
-                          <RuleTextInput
-                            value={row.value}
-                            onChange={(value) =>
-                              updatePercentageRows(percentageRows.map((item) => (item.id === row.id ? { ...item, value } : item)))
-                            }
-                            suffix={progressAmountMode === 'درصدی از مبلغ قرارداد' ? '%' : 'تومان'}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-
-                  <div className="flex justify-end">
-                    <MiniRowButton onClick={() => updatePercentageRows([...percentageRows, createProgressPercentageRow()])}>افزودن ردیف</MiniRowButton>
-                  </div>
+              {progressGroupError ? (
+                <div className="rounded-md border border-[#fecdd3] bg-[#fff1f2] px-4 py-3 text-sm leading-7 text-[#be123c]">
+                  {progressGroupError}
                 </div>
-              </div>
-            ) : null}
+              ) : null}
 
-            {isStageMeasurement ? (
-              <div className="space-y-4">
-                <SectionTitle
-                  title="جدول اقساط مبتنی بر مرحله فیزیکی"
-                  hint="هر ردیف به تحقق یک رویداد فیزیکی وابسته است؛ با ثبت آن رویداد، قسط متناظر فعال می‌شود."
-                />
-                <div className="space-y-3 rounded-md border border-[color:var(--border-soft)] bg-transparent p-4">
-                  {milestoneRows.map((row, index) => (
-                    <div key={row.id} className="space-y-3 rounded-md border border-[color:var(--border-soft)] bg-transparent p-4">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-black text-[color:var(--text-strong)]">مرحله {index + 1}</span>
-                        <MiniRowButton
-                          tone="danger"
-                          ariaLabel={`حذف مرحله ${index + 1}`}
-                          onClick={() => updateMilestoneRows(milestoneRows.length > 1 ? milestoneRows.filter((item) => item.id !== row.id) : [createProgressMilestoneRow()])}
-                        >
-                          <Trash2 className="h-4 w-4" aria-hidden="true" />
-                        </MiniRowButton>
-                      </div>
+              {scheduleLoading ? (
+                <div className="rounded-md border border-[color:var(--border-soft)] bg-transparent p-4 text-sm leading-7 text-[color:var(--text-muted)]">
+                  در حال دریافت برنامه‌ها و مرحله‌های پیشرفت فیزیکی...
+                </div>
+              ) : null}
 
-                      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:[direction:rtl]">
-                        <div className="space-y-2">
-                          <FieldLabel label="مرحله فیزیکی" required tooltip={INSTALLMENT_TOOLTIPS.progressMilestone} />
-                          {selectedSchedule?.stages.length ? (
-                            <select
-                              value={row.milestoneKey}
-                              onChange={(event) =>
-                                updateMilestoneRows(
-                                  milestoneRows.map((item) =>
-                                    item.id === row.id
-                                      ? { ...item, milestoneKey: event.target.value, milestoneTitle: event.target.value }
-                                      : item,
-                                  ),
-                                )
-                              }
-                              className={RULE_PANEL_SELECT_CLASSNAME}
-                            >
-                              <option value="">انتخاب مرحله</option>
-                              {selectedSchedule.stages.map((stage) => (
-                                <option key={stage.id} value={stage.title} className="bg-[color:var(--surface)] text-[color:var(--text-strong)]">
-                                  {stage.title}
-                                </option>
-                              ))}
-                            </select>
+              {!scheduleLoading && !progressSchedules.length ? (
+                <div className="rounded-md border border-[color:var(--border-soft)] bg-transparent p-4 text-sm leading-7 text-[color:var(--text-muted)]">
+                  هنوز هیچ برنامه پیشرفت فیزیکی برای پروژه ثبت نشده است.
+                </div>
+              ) : null}
+
+              {standaloneProgressMode && standaloneWorkingGroup ? (
+                <div className="rounded-2xl bg-[color:var(--surface)] p-0">
+                  {renderProgressGroupEditor(standaloneWorkingGroup)}
+                </div>
+              ) : null}
+
+              {!standaloneProgressMode ? (
+                <div className="space-y-3">
+                  {visibleProgressGroups
+                    .filter((group) => !isProgressGroupEmpty(group))
+                    .map((group, index) => {
+                  const selectedSchedules = progressSchedules.filter((schedule) => group.selectedScheduleKeys.includes(schedule.scheduleKey));
+                  const selectedBlocks = progressBlocks.filter((block) =>
+                    selectedSchedules.some((schedule) => schedule.blockId === block.id),
+                  );
+
+                  return (
+                    <div
+                      key={group.id}
+                      className="overflow-visible rounded-2xl bg-[linear-gradient(180deg,rgba(255,255,255,0.96),color-mix(in_srgb,var(--dark-teal)_5%,white))] shadow-[inset_0_0_0_1px_rgba(15,23,42,0.05)]"
+                    >
+                      <div className="flex w-full items-center justify-between gap-3 px-4 py-4 text-right">
+                        <div className="flex-1 space-y-1">
+                          <div className="flex flex-wrap items-center justify-end gap-2">
+                            <span className="text-sm font-black text-[color:var(--text-strong)]">
+                              بخش {index + 1} اقساط مبتنی بر پیشرفت
+                            </span>
+                            <span className="rounded-full bg-white/85 px-3 py-1 text-xs font-bold text-[color:var(--dark-teal)] shadow-[inset_0_0_0_1px_rgba(15,118,110,0.12)]">
+                              {group.selectedScheduleKeys.length} برنامه
+                            </span>
+                            <span className="rounded-full bg-white/85 px-3 py-1 text-xs font-bold text-[color:var(--dark-teal)] shadow-[inset_0_0_0_1px_rgba(15,118,110,0.12)]">
+                              {group.selectedStageIds.length} مرحله
+                            </span>
+                          </div>
+                          {selectedBlocks.length ? (
+                            <p className="text-xs leading-6 text-[color:var(--text-muted)]">
+                              بلوک‌های درگیر: {selectedBlocks.map((block) => block.name).join('، ')}
+                            </p>
                           ) : (
-                            <RuleTextInput
-                              value={row.milestoneTitle}
-                              onChange={(value) =>
-                                updateMilestoneRows(milestoneRows.map((item) => (item.id === row.id ? { ...item, milestoneKey: value, milestoneTitle: value } : item)))
-                              }
-                              placeholder="مثلاً اتمام اسکلت"
-                            />
+                            <p className="text-xs leading-6 text-[color:var(--text-muted)]">هنوز برنامه یا مرحله‌ای در این بخش پرداخت انتخاب نشده است.</p>
                           )}
                         </div>
-
-                        <div className="space-y-2">
-                          <FieldLabel label={valueColumnLabel} required tooltip={INSTALLMENT_TOOLTIPS.progressAmountValue} />
-                          <RuleTextInput
-                            value={row.value}
-                            onChange={(value) =>
-                              updateMilestoneRows(milestoneRows.map((item) => (item.id === row.id ? { ...item, value } : item)))
-                            }
-                            suffix={progressAmountMode === 'درصدی از مبلغ قرارداد' ? '%' : 'تومان'}
-                          />
+                        <div className="relative">
+                          <button
+                            type="button"
+                            className="business-block-card-menu"
+                            aria-label={`گزینه‌های بخش پرداخت ${index + 1}`}
+                            onClick={() => setOpenProgressGroupMenuId((current) => (current === group.id ? '' : group.id))}
+                          >
+                            <MoreVertical />
+                          </button>
+                          {openProgressGroupMenuId === group.id ? (
+                            <div className="business-block-menu-popover left-0 right-auto">
+                              <Link
+                                href={`/business-settings/contract-rules/installments/progress-based?groupId=${group.id}`}
+                                onClick={() => setOpenProgressGroupMenuId('')}
+                              >
+                                <Pencil /> ویرایش
+                              </Link>
+                              <button type="button" onClick={() => removeProgressGroup(group.id)}>
+                                <Trash2 /> حذف
+                              </button>
+                            </div>
+                          ) : null}
                         </div>
                       </div>
                     </div>
-                  ))}
-
-                  <div className="flex justify-end">
-                    <MiniRowButton onClick={() => updateMilestoneRows([...milestoneRows, createProgressMilestoneRow()])}>افزودن ردیف</MiniRowButton>
-                  </div>
+                  );
+                })}
+                  {!visibleProgressGroups.filter((group) => !isProgressGroupEmpty(group)).length ? (
+                    <div className="rounded-2xl bg-white/70 p-4 text-sm leading-7 text-[color:var(--text-muted)] shadow-[inset_0_0_0_1px_rgba(15,23,42,0.04)]">
+                      هنوز بخشی برای اقساط مبتنی بر پیشرفت ثبت نشده است.
+                    </div>
+                  ) : null}
                 </div>
-              </div>
-            ) : null}
+              ) : null}
+            </div>
           </div>
         </>
       ) : null}
@@ -1329,7 +1471,20 @@ function AdditionalCostsTabContent({
   );
 }
 
-export function ContractRuleDetailsPanel({ ruleId }: { ruleId: ContractRuleId }) {
+export function ContractRuleDetailsPanel({
+  ruleId,
+  forcedTabId,
+  backHref,
+  submitRedirectHref,
+  standaloneProgressGroupId,
+}: {
+  ruleId: ContractRuleId;
+  forcedTabId?: string;
+  backHref?: string;
+  submitRedirectHref?: string;
+  standaloneProgressGroupId?: string;
+}) {
+  const router = useRouter();
   const rule = RULE_CONFIGS[ruleId];
   const isMinimalInstallments = ruleId === 'installments';
   const [loading, setLoading] = useState(true);
@@ -1351,7 +1506,13 @@ export function ContractRuleDetailsPanel({ ruleId }: { ruleId: ContractRuleId })
           throw new Error(payload.message || 'بارگذاری تنظیمات انجام نشد.');
         }
         const payload = (await response.json()) as ContractRuleState;
-        if (mounted) setState(payload);
+        if (mounted) {
+          setState(
+            forcedTabId && rule.tabs.some((tab) => tab.id === forcedTabId)
+              ? { ...payload, activeTab: forcedTabId }
+              : payload,
+          );
+        }
       } catch (loadError) {
         if (mounted) setError(loadError instanceof Error ? loadError.message : 'بارگذاری تنظیمات انجام نشد.');
       } finally {
@@ -1363,13 +1524,15 @@ export function ContractRuleDetailsPanel({ ruleId }: { ruleId: ContractRuleId })
     return () => {
       mounted = false;
     };
-  }, [ruleId]);
+  }, [forcedTabId, rule.tabs, ruleId]);
 
   const currentTab = useMemo(() => {
     if (!state) return rule.tabs[0] ?? null;
     return rule.tabs.find((tab) => tab.id === state.activeTab) ?? rule.tabs[0] ?? null;
   }, [rule, state]);
   const hasSelectedAdditionalCost = ruleId === 'additional-costs' && Boolean(state?.activeChip);
+  const showActivationSection = !forcedTabId;
+  const shouldShowRuleContent = forcedTabId ? true : Boolean(state?.active);
   const activationHeaderLgRow =
     ruleId === 'prepayment' ||
     ruleId === 'installments' ||
@@ -1419,6 +1582,48 @@ export function ContractRuleDetailsPanel({ ruleId }: { ruleId: ContractRuleId })
     }
   };
 
+  const handleStandaloneProgressSubmit = async (serializedGroups: string) => {
+    if (!state) return;
+
+    const nextState: ContractRuleState = {
+      ...state,
+      activeTab: 'progress-based',
+      values: {
+        ...state.values,
+        progressExpandableGroups: serializedGroups,
+      },
+    };
+
+    try {
+      setSaving(true);
+      setError('');
+      setMessage('');
+      setState(nextState);
+
+      const response = await fetch(`/api/business-settings/contract-rules/${ruleId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(nextState),
+      });
+
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => ({}))) as { message?: string };
+        throw new Error(payload.message || 'ذخیره تنظیمات انجام نشد.');
+      }
+
+      if (submitRedirectHref) {
+        router.push(submitRedirectHref);
+        return;
+      }
+
+      setMessage('تنظیمات با موفقیت ذخیره شد.');
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : 'ذخیره تنظیمات انجام نشد.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (loading || !state || !currentTab) {
     return (
       <section className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
@@ -1439,7 +1644,15 @@ export function ContractRuleDetailsPanel({ ruleId }: { ruleId: ContractRuleId })
             : 'rounded-[28px] bg-[color:var(--surface-overlay)] p-5 shadow-[0_18px_45px_var(--shadow-soft)] backdrop-blur',
         )}
       >
-        {!hasSelectedAdditionalCost ? (
+        {backHref ? (
+          <div className="flex justify-end">
+            <Link href={backHref} className="inline-flex items-center gap-2 text-sm font-bold text-[color:var(--theme-action-text)]">
+              <span>بازگشت</span>
+              <ChevronLeft className="h-4 w-4" />
+            </Link>
+          </div>
+        ) : null}
+        {!hasSelectedAdditionalCost && showActivationSection ? (
           <section
             className={cn(
               'border border-[color:var(--border-soft)] bg-[color:var(--surface)]',
@@ -1470,7 +1683,7 @@ export function ContractRuleDetailsPanel({ ruleId }: { ruleId: ContractRuleId })
           </section>
         ) : null}
 
-        {state.active ? (
+        {shouldShowRuleContent ? (
           <>
             {rule.chips?.length && ruleId !== 'adjustment' ? (
               <section
@@ -1506,11 +1719,11 @@ export function ContractRuleDetailsPanel({ ruleId }: { ruleId: ContractRuleId })
             ) : (
               <section
                 className={cn(
-                  'overflow-hidden border border-[color:var(--border-soft)] bg-[color:var(--surface)]',
+                  'overflow-hidden bg-[color:var(--surface)]',
                   isMinimalInstallments ? 'rounded-md' : 'rounded-[24px]',
                 )}
               >
-                {ruleId !== 'adjustment' ? (
+                {ruleId !== 'adjustment' && !forcedTabId ? (
                   <div className="flex flex-wrap border-b border-[color:var(--border-soft)]">
                     {rule.tabs.map((tab) => (
                       <TabButton
@@ -1530,7 +1743,18 @@ export function ContractRuleDetailsPanel({ ruleId }: { ruleId: ContractRuleId })
                   ) : ruleId === 'adjustment' ? (
                     <AdjustmentRuleSection state={state} onValueChange={(key, value) => applyPanelValue(setState, key, value)} />
                   ) : ruleId === 'installments' ? (
-                    <InstallmentsTabContent state={state} onValueChange={(key, value) => applyPanelValue(setState, key, value)} />
+                    <InstallmentsTabContent
+                      state={state}
+                      onValueChange={(key, value) => applyPanelValue(setState, key, value)}
+                      progressBasedStandaloneHref={
+                        !forcedTabId && state.activeTab === 'progress-based'
+                          ? '/business-settings/contract-rules/installments/progress-based'
+                          : undefined
+                      }
+                      standaloneProgressMode={forcedTabId === 'progress-based'}
+                      standaloneProgressGroupId={forcedTabId === 'progress-based' ? standaloneProgressGroupId : undefined}
+                      onStandaloneProgressSubmit={forcedTabId === 'progress-based' ? handleStandaloneProgressSubmit : undefined}
+                    />
                   ) : (
                     <>
                       <div className="rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] px-4 py-4 text-right">
@@ -1575,11 +1799,13 @@ export function ContractRuleDetailsPanel({ ruleId }: { ruleId: ContractRuleId })
         {error ? <div className={cn('border px-4 py-3 text-sm', isMinimalInstallments ? 'rounded-md border-[#e7c9cf] bg-transparent text-[#be123c]' : 'rounded-2xl border-[#fecdd3] bg-[#fff1f2] text-[#be123c]')}>{error}</div> : null}
       </div>
 
-      <div className="pointer-events-none fixed bottom-6 left-1/2 z-20 w-full max-w-6xl -translate-x-1/2 px-4 sm:px-6 lg:px-8">
-        <div className="flex w-full justify-end">
-          <BusinessSettingsSubmitButton saving={saving} onClick={() => void handleSave()} minimal={isMinimalInstallments} />
+      {!forcedTabId ? (
+        <div className="pointer-events-none fixed bottom-6 left-1/2 z-20 w-full max-w-6xl -translate-x-1/2 px-4 sm:px-6 lg:px-8">
+          <div className="flex w-full justify-end">
+            <BusinessSettingsSubmitButton saving={saving} onClick={() => void handleSave()} minimal={isMinimalInstallments} />
+          </div>
         </div>
-      </div>
+      ) : null}
     </section>
   );
 }
