@@ -126,7 +126,7 @@ export async function saveBusinessProfileAction(formData: FormData) {
   } else {
     await prisma.businessProfile.create({ data });
   }
-  revalidatePath('/account');
+  revalidatePath('/business-settings/profile');
   revalidatePath('/');
 }
 
@@ -895,11 +895,11 @@ export async function createCalendarDraftFromDefaultAction(data: {
       endDate: source.endDate,
       weekends: jsonValue(weekends as Prisma.InputJsonValue),
       singleHolidays: jsonValue(singleHolidays as Prisma.InputJsonValue),
-      shiftTitle: source.shiftTitle,
-      shiftTypeLabel: source.shiftTypeLabel,
-      shiftConfig: source.shiftConfig,
+      shiftTitle: '',
+      shiftTypeLabel: '',
+      shiftConfig: '{}',
       holidayCount,
-      totalShiftDays: source.totalShiftDays,
+      totalShiftDays: 0,
       totalEventDays: singleHolidays.length,
       status: 'active',
     },
@@ -1317,6 +1317,31 @@ export async function deleteEmployeeFromQuickSetupAction(id: string) {
   await prisma.employee.deleteMany({ where: { id, tenantId } });
   revalidatePath('/employees');
   revalidatePath('/quick-setup');
+}
+
+export async function updateEmployeeAction(formData: FormData) {
+  const tenantId = await getTenantId();
+  const id = value(formData, 'id');
+  await prisma.employee.updateMany({
+    where: { id, tenantId },
+    data: {
+      firstName: value(formData, 'firstName'),
+      lastName: value(formData, 'lastName'),
+      nationalId: value(formData, 'nationalId') || null,
+      mobile1: value(formData, 'mobile1') || null,
+      mobile2: value(formData, 'mobile2') || null,
+      email: value(formData, 'email') || null,
+      personnelCode: value(formData, 'personnelCode') || null,
+      avatarUrl: value(formData, 'avatarUrl') || null,
+      identityPhotoUrl: value(formData, 'identityPhotoUrl') || null,
+      maritalStatus: (value(formData, 'maritalStatus') || 'single') as never,
+      childrenCount: Number(value(formData, 'childrenCount') || '0'),
+      canEditIdentityPhoto: boolValue(formData, 'canEditIdentityPhoto'),
+    },
+  });
+  revalidatePath('/employees');
+  revalidatePath(`/employees/${id}`);
+  redirect(`/employees/${id}`);
 }
 
 export async function deleteEmployeeAction(formData: FormData) {

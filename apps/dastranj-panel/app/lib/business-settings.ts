@@ -16,20 +16,22 @@ export type BusinessSettingsItem = {
   description: string;
   href: string;
   icon: BusinessSettingsIcon;
+  comingSoon?: boolean;
 };
 
 export const BUSINESS_SETTINGS_CATALOG: BusinessSettingsItem[] = [
   {
     title: 'پروفایل کسب و کار',
     description: 'نام، لوگو، اطلاعات ثبتی، آدرس و سایر تنظیمات پایه کسب‌وکار را در این بخش وارد کنید.',
-    href: '/account',
+    href: '/business-settings/profile',
     icon: 'profile',
   },
   {
     title: 'مدیریت اشتراک',
     description: 'وضعیت پلن، روزهای باقی‌مانده، تمدید یا ارتقای اشتراک را از اینجا پیگیری کنید.',
-    href: '/account',
+    href: '/business-settings/profile',
     icon: 'subscription',
+    comingSoon: true,
   },
   {
     title: 'محل کار',

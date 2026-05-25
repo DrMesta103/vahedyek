@@ -158,7 +158,7 @@ export function CreateCalendarDialog({ open, yearLabel, onClose }: CreateCalenda
 
         <footer className="calendar-create-modal-footer">
           <button type="button" className="calendar-create-submit" disabled={!canSubmit || saving} onClick={handleSubmit}>
-            {saving ? 'در حال ثبت...' : 'تایید'}
+            {saving ? 'در حال ثبت...' : 'تأیید'}
           </button>
           <button type="button" className="calendar-create-cancel" disabled={saving} onClick={onClose}>
             انصراف
