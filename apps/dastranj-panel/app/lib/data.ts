@@ -1,3 +1,5 @@
+import { headers } from 'next/headers';
+import { redirect } from 'next/navigation';
 import { getSessionContext } from './auth';
 import { getGlobalDefaultCalendarTemplate } from './calendar-defaults';
 import { mapShiftTemplateRecord, type ShiftTemplatePickerItem } from './shift-template-picker';
@@ -27,9 +29,25 @@ async function getTenantId(): Promise<string | null> {
   return session?.tenantId ?? null;
 }
 
+async function getSelectTenantRedirectTarget() {
+  const requestHeaders = await headers();
+  const referer = requestHeaders.get('referer');
+  if (referer) {
+    try {
+      const url = new URL(referer);
+      const next = `${url.pathname}${url.search}${url.hash}`;
+      return `/select-tenant?next=${encodeURIComponent(next)}`;
+    } catch {
+      // Ignore malformed referer values and fall back to the default selector route.
+    }
+  }
+
+  return '/select-tenant';
+}
+
 async function requireTenantId(): Promise<string> {
   const tenantId = await getTenantId();
-  if (!tenantId) throw new Error('Active tenant is required for panel data access.');
+  if (!tenantId) redirect(await getSelectTenantRedirectTarget());
   return tenantId;
 }
 

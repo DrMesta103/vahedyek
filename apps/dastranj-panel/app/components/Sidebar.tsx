@@ -79,12 +79,12 @@ export function Sidebar({ activeItem = 'home', forceCollapsed = false, lockColla
   return (
     <aside className={`sidebar${effectiveCollapsed ? ' collapsed' : ''}${lockCollapsed ? ' locked-collapsed' : ''}`}>
       <div className="profile-item">
-        <div className="avatar-small" style={{ background: '#fb923c' }}>
+        <div className="avatar-small dastranj-user-avatar" style={{ background: '#fb923c' }}>
           <i className="fa fa-user"></i>
         </div>
         <div className="name">
           <div>{data?.user?.fullName ?? 'در حال بارگذاری...'}</div>
-          <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '2px' }}>{identityLabel}</div>
+          <div className="sidebar-subtitle">{identityLabel}</div>
         </div>
         <div className="back-btn" style={{ visibility: 'hidden' }} aria-hidden="true">
           <i className="fa fa-chevron-left"></i>
@@ -92,12 +92,12 @@ export function Sidebar({ activeItem = 'home', forceCollapsed = false, lockColla
       </div>
 
       <div className="profile-item">
-        <div className="avatar-small" style={{ background: '#111', fontSize: '10px' }}>
+        <div className="avatar-small dastranj-tenant-avatar">
           {data?.tenant?.brandCode ?? 'TEN'}
         </div>
-        <div className="name" style={{ color: '#6b7280' }}>
+        <div className="name sidebar-tenant-copy">
           <div>{data?.tenant?.name ?? 'tenant'}</div>
-          <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '2px' }}>{data?.tenant?.slug ?? ''}</div>
+          <div className="sidebar-subtitle">{data?.tenant?.slug ?? ''}</div>
         </div>
         <button
           type="button"
