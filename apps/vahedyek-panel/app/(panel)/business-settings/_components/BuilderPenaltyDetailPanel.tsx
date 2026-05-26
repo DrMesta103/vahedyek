@@ -59,10 +59,6 @@ const SECTION_COPY: Record<BuilderPenaltySectionId, { activationTitle: string; a
     activationDescription:
       'در صورت فعال بودن، تغییرات مهم در مصالح یا مشخصات واحد طبق این تنظیمات بررسی می‌شود و می‌تواند منجر به جبران، اصلاح، توافق مالی یا حق فسخ شود.',
   },
-  'area-difference': {
-    activationTitle: 'جریمه اختلاف متراژ',
-    activationDescription: 'در این بخش شرایط و نحوه محاسبه جریمه اختلاف متراژ تعریف می‌شود.',
-  },
 };
 
 function NumberField({

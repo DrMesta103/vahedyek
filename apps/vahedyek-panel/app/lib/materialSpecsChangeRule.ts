@@ -1,4 +1,4 @@
-export type MaterialSpecsOptionDetail = {
+﻿export type MaterialSpecsOptionDetail = {
   description: string;
   effectLabel: string;
   effect: string;

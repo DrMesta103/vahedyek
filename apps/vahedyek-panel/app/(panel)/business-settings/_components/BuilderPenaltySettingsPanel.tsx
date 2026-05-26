@@ -16,10 +16,10 @@ import {
 import { RuleStatusTag } from './RuleStatusTag';
 
 type BuilderPenaltySection = {
-  id: 'unit-delivery-delay' | 'material-specs-change' | 'area-difference';
+  id: 'unit-delivery-delay' | 'material-specs-change';
   title: string;
   description: string;
-  stateKey: 'unitDeliveryDelayEnabled' | 'materialSpecsChangeEnabled' | 'areaDifferenceEnabled';
+  stateKey: 'unitDeliveryDelayEnabled' | 'materialSpecsChangeEnabled';
 };
 
 const BUILDER_PENALTY_SECTIONS: BuilderPenaltySection[] = [
@@ -34,12 +34,6 @@ const BUILDER_PENALTY_SECTIONS: BuilderPenaltySection[] = [
     title: 'تغییرات مهم مصالح و مشخصات واحد',
     description: 'تعیین می‌کند تغییرات مهم در مصالح یا مشخصات واحد چگونه بررسی شود و چه اقدام قراردادی برای آن قابل اعمال باشد.',
     stateKey: 'materialSpecsChangeEnabled',
-  },
-  {
-    id: 'area-difference',
-    title: 'اختلاف متراژ',
-    description: 'مشخص خواهد کرد که در صورت اختلاف متراژ وجود داشته باشد، جریمه سازنده چگونه محاسبه می‌شود',
-    stateKey: 'areaDifferenceEnabled',
   },
 ];
 
@@ -190,6 +184,9 @@ export function BuilderPenaltySettingsPanel() {
             </p>
             <p className="text-sm leading-6 text-[color:var(--text-muted)]">
               همین زیرصفحه‌ها در بخش جرایم سازنده داخل پیش‌نویس قرارداد هم مبنا هستند؛ بنابراین تغییر هر گزینه، روی ساختار پیش‌فرض قراردادهای جدید و نحوه تفسیر اختلافات در همان فلو اثر می‌گذارد.
+            </p>
+            <p className="rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] px-4 py-3 text-sm leading-6 text-[color:var(--text-muted)]">
+              اختلاف متراژ در این ماژول تعریف نمی‌شود، چون ماهیت آن حل‌وفصل مالی یا حق فسخ است، نه جریمه زمان‌محور. این موضوع از مسیر فسخ و تسویه مالی مدیریت می‌شود.
             </p>
             <div className="space-y-3">
               {BUILDER_PENALTY_SECTIONS.map((section) => (

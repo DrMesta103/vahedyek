@@ -1,7 +1,7 @@
 import { isPositiveDecimal, sanitizeDecimalInput, validateProgressiveRows } from './progressivePenalty';
 import type { ContractRuleState } from './businessContractRules';
 
-export type BuilderPenaltySectionId = 'unit-delivery-delay' | 'material-specs-change' | 'area-difference';
+export type BuilderPenaltySectionId = 'unit-delivery-delay' | 'material-specs-change';
 export type BuilderPenaltyMode = 'fixed' | 'percent' | 'progressive';
 
 export const BUILDER_PENALTY_PERIOD_OPTIONS = [
@@ -27,7 +27,7 @@ export const BUILDER_PENALTY_PERCENT_BASIS_OPTIONS = [
 type BuilderPenaltySectionConfig = {
   title: string;
   description: string;
-  stateKey: 'unitDeliveryDelayEnabled' | 'materialSpecsChangeEnabled' | 'areaDifferenceEnabled';
+  stateKey: 'unitDeliveryDelayEnabled' | 'materialSpecsChangeEnabled';
   modeKey: string;
   periodKey: string;
   fixedAmountKey: string;
@@ -85,21 +85,6 @@ export const BUILDER_PENALTY_SECTION_META: Record<BuilderPenaltySectionId, Build
       { fromKey: 'materialSpecsChangeProgressiveRow1From', toKey: 'materialSpecsChangeProgressiveRow1To', rateKey: 'materialSpecsChangeProgressiveRow1Rate' },
       { fromKey: 'materialSpecsChangeProgressiveRow2From', toKey: 'materialSpecsChangeProgressiveRow2To', rateKey: 'materialSpecsChangeProgressiveRow2Rate' },
       { fromKey: 'materialSpecsChangeProgressiveRow3From', toKey: 'materialSpecsChangeProgressiveRow3To', rateKey: 'materialSpecsChangeProgressiveRow3Rate' },
-    ],
-  },
-  'area-difference': {
-    title: 'اختلاف متراژ',
-    description: 'مشخص می‌کند جریمه اختلاف متراژ برای سازنده در چه شرایطی قابل استفاده باشد.',
-    stateKey: 'areaDifferenceEnabled',
-    modeKey: 'areaDifferenceMode',
-    periodKey: 'areaDifferencePeriod',
-    fixedAmountKey: 'areaDifferenceFixedAmount',
-    percentAmountKey: 'areaDifferencePercentAmount',
-    capKey: 'areaDifferencePenaltyCap',
-    progressiveRows: [
-      { fromKey: 'areaDifferenceProgressiveRow1From', toKey: 'areaDifferenceProgressiveRow1To', rateKey: 'areaDifferenceProgressiveRow1Rate' },
-      { fromKey: 'areaDifferenceProgressiveRow2From', toKey: 'areaDifferenceProgressiveRow2To', rateKey: 'areaDifferenceProgressiveRow2Rate' },
-      { fromKey: 'areaDifferenceProgressiveRow3From', toKey: 'areaDifferenceProgressiveRow3To', rateKey: 'areaDifferenceProgressiveRow3Rate' },
     ],
   },
 };

@@ -281,7 +281,6 @@ function buildBusinessSettingsBreadcrumb(pathname: string): Crumb[] {
           const builderPenaltyMap: Record<string, string> = {
             'unit-delivery-delay': 'تاخیر در تحویل واحد',
             'material-specs-change': 'تغییرات مهم مصالح و مشخصات واحد',
-            'area-difference': 'اختلاف متراژ',
           };
 
           if (builderPenaltySection && builderPenaltyMap[builderPenaltySection]) {
