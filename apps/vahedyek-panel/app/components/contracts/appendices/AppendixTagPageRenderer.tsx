@@ -7,6 +7,7 @@ import { AppendixPartiesEditor } from './AppendixPartiesEditor';
 import { AppendixAdjustmentEditor } from './AppendixAdjustmentEditor';
 import { AppendixContractBaseCostsEditor } from './AppendixContractBaseCostsEditor';
 import { AppendixLoanEditor } from './AppendixLoanEditor';
+import { AppendixMaterialSpecsChangeEditor } from './AppendixMaterialSpecsChangeEditor';
 import { AppendixSideCostsEditor } from './AppendixSideCostsEditor';
 import { useAppendixEditor } from './AppendixEditorContext';
 import type {
@@ -14,6 +15,7 @@ import type {
   AppendixContractBaseCostsPayload,
   AppendixDeliveryDatePayload,
   AppendixLoanPayload,
+  AppendixMaterialSpecsChangePayload,
   AppendixPartiesPayload,
   AppendixSideCostsPayload,
   SupportedAppendixTagKey,
@@ -29,6 +31,8 @@ function getTagTitle(tag: SupportedAppendixTagKey) {
       return 'هزینه های اصل قرارداد';
     case 'side-costs':
       return 'هزینه های جانبی';
+    case 'material-specs-change':
+      return 'تغییر مصالح و مشخصات';
     case 'first-party':
       return 'طرف اول';
     case 'second-party':
@@ -48,6 +52,8 @@ function getTagDescription(tag: SupportedAppendixTagKey) {
       return 'اصلاح ردیف مالی اصل قرارداد و سررسیدهای پرداخت اصلی';
     case 'side-costs':
       return 'مدیریت ردیف های مالی جانبی قرارداد';
+    case 'material-specs-change':
+      return 'ثبت پرونده تغییر مصالح و مشخصات و فعال‌سازی نتیجه قراردادی بر اساس مستندات و وضعیت تأیید خریدار';
     case 'unit-delivery-date':
       return 'ثبت تاریخ جدید تحویل واحد';
     default:
@@ -96,6 +102,13 @@ export function AppendixTagPageRenderer({ tag }: { tag: SupportedAppendixTagKey 
 
   const handleLoanChange = useCallback(
     (value: AppendixLoanPayload) => {
+      updateTagPayload(tag, value);
+    },
+    [tag, updateTagPayload],
+  );
+
+  const handleMaterialSpecsChange = useCallback(
+    (value: AppendixMaterialSpecsChangePayload) => {
       updateTagPayload(tag, value);
     },
     [tag, updateTagPayload],
@@ -162,6 +175,12 @@ export function AppendixTagPageRenderer({ tag }: { tag: SupportedAppendixTagKey 
       {tag === 'side-costs' ? (
         <div className="mt-6">
           <AppendixSideCostsEditor value={payload as AppendixSideCostsPayload} onChange={handleSideCostsChange} />
+        </div>
+      ) : null}
+
+      {tag === 'material-specs-change' ? (
+        <div className="mt-6">
+          <AppendixMaterialSpecsChangeEditor value={payload as AppendixMaterialSpecsChangePayload} onChange={handleMaterialSpecsChange} />
         </div>
       ) : null}
     </div>

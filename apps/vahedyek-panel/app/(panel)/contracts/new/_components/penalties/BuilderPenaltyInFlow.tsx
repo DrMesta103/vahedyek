@@ -235,6 +235,8 @@ function ProgressiveGrid({
 function MaterialSpecsMultiSelectField({
   label,
   helper,
+  sectionEffectLabel,
+  sectionEffect,
   options,
   details,
   emptyState,
@@ -243,6 +245,8 @@ function MaterialSpecsMultiSelectField({
 }: {
   label: string;
   helper: string;
+  sectionEffectLabel?: string;
+  sectionEffect?: string;
   options: readonly string[];
   details: Record<string, MaterialSpecsOptionDetail>;
   emptyState: string;
@@ -278,11 +282,15 @@ function MaterialSpecsMultiSelectField({
             <div key={item.label} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-right">
               <div className="text-sm font-extrabold text-slate-800">{item.label}</div>
               <p className="mt-1 text-xs leading-6 text-slate-500">{item.meta.description}</p>
-              <p className="mt-2 text-xs leading-6 text-cyan-800">اثر در بخش‌های دیگر: {item.meta.effect}</p>
             </div>
           ))}
         </div>
       )}
+      {sectionEffectLabel && sectionEffect ? (
+        <div className="rounded-2xl border border-cyan-100 bg-cyan-50/80 px-4 py-3 text-right">
+          <p className="text-xs leading-6 text-cyan-800">{sectionEffectLabel}: {sectionEffect}</p>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -290,9 +298,13 @@ function MaterialSpecsMultiSelectField({
 function MaterialSpecsImportanceField({
   value,
   onChange,
+  sectionEffectLabel,
+  sectionEffect,
 }: {
   value: string;
   onChange: (value: string) => void;
+  sectionEffectLabel?: string;
+  sectionEffect?: string;
 }) {
   const selectedOption =
     MATERIAL_SPECS_CHANGE_IMPORTANCE_LEVELS.find((option) => option.value === value) ?? MATERIAL_SPECS_CHANGE_IMPORTANCE_LEVELS[0];
@@ -314,8 +326,12 @@ function MaterialSpecsImportanceField({
       />
       <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-right">
         <p className="text-xs leading-6 text-slate-500">{selectedOption.description}</p>
-        <p className="mt-2 text-xs leading-6 text-cyan-800">اثر در بخش‌های دیگر: {selectedOption.effect}</p>
       </div>
+      {sectionEffectLabel && sectionEffect ? (
+        <div className="rounded-2xl border border-cyan-100 bg-cyan-50/80 px-4 py-3 text-right">
+          <p className="text-xs leading-6 text-cyan-800">{sectionEffectLabel}: {sectionEffect}</p>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -323,22 +339,24 @@ function MaterialSpecsImportanceField({
 function MaterialSpecsToggleField({
   title,
   description,
-  effect,
   checked,
   onChange,
+  sectionEffectLabel,
+  sectionEffect,
 }: {
   title: string;
   description: string;
-  effect: string;
   checked: boolean;
   onChange: (value: boolean) => void;
+  sectionEffectLabel?: string;
+  sectionEffect?: string;
 }) {
   return (
     <div className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 lg:flex-row lg:items-center lg:justify-between">
       <div className="space-y-2 text-right">
         <div className="text-sm font-extrabold text-slate-800">{title}</div>
         <p className="text-xs leading-6 text-slate-500">{description}</p>
-        <p className="text-xs leading-6 text-cyan-800">اثر در بخش‌های دیگر: {effect}</p>
+        {sectionEffectLabel && sectionEffect ? <p className="text-xs leading-6 text-cyan-800">{sectionEffectLabel}: {sectionEffect}</p> : null}
       </div>
       <div className="self-start lg:self-auto">
         <ContractRegistrationSwitch checked={checked} variant="segmented" onChange={onChange} />
@@ -563,7 +581,10 @@ export const BuilderPenaltyInFlow = forwardRef<
 
                         <div className="border-t border-slate-200" />
 
-                        <MaterialSpecsImportanceField value={importanceLevel} onChange={(value) => setValue('materialSpecsChangeImportanceLevel', value, item.id)} />
+                        <MaterialSpecsImportanceField
+                          value={importanceLevel}
+                          onChange={(value) => setValue('materialSpecsChangeImportanceLevel', value, item.id)}
+                        />
 
                         <div className="border-t border-slate-200" />
 
@@ -582,7 +603,6 @@ export const BuilderPenaltyInFlow = forwardRef<
                         <MaterialSpecsToggleField
                           title="جایگزینی هم‌ارزش یا بهتر"
                           description="اگر متریال یا مشخصات جایگزین از نظر کیفیت و ارزش معادل یا بهتر باشد، تخلف محسوب نمی‌شود."
-                          effect="در همین فلو و در قراردادهای بعدی، این سوییچ تعیین می‌کند آیا جایگزینی هم‌ارزش به‌عنوان تخلف باز شود یا خیر."
                           checked={Boolean(state.values.materialSpecsChangeEquivalentOrBetterAllowed)}
                           onChange={(value) => setValue('materialSpecsChangeEquivalentOrBetterAllowed', value, item.id)}
                         />
@@ -592,7 +612,6 @@ export const BuilderPenaltyInFlow = forwardRef<
                         <MaterialSpecsToggleField
                           title="تأیید خریدار برای تغییرات مهم"
                           description="اگر تغییر مهم بدون تأیید خریدار انجام شود، می‌تواند موجب مطالبه جبران، اصلاح یا حق فسخ شود."
-                          effect="این گزینه در ادامه رسیدگی مشخص می‌کند که تغییر مهم بدون تأیید خریدار، صرفاً یک ثبت عادی باشد یا مبنای اعتراض و جبران."
                           checked={Boolean(state.values.materialSpecsChangeBuyerApprovalRequired)}
                           onChange={(value) => setValue('materialSpecsChangeBuyerApprovalRequired', value, item.id)}
                         />
@@ -618,6 +637,8 @@ export const BuilderPenaltyInFlow = forwardRef<
                           details={MATERIAL_SPECS_CHANGE_REQUIRED_DOCUMENT_DETAILS}
                           emptyState="هنوز مستند لازم انتخاب نشده است. بنابراین حداقل مدارک مورد انتظار در ادامه ثبت و پیگیری تغییر روشن نیست."
                           value={requiredDocuments}
+                          sectionEffectLabel="محل ثبت در اپ"
+                          sectionEffect="فایل این مدارک در مرحله `پیوست و اسناد قرارداد` آپلود می‌شود؛ معمولاً با `افزودن سند` و انتخاب یک دسته سفارشی یا یکی از دسته‌های موجود."
                           onToggle={(itemValue) => setValue('materialSpecsChangeRequiredDocuments', toggleStoredStringList(state.values.materialSpecsChangeRequiredDocuments, itemValue), item.id)}
                         />
                       </div>

@@ -5,6 +5,7 @@ import type {
   AppendixContractBaseCostsPayload,
   AppendixDeliveryDatePayload,
   AppendixLoanPayload,
+  AppendixMaterialSpecsChangePayload,
   AppendixPartiesPayload,
   AppendixSideCostsPayload,
   AppendixTagKey,
@@ -231,6 +232,32 @@ function renderFinancialPayload(payload: Record<string, unknown>) {
   );
 }
 
+function renderJoinedValue(values: string[]) {
+  return values.length ? values.join('، ') : '—';
+}
+
+function renderMaterialSpecsChangePayload(payload: Record<string, unknown>) {
+  const row = payload as unknown as AppendixMaterialSpecsChangePayload;
+
+  return (
+    <div className="space-y-2">
+      {renderValueRow('نوع تغییرات', renderJoinedValue(Array.isArray(row.changeTypes) ? row.changeTypes : []), true)}
+      {renderValueRow('سطح اهمیت', String(row.importanceLevel ?? '—'))}
+      {renderValueRow('مرجع مقایسه', renderJoinedValue(Array.isArray(row.comparisonReferences) ? row.comparisonReferences : []))}
+      {renderValueRow('شرح پرونده', String(row.caseSummary ?? '—'))}
+      {renderValueRow('جایگزینی هم‌ارزش مجاز', row.equivalentReplacementAllowed ? 'بله' : 'خیر')}
+      {renderValueRow('جایگزینی هم‌ارزش اعمال شده', row.equivalentReplacementApplied ? 'بله' : 'خیر')}
+      {renderValueRow('نیاز به تأیید خریدار', row.buyerApprovalRequired ? 'بله' : 'خیر')}
+      {renderValueRow('تأیید خریدار اخذ شده', row.buyerApproved ? 'بله' : 'خیر')}
+      {renderValueRow('نتایج قابل اعمال', renderJoinedValue(Array.isArray(row.selectedOutcomes) ? row.selectedOutcomes : []))}
+      {renderValueRow('مستندات لازم', renderJoinedValue(Array.isArray(row.requiredDocuments) ? row.requiredDocuments : []))}
+      {renderValueRow('اقدام قراردادی فعال', row.enforcementEnabled ? 'بله' : 'خیر')}
+      {row.enforcementReason ? renderValueRow('مبنای اقدام قراردادی', row.enforcementReason) : null}
+      {row.internalNotes ? renderValueRow('یادداشت داخلی', row.internalNotes) : null}
+    </div>
+  );
+}
+
 function renderGenericPayload(payload: Record<string, unknown>) {
   const entries = Object.entries(payload ?? {}).filter(([, value]) => value !== null && value !== undefined && value !== '');
   if (!entries.length) return renderValueRow('محتوا', '—');
@@ -246,5 +273,6 @@ export function HistoryPayloadContent({ payload, tagKey }: { payload: Record<str
   if (tagKey === 'first-party' || tagKey === 'second-party') return renderPartiesPayload(payload);
   if (tagKey === 'loan') return renderLoanPayload(payload);
   if (tagKey === 'adjustment' || tagKey === 'contract-base-costs' || tagKey === 'side-costs') return renderFinancialPayload(payload);
+  if (tagKey === 'material-specs-change') return renderMaterialSpecsChangePayload(payload);
   return renderGenericPayload(payload);
 }

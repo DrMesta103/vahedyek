@@ -355,6 +355,39 @@ function LoanSection({ payload }: { payload: Record<string, unknown> }) {
   );
 }
 
+function GenericPayloadSection({ title, payload }: { title: string; payload: Record<string, unknown> }) {
+  const entries = Object.entries(payload ?? {}).filter(([, value]) => value !== null && value !== undefined && value !== '');
+
+  return (
+    <section className="rounded-3xl border border-slate-200 bg-slate-50/70 p-4">
+      <div className="flex items-center justify-between gap-3">
+        <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-slate-700 shadow-sm">
+          <ListChecks className="h-4 w-4" />
+        </span>
+        <div className="text-right">
+          <div className="text-[15px] font-black text-slate-900">{title}</div>
+          <div className="text-[11px] font-semibold text-slate-500">نمایش نزدیک‌ترین داده معتبر قبلی برای این بخش</div>
+        </div>
+      </div>
+
+      <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+        {entries.length ? (
+          entries.map(([key, value], index) => (
+            <div key={key} className={`grid gap-2 px-4 py-3 text-right sm:grid-cols-[180px_minmax(0,1fr)] ${index > 0 ? 'border-t border-slate-100' : ''}`}>
+              <div className="text-[11px] font-black text-slate-500">{key}</div>
+              <div className="text-[13px] font-semibold leading-7 text-slate-700">
+                {Array.isArray(value) ? value.map((item) => String(item)).join('، ') || '—' : String(value)}
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="px-4 py-3 text-[13px] font-semibold text-slate-500">داده‌ای ثبت نشده است.</div>
+        )}
+      </div>
+    </section>
+  );
+}
+
 export function AppendixPreviousValueDialog({
   open,
   tag,
@@ -401,6 +434,7 @@ export function AppendixPreviousValueDialog({
           {tag === 'adjustment' ? <FinancialPreviewSection title="اطلاعات تعدیل" payload={data.payload} mode="adjustment" /> : null}
           {tag === 'contract-base-costs' ? <FinancialPreviewSection title="اطلاعات اصل قرارداد" payload={data.payload} mode="contract-base-costs" /> : null}
           {tag === 'side-costs' ? <FinancialPreviewSection title="اطلاعات هزینه های جانبی" payload={data.payload} mode="side-costs" /> : null}
+          {tag === 'material-specs-change' ? <GenericPayloadSection title="اطلاعات پرونده تغییر مصالح و مشخصات" payload={data.payload} /> : null}
           {tag === 'unit-delivery-date' ? <DeliveryDateSection payload={data.payload} /> : null}
           {tag === 'first-party' || tag === 'second-party' ? <PartySection tag={tag} payload={data.payload} /> : null}
         </div>

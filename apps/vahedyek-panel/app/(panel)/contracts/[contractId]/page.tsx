@@ -174,7 +174,7 @@ export default function ContractDetailsPage() {
     const lockedForApproval = contract?.approvalInstance?.status === 'IN_REVIEW';
     const isFinalizedUi = contract?.status === 'completed';
     /** در قرارداد تکمیل‌شده فقط این موارد فعال می‌مانند؛ بقیه پیام «در حال توسعه». */
-    const enabledWhenCompleted = new Set(['reports', 'dues', 'appendix', 'history']);
+    const enabledWhenCompleted = new Set(['reports', 'dues', 'appendix', 'material-specs-change', 'history']);
 
     const enabled = (id: string) => {
       if (id === 'view-draft') return true;
@@ -198,6 +198,7 @@ export default function ContractDetailsPage() {
       if (id === 'reports') return 'گزارش‌های مربوط به قرارداد (مالی/عملکردی/وضعیت).'
       if (id === 'dues') return 'مدیریت سررسیدها و فیش‌های پرداختی/واریزی مرتبط با قرارداد.'
       if (id === 'appendix') return 'ثبت و مدیریت متمم‌های قرارداد پس از نهایی شدن.'
+      if (id === 'material-specs-change') return 'ثبت پرونده تغییر مصالح و مشخصات، انتخاب مستندات، و فعال‌سازی جبران یا اقدام قراردادی بر اساس آن.'
       if (id === 'history') return 'مشاهده سیر تغییرات قرارداد از نسخه اصلی تا آخرین متمم تاییدشده.'
       if (id === 'docs') return 'بارگذاری و مدیریت مدارک و پیوست‌های قرارداد.'
       if (id === 'court') return 'ثبت و مدیریت اقاله و تغییر وضعیت‌های مرتبط.'
@@ -227,6 +228,7 @@ export default function ContractDetailsPage() {
       { id: 'reports', title: 'گزارشات', icon: 'fa-solid fa-money-bill-transfer' },
       { id: 'dues', title: 'سر رسید ها و فیش ها', icon: 'fa-solid fa-calendar-check' },
       { id: 'appendix', title: 'متمم ها', icon: 'fa-solid fa-file-circle-plus' },
+      { id: 'material-specs-change', title: 'تغییر مصالح و مشخصات', icon: 'fa-solid fa-swatchbook' },
       { id: 'history', title: 'تاریخچه ی قرارداد', icon: 'fa-solid fa-clock-rotate-left' },
       // 7: always visible (click shows toast until implemented)
       { id: 'docs', title: 'مدارک قرارداد', icon: 'fa-solid fa-folder-open' },
@@ -446,6 +448,12 @@ export default function ContractDetailsPage() {
                 if (item.id === 'appendix') {
                   const q = searchParams?.toString();
                   router.push(`/contracts/${String(contractId)}/appendices${q ? `?${q}` : ''}`);
+                  return;
+                }
+                if (item.id === 'material-specs-change') {
+                  const next = new URLSearchParams(searchParams?.toString() ?? '');
+                  next.set('types', 'material-specs-change');
+                  router.push(`/contracts/${String(contractId)}/appendices?${next.toString()}`);
                   return;
                 }
                 if (item.id === 'history') {

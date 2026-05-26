@@ -5,12 +5,13 @@ export type AppendixIssuerType = 'self' | 'employee' | 'former-employee';
 export type AppendixStatus = 'draft' | 'pending_approval' | 'completed';
 export type ContractEntityKind = 'contract' | 'appendix';
 export type AppendixSourceKind = 'contract' | 'appendix';
-export type AppendixTagGroupKey = 'financial' | 'conditions' | 'parties' | 'dates';
+export type AppendixTagGroupKey = 'financial' | 'conditions' | 'parties' | 'dates' | 'quality';
 export type AppendixTagKey =
   | 'loan'
   | 'adjustment'
   | 'side-costs'
   | 'contract-base-costs'
+  | 'material-specs-change'
   | 'installments'
   | 'prepayment'
   | 'unit-delivery'
@@ -122,6 +123,22 @@ export interface AppendixSideCostsPayload {
   activeTab: string;
   categories: FinancialCategoryData[];
   dueItems: FinancialDueItemData[];
+}
+
+export interface AppendixMaterialSpecsChangePayload {
+  changeTypes: string[];
+  importanceLevel: string;
+  comparisonReferences: string[];
+  equivalentReplacementAllowed: boolean;
+  equivalentReplacementApplied: boolean;
+  buyerApprovalRequired: boolean;
+  buyerApproved: boolean;
+  selectedOutcomes: string[];
+  requiredDocuments: string[];
+  enforcementEnabled: boolean;
+  enforcementReason: string;
+  caseSummary: string;
+  internalNotes: string;
 }
 
 export type AppendixLoanPaymentStatus = 'unselected' | 'full' | 'less' | 'more' | 'none';
@@ -566,7 +583,8 @@ export type SupportedAppendixTagKey =
   | 'unit-delivery-date'
   | 'adjustment'
   | 'contract-base-costs'
-  | 'side-costs';
+  | 'side-costs'
+  | 'material-specs-change';
 
 export interface ContractAppendix {
   id: string;

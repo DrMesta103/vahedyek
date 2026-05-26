@@ -20,6 +20,7 @@ import type {
   AppendixContractBaseCostsPayload,
   AppendixDeliveryDatePayload,
   AppendixLoanPayload,
+  AppendixMaterialSpecsChangePayload,
   AppendixPartiesPayload,
   AppendixSideCostsPayload,
   AppendixTagKey,
@@ -32,6 +33,13 @@ import type {
   SupportedAppendixTagKey,
 } from '../types/contract';
 import { isSupportedAppendixTag } from './appendixTagSupport';
+import {
+  MATERIAL_SPECS_CHANGE_COMPARISON_REFERENCES,
+  MATERIAL_SPECS_CHANGE_IMPORTANCE_LEVELS,
+  MATERIAL_SPECS_CHANGE_OUTCOMES,
+  MATERIAL_SPECS_CHANGE_REQUIRED_DOCUMENTS,
+  MATERIAL_SPECS_CHANGE_TYPES,
+} from './materialSpecsChangeRule';
 
 export const APPENDIX_ADJUSTMENT_LINE_ID = createFinancialLineId('appendix-adjustment');
 export const APPENDIX_ADJUSTMENT_TITLE = 'تعدیل';
@@ -43,7 +51,8 @@ export type SupportedAppendixPayload =
   | AppendixPartiesPayload
   | AppendixAdjustmentPayload
   | AppendixContractBaseCostsPayload
-  | AppendixSideCostsPayload;
+  | AppendixSideCostsPayload
+  | AppendixMaterialSpecsChangePayload;
 
 type FinancialAppendixPayload =
   | AppendixAdjustmentPayload
@@ -495,6 +504,68 @@ function normalizeSideCostsPayload(input: unknown): AppendixSideCostsPayload {
   return normalizeFinancialPayload(row, normalizeSideCostCategories(row.categories));
 }
 
+function normalizeStringList(input: unknown, validOptions: readonly string[]) {
+  const validSet = new Set(validOptions);
+  const source = Array.isArray(input)
+    ? input
+    : typeof input === 'string'
+      ? (() => {
+          try {
+            const parsed = JSON.parse(input) as unknown;
+            return Array.isArray(parsed) ? parsed : [input];
+          } catch {
+            return input.split('||');
+          }
+        })()
+      : [];
+
+  return source
+    .map((item) => String(item ?? '').trim())
+    .filter((item): item is string => Boolean(item) && validSet.has(item))
+    .filter((item, index, arr) => arr.indexOf(item) === index);
+}
+
+function createInitialMaterialSpecsChangePayload(): AppendixMaterialSpecsChangePayload {
+  return {
+    changeTypes: [],
+    importanceLevel: '',
+    comparisonReferences: [],
+    equivalentReplacementAllowed: true,
+    equivalentReplacementApplied: false,
+    buyerApprovalRequired: true,
+    buyerApproved: false,
+    selectedOutcomes: [],
+    requiredDocuments: [],
+    enforcementEnabled: false,
+    enforcementReason: '',
+    caseSummary: '',
+    internalNotes: '',
+  };
+}
+
+function normalizeMaterialSpecsChangePayload(input: unknown): AppendixMaterialSpecsChangePayload {
+  const row = input && typeof input === 'object' ? (input as Record<string, unknown>) : {};
+  const normalized = createInitialMaterialSpecsChangePayload();
+  const validImportanceLevels = new Set(MATERIAL_SPECS_CHANGE_IMPORTANCE_LEVELS.map((item) => item.value));
+  const importanceLevel = String(row.importanceLevel ?? '').trim();
+
+  return {
+    changeTypes: normalizeStringList(row.changeTypes, MATERIAL_SPECS_CHANGE_TYPES),
+    importanceLevel: validImportanceLevels.has(importanceLevel as (typeof MATERIAL_SPECS_CHANGE_IMPORTANCE_LEVELS)[number]['value']) ? importanceLevel : '',
+    comparisonReferences: normalizeStringList(row.comparisonReferences, MATERIAL_SPECS_CHANGE_COMPARISON_REFERENCES),
+    equivalentReplacementAllowed: Boolean(row.equivalentReplacementAllowed ?? normalized.equivalentReplacementAllowed),
+    equivalentReplacementApplied: Boolean(row.equivalentReplacementApplied),
+    buyerApprovalRequired: Boolean(row.buyerApprovalRequired ?? normalized.buyerApprovalRequired),
+    buyerApproved: Boolean(row.buyerApproved),
+    selectedOutcomes: normalizeStringList(row.selectedOutcomes, MATERIAL_SPECS_CHANGE_OUTCOMES),
+    requiredDocuments: normalizeStringList(row.requiredDocuments, MATERIAL_SPECS_CHANGE_REQUIRED_DOCUMENTS),
+    enforcementEnabled: Boolean(row.enforcementEnabled),
+    enforcementReason: String(row.enforcementReason ?? ''),
+    caseSummary: String(row.caseSummary ?? ''),
+    internalNotes: String(row.internalNotes ?? ''),
+  };
+}
+
 function extractContractBaseCategories(financial: ContractFinancialData | null) {
   if (!financial) return createInitialFinancialCategories();
   const source = Array.isArray(financial.categories) ? financial.categories : [];
@@ -596,6 +667,8 @@ export function createInitialAppendixPayload(tag: SupportedAppendixTagKey): Supp
       return createEmptyFinancialPayload(createInitialFinancialCategories());
     case 'side-costs':
       return createEmptyFinancialPayload([]);
+    case 'material-specs-change':
+      return createInitialMaterialSpecsChangePayload();
   }
 }
 
@@ -614,6 +687,8 @@ export function normalizeAppendixPayload(tag: SupportedAppendixTagKey, input: un
       return normalizeContractBaseCostsPayload(input);
     case 'side-costs':
       return normalizeSideCostsPayload(input);
+    case 'material-specs-change':
+      return normalizeMaterialSpecsChangePayload(input);
   }
 }
 
@@ -647,6 +722,10 @@ export function getContractBaselinePayload(tag: SupportedAppendixTagKey, contrac
 
   if (tag === 'contract-base-costs') {
     return buildContractBasePayload(getFinancialData(contract));
+  }
+
+  if (tag === 'material-specs-change') {
+    return createInitialMaterialSpecsChangePayload();
   }
 
   return buildSideCostsPayload(getFinancialData(contract));
@@ -700,6 +779,38 @@ function validateLoanPayload(payload: AppendixLoanPayload): string {
   return '';
 }
 
+function validateMaterialSpecsChangePayload(payload: AppendixMaterialSpecsChangePayload): string {
+  if (!payload.changeTypes.length) {
+    return 'حداقل یک نوع تغییر مشمول را برای پرونده تغییر مصالح و مشخصات انتخاب کنید.';
+  }
+
+  if (!payload.importanceLevel.trim()) {
+    return 'سطح اهمیت تغییر را برای پرونده تغییر مصالح و مشخصات مشخص کنید.';
+  }
+
+  if (!payload.comparisonReferences.length) {
+    return 'حداقل یک مرجع مقایسه را برای پرونده تغییر مصالح و مشخصات انتخاب کنید.';
+  }
+
+  if (!payload.selectedOutcomes.length) {
+    return 'حداقل یک نتیجه قابل اعمال را برای پرونده تغییر مصالح و مشخصات انتخاب کنید.';
+  }
+
+  if (!payload.requiredDocuments.length) {
+    return 'حداقل یک مستند لازم را برای پرونده تغییر مصالح و مشخصات انتخاب کنید.';
+  }
+
+  if (!payload.caseSummary.trim()) {
+    return 'شرح تغییر یا اختلاف را برای پرونده تغییر مصالح و مشخصات وارد کنید.';
+  }
+
+  if (payload.enforcementEnabled && !payload.enforcementReason.trim()) {
+    return 'در صورت فعال‌سازی اقدام قراردادی، مبنای این تصمیم را هم ثبت کنید.';
+  }
+
+  return '';
+}
+
 export function validateAppendixPayload(tag: SupportedAppendixTagKey, payload: SupportedAppendixPayload): string {
   if (tag === 'loan') {
     return validateLoanPayload(payload as AppendixLoanPayload);
@@ -727,6 +838,10 @@ export function validateAppendixPayload(tag: SupportedAppendixTagKey, payload: S
 
   if (tag === 'contract-base-costs') {
     return validateContractBaseCostsPayload(payload as AppendixContractBaseCostsPayload);
+  }
+
+  if (tag === 'material-specs-change') {
+    return validateMaterialSpecsChangePayload(payload as AppendixMaterialSpecsChangePayload);
   }
 
   return validateSideCostsPayload(payload as AppendixSideCostsPayload);

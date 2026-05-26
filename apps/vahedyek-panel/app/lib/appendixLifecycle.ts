@@ -104,6 +104,22 @@ function summarizeLoanPayload(item: ContractAppendixItem) {
     .join(' • ');
 }
 
+function summarizeMaterialSpecsChangePayload(item: ContractAppendixItem) {
+  const changeTypes = Array.isArray(item.payload.changeTypes) ? item.payload.changeTypes.map((entry) => String(entry).trim()).filter(Boolean) : [];
+  const outcomes = Array.isArray(item.payload.selectedOutcomes) ? item.payload.selectedOutcomes.map((entry) => String(entry).trim()).filter(Boolean) : [];
+  const importanceLevel = String(item.payload.importanceLevel ?? '').trim();
+  const enforcementEnabled = Boolean(item.payload.enforcementEnabled);
+
+  return [
+    changeTypes.length ? `دامنه تغییر: ${changeTypes.join('، ')}` : '',
+    importanceLevel ? `سطح اهمیت: ${importanceLevel}` : '',
+    outcomes.length ? `خروجی: ${outcomes.join('، ')}` : '',
+    enforcementEnabled ? 'اقدام قراردادی فعال شده است' : 'ثبت پرونده بدون اقدام قراردادی',
+  ]
+    .filter(Boolean)
+    .join(' • ');
+}
+
 export function appendixItemValueText(item: ContractAppendixItem) {
   if (item.tagKey === 'loan') {
     return summarizeLoanPayload(item);
@@ -137,6 +153,10 @@ export function appendixItemValueText(item: ContractAppendixItem) {
 
   if (item.tagKey === 'side-costs') {
     return summarizeSideCostsPayload(item);
+  }
+
+  if (item.tagKey === 'material-specs-change') {
+    return summarizeMaterialSpecsChangePayload(item);
   }
 
   return String(item.payload.detailText ?? '').trim() || item.description;

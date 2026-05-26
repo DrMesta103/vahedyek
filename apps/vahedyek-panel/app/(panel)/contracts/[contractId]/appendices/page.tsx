@@ -125,6 +125,8 @@ export default function ContractAppendicesPage() {
     return Array.from(CONTRACT_APPENDIX_TAG_MAP.entries()).map(([key, def]) => ({ key, title: def.title }));
   }, []);
 
+  const directCreateTags = useMemo(() => filterSupportedAppendixTags(selectedFilterTags), [selectedFilterTags]);
+
   const filteredAppendices = useMemo(() => {
     if (!selectedFilterTags.length) return appendices;
     return appendices.filter((appendix) => appendix.items.some((item) => selectedFilterTags.includes(item.tagKey)));
@@ -144,6 +146,16 @@ export default function ContractAppendicesPage() {
     if (list) next.set('list', list);
     if (types) next.set('types', types);
     router.push(`/contracts/${contractId}/appendices/new?${next.toString()}`);
+  };
+
+  const goToDirectCreate = (tag: AppendixTagKey) => {
+    const next = new URLSearchParams();
+    next.set('tags', tag);
+    const list = searchParams?.get('list');
+    const types = searchParams?.get('types');
+    if (list) next.set('list', list);
+    if (types) next.set('types', types);
+    router.push(`/contracts/${contractId}/appendices/new/${tag}?${next.toString()}`);
   };
 
   const updateFilterTags = (nextTags: AppendixTagKey[]) => {
@@ -216,15 +228,26 @@ export default function ContractAppendicesPage() {
                         </>
                       ) : null}
                     </div>
+                    {selectedFilterTags.length === 1 && selectedFilterTags[0] === 'material-specs-change' ? (
+                      <div className="mt-3 rounded-2xl border border-cyan-200 bg-cyan-50/80 px-4 py-3 text-[12px] font-semibold leading-7 text-cyan-900">
+                        در این بخش پرونده‌های اجرایی تغییر مصالح و مشخصات ثبت می‌شود؛ از همین مسیر می‌توانید مستندات لازم، نتیجه رسیدگی و فعال‌سازی اقدام قراردادی را روی قرارداد نگه دارید.
+                      </div>
+                    ) : null}
                   </div>
                 </div>
 
                 <button
                   type="button"
-                  onClick={() => setPickerOpen(true)}
+                  onClick={() => {
+                    if (directCreateTags.length === 1) {
+                      goToDirectCreate(directCreateTags[0]);
+                      return;
+                    }
+                    setPickerOpen(true);
+                  }}
                   className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-2xl bg-[linear-gradient(180deg,color-mix(in_srgb,var(--dark-teal)_92%,black),color-mix(in_srgb,var(--dark-teal)_78%,#0f766e))] px-5 py-3 text-[13px] font-black text-white shadow-sm transition hover:brightness-105"
                 >
-                  افزودن متمم
+                  {selectedFilterTags.length === 1 && selectedFilterTags[0] === 'material-specs-change' ? 'ثبت پرونده تغییر' : 'افزودن متمم'}
                   <Plus className="h-4 w-4" />
                 </button>
               </div>
