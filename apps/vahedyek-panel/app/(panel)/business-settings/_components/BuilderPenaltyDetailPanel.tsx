@@ -1,8 +1,16 @@
 'use client';
 
+import { ArrowUpRight, BadgePercent, CircleDollarSign, Info } from 'lucide-react';
 import { useEffect, useState, type ElementType } from 'react';
-import { ArrowUpRight, BadgePercent, CircleDollarSign } from 'lucide-react';
 import { type ContractRuleState } from '../../../lib/businessContractRules';
+import {
+  BUILDER_PENALTY_MODE_OPTIONS,
+  BUILDER_PENALTY_PERCENT_BASIS_OPTIONS,
+  BUILDER_PENALTY_PERIOD_OPTIONS,
+  BUILDER_PENALTY_SECTION_META,
+  type BuilderPenaltyMode,
+  type BuilderPenaltySectionId,
+} from '../../../lib/builderPenalty';
 import { normalizeKnownProgressivePenaltyValues } from '../../../lib/progressivePenalty';
 import {
   ContractRegistrationSwitch,
@@ -18,116 +26,83 @@ import {
   cn,
 } from './LoanSettingsPrimitives';
 
-type BuilderPenaltySectionId = 'unit-delivery-delay' | 'material-specs-change' | 'area-difference';
-type BuilderPenaltyMode = 'fixed' | 'percent' | 'progressive';
-
-type SectionConfig = {
-  title: string;
-  description: string;
-  activationTitle: string;
-  activationDescription: string;
-  stateKey: 'unitDeliveryDelayEnabled' | 'materialSpecsChangeEnabled' | 'areaDifferenceEnabled';
-  modeKey: string;
-  periodKey: string;
-  fixedAmountKey: string;
-  percentAmountKey: string;
-  capKey: string;
-  trailingField: {
-    key: string;
-    label: string;
-    helper: string;
-    type: 'number' | 'choice';
-    options?: string[];
-  };
-  progressiveRows: Array<{ fromKey: string; toKey: string; rateKey: string }>;
-};
-
-const PERIOD_OPTIONS = [
-  { value: 'روزانه', label: 'روزانه' },
-  { value: 'ماهانه', label: 'ماهانه' },
-  { value: 'سالانه', label: 'سالانه' },
-] as const;
-
-const MODE_OPTIONS: Array<{ id: BuilderPenaltyMode; title: string; icon: ElementType }> = [
-  { id: 'fixed', title: 'مبلغ ثابت', icon: CircleDollarSign },
-  { id: 'percent', title: 'درصدی', icon: BadgePercent },
-  { id: 'progressive', title: 'تصاعدی', icon: ArrowUpRight },
+const MODE_CARDS: Array<{ value: BuilderPenaltyMode; title: string; icon: ElementType }> = [
+  { value: 'fixed', title: 'مبلغ ثابت', icon: CircleDollarSign },
+  { value: 'percent', title: 'درصدی', icon: BadgePercent },
+  { value: 'progressive', title: 'تصاعدی', icon: ArrowUpRight },
 ];
 
-const SECTION_META: Record<BuilderPenaltySectionId, SectionConfig> = {
+const SECTION_COPY: Record<BuilderPenaltySectionId, { activationTitle: string; activationDescription: string }> = {
   'unit-delivery-delay': {
-    title: 'تاخیر در تحویل واحد',
-    description: 'مشخص می‌کند جریمه تاخیر در تحویل واحد برای سازنده در چه شرایطی قابل استفاده باشد.',
-    activationTitle: 'فعال‌سازی تاخیر در تحویل واحد',
-    activationDescription: 'با فعال‌سازی این گزینه، جریمه تاخیر در تحویل واحد بر اساس پیکربندی به تمام قرارداد قابل استفاده می‌باشد.',
-    stateKey: 'unitDeliveryDelayEnabled',
-    modeKey: 'unitDeliveryDelayMode',
-    periodKey: 'unitDeliveryDelayPeriod',
-    fixedAmountKey: 'unitDeliveryDelayFixedAmount',
-    percentAmountKey: 'unitDeliveryDelayPercentAmount',
-    capKey: 'unitDeliveryDelayPenaltyCap',
-    trailingField: {
-      key: 'unitDeliveryDelayGraceDays',
-      label: 'مهلت تنفس (بدون جریمه)',
-      helper: 'تعداد روز تاخیر مجاز قبل از شروع محاسبه جریمه',
-      type: 'number',
-    },
-    progressiveRows: [
-      { fromKey: 'unitDeliveryDelayProgressiveRow1From', toKey: 'unitDeliveryDelayProgressiveRow1To', rateKey: 'unitDeliveryDelayProgressiveRow1Rate' },
-      { fromKey: 'unitDeliveryDelayProgressiveRow2From', toKey: 'unitDeliveryDelayProgressiveRow2To', rateKey: 'unitDeliveryDelayProgressiveRow2Rate' },
-      { fromKey: 'unitDeliveryDelayProgressiveRow3From', toKey: 'unitDeliveryDelayProgressiveRow3To', rateKey: 'unitDeliveryDelayProgressiveRow3Rate' },
-    ],
+    activationTitle: 'جریمه تاخیر در تحویل واحد',
+    activationDescription: 'این بخش منطق جریمه سازنده بابت تاخیر در تحویل واحد را مشخص می‌کند. جریمه می‌تواند ثابت، درصدی یا تصاعدی باشد و با مهلت تنفس و سقف قابل کنترل یا نامحدود تنظیم شود.',
   },
   'material-specs-change': {
-    title: 'تغییر مصالح / مشخصات',
-    description: 'مشخص می‌کند جریمه مربوط به تغییر مصالح یا مشخصات واحد برای سازنده در چه شرایطی قابل استفاده باشد.',
-    activationTitle: 'فعال‌سازی جریمه تغییر مصالح / مشخصات',
-    activationDescription: 'با فعال‌سازی این گزینه، جریمه تغییر مصالح / مشخصات بر اساس پیکربندی به تمام قرارداد قابل استفاده می‌باشد.',
-    stateKey: 'materialSpecsChangeEnabled',
-    modeKey: 'materialSpecsChangeMode',
-    periodKey: 'materialSpecsChangePeriod',
-    fixedAmountKey: 'materialSpecsChangeFixedAmount',
-    percentAmountKey: 'materialSpecsChangePercentAmount',
-    capKey: 'materialSpecsChangePenaltyCap',
-    trailingField: {
-      key: 'materialSpecsChangeSubject',
-      label: 'مشخصات محتمل',
-      helper: 'با فعال‌سازی این گزینه، جرائم بر اساس پیکربندی به تمام قراردادهای جدید اعمال خواهند شد',
-      type: 'choice',
-      options: ['گرمایش از کف', 'شیرآلات با کیفیت'],
-    },
-    progressiveRows: [
-      { fromKey: 'materialSpecsChangeProgressiveRow1From', toKey: 'materialSpecsChangeProgressiveRow1To', rateKey: 'materialSpecsChangeProgressiveRow1Rate' },
-      { fromKey: 'materialSpecsChangeProgressiveRow2From', toKey: 'materialSpecsChangeProgressiveRow2To', rateKey: 'materialSpecsChangeProgressiveRow2Rate' },
-      { fromKey: 'materialSpecsChangeProgressiveRow3From', toKey: 'materialSpecsChangeProgressiveRow3To', rateKey: 'materialSpecsChangeProgressiveRow3Rate' },
-    ],
+    activationTitle: 'جریمه تغییر مصالح / مشخصات',
+    activationDescription: 'در این بخش شرایط و نحوه محاسبه جریمه تغییر مصالح یا مشخصات واحد تعریف می‌شود.',
   },
   'area-difference': {
-    title: 'اختلاف متراژ',
-    description: 'مشخص می‌کند جریمه مربوط به اختلاف متراژ برای سازنده در چه شرایطی قابل استفاده باشد.',
-    activationTitle: 'فعال‌سازی جریمه اختلاف متراژ',
-    activationDescription: 'با فعال‌سازی این گزینه، جریمه اختلاف متراژ بر اساس پیکربندی به تمام قرارداد قابل استفاده می‌باشد.',
-    stateKey: 'areaDifferenceEnabled',
-    modeKey: 'areaDifferenceMode',
-    periodKey: 'areaDifferencePeriod',
-    fixedAmountKey: 'areaDifferenceFixedAmount',
-    percentAmountKey: 'areaDifferencePercentAmount',
-    capKey: 'areaDifferencePenaltyCap',
-    trailingField: {
-      key: 'areaDifferenceAllowedChange',
-      label: 'میزان مجاز تغییر در متراژ',
-      helper: 'میزان مجاز تغییر در متراژ واحد که در صورتی که بیش از این مقدار تغییر داشته باشد سازنده بایستی جریمه پرداخت کند',
-      type: 'number',
-    },
-    progressiveRows: [
-      { fromKey: 'areaDifferenceProgressiveRow1From', toKey: 'areaDifferenceProgressiveRow1To', rateKey: 'areaDifferenceProgressiveRow1Rate' },
-      { fromKey: 'areaDifferenceProgressiveRow2From', toKey: 'areaDifferenceProgressiveRow2To', rateKey: 'areaDifferenceProgressiveRow2Rate' },
-      { fromKey: 'areaDifferenceProgressiveRow3From', toKey: 'areaDifferenceProgressiveRow3To', rateKey: 'areaDifferenceProgressiveRow3Rate' },
-    ],
+    activationTitle: 'جریمه اختلاف متراژ',
+    activationDescription: 'در این بخش شرایط و نحوه محاسبه جریمه اختلاف متراژ تعریف می‌شود.',
   },
 };
 
-function BuilderPenaltyModeButton({
+function NumberField({
+  label,
+  value,
+  onChange,
+  helper,
+  suffix = '',
+  disabled = false,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  helper?: string;
+  suffix?: string;
+  disabled?: boolean;
+}) {
+  return (
+    <div className="space-y-3">
+      <FieldLabel label={label} />
+      {disabled ? (
+        <input value={value} disabled className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-right text-slate-500" />
+      ) : (
+        <FinancialAmountInput value={value} onChange={onChange} suffix={suffix} />
+      )}
+      {helper ? <p className="text-right text-sm text-[color:var(--text-muted)]">{helper}</p> : null}
+    </div>
+  );
+}
+
+function TextField({
+  label,
+  value,
+  onChange,
+  helper,
+  placeholder,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  helper?: string;
+  placeholder?: string;
+}) {
+  return (
+    <div className="space-y-3">
+      <FieldLabel label={label} />
+      <input
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder={placeholder}
+        className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-right text-slate-900 placeholder:text-slate-400"
+      />
+      {helper ? <p className="text-right text-sm text-[color:var(--text-muted)]">{helper}</p> : null}
+    </div>
+  );
+}
+
+function ModeButton({
   title,
   icon: Icon,
   active,
@@ -139,17 +114,11 @@ function BuilderPenaltyModeButton({
   onClick: () => void;
 }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="group relative flex min-w-[120px] flex-1 flex-col items-center justify-center gap-3 px-3 py-5 text-center transition"
-    >
+    <button type="button" onClick={onClick} className="group relative flex min-w-[120px] flex-1 flex-col items-center gap-3 px-3 py-5 text-center transition">
       <span
         className={cn(
           'flex h-14 w-14 items-center justify-center rounded-full border transition',
-          active
-            ? 'border-[#49495f] bg-[#49495f] text-white'
-            : 'border-[color:var(--border-color)] bg-[color:var(--surface)] text-[color:var(--text-muted)]',
+          active ? 'border-[#49495f] bg-[#49495f] text-white' : 'border-[color:var(--border-color)] bg-[color:var(--surface)] text-[color:var(--text-muted)]',
         )}
       >
         <Icon className="h-6 w-6" />
@@ -160,74 +129,26 @@ function BuilderPenaltyModeButton({
   );
 }
 
-function NumericField({
-  label,
-  value,
-  onChange,
-  helper,
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  helper: string;
-}) {
-  return (
-    <div className="space-y-3">
-      <FieldLabel label={label} />
-      <FinancialAmountInput value={value} onChange={onChange} suffix="" />
-      <p className="text-right text-sm text-[color:var(--text-muted)]">{helper}</p>
-    </div>
-  );
-}
-
-function ProgressiveRateGrid({
+function ProgressiveAmountGrid({
   rows,
-  state,
+  values,
   onValueChange,
+  periodLabel,
 }: {
-  rows: SectionConfig['progressiveRows'];
-  state: ContractRuleState;
-  onValueChange: (key: string, value: string) => void;
-}) {
-  return (
-    <div className="space-y-5">
-      {rows.map((row, index) => (
-        <div key={row.fromKey} className="grid gap-4 lg:grid-cols-3">
-          <div className="space-y-3">
-            <FieldLabel label={`از بازه ${index + 1}`} />
-            <FinancialAmountInput value={String(state.values[row.fromKey] ?? '')} onChange={(value) => onValueChange(row.fromKey, value)} suffix="" />
-          </div>
-          <div className="space-y-3">
-            <FieldLabel label={`تا بازه ${index + 1}`} />
-            <FinancialAmountInput value={String(state.values[row.toKey] ?? '')} onChange={(value) => onValueChange(row.toKey, value)} suffix="" />
-          </div>
-          <div className="space-y-3">
-            <FieldLabel label={`نرخ جریمه ${index + 1}`} />
-            <FinancialAmountInput value={String(state.values[row.rateKey] ?? '')} onChange={(value) => onValueChange(row.rateKey, value)} suffix="%" />
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function SmartProgressiveRateGrid({
-  rows,
-  state,
-  onValueChange,
-}: {
-  rows: SectionConfig['progressiveRows'];
-  state: ContractRuleState;
+  rows: Array<{ fromKey: string; toKey: string; rateKey: string }>;
+  values: ContractRuleState['values'];
   onValueChange: (key: string, value: string | boolean) => void;
+  periodLabel: string;
 }) {
   const getOpenEndedKey = (toKey: string) => toKey.replace(/To$/, 'OpenEnded');
   let nextFrom = 1;
-  const normalizedRows = rows.map((row) => {
+
+  const computedRows = rows.map((row) => {
     const openEndedKey = getOpenEndedKey(row.toKey);
+    const to = String(values[row.toKey] ?? '');
+    const openEnded = Boolean(values[openEndedKey]);
     const from = String(nextFrom);
-    const to = String(state.values[row.toKey] || '');
-    const openEnded = Boolean(state.values[openEndedKey]);
-    const toNumber = Number(to.replace(/\D/g, ''));
+    const toNumber = Number(String(to).replace(/\D/g, ''));
 
     if (!openEnded && Number.isFinite(toNumber) && toNumber >= nextFrom) {
       nextFrom = toNumber + 1;
@@ -238,22 +159,23 @@ function SmartProgressiveRateGrid({
       openEndedKey,
       from,
       to,
-      rate: String(state.values[row.rateKey] || ''),
       openEnded,
+      amount: String(values[row.rateKey] ?? ''),
     };
   });
-  const firstOpenEndedIndex = normalizedRows.findIndex((row) => row.openEnded);
-  const visibleRows = firstOpenEndedIndex >= 0 ? normalizedRows.slice(0, firstOpenEndedIndex + 1) : normalizedRows;
 
-  const syncRanges = (updates: Partial<Record<string, string | boolean>>) => {
-    let nextFrom = 1;
+  const lastVisibleIndex = computedRows.findIndex((row) => row.openEnded);
+  const visibleRows = lastVisibleIndex >= 0 ? computedRows.slice(0, lastVisibleIndex + 1) : computedRows;
+
+  const syncRanges = (rowUpdates: Partial<Record<string, string | boolean>>) => {
+    let from = 1;
     let closed = false;
 
-    normalizedRows.forEach((row) => {
-      onValueChange(row.fromKey, String(nextFrom));
+    computedRows.forEach((row) => {
+      onValueChange(row.fromKey, String(from));
       if (closed) return;
 
-      const openEnded = Boolean(updates[row.openEndedKey] ?? row.openEnded);
+      const openEnded = Boolean(rowUpdates[row.openEndedKey] ?? row.openEnded);
       onValueChange(row.openEndedKey, openEnded);
       if (openEnded) {
         onValueChange(row.toKey, '');
@@ -261,8 +183,10 @@ function SmartProgressiveRateGrid({
         return;
       }
 
-      const to = Number(String(updates[row.toKey] ?? row.to).replace(/\D/g, ''));
-      if (Number.isFinite(to) && to >= nextFrom) nextFrom = to + 1;
+      const toValue = String(rowUpdates[row.toKey] ?? row.to).replace(/\D/g, '');
+      onValueChange(row.toKey, toValue);
+      const to = Number(toValue);
+      if (Number.isFinite(to) && to >= from) from = to + 1;
     });
   };
 
@@ -271,10 +195,11 @@ function SmartProgressiveRateGrid({
       {visibleRows.map((row, index) => (
         <div key={row.fromKey} className="grid gap-4 rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] p-4 lg:grid-cols-[1fr_120px_1fr_1fr]">
           <div className="space-y-3">
-            <FieldLabel label={`از بازه ${index + 1}`} />
+            <FieldLabel label={`از روز ${row.from}`} />
             <input value={row.from} disabled className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-right text-slate-500" />
-            <p className="text-right text-xs text-[color:var(--text-muted)]">شروع خودکار است.</p>
+            <p className="text-right text-xs text-[color:var(--text-muted)]">شروع هر پله به‌صورت خودکار از پایان پله قبلی محاسبه می‌شود.</p>
           </div>
+
           <label className="flex items-center justify-end gap-2 pt-9 text-xs font-bold text-[color:var(--text-muted)]">
             <input
               type="checkbox"
@@ -284,23 +209,21 @@ function SmartProgressiveRateGrid({
             />
             به بعد
           </label>
+
           <div className="space-y-3">
-            <FieldLabel label={`تا بازه ${index + 1}`} />
+            <FieldLabel label={`تا روز ${index + 1}`} />
             <input
               value={row.to}
               disabled={row.openEnded}
-              onChange={(event) => {
-                const value = event.target.value.replace(/\D/g, '');
-                onValueChange(row.toKey, value);
-                syncRanges({ [row.toKey]: value, [row.openEndedKey]: false });
-              }}
-              placeholder={row.openEnded ? 'به بعد' : 'تا روز'}
+              onChange={(event) => syncRanges({ [row.toKey]: event.target.value.replace(/\D/g, ''), [row.openEndedKey]: false })}
+              placeholder={row.openEnded ? 'به بعد' : 'مثلاً 30'}
               className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-right disabled:bg-slate-50 disabled:text-slate-500"
             />
           </div>
+
           <div className="space-y-3">
-            <FieldLabel label={`نرخ جریمه ${index + 1}`} />
-            <FinancialAmountInput value={row.rate} onChange={(value) => onValueChange(row.rateKey, value)} suffix="%" />
+            <FieldLabel label={`مبلغ جریمه ${periodLabel} - پله ${index + 1}`} />
+            <FinancialAmountInput value={row.amount} onChange={(value) => onValueChange(row.rateKey, value)} suffix="" />
           </div>
         </div>
       ))}
@@ -315,7 +238,8 @@ export function BuilderPenaltyDetailPanel({ sectionId }: { sectionId: BuilderPen
   const [message, setMessage] = useState('');
   const [state, setState] = useState<ContractRuleState | null>(null);
 
-  const section = SECTION_META[sectionId];
+  const section = BUILDER_PENALTY_SECTION_META[sectionId];
+  const copy = SECTION_COPY[sectionId];
 
   useEffect(() => {
     let mounted = true;
@@ -349,6 +273,7 @@ export function BuilderPenaltyDetailPanel({ sectionId }: { sectionId: BuilderPen
       setSaving(true);
       setError('');
       if (!options?.silent) setMessage('');
+
       const normalizedState = {
         ...nextState,
         values: normalizeKnownProgressivePenaltyValues(nextState.values),
@@ -366,9 +291,7 @@ export function BuilderPenaltyDetailPanel({ sectionId }: { sectionId: BuilderPen
         throw new Error(payload.message || 'ذخیره تنظیمات جریمه سازنده انجام نشد.');
       }
 
-      if (!options?.silent) {
-        setMessage(`تنظیمات «${section.title}» با موفقیت ذخیره شد.`);
-      }
+      if (!options?.silent) setMessage(`تنظیمات «${section.title}» ذخیره شد.`);
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : 'ذخیره تنظیمات جریمه سازنده انجام نشد.');
     } finally {
@@ -384,15 +307,11 @@ export function BuilderPenaltyDetailPanel({ sectionId }: { sectionId: BuilderPen
             values: normalizeKnownProgressivePenaltyValues({
               ...current.values,
               [key]: value,
+              ...(key === section.unlimitedCapKey && value ? { [section.capKey]: '' } : {}),
             }),
           }
         : current,
     );
-  };
-
-  const handleSave = async () => {
-    if (!state) return;
-    await persistState(state);
   };
 
   if (loading || !state) {
@@ -401,8 +320,10 @@ export function BuilderPenaltyDetailPanel({ sectionId }: { sectionId: BuilderPen
 
   const activeMode = String(state.values[section.modeKey] || 'fixed') as BuilderPenaltyMode;
   const rootEnabled = Boolean(state.active);
-  const sectionOwnEnabled = Boolean(state.values[section.stateKey]);
-  const sectionEnabled = rootEnabled && sectionOwnEnabled;
+  const sectionEnabled = rootEnabled && Boolean(state.values[section.stateKey]);
+  const periodLabel = String(state.values[section.periodKey] || BUILDER_PENALTY_PERIOD_OPTIONS[0].value);
+  const unlimitedCap = section.unlimitedCapKey ? Boolean(state.values[section.unlimitedCapKey]) : false;
+  const selectedPercentBasis = section.percentBasisKey ? String(state.values[section.percentBasisKey] || BUILDER_PENALTY_PERCENT_BASIS_OPTIONS[0]) : '';
 
   return (
     <>
@@ -410,12 +331,12 @@ export function BuilderPenaltyDetailPanel({ sectionId }: { sectionId: BuilderPen
         <LoanSectionCard className="p-5">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <div className="space-y-3 text-right">
-              <h2 className="text-xl font-black text-[color:var(--text-strong)]">{section.activationTitle}</h2>
-              <p className="text-sm leading-7 text-[color:var(--text-muted)]">{section.activationDescription}</p>
+              <h2 className="text-xl font-black text-[color:var(--text-strong)]">{copy.activationTitle}</h2>
+              <p className="text-sm leading-7 text-[color:var(--text-muted)]">{copy.activationDescription}</p>
             </div>
             <div className="self-start lg:self-auto">
               <ContractRegistrationSwitch
-                checked={sectionOwnEnabled}
+                checked={Boolean(state.values[section.stateKey])}
                 variant="segmented"
                 onChange={(value) => {
                   const nextState = {
@@ -436,14 +357,8 @@ export function BuilderPenaltyDetailPanel({ sectionId }: { sectionId: BuilderPen
         {sectionEnabled ? (
           <LoanSectionCard className="overflow-hidden">
             <div className="flex flex-wrap border-b border-[color:var(--border-soft)]">
-              {MODE_OPTIONS.map((mode) => (
-                <BuilderPenaltyModeButton
-                  key={mode.id}
-                  title={mode.title}
-                  icon={mode.icon}
-                  active={activeMode === mode.id}
-                  onClick={() => setValue(section.modeKey, mode.id)}
-                />
+              {MODE_CARDS.map((mode) => (
+                <ModeButton key={mode.value} title={mode.title} icon={mode.icon} active={activeMode === mode.value} onClick={() => setValue(section.modeKey, mode.value)} />
               ))}
             </div>
 
@@ -451,86 +366,193 @@ export function BuilderPenaltyDetailPanel({ sectionId }: { sectionId: BuilderPen
               <div className="space-y-5">
                 <div className="text-right">
                   <h2 className="text-[17px] font-black text-[color:var(--text-strong)]">دوره محاسبه جریمه</h2>
-                  <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">
-                    با فعال‌سازی این گزینه، جرائم بر اساس پیکربندی به تمام قراردادهای جدید اعمال خواهند شد
-                  </p>
+                  <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">مشخص کنید جریمه بر مبنای روز، ماه یا سال محاسبه شود.</p>
                 </div>
-
                 <LoanChoicePills
                   ariaLabel="دوره محاسبه جریمه"
-                  options={PERIOD_OPTIONS.map((option) => ({ value: option.value, label: option.label }))}
-                  value={String(state.values[section.periodKey] || PERIOD_OPTIONS[0].value)}
+                  options={BUILDER_PENALTY_PERIOD_OPTIONS.map((option) => ({ value: option.value, label: option.label }))}
+                  value={periodLabel}
                   onChange={(value) => setValue(section.periodKey, value)}
                 />
               </div>
 
               {activeMode === 'fixed' ? (
-                <>
-                  <div className="border-t border-[color:var(--border-soft)]" />
-                  <NumericField
-                    label="مبلغ ثابت جریمه"
-                    value={String(state.values[section.fixedAmountKey] ?? '')}
-                    onChange={(value) => setValue(section.fixedAmountKey, value)}
-                    helper="مبلغی که به ازای هر دوره تاخیر به عنوان جریمه درنظر گرفته میشود"
-                  />
-                </>
+                <NumberField
+                  label="مبلغ ثابت جریمه"
+                  value={String(state.values[section.fixedAmountKey] ?? '')}
+                  onChange={(value) => setValue(section.fixedAmountKey, value)}
+                  helper={`مبلغ جریمه‌ای که برای هر دوره تاخیر (${periodLabel}) محاسبه می‌شود.`}
+                />
               ) : null}
 
               {activeMode === 'percent' ? (
                 <>
-                  <div className="border-t border-[color:var(--border-soft)]" />
-                  <NumericField
+                  <NumberField
                     label="درصد جریمه"
                     value={String(state.values[section.percentAmountKey] ?? '')}
                     onChange={(value) => setValue(section.percentAmountKey, value)}
-                    helper="درصدی که به عنوان جریمه برای این مورد اعمال می‌شود"
+                    helper={`مثلاً ۱٪ از مبنای انتخاب‌شده در هر ${periodLabel.replace('انه', '')} تاخیر.`}
+                    suffix="%"
                   />
+
+                  {section.percentBasisKey ? (
+                    <div className="space-y-5">
+                      <div className="text-right">
+                        <h3 className="text-[17px] font-black text-[color:var(--text-strong)]">مبنای محاسبه درصد</h3>
+                        <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">مشخص کنید درصد جریمه از چه عددی محاسبه می‌شود.</p>
+                      </div>
+                      <LoanChoicePills
+                        ariaLabel="مبنای محاسبه درصد"
+                        options={BUILDER_PENALTY_PERCENT_BASIS_OPTIONS.map((option) => ({ value: option, label: option }))}
+                        value={selectedPercentBasis}
+                        onChange={(value) => setValue(section.percentBasisKey!, value)}
+                      />
+                    </div>
+                  ) : null}
+
+                  {selectedPercentBasis === 'ارزش روز واحد' ? (
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                      <div className="mb-4 text-right">
+                        <h4 className="text-sm font-bold text-slate-800">فلو ثبت ارزش روز واحد</h4>
+                        <p className="mt-1 text-xs leading-6 text-slate-500">چون فلو جداگانه‌ای برای ارزش روز واحد در نرم‌افزار وجود ندارد، مبلغ و مرجع آن در همین بخش ثبت می‌شود.</p>
+                      </div>
+                      <div className="grid gap-4 lg:grid-cols-2">
+                        <NumberField
+                          label="مبلغ ارزش روز واحد"
+                          value={String(state.values[section.marketValueAmountKey!] ?? '')}
+                          onChange={(value) => setValue(section.marketValueAmountKey!, value)}
+                          helper="عددی که درصد جریمه از آن محاسبه می‌شود."
+                        />
+                        <TextField
+                          label="مرجع / توضیح ارزش روز"
+                          value={String(state.values[section.marketValueReferenceKey!] ?? '')}
+                          onChange={(value) => setValue(section.marketValueReferenceKey!, value)}
+                          placeholder="مثلاً گزارش ارزش‌گذاری داخلی در تاریخ ۱۴۰۵/۰۳/۰۱"
+                          helper="منشأ این عدد را ثبت کنید تا در آینده قابل استناد باشد."
+                        />
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {selectedPercentBasis === 'مبلغ تعیین‌شده توسط کارشناس' ? (
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                      <div className="mb-4 text-right">
+                        <h4 className="text-sm font-bold text-slate-800">فلو ثبت مبلغ کارشناسی</h4>
+                        <p className="mt-1 text-xs leading-6 text-slate-500">برای این مبنا باید مبلغ و مشخصات مرجع کارشناسی در همین صفحه ثبت شود.</p>
+                      </div>
+                      <div className="grid gap-4 lg:grid-cols-2">
+                        <NumberField
+                          label="مبلغ تعیین‌شده توسط کارشناس"
+                          value={String(state.values[section.expertAmountKey!] ?? '')}
+                          onChange={(value) => setValue(section.expertAmountKey!, value)}
+                          helper="عددی که مبنای محاسبه درصد جریمه خواهد بود."
+                        />
+                        <TextField
+                          label="نام کارشناس / شماره گزارش"
+                          value={String(state.values[section.expertReferenceKey!] ?? '')}
+                          onChange={(value) => setValue(section.expertReferenceKey!, value)}
+                          placeholder="مثلاً کارشناس رسمی شماره گزارش ۱۲۳"
+                          helper="برای ردیابی و استناد بعدی لازم است."
+                        />
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {selectedPercentBasis === 'سفارشی' ? (
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                      <div className="mb-4 text-right">
+                        <h4 className="text-sm font-bold text-slate-800">فلو مبنای سفارشی</h4>
+                        <p className="mt-1 text-xs leading-6 text-slate-500">برای حالت سفارشی باید هم عنوان مبنا و هم مبلغ مرجع را مشخص کنید.</p>
+                      </div>
+                      <div className="grid gap-4 lg:grid-cols-3">
+                        <TextField
+                          label="عنوان مبنای سفارشی"
+                          value={String(state.values[section.customBasisTitleKey!] ?? '')}
+                          onChange={(value) => setValue(section.customBasisTitleKey!, value)}
+                          placeholder="مثلاً ارزش توافقی واحد"
+                          helper="شرح دهید درصد از چه چیزی محاسبه می‌شود."
+                        />
+                        <NumberField
+                          label="مبلغ مبنای سفارشی"
+                          value={String(state.values[section.customBasisAmountKey!] ?? '')}
+                          onChange={(value) => setValue(section.customBasisAmountKey!, value)}
+                          helper="عدد مرجع برای محاسبه درصد."
+                        />
+                        <TextField
+                          label="توضیح / مرجع سفارشی"
+                          value={String(state.values[section.customBasisReferenceKey!] ?? '')}
+                          onChange={(value) => setValue(section.customBasisReferenceKey!, value)}
+                          placeholder="در صورت نیاز"
+                          helper="اختیاری، برای شفافیت بیشتر."
+                        />
+                      </div>
+                    </div>
+                  ) : null}
                 </>
               ) : null}
 
               {activeMode === 'progressive' ? (
                 <>
-                  <div className="border-t border-[color:var(--border-soft)]" />
                   <div className="space-y-3">
-                    <h3 className="text-right text-[17px] font-black text-[color:var(--text-strong)]">جدول جریمه‌های تصاعدی</h3>
-                    <p className="text-right text-sm text-[color:var(--text-muted)]">نرخ جریمه را برای بازه‌های مختلف ثبت کنید.</p>
+                    <h3 className="text-right text-[17px] font-black text-[color:var(--text-strong)]">پله‌های جریمه تصاعدی</h3>
+                    <p className="text-right text-sm text-[color:var(--text-muted)]">
+                      مثال: روزهای ۱ تا ۳۰ یک مبلغ، روزهای ۳۱ تا ۶۰ مبلغ بیشتر، و از روز ۶۱ به بعد مبلغ بالاتر.
+                    </p>
                   </div>
-                  <SmartProgressiveRateGrid rows={section.progressiveRows} state={state} onValueChange={(key, value) => setValue(key, value)} />
+                  <ProgressiveAmountGrid rows={section.progressiveRows} values={state.values} onValueChange={setValue} periodLabel={periodLabel} />
                 </>
               ) : null}
 
-              <div className="border-t border-[color:var(--border-soft)]" />
-
-              <NumericField
-                label="سقف جریمه"
-                value={String(state.values[section.capKey] ?? '')}
-                onChange={(value) => setValue(section.capKey, value)}
-                helper="حداکثر مبلغ جریمه ای که قابل اعمال میباشد مشخص میشود"
-              />
-
-              <div className="border-t border-[color:var(--border-soft)]" />
-
-              {section.trailingField.type === 'number' ? (
-                <NumericField
-                  label={section.trailingField.label}
-                  value={String(state.values[section.trailingField.key] ?? '')}
-                  onChange={(value) => setValue(section.trailingField.key, value)}
-                  helper={section.trailingField.helper}
-                />
-              ) : (
-                <div className="space-y-5">
-                  <div className="text-right">
-                    <h3 className="text-[17px] font-black text-[color:var(--text-strong)]">{section.trailingField.label}</h3>
-                    <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">{section.trailingField.helper}</p>
+              {sectionId === 'unit-delivery-delay' ? (
+                <>
+                  <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-right text-sm leading-7 text-amber-900">
+                    <div className="flex items-start gap-2">
+                      <Info className="mt-1 h-4 w-4 shrink-0" />
+                      <p>اگر مهلت تنفس ۱۰ روز باشد، جریمه از روز ۱۱ تاخیر شروع می‌شود؛ نه از روز اول.</p>
+                    </div>
                   </div>
-                  <LoanChoicePills
-                    ariaLabel={section.trailingField.label}
-                    options={(section.trailingField.options ?? []).map((option) => ({ value: option, label: option }))}
-                    value={String(state.values[section.trailingField.key] || section.trailingField.options?.[0] || '')}
-                    onChange={(value) => setValue(section.trailingField.key, value)}
+
+                  <div className="rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-right text-sm leading-7 text-sky-900">
+                    <div className="flex items-start gap-2">
+                      <Info className="mt-1 h-4 w-4 shrink-0" />
+                      <p>منطق جریمه و منطق فسخ مستقل هستند. این صفحه فقط نحوه ایجاد و محاسبه جریمه را تعریف می‌کند؛ اگر برای همین تخلف حق فسخ هم لازم است، باید جداگانه در تنظیمات فسخ خریدار پیکربندی شود.</p>
+                    </div>
+                  </div>
+
+                  <NumberField
+                    label="مهلت تنفس بدون جریمه (بر حسب روز)"
+                    value={String(state.values[section.graceDaysKey!] ?? '')}
+                    onChange={(value) => setValue(section.graceDaysKey!, value)}
+                    helper="تعداد روزهای مجاز بعد از موعد تحویل که هنوز جریمه از آن تاریخ شروع نمی‌شود."
                   />
-                </div>
-              )}
+
+                  <div className="space-y-4 rounded-2xl border border-[color:var(--border-soft)] p-4">
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="space-y-1 text-right">
+                        <h3 className="text-[17px] font-black text-[color:var(--text-strong)]">سقف جریمه</h3>
+                        <p className="text-sm leading-7 text-[color:var(--text-muted)]">می‌توانید سقف تعریف کنید یا محاسبه را بدون سقف ادامه دهید.</p>
+                      </div>
+                      <label className="flex items-center gap-2 text-sm font-bold text-[color:var(--text-muted)]">
+                        <input
+                          type="checkbox"
+                          checked={unlimitedCap}
+                          onChange={(event) => setValue(section.unlimitedCapKey!, event.target.checked)}
+                          className="h-4 w-4 rounded border-slate-300 text-cyan-600"
+                        />
+                        بدون سقف
+                      </label>
+                    </div>
+
+                    <NumberField
+                      label="مبلغ سقف جریمه"
+                      value={String(state.values[section.capKey] ?? '')}
+                      onChange={(value) => setValue(section.capKey, value)}
+                      helper={unlimitedCap ? 'در حالت بدون سقف، این مقدار غیرفعال است.' : 'اگر مدل ثابت باشد، این عدد نمی‌تواند کمتر از مبلغ پایه جریمه باشد.'}
+                      disabled={unlimitedCap}
+                    />
+                  </div>
+                </>
+              ) : null}
             </div>
           </LoanSectionCard>
         ) : null}
@@ -539,7 +561,7 @@ export function BuilderPenaltyDetailPanel({ sectionId }: { sectionId: BuilderPen
         {error ? <LoanError error={error} /> : null}
       </LoanPageShell>
 
-      <LoanSaveBar saving={saving} onSave={() => void handleSave()} />
+      <LoanSaveBar saving={saving} onSave={() => (state ? void persistState(state) : undefined)} />
     </>
   );
 }

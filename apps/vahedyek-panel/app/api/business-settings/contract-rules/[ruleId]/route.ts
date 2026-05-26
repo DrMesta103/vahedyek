@@ -1,9 +1,10 @@
 import { Prisma } from '@/lib/prisma-client';
 import { NextResponse } from 'next/server';
 import { requireSessionContext } from '../../../../lib/auth';
+import { normalizeBuilderPenaltyRuleState, validateBuilderPenaltyRuleState } from '../../../../lib/builderPenalty';
+import { CONTRACT_RULE_ITEMS, createInitialRuleState, normalizeRuleState, type ContractRuleId } from '../../../../lib/businessContractRules';
 import { prisma } from '../../../../lib/prisma';
 import { handlePrismaApiError } from '../../../../lib/prismaApiError';
-import { CONTRACT_RULE_ITEMS, createInitialRuleState, normalizeRuleState, type ContractRuleId } from '../../../../lib/businessContractRules';
 
 function isRuleId(value: string): value is ContractRuleId {
   return CONTRACT_RULE_ITEMS.some((item) => item.id === value);
@@ -45,7 +46,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ ruleId: st
     const payload = settings?.rulesPayload && typeof settings.rulesPayload === 'object' ? settings.rulesPayload : {};
     const rule = normalizeRuleState(ruleId, (payload as Record<string, unknown>)[ruleId]);
 
-    return NextResponse.json(rule);
+    return NextResponse.json(ruleId === 'builder-penalty' ? normalizeBuilderPenaltyRuleState(rule) : rule);
   } catch (error) {
     return handlePrismaApiError(error);
   }
@@ -62,12 +63,20 @@ export async function PUT(request: Request, { params }: { params: Promise<{ rule
     }
 
     const body = await request.json();
-    const normalizedRule = normalizeRuleState(ruleId, body);
+    const normalizedBaseRule = normalizeRuleState(ruleId, body);
+    const normalizedRule = ruleId === 'builder-penalty' ? normalizeBuilderPenaltyRuleState(normalizedBaseRule) : normalizedBaseRule;
 
     if (ruleId === 'adjustment' && normalizedRule.activeTab === 'multi-indicator') {
       const total = getAdjustmentWeightsTotal(normalizedRule.values);
       if (total > 100) {
         return NextResponse.json({ message: `جمع درصد شاخص‌های تعدیل ${total}٪ است و نباید از ۱۰۰٪ بیشتر باشد.` }, { status: 400 });
+      }
+    }
+
+    if (ruleId === 'builder-penalty') {
+      const validation = validateBuilderPenaltyRuleState(normalizedRule);
+      if (!validation.ok) {
+        return NextResponse.json({ message: validation.message }, { status: 400 });
       }
     }
 

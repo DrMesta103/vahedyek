@@ -1,4 +1,5 @@
 import { fixMojibakeDeep } from './fixMojibake';
+import { BUILDER_PENALTY_PERCENT_BASIS_OPTIONS } from './builderPenalty';
 
 export type ContractRuleId =
   | 'installments'
@@ -861,6 +862,28 @@ export function normalizeRuleState(ruleId: ContractRuleId, payload: unknown): Co
       values[key] = typeof rawValue === 'string' ? rawValue : '';
     });
     ['discountConditionKeepOnDelay', 'discountConditionPenaltyOnDiscount'].forEach((key) => {
+      values[key] = Boolean(valuesInput[key]);
+    });
+  }
+
+  if (ruleId === 'builder-penalty') {
+    const extraTextDefaults: Record<string, string> = {
+      unitDeliveryDelayPercentBasis: BUILDER_PENALTY_PERCENT_BASIS_OPTIONS[0],
+      unitDeliveryDelayMarketValueAmount: '',
+      unitDeliveryDelayMarketValueReference: '',
+      unitDeliveryDelayExpertAmount: '',
+      unitDeliveryDelayExpertReference: '',
+      unitDeliveryDelayCustomBasisTitle: '',
+      unitDeliveryDelayCustomBasisAmount: '',
+      unitDeliveryDelayCustomBasisReference: '',
+    };
+
+    Object.entries(extraTextDefaults).forEach(([key, fallback]) => {
+      const rawValue = valuesInput[key];
+      values[key] = typeof rawValue === 'string' && rawValue.trim() ? rawValue : fallback;
+    });
+
+    ['unitDeliveryDelayPenaltyCapUnlimited'].forEach((key) => {
       values[key] = Boolean(valuesInput[key]);
     });
   }

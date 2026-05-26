@@ -12,6 +12,7 @@ import {
   type PhysicalProgressScheduleVersion,
 } from '../../../../lib/physicalProgressScheduleLogic';
 import { prisma } from '../../../../lib/prisma';
+import { ensureTenantProjectSettingsColumns } from '../../../../lib/tenantProjectSettingsColumns';
 
 type TenantScheduleRow = {
   projectPhysicalProgressSchedules: unknown;
@@ -30,10 +31,7 @@ export {
 };
 
 export async function ensurePhysicalProgressScheduleColumn() {
-  await prisma.$executeRawUnsafe(`
-    ALTER TABLE "Tenant"
-    ADD COLUMN IF NOT EXISTS "projectPhysicalProgressSchedules" JSONB NOT NULL DEFAULT '[]'::jsonb
-  `);
+  await ensureTenantProjectSettingsColumns();
 }
 
 export async function getTenantPhysicalProgressScheduleVersions(tenantId: string) {
