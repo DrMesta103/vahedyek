@@ -3,8 +3,9 @@
 import Link from 'next/link';
 import { ChevronDown, type LucideIcon } from 'lucide-react';
 import { useState } from 'react';
-import { ChoicePills as UiChoicePills, PersianDatePicker, RULE_PANEL_TEXT_INPUT_CLASSNAME, RuleAmountInput } from '@repo/ui';
+import { ChoicePills as UiChoicePills, PersianDatePicker, RULE_PANEL_TEXT_INPUT_CLASSNAME } from '@repo/ui';
 import { BusinessSettingsSubmitButton } from './BusinessSettingsSubmitButton';
+import { ProfileAwareUnitInput } from '../../../components/ProfileAwareUnitInput';
 
 export function cn(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ');
@@ -186,7 +187,7 @@ export function FinancialAmountInput({
   placeholder?: string;
   suffix: string;
 }) {
-  return <RuleAmountInput value={value} onChange={onChange} placeholder={placeholder} suffix={suffix} />;
+  return <ProfileAwareUnitInput value={value} onChange={onChange} placeholder={placeholder} suffix={suffix} numericMode={suffix === '%' ? 'decimal' : 'integer'} />;
 }
 
 export function LoanDateInput({

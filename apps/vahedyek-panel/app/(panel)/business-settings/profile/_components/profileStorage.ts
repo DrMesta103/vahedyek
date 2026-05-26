@@ -1021,7 +1021,11 @@ export function removeBankAccount(store: ProfileStore, accountId: string) {
 export function formatCurrencyBySettings(amount: number, settings?: CurrencySettings) {
   const currency = settings?.quoteCurrency ?? 'toman';
   const formatted = new Intl.NumberFormat('fa-IR').format(amount);
-  return `${formatted} ${currency === 'toman' ? 'تومان' : 'ریال'}`;
+  return `${formatted} ${getCurrencyLabelBySettings(settings)}`;
+}
+
+export function getCurrencyLabelBySettings(settings?: CurrencySettings) {
+  return (settings?.quoteCurrency ?? 'toman') === 'toman' ? 'تومان' : 'ریال';
 }
 
 export function formatDateBySettings(input: string, settings?: CalendarSettings) {

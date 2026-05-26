@@ -9,7 +9,7 @@ import {
   CirclePercent,
   TrendingUp,
 } from 'lucide-react';
-import { Input, RuleAmountInput, StickySubmitBar } from '@repo/ui';
+import { Input, StickySubmitBar } from '@repo/ui';
 import { getPenaltyItem } from './penaltiesConfig';
 import { useContractFlowBasePath } from './useContractFlowBasePath';
 import {
@@ -20,6 +20,7 @@ import {
   sanitizePositiveIntegerInput,
   validateProgressiveRows,
 } from '../../../../lib/progressivePenalty';
+import { ProfileAwareUnitInput } from '../../../../components/ProfileAwareUnitInput';
 
 type PenaltyMode = 'fixed' | 'overdue' | 'contract' | 'progressive';
 type PenaltyPeriod = 'daily' | 'monthly' | 'yearly';
@@ -109,7 +110,7 @@ function LabeledField({
         {label} <span className="text-rose-400">*</span>
       </span>
       {suffix ? (
-        <RuleAmountInput value={value} onChange={onChange} placeholder={placeholder} suffix={suffix} />
+        <ProfileAwareUnitInput value={value} onChange={onChange} placeholder={placeholder} suffix={suffix} numericMode={suffix === '%' ? 'decimal' : 'integer'} />
       ) : (
         <Input
           value={value}

@@ -35,6 +35,7 @@ import {
   RuleTabButton,
   TagPills,
 } from '@repo/ui';
+import { ProfileAwareUnitInput } from '../../../components/ProfileAwareUnitInput';
 import { TagPill as DraftTagPill } from '../../contracts/new/_components/ContractFormPrimitives';
 import { AdjustmentRuleSection } from './AdjustmentRuleSection';
 import { DiscountRuleSection } from './DiscountRuleSection';
@@ -83,8 +84,8 @@ function RuleTextInput({
   suffix?: string;
   icon?: ElementType;
 }) {
-  if (suffix === 'تومان' || suffix === '%') {
-    return <RuleAmountInput value={value} onChange={onChange} placeholder={placeholder} suffix={suffix} />;
+  if (suffix) {
+    return <ProfileAwareUnitInput value={value} onChange={onChange} placeholder={placeholder} suffix={suffix} numericMode={suffix === '%' ? 'decimal' : 'integer'} />;
   }
 
   return (

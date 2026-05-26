@@ -21,6 +21,7 @@ import {
   LoanLoadingState,
   LoanSuccess,
 } from '../../../../business-settings/_components/LoanSettingsPrimitives';
+import { ProfileAwareUnitInput } from '../../../../../components/ProfileAwareUnitInput';
 
 type BuilderPenaltySection = {
   id: BuilderPenaltySectionId;
@@ -162,36 +163,43 @@ function ProgressiveGrid({
   return (
     <div className="space-y-4">
       {visibleRows.map((row, index) => (
-        <div key={row.fromKey} className="grid gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3 lg:grid-cols-[1fr_100px_1fr_1fr]">
-          <div className="space-y-2">
-            <FieldLabel label={`از روز ${row.from}`} />
-            <input value={row.from} disabled className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-right text-slate-500" />
-          </div>
-
-          <label className="flex items-center justify-end gap-2 pt-8 text-xs font-bold text-slate-500">
-            <input
-              type="checkbox"
-              checked={row.openEnded}
-              onChange={(event) => sync({ [row.openEndedKey]: event.target.checked, [row.toKey]: '' })}
-              className="h-4 w-4 rounded border-slate-300 text-cyan-600"
-            />
-            به بعد
-          </label>
-
-          <div className="space-y-2">
-            <FieldLabel label={`تا روز ${index + 1}`} />
-            <input
-              value={row.to}
-              disabled={row.openEnded}
-              onChange={(event) => sync({ [row.toKey]: event.target.value.replace(/\D/g, ''), [row.openEndedKey]: false })}
-              placeholder={row.openEnded ? 'به بعد' : 'مثلاً 30'}
-              className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-right disabled:bg-slate-50 disabled:text-slate-500"
-            />
-          </div>
-
+        <div key={row.fromKey} className="grid gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3 lg:grid-cols-[1.25fr_1.75fr]">
           <div className="space-y-2">
             <FieldLabel label={`مبلغ جریمه ${periodLabel} - پله ${index + 1}`} />
-            <FinancialAmountInput value={row.amount} onChange={(value) => onValueChange(row.rateKey, value)} suffix="" />
+            <FinancialAmountInput value={row.amount} onChange={(value) => onValueChange(row.rateKey, value)} suffix="تومان" />
+          </div>
+
+          <div className="space-y-2">
+            <div className="grid gap-3 sm:grid-cols-[minmax(0,132px)_minmax(0,132px)] sm:justify-end">
+              <div className="space-y-2">
+                <FieldLabel label="از" />
+                <ProfileAwareUnitInput value={row.from} onChange={() => undefined} suffix="روز" numericMode="integer" disabled />
+              </div>
+
+              <div className="space-y-2">
+                <FieldLabel label="تا" />
+                <ProfileAwareUnitInput
+                  value={row.to}
+                  disabled={row.openEnded}
+                  onChange={(value) => sync({ [row.toKey]: value.replace(/\D/g, ''), [row.openEndedKey]: false })}
+                  placeholder={row.openEnded ? 'به بعد' : '30'}
+                  suffix="روز"
+                  numericMode="integer"
+                />
+              </div>
+            </div>
+
+            <label className="flex items-center justify-end gap-2 text-xs font-bold text-slate-500">
+              <input
+                type="checkbox"
+                checked={row.openEnded}
+                onChange={(event) => sync({ [row.openEndedKey]: event.target.checked, [row.toKey]: '' })}
+                className="h-4 w-4 rounded border-slate-300 text-cyan-600"
+              />
+              به بعد
+            </label>
+
+            <p className="text-right text-xs text-slate-500">شروع هر پله به‌صورت خودکار از پایان پله قبلی محاسبه می‌شود.</p>
           </div>
         </div>
       ))}
@@ -581,27 +589,30 @@ export const BuilderPenaltyInFlow = forwardRef<
                             helper="اگر این مقدار ۱۰ باشد، جریمه از روز ۱۱ تاخیر شروع می‌شود."
                           />
 
-                          <div className="space-y-3 rounded-2xl border border-slate-200 p-4">
-                            <label className="flex items-center justify-between gap-3">
-                              <div className="text-right">
-                                <div className="text-sm font-bold text-slate-700">بدون سقف</div>
-                                <p className="text-xs leading-6 text-slate-500">در این حالت جریمه تا هر زمان تاخیر ادامه یابد محاسبه می‌شود.</p>
+                          <div className="space-y-5 rounded-[28px] border border-slate-200 bg-white p-5">
+                            <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                              <div className="space-y-2 text-right">
+                                <h4 className="text-sm font-bold text-slate-700">سقف جریمه</h4>
+                                <p className="text-xs leading-6 text-slate-500">
+                                  در صورت فعال بودن، جریمه فقط تا سقف مشخص محاسبه می‌شود. در حالت غیرفعال، محاسبه جریمه بدون سقف ادامه پیدا می‌کند.
+                                </p>
                               </div>
-                              <input
-                                type="checkbox"
-                                checked={unlimitedCap}
-                                onChange={(event) => setValue(section.unlimitedCapKey!, event.target.checked, item.id)}
-                                className="h-4 w-4 rounded border-slate-300 text-cyan-600"
-                              />
-                            </label>
+                              <div className="self-start lg:self-auto">
+                                <ContractRegistrationSwitch
+                                  checked={!unlimitedCap}
+                                  variant="segmented"
+                                  onChange={(value) => setValue(section.unlimitedCapKey!, !value, item.id)}
+                                />
+                              </div>
+                            </div>
 
-                            <AmountField
-                              label="سقف جریمه"
-                              value={String(state.values[section.capKey] ?? '')}
-                              onChange={(value) => setValue(section.capKey, value, item.id)}
-                              helper={unlimitedCap ? 'در حالت بدون سقف، این فیلد غیرفعال است.' : 'اگر مدل ثابت باشد، سقف نمی‌تواند کمتر از مبلغ پایه جریمه باشد.'}
-                              disabled={unlimitedCap}
-                            />
+                            {!unlimitedCap ? (
+                              <div className="space-y-3">
+                                <FieldLabel label="مبلغ سقف جریمه *" />
+                                <FinancialAmountInput value={String(state.values[section.capKey] ?? '')} onChange={(value) => setValue(section.capKey, value, item.id)} suffix="" />
+                                <p className="text-right text-sm text-slate-500">اگر مدل ثابت باشد، سقف نمی‌تواند کمتر از مبلغ پایه جریمه باشد.</p>
+                              </div>
+                            ) : null}
                           </div>
                         </>
                       ) : null}
