@@ -3,13 +3,14 @@
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, CircleDollarSign, CirclePercent } from 'lucide-react';
-import { Input, RuleAmountInput, StickySubmitBar } from '@repo/ui';
+import { Input, StickySubmitBar } from '@repo/ui';
 import {
   getDiscountEntry,
   getDiscountGroup,
   type DiscountScope,
 } from './discountsConfig';
 import { useContractFlowBasePath } from './useContractFlowBasePath';
+import { ProfileAwareUnitInput } from '../../../../components/ProfileAwareUnitInput';
 
 type ValueMode = 'amount' | 'percent';
 
@@ -34,7 +35,7 @@ function LabeledField({
         {label} <span className="text-rose-400">*</span>
       </span>
       {suffix ? (
-        <RuleAmountInput value={value} onChange={onChange} placeholder={placeholder} suffix={suffix} />
+        <ProfileAwareUnitInput value={value} onChange={onChange} placeholder={placeholder} suffix={suffix} numericMode={suffix === '%' ? 'decimal' : 'integer'} />
       ) : (
         <Input
           value={value}

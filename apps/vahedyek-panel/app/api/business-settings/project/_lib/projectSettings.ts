@@ -1,5 +1,6 @@
 import { Prisma } from '@/lib/prisma-client';
 import { prisma } from '../../../../lib/prisma';
+import { ensureTenantProjectSettingsColumns } from '../../../../lib/tenantProjectSettingsColumns';
 
 export type ProjectUnitTypeRecord = {
   id: string;
@@ -63,24 +64,7 @@ type TenantProjectSettingsRow = {
   projectAddressData: unknown;
 };
 
-export async function ensureProjectSettingsColumns() {
-  await prisma.$executeRawUnsafe(`
-    ALTER TABLE "Tenant"
-    ADD COLUMN IF NOT EXISTS "projectUnitTypes" JSONB NOT NULL DEFAULT '[]'::jsonb
-  `);
-  await prisma.$executeRawUnsafe(`
-    ALTER TABLE "Tenant"
-    ADD COLUMN IF NOT EXISTS "projectReportData" JSONB NOT NULL DEFAULT '{}'::jsonb
-  `);
-  await prisma.$executeRawUnsafe(`
-    ALTER TABLE "Tenant"
-    ADD COLUMN IF NOT EXISTS "projectTechnicalSpecs" JSONB NOT NULL DEFAULT '{}'::jsonb
-  `);
-  await prisma.$executeRawUnsafe(`
-    ALTER TABLE "Tenant"
-    ADD COLUMN IF NOT EXISTS "projectAddressData" JSONB NOT NULL DEFAULT '{}'::jsonb
-  `);
-}
+export const ensureProjectSettingsColumns = ensureTenantProjectSettingsColumns;
 
 export async function getTenantProjectSettings(tenantId: string) {
   await ensureProjectSettingsColumns();

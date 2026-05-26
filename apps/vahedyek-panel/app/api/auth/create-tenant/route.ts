@@ -5,6 +5,7 @@ import { getActorName, recordAuditLog } from '../../../lib/audit-log';
 import { createSession, getSessionContext, setAuthCookie } from '../../../lib/auth';
 import { prisma } from '../../../lib/prisma';
 import { handlePrismaApiError } from '../../../lib/prismaApiError';
+import { ensureTenantProjectSettingsColumns } from '../../../lib/tenantProjectSettingsColumns';
 
 const ALLOWED_PACKAGES = new Set(['starter', 'growth', 'enterprise']);
 const ALLOWED_BILLING_CYCLES = new Set(['monthly', 'yearly']);
@@ -57,6 +58,8 @@ export async function POST(request: Request) {
     if (!ALLOWED_PACKAGES.has(packageId) || !ALLOWED_BILLING_CYCLES.has(billingCycle)) {
       return NextResponse.json({ message: 'اطلاعات پکیج یا دوره پرداخت معتبر نیست.' }, { status: 400 });
     }
+
+    await ensureTenantProjectSettingsColumns();
 
     const tenant = await prisma.tenant.create({
       data: {

@@ -1,7 +1,8 @@
 'use client';
 
-import { BusinessSwitch, Input, RuleAmountInput, RULE_PANEL_TEXT_INPUT_CLASSNAME } from '@repo/ui';
+import { BusinessSwitch, Input, RULE_PANEL_TEXT_INPUT_CLASSNAME } from '@repo/ui';
 import { TagPills } from '../../contracts/new/_components/ContractFormPrimitives';
+import { ProfileAwareUnitInput } from '../../../components/ProfileAwareUnitInput';
 
 export function RuleTextInput({
   value,
@@ -14,8 +15,8 @@ export function RuleTextInput({
   placeholder?: string;
   suffix?: string;
 }) {
-  if (suffix === 'تومان' || suffix === '%') {
-    return <RuleAmountInput value={value} onChange={onChange} placeholder={placeholder} suffix={suffix} />;
+  if (suffix) {
+    return <ProfileAwareUnitInput value={value} onChange={onChange} placeholder={placeholder} suffix={suffix} numericMode={suffix === '%' ? 'decimal' : 'integer'} />;
   }
 
   return (

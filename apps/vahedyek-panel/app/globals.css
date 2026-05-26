@@ -7014,12 +7014,14 @@ textarea::placeholder {
 }
 
 .progress-amount-mode-switch {
-  width: 100% !important;
-  min-width: 0;
+  width: 156px !important;
+  min-width: 156px;
 }
 
 .progress-amount-mode-switch .business-switch-option {
   white-space: nowrap;
+  padding-inline: 8px;
+  font-size: 11px;
 }
 
 .financial-due-switch:disabled {
