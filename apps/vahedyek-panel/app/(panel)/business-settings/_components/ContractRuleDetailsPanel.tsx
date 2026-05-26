@@ -602,6 +602,7 @@ function InstallmentsTabContent({
   const [scheduleLoading, setScheduleLoading] = useState(false);
   const [openProgressGroupId, setOpenProgressGroupId] = useState('');
   const [openProgressGroupMenuId, setOpenProgressGroupMenuId] = useState('');
+  const [expandedProgressDetailsId, setExpandedProgressDetailsId] = useState('');
   const [progressGroupError, setProgressGroupError] = useState('');
   const progressGroups = useMemo(
     () => parseProgressExpandableGroups(state.values.progressExpandableGroups),
@@ -1072,13 +1073,13 @@ function InstallmentsTabContent({
                   href={progressBasedStandaloneHref}
                   className="flex w-full items-center justify-between rounded-[24px] border border-[color:var(--border-soft)] bg-[color:var(--surface)] px-6 py-6 text-right transition hover:bg-[color:var(--surface-soft)]"
                 >
-                  <ChevronLeft className="h-6 w-6 shrink-0 text-[color:var(--text-muted)]" />
                   <div className="space-y-2">
                     <h3 className="text-xl font-black text-[color:var(--text-strong)]">افزودن بخش جدید اقساط مبتنی بر پیشرفت</h3>
                     <p className="text-sm leading-7 text-[color:var(--text-muted)]">
                       برای تعریف یک بخش جدید، انتخاب برنامه‌ها و مرحله‌های مرتبط را در صفحه بعد انجام دهید.
                     </p>
                   </div>
+                  <ChevronLeft className="h-6 w-6 shrink-0 text-[color:var(--text-muted)]" />
                 </Link>
               ) : (
                 <SectionTitle
@@ -1124,6 +1125,8 @@ function InstallmentsTabContent({
                   const selectedBlocks = progressBlocks.filter((block) =>
                     selectedSchedules.some((schedule) => schedule.blockId === block.id),
                   );
+                  const groupEntries = group.entries.filter((entry) => group.selectedStageIds.includes(entry.stageId));
+                  const detailsExpanded = expandedProgressDetailsId === group.id;
 
                   return (
                     <div
@@ -1175,6 +1178,63 @@ function InstallmentsTabContent({
                           ) : null}
                         </div>
                       </div>
+
+                      <div className="flex justify-center px-4 pb-4">
+                        <button
+                          type="button"
+                          onClick={() => setExpandedProgressDetailsId((current) => (current === group.id ? '' : group.id))}
+                          className="inline-flex items-center gap-2 rounded-full bg-white/85 px-4 py-2 text-sm font-bold text-[color:var(--dark-teal)] shadow-[inset_0_0_0_1px_rgba(15,118,110,0.12)] transition hover:bg-white"
+                        >
+                          <span>{detailsExpanded ? 'بستن' : 'بیشتر'}</span>
+                          <ChevronLeft className={cn('h-4 w-4 transition', detailsExpanded ? '-rotate-90' : 'rotate-90')} />
+                        </button>
+                      </div>
+
+                      {detailsExpanded ? (
+                        <div className="space-y-4 border-t border-white/70 px-4 pb-4 pt-4">
+                          <div className="space-y-2 text-right">
+                            <h4 className="text-sm font-black text-[color:var(--text-strong)]">برنامه‌های انتخاب‌شده</h4>
+                            <div className="flex flex-row-reverse flex-wrap justify-end gap-2">
+                              {selectedSchedules.map((schedule) => (
+                                <span
+                                  key={`${group.id}-${schedule.scheduleKey}`}
+                                  className="rounded-full bg-white/90 px-3 py-1.5 text-xs font-bold text-[color:var(--dark-teal)] shadow-[inset_0_0_0_1px_rgba(15,118,110,0.12)]"
+                                >
+                                  {schedule.title} | {schedule.blockName}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div className="space-y-2 text-right">
+                            <h4 className="text-sm font-black text-[color:var(--text-strong)]">مرحله‌های ثبت‌شده</h4>
+                            <div className="grid gap-2">
+                              {groupEntries.map((entry) => (
+                                <div
+                                  key={`${group.id}-${entry.stageId}`}
+                                  className="rounded-2xl bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] shadow-[inset_0_0_0_1px_rgba(15,23,42,0.05)]"
+                                >
+                                  <div className="flex flex-wrap items-center justify-between gap-2">
+                                    <span className="font-black">{entry.stageTitle}</span>
+                                    <span className="text-xs text-[color:var(--text-muted)]">
+                                      {entry.amountMode === 'percent' ? 'درصدی' : 'مبلغی'}
+                                    </span>
+                                  </div>
+                                  <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-[color:var(--text-muted)]">
+                                    <span>{entry.scheduleTitle} | {entry.blockName}</span>
+                                    <span>
+                                      پیشرفت: {entry.progressValue}
+                                      {` % `}
+                                      | مقدار: {entry.value}
+                                      {entry.amountMode === 'percent' ? '٪' : ' تومان'}
+                                    </span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      ) : null}
                     </div>
                   );
                 })}
