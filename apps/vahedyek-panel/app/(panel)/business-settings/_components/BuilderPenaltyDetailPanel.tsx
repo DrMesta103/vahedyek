@@ -3,6 +3,20 @@
 import { useEffect, useState, type ElementType } from 'react';
 import { ArrowUpRight, BadgePercent, CircleDollarSign } from 'lucide-react';
 import { type ContractRuleState } from '../../../lib/businessContractRules';
+import {
+  MATERIAL_SPECS_CHANGE_COMPARISON_REFERENCES,
+  MATERIAL_SPECS_CHANGE_IMPORTANCE_LEVELS,
+  MATERIAL_SPECS_CHANGE_OUTCOMES,
+  MATERIAL_SPECS_CHANGE_OUTCOME_DETAILS,
+  MATERIAL_SPECS_CHANGE_REFERENCE_DETAILS,
+  MATERIAL_SPECS_CHANGE_REQUIRED_DOCUMENTS,
+  MATERIAL_SPECS_CHANGE_REQUIRED_DOCUMENT_DETAILS,
+  MATERIAL_SPECS_CHANGE_TYPE_DETAILS,
+  MATERIAL_SPECS_CHANGE_TYPES,
+  type MaterialSpecsOptionDetail,
+  parseStoredStringList,
+  toggleStoredStringList,
+} from '../../../lib/materialSpecsChangeRule';
 import { normalizeKnownProgressivePenaltyValues } from '../../../lib/progressivePenalty';
 import {
   ContractRegistrationSwitch,
@@ -17,6 +31,7 @@ import {
   LoanSuccess,
   cn,
 } from './LoanSettingsPrimitives';
+import { MultiTagPills, TagPills } from '../../contracts/new/_components/ContractFormPrimitives';
 
 type BuilderPenaltySectionId = 'unit-delivery-delay' | 'material-specs-change' | 'area-difference';
 type BuilderPenaltyMode = 'fixed' | 'percent' | 'progressive';
@@ -27,6 +42,7 @@ type SectionConfig = {
   activationTitle: string;
   activationDescription: string;
   stateKey: 'unitDeliveryDelayEnabled' | 'materialSpecsChangeEnabled' | 'areaDifferenceEnabled';
+  variant?: 'default' | 'material-specs-change';
   modeKey: string;
   periodKey: string;
   fixedAmountKey: string;
@@ -79,11 +95,13 @@ const SECTION_META: Record<BuilderPenaltySectionId, SectionConfig> = {
     ],
   },
   'material-specs-change': {
-    title: 'تغییر مصالح / مشخصات',
-    description: 'مشخص می‌کند جریمه مربوط به تغییر مصالح یا مشخصات واحد برای سازنده در چه شرایطی قابل استفاده باشد.',
-    activationTitle: 'فعال‌سازی جریمه تغییر مصالح / مشخصات',
-    activationDescription: 'با فعال‌سازی این گزینه، جریمه تغییر مصالح / مشخصات بر اساس پیکربندی به تمام قرارداد قابل استفاده می‌باشد.',
+    title: 'تغییرات مهم مصالح و مشخصات واحد',
+    description: 'تعیین شرایطی که تغییر مصالح یا مشخصات، موجب جبران، اصلاح یا حق فسخ برای خریدار می‌شود.',
+    activationTitle: 'فعال‌سازی قواعد تغییر مصالح و مشخصات',
+    activationDescription:
+      'در صورت فعال بودن، تغییرات مهم در مصالح یا مشخصات واحد طبق این تنظیمات بررسی می‌شود و می‌تواند منجر به جبران، اصلاح، توافق مالی یا حق فسخ شود.',
     stateKey: 'materialSpecsChangeEnabled',
+    variant: 'material-specs-change',
     modeKey: 'materialSpecsChangeMode',
     periodKey: 'materialSpecsChangePeriod',
     fixedAmountKey: 'materialSpecsChangeFixedAmount',
@@ -176,6 +194,121 @@ function NumericField({
       <FieldLabel label={label} />
       <FinancialAmountInput value={value} onChange={onChange} suffix="" />
       <p className="text-right text-sm text-[color:var(--text-muted)]">{helper}</p>
+    </div>
+  );
+}
+
+function MaterialSpecsMultiSelectField({
+  label,
+  helper,
+  options,
+  details,
+  emptyState,
+  value,
+  onToggle,
+}: {
+  label: string;
+  helper: string;
+  options: readonly string[];
+  details: Record<string, MaterialSpecsOptionDetail>;
+  emptyState: string;
+  value: string[];
+  onToggle: (item: string) => void;
+}) {
+  const selectedDetails = value
+    .map((item) => (details[item] ? { label: item, meta: details[item] } : null))
+    .filter((item): item is { label: string; meta: MaterialSpecsOptionDetail } => Boolean(item));
+
+  return (
+    <div className="space-y-4">
+      <div className="text-right">
+        <h3 className="text-[17px] font-black text-[color:var(--text-strong)]">{label}</h3>
+        <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">{helper}</p>
+      </div>
+      <MultiTagPills
+        options={options.map((option) => ({ value: option, label: option, tooltip: option }))}
+        values={value}
+        onChange={(nextValues) => {
+          const currentSet = new Set(value);
+          const nextSet = new Set(nextValues);
+          const changed = options.find((option) => currentSet.has(option) !== nextSet.has(option));
+          if (changed) onToggle(changed);
+        }}
+        className="justify-end flex-row-reverse"
+      />
+      {!selectedDetails.length ? (
+        <p className="rounded-2xl border border-dashed border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] px-4 py-3 text-right text-sm leading-7 text-[color:var(--text-muted)]">{emptyState}</p>
+      ) : (
+        <div className="space-y-3">
+          {selectedDetails.map((item) => (
+            <div key={item.label} className="rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] px-4 py-3 text-right">
+              <div className="text-sm font-black text-[color:var(--text-strong)]">{item.label}</div>
+              <p className="mt-1 text-sm leading-7 text-[color:var(--text-muted)]">{item.meta.description}</p>
+              <p className="mt-2 text-xs leading-6 text-cyan-800">اثر در بخش‌های دیگر: {item.meta.effect}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MaterialSpecsImportanceField({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const selectedOption =
+    MATERIAL_SPECS_CHANGE_IMPORTANCE_LEVELS.find((option) => option.value === value) ?? MATERIAL_SPECS_CHANGE_IMPORTANCE_LEVELS[0];
+
+  return (
+    <div className="space-y-4">
+      <div className="text-right">
+        <h3 className="text-[17px] font-black text-[color:var(--text-strong)]">سطح اهمیت تغییر</h3>
+      </div>
+      <TagPills
+        options={MATERIAL_SPECS_CHANGE_IMPORTANCE_LEVELS.map((option) => ({
+          value: option.value,
+          label: option.label,
+          tooltip: option.label,
+        }))}
+        value={selectedOption.value}
+        onChange={onChange}
+        className="justify-end flex-row-reverse"
+      />
+      <div className="rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] px-4 py-3 text-right">
+        <p className="text-sm leading-7 text-[color:var(--text-muted)]">{selectedOption.description}</p>
+        <p className="mt-2 text-xs leading-6 text-cyan-800">اثر در بخش‌های دیگر: {selectedOption.effect}</p>
+      </div>
+    </div>
+  );
+}
+
+function MaterialSpecsToggleField({
+  title,
+  description,
+  effect,
+  checked,
+  onChange,
+}: {
+  title: string;
+  description: string;
+  effect: string;
+  checked: boolean;
+  onChange: (value: boolean) => void;
+}) {
+  return (
+    <div className="flex flex-col gap-4 rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] p-4 lg:flex-row lg:items-center lg:justify-between">
+      <div className="space-y-2 text-right">
+        <h3 className="text-[17px] font-black text-[color:var(--text-strong)]">{title}</h3>
+        <p className="text-sm leading-7 text-[color:var(--text-muted)]">{description}</p>
+        <p className="text-xs leading-6 text-cyan-800">اثر در بخش‌های دیگر: {effect}</p>
+      </div>
+      <div className="self-start lg:self-auto">
+        <ContractRegistrationSwitch checked={checked} variant="segmented" onChange={onChange} />
+      </div>
     </div>
   );
 }
@@ -403,6 +536,13 @@ export function BuilderPenaltyDetailPanel({ sectionId }: { sectionId: BuilderPen
   const rootEnabled = Boolean(state.active);
   const sectionOwnEnabled = Boolean(state.values[section.stateKey]);
   const sectionEnabled = rootEnabled && sectionOwnEnabled;
+  const includedTypes = parseStoredStringList(state.values.materialSpecsChangeIncludedTypes);
+  const referenceSources = parseStoredStringList(state.values.materialSpecsChangeReferenceSources);
+  const violationOutcomes = parseStoredStringList(state.values.materialSpecsChangeViolationOutcomes);
+  const requiredDocuments = parseStoredStringList(state.values.materialSpecsChangeRequiredDocuments);
+  const importanceLevel =
+    String(state.values.materialSpecsChangeImportanceLevel || MATERIAL_SPECS_CHANGE_IMPORTANCE_LEVELS[0]?.value || '');
+  const isMaterialSpecsSection = section.variant === 'material-specs-change';
 
   return (
     <>
@@ -433,7 +573,84 @@ export function BuilderPenaltyDetailPanel({ sectionId }: { sectionId: BuilderPen
           </div>
         </LoanSectionCard>
 
-        {sectionEnabled ? (
+        {sectionEnabled ? isMaterialSpecsSection ? (
+          <LoanSectionCard className="space-y-8 p-5">
+            <div className="rounded-2xl border border-cyan-200 bg-cyan-50/70 px-4 py-3 text-right">
+              <p className="text-sm leading-7 text-slate-700">
+                این تنظیمات همان ساختاری را تعیین می‌کنند که در بخش جرایم سازنده داخل پیش‌نویس قرارداد نمایش داده می‌شود. هر تغییر پس از ذخیره، به عنوان مرجع پیش‌فرض قراردادهای بعدی و مبنای بررسی اختلافات مربوط به تغییر مصالح و مشخصات استفاده خواهد شد.
+              </p>
+            </div>
+            <MaterialSpecsMultiSelectField
+              label="نوع تغییرات مشمول"
+              helper="مشخص کنید تغییر در کدام بخش‌ها می‌تواند مشمول بررسی و اقدام قراردادی شود."
+              options={MATERIAL_SPECS_CHANGE_TYPES}
+              details={MATERIAL_SPECS_CHANGE_TYPE_DETAILS}
+              emptyState="هنوز حوزه‌ای انتخاب نشده است. تا زمانی که موردی انتخاب نشود، در فلو قرارداد نیز دسته مشخصی برای ثبت این نوع تغییر نمایش یا تفسیر نمی‌شود."
+              value={includedTypes}
+              onToggle={(item) => setValue('materialSpecsChangeIncludedTypes', toggleStoredStringList(state.values.materialSpecsChangeIncludedTypes, item))}
+            />
+
+            <div className="border-t border-[color:var(--border-soft)]" />
+
+            <MaterialSpecsImportanceField value={importanceLevel} onChange={(value) => setValue('materialSpecsChangeImportanceLevel', value)} />
+
+            <div className="border-t border-[color:var(--border-soft)]" />
+
+            <MaterialSpecsMultiSelectField
+              label="مرجع مقایسه"
+              helper="تغییرات نسبت به کدام سند یا مرجع بررسی شود."
+              options={MATERIAL_SPECS_CHANGE_COMPARISON_REFERENCES}
+              details={MATERIAL_SPECS_CHANGE_REFERENCE_DETAILS}
+              emptyState="هنوز مرجع مقایسه‌ای انتخاب نشده است. بدون این انتخاب، تیم قرارداد در پیش‌نویس و رسیدگی‌های بعدی مبنای روشنی برای سنجش تغییر نخواهد داشت."
+              value={referenceSources}
+              onToggle={(item) => setValue('materialSpecsChangeReferenceSources', toggleStoredStringList(state.values.materialSpecsChangeReferenceSources, item))}
+            />
+
+            <div className="border-t border-[color:var(--border-soft)]" />
+
+            <MaterialSpecsToggleField
+              title="جایگزینی هم‌ارزش یا بهتر"
+              description="اگر متریال یا مشخصات جایگزین از نظر کیفیت و ارزش معادل یا بهتر باشد، تخلف محسوب نمی‌شود."
+              effect="در پیش‌نویس و رسیدگی‌های بعدی، این سوییچ تعیین می‌کند آیا تغییر هم‌ارزش باید تخلف تلقی شود یا سیستم آن را به‌عنوان جایگزینی مجاز بپذیرد."
+              checked={Boolean(state.values.materialSpecsChangeEquivalentOrBetterAllowed)}
+              onChange={(value) => setValue('materialSpecsChangeEquivalentOrBetterAllowed', value)}
+            />
+
+            <div className="border-t border-[color:var(--border-soft)]" />
+
+            <MaterialSpecsToggleField
+              title="تأیید خریدار برای تغییرات مهم"
+              description="اگر تغییر مهم بدون تأیید خریدار انجام شود، می‌تواند موجب مطالبه جبران، اصلاح یا حق فسخ شود."
+              effect="این گزینه در جریان قرارداد مشخص می‌کند که برای تغییرات مهم، نبود تأیید خریدار خودِ یک مبنای اعتراض، جبران یا فسخ باشد یا نه."
+              checked={Boolean(state.values.materialSpecsChangeBuyerApprovalRequired)}
+              onChange={(value) => setValue('materialSpecsChangeBuyerApprovalRequired', value)}
+            />
+
+            <div className="border-t border-[color:var(--border-soft)]" />
+
+            <MaterialSpecsMultiSelectField
+              label="نتیجه قابل اعمال در صورت تخلف"
+              helper="مشخص کنید در صورت احراز تغییر غیرمجاز، چه اقداماتی در سیستم قابل انتخاب باشد."
+              options={MATERIAL_SPECS_CHANGE_OUTCOMES}
+              details={MATERIAL_SPECS_CHANGE_OUTCOME_DETAILS}
+              emptyState="هنوز خروجی قابل اعمالی انتخاب نشده است. تا وقتی این بخش خالی بماند، نتیجه رسیدگی در بخش‌های بعدی پروژه استاندارد و ازپیش‌تعریف‌شده نخواهد بود."
+              value={violationOutcomes}
+              onToggle={(item) => setValue('materialSpecsChangeViolationOutcomes', toggleStoredStringList(state.values.materialSpecsChangeViolationOutcomes, item))}
+            />
+
+            <div className="border-t border-[color:var(--border-soft)]" />
+
+            <MaterialSpecsMultiSelectField
+              label="مستندات لازم برای بررسی تغییر"
+              helper="برای ثبت یا پیگیری تغییر مصالح/مشخصات، حداقل یک مستند باید ضمیمه شود."
+              options={MATERIAL_SPECS_CHANGE_REQUIRED_DOCUMENTS}
+              details={MATERIAL_SPECS_CHANGE_REQUIRED_DOCUMENT_DETAILS}
+              emptyState="هنوز مستند لازم انتخاب نشده است. در این وضعیت، تیم اجرا و بررسی نمی‌داند برای ثبت یا پیگیری این نوع تغییر حداقل چه مدرکی باید ضمیمه شود."
+              value={requiredDocuments}
+              onToggle={(item) => setValue('materialSpecsChangeRequiredDocuments', toggleStoredStringList(state.values.materialSpecsChangeRequiredDocuments, item))}
+            />
+          </LoanSectionCard>
+        ) : (
           <LoanSectionCard className="overflow-hidden">
             <div className="flex flex-wrap border-b border-[color:var(--border-soft)]">
               {MODE_OPTIONS.map((mode) => (
@@ -539,7 +756,12 @@ export function BuilderPenaltyDetailPanel({ sectionId }: { sectionId: BuilderPen
         {error ? <LoanError error={error} /> : null}
       </LoanPageShell>
 
-      <LoanSaveBar saving={saving} onSave={() => void handleSave()} />
+      <LoanSaveBar
+        saving={saving}
+        onSave={() => void handleSave()}
+        label={isMaterialSpecsSection ? 'ذخیره تنظیمات' : undefined}
+        savingLabel={isMaterialSpecsSection ? 'در حال ذخیره‌سازی' : undefined}
+      />
     </>
   );
 }

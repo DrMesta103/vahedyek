@@ -588,6 +588,11 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
         {/* Keep both tabs mounted to prevent layout "jump" on switch */}
         <div className={partyTab === 'seller' ? 'block' : 'hidden'} aria-hidden={partyTab !== 'seller'}>
           <div className="p-6 sm:p-8">
+            <div className="mb-5 rounded-2xl border border-cyan-200 bg-cyan-50/70 px-4 py-3 text-right">
+              <p className="text-[12px] leading-6 text-slate-700">
+                این بخش از تنظیمات سازمانی جرایم سازنده استفاده می‌کند. اگر در اینجا گزینه‌ای را تغییر دهید، همان ساختار در قراردادهای بعدی و در صفحه تنظیمات کسب‌وکار نیز مبنای یکسان خواهد داشت.
+              </p>
+            </div>
             <BuilderPenaltyInFlow ref={sellerPenaltyRef} onStatusChange={setSellerStatus} />
           </div>
         </div>

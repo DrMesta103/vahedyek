@@ -31,8 +31,8 @@ const BUILDER_PENALTY_SECTIONS: BuilderPenaltySection[] = [
   },
   {
     id: 'material-specs-change',
-    title: 'تغییر مصالح / مشخصات',
-    description: 'مشخص خواهد کرد که در صورت تغییر مصالح / مشخصات وجود داشته باشد، جریمه سازنده چگونه محاسبه می‌شود',
+    title: 'تغییرات مهم مصالح و مشخصات واحد',
+    description: 'تعیین می‌کند تغییرات مهم در مصالح یا مشخصات واحد چگونه بررسی شود و چه اقدام قراردادی برای آن قابل اعمال باشد.',
     stateKey: 'materialSpecsChangeEnabled',
   },
   {
@@ -187,6 +187,9 @@ export function BuilderPenaltySettingsPanel() {
           <div className="space-y-4 text-right">
             <p className="text-sm leading-6 text-[color:var(--text-muted)]">
               هر آیتم شما را به صفحه تنظیمات همان جریمه هدایت می‌کند تا وضعیت فعال‌سازی و جزئیات آن را مستقل ذخیره کنید.
+            </p>
+            <p className="text-sm leading-6 text-[color:var(--text-muted)]">
+              همین زیرصفحه‌ها در بخش جرایم سازنده داخل پیش‌نویس قرارداد هم مبنا هستند؛ بنابراین تغییر هر گزینه، روی ساختار پیش‌فرض قراردادهای جدید و نحوه تفسیر اختلافات در همان فلو اثر می‌گذارد.
             </p>
             <div className="space-y-3">
               {BUILDER_PENALTY_SECTIONS.map((section) => (

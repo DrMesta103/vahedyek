@@ -294,11 +294,21 @@ export function LoanError({ error }: { error: string }) {
   return <div className="rounded-2xl border border-[#fecdd3] bg-[#fff1f2] px-4 py-3 text-sm text-[#be123c]">{error}</div>;
 }
 
-export function LoanSaveBar({ saving, onSave }: { saving: boolean; onSave: () => void }) {
+export function LoanSaveBar({
+  saving,
+  onSave,
+  label,
+  savingLabel,
+}: {
+  saving: boolean;
+  onSave: () => void;
+  label?: string;
+  savingLabel?: string;
+}) {
   return (
     <div className="fixed inset-x-0 bottom-6 z-20 px-4 pointer-events-none sm:px-6 lg:px-8">
       <div className="mx-auto flex max-w-6xl justify-end">
-        <BusinessSettingsSubmitButton saving={saving} onClick={onSave} />
+        <BusinessSettingsSubmitButton saving={saving} onClick={onSave} label={label} savingLabel={savingLabel} />
       </div>
     </div>
   );
