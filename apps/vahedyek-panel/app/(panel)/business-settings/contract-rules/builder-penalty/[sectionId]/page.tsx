@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import PanelLayout from '../../../../../components/PanelLayout';
 import { BuilderPenaltyDetailPanel } from '../../../_components/BuilderPenaltyDetailPanel';
 
-const VALID_SECTION_IDS = ['unit-delivery-delay', 'material-specs-change', 'area-difference'] as const;
+const VALID_SECTION_IDS = ['unit-delivery-delay', 'material-specs-change'] as const;
 
 export default async function BuilderPenaltySectionPage({
   params,

@@ -55,11 +55,6 @@ const SECTIONS: BuilderPenaltySection[] = [
     title: 'تغییرات مهم مصالح و مشخصات واحد',
     description: 'تعیین می‌کند تغییرات مهم در مصالح یا مشخصات واحد چگونه بررسی شود و چه اقدام قراردادی برای آن قابل اعمال باشد.',
   },
-  {
-    id: 'area-difference',
-    title: 'اختلاف متراژ',
-    description: 'منطق جریمه اختلاف متراژ را برای قراردادهای جدید مشخص کنید.',
-  },
 ];
 
 const SECTION_COPY: Record<BuilderPenaltySectionId, { activationDescription: string }> = {
@@ -69,9 +64,6 @@ const SECTION_COPY: Record<BuilderPenaltySectionId, { activationDescription: str
   'material-specs-change': {
     activationDescription:
       'در صورت فعال بودن، تغییرات مهم در مصالح یا مشخصات واحد طبق این تنظیمات بررسی می‌شود و می‌تواند منجر به جبران، اصلاح، توافق مالی یا حق فسخ شود.',
-  },
-  'area-difference': {
-    activationDescription: 'در این بخش شرایط و نحوه محاسبه جریمه اختلاف متراژ تعریف می‌شود.',
   },
 };
 

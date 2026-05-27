@@ -1,0 +1,3 @@
+SELECT id, email, "fullName", mobile FROM "AppUser"
+WHERE mobile IN ('9173169741','09173169741','989173169741','+989173169741')
+   OR REPLACE(COALESCE(mobile,''), '+98', '') IN ('9173169741','09173169741');
