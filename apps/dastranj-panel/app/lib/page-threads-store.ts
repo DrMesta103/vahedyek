@@ -34,7 +34,7 @@ const globalForPageThreads = globalThis as unknown as {
 
 type ThreadRow = {
   id: string;
-  tenantId: string;
+  tenantId: string | null;
   appId: string;
   pageKey: string;
   pagePathSample: string;
@@ -51,6 +51,8 @@ type ThreadRow = {
   updaterId: string | null;
   updaterFullName: string | null;
   updaterEmail: string | null;
+  tenantName: string | null;
+  tenantSlug: string | null;
   isOpened: boolean | null;
 };
 
@@ -231,6 +233,9 @@ export function mapThreadRow(row: ThreadRow): PageThreadRecord {
   return {
     id: row.id,
     appId: row.appId,
+    tenantId: row.tenantId,
+    tenantName: row.tenantName,
+    tenantSlug: row.tenantSlug,
     pageKey: row.pageKey,
     pagePathSample: row.pagePathSample,
     title: row.title,
@@ -298,6 +303,8 @@ export async function listThreadsForApp(input: { tenantId: string; userId: strin
         updater."id" AS "updaterId",
         updater."fullName" AS "updaterFullName",
         updater."email" AS "updaterEmail",
+        tenant."name" AS "tenantName",
+        tenant."slug" AS "tenantSlug",
         CASE
           WHEN latest_message."lastMessageAt" IS NULL THEN COALESCE(state."isOpened", FALSE)
           WHEN state."updatedAt" IS NULL THEN FALSE
@@ -317,7 +324,8 @@ export async function listThreadsForApp(input: { tenantId: string; userId: strin
         AND state."userId" = $3
       LEFT JOIN "AppUser" author ON author."id" = t."createdById"
       LEFT JOIN "AppUser" updater ON updater."id" = t."updatedById"
-      WHERE t."tenantId" = $1 AND t."appId" = $2
+      LEFT JOIN "Tenant" tenant ON tenant."id" = t."tenantId"
+      WHERE t."appId" = $2
       ORDER BY t."updatedAt" DESC, t."createdAt" DESC
     `,
     input.tenantId,
@@ -357,6 +365,8 @@ export async function listThreadsForPage(input: { pagePath: string; tenantId: st
         updater."id" AS "updaterId",
         updater."fullName" AS "updaterFullName",
         updater."email" AS "updaterEmail",
+        tenant."name" AS "tenantName",
+        tenant."slug" AS "tenantSlug",
         CASE
           WHEN latest_message."lastMessageAt" IS NULL THEN COALESCE(state."isOpened", FALSE)
           WHEN state."updatedAt" IS NULL THEN FALSE
@@ -376,7 +386,8 @@ export async function listThreadsForPage(input: { pagePath: string; tenantId: st
         AND state."userId" = $4
       LEFT JOIN "AppUser" author ON author."id" = t."createdById"
       LEFT JOIN "AppUser" updater ON updater."id" = t."updatedById"
-      WHERE t."tenantId" = $1 AND t."appId" = $2 AND t."pageKey" = $3
+      LEFT JOIN "Tenant" tenant ON tenant."id" = t."tenantId"
+      WHERE t."appId" = $2 AND t."pageKey" = $3
       ORDER BY t."updatedAt" DESC, t."createdAt" DESC
     `,
     input.tenantId,
@@ -492,7 +503,7 @@ export async function updateThreadMeta(input: {
         "labelsJson" = COALESCE($5, "labelsJson"),
         "updatedById" = $6,
         "updatedAt" = CURRENT_TIMESTAMP
-      WHERE "id" = $7 AND "tenantId" = $8 AND "appId" = $9
+      WHERE "id" = $7 AND "appId" = $8
     `,
     title && title.length ? title : null,
     docType,
@@ -501,9 +512,24 @@ export async function updateThreadMeta(input: {
     labels ? JSON.stringify(labels) : null,
     input.actorUserId,
     input.threadId,
-    input.tenantId,
     currentAppConfig.appId,
   );
+}
+
+export async function deleteThread(input: { threadId: string }) {
+  await ensurePageThreadsTables();
+
+  const rows = await prisma.$queryRawUnsafe<{ id: string }[]>(
+    `
+      DELETE FROM ${THREADS_TABLE}
+      WHERE "id" = $1 AND "appId" = $2
+      RETURNING "id"
+    `,
+    input.threadId,
+    currentAppConfig.appId,
+  );
+
+  return rows.length > 0;
 }
 
 export async function listThreadMessages(input: { threadId: string }) {
@@ -602,11 +628,10 @@ export async function createMessage(input: {
     `
       UPDATE ${THREADS_TABLE}
       SET "updatedAt" = CURRENT_TIMESTAMP, "updatedById" = $1
-      WHERE "id" = $2 AND "tenantId" = $3 AND "appId" = $4
+      WHERE "id" = $2 AND "appId" = $3
     `,
     input.actorUserId,
     input.threadId,
-    input.tenantId,
     currentAppConfig.appId,
   );
 

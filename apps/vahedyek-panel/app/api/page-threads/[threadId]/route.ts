@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requireActiveAuthPayload } from '../../../lib/auth';
-import { updateThreadMeta } from '../../../lib/page-threads-store';
+import { deleteThread, updateThreadMeta } from '../../../lib/page-threads-store';
 import { handlePrismaApiError } from '../../../lib/prismaApiError';
 
 type RouteContext = {
@@ -32,6 +32,24 @@ export async function PATCH(request: Request, context: RouteContext) {
       status: body.status,
       labels: body.labels,
     });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    return handlePrismaApiError(error);
+  }
+}
+
+export async function DELETE(_: Request, context: RouteContext) {
+  try {
+    const auth = await requireActiveAuthPayload();
+    if (auth instanceof NextResponse) return auth;
+
+    const { threadId } = await context.params;
+    const deleted = await deleteThread({ threadId });
+
+    if (!deleted) {
+      return NextResponse.json({ message: 'گفت‌وگو پیدا نشد.' }, { status: 404 });
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -204,6 +204,9 @@ type DevDocThreadStatus = (typeof DEV_DOC_THREAD_STATUSES)[number];
 type DevDocThreadRecord = {
     id: string;
     appId: string;
+    tenantId: string | null;
+    tenantName: string | null;
+    tenantSlug: string | null;
     pageKey: string;
     pagePathSample: string;
     title: string;
@@ -234,10 +237,11 @@ type DevDocThreadsBoardProps = {
     appName: string;
     listEndpoint: string;
     updateEndpoint: (threadId: string) => string;
+    deleteEndpoint?: (threadId: string) => string;
     title?: string;
     description?: string;
 };
-declare function DevDocThreadsBoard({ appName, listEndpoint, updateEndpoint, title, description, }: DevDocThreadsBoardProps): react_jsx_runtime.JSX.Element;
+declare function DevDocThreadsBoard({ appName, listEndpoint, updateEndpoint, deleteEndpoint, title, description, }: DevDocThreadsBoardProps): react_jsx_runtime.JSX.Element;
 
 type AppThemeTokens = {
     primary: string;

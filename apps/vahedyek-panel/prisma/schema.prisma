@@ -33,7 +33,6 @@ model Tenant {
   DevPageDocument                  DevPageDocument[]
   DevPageDocumentEvent             DevPageDocumentEvent[]
   DevPageDocumentReadState         DevPageDocumentReadState[]
-  DevPageThreadReadState           DevPageThreadReadState[]
   directory                        DirectoryPerson[]
   representatives                  DirectoryRepresentative[]
   employees                        Employee[]
@@ -868,6 +867,7 @@ model DevPageMessage {
 model DevPageThread {
   id                                         String                   @id
   appId                                      String                   @default("vahedyek")
+  tenantId                                   String?
   pageKey                                    String
   pagePathSample                             String                   @default("/")
   title                                      String
@@ -885,22 +885,21 @@ model DevPageThread {
   DevPageThreadReadState                     DevPageThreadReadState[]
 
   @@index([appId, pageKey])
+  @@index([appId, tenantId])
   @@index([appId, updatedAt(sort: Desc)])
 }
 
 model DevPageThreadReadState {
   id        String        @id
-  tenantId  String
   appId     String        @default("vahedyek")
   userId    String
   threadId  String
   isOpened  Boolean       @default(false)
   updatedAt DateTime      @default(now())
-  Tenant    Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   Thread    DevPageThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
   AppUser   AppUser       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([tenantId, appId, userId, threadId])
+  @@unique([appId, userId, threadId])
 }
 
 model TenantBusinessProfileSettings {

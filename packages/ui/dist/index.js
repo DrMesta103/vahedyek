@@ -1028,6 +1028,16 @@ var __iconNode7 = [
   ["path", { d: "m21 21-4.3-4.3", key: "1qie3q" }]
 ];
 var Search = createLucideIcon("search", __iconNode7);
+
+// ../../node_modules/lucide-react/dist/esm/icons/trash-2.js
+var __iconNode8 = [
+  ["path", { d: "M3 6h18", key: "d0wm0j" }],
+  ["path", { d: "M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6", key: "4alrt4" }],
+  ["path", { d: "M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2", key: "v07s0e" }],
+  ["line", { x1: "10", x2: "10", y1: "11", y2: "17", key: "1uufr5" }],
+  ["line", { x1: "14", x2: "14", y1: "11", y2: "17", key: "xtxkd" }]
+];
+var Trash2 = createLucideIcon("trash-2", __iconNode8);
 var STATUS_COLUMNS = [
   { id: "todo", title: "\u0627\u0646\u062C\u0627\u0645\u200C\u0646\u0634\u062F\u0647", description: "\u06AF\u0641\u062A\u06AF\u0648\u0647\u0627\u06CC\u06CC \u06A9\u0647 \u0647\u0646\u0648\u0632 \u0634\u0631\u0648\u0639 \u0646\u0634\u062F\u0647\u200C\u0627\u0646\u062F" },
   { id: "in_progress", title: "\u062F\u0631 \u062D\u0627\u0644 \u0627\u0646\u062C\u0627\u0645", description: "\u0645\u0648\u0627\u0631\u062F\u06CC \u06A9\u0647 \u062A\u06CC\u0645 \u0631\u0648\u06CC \u0622\u0646\u200C\u0647\u0627 \u062F\u0631 \u062D\u0627\u0644 \u06A9\u0627\u0631 \u0627\u0633\u062A" },
@@ -1043,6 +1053,7 @@ function DevDocThreadsBoard({
   appName,
   listEndpoint,
   updateEndpoint,
+  deleteEndpoint,
   title = "\u0628\u0631\u062F \u06AF\u0641\u062A\u200C\u0648\u06AF\u0648\u0647\u0627\u06CC \u0645\u0633\u062A\u0646\u062F\u0627\u062A",
   description = "\u062F\u0631 \u0627\u06CC\u0646 \u0628\u062E\u0634 \u0645\u06CC\u200C\u062A\u0648\u0627\u0646\u06CC\u062F \u06AF\u0641\u062A\u06AF\u0648\u0647\u0627 \u0648 \u0646\u0638\u0631\u0627\u062A \u0645\u0631\u0628\u0648\u0637 \u0628\u0647 \u0645\u0633\u062A\u0646\u062F\u0627\u062A \u0631\u0627 \u0645\u062F\u06CC\u0631\u06CC\u062A \u0648 \u062F\u0646\u0628\u0627\u0644 \u06A9\u0646\u06CC\u062F. \u0627\u0632 \u062C\u0633\u062A\u062C\u0648\u060C \u0645\u0631\u062A\u0628\u200C\u0633\u0627\u0632\u06CC \u0648 \u06A9\u0634\u06CC\u062F\u0646 \u06A9\u0627\u0631\u062A\u200C\u0647\u0627 \u0628\u0631\u0627\u06CC \u062A\u063A\u06CC\u06CC\u0631 \u0648\u0636\u0639\u06CC\u062A \u0627\u0633\u062A\u0641\u0627\u062F\u0647 \u06A9\u0646\u06CC\u062F."
 }) {
@@ -1053,6 +1064,7 @@ function DevDocThreadsBoard({
   const [search, setSearch] = React.useState("");
   const [draggingThreadId, setDraggingThreadId] = React.useState(null);
   const [activeDropZone, setActiveDropZone] = React.useState(null);
+  const resolvedDeleteEndpoint = deleteEndpoint ?? updateEndpoint;
   const loadThreads = async () => {
     setLoading(true);
     setError("");
@@ -1070,11 +1082,33 @@ function DevDocThreadsBoard({
   React.useEffect(() => {
     void loadThreads();
   }, []);
+  React.useEffect(() => {
+    const refresh = () => {
+      void loadThreads();
+    };
+    const intervalId = window.setInterval(refresh, 15e3);
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", refresh);
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", refresh);
+    };
+  }, []);
   const filteredThreads = React.useMemo(() => {
     const query = search.trim().toLowerCase();
     if (!query) return threads;
     return threads.filter(
-      (thread) => [thread.title, thread.docType, thread.pagePathSample, thread.pageKey, thread.createdBy?.fullName, ...thread.labels].filter(Boolean).join(" ").toLowerCase().includes(query)
+      (thread) => [
+        thread.title,
+        thread.docType,
+        thread.pagePathSample,
+        thread.pageKey,
+        thread.tenantName,
+        thread.tenantSlug,
+        thread.createdBy?.fullName,
+        ...thread.labels
+      ].filter(Boolean).join(" ").toLowerCase().includes(query)
     );
   }, [search, threads]);
   const columns = React.useMemo(
@@ -1102,6 +1136,28 @@ function DevDocThreadsBoard({
     } catch (updateError) {
       setThreads(previousThreads);
       setError(updateError instanceof Error ? updateError.message : "\u0628\u0647\u200C\u0631\u0648\u0632\u0631\u0633\u0627\u0646\u06CC \u0648\u0636\u0639\u06CC\u062A \u0628\u0627 \u062E\u0637\u0627 \u0645\u0648\u0627\u062C\u0647 \u0634\u062F.");
+    } finally {
+      setSavingThreadId(null);
+      setDraggingThreadId(null);
+      setActiveDropZone(null);
+    }
+  };
+  const removeThread = async (threadId) => {
+    const currentThread = threads.find((thread) => thread.id === threadId);
+    if (!currentThread) return;
+    const confirmed = window.confirm(`\u062D\u0630\u0641 \u06AF\u0641\u062A\u200C\u0648\u06AF\u0648\u06CC \xAB${currentThread.title}\xBB\u061F \u0627\u06CC\u0646 \u0639\u0645\u0644\u06CC\u0627\u062A \u0642\u0627\u0628\u0644 \u0628\u0627\u0632\u06AF\u0634\u062A \u0646\u06CC\u0633\u062A.`);
+    if (!confirmed) return;
+    const previousThreads = threads;
+    setThreads((current) => current.filter((thread) => thread.id !== threadId));
+    setSavingThreadId(threadId);
+    setError("");
+    try {
+      const response = await fetch(resolvedDeleteEndpoint(threadId), { method: "DELETE" });
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(payload?.message || "\u062D\u0630\u0641 \u06AF\u0641\u062A\u200C\u0648\u06AF\u0648 \u0628\u0627 \u062E\u0637\u0627 \u0645\u0648\u0627\u062C\u0647 \u0634\u062F.");
+    } catch (removeError) {
+      setThreads(previousThreads);
+      setError(removeError instanceof Error ? removeError.message : "\u062D\u0630\u0641 \u06AF\u0641\u062A\u200C\u0648\u06AF\u0648 \u0628\u0627 \u062E\u0637\u0627 \u0645\u0648\u0627\u062C\u0647 \u0634\u062F.");
     } finally {
       setSavingThreadId(null);
       setDraggingThreadId(null);
@@ -1203,6 +1259,7 @@ function DevDocThreadsBoard({
                         /* @__PURE__ */ jsxRuntime.jsxs("div", { className: "mb-3 flex flex-wrap gap-2", children: [
                           /* @__PURE__ */ jsxRuntime.jsx("span", { className: chipClass(), children: thread.docType }),
                           /* @__PURE__ */ jsxRuntime.jsx("span", { className: chipClass(), children: DEV_DOC_PRIORITY_LABELS[thread.priority] }),
+                          /* @__PURE__ */ jsxRuntime.jsx("span", { className: chipClass(), children: thread.tenantName || thread.tenantSlug || "tenant \u0646\u0627\u0645\u0634\u062E\u0635" }),
                           thread.status === "in_progress" ? /* @__PURE__ */ jsxRuntime.jsx("span", { className: "inline-flex items-center rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-700", children: "\u062F\u0631 \u062D\u0627\u0644 \u0627\u0646\u062C\u0627\u0645" }) : null,
                           thread.status === "done" ? /* @__PURE__ */ jsxRuntime.jsx("span", { className: "inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700", children: "\u0627\u0646\u062C\u0627\u0645\u200C\u0634\u062F\u0647" }) : null,
                           thread.labels.slice(0, 3).map((label) => /* @__PURE__ */ jsxRuntime.jsx("span", { className: chipClass(), children: label }, `${thread.id}-${label}`))
@@ -1212,6 +1269,17 @@ function DevDocThreadsBoard({
                     ] }),
                     /* @__PURE__ */ jsxRuntime.jsxs("div", { className: "flex items-center gap-2", children: [
                       savingThreadId === thread.id ? /* @__PURE__ */ jsxRuntime.jsx(LoaderCircle, { className: "h-4 w-4 animate-spin text-[color:var(--theme-accent)]" }) : null,
+                      /* @__PURE__ */ jsxRuntime.jsx(
+                        "button",
+                        {
+                          type: "button",
+                          className: "inline-flex h-8 w-8 items-center justify-center rounded-full border border-[color:var(--border-color)] text-[color:var(--text-muted)] transition hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700",
+                          onClick: () => void removeThread(thread.id),
+                          "aria-label": "\u062D\u0630\u0641 \u06AF\u0641\u062A\u200C\u0648\u06AF\u0648",
+                          title: "\u062D\u0630\u0641 \u06AF\u0641\u062A\u200C\u0648\u06AF\u0648",
+                          children: /* @__PURE__ */ jsxRuntime.jsx(Trash2, { className: "h-4 w-4" })
+                        }
+                      ),
                       /* @__PURE__ */ jsxRuntime.jsx(GripVertical, { className: "h-4 w-4 text-[color:var(--text-muted)]" })
                     ] })
                   ] }),
@@ -1225,6 +1293,10 @@ function DevDocThreadsBoard({
                       /* @__PURE__ */ jsxRuntime.jsxs("span", { children: [
                         "\u0622\u062E\u0631\u06CC\u0646 \u0628\u0631\u0648\u0632\u0631\u0633\u0627\u0646\u06CC: ",
                         formatDateTime(thread.updatedAt)
+                      ] }),
+                      /* @__PURE__ */ jsxRuntime.jsxs("span", { children: [
+                        "tenant: ",
+                        thread.tenantName || thread.tenantSlug || "\u0646\u0627\u0645\u0634\u062E\u0635"
                       ] })
                     ] })
                   ] }),
@@ -1267,6 +1339,7 @@ lucide-react/dist/esm/icons/grip-vertical.js:
 lucide-react/dist/esm/icons/loader-circle.js:
 lucide-react/dist/esm/icons/refresh-cw.js:
 lucide-react/dist/esm/icons/search.js:
+lucide-react/dist/esm/icons/trash-2.js:
 lucide-react/dist/esm/lucide-react.js:
   (**
    * @license lucide-react v0.487.0 - ISC
