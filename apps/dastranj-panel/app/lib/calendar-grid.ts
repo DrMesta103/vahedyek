@@ -7,6 +7,7 @@ import {
   PERSIAN_WEEKDAY_NAMES,
   type PersianYmd,
 } from './calendar-dates';
+import { getCalendarHolidayTypeLabel } from './calendar-event-types';
 import { isCalendarHolidayEvent, normalizePersianDateInput, type CalendarStoredEvent } from './calendar-events';
 import { summarizeShiftForDayPanel, type CalendarDayShiftDetails } from './calendar-shift-display';
 import type { CalendarShiftType, StoredCalendarShift } from './calendar-shifts';
@@ -29,6 +30,7 @@ export type CalendarDayEvent = {
   title: string;
   description: string;
   tone: 'holiday' | 'weekend' | 'other';
+  holidayTypeLabel?: string;
 };
 
 export type CalendarDayShift = CalendarDayShiftDetails;
@@ -70,12 +72,11 @@ function shiftIncludedDates(shift: StoredCalendarShift) {
 function shiftAppliesOnWeekday(
   shift: StoredCalendarShift,
   weekdayName: string,
-  isHoliday: boolean,
   date: string,
   excludedDates: Set<string>,
 ) {
   const normalizedDate = normalizePersianDateInput(date);
-  if (isHoliday || excludedDates.has(normalizedDate)) return false;
+  if (excludedDates.has(normalizedDate)) return false;
 
   const includedDates = shiftIncludedDates(shift);
   if (includedDates.length > 0) {
@@ -116,8 +117,10 @@ export function buildMonthCells(input: {
   singleHolidays: CalendarStoredEvent[];
   shifts: StoredCalendarShift[];
   excludedShiftDates?: string[];
+  weekendOverrideDates?: string[];
 }): CalendarDayCell[] {
   const excludedDates = new Set((input.excludedShiftDates ?? []).map((item) => item.trim()));
+  const weekendOverrides = new Set((input.weekendOverrideDates ?? []).map((item) => normalizePersianDateInput(item)));
   const daysInMonth = getPersianMonthLength(input.year, input.month);
   const startWeekday = getPersianWeekdayIndex({ year: input.year, month: input.month, day: 1 });
   const cells: CalendarDayCell[] = [];
@@ -142,11 +145,11 @@ export function buildMonthCells(input: {
     const weekdayIndex = getPersianWeekdayIndex(parts);
     const inRange = isPersianYmdInRange(parts, input.bounds.start, input.bounds.end);
     const holidayEvent = findHolidayEvent(date, input.singleHolidays);
-    const isWeekend = inRange && isWeekendDay(weekdayName, input.weekends);
+    const isWeekend = inRange && isWeekendDay(weekdayName, input.weekends) && !weekendOverrides.has(date);
     const isHoliday = inRange && (Boolean(holidayEvent) || isWeekend);
     const hasOtherEvent = inRange && dayHasOtherEvent(date, input.singleHolidays);
     const applicableShifts = inRange
-      ? input.shifts.filter((shift) => shiftAppliesOnWeekday(shift, weekdayName, isHoliday, date, excludedDates))
+      ? input.shifts.filter((shift) => shiftAppliesOnWeekday(shift, weekdayName, date, excludedDates))
       : [];
     const shiftTypes = [...new Set(applicableShifts.map((shift) => shift.shiftType))];
 
@@ -184,8 +187,10 @@ export function getDayDetails(input: {
   singleHolidays: CalendarStoredEvent[];
   shifts: StoredCalendarShift[];
   excludedShiftDates?: string[];
+  weekendOverrideDates?: string[];
 }): { isHoliday: boolean; shifts: CalendarDayShift[]; events: CalendarDayEvent[] } {
   const excludedDates = new Set((input.excludedShiftDates ?? []).map((item) => item.trim()));
+  const weekendOverrides = new Set((input.weekendOverrideDates ?? []).map((item) => normalizePersianDateInput(item)));
   const parts = input.date.match(/^(\d{4})\/(\d{2})\/(\d{2})$/);
   if (!parts) {
     return { isHoliday: false, shifts: [], events: [] };
@@ -199,7 +204,7 @@ export function getDayDetails(input: {
   const weekdayName = getPersianWeekdayName(ymd);
   const dayEvents = findEventsForDate(input.date, input.singleHolidays);
   const holidayEvent = dayEvents.find((item) => isCalendarHolidayEvent(item));
-  const isWeekend = isWeekendDay(weekdayName, input.weekends);
+  const isWeekend = isWeekendDay(weekdayName, input.weekends) && !weekendOverrides.has(input.date);
   const isHoliday = Boolean(holidayEvent) || isWeekend;
 
   const events: CalendarDayEvent[] = dayEvents.map((item) => ({
@@ -207,6 +212,7 @@ export function getDayDetails(input: {
     title: item.title,
     description: item.description?.trim() ? item.description : 'ثبت نشده است',
     tone: isCalendarHolidayEvent(item) ? 'holiday' : 'other',
+    holidayTypeLabel: item.holidayType ? getCalendarHolidayTypeLabel(item.holidayType) : undefined,
   }));
 
   if (isWeekend && !holidayEvent) {
@@ -218,11 +224,9 @@ export function getDayDetails(input: {
     });
   }
 
-  const shifts = isHoliday
-    ? []
-    : input.shifts
-        .filter((shift) => shiftAppliesOnWeekday(shift, weekdayName, isHoliday, input.date, excludedDates))
-        .map((shift) => summarizeShiftForDayPanel(shift));
+  const shifts = input.shifts
+    .filter((shift) => shiftAppliesOnWeekday(shift, weekdayName, input.date, excludedDates))
+    .map((shift) => summarizeShiftForDayPanel(shift));
 
   return { isHoliday, shifts, events };
 }

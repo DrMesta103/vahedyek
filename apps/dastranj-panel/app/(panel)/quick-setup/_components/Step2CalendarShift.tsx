@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useMemo, useState, type ReactNode } from 'react';
 import { createCalendarDraftFromDefaultAction, updateCalendarFromQuickSetupAction } from '../../../lib/actions';
+import { resolveCalendarShiftTitle } from '../../../lib/calendar-shifts';
 import type { CompletedCalendarItem, DefaultCalendarTemplate } from './quick-setup.types';
 
 type SectionKey = 'calendar' | 'holiday' | 'shift';
@@ -422,12 +423,11 @@ function TitleCard({ title, setTitle }: { title: string; setTitle: (value: strin
         <div className="text-xl font-black text-white">اطلاعات پایه شیفت</div>
       </div>
       <label className="mt-6 block space-y-2 text-right">
-        <span className="text-sm font-bold text-white">
-          عنوان شیفت <span className="text-rose-400">*</span>
-        </span>
+        <span className="text-sm font-bold text-white">عنوان شیفت</span>
         <input
           value={title}
           onChange={(event) => setTitle(event.target.value)}
+          placeholder="عنوان شیفت (اختیاری)"
           className="w-full rounded-xl border border-slate-600 bg-slate-900/60 px-4 py-3 text-right text-sm text-white outline-none transition-colors focus:border-indigo-400"
         />
       </label>
@@ -720,11 +720,18 @@ export default function Step2CalendarShift({
   );
 
   const selectedShiftLabel = SHIFT_OPTIONS.find((item) => item.id === shiftType)?.label ?? 'شیفت ثبت نشده';
-  const fixedReady = shiftType === 'fixed' && shiftTitle.trim() && workingDays.length > 0 && fixedTotalMinutes <= 24 * 60 && !hasFixedRestError(rests, fixedWorkRange);
-  const floatDayReady = shiftType === 'float-day' && shiftTitle.trim() && floatDayWorkingDays.length > 0 && floatDayTotalMinutes <= 24 * 60 && !hasFixedRestError(floatDayRests, floatDayWorkRange);
-  const floatAbsReady = shiftType === 'float-abs' && shiftTitle.trim() && floatAbsWorkingDays.length > 0 && floatAbsTotalMinutes <= 24 * 60 && !hasFixedRestError(floatAbsRests, floatAbsWorkRange);
-  const splitReady = shiftType === 'split' && shiftTitle.trim() && splitWorkingDays.length > 0 && splitTotalMinutes <= 24 * 60 && !hasFixedRestError(split1Rests, split1WorkRange) && !hasFixedRestError(split2Rests, split2WorkRange);
-  const rotateReady = shiftType === 'rotate' && shiftTitle.trim() && rotateSegments.length > 0 && rotateSegments.every((segment) => segment.kind === 'off' || !hasFixedRestError(segment.rests, { start: segment.start, end: segment.end, nextDay: segment.nextDay }));
+  const fixedReady = shiftType === 'fixed' && workingDays.length > 0 && fixedTotalMinutes <= 24 * 60 && !hasFixedRestError(rests, fixedWorkRange);
+  const floatDayReady = shiftType === 'float-day' && floatDayWorkingDays.length > 0 && floatDayTotalMinutes <= 24 * 60 && !hasFixedRestError(floatDayRests, floatDayWorkRange);
+  const floatAbsReady = shiftType === 'float-abs' && floatAbsWorkingDays.length > 0 && floatAbsTotalMinutes <= 24 * 60 && !hasFixedRestError(floatAbsRests, floatAbsWorkRange);
+  const splitReady = shiftType === 'split' && splitWorkingDays.length > 0 && splitTotalMinutes <= 24 * 60 && !hasFixedRestError(split1Rests, split1WorkRange) && !hasFixedRestError(split2Rests, split2WorkRange);
+  const rotateReady =
+    shiftType === 'rotate' &&
+    rotateSegments.length > 0 &&
+    rotateSegments.every(
+      (segment) =>
+        segment.kind === 'off' ||
+        !hasFixedRestError(segment.rests, { start: segment.start, end: segment.end, nextDay: segment.nextDay }),
+    );
   const canSave = Boolean(title.trim() && year.trim() && draftCalendarId && (fixedReady || floatDayReady || floatAbsReady || splitReady || rotateReady));
 
   const toggle = (list: string[], value: string) => (list.includes(value) ? list.filter((item) => item !== value) : [...list, value]);
@@ -768,7 +775,7 @@ export default function Step2CalendarShift({
     shiftType,
     mode: shiftMode,
     templateId: selectedTemplateId,
-    title: shiftTitle.trim(),
+    title: resolveCalendarShiftTitle(shiftTitle, shiftType),
     fixedShift: { startTime, endTime, endsNextDay: nextDay },
     workingDays,
     rests,
@@ -840,7 +847,7 @@ export default function Step2CalendarShift({
         weekends,
         singleHolidays: holidays,
         shiftType,
-        shiftTitle: shiftTitle.trim(),
+        shiftTitle: resolveCalendarShiftTitle(shiftTitle, shiftType),
         shiftConfig: buildShiftConfig(),
       });
       onComplete({

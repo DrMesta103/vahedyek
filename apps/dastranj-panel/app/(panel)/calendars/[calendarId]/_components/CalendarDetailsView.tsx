@@ -35,7 +35,7 @@ import {
   deleteCalendarEventsInRangeAction,
   deleteCalendarShiftsInRangeAction,
   deleteCalendarStoredEventAction,
-  removeCalendarWeekendDayAction,
+  addCalendarWeekendOverrideAction,
 } from '../../../../lib/actions';
 import type { CalendarShiftDayContext, CalendarShiftWizardCalendar } from './shift/types';
 import type { CalendarStoredEvent } from '../../../../lib/calendar-events';
@@ -55,6 +55,7 @@ export type CalendarDetailsData = {
   startDate: string;
   endDate: string;
   weekends: string[];
+  weekendOverrideDates: string[];
   singleHolidays: CalendarStoredEvent[];
   shifts: StoredCalendarShift[];
   excludedShiftDates: string[];
@@ -135,6 +136,19 @@ export function CalendarDetailsView({ calendar }: CalendarDetailsViewProps) {
   const selectedCell = cells.find((cell) => cell.day === selectedDay) ?? null;
   const selectedDate = selectedCell?.date ?? formatSelectedDate(calendar.viewYear, calendar.viewMonth, selectedDay);
 
+  const dayDetails = useMemo(
+    () =>
+      getDayDetails({
+        date: selectedDate,
+        weekends: calendar.weekends,
+        singleHolidays: calendar.singleHolidays,
+        shifts: calendar.shifts,
+        excludedShiftDates: calendar.excludedShiftDates,
+        weekendOverrideDates: calendar.weekendOverrideDates,
+      }),
+    [calendar.excludedShiftDates, calendar.shifts, calendar.singleHolidays, calendar.weekends, calendar.weekendOverrideDates, selectedDate],
+  );
+
   const shiftDayContext = useMemo((): CalendarShiftDayContext | undefined => {
     if (!shiftDialogFromDay) return undefined;
     const ymd = parsePersianYmd(selectedDate);
@@ -142,8 +156,9 @@ export function CalendarDetailsView({ calendar }: CalendarDetailsViewProps) {
     return {
       date: selectedDate,
       weekdayName: getPersianWeekdayName(ymd),
+      isHoliday: dayDetails.isHoliday,
     };
-  }, [selectedDate, shiftDialogFromDay]);
+  }, [dayDetails.isHoliday, selectedDate, shiftDialogFromDay]);
 
   const openShiftDialog = (fromDay: boolean) => {
     setShiftDialogFromDay(fromDay);
@@ -167,7 +182,11 @@ export function CalendarDetailsView({ calendar }: CalendarDetailsViewProps) {
 
   const eventDayContext = useMemo(() => {
     if (!eventDialogFromDay) return undefined;
-    return { date: selectedDate };
+    const ymd = parsePersianYmd(selectedDate);
+    return {
+      date: selectedDate,
+      weekdayName: ymd ? getPersianWeekdayName(ymd) : '',
+    };
   }, [eventDialogFromDay, selectedDate]);
 
   const refreshDayDetails = () => router.refresh();
@@ -188,27 +207,12 @@ export function CalendarDetailsView({ calendar }: CalendarDetailsViewProps) {
     if (!window.confirm('آیا از حذف این رویداد مطمئن هستید؟')) return;
 
     if (eventId.startsWith('weekend-')) {
-      await removeCalendarWeekendDayAction({
-        calendarId: calendar.id,
-        weekdayName: eventId.slice('weekend-'.length),
-      });
+      await addCalendarWeekendOverrideAction({ calendarId: calendar.id, date: selectedDate });
     } else {
       await deleteCalendarStoredEventAction({ calendarId: calendar.id, eventId });
     }
     refreshDayDetails();
   };
-
-  const dayDetails = useMemo(
-    () =>
-      getDayDetails({
-        date: selectedDate,
-        weekends: calendar.weekends,
-        singleHolidays: calendar.singleHolidays,
-        shifts: calendar.shifts,
-        excludedShiftDates: calendar.excludedShiftDates,
-      }),
-    [calendar.excludedShiftDates, calendar.shifts, calendar.singleHolidays, calendar.weekends, selectedDate],
-  );
 
   const goToMonth = (year: number, month: number) => {
     router.push(`/calendars/${calendar.id}?jy=${year}&jm=${month}`, { scroll: false });
@@ -406,7 +410,6 @@ export function CalendarDetailsView({ calendar }: CalendarDetailsViewProps) {
                   className="calendar-details-round-btn"
                   aria-label="افزودن شیفت"
                   onClick={() => openShiftDialog(true)}
-                  disabled={dayDetails.isHoliday}
                 >
                   <Plus className="h-4 w-4" />
                 </button>
@@ -470,7 +473,7 @@ export function CalendarDetailsView({ calendar }: CalendarDetailsViewProps) {
               ) : (
                 <p className="calendar-details-muted">
                   {dayDetails.isHoliday
-                    ? 'به دلیل تعطیل بودن این روز، امکان ثبت شیفت وجود ندارد. برای ثبت شیفت، رویداد خود را حذف یا ویرایش کنید.'
+                    ? 'این روز تعطیل است؛ می‌توانید شیفت ثبت کنید، اما در صورت کارکرد احتمال اعمال ضریب بیشتر (تعطیل/جمعه) وجود دارد.'
                     : 'هنوز شیفتی برای این روز ثبت نشده است.'}
                 </p>
               )}
@@ -506,6 +509,11 @@ export function CalendarDetailsView({ calendar }: CalendarDetailsViewProps) {
                           <h4>
                             <span>عنوان:</span> {event.title}
                           </h4>
+                          {event.holidayTypeLabel ? (
+                            <p>
+                              <span>نوع تعطیلی:</span> {event.holidayTypeLabel}
+                            </p>
+                          ) : null}
                           <p>
                             <span>توضیحات:</span> {event.description}
                           </p>

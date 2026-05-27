@@ -7,6 +7,7 @@ import {
   Clock3,
   Construction,
   CreditCard,
+  Calculator,
   FileText,
   MapPin,
   Network,
@@ -24,6 +25,7 @@ const ICONS: Record<BusinessSettingsIcon, LucideIcon> = {
   calendar: CalendarDays,
   shift: Clock3,
   draft: FileText,
+  payroll: Calculator,
   policy: Shield,
   request: ClipboardList,
   'work-group': UsersRound,
@@ -37,9 +39,11 @@ export type BusinessSettingsCardProps = {
   href: string;
   icon: BusinessSettingsIcon;
   comingSoon?: boolean;
+  badgeLabel?: string;
+  badgeTooltip?: string;
 };
 
-export function BusinessSettingsCard({ title, description, href, icon, comingSoon }: BusinessSettingsCardProps) {
+export function BusinessSettingsCard({ title, description, href, icon, comingSoon, badgeLabel, badgeTooltip }: BusinessSettingsCardProps) {
   const Icon = ICONS[icon];
 
   if (comingSoon) {
@@ -90,9 +94,19 @@ export function BusinessSettingsCard({ title, description, href, icon, comingSoo
       </span>
 
       <div className="min-w-0 flex-1 text-right">
-        <h2 className="m-0 text-[13px] font-extrabold leading-snug text-white [html[data-theme=light]_&]:text-slate-900">
-          {title}
-        </h2>
+        <div className="flex items-center gap-2">
+          <h2 className="m-0 text-[13px] font-extrabold leading-snug text-white [html[data-theme=light]_&]:text-slate-900">
+            {title}
+          </h2>
+          {badgeLabel ? (
+            <span
+              className="inline-flex items-center rounded-md border border-sky-500/30 bg-sky-500/10 px-2 py-0.5 text-[10px] font-bold text-sky-300 [html[data-theme=light]_&]:border-sky-400/40 [html[data-theme=light]_&]:bg-sky-50 [html[data-theme=light]_&]:text-sky-700"
+              title={badgeTooltip}
+            >
+              {badgeLabel}
+            </span>
+          ) : null}
+        </div>
         <p className="m-0 mt-1 text-[11px] font-medium leading-6 text-slate-400 [html[data-theme=light]_&]:text-slate-500">
           {description}
         </p>

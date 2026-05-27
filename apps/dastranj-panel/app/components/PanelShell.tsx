@@ -15,12 +15,19 @@ export function PanelShell({ children }: { children: ReactNode }) {
   const activeItem = getActiveNavigationItem(pathname);
   const showOrbitMenu = pathname === '/';
   const isDevDocThreadsPage = pathname.startsWith('/dev-doc-threads');
-  const lockMainSidebar = pathname === '/draft-templates/new' || pathname.startsWith('/draft-templates/new/');
+  const lockMainSidebar =
+    pathname === '/draft-templates/new' ||
+    pathname.startsWith('/draft-templates/new/') ||
+    pathname === '/business-settings/payroll-attendance';
 
   return (
     <div className="app-shell">
       <PageDocsWidget />
-      <Sidebar activeItem={activeItem.id} forceCollapsed={lockMainSidebar} lockCollapsed={lockMainSidebar} />
+      <Sidebar
+        activeItem={activeItem.id}
+        forceCollapsed={lockMainSidebar}
+        lockCollapsed={lockMainSidebar}
+      />
       {showOrbitMenu ? (
         <main className={minimalScrollClass('vertical', 'main-content home-main-content')}>
           <OrbitMenu activeItem={activeItem.id} />

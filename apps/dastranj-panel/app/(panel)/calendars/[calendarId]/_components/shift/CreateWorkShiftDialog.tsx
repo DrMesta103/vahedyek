@@ -138,6 +138,12 @@ export function CreateWorkShiftDialog({
                 ? `نوع شیفت را برای ${dayContext.date} انتخاب کنید.`
                 : 'نوع شیفت را انتخاب کنید.'}
           </p>
+          {dayContext?.isHoliday ? (
+            <p className="calendar-shift-holiday-hint">
+              این روز تعطیل است. ثبت شیفت مجاز است، اما در صورت کارکرد ممکن است ضریب تعطیل/جمعه‌کاری در حقوق و دستمزد
+              اعمال شود.
+            </p>
+          ) : null}
         </header>
 
         {selectedCard ? (

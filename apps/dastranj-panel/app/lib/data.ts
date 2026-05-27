@@ -18,6 +18,7 @@ import {
   countShiftsByType,
   listCalendarShifts,
   listExcludedShiftDates,
+  listWeekendOverrideDates,
   type CalendarShiftType,
   type StoredCalendarShift,
 } from './calendar-shifts';
@@ -235,6 +236,9 @@ export async function getCalendarDetails(
   const excludedShiftDates = listExcludedShiftDates(calendar.shiftConfig).map((date) =>
     normalizePersianDateInput(date),
   );
+  const weekendOverrideDates = listWeekendOverrideDates(calendar.shiftConfig).map((date) =>
+    normalizePersianDateInput(date),
+  );
   const shiftCounts = countShiftsByType(shifts);
 
   const start = parsePersianYmd(calendar.startDate);
@@ -262,6 +266,7 @@ export async function getCalendarDetails(
     singleHolidays,
     shifts,
     excludedShiftDates,
+    weekendOverrideDates,
   });
 
   const yearNumber = Number(calendar.yearLabel.replace(/[^\d]/g, '')) || viewYear;
@@ -303,6 +308,7 @@ export async function getCalendarDetails(
     singleHolidays,
     shifts: shifts as StoredCalendarShift[],
     excludedShiftDates,
+    weekendOverrideDates,
     shiftCount: shifts.length,
     shiftLegend: CALENDAR_SHIFT_LEGEND.map((item) => ({ ...item, count: shiftCounts[item.key] })),
     eventCount: calendar.totalEventDays,

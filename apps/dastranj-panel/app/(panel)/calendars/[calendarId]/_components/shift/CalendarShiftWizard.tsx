@@ -16,6 +16,7 @@ import {
 import { useMemo, useState, type ReactNode } from 'react';
 import { addCalendarShiftAction } from '../../../../../lib/actions';
 import { normalizePersianDateInput } from '../../../../../lib/calendar-events';
+import { resolveCalendarShiftTitle } from '../../../../../lib/calendar-shifts';
 import type { ShiftTemplatePickerItem } from '../../../../../lib/shift-template-picker';
 import type { CalendarShiftDayContext, CalendarShiftWizardCalendar } from './types';
 
@@ -426,12 +427,11 @@ function TitleCard({ title, setTitle }: { title: string; setTitle: (value: strin
         <div className="text-xl font-black text-white">اطلاعات پایه شیفت</div>
       </div>
       <label className="mt-6 block space-y-2 text-right">
-        <span className="text-sm font-bold text-white">
-          عنوان شیفت <span className="text-rose-400">*</span>
-        </span>
+        <span className="text-sm font-bold text-white">عنوان شیفت</span>
         <input
           value={title}
           onChange={(event) => setTitle(event.target.value)}
+          placeholder="عنوان شیفت (اختیاری)"
           className="w-full rounded-xl border border-slate-600 bg-slate-900/60 px-4 py-3 text-right text-sm text-white outline-none transition-colors focus:border-indigo-400"
         />
       </label>
@@ -773,31 +773,34 @@ export function CalendarShiftWizard({
   const hasWeekdaySchedule = (days: string[]) => Boolean(dayContext) || days.length > 0;
   const fixedReady =
     shiftType === 'fixed' &&
-    shiftTitle.trim() &&
     hasWeekdaySchedule(workingDays) &&
     fixedTotalMinutes <= 24 * 60 &&
     !hasFixedRestError(rests, fixedWorkRange);
   const floatDayReady =
     shiftType === 'float-day' &&
-    shiftTitle.trim() &&
     hasWeekdaySchedule(floatDayWorkingDays) &&
     floatDayTotalMinutes <= 24 * 60 &&
     !hasFixedRestError(floatDayRests, floatDayWorkRange);
   const floatAbsReady =
     shiftType === 'float-abs' &&
-    shiftTitle.trim() &&
     hasWeekdaySchedule(floatAbsWorkingDays) &&
     floatAbsTotalMinutes <= 24 * 60 &&
     !hasFixedRestError(floatAbsRests, floatAbsWorkRange);
   const splitReady =
     shiftType === 'split' &&
-    shiftTitle.trim() &&
     hasWeekdaySchedule(splitWorkingDays) &&
     splitTotalMinutes <= 24 * 60 &&
     !hasFixedRestError(split1Rests, split1WorkRange) &&
     !hasFixedRestError(split2Rests, split2WorkRange);
-  const rotateReady = shiftType === 'rotate' && shiftTitle.trim() && rotateSegments.length > 0 && rotateSegments.every((segment) => segment.kind === 'off' || !hasFixedRestError(segment.rests, { start: segment.start, end: segment.end, nextDay: segment.nextDay }));
-  const canSave = Boolean(shiftTitle.trim() && (fixedReady || floatDayReady || floatAbsReady || splitReady || rotateReady));
+  const rotateReady =
+    shiftType === 'rotate' &&
+    rotateSegments.length > 0 &&
+    rotateSegments.every(
+      (segment) =>
+        segment.kind === 'off' ||
+        !hasFixedRestError(segment.rests, { start: segment.start, end: segment.end, nextDay: segment.nextDay }),
+    );
+  const canSave = Boolean(fixedReady || floatDayReady || floatAbsReady || splitReady || rotateReady);
 
   const toggle = (list: string[], value: string) => (list.includes(value) ? list.filter((item) => item !== value) : [...list, value]);
 
@@ -922,7 +925,7 @@ export function CalendarShiftWizard({
       shiftType,
       mode: shiftMode,
       templateId: selectedTemplateId,
-      title: shiftTitle.trim(),
+      title: resolveCalendarShiftTitle(shiftTitle, shiftType),
       fixedShift: { startTime, endTime, endsNextDay: nextDay },
       rests,
       floatingShiftStartOfDay: {
@@ -961,7 +964,7 @@ export function CalendarShiftWizard({
     try {
       const payload: ShiftWizardSavePayload = {
         shiftType,
-        shiftTitle: shiftTitle.trim(),
+        shiftTitle: resolveCalendarShiftTitle(shiftTitle, shiftType),
         shiftConfig: buildShiftConfig(),
         description: isTemplatePurpose ? templateDescription.trim() || undefined : undefined,
       };
@@ -992,6 +995,13 @@ export function CalendarShiftWizard({
       <div className={compact ? 'calendar-shift-wizard-inner' : 'space-y-3 rounded-xl border border-white/10 bg-slate-950/45 p-4 sm:p-5'}>
         <div className={compact ? 'calendar-shift-wizard-content' : 'space-y-5 text-right'}>
             {dayContext ? <LockedDayField dayContext={dayContext} /> : null}
+
+            {dayContext?.isHoliday ? (
+              <p className="calendar-shift-holiday-hint">
+                این روز تعطیل است. ثبت شیفت مجاز است، اما در صورت کارکرد ممکن است ضریب تعطیل/جمعه‌کاری در حقوق و
+                دستمزد اعمال شود.
+              </p>
+            ) : null}
 
             {isTemplatePurpose ? (
               <label className="calendar-create-field">

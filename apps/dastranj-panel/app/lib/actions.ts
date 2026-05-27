@@ -9,8 +9,21 @@ import { isPersianYmdInRange, parsePersianYmd } from './calendar-dates';
 import { ensureGlobalDefaultCalendar } from './calendar-defaults';
 import { getOfficialHolidaysForYear } from './calendar-official-holidays';
 import { expandCalendarEventDates, normalizePersianDateInput, parseCalendarStoredEvents } from './calendar-events';
+import {
+  CALENDAR_FRIDAY_HOLIDAY_TYPE,
+  getCalendarHolidayTypeLabel,
+  isPersianFridayDate,
+  resolveCalendarEventTitle,
+  resolveHolidayTypeForDate,
+  type CalendarHolidayType,
+} from './calendar-event-types';
 import type { CalendarShiftType } from './calendar-shifts';
-import { listExcludedShiftDates, parseCalendarShiftConfig } from './calendar-shifts';
+import {
+  getCalendarShiftTypeLabel,
+  listExcludedShiftDates,
+  parseCalendarShiftConfig,
+  resolveCalendarShiftTitle,
+} from './calendar-shifts';
 import { serializeShiftTemplateFromWizard } from './shift-template-map';
 import { getPolicyFamilyMeta, getPolicySectionValues } from './policy-workspaces';
 import { seedSampleData } from './seed';
@@ -66,15 +79,6 @@ async function getTenantId() {
 
 function tenantRelation(tenantId: string) {
   return { tenant: { connect: { id: tenantId } } };
-}
-
-function getShiftTypeLabel(shiftType: string) {
-  if (shiftType === 'fixed') return 'شیفت ثابت';
-  if (shiftType === 'float-day') return 'شیفت شناور (شروع روز)';
-  if (shiftType === 'float-abs') return 'شیفت شناور مطلق';
-  if (shiftType === 'split') return 'شیفت دو تکه';
-  if (shiftType === 'rotate') return 'شیفت چرخشی';
-  return shiftType;
 }
 
 function getPolicyFamilyKey(sectionValues: Prisma.JsonValue | null | undefined) {
@@ -523,11 +527,13 @@ export async function addCalendarShiftAction(data: {
     });
   }
 
+  const resolvedShiftTitle = resolveCalendarShiftTitle(data.shiftTitle, data.shiftType);
+
   const newShift = {
     id: crypto.randomUUID(),
     shiftType: data.shiftType,
-    title: data.shiftTitle,
-    config: { ...data.shiftConfig, shiftType: data.shiftType, title: data.shiftTitle },
+    title: resolvedShiftTitle,
+    config: { ...data.shiftConfig, shiftType: data.shiftType, title: resolvedShiftTitle },
     createdAt: new Date().toISOString(),
   };
 
@@ -538,8 +544,8 @@ export async function addCalendarShiftAction(data: {
   await prisma.calendar.update({
     where: { id: data.calendarId },
     data: {
-      shiftTitle: data.shiftTitle,
-      shiftTypeLabel: getShiftTypeLabel(data.shiftType),
+      shiftTitle: resolvedShiftTitle,
+      shiftTypeLabel: getCalendarShiftTypeLabel(data.shiftType),
       shiftConfig: jsonValue({ ...root, shifts: existingShifts, excludedDates } as Prisma.InputJsonValue),
       totalShiftDays: existingShifts.length,
     },
@@ -556,12 +562,12 @@ export async function addCalendarEventsAction(data: {
   calendarId: string;
   title: string;
   description?: string;
-  category?: string;
   startDate?: string;
   endDate?: string;
   weekdays?: string[];
   singleDate?: string;
   isHoliday: boolean;
+  holidayType?: CalendarHolidayType;
 }) {
   const tenantId = await getTenantId();
   const calendar = await prisma.calendar.findFirst({
@@ -592,42 +598,75 @@ export async function addCalendarEventsAction(data: {
     throw new Error('No valid dates were found for this event range.');
   }
 
+  if (data.isHoliday) {
+    if (!data.holidayType) {
+      throw new Error('نوع تعطیلی را انتخاب کنید.');
+    }
+
+    if (data.singleDate) {
+      const norm = normalizePersianDateInput(data.singleDate);
+      if (isPersianFridayDate(norm)) {
+        if (data.holidayType !== 'friday') {
+          throw new Error('برای روز جمعه فقط «تعطیلی جمعه» مجاز است؛ رسمی یا سازمانی انتخاب نشود.');
+        }
+      } else if (data.holidayType !== 'official' && data.holidayType !== 'organizational') {
+        throw new Error('برای این روز باید نوع تعطیلی «رسمی» یا «سازمانی» را مشخص کنید.');
+      }
+    } else {
+      if (data.holidayType === 'friday') {
+        const allFriday = dates.every((d) => isPersianFridayDate(normalizePersianDateInput(d)));
+        if (!allFriday) {
+          throw new Error('نوع «تعطیلی جمعه» فقط وقتی مجاز است که همهٔ روزهای انتخاب‌شده جمعه باشند.');
+        }
+      } else if (data.holidayType !== 'official' && data.holidayType !== 'organizational') {
+        throw new Error('نوع تعطیلی را مشخص کنید.');
+      }
+    }
+  }
+
   const existing = parseCalendarStoredEvents(calendar.singleHolidays);
   const existingDates = new Set(existing.map((item) => item.date));
   const createdAt = new Date().toISOString();
-  const title = data.title.trim();
   const description = data.description?.trim() || undefined;
-  const category = data.category?.trim() || undefined;
 
   const newEvents = dates
     .filter((date) => !existingDates.has(date))
-    .map((date) => ({
-      id: crypto.randomUUID(),
-      title,
-      date: normalizePersianDateInput(date),
-      description,
-      category,
-      isHoliday: data.isHoliday,
-      createdAt,
-    }));
+    .map((date) => {
+      const normalizedDate = normalizePersianDateInput(date);
+      const baseHolidayType: 'official' | 'organizational' =
+        data.holidayType === 'organizational' ? 'organizational' : 'official';
+      const resolvedHolidayType = data.isHoliday
+        ? data.holidayType === 'friday'
+          ? 'friday'
+          : resolveHolidayTypeForDate(normalizedDate, baseHolidayType)
+        : undefined;
+
+      const resolvedTitle = resolveCalendarEventTitle({
+        title: data.title,
+        isHoliday: data.isHoliday,
+        holidayType: resolvedHolidayType,
+      });
+
+      return {
+        id: crypto.randomUUID(),
+        title: resolvedTitle,
+        date: normalizedDate,
+        description,
+        category: resolvedHolidayType ? getCalendarHolidayTypeLabel(resolvedHolidayType) : undefined,
+        isHoliday: data.isHoliday,
+        holidayType: resolvedHolidayType,
+        createdAt,
+      };
+    });
 
   const merged = [...existing, ...newEvents];
   const weekends = Array.isArray(calendar.weekends) ? (calendar.weekends as string[]) : [];
   const holidayEvents = merged.filter((item) => item.isHoliday !== false);
 
-  const shiftRoot = parseCalendarShiftConfig(calendar.shiftConfig);
-  const excludedDates = new Set(listExcludedShiftDates(calendar.shiftConfig).map((date) => normalizePersianDateInput(date)));
-  if (data.isHoliday) {
-    for (const date of dates) {
-      excludedDates.add(normalizePersianDateInput(date));
-    }
-  }
-
   await prisma.calendar.update({
     where: { id: data.calendarId },
     data: {
       singleHolidays: jsonValue(merged as Prisma.InputJsonValue),
-      shiftConfig: jsonValue({ ...shiftRoot, excludedDates: [...excludedDates] } as Prisma.InputJsonValue),
       holidayCount: weekends.length + holidayEvents.length,
       totalEventDays: merged.length,
     },
@@ -670,6 +709,34 @@ export async function removeCalendarWeekendDayAction(data: { calendarId: string;
   revalidatePath('/quick-setup');
 
   return { removedWeekday: data.weekdayName };
+}
+
+export async function addCalendarWeekendOverrideAction(data: { calendarId: string; date: string }) {
+  const tenantId = await getTenantId();
+  const calendar = await prisma.calendar.findFirst({
+    where: { id: data.calendarId, tenantId },
+    select: { id: true, shiftConfig: true },
+  });
+  if (!calendar) throw new Error('Calendar not found for active tenant.');
+
+  const root = parseCalendarShiftConfig(calendar.shiftConfig);
+  const normalizedDate = normalizePersianDateInput(data.date);
+  const existing = Array.isArray(root.weekendOverrides) ? (root.weekendOverrides as string[]) : [];
+  const weekendOverrides = new Set(existing.map((item) => normalizePersianDateInput(String(item))));
+  weekendOverrides.add(normalizedDate);
+
+  await prisma.calendar.update({
+    where: { id: data.calendarId },
+    data: {
+      shiftConfig: jsonValue({ ...root, weekendOverrides: [...weekendOverrides] } as Prisma.InputJsonValue),
+    },
+  });
+
+  revalidatePath('/calendars');
+  revalidatePath(`/calendars/${data.calendarId}`);
+  revalidatePath('/quick-setup');
+
+  return { date: normalizedDate };
 }
 
 export async function deleteCalendarStoredEventAction(data: { calendarId: string; eventId: string }) {
@@ -850,7 +917,7 @@ export async function createCalendarWithShiftAction(data: {
       weekends: jsonValue(data.weekends),
       singleHolidays: jsonValue(data.singleHolidays),
       shiftTitle: data.shiftTitle,
-      shiftTypeLabel: getShiftTypeLabel(data.shiftType),
+      shiftTypeLabel: getCalendarShiftTypeLabel(data.shiftType),
       shiftConfig: jsonValue(data.shiftConfig as Prisma.InputJsonObject),
       holidayCount,
       totalShiftDays: 0,
@@ -939,12 +1006,12 @@ export async function updateCalendarFromQuickSetupAction(data: {
   if (!current) throw new Error('Calendar not found for active tenant.');
 
   const holidayCount = data.weekends.length + data.singleHolidays.length;
-  const shiftTypeLabel =
-    data.shiftType === 'fixed' ? 'شیفت ثابت' :
-    data.shiftType === 'float-day' ? 'شیفت شناور (شروع روز)' :
-    data.shiftType === 'float-abs' ? 'شیفت شناور مطلق' :
-    data.shiftType === 'split' ? 'شیفت دوتکه' :
-    data.shiftType === 'rotate' ? 'شیفت چرخشی' : data.shiftType;
+  const resolvedShiftTitle = resolveCalendarShiftTitle(data.shiftTitle, data.shiftType);
+  const shiftConfig = {
+    ...data.shiftConfig,
+    shiftType: data.shiftType,
+    title: resolvedShiftTitle,
+  };
 
   const calendar = await prisma.calendar.update({
     where: { id: data.calendarId },
@@ -956,9 +1023,9 @@ export async function updateCalendarFromQuickSetupAction(data: {
       endDate: data.endDate,
       weekends: jsonValue(data.weekends),
       singleHolidays: jsonValue(data.singleHolidays),
-      shiftTitle: data.shiftTitle,
-      shiftTypeLabel: getShiftTypeLabel(data.shiftType),
-      shiftConfig: jsonValue(data.shiftConfig as Prisma.InputJsonObject),
+      shiftTitle: resolvedShiftTitle,
+      shiftTypeLabel: getCalendarShiftTypeLabel(data.shiftType),
+      shiftConfig: jsonValue(shiftConfig as Prisma.InputJsonObject),
       holidayCount,
       totalEventDays: data.singleHolidays.length,
     },

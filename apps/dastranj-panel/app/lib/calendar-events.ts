@@ -9,15 +9,10 @@ import {
   parsePersianYmd,
   type PersianYmd,
 } from './calendar-dates';
+import type { CalendarHolidayType } from './calendar-event-types';
+import { inferHolidayTypeFromLegacyEvent } from './calendar-event-types';
 
 const PERSIAN_DIGITS = '۰۱۲۳۴۵۶۷۸۹';
-
-export const CALENDAR_EVENT_PRESETS = [
-  'تعطیلات سازمانی',
-  'تعطیلات رسمی',
-  'رویداد ویژه',
-  'فورس ماژور',
-] as const;
 
 export type CalendarStoredEvent = {
   id: string;
@@ -26,6 +21,7 @@ export type CalendarStoredEvent = {
   description?: string;
   category?: string;
   isHoliday?: boolean;
+  holidayType?: CalendarHolidayType;
 };
 
 export function normalizePersianDateInput(value: string): string {
@@ -68,6 +64,20 @@ export function parseCalendarStoredEvents(value: unknown): CalendarStoredEvent[]
         typeof (item as CalendarStoredEvent).isHoliday === 'boolean'
           ? (item as CalendarStoredEvent).isHoliday
           : true,
+    }))
+    .map((item) => ({
+      ...item,
+      holidayType:
+        item.isHoliday === false
+          ? undefined
+          : inferHolidayTypeFromLegacyEvent({
+              category: item.category,
+              title: item.title,
+              holidayType:
+                typeof (item as CalendarStoredEvent).holidayType === 'string'
+                  ? (item as CalendarStoredEvent).holidayType
+                  : undefined,
+            }),
     }))
     .filter((item) => item.id && item.title && item.date);
 }

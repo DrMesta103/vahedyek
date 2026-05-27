@@ -1,5 +1,5 @@
 import type { ShiftTemplateType } from '../../node_modules/.prisma/client';
-import type { CalendarShiftType } from './calendar-shifts';
+import { resolveCalendarShiftTitle, type CalendarShiftType } from './calendar-shifts';
 
 export type ShiftTemplateCategory = CalendarShiftType;
 
@@ -118,16 +118,17 @@ export function serializeShiftTemplateFromWizard(input: {
 }) {
   const weekDays = extractTemplateWeekDays(input.shiftType, input.shiftConfig);
   const breaks = extractTemplateBreaks(input.shiftType, input.shiftConfig);
+  const resolvedTitle = resolveCalendarShiftTitle(input.shiftTitle, input.shiftType);
 
   return {
-    title: input.shiftTitle.trim(),
+    title: resolvedTitle,
     description: input.description?.trim() || null,
     type: calendarShiftTypeToTemplateType(input.shiftType),
     weekDays,
     config: {
       ...input.shiftConfig,
       shiftType: input.shiftType,
-      title: input.shiftTitle.trim(),
+      title: resolvedTitle,
     },
     breaks,
     isActive: input.isActive ?? true,
