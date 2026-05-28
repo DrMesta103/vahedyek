@@ -211,7 +211,7 @@ export function DraftTemplatesClient() {
 
   const openTemplate = (template: ContractDraftTemplate) => {
     window.localStorage.setItem(ACTIVE_CONTRACT_DRAFT_TEMPLATE_STORAGE_KEY, template.id);
-    router.push('/business-settings/payroll-attendance');
+    router.push('/draft-templates/builder');
   };
 
   const createTemplate = (template: ContractDraftTemplate) => {

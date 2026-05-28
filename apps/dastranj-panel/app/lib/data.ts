@@ -347,15 +347,94 @@ export async function listDefaultPolicies() {
   });
 }
 
-export async function listEmployees() {
+type EmployeeListFilters = {
+  search?: string;
+  status?: 'all' | 'active' | 'inactive';
+  assignment?: 'all' | 'assigned' | 'unassigned';
+  createdFrom?: string;
+  createdTo?: string;
+};
+
+function normalizeSearchTerm(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, ' ');
+}
+
+function parseDateInput(value?: string) {
+  if (!value) return null;
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+export async function listEmployees(options?: EmployeeListFilters) {
   const tenantId = await requireTenantId();
+  const search = options?.search ? normalizeSearchTerm(options.search) : '';
+  const createdFrom = parseDateInput(options?.createdFrom);
+  const createdTo = parseDateInput(options?.createdTo);
+  const andConditions: any[] = [];
+
+  if (options?.status === 'active') {
+    andConditions.push({ isActive: true });
+  } else if (options?.status === 'inactive') {
+    andConditions.push({ isActive: false });
+  }
+
+  if (createdFrom || createdTo) {
+    andConditions.push({
+      createdAt: {
+        ...(createdFrom ? { gte: createdFrom } : {}),
+        ...(createdTo ? { lte: createdTo } : {}),
+      },
+    });
+  }
+
+  if (options?.assignment === 'assigned') {
+    andConditions.push({
+      OR: [
+        { organizationUnits: { some: { organizationUnit: { tenantId } } } },
+        { workGroupMemberships: { some: { isCurrent: true, workGroup: { tenantId } } } },
+      ],
+    });
+  } else if (options?.assignment === 'unassigned') {
+    andConditions.push({
+      organizationUnits: { none: { organizationUnit: { tenantId } } },
+      workGroupMemberships: { none: { isCurrent: true, workGroup: { tenantId } } },
+    });
+  }
+
+  if (search) {
+    andConditions.push({
+      OR: [
+        { firstName: { contains: search, mode: 'insensitive' } },
+        { lastName: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } },
+        { mobile1: { contains: search, mode: 'insensitive' } },
+        { mobile2: { contains: search, mode: 'insensitive' } },
+        { nationalId: { contains: search, mode: 'insensitive' } },
+        { personnelCode: { contains: search, mode: 'insensitive' } },
+        { organizationUnits: { some: { organizationUnit: { title: { contains: search, mode: 'insensitive' } } } } },
+        { workGroupMemberships: { some: { workGroup: { title: { contains: search, mode: 'insensitive' } } } } },
+      ],
+    });
+  }
+
+  const where = andConditions.length ? { tenantId, AND: andConditions } : { tenantId };
+
   return prisma.employee.findMany({
-    where: { tenantId },
+    where,
     include: {
-      organizationUnits: { where: { organizationUnit: { tenantId } }, include: { organizationUnit: true } },
-      workGroupMemberships: { where: { workGroup: { tenantId }, isCurrent: true }, include: { workGroup: true } },
+      organizationUnits: {
+        where: { organizationUnit: { tenantId } },
+        include: { organizationUnit: { select: { id: true, title: true } } },
+      },
+      workGroupMemberships: {
+        where: { workGroup: { tenantId }, isCurrent: true },
+        include: { workGroup: { select: { id: true, title: true } } },
+      },
     },
-    orderBy: { createdAt: 'desc' },
+    orderBy: [{ isActive: 'desc' }, { createdAt: 'desc' }],
   });
 }
 

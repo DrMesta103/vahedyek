@@ -1,5 +1,5 @@
-import { ContractDraftTemplateBuilder } from '../_components/ContractDraftTemplateBuilder';
+import { PayrollSettingsEntry } from '../_components/PayrollSettingsEntry';
 
 export default function PayrollAttendanceSettingsPage() {
-  return <ContractDraftTemplateBuilder />;
+  return <PayrollSettingsEntry mode="admin" />;
 }
