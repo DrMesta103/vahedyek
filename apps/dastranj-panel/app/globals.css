@@ -13330,6 +13330,519 @@ body {
   background: rgba(99, 102, 241, 0.08);
 }
 
+/* ── Employee detail redesigned ── */
+.employee-detail-page {
+  width: min(100%, 1180px);
+  max-width: 1180px;
+  padding-bottom: 34px;
+}
+
+.employee-detail-shell {
+  display: grid;
+  gap: 16px;
+  width: 100%;
+}
+
+.employee-detail-summary-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.95fr);
+  gap: 16px;
+}
+
+.employee-detail-stat-card,
+.employee-detail-note-panel {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at top right, rgba(245, 158, 11, 0.07), transparent 24%),
+    rgba(15, 23, 42, 0.58);
+  box-shadow: 0 16px 34px rgba(2, 6, 23, 0.18);
+}
+
+.employee-detail-profile-card {
+  display: grid;
+  gap: 18px;
+  padding: 18px;
+}
+
+.employee-detail-profile-head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.employee-detail-avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+  width: 108px;
+  height: 108px;
+}
+
+.employee-detail-avatar {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(8, 15, 30, 0.72);
+  color: #cbd5e1;
+  overflow: hidden;
+}
+
+.employee-detail-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.employee-detail-avatar-secondary {
+  position: absolute;
+  right: -10px;
+  bottom: -10px;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  border: 2px solid #101b31;
+  background: rgba(15, 23, 42, 0.88);
+  color: #94a3b8;
+  overflow: hidden;
+}
+
+.employee-detail-avatar-secondary img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.employee-detail-profile-copy {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.employee-detail-profile-copy h2 {
+  margin: 0;
+  color: #f8fafc;
+  font-size: clamp(22px, 2vw, 28px);
+  font-weight: 900;
+}
+
+.employee-detail-profile-subtitle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  color: #cbd5e1;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.employee-detail-profile-subtitle span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  background: rgba(2, 6, 23, 0.18);
+  padding: 0 10px;
+}
+
+.employee-detail-contact-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.employee-detail-contact-row span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  background: rgba(8, 15, 30, 0.72);
+  color: #e2e8f0;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.employee-detail-profile-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.employee-detail-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.72);
+  color: #e2e8f0;
+  padding: 0 14px;
+  font-size: 12px;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.employee-detail-action-btn.is-primary {
+  border-color: rgba(245, 158, 11, 0.5);
+  background: linear-gradient(180deg, #f9ab34, #ea8f13);
+  color: #fff;
+}
+
+.employee-detail-stat-card--wide {
+  display: grid;
+  gap: 18px;
+  padding: 18px;
+}
+
+.employee-detail-stat-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.employee-detail-stat-head p {
+  margin: 0;
+  color: #f9ab34;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.employee-detail-stat-head h3 {
+  margin: 4px 0 0;
+  color: #f8fafc;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.employee-detail-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #cbd5e1;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.employee-detail-stat-body {
+  display: grid;
+  grid-template-columns: 160px minmax(0, 1fr);
+  gap: 16px;
+  align-items: center;
+}
+
+.employee-detail-ring {
+  display: grid;
+  place-items: center;
+  width: 132px;
+  height: 132px;
+  border-radius: 999px;
+  background: conic-gradient(#f9ab34 0 60%, rgba(148, 163, 184, 0.28) 60% 100%);
+}
+
+.employee-detail-ring-inner {
+  display: grid;
+  place-items: center;
+  gap: 2px;
+  width: 88px;
+  height: 88px;
+  border-radius: 999px;
+  background: rgba(11, 18, 33, 0.94);
+  text-align: center;
+}
+
+.employee-detail-ring-inner strong {
+  color: #f8fafc;
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.employee-detail-ring-inner span {
+  color: #cbd5e1;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.employee-detail-contract-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.employee-detail-contract-item {
+  display: grid;
+  gap: 6px;
+  min-height: 70px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 16px;
+  background: rgba(8, 15, 30, 0.45);
+  padding: 12px 14px;
+}
+
+.employee-detail-contract-item span {
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.employee-detail-contract-item strong {
+  color: #f8fafc;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.employee-detail-section {
+  display: grid;
+  gap: 14px;
+}
+
+.employee-detail-section-head {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.employee-detail-section-head h3 {
+  margin: 0;
+  color: #f8fafc;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.employee-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.employee-detail-grid--two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.employee-detail-tile,
+.employee-detail-note-panel {
+  position: relative;
+  overflow: hidden;
+  min-height: 176px;
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at top right, rgba(245, 158, 11, 0.04), transparent 22%),
+    rgba(15, 23, 42, 0.52);
+  box-shadow: 0 12px 26px rgba(2, 6, 23, 0.12);
+}
+
+.employee-detail-tile {
+  display: grid;
+  gap: 10px;
+  text-decoration: none;
+  transition:
+    border-color 0.15s ease,
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.employee-detail-tile:hover {
+  border-color: rgba(245, 158, 11, 0.42);
+  transform: translateY(-1px);
+  box-shadow: 0 14px 28px rgba(2, 6, 23, 0.18);
+}
+
+.employee-detail-tile.is-disabled {
+  opacity: 0.72;
+  cursor: not-allowed;
+}
+
+.employee-detail-tile-head {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) 58px;
+  gap: 10px;
+  align-items: start;
+}
+
+.employee-detail-tile-arrow {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: rgba(245, 158, 11, 0.14);
+  color: #f9ab34;
+}
+
+.employee-detail-tile-arrow.is-disabled {
+  background: rgba(148, 163, 184, 0.12);
+  color: #94a3b8;
+}
+
+.employee-detail-tile-copy {
+  display: grid;
+  gap: 8px;
+}
+
+.employee-detail-tile-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.employee-detail-tile h3 {
+  margin: 0;
+  color: #f8fafc;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.employee-detail-tile-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  border-radius: 999px;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  background: rgba(245, 158, 11, 0.12);
+  color: #f9ab34;
+  padding: 0 10px;
+  font-size: 11px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.employee-detail-tile-badge.is-disabled {
+  border-color: rgba(148, 163, 184, 0.25);
+  background: rgba(148, 163, 184, 0.12);
+  color: #cbd5e1;
+}
+
+.employee-detail-tile p {
+  margin: 0;
+  color: #cbd5e1;
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.employee-detail-tile-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  justify-self: end;
+  width: 54px;
+  height: 54px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #e2e8f0;
+}
+
+.employee-detail-tile-footer {
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.employee-detail-note-panel {
+  display: grid;
+  gap: 10px;
+}
+
+.employee-detail-note-panel.is-muted {
+  opacity: 0.86;
+}
+
+.employee-detail-note-title {
+  color: #f9ab34;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.employee-detail-note-panel p {
+  margin: 0;
+  color: #e2e8f0;
+  font-size: 12px;
+  line-height: 1.9;
+}
+
+[data-theme='light'] .employee-detail-stat-card,
+[data-theme='light'] .employee-detail-note-panel,
+[data-theme='light'] .employee-detail-tile {
+  border-color: rgba(15, 23, 42, 0.08);
+  background: rgba(255, 255, 255, 0.9);
+}
+
+[data-theme='light'] .employee-detail-profile-copy h2,
+[data-theme='light'] .employee-detail-stat-head h3,
+[data-theme='light'] .employee-detail-section-head h3,
+[data-theme='light'] .employee-detail-tile h3,
+[data-theme='light'] .employee-detail-contract-item strong,
+[data-theme='light'] .employee-detail-note-title,
+[data-theme='light'] .employee-detail-note-panel p {
+  color: #0f172a;
+}
+
+[data-theme='light'] .employee-detail-profile-subtitle,
+[data-theme='light'] .employee-detail-contact-row span,
+[data-theme='light'] .employee-detail-contract-item span,
+[data-theme='light'] .employee-detail-back-link,
+[data-theme='light'] .employee-detail-tile p,
+[data-theme='light'] .employee-detail-tile-footer {
+  color: #64748b;
+}
+
+@media (max-width: 1180px) {
+  .employee-detail-summary-grid,
+  .employee-detail-grid,
+  .employee-detail-grid--two {
+    grid-template-columns: 1fr;
+  }
+
+  .employee-detail-stat-body {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+
+  .employee-detail-contract-grid {
+    width: 100%;
+  }
+}
+
+@media (max-width: 900px) {
+  .employee-detail-page {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .employee-detail-profile-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .employee-detail-stat-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .employee-detail-contract-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .employee-detail-tile-head {
+    grid-template-columns: 30px minmax(0, 1fr);
+  }
+
+  .employee-detail-tile-icon {
+    display: none;
+  }
+}
+
 .employee-sub-page {
   display: grid;
   gap: 20px;
@@ -18305,6 +18818,74 @@ body {
   line-height: 1.7;
 }
 
+.contract-draft-option-grid {
+  gap: 10px;
+}
+
+.contract-draft-option-grid button.contract-draft-option-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-direction: row-reverse;
+  gap: 10px;
+  min-height: 52px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(11, 29, 54, 0.52);
+  border-color: rgba(151, 182, 215, 0.22);
+  color: #d9e7f5;
+  text-align: right;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.contract-draft-option-grid button.contract-draft-option-chip.is-selected {
+  border-color: rgba(246, 174, 52, 0.78);
+  background: linear-gradient(180deg, rgba(247, 174, 57, 0.96), rgba(235, 149, 25, 0.92));
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(246, 174, 52, 0.16);
+}
+
+.contract-draft-option-active {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+}
+
+.contract-draft-option-check {
+  display: none;
+}
+
+.contract-draft-option-label {
+  flex: 1;
+  min-width: 0;
+  text-wrap: balance;
+}
+
+.contract-draft-intro-card {
+  gap: 14px;
+}
+
+.contract-draft-subsection--nested {
+  gap: 10px;
+  margin-top: 2px;
+}
+
+.contract-draft-subcategory-note {
+  margin: 0;
+  color: #f6ae34;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.7;
+  text-align: left;
+}
+
 @media (max-width: 560px) {
   .calendar-create-modal:has(.business-draft-template-dialog) {
     width: min(100%, 100%);
@@ -18334,371 +18915,6 @@ body {
   overflow-y: auto;
   overscroll-behavior: contain;
   direction: rtl;
-}
-
-.draft-template-flow-page.business-contract-template-flow {
-  --flow-side: clamp(220px, 17vw, 280px);
-  gap: 0 18px;
-  padding: 0 6px;
-  background: radial-gradient(1200px 500px at 50% -10%, rgba(36, 99, 189, 0.18), transparent),
-    linear-gradient(180deg, rgba(10, 22, 44, 0.98), rgba(7, 16, 31, 0.96));
-}
-
-.business-contract-template-flow .draft-template-flow-sidebar-panel {
-  margin: 14px 0 14px 8px;
-  border-radius: 18px;
-  border: 1px solid rgba(119, 157, 201, 0.18);
-}
-
-.business-contract-template-flow .draft-template-flow-report-panel {
-  margin: 14px 8px 14px 0;
-  border-radius: 18px;
-  border: 1px solid rgba(119, 157, 201, 0.18);
-}
-
-.business-contract-template-flow.business-payroll-flow .draft-template-flow-nav-item.is-locked,
-.business-contract-template-flow.business-payroll-flow .draft-template-flow-nav-item.is-locked:hover {
-  opacity: 1;
-}
-
-.business-contract-template-flow.business-payroll-flow .draft-template-flow-nav-copy small {
-  color: #aec5de;
-}
-
-.contract-draft-stepper-head p {
-  color: #9eb6ce;
-}
-
-.contract-draft-live-summary .draft-template-flow-report-header.contract-draft-summary-head {
-  padding-bottom: 12px;
-}
-
-.contract-draft-live-summary .draft-template-flow-report-header.contract-draft-summary-head h2 {
-  font-size: 17px;
-}
-
-.contract-draft-summary-scroll {
-  padding: 8px 10px 16px !important;
-}
-
-.contract-draft-summary-grid {
-  display: grid;
-  gap: 11px;
-}
-
-.contract-draft-summary-card {
-  border: 1px solid rgba(119, 157, 201, 0.2);
-  border-radius: 14px;
-  background: rgba(17, 40, 69, 0.55);
-  padding: 12px 13px;
-}
-
-.contract-draft-summary-card h3 {
-  margin: 0 0 9px;
-  font-size: 11px;
-  font-weight: 950;
-  color: #dff5ff;
-  letter-spacing: 0.02em;
-}
-
-.contract-draft-summary-dl {
-  margin: 0;
-  display: grid;
-  gap: 8px;
-}
-
-.contract-draft-summary-dl div {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 6px;
-}
-
-.contract-draft-summary-dl dt {
-  margin: 0;
-  font-size: 11px;
-  font-weight: 750;
-  color: #93abc4;
-}
-
-.contract-draft-summary-dl dd {
-  margin: 0;
-  font-size: 12px;
-  font-weight: 950;
-  color: #eaf2fb;
-}
-
-.contract-draft-summary-value {
-  color: #ffc255 !important;
-}
-
-.contract-draft-page-header {
-  gap: 8px !important;
-  margin-bottom: 22px !important;
-}
-
-.contract-draft-breadcrumb.contract-draft-flow-breadcrumb,
-.contract-draft-breadcrumb {
-  display: inline-flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px;
-  row-gap: 4px;
-  color: #94a3b8;
-  font-size: 12px;
-  font-weight: 800;
-}
-
-.contract-draft-breadcrumb a {
-  color: #94a3b8;
-  text-decoration: none;
-}
-
-.contract-draft-breadcrumb a:hover {
-  color: #e2e8f0;
-}
-
-.contract-draft-breadcrumb-chevron {
-  color: #64748b;
-  flex-shrink: 0;
-  transform: scaleX(-1);
-}
-
-.contract-draft-breadcrumb-current {
-  color: #e2e8f0;
-  font-weight: 950;
-}
-
-.business-payroll-flow-title.contract-draft-title-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 14px;
-  width: 100%;
-}
-
-.contract-draft-title-block {
-  display: grid;
-  gap: 6px;
-  text-align: start;
-  flex: 1;
-  min-width: 220px;
-}
-
-.contract-draft-heading-line {
-  flex-wrap: wrap;
-  align-items: center;
-}
-
-.contract-draft-heading-line h1 {
-  margin: 0;
-  font-size: clamp(20px, 2.2vw, 26px);
-  font-weight: 950;
-  color: #f8fafc;
-}
-
-.contract-draft-template-name {
-  margin: 0;
-  font-size: 13px;
-  font-weight: 900;
-  color: #f6ae34;
-}
-
-.contract-draft-page-lead {
-  margin: 0;
-  font-size: 13px;
-  font-weight: 700;
-  color: #94a3b8;
-  line-height: 1.7;
-}
-
-.contract-draft-header-badges {
-  gap: 7px !important;
-  margin-top: 12px !important;
-}
-
-.business-payroll-header-badges.contract-draft-header-badges span.contract-draft-badge,
-.contract-draft-badge {
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 10px;
-  font-weight: 950;
-}
-
-.contract-draft-badge--usage {
-  border-color: rgba(56, 189, 248, 0.35) !important;
-  background: rgba(56, 189, 248, 0.12) !important;
-}
-
-.contract-draft-badge--base {
-  border-color: rgba(148, 182, 219, 0.28) !important;
-  background: rgba(15, 42, 78, 0.45) !important;
-  color: #dbe8f5 !important;
-}
-
-.contract-draft-badge--draft {
-  border-color: rgba(246, 174, 52, 0.35) !important;
-  background: rgba(246, 174, 52, 0.09) !important;
-  color: #ffd089 !important;
-}
-
-.contract-draft-back-link {
-  flex-shrink: 0;
-}
-
-.contract-draft-sections-stack .draft-template-flow-section.contract-draft-step-section {
-  gap: 16px;
-  padding: 18px 20px;
-}
-
-.contract-draft-step-banner .contract-draft-step-banner-copy {
-  display: flex;
-  gap: 14px;
-  align-items: flex-start;
-}
-
-.contract-draft-step-icon-shell.business-payroll-section-icon {
-  width: 44px;
-  height: 44px;
-}
-
-.contract-draft-step-body {
-  display: grid;
-  gap: 14px;
-}
-
-.contract-draft-field-hint {
-  margin: 0;
-  font-size: 12px;
-  font-weight: 720;
-  color: #aec5de;
-  line-height: 1.75;
-  text-align: right;
-}
-
-.contract-draft-subsection {
-  padding: 14px !important;
-}
-
-.contract-draft-reg-badge {
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  border-radius: 999px;
-  padding: 3px 8px;
-  font-size: 9px !important;
-  font-weight: 950;
-  letter-spacing: 0.02em;
-  border-width: 1px;
-  border-style: solid;
-}
-
-.contract-draft-reg-badge--internal {
-  border-color: rgba(56, 189, 248, 0.35);
-  background: rgba(56, 189, 248, 0.09);
-  color: #ccefff !important;
-}
-
-.contract-draft-reg-badge--legal {
-  border-color: rgba(167, 139, 250, 0.35);
-  background: rgba(139, 92, 246, 0.1);
-  color: #ebe4ff !important;
-}
-
-.business-draft-section-title span.contract-draft-reg-badge {
-  align-self: center;
-}
-
-.contract-draft-option-grid {
-  gap: 10px !important;
-}
-
-.contract-draft-option-chip {
-  position: relative;
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  justify-content: flex-start;
-  min-height: 44px;
-  padding: 8px 10px !important;
-  border: 1px solid rgba(141, 170, 204, 0.22);
-  border-radius: 13px !important;
-  background: rgba(13, 32, 60, 0.45);
-  color: #e9f3ff !important;
-  text-align: right;
-  cursor: pointer;
-  font-family: inherit;
-  font-size: 11px;
-  font-weight: 840;
-  line-height: 1.45;
-  transition:
-    border-color 0.15s ease,
-    background 0.15s ease;
-}
-
-.contract-draft-option-chip:hover {
-  border-color: rgba(246, 174, 52, 0.35);
-  background: rgba(246, 174, 52, 0.06);
-}
-
-.contract-draft-option-chip.is-selected {
-  border-color: rgba(246, 174, 52, 0.68) !important;
-  background: rgba(246, 174, 52, 0.12) !important;
-}
-
-.contract-draft-option-check {
-  display: inline-flex;
-  width: 20px;
-  height: 20px;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  border-radius: 6px;
-  border: 1px solid rgba(148, 182, 219, 0.25);
-  background: rgba(8, 24, 48, 0.6);
-}
-
-.contract-draft-option-chip.is-selected .contract-draft-option-check {
-  border-color: rgba(246, 174, 52, 0.55);
-  background: rgba(246, 174, 52, 0.16);
-  color: #ffb82e;
-}
-
-.contract-draft-option-label {
-  flex: 1;
-  min-width: 0;
-  text-wrap: balance;
-}
-
-.contract-draft-step-footer {
-  border-top-color: rgba(119, 157, 201, 0.18) !important;
-  padding-top: 16px !important;
-}
-
-@media (max-width: 1200px) {
-  .draft-template-flow-page.business-contract-template-flow {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-areas:
-      'content'
-      'nav'
-      'report';
-    gap: 12px;
-    overflow-y: auto;
-    padding-bottom: 20px;
-  }
-
-  .draft-template-flow-page.business-contract-template-flow .draft-template-flow-sidebar-right,
-  .draft-template-flow-page.business-contract-template-flow .draft-template-flow-report {
-    height: auto;
-    max-height: none;
-  }
-
-  .draft-template-flow-page.business-contract-template-flow .draft-template-flow-sidebar-panel,
-  .draft-template-flow-page.business-contract-template-flow .draft-template-flow-report-panel {
-    margin: 0 8px;
-  }
 }
 
 .business-payroll-header-badges {

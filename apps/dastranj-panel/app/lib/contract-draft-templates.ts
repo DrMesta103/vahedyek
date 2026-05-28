@@ -53,7 +53,9 @@ export type ContractDraftTemplate = {
   data: {
     classification: {
       contractType: string;
+      contractSubType: string;
       workLocationCategories: string[];
+      workLocationSubCategory: string;
     };
     attendanceBase: {
       monthlyOvertimeLimitHours: number;
@@ -161,7 +163,9 @@ export function createContractDraftTemplate({
     data: {
       classification: {
         contractType: '',
+        contractSubType: '',
         workLocationCategories: [],
+        workLocationSubCategory: '',
       },
       attendanceBase: {
         monthlyOvertimeLimitHours: baseSettings.workTimePayRules.overtime.dailyLimitHours * 28,
@@ -210,18 +214,23 @@ export function normalizeContractDraftTemplate(value: unknown): ContractDraftTem
   if (!value || typeof value !== 'object') return null;
   const template = value as ContractDraftTemplate;
   if (!template.id || !template.name || !template.usageType) return null;
+  const defaults = createContractDraftTemplate({
+    name: template.name,
+    usageType: template.usageType,
+    baseSettingsYear: template.baseSettingsYear,
+    baseSettings: DEFAULT_PAYROLL_SETTINGS,
+  }).data;
   return {
     ...template,
     status: 'draft',
     stepsProgress: template.stepsProgress ?? createInitialTemplateProgress(template.usageType),
     data: {
-      ...createContractDraftTemplate({
-        name: template.name,
-        usageType: template.usageType,
-        baseSettingsYear: template.baseSettingsYear,
-        baseSettings: DEFAULT_PAYROLL_SETTINGS,
-      }).data,
+      ...defaults,
       ...template.data,
+      classification: {
+        ...defaults.classification,
+        ...template.data?.classification,
+      },
     },
   };
 }

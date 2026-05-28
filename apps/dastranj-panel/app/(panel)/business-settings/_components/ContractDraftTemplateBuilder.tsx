@@ -56,12 +56,80 @@ const CONTRACT_TYPES = [
   'قراردادهای مشاوره‌ای و تخصصی',
 ];
 
+const CONTRACT_TYPE_SUBCATEGORIES: Record<string, { hint: string; options: string[] }> = {
+  'قراردادهای رسمی و استخدام دائم': {
+    hint: 'این دسته‌بندی نشان می‌دهد همکاری کارمند بلندمدت و سازمانی است.',
+    options: ['استخدام دائم تمام‌وقت', 'استخدام دائم پاره‌وقت', 'استخدام با دوره آزمایشی اولیه', 'استخدام با مزایای کامل', 'استخدام داخلی سازمان'],
+  },
+  'قراردادهای موقت و پروژه‌ای': {
+    hint: 'این دسته‌بندی برای همکاری‌هایی است که زمان، مأموریت یا پروژه مشخص دارند.',
+    options: ['قرارداد مدت‌معین', 'قرارداد پروژه‌ای', 'قرارداد فصلی', 'قرارداد جایگزینی موقت', 'قرارداد تا پایان مأموریت/پروژه'],
+  },
+  'قراردادهای نیمه‌وقت و منعطف': {
+    hint: 'این دسته‌بندی برای همکاری‌هایی است که زمان یا محل حضور انعطاف دارد.',
+    options: ['نیمه‌وقت ثابت', 'ساعتی', 'شیفتی منعطف', 'دورکاری منعطف', 'همکاری شناور'],
+  },
+  'قراردادهای آزمایشی و آموزشی': {
+    hint: 'این دسته‌بندی برای شروع همکاری با تمرکز بر آموزش یا ارزیابی اولیه است.',
+    options: ['دوره آزمایشی استخدام', 'کارآموزی', 'آموزش حین کار', 'دوره مهارت‌آموزی', 'همکاری آموزشی بدون تعهد استخدام'],
+  },
+  'قراردادهای ویژه و خاص': {
+    hint: 'این دسته‌بندی برای قراردادهایی است که شرایط پرداخت، دسترسی یا مسئولیت خاص دارند.',
+    options: ['قرارداد با شرایط خاص پرداخت', 'قرارداد محرمانه/حساس', 'قرارداد با دسترسی ویژه', 'قرارداد کوتاه‌مدت اضطراری', 'قرارداد ویژه مدیران یا افراد کلیدی'],
+  },
+  'قراردادهای مشاوره‌ای و تخصصی': {
+    hint: 'این دسته‌بندی برای همکاری تخصصی، مشاوره‌ای یا پیمانکاری فردی است.',
+    options: ['مشاوره ساعتی', 'مشاوره پروژه‌ای', 'خدمات تخصصی', 'قرارداد فریلنسری', 'قرارداد پیمانکاری فردی'],
+  },
+};
+
 const WORK_LOCATION_CATEGORIES = [
   'دسته‌بندی بر اساس نوع حضور فیزیکی',
-  'دسته‌بندی بر اساس ارتباط با مشتری و ذینفعان',
   'دسته‌بندی بر اساس نوع محیط کاری',
+  'دسته‌بندی بر اساس ارتباط با مشتری و ذینفعان',
   'دسته‌بندی بر اساس پویایی و جابجایی شغلی',
 ];
+
+const WORK_LOCATION_SUBCATEGORIES: Record<string, Array<{ label: string; helper?: string }>> = {
+  'دسته‌بندی بر اساس نوع حضور فیزیکی': [
+    { label: 'ثابت', helper: 'محل کار تغییر نمی‌کند و همواره مشخص است.' },
+    { label: 'دورکاری', helper: 'کار از خارج از محل سازمان انجام می‌شود.' },
+    { label: 'ترکیبی / هیبریدی', helper: 'بخشی از کار حضوری و بخشی به‌صورت دورکاری انجام می‌شود.' },
+    { label: 'حضوری شیفتی', helper: 'حضور فیزیکی بر اساس شیفت‌های کاری انجام می‌شود.' },
+    { label: 'حضور موردی', helper: 'حضور در محل کار فقط در زمان‌های مشخص یا موردنیاز انجام می‌شود.' },
+    { label: 'شناور', helper: 'زمان و محل حضور می‌تواند بر اساس توافق تغییر کند.' },
+  ],
+  'دسته‌بندی بر اساس نوع محیط کاری': [
+    { label: 'دفتر اداری' },
+    { label: 'کارخانه' },
+    { label: 'کارگاه' },
+    { label: 'فروشگاه / شعبه' },
+    { label: 'انبار' },
+    { label: 'سایت پروژه' },
+    { label: 'مرکز تماس' },
+    { label: 'محیط عملیاتی' },
+    { label: 'محل مشتری' },
+  ],
+  'دسته‌بندی بر اساس ارتباط با مشتری و ذینفعان': [
+    { label: 'بدون ارتباط مستقیم با مشتری' },
+    { label: 'ارتباط مستقیم با مشتری' },
+    { label: 'ارتباط با تأمین‌کننده' },
+    { label: 'ارتباط با پیمانکار' },
+    { label: 'ارتباط با سازمان‌های بیرونی' },
+    { label: 'نماینده سازمان نزد مشتری' },
+    { label: 'کار در محل مشتری' },
+  ],
+  'دسته‌بندی بر اساس پویایی و جابجایی شغلی': [
+    { label: 'ثابت' },
+    { label: 'چندبخشی' },
+    { label: 'پروژه‌ای' },
+    { label: 'مأموریتی' },
+    { label: 'سفرهای بین‌المللی' },
+    { label: 'بین شعب' },
+    { label: 'میدانی' },
+    { label: 'سیار' },
+  ],
+};
 
 const PAYMENT_TYPES = [
   'پرداخت بر اساس دوره‌های زمانی',
@@ -295,9 +363,13 @@ function OptionGrid({
             className={`contract-draft-option-chip${isSelected ? ' is-selected' : ''}`}
             onClick={() => onChange(multi && Array.isArray(selected) ? toggle(selected, option) : option)}
           >
-            {multi ? (
+            {isSelected ? (
+              <span className="contract-draft-option-active" aria-hidden>
+                <Check className="h-3.5 w-3.5" strokeWidth={2.8} />
+              </span>
+            ) : multi ? (
               <span className="contract-draft-option-check" aria-hidden>
-                {isSelected ? <Check className="h-3.5 w-3.5" strokeWidth={2.75} /> : null}
+                <span />
               </span>
             ) : null}
             <span className="contract-draft-option-label">{option}</span>
@@ -385,18 +457,12 @@ export function ContractDraftTemplateBuilder() {
     window.localStorage.setItem(ACTIVE_CONTRACT_DRAFT_TEMPLATE_STORAGE_KEY, withProgress.id);
   };
 
-  const markDirty = (step: ContractDraftTemplateStepId) => {
-    if (!stepState || !template) return;
-    const next = { ...stepState, [step]: { ...stepState[step], dirty: true, saved: false } };
-    setStepState(next);
-    persist(template, next, activeStep);
-  };
-
   const updateTemplate = (step: ContractDraftTemplateStepId, apply: (current: ContractDraftTemplate) => ContractDraftTemplate) => {
-    if (!template) return;
+    if (!template || !stepState) return;
     const next = apply(template);
-    persist(next);
-    markDirty(step);
+    const nextState = { ...stepState, [step]: { ...stepState[step], dirty: true, saved: false } };
+    setStepState(nextState);
+    persist(next, nextState, activeStep);
     setErrors({});
   };
 
@@ -706,6 +772,9 @@ function validateStep(step: ContractDraftTemplateStepId, template: ContractDraft
   const errors: Record<string, string> = {};
   if (step === 'classification') {
     if (!template.data.classification.contractType) errors.contractType = 'حداقل یک گزینه را انتخاب کنید';
+    if (!template.data.classification.contractSubType) errors.contractSubType = 'زیرگروه قرارداد را انتخاب کنید';
+    if (!template.data.classification.workLocationCategories[0] || !WORK_LOCATION_CATEGORIES.includes(template.data.classification.workLocationCategories[0])) errors.workLocationCategory = 'دسته‌بندی محل انجام کار را انتخاب کنید';
+    if (!template.data.classification.workLocationSubCategory) errors.workLocationSubCategory = 'زیرگروه محل انجام کار را انتخاب کنید';
   }
   if (step === 'attendanceBase') {
     if (!Number.isFinite(template.data.attendanceBase.monthlyOvertimeLimitHours) || template.data.attendanceBase.monthlyOvertimeLimitHours <= 0) errors.monthlyOvertimeLimitHours = 'مقدار باید عددی مثبت باشد';
@@ -912,33 +981,118 @@ function PayrollBaseStep({
 }
 
 function ClassificationStep({ template, errors, updateTemplate }: { template: ContractDraftTemplate; errors: Record<string, string>; updateTemplate: (step: ContractDraftTemplateStepId, apply: (current: ContractDraftTemplate) => ContractDraftTemplate) => void }) {
+  const selectedContractType = template.data.classification.contractType;
+  const contractConfig = selectedContractType ? CONTRACT_TYPE_SUBCATEGORIES[selectedContractType] : null;
+  const selectedContractSubType = template.data.classification.contractSubType;
+  const selectedLocationCategory = template.data.classification.workLocationCategories[0] ?? '';
+  const selectedLocationSubCategory = template.data.classification.workLocationSubCategory;
+  const locationOptions = selectedLocationCategory ? WORK_LOCATION_SUBCATEGORIES[selectedLocationCategory] ?? [] : [];
+  const selectedLocationHelper = locationOptions.find((option) => option.label === selectedLocationSubCategory)?.helper;
+
   return (
     <>
-      <section className="business-payroll-subcard contract-draft-subsection">
+      <section className="business-payroll-subcard contract-draft-subsection contract-draft-intro-card">
         <div className="business-draft-section-title">
           <h3>نوع قرارداد</h3>
           <span className="contract-draft-reg-badge contract-draft-reg-badge--internal">آیین‌نامه داخلی</span>
         </div>
-        <p className="contract-draft-field-hint">نوع همکاری و شرایط کلی را برای متن قرارداد مشخص کنید.</p>
+        <p className="contract-draft-field-hint">نوع قرارداد مشخص می‌کند که شرایط همکاری کارمند با سازمان چگونه است. این گزینه بر میزان تعهدات، مزایا و شرایط فسخ قرارداد تأثیر می‌گذارد.</p>
         <OptionGrid
           options={CONTRACT_TYPES}
-          selected={template.data.classification.contractType}
-          onChange={(contractType) => updateTemplate('classification', (current) => ({ ...current, data: { ...current.data, classification: { ...current.data.classification, contractType: contractType as string } } }))}
+          selected={selectedContractType}
+          onChange={(contractType) =>
+            updateTemplate('classification', (current) => {
+              const config = CONTRACT_TYPE_SUBCATEGORIES[contractType as string];
+              return {
+                ...current,
+                data: {
+                  ...current.data,
+                  classification: {
+                    ...current.data.classification,
+                    contractType: contractType as string,
+                    contractSubType: config?.options[0] ?? '',
+                  },
+                },
+              };
+            })
+          }
         />
         {errors.contractType ? <p className="business-payroll-warning"><CircleAlert className="h-4 w-4" aria-hidden /> {errors.contractType}</p> : null}
+        {contractConfig ? (
+          <div className="contract-draft-subchoice-panel">
+            <p className="contract-draft-subcategory-note">{contractConfig.hint}</p>
+            <OptionGrid
+              options={contractConfig.options}
+              selected={selectedContractSubType}
+              onChange={(contractSubType) =>
+                updateTemplate('classification', (current) => ({
+                  ...current,
+                  data: {
+                    ...current.data,
+                    classification: {
+                      ...current.data.classification,
+                      contractSubType: contractSubType as string,
+                    },
+                  },
+                }))
+              }
+            />
+            {selectedContractSubType ? <p className="contract-draft-subcategory-note">{selectedContractSubType}</p> : null}
+          </div>
+        ) : null}
+        {errors.contractSubType ? <p className="business-payroll-warning"><CircleAlert className="h-4 w-4" aria-hidden /> {errors.contractSubType}</p> : null}
       </section>
-      <section className="business-payroll-subcard contract-draft-subsection">
+
+      <section className="business-payroll-subcard contract-draft-subsection contract-draft-subsection--nested">
         <div className="business-draft-section-title">
           <h3>دسته‌بندی بر اساس محل انجام کار</h3>
           <span className="contract-draft-reg-badge contract-draft-reg-badge--internal">آیین‌نامه داخلی</span>
         </div>
-        <p className="contract-draft-field-hint">محل یا شیوه انجام کار را برای متن قرارداد مشخص کنید.</p>
+        <p className="contract-draft-field-hint">این بخش مشخص می‌کند که کارمند در چه محیطی مشغول به کار است. بسته به ماهیت شغل، محل انجام کار می‌تواند ثابت، متغیر یا وابسته به مشتری باشد.</p>
         <OptionGrid
           options={WORK_LOCATION_CATEGORIES}
-          selected={template.data.classification.workLocationCategories}
-          multi
-          onChange={(workLocationCategories) => updateTemplate('classification', (current) => ({ ...current, data: { ...current.data, classification: { ...current.data.classification, workLocationCategories: workLocationCategories as string[] } } }))}
+          selected={selectedLocationCategory}
+          onChange={(workLocationCategory) =>
+            updateTemplate('classification', (current) => {
+              const options = WORK_LOCATION_SUBCATEGORIES[workLocationCategory as string] ?? [];
+              return {
+                ...current,
+                data: {
+                  ...current.data,
+                  classification: {
+                    ...current.data.classification,
+                    workLocationCategories: [workLocationCategory as string],
+                    workLocationSubCategory: options[0]?.label ?? '',
+                  },
+                },
+              };
+            })
+          }
         />
+        {errors.workLocationCategory ? <p className="business-payroll-warning"><CircleAlert className="h-4 w-4" aria-hidden /> {errors.workLocationCategory}</p> : null}
+        {selectedLocationCategory ? (
+          <div className="contract-draft-subchoice-panel">
+            <p className="contract-draft-subcategory-note">مشخص می‌کند که کارمند به‌صورت ثابت در یک مکان خاص حضور دارد یا محل کار او متغیر است.</p>
+            <OptionGrid
+              options={locationOptions.map((option) => option.label)}
+              selected={selectedLocationSubCategory}
+              onChange={(workLocationSubCategory) =>
+                updateTemplate('classification', (current) => ({
+                  ...current,
+                  data: {
+                    ...current.data,
+                    classification: {
+                      ...current.data.classification,
+                      workLocationSubCategory: workLocationSubCategory as string,
+                    },
+                  },
+                }))
+              }
+            />
+            {selectedLocationHelper ? <p className="contract-draft-subcategory-note">{selectedLocationHelper}</p> : null}
+          </div>
+        ) : null}
+        {errors.workLocationSubCategory ? <p className="business-payroll-warning"><CircleAlert className="h-4 w-4" aria-hidden /> {errors.workLocationSubCategory}</p> : null}
       </section>
     </>
   );

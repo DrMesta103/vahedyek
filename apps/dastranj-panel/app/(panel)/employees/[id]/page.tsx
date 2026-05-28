@@ -1,7 +1,6 @@
 import { notFound } from 'next/navigation';
 import { ModulePageHeader } from '../../../components/module-page/ModulePageHeader';
 import { getEmployee } from '../../../lib/data';
-import { formatPersianDate } from '../../../lib/format-date';
 import { EmployeeDetailView } from './_components/EmployeeDetailView';
 
 export default async function EmployeeDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -31,7 +30,17 @@ export default async function EmployeeDetailPage({ params }: { params: Promise<{
     maritalStatus: employee.maritalStatus,
     childrenCount: employee.childrenCount,
     canEditIdentityPhoto: employee.canEditIdentityPhoto,
-    createdAt: formatPersianDate(employee.createdAt),
+    createdAt: employee.createdAt.toISOString(),
+    organizationUnits: employee.organizationUnits.map((item) => ({
+      id: item.organizationUnit.id,
+      title: item.organizationUnit.title,
+    })),
+    workGroups: employee.workGroupMemberships.map((item) => ({
+      id: item.workGroup.id,
+      title: item.workGroup.title,
+    })),
+    bankAccountsCount: Array.isArray(employee.bankAccounts) ? employee.bankAccounts.length : 0,
+    guaranteeCount: Array.isArray(employee.guarantees) ? employee.guarantees.length : 0,
   };
 
   return (
