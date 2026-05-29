@@ -1,6 +1,7 @@
 import {
   DEFAULT_PAYROLL_SETTINGS,
   type PayrollSettings,
+  getActiveTenantStorageId,
 } from './payroll-business-settings';
 
 export type ContractDraftTemplateUsageType = 'attendance_only' | 'payroll_attendance';
@@ -66,6 +67,8 @@ export type ContractDraftTemplate = {
       dailyRequiredMinutes: number;
       dailyBaseSalary: number;
       insuranceEnabled: boolean;
+      employerInsurancePercent: number;
+      employeeInsurancePercent: number;
       taxEnabled: boolean;
       taxPayer: 'employee' | 'employer';
     };
@@ -101,6 +104,19 @@ export type ContractDraftTemplate = {
 
 export const CONTRACT_DRAFT_TEMPLATES_STORAGE_KEY = 'dastranj-contract-draft-templates-v1';
 export const ACTIVE_CONTRACT_DRAFT_TEMPLATE_STORAGE_KEY = 'dastranj-active-contract-draft-template-v1';
+
+function scopeStorageKey(key: string, tenantId?: string | null) {
+  const scope = tenantId ?? getActiveTenantStorageId();
+  return scope ? `${key}:${scope}` : key;
+}
+
+export function getContractDraftTemplatesStorageKey(tenantId?: string | null) {
+  return scopeStorageKey(CONTRACT_DRAFT_TEMPLATES_STORAGE_KEY, tenantId);
+}
+
+export function getActiveContractDraftTemplateStorageKey(tenantId?: string | null) {
+  return scopeStorageKey(ACTIVE_CONTRACT_DRAFT_TEMPLATE_STORAGE_KEY, tenantId);
+}
 
 export const ATTENDANCE_TEMPLATE_STEPS: Array<{ id: ContractDraftTemplateStepId; title: string; detail: string }> = [
   { id: 'attendanceBase', title: 'اطلاعات پایه تردد', detail: 'سقف‌ها، سهمیه‌ها و انتقال استحقاقی' },
@@ -176,6 +192,8 @@ export function createContractDraftTemplate({
         dailyRequiredMinutes: baseSettings.financial.dailyRequiredMinutes,
         dailyBaseSalary: baseSettings.financial.dailyBaseSalary,
         insuranceEnabled: baseSettings.deductions.employeeInsurancePercent > 0,
+        employerInsurancePercent: baseSettings.deductions.employerInsurancePercent,
+        employeeInsurancePercent: baseSettings.deductions.employeeInsurancePercent,
         taxEnabled: baseSettings.deductions.taxBrackets.length > 0,
         taxPayer: 'employee',
       },
@@ -230,6 +248,10 @@ export function normalizeContractDraftTemplate(value: unknown): ContractDraftTem
       classification: {
         ...defaults.classification,
         ...template.data?.classification,
+      },
+      payrollBase: {
+        ...defaults.payrollBase,
+        ...template.data?.payrollBase,
       },
     },
   };

@@ -22,11 +22,13 @@ import {
 } from 'lucide-react';
 import { MinimalScroll } from '../../../../../components/MinimalScroll';
 import { PanelFormModal, PanelFormModalActions } from '../../../../../components/PanelFormModal';
+import { UnsavedChangesDialog, useUnsavedLeaveGuard } from '../../../../../components/UnsavedChangesGuard';
 import { formatFaNumber, toPersianDigits } from '../../../../../lib/format-fa';
 import { formatPersianDate } from '../../../../../lib/format-date';
 import { CONTRACT_DRAFT_TEMPLATES_STORAGE_KEY, normalizeContractDraftTemplate, type ContractDraftTemplate } from '../../../../../lib/contract-draft-templates';
 import {
   DEFAULT_PAYROLL_SETTINGS,
+  getActiveTenantStorageId,
   getPayrollSettingsStorageKey,
   normalizePayrollSettings,
   type PayrollSettings,
@@ -264,7 +266,7 @@ function readTemplates(): ContractDraftTemplate[] {
 
 function readSettingsForTemplate(template: ContractDraftTemplate | null | undefined) {
   if (!template || typeof window === 'undefined') return DEFAULT_PAYROLL_SETTINGS;
-  const raw = window.localStorage.getItem(getPayrollSettingsStorageKey(template.baseSettingsYear));
+  const raw = window.localStorage.getItem(getPayrollSettingsStorageKey(template.baseSettingsYear, getActiveTenantStorageId()));
   if (!raw) return DEFAULT_PAYROLL_SETTINGS;
   try {
     return normalizePayrollSettings(JSON.parse(raw));
@@ -1058,6 +1060,10 @@ export function EmployeeContractDraftBuilderClient({
   const supplemental = supplementalProfiles[employee.id] ?? getDefaultEmployeeSupplementalProfile();
   const baseSettings = currentDraft?.templateId ? readSettingsForTemplate(templates.find((item) => item.id === currentDraft.templateId) ?? null) : DEFAULT_PAYROLL_SETTINGS;
   const steps = currentDraft ? getEmployeeDraftSteps(currentDraft.usageType) : [];
+  const hasUnsavedChanges = useMemo(
+    () => Boolean(currentDraft) && steps.some(({ id }) => currentDraft.progress[id]?.dirty),
+    [currentDraft, steps],
+  );
 
   const updateDraft = (
     updater: (draft: EmployeeContractDraft) => EmployeeContractDraft,
@@ -1177,6 +1183,70 @@ export function EmployeeContractDraftBuilderClient({
     if (!currentDraft) return;
     persistStep(step);
   };
+
+  const saveDirtyStepsAndLeave = () => {
+    if (!currentDraft) return true;
+
+    const dirtySteps = steps.filter(({ id }) => currentDraft.progress[id]?.dirty).map(({ id }) => id);
+    for (const step of dirtySteps) {
+      const registrationNumber = currentDraft.timing.registrationNumber.trim();
+      const duplicateRegistration =
+        step === 'timing' &&
+        registrationNumber &&
+        drafts.some(
+          (item) =>
+            item.id !== currentDraft.id &&
+            item.timing.registrationNumber.trim() === registrationNumber,
+        );
+      if (duplicateRegistration) {
+        setErrors({ timing_registrationNumber: 'Ø§ÛŒÙ† Ø´Ù…Ø§Ø±Ù‡ Ù‚Ø±Ø§Ø±Ø¯Ø§Ø¯ Ù‚Ø¨Ù„Ø§Ù‹ Ø§Ø³ØªÙØ§Ø¯Ù‡ Ø´Ø¯Ù‡ Ø§Ø³Øª' });
+        setActiveStep(step);
+        requestAnimationFrame(() => document.getElementById(`employee-draft-${step}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+        return false;
+      }
+
+      const validation = validateStep(step, currentDraft, employee, supplemental, baseSettings);
+      if (Object.keys(validation).length) {
+        setErrors(validation);
+        setActiveStep(step);
+        requestAnimationFrame(() => document.getElementById(`employee-draft-${step}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+        return false;
+      }
+    }
+
+    if (!dirtySteps.length) return true;
+
+    const nextProgress = { ...currentDraft.progress };
+    for (const step of dirtySteps) {
+      nextProgress[step] = {
+        ...nextProgress[step],
+        completed: true,
+        dirty: false,
+        saved: true,
+        opened: true,
+      };
+    }
+
+    const allCompleted = steps.every(({ id }) => nextProgress[id]?.completed || nextProgress[id]?.saved);
+    const nextDraft: EmployeeContractDraft = {
+      ...currentDraft,
+      updatedAt: new Date().toISOString(),
+      status: allCompleted ? 'completed' : 'in_progress',
+      progress: nextProgress,
+    };
+    const nextDrafts = drafts.map((item) => (item.id === nextDraft.id ? nextDraft : item));
+    setCurrentDraft(nextDraft);
+    persist(nextDrafts);
+    setErrors({});
+    setNotice('ØªØºÛŒÛŒØ±Ø§Øª Ø°Ø®ÛŒØ±Ù‡ Ø´Ø¯.');
+    return true;
+  };
+
+  const unsavedLeaveGuard = useUnsavedLeaveGuard({
+    hasUnsavedChanges,
+    onSaveAndLeave: saveDirtyStepsAndLeave,
+    onBrowserBack: () => router.push(`/employees/${employee.id}/contract-drafts`),
+  });
 
   const completedCount = currentDraft ? getProgressCompleted(currentDraft) : 0;
   const diffCount = currentDraft ? countDifferences(currentDraft) : 0;
@@ -1415,7 +1485,11 @@ export function EmployeeContractDraftBuilderClient({
           <nav className="draft-template-flow-breadcrumb" aria-label="مسیر صفحه">
             <Link href="/">دسترنج</Link>
             <ChevronLeft className="h-3.5 w-3.5" />
-            <Link href={`/employees/${employee.id}/contract-drafts`}>بازگشت به فهرست پیش‌نویس‌ها</Link>
+            <button
+              type="button"
+              className="business-payroll-year-back"
+              onClick={() => unsavedLeaveGuard.requestLeave(() => router.push(`/employees/${employee.id}/contract-drafts`))}
+            >بازگشت به فهرست پیش‌نویس‌ها</button>
           </nav>
           <div className="business-payroll-title-row">
             <h1>پیش‌نویس قرارداد کارمند</h1>
@@ -1426,7 +1500,11 @@ export function EmployeeContractDraftBuilderClient({
           </div>
           <p>تنظیم پیش‌نویس قرارداد برای کارمند انتخاب‌شده</p>
           <div className="business-payroll-header-badges">
-            <button type="button" className="draft-template-flow-action is-secondary" onClick={() => router.push(`/employees/${employee.id}/contract-drafts`)}>
+            <button
+              type="button"
+              className="draft-template-flow-action is-secondary"
+              onClick={() => unsavedLeaveGuard.requestLeave(() => router.push(`/employees/${employee.id}/contract-drafts`))}
+            >
               <ArrowLeft className="h-4 w-4" /> بازگشت به فهرست پیش‌نویس‌ها
             </button>
             <button type="button" className="draft-template-flow-action is-secondary" onClick={() => setEmployeeInfoEditor(true)}>
@@ -2108,6 +2186,13 @@ export function EmployeeContractDraftBuilderClient({
           }));
           setTaxBracketEditor({ open: false, bracket: null });
         }}
+      />
+      <UnsavedChangesDialog
+        open={unsavedLeaveGuard.dialogOpen}
+        saving={unsavedLeaveGuard.saving}
+        onSaveAndLeave={unsavedLeaveGuard.confirmSaveAndLeave}
+        onDiscardAndLeave={unsavedLeaveGuard.confirmDiscardAndLeave}
+        onCancel={unsavedLeaveGuard.closeDialog}
       />
     </div>
   );

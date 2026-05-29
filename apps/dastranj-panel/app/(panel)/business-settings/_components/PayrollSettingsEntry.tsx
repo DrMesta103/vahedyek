@@ -1,15 +1,21 @@
 'use client';
 
-import { CalendarDays, ChevronLeft, Plus, Search, X } from 'lucide-react';
+import { CalendarDays, ChevronLeft, Eye, Plus, Search, Trash2, X, Pencil } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { PanelFormModal, PanelFormModalActions } from '../../../components/PanelFormModal';
+import { CardMenu } from '../../../components/CardMenu';
+import { ConfirmDialog } from '../../../components/ConfirmDialog';
 import { getPersianPartsFromDate } from '../../../lib/calendar-dates';
 import { formatFaNumber } from '../../../lib/format-fa';
 import {
+  ACTIVE_TENANT_STORAGE_KEY,
+  getActiveTenantStorageId,
   PAYROLL_SETTINGS_STORAGE_KEY,
-  PAYROLL_SETTINGS_YEARS_STORAGE_KEY,
   getPayrollSettingsStorageKey,
+  getPayrollSettingsDraftStorageKey,
+  getPayrollSettingsYearsStorageKey,
+  getPayrollStepperProgressStorageKey,
   type BusinessSettingYear,
   type PayrollSettingsMode,
 } from '../../../lib/payroll-business-settings';
@@ -33,51 +39,114 @@ function createYear(year: number, currentYear: number, title?: string): Business
   };
 }
 
-function readYears(currentYear: number) {
-  const raw = window.localStorage.getItem(PAYROLL_SETTINGS_YEARS_STORAGE_KEY);
+function getSelectableYears(existingYears: BusinessSettingYear[], currentYear: number) {
+  const existingYearNumbers = new Set(existingYears.map((item) => item.year));
+  return [currentYear + 1, currentYear, currentYear - 1]
+    .filter((year) => year >= 1200 && year <= 1600)
+    .map((year) => ({
+      year,
+      label: formatFaNumber(year, { useGrouping: false }),
+      relativeLabel: year === currentYear ? 'سال جاری' : '',
+      disabled: existingYearNumbers.has(year),
+    }));
+}
+
+function getEditableYears(existingYears: BusinessSettingYear[], currentYear: number, excludedId: string) {
+  const existingYearNumbers = new Set(existingYears.filter((item) => item.id !== excludedId).map((item) => item.year));
+  return [currentYear + 1, currentYear, currentYear - 1]
+    .filter((year) => year >= 1200 && year <= 1600)
+    .map((year) => ({
+      year,
+      label: formatFaNumber(year, { useGrouping: false }),
+      relativeLabel: year === currentYear ? 'سال جاری' : '',
+      disabled: existingYearNumbers.has(year),
+    }));
+}
+
+function readYears(currentYear: number, tenantId?: string | null) {
+  const yearsStorageKey = getPayrollSettingsYearsStorageKey(tenantId);
+  const raw = window.localStorage.getItem(yearsStorageKey);
   if (raw) {
     try {
       const parsed = JSON.parse(raw) as BusinessSettingYear[];
       if (Array.isArray(parsed)) return parsed;
     } catch {
-      window.localStorage.removeItem(PAYROLL_SETTINGS_YEARS_STORAGE_KEY);
+      window.localStorage.removeItem(yearsStorageKey);
     }
   }
 
-  const legacySettings = window.localStorage.getItem(PAYROLL_SETTINGS_STORAGE_KEY);
+  const legacySettings = tenantId ? null : window.localStorage.getItem(PAYROLL_SETTINGS_STORAGE_KEY);
   if (legacySettings) {
     const initialYears = [createYear(currentYear, currentYear)];
-    window.localStorage.setItem(PAYROLL_SETTINGS_YEARS_STORAGE_KEY, JSON.stringify(initialYears));
+    window.localStorage.setItem(yearsStorageKey, JSON.stringify(initialYears));
     window.localStorage.setItem(getPayrollSettingsStorageKey(currentYear), legacySettings);
     return initialYears;
   }
-  window.localStorage.setItem(PAYROLL_SETTINGS_YEARS_STORAGE_KEY, '[]');
+  window.localStorage.setItem(yearsStorageKey, '[]');
   return [];
 }
 
-function AddYearDialog({
+function removeYearStorage(year: number, tenantId?: string | null) {
+  window.localStorage.removeItem(getPayrollSettingsStorageKey(year, tenantId));
+  window.localStorage.removeItem(getPayrollStepperProgressStorageKey('admin', year, tenantId));
+  window.localStorage.removeItem(getPayrollSettingsDraftStorageKey('admin', year, tenantId));
+}
+
+function moveYearStorage(fromYear: number, toYear: number, tenantId?: string | null) {
+  if (fromYear === toYear) return;
+  const storagePairs = [
+    [getPayrollSettingsStorageKey(fromYear, tenantId), getPayrollSettingsStorageKey(toYear, tenantId)],
+    [getPayrollStepperProgressStorageKey('admin', fromYear, tenantId), getPayrollStepperProgressStorageKey('admin', toYear, tenantId)],
+    [getPayrollSettingsDraftStorageKey('admin', fromYear, tenantId), getPayrollSettingsDraftStorageKey('admin', toYear, tenantId)],
+  ] as const;
+
+  storagePairs.forEach(([fromKey, toKey]) => {
+    const value = window.localStorage.getItem(fromKey);
+    if (value === null) return;
+    window.localStorage.setItem(toKey, value);
+    window.localStorage.removeItem(fromKey);
+  });
+}
+
+function YearDialog({
   open,
   years,
   currentYear,
+  initialYear,
+  initialTitle,
+  submitLabel,
+  dialogTitle,
+  lead,
   onClose,
   onSubmit,
+  mode = 'create',
 }: {
   open: boolean;
   years: BusinessSettingYear[];
   currentYear: number;
+  initialYear?: number;
+  initialTitle?: string;
+  submitLabel: string;
+  dialogTitle: string;
+  lead: string;
   onClose: () => void;
   onSubmit: (year: BusinessSettingYear) => void;
+  mode?: 'create' | 'edit';
 }) {
   const [yearValue, setYearValue] = useState('');
-  const [title, setTitle] = useState('');
+  const [draftTitle, setDraftTitle] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const selectableYears = useMemo(
+    () => (mode === 'edit' && initialYear != null ? getEditableYears(years, currentYear, `year-${initialYear}`) : getSelectableYears(years, currentYear)),
+    [currentYear, initialYear, mode, years],
+  );
 
   useEffect(() => {
     if (!open) return;
-    setYearValue('');
-    setTitle('');
+    setYearValue(String(initialYear ?? selectableYears.find((item) => !item.disabled)?.year ?? selectableYears[0]?.year ?? ''));
+    setDraftTitle(initialTitle ?? '');
     setError(null);
-  }, [open]);
+  }, [initialYear, initialTitle, open, selectableYears]);
 
   const submit = () => {
     const normalized = normalizeDigits(yearValue).trim();
@@ -90,11 +159,11 @@ function AddYearDialog({
       setError('سال وارد شده معتبر نیست');
       return;
     }
-    if (years.some((item) => item.year === year)) {
+    if (years.some((item) => item.year === year && item.id !== `year-${initialYear ?? year}`)) {
       setError('این سال قبلا تعریف شده است');
       return;
     }
-    onSubmit(createYear(year, currentYear, title));
+    onSubmit(createYear(year, currentYear, draftTitle));
   };
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -105,37 +174,56 @@ function AddYearDialog({
   return (
     <PanelFormModal
       open={open}
-      title="افزودن سال جدید"
-      lead="سال مالی مورد نظر برای ثبت ضرایب حقوق، دستمزد و تردد را تعریف کنید."
+      title={dialogTitle}
+      lead={lead}
       error={error}
       onClose={onClose}
-      footer={<PanelFormModalActions submitLabel="ثبت سال" onSubmit={submit} onCancel={onClose} />}
+      footer={<PanelFormModalActions submitLabel={submitLabel} onSubmit={submit} onCancel={onClose} />}
     >
       <form className="payroll-year-dialog-form" onSubmit={handleSubmit}>
-        <label className="calendar-create-field">
+        <div className="calendar-create-field payroll-year-field">
           <span>
             سال <em>*</em>
           </span>
-          <input
-            type="text"
-            inputMode="numeric"
-            value={yearValue}
-            placeholder="مثلا ۱۴۰۳"
-            autoFocus
-            onChange={(event) => {
-              setYearValue(event.target.value);
-              setError(null);
-            }}
-          />
-        </label>
+          {selectableYears.every((item) => item.disabled) ? (
+            <p className="payroll-year-empty-hint">همه سال‌های مجاز قبلاً ثبت شده‌اند.</p>
+          ) : (
+            <div className="payroll-year-chips" role="radiogroup" aria-label="انتخاب سال">
+              {selectableYears.map((yearOption) => {
+                const isSelected = yearOption.year === Number(yearValue);
+                return (
+                  <label
+                    key={yearOption.year}
+                    className={`payroll-year-chip ${isSelected ? 'is-selected' : ''} ${yearOption.disabled ? 'is-disabled' : ''}`}
+                  >
+                    <input
+                      type="radio"
+                      name="payroll-year"
+                      value={yearOption.year}
+                      checked={isSelected}
+                      disabled={yearOption.disabled}
+                      onChange={() => {
+                        setYearValue(String(yearOption.year));
+                        setError(null);
+                      }}
+                    />
+                    <span className="payroll-year-chip-year">{yearOption.label}</span>
+                    {yearOption.relativeLabel ? <small>{yearOption.relativeLabel}</small> : null}
+                    {yearOption.disabled ? <small className="payroll-year-chip-badge">ثبت شده</small> : null}
+                  </label>
+                );
+              })}
+            </div>
+          )}
+        </div>
         <label className="calendar-create-field">
           <span>عنوان نمایشی</span>
           <input
             type="text"
-            value={title}
+            value={draftTitle}
             placeholder="مثلا سال ۱۴۰۳"
             onChange={(event) => {
-              setTitle(event.target.value);
+              setDraftTitle(event.target.value);
               setError(null);
             }}
           />
@@ -145,7 +233,7 @@ function AddYearDialog({
   );
 }
 
-export function PayrollSettingsEntry({ mode = 'admin' }: { mode?: PayrollSettingsMode }) {
+export function PayrollSettingsEntry({ mode = 'admin', tenantId = null }: { mode?: PayrollSettingsMode; tenantId?: string | null }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentYear = getPersianPartsFromDate().year;
@@ -153,11 +241,20 @@ export function PayrollSettingsEntry({ mode = 'admin' }: { mode?: PayrollSetting
   const [loaded, setLoaded] = useState(false);
   const [query, setQuery] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editDialog, setEditDialog] = useState<{ open: boolean; year: BusinessSettingYear | null }>({ open: false, year: null });
+  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; year: BusinessSettingYear | null }>({ open: false, year: null });
   const isTenant = mode === 'tenant';
+  const tenantStorageId = isTenant ? tenantId ?? getActiveTenantStorageId() : null;
+  const yearsStorageKey = getPayrollSettingsYearsStorageKey(null);
   const listPath = isTenant ? '/business-settings/payroll-attendance/tenant' : '/business-settings/payroll-attendance';
 
   useEffect(() => {
-    setYears(readYears(currentYear));
+    if (!isTenant || !tenantId) return;
+    window.sessionStorage.setItem(ACTIVE_TENANT_STORAGE_KEY, tenantId);
+  }, [isTenant, tenantId]);
+
+  useEffect(() => {
+    setYears(readYears(currentYear, null));
     setLoaded(true);
   }, [currentYear]);
 
@@ -181,9 +278,30 @@ export function PayrollSettingsEntry({ mode = 'admin' }: { mode?: PayrollSetting
       ? years.map((item) => ({ ...item, isCurrent: false })).concat(year)
       : years.concat(year);
     setYears(nextYears);
-    window.localStorage.setItem(PAYROLL_SETTINGS_YEARS_STORAGE_KEY, JSON.stringify(nextYears));
+    window.localStorage.setItem(yearsStorageKey, JSON.stringify(nextYears));
     setDialogOpen(false);
     openYear(year);
+  };
+
+  const updateYear = (year: BusinessSettingYear) => {
+    const previous = editDialog.year;
+    if (!previous) return;
+    const nextYears = years.map((item) => (item.id === previous.id ? year : item));
+    setYears(nextYears);
+    window.localStorage.setItem(yearsStorageKey, JSON.stringify(nextYears));
+    moveYearStorage(previous.year, year.year, tenantStorageId);
+    setEditDialog({ open: false, year: null });
+    openYear(year);
+  };
+
+  const deleteYear = () => {
+    const target = deleteDialog.year;
+    if (!target) return;
+    const nextYears = years.filter((item) => item.id !== target.id);
+    setYears(nextYears);
+    window.localStorage.setItem(yearsStorageKey, JSON.stringify(nextYears));
+    removeYearStorage(target.year, tenantStorageId);
+    setDeleteDialog({ open: false, year: null });
   };
 
   if (!loaded) return null;
@@ -194,6 +312,7 @@ export function PayrollSettingsEntry({ mode = 'admin' }: { mode?: PayrollSetting
         key={selectedYear.id}
         mode={mode}
         selectedYear={selectedYear}
+        tenantId={tenantStorageId}
         onBackToYears={() => router.push(listPath)}
       />
     );
@@ -247,12 +366,50 @@ export function PayrollSettingsEntry({ mode = 'admin' }: { mode?: PayrollSetting
         ) : visibleYears.length ? (
           <div className="business-payroll-years-list">
             {visibleYears.map((year) => (
-              <button
+              <div
                 key={year.id}
-                type="button"
                 className={`business-payroll-year-row ${year.isCurrent ? 'is-current' : ''}`}
+                role="button"
+                tabIndex={0}
                 onClick={() => openYear(year)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    openYear(year);
+                  }
+                }}
               >
+                {!isTenant ? (
+                  <div
+                    className="business-payroll-year-menu"
+                    onClick={(event) => event.stopPropagation()}
+                    onKeyDown={(event) => event.stopPropagation()}
+                  >
+                    <CardMenu
+                      items={[
+                        {
+                          kind: 'action',
+                          label: 'جزئیات',
+                          icon: <Eye className="h-4 w-4" />,
+                          onClick: () => openYear(year),
+                        },
+                        {
+                          kind: 'action',
+                          label: 'ویرایش',
+                          icon: <Pencil className="h-4 w-4" />,
+                          onClick: () => setEditDialog({ open: true, year }),
+                        },
+                        {
+                          kind: 'action',
+                          label: 'حذف',
+                          tone: 'danger',
+                          icon: <Trash2 className="h-4 w-4" />,
+                          onClick: () => setDeleteDialog({ open: true, year }),
+                        },
+                      ]}
+                    />
+                  </div>
+                ) : null}
                 <span className="business-payroll-year-arrow">
                   <ChevronLeft className="h-4 w-4" />
                 </span>
@@ -261,7 +418,7 @@ export function PayrollSettingsEntry({ mode = 'admin' }: { mode?: PayrollSetting
                   {year.isCurrent ? <small>سال جاری</small> : null}
                 </span>
                 <CalendarDays className="business-payroll-year-icon h-5 w-5" />
-              </button>
+              </div>
             ))}
           </div>
         ) : (
@@ -269,7 +426,41 @@ export function PayrollSettingsEntry({ mode = 'admin' }: { mode?: PayrollSetting
         )}
       </main>
       {!isTenant ? (
-        <AddYearDialog open={dialogOpen} years={years} currentYear={currentYear} onClose={() => setDialogOpen(false)} onSubmit={addYear} />
+        <>
+          <YearDialog
+            open={dialogOpen}
+            years={years}
+            currentYear={currentYear}
+            submitLabel="ثبت سال"
+            dialogTitle="افزودن سال جدید"
+            lead="سال مالی مورد نظر برای ثبت ضرایب حقوق، دستمزد و تردد را تعریف کنید."
+            onClose={() => setDialogOpen(false)}
+            onSubmit={addYear}
+          />
+          <YearDialog
+            open={editDialog.open}
+            years={years}
+            currentYear={currentYear}
+            initialYear={editDialog.year?.year}
+            initialTitle={editDialog.year?.title}
+            submitLabel="ثبت تغییرات"
+            dialogTitle="ویرایش سال"
+            lead="سال و عنوان نمایشی را تغییر دهید. اگر سال عوض شود، داده‌های همان سال هم جابه‌جا می‌شوند."
+            mode="edit"
+            onClose={() => setEditDialog({ open: false, year: null })}
+            onSubmit={updateYear}
+          />
+          <ConfirmDialog
+            open={deleteDialog.open}
+            title="حذف سال"
+            description={deleteDialog.year ? `آیا از حذف «${deleteDialog.year.title}» مطمئن هستید؟ داده‌های ذخیره‌شده برای این سال هم حذف می‌شوند.` : ''}
+            confirmLabel="بله، حذف شود"
+            cancelLabel="انصراف"
+            tone="danger"
+            onCancel={() => setDeleteDialog({ open: false, year: null })}
+            onConfirm={deleteYear}
+          />
+        </>
       ) : null}
     </div>
   );

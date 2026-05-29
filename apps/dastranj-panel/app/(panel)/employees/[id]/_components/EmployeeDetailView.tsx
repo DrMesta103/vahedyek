@@ -5,22 +5,27 @@ import {
   ArrowLeft,
   BadgeCheck,
   CalendarDays,
-  Clock3,
+  ClipboardList,
   CreditCard,
   FileText,
+  FolderOpen,
   Gauge,
   LayoutGrid,
   Mail,
   MapPin,
   Pencil,
   Phone,
-  ShieldCheck,
+  Printer,
+  Type,
   User,
+  UserMinus,
+  UserX,
   Wallet,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { formatPersianDate } from '../../../../lib/format-date';
+import { formatFaNumber } from '../../../../lib/format-fa';
 import { EditEmployeeFlow, type EditEmployeeData } from './EditEmployeeFlow';
 
 type EmployeeDetailSection = {
@@ -29,6 +34,7 @@ type EmployeeDetailSection = {
   href?: string;
   disabled?: boolean;
   badge?: string;
+  highlighted?: boolean;
   icon: LucideIcon;
 };
 
@@ -45,35 +51,54 @@ function normalizeDisplay(value: string | null | undefined) {
   return trimmed ? trimmed : 'ثبت نشده';
 }
 
-function buildSections(employeeId: string, bankAccountsCount: number, guaranteeCount: number): Array<{ title: string; cards: EmployeeDetailSection[] }> {
+function countCompletion(employee: EmployeeDetailData) {
+  const items = [
+    employee.personnelCode,
+    employee.email,
+    employee.mobile1,
+    employee.mobile2,
+    employee.avatarUrl,
+    employee.organizationUnits?.length ? '1' : '',
+    employee.workGroups?.length ? '1' : '',
+  ];
+  return Math.round((items.filter(Boolean).length / items.length) * 100);
+}
+
+function daysSinceCreated(createdAt: string) {
+  const created = new Date(createdAt);
+  if (Number.isNaN(created.getTime())) return 0;
+  return Math.max(0, Math.floor((Date.now() - created.getTime()) / (1000 * 60 * 60 * 24)));
+}
+
+function buildSections(employeeId: string): Array<{ title: string; cards: EmployeeDetailSection[]; layout?: 'default' | 'contract' }> {
   return [
     {
       title: 'گزارشات و درخواست ها',
       cards: [
         {
           title: 'درخواست ها',
-          description: 'همه درخواست های ثبت شده توسط کارمند را در اینجا می بینید. این بخش برای بررسی وضعیت درخواست ها و پیگیری بعدا توسعه می یابد.',
+          description: 'همه درخواست‌های ثبت‌شده توسط کارمند را در اینجا می‌بینید.',
           disabled: true,
           badge: 'در آینده',
-          icon: FileText,
+          icon: ClipboardList,
         },
         {
           title: 'گزارشات',
-          description: 'گزارش های مربوط به عملکرد، حضور و فعالیت کارمند در این بخش قرار می گیرد.',
+          description: 'گزارش‌های مربوط به عملکرد، حضور و فعالیت کارمند در این بخش قرار می‌گیرد.',
           disabled: true,
           badge: 'در آینده',
           icon: Gauge,
         },
         {
           title: 'ارزیابی عملکرد',
-          description: 'سوابق ارزیابی، بازخوردها و نتیجه های دوره ای در آینده در همین بخش اضافه می شود.',
+          description: 'سوابق ارزیابی، بازخوردها و نتایج دوره‌ای در این بخش نمایش داده می‌شود.',
           disabled: true,
           badge: 'در آینده',
           icon: BadgeCheck,
         },
         {
-          title: 'حقوق و دستمزد',
-          description: 'خلاصه اطلاعات حقوق و تردد کارمند از اینجا قابل مشاهده و مدیریت خواهد شد.',
+          title: 'گزارش حقوق و دستمزد',
+          description: 'خلاصه اطلاعات حقوق و تردد کارمند از اینجا قابل مشاهده خواهد بود.',
           disabled: true,
           badge: 'در آینده',
           icon: Wallet,
@@ -82,67 +107,68 @@ function buildSections(employeeId: string, bankAccountsCount: number, guaranteeC
     },
     {
       title: 'اطلاعات قرارداد',
+      layout: 'contract',
       cards: [
         {
-          title: 'مشخصات قرارداد',
-          description: 'اطلاعات هویتی، شغلی و وضعیت قرارداد را به صورت خلاصه اینجا مدیریت کنید.',
+          title: 'مشخصات کارمند',
+          description: 'اطلاعات هویتی، شغلی و وضعیت همکاری کارمند را مدیریت کنید.',
           disabled: true,
           badge: 'در آینده',
-          icon: FileText,
+          icon: User,
         },
         {
           title: 'تنظیم پیش‌نویس',
-          description: 'پیش‌نویس قرارداد این کارمند را باز کنید، از قالب آماده شروع کنید و مراحل قرارداد را ادامه دهید.',
+          description: 'پیش‌نویس قرارداد را باز کنید، از قالب آماده شروع کنید و مراحل را ادامه دهید.',
           href: `/employees/${employeeId}/contract-drafts`,
-          badge: 'شروع',
+          highlighted: true,
           icon: Pencil,
         },
         {
-          title: 'تاریخچه قرارداد',
-          description: 'نسخه های قرارداد، تغییرات و رویدادهای ثبت شده بعدا در این بخش دیده می شود.',
+          title: 'مرکز اسناد',
+          description: 'پیوست‌ها، قراردادهای امضاشده و اسناد مرتبط در این بخش نگهداری می‌شوند.',
           disabled: true,
           badge: 'در آینده',
-          icon: Clock3,
+          icon: FolderOpen,
         },
         {
-          title: 'مرکز اسناد',
-          description: 'پیوست ها، قراردادهای امضا شده و اسناد مربوطه در نسخه های بعدی اضافه می شود.',
+          title: 'تاریخچه چاپ قرارداد',
+          description: 'نسخه‌های چاپ‌شده قرارداد و سوابق مربوطه در اینجا ثبت می‌شود.',
           disabled: true,
           badge: 'در آینده',
-          icon: CreditCard,
+          icon: Printer,
+        },
+        {
+          title: 'تنظیم متن قرارداد',
+          description: 'متن قرارداد، بندها و شرایط همکاری را از این مسیر تنظیم کنید.',
+          disabled: true,
+          badge: 'در آینده',
+          icon: Type,
         },
       ],
     },
     {
-      title: 'ایجاد منظم',
+      title: 'ایجاد متمم',
       cards: [
         {
           title: 'متمم بر مبلغ قرارداد',
-          description: 'اگر تغییرات مالی یا مزدی وجود داشته باشد، این بخش برای ثبت متمم ها آماده می شود.',
+          description: 'ثبت تغییرات مالی یا مزایای قرارداد از این بخش انجام می‌شود.',
           disabled: true,
           badge: 'در آینده',
           icon: Wallet,
         },
         {
           title: 'متمم بر تاریخ (تمدید)',
-          description: 'مدت قرارداد و تاریخ های تمدید در آینده از این مسیر قابل مدیریت خواهد بود.',
+          description: 'مدت قرارداد و تاریخ‌های تمدید از این مسیر قابل مدیریت است.',
           disabled: true,
           badge: 'در آینده',
           icon: CalendarDays,
         },
         {
           title: 'متمم بر نوع قرارداد',
-          description: 'تغییر نوع قرارداد یا ساختار همکاری بعدا از اینجا اعمال می شود.',
+          description: 'تغییر نوع قرارداد یا ساختار همکاری از اینجا اعمال می‌شود.',
           disabled: true,
           badge: 'در آینده',
           icon: LayoutGrid,
-        },
-        {
-          title: 'تایید و ثبت',
-          description: 'ثبت نهایی تغییرات پس از تکمیل همه مراحل در همین قسمت اضافه می شود.',
-          disabled: true,
-          badge: 'در آینده',
-          icon: ShieldCheck,
         },
       ],
     },
@@ -151,31 +177,30 @@ function buildSections(employeeId: string, bankAccountsCount: number, guaranteeC
       cards: [
         {
           title: 'درخواست استعفا',
-          description: 'فرایند ثبت درخواست استعفا، بررسی و تایید آن در این بخش پیاده می شود.',
+          description: 'فرایند ثبت، بررسی و تأیید درخواست استعفا در این بخش انجام می‌شود.',
           disabled: true,
           badge: 'در آینده',
           icon: FileText,
         },
         {
           title: 'ترک کار',
-          description: 'فرایند ترک کار کارمند و ثبت نتیجه نهایی در نسخه های بعدی آماده می شود.',
+          description: 'فرایند ترک کار کارمند و ثبت نتیجه نهایی از این مسیر پیگیری می‌شود.',
           disabled: true,
           badge: 'در آینده',
-          icon: User,
+          icon: UserMinus,
         },
         {
-          title: 'استخراج',
-          description: 'خروجی های لازم برای بایگانی، گزارش یا انتقال اطلاعات بعدا اضافه خواهد شد.',
+          title: 'اخراج',
+          description: 'ثبت و پیگیری فرایند اخراج کارمند در این بخش انجام می‌شود.',
           disabled: true,
           badge: 'در آینده',
-          icon: FileText,
+          icon: UserX,
         },
         {
-          title: 'حساب ها و ضمانت ها',
-          description: 'حساب های بانکی و ضمانت های فعلی کارمند را از همین بخش ها می توان مدیریت کرد.',
+          title: 'تسویه نهایی',
+          description: 'حساب‌های بانکی، ضمانت‌ها و تسویه نهایی کارمند از این بخش مدیریت می‌شود.',
           href: `/employees/${employeeId}/bank-accounts`,
           icon: CreditCard,
-          badge: `${bankAccountsCount.toLocaleString('fa-IR')} حساب / ${guaranteeCount.toLocaleString('fa-IR')} ضمانت`,
         },
       ],
     },
@@ -188,39 +213,37 @@ function DetailTile({
   href,
   disabled,
   badge,
+  highlighted,
   icon: Icon,
 }: EmployeeDetailSection) {
   const content = (
     <>
-      <div className="employee-detail-tile-head">
-        <span className={`employee-detail-tile-arrow${disabled ? ' is-disabled' : ''}`}>
-          <ArrowLeft className="h-4 w-4" aria-hidden />
-        </span>
-        <div className="employee-detail-tile-copy">
-          <div className="employee-detail-tile-title-row">
-            <h3>{title}</h3>
-            {badge ? <span className={`employee-detail-tile-badge${disabled ? ' is-disabled' : ''}`}>{badge}</span> : null}
-          </div>
-          <p>{description}</p>
+      <span className={`employee-detail-tile-arrow${disabled ? ' is-disabled' : ''}`}>
+        <ArrowLeft className="h-4 w-4" aria-hidden />
+      </span>
+      <div className="employee-detail-tile-copy">
+        <div className="employee-detail-tile-title-row">
+          <h3>{title}</h3>
+          {badge ? <span className={`employee-detail-tile-badge${disabled ? ' is-disabled' : ''}`}>{badge}</span> : null}
         </div>
-        <span className="employee-detail-tile-icon" aria-hidden>
-          <Icon className="h-7 w-7" strokeWidth={1.8} />
-        </span>
+        <p>{description}</p>
       </div>
-      {disabled ? <span className="employee-detail-tile-footer">در آینده توسعه می‌دهیم</span> : null}
+      <span className="employee-detail-tile-icon" aria-hidden>
+        <Icon className="h-7 w-7" strokeWidth={1.8} />
+      </span>
     </>
   );
 
   if (disabled || !href) {
     return (
-      <article className="employee-detail-tile is-disabled" aria-disabled="true">
+      <article className={`employee-detail-tile is-disabled${highlighted ? ' is-highlighted' : ''}`} aria-disabled="true">
         {content}
       </article>
     );
   }
 
   return (
-    <Link href={href} className="employee-detail-tile">
+    <Link href={href} className={`employee-detail-tile${highlighted ? ' is-highlighted' : ''}`}>
       {content}
     </Link>
   );
@@ -236,108 +259,109 @@ export function EmployeeDetailView({
   const fullName = `${employee.firstName} ${employee.lastName}`.trim();
   const organizationUnits = employee.organizationUnits ?? [];
   const workGroups = employee.workGroups ?? [];
-  const bankAccountsCount = employee.bankAccountsCount ?? 0;
-  const guaranteeCount = employee.guaranteeCount ?? 0;
-  const sections = useMemo(() => buildSections(employee.id, bankAccountsCount, guaranteeCount), [bankAccountsCount, employee.id, guaranteeCount]);
+  const completionPercent = countCompletion(employee);
+  const membershipDays = daysSinceCreated(employee.createdAt);
+  const missingSections = 7 - Math.round((completionPercent / 100) * 7);
+  const sections = useMemo(() => buildSections(employee.id), [employee.id]);
 
   return (
     <>
       <div className="employee-detail-shell" dir="rtl" lang="fa">
-        <section className="employee-detail-summary-grid">
-          <article className="employee-detail-stat-card employee-detail-profile-card">
-            <div className="employee-detail-profile-head">
-              <div className="employee-detail-avatar-wrap">
-                <div className="employee-detail-avatar">
-                  {employee.avatarUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={employee.avatarUrl} alt="" />
-                  ) : (
-                    <User className="h-8 w-8" strokeWidth={1.7} />
-                  )}
-                </div>
-                <div className="employee-detail-avatar-secondary">
-                  {employee.identityPhotoUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={employee.identityPhotoUrl} alt="" />
-                  ) : (
-                    <CreditCard className="h-5 w-5" strokeWidth={1.7} />
-                  )}
-                </div>
+        <section className="employee-detail-hero">
+          <article className="employee-detail-hero-card employee-detail-hero-profile">
+            <div className="employee-detail-hero-profile-main">
+              <div className="employee-detail-avatar employee-detail-avatar--round">
+                {employee.avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={employee.avatarUrl} alt="" />
+                ) : (
+                  <User className="h-9 w-9" strokeWidth={1.7} />
+                )}
               </div>
-
-              <div className="employee-detail-profile-copy">
+              <div className="employee-detail-hero-profile-copy">
                 <h2>{fullName || 'بدون نام'}</h2>
-                <div className="employee-detail-profile-subtitle">
-                  <span>کد ملی: {normalizeDisplay(employee.nationalId)}</span>
-                  <span>کد پرسنلی: {normalizeDisplay(employee.personnelCode)}</span>
-                </div>
-                <div className="employee-detail-contact-row">
-                  <span>
-                    <Phone className="h-3.5 w-3.5" />
-                    {normalizeDisplay(employee.mobile1)}
-                  </span>
-                  <span>
-                    <Mail className="h-3.5 w-3.5" />
-                    {normalizeDisplay(employee.email)}
-                  </span>
-                  <span>
-                    <MapPin className="h-3.5 w-3.5" />
-                    {organizationUnits.length ? organizationUnits.map((item) => item.title).join('، ') : 'واحد ندارد'}
-                  </span>
-                </div>
+                <p>کد ملی: {normalizeDisplay(employee.nationalId)}</p>
               </div>
             </div>
-
-            <div className="employee-detail-profile-actions">
+            <div className="employee-detail-hero-contact-icons">
+              <span title="موبایل">
+                <Phone className="h-4 w-4" aria-hidden />
+              </span>
+              <span title="ایمیل">
+                <Mail className="h-4 w-4" aria-hidden />
+              </span>
+              <span title="واحد سازمانی">
+                <MapPin className="h-4 w-4" aria-hidden />
+              </span>
+            </div>
+            <div className="employee-detail-hero-profile-actions">
               <button type="button" className="employee-detail-action-btn is-primary" onClick={() => setEditing(true)}>
                 <Pencil className="h-4 w-4" />
                 ویرایش
               </button>
-              <Link href={`/employees/${employee.id}/bank-accounts`} className="employee-detail-action-btn">
-                <CreditCard className="h-4 w-4" />
-                حساب‌های بانکی
+              <Link href={`/employees/${employee.id}/guarantee`} className="employee-detail-action-btn">
+                ضمانت‌ها
               </Link>
             </div>
           </article>
 
-          <article className="employee-detail-stat-card employee-detail-stat-card--wide">
-            <div className="employee-detail-stat-head">
-              <div>
-                <p>اطلاعات آخرین قرارداد</p>
-                <h3>نمای خلاصه پرونده</h3>
-              </div>
+          <article className="employee-detail-hero-card employee-detail-hero-contract">
+            <div className="employee-detail-hero-contract-head">
+              <h3>اطلاعات آخرین قرارداد</h3>
               <Link href="/employees" className="employee-detail-back-link">
                 بازگشت به فهرست
-                <ArrowLeft className="h-4 w-4" />
+                <ArrowLeft className="h-4 w-4" aria-hidden />
               </Link>
             </div>
-
-            <div className="employee-detail-stat-body">
-              <div className="employee-detail-ring">
-                <div className="employee-detail-ring-inner">
-                  <strong>60%</strong>
-                  <span>تکمیل</span>
-                </div>
+            <div className="employee-detail-hero-contract-grid">
+              <div className="employee-detail-contract-item">
+                <span>شماره قرارداد</span>
+                <strong>{normalizeDisplay(employee.personnelCode)}</strong>
               </div>
-
-              <div className="employee-detail-contract-grid">
-                <div className="employee-detail-contract-item">
-                  <span>وضعیت قرارداد</span>
-                  <strong>فعال</strong>
-                </div>
-                <div className="employee-detail-contract-item">
-                  <span>شماره قرارداد</span>
-                  <strong>{normalizeDisplay(employee.personnelCode)}</strong>
-                </div>
-                <div className="employee-detail-contract-item">
-                  <span>مبلغ قرارداد</span>
-                  <strong>در آینده توسعه می‌دهیم</strong>
-                </div>
-                <div className="employee-detail-contract-item">
-                  <span>مدت قرارداد</span>
-                  <strong>{formatPersianDate(employee.createdAt)}</strong>
-                </div>
+              <div className="employee-detail-contract-item">
+                <span>مبلغ قرارداد</span>
+                <strong>ثبت نشده</strong>
               </div>
+              <div className="employee-detail-contract-item is-wide">
+                <span>مدت قرارداد</span>
+                <strong>ثبت نشده</strong>
+              </div>
+              <div className="employee-detail-contract-item is-wide">
+                <span>بازه قرارداد</span>
+                <strong>
+                  از تاریخ {formatPersianDate(employee.createdAt)} تا ثبت نشده
+                </strong>
+              </div>
+            </div>
+            <div className="employee-detail-hero-contract-meta">
+              <span>{organizationUnits.length ? organizationUnits.map((item) => item.title).join('، ') : 'واحد سازمانی ثبت نشده'}</span>
+              <span>{workGroups.length ? workGroups.map((item) => item.title).join('، ') : 'گروه کاری ثبت نشده'}</span>
+            </div>
+          </article>
+
+          <article className="employee-detail-hero-card employee-detail-hero-status">
+            <div className="employee-detail-arc-gauge" style={{ ['--progress' as never]: `${completionPercent}%` }} aria-hidden>
+              <div className="employee-detail-arc-gauge-track" />
+              <div className="employee-detail-arc-gauge-fill" />
+              <div className="employee-detail-arc-gauge-value">
+                <strong>{formatFaNumber(completionPercent, { useGrouping: false })}%</strong>
+              </div>
+            </div>
+            <div className="employee-detail-status-badges">
+              <span className="employee-detail-status-badge is-outline">موقت (پاره وقت)</span>
+              <span className="employee-detail-status-badge is-solid">فاقد قرارداد</span>
+            </div>
+            <div className="employee-detail-status-stats">
+              <p>
+                <span className="employee-detail-status-dot is-passed" aria-hidden />
+                {formatFaNumber(membershipDays, { useGrouping: false })} روز از عضویت گذشته
+              </p>
+              <p>
+                <span className="employee-detail-status-dot is-remaining" aria-hidden />
+                {missingSections > 0
+                  ? `${formatFaNumber(missingSections, { useGrouping: false })} بخش ناقص در پرونده`
+                  : 'پرونده کامل است'}
+              </p>
             </div>
           </article>
         </section>
@@ -347,33 +371,31 @@ export function EmployeeDetailView({
             <div className="employee-detail-section-head">
               <h3>{section.title}</h3>
             </div>
-            <div className="employee-detail-grid">
-              {section.cards.map((card) => (
-                <DetailTile key={card.title} {...card} />
-              ))}
-            </div>
+            {section.layout === 'contract' ? (
+              <>
+                <div className="employee-detail-grid">
+                  {section.cards.slice(0, 4).map((card) => (
+                    <DetailTile key={card.title} {...card} />
+                  ))}
+                </div>
+                <div className="employee-detail-grid employee-detail-grid--single">
+                  <DetailTile {...section.cards[4]} />
+                </div>
+              </>
+            ) : (
+              <div className={`employee-detail-grid${section.cards.length === 3 ? ' employee-detail-grid--three' : ''}`}>
+                {section.cards.map((card) => (
+                  <DetailTile key={card.title} {...card} />
+                ))}
+              </div>
+            )}
+            {section.title === 'خاتمه همکاری' ? (
+              <p className="employee-detail-settlement-note">
+                تنها در صورت خاتمه همکاری، فرایند تسویه فعال خواهد شد.
+              </p>
+            ) : null}
           </section>
         ))}
-
-        <section className="employee-detail-section">
-          <div className="employee-detail-section-head">
-            <h3>امکانات تکمیلی</h3>
-          </div>
-          <div className="employee-detail-grid employee-detail-grid--two">
-            <article className="employee-detail-note-panel">
-              <div className="employee-detail-note-title">اطلاعات تکمیلی کارمند</div>
-              <p>وضعیت تأهل: {employee.maritalStatus === 'married' ? 'متاهل' : employee.maritalStatus === 'divorced' ? 'جداشده' : 'مجرد'}</p>
-              <p>تعداد فرزندان: {employee.childrenCount.toLocaleString('fa-IR')}</p>
-              <p>گروه‌های کاری: {workGroups.length ? workGroups.map((item) => item.title).join('، ') : 'ثبت نشده'}</p>
-              <p>ضمانت‌ها: {guaranteeCount.toLocaleString('fa-IR')} مورد</p>
-            </article>
-
-            <article className="employee-detail-note-panel is-muted">
-              <div className="employee-detail-note-title">یادداشت</div>
-              <p>بخش‌های نمایش داده شده مطابق ساختار فیگما چیده شده‌اند. هر موردی که هنوز پیاده نشده باشد به صورت غیرفعال نمایش داده می‌شود و پیام «در آینده توسعه می‌دهیم» دارد.</p>
-            </article>
-          </div>
-        </section>
       </div>
 
       {editing ? <EditEmployeeFlow employee={employee} onClose={() => setEditing(false)} /> : null}

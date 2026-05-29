@@ -19,8 +19,12 @@ import {
   Wallet,
 } from 'lucide-react';
 import { MinimalScroll } from '../../../components/MinimalScroll';
+import { ConfirmDialog } from '../../../components/ConfirmDialog';
+import { PanelFormModal, PanelFormModalActions } from '../../../components/PanelFormModal';
+import { UnsavedChangesDialog, useUnsavedLeaveGuard } from '../../../components/UnsavedChangesGuard';
 import { formatFaNumber, toPersianDigits } from '../../../lib/format-fa';
 import {
+  getActiveTenantStorageId,
   BENEFIT_FIELDS,
   COEFFICIENT_COMBINATION_METHODS,
   COEFFICIENT_EXCEPTION_METHODS,
@@ -189,6 +193,13 @@ function NumericField({
   decimalValue?: boolean;
   difference?: BaseDifference | null;
 }) {
+  const displayValue = Number.isFinite(value) ? toPersianDigits(String(value)) : '';
+  const [draftValue, setDraftValue] = useState(displayValue);
+
+  useEffect(() => {
+    setDraftValue(displayValue);
+  }, [displayValue]);
+
   return (
     <label className={`business-payroll-field ${error ? 'has-error' : ''}`}>
       <span className="business-payroll-field-label">
@@ -197,9 +208,13 @@ function NumericField({
       </span>
       <span className="business-payroll-input">
         <input
-          value={Number.isFinite(value) ? (decimalValue ? decimal(value) : formatFaNumber(value)) : ''}
+          value={draftValue}
           inputMode={decimalValue ? 'decimal' : 'numeric'}
-          onChange={(event) => onChange(parseNumber(event.target.value))}
+          onChange={(event) => {
+            const nextValue = event.target.value;
+            setDraftValue(nextValue);
+            onChange(parseNumber(nextValue));
+          }}
         />
         <b>{unit}</b>
       </span>
@@ -340,21 +355,29 @@ function FinancialSection({
   );
 }
 
-function TaxBracketEditor({
+function TaxBracketDialog({
+  open,
   bracket,
   existing,
-  onCancel,
+  onClose,
   onSubmit,
 }: {
-  bracket?: TaxBracket | null;
+  open: boolean;
+  bracket: TaxBracket | null;
   existing: TaxBracket[];
-  onCancel: () => void;
+  onClose: () => void;
   onSubmit: (bracket: TaxBracket) => void;
 }) {
   const [draft, setDraft] = useState<TaxBracket>(
     bracket ?? { id: `tax-${Date.now()}`, from: Number.NaN, to: Number.NaN, percent: Number.NaN },
   );
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (!open) return;
+    setDraft(bracket ?? { id: `tax-${Date.now()}`, from: Number.NaN, to: Number.NaN, percent: Number.NaN });
+    setError('');
+  }, [bracket, open]);
 
   const submit = () => {
     const nextError = validateTaxBracket(draft, existing);
@@ -366,9 +389,15 @@ function TaxBracketEditor({
   };
 
   return (
-    <div className="business-payroll-editor">
-      <h4>{bracket ? 'ویرایش پله مالیاتی' : 'افزودن پله مالیاتی'}</h4>
-      <div className="business-payroll-fields three">
+    <PanelFormModal
+      open={open}
+      title={bracket ? 'ویرایش پله مالیاتی' : 'افزودن پله مالیاتی'}
+      lead="هر درصد فقط روی بخش درآمد واقع در همان بازه اعمال می‌شود."
+      error={error}
+      onClose={onClose}
+      footer={<PanelFormModalActions submitLabel="ثبت پله" onSubmit={submit} onCancel={onClose} />}
+    >
+      <div className="draft-template-tax-bracket-form payroll-tax-bracket-dialog-fields">
         <NumericField label="از" value={draft.from} unit="ریال" onChange={(from) => setDraft((value) => ({ ...value, from }))} />
         <NumericField label="تا" value={draft.to} unit="ریال" onChange={(to) => setDraft((value) => ({ ...value, to }))} />
         <NumericField
@@ -379,16 +408,7 @@ function TaxBracketEditor({
           onChange={(percent) => setDraft((value) => ({ ...value, percent }))}
         />
       </div>
-      {error ? <p className="business-payroll-form-error">{error}</p> : null}
-      <div className="business-payroll-editor-actions">
-        <button type="button" className="is-primary" onClick={submit}>
-          ثبت پله
-        </button>
-        <button type="button" onClick={onCancel}>
-          انصراف
-        </button>
-      </div>
-    </div>
+    </PanelFormModal>
   );
 }
 
@@ -407,8 +427,8 @@ function DeductionsSection({
   onPercentChange: (key: 'employerInsurancePercent' | 'employeeInsurancePercent', value: number) => void;
   onBracketsChange: (items: TaxBracket[]) => void;
 }) {
-  const [editorOpen, setEditorOpen] = useState(false);
-  const [editing, setEditing] = useState<TaxBracket | null>(null);
+  const [bracketEditor, setBracketEditor] = useState<{ open: boolean; bracket: TaxBracket | null }>({ open: false, bracket: null });
+  const [deletingBracket, setDeletingBracket] = useState<TaxBracket | null>(null);
 
   const upsertBracket = (bracket: TaxBracket) => {
     const exists = settings.deductions.taxBrackets.some((item) => item.id === bracket.id);
@@ -416,8 +436,13 @@ function DeductionsSection({
       ? settings.deductions.taxBrackets.map((item) => (item.id === bracket.id ? bracket : item))
       : [...settings.deductions.taxBrackets, bracket];
     onBracketsChange(next.sort((left, right) => left.from - right.from));
-    setEditing(null);
-    setEditorOpen(false);
+    setBracketEditor({ open: false, bracket: null });
+  };
+
+  const confirmDeleteBracket = () => {
+    if (!deletingBracket) return;
+    onBracketsChange(settings.deductions.taxBrackets.filter((item) => item.id !== deletingBracket.id));
+    setDeletingBracket(null);
   };
 
   return (
@@ -473,10 +498,7 @@ function DeductionsSection({
           <button
             type="button"
             className="business-payroll-outline-button"
-            onClick={() => {
-              setEditing(null);
-              setEditorOpen(true);
-            }}
+            onClick={() => setBracketEditor({ open: true, bracket: null })}
           >
             <Plus className="h-4 w-4" /> افزودن پله
           </button>
@@ -507,17 +529,14 @@ function DeductionsSection({
                 <button
                   type="button"
                   aria-label="ویرایش بازه مالیاتی"
-                  onClick={() => {
-                    setEditing(bracket);
-                    setEditorOpen(true);
-                  }}
+                  onClick={() => setBracketEditor({ open: true, bracket })}
                 >
                   <Pencil className="h-4 w-4" />
                 </button>
                 <button
                   type="button"
                   aria-label="حذف بازه مالیاتی"
-                  onClick={() => onBracketsChange(settings.deductions.taxBrackets.filter((item) => item.id !== bracket.id))}
+                  onClick={() => setDeletingBracket(bracket)}
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
@@ -540,15 +559,29 @@ function DeductionsSection({
               )}
             />
           ))}
-        {editorOpen ? (
-          <TaxBracketEditor
-            key={editing?.id ?? 'new-tax'}
-            bracket={editing}
+        {bracketEditor.open ? (
+          <TaxBracketDialog
+            open={bracketEditor.open}
+            bracket={bracketEditor.bracket}
             existing={settings.deductions.taxBrackets}
+            onClose={() => setBracketEditor({ open: false, bracket: null })}
             onSubmit={upsertBracket}
-            onCancel={() => setEditorOpen(false)}
           />
         ) : null}
+        <ConfirmDialog
+          open={Boolean(deletingBracket)}
+          title="حذف پله مالیاتی"
+          description={
+            deletingBracket
+              ? `آیا از حذف پله ${money(deletingBracket.from)} تا ${money(deletingBracket.to)} با نرخ ${formatFaNumber(deletingBracket.percent)}٪ مطمئن هستید؟`
+              : ''
+          }
+          confirmLabel="حذف"
+          cancelLabel="انصراف"
+          tone="danger"
+          onConfirm={confirmDeleteBracket}
+          onCancel={() => setDeletingBracket(null)}
+        />
       </section>
     </>
   );
@@ -608,20 +641,29 @@ function newVariableAmount(type: VariableAmountType): VariableAmount {
   };
 }
 
-function VariableAmountEditor({
+function VariableAmountDialog({
+  open,
   initialItem,
   derived,
-  onCancel,
+  onClose,
   onSubmit,
 }: {
-  initialItem: VariableAmount;
+  open: boolean;
+  initialItem: VariableAmount | null;
   derived: PayrollDerivedValues;
-  onCancel: () => void;
+  onClose: () => void;
   onSubmit: (item: VariableAmount) => void;
 }) {
-  const [item, setItem] = useState(initialItem);
+  const [item, setItem] = useState<VariableAmount>(initialItem ?? newVariableAmount('addition'));
   const [error, setError] = useState('');
   const calculated = calculateVariableAmount(item, derived.monthlyBaseSalary, derived.grossPay);
+  const isEditing = Boolean(initialItem);
+
+  useEffect(() => {
+    if (!open) return;
+    setItem(initialItem ?? newVariableAmount('addition'));
+    setError('');
+  }, [initialItem, open]);
 
   const submit = () => {
     if (!item.title.trim()) return setError('عنوان الزامی است.');
@@ -635,76 +677,74 @@ function VariableAmountEditor({
   };
 
   return (
-    <section className="business-payroll-editor variable">
-      <h4>{item.type === 'addition' ? 'اضافات اختیاری' : 'کسورات اختیاری'}</h4>
-      <p>
-        {item.type === 'addition'
-          ? 'این مبلغ به حقوق قابل پرداخت افزوده می شود.'
-          : 'این مبلغ قراردادی از حقوق قابل پرداخت کم می شود و مستقل از بیمه و مالیات پایه است.'}
-      </p>
-      <div className="business-payroll-chips">
-        {VARIABLE_TITLES[item.type].map((title) => (
-          <button
-            key={title}
-            type="button"
-            className={item.title === title ? 'is-selected' : ''}
-            onClick={() => setItem((value) => ({ ...value, title }))}
-          >
-            {title}
-          </button>
-        ))}
-      </div>
-      <div className="business-payroll-toggle">
-        <button
-          type="button"
-          className={item.calculationMethod === 'fixed' ? 'is-selected' : ''}
-          onClick={() => setItem((value) => ({ ...value, calculationMethod: 'fixed' }))}
-        >
-          مبلغ ثابت
-        </button>
-        <button
-          type="button"
-          className={item.calculationMethod === 'percentage' ? 'is-selected' : ''}
-          onClick={() => setItem((value) => ({ ...value, calculationMethod: 'percentage' }))}
-        >
-          ضریب محاسبه
-        </button>
-      </div>
-      {item.calculationMethod === 'fixed' ? (
-        <NumericField label="مبلغ" value={item.amount} unit="ریال" onChange={(amount) => setItem((value) => ({ ...value, amount }))} />
-      ) : (
-        <div className="business-payroll-fields two">
-          <NumericField
-            label="درصد محاسبه"
-            value={item.percent}
-            unit="%"
-            decimalValue
-            onChange={(percent) => setItem((value) => ({ ...value, percent }))}
-          />
-          <label className="business-payroll-field">
-            <span className="business-payroll-field-label">مبنای پرداخت</span>
-            <select
-              value={item.calculationBase}
-              onChange={(event) => setItem((value) => ({ ...value, calculationBase: event.target.value as VariableCalculationBase }))}
+    <PanelFormModal
+      open={open}
+      title={isEditing ? 'ویرایش مبلغ متغیر' : item.type === 'addition' ? 'افزودن اضافات' : 'افزودن کسورات'}
+      lead={
+        item.type === 'addition'
+          ? 'این مبلغ به حقوق قابل پرداخت افزوده می‌شود.'
+          : 'این مبلغ قراردادی از حقوق قابل پرداخت کم می‌شود و مستقل از بیمه و مالیات پایه است.'
+      }
+      error={error}
+      onClose={onClose}
+      footer={<PanelFormModalActions submitLabel="ثبت" onSubmit={submit} onCancel={onClose} />}
+    >
+      <div className="payroll-variable-amount-dialog-form business-payroll-editor variable">
+        <div className="business-payroll-chips">
+          {VARIABLE_TITLES[item.type].map((title) => (
+            <button
+              key={title}
+              type="button"
+              className={item.title === title ? 'is-selected' : ''}
+              onClick={() => setItem((value) => ({ ...value, title }))}
             >
-              <option value="baseSalary">درصدی از حقوق پایه ماهانه</option>
-              <option value="grossPay">درصدی از جمع حقوق دریافتی</option>
-            </select>
-            <small>حقوق پایه ماهانه برابر حقوق پایه روزانه ضرب در ۳۰ است.</small>
-          </label>
+              {title}
+            </button>
+          ))}
         </div>
-      )}
-      {Number.isFinite(calculated) ? <div className="business-payroll-formula">مبلغ نهایی محاسبه شده: {money(calculated)}</div> : null}
-      {error ? <p className="business-payroll-form-error">{error}</p> : null}
-      <div className="business-payroll-editor-actions">
-        <button type="button" className="is-primary" onClick={submit}>
-          ثبت
-        </button>
-        <button type="button" onClick={onCancel}>
-          انصراف
-        </button>
+        <div className="business-payroll-toggle">
+          <button
+            type="button"
+            className={item.calculationMethod === 'fixed' ? 'is-selected' : ''}
+            onClick={() => setItem((value) => ({ ...value, calculationMethod: 'fixed' }))}
+          >
+            مبلغ ثابت
+          </button>
+          <button
+            type="button"
+            className={item.calculationMethod === 'percentage' ? 'is-selected' : ''}
+            onClick={() => setItem((value) => ({ ...value, calculationMethod: 'percentage' }))}
+          >
+            ضریب محاسبه
+          </button>
+        </div>
+        {item.calculationMethod === 'fixed' ? (
+          <NumericField label="مبلغ" value={item.amount} unit="ریال" onChange={(amount) => setItem((value) => ({ ...value, amount }))} />
+        ) : (
+          <div className="business-payroll-fields two">
+            <NumericField
+              label="درصد محاسبه"
+              value={item.percent}
+              unit="%"
+              decimalValue
+              onChange={(percent) => setItem((value) => ({ ...value, percent }))}
+            />
+            <label className="business-payroll-field">
+              <span className="business-payroll-field-label">مبنای پرداخت</span>
+              <select
+                value={item.calculationBase}
+                onChange={(event) => setItem((value) => ({ ...value, calculationBase: event.target.value as VariableCalculationBase }))}
+              >
+                <option value="baseSalary">درصدی از حقوق پایه ماهانه</option>
+                <option value="grossPay">درصدی از جمع حقوق دریافتی</option>
+              </select>
+              <small>حقوق پایه ماهانه برابر حقوق پایه روزانه ضرب در ۳۰ است.</small>
+            </label>
+          </div>
+        )}
+        {Number.isFinite(calculated) ? <div className="business-payroll-formula">مبلغ نهایی محاسبه شده: {money(calculated)}</div> : null}
       </div>
-    </section>
+    </PanelFormModal>
   );
 }
 
@@ -719,19 +759,22 @@ function VariableAmountsSection({
   derived: PayrollDerivedValues;
   onChange: (type: VariableAmountType, items: VariableAmount[]) => void;
 }) {
-  const [editing, setEditing] = useState<VariableAmount | null>(null);
+  const [amountEditor, setAmountEditor] = useState<{ open: boolean; item: VariableAmount | null }>({ open: false, item: null });
+  const [deletingItem, setDeletingItem] = useState<VariableAmount | null>(null);
   const list = [...settings.variableAmounts.additions, ...settings.variableAmounts.deductions];
 
   const upsert = (item: VariableAmount) => {
     const current = item.type === 'addition' ? settings.variableAmounts.additions : settings.variableAmounts.deductions;
     const exists = current.some((entry) => entry.id === item.id);
     onChange(item.type, exists ? current.map((entry) => (entry.id === item.id ? item : entry)) : [...current, item]);
-    setEditing(null);
+    setAmountEditor({ open: false, item: null });
   };
 
-  const remove = (item: VariableAmount) => {
-    const current = item.type === 'addition' ? settings.variableAmounts.additions : settings.variableAmounts.deductions;
-    onChange(item.type, current.filter((entry) => entry.id !== item.id));
+  const confirmDeleteItem = () => {
+    if (!deletingItem) return;
+    const current = deletingItem.type === 'addition' ? settings.variableAmounts.additions : settings.variableAmounts.deductions;
+    onChange(deletingItem.type, current.filter((entry) => entry.id !== deletingItem.id));
+    setDeletingItem(null);
   };
 
   return (
@@ -742,16 +785,20 @@ function VariableAmountsSection({
         icon={<ReceiptText className="h-5 w-5" />}
       />
       <div className="business-payroll-variable-actions">
-        <button type="button" onClick={() => setEditing(newVariableAmount('addition'))}>
+        <button type="button" onClick={() => setAmountEditor({ open: true, item: newVariableAmount('addition') })}>
           <Plus className="h-4 w-4" /> افزودن اضافات
         </button>
-        <button type="button" onClick={() => setEditing(newVariableAmount('deduction'))}>
+        <button type="button" onClick={() => setAmountEditor({ open: true, item: newVariableAmount('deduction') })}>
           <Plus className="h-4 w-4" /> افزودن کسورات
         </button>
       </div>
-      {editing ? (
-        <VariableAmountEditor key={editing.id} initialItem={editing} derived={derived} onCancel={() => setEditing(null)} onSubmit={upsert} />
-      ) : null}
+      <VariableAmountDialog
+        open={amountEditor.open}
+        initialItem={amountEditor.item}
+        derived={derived}
+        onClose={() => setAmountEditor({ open: false, item: null })}
+        onSubmit={upsert}
+      />
       <div className="business-payroll-items">
         {list.length ? (
           list.map((item) => {
@@ -780,10 +827,10 @@ function VariableAmountsSection({
                 </p>
                 <b>{money(amount)}</b>
                 <div className="business-payroll-item-actions">
-                  <button type="button" aria-label="ویرایش آیتم" onClick={() => setEditing(item)}>
+                  <button type="button" aria-label="ویرایش آیتم" onClick={() => setAmountEditor({ open: true, item })}>
                     <Pencil className="h-4 w-4" />
                   </button>
-                  <button type="button" aria-label="حذف آیتم" onClick={() => remove(item)}>
+                  <button type="button" aria-label="حذف آیتم" onClick={() => setDeletingItem(item)}>
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
@@ -810,6 +857,16 @@ function VariableAmountsSection({
             ))}
         </div>
       ) : null}
+      <ConfirmDialog
+        open={Boolean(deletingItem)}
+        title="حذف مبلغ متغیر"
+        description={deletingItem ? `آیا از حذف «${deletingItem.title}» مطمئن هستید؟` : ''}
+        confirmLabel="حذف"
+        cancelLabel="انصراف"
+        tone="danger"
+        onConfirm={confirmDeleteItem}
+        onCancel={() => setDeletingItem(null)}
+      />
     </>
   );
 }
@@ -1641,10 +1698,12 @@ function createStepperProgress(selectedYear: number, state: StepState, currentSt
 export function PayrollBusinessSettingsFlow({
   mode,
   selectedYear,
+  tenantId = null,
   onBackToYears,
 }: {
   mode: PayrollSettingsMode;
   selectedYear: BusinessSettingYear;
+  tenantId?: string | null;
   onBackToYears: () => void;
 }) {
   const isTenant = mode === 'tenant';
@@ -1657,10 +1716,15 @@ export function PayrollBusinessSettingsFlow({
   const savedSettingsRef = useRef<PayrollSettings>(DEFAULT_PAYROLL_SETTINGS);
   const tenantOverridesRef = useRef<PayrollSettingsOverrides>({});
   const derived = useMemo(() => calculatePayrollValues(settings), [settings]);
+  const tenantStorageId = isTenant ? tenantId ?? getActiveTenantStorageId() : null;
   const adminStorageKey = getPayrollSettingsStorageKey(selectedYear.year);
-  const storageKey = isTenant ? getTenantPayrollSettingsStorageKey(selectedYear.year) : adminStorageKey;
-  const progressStorageKey = getPayrollStepperProgressStorageKey(mode, selectedYear.year);
-  const draftStorageKey = getPayrollSettingsDraftStorageKey(mode, selectedYear.year);
+  const storageKey = isTenant ? getTenantPayrollSettingsStorageKey(selectedYear.year, tenantStorageId) : adminStorageKey;
+  const progressStorageKey = getPayrollStepperProgressStorageKey(mode, selectedYear.year, tenantStorageId);
+  const draftStorageKey = getPayrollSettingsDraftStorageKey(mode, selectedYear.year, tenantStorageId);
+  const hasUnsavedChanges = useMemo(
+    () => PAYROLL_STEPS.some(({ id }) => stepState[id]?.dirty),
+    [stepState],
+  );
 
   useEffect(() => {
     let baseSettings = DEFAULT_PAYROLL_SETTINGS;
@@ -1840,6 +1904,23 @@ export function PayrollBusinessSettingsFlow({
     setNotice('تنظیمات حقوق، حضور و غیاب با موفقیت ثبت شد.');
   };
 
+  const saveDirtyStepsAndLeave = () => {
+    const dirtySteps = PAYROLL_STEPS.filter(({ id }) => stepState[id]?.dirty).map(({ id }) => id);
+    for (const step of dirtySteps) {
+      if (!saveStep(step)) return false;
+    }
+    if (dirtySteps.length) {
+      window.localStorage.removeItem(draftStorageKey);
+    }
+    return true;
+  };
+
+  const unsavedLeaveGuard = useUnsavedLeaveGuard({
+    hasUnsavedChanges,
+    onSaveAndLeave: saveDirtyStepsAndLeave,
+    onBrowserBack: onBackToYears,
+  });
+
   const allStepsOpened = PAYROLL_STEPS.every(({ id }) => stepState[id].opened);
 
   const renderSectionContent = (step: PayrollStepId) => {
@@ -1924,7 +2005,7 @@ export function PayrollBusinessSettingsFlow({
         {index < PAYROLL_STEPS.length - 1 ? (
           <button
             type="button"
-            className="draft-template-flow-action is-primary"
+            className={state.dirty ? 'draft-template-flow-action is-save-continue' : 'draft-template-flow-action is-primary'}
             onClick={() => continueFromStep(step)}
           >
             {state.dirty ? <Save className="h-4 w-4" /> : null}
@@ -1991,7 +2072,11 @@ export function PayrollBusinessSettingsFlow({
             })}
           </MinimalScroll>
           <div className="draft-template-flow-sidebar-footer">
-            <button type="button" className="draft-template-flow-action is-secondary" onClick={onBackToYears}>
+            <button
+              type="button"
+              className="draft-template-flow-action is-secondary"
+              onClick={() => unsavedLeaveGuard.requestLeave(onBackToYears)}
+            >
               بازگشت به لیست سال ها
             </button>
             <button type="button" className="draft-template-flow-action is-primary" disabled={!allStepsOpened} onClick={submitAll}>
@@ -2008,7 +2093,11 @@ export function PayrollBusinessSettingsFlow({
             <ChevronLeft className="h-3.5 w-3.5" />
             <Link href="/business-settings">تنظیمات کسب و کار</Link>
             <ChevronLeft className="h-3.5 w-3.5" />
-            <button type="button" className="business-payroll-year-back" onClick={onBackToYears}>
+            <button
+              type="button"
+              className="business-payroll-year-back"
+              onClick={() => unsavedLeaveGuard.requestLeave(onBackToYears)}
+            >
               {isTenant ? 'تنظیمات اختصاصی حقوق و دستمزد کسب و کار' : 'قوانین حقوق و حضور و غیاب'}
             </button>
             <ChevronLeft className="h-3.5 w-3.5" />
@@ -2025,6 +2114,13 @@ export function PayrollBusinessSettingsFlow({
               : `تنظیمات پایه محاسبه حقوق، کسورات، پرداخت زمان کاری و مرخصی برای ${selectedYear.title} را مرحله به مرحله ثبت کنید.`}
           </p>
         </header>
+        <div className="business-payroll-default-banner" role="note">
+          <Info className="business-payroll-default-banner-icon h-5 w-5" aria-hidden />
+          <div className="business-payroll-default-banner-copy">
+            <strong>اطلاعات پیش‌فرض بر اساس قوانین اداره کار</strong>
+            <p>تمامی اطلاعات به‌صورت پیش‌فرض مطابق قوانین اداره کار پر شده‌اند و شما می‌توانید در هر مرحله تغییرات لازم را اعمال کنید.</p>
+          </div>
+        </div>
         {notice ? <div className="business-payroll-notice">{notice}</div> : null}
         <div className="business-payroll-sections">
           {PAYROLL_STEPS.map((step) =>
@@ -2047,6 +2143,13 @@ export function PayrollBusinessSettingsFlow({
           )}
         </div>
       </main>
+      <UnsavedChangesDialog
+        open={unsavedLeaveGuard.dialogOpen}
+        saving={unsavedLeaveGuard.saving}
+        onSaveAndLeave={unsavedLeaveGuard.confirmSaveAndLeave}
+        onDiscardAndLeave={unsavedLeaveGuard.confirmDiscardAndLeave}
+        onCancel={unsavedLeaveGuard.closeDialog}
+      />
     </div>
   );
 }

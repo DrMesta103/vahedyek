@@ -1,9 +1,9 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
-  Check,
   ChevronLeft,
   CircleAlert,
   Clock3,
@@ -23,9 +23,11 @@ import {
 } from 'lucide-react';
 import { MinimalScroll } from '../../../components/MinimalScroll';
 import { PanelFormModal, PanelFormModalActions } from '../../../components/PanelFormModal';
+import { UnsavedChangesDialog, useUnsavedLeaveGuard } from '../../../components/UnsavedChangesGuard';
+import { AdaptiveChipGroup } from '../../../components/AdaptiveChipGroup';
 import {
-  ACTIVE_CONTRACT_DRAFT_TEMPLATE_STORAGE_KEY,
-  CONTRACT_DRAFT_TEMPLATES_STORAGE_KEY,
+  getActiveContractDraftTemplateStorageKey,
+  getContractDraftTemplatesStorageKey,
   getTemplateSteps,
   normalizeContractDraftTemplate,
   type ContractDraftTemplate,
@@ -35,6 +37,8 @@ import {
 import { formatFaNumber, toPersianDigits } from '../../../lib/format-fa';
 import {
   DEFAULT_PAYROLL_SETTINGS,
+  ACTIVE_TENANT_STORAGE_KEY,
+  getActiveTenantStorageId,
   getPayrollSettingsStorageKey,
   normalizePayrollSettings,
   calculatePayrollValues,
@@ -196,14 +200,14 @@ function decimal(value: number) {
   return toPersianDigits(Number.isFinite(value) ? String(value) : '');
 }
 
-function readTemplates() {
-  const raw = window.localStorage.getItem(CONTRACT_DRAFT_TEMPLATES_STORAGE_KEY);
+function readTemplates(tenantId?: string | null) {
+  const raw = window.localStorage.getItem(getContractDraftTemplatesStorageKey(tenantId));
   if (!raw) return [];
   try {
     const parsed = JSON.parse(raw) as unknown[];
     return Array.isArray(parsed) ? parsed.map(normalizeContractDraftTemplate).filter(Boolean) as ContractDraftTemplate[] : [];
   } catch {
-    window.localStorage.removeItem(CONTRACT_DRAFT_TEMPLATES_STORAGE_KEY);
+    window.localStorage.removeItem(getContractDraftTemplatesStorageKey(tenantId));
     return [];
   }
 }
@@ -326,6 +330,12 @@ function FieldShell({
   difference?: BaseDifference | null;
   onChange: (value: number) => void;
 }) {
+  const [draftValue, setDraftValue] = useState(Number.isFinite(value) ? String(value) : '');
+
+  useEffect(() => {
+    setDraftValue(Number.isFinite(value) ? String(value) : '');
+  }, [value]);
+
   return (
     <label className={`business-payroll-field ${error ? 'has-error' : ''}`}>
       <span className="business-payroll-field-label">
@@ -333,7 +343,18 @@ function FieldShell({
         {differenceBadge(difference)}
       </span>
       <span className="business-payroll-input">
-        <input inputMode="numeric" value={Number.isFinite(value) ? formatFaNumber(value) : ''} onChange={(event) => onChange(Number(event.target.value.replace(/[^\d.]/g, '')))} />
+        <input
+          type="text"
+          inputMode="numeric"
+          value={draftValue}
+          onChange={(event) => {
+            const nextValue = event.target.value
+              .replace(/[۰-۹]/g, (digit) => String(digit.charCodeAt(0) - 1776))
+              .replace(/[٠-٩]/g, (digit) => String(digit.charCodeAt(0) - 1632));
+            setDraftValue(nextValue);
+            onChange(nextValue ? Number(nextValue.replace(/[^\d.]/g, '')) : Number.NaN);
+          }}
+        />
         <b>{unit}</b>
       </span>
       {error ? <em>{error}</em> : null}
@@ -353,30 +374,13 @@ function OptionGrid({
   onChange: (value: string | string[]) => void;
 }) {
   return (
-    <div className="business-draft-option-grid contract-draft-option-grid">
-      {options.map((option) => {
-        const isSelected = Array.isArray(selected) ? selected.includes(option) : selected === option;
-        return (
-          <button
-            key={option}
-            type="button"
-            className={`contract-draft-option-chip${isSelected ? ' is-selected' : ''}`}
-            onClick={() => onChange(multi && Array.isArray(selected) ? toggle(selected, option) : option)}
-          >
-            {isSelected ? (
-              <span className="contract-draft-option-active" aria-hidden>
-                <Check className="h-3.5 w-3.5" strokeWidth={2.8} />
-              </span>
-            ) : multi ? (
-              <span className="contract-draft-option-check" aria-hidden>
-                <span />
-              </span>
-            ) : null}
-            <span className="contract-draft-option-label">{option}</span>
-          </button>
-        );
-      })}
-    </div>
+    <AdaptiveChipGroup
+      className="business-draft-option-grid contract-draft-option-grid"
+      items={options.map((option) => ({ value: option, label: option }))}
+      selected={selected}
+      multi={multi}
+      onChange={onChange}
+    />
   );
 }
 
@@ -405,18 +409,20 @@ function AttachmentDialog({
       onClose={onClose}
       footer={<PanelFormModalActions submitLabel="ثبت" onSubmit={() => onSubmit(draft)} onCancel={onClose} />}
     >
-      <div className="business-payroll-chips business-draft-document-picker">
-        {category?.options.map((option) => (
-          <button key={option} type="button" className={draft.includes(option) ? 'is-selected' : ''} onClick={() => setDraft(toggle(draft, option))}>
-            {option}
-          </button>
-        ))}
-      </div>
+      <AdaptiveChipGroup
+        className="business-payroll-chips business-draft-document-picker"
+        items={(category?.options ?? []).map((option) => ({ value: option, label: option }))}
+        selected={draft}
+        multi
+        onChange={(value) => setDraft(Array.isArray(value) ? value : [value])}
+      />
     </PanelFormModal>
   );
 }
 
-export function ContractDraftTemplateBuilder() {
+export function ContractDraftTemplateBuilder({ tenantId = null }: { tenantId?: string | null }) {
+  const router = useRouter();
+  const tenantStorageId = tenantId ?? getActiveTenantStorageId();
   const [templates, setTemplates] = useState<ContractDraftTemplate[]>([]);
   const [template, setTemplate] = useState<ContractDraftTemplate | null>(null);
   const [baseSettings, setBaseSettings] = useState<PayrollSettings>(DEFAULT_PAYROLL_SETTINGS);
@@ -427,22 +433,29 @@ export function ContractDraftTemplateBuilder() {
   const savedTemplateRef = useRef<ContractDraftTemplate | null>(null);
 
   useEffect(() => {
-    const all = readTemplates();
-    const activeId = window.localStorage.getItem(ACTIVE_CONTRACT_DRAFT_TEMPLATE_STORAGE_KEY);
+    if (tenantId) {
+      window.sessionStorage.setItem(ACTIVE_TENANT_STORAGE_KEY, tenantId);
+    }
+    const all = readTemplates(tenantStorageId);
+    const activeId = window.localStorage.getItem(getActiveContractDraftTemplateStorageKey(tenantStorageId));
     const current = all.find((item) => item.id === activeId) ?? all[0] ?? null;
     setTemplates(all);
     setTemplate(current);
     savedTemplateRef.current = current;
     if (!current) return;
-    const rawBase = window.localStorage.getItem(getPayrollSettingsStorageKey(current.baseSettingsYear));
+    const rawBase = window.localStorage.getItem(getPayrollSettingsStorageKey(current.baseSettingsYear, tenantStorageId));
     const base = rawBase ? normalizePayrollSettings(JSON.parse(rawBase)) : DEFAULT_PAYROLL_SETTINGS;
     setBaseSettings(base);
     const state = createStepState(current);
     setStepState(state);
     setActiveStep(current.stepsProgress.currentStepId || getTemplateSteps(current.usageType)[0].id);
-  }, []);
+  }, [tenantId, tenantStorageId]);
 
   const steps = template ? getTemplateSteps(template.usageType) : [];
+  const hasUnsavedChanges = useMemo(
+    () => Boolean(stepState) && steps.some(({ id }) => stepState[id]?.dirty),
+    [stepState, steps],
+  );
   const settings = useMemo(() => template ? composeSettings(template, baseSettings) : DEFAULT_PAYROLL_SETTINGS, [template, baseSettings]);
   const derived = useMemo(() => calculatePayrollValues(settings), [settings]);
 
@@ -453,8 +466,8 @@ export function ContractDraftTemplateBuilder() {
       ? templates.map((item) => (item.id === withProgress.id ? withProgress : item))
       : [withProgress, ...templates];
     setTemplates(nextTemplates);
-    window.localStorage.setItem(CONTRACT_DRAFT_TEMPLATES_STORAGE_KEY, JSON.stringify(nextTemplates));
-    window.localStorage.setItem(ACTIVE_CONTRACT_DRAFT_TEMPLATE_STORAGE_KEY, withProgress.id);
+    window.localStorage.setItem(getContractDraftTemplatesStorageKey(tenantStorageId), JSON.stringify(nextTemplates));
+    window.localStorage.setItem(getActiveContractDraftTemplateStorageKey(tenantStorageId), withProgress.id);
   };
 
   const updateTemplate = (step: ContractDraftTemplateStepId, apply: (current: ContractDraftTemplate) => ContractDraftTemplate) => {
@@ -514,6 +527,40 @@ export function ContractDraftTemplateBuilder() {
     requestAnimationFrame(() => scrollToStep(nextStep.id));
   };
 
+  const saveDirtyStepsAndLeave = () => {
+    if (!template || !stepState) return true;
+
+    const dirtySteps = steps.filter(({ id }) => stepState[id]?.dirty).map(({ id }) => id);
+    for (const step of dirtySteps) {
+      const validation = validateStep(step, template, settings);
+      if (Object.keys(validation).length) {
+        setErrors(validation);
+        setActiveStep(step);
+        requestAnimationFrame(() => scrollToStep(step));
+        return false;
+      }
+    }
+
+    if (!dirtySteps.length) return true;
+
+    const nextState = { ...stepState };
+    for (const step of dirtySteps) {
+      nextState[step] = { ...nextState[step], dirty: false, saved: true };
+    }
+    const nextTemplate = updateProgress(template, nextState, activeStep);
+    setStepState(nextState);
+    savedTemplateRef.current = nextTemplate;
+    persist(nextTemplate, nextState, activeStep);
+    setErrors({});
+    return true;
+  };
+
+  const unsavedLeaveGuard = useUnsavedLeaveGuard({
+    hasUnsavedChanges,
+    onSaveAndLeave: saveDirtyStepsAndLeave,
+    onBrowserBack: () => router.push('/draft-templates'),
+  });
+
   if (!template || !stepState) {
     return (
       <div className="business-payroll-years-page business-payroll-flow" dir="rtl" lang="fa">
@@ -532,9 +579,12 @@ export function ContractDraftTemplateBuilder() {
   }
 
   const completedCount = steps.filter(({ id }) => stepState[id]?.completed || stepState[id]?.saved).length;
+  const progressPercent = steps.length ? Math.round((completedCount / steps.length) * 100) : 0;
   const diffCount = countDifferences(template, baseSettings);
   const commitmentCount = template.data.specialCommitments.selected.length;
   const documentCount = Object.values(template.data.attachments.requiredDocuments).reduce((sum, items) => sum + items.length, 0);
+  const activeBenefitCount = BENEFIT_TEMPLATE_FIELDS.filter(({ key }) => template.data.benefits[key].enabled).length;
+  const annualTransferEnabled = template.data.leave.transferLimits.annual.enabled;
 
   return (
     <div className="draft-template-flow-page business-payroll-flow business-contract-template-flow" dir="rtl" lang="fa">
@@ -596,100 +646,88 @@ export function ContractDraftTemplateBuilder() {
 
       <aside className="draft-template-flow-report business-payroll-report contract-draft-live-summary" aria-label="خلاصه زنده">
         <div className="draft-template-flow-report-panel">
-          <header className="draft-template-flow-report-header contract-draft-summary-head">
+          <header className="draft-template-flow-report-header">
+            <div className="draft-template-flow-report-meta">
+              <span>وضعیت قالب</span>
+              <strong>پیش‌نویس</strong>
+            </div>
             <h2>خلاصه زنده</h2>
             <p>اطلاعات قالب با تغییر مقادیر به‌روز می‌شود.</p>
           </header>
-          <MinimalScroll className="draft-template-flow-report-body business-payroll-summary contract-draft-summary-scroll">
-            <div className="contract-draft-summary-grid">
-              <article className="contract-draft-summary-card">
-                <h3>اطلاعات قالب</h3>
-                <dl className="contract-draft-summary-dl">
-                  <div>
-                    <dt>نام قالب</dt>
-                    <dd>{template.name}</dd>
-                  </div>
-                  <div>
-                    <dt>نوع قالب</dt>
-                    <dd>{formatUsageTypeLabel(template.usageType)}</dd>
-                  </div>
-                  <div>
-                    <dt>مبنای تنظیمات</dt>
-                    <dd>سال {formatFaNumber(template.baseSettingsYear, { useGrouping: false })}</dd>
-                  </div>
-                </dl>
-              </article>
-              <article className="contract-draft-summary-card">
-                <h3>پیشرفت تکمیل</h3>
-                <dl className="contract-draft-summary-dl">
-                  <div>
-                    <dt>مراحل تکمیل‌شده</dt>
-                    <dd>
-                      {formatFaNumber(completedCount, { useGrouping: false })} از {formatFaNumber(steps.length, { useGrouping: false })}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>تفاوت با مبنا</dt>
-                    <dd className="contract-draft-summary-value">{formatFaNumber(diffCount, { useGrouping: false })}</dd>
-                  </div>
-                </dl>
-              </article>
-              <article className="contract-draft-summary-card">
-                <h3>تعهدات و مدارک</h3>
-                <dl className="contract-draft-summary-dl">
-                  <div>
-                    <dt>تعهدات انتخاب‌شده</dt>
-                    <dd>{formatFaNumber(commitmentCount, { useGrouping: false })}</dd>
-                  </div>
-                  <div>
-                    <dt>مدارک اجباری</dt>
-                    <dd>{formatFaNumber(documentCount, { useGrouping: false })}</dd>
-                  </div>
-                </dl>
-              </article>
-              <article className="contract-draft-summary-card">
-                <h3>تردد و مرخصی</h3>
-                <dl className="contract-draft-summary-dl">
-                  <div>
-                    <dt>سقف اضافه‌کاری ماهانه</dt>
-                    <dd className="contract-draft-summary-value">{formatFaNumber(template.data.attendanceBase.monthlyOvertimeLimitHours)} ساعت</dd>
-                  </div>
-                  <div>
-                    <dt>سهمیه مرخصی ماهانه</dt>
-                    <dd className="contract-draft-summary-value">{formatFaNumber(template.data.leave.monthlyQuotaHours)} ساعت</dd>
-                  </div>
-                  <div>
-                    <dt>انتقال سالانه</dt>
-                    <dd>
-                      {template.data.leave.transferLimits.annual.enabled
-                        ? `${formatFaNumber(template.data.leave.transferLimits.annual.hours ?? 0)} ساعت`
-                        : 'غیرفعال'}
-                    </dd>
-                  </div>
-                </dl>
-              </article>
-              {template.usageType === 'payroll_attendance' ? (
-                <article className="contract-draft-summary-card">
-                  <h3>حقوق و مزایا</h3>
-                  <dl className="contract-draft-summary-dl">
-                    <div>
-                      <dt>حقوق پایه روزانه</dt>
-                      <dd className="contract-draft-summary-value">{money(template.data.payrollBase.dailyBaseSalary)}</dd>
-                    </div>
-                    <div>
-                      <dt>دقایق موظفی روزانه</dt>
-                      <dd className="contract-draft-summary-value">{formatFaNumber(template.data.payrollBase.dailyRequiredMinutes)} دقیقه</dd>
-                    </div>
-                    <div>
-                      <dt>مزایای فعال</dt>
-                      <dd className="contract-draft-summary-value">
-                        {formatFaNumber(BENEFIT_TEMPLATE_FIELDS.filter(({ key }) => template.data.benefits[key].enabled).length, { useGrouping: false })}
-                      </dd>
-                    </div>
-                  </dl>
-                </article>
-              ) : null}
+          <MinimalScroll className="draft-template-flow-report-body business-payroll-summary contract-draft-summary-body">
+            <div className="draft-template-flow-report-card accent">
+              <span>نام قالب</span>
+              <strong>{template.name}</strong>
+              <small>
+                {formatUsageTypeLabel(template.usageType)} · سال {formatFaNumber(template.baseSettingsYear, { useGrouping: false })}
+              </small>
             </div>
+
+            <div className="draft-template-flow-report-card contract-draft-summary-progress">
+              <div className="draft-template-flow-report-card-head">
+                <span>پیشرفت تکمیل</span>
+                <strong>
+                  {formatFaNumber(completedCount, { useGrouping: false })} از {formatFaNumber(steps.length, { useGrouping: false })}
+                </strong>
+              </div>
+              <div
+                className="contract-draft-summary-progress-bar"
+                role="progressbar"
+                aria-valuenow={progressPercent}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-label="پیشرفت تکمیل مراحل"
+              >
+                <span style={{ width: `${progressPercent}%` }} />
+              </div>
+              <small>{formatFaNumber(progressPercent, { useGrouping: false })}٪ تکمیل شده</small>
+            </div>
+
+            <div className="draft-template-flow-report-grid">
+              <div>
+                <span>تفاوت با مبنا</span>
+                <strong className={diffCount > 0 ? 'is-positive' : ''}>{formatFaNumber(diffCount, { useGrouping: false })}</strong>
+              </div>
+              <div>
+                <span>تعهدات</span>
+                <strong>{formatFaNumber(commitmentCount, { useGrouping: false })}</strong>
+              </div>
+              <div>
+                <span>مدارک اجباری</span>
+                <strong>{formatFaNumber(documentCount, { useGrouping: false })}</strong>
+              </div>
+              <div>
+                <span>{template.usageType === 'payroll_attendance' ? 'مزایای فعال' : 'سقف اضافه‌کاری'}</span>
+                <strong className={template.usageType === 'payroll_attendance' ? 'is-positive' : ''}>
+                  {template.usageType === 'payroll_attendance'
+                    ? formatFaNumber(activeBenefitCount, { useGrouping: false })
+                    : `${formatFaNumber(template.data.attendanceBase.monthlyOvertimeLimitHours)} ساعت`}
+                </strong>
+              </div>
+            </div>
+
+            <div className="draft-template-flow-report-card">
+              <span>تردد و مرخصی</span>
+              <small>سقف اضافه‌کاری ماهانه: {formatFaNumber(template.data.attendanceBase.monthlyOvertimeLimitHours)} ساعت</small>
+              <small>سهمیه مرخصی ماهانه: {formatFaNumber(template.data.leave.monthlyQuotaHours)} ساعت</small>
+              <small>
+                انتقال سالانه:{' '}
+                {annualTransferEnabled
+                  ? `${formatFaNumber(template.data.leave.transferLimits.annual.hours ?? 0)} ساعت`
+                  : 'غیرفعال'}
+              </small>
+            </div>
+
+            {template.usageType === 'payroll_attendance' ? (
+              <div className="draft-template-flow-report-card total">
+                <span>حقوق پایه روزانه</span>
+                <strong>{money(template.data.payrollBase.dailyBaseSalary)}</strong>
+                <small>
+                  دقایق موظفی روزانه: {formatFaNumber(template.data.payrollBase.dailyRequiredMinutes)} · مزایای فعال:{' '}
+                  {formatFaNumber(activeBenefitCount, { useGrouping: false })}
+                </small>
+              </div>
+            ) : null}
           </MinimalScroll>
         </div>
       </aside>
@@ -712,9 +750,13 @@ export function ContractDraftTemplateBuilder() {
               <p className="contract-draft-template-name">{template.name}</p>
               <p className="contract-draft-page-lead">ساخت و تنظیم قالب قرارداد بر اساس تنظیمات مبنای انتخاب‌شده</p>
             </div>
-            <Link href="/draft-templates" className="business-payroll-outline-button contract-draft-back-link">
+            <button
+              type="button"
+              className="business-payroll-outline-button contract-draft-back-link"
+              onClick={() => unsavedLeaveGuard.requestLeave(() => router.push('/draft-templates'))}
+            >
               بازگشت به فهرست قالب‌ها
-            </Link>
+            </button>
           </div>
           <div className="business-payroll-header-badges contract-draft-header-badges">
             <span className="contract-draft-badge contract-draft-badge--usage">نوع قالب: {formatUsageTypeLabel(template.usageType)}</span>
@@ -733,7 +775,17 @@ export function ContractDraftTemplateBuilder() {
               <ContractStepHeader stepId={step.id} title={step.title} detail={step.detail} />
               <div className="contract-draft-step-body">{renderStep(step.id, template, baseSettings, settings, derived, errors, updateTemplate, setAttachmentCategory)}</div>
               <footer className="business-payroll-step-footer contract-draft-step-footer">
-                <button type="button" className="draft-template-flow-action is-primary" onClick={() => continueFromStep(step.id)}>
+                <button
+                  type="button"
+                  className={
+                    steps[steps.length - 1].id === step.id
+                      ? 'draft-template-flow-action is-primary'
+                      : stepState[step.id].dirty
+                        ? 'draft-template-flow-action is-save-continue'
+                        : 'draft-template-flow-action is-secondary'
+                  }
+                  onClick={() => continueFromStep(step.id)}
+                >
                   {stepState[step.id].dirty ? <Save className="h-4 w-4" aria-hidden /> : null}
                   {steps[steps.length - 1].id === step.id ? 'ذخیره تغییرات' : stepState[step.id].dirty ? 'ذخیره و ادامه' : 'مرحله بعد'}
                 </button>
@@ -764,6 +816,13 @@ export function ContractDraftTemplateBuilder() {
           setAttachmentCategory(null);
         }}
       />
+      <UnsavedChangesDialog
+        open={unsavedLeaveGuard.dialogOpen}
+        saving={unsavedLeaveGuard.saving}
+        onSaveAndLeave={unsavedLeaveGuard.confirmSaveAndLeave}
+        onDiscardAndLeave={unsavedLeaveGuard.confirmDiscardAndLeave}
+        onCancel={unsavedLeaveGuard.closeDialog}
+      />
     </div>
   );
 }
@@ -783,6 +842,14 @@ function validateStep(step: ContractDraftTemplateStepId, template: ContractDraft
   if (step === 'payrollBase') {
     if (!Number.isFinite(template.data.payrollBase.dailyRequiredMinutes) || template.data.payrollBase.dailyRequiredMinutes <= 0) errors.dailyRequiredMinutes = 'مقدار باید عددی مثبت باشد';
     if (!Number.isFinite(template.data.payrollBase.dailyBaseSalary) || template.data.payrollBase.dailyBaseSalary <= 0) errors.dailyBaseSalary = 'مقدار باید عددی مثبت باشد';
+    if (template.data.payrollBase.insuranceEnabled) {
+      if (!Number.isFinite(template.data.payrollBase.employerInsurancePercent) || template.data.payrollBase.employerInsurancePercent < 0) {
+        errors.employerInsurancePercent = 'مقدار باید عددی معتبر باشد';
+      }
+      if (!Number.isFinite(template.data.payrollBase.employeeInsurancePercent) || template.data.payrollBase.employeeInsurancePercent < 0) {
+        errors.employeeInsurancePercent = 'مقدار باید عددی معتبر باشد';
+      }
+    }
   }
   if (step === 'paymentType' && !template.data.paymentType.type) errors.paymentType = 'حداقل یک گزینه را انتخاب کنید';
   if (step === 'workTimePayRules') return validatePayrollStep('overtime', settings);
@@ -794,6 +861,9 @@ function countDifferences(template: ContractDraftTemplate, base: PayrollSettings
   let count = 0;
   if (template.data.payrollBase.dailyRequiredMinutes !== base.financial.dailyRequiredMinutes) count += 1;
   if (template.data.payrollBase.dailyBaseSalary !== base.financial.dailyBaseSalary) count += 1;
+  if (template.data.payrollBase.insuranceEnabled !== (base.deductions.employeeInsurancePercent > 0)) count += 1;
+  if (template.data.payrollBase.employerInsurancePercent !== base.deductions.employerInsurancePercent) count += 1;
+  if (template.data.payrollBase.employeeInsurancePercent !== base.deductions.employeeInsurancePercent) count += 1;
   if (JSON.stringify(template.data.workTimePayRules) !== JSON.stringify(base.workTimePayRules)) count += 1;
   if (JSON.stringify(template.data.leave) !== JSON.stringify(base.leave)) count += 1;
   BENEFIT_TEMPLATE_FIELDS.forEach(({ key, baseKey }) => {
@@ -975,6 +1045,60 @@ function PayrollBaseStep({
             onChange={(employeePays) => updateTemplate('payrollBase', (current) => ({ ...current, data: { ...current.data, payrollBase: { ...current.data.payrollBase, taxEnabled: true, taxPayer: employeePays ? 'employee' : 'employer' } } }))}
           />
         </div>
+        {template.data.payrollBase.insuranceEnabled ? (
+          <div className="business-payroll-fields two contract-draft-insurance-fields">
+            <FieldShell
+              label="درصد بیمه کارفرما"
+              unit="%"
+              value={template.data.payrollBase.employerInsurancePercent}
+              difference={compareValues(baseSettings.deductions.employerInsurancePercent, template.data.payrollBase.employerInsurancePercent, {
+                changed: 'متفاوت با مبنا',
+                tooltip: `سهم بیمه کارفرما در تنظیمات مبنا ${formatFaNumber(baseSettings.deductions.employerInsurancePercent)}٪ است.`,
+                higher: (value) => `${formatFaNumber(value)}٪ بیشتر از مبنا`,
+                lower: (value) => `${formatFaNumber(value)}٪ کمتر از مبنا`,
+              })}
+              onChange={(employerInsurancePercent) =>
+                updateTemplate('payrollBase', (current) => ({
+                  ...current,
+                  data: {
+                    ...current.data,
+                    payrollBase: {
+                      ...current.data.payrollBase,
+                      employerInsurancePercent,
+                    },
+                  },
+                }))
+              }
+            />
+            <FieldShell
+              label="درصد بیمه کارگر"
+              unit="%"
+              value={template.data.payrollBase.employeeInsurancePercent}
+              difference={compareValues(baseSettings.deductions.employeeInsurancePercent, template.data.payrollBase.employeeInsurancePercent, {
+                changed: 'متفاوت با مبنا',
+                tooltip: `سهم بیمه کارگر در تنظیمات مبنا ${formatFaNumber(baseSettings.deductions.employeeInsurancePercent)}٪ است.`,
+                higher: (value) => `${formatFaNumber(value)}٪ بیشتر از مبنا`,
+                lower: (value) => `${formatFaNumber(value)}٪ کمتر از مبنا`,
+              })}
+              onChange={(employeeInsurancePercent) =>
+                updateTemplate('payrollBase', (current) => ({
+                  ...current,
+                  data: {
+                    ...current.data,
+                    payrollBase: {
+                      ...current.data.payrollBase,
+                      employeeInsurancePercent,
+                    },
+                  },
+                }))
+              }
+            />
+          </div>
+        ) : (
+          <p className="contract-draft-subcategory-note contract-draft-subcategory-note--muted">
+            وقتی بیمه غیرفعال است، سهم‌های بیمه نمایش داده نمی‌شوند.
+          </p>
+        )}
       </section>
     </>
   );
@@ -1239,7 +1363,21 @@ function VariableList({ title, items, onAdd, onUpdate, onRemove }: { title: stri
             <option value="fixed">مبلغ ثابت</option>
             <option value="percentage">ضریب</option>
           </select>
-          <input inputMode="numeric" value={item.method === 'fixed' ? item.amount : item.percent} onChange={(event) => onUpdate(item.method === 'fixed' ? { ...item, amount: Number(event.target.value) } : { ...item, percent: Number(event.target.value) })} />
+          <input
+            type="text"
+            inputMode="numeric"
+            value={item.method === 'fixed' ? (Number.isFinite(item.amount) ? String(item.amount) : '') : (Number.isFinite(item.percent) ? String(item.percent) : '')}
+            onChange={(event) => {
+              const normalized = event.target.value
+                .replace(/[۰-۹]/g, (digit) => String(digit.charCodeAt(0) - 1776))
+                .replace(/[٠-٩]/g, (digit) => String(digit.charCodeAt(0) - 1632));
+              onUpdate(
+                item.method === 'fixed'
+                  ? { ...item, amount: normalized ? Number(normalized) : Number.NaN }
+                  : { ...item, percent: normalized ? Number(normalized) : Number.NaN },
+              );
+            }}
+          />
           <button type="button" onClick={() => onRemove(item)}><Trash2 className="h-4 w-4" /></button>
         </article>
       ))}

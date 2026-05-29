@@ -1,6 +1,12 @@
-import { DEFAULT_PAYROLL_SETTINGS, normalizePayrollSettings, type PayrollSettings, type TaxBracket } from './payroll-business-settings';
+import {
+  DEFAULT_PAYROLL_SETTINGS,
+  getActiveTenantStorageId,
+  normalizePayrollSettings,
+  type PayrollSettings,
+  type TaxBracket,
+  getPayrollSettingsStorageKey,
+} from './payroll-business-settings';
 import type { ContractDraftTemplate, ContractDraftTemplateUsageType } from './contract-draft-templates';
-import { getPayrollSettingsStorageKey } from './payroll-business-settings';
 
 export type EmployeeContractDraftUsageType = ContractDraftTemplateUsageType;
 
@@ -143,6 +149,19 @@ export type EmployeeContractDraftTemplateChoice = {
 export const EMPLOYEE_CONTRACT_DRAFTS_STORAGE_KEY = 'dastranj-employee-contract-drafts-v1';
 export const EMPLOYEE_SUPPLEMENTAL_PROFILE_STORAGE_KEY = 'dastranj-employee-supplemental-profile-v1';
 
+function scopeStorageKey(key: string, tenantId?: string | null) {
+  const scope = tenantId ?? getActiveTenantStorageId();
+  return scope ? `${key}:${scope}` : key;
+}
+
+export function getEmployeeContractDraftsStorageKey(tenantId?: string | null) {
+  return scopeStorageKey(EMPLOYEE_CONTRACT_DRAFTS_STORAGE_KEY, tenantId);
+}
+
+export function getEmployeeSupplementalStorageKey(tenantId?: string | null) {
+  return scopeStorageKey(EMPLOYEE_SUPPLEMENTAL_PROFILE_STORAGE_KEY, tenantId);
+}
+
 export const EMPLOYEE_BENEFIT_KEYS = ['workerAllowance', 'housingAllowance', 'childAllowance', 'marriageAllowance', 'seniorityAllowance'] as const;
 
 export const EMPLOYEE_CONTRACT_DRAFT_STEPS: Record<EmployeeContractDraftUsageType, EmployeeContractDraftStep[]> = {
@@ -194,12 +213,8 @@ export function getEmployeeDraftSteps(usageType: EmployeeContractDraftUsageType)
   return EMPLOYEE_CONTRACT_DRAFT_STEPS[usageType];
 }
 
-export function getEmployeeDraftStorageKey() {
-  return EMPLOYEE_CONTRACT_DRAFTS_STORAGE_KEY;
-}
-
-export function getEmployeeSupplementalStorageKey() {
-  return EMPLOYEE_SUPPLEMENTAL_PROFILE_STORAGE_KEY;
+export function getEmployeeDraftStorageKey(tenantId?: string | null) {
+  return getEmployeeContractDraftsStorageKey(tenantId);
 }
 
 export function getEmployeeDraftsFromStorage(raw: string | null | undefined) {
@@ -282,8 +297,8 @@ export function buildTemplateSnapshot(
     },
     insuranceTax: {
       insuranceEnabled: template.data.payrollBase.insuranceEnabled,
-      employerInsurancePercent: baseSettings.deductions.employerInsurancePercent,
-      employeeInsurancePercent: baseSettings.deductions.employeeInsurancePercent,
+      employerInsurancePercent: template.data.payrollBase.employerInsurancePercent,
+      employeeInsurancePercent: template.data.payrollBase.employeeInsurancePercent,
       taxEnabled: template.data.payrollBase.taxEnabled,
       taxPayer: template.data.payrollBase.taxPayer,
       taxBrackets: baseSettings.deductions.taxBrackets.map((item) => ({ ...item })),
@@ -495,16 +510,16 @@ export function findEmployeeDraft(drafts: EmployeeContractDraft[], employeeId: s
   return drafts.find((draft) => draft.employeeId === employeeId && draft.id === draftId) ?? null;
 }
 
-export function persistEmployeeDrafts(drafts: EmployeeContractDraft[]) {
-  window.localStorage.setItem(EMPLOYEE_CONTRACT_DRAFTS_STORAGE_KEY, JSON.stringify(drafts));
+export function persistEmployeeDrafts(drafts: EmployeeContractDraft[], tenantId?: string | null) {
+  window.localStorage.setItem(getEmployeeContractDraftsStorageKey(tenantId), JSON.stringify(drafts));
 }
 
-export function readEmployeeDrafts() {
-  return getEmployeeDraftsFromStorage(window.localStorage.getItem(EMPLOYEE_CONTRACT_DRAFTS_STORAGE_KEY));
+export function readEmployeeDrafts(tenantId?: string | null) {
+  return getEmployeeDraftsFromStorage(window.localStorage.getItem(getEmployeeContractDraftsStorageKey(tenantId)));
 }
 
-export function readEmployeeSupplementalProfiles(): Record<string, EmployeeSupplementalProfile> {
-  const raw = window.localStorage.getItem(EMPLOYEE_SUPPLEMENTAL_PROFILE_STORAGE_KEY);
+export function readEmployeeSupplementalProfiles(tenantId?: string | null): Record<string, EmployeeSupplementalProfile> {
+  const raw = window.localStorage.getItem(getEmployeeSupplementalStorageKey(tenantId));
   if (!raw) return {};
   try {
     const parsed = JSON.parse(raw) as unknown;
@@ -514,18 +529,18 @@ export function readEmployeeSupplementalProfiles(): Record<string, EmployeeSuppl
       return result;
     }, {});
   } catch {
-    window.localStorage.removeItem(EMPLOYEE_SUPPLEMENTAL_PROFILE_STORAGE_KEY);
+    window.localStorage.removeItem(getEmployeeSupplementalStorageKey(tenantId));
     return {};
   }
 }
 
-export function persistEmployeeSupplementalProfiles(profiles: Record<string, EmployeeSupplementalProfile>) {
-  window.localStorage.setItem(EMPLOYEE_SUPPLEMENTAL_PROFILE_STORAGE_KEY, JSON.stringify(profiles));
+export function persistEmployeeSupplementalProfiles(profiles: Record<string, EmployeeSupplementalProfile>, tenantId?: string | null) {
+  window.localStorage.setItem(getEmployeeSupplementalStorageKey(tenantId), JSON.stringify(profiles));
 }
 
 export function readBaseSettingsByTemplate(template: ContractDraftTemplate | null | undefined) {
   if (!template) return DEFAULT_PAYROLL_SETTINGS;
-  const raw = window.localStorage.getItem(getPayrollSettingsStorageKey(template.baseSettingsYear));
+  const raw = window.localStorage.getItem(getPayrollSettingsStorageKey(template.baseSettingsYear, getActiveTenantStorageId()));
   if (!raw) return DEFAULT_PAYROLL_SETTINGS;
   try {
     return normalizePayrollSettings(JSON.parse(raw));

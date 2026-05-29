@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Search, Users2, UserCheck, UserX } from 'lucide-react';
+import { CalendarDays, Check, Plus, Search, Users2 } from 'lucide-react';
 import { ModulePageHeader } from '../../components/module-page/ModulePageHeader';
 import { businessSettingsBreadcrumbs } from '../../components/module-page/module-breadcrumbs';
 import { listEmployees } from '../../lib/data';
@@ -49,7 +49,8 @@ function FilterChip({
   const href = mergeQuery(baseQuery, { status: value });
   return (
     <Link href={href} className={`employees-filter-chip${current === value ? ' is-active' : ''}`}>
-      {label}
+      {current === value ? <Check className="h-4 w-4" aria-hidden /> : null}
+      <span>{label}</span>
     </Link>
   );
 }
@@ -68,7 +69,8 @@ function AssignmentChip({
   const href = mergeQuery(baseQuery, { assignment: value });
   return (
     <Link href={href} className={`employees-filter-chip${current === value ? ' is-active' : ''}`}>
-      {label}
+      {current === value ? <Check className="h-4 w-4" aria-hidden /> : null}
+      <span>{label}</span>
     </Link>
   );
 }
@@ -78,7 +80,6 @@ function createEmployeeSummary(items: Awaited<ReturnType<typeof listEmployees>>)
     total: items.length,
     active: items.filter((item) => item.isActive).length,
     inactive: items.filter((item) => !item.isActive).length,
-    withAssignments: items.filter((item) => item.organizationUnits.length || item.workGroupMemberships.length).length,
   };
 }
 
@@ -122,12 +123,12 @@ export default async function EmployeesPage({ searchParams }: EmployeesPageProps
       />
 
       <div className="employees-layout" dir="ltr">
-        <aside className="employees-filters" dir="rtl" lang="fa">
+        <aside className="employees-filters employees-filter-sidebar" dir="rtl" lang="fa" aria-label="فیلتر کارمندان">
           <form className="employees-filters-form" method="get">
-            <input type="hidden" name="q" value={query} />
+            <div className="employees-filters-heading">فیلتر</div>
 
             <section className="employees-filter-section">
-              <div className="employees-filter-title">فیلتر</div>
+              <div className="employees-filter-title">وضعیت همکاری</div>
               <div className="employees-filter-group">
                 <FilterChip label="همه" value="all" current={status} baseQuery={baseQuery} />
                 <FilterChip label="کارمند فعال" value="active" current={status} baseQuery={baseQuery} />
@@ -148,19 +149,25 @@ export default async function EmployeesPage({ searchParams }: EmployeesPageProps
               <div className="employees-filter-title">تاریخ</div>
               <label className="employees-filter-field">
                 <span>از تاریخ</span>
-                <input name="from" type="date" defaultValue={from} />
+                <span className="employees-filter-input-wrap">
+                  <input name="from" type="date" defaultValue={from} />
+                  <CalendarDays className="employees-filter-input-icon h-4 w-4" aria-hidden />
+                </span>
               </label>
               <label className="employees-filter-field">
                 <span>تا تاریخ</span>
-                <input name="to" type="date" defaultValue={to} />
+                <span className="employees-filter-input-wrap">
+                  <input name="to" type="date" defaultValue={to} />
+                  <CalendarDays className="employees-filter-input-icon h-4 w-4" aria-hidden />
+                </span>
               </label>
             </section>
 
             <section className="employees-filter-section">
               <div className="employees-filter-title">جستجو</div>
               <label className="employees-filter-field">
-                <span>نام / موبایل / کد</span>
-                <input name="q" type="search" defaultValue={query} placeholder="جستجو..." />
+                <span>کارمند</span>
+                <input name="q" type="search" defaultValue={query} placeholder="نام / موبایل / کد" />
               </label>
             </section>
 
@@ -187,37 +194,21 @@ export default async function EmployeesPage({ searchParams }: EmployeesPageProps
                 name="q"
                 type="search"
                 defaultValue={query}
-                placeholder="جستجو در نام، موبایل، ایمیل، کد پرسنلی، واحد یا گروه کاری"
+                placeholder="جستجو"
                 aria-label="جستجو در کارمندان"
               />
-              <button type="submit" className="employees-search-submit">
-                جستجو
-              </button>
             </form>
 
             <Link href="/employees/new" className="employees-add-btn">
-              <span aria-hidden>+</span>
+              <Plus className="h-4 w-4" aria-hidden />
               افزودن کارمند
             </Link>
           </div>
 
-          <div className="employees-summary">
-            <span className="employees-summary-chip">
-              <Users2 className="h-4 w-4" />
-              <strong>{summary.total.toLocaleString('fa-IR')}</strong>
-              <span>کل کارمندان</span>
-            </span>
-            <span className="employees-summary-chip is-active">
-              <UserCheck className="h-4 w-4" />
-              <strong>{summary.active.toLocaleString('fa-IR')}</strong>
-              <span>فعال</span>
-            </span>
-            <span className="employees-summary-chip is-inactive">
-              <UserX className="h-4 w-4" />
-              <strong>{summary.inactive.toLocaleString('fa-IR')}</strong>
-              <span>غیرفعال</span>
-            </span>
-          </div>
+          <p className="employees-results-meta" aria-live="polite">
+            {summary.total.toLocaleString('fa-IR')} کارمند
+            {summary.active > 0 ? ` · ${summary.active.toLocaleString('fa-IR')} فعال` : ''}
+          </p>
 
           {items.length ? (
             <div className="employees-list">

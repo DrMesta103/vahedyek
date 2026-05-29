@@ -1,36 +1,6 @@
 'use server';
 
-import crypto from 'node:crypto';
 import { Prisma, type PrismaClient } from '../../node_modules/.prisma/client';
-import { currentAppConfig } from '../config/current';
-import { ensurePageThreadsTables } from './page-threads-store';
-
-const DEV_DOC_THREAD_SEEDS = [
-  {
-    title: 'راهنمای شروع',
-    docType: 'technical',
-    pageKey: '/dev-doc-threads',
-    pagePathSample: '/dev-doc-threads',
-    priority: 'p2',
-    status: 'done',
-  },
-  {
-    title: 'تنظیمات حضور',
-    docType: 'business',
-    pageKey: '/business-settings/attendance',
-    pagePathSample: '/business-settings/attendance',
-    priority: 'p1',
-    status: 'in_progress',
-  },
-  {
-    title: 'فرم ثبت درخواست',
-    docType: 'free',
-    pageKey: '/request-reasons',
-    pagePathSample: '/request-reasons',
-    priority: 'p2',
-    status: 'todo',
-  },
-] as const;
 
 const demoCalendars1404 = [
   {
@@ -86,7 +56,6 @@ export async function ensureDemoCalendars(prisma: PrismaClient, tenantId: string
 
 export async function seedSampleData(prisma: PrismaClient, tenantId: string) {
   await ensureDemoCalendars(prisma, tenantId);
-  await ensureDevDocThreads(prisma, tenantId);
 
   const businessProfileCount = await prisma.businessProfile.count({ where: { tenantId } });
   if (businessProfileCount > 0) return;
@@ -256,48 +225,4 @@ export async function seedSampleData(prisma: PrismaClient, tenantId: string) {
       { tenantId, title: 'پیش نویس سیاست حضور', description: 'قالب اولیه برای سیاست حضور و غیاب', category: 'attendance', body: 'الگوی ورود، خروج، مرخصی و اضافه کاری' },
     ],
   });
-}
-
-export async function ensureDevDocThreads(prisma: PrismaClient, tenantId: string) {
-  await ensurePageThreadsTables();
-
-  const existing = await prisma.$queryRawUnsafe<Array<{ count: bigint }>>(
-    `
-      SELECT COUNT(*)::bigint AS count
-      FROM "DevPageThread"
-      WHERE "tenantId" = $1 AND "appId" = $2
-    `,
-    tenantId,
-    currentAppConfig.appId,
-  );
-
-  if ((existing[0]?.count ?? BigInt(0)) > BigInt(0)) return;
-
-  const author = await prisma.appUser.findFirst({ orderBy: { createdAt: 'asc' } });
-  if (!author) return;
-
-  for (const seed of DEV_DOC_THREAD_SEEDS) {
-    await prisma.$executeRawUnsafe(
-      `
-        INSERT INTO "DevPageThread" (
-          "id", "tenantId", "appId", "pageKey", "pagePathSample", "title", "docType",
-          "priority", "status", "labelsJson", "createdById", "updatedById", "createdAt", "updatedAt"
-        )
-        VALUES (
-          $1, $2, $3, $4, $5, $6, $7,
-          $8, $9, '[]', $10, $10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
-        )
-      `,
-      crypto.randomUUID(),
-      tenantId,
-      currentAppConfig.appId,
-      seed.pageKey,
-      seed.pagePathSample,
-      seed.title,
-      seed.docType,
-      seed.priority,
-      seed.status,
-      author.id,
-    );
-  }
 }

@@ -195,6 +195,17 @@ export type PayrollDerivedValues = {
 export const PAYROLL_SETTINGS_STORAGE_KEY = 'dastranj-business-payroll-settings-v1';
 export const PAYROLL_SETTINGS_YEARS_STORAGE_KEY = 'dastranj-business-payroll-years-v1';
 export const PAYROLL_STEPPER_PROGRESS_STORAGE_KEY = 'dastranj-business-payroll-stepper-progress-v1';
+export const ACTIVE_TENANT_STORAGE_KEY = 'active-tenant-id';
+
+export function getActiveTenantStorageId() {
+  if (typeof window === 'undefined') return null;
+  const tenantId = window.sessionStorage.getItem(ACTIVE_TENANT_STORAGE_KEY)?.trim();
+  return tenantId || null;
+}
+
+function scopeStorageKey(key: string, tenantId?: string | null) {
+  return tenantId ? `${key}:${tenantId}` : key;
+}
 
 export const WORK_TIME_CONDITIONS: Array<{ key: WorkTimeConditionKey; label: string; shortLabel: string }> = [
   { key: 'normal_overtime', label: 'اضافه کاری عادی', shortLabel: 'اضافه کاری' },
@@ -266,20 +277,24 @@ export type BusinessSettingYear = {
   updatedAt: string;
 };
 
-export function getPayrollSettingsStorageKey(year: number) {
-  return `${PAYROLL_SETTINGS_STORAGE_KEY}-year-${year}`;
+export function getPayrollSettingsStorageKey(year: number, tenantId?: string | null) {
+  return scopeStorageKey(`${PAYROLL_SETTINGS_STORAGE_KEY}-year-${year}`, tenantId);
 }
 
-export function getTenantPayrollSettingsStorageKey(year: number) {
-  return `${PAYROLL_SETTINGS_STORAGE_KEY}-tenant-year-${year}`;
+export function getPayrollSettingsYearsStorageKey(tenantId?: string | null) {
+  return scopeStorageKey(PAYROLL_SETTINGS_YEARS_STORAGE_KEY, tenantId);
 }
 
-export function getPayrollStepperProgressStorageKey(mode: PayrollSettingsMode, year: number) {
-  return `${PAYROLL_STEPPER_PROGRESS_STORAGE_KEY}-${mode}-year-${year}`;
+export function getTenantPayrollSettingsStorageKey(year: number, tenantId?: string | null) {
+  return scopeStorageKey(`${PAYROLL_SETTINGS_STORAGE_KEY}-tenant-year-${year}`, tenantId);
 }
 
-export function getPayrollSettingsDraftStorageKey(mode: PayrollSettingsMode, year: number) {
-  return `${PAYROLL_SETTINGS_STORAGE_KEY}-draft-${mode}-year-${year}`;
+export function getPayrollStepperProgressStorageKey(mode: PayrollSettingsMode, year: number, tenantId?: string | null) {
+  return scopeStorageKey(`${PAYROLL_STEPPER_PROGRESS_STORAGE_KEY}-${mode}-year-${year}`, tenantId);
+}
+
+export function getPayrollSettingsDraftStorageKey(mode: PayrollSettingsMode, year: number, tenantId?: string | null) {
+  return scopeStorageKey(`${PAYROLL_SETTINGS_STORAGE_KEY}-draft-${mode}-year-${year}`, tenantId);
 }
 
 export type PayrollStepperProgress = {
