@@ -21,6 +21,7 @@ import {
   Wallet,
 } from 'lucide-react';
 import { MinimalScroll } from '../../../../../components/MinimalScroll';
+import { CalculationRulesBadges, CalcRulesDiffBadge, CalcRulesEditButton, CalculationRulesDialog } from '../../../../../components/CalculationRulesChips';
 import { PanelFormModal, PanelFormModalActions } from '../../../../../components/PanelFormModal';
 import { UnsavedChangesDialog, useUnsavedLeaveGuard } from '../../../../../components/UnsavedChangesGuard';
 import { formatFaNumber, toPersianDigits } from '../../../../../lib/format-fa';
@@ -28,9 +29,11 @@ import { formatPersianDate } from '../../../../../lib/format-date';
 import { CONTRACT_DRAFT_TEMPLATES_STORAGE_KEY, normalizeContractDraftTemplate, type ContractDraftTemplate } from '../../../../../lib/contract-draft-templates';
 import {
   DEFAULT_PAYROLL_SETTINGS,
+  DEFAULT_FIXED_BENEFIT_RULES,
   getActiveTenantStorageId,
   getPayrollSettingsStorageKey,
   normalizePayrollSettings,
+  type CalculationRules,
   type PayrollSettings,
   type TaxBracket,
 } from '../../../../../lib/payroll-business-settings';
@@ -1032,6 +1035,7 @@ export function EmployeeContractDraftBuilderClient({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [notice, setNotice] = useState('');
   const [currentDraft, setCurrentDraft] = useState<EmployeeContractDraft | null>(null);
+  const [benefitRulesDialog, setBenefitRulesDialog] = useState<keyof EmployeeContractDraft['benefits'] | null>(null);
 
   useEffect(() => {
     if (!loaded || !activeDraft) return;
@@ -1335,6 +1339,8 @@ export function EmployeeContractDraftBuilderClient({
         : item.enabled && item.amount === legalAmount
           ? fieldBadge('برابر با مبنای قانون کار', 'success')
           : null;
+    const currentRules = item.calculationRules ?? DEFAULT_FIXED_BENEFIT_RULES;
+    const templateRules = currentDraft.templateSnapshot?.benefitRules?.[key] ?? baseSettings.benefitRules?.[key] ?? DEFAULT_FIXED_BENEFIT_RULES;
     return (
       <article className="business-payroll-transfer-rule" key={key}>
         <div className="business-payroll-transfer-rule-head">
@@ -1394,6 +1400,11 @@ export function EmployeeContractDraftBuilderClient({
             </span>
           </label>
         ) : null}
+        <div className="calc-badges-row">
+          <CalculationRulesBadges rules={currentRules} />
+          <CalcRulesDiffBadge baseRules={templateRules} currentRules={currentRules} baseLabel="قالب انتخاب‌شده" differenceLabel="متفاوت با قواعد قالب" />
+          <CalcRulesEditButton onClick={() => setBenefitRulesDialog(key)} />
+        </div>
       </article>
     );
   };
@@ -2136,6 +2147,34 @@ export function EmployeeContractDraftBuilderClient({
                       {benefitSection('marriageAllowance')}
                       {benefitSection('seniorityAllowance')}
                     </div>
+                    {benefitRulesDialog ? (
+                      <CalculationRulesDialog
+                        open={Boolean(benefitRulesDialog)}
+                        itemTitle={
+                          benefitRulesDialog === 'workerAllowance' ? 'بن کارگری'
+                          : benefitRulesDialog === 'housingAllowance' ? 'حق مسکن'
+                          : benefitRulesDialog === 'childAllowance' ? 'حق اولاد'
+                          : benefitRulesDialog === 'marriageAllowance' ? 'حق تأهل'
+                          : 'مزد پایه سنوات'
+                        }
+                        rules={currentDraft.benefits[benefitRulesDialog].calculationRules ?? DEFAULT_FIXED_BENEFIT_RULES}
+                        baseRules={currentDraft.templateSnapshot?.benefitRules?.[benefitRulesDialog] ?? baseSettings.benefitRules?.[benefitRulesDialog] ?? DEFAULT_FIXED_BENEFIT_RULES}
+                        baseLabel="قالب انتخاب‌شده"
+                        differenceLabel="متفاوت با قواعد قالب"
+                        effectContext="benefit_or_addition"
+                        onClose={() => setBenefitRulesDialog(null)}
+                        onSubmit={(next) => {
+                          updateDraft((draft) => ({
+                            ...draft,
+                            benefits: {
+                              ...draft.benefits,
+                              [benefitRulesDialog]: { ...draft.benefits[benefitRulesDialog], calculationRules: next },
+                            },
+                          }));
+                          setBenefitRulesDialog(null);
+                        }}
+                      />
+                    ) : null}
                     {renderStepFooter('benefits')}
                   </StepShell>
                 ) : (

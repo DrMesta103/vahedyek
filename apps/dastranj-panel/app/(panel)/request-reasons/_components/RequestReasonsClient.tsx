@@ -2,14 +2,12 @@
 
 import { useRouter } from 'next/navigation';
 import {
-  useCallback,
   useEffect,
   useMemo,
   useRef,
   useState,
   useTransition,
   type ReactNode,
-  type WheelEvent,
 } from 'react';
 import {
   DndContext,
@@ -250,14 +248,81 @@ export function RequestReasonsClient({ items, activeCategory, onAddClick }: Requ
     });
   };
 
-  const handleCategoriesWheel = useCallback((event: WheelEvent<HTMLDivElement>) => {
+  useEffect(() => {
     const el = categoriesScrollRef.current;
-    if (!el || el.scrollWidth <= el.clientWidth) return;
+    if (!el) return;
 
-    if (Math.abs(event.deltaY) > Math.abs(event.deltaX)) {
-      event.preventDefault();
+    const onWheel = (event: WheelEvent) => {
+      if (el.scrollWidth <= el.clientWidth + 1) return;
+      if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
+
+      const previousScrollLeft = el.scrollLeft;
       el.scrollBy({ left: event.deltaY, behavior: 'auto' });
-    }
+      if (el.scrollLeft === previousScrollLeft) return;
+
+      event.preventDefault();
+    };
+
+    let dragPointerId: number | null = null;
+    let dragStartX = 0;
+    let dragStartScrollLeft = 0;
+    let dragActive = false;
+
+    const onPointerDown = (event: PointerEvent) => {
+      if (event.pointerType === 'mouse' && event.button !== 0) return;
+
+      dragPointerId = event.pointerId;
+      dragStartX = event.clientX;
+      dragStartScrollLeft = el.scrollLeft;
+      dragActive = false;
+    };
+
+    const onPointerMove = (event: PointerEvent) => {
+      if (dragPointerId !== event.pointerId) return;
+
+      const deltaX = event.clientX - dragStartX;
+      if (!dragActive) {
+        if (Math.abs(deltaX) < 6) return;
+        dragActive = true;
+        el.classList.add('is-dragging');
+        el.setPointerCapture(event.pointerId);
+      }
+
+      el.scrollLeft = dragStartScrollLeft - deltaX;
+      event.preventDefault();
+    };
+
+    const endDrag = (event: PointerEvent) => {
+      if (dragPointerId !== event.pointerId) return;
+
+      if (dragActive) {
+        el.dataset.suppressClick = '1';
+        window.setTimeout(() => {
+          delete el.dataset.suppressClick;
+        }, 0);
+      }
+
+      dragPointerId = null;
+      dragActive = false;
+      el.classList.remove('is-dragging');
+      if (el.hasPointerCapture(event.pointerId)) {
+        el.releasePointerCapture(event.pointerId);
+      }
+    };
+
+    el.addEventListener('wheel', onWheel, { passive: false });
+    el.addEventListener('pointerdown', onPointerDown);
+    el.addEventListener('pointermove', onPointerMove);
+    el.addEventListener('pointerup', endDrag);
+    el.addEventListener('pointercancel', endDrag);
+
+    return () => {
+      el.removeEventListener('wheel', onWheel);
+      el.removeEventListener('pointerdown', onPointerDown);
+      el.removeEventListener('pointermove', onPointerMove);
+      el.removeEventListener('pointerup', endDrag);
+      el.removeEventListener('pointercancel', endDrag);
+    };
   }, []);
 
   const listContent = dndReady ? (
@@ -281,12 +346,7 @@ export function RequestReasonsClient({ items, activeCategory, onAddClick }: Requ
   return (
     <>
       <div className="request-reason-categories-clip">
-        <MinimalScroll
-          ref={categoriesScrollRef}
-          variant="horizontalHidden"
-          className="request-reason-categories-scroll"
-          onWheel={handleCategoriesWheel}
-        >
+        <MinimalScroll ref={categoriesScrollRef} variant="horizontalHidden" className="request-reason-categories-scroll">
           <div className="request-reason-categories" role="tablist" aria-label="دسته‌بندی دلایل درخواست">
           {requestReasonCategories.map((category) => {
             const isActive = category === activeCategory;
@@ -297,7 +357,10 @@ export function RequestReasonsClient({ items, activeCategory, onAddClick }: Requ
                 role="tab"
                 aria-selected={isActive}
                 className={`request-reason-category-chip${isActive ? ' is-active' : ''}`}
-                onClick={() => handleCategoryChange(category)}
+                onClick={() => {
+                  if (categoriesScrollRef.current?.dataset.suppressClick === '1') return;
+                  handleCategoryChange(category);
+                }}
               >
                 {requestReasonTabLabels[category]}
               </button>

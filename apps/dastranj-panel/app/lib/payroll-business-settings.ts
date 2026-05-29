@@ -51,6 +51,100 @@ export type VariableAmountType = 'addition' | 'deduction';
 export type VariableCalculationMethod = 'fixed' | 'percentage';
 export type VariableCalculationBase = 'baseSalary' | 'grossPay';
 
+// ─── Calculation Rules ────────────────────────────────────────────────────────
+
+export type PaymentEffect = 'earning' | 'deduction' | 'employer_cost' | 'informational';
+
+export type CalculationRules = {
+  paymentEffect: PaymentEffect;
+  includedInInsuranceBase: boolean;
+  includedInTaxBase: boolean;
+  systemGenerated: boolean;
+  lockedRules: boolean;
+};
+
+export const DEFAULT_FIXED_BENEFIT_RULES: CalculationRules = {
+  paymentEffect: 'earning',
+  includedInInsuranceBase: true,
+  includedInTaxBase: true,
+  systemGenerated: false,
+  lockedRules: false,
+};
+
+export const DEFAULT_OPTIONAL_ADDITION_RULES: CalculationRules = {
+  paymentEffect: 'earning',
+  includedInInsuranceBase: false,
+  includedInTaxBase: true,
+  systemGenerated: false,
+  lockedRules: false,
+};
+
+export const DEFAULT_OPTIONAL_DEDUCTION_RULES: CalculationRules = {
+  paymentEffect: 'deduction',
+  includedInInsuranceBase: false,
+  includedInTaxBase: false,
+  systemGenerated: false,
+  lockedRules: false,
+};
+
+export const EMPLOYEE_INSURANCE_RULES: CalculationRules = {
+  paymentEffect: 'deduction',
+  includedInInsuranceBase: false,
+  includedInTaxBase: false,
+  systemGenerated: true,
+  lockedRules: true,
+};
+
+export const EMPLOYER_INSURANCE_RULES: CalculationRules = {
+  paymentEffect: 'employer_cost',
+  includedInInsuranceBase: false,
+  includedInTaxBase: false,
+  systemGenerated: true,
+  lockedRules: true,
+};
+
+export const TAX_RULES: CalculationRules = {
+  paymentEffect: 'deduction',
+  includedInInsuranceBase: false,
+  includedInTaxBase: false,
+  systemGenerated: true,
+  lockedRules: true,
+};
+
+export const PAYMENT_EFFECT_LABELS: Record<PaymentEffect, string> = {
+  earning: 'افزاینده دریافتی',
+  deduction: 'کاهنده دریافتی',
+  employer_cost: 'هزینه کارفرما',
+  informational: 'فقط قراردادی',
+};
+
+export function normalizeCalculationRules(value: unknown, defaults: CalculationRules): CalculationRules {
+  if (!value || typeof value !== 'object') return { ...defaults };
+  const source = value as Partial<CalculationRules>;
+  const paymentEffect: PaymentEffect =
+    source.paymentEffect === 'earning' || source.paymentEffect === 'deduction' ||
+    source.paymentEffect === 'employer_cost' || source.paymentEffect === 'informational'
+      ? source.paymentEffect
+      : defaults.paymentEffect;
+  return {
+    paymentEffect,
+    includedInInsuranceBase: typeof source.includedInInsuranceBase === 'boolean' ? source.includedInInsuranceBase : defaults.includedInInsuranceBase,
+    includedInTaxBase: typeof source.includedInTaxBase === 'boolean' ? source.includedInTaxBase : defaults.includedInTaxBase,
+    systemGenerated: typeof source.systemGenerated === 'boolean' ? source.systemGenerated : defaults.systemGenerated,
+    lockedRules: typeof source.lockedRules === 'boolean' ? source.lockedRules : defaults.lockedRules,
+  };
+}
+
+export function compareCalculationRules(base: CalculationRules, current: CalculationRules): boolean {
+  return (
+    base.paymentEffect !== current.paymentEffect ||
+    base.includedInInsuranceBase !== current.includedInInsuranceBase ||
+    base.includedInTaxBase !== current.includedInTaxBase
+  );
+}
+
+// ─── Variable Amount ──────────────────────────────────────────────────────────
+
 export type VariableAmount = {
   id: string;
   title: string;
@@ -59,7 +153,10 @@ export type VariableAmount = {
   amount: number;
   percent: number;
   calculationBase: VariableCalculationBase;
+  calculationRules: CalculationRules;
 };
+
+export type BenefitRulesMap = Record<keyof PayrollSettings['benefits'], CalculationRules>;
 
 export type PayrollSettings = {
   financial: {
@@ -79,6 +176,7 @@ export type PayrollSettings = {
     seniorityAllowance: number;
     eidBonus: number;
   };
+  benefitRules: BenefitRulesMap;
   variableAmounts: {
     additions: VariableAmount[];
     deductions: VariableAmount[];
@@ -149,6 +247,7 @@ export type PayrollSettingsOverrides = Partial<{
   financial: Partial<PayrollSettings['financial']>;
   deductions: Partial<PayrollSettings['deductions']>;
   benefits: Partial<PayrollSettings['benefits']>;
+  benefitRules: Partial<BenefitRulesMap>;
   variableAmounts: Partial<PayrollSettings['variableAmounts']>;
   workTimePayRules: Partial<{
     overtime: Partial<PayrollSettings['workTimePayRules']['overtime']>;
@@ -183,11 +282,14 @@ export type PayrollDerivedValues = {
   totalOptionalAdditions: number;
   totalOptionalDeductions: number;
   grossPay: number;
+  insuranceBase: number;
+  taxBase: number;
   employeeInsuranceAmount: number;
   employerInsuranceAmount: number;
   estimatedTax: number;
   totalDeductions: number;
   netPayable: number;
+  employerTotalCost: number;
   weeklyOvertimeLimit: number;
   monthlyOvertimeLimit: number;
 };
@@ -471,7 +573,36 @@ export function normalizePayrollSettings(value: unknown): PayrollSettings {
       transferLimits: normalizeLeaveTransferLimits(source.leave && typeof source.leave === 'object' ? (source.leave as Record<string, unknown>).transferLimits : undefined, true),
     },
   };
-  return mergeOverrides(DEFAULT_PAYROLL_SETTINGS, withMigration) as PayrollSettings;
+  const merged = mergeOverrides(DEFAULT_PAYROLL_SETTINGS, withMigration) as PayrollSettings;
+
+  // Normalize benefitRules with safe defaults
+  const rawBenefitRules = source.benefitRules && typeof source.benefitRules === 'object'
+    ? source.benefitRules as Record<string, unknown>
+    : {};
+  merged.benefitRules = {
+    workerAllowance: normalizeCalculationRules(rawBenefitRules.workerAllowance, DEFAULT_FIXED_BENEFIT_RULES),
+    housingAllowance: normalizeCalculationRules(rawBenefitRules.housingAllowance, DEFAULT_FIXED_BENEFIT_RULES),
+    childAllowance: normalizeCalculationRules(rawBenefitRules.childAllowance, DEFAULT_FIXED_BENEFIT_RULES),
+    marriageAllowance: normalizeCalculationRules(rawBenefitRules.marriageAllowance, DEFAULT_FIXED_BENEFIT_RULES),
+    seniorityAllowance: normalizeCalculationRules(rawBenefitRules.seniorityAllowance, DEFAULT_FIXED_BENEFIT_RULES),
+    eidBonus: normalizeCalculationRules(rawBenefitRules.eidBonus, DEFAULT_FIXED_BENEFIT_RULES),
+  };
+
+  // Normalize calculationRules on variable amounts
+  const normalizeVariableRules = (items: VariableAmount[], defaultRules: CalculationRules): VariableAmount[] =>
+    items.map((item) => ({
+      ...item,
+      calculationRules: normalizeCalculationRules(
+        (item as unknown as Record<string, unknown>).calculationRules,
+        defaultRules,
+      ),
+    }));
+  merged.variableAmounts = {
+    additions: normalizeVariableRules(merged.variableAmounts.additions, DEFAULT_OPTIONAL_ADDITION_RULES),
+    deductions: normalizeVariableRules(merged.variableAmounts.deductions, DEFAULT_OPTIONAL_DEDUCTION_RULES),
+  };
+
+  return merged;
 }
 
 export function normalizePayrollOverrides(value: unknown): PayrollSettingsOverrides {
@@ -649,6 +780,14 @@ export const DEFAULT_PAYROLL_SETTINGS: PayrollSettings = {
     seniorityAllowance: 9000000,
     eidBonus: 11000000,
   },
+  benefitRules: {
+    workerAllowance: { ...DEFAULT_FIXED_BENEFIT_RULES },
+    housingAllowance: { ...DEFAULT_FIXED_BENEFIT_RULES },
+    childAllowance: { ...DEFAULT_FIXED_BENEFIT_RULES },
+    marriageAllowance: { ...DEFAULT_FIXED_BENEFIT_RULES },
+    seniorityAllowance: { ...DEFAULT_FIXED_BENEFIT_RULES },
+    eidBonus: { ...DEFAULT_FIXED_BENEFIT_RULES },
+  },
   variableAmounts: {
     additions: [],
     deductions: [],
@@ -722,21 +861,85 @@ export function calculatePayrollValues(settings: PayrollSettings): PayrollDerive
   const salaryPerMinute = settings.financial.dailyBaseSalary / requiredMinutes;
   const salaryPerHour = salaryPerMinute * 60;
   const monthlyBaseSalary = settings.financial.dailyBaseSalary * 30;
+
+  // Benefits: sum all benefit amounts (earnings)
   const totalBenefits = Object.values(settings.benefits).reduce((sum, amount) => sum + amount, 0);
   const initialGrossPay = monthlyBaseSalary + totalBenefits;
+
+  // Variable additions with earning effect
   const totalOptionalAdditions = settings.variableAmounts.additions.reduce(
-    (sum, item) => sum + calculateVariableAmount(item, monthlyBaseSalary, initialGrossPay),
+    (sum, item) => {
+      const rules = item.calculationRules ?? DEFAULT_OPTIONAL_ADDITION_RULES;
+      if (rules.paymentEffect === 'earning') {
+        return sum + calculateVariableAmount(item, monthlyBaseSalary, initialGrossPay);
+      }
+      return sum;
+    },
     0,
   );
   const grossPay = initialGrossPay + totalOptionalAdditions;
+
+  // Variable deductions with deduction effect
   const totalOptionalDeductions = settings.variableAmounts.deductions.reduce(
-    (sum, item) => sum + calculateVariableAmount(item, monthlyBaseSalary, grossPay),
+    (sum, item) => {
+      const rules = item.calculationRules ?? DEFAULT_OPTIONAL_DEDUCTION_RULES;
+      if (rules.paymentEffect === 'deduction') {
+        return sum + calculateVariableAmount(item, monthlyBaseSalary, grossPay);
+      }
+      return sum;
+    },
     0,
   );
-  const employeeInsuranceAmount = (grossPay * settings.deductions.employeeInsurancePercent) / 100;
-  const employerInsuranceAmount = (grossPay * settings.deductions.employerInsurancePercent) / 100;
-  const estimatedTax = calculateTax(grossPay, settings.deductions.taxBrackets);
+
+  // Insurance base: sum of items where includedInInsuranceBase = true
+  // Base salary always included
+  let insuranceBase = monthlyBaseSalary;
+  // Benefits
+  (Object.keys(settings.benefits) as Array<keyof typeof settings.benefits>).forEach((key) => {
+    const rules = settings.benefitRules?.[key] ?? DEFAULT_FIXED_BENEFIT_RULES;
+    if (rules.includedInInsuranceBase && rules.paymentEffect === 'earning') {
+      insuranceBase += settings.benefits[key];
+    }
+  });
+  // Variable additions
+  settings.variableAmounts.additions.forEach((item) => {
+    const rules = item.calculationRules ?? DEFAULT_OPTIONAL_ADDITION_RULES;
+    if (rules.includedInInsuranceBase && rules.paymentEffect === 'earning') {
+      insuranceBase += calculateVariableAmount(item, monthlyBaseSalary, grossPay);
+    }
+  });
+
+  // Tax base: sum of items where includedInTaxBase = true
+  let taxBase = monthlyBaseSalary;
+  (Object.keys(settings.benefits) as Array<keyof typeof settings.benefits>).forEach((key) => {
+    const rules = settings.benefitRules?.[key] ?? DEFAULT_FIXED_BENEFIT_RULES;
+    if (rules.includedInTaxBase && rules.paymentEffect === 'earning') {
+      taxBase += settings.benefits[key];
+    }
+  });
+  settings.variableAmounts.additions.forEach((item) => {
+    const rules = item.calculationRules ?? DEFAULT_OPTIONAL_ADDITION_RULES;
+    if (rules.includedInTaxBase && rules.paymentEffect === 'earning') {
+      taxBase += calculateVariableAmount(item, monthlyBaseSalary, grossPay);
+    }
+  });
+
+  const employeeInsuranceAmount = (insuranceBase * settings.deductions.employeeInsurancePercent) / 100;
+  const employerInsuranceAmount = (insuranceBase * settings.deductions.employerInsurancePercent) / 100;
+  const estimatedTax = calculateTax(taxBase, settings.deductions.taxBrackets);
   const totalDeductions = employeeInsuranceAmount + estimatedTax + totalOptionalDeductions;
+
+  // Employer costs from variable amounts
+  const totalEmployerCosts = settings.variableAmounts.additions.reduce(
+    (sum, item) => {
+      const rules = item.calculationRules ?? DEFAULT_OPTIONAL_ADDITION_RULES;
+      if (rules.paymentEffect === 'employer_cost') {
+        return sum + calculateVariableAmount(item, monthlyBaseSalary, grossPay);
+      }
+      return sum;
+    },
+    0,
+  );
 
   return {
     fullWorkingDayHours: Math.floor(settings.financial.dailyRequiredMinutes / 60),
@@ -748,11 +951,14 @@ export function calculatePayrollValues(settings: PayrollSettings): PayrollDerive
     totalOptionalAdditions,
     totalOptionalDeductions,
     grossPay,
+    insuranceBase,
+    taxBase,
     employeeInsuranceAmount,
     employerInsuranceAmount,
     estimatedTax,
     totalDeductions,
     netPayable: grossPay - totalDeductions,
+    employerTotalCost: grossPay + employerInsuranceAmount + totalEmployerCosts,
     weeklyOvertimeLimit: settings.workTimePayRules.overtime.dailyLimitHours * 7,
     monthlyOvertimeLimit: settings.workTimePayRules.overtime.dailyLimitHours * 28,
   };

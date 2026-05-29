@@ -12200,30 +12200,40 @@ body {
 /* نوار دسته‌ها: اسکرول افقی بدون نمایش scrollbar (مثل استوری اینستاگرام) */
 .request-reason-categories-clip {
   position: relative;
-  width: 100%;
+  width: 0;
+  min-width: 100%;
   max-width: 100%;
-  min-width: 0;
   overflow: hidden;
 }
 
 .request-reason-categories-scroll {
-  width: 100%;
+  width: 0;
+  min-width: 100%;
   max-width: 100%;
-  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: contain;
+  overscroll-behavior-y: auto;
   scroll-behavior: smooth;
+  touch-action: pan-x;
+  cursor: grab;
   padding-bottom: 32px;
   margin-bottom: -32px;
 }
 
+.request-reason-categories-scroll.is-dragging {
+  cursor: grabbing;
+  scroll-behavior: auto;
+  user-select: none;
+}
+
 .request-reason-categories {
-  display: inline-flex;
+  display: flex;
   flex-wrap: nowrap;
   align-items: center;
   gap: 10px;
   width: max-content;
-  min-width: 100%;
 }
 
 .request-reason-category-chip {
@@ -20193,4 +20203,171 @@ body {
   .business-payroll-transfer-grid {
     grid-template-columns: 1fr;
   }
+}
+
+
+/* ─── Calculation Rules ───────────────────────────────────────────────────── */
+
+/* Read-only badges on item cards */
+.calc-badges-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.calc-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: var(--text-xs);
+  line-height: 1.6;
+  cursor: default;
+  user-select: none;
+  border: 1px solid rgba(151, 182, 215, 0.18);
+  background: rgba(14, 26, 43, 0.5);
+  color: var(--muted);
+}
+
+.calc-badge.is-active {
+  border-color: rgba(246, 174, 52, 0.45);
+  background: rgba(246, 174, 52, 0.08);
+  color: #fbbf24;
+}
+
+.calc-badge.is-system {
+  border-color: rgba(99, 102, 241, 0.4);
+  background: rgba(99, 102, 241, 0.1);
+  color: #a5b4fc;
+}
+
+.calc-badge.is-diff {
+  border-color: rgba(20, 184, 166, 0.35);
+  background: rgba(20, 184, 166, 0.08);
+  color: #5eead4;
+}
+
+/* Edit button on item cards */
+.calc-rules-edit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: var(--text-xs);
+  border: 1px solid rgba(151, 182, 215, 0.2);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  margin-top: 6px;
+}
+
+.calc-rules-edit-btn:hover {
+  border-color: rgba(246, 174, 52, 0.5);
+  color: #fbbf24;
+  background: rgba(246, 174, 52, 0.06);
+}
+
+/* Dialog body */
+.calc-dialog-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.calc-dialog-locked-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  color: #a5b4fc;
+  font-size: var(--text-sm);
+}
+
+.calc-dialog-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.calc-dialog-section-label {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.calc-dialog-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.calc-select-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: var(--text-sm);
+  border: 1px solid rgba(151, 182, 215, 0.22);
+  background: rgba(14, 26, 43, 0.5);
+  color: var(--muted);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+
+.calc-select-chip:hover {
+  border-color: rgba(246, 174, 52, 0.45);
+  color: var(--text);
+}
+
+.calc-select-chip.is-active {
+  border-color: #f6ae34;
+  background: rgba(246, 174, 52, 0.14);
+  color: #fcd34d;
+}
+
+.calc-dialog-helper {
+  font-size: var(--text-xs);
+  color: var(--muted);
+  margin: 0;
+  line-height: 1.6;
+}
+
+.calc-dialog-warning {
+  font-size: var(--text-xs);
+  color: #fb923c;
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: rgba(251, 146, 60, 0.08);
+  border: 1px solid rgba(251, 146, 60, 0.2);
+  line-height: 1.6;
+}
+
+.calc-dialog-compare {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(14, 26, 43, 0.6);
+  border: 1px solid rgba(151, 182, 215, 0.12);
+}
+
+.calc-dialog-compare-label {
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
+.business-payroll-benefit-with-rules {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
 }

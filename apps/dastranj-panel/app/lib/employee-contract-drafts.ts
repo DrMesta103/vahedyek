@@ -1,7 +1,10 @@
 import {
   DEFAULT_PAYROLL_SETTINGS,
+  DEFAULT_FIXED_BENEFIT_RULES,
   getActiveTenantStorageId,
   normalizePayrollSettings,
+  normalizeCalculationRules,
+  type CalculationRules,
   type PayrollSettings,
   type TaxBracket,
   getPayrollSettingsStorageKey,
@@ -55,6 +58,7 @@ export type EmployeeDraftTemplateSnapshot = {
     taxBrackets: TaxBracket[];
   };
   benefits: Record<'workerAllowance' | 'housingAllowance' | 'childAllowance' | 'marriageAllowance' | 'seniorityAllowance', number>;
+  benefitRules: Record<'workerAllowance' | 'housingAllowance' | 'childAllowance' | 'marriageAllowance' | 'seniorityAllowance', CalculationRules>;
 };
 
 export type EmployeeSupplementalProfile = {
@@ -127,7 +131,7 @@ export type EmployeeContractDraft = {
   };
   benefits: Record<
     'workerAllowance' | 'housingAllowance' | 'childAllowance' | 'seniorityAllowance' | 'marriageAllowance',
-    { enabled: boolean; amount: number }
+    { enabled: boolean; amount: number; calculationRules: CalculationRules }
   >;
   progress: EmployeeDraftProgress;
 };
@@ -310,14 +314,22 @@ export function buildTemplateSnapshot(
       marriageAllowance: template.data.benefits.marriageAllowance.enabled ? template.data.benefits.marriageAllowance.amount : 0,
       seniorityAllowance: template.data.benefits.seniorityAllowance.enabled ? template.data.benefits.seniorityAllowance.amount : 0,
     },
+    benefitRules: {
+      workerAllowance: normalizeCalculationRules(template.data.benefits.workerAllowance.calculationRules, baseSettings.benefitRules.workerAllowance),
+      housingAllowance: normalizeCalculationRules(template.data.benefits.housingAllowance.calculationRules, baseSettings.benefitRules.housingAllowance),
+      childAllowance: normalizeCalculationRules(template.data.benefits.childAllowance.calculationRules, baseSettings.benefitRules.childAllowance),
+      marriageAllowance: normalizeCalculationRules(template.data.benefits.marriageAllowance.calculationRules, baseSettings.benefitRules.marriageAllowance),
+      seniorityAllowance: normalizeCalculationRules(template.data.benefits.seniorityAllowance.calculationRules, baseSettings.benefitRules.seniorityAllowance),
+    },
   };
 }
 
-function normalizeBenefitState(value: unknown, fallbackAmount: number) {
-  const source = value && typeof value === 'object' ? (value as Partial<{ enabled: boolean; amount: number }>) : {};
+function normalizeBenefitState(value: unknown, fallbackAmount: number, fallbackRules: CalculationRules) {
+  const source = value && typeof value === 'object' ? (value as Partial<{ enabled: boolean; amount: number; calculationRules: CalculationRules }>) : {};
   return {
     enabled: typeof source.enabled === 'boolean' ? source.enabled : true,
     amount: Number.isFinite(source.amount) ? Number(source.amount) : fallbackAmount,
+    calculationRules: normalizeCalculationRules(source.calculationRules, fallbackRules),
   };
 }
 
@@ -337,7 +349,18 @@ export function normalizeEmployeeContractDraft(value: unknown): EmployeeContract
     status: draft.status ?? 'draft',
     templateId: draft.templateId ?? null,
     templateName: draft.templateName ?? null,
-    templateSnapshot: draft.templateSnapshot ?? null,
+    templateSnapshot: draft.templateSnapshot
+      ? {
+          ...draft.templateSnapshot,
+          benefitRules: {
+            workerAllowance: normalizeCalculationRules(draft.templateSnapshot.benefitRules?.workerAllowance, DEFAULT_FIXED_BENEFIT_RULES),
+            housingAllowance: normalizeCalculationRules(draft.templateSnapshot.benefitRules?.housingAllowance, DEFAULT_FIXED_BENEFIT_RULES),
+            childAllowance: normalizeCalculationRules(draft.templateSnapshot.benefitRules?.childAllowance, DEFAULT_FIXED_BENEFIT_RULES),
+            marriageAllowance: normalizeCalculationRules(draft.templateSnapshot.benefitRules?.marriageAllowance, DEFAULT_FIXED_BENEFIT_RULES),
+            seniorityAllowance: normalizeCalculationRules(draft.templateSnapshot.benefitRules?.seniorityAllowance, DEFAULT_FIXED_BENEFIT_RULES),
+          },
+        }
+      : null,
     createdAt: draft.createdAt ?? new Date().toISOString(),
     updatedAt: draft.updatedAt ?? draft.createdAt ?? new Date().toISOString(),
     contractNumber: draft.contractNumber ?? createUniqueContractNumber([]),
@@ -384,11 +407,11 @@ export function normalizeEmployeeContractDraft(value: unknown): EmployeeContract
       taxBrackets: Array.isArray(draft.insuranceTax?.taxBrackets) ? draft.insuranceTax.taxBrackets : [],
     },
     benefits: {
-      workerAllowance: normalizeBenefitState(draft.benefits?.workerAllowance, baseSettings.benefits.workerAllowance),
-      housingAllowance: normalizeBenefitState(draft.benefits?.housingAllowance, baseSettings.benefits.housingAllowance),
-      childAllowance: normalizeBenefitState(draft.benefits?.childAllowance, baseSettings.benefits.childAllowance),
-      marriageAllowance: normalizeBenefitState(draft.benefits?.marriageAllowance, baseSettings.benefits.marriageAllowance),
-      seniorityAllowance: normalizeBenefitState(draft.benefits?.seniorityAllowance, baseSettings.benefits.seniorityAllowance),
+      workerAllowance: normalizeBenefitState(draft.benefits?.workerAllowance, baseSettings.benefits.workerAllowance, baseSettings.benefitRules?.workerAllowance ?? DEFAULT_FIXED_BENEFIT_RULES),
+      housingAllowance: normalizeBenefitState(draft.benefits?.housingAllowance, baseSettings.benefits.housingAllowance, baseSettings.benefitRules?.housingAllowance ?? DEFAULT_FIXED_BENEFIT_RULES),
+      childAllowance: normalizeBenefitState(draft.benefits?.childAllowance, baseSettings.benefits.childAllowance, baseSettings.benefitRules?.childAllowance ?? DEFAULT_FIXED_BENEFIT_RULES),
+      marriageAllowance: normalizeBenefitState(draft.benefits?.marriageAllowance, baseSettings.benefits.marriageAllowance, baseSettings.benefitRules?.marriageAllowance ?? DEFAULT_FIXED_BENEFIT_RULES),
+      seniorityAllowance: normalizeBenefitState(draft.benefits?.seniorityAllowance, baseSettings.benefits.seniorityAllowance, baseSettings.benefitRules?.seniorityAllowance ?? DEFAULT_FIXED_BENEFIT_RULES),
     },
     progress: draft.progress ?? defaultProgress,
   };
@@ -473,11 +496,11 @@ export function createInitialEmployeeContractDraft({
       taxBrackets: snapshot?.insuranceTax.taxBrackets.map((item) => ({ ...item })) ?? resolvedBase.deductions.taxBrackets.map((item) => ({ ...item })),
     },
     benefits: {
-      workerAllowance: { enabled: true, amount: snapshot?.benefits.workerAllowance ?? resolvedBase.benefits.workerAllowance },
-      housingAllowance: { enabled: true, amount: snapshot?.benefits.housingAllowance ?? resolvedBase.benefits.housingAllowance },
-      childAllowance: { enabled: true, amount: snapshot?.benefits.childAllowance ?? resolvedBase.benefits.childAllowance },
-      marriageAllowance: { enabled: true, amount: snapshot?.benefits.marriageAllowance ?? resolvedBase.benefits.marriageAllowance },
-      seniorityAllowance: { enabled: true, amount: snapshot?.benefits.seniorityAllowance ?? resolvedBase.benefits.seniorityAllowance },
+      workerAllowance: { enabled: true, amount: snapshot?.benefits.workerAllowance ?? resolvedBase.benefits.workerAllowance, calculationRules: { ...(resolvedBase.benefitRules?.workerAllowance ?? DEFAULT_FIXED_BENEFIT_RULES) } },
+      housingAllowance: { enabled: true, amount: snapshot?.benefits.housingAllowance ?? resolvedBase.benefits.housingAllowance, calculationRules: { ...(resolvedBase.benefitRules?.housingAllowance ?? DEFAULT_FIXED_BENEFIT_RULES) } },
+      childAllowance: { enabled: true, amount: snapshot?.benefits.childAllowance ?? resolvedBase.benefits.childAllowance, calculationRules: { ...(resolvedBase.benefitRules?.childAllowance ?? DEFAULT_FIXED_BENEFIT_RULES) } },
+      marriageAllowance: { enabled: true, amount: snapshot?.benefits.marriageAllowance ?? resolvedBase.benefits.marriageAllowance, calculationRules: { ...(resolvedBase.benefitRules?.marriageAllowance ?? DEFAULT_FIXED_BENEFIT_RULES) } },
+      seniorityAllowance: { enabled: true, amount: snapshot?.benefits.seniorityAllowance ?? resolvedBase.benefits.seniorityAllowance, calculationRules: { ...(resolvedBase.benefitRules?.seniorityAllowance ?? DEFAULT_FIXED_BENEFIT_RULES) } },
     },
     progress,
   };

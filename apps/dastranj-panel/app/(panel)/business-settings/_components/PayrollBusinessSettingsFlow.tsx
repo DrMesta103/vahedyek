@@ -22,6 +22,8 @@ import { MinimalScroll } from '../../../components/MinimalScroll';
 import { ConfirmDialog } from '../../../components/ConfirmDialog';
 import { PanelFormModal, PanelFormModalActions } from '../../../components/PanelFormModal';
 import { UnsavedChangesDialog, useUnsavedLeaveGuard } from '../../../components/UnsavedChangesGuard';
+import { CalculationRulesBadges, CalcRulesDiffBadge, CalcRulesEditButton, CalculationRulesDialog } from '../../../components/CalculationRulesChips';
+import type { PaymentEffectContext } from '../../../components/CalculationRulesChips';
 import { formatFaNumber, toPersianDigits } from '../../../lib/format-fa';
 import {
   getActiveTenantStorageId,
@@ -48,8 +50,19 @@ import {
   normalizePayrollSettings,
   validatePayrollStep,
   validateTaxBracket,
+  DEFAULT_OPTIONAL_ADDITION_RULES,
+  DEFAULT_OPTIONAL_DEDUCTION_RULES,
+  DEFAULT_FIXED_BENEFIT_RULES,
+  EMPLOYEE_INSURANCE_RULES,
+  EMPLOYER_INSURANCE_RULES,
+  TAX_RULES,
+  PAYMENT_EFFECT_LABELS,
+  compareCalculationRules,
+  normalizeCalculationRules,
   type BaseDifference,
   type BusinessSettingYear,
+  type CalculationRules,
+  type PaymentEffect,
   type CoefficientCombinationMethod,
   type CoefficientExceptionMethod,
   type CoefficientExceptionRule,
@@ -455,32 +468,38 @@ function DeductionsSection({
       <section className="business-payroll-subcard">
         <h3>بیمه</h3>
         <div className="business-payroll-fields two">
-          <NumericField
-            label="درصد بیمه کارفرما"
-            value={settings.deductions.employerInsurancePercent}
-            unit="%"
-            decimalValue
-            onChange={(value) => onPercentChange('employerInsurancePercent', value)}
-            helper="سهم پرداختی شرکت است و معمولاً از حقوق کارمند کم نمی شود."
-            error={errors.employerInsurancePercent}
-            difference={baseSettings ? compareValues(baseSettings.deductions.employerInsurancePercent, settings.deductions.employerInsurancePercent, {
-              changed: 'متفاوت با درصد پایه',
-              tooltip: `درصد پایه بیمه کارفرما تعریف شده توسط تاو ادمین ${formatFaNumber(baseSettings.deductions.employerInsurancePercent)}٪ است.`,
-            }) : null}
-          />
-          <NumericField
-            label="درصد بیمه کارمند"
-            value={settings.deductions.employeeInsurancePercent}
-            unit="%"
-            decimalValue
-            onChange={(value) => onPercentChange('employeeInsurancePercent', value)}
-            helper="سهم بیمه ای که از حقوق کارمند کسر می شود."
-            error={errors.employeeInsurancePercent}
-            difference={baseSettings ? compareValues(baseSettings.deductions.employeeInsurancePercent, settings.deductions.employeeInsurancePercent, {
-              changed: 'متفاوت با درصد پایه',
-              tooltip: `درصد پایه بیمه کارمند تعریف شده توسط تاو ادمین ${formatFaNumber(baseSettings.deductions.employeeInsurancePercent)}٪ است.`,
-            }) : null}
-          />
+          <div>
+            <NumericField
+              label="درصد بیمه کارفرما"
+              value={settings.deductions.employerInsurancePercent}
+              unit="%"
+              decimalValue
+              onChange={(value) => onPercentChange('employerInsurancePercent', value)}
+              helper="سهم پرداختی شرکت است و معمولاً از حقوق کارمند کم نمی شود."
+              error={errors.employerInsurancePercent}
+              difference={baseSettings ? compareValues(baseSettings.deductions.employerInsurancePercent, settings.deductions.employerInsurancePercent, {
+                changed: 'متفاوت با درصد پایه',
+                tooltip: `درصد پایه بیمه کارفرما تعریف شده توسط تاو ادمین ${formatFaNumber(baseSettings.deductions.employerInsurancePercent)}٪ است.`,
+              }) : null}
+            />
+            <CalculationRulesBadges rules={EMPLOYER_INSURANCE_RULES} />
+          </div>
+          <div>
+            <NumericField
+              label="درصد بیمه کارمند"
+              value={settings.deductions.employeeInsurancePercent}
+              unit="%"
+              decimalValue
+              onChange={(value) => onPercentChange('employeeInsurancePercent', value)}
+              helper="سهم بیمه ای که از حقوق کارمند کسر می شود."
+              error={errors.employeeInsurancePercent}
+              difference={baseSettings ? compareValues(baseSettings.deductions.employeeInsurancePercent, settings.deductions.employeeInsurancePercent, {
+                changed: 'متفاوت با درصد پایه',
+                tooltip: `درصد پایه بیمه کارمند تعریف شده توسط تاو ادمین ${formatFaNumber(baseSettings.deductions.employeeInsurancePercent)}٪ است.`,
+              }) : null}
+            />
+            <CalculationRulesBadges rules={EMPLOYEE_INSURANCE_RULES} />
+          </div>
         </div>
         <div className="business-payroll-example">
           <strong>نمونه برای پایه بیمه {money(10000000)}</strong>
@@ -494,6 +513,7 @@ function DeductionsSection({
           <div>
             <h3>مالیات</h3>
             <p>هر درصد فقط روی بخش درآمد واقع در همان بازه اعمال می شود.</p>
+            <CalculationRulesBadges rules={TAX_RULES} />
           </div>
           <button
             type="button"
@@ -592,12 +612,24 @@ function BenefitsSection({
   baseSettings,
   errors,
   onChange,
+  onRulesChange,
 }: {
   settings: PayrollSettings;
   baseSettings?: PayrollSettings;
   errors: Record<string, string>;
   onChange: (key: keyof PayrollSettings['benefits'], value: number) => void;
+  onRulesChange?: (key: keyof PayrollSettings['benefits'], rules: CalculationRules) => void;
 }) {
+  const [rulesDialog, setRulesDialog] = useState<{ key: keyof PayrollSettings['benefits'] } | null>(null);
+
+  const openDialog = (key: keyof PayrollSettings['benefits']) => setRulesDialog({ key });
+  const closeDialog = () => setRulesDialog(null);
+
+  const activeKey = rulesDialog?.key;
+  const activeRules = activeKey ? (settings.benefitRules?.[activeKey] ?? { ...DEFAULT_FIXED_BENEFIT_RULES }) : null;
+  const activeBaseRules = activeKey ? baseSettings?.benefitRules?.[activeKey] : null;
+  const activeLabel = activeKey ? BENEFIT_FIELDS.find((f) => f.key === activeKey)?.label : undefined;
+
   return (
     <>
       <SectionHeader
@@ -606,25 +638,51 @@ function BenefitsSection({
         icon={<Wallet className="h-5 w-5" />}
       />
       <div className="business-payroll-fields two">
-        {BENEFIT_FIELDS.map((field) => (
-          <NumericField
-            key={field.key}
-            label={field.label}
-            value={settings.benefits[field.key]}
-            unit="ریال"
-            onChange={(value) => onChange(field.key, value)}
-            helper={field.helper}
-            error={errors[field.key]}
-            difference={baseSettings ? compareValues(baseSettings.benefits[field.key], settings.benefits[field.key], {
-              changed: 'متفاوت با مبلغ پایه',
-              tooltip: `مبلغ پایه تعریف شده توسط تاو ادمین برای ${field.label} ${money(baseSettings.benefits[field.key])} است.`,
-            }) : null}
-          />
-        ))}
+        {BENEFIT_FIELDS.map((field) => {
+          const currentRules = settings.benefitRules?.[field.key] ?? { ...DEFAULT_FIXED_BENEFIT_RULES };
+          const baseRules = baseSettings?.benefitRules?.[field.key];
+          return (
+            <div key={field.key} className="business-payroll-benefit-with-rules">
+              <NumericField
+                label={field.label}
+                value={settings.benefits[field.key]}
+                unit="ریال"
+                onChange={(value) => onChange(field.key, value)}
+                helper={field.helper}
+                error={errors[field.key]}
+                difference={baseSettings ? compareValues(baseSettings.benefits[field.key], settings.benefits[field.key], {
+                  changed: 'متفاوت با مبلغ پایه',
+                  tooltip: `مبلغ پایه تعریف شده توسط تاو ادمین برای ${field.label} ${money(baseSettings.benefits[field.key])} است.`,
+                }) : null}
+              />
+              <div className="calc-badges-row">
+                <CalculationRulesBadges rules={currentRules} />
+                {baseRules ? <CalcRulesDiffBadge baseRules={baseRules} currentRules={currentRules} baseLabel="تنظیمات تاو ادمین" /> : null}
+                {onRulesChange ? <CalcRulesEditButton onClick={() => openDialog(field.key)} /> : null}
+              </div>
+            </div>
+          );
+        })}
       </div>
       <div className="business-payroll-highlight subtle">
         عیدی و سنوات ممکن است مطابق سیاست سازمان در پرداخت ماهانه یا در زمان تسویه لحاظ شوند؛ مقدار اینجا مبنای تنظیم است.
       </div>
+
+      {activeRules && activeKey ? (
+        <CalculationRulesDialog
+          open={Boolean(rulesDialog)}
+          itemTitle={activeLabel}
+          rules={activeRules}
+          baseRules={activeBaseRules}
+          baseLabel={baseSettings ? 'تنظیمات تاو ادمین' : undefined}
+          effectContext="benefit_or_addition"
+          onClose={closeDialog}
+          onSubmit={(next) => {
+            onRulesChange?.(activeKey, next);
+            closeDialog();
+          }}
+        />
+      ) : null}
     </>
   );
 }
@@ -638,6 +696,7 @@ function newVariableAmount(type: VariableAmountType): VariableAmount {
     amount: Number.NaN,
     percent: Number.NaN,
     calculationBase: 'baseSalary',
+    calculationRules: type === 'addition' ? { ...DEFAULT_OPTIONAL_ADDITION_RULES } : { ...DEFAULT_OPTIONAL_DEDUCTION_RULES },
   };
 }
 
@@ -645,12 +704,14 @@ function VariableAmountDialog({
   open,
   initialItem,
   derived,
+  baseSettings,
   onClose,
   onSubmit,
 }: {
   open: boolean;
   initialItem: VariableAmount | null;
   derived: PayrollDerivedValues;
+  baseSettings?: PayrollSettings;
   onClose: () => void;
   onSubmit: (item: VariableAmount) => void;
 }) {
@@ -675,6 +736,10 @@ function VariableAmountDialog({
     }
     onSubmit(item);
   };
+
+  // Find base item for comparison
+  const baseList = item.type === 'addition' ? baseSettings?.variableAmounts.additions : baseSettings?.variableAmounts.deductions;
+  const baseItem = baseList?.find((entry) => entry.id === item.id);
 
   return (
     <PanelFormModal
@@ -761,6 +826,7 @@ function VariableAmountsSection({
 }) {
   const [amountEditor, setAmountEditor] = useState<{ open: boolean; item: VariableAmount | null }>({ open: false, item: null });
   const [deletingItem, setDeletingItem] = useState<VariableAmount | null>(null);
+  const [rulesDialog, setRulesDialog] = useState<VariableAmount | null>(null);
   const list = [...settings.variableAmounts.additions, ...settings.variableAmounts.deductions];
 
   const upsert = (item: VariableAmount) => {
@@ -768,6 +834,13 @@ function VariableAmountsSection({
     const exists = current.some((entry) => entry.id === item.id);
     onChange(item.type, exists ? current.map((entry) => (entry.id === item.id ? item : entry)) : [...current, item]);
     setAmountEditor({ open: false, item: null });
+  };
+
+  const saveRules = (item: VariableAmount, rules: CalculationRules) => {
+    const updated = { ...item, calculationRules: rules };
+    const current = item.type === 'addition' ? settings.variableAmounts.additions : settings.variableAmounts.deductions;
+    onChange(item.type, current.map((entry) => (entry.id === item.id ? updated : entry)));
+    setRulesDialog(null);
   };
 
   const confirmDeleteItem = () => {
@@ -796,6 +869,7 @@ function VariableAmountsSection({
         open={amountEditor.open}
         initialItem={amountEditor.item}
         derived={derived}
+        baseSettings={baseSettings}
         onClose={() => setAmountEditor({ open: false, item: null })}
         onSubmit={upsert}
       />
@@ -813,6 +887,7 @@ function VariableAmountsSection({
                   })
                 : customDifference('اختصاصی کسب و کار', 'این آیتم فقط در تنظیمات این کسب و کار تعریف شده است.', 'added')
               : null;
+            const rules = item.calculationRules;
             return (
               <article key={item.id}>
                 <div>
@@ -826,6 +901,13 @@ function VariableAmountsSection({
                     : `${formatFaNumber(item.percent)}٪ از ${item.calculationBase === 'baseSalary' ? 'حقوق پایه ماهانه' : 'جمع حقوق دریافتی'}`}
                 </p>
                 <b>{money(amount)}</b>
+                <div className="calc-badges-row">
+                  <CalculationRulesBadges rules={rules} />
+                  {baseItem?.calculationRules ? (
+                    <CalcRulesDiffBadge baseRules={baseItem.calculationRules} currentRules={rules} baseLabel="تنظیمات تاو ادمین" />
+                  ) : null}
+                  <CalcRulesEditButton onClick={() => setRulesDialog(item)} />
+                </div>
                 <div className="business-payroll-item-actions">
                   <button type="button" aria-label="ویرایش آیتم" onClick={() => setAmountEditor({ open: true, item })}>
                     <Pencil className="h-4 w-4" />
@@ -867,6 +949,23 @@ function VariableAmountsSection({
         onConfirm={confirmDeleteItem}
         onCancel={() => setDeletingItem(null)}
       />
+      {rulesDialog ? (
+        <CalculationRulesDialog
+          open={Boolean(rulesDialog)}
+          itemTitle={rulesDialog.title}
+          rules={rulesDialog.calculationRules}
+          baseRules={
+            (rulesDialog.type === 'addition'
+              ? baseSettings?.variableAmounts.additions
+              : baseSettings?.variableAmounts.deductions
+            )?.find((e) => e.id === rulesDialog.id)?.calculationRules ?? null
+          }
+          baseLabel={baseSettings ? 'تنظیمات تاو ادمین' : undefined}
+          effectContext={rulesDialog.type === 'addition' ? 'benefit_or_addition' : 'deduction'}
+          onClose={() => setRulesDialog(null)}
+          onSubmit={(next) => saveRules(rulesDialog, next)}
+        />
+      ) : null}
     </>
   );
 }
@@ -1633,6 +1732,16 @@ function SummarySidebar({ settings, derived }: { settings: PayrollSettings; deri
               <strong className="is-negative">{money(derived.totalOptionalDeductions)}</strong>
             </div>
           </div>
+          <div className="draft-template-flow-report-grid">
+            <div>
+              <span>مبنای بیمه</span>
+              <strong>{money(derived.insuranceBase)}</strong>
+            </div>
+            <div>
+              <span>مبنای مالیات</span>
+              <strong>{money(derived.taxBase)}</strong>
+            </div>
+          </div>
           <div className="draft-template-flow-report-card">
             <span>مجموع کسورات برآوردی</span>
             <strong className="is-negative">{money(derived.totalDeductions)}</strong>
@@ -1641,6 +1750,11 @@ function SummarySidebar({ settings, derived }: { settings: PayrollSettings; deri
           <div className="draft-template-flow-report-card total">
             <span>خالص پرداختی برآوردی</span>
             <strong>{money(derived.netPayable)}</strong>
+          </div>
+          <div className="draft-template-flow-report-card">
+            <span>هزینه کل کارفرما</span>
+            <strong>{money(derived.employerTotalCost)}</strong>
+            <small>شامل حقوق + بیمه کارفرما + هزینه‌های کارفرمایی</small>
           </div>
           <div className="draft-template-flow-report-card business-payroll-time-summary">
             <span>ضرایب پرداخت زمان کاری</span>
@@ -1957,6 +2071,10 @@ export function PayrollBusinessSettingsFlow({
             baseSettings={isTenant ? adminBaseSettings : undefined}
             errors={errors}
             onChange={(key, value) => update('benefits', (current) => ({ ...current, benefits: { ...current.benefits, [key]: value } }))}
+            onRulesChange={(key, rules) => update('benefits', (current) => ({
+              ...current,
+              benefitRules: { ...current.benefitRules, [key]: rules },
+            }))}
           />
         );
       case 'variableAmounts':

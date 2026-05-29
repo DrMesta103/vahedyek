@@ -1,5 +1,10 @@
 import {
   DEFAULT_PAYROLL_SETTINGS,
+  DEFAULT_FIXED_BENEFIT_RULES,
+  DEFAULT_OPTIONAL_ADDITION_RULES,
+  DEFAULT_OPTIONAL_DEDUCTION_RULES,
+  normalizeCalculationRules,
+  type CalculationRules,
   type PayrollSettings,
   getActiveTenantStorageId,
 } from './payroll-business-settings';
@@ -29,6 +34,7 @@ export type ContractDraftTemplateProgress = {
 export type BenefitTemplateItem = {
   enabled: boolean;
   amount: number;
+  calculationRules: CalculationRules;
 };
 
 export type VariableTemplateItem = {
@@ -39,6 +45,7 @@ export type VariableTemplateItem = {
   amount: number;
   percent: number;
   base: 'baseSalary' | 'grossPay';
+  calculationRules: CalculationRules;
 };
 
 export type ContractDraftTemplate = {
@@ -198,12 +205,12 @@ export function createContractDraftTemplate({
         taxPayer: 'employee',
       },
       benefits: {
-        workerAllowance: { enabled: true, amount: baseSettings.benefits.workerAllowance },
-        housingAllowance: { enabled: true, amount: baseSettings.benefits.housingAllowance },
-        childAllowance: { enabled: true, amount: baseSettings.benefits.childAllowance },
-        marriageAllowance: { enabled: true, amount: baseSettings.benefits.marriageAllowance },
-        seniorityAllowance: { enabled: true, amount: baseSettings.benefits.seniorityAllowance },
-        eidBonus: { enabled: true, amount: baseSettings.benefits.eidBonus },
+        workerAllowance: { enabled: true, amount: baseSettings.benefits.workerAllowance, calculationRules: { ...(baseSettings.benefitRules?.workerAllowance ?? DEFAULT_FIXED_BENEFIT_RULES) } },
+        housingAllowance: { enabled: true, amount: baseSettings.benefits.housingAllowance, calculationRules: { ...(baseSettings.benefitRules?.housingAllowance ?? DEFAULT_FIXED_BENEFIT_RULES) } },
+        childAllowance: { enabled: true, amount: baseSettings.benefits.childAllowance, calculationRules: { ...(baseSettings.benefitRules?.childAllowance ?? DEFAULT_FIXED_BENEFIT_RULES) } },
+        marriageAllowance: { enabled: true, amount: baseSettings.benefits.marriageAllowance, calculationRules: { ...(baseSettings.benefitRules?.marriageAllowance ?? DEFAULT_FIXED_BENEFIT_RULES) } },
+        seniorityAllowance: { enabled: true, amount: baseSettings.benefits.seniorityAllowance, calculationRules: { ...(baseSettings.benefitRules?.seniorityAllowance ?? DEFAULT_FIXED_BENEFIT_RULES) } },
+        eidBonus: { enabled: true, amount: baseSettings.benefits.eidBonus, calculationRules: { ...(baseSettings.benefitRules?.eidBonus ?? DEFAULT_FIXED_BENEFIT_RULES) } },
         severancePaymentMethod: 'end_of_work',
         finalSettlementEnabled: true,
       },
@@ -238,6 +245,56 @@ export function normalizeContractDraftTemplate(value: unknown): ContractDraftTem
     baseSettingsYear: template.baseSettingsYear,
     baseSettings: DEFAULT_PAYROLL_SETTINGS,
   }).data;
+
+  // Normalize benefit calculationRules with safe defaults
+  const normalizeBenefit = (raw: unknown, defaultRules: CalculationRules): BenefitTemplateItem => {
+    const src = raw && typeof raw === 'object' ? raw as Partial<BenefitTemplateItem> : {};
+    return {
+      enabled: typeof src.enabled === 'boolean' ? src.enabled : true,
+      amount: Number.isFinite(src.amount) ? Number(src.amount) : 0,
+      calculationRules: normalizeCalculationRules(src.calculationRules, defaultRules),
+    };
+  };
+
+  const normalizeVariableItem = (raw: unknown): VariableTemplateItem | null => {
+    if (!raw || typeof raw !== 'object') return null;
+    const src = raw as Partial<VariableTemplateItem>;
+    if (!src.id) return null;
+    const type = src.type === 'deduction' ? 'deduction' : 'addition';
+    return {
+      id: src.id,
+      title: src.title ?? '',
+      type,
+      method: src.method === 'percentage' ? 'percentage' : 'fixed',
+      amount: Number.isFinite(src.amount) ? Number(src.amount) : 0,
+      percent: Number.isFinite(src.percent) ? Number(src.percent) : 0,
+      base: src.base === 'grossPay' ? 'grossPay' : 'baseSalary',
+      calculationRules: normalizeCalculationRules(
+        src.calculationRules,
+        type === 'addition' ? DEFAULT_OPTIONAL_ADDITION_RULES : DEFAULT_OPTIONAL_DEDUCTION_RULES,
+      ),
+    };
+  };
+
+  const rawBenefits = template.data?.benefits as Record<string, unknown> | undefined;
+  const normalizedBenefits = {
+    workerAllowance: normalizeBenefit(rawBenefits?.workerAllowance, DEFAULT_FIXED_BENEFIT_RULES),
+    housingAllowance: normalizeBenefit(rawBenefits?.housingAllowance, DEFAULT_FIXED_BENEFIT_RULES),
+    childAllowance: normalizeBenefit(rawBenefits?.childAllowance, DEFAULT_FIXED_BENEFIT_RULES),
+    marriageAllowance: normalizeBenefit(rawBenefits?.marriageAllowance, DEFAULT_FIXED_BENEFIT_RULES),
+    seniorityAllowance: normalizeBenefit(rawBenefits?.seniorityAllowance, DEFAULT_FIXED_BENEFIT_RULES),
+    eidBonus: normalizeBenefit(rawBenefits?.eidBonus, DEFAULT_FIXED_BENEFIT_RULES),
+    severancePaymentMethod: (rawBenefits?.severancePaymentMethod as 'end_of_work' | 'periodic') ?? 'end_of_work',
+    finalSettlementEnabled: typeof rawBenefits?.finalSettlementEnabled === 'boolean' ? rawBenefits.finalSettlementEnabled : true,
+  };
+
+  const rawVP = template.data?.variablePayments as { enabled?: boolean; additions?: unknown[]; deductions?: unknown[] } | undefined;
+  const normalizedVariablePayments = {
+    enabled: typeof rawVP?.enabled === 'boolean' ? rawVP.enabled : false,
+    additions: Array.isArray(rawVP?.additions) ? rawVP.additions.map(normalizeVariableItem).filter(Boolean) as VariableTemplateItem[] : [],
+    deductions: Array.isArray(rawVP?.deductions) ? rawVP.deductions.map(normalizeVariableItem).filter(Boolean) as VariableTemplateItem[] : [],
+  };
+
   return {
     ...template,
     status: 'draft',
@@ -253,6 +310,8 @@ export function normalizeContractDraftTemplate(value: unknown): ContractDraftTem
         ...defaults.payrollBase,
         ...template.data?.payrollBase,
       },
+      benefits: normalizedBenefits,
+      variablePayments: normalizedVariablePayments,
     },
   };
 }

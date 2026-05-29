@@ -25,6 +25,8 @@ import { MinimalScroll } from '../../../components/MinimalScroll';
 import { PanelFormModal, PanelFormModalActions } from '../../../components/PanelFormModal';
 import { UnsavedChangesDialog, useUnsavedLeaveGuard } from '../../../components/UnsavedChangesGuard';
 import { AdaptiveChipGroup } from '../../../components/AdaptiveChipGroup';
+import { CalculationRulesBadges, CalcRulesDiffBadge, CalcRulesEditButton, CalculationRulesDialog } from '../../../components/CalculationRulesChips';
+import type { PaymentEffectContext } from '../../../components/CalculationRulesChips';
 import {
   getActiveContractDraftTemplateStorageKey,
   getContractDraftTemplatesStorageKey,
@@ -37,6 +39,9 @@ import {
 import { formatFaNumber, toPersianDigits } from '../../../lib/format-fa';
 import {
   DEFAULT_PAYROLL_SETTINGS,
+  DEFAULT_FIXED_BENEFIT_RULES,
+  DEFAULT_OPTIONAL_ADDITION_RULES,
+  DEFAULT_OPTIONAL_DEDUCTION_RULES,
   ACTIVE_TENANT_STORAGE_KEY,
   getActiveTenantStorageId,
   getPayrollSettingsStorageKey,
@@ -45,6 +50,7 @@ import {
   compareValues,
   validatePayrollStep,
   type BaseDifference,
+  type CalculationRules,
   type PayrollSettings,
 } from '../../../lib/payroll-business-settings';
 import { LeaveSection, WorkTimePayRulesSection } from './PayrollBusinessSettingsFlow';
@@ -892,7 +898,7 @@ function renderStep(
     case 'benefits':
       return <BenefitsTemplateStep template={template} baseSettings={baseSettings} updateTemplate={updateTemplate} />;
     case 'variablePayments':
-      return <VariablePaymentsStep template={template} updateTemplate={updateTemplate} />;
+      return <VariablePaymentsStep template={template} baseSettings={baseSettings} updateTemplate={updateTemplate} />;
     case 'paymentType':
       return <PaymentTypeStep template={template} errors={errors} updateTemplate={updateTemplate} />;
     case 'workTimePayRules':
@@ -1235,6 +1241,13 @@ function ToggleCard({ title, first, second, selected, onChange }: { title: strin
 }
 
 function BenefitsTemplateStep({ template, baseSettings, updateTemplate }: { template: ContractDraftTemplate; baseSettings: PayrollSettings; updateTemplate: (step: ContractDraftTemplateStepId, apply: (current: ContractDraftTemplate) => ContractDraftTemplate) => void }) {
+  const [rulesDialog, setRulesDialog] = useState<{ key: typeof BENEFIT_TEMPLATE_FIELDS[number]['key'] } | null>(null);
+
+  const activeKey = rulesDialog?.key;
+  const activeItem = activeKey ? template.data.benefits[activeKey] : null;
+  const activeBaseRules = activeKey ? baseSettings.benefitRules?.[activeKey] ?? DEFAULT_FIXED_BENEFIT_RULES : null;
+  const activeLabel = activeKey ? BENEFIT_TEMPLATE_FIELDS.find((f) => f.key === activeKey)?.label : undefined;
+
   return (
     <>
       <p className="contract-draft-field-hint">مزایای این قالب را نسبت به مبنا فعال یا مبلغ‌دهی کنید.</p>
@@ -1242,7 +1255,9 @@ function BenefitsTemplateStep({ template, baseSettings, updateTemplate }: { temp
         {BENEFIT_TEMPLATE_FIELDS.map(({ key, label, baseKey, description }) => {
           const item = template.data.benefits[key];
           const baseAmount = baseSettings.benefits[baseKey];
-          const difference = !item.enabled
+          const baseRules = baseSettings.benefitRules?.[baseKey] ?? DEFAULT_FIXED_BENEFIT_RULES;
+          const currentRules = item.calculationRules ?? DEFAULT_FIXED_BENEFIT_RULES;
+          const amountDiff = !item.enabled
             ? customDifference('غیرفعال نسبت به مبنا', `مبلغ مبنا برای ${label} ${money(baseAmount)} است.`)
             : compareValues(baseAmount, item.amount, { changed: 'متفاوت با مبلغ مبنا', tooltip: `مبلغ مبنا برای ${label} ${money(baseAmount)} است.` });
           return (
@@ -1251,7 +1266,7 @@ function BenefitsTemplateStep({ template, baseSettings, updateTemplate }: { temp
                 <div>
                   <strong>{label}</strong>
                   <small>{description}</small>
-                  {differenceBadge(difference)}
+                  {differenceBadge(amountDiff)}
                 </div>
                 <div className="business-payroll-toggle">
                   <button type="button" className={item.enabled ? 'is-selected' : ''} onClick={() => updateTemplate('benefits', (current) => ({ ...current, data: { ...current.data, benefits: { ...current.data.benefits, [key]: { ...item, enabled: true } } } }))}>فعال</button>
@@ -1261,6 +1276,11 @@ function BenefitsTemplateStep({ template, baseSettings, updateTemplate }: { temp
               {item.enabled ? (
                 <FieldShell label="مبلغ" unit="ریال" value={item.amount} onChange={(amount) => updateTemplate('benefits', (current) => ({ ...current, data: { ...current.data, benefits: { ...current.data.benefits, [key]: { ...item, amount } } } }))} />
               ) : null}
+              <div className="calc-badges-row">
+                <CalculationRulesBadges rules={currentRules} />
+                <CalcRulesDiffBadge baseRules={baseRules} currentRules={currentRules} baseLabel="تنظیمات مبنا" />
+                <CalcRulesEditButton onClick={() => setRulesDialog({ key })} />
+              </div>
             </article>
           );
         })}
@@ -1277,11 +1297,36 @@ function BenefitsTemplateStep({ template, baseSettings, updateTemplate }: { temp
           کلیه حقوق و مزایای پرداخت‌نشده در زمان تسویه‌حساب نهایی پرداخت خواهد شد.
         </label>
       </section>
+
+      {activeItem && activeKey ? (
+        <CalculationRulesDialog
+          open={Boolean(rulesDialog)}
+          itemTitle={activeLabel}
+          rules={activeItem.calculationRules ?? DEFAULT_FIXED_BENEFIT_RULES}
+          baseRules={activeBaseRules}
+          baseLabel="تنظیمات مبنا"
+          effectContext="benefit_or_addition"
+          onClose={() => setRulesDialog(null)}
+          onSubmit={(next) => {
+            updateTemplate('benefits', (current) => ({
+              ...current,
+              data: {
+                ...current.data,
+                benefits: {
+                  ...current.data.benefits,
+                  [activeKey]: { ...current.data.benefits[activeKey], calculationRules: next },
+                },
+              },
+            }));
+            setRulesDialog(null);
+          }}
+        />
+      ) : null}
     </>
   );
 }
 
-function VariablePaymentsStep({ template, updateTemplate }: { template: ContractDraftTemplate; updateTemplate: (step: ContractDraftTemplateStepId, apply: (current: ContractDraftTemplate) => ContractDraftTemplate) => void }) {
+function VariablePaymentsStep({ template, baseSettings, updateTemplate }: { template: ContractDraftTemplate; baseSettings: PayrollSettings; updateTemplate: (step: ContractDraftTemplateStepId, apply: (current: ContractDraftTemplate) => ContractDraftTemplate) => void }) {
   const addItem = (type: 'addition' | 'deduction') => {
     const item: VariableTemplateItem = {
       id: `${type}-${Date.now()}`,
@@ -1291,6 +1336,7 @@ function VariablePaymentsStep({ template, updateTemplate }: { template: Contract
       amount: 0,
       percent: 0,
       base: 'baseSalary',
+      calculationRules: type === 'addition' ? { ...DEFAULT_OPTIONAL_ADDITION_RULES } : { ...DEFAULT_OPTIONAL_DEDUCTION_RULES },
     };
     updateTemplate('variablePayments', (current) => ({
       ...current,
@@ -1341,46 +1387,99 @@ function VariablePaymentsStep({ template, updateTemplate }: { template: Contract
       </div>
       {template.data.variablePayments.enabled ? (
         <div className="business-payroll-time-rule-cards">
-          <VariableList title="اضافات اختیاری" items={template.data.variablePayments.additions} onAdd={() => addItem('addition')} onUpdate={updateItem} onRemove={removeItem} />
-          <VariableList title="کسورات اختیاری" items={template.data.variablePayments.deductions} onAdd={() => addItem('deduction')} onUpdate={updateItem} onRemove={removeItem} />
+          <VariableList
+            title="اضافات اختیاری"
+            items={template.data.variablePayments.additions}
+            baseItems={baseSettings.variableAmounts.additions}
+            onAdd={() => addItem('addition')}
+            onUpdate={updateItem}
+            onRemove={removeItem}
+            itemType="addition"
+          />
+          <VariableList
+            title="کسورات اختیاری"
+            items={template.data.variablePayments.deductions}
+            baseItems={baseSettings.variableAmounts.deductions}
+            onAdd={() => addItem('deduction')}
+            onUpdate={updateItem}
+            onRemove={removeItem}
+            itemType="deduction"
+          />
         </div>
       ) : null}
     </>
   );
 }
 
-function VariableList({ title, items, onAdd, onUpdate, onRemove }: { title: string; items: VariableTemplateItem[]; onAdd: () => void; onUpdate: (item: VariableTemplateItem) => void; onRemove: (item: VariableTemplateItem) => void }) {
+function VariableList({ title, items, baseItems, onAdd, onUpdate, onRemove, itemType }: {
+  title: string;
+  items: VariableTemplateItem[];
+  baseItems?: { id: string; calculationRules?: CalculationRules }[];
+  onAdd: () => void;
+  onUpdate: (item: VariableTemplateItem) => void;
+  onRemove: (item: VariableTemplateItem) => void;
+  itemType: 'addition' | 'deduction';
+}) {
+  const [rulesDialog, setRulesDialog] = useState<VariableTemplateItem | null>(null);
+  const effectContext: PaymentEffectContext = itemType === 'deduction' ? 'deduction' : 'benefit_or_addition';
+
   return (
     <section className="business-payroll-subcard">
       <div className="business-payroll-subcard-head">
         <h3>{title}</h3>
         <button type="button" className="business-payroll-outline-button" onClick={onAdd}><Plus className="h-4 w-4" /> افزودن</button>
       </div>
-      {items.map((item) => (
-        <article key={item.id} className="business-draft-variable-card">
-          <input value={item.title} onChange={(event) => onUpdate({ ...item, title: event.target.value })} />
-          <select value={item.method} onChange={(event) => onUpdate({ ...item, method: event.target.value as VariableTemplateItem['method'] })}>
-            <option value="fixed">مبلغ ثابت</option>
-            <option value="percentage">ضریب</option>
-          </select>
-          <input
-            type="text"
-            inputMode="numeric"
-            value={item.method === 'fixed' ? (Number.isFinite(item.amount) ? String(item.amount) : '') : (Number.isFinite(item.percent) ? String(item.percent) : '')}
-            onChange={(event) => {
-              const normalized = event.target.value
-                .replace(/[۰-۹]/g, (digit) => String(digit.charCodeAt(0) - 1776))
-                .replace(/[٠-٩]/g, (digit) => String(digit.charCodeAt(0) - 1632));
-              onUpdate(
-                item.method === 'fixed'
-                  ? { ...item, amount: normalized ? Number(normalized) : Number.NaN }
-                  : { ...item, percent: normalized ? Number(normalized) : Number.NaN },
-              );
-            }}
-          />
-          <button type="button" onClick={() => onRemove(item)}><Trash2 className="h-4 w-4" /></button>
-        </article>
-      ))}
+      {items.map((item) => {
+        const baseItem = baseItems?.find((b) => b.id === item.id);
+        const rules = item.calculationRules ?? (item.type === 'addition' ? DEFAULT_OPTIONAL_ADDITION_RULES : DEFAULT_OPTIONAL_DEDUCTION_RULES);
+        return (
+          <article key={item.id} className="business-draft-variable-card">
+            <input value={item.title} onChange={(event) => onUpdate({ ...item, title: event.target.value })} />
+            <select value={item.method} onChange={(event) => onUpdate({ ...item, method: event.target.value as VariableTemplateItem['method'] })}>
+              <option value="fixed">مبلغ ثابت</option>
+              <option value="percentage">ضریب</option>
+            </select>
+            <input
+              type="text"
+              inputMode="numeric"
+              value={item.method === 'fixed' ? (Number.isFinite(item.amount) ? String(item.amount) : '') : (Number.isFinite(item.percent) ? String(item.percent) : '')}
+              onChange={(event) => {
+                const normalized = event.target.value
+                  .replace(/[۰-۹]/g, (digit) => String(digit.charCodeAt(0) - 1776))
+                  .replace(/[٠-٩]/g, (digit) => String(digit.charCodeAt(0) - 1632));
+                onUpdate(
+                  item.method === 'fixed'
+                    ? { ...item, amount: normalized ? Number(normalized) : Number.NaN }
+                    : { ...item, percent: normalized ? Number(normalized) : Number.NaN },
+                );
+              }}
+            />
+            <button type="button" onClick={() => onRemove(item)}><Trash2 className="h-4 w-4" /></button>
+            <div className="calc-badges-row" style={{ gridColumn: '1 / -1' }}>
+              <CalculationRulesBadges rules={rules} />
+              {baseItem?.calculationRules ? (
+                <CalcRulesDiffBadge baseRules={baseItem.calculationRules} currentRules={rules} baseLabel="تنظیمات مبنا" />
+              ) : null}
+              <CalcRulesEditButton onClick={() => setRulesDialog(item)} />
+            </div>
+          </article>
+        );
+      })}
+      {rulesDialog ? (
+        <CalculationRulesDialog
+          open={Boolean(rulesDialog)}
+          itemTitle={rulesDialog.title}
+          rules={rulesDialog.calculationRules ?? (rulesDialog.type === 'addition' ? DEFAULT_OPTIONAL_ADDITION_RULES : DEFAULT_OPTIONAL_DEDUCTION_RULES)}
+          baseRules={baseItems?.find((b) => b.id === rulesDialog.id)?.calculationRules ?? null}
+          baseLabel="تنظیمات مبنا"
+          effectContext={effectContext}
+          onClose={() => setRulesDialog(null)}
+          onSubmit={(next) => {
+            onUpdate({ ...rulesDialog, calculationRules: next });
+            setRulesDialog(null);
+          }}
+        />
+      ) : null}
     </section>
   );
 }
