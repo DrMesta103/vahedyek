@@ -27,6 +27,66 @@ import {
 import { prisma } from './prisma';
 import type { QuickSetupStep } from '../(panel)/quick-setup/_components/quick-setup.types';
 
+type LocationListRow = {
+  id: string;
+  title: string;
+  address: string;
+  description: string | null;
+  radius: number;
+  latitude: { toString(): string } | null;
+  longitude: { toString(): string } | null;
+  isPrimaryOnboarding?: boolean;
+};
+
+function isMissingPrimaryOnboardingColumn(error: unknown) {
+  return error instanceof Error && error.message.includes('The column `Location.isPrimaryOnboarding` does not exist');
+}
+
+const locationListSelect = {
+  id: true,
+  title: true,
+  address: true,
+  description: true,
+  radius: true,
+  latitude: true,
+  longitude: true,
+  isPrimaryOnboarding: true,
+} as const;
+
+const legacyLocationListSelect = {
+  id: true,
+  title: true,
+  address: true,
+  description: true,
+  radius: true,
+  latitude: true,
+  longitude: true,
+} as const;
+
+async function listLocationsForTenant(tenantId: string, take?: number) {
+  const where = { tenantId };
+
+  try {
+    return (await prisma.location.findMany({
+      where,
+      orderBy: [{ isPrimaryOnboarding: 'desc' }, { updatedAt: 'desc' }],
+      select: locationListSelect,
+      ...(typeof take === 'number' ? { take } : {}),
+    } as any)) as LocationListRow[];
+  } catch (error) {
+    if (!isMissingPrimaryOnboardingColumn(error)) throw error;
+    return ((await prisma.location.findMany({
+      where,
+      select: legacyLocationListSelect,
+      orderBy: { updatedAt: 'desc' },
+      ...(typeof take === 'number' ? { take } : {}),
+    })) as Array<Omit<LocationListRow, 'isPrimaryOnboarding'>>).map((item) => ({
+      ...item,
+      isPrimaryOnboarding: false,
+    }));
+  }
+}
+
 async function getTenantId(): Promise<string | null> {
   const session = await getSessionContext();
   return session?.tenantId ?? null;
@@ -97,7 +157,7 @@ export async function getQuickSetupChecklist() {
 
   const [profile, locationList, calendarList, policyList, employeeList, workGroupList, calendars, policies, employees, workGroups, defaultCalendarTemplate] = await Promise.all([
     getBusinessProfile(),
-    prisma.location.findMany({ where, orderBy: { createdAt: 'desc' }, take: 10 }),
+    listLocationsForTenant(tenantId, 10),
     prisma.calendar.findMany({ where, orderBy: { updatedAt: 'desc' }, take: 20 }),
     prisma.workPolicy.findMany({ where, include: { calendar: true }, orderBy: { updatedAt: 'desc' }, take: 5 }),
     prisma.employee.findMany({ where, orderBy: { createdAt: 'desc' }, take: 20 }),
@@ -109,15 +169,20 @@ export async function getQuickSetupChecklist() {
     getGlobalDefaultCalendarTemplate(),
   ]);
 
-  const locations = locationList.length;
+  const primaryLocation = locationList.find((item) => item.isPrimaryOnboarding) ?? null;
 
   return {
     profile,
     locationItems: locationList.map((item) => ({
       id: item.id,
       title: item.title,
+      address: item.address,
       description: item.description,
       radius: item.radius,
+      allowedRadiusMeters: item.radius,
+      latitude: item.latitude?.toString() ?? null,
+      longitude: item.longitude?.toString() ?? null,
+      isPrimaryOnboarding: item.isPrimaryOnboarding,
     })),
     calendarItems: calendarList.map((item) => ({
       id: item.id,
@@ -152,7 +217,7 @@ export async function getQuickSetupChecklist() {
     defaultCalendarTemplate,
     tenantId,
     steps: [
-      { key: 'location', title: 'محل کار', subtitle: 'ثبت محل کار و شعاع مجاز', done: locations > 0, href: '/locations/new', manageHref: '/locations', count: locations },
+      { key: 'location', title: 'محل کار اصلی', subtitle: 'ثبت محل کار اصلی و شعاع مجاز', done: Boolean(primaryLocation), href: '/locations/new', manageHref: '/locations', count: primaryLocation ? 1 : 0 },
       { key: 'calendar', title: 'تقویم کاری', subtitle: 'تقویم، تعطیلات و شیفت', done: calendars > 0, href: '/calendars?create=1', manageHref: '/calendars', count: calendars },
       { key: 'policy', title: 'سیاست‌های کاری', subtitle: 'قوانین حضور و غیاب', done: policies > 0, href: '/policies', manageHref: '/policies', count: policies },
       { key: 'employee', title: 'مدیریت کارکنان', subtitle: 'ساخت پرونده پرسنلی', done: employees > 0, href: '/employees/new', manageHref: '/employees', count: employees },
@@ -163,7 +228,7 @@ export async function getQuickSetupChecklist() {
 
 export async function listLocations() {
   const tenantId = await requireTenantId();
-  return prisma.location.findMany({ where: { tenantId }, orderBy: { createdAt: 'desc' } });
+  return listLocationsForTenant(tenantId);
 }
 
 export async function getLocation(id: string) {

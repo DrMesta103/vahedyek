@@ -8,15 +8,17 @@ type LocationWorkplaceCardProps = {
   radius: number;
   latitude: { toString(): string } | string | null;
   longitude: { toString(): string } | string | null;
+  isPrimaryOnboarding?: boolean;
 };
 
-export function LocationWorkplaceCard({ id, title, radius, latitude, longitude }: LocationWorkplaceCardProps) {
+export function LocationWorkplaceCard({ id, title, radius, latitude, longitude, isPrimaryOnboarding }: LocationWorkplaceCardProps) {
   const pin = resolveLocationMapPin(latitude, longitude);
 
   return (
     <article className="location-workplace-card">
       <div className="location-workplace-card-top">
         <LocationCardActions id={id} title={title} />
+        {isPrimaryOnboarding ? <span className="location-card-primary-badge">محل اصلی</span> : null}
       </div>
       <div className="location-workplace-card-body">
         <div className="location-workplace-map" aria-hidden>
@@ -26,7 +28,7 @@ export function LocationWorkplaceCard({ id, title, radius, latitude, longitude }
         </div>
         <div className="location-workplace-copy">
           <h3>{title}</h3>
-          <p>شعاع مجاز: {radius.toLocaleString('fa-IR')} متر</p>
+          <p>شعاع مجاز ثبت تردد: {radius.toLocaleString('fa-IR')} متر</p>
         </div>
       </div>
     </article>

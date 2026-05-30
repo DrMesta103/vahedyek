@@ -16,8 +16,13 @@ export type QuickSetupStep = {
 export type LocationSummaryItem = {
   id: string;
   title: string;
+  address: string;
   description: string | null;
   radius: number;
+  allowedRadiusMeters: number;
+  latitude: string | null;
+  longitude: string | null;
+  isPrimaryOnboarding: boolean;
 };
 
 export type CalendarSummary = {

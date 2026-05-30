@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Check, CheckCircle2 } from 'lucide-react';
 import { MinimalScroll } from '../../../components/MinimalScroll';
-import Step1Location from './Step1Location';
+import Step1Location, { type Step1LocationHandle } from './Step1Location';
 import Step2CalendarShift from './Step2CalendarShift';
 import Step3Policy from './Step3Policy';
 import Step4Employees from './Step4Employees';
@@ -21,7 +21,7 @@ import type {
 type Step = 1 | 2 | 3 | 4 | 5;
 
 const STEPS: Array<{ id: Step; key: QuickSetupStep['key']; title: string; description: string }> = [
-  { id: 1, key: 'location', title: 'محل کار', description: 'ثبت محل کار و شعاع مجاز' },
+  { id: 1, key: 'location', title: 'محل کار اصلی', description: 'ثبت محل کار اصلی و شعاع مجاز' },
   { id: 2, key: 'calendar', title: 'تقویم کاری', description: 'تقویم، تعطیلات و شیفت' },
   { id: 3, key: 'policy', title: 'سیاست های کاری', description: 'تنظیم قوانین و سیاست ها' },
   { id: 4, key: 'employee', title: 'مدیریت کارکنان', description: 'ثبت و تکمیل کارکنان' },
@@ -101,13 +101,14 @@ export function QuickSetupFlow({
   const [completedSteps, setCompletedSteps] = useState<Step[]>(initialCompleted);
   const [exitOpen, setExitOpen] = useState(false);
   const [completedOpen, setCompletedOpen] = useState(false);
-  const [location, setLocation] = useState<LocationSummaryItem | null>(locationItems[0] ?? null);
+  const [location, setLocation] = useState<LocationSummaryItem | null>(locationItems.find((item) => item.isPrimaryOnboarding) ?? null);
   const [calendar, setCalendar] = useState<CompletedCalendarItem | null>(calendarItems[0] ?? null);
   const [calendars, setCalendars] = useState<CompletedCalendarItem[]>(calendarItems);
   const [policy, setPolicy] = useState<QuickPolicySummary | null>(policyItems[0] ?? null);
   const [employees, setEmployees] = useState<QuickEmployeeSummary[]>(employeeItems);
   const [workGroup, setWorkGroup] = useState<QuickWorkGroupSummary | null>(workGroupItems[0] ?? null);
   const employeesRef = useRef<QuickEmployeeSummary[]>(employeeItems);
+  const locationStepRef = useRef<Step1LocationHandle | null>(null);
 
   useEffect(() => {
     employeesRef.current = employees;
@@ -140,6 +141,14 @@ export function QuickSetupFlow({
     setStep((prev) => (prev + 1) as Step);
   };
 
+  const handleExit = () => {
+    if (step === 1) {
+      locationStepRef.current?.requestExit();
+      return;
+    }
+    setExitOpen(true);
+  };
+
   return (
     <div className="min-h-[calc(100vh-5rem)] p-4 sm:p-4 lg:p-4" dir="rtl">
       <div className="mx-auto max-w-6xl space-y-4">
@@ -158,10 +167,10 @@ export function QuickSetupFlow({
               </div>
               <button
                 type="button"
-                onClick={() => setExitOpen(true)}
+                onClick={handleExit}
                 className="mt-5 inline-flex items-center justify-center rounded-xl border border-rose-400/60 px-4 py-2 text-sm text-rose-300 transition-colors hover:bg-rose-500/10"
               >
-                خروج از راه اندازی سریع
+                خروج موقت از راه‌اندازی
               </button>
             </div>
 
@@ -202,9 +211,9 @@ export function QuickSetupFlow({
         <div className="space-y-4">
           <div className={step === 1 ? 'block' : 'hidden'}>
             <Step1Location
+              ref={locationStepRef}
               isCompleted={completedSteps.includes(1)}
               initialLocation={location}
-              onBack={goBack}
               onComplete={(value) => {
                 setLocation(value);
                 markStepCompleted(1);

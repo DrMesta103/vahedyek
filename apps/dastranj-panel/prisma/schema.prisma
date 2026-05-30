@@ -225,10 +225,13 @@ model Location {
   latitude    Decimal?    @db.Decimal(10, 6)
   longitude   Decimal?    @db.Decimal(10, 6)
   description String?
+  isPrimaryOnboarding Boolean @default(false)
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
   tenant      Tenant?     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   workGroups  WorkGroup[]
+
+  @@index([tenantId, isPrimaryOnboarding])
 }
 
 model OrganizationUnit {

@@ -1,53 +1,227 @@
-﻿'use client';
+'use client';
 
-import { ArrowLeft, MapPin, Plus, Search } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { CircleAlert, CheckCircle2 } from 'lucide-react';
+import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { PanelFormModal } from '../../../components/PanelFormModal';
+import { WorkplaceLocationPicker } from '../../../components/WorkplaceLocationPicker';
 import { saveLocationFromQuickSetupAction } from '../../../lib/actions';
+import {
+  WORKPLACE_LOCATION_DEFAULT_RADIUS,
+  WORKPLACE_LOCATION_RADIUS_PRESETS,
+  toWorkplaceLocationDraft,
+  validateWorkplaceLocationDraft,
+} from '../../../lib/workplace-location';
 import type { LocationSummaryItem } from './quick-setup.types';
 
 type Step1LocationProps = {
   isCompleted: boolean;
   initialLocation: LocationSummaryItem | null;
-  onBack: () => void;
   onComplete: (value: LocationSummaryItem) => void;
 };
 
-export default function Step1Location({ isCompleted, initialLocation, onBack, onComplete }: Step1LocationProps) {
-  const [title, setTitle] = useState(initialLocation?.title ?? 'کارگاه');
-  const [radius, setRadius] = useState(initialLocation?.radius ?? 50);
-  const [search, setSearch] = useState('');
-  const [lat, setLat] = useState<number | null>(35.6997);
-  const [lng, setLng] = useState<number | null>(51.338);
+export type Step1LocationHandle = {
+  requestExit: () => void;
+};
+
+function draftFromLocation(location: LocationSummaryItem | null) {
+  return toWorkplaceLocationDraft({
+    title: location?.title ?? '',
+    address: location?.address ?? '',
+    description: location?.description ?? '',
+    radius: String(location?.allowedRadiusMeters ?? location?.radius ?? WORKPLACE_LOCATION_DEFAULT_RADIUS),
+    latitude: location?.latitude ?? '',
+    longitude: location?.longitude ?? '',
+  });
+}
+
+function buildFormData(draft: ReturnType<typeof draftFromLocation>) {
+  const formData = new FormData();
+  formData.set('title', draft.title);
+  formData.set('address', draft.address);
+  formData.set('description', draft.description);
+  formData.set('radius', draft.radius);
+  formData.set('latitude', draft.latitude);
+  formData.set('longitude', draft.longitude);
+  return formData;
+}
+
+function isSameDraft(left: ReturnType<typeof draftFromLocation>, right: ReturnType<typeof draftFromLocation>) {
+  return (
+    left.title.trim() === right.title.trim() &&
+    left.address.trim() === right.address.trim() &&
+    left.description.trim() === right.description.trim() &&
+    left.radius.trim() === right.radius.trim() &&
+    left.latitude.trim() === right.latitude.trim() &&
+    left.longitude.trim() === right.longitude.trim()
+  );
+}
+
+export default forwardRef<Step1LocationHandle, Step1LocationProps>(function Step1Location(
+  { isCompleted, initialLocation, onComplete },
+  ref,
+) {
+  const router = useRouter();
+  const [title, setTitle] = useState(initialLocation?.title ?? '');
+  const [address, setAddress] = useState(initialLocation?.address ?? '');
+  const [description, setDescription] = useState(initialLocation?.description ?? '');
+  const [radius, setRadius] = useState(String(initialLocation?.allowedRadiusMeters ?? initialLocation?.radius ?? WORKPLACE_LOCATION_DEFAULT_RADIUS));
+  const [latitude, setLatitude] = useState(initialLocation?.latitude ?? '');
+  const [longitude, setLongitude] = useState(initialLocation?.longitude ?? '');
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [saveError, setSaveError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const [saving, setSaving] = useState(false);
-
-  const selectedLocationLabel = useMemo(() => {
-    if (lat == null || lng == null) return 'هنوز نقطه ای روی نقشه انتخاب نشده است';
-    return `نقطه انتخابی: ${lat.toFixed(4)} , ${lng.toFixed(4)}`;
-  }, [lat, lng]);
-
-  const pickMap = (event: React.MouseEvent<HTMLButtonElement>) => {
-    const rect = event.currentTarget.getBoundingClientRect();
-    const x = (event.clientX - rect.left) / rect.width;
-    const y = (event.clientY - rect.top) / rect.height;
-    setLat(Number((35.86 - y * (35.86 - 35.58)).toFixed(6)));
-    setLng(Number((51.21 + x * (51.62 - 51.21)).toFixed(6)));
+  const [mapStatus, setMapStatus] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [geolocationDenied, setGeolocationDenied] = useState(false);
+  const [exitOpen, setExitOpen] = useState(false);
+  const [radiusMode, setRadiusMode] = useState<'preset' | 'custom'>(
+    WORKPLACE_LOCATION_RADIUS_PRESETS.some(
+      (value) => value === Number(initialLocation?.allowedRadiusMeters ?? initialLocation?.radius ?? WORKPLACE_LOCATION_DEFAULT_RADIUS),
+    )
+      ? 'preset'
+      : 'custom',
+  );
+  const radiusInputRef = useRef<HTMLInputElement | null>(null);
+  const [baselineDraft, setBaselineDraft] = useState(() => draftFromLocation(initialLocation));
+  const clearError = (key: string) => {
+    setErrors((prev) => {
+      if (!(key in prev)) return prev;
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
   };
 
-  const save = async () => {
-    if (!title.trim()) return;
+  useEffect(() => {
+    if (!initialLocation) return;
+    const nextDraft = draftFromLocation(initialLocation);
+    setTitle(nextDraft.title);
+    setAddress(nextDraft.address);
+    setDescription(nextDraft.description);
+    setRadius(nextDraft.radius);
+    setLatitude(nextDraft.latitude);
+    setLongitude(nextDraft.longitude);
+    setBaselineDraft(nextDraft);
+    setRadiusMode(WORKPLACE_LOCATION_RADIUS_PRESETS.some((value) => value === Number(nextDraft.radius)) ? 'preset' : 'custom');
+  }, [initialLocation?.id]);
+
+  const currentDraft = useMemo(
+    () =>
+      toWorkplaceLocationDraft({
+        title,
+        address,
+        description,
+        radius,
+        latitude,
+        longitude,
+      }),
+    [address, description, latitude, longitude, radius, title],
+  );
+
+  const hasUnsavedChanges = useMemo(() => !isSameDraft(currentDraft, baselineDraft), [baselineDraft, currentDraft]);
+
+  useEffect(() => {
+    if (hasUnsavedChanges) {
+      setSuccessMessage('');
+      setSaveError('');
+    }
+  }, [hasUnsavedChanges]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setMapStatus('ready'), 180);
+    return () => window.clearTimeout(timer);
+  }, [initialLocation?.id]);
+
+  useImperativeHandle(ref, () => ({
+    requestExit: () => {
+      if (!hasUnsavedChanges) {
+        router.push('/business-settings');
+        return;
+      }
+      setExitOpen(true);
+    },
+  }));
+
+  const updateRadius = (nextValue: number, mode: 'preset' | 'custom' = 'preset') => {
+    setRadius(String(nextValue));
+    setRadiusMode(mode);
+  };
+
+  const handleUseCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      setGeolocationDenied(true);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setGeolocationDenied(false);
+        setLatitude(Number(position.coords.latitude.toFixed(6)).toString());
+        setLongitude(Number(position.coords.longitude.toFixed(6)).toString());
+        if (!address.trim()) {
+          setAddress('موقعیت فعلی من');
+        }
+        setMapStatus('ready');
+      },
+      (error) => {
+        setGeolocationDenied(error.code === error.PERMISSION_DENIED);
+      },
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 },
+    );
+  };
+
+  const handleMapRetry = () => {
+    setMapStatus('loading');
+    window.setTimeout(() => setMapStatus('ready'), 220);
+  };
+
+  const saveLocation = async (advance: boolean) => {
+    const validation = validateWorkplaceLocationDraft(currentDraft);
+    setErrors(validation.valid ? {} : validation.errors);
+    setSaveError('');
+    setSuccessMessage('');
+
+    if (!validation.valid) {
+      return null;
+    }
+
     setSaving(true);
     try {
-      const formData = new FormData();
-      formData.set('title', title.trim());
-      formData.set('radius', String(radius || 50));
-      formData.set('address', search.trim() || selectedLocationLabel);
-      formData.set('description', 'توضیحات ثبت نشده است');
-      if (lat != null) formData.set('latitude', String(lat));
-      if (lng != null) formData.set('longitude', String(lng));
-      const saved = await saveLocationFromQuickSetupAction(formData);
-      onComplete(saved);
-    } catch (error) {
-      throw error;
+      const result = await saveLocationFromQuickSetupAction(buildFormData(currentDraft));
+      if (!result.ok) {
+        setErrors(result.errors ?? {});
+        setSaveError(result.message ?? 'محل کار ذخیره نشد. دوباره تلاش کنید.');
+        return null;
+      }
+
+      const saved = result.location;
+      const nextDraft = draftFromLocation({
+        ...saved,
+        radius: saved.allowedRadiusMeters,
+        allowedRadiusMeters: saved.allowedRadiusMeters,
+      });
+      setTitle(saved.title);
+      setAddress(saved.address);
+      setDescription(saved.description ?? '');
+      setRadius(String(saved.allowedRadiusMeters));
+      setRadiusMode(
+        WORKPLACE_LOCATION_RADIUS_PRESETS.some((value) => value === Number(saved.allowedRadiusMeters)) ? 'preset' : 'custom',
+      );
+      setLatitude(saved.latitude ?? '');
+      setLongitude(saved.longitude ?? '');
+      setSuccessMessage('محل کار اصلی با موفقیت ثبت شد.');
+      setErrors({});
+      setBaselineDraft(draftFromLocation(saved));
+
+      if (advance) {
+        onComplete(saved);
+      }
+
+      return nextDraft;
+    } catch {
+      setSaveError('محل کار ذخیره نشد. دوباره تلاش کنید.');
+      return null;
     } finally {
       setSaving(false);
     }
@@ -55,75 +229,247 @@ export default function Step1Location({ isCompleted, initialLocation, onBack, on
 
   if (isCompleted && initialLocation) {
     return (
-      <section className="rounded-xl border border-white/10 bg-slate-800/65 p-3.5 sm:p-4">
-        <div className="rounded-xl border border-white/10 bg-slate-950/45 p-4 sm:p-5">
-          <div className="flex flex-col items-center gap-4">
-            <div className="w-full rounded-xl border border-white/10 bg-slate-900/70 p-4 text-right lg:max-w-[260px]">
-              <div className="text-lg font-bold text-white">عنوان: {initialLocation.title}</div>
-              <div className="mt-3 text-sm text-slate-300">توضیحات: {initialLocation.description || 'توضیحات ثبت نشده است'}</div>
-              <div className="mt-2 text-sm text-slate-300">شعاع مجاز: {initialLocation.radius} متر</div>
-            </div>
+      <section className="quick-setup-stage-card">
+        <div className="quick-setup-stage-header">
+          <div className="quick-setup-stage-title">
+            <h2>محل کار اصلی را تعریف کنید</h2>
+            <p>این محل برای کنترل ثبت ورود و خروج موبایلی کارکنان استفاده می‌شود.</p>
           </div>
-          <a href="/locations" className="mt-5 flex w-full items-center justify-center rounded-lg bg-indigo-600 px-3.5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-indigo-500">
-            برای مدیریت کامل محل های کار، کلیک کنید تا به فهرست محل های کار بروید.
-          </a>
+          <div className="quick-setup-pill is-success">تکمیل شده</div>
         </div>
-        <div className="mt-5 flex">
-          <button type="button" onClick={onBack} className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-600 text-white transition-colors hover:bg-indigo-500">
-            <ArrowLeft className="h-4 w-4" />
-          </button>
+
+        <div className="quick-setup-stage-body">
+          <div className="quick-setup-location-completed">
+            <div className="quick-setup-location-card">
+              <div>عنوان محل کار: {initialLocation.title}</div>
+              <span>آدرس محل کار: {initialLocation.address}</span>
+              <span>مختصات انتخاب‌شده: {initialLocation.latitude ?? '-'} ، {initialLocation.longitude ?? '-'}</span>
+              <span>شعاع مجاز ثبت تردد: {initialLocation.allowedRadiusMeters.toLocaleString('fa-IR')} متر</span>
+              <span>توضیحات تکمیلی: {initialLocation.description || 'ثبت نشده است'}</span>
+            </div>
+            <a href="/locations" className="quick-setup-primary-action">
+              برای مدیریت کامل‌تر محل‌های کار، به بخش محل‌های کار بروید.
+            </a>
+          </div>
         </div>
       </section>
     );
   }
 
   return (
-    <section className="rounded-xl border border-white/10 bg-slate-800/65 p-3.5 sm:p-4">
-      <div className="rounded-xl border border-white/10 bg-slate-950/45 p-4 sm:p-5">
-        <div className="grid gap-5 lg:grid-cols-[1.05fr_1fr]">
-          <div className="order-2 rounded-xl bg-stone-200 p-2.5 lg:order-1">
-            <div className="relative h-full min-h-[280px] overflow-hidden rounded-xl border border-slate-300 bg-[linear-gradient(180deg,#f6f5f3,#dddddd)]">
-              <div className="absolute left-3 right-3 top-3 z-10 flex items-center gap-2 rounded-full bg-slate-900 px-3 py-2.5 text-white shadow-lg">
-                <Search className="h-4 w-4 text-slate-300" />
-                <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="جستجو" className="w-full bg-transparent text-right text-sm text-white outline-none placeholder:text-slate-400" />
-              </div>
-              <button type="button" onClick={pickMap} className="relative h-full w-full">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_35%,rgba(99,102,241,0.10),transparent_15%),linear-gradient(45deg,transparent_48%,rgba(148,163,184,0.18)_49%,transparent_50%),linear-gradient(-45deg,transparent_48%,rgba(148,163,184,0.12)_49%,transparent_50%)] bg-[length:100%_100%,48px_48px,48px_48px]" />
-                <MapPin className="absolute left-1/2 top-[45%] h-8 w-8 -translate-x-1/2 -translate-y-1/2 text-indigo-600" />
-                <div className="absolute bottom-4 left-4 flex h-9 w-9 items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg">
-                  <MapPin className="h-4 w-4" />
-                </div>
-                <div className="absolute bottom-4 right-4 flex flex-col gap-2">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg"><Plus className="h-4 w-4" /></div>
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg"><Search className="h-4 w-4" /></div>
-                </div>
-              </button>
+    <>
+      <section className="quick-setup-stage-card">
+        <div className="quick-setup-stage-header">
+          <div className="quick-setup-stage-title">
+            <h2>محل کار اصلی را تعریف کنید</h2>
+            <p>این محل برای کنترل ثبت ورود و خروج موبایلی کارکنان استفاده می‌شود.</p>
+          </div>
+          <button
+            type="button"
+            className="quick-setup-exit"
+            onClick={() => {
+              if (hasUnsavedChanges) {
+                setExitOpen(true);
+                return;
+              }
+              router.push('/business-settings');
+            }}
+          >
+            خروج موقت از راه‌اندازی
+          </button>
+        </div>
+
+        <div className="quick-setup-stage-body">
+          <div className="quick-setup-info-panel quick-setup-info-panel-primary">
+            <div className="quick-setup-info-head">
+              <strong>موقعیت اصلی سازمان</strong>
+              <span>کارکنان فقط زمانی می‌توانند ورود یا خروج خود را ثبت کنند که داخل شعاع مجاز این محل باشند.</span>
+            </div>
+            <div className="quick-setup-location-hint">
+              در این مرحله فقط یک محل کار اصلی ثبت می‌شود. بعداً می‌توانید از بخش تنظیمات، شعبه‌ها یا پروژه‌های بیشتری اضافه کنید.
             </div>
           </div>
 
-          <div className="order-1 space-y-4 lg:order-2">
-            <label className="block space-y-2 text-right">
-              <span className="text-xs font-semibold text-white">عنوان <span className="text-rose-400">*</span></span>
-              <input value={title} onChange={(event) => setTitle(event.target.value)} className="w-full rounded-lg border border-slate-600 bg-slate-900/60 px-3 py-2.5 text-sm text-white outline-none transition-colors focus:border-indigo-400" />
-            </label>
-            <label className="block space-y-2 text-right">
-              <span className="text-xs font-semibold text-white">شعاع خطا <span className="text-rose-400">*</span></span>
-              <div className="rounded-lg border border-slate-600 bg-slate-900/60 px-3 py-2 transition-colors focus-within:border-indigo-400">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="pointer-events-none text-xs text-slate-400">متر</span>
-                  <input value={radius} onChange={(event) => setRadius(Number(event.target.value) || 0)} className="min-w-[88px] flex-1 bg-transparent px-1 py-1 text-right text-sm text-white outline-none" />
+          <div className="quick-setup-location-layout">
+            <div className="quick-setup-location-form">
+              <label className="quick-setup-field">
+                <span><b>*</b> عنوان محل کار</span>
+                <input
+                  value={title}
+                  onChange={(event) => {
+                    setTitle(event.target.value);
+                    clearError('title');
+                  }}
+                  aria-invalid={Boolean(errors.title)}
+                />
+                {errors.title ? <small className="quick-setup-field-error">{errors.title}</small> : null}
+              </label>
+
+              <label className="quick-setup-field">
+                <span><b>*</b> آدرس محل کار</span>
+                <input
+                  value={address}
+                  onChange={(event) => {
+                    setAddress(event.target.value);
+                    clearError('address');
+                  }}
+                  aria-invalid={Boolean(errors.address)}
+                />
+                {errors.address ? <small className="quick-setup-field-error">{errors.address}</small> : null}
+              </label>
+
+              <label className="quick-setup-field">
+                <span>توضیحات تکمیلی</span>
+                <textarea
+                  value={description}
+                  onChange={(event) => setDescription(event.target.value)}
+                  rows={4}
+                  className="quick-setup-textarea"
+                />
+              </label>
+
+              <div className="quick-setup-field">
+                <span><b>*</b> شعاع مجاز ثبت تردد</span>
+                <div className="quick-setup-radius-presets" role="group" aria-label="شعاع مجاز ثبت تردد">
+                  {WORKPLACE_LOCATION_RADIUS_PRESETS.map((preset) => (
+                  <button
+                    key={preset}
+                    type="button"
+                    className={radius === String(preset) ? 'is-selected' : ''}
+                    onClick={() => {
+                      updateRadius(preset, 'preset');
+                      clearError('radius');
+                    }}
+                  >
+                    {preset.toLocaleString('fa-IR')} متر
+                  </button>
+                  ))}
+                  <button
+                  type="button"
+                  className={radiusMode === 'custom' ? 'is-selected' : ''}
+                  onClick={() => {
+                    setRadiusMode('custom');
+                    radiusInputRef.current?.focus();
+                    }}
+                  >
+                    مقدار دلخواه
+                  </button>
                 </div>
+                <input
+                  ref={radiusInputRef}
+                  value={radius}
+                  onChange={(event) => {
+                    setRadius(event.target.value);
+                    setRadiusMode('custom');
+                    clearError('radius');
+                  }}
+                  inputMode="numeric"
+                  aria-invalid={Boolean(errors.radius)}
+                />
+                {errors.radius ? <small className="quick-setup-field-error">{errors.radius}</small> : null}
+                {Number(radius) > 50 ? <small className="quick-setup-warning">شعاع زیاد ممکن است دقت کنترل تردد را کاهش دهد.</small> : null}
               </div>
-            </label>
+
+              <div className="quick-setup-field">
+                <span>مختصات انتخاب‌شده</span>
+                <div className="quick-setup-coord-card">
+                  {latitude && longitude ? (
+                    <strong>{Number(latitude).toFixed(6)} ، {Number(longitude).toFixed(6)}</strong>
+                  ) : (
+                    <strong>هنوز نقطه‌ای روی نقشه انتخاب نشده است.</strong>
+                  )}
+                </div>
+                {errors.latitude ? <small className="quick-setup-field-error">{errors.latitude}</small> : null}
+              </div>
+
+              {saveError ? (
+                <div className="quick-setup-save-error" role="alert">
+                  <CircleAlert className="h-4 w-4" aria-hidden />
+                  {saveError}
+                </div>
+              ) : null}
+              {successMessage ? (
+                <div className="quick-setup-save-success" role="status">
+                  <CheckCircle2 className="h-4 w-4" aria-hidden />
+                  {successMessage}
+                </div>
+              ) : null}
+            </div>
+
+            <div className="quick-setup-map-panel">
+                <WorkplaceLocationPicker
+                latitude={latitude}
+                longitude={longitude}
+                radius={Number(radius) || WORKPLACE_LOCATION_DEFAULT_RADIUS}
+                status={mapStatus}
+                geolocationDenied={geolocationDenied}
+                onPickCoordinates={({ latitude: nextLatitude, longitude: nextLongitude }) => {
+                  setGeolocationDenied(false);
+                  setLatitude(String(nextLatitude));
+                  setLongitude(String(nextLongitude));
+                  clearError('latitude');
+                }}
+                onUseCurrentLocation={handleUseCurrentLocation}
+                onRetryMap={handleMapRetry}
+              />
+            </div>
           </div>
         </div>
-        <div className="mt-4 text-right text-xs text-slate-400">{selectedLocationLabel}</div>
-        <div className="mt-5 flex justify-end">
-          <button type="button" onClick={save} disabled={!title.trim() || saving} className="rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50">
-            {saving ? 'در حال ثبت...' : 'مرحله بعد'}
+
+        <div className="quick-setup-navigation-row">
+          <button type="button" className="quick-setup-secondary-action" onClick={() => void saveLocation(false)} disabled={saving}>
+            ذخیره پیش‌نویس
+          </button>
+          <button
+            type="button"
+            className="quick-setup-primary-action"
+            onClick={async () => {
+              await saveLocation(true);
+            }}
+            disabled={saving}
+          >
+            {saving ? 'در حال ذخیره...' : 'ذخیره و ادامه به تقویم کاری'}
           </button>
         </div>
-      </div>
-    </section>
+      </section>
+
+      {exitOpen ? (
+        <PanelFormModal
+          open={exitOpen}
+          title="تغییرات شما ذخیره نشده است"
+          lead="آیا می‌خواهید بدون ذخیره خارج شوید؟"
+          onClose={() => setExitOpen(false)}
+          footer={
+            <div className="unsaved-guard-actions">
+              <button
+                type="button"
+                className="quick-setup-primary-action"
+                onClick={async () => {
+                  const saved = await saveLocation(false);
+                  if (!saved) return;
+                  router.push('/business-settings');
+                }}
+                disabled={saving}
+              >
+                {saving ? 'در حال ذخیره...' : 'ذخیره و خروج'}
+              </button>
+              <button
+                type="button"
+                className="quick-setup-secondary-action"
+                onClick={() => router.push('/business-settings')}
+                disabled={saving}
+              >
+                بدون ذخیره خارج شوم
+              </button>
+              <button type="button" className="quick-setup-secondary-action" onClick={() => setExitOpen(false)} disabled={saving}>
+                انصراف
+              </button>
+            </div>
+          }
+        >
+          <div className="unsaved-guard-dialog" />
+        </PanelFormModal>
+      ) : null}
+    </>
   );
-}
+});
