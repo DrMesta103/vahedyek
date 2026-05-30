@@ -1,6 +1,7 @@
 'use server';
 
 import { Prisma, type PrismaClient } from '../../node_modules/.prisma/client';
+import { ensureTenantDefaultRequestReasons } from './request-reason-defaults';
 
 const demoCalendars1404 = [
   {
@@ -56,6 +57,7 @@ export async function ensureDemoCalendars(prisma: PrismaClient, tenantId: string
 
 export async function seedSampleData(prisma: PrismaClient, tenantId: string) {
   await ensureDemoCalendars(prisma, tenantId);
+  await ensureTenantDefaultRequestReasons(prisma, tenantId);
 
   const businessProfileCount = await prisma.businessProfile.count({ where: { tenantId } });
   if (businessProfileCount > 0) return;
@@ -101,17 +103,6 @@ export async function seedSampleData(prisma: PrismaClient, tenantId: string) {
       payrollPackageEnabled: true,
       quickSetupStatus: 'in_progress',
     },
-  });
-
-  await prisma.requestReason.createMany({
-    data: [
-      { tenantId, title: 'اصلاح خروج', category: 'attendance', displayOrder: 0 },
-      { tenantId, title: 'فراموشی ثبت تردد', category: 'attendance', displayOrder: 1 },
-      { tenantId, title: 'اصلاح ورود', description: 'ثبت درخواست اصلاح ورود', category: 'attendance', displayOrder: 2 },
-      { tenantId, title: 'دورکاری روزانه', description: 'ثبت دورکاری برای یک روز', category: 'remote_work', displayOrder: 0 },
-      { tenantId, title: 'ماموریت خارج شرکت', description: 'ثبت ماموریت ساعتی یا روزانه', category: 'mission', displayOrder: 0 },
-      { tenantId, title: 'مرخصی ساعتی', description: 'مرخصی ساعتی استحقاقی', category: 'annual_leave', displayOrder: 0 },
-    ],
   });
 
   const shiftTemplate = await prisma.shiftTemplate.create({

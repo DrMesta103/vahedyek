@@ -78,8 +78,8 @@ function buildSections(employeeId: string): Array<{ title: string; cards: Employ
         {
           title: 'درخواست ها',
           description: 'همه درخواست‌های ثبت‌شده توسط کارمند را در اینجا می‌بینید.',
-          disabled: true,
-          badge: 'در آینده',
+          href: `/employees/${employeeId}/requests`,
+          highlighted: true,
           icon: ClipboardList,
         },
         {

@@ -19,8 +19,11 @@ import { formatFaNumber, formatPersianJalaliDate } from '../../lib/format-fa';
 import {
   ACTIVE_TENANT_STORAGE_KEY,
   getPayrollSettingsStorageKey,
+  getTenantPayrollSettingsStorageKey,
   getPayrollSettingsYearsStorageKey,
+  applyPayrollOverrides,
   normalizePayrollSettings,
+  normalizePayrollOverrides,
   type BusinessSettingYear,
 } from '../../lib/payroll-business-settings';
 
@@ -46,6 +49,22 @@ function readYears() {
     window.localStorage.removeItem(getPayrollSettingsYearsStorageKey(null));
     return [];
   }
+}
+
+function readTenantPayrollBaseSettings(year: number, tenantId?: string | null) {
+  const rawAdminBase = window.localStorage.getItem(getPayrollSettingsStorageKey(year));
+  const adminBase = rawAdminBase ? normalizePayrollSettings(JSON.parse(rawAdminBase)) : normalizePayrollSettings({});
+  if (!tenantId) return adminBase;
+
+  const rawTenantOverrides = window.localStorage.getItem(getTenantPayrollSettingsStorageKey(year, tenantId));
+  if (rawTenantOverrides) {
+    return normalizePayrollSettings(
+      applyPayrollOverrides(adminBase, normalizePayrollOverrides(JSON.parse(rawTenantOverrides))),
+    );
+  }
+
+  const rawLegacyTenantSettings = window.localStorage.getItem(getPayrollSettingsStorageKey(year, tenantId));
+  return rawLegacyTenantSettings ? normalizePayrollSettings(JSON.parse(rawLegacyTenantSettings)) : adminBase;
 }
 
 function usageLabel(value: ContractDraftTemplateUsageType) {
@@ -275,8 +294,7 @@ function CreateTemplateDialog({
       return;
     }
     const year = Number(baseYear);
-    const rawSettings = window.localStorage.getItem(getPayrollSettingsStorageKey(year, tenantId));
-    const baseSettings = rawSettings ? normalizePayrollSettings(JSON.parse(rawSettings)) : normalizePayrollSettings({});
+    const baseSettings = readTenantPayrollBaseSettings(year, tenantId);
     onCreated(createContractDraftTemplate({ name: name.trim(), usageType, baseSettingsYear: year, baseSettings }));
   };
 

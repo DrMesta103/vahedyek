@@ -1,6 +1,8 @@
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { getSessionContext } from './auth';
+import { requestReasonCategories } from './constants';
+import { ensureTenantDefaultRequestReasons } from './request-reason-defaults';
 import { getGlobalDefaultCalendarTemplate } from './calendar-defaults';
 import { mapShiftTemplateRecord, type ShiftTemplatePickerItem } from './shift-template-picker';
 import {
@@ -171,6 +173,13 @@ export async function getLocation(id: string) {
 
 export async function listRequestReasons() {
   const tenantId = await requireTenantId();
+  const categoryRows = await prisma.requestReason.groupBy({
+    by: ['category'],
+    where: { tenantId },
+  });
+  if (categoryRows.length < requestReasonCategories.length) {
+    await ensureTenantDefaultRequestReasons(prisma, tenantId);
+  }
   return prisma.requestReason.findMany({ where: { tenantId }, orderBy: [{ displayOrder: 'asc' }, { createdAt: 'asc' }] });
 }
 

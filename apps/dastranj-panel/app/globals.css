@@ -12188,6 +12188,10 @@ body {
 }
 
 /* ── Request reasons (tabs + drag list) ── */
+.request-reasons-page.module-page {
+  gap: 8px;
+}
+
 .request-reasons-page .module-page-header .module-page-add-btn {
   display: none;
 }
@@ -12218,8 +12222,8 @@ body {
   scroll-behavior: smooth;
   touch-action: pan-x;
   cursor: grab;
-  padding-bottom: 32px;
-  margin-bottom: -32px;
+  padding-bottom: 18px;
+  margin-bottom: -18px;
 }
 
 .request-reason-categories-scroll.is-dragging {
@@ -12232,20 +12236,20 @@ body {
   display: flex;
   flex-wrap: nowrap;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   width: max-content;
 }
 
 .request-reason-category-chip {
   flex-shrink: 0;
-  min-height: 44px;
+  min-height: var(--control-height);
   border: 1px solid rgba(148, 163, 184, 0.35);
   border-radius: 999px;
   background: rgba(15, 23, 42, 0.55);
   color: #e2e8f0;
-  padding: 0 18px;
-  font-size: 13px;
-  font-weight: 700;
+  padding: 0 12px;
+  font-size: 11px;
+  font-weight: 800;
   white-space: nowrap;
   transition:
     border-color 0.15s ease,
@@ -12267,18 +12271,18 @@ body {
 
 .request-reason-list {
   display: grid;
-  gap: 12px;
+  gap: 6px;
   width: 100%;
 }
 
 .request-reason-row {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 10px;
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 20px;
+  border-radius: var(--radius-lg);
   background: rgba(15, 23, 42, 0.55);
-  padding: 16px 18px;
+  padding: 12px 14px;
   transition: border-color 0.18s ease;
 }
 
@@ -12291,10 +12295,10 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 28px;
+  height: 28px;
   border: none;
-  border-radius: 10px;
+  border-radius: 8px;
   background: transparent;
   color: #94a3b8;
   cursor: grab;
@@ -12320,22 +12324,22 @@ body {
   height: 0;
 }
 
-.request-reason-toggle-track {
-  width: 52px;
-  height: 30px;
+.request-reason-row .request-reason-toggle-track {
+  width: 44px;
+  height: 26px;
   border-radius: 999px;
   background: rgba(148, 163, 184, 0.28);
   transition: background 0.2s ease;
   position: relative;
 }
 
-.request-reason-toggle-track::after {
+.request-reason-row .request-reason-toggle-track::after {
   content: '';
   position: absolute;
   top: 4px;
   inset-inline-end: 4px;
-  width: 22px;
-  height: 22px;
+  width: 18px;
+  height: 18px;
   border-radius: 999px;
   background: #f8fafc;
   transition: inset-inline-end 0.2s ease, inset-inline-start 0.2s ease;
@@ -12354,22 +12358,22 @@ body {
   flex: 1;
   min-width: 0;
   display: grid;
-  gap: 6px;
+  gap: 4px;
   text-align: right;
 }
 
 .request-reason-row-copy h3 {
   margin: 0;
-  font-size: clamp(17px, 2vw, 20px);
-  font-weight: 800;
+  font-size: clamp(13px, 1.35vw, 15px);
+  font-weight: 900;
   color: #f8fafc;
 }
 
 .request-reason-row-copy p {
   margin: 0;
   color: #94a3b8;
-  font-size: 14px;
-  line-height: 1.7;
+  font-size: 11px;
+  line-height: 1.6;
 }
 
 .request-reason-label {
@@ -12423,7 +12427,7 @@ body {
 }
 
 .request-reasons-add-btn {
-  min-width: 220px;
+  min-width: 0;
 }
 
 [data-theme='light'] .request-reason-category-chip {
@@ -19862,6 +19866,18 @@ body {
   gap: 9px;
 }
 
+.business-draft-option-grid.adaptive-chip-group,
+.business-draft-option-grid.contract-draft-option-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.business-draft-option-grid .adaptive-chip {
+  width: 100%;
+  max-width: none;
+}
+
 .adaptive-chip-group {
   display: flex;
   flex-wrap: wrap;
@@ -19953,17 +19969,39 @@ body {
   margin: 0;
 }
 
-.business-draft-checkbox {
+.panel-toggle-row {
   display: flex;
   align-items: center;
-  gap: 9px;
-  color: #dbe8f5;
-  font-size: 12px;
-  font-weight: 850;
+  justify-content: space-between;
+  gap: 14px;
+  width: 100%;
+  cursor: pointer;
 }
 
-.business-draft-checkbox input {
-  accent-color: #f6ae34;
+.panel-toggle-row-label {
+  flex: 1;
+  min-width: 0;
+  color: #bfd0e3;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.75;
+}
+
+.panel-toggle-row-switch {
+  flex-shrink: 0;
+}
+
+.business-contract-template-flow .panel-toggle-row-switch input:checked + .request-reason-toggle-track {
+  background: linear-gradient(135deg, #f6ae34, #eb9519);
+}
+
+.contract-draft-severance-card {
+  gap: 10px;
+}
+
+.contract-draft-severance-card .panel-toggle-row {
+  padding-top: 10px;
+  border-top: 1px solid rgba(151, 182, 215, 0.12);
 }
 
 .business-draft-variable-card {
@@ -20370,4 +20408,988 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0;
+}
+
+.attachment-manager,
+.employee-request-dialog-section,
+.employee-requests-filter,
+.employee-request-card,
+.employee-request-placeholder,
+.employee-request-empty-state,
+.company-loan-card,
+.company-loans-empty,
+.company-loans-toolbar {
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: rgba(15, 23, 42, 0.64);
+  box-shadow: 0 18px 42px rgba(2, 6, 23, 0.24);
+}
+
+.attachment-manager {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-radius: 22px;
+  padding: 14px;
+}
+
+.attachment-manager-head,
+.attachment-manager-item,
+.employee-requests-toolbar,
+.employee-request-card-head,
+.employee-request-card-foot,
+.company-loans-toolbar,
+.company-loan-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.attachment-manager-head strong,
+.company-loans-toolbar strong {
+  display: block;
+  color: #f8fafc;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.attachment-manager-head span,
+.company-loans-toolbar span,
+.attachment-manager-empty,
+.employee-request-empty-note,
+.employee-request-description-text,
+.employee-request-tooltip,
+.company-loans-empty p {
+  color: #94a3b8;
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.attachment-manager-list {
+  display: grid;
+  gap: 8px;
+}
+
+.attachment-manager-item {
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: rgba(15, 23, 42, 0.78);
+  padding: 10px 12px;
+  color: #e2e8f0;
+}
+
+.attachment-manager-item > div {
+  min-width: 0;
+  flex: 1;
+}
+
+.attachment-manager-item strong,
+.attachment-manager-item span {
+  display: block;
+}
+
+.attachment-manager-item span {
+  margin-top: 2px;
+  color: #94a3b8;
+  font-size: 11px;
+}
+
+.attachment-manager-item button,
+.employee-request-actions button,
+.company-loan-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.82);
+  color: #cbd5e1;
+  min-width: 34px;
+  height: 34px;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 800;
+  transition: 160ms ease;
+}
+
+.attachment-manager-item button:hover,
+.employee-request-actions button:hover,
+.company-loan-actions button:hover {
+  border-color: rgba(251, 146, 60, 0.55);
+  color: #fed7aa;
+}
+
+.attachment-manager-dropzone {
+  grid-column: 1 / -1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 92px;
+  border: 1px dashed rgba(251, 146, 60, 0.42);
+  border-radius: 18px;
+  background: rgba(251, 146, 60, 0.08);
+  color: #fed7aa;
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.attachment-manager-dropzone input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.employee-request-form-grid,
+.company-loan-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.employee-requests-page {
+  width: min(100%, 1220px);
+  max-width: 1220px;
+}
+
+.employee-requests-layout {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+  direction: ltr;
+}
+
+.employee-requests-layout > * {
+  direction: rtl;
+}
+
+.employee-requests-filter {
+  position: sticky;
+  top: 96px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  border-radius: 24px;
+  padding: 16px;
+}
+
+.employee-filter-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.employee-filter-block > strong {
+  color: #f8fafc;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.employee-filter-block label,
+.employee-filter-quick button,
+.employee-request-chip-grid button,
+.employee-request-more-btn,
+.company-loan-status-picker button {
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(15, 23, 42, 0.72);
+  color: #cbd5e1;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.employee-filter-block label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.employee-filter-readonly {
+  border-radius: 16px;
+  border: 1px solid rgba(20, 184, 166, 0.22);
+  background: rgba(20, 184, 166, 0.08);
+  color: #ccfbf1;
+  padding: 10px 12px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.employee-filter-quick,
+.employee-request-chip-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.employee-filter-quick button.is-active,
+.employee-request-chip-grid button.is-selected,
+.company-loan-status-picker button.is-selected {
+  border-color: rgba(251, 146, 60, 0.62);
+  background: rgba(251, 146, 60, 0.16);
+  color: #fed7aa;
+}
+
+.employee-requests-main {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.employee-requests-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  border: 1px solid rgba(20, 184, 166, 0.18);
+  border-radius: 28px;
+  padding: 18px;
+  background:
+    radial-gradient(circle at top right, rgba(20, 184, 166, 0.2), transparent 32%),
+    linear-gradient(135deg, rgba(15, 23, 42, 0.92), rgba(30, 41, 59, 0.72));
+}
+
+.employee-request-person {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.employee-request-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 58px;
+  height: 58px;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(15, 23, 42, 0.8);
+  color: #f8fafc;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.employee-request-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.employee-request-person h2,
+.employee-request-card h3,
+.company-loan-card h2 {
+  margin: 0;
+  color: #f8fafc;
+  font-size: 16px;
+  font-weight: 950;
+}
+
+.employee-request-person p {
+  margin: 4px 0 0;
+  color: #cbd5e1;
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.employee-request-back-link {
+  color: #fed7aa;
+  font-size: 12px;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.employee-request-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 0 8px;
+}
+
+.employee-request-tabs button {
+  flex: 0 0 auto;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.72);
+  color: #cbd5e1;
+  padding: 10px 14px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.employee-request-tabs button.is-active {
+  border-color: rgba(20, 184, 166, 0.6);
+  background: rgba(20, 184, 166, 0.14);
+  color: #ccfbf1;
+}
+
+.employee-request-list,
+.company-loans-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.employee-request-card,
+.employee-request-placeholder,
+.employee-request-empty-state {
+  border-radius: 24px;
+  padding: 16px;
+}
+
+.employee-request-card {
+  display: grid;
+  gap: 14px;
+}
+
+.employee-request-card-main {
+  display: grid;
+  gap: 12px;
+}
+
+.employee-request-status {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  border-radius: 999px;
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.employee-request-status.is-pending {
+  background: rgba(251, 191, 36, 0.14);
+  color: #fde68a;
+}
+
+.employee-request-status.is-approved {
+  background: rgba(34, 197, 94, 0.14);
+  color: #bbf7d0;
+}
+
+.employee-request-status.is-rejected {
+  background: rgba(248, 113, 113, 0.14);
+  color: #fecaca;
+}
+
+.employee-request-status.is-canceled {
+  background: rgba(148, 163, 184, 0.16);
+  color: #cbd5e1;
+}
+
+.employee-request-meta-grid,
+.employee-request-balance,
+.employee-request-loan-summary,
+.company-loan-meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.employee-request-meta-grid div,
+.employee-request-balance div,
+.employee-request-loan-summary div,
+.company-loan-meta div {
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.62);
+  padding: 10px;
+}
+
+.employee-request-meta-grid dt,
+.employee-request-balance span,
+.employee-request-loan-summary span,
+.company-loan-meta dt {
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.employee-request-meta-grid dd,
+.employee-request-balance strong,
+.employee-request-loan-summary strong,
+.company-loan-meta dd {
+  margin: 4px 0 0;
+  color: #f8fafc;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.employee-request-actions,
+.company-loan-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.employee-request-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.employee-request-dialog-section {
+  border-radius: 22px;
+  padding: 14px;
+}
+
+.employee-request-section-title {
+  margin: 0 0 10px;
+  color: #f8fafc;
+  font-size: 13px;
+  font-weight: 950;
+}
+
+.employee-request-empty-loan {
+  display: grid;
+  gap: 10px;
+  border-radius: 18px;
+  border: 1px dashed rgba(251, 146, 60, 0.42);
+  padding: 14px;
+  color: #fed7aa;
+}
+
+.employee-request-empty-loan a {
+  color: #fdba74;
+  font-weight: 900;
+}
+
+.employee-request-description {
+  grid-column: 1 / -1;
+}
+
+.employee-request-saving {
+  color: #fed7aa;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.company-loans-page {
+  width: min(100%, 1040px);
+}
+
+.company-loans-workspace {
+  display: grid;
+  gap: 16px;
+}
+
+.company-loans-toolbar,
+.company-loans-empty {
+  border-radius: 24px;
+  padding: 16px;
+}
+
+.company-loans-empty {
+  display: grid;
+  justify-items: start;
+  gap: 10px;
+}
+
+.company-loans-empty strong {
+  color: #f8fafc;
+  font-size: 15px;
+  font-weight: 950;
+}
+
+.company-loans-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.company-loan-card {
+  border-radius: 24px;
+  padding: 16px;
+}
+
+.company-loan-card-head {
+  align-items: flex-start;
+}
+
+.company-loan-status {
+  display: inline-flex;
+  margin-top: 8px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.16);
+  color: #cbd5e1;
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.company-loan-status.is-active {
+  background: rgba(20, 184, 166, 0.16);
+  color: #99f6e4;
+}
+
+.company-loan-meta {
+  margin: 14px 0 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.company-loan-status-picker {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.company-loan-status-picker > span {
+  color: #f8fafc;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.business-payroll-field small {
+  display: block;
+  margin-top: 6px;
+  color: #fca5a5;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+@media (max-width: 980px) {
+  .employee-requests-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .employee-requests-filter {
+    position: static;
+    order: 2;
+  }
+
+  .company-loans-grid,
+  .employee-request-meta-grid,
+  .employee-request-balance,
+  .employee-request-loan-summary {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .employee-request-form-grid,
+  .company-loan-form-grid,
+  .company-loan-meta {
+    grid-template-columns: 1fr;
+  }
+
+  .employee-requests-hero,
+  .employee-requests-toolbar,
+  .employee-request-card-foot,
+  .company-loans-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
+
+.panel-form-modal-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.panel-form-modal-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.72);
+  color: #cbd5e1;
+  transition: 160ms ease;
+}
+
+.panel-form-modal-close:hover {
+  border-color: rgba(251, 146, 60, 0.45);
+  color: #fed7aa;
+}
+
+.calendar-create-modal:has(.employee-request-dialog),
+.calendar-create-modal:has(.attachment-manager-dialog) {
+  width: min(94vw, 600px);
+  max-height: 85vh;
+  border-radius: 24px;
+  border-color: rgba(148, 163, 184, 0.18);
+  background:
+    radial-gradient(circle at top right, rgba(20, 184, 166, 0.12), transparent 30%),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.94));
+  overflow: hidden;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .calendar-create-modal-head,
+.calendar-create-modal:has(.attachment-manager-dialog) .calendar-create-modal-head {
+  padding: 16px 18px 10px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .calendar-create-modal-head h2,
+.calendar-create-modal:has(.attachment-manager-dialog) .calendar-create-modal-head h2 {
+  font-size: 16px;
+  line-height: 1.5;
+  font-weight: 950;
+  letter-spacing: -0.01em;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .calendar-event-modal-lead,
+.calendar-create-modal:has(.attachment-manager-dialog) .calendar-event-modal-lead {
+  margin-top: 4px;
+  color: #94a3b8;
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .calendar-create-modal-body,
+.calendar-create-modal:has(.attachment-manager-dialog) .calendar-create-modal-body {
+  max-height: calc(85vh - 132px);
+  overflow: auto;
+  padding: 12px 16px;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .calendar-create-modal-footer,
+.calendar-create-modal:has(.attachment-manager-dialog) .calendar-create-modal-footer {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  justify-content: flex-start;
+  gap: 8px;
+  padding: 10px 16px 14px;
+  border-top: 1px solid rgba(148, 163, 184, 0.14);
+  background: rgba(15, 23, 42, 0.96);
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .calendar-create-submit,
+.calendar-create-modal:has(.employee-request-dialog) .calendar-create-cancel,
+.calendar-create-modal:has(.attachment-manager-dialog) .calendar-create-submit,
+.calendar-create-modal:has(.attachment-manager-dialog) .calendar-create-cancel {
+  min-height: 36px;
+  border-radius: 12px;
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .calendar-create-submit,
+.calendar-create-modal:has(.attachment-manager-dialog) .calendar-create-submit {
+  background: linear-gradient(135deg, #f97316, #fb923c);
+  color: #1f1307;
+  box-shadow: 0 10px 24px rgba(249, 115, 22, 0.22);
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .calendar-create-cancel,
+.calendar-create-modal:has(.attachment-manager-dialog) .calendar-create-cancel {
+  border: 1px solid rgba(248, 113, 113, 0.26);
+  background: rgba(127, 29, 29, 0.12);
+  color: #fecaca;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .calendar-create-error,
+.calendar-create-modal:has(.attachment-manager-dialog) .calendar-create-error {
+  margin: 0 16px 8px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .employee-request-dialog,
+.calendar-create-modal:has(.attachment-manager-dialog) .attachment-manager-dialog {
+  gap: 10px;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .employee-request-person {
+  min-height: 58px;
+  border: 1px solid rgba(20, 184, 166, 0.16);
+  border-radius: 18px;
+  background: rgba(15, 23, 42, 0.62);
+  padding: 9px 10px;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .employee-request-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .employee-request-person strong {
+  display: block;
+  color: #f8fafc;
+  font-size: 13px;
+  line-height: 1.45;
+  font-weight: 950;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .employee-request-person span {
+  display: block;
+  margin-top: 1px;
+  color: #94a3b8;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .employee-request-person b {
+  margin-inline-start: auto;
+  border-radius: 999px;
+  padding: 5px 8px;
+  font-size: 10px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .employee-request-person b.is-approved {
+  background: rgba(34, 197, 94, 0.13);
+  color: #bbf7d0;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .employee-request-person b.is-muted {
+  background: rgba(148, 163, 184, 0.13);
+  color: #cbd5e1;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .employee-request-dialog-section,
+.calendar-create-modal:has(.employee-request-dialog) .attachment-manager,
+.calendar-create-modal:has(.attachment-manager-dialog) .attachment-picker-section {
+  border-radius: 16px;
+  padding: 10px;
+  box-shadow: none;
+  background: rgba(15, 23, 42, 0.58);
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .employee-request-section-title,
+.calendar-create-modal:has(.attachment-manager-dialog) .employee-request-section-title {
+  margin-bottom: 8px;
+  color: #e2e8f0;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .employee-request-form-grid,
+.calendar-create-modal:has(.attachment-manager-dialog) .employee-request-form-grid {
+  gap: 9px;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .business-payroll-field,
+.calendar-create-modal:has(.attachment-manager-dialog) .business-payroll-field {
+  gap: 5px;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .business-payroll-field-label,
+.calendar-create-modal:has(.attachment-manager-dialog) .business-payroll-field-label {
+  font-size: 10.5px;
+  color: #9fb0c6;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .business-payroll-field input,
+.calendar-create-modal:has(.employee-request-dialog) .business-payroll-field select,
+.calendar-create-modal:has(.employee-request-dialog) .business-payroll-field textarea,
+.calendar-create-modal:has(.attachment-manager-dialog) .business-payroll-field input,
+.calendar-create-modal:has(.attachment-manager-dialog) .business-payroll-field textarea {
+  min-height: 36px;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(2, 6, 23, 0.42);
+  color: #f8fafc;
+  padding: 8px 10px;
+  font-size: 12px;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .business-payroll-field textarea,
+.calendar-create-modal:has(.attachment-manager-dialog) .business-payroll-field textarea {
+  min-height: 62px;
+  resize: vertical;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .business-payroll-field input:focus,
+.calendar-create-modal:has(.employee-request-dialog) .business-payroll-field select:focus,
+.calendar-create-modal:has(.employee-request-dialog) .business-payroll-field textarea:focus,
+.calendar-create-modal:has(.attachment-manager-dialog) .business-payroll-field input:focus,
+.calendar-create-modal:has(.attachment-manager-dialog) .business-payroll-field textarea:focus {
+  outline: none;
+  border-color: rgba(251, 146, 60, 0.55);
+  box-shadow: 0 0 0 3px rgba(251, 146, 60, 0.1);
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .employee-request-balance,
+.calendar-create-modal:has(.employee-request-dialog) .employee-request-loan-summary {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .employee-request-balance span,
+.calendar-create-modal:has(.employee-request-dialog) .employee-request-loan-summary span {
+  border-radius: 14px;
+  padding: 8px;
+  font-size: 11px;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .employee-request-chip-grid,
+.attachment-chip-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .employee-request-chip-grid button,
+.calendar-create-modal:has(.employee-request-dialog) .employee-request-more-btn,
+.attachment-chip-grid button,
+.attachment-custom-row button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 30px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 999px;
+  background: rgba(2, 6, 23, 0.34);
+  color: #cbd5e1;
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 850;
+  transition: 150ms ease;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .employee-request-chip-grid button.is-selected,
+.attachment-chip-grid button.is-selected {
+  border-color: rgba(251, 146, 60, 0.7);
+  background: rgba(251, 146, 60, 0.18);
+  color: #fed7aa;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .employee-request-more-btn,
+.attachment-chip-grid button.is-add {
+  border-color: transparent;
+  background: transparent;
+  color: #fdba74;
+  padding-inline: 4px;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .employee-request-tooltip {
+  margin: 8px 0 0;
+  font-size: 10.5px;
+  line-height: 1.7;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .attachment-manager {
+  gap: 8px;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .attachment-manager-head {
+  gap: 8px;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .attachment-manager-head strong {
+  font-size: 12px;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .attachment-manager-head span {
+  font-size: 10.5px;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .attachment-manager .business-payroll-outline-button {
+  min-height: 30px;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 11px;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .attachment-manager-item {
+  padding: 7px 9px;
+  border-radius: 13px;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .attachment-manager-empty {
+  margin: 0;
+  font-size: 11px;
+}
+
+.attachment-manager-dialog {
+  display: grid;
+  gap: 10px;
+}
+
+.attachment-picker-section {
+  display: grid;
+  gap: 8px;
+}
+
+.attachment-custom-row {
+  display: flex;
+  gap: 8px;
+}
+
+.attachment-custom-row input {
+  flex: 1;
+  min-height: 34px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 12px;
+  background: rgba(2, 6, 23, 0.42);
+  color: #f8fafc;
+  padding: 7px 10px;
+  font-size: 12px;
+}
+
+.attachment-manager-fields {
+  margin-top: 2px;
+}
+
+.calendar-create-modal:has(.attachment-manager-dialog) .attachment-manager-dropzone {
+  min-height: 74px;
+  border-radius: 16px;
+  font-size: 12px;
+  background: rgba(251, 146, 60, 0.07);
+}
+
+.attachment-selected-files {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 5px;
+}
+
+.attachment-selected-files span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  max-width: 100%;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 999px;
+  background: rgba(2, 6, 23, 0.34);
+  color: #cbd5e1;
+  padding: 5px 9px;
+  font-size: 10.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .calendar-create-modal:has(.employee-request-dialog),
+  .calendar-create-modal:has(.attachment-manager-dialog) {
+    width: min(96vw, 520px);
+    max-height: 88vh;
+  }
+
+  .calendar-create-modal:has(.employee-request-dialog) .calendar-create-modal-body,
+  .calendar-create-modal:has(.attachment-manager-dialog) .calendar-create-modal-body {
+    max-height: calc(88vh - 132px);
+    padding-inline: 12px;
+  }
+
+  .calendar-create-modal:has(.employee-request-dialog) .employee-request-form-grid,
+  .calendar-create-modal:has(.attachment-manager-dialog) .employee-request-form-grid,
+  .calendar-create-modal:has(.employee-request-dialog) .employee-request-balance,
+  .calendar-create-modal:has(.employee-request-dialog) .employee-request-loan-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .calendar-create-modal:has(.employee-request-dialog) .employee-request-person {
+    align-items: flex-start;
+  }
+
+  .calendar-create-modal:has(.employee-request-dialog) .employee-request-person b {
+    margin-inline-start: 0;
+  }
 }

@@ -89,6 +89,12 @@ export const BUSINESS_SETTINGS_CATALOG: BusinessSettingsItem[] = [
     icon: 'request',
   },
   {
+    title: 'وام‌های سازمانی',
+    description: 'تعریف و مدیریت وام‌هایی که در درخواست وام کارمندان استفاده می‌شوند.',
+    href: '/business-settings/company-loans',
+    icon: 'request',
+  },
+  {
     title: 'گروه‌های کاری',
     description: 'ایجاد گروه‌های کاری برای مدیریت آسان‌تر کارمندان.',
     href: '/work-groups',

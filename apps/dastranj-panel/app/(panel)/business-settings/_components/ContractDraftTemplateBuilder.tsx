@@ -13,6 +13,7 @@ import {
   LineChart,
   LockKeyhole,
   Paperclip,
+  Pencil,
   Plus,
   Save,
   ShieldCheck,
@@ -23,8 +24,10 @@ import {
 } from 'lucide-react';
 import { MinimalScroll } from '../../../components/MinimalScroll';
 import { PanelFormModal, PanelFormModalActions } from '../../../components/PanelFormModal';
+import { ConfirmDialog } from '../../../components/ConfirmDialog';
 import { UnsavedChangesDialog, useUnsavedLeaveGuard } from '../../../components/UnsavedChangesGuard';
 import { AdaptiveChipGroup } from '../../../components/AdaptiveChipGroup';
+import { PanelToggleRow } from '../../../components/PanelToggleRow';
 import { CalculationRulesBadges, CalcRulesDiffBadge, CalcRulesEditButton, CalculationRulesDialog } from '../../../components/CalculationRulesChips';
 import type { PaymentEffectContext } from '../../../components/CalculationRulesChips';
 import {
@@ -45,13 +48,17 @@ import {
   ACTIVE_TENANT_STORAGE_KEY,
   getActiveTenantStorageId,
   getPayrollSettingsStorageKey,
+  getTenantPayrollSettingsStorageKey,
+  applyPayrollOverrides,
   normalizePayrollSettings,
+  normalizePayrollOverrides,
   calculatePayrollValues,
   compareValues,
   validatePayrollStep,
   type BaseDifference,
   type CalculationRules,
   type PayrollSettings,
+  type VariableAmount,
 } from '../../../lib/payroll-business-settings';
 import { LeaveSection, WorkTimePayRulesSection } from './PayrollBusinessSettingsFlow';
 
@@ -218,6 +225,24 @@ function readTemplates(tenantId?: string | null) {
   }
 }
 
+function readTenantPayrollBaseSettings(year: number, tenantId?: string | null) {
+  if (typeof window === 'undefined') return DEFAULT_PAYROLL_SETTINGS;
+  const rawAdminBase = window.localStorage.getItem(getPayrollSettingsStorageKey(year));
+  const adminBase = rawAdminBase ? normalizePayrollSettings(JSON.parse(rawAdminBase)) : DEFAULT_PAYROLL_SETTINGS;
+  const storageTenantId = tenantId ?? getActiveTenantStorageId();
+  if (!storageTenantId) return adminBase;
+
+  const rawTenantOverrides = window.localStorage.getItem(getTenantPayrollSettingsStorageKey(year, storageTenantId));
+  if (rawTenantOverrides) {
+    return normalizePayrollSettings(
+      applyPayrollOverrides(adminBase, normalizePayrollOverrides(JSON.parse(rawTenantOverrides))),
+    );
+  }
+
+  const rawLegacyTenantSettings = window.localStorage.getItem(getPayrollSettingsStorageKey(year, storageTenantId));
+  return rawLegacyTenantSettings ? normalizePayrollSettings(JSON.parse(rawLegacyTenantSettings)) : adminBase;
+}
+
 function differenceBadge(difference?: BaseDifference | null) {
   if (!difference) return null;
   return (
@@ -233,6 +258,50 @@ function customDifference(message: string, tooltip: string): BaseDifference {
 
 function toggle(list: string[], value: string) {
   return list.includes(value) ? list.filter((item) => item !== value) : [...list, value];
+}
+
+function normalizeDecimalInput(value: string) {
+  const normalized = value
+    .replace(/[۰-۹]/g, (digit) => String(digit.charCodeAt(0) - 1776))
+    .replace(/[٠-٩]/g, (digit) => String(digit.charCodeAt(0) - 1632))
+    .replace(/,/g, '');
+  return normalized ? Number(normalized.replace(/[^\d.]/g, '')) : Number.NaN;
+}
+
+function newVariableTemplateItem(type: 'addition' | 'deduction'): VariableTemplateItem {
+  return {
+    id: `${type}-${Date.now()}`,
+    title: type === 'addition' ? 'پاداش ثابت ماهانه' : 'کسورات سازمانی',
+    type,
+    method: 'fixed',
+    amount: 0,
+    percent: 0,
+    base: 'baseSalary',
+    calculationRules: type === 'addition' ? { ...DEFAULT_OPTIONAL_ADDITION_RULES } : { ...DEFAULT_OPTIONAL_DEDUCTION_RULES },
+  };
+}
+
+function getVariableItemDifference(baseItem: VariableAmount | undefined, item: VariableTemplateItem): BaseDifference | null {
+  if (!baseItem) return null;
+  if (baseItem.calculationMethod !== item.method) {
+    return customDifference('متفاوت با مبنا', 'روش محاسبه این آیتم با تنظیمات پایه متفاوت است.');
+  }
+  if (item.method === 'fixed') {
+    return compareValues(baseItem.amount, item.amount, {
+      changed: 'متفاوت با مبنا',
+      tooltip: `مبلغ مبنا برای این آیتم ${money(baseItem.amount)} است.`,
+    });
+  }
+  if (baseItem.percent !== item.percent) {
+    return compareValues(baseItem.percent, item.percent, {
+      changed: 'متفاوت با مبنا',
+      tooltip: `درصد مبنا برای این آیتم ${decimal(baseItem.percent)}٪ است.`,
+    });
+  }
+  if (baseItem.calculationBase !== item.base) {
+    return customDifference('متفاوت با مبنا', 'مبنای محاسبه این آیتم با تنظیمات پایه متفاوت است.');
+  }
+  return null;
 }
 
 const CONTRACT_STEP_ICONS: Record<ContractDraftTemplateStepId, ReactNode> = {
@@ -358,7 +427,7 @@ function FieldShell({
               .replace(/[۰-۹]/g, (digit) => String(digit.charCodeAt(0) - 1776))
               .replace(/[٠-٩]/g, (digit) => String(digit.charCodeAt(0) - 1632));
             setDraftValue(nextValue);
-            onChange(nextValue ? Number(nextValue.replace(/[^\d.]/g, '')) : Number.NaN);
+            onChange(normalizeDecimalInput(nextValue));
           }}
         />
         <b>{unit}</b>
@@ -449,9 +518,7 @@ export function ContractDraftTemplateBuilder({ tenantId = null }: { tenantId?: s
     setTemplate(current);
     savedTemplateRef.current = current;
     if (!current) return;
-    const rawBase = window.localStorage.getItem(getPayrollSettingsStorageKey(current.baseSettingsYear, tenantStorageId));
-    const base = rawBase ? normalizePayrollSettings(JSON.parse(rawBase)) : DEFAULT_PAYROLL_SETTINGS;
-    setBaseSettings(base);
+    setBaseSettings(readTenantPayrollBaseSettings(current.baseSettingsYear, tenantStorageId));
     const state = createStepState(current);
     setStepState(state);
     setActiveStep(current.stepsProgress.currentStepId || getTemplateSteps(current.usageType)[0].id);
@@ -1285,17 +1352,23 @@ function BenefitsTemplateStep({ template, baseSettings, updateTemplate }: { temp
           );
         })}
       </div>
-      <section className="business-payroll-subcard">
+      <section className="business-payroll-subcard contract-draft-subsection contract-draft-severance-card">
         <h3>مزایای پایان سال و پایان کار</h3>
         <OptionGrid
           options={['پرداخت در پایان همکاری', 'پرداخت دوره‌ای']}
           selected={template.data.benefits.severancePaymentMethod === 'end_of_work' ? 'پرداخت در پایان همکاری' : 'پرداخت دوره‌ای'}
           onChange={(value) => updateTemplate('benefits', (current) => ({ ...current, data: { ...current.data, benefits: { ...current.data.benefits, severancePaymentMethod: value === 'پرداخت در پایان همکاری' ? 'end_of_work' : 'periodic' } } }))}
         />
-        <label className="business-draft-checkbox">
-          <input type="checkbox" checked={template.data.benefits.finalSettlementEnabled} onChange={(event) => updateTemplate('benefits', (current) => ({ ...current, data: { ...current.data, benefits: { ...current.data.benefits, finalSettlementEnabled: event.target.checked } } }))} />
-          کلیه حقوق و مزایای پرداخت‌نشده در زمان تسویه‌حساب نهایی پرداخت خواهد شد.
-        </label>
+        <PanelToggleRow
+          label="کلیه حقوق و مزایای پرداخت‌نشده در زمان تسویه‌حساب نهایی پرداخت خواهد شد."
+          checked={template.data.benefits.finalSettlementEnabled}
+          onChange={(finalSettlementEnabled) =>
+            updateTemplate('benefits', (current) => ({
+              ...current,
+              data: { ...current.data, benefits: { ...current.data.benefits, finalSettlementEnabled } },
+            }))
+          }
+        />
       </section>
 
       {activeItem && activeKey ? (
@@ -1352,13 +1425,15 @@ function VariablePaymentsStep({ template, baseSettings, updateTemplate }: { temp
 
   const updateItem = (item: VariableTemplateItem) => updateTemplate('variablePayments', (current) => {
     const key = item.type === 'addition' ? 'additions' : 'deductions';
+    const items = current.data.variablePayments[key];
+    const exists = items.some((entry) => entry.id === item.id);
     return {
       ...current,
       data: {
         ...current.data,
         variablePayments: {
           ...current.data.variablePayments,
-          [key]: current.data.variablePayments[key].map((entry) => (entry.id === item.id ? item : entry)),
+          [key]: exists ? items.map((entry) => (entry.id === item.id ? item : entry)) : [...items, item],
         },
       },
     };
@@ -1387,7 +1462,7 @@ function VariablePaymentsStep({ template, baseSettings, updateTemplate }: { temp
       </div>
       {template.data.variablePayments.enabled ? (
         <div className="business-payroll-time-rule-cards">
-          <VariableList
+          <VariableListDialog
             title="اضافات اختیاری"
             items={template.data.variablePayments.additions}
             baseItems={baseSettings.variableAmounts.additions}
@@ -1396,7 +1471,7 @@ function VariablePaymentsStep({ template, baseSettings, updateTemplate }: { temp
             onRemove={removeItem}
             itemType="addition"
           />
-          <VariableList
+          <VariableListDialog
             title="کسورات اختیاری"
             items={template.data.variablePayments.deductions}
             baseItems={baseSettings.variableAmounts.deductions}
@@ -1478,6 +1553,302 @@ function VariableList({ title, items, baseItems, onAdd, onUpdate, onRemove, item
             onUpdate({ ...rulesDialog, calculationRules: next });
             setRulesDialog(null);
           }}
+        />
+      ) : null}
+    </section>
+  );
+}
+
+function VariableAmountDialog({
+  open,
+  initialItem,
+  baseItem,
+  onClose,
+  onSubmit,
+}: {
+  open: boolean;
+  initialItem: VariableTemplateItem | null;
+  baseItem?: VariableAmount | null;
+  onClose: () => void;
+  onSubmit: (item: VariableTemplateItem) => void;
+}) {
+  const [item, setItem] = useState<VariableTemplateItem>(initialItem ?? newVariableTemplateItem('addition'));
+  const [error, setError] = useState('');
+  const [rulesDialog, setRulesDialog] = useState<VariableTemplateItem | null>(null);
+  const isEditing = Boolean(initialItem);
+  const methodDifference = baseItem ? customDifference('متفاوت با مبنا', 'روش محاسبه این آیتم با تنظیمات پایه متفاوت است.') : null;
+  const amountDifference =
+    baseItem && item.method === 'fixed' && baseItem.calculationMethod === 'fixed'
+      ? compareValues(baseItem.amount, item.amount, {
+          changed: 'متفاوت با مبنا',
+          tooltip: `مبلغ مبنا برای این آیتم ${money(baseItem.amount)} است.`,
+        })
+      : methodDifference;
+  const percentDifference =
+    baseItem && item.method === 'percentage' && baseItem.calculationMethod === 'percentage'
+      ? compareValues(baseItem.percent, item.percent, {
+          changed: 'متفاوت با مبنا',
+          tooltip: `درصد مبنا برای این آیتم ${decimal(baseItem.percent)}٪ است.`,
+        })
+      : methodDifference;
+  const baseDifference = baseItem && item.method === 'percentage' && baseItem.calculationMethod === 'percentage' && baseItem.calculationBase !== item.base
+    ? customDifference('متفاوت با مبنا', 'مبنای محاسبه این آیتم با تنظیمات پایه متفاوت است.')
+    : null;
+  const rules = item.calculationRules ?? (item.type === 'addition' ? DEFAULT_OPTIONAL_ADDITION_RULES : DEFAULT_OPTIONAL_DEDUCTION_RULES);
+  const baseRules = baseItem?.calculationRules ?? null;
+  const effectContext: PaymentEffectContext = item.type === 'deduction' ? 'deduction' : 'benefit_or_addition';
+
+  useEffect(() => {
+    if (!open) {
+      setRulesDialog(null);
+      return;
+    }
+    setItem(initialItem ?? newVariableTemplateItem('addition'));
+    setError('');
+    setRulesDialog(null);
+  }, [initialItem, open]);
+
+  const submit = () => {
+    if (!item.title.trim()) return setError('عنوان الزامی است.');
+    if (item.method === 'fixed' && (!Number.isFinite(item.amount) || item.amount < 0)) {
+      return setError('مبلغ وارد شده معتبر نیست.');
+    }
+    if (item.method === 'percentage' && (!Number.isFinite(item.percent) || item.percent <= 0 || item.percent > 100)) {
+      return setError('درصد باید بیشتر از صفر و حداکثر ۱۰۰ باشد.');
+    }
+    onSubmit(item);
+  };
+
+  return (
+    <>
+      <PanelFormModal
+        open={open}
+        title={isEditing ? 'ویرایش مبلغ متغیر' : item.type === 'addition' ? 'افزودن اضافه' : 'افزودن کسورات'}
+        lead={
+          item.type === 'addition'
+            ? 'این مبلغ به حقوق قابل پرداخت اضافه می‌شود.'
+            : 'این مبلغ قراردادی از حقوق قابل پرداخت کم می‌شود و مستقل از بیمه و مالیات پایه است.'
+        }
+        error={error}
+        onClose={onClose}
+        footer={<PanelFormModalActions submitLabel="ثبت" onSubmit={submit} onCancel={onClose} />}
+      >
+        <div className="payroll-variable-amount-dialog-form business-payroll-editor variable">
+          <label className="business-payroll-field">
+            <span className="business-payroll-field-label">عنوان</span>
+            <input
+              type="text"
+              value={item.title}
+              onChange={(event) => setItem((value) => ({ ...value, title: event.target.value }))}
+            />
+          </label>
+
+          <div className="business-payroll-toggle">
+            <button
+              type="button"
+              className={item.method === 'fixed' ? 'is-selected' : ''}
+              onClick={() => setItem((value) => ({ ...value, method: 'fixed' }))}
+            >
+              مبلغ ثابت
+            </button>
+            <button
+              type="button"
+              className={item.method === 'percentage' ? 'is-selected' : ''}
+              onClick={() => setItem((value) => ({ ...value, method: 'percentage' }))}
+            >
+              ضریب محاسبه
+            </button>
+          </div>
+
+          {item.method === 'fixed' ? (
+            <FieldShell
+              label="مبلغ"
+              unit="ریال"
+              value={item.amount}
+              difference={amountDifference}
+              onChange={(amount) => setItem((value) => ({ ...value, amount }))}
+            />
+          ) : (
+            <div className="business-payroll-fields two">
+              <FieldShell
+                label="درصد محاسبه"
+                unit="%"
+                value={item.percent}
+                difference={percentDifference}
+                onChange={(percent) => setItem((value) => ({ ...value, percent }))}
+              />
+              <label className="business-payroll-field">
+                <span className="business-payroll-field-label">
+                  مبنای پرداخت
+                  {differenceBadge(baseDifference)}
+                </span>
+                <select
+                  value={item.base}
+                  onChange={(event) => setItem((value) => ({ ...value, base: event.target.value as VariableTemplateItem['base'] }))}
+                >
+                  <option value="baseSalary">درصدی از حقوق پایه ماهانه</option>
+                  <option value="grossPay">درصدی از جمع حقوق دریافتی</option>
+                </select>
+                <small>حقوق پایه ماهانه برابر حقوق پایه روزانه ضرب در ۳۰ است.</small>
+              </label>
+            </div>
+          )}
+
+          <div className="calc-badges-row">
+            <CalculationRulesBadges rules={rules} />
+            {baseRules ? <CalcRulesDiffBadge baseRules={baseRules} currentRules={rules} baseLabel="تنظیمات مبنا" /> : null}
+            <CalcRulesEditButton onClick={() => setRulesDialog(item)} />
+          </div>
+        </div>
+      </PanelFormModal>
+
+      {rulesDialog ? (
+        <CalculationRulesDialog
+          open={Boolean(rulesDialog)}
+          itemTitle={rulesDialog.title}
+          rules={rulesDialog.calculationRules ?? (rulesDialog.type === 'addition' ? DEFAULT_OPTIONAL_ADDITION_RULES : DEFAULT_OPTIONAL_DEDUCTION_RULES)}
+          baseRules={baseRules}
+          baseLabel="تنظیمات مبنا"
+          effectContext={effectContext}
+          onClose={() => setRulesDialog(null)}
+          onSubmit={(next) => {
+            setItem((value) => ({ ...value, calculationRules: next }));
+            setRulesDialog(null);
+          }}
+        />
+      ) : null}
+    </>
+  );
+}
+
+function VariableListDialog({
+  title,
+  items,
+  baseItems,
+  onAdd,
+  onUpdate,
+  onRemove,
+  itemType,
+}: {
+  title: string;
+  items: VariableTemplateItem[];
+  baseItems?: VariableAmount[];
+  onAdd: () => void;
+  onUpdate: (item: VariableTemplateItem) => void;
+  onRemove: (item: VariableTemplateItem) => void;
+  itemType: 'addition' | 'deduction';
+}) {
+  const [editor, setEditor] = useState<VariableTemplateItem | null>(null);
+  const [deletingItem, setDeletingItem] = useState<VariableTemplateItem | null>(null);
+  const [rulesDialog, setRulesDialog] = useState<VariableTemplateItem | null>(null);
+  const effectContext: PaymentEffectContext = itemType === 'deduction' ? 'deduction' : 'benefit_or_addition';
+  void onAdd;
+
+  const saveItem = (item: VariableTemplateItem) => {
+    onUpdate(item);
+    setEditor(null);
+  };
+
+  const saveRules = (item: VariableTemplateItem, rules: CalculationRules) => {
+    onUpdate({ ...item, calculationRules: rules });
+    setRulesDialog(null);
+  };
+
+  const confirmDeleteItem = () => {
+    if (!deletingItem) return;
+    onRemove(deletingItem);
+    setDeletingItem(null);
+  };
+
+  return (
+    <section className="business-payroll-subcard">
+      <div className="business-payroll-subcard-head">
+        <h3>{title}</h3>
+        <button type="button" className="business-payroll-outline-button" onClick={() => setEditor(newVariableTemplateItem(itemType))}>
+          <Plus className="h-4 w-4" /> افزودن
+        </button>
+      </div>
+      <VariableAmountDialog
+        open={Boolean(editor)}
+        initialItem={editor}
+        baseItem={editor ? baseItems?.find((b) => b.id === editor.id) ?? null : null}
+        onClose={() => setEditor(null)}
+        onSubmit={saveItem}
+      />
+      <div className="business-payroll-items">
+        {items.length ? (
+          items.map((item) => {
+            const baseItem = baseItems?.find((b) => b.id === item.id);
+            const rules = item.calculationRules ?? (item.type === 'addition' ? DEFAULT_OPTIONAL_ADDITION_RULES : DEFAULT_OPTIONAL_DEDUCTION_RULES);
+            const valueDifference = getVariableItemDifference(baseItem, item);
+            return (
+              <article key={item.id} className="business-draft-variable-card">
+                <div className="business-payroll-transfer-rule-head">
+                  <div>
+                    <strong>{item.title}</strong>
+                    <small>{item.type === 'addition' ? 'اضافه اختیاری' : 'کسورات اختیاری'}</small>
+                    {differenceBadge(valueDifference)}
+                  </div>
+                  <div className="business-payroll-item-actions">
+                    <button type="button" aria-label="ویرایش آیتم" onClick={() => setEditor(item)}>
+                      <Pencil className="h-4 w-4" />
+                    </button>
+                    <button type="button" aria-label="حذف آیتم" onClick={() => setDeletingItem(item)}>
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+                <p>
+                  {item.method === 'fixed'
+                    ? 'مبلغ ثابت'
+                    : `${formatFaNumber(item.percent)}٪ از ${item.base === 'baseSalary' ? 'حقوق پایه ماهانه' : 'جمع حقوق دریافتی'}`}
+                </p>
+                <b>{item.method === 'fixed' ? money(item.amount) : `${formatFaNumber(item.percent)}٪`}</b>
+                <div className="calc-badges-row" style={{ gridColumn: '1 / -1' }}>
+                  <CalculationRulesBadges rules={rules} />
+                  {baseItem?.calculationRules ? (
+                    <CalcRulesDiffBadge baseRules={baseItem.calculationRules} currentRules={rules} baseLabel="تنظیمات مبنا" />
+                  ) : null}
+                  <CalcRulesEditButton onClick={() => setRulesDialog(item)} />
+                </div>
+              </article>
+            );
+          })
+        ) : (
+          <p className="business-payroll-empty">هنوز مبلغ متغیری ثبت نشده است.</p>
+        )}
+      </div>
+      {baseItems?.length ? (
+        <div className="business-payroll-removed-items">
+          {baseItems
+            .filter((baseItem) => !items.some((item) => item.id === baseItem.id))
+            .map((baseItem) => (
+              <span key={`removed-${baseItem.id}`}>
+                {differenceBadge(customDifference('حذف از مبنا', `${baseItem.title} در تنظیمات پایه وجود دارد.`))}
+              </span>
+            ))}
+        </div>
+      ) : null}
+      <ConfirmDialog
+        open={Boolean(deletingItem)}
+        title="حذف مبلغ متغیر"
+        description={deletingItem ? `آیا از حذف «${deletingItem.title}» مطمئن هستید؟` : ''}
+        confirmLabel="حذف"
+        cancelLabel="انصراف"
+        tone="danger"
+        onConfirm={confirmDeleteItem}
+        onCancel={() => setDeletingItem(null)}
+      />
+      {rulesDialog ? (
+        <CalculationRulesDialog
+          open={Boolean(rulesDialog)}
+          itemTitle={rulesDialog.title}
+          rules={rulesDialog.calculationRules ?? (rulesDialog.type === 'addition' ? DEFAULT_OPTIONAL_ADDITION_RULES : DEFAULT_OPTIONAL_DEDUCTION_RULES)}
+          baseRules={baseItems?.find((b) => b.id === rulesDialog.id)?.calculationRules ?? null}
+          baseLabel="تنظیمات مبنا"
+          effectContext={effectContext}
+          onClose={() => setRulesDialog(null)}
+          onSubmit={(next) => saveRules(rulesDialog, next)}
         />
       ) : null}
     </section>

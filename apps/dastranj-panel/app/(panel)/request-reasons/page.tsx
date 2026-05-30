@@ -15,7 +15,7 @@ export default async function RequestReasonsPage({ searchParams }: RequestReason
   const activeCategory =
     categoryParam && requestReasonCategories.includes(categoryParam as (typeof requestReasonCategories)[number])
       ? (categoryParam as (typeof requestReasonCategories)[number])
-      : 'attendance';
+      : 'daily_leave';
 
   return (
     <div className="page-stack module-page request-reasons-page" dir="rtl" lang="fa">

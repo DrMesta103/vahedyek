@@ -155,7 +155,7 @@ function SortableRequestReasonRow({
       articleClassName={`request-reason-row${isDragging ? ' is-dragging' : ''}`}
       dragHandle={
         <button type="button" className="request-reason-drag-btn" aria-label="جابجایی" {...attributes} {...listeners}>
-          <GripVertical className="h-5 w-5" strokeWidth={2.2} />
+          <GripVertical className="h-4 w-4" strokeWidth={2.2} />
         </button>
       }
     />
@@ -181,7 +181,7 @@ function StaticRequestReasonRow({
       toggling={toggling}
       dragHandle={
         <button type="button" className="request-reason-drag-btn" aria-label="جابجایی" disabled>
-          <GripVertical className="h-5 w-5" strokeWidth={2.2} />
+          <GripVertical className="h-4 w-4" strokeWidth={2.2} />
         </button>
       }
     />
