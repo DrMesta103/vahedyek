@@ -265,16 +265,15 @@ function getSeparatorValue(part: NamingPatternPart) {
   return '-';
 }
 
-function getTextPlaceholderKey(part: NamingPatternPart) {
-  const label = part.config.label?.trim() || 'متن قابل تکمیل';
-  return part.config.placeholderKey?.trim() || label.replace(/\s+/g, '_').toLowerCase();
+function getStablePlaceholderKey(part: NamingPatternPart) {
+  return part.config.placeholderKey?.trim() || `placeholder_${part.id}`;
 }
 
 function renderTextPart(part: NamingPatternPart, context: NamingPatternContext) {
   const mode = part.config.mode ?? 'fixed';
   if (mode === 'placeholder') {
     const label = part.config.label?.trim() || 'متن قابل تکمیل';
-    const key = getTextPlaceholderKey(part);
+    const key = getStablePlaceholderKey(part);
     return context.placeholders?.[key]?.trim() || `{${label}}`;
   }
   return part.config.value ?? part.config.text ?? '';
@@ -536,15 +535,19 @@ function normalizePart(value: unknown, index: number): NamingPatternPart | null 
   const normalizedType = source.type === 'static_text' || LEGACY_VARIABLE_PART_LABELS[source.type] ? 'text' : source.type;
   const part = createNamingPatternPart(normalizedType, Number.isFinite(source.order) ? Number(source.order) : index);
   const legacyText = LEGACY_VARIABLE_PART_LABELS[source.type];
+  const mergedConfig = {
+    ...part.config,
+    ...(source.config && typeof source.config === 'object' ? source.config : {}),
+    ...(source.type === 'static_text' ? { mode: 'fixed', value: source.config?.value ?? source.config?.text ?? '' } : {}),
+    ...(legacyText ? { mode: 'fixed', value: legacyText, label: 'متن ثابت' } : {}),
+  } as NamingPatternPartConfig;
+  if ((mergedConfig.mode ?? 'fixed') === 'placeholder' && !mergedConfig.placeholderKey) {
+    mergedConfig.placeholderKey = `placeholder_${part.id}`;
+  }
   return {
     ...part,
     id: typeof source.id === 'string' && source.id.trim() ? source.id : part.id,
-    config: {
-      ...part.config,
-      ...(source.config && typeof source.config === 'object' ? source.config : {}),
-      ...(source.type === 'static_text' ? { mode: 'fixed', value: source.config?.value ?? source.config?.text ?? '' } : {}),
-      ...(legacyText ? { mode: 'fixed', value: legacyText, label: 'متن ثابت' } : {}),
-    },
+    config: mergedConfig,
   };
 }
 
@@ -655,7 +658,7 @@ export function getNamingPatternPlaceholderParts(pattern: NamingPattern) {
     .filter((part) => (part.type === 'text' || part.type === 'static_text') && part.config.mode === 'placeholder')
     .map((part) => ({
       id: part.id,
-      key: getTextPlaceholderKey(part),
+      key: getStablePlaceholderKey(part),
       label: part.config.label?.trim() || 'متن قابل تکمیل',
     }));
 }

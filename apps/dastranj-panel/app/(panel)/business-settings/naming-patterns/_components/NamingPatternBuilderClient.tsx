@@ -91,6 +91,7 @@ function buildPreset(preset: string | null, tenantId?: string | null, usage?: Na
 
 function PartConfigEditor({ part, onChange }: { part: NamingPatternPart; onChange: (part: NamingPatternPart) => void }) {
   const updateConfig = (patch: Partial<NamingPatternPart['config']>) => onChange({ ...part, config: { ...part.config, ...patch } });
+  const stablePlaceholderKey = `placeholder_${part.id}`;
 
   if (part.type === 'text' || part.type === 'static_text') {
     const mode = part.config.mode ?? 'fixed';
@@ -98,7 +99,17 @@ function PartConfigEditor({ part, onChange }: { part: NamingPatternPart; onChang
       <div className="grid gap-3 md:grid-cols-2">
         <label className={fieldClass()} title="متن ثابت: مقداری است که همین حالا وارد می‌شود و همیشه ثابت می‌ماند. متن قابل تکمیل: جایگاهی است که مقدار آن هنگام استفاده از الگو وارد می‌شود.">
           نوع متن
-          <select className={inputClass()} value={mode} onChange={(event) => updateConfig({ mode: event.target.value as 'fixed' | 'placeholder' })}>
+          <select
+            className={inputClass()}
+            value={mode}
+            onChange={(event) => {
+              const nextMode = event.target.value as 'fixed' | 'placeholder';
+              updateConfig({
+                mode: nextMode,
+                ...(nextMode === 'placeholder' ? { placeholderKey: part.config.placeholderKey?.trim() || stablePlaceholderKey, label: part.config.label?.trim() || 'متن قابل تکمیل' } : {}),
+              });
+            }}
+          >
             <option value="fixed">متن ثابت</option>
             <option value="placeholder">متن قابل تکمیل</option>
           </select>
@@ -106,7 +117,12 @@ function PartConfigEditor({ part, onChange }: { part: NamingPatternPart; onChang
         {mode === 'placeholder' ? (
           <label className={fieldClass()} title="متن قابل تکمیل: جایگاهی است که مقدار آن هنگام استفاده از الگو وارد می‌شود.">
             عنوان جایگاه را وارد کنید
-            <input className={inputClass()} value={part.config.label ?? ''} onChange={(event) => updateConfig({ label: event.target.value, placeholderKey: event.target.value.trim().replace(/\s+/g, '_').toLowerCase() })} placeholder="مثلا عنوان قالب" />
+            <input
+              className={inputClass()}
+              value={part.config.label ?? ''}
+              onChange={(event) => updateConfig({ label: event.target.value, placeholderKey: part.config.placeholderKey?.trim() || stablePlaceholderKey })}
+              placeholder="مثلا عنوان قالب"
+            />
           </label>
         ) : (
           <label className={fieldClass()} title="متن ثابت: مقداری است که همین حالا وارد می‌شود و همیشه ثابت می‌ماند.">

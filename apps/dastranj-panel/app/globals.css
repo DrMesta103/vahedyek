@@ -18404,11 +18404,45 @@ body {
   padding: 9px 21px;
 }
 
+.calendar-create-modal-backdrop:has(.business-draft-template-dialog) {
+  align-items: flex-start;
+  overflow-y: auto;
+  padding-top: max(16px, 3vh);
+  padding-bottom: max(16px, 3vh);
+}
+
+.calendar-create-modal.panel-minimal-scroll:has(.business-draft-template-dialog) {
+  overflow: hidden;
+}
+
 .calendar-create-modal:has(.business-draft-template-dialog) {
+  display: flex;
+  flex-direction: column;
   width: min(100%, 560px);
-  padding: 20px 22px 18px;
+  max-height: min(92vh, 900px);
+  overflow: hidden;
+  padding: 20px 22px 0;
   border-color: rgba(152, 183, 219, 0.22);
   background: linear-gradient(180deg, #17385f, #102945);
+}
+
+.calendar-create-modal:has(.business-draft-template-dialog) .calendar-create-modal-head,
+.calendar-create-modal:has(.business-draft-template-dialog) .calendar-create-modal-footer {
+  flex-shrink: 0;
+}
+
+.calendar-create-modal:has(.business-draft-template-dialog) .calendar-create-modal-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: 12px;
+}
+
+.calendar-create-modal:has(.business-draft-template-dialog) .calendar-create-modal-footer {
+  margin: 0 -22px;
+  border-top: 1px solid rgba(148, 163, 184, 0.1);
+  background: rgba(8, 13, 27, 0.82);
+  padding: 16px 22px 18px;
 }
 
 .calendar-create-modal:has(.business-draft-template-dialog) .calendar-event-modal-lead {
@@ -18430,6 +18464,84 @@ body {
   padding: 14px;
   display: grid;
   gap: 12px;
+}
+
+.business-draft-dialog-card--compact {
+  gap: 10px;
+  padding: 12px 14px;
+}
+
+.business-draft-compact-head {
+  display: grid;
+  gap: 4px;
+}
+
+.business-draft-compact-title {
+  color: #e5edf8;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1.6;
+}
+
+.business-draft-compact-title em {
+  color: #f6ae34;
+  font-style: normal;
+}
+
+.business-draft-compact-hint {
+  color: #8fa8c3;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.7;
+}
+
+.business-draft-scope-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.business-draft-scope-option {
+  display: grid;
+  gap: 6px;
+  align-content: start;
+  min-height: 0;
+  border: 1px solid rgba(151, 182, 215, 0.22);
+  border-radius: 10px;
+  background: rgba(11, 29, 54, 0.5);
+  color: #d9e7f5;
+  padding: 10px 12px;
+  text-align: right;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.business-draft-scope-option.is-selected {
+  border-color: rgba(246, 174, 52, 0.72);
+  background: rgba(246, 174, 52, 0.14);
+  color: #fff;
+}
+
+.business-draft-scope-option-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: inherit;
+  font-size: 12px;
+  font-weight: 950;
+  line-height: 1.5;
+}
+
+.business-draft-scope-option small {
+  display: block;
+  color: #aebfd1;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.65;
+}
+
+.business-draft-scope-option.is-selected small {
+  color: #dbe7f4;
 }
 
 .business-draft-dialog-card-head {
@@ -18526,9 +18638,10 @@ body {
 }
 
 .business-draft-template-mode-row button {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 6px;
   min-height: 40px;
   border: 1px solid rgba(151, 182, 215, 0.22);
   border-radius: 10px;
@@ -20834,7 +20947,8 @@ body {
     padding: 16px;
   }
 
-  .business-draft-dialog-options-grid {
+  .business-draft-dialog-options-grid,
+  .business-draft-scope-options {
     grid-template-columns: 1fr;
   }
 

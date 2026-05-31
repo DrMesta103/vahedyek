@@ -1,6 +1,6 @@
 'use client';
 
-import { BriefcaseBusiness, ChevronDown, ChevronUp, Eye, FileText, Info, Layers3, Pencil, Plus, Search, ShieldCheck, Trash2, X } from 'lucide-react';
+import { ChevronDown, ChevronUp, Eye, FileText, Info, Layers3, Pencil, Plus, Search, ShieldCheck, Trash2, X } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { CardMenu } from '../../components/CardMenu';
@@ -150,7 +150,7 @@ function TemplateListCard({
           <DraftShowcaseFields>
             <DraftShowcaseField label="نام قالب" value={template.name} prominent />
             <DraftShowcaseField label="مبنای سال" value={formatFaNumber(template.baseSettingsYear, { useGrouping: false })} />
-            <DraftShowcaseField label="نوع قالب" value={usageLabel(template.usageType)} />
+            <DraftShowcaseField label="حوزه پوشش" value={usageLabel(template.usageType)} />
           </DraftShowcaseFields>
           <DraftShowcaseFields className="is-compact">
             <DraftShowcaseField label="تاریخ ثبت" value={<time dateTime={template.createdAt}>{formatPersianJalaliDate(template.createdAt)}</time>} />
@@ -357,11 +357,11 @@ function CreateTemplateDialog({
       return;
     }
     if (!usageType) {
-      setError('نوع قالب را انتخاب کنید');
+      setError('حوزه پوشش قالب را انتخاب کنید');
       return;
     }
     if (!baseYear) {
-      setError('مبنای تنظیمات را انتخاب کنید');
+      setError('سال مبنای تنظیمات را انتخاب کنید');
       return;
     }
     const year = Number(baseYear);
@@ -452,56 +452,46 @@ function CreateTemplateDialog({
           ) : null}
         </div>
 
-        <div className="business-draft-dialog-card">
-          <div className="business-draft-dialog-card-head">
-            <div>
-              <span className="business-draft-dialog-kicker">
-                <BriefcaseBusiness className="h-4 w-4" />
-                نوع قالب
-              </span>
-              <h3>این قالب برای چه کاری است؟</h3>
-              <p>با انتخاب نوع قالب، فیلدهای بعدی و ساختار پیش‌فرض تنظیم می‌شوند.</p>
-            </div>
+        <div className="business-draft-dialog-card business-draft-dialog-card--compact">
+          <div className="business-draft-compact-head">
+            <span className="business-draft-compact-title">
+              حوزه پوشش قالب <em>*</em>
+            </span>
+            <span className="business-draft-compact-hint">مراحل و فیلدهای ساخت قالب بر اساس این انتخاب تنظیم می‌شوند.</span>
           </div>
-
-          <div className="business-draft-dialog-options business-draft-dialog-options-grid">
-            <button type="button" className={usageType === 'attendance_only' ? 'is-selected' : ''} onClick={() => setUsageType('attendance_only')}>
-              <span className="business-draft-option-pill">
-                <ShieldCheck className="h-4 w-4" />
+          <div className="business-draft-scope-options" role="radiogroup" aria-label="حوزه پوشش قالب">
+            <button
+              type="button"
+              className={`business-draft-scope-option${usageType === 'attendance_only' ? ' is-selected' : ''}`}
+              onClick={() => setUsageType('attendance_only')}
+            >
+              <span className="business-draft-scope-option-title">
+                <ShieldCheck className="h-3.5 w-3.5" aria-hidden />
                 فقط تردد
               </span>
-              <strong>مناسب برای سیستم تردد</strong>
-              <small>برای حضور و غیاب، مرخصی، اضافه‌کاری و قوانین تردد.</small>
+              <small>حضور و غیاب، مرخصی، اضافه‌کاری و قوانین تردد.</small>
             </button>
-            <button type="button" className={usageType === 'payroll_attendance' ? 'is-selected' : ''} onClick={() => setUsageType('payroll_attendance')}>
-              <span className="business-draft-option-pill">
-                <Layers3 className="h-4 w-4" />
+            <button
+              type="button"
+              className={`business-draft-scope-option${usageType === 'payroll_attendance' ? ' is-selected' : ''}`}
+              onClick={() => setUsageType('payroll_attendance')}
+            >
+              <span className="business-draft-scope-option-title">
+                <Layers3 className="h-3.5 w-3.5" aria-hidden />
                 تردد و حقوق
               </span>
-              <strong>مناسب برای سیستم تردد و حقوق و دستمزد</strong>
-              <small>برای حقوق پایه، مزایا، کسورات، بیمه، مالیات و دستمزد.</small>
+              <small>حقوق پایه، مزایا، بیمه، مالیات و محاسبات دستمزد.</small>
             </button>
           </div>
         </div>
 
-        <div className="business-draft-dialog-card">
-          <div className="business-draft-dialog-card-head">
-            <div>
-              <span className="business-draft-dialog-kicker">
-                <Layers3 className="h-4 w-4" />
-                مبنای تنظیمات
-              </span>
-              <h3>مبنای تنظیمات ضرایب و قوانین</h3>
-              <p>مقادیر اولیه قالب و هینت‌های مغایرت از این سال دریافت می‌شوند.</p>
-            </div>
-          </div>
-
+        <div className="business-draft-dialog-card business-draft-dialog-card--compact">
           <label className="business-draft-field">
             <span>
-              انتخاب مبنا <em>*</em>
+              سال مبنای تنظیمات <em>*</em>
             </span>
             <select value={baseYear} onChange={(event) => setBaseYear(event.target.value)}>
-              <option value="">مبنای تنظیمات را انتخاب کنید</option>
+              <option value="">انتخاب سال مبنا</option>
               {years.map((year) => (
                 <option key={year.id} value={year.year}>
                   تنظیمات {year.title}
@@ -509,7 +499,7 @@ function CreateTemplateDialog({
               ))}
             </select>
           </label>
-          <p className="business-draft-field-note">بعد از ثبت، قالب از همین مبنا پیش‌فرض‌گیری می‌شود و تفاوت‌ها با آن مقایسه می‌شوند.</p>
+          <p className="business-draft-field-note">مقادیر اولیه و مقایسه مغایرت‌ها از تنظیمات همین سال خوانده می‌شود.</p>
         </div>
       </form>
     </PanelFormModal>
