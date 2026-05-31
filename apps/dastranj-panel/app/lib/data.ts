@@ -199,8 +199,13 @@ export async function getQuickSetupChecklist() {
       description: item.description ?? 'توضیحات ثبت نشده است',
       calendarId: item.calendarId ?? '',
       calendarTitle: item.calendar?.title ?? '-',
+      isDefault: item.isDefault,
       templateId: String((item.sectionValues as { templateId?: string } | null)?.templateId ?? 'custom'),
       templateTitle: String((item.sectionValues as { templateTitle?: string } | null)?.templateTitle ?? item.title),
+      selectedCalendarId: String((item.sectionValues as { selectedCalendarId?: string } | null)?.selectedCalendarId ?? item.calendarId ?? ''),
+      selectedPolicyTemplateId: String((item.sectionValues as { selectedPolicyTemplateId?: string } | null)?.selectedPolicyTemplateId ?? (item.sectionValues as { templateId?: string } | null)?.templateId ?? 'custom'),
+      generatedPolicyTitle: String((item.sectionValues as { generatedPolicyTitle?: string } | null)?.generatedPolicyTitle ?? item.title),
+      generatedPolicyDescription: String((item.sectionValues as { generatedPolicyDescription?: string } | null)?.generatedPolicyDescription ?? (item.description ?? '')),
       year: item.calendar?.yearLabel ?? '',
     })),
     employeeItems: employeeList.map((item) => ({

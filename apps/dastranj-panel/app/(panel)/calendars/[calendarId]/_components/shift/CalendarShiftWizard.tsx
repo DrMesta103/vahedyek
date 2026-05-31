@@ -17,6 +17,7 @@ import { useMemo, useState, type ReactNode } from 'react';
 import { addCalendarShiftAction } from '../../../../../lib/actions';
 import { normalizePersianDateInput } from '../../../../../lib/calendar-events';
 import { resolveCalendarShiftTitle } from '../../../../../lib/calendar-shifts';
+import { calculateTimeRangeDurationMinutes, validateTimeRangeUnder24Hours } from '../../../../../lib/time-range-validation';
 import type { ShiftTemplatePickerItem } from '../../../../../lib/shift-template-picker';
 import type { CalendarShiftDayContext, CalendarShiftWizardCalendar } from './types';
 
@@ -64,16 +65,16 @@ const SHIFT_OPTIONS: Array<{
   {
     id: 'fixed',
     label: 'شیفت ثابت',
-    hintTitle: 'مناسب برای برنامه های تکرارشونده',
-    hintDescription: 'برای تیم هایی که ساعت شروع و پایان مشخص و یکسان دارند مناسب است.',
-    hintExample: 'مثال: کارکنان اداری هر روز از 08:00 تا 16:30.',
+    hintTitle: 'شیفت ثابت',
+    hintDescription: 'شیفت ثابت برای تیم‌هایی مناسب است که ساعت ورود و خروج مشخص و تکرارشونده دارند.',
+    hintExample: 'مثال: ۸:۰۰ تا ۱۶:۳۰',
   },
   {
     id: 'float-day',
-    label: 'شیفت شناور (شروع روز)',
-    hintTitle: 'مناسب برای ورود منعطف',
-    hintDescription: 'وقتی فقط بازه شروع در روز مهم است و کارمند می تواند در آن بازه ورود بزند.',
-    hintExample: 'مثال: ورود بین 07:00 تا 09:00 و تکمیل 8 ساعت کار.',
+    label: 'شیفت شناور شروع روز',
+    hintTitle: 'شیفت شناور شروع روز',
+    hintDescription: 'در این نوع شیفت، کارمند می‌تواند در یک بازه مشخص وارد شود، اما باید مدت کار موظف را کامل کند. ساعت خروج بر اساس زمان ورود واقعی محاسبه می‌شود.',
+    hintExample: 'مثال: ورود ۷:۰۰ تا ۹:۰۰ و تکمیل ۸ ساعت کار.',
   },
   {
     id: 'float-abs',
@@ -86,8 +87,8 @@ const SHIFT_OPTIONS: Array<{
     id: 'split',
     label: 'شیفت دو تکه',
     hintTitle: 'مناسب برای شیفت های چندبازه ای',
-    hintDescription: 'وقتی ساعت کاری در دو بخش جدا از هم انجام می شود استفاده می شود.',
-    hintExample: 'مثال: 08:00 تا 12:00 و 16:00 تا 20:00 برای فروشگاه.',
+    hintDescription: 'در این نوع شیفت، روز کاری از دو یا چند بازه کاری جدا تشکیل می شود. فاصله بین بازه ها الزاماً استراحت محسوب نمی شود.',
+    hintExample: 'بازه کاری اول 08:00 تا 12:00 و بازه کاری دوم 16:00 تا 20:00. مدت کارکرد کل 8 ساعت است و فاصله بین دو بازه به صورت خودکار استراحت محاسبه نمی شود.',
   },
   {
     id: 'rotate',
@@ -172,6 +173,49 @@ function formatDuration(minutes: number) {
   return `${hours}:${String(mins).padStart(2, '0')}`;
 }
 
+function formatFloatDayPermittedExitRange(entryStart: string, entryEnd: string, requiredMinutes: number) {
+  const exitStartMinutes = parseTime(entryStart) + requiredMinutes;
+  const exitEndMinutes = parseTime(entryEnd) + requiredMinutes;
+  const exitStartNextDay = exitStartMinutes >= 24 * 60;
+  const exitEndNextDay = exitEndMinutes >= 24 * 60;
+  const exitStart = minutesToTime(exitStartMinutes % (24 * 60));
+  const exitEnd = minutesToTime(exitEndMinutes % (24 * 60));
+
+  if (exitStartNextDay && exitEndNextDay) {
+    return `${exitStart} (روز بعد) تا ${exitEnd} (روز بعد)`;
+  }
+  if (exitEndNextDay) {
+    return `${exitStart} تا ${exitEnd} (روز بعد)`;
+  }
+  return `${exitStart} تا ${exitEnd}`;
+}
+
+function formatWorkingDaysLabel(days: string[]) {
+  if (days.length === 0) return '-';
+  if (days.length === 1) return days[0];
+  const indices = days.map((day) => WEEK_DAYS.indexOf(day)).filter((index) => index >= 0).sort((a, b) => a - b);
+  if (indices.length === 0) return days.join('، ');
+  let start = indices[0];
+  let end = indices[0];
+  const ranges: string[] = [];
+  for (let index = 1; index <= indices.length; index += 1) {
+    if (index < indices.length && indices[index] === end + 1) {
+      end = indices[index];
+      continue;
+    }
+    ranges.push(start === end ? WEEK_DAYS[start] : `${WEEK_DAYS[start]} تا ${WEEK_DAYS[end]}`);
+    if (index < indices.length) {
+      start = indices[index];
+      end = indices[index];
+    }
+  }
+  return ranges.join('، ');
+}
+
+function totalDeductedRestMinutes(items: RestItem[]) {
+  return items.reduce((sum, item) => sum + restMinutes(item), 0);
+}
+
 function restMinutes(item: RestItem) {
   if (!item.deductFromWork) return 0;
   if (item.type === 'fixed') {
@@ -203,6 +247,8 @@ function normalizeToRangeDay(value: string, range: WorkRange) {
 }
 
 function fixedRestError(item: RestItem, range?: WorkRange) {
+  const duration = item.type === 'fixed' ? calculateTimeRangeDurationMinutes(item.start, item.end, item.endsNextDay) : item.unit === 'hours' ? item.duration * 60 : item.duration;
+  if (duration >= 24 * 60) return 'بازه زمانی نمی‌تواند ۲۴ ساعت یا بیشتر باشد.';
   if (item.type !== 'fixed' || !range) return '';
   const workStart = parseTime(range.start);
   const workEnd = rangeEndMinutes(range);
@@ -211,12 +257,47 @@ function fixedRestError(item: RestItem, range?: WorkRange) {
   if (workEnd > 24 * 60 && restEnd < workStart) restEnd += 24 * 60;
 
   if (restEnd <= restStart) return 'پایان استراحت باید بعد از شروع استراحت باشد.';
-  if (restStart < workStart || restEnd > workEnd) return 'استراحت ثابت باید داخل بازه کاری همین شیفت باشد. زمان استراحت را تغییر دهید.';
+  if (restStart < workStart || restEnd > workEnd) return 'بازه استراحت باید داخل محدوده شیفت باشد.';
   return '';
 }
 
 function hasFixedRestError(items: RestItem[], range?: WorkRange) {
   return items.some((item) => Boolean(fixedRestError(item, range)));
+}
+
+function grossShiftMinutes(start: string, end: string, nextDay: boolean) {
+  return calculateTimeRangeDurationMinutes(start, end, nextDay);
+}
+
+function intervalsOverlap(a: WorkRange, b: WorkRange) {
+  const aStart = parseTime(a.start);
+  const aEnd = rangeEndMinutes(a);
+  const bStart = parseTime(b.start);
+  const bEnd = rangeEndMinutes(b);
+  return aStart < bEnd && bStart < aEnd;
+}
+
+function fixedRestInterval(item: RestItem, range: WorkRange) {
+  if (item.type !== 'fixed') return null;
+  const workStart = parseTime(range.start);
+  const workEnd = rangeEndMinutes(range);
+  const restStart = normalizeToRangeDay(item.start, range);
+  let restEnd = parseTime(item.end) + (item.endsNextDay ? 24 * 60 : 0);
+  if (workEnd > 24 * 60 && restEnd < workStart) restEnd += 24 * 60;
+  return { start: restStart, end: restEnd };
+}
+
+function hasOverlappingFixedRests(items: RestItem[], range?: WorkRange) {
+  if (!range) return false;
+  const intervals = items
+    .map((item) => fixedRestInterval(item, range))
+    .filter((item): item is { start: number; end: number } => Boolean(item));
+  intervals.sort((a, b) => a.start - b.start);
+
+  for (let index = 1; index < intervals.length; index += 1) {
+    if (intervals[index].start < intervals[index - 1].end) return true;
+  }
+  return false;
 }
 
 function createRest(type: RestType = 'fixed'): RestItem {
@@ -246,6 +327,32 @@ function normalizeRests(value: unknown, fallback: RestItem[] = [createRest('fixe
       unit: rest.unit === 'hours' ? 'hours' : 'minutes',
       deductFromWork: rest.deductFromWork !== false,
     };
+  });
+}
+
+function fixedRestDurationMinutes(item: RestItem) {
+  return calculateTimeRangeDurationMinutes(item.start, item.end, item.endsNextDay);
+}
+
+function convertRestToFloating(item: RestItem) {
+  const duration = item.type === 'fixed' ? fixedRestDurationMinutes(item) : item.unit === 'hours' ? item.duration * 60 : item.duration;
+  if (duration <= 0 || duration >= 24 * 60) return null;
+  return {
+    ...item,
+    type: 'floating' as RestType,
+    start: '00:00',
+    end: '00:00',
+    endsNextDay: false,
+    duration,
+    unit: duration % 60 === 0 ? ('hours' as RestUnit) : ('minutes' as RestUnit),
+  };
+}
+
+function normalizeAbsoluteFloatingRests(value: unknown, rangeEnabled: boolean) {
+  return normalizeRests(value, []).flatMap((item) => {
+    if (rangeEnabled || item.type !== 'fixed') return [item];
+    const converted = convertRestToFloating(item);
+    return converted ? [converted] : [];
   });
 }
 
@@ -376,9 +483,21 @@ function FieldTooltip({ text }: { text: string }) {
   );
 }
 
-function TimeField({ label, value, onChange, hint }: { label: string; value: string; onChange: (value: string) => void; hint?: string }) {
+function TimeField({
+  label,
+  value,
+  onChange,
+  hint,
+  disabled = false,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  hint?: string;
+  disabled?: boolean;
+}) {
   return (
-    <label className="space-y-2 text-right">
+    <label className={cn('space-y-2 text-right', disabled && 'opacity-60')}>
       <span className="flex flex-row-reverse items-center justify-end gap-2 text-sm font-bold text-slate-300">
         <span>{label}</span>
         {hint ? <FieldTooltip text={hint} /> : null}
@@ -386,9 +505,71 @@ function TimeField({ label, value, onChange, hint }: { label: string; value: str
       <input
         type="time"
         value={value}
+        disabled={disabled}
         onChange={(event) => onChange(event.target.value)}
-        className="w-full rounded-xl border border-slate-600 bg-slate-900/60 px-4 py-3 text-right text-sm font-bold text-white outline-none transition-colors focus:border-indigo-400"
+        className={cn(
+          'w-full rounded-xl border border-slate-600 bg-slate-900/60 px-4 py-3 text-right text-sm font-bold text-white outline-none transition-colors focus:border-indigo-400',
+          disabled && 'cursor-not-allowed opacity-70',
+        )}
       />
+    </label>
+  );
+}
+
+function DurationAmountField({
+  label,
+  value,
+  unit,
+  onChange,
+  onUnitChange,
+  hint,
+}: {
+  label: string;
+  value: number;
+  unit: RestUnit;
+  onChange: (value: number) => void;
+  onUnitChange: (unit: RestUnit) => void;
+  hint?: string;
+}) {
+  const displayValue = unit === 'hours' ? Math.max(value / 60, 0) : value;
+
+  return (
+    <label className="space-y-2 text-right">
+      <span className="flex flex-row-reverse items-center justify-end gap-2 text-sm font-bold text-slate-300">
+        <span>{label}</span>
+        {hint ? <FieldTooltip text={hint} /> : null}
+      </span>
+      <div className="grid grid-cols-[1fr_auto] gap-2">
+        <input
+          type="number"
+          step={unit === 'hours' ? 0.5 : 1}
+          min={0}
+          value={displayValue}
+          onChange={(event) => {
+            const nextValue = Number(event.target.value) || 0;
+            onChange(unit === 'hours' ? nextValue * 60 : nextValue);
+          }}
+          className="w-full rounded-xl border border-slate-600 bg-slate-900/60 px-4 py-3 text-right text-sm font-bold text-white outline-none transition-colors focus:border-indigo-400"
+        />
+        <div className="rounded-full bg-slate-950/80 p-1">
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => onUnitChange('hours')}
+              className={cn('rounded-full px-3 py-3 text-xs font-bold transition-colors', unit === 'hours' ? 'bg-slate-700 text-white' : 'text-slate-400')}
+            >
+              ساعت
+            </button>
+            <button
+              type="button"
+              onClick={() => onUnitChange('minutes')}
+              className={cn('rounded-full px-3 py-3 text-xs font-bold transition-colors', unit === 'minutes' ? 'bg-slate-700 text-white' : 'text-slate-400')}
+            >
+              دقیقه
+            </button>
+          </div>
+        </div>
+      </div>
     </label>
   );
 }
@@ -409,17 +590,31 @@ function CheckboxField({ label, checked, onChange }: { label: string; checked: b
   return <InlineToggle label={label} checked={checked} onChange={onChange} />;
 }
 
-function DurationCard({ minutes }: { minutes: number }) {
+function DurationCard({ minutes, label = 'مدت شیفت' }: { minutes: number; label?: string }) {
   return (
-    <div className={cn('rounded-[18px] px-5 py-4 text-right', minutes > 24 * 60 ? 'bg-rose-950/70' : 'bg-indigo-950/70')}>
-      <div className="text-sm text-slate-300">مدت شیفت</div>
-      <div className={cn('mt-2 text-5xl font-black', minutes > 24 * 60 ? 'text-rose-400' : 'text-indigo-400')}>{formatDuration(minutes)}</div>
-      {minutes > 24 * 60 ? <div className="mt-1 text-xs text-rose-300">شیفت نمی تواند بیشتر از 24 ساعت باشد</div> : null}
+    <div className={cn('rounded-[18px] px-5 py-4 text-right', minutes >= 24 * 60 ? 'bg-rose-950/70' : 'bg-indigo-950/70')}>
+      <div className="text-sm text-slate-300">{label}</div>
+      <div className={cn('mt-2 text-5xl font-black', minutes >= 24 * 60 ? 'text-rose-400' : 'text-indigo-400')}>{formatDuration(minutes)}</div>
+      {minutes >= 24 * 60 ? <div className="mt-1 text-xs text-rose-300">بازه زمانی نمی‌تواند ۲۴ ساعت یا بیشتر باشد.</div> : null}
     </div>
   );
 }
 
-function TitleCard({ title, setTitle }: { title: string; setTitle: (value: string) => void }) {
+function TitleCard({
+  title,
+  setTitle,
+  helper,
+  error,
+  required = false,
+  placeholder = 'مثلاً: شیفت صبح اداری',
+}: {
+  title: string;
+  setTitle: (value: string) => void;
+  helper?: string;
+  error?: string;
+  required?: boolean;
+  placeholder?: string;
+}) {
   return (
     <div className="rounded-[22px] border border-white/10 p-5">
       <div className="flex flex-row-reverse items-center justify-between gap-3 border-b border-white/10 pb-4 text-right">
@@ -427,13 +622,22 @@ function TitleCard({ title, setTitle }: { title: string; setTitle: (value: strin
         <div className="text-xl font-black text-white">اطلاعات پایه شیفت</div>
       </div>
       <label className="mt-6 block space-y-2 text-right">
-        <span className="text-sm font-bold text-white">عنوان شیفت</span>
+        <span className="text-sm font-bold text-white">{required ? 'عنوان شیفت' : 'عنوان شیفت (اختیاری)'}</span>
         <input
           value={title}
           onChange={(event) => setTitle(event.target.value)}
-          placeholder="عنوان شیفت (اختیاری)"
-          className="w-full rounded-xl border border-slate-600 bg-slate-900/60 px-4 py-3 text-right text-sm text-white outline-none transition-colors focus:border-indigo-400"
+          placeholder={placeholder}
+          className={cn(
+            'w-full rounded-xl border bg-slate-900/60 px-4 py-3 text-right text-sm text-white outline-none transition-colors focus:border-indigo-400',
+            error ? 'border-rose-400/60' : 'border-slate-600',
+          )}
         />
+        {helper ? (
+          <p className="text-xs leading-6 text-slate-400">{helper}</p>
+        ) : (
+          <p className="text-xs leading-6 text-slate-400">در صورت خالی بودن، نام پیش‌فرض بر اساس نوع شیفت استفاده می‌شود.</p>
+        )}
+        {error ? <small className="block text-xs font-bold text-rose-300">{error}</small> : null}
       </label>
     </div>
   );
@@ -456,7 +660,7 @@ function ModeSwitch({ mode, setMode, noTemplateMessage }: { mode: ShiftMode; set
             onClick={() => setMode('template')}
             className={cn('rounded-full px-4 py-3 text-sm font-bold transition-colors', mode === 'template' ? 'bg-slate-700 text-white' : 'text-slate-400')}
           >
-            انتخاب از قالب ها
+            انتخاب از قالب آماده
           </button>
         </div>
       </div>
@@ -465,21 +669,42 @@ function ModeSwitch({ mode, setMode, noTemplateMessage }: { mode: ShiftMode; set
   );
 }
 
-function WeekDaysEditor({ days, onToggle }: { days: string[]; onToggle: (day: string) => void }) {
+function WeekDaysEditor({
+  days,
+  onToggle,
+  calendarHolidayDays = [],
+}: {
+  days: string[];
+  onToggle: (day: string) => void;
+  calendarHolidayDays?: string[];
+}) {
+  const selectedHolidayDays = days.filter((day) => calendarHolidayDays.includes(day));
+
   return (
     <div className="space-y-3 text-right">
       <div className="flex flex-row-reverse items-center justify-end gap-2 text-xl font-black text-white">
-        <span>روزهای هفته</span>
+        <span>روزهای فعال</span>
         <CalendarDays className="h-5 w-5 text-slate-300" />
       </div>
       <div className="flex flex-wrap justify-start gap-2">
-        {[...WEEK_DAYS].reverse().map((day) => (
-          <DetailToggle key={day} active={days.includes(day)} onClick={() => onToggle(day)}>
-            {days.includes(day) ? `${day} ✓` : day}
-          </DetailToggle>
+        {WEEK_DAYS.map((day) => (
+          <div key={day} className="relative inline-flex flex-col items-center gap-1">
+            <DetailToggle active={days.includes(day)} onClick={() => onToggle(day)}>
+              {days.includes(day) ? `${day} ✓` : day}
+            </DetailToggle>
+            {calendarHolidayDays.includes(day) ? (
+              <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold text-amber-200">تعطیل در تقویم</span>
+            ) : null}
+          </div>
         ))}
       </div>
-      <div className="text-sm text-slate-400">روزهای غیرفعال شده در تقویم فعلی شما تعطیل هستند.</div>
+      {selectedHolidayDays.length > 0 ? (
+        <div className="rounded-xl border border-amber-400/25 bg-amber-950/30 px-3 py-2 text-xs leading-6 text-amber-100">
+          این روز در تقویم کاری تعطیل ثبت شده است. با انتخاب آن، این شیفت برای همان روز فعال خواهد شد.
+        </div>
+      ) : (
+        <div className="text-sm text-slate-400">روزهای غیرفعال شده در تقویم فعلی شما تعطیل هستند.</div>
+      )}
     </div>
   );
 }
@@ -510,41 +735,51 @@ function BreakTypeSelect({
 }) {
   if (floatingOnly) {
     return (
-      <div className="rounded-xl border border-slate-600 bg-slate-700/40 px-4 py-3 text-right text-sm font-bold text-slate-200">
-        شناور
-      </div>
+      <div className="rounded-xl border border-slate-600 bg-slate-700/40 px-4 py-3 text-right text-sm font-bold text-slate-200">مدت شناور</div>
     );
   }
 
   return (
-    <label className="block space-y-2 text-right">
+    <div className="space-y-2 text-right">
       <span className="text-xs font-bold text-slate-400">نوع استراحت</span>
-      <select
-        value={value}
-        onChange={(event) => onChange(event.target.value as RestType)}
-        className="w-full rounded-xl border border-slate-600 bg-slate-800 px-4 py-3 text-right text-sm font-bold text-white [color-scheme:dark] outline-none transition-colors focus:border-indigo-400 [&>option]:bg-slate-900 [&>option]:text-white"
-      >
-        <option value="fixed">بازه ثابت</option>
-        <option value="floating">شناور</option>
-      </select>
-    </label>
+      <div className="rounded-full bg-slate-950/80 p-1">
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => onChange('fixed')}
+            className={cn('rounded-full px-4 py-3 text-sm font-bold transition-colors', value === 'fixed' ? 'bg-slate-700 text-white' : 'text-slate-400')}
+          >
+            بازه ثابت
+          </button>
+          <button
+            type="button"
+            onClick={() => onChange('floating')}
+            className={cn('rounded-full px-4 py-3 text-sm font-bold transition-colors', value === 'floating' ? 'bg-slate-700 text-white' : 'text-slate-400')}
+          >
+            مدت شناور
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 
 function DeductToggle({ checked, onChange }: { checked: boolean; onChange: (checked: boolean) => void }) {
-  return <InlineToggle label="کسر از ساعات کاری" checked={checked} onChange={onChange} />;
+  return <InlineToggle label="کسر استراحت از کارکرد" checked={checked} onChange={onChange} />;
 }
 
 function BreakEditor({
   items,
   onChange,
   floatingOnly = false,
+  preferFloatingDuration = false,
   workRange,
   allowFixedRestEndsNextDay = false,
 }: {
   items: RestItem[];
   onChange: (items: RestItem[]) => void;
   floatingOnly?: boolean;
+  preferFloatingDuration?: boolean;
   workRange?: WorkRange;
   allowFixedRestEndsNextDay?: boolean;
 }) {
@@ -555,7 +790,7 @@ function BreakEditor({
       <div dir="ltr" className="flex items-center justify-between gap-3">
         <button
           type="button"
-          onClick={() => onChange([...items, createRest(floatingOnly ? 'floating' : 'fixed')])}
+          onClick={() => onChange([...items, createRest(preferFloatingDuration || floatingOnly ? 'floating' : 'fixed')])}
           className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-600 text-white transition-colors hover:bg-indigo-500"
         >
           <Plus className="h-5 w-5" />
@@ -565,6 +800,11 @@ function BreakEditor({
           <Coffee className="h-5 w-5 text-slate-300" />
         </div>
       </div>
+      {preferFloatingDuration ? (
+        <div className="rounded-xl border border-indigo-400/20 bg-indigo-950/30 px-3 py-2 text-xs leading-6 text-indigo-100">
+          برای شیفت شناور، مدت شناور معمولاً مناسب‌تر است؛ مگر اینکه سازمان ساعت استراحت ثابت داشته باشد.
+        </div>
+      ) : null}
 
       {items.map((item) => (
         <div key={item.id} className="space-y-4 rounded-[18px] border border-white/10 bg-slate-800/45 p-4">
@@ -591,6 +831,11 @@ function BreakEditor({
                 <div className="flex justify-start">
                   <DeductToggle checked={item.deductFromWork} onChange={(checked) => updateItem(item.id, { deductFromWork: checked })} />
                 </div>
+                {preferFloatingDuration ? (
+                  <p className="text-xs leading-6 text-slate-400">
+                    در شیفت شناور، بازه ثابت استراحت فقط زمانی مناسب است که سازمان ساعت استراحت مشخص و ثابتی داشته باشد.
+                  </p>
+                ) : null}
               </div>
               <div className="min-w-0 space-y-2">
                 <TimeField label="پایان استراحت" value={item.end} onChange={(value) => updateItem(item.id, { end: value })} />
@@ -693,6 +938,8 @@ export function CalendarShiftWizard({
   );
   const [selectedTemplateId, setSelectedTemplateId] = useState(String(baseShiftConfig.templateId ?? ''));
   const [shiftTitle, setShiftTitle] = useState('');
+  const [saveError, setSaveError] = useState('');
+  const [rotateComingSoonOpen, setRotateComingSoonOpen] = useState(false);
   const [templateDescription, setTemplateDescription] = useState(initialDescription);
 
   const [workingDays, setWorkingDays] = useState<string[]>(
@@ -709,28 +956,36 @@ export function CalendarShiftWizard({
   const [floatDayWorkingDays, setFloatDayWorkingDays] = useState<string[]>(
     stringArray(baseShiftConfig.floatDayWorkingDays, defaultWorkingDaysForContext),
   );
-  const [floatDayRequiredMinutes, setFloatDayRequiredMinutes] = useState(Number(floatDayConfig.requiredMinutes ?? 480) || 480);
+  const initialFloatDayRequiredMinutes = Number(floatDayConfig.requiredMinutes ?? 480) || 480;
+  const [floatDayRequiredMinutes, setFloatDayRequiredMinutes] = useState(initialFloatDayRequiredMinutes);
+  const [floatDayRequiredUnit, setFloatDayRequiredUnit] = useState<RestUnit>(initialFloatDayRequiredMinutes % 60 === 0 ? 'hours' : 'minutes');
   const [floatDayEntryStart, setFloatDayEntryStart] = useState(String(floatDayConfig.bandwidthStart ?? '08:00'));
   const [floatDayEntryEnd, setFloatDayEntryEnd] = useState(String(floatDayConfig.bandwidthEnd ?? '16:00'));
-  const [floatDayEntryEndsNextDay, setFloatDayEntryEndsNextDay] = useState(Boolean(floatDayConfig.bandwidthEndsNextDay ?? false));
   const [floatDayCoreStart, setFloatDayCoreStart] = useState(String(floatDayConfig.coreTimeStart ?? '10:00'));
   const [floatDayCoreEnd, setFloatDayCoreEnd] = useState(String(floatDayConfig.coreTimeEnd ?? '14:00'));
+  const [floatDayCoreEnabled, setFloatDayCoreEnabled] = useState(Boolean(floatDayConfig.coreTimeStart && floatDayConfig.coreTimeEnd));
   const [floatDayRests, setFloatDayRests] = useState<RestItem[]>(normalizeRests(floatDayConfig.rests ?? baseShiftConfig.floatDayRests, []));
 
   const [floatAbsWorkingDays, setFloatAbsWorkingDays] = useState<string[]>(
     stringArray(baseShiftConfig.floatAbsWorkingDays, defaultWorkingDaysForContext),
   );
   const [floatAbsRequiredMinutes, setFloatAbsRequiredMinutes] = useState(Number(floatAbsConfig.requiredMinutes ?? 480) || 480);
+  const initialFloatAbsRangeEnabled = Boolean(
+    floatAbsConfig.registrationRangeEnabled ?? ('startTime' in floatAbsConfig || 'endTime' in floatAbsConfig || 'endsNextDay' in floatAbsConfig),
+  );
+  const [floatAbsRangeEnabled, setFloatAbsRangeEnabled] = useState(initialFloatAbsRangeEnabled);
   const [floatAbsStart, setFloatAbsStart] = useState(String(floatAbsConfig.startTime ?? '08:00'));
   const [floatAbsEnd, setFloatAbsEnd] = useState(String(floatAbsConfig.endTime ?? '16:00'));
-  const [floatAbsNextDay, setFloatAbsNextDay] = useState(Boolean(floatAbsConfig.endsNextDay ?? false));
-  const [floatAbsRests, setFloatAbsRests] = useState<RestItem[]>(normalizeRests(floatAbsConfig.rests ?? baseShiftConfig.floatAbsRests, []));
+  const [floatAbsRests, setFloatAbsRests] = useState<RestItem[]>(
+    normalizeAbsoluteFloatingRests(floatAbsConfig.rests ?? baseShiftConfig.floatAbsRests, initialFloatAbsRangeEnabled),
+  );
 
   const [splitWorkingDays, setSplitWorkingDays] = useState<string[]>(
     stringArray(baseShiftConfig.splitWorkingDays, defaultWorkingDaysForContext),
   );
   const [split1Start, setSplit1Start] = useState(String(splitConfig.segment1Start ?? '08:00'));
   const [split1End, setSplit1End] = useState(String(splitConfig.segment1End ?? '12:00'));
+  const [split1NextDay, setSplit1NextDay] = useState(Boolean(splitConfig.segment1EndsNextDay ?? false));
   const [split1Rests, setSplit1Rests] = useState<RestItem[]>(normalizeRests(splitConfig.segment1Breaks, []));
   const [split2Start, setSplit2Start] = useState(String(splitConfig.segment2Start ?? '16:00'));
   const [split2End, setSplit2End] = useState(String(splitConfig.segment2End ?? '20:00'));
@@ -739,59 +994,191 @@ export function CalendarShiftWizard({
 
   const [rotateSegments, setRotateSegments] = useState<RotateSegment[]>(normalizeSegments(baseShiftConfig.rotatingItems));
 
+  const setFloatDayRequiredMinutesValue = (minutes: number) => {
+    const safe = Math.max(Math.round(minutes), 0);
+    setFloatDayRequiredMinutes(safe);
+  };
+
   const fixedWorkRange = useMemo<WorkRange>(() => ({ start: startTime, end: endTime, nextDay }), [endTime, nextDay, startTime]);
-  const floatAbsWorkRange = useMemo<WorkRange>(() => ({ start: floatAbsStart, end: floatAbsEnd, nextDay: floatAbsNextDay }), [floatAbsEnd, floatAbsNextDay, floatAbsStart]);
-  const split1WorkRange = useMemo<WorkRange>(() => ({ start: split1Start, end: split1End, nextDay: false }), [split1End, split1Start]);
+  const floatAbsWorkRange = useMemo<WorkRange | undefined>(
+    () => (floatAbsRangeEnabled ? { start: floatAbsStart, end: floatAbsEnd, nextDay: false } : undefined),
+    [floatAbsEnd, floatAbsRangeEnabled, floatAbsStart],
+  );
+  const floatAbsFixedBreaksAllowed = Boolean(floatAbsWorkRange);
+  const floatAbsDeducted = useMemo(() => totalDeductedRestMinutes(floatAbsRests), [floatAbsRests]);
+  const floatAbsNetMinutes = useMemo(() => Math.max(floatAbsRequiredMinutes - floatAbsDeducted, 0), [floatAbsDeducted, floatAbsRequiredMinutes]);
+  const split1WorkRange = useMemo<WorkRange>(() => ({ start: split1Start, end: split1End, nextDay: split1NextDay }), [split1End, split1NextDay, split1Start]);
   const split2WorkRange = useMemo<WorkRange>(() => ({ start: split2Start, end: split2End, nextDay: split2NextDay }), [split2End, split2NextDay, split2Start]);
 
   const fixedTotalMinutes = useMemo(() => shiftDuration(startTime, endTime, nextDay, rests), [endTime, nextDay, rests, startTime]);
   const floatDayDeducted = useMemo(() => floatDayRests.reduce((sum, item) => sum + restMinutes(item), 0), [floatDayRests]);
-  const floatDayExitRange = useMemo(() => {
-    const entryStart = parseTime(floatDayEntryStart);
-    const entryEnd = parseTime(floatDayEntryEnd) + (floatDayEntryEndsNextDay || parseTime(floatDayEntryEnd) <= entryStart ? 24 * 60 : 0);
-    const exitStart = parseTime(floatDayEntryStart) + floatDayRequiredMinutes + floatDayDeducted;
-    const exitEnd = entryEnd + floatDayRequiredMinutes + floatDayDeducted;
-    const coreEndLimit = parseTime(floatDayCoreEnd) + floatDayRequiredMinutes;
-    return { start: formatDuration(exitStart), end: formatDuration(Math.max(exitEnd, coreEndLimit)) };
-  }, [floatDayCoreEnd, floatDayDeducted, floatDayEntryEnd, floatDayEntryEndsNextDay, floatDayEntryStart, floatDayRequiredMinutes]);
-  const floatDayWorkRange = useMemo<WorkRange>(() => ({ start: floatDayEntryStart, end: floatDayExitRange.end, nextDay: parseTime(floatDayExitRange.end) <= parseTime(floatDayEntryStart) }), [floatDayEntryStart, floatDayExitRange.end]);
-  const floatDayTotalMinutes = useMemo(
-    () => {
-      const entryStart = parseTime(floatDayEntryStart);
-      const entryEnd = parseTime(floatDayEntryEnd) + (floatDayEntryEndsNextDay || parseTime(floatDayEntryEnd) <= entryStart ? 24 * 60 : 0);
-      return floatDayRequiredMinutes + floatDayDeducted + Math.max(entryEnd - entryStart, 0);
-    },
-    [floatDayDeducted, floatDayEntryEnd, floatDayEntryEndsNextDay, floatDayEntryStart, floatDayRequiredMinutes],
-  );
-  const floatAbsTotalMinutes = useMemo(() => shiftDuration(floatAbsStart, floatAbsEnd, floatAbsNextDay, floatAbsRests), [floatAbsEnd, floatAbsNextDay, floatAbsRests, floatAbsStart]);
+  const floatDayWorkRange = useMemo<WorkRange>(() => {
+    const rangeEnd = parseTime(floatDayEntryStart) + floatDayRequiredMinutes;
+    return {
+      start: floatDayEntryStart,
+      end: minutesToTime(rangeEnd % (24 * 60)),
+      nextDay: rangeEnd >= 24 * 60,
+    };
+  }, [floatDayEntryStart, floatDayRequiredMinutes]);
+  const floatDayNetMinutes = useMemo(() => Math.max(floatDayRequiredMinutes - floatDayDeducted, 0), [floatDayDeducted, floatDayRequiredMinutes]);
+  const floatDaySampleEntry = '08:30';
+  const floatDaySampleExit = minutesToTime(parseTime(floatDaySampleEntry) + floatDayRequiredMinutes);
+  const floatDaySampleStatus = parseTime(floatDaySampleEntry) < parseTime(floatDayEntryStart)
+    ? 'قبل از بازه'
+    : parseTime(floatDaySampleEntry) > parseTime(floatDayEntryEnd)
+      ? 'بعد از بازه'
+      : 'مجاز';
   const splitTotalMinutes = useMemo(
-    () => shiftDuration(split1Start, split1End, false, split1Rests) + shiftDuration(split2Start, split2End, split2NextDay, split2Rests),
-    [split1End, split1Rests, split1Start, split2End, split2NextDay, split2Rests, split2Start],
+    () => shiftDuration(split1Start, split1End, split1NextDay, split1Rests) + shiftDuration(split2Start, split2End, split2NextDay, split2Rests),
+    [split1End, split1NextDay, split1Rests, split1Start, split2End, split2NextDay, split2Rests, split2Start],
   );
 
-  const selectedShiftLabel = SHIFT_OPTIONS.find((item) => item.id === shiftType)?.label ?? 'شیفت ثبت نشده';
+  const setFloatAbsRangeEnabledWithConversion = (checked: boolean) => {
+    if (!checked && floatAbsRangeEnabled && floatAbsRests.some((item) => item.type === 'fixed')) {
+      const confirmed = window.confirm(
+        'با غیرفعال کردن محدودیت زمانی ثبت تردد، استراحت‌های بازه ثابت دیگر معتبر نیستند و به مدت شناور تبدیل یا حذف می‌شوند. ادامه می‌دهید؟',
+      );
+      if (!confirmed) return;
+      setFloatAbsRests((prev) => prev.flatMap((item) => {
+        if (item.type !== 'fixed') return [item];
+        const converted = convertRestToFloating(item);
+        return converted ? [converted] : [];
+      }));
+    }
+    setFloatAbsRangeEnabled(checked);
+    if (!checked) {
+      setFloatAbsStart('');
+      setFloatAbsEnd('');
+    }
+  };
+
+  const handleFloatAbsBreakChange = (items: RestItem[]) => {
+    if (!floatAbsFixedBreaksAllowed) {
+      setFloatAbsRests(items.flatMap((item) => {
+        if (item.type !== 'fixed') return [item];
+        const converted = convertRestToFloating(item);
+        return converted ? [converted] : [];
+      }));
+      return;
+    }
+    setFloatAbsRests(items);
+  };
+
+  const getFixedShiftErrors = () => {
+    const errors: string[] = [];
+    if (!dayContext && workingDays.length === 0) errors.push('حداقل یک روز برای این شیفت انتخاب کنید.');
+    if (!startTime) errors.push('ساعت ورود را مشخص کنید.');
+    if (!endTime) errors.push('ساعت خروج را مشخص کنید.');
+    if (startTime && endTime && !nextDay && parseTime(endTime) <= parseTime(startTime)) {
+      errors.push('ساعت خروج قبل از ساعت ورود است. اگر این شیفت شبانه است، گزینه «خروج در روز بعد» را فعال کنید.');
+    }
+    if (validateTimeRangeUnder24Hours(startTime, endTime, nextDay)) {
+      errors.push('بازه زمانی نمی‌تواند ۲۴ ساعت یا بیشتر باشد.');
+    }
+    if (hasFixedRestError(rests, fixedWorkRange)) errors.push('بازه استراحت باید داخل محدوده شیفت باشد.');
+    if (hasOverlappingFixedRests(rests, fixedWorkRange)) errors.push('بازه‌های استراحت با یکدیگر تداخل دارند.');
+    if (totalDeductedRestMinutes(rests) > grossShiftMinutes(startTime, endTime, nextDay)) {
+      errors.push('مدت استراحت نمی‌تواند از مدت شیفت بیشتر باشد.');
+    }
+    return errors;
+  };
+
+  const getFloatDayErrors = () => {
+    const errors: string[] = [];
+    if (!dayContext && floatDayWorkingDays.length === 0) errors.push('حداقل یک روز برای این شیفت انتخاب کنید.');
+    if (!shiftTitle.trim()) errors.push('عنوان شیفت را وارد کنید.');
+    if (!floatDayEntryStart || !floatDayEntryEnd) errors.push('بازه مجاز ورود را کامل کنید.');
+    if (floatDayEntryStart && floatDayEntryEnd && parseTime(floatDayEntryEnd) <= parseTime(floatDayEntryStart)) {
+      errors.push('پایان بازه مجاز ورود باید بعد از شروع آن باشد.');
+    }
+    if (validateTimeRangeUnder24Hours(floatDayEntryStart, floatDayEntryEnd)) {
+      errors.push('بازه زمانی نمی‌تواند ۲۴ ساعت یا بیشتر باشد.');
+    }
+    if (!floatDayRequiredMinutes) errors.push('مدت کار موظف را وارد کنید.');
+    if (floatDayRequiredMinutes <= 0) errors.push('مدت کار موظف باید بیشتر از صفر باشد.');
+    if (floatDayCoreEnabled) {
+      if (!floatDayCoreStart || !floatDayCoreEnd) {
+        errors.push('شروع و پایان هسته حضور را کامل کنید.');
+      }
+      if (floatDayCoreStart && floatDayCoreEnd && parseTime(floatDayCoreEnd) <= parseTime(floatDayCoreStart)) {
+        errors.push('پایان هسته حضور باید بعد از شروع آن باشد.');
+      }
+      if (validateTimeRangeUnder24Hours(floatDayCoreStart, floatDayCoreEnd)) {
+        errors.push('بازه زمانی نمی‌تواند ۲۴ ساعت یا بیشتر باشد.');
+      }
+    }
+    if (totalDeductedRestMinutes(floatDayRests) > floatDayRequiredMinutes) {
+      errors.push('مدت استراحت نمی‌تواند از مدت کار موظف بیشتر باشد.');
+    }
+    if (hasFixedRestError(floatDayRests, floatDayWorkRange)) {
+      errors.push('بازه استراحت باید داخل محدوده شیفت باشد.');
+    }
+    if (hasOverlappingFixedRests(floatDayRests, floatDayWorkRange)) {
+      errors.push('بازه‌های استراحت با یکدیگر تداخل دارند.');
+    }
+    return errors;
+  };
+
+  const fixedShiftErrors = shiftType === 'fixed' ? getFixedShiftErrors() : [];
+  const floatDayErrors = shiftType === 'float-day' ? getFloatDayErrors() : [];
+  const floatAbsErrors = (() => {
+    if (shiftType !== 'float-abs') return [] as string[];
+    const errors: string[] = [];
+    if (!shiftTitle.trim()) errors.push('عنوان شیفت را وارد کنید.');
+    if (!dayContext && floatAbsWorkingDays.length === 0) errors.push('حداقل یک روز برای این شیفت انتخاب کنید.');
+    if (!floatAbsRequiredMinutes) errors.push('حداقل مدت کار روزانه را وارد کنید.');
+    if (floatAbsRequiredMinutes <= 0) errors.push('حداقل مدت کار روزانه باید بیشتر از صفر باشد.');
+    if (floatAbsRangeEnabled) {
+      if (!floatAbsStart || !floatAbsEnd) errors.push('محدوده مجاز ثبت تردد را کامل کنید.');
+      if (floatAbsStart && floatAbsEnd && parseTime(floatAbsEnd) <= parseTime(floatAbsStart)) {
+        errors.push('پایان محدوده مجاز ثبت تردد باید بعد از شروع آن باشد.');
+      }
+      if (validateTimeRangeUnder24Hours(floatAbsStart, floatAbsEnd)) {
+        errors.push('بازه زمانی نمی‌تواند ۲۴ ساعت یا بیشتر باشد.');
+      }
+    }
+    if (floatAbsDeducted > floatAbsRequiredMinutes) {
+      errors.push('مدت استراحت نمی‌تواند از حداقل مدت کار روزانه بیشتر باشد.');
+    }
+    if (floatAbsWorkRange && hasFixedRestError(floatAbsRests, floatAbsWorkRange)) {
+      errors.push('بازه استراحت ثابت باید داخل محدوده مجاز ثبت تردد باشد.');
+    }
+    if (hasOverlappingFixedRests(floatAbsRests, floatAbsWorkRange)) {
+      errors.push('بازه‌های استراحت با یکدیگر تداخل دارند.');
+    }
+    return errors;
+  })();
+
   const hasWeekdaySchedule = (days: string[]) => Boolean(dayContext) || days.length > 0;
   const fixedReady =
     shiftType === 'fixed' &&
+    fixedShiftErrors.length === 0 &&
     hasWeekdaySchedule(workingDays) &&
-    fixedTotalMinutes <= 24 * 60 &&
-    !hasFixedRestError(rests, fixedWorkRange);
+    grossShiftMinutes(startTime, endTime, nextDay) < 24 * 60;
   const floatDayReady =
     shiftType === 'float-day' &&
-    hasWeekdaySchedule(floatDayWorkingDays) &&
-    floatDayTotalMinutes <= 24 * 60 &&
-    !hasFixedRestError(floatDayRests, floatDayWorkRange);
+    floatDayErrors.length === 0 &&
+    hasWeekdaySchedule(floatDayWorkingDays);
   const floatAbsReady =
     shiftType === 'float-abs' &&
-    hasWeekdaySchedule(floatAbsWorkingDays) &&
-    floatAbsTotalMinutes <= 24 * 60 &&
-    !hasFixedRestError(floatAbsRests, floatAbsWorkRange);
+    floatAbsErrors.length === 0 &&
+    hasWeekdaySchedule(floatAbsWorkingDays);
+  const splitGrossMinutes = grossShiftMinutes(split1Start, split1End, split1NextDay) + grossShiftMinutes(split2Start, split2End, split2NextDay);
   const splitReady =
     shiftType === 'split' &&
+    Boolean(split1Start && split1End && split2Start && split2End) &&
+    !(split1Start && split1End && parseTime(split1End) <= parseTime(split1Start) && !split1NextDay) &&
+    !(split2Start && split2End && parseTime(split2End) <= parseTime(split2Start) && !split2NextDay) &&
+    !validateTimeRangeUnder24Hours(split1Start, split1End, split1NextDay) &&
+    !validateTimeRangeUnder24Hours(split2Start, split2End, split2NextDay) &&
     hasWeekdaySchedule(splitWorkingDays) &&
     splitTotalMinutes <= 24 * 60 &&
+    !intervalsOverlap(split1WorkRange, split2WorkRange) &&
     !hasFixedRestError(split1Rests, split1WorkRange) &&
-    !hasFixedRestError(split2Rests, split2WorkRange);
+    !hasFixedRestError(split2Rests, split2WorkRange) &&
+    !hasOverlappingFixedRests(split1Rests, split1WorkRange) &&
+    !hasOverlappingFixedRests(split2Rests, split2WorkRange) &&
+    totalDeductedRestMinutes([...split1Rests, ...split2Rests]) <= splitGrossMinutes;
   const rotateReady =
     shiftType === 'rotate' &&
     rotateSegments.length > 0 &&
@@ -845,24 +1232,25 @@ export function CalendarShiftWizard({
     if (template.shiftType === 'float-day') {
       const floatDay = asObject(config.floatingShiftStartOfDay);
       setFloatDayWorkingDays(template.weekDays.length > 0 ? template.weekDays : stringArray(config.floatDayWorkingDays, DEFAULT_WORKING_DAYS));
-      setFloatDayRequiredMinutes(Number(floatDay.requiredMinutes ?? 480) || 480);
+      setFloatDayRequiredMinutesValue(Number(floatDay.requiredMinutes ?? 480) || 480);
       setFloatDayEntryStart(String(floatDay.bandwidthStart ?? '08:00'));
       setFloatDayEntryEnd(String(floatDay.bandwidthEnd ?? '16:00'));
-      setFloatDayEntryEndsNextDay(Boolean(floatDay.bandwidthEndsNextDay ?? false));
       setFloatDayCoreStart(String(floatDay.coreTimeStart ?? '10:00'));
       setFloatDayCoreEnd(String(floatDay.coreTimeEnd ?? '14:00'));
+      setFloatDayCoreEnabled(Boolean(floatDay.coreTimeStart && floatDay.coreTimeEnd));
       setFloatDayRests(normalizeRests(floatDay.rests, floatDayRests));
       return;
     }
 
     if (template.shiftType === 'float-abs') {
       const floatAbs = asObject(config.absoluteFloatingShift);
+      const rangeEnabled = Boolean(floatAbs.registrationRangeEnabled ?? ('startTime' in floatAbs || 'endTime' in floatAbs || 'endsNextDay' in floatAbs));
       setFloatAbsWorkingDays(template.weekDays.length > 0 ? template.weekDays : stringArray(config.floatAbsWorkingDays, DEFAULT_WORKING_DAYS));
       setFloatAbsRequiredMinutes(Number(floatAbs.requiredMinutes ?? 480) || 480);
+      setFloatAbsRangeEnabled(rangeEnabled);
       setFloatAbsStart(String(floatAbs.startTime ?? '08:00'));
       setFloatAbsEnd(String(floatAbs.endTime ?? '16:00'));
-      setFloatAbsNextDay(Boolean(floatAbs.endsNextDay ?? false));
-      setFloatAbsRests(normalizeRests(floatAbs.rests, floatAbsRests));
+      setFloatAbsRests(normalizeAbsoluteFloatingRests(floatAbs.rests, rangeEnabled));
       return;
     }
 
@@ -932,21 +1320,23 @@ export function CalendarShiftWizard({
         requiredMinutes: floatDayRequiredMinutes,
         bandwidthStart: floatDayEntryStart,
         bandwidthEnd: floatDayEntryEnd,
-        bandwidthEndsNextDay: floatDayEntryEndsNextDay,
-        coreTimeStart: floatDayCoreStart,
-        coreTimeEnd: floatDayCoreEnd,
+        bandwidthEndsNextDay: false,
+        coreTimeStart: floatDayCoreEnabled ? floatDayCoreStart : '',
+        coreTimeEnd: floatDayCoreEnabled ? floatDayCoreEnd : '',
         rests: floatDayRests,
       },
       absoluteFloatingShift: {
         requiredMinutes: floatAbsRequiredMinutes,
-        startTime: floatAbsStart,
-        endTime: floatAbsEnd,
-        endsNextDay: floatAbsNextDay,
+        registrationRangeEnabled: floatAbsRangeEnabled,
+        startTime: floatAbsRangeEnabled ? floatAbsStart : '',
+        endTime: floatAbsRangeEnabled ? floatAbsEnd : '',
+        endsNextDay: false,
         rests: floatAbsRests,
       },
       splitShift: {
         segment1Start: split1Start,
         segment1End: split1End,
+        segment1EndsNextDay: split1NextDay,
         segment1Breaks: split1Rests,
         segment2Start: split2Start,
         segment2End: split2End,
@@ -961,6 +1351,7 @@ export function CalendarShiftWizard({
   const save = async () => {
     if (!canSave) return;
     setSaving(true);
+    setSaveError('');
     try {
       const payload: ShiftWizardSavePayload = {
         shiftType,
@@ -980,12 +1371,14 @@ export function CalendarShiftWizard({
         });
       }
       onSaved();
+    } catch {
+      setSaveError('شیفت ذخیره نشد. دوباره تلاش کنید.');
     } finally {
       setSaving(false);
     }
   };
 
-  const resolvedSubmitLabel = submitLabel ?? (isTemplatePurpose ? 'ثبت قالب' : 'ثبت شیفت');
+  const resolvedSubmitLabel = submitLabel ?? (isTemplatePurpose ? 'ثبت قالب' : 'ذخیره شیفت');
 
   return (
     <section
@@ -1025,6 +1418,10 @@ export function CalendarShiftWizard({
                       option={option}
                       active={shiftType === option.id}
                       onClick={() => {
+                        if (option.id === 'rotate') {
+                          setRotateComingSoonOpen(true);
+                          return;
+                        }
                         setShiftType(option.id);
                         setShiftMode(option.id === 'fixed' ? shiftMode : 'manual');
                       }}
@@ -1061,13 +1458,29 @@ export function CalendarShiftWizard({
 
             {shiftType === 'fixed' ? (
               <>
-                <TitleCard title={shiftTitle} setTitle={setShiftTitle} />
+                <TitleCard
+                  title={shiftTitle}
+                  setTitle={setShiftTitle}
+                  helper="این عنوان بعداً در گزارش‌ها، تنظیمات کاربران و گروه‌های کاری نمایش داده می‌شود."
+                  required
+                  placeholder="مثلاً: شیفت شناور اداری"
+                />
+                <div className="rounded-xl border border-emerald-400/20 bg-emerald-500/10 p-4 text-right">
+                  <div className="text-sm font-bold text-emerald-100">شیفت ثابت برای تیم‌هایی مناسب است که ساعت ورود و خروج مشخص و تکرارشونده دارند.</div>
+                  <p className="mt-2 text-xs leading-6 text-emerald-50/80">مثال: ۸:۰۰ تا ۱۶:۳۰</p>
+                </div>
                 <div className="rounded-[22px] border border-white/10 p-5">
                   <div className="flex flex-row-reverse items-center justify-between gap-3 border-b border-white/10 pb-4 text-right">
                     <SlidersHorizontal className="h-5 w-5 text-indigo-300" />
-                    <div className="text-xl font-black text-white">تعریف شیفت ثابت</div>
+                    <div className="text-xl font-black text-white">شیفت کاری پایه را تعریف کنید</div>
                   </div>
                   {enableBuiltinTemplatePicker ? <ModeSwitch mode={shiftMode} setMode={setShiftMode} /> : null}
+                  <div className="mt-3 rounded-xl border border-indigo-400/20 bg-indigo-950/30 p-4 text-right">
+                    <div className="text-sm font-bold text-white">این شیفت برای محاسبه حضور، تأخیر، خروج زودهنگام، استراحت و مدت کارکرد کارکنان استفاده می‌شود.</div>
+                    <p className="mt-2 text-xs leading-6 text-slate-300">
+                      در این مرحله فقط یک شیفت پایه برای شروع کار تعریف کنید. پس از تکمیل راه‌اندازی، می‌توانید برای گروه‌های کاری مختلف، شیفت‌های بیشتری بسازید.
+                    </p>
+                  </div>
                   <div className="mt-6 space-y-5">
                     {enableBuiltinTemplatePicker && shiftMode === 'template' ? (
                       <div className="space-y-4">
@@ -1102,19 +1515,48 @@ export function CalendarShiftWizard({
                       </div>
                     ) : null}
                     {!dayContext ? (
-                      <WeekDaysEditor days={workingDays} onToggle={(day) => setWorkingDays((prev) => toggle(prev, day))} />
+                      <WeekDaysEditor
+                        days={workingDays}
+                        calendarHolidayDays={weekends}
+                        onToggle={(day) => setWorkingDays((prev) => toggle(prev, day))}
+                      />
                     ) : null}
                     <div className="grid grid-cols-2 gap-4">
-                      <TimeField label="ساعت ورود" value={startTime} onChange={setStartTime} hint="ساعت شروع کار در روز کاری انتخاب شده است." />
+                      <TimeField label="ساعت ورود" value={startTime} onChange={setStartTime} hint="زمانی که انتظار می‌رود کارمند شیفت خود را شروع کند." />
                       <div className="min-w-0 space-y-2">
-                        <TimeField label="ساعت خروج" value={endTime} onChange={setEndTime} hint="اگر خروج بعد از نیمه شب انجام می شود، گزینه پایان در روز بعد را فعال کنید." />
+                        <TimeField label="ساعت خروج" value={endTime} onChange={setEndTime} hint="زمانی که انتظار می‌رود کارمند شیفت خود را پایان دهد." />
                         <div className="flex justify-end">
-                          <CheckboxField label="پایان در روز بعد" checked={nextDay} onChange={setNextDay} />
+                          <CheckboxField label="خروج در روز بعد" checked={nextDay} onChange={setNextDay} />
                         </div>
                       </div>
                     </div>
                     <BreakEditor items={rests} onChange={setRests} workRange={fixedWorkRange} allowFixedRestEndsNextDay />
-                    <DurationCard minutes={fixedTotalMinutes} />
+                    {fixedShiftErrors.length > 0 ? (
+                      <div className="rounded-xl border border-rose-400/25 bg-rose-950/40 px-4 py-3 text-right">
+                        {fixedShiftErrors.map((error) => (
+                          <div key={error} className="text-xs font-bold leading-6 text-rose-200">
+                            {error}
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
+                    <div className="rounded-[18px] border border-indigo-400/25 bg-indigo-950/35 p-5 text-right">
+                      <div className="text-lg font-black text-white">خلاصه شیفت</div>
+                      <div className="mt-4 space-y-2 text-sm leading-7 text-slate-200">
+                        <div>نوع شیفت: شیفت ثابت</div>
+                        <div>روش تعریف: {shiftMode === 'template' ? 'انتخاب از قالب آماده' : 'تعریف دستی'}</div>
+                        <div>عنوان: {shiftTitle || '-'}</div>
+                        <div>روزهای فعال: {formatWorkingDaysLabel(workingDays)}</div>
+                        <div>ساعت کار: {startTime} تا {endTime}{nextDay ? ' (روز بعد)' : ''}</div>
+                        <div>خروج در روز بعد: {nextDay ? 'فعال' : 'غیرفعال'}</div>
+                        <div>استراحت قابل کسر: {formatDuration(totalDeductedRestMinutes(rests))}</div>
+                        <div>
+                          مدت کل شیفت:{' '}
+                          {validateTimeRangeUnder24Hours(startTime, endTime, nextDay) ? 'نامعتبر' : formatDuration(grossShiftMinutes(startTime, endTime, nextDay))}
+                        </div>
+                        <div>مدت کارکرد مفید: {formatDuration(fixedTotalMinutes)}</div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </>
@@ -1122,67 +1564,130 @@ export function CalendarShiftWizard({
 
             {shiftType === 'float-day' ? (
               <>
-                <TitleCard title={shiftTitle} setTitle={setShiftTitle} />
+                <TitleCard
+                  title={shiftTitle}
+                  setTitle={setShiftTitle}
+                  helper="این عنوان بعداً در گزارش‌ها، تنظیمات کاربران و گروه‌های کاری نمایش داده می‌شود. در صورت خالی بودن، نام پیش‌فرض بر اساس نوع شیفت استفاده می‌شود."
+                />
+                <div className="rounded-xl border border-indigo-400/20 bg-indigo-500/10 p-4 text-right">
+                  <div className="text-sm font-bold text-indigo-100">
+                    در این نوع شیفت، کارمند می‌تواند در یک بازه مشخص وارد شود، اما باید مدت کار موظف را کامل کند. ساعت خروج بر اساس زمان ورود واقعی محاسبه می‌شود.
+                  </div>
+                  <p className="mt-2 text-xs leading-6 text-indigo-50/80">اگر بازه ورود ۷:۰۰ تا ۹:۰۰ و مدت کار موظف ۸ ساعت باشد، کارمندی که ساعت ۸:۳۰ وارد شود، خروج مورد انتظارش ۱۶:۳۰ خواهد بود.</p>
+                </div>
                 <div className="rounded-[22px] border border-white/10 p-5">
                   <div className="flex flex-row-reverse items-center justify-between gap-3 border-b border-white/10 pb-4 text-right">
                     <SlidersHorizontal className="h-5 w-5 text-indigo-300" />
-                    <div className="text-xl font-black text-white">تعریف شیفت شناور - شروع روز</div>
+                    <div className="text-xl font-black text-white">تعریف شیفت شناور شروع روز</div>
                   </div>
                   <ModeSwitch mode={shiftMode} setMode={setShiftMode} noTemplateMessage />
+                  <div className="mt-3 rounded-xl border border-indigo-400/20 bg-indigo-950/30 p-4 text-right">
+                    <div className="text-sm font-bold text-white">کارمند فقط در این بازه می‌تواند ورود خود را بدون تأخیر ثبت کند.</div>
+                    <p className="mt-2 text-xs leading-6 text-slate-300">ورود قبل از شروع بازه، طبق سیاست‌های تردد سازمان در مراحل بعدی قابل تنظیم است. ورود بعد از پایان بازه مجاز می‌تواند در گزارش‌ها به‌عنوان تأخیر نمایش داده شود.</p>
+                  </div>
                   <div className="mt-6 space-y-5">
                     {!dayContext ? (
                       <WeekDaysEditor
                         days={floatDayWorkingDays}
+                        calendarHolidayDays={weekends}
                         onToggle={(day) => setFloatDayWorkingDays((prev) => toggle(prev, day))}
                       />
                     ) : null}
                     <div className="space-y-4">
-                      <div className="max-w-[22rem]">
-                        <TimeField label="ساعت کار موظفی" value={minutesToTime(floatDayRequiredMinutes)} onChange={(value) => setFloatDayRequiredMinutes(parseTime(value))} hint="مدت کاری است که از زمان ورود هر کارمند محاسبه می شود." />
-                      </div>
                       <div className="grid gap-4 md:grid-cols-2">
-                        <TimeField label="شروع بازه ورود" value={floatDayEntryStart} onChange={setFloatDayEntryStart} hint="زودترین زمانی که ورود کارمند برای این شیفت پذیرفته می شود." />
-                        <div className="min-w-0 space-y-2">
-                          <TimeField label="پایان بازه ورود" value={floatDayEntryEnd} onChange={setFloatDayEntryEnd} hint="دیرترین زمانی که ورود کارمند برای این شیفت پذیرفته می شود." />
-                          <div className="flex justify-end">
-                            <CheckboxField label="پایان در روز بعد" checked={floatDayEntryEndsNextDay} onChange={setFloatDayEntryEndsNextDay} />
+                        <TimeField label="شروع بازه مجاز ورود" value={floatDayEntryStart} onChange={setFloatDayEntryStart} hint="زودترین زمانی که ورود کارمند مجاز است." />
+                        <TimeField label="پایان بازه مجاز ورود" value={floatDayEntryEnd} onChange={setFloatDayEntryEnd} hint="آخرین زمانی که ورود کارمند بدون تأخیر پذیرفته می‌شود." />
+                      </div>
+                      <div className="max-w-[26rem]">
+                        <DurationAmountField
+                          label="مدت کار موظف"
+                          value={floatDayRequiredMinutes}
+                          unit={floatDayRequiredUnit}
+                          onChange={setFloatDayRequiredMinutesValue}
+                          onUnitChange={setFloatDayRequiredUnit}
+                          hint="مدت کاری که کارمند باید پس از ورود کامل کند."
+                        />
+                        <p className="mt-2 text-xs leading-6 text-slate-300">خروج مورد انتظار بر اساس ساعت ورود واقعی و مدت کار موظف محاسبه می‌شود.</p>
+                        {floatDayRequiredMinutes > 12 * 60 ? (
+                          <p className="mt-2 text-xs font-bold text-amber-200">مدت کار موظف بیش از حد معمول است. مقدار را بررسی کنید.</p>
+                        ) : null}
+                      </div>
+                      <div className="rounded-[18px] border border-white/10 bg-slate-900/40 p-4">
+                        <div className="flex flex-row-reverse items-start justify-between gap-3">
+                          <div>
+                            <div className="text-sm font-bold text-white">هسته حضور</div>
+                            <p className="mt-2 text-xs leading-6 text-slate-400">
+                              هسته حضور بازه‌ای است که با وجود شناور بودن زمان ورود، انتظار می‌رود کارمند در آن بازه حاضر باشد.
+                            </p>
+                          </div>
+                          <div className="flex shrink-0 flex-row-reverse gap-2">
+                            <DetailToggle active={floatDayCoreEnabled} onClick={() => setFloatDayCoreEnabled(true)}>
+                              فعال
+                            </DetailToggle>
+                            <DetailToggle active={!floatDayCoreEnabled} onClick={() => setFloatDayCoreEnabled(false)}>
+                              غیرفعال
+                            </DetailToggle>
                           </div>
                         </div>
-                      </div>
-                      <div className="grid gap-4 md:grid-cols-2">
-                        <TimeField
-                          label="شروع هسته حضور"
-                          value={floatDayCoreStart}
-                          onChange={setFloatDayCoreStart}
-                          hint="هسته حضور باید در روز جاری باشد و نمی تواند در روز بعد باشد."
-                        />
-                        <TimeField
-                          label="پایان هسته حضور"
-                          value={floatDayCoreEnd}
-                          onChange={setFloatDayCoreEnd}
-                          hint="هسته حضور باید در روز جاری باشد و نمی تواند در روز بعد باشد."
-                        />
-                      </div>
-                    </div>
-                    <div className="rounded-[18px] border border-indigo-400/25 bg-indigo-950/50 p-4 text-right">
-                      <div className="text-sm font-bold text-slate-300">پایان بازه خروج</div>
-                      <div className="mt-3 grid gap-3 md:grid-cols-2">
-                        <div className="rounded-xl bg-slate-950/45 px-4 py-3">
-                          <div className="text-xs text-slate-400">زودترین خروج</div>
-                          <div className="mt-1 text-xl font-black text-indigo-300">{floatDayExitRange.start}</div>
-                        </div>
-                        <div className="rounded-xl bg-slate-950/45 px-4 py-3">
-                          <div className="text-xs text-slate-400">دیرترین خروج</div>
-                          <div className="mt-1 text-xl font-black text-indigo-300">{floatDayExitRange.end}</div>
+                        <div className="mt-4 grid gap-4 md:grid-cols-2">
+                          <TimeField
+                            label="شروع هسته حضور"
+                            value={floatDayCoreStart}
+                            onChange={setFloatDayCoreStart}
+                            hint="زمان شروع بازه‌ای که حضور کارمند از آن به بعد الزامی‌تر می‌شود."
+                            disabled={!floatDayCoreEnabled}
+                          />
+                          <TimeField
+                            label="پایان هسته حضور"
+                            value={floatDayCoreEnd}
+                            onChange={setFloatDayCoreEnd}
+                            hint="زمان پایان بازه‌ای که حضور کارمند تا آن زمان باید حفظ شود."
+                            disabled={!floatDayCoreEnabled}
+                          />
                         </div>
                       </div>
                     </div>
-                    <BreakEditor items={floatDayRests} onChange={setFloatDayRests} workRange={floatDayWorkRange} allowFixedRestEndsNextDay />
-                    <div className="grid grid-cols-2 gap-3">
-                      <DurationCard minutes={floatDayTotalMinutes} />
-                      <div className="rounded-[18px] bg-slate-900/60 px-5 py-4 text-right">
-                        <div className="text-sm text-slate-300">ساعت موظفی</div>
-                        <div className="mt-2 text-xl font-black text-emerald-400">{formatDuration(floatDayRequiredMinutes)}</div>
+                    <BreakEditor
+                      items={floatDayRests}
+                      onChange={setFloatDayRests}
+                      workRange={floatDayWorkRange}
+                      preferFloatingDuration
+                    />
+                    {floatDayErrors.length > 0 ? (
+                      <div className="rounded-xl border border-rose-400/25 bg-rose-950/40 px-4 py-3 text-right">
+                        {floatDayErrors.map((error) => (
+                          <div key={error} className="text-xs font-bold leading-6 text-rose-200">
+                            {error}
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
+                    <div className="rounded-[18px] border border-indigo-400/25 bg-indigo-950/35 p-5 text-right">
+                      <div className="text-lg font-black text-white">خلاصه شیفت</div>
+                      <div className="mt-4 space-y-2 text-sm leading-7 text-slate-200">
+                        <div>نوع شیفت: شیفت شناور شروع روز</div>
+                        <div>روش تعریف: {shiftMode === 'template' ? 'انتخاب از قالب آماده' : 'تعریف دستی'}</div>
+                        <div>عنوان: {shiftTitle || '-'}</div>
+                        <div>روزهای فعال: {formatWorkingDaysLabel(floatDayWorkingDays)}</div>
+                        <div>بازه مجاز ورود: {floatDayEntryStart} تا {floatDayEntryEnd}</div>
+                        <div>
+                          بازه مجاز خروج:{' '}
+                          {formatFloatDayPermittedExitRange(floatDayEntryStart, floatDayEntryEnd, floatDayRequiredMinutes)}
+                        </div>
+                        <div>مدت کار موظف: {formatDuration(floatDayRequiredMinutes)}</div>
+                        {floatDayCoreEnabled && floatDayCoreStart && floatDayCoreEnd ? (
+                          <div>هسته حضور: {floatDayCoreStart} تا {floatDayCoreEnd}</div>
+                        ) : null}
+                        <div>استراحت قابل کسر: {formatDuration(floatDayDeducted)}</div>
+                        <div>مدت کارکرد مفید در گزارش: {formatDuration(floatDayNetMinutes)}</div>
+                        <div className="rounded-xl bg-slate-900/50 px-3 py-2 text-xs leading-6 text-indigo-100">
+                          <div>نمونه محاسبه:</div>
+                          <div>اگر کارمند ساعت {floatDaySampleEntry} وارد شود:</div>
+                          <div>خروج مورد انتظار: {floatDaySampleExit}</div>
+                          <div>وضعیت ورود: {floatDaySampleStatus}</div>
+                          <div className="mt-2">ورود قبل از شروع بازه، طبق سیاست‌های تردد سازمان در مراحل بعدی قابل تنظیم است.</div>
+                          <div>ورود بعد از پایان بازه مجاز می‌تواند در گزارش‌ها به‌عنوان تأخیر نمایش داده شود.</div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1196,34 +1701,87 @@ export function CalendarShiftWizard({
                 <div className="rounded-[22px] border border-white/10 p-5">
                   <div className="flex flex-row-reverse items-center justify-between gap-3 border-b border-white/10 pb-4 text-right">
                     <SlidersHorizontal className="h-5 w-5 text-indigo-300" />
-                    <div className="text-xl font-black text-white">تعریف شیفت شناور - مطلق</div>
+                    <div className="text-xl font-black text-white">تعریف شیفت شناور مطلق</div>
                   </div>
                   <ModeSwitch mode={shiftMode} setMode={setShiftMode} noTemplateMessage />
+                  <div className="mt-3 rounded-xl border border-indigo-400/20 bg-indigo-950/30 p-4 text-right">
+                    <div className="text-sm font-bold text-white">در این نوع شیفت، ساعت ورود و خروج ثابت کنترل نمی‌شود. ملاک اصلی، مجموع کارکرد روزانه کارمند است.</div>
+                    <p className="mt-2 text-xs leading-6 text-slate-300">
+                      مثال: حداقل مدت کار روزانه ۶ ساعت. اگر کارمند امروز در چند نوبت مختلف مجموعاً ۶ ساعت کار کند، کارکرد روزانه او تکمیل‌شده محسوب می‌شود.
+                    </p>
+                  </div>
                   <div className="mt-6 space-y-5">
                     {!dayContext ? (
                       <WeekDaysEditor
                         days={floatAbsWorkingDays}
+                        calendarHolidayDays={weekends}
                         onToggle={(day) => setFloatAbsWorkingDays((prev) => toggle(prev, day))}
                       />
                     ) : null}
                     <div className="max-w-[22rem]">
-                      <TimeField label="ساعت کار موظفی" value={minutesToTime(floatAbsRequiredMinutes)} onChange={(value) => setFloatAbsRequiredMinutes(parseTime(value))} hint="مدت کار موظفی در شیفت شناور مطلق است و به بازه ورود وابسته نیست." />
+                      <TimeField
+                        label="حداقل مدت کار روزانه"
+                        value={minutesToTime(floatAbsRequiredMinutes)}
+                        onChange={(value) => setFloatAbsRequiredMinutes(parseTime(value))}
+                        hint="حداقل مجموع زمانی که کارمند باید در یک روز کاری ثبت کارکرد داشته باشد."
+                      />
+                      <p className="mt-2 text-xs leading-6 text-slate-300">در این مدل، کارکرد روزانه می‌تواند از یک یا چند بازه ورود و خروج تشکیل شود. ملاک، مجموع کارکرد روزانه است.</p>
+                      {floatAbsRequiredMinutes > 12 * 60 ? (
+                        <p className="mt-2 text-xs font-bold text-amber-200">مدت کار روزانه بیش از حد معمول است. مقدار را بررسی کنید.</p>
+                      ) : null}
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <TimeField label="ساعت شروع" value={floatAbsStart} onChange={setFloatAbsStart} hint="شروع بازه مجاز برای انجام کار شناور مطلق." />
-                      <div className="min-w-0 space-y-2">
-                        <TimeField label="ساعت پایان" value={floatAbsEnd} onChange={setFloatAbsEnd} hint="پایان بازه مجاز کار؛ اگر به روز بعد می رسد، گزینه پایان در روز بعد را فعال کنید." />
-                        <div className="flex justify-end">
-                          <CheckboxField label="پایان در روز بعد" checked={floatAbsNextDay} onChange={setFloatAbsNextDay} />
+                    <div className="space-y-3 rounded-[18px] border border-white/10 bg-slate-900/40 p-4">
+                      <InlineToggle
+                        label="محدودیت زمانی برای ثبت تردد فعال شود"
+                        checked={floatAbsRangeEnabled}
+                        onChange={(checked) => setFloatAbsRangeEnabledWithConversion(checked)}
+                      />
+                      <div className="text-sm font-bold text-white">محدوده مجاز ثبت تردد، اختیاری</div>
+                      <p className="text-xs leading-6 text-slate-400">در صورت نیاز، می‌توانید مشخص کنید ثبت ورود و خروج فقط در یک بازه زمانی خاص از روز مجاز باشد.</p>
+                      {floatAbsRangeEnabled ? (
+                        <div className="grid grid-cols-2 gap-4">
+                          <TimeField label="از ساعت" value={floatAbsStart} onChange={setFloatAbsStart} hint="زودترین زمانی که ثبت تردد در این شیفت مجاز است." />
+                          <TimeField label="تا ساعت" value={floatAbsEnd} onChange={setFloatAbsEnd} hint="آخرین زمانی که ثبت تردد در این شیفت مجاز است." />
                         </div>
-                      </div>
+                      ) : (
+                        <div className="rounded-xl border border-dashed border-white/10 bg-slate-950/30 px-3 py-2 text-xs leading-6 text-slate-300">بدون محدودیت زمانی</div>
+                      )}
                     </div>
-                    <BreakEditor items={floatAbsRests} onChange={setFloatAbsRests} floatingOnly workRange={floatAbsWorkRange} />
-                    <div className="grid grid-cols-2 gap-3">
-                      <DurationCard minutes={floatAbsTotalMinutes} />
-                      <div className="rounded-[18px] bg-slate-900/60 px-5 py-4 text-right">
-                        <div className="text-sm text-slate-300">ساعت موظفی</div>
-                        <div className="mt-2 text-xl font-black text-emerald-400">{formatDuration(floatAbsRequiredMinutes)}</div>
+                    <BreakEditor
+                      items={floatAbsRests}
+                      onChange={handleFloatAbsBreakChange}
+                      preferFloatingDuration
+                      floatingOnly={!floatAbsFixedBreaksAllowed}
+                      workRange={floatAbsFixedBreaksAllowed ? floatAbsWorkRange : undefined}
+                    />
+                    {floatAbsErrors.length > 0 ? (
+                      <div className="rounded-xl border border-rose-400/25 bg-rose-950/40 px-4 py-3 text-right">
+                        {floatAbsErrors.map((error) => (
+                          <div key={error} className="text-xs font-bold leading-6 text-rose-200">
+                            {error}
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
+                    <div className="rounded-[18px] border border-indigo-400/25 bg-indigo-950/35 p-5 text-right">
+                      <div className="text-lg font-black text-white">خلاصه شیفت</div>
+                      <div className="mt-4 space-y-2 text-sm leading-7 text-slate-200">
+                        <div>نوع شیفت: شیفت شناور مطلق</div>
+                        <div>روش تعریف: {shiftMode === 'template' ? 'انتخاب از قالب آماده' : 'تعریف دستی'}</div>
+                        <div>عنوان: {shiftTitle || '-'}</div>
+                        <div>روزهای فعال: {formatWorkingDaysLabel(floatAbsWorkingDays)}</div>
+                        <div>ملاک محاسبه: مجموع کارکرد روزانه</div>
+                        <div>حداقل کارکرد لازم: {formatDuration(floatAbsRequiredMinutes)}</div>
+                        <div>محدوده مجاز ثبت تردد: {floatAbsRangeEnabled ? `${floatAbsStart} تا ${floatAbsEnd}` : 'بدون محدودیت زمانی'}</div>
+                        <div>استراحت قابل کسر: {formatDuration(floatAbsDeducted)}</div>
+                        <div>مدت کارکرد مفید مورد انتظار: {formatDuration(floatAbsNetMinutes)}</div>
+                        <div className="rounded-xl bg-slate-900/50 px-3 py-2 text-xs leading-6 text-indigo-100">
+                          <div>در این نوع شیفت، تأخیر بر اساس ساعت ورود محاسبه نمی‌شود؛ ملاک، تکمیل حداقل کارکرد روزانه است.</div>
+                          <div className="mt-1">ورود اول: ۹:۰۰ تا ۱۲:۰۰</div>
+                          <div>ورود دوم: ۱۵:۰۰ تا ۱۸:۰۰</div>
+                          <div>مجموع کارکرد: ۶ ساعت</div>
+                          <div>وضعیت: تکمیل‌شده</div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1242,30 +1800,60 @@ export function CalendarShiftWizard({
                   <ModeSwitch mode={shiftMode} setMode={setShiftMode} noTemplateMessage />
                   <div className="mt-6 space-y-5">
                     {!dayContext ? (
-                      <WeekDaysEditor days={splitWorkingDays} onToggle={(day) => setSplitWorkingDays((prev) => toggle(prev, day))} />
+                      <WeekDaysEditor
+                        days={splitWorkingDays}
+                        calendarHolidayDays={weekends}
+                        onToggle={(day) => setSplitWorkingDays((prev) => toggle(prev, day))}
+                      />
                     ) : null}
                     <div className="space-y-4 rounded-[18px] border border-indigo-500/30 bg-slate-900/40 p-4">
-                      <div className="text-right text-base font-black text-indigo-300">تکه 1</div>
+                      <div className="text-right text-base font-black text-indigo-300">بازه کاری اول</div>
                       <div className="grid grid-cols-2 gap-4">
-                        <TimeField label="شروع تکه اول" value={split1Start} onChange={setSplit1Start} hint="شروع تکه اول باید در روز جاری باشد و نمی تواند در روز بعد باشد." />
-                        <TimeField label="پایان تکه اول" value={split1End} onChange={setSplit1End} hint="پایان تکه اول باید بعد از شروع تکه اول و قبل از شروع تکه دوم باشد." />
+                        <TimeField label="شروع بازه کاری" value={split1Start} onChange={setSplit1Start} />
+                        <div className="min-w-0 space-y-2">
+                          <TimeField label="پایان بازه کاری" value={split1End} onChange={setSplit1End} />
+                          <div className="flex justify-end">
+                            <CheckboxField label="خروج در روز بعد" checked={split1NextDay} onChange={setSplit1NextDay} />
+                          </div>
+                        </div>
                       </div>
                       <BreakEditor items={split1Rests} onChange={setSplit1Rests} workRange={split1WorkRange} />
                     </div>
                     <div className="space-y-4 rounded-[18px] border border-indigo-500/30 bg-slate-900/40 p-4">
-                      <div className="text-right text-base font-black text-indigo-300">تکه 2</div>
+                      <div className="text-right text-base font-black text-indigo-300">بازه کاری دوم</div>
                       <div className="grid grid-cols-2 gap-4">
-                        <TimeField label="شروع تکه دوم" value={split2Start} onChange={setSplit2Start} hint="شروع تکه دوم باید در روز جاری باشد و نمی تواند در روز بعد باشد." />
+                        <TimeField label="شروع بازه کاری" value={split2Start} onChange={setSplit2Start} />
                         <div className="min-w-0 space-y-2">
-                          <TimeField label="پایان تکه دوم" value={split2End} onChange={setSplit2End} hint="فقط پایان تکه دوم می تواند با گزینه پایان در روز بعد به روز بعد منتقل شود." />
+                          <TimeField label="پایان بازه کاری" value={split2End} onChange={setSplit2End} />
                           <div className="flex justify-end">
-                            <CheckboxField label="پایان در روز بعد" checked={split2NextDay} onChange={setSplit2NextDay} />
+                            <CheckboxField label="خروج در روز بعد" checked={split2NextDay} onChange={setSplit2NextDay} />
                           </div>
                         </div>
                       </div>
                       <BreakEditor items={split2Rests} onChange={setSplit2Rests} workRange={split2WorkRange} />
                     </div>
-                    <DurationCard minutes={splitTotalMinutes} />
+                    <div className="rounded-[18px] border border-indigo-400/25 bg-indigo-950/35 p-5 text-right">
+                      <div className="text-lg font-black text-white">خلاصه شیفت</div>
+                      <div className="mt-4 space-y-2 text-sm leading-7 text-slate-200">
+                        <div>نوع شیفت: شیفت دو تکه</div>
+                        <div>روش تعریف: {shiftMode === 'template' ? 'انتخاب از قالب آماده' : 'تعریف دستی'}</div>
+                        <div>عنوان: {shiftTitle || '-'}</div>
+                        <div>روزهای فعال: {formatWorkingDaysLabel(splitWorkingDays)}</div>
+                        <div>بازه‌های کاری:</div>
+                        <div>
+                          ۱. {split1Start} تا {split1End}{split1NextDay ? ' (روز بعد)' : ''} —{' '}
+                          {validateTimeRangeUnder24Hours(split1Start, split1End, split1NextDay) ? 'نامعتبر' : formatDuration(grossShiftMinutes(split1Start, split1End, split1NextDay))}
+                        </div>
+                        <div>
+                          ۲. {split2Start} تا {split2End}{split2NextDay ? ' (روز بعد)' : ''} —{' '}
+                          {validateTimeRangeUnder24Hours(split2Start, split2End, split2NextDay) ? 'نامعتبر' : formatDuration(grossShiftMinutes(split2Start, split2End, split2NextDay))}
+                        </div>
+                        <div>مدت کارکرد کل: {formatDuration(grossShiftMinutes(split1Start, split1End, split1NextDay) + grossShiftMinutes(split2Start, split2End, split2NextDay))}</div>
+                        <div>استراحت قابل کسر: {formatDuration(totalDeductedRestMinutes([...split1Rests, ...split2Rests]))}</div>
+                        <div>مدت کارکرد مفید: {formatDuration(splitTotalMinutes)}</div>
+                        <div className="rounded-xl bg-slate-900/50 px-3 py-2 text-xs leading-6 text-indigo-100">فاصله بین بازه‌های کاری به‌صورت خودکار استراحت محسوب نمی‌شود.</div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </>
@@ -1367,6 +1955,10 @@ export function CalendarShiftWizard({
               </>
             ) : null}
 
+            {saveError ? (
+              <div className="rounded-xl border border-rose-400/25 bg-rose-950/40 px-4 py-3 text-right text-sm font-bold text-rose-200">{saveError}</div>
+            ) : null}
+
             {compact ? (
               <footer className="calendar-shift-wizard-actions">
                 <button
@@ -1400,6 +1992,30 @@ export function CalendarShiftWizard({
             )}
           </div>
       </div>
+
+      {rotateComingSoonOpen ? (
+        <div className="fixed inset-0 z-[100] bg-black/65" onClick={() => setRotateComingSoonOpen(false)}>
+          <div
+            className="fixed left-1/2 top-1/2 z-[101] w-[min(100%-2rem,26rem)] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-white/10 bg-slate-900 p-5 text-right text-slate-100 shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="text-lg font-black text-white">شیفت چرخشی</div>
+            <p className="mt-3 text-sm leading-7 text-slate-300">این قابلیت به‌زودی اضافه می‌شود.</p>
+            <p className="mt-2 text-xs leading-6 text-slate-400">
+              زیرساخت این بخش آماده است، اما تعریف و مدیریت شیفت‌های چرخشی در نسخه‌های بعدی فعال خواهد شد.
+            </p>
+            <div className="mt-6 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setRotateComingSoonOpen(false)}
+                className="rounded-full bg-orange-500 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-orange-400"
+              >
+                متوجه شدم
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }

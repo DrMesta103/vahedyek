@@ -62,8 +62,13 @@ export type QuickPolicySummary = {
   description: string;
   calendarId: string;
   calendarTitle: string;
+  isDefault?: boolean;
   templateId: string;
   templateTitle: string;
+  selectedCalendarId?: string;
+  selectedPolicyTemplateId?: string;
+  generatedPolicyTitle?: string;
+  generatedPolicyDescription?: string;
   year: string;
 };
 

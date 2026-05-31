@@ -23,7 +23,7 @@ type Step = 1 | 2 | 3 | 4 | 5;
 const STEPS: Array<{ id: Step; key: QuickSetupStep['key']; title: string; description: string }> = [
   { id: 1, key: 'location', title: 'محل کار اصلی', description: 'ثبت محل کار اصلی و شعاع مجاز' },
   { id: 2, key: 'calendar', title: 'تقویم کاری', description: 'تقویم، تعطیلات و شیفت' },
-  { id: 3, key: 'policy', title: 'سیاست های کاری', description: 'تنظیم قوانین و سیاست ها' },
+  { id: 3, key: 'policy', title: 'سیاست کاری', description: 'انتخاب قالب اولیه قوانین تردد و درخواست' },
   { id: 4, key: 'employee', title: 'مدیریت کارکنان', description: 'ثبت و تکمیل کارکنان' },
   { id: 5, key: 'work-group', title: 'گروه های کاری', description: 'ساخت گروه کاری و اتمام راه اندازی' },
 ];
@@ -104,7 +104,7 @@ export function QuickSetupFlow({
   const [location, setLocation] = useState<LocationSummaryItem | null>(locationItems.find((item) => item.isPrimaryOnboarding) ?? null);
   const [calendar, setCalendar] = useState<CompletedCalendarItem | null>(calendarItems[0] ?? null);
   const [calendars, setCalendars] = useState<CompletedCalendarItem[]>(calendarItems);
-  const [policy, setPolicy] = useState<QuickPolicySummary | null>(policyItems[0] ?? null);
+  const [policy, setPolicy] = useState<QuickPolicySummary | null>(policyItems.find((item) => item.isDefault) ?? policyItems[0] ?? null);
   const [employees, setEmployees] = useState<QuickEmployeeSummary[]>(employeeItems);
   const [workGroup, setWorkGroup] = useState<QuickWorkGroupSummary | null>(workGroupItems[0] ?? null);
   const employeesRef = useRef<QuickEmployeeSummary[]>(employeeItems);
@@ -268,7 +268,7 @@ export function QuickSetupFlow({
               }))}
               policies={
                 policy
-                  ? [{ id: policy.id, name: policy.title, calendarName: policy.calendarTitle, isActive: true, yearUsed: policy.year }]
+                  ? [{ id: policy.id, name: policy.title, calendarName: policy.calendarTitle, isActive: true, yearUsed: policy.year, isDefault: policy.isDefault ?? true }]
                   : []
               }
               onSave={(value) => {

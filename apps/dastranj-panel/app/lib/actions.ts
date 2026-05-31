@@ -21,6 +21,7 @@ import {
   resolveHolidayTypeForDate,
   type CalendarHolidayType,
 } from './calendar-event-types';
+import { countCalendarHolidayDays } from './calendar-grid';
 import type { CalendarShiftType } from './calendar-shifts';
 import {
   getCalendarShiftTypeLabel,
@@ -1142,6 +1143,63 @@ export async function createCalendarDraftFromDefaultAction(data: {
   };
 }
 
+function resolveCalendarHolidayCount(input: {
+  startDate: string;
+  endDate: string;
+  weekends: string[];
+  singleHolidays: Array<{ date: string; isHoliday?: boolean }>;
+  weekendOverrideDates?: string[];
+}) {
+  return countCalendarHolidayDays({
+    startDate: input.startDate,
+    endDate: input.endDate,
+    weekends: input.weekends,
+    singleHolidayDates: input.singleHolidays
+      .filter((item) => item.isHoliday !== false)
+      .map((item) => item.date),
+    weekendOverrideDates: input.weekendOverrideDates,
+  });
+}
+
+export async function updateCalendarHolidaysFromQuickSetupAction(data: {
+  calendarId: string;
+  startDate: string;
+  endDate: string;
+  weekends: string[];
+  singleHolidays: { id: string; title: string; date: string }[];
+}) {
+  const tenantId = await getTenantId();
+  const current = await prisma.calendar.findFirst({
+    where: { id: data.calendarId, tenantId },
+    select: { id: true, shiftConfig: true },
+  });
+  if (!current) throw new Error('Calendar not found for active tenant.');
+
+  const shiftRoot = parseCalendarShiftConfig(current.shiftConfig);
+  const holidayCount = resolveCalendarHolidayCount({
+    startDate: data.startDate,
+    endDate: data.endDate,
+    weekends: data.weekends,
+    singleHolidays: data.singleHolidays,
+    weekendOverrideDates: Array.isArray(shiftRoot.weekendOverrides)
+      ? (shiftRoot.weekendOverrides as string[])
+      : [],
+  });
+
+  await prisma.calendar.update({
+    where: { id: data.calendarId },
+    data: {
+      weekends: jsonValue(data.weekends),
+      singleHolidays: jsonValue(data.singleHolidays),
+      holidayCount,
+      totalEventDays: data.singleHolidays.length,
+    },
+  });
+
+  revalidatePath('/calendars');
+  revalidatePath('/quick-setup');
+}
+
 export async function updateCalendarFromQuickSetupAction(data: {
   calendarId: string;
   title: string;
@@ -1158,11 +1216,20 @@ export async function updateCalendarFromQuickSetupAction(data: {
   const tenantId = await getTenantId();
   const current = await prisma.calendar.findFirst({
     where: { id: data.calendarId, tenantId },
-    select: { id: true },
+    select: { id: true, shiftConfig: true },
   });
   if (!current) throw new Error('Calendar not found for active tenant.');
 
-  const holidayCount = data.weekends.length + data.singleHolidays.length;
+  const shiftRoot = parseCalendarShiftConfig(current.shiftConfig);
+  const holidayCount = resolveCalendarHolidayCount({
+    startDate: data.startDate,
+    endDate: data.endDate,
+    weekends: data.weekends,
+    singleHolidays: data.singleHolidays,
+    weekendOverrideDates: Array.isArray(shiftRoot.weekendOverrides)
+      ? (shiftRoot.weekendOverrides as string[])
+      : [],
+  });
   const resolvedShiftTitle = resolveCalendarShiftTitle(data.shiftTitle, data.shiftType);
   const shiftConfig = {
     ...data.shiftConfig,
@@ -1460,14 +1527,20 @@ export async function createPolicyFromQuickSetupAction(data: {
       title: data.title,
       description: data.description ?? null,
       calendarId: data.calendarId,
+      isDefault: true,
       sectionValues: jsonValue({
         familyKey: 'work',
         variant: 'default',
         manualAttendance: false,
         overtimeFromAttendance: true,
         nightWorkStart: '22:00',
+        templateType: 'quick-setup',
         templateId: data.policyTemplateId,
         templateTitle: data.templateTitle ?? data.title,
+        selectedCalendarId: data.calendarId,
+        selectedPolicyTemplateId: data.policyTemplateId,
+        generatedPolicyTitle: data.title,
+        generatedPolicyDescription: data.description ?? '',
         year: data.year ?? '',
       }),
     },

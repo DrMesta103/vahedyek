@@ -1,9 +1,12 @@
 import {
+  addPersianDays,
+  comparePersianYmd,
   formatPersianYmd,
   getPersianMonthLength,
   getPersianWeekdayIndex,
   getPersianWeekdayName,
   isPersianYmdInRange,
+  parsePersianYmd,
   PERSIAN_WEEKDAY_NAMES,
   type PersianYmd,
 } from './calendar-dates';
@@ -229,4 +232,36 @@ export function getDayDetails(input: {
     .map((shift) => summarizeShiftForDayPanel(shift));
 
   return { isHoliday, shifts, events };
+}
+
+export function countCalendarHolidayDays(input: {
+  startDate: string;
+  endDate: string;
+  weekends: string[];
+  singleHolidayDates: string[];
+  weekendOverrideDates?: string[];
+}): number {
+  const start = parsePersianYmd(input.startDate);
+  const end = parsePersianYmd(input.endDate);
+  if (!start || !end) return input.singleHolidayDates.length;
+
+  const overrides = new Set((input.weekendOverrideDates ?? []).map((item) => normalizePersianDateInput(item)));
+  const singleHolidayDates = new Set(input.singleHolidayDates.map((item) => normalizePersianDateInput(item)));
+  const countedDates = new Set<string>();
+  let current = start;
+
+  while (comparePersianYmd(current, end) <= 0) {
+    const date = formatPersianYmd(current);
+    const weekdayName = getPersianWeekdayName(current);
+    const isWeeklyHoliday = isWeekendDay(weekdayName, input.weekends) && !overrides.has(date);
+    const isSingleHoliday = singleHolidayDates.has(date);
+
+    if ((isWeeklyHoliday || isSingleHoliday) && !countedDates.has(date)) {
+      countedDates.add(date);
+    }
+
+    current = addPersianDays(current, 1);
+  }
+
+  return countedDates.size;
 }
