@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { CardMenu } from '../../components/CardMenu';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
+import { DraftShowcaseField, DraftShowcaseFieldBadge, DraftShowcaseFields } from '../../components/DraftShowcaseField';
 import { PanelFormModal, PanelFormModalActions } from '../../components/PanelFormModal';
 import {
   getActiveContractDraftTemplateStorageKey,
@@ -16,6 +17,17 @@ import {
 } from '../../lib/contract-draft-templates';
 import { readEmployeeDrafts, type EmployeeContractDraft } from '../../lib/employee-contract-drafts';
 import { formatFaNumber, formatPersianJalaliDate } from '../../lib/format-fa';
+import {
+  findDefaultNamingPattern,
+  generateNamingPattern,
+  generateUniqueNamingPattern,
+  getNamingPatternPlaceholderParts,
+  getNamingPatternSequenceLabel,
+  persistNamingPatterns,
+  readNamingPatterns,
+  type NamingPattern,
+  type NamingPatternContext,
+} from '../../lib/naming-patterns';
 import {
   ACTIVE_TENANT_STORAGE_KEY,
   getPayrollSettingsStorageKey,
@@ -134,17 +146,19 @@ function TemplateListCard({
   return (
     <article className="draft-template-card draft-template-showcase-card">
       <header className="draft-template-showcase-head">
-        <div className="draft-template-showcase-title-block">
-          <h3>{template.name}</h3>
-          <span className="draft-template-showcase-meta">
-            مبنای سال {formatFaNumber(template.baseSettingsYear, { useGrouping: false })} · {usageLabel(template.usageType)}
-          </span>
+        <div className="draft-template-showcase-info">
+          <DraftShowcaseFields>
+            <DraftShowcaseField label="نام قالب" value={template.name} prominent />
+            <DraftShowcaseField label="مبنای سال" value={formatFaNumber(template.baseSettingsYear, { useGrouping: false })} />
+            <DraftShowcaseField label="نوع قالب" value={usageLabel(template.usageType)} />
+          </DraftShowcaseFields>
+          <DraftShowcaseFields className="is-compact">
+            <DraftShowcaseField label="تاریخ ثبت" value={<time dateTime={template.createdAt}>{formatPersianJalaliDate(template.createdAt)}</time>} />
+            <DraftShowcaseField label="آخرین به‌روزرسانی" value={<time dateTime={template.updatedAt}>{formatPersianJalaliDate(template.updatedAt)}</time>} />
+            <DraftShowcaseFieldBadge label="تعداد استفاده" value={`${formatFaNumber(usageCount, { useGrouping: false })} مورد`} />
+          </DraftShowcaseFields>
         </div>
         <div className="draft-template-showcase-actions">
-          <time dateTime={template.updatedAt}>{formatPersianJalaliDate(template.updatedAt)}</time>
-          <span className="draft-template-usage-badge">
-            {formatFaNumber(usageCount, { useGrouping: false })} مورد استفاده شده
-          </span>
           <button type="button" className="draft-template-use-btn" onClick={onOpen}>
             استفاده از این قالب برای تنظیم پیش‌نویس
           </button>
@@ -258,12 +272,14 @@ function CreateTemplateDialog({
   open,
   years,
   tenantId,
+  existingTemplateNames,
   onClose,
   onCreated,
 }: {
   open: boolean;
   years: BusinessSettingYear[];
   tenantId?: string | null;
+  existingTemplateNames: string[];
   onClose: () => void;
   onCreated: (template: ContractDraftTemplate) => void;
 }) {
@@ -271,6 +287,9 @@ function CreateTemplateDialog({
   const [usageType, setUsageType] = useState<ContractDraftTemplateUsageType | ''>('');
   const [baseYear, setBaseYear] = useState('');
   const [error, setError] = useState('');
+  const [activeNamePattern, setActiveNamePattern] = useState<NamingPattern | null>(null);
+  const [nameMode, setNameMode] = useState<'pattern' | 'manual'>('manual');
+  const [placeholderValues, setPlaceholderValues] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!open) return;
@@ -278,11 +297,63 @@ function CreateTemplateDialog({
     setUsageType('');
     setBaseYear('');
     setError('');
+    setPlaceholderValues({});
+    const pattern = findDefaultNamingPattern(readNamingPatterns(tenantId), 'draft_template_name');
+    setActiveNamePattern(pattern);
+    setNameMode(pattern ? 'pattern' : 'manual');
   }, [open]);
 
+  const placeholderParts = useMemo(() => (activeNamePattern ? getNamingPatternPlaceholderParts(activeNamePattern) : []), [activeNamePattern]);
+  const patternHasSequence = useMemo(() => Boolean(activeNamePattern?.parts.some((part) => part.type === 'sequence')), [activeNamePattern]);
+  const patternContext = useMemo<NamingPatternContext>(() => ({
+    date: new Date().toISOString().slice(0, 10),
+    template: { type: usageType ? usageLabel(usageType) : '' },
+    placeholders: placeholderValues,
+  }), [placeholderValues, usageType]);
+  const patternPreview = useMemo(() => (
+    activeNamePattern ? {
+      ...generateNamingPattern({ pattern: activeNamePattern, context: patternContext }),
+      next: generateNamingPattern({ pattern: activeNamePattern, context: patternContext, sequenceOffset: 1 }).output,
+    } : null
+  ), [activeNamePattern, patternContext]);
+
   const submit = () => {
-    if (!name.trim()) {
+    let resolvedName = name.trim();
+    let committedPattern: NamingPattern | null = null;
+    if (nameMode === 'pattern' && activeNamePattern) {
+      for (const item of placeholderParts) {
+        if (!placeholderValues[item.key]?.trim()) {
+          setError('این فیلد الزامی است');
+          return;
+        }
+      }
+      const latestPatterns = readNamingPatterns(tenantId);
+      const latestPattern = findDefaultNamingPattern(latestPatterns, 'draft_template_name');
+      if (!latestPattern) {
+        setError('نام تولیدشده معتبر نیست');
+        return;
+      }
+      const generated = generateUniqueNamingPattern({
+        pattern: latestPattern,
+        context: patternContext,
+        existingOutputs: existingTemplateNames,
+      });
+      if (!generated.output?.trim() || generated.conflict) {
+        setError(generated.conflict ?? 'نام تولیدشده معتبر نیست');
+        return;
+      }
+      resolvedName = generated.output.trim();
+      committedPattern = generated.pattern;
+    } else if (!resolvedName) {
       setError('نام قالب الزامی است');
+      return;
+    }
+    if (!resolvedName) {
+      setError('نام تولیدشده معتبر نیست');
+      return;
+    }
+    if (existingTemplateNames.some((item) => item.trim() === resolvedName)) {
+      setError('نام قالب تکراری است');
       return;
     }
     if (!usageType) {
@@ -295,7 +366,12 @@ function CreateTemplateDialog({
     }
     const year = Number(baseYear);
     const baseSettings = readTenantPayrollBaseSettings(year, tenantId);
-    onCreated(createContractDraftTemplate({ name: name.trim(), usageType, baseSettingsYear: year, baseSettings }));
+    const template = createContractDraftTemplate({ name: resolvedName, usageType, baseSettingsYear: year, baseSettings });
+    if (committedPattern) {
+      const latestPatterns = readNamingPatterns(tenantId);
+      persistNamingPatterns(latestPatterns.map((item) => (item.id === committedPattern.id ? committedPattern : item)), tenantId);
+    }
+    onCreated(template);
   };
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -324,12 +400,56 @@ function CreateTemplateDialog({
               <p>یک نام واضح انتخاب کنید تا بعداً قالب را سریع تشخیص دهید.</p>
             </div>
           </div>
-          <label className="business-draft-field">
-            <span>
-              نام قالب <em>*</em>
-            </span>
-            <input value={name} placeholder="مثلا قالب قرارداد نیروهای شیفتی" onChange={(event) => setName(event.target.value)} />
-          </label>
+          {activeNamePattern ? (
+            <div className="rounded-2xl border border-cyan-400/25 bg-cyan-400/10 p-3 text-right">
+              <span className="block text-sm font-extrabold text-cyan-100">الگوی نام‌گذاری قالب</span>
+              <p className="m-0 mt-1 text-xs font-semibold leading-6 text-slate-300 [html[data-theme=light]_&]:text-slate-600">
+                برای نام قالب، یک الگوی نام‌گذاری تعریف شده است. می‌توانید از آن استفاده کنید یا نام را دستی وارد کنید.
+              </p>
+              <div className="mt-3 grid gap-2 md:grid-cols-2">
+                <button type="button" className={`rounded-2xl border px-3 py-2 text-xs font-extrabold ${nameMode === 'pattern' ? 'border-orange-400/50 bg-orange-500/15 text-orange-200' : 'border-white/10 bg-white/[0.04] text-slate-300'}`} onClick={() => setNameMode('pattern')}>
+                  استفاده از الگو
+                </button>
+                <button type="button" className={`rounded-2xl border px-3 py-2 text-xs font-extrabold ${nameMode === 'manual' ? 'border-orange-400/50 bg-orange-500/15 text-orange-200' : 'border-white/10 bg-white/[0.04] text-slate-300'}`} onClick={() => setNameMode('manual')}>
+                  ورود دستی نام قالب
+                </button>
+              </div>
+              {nameMode === 'pattern' ? (
+                <div className="mt-3 flex flex-col gap-3">
+                  {placeholderParts.map((item) => (
+                    <label key={item.id} className="business-draft-field">
+                      <span>{item.label} <em>*</em></span>
+                      <input value={placeholderValues[item.key] ?? ''} placeholder="مثلا پیش نویس یوایکس" onChange={(event) => setPlaceholderValues((current) => ({ ...current, [item.key]: event.target.value }))} />
+                    </label>
+                  ))}
+                  <div className="rounded-2xl border border-white/10 bg-slate-950/35 p-3 [html[data-theme=light]_&]:border-slate-200 [html[data-theme=light]_&]:bg-white">
+                    <span className="block text-[11px] font-bold text-slate-400">خروجی نام قالب</span>
+                    <strong dir={activeNamePattern.direction ?? 'rtl'} className="mt-1 block break-words text-sm text-white [html[data-theme=light]_&]:text-slate-900">
+                      {patternPreview?.output || 'نام تولیدشده معتبر نیست'}
+                    </strong>
+                    {patternHasSequence ? (
+                      <div className="mt-2 grid gap-2 md:grid-cols-2">
+                        <span className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-[11px] font-bold text-slate-300">
+                          خروجی بعدی: <strong dir={activeNamePattern.direction ?? 'rtl'}>{patternPreview?.next || '-'}</strong>
+                        </span>
+                        <span className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-[11px] font-bold text-slate-300">
+                          شماره فعلی / بعدی: {getNamingPatternSequenceLabel(activeNamePattern)}
+                        </span>
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+          {nameMode === 'manual' ? (
+            <label className="business-draft-field">
+              <span>
+                نام قالب <em>*</em>
+              </span>
+              <input value={name} placeholder="مثلا قالب قرارداد نیروهای شیفتی" onChange={(event) => setName(event.target.value)} />
+            </label>
+          ) : null}
         </div>
 
         <div className="business-draft-dialog-card">
@@ -512,7 +632,14 @@ export function DraftTemplatesClient({ tenantId = null }: { tenantId?: string | 
         </div>
       )}
 
-      <CreateTemplateDialog open={dialogOpen} years={years} tenantId={tenantId} onClose={() => setDialogOpen(false)} onCreated={createTemplate} />
+      <CreateTemplateDialog
+        open={dialogOpen}
+        years={years}
+        tenantId={tenantId}
+        existingTemplateNames={templates.map((template) => template.name)}
+        onClose={() => setDialogOpen(false)}
+        onCreated={createTemplate}
+      />
     </div>
   );
 }

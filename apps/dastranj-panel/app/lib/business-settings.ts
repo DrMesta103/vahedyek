@@ -5,6 +5,7 @@ export type BusinessSettingsIcon =
   | 'calendar'
   | 'shift'
   | 'draft'
+  | 'naming'
   | 'payroll'
   | 'policy'
   | 'request'
@@ -75,6 +76,12 @@ export const BUSINESS_SETTINGS_CATALOG: BusinessSettingsItem[] = [
     description: 'مدیریت قالب‌های قرارداد تیم و فرایندهای منابع انسانی.',
     href: '/draft-templates',
     icon: 'draft',
+  },
+  {
+    title: 'الگوهای نام‌گذاری و شماره‌گذاری',
+    description: 'تعریف الگوهای پویا برای تولید نام‌ها و شماره‌های سازمانی.',
+    href: '/business-settings/naming-patterns',
+    icon: 'naming',
   },
   {
     title: 'سیاست‌های کاری',

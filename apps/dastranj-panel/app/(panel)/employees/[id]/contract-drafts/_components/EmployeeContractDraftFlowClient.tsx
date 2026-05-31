@@ -1,30 +1,47 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   ArrowLeft,
+  Building2,
   CalendarDays,
   Check,
+  ChevronDown,
   ChevronLeft,
+  ChevronUp,
   CircleAlert,
   Edit3,
+  Eye,
   FileText,
+  Info,
+  RotateCcw,
+  Scale,
+  Layers3,
   LockKeyhole,
   Pencil,
   Plus,
   Save,
+  Search,
   ShieldAlert,
   ShieldCheck,
   Trash2,
+  UserRound,
   Wallet,
+  X,
 } from 'lucide-react';
+import { PersianDatePicker } from '@repo/ui';
+import { CardMenu } from '../../../../../components/CardMenu';
+import { ConfirmDialog } from '../../../../../components/ConfirmDialog';
+import { DraftShowcaseField, DraftShowcaseFieldBadge, DraftShowcaseFields } from '../../../../../components/DraftShowcaseField';
 import { MinimalScroll } from '../../../../../components/MinimalScroll';
 import { CalculationRulesBadges, CalcRulesDiffBadge, CalcRulesEditButton, CalculationRulesDialog } from '../../../../../components/CalculationRulesChips';
 import { PanelFormModal, PanelFormModalActions } from '../../../../../components/PanelFormModal';
 import { UnsavedChangesDialog, useUnsavedLeaveGuard } from '../../../../../components/UnsavedChangesGuard';
-import { formatFaNumber, toPersianDigits } from '../../../../../lib/format-fa';
+import { formatPersianYmd, getPersianPartsFromDate, parsePersianYmd, persianToDate } from '../../../../../lib/calendar-dates';
+import { normalizePersianDateInput } from '../../../../../lib/calendar-events';
+import { formatFaNumber, formatPersianJalaliDate, toPersianDigits } from '../../../../../lib/format-fa';
 import { formatPersianDate } from '../../../../../lib/format-date';
 import { CONTRACT_DRAFT_TEMPLATES_STORAGE_KEY, normalizeContractDraftTemplate, type ContractDraftTemplate } from '../../../../../lib/contract-draft-templates';
 import {
@@ -37,6 +54,13 @@ import {
   type PayrollSettings,
   type TaxBracket,
 } from '../../../../../lib/payroll-business-settings';
+import { EmployeeSupplementalProfileEditor } from '../../_components/EmployeeSupplementalProfileEditor';
+import { EmployeeSupplementalProfileView } from '../../_components/EmployeeSupplementalProfileView';
+import { computeSupplementalCompleteness } from '../../../../../lib/employee-supplemental-fields';
+import {
+  commitDefaultNamingPattern,
+  type NamingPatternContext,
+} from '../../../../../lib/naming-patterns';
 import {
   createInitialEmployeeContractDraft,
   EMPLOYEE_BENEFIT_KEYS,
@@ -45,6 +69,7 @@ import {
   getEmployeeDraftStorageKey,
   getEmployeeSupplementalStorageKey,
   getDefaultEmployeeSupplementalProfile,
+  normalizeEmployeeSupplementalProfile,
   readBaseSettingsByTemplate,
   readEmployeeDrafts,
   readEmployeeSupplementalProfiles,
@@ -79,12 +104,205 @@ type EmployeeDraftEmployee = {
 };
 
 type BusinessProfile = {
+  ownershipKind?: 'legal' | 'natural';
+  companyName?: string | null;
   brandName?: string | null;
   legalName?: string | null;
+  registrationNumber?: string | null;
+  nationalId?: string | null;
+  taxFileNumber?: string | null;
+  economicCode?: string | null;
+  ownerName?: string | null;
   contactEmail?: string | null;
   phone?: string | null;
   address?: string | null;
 };
+
+type AccountProfileApiResponse = {
+  store?: {
+    ownership?: {
+      ownershipKind?: 'legal' | 'natural';
+      companyName?: string;
+      brandName?: string;
+      legalName?: string;
+      registrationNumber?: string;
+      nationalId?: string;
+      taxFileNumber?: string;
+      economicCode?: string;
+    };
+  };
+  meta?: {
+    owner?: {
+      fullName?: string;
+      mobile?: string | null;
+      email?: string | null;
+    };
+  };
+};
+
+function normalizeDisplay(value: string | null | undefined) {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : '';
+}
+
+function buildBusinessProfileFromApi(payload: AccountProfileApiResponse | null | undefined): BusinessProfile | null {
+  const ownership = payload?.store?.ownership;
+  const owner = payload?.meta?.owner;
+  if (!ownership && !owner) return null;
+
+  return {
+    ownershipKind: ownership?.ownershipKind,
+    companyName: ownership?.companyName ?? null,
+    brandName: ownership?.brandName ?? null,
+    legalName: ownership?.legalName ?? null,
+    registrationNumber: ownership?.registrationNumber ?? null,
+    nationalId: ownership?.nationalId ?? null,
+    taxFileNumber: ownership?.taxFileNumber ?? null,
+    economicCode: ownership?.economicCode ?? null,
+    ownerName: owner?.fullName ?? null,
+    contactEmail: owner?.email ?? null,
+    phone: owner?.mobile ?? null,
+    address: null,
+  };
+}
+
+function displayStatValue(value: string) {
+  return value || 'ثبت نشده';
+}
+
+type ContractPartyStat = {
+  label: string;
+  value: string;
+};
+
+type ContractPartyDisplay = {
+  kind: 'legal' | 'natural';
+  hint: string;
+  identityLabel: string;
+  identityTitle: string;
+  identitySubtitle?: string;
+  stats: ContractPartyStat[];
+  statsSecondary?: ContractPartyStat[];
+  missing: boolean;
+};
+
+function buildBusinessPartyFirstDisplay(profile: BusinessProfile | null | undefined): ContractPartyDisplay | null {
+  if (!profile) return null;
+
+  const ownershipKind = profile.ownershipKind ?? 'legal';
+  const ownerName = normalizeDisplay(profile.ownerName);
+  const phoneOrEmail = normalizeDisplay(profile.phone) || normalizeDisplay(profile.contactEmail);
+
+  if (ownershipKind === 'natural') {
+    return {
+      kind: 'natural',
+      hint: 'طرف اول قرارداد، مالک کسب‌وکار (شخص حقیقی) است که قرارداد را امضا می‌کند.',
+      identityLabel: 'نام و نام خانوادگی',
+      identityTitle: ownerName || 'مالک کسب‌وکار ثبت نشده',
+      identitySubtitle: 'شخص حقیقی',
+      stats: [
+        { label: 'نام و نام خانوادگی', value: displayStatValue(ownerName) },
+        { label: 'راه ارتباطی', value: displayStatValue(phoneOrEmail) },
+        { label: 'نوع مالکیت', value: 'شخص حقیقی' },
+      ],
+      missing: !ownerName || !phoneOrEmail,
+    };
+  }
+
+  const brandName = normalizeDisplay(profile.brandName);
+  const companyName =
+    normalizeDisplay(profile.companyName) || normalizeDisplay(profile.legalName) || 'شرکت ثبت نشده';
+  const nationalId = normalizeDisplay(profile.nationalId);
+  const economicCode = normalizeDisplay(profile.economicCode);
+
+  return {
+    kind: 'legal',
+    hint: 'طرف اول قرارداد، سازمان یا شرکت کارفرما است که قرارداد را امضا می‌کند.',
+    identityLabel: 'نام تجاری شرکت',
+    identityTitle: brandName || companyName,
+    stats: [
+      { label: 'شناسه ملی', value: displayStatValue(nationalId) },
+      { label: 'کد اقتصادی', value: displayStatValue(economicCode) },
+      { label: 'نماینده قانونی', value: displayStatValue(ownerName) },
+    ],
+    missing: !nationalId || !economicCode || !ownerName,
+  };
+}
+
+function ContractFirstPartyCard({ profile }: { profile: BusinessProfile | null | undefined }) {
+  const display = buildBusinessPartyFirstDisplay(profile);
+  const IdentityIcon = display?.kind === 'natural' ? UserRound : Building2;
+
+  return (
+    <div className="business-payroll-subcard contract-party-card">
+      <div className="business-draft-section-title">
+        <h3>طرف اول قرارداد</h3>
+        <span className="contract-draft-reg-badge contract-draft-reg-badge--internal">کارفرما</span>
+      </div>
+
+      {display ? (
+        <>
+          <p className="contract-party-card-hint">
+            <Info className="h-3.5 w-3.5" aria-hidden />
+            <span>{display.hint}</span>
+          </p>
+
+          <div className="contract-party-card-identity">
+            <span className="contract-party-card-avatar" aria-hidden>
+              <IdentityIcon className="h-5 w-5" />
+            </span>
+            <div className="contract-party-card-identity-copy">
+              <div className="contract-party-card-identity-line">
+                <span className="contract-party-stat-label">{display.identityLabel}:</span>
+                <strong>{display.identityTitle}</strong>
+              </div>
+              {display.identitySubtitle ? <span>{display.identitySubtitle}</span> : null}
+            </div>
+          </div>
+
+          <div className="contract-party-card-stats">
+            {display.stats.map((stat) => (
+              <div key={stat.label} className="contract-party-stat">
+                <span className="contract-party-stat-label">{stat.label}</span>
+                <strong className="contract-party-stat-value">{stat.value}</strong>
+              </div>
+            ))}
+          </div>
+
+          {display.statsSecondary?.length ? (
+            <div className="contract-party-card-stats is-secondary">
+              {display.statsSecondary.map((stat) => (
+                <div key={stat.label} className="contract-party-stat">
+                  <span className="contract-party-stat-label">{stat.label}</span>
+                  <strong className="contract-party-stat-value">{stat.value}</strong>
+                </div>
+              ))}
+            </div>
+          ) : null}
+
+          {display.missing ? (
+            <div className="contract-party-card-footer">
+              {fieldBadge('اطلاعات کارفرما ناقص است', 'warning')}
+              <Link href="/business-settings/profile" className="draft-template-flow-action is-primary">
+                تکمیل اطلاعات کسب و کار
+              </Link>
+            </div>
+          ) : null}
+        </>
+      ) : (
+        <div className="contract-party-card-footer">
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {fieldBadge('اطلاعات کارفرما ناقص است', 'warning')}
+            {fieldBadge('پروفایل کسب و کار یافت نشد', 'warning')}
+          </div>
+          <Link href="/business-settings/profile" className="draft-template-flow-action is-primary" style={{ width: 'fit-content' }}>
+            تکمیل اطلاعات کسب و کار
+          </Link>
+        </div>
+      )}
+    </div>
+  );
+}
 
 const CONTRACT_TYPE_GROUPS = [
   {
@@ -145,28 +363,6 @@ const ENVIRONMENT_LOCATION_OPTIONS = ['دفتر اداری', 'کارخانه', '
 const RELATION_LOCATION_OPTIONS = ['بدون ارتباط مستقیم با مشتری', 'ارتباط مستقیم با مشتری', 'ارتباط با تأمین‌کننده', 'ارتباط با پیمانکار', 'ارتباط با سازمان‌های بیرونی', 'نماینده سازمان نزد مشتری', 'کار در محل مشتری'] as const;
 const DYNAMIC_LOCATION_OPTIONS = ['ثابت', 'چندبخشی', 'پروژه‌ای', 'مأموریتی', 'سفرهای بین‌المللی', 'بین شعب', 'میدانی', 'سیار'] as const;
 
-const EMPLOYEE_BASE_FIELDS: Array<{ label: string; key: keyof EmployeeSupplementalProfile }> = [
-  { label: 'نام پدر', key: 'fatherName' },
-  { label: 'تاریخ تولد', key: 'birthDate' },
-  { label: 'محل صدور شناسنامه', key: 'issuePlace' },
-  { label: 'جنسیت', key: 'gender' },
-  { label: 'آخرین رشته تحصیلی', key: 'educationField' },
-  { label: 'مدرک تحصیلی', key: 'educationDegree' },
-  { label: 'عنوان شغل', key: 'jobTitle' },
-  { label: 'تاریخ اولین قرارداد', key: 'firstContractDate' },
-  { label: 'وضعیت نظام وظیفه', key: 'militaryStatus' },
-  { label: 'کشور', key: 'country' },
-  { label: 'استان', key: 'province' },
-  { label: 'شهر', key: 'city' },
-  { label: 'خیابان', key: 'street' },
-  { label: 'نام ساختمان', key: 'buildingName' },
-  { label: 'کوچه', key: 'alley' },
-  { label: 'پلاک', key: 'plaque' },
-  { label: 'طبقه', key: 'floor' },
-  { label: 'واحد', key: 'unit' },
-  { label: 'کد پستی', key: 'postalCode' },
-];
-
 function normalizeDigits(value: string) {
   return value
     .replace(/[۰-۹]/g, (digit) => String(digit.charCodeAt(0) - 1776))
@@ -210,10 +406,44 @@ function formatDateInput(value: string) {
   return value ? value.slice(0, 10) : '';
 }
 
+function isoDateToPickerValue(iso: string) {
+  const trimmed = iso.trim().slice(0, 10);
+  if (!trimmed) return '';
+  const parsed = new Date(`${trimmed}T12:00:00`);
+  if (Number.isNaN(parsed.getTime())) return '';
+  return formatPersianYmd(getPersianPartsFromDate(parsed));
+}
+
+function pickerValueToIsoDate(persian: string) {
+  const parts = parsePersianYmd(normalizePersianDateInput(persian));
+  if (!parts) return '';
+  try {
+    return persianToDate(parts).toISOString().slice(0, 10);
+  } catch {
+    return '';
+  }
+}
+
+function formatRegistrationNumberDisplay(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return '—';
+  return trimmed.replace(/\d/g, (digit) => toPersianDigits(digit));
+}
+
 function displayValue(value: string | number | null | undefined) {
   if (typeof value === 'number') return value.toLocaleString('fa-IR');
   const trimmed = String(value ?? '').trim();
   return trimmed ? trimmed : 'ثبت نشده';
+}
+
+function usageLabel(value: EmployeeContractDraftUsageType) {
+  return value === 'attendance_only' ? 'فقط تردد' : 'تردد و حقوق و دستمزد';
+}
+
+function draftStatusLabel(status: EmployeeContractDraft['status']) {
+  if (status === 'completed') return 'تکمیل شده';
+  if (status === 'in_progress') return 'در حال تکمیل';
+  return 'پیش‌نویس';
 }
 
 function fieldBadge(text: string, tone: 'success' | 'warning' | 'muted' = 'muted') {
@@ -292,34 +522,11 @@ function templateChoices(templates: ContractDraftTemplate[]): EmployeeContractDr
 }
 
 function computeEmployeeCompleteness(employee: EmployeeDraftEmployee, supplemental: EmployeeSupplementalProfile) {
-  const values = [
-    employee.nationalId,
-    employee.mobile1,
-    employee.mobile2,
-    employee.email,
-    employee.personnelCode,
-    supplemental.fatherName,
-    supplemental.birthDate,
-    supplemental.issuePlace,
-    supplemental.gender,
-    supplemental.educationField,
-    supplemental.educationDegree,
-    supplemental.jobTitle,
-    supplemental.firstContractDate,
-    supplemental.militaryStatus,
-    supplemental.country,
-    supplemental.province,
-    supplemental.city,
-    supplemental.street,
-    supplemental.buildingName,
-    supplemental.alley,
-    supplemental.plaque,
-    supplemental.floor,
-    supplemental.unit,
-    supplemental.postalCode,
-  ];
-  const filled = values.filter((value) => String(value ?? '').trim()).length;
-  return Math.round((filled / values.length) * 100);
+  return computeSupplementalCompleteness(supplemental, {
+    nationalId: employee.nationalId,
+    maritalStatus: employee.maritalStatus,
+    childrenCount: employee.childrenCount,
+  });
 }
 
 function countDifferences(draft: EmployeeContractDraft) {
@@ -437,18 +644,25 @@ function StepShell({
   tag,
   description,
   icon,
+  titleIcon,
+  descriptionInfo,
   children,
 }: {
   title: string;
   tag?: string;
   description: string;
   icon?: React.ReactNode;
+  titleIcon?: React.ReactNode;
+  descriptionInfo?: boolean;
   children: React.ReactNode;
 }) {
   return (
     <section className="business-payroll-subcard">
-      <div className="business-draft-section-title">
-        <h3>{title}</h3>
+      <div className="business-draft-section-title contract-timing-step-title-row">
+        <h3 className="contract-timing-step-main-title">
+          {titleIcon ? <span className="contract-timing-step-title-icon">{titleIcon}</span> : null}
+          {title}
+        </h3>
         {tag ? (
           <span className="contract-draft-reg-badge contract-draft-reg-badge--internal">
             {icon}
@@ -456,106 +670,56 @@ function StepShell({
           </span>
         ) : null}
       </div>
-      <p>{description}</p>
+      {description ? (
+        <p className={`contract-timing-step-lead${descriptionInfo ? ' has-info' : ''}`}>
+          {descriptionInfo ? <Info className="h-3.5 w-3.5 contract-timing-step-lead-icon" aria-hidden /> : null}
+          <span>{description}</span>
+        </p>
+      ) : null}
       {children}
     </section>
   );
 }
 
-function SupplementalEditorDialog({
-  open,
-  employeeName,
-  value,
-  onCancel,
-  onSubmit,
-}: {
-  open: boolean;
-  employeeName: string;
-  value: EmployeeSupplementalProfile;
-  onCancel: () => void;
-  onSubmit: (value: EmployeeSupplementalProfile) => void;
-}) {
-  const [draft, setDraft] = useState<EmployeeSupplementalProfile>(value);
-  useEffect(() => {
-    if (open) setDraft(value);
-  }, [open, value]);
+function ContractTimingLegalBadge() {
   return (
-    <PanelFormModal
-      open={open}
-      title="تکمیل اطلاعات کارمند"
-      lead={`اطلاعات تکمیلی ${employeeName} را برای استفاده در پیش‌نویس قرارداد ثبت کنید.`}
-      onClose={onCancel}
-      footer={<PanelFormModalActions submitLabel="ذخیره اطلاعات" onSubmit={() => onSubmit(draft)} onCancel={onCancel} />}
-    >
-      <div className="business-draft-dialog">
-        <div className="business-draft-dialog-card">
-          <div className="business-draft-dialog-card-head">
-            <div>
-              <span className="business-draft-dialog-kicker">
-                <FileText className="h-4 w-4" />
-                مشخصات شخصی
-              </span>
-              <h3>اطلاعات هویتی و تحصیلی</h3>
-            </div>
-          </div>
-          <div className="business-draft-option-grid">
-            {[
-              ['fatherName', 'نام پدر'],
-              ['birthDate', 'تاریخ تولد'],
-              ['issuePlace', 'محل صدور شناسنامه'],
-              ['gender', 'جنسیت'],
-              ['educationField', 'آخرین رشته تحصیلی'],
-              ['educationDegree', 'مدرک تحصیلی'],
-              ['jobTitle', 'عنوان شغل'],
-              ['firstContractDate', 'تاریخ اولین قرارداد'],
-              ['militaryStatus', 'وضعیت نظام وظیفه'],
-            ].map(([key, label]) => (
-              <label key={key} className="business-draft-field">
-                <span>{label}</span>
-                <input
-                  value={String((draft as Record<string, string>)[key] ?? '')}
-                  onChange={(event) => setDraft((current) => ({ ...current, [key]: event.target.value }))}
-                />
-              </label>
-            ))}
-          </div>
-        </div>
+    <span className="contract-timing-legal-badge">
+      <Scale className="h-3.5 w-3.5" aria-hidden />
+      آیین‌نامه حقوقی
+    </span>
+  );
+}
 
-        <div className="business-draft-dialog-card">
-          <div className="business-draft-dialog-card-head">
-            <div>
-              <span className="business-draft-dialog-kicker">
-                <Wallet className="h-4 w-4" />
-                آدرس
-              </span>
-              <h3>آدرس و محل سکونت</h3>
-            </div>
-          </div>
-          <div className="business-draft-option-grid">
-            {[
-              ['country', 'کشور'],
-              ['province', 'استان'],
-              ['city', 'شهر'],
-              ['street', 'خیابان'],
-              ['buildingName', 'نام ساختمان'],
-              ['alley', 'کوچه'],
-              ['plaque', 'پلاک'],
-              ['floor', 'طبقه'],
-              ['unit', 'واحد'],
-              ['postalCode', 'کد پستی'],
-            ].map(([key, label]) => (
-              <label key={key} className="business-draft-field">
-                <span>{label}</span>
-                <input
-                  value={String((draft as Record<string, string>)[key] ?? '')}
-                  onChange={(event) => setDraft((current) => ({ ...current, [key]: event.target.value }))}
-                />
-              </label>
-            ))}
-          </div>
-        </div>
+function ContractTimingDateField({
+  label,
+  value,
+  error,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  error?: string;
+  onChange: (value: string) => void;
+}) {
+  const pickerValue = isoDateToPickerValue(value);
+
+  return (
+    <div className="contract-timing-date-field">
+      <span className="contract-timing-date-label">
+        {label} <em aria-hidden>*</em>
+      </span>
+      <div className={`contract-timing-date-input${error ? ' has-error' : ''}`}>
+        <PersianDatePicker
+          value={pickerValue}
+          onChange={(next) => onChange(pickerValueToIsoDate(next))}
+          placeholder="۱۴۰۴/۰۱/۰۱"
+          className="contract-timing-date-picker-control"
+          containerClassName="contract-timing-date-picker"
+          calendarIconAriaLabel={`باز کردن تقویم ${label}`}
+        />
       </div>
-    </PanelFormModal>
+      {error ? <em className="contract-timing-field-error">{error}</em> : null}
+    </div>
   );
 }
 
@@ -665,34 +829,68 @@ function DraftCreationDialog({
   onClose: () => void;
   onCreated: (draft: EmployeeContractDraft) => void;
 }) {
-  const [usageType, setUsageType] = useState<EmployeeContractDraftUsageType | ''>('');
-  const [useTemplate, setUseTemplate] = useState<'yes' | 'no' | ''>('');
+  const [usageType, setUsageType] = useState<EmployeeContractDraftUsageType>('payroll_attendance');
+  const [useTemplate, setUseTemplate] = useState(false);
   const [templateId, setTemplateId] = useState('');
   const [error, setError] = useState('');
 
   useEffect(() => {
     if (!open) return;
-    setUsageType('');
-    setUseTemplate('');
+    setUsageType('payroll_attendance');
+    setUseTemplate(false);
     setTemplateId('');
     setError('');
   }, [open]);
 
-  const filteredTemplates = usageType ? groupByUsage(templates, usageType) : [];
+  const filteredTemplates = useMemo(() => groupByUsage(templates, usageType), [templates, usageType]);
 
-  const submit = () => {
-    if (!usageType) {
-      setError('نوع قرارداد را انتخاب کنید');
+  useEffect(() => {
+    if (!useTemplate) {
+      setTemplateId('');
       return;
     }
-    const selectedTemplate = useTemplate === 'yes' ? filteredTemplates.find((item) => item.id === templateId) ?? null : null;
-    if (useTemplate === 'yes' && !selectedTemplate) {
+    if (filteredTemplates.length === 1) {
+      setTemplateId(filteredTemplates[0].id);
+      return;
+    }
+    setTemplateId((current) => (filteredTemplates.some((item) => item.id === current) ? current : ''));
+  }, [filteredTemplates, useTemplate]);
+
+  const submit = () => {
+    const selectedTemplate = useTemplate ? filteredTemplates.find((item) => item.id === templateId) ?? null : null;
+    if (useTemplate && !selectedTemplate) {
       setError('قالب پیش‌نویس را انتخاب کنید');
       return;
     }
 
     const baseSettings = readSettingsForTemplate(selectedTemplate);
     const allDrafts = readEmployeeDrafts();
+    const supplemental = readEmployeeSupplementalProfiles()[employee.id] ?? getDefaultEmployeeSupplementalProfile();
+    const patternContext: NamingPatternContext = {
+      date: new Date().toISOString().slice(0, 10),
+      employee: {
+        name: `${employee.firstName} ${employee.lastName}`.trim(),
+        code: employee.personnelCode,
+        nationalCode: employee.nationalId,
+        jobTitle: supplemental.jobTitle,
+      },
+      business: {
+        name: businessProfile?.brandName?.trim() || businessProfile?.legalName?.trim() || '',
+      },
+      contract: {
+        type: selectedTemplate?.data.classification.contractType || usageLabel(usageType),
+      },
+      template: {
+        type: selectedTemplate?.name ?? '',
+      },
+    };
+    const existingNumbers = allDrafts.flatMap((draft) => [draft.contractNumber, draft.timing.registrationNumber]).filter(Boolean);
+    const generatedNumber =
+      commitDefaultNamingPattern({
+        usageType: 'contract_number',
+        context: patternContext,
+        existingOutputs: existingNumbers,
+      });
     const nextDraft = createInitialEmployeeContractDraft({
       employeeId: employee.id,
       employeeName: `${employee.firstName} ${employee.lastName}`.trim(),
@@ -701,7 +899,8 @@ function DraftCreationDialog({
       businessProfile,
       template: selectedTemplate,
       baseSettings,
-      supplemental: readEmployeeSupplementalProfiles()[employee.id] ?? getDefaultEmployeeSupplementalProfile(),
+      supplemental,
+      contractNumberOverride: generatedNumber,
     });
     onCreated(nextDraft);
   };
@@ -710,65 +909,118 @@ function DraftCreationDialog({
     <PanelFormModal
       open={open}
       title="افزودن پیش‌نویس قرارداد"
-      lead="برای این کارمند مشخص کنید پیش‌نویس برای کدام نوع قرارداد ساخته شود و آیا بر اساس قالب آماده شروع شود یا نه."
+      lead="حوزه تنظیمات پیش‌نویس را مشخص کنید و در صورت نیاز از یک قالب آماده شروع کنید."
       error={error}
       onClose={onClose}
       footer={<PanelFormModalActions submitLabel="ایجاد پیش‌نویس" onSubmit={submit} onCancel={onClose} />}
     >
-      <div className="business-draft-dialog business-draft-template-dialog">
+      <div className="business-draft-dialog business-draft-template-dialog business-draft-create-dialog">
         <div className="business-draft-dialog-card">
           <div className="business-draft-dialog-card-head">
             <div>
               <span className="business-draft-dialog-kicker">
-                <FileText className="h-4 w-4" />
-                نوع قرارداد
+                <Layers3 className="h-4 w-4" />
+                حوزه تنظیمات
               </span>
-              <h3>این قرارداد برای چه کاری است؟</h3>
+              <h3>این پیش‌نویس برای چه سیستمی است؟</h3>
+              <p>بر اساس انتخاب، مراحل و فیلدهای پیش‌نویس متفاوت می‌شوند.</p>
             </div>
           </div>
           <div className="business-draft-dialog-options business-draft-dialog-options-grid">
-            <button type="button" className={usageType === 'attendance_only' ? 'is-selected' : ''} onClick={() => setUsageType('attendance_only')}>
+            <button
+              type="button"
+              className={usageType === 'attendance_only' ? 'is-selected' : ''}
+              onClick={() => setUsageType('attendance_only')}
+            >
+              <span className="business-draft-option-pill">
+                <ShieldCheck className="h-4 w-4" />
+                فقط تردد
+              </span>
               <strong>مناسب برای سیستم تردد</strong>
-              <small>برای قراردادهایی که فقط به حضور و غیاب، مرخصی، اضافه‌کاری و قوانین تردد نیاز دارند.</small>
+              <small>حضور و غیاب، مرخصی، اضافه‌کاری و قوانین تردد.</small>
             </button>
-            <button type="button" className={usageType === 'payroll_attendance' ? 'is-selected' : ''} onClick={() => setUsageType('payroll_attendance')}>
-              <strong>مناسب برای سیستم تردد و حقوق و دستمزد</strong>
-              <small>برای قراردادهایی که علاوه بر تردد، شامل حقوق پایه، مزایا، بیمه، مالیات و محاسبات دستمزد هستند.</small>
+            <button
+              type="button"
+              className={usageType === 'payroll_attendance' ? 'is-selected' : ''}
+              onClick={() => setUsageType('payroll_attendance')}
+            >
+              <span className="business-draft-option-pill">
+                <Layers3 className="h-4 w-4" />
+                تردد و حقوق
+              </span>
+              <strong>مناسب برای تردد و حقوق و دستمزد</strong>
+              <small>حقوق پایه، مزایا، بیمه، مالیات و محاسبات دستمزد.</small>
             </button>
           </div>
         </div>
 
-        <div className="business-draft-dialog-card">
+        <div className="business-draft-dialog-card business-draft-template-card">
           <div className="business-draft-dialog-card-head">
             <div>
               <span className="business-draft-dialog-kicker">
-                <ShieldCheck className="h-4 w-4" />
+                <FileText className="h-4 w-4" />
                 قالب پیش‌نویس
               </span>
-              <h3>آیا می‌خواهید از قالب پیش‌نویس استفاده شود؟</h3>
+              <h3>نحوه شروع پیش‌نویس</h3>
+              <p>
+                {useTemplate
+                  ? 'یک قالب انتخاب کنید تا مقادیر اولیه از آن پر شود.'
+                  : 'پیش‌نویس با مقادیر پیش‌فرض خالی شروع می‌شود.'}
+              </p>
             </div>
           </div>
-          <div className="business-draft-dialog-options">
-            <button type="button" className={useTemplate === 'yes' ? 'is-selected' : ''} onClick={() => setUseTemplate('yes')}>
-              بله، از قالب استفاده شود
+
+          <div className="business-draft-template-mode-row" role="radiogroup" aria-label="نحوه شروع پیش‌نویس">
+            <button
+              type="button"
+              role="radio"
+              aria-checked={!useTemplate}
+              className={!useTemplate ? 'is-selected' : ''}
+              onClick={() => setUseTemplate(false)}
+            >
+              بدون قالب
             </button>
-            <button type="button" className={useTemplate === 'no' ? 'is-selected' : ''} onClick={() => setUseTemplate('no')}>
-              خیر، بدون قالب شروع شود
+            <button
+              type="button"
+              role="radio"
+              aria-checked={useTemplate}
+              className={useTemplate ? 'is-selected' : ''}
+              onClick={() => setUseTemplate(true)}
+            >
+              از قالب آماده
             </button>
           </div>
-          {useTemplate === 'yes' ? (
-            <label className="business-draft-field" style={{ marginTop: 12 }}>
-              <span>انتخاب قالب پیش‌نویس</span>
-              <select value={templateId} onChange={(event) => setTemplateId(event.target.value)} disabled={!usageType}>
-                <option value="">قالب پیش‌نویس را انتخاب کنید</option>
-                {filteredTemplates.map((template) => (
-                  <option key={template.id} value={template.id}>
-                    {template.name} - {template.baseSettingsYear}
-                  </option>
-                ))}
-              </select>
-              {!filteredTemplates.length && usageType ? <small style={{ color: '#b4c6da' }}>هنوز قالب سازگار برای این نوع قرارداد ثبت نشده است.</small> : null}
-            </label>
+
+          {useTemplate ? (
+            filteredTemplates.length ? (
+              <div className="business-draft-template-picker" role="radiogroup" aria-label="انتخاب قالب پیش‌نویس">
+                {filteredTemplates.map((template) => {
+                  const selected = templateId === template.id;
+                  return (
+                    <button
+                      key={template.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={selected}
+                      className={`business-draft-template-option${selected ? ' is-selected' : ''}`}
+                      onClick={() => setTemplateId(template.id)}
+                    >
+                      <span className="business-draft-template-option-copy">
+                        <strong>{template.name}</strong>
+                        <small>
+                          مبنای {formatFaNumber(template.baseSettingsYear, { useGrouping: false })} · {usageLabel(template.usageType)}
+                        </small>
+                      </span>
+                      {selected ? <Check className="h-4 w-4 business-draft-template-option-check" aria-hidden /> : null}
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="business-draft-field-note business-draft-template-empty-note">
+                هنوز قالب سازگار با «{usageLabel(usageType)}» ثبت نشده است. می‌توانید بدون قالب ادامه دهید.
+              </p>
+            )
           ) : null}
         </div>
       </div>
@@ -776,39 +1028,198 @@ function DraftCreationDialog({
   );
 }
 
-function DraftListCard({
+function DraftDetailSection({
+  label,
+  category,
+  subHint,
+  value,
+}: {
+  label: string;
+  category: string;
+  subHint?: string;
+  value?: string;
+}) {
+  return (
+    <section className="draft-template-detail-section">
+      <span className="draft-template-detail-label">{label}</span>
+      <span className="draft-template-detail-chip">{category}</span>
+      {subHint ? (
+        <p className="draft-template-detail-hint">
+          <Info className="h-3.5 w-3.5" aria-hidden />
+          <span>{subHint}</span>
+        </p>
+      ) : null}
+      {value ? <span className="draft-template-detail-chip is-sub">{value}</span> : null}
+    </section>
+  );
+}
+
+function DraftShowcaseCard({
   draft,
   onOpen,
+  onDelete,
 }: {
   draft: EmployeeContractDraft;
   onOpen: () => void;
+  onDelete: () => void;
 }) {
+  const [expanded, setExpanded] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const detailsRef = useRef<HTMLDivElement | null>(null);
   const steps = getEmployeeDraftSteps(draft.usageType);
-  const completed = steps.filter((step) => draft.progress[step.id]?.completed).length;
+  const completedSteps = steps.filter((step) => draft.progress[step.id]?.completed);
+  const completed = completedSteps.length;
+  const { subject } = draft;
+  const contractCategory = displayValue(subject.contractType);
+  const contractSubType = subject.contractSubType.trim();
+  const locationCategory = displayValue(subject.locationGroup);
+  const locationSubType = subject.locationType.trim();
+  const jobCategory = displayValue(subject.jobGroup);
+  const jobSubType = subject.responsibility.trim();
+  const templateMeta = draft.templateName
+    ? draft.templateName
+    : 'بدون قالب مبنا';
+  const templateBaseYear = draft.templateSnapshot
+    ? formatFaNumber(draft.templateSnapshot.baseSettingsYear, { useGrouping: false })
+    : null;
+  const differenceCount = countDifferences(draft);
+
+  const showDetails = () => {
+    setExpanded(true);
+    requestAnimationFrame(() => detailsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }));
+  };
+
   return (
-    <button type="button" className="draft-template-card business-draft-template-row" onClick={onOpen} style={{ display: 'grid', gap: 10 }}>
-      <div className="draft-template-card-head">
-        <div style={{ display: 'grid', gap: 8, textAlign: 'right' }}>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
-            <strong style={{ fontSize: 15 }}>{draft.contractNumber}</strong>
-            {fieldBadge(draft.status === 'completed' ? 'تکمیل شده' : 'پیش‌نویس', draft.status === 'completed' ? 'success' : 'muted')}
-            {draft.templateName ? fieldBadge(`قالب: ${draft.templateName}`, 'muted') : null}
-          </div>
-          <div style={{ color: '#cbd5e1', fontSize: 12, lineHeight: 1.8 }}>
-            {draft.employeeName} - {steps[0]?.title}
-          </div>
+    <article className="draft-template-card draft-template-showcase-card">
+      <header className="draft-template-showcase-head">
+        <div className="draft-template-showcase-info">
+          <DraftShowcaseFields>
+            <DraftShowcaseField label="شماره قرارداد" value={draft.contractNumber} prominent />
+            <DraftShowcaseField label="حوزه تنظیمات" value={usageLabel(draft.usageType)} />
+            <DraftShowcaseField label="قالب مبنا" value={templateMeta} />
+            {templateBaseYear ? <DraftShowcaseField label="مبنای سال قالب" value={templateBaseYear} /> : null}
+          </DraftShowcaseFields>
+          <DraftShowcaseFields className="is-compact">
+            <DraftShowcaseField label="تاریخ ثبت" value={<time dateTime={draft.createdAt}>{formatPersianJalaliDate(draft.createdAt)}</time>} />
+            <DraftShowcaseField label="آخرین به‌روزرسانی" value={<time dateTime={draft.updatedAt}>{formatPersianJalaliDate(draft.updatedAt)}</time>} />
+            <DraftShowcaseFieldBadge
+              label="پیشرفت مراحل"
+              value={`${formatFaNumber(completed, { useGrouping: false })} / ${formatFaNumber(steps.length, { useGrouping: false })} مرحله`}
+            />
+            <DraftShowcaseFieldBadge label="وضعیت" value={draftStatusLabel(draft.status)} />
+          </DraftShowcaseFields>
         </div>
-        <div style={{ display: 'grid', justifyItems: 'start', gap: 6 }}>
-          <span className="business-payroll-step-badge is-saved">{completed.toLocaleString('fa-IR')} / {steps.length.toLocaleString('fa-IR')}</span>
-          <span style={{ color: '#9fb5cb', fontSize: 11 }}>{formatPersianDate(draft.createdAt)}</span>
+        <div className="draft-template-showcase-actions">
+          <button type="button" className="draft-template-use-btn" onClick={onOpen}>
+            ادامه تنظیم پیش‌نویس
+          </button>
         </div>
-      </div>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-        {draft.templateSnapshot ? fieldBadge(`قالب مبنا: ${draft.templateSnapshot.name}`, 'muted') : fieldBadge('بدون قالب', 'muted')}
-        {fieldBadge(`نوع قرارداد: ${draft.usageType === 'attendance_only' ? 'فقط تردد' : 'تردد و حقوق و دستمزد'}`, 'muted')}
-        {fieldBadge(`${countDifferences(draft).toLocaleString('fa-IR')} تفاوت با قالب`, 'muted')}
-      </div>
-    </button>
+        <div className="draft-template-showcase-menu-wrap">
+          <CardMenu
+            items={[
+              {
+                kind: 'action',
+                label: 'جزئیات',
+                icon: <Eye className="h-4 w-4" aria-hidden />,
+                onClick: showDetails,
+              },
+              {
+                kind: 'action',
+                label: 'ویرایش',
+                icon: <Pencil className="h-4 w-4" aria-hidden />,
+                onClick: onOpen,
+              },
+              {
+                kind: 'action',
+                label: 'حذف',
+                icon: <Trash2 className="h-4 w-4" aria-hidden />,
+                tone: 'danger',
+                onClick: () => setDeleteOpen(true),
+              },
+            ]}
+          />
+        </div>
+      </header>
+
+      <section className="draft-template-workgroups">
+        <span className="draft-template-workgroups-label">مراحل تکمیل‌شده در این پیش‌نویس</span>
+        {completedSteps.length ? (
+          <div className="draft-template-workgroup-chips">
+            {completedSteps.map((step) => (
+              <span key={step.id} className="draft-template-workgroup-chip">
+                {step.title}
+              </span>
+            ))}
+          </div>
+        ) : (
+          <p className="draft-template-workgroups-empty">هنوز مرحله‌ای در این پیش‌نویس تکمیل نشده است.</p>
+        )}
+      </section>
+
+      {expanded ? (
+        <div className="draft-template-detail-stack" ref={detailsRef}>
+          <DraftDetailSection
+            label="نوع قرارداد"
+            category={contractCategory}
+            subHint={subject.contractType.trim() ? `زیر مجموعه قراردادهای «${subject.contractType.trim()}»` : undefined}
+            value={contractSubType || undefined}
+          />
+          <DraftDetailSection
+            label="نوع شغل و مسئولیت"
+            category={jobCategory}
+            subHint={subject.jobGroup.trim() ? `زیر مجموعه «${subject.jobGroup.trim()}»` : undefined}
+            value={jobSubType || undefined}
+          />
+          <DraftDetailSection label="نوع پرداخت حقوق و مزایا" category={usageLabel(draft.usageType)} />
+          <DraftDetailSection
+            label="نوع محل انجام کار"
+            category={locationCategory}
+            subHint={subject.locationGroup.trim() ? `زیر مجموعه «${subject.locationGroup.trim()}»` : undefined}
+            value={locationSubType || undefined}
+          />
+          {draft.templateSnapshot ? (
+            <DraftDetailSection
+              label="تفاوت با قالب مبنا"
+              category={`${formatFaNumber(differenceCount, { useGrouping: false })} مورد تفاوت`}
+              subHint={differenceCount ? 'برخی مقادیر نسبت به قالب مبنا تغییر کرده‌اند.' : 'همه مقادیر با قالب مبنا یکسان است.'}
+            />
+          ) : null}
+        </div>
+      ) : null}
+
+      <button
+        type="button"
+        className="draft-template-expand-toggle"
+        onClick={() => setExpanded((current) => !current)}
+        aria-expanded={expanded}
+      >
+        {expanded ? (
+          <>
+            جزئیات کمتر
+            <ChevronUp className="h-4 w-4" aria-hidden />
+          </>
+        ) : (
+          <>
+            جزئیات بیشتر
+            <ChevronDown className="h-4 w-4" aria-hidden />
+          </>
+        )}
+      </button>
+
+      <ConfirmDialog
+        open={deleteOpen}
+        title="حذف پیش‌نویس قرارداد"
+        description={`آیا از حذف «${draft.contractNumber}» مطمئن هستید؟ این عمل قابل بازگشت نیست.`}
+        confirmLabel="حذف"
+        cancelLabel="انصراف"
+        tone="danger"
+        onConfirm={() => {
+          onDelete();
+          setDeleteOpen(false);
+        }}
+        onCancel={() => setDeleteOpen(false)}
+      />
+    </article>
   );
 }
 
@@ -821,12 +1232,57 @@ export function EmployeeContractDraftsClient({
 }) {
   const router = useRouter();
   const [creating, setCreating] = useState(false);
+  const [query, setQuery] = useState('');
+  const [accountProfile, setAccountProfile] = useState<BusinessProfile | null>(businessProfile);
   const { drafts, templates, loaded, persist } = useDraftStorage(employee.id);
-  const supplementalProfiles = useMemo(() => readEmployeeSupplementalProfiles(), [employee.id, drafts.length]);
-  const supplemental = supplementalProfiles[employee.id] ?? getDefaultEmployeeSupplementalProfile();
-
-  const completion = computeEmployeeCompleteness(employee, supplemental);
   const employeeDrafts = useMemo(() => getEmployeeDraftsByEmployeeId(drafts, employee.id), [drafts, employee.id]);
+  const employeeName = `${employee.firstName} ${employee.lastName}`.trim();
+
+  useEffect(() => {
+    let ignore = false;
+
+    const loadAccountProfile = async () => {
+      try {
+        const response = await fetch('/api/account/profile', { cache: 'no-store' });
+        if (!response.ok) return;
+        const payload = (await response.json()) as AccountProfileApiResponse;
+        if (ignore) return;
+        const resolved = buildBusinessProfileFromApi(payload);
+        if (resolved) setAccountProfile(resolved);
+      } catch {
+        // Keep the server-provided profile when the API request fails.
+      }
+    };
+
+    void loadAccountProfile();
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  const resolvedBusinessProfile = accountProfile ?? businessProfile;
+
+  const visibleDrafts = useMemo(() => {
+    const normalizedQuery = query.trim();
+    if (!normalizedQuery) return employeeDrafts;
+    return employeeDrafts.filter((draft) => {
+      const haystack = [
+        draft.contractNumber,
+        draft.templateName,
+        draft.subject.contractType,
+        draft.subject.contractSubType,
+        draft.subject.jobGroup,
+        draft.subject.responsibility,
+        draft.subject.locationGroup,
+        draft.subject.locationType,
+        usageLabel(draft.usageType),
+      ]
+        .filter(Boolean)
+        .join(' ');
+      return haystack.includes(normalizedQuery);
+    });
+  }, [employeeDrafts, query]);
 
   const createDraft = (draft: EmployeeContractDraft) => {
     const next = [draft, ...drafts.filter((item) => item.id !== draft.id)];
@@ -835,43 +1291,67 @@ export function EmployeeContractDraftsClient({
     router.push(`/employees/${employee.id}/contract-drafts/${draft.id}`);
   };
 
+  const deleteDraft = (draftId: string) => {
+    persist(drafts.filter((item) => item.id !== draftId));
+  };
+
   if (!loaded) return null;
 
   return (
-    <div className="business-draft-list-page" dir="rtl" lang="fa">
-      <header className="business-draft-list-header">
+    <div className="page-stack module-page draft-templates-page business-draft-list-page draft-templates-showcase-page" dir="rtl" lang="fa">
+      <header className="business-draft-list-header draft-templates-showcase-header">
         <div>
-          <p>کارمند: {`${employee.firstName} ${employee.lastName}`.trim()}</p>
-          <h1>پیش‌نویس‌های قرارداد کارمند</h1>
+          <p>کارمند: {employeeName}</p>
+          <h1>پیش‌نویس‌های قرارداد</h1>
           <span>
-            برای {`${employee.firstName} ${employee.lastName}`.trim()} می‌توانید چند پیش‌نویس مستقل بسازید، قالب مبنا را انتخاب کنید و هر نسخه را جداگانه ادامه دهید.
+            پیش‌نویس‌های قرارداد {employeeName} را بر اساس قالب‌های مبنا تنظیم کنید؛ هر پیش‌نویس را می‌توانید جداگانه ادامه دهید.
           </span>
         </div>
-        <button type="button" className="draft-template-flow-action is-primary" onClick={() => setCreating(true)}>
-          <Plus className="h-4 w-4" /> افزودن پیش‌نویس جدید +
-        </button>
       </header>
 
-      <div className="business-payroll-header-badges">
-        {fieldBadge(businessProfile?.brandName?.trim() || 'اطلاعات کسب‌وکار ناقص', businessProfile?.brandName ? 'success' : 'warning')}
-        {fieldBadge(`تکمیل پروفایل کارمند: ${completion}%`, completion >= 70 ? 'success' : 'warning')}
-        {fieldBadge(`شناسه کارمند: ${displayValue(employee.personnelCode)}`, 'muted')}
+      <div className="draft-templates-showcase-toolbar" aria-label="ابزارهای فهرست پیش‌نویس‌ها">
+        <label className="draft-templates-showcase-search">
+          <Search className="h-4 w-4" aria-hidden />
+          <input
+            type="search"
+            value={query}
+            placeholder="جستجو"
+            aria-label="جستجوی پیش‌نویس"
+            onChange={(event) => setQuery(event.target.value)}
+          />
+          {query ? (
+            <button type="button" aria-label="پاک کردن جستجو" onClick={() => setQuery('')}>
+              <X className="h-4 w-4" />
+            </button>
+          ) : null}
+        </label>
+        <button type="button" className="draft-templates-showcase-add" onClick={() => setCreating(true)}>
+          <Plus className="h-4 w-4" aria-hidden />
+          افزودن پیش‌نویس جدید
+        </button>
       </div>
 
-      {employeeDrafts.length ? (
-        <div className="draft-template-list">
-          {employeeDrafts.map((draft) => (
-            <DraftListCard key={draft.id} draft={draft} onOpen={() => router.push(`/employees/${employee.id}/contract-drafts/${draft.id}`)} />
+      {visibleDrafts.length ? (
+        <div className="draft-template-list draft-templates-showcase-list">
+          {visibleDrafts.map((draft) => (
+            <DraftShowcaseCard
+              key={draft.id}
+              draft={draft}
+              onOpen={() => router.push(`/employees/${employee.id}/contract-drafts/${draft.id}`)}
+              onDelete={() => deleteDraft(draft.id)}
+            />
           ))}
         </div>
       ) : (
-        <div className="draft-template-empty">
+        <div className="draft-template-empty draft-templates-showcase-empty">
           <FileText className="h-8 w-8" />
-          <p>هنوز پیش‌نویسی برای این کارمند ثبت نشده است</p>
-          <span style={{ color: '#b8cadd', fontSize: 13 }}>برای شروع، یک پیش‌نویس قرارداد جدید بسازید.</span>
-          <button type="button" className="draft-template-flow-action is-primary" onClick={() => setCreating(true)}>
-            <Plus className="h-4 w-4" /> افزودن پیش‌نویس جدید
-          </button>
+          <p>{query.trim() ? 'پیش‌نویسی با این عبارت پیدا نشد.' : 'هنوز پیش‌نویسی برای این کارمند ثبت نشده است.'}</p>
+          {!query.trim() ? (
+            <button type="button" className="draft-templates-showcase-add" onClick={() => setCreating(true)}>
+              <Plus className="h-4 w-4" aria-hidden />
+              افزودن پیش‌نویس جدید
+            </button>
+          ) : null}
         </div>
       )}
 
@@ -1027,6 +1507,7 @@ export function EmployeeContractDraftBuilderClient({
 }) {
   const router = useRouter();
   const { drafts, templates, supplementalProfiles, loaded, persist, persistSupp, activeDraft } = useEmployeeDraftContext(employee, draftId);
+  const [accountProfile, setAccountProfile] = useState<BusinessProfile | null>(businessProfile);
   const [activeStep, setActiveStep] = useState<EmployeeContractDraftStepId>('parties');
   const [supplementalOpen, setSupplementalOpen] = useState(false);
   const [editingRegistration, setEditingRegistration] = useState(false);
@@ -1036,6 +1517,31 @@ export function EmployeeContractDraftBuilderClient({
   const [notice, setNotice] = useState('');
   const [currentDraft, setCurrentDraft] = useState<EmployeeContractDraft | null>(null);
   const [benefitRulesDialog, setBenefitRulesDialog] = useState<keyof EmployeeContractDraft['benefits'] | null>(null);
+
+  useEffect(() => {
+    let ignore = false;
+
+    const loadAccountProfile = async () => {
+      try {
+        const response = await fetch('/api/account/profile', { cache: 'no-store' });
+        if (!response.ok) return;
+        const payload = (await response.json()) as AccountProfileApiResponse;
+        if (ignore) return;
+        const resolved = buildBusinessProfileFromApi(payload);
+        if (resolved) setAccountProfile(resolved);
+      } catch {
+        // keep the prop value when the API request fails
+      }
+    };
+
+    void loadAccountProfile();
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  const resolvedBusinessProfile = accountProfile ?? businessProfile;
 
   useEffect(() => {
     if (!loaded || !activeDraft) return;
@@ -1144,17 +1650,54 @@ export function EmployeeContractDraftBuilderClient({
   };
 
   const createOrUpdateSupplemental = (value: EmployeeSupplementalProfile) => {
-    const profiles = { ...supplementalProfiles, [employee.id]: value };
+    const normalized = normalizeEmployeeSupplementalProfile(value);
+    const profiles = { ...supplementalProfiles, [employee.id]: normalized };
     persistSupp(profiles);
     updateDraft((draft) => ({
       ...draft,
-      employeeSupplemental: value,
+      employeeSupplemental: normalized,
     }));
     setSupplementalOpen(false);
   };
 
   const regenerateRegistrationNumber = () => {
     if (!currentDraft) return;
+    const patternContext: NamingPatternContext = {
+      date: currentDraft.timing.contractDate || new Date().toISOString().slice(0, 10),
+      employee: {
+        name: currentDraft.employeeName,
+        code: employee.personnelCode,
+        nationalCode: employee.nationalId,
+        jobTitle: supplemental.jobTitle,
+      },
+      business: {
+        name: resolvedBusinessProfile?.brandName?.trim() || resolvedBusinessProfile?.legalName?.trim() || '',
+      },
+      contract: {
+        type: currentDraft.subject.contractType || usageLabel(currentDraft.usageType),
+      },
+      template: {
+        type: currentDraft.templateName ?? '',
+      },
+    };
+    const existingNumbers = drafts
+      .filter((draft) => draft.id !== currentDraft.id)
+      .flatMap((draft) => [draft.contractNumber, draft.timing.registrationNumber])
+      .filter(Boolean);
+    const patternedNumber =
+      commitDefaultNamingPattern({
+        usageType: 'contract_number',
+        context: patternContext,
+        existingOutputs: existingNumbers,
+      });
+    if (patternedNumber) {
+      updateDraft((draft) => ({
+        ...draft,
+        contractNumber: patternedNumber,
+        timing: { ...draft.timing, registrationNumber: patternedNumber },
+      }));
+      return;
+    }
     const prefix = `CN-${new Date().getFullYear()}-`;
     const nextIndex = drafts.filter((draft) => draft.contractNumber.startsWith(prefix)).length + 1;
     const nextNumber = `${prefix}${String(nextIndex).padStart(3, '0')}`;
@@ -1548,177 +2091,145 @@ export function EmployeeContractDraftBuilderClient({
                     description="این بخش شامل اطلاعات سازمان و کارمند است که در این قرارداد حضور دارند. لطفاً تمام اطلاعات را با دقت وارد کنید."
                     icon={<ShieldCheck className="h-4 w-4" />}
                   >
-                    <div className="business-payroll-subcard" style={{ marginTop: 10 }}>
-                      <div className="business-draft-section-title">
-                        <h3>طرف اول قرارداد</h3>
-                        <span className="contract-draft-reg-badge contract-draft-reg-badge--internal">کارفرما</span>
-                      </div>
-                      <div className="business-payroll-transfer-rule-muted">
-                        {businessProfile?.brandName ? (
-                          <div style={{ display: 'grid', gap: 8 }}>
-                            <div>نام شرکت / نام کسب و کار: <strong>{businessProfile.brandName}</strong></div>
-                            <div>شناسه ملی: <strong>{displayValue(businessProfile.legalName)}</strong></div>
-                            <div>کد اقتصادی: <strong>ثبت نشده</strong></div>
-                            <div>نماینده قانونی: <strong>ثبت نشده</strong></div>
-                            <div>تلفن/ایمیل: <strong>{displayValue(businessProfile.phone || businessProfile.contactEmail)}</strong></div>
-                            <div>آدرس: <strong>{displayValue(businessProfile.address)}</strong></div>
-                          </div>
-                        ) : (
-                          <div style={{ display: 'grid', gap: 10 }}>
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                              {fieldBadge('اطلاعات کارفرما ناقص است', 'warning')}
-                              {fieldBadge('شناسه ملی / کد اقتصادی / نماینده قانونی ثبت نشده است', 'warning')}
-                            </div>
-                            <Link href="/business-settings/profile" className="draft-template-flow-action is-primary" style={{ width: 'fit-content' }}>
-                              تکمیل اطلاعات کسب و کار
-                            </Link>
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                    <ContractFirstPartyCard profile={resolvedBusinessProfile} />
 
-                    <div className="business-payroll-subcard" style={{ marginTop: 10 }}>
-                      <div className="business-draft-section-title">
-                        <h3>طرف دوم قرارداد</h3>
-                        <span className="contract-draft-reg-badge contract-draft-reg-badge--internal">کارمند</span>
-                      </div>
-                      <div className="business-payroll-transfer-rule-muted">
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
-                          {fieldBadge(`${employee.firstName} ${employee.lastName}`.trim(), 'muted')}
-                          {fieldBadge(`کد ملی: ${displayValue(employee.nationalId)}`, 'muted')}
-                          {fieldBadge(`وضعیت تکمیل: ${employeeCompletion}%`, employeeCompletion >= 70 ? 'success' : 'warning')}
-                        </div>
-                        <div className="business-draft-category-grid">
-                          {EMPLOYEE_BASE_FIELDS.map((field) => {
-                            const rawValue = (supplemental as Record<string, string>)[field.key];
-                            const value = field.key === 'gender'
-                              ? rawValue === 'male'
-                                ? 'مرد'
-                                : rawValue === 'female'
-                                  ? 'زن'
-                                  : rawValue === 'other'
-                                    ? 'سایر'
-                                    : ''
-                              : rawValue;
-                            const label = ['fatherName', 'birthDate', 'issuePlace', 'gender'].includes(String(field.key))
-                              ? 'اطلاعات شخصی'
-                              : ['educationField', 'educationDegree'].includes(String(field.key))
-                                ? 'اطلاعات تحصیلی'
-                                : ['jobTitle', 'firstContractDate'].includes(String(field.key))
-                                  ? 'اطلاعات شغلی'
-                                  : field.key === 'militaryStatus'
-                                    ? 'اطلاعات نظام وظیفه'
-                                    : 'اطلاعات آدرس';
-                            return (
-                              <div key={field.key} className="business-payroll-transfer-rule" style={{ gap: 8 }}>
-                                <div className="business-payroll-transfer-rule-head">
-                                  <div>
-                                    <strong>{field.label}</strong>
-                                    <small>{label}</small>
-                                  </div>
-                                  {String(value).trim() ? fieldBadge('تکمیل شده', 'success') : fieldBadge('نیازمند تکمیل', 'warning')}
-                                </div>
-                                <div style={{ color: '#e2e8f0', fontSize: 12, lineHeight: 1.9 }}>{valueOrEmpty(value)}</div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    </div>
+                    <EmployeeSupplementalProfileView
+                      employeeName={`${employee.firstName} ${employee.lastName}`.trim()}
+                      employee={{
+                        nationalId: employee.nationalId,
+                        maritalStatus: employee.maritalStatus,
+                        childrenCount: employee.childrenCount,
+                      }}
+                      supplemental={supplemental}
+                      onEdit={() => setSupplementalOpen(true)}
+                      showFooterLink
+                      profileHref={`/employees/${employee.id}/profile`}
+                    />
                     {renderStepFooter('parties')}
                   </StepShell>
                 ) : step.id === 'timing' ? (
                   <StepShell
                     title="مشخصات زمانی و ثبت قرارداد"
-                    tag="آیین‌نامه حقوقی"
                     description="این بخش شامل اطلاعات مربوط به تاریخ‌های قرارداد، شماره ثبت و وضعیت آن است. این اطلاعات برای پیگیری‌های رسمی، مالی و منابع انسانی استفاده می‌شود."
-                    icon={<CalendarDays className="h-4 w-4" />}
+                    titleIcon={<FileText className="h-5 w-5" aria-hidden />}
+                    descriptionInfo
                   >
-                    <div className="business-draft-category-grid" style={{ marginTop: 10 }}>
-                      <div className="business-payroll-subcard">
-                        <div className="business-draft-section-title">
-                          <h3>تاریخ عقد قرارداد</h3>
-                          <span className="contract-draft-reg-badge contract-draft-reg-badge--internal">آیین‌نامه حقوقی</span>
+                    <div className="contract-timing-step-stack">
+                      <article className="contract-timing-card">
+                        <div className="contract-timing-card-head">
+                          <h4>تاریخ عقد قرارداد</h4>
+                          <ContractTimingLegalBadge />
                         </div>
-                        <label className="business-payroll-field">
-                          <span className="business-payroll-field-label">تاریخ عقد قرارداد</span>
-                          <span className="business-payroll-input">
-                            <input
-                              type="date"
-                              value={formatDateInput(currentDraft.timing.contractDate)}
-                              onChange={(event) => updateTimingField('contractDate', event.target.value)}
-                            />
-                          </span>
-                          {errors.timing_contractDate ? <em>{errors.timing_contractDate}</em> : null}
-                        </label>
-                      </div>
+                        <p className="contract-timing-card-desc">
+                          این تاریخ، روز رسمی توافق و عقد قرارداد بین کارفرما و کارگر است و ممکن است با تاریخ آغاز همکاری متفاوت باشد.
+                        </p>
+                        <ContractTimingDateField
+                          label="تاریخ عقد قرارداد"
+                          value={formatDateInput(currentDraft.timing.contractDate)}
+                          error={errors.timing_contractDate}
+                          onChange={(value) => updateTimingField('contractDate', value)}
+                        />
+                      </article>
 
-                      <div className="business-payroll-subcard">
-                        <div className="business-draft-section-title">
-                          <h3>شماره ثبت قرارداد</h3>
-                          <span className="contract-draft-reg-badge contract-draft-reg-badge--internal">ثبت یکتا</span>
+                      <article className="contract-timing-card contract-timing-card--registration">
+                        <div className="contract-timing-card-head">
+                          <h4>شماره ثبت قرارداد</h4>
                         </div>
-                        <div className="business-payroll-transfer-rule-muted">
-                          این شماره ثبت به طور خودکار توسط سیستم ایجاد شده است. در صورت نیاز به تغییر، روی فیلد کلیک کنید.
-                        </div>
-                        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                          <button type="button" className="draft-template-flow-action is-secondary" onClick={() => setEditingRegistration((value) => !value)}>
-                            <Pencil className="h-4 w-4" /> {editingRegistration ? 'قفل شماره' : 'ویرایش'}
-                          </button>
-                          <button type="button" className="draft-template-flow-action is-secondary" onClick={regenerateRegistrationNumber}>
-                            <Edit3 className="h-4 w-4" /> تولید مجدد
-                          </button>
-                        </div>
-                        <label className="business-payroll-field">
-                          <span className="business-payroll-field-label">شماره ثبت قرارداد</span>
-                          <span className="business-payroll-input">
-                            <input
-                              value={currentDraft.timing.registrationNumber}
-                              disabled={!editingRegistration}
-                              onChange={(event) =>
-                                updateDraft((draft) => ({
-                                  ...draft,
-                                  contractNumber: event.target.value,
-                                  timing: { ...draft.timing, registrationNumber: event.target.value },
-                                }))
+                        <p className="contract-timing-card-desc has-info">
+                          <Info className="h-3.5 w-3.5" aria-hidden />
+                          <span>
+                            شماره یکتای قرارداد که برای پیگیری‌های اداری، مالی و حقوقی استفاده می‌شود. این شماره باید مطابق
+                            با سیستم ثبت قراردادهای سازمان باشد.
+                          </span>
+                        </p>
+                        <div className="contract-timing-registration-line">
+                          <div
+                            className={`contract-timing-registration-field${editingRegistration ? ' is-editing' : ''}`}
+                            onClick={() => {
+                              if (!editingRegistration) setEditingRegistration(true);
+                            }}
+                            onKeyDown={(event) => {
+                              if (event.key === 'Enter' || event.key === ' ') {
+                                event.preventDefault();
+                                if (!editingRegistration) setEditingRegistration(true);
                               }
-                            />
-                          </span>
-                          {errors.timing_registrationNumber ? <em>{errors.timing_registrationNumber}</em> : null}
-                        </label>
-                      </div>
-
-                      <div className="business-payroll-subcard">
-                        <div className="business-draft-section-title">
-                          <h3>مدت همکاری و پایان قرارداد</h3>
-                          <span className="contract-draft-reg-badge contract-draft-reg-badge--internal">آیین‌نامه حقوقی</span>
+                            }}
+                            role={editingRegistration ? undefined : 'button'}
+                            tabIndex={editingRegistration ? undefined : 0}
+                          >
+                            <span className="contract-timing-registration-label">شماره ثبت قرارداد</span>
+                            {editingRegistration ? (
+                              <input
+                                className="contract-timing-registration-value"
+                                value={currentDraft.timing.registrationNumber}
+                                autoFocus
+                                dir="ltr"
+                                onClick={(event) => event.stopPropagation()}
+                                onChange={(event) =>
+                                  updateDraft((draft) => ({
+                                    ...draft,
+                                    contractNumber: event.target.value,
+                                    timing: { ...draft.timing, registrationNumber: event.target.value },
+                                  }))
+                                }
+                              />
+                            ) : (
+                              <strong className="contract-timing-registration-value" dir="ltr">
+                                {formatRegistrationNumberDisplay(currentDraft.timing.registrationNumber)}
+                              </strong>
+                            )}
+                          </div>
+                          <div className="contract-timing-registration-actions">
+                            <button
+                              type="button"
+                              className="contract-timing-registration-action"
+                              aria-label="تولید مجدد شماره ثبت"
+                              onClick={regenerateRegistrationNumber}
+                            >
+                              <RotateCcw className="h-4 w-4" aria-hidden />
+                            </button>
+                            <button
+                              type="button"
+                              className="contract-timing-registration-action"
+                              aria-label={editingRegistration ? 'قفل شماره ثبت' : 'ویرایش شماره ثبت'}
+                              onClick={() => setEditingRegistration((value) => !value)}
+                            >
+                              <Pencil className="h-4 w-4" aria-hidden />
+                            </button>
+                          </div>
                         </div>
-                        <div className="business-payroll-fields two">
-                          <label className="business-payroll-field">
-                            <span className="business-payroll-field-label">تاریخ آغاز قرارداد</span>
-                            <span className="business-payroll-input">
-                              <input
-                                type="date"
-                                value={formatDateInput(currentDraft.timing.startDate)}
-                                onChange={(event) => updateTimingField('startDate', event.target.value)}
-                              />
-                            </span>
-                            {errors.timing_startDate ? <em>{errors.timing_startDate}</em> : null}
-                          </label>
-                          <label className="business-payroll-field">
-                            <span className="business-payroll-field-label">تاریخ پایان قرارداد</span>
-                            <span className="business-payroll-input">
-                              <input
-                                type="date"
-                                value={formatDateInput(currentDraft.timing.endDate)}
-                                onChange={(event) => updateTimingField('endDate', event.target.value)}
-                              />
-                            </span>
-                            {errors.timing_endDate ? <em>{errors.timing_endDate}</em> : null}
-                          </label>
+                        {errors.timing_registrationNumber ? (
+                          <em className="contract-timing-field-error">{errors.timing_registrationNumber}</em>
+                        ) : null}
+                        <p className="contract-timing-registration-note">
+                          این شماره ثبت به‌طور خودکار توسط سیستم ایجاد شده است. در صورت نیاز به تغییر، روی فیلد کلیک کنید.
+                        </p>
+                      </article>
+
+                      <article className="contract-timing-card">
+                        <div className="contract-timing-card-head">
+                          <h4>مدت همکاری و پایان قرارداد</h4>
+                          <ContractTimingLegalBadge />
+                        </div>
+                        <p className="contract-timing-card-desc">
+                          در این بخش بازه زمانی همکاری تعیین می‌شود؛ این بازه مبنای محاسبه حقوق، بیمه و تعهدات قراردادی است.
+                        </p>
+                        <div className="contract-timing-date-grid">
+                          <ContractTimingDateField
+                            label="تاریخ آغاز قرارداد"
+                            value={formatDateInput(currentDraft.timing.startDate)}
+                            error={errors.timing_startDate}
+                            onChange={(value) => updateTimingField('startDate', value)}
+                          />
+                          <ContractTimingDateField
+                            label="تاریخ پایان قرارداد"
+                            value={formatDateInput(currentDraft.timing.endDate)}
+                            error={errors.timing_endDate}
+                            onChange={(value) => updateTimingField('endDate', value)}
+                          />
                         </div>
                         {currentDraft.templateSnapshot ? (
-                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                          <div className="contract-timing-template-diff">
                             {currentDraft.timing.durationMonths !== currentDraft.templateSnapshot.timing.durationMonths ? (
                               differenceBadge(
                                 'متفاوت با مدت قالب',
@@ -1729,8 +2240,7 @@ export function EmployeeContractDraftBuilderClient({
                             )}
                           </div>
                         ) : null}
-                        {errors.timing_endDate ? <em>{errors.timing_endDate}</em> : null}
-                      </div>
+                      </article>
                     </div>
                     {renderStepFooter('timing')}
                   </StepShell>
@@ -2194,17 +2704,27 @@ export function EmployeeContractDraftBuilderClient({
         </div>
       </main>
 
-      <SupplementalEditorDialog
+      <EmployeeSupplementalProfileEditor
         open={supplementalOpen}
         employeeName={`${employee.firstName} ${employee.lastName}`.trim()}
         value={supplemental}
+        employeeMeta={{
+          nationalId: employee.nationalId,
+          maritalStatus: employee.maritalStatus,
+          childrenCount: employee.childrenCount,
+        }}
         onCancel={() => setSupplementalOpen(false)}
         onSubmit={createOrUpdateSupplemental}
       />
-      <SupplementalEditorDialog
+      <EmployeeSupplementalProfileEditor
         open={employeeInfoEditor}
         employeeName={`${employee.firstName} ${employee.lastName}`.trim()}
         value={supplemental}
+        employeeMeta={{
+          nationalId: employee.nationalId,
+          maritalStatus: employee.maritalStatus,
+          childrenCount: employee.childrenCount,
+        }}
         onCancel={() => setEmployeeInfoEditor(false)}
         onSubmit={createOrUpdateSupplemental}
       />

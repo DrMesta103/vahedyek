@@ -61,6 +61,18 @@ export type EmployeeDraftTemplateSnapshot = {
   benefitRules: Record<'workerAllowance' | 'housingAllowance' | 'childAllowance' | 'marriageAllowance' | 'seniorityAllowance', CalculationRules>;
 };
 
+export type EmployeeEducationRecord = {
+  id: string;
+  field: string;
+  degree: string;
+};
+
+export type EmployeeJobRecord = {
+  id: string;
+  title: string;
+  startDate: string;
+};
+
 export type EmployeeSupplementalProfile = {
   fatherName: string;
   birthDate: string;
@@ -68,8 +80,10 @@ export type EmployeeSupplementalProfile = {
   gender: '' | 'male' | 'female' | 'other';
   educationField: string;
   educationDegree: string;
+  educationRecords: EmployeeEducationRecord[];
   jobTitle: string;
   firstContractDate: string;
+  jobRecords: EmployeeJobRecord[];
   militaryStatus: string;
   country: string;
   province: string;
@@ -153,6 +167,15 @@ export type EmployeeContractDraftTemplateChoice = {
 export const EMPLOYEE_CONTRACT_DRAFTS_STORAGE_KEY = 'dastranj-employee-contract-drafts-v1';
 export const EMPLOYEE_SUPPLEMENTAL_PROFILE_STORAGE_KEY = 'dastranj-employee-supplemental-profile-v1';
 
+function getBrowserLocalStorage() {
+  if (typeof window === 'undefined') return null;
+  try {
+    return window.localStorage;
+  } catch {
+    return null;
+  }
+}
+
 function scopeStorageKey(key: string, tenantId?: string | null) {
   const scope = tenantId ?? getActiveTenantStorageId();
   return scope ? `${key}:${scope}` : key;
@@ -232,17 +255,105 @@ export function getEmployeeDraftsFromStorage(raw: string | null | undefined) {
   }
 }
 
+function createSupplementalRecordId() {
+  return globalThis.crypto?.randomUUID?.() ?? `rec-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+export function createEmptyEducationRecord(): EmployeeEducationRecord {
+  return { id: createSupplementalRecordId(), field: '', degree: '' };
+}
+
+export function createEmptyJobRecord(): EmployeeJobRecord {
+  return { id: createSupplementalRecordId(), title: '', startDate: '' };
+}
+
+function normalizeEducationRecords(source: Partial<EmployeeSupplementalProfile>) {
+  if (Array.isArray(source.educationRecords) && source.educationRecords.length) {
+    return source.educationRecords
+      .map((item) => {
+        const record = (item && typeof item === 'object' ? item : {}) as Partial<EmployeeEducationRecord>;
+        return {
+          id: typeof record.id === 'string' && record.id.trim() ? record.id : createSupplementalRecordId(),
+          field: typeof record.field === 'string' ? record.field : '',
+          degree: typeof record.degree === 'string' ? record.degree : '',
+        } satisfies EmployeeEducationRecord;
+      })
+      .filter(Boolean);
+  }
+
+  if (source.educationField?.trim() || source.educationDegree?.trim()) {
+    return [
+      {
+        id: createSupplementalRecordId(),
+        field: source.educationField ?? '',
+        degree: source.educationDegree ?? '',
+      },
+    ];
+  }
+
+  return [createEmptyEducationRecord()];
+}
+
+function normalizeJobRecords(source: Partial<EmployeeSupplementalProfile>) {
+  if (Array.isArray(source.jobRecords) && source.jobRecords.length) {
+    return source.jobRecords
+      .map((item) => {
+        const record = (item && typeof item === 'object' ? item : {}) as Partial<EmployeeJobRecord>;
+        return {
+          id: typeof record.id === 'string' && record.id.trim() ? record.id : createSupplementalRecordId(),
+          title: typeof record.title === 'string' ? record.title : '',
+          startDate: typeof record.startDate === 'string' ? record.startDate : '',
+        } satisfies EmployeeJobRecord;
+      })
+      .filter(Boolean);
+  }
+
+  if (source.jobTitle?.trim() || source.firstContractDate?.trim()) {
+    return [
+      {
+        id: createSupplementalRecordId(),
+        title: source.jobTitle ?? '',
+        startDate: source.firstContractDate ?? '',
+      },
+    ];
+  }
+
+  return [createEmptyJobRecord()];
+}
+
+export function syncSupplementalLegacyFields(profile: EmployeeSupplementalProfile): EmployeeSupplementalProfile {
+  const educationRecords = profile.educationRecords.length ? profile.educationRecords : [createEmptyEducationRecord()];
+  const jobRecords = profile.jobRecords.length ? profile.jobRecords : [createEmptyJobRecord()];
+  const firstEducation = educationRecords[0];
+  const firstJob = jobRecords[0];
+
+  return {
+    ...profile,
+    educationRecords,
+    jobRecords,
+    educationField: firstEducation?.field ?? '',
+    educationDegree: firstEducation?.degree ?? '',
+    jobTitle: firstJob?.title ?? '',
+    firstContractDate: firstJob?.startDate ?? '',
+  };
+}
+
 export function normalizeEmployeeSupplementalProfile(value: unknown): EmployeeSupplementalProfile {
   const source = value && typeof value === 'object' ? (value as Partial<EmployeeSupplementalProfile>) : {};
-  return {
+  const educationRecords = normalizeEducationRecords(source);
+  const jobRecords = normalizeJobRecords(source);
+
+  return syncSupplementalLegacyFields({
     fatherName: source.fatherName ?? '',
     birthDate: source.birthDate ?? '',
     issuePlace: source.issuePlace ?? '',
     gender: source.gender ?? '',
-    educationField: source.educationField ?? '',
-    educationDegree: source.educationDegree ?? '',
-    jobTitle: source.jobTitle ?? '',
-    firstContractDate: source.firstContractDate ?? '',
+    educationField: source.educationField ?? educationRecords[0]?.field ?? '',
+    educationDegree: source.educationDegree ?? educationRecords[0]?.degree ?? '',
+    educationRecords,
+    jobTitle: source.jobTitle ?? jobRecords[0]?.title ?? '',
+    firstContractDate: source.firstContractDate ?? jobRecords[0]?.startDate ?? '',
+    jobRecords,
     militaryStatus: source.militaryStatus ?? '',
     country: source.country ?? '',
     province: source.province ?? '',
@@ -254,7 +365,7 @@ export function normalizeEmployeeSupplementalProfile(value: unknown): EmployeeSu
     floor: source.floor ?? '',
     unit: source.unit ?? '',
     postalCode: source.postalCode ?? '',
-  };
+  });
 }
 
 export function getDefaultEmployeeSupplementalProfile(): EmployeeSupplementalProfile {
@@ -426,6 +537,7 @@ export function createInitialEmployeeContractDraft({
   template,
   baseSettings,
   supplemental,
+  contractNumberOverride,
 }: {
   employeeId: string;
   employeeName: string;
@@ -441,13 +553,14 @@ export function createInitialEmployeeContractDraft({
   template?: ContractDraftTemplate | null;
   baseSettings?: PayrollSettings | null;
   supplemental?: EmployeeSupplementalProfile | null;
+  contractNumberOverride?: string | null;
 }): EmployeeContractDraft {
   const resolvedBase = baseSettings ? normalizePayrollSettings(baseSettings) : DEFAULT_PAYROLL_SETTINGS;
   const snapshot = template ? buildTemplateSnapshot(template, resolvedBase) : null;
   const steps = getEmployeeDraftSteps(usageType).map((item) => item.id);
   const progress = buildProgress(steps, steps[0]);
   const now = new Date();
-  const registrationNumber = createUniqueContractNumber(drafts);
+  const registrationNumber = contractNumberOverride?.trim() || createUniqueContractNumber(drafts);
 
   return {
     id: `employee-contract-draft-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -534,15 +647,22 @@ export function findEmployeeDraft(drafts: EmployeeContractDraft[], employeeId: s
 }
 
 export function persistEmployeeDrafts(drafts: EmployeeContractDraft[], tenantId?: string | null) {
-  window.localStorage.setItem(getEmployeeContractDraftsStorageKey(tenantId), JSON.stringify(drafts));
+  const storage = getBrowserLocalStorage();
+  if (!storage) return;
+  storage.setItem(getEmployeeContractDraftsStorageKey(tenantId), JSON.stringify(drafts));
 }
 
 export function readEmployeeDrafts(tenantId?: string | null) {
-  return getEmployeeDraftsFromStorage(window.localStorage.getItem(getEmployeeContractDraftsStorageKey(tenantId)));
+  const storage = getBrowserLocalStorage();
+  if (!storage) return [];
+  return getEmployeeDraftsFromStorage(storage.getItem(getEmployeeContractDraftsStorageKey(tenantId)));
 }
 
 export function readEmployeeSupplementalProfiles(tenantId?: string | null): Record<string, EmployeeSupplementalProfile> {
-  const raw = window.localStorage.getItem(getEmployeeSupplementalStorageKey(tenantId));
+  const storage = getBrowserLocalStorage();
+  if (!storage) return {};
+
+  const raw = storage.getItem(getEmployeeSupplementalStorageKey(tenantId));
   if (!raw) return {};
   try {
     const parsed = JSON.parse(raw) as unknown;
@@ -552,18 +672,23 @@ export function readEmployeeSupplementalProfiles(tenantId?: string | null): Reco
       return result;
     }, {});
   } catch {
-    window.localStorage.removeItem(getEmployeeSupplementalStorageKey(tenantId));
+    storage.removeItem(getEmployeeSupplementalStorageKey(tenantId));
     return {};
   }
 }
 
 export function persistEmployeeSupplementalProfiles(profiles: Record<string, EmployeeSupplementalProfile>, tenantId?: string | null) {
-  window.localStorage.setItem(getEmployeeSupplementalStorageKey(tenantId), JSON.stringify(profiles));
+  const storage = getBrowserLocalStorage();
+  if (!storage) return;
+  storage.setItem(getEmployeeSupplementalStorageKey(tenantId), JSON.stringify(profiles));
 }
 
 export function readBaseSettingsByTemplate(template: ContractDraftTemplate | null | undefined) {
   if (!template) return DEFAULT_PAYROLL_SETTINGS;
-  const raw = window.localStorage.getItem(getPayrollSettingsStorageKey(template.baseSettingsYear, getActiveTenantStorageId()));
+  const storage = getBrowserLocalStorage();
+  if (!storage) return DEFAULT_PAYROLL_SETTINGS;
+
+  const raw = storage.getItem(getPayrollSettingsStorageKey(template.baseSettingsYear, getActiveTenantStorageId()));
   if (!raw) return DEFAULT_PAYROLL_SETTINGS;
   try {
     return normalizePayrollSettings(JSON.parse(raw));

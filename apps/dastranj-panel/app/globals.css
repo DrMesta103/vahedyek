@@ -8357,6 +8357,61 @@ body {
   text-align: right;
 }
 
+.draft-showcase-fields {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  text-align: right;
+}
+
+.draft-showcase-fields.is-compact {
+  gap: 6px;
+}
+
+.draft-showcase-field {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: flex-start;
+  gap: 6px;
+  line-height: 1.6;
+}
+
+.draft-showcase-field-label {
+  flex-shrink: 0;
+  color: #8fa8c3;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.draft-showcase-field-value {
+  color: #dbe7f4;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+.draft-showcase-field-value.is-prominent {
+  color: #fff;
+  font-size: 15px;
+  font-weight: 950;
+}
+
+.draft-showcase-field-badge {
+  margin-inline-start: 0;
+}
+
+.draft-template-showcase-info {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  flex: 1;
+  min-width: 0;
+  align-items: start;
+}
+
 .draft-template-showcase-title-block h3 {
   margin: 0;
   color: #fff;
@@ -18459,6 +18514,653 @@ body {
   font-weight: 700;
 }
 
+.business-draft-create-dialog .business-draft-template-card {
+  display: grid;
+  gap: 12px;
+}
+
+.business-draft-template-mode-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.business-draft-template-mode-row button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  border: 1px solid rgba(151, 182, 215, 0.22);
+  border-radius: 10px;
+  background: rgba(11, 29, 54, 0.5);
+  color: #d9e7f5;
+  padding: 0 12px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1.5;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.business-draft-template-mode-row button.is-selected {
+  border-color: rgba(246, 174, 52, 0.72);
+  background: rgba(246, 174, 52, 0.14);
+  color: #fff;
+}
+
+.business-draft-template-picker {
+  display: grid;
+  gap: 6px;
+}
+
+.business-draft-template-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  min-height: 52px;
+  border: 1px solid rgba(151, 182, 215, 0.18);
+  border-radius: 10px;
+  background: rgba(11, 29, 54, 0.42);
+  padding: 10px 12px;
+  text-align: right;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.business-draft-template-option:hover {
+  border-color: rgba(151, 182, 215, 0.32);
+  background: rgba(11, 29, 54, 0.62);
+}
+
+.business-draft-template-option.is-selected {
+  border-color: rgba(246, 174, 52, 0.72);
+  background: rgba(246, 174, 52, 0.1);
+}
+
+.business-draft-template-option-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.business-draft-template-option-copy strong {
+  display: block;
+  color: #f8fafc;
+  font-size: 12px;
+  font-weight: 950;
+  line-height: 1.6;
+}
+
+.business-draft-template-option-copy small {
+  display: block;
+  color: #8fa8c3;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.6;
+}
+
+.business-draft-template-option-check {
+  flex-shrink: 0;
+  color: #f7c467;
+}
+
+.business-draft-template-empty-note {
+  padding-top: 2px;
+}
+
+.calendar-create-modal-backdrop:has(.employee-supplemental-editor-dialog) {
+  align-items: flex-start;
+  overflow-y: auto;
+  padding-top: max(16px, 3vh);
+  padding-bottom: max(16px, 3vh);
+}
+
+.calendar-create-modal:has(.employee-supplemental-editor-dialog) {
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 560px);
+  max-height: min(92vh, 900px);
+  overflow: hidden;
+  padding: 20px 22px 0;
+  border-color: rgba(152, 183, 219, 0.22);
+  background: linear-gradient(180deg, #17385f, #102945);
+}
+
+.calendar-create-modal:has(.employee-supplemental-editor-dialog) .calendar-create-modal-head,
+.calendar-create-modal:has(.employee-supplemental-editor-dialog) .calendar-create-modal-footer {
+  flex-shrink: 0;
+}
+
+.calendar-create-modal:has(.employee-supplemental-editor-dialog) .calendar-create-modal-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-inline: 2px;
+  padding-bottom: 12px;
+}
+
+.calendar-create-modal:has(.employee-supplemental-editor-dialog) .calendar-create-modal-footer {
+  margin: 0 -22px;
+  border-top: 1px solid rgba(148, 163, 184, 0.1);
+  background: rgba(8, 13, 27, 0.82);
+  padding: 16px 22px 18px;
+}
+
+.employee-supplemental-editor-dialog {
+  gap: 10px;
+}
+
+.employee-supplemental-editor-summary {
+  display: grid;
+  gap: 8px;
+  border: 1px solid rgba(152, 183, 219, 0.16);
+  border-radius: 14px;
+  background: rgba(9, 28, 53, 0.54);
+  padding: 12px 14px;
+}
+
+.employee-supplemental-editor-summary-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.employee-supplemental-editor-summary-row strong {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 950;
+}
+
+.employee-supplemental-editor-progress {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  border-radius: 999px;
+  background: rgba(244, 63, 94, 0.14);
+  color: #fecdd3;
+  padding: 0 12px;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.employee-supplemental-editor-progress.is-complete {
+  background: rgba(34, 197, 94, 0.16);
+  color: #86efac;
+}
+
+.employee-supplemental-editor-section {
+  gap: 10px;
+}
+
+.employee-supplemental-editor-section .business-draft-dialog-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.employee-supplemental-record-stack {
+  display: grid;
+  gap: 10px;
+}
+
+.employee-supplemental-record-block {
+  display: grid;
+  gap: 10px;
+  border: 1px solid rgba(152, 183, 219, 0.14);
+  border-radius: 12px;
+  background: rgba(8, 24, 46, 0.42);
+  padding: 12px;
+}
+
+.employee-supplemental-record-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.employee-supplemental-record-index {
+  color: #94b4d4;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.employee-supplemental-record-add,
+.employee-supplemental-record-remove {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  border: 1px solid rgba(152, 183, 219, 0.24);
+  border-radius: 999px;
+  background: rgba(11, 29, 54, 0.62);
+  color: #dbe7f4;
+  padding: 0 12px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 900;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.employee-supplemental-record-add:hover,
+.employee-supplemental-record-remove:hover {
+  border-color: rgba(246, 174, 52, 0.52);
+  background: rgba(246, 174, 52, 0.1);
+  color: #fff;
+}
+
+.employee-supplemental-record-remove {
+  border-color: rgba(244, 63, 94, 0.28);
+  background: rgba(244, 63, 94, 0.08);
+  color: #fecdd3;
+}
+
+.contract-party-record-stack {
+  display: grid;
+  gap: 8px;
+}
+
+.contract-party-record-card {
+  display: grid;
+  gap: 8px;
+  border: 1px solid rgba(152, 183, 219, 0.12);
+  border-radius: 12px;
+  background: rgba(8, 24, 46, 0.28);
+  padding: 10px 12px;
+}
+
+.contract-party-record-index {
+  color: #8fa8c3;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.contract-draft-reg-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  padding: 5px 10px;
+  font-size: 10px;
+  font-weight: 950;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.contract-draft-reg-badge--internal {
+  border: 1px solid rgba(56, 189, 248, 0.24);
+  background: rgba(56, 189, 248, 0.1);
+  color: #dff5ff;
+}
+
+.contract-draft-reg-badge--legal {
+  border: 1px solid rgba(246, 174, 52, 0.42);
+  background: rgba(246, 174, 52, 0.12);
+  color: #ffe0a8;
+}
+
+.contract-timing-step-title-row {
+  align-items: flex-start;
+}
+
+.contract-timing-step-main-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.contract-timing-step-title-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #f8fafc;
+}
+
+.contract-timing-step-lead {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0 0 14px;
+  color: #8fa8c3;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.85;
+}
+
+.contract-timing-step-lead.has-info .contract-timing-step-lead-icon {
+  flex-shrink: 0;
+  margin-top: 3px;
+  color: #7f97b0;
+}
+
+.contract-timing-step-stack {
+  display: grid;
+  gap: 12px;
+}
+
+.contract-timing-card {
+  display: grid;
+  gap: 12px;
+  border: 1px solid rgba(152, 183, 219, 0.14);
+  border-radius: 14px;
+  background: rgba(8, 24, 46, 0.42);
+  padding: 14px 16px;
+}
+
+.contract-timing-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.contract-timing-card-head h4 {
+  margin: 0;
+  color: #f8fafc;
+  font-size: 14px;
+  font-weight: 950;
+  line-height: 1.6;
+}
+
+.contract-timing-legal-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  border: 1px solid rgba(246, 174, 52, 0.42);
+  border-radius: 999px;
+  background: rgba(246, 174, 52, 0.12);
+  color: #ffe0a8;
+  padding: 5px 10px;
+  font-size: 10px;
+  font-weight: 950;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.contract-timing-card-desc {
+  margin: 0;
+  color: #8fa8c3;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.85;
+}
+
+.contract-timing-card-desc.has-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.contract-timing-card-desc.has-info svg {
+  flex-shrink: 0;
+  margin-top: 3px;
+  color: #7f97b0;
+}
+
+.contract-timing-date-field {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.contract-timing-date-label {
+  color: #e5edf8;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1.6;
+}
+
+.contract-timing-date-label em {
+  color: #f87171;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.contract-timing-date-input {
+  min-height: 46px;
+  border: 1px solid rgba(59, 130, 246, 0.55);
+  border-radius: 10px;
+  background: rgba(10, 22, 42, 0.72);
+  padding: 4px 10px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.contract-timing-date-input:focus-within {
+  border-color: rgba(96, 165, 250, 0.85);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.14);
+}
+
+.contract-timing-date-input.has-error {
+  border-color: rgba(248, 113, 113, 0.55);
+}
+
+.contract-timing-date-picker {
+  width: 100%;
+}
+
+.contract-timing-date-picker .contract-timing-date-picker-control,
+.contract-timing-date-picker input {
+  width: 100%;
+  min-height: 36px;
+  border: 0 !important;
+  border-radius: 8px !important;
+  background: transparent !important;
+  color: #fff !important;
+  box-shadow: none !important;
+  outline: 0 !important;
+  padding: 0 40px 0 8px !important;
+  font: inherit;
+  font-size: 13px !important;
+  font-weight: 900 !important;
+  text-align: right !important;
+  direction: rtl;
+}
+
+.contract-timing-date-picker button {
+  right: auto !important;
+  left: 10px !important;
+  color: #f6ae34 !important;
+}
+
+.contract-timing-date-picker button:hover {
+  color: #ffe0a8 !important;
+}
+
+.contract-timing-date-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.contract-timing-registration-line {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.contract-timing-registration-field {
+  flex: 1;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  min-height: 48px;
+  border: 1px solid rgba(59, 130, 246, 0.45);
+  border-radius: 10px;
+  background: rgba(10, 22, 42, 0.72);
+  padding: 0 14px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.contract-timing-registration-field.is-editing {
+  cursor: text;
+}
+
+.contract-timing-registration-field:focus-visible {
+  outline: 2px solid rgba(246, 174, 52, 0.55);
+  outline-offset: 2px;
+}
+
+.contract-timing-registration-label {
+  color: #7f97b0;
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.contract-timing-registration-value {
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 950;
+  text-align: left;
+  outline: 0;
+  padding: 0;
+  font-family: inherit;
+  letter-spacing: 0.02em;
+}
+
+.contract-timing-registration-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.contract-timing-registration-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(246, 174, 52, 0.55);
+  border-radius: 8px;
+  background: rgba(246, 174, 52, 0.08);
+  color: #f6ae34;
+  padding: 0;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+}
+
+.contract-timing-registration-action:hover {
+  border-color: rgba(246, 174, 52, 0.85);
+  background: rgba(246, 174, 52, 0.16);
+  transform: translateY(-1px);
+}
+
+.contract-timing-registration-note {
+  margin: 0;
+  color: #8fa8c3;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.8;
+}
+
+.contract-timing-field-error {
+  display: block;
+  color: #ffb7b7;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 800;
+  line-height: 1.6;
+}
+
+.contract-timing-template-diff {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+@media (max-width: 640px) {
+  .contract-timing-date-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .contract-timing-registration-line {
+    flex-direction: column;
+  }
+
+  .contract-timing-registration-actions {
+    justify-content: flex-end;
+  }
+}
+
+.employee-supplemental-editor-section .business-draft-dialog-card-head p {
+  margin: 4px 0 0;
+  color: #8fa8c3;
+  font-size: 11px;
+  line-height: 1.7;
+  font-weight: 700;
+}
+
+.employee-supplemental-editor-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 12px;
+}
+
+.employee-supplemental-editor-field.is-wide {
+  grid-column: 1 / -1;
+}
+
+.employee-supplemental-editor-field span {
+  color: #dbe7f4;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.employee-supplemental-gender-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.employee-supplemental-gender-row button {
+  min-height: 38px;
+  border: 1px solid rgba(151, 182, 215, 0.22);
+  border-radius: 10px;
+  background: rgba(11, 29, 54, 0.5);
+  color: #d9e7f5;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.employee-supplemental-gender-row button.is-selected {
+  border-color: rgba(246, 174, 52, 0.72);
+  background: rgba(246, 174, 52, 0.14);
+  color: #fff;
+}
+
+@media (max-width: 560px) {
+  .calendar-create-modal:has(.employee-supplemental-editor-dialog) {
+    width: min(100%, 100%);
+    padding: 16px;
+  }
+
+  .employee-supplemental-editor-grid,
+  .employee-supplemental-gender-row {
+    grid-template-columns: 1fr;
+  }
+}
+
 .business-payroll-year-back {
   border: 0;
   background: transparent;
@@ -18909,6 +19611,199 @@ body {
   align-items: start;
   justify-content: space-between;
   gap: 14px;
+}
+
+.contract-party-card {
+  margin-top: 10px;
+  gap: 12px;
+}
+
+.contract-party-card--employee {
+  margin-top: 10px;
+}
+
+.contract-party-card-toolbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.contract-party-card-toolbar .business-draft-section-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.contract-party-card-edit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border: 1px solid rgba(246, 174, 52, 0.55);
+  border-radius: 10px;
+  background: rgba(246, 174, 52, 0.12);
+  color: #f7c467;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.contract-party-card-edit:hover {
+  background: rgba(246, 174, 52, 0.2);
+  border-color: rgba(246, 174, 52, 0.85);
+  color: #ffe7b8;
+}
+
+.contract-party-card-avatar.is-employee {
+  border-color: rgba(246, 174, 52, 0.35);
+  background: linear-gradient(180deg, rgba(246, 174, 52, 0.22), rgba(11, 29, 54, 0.72));
+  color: #ffe7b8;
+}
+
+.contract-party-section {
+  display: grid;
+  gap: 8px;
+}
+
+.contract-party-section-title {
+  margin: 0;
+  color: #dbe7f4;
+  font-size: 12px;
+  font-weight: 950;
+  line-height: 1.6;
+}
+
+.contract-party-card-stats.is-address {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.employee-supplemental-profile-page {
+  display: grid;
+  gap: 14px;
+}
+
+.employee-supplemental-profile-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.employee-supplemental-profile-shell {
+  width: min(100%, 920px);
+}
+
+.contract-party-card-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  color: #8fa8c3;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.8;
+}
+
+.contract-party-card-hint svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: #7f97b0;
+}
+
+.contract-party-card-identity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 2px 0 4px;
+}
+
+.contract-party-card-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  border: 1px solid rgba(56, 189, 248, 0.24);
+  background: linear-gradient(180deg, rgba(56, 189, 248, 0.18), rgba(11, 29, 54, 0.72));
+  color: #f7c467;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.contract-party-card-identity-copy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  text-align: right;
+}
+
+.contract-party-card-identity-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.contract-party-card-identity-copy strong {
+  color: #fff;
+  font-size: 15px;
+  font-weight: 950;
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+.contract-party-card-identity-copy span {
+  color: #9fb5cb;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.6;
+}
+
+.contract-party-card-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.contract-party-card-stats.is-secondary {
+  margin-top: -2px;
+}
+
+.contract-party-stat {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  border: 1px solid rgba(151, 182, 215, 0.14);
+  border-radius: 12px;
+  background: rgba(11, 29, 54, 0.62);
+  padding: 10px 12px;
+  text-align: right;
+}
+
+.contract-party-stat-label {
+  color: #8fa8c3;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1.5;
+}
+
+.contract-party-stat-value {
+  color: #f8fafc;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+.contract-party-card-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding-top: 2px;
 }
 
 .business-payroll-outline-button,
@@ -19942,6 +20837,18 @@ body {
   .business-draft-dialog-options-grid {
     grid-template-columns: 1fr;
   }
+
+  .business-draft-template-mode-row {
+    grid-template-columns: 1fr;
+  }
+
+  .contract-party-card-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .contract-party-card-stats.is-address {
+    grid-template-columns: 1fr;
+  }
 }
 
 .business-draft-template-row {
@@ -20290,6 +21197,10 @@ body {
 
   .draft-template-showcase-head {
     flex-direction: column;
+  }
+
+  .draft-template-showcase-info {
+    grid-template-columns: 1fr;
   }
 
   .draft-template-showcase-actions {

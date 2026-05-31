@@ -1,5 +1,6 @@
 ﻿'use client';
 
+import dynamic from 'next/dynamic';
 import {
   ArrowLeft,
   CalendarDays,
@@ -16,7 +17,24 @@ import {
 import { useMemo, useState, type ReactNode } from 'react';
 import { createCalendarDraftFromDefaultAction, updateCalendarFromQuickSetupAction } from '../../../lib/actions';
 import { resolveCalendarShiftTitle } from '../../../lib/calendar-shifts';
+import type { ShiftWizardSavePayload } from '../../calendars/[calendarId]/_components/shift/CalendarShiftWizard';
+import type { CalendarShiftWizardCalendar } from '../../calendars/[calendarId]/_components/shift/types';
 import type { CompletedCalendarItem, DefaultCalendarTemplate } from './quick-setup.types';
+
+const CalendarShiftWizard = dynamic(
+  () =>
+    import('../../calendars/[calendarId]/_components/shift/CalendarShiftWizard').then((module) => ({
+      default: module.CalendarShiftWizard,
+    })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="rounded-[22px] border border-white/10 bg-slate-900/50 p-6 text-center text-sm text-slate-300" role="status">
+        در حال بارگذاری فرم شیفت چرخشی...
+      </div>
+    ),
+  },
+);
 
 type SectionKey = 'calendar' | 'holiday' | 'shift';
 type ShiftType = 'fixed' | 'float-day' | 'float-abs' | 'split' | 'rotate';
@@ -1092,9 +1110,53 @@ export default function Step2CalendarShift({
           ? splitWorkingDays
           : workingDays;
 
-  const rotateAdvancedHref = draftCalendarId
-    ? `/calendars/${draftCalendarId}?returnTo=${encodeURIComponent('/quick-setup')}`
-    : `/shift-templates?returnTo=${encodeURIComponent('/quick-setup')}`;
+  const rotateWizardCalendar = useMemo<CalendarShiftWizardCalendar>(
+    () => ({
+      id: draftCalendarId || 'draft',
+      title: title.trim(),
+      description: description?.trim() || null,
+      yearLabel: year.trim(),
+      startDate: `${year}/01/01`,
+      endDate: `${year}/12/29`,
+      weekends,
+      singleHolidays: holidays,
+    }),
+    [description, draftCalendarId, holidays, title, weekends, year],
+  );
+
+  const saveRotateShift = async (payload: ShiftWizardSavePayload) => {
+    if (!draftCalendarId) throw new Error('ابتدا مراحل تقویم و تعطیلات را تکمیل کنید.');
+
+    setSaveError('');
+    try {
+      const result = await updateCalendarFromQuickSetupAction({
+        calendarId: draftCalendarId,
+        title: title.trim(),
+        description: description?.trim(),
+        yearLabel: year.trim(),
+        startDate: `${year}/01/01`,
+        endDate: `${year}/12/29`,
+        weekends,
+        singleHolidays: holidays,
+        shiftType: payload.shiftType,
+        shiftTitle: payload.shiftTitle,
+        shiftConfig: payload.shiftConfig,
+      });
+      setIsDirty(false);
+      onComplete({
+        id: result.id,
+        title: result.title,
+        yearLabel: result.yearLabel,
+        description: result.description,
+        shiftTitle: result.shiftTitle,
+        shiftTypeLabel: result.shiftTypeLabel,
+        holidayCount: result.holidayCount,
+      });
+    } catch {
+      setSaveError('شیفت ذخیره نشد. دوباره تلاش کنید.');
+      throw new Error('save failed');
+    }
+  };
 
   const addSingleHoliday = () => {
     if (!holidayTitle.trim() || !holidayDate.trim()) return;
@@ -1429,18 +1491,27 @@ export default function Step2CalendarShift({
             ) : null}
 
             {shiftType === 'rotate' ? (
-              <div className="rounded-[22px] border border-white/10 bg-slate-900/50 p-6 text-right">
-                <div className="text-lg font-black text-white">شیفت چرخشی نیاز به تعریف الگوی پیشرفته دارد.</div>
-                <p className="mt-3 text-sm leading-7 text-slate-300">
-                  برای این نوع شیفت باید مشخص شود الگو چگونه بین روزها، افراد یا گروه‌ها جابه‌جا می‌شود.
-                </p>
-                <a
-                  href={rotateAdvancedHref}
-                  className="mt-5 inline-flex items-center justify-center rounded-full bg-indigo-600 px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-indigo-500"
-                >
-                  ورود به تنظیمات پیشرفته چرخش
-                </a>
-              </div>
+              draftCalendarId ? (
+                <CalendarShiftWizard
+                  key={`quick-setup-rotate-${draftCalendarId}`}
+                  calendar={rotateWizardCalendar}
+                  initialShiftType="rotate"
+                  hideTypePicker
+                  compact
+                  enableBuiltinTemplatePicker={false}
+                  submitLabel="ذخیره و ادامه به مدیریت کاربران"
+                  onSaveShift={saveRotateShift}
+                  onSaved={() => {}}
+                  onCancel={() => setShiftType('fixed')}
+                />
+              ) : (
+                <div className="rounded-[22px] border border-amber-400/25 bg-amber-950/30 p-6 text-right">
+                  <div className="text-lg font-black text-white">ابتدا مراحل تقویم و تعطیلات را تکمیل کنید.</div>
+                  <p className="mt-3 text-sm leading-7 text-slate-300">
+                    برای تعریف شیفت چرخشی، باید تقویم کاری و تعطیلات را در مراحل قبل ثبت کنید.
+                  </p>
+                </div>
+              )
             ) : null}
 
             {shiftType !== 'rotate' ? (

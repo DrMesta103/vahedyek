@@ -5,6 +5,7 @@ import { removeClientStorageStateAction, upsertClientStorageStatesAction } from 
 
 const BUSINESS_STORAGE_PREFIXES = [
   'dastranj-contract-draft-templates-v1',
+  'dastranj-naming-patterns-v1',
   'dastranj-business-payroll-settings-v1',
   'dastranj-business-payroll-years-v1',
   'dastranj-business-payroll-stepper-progress-v1',

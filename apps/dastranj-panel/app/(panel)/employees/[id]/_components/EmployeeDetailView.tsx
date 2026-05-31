@@ -111,9 +111,9 @@ function buildSections(employeeId: string): Array<{ title: string; cards: Employ
       cards: [
         {
           title: 'مشخصات کارمند',
-          description: 'اطلاعات هویتی، شغلی و وضعیت همکاری کارمند را مدیریت کنید.',
-          disabled: true,
-          badge: 'در آینده',
+          description: 'اطلاعات شخصی، تحصیلی، شغلی، نظام وظیفه و آدرس کارمند را مدیریت کنید.',
+          href: `/employees/${employeeId}/profile`,
+          highlighted: true,
           icon: User,
         },
         {
