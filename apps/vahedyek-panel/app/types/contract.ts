@@ -94,6 +94,17 @@ export interface FinancialDueItemData {
   title: string;
   amount: number;
   dueDate: string;
+  regularScheduleGroupId?: string | null;
+  regularScheduleConfig?: {
+    preset: string;
+    frequency: 'monthly' | 'daily';
+    period: number;
+    count: number;
+    startDate: string;
+    totalAmount: number;
+    itemIndex: number;
+    baseTitle: string;
+  } | null;
 }
 
 export interface AppendixDeliveryDatePayload {

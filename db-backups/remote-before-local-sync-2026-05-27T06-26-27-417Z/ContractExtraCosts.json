@@ -1,0 +1,78 @@
+[
+  {
+    "id": "f09120ce-719a-4a1f-8380-f4825922da69",
+    "draftId": "38dfb014-02b1-4190-821d-d2ab3394a0d5",
+    "payload": [],
+    "createdAt": "2026-05-05T05:57:59.713Z",
+    "updatedAt": "2026-05-05T07:43:18.244Z"
+  },
+  {
+    "id": "771c15ff-f14d-4ce8-a737-1d02e0e178f6",
+    "draftId": "f7e66789-e173-4379-ad75-0340b7efb177",
+    "payload": [],
+    "createdAt": "2026-05-05T08:21:10.255Z",
+    "updatedAt": "2026-05-05T08:21:10.255Z"
+  },
+  {
+    "id": "0dd96d99-97b4-4cb7-a49f-d9414ab1ea4c",
+    "draftId": "959073a8-a0e5-4f58-b4ed-c6bf4e772d83",
+    "payload": [],
+    "createdAt": "2026-05-05T09:03:50.562Z",
+    "updatedAt": "2026-05-05T09:03:50.562Z"
+  },
+  {
+    "id": "18e7e295-003e-40a4-8aeb-bebb8c84a1c7",
+    "draftId": "f8338f76-3c5f-4dae-ade1-4197fba9c94e",
+    "payload": [],
+    "createdAt": "2026-05-05T08:49:52.566Z",
+    "updatedAt": "2026-05-07T01:28:12.412Z"
+  },
+  {
+    "id": "d2256528-fc9b-4ecc-9b0b-68399b449c0f",
+    "draftId": "19760cf8-7344-4cd7-bfee-66cca1a40395",
+    "payload": [
+      {
+        "type": "COMMISSION",
+        "sellerName": "بنگاه جعفری",
+        "totalValue": 20,
+        "calculationMethod": "AMOUNT",
+        "buyerSharePercentage": 50,
+        "sellerSharePercentage": 50
+      },
+      {
+        "type": "NOTARY",
+        "sellerName": "",
+        "totalValue": 0,
+        "calculationMethod": "AMOUNT",
+        "buyerSharePercentage": 50,
+        "sellerSharePercentage": 50
+      },
+      {
+        "type": "LEGAL",
+        "sellerName": "",
+        "totalValue": 0,
+        "calculationMethod": "AMOUNT",
+        "buyerSharePercentage": 50,
+        "sellerSharePercentage": 50
+      }
+    ],
+    "createdAt": "2026-05-20T09:13:48.815Z",
+    "updatedAt": "2026-05-20T12:08:10.922Z"
+  },
+  {
+    "id": "c22f3ee6-e62a-4b20-91e6-8aaf7533be53",
+    "draftId": "08f99c91-6a75-49d4-9edc-c170bd22eb8b",
+    "payload": [
+      {
+        "type": "COMMISSION",
+        "sellerName": "کمیسیون",
+        "totalValue": 1000000,
+        "calculationMethod": "AMOUNT",
+        "buyerSharePercentage": 60,
+        "sellerSharePercentage": 40
+      }
+    ],
+    "createdAt": "2026-05-13T05:39:24.610Z",
+    "updatedAt": "2026-05-26T04:38:47.578Z"
+  }
+]

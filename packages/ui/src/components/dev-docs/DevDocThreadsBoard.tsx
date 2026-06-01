@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ArrowUpRight, CheckCircle2, Circle, GripVertical, Loader2, RefreshCw, Search } from 'lucide-react';
+import { ArrowUpRight, CheckCircle2, Circle, GripVertical, Loader2, MessageSquareText, RefreshCw, Search } from 'lucide-react';
 import { Input } from '../Input';
 import {
   DEV_DOC_PRIORITY_LABELS,
@@ -50,6 +50,7 @@ export function DevDocThreadsBoard({
   const [savingThreadId, setSavingThreadId] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
+  const [creatorFilters, setCreatorFilters] = useState<string[]>([]);
   const [draggingThreadId, setDraggingThreadId] = useState<string | null>(null);
   const [activeDropZone, setActiveDropZone] = useState<DevDocThreadStatus | null>(null);
 
@@ -72,24 +73,46 @@ export function DevDocThreadsBoard({
     void loadThreads();
   }, []);
 
+  const creatorOptions = useMemo(() => {
+    const seen = new Map<string, { id: string; fullName: string }>();
+    for (const thread of threads) {
+      const creatorId = thread.createdBy?.id;
+      if (!creatorId || seen.has(creatorId)) continue;
+      seen.set(creatorId, {
+        id: creatorId,
+        fullName: thread.createdBy?.fullName || 'نامشخص',
+      });
+    }
+    return Array.from(seen.values()).sort((a, b) => a.fullName.localeCompare(b.fullName, 'fa'));
+  }, [threads]);
+
   const filteredThreads = useMemo(() => {
     const query = search.trim().toLowerCase();
-    if (!query) return threads;
+    const baseThreads =
+      creatorFilters.length === 0 ? threads : threads.filter((thread) => thread.createdBy?.id && creatorFilters.includes(thread.createdBy.id));
 
-    return threads.filter((thread) =>
+    if (!query) return baseThreads;
+
+    return baseThreads.filter((thread) =>
       [thread.title, thread.docType, thread.pagePathSample, thread.pageKey, thread.createdBy?.fullName, ...thread.labels]
         .filter(Boolean)
         .join(' ')
         .toLowerCase()
         .includes(query),
     );
-  }, [search, threads]);
+  }, [creatorFilters, search, threads]);
 
   const columns = useMemo(
     () =>
       STATUS_COLUMNS.map((column) => ({
         ...column,
-        threads: filteredThreads.filter((thread) => thread.status === column.id),
+        threads: filteredThreads
+          .filter((thread) => thread.status === column.id)
+          .sort((left, right) => {
+            const timeDiff = new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime();
+            if (timeDiff !== 0) return timeDiff;
+            return left.title.localeCompare(right.title, 'fa');
+          }),
       })),
     [filteredThreads],
   );
@@ -140,7 +163,7 @@ export function DevDocThreadsBoard({
           </button>
         </div>
 
-        <div className="mt-6 grid gap-4 xl:grid-cols-[minmax(0,1fr)_280px]">
+        <div className="mt-6 grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px_280px]">
           <label className="grid gap-2">
             <span className="text-xs font-semibold text-[color:var(--text-muted)]">جستجو بین عناوین، مستندات، مسیرها و برچسب‌ها</span>
             <div className="relative">
@@ -148,6 +171,48 @@ export function DevDocThreadsBoard({
               <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="مثلا قرارداد، financial، /business-settings/..." className="pr-10" />
             </div>
           </label>
+          <div className="grid gap-2">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-xs font-semibold text-[color:var(--text-muted)]">فیلتر بر اساس سازنده گفتگو</span>
+              <button
+                type="button"
+                className="text-xs font-semibold text-[color:var(--theme-accent)]"
+                onClick={() => setCreatorFilters([])}
+              >
+                پاک کردن
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2 rounded-[18px] border border-[color:var(--border-color)] bg-[color:var(--surface)] p-2">
+              <button
+                type="button"
+                className={creatorFilters.length === 0 ? 'inline-flex items-center rounded-full bg-[color:var(--theme-accent)] px-3 py-2 text-xs font-bold text-white' : chipClass()}
+                onClick={() => setCreatorFilters([])}
+              >
+                همه سازنده‌ها
+              </button>
+              {creatorOptions.map((creator) => {
+                const active = creatorFilters.includes(creator.id);
+                return (
+                  <button
+                    key={creator.id}
+                    type="button"
+                    className={
+                      active
+                        ? 'inline-flex items-center rounded-full bg-[color:var(--theme-accent)] px-3 py-2 text-xs font-bold text-white'
+                        : chipClass()
+                    }
+                    onClick={() => {
+                      setCreatorFilters((current) =>
+                        current.includes(creator.id) ? current.filter((id) => id !== creator.id) : [...current, creator.id],
+                      );
+                    }}
+                  >
+                    {creator.fullName}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
           <div className="grid grid-cols-3 gap-2">
             {STATUS_COLUMNS.map((column) => (
               <div key={column.id} className="rounded-[22px] border border-[color:var(--border-color)] bg-transparent px-3 py-3 text-center text-sm text-[color:var(--text-body)]">
@@ -233,8 +298,15 @@ export function DevDocThreadsBoard({
                             </span>
                             <div className="min-w-0">
                               <div className="mb-3 flex flex-wrap gap-2">
+                                <span className="inline-flex items-center rounded-full border border-[color:var(--border-color)] bg-[color:var(--surface)] px-2.5 py-1 text-[11px] font-bold text-[color:var(--text-body)]">
+                                  گفت‌وگو
+                                </span>
                                 <span className={chipClass()}>{thread.docType}</span>
                                 <span className={chipClass()}>{DEV_DOC_PRIORITY_LABELS[thread.priority]}</span>
+                                <span className={chipClass()}>
+                                  <MessageSquareText className="ml-1 h-3.5 w-3.5" />
+                                  {thread.messageCount} پیام
+                                </span>
                                 {thread.status === 'in_progress' ? (
                                   <span className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-700">
                                     در حال انجام
@@ -261,10 +333,13 @@ export function DevDocThreadsBoard({
                         </div>
 
                         <div className="mt-4 space-y-2 text-xs text-[color:var(--text-muted)]">
-                          <div className="truncate font-mono">{thread.pagePathSample}</div>
                           <div className="flex flex-wrap gap-x-3 gap-y-1">
                             <span>ایجادکننده: {thread.createdBy?.fullName || 'نامشخص'}</span>
                             <span>آخرین بروزرسانی: {formatDateTime(thread.updatedAt)}</span>
+                          </div>
+                          <div className="rounded-[18px] border border-dashed border-[color:var(--border-color)] bg-[color:var(--surface)] px-3 py-2">
+                            <div className="mb-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[color:var(--text-muted)]">صفحه مرتبط</div>
+                            <div className="truncate font-mono text-[11px] text-[color:var(--text-body)]">{thread.pagePathSample}</div>
                           </div>
                         </div>
 

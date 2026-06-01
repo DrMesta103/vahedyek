@@ -1,0 +1,101 @@
+[
+  {
+    "id": "c488ff80-c263-4141-a72a-63c7f540ccf4",
+    "tenantId": "cmok2gpmo0001wcaw3nz2y79x",
+    "appId": "vahedyek",
+    "userId": "cmok2f0u20000wcawkc8lihv1",
+    "threadId": "a8560552-de86-4aaa-862d-f30593474ca0",
+    "isOpened": true,
+    "updatedAt": "2026-05-20T12:46:06.290Z"
+  },
+  {
+    "id": "b71415e3-86b7-4fb6-a673-2f67f60d2f63",
+    "tenantId": "cmok2gpmo0001wcaw3nz2y79x",
+    "appId": "vahedyek",
+    "userId": "cmok2f0u20000wcawkc8lihv1",
+    "threadId": "4e2fac33-2884-467a-8466-0449d89a409c",
+    "isOpened": true,
+    "updatedAt": "2026-05-20T12:46:09.998Z"
+  },
+  {
+    "id": "0fd03bc9-75c1-41cd-be4f-8b53e8120c65",
+    "tenantId": "cmok2gpmo0001wcaw3nz2y79x",
+    "appId": "vahedyek",
+    "userId": "cmok2f0u20000wcawkc8lihv1",
+    "threadId": "36bf1df9-32a7-4843-967d-535ab0dae39a",
+    "isOpened": true,
+    "updatedAt": "2026-05-20T12:46:11.601Z"
+  },
+  {
+    "id": "01780b45-98f4-407a-bc15-2e5bc4593812",
+    "tenantId": "cmok2gpmo0001wcaw3nz2y79x",
+    "appId": "vahedyek",
+    "userId": "cmok2f0u20000wcawkc8lihv1",
+    "threadId": "61e61778-68a8-4da2-8093-b8123a2e5509",
+    "isOpened": true,
+    "updatedAt": "2026-05-20T12:46:18.603Z"
+  },
+  {
+    "id": "7e5405ee-c86f-4c7f-956b-c9094006b3e7",
+    "tenantId": "cmok2gpmo0001wcaw3nz2y79x",
+    "appId": "vahedyek",
+    "userId": "cmok2f0u20000wcawkc8lihv1",
+    "threadId": "e31cef83-66ce-4a8a-87fa-e2b6fb7db70a",
+    "isOpened": true,
+    "updatedAt": "2026-05-20T12:46:32.198Z"
+  },
+  {
+    "id": "b85f3adf-51c7-4ab8-bb3c-4c58ef0b5537",
+    "tenantId": "cmok2gpmo0001wcaw3nz2y79x",
+    "appId": "vahedyek",
+    "userId": "cmok2f0u20000wcawkc8lihv1",
+    "threadId": "e4504519-381e-47ea-a188-7c118a2d54c8",
+    "isOpened": true,
+    "updatedAt": "2026-05-20T12:48:09.710Z"
+  },
+  {
+    "id": "95e449db-72db-47d2-b5e0-c6a7c76282f3",
+    "tenantId": "cmok2gpmo0001wcaw3nz2y79x",
+    "appId": "vahedyek",
+    "userId": "cmok2f0u20000wcawkc8lihv1",
+    "threadId": "acd66bc0-1814-4c84-848a-2ba86161a4cf",
+    "isOpened": true,
+    "updatedAt": "2026-05-20T12:49:05.486Z"
+  },
+  {
+    "id": "cdd089a3-f189-4017-a2c4-c69be9d64472",
+    "tenantId": "cmok2gpmo0001wcaw3nz2y79x",
+    "appId": "vahedyek",
+    "userId": "cmok2f0u20000wcawkc8lihv1",
+    "threadId": "76795aac-5f5e-4c16-b89a-d1cee7aa803c",
+    "isOpened": true,
+    "updatedAt": "2026-05-20T13:12:52.624Z"
+  },
+  {
+    "id": "a68dab61-3e4f-497a-81b5-b271e5fa1090",
+    "tenantId": "cmp2l1wfd07mzoy08jumz3qho",
+    "appId": "vahedyek",
+    "userId": "cmp2kunj407myoy082f9uuuae",
+    "threadId": "76bae355-7289-4a40-806b-f215f02cbf52",
+    "isOpened": true,
+    "updatedAt": "2026-05-21T07:52:38.412Z"
+  },
+  {
+    "id": "b60fb89c-6eaf-408c-8045-dfdee41350f4",
+    "tenantId": "cmp2l1wfd07mzoy08jumz3qho",
+    "appId": "vahedyek",
+    "userId": "cmp2kunj407myoy082f9uuuae",
+    "threadId": "52993af4-82b3-4dce-8458-41661b524384",
+    "isOpened": true,
+    "updatedAt": "2026-05-21T09:16:34.600Z"
+  },
+  {
+    "id": "968925ff-319c-4087-b7fb-597e7007624e",
+    "tenantId": "cmp2l1wfd07mzoy08jumz3qho",
+    "appId": "vahedyek",
+    "userId": "cmp2kunj407myoy082f9uuuae",
+    "threadId": "7c6bf31d-f47f-413c-824c-1ddeb3c111db",
+    "isOpened": true,
+    "updatedAt": "2026-05-27T01:24:17.349Z"
+  }
+]

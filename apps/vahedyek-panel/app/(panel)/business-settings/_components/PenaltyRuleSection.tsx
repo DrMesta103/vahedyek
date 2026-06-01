@@ -7,7 +7,6 @@ import {
   ChevronLeft,
   CircleDollarSign,
   CirclePercent,
-  Plus,
 } from 'lucide-react';
 import {
   BusinessSwitch,
@@ -31,6 +30,7 @@ type ProgressiveRowConfig = {
   from: string;
   to: string;
   rate: string;
+  openEndedKey: string;
 };
 
 const PERIOD_OPTIONS = ['روزانه', 'ماهانه', 'سالانه'] as const;
@@ -43,21 +43,30 @@ function RulePlainTextInput({
   onChange,
   placeholder,
   disabled = false,
+  suffix,
 }: {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
   disabled?: boolean;
+  suffix?: string;
 }) {
   return (
-    <Input
-      type="text"
-      value={value}
-      disabled={disabled}
-      onChange={(e) => onChange(e.target.value)}
-      placeholder={placeholder}
-      className={`${RULE_PANEL_TEXT_INPUT_CLASSNAME} disabled:bg-slate-50 disabled:text-slate-500`}
-    />
+    <div className="relative">
+      <Input
+        type="text"
+        value={value}
+        disabled={disabled}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className={`${RULE_PANEL_TEXT_INPUT_CLASSNAME} ${suffix ? 'pe-12' : ''} disabled:bg-slate-50 disabled:text-slate-500`}
+      />
+      {suffix ? (
+        <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-xs font-bold text-[color:var(--text-muted)]">
+          {suffix}
+        </span>
+      ) : null}
+    </div>
   );
 }
 
@@ -94,10 +103,10 @@ const MODE_OPTIONS: Array<{
 ];
 
 const PROGRESSIVE_DEFAULT_ROWS: ProgressiveRowConfig[] = [
-  { fromKey: 'penaltyProgressiveRow1From', toKey: 'penaltyProgressiveRow1To', rateKey: 'penaltyProgressiveRow1Rate', from: '1', to: '30', rate: '' },
-  { fromKey: 'penaltyProgressiveRow2From', toKey: 'penaltyProgressiveRow2To', rateKey: 'penaltyProgressiveRow2Rate', from: '', to: '', rate: '' },
-  { fromKey: 'penaltyProgressiveRow3From', toKey: 'penaltyProgressiveRow3To', rateKey: 'penaltyProgressiveRow3Rate', from: '', to: '', rate: '' },
-  { fromKey: 'penaltyProgressiveRow4From', toKey: 'penaltyProgressiveRow4To', rateKey: 'penaltyProgressiveRow4Rate', from: '', to: '', rate: '' },
+  { fromKey: 'penaltyProgressiveRow1From', toKey: 'penaltyProgressiveRow1To', rateKey: 'penaltyProgressiveRow1Rate', openEndedKey: 'penaltyProgressiveRow1OpenEnded', from: '1', to: '30', rate: '' },
+  { fromKey: 'penaltyProgressiveRow2From', toKey: 'penaltyProgressiveRow2To', rateKey: 'penaltyProgressiveRow2Rate', openEndedKey: 'penaltyProgressiveRow2OpenEnded', from: '', to: '', rate: '' },
+  { fromKey: 'penaltyProgressiveRow3From', toKey: 'penaltyProgressiveRow3To', rateKey: 'penaltyProgressiveRow3Rate', openEndedKey: 'penaltyProgressiveRow3OpenEnded', from: '', to: '', rate: '' },
+  { fromKey: 'penaltyProgressiveRow4From', toKey: 'penaltyProgressiveRow4To', rateKey: 'penaltyProgressiveRow4Rate', openEndedKey: 'penaltyProgressiveRow4OpenEnded', from: '', to: '', rate: '' },
 ];
 
 function getStringValue(value: unknown) {
@@ -110,16 +119,6 @@ function hasRowContent(values: ContractRuleState['values'], row: ProgressiveRowC
       getStringValue(values[row.toKey]) ||
       getStringValue(values[row.rateKey]),
   );
-}
-
-function getVisibleProgressiveRowCount(values: ContractRuleState['values']) {
-  let count = 1;
-  for (let index = 1; index < PROGRESSIVE_DEFAULT_ROWS.length; index += 1) {
-    if (hasRowContent(values, PROGRESSIVE_DEFAULT_ROWS[index])) {
-      count = index + 1;
-    }
-  }
-  return count;
 }
 
 function getNextFromValue(previousTo: string) {
@@ -151,14 +150,14 @@ function ProgressRow({
       <div className="hidden pb-8 text-center text-2xl text-[color:var(--text-muted)] lg:block">-</div>
       <div className="space-y-3">
         <RuleFieldLabel label="از" required />
-        <RulePlainTextInput value={from} onChange={(value) => onChange('from', value)} placeholder="از روز" disabled={fromDisabled} />
+        <RulePlainTextInput value={from} onChange={(value) => onChange('from', value)} placeholder="از روز" disabled={fromDisabled} suffix="روز" />
         <p className="text-right text-xs text-[color:var(--text-muted)]">
           {fromDisabled ? 'این مقدار بر اساس بازه قبلی به‌صورت خودکار تعیین می‌شود.' : 'مثال: از ۱ روز تاخیر'}
         </p>
       </div>
       <div className="space-y-3">
         <RuleFieldLabel label="تا" required />
-        <RulePlainTextInput value={to} onChange={(value) => onChange('to', value)} placeholder="تا روز" />
+        <RulePlainTextInput value={to} onChange={(value) => onChange('to', value)} placeholder="تا روز" suffix="روز" />
         <p className="text-right text-xs text-[color:var(--text-muted)]">مثال: تا ۳۰ روز تاخیر</p>
       </div>
     </div>
@@ -170,44 +169,57 @@ function SmartProgressRow({
   to,
   rate,
   openEnded,
+  blocked,
   onChange,
 }: {
   from: string;
   to: string;
   rate: string;
   openEnded: boolean;
+  blocked: boolean;
   onChange: (field: 'to' | 'rate' | 'openEnded', value: string | boolean) => void;
 }) {
   return (
-    <div className="grid gap-4 rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] p-4 lg:grid-cols-[1fr_120px_170px_170px] lg:items-end">
+    <div className={`grid gap-4 rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] p-4 lg:grid-cols-[1fr_120px_170px_170px] lg:items-end ${blocked ? 'opacity-60' : ''}`}>
       <div className="space-y-3">
         <RuleFieldLabel label="نرخ جریمه" required />
         <RuleAmountInput value={rate} onChange={(value) => onChange('rate', value)} suffix="%" />
-        <p className="text-right text-xs text-[color:var(--text-muted)]">مثال: 0.5٪ یا 1.25٪</p>
+        <p className="text-right text-xs leading-5 text-[color:var(--text-muted)]">مثال: 0.5%</p>
       </div>
       <label className="flex items-center justify-end gap-2 pb-8 text-xs font-bold text-[color:var(--text-muted)]">
         <input
           type="checkbox"
           checked={openEnded}
+          disabled={blocked}
           onChange={(event) => onChange('openEnded', event.target.checked)}
           className="h-4 w-4 rounded border-slate-300 text-cyan-600"
         />
         به بعد
       </label>
       <div className="space-y-3">
+        <RuleFieldLabel label="از" required />
+        <RulePlainTextInput value={from} disabled onChange={() => undefined} placeholder="از روز" suffix="روز" />
+        <p className="text-right text-xs leading-5 text-[color:var(--text-muted)]">شروع بازه خودکار است.</p>
+      </div>
+      <div className="space-y-3">
         <RuleFieldLabel label="تا" required />
         <RulePlainTextInput
           value={to}
-          disabled={openEnded}
-          onChange={(value) => onChange('to', value.replace(/\D/g, ''))}
-          placeholder={openEnded ? 'به بعد' : 'تا روز'}
+          disabled={openEnded || blocked}
+          onChange={(value) => {
+            const nextTo = value.replace(/\D/g, '');
+            const fromNumber = Number(from);
+            const toNumber = Number(nextTo);
+            if (Number.isFinite(fromNumber) && fromNumber > 0 && Number.isFinite(toNumber) && toNumber < fromNumber) {
+              onChange('to', String(fromNumber));
+              return;
+            }
+            onChange('to', nextTo);
+          }}
+          placeholder={openEnded ? 'به بعد' : blocked ? 'غیرفعال' : 'تا روز'}
+          suffix="روز"
         />
-        <p className="text-right text-xs text-[color:var(--text-muted)]">{openEnded ? 'این بازه آخرین ردیف است.' : 'فقط پایان بازه را وارد کنید.'}</p>
-      </div>
-      <div className="space-y-3">
-        <RuleFieldLabel label="از" required />
-        <RulePlainTextInput value={from} disabled onChange={() => undefined} placeholder="از روز" />
-        <p className="text-right text-xs text-[color:var(--text-muted)]">شروع بازه خودکار محاسبه می‌شود.</p>
+        <p className="text-right text-xs leading-5 text-[color:var(--text-muted)]">نباید از شروع کمتر باشد.</p>
       </div>
     </div>
   );
@@ -348,10 +360,7 @@ export function PenaltyRuleSection({
   const selectedPenalty = PENALTY_ITEMS.find((item) => item.id === state.activeChip);
   const currentMode = MODE_OPTIONS.find((item) => item.id === activeMode) ?? MODE_OPTIONS[0];
   const keys = getModeValues(currentMode.id);
-  const progressiveRowCount = getVisibleProgressiveRowCount(state.values);
-  const visibleProgressiveRows = PROGRESSIVE_DEFAULT_ROWS.slice(0, progressiveRowCount);
-  const canAddProgressiveRow = progressiveRowCount < MAX_PROGRESSIVE_ROWS;
-  const activeRateCountLabel = `${progressiveRowCount} از ${MAX_PROGRESSIVE_ROWS} نرخ`;
+  const activeRateCountLabel = `${MAX_PROGRESSIVE_ROWS} از ${MAX_PROGRESSIVE_ROWS} نرخ`;
 
   const syncNextRowFrom = (rowIndex: number, toValue: string) => {
     const nextRow = PROGRESSIVE_DEFAULT_ROWS[rowIndex + 1];
@@ -379,21 +388,18 @@ export function PenaltyRuleSection({
     onValueChange(row.fromKey, value.trim());
   };
 
-  const handleAddProgressiveRow = () => {
-    if (!canAddProgressiveRow) return;
-
-    const previousRow = PROGRESSIVE_DEFAULT_ROWS[progressiveRowCount - 1];
-    const nextRow = PROGRESSIVE_DEFAULT_ROWS[progressiveRowCount];
-    if (!previousRow || !nextRow) return;
-
-    const previousTo = getStringValue(state.values[previousRow.toKey]);
-    const nextFrom = getNextFromValue(previousTo);
-    if (!nextFrom) return;
-
-    onValueChange(nextRow.fromKey, nextFrom);
-    onValueChange(nextRow.toKey, '');
-    onValueChange(nextRow.rateKey, '');
-  };
+  const computedProgressiveRows = PROGRESSIVE_DEFAULT_ROWS.map((row, index) => {
+    const previousOpenEnded = PROGRESSIVE_DEFAULT_ROWS.slice(0, index).some((previousRow) => Boolean(state.values[previousRow.openEndedKey]));
+    const openEnded = Boolean(state.values[row.openEndedKey]) && !previousOpenEnded;
+    const blocked = previousOpenEnded && !openEnded;
+    const previousTo = index > 0 ? String(state.values[PROGRESSIVE_DEFAULT_ROWS[index - 1].toKey] ?? '') : '';
+    const from = blocked ? '' : index === 0 ? String(state.values[row.fromKey] || row.from || '1') : getNextFromValue(previousTo);
+    const to = blocked ? '' : String(state.values[row.toKey] ?? '');
+    return { ...row, openEnded, blocked, from, to, rate: String(state.values[row.rateKey] ?? '') };
+  });
+  const firstOpenEndedIndex = computedProgressiveRows.findIndex((row) => row.openEnded);
+  const visibleProgressiveRows =
+    firstOpenEndedIndex >= 0 ? computedProgressiveRows.slice(0, firstOpenEndedIndex + 1) : computedProgressiveRows;
 
   if (!selectedPenalty) {
     return (
@@ -499,6 +505,7 @@ export function PenaltyRuleSection({
                 <RulePlainTextInput
                   value={String(state.values[keys.graceKey] ?? '')}
                   onChange={(value) => onValueChange(keys.graceKey, value)}
+                  suffix="روز"
                 />
                 <p className="text-right text-sm text-[color:var(--text-muted)]">
                   تعداد روزهایی که پس از سررسید بدون محاسبه جریمه به خریدار مهلت داده می‌شود.
@@ -538,6 +545,7 @@ export function PenaltyRuleSection({
                 <RulePlainTextInput
                   value={String(state.values[keys.graceKey] ?? '')}
                   onChange={(value) => onValueChange(keys.graceKey, value)}
+                  suffix="روز"
                 />
                 <p className="text-right text-sm text-[color:var(--text-muted)]">
                   تعداد روزهایی که پس از سررسید قسط بدون محاسبه جریمه مهلت داده می‌شود.
@@ -580,6 +588,7 @@ export function PenaltyRuleSection({
                 <RulePlainTextInput
                   value={String(state.values[keys.graceKey] ?? '')}
                   onChange={(value) => onValueChange(keys.graceKey, value)}
+                  suffix="روز"
                 />
                 <p className="text-right text-sm text-[color:var(--text-muted)]">
                   تعداد روزهایی که پس از سررسید بدون محاسبه جریمه به خریدار مهلت داده می‌شود.
@@ -587,54 +596,50 @@ export function PenaltyRuleSection({
               </div>
 
               <div className="space-y-5 border-t border-[color:var(--border-soft)] pt-5">
-                <div className="flex flex-col gap-4 lg:flex-row-reverse lg:items-start lg:justify-between">
-                  <div className="text-right">
-                    <div className="flex items-center justify-end gap-2">
+                <div className="flex flex-col gap-4 lg:items-end">
+                  <div className="w-full text-right">
+                    <div className="flex items-center justify-start gap-2">
                       <h3 className="text-[17px] font-black text-[color:var(--text-strong)]">جدول جریمه‌های تصاعدی</h3>
                       <span className="rounded-full border border-[color:var(--border-soft)] px-3 py-1 text-xs font-bold text-[color:var(--text-muted)]">
                         {activeRateCountLabel}
                       </span>
                     </div>
                     <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">
-                      حداکثر ۴ نرخ قابل تعریف است. برای هر نرخ جدید، مقدار «از» بر اساس «تا» ردیف قبلی به‌صورت خودکار قفل می‌شود.
+                      حداکثر ۴ نرخ قابل تعریف است. برای هر نرخ جدید، مقدار «از» بر اساس «تا» ردیف قبلی به‌صورت خودکار قفل می‌شود و با «به بعد» ردیف‌های بعدی دیگر نمایش داده نمی‌شوند.
                     </p>
                     <div className="mt-3 flex items-center justify-end gap-2">
                       {Array.from({ length: MAX_PROGRESSIVE_ROWS }, (_, index) => (
                         <span
                           key={index}
-                          className={`h-2.5 w-10 rounded-full transition ${
-                            index < progressiveRowCount ? 'bg-[color:var(--theme-action-border)]' : 'bg-[color:var(--border-soft)]'
-                          }`}
+                          className="h-2.5 w-10 rounded-full bg-[color:var(--theme-action-border)] transition"
                         />
                       ))}
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-start lg:self-center">
-                    <button
-                      type="button"
-                      onClick={handleAddProgressiveRow}
-                      disabled={!canAddProgressiveRow || !getNextFromValue(getStringValue(state.values[visibleProgressiveRows[visibleProgressiveRows.length - 1].toKey]))}
-                      className="inline-flex items-center gap-2 rounded-full border border-[color:var(--theme-action-border)] bg-[color:var(--theme-action-bg)] px-4 py-2 text-sm font-bold text-[color:var(--theme-action-text)] transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
-                    >
-                      <Plus className="h-4 w-4" />
-                      افزودن نرخ
-                    </button>
-                  </div>
                 </div>
 
                 <div className="space-y-5">
                   {visibleProgressiveRows.map((row, rowIndex) => {
-                    const previousTo = rowIndex > 0 ? getStringValue(state.values[visibleProgressiveRows[rowIndex - 1].toKey]) : '';
-                    const lockedFrom = rowIndex === 0 ? String(state.values[row.fromKey] || row.from || '1') : getNextFromValue(previousTo);
+                    const actualIndex = computedProgressiveRows.findIndex((item) => item.fromKey === row.fromKey);
                     return (
-                      <ProgressRow
+                      <SmartProgressRow
                         key={row.fromKey}
-                        from={lockedFrom}
-                        to={String(state.values[row.toKey] ?? '')}
-                        rate={String(state.values[row.rateKey] ?? '')}
-                        fromDisabled={rowIndex > 0}
-                        onChange={(field, value) => handleProgressiveRowChange(rowIndex, field, value)}
+                        from={row.from}
+                        to={row.to}
+                        rate={row.rate}
+                        openEnded={row.openEnded}
+                        blocked={row.blocked}
+                        onChange={(field, value) => {
+                          if (field === 'openEnded') {
+                            const checked = Boolean(value);
+                            onValueChange(row.openEndedKey, checked);
+                            if (checked) onValueChange(row.toKey, '');
+                            return;
+                          }
+
+                          handleProgressiveRowChange(actualIndex, field, String(value));
+                        }}
                       />
                     );
                   })}

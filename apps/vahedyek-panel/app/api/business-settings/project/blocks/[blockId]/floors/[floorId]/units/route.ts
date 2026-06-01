@@ -209,7 +209,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ blo
       }
     });
 
-    return NextResponse.json({ created: createdIds.length }, { status: 201 });
+    return NextResponse.json({ created: createdIds.length, createdIds }, { status: 201 });
   } catch (error) {
     return handlePrismaApiError(error);
   }

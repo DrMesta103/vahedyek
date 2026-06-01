@@ -44,6 +44,7 @@ import { buildValidationSummary } from './validationPresentation';
 type FinancialCategory = FinancialCategoryData;
 type DueItem = FinancialDueItemData;
 type DueMode = 'irregular' | 'regular';
+type RegularDuePreset = 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'bimonthly' | 'quarterly' | 'semiannual' | 'annual';
 
 const SYSTEM_FINANCIAL_CATEGORIES = [
   { id: 'principal', name: 'مبلغ اصل قرارداد', requiresDue: false },
@@ -58,9 +59,35 @@ const FINANCIAL_SUB_CATEGORY_IDS = ['advance', 'installment', 'loan', 'handover'
 const DUE_TAG_OPTIONS = SYSTEM_FINANCIAL_CATEGORIES.map((item) => item.name);
 const REGULAR_DUE_CATEGORY_ID = 'installment';
 const PRIMARY_FINANCIAL_CATEGORY_IDS = ['principal', ...FINANCIAL_SUB_CATEGORY_IDS] as const;
+const REGULAR_DUE_PRESETS: Array<{
+  value: RegularDuePreset;
+  label: string;
+  frequency: DueFrequency;
+  period: number;
+  unitLabel: string;
+}> = [
+  { value: 'daily', label: 'روزانه', frequency: 'daily', period: 1, unitLabel: 'روز' },
+  { value: 'weekly', label: 'هفتگی', frequency: 'daily', period: 7, unitLabel: 'روز' },
+  { value: 'biweekly', label: 'دو هفتگی', frequency: 'daily', period: 14, unitLabel: 'روز' },
+  { value: 'monthly', label: 'ماهیانه', frequency: 'monthly', period: 1, unitLabel: 'ماه' },
+  { value: 'bimonthly', label: 'دو ماهیانه', frequency: 'monthly', period: 2, unitLabel: 'ماه' },
+  { value: 'quarterly', label: 'سه ماهیانه', frequency: 'monthly', period: 3, unitLabel: 'ماه' },
+  { value: 'semiannual', label: '6 ماهیانه', frequency: 'monthly', period: 6, unitLabel: 'ماه' },
+  { value: 'annual', label: 'سالیانه', frequency: 'monthly', period: 12, unitLabel: 'ماه' },
+];
 
 function isPrimaryFinancialCategoryId(categoryId: string) {
   return (PRIMARY_FINANCIAL_CATEGORY_IDS as readonly string[]).includes(categoryId);
+}
+
+function getRegularDuePresetConfig(preset: RegularDuePreset) {
+  return REGULAR_DUE_PRESETS.find((item) => item.value === preset) ?? REGULAR_DUE_PRESETS[3];
+}
+
+function resolveRegularDuePreset(frequency: DueFrequency, period: number): RegularDuePreset {
+  return (
+    REGULAR_DUE_PRESETS.find((item) => item.frequency === frequency && item.period === Math.max(period, 1))?.value ?? 'monthly'
+  );
 }
 
 function splitFinancialPayloadSections(payload: ContractFinancialData) {
@@ -227,6 +254,16 @@ function buildDueTitle(category: FinancialCategory | null, title: string, dueTag
   return `${dueTag.trim()} ${trimmedTitle}`;
 }
 
+function usesAdvanceDueDefaultTitle(categoryId: string) {
+  return categoryId === 'advance' || categoryId.endsWith(':advance');
+}
+
+function buildDefaultDueTitle(categoryId: string, dueItems: DueItem[]) {
+  if (!usesAdvanceDueDefaultTitle(categoryId)) return '';
+  const sequence = dueItems.filter((item) => item.categoryId === categoryId).length + 1;
+  return sequence <= 1 ? 'پیش پرداخت' : `پیش پرداخت ${sequence}`;
+}
+
 const TAG_NAME_TO_SUB_ID = Object.fromEntries(
   SYSTEM_FINANCIAL_CATEGORIES.filter((x) => x.id !== 'principal').map((x) => [x.name, x.id]),
 ) as Record<string, string>;
@@ -330,6 +367,25 @@ function normalizeFinancialPayload(data: ContractFinancialData | null): Contract
     categories,
     dueItems: migrated.dueItems,
   };
+}
+
+function serializeFinancialPayloadForDirty(payload: ContractFinancialData) {
+  const { activeTab: _activeTab, categories, ...rest } = payload;
+  const comparableCategories = categories.map((item) =>
+    item.id === 'principal'
+      ? {
+          ...item,
+          capAmount: 0,
+          dueAmount: 0,
+          noDueAmount: 0,
+        }
+      : item,
+  );
+
+  return JSON.stringify({
+    ...rest,
+    categories: comparableCategories,
+  });
 }
 
 function parseNum(value: string) {
@@ -606,13 +662,13 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
 
   const [dueDialogOpen, setDueDialogOpen] = useState(false);
   const [editingDueId, setEditingDueId] = useState<string | null>(null);
+  const [editingRegularGroupId, setEditingRegularGroupId] = useState<string | null>(null);
   const [dueMode, setDueMode] = useState<DueMode>('irregular');
   const [dueTag, setDueTag] = useState('');
   const [dueTitle, setDueTitle] = useState('');
   const [dueAmount, setDueAmount] = useState('');
   const [dueDate, setDueDate] = useState('');
-  const [regularFrequency, setRegularFrequency] = useState<DueFrequency>('monthly');
-  const [regularPeriod, setRegularPeriod] = useState('1');
+  const [regularPreset, setRegularPreset] = useState<RegularDuePreset>('monthly');
   const [regularCount, setRegularCount] = useState('');
   const [regularStartDate, setRegularStartDate] = useState('');
   const [externalSectionsRoot, setExternalSectionsRoot] = useState<HTMLElement | null>(null);
@@ -671,7 +727,7 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
           storageArea: String(derivedStorageArea),
           totalArea: String(derivedTotalArea),
         };
-        initialSnapshotRef.current = JSON.stringify(savedPayload);
+        initialSnapshotRef.current = serializeFinancialPayloadForDirty(savedPayload);
         setSavedPayloadState(savedPayload);
 
         setAreaPricingMode(derivedAreaPricingMode);
@@ -737,8 +793,10 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
 
   const overContractAmount = totalContractAmount > 0 && overall.cap > totalContractAmount;
   const visibleDueItems = useMemo(() => dueItems.filter((item) => item.categoryId === activeTab), [activeTab, dueItems]);
+  const regularPresetConfig = useMemo(() => getRegularDuePresetConfig(regularPreset), [regularPreset]);
+  const regularFrequency = regularPresetConfig.frequency;
   const regularInstallmentCount = Number(regularCount);
-  const regularIntervalPeriod = Math.max(Number(regularPeriod) || 1, 1);
+  const regularIntervalPeriod = regularPresetConfig.period;
   const regularPreviewAmounts = useMemo(
     () =>
       Number.isFinite(regularInstallmentCount) && regularInstallmentCount > 0 && parseNum(dueAmount) > 0
@@ -836,8 +894,8 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
   const finalizePersistedPayload = (savedPayload: ContractFinancialData) => {
     if (!draftId) return;
     const currentPayload = buildPayload();
-    const savedSnapshot = JSON.stringify(savedPayload);
-    const currentSnapshot = JSON.stringify(currentPayload);
+    const savedSnapshot = serializeFinancialPayloadForDirty(savedPayload);
+    const currentSnapshot = serializeFinancialPayloadForDirty(currentPayload);
     const hasChanges = currentSnapshot !== savedSnapshot;
 
     initialSnapshotRef.current = savedSnapshot;
@@ -967,7 +1025,7 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
     setShowValidation(false);
     try {
       await saveStepData(draftId, 'financial', payload);
-      initialSnapshotRef.current = JSON.stringify(payload);
+      initialSnapshotRef.current = serializeFinancialPayloadForDirty(payload);
       setSavedPayloadState(payload);
       clearFrontendStepDraft(draftId, 'financial');
       setDirty(false);
@@ -1161,15 +1219,17 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
   };
 
   const openDueForCategory = (categoryId: string) => {
+    const supportsRegular =
+      categoryId === REGULAR_DUE_CATEGORY_ID || Boolean(categoryId.endsWith(':installment'));
     setActiveTab(categoryId);
     setEditingDueId(null);
-    setDueMode('irregular');
+    setEditingRegularGroupId(null);
+    setDueMode(supportsRegular ? 'regular' : 'irregular');
     setDueTag('');
-    setDueTitle('');
+    setDueTitle(buildDefaultDueTitle(categoryId, dueItems));
     setDueAmount('');
     setDueDate('');
-    setRegularFrequency('monthly');
-    setRegularPeriod('1');
+    setRegularPreset('monthly');
     setRegularCount('');
     setRegularStartDate('');
     setDueFormError('');
@@ -1180,7 +1240,25 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
 
   const openEditDueItem = (item: DueItem) => {
     setActiveTab(item.categoryId);
+    if (item.regularScheduleGroupId && item.regularScheduleConfig) {
+      const groupedItems = dueItems.filter((entry) => entry.regularScheduleGroupId === item.regularScheduleGroupId);
+      setEditingDueId(null);
+      setEditingRegularGroupId(item.regularScheduleGroupId);
+      setDueMode('regular');
+      setDueTag('');
+      setDueTitle(item.regularScheduleConfig.baseTitle);
+      setDueAmount(item.regularScheduleConfig.totalAmount ? item.regularScheduleConfig.totalAmount.toLocaleString('en-US') : '');
+      setDueDate('');
+      setRegularPreset(resolveRegularDuePreset(item.regularScheduleConfig.frequency, item.regularScheduleConfig.period));
+      setRegularCount(String(item.regularScheduleConfig.count || groupedItems.length));
+      setRegularStartDate(item.regularScheduleConfig.startDate || groupedItems[0]?.dueDate || '');
+      setDueFormError('');
+      setDueDialogOpen(true);
+      return;
+    }
+
     setEditingDueId(item.id);
+    setEditingRegularGroupId(null);
     setDueMode('irregular');
     const category = categories.find((entry) => entry.id === item.categoryId) ?? null;
     const parsedTaggedTitle = category && !category.system ? splitTaggedTitle(item.title) : { dueTag: '', dueTitle: item.title };
@@ -1188,8 +1266,7 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
     setDueTitle(parsedTaggedTitle.dueTitle);
     setDueAmount(item.amount ? item.amount.toLocaleString('en-US') : '');
     setDueDate(item.dueDate);
-    setRegularFrequency('monthly');
-    setRegularPeriod('1');
+    setRegularPreset('monthly');
     setRegularCount('');
     setRegularStartDate('');
     setDueFormError('');
@@ -1238,6 +1315,7 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
         return;
       }
 
+      const regularGroupId = editingRegularGroupId ?? `due-group-${Date.now()}`;
       const generatedItems = buildRegularDueItems({
         activeTab,
         title: finalDueTitle,
@@ -1246,6 +1324,9 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
         startDate: regularStartDate,
         frequency: regularFrequency,
         period: regularIntervalPeriod,
+        groupId: regularGroupId,
+        idPrefix: regularGroupId,
+        preset: regularPreset,
       });
 
       if (generatedItems.some((item) => !item.dueDate)) {
@@ -1253,17 +1334,21 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
         return;
       }
 
-      setDueItems((current) => [...current, ...generatedItems]);
+      setDueItems((current) =>
+        editingRegularGroupId
+          ? [...current.filter((item) => item.regularScheduleGroupId !== editingRegularGroupId), ...generatedItems]
+          : [...current, ...generatedItems],
+      );
     }
 
     setDueMode('irregular');
     setEditingDueId(null);
+    setEditingRegularGroupId(null);
     setDueTag('');
     setDueTitle('');
     setDueAmount('');
     setDueDate('');
-    setRegularFrequency('monthly');
-    setRegularPeriod('1');
+    setRegularPreset('monthly');
     setRegularCount('');
     setRegularStartDate('');
     setDueFormError('');
@@ -1274,7 +1359,7 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
     if (loading) return;
 
     const payload = buildPayload();
-    const snapshot = JSON.stringify(payload);
+    const snapshot = serializeFinancialPayloadForDirty(payload);
     dispatchContractFlowFinancialSnapshot(payload);
     if (!initialSnapshotRef.current) {
       initialSnapshotRef.current = snapshot;
@@ -1719,10 +1804,11 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
         onClose={() => {
           setDueDialogOpen(false);
           setEditingDueId(null);
+          setEditingRegularGroupId(null);
           setDueTag('');
           setDueFormError('');
         }}
-        title={editingDueId ? 'ویرایش سررسید' : 'ثبت سررسید'}
+        title={editingRegularGroupId ? 'ویرایش اقساط منظم' : editingDueId ? 'ویرایش سررسید' : 'ثبت سررسید'}
         description={`سررسید برای ${categories.find((item) => item.id === activeTab)?.name ?? 'دسته‌بندی فعال'} ثبت می‌شود.`}
         panelClassName="!max-w-[27vw]"
         footerClassName="justify-start border-gray-100 px-5 py-3"
@@ -1733,6 +1819,7 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
               onClick={() => {
                 setDueDialogOpen(false);
                 setEditingDueId(null);
+                setEditingRegularGroupId(null);
                 setDueTag('');
                 setDueFormError('');
               }}
@@ -1758,7 +1845,7 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
                   offValue="irregular"
                   onText="منظم"
                   offText="نامنظم"
-                  disabled={Boolean(editingDueId)}
+                  disabled={Boolean(editingDueId || editingRegularGroupId)}
                 />
               </div>
             </section>
@@ -1804,16 +1891,13 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
           </section>
 
           <section className="space-y-3 border-t border-gray-100 pt-4">
-            <div className="flex items-center justify-between gap-3">
-              <div className="text-[13px] font-bold text-gray-800">{activeCategorySupportsRegular && dueMode === 'regular' ? 'زمان‌بندی اقساط' : 'زمان سررسید'}</div>
-              {activeCategorySupportsRegular && dueMode === 'regular' ? (
-                <TagPills<DueFrequency>
-                  value={regularFrequency}
-                  onChange={setRegularFrequency}
-                  options={[
-                    { value: 'monthly', label: 'ماهانه' },
-                    { value: 'daily', label: 'روزانه' },
-                  ]}
+              <div className="flex items-center justify-between gap-3">
+                <div className="text-[13px] font-bold text-gray-800">{activeCategorySupportsRegular && dueMode === 'regular' ? 'زمان‌بندی اقساط' : 'زمان سررسید'}</div>
+                {activeCategorySupportsRegular && dueMode === 'regular' ? (
+                <TagPills<RegularDuePreset>
+                  value={regularPreset}
+                  onChange={setRegularPreset}
+                  options={REGULAR_DUE_PRESETS.map((option) => ({ value: option.value, label: option.label }))}
                 />
               ) : null}
             </div>
@@ -1824,16 +1908,13 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
               <>
                 <div className="grid gap-3">
                   <div>
-                    <FieldLabel label={`دوره اقساط ${regularFrequency === 'monthly' ? 'ماهانه' : 'روزانه'}`} />
-                    <Input
-                      value={regularPeriod}
-                      onChange={(event) => setRegularPeriod(event.target.value.replace(/\D/g, ''))}
-                      placeholder={regularFrequency === 'monthly' ? 'مثال: 1 ماه' : 'مثال: 7 روز'}
-                      className="mt-2 h-10 rounded-lg border-gray-200 bg-white px-3 text-[13px]"
-                    />
+                    <FieldLabel label="بازه تکرار" />
+                    <div className="mt-2 flex h-10 items-center rounded-lg border border-gray-200 bg-gray-50 px-3 text-[13px] text-gray-700">
+                      {regularPresetConfig.label}
+                    </div>
                   </div>
                   <div>
-                    <FieldLabel label={regularFrequency === 'monthly' ? 'تعداد اقساط ماهانه' : 'تعداد اقساط روزانه'} />
+                    <FieldLabel label={`تعداد اقساط ${regularPresetConfig.label}`} />
                     <Input
                       value={regularCount}
                       onChange={(event) => setRegularCount(event.target.value.replace(/\D/g, ''))}
@@ -1842,7 +1923,7 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
                     />
                   </div>
                   <DateField
-                    label={`شروع اقساط ${regularFrequency === 'monthly' ? 'ماهانه' : 'روزانه'}`}
+                    label={`شروع اقساط ${regularPresetConfig.label}`}
                     value={regularStartDate}
                     onChange={setRegularStartDate}
                     placeholder="تاریخ شروع را انتخاب کنید"
@@ -1862,7 +1943,7 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
                 </div>
 
                 <div className="flex items-center justify-between gap-3 rounded-lg bg-[#f6f7f4] px-3 py-2 text-xs text-gray-500">
-                  <span>{`فاصله ثبت اقساط: هر ${regularIntervalPeriod} ${regularFrequency === 'monthly' ? 'ماه' : 'روز'}`}</span>
+                  <span>{`فاصله ثبت اقساط: هر ${regularIntervalPeriod} ${regularPresetConfig.unitLabel}`}</span>
                   <span>{regularInstallmentCount > 0 ? `${regularInstallmentCount} سررسید` : 'تعداد سررسید نامشخص'}</span>
                 </div>
               </>

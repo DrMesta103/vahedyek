@@ -50,8 +50,8 @@ export function ContractRuleMenuPanel() {
       <div className="rounded-[28px] border border-[color:var(--border-color)] bg-[color:var(--surface-overlay)] p-5 shadow-[0_18px_45px_var(--shadow-soft)] backdrop-blur sm:p-6">
         <div className="flex flex-col gap-4 border-b border-[color:var(--border-soft)] pb-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-2 text-right">
-            <p className="text-sm text-[color:var(--text-muted)]">تنظیمات کسب و کار / تنظیمات مالی و قواعد قراردادی</p>
-            <h1 className="text-2xl font-black text-[color:var(--text-strong)] sm:text-3xl">تنظیمات مالی و قواعد قراردادی</h1>
+            <p className="text-sm text-[color:var(--text-muted)]">تنظیمات کسب و کار / تنظیمات جریمه خریدار</p>
+            <h1 className="text-2xl font-black text-[color:var(--text-strong)] sm:text-3xl">تنظیمات جریمه خریدار</h1>
           </div>
           <div className="flex h-12 w-12 items-center justify-center self-end rounded-2xl border border-[color:var(--theme-action-border)] bg-[color:var(--theme-action-bg)] text-[color:var(--theme-action-text)] sm:self-auto">
             <Landmark className="h-5 w-5" />
@@ -60,7 +60,7 @@ export function ContractRuleMenuPanel() {
 
         <div className="mt-6 rounded-3xl border border-[color:var(--theme-accent-border)] bg-[color:var(--surface-soft)] p-5 sm:p-6">
           <div className="mb-5 space-y-2 text-right">
-            <h2 className="text-xl font-black text-[color:var(--text-strong)]">فلو تنظیمات مالی و قواعد قراردادی</h2>
+            <h2 className="text-xl font-black text-[color:var(--text-strong)]">فلو تنظیمات جریمه خریدار</h2>
             <p className="text-sm leading-7 text-[color:var(--text-muted)]">
               آیتم‌های این صفحه به صورت next page عمل می‌کنند و وارد جزئیات هر تنظیم می‌شوید.
             </p>

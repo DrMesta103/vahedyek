@@ -6,6 +6,8 @@ export type ContractFlowSectionId =
   | 'financial'
   | 'penalties'
   | 'discounts'
+  | 'interest'
+  | 'forgiveness'
   | 'termination'
   | 'extraCosts'
   | 'technicalSpecs'

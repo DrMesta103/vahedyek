@@ -7,6 +7,7 @@ import { PenaltiesStep } from './PenaltiesStep';
 import { PlaceholderStep } from './PlaceholderStep';
 import { SubjectStep } from './SubjectStep';
 import { TerminationStep } from './TerminationStep';
+import { ContractRuleDraftStep } from './ContractRuleDraftStep';
 
 const STEP_CONFIG = {
   subject: {
@@ -28,6 +29,18 @@ const STEP_CONFIG = {
   discounts: {
     title: 'تخفیف‌ها',
     component: DiscountsStep,
+  },
+  interest: {
+    title: 'سود دریافتی',
+    component: (props: { stepId: string; title: string }) => (
+      <ContractRuleDraftStep stepId="interest" ruleId="interest" title={props.title} />
+    ),
+  },
+  forgiveness: {
+    title: 'بخشودگی',
+    component: (props: { stepId: string; title: string }) => (
+      <ContractRuleDraftStep stepId="forgiveness" ruleId="forgiveness" title={props.title} />
+    ),
   },
   'party-one': {
     title: 'طرفین',

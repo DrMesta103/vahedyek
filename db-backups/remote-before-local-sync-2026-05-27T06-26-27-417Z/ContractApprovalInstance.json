@@ -1,0 +1,33 @@
+[
+  {
+    "id": "cmpmcta6v019us52vmvi16iw4",
+    "tenantId": "cmp2l1wfd07mzoy08jumz3qho",
+    "draftId": "08f99c91-6a75-49d4-9edc-c170bd22eb8b",
+    "workflowId": "cmp3yn3sq052soycwkh6wazlc",
+    "status": "IN_REVIEW",
+    "currentStepIndex": 0,
+    "stepsSnapshot": [
+      {
+        "id": "1dde73d6-9fa8-4545-a8cc-873b47189ac9",
+        "type": "PARALLEL",
+        "logic": {
+          "mode": "ALL_MUST_APPROVE"
+        },
+        "title": "مرحله جدید",
+        "isFinal": true,
+        "approvers": [
+          "cmp2mzbup010boyv404pqubzz"
+        ],
+        "permissions": {
+          "rejectToDraftApproverIds": "ALL_APPROVERS",
+          "requestRevisionApproverIds": "ALL_APPROVERS"
+        },
+        "finalApproverId": "cmp2mzbup010boyv404pqubzz"
+      }
+    ],
+    "revisionResumeStepIndex": null,
+    "createdAt": "2026-05-26T04:39:06.008Z",
+    "updatedAt": "2026-05-26T04:39:06.008Z",
+    "finalApproverUserId": "cmp2kunj407myoy082f9uuuae"
+  }
+]

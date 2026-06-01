@@ -1,0 +1,194 @@
+[
+  {
+    "id": "cmogu3bpl001lwc5gzyzew42i",
+    "membershipId": "cmogu31vm0003wc5gak8bsfkr",
+    "roleId": "cmogu346g0005wc5gbducadoo",
+    "createdAt": "2026-04-27T03:16:28.617Z"
+  },
+  {
+    "id": "cmok2gz41001lwcawvu7flzg2",
+    "membershipId": "cmok2gpmo0003wcaw8cmrzzsi",
+    "roleId": "cmok2gsbx000dwcawovnnmtvx",
+    "createdAt": "2026-04-29T09:34:20.929Z"
+  },
+  {
+    "id": "cmol19stl0062nw0w1n09n55z",
+    "membershipId": "cmol19sro004knw0w3jwissag",
+    "roleId": "cmol19ss1004snw0wlom0bklr",
+    "createdAt": "2026-04-30T01:48:32.745Z"
+  },
+  {
+    "id": "cmopbsbdj00jhpj0vlbfzzhd3",
+    "membershipId": "cmopbsbc100hzpj0v8a5x1bqk",
+    "roleId": "cmopbsbcc00i1pj0v0k3mei29",
+    "createdAt": "2026-05-03T01:53:57.463Z"
+  },
+  {
+    "id": "cmotw0om401d5otwsu57qr4cy",
+    "membershipId": "cmotvxqhe00nwotwszjy059m2",
+    "roleId": "cmopbsbcg00ihpj0v3lakbewk",
+    "createdAt": "2026-05-06T06:31:24.640Z"
+  },
+  {
+    "id": "cmotwboju02b4otwss2a480g8",
+    "membershipId": "cmotndtae00f2otl4p0xpwga6",
+    "roleId": "cmopbsbcg00ihpj0v3lakbewk",
+    "createdAt": "2026-05-06T06:39:58.027Z"
+  },
+  {
+    "id": "cmov0piqp01efoy689oedxgkp",
+    "membershipId": "cmov0p3o301axoy68n59ef2ga",
+    "roleId": "cmok2gss7000fwcawbe13pw26",
+    "createdAt": "2026-05-07T01:30:28.321Z"
+  },
+  {
+    "id": "cmov3xeum009cotjg5mbhqhqb",
+    "membershipId": "cmov3x3js0080otjg5kbi238t",
+    "roleId": "cmopbsbcc00i3pj0vc4xv7i3p",
+    "createdAt": "2026-05-07T03:00:35.375Z"
+  },
+  {
+    "id": "cmov4g2me00c3otjgxpqggrxh",
+    "membershipId": "cmov4frwn00atotjgggf445e4",
+    "roleId": "cmopbsbcc00i3pj0vc4xv7i3p",
+    "createdAt": "2026-05-07T03:15:05.990Z"
+  },
+  {
+    "id": "cmov4tzyg00m2otjgx731akd1",
+    "membershipId": "cmov4tgy900ikotjg4ef1dsv9",
+    "roleId": "cmopbsbcc00i3pj0vc4xv7i3p",
+    "createdAt": "2026-05-07T03:25:51.241Z"
+  },
+  {
+    "id": "cmov4vw7n00tjotjgoi24q4u4",
+    "membershipId": "cmov4vl5200s7otjg3n1dxmpc",
+    "roleId": "cmopbsbcc00i3pj0vc4xv7i3p",
+    "createdAt": "2026-05-07T03:27:24.179Z"
+  },
+  {
+    "id": "cmov9bkm000ayotik4im9ok7i",
+    "membershipId": "cmov9b6cz009sotikzuswvbg6",
+    "roleId": "cmopbsbcc00i3pj0vc4xv7i3p",
+    "createdAt": "2026-05-07T05:31:34.104Z"
+  },
+  {
+    "id": "cmp141u4601i0oy54k0ayn933",
+    "membershipId": "cmp141qot01gloy54cim7wrfn",
+    "roleId": "cmok2gs650007wcaw0qrquiiu",
+    "createdAt": "2026-05-11T07:50:38.838Z"
+  },
+  {
+    "id": "cmp2l210q07ogoy082miwtty5",
+    "membershipId": "cmp2l1wfd07n1oy08ks3hxpd5",
+    "roleId": "cmp2l1xib07n3oy084oiblqgm",
+    "createdAt": "2026-05-12T08:34:27.435Z"
+  },
+  {
+    "id": "cmp2momfn00csoyv4h5a3mtk5",
+    "membershipId": "cmp2mof5n009yoyv4x3prrlox",
+    "roleId": "cmp2l1y7i07nboy08nx4fhz9f",
+    "createdAt": "2026-05-12T09:20:01.236Z"
+  },
+  {
+    "id": "cmp2mzfkv011soyv4no2phff1",
+    "membershipId": "cmp2mzc4x010doyv4j9xqkkv3",
+    "roleId": "cmp2l1yha07nfoy08eryk3wz9",
+    "createdAt": "2026-05-12T09:28:25.567Z"
+  },
+  {
+    "id": "cmp86hdsm08prp92jdofte1h5",
+    "membershipId": "cmp86hdqx08ocp92jjpp5x94o",
+    "roleId": "cmp86hdr708oep92jaxpl6pzq",
+    "createdAt": "2026-05-16T06:33:06.646Z"
+  },
+  {
+    "id": "cmp9db1i302oeoy08uxf5ijmd",
+    "membershipId": "cmp9dayht02mzoy089zmyt6e1",
+    "roleId": "cmp2l1yca07ndoy08nwpxw2to",
+    "createdAt": "2026-05-17T02:31:54.268Z"
+  },
+  {
+    "id": "cmp9dcmgn036zoy08g9sld6gw",
+    "membershipId": "cmp9dciqu035koy08apr02uhs",
+    "roleId": "cmp2l1yha07nfoy08eryk3wz9",
+    "createdAt": "2026-05-17T02:33:07.944Z"
+  },
+  {
+    "id": "cmp9de34y03ploy08f1jfea1s",
+    "membershipId": "cmp9de0ne03o6oy08vmk9h0aw",
+    "roleId": "cmp2l1yha07nfoy08eryk3wz9",
+    "createdAt": "2026-05-17T02:34:16.354Z"
+  },
+  {
+    "id": "cmp9dw94p001ile2j0u66wikp",
+    "membershipId": "cmp9dw93l0003le2j3zpc7maw",
+    "roleId": "cmp9dw93s0005le2jf9eqds33",
+    "createdAt": "2026-05-17T02:48:23.930Z"
+  },
+  {
+    "id": "cmpdq1j28016xu6swgn380dwi",
+    "membershipId": "cmpdq1j14015iu6swjaan9qs9",
+    "roleId": "cmpdq1j1a015ku6sw3wktw1oz",
+    "createdAt": "2026-05-20T03:39:30.177Z"
+  },
+  {
+    "id": "cmpdqkiqe0671u6swugjefiqh",
+    "membershipId": "cmpdqkipq065mu6sw5aspf4d7",
+    "roleId": "cmpdq1j1r015wu6swr1b61qxe",
+    "createdAt": "2026-05-20T03:54:16.215Z"
+  },
+  {
+    "id": "cmpdqnazx0780u6sw36rlu8py",
+    "membershipId": "cmpdqnayl076lu6swc9x21bw0",
+    "roleId": "cmpdq1j1u0160u6swbdxscb4a",
+    "createdAt": "2026-05-20T03:56:26.157Z"
+  },
+  {
+    "id": "cmpdwosm612yku6swdkmb1b7m",
+    "membershipId": "cmpdwoskx12x5u6swes2v15xv",
+    "roleId": "cmpdq1j1u0160u6swbdxscb4a",
+    "createdAt": "2026-05-20T06:45:33.342Z"
+  },
+  {
+    "id": "cmpf16cpk001ivo5srltrh4yl",
+    "membershipId": "cmpf16con0003vo5secpo0jhd",
+    "roleId": "cmpf16cov0005vo5s6v9xcrlo",
+    "createdAt": "2026-05-21T01:38:57.176Z"
+  },
+  {
+    "id": "cmpf18q8w00zpvo5s9obed6vz",
+    "membershipId": "cmpf18pyl00wvvo5spdpmqe6k",
+    "roleId": "cmpf16cp3000dvo5sfvb2k1dc",
+    "createdAt": "2026-05-21T01:40:48.033Z"
+  },
+  {
+    "id": "cmpnl66cv01lomd2vmu09ptyt",
+    "membershipId": "cmpnl66cg01k9md2vs7he3rg9",
+    "roleId": "cmp2l1xsj07n5oy086c5cjmxc",
+    "createdAt": "2026-05-27T01:20:50.671Z"
+  },
+  {
+    "id": "cmpnl6q6w01x9md2vfgw13sby",
+    "membershipId": "cmpnl6q6g01vumd2vd4re14id",
+    "roleId": "cmp2l1xsj07n5oy086c5cjmxc",
+    "createdAt": "2026-05-27T01:21:16.377Z"
+  },
+  {
+    "id": "cmpnl772m02fzmd2v78x9bazj",
+    "membershipId": "cmpnl772402ekmd2vbr4h0pzf",
+    "roleId": "cmp2l1yca07ndoy08nwpxw2to",
+    "createdAt": "2026-05-27T01:21:38.254Z"
+  },
+  {
+    "id": "cmpnl84nz0306md2viz3vqo95",
+    "membershipId": "cmpnl84nk02yrmd2vmw9kg5bd",
+    "roleId": "cmp2l1xsj07n5oy086c5cjmxc",
+    "createdAt": "2026-05-27T01:22:21.792Z"
+  },
+  {
+    "id": "cmpnl9p8a03rimd2vgureqjm2",
+    "membershipId": "cmpnl9p7t03q3md2vmvprw4lb",
+    "roleId": "cmp2l1ym307nhoy0887yg1bgu",
+    "createdAt": "2026-05-27T01:23:35.098Z"
+  }
+]

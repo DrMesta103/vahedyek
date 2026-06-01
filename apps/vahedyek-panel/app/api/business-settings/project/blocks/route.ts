@@ -70,6 +70,10 @@ function normalizeStatus(status: string | undefined) {
   return ['incomplete', 'complete', 'in_progress'].includes(status ?? '') ? status! : 'incomplete';
 }
 
+function normalizeBlockName(value: string) {
+  return value.trim().toLocaleLowerCase('fa-IR');
+}
+
 function mapBlock(block: DbBlock) {
   return {
     id: block.id,
@@ -117,6 +121,18 @@ async function getBlocks(tenantId: string) {
   return rows.map(mapBlock);
 }
 
+async function blockNameExists(tenantId: string, name: string) {
+  const rows = await prisma.$queryRaw<Array<{ id: string }>>(Prisma.sql`
+    SELECT b."id"
+    FROM "Block" b
+    WHERE b."tenantId" = ${tenantId}
+      AND LOWER(TRIM(b."name")) = ${normalizeBlockName(name)}
+    LIMIT 1
+  `);
+
+  return rows.length > 0;
+}
+
 export async function GET() {
   try {
     const session = await requireSessionContext();
@@ -137,13 +153,16 @@ export async function POST(request: Request) {
     const mode = body.mode === 'bulk' ? 'bulk' : 'single';
     const mainPlate = body.mainPlate?.trim() || null;
     const subPlate = body.subPlate?.trim() || null;
-    const status = 'incomplete';
-    const usageCounts = DEFAULT_USAGE_COUNTS;
+    const status = normalizeStatus(body.status);
+    const usageCounts = normalizeUsageCounts(body.usageCounts);
     const usageJson = JSON.stringify(usageCounts);
 
     if (mode === 'single') {
       const name = body.name?.trim();
-      if (!name) return NextResponse.json({ message: 'مشخصه بلوک الزامی است.' }, { status: 400 });
+      if (!name) return NextResponse.json({ message: 'نام یا شماره بلوک الزامی است.' }, { status: 400 });
+      if (await blockNameExists(session.tenantId, name)) {
+        return NextResponse.json({ message: 'این نام برای بلوک دیگری در همین پروژه ثبت شده است.' }, { status: 400 });
+      }
 
       const blockId = crypto.randomUUID();
       await prisma.$executeRaw(Prisma.sql`
@@ -163,7 +182,10 @@ export async function POST(request: Request) {
         request,
       });
 
-      return NextResponse.json({ blocks: await getBlocks(session.tenantId) }, { status: 201 });
+      return NextResponse.json(
+        { blocks: await getBlocks(session.tenantId), createdCount: 1, createdBlockId: blockId, mode: 'single' },
+        { status: 201 },
+      );
     }
 
     const prefix = body.prefix?.trim();
@@ -172,7 +194,14 @@ export async function POST(request: Request) {
 
     if (!prefix) return NextResponse.json({ message: 'پیشوند نام‌گذاری الزامی است.' }, { status: 400 });
     if (!Number.isFinite(from) || !Number.isFinite(to) || from > to) {
-      return NextResponse.json({ message: 'بازه شماره‌گذاری معتبر نیست.' }, { status: 400 });
+      return NextResponse.json({ message: 'شماره پایان باید بزرگ‌تر یا مساوی شماره شروع باشد.' }, { status: 400 });
+    }
+
+    const plannedNames = Array.from({ length: to - from + 1 }, (_, index) => `${prefix}-${from + index}`);
+    for (const candidate of plannedNames) {
+      if (await blockNameExists(session.tenantId, candidate)) {
+        return NextResponse.json({ message: 'این نام برای بلوک دیگری در همین پروژه ثبت شده است.' }, { status: 400 });
+      }
     }
 
     const createdBlocks: Array<{ id: string; name: string }> = [];
@@ -185,6 +214,7 @@ export async function POST(request: Request) {
       `);
       createdBlocks.push({ id: blockId, name });
     }
+
     await recordAuditLog({
       tenantId: session.tenantId,
       actorUserId: session.userId,
@@ -197,7 +227,7 @@ export async function POST(request: Request) {
       request,
     });
 
-    return NextResponse.json({ blocks: await getBlocks(session.tenantId) }, { status: 201 });
+    return NextResponse.json({ blocks: await getBlocks(session.tenantId), createdCount: createdBlocks.length, mode: 'bulk' }, { status: 201 });
   } catch (error) {
     return handlePrismaApiError(error);
   }

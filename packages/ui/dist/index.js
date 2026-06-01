@@ -1013,21 +1013,29 @@ var GripVertical = createLucideIcon("grip-vertical", __iconNode4);
 var __iconNode5 = [["path", { d: "M21 12a9 9 0 1 1-6.219-8.56", key: "13zald" }]];
 var LoaderCircle = createLucideIcon("loader-circle", __iconNode5);
 
-// ../../node_modules/lucide-react/dist/esm/icons/refresh-cw.js
+// ../../node_modules/lucide-react/dist/esm/icons/message-square-text.js
 var __iconNode6 = [
+  ["path", { d: "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z", key: "1lielz" }],
+  ["path", { d: "M13 8H7", key: "14i4kc" }],
+  ["path", { d: "M17 12H7", key: "16if0g" }]
+];
+var MessageSquareText = createLucideIcon("message-square-text", __iconNode6);
+
+// ../../node_modules/lucide-react/dist/esm/icons/refresh-cw.js
+var __iconNode7 = [
   ["path", { d: "M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8", key: "v9h5vc" }],
   ["path", { d: "M21 3v5h-5", key: "1q7to0" }],
   ["path", { d: "M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16", key: "3uifl3" }],
   ["path", { d: "M8 16H3v5", key: "1cv678" }]
 ];
-var RefreshCw = createLucideIcon("refresh-cw", __iconNode6);
+var RefreshCw = createLucideIcon("refresh-cw", __iconNode7);
 
 // ../../node_modules/lucide-react/dist/esm/icons/search.js
-var __iconNode7 = [
+var __iconNode8 = [
   ["circle", { cx: "11", cy: "11", r: "8", key: "4ej97u" }],
   ["path", { d: "m21 21-4.3-4.3", key: "1qie3q" }]
 ];
-var Search = createLucideIcon("search", __iconNode7);
+var Search = createLucideIcon("search", __iconNode8);
 var STATUS_COLUMNS = [
   { id: "todo", title: "\u0627\u0646\u062C\u0627\u0645\u200C\u0646\u0634\u062F\u0647", description: "\u06AF\u0641\u062A\u06AF\u0648\u0647\u0627\u06CC\u06CC \u06A9\u0647 \u0647\u0646\u0648\u0632 \u0634\u0631\u0648\u0639 \u0646\u0634\u062F\u0647\u200C\u0627\u0646\u062F" },
   { id: "in_progress", title: "\u062F\u0631 \u062D\u0627\u0644 \u0627\u0646\u062C\u0627\u0645", description: "\u0645\u0648\u0627\u0631\u062F\u06CC \u06A9\u0647 \u062A\u06CC\u0645 \u0631\u0648\u06CC \u0622\u0646\u200C\u0647\u0627 \u062F\u0631 \u062D\u0627\u0644 \u06A9\u0627\u0631 \u0627\u0633\u062A" },
@@ -1051,6 +1059,7 @@ function DevDocThreadsBoard({
   const [savingThreadId, setSavingThreadId] = React.useState(null);
   const [error, setError] = React.useState("");
   const [search, setSearch] = React.useState("");
+  const [creatorFilters, setCreatorFilters] = React.useState([]);
   const [draggingThreadId, setDraggingThreadId] = React.useState(null);
   const [activeDropZone, setActiveDropZone] = React.useState(null);
   const loadThreads = async () => {
@@ -1070,17 +1079,34 @@ function DevDocThreadsBoard({
   React.useEffect(() => {
     void loadThreads();
   }, []);
+  const creatorOptions = React.useMemo(() => {
+    const seen = /* @__PURE__ */ new Map();
+    for (const thread of threads) {
+      const creatorId = thread.createdBy?.id;
+      if (!creatorId || seen.has(creatorId)) continue;
+      seen.set(creatorId, {
+        id: creatorId,
+        fullName: thread.createdBy?.fullName || "\u0646\u0627\u0645\u0634\u062E\u0635"
+      });
+    }
+    return Array.from(seen.values()).sort((a, b) => a.fullName.localeCompare(b.fullName, "fa"));
+  }, [threads]);
   const filteredThreads = React.useMemo(() => {
     const query = search.trim().toLowerCase();
-    if (!query) return threads;
-    return threads.filter(
+    const baseThreads = creatorFilters.length === 0 ? threads : threads.filter((thread) => thread.createdBy?.id && creatorFilters.includes(thread.createdBy.id));
+    if (!query) return baseThreads;
+    return baseThreads.filter(
       (thread) => [thread.title, thread.docType, thread.pagePathSample, thread.pageKey, thread.createdBy?.fullName, ...thread.labels].filter(Boolean).join(" ").toLowerCase().includes(query)
     );
-  }, [search, threads]);
+  }, [creatorFilters, search, threads]);
   const columns = React.useMemo(
     () => STATUS_COLUMNS.map((column) => ({
       ...column,
-      threads: filteredThreads.filter((thread) => thread.status === column.id)
+      threads: filteredThreads.filter((thread) => thread.status === column.id).sort((left, right) => {
+        const timeDiff = new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime();
+        if (timeDiff !== 0) return timeDiff;
+        return left.title.localeCompare(right.title, "fa");
+      })
     })),
     [filteredThreads]
   );
@@ -1129,12 +1155,54 @@ function DevDocThreadsBoard({
           }
         )
       ] }),
-      /* @__PURE__ */ jsxRuntime.jsxs("div", { className: "mt-6 grid gap-4 xl:grid-cols-[minmax(0,1fr)_280px]", children: [
+      /* @__PURE__ */ jsxRuntime.jsxs("div", { className: "mt-6 grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px_280px]", children: [
         /* @__PURE__ */ jsxRuntime.jsxs("label", { className: "grid gap-2", children: [
           /* @__PURE__ */ jsxRuntime.jsx("span", { className: "text-xs font-semibold text-[color:var(--text-muted)]", children: "\u062C\u0633\u062A\u062C\u0648 \u0628\u06CC\u0646 \u0639\u0646\u0627\u0648\u06CC\u0646\u060C \u0645\u0633\u062A\u0646\u062F\u0627\u062A\u060C \u0645\u0633\u06CC\u0631\u0647\u0627 \u0648 \u0628\u0631\u0686\u0633\u0628\u200C\u0647\u0627" }),
           /* @__PURE__ */ jsxRuntime.jsxs("div", { className: "relative", children: [
             /* @__PURE__ */ jsxRuntime.jsx(Search, { className: "pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[color:var(--text-muted)]" }),
             /* @__PURE__ */ jsxRuntime.jsx(Input, { value: search, onChange: (event) => setSearch(event.target.value), placeholder: "\u0645\u062B\u0644\u0627 \u0642\u0631\u0627\u0631\u062F\u0627\u062F\u060C financial\u060C /business-settings/...", className: "pr-10" })
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxRuntime.jsxs("div", { className: "grid gap-2", children: [
+          /* @__PURE__ */ jsxRuntime.jsxs("div", { className: "flex items-center justify-between gap-3", children: [
+            /* @__PURE__ */ jsxRuntime.jsx("span", { className: "text-xs font-semibold text-[color:var(--text-muted)]", children: "\u0641\u06CC\u0644\u062A\u0631 \u0628\u0631 \u0627\u0633\u0627\u0633 \u0633\u0627\u0632\u0646\u062F\u0647 \u06AF\u0641\u062A\u06AF\u0648" }),
+            /* @__PURE__ */ jsxRuntime.jsx(
+              "button",
+              {
+                type: "button",
+                className: "text-xs font-semibold text-[color:var(--theme-accent)]",
+                onClick: () => setCreatorFilters([]),
+                children: "\u067E\u0627\u06A9 \u06A9\u0631\u062F\u0646"
+              }
+            )
+          ] }),
+          /* @__PURE__ */ jsxRuntime.jsxs("div", { className: "flex flex-wrap gap-2 rounded-[18px] border border-[color:var(--border-color)] bg-[color:var(--surface)] p-2", children: [
+            /* @__PURE__ */ jsxRuntime.jsx(
+              "button",
+              {
+                type: "button",
+                className: creatorFilters.length === 0 ? "inline-flex items-center rounded-full bg-[color:var(--theme-accent)] px-3 py-2 text-xs font-bold text-white" : chipClass(),
+                onClick: () => setCreatorFilters([]),
+                children: "\u0647\u0645\u0647 \u0633\u0627\u0632\u0646\u062F\u0647\u200C\u0647\u0627"
+              }
+            ),
+            creatorOptions.map((creator) => {
+              const active = creatorFilters.includes(creator.id);
+              return /* @__PURE__ */ jsxRuntime.jsx(
+                "button",
+                {
+                  type: "button",
+                  className: active ? "inline-flex items-center rounded-full bg-[color:var(--theme-accent)] px-3 py-2 text-xs font-bold text-white" : chipClass(),
+                  onClick: () => {
+                    setCreatorFilters(
+                      (current) => current.includes(creator.id) ? current.filter((id) => id !== creator.id) : [...current, creator.id]
+                    );
+                  },
+                  children: creator.fullName
+                },
+                creator.id
+              );
+            })
           ] })
         ] }),
         /* @__PURE__ */ jsxRuntime.jsx("div", { className: "grid grid-cols-3 gap-2", children: STATUS_COLUMNS.map((column) => /* @__PURE__ */ jsxRuntime.jsxs("div", { className: "rounded-[22px] border border-[color:var(--border-color)] bg-transparent px-3 py-3 text-center text-sm text-[color:var(--text-body)]", children: [
@@ -1201,8 +1269,14 @@ function DevDocThreadsBoard({
                       ),
                       /* @__PURE__ */ jsxRuntime.jsxs("div", { className: "min-w-0", children: [
                         /* @__PURE__ */ jsxRuntime.jsxs("div", { className: "mb-3 flex flex-wrap gap-2", children: [
+                          /* @__PURE__ */ jsxRuntime.jsx("span", { className: "inline-flex items-center rounded-full border border-[color:var(--border-color)] bg-[color:var(--surface)] px-2.5 py-1 text-[11px] font-bold text-[color:var(--text-body)]", children: "\u06AF\u0641\u062A\u200C\u0648\u06AF\u0648" }),
                           /* @__PURE__ */ jsxRuntime.jsx("span", { className: chipClass(), children: thread.docType }),
                           /* @__PURE__ */ jsxRuntime.jsx("span", { className: chipClass(), children: DEV_DOC_PRIORITY_LABELS[thread.priority] }),
+                          /* @__PURE__ */ jsxRuntime.jsxs("span", { className: chipClass(), children: [
+                            /* @__PURE__ */ jsxRuntime.jsx(MessageSquareText, { className: "ml-1 h-3.5 w-3.5" }),
+                            thread.messageCount,
+                            " \u067E\u06CC\u0627\u0645"
+                          ] }),
                           thread.status === "in_progress" ? /* @__PURE__ */ jsxRuntime.jsx("span", { className: "inline-flex items-center rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-700", children: "\u062F\u0631 \u062D\u0627\u0644 \u0627\u0646\u062C\u0627\u0645" }) : null,
                           thread.status === "done" ? /* @__PURE__ */ jsxRuntime.jsx("span", { className: "inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700", children: "\u0627\u0646\u062C\u0627\u0645\u200C\u0634\u062F\u0647" }) : null,
                           thread.labels.slice(0, 3).map((label) => /* @__PURE__ */ jsxRuntime.jsx("span", { className: chipClass(), children: label }, `${thread.id}-${label}`))
@@ -1216,7 +1290,6 @@ function DevDocThreadsBoard({
                     ] })
                   ] }),
                   /* @__PURE__ */ jsxRuntime.jsxs("div", { className: "mt-4 space-y-2 text-xs text-[color:var(--text-muted)]", children: [
-                    /* @__PURE__ */ jsxRuntime.jsx("div", { className: "truncate font-mono", children: thread.pagePathSample }),
                     /* @__PURE__ */ jsxRuntime.jsxs("div", { className: "flex flex-wrap gap-x-3 gap-y-1", children: [
                       /* @__PURE__ */ jsxRuntime.jsxs("span", { children: [
                         "\u0627\u06CC\u062C\u0627\u062F\u06A9\u0646\u0646\u062F\u0647: ",
@@ -1226,6 +1299,10 @@ function DevDocThreadsBoard({
                         "\u0622\u062E\u0631\u06CC\u0646 \u0628\u0631\u0648\u0632\u0631\u0633\u0627\u0646\u06CC: ",
                         formatDateTime(thread.updatedAt)
                       ] })
+                    ] }),
+                    /* @__PURE__ */ jsxRuntime.jsxs("div", { className: "rounded-[18px] border border-dashed border-[color:var(--border-color)] bg-[color:var(--surface)] px-3 py-2", children: [
+                      /* @__PURE__ */ jsxRuntime.jsx("div", { className: "mb-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[color:var(--text-muted)]", children: "\u0635\u0641\u062D\u0647 \u0645\u0631\u062A\u0628\u0637" }),
+                      /* @__PURE__ */ jsxRuntime.jsx("div", { className: "truncate font-mono text-[11px] text-[color:var(--text-body)]", children: thread.pagePathSample })
                     ] })
                   ] }),
                   /* @__PURE__ */ jsxRuntime.jsxs("div", { className: "mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-[color:var(--border-color)] pt-4", children: [
@@ -1265,6 +1342,7 @@ lucide-react/dist/esm/icons/circle-check.js:
 lucide-react/dist/esm/icons/circle.js:
 lucide-react/dist/esm/icons/grip-vertical.js:
 lucide-react/dist/esm/icons/loader-circle.js:
+lucide-react/dist/esm/icons/message-square-text.js:
 lucide-react/dist/esm/icons/refresh-cw.js:
 lucide-react/dist/esm/icons/search.js:
 lucide-react/dist/esm/lucide-react.js:

@@ -140,12 +140,12 @@ export const CONTRACT_RULE_ITEMS: Array<{ id: ContractRuleId; title: string; des
   },
   {
     id: 'penalty',
-    title: 'تنظیمات جریمه',
+    title: 'تنظیمات جریمه خریدار',
     description: 'میزان جریمه تاخیر، مبنای محاسبه و دوره محاسبه جریمه را در این بخش مشخص کنید.',
   },
   {
     id: 'builder-penalty',
-    title: 'جریمه سازنده',
+    title: 'تنظیمات جریمه سازنده',
     description: 'فعال‌سازی و تنظیم جریمه‌های مرتبط با تعهدات سازنده مانند تاخیر در تحویل، تغییر مشخصات و اختلاف متراژ.',
   },
   {
@@ -442,9 +442,9 @@ export const RULE_CONFIGS: Record<ContractRuleId, RuleConfig> = fixMojibakeDeep(
   },
   penalty: {
     id: 'penalty',
-    title: 'تنظیمات جریمه',
+    title: 'تنظیمات جریمه خریدار',
     description: 'فعال‌سازی جریمه‌ها و تعریف چارچوب محاسبه هر مورد مطابق قرارداد.',
-    activationTitle: 'تنظیمات جریمه‌ها',
+    activationTitle: 'تنظیمات جریمه خریدار',
     activationDescription: 'در صورت فعال بودن، چارچوب پیشنهادی محاسبه جریمه تعریف می‌شود و در زمان ثبت یا اجرای قرارداد، در صورت وقوع تأخیر محاسبه و هشدار نمایش داده می‌شود.',
     tabs: [
       {
@@ -524,7 +524,7 @@ export const RULE_CONFIGS: Record<ContractRuleId, RuleConfig> = fixMojibakeDeep(
   },
   'builder-penalty': {
     id: 'builder-penalty',
-    title: 'جریمه سازنده',
+    title: 'تنظیمات جریمه سازنده',
     description: 'فعال‌سازی و مدیریت جریمه‌های مربوط به تعهدات سازنده در قرارداد.',
     activationTitle: 'فعال‌سازی جرائم سازنده',
     activationDescription: 'با فعال‌سازی این بخش، تنظیمات جریمه سازنده بر اساس پیکربندی برای قراردادهای جدید اعمال خواهد شد.',
@@ -694,6 +694,7 @@ export const RULE_CONFIGS: Record<ContractRuleId, RuleConfig> = fixMojibakeDeep(
           { key: 'forgiveMaxValue', label: 'حداکثر جریمه قابل بخشش', type: 'number', placeholder: '10000000' },
           { key: 'forgiveOutsideBuyerControl', label: 'تاخیر خارج از اختیار خریدار', type: 'switch' },
           { key: 'forgiveManagerApproval', label: 'تایید مدیر برای بخشودگی‌های بزرگ', type: 'switch' },
+          { key: 'forgiveDraftTemplateUsageEnabled', label: 'استفاده در پیش‌نویس', type: 'switch' },
         ],
       },
       {
@@ -725,6 +726,7 @@ export const RULE_CONFIGS: Record<ContractRuleId, RuleConfig> = fixMojibakeDeep(
           { key: 'interestReducingPrincipal', label: 'سهم اصل ثابت سود کاهشی', type: 'switch' },
           { key: 'interestTogetherPayment', label: 'پرداخت همزمان اصل و سود', type: 'switch' },
           { key: 'interestPrincipalAtEnd', label: 'پرداخت فقط سود تسویه اصل در پایان', type: 'switch' },
+          { key: 'interestDraftTemplateUsageEnabled', label: 'استفاده در پیش‌نویس', type: 'switch' },
         ],
       },
       {

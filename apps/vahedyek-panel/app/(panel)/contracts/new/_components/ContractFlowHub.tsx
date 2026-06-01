@@ -13,6 +13,7 @@ import { FinancialStep } from './FinancialStep';
 import { LeftReportSidebar } from './LeftReportSidebar';
 import { PartiesStep } from './PartiesStep';
 import { PenaltiesStep } from './PenaltiesStep';
+import { ContractRuleDraftStep } from './ContractRuleDraftStep';
 import { ContractDraftPreviewDialog } from '../../../../components/contracts/ContractDraftPreviewDialog';
 import { RightNavSidebar } from './RightNavSidebar';
 import { SubjectStep } from './SubjectStep';
@@ -70,6 +71,8 @@ const SAVEABLE_SECTIONS: ContractFlowSectionId[] = [
   'financial',
   'penalties',
   'discounts',
+  'interest',
+  'forgiveness',
   'termination',
   'extraCosts',
   'technicalSpecs',
@@ -81,6 +84,8 @@ const SECTION_ORDER: ContractFlowSectionId[] = [
   'financial',
   'penalties',
   'discounts',
+  'interest',
+  'forgiveness',
   'termination',
   'extraCosts',
   'technicalSpecs',
@@ -92,7 +97,9 @@ const SECTION_PREREQUISITES: Record<ContractFlowSectionId, ContractFlowSectionId
   financial: ['subject', 'parties'],
   penalties: ['subject', 'parties', 'financial'],
   discounts: ['subject', 'parties', 'financial', 'penalties'],
-  termination: ['subject', 'parties', 'financial', 'penalties', 'discounts'],
+  interest: ['subject', 'parties', 'financial', 'penalties', 'discounts'],
+  forgiveness: ['subject', 'parties', 'financial', 'penalties', 'discounts', 'interest'],
+  termination: ['subject', 'parties', 'financial', 'penalties', 'discounts', 'interest', 'forgiveness'],
   extraCosts: ['termination'],
   technicalSpecs: ['extraCosts'],
   contractAttachments: ['technicalSpecs'],
@@ -107,6 +114,8 @@ const SECTION_TITLES: Record<ContractFlowSectionId, string> = {
   extraCosts: 'سایر هزینه‌های قرارداد',
   technicalSpecs: 'مشخصات فنی پروژه',
   contractAttachments: 'پیوست و اسناد قرارداد',
+  interest: 'سود دریافتی',
+  forgiveness: 'بخشودگی',
 };
 
 const FIXED_FINANCIAL_COLORS = {
@@ -382,7 +391,11 @@ export function ContractFlowHub() {
             ? (inlinePayload as ContractDiscountsData)
             : getFrontendStepDraft<ContractDiscountsData>(draftId, 'discounts');
         setDiscountsData(discounts);
-        if (discounts && validateDiscountsStep(discounts).valid) setPendingScrollSection('termination');
+        if (discounts && validateDiscountsStep(discounts).valid) setPendingScrollSection('interest');
+      } else if (savedSectionId === 'interest') {
+        setPendingScrollSection('forgiveness');
+      } else if (savedSectionId === 'forgiveness') {
+        setPendingScrollSection('termination');
       } else if (savedSectionId === 'termination') {
         const termination =
           inlinePayload !== undefined
@@ -423,6 +436,8 @@ export function ContractFlowHub() {
   const financialComplete = Boolean(financialData && validateFinancialStep(financialData).valid);
   const penaltiesComplete = Boolean(penaltiesData && validatePenaltiesStep(penaltiesData).valid);
   const discountsComplete = Boolean(discountsData && validateDiscountsStep(discountsData).valid);
+  const interestComplete = true;
+  const forgivenessComplete = true;
   const terminationComplete = Boolean(terminationData && validateTerminationStep(terminationData).valid);
   const extraCostsComplete = extraCostsExists;
   const technicalSpecsComplete = technicalSpecsExists;
@@ -433,6 +448,8 @@ export function ContractFlowHub() {
     financial: financialComplete,
     penalties: penaltiesComplete,
     discounts: discountsComplete,
+    interest: interestComplete,
+    forgiveness: forgivenessComplete,
     termination: terminationComplete,
     extraCosts: extraCostsComplete,
     technicalSpecs: technicalSpecsComplete,
@@ -577,6 +594,16 @@ export function ContractFlowHub() {
           : discountsData
             ? { label: 'ناقص', detail: 'بخشی از تنظیمات تخفیف ثبت شده و هنوز کامل نیست.', tone: 'amber' }
             : { label: 'آماده تنظیم', detail: 'پس از تکمیل بخش مالی، ثبت تخفیف‌ها آماده است.', tone: 'blue' },
+      interest: !discountsComplete
+        ? { label: 'در انتظار تخفیف‌ها', detail: 'ابتدا بخش تخفیف‌ها را تکمیل و ذخیره کنید.', tone: 'amber' }
+        : lastUpdatedMap.interest
+          ? { label: 'تکمیل شده', detail: 'تنظیمات سود دریافتی برای این پیش‌نویس ذخیره شده است.', tone: 'green' }
+          : { label: 'آماده تنظیم', detail: 'تنظیمات سود از تنظیمات کسب‌وکار خوانده شده و برای این پیش‌نویس قابل تغییر است.', tone: 'blue' },
+      forgiveness: !lastUpdatedMap.interest
+        ? { label: 'در انتظار سود', detail: 'ابتدا بخش سود دریافتی را ذخیره کنید.', tone: 'amber' }
+        : lastUpdatedMap.forgiveness
+          ? { label: 'تکمیل شده', detail: 'تنظیمات بخشودگی برای این پیش‌نویس ذخیره شده است.', tone: 'green' }
+          : { label: 'آماده تنظیم', detail: 'تنظیمات بخشودگی از تنظیمات کسب‌وکار خوانده شده و برای این پیش‌نویس قابل تغییر است.', tone: 'blue' },
       termination: !discountsComplete
         ? { label: 'Waiting', detail: 'Complete penalties and discounts before finalizing termination clauses.', tone: 'amber' }
         : terminationComplete
@@ -607,6 +634,8 @@ export function ContractFlowHub() {
       extraCostsComplete,
       financialComplete,
       financialData,
+      lastUpdatedMap.forgiveness,
+      lastUpdatedMap.interest,
       loading,
       partiesComplete,
       partiesData,
@@ -650,6 +679,18 @@ export function ContractFlowHub() {
       render: () => <DiscountsStep stepId="discounts" title="تخفیف‌ها" embedded />,
     },
     {
+      id: 'interest',
+      title: 'سود دریافتی',
+      navLabel: 'Interest',
+      render: () => <ContractRuleDraftStep stepId="interest" ruleId="interest" title="سود دریافتی" embedded />,
+    },
+    {
+      id: 'forgiveness',
+      title: 'بخشودگی',
+      navLabel: 'Forgiveness',
+      render: () => <ContractRuleDraftStep stepId="forgiveness" ruleId="forgiveness" title="بخشودگی" embedded />,
+    },
+    {
       id: 'termination',
       title: 'شرایط فسخ',
       navLabel: 'Termination Terms',
@@ -675,7 +716,7 @@ export function ContractFlowHub() {
     },
   ];
 
-  const visibleSections = useMemo(() => sections.filter((section) => !accessMap[section.id]?.locked), [accessMap, sections]);
+  const visibleSections = sections.filter((section) => !accessMap[section.id]?.locked);
 
   const reportData = financialLiveData ?? financialData;
   const financialLineSections = useMemo(
@@ -692,7 +733,7 @@ export function ContractFlowHub() {
   const remainder = Math.max(contractTotal - allocatedAmount, 0);
   const leaveIssues = useMemo<LeaveIssue[]>(() => {
     const issues: LeaveIssue[] = [];
-    (['subject', 'parties', 'financial', 'penalties', 'discounts', 'termination', 'extraCosts', 'technicalSpecs', 'contractAttachments'] as const).forEach(
+    (['subject', 'parties', 'financial', 'penalties', 'discounts', 'interest', 'forgiveness', 'termination', 'extraCosts', 'technicalSpecs', 'contractAttachments'] as const).forEach(
       (sectionId) => {
         if (!dirtyMap[sectionId]) return;
         issues.push({
@@ -708,6 +749,8 @@ export function ContractFlowHub() {
     dirtyMap.discounts,
     dirtyMap.extraCosts,
     dirtyMap.financial,
+    dirtyMap.forgiveness,
+    dirtyMap.interest,
     dirtyMap.parties,
     dirtyMap.penalties,
     dirtyMap.subject,
@@ -1031,6 +1074,8 @@ export function ContractFlowHub() {
           const status = statusMap[section.id];
           const isSubjectSection = section.id === 'subject';
           const isTerminationSection = section.id === 'termination';
+          const lockedAccess = accessMap[section.id];
+          const isLockedSection = Boolean(lockedAccess?.locked);
           return (
             <Fragment key={section.id}>
               <section
@@ -1060,7 +1105,26 @@ export function ContractFlowHub() {
                   </div>
                 </div>
 
-                <div className={isSubjectSection ? 'px-4 pb-4 md:px-5 md:pb-5' : ''}>{section.render()}</div>
+                <div className={isSubjectSection ? 'px-4 pb-4 md:px-5 md:pb-5' : ''}>
+                  {isLockedSection ? (
+                    <div className="rounded-2xl border border-[var(--theme-warning-border)] bg-[var(--theme-warning-bg)] px-4 py-4 text-right">
+                      <div className="flex items-center justify-end gap-2 text-sm font-extrabold text-[var(--theme-warning-text)]">
+                        <span>{SECTION_TITLES[section.id]} هنوز قفل است</span>
+                        <Lock className="h-4 w-4" />
+                      </div>
+                      <p className="mt-2 text-sm leading-7 text-[var(--text-body)]">{lockedAccess.info}</p>
+                      <button
+                        type="button"
+                        onClick={() => setLockedDialogSection(section.id)}
+                        className="mt-3 rounded-xl border border-[var(--theme-warning-border)] bg-[var(--surface)] px-3 py-2 text-xs font-bold text-[var(--theme-warning-text)] transition hover:bg-[var(--surface-soft)]"
+                      >
+                        مشاهده پیش‌نیازها
+                      </button>
+                    </div>
+                  ) : (
+                    section.render()
+                  )}
+                </div>
               </section>
               {section.id === 'financial' ? <div id="contract-financial-line-sections-root" className="space-y-6" /> : null}
             </Fragment>

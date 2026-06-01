@@ -1,0 +1,377 @@
+[
+  {
+    "id": "305baae5-6007-417b-8ff5-21cd54538e44",
+    "draftId": "38dfb014-02b1-4190-821d-d2ab3394a0d5",
+    "buyerRules": {
+      "buyerTerms": {
+        "lateDelivery": {
+          "gracePreset": "30",
+          "ruleEnabled": false,
+          "graceDaysCustom": "",
+          "calculationBasis": "contract-date",
+          "expertApprovalRequired": false
+        },
+        "notification": {
+          "notifyBuyer": false,
+          "ruleEnabled": false,
+          "notifyContractManager": false,
+          "showManagementOptionInGrid": false
+        },
+        "areaDiscrepancy": {
+          "ruleEnabled": false,
+          "thresholdPreset": "2",
+          "referenceSources": [],
+          "thresholdPercentCustom": "",
+          "financialSettlementInsteadOfTermination": false
+        },
+        "breachOfObligations": {
+          "ruleEnabled": false,
+          "obligationTypes": [],
+          "rectificationPreset": "30",
+          "rectificationDaysCustom": ""
+        },
+        "specificationChanges": {
+          "ruleEnabled": false,
+          "includedTypes": [],
+          "priorApprovalRequired": false
+        }
+      },
+      "buyerCompletion": {
+        "lateDelivery": false,
+        "notification": false,
+        "areaDiscrepancy": false,
+        "breachOfObligations": false,
+        "specificationChanges": false
+      },
+      "terminationBuyerPanel": "list"
+    },
+    "createdAt": "2026-05-05T05:19:20.710Z",
+    "updatedAt": "2026-05-05T08:06:03.781Z"
+  },
+  {
+    "id": "e58341c7-b735-4c89-862a-fb52848e695a",
+    "draftId": "f7e66789-e173-4379-ad75-0340b7efb177",
+    "buyerRules": {
+      "buyerTerms": {
+        "lateDelivery": {
+          "gracePreset": "30",
+          "ruleEnabled": false,
+          "graceDaysCustom": "",
+          "calculationBasis": "contract-date",
+          "expertApprovalRequired": false
+        },
+        "notification": {
+          "notifyBuyer": false,
+          "ruleEnabled": false,
+          "notifyContractManager": false,
+          "showManagementOptionInGrid": false
+        },
+        "areaDiscrepancy": {
+          "ruleEnabled": false,
+          "thresholdPreset": "2",
+          "referenceSources": [],
+          "thresholdPercentCustom": "",
+          "financialSettlementInsteadOfTermination": false
+        },
+        "breachOfObligations": {
+          "ruleEnabled": false,
+          "obligationTypes": [],
+          "rectificationPreset": "30",
+          "rectificationDaysCustom": ""
+        },
+        "specificationChanges": {
+          "ruleEnabled": false,
+          "includedTypes": [],
+          "priorApprovalRequired": false
+        }
+      },
+      "buyerCompletion": {
+        "lateDelivery": false,
+        "notification": false,
+        "areaDiscrepancy": false,
+        "breachOfObligations": false,
+        "specificationChanges": false
+      },
+      "terminationBuyerPanel": "list"
+    },
+    "createdAt": "2026-05-05T08:20:52.518Z",
+    "updatedAt": "2026-05-05T08:20:52.518Z"
+  },
+  {
+    "id": "0b7c1794-e7af-4cd1-9597-5024dd9dc1fd",
+    "draftId": "959073a8-a0e5-4f58-b4ed-c6bf4e772d83",
+    "buyerRules": {
+      "buyerTerms": {
+        "lateDelivery": {
+          "gracePreset": "30",
+          "ruleEnabled": false,
+          "graceDaysCustom": "",
+          "calculationBasis": "contract-date",
+          "expertApprovalRequired": false
+        },
+        "notification": {
+          "notifyBuyer": false,
+          "ruleEnabled": false,
+          "notifyContractManager": false,
+          "showManagementOptionInGrid": false
+        },
+        "areaDiscrepancy": {
+          "ruleEnabled": false,
+          "thresholdPreset": "2",
+          "referenceSources": [],
+          "thresholdPercentCustom": "",
+          "financialSettlementInsteadOfTermination": false
+        },
+        "breachOfObligations": {
+          "ruleEnabled": false,
+          "obligationTypes": [],
+          "rectificationPreset": "30",
+          "rectificationDaysCustom": ""
+        },
+        "specificationChanges": {
+          "ruleEnabled": false,
+          "includedTypes": [],
+          "priorApprovalRequired": false
+        }
+      },
+      "buyerCompletion": {
+        "lateDelivery": false,
+        "notification": false,
+        "areaDiscrepancy": false,
+        "breachOfObligations": false,
+        "specificationChanges": false
+      },
+      "terminationBuyerPanel": "list"
+    },
+    "createdAt": "2026-05-05T09:01:17.577Z",
+    "updatedAt": "2026-05-05T09:01:17.577Z"
+  },
+  {
+    "id": "8e6f3f98-18e9-4f31-8571-9e25efc8218f",
+    "draftId": "f8338f76-3c5f-4dae-ade1-4197fba9c94e",
+    "buyerRules": {
+      "buyerTerms": {
+        "lateDelivery": {
+          "gracePreset": "30",
+          "ruleEnabled": false,
+          "graceDaysCustom": "",
+          "calculationBasis": "contract-date",
+          "expertApprovalRequired": false
+        },
+        "notification": {
+          "notifyBuyer": false,
+          "ruleEnabled": false,
+          "notifyContractManager": false,
+          "showManagementOptionInGrid": false
+        },
+        "areaDiscrepancy": {
+          "ruleEnabled": false,
+          "thresholdPreset": "2",
+          "referenceSources": [],
+          "thresholdPercentCustom": "",
+          "financialSettlementInsteadOfTermination": false
+        },
+        "draftTemplateUsage": {
+          "ruleEnabled": false,
+          "allowPerContractOverride": false
+        },
+        "breachOfObligations": {
+          "ruleEnabled": false,
+          "obligationTypes": [],
+          "rectificationPreset": "30",
+          "rectificationDaysCustom": ""
+        },
+        "specificationChanges": {
+          "ruleEnabled": false,
+          "includedTypes": [],
+          "priorApprovalRequired": false
+        }
+      },
+      "buyerCompletion": {
+        "lateDelivery": false,
+        "notification": false,
+        "areaDiscrepancy": false,
+        "draftTemplateUsage": false,
+        "breachOfObligations": false,
+        "specificationChanges": false
+      },
+      "terminationBuyerPanel": "list"
+    },
+    "createdAt": "2026-05-05T08:49:39.592Z",
+    "updatedAt": "2026-05-07T01:28:07.995Z"
+  },
+  {
+    "id": "d478ab2a-211d-4b08-9820-d4f88af32288",
+    "draftId": "19760cf8-7344-4cd7-bfee-66cca1a40395",
+    "buyerRules": {
+      "buyerTerms": {
+        "lateDelivery": {
+          "gracePreset": "30",
+          "ruleEnabled": true,
+          "graceDaysCustom": "",
+          "calculationBasis": "contract-date",
+          "expertApprovalRequired": false
+        },
+        "notification": {
+          "notifyBuyer": false,
+          "ruleEnabled": false,
+          "notifyContractManager": false,
+          "showManagementOptionInGrid": false
+        },
+        "areaDiscrepancy": {
+          "ruleEnabled": false,
+          "thresholdPreset": "2",
+          "referenceSources": [],
+          "thresholdPercentCustom": "",
+          "financialSettlementInsteadOfTermination": false
+        },
+        "draftTemplateUsage": {
+          "ruleEnabled": false,
+          "allowPerContractOverride": false
+        },
+        "breachOfObligations": {
+          "ruleEnabled": false,
+          "obligationTypes": [],
+          "rectificationPreset": "30",
+          "rectificationDaysCustom": ""
+        },
+        "specificationChanges": {
+          "ruleEnabled": false,
+          "includedTypes": [],
+          "priorApprovalRequired": false
+        }
+      },
+      "buyerCompletion": {
+        "lateDelivery": true,
+        "notification": false,
+        "areaDiscrepancy": false,
+        "draftTemplateUsage": false,
+        "breachOfObligations": false,
+        "specificationChanges": false
+      },
+      "terminationBuyerPanel": "list"
+    },
+    "createdAt": "2026-05-20T09:11:27.636Z",
+    "updatedAt": "2026-05-20T12:08:07.373Z"
+  },
+  {
+    "id": "1629fd42-a287-45a3-963b-a513bf4e9ce7",
+    "draftId": "08f99c91-6a75-49d4-9edc-c170bd22eb8b",
+    "buyerRules": {
+      "buyerTerms": {
+        "lateDelivery": {
+          "gracePreset": "6",
+          "ruleEnabled": true,
+          "calculationBasis": [
+            "contract-delivery-date"
+          ],
+          "graceMonthsCustom": ""
+        },
+        "notification": {
+          "notifyBuyer": false,
+          "ruleEnabled": true,
+          "notifyContractManager": false,
+          "showManagementOptionInGrid": false
+        },
+        "areaDiscrepancy": {
+          "ruleEnabled": true,
+          "thresholdPreset": "2",
+          "referenceSources": [
+            "official-title-deed",
+            "partition-statement"
+          ],
+          "discrepancyScopes": [],
+          "settlementPricingBasis": "contract-price",
+          "thresholdPercentCustom": "",
+          "financialSettlementInsteadOfTermination": false
+        },
+        "draftTemplateUsage": {
+          "ruleEnabled": false,
+          "allowPerContractOverride": false
+        },
+        "breachOfObligations": {
+          "ruleEnabled": false,
+          "obligationTypes": [],
+          "rectificationPreset": "30",
+          "rectificationDaysCustom": ""
+        },
+        "specificationChanges": {
+          "ruleEnabled": true,
+          "includedTypes": [
+            "unit-plan",
+            "floor-change",
+            "facility-reduction",
+            "block-change"
+          ],
+          "priorApprovalRequired": true
+        },
+        "physicalProgressDelay": {
+          "gracePreset": "30",
+          "ruleEnabled": true,
+          "milestoneTypes": [
+            "progress-30",
+            "skeleton-complete",
+            "shell-complete",
+            "finishing-complete",
+            "progress-50"
+          ],
+          "timelinePreset": "6",
+          "graceDaysCustom": "",
+          "triggerCondition": "any-milestone",
+          "milestoneSettings": {
+            "progress-30": {
+              "gracePreset": "30",
+              "timelinePreset": "6",
+              "graceDaysCustom": "",
+              "timelineMonthsCustom": "",
+              "timelineSpecificDate": ""
+            },
+            "progress-50": {
+              "gracePreset": "30",
+              "timelinePreset": "6",
+              "graceDaysCustom": "",
+              "timelineMonthsCustom": "",
+              "timelineSpecificDate": ""
+            },
+            "shell-complete": {
+              "gracePreset": "30",
+              "timelinePreset": "6",
+              "graceDaysCustom": "",
+              "timelineMonthsCustom": "",
+              "timelineSpecificDate": ""
+            },
+            "skeleton-complete": {
+              "gracePreset": "30",
+              "timelinePreset": "6",
+              "graceDaysCustom": "",
+              "timelineMonthsCustom": "",
+              "timelineSpecificDate": ""
+            },
+            "finishing-complete": {
+              "gracePreset": "30",
+              "timelinePreset": "6",
+              "graceDaysCustom": "",
+              "timelineMonthsCustom": "",
+              "timelineSpecificDate": ""
+            }
+          },
+          "timelineMonthsCustom": "",
+          "timelineSpecificDate": "",
+          "progressCertificationSource": "project-supervisor-report"
+        }
+      },
+      "buyerCompletion": {
+        "lateDelivery": true,
+        "notification": false,
+        "areaDiscrepancy": false,
+        "draftTemplateUsage": false,
+        "breachOfObligations": false,
+        "specificationChanges": true,
+        "physicalProgressDelay": false
+      },
+      "terminationBuyerPanel": "list"
+    },
+    "createdAt": "2026-05-13T05:38:00.067Z",
+    "updatedAt": "2026-05-26T04:38:44.874Z"
+  }
+]

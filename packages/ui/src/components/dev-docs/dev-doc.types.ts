@@ -15,6 +15,7 @@ export type DevDocThreadRecord = {
   status: DevDocThreadStatus;
   labels: string[];
   isOpened: boolean;
+  messageCount: number;
   createdAt: string;
   updatedAt: string;
   createdBy: {

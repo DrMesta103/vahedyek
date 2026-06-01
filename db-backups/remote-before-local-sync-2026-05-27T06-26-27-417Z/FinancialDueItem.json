@@ -1,0 +1,218 @@
+[
+  {
+    "id": "cmos62xuv01f1wc6o558c4426:due-1777957388246",
+    "financialId": "cmos62xuv01f1wc6o558c4426",
+    "categoryId": "cmos62xuv01f1wc6o558c4426:advance",
+    "amount": "1000000.00",
+    "dueDate": "۱۴۰۵/۰۲/۱۵",
+    "title": "پیش پرداخت"
+  },
+  {
+    "id": "cmos62xuv01f1wc6o558c4426:due-1777957488541",
+    "financialId": "cmos62xuv01f1wc6o558c4426",
+    "categoryId": "cmos62xuv01f1wc6o558c4426:installment",
+    "amount": "1000000.00",
+    "dueDate": "۱۴۰۵/۰۲/۱۵",
+    "title": "اقساط"
+  },
+  {
+    "id": "cmos62xuv01f1wc6o558c4426:due-1777957515366",
+    "financialId": "cmos62xuv01f1wc6o558c4426",
+    "categoryId": "cmos62xuv01f1wc6o558c4426:installment",
+    "amount": "500000.00",
+    "dueDate": "۱۴۰۵/۰۲/۱۷",
+    "title": "اقساط"
+  },
+  {
+    "id": "cmos62xuv01f1wc6o558c4426:due-1777957541549",
+    "financialId": "cmos62xuv01f1wc6o558c4426",
+    "categoryId": "cmos62xuv01f1wc6o558c4426:installment",
+    "amount": "1500000.00",
+    "dueDate": "۱۴۰۵/۰۲/۲۲",
+    "title": "اقساط"
+  },
+  {
+    "id": "cmoskerfd03i9wc8wy46g65jz:due-1777981715366",
+    "financialId": "cmoskerfd03i9wc8wy46g65jz",
+    "categoryId": "cmoskerfd03i9wc8wy46g65jz:advance",
+    "amount": "1000000.00",
+    "dueDate": "۱۴۰۵/۰۲/۱۵",
+    "title": "پیش پرداخت"
+  },
+  {
+    "id": "draft-demo-001-due-1",
+    "financialId": "cmp13vjn10009oyykhvjvftmn",
+    "categoryId": "advance",
+    "amount": "2500000000.00",
+    "dueDate": "1405/02/01",
+    "title": ""
+  },
+  {
+    "id": "draft-demo-001-due-2",
+    "financialId": "cmp13vjn10009oyykhvjvftmn",
+    "categoryId": "document",
+    "amount": "3000000000.00",
+    "dueDate": "1405/04/01",
+    "title": ""
+  },
+  {
+    "id": "cmpdr87u609sku6sw4evjt58u:due-1779262716034",
+    "financialId": "cmpdr87u609sku6sw4evjt58u",
+    "categoryId": "cmpdr87u609sku6sw4evjt58u:advance",
+    "amount": "5.00",
+    "dueDate": "۱۴۰۵/۰۲/۳۰",
+    "title": "پیش پرداخت"
+  },
+  {
+    "id": "cmpdr87u609sku6sw4evjt58u:due-1779262733913",
+    "financialId": "cmpdr87u609sku6sw4evjt58u",
+    "categoryId": "cmpdr87u609sku6sw4evjt58u:advance",
+    "amount": "5.00",
+    "dueDate": "۱۴۰۵/۰۲/۳۱",
+    "title": "پیش پرداخت 2"
+  },
+  {
+    "id": "cmpdr87u609sku6sw4evjt58u:due-1779262824928",
+    "financialId": "cmpdr87u609sku6sw4evjt58u",
+    "categoryId": "cmpdr87u609sku6sw4evjt58u:installment",
+    "amount": "10.00",
+    "dueDate": "۱۴۰۵/۰۵/۰۸",
+    "title": "ثابت 1"
+  },
+  {
+    "id": "cmpdr87u609sku6sw4evjt58u:due-1779262896488-0",
+    "financialId": "cmpdr87u609sku6sw4evjt58u",
+    "categoryId": "cmpdr87u609sku6sw4evjt58u:installment",
+    "amount": "5.00",
+    "dueDate": "1405/05/31",
+    "title": "ثابت 2 1"
+  },
+  {
+    "id": "cmpdr87u609sku6sw4evjt58u:due-1779262896488-1",
+    "financialId": "cmpdr87u609sku6sw4evjt58u",
+    "categoryId": "cmpdr87u609sku6sw4evjt58u:installment",
+    "amount": "5.00",
+    "dueDate": "1405/07/30",
+    "title": "ثابت 2 2"
+  },
+  {
+    "id": "cmpdr87u609sku6sw4evjt58u:due-1779263249496",
+    "financialId": "cmpdr87u609sku6sw4evjt58u",
+    "categoryId": "cmpdr87u609sku6sw4evjt58u:fin-line-559e8d07-e4b4-4b80-a13f-20e26caa0489:advance",
+    "amount": "50.00",
+    "dueDate": "۱۴۰۵/۰۲/۳۱",
+    "title": "پیش پرداخت"
+  },
+  {
+    "id": "cmp2n7tqa01dgoyv47apj6fab:due-1778590901094",
+    "financialId": "cmp2n7tqa01dgoyv47apj6fab",
+    "categoryId": "cmp2n7tqa01dgoyv47apj6fab:advance",
+    "amount": "20000000.00",
+    "dueDate": "۱۴۰۵/۰۲/۰۱",
+    "title": "پیش پرداخت"
+  },
+  {
+    "id": "cmp2n7tqa01dgoyv47apj6fab:due-1778590983030-0",
+    "financialId": "cmp2n7tqa01dgoyv47apj6fab",
+    "categoryId": "cmp2n7tqa01dgoyv47apj6fab:installment",
+    "amount": "2000000.00",
+    "dueDate": "1405/02/04",
+    "title": "قسط 2 1"
+  },
+  {
+    "id": "cmp2n7tqa01dgoyv47apj6fab:due-1778591087182",
+    "financialId": "cmp2n7tqa01dgoyv47apj6fab",
+    "categoryId": "cmp2n7tqa01dgoyv47apj6fab:advance",
+    "amount": "20000000.00",
+    "dueDate": "۱۴۰۵/۰۲/۲۵",
+    "title": "پیش پرداخت 2"
+  },
+  {
+    "id": "cmp2n7tqa01dgoyv47apj6fab:due-1778590931750",
+    "financialId": "cmp2n7tqa01dgoyv47apj6fab",
+    "categoryId": "cmp2n7tqa01dgoyv47apj6fab:installment",
+    "amount": "10000000.00",
+    "dueDate": "۱۴۰۵/۰۲/۳۱",
+    "title": "قسط 1"
+  },
+  {
+    "id": "cmp2n7tqa01dgoyv47apj6fab:due-1778590983030-1",
+    "financialId": "cmp2n7tqa01dgoyv47apj6fab",
+    "categoryId": "cmp2n7tqa01dgoyv47apj6fab:installment",
+    "amount": "2000000.00",
+    "dueDate": "1405/03/04",
+    "title": "قسط 2 2"
+  },
+  {
+    "id": "cmp2n7tqa01dgoyv47apj6fab:due-1778590983030-2",
+    "financialId": "cmp2n7tqa01dgoyv47apj6fab",
+    "categoryId": "cmp2n7tqa01dgoyv47apj6fab:installment",
+    "amount": "2000000.00",
+    "dueDate": "1405/04/04",
+    "title": "قسط 2 3"
+  },
+  {
+    "id": "cmp2n7tqa01dgoyv47apj6fab:due-1778590983030-3",
+    "financialId": "cmp2n7tqa01dgoyv47apj6fab",
+    "categoryId": "cmp2n7tqa01dgoyv47apj6fab:installment",
+    "amount": "2000000.00",
+    "dueDate": "1405/05/04",
+    "title": "قسط 2 4"
+  },
+  {
+    "id": "cmp2n7tqa01dgoyv47apj6fab:due-1778590983030-4",
+    "financialId": "cmp2n7tqa01dgoyv47apj6fab",
+    "categoryId": "cmp2n7tqa01dgoyv47apj6fab:installment",
+    "amount": "2000000.00",
+    "dueDate": "1405/06/04",
+    "title": "قسط 2 5"
+  },
+  {
+    "id": "cmp2n7tqa01dgoyv47apj6fab:due-1778591240342-0",
+    "financialId": "cmp2n7tqa01dgoyv47apj6fab",
+    "categoryId": "cmp2n7tqa01dgoyv47apj6fab:fin-line-e05c060c-28dc-4dcc-91ff-ebfc8b3c1a52:installment",
+    "amount": "400000.00",
+    "dueDate": "1405/02/31",
+    "title": "قسط 1"
+  },
+  {
+    "id": "cmp2n7tqa01dgoyv47apj6fab:due-1778591204590",
+    "financialId": "cmp2n7tqa01dgoyv47apj6fab",
+    "categoryId": "cmp2n7tqa01dgoyv47apj6fab:fin-line-e05c060c-28dc-4dcc-91ff-ebfc8b3c1a52:advance",
+    "amount": "2000000.00",
+    "dueDate": "۱۴۰۵/۰۲/۳۱",
+    "title": "پیش پرداخت"
+  },
+  {
+    "id": "cmp2n7tqa01dgoyv47apj6fab:due-1778591240342-1",
+    "financialId": "cmp2n7tqa01dgoyv47apj6fab",
+    "categoryId": "cmp2n7tqa01dgoyv47apj6fab:fin-line-e05c060c-28dc-4dcc-91ff-ebfc8b3c1a52:installment",
+    "amount": "400000.00",
+    "dueDate": "1405/03/31",
+    "title": "قسط 2"
+  },
+  {
+    "id": "cmp2n7tqa01dgoyv47apj6fab:due-1778591240342-2",
+    "financialId": "cmp2n7tqa01dgoyv47apj6fab",
+    "categoryId": "cmp2n7tqa01dgoyv47apj6fab:fin-line-e05c060c-28dc-4dcc-91ff-ebfc8b3c1a52:installment",
+    "amount": "400000.00",
+    "dueDate": "1405/04/31",
+    "title": "قسط 3"
+  },
+  {
+    "id": "cmp2n7tqa01dgoyv47apj6fab:due-1778591240342-3",
+    "financialId": "cmp2n7tqa01dgoyv47apj6fab",
+    "categoryId": "cmp2n7tqa01dgoyv47apj6fab:fin-line-e05c060c-28dc-4dcc-91ff-ebfc8b3c1a52:installment",
+    "amount": "400000.00",
+    "dueDate": "1405/05/31",
+    "title": "قسط 4"
+  },
+  {
+    "id": "cmp2n7tqa01dgoyv47apj6fab:due-1778591240342-4",
+    "financialId": "cmp2n7tqa01dgoyv47apj6fab",
+    "categoryId": "cmp2n7tqa01dgoyv47apj6fab:fin-line-e05c060c-28dc-4dcc-91ff-ebfc8b3c1a52:installment",
+    "amount": "400000.00",
+    "dueDate": "1405/06/31",
+    "title": "قسط 5"
+  }
+]

@@ -177,7 +177,7 @@ export function TagPills<T extends string>({
   wrap = true,
   className = '',
 }: {
-  options: { value: T; label: string; tooltip?: string }[];
+  options: ReadonlyArray<{ value: T; label: string; tooltip?: string }>;
   value: T;
   onChange: (value: T) => void;
   wrap?: boolean;
@@ -205,7 +205,7 @@ export function MultiTagPills<T extends string>({
   wrap = true,
   className = '',
 }: {
-  options: { value: T; label: string; tooltip?: string }[];
+  options: ReadonlyArray<{ value: T; label: string; tooltip?: string }>;
   values: T[];
   onChange: (values: T[]) => void;
   wrap?: boolean;

@@ -1,0 +1,682 @@
+[
+  {
+    "id": "cmoprxqhg0161oywoamb9uj5b:advance",
+    "financialId": "cmoprxqhg0161oywoamb9uj5b",
+    "name": "پیش پرداخت",
+    "capAmount": "5111111.00",
+    "dueAmount": "5111111.00",
+    "noDueAmount": "0.00",
+    "system": true,
+    "requiresDue": true
+  },
+  {
+    "id": "cmoprxqhg0161oywoamb9uj5b:installment",
+    "financialId": "cmoprxqhg0161oywoamb9uj5b",
+    "name": "اقساط ثابت",
+    "capAmount": "520446.00",
+    "dueAmount": "520446.00",
+    "noDueAmount": "0.00",
+    "system": true,
+    "requiresDue": true
+  },
+  {
+    "id": "cmoprxqhg0161oywoamb9uj5b:loan",
+    "financialId": "cmoprxqhg0161oywoamb9uj5b",
+    "name": "وام بانکی",
+    "capAmount": "520664.00",
+    "dueAmount": "0.00",
+    "noDueAmount": "520664.00",
+    "system": true,
+    "requiresDue": false
+  },
+  {
+    "id": "cmoprxqhg0161oywoamb9uj5b:handover",
+    "financialId": "cmoprxqhg0161oywoamb9uj5b",
+    "name": "تحویل واحد",
+    "capAmount": "620444.00",
+    "dueAmount": "0.00",
+    "noDueAmount": "620444.00",
+    "system": true,
+    "requiresDue": false
+  },
+  {
+    "id": "cmoprxqhg0161oywoamb9uj5b:document",
+    "financialId": "cmoprxqhg0161oywoamb9uj5b",
+    "name": "تحویل سند",
+    "capAmount": "655200.00",
+    "dueAmount": "0.00",
+    "noDueAmount": "655200.00",
+    "system": true,
+    "requiresDue": false
+  },
+  {
+    "id": "cmoprxqhg0161oywoamb9uj5b:custom-1777800472015",
+    "financialId": "cmoprxqhg0161oywoamb9uj5b",
+    "name": "انشعاب",
+    "capAmount": "1000000.00",
+    "dueAmount": "1000000.00",
+    "noDueAmount": "0.00",
+    "system": false,
+    "requiresDue": true
+  },
+  {
+    "id": "cmos62xuv01f1wc6o558c4426:advance",
+    "financialId": "cmos62xuv01f1wc6o558c4426",
+    "name": "پیش پرداخت",
+    "capAmount": "1000000.00",
+    "dueAmount": "1000000.00",
+    "noDueAmount": "0.00",
+    "system": true,
+    "requiresDue": true
+  },
+  {
+    "id": "cmos62xuv01f1wc6o558c4426:installment",
+    "financialId": "cmos62xuv01f1wc6o558c4426",
+    "name": "اقساط ثابت",
+    "capAmount": "3000000.00",
+    "dueAmount": "3000000.00",
+    "noDueAmount": "0.00",
+    "system": true,
+    "requiresDue": true
+  },
+  {
+    "id": "cmos62xuv01f1wc6o558c4426:loan",
+    "financialId": "cmos62xuv01f1wc6o558c4426",
+    "name": "وام بانکی",
+    "capAmount": "1000000.00",
+    "dueAmount": "0.00",
+    "noDueAmount": "1000000.00",
+    "system": true,
+    "requiresDue": false
+  },
+  {
+    "id": "cmos62xuv01f1wc6o558c4426:handover",
+    "financialId": "cmos62xuv01f1wc6o558c4426",
+    "name": "تحویل واحد",
+    "capAmount": "3000000.00",
+    "dueAmount": "0.00",
+    "noDueAmount": "3000000.00",
+    "system": true,
+    "requiresDue": false
+  },
+  {
+    "id": "cmos62xuv01f1wc6o558c4426:document",
+    "financialId": "cmos62xuv01f1wc6o558c4426",
+    "name": "تحویل سند",
+    "capAmount": "2000000.00",
+    "dueAmount": "0.00",
+    "noDueAmount": "2000000.00",
+    "system": true,
+    "requiresDue": false
+  },
+  {
+    "id": "cmosdmyic09xlwc6onbs9i4l1:advance",
+    "financialId": "cmosdmyic09xlwc6onbs9i4l1",
+    "name": "پیش پرداخت",
+    "capAmount": "0.00",
+    "dueAmount": "0.00",
+    "noDueAmount": "0.00",
+    "system": true,
+    "requiresDue": true
+  },
+  {
+    "id": "cmosdmyic09xlwc6onbs9i4l1:installment",
+    "financialId": "cmosdmyic09xlwc6onbs9i4l1",
+    "name": "اقساط ثابت",
+    "capAmount": "0.00",
+    "dueAmount": "0.00",
+    "noDueAmount": "0.00",
+    "system": true,
+    "requiresDue": true
+  },
+  {
+    "id": "cmosdmyic09xlwc6onbs9i4l1:loan",
+    "financialId": "cmosdmyic09xlwc6onbs9i4l1",
+    "name": "وام بانکی",
+    "capAmount": "0.00",
+    "dueAmount": "0.00",
+    "noDueAmount": "0.00",
+    "system": true,
+    "requiresDue": false
+  },
+  {
+    "id": "cmosdmyic09xlwc6onbs9i4l1:handover",
+    "financialId": "cmosdmyic09xlwc6onbs9i4l1",
+    "name": "تحویل واحد",
+    "capAmount": "0.00",
+    "dueAmount": "0.00",
+    "noDueAmount": "0.00",
+    "system": true,
+    "requiresDue": false
+  },
+  {
+    "id": "cmosdmyic09xlwc6onbs9i4l1:document",
+    "financialId": "cmosdmyic09xlwc6onbs9i4l1",
+    "name": "تحویل سند",
+    "capAmount": "0.00",
+    "dueAmount": "0.00",
+    "noDueAmount": "0.00",
+    "system": true,
+    "requiresDue": false
+  },
+  {
+    "id": "cmoskerfd03i9wc8wy46g65jz:advance",
+    "financialId": "cmoskerfd03i9wc8wy46g65jz",
+    "name": "پیش پرداخت",
+    "capAmount": "1000000.00",
+    "dueAmount": "1000000.00",
+    "noDueAmount": "0.00",
+    "system": true,
+    "requiresDue": true
+  },
+  {
+    "id": "cmoskerfd03i9wc8wy46g65jz:installment",
+    "financialId": "cmoskerfd03i9wc8wy46g65jz",
+    "name": "اقساط ثابت",
+    "capAmount": "0.00",
+    "dueAmount": "0.00",
+    "noDueAmount": "0.00",
+    "system": true,
+    "requiresDue": true
+  },
+  {
+    "id": "cmoskerfd03i9wc8wy46g65jz:loan",
+    "financialId": "cmoskerfd03i9wc8wy46g65jz",
+    "name": "وام بانکی",
+    "capAmount": "0.00",
+    "dueAmount": "0.00",
+    "noDueAmount": "0.00",
+    "system": true,
+    "requiresDue": false
+  },
+  {
+    "id": "cmoskerfd03i9wc8wy46g65jz:handover",
+    "financialId": "cmoskerfd03i9wc8wy46g65jz",
+    "name": "تحویل واحد",
+    "capAmount": "0.00",
+    "dueAmount": "0.00",
+    "noDueAmount": "0.00",
+    "system": true,
+    "requiresDue": false
+  },
+  {
+    "id": "cmoskerfd03i9wc8wy46g65jz:document",
+    "financialId": "cmoskerfd03i9wc8wy46g65jz",
+    "name": "تحویل سند",
+    "capAmount": "0.00",
+    "dueAmount": "0.00",
+    "noDueAmount": "0.00",
+    "system": true,
+    "requiresDue": false
+  },
+  {
+    "id": "cmoslx7em07t8wc8wxd4i8eug:advance",
+    "financialId": "cmoslx7em07t8wc8wxd4i8eug",
+    "name": "پیش پرداخت",
+    "capAmount": "0.00",
+    "dueAmount": "0.00",
+    "noDueAmount": "0.00",
+    "system": true,
+    "requiresDue": true
+  },
+  {
+    "id": "cmoslx7em07t8wc8wxd4i8eug:installment",
+    "financialId": "cmoslx7em07t8wc8wxd4i8eug",
+    "name": "اقساط ثابت",
+    "capAmount": "0.00",
+    "dueAmount": "0.00",
+    "noDueAmount": "0.00",
+    "system": true,
+    "requiresDue": true
+  },
+  {
+    "id": "cmoslx7em07t8wc8wxd4i8eug:loan",
+    "financialId": "cmoslx7em07t8wc8wxd4i8eug",
+    "name": "وام بانکی",
+    "capAmount": "0.00",
+    "dueAmount": "0.00",
+    "noDueAmount": "0.00",
+    "system": true,
+    "requiresDue": false
+  },
+  {
+    "id": "cmoslx7em07t8wc8wxd4i8eug:handover",
+    "financialId": "cmoslx7em07t8wc8wxd4i8eug",
+    "name": "تحویل واحد",
+    "capAmount": "0.00",
+    "dueAmount": "0.00",
+    "noDueAmount": "0.00",
+    "system": true,
+    "requiresDue": false
+  },
+  {
+    "id": "cmoslx7em07t8wc8wxd4i8eug:document",
+    "financialId": "cmoslx7em07t8wc8wxd4i8eug",
+    "name": "تحویل سند",
+    "capAmount": "0.00",
+    "dueAmount": "0.00",
+    "noDueAmount": "0.00",
+    "system": true,
+    "requiresDue": false
+  },
+  {
+    "id": "cmosl9yzj05kuwc8wmje70lha:advance",
+    "financialId": "cmosl9yzj05kuwc8wmje70lha",
+    "name": "پیش پرداخت",
+    "capAmount": "10000000.00",
+    "dueAmount": "10000000.00",
+    "noDueAmount": "0.00",
+    "system": true,
+    "requiresDue": true
+  },
+  {
+    "id": "cmosl9yzj05kuwc8wmje70lha:installment",
+    "financialId": "cmosl9yzj05kuwc8wmje70lha",
+    "name": "اقساط ثابت",
+    "capAmount": "10000000.00",
+    "dueAmount": "10000000.00",
+    "noDueAmount": "0.00",
+    "system": true,
+    "requiresDue": true
+  },
+  {
+    "id": "cmosl9yzj05kuwc8wmje70lha:loan",
+    "financialId": "cmosl9yzj05kuwc8wmje70lha",
+    "name": "وام بانکی",
+    "capAmount": "10000000.00",
+    "dueAmount": "0.00",
+    "noDueAmount": "10000000.00",
+    "system": true,
+    "requiresDue": false
+  },
+  {
+    "id": "cmosl9yzj05kuwc8wmje70lha:handover",
+    "financialId": "cmosl9yzj05kuwc8wmje70lha",
+    "name": "تحویل واحد",
+    "capAmount": "10000000.00",
+    "dueAmount": "0.00",
+    "noDueAmount": "10000000.00",
+    "system": true,
+    "requiresDue": false
+  },
+  {
+    "id": "cmosl9yzj05kuwc8wmje70lha:document",
+    "financialId": "cmosl9yzj05kuwc8wmje70lha",
+    "name": "تحویل سند",
+    "capAmount": "10000000.00",
+    "dueAmount": "0.00",
+    "noDueAmount": "10000000.00",
+    "system": true,
+    "requiresDue": false
+  },
+  {
+    "id": "cmosl9yzj05kuwc8wmje70lha:custom-1778128798054",
+    "financialId": "cmosl9yzj05kuwc8wmje70lha",
+    "name": "اشعابات",
+    "capAmount": "10000000.00",
+    "dueAmount": "10000000.00",
+    "noDueAmount": "0.00",
+    "system": false,
+    "requiresDue": true
+  },
+  {
+    "id": "cmosl9yzj05kuwc8wmje70lha:custom-1778128823477",
+    "financialId": "cmosl9yzj05kuwc8wmje70lha",
+    "name": "فضای سبز",
+    "capAmount": "10000000.00",
+    "dueAmount": "10000000.00",
+    "noDueAmount": "0.00",
+    "system": false,
+    "requiresDue": true
+  },
+  {
+    "id": "cmosl9yzj05kuwc8wmje70lha:custom-1778128840518",
+    "financialId": "cmosl9yzj05kuwc8wmje70lha",
+    "name": "هزینه برق",
+    "capAmount": "10000000.00",
+    "dueAmount": "10000000.00",
+    "noDueAmount": "0.00",
+    "system": false,
+    "requiresDue": true
+  },
+  {
+    "id": "cmosl9yzj05kuwc8wmje70lha:custom-1778128860054",
+    "financialId": "cmosl9yzj05kuwc8wmje70lha",
+    "name": "هزینه ها",
+    "capAmount": "10000000.00",
+    "dueAmount": "10000000.00",
+    "noDueAmount": "0.00",
+    "system": false,
+    "requiresDue": true
+  },
+  {
+    "id": "cmosl9yzj05kuwc8wmje70lha:custom-1778128934038",
+    "financialId": "cmosl9yzj05kuwc8wmje70lha",
+    "name": "کارشناس",
+    "capAmount": "10000000.00",
+    "dueAmount": "10000000.00",
+    "noDueAmount": "0.00",
+    "system": false,
+    "requiresDue": true
+  },
+  {
+    "id": "advance",
+    "financialId": "cmp13vjn10009oyykhvjvftmn",
+    "name": "پیش پرداخت",
+    "capAmount": "2500000000.00",
+    "dueAmount": "2500000000.00",
+    "noDueAmount": "0.00",
+    "system": true,
+    "requiresDue": true
+  },
+  {
+    "id": "document",
+    "financialId": "cmp13vjn10009oyykhvjvftmn",
+    "name": "تحویل سند",
+    "capAmount": "3000000000.00",
+    "dueAmount": "3000000000.00",
+    "noDueAmount": "0.00",
+    "system": true,
+    "requiresDue": true
+  },
+  {
+    "id": "cmos6so2o053lwc6o3f70pfq9:principal",
+    "financialId": "cmos6so2o053lwc6o3f70pfq9",
+    "name": "مبلغ اصل قرارداد",
+    "capAmount": "110000000.00",
+    "dueAmount": "0.00",
+    "noDueAmount": "110000000.00",
+    "system": true,
+    "requiresDue": false
+  },
+  {
+    "id": "cmos6so2o053lwc6o3f70pfq9:advance",
+    "financialId": "cmos6so2o053lwc6o3f70pfq9",
+    "name": "پیش پرداخت",
+    "capAmount": "26000000.00",
+    "dueAmount": "26000000.00",
+    "noDueAmount": "0.00",
+    "system": true,
+    "requiresDue": true
+  },
+  {
+    "id": "cmos6so2o053lwc6o3f70pfq9:installment",
+    "financialId": "cmos6so2o053lwc6o3f70pfq9",
+    "name": "اقساط ثابت",
+    "capAmount": "21000000.00",
+    "dueAmount": "21000000.00",
+    "noDueAmount": "0.00",
+    "system": true,
+    "requiresDue": true
+  },
+  {
+    "id": "cmos6so2o053lwc6o3f70pfq9:loan",
+    "financialId": "cmos6so2o053lwc6o3f70pfq9",
+    "name": "وام بانکی",
+    "capAmount": "21000000.00",
+    "dueAmount": "0.00",
+    "noDueAmount": "21000000.00",
+    "system": true,
+    "requiresDue": false
+  },
+  {
+    "id": "cmos6so2o053lwc6o3f70pfq9:handover",
+    "financialId": "cmos6so2o053lwc6o3f70pfq9",
+    "name": "تحویل واحد",
+    "capAmount": "21000000.00",
+    "dueAmount": "0.00",
+    "noDueAmount": "21000000.00",
+    "system": true,
+    "requiresDue": false
+  },
+  {
+    "id": "cmos6so2o053lwc6o3f70pfq9:document",
+    "financialId": "cmos6so2o053lwc6o3f70pfq9",
+    "name": "تحویل سند",
+    "capAmount": "21000000.00",
+    "dueAmount": "0.00",
+    "noDueAmount": "21000000.00",
+    "system": true,
+    "requiresDue": false
+  },
+  {
+    "id": "cmpdr87u609sku6sw4evjt58u:principal",
+    "financialId": "cmpdr87u609sku6sw4evjt58u",
+    "name": "مبلغ اصل قرارداد",
+    "capAmount": "100.00",
+    "dueAmount": "0.00",
+    "noDueAmount": "100.00",
+    "system": true,
+    "requiresDue": false
+  },
+  {
+    "id": "cmpdr87u609sku6sw4evjt58u:advance",
+    "financialId": "cmpdr87u609sku6sw4evjt58u",
+    "name": "پیش پرداخت",
+    "capAmount": "10.00",
+    "dueAmount": "10.00",
+    "noDueAmount": "0.00",
+    "system": true,
+    "requiresDue": true
+  },
+  {
+    "id": "cmpdr87u609sku6sw4evjt58u:installment",
+    "financialId": "cmpdr87u609sku6sw4evjt58u",
+    "name": "اقساط ثابت",
+    "capAmount": "20.00",
+    "dueAmount": "20.00",
+    "noDueAmount": "0.00",
+    "system": true,
+    "requiresDue": true
+  },
+  {
+    "id": "cmpdr87u609sku6sw4evjt58u:loan",
+    "financialId": "cmpdr87u609sku6sw4evjt58u",
+    "name": "وام بانکی",
+    "capAmount": "30.00",
+    "dueAmount": "0.00",
+    "noDueAmount": "30.00",
+    "system": true,
+    "requiresDue": false
+  },
+  {
+    "id": "cmpdr87u609sku6sw4evjt58u:handover",
+    "financialId": "cmpdr87u609sku6sw4evjt58u",
+    "name": "تحویل واحد",
+    "capAmount": "20.00",
+    "dueAmount": "0.00",
+    "noDueAmount": "20.00",
+    "system": true,
+    "requiresDue": false
+  },
+  {
+    "id": "cmpdr87u609sku6sw4evjt58u:document",
+    "financialId": "cmpdr87u609sku6sw4evjt58u",
+    "name": "تحویل سند",
+    "capAmount": "20.00",
+    "dueAmount": "0.00",
+    "noDueAmount": "20.00",
+    "system": true,
+    "requiresDue": false
+  },
+  {
+    "id": "cmpdr87u609sku6sw4evjt58u:fin-line-559e8d07-e4b4-4b80-a13f-20e26caa0489",
+    "financialId": "cmpdr87u609sku6sw4evjt58u",
+    "name": "مجموعه تفریحی",
+    "capAmount": "100.00",
+    "dueAmount": "0.00",
+    "noDueAmount": "100.00",
+    "system": false,
+    "requiresDue": false
+  },
+  {
+    "id": "cmpdr87u609sku6sw4evjt58u:fin-line-559e8d07-e4b4-4b80-a13f-20e26caa0489:advance",
+    "financialId": "cmpdr87u609sku6sw4evjt58u",
+    "name": "پیش پرداخت",
+    "capAmount": "50.00",
+    "dueAmount": "50.00",
+    "noDueAmount": "0.00",
+    "system": true,
+    "requiresDue": true
+  },
+  {
+    "id": "cmpdr87u609sku6sw4evjt58u:fin-line-559e8d07-e4b4-4b80-a13f-20e26caa0489:installment",
+    "financialId": "cmpdr87u609sku6sw4evjt58u",
+    "name": "اقساط ثابت",
+    "capAmount": "0.00",
+    "dueAmount": "0.00",
+    "noDueAmount": "0.00",
+    "system": true,
+    "requiresDue": true
+  },
+  {
+    "id": "cmpdr87u609sku6sw4evjt58u:fin-line-559e8d07-e4b4-4b80-a13f-20e26caa0489:loan",
+    "financialId": "cmpdr87u609sku6sw4evjt58u",
+    "name": "وام بانکی",
+    "capAmount": "50.00",
+    "dueAmount": "0.00",
+    "noDueAmount": "50.00",
+    "system": true,
+    "requiresDue": false
+  },
+  {
+    "id": "cmpdr87u609sku6sw4evjt58u:fin-line-559e8d07-e4b4-4b80-a13f-20e26caa0489:handover",
+    "financialId": "cmpdr87u609sku6sw4evjt58u",
+    "name": "تحویل واحد",
+    "capAmount": "0.00",
+    "dueAmount": "0.00",
+    "noDueAmount": "0.00",
+    "system": true,
+    "requiresDue": false
+  },
+  {
+    "id": "cmpdr87u609sku6sw4evjt58u:fin-line-559e8d07-e4b4-4b80-a13f-20e26caa0489:document",
+    "financialId": "cmpdr87u609sku6sw4evjt58u",
+    "name": "تحویل سند",
+    "capAmount": "0.00",
+    "dueAmount": "0.00",
+    "noDueAmount": "0.00",
+    "system": true,
+    "requiresDue": false
+  },
+  {
+    "id": "cmp2n7tqa01dgoyv47apj6fab:principal",
+    "financialId": "cmp2n7tqa01dgoyv47apj6fab",
+    "name": "مبلغ اصل قرارداد",
+    "capAmount": "120000000.00",
+    "dueAmount": "0.00",
+    "noDueAmount": "120000000.00",
+    "system": true,
+    "requiresDue": false
+  },
+  {
+    "id": "cmp2n7tqa01dgoyv47apj6fab:advance",
+    "financialId": "cmp2n7tqa01dgoyv47apj6fab",
+    "name": "پیش پرداخت",
+    "capAmount": "40000000.00",
+    "dueAmount": "40000000.00",
+    "noDueAmount": "0.00",
+    "system": true,
+    "requiresDue": true
+  },
+  {
+    "id": "cmp2n7tqa01dgoyv47apj6fab:installment",
+    "financialId": "cmp2n7tqa01dgoyv47apj6fab",
+    "name": "اقساط ثابت",
+    "capAmount": "20000000.00",
+    "dueAmount": "20000000.00",
+    "noDueAmount": "0.00",
+    "system": true,
+    "requiresDue": true
+  },
+  {
+    "id": "cmp2n7tqa01dgoyv47apj6fab:loan",
+    "financialId": "cmp2n7tqa01dgoyv47apj6fab",
+    "name": "وام بانکی",
+    "capAmount": "20000000.00",
+    "dueAmount": "0.00",
+    "noDueAmount": "20000000.00",
+    "system": true,
+    "requiresDue": false
+  },
+  {
+    "id": "cmp2n7tqa01dgoyv47apj6fab:handover",
+    "financialId": "cmp2n7tqa01dgoyv47apj6fab",
+    "name": "تحویل واحد",
+    "capAmount": "20000000.00",
+    "dueAmount": "0.00",
+    "noDueAmount": "20000000.00",
+    "system": true,
+    "requiresDue": false
+  },
+  {
+    "id": "cmp2n7tqa01dgoyv47apj6fab:document",
+    "financialId": "cmp2n7tqa01dgoyv47apj6fab",
+    "name": "تحویل سند",
+    "capAmount": "20000000.00",
+    "dueAmount": "0.00",
+    "noDueAmount": "20000000.00",
+    "system": true,
+    "requiresDue": false
+  },
+  {
+    "id": "cmp2n7tqa01dgoyv47apj6fab:fin-line-e05c060c-28dc-4dcc-91ff-ebfc8b3c1a52",
+    "financialId": "cmp2n7tqa01dgoyv47apj6fab",
+    "name": "انشعاب آب",
+    "capAmount": "10000000.00",
+    "dueAmount": "0.00",
+    "noDueAmount": "10000000.00",
+    "system": false,
+    "requiresDue": false
+  },
+  {
+    "id": "cmp2n7tqa01dgoyv47apj6fab:fin-line-e05c060c-28dc-4dcc-91ff-ebfc8b3c1a52:advance",
+    "financialId": "cmp2n7tqa01dgoyv47apj6fab",
+    "name": "پیش پرداخت",
+    "capAmount": "2000000.00",
+    "dueAmount": "2000000.00",
+    "noDueAmount": "0.00",
+    "system": true,
+    "requiresDue": true
+  },
+  {
+    "id": "cmp2n7tqa01dgoyv47apj6fab:fin-line-e05c060c-28dc-4dcc-91ff-ebfc8b3c1a52:installment",
+    "financialId": "cmp2n7tqa01dgoyv47apj6fab",
+    "name": "اقساط ثابت",
+    "capAmount": "2000000.00",
+    "dueAmount": "2000000.00",
+    "noDueAmount": "0.00",
+    "system": true,
+    "requiresDue": true
+  },
+  {
+    "id": "cmp2n7tqa01dgoyv47apj6fab:fin-line-e05c060c-28dc-4dcc-91ff-ebfc8b3c1a52:loan",
+    "financialId": "cmp2n7tqa01dgoyv47apj6fab",
+    "name": "وام بانکی",
+    "capAmount": "2000000.00",
+    "dueAmount": "0.00",
+    "noDueAmount": "2000000.00",
+    "system": true,
+    "requiresDue": false
+  },
+  {
+    "id": "cmp2n7tqa01dgoyv47apj6fab:fin-line-e05c060c-28dc-4dcc-91ff-ebfc8b3c1a52:handover",
+    "financialId": "cmp2n7tqa01dgoyv47apj6fab",
+    "name": "تحویل واحد",
+    "capAmount": "2000000.00",
+    "dueAmount": "0.00",
+    "noDueAmount": "2000000.00",
+    "system": true,
+    "requiresDue": false
+  },
+  {
+    "id": "cmp2n7tqa01dgoyv47apj6fab:fin-line-e05c060c-28dc-4dcc-91ff-ebfc8b3c1a52:document",
+    "financialId": "cmp2n7tqa01dgoyv47apj6fab",
+    "name": "تحویل سند",
+    "capAmount": "2000000.00",
+    "dueAmount": "0.00",
+    "noDueAmount": "2000000.00",
+    "system": true,
+    "requiresDue": false
+  }
+]

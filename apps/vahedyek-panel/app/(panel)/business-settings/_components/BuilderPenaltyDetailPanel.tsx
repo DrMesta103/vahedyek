@@ -143,6 +143,27 @@ function ModeButton({
   );
 }
 
+function TooltipHint({ text }: { text: string }) {
+  return (
+    <span className="group relative inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[color:var(--text-muted)]">
+      <Info className="h-4 w-4" aria-hidden="true" />
+      <span className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 w-64 -translate-x-1/2 rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-strong)] px-3 py-2 text-right text-xs leading-6 text-[color:var(--text-body)] opacity-0 shadow-[0_18px_40px_var(--shadow-soft)] transition group-hover:opacity-100 group-focus-within:opacity-100">
+        {text}
+      </span>
+    </span>
+  );
+}
+
+function getStringValue(value: unknown) {
+  return String(value ?? '').trim();
+}
+
+function getNextFromValue(previousTo: string) {
+  const parsed = Number(previousTo);
+  if (!previousTo || !Number.isFinite(parsed)) return '';
+  return String(parsed + 1);
+}
+
 function ProgressiveAmountGrid({
   rows,
   values,
@@ -156,15 +177,22 @@ function ProgressiveAmountGrid({
 }) {
   const getOpenEndedKey = (toKey: string) => toKey.replace(/To$/, 'OpenEnded');
   let nextFrom = 1;
+  let closed = false;
 
   const computedRows = rows.map((row) => {
     const openEndedKey = getOpenEndedKey(row.toKey);
-    const to = String(values[row.toKey] ?? '');
-    const openEnded = Boolean(values[openEndedKey]);
-    const from = String(nextFrom);
+    const rawOpenEnded = Boolean(values[openEndedKey]);
+    const openEnded = !closed && rawOpenEnded;
+    const blocked = closed && !openEnded;
+    const from = blocked ? '' : String(nextFrom);
+    const to = blocked ? '' : String(values[row.toKey] ?? '');
     const toNumber = Number(String(to).replace(/\D/g, ''));
 
-    if (!openEnded && Number.isFinite(toNumber) && toNumber >= nextFrom) nextFrom = toNumber + 1;
+    if (openEnded) {
+      closed = true;
+    } else if (!closed && Number.isFinite(toNumber) && toNumber >= nextFrom) {
+      nextFrom = toNumber + 1;
+    }
 
     return {
       ...row,
@@ -172,78 +200,94 @@ function ProgressiveAmountGrid({
       from,
       to,
       openEnded,
+      blocked,
       amount: String(values[row.rateKey] ?? ''),
     };
   });
 
-  const visibleUntil = computedRows.findIndex((row) => row.openEnded);
-  const visibleRows = visibleUntil >= 0 ? computedRows.slice(0, visibleUntil + 1) : computedRows;
-
-  const syncRanges = (updates: Partial<Record<string, string | boolean>>) => {
-    let from = 1;
-    let closed = false;
-
-    computedRows.forEach((row) => {
-      onValueChange(row.fromKey, String(from));
-      if (closed) return;
-
-      const openEnded = Boolean(updates[row.openEndedKey] ?? row.openEnded);
-      onValueChange(row.openEndedKey, openEnded);
-      if (openEnded) {
-        onValueChange(row.toKey, '');
-        closed = true;
-        return;
-      }
-
-      const toValue = String(updates[row.toKey] ?? row.to).replace(/\D/g, '');
-      onValueChange(row.toKey, toValue);
-      const toNumber = Number(toValue);
-      if (Number.isFinite(toNumber) && toNumber >= from) from = toNumber + 1;
-    });
-  };
-
   return (
     <div className="space-y-5">
-      {visibleRows.map((row, index) => (
-        <div key={row.fromKey} className="grid gap-4 rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] p-4 lg:grid-cols-[1.25fr_1.75fr]">
-          <div className="space-y-3">
-            <FieldLabel label={`مبلغ جریمه ${periodLabel} - پله ${index + 1}`} />
-            <FinancialAmountInput value={row.amount} onChange={(value) => onValueChange(row.rateKey, value)} suffix="تومان" />
-          </div>
+      {computedRows.map((row, index) => {
+        const previousTo = index > 0 ? getStringValue(computedRows[index - 1]?.to) : '';
+        const lockedFrom = row.blocked
+          ? ''
+          : index === 0
+            ? String(values[row.fromKey] || row.from || '1')
+            : getNextFromValue(previousTo);
+        const isLocked = row.openEnded || row.blocked;
 
-          <div className="space-y-3">
-            <div className="grid gap-3 sm:grid-cols-[minmax(0,140px)_minmax(0,140px)] sm:justify-end">
-              <div className="space-y-3">
-                <FieldLabel label="از" />
-                <ProfileAwareUnitInput value={row.from} onChange={() => undefined} suffix="روز" numericMode="integer" disabled />
+        return (
+          <div
+            key={row.fromKey}
+            dir="ltr"
+            className={`grid gap-4 rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] p-4 text-right lg:grid-cols-[minmax(0,1.35fr)_120px_minmax(0,1fr)_minmax(0,1fr)] lg:items-end ${
+              isLocked ? 'opacity-60' : ''
+            }`}
+          >
+            <div className="space-y-3">
+              <div className="flex items-center justify-end gap-2 flex-row-reverse">
+                <TooltipHint text="این مقدار به‌صورت درصد اعمال می‌شود. مثال: 0.5 یعنی نیم درصد برای این بازه." />
+                <span className="text-[15px] font-black text-[color:var(--text-strong)]">نرخ جریمه {periodLabel} - پله {index + 1}</span>
               </div>
-              <div className="space-y-3">
-                <FieldLabel label="تا" />
-                <ProfileAwareUnitInput
-                  value={row.to}
-                  disabled={row.openEnded}
-                  onChange={(value) => syncRanges({ [row.toKey]: value.replace(/\D/g, ''), [row.openEndedKey]: false })}
-                  placeholder={row.openEnded ? 'به بعد' : '30'}
-                  suffix="روز"
-                  numericMode="integer"
-                />
-              </div>
+              <FinancialAmountInput
+                value={row.amount}
+                onChange={(value) => onValueChange(row.rateKey, value)}
+                suffix="%"
+              />
+              <p className="text-right text-xs text-[color:var(--text-muted)]">مثال: 0.5%</p>
             </div>
 
-            <label className="flex items-center justify-end gap-2 text-xs font-bold text-[color:var(--text-muted)]">
-              <input
-                type="checkbox"
-                checked={row.openEnded}
-                onChange={(event) => syncRanges({ [row.openEndedKey]: event.target.checked, [row.toKey]: '' })}
-                className="h-4 w-4 rounded border-slate-300 text-cyan-600"
-              />
-              به بعد
-            </label>
+            <div className="space-y-3">
+              <label className="flex items-center justify-end gap-2 text-xs font-bold text-[color:var(--text-muted)]">
+                <input
+                  type="checkbox"
+                  checked={row.openEnded}
+                  disabled={row.blocked}
+                  onChange={(event) => {
+                    onValueChange(row.openEndedKey, event.target.checked);
+                    if (event.target.checked) onValueChange(row.toKey, '');
+                  }}
+                  className="h-4 w-4 rounded border-slate-300 text-cyan-600"
+                />
+                <span className="inline-flex items-center gap-2">
+                  به بعد
+                  <TooltipHint text="این ردیف را بدون سقف می‌کند و ردیف‌های بعدی را غیرفعال می‌کند." />
+                </span>
+              </label>
+            </div>
 
-            <p className="text-right text-xs text-[color:var(--text-muted)]">شروع هر پله به‌صورت خودکار از پایان پله قبلی محاسبه می‌شود.</p>
+            <div className="space-y-3">
+              <div className="flex items-center justify-end gap-2 flex-row-reverse">
+                <TooltipHint text="پایان این بازه را وارد کنید. اگر می‌خواهید این بازه از این نقطه به بعد ادامه داشته باشد، «به بعد» را فعال کنید." />
+                <span className="text-[15px] font-black text-[color:var(--text-strong)]">تا</span>
+              </div>
+              <ProfileAwareUnitInput
+                value={row.to}
+                disabled={isLocked}
+                onChange={(value) => onValueChange(row.toKey, value.replace(/\D/g, ''))}
+                placeholder={row.openEnded ? 'به بعد' : row.blocked ? 'غیرفعال' : '30'}
+                suffix="روز"
+                numericMode="integer"
+              />
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex items-center justify-end gap-2 flex-row-reverse">
+                <TooltipHint text="شروع این بازه است. از پله دوم به بعد، مقدار آن به‌صورت خودکار از پایان بازه قبلی محاسبه می‌شود." />
+                <span className="text-[15px] font-black text-[color:var(--text-strong)]">از</span>
+              </div>
+              <ProfileAwareUnitInput value={lockedFrom} onChange={() => undefined} suffix="روز" numericMode="integer" disabled />
+              <p className="text-right text-xs text-[color:var(--text-muted)]">
+                {row.openEnded
+                  ? 'این بازه بدون سقف است و مقدار «از» بر اساس بازه قبلی محاسبه می‌شود.'
+                  : row.blocked
+                    ? 'این ردیف به‌دلیل «به بعد» در ردیف قبل غیرفعال است.'
+                    : 'شروع بازه از این روز در نظر گرفته می‌شود.'}
+              </p>
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

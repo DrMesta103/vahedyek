@@ -8,7 +8,7 @@ import { submitContractApprovalWorkflowAction } from '../../../../actions/contra
 import { listApprovalWorkflowsAction } from '../../../../actions/workflowActions';
 import type { ContractFlowSectionId } from './contractFlowSignals';
 
-const SAVEABLE_SECTIONS: ContractFlowSectionId[] = ['subject', 'parties', 'financial', 'penalties', 'discounts', 'termination'];
+const SAVEABLE_SECTIONS: ContractFlowSectionId[] = ['subject', 'parties', 'financial', 'penalties', 'discounts', 'interest', 'forgiveness', 'termination'];
 
 type SectionItem = {
   id: ContractFlowSectionId;

@@ -24,7 +24,8 @@ const THREAD_PAGE_KEY_INDEX = '"DevPageThread_appId_pageKey_idx"';
 const THREAD_UPDATED_AT_INDEX = '"DevPageThread_appId_updatedAt_idx"';
 const MESSAGE_THREAD_INDEX = '"DevPageMessage_threadId_createdAt_idx"';
 const THREAD_READ_STATE_UNIQUE_INDEX = '"DevPageThreadReadState_tenantId_appId_userId_threadId_key"';
-const PAGE_THREADS_SCHEMA_VERSION = 2;
+const THREAD_READ_STATE_LEGACY_UNIQUE_INDEX = '"DevPageThreadReadState_appId_userId_threadId_key"';
+const PAGE_THREADS_SCHEMA_VERSION = 3;
 
 const globalForPageThreads = globalThis as unknown as {
   __pageThreadsTablesReady?: boolean;
@@ -42,6 +43,7 @@ type ThreadRow = {
   priority: string;
   status: string;
   labelsJson: string | null;
+  messageCount: number | null;
   createdAt: Date;
   updatedAt: Date;
   authorId: string | null;
@@ -188,8 +190,26 @@ export async function ensurePageThreadsTables() {
     );
   `);
 
+  await prisma.$executeRawUnsafe(`ALTER TABLE ${THREAD_READ_STATE_TABLE} ADD COLUMN IF NOT EXISTS "tenantId" TEXT;`);
   await prisma.$executeRawUnsafe(`ALTER TABLE ${THREAD_READ_STATE_TABLE} ADD COLUMN IF NOT EXISTS "appId" TEXT NOT NULL DEFAULT '${currentAppConfig.appId}';`);
   await prisma.$executeRawUnsafe(`ALTER TABLE ${THREAD_READ_STATE_TABLE} ADD COLUMN IF NOT EXISTS "isOpened" BOOLEAN NOT NULL DEFAULT FALSE;`);
+  await prisma.$executeRawUnsafe(`DROP INDEX IF EXISTS ${THREAD_READ_STATE_LEGACY_UNIQUE_INDEX};`);
+  await prisma.$executeRawUnsafe(`
+    DO $$
+    BEGIN
+      IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conname = 'DevPageThreadReadState_tenantId_fkey'
+      ) THEN
+        ALTER TABLE ${THREAD_READ_STATE_TABLE}
+        ADD CONSTRAINT "DevPageThreadReadState_tenantId_fkey"
+        FOREIGN KEY ("tenantId") REFERENCES "Tenant"("id")
+        ON DELETE CASCADE
+        ON UPDATE CASCADE;
+      END IF;
+    END $$;
+  `);
   await prisma.$executeRawUnsafe(`
     CREATE UNIQUE INDEX IF NOT EXISTS ${THREAD_READ_STATE_UNIQUE_INDEX}
     ON ${THREAD_READ_STATE_TABLE} ("tenantId", "appId", "userId", "threadId");
@@ -232,6 +252,7 @@ export function mapThreadRow(row: ThreadRow): PageThreadRecord {
     status,
     labels: safeJsonParseStringArray(row.labelsJson),
     isOpened: Boolean(row.isOpened),
+    messageCount: Math.max(0, row.messageCount ?? 0),
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
     createdBy: row.authorId
@@ -282,6 +303,7 @@ export async function listThreadsForApp(input: { tenantId: string; userId: strin
         t."priority",
         t."status",
         t."labelsJson",
+        COALESCE(message_stats."messageCount", 0) AS "messageCount",
         t."createdAt",
         t."updatedAt",
         author."id" AS "authorId",
@@ -297,6 +319,11 @@ export async function listThreadsForApp(input: { tenantId: string; userId: strin
           ELSE FALSE
         END AS "isOpened"
       FROM ${THREADS_TABLE} t
+      LEFT JOIN (
+        SELECT "threadId", COUNT(*)::int AS "messageCount"
+        FROM ${MESSAGES_TABLE}
+        GROUP BY "threadId"
+      ) message_stats ON message_stats."threadId" = t."id"
       LEFT JOIN (
         SELECT "threadId", MAX("createdAt") AS "lastMessageAt"
         FROM ${MESSAGES_TABLE}
@@ -340,6 +367,7 @@ export async function listThreadsForPage(input: { pagePath: string; tenantId: st
         t."priority",
         t."status",
         t."labelsJson",
+        COALESCE(message_stats."messageCount", 0) AS "messageCount",
         t."createdAt",
         t."updatedAt",
         author."id" AS "authorId",
@@ -355,6 +383,11 @@ export async function listThreadsForPage(input: { pagePath: string; tenantId: st
           ELSE FALSE
         END AS "isOpened"
       FROM ${THREADS_TABLE} t
+      LEFT JOIN (
+        SELECT "threadId", COUNT(*)::int AS "messageCount"
+        FROM ${MESSAGES_TABLE}
+        GROUP BY "threadId"
+      ) message_stats ON message_stats."threadId" = t."id"
       LEFT JOIN (
         SELECT "threadId", MAX("createdAt") AS "lastMessageAt"
         FROM ${MESSAGES_TABLE}
