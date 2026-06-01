@@ -4,13 +4,31 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { Prisma, WorkGroupAccessLevel } from '../../node_modules/.prisma/client';
 import { prisma } from './prisma';
+import {
+  toWorkplaceLocationDraft,
+  validateWorkplaceLocationDraft,
+} from './workplace-location';
 import { getSessionContext } from './auth';
 import { isPersianYmdInRange, parsePersianYmd } from './calendar-dates';
 import { ensureGlobalDefaultCalendar } from './calendar-defaults';
 import { getOfficialHolidaysForYear } from './calendar-official-holidays';
 import { expandCalendarEventDates, normalizePersianDateInput, parseCalendarStoredEvents } from './calendar-events';
+import {
+  CALENDAR_FRIDAY_HOLIDAY_TYPE,
+  getCalendarHolidayTypeLabel,
+  isPersianFridayDate,
+  resolveCalendarEventTitle,
+  resolveHolidayTypeForDate,
+  type CalendarHolidayType,
+} from './calendar-event-types';
+import { countCalendarHolidayDays } from './calendar-grid';
 import type { CalendarShiftType } from './calendar-shifts';
-import { listExcludedShiftDates, parseCalendarShiftConfig } from './calendar-shifts';
+import {
+  getCalendarShiftTypeLabel,
+  listExcludedShiftDates,
+  parseCalendarShiftConfig,
+  resolveCalendarShiftTitle,
+} from './calendar-shifts';
 import { serializeShiftTemplateFromWizard } from './shift-template-map';
 import { getPolicyFamilyMeta, getPolicySectionValues } from './policy-workspaces';
 import { seedSampleData } from './seed';
@@ -68,15 +86,6 @@ function tenantRelation(tenantId: string) {
   return { tenant: { connect: { id: tenantId } } };
 }
 
-function getShiftTypeLabel(shiftType: string) {
-  if (shiftType === 'fixed') return 'شیفت ثابت';
-  if (shiftType === 'float-day') return 'شیفت شناور (شروع روز)';
-  if (shiftType === 'float-abs') return 'شیفت شناور مطلق';
-  if (shiftType === 'split') return 'شیفت دو تکه';
-  if (shiftType === 'rotate') return 'شیفت چرخشی';
-  return shiftType;
-}
-
 function getPolicyFamilyKey(sectionValues: Prisma.JsonValue | null | undefined) {
   if (!sectionValues || typeof sectionValues !== 'object' || Array.isArray(sectionValues)) return null;
   const familyKey = (sectionValues as Record<string, unknown>).familyKey;
@@ -91,13 +100,48 @@ function shouldRetryLocationWithoutCoordinates(error: unknown) {
   );
 }
 
-function baseLocationData(formData: FormData, tenantId: string) {
-  return {
-    ...tenantRelation(tenantId),
+function shouldRetryLocationWithoutPrimaryOnboarding(error: unknown) {
+  return (
+    error instanceof Error &&
+    (error.message.includes('Unknown argument `isPrimaryOnboarding`') ||
+      error.message.includes('The column `Location.isPrimaryOnboarding` does not exist'))
+  );
+}
+
+function readWorkplaceLocationDraft(formData: FormData) {
+  return toWorkplaceLocationDraft({
     title: value(formData, 'title'),
     address: value(formData, 'address'),
-    radius: Number(value(formData, 'radius') || '100'),
-    description: value(formData, 'description') || null,
+    description: value(formData, 'description'),
+    radius: value(formData, 'radius'),
+    latitude: value(formData, 'latitude'),
+    longitude: value(formData, 'longitude'),
+  });
+}
+
+function buildLocationData(formData: FormData, tenantId: string, isPrimaryOnboarding = false) {
+  const draft = readWorkplaceLocationDraft(formData);
+  const validation = validateWorkplaceLocationDraft(draft);
+  if (!validation.valid) {
+    const message =
+      validation.errors.title ??
+      validation.errors.address ??
+      validation.errors.radius ??
+      validation.errors.latitude ??
+      validation.errors.general ??
+      'محل کار ذخیره نشد. دوباره تلاش کنید.';
+    throw new Error(message);
+  }
+
+  return {
+    ...tenantRelation(tenantId),
+    title: validation.values.title,
+    address: validation.values.address,
+    radius: validation.values.radius,
+    description: validation.values.description,
+    latitude: new Prisma.Decimal(validation.values.latitude),
+    longitude: new Prisma.Decimal(validation.values.longitude),
+    isPrimaryOnboarding,
   };
 }
 
@@ -132,17 +176,22 @@ export async function saveBusinessProfileAction(formData: FormData) {
 
 export async function createLocationAction(formData: FormData) {
   const tenantId = await getTenantId();
-  const data = {
-    ...baseLocationData(formData, tenantId),
-    latitude: decimalValue(formData, 'latitude'),
-    longitude: decimalValue(formData, 'longitude'),
-  };
+  const data = buildLocationData(formData, tenantId);
 
   try {
-    await prisma.location.create({ data });
+    await prisma.location.create({ data: data as any });
   } catch (error) {
-    if (!shouldRetryLocationWithoutCoordinates(error)) throw error;
-    await prisma.location.create({ data: baseLocationData(formData, tenantId) });
+    if (!shouldRetryLocationWithoutCoordinates(error) && !shouldRetryLocationWithoutPrimaryOnboarding(error)) throw error;
+    await prisma.location.create({
+      data: {
+        ...tenantRelation(tenantId),
+        title: data.title,
+        address: data.address,
+        radius: data.radius,
+        description: data.description,
+        ...(shouldRetryLocationWithoutCoordinates(error) ? {} : { latitude: data.latitude, longitude: data.longitude }),
+      } as any,
+    });
   }
 
   revalidatePath('/locations');
@@ -152,17 +201,22 @@ export async function createLocationAction(formData: FormData) {
 
 export async function createLocationFromQuickSetupAction(formData: FormData) {
   const tenantId = await getTenantId();
-  const data = {
-    ...baseLocationData(formData, tenantId),
-    latitude: decimalValue(formData, 'latitude'),
-    longitude: decimalValue(formData, 'longitude'),
-  };
+  const data = buildLocationData(formData, tenantId);
 
   try {
-    await prisma.location.create({ data });
+    await prisma.location.create({ data: data as any });
   } catch (error) {
-    if (!shouldRetryLocationWithoutCoordinates(error)) throw error;
-    await prisma.location.create({ data: baseLocationData(formData, tenantId) });
+    if (!shouldRetryLocationWithoutCoordinates(error) && !shouldRetryLocationWithoutPrimaryOnboarding(error)) throw error;
+    await prisma.location.create({
+      data: {
+        ...tenantRelation(tenantId),
+        title: data.title,
+        address: data.address,
+        radius: data.radius,
+        description: data.description,
+        ...(shouldRetryLocationWithoutCoordinates(error) ? {} : { latitude: data.latitude, longitude: data.longitude }),
+      } as any,
+    });
   }
 
   revalidatePath('/locations');
@@ -172,50 +226,158 @@ export async function createLocationFromQuickSetupAction(formData: FormData) {
 
 export async function saveLocationFromQuickSetupAction(formData: FormData) {
   const tenantId = await getTenantId();
+  const draft = readWorkplaceLocationDraft(formData);
+  const validation = validateWorkplaceLocationDraft(draft);
+  if (!validation.valid) {
+    return {
+      ok: false as const,
+      message: 'محل کار ذخیره نشد. دوباره تلاش کنید.',
+      errors: validation.errors,
+    };
+  }
+
   const data = {
-    ...baseLocationData(formData, tenantId),
-    latitude: decimalValue(formData, 'latitude'),
-    longitude: decimalValue(formData, 'longitude'),
+    ...tenantRelation(tenantId),
+    title: validation.values.title,
+    address: validation.values.address,
+    radius: validation.values.radius,
+    description: validation.values.description,
+    latitude: new Prisma.Decimal(validation.values.latitude),
+    longitude: new Prisma.Decimal(validation.values.longitude),
+    isPrimaryOnboarding: true,
   };
 
+  let location: unknown;
   try {
-    const location = await prisma.location.create({ data });
-    revalidatePath('/locations');
-    revalidatePath('/quick-setup');
-    return { id: location.id, title: location.title, radius: location.radius, description: location.description };
+    location = await prisma.$transaction(async (tx) => {
+      const existingPrimary = (await tx.location.findFirst({
+        where: { tenantId, isPrimaryOnboarding: true } as any,
+        select: { id: true } as any,
+      })) as unknown as { id: string } | null;
+
+      await tx.location.updateMany({
+        where: { tenantId, isPrimaryOnboarding: true, ...(existingPrimary ? { id: { not: existingPrimary.id } } : {}) } as any,
+        data: { isPrimaryOnboarding: false },
+      });
+
+      const saved = existingPrimary
+        ? await tx.location.update({
+            where: { id: existingPrimary.id },
+            data: data as any,
+          })
+        : await tx.location.create({ data: data as any });
+
+      await tx.businessProfile.updateMany({
+        where: { tenantId, quickSetupStatus: 'pending' },
+        data: { quickSetupStatus: 'in_progress' },
+      });
+
+      return saved;
+    });
   } catch (error) {
-    if (!shouldRetryLocationWithoutCoordinates(error)) throw error;
-    const location = await prisma.location.create({ data: baseLocationData(formData, tenantId) });
-    revalidatePath('/locations');
-    revalidatePath('/quick-setup');
-    return { id: location.id, title: location.title, radius: location.radius, description: location.description };
+    if (!shouldRetryLocationWithoutPrimaryOnboarding(error)) throw error;
+
+    location = await prisma.$transaction(async (tx) => {
+      const existingLocation = await tx.location.findFirst({
+        where: { tenantId },
+        orderBy: { updatedAt: 'desc' },
+      });
+
+      const saved = existingLocation
+        ? await tx.location.update({
+            where: { id: existingLocation.id },
+            data: {
+              ...tenantRelation(tenantId),
+              title: data.title,
+              address: data.address,
+              radius: data.radius,
+              description: data.description,
+              latitude: data.latitude,
+              longitude: data.longitude,
+            } as any,
+          })
+        : await tx.location.create({
+            data: {
+              ...tenantRelation(tenantId),
+              title: data.title,
+              address: data.address,
+              radius: data.radius,
+              description: data.description,
+              latitude: data.latitude,
+              longitude: data.longitude,
+            } as any,
+          });
+
+      await tx.businessProfile.updateMany({
+        where: { tenantId, quickSetupStatus: 'pending' },
+        data: { quickSetupStatus: 'in_progress' },
+      });
+
+      return saved;
+    });
   }
+
+  const savedLocation = location as {
+    id: string;
+    title: string;
+    address: string;
+    description: string | null;
+    radius: number;
+    latitude: { toString(): string } | null;
+    longitude: { toString(): string } | null;
+    isPrimaryOnboarding?: boolean;
+  };
+
+  revalidatePath('/locations');
+  revalidatePath('/quick-setup');
+  return {
+    ok: true as const,
+    message: 'محل کار اصلی با موفقیت ثبت شد.',
+    location: {
+      id: savedLocation.id,
+      title: savedLocation.title,
+      address: savedLocation.address,
+      description: savedLocation.description,
+      radius: savedLocation.radius,
+      allowedRadiusMeters: savedLocation.radius,
+      latitude: savedLocation.latitude?.toString() ?? null,
+      longitude: savedLocation.longitude?.toString() ?? null,
+      isPrimaryOnboarding: Boolean(savedLocation.isPrimaryOnboarding),
+    },
+  };
 }
 
 export async function updateLocationAction(formData: FormData) {
   const tenantId = await getTenantId();
   const id = value(formData, 'id');
-  const current = await prisma.location.findFirst({ where: { id, tenantId }, select: { id: true } });
+  const current = (await prisma.location.findFirst({ where: { id, tenantId }, select: { id: true } })) as { id: string } | null;
   if (!current) throw new Error('Location not found for active tenant.');
-  const baseData = {
-    title: value(formData, 'title'),
-    address: value(formData, 'address'),
-    radius: Number(value(formData, 'radius') || '100'),
-    description: value(formData, 'description') || null,
-  };
+  const data = buildLocationData(formData, tenantId, false);
 
   try {
     await prisma.location.update({
       where: { id },
       data: {
-        ...baseData,
-        latitude: decimalValue(formData, 'latitude'),
-        longitude: decimalValue(formData, 'longitude'),
-      },
+        title: data.title,
+        address: data.address,
+        radius: data.radius,
+        description: data.description,
+        latitude: data.latitude,
+        longitude: data.longitude,
+      } as any,
     });
   } catch (error) {
-    if (!shouldRetryLocationWithoutCoordinates(error)) throw error;
-    await prisma.location.update({ where: { id }, data: baseData });
+    if (!shouldRetryLocationWithoutCoordinates(error) && !shouldRetryLocationWithoutPrimaryOnboarding(error)) throw error;
+    await prisma.location.update({
+      where: { id },
+      data: {
+        title: data.title,
+        address: data.address,
+        radius: data.radius,
+        description: data.description,
+        ...(shouldRetryLocationWithoutCoordinates(error) ? {} : { latitude: data.latitude, longitude: data.longitude }),
+      } as any,
+    });
   }
 
   revalidatePath('/locations');
@@ -523,11 +685,13 @@ export async function addCalendarShiftAction(data: {
     });
   }
 
+  const resolvedShiftTitle = resolveCalendarShiftTitle(data.shiftTitle, data.shiftType);
+
   const newShift = {
     id: crypto.randomUUID(),
     shiftType: data.shiftType,
-    title: data.shiftTitle,
-    config: { ...data.shiftConfig, shiftType: data.shiftType, title: data.shiftTitle },
+    title: resolvedShiftTitle,
+    config: { ...data.shiftConfig, shiftType: data.shiftType, title: resolvedShiftTitle },
     createdAt: new Date().toISOString(),
   };
 
@@ -538,8 +702,8 @@ export async function addCalendarShiftAction(data: {
   await prisma.calendar.update({
     where: { id: data.calendarId },
     data: {
-      shiftTitle: data.shiftTitle,
-      shiftTypeLabel: getShiftTypeLabel(data.shiftType),
+      shiftTitle: resolvedShiftTitle,
+      shiftTypeLabel: getCalendarShiftTypeLabel(data.shiftType),
       shiftConfig: jsonValue({ ...root, shifts: existingShifts, excludedDates } as Prisma.InputJsonValue),
       totalShiftDays: existingShifts.length,
     },
@@ -556,12 +720,12 @@ export async function addCalendarEventsAction(data: {
   calendarId: string;
   title: string;
   description?: string;
-  category?: string;
   startDate?: string;
   endDate?: string;
   weekdays?: string[];
   singleDate?: string;
   isHoliday: boolean;
+  holidayType?: CalendarHolidayType;
 }) {
   const tenantId = await getTenantId();
   const calendar = await prisma.calendar.findFirst({
@@ -592,42 +756,75 @@ export async function addCalendarEventsAction(data: {
     throw new Error('No valid dates were found for this event range.');
   }
 
+  if (data.isHoliday) {
+    if (!data.holidayType) {
+      throw new Error('نوع تعطیلی را انتخاب کنید.');
+    }
+
+    if (data.singleDate) {
+      const norm = normalizePersianDateInput(data.singleDate);
+      if (isPersianFridayDate(norm)) {
+        if (data.holidayType !== 'friday') {
+          throw new Error('برای روز جمعه فقط «تعطیلی جمعه» مجاز است؛ رسمی یا سازمانی انتخاب نشود.');
+        }
+      } else if (data.holidayType !== 'official' && data.holidayType !== 'organizational') {
+        throw new Error('برای این روز باید نوع تعطیلی «رسمی» یا «سازمانی» را مشخص کنید.');
+      }
+    } else {
+      if (data.holidayType === 'friday') {
+        const allFriday = dates.every((d) => isPersianFridayDate(normalizePersianDateInput(d)));
+        if (!allFriday) {
+          throw new Error('نوع «تعطیلی جمعه» فقط وقتی مجاز است که همهٔ روزهای انتخاب‌شده جمعه باشند.');
+        }
+      } else if (data.holidayType !== 'official' && data.holidayType !== 'organizational') {
+        throw new Error('نوع تعطیلی را مشخص کنید.');
+      }
+    }
+  }
+
   const existing = parseCalendarStoredEvents(calendar.singleHolidays);
   const existingDates = new Set(existing.map((item) => item.date));
   const createdAt = new Date().toISOString();
-  const title = data.title.trim();
   const description = data.description?.trim() || undefined;
-  const category = data.category?.trim() || undefined;
 
   const newEvents = dates
     .filter((date) => !existingDates.has(date))
-    .map((date) => ({
-      id: crypto.randomUUID(),
-      title,
-      date: normalizePersianDateInput(date),
-      description,
-      category,
-      isHoliday: data.isHoliday,
-      createdAt,
-    }));
+    .map((date) => {
+      const normalizedDate = normalizePersianDateInput(date);
+      const baseHolidayType: 'official' | 'organizational' =
+        data.holidayType === 'organizational' ? 'organizational' : 'official';
+      const resolvedHolidayType = data.isHoliday
+        ? data.holidayType === 'friday'
+          ? 'friday'
+          : resolveHolidayTypeForDate(normalizedDate, baseHolidayType)
+        : undefined;
+
+      const resolvedTitle = resolveCalendarEventTitle({
+        title: data.title,
+        isHoliday: data.isHoliday,
+        holidayType: resolvedHolidayType,
+      });
+
+      return {
+        id: crypto.randomUUID(),
+        title: resolvedTitle,
+        date: normalizedDate,
+        description,
+        category: resolvedHolidayType ? getCalendarHolidayTypeLabel(resolvedHolidayType) : undefined,
+        isHoliday: data.isHoliday,
+        holidayType: resolvedHolidayType,
+        createdAt,
+      };
+    });
 
   const merged = [...existing, ...newEvents];
   const weekends = Array.isArray(calendar.weekends) ? (calendar.weekends as string[]) : [];
   const holidayEvents = merged.filter((item) => item.isHoliday !== false);
 
-  const shiftRoot = parseCalendarShiftConfig(calendar.shiftConfig);
-  const excludedDates = new Set(listExcludedShiftDates(calendar.shiftConfig).map((date) => normalizePersianDateInput(date)));
-  if (data.isHoliday) {
-    for (const date of dates) {
-      excludedDates.add(normalizePersianDateInput(date));
-    }
-  }
-
   await prisma.calendar.update({
     where: { id: data.calendarId },
     data: {
       singleHolidays: jsonValue(merged as Prisma.InputJsonValue),
-      shiftConfig: jsonValue({ ...shiftRoot, excludedDates: [...excludedDates] } as Prisma.InputJsonValue),
       holidayCount: weekends.length + holidayEvents.length,
       totalEventDays: merged.length,
     },
@@ -670,6 +867,34 @@ export async function removeCalendarWeekendDayAction(data: { calendarId: string;
   revalidatePath('/quick-setup');
 
   return { removedWeekday: data.weekdayName };
+}
+
+export async function addCalendarWeekendOverrideAction(data: { calendarId: string; date: string }) {
+  const tenantId = await getTenantId();
+  const calendar = await prisma.calendar.findFirst({
+    where: { id: data.calendarId, tenantId },
+    select: { id: true, shiftConfig: true },
+  });
+  if (!calendar) throw new Error('Calendar not found for active tenant.');
+
+  const root = parseCalendarShiftConfig(calendar.shiftConfig);
+  const normalizedDate = normalizePersianDateInput(data.date);
+  const existing = Array.isArray(root.weekendOverrides) ? (root.weekendOverrides as string[]) : [];
+  const weekendOverrides = new Set(existing.map((item) => normalizePersianDateInput(String(item))));
+  weekendOverrides.add(normalizedDate);
+
+  await prisma.calendar.update({
+    where: { id: data.calendarId },
+    data: {
+      shiftConfig: jsonValue({ ...root, weekendOverrides: [...weekendOverrides] } as Prisma.InputJsonValue),
+    },
+  });
+
+  revalidatePath('/calendars');
+  revalidatePath(`/calendars/${data.calendarId}`);
+  revalidatePath('/quick-setup');
+
+  return { date: normalizedDate };
 }
 
 export async function deleteCalendarStoredEventAction(data: { calendarId: string; eventId: string }) {
@@ -850,7 +1075,7 @@ export async function createCalendarWithShiftAction(data: {
       weekends: jsonValue(data.weekends),
       singleHolidays: jsonValue(data.singleHolidays),
       shiftTitle: data.shiftTitle,
-      shiftTypeLabel: getShiftTypeLabel(data.shiftType),
+      shiftTypeLabel: getCalendarShiftTypeLabel(data.shiftType),
       shiftConfig: jsonValue(data.shiftConfig as Prisma.InputJsonObject),
       holidayCount,
       totalShiftDays: 0,
@@ -918,6 +1143,63 @@ export async function createCalendarDraftFromDefaultAction(data: {
   };
 }
 
+function resolveCalendarHolidayCount(input: {
+  startDate: string;
+  endDate: string;
+  weekends: string[];
+  singleHolidays: Array<{ date: string; isHoliday?: boolean }>;
+  weekendOverrideDates?: string[];
+}) {
+  return countCalendarHolidayDays({
+    startDate: input.startDate,
+    endDate: input.endDate,
+    weekends: input.weekends,
+    singleHolidayDates: input.singleHolidays
+      .filter((item) => item.isHoliday !== false)
+      .map((item) => item.date),
+    weekendOverrideDates: input.weekendOverrideDates,
+  });
+}
+
+export async function updateCalendarHolidaysFromQuickSetupAction(data: {
+  calendarId: string;
+  startDate: string;
+  endDate: string;
+  weekends: string[];
+  singleHolidays: { id: string; title: string; date: string }[];
+}) {
+  const tenantId = await getTenantId();
+  const current = await prisma.calendar.findFirst({
+    where: { id: data.calendarId, tenantId },
+    select: { id: true, shiftConfig: true },
+  });
+  if (!current) throw new Error('Calendar not found for active tenant.');
+
+  const shiftRoot = parseCalendarShiftConfig(current.shiftConfig);
+  const holidayCount = resolveCalendarHolidayCount({
+    startDate: data.startDate,
+    endDate: data.endDate,
+    weekends: data.weekends,
+    singleHolidays: data.singleHolidays,
+    weekendOverrideDates: Array.isArray(shiftRoot.weekendOverrides)
+      ? (shiftRoot.weekendOverrides as string[])
+      : [],
+  });
+
+  await prisma.calendar.update({
+    where: { id: data.calendarId },
+    data: {
+      weekends: jsonValue(data.weekends),
+      singleHolidays: jsonValue(data.singleHolidays),
+      holidayCount,
+      totalEventDays: data.singleHolidays.length,
+    },
+  });
+
+  revalidatePath('/calendars');
+  revalidatePath('/quick-setup');
+}
+
 export async function updateCalendarFromQuickSetupAction(data: {
   calendarId: string;
   title: string;
@@ -934,17 +1216,26 @@ export async function updateCalendarFromQuickSetupAction(data: {
   const tenantId = await getTenantId();
   const current = await prisma.calendar.findFirst({
     where: { id: data.calendarId, tenantId },
-    select: { id: true },
+    select: { id: true, shiftConfig: true },
   });
   if (!current) throw new Error('Calendar not found for active tenant.');
 
-  const holidayCount = data.weekends.length + data.singleHolidays.length;
-  const shiftTypeLabel =
-    data.shiftType === 'fixed' ? 'شیفت ثابت' :
-    data.shiftType === 'float-day' ? 'شیفت شناور (شروع روز)' :
-    data.shiftType === 'float-abs' ? 'شیفت شناور مطلق' :
-    data.shiftType === 'split' ? 'شیفت دوتکه' :
-    data.shiftType === 'rotate' ? 'شیفت چرخشی' : data.shiftType;
+  const shiftRoot = parseCalendarShiftConfig(current.shiftConfig);
+  const holidayCount = resolveCalendarHolidayCount({
+    startDate: data.startDate,
+    endDate: data.endDate,
+    weekends: data.weekends,
+    singleHolidays: data.singleHolidays,
+    weekendOverrideDates: Array.isArray(shiftRoot.weekendOverrides)
+      ? (shiftRoot.weekendOverrides as string[])
+      : [],
+  });
+  const resolvedShiftTitle = resolveCalendarShiftTitle(data.shiftTitle, data.shiftType);
+  const shiftConfig = {
+    ...data.shiftConfig,
+    shiftType: data.shiftType,
+    title: resolvedShiftTitle,
+  };
 
   const calendar = await prisma.calendar.update({
     where: { id: data.calendarId },
@@ -956,9 +1247,9 @@ export async function updateCalendarFromQuickSetupAction(data: {
       endDate: data.endDate,
       weekends: jsonValue(data.weekends),
       singleHolidays: jsonValue(data.singleHolidays),
-      shiftTitle: data.shiftTitle,
-      shiftTypeLabel: getShiftTypeLabel(data.shiftType),
-      shiftConfig: jsonValue(data.shiftConfig as Prisma.InputJsonObject),
+      shiftTitle: resolvedShiftTitle,
+      shiftTypeLabel: getCalendarShiftTypeLabel(data.shiftType),
+      shiftConfig: jsonValue(shiftConfig as Prisma.InputJsonObject),
       holidayCount,
       totalEventDays: data.singleHolidays.length,
     },
@@ -1236,14 +1527,20 @@ export async function createPolicyFromQuickSetupAction(data: {
       title: data.title,
       description: data.description ?? null,
       calendarId: data.calendarId,
+      isDefault: true,
       sectionValues: jsonValue({
         familyKey: 'work',
         variant: 'default',
         manualAttendance: false,
         overtimeFromAttendance: true,
         nightWorkStart: '22:00',
+        templateType: 'quick-setup',
         templateId: data.policyTemplateId,
         templateTitle: data.templateTitle ?? data.title,
+        selectedCalendarId: data.calendarId,
+        selectedPolicyTemplateId: data.policyTemplateId,
+        generatedPolicyTitle: data.title,
+        generatedPolicyDescription: data.description ?? '',
         year: data.year ?? '',
       }),
     },

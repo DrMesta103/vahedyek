@@ -1,29 +1,37 @@
-export const requestReasonLabels = {
-  attendance: 'حضور و غیاب',
-  remote_work: 'دورکاری',
-  loan: 'وام',
-  salary_advance: 'علی‌الحساب حقوق',
-  mission: 'ماموریت',
-  annual_leave: 'مرخصی استحقاقی',
-  unpaid_leave: 'مرخصی بدون حقوق',
-  reward_leave: 'مرخصی تشویقی',
-  sick_leave: 'مرخصی استعلاجی',
-} as const;
+/** ترتیب تب‌های دلایل درخواست (ثابت) */
+export const REQUEST_REASON_CATEGORY_ORDER = [
+  'daily_leave',
+  'hourly_leave',
+  'reward_leave',
+  'unpaid_leave',
+  'sick_leave',
+  'overtime',
+  'attendance',
+  'remote_work',
+  'mission',
+  'salary_advance',
+  'loan',
+] as const;
 
-/** برچسب تب‌های صفحه دلایل درخواست (مطابق UI طراحی) */
-export const requestReasonTabLabels = {
+export type RequestReasonCategoryKey = (typeof REQUEST_REASON_CATEGORY_ORDER)[number];
+
+export const requestReasonTabLabels: Record<RequestReasonCategoryKey, string> = {
+  daily_leave: 'مرخصی روزانه',
+  hourly_leave: 'مرخصی ساعتی',
+  reward_leave: 'مرخصی تشویقی',
+  unpaid_leave: 'مرخصی بدون حقوق',
+  sick_leave: 'مرخصی استعلاجی',
+  overtime: 'اضافه کاری',
   attendance: 'حضور و غیاب (تردد)',
   remote_work: 'دورکاری',
-  loan: 'وام',
-  salary_advance: 'علی الحساب حقوق',
   mission: 'ماموریت',
-  annual_leave: 'مرخصی استحقاقی',
-  unpaid_leave: 'مرخصی بدون حقوق',
-  reward_leave: 'مرخصی تشویقی',
-  sick_leave: 'مرخصی استعلاجی',
-} as const satisfies Record<keyof typeof requestReasonLabels, string>;
+  salary_advance: 'مساعده',
+  loan: 'وام',
+};
 
-export const requestReasonCategories = Object.keys(requestReasonTabLabels) as (keyof typeof requestReasonTabLabels)[];
+export const requestReasonLabels = requestReasonTabLabels;
+
+export const requestReasonCategories = [...REQUEST_REASON_CATEGORY_ORDER];
 
 export const shiftTypeLabels = {
   fixed: 'ثابت',

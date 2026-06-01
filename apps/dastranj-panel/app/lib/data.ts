@@ -1,6 +1,8 @@
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { getSessionContext } from './auth';
+import { requestReasonCategories } from './constants';
+import { ensureTenantDefaultRequestReasons } from './request-reason-defaults';
 import { getGlobalDefaultCalendarTemplate } from './calendar-defaults';
 import { mapShiftTemplateRecord, type ShiftTemplatePickerItem } from './shift-template-picker';
 import {
@@ -18,11 +20,72 @@ import {
   countShiftsByType,
   listCalendarShifts,
   listExcludedShiftDates,
+  listWeekendOverrideDates,
   type CalendarShiftType,
   type StoredCalendarShift,
 } from './calendar-shifts';
 import { prisma } from './prisma';
 import type { QuickSetupStep } from '../(panel)/quick-setup/_components/quick-setup.types';
+
+type LocationListRow = {
+  id: string;
+  title: string;
+  address: string;
+  description: string | null;
+  radius: number;
+  latitude: { toString(): string } | null;
+  longitude: { toString(): string } | null;
+  isPrimaryOnboarding?: boolean;
+};
+
+function isMissingPrimaryOnboardingColumn(error: unknown) {
+  return error instanceof Error && error.message.includes('The column `Location.isPrimaryOnboarding` does not exist');
+}
+
+const locationListSelect = {
+  id: true,
+  title: true,
+  address: true,
+  description: true,
+  radius: true,
+  latitude: true,
+  longitude: true,
+  isPrimaryOnboarding: true,
+} as const;
+
+const legacyLocationListSelect = {
+  id: true,
+  title: true,
+  address: true,
+  description: true,
+  radius: true,
+  latitude: true,
+  longitude: true,
+} as const;
+
+async function listLocationsForTenant(tenantId: string, take?: number) {
+  const where = { tenantId };
+
+  try {
+    return (await prisma.location.findMany({
+      where,
+      orderBy: [{ isPrimaryOnboarding: 'desc' }, { updatedAt: 'desc' }],
+      select: locationListSelect,
+      ...(typeof take === 'number' ? { take } : {}),
+    } as any)) as LocationListRow[];
+  } catch (error) {
+    if (!isMissingPrimaryOnboardingColumn(error)) throw error;
+    return ((await prisma.location.findMany({
+      where,
+      select: legacyLocationListSelect,
+      orderBy: { updatedAt: 'desc' },
+      ...(typeof take === 'number' ? { take } : {}),
+    })) as Array<Omit<LocationListRow, 'isPrimaryOnboarding'>>).map((item) => ({
+      ...item,
+      isPrimaryOnboarding: false,
+    }));
+  }
+}
 
 async function getTenantId(): Promise<string | null> {
   const session = await getSessionContext();
@@ -94,7 +157,7 @@ export async function getQuickSetupChecklist() {
 
   const [profile, locationList, calendarList, policyList, employeeList, workGroupList, calendars, policies, employees, workGroups, defaultCalendarTemplate] = await Promise.all([
     getBusinessProfile(),
-    prisma.location.findMany({ where, orderBy: { createdAt: 'desc' }, take: 10 }),
+    listLocationsForTenant(tenantId, 10),
     prisma.calendar.findMany({ where, orderBy: { updatedAt: 'desc' }, take: 20 }),
     prisma.workPolicy.findMany({ where, include: { calendar: true }, orderBy: { updatedAt: 'desc' }, take: 5 }),
     prisma.employee.findMany({ where, orderBy: { createdAt: 'desc' }, take: 20 }),
@@ -106,15 +169,20 @@ export async function getQuickSetupChecklist() {
     getGlobalDefaultCalendarTemplate(),
   ]);
 
-  const locations = locationList.length;
+  const primaryLocation = locationList.find((item) => item.isPrimaryOnboarding) ?? null;
 
   return {
     profile,
     locationItems: locationList.map((item) => ({
       id: item.id,
       title: item.title,
+      address: item.address,
       description: item.description,
       radius: item.radius,
+      allowedRadiusMeters: item.radius,
+      latitude: item.latitude?.toString() ?? null,
+      longitude: item.longitude?.toString() ?? null,
+      isPrimaryOnboarding: item.isPrimaryOnboarding,
     })),
     calendarItems: calendarList.map((item) => ({
       id: item.id,
@@ -131,8 +199,13 @@ export async function getQuickSetupChecklist() {
       description: item.description ?? 'توضیحات ثبت نشده است',
       calendarId: item.calendarId ?? '',
       calendarTitle: item.calendar?.title ?? '-',
+      isDefault: item.isDefault,
       templateId: String((item.sectionValues as { templateId?: string } | null)?.templateId ?? 'custom'),
       templateTitle: String((item.sectionValues as { templateTitle?: string } | null)?.templateTitle ?? item.title),
+      selectedCalendarId: String((item.sectionValues as { selectedCalendarId?: string } | null)?.selectedCalendarId ?? item.calendarId ?? ''),
+      selectedPolicyTemplateId: String((item.sectionValues as { selectedPolicyTemplateId?: string } | null)?.selectedPolicyTemplateId ?? (item.sectionValues as { templateId?: string } | null)?.templateId ?? 'custom'),
+      generatedPolicyTitle: String((item.sectionValues as { generatedPolicyTitle?: string } | null)?.generatedPolicyTitle ?? item.title),
+      generatedPolicyDescription: String((item.sectionValues as { generatedPolicyDescription?: string } | null)?.generatedPolicyDescription ?? (item.description ?? '')),
       year: item.calendar?.yearLabel ?? '',
     })),
     employeeItems: employeeList.map((item) => ({
@@ -149,7 +222,7 @@ export async function getQuickSetupChecklist() {
     defaultCalendarTemplate,
     tenantId,
     steps: [
-      { key: 'location', title: 'محل کار', subtitle: 'ثبت محل کار و شعاع مجاز', done: locations > 0, href: '/locations/new', manageHref: '/locations', count: locations },
+      { key: 'location', title: 'محل کار اصلی', subtitle: 'ثبت محل کار اصلی و شعاع مجاز', done: Boolean(primaryLocation), href: '/locations/new', manageHref: '/locations', count: primaryLocation ? 1 : 0 },
       { key: 'calendar', title: 'تقویم کاری', subtitle: 'تقویم، تعطیلات و شیفت', done: calendars > 0, href: '/calendars?create=1', manageHref: '/calendars', count: calendars },
       { key: 'policy', title: 'سیاست‌های کاری', subtitle: 'قوانین حضور و غیاب', done: policies > 0, href: '/policies', manageHref: '/policies', count: policies },
       { key: 'employee', title: 'مدیریت کارکنان', subtitle: 'ساخت پرونده پرسنلی', done: employees > 0, href: '/employees/new', manageHref: '/employees', count: employees },
@@ -160,7 +233,7 @@ export async function getQuickSetupChecklist() {
 
 export async function listLocations() {
   const tenantId = await requireTenantId();
-  return prisma.location.findMany({ where: { tenantId }, orderBy: { createdAt: 'desc' } });
+  return listLocationsForTenant(tenantId);
 }
 
 export async function getLocation(id: string) {
@@ -170,6 +243,13 @@ export async function getLocation(id: string) {
 
 export async function listRequestReasons() {
   const tenantId = await requireTenantId();
+  const categoryRows = await prisma.requestReason.groupBy({
+    by: ['category'],
+    where: { tenantId },
+  });
+  if (categoryRows.length < requestReasonCategories.length) {
+    await ensureTenantDefaultRequestReasons(prisma, tenantId);
+  }
   return prisma.requestReason.findMany({ where: { tenantId }, orderBy: [{ displayOrder: 'asc' }, { createdAt: 'asc' }] });
 }
 
@@ -235,6 +315,9 @@ export async function getCalendarDetails(
   const excludedShiftDates = listExcludedShiftDates(calendar.shiftConfig).map((date) =>
     normalizePersianDateInput(date),
   );
+  const weekendOverrideDates = listWeekendOverrideDates(calendar.shiftConfig).map((date) =>
+    normalizePersianDateInput(date),
+  );
   const shiftCounts = countShiftsByType(shifts);
 
   const start = parsePersianYmd(calendar.startDate);
@@ -262,6 +345,7 @@ export async function getCalendarDetails(
     singleHolidays,
     shifts,
     excludedShiftDates,
+    weekendOverrideDates,
   });
 
   const yearNumber = Number(calendar.yearLabel.replace(/[^\d]/g, '')) || viewYear;
@@ -303,6 +387,7 @@ export async function getCalendarDetails(
     singleHolidays,
     shifts: shifts as StoredCalendarShift[],
     excludedShiftDates,
+    weekendOverrideDates,
     shiftCount: shifts.length,
     shiftLegend: CALENDAR_SHIFT_LEGEND.map((item) => ({ ...item, count: shiftCounts[item.key] })),
     eventCount: calendar.totalEventDays,
@@ -341,15 +426,94 @@ export async function listDefaultPolicies() {
   });
 }
 
-export async function listEmployees() {
+type EmployeeListFilters = {
+  search?: string;
+  status?: 'all' | 'active' | 'inactive';
+  assignment?: 'all' | 'assigned' | 'unassigned';
+  createdFrom?: string;
+  createdTo?: string;
+};
+
+function normalizeSearchTerm(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, ' ');
+}
+
+function parseDateInput(value?: string) {
+  if (!value) return null;
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+export async function listEmployees(options?: EmployeeListFilters) {
   const tenantId = await requireTenantId();
+  const search = options?.search ? normalizeSearchTerm(options.search) : '';
+  const createdFrom = parseDateInput(options?.createdFrom);
+  const createdTo = parseDateInput(options?.createdTo);
+  const andConditions: any[] = [];
+
+  if (options?.status === 'active') {
+    andConditions.push({ isActive: true });
+  } else if (options?.status === 'inactive') {
+    andConditions.push({ isActive: false });
+  }
+
+  if (createdFrom || createdTo) {
+    andConditions.push({
+      createdAt: {
+        ...(createdFrom ? { gte: createdFrom } : {}),
+        ...(createdTo ? { lte: createdTo } : {}),
+      },
+    });
+  }
+
+  if (options?.assignment === 'assigned') {
+    andConditions.push({
+      OR: [
+        { organizationUnits: { some: { organizationUnit: { tenantId } } } },
+        { workGroupMemberships: { some: { isCurrent: true, workGroup: { tenantId } } } },
+      ],
+    });
+  } else if (options?.assignment === 'unassigned') {
+    andConditions.push({
+      organizationUnits: { none: { organizationUnit: { tenantId } } },
+      workGroupMemberships: { none: { isCurrent: true, workGroup: { tenantId } } },
+    });
+  }
+
+  if (search) {
+    andConditions.push({
+      OR: [
+        { firstName: { contains: search, mode: 'insensitive' } },
+        { lastName: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } },
+        { mobile1: { contains: search, mode: 'insensitive' } },
+        { mobile2: { contains: search, mode: 'insensitive' } },
+        { nationalId: { contains: search, mode: 'insensitive' } },
+        { personnelCode: { contains: search, mode: 'insensitive' } },
+        { organizationUnits: { some: { organizationUnit: { title: { contains: search, mode: 'insensitive' } } } } },
+        { workGroupMemberships: { some: { workGroup: { title: { contains: search, mode: 'insensitive' } } } } },
+      ],
+    });
+  }
+
+  const where = andConditions.length ? { tenantId, AND: andConditions } : { tenantId };
+
   return prisma.employee.findMany({
-    where: { tenantId },
+    where,
     include: {
-      organizationUnits: { where: { organizationUnit: { tenantId } }, include: { organizationUnit: true } },
-      workGroupMemberships: { where: { workGroup: { tenantId }, isCurrent: true }, include: { workGroup: true } },
+      organizationUnits: {
+        where: { organizationUnit: { tenantId } },
+        include: { organizationUnit: { select: { id: true, title: true } } },
+      },
+      workGroupMemberships: {
+        where: { workGroup: { tenantId }, isCurrent: true },
+        include: { workGroup: { select: { id: true, title: true } } },
+      },
     },
-    orderBy: { createdAt: 'desc' },
+    orderBy: [{ isActive: 'desc' }, { createdAt: 'desc' }],
   });
 }
 

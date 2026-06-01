@@ -16,7 +16,6 @@ export async function GET(_: Request, context: RouteContext) {
 
     const { threadId } = await context.params;
     await upsertThreadOpenState({
-      tenantId: auth.tenantId,
       userId: auth.userId,
       threadId,
       isOpened: true,
@@ -56,7 +55,6 @@ export async function POST(request: Request, context: RouteContext) {
     });
 
     await upsertThreadOpenState({
-      tenantId: auth.tenantId,
       userId: auth.userId,
       threadId,
       isOpened: true,

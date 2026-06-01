@@ -601,6 +601,40 @@ textarea {
   background: rgba(20, 184, 166, 0.12);
 }
 
+.sidebar.collapsed .sidebar-toolbar {
+  flex-direction: column;
+  gap: 6px;
+  justify-content: flex-start;
+  padding: 8px 4px;
+}
+
+.toolbar-sidebar-expand {
+  border: 1px solid rgba(236, 253, 245, 0.35);
+  background: rgba(255, 255, 255, 0.12);
+  color: #ecfdf5;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  min-height: 34px;
+  border-radius: 10px;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.toolbar-sidebar-expand:hover {
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(236, 253, 245, 0.5);
+}
+
+.toolbar-sidebar-expand i {
+  font-size: 15px !important;
+  color: #ecfdf5 !important;
+  cursor: pointer;
+}
+
 .toolbar-badge-wrap {
   position: relative;
   display: inline-flex;
@@ -709,6 +743,20 @@ textarea {
   align-items: center;
   justify-content: center;
   padding: 0;
+}
+
+.sidebar.collapsed .version-toggle {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid rgba(236, 253, 245, 0.28);
+  background: rgba(255, 255, 255, 0.1);
+  color: #ecfdf5;
+  font-size: 16px;
+}
+
+.sidebar.collapsed .version-toggle i {
+  color: #ecfdf5;
 }
 
 .sidebar.collapsed .version-footer {
@@ -1196,6 +1244,30 @@ textarea {
   padding: 18px;
 }
 
+.location-form-panel input,
+.location-form-panel textarea {
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid rgba(126, 142, 187, 0.28);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text);
+  padding: 0 14px;
+  outline: none;
+  text-align: right;
+}
+
+.location-form-panel textarea {
+  min-height: 100px;
+  padding: 12px 14px;
+  resize: vertical;
+}
+
+.location-form-panel input[aria-invalid='true'],
+.location-form-panel textarea[aria-invalid='true'] {
+  border-color: rgba(255, 138, 166, 0.5);
+}
+
 .location-coord-strip {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1274,6 +1346,7 @@ textarea {
   min-height: 320px;
   border-radius: 22px;
   overflow: hidden;
+  cursor: crosshair;
   background:
     linear-gradient(rgba(163, 178, 204, 0.16) 1px, transparent 1px),
     linear-gradient(90deg, rgba(163, 178, 204, 0.16) 1px, transparent 1px),
@@ -1288,6 +1361,21 @@ textarea {
   transform: translate(-50%, -100%);
   color: #0f766e;
   z-index: 2;
+}
+
+.location-map-selected.is-empty {
+  left: 50%;
+  top: 50%;
+  color: rgba(15, 118, 110, 0.28);
+}
+
+.location-map-radius-preview {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  border-radius: 999px;
+  border: 1px dashed rgba(15, 118, 110, 0.22);
+  background: rgba(20, 184, 166, 0.12);
+  z-index: 1;
 }
 
 .location-map-point {
@@ -1320,6 +1408,137 @@ textarea {
   color: #1a2332;
   padding: 10px 12px;
   font-size: 12px;
+}
+
+.location-map-search {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(8, 17, 31, 0.08);
+  background: rgba(255, 255, 255, 0.94);
+  padding: 0 14px;
+  color: #1a2332;
+}
+
+.location-map-search input {
+  width: 100%;
+  min-height: 40px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  outline: none;
+  text-align: right;
+}
+
+.location-map-status {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: linear-gradient(180deg, rgba(245, 248, 252, 0.68), rgba(245, 248, 252, 0.86));
+}
+
+.location-map-status-box {
+  display: grid;
+  gap: 10px;
+  max-width: 320px;
+  border: 1px solid rgba(8, 17, 31, 0.08);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.94);
+  color: #1a2332;
+  padding: 14px 16px;
+  text-align: center;
+}
+
+.location-map-status-box.is-error {
+  border-color: rgba(244, 63, 94, 0.22);
+}
+
+.location-map-status-box strong {
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.location-map-status-box span {
+  color: #5b6478;
+  font-size: 12px;
+}
+
+.location-map-status-retry {
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #03121c;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 14px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.location-map-warning,
+.location-form-warning,
+.quick-setup-warning {
+  color: #f8d66d;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.location-form-error,
+.quick-setup-field-error {
+  display: block;
+  margin-top: 6px;
+  color: #ff8aa6;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.location-radius-presets,
+.quick-setup-radius-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.location-radius-presets button,
+.quick-setup-radius-presets button {
+  border: 1px solid rgba(126, 142, 187, 0.28);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text);
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.location-radius-presets button.is-selected,
+.quick-setup-radius-presets button.is-selected {
+  border-color: transparent;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #03121c;
+}
+
+.location-card-primary-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid rgba(20, 184, 166, 0.24);
+  background: rgba(20, 184, 166, 0.12);
+  color: #7ef0d8;
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 800;
 }
 
 .location-radius-controls {
@@ -1362,6 +1581,10 @@ textarea {
   position: relative;
 }
 
+.card-menu.is-open {
+  z-index: 40;
+}
+
 .card-menu summary {
   list-style: none;
 }
@@ -1395,7 +1618,7 @@ textarea {
   position: absolute;
   top: calc(100% + 6px);
   left: 0;
-  z-index: 8;
+  z-index: 50;
   min-width: 116px;
   display: grid;
   gap: 4px;
@@ -2350,6 +2573,7 @@ textarea {
 }
 
 .quick-setup-field input,
+.quick-setup-field textarea,
 .quick-setup-map-search input {
   width: 100%;
   min-height: 42px;
@@ -2361,6 +2585,12 @@ textarea {
   outline: none;
   font-weight: 800;
   text-align: right;
+}
+
+.quick-setup-field textarea {
+  min-height: 100px;
+  padding: 12px 14px;
+  resize: vertical;
 }
 
 .quick-setup-field-inline {
@@ -2384,6 +2614,38 @@ textarea {
   padding: 14px;
   line-height: 1.9;
   font-size: 13px;
+}
+
+.quick-setup-coord-card {
+  border: 1px solid rgba(126, 142, 187, 0.28);
+  border-radius: 14px;
+  background: rgba(10, 21, 38, 0.48);
+  color: #f1f4ff;
+  padding: 12px 14px;
+  line-height: 1.8;
+}
+
+.quick-setup-save-error,
+.quick-setup-save-success {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 14px;
+  padding: 12px 14px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.quick-setup-save-error {
+  border: 1px solid rgba(255, 138, 166, 0.22);
+  background: rgba(255, 138, 166, 0.08);
+  color: #ff9db5;
+}
+
+.quick-setup-save-success {
+  border: 1px solid rgba(102, 241, 193, 0.18);
+  background: rgba(102, 241, 193, 0.08);
+  color: #8ff3db;
 }
 
 .quick-setup-map-panel {
@@ -6112,6 +6374,40 @@ body {
   background: color-mix(in srgb, var(--dark-teal) 16%, transparent);
 }
 
+.sidebar.collapsed .sidebar-toolbar {
+  flex-direction: column;
+  gap: 6px;
+  justify-content: flex-start;
+  padding: 8px 4px;
+}
+
+.toolbar-sidebar-expand {
+  border: 1px solid rgba(236, 253, 245, 0.35);
+  background: rgba(255, 255, 255, 0.12);
+  color: #ecfdf5;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  min-height: 34px;
+  border-radius: 10px;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.toolbar-sidebar-expand:hover {
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(236, 253, 245, 0.5);
+}
+
+.toolbar-sidebar-expand i {
+  font-size: 15px !important;
+  color: #ecfdf5 !important;
+  cursor: pointer;
+}
+
 .toolbar-badge-wrap {
   position: relative;
   display: inline-flex;
@@ -6263,6 +6559,20 @@ body {
   align-items: center;
   justify-content: center;
   padding: 0;
+}
+
+.sidebar.collapsed .version-toggle {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid rgba(236, 253, 245, 0.28);
+  background: rgba(255, 255, 255, 0.1);
+  color: #ecfdf5;
+  font-size: 16px;
+}
+
+.sidebar.collapsed .version-toggle i {
+  color: #ecfdf5;
 }
 
 .locked-collapsed .version-toggle {
@@ -7889,6 +8199,399 @@ body {
 .draft-templates-page.module-page {
   width: min(100%, 920px);
   gap: 16px;
+}
+
+.draft-templates-showcase-page.module-page {
+  width: min(100%, 1080px);
+  gap: 18px;
+}
+
+.draft-templates-showcase-header {
+  margin-bottom: 4px;
+}
+
+.draft-templates-showcase-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.draft-templates-showcase-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+  min-height: 46px;
+  border: 1px solid rgba(151, 182, 215, 0.2);
+  border-radius: 12px;
+  background: rgba(11, 29, 54, 0.72);
+  padding: 0 14px;
+  color: #9fb5cb;
+}
+
+.draft-templates-showcase-search:focus-within {
+  border-color: rgba(246, 174, 52, 0.42);
+  box-shadow: 0 0 0 3px rgba(246, 174, 52, 0.1);
+}
+
+.draft-templates-showcase-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: #f8fafc;
+  outline: none;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.draft-templates-showcase-search input::placeholder {
+  color: #7f97b0;
+}
+
+.draft-templates-showcase-search button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  color: #9fb5cb;
+  padding: 0;
+  cursor: pointer;
+}
+
+.draft-templates-showcase-add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-shrink: 0;
+  min-height: 46px;
+  border: 0;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #f7ae39, #eb9520);
+  color: #142947;
+  padding: 0 18px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 950;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(246, 174, 52, 0.18);
+}
+
+.draft-templates-showcase-add:hover {
+  filter: brightness(1.03);
+}
+
+.draft-templates-showcase-list {
+  gap: 16px;
+}
+
+.draft-template-showcase-card {
+  display: grid;
+  gap: 0;
+  min-height: auto;
+  position: relative;
+  border: 1px solid rgba(151, 182, 215, 0.18);
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(17, 40, 69, 0.92), rgba(10, 24, 44, 0.96));
+  padding: 0;
+  overflow: visible;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.draft-template-showcase-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px 16px;
+  border-bottom: 1px solid rgba(151, 182, 215, 0.12);
+}
+
+.draft-template-showcase-menu-wrap {
+  flex-shrink: 0;
+  align-self: flex-start;
+}
+
+.draft-template-showcase-menu-wrap .card-menu-trigger {
+  width: 32px;
+  height: 32px;
+  border: 1px solid rgba(151, 182, 215, 0.22);
+  border-radius: 10px;
+  background: rgba(11, 29, 54, 0.72);
+  color: #e8f1fa;
+}
+
+.draft-template-showcase-menu-wrap .card-menu-trigger:hover,
+.draft-template-showcase-menu-wrap .card-menu[open] .card-menu-trigger {
+  border-color: rgba(246, 174, 52, 0.42);
+  background: rgba(246, 174, 52, 0.1);
+  color: #ffe7b8;
+}
+
+.draft-template-showcase-menu-wrap .card-menu-dropdown {
+  left: 0;
+  right: auto;
+  min-width: 156px;
+  border-color: rgba(151, 182, 215, 0.22);
+  background: rgba(10, 24, 44, 0.98);
+  z-index: 12;
+}
+
+.draft-template-showcase-card .draft-template-detail-stack,
+.draft-template-showcase-card .draft-template-workgroups,
+.draft-template-showcase-card .draft-template-expand-toggle {
+  border-radius: 0;
+}
+
+.draft-template-showcase-title-block {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  text-align: right;
+}
+
+.draft-showcase-fields {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  text-align: right;
+}
+
+.draft-showcase-fields.is-compact {
+  gap: 6px;
+}
+
+.draft-showcase-field {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: flex-start;
+  gap: 6px;
+  line-height: 1.6;
+}
+
+.draft-showcase-field-label {
+  flex-shrink: 0;
+  color: #8fa8c3;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.draft-showcase-field-value {
+  color: #dbe7f4;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+.draft-showcase-field-value.is-prominent {
+  color: #fff;
+  font-size: 15px;
+  font-weight: 950;
+}
+
+.draft-showcase-field-badge {
+  margin-inline-start: 0;
+}
+
+.draft-template-showcase-info {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  flex: 1;
+  min-width: 0;
+  align-items: start;
+}
+
+.draft-template-showcase-title-block h3 {
+  margin: 0;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 950;
+  line-height: 1.5;
+}
+
+.draft-template-showcase-meta {
+  color: #9fb5cb;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.7;
+}
+
+.draft-template-showcase-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.draft-template-showcase-actions time {
+  color: #b8cadd;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.draft-template-usage-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  border-radius: 999px;
+  background: rgba(34, 197, 94, 0.16);
+  color: #86efac;
+  padding: 0 12px;
+  font-size: 11px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.draft-template-use-btn {
+  min-height: 36px;
+  border: 1px solid rgba(246, 174, 52, 0.72);
+  border-radius: 10px;
+  background: transparent;
+  color: #f7c467;
+  padding: 0 14px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 900;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.draft-template-use-btn:hover {
+  background: rgba(246, 174, 52, 0.12);
+  color: #ffe7b8;
+}
+
+.draft-template-workgroups {
+  display: grid;
+  gap: 10px;
+  padding: 14px 20px;
+  border-bottom: 1px solid rgba(151, 182, 215, 0.1);
+}
+
+.draft-template-workgroups-label {
+  color: #dbe7f4;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.draft-template-workgroup-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.draft-template-workgroup-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  border-radius: 999px;
+  background: rgba(11, 29, 54, 0.82);
+  border: 1px solid rgba(151, 182, 215, 0.18);
+  color: #d9e7f5;
+  padding: 0 12px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.draft-template-workgroups-empty {
+  margin: 0;
+  color: #8fa8c3;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.draft-template-detail-stack {
+  display: grid;
+  gap: 0;
+}
+
+.draft-template-detail-section {
+  display: grid;
+  gap: 8px;
+  padding: 14px 20px;
+  border-bottom: 1px solid rgba(151, 182, 215, 0.1);
+  text-align: right;
+}
+
+.draft-template-detail-label {
+  color: #dbe7f4;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.draft-template-detail-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: fit-content;
+  max-width: 100%;
+  min-height: 34px;
+  border-radius: 10px;
+  background: rgba(11, 29, 54, 0.82);
+  border: 1px solid rgba(151, 182, 215, 0.16);
+  color: #f8fafc;
+  padding: 0 12px;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1.6;
+}
+
+.draft-template-detail-chip.is-sub {
+  background: rgba(17, 40, 69, 0.72);
+  color: #e8f1fa;
+}
+
+.draft-template-detail-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: #8fa8c3;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.7;
+}
+
+.draft-template-expand-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 44px;
+  border: 0;
+  border-top: 1px solid rgba(151, 182, 215, 0.1);
+  background: rgba(8, 17, 31, 0.42);
+  color: #b8cadd;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.draft-template-expand-toggle:hover {
+  background: rgba(246, 174, 52, 0.08);
+  color: #f7d9a6;
+}
+
+.draft-templates-showcase-empty {
+  border-color: rgba(151, 182, 215, 0.22);
+  background: rgba(11, 29, 54, 0.42);
 }
 
 .draft-templates-page .module-page-header {
@@ -11750,6 +12453,10 @@ body {
 }
 
 /* ── Request reasons (tabs + drag list) ── */
+.request-reasons-page.module-page {
+  gap: 8px;
+}
+
 .request-reasons-page .module-page-header .module-page-add-btn {
   display: none;
 }
@@ -11762,42 +12469,52 @@ body {
 /* نوار دسته‌ها: اسکرول افقی بدون نمایش scrollbar (مثل استوری اینستاگرام) */
 .request-reason-categories-clip {
   position: relative;
-  width: 100%;
+  width: 0;
+  min-width: 100%;
   max-width: 100%;
-  min-width: 0;
   overflow: hidden;
 }
 
 .request-reason-categories-scroll {
-  width: 100%;
+  width: 0;
+  min-width: 100%;
   max-width: 100%;
-  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: contain;
+  overscroll-behavior-y: auto;
   scroll-behavior: smooth;
-  padding-bottom: 32px;
-  margin-bottom: -32px;
+  touch-action: pan-x;
+  cursor: grab;
+  padding-bottom: 18px;
+  margin-bottom: -18px;
+}
+
+.request-reason-categories-scroll.is-dragging {
+  cursor: grabbing;
+  scroll-behavior: auto;
+  user-select: none;
 }
 
 .request-reason-categories {
-  display: inline-flex;
+  display: flex;
   flex-wrap: nowrap;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   width: max-content;
-  min-width: 100%;
 }
 
 .request-reason-category-chip {
   flex-shrink: 0;
-  min-height: 44px;
+  min-height: var(--control-height);
   border: 1px solid rgba(148, 163, 184, 0.35);
   border-radius: 999px;
   background: rgba(15, 23, 42, 0.55);
   color: #e2e8f0;
-  padding: 0 18px;
-  font-size: 13px;
-  font-weight: 700;
+  padding: 0 12px;
+  font-size: 11px;
+  font-weight: 800;
   white-space: nowrap;
   transition:
     border-color 0.15s ease,
@@ -11819,18 +12536,18 @@ body {
 
 .request-reason-list {
   display: grid;
-  gap: 12px;
+  gap: 6px;
   width: 100%;
 }
 
 .request-reason-row {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 10px;
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 20px;
+  border-radius: var(--radius-lg);
   background: rgba(15, 23, 42, 0.55);
-  padding: 16px 18px;
+  padding: 12px 14px;
   transition: border-color 0.18s ease;
 }
 
@@ -11843,10 +12560,10 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 28px;
+  height: 28px;
   border: none;
-  border-radius: 10px;
+  border-radius: 8px;
   background: transparent;
   color: #94a3b8;
   cursor: grab;
@@ -11872,22 +12589,22 @@ body {
   height: 0;
 }
 
-.request-reason-toggle-track {
-  width: 52px;
-  height: 30px;
+.request-reason-row .request-reason-toggle-track {
+  width: 44px;
+  height: 26px;
   border-radius: 999px;
   background: rgba(148, 163, 184, 0.28);
   transition: background 0.2s ease;
   position: relative;
 }
 
-.request-reason-toggle-track::after {
+.request-reason-row .request-reason-toggle-track::after {
   content: '';
   position: absolute;
   top: 4px;
   inset-inline-end: 4px;
-  width: 22px;
-  height: 22px;
+  width: 18px;
+  height: 18px;
   border-radius: 999px;
   background: #f8fafc;
   transition: inset-inline-end 0.2s ease, inset-inline-start 0.2s ease;
@@ -11906,22 +12623,22 @@ body {
   flex: 1;
   min-width: 0;
   display: grid;
-  gap: 6px;
+  gap: 4px;
   text-align: right;
 }
 
 .request-reason-row-copy h3 {
   margin: 0;
-  font-size: clamp(17px, 2vw, 20px);
-  font-weight: 800;
+  font-size: clamp(13px, 1.35vw, 15px);
+  font-weight: 900;
   color: #f8fafc;
 }
 
 .request-reason-row-copy p {
   margin: 0;
   color: #94a3b8;
-  font-size: 14px;
-  line-height: 1.7;
+  font-size: 11px;
+  line-height: 1.6;
 }
 
 .request-reason-label {
@@ -11975,7 +12692,7 @@ body {
 }
 
 .request-reasons-add-btn {
-  min-width: 220px;
+  min-width: 0;
 }
 
 [data-theme='light'] .request-reason-category-chip {
@@ -12021,9 +12738,262 @@ body {
 }
 
 /* ── Employees list ── */
-.employees-page > * {
+.panel-route-body:has(.employees-page) {
+  max-width: none;
+  padding-inline: 18px 22px;
+}
+
+.employees-page {
+  width: 100%;
+  max-width: none;
+}
+
+.employees-layout {
+  display: grid;
+  grid-template-columns: 252px minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.employees-filter-sidebar {
+  position: sticky;
+  top: 14px;
+  z-index: 5;
+  width: 252px;
+  height: calc(100vh - 28px);
+  border: 1px solid var(--stroke-soft);
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(8, 17, 31, 0.94), rgba(11, 27, 42, 0.96));
+  box-shadow: 0 20px 56px rgba(2, 6, 23, 0.24);
+  margin: 14px 0 14px 0;
+  overflow: hidden;
+  justify-self: start;
+}
+
+.employees-filters-form {
+  display: grid;
+  gap: 16px;
+  height: 100%;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 14px 12px 16px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.employees-filters-heading {
+  margin: 0 4px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  color: #f4fbff;
+  font-size: 14px;
+  font-weight: 900;
+  text-align: right;
+}
+
+.employees-filter-section {
+  display: grid;
+  gap: 8px;
+  margin: 0 4px;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.employees-filter-title {
+  color: #9eb3ca;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.employees-filter-group {
+  display: grid;
+  gap: 6px;
+}
+
+.employees-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  min-height: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  color: #9eb3ca;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 0 12px;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.employees-filter-chip:hover {
+  border-color: rgba(56, 189, 248, 0.22);
+  background: linear-gradient(135deg, rgba(20, 184, 166, 0.12), rgba(56, 189, 248, 0.1));
+  color: #f4fbff;
+}
+
+.employees-filter-chip.is-active {
+  border-color: rgba(245, 158, 11, 0.45);
+  background: linear-gradient(180deg, rgba(249, 171, 52, 0.22), rgba(234, 143, 19, 0.14));
+  color: #fde68a;
+}
+
+.employees-filter-field {
+  display: grid;
+  gap: 6px;
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.employees-filter-input-wrap {
+  position: relative;
+  display: block;
+}
+
+.employees-filter-input-icon {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  transform: translateY(-50%);
+  color: #64748b;
+  pointer-events: none;
+}
+
+.employees-filter-field input {
+  width: 100%;
+  min-height: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  color: #f4fbff;
+  padding: 0 12px;
+  font-size: 12px;
+  outline: none;
+}
+
+.employees-filter-input-wrap input {
+  padding-left: 36px;
+}
+
+.employees-filter-field input::placeholder {
+  color: #64748b;
+}
+
+.employees-filter-actions {
+  display: grid;
+  gap: 8px;
+  margin: auto 4px 0;
+  padding-top: 4px;
+}
+
+.employees-filter-submit,
+.employees-filter-reset,
+.employees-add-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 46px;
+  border-radius: 14px;
+  border: 1px solid transparent;
+  font-size: 12px;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.employees-filter-submit {
+  border-color: rgba(245, 158, 11, 0.5);
+  background: linear-gradient(180deg, #f9ab34, #ea8f13);
+  color: #fff;
+}
+
+.employees-filter-reset {
+  border-color: rgba(151, 182, 215, 0.14);
+  background: rgba(15, 23, 42, 0.7);
+  color: #cbd5e1;
+}
+
+.employees-main {
   min-width: 0;
-  max-width: 100%;
+  width: min(100%, 1080px);
+  max-width: 1080px;
+  justify-self: center;
+  margin-inline: auto;
+  display: grid;
+  gap: 12px;
+}
+
+.employees-topbar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.employees-search--hero {
+  flex: 1;
+  min-height: 52px;
+  border: 1px solid rgba(151, 182, 215, 0.14);
+  border-radius: 16px;
+  background: rgba(8, 17, 31, 0.72);
+  padding: 0 16px;
+}
+
+.employees-search--hero input {
+  font-size: 13px;
+}
+
+.employees-add-btn {
+  flex-shrink: 0;
+  min-width: 168px;
+  border-color: rgba(245, 158, 11, 0.6);
+  background: linear-gradient(180deg, #f9ab34, #ea8f13);
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(234, 143, 19, 0.22);
+}
+
+.employees-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.employees-search-icon {
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+.employees-search input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  color: #f8fafc;
+  outline: none;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.employees-search input::placeholder {
+  color: #64748b;
+  font-weight: 500;
+}
+
+.employees-results-meta {
+  margin: 0;
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .employees-list {
@@ -12033,26 +13003,61 @@ body {
 }
 
 .employee-card {
-  display: flex;
+  position: relative;
+  direction: rtl;
+  display: grid;
+  grid-template-columns: minmax(196px, 220px) minmax(0, 1fr) minmax(168px, 196px);
+  gap: 0;
+  border: 1px solid rgba(151, 182, 215, 0.14);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at top right, rgba(56, 189, 248, 0.06), transparent 28%),
+    rgba(11, 22, 40, 0.88);
+  padding: 44px 0 0;
+  overflow: hidden;
+  transition:
+    border-color 0.18s ease,
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.employee-card-toolbar {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  z-index: 3;
+  display: inline-flex;
   align-items: center;
-  gap: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 20px;
-  background: rgba(15, 23, 42, 0.55);
-  padding: 18px 20px;
-  transition: border-color 0.18s ease;
+  gap: 10px;
+  direction: ltr;
+}
+
+.employee-card-toolbar .card-menu-trigger {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(15, 23, 42, 0.82);
+}
+
+.employee-card-toolbar .card-menu-dropdown {
+  left: 0;
+  right: auto;
 }
 
 .employee-card:hover {
-  border-color: rgba(99, 102, 241, 0.32);
+  border-color: rgba(34, 211, 238, 0.55);
+  transform: translateY(-1px);
+  box-shadow: 0 18px 36px rgba(2, 6, 23, 0.28);
 }
 
-.employee-card-identity {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  flex-shrink: 0;
-  min-width: 180px;
+.employee-card-profile {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 12px;
+  padding: 20px 16px;
+  border-inline-start: 1px solid rgba(151, 182, 215, 0.1);
 }
 
 .employee-card-avatar {
@@ -12061,11 +13066,16 @@ body {
   justify-content: center;
   width: 56px;
   height: 56px;
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  border: 2px solid rgba(151, 182, 215, 0.18);
   background: rgba(148, 163, 184, 0.16);
   color: #cbd5e1;
   overflow: hidden;
+}
+
+.employee-card-avatar--large {
+  width: 88px;
+  height: 88px;
 }
 
 .employee-card-avatar img {
@@ -12074,96 +13084,410 @@ body {
   object-fit: cover;
 }
 
-.employee-card-name {
-  margin: 0;
-  font-size: clamp(16px, 1.8vw, 18px);
-  font-weight: 900;
+.employee-card-profile-copy {
+  display: grid;
+  gap: 6px;
+  justify-items: center;
+  text-align: center;
+}
+
+.employee-card-profile-copy strong {
   color: #f8fafc;
-  white-space: nowrap;
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.employee-card-contact-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.employee-card-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(148, 163, 184, 0.12);
+  color: #cbd5e1;
+  cursor: pointer;
+}
+
+.employee-card-copy-btn:hover {
+  background: rgba(56, 189, 248, 0.16);
+  color: #7dd3fc;
+}
+
+.employee-card-actions {
+  display: none;
+}
+
+.employee-card .card-menu-trigger {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+}
+
+.employee-card .card-menu-dropdown {
+  left: 0;
+  right: auto;
+  min-width: 148px;
 }
 
 .employee-card-details {
   display: grid;
-  gap: 6px;
-  flex: 1;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 10px;
   min-width: 0;
-  text-align: right;
+  padding: 18px 16px;
 }
 
 .employee-card-detail-row {
   display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
+  align-items: flex-start;
   gap: 6px;
-  font-size: 14px;
-  line-height: 1.7;
+  min-height: 42px;
+  border: 1px solid rgba(151, 182, 215, 0.08);
+  border-radius: 14px;
+  background: rgba(2, 6, 23, 0.22);
+  padding: 10px 12px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.employee-card-detail-row.is-compact {
+  align-items: center;
+  grid-column: 1 / -1;
+  min-height: 46px;
+  background: rgba(2, 6, 23, 0.12);
+  border-color: transparent;
 }
 
 .employee-card-detail-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
   color: #94a3b8;
   font-weight: 700;
 }
 
 .employee-card-detail-value {
+  min-width: 0;
   color: #f8fafc;
-  font-weight: 600;
+  font-weight: 700;
 }
 
-.employee-card-actions {
+.employee-card-detail-value--link {
   display: inline-flex;
   align-items: center;
+  gap: 4px;
+  margin-inline-start: auto;
+  color: #38bdf8;
+  font-size: 11px;
+  text-decoration: none;
+}
+
+.employee-card-detail-value--link:hover {
+  color: #7dd3fc;
+}
+
+.employee-card-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  border-radius: 999px;
+  padding: 0 10px;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.employee-card-status.is-active {
+  border: 1px solid rgba(56, 189, 248, 0.28);
+  background: rgba(56, 189, 248, 0.14);
+  color: #7dd3fc;
+}
+
+.employee-card-status.is-inactive {
+  border: 1px solid rgba(248, 113, 113, 0.22);
+  background: rgba(248, 113, 113, 0.12);
+  color: #fca5a5;
+}
+
+.employee-card-progress {
+  display: grid;
   gap: 12px;
+  align-content: center;
+  justify-items: center;
+  padding: 18px 14px;
+  border-inline-end: 1px solid rgba(151, 182, 215, 0.1);
+}
+
+.employee-card-arc-gauge {
+  --progress: 0%;
+  position: relative;
+  width: 148px;
+  height: 84px;
+}
+
+.employee-card-arc-gauge-track,
+.employee-card-arc-gauge-fill {
+  position: absolute;
+  inset: 0;
+  border-radius: 148px 148px 0 0;
+  overflow: hidden;
+}
+
+.employee-card-arc-gauge-track::before,
+.employee-card-arc-gauge-fill::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  transform-origin: center bottom;
+}
+
+.employee-card-arc-gauge-track::before {
+  background:
+    radial-gradient(circle at 50% 100%, rgba(11, 22, 40, 1) 58%, transparent 59%),
+    conic-gradient(from 180deg at 50% 100%, rgba(148, 163, 184, 0.28) 0deg, rgba(148, 163, 184, 0.28) 180deg, transparent 180deg);
+}
+
+.employee-card-arc-gauge-fill::before {
+  background: conic-gradient(
+    from 180deg at 50% 100%,
+    #38bdf8 0deg,
+    #38bdf8 calc(var(--progress) * 1.8),
+    transparent calc(var(--progress) * 1.8),
+    transparent 180deg
+  );
+}
+
+.employee-card-arc-gauge-value {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 4px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
+
+.employee-card-arc-gauge-value strong {
+  color: #f8fafc;
+  font-size: 22px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.employee-card-progress-stats {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+}
+
+.employee-card-progress-stats p {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: #cbd5e1;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.employee-card-progress-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
   flex-shrink: 0;
+}
+
+.employee-card-progress-dot.is-passed {
+  background: #38bdf8;
+}
+
+.employee-card-progress-dot.is-remaining {
+  background: #f9ab34;
 }
 
 .employee-card-toggle {
   flex-shrink: 0;
 }
 
-.employee-card .card-menu-trigger {
-  width: 40px;
-  height: 40px;
-  border-radius: 999px;
+.employees-empty-state {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  border: 1px solid rgba(151, 182, 215, 0.14);
+  border-radius: 22px;
+  background: rgba(15, 23, 42, 0.5);
+  padding: 42px 20px;
+  text-align: center;
 }
 
-.employee-card .card-menu-dropdown {
-  left: auto;
-  right: 0;
-  min-width: 148px;
+.employees-empty-state h2 {
+  margin: 0;
+  color: #f8fafc;
+  font-size: 18px;
+  font-weight: 900;
 }
 
-[data-theme='light'] .employee-card {
+.employees-empty-state p {
+  margin: 0;
+  max-width: 480px;
+  color: #cbd5e1;
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.employees-empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+.employees-empty-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  border-radius: 14px;
+  border: 1px solid rgba(151, 182, 215, 0.14);
+  background: rgba(15, 23, 42, 0.72);
+  color: #e2e8f0;
+  padding: 0 14px;
+  font-size: 12px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.employees-empty-link.is-primary {
+  border-color: rgba(245, 158, 11, 0.45);
+  background: linear-gradient(180deg, #f9ab34, #ea8f13);
+  color: #fff;
+}
+
+[data-theme='light'] .employees-filter-sidebar,
+[data-theme='light'] .employee-card,
+[data-theme='light'] .employees-empty-state {
   border-color: rgba(15, 23, 42, 0.08);
-  background: rgba(255, 255, 255, 0.92);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.96));
 }
 
-[data-theme='light'] .employee-card-name,
-[data-theme='light'] .employee-card-detail-value {
+[data-theme='light'] .employees-filters-heading,
+[data-theme='light'] .employees-filter-section {
+  border-color: rgba(15, 23, 42, 0.08);
+  background: rgba(255, 255, 255, 0.72);
+}
+
+[data-theme='light'] .employees-filter-chip,
+[data-theme='light'] .employees-filter-field input,
+[data-theme='light'] .employees-search--hero,
+[data-theme='light'] .employee-card-detail-row,
+[data-theme='light'] .employee-card-profile,
+[data-theme='light'] .employees-empty-link {
+  border-color: rgba(15, 23, 42, 0.08);
+  background: rgba(255, 255, 255, 0.9);
+}
+
+[data-theme='light'] .employees-filters-heading,
+[data-theme='light'] .employee-card-detail-value,
+[data-theme='light'] .employee-card-profile-copy strong,
+[data-theme='light'] .employees-empty-state h2 {
   color: #0f172a;
 }
 
-[data-theme='light'] .employee-card-detail-label {
+[data-theme='light'] .employees-filter-field,
+[data-theme='light'] .employees-results-meta,
+[data-theme='light'] .employee-card-detail-label,
+[data-theme='light'] .employee-card-contact-line,
+[data-theme='light'] .employees-empty-state p {
   color: #64748b;
 }
 
-@media (max-width: 900px) {
-  .employee-card {
-    flex-wrap: wrap;
-    align-items: flex-start;
+[data-theme='light'] .employees-search input {
+  color: #0f172a;
+}
+
+[data-theme='light'] .employee-card-status.is-active {
+  color: #0369a1;
+}
+
+[data-theme='light'] .employee-card-status.is-inactive {
+  color: #dc2626;
+}
+
+@media (max-width: 1180px) {
+  .employees-layout {
+    grid-template-columns: 1fr;
   }
 
-  .employee-card-identity {
-    min-width: 0;
-    flex: 1;
+  .employees-filter-sidebar {
+    position: static;
+    width: 100%;
+    height: auto;
+    max-height: none;
+    margin: 0;
+    justify-self: stretch;
+  }
+
+  .employees-main {
+    width: 100%;
+    max-width: 1080px;
+    justify-self: center;
+    margin-inline: auto;
+  }
+
+  .employees-filters-form {
+    max-height: none;
+  }
+
+  .employee-card {
+    grid-template-columns: 1fr;
+    padding-top: 48px;
+  }
+
+  .employee-card-profile {
+    order: -1;
+    border-inline-start: none;
+    border-bottom: 1px solid rgba(151, 182, 215, 0.1);
+  }
+
+  .employee-card-progress {
+    border-inline-end: none;
+    border-top: 1px solid rgba(151, 182, 215, 0.1);
+  }
+}
+
+@media (max-width: 900px) {
+  .employees-page {
+    width: 100%;
+  }
+
+  .employees-topbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .employees-add-btn {
+    width: 100%;
   }
 
   .employee-card-details {
-    width: 100%;
-    order: 3;
+    grid-template-columns: 1fr;
   }
 
-  .employee-card-actions {
-    margin-inline-start: auto;
+  .employee-card-detail-row.is-compact {
+    align-items: flex-start;
+    flex-wrap: wrap;
   }
 }
 
@@ -12620,9 +13944,9 @@ body {
 
 /* ── Employee detail & sub-pages ── */
 .employee-detail-page {
-  width: min(100%, 980px);
-  max-width: 980px;
-  padding-bottom: 32px;
+  width: min(100%, 1280px);
+  max-width: 1280px;
+  padding-bottom: 34px;
 }
 
 .employee-detail-page > * {
@@ -12738,6 +14062,554 @@ body {
 .employee-detail-section-link:hover {
   border-color: rgba(99, 102, 241, 0.35);
   background: rgba(99, 102, 241, 0.08);
+}
+
+/* ── Employee detail redesigned ── */
+
+.employee-detail-shell {
+  display: grid;
+  gap: 22px;
+  width: 100%;
+}
+
+.employee-detail-hero {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.95fr) minmax(0, 1.5fr) minmax(200px, 0.85fr);
+  gap: 14px;
+}
+
+.employee-detail-hero-card {
+  border: 1px solid rgba(151, 182, 215, 0.14);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at top right, rgba(56, 189, 248, 0.06), transparent 28%),
+    rgba(11, 22, 40, 0.9);
+  box-shadow: 0 16px 34px rgba(2, 6, 23, 0.2);
+  padding: 18px;
+}
+
+.employee-detail-hero-profile {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+}
+
+.employee-detail-hero-profile-main {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.employee-detail-avatar--round {
+  width: 88px;
+  height: 88px;
+  border-radius: 999px;
+  border: 2px solid rgba(151, 182, 215, 0.2);
+  background: rgba(8, 15, 30, 0.72);
+  color: #cbd5e1;
+  overflow: hidden;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+}
+
+.employee-detail-avatar--round img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.employee-detail-hero-profile-copy {
+  min-width: 0;
+}
+
+.employee-detail-hero-profile-copy h2 {
+  margin: 0;
+  color: #f8fafc;
+  font-size: clamp(20px, 2vw, 26px);
+  font-weight: 900;
+}
+
+.employee-detail-hero-profile-copy p {
+  margin: 8px 0 0;
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.employee-detail-hero-contact-icons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.employee-detail-hero-contact-icons span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  border: 1px solid rgba(151, 182, 215, 0.14);
+  background: rgba(8, 15, 30, 0.72);
+  color: #cbd5e1;
+}
+
+.employee-detail-hero-profile-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.employee-detail-hero-contract {
+  display: grid;
+  gap: 14px;
+}
+
+.employee-detail-hero-contract-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.employee-detail-hero-contract-head h3 {
+  margin: 0;
+  color: #f8fafc;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.employee-detail-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #94a3b8;
+  text-decoration: none;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.employee-detail-hero-contract-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.employee-detail-contract-item {
+  display: grid;
+  gap: 6px;
+  min-height: 64px;
+  border: 1px solid rgba(151, 182, 215, 0.1);
+  border-radius: 14px;
+  background: rgba(2, 6, 23, 0.22);
+  padding: 10px 12px;
+}
+
+.employee-detail-contract-item.is-wide {
+  grid-column: 1 / -1;
+}
+
+.employee-detail-contract-item span {
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.employee-detail-contract-item strong {
+  color: #f8fafc;
+  font-size: 13px;
+  font-weight: 900;
+  line-height: 1.6;
+}
+
+.employee-detail-hero-contract-meta {
+  display: grid;
+  gap: 6px;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.employee-detail-hero-status {
+  display: grid;
+  gap: 12px;
+  justify-items: center;
+  align-content: start;
+}
+
+.employee-detail-arc-gauge {
+  --progress: 0%;
+  position: relative;
+  width: 148px;
+  height: 84px;
+}
+
+.employee-detail-arc-gauge-track,
+.employee-detail-arc-gauge-fill {
+  position: absolute;
+  inset: 0;
+  border-radius: 148px 148px 0 0;
+  overflow: hidden;
+}
+
+.employee-detail-arc-gauge-track::before,
+.employee-detail-arc-gauge-fill::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  transform-origin: center bottom;
+}
+
+.employee-detail-arc-gauge-track::before {
+  background:
+    radial-gradient(circle at 50% 100%, rgba(11, 22, 40, 1) 58%, transparent 59%),
+    conic-gradient(from 180deg at 50% 100%, rgba(148, 163, 184, 0.28) 0deg, rgba(148, 163, 184, 0.28) 180deg, transparent 180deg);
+}
+
+.employee-detail-arc-gauge-fill::before {
+  background: conic-gradient(
+    from 180deg at 50% 100%,
+    #38bdf8 0deg,
+    #38bdf8 calc(var(--progress) * 1.8),
+    transparent calc(var(--progress) * 1.8),
+    transparent 180deg
+  );
+}
+
+.employee-detail-arc-gauge-value {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 4px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
+
+.employee-detail-arc-gauge-value strong {
+  color: #f8fafc;
+  font-size: 22px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.employee-detail-status-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.employee-detail-status-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  border-radius: 999px;
+  padding: 0 12px;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.employee-detail-status-badge.is-outline {
+  border: 1px solid rgba(245, 158, 11, 0.45);
+  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.employee-detail-status-badge.is-solid {
+  border: 1px solid rgba(245, 158, 11, 0.55);
+  background: linear-gradient(180deg, #f9ab34, #ea8f13);
+  color: #111827;
+}
+
+.employee-detail-status-stats {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+}
+
+.employee-detail-status-stats p {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: #cbd5e1;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.employee-detail-status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.employee-detail-status-dot.is-passed {
+  background: #38bdf8;
+}
+
+.employee-detail-status-dot.is-remaining {
+  background: #f9ab34;
+}
+
+.employee-detail-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  border: 1px solid rgba(151, 182, 215, 0.14);
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.72);
+  color: #e2e8f0;
+  padding: 0 12px;
+  font-size: 11px;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.employee-detail-action-btn.is-primary {
+  border-color: rgba(245, 158, 11, 0.5);
+  background: linear-gradient(180deg, #f9ab34, #ea8f13);
+  color: #fff;
+}
+
+.employee-detail-section {
+  display: grid;
+  gap: 14px;
+}
+
+.employee-detail-section-head {
+  width: 100%;
+  text-align: right;
+}
+
+.employee-detail-section-head h3 {
+  margin: 0;
+  color: #f8fafc;
+  font-size: 18px;
+  font-weight: 900;
+  text-align: right;
+}
+
+.employee-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.employee-detail-grid--three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.employee-detail-grid--single {
+  grid-template-columns: minmax(0, 1fr);
+  max-width: calc(25% - 9px);
+  margin-inline: auto;
+}
+
+.employee-detail-settlement-note {
+  margin: 0;
+  max-width: 360px;
+  justify-self: end;
+  border: 1px solid rgba(151, 182, 215, 0.14);
+  border-radius: 14px;
+  background: rgba(8, 17, 31, 0.72);
+  color: #cbd5e1;
+  padding: 12px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.8;
+}
+
+.employee-detail-tile,
+.employee-detail-note-panel {
+  position: relative;
+  overflow: hidden;
+  min-height: 168px;
+  padding: 14px;
+  border: 1px solid rgba(151, 182, 215, 0.12);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at top right, rgba(56, 189, 248, 0.05), transparent 24%),
+    rgba(11, 22, 40, 0.82);
+  box-shadow: 0 12px 26px rgba(2, 6, 23, 0.14);
+}
+
+.employee-detail-tile {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) 58px;
+  gap: 10px;
+  align-items: start;
+  direction: ltr;
+  text-decoration: none;
+  transition:
+    border-color 0.15s ease,
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.employee-detail-tile:hover {
+  border-color: rgba(34, 211, 238, 0.45);
+  transform: translateY(-1px);
+  box-shadow: 0 14px 28px rgba(2, 6, 23, 0.18);
+}
+
+.employee-detail-tile.is-highlighted {
+  border-color: rgba(245, 158, 11, 0.65);
+  box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.25), 0 14px 28px rgba(2, 6, 23, 0.18);
+}
+
+.employee-detail-tile.is-disabled {
+  opacity: 0.78;
+  cursor: not-allowed;
+}
+
+.employee-detail-tile-arrow {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: rgba(245, 158, 11, 0.14);
+  color: #f9ab34;
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.employee-detail-tile-arrow.is-disabled {
+  background: rgba(148, 163, 184, 0.12);
+  color: #94a3b8;
+}
+
+.employee-detail-tile-copy {
+  display: grid;
+  gap: 8px;
+  grid-column: 2;
+  grid-row: 1;
+  direction: rtl;
+  text-align: right;
+}
+
+.employee-detail-tile-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 54px;
+  height: 54px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #e2e8f0;
+  grid-column: 3;
+  grid-row: 1;
+  justify-self: end;
+}
+
+.employee-detail-tile-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.employee-detail-tile h3 {
+  margin: 0;
+  color: #f8fafc;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.employee-detail-tile-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  border-radius: 999px;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  background: rgba(245, 158, 11, 0.12);
+  color: #f9ab34;
+  padding: 0 8px;
+  font-size: 10px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.employee-detail-tile-badge.is-disabled {
+  border-color: rgba(148, 163, 184, 0.25);
+  background: rgba(148, 163, 184, 0.12);
+  color: #cbd5e1;
+}
+
+.employee-detail-tile p {
+  margin: 0;
+  color: #94a3b8;
+  font-size: 11px;
+  line-height: 1.8;
+}
+
+[data-theme='light'] .employee-detail-hero-card,
+[data-theme='light'] .employee-detail-tile,
+[data-theme='light'] .employee-detail-settlement-note {
+  border-color: rgba(15, 23, 42, 0.08);
+  background: rgba(255, 255, 255, 0.92);
+}
+
+[data-theme='light'] .employee-detail-hero-profile-copy h2,
+[data-theme='light'] .employee-detail-hero-contract-head h3,
+[data-theme='light'] .employee-detail-section-head h3,
+[data-theme='light'] .employee-detail-tile h3,
+[data-theme='light'] .employee-detail-contract-item strong {
+  color: #0f172a;
+}
+
+[data-theme='light'] .employee-detail-hero-profile-copy p,
+[data-theme='light'] .employee-detail-contract-item span,
+[data-theme='light'] .employee-detail-back-link,
+[data-theme='light'] .employee-detail-tile p,
+[data-theme='light'] .employee-detail-settlement-note {
+  color: #64748b;
+}
+
+@media (max-width: 1180px) {
+  .employee-detail-hero,
+  .employee-detail-grid,
+  .employee-detail-grid--three {
+    grid-template-columns: 1fr;
+  }
+
+  .employee-detail-grid--single {
+    max-width: 100%;
+  }
+
+  .employee-detail-hero-profile-main {
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 900px) {
+  .employee-detail-page {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .employee-detail-hero-contract-head {
+    flex-direction: column;
+  }
+
+  .employee-detail-hero-contract-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .employee-detail-tile {
+    grid-template-columns: 30px minmax(0, 1fr);
+  }
+
+  .employee-detail-tile-icon {
+    display: none;
+  }
 }
 
 .employee-sub-page {
@@ -13373,6 +15245,104 @@ body {
   min-height: var(--control-height);
 }
 
+/* Business settings hub */
+.business-settings-search-wrap {
+  position: relative;
+  margin-bottom: 4px;
+  padding: 14px 12px;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid rgba(186, 230, 253, 0.28);
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.92), rgba(15, 23, 42, 0.78));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.business-settings-search-pattern {
+  position: absolute;
+  inset: 0;
+  opacity: 0.14;
+  background-image:
+    radial-gradient(circle at 12% 35%, rgba(56, 189, 248, 0.35) 0 1px, transparent 1px 100%),
+    radial-gradient(circle at 78% 62%, rgba(20, 184, 166, 0.35) 0 1px, transparent 1px 100%),
+    linear-gradient(135deg, rgba(148, 163, 184, 0.08) 25%, transparent 25% 50%, rgba(148, 163, 184, 0.08) 50% 75%, transparent 75% 100%);
+  background-size: 28px 28px, 32px 32px, 18px 18px;
+  pointer-events: none;
+}
+
+.business-settings-search {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(186, 230, 253, 0.22);
+  background: rgba(8, 17, 31, 0.72);
+}
+
+.business-settings-search input {
+  flex: 1;
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: #f8fafc;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: right;
+  outline: none;
+}
+
+.business-settings-search input::placeholder {
+  color: rgba(203, 213, 225, 0.72);
+  font-weight: 500;
+}
+
+.business-settings-search-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: rgba(203, 213, 225, 0.8);
+}
+
+.business-settings-search-clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(203, 213, 225, 0.85);
+  cursor: pointer;
+  padding: 0;
+}
+
+.business-settings-search-clear:hover {
+  color: #f8fafc;
+  background: rgba(20, 184, 166, 0.14);
+}
+
+[data-theme='light'] .business-settings-search-wrap {
+  border-color: rgba(148, 163, 184, 0.35);
+  background: linear-gradient(180deg, rgba(241, 245, 249, 0.98), rgba(226, 232, 240, 0.92));
+}
+
+[data-theme='light'] .business-settings-search {
+  border-color: rgba(148, 163, 184, 0.28);
+  background: rgba(255, 255, 255, 0.92);
+}
+
+[data-theme='light'] .business-settings-search input {
+  color: #0f172a;
+}
+
+[data-theme='light'] .business-settings-search input::placeholder {
+  color: rgba(100, 116, 139, 0.85);
+}
+
 /* Business settings hub cards use Tailwind in BusinessSettingsCard.tsx */
 
 /* ─── Calendar details page ───────────────────────────────────────────────── */
@@ -13901,7 +15871,330 @@ body {
   border-color: rgba(99, 102, 241, 0.55);
 }
 
-.calendar-event-presets,
+.calendar-event-mode-intro {
+  margin: -2px 0 0;
+  font-size: 12px;
+  line-height: 1.75;
+  color: #94a3b8;
+}
+
+.calendar-event-mode-grid,
+.calendar-event-holiday-type-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.calendar-event-mode-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.calendar-event-mode-card,
+.calendar-event-holiday-type-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.88), rgba(15, 23, 42, 0.62));
+  color: inherit;
+  padding: 12px;
+  text-align: right;
+  cursor: pointer;
+  font-family: inherit;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.15s ease;
+}
+
+.calendar-event-mode-card:hover,
+.calendar-event-holiday-type-card:not(.is-locked):hover {
+  border-color: rgba(148, 163, 184, 0.38);
+  transform: translateY(-1px);
+}
+
+.calendar-event-mode-card:focus-visible,
+.calendar-event-holiday-type-card:focus-visible {
+  outline: 2px solid rgba(99, 102, 241, 0.65);
+  outline-offset: 2px;
+}
+
+.calendar-event-mode-card-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.calendar-event-mode-card.is-regular .calendar-event-mode-card-icon {
+  background: rgba(56, 189, 248, 0.14);
+  color: #7dd3fc;
+  border: 1px solid rgba(56, 189, 248, 0.28);
+}
+
+.calendar-event-mode-card.is-holiday .calendar-event-mode-card-icon {
+  background: rgba(245, 158, 11, 0.14);
+  color: #fcd34d;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.calendar-event-mode-card-body {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.calendar-event-mode-card-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+}
+
+.calendar-event-mode-card strong,
+.calendar-event-holiday-type-card strong {
+  font-size: 13px;
+  font-weight: 900;
+  color: #f8fafc;
+}
+
+.calendar-event-mode-card p,
+.calendar-event-holiday-type-card p {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.75;
+  color: #94a3b8;
+}
+
+.calendar-event-mode-card-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1.4;
+}
+
+.calendar-event-mode-card-badge.is-muted {
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: rgba(148, 163, 184, 0.12);
+  color: #cbd5e1;
+}
+
+.calendar-event-mode-card-badge.is-payroll {
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  background: rgba(245, 158, 11, 0.14);
+  color: #fde68a;
+}
+
+.calendar-event-mode-card-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: rgba(15, 23, 42, 0.72);
+  color: transparent;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.calendar-event-mode-card.is-active {
+  box-shadow: 0 10px 28px rgba(2, 6, 23, 0.28);
+}
+
+.calendar-event-mode-card.is-regular.is-active {
+  border-color: rgba(56, 189, 248, 0.55);
+  background: linear-gradient(180deg, rgba(14, 116, 144, 0.22), rgba(15, 23, 42, 0.72));
+}
+
+.calendar-event-mode-card.is-regular.is-active .calendar-event-mode-card-check {
+  border-color: rgba(56, 189, 248, 0.55);
+  background: rgba(56, 189, 248, 0.9);
+  color: #0f172a;
+}
+
+.calendar-event-mode-card.is-holiday.is-active {
+  border-color: rgba(245, 158, 11, 0.55);
+  background: linear-gradient(180deg, rgba(180, 83, 9, 0.2), rgba(15, 23, 42, 0.72));
+}
+
+.calendar-event-mode-card.is-holiday.is-active .calendar-event-mode-card-check {
+  border-color: rgba(245, 158, 11, 0.55);
+  background: rgba(245, 158, 11, 0.92);
+  color: #451a03;
+}
+
+.calendar-event-holiday-type-card.is-active.is-official {
+  border-color: rgba(239, 68, 68, 0.5);
+  background: linear-gradient(180deg, rgba(127, 29, 29, 0.28), rgba(15, 23, 42, 0.72));
+  box-shadow: 0 10px 28px rgba(2, 6, 23, 0.28);
+}
+
+.calendar-event-holiday-type-card.is-active.is-organizational {
+  border-color: rgba(99, 102, 241, 0.55);
+  background: linear-gradient(180deg, rgba(79, 70, 229, 0.22), rgba(15, 23, 42, 0.72));
+  box-shadow: 0 10px 28px rgba(2, 6, 23, 0.28);
+}
+
+.calendar-event-holiday-type {
+  display: grid;
+  gap: 10px;
+  margin-top: 4px;
+  padding-top: 12px;
+  border-top: 1px dashed rgba(148, 163, 184, 0.22);
+}
+
+.calendar-event-holiday-type-head {
+  display: grid;
+  gap: 4px;
+}
+
+.calendar-event-holiday-type-head span {
+  font-size: 13px;
+  font-weight: 800;
+  color: #e2e8f0;
+}
+
+.calendar-event-holiday-type-head span em {
+  color: #f87171;
+  font-style: normal;
+}
+
+.calendar-event-holiday-type-head p {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.7;
+  color: #94a3b8;
+}
+
+.calendar-event-holiday-type-grid {
+  grid-template-columns: 1fr;
+}
+
+.calendar-event-holiday-type-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+}
+
+.calendar-event-holiday-type-card-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  flex-shrink: 0;
+}
+
+.calendar-event-holiday-type-card-icon.is-official {
+  background: rgba(239, 68, 68, 0.12);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.28);
+}
+
+.calendar-event-holiday-type-card-icon.is-organizational {
+  background: rgba(99, 102, 241, 0.14);
+  color: #c7d2fe;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+}
+
+.calendar-event-holiday-type-card-icon.is-friday {
+  background: rgba(245, 158, 11, 0.14);
+  color: #fcd34d;
+  border: 1px solid rgba(245, 158, 11, 0.32);
+}
+
+.calendar-event-holiday-type-copy {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.calendar-event-holiday-type-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: rgba(15, 23, 42, 0.72);
+  color: transparent;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.calendar-event-holiday-type-card.is-official.is-active .calendar-event-holiday-type-check {
+  border-color: rgba(239, 68, 68, 0.55);
+  background: rgba(239, 68, 68, 0.92);
+  color: #fff;
+}
+
+.calendar-event-holiday-type-card.is-organizational.is-active .calendar-event-holiday-type-check {
+  border-color: rgba(99, 102, 241, 0.55);
+  background: rgba(99, 102, 241, 0.92);
+  color: #fff;
+}
+
+.calendar-event-holiday-type-card.is-locked {
+  cursor: default;
+  grid-template-columns: auto minmax(0, 1fr);
+  border-color: rgba(245, 158, 11, 0.45);
+  background: linear-gradient(180deg, rgba(180, 83, 9, 0.18), rgba(15, 23, 42, 0.72));
+  box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.08);
+}
+
+.calendar-event-holiday-type-card.is-locked:hover {
+  transform: none;
+}
+
+.calendar-event-holiday-type-lock {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 800;
+  color: #fcd34d;
+}
+
+@media (max-width: 560px) {
+  .calendar-event-mode-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.calendar-event-holiday-range-note {
+  color: #fbbf24;
+}
+
+.calendar-shift-holiday-hint {
+  margin: 8px 0 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(245, 158, 11, 0.28);
+  background: rgba(245, 158, 11, 0.1);
+  color: #fde68a;
+  font-size: 12px;
+  line-height: 1.8;
+  text-align: right;
+}
+
 .calendar-event-weekdays,
 .calendar-event-date-presets {
   display: flex;
@@ -14085,7 +16378,8 @@ body {
 }
 
 .calendar-create-field input,
-.calendar-create-field textarea {
+.calendar-create-field textarea,
+.calendar-create-field select {
   width: 100%;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 10px;
@@ -14099,7 +16393,8 @@ body {
 }
 
 .calendar-create-field input:focus,
-.calendar-create-field textarea:focus {
+.calendar-create-field textarea:focus,
+.calendar-create-field select:focus {
   border-color: rgba(99, 102, 241, 0.55);
 }
 
@@ -14199,6 +16494,79 @@ body {
 
 .calendar-create-cancel {
   color: #f87171;
+}
+
+.calendar-create-modal:has(.unsaved-guard-dialog) .calendar-create-modal-footer {
+  padding-top: 10px;
+}
+
+.calendar-create-modal:has(.unsaved-guard-dialog) .unsaved-guard-actions {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.calendar-create-modal:has(.unsaved-guard-dialog) .unsaved-guard-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.72);
+  color: #e2e8f0;
+  padding: 0 16px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(2, 6, 23, 0.22);
+  transition: transform 0.12s ease, filter 0.12s ease, background-color 0.12s ease, border-color 0.12s ease;
+}
+
+.calendar-create-modal:has(.unsaved-guard-dialog) .unsaved-guard-action:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.06);
+}
+
+.calendar-create-modal:has(.unsaved-guard-dialog) .unsaved-guard-action:disabled {
+  opacity: 0.62;
+  cursor: not-allowed;
+  transform: none;
+  filter: none;
+}
+
+.calendar-create-modal:has(.unsaved-guard-dialog) .unsaved-guard-action.is-primary {
+  border-color: #f6ae34;
+  background: linear-gradient(180deg, #f7be52, #f6ae34);
+  color: #132847;
+}
+
+.calendar-create-modal:has(.unsaved-guard-dialog) .unsaved-guard-action.is-danger {
+  border-color: rgba(248, 113, 113, 0.5);
+  color: #fecaca;
+}
+
+.calendar-create-modal:has(.unsaved-guard-dialog) .unsaved-guard-action.is-secondary {
+  border-color: rgba(148, 163, 184, 0.52);
+  color: #d6e1ef;
+}
+
+@media (max-width: 560px) {
+  .calendar-create-modal:has(.unsaved-guard-dialog) .unsaved-guard-actions {
+    gap: 8px;
+  }
+
+  .calendar-create-modal:has(.unsaved-guard-dialog) .unsaved-guard-action {
+    min-height: 38px;
+    padding: 0 12px;
+    font-size: 12px;
+  }
 }
 
 .calendar-event-confirm-backdrop {
@@ -15403,11 +17771,11 @@ body {
 }
 
 .calendar-create-modal:has(.draft-template-tax-bracket-form) {
-  width: min(100%, 440px);
+  width: min(100%, 480px);
   overflow: hidden;
   border-radius: 14px;
   background: linear-gradient(180deg, rgba(11, 18, 34, 0.99), rgba(10, 16, 31, 0.97));
-  padding: 18px 14px 0;
+  padding: 18px 16px 0;
 }
 
 .calendar-create-modal:has(.draft-template-tax-bracket-form) .calendar-create-modal-head {
@@ -15427,8 +17795,56 @@ body {
 .calendar-create-modal:has(.draft-template-tax-bracket-form) .draft-template-tax-bracket-form {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 18px;
+  gap: 12px;
   padding-bottom: 18px;
+}
+
+.payroll-tax-bracket-dialog-fields {
+  display: grid;
+  gap: 12px;
+}
+
+.calendar-create-modal:has(.draft-template-tax-bracket-form) .payroll-tax-bracket-dialog-fields .business-payroll-field {
+  gap: 8px;
+}
+
+.calendar-create-modal:has(.draft-template-tax-bracket-form) .payroll-tax-bracket-dialog-fields .business-payroll-field-label {
+  color: #dbe7f4;
+  font-size: 12px;
+}
+
+.calendar-create-modal:has(.draft-template-tax-bracket-form) .payroll-tax-bracket-dialog-fields .business-payroll-input {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  padding: 0 14px;
+  border-color: rgba(164, 195, 226, 0.38);
+  background: rgba(18, 34, 61, 0.88);
+}
+
+.calendar-create-modal:has(.draft-template-tax-bracket-form) .payroll-tax-bracket-dialog-fields .business-payroll-input input {
+  width: 100%;
+  min-width: 0;
+  font-size: 15px;
+  font-weight: 900;
+  text-align: left;
+  direction: ltr;
+}
+
+.calendar-create-modal:has(.draft-template-tax-bracket-form) .payroll-tax-bracket-dialog-fields .business-payroll-input b {
+  min-width: 34px;
+  color: #9fb5cb;
+  font-size: 11px;
+  font-weight: 800;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.calendar-create-modal:has(.draft-template-tax-bracket-form) .payroll-tax-bracket-dialog-fields .business-payroll-field:last-child .business-payroll-input input {
+  text-align: center;
+  direction: rtl;
 }
 
 .calendar-create-modal:has(.draft-template-tax-bracket-form) .calendar-create-field {
@@ -15504,4 +17920,4711 @@ body {
   padding: 0 6px;
   font-size: 12px;
   font-weight: 950;
+}
+
+.calendar-create-modal:has(.payroll-variable-amount-dialog-form) {
+  width: min(100%, 520px);
+  border-color: rgba(152, 183, 219, 0.24);
+  background:
+    radial-gradient(circle at top right, rgba(246, 174, 52, 0.1), transparent 38%),
+    linear-gradient(180deg, #17385f, #102945);
+}
+
+.calendar-create-modal:has(.payroll-variable-amount-dialog-form) .calendar-event-modal-lead {
+  margin: 7px 0 0;
+  color: #b4c6da;
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.payroll-variable-amount-dialog-form {
+  display: grid;
+  gap: 14px;
+  padding-top: 2px;
+}
+
+.calendar-create-modal:has(.payroll-variable-amount-dialog-form) .business-payroll-chips,
+.calendar-create-modal:has(.payroll-variable-amount-dialog-form) .business-payroll-toggle {
+  justify-content: flex-start;
+}
+
+.calendar-create-modal:has(.payroll-variable-amount-dialog-form) .business-payroll-formula {
+  border: 1px solid rgba(246, 174, 52, 0.24);
+  border-radius: 12px;
+  background: rgba(246, 174, 52, 0.08);
+  color: #ffe0a8;
+  padding: 10px 12px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+/* Payroll and attendance business settings flow */
+.business-payroll-flow {
+  color: #f4f7fb;
+  background: #102945;
+}
+
+.business-payroll-flow .draft-template-flow-sidebar-panel,
+.business-payroll-flow .draft-template-flow-report-panel {
+  background: linear-gradient(180deg, #122e52, #0d213d);
+  border-color: rgba(156, 183, 216, 0.14);
+}
+
+.business-payroll-flow .draft-template-flow-content {
+  background: #15345b;
+}
+
+.business-payroll-years-page {
+  display: block;
+  direction: rtl;
+  min-height: 100%;
+  overflow-y: auto;
+  background: #102945;
+}
+
+.business-payroll-years-content {
+  display: grid;
+  align-content: start;
+  gap: 18px;
+  width: min(100% - 40px, 980px);
+  margin: 0 auto;
+  padding: clamp(28px, 6vh, 54px) 0 36px;
+}
+
+.business-payroll-years-header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 22px;
+}
+
+.business-payroll-years-header div {
+  display: grid;
+  gap: 8px;
+  text-align: right;
+}
+
+.business-payroll-years-header p {
+  margin: 0;
+  color: #f6ae34;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.business-payroll-years-header h1 {
+  margin: 0;
+  color: #f8fafc;
+  font-size: clamp(21px, 2vw, 25px);
+  font-weight: 950;
+}
+
+.business-payroll-years-header span {
+  color: #b4c6da;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.business-payroll-mode-badge {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgba(45, 212, 191, 0.34);
+  border-radius: 999px;
+  background: rgba(45, 212, 191, 0.1);
+  color: #71ddd0 !important;
+  padding: 6px 13px;
+  font-size: 11px;
+  font-weight: 950;
+  white-space: nowrap;
+}
+
+.business-payroll-years-page .draft-template-flow-action.is-primary {
+  display: inline-flex;
+  width: auto;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  flex-shrink: 0;
+  border-color: #f6ae34;
+  background: #f6ae34;
+  color: #142947;
+  box-shadow: 0 10px 25px rgba(246, 174, 52, 0.2);
+}
+
+.business-payroll-years-search {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 50px;
+  border: 1px solid rgba(152, 183, 219, 0.22);
+  border-radius: 14px;
+  background: rgba(13, 33, 61, 0.42);
+  color: #b4c6da;
+  padding: 0 16px;
+}
+
+.business-payroll-years-search:focus-within {
+  border-color: rgba(246, 174, 52, 0.7);
+  box-shadow: 0 0 0 3px rgba(246, 174, 52, 0.12);
+}
+
+.business-payroll-years-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: #f8fafc;
+  outline: 0;
+  padding: 0;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  text-align: right;
+}
+
+.business-payroll-years-search input::placeholder {
+  color: #90a7c1;
+}
+
+.business-payroll-years-search button {
+  border: 0;
+  background: transparent;
+  color: #b4c6da;
+  padding: 0;
+  cursor: pointer;
+}
+
+.business-payroll-years-list {
+  display: grid;
+  gap: 9px;
+}
+
+.business-payroll-year-row {
+  display: flex;
+  direction: ltr;
+  align-items: center;
+  gap: 13px;
+  min-height: 66px;
+  border: 1px solid rgba(152, 183, 219, 0.18);
+  border-radius: 16px;
+  background: rgba(19, 46, 82, 0.72);
+  color: #f8fafc;
+  padding: 0 16px;
+  font: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+}
+
+.business-payroll-year-menu {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.business-payroll-year-row:hover {
+  border-color: rgba(246, 174, 52, 0.44);
+  background: rgba(36, 72, 114, 0.8);
+  transform: translateY(-1px);
+}
+
+.business-payroll-year-row.is-current {
+  border-color: rgba(246, 174, 52, 0.48);
+  background: rgba(246, 174, 52, 0.1);
+}
+
+.business-payroll-year-row:has(.card-menu.is-open) {
+  z-index: 35;
+}
+
+.business-payroll-year-arrow {
+  display: inline-flex;
+  color: #9db5cf;
+}
+
+.business-payroll-year-copy {
+  display: flex;
+  direction: rtl;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  flex: 1;
+  text-align: right;
+}
+
+.business-payroll-year-copy strong {
+  color: #fff;
+  font-size: 15px;
+  font-weight: 950;
+}
+
+.business-payroll-year-copy small {
+  border: 1px solid rgba(246, 174, 52, 0.4);
+  border-radius: 999px;
+  background: rgba(246, 174, 52, 0.13);
+  color: #ffc255;
+  padding: 3px 10px;
+  font-size: 10px;
+  font-weight: 950;
+}
+
+.business-payroll-year-icon {
+  flex-shrink: 0;
+  color: #f6ae34;
+}
+
+.business-payroll-years-empty {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  border: 1px dashed rgba(152, 183, 219, 0.25);
+  border-radius: 18px;
+  background: rgba(19, 46, 82, 0.45);
+  color: #f6ae34;
+  padding: clamp(40px, 10vh, 78px) 20px;
+  text-align: center;
+}
+
+.business-payroll-years-empty h2 {
+  margin: 0;
+  color: #fff;
+  font-size: 18px;
+}
+
+.business-payroll-years-empty p {
+  margin: 0 0 8px;
+  color: #b4c6da;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.business-payroll-years-no-results {
+  border: 1px dashed rgba(152, 183, 219, 0.2);
+  border-radius: 16px;
+  color: #b4c6da;
+  padding: 34px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.calendar-create-modal:has(.payroll-year-dialog-form) {
+  position: relative;
+  overflow: visible;
+  width: min(100%, 460px);
+  border-color: rgba(152, 183, 219, 0.24);
+  background:
+    radial-gradient(circle at top right, rgba(246, 174, 52, 0.12), transparent 38%),
+    radial-gradient(circle at left bottom, rgba(59, 130, 246, 0.14), transparent 34%),
+    linear-gradient(180deg, #17385f, #102945);
+  box-shadow: 0 30px 90px rgba(2, 6, 23, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.calendar-create-modal:has(.payroll-year-dialog-form) .calendar-event-modal-lead {
+  margin: 7px 0 0;
+  color: #b4c6da;
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.payroll-year-dialog-form {
+  display: grid;
+  gap: 14px;
+}
+
+.calendar-create-modal:has(.payroll-year-dialog-form) .calendar-create-field input:focus,
+.calendar-create-modal:has(.payroll-year-dialog-form) .calendar-create-field select:focus {
+  border-color: #f6ae34;
+  box-shadow: 0 0 0 3px rgba(246, 174, 52, 0.12);
+}
+
+.calendar-create-modal:has(.payroll-year-dialog-form) .calendar-create-field select {
+  appearance: none;
+  color-scheme: dark;
+  background-image:
+    linear-gradient(45deg, transparent 50%, #f4b64c 50%),
+    linear-gradient(135deg, #f4b64c 50%, transparent 50%);
+  background-position:
+    calc(100% - 18px) 18px,
+    calc(100% - 12px) 18px;
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+  padding-inline-end: 34px;
+  line-height: 1.5;
+}
+
+.calendar-create-modal:has(.payroll-year-dialog-form) .calendar-create-field input {
+  min-height: 46px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(18, 34, 61, 0.96), rgba(10, 21, 38, 0.96));
+  color: #f8fafc;
+  padding: 10px 12px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  outline: none;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.calendar-create-modal:has(.payroll-year-dialog-form) .payroll-year-field {
+  gap: 10px;
+}
+
+.calendar-create-modal:has(.payroll-year-dialog-form) .payroll-year-empty-hint {
+  margin: 0;
+  border: 1px dashed rgba(246, 174, 52, 0.34);
+  border-radius: 12px;
+  background: rgba(246, 174, 52, 0.08);
+  color: #f7d9a6;
+  padding: 12px 14px;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.7;
+}
+
+.calendar-create-modal:has(.payroll-year-dialog-form) .payroll-year-chips {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.calendar-create-modal:has(.payroll-year-dialog-form) .payroll-year-chip {
+  position: relative;
+  display: grid;
+  gap: 4px;
+  justify-items: center;
+  align-content: center;
+  min-height: 78px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(18, 34, 61, 0.96), rgba(10, 21, 38, 0.96));
+  color: #dbe7f4;
+  padding: 10px 8px;
+  text-align: center;
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  transition:
+    border-color 120ms ease,
+    background 120ms ease,
+    transform 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.calendar-create-modal:has(.payroll-year-dialog-form) .payroll-year-chip input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.calendar-create-modal:has(.payroll-year-dialog-form) .payroll-year-chip:hover:not(.is-disabled) {
+  border-color: rgba(246, 174, 52, 0.42);
+  transform: translateY(-1px);
+}
+
+.calendar-create-modal:has(.payroll-year-dialog-form) .payroll-year-chip.is-selected {
+  border-color: rgba(246, 174, 52, 0.82);
+  background: linear-gradient(180deg, rgba(247, 174, 57, 0.96), rgba(235, 149, 25, 0.92));
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(246, 174, 52, 0.18);
+}
+
+.calendar-create-modal:has(.payroll-year-dialog-form) .payroll-year-chip.is-selected small {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.calendar-create-modal:has(.payroll-year-dialog-form) .payroll-year-chip.is-disabled {
+  opacity: 0.48;
+  cursor: not-allowed;
+  transform: none;
+  pointer-events: none;
+}
+
+.calendar-create-modal:has(.payroll-year-dialog-form) .payroll-year-chip-year {
+  font-size: 17px;
+  font-weight: 950;
+  line-height: 1.2;
+}
+
+.calendar-create-modal:has(.payroll-year-dialog-form) .payroll-year-chip small {
+  color: #9fb5cb;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1.4;
+}
+
+.calendar-create-modal:has(.payroll-year-dialog-form) .payroll-year-chip-badge {
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.18);
+  color: #dbe7f4 !important;
+  padding: 2px 7px;
+}
+
+@media (max-width: 520px) {
+  .calendar-create-modal:has(.payroll-year-dialog-form) .payroll-year-chips {
+    grid-template-columns: 1fr;
+  }
+
+  .calendar-create-modal:has(.payroll-year-dialog-form) .payroll-year-chip {
+    min-height: 58px;
+    grid-template-columns: auto 1fr;
+    justify-items: start;
+    align-items: center;
+    text-align: right;
+    padding: 10px 12px;
+  }
+
+  .calendar-create-modal:has(.payroll-year-dialog-form) .payroll-year-chip-year {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    font-size: 15px;
+  }
+
+  .calendar-create-modal:has(.payroll-year-dialog-form) .payroll-year-chip small {
+    grid-column: 2;
+  }
+}
+
+.calendar-create-modal:has(.payroll-year-dialog-form) .calendar-create-submit {
+  border: 1px solid #f6ae34;
+  border-radius: 999px;
+  background: #f6ae34;
+  color: #142947;
+  padding: 9px 21px;
+}
+
+.calendar-create-modal:has(.payroll-year-dialog-form) .calendar-create-cancel {
+  border: 1px solid rgba(246, 174, 52, 0.42);
+  border-radius: 999px;
+  color: #f4b64c;
+  padding: 9px 21px;
+}
+
+.calendar-create-modal-backdrop:has(.business-draft-template-dialog) {
+  align-items: flex-start;
+  overflow-y: auto;
+  padding-top: max(16px, 3vh);
+  padding-bottom: max(16px, 3vh);
+}
+
+.calendar-create-modal.panel-minimal-scroll:has(.business-draft-template-dialog) {
+  overflow: hidden;
+}
+
+.calendar-create-modal:has(.business-draft-template-dialog) {
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 560px);
+  max-height: min(92vh, 900px);
+  overflow: hidden;
+  padding: 20px 22px 0;
+  border-color: rgba(152, 183, 219, 0.22);
+  background: linear-gradient(180deg, #17385f, #102945);
+}
+
+.calendar-create-modal:has(.business-draft-template-dialog) .calendar-create-modal-head,
+.calendar-create-modal:has(.business-draft-template-dialog) .calendar-create-modal-footer {
+  flex-shrink: 0;
+}
+
+.calendar-create-modal:has(.business-draft-template-dialog) .calendar-create-modal-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: 12px;
+}
+
+.calendar-create-modal:has(.business-draft-template-dialog) .calendar-create-modal-footer {
+  margin: 0 -22px;
+  border-top: 1px solid rgba(148, 163, 184, 0.1);
+  background: rgba(8, 13, 27, 0.82);
+  padding: 16px 22px 18px;
+}
+
+.calendar-create-modal:has(.business-draft-template-dialog) .calendar-event-modal-lead {
+  margin: 7px 0 0;
+  color: #b4c6da;
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.business-draft-template-dialog {
+  display: grid;
+  gap: 12px;
+}
+
+.business-draft-dialog-card {
+  border: 1px solid rgba(152, 183, 219, 0.16);
+  border-radius: 16px;
+  background: rgba(9, 28, 53, 0.54);
+  padding: 14px;
+  display: grid;
+  gap: 12px;
+}
+
+.business-draft-dialog-card--compact {
+  gap: 10px;
+  padding: 12px 14px;
+}
+
+.business-draft-compact-head {
+  display: grid;
+  gap: 4px;
+}
+
+.business-draft-compact-title {
+  color: #e5edf8;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1.6;
+}
+
+.business-draft-compact-title em {
+  color: #f6ae34;
+  font-style: normal;
+}
+
+.business-draft-compact-hint {
+  color: #8fa8c3;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.7;
+}
+
+.business-draft-scope-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.business-draft-scope-option {
+  display: grid;
+  gap: 6px;
+  align-content: start;
+  min-height: 0;
+  border: 1px solid rgba(151, 182, 215, 0.22);
+  border-radius: 10px;
+  background: rgba(11, 29, 54, 0.5);
+  color: #d9e7f5;
+  padding: 10px 12px;
+  text-align: right;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.business-draft-scope-option.is-selected {
+  border-color: rgba(246, 174, 52, 0.72);
+  background: rgba(246, 174, 52, 0.14);
+  color: #fff;
+}
+
+.business-draft-scope-option-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: inherit;
+  font-size: 12px;
+  font-weight: 950;
+  line-height: 1.5;
+}
+
+.business-draft-scope-option small {
+  display: block;
+  color: #aebfd1;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.65;
+}
+
+.business-draft-scope-option.is-selected small {
+  color: #dbe7f4;
+}
+
+.business-draft-dialog-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.business-draft-dialog-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgba(56, 189, 248, 0.22);
+  border-radius: 999px;
+  background: rgba(56, 189, 248, 0.09);
+  color: #dff5ff;
+  padding: 4px 10px;
+  font-size: 10px;
+  font-weight: 950;
+}
+
+.business-draft-dialog-card-head h3 {
+  margin: 8px 0 0;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 950;
+}
+
+.business-draft-dialog-card-head p {
+  margin: 6px 0 0;
+  color: #b6c8db;
+  font-size: 12px;
+  line-height: 1.8;
+  font-weight: 700;
+}
+
+.business-draft-field {
+  display: grid;
+  gap: 8px;
+}
+
+.business-draft-field span {
+  color: #e2e8f0;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.business-draft-field span em {
+  color: #f6ae34;
+  font-style: normal;
+}
+
+.business-draft-field input,
+.business-draft-field select {
+  width: 100%;
+  border: 1px solid rgba(154, 177, 204, 0.22);
+  border-radius: 12px;
+  background: rgba(15, 32, 57, 0.72);
+  color: #f8fafc;
+  padding: 12px 13px;
+  font-family: inherit;
+  font-size: 13px;
+  outline: none;
+}
+
+.business-draft-field input::placeholder {
+  color: #8ea5bc;
+}
+
+.business-draft-field input:focus,
+.business-draft-field select:focus {
+  border-color: rgba(246, 174, 52, 0.72);
+  box-shadow: 0 0 0 3px rgba(246, 174, 52, 0.12);
+}
+
+.business-draft-field-note {
+  margin: 0;
+  color: #8fa6bb;
+  font-size: 11px;
+  line-height: 1.8;
+  font-weight: 700;
+}
+
+.business-draft-create-dialog .business-draft-template-card {
+  display: grid;
+  gap: 12px;
+}
+
+.business-draft-template-mode-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.business-draft-template-mode-row button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 40px;
+  border: 1px solid rgba(151, 182, 215, 0.22);
+  border-radius: 10px;
+  background: rgba(11, 29, 54, 0.5);
+  color: #d9e7f5;
+  padding: 0 12px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1.5;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.business-draft-template-mode-row button.is-selected {
+  border-color: rgba(246, 174, 52, 0.72);
+  background: rgba(246, 174, 52, 0.14);
+  color: #fff;
+}
+
+.business-draft-template-picker {
+  display: grid;
+  gap: 6px;
+}
+
+.business-draft-template-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  min-height: 52px;
+  border: 1px solid rgba(151, 182, 215, 0.18);
+  border-radius: 10px;
+  background: rgba(11, 29, 54, 0.42);
+  padding: 10px 12px;
+  text-align: right;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.business-draft-template-option:hover {
+  border-color: rgba(151, 182, 215, 0.32);
+  background: rgba(11, 29, 54, 0.62);
+}
+
+.business-draft-template-option.is-selected {
+  border-color: rgba(246, 174, 52, 0.72);
+  background: rgba(246, 174, 52, 0.1);
+}
+
+.business-draft-template-option-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.business-draft-template-option-copy strong {
+  display: block;
+  color: #f8fafc;
+  font-size: 12px;
+  font-weight: 950;
+  line-height: 1.6;
+}
+
+.business-draft-template-option-copy small {
+  display: block;
+  color: #8fa8c3;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.6;
+}
+
+.business-draft-template-option-check {
+  flex-shrink: 0;
+  color: #f7c467;
+}
+
+.business-draft-template-empty-note {
+  padding-top: 2px;
+}
+
+.calendar-create-modal-backdrop:has(.employee-supplemental-editor-dialog) {
+  align-items: flex-start;
+  overflow-y: auto;
+  padding-top: max(16px, 3vh);
+  padding-bottom: max(16px, 3vh);
+}
+
+.calendar-create-modal:has(.employee-supplemental-editor-dialog) {
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 560px);
+  max-height: min(92vh, 900px);
+  overflow: hidden;
+  padding: 20px 22px 0;
+  border-color: rgba(152, 183, 219, 0.22);
+  background: linear-gradient(180deg, #17385f, #102945);
+}
+
+.calendar-create-modal:has(.employee-supplemental-editor-dialog) .calendar-create-modal-head,
+.calendar-create-modal:has(.employee-supplemental-editor-dialog) .calendar-create-modal-footer {
+  flex-shrink: 0;
+}
+
+.calendar-create-modal:has(.employee-supplemental-editor-dialog) .calendar-create-modal-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-inline: 2px;
+  padding-bottom: 12px;
+}
+
+.calendar-create-modal:has(.employee-supplemental-editor-dialog) .calendar-create-modal-footer {
+  margin: 0 -22px;
+  border-top: 1px solid rgba(148, 163, 184, 0.1);
+  background: rgba(8, 13, 27, 0.82);
+  padding: 16px 22px 18px;
+}
+
+.employee-supplemental-editor-dialog {
+  gap: 10px;
+}
+
+.employee-supplemental-editor-summary {
+  display: grid;
+  gap: 8px;
+  border: 1px solid rgba(152, 183, 219, 0.16);
+  border-radius: 14px;
+  background: rgba(9, 28, 53, 0.54);
+  padding: 12px 14px;
+}
+
+.employee-supplemental-editor-summary-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.employee-supplemental-editor-summary-row strong {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 950;
+}
+
+.employee-supplemental-editor-progress {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  border-radius: 999px;
+  background: rgba(244, 63, 94, 0.14);
+  color: #fecdd3;
+  padding: 0 12px;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.employee-supplemental-editor-progress.is-complete {
+  background: rgba(34, 197, 94, 0.16);
+  color: #86efac;
+}
+
+.employee-supplemental-editor-section {
+  gap: 10px;
+}
+
+.employee-supplemental-editor-section .business-draft-dialog-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.employee-supplemental-record-stack {
+  display: grid;
+  gap: 10px;
+}
+
+.employee-supplemental-record-block {
+  display: grid;
+  gap: 10px;
+  border: 1px solid rgba(152, 183, 219, 0.14);
+  border-radius: 12px;
+  background: rgba(8, 24, 46, 0.42);
+  padding: 12px;
+}
+
+.employee-supplemental-record-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.employee-supplemental-record-index {
+  color: #94b4d4;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.employee-supplemental-record-add,
+.employee-supplemental-record-remove {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  border: 1px solid rgba(152, 183, 219, 0.24);
+  border-radius: 999px;
+  background: rgba(11, 29, 54, 0.62);
+  color: #dbe7f4;
+  padding: 0 12px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 900;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.employee-supplemental-record-add:hover,
+.employee-supplemental-record-remove:hover {
+  border-color: rgba(246, 174, 52, 0.52);
+  background: rgba(246, 174, 52, 0.1);
+  color: #fff;
+}
+
+.employee-supplemental-record-remove {
+  border-color: rgba(244, 63, 94, 0.28);
+  background: rgba(244, 63, 94, 0.08);
+  color: #fecdd3;
+}
+
+.contract-party-record-stack {
+  display: grid;
+  gap: 8px;
+}
+
+.contract-party-record-card {
+  display: grid;
+  gap: 8px;
+  border: 1px solid rgba(152, 183, 219, 0.12);
+  border-radius: 12px;
+  background: rgba(8, 24, 46, 0.28);
+  padding: 10px 12px;
+}
+
+.contract-party-record-index {
+  color: #8fa8c3;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.contract-draft-reg-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  padding: 5px 10px;
+  font-size: 10px;
+  font-weight: 950;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.contract-draft-reg-badge--internal {
+  border: 1px solid rgba(56, 189, 248, 0.24);
+  background: rgba(56, 189, 248, 0.1);
+  color: #dff5ff;
+}
+
+.contract-draft-reg-badge--legal {
+  border: 1px solid rgba(246, 174, 52, 0.42);
+  background: rgba(246, 174, 52, 0.12);
+  color: #ffe0a8;
+}
+
+.contract-timing-step-title-row {
+  align-items: flex-start;
+}
+
+.contract-timing-step-main-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.contract-timing-step-title-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #f8fafc;
+}
+
+.contract-timing-step-lead {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0 0 14px;
+  color: #8fa8c3;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.85;
+}
+
+.contract-timing-step-lead.has-info .contract-timing-step-lead-icon {
+  flex-shrink: 0;
+  margin-top: 3px;
+  color: #7f97b0;
+}
+
+.contract-timing-step-stack {
+  display: grid;
+  gap: 12px;
+}
+
+.contract-timing-card {
+  display: grid;
+  gap: 12px;
+  border: 1px solid rgba(152, 183, 219, 0.14);
+  border-radius: 14px;
+  background: rgba(8, 24, 46, 0.42);
+  padding: 14px 16px;
+}
+
+.contract-timing-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.contract-timing-card-head h4 {
+  margin: 0;
+  color: #f8fafc;
+  font-size: 14px;
+  font-weight: 950;
+  line-height: 1.6;
+}
+
+.contract-timing-legal-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  border: 1px solid rgba(246, 174, 52, 0.42);
+  border-radius: 999px;
+  background: rgba(246, 174, 52, 0.12);
+  color: #ffe0a8;
+  padding: 5px 10px;
+  font-size: 10px;
+  font-weight: 950;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.contract-timing-card-desc {
+  margin: 0;
+  color: #8fa8c3;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.85;
+}
+
+.contract-timing-card-desc.has-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.contract-timing-card-desc.has-info svg {
+  flex-shrink: 0;
+  margin-top: 3px;
+  color: #7f97b0;
+}
+
+.contract-timing-date-field {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.contract-timing-date-label {
+  color: #e5edf8;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1.6;
+}
+
+.contract-timing-date-label em {
+  color: #f87171;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.contract-timing-date-input {
+  min-height: 46px;
+  border: 1px solid rgba(59, 130, 246, 0.55);
+  border-radius: 10px;
+  background: rgba(10, 22, 42, 0.72);
+  padding: 4px 10px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.contract-timing-date-input:focus-within {
+  border-color: rgba(96, 165, 250, 0.85);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.14);
+}
+
+.contract-timing-date-input.has-error {
+  border-color: rgba(248, 113, 113, 0.55);
+}
+
+.contract-timing-date-picker {
+  width: 100%;
+}
+
+.contract-timing-date-picker .contract-timing-date-picker-control,
+.contract-timing-date-picker input {
+  width: 100%;
+  min-height: 36px;
+  border: 0 !important;
+  border-radius: 8px !important;
+  background: transparent !important;
+  color: #fff !important;
+  box-shadow: none !important;
+  outline: 0 !important;
+  padding: 0 40px 0 8px !important;
+  font: inherit;
+  font-size: 13px !important;
+  font-weight: 900 !important;
+  text-align: right !important;
+  direction: rtl;
+}
+
+.contract-timing-date-picker button {
+  right: auto !important;
+  left: 10px !important;
+  color: #f6ae34 !important;
+}
+
+.contract-timing-date-picker button:hover {
+  color: #ffe0a8 !important;
+}
+
+.contract-timing-date-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.contract-timing-registration-line {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.contract-timing-registration-field {
+  flex: 1;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  min-height: 48px;
+  border: 1px solid rgba(59, 130, 246, 0.45);
+  border-radius: 10px;
+  background: rgba(10, 22, 42, 0.72);
+  padding: 0 14px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.contract-timing-registration-field.is-editing {
+  cursor: text;
+}
+
+.contract-timing-registration-field:focus-visible {
+  outline: 2px solid rgba(246, 174, 52, 0.55);
+  outline-offset: 2px;
+}
+
+.contract-timing-registration-label {
+  color: #7f97b0;
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.contract-timing-registration-value {
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 950;
+  text-align: left;
+  outline: 0;
+  padding: 0;
+  font-family: inherit;
+  letter-spacing: 0.02em;
+}
+
+.contract-timing-registration-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.contract-timing-registration-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(246, 174, 52, 0.55);
+  border-radius: 8px;
+  background: rgba(246, 174, 52, 0.08);
+  color: #f6ae34;
+  padding: 0;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+}
+
+.contract-timing-registration-action:hover {
+  border-color: rgba(246, 174, 52, 0.85);
+  background: rgba(246, 174, 52, 0.16);
+  transform: translateY(-1px);
+}
+
+.contract-timing-registration-note {
+  margin: 0;
+  color: #8fa8c3;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.8;
+}
+
+.contract-timing-field-error {
+  display: block;
+  color: #ffb7b7;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 800;
+  line-height: 1.6;
+}
+
+.contract-timing-template-diff {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+@media (max-width: 640px) {
+  .contract-timing-date-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .contract-timing-registration-line {
+    flex-direction: column;
+  }
+
+  .contract-timing-registration-actions {
+    justify-content: flex-end;
+  }
+}
+
+.employee-supplemental-editor-section .business-draft-dialog-card-head p {
+  margin: 4px 0 0;
+  color: #8fa8c3;
+  font-size: 11px;
+  line-height: 1.7;
+  font-weight: 700;
+}
+
+.employee-supplemental-editor-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 12px;
+}
+
+.employee-supplemental-editor-field.is-wide {
+  grid-column: 1 / -1;
+}
+
+.employee-supplemental-editor-field span {
+  color: #dbe7f4;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.employee-supplemental-gender-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.employee-supplemental-gender-row button {
+  min-height: 38px;
+  border: 1px solid rgba(151, 182, 215, 0.22);
+  border-radius: 10px;
+  background: rgba(11, 29, 54, 0.5);
+  color: #d9e7f5;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.employee-supplemental-gender-row button.is-selected {
+  border-color: rgba(246, 174, 52, 0.72);
+  background: rgba(246, 174, 52, 0.14);
+  color: #fff;
+}
+
+@media (max-width: 560px) {
+  .calendar-create-modal:has(.employee-supplemental-editor-dialog) {
+    width: min(100%, 100%);
+    padding: 16px;
+  }
+
+  .employee-supplemental-editor-grid,
+  .employee-supplemental-gender-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.business-payroll-year-back {
+  border: 0;
+  background: transparent;
+  color: #94a3b8;
+  padding: 0;
+  font: inherit;
+  font-weight: inherit;
+  cursor: pointer;
+}
+
+.business-payroll-year-back:hover {
+  color: #e2e8f0;
+}
+
+.business-payroll-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.business-payroll-title-row span {
+  border: 1px solid rgba(246, 174, 52, 0.4);
+  border-radius: 999px;
+  background: rgba(246, 174, 52, 0.12);
+  color: #ffc255;
+  padding: 5px 12px;
+  font-size: 11px;
+  font-weight: 950;
+}
+
+.business-payroll-flow .draft-template-flow-nav-item {
+  border-color: rgba(152, 183, 219, 0.18);
+  background: rgba(19, 46, 82, 0.86);
+}
+
+.business-payroll-flow .draft-template-flow-nav-item:hover,
+.business-payroll-flow .draft-template-flow-nav-item.is-active {
+  border-color: rgba(246, 174, 52, 0.56);
+  background: rgba(246, 174, 52, 0.12);
+}
+
+.business-payroll-flow .draft-template-flow-nav-item.is-locked,
+.business-payroll-flow .draft-template-flow-nav-item.is-locked:hover {
+  border-color: rgba(152, 183, 219, 0.1);
+  background: rgba(19, 46, 82, 0.42);
+  opacity: 0.52;
+}
+
+.business-payroll-flow .draft-template-flow-nav-item.is-dirty {
+  border-color: rgba(246, 174, 52, 0.68);
+  background: rgba(246, 174, 52, 0.17);
+}
+
+.business-payroll-flow .draft-template-flow-nav-number {
+  background: rgba(246, 174, 52, 0.17);
+  color: #ffc255;
+}
+
+.business-payroll-step-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding-top: 5px;
+}
+
+.business-payroll-step-badge {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 2px 7px;
+  font-size: 9px;
+  font-weight: 950;
+  line-height: 1.7;
+}
+
+.business-payroll-step-badge.is-current,
+.business-payroll-step-badge.is-dirty {
+  border-color: rgba(246, 174, 52, 0.42);
+  background: rgba(246, 174, 52, 0.15);
+  color: #ffc255;
+}
+
+.business-payroll-step-badge.is-opened {
+  border-color: rgba(148, 182, 219, 0.18);
+  background: rgba(148, 182, 219, 0.09);
+  color: #c8d9eb;
+}
+
+.business-payroll-step-badge.is-locked {
+  gap: 4px;
+  border-color: rgba(148, 182, 219, 0.13);
+  color: #8aa1bc;
+}
+
+.business-payroll-step-badge.is-saved {
+  border-color: rgba(45, 212, 191, 0.22);
+  background: rgba(45, 212, 191, 0.09);
+  color: #76dbc9;
+}
+
+.business-payroll-step-save-tag {
+  flex-shrink: 0;
+  border: 1px solid rgba(246, 174, 52, 0.58);
+  border-radius: 999px;
+  background: rgba(246, 174, 52, 0.15);
+  color: #ffc255;
+  padding: 4px 10px;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 950;
+  cursor: pointer;
+}
+
+.business-payroll-step-save-tag:hover {
+  background: #f6ae34;
+  color: #142947;
+}
+
+.business-payroll-flow .draft-template-flow-nav-save,
+.business-payroll-flow .draft-template-flow-section-save.is-dirty,
+.business-payroll-flow .draft-template-flow-action.is-primary {
+  border-color: #f6ae34;
+  background: #f6ae34;
+  color: #142947;
+  box-shadow: 0 10px 25px rgba(246, 174, 52, 0.2);
+}
+
+.business-payroll-flow .draft-template-flow-action.is-secondary {
+  border-color: rgba(246, 174, 52, 0.34);
+  color: #f4b64c;
+  background: transparent;
+}
+
+.business-payroll-flow .draft-template-flow-action.is-save-continue {
+  border-color: rgba(56, 189, 248, 0.38);
+  background: rgba(8, 20, 35, 0.72);
+  color: #8ad8ff;
+  box-shadow: 0 10px 24px rgba(56, 189, 248, 0.14);
+}
+
+.business-payroll-flow .draft-template-flow-action.is-save-continue:hover:not(:disabled) {
+  background: rgba(14, 36, 61, 0.82);
+  border-color: rgba(56, 189, 248, 0.6);
+}
+
+.business-contract-template-flow .contract-draft-step-footer .draft-template-flow-action.is-secondary {
+  border-color: rgba(56, 189, 248, 0.36);
+  background: rgba(10, 29, 51, 0.72);
+  color: #8ad8ff;
+  box-shadow: 0 10px 24px rgba(56, 189, 248, 0.12);
+}
+
+.business-contract-template-flow .contract-draft-step-footer .draft-template-flow-action.is-secondary:hover:not(:disabled) {
+  border-color: rgba(56, 189, 248, 0.58);
+  background: rgba(14, 36, 61, 0.82);
+}
+
+.business-contract-template-flow .contract-draft-step-footer .draft-template-flow-action.is-save-continue {
+  border-color: rgba(34, 197, 94, 0.42);
+  background: linear-gradient(180deg, #22c55e, #16a34a);
+  color: #f8fafc;
+  box-shadow: 0 10px 24px rgba(34, 197, 94, 0.16);
+}
+
+.business-contract-template-flow .contract-draft-step-footer .draft-template-flow-action.is-save-continue:hover:not(:disabled) {
+  border-color: rgba(34, 197, 94, 0.6);
+  background: linear-gradient(180deg, #2dd16a, #16964a);
+}
+
+.contract-draft-subcategory-note--muted {
+  color: #8fa8c3;
+}
+
+.contract-draft-insurance-fields {
+  margin-top: 10px;
+}
+
+.business-payroll-flow .draft-template-flow-action:disabled {
+  opacity: 0.48;
+  cursor: not-allowed;
+}
+
+.business-payroll-content {
+  padding: 22px clamp(14px, 2vw, 28px) 34px;
+}
+
+.business-payroll-current-section {
+  gap: 20px;
+  border-color: rgba(119, 157, 201, 0.2);
+  background: #244872;
+  box-shadow: 0 12px 34px rgba(6, 21, 43, 0.16);
+  scroll-margin-top: 18px;
+}
+
+.business-payroll-current-section.is-current {
+  border-color: rgba(246, 174, 52, 0.48);
+  box-shadow: 0 12px 34px rgba(6, 21, 43, 0.16), 0 0 0 1px rgba(246, 174, 52, 0.1);
+}
+
+.business-payroll-sections {
+  display: grid;
+  gap: 18px;
+}
+
+.business-payroll-section-head {
+  justify-content: space-between;
+  border-color: rgba(163, 189, 218, 0.16);
+}
+
+.business-payroll-section-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 38px;
+  width: 38px;
+  border-radius: 12px;
+  background: rgba(246, 174, 52, 0.12);
+  color: #f6ae34;
+}
+
+.business-payroll-fields {
+  display: grid;
+  gap: 16px;
+}
+
+.business-payroll-fields.two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.business-payroll-fields.three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.business-payroll-field {
+  display: grid;
+  align-content: start;
+  gap: 7px;
+  min-width: 0;
+  text-align: right;
+}
+
+.business-payroll-field-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #f8fafc;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.business-payroll-info {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width: 17px;
+  height: 17px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(215, 228, 244, 0.12);
+  color: #ccdbea;
+  padding: 0;
+  cursor: help;
+}
+
+.business-payroll-input {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 45px;
+  border: 1px solid rgba(164, 195, 226, 0.52);
+  border-radius: 10px;
+  background: rgba(37, 73, 114, 0.5);
+  padding: 0 13px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.business-payroll-input:focus-within,
+.business-payroll-field select:focus {
+  border-color: #f6ae34;
+  box-shadow: 0 0 0 3px rgba(246, 174, 52, 0.13);
+}
+
+.business-payroll-input input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  outline: 0;
+  padding: 0;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 900;
+  text-align: right;
+}
+
+.business-payroll-input b {
+  flex-shrink: 0;
+  color: #e4edf7;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.business-payroll-field select {
+  min-height: 45px;
+  border: 1px solid rgba(164, 195, 226, 0.52);
+  border-radius: 10px;
+  background: rgba(37, 73, 114, 0.5);
+  color: #fff;
+  outline: 0;
+  padding: 0 12px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.business-payroll-field option {
+  background: #17385f;
+}
+
+.business-payroll-field small {
+  color: #b4c6da;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.75;
+}
+
+.business-payroll-difference-badge {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 999px;
+  background: #218bd4;
+  color: #fff;
+  padding: 4px 10px;
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1.55;
+  cursor: help;
+}
+
+.business-payroll-field em,
+.business-payroll-table-row > em {
+  color: #ffb7b7;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.business-payroll-field.has-error .business-payroll-input {
+  border-color: rgba(248, 113, 113, 0.72);
+}
+
+.business-payroll-highlight {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid rgba(246, 174, 52, 0.38);
+  border-radius: 12px;
+  background: rgba(246, 174, 52, 0.1);
+  color: #ffd185;
+  padding: 12px 14px;
+  font-size: 12px;
+  font-weight: 800;
+  text-align: right;
+}
+
+.business-payroll-highlight.subtle {
+  color: #d9e4f2;
+  border-color: rgba(163, 189, 218, 0.18);
+  background: rgba(15, 38, 67, 0.32);
+}
+
+.business-payroll-calculation,
+.business-payroll-subcard {
+  display: grid;
+  gap: 14px;
+  border: 1px solid rgba(151, 182, 215, 0.2);
+  border-radius: 15px;
+  background: rgba(16, 40, 70, 0.35);
+  padding: 15px;
+}
+
+.business-payroll-calculation header {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  color: #f6ae34;
+  font-size: 14px;
+}
+
+.business-payroll-calculation-grid {
+  display: grid;
+  grid-template-columns: 1.25fr 1fr 1fr;
+  gap: 8px;
+}
+
+.business-payroll-calculation-grid div,
+.business-payroll-example {
+  display: grid;
+  gap: 5px;
+  border-radius: 11px;
+  background: rgba(13, 33, 61, 0.42);
+  padding: 11px 12px;
+}
+
+.business-payroll-calculation-grid span,
+.business-payroll-calculation p,
+.business-payroll-example span,
+.business-payroll-derived-note,
+.business-payroll-subcard p {
+  margin: 0;
+  color: #bfd0e3;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.85;
+}
+
+.business-payroll-calculation-grid strong,
+.business-payroll-example strong {
+  color: #f8fafc;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.business-payroll-calculation p,
+.business-payroll-formula {
+  border: 1px dashed rgba(246, 174, 52, 0.35);
+  border-radius: 10px;
+  background: rgba(246, 174, 52, 0.07);
+  color: #ffe1aa;
+  padding: 10px 12px;
+}
+
+.business-payroll-subcard > h3,
+.business-payroll-subcard-head h3 {
+  margin: 0;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 950;
+}
+
+.business-payroll-subcard-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.contract-party-card {
+  margin-top: 10px;
+  gap: 12px;
+}
+
+.contract-party-card--employee {
+  margin-top: 10px;
+}
+
+.contract-party-card-toolbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.contract-party-card-toolbar .business-draft-section-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.contract-party-card-edit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border: 1px solid rgba(246, 174, 52, 0.55);
+  border-radius: 10px;
+  background: rgba(246, 174, 52, 0.12);
+  color: #f7c467;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.contract-party-card-edit:hover {
+  background: rgba(246, 174, 52, 0.2);
+  border-color: rgba(246, 174, 52, 0.85);
+  color: #ffe7b8;
+}
+
+.contract-party-card-avatar.is-employee {
+  border-color: rgba(246, 174, 52, 0.35);
+  background: linear-gradient(180deg, rgba(246, 174, 52, 0.22), rgba(11, 29, 54, 0.72));
+  color: #ffe7b8;
+}
+
+.contract-party-section {
+  display: grid;
+  gap: 8px;
+}
+
+.contract-party-section-title {
+  margin: 0;
+  color: #dbe7f4;
+  font-size: 12px;
+  font-weight: 950;
+  line-height: 1.6;
+}
+
+.contract-party-card-stats.is-address {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.employee-supplemental-profile-page {
+  display: grid;
+  gap: 14px;
+}
+
+.employee-supplemental-profile-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.employee-supplemental-profile-shell {
+  width: min(100%, 920px);
+}
+
+.contract-party-card-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  color: #8fa8c3;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.8;
+}
+
+.contract-party-card-hint svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: #7f97b0;
+}
+
+.contract-party-card-identity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 2px 0 4px;
+}
+
+.contract-party-card-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  border: 1px solid rgba(56, 189, 248, 0.24);
+  background: linear-gradient(180deg, rgba(56, 189, 248, 0.18), rgba(11, 29, 54, 0.72));
+  color: #f7c467;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.contract-party-card-identity-copy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  text-align: right;
+}
+
+.contract-party-card-identity-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.contract-party-card-identity-copy strong {
+  color: #fff;
+  font-size: 15px;
+  font-weight: 950;
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+.contract-party-card-identity-copy span {
+  color: #9fb5cb;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.6;
+}
+
+.contract-party-card-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.contract-party-card-stats.is-secondary {
+  margin-top: -2px;
+}
+
+.contract-party-stat {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  border: 1px solid rgba(151, 182, 215, 0.14);
+  border-radius: 12px;
+  background: rgba(11, 29, 54, 0.62);
+  padding: 10px 12px;
+  text-align: right;
+}
+
+.contract-party-stat-label {
+  color: #8fa8c3;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1.5;
+}
+
+.contract-party-stat-value {
+  color: #f8fafc;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+.contract-party-card-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding-top: 2px;
+}
+
+.business-payroll-outline-button,
+.business-payroll-variable-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 36px;
+  border: 1px solid rgba(246, 174, 52, 0.65);
+  border-radius: 999px;
+  background: transparent;
+  color: #f6ae34;
+  padding: 0 16px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.business-payroll-table {
+  overflow: hidden;
+  border: 1px solid rgba(168, 194, 223, 0.28);
+  border-radius: 12px;
+}
+
+.business-payroll-table-head,
+.business-payroll-table-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 0.55fr 100px;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  text-align: right;
+}
+
+.business-payroll-table-head {
+  color: #f6ae34;
+  border-bottom: 1px solid rgba(168, 194, 223, 0.22);
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.business-payroll-table-row {
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.business-payroll-table-row + .business-payroll-table-row {
+  border-top: 1px solid rgba(168, 194, 223, 0.12);
+}
+
+.business-payroll-table-row > div {
+  display: flex;
+  gap: 6px;
+}
+
+.business-payroll-table-row button,
+.business-payroll-item-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 29px;
+  height: 29px;
+  border: 1px solid rgba(167, 194, 222, 0.25);
+  border-radius: 8px;
+  background: rgba(12, 29, 53, 0.45);
+  color: #d4e0ed;
+  cursor: pointer;
+}
+
+.business-payroll-table-row > em {
+  grid-column: 1 / -1;
+}
+
+.business-payroll-table-row > .business-payroll-difference-badge {
+  grid-column: 1 / -1;
+}
+
+.business-payroll-editor {
+  display: grid;
+  gap: 13px;
+  border: 1px solid rgba(246, 174, 52, 0.32);
+  border-radius: 14px;
+  background: rgba(14, 34, 62, 0.48);
+  padding: 14px;
+}
+
+.business-payroll-editor h4 {
+  margin: 0;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 950;
+}
+
+.business-payroll-editor.variable > p {
+  margin: -5px 0 0;
+  color: #bfd0e3;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.9;
+}
+
+.business-payroll-form-error {
+  margin: 0;
+  color: #ffd1d1;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.business-payroll-editor-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-start;
+}
+
+.business-payroll-editor-actions button {
+  min-height: 34px;
+  border: 1px solid rgba(246, 174, 52, 0.52);
+  border-radius: 999px;
+  background: transparent;
+  color: #f6ae34;
+  padding: 0 18px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.business-payroll-editor-actions .is-primary {
+  background: #f6ae34;
+  color: #172d4a;
+}
+
+.business-payroll-variable-actions {
+  display: flex;
+  justify-content: flex-start;
+  gap: 10px;
+}
+
+.business-payroll-chips,
+.business-payroll-toggle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.business-payroll-chips button,
+.business-payroll-toggle button {
+  border: 1px solid rgba(151, 182, 215, 0.22);
+  border-radius: 9px;
+  background: rgba(11, 29, 54, 0.58);
+  color: #e1ebf5;
+  padding: 9px 12px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.business-payroll-chips button.is-selected,
+.business-payroll-toggle button.is-selected {
+  border-color: #f6ae34;
+  background: #f6ae34;
+  color: #132844;
+}
+
+.business-payroll-toggle button.is-warning {
+  border-color: #f6ae34;
+  background: rgba(246, 174, 52, 0.16);
+  color: #fbbf57;
+}
+
+.business-payroll-formula {
+  color: #ffe1aa;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.business-payroll-items {
+  display: grid;
+  gap: 9px;
+}
+
+.business-payroll-items article {
+  display: grid;
+  grid-template-columns: minmax(140px, 1fr) minmax(160px, 1fr) auto auto;
+  align-items: center;
+  gap: 14px;
+  border: 1px solid rgba(151, 182, 215, 0.18);
+  border-radius: 12px;
+  background: rgba(16, 37, 65, 0.38);
+  padding: 12px 13px;
+}
+
+.business-payroll-items article div:first-child {
+  display: grid;
+  gap: 4px;
+}
+
+.business-payroll-items .business-payroll-difference-badge {
+  margin-top: 4px;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.business-payroll-removed-items {
+  display: grid;
+  gap: 8px;
+}
+
+.business-payroll-items strong {
+  color: #fff;
+  font-size: 13px;
+}
+
+.business-payroll-items span,
+.business-payroll-items p {
+  margin: 0;
+  color: #b8cadd;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.business-payroll-items b {
+  color: #f7bd56;
+  font-size: 13px;
+}
+
+.business-payroll-item-actions {
+  display: flex;
+  gap: 5px;
+}
+
+.business-payroll-empty {
+  border: 1px dashed rgba(155, 184, 216, 0.25);
+  border-radius: 12px;
+  color: #bed0e2;
+  padding: 18px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.business-payroll-overtime-limits {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.business-payroll-overtime-limits div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  border-radius: 10px;
+  background: rgba(15, 37, 66, 0.43);
+  color: #c2d3e5;
+  padding: 13px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.business-payroll-overtime-limits strong {
+  color: #fff;
+}
+
+.business-payroll-coefficients {
+  display: grid;
+  gap: 11px;
+}
+
+.business-payroll-coefficients article {
+  display: grid;
+  grid-template-columns: minmax(190px, 0.85fr) minmax(230px, 1.15fr);
+  align-items: center;
+  gap: 16px;
+  border: 1px solid rgba(151, 182, 215, 0.14);
+  border-radius: 12px;
+  padding: 11px;
+}
+
+.business-payroll-coefficients article > div {
+  display: grid;
+  gap: 5px;
+  border-radius: 10px;
+  background: rgba(13, 31, 56, 0.42);
+  padding: 10px 12px;
+}
+
+.business-payroll-coefficients article > div strong {
+  color: #e9f2fc;
+  font-size: 12px;
+}
+
+.business-payroll-coefficients article > div span {
+  color: #f5bd59;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.business-payroll-coefficients article > div small {
+  color: #aec3d9;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.business-payroll-time-rule-cards {
+  display: grid;
+  gap: 11px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.business-payroll-time-rule-cards article {
+  display: grid;
+  gap: 11px;
+  border: 1px solid rgba(151, 182, 215, 0.14);
+  border-radius: 12px;
+  background: rgba(13, 31, 56, 0.2);
+  padding: 12px;
+}
+
+.business-payroll-rule-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.business-payroll-rule-title h4 {
+  margin: 0;
+  color: #f8fafc;
+  font-size: 14px;
+  font-weight: 950;
+}
+
+.business-payroll-rule-result {
+  display: grid;
+  gap: 5px;
+  border-radius: 10px;
+  background: rgba(13, 31, 56, 0.42);
+  padding: 10px 12px;
+}
+
+.business-payroll-rule-result strong {
+  color: #e9f2fc;
+  font-size: 12px;
+}
+
+.business-payroll-rule-result span {
+  color: #f5bd59;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.business-payroll-rule-result small {
+  color: #aec3d9;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.75;
+}
+
+.business-payroll-standard-badge {
+  border: 1px solid rgba(45, 212, 191, 0.3);
+  border-radius: 999px;
+  background: rgba(45, 212, 191, 0.1);
+  color: #78ddcf;
+  padding: 5px 12px;
+  font-size: 10px;
+  font-weight: 950;
+  white-space: nowrap;
+}
+
+.business-payroll-combination-method {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid rgba(156, 184, 216, 0.2);
+  border-radius: 11px;
+  background: rgba(13, 31, 56, 0.42);
+  color: #f8fafc;
+  padding: 10px 13px;
+}
+
+.business-payroll-combination-card {
+  display: grid;
+  gap: 12px;
+  border: 1px solid rgba(151, 182, 215, 0.18);
+  border-radius: 16px;
+  background: rgba(13, 31, 56, 0.24);
+  padding: 15px;
+}
+
+.business-payroll-combination-card > header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.business-payroll-combination-card h4 {
+  margin: 0;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 950;
+}
+
+.business-payroll-combination-card p {
+  margin: 5px 0 0;
+  color: #b9cada;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.7;
+  max-width: 54ch;
+}
+
+.business-payroll-method-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.business-payroll-method-options button {
+  display: grid;
+  gap: 6px;
+  border: 1px solid rgba(151, 182, 215, 0.2);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(11, 29, 54, 0.72), rgba(11, 29, 54, 0.48));
+  color: #c8d8e8;
+  padding: 13px 13px 12px;
+  text-align: right;
+  cursor: pointer;
+  min-height: 108px;
+  position: relative;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.business-payroll-method-options button.is-selected {
+  border-color: rgba(246, 174, 52, 0.72);
+  background: rgba(246, 174, 52, 0.14);
+  box-shadow: 0 0 0 1px rgba(246, 174, 52, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.business-payroll-method-options strong {
+  color: #fff;
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.business-payroll-method-badge {
+  width: fit-content;
+  border: 1px solid rgba(246, 174, 52, 0.28);
+  border-radius: 999px;
+  background: rgba(246, 174, 52, 0.12);
+  color: #ffc255;
+  padding: 2px 8px;
+  font-size: 9px;
+  font-weight: 950;
+}
+
+.business-payroll-method-helper,
+.business-payroll-method-example,
+.business-payroll-combination-preview span,
+.business-payroll-combination-preview small {
+  color: #b7c8da;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.7;
+}
+
+.business-payroll-method-example {
+  color: #dbe9f7;
+}
+
+.business-payroll-method-info {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.08);
+  color: #dfe8f3;
+  position: absolute;
+  top: 11px;
+  left: 11px;
+}
+
+.business-payroll-combination-preview,
+.business-payroll-preview-result {
+  display: grid;
+  gap: 7px;
+  border-radius: 12px;
+  background: rgba(10, 25, 47, 0.36);
+  padding: 11px 12px;
+}
+
+.business-payroll-combination-preview strong {
+  color: #f6ae34;
+  font-size: 13px;
+  font-weight: 950;
+}
+
+.business-payroll-preview-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.business-payroll-preview-chips span {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  border-radius: 999px;
+  background: rgba(56, 189, 248, 0.08);
+  color: #e2f4ff;
+  padding: 3px 8px;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.business-payroll-exception-list {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.business-payroll-rule-card {
+  display: grid;
+  gap: 10px;
+  border: 1px solid rgba(151, 182, 215, 0.15);
+  border-radius: 14px;
+  background: rgba(16, 37, 65, 0.34);
+  padding: 13px;
+}
+
+.business-payroll-rule-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.business-payroll-rule-main {
+  display: grid;
+  gap: 6px;
+}
+
+.business-payroll-rule-topline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.business-payroll-rule-state,
+.business-payroll-rule-priority,
+.business-payroll-rule-meta span {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 3px 8px;
+  font-size: 9px;
+  font-weight: 950;
+}
+
+.business-payroll-rule-state.is-active {
+  border: 1px solid rgba(45, 212, 191, 0.28);
+  background: rgba(45, 212, 191, 0.12);
+  color: #76dbc9;
+}
+
+.business-payroll-rule-state.is-inactive {
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: rgba(148, 163, 184, 0.12);
+  color: #b7c8da;
+}
+
+.business-payroll-rule-priority {
+  border: 1px solid rgba(56, 189, 248, 0.22);
+  background: rgba(56, 189, 248, 0.1);
+  color: #cfefff;
+}
+
+.business-payroll-rule-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.business-payroll-rule-meta b {
+  border: 1px solid rgba(246, 174, 52, 0.22);
+  border-radius: 999px;
+  background: rgba(246, 174, 52, 0.08);
+  color: #ffd185;
+  padding: 3px 8px;
+  font-size: 9px;
+}
+
+.business-payroll-rule-meta span {
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  background: rgba(56, 189, 248, 0.08);
+  color: #dff5ff;
+}
+
+.business-payroll-exception-list strong,
+.business-payroll-exception-list b {
+  color: #fff;
+  font-size: 12px;
+}
+
+.business-payroll-exception-list span {
+  color: #b8cadd;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.business-payroll-condition-chips,
+.business-payroll-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.business-payroll-condition-chips span {
+  border: 1px solid rgba(56, 189, 248, 0.24);
+  border-radius: 999px;
+  background: rgba(56, 189, 248, 0.1);
+  color: #dff5ff;
+  padding: 3px 8px;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.business-payroll-suggestions {
+  align-items: center;
+  border-top: 1px solid rgba(151, 182, 215, 0.12);
+  padding-top: 10px;
+}
+
+.business-payroll-suggestions strong {
+  color: #f6ae34;
+  font-size: 11px;
+  font-weight: 950;
+}
+
+.business-payroll-suggestions button {
+  border: 1px solid rgba(151, 182, 215, 0.22);
+  border-radius: 999px;
+  background: transparent;
+  color: #d6e3ef;
+  padding: 5px 10px;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.business-payroll-preview-result {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.business-payroll-preview-result div {
+  display: grid;
+  gap: 4px;
+}
+
+.business-payroll-preview-result span {
+  color: #9fb5cb;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.business-payroll-preview-result strong {
+  color: #fff;
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.business-payroll-preview-formula {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  border-radius: 10px;
+  background: rgba(246, 174, 52, 0.08);
+  color: #ffe1aa;
+  padding: 10px 12px;
+}
+
+.business-payroll-preview-formula strong {
+  color: #fff;
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.business-payroll-editor.combination {
+  background: rgba(10, 25, 47, 0.34);
+}
+
+.business-payroll-editor-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.business-payroll-combination .business-payroll-formula {
+  display: grid;
+  gap: 7px;
+}
+
+.business-payroll-combination .business-payroll-formula strong {
+  color: #f8fafc;
+}
+
+.business-payroll-preview-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.business-payroll-preview-row strong {
+  color: #fff;
+}
+
+.business-payroll-preview-row span {
+  color: #9fb5cb;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.business-payroll-preview-breakdown {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.business-payroll-preview-breakdown span {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgba(246, 174, 52, 0.18);
+  border-radius: 999px;
+  background: rgba(246, 174, 52, 0.08);
+  color: #ffe2af;
+  padding: 3px 8px;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.business-payroll-editor.combination {
+  position: relative;
+  border: 1px solid rgba(151, 182, 215, 0.18);
+  border-radius: 14px;
+  background: rgba(9, 24, 45, 0.52);
+}
+
+.business-payroll-editor.combination .business-payroll-field,
+.business-payroll-editor.combination .business-payroll-fields {
+  gap: 10px;
+}
+
+.business-payroll-editor.combination select,
+.business-payroll-editor.combination input {
+  font-size: 12px;
+}
+
+.business-payroll-editor.combination .business-payroll-editor-actions {
+  justify-content: flex-end;
+}
+
+.business-payroll-time-summary small {
+  margin-top: 5px;
+}
+
+.business-payroll-settlement-rules {
+  display: grid;
+  gap: 9px;
+}
+
+.business-payroll-settlement-rules article {
+  display: grid;
+  gap: 10px;
+  border: 1px solid rgba(162, 189, 218, 0.24);
+  border-radius: 11px;
+  padding: 11px;
+}
+
+.business-payroll-settlement-rules article > strong {
+  color: #fff;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.business-payroll-transfer-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.business-payroll-transfer-rule {
+  display: grid;
+  gap: 10px;
+  border: 1px solid rgba(162, 189, 218, 0.18);
+  border-radius: 14px;
+  background: rgba(13, 31, 56, 0.24);
+  padding: 12px;
+}
+
+.business-payroll-transfer-rule.is-disabled {
+  opacity: 0.82;
+  background: rgba(13, 31, 56, 0.16);
+}
+
+.business-payroll-transfer-rule-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.business-payroll-transfer-rule-head > div:first-child {
+  display: grid;
+  gap: 6px;
+}
+
+.business-payroll-transfer-rule-head strong {
+  color: #fff;
+  font-size: 13px;
+  font-weight: 950;
+}
+
+.business-payroll-transfer-rule-muted {
+  border-radius: 11px;
+  background: rgba(8, 22, 41, 0.34);
+  color: #9fb5cb;
+  padding: 11px 12px;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.8;
+}
+
+.business-payroll-warning {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: #f5bc51 !important;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.business-payroll-coming-soon {
+  display: grid;
+  justify-items: start;
+  gap: 10px;
+  border: 1px dashed rgba(246, 174, 52, 0.37);
+  border-radius: 16px;
+  background: rgba(16, 39, 70, 0.38);
+  padding: 20px;
+}
+
+.business-payroll-coming-soon span {
+  border-radius: 999px;
+  background: rgba(246, 174, 52, 0.14);
+  color: #f6ae34;
+  padding: 5px 12px;
+  font-size: 11px;
+  font-weight: 950;
+}
+
+.business-payroll-coming-soon h3 {
+  margin: 0;
+  color: #fff;
+  font-size: 17px;
+}
+
+.business-draft-list-page {
+  min-height: 100%;
+  background: #07182d;
+  color: #fff;
+  padding: 28px;
+}
+
+.business-draft-list-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.business-draft-list-header p {
+  margin: 0 0 6px;
+  color: #9fb5cb;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.business-draft-list-header h1 {
+  margin: 0;
+  color: #fff;
+  font-size: 24px;
+  font-weight: 950;
+}
+
+.business-draft-list-header span {
+  display: block;
+  margin-top: 8px;
+  color: #b8cadd;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.business-draft-dialog {
+  display: grid;
+  gap: 14px;
+}
+
+.business-draft-dialog-options {
+  display: grid;
+  gap: 8px;
+}
+
+.business-draft-dialog-options > span {
+  color: #dbe7f4;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.business-draft-dialog-options em,
+.business-draft-dialog .calendar-create-field em {
+  color: #f6ae34;
+  font-style: normal;
+}
+
+.business-draft-dialog-options button,
+.business-draft-option-grid button {
+  border: 1px solid rgba(151, 182, 215, 0.22);
+  border-radius: 12px;
+  background: rgba(11, 29, 54, 0.5);
+  color: #d9e7f5;
+  padding: 11px 12px;
+  text-align: right;
+  cursor: pointer;
+}
+
+.business-draft-dialog-options-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.business-draft-dialog-options button.is-selected,
+.business-draft-option-grid button.is-selected {
+  border-color: rgba(246, 174, 52, 0.72);
+  background: rgba(246, 174, 52, 0.14);
+  color: #fff;
+}
+
+.business-draft-dialog-options button {
+  display: grid;
+  gap: 7px;
+  align-content: start;
+  min-height: 124px;
+}
+
+.business-draft-option-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  justify-self: start;
+  border-radius: 999px;
+  border: 1px solid rgba(151, 182, 215, 0.22);
+  background: rgba(6, 22, 43, 0.62);
+  color: #dfeefc;
+  padding: 4px 9px;
+  font-size: 10px;
+  font-weight: 950;
+}
+
+.business-draft-dialog-options strong {
+  display: block;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 950;
+}
+
+.business-draft-dialog-options small {
+  display: block;
+  margin-top: 5px;
+  color: #aebfd1;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.7;
+}
+
+.contract-draft-option-grid,
+.business-draft-document-picker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 10px;
+}
+
+.contract-draft-intro-card {
+  gap: 14px;
+}
+
+.contract-draft-subsection--nested {
+  gap: 10px;
+  margin-top: 2px;
+}
+
+.contract-draft-subcategory-note {
+  margin: 0;
+  color: #f6ae34;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.7;
+  text-align: left;
+}
+
+@media (max-width: 560px) {
+  .calendar-create-modal:has(.business-draft-template-dialog) {
+    width: min(100%, 100%);
+    padding: 16px;
+  }
+
+  .business-draft-dialog-options-grid,
+  .business-draft-scope-options {
+    grid-template-columns: 1fr;
+  }
+
+  .business-draft-template-mode-row {
+    grid-template-columns: 1fr;
+  }
+
+  .contract-party-card-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .contract-party-card-stats.is-address {
+    grid-template-columns: 1fr;
+  }
+}
+
+.business-draft-template-row {
+  width: 100%;
+  text-align: right;
+  cursor: pointer;
+}
+
+.business-contract-template-flow {
+  --flow-side: clamp(232px, 18vw, 280px);
+}
+
+.business-contract-template-flow .draft-template-flow-section-card {
+  scroll-margin-top: 22px;
+}
+
+/* Contract draft template — live summary sidebar */
+.contract-draft-live-summary .draft-template-flow-report-header {
+  padding: 16px 14px 12px;
+}
+
+.contract-draft-live-summary .draft-template-flow-report-meta {
+  margin-bottom: 10px;
+  border-color: rgba(246, 174, 52, 0.28);
+  background: rgba(246, 174, 52, 0.08);
+}
+
+.contract-draft-live-summary .draft-template-flow-report-meta strong {
+  background: rgba(246, 174, 52, 0.16);
+  color: #f7c467;
+}
+
+.contract-draft-live-summary .contract-draft-summary-body {
+  align-content: start;
+  gap: 8px;
+  padding: 8px 10px 16px;
+}
+
+.contract-draft-live-summary .draft-template-flow-report-card {
+  padding: 11px 12px;
+}
+
+.contract-draft-live-summary .draft-template-flow-report-card.accent strong {
+  font-size: 15px;
+  line-height: 1.45;
+  word-break: break-word;
+}
+
+.contract-draft-summary-progress .draft-template-flow-report-card-head {
+  margin-bottom: 8px;
+}
+
+.contract-draft-summary-progress .draft-template-flow-report-card-head strong {
+  margin-top: 0;
+  font-size: 12px;
+}
+
+.contract-draft-summary-progress-bar {
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.16);
+  overflow: hidden;
+}
+
+.contract-draft-summary-progress-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #14b8a6, #f6ae34);
+  transition: width 0.25s ease;
+}
+
+.contract-draft-live-summary .draft-template-flow-report-grid {
+  gap: 7px;
+}
+
+.contract-draft-live-summary .draft-template-flow-report-grid > div {
+  padding: 10px;
+}
+
+.contract-draft-live-summary .draft-template-flow-report-grid strong {
+  margin-top: 4px;
+  font-size: 13px;
+}
+
+.contract-draft-live-summary .draft-template-flow-report-card > strong {
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.contract-draft-live-summary .draft-template-flow-report-card small {
+  margin-top: 5px;
+}
+
+@media (max-width: 760px) {
+  .contract-draft-live-summary .contract-draft-summary-body {
+    grid-template-columns: 1fr;
+  }
+}
+
+.draft-template-flow-main {
+  grid-area: content;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  direction: rtl;
+}
+
+.business-payroll-header-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.business-payroll-header-badges span,
+.business-draft-section-title span {
+  border: 1px solid rgba(56, 189, 248, 0.24);
+  border-radius: 999px;
+  background: rgba(56, 189, 248, 0.1);
+  color: #dff5ff;
+  padding: 5px 10px;
+  font-size: 10px;
+  font-weight: 950;
+}
+
+.business-draft-option-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.business-draft-option-grid.adaptive-chip-group,
+.business-draft-option-grid.contract-draft-option-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.business-draft-option-grid .adaptive-chip {
+  width: 100%;
+  max-width: none;
+}
+
+.adaptive-chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 10px;
+}
+
+.adaptive-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  width: fit-content;
+  max-width: 100%;
+  min-height: 50px;
+  border: 1px solid rgba(151, 182, 215, 0.22);
+  border-radius: 14px;
+  background: rgba(11, 29, 54, 0.52);
+  color: #d9e7f5;
+  padding: 11px 14px;
+  text-align: right;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.adaptive-chip:hover:not(:disabled) {
+  border-color: rgba(246, 174, 52, 0.42);
+  transform: translateY(-1px);
+}
+
+.adaptive-chip.is-selected {
+  border-color: rgba(246, 174, 52, 0.78);
+  background: linear-gradient(180deg, rgba(247, 174, 57, 0.96), rgba(235, 149, 25, 0.92));
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(246, 174, 52, 0.16);
+}
+
+.adaptive-chip.is-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.adaptive-chip-check,
+.adaptive-chip-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+}
+
+.adaptive-chip-check {
+  border: 1px solid rgba(255, 255, 255, 0.58);
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+}
+
+.adaptive-chip-icon {
+  color: #f7c467;
+}
+
+.adaptive-chip-label {
+  display: block;
+  min-width: 0;
+  white-space: normal;
+  line-height: 1.55;
+  word-break: break-word;
+}
+
+.business-draft-section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.business-draft-section-title h3 {
+  margin: 0;
+}
+
+.panel-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  width: 100%;
+  cursor: pointer;
+}
+
+.panel-toggle-row-label {
+  flex: 1;
+  min-width: 0;
+  color: #bfd0e3;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.75;
+}
+
+.panel-toggle-row-switch {
+  flex-shrink: 0;
+}
+
+.business-contract-template-flow .panel-toggle-row-switch input:checked + .request-reason-toggle-track {
+  background: linear-gradient(135deg, #f6ae34, #eb9519);
+}
+
+.contract-draft-severance-card {
+  gap: 10px;
+}
+
+.contract-draft-severance-card .panel-toggle-row {
+  padding-top: 10px;
+  border-top: 1px solid rgba(151, 182, 215, 0.12);
+}
+
+.business-draft-variable-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 130px 120px auto;
+  gap: 8px;
+  align-items: center;
+  border: 1px solid rgba(151, 182, 215, 0.16);
+  border-radius: 12px;
+  background: rgba(9, 24, 45, 0.34);
+  padding: 10px;
+}
+
+.business-draft-variable-card input,
+.business-draft-variable-card select {
+  min-width: 0;
+  border: 1px solid rgba(151, 182, 215, 0.22);
+  border-radius: 10px;
+  background: rgba(8, 22, 41, 0.5);
+  color: #fff;
+  padding: 9px 10px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.business-draft-variable-card button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 163, 132, 0.28);
+  border-radius: 10px;
+  background: rgba(255, 163, 132, 0.08);
+  color: #ffb697;
+  padding: 9px;
+  cursor: pointer;
+}
+
+.business-draft-category-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.business-draft-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.business-draft-document-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+@media (max-width: 1060px) {
+  .business-draft-option-grid,
+  .business-draft-category-grid,
+  .business-draft-variable-card {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .business-draft-list-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .draft-templates-showcase-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .draft-template-showcase-head {
+    flex-direction: column;
+  }
+
+  .draft-template-showcase-info {
+    grid-template-columns: 1fr;
+  }
+
+  .draft-template-showcase-actions {
+    justify-content: flex-start;
+  }
+
+  .draft-template-showcase-menu-wrap {
+    align-self: flex-end;
+  }
+}
+
+.business-payroll-coming-soon p {
+  margin: 0;
+  color: #bed0e2;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.business-payroll-coming-soon button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid rgba(156, 182, 212, 0.22);
+  border-radius: 999px;
+  background: rgba(15, 37, 66, 0.38);
+  color: #96aac2;
+  padding: 9px 18px;
+  font: inherit;
+}
+
+.business-payroll-step-footer {
+  display: flex;
+  justify-content: flex-start;
+  gap: 9px;
+  border-top: 1px solid rgba(164, 190, 220, 0.16);
+  padding-top: 15px;
+}
+
+.business-payroll-step-footer .draft-template-flow-action {
+  width: auto;
+}
+
+.business-payroll-step-footer .draft-template-flow-section-save:disabled {
+  opacity: 0.52;
+  cursor: not-allowed;
+}
+
+.business-payroll-notice {
+  margin-bottom: 14px;
+  border: 1px solid rgba(246, 174, 52, 0.3);
+  border-radius: 12px;
+  background: rgba(246, 174, 52, 0.09);
+  color: #ffe0a8;
+  padding: 11px 14px;
+  text-align: right;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.business-payroll-default-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 0 0 16px;
+  border: 1px solid rgba(56, 189, 248, 0.34);
+  border-radius: 16px;
+  background: linear-gradient(90deg, rgba(56, 189, 248, 0.14), rgba(45, 212, 191, 0.1));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  color: #dff5ff;
+  padding: 14px 16px;
+}
+
+.business-payroll-default-banner-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: #67e8f9;
+}
+
+.business-payroll-default-banner-copy {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.business-payroll-default-banner-copy strong {
+  color: #f8fafc;
+  font-size: 14px;
+  font-weight: 950;
+  line-height: 1.6;
+}
+
+.business-payroll-default-banner-copy p {
+  margin: 0;
+  color: #b9d9ea;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.85;
+}
+
+.business-payroll-summary .draft-template-flow-report-card,
+.business-payroll-summary .draft-template-flow-report-grid > div {
+  border-color: rgba(156, 184, 216, 0.18);
+  background: rgba(17, 40, 69, 0.56);
+}
+
+.business-payroll-summary .draft-template-flow-report-card.accent,
+.business-payroll-summary .draft-template-flow-report-card.total {
+  border-color: rgba(246, 174, 52, 0.37);
+  background: rgba(246, 174, 52, 0.08);
+}
+
+.business-payroll-summary small {
+  display: block;
+  margin-top: 7px;
+  color: #a9bfd6;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.7;
+}
+
+.business-payroll-summary .is-positive {
+  color: #f7c467;
+}
+
+.business-payroll-summary .is-negative {
+  color: #ffb697;
+}
+
+@media (max-width: 1060px) {
+  .business-payroll-calculation-grid,
+  .business-payroll-items article,
+  .business-payroll-method-options,
+  .business-payroll-preview-result,
+  .business-payroll-coefficients article,
+  .business-payroll-time-rule-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .business-payroll-exception-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .business-payroll-years-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .business-payroll-subcard-head,
+  .business-payroll-step-footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .business-payroll-fields.two,
+  .business-payroll-fields.three,
+  .business-payroll-overtime-limits,
+  .business-payroll-transfer-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* ─── Calculation Rules ───────────────────────────────────────────────────── */
+
+/* Read-only badges on item cards */
+.calc-badges-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.calc-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: var(--text-xs);
+  line-height: 1.6;
+  cursor: default;
+  user-select: none;
+  border: 1px solid rgba(151, 182, 215, 0.18);
+  background: rgba(14, 26, 43, 0.5);
+  color: var(--muted);
+}
+
+.calc-badge.is-active {
+  border-color: rgba(246, 174, 52, 0.45);
+  background: rgba(246, 174, 52, 0.08);
+  color: #fbbf24;
+}
+
+.calc-badge.is-system {
+  border-color: rgba(99, 102, 241, 0.4);
+  background: rgba(99, 102, 241, 0.1);
+  color: #a5b4fc;
+}
+
+.calc-badge.is-diff {
+  border-color: rgba(20, 184, 166, 0.35);
+  background: rgba(20, 184, 166, 0.08);
+  color: #5eead4;
+}
+
+/* Edit button on item cards */
+.calc-rules-edit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: var(--text-xs);
+  border: 1px solid rgba(151, 182, 215, 0.2);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  margin-top: 6px;
+}
+
+.calc-rules-edit-btn:hover {
+  border-color: rgba(246, 174, 52, 0.5);
+  color: #fbbf24;
+  background: rgba(246, 174, 52, 0.06);
+}
+
+/* Dialog body */
+.calc-dialog-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.calc-dialog-locked-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  color: #a5b4fc;
+  font-size: var(--text-sm);
+}
+
+.calc-dialog-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.calc-dialog-section-label {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.calc-dialog-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.calc-select-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: var(--text-sm);
+  border: 1px solid rgba(151, 182, 215, 0.22);
+  background: rgba(14, 26, 43, 0.5);
+  color: var(--muted);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+
+.calc-select-chip:hover {
+  border-color: rgba(246, 174, 52, 0.45);
+  color: var(--text);
+}
+
+.calc-select-chip.is-active {
+  border-color: #f6ae34;
+  background: rgba(246, 174, 52, 0.14);
+  color: #fcd34d;
+}
+
+.calc-dialog-helper {
+  font-size: var(--text-xs);
+  color: var(--muted);
+  margin: 0;
+  line-height: 1.6;
+}
+
+.calc-dialog-warning {
+  font-size: var(--text-xs);
+  color: #fb923c;
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: rgba(251, 146, 60, 0.08);
+  border: 1px solid rgba(251, 146, 60, 0.2);
+  line-height: 1.6;
+}
+
+.calc-dialog-compare {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(14, 26, 43, 0.6);
+  border: 1px solid rgba(151, 182, 215, 0.12);
+}
+
+.calc-dialog-compare-label {
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
+.business-payroll-benefit-with-rules {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.attachment-manager,
+.employee-request-dialog-section,
+.employee-requests-filter,
+.employee-request-card,
+.employee-request-placeholder,
+.employee-request-empty-state,
+.company-loan-card,
+.company-loans-empty,
+.company-loans-toolbar {
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: rgba(15, 23, 42, 0.64);
+  box-shadow: 0 18px 42px rgba(2, 6, 23, 0.24);
+}
+
+.attachment-manager {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-radius: 22px;
+  padding: 14px;
+}
+
+.attachment-manager-head,
+.attachment-manager-item,
+.employee-requests-toolbar,
+.employee-request-card-head,
+.employee-request-card-foot,
+.company-loans-toolbar,
+.company-loan-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.attachment-manager-head strong,
+.company-loans-toolbar strong {
+  display: block;
+  color: #f8fafc;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.attachment-manager-head span,
+.company-loans-toolbar span,
+.attachment-manager-empty,
+.employee-request-empty-note,
+.employee-request-description-text,
+.employee-request-tooltip,
+.company-loans-empty p {
+  color: #94a3b8;
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.attachment-manager-list {
+  display: grid;
+  gap: 8px;
+}
+
+.attachment-manager-item {
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: rgba(15, 23, 42, 0.78);
+  padding: 10px 12px;
+  color: #e2e8f0;
+}
+
+.attachment-manager-item > div {
+  min-width: 0;
+  flex: 1;
+}
+
+.attachment-manager-item strong,
+.attachment-manager-item span {
+  display: block;
+}
+
+.attachment-manager-item span {
+  margin-top: 2px;
+  color: #94a3b8;
+  font-size: 11px;
+}
+
+.attachment-manager-item button,
+.employee-request-actions button,
+.company-loan-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.82);
+  color: #cbd5e1;
+  min-width: 34px;
+  height: 34px;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 800;
+  transition: 160ms ease;
+}
+
+.attachment-manager-item button:hover,
+.employee-request-actions button:hover,
+.company-loan-actions button:hover {
+  border-color: rgba(251, 146, 60, 0.55);
+  color: #fed7aa;
+}
+
+.attachment-manager-dropzone {
+  grid-column: 1 / -1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 92px;
+  border: 1px dashed rgba(251, 146, 60, 0.42);
+  border-radius: 18px;
+  background: rgba(251, 146, 60, 0.08);
+  color: #fed7aa;
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.attachment-manager-dropzone input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.employee-request-form-grid,
+.company-loan-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.employee-requests-page {
+  width: min(100%, 1220px);
+  max-width: 1220px;
+}
+
+.employee-requests-layout {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+  direction: ltr;
+}
+
+.employee-requests-layout > * {
+  direction: rtl;
+}
+
+.employee-requests-filter {
+  position: sticky;
+  top: 96px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  border-radius: 24px;
+  padding: 16px;
+}
+
+.employee-filter-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.employee-filter-block > strong {
+  color: #f8fafc;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.employee-filter-block label,
+.employee-filter-quick button,
+.employee-request-chip-grid button,
+.employee-request-more-btn,
+.company-loan-status-picker button {
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(15, 23, 42, 0.72);
+  color: #cbd5e1;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.employee-filter-block label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.employee-filter-readonly {
+  border-radius: 16px;
+  border: 1px solid rgba(20, 184, 166, 0.22);
+  background: rgba(20, 184, 166, 0.08);
+  color: #ccfbf1;
+  padding: 10px 12px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.employee-filter-quick,
+.employee-request-chip-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.employee-filter-quick button.is-active,
+.employee-request-chip-grid button.is-selected,
+.company-loan-status-picker button.is-selected {
+  border-color: rgba(251, 146, 60, 0.62);
+  background: rgba(251, 146, 60, 0.16);
+  color: #fed7aa;
+}
+
+.employee-requests-main {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.employee-requests-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  border: 1px solid rgba(20, 184, 166, 0.18);
+  border-radius: 28px;
+  padding: 18px;
+  background:
+    radial-gradient(circle at top right, rgba(20, 184, 166, 0.2), transparent 32%),
+    linear-gradient(135deg, rgba(15, 23, 42, 0.92), rgba(30, 41, 59, 0.72));
+}
+
+.employee-request-person {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.employee-request-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 58px;
+  height: 58px;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(15, 23, 42, 0.8);
+  color: #f8fafc;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.employee-request-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.employee-request-person h2,
+.employee-request-card h3,
+.company-loan-card h2 {
+  margin: 0;
+  color: #f8fafc;
+  font-size: 16px;
+  font-weight: 950;
+}
+
+.employee-request-person p {
+  margin: 4px 0 0;
+  color: #cbd5e1;
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.employee-request-back-link {
+  color: #fed7aa;
+  font-size: 12px;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.employee-request-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 0 8px;
+}
+
+.employee-request-tabs button {
+  flex: 0 0 auto;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.72);
+  color: #cbd5e1;
+  padding: 10px 14px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.employee-request-tabs button.is-active {
+  border-color: rgba(20, 184, 166, 0.6);
+  background: rgba(20, 184, 166, 0.14);
+  color: #ccfbf1;
+}
+
+.employee-request-list,
+.company-loans-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.employee-request-card,
+.employee-request-placeholder,
+.employee-request-empty-state {
+  border-radius: 24px;
+  padding: 16px;
+}
+
+.employee-request-card {
+  display: grid;
+  gap: 14px;
+}
+
+.employee-request-card-main {
+  display: grid;
+  gap: 12px;
+}
+
+.employee-request-status {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  border-radius: 999px;
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.employee-request-status.is-pending {
+  background: rgba(251, 191, 36, 0.14);
+  color: #fde68a;
+}
+
+.employee-request-status.is-approved {
+  background: rgba(34, 197, 94, 0.14);
+  color: #bbf7d0;
+}
+
+.employee-request-status.is-rejected {
+  background: rgba(248, 113, 113, 0.14);
+  color: #fecaca;
+}
+
+.employee-request-status.is-canceled {
+  background: rgba(148, 163, 184, 0.16);
+  color: #cbd5e1;
+}
+
+.employee-request-meta-grid,
+.employee-request-balance,
+.employee-request-loan-summary,
+.company-loan-meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.employee-request-meta-grid div,
+.employee-request-balance div,
+.employee-request-loan-summary div,
+.company-loan-meta div {
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.62);
+  padding: 10px;
+}
+
+.employee-request-meta-grid dt,
+.employee-request-balance span,
+.employee-request-loan-summary span,
+.company-loan-meta dt {
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.employee-request-meta-grid dd,
+.employee-request-balance strong,
+.employee-request-loan-summary strong,
+.company-loan-meta dd {
+  margin: 4px 0 0;
+  color: #f8fafc;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.employee-request-actions,
+.company-loan-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.employee-request-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.employee-request-dialog-section {
+  border-radius: 22px;
+  padding: 14px;
+}
+
+.employee-request-section-title {
+  margin: 0 0 10px;
+  color: #f8fafc;
+  font-size: 13px;
+  font-weight: 950;
+}
+
+.employee-request-empty-loan {
+  display: grid;
+  gap: 10px;
+  border-radius: 18px;
+  border: 1px dashed rgba(251, 146, 60, 0.42);
+  padding: 14px;
+  color: #fed7aa;
+}
+
+.employee-request-empty-loan a {
+  color: #fdba74;
+  font-weight: 900;
+}
+
+.employee-request-description {
+  grid-column: 1 / -1;
+}
+
+.employee-request-saving {
+  color: #fed7aa;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.company-loans-page {
+  width: min(100%, 1040px);
+}
+
+.company-loans-workspace {
+  display: grid;
+  gap: 16px;
+}
+
+.company-loans-toolbar,
+.company-loans-empty {
+  border-radius: 24px;
+  padding: 16px;
+}
+
+.company-loans-empty {
+  display: grid;
+  justify-items: start;
+  gap: 10px;
+}
+
+.company-loans-empty strong {
+  color: #f8fafc;
+  font-size: 15px;
+  font-weight: 950;
+}
+
+.company-loans-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.company-loan-card {
+  border-radius: 24px;
+  padding: 16px;
+}
+
+.company-loan-card-head {
+  align-items: flex-start;
+}
+
+.company-loan-status {
+  display: inline-flex;
+  margin-top: 8px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.16);
+  color: #cbd5e1;
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.company-loan-status.is-active {
+  background: rgba(20, 184, 166, 0.16);
+  color: #99f6e4;
+}
+
+.company-loan-meta {
+  margin: 14px 0 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.company-loan-status-picker {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.company-loan-status-picker > span {
+  color: #f8fafc;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.business-payroll-field small {
+  display: block;
+  margin-top: 6px;
+  color: #fca5a5;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+@media (max-width: 980px) {
+  .employee-requests-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .employee-requests-filter {
+    position: static;
+    order: 2;
+  }
+
+  .company-loans-grid,
+  .employee-request-meta-grid,
+  .employee-request-balance,
+  .employee-request-loan-summary {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .employee-request-form-grid,
+  .company-loan-form-grid,
+  .company-loan-meta {
+    grid-template-columns: 1fr;
+  }
+
+  .employee-requests-hero,
+  .employee-requests-toolbar,
+  .employee-request-card-foot,
+  .company-loans-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
+
+.panel-form-modal-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.panel-form-modal-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.72);
+  color: #cbd5e1;
+  transition: 160ms ease;
+}
+
+.panel-form-modal-close:hover {
+  border-color: rgba(251, 146, 60, 0.45);
+  color: #fed7aa;
+}
+
+.calendar-create-modal:has(.employee-request-dialog),
+.calendar-create-modal:has(.attachment-manager-dialog) {
+  width: min(94vw, 600px);
+  max-height: 85vh;
+  border-radius: 24px;
+  border-color: rgba(148, 163, 184, 0.18);
+  background:
+    radial-gradient(circle at top right, rgba(20, 184, 166, 0.12), transparent 30%),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.94));
+  overflow: hidden;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .calendar-create-modal-head,
+.calendar-create-modal:has(.attachment-manager-dialog) .calendar-create-modal-head {
+  padding: 16px 18px 10px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .calendar-create-modal-head h2,
+.calendar-create-modal:has(.attachment-manager-dialog) .calendar-create-modal-head h2 {
+  font-size: 16px;
+  line-height: 1.5;
+  font-weight: 950;
+  letter-spacing: -0.01em;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .calendar-event-modal-lead,
+.calendar-create-modal:has(.attachment-manager-dialog) .calendar-event-modal-lead {
+  margin-top: 4px;
+  color: #94a3b8;
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .calendar-create-modal-body,
+.calendar-create-modal:has(.attachment-manager-dialog) .calendar-create-modal-body {
+  max-height: calc(85vh - 132px);
+  overflow: auto;
+  padding: 12px 16px;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .calendar-create-modal-footer,
+.calendar-create-modal:has(.attachment-manager-dialog) .calendar-create-modal-footer {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  justify-content: flex-start;
+  gap: 8px;
+  padding: 10px 16px 14px;
+  border-top: 1px solid rgba(148, 163, 184, 0.14);
+  background: rgba(15, 23, 42, 0.96);
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .calendar-create-submit,
+.calendar-create-modal:has(.employee-request-dialog) .calendar-create-cancel,
+.calendar-create-modal:has(.attachment-manager-dialog) .calendar-create-submit,
+.calendar-create-modal:has(.attachment-manager-dialog) .calendar-create-cancel {
+  min-height: 36px;
+  border-radius: 12px;
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .calendar-create-submit,
+.calendar-create-modal:has(.attachment-manager-dialog) .calendar-create-submit {
+  background: linear-gradient(135deg, #f97316, #fb923c);
+  color: #1f1307;
+  box-shadow: 0 10px 24px rgba(249, 115, 22, 0.22);
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .calendar-create-cancel,
+.calendar-create-modal:has(.attachment-manager-dialog) .calendar-create-cancel {
+  border: 1px solid rgba(248, 113, 113, 0.26);
+  background: rgba(127, 29, 29, 0.12);
+  color: #fecaca;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .calendar-create-error,
+.calendar-create-modal:has(.attachment-manager-dialog) .calendar-create-error {
+  margin: 0 16px 8px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .employee-request-dialog,
+.calendar-create-modal:has(.attachment-manager-dialog) .attachment-manager-dialog {
+  gap: 10px;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .employee-request-person {
+  min-height: 58px;
+  border: 1px solid rgba(20, 184, 166, 0.16);
+  border-radius: 18px;
+  background: rgba(15, 23, 42, 0.62);
+  padding: 9px 10px;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .employee-request-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .employee-request-person strong {
+  display: block;
+  color: #f8fafc;
+  font-size: 13px;
+  line-height: 1.45;
+  font-weight: 950;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .employee-request-person span {
+  display: block;
+  margin-top: 1px;
+  color: #94a3b8;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .employee-request-person b {
+  margin-inline-start: auto;
+  border-radius: 999px;
+  padding: 5px 8px;
+  font-size: 10px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .employee-request-person b.is-approved {
+  background: rgba(34, 197, 94, 0.13);
+  color: #bbf7d0;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .employee-request-person b.is-muted {
+  background: rgba(148, 163, 184, 0.13);
+  color: #cbd5e1;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .employee-request-dialog-section,
+.calendar-create-modal:has(.employee-request-dialog) .attachment-manager,
+.calendar-create-modal:has(.attachment-manager-dialog) .attachment-picker-section {
+  border-radius: 16px;
+  padding: 10px;
+  box-shadow: none;
+  background: rgba(15, 23, 42, 0.58);
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .employee-request-section-title,
+.calendar-create-modal:has(.attachment-manager-dialog) .employee-request-section-title {
+  margin-bottom: 8px;
+  color: #e2e8f0;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .employee-request-form-grid,
+.calendar-create-modal:has(.attachment-manager-dialog) .employee-request-form-grid {
+  gap: 9px;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .business-payroll-field,
+.calendar-create-modal:has(.attachment-manager-dialog) .business-payroll-field {
+  gap: 5px;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .business-payroll-field-label,
+.calendar-create-modal:has(.attachment-manager-dialog) .business-payroll-field-label {
+  font-size: 10.5px;
+  color: #9fb0c6;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .business-payroll-field input,
+.calendar-create-modal:has(.employee-request-dialog) .business-payroll-field select,
+.calendar-create-modal:has(.employee-request-dialog) .business-payroll-field textarea,
+.calendar-create-modal:has(.attachment-manager-dialog) .business-payroll-field input,
+.calendar-create-modal:has(.attachment-manager-dialog) .business-payroll-field textarea {
+  min-height: 36px;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(2, 6, 23, 0.42);
+  color: #f8fafc;
+  padding: 8px 10px;
+  font-size: 12px;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .business-payroll-field textarea,
+.calendar-create-modal:has(.attachment-manager-dialog) .business-payroll-field textarea {
+  min-height: 62px;
+  resize: vertical;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .business-payroll-field input:focus,
+.calendar-create-modal:has(.employee-request-dialog) .business-payroll-field select:focus,
+.calendar-create-modal:has(.employee-request-dialog) .business-payroll-field textarea:focus,
+.calendar-create-modal:has(.attachment-manager-dialog) .business-payroll-field input:focus,
+.calendar-create-modal:has(.attachment-manager-dialog) .business-payroll-field textarea:focus {
+  outline: none;
+  border-color: rgba(251, 146, 60, 0.55);
+  box-shadow: 0 0 0 3px rgba(251, 146, 60, 0.1);
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .employee-request-balance,
+.calendar-create-modal:has(.employee-request-dialog) .employee-request-loan-summary {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .employee-request-balance span,
+.calendar-create-modal:has(.employee-request-dialog) .employee-request-loan-summary span {
+  border-radius: 14px;
+  padding: 8px;
+  font-size: 11px;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .employee-request-chip-grid,
+.attachment-chip-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .employee-request-chip-grid button,
+.calendar-create-modal:has(.employee-request-dialog) .employee-request-more-btn,
+.attachment-chip-grid button,
+.attachment-custom-row button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 30px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 999px;
+  background: rgba(2, 6, 23, 0.34);
+  color: #cbd5e1;
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 850;
+  transition: 150ms ease;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .employee-request-chip-grid button.is-selected,
+.attachment-chip-grid button.is-selected {
+  border-color: rgba(251, 146, 60, 0.7);
+  background: rgba(251, 146, 60, 0.18);
+  color: #fed7aa;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .employee-request-more-btn,
+.attachment-chip-grid button.is-add {
+  border-color: transparent;
+  background: transparent;
+  color: #fdba74;
+  padding-inline: 4px;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .employee-request-tooltip {
+  margin: 8px 0 0;
+  font-size: 10.5px;
+  line-height: 1.7;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .attachment-manager {
+  gap: 8px;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .attachment-manager-head {
+  gap: 8px;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .attachment-manager-head strong {
+  font-size: 12px;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .attachment-manager-head span {
+  font-size: 10.5px;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .attachment-manager .business-payroll-outline-button {
+  min-height: 30px;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 11px;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .attachment-manager-item {
+  padding: 7px 9px;
+  border-radius: 13px;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .attachment-manager-empty {
+  margin: 0;
+  font-size: 11px;
+}
+
+.attachment-manager-dialog {
+  display: grid;
+  gap: 10px;
+}
+
+.attachment-picker-section {
+  display: grid;
+  gap: 8px;
+}
+
+.attachment-custom-row {
+  display: flex;
+  gap: 8px;
+}
+
+.attachment-custom-row input {
+  flex: 1;
+  min-height: 34px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 12px;
+  background: rgba(2, 6, 23, 0.42);
+  color: #f8fafc;
+  padding: 7px 10px;
+  font-size: 12px;
+}
+
+.attachment-manager-fields {
+  margin-top: 2px;
+}
+
+.calendar-create-modal:has(.attachment-manager-dialog) .attachment-manager-dropzone {
+  min-height: 74px;
+  border-radius: 16px;
+  font-size: 12px;
+  background: rgba(251, 146, 60, 0.07);
+}
+
+.attachment-selected-files {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 5px;
+}
+
+.attachment-selected-files span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  max-width: 100%;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 999px;
+  background: rgba(2, 6, 23, 0.34);
+  color: #cbd5e1;
+  padding: 5px 9px;
+  font-size: 10.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .calendar-create-modal:has(.employee-request-dialog),
+  .calendar-create-modal:has(.attachment-manager-dialog) {
+    width: min(96vw, 520px);
+    max-height: 88vh;
+  }
+
+  .calendar-create-modal:has(.employee-request-dialog) .calendar-create-modal-body,
+  .calendar-create-modal:has(.attachment-manager-dialog) .calendar-create-modal-body {
+    max-height: calc(88vh - 132px);
+    padding-inline: 12px;
+  }
+
+  .calendar-create-modal:has(.employee-request-dialog) .employee-request-form-grid,
+  .calendar-create-modal:has(.attachment-manager-dialog) .employee-request-form-grid,
+  .calendar-create-modal:has(.employee-request-dialog) .employee-request-balance,
+  .calendar-create-modal:has(.employee-request-dialog) .employee-request-loan-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .calendar-create-modal:has(.employee-request-dialog) .employee-request-person {
+    align-items: flex-start;
+  }
+
+  .calendar-create-modal:has(.employee-request-dialog) .employee-request-person b {
+    margin-inline-start: 0;
+  }
 }

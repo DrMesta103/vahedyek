@@ -5,6 +5,8 @@ export type BusinessSettingsIcon =
   | 'calendar'
   | 'shift'
   | 'draft'
+  | 'naming'
+  | 'payroll'
   | 'policy'
   | 'request'
   | 'work-group'
@@ -17,6 +19,8 @@ export type BusinessSettingsItem = {
   href: string;
   icon: BusinessSettingsIcon;
   comingSoon?: boolean;
+  badgeLabel?: string;
+  badgeTooltip?: string;
 };
 
 export const BUSINESS_SETTINGS_CATALOG: BusinessSettingsItem[] = [
@@ -52,10 +56,32 @@ export const BUSINESS_SETTINGS_CATALOG: BusinessSettingsItem[] = [
     icon: 'shift',
   },
   {
+    title: 'تنظیمات ضرایب و مقادیر حقوق و دستمزد و تردد',
+    description: 'تعریف مبالغ پایه، مزایا، کسورات، اضافه کار و قواعد مرخصی کارکنان.',
+    href: '/business-settings/payroll-attendance',
+    icon: 'payroll',
+    badgeLabel: 'تاو ادمین',
+    badgeTooltip: 'این قسمت در پنل تاو ادمین پر میشه',
+  },
+  {
+    title: 'تنظیمات اختصاصی حقوق و دستمزد کسب و کار',
+    description: 'مدیریت تنظیمات حقوق، تردد، مزایا، کسورات، اضافه کار و مرخصی بر اساس مقادیر اختصاصی کسب و کار.',
+    href: '/business-settings/payroll-attendance/tenant',
+    icon: 'payroll',
+    badgeLabel: 'صاحب کسب و کار',
+    badgeTooltip: 'این مقادیر اختصاصی کسب و کار و قابل مقایسه با مبنای تاو ادمین است.',
+  },
+  {
     title: 'قالب‌های پیش‌نویس قرارداد',
     description: 'مدیریت قالب‌های قرارداد تیم و فرایندهای منابع انسانی.',
     href: '/draft-templates',
     icon: 'draft',
+  },
+  {
+    title: 'الگوهای نام‌گذاری و شماره‌گذاری',
+    description: 'تعریف الگوهای پویا برای تولید نام‌ها و شماره‌های سازمانی.',
+    href: '/business-settings/naming-patterns',
+    icon: 'naming',
   },
   {
     title: 'سیاست‌های کاری',
@@ -67,6 +93,12 @@ export const BUSINESS_SETTINGS_CATALOG: BusinessSettingsItem[] = [
     title: 'دلایل درخواست',
     description: 'مدیریت دلایل درخواست‌های سازمانی.',
     href: '/request-reasons',
+    icon: 'request',
+  },
+  {
+    title: 'وام‌های سازمانی',
+    description: 'تعریف و مدیریت وام‌هایی که در درخواست وام کارمندان استفاده می‌شوند.',
+    href: '/business-settings/company-loans',
     icon: 'request',
   },
   {
@@ -88,3 +120,21 @@ export const BUSINESS_SETTINGS_CATALOG: BusinessSettingsItem[] = [
     icon: 'org-unit',
   },
 ];
+
+function normalizeBusinessSettingsSearch(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .replace(/[يی]/g, 'ی')
+    .replace(/[كک]/g, 'ک')
+    .trim();
+}
+
+export function filterBusinessSettingsCatalog(items: BusinessSettingsItem[], query: string) {
+  const normalizedQuery = normalizeBusinessSettingsSearch(query);
+  if (!normalizedQuery) return items;
+
+  return items.filter((item) =>
+    normalizeBusinessSettingsSearch(`${item.title} ${item.description}`).includes(normalizedQuery),
+  );
+}

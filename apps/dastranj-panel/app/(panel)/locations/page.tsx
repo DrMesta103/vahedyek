@@ -26,6 +26,7 @@ export default async function LocationsPage() {
             radius={item.radius}
             latitude={item.latitude}
             longitude={item.longitude}
+            isPrimaryOnboarding={item.isPrimaryOnboarding}
           />
         ))}
         <ModuleAddTile href="/locations/new" label="برای افزودن محل کار کلیک کنید." />

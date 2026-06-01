@@ -33,9 +33,20 @@ export type StoredCalendarShift = {
   createdAt: string;
 };
 
+export function getCalendarShiftTypeLabel(shiftType: string) {
+  const item = CALENDAR_SHIFT_LEGEND.find((entry) => entry.key === shiftType);
+  return item?.label ?? 'شیفت';
+}
+
+export function resolveCalendarShiftTitle(title: string, shiftType: string) {
+  const trimmed = title.trim();
+  return trimmed || getCalendarShiftTypeLabel(shiftType);
+}
+
 export type CalendarShiftConfigRoot = Record<string, unknown> & {
   shifts?: StoredCalendarShift[];
   excludedDates?: string[];
+  weekendOverrides?: string[];
 };
 
 function stringArray(value: unknown): string[] {
@@ -98,4 +109,9 @@ export function countShiftsByType(shifts: StoredCalendarShift[]) {
 export function listExcludedShiftDates(shiftConfig: unknown): string[] {
   const root = parseCalendarShiftConfig(shiftConfig);
   return stringArray(root.excludedDates);
+}
+
+export function listWeekendOverrideDates(shiftConfig: unknown): string[] {
+  const root = parseCalendarShiftConfig(shiftConfig);
+  return stringArray(root.weekendOverrides);
 }

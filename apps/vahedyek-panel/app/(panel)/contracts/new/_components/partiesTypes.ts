@@ -12,11 +12,9 @@ export type DirectoryItem = {
 export type PartyRow = DirectoryItem & {
   shareValue: number;
   isPrimary: boolean;
-  /** برچسب‌های نمایشی (مثلاً صاحب کسب‌وکار) */
   tags?: string[];
-  /** اگر true باشد، ردیف قابل حذف/تغییر نیست. */
+  details?: string[];
   locked?: boolean;
-  /** اگر true باشد، مقدار سهم قابل تغییر نیست. */
   lockShare?: boolean;
 };
 

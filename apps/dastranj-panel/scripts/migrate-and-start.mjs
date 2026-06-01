@@ -86,5 +86,11 @@ if (migrate.status !== 0) {
   }
 }
 
+const backfillRequestReasons = run('npx tsx scripts/backfill-request-reason-defaults.ts');
+if (backfillRequestReasons.status !== 0) {
+  console.error('Default request-reason backfill failed.');
+  process.exit(backfillRequestReasons.status ?? 1);
+}
+
 const next = run('next start -p 3030');
 process.exit(next.status ?? 1);

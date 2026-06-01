@@ -7,6 +7,9 @@ export type ThreadStatus = (typeof THREAD_STATUSES)[number];
 export type PageThreadRecord = {
   id: string;
   appId: string;
+  tenantId: string | null;
+  tenantName: string | null;
+  tenantSlug: string | null;
   pageKey: string;
   pagePathSample: string;
   title: string;

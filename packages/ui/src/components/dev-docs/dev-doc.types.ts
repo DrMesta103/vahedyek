@@ -7,6 +7,9 @@ export type DevDocThreadStatus = (typeof DEV_DOC_THREAD_STATUSES)[number];
 export type DevDocThreadRecord = {
   id: string;
   appId: string;
+  tenantId: string | null;
+  tenantName: string | null;
+  tenantSlug: string | null;
   pageKey: string;
   pagePathSample: string;
   title: string;

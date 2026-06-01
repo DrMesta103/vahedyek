@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import PanelLayout from '../../../../../../../components/PanelLayout';
 import { BusinessFloorForm } from '../../../../../_components/BusinessProjectPanel';
 
@@ -6,7 +7,9 @@ export default async function NewBusinessProjectFloorPage({ params }: { params: 
 
   return (
     <PanelLayout>
-      <BusinessFloorForm blockId={blockId} />
+      <Suspense fallback={null}>
+        <BusinessFloorForm blockId={blockId} />
+      </Suspense>
     </PanelLayout>
   );
 }

@@ -1,8 +1,8 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import { Suspense, type ReactNode } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { ChevronLeft } from 'lucide-react';
 import { getActiveNavigationItem } from '../lib/navigation';
 import { OrbitMenu } from './OrbitMenu';
@@ -11,16 +11,33 @@ import { minimalScrollClass } from './MinimalScroll';
 import { Sidebar } from './Sidebar';
 
 export function PanelShell({ children }: { children: ReactNode }) {
+  return (
+    <Suspense fallback={null}>
+      <PanelShellContent>{children}</PanelShellContent>
+    </Suspense>
+  );
+}
+
+function PanelShellContent({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const activeItem = getActiveNavigationItem(pathname);
   const showOrbitMenu = pathname === '/';
   const isDevDocThreadsPage = pathname.startsWith('/dev-doc-threads');
-  const lockMainSidebar = pathname === '/draft-templates/new' || pathname.startsWith('/draft-templates/new/');
+  const isPayrollAttendanceRecordPage = pathname === '/business-settings/payroll-attendance' && searchParams.has('year');
+  const lockMainSidebar =
+    isPayrollAttendanceRecordPage ||
+    pathname === '/draft-templates/new' ||
+    pathname.startsWith('/draft-templates/new/');
 
   return (
     <div className="app-shell">
       <PageDocsWidget />
-      <Sidebar activeItem={activeItem.id} forceCollapsed={lockMainSidebar} lockCollapsed={lockMainSidebar} />
+      <Sidebar
+        activeItem={activeItem.id}
+        forceCollapsed={lockMainSidebar}
+        lockCollapsed={lockMainSidebar}
+      />
       {showOrbitMenu ? (
         <main className={minimalScrollClass('vertical', 'main-content home-main-content')}>
           <OrbitMenu activeItem={activeItem.id} />

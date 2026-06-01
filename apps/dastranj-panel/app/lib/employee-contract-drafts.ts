@@ -1,0 +1,698 @@
+import {
+  DEFAULT_PAYROLL_SETTINGS,
+  DEFAULT_FIXED_BENEFIT_RULES,
+  getActiveTenantStorageId,
+  normalizePayrollSettings,
+  normalizeCalculationRules,
+  type CalculationRules,
+  type PayrollSettings,
+  type TaxBracket,
+  getPayrollSettingsStorageKey,
+} from './payroll-business-settings';
+import type { ContractDraftTemplate, ContractDraftTemplateUsageType } from './contract-draft-templates';
+
+export type EmployeeContractDraftUsageType = ContractDraftTemplateUsageType;
+
+export type EmployeeContractDraftStepId =
+  | 'parties'
+  | 'timing'
+  | 'subject'
+  | 'financial'
+  | 'insuranceTax'
+  | 'benefits'
+  | 'workTimePayRules'
+  | 'leave'
+  | 'future';
+
+export type EmployeeDraftStepState = {
+  opened: boolean;
+  completed: boolean;
+  dirty: boolean;
+  saved: boolean;
+};
+
+export type EmployeeDraftProgress = Record<EmployeeContractDraftStepId, EmployeeDraftStepState>;
+
+export type EmployeeDraftTemplateSnapshot = {
+  id: string;
+  name: string;
+  usageType: EmployeeContractDraftUsageType;
+  baseSettingsYear: number;
+  classification: {
+    contractType: string;
+    locationGroup: string;
+  };
+  timing: {
+    durationMonths: number;
+  };
+  financial: {
+    dailyRequiredMinutes: number;
+    dailyBaseSalary: number;
+  };
+  insuranceTax: {
+    insuranceEnabled: boolean;
+    employerInsurancePercent: number;
+    employeeInsurancePercent: number;
+    taxEnabled: boolean;
+    taxPayer: 'employee' | 'employer';
+    taxBrackets: TaxBracket[];
+  };
+  benefits: Record<'workerAllowance' | 'housingAllowance' | 'childAllowance' | 'marriageAllowance' | 'seniorityAllowance', number>;
+  benefitRules: Record<'workerAllowance' | 'housingAllowance' | 'childAllowance' | 'marriageAllowance' | 'seniorityAllowance', CalculationRules>;
+};
+
+export type EmployeeEducationRecord = {
+  id: string;
+  field: string;
+  degree: string;
+};
+
+export type EmployeeJobRecord = {
+  id: string;
+  title: string;
+  startDate: string;
+};
+
+export type EmployeeSupplementalProfile = {
+  fatherName: string;
+  birthDate: string;
+  issuePlace: string;
+  gender: '' | 'male' | 'female' | 'other';
+  educationField: string;
+  educationDegree: string;
+  educationRecords: EmployeeEducationRecord[];
+  jobTitle: string;
+  firstContractDate: string;
+  jobRecords: EmployeeJobRecord[];
+  militaryStatus: string;
+  country: string;
+  province: string;
+  city: string;
+  street: string;
+  buildingName: string;
+  alley: string;
+  plaque: string;
+  floor: string;
+  unit: string;
+  postalCode: string;
+};
+
+export type EmployeeContractDraft = {
+  id: string;
+  employeeId: string;
+  employeeName: string;
+  usageType: EmployeeContractDraftUsageType;
+  status: 'draft' | 'in_progress' | 'completed';
+  templateId: string | null;
+  templateName: string | null;
+  templateSnapshot: EmployeeDraftTemplateSnapshot | null;
+  createdAt: string;
+  updatedAt: string;
+  contractNumber: string;
+  parties: {
+    employerName: string;
+    employerNationalId: string;
+    employerEconomicCode: string;
+    legalRepresentative: string;
+  };
+  employeeSupplemental: EmployeeSupplementalProfile;
+  timing: {
+    contractDate: string;
+    registrationNumber: string;
+    startDate: string;
+    endDate: string;
+    durationMonths: number;
+  };
+  subject: {
+    contractType: string;
+    contractSubType: string;
+    jobGroup: string;
+    responsibility: string;
+    locationGroup: string;
+    locationType: string;
+  };
+  financial: {
+    dailyRequiredMinutes: number;
+    dailyBaseSalary: number;
+  };
+  insuranceTax: {
+    insuranceEnabled: boolean;
+    employerInsurancePercent: number;
+    employeeInsurancePercent: number;
+    taxEnabled: boolean;
+    taxPayer: 'employee' | 'employer';
+    taxBrackets: TaxBracket[];
+  };
+  benefits: Record<
+    'workerAllowance' | 'housingAllowance' | 'childAllowance' | 'seniorityAllowance' | 'marriageAllowance',
+    { enabled: boolean; amount: number; calculationRules: CalculationRules }
+  >;
+  progress: EmployeeDraftProgress;
+};
+
+export type EmployeeContractDraftStep = {
+  id: EmployeeContractDraftStepId;
+  title: string;
+  detail: string;
+  implemented: boolean;
+};
+
+export type EmployeeContractDraftTemplateChoice = {
+  id: string;
+  name: string;
+  usageType: EmployeeContractDraftUsageType;
+  baseSettingsYear: number;
+};
+
+export const EMPLOYEE_CONTRACT_DRAFTS_STORAGE_KEY = 'dastranj-employee-contract-drafts-v1';
+export const EMPLOYEE_SUPPLEMENTAL_PROFILE_STORAGE_KEY = 'dastranj-employee-supplemental-profile-v1';
+
+function getBrowserLocalStorage() {
+  if (typeof window === 'undefined') return null;
+  try {
+    return window.localStorage;
+  } catch {
+    return null;
+  }
+}
+
+function scopeStorageKey(key: string, tenantId?: string | null) {
+  const scope = tenantId ?? getActiveTenantStorageId();
+  return scope ? `${key}:${scope}` : key;
+}
+
+export function getEmployeeContractDraftsStorageKey(tenantId?: string | null) {
+  return scopeStorageKey(EMPLOYEE_CONTRACT_DRAFTS_STORAGE_KEY, tenantId);
+}
+
+export function getEmployeeSupplementalStorageKey(tenantId?: string | null) {
+  return scopeStorageKey(EMPLOYEE_SUPPLEMENTAL_PROFILE_STORAGE_KEY, tenantId);
+}
+
+export const EMPLOYEE_BENEFIT_KEYS = ['workerAllowance', 'housingAllowance', 'childAllowance', 'marriageAllowance', 'seniorityAllowance'] as const;
+
+export const EMPLOYEE_CONTRACT_DRAFT_STEPS: Record<EmployeeContractDraftUsageType, EmployeeContractDraftStep[]> = {
+  attendance_only: [
+    { id: 'parties', title: 'مشخصات طرفین قرارداد', detail: 'کارفرما و کارمند', implemented: true },
+    { id: 'timing', title: 'مشخصات زمانی و ثبت قرارداد', detail: 'تاریخ‌ها و شماره ثبت', implemented: true },
+    { id: 'subject', title: 'موضوع قرارداد', detail: 'نوع همکاری و محل کار', implemented: true },
+    { id: 'financial', title: 'اطلاعات مالی تردد', detail: 'دقایق موظفی روزانه', implemented: true },
+    { id: 'workTimePayRules', title: 'پرداخت زمان کاری', detail: 'در ادامه تکمیل می‌شود', implemented: false },
+    { id: 'leave', title: 'مرخصی', detail: 'در ادامه تکمیل می‌شود', implemented: false },
+    { id: 'future', title: 'سایر مراحل', detail: 'در ادامه تکمیل می‌شود', implemented: false },
+  ],
+  payroll_attendance: [
+    { id: 'parties', title: 'مشخصات طرفین قرارداد', detail: 'کارفرما و کارمند', implemented: true },
+    { id: 'timing', title: 'مشخصات زمانی و ثبت قرارداد', detail: 'تاریخ‌ها و شماره ثبت', implemented: true },
+    { id: 'subject', title: 'موضوع قرارداد', detail: 'نوع همکاری و محل کار', implemented: true },
+    { id: 'financial', title: 'اطلاعات مالی قرارداد', detail: 'حقوق، دقایق موظفی و مبنا', implemented: true },
+    { id: 'insuranceTax', title: 'بیمه و مالیات', detail: 'تعهدات بیمه‌ای و مالیاتی', implemented: true },
+    { id: 'benefits', title: 'مزایای پایه و مستمر', detail: 'مزایای ثابت و قانونی', implemented: true },
+    { id: 'future', title: 'سایر مراحل', detail: 'در ادامه تکمیل می‌شود', implemented: false },
+  ],
+};
+
+function buildProgress(stepIds: EmployeeContractDraftStepId[], currentStepId: EmployeeContractDraftStepId): EmployeeDraftProgress {
+  const initial = Object.fromEntries(
+    Object.values(['parties', 'timing', 'subject', 'financial', 'insuranceTax', 'benefits', 'workTimePayRules', 'leave', 'future'] as EmployeeContractDraftStepId[]).map((stepId) => [
+      stepId,
+      { opened: false, completed: false, dirty: false, saved: false },
+    ]),
+  ) as EmployeeDraftProgress;
+
+  stepIds.forEach((stepId, index) => {
+    initial[stepId] = {
+      opened: index === 0,
+      completed: false,
+      dirty: false,
+      saved: false,
+    };
+  });
+
+  if (initial[currentStepId]) {
+    initial[currentStepId].opened = true;
+  }
+
+  return initial;
+}
+
+export function getEmployeeDraftSteps(usageType: EmployeeContractDraftUsageType) {
+  return EMPLOYEE_CONTRACT_DRAFT_STEPS[usageType];
+}
+
+export function getEmployeeDraftStorageKey(tenantId?: string | null) {
+  return getEmployeeContractDraftsStorageKey(tenantId);
+}
+
+export function getEmployeeDraftsFromStorage(raw: string | null | undefined) {
+  if (!raw) return [] as EmployeeContractDraft[];
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [] as EmployeeContractDraft[];
+    return parsed.map((item) => normalizeEmployeeContractDraft(item)).filter(Boolean) as EmployeeContractDraft[];
+  } catch {
+    return [] as EmployeeContractDraft[];
+  }
+}
+
+function createSupplementalRecordId() {
+  return globalThis.crypto?.randomUUID?.() ?? `rec-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+export function createEmptyEducationRecord(): EmployeeEducationRecord {
+  return { id: createSupplementalRecordId(), field: '', degree: '' };
+}
+
+export function createEmptyJobRecord(): EmployeeJobRecord {
+  return { id: createSupplementalRecordId(), title: '', startDate: '' };
+}
+
+function normalizeEducationRecords(source: Partial<EmployeeSupplementalProfile>) {
+  if (Array.isArray(source.educationRecords) && source.educationRecords.length) {
+    return source.educationRecords
+      .map((item) => {
+        const record = (item && typeof item === 'object' ? item : {}) as Partial<EmployeeEducationRecord>;
+        return {
+          id: typeof record.id === 'string' && record.id.trim() ? record.id : createSupplementalRecordId(),
+          field: typeof record.field === 'string' ? record.field : '',
+          degree: typeof record.degree === 'string' ? record.degree : '',
+        } satisfies EmployeeEducationRecord;
+      })
+      .filter(Boolean);
+  }
+
+  if (source.educationField?.trim() || source.educationDegree?.trim()) {
+    return [
+      {
+        id: createSupplementalRecordId(),
+        field: source.educationField ?? '',
+        degree: source.educationDegree ?? '',
+      },
+    ];
+  }
+
+  return [createEmptyEducationRecord()];
+}
+
+function normalizeJobRecords(source: Partial<EmployeeSupplementalProfile>) {
+  if (Array.isArray(source.jobRecords) && source.jobRecords.length) {
+    return source.jobRecords
+      .map((item) => {
+        const record = (item && typeof item === 'object' ? item : {}) as Partial<EmployeeJobRecord>;
+        return {
+          id: typeof record.id === 'string' && record.id.trim() ? record.id : createSupplementalRecordId(),
+          title: typeof record.title === 'string' ? record.title : '',
+          startDate: typeof record.startDate === 'string' ? record.startDate : '',
+        } satisfies EmployeeJobRecord;
+      })
+      .filter(Boolean);
+  }
+
+  if (source.jobTitle?.trim() || source.firstContractDate?.trim()) {
+    return [
+      {
+        id: createSupplementalRecordId(),
+        title: source.jobTitle ?? '',
+        startDate: source.firstContractDate ?? '',
+      },
+    ];
+  }
+
+  return [createEmptyJobRecord()];
+}
+
+export function syncSupplementalLegacyFields(profile: EmployeeSupplementalProfile): EmployeeSupplementalProfile {
+  const educationRecords = profile.educationRecords.length ? profile.educationRecords : [createEmptyEducationRecord()];
+  const jobRecords = profile.jobRecords.length ? profile.jobRecords : [createEmptyJobRecord()];
+  const firstEducation = educationRecords[0];
+  const firstJob = jobRecords[0];
+
+  return {
+    ...profile,
+    educationRecords,
+    jobRecords,
+    educationField: firstEducation?.field ?? '',
+    educationDegree: firstEducation?.degree ?? '',
+    jobTitle: firstJob?.title ?? '',
+    firstContractDate: firstJob?.startDate ?? '',
+  };
+}
+
+export function normalizeEmployeeSupplementalProfile(value: unknown): EmployeeSupplementalProfile {
+  const source = value && typeof value === 'object' ? (value as Partial<EmployeeSupplementalProfile>) : {};
+  const educationRecords = normalizeEducationRecords(source);
+  const jobRecords = normalizeJobRecords(source);
+
+  return syncSupplementalLegacyFields({
+    fatherName: source.fatherName ?? '',
+    birthDate: source.birthDate ?? '',
+    issuePlace: source.issuePlace ?? '',
+    gender: source.gender ?? '',
+    educationField: source.educationField ?? educationRecords[0]?.field ?? '',
+    educationDegree: source.educationDegree ?? educationRecords[0]?.degree ?? '',
+    educationRecords,
+    jobTitle: source.jobTitle ?? jobRecords[0]?.title ?? '',
+    firstContractDate: source.firstContractDate ?? jobRecords[0]?.startDate ?? '',
+    jobRecords,
+    militaryStatus: source.militaryStatus ?? '',
+    country: source.country ?? '',
+    province: source.province ?? '',
+    city: source.city ?? '',
+    street: source.street ?? '',
+    buildingName: source.buildingName ?? '',
+    alley: source.alley ?? '',
+    plaque: source.plaque ?? '',
+    floor: source.floor ?? '',
+    unit: source.unit ?? '',
+    postalCode: source.postalCode ?? '',
+  });
+}
+
+export function getDefaultEmployeeSupplementalProfile(): EmployeeSupplementalProfile {
+  return normalizeEmployeeSupplementalProfile({});
+}
+
+function toDateOffset(base: Date, days: number) {
+  const next = new Date(base);
+  next.setDate(next.getDate() + days);
+  return next.toISOString().slice(0, 10);
+}
+
+function toMonthOffset(base: Date, months: number) {
+  const next = new Date(base);
+  next.setMonth(next.getMonth() + months);
+  return next.toISOString().slice(0, 10);
+}
+
+function createUniqueContractNumber(drafts: EmployeeContractDraft[]) {
+  const year = new Date().getFullYear();
+  const nextIndex = drafts.filter((draft) => draft.contractNumber.startsWith(`CN-${year}-`)).length + 1;
+  return `CN-${year}-${String(nextIndex).padStart(3, '0')}`;
+}
+
+export function buildTemplateSnapshot(
+  template: ContractDraftTemplate,
+  baseSettings: PayrollSettings = DEFAULT_PAYROLL_SETTINGS,
+): EmployeeDraftTemplateSnapshot {
+  return {
+    id: template.id,
+    name: template.name,
+    usageType: template.usageType,
+    baseSettingsYear: template.baseSettingsYear,
+    classification: {
+      contractType: template.data.classification.contractType ?? '',
+      locationGroup: template.data.classification.workLocationCategories[0] ?? '',
+    },
+    timing: {
+      durationMonths: 12,
+    },
+    financial: {
+      dailyRequiredMinutes: template.data.payrollBase.dailyRequiredMinutes || baseSettings.financial.dailyRequiredMinutes,
+      dailyBaseSalary: template.data.payrollBase.dailyBaseSalary || baseSettings.financial.dailyBaseSalary,
+    },
+    insuranceTax: {
+      insuranceEnabled: template.data.payrollBase.insuranceEnabled,
+      employerInsurancePercent: template.data.payrollBase.employerInsurancePercent,
+      employeeInsurancePercent: template.data.payrollBase.employeeInsurancePercent,
+      taxEnabled: template.data.payrollBase.taxEnabled,
+      taxPayer: template.data.payrollBase.taxPayer,
+      taxBrackets: baseSettings.deductions.taxBrackets.map((item) => ({ ...item })),
+    },
+    benefits: {
+      workerAllowance: template.data.benefits.workerAllowance.enabled ? template.data.benefits.workerAllowance.amount : 0,
+      housingAllowance: template.data.benefits.housingAllowance.enabled ? template.data.benefits.housingAllowance.amount : 0,
+      childAllowance: template.data.benefits.childAllowance.enabled ? template.data.benefits.childAllowance.amount : 0,
+      marriageAllowance: template.data.benefits.marriageAllowance.enabled ? template.data.benefits.marriageAllowance.amount : 0,
+      seniorityAllowance: template.data.benefits.seniorityAllowance.enabled ? template.data.benefits.seniorityAllowance.amount : 0,
+    },
+    benefitRules: {
+      workerAllowance: normalizeCalculationRules(template.data.benefits.workerAllowance.calculationRules, baseSettings.benefitRules.workerAllowance),
+      housingAllowance: normalizeCalculationRules(template.data.benefits.housingAllowance.calculationRules, baseSettings.benefitRules.housingAllowance),
+      childAllowance: normalizeCalculationRules(template.data.benefits.childAllowance.calculationRules, baseSettings.benefitRules.childAllowance),
+      marriageAllowance: normalizeCalculationRules(template.data.benefits.marriageAllowance.calculationRules, baseSettings.benefitRules.marriageAllowance),
+      seniorityAllowance: normalizeCalculationRules(template.data.benefits.seniorityAllowance.calculationRules, baseSettings.benefitRules.seniorityAllowance),
+    },
+  };
+}
+
+function normalizeBenefitState(value: unknown, fallbackAmount: number, fallbackRules: CalculationRules) {
+  const source = value && typeof value === 'object' ? (value as Partial<{ enabled: boolean; amount: number; calculationRules: CalculationRules }>) : {};
+  return {
+    enabled: typeof source.enabled === 'boolean' ? source.enabled : true,
+    amount: Number.isFinite(source.amount) ? Number(source.amount) : fallbackAmount,
+    calculationRules: normalizeCalculationRules(source.calculationRules, fallbackRules),
+  };
+}
+
+export function normalizeEmployeeContractDraft(value: unknown): EmployeeContractDraft | null {
+  if (!value || typeof value !== 'object') return null;
+  const draft = value as Partial<EmployeeContractDraft>;
+  if (!draft.id || !draft.employeeId || !draft.employeeName || !draft.usageType) return null;
+  const usageType = draft.usageType as EmployeeContractDraftUsageType;
+  const steps = getEmployeeDraftSteps(usageType).map((item) => item.id);
+  const defaultProgress = buildProgress(steps, steps[0]);
+  const baseSettings = DEFAULT_PAYROLL_SETTINGS;
+  return {
+    id: draft.id,
+    employeeId: draft.employeeId,
+    employeeName: draft.employeeName,
+    usageType,
+    status: draft.status ?? 'draft',
+    templateId: draft.templateId ?? null,
+    templateName: draft.templateName ?? null,
+    templateSnapshot: draft.templateSnapshot
+      ? {
+          ...draft.templateSnapshot,
+          benefitRules: {
+            workerAllowance: normalizeCalculationRules(draft.templateSnapshot.benefitRules?.workerAllowance, DEFAULT_FIXED_BENEFIT_RULES),
+            housingAllowance: normalizeCalculationRules(draft.templateSnapshot.benefitRules?.housingAllowance, DEFAULT_FIXED_BENEFIT_RULES),
+            childAllowance: normalizeCalculationRules(draft.templateSnapshot.benefitRules?.childAllowance, DEFAULT_FIXED_BENEFIT_RULES),
+            marriageAllowance: normalizeCalculationRules(draft.templateSnapshot.benefitRules?.marriageAllowance, DEFAULT_FIXED_BENEFIT_RULES),
+            seniorityAllowance: normalizeCalculationRules(draft.templateSnapshot.benefitRules?.seniorityAllowance, DEFAULT_FIXED_BENEFIT_RULES),
+          },
+        }
+      : null,
+    createdAt: draft.createdAt ?? new Date().toISOString(),
+    updatedAt: draft.updatedAt ?? draft.createdAt ?? new Date().toISOString(),
+    contractNumber: draft.contractNumber ?? createUniqueContractNumber([]),
+    parties: {
+      employerName: draft.parties?.employerName ?? '',
+      employerNationalId: draft.parties?.employerNationalId ?? '',
+      employerEconomicCode: draft.parties?.employerEconomicCode ?? '',
+      legalRepresentative: draft.parties?.legalRepresentative ?? '',
+    },
+    employeeSupplemental: normalizeEmployeeSupplementalProfile(draft.employeeSupplemental),
+    timing: {
+      contractDate: draft.timing?.contractDate ?? '',
+      registrationNumber: draft.timing?.registrationNumber ?? '',
+      startDate: draft.timing?.startDate ?? '',
+      endDate: draft.timing?.endDate ?? '',
+      durationMonths: Number.isFinite(draft.timing?.durationMonths) ? Number(draft.timing?.durationMonths) : 12,
+    },
+    subject: {
+      contractType: draft.subject?.contractType ?? '',
+      contractSubType: draft.subject?.contractSubType ?? '',
+      jobGroup: draft.subject?.jobGroup ?? '',
+      responsibility: draft.subject?.responsibility ?? '',
+      locationGroup: draft.subject?.locationGroup ?? '',
+      locationType: draft.subject?.locationType ?? '',
+    },
+    financial: {
+      dailyRequiredMinutes: Number.isFinite(draft.financial?.dailyRequiredMinutes)
+        ? Number(draft.financial?.dailyRequiredMinutes)
+        : baseSettings.financial.dailyRequiredMinutes,
+      dailyBaseSalary: Number.isFinite(draft.financial?.dailyBaseSalary)
+        ? Number(draft.financial?.dailyBaseSalary)
+        : baseSettings.financial.dailyBaseSalary,
+    },
+    insuranceTax: {
+      insuranceEnabled: draft.insuranceTax?.insuranceEnabled ?? false,
+      employerInsurancePercent: Number.isFinite(draft.insuranceTax?.employerInsurancePercent)
+        ? Number(draft.insuranceTax?.employerInsurancePercent)
+        : baseSettings.deductions.employerInsurancePercent,
+      employeeInsurancePercent: Number.isFinite(draft.insuranceTax?.employeeInsurancePercent)
+        ? Number(draft.insuranceTax?.employeeInsurancePercent)
+        : baseSettings.deductions.employeeInsurancePercent,
+      taxEnabled: draft.insuranceTax?.taxEnabled ?? false,
+      taxPayer: draft.insuranceTax?.taxPayer ?? 'employee',
+      taxBrackets: Array.isArray(draft.insuranceTax?.taxBrackets) ? draft.insuranceTax.taxBrackets : [],
+    },
+    benefits: {
+      workerAllowance: normalizeBenefitState(draft.benefits?.workerAllowance, baseSettings.benefits.workerAllowance, baseSettings.benefitRules?.workerAllowance ?? DEFAULT_FIXED_BENEFIT_RULES),
+      housingAllowance: normalizeBenefitState(draft.benefits?.housingAllowance, baseSettings.benefits.housingAllowance, baseSettings.benefitRules?.housingAllowance ?? DEFAULT_FIXED_BENEFIT_RULES),
+      childAllowance: normalizeBenefitState(draft.benefits?.childAllowance, baseSettings.benefits.childAllowance, baseSettings.benefitRules?.childAllowance ?? DEFAULT_FIXED_BENEFIT_RULES),
+      marriageAllowance: normalizeBenefitState(draft.benefits?.marriageAllowance, baseSettings.benefits.marriageAllowance, baseSettings.benefitRules?.marriageAllowance ?? DEFAULT_FIXED_BENEFIT_RULES),
+      seniorityAllowance: normalizeBenefitState(draft.benefits?.seniorityAllowance, baseSettings.benefits.seniorityAllowance, baseSettings.benefitRules?.seniorityAllowance ?? DEFAULT_FIXED_BENEFIT_RULES),
+    },
+    progress: draft.progress ?? defaultProgress,
+  };
+}
+
+export function createInitialEmployeeContractDraft({
+  employeeId,
+  employeeName,
+  usageType,
+  drafts,
+  businessProfile,
+  template,
+  baseSettings,
+  supplemental,
+  contractNumberOverride,
+}: {
+  employeeId: string;
+  employeeName: string;
+  usageType: EmployeeContractDraftUsageType;
+  drafts: EmployeeContractDraft[];
+  businessProfile?: {
+    brandName?: string | null;
+    legalName?: string | null;
+    contactEmail?: string | null;
+    phone?: string | null;
+    address?: string | null;
+  } | null;
+  template?: ContractDraftTemplate | null;
+  baseSettings?: PayrollSettings | null;
+  supplemental?: EmployeeSupplementalProfile | null;
+  contractNumberOverride?: string | null;
+}): EmployeeContractDraft {
+  const resolvedBase = baseSettings ? normalizePayrollSettings(baseSettings) : DEFAULT_PAYROLL_SETTINGS;
+  const snapshot = template ? buildTemplateSnapshot(template, resolvedBase) : null;
+  const steps = getEmployeeDraftSteps(usageType).map((item) => item.id);
+  const progress = buildProgress(steps, steps[0]);
+  const now = new Date();
+  const registrationNumber = contractNumberOverride?.trim() || createUniqueContractNumber(drafts);
+
+  return {
+    id: `employee-contract-draft-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    employeeId,
+    employeeName,
+    usageType,
+    status: 'draft',
+    templateId: template?.id ?? null,
+    templateName: template?.name ?? null,
+    templateSnapshot: snapshot,
+    createdAt: now.toISOString(),
+    updatedAt: now.toISOString(),
+    contractNumber: registrationNumber,
+    parties: {
+      employerName: businessProfile?.brandName?.trim() || businessProfile?.legalName?.trim() || '',
+      employerNationalId: '',
+      employerEconomicCode: '',
+      legalRepresentative: '',
+    },
+    employeeSupplemental: supplemental ?? getDefaultEmployeeSupplementalProfile(),
+    timing: {
+      contractDate: now.toISOString().slice(0, 10),
+      registrationNumber,
+      startDate: now.toISOString().slice(0, 10),
+      endDate: toMonthOffset(now, 12),
+      durationMonths: 12,
+    },
+    subject: {
+      contractType: snapshot?.classification.contractType ?? '',
+      contractSubType: '',
+      jobGroup: '',
+      responsibility: '',
+      locationGroup: snapshot?.classification.locationGroup ?? '',
+      locationType: '',
+    },
+    financial: {
+      dailyRequiredMinutes: snapshot?.financial.dailyRequiredMinutes ?? resolvedBase.financial.dailyRequiredMinutes,
+      dailyBaseSalary: snapshot?.financial.dailyBaseSalary ?? resolvedBase.financial.dailyBaseSalary,
+    },
+    insuranceTax: {
+      insuranceEnabled: snapshot?.insuranceTax.insuranceEnabled ?? false,
+      employerInsurancePercent: snapshot?.insuranceTax.employerInsurancePercent ?? resolvedBase.deductions.employerInsurancePercent,
+      employeeInsurancePercent: snapshot?.insuranceTax.employeeInsurancePercent ?? resolvedBase.deductions.employeeInsurancePercent,
+      taxEnabled: snapshot?.insuranceTax.taxEnabled ?? false,
+      taxPayer: snapshot?.insuranceTax.taxPayer ?? 'employee',
+      taxBrackets: snapshot?.insuranceTax.taxBrackets.map((item) => ({ ...item })) ?? resolvedBase.deductions.taxBrackets.map((item) => ({ ...item })),
+    },
+    benefits: {
+      workerAllowance: { enabled: true, amount: snapshot?.benefits.workerAllowance ?? resolvedBase.benefits.workerAllowance, calculationRules: { ...(resolvedBase.benefitRules?.workerAllowance ?? DEFAULT_FIXED_BENEFIT_RULES) } },
+      housingAllowance: { enabled: true, amount: snapshot?.benefits.housingAllowance ?? resolvedBase.benefits.housingAllowance, calculationRules: { ...(resolvedBase.benefitRules?.housingAllowance ?? DEFAULT_FIXED_BENEFIT_RULES) } },
+      childAllowance: { enabled: true, amount: snapshot?.benefits.childAllowance ?? resolvedBase.benefits.childAllowance, calculationRules: { ...(resolvedBase.benefitRules?.childAllowance ?? DEFAULT_FIXED_BENEFIT_RULES) } },
+      marriageAllowance: { enabled: true, amount: snapshot?.benefits.marriageAllowance ?? resolvedBase.benefits.marriageAllowance, calculationRules: { ...(resolvedBase.benefitRules?.marriageAllowance ?? DEFAULT_FIXED_BENEFIT_RULES) } },
+      seniorityAllowance: { enabled: true, amount: snapshot?.benefits.seniorityAllowance ?? resolvedBase.benefits.seniorityAllowance, calculationRules: { ...(resolvedBase.benefitRules?.seniorityAllowance ?? DEFAULT_FIXED_BENEFIT_RULES) } },
+    },
+    progress,
+  };
+}
+
+export function updateEmployeeDraftProgress(
+  draft: EmployeeContractDraft,
+  patch: Partial<EmployeeDraftProgress>,
+  activeStep: EmployeeContractDraftStepId,
+): EmployeeContractDraft {
+  return {
+    ...draft,
+    updatedAt: new Date().toISOString(),
+    progress: {
+      ...draft.progress,
+      ...patch,
+      [activeStep]: {
+        ...(draft.progress[activeStep] ?? { opened: true, completed: false, dirty: false, saved: false }),
+        ...(patch[activeStep] ?? {}),
+      },
+    },
+  };
+}
+
+export function getEmployeeDraftsByEmployeeId(drafts: EmployeeContractDraft[], employeeId: string) {
+  return drafts.filter((draft) => draft.employeeId === employeeId).sort((left, right) => right.updatedAt.localeCompare(left.updatedAt));
+}
+
+export function findEmployeeDraft(drafts: EmployeeContractDraft[], employeeId: string, draftId: string) {
+  return drafts.find((draft) => draft.employeeId === employeeId && draft.id === draftId) ?? null;
+}
+
+export function persistEmployeeDrafts(drafts: EmployeeContractDraft[], tenantId?: string | null) {
+  const storage = getBrowserLocalStorage();
+  if (!storage) return;
+  storage.setItem(getEmployeeContractDraftsStorageKey(tenantId), JSON.stringify(drafts));
+}
+
+export function readEmployeeDrafts(tenantId?: string | null) {
+  const storage = getBrowserLocalStorage();
+  if (!storage) return [];
+  return getEmployeeDraftsFromStorage(storage.getItem(getEmployeeContractDraftsStorageKey(tenantId)));
+}
+
+export function readEmployeeSupplementalProfiles(tenantId?: string | null): Record<string, EmployeeSupplementalProfile> {
+  const storage = getBrowserLocalStorage();
+  if (!storage) return {};
+
+  const raw = storage.getItem(getEmployeeSupplementalStorageKey(tenantId));
+  if (!raw) return {};
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {};
+    return Object.entries(parsed as Record<string, unknown>).reduce<Record<string, EmployeeSupplementalProfile>>((result, [key, value]) => {
+      result[key] = normalizeEmployeeSupplementalProfile(value);
+      return result;
+    }, {});
+  } catch {
+    storage.removeItem(getEmployeeSupplementalStorageKey(tenantId));
+    return {};
+  }
+}
+
+export function persistEmployeeSupplementalProfiles(profiles: Record<string, EmployeeSupplementalProfile>, tenantId?: string | null) {
+  const storage = getBrowserLocalStorage();
+  if (!storage) return;
+  storage.setItem(getEmployeeSupplementalStorageKey(tenantId), JSON.stringify(profiles));
+}
+
+export function readBaseSettingsByTemplate(template: ContractDraftTemplate | null | undefined) {
+  if (!template) return DEFAULT_PAYROLL_SETTINGS;
+  const storage = getBrowserLocalStorage();
+  if (!storage) return DEFAULT_PAYROLL_SETTINGS;
+
+  const raw = storage.getItem(getPayrollSettingsStorageKey(template.baseSettingsYear, getActiveTenantStorageId()));
+  if (!raw) return DEFAULT_PAYROLL_SETTINGS;
+  try {
+    return normalizePayrollSettings(JSON.parse(raw));
+  } catch {
+    return DEFAULT_PAYROLL_SETTINGS;
+  }
+}

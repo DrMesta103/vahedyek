@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { updateRequestReasonAction } from '../../../../lib/actions';
-import { requestReasonLabels } from '../../../../lib/constants';
+import { requestReasonCategories, requestReasonTabLabels } from '../../../../lib/constants';
 import { getRequestReason } from '../../../../lib/data';
 import { FormCard, PageIntro } from '@repo/ui/server';
 
@@ -40,9 +40,9 @@ export default async function EditRequestReasonPage({ params }: EditRequestReaso
           <label>
             <span>دسته</span>
             <select name="category" defaultValue={reason.category}>
-              {Object.entries(requestReasonLabels).map(([key, label]) => (
+              {requestReasonCategories.map((key) => (
                 <option key={key} value={key}>
-                  {label}
+                  {requestReasonTabLabels[key]}
                 </option>
               ))}
             </select>

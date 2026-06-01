@@ -13,8 +13,8 @@ export async function GET(request: Request) {
     const pagePath = searchParams.get('pagePath') || '/';
     const payload =
       scope === 'app'
-        ? await listThreadsForApp({ tenantId: auth.tenantId, userId: auth.userId })
-        : await listThreadsForPage({ pagePath, tenantId: auth.tenantId, userId: auth.userId });
+        ? await listThreadsForApp({ userId: auth.userId })
+        : await listThreadsForPage({ pagePath, userId: auth.userId });
     return NextResponse.json(payload);
   } catch (error) {
     return handlePrismaApiError(error);
@@ -40,6 +40,7 @@ export async function POST(request: Request) {
     }
 
     const created = await createThread({
+      tenantId: auth.tenantId,
       pagePath: body.pagePath || '/',
       title,
       docType: body.docType,

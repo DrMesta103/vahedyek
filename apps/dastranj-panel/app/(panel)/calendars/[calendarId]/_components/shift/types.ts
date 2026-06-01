@@ -1,6 +1,7 @@
 export type CalendarShiftDayContext = {
   date: string;
   weekdayName: string;
+  isHoliday?: boolean;
 };
 
 export type CalendarShiftWizardCalendar = {

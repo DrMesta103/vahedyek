@@ -86,7 +86,7 @@ export function CardMenu({ items }: CardMenuProps) {
 
   return (
     <>
-      <div className="card-menu" ref={rootRef}>
+      <div className={`card-menu ${open ? 'is-open' : ''}`} ref={rootRef}>
         <button type="button" className="card-menu-trigger" aria-label="منوی عملیات" onClick={toggleMenu}>
           <span aria-hidden>⋮</span>
         </button>

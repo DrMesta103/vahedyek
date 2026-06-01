@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { NextResponse } from 'next/server';
 import { createSession, ensureOwnerMembershipRole, ensureTenantDefaultRoles, getSessionContext, setAuthCookie } from '../../../lib/auth';
 import { prisma } from '../../../lib/prisma';
+import { ensureTenantDefaultRequestReasons } from '../../../lib/request-reason-defaults';
 import { handlePrismaApiError } from '../../../lib/prismaApiError';
 
 const ALLOWED_PACKAGES = new Set(['starter', 'growth', 'enterprise']);
@@ -61,6 +62,7 @@ export async function POST(request: Request) {
     });
 
     await ensureTenantDefaultRoles(tenant.id);
+    await ensureTenantDefaultRequestReasons(prisma, tenant.id);
     const membership = await prisma.userTenantMembership.findUnique({
       where: { userId_tenantId: { userId: session.userId, tenantId: tenant.id } },
     });

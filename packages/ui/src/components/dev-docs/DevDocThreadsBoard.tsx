@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ArrowUpRight, CheckCircle2, Circle, GripVertical, Loader2, MessageSquareText, RefreshCw, Search } from 'lucide-react';
+import { ArrowUpRight, CheckCircle2, Circle, GripVertical, Loader2, MessageSquareText, RefreshCw, Search, Trash2 } from 'lucide-react';
 import { Input } from '../Input';
 import {
   DEV_DOC_PRIORITY_LABELS,
@@ -34,6 +34,7 @@ export type DevDocThreadsBoardProps = {
   appName: string;
   listEndpoint: string;
   updateEndpoint: (threadId: string) => string;
+  deleteEndpoint?: (threadId: string) => string;
   title?: string;
   description?: string;
 };
@@ -42,6 +43,7 @@ export function DevDocThreadsBoard({
   appName,
   listEndpoint,
   updateEndpoint,
+  deleteEndpoint,
   title = 'برد گفت‌وگوهای مستندات',
   description = 'در این بخش می‌توانید گفتگوها و نظرات مربوط به مستندات را مدیریت و دنبال کنید. از جستجو، مرتب‌سازی و کشیدن کارت‌ها برای تغییر وضعیت استفاده کنید.',
 }: DevDocThreadsBoardProps) {
@@ -53,6 +55,7 @@ export function DevDocThreadsBoard({
   const [creatorFilters, setCreatorFilters] = useState<string[]>([]);
   const [draggingThreadId, setDraggingThreadId] = useState<string | null>(null);
   const [activeDropZone, setActiveDropZone] = useState<DevDocThreadStatus | null>(null);
+  const resolvedDeleteEndpoint = deleteEndpoint ?? updateEndpoint;
 
   const loadThreads = async () => {
     setLoading(true);
@@ -86,6 +89,22 @@ export function DevDocThreadsBoard({
     return Array.from(seen.values()).sort((a, b) => a.fullName.localeCompare(b.fullName, 'fa'));
   }, [threads]);
 
+  useEffect(() => {
+    const refresh = () => {
+      void loadThreads();
+    };
+
+    const intervalId = window.setInterval(refresh, 15_000);
+    window.addEventListener('focus', refresh);
+    document.addEventListener('visibilitychange', refresh);
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener('focus', refresh);
+      document.removeEventListener('visibilitychange', refresh);
+    };
+  }, []);
+
   const filteredThreads = useMemo(() => {
     const query = search.trim().toLowerCase();
     const baseThreads =
@@ -94,7 +113,16 @@ export function DevDocThreadsBoard({
     if (!query) return baseThreads;
 
     return baseThreads.filter((thread) =>
-      [thread.title, thread.docType, thread.pagePathSample, thread.pageKey, thread.createdBy?.fullName, ...thread.labels]
+      [
+        thread.title,
+        thread.docType,
+        thread.pagePathSample,
+        thread.pageKey,
+        thread.tenantName,
+        thread.tenantSlug,
+        thread.createdBy?.fullName,
+        ...thread.labels,
+      ]
         .filter(Boolean)
         .join(' ')
         .toLowerCase()
@@ -137,6 +165,32 @@ export function DevDocThreadsBoard({
     } catch (updateError) {
       setThreads(previousThreads);
       setError(updateError instanceof Error ? updateError.message : 'به‌روزرسانی وضعیت با خطا مواجه شد.');
+    } finally {
+      setSavingThreadId(null);
+      setDraggingThreadId(null);
+      setActiveDropZone(null);
+    }
+  };
+
+  const removeThread = async (threadId: string) => {
+    const currentThread = threads.find((thread) => thread.id === threadId);
+    if (!currentThread) return;
+
+    const confirmed = window.confirm(`حذف گفت‌وگوی «${currentThread.title}»؟ این عملیات قابل بازگشت نیست.`);
+    if (!confirmed) return;
+
+    const previousThreads = threads;
+    setThreads((current) => current.filter((thread) => thread.id !== threadId));
+    setSavingThreadId(threadId);
+    setError('');
+
+    try {
+      const response = await fetch(resolvedDeleteEndpoint(threadId), { method: 'DELETE' });
+      const payload = (await response.json().catch(() => null)) as { message?: string } | null;
+      if (!response.ok) throw new Error(payload?.message || 'حذف گفت‌وگو با خطا مواجه شد.');
+    } catch (removeError) {
+      setThreads(previousThreads);
+      setError(removeError instanceof Error ? removeError.message : 'حذف گفت‌وگو با خطا مواجه شد.');
     } finally {
       setSavingThreadId(null);
       setDraggingThreadId(null);
@@ -307,6 +361,7 @@ export function DevDocThreadsBoard({
                                   <MessageSquareText className="ml-1 h-3.5 w-3.5" />
                                   {thread.messageCount} پیام
                                 </span>
+                                <span className={chipClass()}>{thread.tenantName || thread.tenantSlug || 'tenant نامشخص'}</span>
                                 {thread.status === 'in_progress' ? (
                                   <span className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-700">
                                     در حال انجام
@@ -328,6 +383,15 @@ export function DevDocThreadsBoard({
                           </div>
                           <div className="flex items-center gap-2">
                             {savingThreadId === thread.id ? <Loader2 className="h-4 w-4 animate-spin text-[color:var(--theme-accent)]" /> : null}
+                            <button
+                              type="button"
+                              className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[color:var(--border-color)] text-[color:var(--text-muted)] transition hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700"
+                              onClick={() => void removeThread(thread.id)}
+                              aria-label="حذف گفت‌وگو"
+                              title="حذف گفت‌وگو"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
                             <GripVertical className="h-4 w-4 text-[color:var(--text-muted)]" />
                           </div>
                         </div>
@@ -336,6 +400,7 @@ export function DevDocThreadsBoard({
                           <div className="flex flex-wrap gap-x-3 gap-y-1">
                             <span>ایجادکننده: {thread.createdBy?.fullName || 'نامشخص'}</span>
                             <span>آخرین بروزرسانی: {formatDateTime(thread.updatedAt)}</span>
+                            <span>tenant: {thread.tenantName || thread.tenantSlug || 'نامشخص'}</span>
                           </div>
                           <div className="rounded-[18px] border border-dashed border-[color:var(--border-color)] bg-[color:var(--surface)] px-3 py-2">
                             <div className="mb-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[color:var(--text-muted)]">صفحه مرتبط</div>

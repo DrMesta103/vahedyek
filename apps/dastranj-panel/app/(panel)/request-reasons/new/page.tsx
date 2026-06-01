@@ -8,6 +8,6 @@ type NewRequestReasonPageProps = {
 
 export default async function NewRequestReasonPage({ searchParams }: NewRequestReasonPageProps) {
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
-  const category = resolvedSearchParams?.category ?? 'attendance';
+  const category = resolvedSearchParams?.category ?? 'daily_leave';
   redirect(`/request-reasons?category=${category}&create=1`);
 }

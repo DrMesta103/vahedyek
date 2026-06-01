@@ -9,6 +9,7 @@ export default function DevDocThreadsPageClient() {
       appName={currentAppConfig.appName}
       listEndpoint="/api/page-threads?scope=app"
       updateEndpoint={(threadId) => `/api/page-threads/${threadId}`}
+      deleteEndpoint={(threadId) => `/api/page-threads/${threadId}`}
     />
   );
 }

@@ -1,21 +1,38 @@
 'use client';
 
+import Link from 'next/link';
 import { useState, useTransition } from 'react';
-import { Info, Pencil, Trash2, User } from 'lucide-react';
+import {
+  Building2,
+  CalendarDays,
+  Check,
+  Copy,
+  ExternalLink,
+  Info,
+  Layers3,
+  Pencil,
+  Phone,
+  Trash2,
+  User,
+} from 'lucide-react';
 import { CardMenu } from '../../../components/CardMenu';
 import { deleteEmployeeAction, toggleEmployeeActiveAction } from '../../../lib/actions';
 import { formatPersianDate } from '../../../lib/format-date';
+import { formatFaNumber } from '../../../lib/format-fa';
 
 export type EmployeeCardItem = {
   id: string;
   firstName: string;
   lastName: string;
+  personnelCode: string | null;
   email: string | null;
   mobile1: string | null;
   mobile2: string | null;
   avatarUrl: string | null;
   isActive: boolean;
   createdAt: string;
+  organizationUnits: Array<{ id: string; title: string }>;
+  workGroups: Array<{ id: string; title: string }>;
 };
 
 function displayValue(value: string | null | undefined) {
@@ -23,10 +40,37 @@ function displayValue(value: string | null | undefined) {
   return trimmed ? trimmed : '-';
 }
 
+function countCompletion(employee: EmployeeCardItem) {
+  const items = [
+    employee.personnelCode,
+    employee.email,
+    employee.mobile1,
+    employee.mobile2,
+    employee.avatarUrl,
+    employee.organizationUnits.length ? '1' : '',
+    employee.workGroups.length ? '1' : '',
+  ];
+  return Math.round((items.filter(Boolean).length / items.length) * 100);
+}
+
+function daysSinceCreated(createdAt: string) {
+  const created = new Date(createdAt);
+  if (Number.isNaN(created.getTime())) return 0;
+  return Math.max(0, Math.floor((Date.now() - created.getTime()) / (1000 * 60 * 60 * 24)));
+}
+
 export function EmployeeCard({ employee }: { employee: EmployeeCardItem }) {
   const [isActive, setIsActive] = useState(employee.isActive);
+  const [copied, setCopied] = useState(false);
   const [pending, startTransition] = useTransition();
   const fullName = `${employee.firstName} ${employee.lastName}`.trim();
+  const organizationUnitTitles = employee.organizationUnits.map((item) => item.title);
+  const workGroupTitles = employee.workGroups.map((item) => item.title);
+  const completionPercent = countCompletion(employee);
+  const missingCount = 7 - Math.round((completionPercent / 100) * 7);
+  const membershipDays = daysSinceCreated(employee.createdAt);
+  const contactLine = displayValue(employee.mobile1) !== '-' ? employee.mobile1 : employee.personnelCode;
+  const contactLabel = displayValue(employee.mobile1) !== '-' ? 'موبایل' : 'کد پرسنلی';
 
   const handleToggle = (next: boolean) => {
     setIsActive(next);
@@ -38,45 +82,21 @@ export function EmployeeCard({ employee }: { employee: EmployeeCardItem }) {
     });
   };
 
+  const handleCopy = async () => {
+    const value = contactLine?.trim();
+    if (!value || value === '-') return;
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1600);
+    } catch {
+      // ignore clipboard errors
+    }
+  };
+
   return (
     <article className="employee-card">
-      <div className="employee-card-identity">
-        <div className="employee-card-avatar" aria-hidden>
-          {employee.avatarUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={employee.avatarUrl} alt="" />
-          ) : (
-            <User className="h-7 w-7" strokeWidth={2} />
-          )}
-        </div>
-        <h3 className="employee-card-name">{fullName || 'بدون نام'}</h3>
-      </div>
-
-      <div className="employee-card-details">
-        <div className="employee-card-detail-row">
-          <span className="employee-card-detail-label">ایمیل:</span>
-          <span className="employee-card-detail-value">{displayValue(employee.email)}</span>
-        </div>
-        <div className="employee-card-detail-row">
-          <span className="employee-card-detail-label">شماره موبایل ۱:</span>
-          <span className="employee-card-detail-value">{displayValue(employee.mobile1)}</span>
-        </div>
-        <div className="employee-card-detail-row">
-          <span className="employee-card-detail-label">شماره موبایل ۲:</span>
-          <span className="employee-card-detail-value">{displayValue(employee.mobile2)}</span>
-        </div>
-        <div className="employee-card-detail-row">
-          <span className="employee-card-detail-label">تاریخ ایجاد:</span>
-          <span className="employee-card-detail-value">{formatPersianDate(employee.createdAt)}</span>
-        </div>
-      </div>
-
-      <div className="employee-card-actions">
-        <label className="request-reason-toggle employee-card-toggle">
-          <input type="checkbox" checked={isActive} disabled={pending} onChange={(event) => handleToggle(event.target.checked)} />
-          <span className="request-reason-toggle-track" aria-hidden />
-        </label>
-
+      <div className="employee-card-toolbar">
         <CardMenu
           items={[
             {
@@ -107,6 +127,111 @@ export function EmployeeCard({ employee }: { employee: EmployeeCardItem }) {
             },
           ]}
         />
+        <label className="request-reason-toggle employee-card-toggle">
+          <input
+            type="checkbox"
+            checked={isActive}
+            disabled={pending}
+            onChange={(event) => handleToggle(event.target.checked)}
+          />
+          <span className="request-reason-toggle-track" aria-hidden />
+        </label>
+      </div>
+
+      <div className="employee-card-profile">
+        <div className="employee-card-avatar employee-card-avatar--large" aria-hidden>
+          {employee.avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={employee.avatarUrl} alt="" />
+          ) : (
+            <User className="h-8 w-8" strokeWidth={2} />
+          )}
+        </div>
+        <div className="employee-card-profile-copy">
+          <strong>{fullName || 'بدون نام'}</strong>
+          <div className="employee-card-contact-line">
+            <span>{displayValue(contactLine)}</span>
+            {contactLine && contactLine !== '-' ? (
+              <button type="button" className="employee-card-copy-btn" onClick={handleCopy} aria-label={`کپی ${contactLabel}`}>
+                {copied ? <Check className="h-3.5 w-3.5" aria-hidden /> : <Copy className="h-3.5 w-3.5" aria-hidden />}
+              </button>
+            ) : null}
+          </div>
+        </div>
+      </div>
+
+      <div className="employee-card-details">
+        <div className="employee-card-detail-row is-compact">
+          <span className="employee-card-detail-label">وضعیت کارمند:</span>
+          <span className={`employee-card-status ${isActive ? 'is-active' : 'is-inactive'}`}>{isActive ? 'فعال' : 'غیرفعال'}</span>
+          <Link href={`/employees/${employee.id}`} className="employee-card-detail-value employee-card-detail-value--link">
+            مشاهده جزئیات
+            <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+          </Link>
+        </div>
+        <div className="employee-card-detail-row">
+          <span className="employee-card-detail-label">
+            <Phone className="h-3.5 w-3.5" aria-hidden />
+            موبایل ۱:
+          </span>
+          <span className="employee-card-detail-value">{displayValue(employee.mobile1)}</span>
+        </div>
+        <div className="employee-card-detail-row">
+          <span className="employee-card-detail-label">
+            <Phone className="h-3.5 w-3.5" aria-hidden />
+            موبایل ۲:
+          </span>
+          <span className="employee-card-detail-value">{displayValue(employee.mobile2)}</span>
+        </div>
+        <div className="employee-card-detail-row">
+          <span className="employee-card-detail-label">
+            <Building2 className="h-3.5 w-3.5" aria-hidden />
+            واحد سازمانی:
+          </span>
+          <span className="employee-card-detail-value">{organizationUnitTitles.length ? organizationUnitTitles.join('، ') : '-'}</span>
+        </div>
+        <div className="employee-card-detail-row">
+          <span className="employee-card-detail-label">
+            <Layers3 className="h-3.5 w-3.5" aria-hidden />
+            گروه کاری:
+          </span>
+          <span className="employee-card-detail-value">{workGroupTitles.length ? workGroupTitles.join('، ') : '-'}</span>
+        </div>
+        <div className="employee-card-detail-row">
+          <span className="employee-card-detail-label">ایمیل:</span>
+          <span className="employee-card-detail-value">{displayValue(employee.email)}</span>
+        </div>
+        <div className="employee-card-detail-row">
+          <span className="employee-card-detail-label">
+            <CalendarDays className="h-3.5 w-3.5" aria-hidden />
+            تاریخ ایجاد:
+          </span>
+          <span className="employee-card-detail-value">{formatPersianDate(employee.createdAt)}</span>
+        </div>
+      </div>
+
+      <div className="employee-card-progress" aria-label="تکمیل پرونده">
+        <div className="employee-card-arc-gauge" style={{ ['--progress' as never]: `${completionPercent}%` }} aria-hidden>
+          <div className="employee-card-arc-gauge-track" />
+          <div className="employee-card-arc-gauge-fill" />
+          <div className="employee-card-arc-gauge-value">
+            <strong>{formatFaNumber(completionPercent, { useGrouping: false })}%</strong>
+          </div>
+        </div>
+        <div className="employee-card-progress-stats">
+          <p>
+            <span className="employee-card-progress-dot is-passed" aria-hidden />
+            <span>{formatFaNumber(membershipDays, { useGrouping: false })} روز از عضویت گذشته</span>
+          </p>
+          <p>
+            <span className="employee-card-progress-dot is-remaining" aria-hidden />
+            <span>
+              {missingCount > 0
+                ? `${formatFaNumber(missingCount, { useGrouping: false })} بخش ناقص در پرونده`
+                : 'پرونده کامل است'}
+            </span>
+          </p>
+        </div>
       </div>
     </article>
   );

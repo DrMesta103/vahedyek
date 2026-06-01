@@ -83,6 +83,13 @@ export function PartySection({
                             ))
                           : null}
                       </div>
+                      {row.details?.length ? (
+                        <div className="mt-1 space-y-0.5 text-[11px] font-semibold leading-5 text-slate-500">
+                          {row.details.map((detail) => (
+                            <div key={detail}>{detail}</div>
+                          ))}
+                        </div>
+                      ) : null}
                     </div>
                   </div>
 

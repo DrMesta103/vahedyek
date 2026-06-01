@@ -21,11 +21,11 @@ export const THREADS_TABLE = '"DevPageThread"';
 export const MESSAGES_TABLE = '"DevPageMessage"';
 export const THREAD_READ_STATE_TABLE = '"DevPageThreadReadState"';
 const THREAD_PAGE_KEY_INDEX = '"DevPageThread_appId_pageKey_idx"';
+const THREAD_TENANT_INDEX = '"DevPageThread_appId_tenantId_idx"';
 const THREAD_UPDATED_AT_INDEX = '"DevPageThread_appId_updatedAt_idx"';
 const MESSAGE_THREAD_INDEX = '"DevPageMessage_threadId_createdAt_idx"';
-const THREAD_READ_STATE_UNIQUE_INDEX = '"DevPageThreadReadState_tenantId_appId_userId_threadId_key"';
-const THREAD_READ_STATE_LEGACY_UNIQUE_INDEX = '"DevPageThreadReadState_appId_userId_threadId_key"';
-const PAGE_THREADS_SCHEMA_VERSION = 3;
+const THREAD_READ_STATE_UNIQUE_INDEX = '"DevPageThreadReadState_appId_userId_threadId_key"';
+const PAGE_THREADS_SCHEMA_VERSION = 4;
 
 const globalForPageThreads = globalThis as unknown as {
   __pageThreadsTablesReady?: boolean;
@@ -36,6 +36,7 @@ const globalForPageThreads = globalThis as unknown as {
 type ThreadRow = {
   id: string;
   appId: string;
+  tenantId: string | null;
   pageKey: string;
   pagePathSample: string;
   title: string;
@@ -52,6 +53,8 @@ type ThreadRow = {
   updaterId: string | null;
   updaterFullName: string | null;
   updaterEmail: string | null;
+  tenantName: string | null;
+  tenantSlug: string | null;
   isOpened: boolean | null;
 };
 
@@ -96,6 +99,7 @@ export async function ensurePageThreadsTables() {
     CREATE TABLE IF NOT EXISTS ${THREADS_TABLE} (
       "id" TEXT PRIMARY KEY,
       "appId" TEXT NOT NULL DEFAULT '${currentAppConfig.appId}',
+      "tenantId" TEXT,
       "pageKey" TEXT NOT NULL,
       "pagePathSample" TEXT NOT NULL DEFAULT '/',
       "title" TEXT NOT NULL,
@@ -119,6 +123,7 @@ export async function ensurePageThreadsTables() {
   `);
 
   await prisma.$executeRawUnsafe(`ALTER TABLE ${THREADS_TABLE} ADD COLUMN IF NOT EXISTS "appId" TEXT NOT NULL DEFAULT '${currentAppConfig.appId}';`);
+  await prisma.$executeRawUnsafe(`ALTER TABLE ${THREADS_TABLE} ADD COLUMN IF NOT EXISTS "tenantId" TEXT;`);
   await prisma.$executeRawUnsafe(`ALTER TABLE ${THREADS_TABLE} ADD COLUMN IF NOT EXISTS "priority" TEXT NOT NULL DEFAULT 'p2';`);
   await prisma.$executeRawUnsafe(`ALTER TABLE ${THREADS_TABLE} ADD COLUMN IF NOT EXISTS "status" TEXT NOT NULL DEFAULT 'todo';`);
   await prisma.$executeRawUnsafe(`ALTER TABLE ${THREADS_TABLE} ADD COLUMN IF NOT EXISTS "labelsJson" TEXT NOT NULL DEFAULT '[]';`);
@@ -127,6 +132,10 @@ export async function ensurePageThreadsTables() {
   await prisma.$executeRawUnsafe(`
     CREATE INDEX IF NOT EXISTS ${THREAD_PAGE_KEY_INDEX}
     ON ${THREADS_TABLE} ("appId", "pageKey");
+  `);
+  await prisma.$executeRawUnsafe(`
+    CREATE INDEX IF NOT EXISTS ${THREAD_TENANT_INDEX}
+    ON ${THREADS_TABLE} ("appId", "tenantId");
   `);
   await prisma.$executeRawUnsafe(`
     CREATE INDEX IF NOT EXISTS ${THREAD_UPDATED_AT_INDEX}
@@ -169,16 +178,11 @@ export async function ensurePageThreadsTables() {
   await prisma.$executeRawUnsafe(`
     CREATE TABLE IF NOT EXISTS ${THREAD_READ_STATE_TABLE} (
       "id" TEXT PRIMARY KEY,
-      "tenantId" TEXT NOT NULL,
       "appId" TEXT NOT NULL DEFAULT '${currentAppConfig.appId}',
       "userId" TEXT NOT NULL,
       "threadId" TEXT NOT NULL,
       "isOpened" BOOLEAN NOT NULL DEFAULT FALSE,
       "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      CONSTRAINT "DevPageThreadReadState_tenantId_fkey"
-        FOREIGN KEY ("tenantId") REFERENCES "Tenant"("id")
-        ON DELETE CASCADE
-        ON UPDATE CASCADE,
       CONSTRAINT "DevPageThreadReadState_userId_fkey"
         FOREIGN KEY ("userId") REFERENCES "AppUser"("id")
         ON DELETE CASCADE
@@ -193,26 +197,12 @@ export async function ensurePageThreadsTables() {
   await prisma.$executeRawUnsafe(`ALTER TABLE ${THREAD_READ_STATE_TABLE} ADD COLUMN IF NOT EXISTS "tenantId" TEXT;`);
   await prisma.$executeRawUnsafe(`ALTER TABLE ${THREAD_READ_STATE_TABLE} ADD COLUMN IF NOT EXISTS "appId" TEXT NOT NULL DEFAULT '${currentAppConfig.appId}';`);
   await prisma.$executeRawUnsafe(`ALTER TABLE ${THREAD_READ_STATE_TABLE} ADD COLUMN IF NOT EXISTS "isOpened" BOOLEAN NOT NULL DEFAULT FALSE;`);
-  await prisma.$executeRawUnsafe(`DROP INDEX IF EXISTS ${THREAD_READ_STATE_LEGACY_UNIQUE_INDEX};`);
-  await prisma.$executeRawUnsafe(`
-    DO $$
-    BEGIN
-      IF NOT EXISTS (
-        SELECT 1
-        FROM pg_constraint
-        WHERE conname = 'DevPageThreadReadState_tenantId_fkey'
-      ) THEN
-        ALTER TABLE ${THREAD_READ_STATE_TABLE}
-        ADD CONSTRAINT "DevPageThreadReadState_tenantId_fkey"
-        FOREIGN KEY ("tenantId") REFERENCES "Tenant"("id")
-        ON DELETE CASCADE
-        ON UPDATE CASCADE;
-      END IF;
-    END $$;
-  `);
+  await prisma.$executeRawUnsafe(`ALTER TABLE ${THREAD_READ_STATE_TABLE} DROP CONSTRAINT IF EXISTS "DevPageThreadReadState_tenantId_fkey";`);
+  await prisma.$executeRawUnsafe(`ALTER TABLE ${THREAD_READ_STATE_TABLE} DROP COLUMN IF EXISTS "tenantId";`);
+  await prisma.$executeRawUnsafe(`DROP INDEX IF EXISTS "DevPageThreadReadState_tenantId_appId_userId_threadId_key";`);
   await prisma.$executeRawUnsafe(`
     CREATE UNIQUE INDEX IF NOT EXISTS ${THREAD_READ_STATE_UNIQUE_INDEX}
-    ON ${THREAD_READ_STATE_TABLE} ("tenantId", "appId", "userId", "threadId");
+    ON ${THREAD_READ_STATE_TABLE} ("appId", "userId", "threadId");
   `);
   })();
 
@@ -244,6 +234,9 @@ export function mapThreadRow(row: ThreadRow): PageThreadRecord {
   return {
     id: row.id,
     appId: row.appId,
+    tenantId: row.tenantId,
+    tenantName: row.tenantName,
+    tenantSlug: row.tenantSlug,
     pageKey: row.pageKey,
     pagePathSample: row.pagePathSample,
     title: row.title,
@@ -288,7 +281,7 @@ export function mapMessageRow(row: MessageRow): PageMessageRecord {
   };
 }
 
-export async function listThreadsForApp(input: { tenantId: string; userId: string }) {
+export async function listThreadsForApp(input: { userId: string }) {
   await ensurePageThreadsTables();
 
   const rows = await prisma.$queryRawUnsafe<ThreadRow[]>(
@@ -296,6 +289,7 @@ export async function listThreadsForApp(input: { tenantId: string; userId: strin
       SELECT
         t."id",
         t."appId",
+        t."tenantId",
         t."pageKey",
         t."pagePathSample",
         t."title",
@@ -312,6 +306,8 @@ export async function listThreadsForApp(input: { tenantId: string; userId: strin
         updater."id" AS "updaterId",
         updater."fullName" AS "updaterFullName",
         updater."email" AS "updaterEmail",
+        tenant."name" AS "tenantName",
+        tenant."slug" AS "tenantSlug",
         CASE
           WHEN latest_message."lastMessageAt" IS NULL THEN COALESCE(state."isOpened", FALSE)
           WHEN state."updatedAt" IS NULL THEN FALSE
@@ -332,15 +328,14 @@ export async function listThreadsForApp(input: { tenantId: string; userId: strin
       LEFT JOIN ${THREAD_READ_STATE_TABLE} state
         ON state."threadId" = t."id"
         AND state."appId" = t."appId"
-        AND state."tenantId" = $2
-        AND state."userId" = $3
+        AND state."userId" = $2
       LEFT JOIN "AppUser" author ON author."id" = t."createdById"
       LEFT JOIN "AppUser" updater ON updater."id" = t."updatedById"
+      LEFT JOIN "Tenant" tenant ON tenant."id" = t."tenantId"
       WHERE t."appId" = $1
       ORDER BY t."updatedAt" DESC, t."createdAt" DESC
     `,
     currentAppConfig.appId,
-    input.tenantId,
     input.userId,
   );
 
@@ -351,7 +346,7 @@ export async function listThreadsForApp(input: { tenantId: string; userId: strin
   };
 }
 
-export async function listThreadsForPage(input: { pagePath: string; tenantId: string; userId: string }) {
+export async function listThreadsForPage(input: { pagePath: string; userId: string }) {
   const { pagePath, pageKey } = normalizePagePath(input.pagePath);
   await ensurePageThreadsTables();
 
@@ -360,6 +355,7 @@ export async function listThreadsForPage(input: { pagePath: string; tenantId: st
       SELECT
         t."id",
         t."appId",
+        t."tenantId",
         t."pageKey",
         t."pagePathSample",
         t."title",
@@ -376,6 +372,8 @@ export async function listThreadsForPage(input: { pagePath: string; tenantId: st
         updater."id" AS "updaterId",
         updater."fullName" AS "updaterFullName",
         updater."email" AS "updaterEmail",
+        tenant."name" AS "tenantName",
+        tenant."slug" AS "tenantSlug",
         CASE
           WHEN latest_message."lastMessageAt" IS NULL THEN COALESCE(state."isOpened", FALSE)
           WHEN state."updatedAt" IS NULL THEN FALSE
@@ -396,16 +394,15 @@ export async function listThreadsForPage(input: { pagePath: string; tenantId: st
       LEFT JOIN ${THREAD_READ_STATE_TABLE} state
         ON state."threadId" = t."id"
         AND state."appId" = t."appId"
-        AND state."tenantId" = $3
-        AND state."userId" = $4
+        AND state."userId" = $3
       LEFT JOIN "AppUser" author ON author."id" = t."createdById"
       LEFT JOIN "AppUser" updater ON updater."id" = t."updatedById"
+      LEFT JOIN "Tenant" tenant ON tenant."id" = t."tenantId"
       WHERE t."appId" = $1 AND t."pageKey" = $2
       ORDER BY t."updatedAt" DESC, t."createdAt" DESC
     `,
     currentAppConfig.appId,
     pageKey,
-    input.tenantId,
     input.userId,
   );
 
@@ -413,7 +410,6 @@ export async function listThreadsForPage(input: { pagePath: string; tenantId: st
 }
 
 export async function upsertThreadOpenState(input: {
-  tenantId: string;
   userId: string;
   threadId: string;
   isOpened: boolean;
@@ -423,16 +419,15 @@ export async function upsertThreadOpenState(input: {
   await prisma.$executeRawUnsafe(
     `
       INSERT INTO ${THREAD_READ_STATE_TABLE} (
-        "id", "tenantId", "appId", "userId", "threadId", "isOpened", "updatedAt"
+        "id", "appId", "userId", "threadId", "isOpened", "updatedAt"
       )
-      VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP)
-      ON CONFLICT ("tenantId", "appId", "userId", "threadId")
+      VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)
+      ON CONFLICT ("appId", "userId", "threadId")
       DO UPDATE SET
         "isOpened" = EXCLUDED."isOpened",
         "updatedAt" = CURRENT_TIMESTAMP
     `,
     crypto.randomUUID(),
-    input.tenantId,
     currentAppConfig.appId,
     input.userId,
     input.threadId,
@@ -441,6 +436,7 @@ export async function upsertThreadOpenState(input: {
 }
 
 export async function createThread(input: {
+  tenantId: string | null;
   pagePath: string;
   title: string;
   docType?: unknown;
@@ -465,12 +461,13 @@ export async function createThread(input: {
   await prisma.$executeRawUnsafe(
     `
       INSERT INTO ${THREADS_TABLE} (
-        "id","appId","pageKey","pagePathSample","title","docType","priority","status","labelsJson","createdById","updatedById"
+        "id","appId","tenantId","pageKey","pagePathSample","title","docType","priority","status","labelsJson","createdById","updatedById"
       )
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
     `,
     id,
     currentAppConfig.appId,
+    input.tenantId,
     pageKey,
     pagePath,
     title,
@@ -483,6 +480,22 @@ export async function createThread(input: {
   );
 
   return { id, pagePath, pageKey };
+}
+
+export async function deleteThread(input: { threadId: string }) {
+  await ensurePageThreadsTables();
+
+  const rows = await prisma.$queryRawUnsafe<{ id: string }[]>(
+    `
+      DELETE FROM ${THREADS_TABLE}
+      WHERE "id" = $1 AND "appId" = $2
+      RETURNING "id"
+    `,
+    input.threadId,
+    currentAppConfig.appId,
+  );
+
+  return rows.length > 0;
 }
 
 export async function updateThreadMeta(input: {

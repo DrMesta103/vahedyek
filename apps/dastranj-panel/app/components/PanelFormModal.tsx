@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
+import { X } from 'lucide-react';
 import { MinimalScroll } from './MinimalScroll';
 
 type PanelFormModalProps = {
@@ -61,7 +62,12 @@ export function PanelFormModal({ open, title, lead, onClose, children, footer, e
         onMouseDown={(event) => event.stopPropagation()}
       >
         <header className="calendar-create-modal-head">
-          <h2 id="panel-form-modal-title">{title}</h2>
+          <div className="panel-form-modal-title-row">
+            <h2 id="panel-form-modal-title">{title}</h2>
+            <button type="button" className="panel-form-modal-close" aria-label="بستن" onClick={onClose}>
+              <X className="h-4 w-4" />
+            </button>
+          </div>
           {lead ? <p className="calendar-event-modal-lead">{lead}</p> : null}
         </header>
 

@@ -8,7 +8,7 @@ import type { QuickWorkGroupSummary } from './quick-setup.types';
 
 type LocationOption = { id: string; name: string; description: string; radius: number };
 type EmployeeOption = { id: string; name: string; contactValue: string };
-type PolicyOption = { id: string; name: string; calendarName: string; isActive: boolean; yearUsed: string };
+type PolicyOption = { id: string; name: string; calendarName: string; isActive: boolean; yearUsed: string; isDefault?: boolean };
 type SelectedEmployee = { id: string; name: string; selectedRole: 'employee' | 'lead' | 'manager' };
 
 type Draft = {
@@ -73,7 +73,10 @@ export default function Step5WorkGroup({
     selectedLocationId: locations[0]?.id ?? '',
     selectedEmployees: [],
     employeeSearch: '',
-    selectedPolicyIds: policies[0] ? [policies[0].id] : [],
+    selectedPolicyIds: (() => {
+      const defaultPolicy = policies.find((item) => item.isDefault);
+      return defaultPolicy?.id ? [defaultPolicy.id] : policies[0] ? [policies[0].id] : [];
+    })(),
   });
   const [saved, setSaved] = useState(Boolean(initialWorkGroup));
   const [saving, setSaving] = useState(false);
@@ -99,8 +102,9 @@ export default function Step5WorkGroup({
   }, [draft.selectedLocationId, locations]);
 
   useEffect(() => {
-    if (!draft.selectedPolicyIds.length && policies[0]?.id) {
-      setDraft((prev) => ({ ...prev, selectedPolicyIds: [policies[0].id] }));
+    const defaultPolicy = policies.find((item) => item.isDefault);
+    if (!draft.selectedPolicyIds.length && (defaultPolicy?.id || policies[0]?.id)) {
+      setDraft((prev) => ({ ...prev, selectedPolicyIds: [defaultPolicy?.id ?? policies[0].id] }));
     }
   }, [draft.selectedPolicyIds.length, policies]);
 

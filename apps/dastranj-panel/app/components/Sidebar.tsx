@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { useAuthContext } from '../hooks/useAuthContext';
 import { formatIdentityLabel } from '../lib/contact';
@@ -12,11 +12,13 @@ import { ThemeToggle } from './theme/ThemeToggle';
 interface SidebarProps {
   activeItem?: string;
   forceCollapsed?: boolean;
+  forceExpanded?: boolean;
   lockCollapsed?: boolean;
 }
 
-export function Sidebar({ activeItem = 'home', forceCollapsed = false, lockCollapsed = false }: SidebarProps) {
+export function Sidebar({ activeItem = 'home', forceCollapsed = false, forceExpanded = false, lockCollapsed = false }: SidebarProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const { data } = useAuthContext();
   const [collapsed, setCollapsed] = useState(false);
   const [toolbarMenuOpen, setToolbarMenuOpen] = useState(false);
@@ -28,14 +30,26 @@ export function Sidebar({ activeItem = 'home', forceCollapsed = false, lockColla
       return;
     }
 
+    if (forceExpanded) {
+      setCollapsed(false);
+      return;
+    }
+
     const savedState = window.localStorage.getItem('app-sidebar-collapsed');
     setCollapsed(savedState === 'true');
-  }, [forceCollapsed]);
+  }, [forceCollapsed, forceExpanded]);
+
+  useEffect(() => {
+    if (forceCollapsed || forceExpanded) return;
+    window.localStorage.setItem('app-sidebar-collapsed', String(collapsed));
+  }, [collapsed, forceCollapsed, forceExpanded]);
 
   useEffect(() => {
     if (forceCollapsed) return;
-    window.localStorage.setItem('app-sidebar-collapsed', String(collapsed));
-  }, [collapsed, forceCollapsed]);
+    if (pathname === '/business-settings' || pathname.startsWith('/business-settings/')) {
+      setCollapsed(false);
+    }
+  }, [forceCollapsed, pathname]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -63,7 +77,7 @@ export function Sidebar({ activeItem = 'home', forceCollapsed = false, lockColla
     router.push('/dev-doc-threads');
   };
 
-  const effectiveCollapsed = forceCollapsed || collapsed;
+  const effectiveCollapsed = forceCollapsed || (!forceExpanded && collapsed);
   const allowedMenuItemIds = data?.access?.allowedMenuItemIds;
   const canSeeSettings = !allowedMenuItemIds || allowedMenuItemIds.includes('settings');
   const visibleMenuItems = getSidebarMenuItems().filter((item) => !allowedMenuItemIds || allowedMenuItemIds.includes(item.id));
@@ -112,34 +126,48 @@ export function Sidebar({ activeItem = 'home', forceCollapsed = false, lockColla
 
       <div className="sidebar-toolbar">
         {effectiveCollapsed ? (
-          <div className="toolbar-menu-wrap" ref={toolbarMenuRef}>
-            <button
-              type="button"
-              className="toolbar-menu-trigger"
-              onClick={() => setToolbarMenuOpen((current) => !current)}
-              title="گزینه‌های بیشتر"
-            >
-              <i className="fa fa-ellipsis-h"></i>
-            </button>
-            {toolbarMenuOpen ? (
-              <div className="toolbar-menu-dropdown">
-                <button type="button" onClick={handleLogout} className="toolbar-menu-item">
-                  <i className="fa fa-sign-out-alt" style={{ transform: 'scaleX(-1)' }}></i>
-                </button>
-                <button type="button" className="toolbar-menu-item">
-                  <span className="toolbar-badge-wrap">
-                    <i className="fa fa-bell"></i>
-                    <span className="badge">1</span>
-                  </span>
-                </button>
-                {settingsButton('toolbar-menu-item')}
-                <button type="button" onClick={() => router.push('/')} className="toolbar-menu-item">
-                  <i className={`fa fa-home${activeItem === 'home' ? ' active-toolbar-icon' : ''}`}></i>
-                </button>
-                <ThemeToggle collapsed />
-              </div>
+          <>
+            {!lockCollapsed ? (
+              <button
+                type="button"
+                className="toolbar-sidebar-expand"
+                onClick={() => setCollapsed(false)}
+                aria-label="باز کردن منو"
+                title="باز کردن منو"
+              >
+                <i className="fa fa-angle-double-right" aria-hidden />
+              </button>
             ) : null}
-          </div>
+            <div className="toolbar-menu-wrap" ref={toolbarMenuRef}>
+              <button
+                type="button"
+                className="toolbar-menu-trigger"
+                onClick={() => setToolbarMenuOpen((current) => !current)}
+                title="میانبر نوار ابزار (خروج، خانه، اعلان و …)"
+                aria-label="میانبر نوار ابزار"
+              >
+                <i className="fa fa-ellipsis-h"></i>
+              </button>
+              {toolbarMenuOpen ? (
+                <div className="toolbar-menu-dropdown">
+                  <button type="button" onClick={handleLogout} className="toolbar-menu-item">
+                    <i className="fa fa-sign-out-alt" style={{ transform: 'scaleX(-1)' }}></i>
+                  </button>
+                  <button type="button" className="toolbar-menu-item">
+                    <span className="toolbar-badge-wrap">
+                      <i className="fa fa-bell"></i>
+                      <span className="badge">1</span>
+                    </span>
+                  </button>
+                  {settingsButton('toolbar-menu-item')}
+                  <button type="button" onClick={() => router.push('/')} className="toolbar-menu-item">
+                    <i className={`fa fa-home${activeItem === 'home' ? ' active-toolbar-icon' : ''}`}></i>
+                  </button>
+                  <ThemeToggle collapsed />
+                </div>
+              ) : null}
+            </div>
+          </>
         ) : (
           <>
             <button type="button" onClick={handleLogout} style={{ background: 'transparent', border: 'none' }}>
@@ -197,15 +225,16 @@ export function Sidebar({ activeItem = 'home', forceCollapsed = false, lockColla
       </div>
 
       <div className="version-footer">
-        <button
-          type="button"
-          className="version-toggle"
-          onClick={() => setCollapsed((current) => !current)}
-          title={effectiveCollapsed ? 'باز کردن سایدبار' : 'جمع کردن سایدبار'}
-          disabled={lockCollapsed}
-        >
-          <i className={`fa ${effectiveCollapsed ? 'fa-angle-double-left' : 'fa-angle-double-right'}`}></i>
-        </button>
+        {lockCollapsed ? null : (
+          <button
+            type="button"
+            className="version-toggle"
+            onClick={() => setCollapsed((current) => !current)}
+            title={effectiveCollapsed ? 'باز کردن سایدبار' : 'جمع کردن سایدبار'}
+          >
+            <i className={`fa ${effectiveCollapsed ? 'fa-angle-double-left' : 'fa-angle-double-right'}`}></i>
+          </button>
+        )}
         <span>0.8.0</span>
       </div>
     </aside>
