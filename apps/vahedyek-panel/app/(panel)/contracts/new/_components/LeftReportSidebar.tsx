@@ -136,6 +136,7 @@ export function LeftReportSidebar({
 
   const status = contractStatus ?? 'draft';
   const contractNumberText = contractNumber?.trim() ? contractNumber.trim() : '—';
+  const isOverContractLimit = remainder < 0;
   const financialLineRows = (reportData?.categories ?? []).filter(
     (item) => isFinancialLineHeaderCategoryId(item.id) && item.capAmount > 0,
   );
@@ -144,27 +145,16 @@ export function LeftReportSidebar({
     <aside className="contract-flow-report-sidebar shrink-0">
       <div className="contract-flow-report-panel">
         <div className="contract-flow-report-header">
-          <div className="contract-flow-report-meta-card">
-            <div className="contract-flow-report-meta-row">
-              <span className="contract-flow-report-meta-label">شماره</span>
-              <strong className="contract-flow-report-meta-value">{contractNumberText}</strong>
-            </div>
-            <span className={`contract-flow-report-status-pill is-${status}`}>{getContractStatusLabel(status)}</span>
+          <div className="contract-flow-report-title-row">
+            <h2>گزارش مالی</h2>
           </div>
-          <h2>گزارش زنده مالی</h2>
-          <p>خلاصه‌ی لحظه‌ای از مبلغ قرارداد، تخصیص‌ها و سررسیدها</p>
         </div>
 
         <div className="contract-flow-report-body">
-          <div className="contract-flow-report-card">
-            <div className="contract-flow-report-card-label">جمع کل قرارداد</div>
-            <div className="contract-flow-report-card-value">{formatCurrency(contractTotal)}</div>
-          </div>
-
-          <div className="contract-flow-report-grid">
-            <div className="contract-flow-report-mini">
-              <span>مبالغ دسته‌بندی‌شده</span>
-              <strong>{formatCurrency(allocatedAmount)}</strong>
+          <div className="contract-flow-report-grid contract-flow-report-grid-compact">
+            <div className="contract-flow-report-card contract-flow-report-card-summary">
+              <div className="contract-flow-report-card-label">جمع کل قرارداد</div>
+              <div className="contract-flow-report-card-summary-value">{formatCurrency(contractTotal)}</div>
             </div>
           </div>
 
@@ -179,7 +169,7 @@ export function LeftReportSidebar({
           <div className="contract-flow-report-card">
             <div className="contract-flow-report-card-head">
               <span>مانده تا سقف قرارداد</span>
-              <strong>{formatCurrency(remainder)}</strong>
+              <strong className={isOverContractLimit ? 'contract-flow-report-card-head-value-negative' : undefined}>{formatCurrency(remainder)}</strong>
             </div>
             <div className="contract-flow-report-legend">
               {paidSlices.slice(0, 5).map((item) => (

@@ -650,10 +650,6 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
   const [dueItems, setDueItems] = useState<DueItem[]>([]);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [openInfoId, setOpenInfoId] = useState<string | null>(null);
-  const [pendingCategoryApply, setPendingCategoryApply] = useState<{
-    categories: FinancialCategory[];
-    activeTab: string;
-  } | null>(null);
 
   const [catDialogOpen, setCatDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -929,7 +925,6 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
             parkingFixedAmount: 'مبلغ کلی پارکینگ',
             storageFixedAmount: 'مبلغ کلی انباری',
             categories: 'ردیف مالی',
-            categoriesTotal: 'جمع ردیف‌های مالی',
             dueItems: 'سررسیدها',
           },
           'اطلاعات مالی معتبر نیست.',
@@ -967,7 +962,6 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
           additionalValidation.errors,
           {
             categories: 'سایر هزینه‌ها',
-            categoriesTotal: 'جمع ردیف‌های مالی',
             dueItems: 'سررسیدهای سایر هزینه‌ها',
           },
           'ذخیره سایر هزینه‌ها انجام نشد.',
@@ -1009,7 +1003,6 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
             parkingFixedAmount: 'مبلغ کلی پارکینگ',
             storageFixedAmount: 'مبلغ کلی انباری',
             categories: 'ردیف مالی',
-            categoriesTotal: 'جمع ردیف‌های مالی',
             dueItems: 'سررسیدها',
           },
           'اطلاعات مالی معتبر نیست.',
@@ -1064,19 +1057,6 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
     }
   };
 
-  const maybeWarnOnExcess = (nextCategories: FinancialCategory[], nextActiveTab: string) => {
-    const nextTotal = sumFinancialCapsCountedAgainstContractTotal(nextCategories);
-    if (totalContractAmount > 0 && nextTotal > totalContractAmount) {
-      setPendingCategoryApply({
-        categories: nextCategories,
-        activeTab: nextActiveTab,
-      });
-      return false;
-    }
-
-    return true;
-  };
-
   const openAdd = () => {
     setEditingId(null);
     setCustomName('');
@@ -1127,7 +1107,6 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
       });
       const nextCategories = orderFinancialCategories([...categories, normalizeCategory(header), ...subs]);
       const firstSubId = `${lineId}:${FINANCIAL_SUB_CATEGORY_IDS[0]}`;
-      if (!maybeWarnOnExcess(nextCategories, firstSubId)) return;
       setCategories(nextCategories);
       setActiveTab(firstSubId);
       setExpandedCustomCategoryId(lineId);
@@ -1152,8 +1131,6 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
         });
       }),
     );
-
-    if (!maybeWarnOnExcess(nextCategories, editingId)) return;
 
     setCategories(nextCategories);
     setActiveTab(editingId);
@@ -1591,7 +1568,7 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
           onDeleteDueItem={(id) => setDueItems((current) => current.filter((dueItem) => dueItem.id !== id))}
           formatInput={formatInput}
           formatMoney={formatMoney}
-          invalidCategoryIds={categories.filter((item) => visibleErrors.categoriesTotal || visibleErrors.categories || (visibleErrors.dueItems && (categoryDueItemsMap[item.id]?.length ?? 0) > 0)).map((item) => item.id)}
+          invalidCategoryIds={categories.filter((item) => visibleErrors.categories || (visibleErrors.dueItems && (categoryDueItemsMap[item.id]?.length ?? 0) > 0)).map((item) => item.id)}
           showAdditionalCostsSection={false}
         />
       </div>
@@ -1629,7 +1606,7 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
                 onDeleteDueItem={(id) => setDueItems((current) => current.filter((dueItem) => dueItem.id !== id))}
                 formatInput={formatInput}
                 formatMoney={formatMoney}
-                invalidCategoryIds={categories.filter((item) => visibleErrors.categoriesTotal || visibleErrors.categories || (visibleErrors.dueItems && (categoryDueItemsMap[item.id]?.length ?? 0) > 0)).map((item) => item.id)}
+                invalidCategoryIds={categories.filter((item) => visibleErrors.categories || (visibleErrors.dueItems && (categoryDueItemsMap[item.id]?.length ?? 0) > 0)).map((item) => item.id)}
                 showPrincipalSection={false}
                 additionalCostsFooter={
                   <>
@@ -1761,41 +1738,6 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
         <div>
           <FieldLabel label="سقف مبلغ" />
           <Input value={capAmount} onChange={(event) => setCapAmount(formatInput(event.target.value))} placeholder="مثال: 10,000,000" className="mt-2" />
-        </div>
-      </Modal>
-
-      <Modal
-        open={Boolean(pendingCategoryApply)}
-        onClose={() => setPendingCategoryApply(null)}
-        title="مغایرت مبلغ"
-        description="جمع ردیف‌های مالی از مبلغ قرارداد بیشتر شده است."
-        footer={
-          <>
-            <button
-              type="button"
-              onClick={() => setPendingCategoryApply(null)}
-              className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50"
-            >
-              انصراف
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                if (!pendingCategoryApply) return;
-                setCategories(pendingCategoryApply.categories);
-                setActiveTab(pendingCategoryApply.activeTab);
-                setPendingCategoryApply(null);
-                setCatDialogOpen(false);
-              }}
-              className="rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-white hover:bg-amber-600"
-            >
-              ادامه
-            </button>
-          </>
-        }
-      >
-        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-          یا مبلغ قرارداد را اصلاح کنید، یا با آگاهی ادامه دهید. در زمان ثبت نهایی اگر این مغایرت باقی بماند، ذخیره انجام نمی‌شود.
         </div>
       </Modal>
 

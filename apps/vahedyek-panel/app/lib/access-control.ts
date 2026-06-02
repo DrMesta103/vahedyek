@@ -28,7 +28,13 @@ export const DEFAULT_TENANT_ROLES = [
 ] as const;
 
 export const APP_PERMISSION_ITEMS = currentAppConfig.permissions;
-export const MENU_PERMISSION_ITEMS = currentAppConfig.menuItems.map((item) => ({
+const HIDDEN_MENU_ITEM_IDS = new Set(['complex']);
+
+function isVisibleMenuItem(item: { id: string }) {
+  return !HIDDEN_MENU_ITEM_IDS.has(item.id);
+}
+
+export const MENU_PERMISSION_ITEMS = currentAppConfig.menuItems.filter(isVisibleMenuItem).map((item) => ({
   id: item.id,
   label: item.label,
   icon: item.icon,
@@ -60,7 +66,7 @@ function unique(values: string[]) {
 }
 
 function toAllowedMenuItemIds(access: Pick<AccessSnapshot, 'isOwner' | 'permissionKeys'>) {
-  return filterMenuByPermissions(currentAppConfig.menuItems, access).map((item) => item.id);
+  return filterMenuByPermissions(currentAppConfig.menuItems.filter(isVisibleMenuItem), access).map((item) => item.id);
 }
 
 function normalizeText(value: unknown) {

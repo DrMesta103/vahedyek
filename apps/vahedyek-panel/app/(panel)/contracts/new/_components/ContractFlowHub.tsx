@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { AlertCircle, CheckCircle2, Info, Lock, X } from 'lucide-react';
 import { getActiveDraftId, getFrontendStepDraft, getStepData } from '../../../../lib/contractDraftClient';
 import { computeContractTotalRialFromFinancial } from '../../../../lib/contractFinancialPricing';
-import { isFinancialLineHeaderCategoryId, isFinancialLineSubtreeCategoryId } from '../../../../lib/financialUtils';
+import { isFinancialLineHeaderCategoryId, isFinancialLineSubtreeCategoryId, isLegacyCustomRootCategoryId } from '../../../../lib/financialUtils';
 import { validateDiscountsStep, validateFinancialStep, validatePenaltiesStep, validateStep1, validateStep2, validateTerminationStep } from '../../../../lib/contractValidation';
 import type { ContractDiscountsData, ContractFinancialData, ContractPartiesData, ContractPenaltiesData, ContractSubjectData, ContractTerminationData } from '../../../../types/contract';
 import { DiscountsStep } from './DiscountsStep';
@@ -212,6 +212,15 @@ function getFinancialSlices(data: ContractFinancialData | null) {
         color,
       };
     });
+}
+
+function getAdditionalFinancialTotal(data: ContractFinancialData | null) {
+  if (!data?.categories?.length) return 0;
+
+  return data.categories.reduce((sum, item) => {
+    if (!isFinancialLineHeaderCategoryId(item.id) && !isLegacyCustomRootCategoryId(item.id)) return sum;
+    return sum + Math.max(0, Number(item.capAmount) || 0);
+  }, 0);
 }
 
 function FinancialDonut({ slices }: { slices: Array<{ id: string; name: string; value: number; color: string }> }) {
@@ -727,10 +736,12 @@ export function ContractFlowHub() {
     [reportData],
   );
   const contractTotal = getContractTotal(reportData);
+  const additionalFinancialTotal = getAdditionalFinancialTotal(reportData);
   const paidSlices = getFinancialSlices(reportData);
   const allocatedAmount = paidSlices.reduce((sum, item) => sum + item.value, 0);
+  const reportContractTotal = contractTotal + additionalFinancialTotal;
   const dueAmount = reportData?.dueItems?.reduce((sum, item) => sum + item.amount, 0) ?? 0;
-  const remainder = Math.max(contractTotal - allocatedAmount, 0);
+  const remainder = reportContractTotal - allocatedAmount;
   const leaveIssues = useMemo<LeaveIssue[]>(() => {
     const issues: LeaveIssue[] = [];
     (['subject', 'parties', 'financial', 'penalties', 'discounts', 'interest', 'forgiveness', 'termination', 'extraCosts', 'technicalSpecs', 'contractAttachments'] as const).forEach(
@@ -1060,7 +1071,7 @@ export function ContractFlowHub() {
 
       <LeftReportSidebar
         reportData={reportData}
-        contractTotal={contractTotal}
+        contractTotal={reportContractTotal}
         paidSlices={paidSlices}
         allocatedAmount={allocatedAmount}
         dueAmount={dueAmount}

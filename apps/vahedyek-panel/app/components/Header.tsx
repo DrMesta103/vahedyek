@@ -6,38 +6,30 @@ interface HeaderProps {
 }
 
 export default function Header({ username }: HeaderProps) {
+  void username;
+
   return (
     <header className="bg-white border-b border-gray-200 px-6 py-3">
       <div className="flex items-center justify-between">
-        {/* Right side - User info */}
         <div className="flex items-center gap-4">
-          <div className="w-10 h-10 bg-orange-400 rounded-full flex items-center justify-center text-white font-bold">
-            ع
-          </div>
-          <span className="text-gray-700 font-medium">علیشاپور بزر</span>
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-400 font-bold text-white">ع</div>
+          <span className="font-medium text-gray-700">علیشاپور بزرگ</span>
         </div>
 
-        {/* Center - Navigation */}
         <div className="flex items-center gap-6">
-          <button className="text-gray-600 hover:text-gray-900">
-            جزئیات مجتمع
-          </button>
-          <button className="text-gray-600 hover:text-gray-900">
-            خانه
-          </button>
+          <button className="text-gray-600 hover:text-gray-900">خانه</button>
         </div>
 
-        {/* Left side - Icons */}
         <div className="flex items-center gap-3">
-          <button className="p-2 hover:bg-gray-100 rounded-full">
-            <Bell className="w-5 h-5 text-gray-600" />
+          <button className="rounded-full p-2 hover:bg-gray-100">
+            <Bell className="h-5 w-5 text-gray-600" />
           </button>
           <ThemeToggle collapsed />
-          <button className="p-2 hover:bg-gray-100 rounded-full">
-            <Settings className="w-5 h-5 text-gray-600" />
+          <button className="rounded-full p-2 hover:bg-gray-100">
+            <Settings className="h-5 w-5 text-gray-600" />
           </button>
-          <button className="p-2 hover:bg-gray-100 rounded-full bg-teal-100">
-            <Home className="w-5 h-5 text-gray-700" />
+          <button className="rounded-full bg-teal-100 p-2 hover:bg-gray-100">
+            <Home className="h-5 w-5 text-gray-700" />
           </button>
         </div>
       </div>

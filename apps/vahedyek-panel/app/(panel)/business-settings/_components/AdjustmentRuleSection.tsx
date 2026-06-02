@@ -1,7 +1,7 @@
 'use client';
 
 import { BadgePercent, ChartNoAxesCombined, SlidersHorizontal } from 'lucide-react';
-import type { ContractRuleState } from '../../../lib/businessContractRules';
+import { getAdjustmentMultiIndicatorWeightsTotal, type ContractRuleState } from '../../../lib/businessContractRules';
 import { BusinessSwitch, ChoicePills as UiChoicePills, RuleFieldLabel, RuleTabButton } from '@repo/ui';
 import { RuleTextInput as SharedRuleTextInput } from './RuleStylePrimitives';
 
@@ -89,12 +89,6 @@ function getAdjustmentLead(tabId: string) {
   }
 }
 
-function parsePercent(value: string | boolean | undefined) {
-  if (typeof value !== 'string') return 0;
-  const normalized = Number(value.toString().replace(/[^\d.-]/g, ''));
-  return Number.isFinite(normalized) && normalized > 0 ? normalized : 0;
-}
-
 export function AdjustmentRuleSection({
   state,
   onValueChange,
@@ -110,14 +104,7 @@ export function AdjustmentRuleSection({
   const activeTab = state.activeTab;
   const selectedPeriod = String(state.activeChip || '');
   const selectedRoundRule = String(state.values.adjustFixedRound || '');
-  const multiIndicatorTotal =
-    parsePercent(state.values.adjustMultiHousingWeight) +
-    parsePercent(state.values.adjustMultiLaborWeight) +
-    parsePercent(state.values.adjustMultiMaterialWeight) +
-    parsePercent(state.values.adjustMultiMaterialsOtherWeight) +
-    parsePercent(state.values.adjustMultiWageWeight) +
-    parsePercent(state.values.adjustMultiEnergyWeight) +
-    parsePercent(state.values.adjustMultiGeneralPriceWeight);
+  const multiIndicatorTotal = getAdjustmentMultiIndicatorWeightsTotal(state.values);
   const multiIndicatorOverflow = multiIndicatorTotal > 100;
 
   return (
