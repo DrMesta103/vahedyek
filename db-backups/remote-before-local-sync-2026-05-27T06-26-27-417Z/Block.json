@@ -1,0 +1,338 @@
+[
+  {
+    "id": "b0f5b218-4b7c-4ba4-a512-46831165dff5",
+    "tenantId": "cmogu31vm0001wc5gq6ojac7j",
+    "name": "a1",
+    "mainPlate": "1",
+    "subPlate": "1",
+    "status": "incomplete",
+    "usageCounts": {
+      "office": 0,
+      "amenity": 0,
+      "parking": 0,
+      "storage": 0,
+      "commercial": 0,
+      "residential": 0
+    }
+  },
+  {
+    "id": "abc70019-251c-41da-af22-60db051cf7ad",
+    "tenantId": "cmok2gpmo0001wcaw3nz2y79x",
+    "name": "A-1",
+    "mainPlate": null,
+    "subPlate": null,
+    "status": "incomplete",
+    "usageCounts": {
+      "office": 0,
+      "amenity": 0,
+      "parking": 0,
+      "storage": 0,
+      "commercial": 0,
+      "residential": 0
+    }
+  },
+  {
+    "id": "c39031f4-5bce-48a6-8fd6-226bcaec2444",
+    "tenantId": "cmok2gpmo0001wcaw3nz2y79x",
+    "name": "A-2",
+    "mainPlate": null,
+    "subPlate": null,
+    "status": "incomplete",
+    "usageCounts": {
+      "office": 0,
+      "amenity": 0,
+      "parking": 0,
+      "storage": 0,
+      "commercial": 0,
+      "residential": 0
+    }
+  },
+  {
+    "id": "35f3f0cf-aa2e-4c46-be0e-8e5f711eaeaf",
+    "tenantId": "cmok2gpmo0001wcaw3nz2y79x",
+    "name": "A-3",
+    "mainPlate": null,
+    "subPlate": null,
+    "status": "incomplete",
+    "usageCounts": {
+      "office": 0,
+      "amenity": 0,
+      "parking": 0,
+      "storage": 0,
+      "commercial": 0,
+      "residential": 0
+    }
+  },
+  {
+    "id": "4f46f266-e1c4-4443-bbc0-0d4876229f32",
+    "tenantId": "cmok2gpmo0001wcaw3nz2y79x",
+    "name": "سارا",
+    "mainPlate": "12",
+    "subPlate": "123",
+    "status": "incomplete",
+    "usageCounts": {
+      "office": 0,
+      "amenity": 0,
+      "parking": 0,
+      "storage": 0,
+      "commercial": 0,
+      "residential": 0
+    }
+  },
+  {
+    "id": "block-001",
+    "tenantId": "cmp13vcfq0000oyykak76s9ev",
+    "name": "بلوک آفتاب",
+    "mainPlate": null,
+    "subPlate": null,
+    "status": "incomplete",
+    "usageCounts": {
+      "office": 0,
+      "amenity": 0,
+      "parking": 0,
+      "storage": 0,
+      "commercial": 0,
+      "residential": 0
+    }
+  },
+  {
+    "id": "block-002",
+    "tenantId": "cmp13vcfq0000oyykak76s9ev",
+    "name": "بلوک سپهر",
+    "mainPlate": null,
+    "subPlate": null,
+    "status": "incomplete",
+    "usageCounts": {
+      "office": 0,
+      "amenity": 0,
+      "parking": 0,
+      "storage": 0,
+      "commercial": 0,
+      "residential": 0
+    }
+  },
+  {
+    "id": "block-003",
+    "tenantId": "cmp13vcfq0000oyykak76s9ev",
+    "name": "بلوک نگین",
+    "mainPlate": null,
+    "subPlate": null,
+    "status": "incomplete",
+    "usageCounts": {
+      "office": 0,
+      "amenity": 0,
+      "parking": 0,
+      "storage": 0,
+      "commercial": 0,
+      "residential": 0
+    }
+  },
+  {
+    "id": "7c081187-eb99-4ea5-9633-818b783b72ad",
+    "tenantId": "cmp2l1wfd07mzoy08jumz3qho",
+    "name": "A-1",
+    "mainPlate": "52",
+    "subPlate": "1",
+    "status": "incomplete",
+    "usageCounts": {
+      "office": 0,
+      "amenity": 0,
+      "parking": 0,
+      "storage": 0,
+      "commercial": 0,
+      "residential": 0
+    }
+  },
+  {
+    "id": "c6d5d62a-ac89-439c-9175-0d56e7af3942",
+    "tenantId": "cmp2l1wfd07mzoy08jumz3qho",
+    "name": "A-2",
+    "mainPlate": "52",
+    "subPlate": "1",
+    "status": "incomplete",
+    "usageCounts": {
+      "office": 0,
+      "amenity": 0,
+      "parking": 0,
+      "storage": 0,
+      "commercial": 0,
+      "residential": 0
+    }
+  },
+  {
+    "id": "38205ef4-4b96-47c1-ab91-c2f1e7c09dbb",
+    "tenantId": "cmp2l1wfd07mzoy08jumz3qho",
+    "name": "A-3",
+    "mainPlate": "52",
+    "subPlate": "1",
+    "status": "incomplete",
+    "usageCounts": {
+      "office": 0,
+      "amenity": 0,
+      "parking": 0,
+      "storage": 0,
+      "commercial": 0,
+      "residential": 0
+    }
+  },
+  {
+    "id": "b0fbacc2-5517-46a9-b872-a0793a891e1e",
+    "tenantId": "cmp2l1wfd07mzoy08jumz3qho",
+    "name": "A-4",
+    "mainPlate": "52",
+    "subPlate": "1",
+    "status": "incomplete",
+    "usageCounts": {
+      "office": 0,
+      "amenity": 0,
+      "parking": 0,
+      "storage": 0,
+      "commercial": 0,
+      "residential": 0
+    }
+  },
+  {
+    "id": "01aa6fb0-9003-4d66-8d47-d51ab34fe111",
+    "tenantId": "cmp2l1wfd07mzoy08jumz3qho",
+    "name": "A-5",
+    "mainPlate": "52",
+    "subPlate": "1",
+    "status": "incomplete",
+    "usageCounts": {
+      "office": 0,
+      "amenity": 0,
+      "parking": 0,
+      "storage": 0,
+      "commercial": 0,
+      "residential": 0
+    }
+  },
+  {
+    "id": "5181b560-72f2-4b9f-b92b-ca2f6ca88e85",
+    "tenantId": "cmp2l1wfd07mzoy08jumz3qho",
+    "name": "A-6",
+    "mainPlate": "52",
+    "subPlate": "1",
+    "status": "incomplete",
+    "usageCounts": {
+      "office": 0,
+      "amenity": 0,
+      "parking": 0,
+      "storage": 0,
+      "commercial": 0,
+      "residential": 0
+    }
+  },
+  {
+    "id": "251d40a9-973f-4d2f-a2a0-7889418f96f4",
+    "tenantId": "cmp2l1wfd07mzoy08jumz3qho",
+    "name": "A-7",
+    "mainPlate": "52",
+    "subPlate": "1",
+    "status": "incomplete",
+    "usageCounts": {
+      "office": 0,
+      "amenity": 0,
+      "parking": 0,
+      "storage": 0,
+      "commercial": 0,
+      "residential": 0
+    }
+  },
+  {
+    "id": "24c977d9-a591-4c80-a059-d9cfffaad2aa",
+    "tenantId": "cmp2l1wfd07mzoy08jumz3qho",
+    "name": "A-8",
+    "mainPlate": "52",
+    "subPlate": "1",
+    "status": "incomplete",
+    "usageCounts": {
+      "office": 0,
+      "amenity": 0,
+      "parking": 0,
+      "storage": 0,
+      "commercial": 0,
+      "residential": 0
+    }
+  },
+  {
+    "id": "33ba0464-25e3-4617-a7b8-23f779cc0e83",
+    "tenantId": "cmp2l1wfd07mzoy08jumz3qho",
+    "name": "A-9",
+    "mainPlate": "52",
+    "subPlate": "1",
+    "status": "incomplete",
+    "usageCounts": {
+      "office": 0,
+      "amenity": 0,
+      "parking": 0,
+      "storage": 0,
+      "commercial": 0,
+      "residential": 0
+    }
+  },
+  {
+    "id": "449f45c7-f610-485d-a6ee-e93e275b2141",
+    "tenantId": "cmp2l1wfd07mzoy08jumz3qho",
+    "name": "A-10",
+    "mainPlate": "52",
+    "subPlate": "1",
+    "status": "incomplete",
+    "usageCounts": {
+      "office": 0,
+      "amenity": 0,
+      "parking": 0,
+      "storage": 0,
+      "commercial": 0,
+      "residential": 0
+    }
+  },
+  {
+    "id": "167fc285-fd26-4731-972d-15d43885e78f",
+    "tenantId": "cmpdq1j13015gu6sw1ihl67u2",
+    "name": "رعنا",
+    "mainPlate": "1",
+    "subPlate": "1",
+    "status": "incomplete",
+    "usageCounts": {
+      "office": 0,
+      "amenity": 0,
+      "parking": 0,
+      "storage": 0,
+      "commercial": 0,
+      "residential": 0
+    }
+  },
+  {
+    "id": "7eb3d82e-ef3d-4e9d-8e3c-e973cdd3744c",
+    "tenantId": "cmpdq1j13015gu6sw1ihl67u2",
+    "name": "queen",
+    "mainPlate": "2",
+    "subPlate": "3",
+    "status": "incomplete",
+    "usageCounts": {
+      "office": 0,
+      "amenity": 0,
+      "parking": 0,
+      "storage": 0,
+      "commercial": 0,
+      "residential": 0
+    }
+  },
+  {
+    "id": "ea4eedac-58af-4c41-b6a2-3f6ce6073be1",
+    "tenantId": "cmp9dw93l0001le2jywlbp256",
+    "name": "m",
+    "mainPlate": "2",
+    "subPlate": "1",
+    "status": "incomplete",
+    "usageCounts": {
+      "office": 0,
+      "amenity": 0,
+      "parking": 0,
+      "storage": 0,
+      "commercial": 0,
+      "residential": 0
+    }
+  }
+]

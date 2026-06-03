@@ -2,30 +2,18 @@ import { Prisma } from '@/lib/prisma-client';
 import { NextResponse } from 'next/server';
 import { requireSessionContext } from '../../../../lib/auth';
 import { normalizeBuilderPenaltyRuleState, validateBuilderPenaltyRuleState } from '../../../../lib/builderPenalty';
-import { CONTRACT_RULE_ITEMS, createInitialRuleState, normalizeRuleState, type ContractRuleId } from '../../../../lib/businessContractRules';
+import {
+  CONTRACT_RULE_ITEMS,
+  createInitialRuleState,
+  normalizeRuleState,
+  validateAdjustmentMultiIndicatorWeights,
+  type ContractRuleId,
+} from '../../../../lib/businessContractRules';
 import { prisma } from '../../../../lib/prisma';
 import { handlePrismaApiError } from '../../../../lib/prismaApiError';
 
 function isRuleId(value: string): value is ContractRuleId {
   return CONTRACT_RULE_ITEMS.some((item) => item.id === value);
-}
-
-function parsePercentValue(value: string | boolean | undefined) {
-  if (typeof value !== 'string') return 0;
-  const normalized = Number(value.replace(/[^\d.-]/g, ''));
-  return Number.isFinite(normalized) && normalized > 0 ? normalized : 0;
-}
-
-function getAdjustmentWeightsTotal(values: Record<string, string | boolean>) {
-  return (
-    parsePercentValue(values.adjustMultiHousingWeight) +
-    parsePercentValue(values.adjustMultiLaborWeight) +
-    parsePercentValue(values.adjustMultiMaterialWeight) +
-    parsePercentValue(values.adjustMultiMaterialsOtherWeight) +
-    parsePercentValue(values.adjustMultiWageWeight) +
-    parsePercentValue(values.adjustMultiEnergyWeight) +
-    parsePercentValue(values.adjustMultiGeneralPriceWeight)
-  );
 }
 
 export async function GET(_: Request, { params }: { params: Promise<{ ruleId: string }> }) {
@@ -67,9 +55,9 @@ export async function PUT(request: Request, { params }: { params: Promise<{ rule
     const normalizedRule = ruleId === 'builder-penalty' ? normalizeBuilderPenaltyRuleState(normalizedBaseRule) : normalizedBaseRule;
 
     if (ruleId === 'adjustment' && normalizedRule.activeTab === 'multi-indicator') {
-      const total = getAdjustmentWeightsTotal(normalizedRule.values);
-      if (total > 100) {
-        return NextResponse.json({ message: `جمع درصد شاخص‌های تعدیل ${total}٪ است و نباید از ۱۰۰٪ بیشتر باشد.` }, { status: 400 });
+      const validation = validateAdjustmentMultiIndicatorWeights(normalizedRule.values);
+      if (!validation.valid) {
+        return NextResponse.json({ message: validation.message }, { status: 400 });
       }
     }
 

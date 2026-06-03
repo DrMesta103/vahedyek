@@ -372,7 +372,7 @@ function RuleTabButton({
       type: "button",
       onClick,
       className: cn(
-        "group relative flex min-w-[168px] flex-1 flex-col items-center justify-center gap-3 px-3 py-5 text-center transition",
+        "group relative flex min-w-[168px] flex-1 flex-col items-center justify-center gap-3 px-3 py-5 text-center transition max-sm:min-w-[132px] max-sm:gap-2 max-sm:px-2 max-sm:py-4",
         active ? "text-[color:var(--text-strong)]" : "text-[color:var(--text-muted)] hover:text-[color:var(--text-strong)]"
       ),
       children: [
@@ -380,10 +380,10 @@ function RuleTabButton({
           "span",
           {
             className: cn(
-              "flex h-14 w-14 items-center justify-center rounded-full border transition",
+              "flex h-14 w-14 items-center justify-center rounded-full border transition max-sm:h-12 max-sm:w-12",
               active ? "border-[color:var(--theme-action-border)] bg-[color:var(--theme-action-bg)] text-[color:var(--theme-action-text)]" : "border-[color:var(--border-color)] bg-[color:var(--surface)] text-[color:var(--text-muted)]"
             ),
-            children: /* @__PURE__ */ jsx(Icon2, { className: "h-6 w-6" })
+            children: /* @__PURE__ */ jsx(Icon2, { className: "h-6 w-6 max-sm:h-5 max-sm:w-5" })
           }
         ),
         /* @__PURE__ */ jsx("span", { className: "text-sm font-bold", children: title }),
@@ -743,15 +743,15 @@ function StickySubmitBar({
   return /* @__PURE__ */ jsx(
     "div",
     {
-      className: embedded ? "mt-6" : "sticky bottom-0 z-10 -mx-8 -mb-8 mt-6 border-t border-slate-200 bg-white/95 backdrop-blur-sm",
-      children: /* @__PURE__ */ jsx("div", { className: "flex items-center justify-end gap-3 px-5 py-3", children: /* @__PURE__ */ jsxs(
+      className: embedded ? "mt-6" : "sticky bottom-0 z-10 -mx-8 -mb-8 mt-6 border-t border-[color:var(--border-color)] bg-[color:var(--surface-overlay)] backdrop-blur-sm max-sm:-mx-4 max-sm:-mb-4",
+      children: /* @__PURE__ */ jsx("div", { className: "flex items-center justify-end gap-3 px-5 py-3 max-sm:px-4", children: /* @__PURE__ */ jsxs(
         "button",
         {
           type: "button",
           onClick,
           disabled,
           "data-contract-save-trigger": submitId,
-          className: "inline-flex h-9 items-center gap-2 rounded-lg bg-teal-700 px-5 text-[13px] font-semibold text-white transition-all hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-600/30 disabled:cursor-not-allowed disabled:opacity-50",
+          className: "inline-flex h-9 items-center gap-2 rounded-lg bg-teal-700 px-5 text-[13px] font-semibold text-white transition-all hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-600/30 disabled:cursor-not-allowed disabled:opacity-50 max-sm:min-h-11 max-sm:w-full max-sm:justify-center",
           children: [
             isLoading ? /* @__PURE__ */ jsx("span", { className: "h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white" }) : null,
             displayLabel
@@ -779,7 +779,7 @@ function ChoicePills({
     {
       role: "radiogroup",
       "aria-label": ariaLabel,
-      className: cn5("flex gap-2", wrap ? "flex-wrap" : "flex-nowrap overflow-x-auto pb-1", className),
+      className: cn5("flex gap-2 max-sm:max-w-full max-sm:overflow-x-auto max-sm:pb-1", wrap ? "flex-wrap" : "flex-nowrap overflow-x-auto pb-1", className),
       children: options.map((option) => {
         const active = value === option.value;
         return /* @__PURE__ */ jsxs(
@@ -791,8 +791,8 @@ function ChoicePills({
             "data-tag-pill": "true",
             "data-active": active ? "true" : "false",
             className: cn5(
-              "inline-flex h-[34px] items-center gap-1.5 rounded-full border px-4 text-[12px] whitespace-nowrap transition-all",
-              active ? "border-[var(--theme-action-border)] bg-[var(--theme-action-bg)] font-semibold text-[#292929] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.25)]" : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50",
+              "inline-flex h-[34px] shrink-0 items-center gap-1.5 rounded-full border px-4 text-[12px] whitespace-nowrap transition-all max-sm:min-h-11 max-sm:px-4",
+              active ? "border-[var(--theme-action-border)] bg-[var(--theme-action-bg)] font-semibold text-[color:var(--text-strong)] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.25)]" : "border-[color:var(--border-color)] bg-[color:var(--surface)] text-[color:var(--text-body)] hover:bg-[color:var(--surface-soft)]",
               pillClassName
             ),
             children: [
@@ -996,31 +996,39 @@ var GripVertical = createLucideIcon("grip-vertical", __iconNode4);
 var __iconNode5 = [["path", { d: "M21 12a9 9 0 1 1-6.219-8.56", key: "13zald" }]];
 var LoaderCircle = createLucideIcon("loader-circle", __iconNode5);
 
-// ../../node_modules/lucide-react/dist/esm/icons/refresh-cw.js
+// ../../node_modules/lucide-react/dist/esm/icons/message-square-text.js
 var __iconNode6 = [
+  ["path", { d: "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z", key: "1lielz" }],
+  ["path", { d: "M13 8H7", key: "14i4kc" }],
+  ["path", { d: "M17 12H7", key: "16if0g" }]
+];
+var MessageSquareText = createLucideIcon("message-square-text", __iconNode6);
+
+// ../../node_modules/lucide-react/dist/esm/icons/refresh-cw.js
+var __iconNode7 = [
   ["path", { d: "M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8", key: "v9h5vc" }],
   ["path", { d: "M21 3v5h-5", key: "1q7to0" }],
   ["path", { d: "M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16", key: "3uifl3" }],
   ["path", { d: "M8 16H3v5", key: "1cv678" }]
 ];
-var RefreshCw = createLucideIcon("refresh-cw", __iconNode6);
+var RefreshCw = createLucideIcon("refresh-cw", __iconNode7);
 
 // ../../node_modules/lucide-react/dist/esm/icons/search.js
-var __iconNode7 = [
+var __iconNode8 = [
   ["circle", { cx: "11", cy: "11", r: "8", key: "4ej97u" }],
   ["path", { d: "m21 21-4.3-4.3", key: "1qie3q" }]
 ];
-var Search = createLucideIcon("search", __iconNode7);
+var Search = createLucideIcon("search", __iconNode8);
 
 // ../../node_modules/lucide-react/dist/esm/icons/trash-2.js
-var __iconNode8 = [
+var __iconNode9 = [
   ["path", { d: "M3 6h18", key: "d0wm0j" }],
   ["path", { d: "M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6", key: "4alrt4" }],
   ["path", { d: "M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2", key: "v07s0e" }],
   ["line", { x1: "10", x2: "10", y1: "11", y2: "17", key: "1uufr5" }],
   ["line", { x1: "14", x2: "14", y1: "11", y2: "17", key: "xtxkd" }]
 ];
-var Trash2 = createLucideIcon("trash-2", __iconNode8);
+var Trash2 = createLucideIcon("trash-2", __iconNode9);
 var STATUS_COLUMNS = [
   { id: "todo", title: "\u0627\u0646\u062C\u0627\u0645\u200C\u0646\u0634\u062F\u0647", description: "\u06AF\u0641\u062A\u06AF\u0648\u0647\u0627\u06CC\u06CC \u06A9\u0647 \u0647\u0646\u0648\u0632 \u0634\u0631\u0648\u0639 \u0646\u0634\u062F\u0647\u200C\u0627\u0646\u062F" },
   { id: "in_progress", title: "\u062F\u0631 \u062D\u0627\u0644 \u0627\u0646\u062C\u0627\u0645", description: "\u0645\u0648\u0627\u0631\u062F\u06CC \u06A9\u0647 \u062A\u06CC\u0645 \u0631\u0648\u06CC \u0622\u0646\u200C\u0647\u0627 \u062F\u0631 \u062D\u0627\u0644 \u06A9\u0627\u0631 \u0627\u0633\u062A" },
@@ -1045,6 +1053,7 @@ function DevDocThreadsBoard({
   const [savingThreadId, setSavingThreadId] = useState(null);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
+  const [creatorFilters, setCreatorFilters] = useState([]);
   const [draggingThreadId, setDraggingThreadId] = useState(null);
   const [activeDropZone, setActiveDropZone] = useState(null);
   const resolvedDeleteEndpoint = deleteEndpoint ?? updateEndpoint;
@@ -1065,6 +1074,18 @@ function DevDocThreadsBoard({
   useEffect(() => {
     void loadThreads();
   }, []);
+  const creatorOptions = useMemo(() => {
+    const seen = /* @__PURE__ */ new Map();
+    for (const thread of threads) {
+      const creatorId = thread.createdBy?.id;
+      if (!creatorId || seen.has(creatorId)) continue;
+      seen.set(creatorId, {
+        id: creatorId,
+        fullName: thread.createdBy?.fullName || "\u0646\u0627\u0645\u0634\u062E\u0635"
+      });
+    }
+    return Array.from(seen.values()).sort((a, b) => a.fullName.localeCompare(b.fullName, "fa"));
+  }, [threads]);
   useEffect(() => {
     const refresh = () => {
       void loadThreads();
@@ -1080,8 +1101,9 @@ function DevDocThreadsBoard({
   }, []);
   const filteredThreads = useMemo(() => {
     const query = search.trim().toLowerCase();
-    if (!query) return threads;
-    return threads.filter(
+    const baseThreads = creatorFilters.length === 0 ? threads : threads.filter((thread) => thread.createdBy?.id && creatorFilters.includes(thread.createdBy.id));
+    if (!query) return baseThreads;
+    return baseThreads.filter(
       (thread) => [
         thread.title,
         thread.docType,
@@ -1093,11 +1115,15 @@ function DevDocThreadsBoard({
         ...thread.labels
       ].filter(Boolean).join(" ").toLowerCase().includes(query)
     );
-  }, [search, threads]);
+  }, [creatorFilters, search, threads]);
   const columns = useMemo(
     () => STATUS_COLUMNS.map((column) => ({
       ...column,
-      threads: filteredThreads.filter((thread) => thread.status === column.id)
+      threads: filteredThreads.filter((thread) => thread.status === column.id).sort((left, right) => {
+        const timeDiff = new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime();
+        if (timeDiff !== 0) return timeDiff;
+        return left.title.localeCompare(right.title, "fa");
+      })
     })),
     [filteredThreads]
   );
@@ -1168,12 +1194,54 @@ function DevDocThreadsBoard({
           }
         )
       ] }),
-      /* @__PURE__ */ jsxs("div", { className: "mt-6 grid gap-4 xl:grid-cols-[minmax(0,1fr)_280px]", children: [
+      /* @__PURE__ */ jsxs("div", { className: "mt-6 grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px_280px]", children: [
         /* @__PURE__ */ jsxs("label", { className: "grid gap-2", children: [
           /* @__PURE__ */ jsx("span", { className: "text-xs font-semibold text-[color:var(--text-muted)]", children: "\u062C\u0633\u062A\u062C\u0648 \u0628\u06CC\u0646 \u0639\u0646\u0627\u0648\u06CC\u0646\u060C \u0645\u0633\u062A\u0646\u062F\u0627\u062A\u060C \u0645\u0633\u06CC\u0631\u0647\u0627 \u0648 \u0628\u0631\u0686\u0633\u0628\u200C\u0647\u0627" }),
           /* @__PURE__ */ jsxs("div", { className: "relative", children: [
             /* @__PURE__ */ jsx(Search, { className: "pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[color:var(--text-muted)]" }),
             /* @__PURE__ */ jsx(Input, { value: search, onChange: (event) => setSearch(event.target.value), placeholder: "\u0645\u062B\u0644\u0627 \u0642\u0631\u0627\u0631\u062F\u0627\u062F\u060C financial\u060C /business-settings/...", className: "pr-10" })
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxs("div", { className: "grid gap-2", children: [
+          /* @__PURE__ */ jsxs("div", { className: "flex items-center justify-between gap-3", children: [
+            /* @__PURE__ */ jsx("span", { className: "text-xs font-semibold text-[color:var(--text-muted)]", children: "\u0641\u06CC\u0644\u062A\u0631 \u0628\u0631 \u0627\u0633\u0627\u0633 \u0633\u0627\u0632\u0646\u062F\u0647 \u06AF\u0641\u062A\u06AF\u0648" }),
+            /* @__PURE__ */ jsx(
+              "button",
+              {
+                type: "button",
+                className: "text-xs font-semibold text-[color:var(--theme-accent)]",
+                onClick: () => setCreatorFilters([]),
+                children: "\u067E\u0627\u06A9 \u06A9\u0631\u062F\u0646"
+              }
+            )
+          ] }),
+          /* @__PURE__ */ jsxs("div", { className: "flex flex-wrap gap-2 rounded-[18px] border border-[color:var(--border-color)] bg-[color:var(--surface)] p-2", children: [
+            /* @__PURE__ */ jsx(
+              "button",
+              {
+                type: "button",
+                className: creatorFilters.length === 0 ? "inline-flex items-center rounded-full bg-[color:var(--theme-accent)] px-3 py-2 text-xs font-bold text-white" : chipClass(),
+                onClick: () => setCreatorFilters([]),
+                children: "\u0647\u0645\u0647 \u0633\u0627\u0632\u0646\u062F\u0647\u200C\u0647\u0627"
+              }
+            ),
+            creatorOptions.map((creator) => {
+              const active = creatorFilters.includes(creator.id);
+              return /* @__PURE__ */ jsx(
+                "button",
+                {
+                  type: "button",
+                  className: active ? "inline-flex items-center rounded-full bg-[color:var(--theme-accent)] px-3 py-2 text-xs font-bold text-white" : chipClass(),
+                  onClick: () => {
+                    setCreatorFilters(
+                      (current) => current.includes(creator.id) ? current.filter((id) => id !== creator.id) : [...current, creator.id]
+                    );
+                  },
+                  children: creator.fullName
+                },
+                creator.id
+              );
+            })
           ] })
         ] }),
         /* @__PURE__ */ jsx("div", { className: "grid grid-cols-3 gap-2", children: STATUS_COLUMNS.map((column) => /* @__PURE__ */ jsxs("div", { className: "rounded-[22px] border border-[color:var(--border-color)] bg-transparent px-3 py-3 text-center text-sm text-[color:var(--text-body)]", children: [
@@ -1240,8 +1308,14 @@ function DevDocThreadsBoard({
                       ),
                       /* @__PURE__ */ jsxs("div", { className: "min-w-0", children: [
                         /* @__PURE__ */ jsxs("div", { className: "mb-3 flex flex-wrap gap-2", children: [
+                          /* @__PURE__ */ jsx("span", { className: "inline-flex items-center rounded-full border border-[color:var(--border-color)] bg-[color:var(--surface)] px-2.5 py-1 text-[11px] font-bold text-[color:var(--text-body)]", children: "\u06AF\u0641\u062A\u200C\u0648\u06AF\u0648" }),
                           /* @__PURE__ */ jsx("span", { className: chipClass(), children: thread.docType }),
                           /* @__PURE__ */ jsx("span", { className: chipClass(), children: DEV_DOC_PRIORITY_LABELS[thread.priority] }),
+                          /* @__PURE__ */ jsxs("span", { className: chipClass(), children: [
+                            /* @__PURE__ */ jsx(MessageSquareText, { className: "ml-1 h-3.5 w-3.5" }),
+                            thread.messageCount,
+                            " \u067E\u06CC\u0627\u0645"
+                          ] }),
                           /* @__PURE__ */ jsx("span", { className: chipClass(), children: thread.tenantName || thread.tenantSlug || "tenant \u0646\u0627\u0645\u0634\u062E\u0635" }),
                           thread.status === "in_progress" ? /* @__PURE__ */ jsx("span", { className: "inline-flex items-center rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-700", children: "\u062F\u0631 \u062D\u0627\u0644 \u0627\u0646\u062C\u0627\u0645" }) : null,
                           thread.status === "done" ? /* @__PURE__ */ jsx("span", { className: "inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700", children: "\u0627\u0646\u062C\u0627\u0645\u200C\u0634\u062F\u0647" }) : null,
@@ -1267,7 +1341,6 @@ function DevDocThreadsBoard({
                     ] })
                   ] }),
                   /* @__PURE__ */ jsxs("div", { className: "mt-4 space-y-2 text-xs text-[color:var(--text-muted)]", children: [
-                    /* @__PURE__ */ jsx("div", { className: "truncate font-mono", children: thread.pagePathSample }),
                     /* @__PURE__ */ jsxs("div", { className: "flex flex-wrap gap-x-3 gap-y-1", children: [
                       /* @__PURE__ */ jsxs("span", { children: [
                         "\u0627\u06CC\u062C\u0627\u062F\u06A9\u0646\u0646\u062F\u0647: ",
@@ -1281,6 +1354,10 @@ function DevDocThreadsBoard({
                         "tenant: ",
                         thread.tenantName || thread.tenantSlug || "\u0646\u0627\u0645\u0634\u062E\u0635"
                       ] })
+                    ] }),
+                    /* @__PURE__ */ jsxs("div", { className: "rounded-[18px] border border-dashed border-[color:var(--border-color)] bg-[color:var(--surface)] px-3 py-2", children: [
+                      /* @__PURE__ */ jsx("div", { className: "mb-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[color:var(--text-muted)]", children: "\u0635\u0641\u062D\u0647 \u0645\u0631\u062A\u0628\u0637" }),
+                      /* @__PURE__ */ jsx("div", { className: "truncate font-mono text-[11px] text-[color:var(--text-body)]", children: thread.pagePathSample })
                     ] })
                   ] }),
                   /* @__PURE__ */ jsxs("div", { className: "mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-[color:var(--border-color)] pt-4", children: [
@@ -1320,6 +1397,7 @@ lucide-react/dist/esm/icons/circle-check.js:
 lucide-react/dist/esm/icons/circle.js:
 lucide-react/dist/esm/icons/grip-vertical.js:
 lucide-react/dist/esm/icons/loader-circle.js:
+lucide-react/dist/esm/icons/message-square-text.js:
 lucide-react/dist/esm/icons/refresh-cw.js:
 lucide-react/dist/esm/icons/search.js:
 lucide-react/dist/esm/icons/trash-2.js:

@@ -29,7 +29,7 @@ export function ChoicePills<T extends string>({
     <div
       role="radiogroup"
       aria-label={ariaLabel}
-      className={cn('flex gap-2', wrap ? 'flex-wrap' : 'flex-nowrap overflow-x-auto pb-1', className)}
+      className={cn('flex gap-2 max-sm:max-w-full max-sm:overflow-x-auto max-sm:pb-1', wrap ? 'flex-wrap' : 'flex-nowrap overflow-x-auto pb-1', className)}
     >
       {options.map((option) => {
         const active = value === option.value;
@@ -42,10 +42,10 @@ export function ChoicePills<T extends string>({
             data-tag-pill="true"
             data-active={active ? 'true' : 'false'}
             className={cn(
-              'inline-flex h-[34px] items-center gap-1.5 rounded-full border px-4 text-[12px] whitespace-nowrap transition-all',
+              'inline-flex h-[34px] shrink-0 items-center gap-1.5 rounded-full border px-4 text-[12px] whitespace-nowrap transition-all max-sm:min-h-11 max-sm:px-4',
               active
-                ? 'border-[var(--theme-action-border)] bg-[var(--theme-action-bg)] font-semibold text-[#292929] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.25)]'
-                : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50',
+                ? 'border-[var(--theme-action-border)] bg-[var(--theme-action-bg)] font-semibold text-[color:var(--text-strong)] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.25)]'
+                : 'border-[color:var(--border-color)] bg-[color:var(--surface)] text-[color:var(--text-body)] hover:bg-[color:var(--surface-soft)]',
               pillClassName,
             )}
           >

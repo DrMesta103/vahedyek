@@ -44,6 +44,7 @@ type ThreadRow = {
   priority: string;
   status: string;
   labelsJson: string | null;
+  messageCount: number | null;
   createdAt: Date;
   updatedAt: Date;
   authorId: string | null;
@@ -193,6 +194,7 @@ export async function ensurePageThreadsTables() {
     );
   `);
 
+  await prisma.$executeRawUnsafe(`ALTER TABLE ${THREAD_READ_STATE_TABLE} ADD COLUMN IF NOT EXISTS "tenantId" TEXT;`);
   await prisma.$executeRawUnsafe(`ALTER TABLE ${THREAD_READ_STATE_TABLE} ADD COLUMN IF NOT EXISTS "appId" TEXT NOT NULL DEFAULT '${currentAppConfig.appId}';`);
   await prisma.$executeRawUnsafe(`ALTER TABLE ${THREAD_READ_STATE_TABLE} ADD COLUMN IF NOT EXISTS "isOpened" BOOLEAN NOT NULL DEFAULT FALSE;`);
   await prisma.$executeRawUnsafe(`ALTER TABLE ${THREAD_READ_STATE_TABLE} DROP CONSTRAINT IF EXISTS "DevPageThreadReadState_tenantId_fkey";`);
@@ -243,6 +245,7 @@ export function mapThreadRow(row: ThreadRow): PageThreadRecord {
     status,
     labels: safeJsonParseStringArray(row.labelsJson),
     isOpened: Boolean(row.isOpened),
+    messageCount: Math.max(0, row.messageCount ?? 0),
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
     createdBy: row.authorId
@@ -294,6 +297,7 @@ export async function listThreadsForApp(input: { userId: string }) {
         t."priority",
         t."status",
         t."labelsJson",
+        COALESCE(message_stats."messageCount", 0) AS "messageCount",
         t."createdAt",
         t."updatedAt",
         author."id" AS "authorId",
@@ -311,6 +315,11 @@ export async function listThreadsForApp(input: { userId: string }) {
           ELSE FALSE
         END AS "isOpened"
       FROM ${THREADS_TABLE} t
+      LEFT JOIN (
+        SELECT "threadId", COUNT(*)::int AS "messageCount"
+        FROM ${MESSAGES_TABLE}
+        GROUP BY "threadId"
+      ) message_stats ON message_stats."threadId" = t."id"
       LEFT JOIN (
         SELECT "threadId", MAX("createdAt") AS "lastMessageAt"
         FROM ${MESSAGES_TABLE}
@@ -354,6 +363,7 @@ export async function listThreadsForPage(input: { pagePath: string; userId: stri
         t."priority",
         t."status",
         t."labelsJson",
+        COALESCE(message_stats."messageCount", 0) AS "messageCount",
         t."createdAt",
         t."updatedAt",
         author."id" AS "authorId",
@@ -371,6 +381,11 @@ export async function listThreadsForPage(input: { pagePath: string; userId: stri
           ELSE FALSE
         END AS "isOpened"
       FROM ${THREADS_TABLE} t
+      LEFT JOIN (
+        SELECT "threadId", COUNT(*)::int AS "messageCount"
+        FROM ${MESSAGES_TABLE}
+        GROUP BY "threadId"
+      ) message_stats ON message_stats."threadId" = t."id"
       LEFT JOIN (
         SELECT "threadId", MAX("createdAt") AS "lastMessageAt"
         FROM ${MESSAGES_TABLE}

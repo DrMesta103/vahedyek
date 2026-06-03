@@ -2,6 +2,17 @@ import { jalaaliMonthLength, toGregorian, toJalaali } from 'jalaali-js';
 
 export type DueFrequency = 'monthly' | 'daily';
 
+export type RegularScheduleConfig = {
+  preset: string;
+  frequency: DueFrequency;
+  period: number;
+  count: number;
+  startDate: string;
+  totalAmount: number;
+  itemIndex: number;
+  baseTitle: string;
+};
+
 export type NormalizedFinancialCategory = {
   id: string;
   name: string;
@@ -151,8 +162,10 @@ export function buildRegularDueItems(input: {
   frequency: DueFrequency;
   period?: number;
   idPrefix?: string;
+  groupId?: string;
+  preset?: string;
 }) {
-  const { activeTab, title, totalAmount, count, startDate, frequency, period = 1, idPrefix = `due-${Date.now()}` } = input;
+  const { activeTab, title, totalAmount, count, startDate, frequency, period = 1, idPrefix = `due-${Date.now()}`, groupId = idPrefix, preset = frequency } = input;
   const distributedAmounts = distributeAmount(totalAmount, count);
 
   return distributedAmounts.map((amount, index) => ({
@@ -161,6 +174,17 @@ export function buildRegularDueItems(input: {
     title: `${title.trim()} ${index + 1}`,
     amount,
     dueDate: addIntervalToDate(startDate, index, frequency, period),
+    regularScheduleGroupId: groupId,
+    regularScheduleConfig: {
+      preset,
+      frequency,
+      period,
+      count,
+      startDate,
+      totalAmount,
+      itemIndex: index,
+      baseTitle: title.trim(),
+    } satisfies RegularScheduleConfig,
   }));
 }
 

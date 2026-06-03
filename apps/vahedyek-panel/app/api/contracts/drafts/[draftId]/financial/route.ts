@@ -6,7 +6,6 @@ import {
   normalizeFinancialCategories,
   normalizeFinancialDueItems,
   sortFinancialCategoriesForPersistence,
-  sumFinancialCapsCountedAgainstContractTotal,
   toNumber,
 } from '../../../../../lib/financialUtils';
 import { prisma } from '../../../../../lib/prisma';
@@ -148,15 +147,6 @@ export async function PUT(request: Request, { params }: { params: Promise<{ draf
             parkingFixedAmount,
             storageFixedAmount,
           });
-    const categoriesTotal = sumFinancialCapsCountedAgainstContractTotal(categories);
-
-    if (totalContractAmount > 0 && categoriesTotal > totalContractAmount) {
-      return NextResponse.json(
-        { message: 'جمع ردیف‌های مالی از مبلغ قرارداد بیشتر است و امکان ثبت وجود ندارد.' },
-        { status: 400 },
-      );
-    }
-
     const categoriesWithPrincipal = (() => {
       const principal = {
         id: PRINCIPAL_CATEGORY_ID,

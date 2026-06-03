@@ -1,0 +1,330 @@
+[
+  {
+    "id": "cmos6uhxa053nwc6o15xrmc4z:rule-mgbs5oow",
+    "penaltiesId": "cmos6uhxa053nwc6o15xrmc4z",
+    "penaltyTypeId": "cmos6uhxa053nwc6o15xrmc4z:unit-handover-delay",
+    "mode": "fixed",
+    "period": "daily",
+    "fixedAmount": "100000.00",
+    "penaltyPercent": "0.00",
+    "bankInterestPercent": "0.00",
+    "graceDays": 2,
+    "roundRule": "100",
+    "extraFeeEnabled": true,
+    "extraFeeType": "percent",
+    "extraFeeAmount": "1.50",
+    "extraFeeRoundRule": "100",
+    "progressiveRows": [
+      {
+        "id": "row-1",
+        "rate": "0.5",
+        "toDay": "4",
+        "fromDay": "1"
+      },
+      {
+        "id": "row-2",
+        "rate": "0.5",
+        "toDay": "6",
+        "fromDay": "5"
+      },
+      {
+        "id": "row-3",
+        "rate": "3.3",
+        "toDay": "65",
+        "fromDay": "7"
+      },
+      {
+        "id": "row-4",
+        "rate": "",
+        "toDay": "",
+        "fromDay": ""
+      }
+    ],
+    "createdAt": "2026-05-05T04:45:12.530Z",
+    "updatedAt": "2026-05-05T04:45:12.530Z"
+  },
+  {
+    "id": "cmoslhbyv06i4wc8w60px44fx:rule-q4549y2c",
+    "penaltiesId": "cmoslhbyv06i4wc8w60px44fx",
+    "penaltyTypeId": "cmoslhbyv06i4wc8w60px44fx:unit-handover-delay",
+    "mode": "contract",
+    "period": "daily",
+    "fixedAmount": "0.00",
+    "penaltyPercent": "2.00",
+    "bankInterestPercent": "3.00",
+    "graceDays": 2,
+    "roundRule": "100",
+    "extraFeeEnabled": false,
+    "extraFeeType": "percent",
+    "extraFeeAmount": "0.00",
+    "extraFeeRoundRule": "100",
+    "progressiveRows": [
+      {
+        "id": "row-1",
+        "rate": "0.5",
+        "toDay": "4",
+        "fromDay": "1"
+      },
+      {
+        "id": "row-2",
+        "rate": "0.5",
+        "toDay": "6",
+        "fromDay": "5"
+      },
+      {
+        "id": "row-3",
+        "rate": "3.3",
+        "toDay": "65",
+        "fromDay": "7"
+      },
+      {
+        "id": "row-4",
+        "rate": "",
+        "toDay": "",
+        "fromDay": ""
+      }
+    ],
+    "createdAt": "2026-05-07T01:13:22.728Z",
+    "updatedAt": "2026-05-07T01:13:22.728Z"
+  },
+  {
+    "id": "cmpdssryt09you6swf42skjg8:rule-620ja2yk",
+    "penaltiesId": "cmpdssryt09you6swf42skjg8",
+    "penaltyTypeId": "cmpdssryt09you6swf42skjg8:document-delay",
+    "mode": "fixed",
+    "period": "monthly",
+    "fixedAmount": "10.00",
+    "penaltyPercent": "0.00",
+    "bankInterestPercent": "0.00",
+    "graceDays": 2,
+    "roundRule": "100",
+    "extraFeeEnabled": false,
+    "extraFeeType": "percent",
+    "extraFeeAmount": "0.00",
+    "extraFeeRoundRule": "100",
+    "progressiveRows": [
+      {
+        "id": "row-1",
+        "rate": "0.5",
+        "toDay": "4",
+        "fromDay": "1",
+        "openEnded": false
+      },
+      {
+        "id": "row-2",
+        "rate": "0.5",
+        "toDay": "6",
+        "fromDay": "5",
+        "openEnded": false
+      },
+      {
+        "id": "row-3",
+        "rate": "3.3",
+        "toDay": "65",
+        "fromDay": "7",
+        "openEnded": false
+      },
+      {
+        "id": "row-4",
+        "rate": "",
+        "toDay": "",
+        "fromDay": "66",
+        "openEnded": false
+      }
+    ],
+    "createdAt": "2026-05-20T08:38:01.334Z",
+    "updatedAt": "2026-05-20T08:38:01.334Z"
+  },
+  {
+    "id": "cmpdssryt09you6swf42skjg8:rule-jf78ejyg",
+    "penaltiesId": "cmpdssryt09you6swf42skjg8",
+    "penaltyTypeId": "cmpdssryt09you6swf42skjg8:unit-handover-delay",
+    "mode": "fixed",
+    "period": "daily",
+    "fixedAmount": "10.00",
+    "penaltyPercent": "50.00",
+    "bankInterestPercent": "20.00",
+    "graceDays": 2,
+    "roundRule": "00",
+    "extraFeeEnabled": true,
+    "extraFeeType": "percent",
+    "extraFeeAmount": "20.00",
+    "extraFeeRoundRule": "100",
+    "progressiveRows": [
+      {
+        "id": "row-1",
+        "rate": "0.5",
+        "toDay": "",
+        "fromDay": "1",
+        "openEnded": false
+      },
+      {
+        "id": "row-1779264157517",
+        "rate": "",
+        "toDay": "",
+        "fromDay": "1",
+        "openEnded": false
+      },
+      {
+        "id": "row-1779264158460",
+        "rate": "",
+        "toDay": "",
+        "fromDay": "1",
+        "openEnded": false
+      },
+      {
+        "id": "row-1779264158644",
+        "rate": "",
+        "toDay": "",
+        "fromDay": "1",
+        "openEnded": false
+      }
+    ],
+    "createdAt": "2026-05-20T08:38:01.334Z",
+    "updatedAt": "2026-05-20T08:38:01.334Z"
+  },
+  {
+    "id": "cmpdssryt09you6swf42skjg8:rule-y0kmanqo",
+    "penaltiesId": "cmpdssryt09you6swf42skjg8",
+    "penaltyTypeId": "cmpdssryt09you6swf42skjg8:installment-delay",
+    "mode": "fixed",
+    "period": "monthly",
+    "fixedAmount": "10.00",
+    "penaltyPercent": "0.00",
+    "bankInterestPercent": "0.00",
+    "graceDays": 2,
+    "roundRule": "100",
+    "extraFeeEnabled": false,
+    "extraFeeType": "percent",
+    "extraFeeAmount": "0.00",
+    "extraFeeRoundRule": "100",
+    "progressiveRows": [
+      {
+        "id": "row-1",
+        "rate": "0.5",
+        "toDay": "4",
+        "fromDay": "1",
+        "openEnded": false
+      },
+      {
+        "id": "row-2",
+        "rate": "0.5",
+        "toDay": "6",
+        "fromDay": "5",
+        "openEnded": false
+      },
+      {
+        "id": "row-3",
+        "rate": "3.3",
+        "toDay": "65",
+        "fromDay": "7",
+        "openEnded": false
+      },
+      {
+        "id": "row-4",
+        "rate": "",
+        "toDay": "",
+        "fromDay": "66",
+        "openEnded": false
+      }
+    ],
+    "createdAt": "2026-05-20T08:38:01.334Z",
+    "updatedAt": "2026-05-20T08:38:01.334Z"
+  },
+  {
+    "id": "cmp2nj48t01dsoyv495wlqmzp:rule-1n50oqwj",
+    "penaltiesId": "cmp2nj48t01dsoyv495wlqmzp",
+    "penaltyTypeId": "cmp2nj48t01dsoyv495wlqmzp:installment-delay",
+    "mode": "overdue",
+    "period": "monthly",
+    "fixedAmount": "0.00",
+    "penaltyPercent": "1.00",
+    "bankInterestPercent": "10.00",
+    "graceDays": 2,
+    "roundRule": "100",
+    "extraFeeEnabled": false,
+    "extraFeeType": "percent",
+    "extraFeeAmount": "0.00",
+    "extraFeeRoundRule": "100",
+    "progressiveRows": [
+      {
+        "id": "row-1",
+        "rate": "0.5",
+        "toDay": "4",
+        "fromDay": "1",
+        "openEnded": false
+      },
+      {
+        "id": "row-2",
+        "rate": "0.5",
+        "toDay": "6",
+        "fromDay": "5",
+        "openEnded": false
+      },
+      {
+        "id": "row-3",
+        "rate": "3.3",
+        "toDay": "65",
+        "fromDay": "7",
+        "openEnded": false
+      },
+      {
+        "id": "row-4",
+        "rate": "",
+        "toDay": "",
+        "fromDay": "66",
+        "openEnded": false
+      }
+    ],
+    "createdAt": "2026-05-26T04:38:39.166Z",
+    "updatedAt": "2026-05-26T04:38:39.166Z"
+  },
+  {
+    "id": "cmp2nj48t01dsoyv495wlqmzp:rule-upy0pxeu",
+    "penaltiesId": "cmp2nj48t01dsoyv495wlqmzp",
+    "penaltyTypeId": "cmp2nj48t01dsoyv495wlqmzp:unit-handover-delay",
+    "mode": "fixed",
+    "period": "monthly",
+    "fixedAmount": "1000000.00",
+    "penaltyPercent": "0.00",
+    "bankInterestPercent": "0.00",
+    "graceDays": 2,
+    "roundRule": "100",
+    "extraFeeEnabled": true,
+    "extraFeeType": "percent",
+    "extraFeeAmount": "2000.00",
+    "extraFeeRoundRule": "100",
+    "progressiveRows": [
+      {
+        "id": "row-1",
+        "rate": "0.5",
+        "toDay": "4",
+        "fromDay": "1",
+        "openEnded": false
+      },
+      {
+        "id": "row-2",
+        "rate": "0.5",
+        "toDay": "6",
+        "fromDay": "5",
+        "openEnded": false
+      },
+      {
+        "id": "row-3",
+        "rate": "3.3",
+        "toDay": "65",
+        "fromDay": "7",
+        "openEnded": false
+      },
+      {
+        "id": "row-4",
+        "rate": "",
+        "toDay": "",
+        "fromDay": "66",
+        "openEnded": false
+      }
+    ],
+    "createdAt": "2026-05-26T04:38:39.166Z",
+    "updatedAt": "2026-05-26T04:38:39.166Z"
+  }
+]

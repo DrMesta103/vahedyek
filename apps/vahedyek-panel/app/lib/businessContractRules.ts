@@ -49,6 +49,110 @@ export type ContractRuleState = {
   values: Record<string, string | boolean>;
 };
 
+export const ADJUSTMENT_MULTI_INDICATOR_WEIGHTS = [
+  { key: 'adjustMultiHousingWeight', label: 'بانک مرکزی' },
+  { key: 'adjustMultiLaborWeight', label: 'مرکز آمار' },
+  { key: 'adjustMultiMaterialWeight', label: 'نظام مهندسی' },
+  { key: 'adjustMultiMaterialsOtherWeight', label: 'مصالح' },
+  { key: 'adjustMultiWageWeight', label: 'دستمزد' },
+  { key: 'adjustMultiEnergyWeight', label: 'انرژی' },
+  { key: 'adjustMultiGeneralPriceWeight', label: 'شاخص عمومی قیمت' },
+] as const;
+
+export type AdjustmentMultiIndicatorWeightKey = (typeof ADJUSTMENT_MULTI_INDICATOR_WEIGHTS)[number]['key'];
+
+export type AdjustmentMultiIndicatorWeightState = {
+  key: AdjustmentMultiIndicatorWeightKey;
+  label: string;
+  rawValue: string;
+  active: boolean;
+  parsedWeight: number | null;
+};
+
+function normalizeAdjustmentMultiIndicatorWeightValue(value: unknown) {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+function normalizeAdjustmentDigits(value: string) {
+  return value
+    .replace(/[۰-۹]/g, (digit) => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(digit)))
+    .replace(/[٠-٩]/g, (digit) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(digit)));
+}
+
+export function parseAdjustmentMultiIndicatorWeight(value: unknown) {
+  const rawValue = normalizeAdjustmentMultiIndicatorWeightValue(value);
+  if (!rawValue || rawValue === '0') return null;
+
+  const parsed = Number(normalizeAdjustmentDigits(rawValue).replace(/[^\d.-]/g, ''));
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
+
+export function getAdjustmentMultiIndicatorWeightStates(values: Record<string, string | boolean>): AdjustmentMultiIndicatorWeightState[] {
+  // The current UI uses the same numeric field to represent enabled/disabled state, so 0/blank are treated as inactive.
+  return ADJUSTMENT_MULTI_INDICATOR_WEIGHTS.map((item) => {
+    const rawValue = normalizeAdjustmentMultiIndicatorWeightValue(values[item.key]);
+    const parsedWeight = parseAdjustmentMultiIndicatorWeight(rawValue);
+    return {
+      key: item.key,
+      label: item.label,
+      rawValue,
+      active: Boolean(rawValue && rawValue !== '0'),
+      parsedWeight,
+    };
+  });
+}
+
+export function getAdjustmentMultiIndicatorActiveCount(values: Record<string, string | boolean>) {
+  return getAdjustmentMultiIndicatorWeightStates(values).filter((item) => item.active).length;
+}
+
+export function getAdjustmentMultiIndicatorWeightsTotal(values: Record<string, string | boolean>) {
+  return getAdjustmentMultiIndicatorWeightStates(values).reduce((sum, item) => sum + (item.parsedWeight ?? 0), 0);
+}
+
+export function validateAdjustmentMultiIndicatorWeights(values: Record<string, string | boolean>) {
+  const states = getAdjustmentMultiIndicatorWeightStates(values);
+  const activeStates = states.filter((item) => item.active);
+  const activeCount = activeStates.length;
+  const invalidActiveState = activeStates.find((item) => item.parsedWeight === null);
+  const total = activeStates.reduce((sum, item) => sum + (item.parsedWeight ?? 0), 0);
+
+  if (invalidActiveState) {
+    return {
+      valid: false,
+      total,
+      activeCount,
+      message: `${invalidActiveState.label} باید وزن معتبر و بزرگ‌تر از صفر داشته باشد.`,
+    };
+  }
+
+  if (activeCount < 2) {
+    return {
+      valid: false,
+      total,
+      activeCount,
+      message: 'در حالت چند شاخص، حداقل دو شاخص فعال باید تعریف شود.',
+    };
+  }
+
+  // TODO: If a parent/upper-level adjustment share is introduced later, replace 100 with that inherited target total.
+  if (Math.abs(total - 100) > 0.0001) {
+    return {
+      valid: false,
+      total,
+      activeCount,
+      message: `جمع درصد شاخص‌های فعال ${total}٪ است و باید ۱۰۰٪ باشد.`,
+    };
+  }
+
+  return {
+    valid: true,
+    total,
+    activeCount,
+    message: '',
+  };
+}
+
 export type LoanSettingsState = {
   enabled: boolean;
   loanAmountMode: LoanAmountMode;
@@ -140,12 +244,12 @@ export const CONTRACT_RULE_ITEMS: Array<{ id: ContractRuleId; title: string; des
   },
   {
     id: 'penalty',
-    title: 'تنظیمات جریمه',
+    title: 'تنظیمات جریمه خریدار',
     description: 'میزان جریمه تاخیر، مبنای محاسبه و دوره محاسبه جریمه را در این بخش مشخص کنید.',
   },
   {
     id: 'builder-penalty',
-    title: 'جریمه سازنده',
+    title: 'تنظیمات جریمه سازنده',
     description: 'فعال‌سازی و تنظیم جریمه‌های مرتبط با تعهدات سازنده مانند تاخیر در تحویل، تغییر مشخصات و اختلاف متراژ.',
   },
   {
@@ -442,9 +546,9 @@ export const RULE_CONFIGS: Record<ContractRuleId, RuleConfig> = fixMojibakeDeep(
   },
   penalty: {
     id: 'penalty',
-    title: 'تنظیمات جریمه',
+    title: 'تنظیمات جریمه خریدار',
     description: 'فعال‌سازی جریمه‌ها و تعریف چارچوب محاسبه هر مورد مطابق قرارداد.',
-    activationTitle: 'تنظیمات جریمه‌ها',
+    activationTitle: 'تنظیمات جریمه خریدار',
     activationDescription: 'در صورت فعال بودن، چارچوب پیشنهادی محاسبه جریمه تعریف می‌شود و در زمان ثبت یا اجرای قرارداد، در صورت وقوع تأخیر محاسبه و هشدار نمایش داده می‌شود.',
     tabs: [
       {
@@ -524,7 +628,7 @@ export const RULE_CONFIGS: Record<ContractRuleId, RuleConfig> = fixMojibakeDeep(
   },
   'builder-penalty': {
     id: 'builder-penalty',
-    title: 'جریمه سازنده',
+    title: 'تنظیمات جریمه سازنده',
     description: 'فعال‌سازی و مدیریت جریمه‌های مربوط به تعهدات سازنده در قرارداد.',
     activationTitle: 'فعال‌سازی جرائم سازنده',
     activationDescription: 'با فعال‌سازی این بخش، تنظیمات جریمه سازنده بر اساس پیکربندی برای قراردادهای جدید اعمال خواهد شد.',
@@ -694,6 +798,7 @@ export const RULE_CONFIGS: Record<ContractRuleId, RuleConfig> = fixMojibakeDeep(
           { key: 'forgiveMaxValue', label: 'حداکثر جریمه قابل بخشش', type: 'number', placeholder: '10000000' },
           { key: 'forgiveOutsideBuyerControl', label: 'تاخیر خارج از اختیار خریدار', type: 'switch' },
           { key: 'forgiveManagerApproval', label: 'تایید مدیر برای بخشودگی‌های بزرگ', type: 'switch' },
+          { key: 'forgiveDraftTemplateUsageEnabled', label: 'استفاده در پیش‌نویس', type: 'switch' },
         ],
       },
       {
@@ -725,6 +830,7 @@ export const RULE_CONFIGS: Record<ContractRuleId, RuleConfig> = fixMojibakeDeep(
           { key: 'interestReducingPrincipal', label: 'سهم اصل ثابت سود کاهشی', type: 'switch' },
           { key: 'interestTogetherPayment', label: 'پرداخت همزمان اصل و سود', type: 'switch' },
           { key: 'interestPrincipalAtEnd', label: 'پرداخت فقط سود تسویه اصل در پایان', type: 'switch' },
+          { key: 'interestDraftTemplateUsageEnabled', label: 'استفاده در پیش‌نویس', type: 'switch' },
         ],
       },
       {

@@ -1,0 +1,731 @@
+[
+  {
+    "id": "cmogu35pc000dwc5g2bd5jk6l",
+    "tenantId": "cmogu31vm0001wc5gq6ojac7j",
+    "key": "representative",
+    "label": "نماینده",
+    "system": true,
+    "createdAt": "2026-04-27T03:16:18.856Z",
+    "updatedAt": "2026-05-19T15:33:35.807Z"
+  },
+  {
+    "id": "cmogu35py000hwc5gmbk8865u",
+    "tenantId": "cmogu31vm0001wc5gq6ojac7j",
+    "key": "customer",
+    "label": "مشتری",
+    "system": true,
+    "createdAt": "2026-04-27T03:16:18.857Z",
+    "updatedAt": "2026-05-19T15:33:35.817Z"
+  },
+  {
+    "id": "cmogu35pz000lwc5gxkzl8uu7",
+    "tenantId": "cmogu31vm0001wc5gq6ojac7j",
+    "key": "employee",
+    "label": "کارمند",
+    "system": true,
+    "createdAt": "2026-04-27T03:16:18.856Z",
+    "updatedAt": "2026-05-19T15:33:35.820Z"
+  },
+  {
+    "id": "cmogu35pb000bwc5gccqo2gls",
+    "tenantId": "cmogu31vm0001wc5gq6ojac7j",
+    "key": "shareholder",
+    "label": "سهام دار",
+    "system": true,
+    "createdAt": "2026-04-27T03:16:18.856Z",
+    "updatedAt": "2026-05-19T15:33:35.822Z"
+  },
+  {
+    "id": "cmp86hdr708oep92jaxpl6pzq",
+    "tenantId": "cmp86hdqx08oap92je5evcqdj",
+    "key": "business_owner",
+    "label": "صاحب کسب و کار",
+    "system": true,
+    "createdAt": "2026-05-16T06:33:06.595Z",
+    "updatedAt": "2026-05-18T15:02:43.343Z"
+  },
+  {
+    "id": "cmogu35pb000awc5gzibpann4",
+    "tenantId": "cmogu31vm0001wc5gq6ojac7j",
+    "key": "partner_representative",
+    "label": "نماینده شریک",
+    "system": true,
+    "createdAt": "2026-04-27T03:16:18.857Z",
+    "updatedAt": "2026-05-19T15:33:35.826Z"
+  },
+  {
+    "id": "cmogu35px000fwc5g286gdtwl",
+    "tenantId": "cmogu31vm0001wc5gq6ojac7j",
+    "key": "legal_shareholder_representative",
+    "label": "نماینده سهام دار حقوقی",
+    "system": true,
+    "createdAt": "2026-04-27T03:16:18.857Z",
+    "updatedAt": "2026-05-19T15:33:35.829Z"
+  },
+  {
+    "id": "cmp86hdrd08ogp92jioibf52f",
+    "tenantId": "cmp86hdqx08oap92je5evcqdj",
+    "key": "representative",
+    "label": "نماینده",
+    "system": true,
+    "createdAt": "2026-05-16T06:33:06.601Z",
+    "updatedAt": "2026-05-18T15:02:43.346Z"
+  },
+  {
+    "id": "cmol19ss30050nw0w0sglibll",
+    "tenantId": "cmol19sro004inw0weixeth3j",
+    "key": "customer",
+    "label": "مشتری",
+    "system": true,
+    "createdAt": "2026-04-30T01:48:32.688Z",
+    "updatedAt": "2026-05-04T01:25:05.061Z"
+  },
+  {
+    "id": "cmol19ss0004onw0w9mwb0glt",
+    "tenantId": "cmol19sro004inw0weixeth3j",
+    "key": "partner_representative",
+    "label": "نماینده شریک",
+    "system": true,
+    "createdAt": "2026-04-30T01:48:32.687Z",
+    "updatedAt": "2026-05-04T01:25:05.062Z"
+  },
+  {
+    "id": "cmol19ss2004wnw0w4gwyotpn",
+    "tenantId": "cmol19sro004inw0weixeth3j",
+    "key": "buyer",
+    "label": "خریدار",
+    "system": true,
+    "createdAt": "2026-04-30T01:48:32.687Z",
+    "updatedAt": "2026-05-04T01:25:05.064Z"
+  },
+  {
+    "id": "cmp86hdrg08oip92jo00g0lfi",
+    "tenantId": "cmp86hdqx08oap92je5evcqdj",
+    "key": "investor",
+    "label": "سرمایه گذار",
+    "system": true,
+    "createdAt": "2026-05-16T06:33:06.604Z",
+    "updatedAt": "2026-05-18T15:02:43.347Z"
+  },
+  {
+    "id": "cmp86hdrj08okp92jjp60q7r5",
+    "tenantId": "cmp86hdqx08oap92je5evcqdj",
+    "key": "customer",
+    "label": "مشتری",
+    "system": true,
+    "createdAt": "2026-05-16T06:33:06.607Z",
+    "updatedAt": "2026-05-18T15:02:43.349Z"
+  },
+  {
+    "id": "cmp86hdrn08omp92jrxlr3zmg",
+    "tenantId": "cmp86hdqx08oap92je5evcqdj",
+    "key": "employee",
+    "label": "کارمند",
+    "system": true,
+    "createdAt": "2026-05-16T06:33:06.612Z",
+    "updatedAt": "2026-05-18T15:02:43.353Z"
+  },
+  {
+    "id": "cmp86hdru08oop92jhpmcdcda",
+    "tenantId": "cmp86hdqx08oap92je5evcqdj",
+    "key": "shareholder",
+    "label": "سهام دار",
+    "system": true,
+    "createdAt": "2026-05-16T06:33:06.617Z",
+    "updatedAt": "2026-05-18T15:02:43.355Z"
+  },
+  {
+    "id": "cmp86hdrx08oqp92jn3mp8h6s",
+    "tenantId": "cmp86hdqx08oap92je5evcqdj",
+    "key": "buyer",
+    "label": "خریدار",
+    "system": true,
+    "createdAt": "2026-05-16T06:33:06.621Z",
+    "updatedAt": "2026-05-18T15:02:43.357Z"
+  },
+  {
+    "id": "cmp86hds008osp92jhiygdhmz",
+    "tenantId": "cmp86hdqx08oap92je5evcqdj",
+    "key": "partner_representative",
+    "label": "نماینده شریک",
+    "system": true,
+    "createdAt": "2026-05-16T06:33:06.624Z",
+    "updatedAt": "2026-05-18T15:02:43.359Z"
+  },
+  {
+    "id": "cmp86hds308oup92jzjc5cbbf",
+    "tenantId": "cmp86hdqx08oap92je5evcqdj",
+    "key": "legal_shareholder_representative",
+    "label": "نماینده سهام دار حقوقی",
+    "system": true,
+    "createdAt": "2026-05-16T06:33:06.627Z",
+    "updatedAt": "2026-05-18T15:02:43.361Z"
+  },
+  {
+    "id": "cmol19ss1004snw0wlom0bklr",
+    "tenantId": "cmol19sro004inw0weixeth3j",
+    "key": "business_owner",
+    "label": "صاحب کسب و کار",
+    "system": true,
+    "createdAt": "2026-04-30T01:48:32.687Z",
+    "updatedAt": "2026-05-04T01:25:05.060Z"
+  },
+  {
+    "id": "cmol19ss2004ynw0wqpita7ot",
+    "tenantId": "cmol19sro004inw0weixeth3j",
+    "key": "employee",
+    "label": "کارمند",
+    "system": true,
+    "createdAt": "2026-04-30T01:48:32.687Z",
+    "updatedAt": "2026-05-04T01:25:05.064Z"
+  },
+  {
+    "id": "cmol19ss1004unw0w3pq8ye4x",
+    "tenantId": "cmol19sro004inw0weixeth3j",
+    "key": "investor",
+    "label": "سرمایه گذار",
+    "system": true,
+    "createdAt": "2026-04-30T01:48:32.688Z",
+    "updatedAt": "2026-05-04T01:25:05.063Z"
+  },
+  {
+    "id": "cmogu346g0005wc5gbducadoo",
+    "tenantId": "cmogu31vm0001wc5gq6ojac7j",
+    "key": "business_owner",
+    "label": "صاحب کسب و کار",
+    "system": true,
+    "createdAt": "2026-04-27T03:16:18.856Z",
+    "updatedAt": "2026-05-19T15:33:35.801Z"
+  },
+  {
+    "id": "cmogu35p80007wc5guhds5055",
+    "tenantId": "cmogu31vm0001wc5gq6ojac7j",
+    "key": "buyer",
+    "label": "خریدار",
+    "system": true,
+    "createdAt": "2026-04-27T03:16:18.857Z",
+    "updatedAt": "2026-05-19T15:33:35.823Z"
+  },
+  {
+    "id": "cmogu35py000jwc5goexy07ra",
+    "tenantId": "cmogu31vm0001wc5gq6ojac7j",
+    "key": "investor",
+    "label": "سرمایه گذار",
+    "system": true,
+    "createdAt": "2026-04-27T03:16:18.856Z",
+    "updatedAt": "2026-05-19T15:33:35.814Z"
+  },
+  {
+    "id": "cmol19srz004mnw0w6zrr27vz",
+    "tenantId": "cmol19sro004inw0weixeth3j",
+    "key": "representative",
+    "label": "نماینده",
+    "system": true,
+    "createdAt": "2026-04-30T01:48:32.686Z",
+    "updatedAt": "2026-05-04T01:25:05.062Z"
+  },
+  {
+    "id": "cmol19ss60052nw0w9ivj11rg",
+    "tenantId": "cmol19sro004inw0weixeth3j",
+    "key": "legal_shareholder_representative",
+    "label": "نماینده سهام دار حقوقی",
+    "system": true,
+    "createdAt": "2026-04-30T01:48:32.687Z",
+    "updatedAt": "2026-05-04T01:25:05.062Z"
+  },
+  {
+    "id": "cmol19ss0004qnw0w6499zyz0",
+    "tenantId": "cmol19sro004inw0weixeth3j",
+    "key": "shareholder",
+    "label": "سهام دار",
+    "system": true,
+    "createdAt": "2026-04-30T01:48:32.687Z",
+    "updatedAt": "2026-05-04T01:25:05.068Z"
+  },
+  {
+    "id": "cmopbsbce00icpj0vvewkk3pm",
+    "tenantId": "cmopbsbc100hxpj0vrza6jk6p",
+    "key": "representative",
+    "label": "نماینده",
+    "system": true,
+    "createdAt": "2026-05-03T01:53:57.419Z",
+    "updatedAt": "2026-05-16T06:32:42.169Z"
+  },
+  {
+    "id": "cmopbsbcd00i9pj0v8k9ljrtm",
+    "tenantId": "cmopbsbc100hxpj0vrza6jk6p",
+    "key": "investor",
+    "label": "سرمایه گذار",
+    "system": true,
+    "createdAt": "2026-05-03T01:53:57.419Z",
+    "updatedAt": "2026-05-16T06:32:42.174Z"
+  },
+  {
+    "id": "cmopbsbcd00i6pj0v38flpvuj",
+    "tenantId": "cmopbsbc100hxpj0vrza6jk6p",
+    "key": "customer",
+    "label": "مشتری",
+    "system": true,
+    "createdAt": "2026-05-03T01:53:57.419Z",
+    "updatedAt": "2026-05-16T06:32:42.177Z"
+  },
+  {
+    "id": "cmopbsbcg00ihpj0v3lakbewk",
+    "tenantId": "cmopbsbc100hxpj0vrza6jk6p",
+    "key": "employee",
+    "label": "کارمند",
+    "system": true,
+    "createdAt": "2026-05-03T01:53:57.420Z",
+    "updatedAt": "2026-05-16T06:32:42.180Z"
+  },
+  {
+    "id": "cmopbsbcd00i7pj0vva18m1xt",
+    "tenantId": "cmopbsbc100hxpj0vrza6jk6p",
+    "key": "shareholder",
+    "label": "سهام دار",
+    "system": true,
+    "createdAt": "2026-05-03T01:53:57.420Z",
+    "updatedAt": "2026-05-16T06:32:42.184Z"
+  },
+  {
+    "id": "cmopbsbcc00i3pj0vc4xv7i3p",
+    "tenantId": "cmopbsbc100hxpj0vrza6jk6p",
+    "key": "buyer",
+    "label": "خریدار",
+    "system": true,
+    "createdAt": "2026-05-03T01:53:57.420Z",
+    "updatedAt": "2026-05-16T06:32:42.187Z"
+  },
+  {
+    "id": "cmopbsbce00idpj0vyi76zpal",
+    "tenantId": "cmopbsbc100hxpj0vrza6jk6p",
+    "key": "partner_representative",
+    "label": "نماینده شریک",
+    "system": true,
+    "createdAt": "2026-05-03T01:53:57.420Z",
+    "updatedAt": "2026-05-16T06:32:42.190Z"
+  },
+  {
+    "id": "cmopbsbcf00igpj0v5fptjnq8",
+    "tenantId": "cmopbsbc100hxpj0vrza6jk6p",
+    "key": "legal_shareholder_representative",
+    "label": "نماینده سهام دار حقوقی",
+    "system": true,
+    "createdAt": "2026-05-03T01:53:57.420Z",
+    "updatedAt": "2026-05-16T06:32:42.192Z"
+  },
+  {
+    "id": "cmopbsbcc00i1pj0v0k3mei29",
+    "tenantId": "cmopbsbc100hxpj0vrza6jk6p",
+    "key": "business_owner",
+    "label": "صاحب کسب و کار",
+    "system": true,
+    "createdAt": "2026-05-03T01:53:57.419Z",
+    "updatedAt": "2026-05-16T06:32:42.166Z"
+  },
+  {
+    "id": "cmp9dw943000hle2jq097mbg7",
+    "tenantId": "cmp9dw93l0001le2jywlbp256",
+    "key": "buyer",
+    "label": "خریدار",
+    "system": true,
+    "createdAt": "2026-05-17T02:48:23.908Z",
+    "updatedAt": "2026-05-21T02:55:46.880Z"
+  },
+  {
+    "id": "cmp9dw93x0009le2jdsxe5m8n",
+    "tenantId": "cmp9dw93l0001le2jywlbp256",
+    "key": "investor",
+    "label": "سرمایه گذار",
+    "system": true,
+    "createdAt": "2026-05-17T02:48:23.902Z",
+    "updatedAt": "2026-05-21T02:55:46.870Z"
+  },
+  {
+    "id": "cmp9dw940000dle2jo51e6gaa",
+    "tenantId": "cmp9dw93l0001le2jywlbp256",
+    "key": "employee",
+    "label": "کارمند",
+    "system": true,
+    "createdAt": "2026-05-17T02:48:23.905Z",
+    "updatedAt": "2026-05-21T02:55:46.874Z"
+  },
+  {
+    "id": "cmp9dw93z000ble2jsj6khndu",
+    "tenantId": "cmp9dw93l0001le2jywlbp256",
+    "key": "customer",
+    "label": "مشتری",
+    "system": true,
+    "createdAt": "2026-05-17T02:48:23.903Z",
+    "updatedAt": "2026-05-21T02:55:46.872Z"
+  },
+  {
+    "id": "cmp9dw945000jle2jmej5kffo",
+    "tenantId": "cmp9dw93l0001le2jywlbp256",
+    "key": "partner_representative",
+    "label": "نماینده شریک",
+    "system": true,
+    "createdAt": "2026-05-17T02:48:23.909Z",
+    "updatedAt": "2026-05-21T02:55:46.882Z"
+  },
+  {
+    "id": "cmp9dw942000fle2jzg8qcwdl",
+    "tenantId": "cmp9dw93l0001le2jywlbp256",
+    "key": "shareholder",
+    "label": "سهام دار",
+    "system": true,
+    "createdAt": "2026-05-17T02:48:23.906Z",
+    "updatedAt": "2026-05-21T02:55:46.878Z"
+  },
+  {
+    "id": "cmp9dw93s0005le2jf9eqds33",
+    "tenantId": "cmp9dw93l0001le2jywlbp256",
+    "key": "business_owner",
+    "label": "صاحب کسب و کار",
+    "system": true,
+    "createdAt": "2026-05-17T02:48:23.896Z",
+    "updatedAt": "2026-05-21T02:55:46.863Z"
+  },
+  {
+    "id": "cmp9dw93v0007le2j8jfroh2q",
+    "tenantId": "cmp9dw93l0001le2jywlbp256",
+    "key": "representative",
+    "label": "نماینده",
+    "system": true,
+    "createdAt": "2026-05-17T02:48:23.900Z",
+    "updatedAt": "2026-05-21T02:55:46.866Z"
+  },
+  {
+    "id": "cmp9dw946000lle2jwsvt25it",
+    "tenantId": "cmp9dw93l0001le2jywlbp256",
+    "key": "legal_shareholder_representative",
+    "label": "نماینده سهام دار حقوقی",
+    "system": true,
+    "createdAt": "2026-05-17T02:48:23.911Z",
+    "updatedAt": "2026-05-21T02:55:46.885Z"
+  },
+  {
+    "id": "cmok2gsbl0009wcawgh2rkfo9",
+    "tenantId": "cmok2gpmo0001wcaw3nz2y79x",
+    "key": "customer",
+    "label": "مشتری",
+    "system": true,
+    "createdAt": "2026-04-29T09:34:11.608Z",
+    "updatedAt": "2026-05-27T02:43:14.488Z"
+  },
+  {
+    "id": "cmok2gs650007wcaw0qrquiiu",
+    "tenantId": "cmok2gpmo0001wcaw3nz2y79x",
+    "key": "buyer",
+    "label": "خریدار",
+    "system": true,
+    "createdAt": "2026-04-29T09:34:11.608Z",
+    "updatedAt": "2026-05-27T02:43:14.492Z"
+  },
+  {
+    "id": "cmok2gssp000hwcawbp8iijwk",
+    "tenantId": "cmok2gpmo0001wcaw3nz2y79x",
+    "key": "partner_representative",
+    "label": "نماینده شریک",
+    "system": true,
+    "createdAt": "2026-04-29T09:34:11.608Z",
+    "updatedAt": "2026-05-27T02:43:14.493Z"
+  },
+  {
+    "id": "cmok2gtgp000jwcaw9mupuqpc",
+    "tenantId": "cmok2gpmo0001wcaw3nz2y79x",
+    "key": "legal_shareholder_representative",
+    "label": "نماینده سهام دار حقوقی",
+    "system": true,
+    "createdAt": "2026-04-29T09:34:11.608Z",
+    "updatedAt": "2026-05-27T02:43:14.494Z"
+  },
+  {
+    "id": "cmp2l1yca07ndoy08nwpxw2to",
+    "tenantId": "cmp2l1wfd07mzoy08jumz3qho",
+    "key": "shareholder",
+    "label": "سهام دار",
+    "system": true,
+    "createdAt": "2026-05-12T08:34:23.962Z",
+    "updatedAt": "2026-05-27T02:52:41.517Z"
+  },
+  {
+    "id": "cmpf16cov0005vo5s6v9xcrlo",
+    "tenantId": "cmpf16con0001vo5s0u1jnael",
+    "key": "business_owner",
+    "label": "صاحب کسب و کار",
+    "system": true,
+    "createdAt": "2026-05-21T01:38:57.152Z",
+    "updatedAt": "2026-05-27T02:50:56.592Z"
+  },
+  {
+    "id": "cmok2gsbm000bwcawpez65pcj",
+    "tenantId": "cmok2gpmo0001wcaw3nz2y79x",
+    "key": "shareholder",
+    "label": "سهام دار",
+    "system": true,
+    "createdAt": "2026-04-29T09:34:11.608Z",
+    "updatedAt": "2026-05-27T02:43:14.491Z"
+  },
+  {
+    "id": "cmok2gss7000fwcawbe13pw26",
+    "tenantId": "cmok2gpmo0001wcaw3nz2y79x",
+    "key": "employee",
+    "label": "کارمند",
+    "system": true,
+    "createdAt": "2026-04-29T09:34:11.608Z",
+    "updatedAt": "2026-05-27T02:43:14.490Z"
+  },
+  {
+    "id": "cmpf16coz0007vo5s8gp20rd8",
+    "tenantId": "cmpf16con0001vo5s0u1jnael",
+    "key": "representative",
+    "label": "نماینده",
+    "system": true,
+    "createdAt": "2026-05-21T01:38:57.155Z",
+    "updatedAt": "2026-05-27T02:50:56.604Z"
+  },
+  {
+    "id": "cmok2gsbx000dwcawovnnmtvx",
+    "tenantId": "cmok2gpmo0001wcaw3nz2y79x",
+    "key": "business_owner",
+    "label": "صاحب کسب و کار",
+    "system": true,
+    "createdAt": "2026-04-29T09:34:11.608Z",
+    "updatedAt": "2026-05-27T02:43:14.483Z"
+  },
+  {
+    "id": "cmpdq1j1q015uu6swmdk1rm8h",
+    "tenantId": "cmpdq1j13015gu6sw1ihl67u2",
+    "key": "shareholder",
+    "label": "سهام دار",
+    "system": true,
+    "createdAt": "2026-05-20T03:39:30.158Z",
+    "updatedAt": "2026-05-26T04:22:21.640Z"
+  },
+  {
+    "id": "cmp2l1yr207njoy089crwkte8",
+    "tenantId": "cmp2l1wfd07mzoy08jumz3qho",
+    "key": "legal_shareholder_representative",
+    "label": "نماینده سهام دار حقوقی",
+    "system": true,
+    "createdAt": "2026-05-12T08:34:24.495Z",
+    "updatedAt": "2026-05-27T02:52:41.521Z"
+  },
+  {
+    "id": "cmpdq1j1r015wu6swr1b61qxe",
+    "tenantId": "cmpdq1j13015gu6sw1ihl67u2",
+    "key": "buyer",
+    "label": "خریدار",
+    "system": true,
+    "createdAt": "2026-05-20T03:39:30.160Z",
+    "updatedAt": "2026-05-26T04:22:21.641Z"
+  },
+  {
+    "id": "cmpdq1j1t015yu6swni9pkp19",
+    "tenantId": "cmpdq1j13015gu6sw1ihl67u2",
+    "key": "partner_representative",
+    "label": "نماینده شریک",
+    "system": true,
+    "createdAt": "2026-05-20T03:39:30.161Z",
+    "updatedAt": "2026-05-26T04:22:21.642Z"
+  },
+  {
+    "id": "cmpdq1j1u0160u6swbdxscb4a",
+    "tenantId": "cmpdq1j13015gu6sw1ihl67u2",
+    "key": "legal_shareholder_representative",
+    "label": "نماینده سهام دار حقوقی",
+    "system": true,
+    "createdAt": "2026-05-20T03:39:30.163Z",
+    "updatedAt": "2026-05-26T04:22:21.643Z"
+  },
+  {
+    "id": "cmpf16cp00009vo5sxdo695ac",
+    "tenantId": "cmpf16con0001vo5s0u1jnael",
+    "key": "investor",
+    "label": "سرمایه گذار",
+    "system": true,
+    "createdAt": "2026-05-21T01:38:57.157Z",
+    "updatedAt": "2026-05-27T02:50:56.605Z"
+  },
+  {
+    "id": "cmpf16cp1000bvo5sdq81970p",
+    "tenantId": "cmpf16con0001vo5s0u1jnael",
+    "key": "customer",
+    "label": "مشتری",
+    "system": true,
+    "createdAt": "2026-05-21T01:38:57.158Z",
+    "updatedAt": "2026-05-27T02:50:56.607Z"
+  },
+  {
+    "id": "cmpf16cp3000dvo5sfvb2k1dc",
+    "tenantId": "cmpf16con0001vo5s0u1jnael",
+    "key": "employee",
+    "label": "کارمند",
+    "system": true,
+    "createdAt": "2026-05-21T01:38:57.159Z",
+    "updatedAt": "2026-05-27T02:50:56.609Z"
+  },
+  {
+    "id": "cmp2l1xib07n3oy084oiblqgm",
+    "tenantId": "cmp2l1wfd07mzoy08jumz3qho",
+    "key": "business_owner",
+    "label": "صاحب کسب و کار",
+    "system": true,
+    "createdAt": "2026-05-12T08:34:22.884Z",
+    "updatedAt": "2026-05-27T02:52:41.497Z"
+  },
+  {
+    "id": "cmpf16cp4000fvo5s8rtkykew",
+    "tenantId": "cmpf16con0001vo5s0u1jnael",
+    "key": "shareholder",
+    "label": "سهام دار",
+    "system": true,
+    "createdAt": "2026-05-21T01:38:57.160Z",
+    "updatedAt": "2026-05-27T02:50:56.610Z"
+  },
+  {
+    "id": "cmpf16cp5000hvo5spqlywtjw",
+    "tenantId": "cmpf16con0001vo5s0u1jnael",
+    "key": "buyer",
+    "label": "خریدار",
+    "system": true,
+    "createdAt": "2026-05-21T01:38:57.162Z",
+    "updatedAt": "2026-05-27T02:50:56.611Z"
+  },
+  {
+    "id": "cmpdq1j1a015ku6sw3wktw1oz",
+    "tenantId": "cmpdq1j13015gu6sw1ihl67u2",
+    "key": "business_owner",
+    "label": "صاحب کسب و کار",
+    "system": true,
+    "createdAt": "2026-05-20T03:39:30.142Z",
+    "updatedAt": "2026-05-26T04:22:21.625Z"
+  },
+  {
+    "id": "cmpf16cp7000jvo5svlgw9p52",
+    "tenantId": "cmpf16con0001vo5s0u1jnael",
+    "key": "partner_representative",
+    "label": "نماینده شریک",
+    "system": true,
+    "createdAt": "2026-05-21T01:38:57.163Z",
+    "updatedAt": "2026-05-27T02:50:56.612Z"
+  },
+  {
+    "id": "cmpf16cp8000lvo5sutxdczqk",
+    "tenantId": "cmpf16con0001vo5s0u1jnael",
+    "key": "legal_shareholder_representative",
+    "label": "نماینده سهام دار حقوقی",
+    "system": true,
+    "createdAt": "2026-05-21T01:38:57.164Z",
+    "updatedAt": "2026-05-27T02:50:56.613Z"
+  },
+  {
+    "id": "cmpdq1j1c015mu6sw0nvm056c",
+    "tenantId": "cmpdq1j13015gu6sw1ihl67u2",
+    "key": "representative",
+    "label": "نماینده",
+    "system": true,
+    "createdAt": "2026-05-20T03:39:30.144Z",
+    "updatedAt": "2026-05-26T04:22:21.631Z"
+  },
+  {
+    "id": "cmok2grx40005wcaw9wsibube",
+    "tenantId": "cmok2gpmo0001wcaw3nz2y79x",
+    "key": "representative",
+    "label": "نماینده",
+    "system": true,
+    "createdAt": "2026-04-29T09:34:11.608Z",
+    "updatedAt": "2026-05-27T02:43:14.485Z"
+  },
+  {
+    "id": "cmpdq1j1e015ou6swf1bhebl2",
+    "tenantId": "cmpdq1j13015gu6sw1ihl67u2",
+    "key": "investor",
+    "label": "سرمایه گذار",
+    "system": true,
+    "createdAt": "2026-05-20T03:39:30.146Z",
+    "updatedAt": "2026-05-26T04:22:21.633Z"
+  },
+  {
+    "id": "cmp2l1xsj07n5oy086c5cjmxc",
+    "tenantId": "cmp2l1wfd07mzoy08jumz3qho",
+    "key": "representative",
+    "label": "نماینده",
+    "system": true,
+    "createdAt": "2026-05-12T08:34:23.252Z",
+    "updatedAt": "2026-05-27T02:52:41.507Z"
+  },
+  {
+    "id": "cmok2gtp3000lwcawtc0jdnfg",
+    "tenantId": "cmok2gpmo0001wcaw3nz2y79x",
+    "key": "investor",
+    "label": "سرمایه گذار",
+    "system": true,
+    "createdAt": "2026-04-29T09:34:11.608Z",
+    "updatedAt": "2026-05-27T02:43:14.487Z"
+  },
+  {
+    "id": "cmpdq1j1k015qu6swiqcdh2d9",
+    "tenantId": "cmpdq1j13015gu6sw1ihl67u2",
+    "key": "customer",
+    "label": "مشتری",
+    "system": true,
+    "createdAt": "2026-05-20T03:39:30.152Z",
+    "updatedAt": "2026-05-26T04:22:21.636Z"
+  },
+  {
+    "id": "cmpdq1j1o015su6sw14vwts8l",
+    "tenantId": "cmpdq1j13015gu6sw1ihl67u2",
+    "key": "employee",
+    "label": "کارمند",
+    "system": true,
+    "createdAt": "2026-05-20T03:39:30.156Z",
+    "updatedAt": "2026-05-26T04:22:21.638Z"
+  },
+  {
+    "id": "cmp2l1xxk07n7oy08dg5yicol",
+    "tenantId": "cmp2l1wfd07mzoy08jumz3qho",
+    "key": "investor",
+    "label": "سرمایه گذار",
+    "system": true,
+    "createdAt": "2026-05-12T08:34:23.433Z",
+    "updatedAt": "2026-05-27T02:52:41.513Z"
+  },
+  {
+    "id": "cmp2l1y2l07n9oy08z89n70qm",
+    "tenantId": "cmp2l1wfd07mzoy08jumz3qho",
+    "key": "customer",
+    "label": "مشتری",
+    "system": true,
+    "createdAt": "2026-05-12T08:34:23.614Z",
+    "updatedAt": "2026-05-27T02:52:41.515Z"
+  },
+  {
+    "id": "cmp2l1y7i07nboy08nx4fhz9f",
+    "tenantId": "cmp2l1wfd07mzoy08jumz3qho",
+    "key": "employee",
+    "label": "کارمند",
+    "system": true,
+    "createdAt": "2026-05-12T08:34:23.790Z",
+    "updatedAt": "2026-05-27T02:52:41.516Z"
+  },
+  {
+    "id": "cmp2l1yha07nfoy08eryk3wz9",
+    "tenantId": "cmp2l1wfd07mzoy08jumz3qho",
+    "key": "buyer",
+    "label": "خریدار",
+    "system": true,
+    "createdAt": "2026-05-12T08:34:24.142Z",
+    "updatedAt": "2026-05-27T02:52:41.518Z"
+  },
+  {
+    "id": "cmp2l1ym307nhoy0887yg1bgu",
+    "tenantId": "cmp2l1wfd07mzoy08jumz3qho",
+    "key": "partner_representative",
+    "label": "نماینده شریک",
+    "system": true,
+    "createdAt": "2026-05-12T08:34:24.316Z",
+    "updatedAt": "2026-05-27T02:52:41.520Z"
+  }
+]

@@ -1,0 +1,1700 @@
+[
+  {
+    "id": "cmogu36bu000vwc5g7b4h2j8d",
+    "roleId": "cmogu346g0005wc5gbducadoo",
+    "permissionKey": "platform.users.update",
+    "createdAt": "2026-04-27T03:16:21.643Z"
+  },
+  {
+    "id": "cmogu36bu000rwc5g6hs7zocr",
+    "roleId": "cmogu346g0005wc5gbducadoo",
+    "permissionKey": "platform.users.view",
+    "createdAt": "2026-04-27T03:16:21.642Z"
+  },
+  {
+    "id": "cmogu36bu000xwc5gcwdto3vs",
+    "roleId": "cmogu346g0005wc5gbducadoo",
+    "permissionKey": "platform.users.create",
+    "createdAt": "2026-04-27T03:16:21.642Z"
+  },
+  {
+    "id": "cmogu36bu000nwc5ghk3s6fzj",
+    "roleId": "cmogu346g0005wc5gbducadoo",
+    "permissionKey": "platform.settings.view",
+    "createdAt": "2026-04-27T03:16:21.642Z"
+  },
+  {
+    "id": "cmogu36bu000pwc5gunfje220",
+    "roleId": "cmogu346g0005wc5gbducadoo",
+    "permissionKey": "platform.settings.manageAccess",
+    "createdAt": "2026-04-27T03:16:21.642Z"
+  },
+  {
+    "id": "cmogu36bu000ywc5gte5ifctl",
+    "roleId": "cmogu346g0005wc5gbducadoo",
+    "permissionKey": "platform.reports.view",
+    "createdAt": "2026-04-27T03:16:21.643Z"
+  },
+  {
+    "id": "cmogu36bv0013wc5gxun2n8sa",
+    "roleId": "cmogu346g0005wc5gbducadoo",
+    "permissionKey": "business.profile.update",
+    "createdAt": "2026-04-27T03:16:21.643Z"
+  },
+  {
+    "id": "cmogu36bv0011wc5gnebglssh",
+    "roleId": "cmogu346g0005wc5gbducadoo",
+    "permissionKey": "platform.users.delete",
+    "createdAt": "2026-04-27T03:16:21.643Z"
+  },
+  {
+    "id": "cmogu36bu000zwc5gi4xnvhdb",
+    "roleId": "cmogu346g0005wc5gbducadoo",
+    "permissionKey": "business.profile.view",
+    "createdAt": "2026-04-27T03:16:21.643Z"
+  },
+  {
+    "id": "cmogu37w10017wc5grq49dj6k",
+    "roleId": "cmogu346g0005wc5gbducadoo",
+    "permissionKey": "contracts.update",
+    "createdAt": "2026-04-27T03:16:21.643Z"
+  },
+  {
+    "id": "cmogu37w2001bwc5g5yysq9ky",
+    "roleId": "cmogu346g0005wc5gbducadoo",
+    "permissionKey": "contracts.sign",
+    "createdAt": "2026-04-27T03:16:21.644Z"
+  },
+  {
+    "id": "cmogu37w20019wc5g3r4j05u5",
+    "roleId": "cmogu346g0005wc5gbducadoo",
+    "permissionKey": "contracts.export",
+    "createdAt": "2026-04-27T03:16:21.644Z"
+  },
+  {
+    "id": "cmogu37vy0015wc5g84j4pesg",
+    "roleId": "cmogu346g0005wc5gbducadoo",
+    "permissionKey": "contracts.delete",
+    "createdAt": "2026-04-27T03:16:21.643Z"
+  },
+  {
+    "id": "cmogu37w4001fwc5g9vo9oyqu",
+    "roleId": "cmogu346g0005wc5gbducadoo",
+    "permissionKey": "contracts.create",
+    "createdAt": "2026-04-27T03:16:21.643Z"
+  },
+  {
+    "id": "cmogu37w3001dwc5gvyqzp0fc",
+    "roleId": "cmogu346g0005wc5gbducadoo",
+    "permissionKey": "complex.manage",
+    "createdAt": "2026-04-27T03:16:21.643Z"
+  },
+  {
+    "id": "cmogu38h7001hwc5gjm677mm3",
+    "roleId": "cmogu346g0005wc5gbducadoo",
+    "permissionKey": "contracts.view",
+    "createdAt": "2026-04-27T03:16:21.643Z"
+  },
+  {
+    "id": "cmogu38h9001jwc5g67nwp05v",
+    "roleId": "cmogu346g0005wc5gbducadoo",
+    "permissionKey": "complex.view",
+    "createdAt": "2026-04-27T03:16:21.643Z"
+  },
+  {
+    "id": "cmok2gtxe0010wcawhil6eia3",
+    "roleId": "cmok2gsbx000dwcawovnnmtvx",
+    "permissionKey": "business.profile.view",
+    "createdAt": "2026-04-29T09:34:14.210Z"
+  },
+  {
+    "id": "cmok2gtxd000wwcawo4ruoawp",
+    "roleId": "cmok2gsbx000dwcawovnnmtvx",
+    "permissionKey": "platform.users.update",
+    "createdAt": "2026-04-29T09:34:14.210Z"
+  },
+  {
+    "id": "cmok2gtxd000xwcawr9rnk99y",
+    "roleId": "cmok2gsbx000dwcawovnnmtvx",
+    "permissionKey": "platform.users.delete",
+    "createdAt": "2026-04-29T09:34:14.210Z"
+  },
+  {
+    "id": "cmok2gtxe0011wcawz607fshe",
+    "roleId": "cmok2gsbx000dwcawovnnmtvx",
+    "permissionKey": "platform.reports.view",
+    "createdAt": "2026-04-29T09:34:14.210Z"
+  },
+  {
+    "id": "cmok2gtxd000twcaw5zgt5hyz",
+    "roleId": "cmok2gsbx000dwcawovnnmtvx",
+    "permissionKey": "platform.users.create",
+    "createdAt": "2026-04-29T09:34:14.210Z"
+  },
+  {
+    "id": "cmok2guwe0015wcawled97pz7",
+    "roleId": "cmok2gsbx000dwcawovnnmtvx",
+    "permissionKey": "contracts.sign",
+    "createdAt": "2026-04-29T09:34:14.210Z"
+  },
+  {
+    "id": "cmok2gtxe0013wcaw7lxjptle",
+    "roleId": "cmok2gsbx000dwcawovnnmtvx",
+    "permissionKey": "complex.view",
+    "createdAt": "2026-04-29T09:34:14.210Z"
+  },
+  {
+    "id": "cmok2gtxd000rwcawvo092h7v",
+    "roleId": "cmok2gsbx000dwcawovnnmtvx",
+    "permissionKey": "platform.users.view",
+    "createdAt": "2026-04-29T09:34:14.210Z"
+  },
+  {
+    "id": "cmok2gv9j001dwcawm6t7rssq",
+    "roleId": "cmok2gsbx000dwcawovnnmtvx",
+    "permissionKey": "contracts.view",
+    "createdAt": "2026-04-29T09:34:14.210Z"
+  },
+  {
+    "id": "cmok2gv9h0017wcaw5l5x67wj",
+    "roleId": "cmok2gsbx000dwcawovnnmtvx",
+    "permissionKey": "complex.manage",
+    "createdAt": "2026-04-29T09:34:14.210Z"
+  },
+  {
+    "id": "cmok2gv9h001bwcawblekpgsa",
+    "roleId": "cmok2gsbx000dwcawovnnmtvx",
+    "permissionKey": "business.profile.update",
+    "createdAt": "2026-04-29T09:34:14.210Z"
+  },
+  {
+    "id": "cmok2gvaf001hwcawpffa86b4",
+    "roleId": "cmok2gsbx000dwcawovnnmtvx",
+    "permissionKey": "contracts.create",
+    "createdAt": "2026-04-29T09:34:14.210Z"
+  },
+  {
+    "id": "cmok2gv9k001fwcawvajnhpkw",
+    "roleId": "cmok2gsbx000dwcawovnnmtvx",
+    "permissionKey": "contracts.export",
+    "createdAt": "2026-04-29T09:34:14.210Z"
+  },
+  {
+    "id": "cmok2gtxd000qwcawx6hmqwf7",
+    "roleId": "cmok2gsbx000dwcawovnnmtvx",
+    "permissionKey": "platform.settings.manageAccess",
+    "createdAt": "2026-04-29T09:34:14.210Z"
+  },
+  {
+    "id": "cmok2gtxd000nwcaw2siully2",
+    "roleId": "cmok2gsbx000dwcawovnnmtvx",
+    "permissionKey": "platform.settings.view",
+    "createdAt": "2026-04-29T09:34:14.210Z"
+  },
+  {
+    "id": "cmok2gv9h0019wcaww6n5zzhw",
+    "roleId": "cmok2gsbx000dwcawovnnmtvx",
+    "permissionKey": "contracts.delete",
+    "createdAt": "2026-04-29T09:34:14.210Z"
+  },
+  {
+    "id": "cmok2gw61001jwcawt4laj089",
+    "roleId": "cmok2gsbx000dwcawovnnmtvx",
+    "permissionKey": "contracts.update",
+    "createdAt": "2026-04-29T09:34:14.210Z"
+  },
+  {
+    "id": "cmol19ssi0054nw0wsn67lf68",
+    "roleId": "cmol19ss1004snw0wlom0bklr",
+    "permissionKey": "platform.settings.view",
+    "createdAt": "2026-04-30T01:48:32.706Z"
+  },
+  {
+    "id": "cmol19ssj0056nw0wy6wjmi9r",
+    "roleId": "cmol19ss1004snw0wlom0bklr",
+    "permissionKey": "platform.settings.manageAccess",
+    "createdAt": "2026-04-30T01:48:32.707Z"
+  },
+  {
+    "id": "cmol19ssj0058nw0wrjmemuoi",
+    "roleId": "cmol19ss1004snw0wlom0bklr",
+    "permissionKey": "platform.users.view",
+    "createdAt": "2026-04-30T01:48:32.708Z"
+  },
+  {
+    "id": "cmol19ssj005anw0wd8nmtloa",
+    "roleId": "cmol19ss1004snw0wlom0bklr",
+    "permissionKey": "platform.users.create",
+    "createdAt": "2026-04-30T01:48:32.708Z"
+  },
+  {
+    "id": "cmol19ssm005knw0wnvas1o18",
+    "roleId": "cmol19ss1004snw0wlom0bklr",
+    "permissionKey": "contracts.create",
+    "createdAt": "2026-04-30T01:48:32.710Z"
+  },
+  {
+    "id": "cmol19ssl005fnw0wfpvtlbqn",
+    "roleId": "cmol19ss1004snw0wlom0bklr",
+    "permissionKey": "complex.view",
+    "createdAt": "2026-04-30T01:48:32.709Z"
+  },
+  {
+    "id": "cmol19ssk005cnw0w15zhxqvb",
+    "roleId": "cmol19ss1004snw0wlom0bklr",
+    "permissionKey": "platform.users.update",
+    "createdAt": "2026-04-30T01:48:32.708Z"
+  },
+  {
+    "id": "cmol19ssl005gnw0wyw9wb5zx",
+    "roleId": "cmol19ss1004snw0wlom0bklr",
+    "permissionKey": "platform.reports.view",
+    "createdAt": "2026-04-30T01:48:32.709Z"
+  },
+  {
+    "id": "cmol19ssm005inw0w62qb0nw0",
+    "roleId": "cmol19ss1004snw0wlom0bklr",
+    "permissionKey": "complex.manage",
+    "createdAt": "2026-04-30T01:48:32.710Z"
+  },
+  {
+    "id": "cmol19ssw005mnw0wctv5f2ht",
+    "roleId": "cmol19ss1004snw0wlom0bklr",
+    "permissionKey": "business.profile.view",
+    "createdAt": "2026-04-30T01:48:32.710Z"
+  },
+  {
+    "id": "cmol19st0005snw0wthsxdxdb",
+    "roleId": "cmol19ss1004snw0wlom0bklr",
+    "permissionKey": "contracts.delete",
+    "createdAt": "2026-04-30T01:48:32.711Z"
+  },
+  {
+    "id": "cmol19st0005pnw0ws30h7v92",
+    "roleId": "cmol19ss1004snw0wlom0bklr",
+    "permissionKey": "contracts.update",
+    "createdAt": "2026-04-30T01:48:32.711Z"
+  },
+  {
+    "id": "cmol19st2005wnw0w0zbrv9wc",
+    "roleId": "cmol19ss1004snw0wlom0bklr",
+    "permissionKey": "contracts.sign",
+    "createdAt": "2026-04-30T01:48:32.712Z"
+  },
+  {
+    "id": "cmol19st2005vnw0wqq6sbr3i",
+    "roleId": "cmol19ss1004snw0wlom0bklr",
+    "permissionKey": "contracts.view",
+    "createdAt": "2026-04-30T01:48:32.712Z"
+  },
+  {
+    "id": "cmol19st0005rnw0wwejm91oz",
+    "roleId": "cmol19ss1004snw0wlom0bklr",
+    "permissionKey": "platform.users.delete",
+    "createdAt": "2026-04-30T01:48:32.711Z"
+  },
+  {
+    "id": "cmol19st40060nw0wcw4ov9n8",
+    "roleId": "cmol19ss1004snw0wlom0bklr",
+    "permissionKey": "contracts.export",
+    "createdAt": "2026-04-30T01:48:32.711Z"
+  },
+  {
+    "id": "cmol19st3005ynw0wfrersa5i",
+    "roleId": "cmol19ss1004snw0wlom0bklr",
+    "permissionKey": "business.profile.update",
+    "createdAt": "2026-04-30T01:48:32.711Z"
+  },
+  {
+    "id": "cmopbsbcr00ilpj0vie8gh2ig",
+    "roleId": "cmopbsbcc00i1pj0v0k3mei29",
+    "permissionKey": "platform.settings.manageAccess",
+    "createdAt": "2026-05-03T01:53:57.435Z"
+  },
+  {
+    "id": "cmopbsbcr00ijpj0vsl2cnt2r",
+    "roleId": "cmopbsbcc00i1pj0v0k3mei29",
+    "permissionKey": "platform.settings.view",
+    "createdAt": "2026-05-03T01:53:57.435Z"
+  },
+  {
+    "id": "cmopbsbcr00irpj0v7tl0ewxi",
+    "roleId": "cmopbsbcc00i1pj0v0k3mei29",
+    "permissionKey": "platform.users.create",
+    "createdAt": "2026-05-03T01:53:57.436Z"
+  },
+  {
+    "id": "cmopbsbcr00iopj0v5xxafyaw",
+    "roleId": "cmopbsbcc00i1pj0v0k3mei29",
+    "permissionKey": "platform.users.view",
+    "createdAt": "2026-05-03T01:53:57.436Z"
+  },
+  {
+    "id": "cmopbsbcs00itpj0vkxu0mv7c",
+    "roleId": "cmopbsbcc00i1pj0v0k3mei29",
+    "permissionKey": "platform.reports.view",
+    "createdAt": "2026-05-03T01:53:57.436Z"
+  },
+  {
+    "id": "cmopbsbcr00ippj0vd34n89xp",
+    "roleId": "cmopbsbcc00i1pj0v0k3mei29",
+    "permissionKey": "platform.users.delete",
+    "createdAt": "2026-05-03T01:53:57.436Z"
+  },
+  {
+    "id": "cmopbsbcs00iwpj0vlejgxur0",
+    "roleId": "cmopbsbcc00i1pj0v0k3mei29",
+    "permissionKey": "business.profile.update",
+    "createdAt": "2026-05-03T01:53:57.436Z"
+  },
+  {
+    "id": "cmopbsbcs00ixpj0vzv2rsl2x",
+    "roleId": "cmopbsbcc00i1pj0v0k3mei29",
+    "permissionKey": "complex.manage",
+    "createdAt": "2026-05-03T01:53:57.436Z"
+  },
+  {
+    "id": "cmopbsbcs00izpj0vbf06bka3",
+    "roleId": "cmopbsbcc00i1pj0v0k3mei29",
+    "permissionKey": "contracts.view",
+    "createdAt": "2026-05-03T01:53:57.437Z"
+  },
+  {
+    "id": "cmopbsbd100j3pj0v0sx1zyxu",
+    "roleId": "cmopbsbcc00i1pj0v0k3mei29",
+    "permissionKey": "platform.users.update",
+    "createdAt": "2026-05-03T01:53:57.437Z"
+  },
+  {
+    "id": "cmopbsbd100j5pj0vgi70pium",
+    "roleId": "cmopbsbcc00i1pj0v0k3mei29",
+    "permissionKey": "complex.view",
+    "createdAt": "2026-05-03T01:53:57.437Z"
+  },
+  {
+    "id": "cmopbsbd200j7pj0v7xrwlsuu",
+    "roleId": "cmopbsbcc00i1pj0v0k3mei29",
+    "permissionKey": "contracts.create",
+    "createdAt": "2026-05-03T01:53:57.438Z"
+  },
+  {
+    "id": "cmopbsbd000j1pj0vfs0mlftq",
+    "roleId": "cmopbsbcc00i1pj0v0k3mei29",
+    "permissionKey": "business.profile.view",
+    "createdAt": "2026-05-03T01:53:57.437Z"
+  },
+  {
+    "id": "cmopbsbd200jdpj0vu9cwca66",
+    "roleId": "cmopbsbcc00i1pj0v0k3mei29",
+    "permissionKey": "contracts.sign",
+    "createdAt": "2026-05-03T01:53:57.438Z"
+  },
+  {
+    "id": "cmopbsbd200jbpj0vuecogfwn",
+    "roleId": "cmopbsbcc00i1pj0v0k3mei29",
+    "permissionKey": "contracts.delete",
+    "createdAt": "2026-05-03T01:53:57.438Z"
+  },
+  {
+    "id": "cmopbsbd200j9pj0vgd6eb9cv",
+    "roleId": "cmopbsbcc00i1pj0v0k3mei29",
+    "permissionKey": "contracts.update",
+    "createdAt": "2026-05-03T01:53:57.438Z"
+  },
+  {
+    "id": "cmopbsbd200jfpj0v3t9lsyy2",
+    "roleId": "cmopbsbcc00i1pj0v0k3mei29",
+    "permissionKey": "contracts.export",
+    "createdAt": "2026-05-03T01:53:57.438Z"
+  },
+  {
+    "id": "cmotwh8zg02cootwsdg9xwn38",
+    "roleId": "cmopbsbce00icpj0vvewkk3pm",
+    "permissionKey": "business.profile.view",
+    "createdAt": "2026-05-06T06:44:17.578Z"
+  },
+  {
+    "id": "cmov3vnp8002notjgoh7xhzw0",
+    "roleId": "cmopbsbcc00i1pj0v0k3mei29",
+    "permissionKey": "customers.create",
+    "createdAt": "2026-05-07T02:59:03.531Z"
+  },
+  {
+    "id": "cmov3voty002potjgudco4qm0",
+    "roleId": "cmopbsbcd00i6pj0v38flpvuj",
+    "permissionKey": "customers.view",
+    "createdAt": "2026-05-07T02:59:10.057Z"
+  },
+  {
+    "id": "cmova88e401p6otik9o8k4i4p",
+    "roleId": "cmopbsbcc00i1pj0v0k3mei29",
+    "permissionKey": "customer.portal.access",
+    "createdAt": "2026-05-07T05:56:57.358Z"
+  },
+  {
+    "id": "cmova88e401p7otik2uyowxuc",
+    "roleId": "cmopbsbcc00i1pj0v0k3mei29",
+    "permissionKey": "customer.contracts.view",
+    "createdAt": "2026-05-07T05:56:57.358Z"
+  },
+  {
+    "id": "cmova88e401p8otik8apx1soh",
+    "roleId": "cmopbsbcc00i1pj0v0k3mei29",
+    "permissionKey": "customer.contracts.details",
+    "createdAt": "2026-05-07T05:56:57.358Z"
+  },
+  {
+    "id": "cmova88e401p9otik16ch4ziv",
+    "roleId": "cmopbsbcc00i1pj0v0k3mei29",
+    "permissionKey": "customer.financial.view",
+    "createdAt": "2026-05-07T05:56:57.358Z"
+  },
+  {
+    "id": "cmova88e401paotika5ssrem2",
+    "roleId": "cmopbsbcc00i1pj0v0k3mei29",
+    "permissionKey": "customer.payments.view",
+    "createdAt": "2026-05-07T05:56:57.358Z"
+  },
+  {
+    "id": "cmova88e401pbotik3slg7hbi",
+    "roleId": "cmopbsbcc00i1pj0v0k3mei29",
+    "permissionKey": "customer.payments.submit",
+    "createdAt": "2026-05-07T05:56:57.358Z"
+  },
+  {
+    "id": "cmova88e401pcotik503ck9mi",
+    "roleId": "cmopbsbcc00i1pj0v0k3mei29",
+    "permissionKey": "customer.documents.view",
+    "createdAt": "2026-05-07T05:56:57.358Z"
+  },
+  {
+    "id": "cmova88e401pdotikdjdn39fe",
+    "roleId": "cmopbsbcc00i1pj0v0k3mei29",
+    "permissionKey": "customer.support.view",
+    "createdAt": "2026-05-07T05:56:57.358Z"
+  },
+  {
+    "id": "cmova88e401peotik56p5te1x",
+    "roleId": "cmopbsbcc00i1pj0v0k3mei29",
+    "permissionKey": "customer.support.create",
+    "createdAt": "2026-05-07T05:56:57.358Z"
+  },
+  {
+    "id": "cmova88e401pfotik9id7mmaz",
+    "roleId": "cmopbsbcc00i1pj0v0k3mei29",
+    "permissionKey": "customer.profile.view",
+    "createdAt": "2026-05-07T05:56:57.358Z"
+  },
+  {
+    "id": "cmova88e401pgotik47whquds",
+    "roleId": "cmopbsbcc00i1pj0v0k3mei29",
+    "permissionKey": "customer.profile.update",
+    "createdAt": "2026-05-07T05:56:57.358Z"
+  },
+  {
+    "id": "cmovab0pm01x7otik9po4f2ua",
+    "roleId": "cmopbsbcg00ihpj0v3lakbewk",
+    "permissionKey": "contracts.view",
+    "createdAt": "2026-05-07T05:59:07.789Z"
+  },
+  {
+    "id": "cmovab0pm01x8otikbh2fjzrh",
+    "roleId": "cmopbsbcg00ihpj0v3lakbewk",
+    "permissionKey": "contracts.create",
+    "createdAt": "2026-05-07T05:59:07.789Z"
+  },
+  {
+    "id": "cmovab0pm01x9otiklbpzwxxh",
+    "roleId": "cmopbsbcg00ihpj0v3lakbewk",
+    "permissionKey": "contracts.update",
+    "createdAt": "2026-05-07T05:59:07.789Z"
+  },
+  {
+    "id": "cmovab0pm01xaotikq356sy6e",
+    "roleId": "cmopbsbcg00ihpj0v3lakbewk",
+    "permissionKey": "customer.portal.access",
+    "createdAt": "2026-05-07T05:59:07.789Z"
+  },
+  {
+    "id": "cmovab0pm01xbotiku03shesr",
+    "roleId": "cmopbsbcg00ihpj0v3lakbewk",
+    "permissionKey": "customer.contracts.view",
+    "createdAt": "2026-05-07T05:59:07.789Z"
+  },
+  {
+    "id": "cmovab0pm01xcotikkmixr75c",
+    "roleId": "cmopbsbcg00ihpj0v3lakbewk",
+    "permissionKey": "customer.contracts.details",
+    "createdAt": "2026-05-07T05:59:07.789Z"
+  },
+  {
+    "id": "cmovab0pm01xdotikdfb1skcu",
+    "roleId": "cmopbsbcg00ihpj0v3lakbewk",
+    "permissionKey": "customer.financial.view",
+    "createdAt": "2026-05-07T05:59:07.789Z"
+  },
+  {
+    "id": "cmovab0pm01xeotiksc359dmy",
+    "roleId": "cmopbsbcg00ihpj0v3lakbewk",
+    "permissionKey": "customer.payments.view",
+    "createdAt": "2026-05-07T05:59:07.789Z"
+  },
+  {
+    "id": "cmovab0pm01xfotikltizjesq",
+    "roleId": "cmopbsbcg00ihpj0v3lakbewk",
+    "permissionKey": "customer.payments.submit",
+    "createdAt": "2026-05-07T05:59:07.789Z"
+  },
+  {
+    "id": "cmovab0pm01xgotikccxk57jw",
+    "roleId": "cmopbsbcg00ihpj0v3lakbewk",
+    "permissionKey": "customer.documents.view",
+    "createdAt": "2026-05-07T05:59:07.789Z"
+  },
+  {
+    "id": "cmovab0pm01xhotikvsi2a2je",
+    "roleId": "cmopbsbcg00ihpj0v3lakbewk",
+    "permissionKey": "customer.support.view",
+    "createdAt": "2026-05-07T05:59:07.789Z"
+  },
+  {
+    "id": "cmovab0pm01xiotik3h45wsj5",
+    "roleId": "cmopbsbcg00ihpj0v3lakbewk",
+    "permissionKey": "customer.support.create",
+    "createdAt": "2026-05-07T05:59:07.789Z"
+  },
+  {
+    "id": "cmovab0pn01xjotikmuyowau7",
+    "roleId": "cmopbsbcg00ihpj0v3lakbewk",
+    "permissionKey": "customer.profile.view",
+    "createdAt": "2026-05-07T05:59:07.789Z"
+  },
+  {
+    "id": "cmovab0pn01xkotikd8jbc49w",
+    "roleId": "cmopbsbcg00ihpj0v3lakbewk",
+    "permissionKey": "customer.profile.update",
+    "createdAt": "2026-05-07T05:59:07.789Z"
+  },
+  {
+    "id": "cmovant9802e5otikjd6pl7ih",
+    "roleId": "cmopbsbcc00i3pj0vc4xv7i3p",
+    "permissionKey": "customer.portal.access",
+    "createdAt": "2026-05-07T06:09:04.629Z"
+  },
+  {
+    "id": "cmovant9802e6otikih9tpgwt",
+    "roleId": "cmopbsbcc00i3pj0vc4xv7i3p",
+    "permissionKey": "customer.contracts.details",
+    "createdAt": "2026-05-07T06:09:04.629Z"
+  },
+  {
+    "id": "cmovant9802e7otikrr0ayosl",
+    "roleId": "cmopbsbcc00i3pj0vc4xv7i3p",
+    "permissionKey": "customer.financial.view",
+    "createdAt": "2026-05-07T06:09:04.629Z"
+  },
+  {
+    "id": "cmovant9802e8otikmijuj7lb",
+    "roleId": "cmopbsbcc00i3pj0vc4xv7i3p",
+    "permissionKey": "customer.payments.view",
+    "createdAt": "2026-05-07T06:09:04.629Z"
+  },
+  {
+    "id": "cmovant9802e9otik50k7qf1u",
+    "roleId": "cmopbsbcc00i3pj0vc4xv7i3p",
+    "permissionKey": "customer.payments.submit",
+    "createdAt": "2026-05-07T06:09:04.629Z"
+  },
+  {
+    "id": "cmovant9802eaotikkvdy880y",
+    "roleId": "cmopbsbcc00i3pj0vc4xv7i3p",
+    "permissionKey": "customer.documents.view",
+    "createdAt": "2026-05-07T06:09:04.629Z"
+  },
+  {
+    "id": "cmovant9802ebotik65k45u6g",
+    "roleId": "cmopbsbcc00i3pj0vc4xv7i3p",
+    "permissionKey": "customer.support.view",
+    "createdAt": "2026-05-07T06:09:04.629Z"
+  },
+  {
+    "id": "cmovant9802ecotik63yhfg6g",
+    "roleId": "cmopbsbcc00i3pj0vc4xv7i3p",
+    "permissionKey": "customer.support.create",
+    "createdAt": "2026-05-07T06:09:04.629Z"
+  },
+  {
+    "id": "cmovant9802edotikoi3epibc",
+    "roleId": "cmopbsbcc00i3pj0vc4xv7i3p",
+    "permissionKey": "customer.profile.view",
+    "createdAt": "2026-05-07T06:09:04.629Z"
+  },
+  {
+    "id": "cmovant9802eeotiklaplluih",
+    "roleId": "cmopbsbcc00i3pj0vc4xv7i3p",
+    "permissionKey": "customer.profile.update",
+    "createdAt": "2026-05-07T06:09:04.629Z"
+  },
+  {
+    "id": "cmovicxnp0027oyv4iyvhuqbv",
+    "roleId": "cmok2gsbx000dwcawovnnmtvx",
+    "permissionKey": "customer.portal.access",
+    "createdAt": "2026-05-07T09:44:34.190Z"
+  },
+  {
+    "id": "cmovicxnp0028oyv4ae2vzkcv",
+    "roleId": "cmok2gsbx000dwcawovnnmtvx",
+    "permissionKey": "customer.contracts.view",
+    "createdAt": "2026-05-07T09:44:34.190Z"
+  },
+  {
+    "id": "cmovicxnp0029oyv48qbq98g0",
+    "roleId": "cmok2gsbx000dwcawovnnmtvx",
+    "permissionKey": "customer.contracts.details",
+    "createdAt": "2026-05-07T09:44:34.190Z"
+  },
+  {
+    "id": "cmovicxnp002aoyv4lbo2t77c",
+    "roleId": "cmok2gsbx000dwcawovnnmtvx",
+    "permissionKey": "customer.financial.view",
+    "createdAt": "2026-05-07T09:44:34.190Z"
+  },
+  {
+    "id": "cmovicxnp002boyv4r4igoyxy",
+    "roleId": "cmok2gsbx000dwcawovnnmtvx",
+    "permissionKey": "customer.payments.view",
+    "createdAt": "2026-05-07T09:44:34.190Z"
+  },
+  {
+    "id": "cmovicxnp002coyv43zd7ylmq",
+    "roleId": "cmok2gsbx000dwcawovnnmtvx",
+    "permissionKey": "customer.payments.submit",
+    "createdAt": "2026-05-07T09:44:34.190Z"
+  },
+  {
+    "id": "cmovicxnp002doyv42ue1lpsu",
+    "roleId": "cmok2gsbx000dwcawovnnmtvx",
+    "permissionKey": "customer.documents.view",
+    "createdAt": "2026-05-07T09:44:34.190Z"
+  },
+  {
+    "id": "cmovicxnp002eoyv4rvlfdour",
+    "roleId": "cmok2gsbx000dwcawovnnmtvx",
+    "permissionKey": "customer.support.view",
+    "createdAt": "2026-05-07T09:44:34.190Z"
+  },
+  {
+    "id": "cmovicxnp002foyv4o29w0m9d",
+    "roleId": "cmok2gsbx000dwcawovnnmtvx",
+    "permissionKey": "customer.support.create",
+    "createdAt": "2026-05-07T09:44:34.190Z"
+  },
+  {
+    "id": "cmovicxnp002goyv4v048rzu0",
+    "roleId": "cmok2gsbx000dwcawovnnmtvx",
+    "permissionKey": "customer.profile.view",
+    "createdAt": "2026-05-07T09:44:34.190Z"
+  },
+  {
+    "id": "cmovicxnp002hoyv46vof9ld1",
+    "roleId": "cmok2gsbx000dwcawovnnmtvx",
+    "permissionKey": "customer.profile.update",
+    "createdAt": "2026-05-07T09:44:34.190Z"
+  },
+  {
+    "id": "cmovicymd0055oyv48wp882zz",
+    "roleId": "cmok2gsbl0009wcawgh2rkfo9",
+    "permissionKey": "customers.view",
+    "createdAt": "2026-05-07T09:44:35.224Z"
+  },
+  {
+    "id": "cmoxv14cs001dpd0wha9evchv",
+    "roleId": "cmogu346g0005wc5gbducadoo",
+    "permissionKey": "customer.portal.access",
+    "createdAt": "2026-05-09T01:14:50.381Z"
+  },
+  {
+    "id": "cmoxv14cs001epd0wtvqczukh",
+    "roleId": "cmogu346g0005wc5gbducadoo",
+    "permissionKey": "customer.contracts.view",
+    "createdAt": "2026-05-09T01:14:50.381Z"
+  },
+  {
+    "id": "cmoxv14cs001fpd0w49m8ui6n",
+    "roleId": "cmogu346g0005wc5gbducadoo",
+    "permissionKey": "customer.contracts.details",
+    "createdAt": "2026-05-09T01:14:50.381Z"
+  },
+  {
+    "id": "cmoxv14cs001gpd0wgqj3x81f",
+    "roleId": "cmogu346g0005wc5gbducadoo",
+    "permissionKey": "customer.financial.view",
+    "createdAt": "2026-05-09T01:14:50.381Z"
+  },
+  {
+    "id": "cmoxv14cs001hpd0wzklqed2f",
+    "roleId": "cmogu346g0005wc5gbducadoo",
+    "permissionKey": "customer.payments.view",
+    "createdAt": "2026-05-09T01:14:50.381Z"
+  },
+  {
+    "id": "cmoxv14cs001ipd0w4w4hvjru",
+    "roleId": "cmogu346g0005wc5gbducadoo",
+    "permissionKey": "customer.payments.submit",
+    "createdAt": "2026-05-09T01:14:50.381Z"
+  },
+  {
+    "id": "cmoxv14cs001jpd0w3ybg7ft3",
+    "roleId": "cmogu346g0005wc5gbducadoo",
+    "permissionKey": "customer.documents.view",
+    "createdAt": "2026-05-09T01:14:50.381Z"
+  },
+  {
+    "id": "cmoxv14cs001kpd0wumr30d5n",
+    "roleId": "cmogu346g0005wc5gbducadoo",
+    "permissionKey": "customer.support.view",
+    "createdAt": "2026-05-09T01:14:50.381Z"
+  },
+  {
+    "id": "cmoxv14ct001lpd0wkyki0exe",
+    "roleId": "cmogu346g0005wc5gbducadoo",
+    "permissionKey": "customer.support.create",
+    "createdAt": "2026-05-09T01:14:50.381Z"
+  },
+  {
+    "id": "cmoxv14ct001mpd0w2qmg53db",
+    "roleId": "cmogu346g0005wc5gbducadoo",
+    "permissionKey": "customer.profile.view",
+    "createdAt": "2026-05-09T01:14:50.381Z"
+  },
+  {
+    "id": "cmoxv14ct001npd0wpqx3vomf",
+    "roleId": "cmogu346g0005wc5gbducadoo",
+    "permissionKey": "customer.profile.update",
+    "createdAt": "2026-05-09T01:14:50.381Z"
+  },
+  {
+    "id": "cmoxv14d8002npd0wzszy369t",
+    "roleId": "cmogu35py000hwc5gmbk8865u",
+    "permissionKey": "customers.view",
+    "createdAt": "2026-05-09T01:14:50.396Z"
+  },
+  {
+    "id": "cmp13aa5j02stoyssf01vw93d",
+    "roleId": "cmok2gsbx000dwcawovnnmtvx",
+    "permissionKey": "audit.logs.view",
+    "createdAt": "2026-05-11T07:29:13.245Z"
+  },
+  {
+    "id": "cmp17s6rr000ymv0w2znns37o",
+    "roleId": "cmopbsbcc00i1pj0v0k3mei29",
+    "permissionKey": "audit.logs.view",
+    "createdAt": "2026-05-11T09:35:07.144Z"
+  },
+  {
+    "id": "cmp2l1ywc07nkoy08t74i54rv",
+    "roleId": "cmp2l1xib07n3oy084oiblqgm",
+    "permissionKey": "audit.logs.view",
+    "createdAt": "2026-05-12T08:34:24.684Z"
+  },
+  {
+    "id": "cmp2l1ywc07nloy08z150y135",
+    "roleId": "cmp2l1xib07n3oy084oiblqgm",
+    "permissionKey": "platform.settings.view",
+    "createdAt": "2026-05-12T08:34:24.684Z"
+  },
+  {
+    "id": "cmp2l1ywc07nmoy08e7pe4mz1",
+    "roleId": "cmp2l1xib07n3oy084oiblqgm",
+    "permissionKey": "platform.settings.manageAccess",
+    "createdAt": "2026-05-12T08:34:24.684Z"
+  },
+  {
+    "id": "cmp2l1ywc07nnoy08o9lualff",
+    "roleId": "cmp2l1xib07n3oy084oiblqgm",
+    "permissionKey": "platform.users.view",
+    "createdAt": "2026-05-12T08:34:24.684Z"
+  },
+  {
+    "id": "cmp2l1ywc07nooy08njgnm6p7",
+    "roleId": "cmp2l1xib07n3oy084oiblqgm",
+    "permissionKey": "platform.users.create",
+    "createdAt": "2026-05-12T08:34:24.684Z"
+  },
+  {
+    "id": "cmp2l1ywc07npoy08002cc8rt",
+    "roleId": "cmp2l1xib07n3oy084oiblqgm",
+    "permissionKey": "platform.users.update",
+    "createdAt": "2026-05-12T08:34:24.684Z"
+  },
+  {
+    "id": "cmp2l1ywc07nqoy089io41g6z",
+    "roleId": "cmp2l1xib07n3oy084oiblqgm",
+    "permissionKey": "platform.users.delete",
+    "createdAt": "2026-05-12T08:34:24.684Z"
+  },
+  {
+    "id": "cmp2l1ywc07nroy08ijnchxxf",
+    "roleId": "cmp2l1xib07n3oy084oiblqgm",
+    "permissionKey": "platform.reports.view",
+    "createdAt": "2026-05-12T08:34:24.684Z"
+  },
+  {
+    "id": "cmp2l1ywc07nsoy08hryloeaf",
+    "roleId": "cmp2l1xib07n3oy084oiblqgm",
+    "permissionKey": "business.profile.view",
+    "createdAt": "2026-05-12T08:34:24.684Z"
+  },
+  {
+    "id": "cmp2l1ywc07ntoy08d514cuqc",
+    "roleId": "cmp2l1xib07n3oy084oiblqgm",
+    "permissionKey": "business.profile.update",
+    "createdAt": "2026-05-12T08:34:24.684Z"
+  },
+  {
+    "id": "cmp2l1ywc07nuoy08h2sxg4zd",
+    "roleId": "cmp2l1xib07n3oy084oiblqgm",
+    "permissionKey": "complex.view",
+    "createdAt": "2026-05-12T08:34:24.684Z"
+  },
+  {
+    "id": "cmp2l1ywc07nvoy08mleh72w2",
+    "roleId": "cmp2l1xib07n3oy084oiblqgm",
+    "permissionKey": "complex.manage",
+    "createdAt": "2026-05-12T08:34:24.684Z"
+  },
+  {
+    "id": "cmp2l1ywc07nwoy08ixm8fmnk",
+    "roleId": "cmp2l1xib07n3oy084oiblqgm",
+    "permissionKey": "contracts.view",
+    "createdAt": "2026-05-12T08:34:24.684Z"
+  },
+  {
+    "id": "cmp2l1ywc07nxoy08ju5dtmph",
+    "roleId": "cmp2l1xib07n3oy084oiblqgm",
+    "permissionKey": "contracts.create",
+    "createdAt": "2026-05-12T08:34:24.684Z"
+  },
+  {
+    "id": "cmp2l1ywc07nyoy088vkt8bqa",
+    "roleId": "cmp2l1xib07n3oy084oiblqgm",
+    "permissionKey": "contracts.update",
+    "createdAt": "2026-05-12T08:34:24.684Z"
+  },
+  {
+    "id": "cmp2l1ywc07nzoy08ymutql04",
+    "roleId": "cmp2l1xib07n3oy084oiblqgm",
+    "permissionKey": "contracts.delete",
+    "createdAt": "2026-05-12T08:34:24.684Z"
+  },
+  {
+    "id": "cmp2l1ywc07o0oy08m8qdnf9c",
+    "roleId": "cmp2l1xib07n3oy084oiblqgm",
+    "permissionKey": "contracts.sign",
+    "createdAt": "2026-05-12T08:34:24.684Z"
+  },
+  {
+    "id": "cmp2l1ywc07o1oy08kwn6bcll",
+    "roleId": "cmp2l1xib07n3oy084oiblqgm",
+    "permissionKey": "contracts.export",
+    "createdAt": "2026-05-12T08:34:24.684Z"
+  },
+  {
+    "id": "cmp2l1ywc07o2oy086xl9epqw",
+    "roleId": "cmp2l1xib07n3oy084oiblqgm",
+    "permissionKey": "customer.portal.access",
+    "createdAt": "2026-05-12T08:34:24.684Z"
+  },
+  {
+    "id": "cmp2l1ywc07o3oy08smu2cz1n",
+    "roleId": "cmp2l1xib07n3oy084oiblqgm",
+    "permissionKey": "customer.contracts.view",
+    "createdAt": "2026-05-12T08:34:24.684Z"
+  },
+  {
+    "id": "cmp2l1ywc07o4oy08ccye2jub",
+    "roleId": "cmp2l1xib07n3oy084oiblqgm",
+    "permissionKey": "customer.contracts.details",
+    "createdAt": "2026-05-12T08:34:24.684Z"
+  },
+  {
+    "id": "cmp2l1ywc07o5oy086hsbqpah",
+    "roleId": "cmp2l1xib07n3oy084oiblqgm",
+    "permissionKey": "customer.financial.view",
+    "createdAt": "2026-05-12T08:34:24.684Z"
+  },
+  {
+    "id": "cmp2l1ywc07o6oy08s1ctrzs6",
+    "roleId": "cmp2l1xib07n3oy084oiblqgm",
+    "permissionKey": "customer.payments.view",
+    "createdAt": "2026-05-12T08:34:24.684Z"
+  },
+  {
+    "id": "cmp2l1ywc07o7oy08ameot5xz",
+    "roleId": "cmp2l1xib07n3oy084oiblqgm",
+    "permissionKey": "customer.payments.submit",
+    "createdAt": "2026-05-12T08:34:24.684Z"
+  },
+  {
+    "id": "cmp2l1ywc07o8oy08owna78s2",
+    "roleId": "cmp2l1xib07n3oy084oiblqgm",
+    "permissionKey": "customer.documents.view",
+    "createdAt": "2026-05-12T08:34:24.684Z"
+  },
+  {
+    "id": "cmp2l1ywc07o9oy08ffk0a92e",
+    "roleId": "cmp2l1xib07n3oy084oiblqgm",
+    "permissionKey": "customer.support.view",
+    "createdAt": "2026-05-12T08:34:24.684Z"
+  },
+  {
+    "id": "cmp2l1ywc07oaoy089e1i1111",
+    "roleId": "cmp2l1xib07n3oy084oiblqgm",
+    "permissionKey": "customer.support.create",
+    "createdAt": "2026-05-12T08:34:24.684Z"
+  },
+  {
+    "id": "cmp2l1ywc07oboy08glkwfazc",
+    "roleId": "cmp2l1xib07n3oy084oiblqgm",
+    "permissionKey": "customer.profile.view",
+    "createdAt": "2026-05-12T08:34:24.684Z"
+  },
+  {
+    "id": "cmp2l1ywc07ocoy08fqpbe20w",
+    "roleId": "cmp2l1xib07n3oy084oiblqgm",
+    "permissionKey": "customer.profile.update",
+    "createdAt": "2026-05-12T08:34:24.684Z"
+  },
+  {
+    "id": "cmp2l1zfk07oeoy08wrzg3tdj",
+    "roleId": "cmp2l1y2l07n9oy08z89n70qm",
+    "permissionKey": "customers.view",
+    "createdAt": "2026-05-12T08:34:25.377Z"
+  },
+  {
+    "id": "cmp6gzksv03q4p92jlur4ua63",
+    "roleId": "cmogu346g0005wc5gbducadoo",
+    "permissionKey": "audit.logs.view",
+    "createdAt": "2026-05-15T01:51:39.343Z"
+  },
+  {
+    "id": "cmp86hds608ovp92jvda668we",
+    "roleId": "cmp86hdr708oep92jaxpl6pzq",
+    "permissionKey": "audit.logs.view",
+    "createdAt": "2026-05-16T06:33:06.630Z"
+  },
+  {
+    "id": "cmp86hds608owp92jtmdvfvob",
+    "roleId": "cmp86hdr708oep92jaxpl6pzq",
+    "permissionKey": "platform.settings.view",
+    "createdAt": "2026-05-16T06:33:06.630Z"
+  },
+  {
+    "id": "cmp86hds608oxp92jig8lsc01",
+    "roleId": "cmp86hdr708oep92jaxpl6pzq",
+    "permissionKey": "platform.settings.manageAccess",
+    "createdAt": "2026-05-16T06:33:06.630Z"
+  },
+  {
+    "id": "cmp86hds608oyp92jm08bmj3f",
+    "roleId": "cmp86hdr708oep92jaxpl6pzq",
+    "permissionKey": "platform.users.view",
+    "createdAt": "2026-05-16T06:33:06.630Z"
+  },
+  {
+    "id": "cmp86hds608ozp92jgldou8jx",
+    "roleId": "cmp86hdr708oep92jaxpl6pzq",
+    "permissionKey": "platform.users.create",
+    "createdAt": "2026-05-16T06:33:06.630Z"
+  },
+  {
+    "id": "cmp86hds608p0p92jfnebqsyx",
+    "roleId": "cmp86hdr708oep92jaxpl6pzq",
+    "permissionKey": "platform.users.update",
+    "createdAt": "2026-05-16T06:33:06.630Z"
+  },
+  {
+    "id": "cmp86hds608p1p92jp3ptpqhs",
+    "roleId": "cmp86hdr708oep92jaxpl6pzq",
+    "permissionKey": "platform.users.delete",
+    "createdAt": "2026-05-16T06:33:06.630Z"
+  },
+  {
+    "id": "cmp86hds608p2p92jmr187cmi",
+    "roleId": "cmp86hdr708oep92jaxpl6pzq",
+    "permissionKey": "platform.reports.view",
+    "createdAt": "2026-05-16T06:33:06.630Z"
+  },
+  {
+    "id": "cmp86hds608p3p92jypmv5cci",
+    "roleId": "cmp86hdr708oep92jaxpl6pzq",
+    "permissionKey": "business.profile.view",
+    "createdAt": "2026-05-16T06:33:06.630Z"
+  },
+  {
+    "id": "cmp86hds608p4p92jgxhe9ajd",
+    "roleId": "cmp86hdr708oep92jaxpl6pzq",
+    "permissionKey": "business.profile.update",
+    "createdAt": "2026-05-16T06:33:06.630Z"
+  },
+  {
+    "id": "cmp86hds608p5p92jmp4h5mwj",
+    "roleId": "cmp86hdr708oep92jaxpl6pzq",
+    "permissionKey": "complex.view",
+    "createdAt": "2026-05-16T06:33:06.630Z"
+  },
+  {
+    "id": "cmp86hds608p6p92jhjjq0tj3",
+    "roleId": "cmp86hdr708oep92jaxpl6pzq",
+    "permissionKey": "complex.manage",
+    "createdAt": "2026-05-16T06:33:06.630Z"
+  },
+  {
+    "id": "cmp86hds608p7p92jfcbjwm4v",
+    "roleId": "cmp86hdr708oep92jaxpl6pzq",
+    "permissionKey": "contracts.view",
+    "createdAt": "2026-05-16T06:33:06.630Z"
+  },
+  {
+    "id": "cmp86hds608p8p92jm5g1hgv8",
+    "roleId": "cmp86hdr708oep92jaxpl6pzq",
+    "permissionKey": "contracts.create",
+    "createdAt": "2026-05-16T06:33:06.630Z"
+  },
+  {
+    "id": "cmp86hds608p9p92jpi5rizyc",
+    "roleId": "cmp86hdr708oep92jaxpl6pzq",
+    "permissionKey": "contracts.update",
+    "createdAt": "2026-05-16T06:33:06.630Z"
+  },
+  {
+    "id": "cmp86hds608pap92jvw210iig",
+    "roleId": "cmp86hdr708oep92jaxpl6pzq",
+    "permissionKey": "contracts.delete",
+    "createdAt": "2026-05-16T06:33:06.630Z"
+  },
+  {
+    "id": "cmp86hds608pbp92j39c3m0vm",
+    "roleId": "cmp86hdr708oep92jaxpl6pzq",
+    "permissionKey": "contracts.sign",
+    "createdAt": "2026-05-16T06:33:06.630Z"
+  },
+  {
+    "id": "cmp86hds608pcp92jg1ps01eh",
+    "roleId": "cmp86hdr708oep92jaxpl6pzq",
+    "permissionKey": "contracts.export",
+    "createdAt": "2026-05-16T06:33:06.630Z"
+  },
+  {
+    "id": "cmp86hds608pdp92j0nrk2v4n",
+    "roleId": "cmp86hdr708oep92jaxpl6pzq",
+    "permissionKey": "customer.portal.access",
+    "createdAt": "2026-05-16T06:33:06.630Z"
+  },
+  {
+    "id": "cmp86hds608pep92jd2maknec",
+    "roleId": "cmp86hdr708oep92jaxpl6pzq",
+    "permissionKey": "customer.contracts.view",
+    "createdAt": "2026-05-16T06:33:06.630Z"
+  },
+  {
+    "id": "cmp86hds608pfp92j6v5nvl2t",
+    "roleId": "cmp86hdr708oep92jaxpl6pzq",
+    "permissionKey": "customer.contracts.details",
+    "createdAt": "2026-05-16T06:33:06.630Z"
+  },
+  {
+    "id": "cmp86hds608pgp92jrh71mwf1",
+    "roleId": "cmp86hdr708oep92jaxpl6pzq",
+    "permissionKey": "customer.financial.view",
+    "createdAt": "2026-05-16T06:33:06.630Z"
+  },
+  {
+    "id": "cmp86hds608php92j28n7qbol",
+    "roleId": "cmp86hdr708oep92jaxpl6pzq",
+    "permissionKey": "customer.payments.view",
+    "createdAt": "2026-05-16T06:33:06.630Z"
+  },
+  {
+    "id": "cmp86hds608pip92jpf7vo5ur",
+    "roleId": "cmp86hdr708oep92jaxpl6pzq",
+    "permissionKey": "customer.payments.submit",
+    "createdAt": "2026-05-16T06:33:06.630Z"
+  },
+  {
+    "id": "cmp86hds608pjp92jk5yszw1i",
+    "roleId": "cmp86hdr708oep92jaxpl6pzq",
+    "permissionKey": "customer.documents.view",
+    "createdAt": "2026-05-16T06:33:06.630Z"
+  },
+  {
+    "id": "cmp86hds608pkp92j20igzuca",
+    "roleId": "cmp86hdr708oep92jaxpl6pzq",
+    "permissionKey": "customer.support.view",
+    "createdAt": "2026-05-16T06:33:06.630Z"
+  },
+  {
+    "id": "cmp86hds608plp92jqz8s2ogd",
+    "roleId": "cmp86hdr708oep92jaxpl6pzq",
+    "permissionKey": "customer.support.create",
+    "createdAt": "2026-05-16T06:33:06.630Z"
+  },
+  {
+    "id": "cmp86hds608pmp92jyxyqnfyy",
+    "roleId": "cmp86hdr708oep92jaxpl6pzq",
+    "permissionKey": "customer.profile.view",
+    "createdAt": "2026-05-16T06:33:06.630Z"
+  },
+  {
+    "id": "cmp86hds608pnp92jf3ur95d1",
+    "roleId": "cmp86hdr708oep92jaxpl6pzq",
+    "permissionKey": "customer.profile.update",
+    "createdAt": "2026-05-16T06:33:06.630Z"
+  },
+  {
+    "id": "cmp86hdse08ppp92ju3xxwa7r",
+    "roleId": "cmp86hdrj08okp92jjp60q7r5",
+    "permissionKey": "customers.view",
+    "createdAt": "2026-05-16T06:33:06.638Z"
+  },
+  {
+    "id": "cmp9dw94a000mle2j9iiji5r4",
+    "roleId": "cmp9dw93s0005le2jf9eqds33",
+    "permissionKey": "audit.logs.view",
+    "createdAt": "2026-05-17T02:48:23.914Z"
+  },
+  {
+    "id": "cmp9dw94a000nle2jjxh875nr",
+    "roleId": "cmp9dw93s0005le2jf9eqds33",
+    "permissionKey": "platform.settings.view",
+    "createdAt": "2026-05-17T02:48:23.914Z"
+  },
+  {
+    "id": "cmp9dw94a000ole2jh7e2q0l7",
+    "roleId": "cmp9dw93s0005le2jf9eqds33",
+    "permissionKey": "platform.settings.manageAccess",
+    "createdAt": "2026-05-17T02:48:23.914Z"
+  },
+  {
+    "id": "cmp9dw94a000ple2jwm6ckh09",
+    "roleId": "cmp9dw93s0005le2jf9eqds33",
+    "permissionKey": "platform.users.view",
+    "createdAt": "2026-05-17T02:48:23.914Z"
+  },
+  {
+    "id": "cmp9dw94a000qle2jcw2d55zx",
+    "roleId": "cmp9dw93s0005le2jf9eqds33",
+    "permissionKey": "platform.users.create",
+    "createdAt": "2026-05-17T02:48:23.914Z"
+  },
+  {
+    "id": "cmp9dw94a000rle2j6z52ibue",
+    "roleId": "cmp9dw93s0005le2jf9eqds33",
+    "permissionKey": "platform.users.update",
+    "createdAt": "2026-05-17T02:48:23.914Z"
+  },
+  {
+    "id": "cmp9dw94a000sle2jrn1gt99x",
+    "roleId": "cmp9dw93s0005le2jf9eqds33",
+    "permissionKey": "platform.users.delete",
+    "createdAt": "2026-05-17T02:48:23.914Z"
+  },
+  {
+    "id": "cmp9dw94a000tle2jczksi6w1",
+    "roleId": "cmp9dw93s0005le2jf9eqds33",
+    "permissionKey": "platform.reports.view",
+    "createdAt": "2026-05-17T02:48:23.914Z"
+  },
+  {
+    "id": "cmp9dw94a000ule2jkaycayjc",
+    "roleId": "cmp9dw93s0005le2jf9eqds33",
+    "permissionKey": "business.profile.view",
+    "createdAt": "2026-05-17T02:48:23.914Z"
+  },
+  {
+    "id": "cmp9dw94a000vle2jqb4u4q72",
+    "roleId": "cmp9dw93s0005le2jf9eqds33",
+    "permissionKey": "business.profile.update",
+    "createdAt": "2026-05-17T02:48:23.914Z"
+  },
+  {
+    "id": "cmp9dw94a000wle2jm7jfid38",
+    "roleId": "cmp9dw93s0005le2jf9eqds33",
+    "permissionKey": "complex.view",
+    "createdAt": "2026-05-17T02:48:23.914Z"
+  },
+  {
+    "id": "cmp9dw94a000xle2j3zgj77na",
+    "roleId": "cmp9dw93s0005le2jf9eqds33",
+    "permissionKey": "complex.manage",
+    "createdAt": "2026-05-17T02:48:23.914Z"
+  },
+  {
+    "id": "cmp9dw94a000yle2j7ygtoyz9",
+    "roleId": "cmp9dw93s0005le2jf9eqds33",
+    "permissionKey": "contracts.view",
+    "createdAt": "2026-05-17T02:48:23.914Z"
+  },
+  {
+    "id": "cmp9dw94a000zle2jsnv1qcuv",
+    "roleId": "cmp9dw93s0005le2jf9eqds33",
+    "permissionKey": "contracts.create",
+    "createdAt": "2026-05-17T02:48:23.914Z"
+  },
+  {
+    "id": "cmp9dw94a0010le2jnaoc5jcz",
+    "roleId": "cmp9dw93s0005le2jf9eqds33",
+    "permissionKey": "contracts.update",
+    "createdAt": "2026-05-17T02:48:23.914Z"
+  },
+  {
+    "id": "cmp9dw94a0011le2jyuh6bh5h",
+    "roleId": "cmp9dw93s0005le2jf9eqds33",
+    "permissionKey": "contracts.delete",
+    "createdAt": "2026-05-17T02:48:23.914Z"
+  },
+  {
+    "id": "cmp9dw94a0012le2jszw87z2k",
+    "roleId": "cmp9dw93s0005le2jf9eqds33",
+    "permissionKey": "contracts.sign",
+    "createdAt": "2026-05-17T02:48:23.914Z"
+  },
+  {
+    "id": "cmp9dw94a0013le2j9gpqjwmj",
+    "roleId": "cmp9dw93s0005le2jf9eqds33",
+    "permissionKey": "contracts.export",
+    "createdAt": "2026-05-17T02:48:23.914Z"
+  },
+  {
+    "id": "cmp9dw94a0014le2jjy2zh556",
+    "roleId": "cmp9dw93s0005le2jf9eqds33",
+    "permissionKey": "customer.portal.access",
+    "createdAt": "2026-05-17T02:48:23.914Z"
+  },
+  {
+    "id": "cmp9dw94a0015le2jyhvx467t",
+    "roleId": "cmp9dw93s0005le2jf9eqds33",
+    "permissionKey": "customer.contracts.view",
+    "createdAt": "2026-05-17T02:48:23.914Z"
+  },
+  {
+    "id": "cmp9dw94a0016le2jof5gief2",
+    "roleId": "cmp9dw93s0005le2jf9eqds33",
+    "permissionKey": "customer.contracts.details",
+    "createdAt": "2026-05-17T02:48:23.914Z"
+  },
+  {
+    "id": "cmp9dw94a0017le2jehbm0a7q",
+    "roleId": "cmp9dw93s0005le2jf9eqds33",
+    "permissionKey": "customer.financial.view",
+    "createdAt": "2026-05-17T02:48:23.914Z"
+  },
+  {
+    "id": "cmp9dw94a0018le2jdl8fiyuo",
+    "roleId": "cmp9dw93s0005le2jf9eqds33",
+    "permissionKey": "customer.payments.view",
+    "createdAt": "2026-05-17T02:48:23.914Z"
+  },
+  {
+    "id": "cmp9dw94a0019le2jm3wp2xir",
+    "roleId": "cmp9dw93s0005le2jf9eqds33",
+    "permissionKey": "customer.payments.submit",
+    "createdAt": "2026-05-17T02:48:23.914Z"
+  },
+  {
+    "id": "cmp9dw94a001ale2j170bdtn2",
+    "roleId": "cmp9dw93s0005le2jf9eqds33",
+    "permissionKey": "customer.documents.view",
+    "createdAt": "2026-05-17T02:48:23.914Z"
+  },
+  {
+    "id": "cmp9dw94a001ble2jyoarpbwa",
+    "roleId": "cmp9dw93s0005le2jf9eqds33",
+    "permissionKey": "customer.support.view",
+    "createdAt": "2026-05-17T02:48:23.914Z"
+  },
+  {
+    "id": "cmp9dw94a001cle2j0iz6fyh3",
+    "roleId": "cmp9dw93s0005le2jf9eqds33",
+    "permissionKey": "customer.support.create",
+    "createdAt": "2026-05-17T02:48:23.914Z"
+  },
+  {
+    "id": "cmp9dw94a001dle2j2p6ai8nz",
+    "roleId": "cmp9dw93s0005le2jf9eqds33",
+    "permissionKey": "customer.profile.view",
+    "createdAt": "2026-05-17T02:48:23.914Z"
+  },
+  {
+    "id": "cmp9dw94a001ele2jnjrmv4fi",
+    "roleId": "cmp9dw93s0005le2jf9eqds33",
+    "permissionKey": "customer.profile.update",
+    "createdAt": "2026-05-17T02:48:23.914Z"
+  },
+  {
+    "id": "cmp9dw94f001gle2jlshe5l6r",
+    "roleId": "cmp9dw93z000ble2jsj6khndu",
+    "permissionKey": "customers.view",
+    "createdAt": "2026-05-17T02:48:23.920Z"
+  },
+  {
+    "id": "cmpdq1j1x0161u6sw1r4optp9",
+    "roleId": "cmpdq1j1a015ku6sw3wktw1oz",
+    "permissionKey": "audit.logs.view",
+    "createdAt": "2026-05-20T03:39:30.165Z"
+  },
+  {
+    "id": "cmpdq1j1x0162u6sw291tv6mg",
+    "roleId": "cmpdq1j1a015ku6sw3wktw1oz",
+    "permissionKey": "platform.settings.view",
+    "createdAt": "2026-05-20T03:39:30.165Z"
+  },
+  {
+    "id": "cmpdq1j1x0163u6sw3chzml9m",
+    "roleId": "cmpdq1j1a015ku6sw3wktw1oz",
+    "permissionKey": "platform.settings.manageAccess",
+    "createdAt": "2026-05-20T03:39:30.165Z"
+  },
+  {
+    "id": "cmpdq1j1x0164u6swdmkyvrxs",
+    "roleId": "cmpdq1j1a015ku6sw3wktw1oz",
+    "permissionKey": "platform.users.view",
+    "createdAt": "2026-05-20T03:39:30.165Z"
+  },
+  {
+    "id": "cmpdq1j1x0165u6sw63990s7k",
+    "roleId": "cmpdq1j1a015ku6sw3wktw1oz",
+    "permissionKey": "platform.users.create",
+    "createdAt": "2026-05-20T03:39:30.165Z"
+  },
+  {
+    "id": "cmpdq1j1x0166u6swhjfs2jef",
+    "roleId": "cmpdq1j1a015ku6sw3wktw1oz",
+    "permissionKey": "platform.users.update",
+    "createdAt": "2026-05-20T03:39:30.165Z"
+  },
+  {
+    "id": "cmpdq1j1x0167u6swuaqe4im4",
+    "roleId": "cmpdq1j1a015ku6sw3wktw1oz",
+    "permissionKey": "platform.users.delete",
+    "createdAt": "2026-05-20T03:39:30.165Z"
+  },
+  {
+    "id": "cmpdq1j1x0168u6swdvv3hm11",
+    "roleId": "cmpdq1j1a015ku6sw3wktw1oz",
+    "permissionKey": "platform.reports.view",
+    "createdAt": "2026-05-20T03:39:30.165Z"
+  },
+  {
+    "id": "cmpdq1j1x0169u6swb1w7ew3d",
+    "roleId": "cmpdq1j1a015ku6sw3wktw1oz",
+    "permissionKey": "business.profile.view",
+    "createdAt": "2026-05-20T03:39:30.165Z"
+  },
+  {
+    "id": "cmpdq1j1x016au6sw5u1ij4eo",
+    "roleId": "cmpdq1j1a015ku6sw3wktw1oz",
+    "permissionKey": "business.profile.update",
+    "createdAt": "2026-05-20T03:39:30.165Z"
+  },
+  {
+    "id": "cmpdq1j1x016bu6swf95jocpn",
+    "roleId": "cmpdq1j1a015ku6sw3wktw1oz",
+    "permissionKey": "complex.view",
+    "createdAt": "2026-05-20T03:39:30.165Z"
+  },
+  {
+    "id": "cmpdq1j1x016cu6swrzk7mkqx",
+    "roleId": "cmpdq1j1a015ku6sw3wktw1oz",
+    "permissionKey": "complex.manage",
+    "createdAt": "2026-05-20T03:39:30.165Z"
+  },
+  {
+    "id": "cmpdq1j1x016du6swfvxtzr2h",
+    "roleId": "cmpdq1j1a015ku6sw3wktw1oz",
+    "permissionKey": "contracts.view",
+    "createdAt": "2026-05-20T03:39:30.165Z"
+  },
+  {
+    "id": "cmpdq1j1x016eu6swyfmtjl3q",
+    "roleId": "cmpdq1j1a015ku6sw3wktw1oz",
+    "permissionKey": "contracts.create",
+    "createdAt": "2026-05-20T03:39:30.165Z"
+  },
+  {
+    "id": "cmpdq1j1x016fu6swu4pd7mp6",
+    "roleId": "cmpdq1j1a015ku6sw3wktw1oz",
+    "permissionKey": "contracts.update",
+    "createdAt": "2026-05-20T03:39:30.165Z"
+  },
+  {
+    "id": "cmpdq1j1x016gu6swl4zhkr1c",
+    "roleId": "cmpdq1j1a015ku6sw3wktw1oz",
+    "permissionKey": "contracts.delete",
+    "createdAt": "2026-05-20T03:39:30.165Z"
+  },
+  {
+    "id": "cmpdq1j1x016hu6swj2q5ssw0",
+    "roleId": "cmpdq1j1a015ku6sw3wktw1oz",
+    "permissionKey": "contracts.sign",
+    "createdAt": "2026-05-20T03:39:30.165Z"
+  },
+  {
+    "id": "cmpdq1j1x016iu6swzc76r0jq",
+    "roleId": "cmpdq1j1a015ku6sw3wktw1oz",
+    "permissionKey": "contracts.export",
+    "createdAt": "2026-05-20T03:39:30.165Z"
+  },
+  {
+    "id": "cmpdq1j1x016ju6swbkei351j",
+    "roleId": "cmpdq1j1a015ku6sw3wktw1oz",
+    "permissionKey": "customer.portal.access",
+    "createdAt": "2026-05-20T03:39:30.165Z"
+  },
+  {
+    "id": "cmpdq1j1x016ku6swwurvhs5e",
+    "roleId": "cmpdq1j1a015ku6sw3wktw1oz",
+    "permissionKey": "customer.contracts.view",
+    "createdAt": "2026-05-20T03:39:30.165Z"
+  },
+  {
+    "id": "cmpdq1j1x016lu6swa7axi3no",
+    "roleId": "cmpdq1j1a015ku6sw3wktw1oz",
+    "permissionKey": "customer.contracts.details",
+    "createdAt": "2026-05-20T03:39:30.165Z"
+  },
+  {
+    "id": "cmpdq1j1x016mu6swouc9wg6c",
+    "roleId": "cmpdq1j1a015ku6sw3wktw1oz",
+    "permissionKey": "customer.financial.view",
+    "createdAt": "2026-05-20T03:39:30.165Z"
+  },
+  {
+    "id": "cmpdq1j1x016nu6swa8itvx9v",
+    "roleId": "cmpdq1j1a015ku6sw3wktw1oz",
+    "permissionKey": "customer.payments.view",
+    "createdAt": "2026-05-20T03:39:30.165Z"
+  },
+  {
+    "id": "cmpdq1j1x016ou6sw7i3ddewg",
+    "roleId": "cmpdq1j1a015ku6sw3wktw1oz",
+    "permissionKey": "customer.payments.submit",
+    "createdAt": "2026-05-20T03:39:30.165Z"
+  },
+  {
+    "id": "cmpdq1j1x016pu6swckwa9i5r",
+    "roleId": "cmpdq1j1a015ku6sw3wktw1oz",
+    "permissionKey": "customer.documents.view",
+    "createdAt": "2026-05-20T03:39:30.165Z"
+  },
+  {
+    "id": "cmpdq1j1x016qu6swkmtxv5vw",
+    "roleId": "cmpdq1j1a015ku6sw3wktw1oz",
+    "permissionKey": "customer.support.view",
+    "createdAt": "2026-05-20T03:39:30.165Z"
+  },
+  {
+    "id": "cmpdq1j1x016ru6swwys40qo3",
+    "roleId": "cmpdq1j1a015ku6sw3wktw1oz",
+    "permissionKey": "customer.support.create",
+    "createdAt": "2026-05-20T03:39:30.165Z"
+  },
+  {
+    "id": "cmpdq1j1x016su6swnehqumqo",
+    "roleId": "cmpdq1j1a015ku6sw3wktw1oz",
+    "permissionKey": "customer.profile.view",
+    "createdAt": "2026-05-20T03:39:30.165Z"
+  },
+  {
+    "id": "cmpdq1j1x016tu6swl9hamww2",
+    "roleId": "cmpdq1j1a015ku6sw3wktw1oz",
+    "permissionKey": "customer.profile.update",
+    "createdAt": "2026-05-20T03:39:30.165Z"
+  },
+  {
+    "id": "cmpdq1j22016vu6swvia19jnb",
+    "roleId": "cmpdq1j1k015qu6swiqcdh2d9",
+    "permissionKey": "customers.view",
+    "createdAt": "2026-05-20T03:39:30.170Z"
+  },
+  {
+    "id": "cmpf16cpa000mvo5sq9pzoa3c",
+    "roleId": "cmpf16cov0005vo5s6v9xcrlo",
+    "permissionKey": "audit.logs.view",
+    "createdAt": "2026-05-21T01:38:57.166Z"
+  },
+  {
+    "id": "cmpf16cpa000nvo5sb0c3b0rc",
+    "roleId": "cmpf16cov0005vo5s6v9xcrlo",
+    "permissionKey": "platform.settings.view",
+    "createdAt": "2026-05-21T01:38:57.166Z"
+  },
+  {
+    "id": "cmpf16cpa000ovo5srhkxi7l5",
+    "roleId": "cmpf16cov0005vo5s6v9xcrlo",
+    "permissionKey": "platform.settings.manageAccess",
+    "createdAt": "2026-05-21T01:38:57.166Z"
+  },
+  {
+    "id": "cmpf16cpa000pvo5s7knhg59q",
+    "roleId": "cmpf16cov0005vo5s6v9xcrlo",
+    "permissionKey": "platform.users.view",
+    "createdAt": "2026-05-21T01:38:57.166Z"
+  },
+  {
+    "id": "cmpf16cpa000qvo5s05ikxoae",
+    "roleId": "cmpf16cov0005vo5s6v9xcrlo",
+    "permissionKey": "platform.users.create",
+    "createdAt": "2026-05-21T01:38:57.166Z"
+  },
+  {
+    "id": "cmpf16cpa000rvo5szj760e13",
+    "roleId": "cmpf16cov0005vo5s6v9xcrlo",
+    "permissionKey": "platform.users.update",
+    "createdAt": "2026-05-21T01:38:57.166Z"
+  },
+  {
+    "id": "cmpf16cpa000svo5scm68rbcu",
+    "roleId": "cmpf16cov0005vo5s6v9xcrlo",
+    "permissionKey": "platform.users.delete",
+    "createdAt": "2026-05-21T01:38:57.166Z"
+  },
+  {
+    "id": "cmpf16cpa000tvo5se54mlrh8",
+    "roleId": "cmpf16cov0005vo5s6v9xcrlo",
+    "permissionKey": "platform.reports.view",
+    "createdAt": "2026-05-21T01:38:57.166Z"
+  },
+  {
+    "id": "cmpf16cpa000uvo5sh76svc5p",
+    "roleId": "cmpf16cov0005vo5s6v9xcrlo",
+    "permissionKey": "business.profile.view",
+    "createdAt": "2026-05-21T01:38:57.166Z"
+  },
+  {
+    "id": "cmpf16cpa000vvo5s5ndwgud3",
+    "roleId": "cmpf16cov0005vo5s6v9xcrlo",
+    "permissionKey": "business.profile.update",
+    "createdAt": "2026-05-21T01:38:57.166Z"
+  },
+  {
+    "id": "cmpf16cpa000wvo5sl3iewmgc",
+    "roleId": "cmpf16cov0005vo5s6v9xcrlo",
+    "permissionKey": "complex.view",
+    "createdAt": "2026-05-21T01:38:57.166Z"
+  },
+  {
+    "id": "cmpf16cpa000xvo5smvsa6zpf",
+    "roleId": "cmpf16cov0005vo5s6v9xcrlo",
+    "permissionKey": "complex.manage",
+    "createdAt": "2026-05-21T01:38:57.166Z"
+  },
+  {
+    "id": "cmpf16cpa000yvo5s5ibn4w3t",
+    "roleId": "cmpf16cov0005vo5s6v9xcrlo",
+    "permissionKey": "contracts.view",
+    "createdAt": "2026-05-21T01:38:57.166Z"
+  },
+  {
+    "id": "cmpf16cpa000zvo5sg7in22qi",
+    "roleId": "cmpf16cov0005vo5s6v9xcrlo",
+    "permissionKey": "contracts.create",
+    "createdAt": "2026-05-21T01:38:57.166Z"
+  },
+  {
+    "id": "cmpf16cpa0010vo5s65m3niei",
+    "roleId": "cmpf16cov0005vo5s6v9xcrlo",
+    "permissionKey": "contracts.update",
+    "createdAt": "2026-05-21T01:38:57.166Z"
+  },
+  {
+    "id": "cmpf16cpa0011vo5sfavyx3mp",
+    "roleId": "cmpf16cov0005vo5s6v9xcrlo",
+    "permissionKey": "contracts.delete",
+    "createdAt": "2026-05-21T01:38:57.166Z"
+  },
+  {
+    "id": "cmpf16cpa0012vo5s3dgsok5g",
+    "roleId": "cmpf16cov0005vo5s6v9xcrlo",
+    "permissionKey": "contracts.sign",
+    "createdAt": "2026-05-21T01:38:57.166Z"
+  },
+  {
+    "id": "cmpf16cpa0013vo5svotv02v4",
+    "roleId": "cmpf16cov0005vo5s6v9xcrlo",
+    "permissionKey": "contracts.export",
+    "createdAt": "2026-05-21T01:38:57.166Z"
+  },
+  {
+    "id": "cmpf16cpa0014vo5spjjdhwdk",
+    "roleId": "cmpf16cov0005vo5s6v9xcrlo",
+    "permissionKey": "customer.portal.access",
+    "createdAt": "2026-05-21T01:38:57.166Z"
+  },
+  {
+    "id": "cmpf16cpa0015vo5ssacz1pqc",
+    "roleId": "cmpf16cov0005vo5s6v9xcrlo",
+    "permissionKey": "customer.contracts.view",
+    "createdAt": "2026-05-21T01:38:57.166Z"
+  },
+  {
+    "id": "cmpf16cpa0016vo5ss4kxm82r",
+    "roleId": "cmpf16cov0005vo5s6v9xcrlo",
+    "permissionKey": "customer.contracts.details",
+    "createdAt": "2026-05-21T01:38:57.166Z"
+  },
+  {
+    "id": "cmpf16cpa0017vo5sbt46u8al",
+    "roleId": "cmpf16cov0005vo5s6v9xcrlo",
+    "permissionKey": "customer.financial.view",
+    "createdAt": "2026-05-21T01:38:57.166Z"
+  },
+  {
+    "id": "cmpf16cpa0018vo5settce1tn",
+    "roleId": "cmpf16cov0005vo5s6v9xcrlo",
+    "permissionKey": "customer.payments.view",
+    "createdAt": "2026-05-21T01:38:57.166Z"
+  },
+  {
+    "id": "cmpf16cpa0019vo5sga5qdz0t",
+    "roleId": "cmpf16cov0005vo5s6v9xcrlo",
+    "permissionKey": "customer.payments.submit",
+    "createdAt": "2026-05-21T01:38:57.166Z"
+  },
+  {
+    "id": "cmpf16cpa001avo5sfr88bhyt",
+    "roleId": "cmpf16cov0005vo5s6v9xcrlo",
+    "permissionKey": "customer.documents.view",
+    "createdAt": "2026-05-21T01:38:57.166Z"
+  },
+  {
+    "id": "cmpf16cpa001bvo5s9w2mkeu8",
+    "roleId": "cmpf16cov0005vo5s6v9xcrlo",
+    "permissionKey": "customer.support.view",
+    "createdAt": "2026-05-21T01:38:57.166Z"
+  },
+  {
+    "id": "cmpf16cpa001cvo5s18iv2ky6",
+    "roleId": "cmpf16cov0005vo5s6v9xcrlo",
+    "permissionKey": "customer.support.create",
+    "createdAt": "2026-05-21T01:38:57.166Z"
+  },
+  {
+    "id": "cmpf16cpa001dvo5s6l1g2sh0",
+    "roleId": "cmpf16cov0005vo5s6v9xcrlo",
+    "permissionKey": "customer.profile.view",
+    "createdAt": "2026-05-21T01:38:57.166Z"
+  },
+  {
+    "id": "cmpf16cpa001evo5sh2s8qqzi",
+    "roleId": "cmpf16cov0005vo5s6v9xcrlo",
+    "permissionKey": "customer.profile.update",
+    "createdAt": "2026-05-21T01:38:57.166Z"
+  },
+  {
+    "id": "cmpf16cpe001gvo5s0wh2lxfs",
+    "roleId": "cmpf16cp1000bvo5sdq81970p",
+    "permissionKey": "customers.view",
+    "createdAt": "2026-05-21T01:38:57.170Z"
+  }
+]

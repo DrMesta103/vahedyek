@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import { Prisma } from '@/lib/prisma-client';
 import { requireSessionContext } from '../../../../../../lib/auth';
 import { prisma } from '../../../../../../lib/prisma';
@@ -29,10 +29,21 @@ function toInteger(value: string | number | undefined) {
 }
 
 async function ensureBlock(tenantId: string, blockId: string) {
-  const rows = await prisma.$queryRaw<Array<{ id: string; name: string }>>(Prisma.sql`
-    SELECT "id", "name"
-    FROM "Block"
-    WHERE "tenantId" = ${tenantId} AND "id" = ${blockId}
+  const rows = await prisma.$queryRaw<
+    Array<{ id: string; name: string; mainPlate: string | null; subPlate: string | null; unitCount: number; floorCount: number }>
+  >(Prisma.sql`
+    SELECT
+      b."id",
+      b."name",
+      b."mainPlate",
+      b."subPlate",
+      COUNT(DISTINCT u."id")::int AS "unitCount",
+      COUNT(DISTINCT f."id")::int AS "floorCount"
+    FROM "Block" b
+    LEFT JOIN "Unit" u ON u."tenantId" = b."tenantId" AND u."blockId" = b."id"
+    LEFT JOIN "BlockFloor" f ON f."tenantId" = b."tenantId" AND f."blockId" = b."id"
+    WHERE b."tenantId" = ${tenantId} AND b."id" = ${blockId}
+    GROUP BY b."id", b."name", b."mainPlate", b."subPlate"
     LIMIT 1
   `);
   return rows[0] ?? null;
@@ -72,6 +83,17 @@ async function getFloors(tenantId: string, blockId: string) {
   }));
 }
 
+async function floorNameExists(tenantId: string, blockId: string, name: string) {
+  const rows = await prisma.$queryRaw<Array<{ id: string }>>(Prisma.sql`
+    SELECT "id"
+    FROM "BlockFloor"
+    WHERE "tenantId" = ${tenantId} AND "blockId" = ${blockId} AND LOWER(TRIM("name")) = ${name.trim().toLocaleLowerCase('fa-IR')}
+    LIMIT 1
+  `);
+
+  return rows.length > 0;
+}
+
 export async function GET(_: Request, { params }: { params: Promise<{ blockId: string }> }) {
   try {
     const { blockId } = await params;
@@ -103,7 +125,13 @@ export async function POST(request: Request, { params }: { params: Promise<{ blo
       const from = toInteger(body.from);
       const to = toInteger(body.to);
       if (!prefix) return NextResponse.json({ message: 'پیشوند نام‌گذاری الزامی است.' }, { status: 400 });
-      if (!Number.isFinite(from) || !Number.isFinite(to) || from > to) return NextResponse.json({ message: 'بازه شماره‌گذاری معتبر نیست.' }, { status: 400 });
+      if (!Number.isFinite(from) || !Number.isFinite(to) || from > to) return NextResponse.json({ message: 'شماره پایان باید بزرگ‌تر یا مساوی شماره شروع باشد.' }, { status: 400 });
+
+      for (let index = from; index <= to; index += 1) {
+        if (await floorNameExists(session.tenantId, blockId, `${prefix}-${index}`)) {
+          return NextResponse.json({ message: 'این نام برای طبقه دیگری در همین بلوک ثبت شده است.' }, { status: 400 });
+        }
+      }
 
       for (let index = from; index <= to; index += 1) {
         await prisma.$executeRaw(Prisma.sql`
@@ -112,18 +140,22 @@ export async function POST(request: Request, { params }: { params: Promise<{ blo
           ON CONFLICT ("tenantId", "blockId", "name") DO NOTHING
         `);
       }
+      return NextResponse.json({ block: await ensureBlock(session.tenantId, blockId), floors: await getFloors(session.tenantId, blockId), createdCount: to - from + 1, mode: 'bulk' }, { status: 201 });
     } else {
       const name = body.name?.trim();
       if (!name) return NextResponse.json({ message: 'مشخصه طبقه الزامی است.' }, { status: 400 });
+      if (await floorNameExists(session.tenantId, blockId, name)) {
+        return NextResponse.json({ message: 'این نام برای طبقه دیگری در همین بلوک ثبت شده است.' }, { status: 400 });
+      }
+      const floorId = crypto.randomUUID();
 
       await prisma.$executeRaw(Prisma.sql`
         INSERT INTO "BlockFloor" ("id", "tenantId", "blockId", "name")
-        VALUES (${crypto.randomUUID()}, ${session.tenantId}, ${blockId}, ${name})
+        VALUES (${floorId}, ${session.tenantId}, ${blockId}, ${name})
         ON CONFLICT ("tenantId", "blockId", "name") DO NOTHING
       `);
+      return NextResponse.json({ block: await ensureBlock(session.tenantId, blockId), floors: await getFloors(session.tenantId, blockId), createdCount: 1, createdFloorId: floorId, mode: 'single' }, { status: 201 });
     }
-
-    return NextResponse.json({ block, floors: await getFloors(session.tenantId, blockId) }, { status: 201 });
   } catch (error) {
     return handlePrismaApiError(error);
   }

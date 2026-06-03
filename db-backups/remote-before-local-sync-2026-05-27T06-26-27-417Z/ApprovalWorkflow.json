@@ -1,0 +1,387 @@
+[
+  {
+    "id": "cmoxye0z900i3oya0ib0n8c50",
+    "tenantId": "cmok2gpmo0001wcaw3nz2y79x",
+    "title": "فرایند جدید",
+    "usageTypes": [
+      "residential"
+    ],
+    "steps": [
+      {
+        "id": "6233046d-f9ff-4d07-9318-56b3523a9af8",
+        "type": "PARALLEL",
+        "logic": {
+          "mode": "ALL_MUST_APPROVE"
+        },
+        "title": "مرحله جدید",
+        "isFinal": false,
+        "approvers": [],
+        "permissions": {
+          "rejectToDraftApproverIds": "ALL_APPROVERS",
+          "requestRevisionApproverIds": "ALL_APPROVERS"
+        },
+        "finalApproverId": null
+      }
+    ],
+    "buyerShouldApprove": true,
+    "active": true,
+    "createdAt": "2026-05-09T02:48:51.381Z",
+    "updatedAt": "2026-05-09T02:48:51.381Z",
+    "finalApproverUserId": null
+  },
+  {
+    "id": "cmoxyv1z30107oya0t58updcv",
+    "tenantId": "cmok2gpmo0001wcaw3nz2y79x",
+    "title": "فرایند جدید",
+    "usageTypes": [
+      "commercial"
+    ],
+    "steps": [
+      {
+        "id": "3ee284db-308d-434c-a835-ea31ae162831",
+        "type": "PARALLEL",
+        "logic": {
+          "mode": "ALL_MUST_APPROVE"
+        },
+        "title": "مرحله جدید",
+        "isFinal": false,
+        "approvers": [],
+        "permissions": {
+          "rejectToDraftApproverIds": "ALL_APPROVERS",
+          "requestRevisionApproverIds": "ALL_APPROVERS"
+        },
+        "finalApproverId": null
+      }
+    ],
+    "buyerShouldApprove": true,
+    "active": true,
+    "createdAt": "2026-05-09T03:02:05.823Z",
+    "updatedAt": "2026-05-09T03:02:05.823Z",
+    "finalApproverUserId": null
+  },
+  {
+    "id": "cmoy2g2at0361oya07bfcjmog",
+    "tenantId": "cmok2gpmo0001wcaw3nz2y79x",
+    "title": "فرایند جدید 3",
+    "usageTypes": [
+      "office"
+    ],
+    "steps": [
+      {
+        "id": "04a5d163-7c83-4958-8ca6-386d1a3a7a83",
+        "type": "PARALLEL",
+        "logic": {
+          "mode": "MINIMUM_COUNT",
+          "count": 1
+        },
+        "title": "مرحله جدید222",
+        "isFinal": true,
+        "approvers": [
+          "cmov0p39801aroy68dgmvy4cg",
+          "cmok2f0u20000wcawkc8lihv1"
+        ],
+        "permissions": {
+          "rejectToDraftApproverIds": "ALL_APPROVERS",
+          "requestRevisionApproverIds": "ALL_APPROVERS"
+        },
+        "finalApproverId": "cmov0p39801aroy68dgmvy4cg"
+      }
+    ],
+    "buyerShouldApprove": true,
+    "active": true,
+    "createdAt": "2026-05-09T04:42:24.869Z",
+    "updatedAt": "2026-05-09T04:42:24.869Z",
+    "finalApproverUserId": "cmok2f0u20000wcawkc8lihv1"
+  },
+  {
+    "id": "cmoy33kqk03o5oya0212gosht",
+    "tenantId": "cmok2gpmo0001wcaw3nz2y79x",
+    "title": "فرایند جدید",
+    "usageTypes": [
+      "parking"
+    ],
+    "steps": [
+      {
+        "id": "c3ef6b59-6b7e-478b-bdfc-ccbeb162ad0c",
+        "type": "PARALLEL",
+        "logic": {
+          "mode": "MINIMUM_COUNT",
+          "count": 1
+        },
+        "title": "مرحله جدید 1",
+        "isFinal": false,
+        "approvers": [
+          "cmok2f0u20000wcawkc8lihv1",
+          "cmov0p39801aroy68dgmvy4cg"
+        ],
+        "permissions": {
+          "rejectToDraftApproverIds": "ALL_APPROVERS",
+          "requestRevisionApproverIds": "ALL_APPROVERS"
+        },
+        "finalApproverId": "cmok2f0u20000wcawkc8lihv1"
+      },
+      {
+        "id": "62824660-1818-4ac8-a5ae-34b7b471d376",
+        "type": "PARALLEL",
+        "logic": {
+          "mode": "MINIMUM_COUNT",
+          "count": 1
+        },
+        "title": "مرحله جدید 5",
+        "isFinal": true,
+        "approvers": [
+          "cmov0p39801aroy68dgmvy4cg",
+          "cmok2f0u20000wcawkc8lihv1",
+          "cmov6x2to05z1oy68novzmsv2"
+        ],
+        "permissions": {
+          "rejectToDraftApproverIds": "ALL_APPROVERS",
+          "requestRevisionApproverIds": "ALL_APPROVERS"
+        },
+        "finalApproverId": "cmov0p39801aroy68dgmvy4cg"
+      }
+    ],
+    "buyerShouldApprove": true,
+    "active": true,
+    "createdAt": "2026-05-09T05:00:41.852Z",
+    "updatedAt": "2026-05-09T05:26:04.412Z",
+    "finalApproverUserId": "cmov0p39801aroy68dgmvy4cg"
+  },
+  {
+    "id": "cmp75712p04dkp92j84vub1q8",
+    "tenantId": "cmogu31vm0001wc5gq6ojac7j",
+    "title": "فرایند جدید 1",
+    "usageTypes": [
+      "residential"
+    ],
+    "steps": [
+      {
+        "id": "f82d273c-03c5-430e-be0c-99b1cd3b7c2d",
+        "type": "PARALLEL",
+        "logic": {
+          "mode": "ALL_MUST_APPROVE"
+        },
+        "title": "مرحله جدید",
+        "isFinal": true,
+        "approvers": [
+          "cmogu2ius0000wc5gmk5hwcsc"
+        ],
+        "permissions": {
+          "rejectToDraftApproverIds": "ALL_APPROVERS",
+          "requestRevisionApproverIds": "ALL_APPROVERS"
+        },
+        "finalApproverId": "cmogu2ius0000wc5gmk5hwcsc"
+      }
+    ],
+    "buyerShouldApprove": false,
+    "active": true,
+    "createdAt": "2026-05-15T13:09:17.809Z",
+    "updatedAt": "2026-05-15T13:09:17.809Z",
+    "finalApproverUserId": "cmogu2ius0000wc5gmk5hwcsc"
+  },
+  {
+    "id": "cmp3yn3sq052soycwkh6wazlc",
+    "tenantId": "cmp2l1wfd07mzoy08jumz3qho",
+    "title": "فرایند جدید",
+    "usageTypes": [
+      "residential"
+    ],
+    "steps": [
+      {
+        "id": "1dde73d6-9fa8-4545-a8cc-873b47189ac9",
+        "type": "PARALLEL",
+        "logic": {
+          "mode": "ALL_MUST_APPROVE"
+        },
+        "title": "مرحله جدید",
+        "isFinal": true,
+        "approvers": [
+          "cmp2mzbup010boyv404pqubzz"
+        ],
+        "permissions": {
+          "rejectToDraftApproverIds": "ALL_APPROVERS",
+          "requestRevisionApproverIds": "ALL_APPROVERS"
+        },
+        "finalApproverId": "cmp2mzbup010boyv404pqubzz"
+      }
+    ],
+    "buyerShouldApprove": true,
+    "active": true,
+    "createdAt": "2026-05-13T07:42:31.995Z",
+    "updatedAt": "2026-05-20T02:19:36.783Z",
+    "finalApproverUserId": "cmp2kunj407myoy082f9uuuae"
+  },
+  {
+    "id": "cmparg3r301ftoyioirqoayrx",
+    "tenantId": "cmp2l1wfd07mzoy08jumz3qho",
+    "title": "فرآیند جدید",
+    "usageTypes": [
+      "storage"
+    ],
+    "steps": [
+      {
+        "id": "56419d23-e8c2-42f3-b06b-3a023a8a3418",
+        "type": "SEQUENTIAL",
+        "logic": {
+          "mode": "ALL_MUST_APPROVE"
+        },
+        "title": "مرحله جدید1",
+        "isFinal": false,
+        "approvers": [
+          "cmov0p39801aroy68dgmvy4cg",
+          "cmp2mzbup010boyv404pqubzz"
+        ],
+        "permissions": {
+          "rejectToDraftApproverIds": "ALL_APPROVERS",
+          "requestRevisionApproverIds": "ALL_APPROVERS"
+        },
+        "finalApproverId": "cmp2mzbup010boyv404pqubzz"
+      },
+      {
+        "id": "cb264019-fceb-451d-929a-e6037dda9874",
+        "type": "SEQUENTIAL",
+        "logic": {
+          "mode": "ALL_MUST_APPROVE"
+        },
+        "title": "مرحله جدید",
+        "isFinal": true,
+        "approvers": [
+          "cmp9de0f203o4oy08cvthsdsc"
+        ],
+        "permissions": {
+          "rejectToDraftApproverIds": "ALL_APPROVERS",
+          "requestRevisionApproverIds": "ALL_APPROVERS"
+        },
+        "finalApproverId": "cmp9de0f203o4oy08cvthsdsc"
+      }
+    ],
+    "buyerShouldApprove": true,
+    "active": false,
+    "createdAt": "2026-05-18T01:55:31.262Z",
+    "updatedAt": "2026-05-18T01:59:46.651Z",
+    "finalApproverUserId": "cmp2kunj407myoy082f9uuuae"
+  },
+  {
+    "id": "cmpaxg05y00igoyu4tciau1ka",
+    "tenantId": "cmp2l1wfd07mzoy08jumz3qho",
+    "title": "فرآیند جدید",
+    "usageTypes": [
+      "commercial"
+    ],
+    "steps": [],
+    "buyerShouldApprove": true,
+    "active": true,
+    "createdAt": "2026-05-18T04:43:24.309Z",
+    "updatedAt": "2026-05-18T04:43:24.309Z",
+    "finalApproverUserId": "cmov0p39801aroy68dgmvy4cg"
+  },
+  {
+    "id": "cmpduocff0bw7u6swteadzbs5",
+    "tenantId": "cmpdq1j13015gu6sw1ihl67u2",
+    "title": "فرآیند جدید",
+    "usageTypes": [
+      "residential"
+    ],
+    "steps": [
+      {
+        "id": "75cd02f2-9132-4cdb-a53d-94b3167e37b1",
+        "type": "PARALLEL",
+        "logic": {
+          "mode": "ALL_MUST_APPROVE"
+        },
+        "title": "مرحله جدید",
+        "isFinal": true,
+        "approvers": [
+          "cmpdq0rw5015fu6sw63346q9a"
+        ],
+        "permissions": {
+          "rejectToDraftApproverIds": "ALL_APPROVERS",
+          "requestRevisionApproverIds": "ALL_APPROVERS"
+        },
+        "finalApproverId": null
+      }
+    ],
+    "buyerShouldApprove": false,
+    "active": true,
+    "createdAt": "2026-05-20T05:49:13.131Z",
+    "updatedAt": "2026-05-20T05:50:28.724Z",
+    "finalApproverUserId": "cmpdq0rw5015fu6sw63346q9a"
+  },
+  {
+    "id": "cmpf16ul700ppvo5sbt6pedmm",
+    "tenantId": "cmpf16con0001vo5s0u1jnael",
+    "title": "فرآیند جدید",
+    "usageTypes": [
+      "residential"
+    ],
+    "steps": [
+      {
+        "id": "ee49817d-9b06-4034-84b6-284b8badd237",
+        "type": "SEQUENTIAL",
+        "logic": {
+          "mode": "ALL_MUST_APPROVE"
+        },
+        "title": "مرحله جدید",
+        "isFinal": false,
+        "approvers": [
+          "cmpf15mjf0000vo5scc84uvlk"
+        ],
+        "permissions": {
+          "rejectToDraftApproverIds": "ALL_APPROVERS",
+          "requestRevisionApproverIds": "ALL_APPROVERS"
+        },
+        "finalApproverId": null
+      },
+      {
+        "id": "915e6ef7-715e-400d-93c2-8d93115c1d3e",
+        "type": "SEQUENTIAL",
+        "logic": {
+          "mode": "ALL_MUST_APPROVE"
+        },
+        "title": "مرحله جدید",
+        "isFinal": true,
+        "approvers": [
+          "cmpf18pyi00wtvo5se190nfmk"
+        ],
+        "permissions": {
+          "rejectToDraftApproverIds": "ALL_APPROVERS",
+          "requestRevisionApproverIds": "ALL_APPROVERS"
+        },
+        "finalApproverId": null
+      }
+    ],
+    "buyerShouldApprove": true,
+    "active": true,
+    "createdAt": "2026-05-21T01:39:20.348Z",
+    "updatedAt": "2026-05-21T02:11:18.325Z",
+    "finalApproverUserId": "cmpf15mjf0000vo5scc84uvlk"
+  },
+  {
+    "id": "cmpf18vq2016wvo5sq7lfw21s",
+    "tenantId": "cmpf16con0001vo5s0u1jnael",
+    "title": "فرآیند جدید",
+    "usageTypes": [
+      "commercial"
+    ],
+    "steps": [],
+    "buyerShouldApprove": true,
+    "active": true,
+    "createdAt": "2026-05-21T01:40:55.130Z",
+    "updatedAt": "2026-05-21T01:40:55.130Z",
+    "finalApproverUserId": null
+  },
+  {
+    "id": "cmpf5k3ov02vvvo5sr8y15gyl",
+    "tenantId": "cmpf16con0001vo5s0u1jnael",
+    "title": "فرآیند جدید",
+    "usageTypes": [
+      "parking"
+    ],
+    "steps": [],
+    "buyerShouldApprove": false,
+    "active": true,
+    "createdAt": "2026-05-21T03:41:37.135Z",
+    "updatedAt": "2026-05-21T03:41:37.135Z",
+    "finalApproverUserId": null
+  }
+]

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { StickySubmitBar } from '@repo/ui';
 import { ContractStepLoader } from './ContractStepLoader';
 import { SubjectContractorBox, type IssuerType } from './SubjectContractorBox';
@@ -35,6 +35,7 @@ type BlockOption = {
 
 export function SubjectStep({ stepId, title, embedded = false }: { stepId: string; title: string; embedded?: boolean }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const basePath = useContractFlowBasePath();
   const initialSnapshotRef = useRef('');
 
@@ -81,6 +82,8 @@ export function SubjectStep({ stepId, title, embedded = false }: { stepId: strin
   ]);
   const validation = useMemo(() => validateStep1(payload), [payload]);
   const visibleErrors = showValidation ? validation.errors : {};
+  const shortcutBlockId = searchParams.get('selectedBlock') ?? '';
+  const shortcutUnitId = searchParams.get('selectedUnit') ?? '';
 
   useEffect(() => {
     let mounted = true;
@@ -95,6 +98,10 @@ export function SubjectStep({ stepId, title, embedded = false }: { stepId: strin
         setEmployees(referenceData.employees);
         setFormerEmployees(referenceData.formerEmployees);
         setBlocks(referenceData.blocks);
+        const preferredBlockId = shortcutBlockId || subjectData?.blockId || '';
+        const preferredBlock = referenceData.blocks.find((block) => block.id === preferredBlockId) ?? null;
+        const preferredUnitId = shortcutUnitId || subjectData?.unitId || '';
+        const preferredUnit = preferredBlock?.units.find((unit) => unit.id === preferredUnitId && unit.category === 'unit') ?? null;
 
         if (subjectData) {
           if (subjectData.contractor.type === 'employee') setIssuerType('staff');
@@ -108,9 +115,9 @@ export function SubjectStep({ stepId, title, embedded = false }: { stepId: strin
           setContractDate(subjectData.contractDate);
           setDeliveryDate(subjectData.deliveryDate);
           setContractNumber(subjectData.contractNumber);
-          setSelectedBlock(subjectData.blockId);
-          setSelectedUnit(subjectData.unitId);
         }
+        setSelectedBlock(preferredBlock?.id ?? subjectData?.blockId ?? '');
+        setSelectedUnit(preferredUnit?.id ?? (preferredBlock?.id === subjectData?.blockId ? subjectData?.unitId ?? '' : ''));
       } catch (error) {
         if (mounted) setFormError(error instanceof Error ? error.message : 'بارگذاری اطلاعات پایه انجام نشد.');
       } finally {
@@ -121,7 +128,7 @@ export function SubjectStep({ stepId, title, embedded = false }: { stepId: strin
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [shortcutBlockId, shortcutUnitId]);
 
   function buildPayload(): ContractSubjectData {
     const contractor =

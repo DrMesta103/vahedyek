@@ -1,0 +1,611 @@
+[
+  {
+    "id": "cmpduu0wa0h4vu6swpm2iv8b5",
+    "appendixId": "1289d2f5-dad4-45bc-9ea6-49378eb8f27a",
+    "tagKey": "unit-delivery-date",
+    "groupKey": "dates",
+    "title": "تاریخ تحویل واحد",
+    "description": "تغییر تاریخ تحویل واحد",
+    "payload": {
+      "reason": "",
+      "nextDate": "۱۴۰۷/۰۲/۱۲",
+      "previousDate": "۱۴۰۸/۰۲/۲۷"
+    },
+    "createdAt": "2026-05-20T05:53:38.122Z",
+    "updatedAt": "2026-05-20T05:53:38.122Z"
+  },
+  {
+    "id": "cmpdv00yn0i8ku6swvplm8yj9",
+    "appendixId": "f7f461de-64a8-452f-af6e-7f0fa176d750",
+    "tagKey": "adjustment",
+    "groupKey": "financial",
+    "title": "تعدیل",
+    "description": "اعمال تعدیل در ارقام قرارداد",
+    "payload": {
+      "dueItems": [
+        {
+          "id": "due-1779269290792",
+          "title": "تعدیل",
+          "amount": 30,
+          "dueDate": "۱۴۰۵/۰۲/۳۱",
+          "categoryId": "fin-line-appendix-adjustment:advance"
+        }
+      ],
+      "activeTab": "fin-line-appendix-adjustment:advance",
+      "categories": [
+        {
+          "id": "principal",
+          "name": "مبلغ اصل قرارداد",
+          "system": true,
+          "capAmount": 0,
+          "dueAmount": 0,
+          "noDueAmount": 0,
+          "requiresDue": false
+        },
+        {
+          "id": "advance",
+          "name": "پیش پرداخت",
+          "system": true,
+          "capAmount": 0,
+          "dueAmount": 0,
+          "noDueAmount": 0,
+          "requiresDue": true
+        },
+        {
+          "id": "installment",
+          "name": "اقساط ثابت",
+          "system": true,
+          "capAmount": 0,
+          "dueAmount": 0,
+          "noDueAmount": 0,
+          "requiresDue": true
+        },
+        {
+          "id": "loan",
+          "name": "وام بانکی",
+          "system": true,
+          "capAmount": 0,
+          "dueAmount": 0,
+          "noDueAmount": 0,
+          "requiresDue": false
+        },
+        {
+          "id": "handover",
+          "name": "تحویل واحد",
+          "system": true,
+          "capAmount": 0,
+          "dueAmount": 0,
+          "noDueAmount": 0,
+          "requiresDue": false
+        },
+        {
+          "id": "document",
+          "name": "تحویل سند",
+          "system": true,
+          "capAmount": 0,
+          "dueAmount": 0,
+          "noDueAmount": 0,
+          "requiresDue": false
+        },
+        {
+          "id": "fin-line-appendix-adjustment",
+          "name": "تعدیل",
+          "system": false,
+          "capAmount": 30,
+          "dueAmount": 0,
+          "noDueAmount": 30,
+          "requiresDue": false
+        },
+        {
+          "id": "fin-line-appendix-adjustment:advance",
+          "name": "پیش پرداخت",
+          "system": true,
+          "capAmount": 30,
+          "dueAmount": 30,
+          "noDueAmount": 0,
+          "requiresDue": true
+        },
+        {
+          "id": "fin-line-appendix-adjustment:installment",
+          "name": "اقساط ثابت",
+          "system": true,
+          "capAmount": 0,
+          "dueAmount": 0,
+          "noDueAmount": 0,
+          "requiresDue": true
+        },
+        {
+          "id": "fin-line-appendix-adjustment:loan",
+          "name": "وام بانکی",
+          "system": true,
+          "capAmount": 0,
+          "dueAmount": 0,
+          "noDueAmount": 0,
+          "requiresDue": false
+        },
+        {
+          "id": "fin-line-appendix-adjustment:handover",
+          "name": "تحویل واحد",
+          "system": true,
+          "capAmount": 0,
+          "dueAmount": 0,
+          "noDueAmount": 0,
+          "requiresDue": false
+        },
+        {
+          "id": "fin-line-appendix-adjustment:document",
+          "name": "تحویل سند",
+          "system": true,
+          "capAmount": 0,
+          "dueAmount": 0,
+          "noDueAmount": 0,
+          "requiresDue": false
+        }
+      ]
+    },
+    "createdAt": "2026-05-20T05:58:18.143Z",
+    "updatedAt": "2026-05-20T05:58:18.143Z"
+  },
+  {
+    "id": "cmpdvjwlh0r3su6sw9b6t09ir",
+    "appendixId": "b9c0065e-6456-4fdc-bb66-37046074bccd",
+    "tagKey": "side-costs",
+    "groupKey": "financial",
+    "title": "هزینه های جانبی",
+    "description": "افزودن یا اصلاح هزینه‌های جانبی",
+    "payload": {
+      "dueItems": [
+        {
+          "id": "due-1779262716034",
+          "title": "پیش پرداخت",
+          "amount": 5,
+          "dueDate": "۱۴۰۵/۰۲/۳۰",
+          "categoryId": "advance"
+        },
+        {
+          "id": "due-1779262733913",
+          "title": "پیش پرداخت 2",
+          "amount": 5,
+          "dueDate": "۱۴۰۵/۰۲/۳۱",
+          "categoryId": "advance"
+        },
+        {
+          "id": "due-1779262824928",
+          "title": "ثابت 1",
+          "amount": 10,
+          "dueDate": "۱۴۰۵/۰۵/۰۸",
+          "categoryId": "installment"
+        },
+        {
+          "id": "due-1779262896488-0",
+          "title": "ثابت 2 1",
+          "amount": 5,
+          "dueDate": "1405/05/31",
+          "categoryId": "installment"
+        },
+        {
+          "id": "due-1779262896488-1",
+          "title": "ثابت 2 2",
+          "amount": 5,
+          "dueDate": "1405/07/30",
+          "categoryId": "installment"
+        },
+        {
+          "id": "due-1779263249496",
+          "title": "پیش پرداخت",
+          "amount": 50,
+          "dueDate": "۱۴۰۵/۰۲/۳۱",
+          "categoryId": "fin-line-559e8d07-e4b4-4b80-a13f-20e26caa0489:advance"
+        },
+        {
+          "id": "due-1779270129782",
+          "title": "سیب",
+          "amount": 60,
+          "dueDate": "۱۴۰۵/۰۲/۳۱",
+          "categoryId": "fin-line-appendix-side-cost-1779269862829:advance"
+        },
+        {
+          "id": "due-1779270176364",
+          "title": "ثقف",
+          "amount": 50,
+          "dueDate": "۱۴۰۵/۰۲/۳۱",
+          "categoryId": "fin-line-559e8d07-e4b4-4b80-a13f-20e26caa0489:installment"
+        }
+      ],
+      "activeTab": "fin-line-559e8d07-e4b4-4b80-a13f-20e26caa0489:installment",
+      "categories": [
+        {
+          "id": "principal",
+          "name": "مبلغ اصل قرارداد",
+          "system": true,
+          "capAmount": 100,
+          "dueAmount": 0,
+          "noDueAmount": 100,
+          "requiresDue": false
+        },
+        {
+          "id": "principal",
+          "name": "مبلغ اصل قرارداد",
+          "system": true,
+          "capAmount": 100,
+          "dueAmount": 0,
+          "noDueAmount": 100,
+          "requiresDue": false
+        },
+        {
+          "id": "advance",
+          "name": "پیش پرداخت",
+          "system": true,
+          "capAmount": 10,
+          "dueAmount": 10,
+          "noDueAmount": 0,
+          "requiresDue": true
+        },
+        {
+          "id": "advance",
+          "name": "پیش پرداخت",
+          "system": true,
+          "capAmount": 10,
+          "dueAmount": 10,
+          "noDueAmount": 0,
+          "requiresDue": true
+        },
+        {
+          "id": "installment",
+          "name": "اقساط ثابت",
+          "system": true,
+          "capAmount": 20,
+          "dueAmount": 20,
+          "noDueAmount": 0,
+          "requiresDue": true
+        },
+        {
+          "id": "installment",
+          "name": "اقساط ثابت",
+          "system": true,
+          "capAmount": 20,
+          "dueAmount": 20,
+          "noDueAmount": 0,
+          "requiresDue": true
+        },
+        {
+          "id": "loan",
+          "name": "وام بانکی",
+          "system": true,
+          "capAmount": 30,
+          "dueAmount": 0,
+          "noDueAmount": 30,
+          "requiresDue": false
+        },
+        {
+          "id": "loan",
+          "name": "وام بانکی",
+          "system": true,
+          "capAmount": 30,
+          "dueAmount": 0,
+          "noDueAmount": 30,
+          "requiresDue": false
+        },
+        {
+          "id": "handover",
+          "name": "تحویل واحد",
+          "system": true,
+          "capAmount": 20,
+          "dueAmount": 0,
+          "noDueAmount": 20,
+          "requiresDue": false
+        },
+        {
+          "id": "handover",
+          "name": "تحویل واحد",
+          "system": true,
+          "capAmount": 20,
+          "dueAmount": 0,
+          "noDueAmount": 20,
+          "requiresDue": false
+        },
+        {
+          "id": "document",
+          "name": "تحویل سند",
+          "system": true,
+          "capAmount": 20,
+          "dueAmount": 0,
+          "noDueAmount": 20,
+          "requiresDue": false
+        },
+        {
+          "id": "document",
+          "name": "تحویل سند",
+          "system": true,
+          "capAmount": 20,
+          "dueAmount": 0,
+          "noDueAmount": 20,
+          "requiresDue": false
+        },
+        {
+          "id": "fin-line-559e8d07-e4b4-4b80-a13f-20e26caa0489",
+          "name": "مجموعه تفریحی",
+          "system": false,
+          "capAmount": 100,
+          "dueAmount": 0,
+          "noDueAmount": 100,
+          "requiresDue": false
+        },
+        {
+          "id": "fin-line-appendix-side-cost-1779269862829",
+          "name": "استخر",
+          "system": false,
+          "capAmount": 60,
+          "dueAmount": 0,
+          "noDueAmount": 60,
+          "requiresDue": false
+        },
+        {
+          "id": "fin-line-559e8d07-e4b4-4b80-a13f-20e26caa0489:advance",
+          "name": "پیش پرداخت",
+          "system": true,
+          "capAmount": 50,
+          "dueAmount": 50,
+          "noDueAmount": 0,
+          "requiresDue": true
+        },
+        {
+          "id": "fin-line-559e8d07-e4b4-4b80-a13f-20e26caa0489:installment",
+          "name": "اقساط ثابت",
+          "system": true,
+          "capAmount": 50,
+          "dueAmount": 50,
+          "noDueAmount": 0,
+          "requiresDue": true
+        },
+        {
+          "id": "fin-line-559e8d07-e4b4-4b80-a13f-20e26caa0489:loan",
+          "name": "وام بانکی",
+          "system": true,
+          "capAmount": 0,
+          "dueAmount": 0,
+          "noDueAmount": 0,
+          "requiresDue": false
+        },
+        {
+          "id": "fin-line-559e8d07-e4b4-4b80-a13f-20e26caa0489:handover",
+          "name": "تحویل واحد",
+          "system": true,
+          "capAmount": 0,
+          "dueAmount": 0,
+          "noDueAmount": 0,
+          "requiresDue": false
+        },
+        {
+          "id": "fin-line-559e8d07-e4b4-4b80-a13f-20e26caa0489:document",
+          "name": "تحویل سند",
+          "system": true,
+          "capAmount": 0,
+          "dueAmount": 0,
+          "noDueAmount": 0,
+          "requiresDue": false
+        },
+        {
+          "id": "fin-line-appendix-side-cost-1779269862829:advance",
+          "name": "پیش پرداخت",
+          "system": true,
+          "capAmount": 60,
+          "dueAmount": 60,
+          "noDueAmount": 0,
+          "requiresDue": true
+        },
+        {
+          "id": "fin-line-appendix-side-cost-1779269862829:installment",
+          "name": "اقساط ثابت",
+          "system": true,
+          "capAmount": 0,
+          "dueAmount": 0,
+          "noDueAmount": 0,
+          "requiresDue": true
+        },
+        {
+          "id": "fin-line-appendix-side-cost-1779269862829:loan",
+          "name": "وام بانکی",
+          "system": true,
+          "capAmount": 0,
+          "dueAmount": 0,
+          "noDueAmount": 0,
+          "requiresDue": false
+        },
+        {
+          "id": "fin-line-appendix-side-cost-1779269862829:handover",
+          "name": "تحویل واحد",
+          "system": true,
+          "capAmount": 0,
+          "dueAmount": 0,
+          "noDueAmount": 0,
+          "requiresDue": false
+        },
+        {
+          "id": "fin-line-appendix-side-cost-1779269862829:document",
+          "name": "تحویل سند",
+          "system": true,
+          "capAmount": 0,
+          "dueAmount": 0,
+          "noDueAmount": 0,
+          "requiresDue": false
+        }
+      ]
+    },
+    "createdAt": "2026-05-20T06:13:45.605Z",
+    "updatedAt": "2026-05-20T06:13:45.605Z"
+  },
+  {
+    "id": "cmpdvjwlh0r3tu6swcdq60y7v",
+    "appendixId": "b9c0065e-6456-4fdc-bb66-37046074bccd",
+    "tagKey": "adjustment",
+    "groupKey": "financial",
+    "title": "تعدیل",
+    "description": "اعمال تعدیل در ارقام قرارداد",
+    "payload": {
+      "dueItems": [
+        {
+          "id": "due-1779269290792",
+          "title": "تعدیل",
+          "amount": 70,
+          "dueDate": "۱۴۰۵/۰۲/۳۱",
+          "categoryId": "fin-line-appendix-adjustment:advance"
+        }
+      ],
+      "activeTab": "fin-line-appendix-adjustment:advance",
+      "categories": [
+        {
+          "id": "principal",
+          "name": "مبلغ اصل قرارداد",
+          "system": true,
+          "capAmount": 0,
+          "dueAmount": 0,
+          "noDueAmount": 0,
+          "requiresDue": false
+        },
+        {
+          "id": "advance",
+          "name": "پیش پرداخت",
+          "system": true,
+          "capAmount": 0,
+          "dueAmount": 0,
+          "noDueAmount": 0,
+          "requiresDue": true
+        },
+        {
+          "id": "installment",
+          "name": "اقساط ثابت",
+          "system": true,
+          "capAmount": 0,
+          "dueAmount": 0,
+          "noDueAmount": 0,
+          "requiresDue": true
+        },
+        {
+          "id": "loan",
+          "name": "وام بانکی",
+          "system": true,
+          "capAmount": 0,
+          "dueAmount": 0,
+          "noDueAmount": 0,
+          "requiresDue": false
+        },
+        {
+          "id": "handover",
+          "name": "تحویل واحد",
+          "system": true,
+          "capAmount": 0,
+          "dueAmount": 0,
+          "noDueAmount": 0,
+          "requiresDue": false
+        },
+        {
+          "id": "document",
+          "name": "تحویل سند",
+          "system": true,
+          "capAmount": 0,
+          "dueAmount": 0,
+          "noDueAmount": 0,
+          "requiresDue": false
+        },
+        {
+          "id": "fin-line-appendix-adjustment",
+          "name": "تعدیل",
+          "system": false,
+          "capAmount": 70,
+          "dueAmount": 0,
+          "noDueAmount": 70,
+          "requiresDue": false
+        },
+        {
+          "id": "fin-line-appendix-adjustment:advance",
+          "name": "پیش پرداخت",
+          "system": true,
+          "capAmount": 70,
+          "dueAmount": 70,
+          "noDueAmount": 0,
+          "requiresDue": true
+        },
+        {
+          "id": "fin-line-appendix-adjustment:installment",
+          "name": "اقساط ثابت",
+          "system": true,
+          "capAmount": 0,
+          "dueAmount": 0,
+          "noDueAmount": 0,
+          "requiresDue": true
+        },
+        {
+          "id": "fin-line-appendix-adjustment:loan",
+          "name": "وام بانکی",
+          "system": true,
+          "capAmount": 0,
+          "dueAmount": 0,
+          "noDueAmount": 0,
+          "requiresDue": false
+        },
+        {
+          "id": "fin-line-appendix-adjustment:handover",
+          "name": "تحویل واحد",
+          "system": true,
+          "capAmount": 0,
+          "dueAmount": 0,
+          "noDueAmount": 0,
+          "requiresDue": false
+        },
+        {
+          "id": "fin-line-appendix-adjustment:document",
+          "name": "تحویل سند",
+          "system": true,
+          "capAmount": 0,
+          "dueAmount": 0,
+          "noDueAmount": 0,
+          "requiresDue": false
+        }
+      ]
+    },
+    "createdAt": "2026-05-20T06:13:45.605Z",
+    "updatedAt": "2026-05-20T06:13:45.605Z"
+  },
+  {
+    "id": "cmpdvjwlh0r3uu6sw166bn67p",
+    "appendixId": "b9c0065e-6456-4fdc-bb66-37046074bccd",
+    "tagKey": "unit-delivery-date",
+    "groupKey": "dates",
+    "title": "تاریخ تحویل واحد",
+    "description": "تغییر تاریخ تحویل واحد",
+    "payload": {
+      "reason": "",
+      "nextDate": "۱۴۰۷/۰۲/۲۶",
+      "previousDate": "۱۴۰۸/۰۲/۲۷"
+    },
+    "createdAt": "2026-05-20T06:13:45.605Z",
+    "updatedAt": "2026-05-20T06:13:45.605Z"
+  },
+  {
+    "id": "cmpe1aede0gzeu6lwzpcy9cb2",
+    "appendixId": "5cb35306-51e1-4e8a-a9f4-cc8e812c43e3",
+    "tagKey": "second-party",
+    "groupKey": "parties",
+    "title": "طرف دوم",
+    "description": "اصلاح اطلاعات یا تعهدات طرف دوم",
+    "payload": {
+      "parties": [
+        {
+          "name": "تاج",
+          "share": {
+            "mode": "dang",
+            "value": 6
+          },
+          "personId": "legal-buyer-1779261953629",
+          "isPrimary": true,
+          "personType": "legal",
+          "directoryId": null
+        }
+      ],
+      "shareMode": "dang"
+    },
+    "createdAt": "2026-05-20T08:54:19.778Z",
+    "updatedAt": "2026-05-20T08:54:19.778Z"
+  }
+]

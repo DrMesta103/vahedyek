@@ -1,0 +1,68 @@
+[
+  {
+    "id": "19e6fbb5-c2c6-4ea6-8824-399c028d884a",
+    "tenantId": "cmogu31vm0001wc5gq6ojac7j",
+    "mainPlate": "1",
+    "subPlates": [
+      "1"
+    ],
+    "createdAt": "2026-04-27T03:17:20.763Z"
+  },
+  {
+    "id": "c9830cb6-5024-4e87-8860-0fde72084fa8",
+    "tenantId": "cmok2gpmo0001wcaw3nz2y79x",
+    "mainPlate": "12",
+    "subPlates": [
+      "123",
+      "1234"
+    ],
+    "createdAt": "2026-04-30T02:25:10.483Z"
+  },
+  {
+    "id": "e043bb53-25b2-4a95-a6c7-3b57bbdf1e23",
+    "tenantId": "cmok2gpmo0001wcaw3nz2y79x",
+    "mainPlate": "56",
+    "subPlates": [
+      "21",
+      "55"
+    ],
+    "createdAt": "2026-05-03T04:45:20.891Z"
+  },
+  {
+    "id": "debee5bf-174f-44bb-9624-5bbb04df35de",
+    "tenantId": "cmp2l1wfd07mzoy08jumz3qho",
+    "mainPlate": "52",
+    "subPlates": [
+      "1",
+      "2"
+    ],
+    "createdAt": "2026-05-12T08:39:08.634Z"
+  },
+  {
+    "id": "d93b7e7a-4163-4cf7-a20a-4dc3e74f8d79",
+    "tenantId": "cmpdq1j13015gu6sw1ihl67u2",
+    "mainPlate": "1",
+    "subPlates": [
+      "1"
+    ],
+    "createdAt": "2026-05-20T07:17:32.130Z"
+  },
+  {
+    "id": "98195611-d1c4-41bb-989f-b491616a1239",
+    "tenantId": "cmpdq1j13015gu6sw1ihl67u2",
+    "mainPlate": "2",
+    "subPlates": [
+      "3"
+    ],
+    "createdAt": "2026-05-20T10:44:52.107Z"
+  },
+  {
+    "id": "d5abb25d-0f4b-4cad-bb22-bfd040f44111",
+    "tenantId": "cmp9dw93l0001le2jywlbp256",
+    "mainPlate": "2",
+    "subPlates": [
+      "1"
+    ],
+    "createdAt": "2026-05-20T11:01:21.591Z"
+  }
+]

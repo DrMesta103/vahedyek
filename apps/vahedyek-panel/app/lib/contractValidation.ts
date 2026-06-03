@@ -1,5 +1,4 @@
-import { sumFinancialCapsCountedAgainstContractTotal } from './financialUtils';
-import { computeFixedContractTotal, computeMeteredContractTotal, getAreaPricingModeConfig, normalizeAreaPricingMode } from './contractFinancialPricing';
+import { getAreaPricingModeConfig, normalizeAreaPricingMode } from './contractFinancialPricing';
 import type {
   ContractDiscountsData,
   ContractFinancialData,
@@ -166,28 +165,6 @@ export function validateFinancialStep(data: Partial<ContractFinancialData>): Val
 
   if (!categories.length) {
     errors.categories = 'حداقل یک ردیف مالی باید ثبت شود';
-  }
-
-  const totalContractAmount =
-    pricingType === 'metered'
-      ? computeMeteredContractTotal({
-          areaPricingMode,
-          unitArea: data.unitArea ?? Math.max(totalArea - parkingArea - storageArea, 0),
-          parkingArea,
-          storageArea,
-          pricePerMeter,
-          parkingPricePerMeter,
-          storagePricePerMeter,
-        })
-      : computeFixedContractTotal({
-          areaPricingMode,
-          fixedTotalAmount,
-          parkingFixedAmount,
-          storageFixedAmount,
-        });
-  const categoriesTotal = sumFinancialCapsCountedAgainstContractTotal(categories);
-  if (totalContractAmount > 0 && categoriesTotal > totalContractAmount) {
-    errors.categoriesTotal = 'جمع ردیف‌های مالی از مبلغ قرارداد بیشتر است.';
   }
 
   const validCategoryIds = new Set(categories.map((item) => item.id));

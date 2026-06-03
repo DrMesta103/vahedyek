@@ -144,8 +144,8 @@ export function normalizeProgressiveRangeValues<T extends ProgressiveRangeValues
 export function normalizeKnownProgressivePenaltyValues<T extends ProgressiveRangeValues>(values: T) {
   const rowSets = [
     { prefix: 'penaltyProgressive', count: 4 },
-    { prefix: 'unitDeliveryDelayProgressive', count: 3 },
-    { prefix: 'materialSpecsChangeProgressive', count: 3 },
+    { prefix: 'unitDeliveryDelayProgressive', count: 4 },
+    { prefix: 'materialSpecsChangeProgressive', count: 4 },
     { prefix: 'areaDifferenceProgressive', count: 3 },
   ];
 

@@ -1,0 +1,135 @@
+[
+  {
+    "id": "c569e942-a6c5-4080-b4ec-7cea3b1e8d22",
+    "tenantId": "cmogu31vm0001wc5gq6ojac7j",
+    "name": "1236",
+    "role": "partner",
+    "personType": "natural"
+  },
+  {
+    "id": "fc73f290-8c2e-4e27-a396-3b030ee67fbb",
+    "tenantId": "cmogu31vm0001wc5gq6ojac7j",
+    "name": "سعید",
+    "role": "partner",
+    "personType": "natural"
+  },
+  {
+    "id": "99cb9505-918b-4e10-b1b6-0c98ea816181",
+    "tenantId": "cmogu31vm0001wc5gq6ojac7j",
+    "name": "ناتنلابل",
+    "role": "partner",
+    "personType": "natural"
+  },
+  {
+    "id": "f48ab2c2-935e-4735-a8a1-5d88abd78a1c",
+    "tenantId": "cmogu31vm0001wc5gq6ojac7j",
+    "name": "دئدتئ",
+    "role": "buyer",
+    "personType": "legal"
+  },
+  {
+    "id": "263b5aeb-a661-4599-95ba-fecd19d87429",
+    "tenantId": "cmogu31vm0001wc5gq6ojac7j",
+    "name": "121",
+    "role": "buyer",
+    "personType": "natural"
+  },
+  {
+    "id": "07bb3fa5-8dd4-40f2-bf73-6cac1b2a1f5e",
+    "tenantId": "cmogu31vm0001wc5gq6ojac7j",
+    "name": "دتناترزلذطزر",
+    "role": "buyer",
+    "personType": "natural"
+  },
+  {
+    "id": "e4d8640d-95eb-4046-9ef8-a6f8a51025c3",
+    "tenantId": "cmok2gpmo0001wcaw3nz2y79x",
+    "name": "رینا",
+    "role": "buyer",
+    "personType": "natural"
+  },
+  {
+    "id": "partner-natural-1",
+    "tenantId": "cmp13vcfq0000oyykak76s9ev",
+    "name": "علی رضایی",
+    "role": "partner",
+    "personType": "natural"
+  },
+  {
+    "id": "partner-natural-2",
+    "tenantId": "cmp13vcfq0000oyykak76s9ev",
+    "name": "مریم احمدی",
+    "role": "partner",
+    "personType": "natural"
+  },
+  {
+    "id": "partner-natural-3",
+    "tenantId": "cmp13vcfq0000oyykak76s9ev",
+    "name": "حسین کریمی",
+    "role": "partner",
+    "personType": "natural"
+  },
+  {
+    "id": "partner-legal-1",
+    "tenantId": "cmp13vcfq0000oyykak76s9ev",
+    "name": "شرکت فپکو",
+    "role": "partner",
+    "personType": "legal"
+  },
+  {
+    "id": "partner-legal-2",
+    "tenantId": "cmp13vcfq0000oyykak76s9ev",
+    "name": "شرکت توسعه سپهر",
+    "role": "partner",
+    "personType": "legal"
+  },
+  {
+    "id": "partner-legal-3",
+    "tenantId": "cmp13vcfq0000oyykak76s9ev",
+    "name": "موسسه سرمایه گستر",
+    "role": "partner",
+    "personType": "legal"
+  },
+  {
+    "id": "buyer-natural-1",
+    "tenantId": "cmp13vcfq0000oyykak76s9ev",
+    "name": "سارا محمدی",
+    "role": "buyer",
+    "personType": "natural"
+  },
+  {
+    "id": "buyer-natural-2",
+    "tenantId": "cmp13vcfq0000oyykak76s9ev",
+    "name": "رضا عباسی",
+    "role": "buyer",
+    "personType": "natural"
+  },
+  {
+    "id": "buyer-natural-3",
+    "tenantId": "cmp13vcfq0000oyykak76s9ev",
+    "name": "نرگس یوسفی",
+    "role": "buyer",
+    "personType": "natural"
+  },
+  {
+    "id": "buyer-legal-1",
+    "tenantId": "cmp13vcfq0000oyykak76s9ev",
+    "name": "شرکت افق سازان",
+    "role": "buyer",
+    "personType": "legal"
+  },
+  {
+    "id": "buyer-legal-2",
+    "tenantId": "cmp13vcfq0000oyykak76s9ev",
+    "name": "شرکت آتیه مسکن",
+    "role": "buyer",
+    "personType": "legal"
+  },
+  {
+    "id": "buyer-legal-3",
+    "tenantId": "cmp13vcfq0000oyykak76s9ev",
+    "name": "گروه سرمایه گذاری پرگاس",
+    "role": "buyer",
+    "personType": "legal"
+  }
+]

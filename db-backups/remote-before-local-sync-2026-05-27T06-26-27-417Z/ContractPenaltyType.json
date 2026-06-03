@@ -1,0 +1,464 @@
+[
+  {
+    "id": "cmos6uhxa053nwc6o15xrmc4z:unit-handover-delay",
+    "penaltiesId": "cmos6uhxa053nwc6o15xrmc4z",
+    "title": "جریمه تاخیر در تحویل واحد",
+    "active": false
+  },
+  {
+    "id": "cmos6uhxa053nwc6o15xrmc4z:installment-delay",
+    "penaltiesId": "cmos6uhxa053nwc6o15xrmc4z",
+    "title": "جریمه تاخیر در پرداخت اقساط",
+    "active": false
+  },
+  {
+    "id": "cmos6uhxa053nwc6o15xrmc4z:document-delay",
+    "penaltiesId": "cmos6uhxa053nwc6o15xrmc4z",
+    "title": "جریمه تاخیر در تحویل سند",
+    "active": false
+  },
+  {
+    "id": "cmos6uhxa053nwc6o15xrmc4z:advance-payment-delay",
+    "penaltiesId": "cmos6uhxa053nwc6o15xrmc4z",
+    "title": "جریمه تاخیر در پیش‌پرداخت",
+    "active": false
+  },
+  {
+    "id": "cmos6uhxa053nwc6o15xrmc4z:misc-cost-delay",
+    "penaltiesId": "cmos6uhxa053nwc6o15xrmc4z",
+    "title": "جریمه تاخیر در هزینه‌های متفرقه",
+    "active": false
+  },
+  {
+    "id": "cmos6uhxa053nwc6o15xrmc4z:adjustment-delay",
+    "penaltiesId": "cmos6uhxa053nwc6o15xrmc4z",
+    "title": "جریمه تاخیر در پرداخت تعدیل",
+    "active": false
+  },
+  {
+    "id": "cmos6uhxa053nwc6o15xrmc4z:penalty-payment-delay",
+    "penaltiesId": "cmos6uhxa053nwc6o15xrmc4z",
+    "title": "جریمه تاخیر در پرداخت جرایم",
+    "active": false
+  },
+  {
+    "id": "cmos6uhxa053nwc6o15xrmc4z:bank-loan-case-delay",
+    "penaltiesId": "cmos6uhxa053nwc6o15xrmc4z",
+    "title": "تاخیر در تشکیل پرونده تسهیلات بانکی",
+    "active": false
+  },
+  {
+    "id": "cmos6uhxa053nwc6o15xrmc4z:lawsuit-cost",
+    "penaltiesId": "cmos6uhxa053nwc6o15xrmc4z",
+    "title": "هزینه تشکیل پرونده دادرسی بابت بدهی",
+    "active": false
+  },
+  {
+    "id": "cmos6uhxa053nwc6o15xrmc4z:document-transfer-followup",
+    "penaltiesId": "cmos6uhxa053nwc6o15xrmc4z",
+    "title": "عدم پیگیری مراحل اداری انتقال سند",
+    "active": false
+  },
+  {
+    "id": "cmos6uhxa053nwc6o15xrmc4z:discount-cancelled",
+    "penaltiesId": "cmos6uhxa053nwc6o15xrmc4z",
+    "title": "جریمه تخفیف لغو شده",
+    "active": false
+  },
+  {
+    "id": "cmosdn48d09xnwc6outuvok5p:unit-handover-delay",
+    "penaltiesId": "cmosdn48d09xnwc6outuvok5p",
+    "title": "جریمه تاخیر در تحویل واحد",
+    "active": false
+  },
+  {
+    "id": "cmosdn48d09xnwc6outuvok5p:installment-delay",
+    "penaltiesId": "cmosdn48d09xnwc6outuvok5p",
+    "title": "جریمه تاخیر در پرداخت اقساط",
+    "active": false
+  },
+  {
+    "id": "cmosdn48d09xnwc6outuvok5p:document-delay",
+    "penaltiesId": "cmosdn48d09xnwc6outuvok5p",
+    "title": "جریمه تاخیر در تحویل سند",
+    "active": false
+  },
+  {
+    "id": "cmosdn48d09xnwc6outuvok5p:advance-payment-delay",
+    "penaltiesId": "cmosdn48d09xnwc6outuvok5p",
+    "title": "جریمه تاخیر در پیش‌پرداخت",
+    "active": false
+  },
+  {
+    "id": "cmosdn48d09xnwc6outuvok5p:misc-cost-delay",
+    "penaltiesId": "cmosdn48d09xnwc6outuvok5p",
+    "title": "جریمه تاخیر در هزینه‌های متفرقه",
+    "active": false
+  },
+  {
+    "id": "cmosdn48d09xnwc6outuvok5p:adjustment-delay",
+    "penaltiesId": "cmosdn48d09xnwc6outuvok5p",
+    "title": "جریمه تاخیر در پرداخت تعدیل",
+    "active": false
+  },
+  {
+    "id": "cmosdn48d09xnwc6outuvok5p:penalty-payment-delay",
+    "penaltiesId": "cmosdn48d09xnwc6outuvok5p",
+    "title": "جریمه تاخیر در پرداخت جرایم",
+    "active": false
+  },
+  {
+    "id": "cmosdn48d09xnwc6outuvok5p:bank-loan-case-delay",
+    "penaltiesId": "cmosdn48d09xnwc6outuvok5p",
+    "title": "تاخیر در تشکیل پرونده تسهیلات بانکی",
+    "active": false
+  },
+  {
+    "id": "cmosdn48d09xnwc6outuvok5p:lawsuit-cost",
+    "penaltiesId": "cmosdn48d09xnwc6outuvok5p",
+    "title": "هزینه تشکیل پرونده دادرسی بابت بدهی",
+    "active": false
+  },
+  {
+    "id": "cmosdn48d09xnwc6outuvok5p:document-transfer-followup",
+    "penaltiesId": "cmosdn48d09xnwc6outuvok5p",
+    "title": "عدم پیگیری مراحل اداری انتقال سند",
+    "active": false
+  },
+  {
+    "id": "cmosdn48d09xnwc6outuvok5p:discount-cancelled",
+    "penaltiesId": "cmosdn48d09xnwc6outuvok5p",
+    "title": "جریمه تخفیف لغو شده",
+    "active": false
+  },
+  {
+    "id": "cmoskezwf03ibwc8wl8cvo0ew:unit-handover-delay",
+    "penaltiesId": "cmoskezwf03ibwc8wl8cvo0ew",
+    "title": "جریمه تاخیر در تحویل واحد",
+    "active": false
+  },
+  {
+    "id": "cmoskezwf03ibwc8wl8cvo0ew:installment-delay",
+    "penaltiesId": "cmoskezwf03ibwc8wl8cvo0ew",
+    "title": "جریمه تاخیر در پرداخت اقساط",
+    "active": false
+  },
+  {
+    "id": "cmoskezwf03ibwc8wl8cvo0ew:document-delay",
+    "penaltiesId": "cmoskezwf03ibwc8wl8cvo0ew",
+    "title": "جریمه تاخیر در تحویل سند",
+    "active": false
+  },
+  {
+    "id": "cmoskezwf03ibwc8wl8cvo0ew:advance-payment-delay",
+    "penaltiesId": "cmoskezwf03ibwc8wl8cvo0ew",
+    "title": "جریمه تاخیر در پیش‌پرداخت",
+    "active": false
+  },
+  {
+    "id": "cmoskezwf03ibwc8wl8cvo0ew:misc-cost-delay",
+    "penaltiesId": "cmoskezwf03ibwc8wl8cvo0ew",
+    "title": "جریمه تاخیر در هزینه‌های متفرقه",
+    "active": false
+  },
+  {
+    "id": "cmoskezwf03ibwc8wl8cvo0ew:adjustment-delay",
+    "penaltiesId": "cmoskezwf03ibwc8wl8cvo0ew",
+    "title": "جریمه تاخیر در پرداخت تعدیل",
+    "active": false
+  },
+  {
+    "id": "cmoskezwf03ibwc8wl8cvo0ew:penalty-payment-delay",
+    "penaltiesId": "cmoskezwf03ibwc8wl8cvo0ew",
+    "title": "جریمه تاخیر در پرداخت جرایم",
+    "active": false
+  },
+  {
+    "id": "cmoskezwf03ibwc8wl8cvo0ew:bank-loan-case-delay",
+    "penaltiesId": "cmoskezwf03ibwc8wl8cvo0ew",
+    "title": "تاخیر در تشکیل پرونده تسهیلات بانکی",
+    "active": false
+  },
+  {
+    "id": "cmoskezwf03ibwc8wl8cvo0ew:lawsuit-cost",
+    "penaltiesId": "cmoskezwf03ibwc8wl8cvo0ew",
+    "title": "هزینه تشکیل پرونده دادرسی بابت بدهی",
+    "active": false
+  },
+  {
+    "id": "cmoskezwf03ibwc8wl8cvo0ew:document-transfer-followup",
+    "penaltiesId": "cmoskezwf03ibwc8wl8cvo0ew",
+    "title": "عدم پیگیری مراحل اداری انتقال سند",
+    "active": false
+  },
+  {
+    "id": "cmoskezwf03ibwc8wl8cvo0ew:discount-cancelled",
+    "penaltiesId": "cmoskezwf03ibwc8wl8cvo0ew",
+    "title": "جریمه تخفیف لغو شده",
+    "active": false
+  },
+  {
+    "id": "cmoslxbzd07tawc8wbkpj5p4b:unit-handover-delay",
+    "penaltiesId": "cmoslxbzd07tawc8wbkpj5p4b",
+    "title": "جریمه تاخیر در تحویل واحد",
+    "active": false
+  },
+  {
+    "id": "cmoslxbzd07tawc8wbkpj5p4b:installment-delay",
+    "penaltiesId": "cmoslxbzd07tawc8wbkpj5p4b",
+    "title": "جریمه تاخیر در پرداخت اقساط",
+    "active": false
+  },
+  {
+    "id": "cmoslxbzd07tawc8wbkpj5p4b:document-delay",
+    "penaltiesId": "cmoslxbzd07tawc8wbkpj5p4b",
+    "title": "جریمه تاخیر در تحویل سند",
+    "active": false
+  },
+  {
+    "id": "cmoslxbzd07tawc8wbkpj5p4b:advance-payment-delay",
+    "penaltiesId": "cmoslxbzd07tawc8wbkpj5p4b",
+    "title": "جریمه تاخیر در پیش‌پرداخت",
+    "active": false
+  },
+  {
+    "id": "cmoslxbzd07tawc8wbkpj5p4b:misc-cost-delay",
+    "penaltiesId": "cmoslxbzd07tawc8wbkpj5p4b",
+    "title": "جریمه تاخیر در هزینه‌های متفرقه",
+    "active": false
+  },
+  {
+    "id": "cmoslxbzd07tawc8wbkpj5p4b:adjustment-delay",
+    "penaltiesId": "cmoslxbzd07tawc8wbkpj5p4b",
+    "title": "جریمه تاخیر در پرداخت تعدیل",
+    "active": false
+  },
+  {
+    "id": "cmoslxbzd07tawc8wbkpj5p4b:penalty-payment-delay",
+    "penaltiesId": "cmoslxbzd07tawc8wbkpj5p4b",
+    "title": "جریمه تاخیر در پرداخت جرایم",
+    "active": false
+  },
+  {
+    "id": "cmoslxbzd07tawc8wbkpj5p4b:bank-loan-case-delay",
+    "penaltiesId": "cmoslxbzd07tawc8wbkpj5p4b",
+    "title": "تاخیر در تشکیل پرونده تسهیلات بانکی",
+    "active": false
+  },
+  {
+    "id": "cmoslxbzd07tawc8wbkpj5p4b:lawsuit-cost",
+    "penaltiesId": "cmoslxbzd07tawc8wbkpj5p4b",
+    "title": "هزینه تشکیل پرونده دادرسی بابت بدهی",
+    "active": false
+  },
+  {
+    "id": "cmoslxbzd07tawc8wbkpj5p4b:document-transfer-followup",
+    "penaltiesId": "cmoslxbzd07tawc8wbkpj5p4b",
+    "title": "عدم پیگیری مراحل اداری انتقال سند",
+    "active": false
+  },
+  {
+    "id": "cmoslxbzd07tawc8wbkpj5p4b:discount-cancelled",
+    "penaltiesId": "cmoslxbzd07tawc8wbkpj5p4b",
+    "title": "جریمه تخفیف لغو شده",
+    "active": false
+  },
+  {
+    "id": "cmoslhbyv06i4wc8w60px44fx:unit-handover-delay",
+    "penaltiesId": "cmoslhbyv06i4wc8w60px44fx",
+    "title": "جریمه تاخیر در تحویل واحد",
+    "active": false
+  },
+  {
+    "id": "cmoslhbyv06i4wc8w60px44fx:installment-delay",
+    "penaltiesId": "cmoslhbyv06i4wc8w60px44fx",
+    "title": "جریمه تاخیر در پرداخت اقساط",
+    "active": false
+  },
+  {
+    "id": "cmoslhbyv06i4wc8w60px44fx:document-delay",
+    "penaltiesId": "cmoslhbyv06i4wc8w60px44fx",
+    "title": "جریمه تاخیر در تحویل سند",
+    "active": false
+  },
+  {
+    "id": "cmoslhbyv06i4wc8w60px44fx:advance-payment-delay",
+    "penaltiesId": "cmoslhbyv06i4wc8w60px44fx",
+    "title": "جریمه تاخیر در پیش‌پرداخت",
+    "active": false
+  },
+  {
+    "id": "cmoslhbyv06i4wc8w60px44fx:misc-cost-delay",
+    "penaltiesId": "cmoslhbyv06i4wc8w60px44fx",
+    "title": "جریمه تاخیر در هزینه‌های متفرقه",
+    "active": false
+  },
+  {
+    "id": "cmoslhbyv06i4wc8w60px44fx:adjustment-delay",
+    "penaltiesId": "cmoslhbyv06i4wc8w60px44fx",
+    "title": "جریمه تاخیر در پرداخت تعدیل",
+    "active": false
+  },
+  {
+    "id": "cmoslhbyv06i4wc8w60px44fx:penalty-payment-delay",
+    "penaltiesId": "cmoslhbyv06i4wc8w60px44fx",
+    "title": "جریمه تاخیر در پرداخت جرایم",
+    "active": false
+  },
+  {
+    "id": "cmoslhbyv06i4wc8w60px44fx:bank-loan-case-delay",
+    "penaltiesId": "cmoslhbyv06i4wc8w60px44fx",
+    "title": "تاخیر در تشکیل پرونده تسهیلات بانکی",
+    "active": false
+  },
+  {
+    "id": "cmoslhbyv06i4wc8w60px44fx:lawsuit-cost",
+    "penaltiesId": "cmoslhbyv06i4wc8w60px44fx",
+    "title": "هزینه تشکیل پرونده دادرسی بابت بدهی",
+    "active": false
+  },
+  {
+    "id": "cmoslhbyv06i4wc8w60px44fx:document-transfer-followup",
+    "penaltiesId": "cmoslhbyv06i4wc8w60px44fx",
+    "title": "عدم پیگیری مراحل اداری انتقال سند",
+    "active": false
+  },
+  {
+    "id": "cmoslhbyv06i4wc8w60px44fx:discount-cancelled",
+    "penaltiesId": "cmoslhbyv06i4wc8w60px44fx",
+    "title": "جریمه تخفیف لغو شده",
+    "active": false
+  },
+  {
+    "id": "cmpdssryt09you6swf42skjg8:unit-handover-delay",
+    "penaltiesId": "cmpdssryt09you6swf42skjg8",
+    "title": "جریمه تاخیر در تحویل واحد",
+    "active": true
+  },
+  {
+    "id": "cmpdssryt09you6swf42skjg8:installment-delay",
+    "penaltiesId": "cmpdssryt09you6swf42skjg8",
+    "title": "جریمه تاخیر در پرداخت اقساط",
+    "active": true
+  },
+  {
+    "id": "cmpdssryt09you6swf42skjg8:document-delay",
+    "penaltiesId": "cmpdssryt09you6swf42skjg8",
+    "title": "جریمه تاخیر در تحویل سند",
+    "active": true
+  },
+  {
+    "id": "cmpdssryt09you6swf42skjg8:advance-payment-delay",
+    "penaltiesId": "cmpdssryt09you6swf42skjg8",
+    "title": "جریمه تاخیر در پیش‌پرداخت",
+    "active": false
+  },
+  {
+    "id": "cmpdssryt09you6swf42skjg8:misc-cost-delay",
+    "penaltiesId": "cmpdssryt09you6swf42skjg8",
+    "title": "جریمه تاخیر در هزینه‌های متفرقه",
+    "active": false
+  },
+  {
+    "id": "cmpdssryt09you6swf42skjg8:adjustment-delay",
+    "penaltiesId": "cmpdssryt09you6swf42skjg8",
+    "title": "جریمه تاخیر در پرداخت تعدیل",
+    "active": false
+  },
+  {
+    "id": "cmpdssryt09you6swf42skjg8:penalty-payment-delay",
+    "penaltiesId": "cmpdssryt09you6swf42skjg8",
+    "title": "جریمه تاخیر در پرداخت جرایم",
+    "active": false
+  },
+  {
+    "id": "cmpdssryt09you6swf42skjg8:bank-loan-case-delay",
+    "penaltiesId": "cmpdssryt09you6swf42skjg8",
+    "title": "تاخیر در تشکیل پرونده تسهیلات بانکی",
+    "active": false
+  },
+  {
+    "id": "cmpdssryt09you6swf42skjg8:lawsuit-cost",
+    "penaltiesId": "cmpdssryt09you6swf42skjg8",
+    "title": "جریمه تشکیل پرونده دادرسی بابت بدهی",
+    "active": false
+  },
+  {
+    "id": "cmpdssryt09you6swf42skjg8:document-transfer-followup",
+    "penaltiesId": "cmpdssryt09you6swf42skjg8",
+    "title": "عدم پیگیری مراحل اداری انتقال سند",
+    "active": false
+  },
+  {
+    "id": "cmpdssryt09you6swf42skjg8:discount-cancelled",
+    "penaltiesId": "cmpdssryt09you6swf42skjg8",
+    "title": "جریمه تخفیف لغو شده",
+    "active": false
+  },
+  {
+    "id": "cmp2nj48t01dsoyv495wlqmzp:unit-handover-delay",
+    "penaltiesId": "cmp2nj48t01dsoyv495wlqmzp",
+    "title": "جریمه تاخیر در تحویل واحد",
+    "active": false
+  },
+  {
+    "id": "cmp2nj48t01dsoyv495wlqmzp:installment-delay",
+    "penaltiesId": "cmp2nj48t01dsoyv495wlqmzp",
+    "title": "جریمه تاخیر در پرداخت اقساط",
+    "active": false
+  },
+  {
+    "id": "cmp2nj48t01dsoyv495wlqmzp:document-delay",
+    "penaltiesId": "cmp2nj48t01dsoyv495wlqmzp",
+    "title": "جریمه تاخیر در تحویل سند",
+    "active": false
+  },
+  {
+    "id": "cmp2nj48t01dsoyv495wlqmzp:advance-payment-delay",
+    "penaltiesId": "cmp2nj48t01dsoyv495wlqmzp",
+    "title": "جریمه تاخیر در پیش‌پرداخت",
+    "active": false
+  },
+  {
+    "id": "cmp2nj48t01dsoyv495wlqmzp:misc-cost-delay",
+    "penaltiesId": "cmp2nj48t01dsoyv495wlqmzp",
+    "title": "جریمه تاخیر در هزینه‌های متفرقه",
+    "active": false
+  },
+  {
+    "id": "cmp2nj48t01dsoyv495wlqmzp:adjustment-delay",
+    "penaltiesId": "cmp2nj48t01dsoyv495wlqmzp",
+    "title": "جریمه تاخیر در پرداخت تعدیل",
+    "active": false
+  },
+  {
+    "id": "cmp2nj48t01dsoyv495wlqmzp:penalty-payment-delay",
+    "penaltiesId": "cmp2nj48t01dsoyv495wlqmzp",
+    "title": "جریمه تاخیر در پرداخت جرایم",
+    "active": false
+  },
+  {
+    "id": "cmp2nj48t01dsoyv495wlqmzp:bank-loan-case-delay",
+    "penaltiesId": "cmp2nj48t01dsoyv495wlqmzp",
+    "title": "تاخیر در تشکیل پرونده تسهیلات بانکی",
+    "active": false
+  },
+  {
+    "id": "cmp2nj48t01dsoyv495wlqmzp:lawsuit-cost",
+    "penaltiesId": "cmp2nj48t01dsoyv495wlqmzp",
+    "title": "جریمه تشکیل پرونده دادرسی بابت بدهی",
+    "active": false
+  },
+  {
+    "id": "cmp2nj48t01dsoyv495wlqmzp:document-transfer-followup",
+    "penaltiesId": "cmp2nj48t01dsoyv495wlqmzp",
+    "title": "عدم پیگیری مراحل اداری انتقال سند",
+    "active": false
+  },
+  {
+    "id": "cmp2nj48t01dsoyv495wlqmzp:discount-cancelled",
+    "penaltiesId": "cmp2nj48t01dsoyv495wlqmzp",
+    "title": "جریمه تخفیف لغو شده",
+    "active": false
+  }
+]

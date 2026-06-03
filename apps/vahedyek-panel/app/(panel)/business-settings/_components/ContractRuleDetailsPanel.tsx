@@ -20,7 +20,13 @@ import {
   UserRoundCog,
   WalletCards,
 } from 'lucide-react';
-import { RULE_CONFIGS, type ContractRuleId, type ContractRuleState, type RuleField } from '../../../lib/businessContractRules';
+import {
+  RULE_CONFIGS,
+  validateAdjustmentMultiIndicatorWeights,
+  type ContractRuleId,
+  type ContractRuleState,
+  type RuleField,
+} from '../../../lib/businessContractRules';
 import type { PhysicalProgressScheduleSummary } from '../../../lib/physicalProgressScheduleLogic';
 import { normalizeKnownProgressivePenaltyValues } from '../../../lib/progressivePenalty';
 import {
@@ -232,24 +238,6 @@ function getAdditionalCostsLead(tabId: string) {
     default:
       return '';
   }
-}
-
-function parsePercentValue(value: string | boolean | undefined) {
-  if (typeof value !== 'string') return 0;
-  const normalized = Number(value.replace(/[^\d.-]/g, ''));
-  return Number.isFinite(normalized) && normalized > 0 ? normalized : 0;
-}
-
-function getAdjustmentWeightsTotal(state: ContractRuleState) {
-  return (
-    parsePercentValue(state.values.adjustMultiHousingWeight) +
-    parsePercentValue(state.values.adjustMultiLaborWeight) +
-    parsePercentValue(state.values.adjustMultiMaterialWeight) +
-    parsePercentValue(state.values.adjustMultiMaterialsOtherWeight) +
-    parsePercentValue(state.values.adjustMultiWageWeight) +
-    parsePercentValue(state.values.adjustMultiEnergyWeight) +
-    parsePercentValue(state.values.adjustMultiGeneralPriceWeight)
-  );
 }
 
 function applyPanelValue(
@@ -1606,9 +1594,9 @@ export function ContractRuleDetailsPanel({
     if (!state) return;
 
     if (ruleId === 'adjustment' && state.activeTab === 'multi-indicator') {
-      const total = getAdjustmentWeightsTotal(state);
-      if (total > 100) {
-        setError(`جمع درصد شاخص‌های تعدیل ${total}٪ است و نباید از ۱۰۰٪ بیشتر باشد.`);
+      const validation = validateAdjustmentMultiIndicatorWeights(state.values);
+      if (!validation.valid) {
+        setError(validation.message);
         setMessage('');
         return;
       }

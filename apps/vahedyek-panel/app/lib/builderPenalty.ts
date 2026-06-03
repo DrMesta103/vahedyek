@@ -70,6 +70,7 @@ export const BUILDER_PENALTY_SECTION_META: Record<BuilderPenaltySectionId, Build
       { fromKey: 'unitDeliveryDelayProgressiveRow1From', toKey: 'unitDeliveryDelayProgressiveRow1To', rateKey: 'unitDeliveryDelayProgressiveRow1Rate' },
       { fromKey: 'unitDeliveryDelayProgressiveRow2From', toKey: 'unitDeliveryDelayProgressiveRow2To', rateKey: 'unitDeliveryDelayProgressiveRow2Rate' },
       { fromKey: 'unitDeliveryDelayProgressiveRow3From', toKey: 'unitDeliveryDelayProgressiveRow3To', rateKey: 'unitDeliveryDelayProgressiveRow3Rate' },
+      { fromKey: 'unitDeliveryDelayProgressiveRow4From', toKey: 'unitDeliveryDelayProgressiveRow4To', rateKey: 'unitDeliveryDelayProgressiveRow4Rate' },
     ],
   },
   'material-specs-change': {
@@ -85,6 +86,7 @@ export const BUILDER_PENALTY_SECTION_META: Record<BuilderPenaltySectionId, Build
       { fromKey: 'materialSpecsChangeProgressiveRow1From', toKey: 'materialSpecsChangeProgressiveRow1To', rateKey: 'materialSpecsChangeProgressiveRow1Rate' },
       { fromKey: 'materialSpecsChangeProgressiveRow2From', toKey: 'materialSpecsChangeProgressiveRow2To', rateKey: 'materialSpecsChangeProgressiveRow2Rate' },
       { fromKey: 'materialSpecsChangeProgressiveRow3From', toKey: 'materialSpecsChangeProgressiveRow3To', rateKey: 'materialSpecsChangeProgressiveRow3Rate' },
+      { fromKey: 'materialSpecsChangeProgressiveRow4From', toKey: 'materialSpecsChangeProgressiveRow4To', rateKey: 'materialSpecsChangeProgressiveRow4Rate' },
     ],
   },
 };

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 import { getDiscountEntry, getDiscountGroup } from '../(panel)/contracts/new/_components/discountsConfig';
 import { getPenaltyItem } from '../(panel)/contracts/new/_components/penaltiesConfig';
@@ -44,6 +44,8 @@ const STEP_LABELS: Record<string, string> = {
   financial: 'اطلاعات مالی قرارداد',
   penalties: 'جرایم',
   discounts: 'تخفیف‌ها',
+  interest: 'سود دریافتی',
+  forgiveness: 'بخشودگی',
   termination: 'شرایط فسخ',
   review: 'نمایش کلی جزئیات',
   final: 'تایید نهایی قرارداد',
@@ -245,7 +247,7 @@ function buildBusinessSettingsBreadcrumb(pathname: string): Crumb[] {
 
   if (pathname.startsWith('/business-settings/contract-rules')) {
     trail.push({
-      label: 'تنظیمات مالی و قواعد قراردادی',
+      label: 'تنظیمات جریمه خریدار',
       href: pathname === '/business-settings/contract-rules' ? undefined : '/business-settings/contract-rules',
     });
 
@@ -259,8 +261,8 @@ function buildBusinessSettingsBreadcrumb(pathname: string): Crumb[] {
         adjustment: 'تنظیمات تعدیل',
         'additional-costs': 'هزینه های جانبی',
         discount: 'تنظیمات تخفیف',
-        penalty: 'تنظیمات جریمه',
-        'builder-penalty': 'جریمه سازنده',
+        penalty: 'تنظیمات جریمه خریدار',
+        'builder-penalty': 'تنظیمات جریمه سازنده',
         'builder-cancellation': 'تنظیمات فسخ سازنده',
         'buyer-cancellation': 'تنظیمات فسخ خریدار',
         forgiveness: 'تنظیمات بخشودگی',
@@ -324,12 +326,16 @@ function buildBusinessSettingsBreadcrumb(pathname: string): Crumb[] {
 
   if (pathname.startsWith('/business-settings/project')) {
     trail.push({
-      label: 'تعریف پروژه / مجتمع',
+      label: 'تنظیمات پروژه / مجتمع',
       href: pathname.startsWith('/business-settings/project/') ? '/business-settings/project' : undefined,
     });
 
     if (pathname.startsWith('/business-settings/project/reports')) {
-      trail.push({ label: 'گزارشات اطلاعات مجتمع' });
+      trail.push({ label: 'گزارش‌های پروژه' });
+    }
+
+    if (pathname.startsWith('/business-settings/project/summary')) {
+      trail.push({ label: 'خلاصه اطلاعات پروژه' });
     }
 
     if (pathname.startsWith('/business-settings/project/technical-specs')) {
@@ -337,15 +343,15 @@ function buildBusinessSettingsBreadcrumb(pathname: string): Crumb[] {
     }
 
     if (pathname.startsWith('/business-settings/project/files')) {
-      trail.push({ label: 'فایل‌ها' });
+      trail.push({ label: 'اسناد و فایل‌های پروژه' });
     }
 
     if (pathname.startsWith('/business-settings/project/plates')) {
-      trail.push({ label: 'پلاک اصلی / پلاک فرعی' });
+      trail.push({ label: 'پلان‌ها و نقشه‌ها' });
     }
 
     if (pathname.startsWith('/business-settings/project/address')) {
-      trail.push({ label: 'آدرس' });
+      trail.push({ label: 'آدرس پروژه' });
     }
 
     if (pathname.startsWith('/business-settings/project/unit-types')) {
@@ -389,7 +395,7 @@ function buildBusinessSettingsBreadcrumb(pathname: string): Crumb[] {
 
   if (pathname.startsWith('/business-settings/project/blocks')) {
     trail.push({
-      label: 'فهرست بلوک',
+      label: 'بلوک‌ها / برج‌ها',
       href: pathname === '/business-settings/project/blocks' ? undefined : '/business-settings/project/blocks',
     });
   }
@@ -428,11 +434,16 @@ function buildBusinessSettingsBreadcrumb(pathname: string): Crumb[] {
 
 export default function PanelLayout({ children }: PanelLayoutProps) {
   const pathname = usePathname();
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const showOrbitMenu = pathname === '/';
   const isContractsNewHub = pathname === '/contracts/new';
   const isContractsListPage = pathname === '/contracts';
   const isContractReportsPage = /^\/contracts\/[^/]+\/reports(?:\/|$)/.test(pathname);
   const isAuditLogsPage = pathname === '/audit-logs';
+
+  useEffect(() => {
+    setMobileSidebarOpen(false);
+  }, [pathname]);
 
   const { activeItem, trail } = useMemo(() => {
     const resolvedActiveItem = resolveActiveItem(pathname);
@@ -504,10 +515,29 @@ export default function PanelLayout({ children }: PanelLayoutProps) {
     <div className="app-shell">
       <PageDocsWidget />
       <ReminderWidget />
+      <button
+        type="button"
+        className="mobile-sidebar-trigger"
+        onClick={() => setMobileSidebarOpen(true)}
+        aria-label="باز کردن منوی اصلی"
+        aria-controls="app-sidebar"
+        aria-expanded={mobileSidebarOpen}
+      >
+        <MenuIcon name="fa-bars" />
+      </button>
+      <button
+        type="button"
+        className={`mobile-sidebar-backdrop${mobileSidebarOpen ? ' is-open' : ''}`}
+        onClick={() => setMobileSidebarOpen(false)}
+        aria-label="بستن منوی اصلی"
+        tabIndex={mobileSidebarOpen ? 0 : -1}
+      />
       <Sidebar
         activeItem={activeItem}
         forceCollapsed={isContractsNewHub || isContractReportsPage}
         lockCollapsed={isContractsNewHub}
+        mobileOpen={mobileSidebarOpen}
+        onMobileClose={() => setMobileSidebarOpen(false)}
       />
       {showOrbitMenu ? (
         <main className="main-content home-main-content">

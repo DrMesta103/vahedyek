@@ -8,7 +8,7 @@ import { submitContractApprovalWorkflowAction } from '../../../../actions/contra
 import { listApprovalWorkflowsAction } from '../../../../actions/workflowActions';
 import type { ContractFlowSectionId } from './contractFlowSignals';
 
-const SAVEABLE_SECTIONS: ContractFlowSectionId[] = ['subject', 'parties', 'financial', 'penalties', 'discounts', 'termination'];
+const SAVEABLE_SECTIONS: ContractFlowSectionId[] = ['subject', 'parties', 'financial', 'penalties', 'discounts', 'interest', 'forgiveness', 'termination'];
 
 type SectionItem = {
   id: ContractFlowSectionId;
@@ -142,7 +142,7 @@ export function RightNavSidebar({
         </div>
 
         <div className="contract-flow-sidebar-body">
-          <div className="contract-flow-nav-list flex gap-2 overflow-x-auto lg:flex-col lg:overflow-visible">
+          <div className="contract-flow-nav-list flex flex-col gap-2">
             {sections.map((section, index) => {
               const isActive = activeSection === section.id;
               const isDirty = Boolean(dirtyMap[section.id]);
@@ -154,7 +154,7 @@ export function RightNavSidebar({
               return (
                 <Fragment key={section.id}>
                   <div
-                    className={`contract-flow-nav-item min-w-max text-right transition-colors lg:w-full ${
+                    className={`contract-flow-nav-item text-right transition-colors lg:w-full ${
                       isActive && !(section.id === 'financial' && activeFinancialLineId) ? 'is-active' : ''
                     } ${isLocked ? 'is-locked' : ''}`}
                   >
@@ -195,7 +195,7 @@ export function RightNavSidebar({
 
                   {section.id === 'financial' && financialLineSections.length ? (
                     <div
-                      className={`contract-flow-nav-item contract-flow-nav-item--financial-line min-w-max text-right transition-colors lg:w-full ${
+                      className={`contract-flow-nav-item contract-flow-nav-item--financial-line text-right transition-colors lg:w-full ${
                         activeFinancialLineId ? 'is-active' : ''
                       }`}
                     >

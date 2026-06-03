@@ -132,10 +132,10 @@ export function TagPill({
       aria-pressed={active}
       data-tag-pill="true"
       data-active={active ? 'true' : 'false'}
-      className={`inline-flex h-[34px] items-center gap-1.5 rounded-full border px-4 text-[12px] whitespace-nowrap transition-all ${
+      className={`inline-flex h-[34px] shrink-0 items-center gap-1.5 rounded-full border px-4 text-[12px] whitespace-nowrap transition-all max-sm:min-h-11 ${
         active
-          ? 'border-[var(--theme-action-border)] bg-[var(--theme-action-bg)] font-semibold text-[#292929] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.25)]'
-          : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
+          ? 'border-[var(--theme-action-border)] bg-[var(--theme-action-bg)] font-semibold text-[var(--text-strong)] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.25)]'
+          : 'border-[var(--border-color)] bg-[var(--surface)] text-[var(--text-body)] hover:bg-[var(--surface-soft)]'
       } ${className}`}
     >
       {active ? (
@@ -177,14 +177,14 @@ export function TagPills<T extends string>({
   wrap = true,
   className = '',
 }: {
-  options: { value: T; label: string; tooltip?: string }[];
+  options: ReadonlyArray<{ value: T; label: string; tooltip?: string }>;
   value: T;
   onChange: (value: T) => void;
   wrap?: boolean;
   className?: string;
 }) {
   return (
-    <div className={`flex gap-2 ${wrap ? 'flex-wrap' : 'flex-nowrap overflow-x-auto pb-1'} ${className}`}>
+    <div className={`flex max-sm:max-w-full max-sm:overflow-x-auto max-sm:pb-1 gap-2 ${wrap ? 'flex-wrap' : 'flex-nowrap overflow-x-auto pb-1'} ${className}`}>
       {options.map((option) => (
         <TagPill
           key={option.value}
@@ -205,14 +205,14 @@ export function MultiTagPills<T extends string>({
   wrap = true,
   className = '',
 }: {
-  options: { value: T; label: string; tooltip?: string }[];
+  options: ReadonlyArray<{ value: T; label: string; tooltip?: string }>;
   values: T[];
   onChange: (values: T[]) => void;
   wrap?: boolean;
   className?: string;
 }) {
   return (
-    <div className={`flex gap-2 ${wrap ? 'flex-wrap' : 'flex-nowrap overflow-x-auto pb-1'} ${className}`}>
+    <div className={`flex max-sm:max-w-full max-sm:overflow-x-auto max-sm:pb-1 gap-2 ${wrap ? 'flex-wrap' : 'flex-nowrap overflow-x-auto pb-1'} ${className}`}>
       {options.map((option) => {
         const active = values.includes(option.value);
         return (

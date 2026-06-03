@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
@@ -13,6 +13,8 @@ import {
   Pencil,
   Plus,
   Search,
+  Sparkles,
+  TrendingUp,
   Trash2,
   Wrench,
 } from 'lucide-react';
@@ -803,6 +805,43 @@ export function ProjectReportsPanel() {
     }
   }
 
+  const blockCount = summary?.blockCount ?? 0;
+  const floorCount = summary?.floorCount ?? 0;
+  const unitCount = summary?.unitCount ?? 0;
+  const parkingCount = summary?.parkingCount ?? 0;
+  const storageCount = summary?.storageCount ?? 0;
+  const amenityCount = summary?.amenityCount ?? 0;
+  const plateCount = summary?.plateCount ?? 0;
+  const visibleTotal = Math.max(blockCount + floorCount + unitCount + parkingCount + storageCount + amenityCount + plateCount, 1);
+  const chartRows = [
+    { label: 'بلوک‌ها', value: blockCount, color: 'linear-gradient(90deg, #0f766e, #14b8a6)' },
+    { label: 'طبقات', value: floorCount, color: 'linear-gradient(90deg, #d97706, #f59e0b)' },
+    { label: 'واحدها', value: unitCount, color: 'linear-gradient(90deg, #1d4ed8, #38bdf8)' },
+    { label: 'پارکینگ‌ها', value: parkingCount, color: 'linear-gradient(90deg, #334155, #64748b)' },
+    { label: 'انباری‌ها', value: storageCount, color: 'linear-gradient(90deg, #7c3aed, #a855f7)' },
+    { label: 'فضاهای رفاهی', value: amenityCount, color: 'linear-gradient(90deg, #db2777, #fb7185)' },
+  ] as const;
+  const donutUnits = [
+    { label: 'واحدهای اصلی', value: unitCount, color: '#0f766e' },
+    { label: 'پارکینگ‌ها', value: parkingCount, color: '#334155' },
+    { label: 'انباری‌ها', value: storageCount, color: '#7c3aed' },
+    { label: 'فضاهای رفاهی', value: amenityCount, color: '#d97706' },
+  ] as const;
+  const dominantItem = chartRows.reduce((best, current) => (current.value > best.value ? current : best), chartRows[0]);
+  const pieProgress = Math.max(0, Math.min(100, summary && visibleTotal ? Math.round((unitCount / visibleTotal) * 100) : 0));
+  const ringStyle = {
+    '--ring-progress': `${Math.max(12, pieProgress)}%`,
+    background: donutUnits
+      .map((item, index) => {
+        const start = donutUnits
+          .slice(0, index)
+          .reduce((acc, current) => acc + (visibleTotal ? (current.value / visibleTotal) * 100 : 0), 0);
+        const end = start + (visibleTotal ? (item.value / visibleTotal) * 100 : 0);
+        return `${item.color} ${start}% ${end}%`;
+      })
+      .join(', '),
+  } as React.CSSProperties;
+
   return (
     <section className="business-block-form-page" aria-label="گزارش اطلاعات مجتمع">
       <div className="business-block-form-card project-flow-form-card">
@@ -817,91 +856,184 @@ export function ProjectReportsPanel() {
 
         {!loading ? (
           <>
-            <div className="project-stats-grid">
-              <ProjectStatCard label="بلوک‌های ثبت‌شده" value={String(summary?.blockCount ?? 0)} />
-              <ProjectStatCard label="طبقات ثبت‌شده" value={String(summary?.floorCount ?? 0)} accent="amber" />
-              <ProjectStatCard label="واحدهای اصلی" value={String(summary?.unitCount ?? 0)} />
-              <ProjectStatCard label="پارکینگ‌ها" value={String(summary?.parkingCount ?? 0)} accent="slate" />
-              <ProjectStatCard label="انباری‌ها" value={String(summary?.storageCount ?? 0)} accent="slate" />
-              <ProjectStatCard label="فضاهای رفاهی" value={String(summary?.amenityCount ?? 0)} accent="amber" />
-              <ProjectStatCard label="پلاک‌های اصلی" value={String(summary?.plateCount ?? 0)} />
+            <div className="project-report-summary-strip">
+              <ProjectStatCard label="بلوک‌های ثبت‌شده" value={String(blockCount)} />
+              <ProjectStatCard label="طبقات ثبت‌شده" value={String(floorCount)} accent="amber" />
+              <ProjectStatCard label="واحدهای اصلی" value={String(unitCount)} />
             </div>
 
-            <div className="project-flow-grid">
-              <FieldGroup label="وضعیت کلی پروژه">
-                <TagPills
-                  options={projectStatusOptions.map((option) => ({ value: option, label: option }))}
-                  value={report.projectStatus}
-                  onChange={(value) => setReport((current) => ({ ...current, projectStatus: value }))}
-                />
-              </FieldGroup>
-              <FieldGroup label="وضعیت پروانه">
-                <TagPills
-                  options={permitStatusOptions.map((option) => ({ value: option, label: option }))}
-                  value={report.permitStatus}
-                  onChange={(value) => setReport((current) => ({ ...current, permitStatus: value }))}
-                />
-              </FieldGroup>
-              <ProjectField label="پیشرفت فیزیکی (%)">
-                <input
-                  value={String(report.physicalProgressPercent)}
-                  onChange={(event) => setReport((current) => ({ ...current, physicalProgressPercent: Number(event.target.value) || 0 }))}
-                  inputMode="numeric"
-                  placeholder="0"
-                />
-              </ProjectField>
-              <ProjectField label="پیشرفت مالی (%)">
-                <input
-                  value={String(report.financialProgressPercent)}
-                  onChange={(event) => setReport((current) => ({ ...current, financialProgressPercent: Number(event.target.value) || 0 }))}
-                  inputMode="numeric"
-                  placeholder="0"
-                />
-              </ProjectField>
-              <FieldGroup label="تاریخ شروع پروژه">
-                <FormDateInput value={report.startDate} onChange={(value) => setReport((current) => ({ ...current, startDate: value }))} />
-              </FieldGroup>
-              <FieldGroup label="تاریخ پیش‌بینی تحویل">
-                <FormDateInput value={report.expectedDeliveryDate} onChange={(value) => setReport((current) => ({ ...current, expectedDeliveryDate: value }))} />
-              </FieldGroup>
-              <ProjectField label="نیروی فعال کارگاه">
-                <input
-                  value={String(report.activeWorkers)}
-                  onChange={(event) => setReport((current) => ({ ...current, activeWorkers: Number(event.target.value) || 0 }))}
-                  inputMode="numeric"
-                  placeholder="0"
-                />
-              </ProjectField>
-              <ProjectField label="واحدهای فروخته‌شده">
-                <input
-                  value={String(report.soldUnits)}
-                  onChange={(event) => setReport((current) => ({ ...current, soldUnits: Number(event.target.value) || 0 }))}
-                  inputMode="numeric"
-                  placeholder="0"
-                />
-              </ProjectField>
-              <ProjectField label="واحدهای رزروشده">
-                <input
-                  value={String(report.reservedUnits)}
-                  onChange={(event) => setReport((current) => ({ ...current, reservedUnits: Number(event.target.value) || 0 }))}
-                  inputMode="numeric"
-                  placeholder="0"
-                />
-              </ProjectField>
-            </div>
+            <div className="project-report-grid">
+              <section className="project-report-panel">
+                <div className="project-report-panel-head">
+                  <div>
+                    <span className="project-report-panel-kicker">واحدها و فضاها</span>
+                    <h3>ترکیب ثبت‌شده‌ها</h3>
+                  </div>
+                  <FileText />
+                </div>
+                <div className="project-report-pie">
+                  <div
+                    className="project-report-donut"
+                    style={ringStyle}
+                    aria-label="نمودار ترکیب واحدها"
+                  >
+                    <div>
+                      <strong>{pieProgress}%</strong>
+                      <span>سهم واحدها</span>
+                    </div>
+                  </div>
+                  <div className="project-report-legend-stack">
+                    <div className="project-report-legend-summary">
+                      <strong>کل آیتم‌های ثبت‌شده</strong>
+                      <span>{visibleTotal}</span>
+                    </div>
+                    <div className="project-report-legend">
+                      {donutUnits.map((item) => {
+                        const ratio = visibleTotal ? Math.round((item.value / visibleTotal) * 100) : 0;
+                        return (
+                          <div className="project-report-legend-item" key={item.label}>
+                            <span style={{ background: item.color }} />
+                            <strong>{item.label}</strong>
+                            <em>{ratio}%</em>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className="project-report-panel-note">
+                      {dominantItem.label} بیشترین سهم را در اجزای پروژه دارد.
+                    </div>
+                  </div>
+                </div>
+              </section>
 
-            <ProjectField label="یادداشت گزارش">
-              <ProjectTextarea
-                value={report.reportNotes}
-                onChange={(value) => setReport((current) => ({ ...current, reportNotes: value.slice(0, 800) }))}
-                placeholder="خلاصه اجرایی، ریسک‌ها، موانع، وضعیت فروش یا هر نکته مهم گزارش را وارد کنید."
-              />
-            </ProjectField>
+              <section className="project-report-panel">
+                <div className="project-report-panel-head">
+                  <div>
+                    <span className="project-report-panel-kicker">نمای کلی</span>
+                    <h3>نمودار اجزای پروژه</h3>
+                  </div>
+                  <ClipboardList />
+                </div>
+                <div className="project-report-bars-summary">
+                  <div>
+                    <strong>{visibleTotal}</strong>
+                    <span>جمع کل آیتم‌ها</span>
+                  </div>
+                  <p>این نمودار توزیع ساختار فعلی پروژه را نشان می‌دهد و با هر ثبت جدید به‌روزرسانی می‌شود.</p>
+                </div>
+                <div className="project-report-bars">
+                  {chartRows.map((item) => {
+                    const width = visibleTotal ? Math.max(6, Math.round((item.value / visibleTotal) * 100)) : 0;
+                    const ratio = visibleTotal ? Math.round((item.value / visibleTotal) * 100) : 0;
+                    return (
+                      <div className="project-report-bar-row" key={item.label}>
+                        <div className="project-report-bar-label">
+                          <strong>{item.label}</strong>
+                          <span>{item.value} · {ratio}%</span>
+                        </div>
+                        <div className="project-report-bar-track">
+                          <div className="project-report-bar-fill" style={{ width: `${width}%`, background: item.color }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
 
-            <div className="business-block-form-actions">
-              <button type="button" className="business-block-form-submit" onClick={submit} disabled={saving}>
-                {saving ? 'در حال ذخیره...' : 'ذخیره گزارش'}
-              </button>
+              <section className="project-report-panel">
+                <div className="project-report-panel-head">
+                  <div>
+                    <span className="project-report-panel-kicker">وضعیت فروش</span>
+                    <h3>عملیات و پیشرفت</h3>
+                  </div>
+                  <TrendingUp />
+                </div>
+                <div className="project-report-progress-grid">
+                  <div className="project-report-progress-card">
+                    <div className="project-report-progress-card-head">
+                      <span>پیشرفت فیزیکی</span>
+                      <strong>{report.physicalProgressPercent}%</strong>
+                    </div>
+                    <div className="project-report-progress-track">
+                      <div
+                        className="project-report-progress-fill"
+                        style={{ width: `${Math.max(0, Math.min(100, report.physicalProgressPercent))}%`, background: 'linear-gradient(90deg, #0f766e, #14b8a6)' }}
+                      />
+                    </div>
+                  </div>
+                  <div className="project-report-progress-card">
+                    <div className="project-report-progress-card-head">
+                      <span>پیشرفت مالی</span>
+                      <strong>{report.financialProgressPercent}%</strong>
+                    </div>
+                    <div className="project-report-progress-track">
+                      <div
+                        className="project-report-progress-fill"
+                        style={{ width: `${Math.max(0, Math.min(100, report.financialProgressPercent))}%`, background: 'linear-gradient(90deg, #7c3aed, #a855f7)' }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="project-report-status-grid">
+                  <div className="project-report-status-card">
+                    <span>وضعیت کلی</span>
+                    <strong>{report.projectStatus || 'ثبت نشده'}</strong>
+                  </div>
+                  <div className="project-report-status-card">
+                    <span>وضعیت پروانه</span>
+                    <strong>{report.permitStatus || 'ثبت نشده'}</strong>
+                  </div>
+                  <div className="project-report-status-card">
+                    <span>واحدهای فروخته‌شده</span>
+                    <strong>{report.soldUnits}</strong>
+                  </div>
+                  <div className="project-report-status-card">
+                    <span>واحدهای رزروشده</span>
+                    <strong>{report.reservedUnits}</strong>
+                  </div>
+                </div>
+              </section>
+
+              <section className="project-report-panel">
+                <div className="project-report-panel-head">
+                  <div>
+                    <span className="project-report-panel-kicker">میان‌بُرها</span>
+                    <h3>مسیرهای مدیریتی</h3>
+                  </div>
+                  <Sparkles />
+                </div>
+                <div className="project-report-links-grid">
+                  <Link className="project-report-link-card" href="/business-settings/project">
+                    <Building2 />
+                    <div>
+                      <strong>تنظیمات پروژه</strong>
+                      <p>تعریف هویت، طبقه‌بندی و اطلاعات پایه پروژه</p>
+                    </div>
+                  </Link>
+                  <Link className="project-report-link-card" href="/business-settings/project/blocks">
+                    <Grid2X2 />
+                    <div>
+                      <strong>بلوک‌ها و طبقات</strong>
+                      <p>مدیریت ساختار بلوک، طبقات و واحدها</p>
+                    </div>
+                  </Link>
+                  <Link className="project-report-link-card" href="/business-settings/project/technical-specs">
+                    <Wrench />
+                    <div>
+                      <strong>مشخصات فنی</strong>
+                      <p>ثبت سیستم‌ها، مصالح و زیرساخت فنی</p>
+                    </div>
+                  </Link>
+                  <Link className="project-report-link-card" href="/business-settings/project/files">
+                    <FileText />
+                    <div>
+                      <strong>فایل‌ها و اسناد</strong>
+                      <p>دسترسی به فایل‌های پروژه و اسناد تکمیلی</p>
+                    </div>
+                  </Link>
+                </div>
+              </section>
             </div>
           </>
         ) : null}
@@ -1490,6 +1622,46 @@ export function ProjectFilesPanel() {
 
         <div className="business-blocks-state">
           برای این بخش route مستقل ایجاد شد. اگر بخواهی، در مرحله بعدی آپلود واقعی فایل، پیش‌نمایش و دسته‌بندی اسناد را هم روی همین صفحه اضافه می‌کنم.
+        </div>
+      </div>
+    </section>
+  );
+}
+
+export function ProjectSummaryPanel() {
+  return (
+    <section className="business-block-form-page" aria-label="خلاصه اطلاعات پروژه">
+      <div className="business-block-form-card project-flow-form-card">
+        <ProjectHero
+          icon={ClipboardList}
+          title="خلاصه اطلاعات پروژه"
+          description="نمای سریع از مسیرهای اصلی تنظیمات و بخش‌های کلیدی پروژه را ببینید."
+        />
+
+        <div className="project-stats-grid">
+          <ProjectStatCard label="بلوک‌ها" value="—" />
+          <ProjectStatCard label="طبقات" value="—" accent="amber" />
+          <ProjectStatCard label="واحدها" value="—" />
+          <ProjectStatCard label="قراردادها" value="—" accent="slate" />
+        </div>
+
+        <div className="business-blocks-toolbar">
+          <Link href="/business-settings/project" className="business-blocks-add">
+            <Building2 />
+            <span>تنظیمات پروژه</span>
+          </Link>
+          <Link href="/business-settings/project/blocks" className="business-blocks-add">
+            <Grid2X2 />
+            <span>بلوک‌ها و طبقات</span>
+          </Link>
+          <Link href="/business-settings/project/reports" className="business-blocks-add">
+            <FileText />
+            <span>گزارش‌ها</span>
+          </Link>
+          <Link href="/business-settings/project/technical-specs" className="business-blocks-add">
+            <Wrench />
+            <span>مشخصات فنی</span>
+          </Link>
         </div>
       </div>
     </section>
