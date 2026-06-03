@@ -26,6 +26,8 @@ import type { LucideIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { formatPersianDate } from '../../../../lib/format-date';
 import { formatFaNumber } from '../../../../lib/format-fa';
+import { getEmployeeContractProfileProgress } from '../../../../lib/employee-contracts';
+import type { EmployeeCurrentContractSummary } from '../../../../lib/employee-contracts';
 import { EditEmployeeFlow, type EditEmployeeData } from './EditEmployeeFlow';
 
 type EmployeeDetailSection = {
@@ -44,30 +46,12 @@ type EmployeeDetailData = EditEmployeeData & {
   organizationUnits?: Array<{ id: string; title: string }>;
   bankAccountsCount?: number;
   guaranteeCount?: number;
+  currentContract?: EmployeeCurrentContractSummary | null;
 };
 
 function normalizeDisplay(value: string | null | undefined) {
   const trimmed = value?.trim();
   return trimmed ? trimmed : 'ثبت نشده';
-}
-
-function countCompletion(employee: EmployeeDetailData) {
-  const items = [
-    employee.personnelCode,
-    employee.email,
-    employee.mobile1,
-    employee.mobile2,
-    employee.avatarUrl,
-    employee.organizationUnits?.length ? '1' : '',
-    employee.workGroups?.length ? '1' : '',
-  ];
-  return Math.round((items.filter(Boolean).length / items.length) * 100);
-}
-
-function daysSinceCreated(createdAt: string) {
-  const created = new Date(createdAt);
-  if (Number.isNaN(created.getTime())) return 0;
-  return Math.max(0, Math.floor((Date.now() - created.getTime()) / (1000 * 60 * 60 * 24)));
 }
 
 function buildSections(employeeId: string): Array<{ title: string; cards: EmployeeDetailSection[]; layout?: 'default' | 'contract' }> {
@@ -77,21 +61,21 @@ function buildSections(employeeId: string): Array<{ title: string; cards: Employ
       cards: [
         {
           title: 'درخواست ها',
-          description: 'همه درخواست‌های ثبت‌شده توسط کارمند را در اینجا می‌بینید.',
+          description: 'همه درخواست های ثبت شده توسط کارمند را در اینجا می بینید.',
           href: `/employees/${employeeId}/requests`,
           highlighted: true,
           icon: ClipboardList,
         },
         {
-          title: 'گزارشات',
-          description: 'گزارش‌های مربوط به عملکرد، حضور و فعالیت کارمند در این بخش قرار می‌گیرد.',
-          disabled: true,
-          badge: 'در آینده',
+          title: 'گزارش کارکرد',
+          description: 'مشاهده گزارش ماهانه، حضور، مرخصی، اضافه کاری و وضعیت تردد کارمند.',
+          href: `/employees/${employeeId}/work-report`,
+          highlighted: true,
           icon: Gauge,
         },
         {
           title: 'ارزیابی عملکرد',
-          description: 'سوابق ارزیابی، بازخوردها و نتایج دوره‌ای در این بخش نمایش داده می‌شود.',
+          description: 'سوابق ارزیابی، بازخوردها و نتایج دوره ای در این بخش نمایش داده می شود.',
           disabled: true,
           badge: 'در آینده',
           icon: BadgeCheck,
@@ -117,22 +101,22 @@ function buildSections(employeeId: string): Array<{ title: string; cards: Employ
           icon: User,
         },
         {
-          title: 'تنظیم پیش‌نویس',
-          description: 'پیش‌نویس قرارداد را باز کنید، از قالب آماده شروع کنید و مراحل را ادامه دهید.',
+          title: 'تنظیم پیش نویس',
+          description: 'پیش نویس قرارداد را باز کنید، از قالب آماده شروع کنید و مراحل را ادامه دهید.',
           href: `/employees/${employeeId}/contract-drafts`,
           highlighted: true,
           icon: Pencil,
         },
         {
           title: 'مرکز اسناد',
-          description: 'پیوست‌ها، قراردادهای امضاشده و اسناد مرتبط در این بخش نگهداری می‌شوند.',
+          description: 'پیوست ها، قراردادهای امضا شده و اسناد مرتبط در این بخش نگهداری می شوند.',
           disabled: true,
           badge: 'در آینده',
           icon: FolderOpen,
         },
         {
           title: 'تاریخچه چاپ قرارداد',
-          description: 'نسخه‌های چاپ‌شده قرارداد و سوابق مربوطه در اینجا ثبت می‌شود.',
+          description: 'نسخه های چاپ شده قرارداد و سوابق مرتبطه در اینجا ثبت می شود.',
           disabled: true,
           badge: 'در آینده',
           icon: Printer,
@@ -151,21 +135,21 @@ function buildSections(employeeId: string): Array<{ title: string; cards: Employ
       cards: [
         {
           title: 'متمم بر مبلغ قرارداد',
-          description: 'ثبت تغییرات مالی یا مزایای قرارداد از این بخش انجام می‌شود.',
+          description: 'ثبت تغییرات مالی یا مزایای قرارداد از این بخش انجام می شود.',
           disabled: true,
           badge: 'در آینده',
           icon: Wallet,
         },
         {
           title: 'متمم بر تاریخ (تمدید)',
-          description: 'مدت قرارداد و تاریخ‌های تمدید از این مسیر قابل مدیریت است.',
+          description: 'مدت قرارداد و تاریخ های تمدید از این مسیر قابل مدیریت است.',
           disabled: true,
           badge: 'در آینده',
           icon: CalendarDays,
         },
         {
           title: 'متمم بر نوع قرارداد',
-          description: 'تغییر نوع قرارداد یا ساختار همکاری از اینجا اعمال می‌شود.',
+          description: 'تغییر نوع قرارداد یا ساختار همکاری از اینجا اعمال می شود.',
           disabled: true,
           badge: 'در آینده',
           icon: LayoutGrid,
@@ -177,28 +161,28 @@ function buildSections(employeeId: string): Array<{ title: string; cards: Employ
       cards: [
         {
           title: 'درخواست استعفا',
-          description: 'فرایند ثبت، بررسی و تأیید درخواست استعفا در این بخش انجام می‌شود.',
+          description: 'فرایند ثبت، بررسی و تایید درخواست استعفا در این بخش انجام می شود.',
           disabled: true,
           badge: 'در آینده',
           icon: FileText,
         },
         {
           title: 'ترک کار',
-          description: 'فرایند ترک کار کارمند و ثبت نتیجه نهایی از این مسیر پیگیری می‌شود.',
+          description: 'فرایند ترک کار کارمند و ثبت نتیجه نهایی از این مسیر پیگیری می شود.',
           disabled: true,
           badge: 'در آینده',
           icon: UserMinus,
         },
         {
           title: 'اخراج',
-          description: 'ثبت و پیگیری فرایند اخراج کارمند در این بخش انجام می‌شود.',
+          description: 'ثبت و پیگیری فرایند اخراج کارمند در این بخش انجام می شود.',
           disabled: true,
           badge: 'در آینده',
           icon: UserX,
         },
         {
           title: 'تسویه نهایی',
-          description: 'حساب‌های بانکی، ضمانت‌ها و تسویه نهایی کارمند از این بخش مدیریت می‌شود.',
+          description: 'حساب های بانکی، ضمانت ها و تسویه نهایی کارمند از این بخش مدیریت می شود.',
           href: `/employees/${employeeId}/bank-accounts`,
           icon: CreditCard,
         },
@@ -249,19 +233,14 @@ function DetailTile({
   );
 }
 
-export function EmployeeDetailView({
-  employee,
-}: {
-  employee: EmployeeDetailData;
-}) {
+export function EmployeeDetailView({ employee }: { employee: EmployeeDetailData }) {
   const [editing, setEditing] = useState(false);
 
   const fullName = `${employee.firstName} ${employee.lastName}`.trim();
   const organizationUnits = employee.organizationUnits ?? [];
   const workGroups = employee.workGroups ?? [];
-  const completionPercent = countCompletion(employee);
-  const membershipDays = daysSinceCreated(employee.createdAt);
-  const missingSections = 7 - Math.round((completionPercent / 100) * 7);
+  const currentContract = employee.currentContract ?? null;
+  const contractProgress = getEmployeeContractProfileProgress(currentContract);
   const sections = useMemo(() => buildSections(employee.id), [employee.id]);
 
   return (
@@ -316,20 +295,20 @@ export function EmployeeDetailView({
             <div className="employee-detail-hero-contract-grid">
               <div className="employee-detail-contract-item">
                 <span>شماره قرارداد</span>
-                <strong>{normalizeDisplay(employee.personnelCode)}</strong>
+                <strong>{normalizeDisplay(currentContract?.contractNumber ?? null)}</strong>
               </div>
               <div className="employee-detail-contract-item">
                 <span>مبلغ قرارداد</span>
-                <strong>ثبت نشده</strong>
+                <strong>{currentContract?.dailyBaseSalary ? `${formatFaNumber(currentContract.dailyBaseSalary)} ریال روزانه` : 'ثبت نشده'}</strong>
               </div>
               <div className="employee-detail-contract-item is-wide">
                 <span>مدت قرارداد</span>
-                <strong>ثبت نشده</strong>
+                <strong>{currentContract?.startDate && currentContract?.endDate ? 'ثبت شده' : 'ثبت نشده'}</strong>
               </div>
               <div className="employee-detail-contract-item is-wide">
                 <span>بازه قرارداد</span>
                 <strong>
-                  از تاریخ {formatPersianDate(employee.createdAt)} تا ثبت نشده
+                  {currentContract ? `از تاریخ ${currentContract.startDate ?? '-'} تا ${currentContract.endDate ?? '-'}` : 'فاقد قرارداد'}
                 </strong>
               </div>
             </div>
@@ -340,27 +319,31 @@ export function EmployeeDetailView({
           </article>
 
           <article className="employee-detail-hero-card employee-detail-hero-status">
-            <div className="employee-detail-arc-gauge" style={{ ['--progress' as never]: `${completionPercent}%` }} aria-hidden>
+            <div className="employee-detail-arc-gauge" style={{ ['--progress' as never]: `${contractProgress.completionPercent}%` }} aria-hidden>
               <div className="employee-detail-arc-gauge-track" />
               <div className="employee-detail-arc-gauge-fill" />
               <div className="employee-detail-arc-gauge-value">
-                <strong>{formatFaNumber(completionPercent, { useGrouping: false })}%</strong>
+                <strong>{formatFaNumber(contractProgress.completionPercent, { useGrouping: false })}%</strong>
               </div>
             </div>
             <div className="employee-detail-status-badges">
-              <span className="employee-detail-status-badge is-outline">موقت (پاره وقت)</span>
-              <span className="employee-detail-status-badge is-solid">فاقد قرارداد</span>
+              <span className="employee-detail-status-badge is-outline">{currentContract?.jobTitle || 'عنوان شغلی ثبت نشده'}</span>
+              <span className="employee-detail-status-badge is-solid">{currentContract ? 'قرارداد فعال' : 'فاقد قرارداد'}</span>
             </div>
             <div className="employee-detail-status-stats">
               <p>
                 <span className="employee-detail-status-dot is-passed" aria-hidden />
-                {formatFaNumber(membershipDays, { useGrouping: false })} روز از عضویت گذشته
+                {contractProgress.hasContract
+                  ? `${formatFaNumber(contractProgress.daysSinceContractStart, { useGrouping: false })} روز از شروع قرارداد گذشته`
+                  : 'قرارداد فعال ثبت نشده'}
               </p>
               <p>
                 <span className="employee-detail-status-dot is-remaining" aria-hidden />
-                {missingSections > 0
-                  ? `${formatFaNumber(missingSections, { useGrouping: false })} بخش ناقص در پرونده`
-                  : 'پرونده کامل است'}
+                {!contractProgress.hasContract
+                  ? 'برای تکمیل پرونده، قرارداد را نهایی کنید'
+                  : contractProgress.missingSections > 0
+                    ? `${formatFaNumber(contractProgress.missingSections, { useGrouping: false })} مرحله ناقص در قرارداد`
+                    : 'پرونده قرارداد کامل است'}
               </p>
             </div>
           </article>
@@ -402,3 +385,4 @@ export function EmployeeDetailView({
     </>
   );
 }
+

@@ -319,14 +319,18 @@ textarea {
 
 .app-shell {
   display: flex;
+  flex-direction: row;
+  direction: ltr;
   height: 100vh;
   overflow: hidden;
 }
 
 .main-content {
+  order: 1;
   flex: 1;
   min-width: 0;
   height: 100vh;
+  direction: rtl;
 }
 
 /* Minimal scroll — shared thin scrollbar (use MinimalScroll component or .panel-minimal-scroll) */
@@ -15218,6 +15222,22 @@ body {
   border-radius: var(--radius-md);
 }
 
+/* Shell layout: sidebar pinned to the physical right edge */
+.sidebar {
+  order: 2;
+  direction: rtl;
+  margin: 10px 10px 10px 0;
+  border-right: 0;
+  border-left: 1px solid var(--line);
+  border-radius: 0 20px 20px 0;
+  box-shadow: -10px 0 40px rgba(2, 6, 23, 0.28);
+  height: calc(100vh - 20px);
+}
+
+.sidebar.collapsed {
+  width: var(--sidebar-collapsed-width);
+}
+
 .policy-work-sections .policy-nav-link {
   min-height: 44px;
   padding: 10px 16px;
@@ -15228,11 +15248,6 @@ body {
 .policy-section-card {
   padding: var(--space-4) var(--space-5);
   border-radius: var(--radius-lg);
-}
-
-.sidebar {
-  margin: 10px 0 10px 10px;
-  height: calc(100vh - 20px);
 }
 
 .toolbar-chip,
@@ -15869,6 +15884,1227 @@ body {
 .calendar-event-field input:focus,
 .calendar-event-field textarea:focus {
   border-color: rgba(99, 102, 241, 0.55);
+}
+
+/* ─── Employee work report page ─────────────────────────────────────────── */
+
+.employee-work-report-page.module-page {
+  width: min(100%, 1120px);
+  max-width: 1120px;
+  gap: 12px;
+}
+
+.employee-work-report-shell {
+  display: grid;
+  gap: 12px;
+  width: 100%;
+}
+
+.employee-work-report-header {
+  display: grid;
+  gap: 10px;
+}
+
+.employee-work-report-title-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.employee-work-report-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(30, 41, 59, 0.72);
+  color: #cbd5e1;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.employee-work-report-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.employee-work-report-header-copy {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.employee-work-report-period-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: rgba(99, 102, 241, 0.14);
+  border: 1px solid rgba(129, 140, 248, 0.35);
+  color: #c7d2fe;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.employee-work-report-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+}
+
+.employee-work-report-meta-row span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(15, 23, 42, 0.55);
+  color: #94a3b8;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.employee-work-report-meta-row span.is-ok {
+  border-color: rgba(45, 212, 191, 0.35);
+  color: #5eead4;
+}
+
+.employee-work-report-meta-row span.is-warn {
+  border-color: rgba(251, 146, 60, 0.35);
+  color: #fdba74;
+}
+
+.employee-work-report-header-copy p {
+  margin: 0;
+  color: #cbd5e1;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.8;
+}
+
+.employee-work-report-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.employee-work-report-meta span {
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.5);
+  padding: 4px 10px;
+}
+
+.employee-work-report-header-actions {
+  display: grid;
+  justify-items: end;
+  gap: 12px;
+  align-content: start;
+}
+
+.employee-work-report-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  color: #fed7aa;
+  font-size: 12px;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.employee-work-report-month-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.employee-work-report-month-controls select {
+  min-width: 220px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.78);
+  color: #f8fafc;
+  padding: 10px 12px;
+  font: inherit;
+  font-size: 12px;
+}
+
+.employee-work-report-month-nav {
+  width: 38px;
+  height: 38px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.78);
+  color: #e2e8f0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.employee-work-report-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.employee-work-report-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(15, 23, 42, 0.72);
+  color: #cbd5e1;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.employee-work-report-badge.is-success {
+  border-color: rgba(34, 197, 94, 0.35);
+  background: rgba(34, 197, 94, 0.1);
+  color: #86efac;
+}
+
+.employee-work-report-badge.is-warn {
+  border-color: rgba(251, 146, 60, 0.35);
+  background: rgba(251, 146, 60, 0.1);
+  color: #fdba74;
+}
+
+.employee-work-report-warnings {
+  display: grid;
+  gap: 8px;
+}
+
+.employee-work-report-warning {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(251, 146, 60, 0.22);
+  border-radius: 16px;
+  background: rgba(251, 146, 60, 0.08);
+  color: #fed7aa;
+  padding: 10px 12px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.employee-work-report-warning.is-inline {
+  border-color: rgba(255, 255, 255, 0.06);
+  background: rgba(30, 41, 59, 0.55);
+  color: #e2e8f0;
+}
+
+.employee-work-report-summary-row {
+  width: 100%;
+}
+
+.employee-work-report-metrics-compact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  color: #94a3b8;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.employee-work-report-panels.calendar-details-body {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+}
+
+.employee-work-report-panels .calendar-details-main {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.employee-work-report-panels .calendar-details-sidebar {
+  flex: 0 0 300px;
+  width: 300px;
+  max-width: 300px;
+}
+
+.employee-work-report-sidebar {
+  position: sticky;
+  top: 88px;
+}
+
+.persian-month-calendar-scope .calendar-details-grid-legend button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  background: rgba(30, 41, 59, 0.55);
+  color: #94a3b8;
+  padding: 4px 10px;
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.persian-month-calendar-scope .calendar-details-grid-legend button.is-active {
+  border-color: rgba(99, 102, 241, 0.45);
+  background: rgba(99, 102, 241, 0.16);
+  color: #e0e7ff;
+}
+
+.persian-month-calendar-scope .calendar-details-grid-legend button i {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+}
+
+.employee-work-report-status-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.employee-work-report-status-pill.is-danger {
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  background: rgba(239, 68, 68, 0.12);
+  color: #fca5a5;
+}
+
+.employee-work-report-status-pill.is-warn {
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  background: rgba(245, 158, 11, 0.12);
+  color: #fcd34d;
+}
+
+.employee-work-report-status-pill.is-success {
+  border: 1px solid rgba(34, 197, 94, 0.35);
+  background: rgba(34, 197, 94, 0.12);
+  color: #86efac;
+}
+
+.employee-work-report-status-pill.is-blue {
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  background: rgba(59, 130, 246, 0.12);
+  color: #93c5fd;
+}
+
+.employee-work-report-status-pill.is-violet {
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  background: rgba(168, 85, 247, 0.12);
+  color: #d8b4fe;
+}
+
+.employee-work-report-status-pill.is-neutral {
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: rgba(148, 163, 184, 0.1);
+  color: #cbd5e1;
+}
+
+.employee-work-report-day-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+}
+
+.employee-work-report-day-metrics span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #94a3b8;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.employee-work-report-day-metrics em {
+  font-style: normal;
+  color: #f8fafc;
+  font-weight: 900;
+}
+
+.employee-work-report-pending-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.employee-work-report-pending-list strong {
+  width: 100%;
+  color: #fcd34d;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.employee-work-report-pending-list span {
+  border-radius: 999px;
+  background: rgba(30, 41, 59, 0.72);
+  color: #cbd5e1;
+  padding: 4px 8px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.employee-work-report-inline-warnings {
+  display: grid;
+  gap: 6px;
+}
+
+.employee-work-report-empty {
+  color: #94a3b8;
+  display: grid;
+  gap: 8px;
+  place-items: center;
+  padding: 24px 12px;
+  text-align: center;
+}
+
+.employee-work-report-monthly-card {
+  border: 1px solid rgba(99, 102, 241, 0.22);
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at top, rgba(99, 102, 241, 0.1), transparent 42%),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.82));
+  padding: 16px 18px;
+  display: grid;
+  gap: 0;
+  width: 100%;
+  box-shadow: 0 12px 32px rgba(2, 6, 23, 0.28);
+}
+
+.employee-work-report-monthly-card-title {
+  margin: 0 0 14px;
+  text-align: center;
+  color: #f8fafc;
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: 0.01em;
+}
+
+.employee-work-report-summary-section {
+  display: grid;
+  gap: 12px;
+}
+
+.employee-work-report-summary-grid-metrics {
+  display: grid;
+  gap: 10px 24px;
+  width: 100%;
+}
+
+.employee-work-report-summary-grid-metrics.is-work {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.employee-work-report-summary-grid-metrics.is-leave {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.employee-work-report-summary-metric {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(30, 41, 59, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.employee-work-report-summary-metric-label {
+  font-size: 12px;
+  font-weight: 800;
+  text-align: right;
+}
+
+.employee-work-report-summary-metric-value {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  color: #f8fafc;
+  white-space: nowrap;
+  direction: ltr;
+}
+
+.employee-work-report-summary-metric-value strong {
+  font-size: 14px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+.employee-work-report-summary-metric-value em {
+  font-size: 10px;
+  font-style: normal;
+  color: #94a3b8;
+  font-weight: 700;
+  direction: rtl;
+}
+
+.employee-work-report-summary-metric.is-green .employee-work-report-summary-metric-label {
+  color: #4ade80;
+}
+
+.employee-work-report-summary-metric.is-red .employee-work-report-summary-metric-label {
+  color: #f87171;
+}
+
+.employee-work-report-summary-metric.is-orange .employee-work-report-summary-metric-label {
+  color: #fb923c;
+}
+
+.employee-work-report-summary-metric.is-cyan .employee-work-report-summary-metric-label {
+  color: #22d3ee;
+}
+
+.employee-work-report-summary-metric.is-yellow .employee-work-report-summary-metric-label {
+  color: #facc15;
+}
+
+.employee-work-report-summary-metric.is-pink .employee-work-report-summary-metric-label {
+  color: #f472b6;
+}
+
+.employee-work-report-summary-metric.is-blue .employee-work-report-summary-metric-label {
+  color: #60a5fa;
+}
+
+.employee-work-report-summary-divider {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 2px 0;
+}
+
+.employee-work-report-summary-divider::before {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  top: 50%;
+  border-top: 1px dashed rgba(250, 204, 21, 0.55);
+}
+
+.employee-work-report-summary-divider span {
+  position: relative;
+  z-index: 1;
+  padding: 0 10px;
+  background: rgba(15, 23, 42, 0.95);
+  color: #facc15;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.employee-work-report-summary-requests {
+  display: grid;
+  gap: 8px;
+  padding-top: 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.employee-work-report-summary-request-group strong {
+  display: block;
+  margin-bottom: 6px;
+  color: #cbd5e1;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.employee-work-report-summary-request-group.is-pending strong {
+  color: #fcd34d;
+}
+
+.employee-work-report-summary-request-group ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 6px;
+}
+
+.employee-work-report-summary-request-group li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  border-radius: 10px;
+  background: rgba(30, 41, 59, 0.55);
+  padding: 6px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #94a3b8;
+}
+
+.employee-work-report-summary-request-group li span:first-child {
+  color: #e2e8f0;
+  font-weight: 800;
+}
+
+.employee-work-report-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.employee-work-report-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.72);
+  color: #cbd5e1;
+  padding: 0 12px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.employee-work-report-filter strong {
+  color: #f8fafc;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.employee-work-report-filter.is-active {
+  border-color: rgba(56, 189, 248, 0.45);
+  background: rgba(56, 189, 248, 0.14);
+  color: #e0f2fe;
+}
+
+.employee-work-report-toolbar-extra {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+}
+
+.employee-work-report-matches-card {
+  margin-top: 12px;
+  border: 1px solid rgba(151, 182, 215, 0.12);
+  border-radius: 18px;
+  background: rgba(11, 22, 40, 0.72);
+  padding: 12px;
+}
+
+.employee-work-report-matches-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.employee-work-report-matches-head strong {
+  display: block;
+  color: #f8fafc;
+  font-weight: 950;
+  font-size: 12px;
+}
+
+.employee-work-report-matches-head span {
+  display: block;
+  margin-top: 3px;
+  color: #94a3b8;
+  font-weight: 800;
+  font-size: 11px;
+}
+
+.employee-work-report-matches-list {
+  display: grid;
+  gap: 8px;
+  max-height: 260px;
+  overflow: auto;
+  padding-left: 2px;
+}
+
+.employee-work-report-matches-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.55);
+  padding: 10px 12px;
+  text-align: right;
+  cursor: pointer;
+}
+
+.employee-work-report-matches-item:hover {
+  border-color: rgba(56, 189, 248, 0.25);
+}
+
+.employee-work-report-matches-item.is-selected {
+  border-color: rgba(56, 189, 248, 0.45);
+  background: rgba(56, 189, 248, 0.1);
+}
+
+.employee-work-report-matches-item.is-holiday {
+  border-color: rgba(239, 68, 68, 0.18);
+  background: rgba(248, 113, 113, 0.06);
+}
+
+.employee-work-report-matches-item-main {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.employee-work-report-matches-item-main strong {
+  color: #f8fafc;
+  font-weight: 950;
+  font-size: 12px;
+}
+
+.employee-work-report-matches-item-main span {
+  color: #94a3b8;
+  font-weight: 800;
+  font-size: 11px;
+}
+
+.employee-work-report-matches-item-meta {
+  display: grid;
+  justify-items: end;
+  gap: 6px;
+}
+
+.employee-work-report-matches-item-mini {
+  color: #94a3b8;
+  font-weight: 800;
+  font-size: 10px;
+}
+
+.employee-work-report-day-quick {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 10px 0 12px;
+}
+
+.employee-work-report-day-quick-item {
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.55);
+  padding: 10px;
+  display: grid;
+  gap: 6px;
+}
+
+.employee-work-report-day-quick-item span {
+  color: #94a3b8;
+  font-weight: 800;
+  font-size: 11px;
+}
+
+.employee-work-report-day-quick-item strong {
+  color: #f8fafc;
+  font-weight: 950;
+  font-size: 12px;
+}
+
+.employee-work-report-summary-card,
+.employee-work-report-detail-card {
+  border: 1px solid rgba(151, 182, 215, 0.12);
+  border-radius: 24px;
+  background: rgba(11, 22, 40, 0.88);
+  box-shadow: 0 16px 30px rgba(2, 6, 23, 0.18);
+  padding: 16px;
+}
+
+.employee-work-report-summary-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.employee-work-report-summary-head h2,
+.employee-work-report-detail-head h3,
+.employee-work-report-detail-block h4 {
+  margin: 0;
+  color: #f8fafc;
+  font-weight: 900;
+}
+
+.employee-work-report-summary-head p,
+.employee-work-report-detail-head p {
+  margin: 6px 0 0;
+  color: #94a3b8;
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.employee-work-report-summary-head-metrics {
+  display: grid;
+  gap: 6px;
+  justify-items: end;
+  color: #cbd5e1;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.employee-work-report-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.employee-work-report-summary-tile {
+  display: grid;
+  gap: 6px;
+  min-height: 92px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 18px;
+  background: rgba(15, 23, 42, 0.72);
+  padding: 12px;
+  color: #cbd5e1;
+}
+
+.employee-work-report-summary-tile span {
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.employee-work-report-summary-tile strong {
+  color: #f8fafc;
+  font-size: 14px;
+  font-weight: 950;
+}
+
+.employee-work-report-summary-tile.is-blue {
+  border-color: rgba(59, 130, 246, 0.25);
+  background: rgba(59, 130, 246, 0.08);
+}
+
+.employee-work-report-summary-tile.is-green {
+  border-color: rgba(34, 197, 94, 0.25);
+  background: rgba(34, 197, 94, 0.08);
+}
+
+.employee-work-report-summary-tile.is-violet {
+  border-color: rgba(168, 85, 247, 0.25);
+  background: rgba(168, 85, 247, 0.08);
+}
+
+.employee-work-report-summary-tile.is-amber {
+  border-color: rgba(245, 158, 11, 0.25);
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.employee-work-report-summary-tile.is-red {
+  border-color: rgba(239, 68, 68, 0.25);
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.employee-work-report-summary-tile.is-neutral {
+  border-color: rgba(148, 163, 184, 0.18);
+}
+
+.employee-work-report-body:not(.calendar-details-body) {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(340px, 0.85fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.employee-work-report-calendar-shell,
+.employee-work-report-details {
+  min-width: 0;
+}
+
+.employee-work-report-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.employee-work-report-weekdays span {
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 900;
+  text-align: center;
+}
+
+.employee-work-report-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.employee-work-report-day {
+  position: relative;
+  display: grid;
+  gap: 6px;
+  min-height: 120px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 18px;
+  background: rgba(15, 23, 42, 0.74);
+  padding: 10px;
+  color: #cbd5e1;
+  text-align: right;
+}
+
+.employee-work-report-day.is-empty {
+  visibility: hidden;
+}
+
+.employee-work-report-day.is-selected {
+  border-color: rgba(56, 189, 248, 0.45);
+  background: rgba(56, 189, 248, 0.1);
+}
+
+.employee-work-report-day.is-today {
+  box-shadow: inset 0 0 0 1px rgba(251, 191, 36, 0.35);
+}
+
+.employee-work-report-day.is-holiday {
+  background: rgba(248, 113, 113, 0.08);
+}
+
+.employee-work-report-day.is-dimmed {
+  opacity: 0.36;
+}
+
+.employee-work-report-day-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.employee-work-report-day-head strong {
+  color: #f8fafc;
+  font-size: 18px;
+  font-weight: 950;
+}
+
+.employee-work-report-day-head em {
+  border-radius: 999px;
+  background: rgba(251, 191, 36, 0.14);
+  color: #fbbf24;
+  padding: 3px 8px;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.employee-work-report-day-weekday {
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.employee-work-report-day-status {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  min-height: 22px;
+  border-radius: 999px;
+  padding: 0 8px;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.employee-work-report-day-status.is-danger {
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: #fca5a5;
+}
+
+.employee-work-report-day-status.is-warn {
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  color: #fcd34d;
+}
+
+.employee-work-report-day-status.is-success {
+  border: 1px solid rgba(34, 197, 94, 0.25);
+  color: #86efac;
+}
+
+.employee-work-report-day-status.is-blue {
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  color: #93c5fd;
+}
+
+.employee-work-report-day-status.is-violet {
+  border: 1px solid rgba(168, 85, 247, 0.25);
+  color: #d8b4fe;
+}
+
+.employee-work-report-day-status.is-neutral {
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  color: #cbd5e1;
+}
+
+.employee-work-report-day-indicators {
+  display: flex;
+  gap: 4px;
+  margin-top: auto;
+}
+
+.employee-work-report-day-indicators i {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.45);
+}
+
+.employee-work-report-day-indicators .is-blue {
+  background: rgba(59, 130, 246, 0.9);
+}
+
+.employee-work-report-day-indicators .is-green {
+  background: rgba(34, 197, 94, 0.9);
+}
+
+.employee-work-report-day-indicators .is-violet {
+  background: rgba(168, 85, 247, 0.9);
+}
+
+.employee-work-report-day-indicators .is-red {
+  background: rgba(239, 68, 68, 0.9);
+}
+
+.employee-work-report-day-indicators .is-amber {
+  background: rgba(245, 158, 11, 0.9);
+}
+
+.employee-work-report-details {
+  position: sticky;
+  top: 88px;
+}
+
+.employee-work-report-detail-card {
+  display: grid;
+  gap: 14px;
+}
+
+.employee-work-report-detail-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.employee-work-report-detail-type {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  border-radius: 999px;
+  padding: 0 10px;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.employee-work-report-detail-type.is-danger {
+  background: rgba(239, 68, 68, 0.1);
+  color: #fca5a5;
+}
+
+.employee-work-report-detail-type.is-warn {
+  background: rgba(245, 158, 11, 0.1);
+  color: #fcd34d;
+}
+
+.employee-work-report-detail-type.is-success {
+  background: rgba(34, 197, 94, 0.1);
+  color: #86efac;
+}
+
+.employee-work-report-detail-type.is-blue {
+  background: rgba(59, 130, 246, 0.1);
+  color: #93c5fd;
+}
+
+.employee-work-report-detail-type.is-violet {
+  background: rgba(168, 85, 247, 0.1);
+  color: #d8b4fe;
+}
+
+.employee-work-report-detail-type.is-neutral {
+  background: rgba(148, 163, 184, 0.08);
+  color: #cbd5e1;
+}
+
+.employee-work-report-detail-block {
+  display: grid;
+  gap: 10px;
+}
+
+.employee-work-report-muted {
+  margin: 0;
+  color: #94a3b8;
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.employee-work-report-shift-list,
+.employee-work-report-request-list,
+.employee-work-report-warning-list {
+  display: grid;
+  gap: 8px;
+}
+
+.employee-work-report-shift-item,
+.employee-work-report-request-item {
+  display: grid;
+  gap: 4px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.72);
+  padding: 10px 12px;
+}
+
+.employee-work-report-shift-item strong,
+.employee-work-report-request-item strong,
+.employee-work-report-pending-box strong {
+  color: #f8fafc;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.employee-work-report-shift-item span,
+.employee-work-report-request-item span {
+  color: #cbd5e1;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.employee-work-report-shift-item small,
+.employee-work-report-request-item small,
+.employee-work-report-pending-box span {
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.employee-work-report-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.employee-work-report-detail-grid div {
+  display: grid;
+  gap: 4px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.72);
+  padding: 10px 12px;
+}
+
+.employee-work-report-detail-grid span {
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.employee-work-report-detail-grid strong {
+  color: #f8fafc;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.employee-work-report-pending-box {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  border: 1px solid rgba(251, 146, 60, 0.18);
+  border-radius: 14px;
+  background: rgba(251, 146, 60, 0.08);
+  padding: 10px 12px;
+}
+
+.employee-work-report-pending-box span {
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.72);
+  padding: 4px 8px;
+}
+
+.employee-work-report-empty {
+  border: 1px dashed rgba(148, 163, 184, 0.24);
+  border-radius: 22px;
+  background: rgba(15, 23, 42, 0.6);
+  color: #94a3b8;
+  display: grid;
+  gap: 10px;
+  place-items: center;
+  padding: 34px 20px;
+  text-align: center;
+}
+
+@media (max-width: 1180px) {
+  .employee-work-report-panels.calendar-details-body {
+    flex-direction: column;
+  }
+
+  .employee-work-report-panels .calendar-details-sidebar {
+    width: 100%;
+    max-width: none;
+    flex: none;
+  }
+
+  .employee-work-report-sidebar {
+    position: static;
+    top: auto;
+  }
+
+  .employee-work-report-summary-grid-metrics.is-work {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .employee-work-report-summary-grid-metrics.is-leave {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .employee-work-report-summary-grid-metrics.is-work,
+  .employee-work-report-summary-grid-metrics.is-leave {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .employee-work-report-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .employee-work-report-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .employee-work-report-weekdays {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .employee-work-report-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .employee-work-report-grid,
+  .employee-work-report-weekdays {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .calendar-event-mode-intro {
@@ -17286,7 +18522,8 @@ body {
   line-height: 1;
 }
 
-.calendar-details-page .calendar-details-day.has-shifts {
+.calendar-details-page .calendar-details-day.has-shifts,
+.persian-month-calendar-scope .calendar-details-day.has-shifts {
   padding-bottom: 18px;
 }
 
@@ -17379,7 +18616,8 @@ body {
 }
 
 .calendar-details-weekdays,
-.calendar-details-page .calendar-details-days {
+.calendar-details-page .calendar-details-days,
+.persian-month-calendar-scope .calendar-details-days {
   display: grid !important;
   width: 100%;
   grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
@@ -17397,7 +18635,8 @@ body {
   font-weight: 800;
 }
 
-.calendar-details-page .calendar-details-day {
+.calendar-details-page .calendar-details-day,
+.persian-month-calendar-scope .calendar-details-day {
   position: relative;
   width: 100%;
   aspect-ratio: 1 / 0.92;
@@ -17410,35 +18649,45 @@ body {
   font-family: inherit;
 }
 
-.calendar-details-page .calendar-details-day.is-empty {
+.calendar-details-page .calendar-details-day.is-empty,
+.persian-month-calendar-scope .calendar-details-day.is-empty {
   border-color: transparent;
   background: transparent;
   cursor: default;
   min-height: 58px;
 }
 
-.calendar-details-page .calendar-details-day.is-holiday:not(.is-selected) {
+.calendar-details-page .calendar-details-day.is-holiday:not(.is-selected),
+.persian-month-calendar-scope .calendar-details-day.is-holiday:not(.is-selected) {
   background: rgba(127, 29, 29, 0.2);
   border-color: rgba(239, 68, 68, 0.14);
 }
 
-.calendar-details-page .calendar-details-day.is-selected {
+.calendar-details-page .calendar-details-day.is-selected,
+.persian-month-calendar-scope .calendar-details-day.is-selected {
   border: 1px solid rgba(59, 130, 246, 0.95);
   background: rgba(99, 102, 241, 0.2) !important;
   box-shadow: inset 0 0 0 1px rgba(129, 140, 248, 0.12);
 }
 
-.calendar-details-page .calendar-details-day.is-selected.is-holiday {
+.calendar-details-page .calendar-details-day.is-selected.is-holiday,
+.persian-month-calendar-scope .calendar-details-day.is-selected.is-holiday {
   background: rgba(99, 102, 241, 0.24) !important;
   border-color: rgba(59, 130, 246, 0.95);
 }
 
-.calendar-details-page .calendar-details-day.is-holiday .calendar-details-day-num:not(.is-today-mark) {
+.calendar-details-page .calendar-details-day.is-holiday .calendar-details-day-num:not(.is-today-mark),
+.persian-month-calendar-scope .calendar-details-day.is-holiday .calendar-details-day-num:not(.is-today-mark) {
   color: #f87171;
 }
 
+.persian-month-calendar-scope .calendar-details-day.is-dimmed {
+  opacity: 0.3;
+}
+
 /* دایره آبی — فقط روز جاری (کلاس مستقیم روی عدد) */
-.calendar-details-page .calendar-details-day-num.is-today-mark {
+.calendar-details-page .calendar-details-day-num.is-today-mark,
+.persian-month-calendar-scope .calendar-details-day-num.is-today-mark {
   width: 22px;
   height: 22px;
   display: inline-flex;
@@ -17471,7 +18720,8 @@ body {
     grid-template-columns: 1fr;
   }
 
-  .calendar-details-page .calendar-details-day {
+  .calendar-details-page .calendar-details-day,
+  .persian-month-calendar-scope .calendar-details-day {
     min-height: 56px;
   }
 }
@@ -17941,6 +19191,46 @@ body {
   display: grid;
   gap: 14px;
   padding-top: 2px;
+}
+
+.variable-amount-type-picker {
+  display: grid;
+  gap: 10px;
+  border: 1px dashed rgba(96, 165, 250, 0.42);
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.28);
+  padding: 12px;
+}
+
+.variable-amount-type-picker-label {
+  display: block;
+  text-align: right;
+  color: #dbeafe;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.variable-amount-type-picker-chips {
+  gap: 8px;
+}
+
+.variable-amount-type-picker-chips button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.variable-amount-type-picker-custom {
+  margin: 0;
+}
+
+.variable-amount-type-picker-custom .business-payroll-input {
+  width: 100%;
+}
+
+.business-payroll-input input::placeholder {
+  color: rgba(228, 237, 247, 0.42);
+  font-weight: 700;
 }
 
 .calendar-create-modal:has(.payroll-variable-amount-dialog-form) .business-payroll-chips,
@@ -18725,6 +20015,7 @@ body {
   padding-top: 2px;
 }
 
+.calendar-create-modal-backdrop:has(.business-ownership-editor-dialog),
 .calendar-create-modal-backdrop:has(.employee-supplemental-editor-dialog) {
   align-items: flex-start;
   overflow-y: auto;
@@ -18732,6 +20023,7 @@ body {
   padding-bottom: max(16px, 3vh);
 }
 
+.calendar-create-modal:has(.business-ownership-editor-dialog),
 .calendar-create-modal:has(.employee-supplemental-editor-dialog) {
   display: flex;
   flex-direction: column;
@@ -18743,11 +20035,14 @@ body {
   background: linear-gradient(180deg, #17385f, #102945);
 }
 
+.calendar-create-modal:has(.business-ownership-editor-dialog) .calendar-create-modal-head,
+.calendar-create-modal:has(.business-ownership-editor-dialog) .calendar-create-modal-footer,
 .calendar-create-modal:has(.employee-supplemental-editor-dialog) .calendar-create-modal-head,
 .calendar-create-modal:has(.employee-supplemental-editor-dialog) .calendar-create-modal-footer {
   flex-shrink: 0;
 }
 
+.calendar-create-modal:has(.business-ownership-editor-dialog) .calendar-create-modal-body,
 .calendar-create-modal:has(.employee-supplemental-editor-dialog) .calendar-create-modal-body {
   flex: 1;
   min-height: 0;
@@ -18756,6 +20051,7 @@ body {
   padding-bottom: 12px;
 }
 
+.calendar-create-modal:has(.business-ownership-editor-dialog) .calendar-create-modal-footer,
 .calendar-create-modal:has(.employee-supplemental-editor-dialog) .calendar-create-modal-footer {
   margin: 0 -22px;
   border-top: 1px solid rgba(148, 163, 184, 0.1);
@@ -18763,8 +20059,47 @@ body {
   padding: 16px 22px 18px;
 }
 
+.business-ownership-editor-dialog,
 .employee-supplemental-editor-dialog {
   gap: 10px;
+}
+
+.business-ownership-legal-type-field {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.business-ownership-legal-type-label {
+  color: #e2e8f0;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.business-ownership-legal-type-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.business-ownership-legal-type-row button {
+  min-height: 36px;
+  border: 1px solid rgba(151, 182, 215, 0.22);
+  border-radius: 10px;
+  background: rgba(11, 29, 54, 0.5);
+  color: #d9e7f5;
+  padding: 0 12px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.business-ownership-legal-type-row button.is-selected {
+  border-color: rgba(246, 174, 52, 0.72);
+  background: rgba(246, 174, 52, 0.14);
+  color: #fff;
 }
 
 .employee-supplemental-editor-summary {
@@ -19056,6 +20391,38 @@ body {
 
 .contract-timing-date-input.has-error {
   border-color: rgba(248, 113, 113, 0.55);
+}
+
+.contract-timing-text-input {
+  display: flex;
+  align-items: center;
+}
+
+.contract-timing-text-control {
+  width: 100%;
+  min-height: 36px;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 950;
+  letter-spacing: 0.02em;
+  outline: 0;
+  padding: 0 4px;
+}
+
+.contract-timing-text-control::placeholder {
+  color: #7f97b0;
+  font-weight: 800;
+}
+
+.contract-timing-registration-hint {
+  margin: 0;
+  color: #8fa8c3;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.7;
 }
 
 .contract-timing-date-picker {
@@ -19726,6 +21093,208 @@ body {
   gap: 14px;
 }
 
+.contract-financial-step {
+  display: grid;
+  gap: 14px;
+}
+
+.contract-financial-basis-card {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(96, 165, 250, 0.22);
+  background: linear-gradient(180deg, rgba(15, 40, 78, 0.92), rgba(8, 22, 44, 0.96));
+}
+
+.contract-financial-basis-card--salary {
+  border-color: rgba(192, 132, 252, 0.28);
+  background: linear-gradient(180deg, rgba(52, 24, 72, 0.88), rgba(18, 10, 36, 0.96));
+}
+
+.contract-financial-basis-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.contract-financial-basis-card-copy h3 {
+  margin: 0 0 6px;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 950;
+}
+
+.contract-financial-basis-card-copy p {
+  margin: 0;
+  color: #bfd0e3;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.contract-financial-basis-input-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: flex-start;
+  gap: 10px;
+}
+
+.contract-financial-basis-field {
+  display: grid;
+  gap: 8px;
+  flex: 0 1 auto;
+  width: min(280px, 100%);
+  min-width: min(100%, 220px);
+  text-align: right;
+}
+
+.contract-financial-basis-input-row .contract-financial-difference-badge {
+  margin-inline-end: auto;
+}
+
+.contract-financial-basis-field-label {
+  color: #d7e6f7;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.contract-financial-basis-input {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 46px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: rgba(2, 10, 24, 0.72);
+}
+
+.contract-financial-basis-input input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 900;
+  text-align: left;
+  direction: ltr;
+  outline: none;
+}
+
+.contract-financial-basis-input b {
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.contract-financial-basis-field.has-error .contract-financial-basis-input {
+  border-color: rgba(248, 113, 113, 0.55);
+}
+
+.contract-financial-basis-footnote {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  color: #94a3b8;
+  font-size: 11px;
+  line-height: 1.65;
+}
+
+.contract-financial-difference-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.5;
+}
+
+.contract-financial-difference-badge.is-higher {
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  background: rgba(56, 189, 248, 0.14);
+  color: #bae6fd;
+}
+
+.contract-financial-difference-badge.is-lower {
+  border: 1px solid rgba(248, 113, 113, 0.42);
+  background: rgba(248, 113, 113, 0.14);
+  color: #fecaca;
+}
+
+.contract-financial-difference-badge.is-changed {
+  border: 1px solid rgba(250, 204, 21, 0.35);
+  background: rgba(250, 204, 21, 0.12);
+  color: #fde68a;
+}
+
+.contract-financial-derived-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.contract-financial-derived-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: rgba(2, 8, 20, 0.55);
+}
+
+.contract-financial-derived-item span {
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.contract-financial-derived-item strong {
+  color: #f8fafc;
+  font-size: 12px;
+  font-weight: 900;
+  text-align: left;
+}
+
+.contract-financial-workdays-note {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px dashed rgba(148, 163, 184, 0.28);
+  background: rgba(255, 255, 255, 0.04);
+  color: #cbd5e1;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+@media (max-width: 640px) {
+  .contract-financial-derived-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .contract-financial-basis-input-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .contract-financial-basis-input-row .contract-financial-difference-badge {
+    margin-inline-end: 0;
+  }
+
+  .contract-financial-basis-field {
+    width: 100%;
+  }
+}
+
 .contract-party-card {
   margin-top: 10px;
   gap: 12px;
@@ -19733,6 +21302,23 @@ body {
 
 .contract-party-card--employee {
   margin-top: 10px;
+}
+
+.contract-party-card--employee.is-collapsed {
+  gap: 10px;
+}
+
+.contract-party-card-identity-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding-top: 2px;
+}
+
+.contract-party-card-expand-toggle {
+  margin-top: 2px;
+  border-radius: 0 0 14px 14px;
 }
 
 .contract-party-card-toolbar {
@@ -20085,6 +21671,30 @@ body {
   color: #132844;
 }
 
+.business-payroll-chips button.is-disabled {
+  opacity: 0.58;
+  cursor: not-allowed;
+  border-color: rgba(151, 182, 215, 0.14);
+  background: rgba(11, 29, 54, 0.32);
+  color: rgba(214, 226, 240, 0.72);
+}
+
+.business-payroll-chips button.is-disabled:hover,
+.business-payroll-chips button.is-disabled:focus-visible {
+  border-color: rgba(151, 182, 215, 0.14);
+  background: rgba(11, 29, 54, 0.32);
+  color: rgba(214, 226, 240, 0.72);
+  box-shadow: none;
+}
+
+.business-payroll-chips button.is-disabled small {
+  display: block;
+  margin-top: 2px;
+  color: rgba(174, 191, 209, 0.85);
+  font-size: 9px;
+  font-weight: 800;
+}
+
 .business-payroll-toggle button.is-warning {
   border-color: #f6ae34;
   background: rgba(246, 174, 52, 0.16);
@@ -20238,6 +21848,100 @@ body {
   border-radius: 12px;
   background: rgba(13, 31, 56, 0.2);
   padding: 12px;
+}
+
+.business-payroll-day-type-cards {
+  display: grid;
+  gap: 11px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.business-payroll-day-type-card {
+  display: grid;
+  gap: 10px;
+  border: 1px solid rgba(151, 182, 215, 0.14);
+  border-radius: 12px;
+  background: rgba(13, 31, 56, 0.2);
+  padding: 12px;
+}
+
+.business-payroll-day-type-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.business-payroll-day-type-card-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.business-payroll-day-type-card-title strong {
+  color: #f8fafc;
+  font-size: 14px;
+  font-weight: 950;
+  line-height: 1.6;
+}
+
+.business-payroll-day-type-card .panel-toggle-row {
+  padding-top: 8px;
+  border-top: 1px solid rgba(151, 182, 215, 0.12);
+}
+
+.business-payroll-day-type-card .panel-toggle-row-label {
+  color: #bfd0e3;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.75;
+}
+
+.business-payroll-day-type-impact {
+  display: grid;
+  gap: 8px;
+  border-radius: 10px;
+  background: rgba(13, 31, 56, 0.34);
+  padding: 10px 12px;
+}
+
+.business-payroll-day-type-impact strong {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #e9f2fc;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1.7;
+}
+
+.business-payroll-day-type-impact em {
+  color: #fb7185;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.business-payroll-day-type-impact-chips {
+  gap: 8px;
+}
+
+.business-payroll-day-type-impact-chips .adaptive-chip {
+  min-height: 32px;
+  padding: 7px 11px;
+  border-radius: 11px;
+  font-size: 11px;
+}
+
+.business-payroll-day-type-impact-chips .adaptive-chip-check,
+.business-payroll-day-type-impact-chips .adaptive-chip-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.business-payroll-day-type-impact-chips .adaptive-chip-label {
+  line-height: 1.45;
 }
 
 .business-payroll-rule-title {
@@ -20751,6 +22455,46 @@ body {
   font-weight: 950;
 }
 
+.contract-benefit-section-lead {
+  margin: 0;
+  color: #9fb5cb;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.85;
+}
+
+.business-payroll-field--readonly {
+  align-content: start;
+}
+
+.business-payroll-readonly-value {
+  display: flex;
+  align-items: center;
+  min-height: 45px;
+  padding: 0 13px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 10px;
+  background: rgba(2, 8, 20, 0.55);
+  color: #f8fafc;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.business-payroll-settings-source-note {
+  margin: 0 0 10px;
+  color: #9fb5cb;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.75;
+}
+
+.business-payroll-settings-source-note a {
+  color: #7dd3fc;
+  font-weight: 900;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .business-payroll-transfer-rule-muted {
   border-radius: 11px;
   background: rgba(8, 22, 41, 0.34);
@@ -20932,13 +22676,68 @@ body {
   margin-top: 2px;
 }
 
+.contract-draft-subchoice-panel {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(151, 182, 215, 0.14);
+}
+
 .contract-draft-subcategory-note {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 8px;
   margin: 0;
   color: #f6ae34;
   font-size: 12px;
   font-weight: 800;
   line-height: 1.7;
-  text-align: left;
+  text-align: right;
+}
+
+.contract-draft-subchoice-hint {
+  margin: 0;
+  color: #8fa8c3;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.7;
+  text-align: right;
+}
+
+.contract-draft-subchoice-footnote {
+  margin: 0;
+  color: #dbe7f4;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.7;
+  text-align: right;
+}
+
+.contract-subject-chip-section {
+  margin-top: 10px;
+  gap: 12px;
+}
+
+.contract-subject-chip-section--nested {
+  margin-top: 0;
+}
+
+.contract-subject-chip-group.adaptive-chip-group {
+  margin-top: 2px;
+}
+
+.contract-subject-chip-section-footer {
+  margin-top: 2px;
+}
+
+.contract-draft-field-hint {
+  margin: 0;
+  color: #8fa8c3;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.8;
 }
 
 @media (max-width: 560px) {
@@ -21362,6 +23161,31 @@ body {
   cursor: not-allowed;
 }
 
+.employee-contract-step-body {
+  display: grid;
+  gap: 12px;
+}
+
+.employee-contract-step-body > .business-payroll-subcard {
+  margin-top: 0;
+}
+
+.employee-contract-template-diff-banner {
+  margin-bottom: 4px;
+}
+
+.employee-contract-mission-badges,
+.employee-contract-document-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.employee-contract-commitment-attachments {
+  margin-top: 12px;
+}
+
 .business-payroll-notice {
   margin-bottom: 14px;
   border: 1px solid rgba(246, 174, 52, 0.3);
@@ -21473,7 +23297,8 @@ body {
   .business-payroll-fields.two,
   .business-payroll-fields.three,
   .business-payroll-overtime-limits,
-  .business-payroll-transfer-grid {
+  .business-payroll-transfer-grid,
+  .business-payroll-day-type-cards {
     grid-template-columns: 1fr;
   }
 }
@@ -22255,6 +24080,14 @@ body {
     radial-gradient(circle at top right, rgba(20, 184, 166, 0.12), transparent 30%),
     linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.94));
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.calendar-create-modal.panel-minimal-scroll:has(.employee-request-dialog),
+.calendar-create-modal.panel-minimal-scroll:has(.attachment-manager-dialog) {
+  overflow: hidden;
 }
 
 .calendar-create-modal:has(.employee-request-dialog) .calendar-create-modal-head,
@@ -22281,21 +24114,31 @@ body {
 
 .calendar-create-modal:has(.employee-request-dialog) .calendar-create-modal-body,
 .calendar-create-modal:has(.attachment-manager-dialog) .calendar-create-modal-body {
-  max-height: calc(85vh - 132px);
+  flex: 1;
+  min-height: 0;
+  max-height: none;
   overflow: auto;
-  padding: 12px 16px;
+  padding: 12px 16px 20px;
 }
 
 .calendar-create-modal:has(.employee-request-dialog) .calendar-create-modal-footer,
 .calendar-create-modal:has(.attachment-manager-dialog) .calendar-create-modal-footer {
-  position: sticky;
-  bottom: 0;
   display: flex;
   justify-content: flex-start;
   gap: 8px;
+  flex-shrink: 0;
   padding: 10px 16px 14px;
   border-top: 1px solid rgba(148, 163, 184, 0.14);
   background: rgba(15, 23, 42, 0.96);
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .calendar-create-modal-footer {
+  position: static;
+  box-shadow: none;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .employee-request-dialog {
+  padding-bottom: 4px;
 }
 
 .calendar-create-modal:has(.employee-request-dialog) .calendar-create-submit,
@@ -22452,6 +24295,10 @@ body {
 .calendar-create-modal:has(.employee-request-dialog) .employee-request-loan-summary {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
+}
+
+.calendar-create-modal:has(.employee-request-dialog) .employee-request-balance.is-empty {
+  opacity: 0.95;
 }
 
 .calendar-create-modal:has(.employee-request-dialog) .employee-request-balance span,

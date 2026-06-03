@@ -47,6 +47,7 @@ model Tenant {
   draftTemplates      DraftTemplate[]
   clientStorageStates ClientStorageState[]
   employeeRequests    EmployeeRequest[]
+  employeeContracts   EmployeeContract[]
   companyLoans        CompanyLoan[]
   attachments         Attachment[]
 }
@@ -148,6 +149,13 @@ enum EmployeeRequestType {
   mission
   salary_advance
   loan
+}
+
+enum EmployeeContractStatus {
+  draft
+  active
+  ended
+  canceled
 }
 
 enum EmployeeRequestStatus {
@@ -343,6 +351,29 @@ model Employee {
   organizationUnits    EmployeeOrganizationUnit[]
   workGroupMemberships WorkGroupMember[]
   requests             EmployeeRequest[]
+  contracts            EmployeeContract[]
+}
+
+model EmployeeContract {
+  id             String                 @id
+  tenantId       String?
+  employeeId     String
+  status         EmployeeContractStatus @default(draft)
+  isCurrent      Boolean                @default(false)
+  startDate      String?
+  endDate        String?
+  contractNumber String?
+  templateId     String?
+  data           Json                   @default("{}")
+  finalizedAt    DateTime?
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+  tenant         Tenant?                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  employee       Employee               @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, employeeId])
+  @@index([tenantId, employeeId, isCurrent])
+  @@index([employeeId, status])
 }
 
 model EmployeeOrganizationUnit {

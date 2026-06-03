@@ -50,19 +50,23 @@ export function AttachmentManager({
   ownerType = 'draft',
   ownerId = 'draft',
   readonly = false,
+  initialCategory,
+  initialTitle,
 }: {
   value: AttachmentDraft[];
   onChange: (next: AttachmentDraft[]) => void;
   ownerType?: string;
   ownerId?: string;
   readonly?: boolean;
+  initialCategory?: string;
+  initialTitle?: string;
 }) {
   const [open, setOpen] = useState(false);
-  const [category, setCategory] = useState(DEFAULT_CATEGORIES[0]);
+  const [category, setCategory] = useState(initialCategory ?? DEFAULT_CATEGORIES[0]);
   const [customCategory, setCustomCategory] = useState('');
   const [customCategories, setCustomCategories] = useState<string[]>([]);
   const [addingCategory, setAddingCategory] = useState(false);
-  const [title, setTitle] = useState(CATEGORY_TITLES[DEFAULT_CATEGORIES[0]][0]);
+  const [title, setTitle] = useState(initialTitle ?? CATEGORY_TITLES[initialCategory ?? DEFAULT_CATEGORIES[0]]?.[0] ?? CATEGORY_TITLES[DEFAULT_CATEGORIES[0]][0]);
   const [customTitle, setCustomTitle] = useState('');
   const [customTitles, setCustomTitles] = useState<string[]>([]);
   const [addingTitle, setAddingTitle] = useState(false);
@@ -72,15 +76,23 @@ export function AttachmentManager({
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
 
-  const categoryOptions = useMemo(() => [...DEFAULT_CATEGORIES, ...customCategories], [customCategories]);
-  const titleOptions = useMemo(() => [...(CATEGORY_TITLES[category] ?? DEFAULT_TITLES), ...customTitles], [category, customTitles]);
+  const categoryOptions = useMemo(
+    () => [...DEFAULT_CATEGORIES, ...(initialCategory && !DEFAULT_CATEGORIES.includes(initialCategory) ? [initialCategory] : []), ...customCategories],
+    [customCategories, initialCategory],
+  );
+  const titleOptions = useMemo(
+    () => [...(CATEGORY_TITLES[category] ?? (initialTitle ? [initialTitle, ...DEFAULT_TITLES] : DEFAULT_TITLES)), ...customTitles],
+    [category, customTitles, initialTitle],
+  );
   const totalSize = useMemo(() => value.reduce((sum, item) => sum + (item.fileSize ?? 0), 0), [value]);
 
   useEffect(() => {
     if (!open) return;
+    if (initialCategory) setCategory(initialCategory);
+    if (initialTitle) setTitle(initialTitle);
     setError('');
     setSaving(false);
-  }, [open]);
+  }, [initialCategory, initialTitle, open]);
 
   useEffect(() => {
     const options = CATEGORY_TITLES[category] ?? DEFAULT_TITLES;

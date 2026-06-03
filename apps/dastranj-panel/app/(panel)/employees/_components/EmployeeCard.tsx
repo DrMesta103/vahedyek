@@ -19,6 +19,8 @@ import { CardMenu } from '../../../components/CardMenu';
 import { deleteEmployeeAction, toggleEmployeeActiveAction } from '../../../lib/actions';
 import { formatPersianDate } from '../../../lib/format-date';
 import { formatFaNumber } from '../../../lib/format-fa';
+import { getEmployeeContractProfileProgress } from '../../../lib/employee-contracts';
+import type { EmployeeCurrentContractSummary } from '../../../lib/employee-contracts';
 
 export type EmployeeCardItem = {
   id: string;
@@ -33,30 +35,12 @@ export type EmployeeCardItem = {
   createdAt: string;
   organizationUnits: Array<{ id: string; title: string }>;
   workGroups: Array<{ id: string; title: string }>;
+  currentContract?: EmployeeCurrentContractSummary | null;
 };
 
 function displayValue(value: string | null | undefined) {
   const trimmed = value?.trim();
   return trimmed ? trimmed : '-';
-}
-
-function countCompletion(employee: EmployeeCardItem) {
-  const items = [
-    employee.personnelCode,
-    employee.email,
-    employee.mobile1,
-    employee.mobile2,
-    employee.avatarUrl,
-    employee.organizationUnits.length ? '1' : '',
-    employee.workGroups.length ? '1' : '',
-  ];
-  return Math.round((items.filter(Boolean).length / items.length) * 100);
-}
-
-function daysSinceCreated(createdAt: string) {
-  const created = new Date(createdAt);
-  if (Number.isNaN(created.getTime())) return 0;
-  return Math.max(0, Math.floor((Date.now() - created.getTime()) / (1000 * 60 * 60 * 24)));
 }
 
 export function EmployeeCard({ employee }: { employee: EmployeeCardItem }) {
@@ -66,9 +50,8 @@ export function EmployeeCard({ employee }: { employee: EmployeeCardItem }) {
   const fullName = `${employee.firstName} ${employee.lastName}`.trim();
   const organizationUnitTitles = employee.organizationUnits.map((item) => item.title);
   const workGroupTitles = employee.workGroups.map((item) => item.title);
-  const completionPercent = countCompletion(employee);
-  const missingCount = 7 - Math.round((completionPercent / 100) * 7);
-  const membershipDays = daysSinceCreated(employee.createdAt);
+  const currentContract = employee.currentContract ?? null;
+  const contractProgress = getEmployeeContractProfileProgress(currentContract);
   const contactLine = displayValue(employee.mobile1) !== '-' ? employee.mobile1 : employee.personnelCode;
   const contactLabel = displayValue(employee.mobile1) !== '-' ? 'موبایل' : 'کد پرسنلی';
 
@@ -203,6 +186,17 @@ export function EmployeeCard({ employee }: { employee: EmployeeCardItem }) {
         </div>
         <div className="employee-card-detail-row">
           <span className="employee-card-detail-label">
+            {currentContract ? `${currentContract.contractNumber ?? 'بدون شماره'} · ${currentContract.startDate ?? '-'} تا ${currentContract.endDate ?? '-'}` : 'فاقد قرارداد'}
+          </span>
+        </div>
+        {currentContract?.jobTitle ? (
+          <div className="employee-card-detail-row">
+            <span className="employee-card-detail-label">عنوان شغلی قرارداد:</span>
+            <span className="employee-card-detail-value">{currentContract.jobTitle}</span>
+          </div>
+        ) : null}
+        <div className="employee-card-detail-row">
+          <span className="employee-card-detail-label">
             <CalendarDays className="h-3.5 w-3.5" aria-hidden />
             تاریخ ایجاد:
           </span>
@@ -210,25 +204,31 @@ export function EmployeeCard({ employee }: { employee: EmployeeCardItem }) {
         </div>
       </div>
 
-      <div className="employee-card-progress" aria-label="تکمیل پرونده">
-        <div className="employee-card-arc-gauge" style={{ ['--progress' as never]: `${completionPercent}%` }} aria-hidden>
+      <div className="employee-card-progress" aria-label="تکمیل پرونده قرارداد">
+        <div className="employee-card-arc-gauge" style={{ ['--progress' as never]: `${contractProgress.completionPercent}%` }} aria-hidden>
           <div className="employee-card-arc-gauge-track" />
           <div className="employee-card-arc-gauge-fill" />
           <div className="employee-card-arc-gauge-value">
-            <strong>{formatFaNumber(completionPercent, { useGrouping: false })}%</strong>
+            <strong>{formatFaNumber(contractProgress.completionPercent, { useGrouping: false })}%</strong>
           </div>
         </div>
         <div className="employee-card-progress-stats">
           <p>
             <span className="employee-card-progress-dot is-passed" aria-hidden />
-            <span>{formatFaNumber(membershipDays, { useGrouping: false })} روز از عضویت گذشته</span>
+            <span>
+              {contractProgress.hasContract
+                ? `${formatFaNumber(contractProgress.daysSinceContractStart, { useGrouping: false })} روز از شروع قرارداد گذشته`
+                : 'قرارداد فعال ثبت نشده'}
+            </span>
           </p>
           <p>
             <span className="employee-card-progress-dot is-remaining" aria-hidden />
             <span>
-              {missingCount > 0
-                ? `${formatFaNumber(missingCount, { useGrouping: false })} بخش ناقص در پرونده`
-                : 'پرونده کامل است'}
+              {!contractProgress.hasContract
+                ? 'برای تکمیل پرونده، قرارداد را نهایی کنید'
+                : contractProgress.missingSections > 0
+                  ? `${formatFaNumber(contractProgress.missingSections, { useGrouping: false })} مرحله ناقص در قرارداد`
+                  : 'پرونده قرارداد کامل است'}
             </span>
           </p>
         </div>

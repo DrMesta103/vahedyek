@@ -67,6 +67,7 @@ export function EmployeeSupplementalProfileClient({ employee }: { employee: Empl
         }}
         supplemental={supplemental}
         onEdit={() => setEditorOpen(true)}
+        defaultExpanded
       />
 
       <EmployeeSupplementalProfileEditor

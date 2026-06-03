@@ -2,7 +2,9 @@ import Link from 'next/link';
 import { CalendarDays, Check, Plus, Search, Users2 } from 'lucide-react';
 import { ModulePageHeader } from '../../components/module-page/ModulePageHeader';
 import { businessSettingsBreadcrumbs } from '../../components/module-page/module-breadcrumbs';
+import { getSessionContext } from '../../lib/auth';
 import { listEmployees } from '../../lib/data';
+import { getCurrentEmployeeContracts } from '../../lib/employee-contracts.server';
 import { EmployeeCard } from './_components/EmployeeCard';
 
 type EmployeesPageProps = {
@@ -98,6 +100,8 @@ export default async function EmployeesPage({ searchParams }: EmployeesPageProps
   const from = normalizeText(resolvedSearchParams.from);
   const to = normalizeText(resolvedSearchParams.to);
 
+  const session = await getSessionContext();
+  const tenantId = session?.tenantId ?? null;
   const items = await listEmployees({
     search: query,
     status,
@@ -105,6 +109,10 @@ export default async function EmployeesPage({ searchParams }: EmployeesPageProps
     createdFrom: from,
     createdTo: to,
   });
+  const currentContracts = await getCurrentEmployeeContracts(
+    items.map((item) => item.id),
+    tenantId,
+  );
   const summary = createEmployeeSummary(items);
   const baseQuery = {
     ...(query ? { q: query } : {}),
@@ -234,6 +242,7 @@ export default async function EmployeesPage({ searchParams }: EmployeesPageProps
                       id: item.workGroup.id,
                       title: item.workGroup.title,
                     })),
+                    currentContract: currentContracts.get(item.id) ?? null,
                   }}
                 />
               ))}

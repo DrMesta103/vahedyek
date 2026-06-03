@@ -4,12 +4,15 @@ import { prisma } from './prisma';
 import { getSessionContext } from './auth';
 import { ensureTenantDefaultRequestReasons } from './request-reason-defaults';
 import { DEFAULT_PAYROLL_SETTINGS } from './payroll-business-settings';
+import { getContractLeaveBalanceInputs, getContractOvertimeRules } from './employee-contracts';
+import { getCurrentEmployeeContract } from './employee-contracts.server';
 import type { RequestReasonCategoryKey } from './constants';
 
 export type EmployeeRequestType = RequestReasonCategoryKey;
 export type EmployeeRequestStatus = 'pending' | 'approved' | 'rejected' | 'canceled';
 export type EmployeeRequestSubmissionMode = 'approved' | 'pending';
 export type EmployeeRequestRangeType = 'full_day' | 'multi_day' | 'hourly' | 'range' | 'point';
+// Legacy compatibility for older attendance records and future imports.
 export type AttendanceActionType = 'check_in' | 'check_out' | 'correction';
 
 export type AttachmentDraft = {
@@ -88,6 +91,8 @@ export type EmployeeRequestsEmployee = {
   organizationUnitTitle: string;
   workGroupTitle: string;
   hasActiveContract: boolean;
+  currentContractId?: string | null;
+  overtimeRules?: ReturnType<typeof getContractOvertimeRules> | null;
 };
 
 export type RequestReasonOption = {
@@ -98,10 +103,10 @@ export type RequestReasonOption = {
 };
 
 export type LeaveBalanceSummary = {
-  annualMinutes: number;
+  annualMinutes: number | null;
   usedMinutes: number;
-  remainingMinutes: number;
-  dailyRequiredMinutes: number;
+  remainingMinutes: number | null;
+  dailyRequiredMinutes: number | null;
 };
 
 export type EmployeeRequestFormPayload = {
@@ -219,16 +224,27 @@ function calculateDuration(payload: EmployeeRequestFormPayload, dailyRequiredMin
   return positiveDuration(payload.startTime, payload.endTime) ?? dailyRequiredMinutes;
 }
 
-function calculationMeta(payload: EmployeeRequestFormPayload, duration: number | null) {
+function calculationMeta(
+  payload: EmployeeRequestFormPayload,
+  duration: number | null,
+  overtimeRules = DEFAULT_PAYROLL_SETTINGS.workTimePayRules,
+  hasActiveContract = true,
+) {
   if (payload.requestType === 'overtime') {
+    const warnings: string[] = [];
+    const limitMinutes = Math.max(0, Number(overtimeRules.overtime.dailyLimitHours) * 60);
+    if (!hasActiveContract) warnings.push('برای محاسبه اضافه‌کاری، قرارداد فعال وجود ندارد.');
+    if (duration && limitMinutes && duration > limitMinutes) warnings.push('مدت اضافه‌کاری از سقف قرارداد جاری بیشتر است.');
     return {
       requestedDurationMinutes: duration,
-      validOvertimeDurationMinutes: duration,
+      validOvertimeDurationMinutes: limitMinutes ? Math.min(duration ?? 0, limitMinutes) : duration,
+      overtimeCoefficient: overtimeRules.overtime.normalCoefficient,
+      dailyLimitMinutes: limitMinutes,
       outsideNormalWorkTime: true,
       nightWorkOverlapMinutes: 0,
       weeklyRestDayOverlapMinutes: 0,
       holidayOverlapMinutes: 0,
-      warnings: [],
+      warnings,
     };
   }
   if (payload.requestType === 'remote_work') return { requestedDurationMinutes: duration };
@@ -355,6 +371,27 @@ export async function listCompanyLoans(): Promise<CompanyLoanItem[]> {
   }));
 }
 
+export async function getEmployeeLeaveBalanceSummary(employeeId: string, tenantId: string) {
+  const currentContract = await getCurrentEmployeeContract(employeeId, tenantId);
+  const contractLeave = getContractLeaveBalanceInputs(currentContract, { fallbackToDefaults: false });
+  const usedRows = await prisma.$queryRaw<Array<{ usedMinutes: bigint | number | null }>>`
+    SELECT COALESCE(SUM("calculatedDurationMinutes"), 0) AS "usedMinutes"
+    FROM "EmployeeRequest"
+    WHERE "tenantId" = ${tenantId}
+      AND "employeeId" = ${employeeId}
+      AND "status" = 'approved'
+      AND "requestType" IN ('daily_leave'::"EmployeeRequestType", 'hourly_leave'::"EmployeeRequestType")
+  `;
+  const usedMinutes = Number(usedRows[0]?.usedMinutes ?? 0);
+  return {
+    annualMinutes: currentContract ? contractLeave.annualMinutes : null,
+    usedMinutes,
+    remainingMinutes:
+      currentContract && contractLeave.annualMinutes != null ? Math.max(0, contractLeave.annualMinutes - usedMinutes) : null,
+    dailyRequiredMinutes: currentContract ? contractLeave.dailyRequiredMinutes : null,
+  } satisfies LeaveBalanceSummary;
+}
+
 export async function getEmployeeRequestsPageData(employeeId: string) {
   const { tenantId } = await requireTenantId();
   await ensureTenantDefaultRequestReasons(prisma, tenantId);
@@ -367,7 +404,10 @@ export async function getEmployeeRequestsPageData(employeeId: string) {
   });
   if (!employee) return null;
 
-  const [requests, attachmentRows, reasons, loans, dailyRequiredMinutes, annualMinutes, usedRows] = await Promise.all([
+  const currentContract = await getCurrentEmployeeContract(employeeId, tenantId);
+  const overtimeRules = getContractOvertimeRules(currentContract);
+
+  const [requests, attachmentRows, reasons, loans, leaveBalance] = await Promise.all([
     prisma.$queryRaw<RawEmployeeRequestRow[]>`
       SELECT
         er.*,
@@ -397,16 +437,7 @@ export async function getEmployeeRequestsPageData(employeeId: string) {
       select: { id: true, title: true, description: true, category: true },
     }),
     listCompanyLoans(),
-    resolveDailyRequiredMinutes(tenantId),
-    resolveLeaveAnnualMinutes(tenantId),
-    prisma.$queryRaw<Array<{ usedMinutes: bigint | number | null }>>`
-      SELECT COALESCE(SUM("calculatedDurationMinutes"), 0) AS "usedMinutes"
-      FROM "EmployeeRequest"
-      WHERE "tenantId" = ${tenantId}
-        AND "employeeId" = ${employeeId}
-        AND "status" = 'approved'
-        AND "requestType" IN ('daily_leave'::"EmployeeRequestType", 'hourly_leave'::"EmployeeRequestType")
-    `,
+    getEmployeeLeaveBalanceSummary(employeeId, tenantId),
   ]);
 
   const attachmentsByRequest = new Map<string, AttachmentDraft[]>();
@@ -416,7 +447,6 @@ export async function getEmployeeRequestsPageData(employeeId: string) {
     attachmentsByRequest.set(row.ownerId, list);
   });
 
-  const usedMinutes = Number(usedRows[0]?.usedMinutes ?? 0);
   const employeeData: EmployeeRequestsEmployee = {
     id: employee.id,
     firstName: employee.firstName,
@@ -425,8 +455,10 @@ export async function getEmployeeRequestsPageData(employeeId: string) {
     personnelCode: employee.personnelCode,
     organizationUnitTitle: employee.organizationUnits.map((item) => item.organizationUnit.title).join('، '),
     workGroupTitle: employee.workGroupMemberships.map((item) => item.workGroup.title).join('، '),
-    jobTitle: '',
-    hasActiveContract: Boolean(employee.personnelCode),
+    jobTitle: currentContract?.jobTitle ?? '',
+    hasActiveContract: Boolean(currentContract),
+    currentContractId: currentContract?.id ?? null,
+    overtimeRules,
   };
 
   return {
@@ -439,12 +471,7 @@ export async function getEmployeeRequestsPageData(employeeId: string) {
       category: reason.category as EmployeeRequestType,
     })) satisfies RequestReasonOption[],
     loans,
-    leaveBalance: {
-      annualMinutes,
-      usedMinutes,
-      remainingMinutes: Math.max(0, annualMinutes - usedMinutes),
-      dailyRequiredMinutes,
-    } satisfies LeaveBalanceSummary,
+    leaveBalance,
   };
 }
 
@@ -488,15 +515,17 @@ export async function upsertEmployeeRequest(payload: EmployeeRequestFormPayload)
   if (['overtime', 'remote_work'].includes(payload.requestType) && payload.startDate === payload.endDate && payload.endTime! <= payload.startTime!) {
     throw new Error('Invalid request time range.');
   }
-  const dailyRequiredMinutes = await resolveDailyRequiredMinutes(tenantId);
-  const calculatedDuration = calculateDuration(payload, dailyRequiredMinutes);
+  const currentContract = await getCurrentEmployeeContract(payload.employeeId, tenantId);
+  const contractLeave = getContractLeaveBalanceInputs(currentContract, { fallbackToDefaults: false });
+  const calculatedDuration = calculateDuration(payload, contractLeave.dailyRequiredMinutes);
   if (!['attendance', 'salary_advance', 'loan'].includes(payload.requestType) && (!calculatedDuration || calculatedDuration <= 0)) {
     throw new Error('Duration must be positive.');
   }
   const status = payload.submissionMode === 'approved' ? 'approved' : payload.status;
   const approvedBy = status === 'approved' ? userName : null;
   const approvedAt = status === 'approved' ? new Date() : null;
-  const meta = calculationMeta(payload, calculatedDuration);
+  const meta = calculationMeta(payload, calculatedDuration, getContractOvertimeRules(currentContract), Boolean(currentContract));
+  const attendanceActionType = payload.requestType === 'attendance' ? null : payload.attendanceActionType ?? null;
 
   let requestId = payload.id;
   if (requestId) {
@@ -518,7 +547,7 @@ export async function upsertEmployeeRequest(payload: EmployeeRequestFormPayload)
         "endTime" = ${payload.endTime ?? null},
         "dateTime" = ${payload.dateTime ?? null},
         "rangeType" = ${payload.rangeType ?? null}::"EmployeeRequestRangeType",
-        "attendanceActionType" = ${payload.attendanceActionType ?? null}::"AttendanceActionType",
+        "attendanceActionType" = ${attendanceActionType}::"AttendanceActionType",
         "amount" = ${payload.amount ?? null},
         "loanId" = ${payload.loanId ?? null},
         "installments" = ${payload.installments ?? null},
@@ -548,7 +577,7 @@ export async function upsertEmployeeRequest(payload: EmployeeRequestFormPayload)
         ${status}::"EmployeeRequestStatus", ${payload.submissionMode}::"EmployeeRequestSubmissionMode",
         ${payload.startDate ?? null}, ${payload.endDate ?? null}, ${payload.startTime ?? null}, ${payload.endTime ?? null},
         ${payload.dateTime ?? null}, ${payload.rangeType ?? null}::"EmployeeRequestRangeType",
-        ${payload.attendanceActionType ?? null}::"AttendanceActionType", ${payload.amount ?? null}, ${payload.loanId ?? null},
+        ${attendanceActionType}::"AttendanceActionType", ${payload.amount ?? null}, ${payload.loanId ?? null},
         ${payload.installments ?? null}, ${payload.reasonId ?? null}, ${payload.description?.trim() || null},
         ${calculatedDuration}, ${JSON.stringify(meta)}::jsonb, ${userName}, ${approvedBy}, ${approvedAt},
         CASE WHEN ${status} = 'canceled' THEN NOW() ELSE NULL END, NOW(), NOW()

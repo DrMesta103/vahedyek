@@ -79,7 +79,12 @@ export async function fetchProfileStore() {
   return (await fetchProfilePayload()).store;
 }
 
-export async function persistProfileStore(store: ProfileStore) {
+export async function persistProfileStore(store: ProfileStore, owner?: Partial<ProfileMeta['owner']>) {
+  const saved = await persistProfilePayload(store, owner);
+  return saved.store;
+}
+
+export async function persistProfilePayload(store: ProfileStore, owner?: Partial<ProfileMeta['owner']>) {
   saveProfileStore(store);
 
   const response = await fetch(PROFILE_API_ENDPOINT, {
@@ -88,7 +93,10 @@ export async function persistProfileStore(store: ProfileStore) {
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ store }),
+    body: JSON.stringify({
+      store,
+      ...(owner ? { owner } : {}),
+    }),
   });
 
   if (response.status === 401) {
@@ -99,10 +107,28 @@ export async function persistProfileStore(store: ProfileStore) {
     throw new Error(`profile_save_failed:${response.status}`);
   }
 
-  const payload = (await response.json()) as { store?: unknown; meta?: { tenantId?: string } };
+  const payload = (await response.json()) as {
+    store?: unknown;
+    meta?: Partial<ProfileMeta> & { tenantId?: string };
+  };
   const merged = normalizeProfileStore(payload.store ?? store);
-  saveProfileStore(merged, payload.meta?.tenantId);
-  return merged;
+  const meta: ProfileMeta = {
+    businessName: typeof payload.meta?.businessName === 'string' ? payload.meta.businessName : DEFAULT_PROFILE_META.businessName,
+    slug: typeof payload.meta?.slug === 'string' ? payload.meta.slug : DEFAULT_PROFILE_META.slug,
+    brandCode: typeof payload.meta?.brandCode === 'string' ? payload.meta.brandCode : DEFAULT_PROFILE_META.brandCode,
+    packageKey: typeof payload.meta?.packageKey === 'string' ? payload.meta.packageKey : DEFAULT_PROFILE_META.packageKey,
+    billingCycle: typeof payload.meta?.billingCycle === 'string' ? payload.meta.billingCycle : DEFAULT_PROFILE_META.billingCycle,
+    createdAt: typeof payload.meta?.createdAt === 'string' ? payload.meta.createdAt : DEFAULT_PROFILE_META.createdAt,
+    owner: {
+      fullName: typeof payload.meta?.owner?.fullName === 'string' ? payload.meta.owner.fullName : DEFAULT_PROFILE_META.owner.fullName,
+      mobile: typeof payload.meta?.owner?.mobile === 'string' ? payload.meta.owner.mobile : DEFAULT_PROFILE_META.owner.mobile,
+      email: typeof payload.meta?.owner?.email === 'string' ? payload.meta.owner.email : DEFAULT_PROFILE_META.owner.email,
+    },
+    tenantId: typeof payload.meta?.tenantId === 'string' ? payload.meta.tenantId : undefined,
+  };
+
+  saveProfileStore(merged, meta.tenantId);
+  return { store: merged, meta };
 }
 
 export function addBankAccount(store: ProfileStore, account: BankAccountRecord) {

@@ -3,8 +3,16 @@ import {
   DEFAULT_FIXED_BENEFIT_RULES,
   DEFAULT_OPTIONAL_ADDITION_RULES,
   DEFAULT_OPTIONAL_DEDUCTION_RULES,
+  DEFAULT_MISSION_SETTINGS,
+  DEFAULT_PAYMENT_SCHEDULE,
   normalizeCalculationRules,
+  normalizeLeaveSettings,
+  normalizeMissionSettings,
+  normalizePaymentSchedule,
+  normalizeWorkTimePayRules,
   type CalculationRules,
+  type MissionSettings,
+  type PaymentSchedule,
   type PayrollSettings,
   getActiveTenantStorageId,
 } from './payroll-business-settings';
@@ -20,6 +28,7 @@ export type ContractDraftTemplateStepId =
   | 'paymentType'
   | 'workTimePayRules'
   | 'leave'
+  | 'mission'
   | 'specialCommitments'
   | 'attachments';
 
@@ -94,11 +103,13 @@ export type ContractDraftTemplate = {
       additions: VariableTemplateItem[];
       deductions: VariableTemplateItem[];
     };
+    paymentSchedule: PaymentSchedule;
     paymentType: {
       type: string;
     };
     workTimePayRules: PayrollSettings['workTimePayRules'];
     leave: PayrollSettings['leave'];
+    mission: MissionSettings;
     specialCommitments: {
       selected: string[];
       uploadedSamples: string[];
@@ -142,6 +153,7 @@ export const PAYROLL_TEMPLATE_STEPS: Array<{ id: ContractDraftTemplateStepId; ti
   { id: 'paymentType', title: 'نوع پرداخت حقوق', detail: 'چرخه و روش دستمزد' },
   { id: 'workTimePayRules', title: 'پرداخت زمان کاری', detail: 'ضرایب و بازه‌های تردد' },
   { id: 'leave', title: 'مرخصی', detail: 'انتقال، تسویه و تنظیمات استحقاقی' },
+  { id: 'mission', title: 'ماموریت', detail: 'قوانین پرداخت ماموریت' },
   { id: 'specialCommitments', title: 'تعهدات خاص قرارداد', detail: 'بندهای پیشنهادی حقوقی' },
   { id: 'attachments', title: 'پیوست‌ها و مدارک', detail: 'الزامی برای عقد قرارداد' },
 ];
@@ -193,7 +205,10 @@ export function createContractDraftTemplate({
       attendanceBase: {
         monthlyOvertimeLimitHours: baseSettings.workTimePayRules.overtime.dailyLimitHours * 28,
         monthlyLeaveQuotaHours: baseSettings.leave.monthlyQuotaHours,
-        annualLeaveTransfer: { ...baseSettings.leave.transferLimits.annual },
+        annualLeaveTransfer: {
+          enabled: baseSettings.leave.transferPolicy.mode === 'carry_forward' && baseSettings.leave.transferPolicy.limits.annual.enabled,
+          hours: baseSettings.leave.transferPolicy.mode === 'carry_forward' ? baseSettings.leave.transferPolicy.limits.annual.maxHours : null,
+        },
       },
       payrollBase: {
         dailyRequiredMinutes: baseSettings.financial.dailyRequiredMinutes,
@@ -219,11 +234,13 @@ export function createContractDraftTemplate({
         additions: [],
         deductions: [],
       },
+      paymentSchedule: { ...DEFAULT_PAYMENT_SCHEDULE },
       paymentType: {
-        type: '',
+        type: 'پرداخت بر اساس دوره‌های زمانی',
       },
-      workTimePayRules: baseSettings.workTimePayRules,
+      workTimePayRules: normalizeWorkTimePayRules(baseSettings.workTimePayRules, baseSettings.workTimePayRules),
       leave: baseSettings.leave,
+      mission: normalizeMissionSettings(baseSettings.mission, DEFAULT_MISSION_SETTINGS),
       specialCommitments: {
         selected: [],
         uploadedSamples: [],
@@ -294,6 +311,14 @@ export function normalizeContractDraftTemplate(value: unknown): ContractDraftTem
     additions: Array.isArray(rawVP?.additions) ? rawVP.additions.map(normalizeVariableItem).filter(Boolean) as VariableTemplateItem[] : [],
     deductions: Array.isArray(rawVP?.deductions) ? rawVP.deductions.map(normalizeVariableItem).filter(Boolean) as VariableTemplateItem[] : [],
   };
+  const paymentSchedule = normalizePaymentSchedule(
+    template.data?.paymentSchedule ?? (template.data as { paymentType?: unknown } | undefined)?.paymentType,
+    DEFAULT_PAYMENT_SCHEDULE,
+  );
+  const workTimePayRules = normalizeWorkTimePayRules(
+    template.data?.workTimePayRules,
+    defaults.workTimePayRules,
+  );
 
   return {
     ...template,
@@ -312,6 +337,18 @@ export function normalizeContractDraftTemplate(value: unknown): ContractDraftTem
       },
       benefits: normalizedBenefits,
       variablePayments: normalizedVariablePayments,
+      paymentSchedule,
+      leave: normalizeLeaveSettings(template.data?.leave, defaults.leave),
+      workTimePayRules,
+      paymentType: {
+        type:
+          paymentSchedule.type === 'job_activity'
+            ? 'پرداخت بر اساس نوع شغل و فعالیت'
+            : paymentSchedule.type === 'hybrid_special'
+              ? 'پرداخت ترکیبی و روش‌های خاص'
+              : 'پرداخت بر اساس دوره‌های زمانی',
+      },
+      mission: normalizeMissionSettings(template.data?.mission, defaults.mission),
     },
   };
 }

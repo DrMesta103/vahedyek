@@ -12,6 +12,7 @@ import {
   Gift,
   LineChart,
   LockKeyhole,
+  MapPinned,
   Paperclip,
   Pencil,
   Plus,
@@ -24,6 +25,7 @@ import {
 } from 'lucide-react';
 import { MinimalScroll } from '../../../components/MinimalScroll';
 import { PanelFormModal, PanelFormModalActions } from '../../../components/PanelFormModal';
+import { VariableAmountTitlePicker } from '../../../components/VariableAmountTitlePicker';
 import { ConfirmDialog } from '../../../components/ConfirmDialog';
 import { UnsavedChangesDialog, useUnsavedLeaveGuard } from '../../../components/UnsavedChangesGuard';
 import { AdaptiveChipGroup } from '../../../components/AdaptiveChipGroup';
@@ -55,98 +57,25 @@ import {
   calculatePayrollValues,
   compareValues,
   validatePayrollStep,
+  VARIABLE_TITLES,
   type BaseDifference,
+  type MissionRule,
   type CalculationRules,
   type PayrollSettings,
   type VariableAmount,
 } from '../../../lib/payroll-business-settings';
 import { LeaveSection, WorkTimePayRulesSection } from './PayrollBusinessSettingsFlow';
+import { MissionStep, MissionRuleDialog } from '../../employees/[id]/contract-drafts/_components/employee-contract-steps/MissionStep';
+import { PaymentScheduleStep } from '../../employees/[id]/contract-drafts/_components/employee-contract-steps/PaymentScheduleStep';
+import {
+  CONTRACT_TYPE_OPTIONS as CONTRACT_TYPES,
+  CONTRACT_TYPE_SUBCATEGORIES,
+  WORK_LOCATION_CATEGORIES,
+  WORK_LOCATION_SUBCATEGORIES,
+  getWorkLocationSubHint,
+} from '../../../lib/contract-subject-options';
 
 type StepState = Record<ContractDraftTemplateStepId, { opened: boolean; completed: boolean; dirty: boolean; saved: boolean }>;
-
-const CONTRACT_TYPES = [
-  'قراردادهای رسمی و استخدام دائم',
-  'قراردادهای موقت و پروژه‌ای',
-  'قراردادهای نیمه‌وقت و منعطف',
-  'قراردادهای آزمایشی و آموزشی',
-  'قراردادهای ویژه و خاص',
-  'قراردادهای مشاوره‌ای و تخصصی',
-];
-
-const CONTRACT_TYPE_SUBCATEGORIES: Record<string, { hint: string; options: string[] }> = {
-  'قراردادهای رسمی و استخدام دائم': {
-    hint: 'این دسته‌بندی نشان می‌دهد همکاری کارمند بلندمدت و سازمانی است.',
-    options: ['استخدام دائم تمام‌وقت', 'استخدام دائم پاره‌وقت', 'استخدام با دوره آزمایشی اولیه', 'استخدام با مزایای کامل', 'استخدام داخلی سازمان'],
-  },
-  'قراردادهای موقت و پروژه‌ای': {
-    hint: 'این دسته‌بندی برای همکاری‌هایی است که زمان، مأموریت یا پروژه مشخص دارند.',
-    options: ['قرارداد مدت‌معین', 'قرارداد پروژه‌ای', 'قرارداد فصلی', 'قرارداد جایگزینی موقت', 'قرارداد تا پایان مأموریت/پروژه'],
-  },
-  'قراردادهای نیمه‌وقت و منعطف': {
-    hint: 'این دسته‌بندی برای همکاری‌هایی است که زمان یا محل حضور انعطاف دارد.',
-    options: ['نیمه‌وقت ثابت', 'ساعتی', 'شیفتی منعطف', 'دورکاری منعطف', 'همکاری شناور'],
-  },
-  'قراردادهای آزمایشی و آموزشی': {
-    hint: 'این دسته‌بندی برای شروع همکاری با تمرکز بر آموزش یا ارزیابی اولیه است.',
-    options: ['دوره آزمایشی استخدام', 'کارآموزی', 'آموزش حین کار', 'دوره مهارت‌آموزی', 'همکاری آموزشی بدون تعهد استخدام'],
-  },
-  'قراردادهای ویژه و خاص': {
-    hint: 'این دسته‌بندی برای قراردادهایی است که شرایط پرداخت، دسترسی یا مسئولیت خاص دارند.',
-    options: ['قرارداد با شرایط خاص پرداخت', 'قرارداد محرمانه/حساس', 'قرارداد با دسترسی ویژه', 'قرارداد کوتاه‌مدت اضطراری', 'قرارداد ویژه مدیران یا افراد کلیدی'],
-  },
-  'قراردادهای مشاوره‌ای و تخصصی': {
-    hint: 'این دسته‌بندی برای همکاری تخصصی، مشاوره‌ای یا پیمانکاری فردی است.',
-    options: ['مشاوره ساعتی', 'مشاوره پروژه‌ای', 'خدمات تخصصی', 'قرارداد فریلنسری', 'قرارداد پیمانکاری فردی'],
-  },
-};
-
-const WORK_LOCATION_CATEGORIES = [
-  'دسته‌بندی بر اساس نوع حضور فیزیکی',
-  'دسته‌بندی بر اساس نوع محیط کاری',
-  'دسته‌بندی بر اساس ارتباط با مشتری و ذینفعان',
-  'دسته‌بندی بر اساس پویایی و جابجایی شغلی',
-];
-
-const WORK_LOCATION_SUBCATEGORIES: Record<string, Array<{ label: string; helper?: string }>> = {
-  'دسته‌بندی بر اساس نوع حضور فیزیکی': [
-    { label: 'ثابت', helper: 'محل کار تغییر نمی‌کند و همواره مشخص است.' },
-    { label: 'دورکاری', helper: 'کار از خارج از محل سازمان انجام می‌شود.' },
-    { label: 'ترکیبی / هیبریدی', helper: 'بخشی از کار حضوری و بخشی به‌صورت دورکاری انجام می‌شود.' },
-    { label: 'حضوری شیفتی', helper: 'حضور فیزیکی بر اساس شیفت‌های کاری انجام می‌شود.' },
-    { label: 'حضور موردی', helper: 'حضور در محل کار فقط در زمان‌های مشخص یا موردنیاز انجام می‌شود.' },
-    { label: 'شناور', helper: 'زمان و محل حضور می‌تواند بر اساس توافق تغییر کند.' },
-  ],
-  'دسته‌بندی بر اساس نوع محیط کاری': [
-    { label: 'دفتر اداری' },
-    { label: 'کارخانه' },
-    { label: 'کارگاه' },
-    { label: 'فروشگاه / شعبه' },
-    { label: 'انبار' },
-    { label: 'سایت پروژه' },
-    { label: 'مرکز تماس' },
-    { label: 'محیط عملیاتی' },
-    { label: 'محل مشتری' },
-  ],
-  'دسته‌بندی بر اساس ارتباط با مشتری و ذینفعان': [
-    { label: 'بدون ارتباط مستقیم با مشتری' },
-    { label: 'ارتباط مستقیم با مشتری' },
-    { label: 'ارتباط با تأمین‌کننده' },
-    { label: 'ارتباط با پیمانکار' },
-    { label: 'ارتباط با سازمان‌های بیرونی' },
-    { label: 'نماینده سازمان نزد مشتری' },
-    { label: 'کار در محل مشتری' },
-  ],
-  'دسته‌بندی بر اساس پویایی و جابجایی شغلی': [
-    { label: 'ثابت' },
-    { label: 'چندبخشی' },
-    { label: 'پروژه‌ای' },
-    { label: 'مأموریتی' },
-    { label: 'سفرهای بین‌المللی' },
-    { label: 'بین شعب' },
-    { label: 'میدانی' },
-    { label: 'سیار' },
-  ],
-};
 
 const PAYMENT_TYPES = [
   'پرداخت بر اساس دوره‌های زمانی',
@@ -271,7 +200,7 @@ function normalizeDecimalInput(value: string) {
 function newVariableTemplateItem(type: 'addition' | 'deduction'): VariableTemplateItem {
   return {
     id: `${type}-${Date.now()}`,
-    title: type === 'addition' ? 'پاداش ثابت ماهانه' : 'کسورات سازمانی',
+    title: VARIABLE_TITLES[type][0],
     type,
     method: 'fixed',
     amount: 0,
@@ -313,6 +242,7 @@ const CONTRACT_STEP_ICONS: Record<ContractDraftTemplateStepId, ReactNode> = {
   paymentType: <CreditCard className="h-5 w-5 shrink-0" aria-hidden />,
   workTimePayRules: <Clock3 className="h-5 w-5 shrink-0" aria-hidden />,
   leave: <Umbrella className="h-5 w-5 shrink-0" aria-hidden />,
+  mission: <MapPinned className="h-5 w-5 shrink-0" aria-hidden />,
   specialCommitments: <ShieldCheck className="h-5 w-5 shrink-0" aria-hidden />,
   attachments: <Paperclip className="h-5 w-5 shrink-0" aria-hidden />,
 };
@@ -370,8 +300,31 @@ function composeSettings(template: ContractDraftTemplate, base: PayrollSettings)
       additions: [],
       deductions: [],
     },
-    workTimePayRules: template.data.workTimePayRules,
+    paymentSchedule: template.data.paymentSchedule ?? base.paymentSchedule,
+    workTimePayRules: {
+      ...template.data.workTimePayRules,
+      nightWork: {
+        ...template.data.workTimePayRules.nightWork,
+        startTime: base.workTimePayRules.nightWork.startTime,
+        endTime: base.workTimePayRules.nightWork.endTime,
+      },
+    },
     leave: template.data.leave,
+    mission: template.data.mission ?? base.mission,
+  };
+}
+
+function syncNightWorkTimesFromBase(
+  rules: PayrollSettings['workTimePayRules'],
+  base: PayrollSettings,
+): PayrollSettings['workTimePayRules'] {
+  return {
+    ...rules,
+    nightWork: {
+      ...rules.nightWork,
+      startTime: base.workTimePayRules.nightWork.startTime,
+      endTime: base.workTimePayRules.nightWork.endTime,
+    },
   };
 }
 
@@ -505,6 +458,8 @@ export function ContractDraftTemplateBuilder({ tenantId = null }: { tenantId?: s
   const [activeStep, setActiveStep] = useState<ContractDraftTemplateStepId>('classification');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [attachmentCategory, setAttachmentCategory] = useState<typeof DOCUMENT_CATEGORIES[number] | null>(null);
+  const [missionEditor, setMissionEditor] = useState<MissionRule | null>(null);
+  const [deletingMissionRule, setDeletingMissionRule] = useState<MissionRule | null>(null);
   const savedTemplateRef = useRef<ContractDraftTemplate | null>(null);
 
   useEffect(() => {
@@ -657,7 +612,8 @@ export function ContractDraftTemplateBuilder({ tenantId = null }: { tenantId?: s
   const commitmentCount = template.data.specialCommitments.selected.length;
   const documentCount = Object.values(template.data.attachments.requiredDocuments).reduce((sum, items) => sum + items.length, 0);
   const activeBenefitCount = BENEFIT_TEMPLATE_FIELDS.filter(({ key }) => template.data.benefits[key].enabled).length;
-  const annualTransferEnabled = template.data.leave.transferLimits.annual.enabled;
+  const annualTransferEnabled = template.data.leave.transferPolicy.mode === 'carry_forward'
+    && template.data.leave.transferPolicy.limits.annual.enabled;
 
   return (
     <div className="draft-template-flow-page business-payroll-flow business-contract-template-flow" dir="rtl" lang="fa">
@@ -786,7 +742,7 @@ export function ContractDraftTemplateBuilder({ tenantId = null }: { tenantId?: s
               <small>
                 انتقال سالانه:{' '}
                 {annualTransferEnabled
-                  ? `${formatFaNumber(template.data.leave.transferLimits.annual.hours ?? 0)} ساعت`
+                  ? `${formatFaNumber(template.data.leave.transferPolicy.limits.annual.maxHours ?? 0)} ساعت`
                   : 'غیرفعال'}
               </small>
             </div>
@@ -846,7 +802,28 @@ export function ContractDraftTemplateBuilder({ tenantId = null }: { tenantId?: s
               className={`draft-template-flow-section business-payroll-current-section contract-draft-step-section ${activeStep === step.id ? 'is-current' : ''}`}
             >
               <ContractStepHeader stepId={step.id} title={step.title} detail={step.detail} />
-              <div className="contract-draft-step-body">{renderStep(step.id, template, baseSettings, settings, derived, errors, updateTemplate, setAttachmentCategory)}</div>
+              <div className="contract-draft-step-body">
+                {renderStep(
+                  step.id,
+                  template,
+                  baseSettings,
+                  settings,
+                  derived,
+                  errors,
+                  updateTemplate,
+                  setAttachmentCategory,
+                  setMissionEditor,
+                  setDeletingMissionRule,
+                  () =>
+                    setMissionEditor({
+                      id: `mission-${Date.now()}`,
+                      title: 'ماموریت جدید',
+                      coefficient: 1,
+                      paymentBase: 'base_salary',
+                      active: true,
+                    }),
+                )}
+              </div>
               <footer className="business-payroll-step-footer contract-draft-step-footer">
                 <button
                   type="button"
@@ -868,6 +845,54 @@ export function ContractDraftTemplateBuilder({ tenantId = null }: { tenantId?: s
         </div>
       </main>
 
+      <MissionRuleDialog
+        open={Boolean(missionEditor)}
+        initialRule={missionEditor}
+        monthlyBaseSalary={derived.monthlyBaseSalary}
+        grossPay={derived.grossPay}
+        onClose={() => setMissionEditor(null)}
+        onSubmit={(rule) => {
+          if (!template || !stepState) return;
+          updateTemplate('mission', (current) => {
+            const exists = current.data.mission.rules.some((item) => item.id === rule.id);
+            return {
+              ...current,
+              data: {
+                ...current.data,
+                mission: {
+                  ...current.data.mission,
+                  enabled: true,
+                  rules: exists ? current.data.mission.rules.map((item) => (item.id === rule.id ? rule : item)) : [...current.data.mission.rules, rule],
+                },
+              },
+            };
+          });
+          setMissionEditor(null);
+        }}
+      />
+      <ConfirmDialog
+        open={Boolean(deletingMissionRule)}
+        title="حذف ماموریت"
+        description={deletingMissionRule ? `آیا از حذف «${deletingMissionRule.title}» مطمئن هستید؟` : ''}
+        confirmLabel="حذف"
+        cancelLabel="انصراف"
+        tone="danger"
+        onConfirm={() => {
+          if (!deletingMissionRule || !template || !stepState) return;
+          updateTemplate('mission', (current) => ({
+            ...current,
+            data: {
+              ...current.data,
+              mission: {
+                ...current.data.mission,
+                rules: current.data.mission.rules.filter((item) => item.id !== deletingMissionRule.id),
+              },
+            },
+          }));
+          setDeletingMissionRule(null);
+        }}
+        onCancel={() => setDeletingMissionRule(null)}
+      />
       <AttachmentDialog
         category={attachmentCategory}
         selected={attachmentCategory ? template.data.attachments.requiredDocuments[attachmentCategory.key] ?? [] : []}
@@ -905,7 +930,10 @@ function validateStep(step: ContractDraftTemplateStepId, template: ContractDraft
   if (step === 'classification') {
     if (!template.data.classification.contractType) errors.contractType = 'حداقل یک گزینه را انتخاب کنید';
     if (!template.data.classification.contractSubType) errors.contractSubType = 'زیرگروه قرارداد را انتخاب کنید';
-    if (!template.data.classification.workLocationCategories[0] || !WORK_LOCATION_CATEGORIES.includes(template.data.classification.workLocationCategories[0])) errors.workLocationCategory = 'دسته‌بندی محل انجام کار را انتخاب کنید';
+    const workLocationCategory = template.data.classification.workLocationCategories[0];
+    if (!workLocationCategory || !(WORK_LOCATION_CATEGORIES as readonly string[]).includes(workLocationCategory)) {
+      errors.workLocationCategory = 'دسته‌بندی محل انجام کار را انتخاب کنید';
+    }
     if (!template.data.classification.workLocationSubCategory) errors.workLocationSubCategory = 'زیرگروه محل انجام کار را انتخاب کنید';
   }
   if (step === 'attendanceBase') {
@@ -924,9 +952,10 @@ function validateStep(step: ContractDraftTemplateStepId, template: ContractDraft
       }
     }
   }
-  if (step === 'paymentType' && !template.data.paymentType.type) errors.paymentType = 'حداقل یک گزینه را انتخاب کنید';
+  if (step === 'paymentType' && !template.data.paymentSchedule.type) errors.paymentType = 'حداقل یک گزینه را انتخاب کنید';
   if (step === 'workTimePayRules') return validatePayrollStep('overtime', settings);
   if (step === 'leave') return validatePayrollStep('leave', settings);
+  if (step === 'mission') return validatePayrollStep('mission', settings);
   return errors;
 }
 
@@ -937,8 +966,10 @@ function countDifferences(template: ContractDraftTemplate, base: PayrollSettings
   if (template.data.payrollBase.insuranceEnabled !== (base.deductions.employeeInsurancePercent > 0)) count += 1;
   if (template.data.payrollBase.employerInsurancePercent !== base.deductions.employerInsurancePercent) count += 1;
   if (template.data.payrollBase.employeeInsurancePercent !== base.deductions.employeeInsurancePercent) count += 1;
+  if (JSON.stringify(template.data.paymentSchedule) !== JSON.stringify(base.paymentSchedule)) count += 1;
   if (JSON.stringify(template.data.workTimePayRules) !== JSON.stringify(base.workTimePayRules)) count += 1;
   if (JSON.stringify(template.data.leave) !== JSON.stringify(base.leave)) count += 1;
+  if (JSON.stringify(template.data.mission) !== JSON.stringify(base.mission)) count += 1;
   BENEFIT_TEMPLATE_FIELDS.forEach(({ key, baseKey }) => {
     if (template.data.benefits[key].amount !== base.benefits[baseKey]) count += 1;
   });
@@ -954,6 +985,9 @@ function renderStep(
   errors: Record<string, string>,
   updateTemplate: (step: ContractDraftTemplateStepId, apply: (current: ContractDraftTemplate) => ContractDraftTemplate) => void,
   setAttachmentCategory: (category: typeof DOCUMENT_CATEGORIES[number]) => void,
+  onMissionEdit: (rule: MissionRule) => void,
+  onMissionDelete: (rule: MissionRule) => void,
+  onMissionAdd: () => void,
 ) {
   switch (step) {
     case 'attendanceBase':
@@ -967,7 +1001,34 @@ function renderStep(
     case 'variablePayments':
       return <VariablePaymentsStep template={template} baseSettings={baseSettings} updateTemplate={updateTemplate} />;
     case 'paymentType':
-      return <PaymentTypeStep template={template} errors={errors} updateTemplate={updateTemplate} />;
+      return (
+        <>
+          <PaymentScheduleStep
+            paymentSchedule={template.data.paymentSchedule}
+            basePaymentSchedule={baseSettings.paymentSchedule}
+            comparisonMode="tenant"
+            comparisonTooltip="در تنظیمات مبنا، نوع پرداخت متفاوت تعریف شده است."
+            helperText="روش کلی پرداخت دستمزد را برای این قالب انتخاب کنید."
+            onChange={(paymentSchedule) =>
+              updateTemplate('paymentType', (current) => ({
+                ...current,
+                data: {
+                  ...current.data,
+                  paymentSchedule,
+                  paymentType: {
+                    type: paymentSchedule.type === 'job_activity'
+                      ? 'پرداخت بر اساس نوع شغل و فعالیت'
+                      : paymentSchedule.type === 'hybrid_special'
+                        ? 'پرداخت ترکیبی و روش‌های خاص'
+                        : 'پرداخت بر اساس دوره‌های زمانی',
+                  },
+                },
+              }))
+            }
+          />
+          {errors.paymentType ? <p className="business-payroll-warning"><CircleAlert className="h-4 w-4" /> {errors.paymentType}</p> : null}
+        </>
+      );
     case 'workTimePayRules':
       return (
         <WorkTimePayRulesSection
@@ -975,8 +1036,13 @@ function renderStep(
           baseSettings={baseSettings}
           derived={derived}
           errors={errors}
+          nightWorkTimesReadOnly
+          businessSettingsHref={`/business-settings/payroll-attendance/tenant?year=${template.baseSettingsYear}`}
           onChange={(workTimePayRules) =>
-            updateTemplate('workTimePayRules', (current) => ({ ...current, data: { ...current.data, workTimePayRules } }))
+            updateTemplate('workTimePayRules', (current) => ({
+              ...current,
+              data: { ...current.data, workTimePayRules: syncNightWorkTimesFromBase(workTimePayRules, baseSettings) },
+            }))
           }
         />
       );
@@ -989,6 +1055,28 @@ function renderStep(
           onLeaveChange={(leave) =>
             updateTemplate('leave', (current) => ({ ...current, data: { ...current.data, leave } }))
           }
+        />
+      );
+    case 'mission':
+      return (
+        <MissionStep
+          mission={template.data.mission}
+          baseMission={baseSettings.mission}
+          derived={derived}
+          comparisonMode="tenant"
+          comparisonReferenceWord="مبنا"
+          exclusiveLabel="این قالب"
+          tag="قالب انتخاب‌شده"
+          description="قواعد ماموریت را برای این قالب تنظیم کنید."
+          onMissionChange={(mission) =>
+            updateTemplate('mission', (current) => ({
+              ...current,
+              data: { ...current.data, mission: { ...current.data.mission, ...mission } },
+            }))
+          }
+          onEditRule={onMissionEdit}
+          onDeleteRule={onMissionDelete}
+          onAddRule={onMissionAdd}
         />
       );
     case 'specialCommitments':
@@ -1044,10 +1132,10 @@ function AttendanceBaseStep({
           label="حداکثر انتقال مرخصی به سال بعد"
           unit="ساعت"
           value={template.data.attendanceBase.annualLeaveTransfer.hours ?? 0}
-          difference={baseSettings.leave.transferLimits.annual.enabled === template.data.attendanceBase.annualLeaveTransfer.enabled
-            ? compareValues(baseSettings.leave.transferLimits.annual.hours ?? 0, template.data.attendanceBase.annualLeaveTransfer.hours ?? 0, {
+          difference={(baseSettings.leave.transferPolicy.mode === 'carry_forward' && baseSettings.leave.transferPolicy.limits.annual.enabled) === template.data.attendanceBase.annualLeaveTransfer.enabled
+            ? compareValues(baseSettings.leave.transferPolicy.limits.annual.maxHours ?? 0, template.data.attendanceBase.annualLeaveTransfer.hours ?? 0, {
                 changed: 'متفاوت با مبنا',
-                tooltip: `انتقال سالیانه در تنظیمات مبنا ${baseSettings.leave.transferLimits.annual.enabled ? `${formatFaNumber(baseSettings.leave.transferLimits.annual.hours ?? 0)} ساعت` : 'غیرفعال'} است.`,
+                tooltip: `انتقال سالیانه در تنظیمات مبنا ${baseSettings.leave.transferPolicy.mode === 'carry_forward' && baseSettings.leave.transferPolicy.limits.annual.enabled ? `${formatFaNumber(baseSettings.leave.transferPolicy.limits.annual.maxHours ?? 0)} ساعت` : 'غیرفعال'} است.`,
               })
             : customDifference(template.data.attendanceBase.annualLeaveTransfer.enabled ? 'فعال شده نسبت به مبنا' : 'غیرفعال نسبت به مبنا', 'وضعیت انتقال سالیانه با تنظیمات مبنا متفاوت است.')}
           onChange={(hours) => updateTemplate('attendanceBase', (current) => ({ ...current, data: { ...current.data, attendanceBase: { ...current.data.attendanceBase, annualLeaveTransfer: { enabled: true, hours } } } }))}
@@ -1195,7 +1283,7 @@ function ClassificationStep({ template, errors, updateTemplate }: { template: Co
         </div>
         <p className="contract-draft-field-hint">نوع قرارداد مشخص می‌کند که شرایط همکاری کارمند با سازمان چگونه است. این گزینه بر میزان تعهدات، مزایا و شرایط فسخ قرارداد تأثیر می‌گذارد.</p>
         <OptionGrid
-          options={CONTRACT_TYPES}
+          options={[...CONTRACT_TYPES]}
           selected={selectedContractType}
           onChange={(contractType) =>
             updateTemplate('classification', (current) => {
@@ -1247,7 +1335,7 @@ function ClassificationStep({ template, errors, updateTemplate }: { template: Co
         </div>
         <p className="contract-draft-field-hint">این بخش مشخص می‌کند که کارمند در چه محیطی مشغول به کار است. بسته به ماهیت شغل، محل انجام کار می‌تواند ثابت، متغیر یا وابسته به مشتری باشد.</p>
         <OptionGrid
-          options={WORK_LOCATION_CATEGORIES}
+          options={[...WORK_LOCATION_CATEGORIES]}
           selected={selectedLocationCategory}
           onChange={(workLocationCategory) =>
             updateTemplate('classification', (current) => {
@@ -1269,7 +1357,7 @@ function ClassificationStep({ template, errors, updateTemplate }: { template: Co
         {errors.workLocationCategory ? <p className="business-payroll-warning"><CircleAlert className="h-4 w-4" aria-hidden /> {errors.workLocationCategory}</p> : null}
         {selectedLocationCategory ? (
           <div className="contract-draft-subchoice-panel">
-            <p className="contract-draft-subcategory-note">مشخص می‌کند که کارمند به‌صورت ثابت در یک مکان خاص حضور دارد یا محل کار او متغیر است.</p>
+            <p className="contract-draft-subcategory-note">{getWorkLocationSubHint(selectedLocationCategory)}</p>
             <OptionGrid
               options={locationOptions.map((option) => option.label)}
               selected={selectedLocationSubCategory}
@@ -1403,7 +1491,7 @@ function VariablePaymentsStep({ template, baseSettings, updateTemplate }: { temp
   const addItem = (type: 'addition' | 'deduction') => {
     const item: VariableTemplateItem = {
       id: `${type}-${Date.now()}`,
-      title: type === 'addition' ? 'پاداش ثابت ماهانه' : 'کسورات سازمانی',
+      title: VARIABLE_TITLES[type][0],
       type,
       method: 'fixed',
       amount: 0,
@@ -1634,14 +1722,11 @@ function VariableAmountDialog({
         footer={<PanelFormModalActions submitLabel="ثبت" onSubmit={submit} onCancel={onClose} />}
       >
         <div className="payroll-variable-amount-dialog-form business-payroll-editor variable">
-          <label className="business-payroll-field">
-            <span className="business-payroll-field-label">عنوان</span>
-            <input
-              type="text"
-              value={item.title}
-              onChange={(event) => setItem((value) => ({ ...value, title: event.target.value }))}
-            />
-          </label>
+          <VariableAmountTitlePicker
+            type={item.type}
+            title={item.title}
+            onTitleChange={(nextTitle) => setItem((value) => ({ ...value, title: nextTitle }))}
+          />
 
           <div className="business-payroll-toggle">
             <button

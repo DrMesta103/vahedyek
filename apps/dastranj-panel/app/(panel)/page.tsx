@@ -1,6 +1,10 @@
 import Link from 'next/link';
-import { getDashboardData } from '../lib/data';
 import { PageIntro, StatGrid } from '@repo/ui/server';
+import { getDashboardData } from '../lib/data';
+import { formatFaNumber } from '../lib/format-fa';
+
+const GOLD_CASH_PRICE = 18410950;
+const MELTED_GOLD_AMOUNT = 1250000;
 
 export default async function DashboardPage() {
   const data = await getDashboardData();
@@ -14,14 +18,41 @@ export default async function DashboardPage() {
         title="داشبورد دسترنج"
         description="نمای کلی از دامنه‌های اصلی کسب‌وکار، منابع انسانی، تقویم، سیاست‌ها و پیش‌نویس‌ها."
         action={
-          <div className="inline-actions">
-            <Link href="/quick-setup" className="primary-link">
+          <>
+            <Link href="/quick-setup" className="inline-flex items-center justify-center rounded-full bg-[color:var(--accent)] px-5 py-2.5 text-sm font-bold text-[#032029] shadow-[0_10px_22px_rgba(20,184,166,0.18)]">
               راه‌اندازی سریع
             </Link>
-            <Link href="/business-settings" className="secondary-link">
+            <Link href="/business-settings" className="inline-flex items-center justify-center rounded-full border border-white/10 bg-white/5 px-5 py-2.5 text-sm font-bold text-white/90">
               تنظیمات
             </Link>
-          </div>
+          </>
+        }
+        aside={
+          <aside className="rounded-[26px] border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-[11px] font-bold tracking-[0.2em] text-white/55">قیمت لحظه‌ای</p>
+                <strong className="mt-2 block text-[28px] font-black leading-tight text-white">
+                  {formatFaNumber(GOLD_CASH_PRICE)} تومان
+                </strong>
+                <p className="mt-2 text-xs leading-6 text-white/65">نمایش عددها با جداکننده‌ی سه‌رقمی برای خوانایی سریع‌تر.</p>
+              </div>
+              <span className="inline-flex shrink-0 items-center rounded-full border border-emerald-400/25 bg-emerald-400/10 px-3 py-1.5 text-[11px] font-bold text-emerald-200">
+                طلای آب‌شده
+              </span>
+            </div>
+
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              <div className="rounded-2xl border border-white/8 bg-black/15 p-4">
+                <div className="text-[11px] font-bold text-white/55">قیمت نقدی</div>
+                <div className="mt-2 text-lg font-black text-white">{formatFaNumber(GOLD_CASH_PRICE)} تومان</div>
+              </div>
+              <div className="rounded-2xl border border-white/8 bg-black/15 p-4">
+                <div className="text-[11px] font-bold text-white/55">مقدار طلای آب‌شده</div>
+                <div className="mt-2 text-lg font-black text-white">{formatFaNumber(MELTED_GOLD_AMOUNT)} گرم</div>
+              </div>
+            </div>
+          </aside>
         }
       />
 
@@ -39,7 +70,7 @@ export default async function DashboardPage() {
           <p>
             {data.profile
               ? `${data.profile.legalName ?? data.profile.brandName} با وضعیت راه‌اندازی ${setupStatusLabel} در حال استفاده از دسترنج است.`
-              : 'برای شروع، پروفایل کسب‌وکار را تکمیل کنید و سپس راه‌اندازی سریع را پیش ببرید تا تقویم، سیاست و کارمندان شما آماده شوند.'}
+              : 'برای شروع، پروفایل کسب‌وکار را تکمیل کنید و سپس راه‌اندازی سریع را پیش ببرید تا تقویم، سیاست و کارکنان شما آماده شوند.'}
           </p>
           <div className="metric-inline-row">
             <div className="metric-inline-card">

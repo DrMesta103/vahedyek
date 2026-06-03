@@ -18,17 +18,6 @@ import {
 import { readEmployeeDrafts, type EmployeeContractDraft } from '../../lib/employee-contract-drafts';
 import { formatFaNumber, formatPersianJalaliDate } from '../../lib/format-fa';
 import {
-  findDefaultNamingPattern,
-  generateNamingPattern,
-  generateUniqueNamingPattern,
-  getNamingPatternPlaceholderParts,
-  getNamingPatternSequenceLabel,
-  persistNamingPatterns,
-  readNamingPatterns,
-  type NamingPattern,
-  type NamingPatternContext,
-} from '../../lib/naming-patterns';
-import {
   ACTIVE_TENANT_STORAGE_KEY,
   getPayrollSettingsStorageKey,
   getTenantPayrollSettingsStorageKey,
@@ -130,12 +119,19 @@ function TemplateListCard({
   const [expanded, setExpanded] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const detailsRef = useRef<HTMLDivElement | null>(null);
-  const { classification, paymentType } = template.data;
+  const { classification } = template.data;
+  const paymentSchedule = template.data.paymentSchedule ?? (template.data as { paymentType?: { type?: string; period?: string } }).paymentType;
   const contractCategory = displayValue(classification.contractType);
   const contractSubType = classification.contractSubType.trim();
   const locationCategory = classification.workLocationCategories[0] ?? classification.workLocationSubCategory;
   const locationSubType = classification.workLocationSubCategory.trim();
-  const paymentCategory = displayValue(paymentType.type);
+  const paymentCategory = paymentSchedule
+    ? paymentSchedule.type === 'job_activity'
+      ? 'پرداخت بر اساس نوع شغل و فعالیت'
+      : paymentSchedule.type === 'hybrid_special'
+        ? 'پرداخت ترکیبی و روش‌های خاص'
+        : 'پرداخت بر اساس دوره‌های زمانی'
+    : 'ثبت نشده';
   const jobCategory = template.data.specialCommitments.selected[0] ?? usageLabel(template.usageType);
 
   const showDetails = () => {
@@ -287,9 +283,6 @@ function CreateTemplateDialog({
   const [usageType, setUsageType] = useState<ContractDraftTemplateUsageType | ''>('');
   const [baseYear, setBaseYear] = useState('');
   const [error, setError] = useState('');
-  const [activeNamePattern, setActiveNamePattern] = useState<NamingPattern | null>(null);
-  const [nameMode, setNameMode] = useState<'pattern' | 'manual'>('manual');
-  const [placeholderValues, setPlaceholderValues] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!open) return;
@@ -297,59 +290,12 @@ function CreateTemplateDialog({
     setUsageType('');
     setBaseYear('');
     setError('');
-    setPlaceholderValues({});
-    const pattern = findDefaultNamingPattern(readNamingPatterns(tenantId), 'draft_template_name');
-    setActiveNamePattern(pattern);
-    setNameMode(pattern ? 'pattern' : 'manual');
   }, [open]);
 
-  const placeholderParts = useMemo(() => (activeNamePattern ? getNamingPatternPlaceholderParts(activeNamePattern) : []), [activeNamePattern]);
-  const patternHasSequence = useMemo(() => Boolean(activeNamePattern?.parts.some((part) => part.type === 'sequence')), [activeNamePattern]);
-  const patternContext = useMemo<NamingPatternContext>(() => ({
-    date: new Date().toISOString().slice(0, 10),
-    template: { type: usageType ? usageLabel(usageType) : '' },
-    placeholders: placeholderValues,
-  }), [placeholderValues, usageType]);
-  const patternPreview = useMemo(() => (
-    activeNamePattern ? {
-      ...generateNamingPattern({ pattern: activeNamePattern, context: patternContext }),
-      next: generateNamingPattern({ pattern: activeNamePattern, context: patternContext, sequenceOffset: 1 }).output,
-    } : null
-  ), [activeNamePattern, patternContext]);
-
   const submit = () => {
-    let resolvedName = name.trim();
-    let committedPattern: NamingPattern | null = null;
-    if (nameMode === 'pattern' && activeNamePattern) {
-      for (const item of placeholderParts) {
-        if (!placeholderValues[item.key]?.trim()) {
-          setError('این فیلد الزامی است');
-          return;
-        }
-      }
-      const latestPatterns = readNamingPatterns(tenantId);
-      const latestPattern = findDefaultNamingPattern(latestPatterns, 'draft_template_name');
-      if (!latestPattern) {
-        setError('نام تولیدشده معتبر نیست');
-        return;
-      }
-      const generated = generateUniqueNamingPattern({
-        pattern: latestPattern,
-        context: patternContext,
-        existingOutputs: existingTemplateNames,
-      });
-      if (!generated.output?.trim() || generated.conflict) {
-        setError(generated.conflict ?? 'نام تولیدشده معتبر نیست');
-        return;
-      }
-      resolvedName = generated.output.trim();
-      committedPattern = generated.pattern;
-    } else if (!resolvedName) {
-      setError('نام قالب الزامی است');
-      return;
-    }
+    const resolvedName = name.trim();
     if (!resolvedName) {
-      setError('نام تولیدشده معتبر نیست');
+      setError('نام قالب الزامی است');
       return;
     }
     if (existingTemplateNames.some((item) => item.trim() === resolvedName)) {
@@ -364,13 +310,10 @@ function CreateTemplateDialog({
       setError('سال مبنای تنظیمات را انتخاب کنید');
       return;
     }
+
     const year = Number(baseYear);
     const baseSettings = readTenantPayrollBaseSettings(year, tenantId);
     const template = createContractDraftTemplate({ name: resolvedName, usageType, baseSettingsYear: year, baseSettings });
-    if (committedPattern) {
-      const latestPatterns = readNamingPatterns(tenantId);
-      persistNamingPatterns(latestPatterns.map((item) => (item.id === committedPattern.id ? committedPattern : item)), tenantId);
-    }
     onCreated(template);
   };
 
@@ -383,7 +326,7 @@ function CreateTemplateDialog({
     <PanelFormModal
       open={open}
       title="افزودن قالب پیش‌نویس قرارداد"
-      lead="قالب بر اساس مبنای حقوق و تردد؛ بعد از ثبت، مراحل ساخت باز می‌شود."
+      lead="فقط عنوان قالب را وارد کنید؛ ساختارهای پیشرفته بعدا اضافه می‌شوند."
       error={error}
       onClose={onClose}
       footer={<PanelFormModalActions submitLabel="ثبت قالب" onSubmit={submit} onCancel={onClose} />}
@@ -397,59 +340,15 @@ function CreateTemplateDialog({
                 مشخصات قالب
               </span>
               <h3>نام قالب پیش‌نویس</h3>
-              <p>یک نام واضح انتخاب کنید تا بعداً قالب را سریع تشخیص دهید.</p>
+              <p>فقط یک عنوان ساده برای قالب وارد کنید تا بعداً سریع تشخیص داده شود.</p>
             </div>
           </div>
-          {activeNamePattern ? (
-            <div className="rounded-2xl border border-cyan-400/25 bg-cyan-400/10 p-3 text-right">
-              <span className="block text-sm font-extrabold text-cyan-100">الگوی نام‌گذاری قالب</span>
-              <p className="m-0 mt-1 text-xs font-semibold leading-6 text-slate-300 [html[data-theme=light]_&]:text-slate-600">
-                برای نام قالب، یک الگوی نام‌گذاری تعریف شده است. می‌توانید از آن استفاده کنید یا نام را دستی وارد کنید.
-              </p>
-              <div className="mt-3 grid gap-2 md:grid-cols-2">
-                <button type="button" className={`rounded-2xl border px-3 py-2 text-xs font-extrabold ${nameMode === 'pattern' ? 'border-orange-400/50 bg-orange-500/15 text-orange-200' : 'border-white/10 bg-white/[0.04] text-slate-300'}`} onClick={() => setNameMode('pattern')}>
-                  استفاده از الگو
-                </button>
-                <button type="button" className={`rounded-2xl border px-3 py-2 text-xs font-extrabold ${nameMode === 'manual' ? 'border-orange-400/50 bg-orange-500/15 text-orange-200' : 'border-white/10 bg-white/[0.04] text-slate-300'}`} onClick={() => setNameMode('manual')}>
-                  ورود دستی نام قالب
-                </button>
-              </div>
-              {nameMode === 'pattern' ? (
-                <div className="mt-3 flex flex-col gap-3">
-                  {placeholderParts.map((item) => (
-                    <label key={item.id} className="business-draft-field">
-                      <span>{item.label} <em>*</em></span>
-                      <input value={placeholderValues[item.key] ?? ''} placeholder="مثلا پیش نویس یوایکس" onChange={(event) => setPlaceholderValues((current) => ({ ...current, [item.key]: event.target.value }))} />
-                    </label>
-                  ))}
-                  <div className="rounded-2xl border border-white/10 bg-slate-950/35 p-3 [html[data-theme=light]_&]:border-slate-200 [html[data-theme=light]_&]:bg-white">
-                    <span className="block text-[11px] font-bold text-slate-400">خروجی نام قالب</span>
-                    <strong dir={activeNamePattern.direction ?? 'rtl'} className="mt-1 block break-words text-sm text-white [html[data-theme=light]_&]:text-slate-900">
-                      {patternPreview?.output || 'نام تولیدشده معتبر نیست'}
-                    </strong>
-                    {patternHasSequence ? (
-                      <div className="mt-2 grid gap-2 md:grid-cols-2">
-                        <span className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-[11px] font-bold text-slate-300">
-                          خروجی بعدی: <strong dir={activeNamePattern.direction ?? 'rtl'}>{patternPreview?.next || '-'}</strong>
-                        </span>
-                        <span className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-[11px] font-bold text-slate-300">
-                          شماره فعلی / بعدی: {getNamingPatternSequenceLabel(activeNamePattern)}
-                        </span>
-                      </div>
-                    ) : null}
-                  </div>
-                </div>
-              ) : null}
-            </div>
-          ) : null}
-          {nameMode === 'manual' ? (
-            <label className="business-draft-field">
-              <span>
-                نام قالب <em>*</em>
-              </span>
-              <input value={name} placeholder="مثلا قالب قرارداد نیروهای شیفتی" onChange={(event) => setName(event.target.value)} />
-            </label>
-          ) : null}
+          <label className="business-draft-field">
+            <span>
+              نام قالب <em>*</em>
+            </span>
+            <input value={name} placeholder="مثلا قالب قرارداد نیروهای شیفتی" onChange={(event) => setName(event.target.value)} />
+          </label>
         </div>
 
         <div className="business-draft-dialog-card business-draft-dialog-card--compact">
@@ -462,7 +361,7 @@ function CreateTemplateDialog({
           <div className="business-draft-scope-options" role="radiogroup" aria-label="حوزه پوشش قالب">
             <button
               type="button"
-              className={`business-draft-scope-option${usageType === 'attendance_only' ? ' is-selected' : ''}`}
+              className={"business-draft-scope-option" + (usageType === 'attendance_only' ? ' is-selected' : '')}
               onClick={() => setUsageType('attendance_only')}
             >
               <span className="business-draft-scope-option-title">
@@ -473,7 +372,7 @@ function CreateTemplateDialog({
             </button>
             <button
               type="button"
-              className={`business-draft-scope-option${usageType === 'payroll_attendance' ? ' is-selected' : ''}`}
+              className={"business-draft-scope-option" + (usageType === 'payroll_attendance' ? ' is-selected' : '')}
               onClick={() => setUsageType('payroll_attendance')}
             >
               <span className="business-draft-scope-option-title">

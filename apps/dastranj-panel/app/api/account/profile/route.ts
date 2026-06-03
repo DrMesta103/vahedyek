@@ -113,7 +113,14 @@ export async function PUT(request: Request) {
     const session = await requireSessionContext();
     if (session instanceof NextResponse) return session;
 
-    const body = (await request.json()) as { store?: unknown };
+    const body = (await request.json()) as {
+      store?: unknown;
+      owner?: {
+        fullName?: string;
+        mobile?: string | null;
+        email?: string | null;
+      };
+    };
     const store = normalizeProfileStore(body.store ?? createDefaultProfileStore());
 
     await ensureProfileSettingsTable();
@@ -131,6 +138,32 @@ export async function PUT(request: Request) {
       session.tenantId,
       JSON.stringify(store),
     );
+
+    if (body.owner) {
+      const ownerMembership = await prisma.userTenantMembership.findFirst({
+        where: { tenantId: session.tenantId, role: 'owner' },
+        orderBy: { createdAt: 'asc' },
+        select: { userId: true },
+      });
+
+      const ownerUserId = ownerMembership?.userId ?? session.user.id;
+      const fullName = typeof body.owner.fullName === 'string' ? body.owner.fullName.trim() : '';
+      const mobile = typeof body.owner.mobile === 'string' ? body.owner.mobile.trim() || null : body.owner.mobile ?? undefined;
+      const email = typeof body.owner.email === 'string' ? body.owner.email.trim() || null : body.owner.email ?? undefined;
+
+      const nameParts = fullName ? fullName.split(/\s+/) : [];
+      const firstName = nameParts[0] || session.user.fullName.split(/\s+/)[0] || 'مالک';
+      const lastName = nameParts.slice(1).join(' ') || session.user.fullName.split(/\s+/).slice(1).join(' ') || 'کسب‌وکار';
+
+      await prisma.appUser.update({
+        where: { id: ownerUserId },
+        data: {
+          ...(fullName ? { fullName, firstName, lastName } : {}),
+          ...(mobile !== undefined ? { mobile } : {}),
+          ...(email !== undefined ? { email } : {}),
+        },
+      });
+    }
 
     const meta = await getProfileMeta(
       session.tenantId,
