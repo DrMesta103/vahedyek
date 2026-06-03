@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 import { getDiscountEntry, getDiscountGroup } from '../(panel)/contracts/new/_components/discountsConfig';
 import { getPenaltyItem } from '../(panel)/contracts/new/_components/penaltiesConfig';
@@ -434,11 +434,16 @@ function buildBusinessSettingsBreadcrumb(pathname: string): Crumb[] {
 
 export default function PanelLayout({ children }: PanelLayoutProps) {
   const pathname = usePathname();
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const showOrbitMenu = pathname === '/';
   const isContractsNewHub = pathname === '/contracts/new';
   const isContractsListPage = pathname === '/contracts';
   const isContractReportsPage = /^\/contracts\/[^/]+\/reports(?:\/|$)/.test(pathname);
   const isAuditLogsPage = pathname === '/audit-logs';
+
+  useEffect(() => {
+    setMobileSidebarOpen(false);
+  }, [pathname]);
 
   const { activeItem, trail } = useMemo(() => {
     const resolvedActiveItem = resolveActiveItem(pathname);
@@ -510,10 +515,29 @@ export default function PanelLayout({ children }: PanelLayoutProps) {
     <div className="app-shell">
       <PageDocsWidget />
       <ReminderWidget />
+      <button
+        type="button"
+        className="mobile-sidebar-trigger"
+        onClick={() => setMobileSidebarOpen(true)}
+        aria-label="باز کردن منوی اصلی"
+        aria-controls="app-sidebar"
+        aria-expanded={mobileSidebarOpen}
+      >
+        <MenuIcon name="fa-bars" />
+      </button>
+      <button
+        type="button"
+        className={`mobile-sidebar-backdrop${mobileSidebarOpen ? ' is-open' : ''}`}
+        onClick={() => setMobileSidebarOpen(false)}
+        aria-label="بستن منوی اصلی"
+        tabIndex={mobileSidebarOpen ? 0 : -1}
+      />
       <Sidebar
         activeItem={activeItem}
         forceCollapsed={isContractsNewHub || isContractReportsPage}
         lockCollapsed={isContractsNewHub}
+        mobileOpen={mobileSidebarOpen}
+        onMobileClose={() => setMobileSidebarOpen(false)}
       />
       {showOrbitMenu ? (
         <main className="main-content home-main-content">

@@ -241,8 +241,8 @@ export function TechnicalSpecsStep({ title }: { title: string }) {
           ) : null}
 
           {specs.length ? (
-            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-              <table className="w-full text-right text-[13px]">
+            <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
+              <table className="w-full min-w-[420px] text-right text-[13px]">
                 <thead className="bg-slate-50">
                   <tr>
                     <th className="px-4 py-3 font-bold text-slate-600">عنوان مشخصه</th>

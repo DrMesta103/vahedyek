@@ -1,6 +1,6 @@
 'use client';
 
-import { BadgePercent, ChartNoAxesCombined, SlidersHorizontal } from 'lucide-react';
+import { BadgePercent, ChartNoAxesCombined, ChevronDown, ChevronUp, SlidersHorizontal } from 'lucide-react';
 import { getAdjustmentMultiIndicatorWeightsTotal, type ContractRuleState } from '../../../lib/businessContractRules';
 import { BusinessSwitch, ChoicePills as UiChoicePills, RuleFieldLabel, RuleTabButton } from '@repo/ui';
 import { RuleTextInput as SharedRuleTextInput } from './RuleStylePrimitives';
@@ -41,6 +41,19 @@ function AdjustmentChoicePills({
       className="justify-end flex-row-reverse"
     />
   );
+}
+
+function normalizeRoundRuleValue(value: string) {
+  switch (value) {
+    case '50':
+    case '۵۰':
+      return '0.0';
+    case '500':
+    case '۵۰۰':
+      return '0.00';
+    default:
+      return value;
+  }
 }
 
 function WeightRow({
@@ -97,13 +110,13 @@ export function AdjustmentRuleSection({
   onValueChange: (key: string, value: string | boolean) => void;
 }) {
   const periodOptions = ['روزانه', 'ماهانه', 'سه ماهه', 'شش ماهه', 'سالانه'];
-  const roundRuleOptions = ['۵۰', '۵۰۰', 'کسر ۱۰۰', 'کسر ۱۰۰۰'];
+  const roundRuleOptions = ['0.0', '0.00', 'کسر ۱۰۰', 'کسر ۱۰۰۰'];
   const sourceOptions = ['بانک مرکزی', 'مرکز آمار', 'نظام مهندسی'];
   const indicatorOptions = ['تورم بانک مرکزی', 'شاخص ساخت‌وساز', 'ارز توافقی'];
   const extraIndicatorsExpanded = Boolean(state.values.adjustMultiManualOverride);
   const activeTab = state.activeTab;
   const selectedPeriod = String(state.activeChip || '');
-  const selectedRoundRule = String(state.values.adjustFixedRound || '');
+  const selectedRoundRule = normalizeRoundRuleValue(String(state.values.adjustFixedRound || ''));
   const multiIndicatorTotal = getAdjustmentMultiIndicatorWeightsTotal(state.values);
   const multiIndicatorOverflow = multiIndicatorTotal > 100;
 
@@ -142,12 +155,13 @@ export function AdjustmentRuleSection({
               </div>
 
               <div className="space-y-5 border-t border-[color:var(--border-soft)] pt-6">
-                <div className="text-right">
+                <div className="space-y-6 text-right">
                   <h4 className="text-[17px] font-black text-[color:var(--text-strong)]">قاعده گرد کردن مبلغ تعدیل</h4>
-                  <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">در صورت نیاز، یک قاعده گرد کردن برای مبلغ تعدیل انتخاب کنید. با کلیک دوباره روی تگ فعال، انتخاب برداشته می‌شود.</p>
+                  <div className="flex justify-end">
+                    <AdjustmentChoicePills options={roundRuleOptions} value={selectedRoundRule} onChange={(value) => onValueChange('adjustFixedRound', value)} />
+                  </div>
+                  <p className="text-sm leading-7 text-[color:var(--text-muted)]">در صورت نیاز، یک قاعده گرد کردن برای مبلغ تعدیل انتخاب کنید. با کلیک دوباره روی تگ فعال، انتخاب برداشته می‌شود.</p>
                 </div>
-
-                <AdjustmentChoicePills options={roundRuleOptions} value={selectedRoundRule} onChange={(value) => onValueChange('adjustFixedRound', value)} />
               </div>
             </>
           ) : null}
@@ -173,12 +187,13 @@ export function AdjustmentRuleSection({
               </div>
 
               <div className="space-y-5 border-t border-[color:var(--border-soft)] pt-6">
-                <div className="text-right">
+                <div className="space-y-6 text-right">
                   <h4 className="text-[17px] font-black text-[color:var(--text-strong)]">قاعده گرد کردن مبلغ تعدیل</h4>
-                  <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">در صورت نیاز، یک قاعده گرد کردن برای مبلغ تعدیل انتخاب کنید. با کلیک دوباره روی تگ فعال، انتخاب برداشته می‌شود.</p>
+                  <div className="flex justify-end">
+                    <AdjustmentChoicePills options={roundRuleOptions} value={selectedRoundRule} onChange={(value) => onValueChange('adjustFixedRound', value)} />
+                  </div>
+                  <p className="text-sm leading-7 text-[color:var(--text-muted)]">در صورت نیاز، یک قاعده گرد کردن برای مبلغ تعدیل انتخاب کنید. با کلیک دوباره روی تگ فعال، انتخاب برداشته می‌شود.</p>
                 </div>
-
-                <AdjustmentChoicePills options={roundRuleOptions} value={selectedRoundRule} onChange={(value) => onValueChange('adjustFixedRound', value)} />
               </div>
             </>
           ) : null}
@@ -219,9 +234,10 @@ export function AdjustmentRuleSection({
                 <button
                   type="button"
                   onClick={() => onValueChange('adjustMultiManualOverride', !extraIndicatorsExpanded)}
-                  className="inline-flex items-center rounded-full border border-[color:var(--theme-action-border)] bg-[color:var(--theme-action-bg)] px-4 py-2 text-sm font-bold text-[color:var(--theme-action-text)] transition hover:opacity-90"
+                  className="mx-auto inline-flex flex-col items-center justify-center gap-2 text-center text-[16px] font-medium text-[color:var(--theme-action-text)] transition hover:opacity-90"
                 >
-                  {extraIndicatorsExpanded ? 'بستن سایر شاخص‌ها' : 'نمایش سایر شاخص‌ها'}
+                  <span>{extraIndicatorsExpanded ? 'بستن سایر شاخص‌ها' : 'نمایش سایر شاخص‌ها'}</span>
+                  {extraIndicatorsExpanded ? <ChevronUp className="h-5 w-5" strokeWidth={2.2} /> : <ChevronDown className="h-5 w-5" strokeWidth={2.2} />}
                 </button>
               </div>
 
@@ -266,12 +282,13 @@ export function AdjustmentRuleSection({
               </div>
 
               <div className="space-y-5 border-t border-[color:var(--border-soft)] pt-6">
-                <div className="text-right">
+                <div className="space-y-6 text-right">
                   <h4 className="text-[17px] font-black text-[color:var(--text-strong)]">قاعده گرد کردن مبلغ تعدیل</h4>
-                  <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">در صورت نیاز، یک قاعده گرد کردن برای مبلغ تعدیل انتخاب کنید. با کلیک دوباره روی تگ فعال، انتخاب برداشته می‌شود.</p>
+                  <div className="flex justify-end">
+                    <AdjustmentChoicePills options={roundRuleOptions} value={selectedRoundRule} onChange={(value) => onValueChange('adjustFixedRound', value)} />
+                  </div>
+                  <p className="text-sm leading-7 text-[color:var(--text-muted)]">در صورت نیاز، یک قاعده گرد کردن برای مبلغ تعدیل انتخاب کنید. با کلیک دوباره روی تگ فعال، انتخاب برداشته می‌شود.</p>
                 </div>
-
-                <AdjustmentChoicePills options={roundRuleOptions} value={selectedRoundRule} onChange={(value) => onValueChange('adjustFixedRound', value)} />
               </div>
             </>
           ) : null}

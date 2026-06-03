@@ -9,18 +9,19 @@ const allowedDevOrigins = (
   .map((origin) => origin.trim())
   .filter(Boolean);
 const projectDir = path.dirname(fileURLToPath(import.meta.url));
+const workspaceRoot = path.resolve(projectDir, '../..');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   allowedDevOrigins,
-  outputFileTracingRoot: projectDir,
+  outputFileTracingRoot: workspaceRoot,
   turbopack: {
-    root: projectDir,
+    root: workspaceRoot,
   },
   ...(withLocator
     ? {
         turbopack: {
-          root: projectDir,
+          root: workspaceRoot,
           rules: {
             '**/*.{tsx,jsx}': {
               condition: 'development',

@@ -389,7 +389,7 @@ function RuleTabButton({
       type: "button",
       onClick,
       className: cn(
-        "group relative flex min-w-[168px] flex-1 flex-col items-center justify-center gap-3 px-3 py-5 text-center transition",
+        "group relative flex min-w-[168px] flex-1 flex-col items-center justify-center gap-3 px-3 py-5 text-center transition max-sm:min-w-[132px] max-sm:gap-2 max-sm:px-2 max-sm:py-4",
         active ? "text-[color:var(--text-strong)]" : "text-[color:var(--text-muted)] hover:text-[color:var(--text-strong)]"
       ),
       children: [
@@ -397,10 +397,10 @@ function RuleTabButton({
           "span",
           {
             className: cn(
-              "flex h-14 w-14 items-center justify-center rounded-full border transition",
+              "flex h-14 w-14 items-center justify-center rounded-full border transition max-sm:h-12 max-sm:w-12",
               active ? "border-[color:var(--theme-action-border)] bg-[color:var(--theme-action-bg)] text-[color:var(--theme-action-text)]" : "border-[color:var(--border-color)] bg-[color:var(--surface)] text-[color:var(--text-muted)]"
             ),
-            children: /* @__PURE__ */ jsxRuntime.jsx(Icon2, { className: "h-6 w-6" })
+            children: /* @__PURE__ */ jsxRuntime.jsx(Icon2, { className: "h-6 w-6 max-sm:h-5 max-sm:w-5" })
           }
         ),
         /* @__PURE__ */ jsxRuntime.jsx("span", { className: "text-sm font-bold", children: title }),
@@ -760,15 +760,15 @@ function StickySubmitBar({
   return /* @__PURE__ */ jsxRuntime.jsx(
     "div",
     {
-      className: embedded ? "mt-6" : "sticky bottom-0 z-10 -mx-8 -mb-8 mt-6 border-t border-slate-200 bg-white/95 backdrop-blur-sm",
-      children: /* @__PURE__ */ jsxRuntime.jsx("div", { className: "flex items-center justify-end gap-3 px-5 py-3", children: /* @__PURE__ */ jsxRuntime.jsxs(
+      className: embedded ? "mt-6" : "sticky bottom-0 z-10 -mx-8 -mb-8 mt-6 border-t border-[color:var(--border-color)] bg-[color:var(--surface-overlay)] backdrop-blur-sm max-sm:-mx-4 max-sm:-mb-4",
+      children: /* @__PURE__ */ jsxRuntime.jsx("div", { className: "flex items-center justify-end gap-3 px-5 py-3 max-sm:px-4", children: /* @__PURE__ */ jsxRuntime.jsxs(
         "button",
         {
           type: "button",
           onClick,
           disabled,
           "data-contract-save-trigger": submitId,
-          className: "inline-flex h-9 items-center gap-2 rounded-lg bg-teal-700 px-5 text-[13px] font-semibold text-white transition-all hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-600/30 disabled:cursor-not-allowed disabled:opacity-50",
+          className: "inline-flex h-9 items-center gap-2 rounded-lg bg-teal-700 px-5 text-[13px] font-semibold text-white transition-all hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-600/30 disabled:cursor-not-allowed disabled:opacity-50 max-sm:min-h-11 max-sm:w-full max-sm:justify-center",
           children: [
             isLoading ? /* @__PURE__ */ jsxRuntime.jsx("span", { className: "h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white" }) : null,
             displayLabel
@@ -796,7 +796,7 @@ function ChoicePills({
     {
       role: "radiogroup",
       "aria-label": ariaLabel,
-      className: cn5("flex gap-2", wrap ? "flex-wrap" : "flex-nowrap overflow-x-auto pb-1", className),
+      className: cn5("flex gap-2 max-sm:max-w-full max-sm:overflow-x-auto max-sm:pb-1", wrap ? "flex-wrap" : "flex-nowrap overflow-x-auto pb-1", className),
       children: options.map((option) => {
         const active = value === option.value;
         return /* @__PURE__ */ jsxRuntime.jsxs(
@@ -808,8 +808,8 @@ function ChoicePills({
             "data-tag-pill": "true",
             "data-active": active ? "true" : "false",
             className: cn5(
-              "inline-flex h-[34px] items-center gap-1.5 rounded-full border px-4 text-[12px] whitespace-nowrap transition-all",
-              active ? "border-[var(--theme-action-border)] bg-[var(--theme-action-bg)] font-semibold text-[#292929] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.25)]" : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50",
+              "inline-flex h-[34px] shrink-0 items-center gap-1.5 rounded-full border px-4 text-[12px] whitespace-nowrap transition-all max-sm:min-h-11 max-sm:px-4",
+              active ? "border-[var(--theme-action-border)] bg-[var(--theme-action-bg)] font-semibold text-[color:var(--text-strong)] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.25)]" : "border-[color:var(--border-color)] bg-[color:var(--surface)] text-[color:var(--text-body)] hover:bg-[color:var(--surface-soft)]",
               pillClassName
             ),
             children: [

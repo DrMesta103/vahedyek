@@ -148,7 +148,8 @@ export default function UnitsPage() {
           ) : filteredRows.length === 0 ? (
             <div className="p-10 text-center text-sm font-bold text-slate-500">واحدی یافت نشد.</div>
           ) : (
-            <table className="w-full min-w-[760px] text-right text-sm">
+            <>
+            <table className="mobile-data-table-desktop w-full min-w-[760px] text-right text-sm">
               <thead className="bg-slate-50 text-xs text-slate-500">
                 <tr>
                   <th className="px-4 py-3">واحد</th>
@@ -181,6 +182,28 @@ export default function UnitsPage() {
                 ))}
               </tbody>
             </table>
+            <div className="mobile-data-card-list">
+              {filteredRows.map((row) => (
+                <article key={row.id} className="mobile-data-card">
+                  <div className="mobile-data-card-head">
+                    <strong className="inline-flex items-center gap-2">
+                      <Home className="h-4 w-4 text-[color:var(--dark-teal)]" />
+                      {row.name}
+                    </strong>
+                    <span className={`rounded-full px-3 py-1 text-xs font-bold ${row.saleEnabled ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>
+                      {row.saleEnabled ? 'قابل فروش' : 'غیرفعال'}
+                    </span>
+                  </div>
+                  <dl className="mobile-data-card-grid">
+                    <div><dt>موقعیت</dt><dd>{row.blockName}، {row.floorName}</dd></div>
+                    <div><dt>نوع</dt><dd>{categoryLabels[row.category]}</dd></div>
+                    <div><dt>متراژ</dt><dd>{formatArea(row.area)}</dd></div>
+                    <div><dt>جزئیات</dt><dd>{row.category === 'unit' ? `${row.bedroomCount} خواب، ${row.balconyCount} تراس` : row.unitType || row.usage}</dd></div>
+                  </dl>
+                </article>
+              ))}
+            </div>
+            </>
           )}
         </section>
       </main>

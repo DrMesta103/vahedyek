@@ -13,9 +13,17 @@ interface SidebarProps {
   activeItem?: string;
   forceCollapsed?: boolean;
   lockCollapsed?: boolean;
+  mobileOpen?: boolean;
+  onMobileClose?: () => void;
 }
 
-export default function Sidebar({ activeItem = 'home', forceCollapsed = false, lockCollapsed = false }: SidebarProps) {
+export default function Sidebar({
+  activeItem = 'home',
+  forceCollapsed = false,
+  lockCollapsed = false,
+  mobileOpen = false,
+  onMobileClose,
+}: SidebarProps) {
   const router = useRouter();
   const { data } = useAuthContext();
   const [collapsed, setCollapsed] = useState(false);
@@ -44,6 +52,16 @@ export default function Sidebar({ activeItem = 'home', forceCollapsed = false, l
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onMobileClose?.();
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [mobileOpen, onMobileClose]);
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
@@ -74,7 +92,10 @@ export default function Sidebar({ activeItem = 'home', forceCollapsed = false, l
     ) : null;
 
   return (
-    <aside className={`sidebar${effectiveCollapsed ? ' collapsed' : ''}${lockCollapsed ? ' locked-collapsed' : ''}`}>
+    <aside id="app-sidebar" className={`sidebar${effectiveCollapsed ? ' collapsed' : ''}${lockCollapsed ? ' locked-collapsed' : ''}${mobileOpen ? ' mobile-open' : ''}`}>
+      <button type="button" className="mobile-sidebar-close" onClick={onMobileClose} aria-label="بستن منوی اصلی">
+        <MenuIcon name="fa-times" />
+      </button>
       <div className="profile-item">
         <div className="avatar-small" style={{ background: '#fb923c' }}>
           <MenuIcon name="fa-user" />
@@ -170,7 +191,7 @@ export default function Sidebar({ activeItem = 'home', forceCollapsed = false, l
               <MenuIcon name="fa-lock" className="menu-lock-icon" />
             </div>
           ) : (
-            <Link key={item.id} href={item.href} title={item.label} className={`menu-link${activeItem === item.id ? ' active' : ''}`}>
+            <Link key={item.id} href={item.href} title={item.label} onClick={onMobileClose} className={`menu-link${activeItem === item.id ? ' active' : ''}`}>
               <MenuIcon name={item.icon} className="menu-link-icon" />
               <span>{item.label}</span>
             </Link>

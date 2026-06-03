@@ -141,7 +141,8 @@ export default function PaymentsPage() {
           ) : filteredRows.length === 0 ? (
             <div className="p-10 text-center text-sm font-bold text-slate-500">واریزی ثبت‌شده‌ای یافت نشد.</div>
           ) : (
-            <table className="w-full min-w-[860px] text-right text-sm">
+            <>
+            <table className="mobile-data-table-desktop w-full min-w-[860px] text-right text-sm">
               <thead className="bg-slate-50 text-xs text-slate-500">
                 <tr>
                   <th className="px-4 py-3">مشتری</th>
@@ -174,6 +175,29 @@ export default function PaymentsPage() {
                 ))}
               </tbody>
             </table>
+            <div className="mobile-data-card-list">
+              {filteredRows.map((row) => (
+                <article key={row.id} className="mobile-data-card">
+                  <div className="mobile-data-card-head">
+                    <strong>{row.buyerName}</strong>
+                    <span className="font-black tabular-nums text-emerald-800">{formatMoneyRial(row.paidAmountRial)}</span>
+                  </div>
+                  <dl className="mobile-data-card-grid">
+                    <div><dt>قرارداد</dt><dd>{row.contractNumber}</dd></div>
+                    <div><dt>تاریخ واریز</dt><dd>{row.depositDate || row.allocationDate || '—'}</dd></div>
+                    <div><dt>روش</dt><dd>{transferKindLabel(row.transferKind)}</dd></div>
+                    <div><dt>شماره پیگیری</dt><dd>{row.trackingNumber || row.referenceNumber || row.receiptNumber || '—'}</dd></div>
+                  </dl>
+                  {row.contractId ? (
+                    <Link href={`/contracts/${row.contractId}/dues`} className="mobile-data-card-action">
+                      <ReceiptText className="h-3.5 w-3.5" />
+                      سررسیدها
+                    </Link>
+                  ) : null}
+                </article>
+              ))}
+            </div>
+            </>
           )}
         </section>
       </main>

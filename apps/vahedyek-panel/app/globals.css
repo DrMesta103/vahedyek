@@ -1275,6 +1275,12 @@ textarea::placeholder {
   overflow: hidden;
 }
 
+.mobile-sidebar-trigger,
+.mobile-sidebar-backdrop,
+.mobile-sidebar-close {
+  display: none;
+}
+
 .sidebar {
   width: var(--sidebar-width);
   background: var(--surface-overlay);
@@ -9307,8 +9313,137 @@ textarea::placeholder {
 }
 
 @media (max-width: 768px) {
+  .app-shell,
+  .home-main-content,
+  .main-stage {
+    height: 100dvh;
+  }
+
+  .main-content {
+    width: 100%;
+  }
+
+  .home-main-content .gear-system {
+    top: 54%;
+    left: calc(50% - 300px);
+    transform: translateY(-50%) scale(0.64);
+    transform-origin: center;
+  }
+
   .sidebar {
-    display: none;
+    position: fixed;
+    inset-block: 0;
+    right: 0;
+    display: flex;
+    width: min(86vw, 320px);
+    max-width: 100%;
+    transform: translateX(105%);
+    transition:
+      transform 180ms ease,
+      box-shadow 180ms ease;
+    z-index: 90;
+  }
+
+  .sidebar.mobile-open,
+  .sidebar.collapsed.mobile-open {
+    width: min(86vw, 320px);
+    transform: translateX(0);
+    box-shadow: -18px 0 48px rgba(15, 23, 42, 0.24);
+  }
+
+  .sidebar.mobile-open .profile-item {
+    justify-content: flex-start;
+    padding: 12px 20px;
+  }
+
+  .sidebar.mobile-open .profile-item .name,
+  .sidebar.mobile-open .invite-section p,
+  .sidebar.mobile-open .invite-btn,
+  .sidebar.mobile-open .version-footer span {
+    display: block;
+  }
+
+  .sidebar.mobile-open .profile-item .back-btn,
+  .sidebar.mobile-open .tenant-switch-btn {
+    display: flex;
+  }
+
+  .sidebar.mobile-open .avatar-small {
+    margin-left: 12px;
+  }
+
+  .sidebar.mobile-open .menu-link {
+    justify-content: flex-start;
+    padding: 12px 25px;
+  }
+
+  .sidebar.mobile-open .menu-link span {
+    display: inline;
+  }
+
+  .sidebar.mobile-open .menu-link i,
+  .sidebar.mobile-open .menu-link svg {
+    margin-left: 15px;
+  }
+
+  .sidebar.mobile-open .menu-link.active {
+    margin: 2px 0;
+    border-radius: 40px 0 0 40px;
+  }
+
+  .sidebar.mobile-open .version-footer {
+    justify-content: space-between;
+  }
+
+  .mobile-sidebar-trigger {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 70;
+    display: inline-flex;
+    height: 42px;
+    width: 42px;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    background: var(--surface-overlay);
+    color: var(--dark-teal);
+    box-shadow: 0 8px 22px var(--shadow-soft);
+    backdrop-filter: blur(14px);
+  }
+
+  .mobile-sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    display: block;
+    border: none;
+    background: rgba(15, 23, 42, 0.42);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 180ms ease;
+  }
+
+  .mobile-sidebar-backdrop.is-open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .mobile-sidebar-close {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 2;
+    display: inline-flex;
+    height: 34px;
+    width: 34px;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    background: var(--surface-soft);
+    color: var(--text-muted);
   }
 
   .main-stage-content {
@@ -9316,7 +9451,24 @@ textarea::placeholder {
   }
 
   .top-header {
-    padding: 12px 16px;
+    min-height: 62px;
+    padding: 16px 62px 12px 16px;
+  }
+
+  .breadcrumb {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+    white-space: nowrap;
+  }
+
+  .breadcrumb::-webkit-scrollbar {
+    display: none;
+  }
+
+  .breadcrumb-item {
+    flex: 0 0 auto;
   }
 
   .content-body {
@@ -9636,6 +9788,144 @@ textarea::placeholder {
 .dark .text-slate-800,
 .dark .text-slate-900 {
   color: var(--text-body) !important;
+}
+
+.mobile-data-card-list {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-data-table-desktop {
+    display: none;
+  }
+
+  .mobile-data-card-list {
+    display: grid;
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .mobile-data-card {
+    display: grid;
+    gap: 12px;
+    padding: 14px;
+    border: 1px solid var(--border-soft);
+    border-radius: 18px;
+    background: var(--surface);
+    color: var(--text-body);
+    box-shadow: 0 6px 16px var(--shadow-soft);
+  }
+
+  .mobile-data-card-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    color: var(--text-strong);
+  }
+
+  .mobile-data-card-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px 12px;
+    margin: 0;
+  }
+
+  .mobile-data-card-grid div {
+    min-width: 0;
+  }
+
+  .mobile-data-card-grid dt {
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .mobile-data-card-grid dd {
+    margin: 4px 0 0;
+    color: var(--text-body);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.8;
+    overflow-wrap: anywhere;
+  }
+
+  .mobile-data-card-action {
+    display: inline-flex;
+    min-height: 40px;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    color: var(--text-body);
+    font-size: 12px;
+    font-weight: 900;
+  }
+
+  .content-body-wide,
+  .reports-stage-content > .content-body.content-body-wide.content-body-contract-reports,
+  .audit-stage-content > .content-body.content-body-wide.content-body-audit {
+    max-width: 100%;
+    padding-inline: 12px;
+  }
+
+  .contract-flow-content {
+    padding: 12px;
+  }
+
+  .contract-flow-sidebar-panel,
+  .contract-flow-report-panel {
+    max-height: none;
+  }
+
+  [role='dialog'],
+  .business-dialog {
+    max-width: calc(100vw - 24px) !important;
+    max-height: calc(100dvh - 24px);
+    overflow-y: auto;
+  }
+
+  .business-dialog-backdrop {
+    padding: 12px;
+  }
+
+  .business-dialog {
+    padding: 18px;
+  }
+
+  .business-dialog-actions {
+    flex-wrap: wrap;
+  }
+
+  .business-dialog-actions > button,
+  .business-dialog-actions > a {
+    min-height: 42px;
+  }
+
+  [role='radiogroup'] {
+    max-width: 100%;
+  }
+
+  [role='radiogroup'] > button {
+    min-height: 42px;
+  }
+
+  .business-switch,
+  .business-switch-option {
+    min-height: 42px;
+  }
+
+  .top-header-reports-dense,
+  .top-header-audit-dense {
+    padding-right: 62px;
+  }
+}
+
+@media (max-width: 420px) {
+  .home-main-content .gear-system {
+    transform: translateY(-50%) scale(0.58);
+  }
 }
 
 .dark .text-teal-700,
