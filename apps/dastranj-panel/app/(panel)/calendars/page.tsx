@@ -12,7 +12,9 @@ type CalendarsPageProps = {
 export default async function CalendarsPage({ searchParams }: CalendarsPageProps) {
   const items = await listCalendars();
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
-  const yearOptions = Array.from(new Set(items.map((item) => item.yearLabel).filter(Boolean)));
+  const yearOptions: string[] = Array.from(
+    new Set(items.map((item) => item.yearLabel).filter((year): year is string => Boolean(year))),
+  );
   const fallbackYear = yearOptions[0] ?? 'all';
   const selectedYear = resolvedSearchParams?.year ?? fallbackYear;
   const defaultYearLabel = currentJalaliYearLabel();

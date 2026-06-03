@@ -1,4 +1,4 @@
-import { Prisma } from '../../node_modules/.prisma/client';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { NextResponse } from 'next/server';
 
 const SETUP_MESSAGE =
@@ -25,7 +25,7 @@ export function handlePrismaApiError(error: unknown) {
     );
   }
 
-  if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2021') {
+  if (error instanceof PrismaClientKnownRequestError && error.code === 'P2021') {
     return NextResponse.json(
       {
         error: 'database_not_initialized',

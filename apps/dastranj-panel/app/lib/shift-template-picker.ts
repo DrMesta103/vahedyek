@@ -1,4 +1,4 @@
-import type { ShiftTemplateType } from '../../node_modules/.prisma/client';
+import type { ShiftTemplateType } from './prisma-client';
 import type { CalendarShiftType } from './calendar-shifts';
 import { templateTypeToCalendarShiftType } from './shift-template-map';
 

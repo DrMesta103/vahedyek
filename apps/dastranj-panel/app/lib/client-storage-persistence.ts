@@ -1,4 +1,3 @@
-import { Prisma } from '../../node_modules/.prisma/client';
 import { prisma } from './prisma';
 
 export type HydratedClientStorageState = {
@@ -84,12 +83,20 @@ async function mirrorContractTemplatesToDraftTemplateTable(storageKey: string, v
 
 export async function listClientStorageStates(tenantId: string | null | undefined): Promise<HydratedClientStorageState[]> {
   const scopes = tenantId ? [GLOBAL_SCOPE, tenantScope(tenantId)] : [GLOBAL_SCOPE];
-  const rows = await prisma.$queryRaw<Array<{ storageKey: string; value: string }>>`
-    SELECT "storageKey", "value"
-    FROM "ClientStorageState"
-    WHERE "scope" IN (${Prisma.join(scopes)})
-    ORDER BY "scope" ASC, "updatedAt" ASC
-  `;
+  const rows =
+    scopes.length === 1
+      ? await prisma.$queryRaw<Array<{ storageKey: string; value: string }>>`
+          SELECT "storageKey", "value"
+          FROM "ClientStorageState"
+          WHERE "scope" = ${scopes[0]}
+          ORDER BY "scope" ASC, "updatedAt" ASC
+        `
+      : await prisma.$queryRaw<Array<{ storageKey: string; value: string }>>`
+          SELECT "storageKey", "value"
+          FROM "ClientStorageState"
+          WHERE "scope" = ${scopes[0]} OR "scope" = ${scopes[1]}
+          ORDER BY "scope" ASC, "updatedAt" ASC
+        `;
 
   return rows.map((row) => ({ storageKey: row.storageKey, value: row.value }));
 }

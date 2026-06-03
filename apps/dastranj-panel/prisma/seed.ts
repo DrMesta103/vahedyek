@@ -1,4 +1,4 @@
-import { PrismaClient } from '../node_modules/.prisma/client';
+import { PrismaClient } from '../node_modules/.prisma/client/index.js';
 import { seedSampleData } from '../app/lib/seed';
 
 const prisma = new PrismaClient();

@@ -1,4 +1,4 @@
-import { Prisma, type Calendar } from '../../node_modules/.prisma/client';
+import { Prisma, type Calendar } from './prisma-client';
 import { getOfficialHolidaysForYear } from './calendar-official-holidays';
 import { prisma } from './prisma';
 
@@ -21,11 +21,11 @@ export type DefaultCalendarTemplate = {
   totalEventDays: number;
 };
 
-function jsonArray<T>(value: Prisma.JsonValue | null | undefined): T[] {
+function jsonArray<T>(value: unknown): T[] {
   return Array.isArray(value) ? (value as T[]) : [];
 }
 
-function jsonObject(value: Prisma.JsonValue | null | undefined): Record<string, unknown> {
+function jsonObject(value: unknown): Record<string, unknown> {
   return value && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
 }
 
@@ -106,7 +106,7 @@ export async function ensureGlobalDefaultCalendar(yearLabel = currentJalaliYearL
       singleHolidays: fallback.singleHolidays,
       shiftTitle: fallback.shiftTitle,
       shiftTypeLabel: fallback.shiftTypeLabel,
-      shiftConfig: fallback.shiftConfig as Prisma.InputJsonObject,
+      shiftConfig: fallback.shiftConfig as any,
       holidayCount: fallback.holidayCount,
       totalShiftDays: fallback.totalShiftDays,
       totalEventDays: fallback.totalEventDays,

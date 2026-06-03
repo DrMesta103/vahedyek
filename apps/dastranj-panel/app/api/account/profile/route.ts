@@ -90,10 +90,10 @@ export async function GET() {
 
     await ensureProfileSettingsTable();
 
-    const rows = await prisma.$queryRawUnsafe<Array<{ profilePayload: unknown }>>(
+    const rows = (await prisma.$queryRawUnsafe(
       `SELECT "profilePayload" FROM ${TABLE_NAME} WHERE "tenantId" = $1 LIMIT 1`,
       session.tenantId,
-    );
+    )) as Array<{ profilePayload: unknown }>;
 
     const store = normalizeProfileStore(rows[0]?.profilePayload ?? {});
     const meta = await getProfileMeta(

@@ -10,7 +10,7 @@ function getInitialTheme(): ThemeMode {
   const saved = window.localStorage.getItem('dastranj-theme');
   if (saved === 'light' || saved === 'dark') return saved;
 
-  return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  return 'dark';
 }
 
 function applyTheme(theme: ThemeMode) {

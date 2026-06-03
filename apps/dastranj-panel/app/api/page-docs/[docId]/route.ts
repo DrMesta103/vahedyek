@@ -28,7 +28,7 @@ type ExistingDocRow = {
 };
 
 async function fetchExistingDoc(docId: string, tenantId: string) {
-  const rows = await prisma.$queryRawUnsafe<ExistingDocRow[]>(
+  const rows = (await prisma.$queryRawUnsafe(
     `
       SELECT "id", "title", "docType", "labelsJson", "pagePath", "pageKey"
       FROM ${DOCS_TABLE}
@@ -38,7 +38,7 @@ async function fetchExistingDoc(docId: string, tenantId: string) {
     docId,
     tenantId,
     currentAppConfig.appId,
-  );
+  )) as ExistingDocRow[];
 
   return rows[0] ?? null;
 }

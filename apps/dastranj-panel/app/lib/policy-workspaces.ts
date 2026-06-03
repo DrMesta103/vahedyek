@@ -1,4 +1,4 @@
-import type { WorkPolicy } from '../../node_modules/.prisma/client';
+import type { WorkPolicy } from './prisma-client';
 
 export type PolicyFamilyKey = 'work' | 'shift' | 'leave' | 'manual' | 'night';
 

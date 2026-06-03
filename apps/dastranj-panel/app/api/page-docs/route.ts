@@ -25,7 +25,7 @@ export async function GET(request: Request) {
 
     await ensurePageDocsTables();
 
-    const rows = await prisma.$queryRawUnsafe<PageDocRow[]>(
+    const rows = (await prisma.$queryRawUnsafe(
       `
         SELECT
           doc."id",
@@ -61,7 +61,7 @@ export async function GET(request: Request) {
       currentAppConfig.appId,
       pageKey,
       session.user.id,
-    );
+    )) as PageDocRow[];
 
     return NextResponse.json({
       pagePath,

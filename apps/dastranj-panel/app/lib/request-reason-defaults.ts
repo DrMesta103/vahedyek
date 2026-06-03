@@ -1,4 +1,4 @@
-import type { PrismaClient, RequestReasonCategory } from '../../node_modules/.prisma/client';
+import type { PrismaClient, RequestReasonCategory } from './prisma-client';
 import { REQUEST_REASON_CATEGORY_ORDER } from './constants';
 
 type DefaultRequestReason = {

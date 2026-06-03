@@ -2,9 +2,7 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import prismaPkg from '../node_modules/.prisma/client/index.js';
-
-const { PrismaClient } = prismaPkg;
+import { PrismaClient } from '../node_modules/.prisma/client/index.js';
 
 const appRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 

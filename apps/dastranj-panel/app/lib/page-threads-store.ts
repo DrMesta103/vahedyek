@@ -282,7 +282,7 @@ export function mapMessageRow(row: MessageRow): PageMessageRecord {
 export async function listThreadsForApp(input: { tenantId: string; userId: string }) {
   await ensurePageThreadsTables();
 
-  const rows = await prisma.$queryRawUnsafe<ThreadRow[]>(
+  const rows = (await prisma.$queryRawUnsafe(
     `
       SELECT
         t."id",
@@ -331,7 +331,7 @@ export async function listThreadsForApp(input: { tenantId: string; userId: strin
     input.tenantId,
     currentAppConfig.appId,
     input.userId,
-  );
+  )) as ThreadRow[];
 
   return {
     pagePath: '/',
@@ -344,7 +344,7 @@ export async function listThreadsForPage(input: { pagePath: string; tenantId: st
   const { pagePath, pageKey } = normalizePagePath(input.pagePath);
   await ensurePageThreadsTables();
 
-  const rows = await prisma.$queryRawUnsafe<ThreadRow[]>(
+  const rows = (await prisma.$queryRawUnsafe(
     `
       SELECT
         t."id",
@@ -394,7 +394,7 @@ export async function listThreadsForPage(input: { pagePath: string; tenantId: st
     currentAppConfig.appId,
     pageKey,
     input.userId,
-  );
+  )) as ThreadRow[];
 
   return { pagePath, pageKey, threads: rows.map(mapThreadRow) };
 }
@@ -519,7 +519,7 @@ export async function updateThreadMeta(input: {
 export async function deleteThread(input: { threadId: string }) {
   await ensurePageThreadsTables();
 
-  const rows = await prisma.$queryRawUnsafe<{ id: string }[]>(
+  const rows = (await prisma.$queryRawUnsafe(
     `
       DELETE FROM ${THREADS_TABLE}
       WHERE "id" = $1 AND "appId" = $2
@@ -527,7 +527,7 @@ export async function deleteThread(input: { threadId: string }) {
     `,
     input.threadId,
     currentAppConfig.appId,
-  );
+  )) as Array<{ id: string }>;
 
   return rows.length > 0;
 }
@@ -535,7 +535,7 @@ export async function deleteThread(input: { threadId: string }) {
 export async function listThreadMessages(input: { threadId: string }) {
   await ensurePageThreadsTables();
 
-  const rows = await prisma.$queryRawUnsafe<MessageRow[]>(
+  const rows = (await prisma.$queryRawUnsafe(
     `
       SELECT
         m."id",
@@ -561,7 +561,7 @@ export async function listThreadMessages(input: { threadId: string }) {
       ORDER BY m."createdAt" ASC
     `,
     input.threadId,
-  );
+  )) as MessageRow[];
 
   return rows.map(mapMessageRow);
 }
@@ -635,7 +635,7 @@ export async function createMessage(input: {
     currentAppConfig.appId,
   );
 
-  const rows = await prisma.$queryRawUnsafe<MessageRow[]>(
+  const rows = (await prisma.$queryRawUnsafe(
     `
       SELECT
         m."id",
@@ -661,7 +661,7 @@ export async function createMessage(input: {
       LIMIT 1
     `,
     id,
-  );
+  )) as MessageRow[];
 
   return rows[0] ? mapMessageRow(rows[0]) : null;
 }

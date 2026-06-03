@@ -13,7 +13,7 @@ export async function GET() {
 
     await ensurePageDocsTables();
 
-    const rows = await prisma.$queryRawUnsafe<PageDocEventRow[]>(
+    const rows = (await prisma.$queryRawUnsafe(
       `
         SELECT
           event."id",
@@ -45,7 +45,7 @@ export async function GET() {
       session.tenantId,
       currentAppConfig.appId,
       session.user.id,
-    );
+    )) as PageDocEventRow[];
 
     return NextResponse.json({
       appId: currentAppConfig.appId,

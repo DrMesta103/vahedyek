@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
-import { Prisma } from '../../node_modules/.prisma/client';
+import { Decimal } from '@prisma/client/runtime/library';
+import { Prisma } from './prisma-client';
 import { prisma } from './prisma';
 import { getSessionContext } from './auth';
 import { ensureTenantDefaultRequestReasons } from './request-reason-defaults';
@@ -138,7 +139,7 @@ type RawEmployeeRequestRow = {
   dateTime: string | null;
   rangeType: EmployeeRequestRangeType | null;
   attendanceActionType: AttendanceActionType | null;
-  amount: Prisma.Decimal | number | string | null;
+  amount: Decimal | number | string | null;
   loanId: string | null;
   loanTitle: string | null;
   installments: number | null;
@@ -181,7 +182,7 @@ async function requireTenantId() {
   return { tenantId: session.tenantId, userName: session.user?.fullName ?? session.user?.email ?? 'مدیر سیستم' };
 }
 
-function numberValue(value: Prisma.Decimal | number | string | null | undefined) {
+function numberValue(value: Decimal | number | string | null | undefined) {
   if (value == null) return null;
   return typeof value === 'number' ? value : Number(value.toString());
 }
@@ -325,12 +326,12 @@ export async function listCompanyLoans(): Promise<CompanyLoanItem[]> {
     id: string;
     title: string;
     guarantorCount: number;
-    minAmount: Prisma.Decimal;
-    maxAmount: Prisma.Decimal;
+    minAmount: Decimal;
+    maxAmount: Decimal;
     minInstallments: number;
     maxInstallments: number;
-    feeRate: Prisma.Decimal;
-    interestRate: Prisma.Decimal;
+    feeRate: Decimal;
+    interestRate: Decimal;
     isActive: boolean;
     createdAt: Date;
     updatedAt: Date;

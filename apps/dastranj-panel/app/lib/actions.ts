@@ -2,7 +2,8 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { Prisma, WorkGroupAccessLevel } from '../../node_modules/.prisma/client';
+import { Decimal } from '@prisma/client/runtime/library';
+import { Prisma, WorkGroupAccessLevel } from './prisma-client';
 import { prisma } from './prisma';
 import {
   toWorkplaceLocationDraft,
@@ -48,7 +49,7 @@ function digitsOnlyValue(formData: FormData, key: string) {
     .replace(/\D/g, '');
 }
 
-function jsonValue<T extends Prisma.InputJsonValue>(value: T): T {
+function jsonValue(value: unknown): any {
   return value;
 }
 
@@ -73,7 +74,7 @@ function parseJsonRecord(value: string | null | undefined) {
 
 function decimalValue(formData: FormData, key: string) {
   const raw = value(formData, key);
-  return raw ? new Prisma.Decimal(raw) : null;
+  return raw ? new Decimal(raw) : null;
 }
 
 async function getTenantId() {
@@ -86,7 +87,7 @@ function tenantRelation(tenantId: string) {
   return { tenant: { connect: { id: tenantId } } };
 }
 
-function getPolicyFamilyKey(sectionValues: Prisma.JsonValue | null | undefined) {
+function getPolicyFamilyKey(sectionValues: unknown) {
   if (!sectionValues || typeof sectionValues !== 'object' || Array.isArray(sectionValues)) return null;
   const familyKey = (sectionValues as Record<string, unknown>).familyKey;
   return typeof familyKey === 'string' ? familyKey : null;
@@ -139,8 +140,8 @@ function buildLocationData(formData: FormData, tenantId: string, isPrimaryOnboar
     address: validation.values.address,
     radius: validation.values.radius,
     description: validation.values.description,
-    latitude: new Prisma.Decimal(validation.values.latitude),
-    longitude: new Prisma.Decimal(validation.values.longitude),
+    latitude: new Decimal(validation.values.latitude),
+    longitude: new Decimal(validation.values.longitude),
     isPrimaryOnboarding,
   };
 }
@@ -242,8 +243,8 @@ export async function saveLocationFromQuickSetupAction(formData: FormData) {
     address: validation.values.address,
     radius: validation.values.radius,
     description: validation.values.description,
-    latitude: new Prisma.Decimal(validation.values.latitude),
-    longitude: new Prisma.Decimal(validation.values.longitude),
+    latitude: new Decimal(validation.values.latitude),
+    longitude: new Decimal(validation.values.longitude),
     isPrimaryOnboarding: true,
   };
 
@@ -569,9 +570,9 @@ export async function createShiftTemplateFromDialogAction(data: {
       title: payload.title,
       description: payload.description,
       type: payload.type,
-      weekDays: jsonValue(payload.weekDays as Prisma.InputJsonValue),
-      config: jsonValue(payload.config as Prisma.InputJsonValue),
-      breaks: jsonValue(payload.breaks as Prisma.InputJsonValue),
+      weekDays: jsonValue(payload.weekDays as any),
+      config: jsonValue(payload.config as any),
+      breaks: jsonValue(payload.breaks as any),
       isActive: payload.isActive,
     },
   });
@@ -704,7 +705,7 @@ export async function addCalendarShiftAction(data: {
     data: {
       shiftTitle: resolvedShiftTitle,
       shiftTypeLabel: getCalendarShiftTypeLabel(data.shiftType),
-      shiftConfig: jsonValue({ ...root, shifts: existingShifts, excludedDates } as Prisma.InputJsonValue),
+      shiftConfig: jsonValue({ ...root, shifts: existingShifts, excludedDates } as any),
       totalShiftDays: existingShifts.length,
     },
   });
@@ -824,7 +825,7 @@ export async function addCalendarEventsAction(data: {
   await prisma.calendar.update({
     where: { id: data.calendarId },
     data: {
-      singleHolidays: jsonValue(merged as Prisma.InputJsonValue),
+      singleHolidays: jsonValue(merged as any),
       holidayCount: weekends.length + holidayEvents.length,
       totalEventDays: merged.length,
     },
@@ -857,7 +858,7 @@ export async function removeCalendarWeekendDayAction(data: { calendarId: string;
   await prisma.calendar.update({
     where: { id: data.calendarId },
     data: {
-      weekends: jsonValue(nextWeekends as Prisma.InputJsonValue),
+      weekends: jsonValue(nextWeekends as any),
       holidayCount: nextWeekends.length + holidayEvents.length,
     },
   });
@@ -886,7 +887,7 @@ export async function addCalendarWeekendOverrideAction(data: { calendarId: strin
   await prisma.calendar.update({
     where: { id: data.calendarId },
     data: {
-      shiftConfig: jsonValue({ ...root, weekendOverrides: [...weekendOverrides] } as Prisma.InputJsonValue),
+      shiftConfig: jsonValue({ ...root, weekendOverrides: [...weekendOverrides] } as any),
     },
   });
 
@@ -917,7 +918,7 @@ export async function deleteCalendarStoredEventAction(data: { calendarId: string
   await prisma.calendar.update({
     where: { id: data.calendarId },
     data: {
-      singleHolidays: jsonValue(remaining as Prisma.InputJsonValue),
+      singleHolidays: jsonValue(remaining as any),
       holidayCount: weekends.length + holidayEvents.length,
       totalEventDays: remaining.length,
     },
@@ -969,7 +970,7 @@ export async function deleteCalendarEventsInRangeAction(data: {
   await prisma.calendar.update({
     where: { id: data.calendarId },
     data: {
-      singleHolidays: jsonValue(remaining as Prisma.InputJsonValue),
+      singleHolidays: jsonValue(remaining as any),
       holidayCount: weekends.length + holidayEvents.length,
       totalEventDays: remaining.length,
     },
@@ -1020,7 +1021,7 @@ export async function deleteCalendarShiftsInRangeAction(data: {
   await prisma.calendar.update({
     where: { id: data.calendarId },
     data: {
-      shiftConfig: jsonValue({ ...shiftRoot, excludedDates: [...excludedDates] } as Prisma.InputJsonValue),
+      shiftConfig: jsonValue({ ...shiftRoot, excludedDates: [...excludedDates] } as any),
     },
   });
 
@@ -1076,7 +1077,7 @@ export async function createCalendarWithShiftAction(data: {
       singleHolidays: jsonValue(data.singleHolidays),
       shiftTitle: data.shiftTitle,
       shiftTypeLabel: getCalendarShiftTypeLabel(data.shiftType),
-      shiftConfig: jsonValue(data.shiftConfig as Prisma.InputJsonObject),
+      shiftConfig: jsonValue(data.shiftConfig as any),
       holidayCount,
       totalShiftDays: 0,
       totalEventDays: data.singleHolidays.length,
@@ -1118,8 +1119,8 @@ export async function createCalendarDraftFromDefaultAction(data: {
       yearLabel: data.yearLabel,
       startDate: source.startDate,
       endDate: source.endDate,
-      weekends: jsonValue(weekends as Prisma.InputJsonValue),
-      singleHolidays: jsonValue(singleHolidays as Prisma.InputJsonValue),
+      weekends: jsonValue(weekends as any),
+      singleHolidays: jsonValue(singleHolidays as any),
       shiftTitle: '',
       shiftTypeLabel: '',
       shiftConfig: '{}',
@@ -1249,7 +1250,7 @@ export async function updateCalendarFromQuickSetupAction(data: {
       singleHolidays: jsonValue(data.singleHolidays),
       shiftTitle: resolvedShiftTitle,
       shiftTypeLabel: getCalendarShiftTypeLabel(data.shiftType),
-      shiftConfig: jsonValue(shiftConfig as Prisma.InputJsonObject),
+      shiftConfig: jsonValue(shiftConfig as any),
       holidayCount,
       totalEventDays: data.singleHolidays.length,
     },
@@ -1660,7 +1661,7 @@ export async function toggleEmployeeActiveAction(formData: FormData) {
 export async function saveEmployeeBankAccountsAction(formData: FormData) {
   const tenantId = await getTenantId();
   const employeeId = value(formData, 'employeeId');
-  const accounts = JSON.parse(value(formData, 'accounts')) as Prisma.InputJsonValue;
+  const accounts = JSON.parse(value(formData, 'accounts')) as any;
   await prisma.employee.updateMany({
     where: { id: employeeId, tenantId },
     data: { bankAccounts: accounts },
@@ -1672,7 +1673,7 @@ export async function saveEmployeeBankAccountsAction(formData: FormData) {
 export async function saveEmployeeGuaranteesAction(formData: FormData) {
   const tenantId = await getTenantId();
   const employeeId = value(formData, 'employeeId');
-  const guarantees = JSON.parse(value(formData, 'guarantees')) as Prisma.InputJsonValue;
+  const guarantees = JSON.parse(value(formData, 'guarantees')) as any;
   await prisma.employee.updateMany({
     where: { id: employeeId, tenantId },
     data: { guarantees },

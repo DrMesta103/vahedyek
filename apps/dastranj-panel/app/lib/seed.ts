@@ -1,6 +1,7 @@
 'use server';
 
-import { Prisma, type PrismaClient } from '../../node_modules/.prisma/client';
+import { Decimal } from '@prisma/client/runtime/library';
+import { Prisma, type PrismaClient } from './prisma-client';
 import { ensureTenantDefaultRequestReasons } from './request-reason-defaults';
 
 const demoCalendars1404 = [
@@ -68,8 +69,8 @@ export async function seedSampleData(prisma: PrismaClient, tenantId: string) {
       title: 'دفتر مرکزی',
       address: 'تهران، خیابان ولیعصر، پلاک 21',
       radius: 120,
-      latitude: new Prisma.Decimal('35.725221'),
-      longitude: new Prisma.Decimal('51.391588'),
+      latitude: new Decimal('35.725221'),
+      longitude: new Decimal('51.391588'),
       description: 'مبدا ثبت تردد تیم ستادی',
     },
   });
