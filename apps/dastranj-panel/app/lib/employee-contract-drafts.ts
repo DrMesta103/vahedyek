@@ -1,15 +1,26 @@
 import {
   DEFAULT_PAYROLL_SETTINGS,
   DEFAULT_FIXED_BENEFIT_RULES,
+  DEFAULT_OPTIONAL_ADDITION_RULES,
+  DEFAULT_OPTIONAL_DEDUCTION_RULES,
   getActiveTenantStorageId,
   normalizePayrollSettings,
   normalizeCalculationRules,
+  normalizeLeaveSettings,
+  normalizeMissionSettings,
+  normalizePaymentSchedule,
+  normalizeWorkTimePayRules,
+  DEFAULT_PAYMENT_SCHEDULE,
+  type MissionSettings,
   type CalculationRules,
+  type PaymentSchedule,
   type PayrollSettings,
   type TaxBracket,
   getPayrollSettingsStorageKey,
 } from './payroll-business-settings';
-import type { ContractDraftTemplate, ContractDraftTemplateUsageType } from './contract-draft-templates';
+import type { ContractDraftTemplate, ContractDraftTemplateUsageType, VariableTemplateItem } from './contract-draft-templates';
+import { formatSubjectResponsibilities, parseSubjectResponsibilities } from './contract-subject-options';
+import type { AttachmentDraft } from './employee-requests';
 
 export type EmployeeContractDraftUsageType = ContractDraftTemplateUsageType;
 
@@ -20,9 +31,31 @@ export type EmployeeContractDraftStepId =
   | 'financial'
   | 'insuranceTax'
   | 'benefits'
+  | 'benefitsEnd'
+  | 'variablePayments'
+  | 'paymentType'
   | 'workTimePayRules'
   | 'leave'
+  | 'mission'
+  | 'specialCommitments'
+  | 'attachments'
   | 'future';
+
+export type EmployeeBenefitPaymentPeriod = 'monthly' | 'quarterly' | 'semiAnnual' | 'annual' | 'none';
+export type EmployeePaymentCycle = 'monthly' | 'weekly' | 'biweekly' | 'daily' | 'project' | 'seasonal';
+
+export type EmployeeMissionRule = MissionSettings['rules'][number];
+export type EmployeeMissionSettings = MissionSettings;
+
+export type EmployeeSpecialCommitments = {
+  selected: string[];
+  attachments: AttachmentDraft[];
+};
+
+export type EmployeeContractAttachments = {
+  requiredDocuments: Record<string, string[]>;
+  files: AttachmentDraft[];
+};
 
 export type EmployeeDraftStepState = {
   opened: boolean;
@@ -59,6 +92,32 @@ export type EmployeeDraftTemplateSnapshot = {
   };
   benefits: Record<'workerAllowance' | 'housingAllowance' | 'childAllowance' | 'marriageAllowance' | 'seniorityAllowance', number>;
   benefitRules: Record<'workerAllowance' | 'housingAllowance' | 'childAllowance' | 'marriageAllowance' | 'seniorityAllowance', CalculationRules>;
+  benefitsEnd?: {
+    eidBonus: {
+      amount: number;
+      period: EmployeeBenefitPaymentPeriod;
+    };
+    endOfService: {
+      enabled: boolean;
+      severancePaymentMethod: 'end_of_work' | 'periodic';
+      finalSettlementEnabled: boolean;
+    };
+  };
+  variablePayments?: {
+    enabled: boolean;
+    additions: VariableTemplateItem[];
+    deductions: VariableTemplateItem[];
+  };
+  paymentSchedule?: PaymentSchedule;
+  paymentType?: {
+    type: string;
+    period: EmployeePaymentCycle;
+  };
+  workTimePayRules?: PayrollSettings['workTimePayRules'];
+  leave?: PayrollSettings['leave'];
+  mission?: EmployeeMissionSettings;
+  specialCommitments?: EmployeeSpecialCommitments;
+  attachments?: EmployeeContractAttachments;
 };
 
 export type EmployeeEducationRecord = {
@@ -102,7 +161,9 @@ export type EmployeeContractDraft = {
   employeeId: string;
   employeeName: string;
   usageType: EmployeeContractDraftUsageType;
-  status: 'draft' | 'in_progress' | 'completed';
+  status: 'draft' | 'in_progress' | 'completed' | 'active' | 'ended' | 'canceled';
+  isCurrent?: boolean;
+  finalizedAt?: string | null;
   templateId: string | null;
   templateName: string | null;
   templateSnapshot: EmployeeDraftTemplateSnapshot | null;
@@ -128,6 +189,7 @@ export type EmployeeContractDraft = {
     contractSubType: string;
     jobGroup: string;
     responsibility: string;
+    responsibilities?: string[];
     locationGroup: string;
     locationType: string;
   };
@@ -147,6 +209,32 @@ export type EmployeeContractDraft = {
     'workerAllowance' | 'housingAllowance' | 'childAllowance' | 'seniorityAllowance' | 'marriageAllowance',
     { enabled: boolean; amount: number; calculationRules: CalculationRules }
   >;
+  benefitsEnd?: {
+    eidBonus: {
+      amount: number;
+      period: EmployeeBenefitPaymentPeriod;
+    };
+    endOfService: {
+      enabled: boolean;
+      severancePaymentMethod: 'end_of_work' | 'periodic';
+      finalSettlementEnabled: boolean;
+    };
+  };
+  variablePayments?: {
+    enabled: boolean;
+    additions: VariableTemplateItem[];
+    deductions: VariableTemplateItem[];
+  };
+  paymentSchedule?: PaymentSchedule;
+  paymentType?: {
+    type: string;
+    period: EmployeePaymentCycle;
+  };
+  workTimePayRules?: PayrollSettings['workTimePayRules'];
+  leave?: PayrollSettings['leave'];
+  mission?: EmployeeMissionSettings;
+  specialCommitments?: EmployeeSpecialCommitments;
+  attachments?: EmployeeContractAttachments;
   progress: EmployeeDraftProgress;
 };
 
@@ -191,14 +279,95 @@ export function getEmployeeSupplementalStorageKey(tenantId?: string | null) {
 
 export const EMPLOYEE_BENEFIT_KEYS = ['workerAllowance', 'housingAllowance', 'childAllowance', 'marriageAllowance', 'seniorityAllowance'] as const;
 
+export const EMPLOYEE_CONTRACT_BENEFIT_LABELS: Record<(typeof EMPLOYEE_BENEFIT_KEYS)[number], string> = {
+  workerAllowance: 'بن کارگری',
+  housingAllowance: 'حق مسکن',
+  childAllowance: 'حق اولاد',
+  marriageAllowance: 'حق تأهل',
+  seniorityAllowance: 'مزد پایه سنوات',
+};
+
+export const EMPLOYEE_CONTRACT_BENEFIT_DESCRIPTIONS: Record<(typeof EMPLOYEE_BENEFIT_KEYS)[number], string> = {
+  workerAllowance:
+    'بن کارگری کمک‌هزینه‌ای است که به‌صورت ماهانه به کارگران پرداخت می‌شود تا بخشی از هزینه‌های معیشتی آنان را پوشش دهد. این مبلغ توسط شورای عالی کار تعیین شده و کارفرما موظف به پرداخت آن است.',
+  housingAllowance:
+    'حق مسکن کمک‌هزینه‌ای است که کارفرما موظف است ماهانه به کارگران پرداخت کند تا بخشی از هزینه‌های مسکن آن‌ها را جبران نماید. این مبلغ سالانه توسط شورای عالی کار تعیین و در فیش حقوقی درج می‌شود.',
+  childAllowance:
+    'حق اولاد کمک‌هزینه‌ای است که کارفرما موظف است به ازای هر فرزند تحت تکفل کارگر پرداخت کند. این مبلغ بر اساس حداقل حقوق پایه و تعداد فرزندان محاسبه شده و در فیش حقوقی ماهانه لحاظ می‌شود.',
+  marriageAllowance:
+    'حق تأهل کمک‌هزینه‌ای است که کارفرما به کارگران متأهل پرداخت می‌کند. این مبلغ به‌صورت ماهانه همراه با حقوق و بر اساس قوانین اداره کار تعیین شده و در قراردادها و فیش‌های پرداختی اعمال می‌شود.',
+  seniorityAllowance:
+    'مزد پایه سنوات مبلغی است که به کارگرانی که حداقل یک سال سابقه کار در یک واحد دارند، پرداخت می‌شود. این مبلغ برای جبران تجربه و سابقه کاری کارگران در نظر گرفته شده و به‌صورت ماهانه همراه با حقوق پایه پرداخت می‌شود.',
+};
+
+const EMPLOYEE_BENEFIT_END_PAYMENT_PERIODS: Array<{ value: EmployeeBenefitPaymentPeriod; label: string }> = [
+  { value: 'monthly', label: 'Ù…Ø§Ù‡ÛŒØ§Ù†Ù‡' },
+  { value: 'quarterly', label: 'Ø³Ù‡â€ŒÙ…Ø§Ù‡Ù‡' },
+  { value: 'semiAnnual', label: 'Ø´Ø´â€ŒÙ…Ø§Ù‡' },
+  { value: 'annual', label: 'Ø³Ø§ÙÙ‡Ø§Ù†Ù‡' },
+  { value: 'none', label: 'Ø¨Ø¯ÙˆÙ† Ø¹ÛŒØ¯ÛŒ' },
+];
+
+const EMPLOYEE_PAYMENT_CYCLES: Array<{ value: EmployeePaymentCycle; label: string }> = [
+  { value: 'monthly', label: 'Ù¾Ø±Ø¯Ø§Ø®Øª Ù…Ø§Ù‡Ø§Ù†Ù‡' },
+  { value: 'weekly', label: 'Ù¾Ø±Ø¯Ø§Ø®Øª Ù‡ÙØªÙ‡â€ŒØ§ÛŒ' },
+  { value: 'biweekly', label: 'Ù¾Ø±Ø¯Ø§Ø®Øª Ø¯Ùˆ Ù‡ÙØªÙ‡ ÛŒÚ© Ø¨Ø§Ø±' },
+  { value: 'daily', label: 'Ù¾Ø±Ø¯Ø§Ø®Øª Ø±ÙˆØ²Ø§ÙÙ‡' },
+  { value: 'project', label: 'Ù¾Ø±Ø¯Ø§Ø®Øª Ù¾Ø±ÙˆÚ˜Ù‡â€ŒØ§ÛŒ' },
+  { value: 'seasonal', label: 'Ù¾Ø±Ø¯Ø§Ø®Øª ÙØµÙ„ÛŒ' },
+];
+
+function legacyPaymentTypeLabelFromSchedule(schedule: PaymentSchedule) {
+  if (schedule.type === 'job_activity') return 'پرداخت بر اساس نوع شغل و فعالیت';
+  if (schedule.type === 'hybrid_special') return 'پرداخت ترکیبی و روش‌های خاص';
+  return 'پرداخت بر اساس دوره‌های زمانی';
+}
+
+function toLegacyPaymentType(schedule: PaymentSchedule): { type: string; period: EmployeePaymentCycle } {
+  return {
+    type: legacyPaymentTypeLabelFromSchedule(schedule),
+    period: schedule.period ?? 'monthly',
+  };
+}
+
+function normalizeVariableTemplateItem(raw: unknown, type: 'addition' | 'deduction'): VariableTemplateItem {
+  const source = raw && typeof raw === 'object' ? (raw as Partial<VariableTemplateItem>) : {};
+  return {
+    id: typeof source.id === 'string' && source.id.trim() ? source.id : `${type}-${Date.now()}`,
+    title: typeof source.title === 'string' ? source.title : '',
+    type,
+    method: source.method === 'percentage' ? 'percentage' : 'fixed',
+    amount: Number.isFinite(source.amount) ? Number(source.amount) : 0,
+    percent: Number.isFinite(source.percent) ? Number(source.percent) : 0,
+    base: source.base === 'grossPay' ? 'grossPay' : 'baseSalary',
+    calculationRules: normalizeCalculationRules(
+      source.calculationRules,
+      type === 'addition' ? DEFAULT_OPTIONAL_ADDITION_RULES : DEFAULT_OPTIONAL_DEDUCTION_RULES,
+    ),
+  };
+}
+
+function normalizeEmployeeProgress(stepIds: EmployeeContractDraftStepId[], progress?: Partial<EmployeeDraftProgress> | null) {
+  const defaultProgress = buildProgress(stepIds, stepIds[0]);
+  if (!progress) return defaultProgress;
+  const merged = { ...defaultProgress };
+  for (const stepId of stepIds) {
+    merged[stepId] = {
+      ...merged[stepId],
+      ...(progress[stepId] ?? {}),
+    };
+  }
+  return merged;
+}
+
 export const EMPLOYEE_CONTRACT_DRAFT_STEPS: Record<EmployeeContractDraftUsageType, EmployeeContractDraftStep[]> = {
   attendance_only: [
     { id: 'parties', title: 'مشخصات طرفین قرارداد', detail: 'کارفرما و کارمند', implemented: true },
     { id: 'timing', title: 'مشخصات زمانی و ثبت قرارداد', detail: 'تاریخ‌ها و شماره ثبت', implemented: true },
     { id: 'subject', title: 'موضوع قرارداد', detail: 'نوع همکاری و محل کار', implemented: true },
     { id: 'financial', title: 'اطلاعات مالی تردد', detail: 'دقایق موظفی روزانه', implemented: true },
-    { id: 'workTimePayRules', title: 'پرداخت زمان کاری', detail: 'در ادامه تکمیل می‌شود', implemented: false },
-    { id: 'leave', title: 'مرخصی', detail: 'در ادامه تکمیل می‌شود', implemented: false },
+    { id: 'workTimePayRules', title: 'پرداخت زمان کاری', detail: 'ضرایب اضافه‌کاری و تردد', implemented: true },
+    { id: 'leave', title: 'مرخصی', detail: 'سهمیه، انتقال و تسویه', implemented: true },
     { id: 'future', title: 'سایر مراحل', detail: 'در ادامه تکمیل می‌شود', implemented: false },
   ],
   payroll_attendance: [
@@ -208,13 +377,39 @@ export const EMPLOYEE_CONTRACT_DRAFT_STEPS: Record<EmployeeContractDraftUsageTyp
     { id: 'financial', title: 'اطلاعات مالی قرارداد', detail: 'حقوق، دقایق موظفی و مبنا', implemented: true },
     { id: 'insuranceTax', title: 'بیمه و مالیات', detail: 'تعهدات بیمه‌ای و مالیاتی', implemented: true },
     { id: 'benefits', title: 'مزایای پایه و مستمر', detail: 'مزایای ثابت و قانونی', implemented: true },
+    { id: 'benefitsEnd', title: 'مزایای پایان سال و پایان کار', detail: 'عیدی و سنوات', implemented: true },
+    { id: 'variablePayments', title: 'پرداخت‌های متغیر', detail: 'اضافات و کسورات اختیاری', implemented: true },
+    { id: 'paymentType', title: 'نوع پرداخت حقوق و مزایا', detail: 'دوره‌ای و ماهانه', implemented: true },
+    { id: 'workTimePayRules', title: 'پرداخت زمان کاری', detail: 'ضرایب اضافه‌کاری و تردد', implemented: true },
+    { id: 'leave', title: 'مرخصی', detail: 'سهمیه، انتقال و تسویه', implemented: true },
+    { id: 'mission', title: 'ماموریت', detail: 'قوانین پرداخت ماموریت', implemented: true },
+    { id: 'specialCommitments', title: 'تعهدات خاص قرارداد', detail: 'بندهای حقوقی و پیوست‌ها', implemented: true },
+    { id: 'attachments', title: 'پیوست‌ها و مدارک', detail: 'مدارک موردنیاز قرارداد', implemented: true },
     { id: 'future', title: 'سایر مراحل', detail: 'در ادامه تکمیل می‌شود', implemented: false },
   ],
 };
 
+const ALL_EMPLOYEE_CONTRACT_DRAFT_STEP_IDS: Record<EmployeeContractDraftStepId, EmployeeContractDraftStepId> = {
+  parties: 'parties',
+  timing: 'timing',
+  subject: 'subject',
+  financial: 'financial',
+  insuranceTax: 'insuranceTax',
+  benefits: 'benefits',
+  benefitsEnd: 'benefitsEnd',
+  variablePayments: 'variablePayments',
+  paymentType: 'paymentType',
+  workTimePayRules: 'workTimePayRules',
+  leave: 'leave',
+  mission: 'mission',
+  specialCommitments: 'specialCommitments',
+  attachments: 'attachments',
+  future: 'future',
+};
+
 function buildProgress(stepIds: EmployeeContractDraftStepId[], currentStepId: EmployeeContractDraftStepId): EmployeeDraftProgress {
   const initial = Object.fromEntries(
-    Object.values(['parties', 'timing', 'subject', 'financial', 'insuranceTax', 'benefits', 'workTimePayRules', 'leave', 'future'] as EmployeeContractDraftStepId[]).map((stepId) => [
+    Object.values(ALL_EMPLOYEE_CONTRACT_DRAFT_STEP_IDS).map((stepId) => [
       stepId,
       { opened: false, completed: false, dirty: false, saved: false },
     ]),
@@ -237,7 +432,7 @@ function buildProgress(stepIds: EmployeeContractDraftStepId[], currentStepId: Em
 }
 
 export function getEmployeeDraftSteps(usageType: EmployeeContractDraftUsageType) {
-  return EMPLOYEE_CONTRACT_DRAFT_STEPS[usageType];
+  return EMPLOYEE_CONTRACT_DRAFT_STEPS[usageType].filter((step) => step.id !== 'future');
 }
 
 export function getEmployeeDraftStorageKey(tenantId?: string | null) {
@@ -384,16 +579,11 @@ function toMonthOffset(base: Date, months: number) {
   return next.toISOString().slice(0, 10);
 }
 
-function createUniqueContractNumber(drafts: EmployeeContractDraft[]) {
-  const year = new Date().getFullYear();
-  const nextIndex = drafts.filter((draft) => draft.contractNumber.startsWith(`CN-${year}-`)).length + 1;
-  return `CN-${year}-${String(nextIndex).padStart(3, '0')}`;
-}
-
 export function buildTemplateSnapshot(
   template: ContractDraftTemplate,
   baseSettings: PayrollSettings = DEFAULT_PAYROLL_SETTINGS,
 ): EmployeeDraftTemplateSnapshot {
+  const workTimePayRules = normalizeWorkTimePayRules(template.data.workTimePayRules, baseSettings.workTimePayRules);
   return {
     id: template.id,
     name: template.name,
@@ -432,6 +622,41 @@ export function buildTemplateSnapshot(
       marriageAllowance: normalizeCalculationRules(template.data.benefits.marriageAllowance.calculationRules, baseSettings.benefitRules.marriageAllowance),
       seniorityAllowance: normalizeCalculationRules(template.data.benefits.seniorityAllowance.calculationRules, baseSettings.benefitRules.seniorityAllowance),
     },
+    benefitsEnd: {
+      eidBonus: {
+        amount: template.data.benefits.eidBonus.enabled ? template.data.benefits.eidBonus.amount : 0,
+        period: template.data.benefits.eidBonus.enabled ? 'annual' : 'none',
+      },
+      endOfService: {
+        enabled: true,
+        severancePaymentMethod: template.data.benefits.severancePaymentMethod,
+        finalSettlementEnabled: template.data.benefits.finalSettlementEnabled,
+      },
+    },
+    variablePayments: {
+      enabled: template.data.variablePayments.enabled,
+      additions: template.data.variablePayments.additions.map((item) => normalizeVariableTemplateItem(item, 'addition')),
+      deductions: template.data.variablePayments.deductions.map((item) => normalizeVariableTemplateItem(item, 'deduction')),
+    },
+    paymentSchedule: normalizePaymentSchedule(template.data.paymentSchedule ?? template.data.paymentType, DEFAULT_PAYMENT_SCHEDULE),
+    paymentType: toLegacyPaymentType(normalizePaymentSchedule(template.data.paymentSchedule ?? template.data.paymentType, DEFAULT_PAYMENT_SCHEDULE)),
+    workTimePayRules,
+    leave: normalizeLeaveSettings(template.data.leave, baseSettings.leave),
+    mission: normalizeMissionSettings(template.data.mission, {
+      enabled: true,
+      rules: [
+        { id: 'mission-with-stay', title: 'ماموریت با اقامتگاه', coefficient: workTimePayRules.mission.coefficient, paymentBase: 'base_salary', active: true },
+        { id: 'mission-without-stay', title: 'ماموریت بدون اقامتگاه', coefficient: workTimePayRules.mission.coefficient, paymentBase: 'base_salary', active: true },
+      ],
+    }),
+    specialCommitments: {
+      selected: Array.isArray(template.data.specialCommitments.selected) ? template.data.specialCommitments.selected : [],
+      attachments: [],
+    },
+    attachments: {
+      requiredDocuments: template.data.attachments.requiredDocuments ?? {},
+      files: [],
+    },
   };
 }
 
@@ -450,7 +675,6 @@ export function normalizeEmployeeContractDraft(value: unknown): EmployeeContract
   if (!draft.id || !draft.employeeId || !draft.employeeName || !draft.usageType) return null;
   const usageType = draft.usageType as EmployeeContractDraftUsageType;
   const steps = getEmployeeDraftSteps(usageType).map((item) => item.id);
-  const defaultProgress = buildProgress(steps, steps[0]);
   const baseSettings = DEFAULT_PAYROLL_SETTINGS;
   return {
     id: draft.id,
@@ -458,6 +682,8 @@ export function normalizeEmployeeContractDraft(value: unknown): EmployeeContract
     employeeName: draft.employeeName,
     usageType,
     status: draft.status ?? 'draft',
+    isCurrent: Boolean(draft.isCurrent),
+    finalizedAt: draft.finalizedAt ?? null,
     templateId: draft.templateId ?? null,
     templateName: draft.templateName ?? null,
     templateSnapshot: draft.templateSnapshot
@@ -470,11 +696,26 @@ export function normalizeEmployeeContractDraft(value: unknown): EmployeeContract
             marriageAllowance: normalizeCalculationRules(draft.templateSnapshot.benefitRules?.marriageAllowance, DEFAULT_FIXED_BENEFIT_RULES),
             seniorityAllowance: normalizeCalculationRules(draft.templateSnapshot.benefitRules?.seniorityAllowance, DEFAULT_FIXED_BENEFIT_RULES),
           },
+          paymentSchedule: normalizePaymentSchedule(
+            draft.templateSnapshot.paymentSchedule ?? draft.templateSnapshot.paymentType,
+            DEFAULT_PAYMENT_SCHEDULE,
+          ),
+          paymentType: draft.templateSnapshot.paymentType
+            ?? toLegacyPaymentType(
+              normalizePaymentSchedule(
+                draft.templateSnapshot.paymentSchedule ?? draft.templateSnapshot.paymentType,
+                DEFAULT_PAYMENT_SCHEDULE,
+              ),
+            ),
+          workTimePayRules: normalizeWorkTimePayRules(
+            draft.templateSnapshot.workTimePayRules ?? baseSettings.workTimePayRules,
+            baseSettings.workTimePayRules,
+          ),
         }
       : null,
     createdAt: draft.createdAt ?? new Date().toISOString(),
     updatedAt: draft.updatedAt ?? draft.createdAt ?? new Date().toISOString(),
-    contractNumber: draft.contractNumber ?? createUniqueContractNumber([]),
+    contractNumber: draft.contractNumber ?? '',
     parties: {
       employerName: draft.parties?.employerName ?? '',
       employerNationalId: draft.parties?.employerNationalId ?? '',
@@ -493,7 +734,20 @@ export function normalizeEmployeeContractDraft(value: unknown): EmployeeContract
       contractType: draft.subject?.contractType ?? '',
       contractSubType: draft.subject?.contractSubType ?? '',
       jobGroup: draft.subject?.jobGroup ?? '',
-      responsibility: draft.subject?.responsibility ?? '',
+      responsibilities: (() => {
+        const parsed = parseSubjectResponsibilities({
+          responsibility: typeof draft.subject?.responsibility === 'string' ? draft.subject.responsibility : '',
+          responsibilities: Array.isArray(draft.subject?.responsibilities) ? draft.subject.responsibilities : undefined,
+        });
+        return parsed;
+      })(),
+      responsibility: (() => {
+        const parsed = parseSubjectResponsibilities({
+          responsibility: typeof draft.subject?.responsibility === 'string' ? draft.subject.responsibility : '',
+          responsibilities: Array.isArray(draft.subject?.responsibilities) ? draft.subject.responsibilities : undefined,
+        });
+        return formatSubjectResponsibilities(parsed);
+      })(),
       locationGroup: draft.subject?.locationGroup ?? '',
       locationType: draft.subject?.locationType ?? '',
     },
@@ -524,7 +778,25 @@ export function normalizeEmployeeContractDraft(value: unknown): EmployeeContract
       marriageAllowance: normalizeBenefitState(draft.benefits?.marriageAllowance, baseSettings.benefits.marriageAllowance, baseSettings.benefitRules?.marriageAllowance ?? DEFAULT_FIXED_BENEFIT_RULES),
       seniorityAllowance: normalizeBenefitState(draft.benefits?.seniorityAllowance, baseSettings.benefits.seniorityAllowance, baseSettings.benefitRules?.seniorityAllowance ?? DEFAULT_FIXED_BENEFIT_RULES),
     },
-    progress: draft.progress ?? defaultProgress,
+    benefitsEnd: draft.benefitsEnd,
+    variablePayments: draft.variablePayments,
+    paymentSchedule: normalizePaymentSchedule(draft.paymentSchedule ?? draft.paymentType, DEFAULT_PAYMENT_SCHEDULE),
+    paymentType: toLegacyPaymentType(normalizePaymentSchedule(draft.paymentSchedule ?? draft.paymentType, DEFAULT_PAYMENT_SCHEDULE)),
+    workTimePayRules: normalizeWorkTimePayRules(
+      draft.workTimePayRules ?? draft.templateSnapshot?.workTimePayRules ?? baseSettings.workTimePayRules,
+      baseSettings.workTimePayRules,
+    ),
+    leave: normalizeLeaveSettings(draft.leave ?? draft.templateSnapshot?.leave ?? baseSettings.leave, baseSettings.leave),
+    mission: normalizeMissionSettings(draft.mission ?? draft.templateSnapshot?.mission, {
+      enabled: true,
+      rules: [
+        { id: 'mission-with-stay', title: 'ماموریت با اقامتگاه', coefficient: baseSettings.workTimePayRules.mission.coefficient, paymentBase: 'base_salary', active: true },
+        { id: 'mission-without-stay', title: 'ماموریت بدون اقامتگاه', coefficient: baseSettings.workTimePayRules.mission.coefficient, paymentBase: 'base_salary', active: true },
+      ],
+    }),
+    specialCommitments: draft.specialCommitments ?? draft.templateSnapshot?.specialCommitments ?? { selected: [], attachments: [] },
+    attachments: draft.attachments ?? draft.templateSnapshot?.attachments ?? { requiredDocuments: {}, files: [] },
+    progress: normalizeEmployeeProgress(steps, draft.progress),
   };
 }
 
@@ -560,7 +832,7 @@ export function createInitialEmployeeContractDraft({
   const steps = getEmployeeDraftSteps(usageType).map((item) => item.id);
   const progress = buildProgress(steps, steps[0]);
   const now = new Date();
-  const registrationNumber = contractNumberOverride?.trim() || createUniqueContractNumber(drafts);
+  const registrationNumber = contractNumberOverride?.trim() ?? '';
 
   return {
     id: `employee-contract-draft-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -593,6 +865,7 @@ export function createInitialEmployeeContractDraft({
       contractSubType: '',
       jobGroup: '',
       responsibility: '',
+      responsibilities: [],
       locationGroup: snapshot?.classification.locationGroup ?? '',
       locationType: '',
     },
@@ -615,6 +888,21 @@ export function createInitialEmployeeContractDraft({
       marriageAllowance: { enabled: true, amount: snapshot?.benefits.marriageAllowance ?? resolvedBase.benefits.marriageAllowance, calculationRules: { ...(resolvedBase.benefitRules?.marriageAllowance ?? DEFAULT_FIXED_BENEFIT_RULES) } },
       seniorityAllowance: { enabled: true, amount: snapshot?.benefits.seniorityAllowance ?? resolvedBase.benefits.seniorityAllowance, calculationRules: { ...(resolvedBase.benefitRules?.seniorityAllowance ?? DEFAULT_FIXED_BENEFIT_RULES) } },
     },
+    benefitsEnd: snapshot?.benefitsEnd,
+    variablePayments: snapshot?.variablePayments,
+    paymentSchedule: snapshot?.paymentSchedule ?? normalizePaymentSchedule(snapshot?.paymentType, DEFAULT_PAYMENT_SCHEDULE),
+    paymentType: snapshot?.paymentType ?? toLegacyPaymentType(snapshot?.paymentSchedule ?? DEFAULT_PAYMENT_SCHEDULE),
+    workTimePayRules: normalizeWorkTimePayRules(snapshot?.workTimePayRules ?? resolvedBase.workTimePayRules, resolvedBase.workTimePayRules),
+    leave: normalizeLeaveSettings(snapshot?.leave ?? resolvedBase.leave, resolvedBase.leave),
+    mission: snapshot?.mission ?? normalizeMissionSettings(undefined, {
+      enabled: true,
+      rules: [
+        { id: 'mission-with-stay', title: 'ماموریت با اقامتگاه', coefficient: resolvedBase.workTimePayRules.mission.coefficient, paymentBase: 'base_salary', active: true },
+        { id: 'mission-without-stay', title: 'ماموریت بدون اقامتگاه', coefficient: resolvedBase.workTimePayRules.mission.coefficient, paymentBase: 'base_salary', active: true },
+      ],
+    }),
+    specialCommitments: snapshot?.specialCommitments ?? { selected: [], attachments: [] },
+    attachments: snapshot?.attachments ?? { requiredDocuments: {}, files: [] },
     progress,
   };
 }

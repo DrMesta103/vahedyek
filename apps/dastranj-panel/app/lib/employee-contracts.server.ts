@@ -1,0 +1,152 @@
+import { Prisma } from '../../node_modules/.prisma/client';
+import { prisma } from './prisma';
+import { getSessionContext } from './auth';
+import { DEFAULT_PAYROLL_SETTINGS } from './payroll-business-settings';
+import { type EmployeeContractDraft } from './employee-contract-drafts';
+import { type EmployeeCurrentContractSummary } from './employee-contracts';
+
+type ContractRow = {
+  id: string;
+  employeeId: string;
+  status: 'draft' | 'active' | 'ended' | 'canceled';
+  isCurrent: boolean;
+  startDate: string | null;
+  endDate: string | null;
+  contractNumber: string | null;
+  templateId: string | null;
+  data: unknown;
+  finalizedAt: Date | null;
+};
+
+function getDraftData(row: ContractRow) {
+  return (row.data && typeof row.data === 'object' ? row.data : {}) as Partial<EmployeeContractDraft>;
+}
+
+function isMissingEmployeeContractTable(error: unknown) {
+  if (!(error instanceof Prisma.PrismaClientKnownRequestError)) return false;
+  const message = error.message.toLowerCase();
+  return message.includes('employeecontract') && (message.includes('does not exist') || message.includes('42p01'));
+}
+
+function contractRowToSummary(row: ContractRow): EmployeeCurrentContractSummary {
+  const data = getDraftData(row);
+  const responsibilities = Array.isArray(data.subject?.responsibilities) ? data.subject?.responsibilities : [];
+  const jobTitle = responsibilities[0] || data.subject?.responsibility || data.subject?.jobGroup || data.subject?.contractType || '';
+  return {
+    id: row.id,
+    employeeId: row.employeeId,
+    status: row.status,
+    isCurrent: row.isCurrent,
+    startDate: row.startDate,
+    endDate: row.endDate,
+    contractNumber: row.contractNumber,
+    templateId: row.templateId,
+    templateName: data.templateName ?? null,
+    jobTitle,
+    dailyBaseSalary: Number.isFinite(data.financial?.dailyBaseSalary) ? Number(data.financial?.dailyBaseSalary) : null,
+    dailyRequiredMinutes: Number.isFinite(data.financial?.dailyRequiredMinutes)
+      ? Number(data.financial?.dailyRequiredMinutes)
+      : DEFAULT_PAYROLL_SETTINGS.financial.dailyRequiredMinutes,
+    finalizedAt: row.finalizedAt?.toISOString() ?? null,
+    data: data as EmployeeContractDraft,
+  };
+}
+
+async function queryCurrentEmployeeContractRows(employeeIds: string[], tenantId?: string | null) {
+  if (!employeeIds.length) return [] as ContractRow[];
+  if (employeeIds.length === 1) {
+    const [employeeId] = employeeIds;
+    return prisma.$queryRaw<ContractRow[]>`
+      SELECT id, "employeeId", status::text AS status, "isCurrent", "startDate", "endDate", "contractNumber", "templateId", data, "finalizedAt"
+      FROM "EmployeeContract"
+      WHERE "employeeId" = ${employeeId}
+        AND "isCurrent" = true
+        AND status = 'active'
+        AND (${tenantId ?? null}::text IS NULL OR "tenantId" = ${tenantId ?? null})
+      ORDER BY "finalizedAt" DESC NULLS LAST, "updatedAt" DESC
+      LIMIT 1
+    `;
+  }
+  return prisma.$queryRaw<ContractRow[]>`
+    SELECT DISTINCT ON ("employeeId")
+      id, "employeeId", status::text AS status, "isCurrent", "startDate", "endDate", "contractNumber", "templateId", data, "finalizedAt"
+    FROM "EmployeeContract"
+    WHERE "employeeId" IN (${Prisma.join(employeeIds)})
+      AND "isCurrent" = true
+      AND status = 'active'
+      AND (${tenantId ?? null}::text IS NULL OR "tenantId" = ${tenantId ?? null})
+    ORDER BY "employeeId", "finalizedAt" DESC NULLS LAST, "updatedAt" DESC
+  `;
+}
+
+export async function getCurrentEmployeeContract(employeeId: string, tenantId?: string | null) {
+  try {
+    const rows = await queryCurrentEmployeeContractRows([employeeId], tenantId);
+    return rows[0] ? contractRowToSummary(rows[0]) : null;
+  } catch (error) {
+    if (isMissingEmployeeContractTable(error)) return null;
+    throw error;
+  }
+}
+
+export async function getCurrentEmployeeContracts(employeeIds: string[], tenantId?: string | null) {
+  if (!employeeIds.length) return new Map<string, EmployeeCurrentContractSummary>();
+  try {
+    const rows = await queryCurrentEmployeeContractRows(employeeIds, tenantId);
+    return new Map(rows.map((row) => [row.employeeId, contractRowToSummary(row)]));
+  } catch (error) {
+    if (isMissingEmployeeContractTable(error)) return new Map();
+    throw error;
+  }
+}
+
+export async function finalizeEmployeeContractDraft(employeeId: string, draft: EmployeeContractDraft) {
+  const session = await getSessionContext();
+  if (!session?.tenantId) throw new Error('tenant_not_selected');
+  const tenantId = session.tenantId;
+  const employee = await prisma.employee.findFirst({ where: { id: employeeId, tenantId }, select: { id: true } });
+  if (!employee) throw new Error('employee_not_found');
+  if (draft.employeeId !== employeeId) throw new Error('invalid_employee_contract');
+
+  const now = new Date();
+  const data = {
+    ...draft,
+    status: 'active',
+    isCurrent: true,
+    finalizedAt: now.toISOString(),
+    updatedAt: now.toISOString(),
+  };
+  const dataJson = JSON.stringify(data);
+
+  await prisma.$transaction(async (tx) => {
+    await tx.$executeRaw`
+      UPDATE "EmployeeContract"
+      SET "isCurrent" = false, status = 'ended', "updatedAt" = ${now}
+      WHERE "tenantId" = ${tenantId}
+        AND "employeeId" = ${employeeId}
+        AND "isCurrent" = true
+        AND id <> ${draft.id}
+    `;
+    await tx.$executeRaw`
+      INSERT INTO "EmployeeContract" (
+        id, "tenantId", "employeeId", status, "isCurrent", "startDate", "endDate", "contractNumber", "templateId", data, "finalizedAt", "createdAt", "updatedAt"
+      )
+      VALUES (
+        ${draft.id}, ${tenantId}, ${employeeId}, 'active', true, ${draft.timing.startDate || null}, ${draft.timing.endDate || null},
+        ${draft.contractNumber || draft.timing.registrationNumber || null}, ${draft.templateId}, ${dataJson}::jsonb, ${now}, ${now}, ${now}
+      )
+      ON CONFLICT (id) DO UPDATE SET
+        status = 'active',
+        "isCurrent" = true,
+        "startDate" = EXCLUDED."startDate",
+        "endDate" = EXCLUDED."endDate",
+        "contractNumber" = EXCLUDED."contractNumber",
+        "templateId" = EXCLUDED."templateId",
+        data = EXCLUDED.data,
+        "finalizedAt" = EXCLUDED."finalizedAt",
+        "updatedAt" = EXCLUDED."updatedAt"
+    `;
+  });
+
+  return getCurrentEmployeeContract(employeeId, tenantId);
+}

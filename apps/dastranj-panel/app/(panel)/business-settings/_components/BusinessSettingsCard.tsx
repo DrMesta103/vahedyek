@@ -10,6 +10,7 @@ import {
   Calculator,
   FileCode2,
   FileText,
+  LockKeyhole,
   MapPin,
   Network,
   Shield,
@@ -54,10 +55,10 @@ export function BusinessSettingsCard({ title, description, href, icon, comingSoo
         className="group relative flex min-h-[54px] w-full flex-row items-center gap-3 rounded-[18px] border border-white/10 bg-slate-900/35 px-4 py-3 opacity-60 shadow-[0_8px_22px_rgba(2,6,23,0.2)] [html[data-theme=light]_&]:border-slate-200/90 [html[data-theme=light]_&]:bg-white/80 [html[data-theme=light]_&]:shadow-[0_6px_18px_rgba(15,23,42,0.05)]"
       >
         <span
-          className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[12px] border border-white/10 bg-white/[0.04] text-slate-500"
+          className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[12px] border border-amber-500/20 bg-amber-500/10 text-amber-400"
           aria-hidden
         >
-          <Icon className="h-4 w-4" strokeWidth={2.2} />
+          <LockKeyhole className="h-4 w-4" strokeWidth={2.2} />
         </span>
 
         <div className="min-w-0 flex-1 text-right">
@@ -67,7 +68,7 @@ export function BusinessSettingsCard({ title, description, href, icon, comingSoo
             </h2>
             <span className="inline-flex items-center gap-1 rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold text-amber-400 [html[data-theme=light]_&]:border-amber-400/40 [html[data-theme=light]_&]:bg-amber-50 [html[data-theme=light]_&]:text-amber-600">
               <Construction className="h-2.5 w-2.5" strokeWidth={2.5} />
-              در حال توسعه
+              قفل شده
             </span>
           </div>
           <p className="m-0 mt-1 text-[11px] font-medium leading-6 text-slate-500 [html[data-theme=light]_&]:text-slate-400">

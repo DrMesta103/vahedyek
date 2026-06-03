@@ -79,9 +79,10 @@ export const BUSINESS_SETTINGS_CATALOG: BusinessSettingsItem[] = [
   },
   {
     title: 'الگوهای نام‌گذاری و شماره‌گذاری',
-    description: 'تعریف الگوهای پویا برای تولید نام‌ها و شماره‌های سازمانی.',
+    description: 'فعلا این بخش قفل است و بعدا توسعه می‌دهیم.',
     href: '/business-settings/naming-patterns',
     icon: 'naming',
+    comingSoon: true,
   },
   {
     title: 'سیاست‌های کاری',

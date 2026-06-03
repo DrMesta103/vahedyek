@@ -158,14 +158,24 @@ function SegmentedToggle({
 }) {
   return /* @__PURE__ */ jsx(BusinessSwitch, { checked, onChange, activeLabel, inactiveLabel });
 }
-function PageIntro({ title, description, action }) {
-  return /* @__PURE__ */ jsxs("section", { className: "page-intro", children: [
-    /* @__PURE__ */ jsxs("div", { children: [
-      /* @__PURE__ */ jsx("h2", { children: title }),
-      /* @__PURE__ */ jsx("p", { children: description })
+function PageIntro({
+  title,
+  description,
+  action,
+  badge,
+  aside
+}) {
+  return /* @__PURE__ */ jsx("section", { className: "page-intro overflow-hidden rounded-[30px] border border-[color:var(--border-color)] bg-[linear-gradient(135deg,rgba(8,17,31,0.96),rgba(14,26,43,0.9))] p-6 shadow-[0_18px_50px_var(--shadow-soft)]", children: /* @__PURE__ */ jsxs("div", { className: "flex flex-col gap-6 lg:flex-row lg:items-stretch lg:justify-between", children: [
+    /* @__PURE__ */ jsxs("div", { className: "grid gap-5 lg:max-w-[min(100%,720px)]", children: [
+      badge ? /* @__PURE__ */ jsx("div", { className: "flex items-center justify-start", children: /* @__PURE__ */ jsx("div", { className: "inline-flex items-center rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-[11px] font-bold text-white/90", children: badge }) }) : null,
+      /* @__PURE__ */ jsxs("div", { className: "grid gap-3", children: [
+        /* @__PURE__ */ jsx("h2", { className: "text-[28px] font-black leading-tight text-white sm:text-[34px]", children: title }),
+        /* @__PURE__ */ jsx("p", { className: "max-w-3xl text-sm leading-8 text-white/72", children: description })
+      ] }),
+      action ? /* @__PURE__ */ jsx("div", { className: "flex flex-wrap items-center gap-3", children: action }) : null
     ] }),
-    action
-  ] });
+    aside ? /* @__PURE__ */ jsx("div", { className: "lg:min-w-[280px] lg:max-w-[320px]", children: aside }) : null
+  ] }) });
 }
 function PrimaryLink({ href, children }) {
   return /* @__PURE__ */ jsx(Link, { href, className: "primary-link", children });
@@ -180,7 +190,7 @@ function EmptyState({ title, description, action }) {
 function StatGrid({ items }) {
   return /* @__PURE__ */ jsx("div", { className: "stat-grid", children: items.map((item) => /* @__PURE__ */ jsxs("article", { className: "stat-card", children: [
     /* @__PURE__ */ jsx("span", { children: item.label }),
-    /* @__PURE__ */ jsx("strong", { children: item.value })
+    /* @__PURE__ */ jsx("strong", { children: typeof item.value === "number" ? new Intl.NumberFormat("fa-IR").format(item.value) : item.value })
   ] }, item.label)) });
 }
 function DataTable({ columns, rows }) {

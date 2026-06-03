@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useTransition } from 'react';
+import { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -21,6 +21,11 @@ import { ConfirmDialog } from '../../../../../components/ConfirmDialog';
 import { AttachmentManager } from '../../../../../components/AttachmentManager';
 import { AdaptiveChipGroup } from '../../../../../components/AdaptiveChipGroup';
 import { formatFaNumber } from '../../../../../lib/format-fa';
+import {
+  EmployeeRequestDialog,
+  REQUEST_TABS as REQUEST_TAB_CONFIG,
+  createInitialEmployeeRequestForm,
+} from './EmployeeRequestDialog';
 import {
   changeEmployeeRequestStatusAction,
   deleteEmployeeRequestAction,
@@ -44,7 +49,7 @@ const REQUEST_TABS: Array<{ type: EmployeeRequestType; label: string }> = [
   { type: 'unpaid_leave', label: 'مرخصی بدون حقوق' },
   { type: 'sick_leave', label: 'مرخصی استعلاجی' },
   { type: 'overtime', label: 'اضافه‌کاری' },
-  { type: 'attendance', label: 'حضور و غیاب / تردد' },
+  { type: 'attendance', label: 'تردد' },
   { type: 'remote_work', label: 'دورکاری' },
   { type: 'mission', label: 'ماموریت' },
   { type: 'salary_advance', label: 'مساعده' },
@@ -115,7 +120,7 @@ function initialForm(type: EmployeeRequestType, employeeId: string): EmployeeReq
     status: 'pending',
     submissionMode: 'pending',
     rangeType,
-    attendanceActionType: type === 'attendance' ? 'correction' : null,
+    attendanceActionType: null,
     startDate: '',
     endDate: '',
     startTime: '',
@@ -298,9 +303,10 @@ function RequestDialog({
       onClose={onClose}
       footer={
         <PanelFormModalActions
-          submitLabel={readonly ? 'بستن' : 'ذخیره'}
+          submitLabel={readonly ? 'بستن' : 'ثبت'}
           cancelLabel={readonly ? 'بازگشت' : 'انصراف'}
           saving={saving}
+          savingLabel="در حال ثبت..."
           onSubmit={submit}
           onCancel={onClose}
         />
@@ -311,10 +317,17 @@ function RequestDialog({
 
         {isLeave ? (
           <>
-            <div className="employee-request-balance">
-              <span>مرخصی سالانه: <strong>{durationLabel(leaveBalance.annualMinutes)}</strong></span>
-              <span>مرخصی باقی‌مانده: <strong>{durationLabel(leaveBalance.remainingMinutes)}</strong></span>
-            </div>
+            {employee.hasActiveContract ? (
+              <div className="employee-request-balance">
+                <span>مرخصی سالانه (قرارداد فعال): <strong>{durationLabel(leaveBalance.annualMinutes)}</strong></span>
+                <span>مرخصی باقی‌مانده: <strong>{durationLabel(leaveBalance.remainingMinutes)}</strong></span>
+              </div>
+            ) : (
+              <div className="employee-request-balance is-empty">
+                <span>مرخصی سالانه: <strong>فاقد قرارداد</strong></span>
+                <span>مرخصی باقی‌مانده: <strong>فاقد قرارداد</strong></span>
+              </div>
+            )}
             <section className="employee-request-dialog-section">
               <div className="employee-request-section-title">نوع بازه مرخصی</div>
               <AdaptiveChipGroup
@@ -341,14 +354,9 @@ function RequestDialog({
         <div className="employee-request-form-grid">
           {form.requestType === 'attendance' ? (
             <>
-              <label className="business-payroll-field">
-                <span className="business-payroll-field-label">نوع تردد</span>
-                <select disabled={readonly} value={form.attendanceActionType ?? 'correction'} onChange={(event) => onChange({ ...form, attendanceActionType: event.target.value as never })}>
-                  <option value="check_in">ورود</option>
-                  <option value="check_out">خروج</option>
-                  <option value="correction">اصلاح تردد</option>
-                </select>
-              </label>
+              <p className="employee-request-tooltip" style={{ gridColumn: '1 / -1' }}>
+                سیستم بر اساس ترتیب ثبت، ترددهای متوالی را به‌صورت خودکار به «تردد کامل» زوج می‌کند.
+              </p>
               <label className="business-payroll-field">
                 <span className="business-payroll-field-label">تاریخ</span>
                 <input disabled={readonly} value={form.startDate ?? ''} onChange={(event) => onChange({ ...form, startDate: event.target.value, dateTime: `${event.target.value} ${form.startTime ?? ''}`.trim() })} placeholder="۱۴۰۵/۰۱/۰۱" />
@@ -540,7 +548,7 @@ export function EmployeeRequestsClient({
   leaveBalance: LeaveBalanceSummary;
 }) {
   const router = useRouter();
-  const [activeType, setActiveType] = useState<EmployeeRequestType>('daily_leave');
+  const [activeType, setActiveType] = useState<(typeof REQUEST_TAB_CONFIG)[number]['key']>('leave');
   const [sort, setSort] = useState<'newest' | 'oldest'>('newest');
   const [statuses, setStatuses] = useState<EmployeeRequestStatus[]>([]);
   const [year, setYear] = useState('');
@@ -549,26 +557,46 @@ export function EmployeeRequestsClient({
   const [dialogMode, setDialogMode] = useState<'create' | 'edit' | 'view' | null>(null);
   const [form, setForm] = useState<EmployeeRequestFormPayload | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<EmployeeRequestItem | null>(null);
+  const [liveLeaveBalance, setLiveLeaveBalance] = useState(leaveBalance);
   const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    setLiveLeaveBalance(leaveBalance);
+  }, [leaveBalance]);
+
+  const refreshLeaveBalance = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/employees/${employee.id}/requests/leave-balance`);
+      if (!response.ok) return;
+      const payload = (await response.json()) as { leaveBalance: LeaveBalanceSummary };
+      setLiveLeaveBalance(payload.leaveBalance);
+    } catch {
+      // keep previous balance
+    }
+  }, [employee.id]);
+
+  const activeTab = REQUEST_TAB_CONFIG.find((tab) => tab.key === activeType) ?? REQUEST_TAB_CONFIG[0];
 
   const currentRequests = useMemo(() => {
     const filtered = requests
-      .filter((request) => request.requestType === activeType)
+      .filter((request) => activeTab.requestTypes.includes(request.requestType))
       .filter((request) => !statuses.length || statuses.includes(request.status))
       .filter((request) => !year || (request.startDate ?? request.dateTime ?? '').startsWith(year))
       .filter((request) => !dateFrom || (request.startDate ?? request.dateTime ?? '') >= dateFrom)
       .filter((request) => !dateTo || (request.startDate ?? request.dateTime ?? '') <= dateTo);
     return filtered.sort((a, b) => sort === 'newest' ? b.createdAt.localeCompare(a.createdAt) : a.createdAt.localeCompare(b.createdAt));
-  }, [activeType, dateFrom, dateTo, requests, sort, statuses, year]);
+  }, [activeTab.requestTypes, dateFrom, dateTo, requests, sort, statuses, year]);
 
   const openCreate = () => {
-    setForm(initialForm(activeType, employee.id));
+    setForm(createInitialEmployeeRequestForm(activeType, employee.id));
     setDialogMode('create');
+    if (activeType === 'leave') void refreshLeaveBalance();
   };
 
   const openRequest = (request: EmployeeRequestItem, mode: 'edit' | 'view') => {
     setForm(formFromRequest(request));
     setDialogMode(mode);
+    if (LEAVE_TYPES.includes(request.requestType)) void refreshLeaveBalance();
   };
 
   const save = () => {
@@ -673,9 +701,15 @@ export function EmployeeRequestsClient({
           </Link>
         </section>
 
+        {!employee.hasActiveContract ? (
+          <div className="business-payroll-warning" style={{ marginBottom: 12 }}>
+            برای محاسبه مرخصی و اضافه‌کاری، قرارداد فعال وجود ندارد.
+          </div>
+        ) : null}
+
         <div className="employee-request-tabs" role="tablist">
-          {REQUEST_TABS.map((tab) => (
-            <button key={tab.type} type="button" className={activeType === tab.type ? 'is-active' : ''} onClick={() => setActiveType(tab.type)}>
+          {REQUEST_TAB_CONFIG.map((tab) => (
+            <button key={tab.key} type="button" className={activeType === tab.key ? 'is-active' : ''} onClick={() => setActiveType(tab.key)}>
               {tab.label}
             </button>
           ))}
@@ -690,12 +724,12 @@ export function EmployeeRequestsClient({
           <>
             <div className="employee-requests-toolbar">
               <div>
-                <strong>{requestTitle(activeType)}</strong>
+                <strong>{activeTab.label}</strong>
                 <span>{formatFaNumber(currentRequests.length, { useGrouping: false })} درخواست</span>
               </div>
               <button type="button" className="module-page-add-btn" onClick={openCreate}>
                 <Plus className="h-4 w-4" />
-                ثبت درخواست جدید
+                {activeType === 'leave' ? 'ثبت مرخصی جدید' : 'ثبت درخواست جدید'}
               </button>
             </div>
 
@@ -724,13 +758,13 @@ export function EmployeeRequestsClient({
       </main>
 
       {dialogMode && form ? (
-        <RequestDialog
+        <EmployeeRequestDialog
           mode={dialogMode}
           employee={employee}
           form={form}
           reasons={reasons}
           loans={loans}
-          leaveBalance={leaveBalance}
+          leaveBalance={liveLeaveBalance}
           saving={isPending}
           onChange={setForm}
           onClose={() => {

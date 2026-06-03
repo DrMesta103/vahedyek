@@ -34,12 +34,12 @@ export function CalendarHolidayTypeField({
         <p>
           {lockedFriday ? (
             <>
-              این روز (یا بازهٔ شما) <strong>جمعه</strong> است؛ فقط «{CALENDAR_FRIDAY_HOLIDAY_TYPE.label}» ثبت می‌شود و
+              این روز (یا بازهٔ شما) به‌عنوان <strong>تعطیل هفتگی</strong> تشخیص داده شده است؛ فقط «{CALENDAR_FRIDAY_HOLIDAY_TYPE.label}» ثبت می‌شود و
               انتخاب رسمی/سازمانی ندارید.
             </>
           ) : (
             <>
-              برای روزهای <strong>غیرجمعه</strong> یکی از دو گزینه را انتخاب کنید؛ رسمی و سازمانی در حقوق و دستمزد ضریب
+              برای روزهای <strong>غیرتعطیل هفتگی</strong> یکی از دو گزینه را انتخاب کنید؛ رسمی و سازمانی در حقوق و دستمزد ضریب
               متفاوتی دارند.
             </>
           )}
@@ -98,7 +98,7 @@ export function CalendarHolidayTypeField({
 
       {rangeIncludesFriday ? (
         <p className="calendar-event-hint calendar-event-holiday-range-note">
-          روزهای جمعه در بازه انتخابی به‌صورت «{CALENDAR_FRIDAY_HOLIDAY_TYPE.label}» ثبت می‌شوند و مشمول ضریب جمعه‌کاری
+          روزهای تعطیل هفتگی در بازه انتخابی به‌صورت «{CALENDAR_FRIDAY_HOLIDAY_TYPE.label}» ثبت می‌شوند و مشمول ضریب تعطیل هفتگی
           خواهند بود.
         </p>
       ) : null}

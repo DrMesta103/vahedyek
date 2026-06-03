@@ -1,12 +1,14 @@
 'use client';
 
-import { Info, Pencil, UserRound } from 'lucide-react';
+import { ChevronDown, ChevronUp, Info, Pencil, UserRound } from 'lucide-react';
 import Link from 'next/link';
+import { useState } from 'react';
 import { formatFaNumber, formatPersianJalaliDate } from '../../../../lib/format-fa';
 import type { EmployeeSupplementalProfile } from '../../../../lib/employee-contract-drafts';
 import {
   EMPLOYEE_PARTY_FIELD_GROUPS,
   computeSupplementalCompleteness,
+  isSupplementalProfileComplete,
   resolveEmployeePartyFieldValue,
   type EmployeePartyDataSource,
 } from '../../../../lib/employee-supplemental-fields';
@@ -55,19 +57,21 @@ export function EmployeeSupplementalProfileView({
   supplemental,
   onEdit,
   editHref,
-  showFooterLink = false,
-  profileHref,
+  collapsible = true,
+  defaultExpanded = false,
 }: {
   employeeName: string;
   employee: EmployeePartyDataSource;
   supplemental: EmployeeSupplementalProfile;
   onEdit?: () => void;
   editHref?: string;
-  showFooterLink?: boolean;
-  profileHref?: string;
+  collapsible?: boolean;
+  defaultExpanded?: boolean;
 }) {
+  const [expanded, setExpanded] = useState(defaultExpanded);
   const completion = computeSupplementalCompleteness(supplemental, employee);
-  const missing = completion < 70;
+  const isComplete = isSupplementalProfileComplete(supplemental, employee);
+  const missing = !isComplete;
 
   const editButton =
     onEdit || editHref ? (
@@ -82,8 +86,12 @@ export function EmployeeSupplementalProfileView({
       )
     ) : null;
 
+  const showDetails = !collapsible || expanded;
+
   return (
-    <div className="business-payroll-subcard contract-party-card contract-party-card--employee">
+    <div
+      className={`business-payroll-subcard contract-party-card contract-party-card--employee${showDetails ? '' : ' is-collapsed'}`}
+    >
       <div className="contract-party-card-toolbar">
         <div className="business-draft-section-title">
           <h3>طرف دوم قرارداد</h3>
@@ -92,10 +100,12 @@ export function EmployeeSupplementalProfileView({
         {editButton}
       </div>
 
-      <p className="contract-party-card-hint">
-        <Info className="h-3.5 w-3.5" aria-hidden />
-        <span>طرف دوم قرارداد، فردی است که تحت این قرارداد در سازمان استخدام می‌شود.</span>
-      </p>
+      {showDetails ? (
+        <p className="contract-party-card-hint">
+          <Info className="h-3.5 w-3.5" aria-hidden />
+          <span>طرف دوم قرارداد، فردی است که تحت این قرارداد در سازمان استخدام می‌شود.</span>
+        </p>
+      ) : null}
 
       <div className="contract-party-card-identity">
         <span className="contract-party-card-avatar is-employee" aria-hidden>
@@ -106,10 +116,15 @@ export function EmployeeSupplementalProfileView({
             <span className="contract-party-stat-label">نام و نام خانوادگی:</span>
             <strong>{employeeName || 'ثبت نشده'}</strong>
           </div>
+          {!showDetails ? (
+            <div className="contract-party-card-identity-status">
+              {fieldBadge(isComplete ? 'اطلاعات تکمیل است' : 'اطلاعات ناقص است', isComplete ? 'success' : 'warning')}
+            </div>
+          ) : null}
         </div>
       </div>
 
-      {EMPLOYEE_PARTY_FIELD_GROUPS.map((group) => (
+      {showDetails ? EMPLOYEE_PARTY_FIELD_GROUPS.map((group) => (
         <section key={group.title} className="contract-party-section">
           <h4 className="contract-party-section-title">{group.title}</h4>
 
@@ -166,20 +181,40 @@ export function EmployeeSupplementalProfileView({
             </div>
           ) : null}
         </section>
-      ))}
+      )) : null}
 
-      {missing ? (
-        <div className="contract-party-card-footer">
-          {fieldBadge(`تکمیل مشخصات: ${formatFaNumber(completion, { useGrouping: false })}%`, 'warning')}
-          {showFooterLink && profileHref ? (
-            <Link href={profileHref} className="draft-template-flow-action is-primary">
-              تکمیل مشخصات کارمند
-            </Link>
-          ) : null}
-        </div>
-      ) : (
-        <div className="contract-party-card-footer">{fieldBadge(`تکمیل مشخصات: ${formatFaNumber(completion, { useGrouping: false })}%`, 'success')}</div>
-      )}
+      {showDetails ? (
+        missing ? (
+          <div className="contract-party-card-footer">
+            {fieldBadge(`تکمیل مشخصات: ${formatFaNumber(completion, { useGrouping: false })}%`, 'warning')}
+          </div>
+        ) : (
+          <div className="contract-party-card-footer">
+            {fieldBadge(`تکمیل مشخصات: ${formatFaNumber(completion, { useGrouping: false })}%`, 'success')}
+          </div>
+        )
+      ) : null}
+
+      {collapsible ? (
+        <button
+          type="button"
+          className="draft-template-expand-toggle contract-party-card-expand-toggle"
+          onClick={() => setExpanded((current) => !current)}
+          aria-expanded={expanded}
+        >
+          {expanded ? (
+            <>
+              جزئیات کمتر
+              <ChevronUp className="h-4 w-4" aria-hidden />
+            </>
+          ) : (
+            <>
+              جزئیات بیشتر
+              <ChevronDown className="h-4 w-4" aria-hidden />
+            </>
+          )}
+        </button>
+      ) : null}
     </div>
   );
 }

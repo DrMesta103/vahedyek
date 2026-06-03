@@ -3,6 +3,7 @@ export type PayrollStepId =
   | 'deductions'
   | 'benefits'
   | 'variableAmounts'
+  | 'paymentType'
   | 'overtime'
   | 'leave'
   | 'mission';
@@ -25,6 +26,22 @@ export type WorkTimeConditionKey =
   | 'official_holiday_work'
   | 'organizational_holiday_work'
   | 'mission';
+
+export type DayTypePaymentRuleKey =
+  | 'no_shift_day'
+  | 'weekly_rest_day'
+  | 'official_holiday'
+  | 'company_holiday';
+
+export type UnpaidAbsenceImpact = 'none' | 'full_deduction' | 'proportional_by_minutes';
+
+export type DayTypePaymentRule = {
+  paidWithoutWork: boolean;
+  unpaidAbsenceImpact: UnpaidAbsenceImpact;
+  workedTimeCoefficient: number;
+};
+
+export type DayTypePaymentRules = Record<DayTypePaymentRuleKey, DayTypePaymentRule>;
 
 export type CoefficientExceptionRule = {
   id: string;
@@ -50,6 +67,76 @@ export type TaxBracket = {
 export type VariableAmountType = 'addition' | 'deduction';
 export type VariableCalculationMethod = 'fixed' | 'percentage';
 export type VariableCalculationBase = 'baseSalary' | 'grossPay';
+export type PaymentScheduleType = 'time_period' | 'job_activity' | 'hybrid_special';
+export type PaymentSchedulePeriod = 'monthly' | 'weekly' | 'biweekly' | 'daily' | 'project' | 'seasonal';
+export type PaymentSchedule = {
+  type: PaymentScheduleType;
+  period: PaymentSchedulePeriod;
+};
+
+export const PAYMENT_SCHEDULE_TYPE_LABELS: Record<string, PaymentScheduleType> = {
+  'پرداخت بر اساس دوره‌های زمانی': 'time_period',
+  'پرداخت بر اساس نوع شغل و فعالیت': 'job_activity',
+  'پرداخت ترکیبی و روش‌های خاص': 'hybrid_special',
+};
+
+export function normalizePaymentScheduleType(value: unknown, fallback: PaymentScheduleType = 'time_period'): PaymentScheduleType {
+  if (value === 'time_period' || value === 'job_activity' || value === 'hybrid_special') return value;
+  if (typeof value === 'string' && PAYMENT_SCHEDULE_TYPE_LABELS[value]) return PAYMENT_SCHEDULE_TYPE_LABELS[value];
+  return fallback;
+}
+
+export function normalizePaymentSchedulePeriod(value: unknown, fallback: PaymentSchedulePeriod = 'monthly'): PaymentSchedulePeriod {
+  if (
+    value === 'monthly' ||
+    value === 'weekly' ||
+    value === 'biweekly' ||
+    value === 'daily' ||
+    value === 'project' ||
+    value === 'seasonal'
+  ) {
+    return value;
+  }
+  return fallback;
+}
+
+export function normalizePaymentSchedule(value: unknown, defaults: PaymentSchedule = DEFAULT_PAYMENT_SCHEDULE): PaymentSchedule {
+  if (!value || typeof value !== 'object') {
+    if (typeof value === 'string') {
+      return {
+        type: normalizePaymentScheduleType(value, defaults.type),
+        period: defaults.period,
+      };
+    }
+    return { ...defaults };
+  }
+  const source = value as Partial<PaymentSchedule> & { paymentType?: unknown; paymentSchedule?: unknown };
+  return {
+    type: normalizePaymentScheduleType(source.type ?? source.paymentType ?? source.paymentSchedule, defaults.type),
+    period: normalizePaymentSchedulePeriod(source.period, defaults.period),
+  };
+}
+export type MissionPaymentBase = 'base_salary' | 'total_payable';
+
+export type MissionRule = {
+  id: string;
+  title: string;
+  coefficient: number;
+  paymentBase: MissionPaymentBase;
+  active: boolean;
+};
+
+export type MissionSettings = {
+  enabled: boolean;
+  rules: MissionRule[];
+};
+
+export type LeaveTransferPolicyMode = 'carry_forward' | 'expire_unused';
+export type LeaveTransferPolicyRuleKey = 'monthly' | 'quarterly' | 'semiAnnual' | 'annual';
+export type LeaveTransferPolicy = {
+  mode: LeaveTransferPolicyMode;
+  limits: Record<LeaveTransferPolicyRuleKey, { enabled: boolean; maxHours: number | null }>;
+};
 
 // ─── Calculation Rules ────────────────────────────────────────────────────────
 
@@ -86,6 +173,26 @@ export const DEFAULT_OPTIONAL_DEDUCTION_RULES: CalculationRules = {
   systemGenerated: false,
   lockedRules: false,
 };
+
+export const DEFAULT_PAYMENT_SCHEDULE: PaymentSchedule = {
+  type: 'time_period',
+  period: 'monthly',
+};
+
+export const PAYMENT_SCHEDULE_TYPE_OPTIONS: Array<{ value: PaymentScheduleType; label: string; enabled: boolean }> = [
+  { value: 'time_period', label: 'پرداخت بر اساس دوره‌های زمانی', enabled: true },
+  { value: 'job_activity', label: 'پرداخت بر اساس نوع شغل و فعالیت', enabled: false },
+  { value: 'hybrid_special', label: 'پرداخت ترکیبی و روش‌های خاص', enabled: false },
+];
+
+export const PAYMENT_SCHEDULE_PERIOD_OPTIONS: Array<{ value: PaymentSchedulePeriod; label: string; enabled: boolean }> = [
+  { value: 'monthly', label: 'پرداخت ماهانه', enabled: true },
+  { value: 'weekly', label: 'پرداخت هفتگی', enabled: false },
+  { value: 'biweekly', label: 'پرداخت دو هفته یکبار', enabled: false },
+  { value: 'daily', label: 'پرداخت روزانه', enabled: false },
+  { value: 'project', label: 'پرداخت پروژه‌ای', enabled: false },
+  { value: 'seasonal', label: 'پرداخت فصلی', enabled: false },
+];
 
 export const EMPLOYEE_INSURANCE_RULES: CalculationRules = {
   paymentEffect: 'deduction',
@@ -181,6 +288,7 @@ export type PayrollSettings = {
     additions: VariableAmount[];
     deductions: VariableAmount[];
   };
+  paymentSchedule: PaymentSchedule;
   workTimePayRules: {
     overtime: {
       dailyLimitHours: number;
@@ -192,15 +300,7 @@ export type PayrollSettings = {
       endTime: string;
       coefficient: number;
     };
-    weeklyRestDayWork: {
-      coefficient: number;
-    };
-    officialHolidayWork: {
-      coefficient: number;
-    };
-    organizationalHolidayWork: {
-      coefficient: number;
-    };
+    dayTypePaymentRules: DayTypePaymentRules;
     mission: {
       coefficient: number;
     };
@@ -211,6 +311,7 @@ export type PayrollSettings = {
   };
   leave: {
     monthlyQuotaHours: number;
+    transferPolicy: LeaveTransferPolicy;
     transferLimits: {
       monthly: { enabled: boolean; hours: number | null };
       quarterly: { enabled: boolean; hours: number | null };
@@ -226,10 +327,7 @@ export type PayrollSettings = {
       employeeRequest: 'cancel' | 'cash';
     };
   };
-  mission: {
-    status: 'coming_soon';
-    readonly: true;
-  };
+  mission: MissionSettings;
 };
 
 export type CoefficientsByCondition = Record<WorkTimeConditionKey, number>;
@@ -249,17 +347,25 @@ export type PayrollSettingsOverrides = Partial<{
   benefits: Partial<PayrollSettings['benefits']>;
   benefitRules: Partial<BenefitRulesMap>;
   variableAmounts: Partial<PayrollSettings['variableAmounts']>;
+  paymentSchedule: Partial<PaymentSchedule>;
   workTimePayRules: Partial<{
     overtime: Partial<PayrollSettings['workTimePayRules']['overtime']>;
     nightWork: Partial<PayrollSettings['workTimePayRules']['nightWork']>;
-    weeklyRestDayWork: Partial<PayrollSettings['workTimePayRules']['weeklyRestDayWork']>;
-    officialHolidayWork: Partial<PayrollSettings['workTimePayRules']['officialHolidayWork']>;
-    organizationalHolidayWork: Partial<PayrollSettings['workTimePayRules']['organizationalHolidayWork']>;
+    dayTypePaymentRules: Partial<Record<DayTypePaymentRuleKey, Partial<DayTypePaymentRule>>>;
     mission: Partial<PayrollSettings['workTimePayRules']['mission']>;
     coefficientCombination: Partial<PayrollSettings['workTimePayRules']['coefficientCombination']>;
   }>;
   leave: {
     monthlyQuotaHours?: number;
+    transferPolicy?: Partial<{
+      mode: LeaveTransferPolicyMode;
+      limits: Partial<{
+        monthly: Partial<LeaveTransferPolicy['limits']['monthly']>;
+        quarterly: Partial<LeaveTransferPolicy['limits']['quarterly']>;
+        semiAnnual: Partial<LeaveTransferPolicy['limits']['semiAnnual']>;
+        annual: Partial<LeaveTransferPolicy['limits']['annual']>;
+      }>;
+    }>;
     transferLimits?: Partial<{
       monthly: Partial<PayrollSettings['leave']['transferLimits']['monthly']>;
       quarterly: Partial<PayrollSettings['leave']['transferLimits']['quarterly']>;
@@ -312,11 +418,94 @@ function scopeStorageKey(key: string, tenantId?: string | null) {
 export const WORK_TIME_CONDITIONS: Array<{ key: WorkTimeConditionKey; label: string; shortLabel: string }> = [
   { key: 'normal_overtime', label: 'اضافه کاری عادی', shortLabel: 'اضافه کاری' },
   { key: 'night_work', label: 'شب کاری', shortLabel: 'شب کاری' },
-  { key: 'weekly_rest_day_work', label: 'جمعه کاری / تعطیل هفتگی', shortLabel: 'جمعه کاری' },
-  { key: 'official_holiday_work', label: 'تعطیل کاری رسمی', shortLabel: 'تعطیل رسمی' },
-  { key: 'organizational_holiday_work', label: 'تعطیل کاری سازمانی', shortLabel: 'تعطیل سازمانی' },
+  { key: 'weekly_rest_day_work', label: 'تعطیل هفتگی', shortLabel: 'تعطیل هفتگی' },
+  { key: 'official_holiday_work', label: 'تعطیل رسمی', shortLabel: 'تعطیل رسمی' },
+  { key: 'organizational_holiday_work', label: 'تعطیل سازمانی', shortLabel: 'تعطیل سازمانی' },
   { key: 'mission', label: 'ماموریت', shortLabel: 'ماموریت' },
 ];
+
+export const DAY_TYPE_PAYMENT_RULES: Array<{
+  key: DayTypePaymentRuleKey;
+  label: string;
+  helper: string;
+}> = [
+  {
+    key: 'no_shift_day',
+    label: 'روز بدون شیفت',
+    helper: 'روزهایی که برای آنها شیفت برنامه‌ریزی نشده است.',
+  },
+  {
+    key: 'weekly_rest_day',
+    label: 'تعطیل هفتگی',
+    helper: 'تعطیل هفتگی از تقویم یا سیاست کاری تشخیص داده می‌شود.',
+  },
+  {
+    key: 'official_holiday',
+    label: 'تعطیل رسمی',
+    helper: 'تعطیلات رسمی تقویم کشور.',
+  },
+  {
+    key: 'company_holiday',
+    label: 'تعطیل سازمانی',
+    helper: 'تعطیلی‌هایی که توسط سازمان یا سیاست کاری تعیین می‌شوند.',
+  },
+];
+
+export const UNPAID_ABSENCE_IMPACT_OPTIONS: Array<{
+  value: UnpaidAbsenceImpact;
+  label: string;
+}> = [
+  { value: 'none', label: 'بدون اثر' },
+  { value: 'full_deduction', label: 'کسر کامل با هر غیبت غیرموجه' },
+  { value: 'proportional_by_minutes', label: 'کسر نسبی بر اساس دقایق غیبت' },
+];
+
+export const DEFAULT_DAY_TYPE_PAYMENT_RULES: DayTypePaymentRules = {
+  no_shift_day: {
+    paidWithoutWork: false,
+    unpaidAbsenceImpact: 'none',
+    workedTimeCoefficient: 1.4,
+  },
+  weekly_rest_day: {
+    paidWithoutWork: true,
+    unpaidAbsenceImpact: 'none',
+    workedTimeCoefficient: 1.4,
+  },
+  official_holiday: {
+    paidWithoutWork: true,
+    unpaidAbsenceImpact: 'none',
+    workedTimeCoefficient: 1.96,
+  },
+  company_holiday: {
+    paidWithoutWork: true,
+    unpaidAbsenceImpact: 'none',
+    workedTimeCoefficient: 1.4,
+  },
+};
+
+export function getDayTypePaymentRuleErrorKey(ruleKey: DayTypePaymentRuleKey, field: keyof DayTypePaymentRule) {
+  return `dayTypePaymentRules.${ruleKey}.${field}`;
+}
+
+export const DEFAULT_MISSION_SETTINGS: MissionSettings = {
+  enabled: true,
+  rules: [
+    {
+      id: 'mission-with-stay',
+      title: 'ماموریت با اقامتگاه',
+      coefficient: 1.89,
+      paymentBase: 'base_salary',
+      active: true,
+    },
+    {
+      id: 'mission-without-stay',
+      title: 'ماموریت بدون اقامتگاه',
+      coefficient: 1.89,
+      paymentBase: 'base_salary',
+      active: true,
+    },
+  ],
+};
 
 export const COEFFICIENT_COMBINATION_METHODS: Array<{
   value: CoefficientCombinationMethod;
@@ -450,25 +639,6 @@ export function compareCollections<T>(
   return { isDifferent: true, direction: 'changed', message: labels.changed, tooltip: labels.tooltip };
 }
 
-function normalizeTransferLimit(value: unknown, fallbackHours: number) {
-  if (value && typeof value === 'object') {
-    const source = value as { enabled?: unknown; hours?: unknown };
-    const hours = typeof source.hours === 'number' && Number.isFinite(source.hours) ? source.hours : null;
-    const enabled = typeof source.enabled === 'boolean' ? source.enabled : hours !== null;
-    return {
-      enabled,
-      hours: enabled ? hours : null,
-    };
-  }
-  if (typeof value === 'number') {
-    return { enabled: true, hours: value };
-  }
-  if (value === null || value === undefined) {
-    return { enabled: false, hours: null };
-  }
-  return { enabled: true, hours: fallbackHours };
-}
-
 function buildDifference(base: unknown, current: unknown): unknown {
   if (Array.isArray(base) || Array.isArray(current)) {
     return JSON.stringify(base) === JSON.stringify(current) ? undefined : current;
@@ -517,42 +687,298 @@ function normalizeCombination(value: unknown, includeDefaults: boolean) {
   return result;
 }
 
-function normalizeLeaveTransferLimits(value: unknown, includeDefaults: boolean) {
-  const source = value && typeof value === 'object' ? value as Record<string, unknown> : {};
-  const defaults = {
-    monthly: 16,
-    quarterly: 32,
-    semiAnnual: 48,
-    annual: 64,
-  };
+function normalizeLeaveTransferPolicyRule(value: unknown, fallback: { enabled: boolean; maxHours: number | null }) {
+  if (!value || typeof value !== 'object') {
+    if (typeof value === 'number') {
+      return { enabled: true, maxHours: value >= 0 ? value : fallback.maxHours };
+    }
+    return { ...fallback };
+  }
+  const source = value as { enabled?: unknown; maxHours?: unknown; hours?: unknown };
+  const hours = typeof source.maxHours === 'number' && Number.isFinite(source.maxHours)
+    ? source.maxHours
+    : typeof source.hours === 'number' && Number.isFinite(source.hours)
+      ? source.hours
+      : null;
+  const enabled = typeof source.enabled === 'boolean' ? source.enabled : hours !== null;
   return {
-    monthly: normalizeTransferLimit(source.monthly, includeDefaults ? defaults.monthly : 0),
-    quarterly: normalizeTransferLimit(source.quarterly, includeDefaults ? defaults.quarterly : 0),
-    semiAnnual: normalizeTransferLimit(source.semiAnnual, includeDefaults ? defaults.semiAnnual : 0),
-    annual: normalizeTransferLimit(source.annual, includeDefaults ? defaults.annual : 0),
+    enabled,
+    maxHours: enabled ? hours : null,
   };
 }
 
-type LegacyOvertime = {
-  dailyLimitHours?: number;
-  coefficients?: Partial<{ normal: number; night: number; holiday: number; mission: number }>;
-};
+function normalizeLeaveTransferPolicy(
+  value: unknown,
+  defaults: LeaveTransferPolicy = {
+    mode: 'carry_forward',
+    limits: {
+      monthly: { enabled: true, maxHours: 16 },
+      quarterly: { enabled: true, maxHours: 32 },
+      semiAnnual: { enabled: true, maxHours: 48 },
+      annual: { enabled: true, maxHours: 64 },
+    },
+  },
+  legacyLimits?: unknown,
+): LeaveTransferPolicy {
+  const source = value && typeof value === 'object' ? value as Record<string, unknown> : {};
+  const rawLimits = source.limits && typeof source.limits === 'object' ? source.limits as Record<string, unknown> : undefined;
+  const legacySource = legacyLimits && typeof legacyLimits === 'object' ? legacyLimits as Record<string, unknown> : undefined;
+  const baseLimits = rawLimits ?? legacySource ?? {};
+  const mode: LeaveTransferPolicyMode = source.mode === 'expire_unused' ? 'expire_unused' : 'carry_forward';
+  const carryForwardFallback = defaults.limits;
+  const normalizedLimits = {
+    monthly: normalizeLeaveTransferPolicyRule(baseLimits.monthly, carryForwardFallback.monthly),
+    quarterly: normalizeLeaveTransferPolicyRule(baseLimits.quarterly, carryForwardFallback.quarterly),
+    semiAnnual: normalizeLeaveTransferPolicyRule(baseLimits.semiAnnual, carryForwardFallback.semiAnnual),
+    annual: normalizeLeaveTransferPolicyRule(baseLimits.annual, carryForwardFallback.annual),
+  };
+  return {
+    mode,
+    limits: mode === 'expire_unused'
+      ? {
+          monthly: { enabled: false, maxHours: null },
+          quarterly: { enabled: false, maxHours: null },
+          semiAnnual: { enabled: false, maxHours: null },
+          annual: { enabled: false, maxHours: null },
+        }
+      : normalizedLimits,
+  };
+}
 
-function mapLegacyOvertime(overtime?: LegacyOvertime) {
-  if (!overtime) return undefined;
+export function normalizeLeaveSettings(value: unknown, defaults: PayrollSettings['leave'] = DEFAULT_PAYROLL_SETTINGS.leave): PayrollSettings['leave'] {
+  const source = value && typeof value === 'object' ? value as Record<string, unknown> : {};
+  const legacyLimits = source.transferLimits && typeof source.transferLimits === 'object' ? source.transferLimits : undefined;
+  const policy = normalizeLeaveTransferPolicy(source.transferPolicy, defaults.transferPolicy, legacyLimits);
+  const rawFinalSettlementRules = source.finalSettlementRules && typeof source.finalSettlementRules === 'object'
+    ? source.finalSettlementRules as Record<string, unknown>
+    : {};
+  const normalizeDecision = (key: keyof PayrollSettings['leave']['finalSettlementRules']) => {
+    const value = rawFinalSettlementRules[key];
+    return value === 'cash' || value === 'cancel' ? value : defaults.finalSettlementRules[key];
+  };
+  const transferLimits = {
+    monthly: { enabled: policy.limits.monthly.enabled, hours: policy.limits.monthly.maxHours },
+    quarterly: { enabled: policy.limits.quarterly.enabled, hours: policy.limits.quarterly.maxHours },
+    semiAnnual: { enabled: policy.limits.semiAnnual.enabled, hours: policy.limits.semiAnnual.maxHours },
+    annual: { enabled: policy.limits.annual.enabled, hours: policy.limits.annual.maxHours },
+  };
+  return {
+    monthlyQuotaHours: typeof source.monthlyQuotaHours === 'number' && Number.isFinite(source.monthlyQuotaHours)
+      ? source.monthlyQuotaHours
+      : defaults.monthlyQuotaHours,
+    transferPolicy: policy,
+    transferLimits,
+    settlementRatePerHour: typeof source.settlementRatePerHour === 'number' && Number.isFinite(source.settlementRatePerHour)
+      ? source.settlementRatePerHour
+      : defaults.settlementRatePerHour,
+    finalSettlementRules: {
+      dismissalDueToFault: normalizeDecision('dismissalDueToFault'),
+      noNoticeLeave: normalizeDecision('noNoticeLeave'),
+      resignationWithNotice: normalizeDecision('resignationWithNotice'),
+      contractEnd: normalizeDecision('contractEnd'),
+      employeeRequest: normalizeDecision('employeeRequest'),
+    },
+  };
+}
+
+function normalizeMissionRule(value: unknown, fallback: MissionRule): MissionRule {
+  const source = value && typeof value === 'object' ? (value as Partial<MissionRule>) : {};
+  const rawPaymentBase = value && typeof value === 'object' ? (value as { paymentBase?: unknown }).paymentBase : undefined;
+  const paymentBase =
+    rawPaymentBase === 'total_payable' || rawPaymentBase === 'grossPay'
+      ? 'total_payable'
+      : 'base_salary';
+  return {
+    id: typeof source.id === 'string' && source.id.trim() ? source.id : fallback.id,
+    title: typeof source.title === 'string' ? source.title : fallback.title,
+    coefficient: Number.isFinite(source.coefficient) ? Number(source.coefficient) : fallback.coefficient,
+    paymentBase,
+    active: typeof source.active === 'boolean' ? source.active : fallback.active,
+  };
+}
+
+export function normalizeMissionSettings(value: unknown, defaults: MissionSettings = DEFAULT_MISSION_SETTINGS): MissionSettings {
+  if (!value || typeof value !== 'object') {
+    return { ...defaults, rules: defaults.rules.map((rule) => ({ ...rule })) };
+  }
+  const source = value as Partial<MissionSettings> & { rules?: unknown };
+  return {
+    enabled: typeof source.enabled === 'boolean' ? source.enabled : defaults.enabled,
+    rules: Array.isArray(source.rules)
+      ? source.rules.map((rule, index) => normalizeMissionRule(rule, defaults.rules[index] ?? defaults.rules[0])).filter(Boolean)
+      : defaults.rules.map((rule) => ({ ...rule })),
+  };
+}
+
+function asRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {};
+}
+
+function normalizeDayTypePaymentRule(value: unknown, fallback: DayTypePaymentRule): DayTypePaymentRule {
+  if (typeof value === 'number') {
+    return {
+      ...fallback,
+      workedTimeCoefficient: Number.isFinite(value) ? value : fallback.workedTimeCoefficient,
+    };
+  }
+  const source = asRecord(value);
+  const impact = source.unpaidAbsenceImpact;
+  const unpaidAbsenceImpact: UnpaidAbsenceImpact =
+    impact === 'none' || impact === 'full_deduction' || impact === 'proportional_by_minutes'
+      ? impact
+      : fallback.unpaidAbsenceImpact;
+  const workedTimeCoefficient =
+    typeof source.workedTimeCoefficient === 'number' && Number.isFinite(source.workedTimeCoefficient)
+      ? source.workedTimeCoefficient
+      : typeof source.coefficient === 'number' && Number.isFinite(source.coefficient)
+        ? source.coefficient
+        : fallback.workedTimeCoefficient;
+  return {
+    paidWithoutWork: typeof source.paidWithoutWork === 'boolean' ? source.paidWithoutWork : fallback.paidWithoutWork,
+    unpaidAbsenceImpact,
+    workedTimeCoefficient,
+  };
+}
+
+export function normalizeDayTypePaymentRules(
+  value: unknown,
+  defaults: DayTypePaymentRules = DEFAULT_DAY_TYPE_PAYMENT_RULES,
+): DayTypePaymentRules {
+  const source = asRecord(value);
+  return {
+    no_shift_day: normalizeDayTypePaymentRule(source.no_shift_day ?? source.noShiftDay, defaults.no_shift_day),
+    weekly_rest_day: normalizeDayTypePaymentRule(
+      source.weekly_rest_day ?? source.weeklyRestDay ?? source.weeklyRestDayWork,
+      defaults.weekly_rest_day,
+    ),
+    official_holiday: normalizeDayTypePaymentRule(
+      source.official_holiday ?? source.officialHoliday ?? source.officialHolidayWork,
+      defaults.official_holiday,
+    ),
+    company_holiday: normalizeDayTypePaymentRule(
+      source.company_holiday ?? source.companyHoliday ?? source.companyHolidayWork ?? source.organizationalHolidayWork,
+      defaults.company_holiday,
+    ),
+  };
+}
+
+export function normalizeWorkTimePayRules(
+  value: unknown,
+  defaults: PayrollSettings['workTimePayRules'] = DEFAULT_PAYROLL_SETTINGS.workTimePayRules,
+): PayrollSettings['workTimePayRules'] {
+  const source = asRecord(value);
+  const overtime = asRecord(source.overtime);
+  const overtimeCoefficients = asRecord(overtime.coefficients);
+  const nightWork = asRecord(source.nightWork);
+  const dayTypeSource = asRecord(source.dayTypePaymentRules);
+  const combination = asRecord(source.coefficientCombination);
+  const dayTypePaymentRules = normalizeDayTypePaymentRules(
+    {
+      ...dayTypeSource,
+      no_shift_day: dayTypeSource.no_shift_day ?? dayTypeSource.noShiftDay,
+      weekly_rest_day: dayTypeSource.weekly_rest_day ?? dayTypeSource.weeklyRestDay ?? source.weeklyRestDayWork ?? source.fridayWork ?? source.fridayWorkCoefficient ?? source.fridayCoefficient,
+      official_holiday: dayTypeSource.official_holiday ?? dayTypeSource.officialHoliday ?? source.officialHolidayWork ?? source.officialHolidayCoefficient ?? overtimeCoefficients.holiday,
+      company_holiday: dayTypeSource.company_holiday ?? dayTypeSource.companyHoliday ?? source.organizationalHolidayWork ?? source.companyHolidayCoefficient ?? source.companyHolidayWorkCoefficient,
+    },
+    defaults.dayTypePaymentRules,
+  );
+  const missionSource = asRecord(source.mission);
+  const missionCoefficient =
+    typeof missionSource.coefficient === 'number' && Number.isFinite(missionSource.coefficient)
+      ? missionSource.coefficient
+      : typeof source.missionCoefficient === 'number' && Number.isFinite(source.missionCoefficient)
+        ? source.missionCoefficient
+        : defaults.mission.coefficient;
   return {
     overtime: {
-      dailyLimitHours: overtime.dailyLimitHours,
-      normalCoefficient: overtime.coefficients?.normal,
+      dailyLimitHours:
+        typeof overtime.dailyLimitHours === 'number' && Number.isFinite(overtime.dailyLimitHours)
+          ? overtime.dailyLimitHours
+          : defaults.overtime.dailyLimitHours,
+      normalCoefficient:
+        typeof overtime.normalCoefficient === 'number' && Number.isFinite(overtime.normalCoefficient)
+          ? overtime.normalCoefficient
+          : defaults.overtime.normalCoefficient,
     },
     nightWork: {
-      coefficient: overtime.coefficients?.night,
+      enabled: typeof nightWork.enabled === 'boolean' ? nightWork.enabled : defaults.nightWork.enabled,
+      startTime: typeof nightWork.startTime === 'string' ? nightWork.startTime : defaults.nightWork.startTime,
+      endTime: typeof nightWork.endTime === 'string' ? nightWork.endTime : defaults.nightWork.endTime,
+      coefficient:
+        typeof nightWork.coefficient === 'number' && Number.isFinite(nightWork.coefficient)
+          ? nightWork.coefficient
+          : defaults.nightWork.coefficient,
     },
-    officialHolidayWork: {
-      coefficient: overtime.coefficients?.holiday,
-    },
+    dayTypePaymentRules,
     mission: {
-      coefficient: overtime.coefficients?.mission,
+      coefficient: missionCoefficient,
+    },
+    coefficientCombination: {
+      defaultMethod:
+        combination.defaultMethod === 'highest_only' ||
+        combination.defaultMethod === 'additive_percentage' ||
+        combination.defaultMethod === 'multiply_coefficients' ||
+        combination.defaultMethod === 'separate_premium_sum'
+          ? combination.defaultMethod
+          : defaults.coefficientCombination.defaultMethod,
+      exceptionRules: Array.isArray(combination.exceptionRules)
+        ? combination.exceptionRules as CoefficientExceptionRule[]
+        : defaults.coefficientCombination.exceptionRules.map((rule) => ({ ...rule })),
+    },
+  };
+}
+
+type LegacyWorkTimeRules = Partial<{
+  overtime: Partial<PayrollSettings['workTimePayRules']['overtime']>;
+  nightWork: Partial<PayrollSettings['workTimePayRules']['nightWork']>;
+  dayTypePaymentRules: Partial<Record<DayTypePaymentRuleKey, Partial<DayTypePaymentRule>>>;
+  mission: Partial<PayrollSettings['workTimePayRules']['mission']>;
+  coefficientCombination: Partial<PayrollSettings['workTimePayRules']['coefficientCombination']>;
+}>;
+
+function mapLegacyWorkTimeRules(source?: Record<string, unknown>): LegacyWorkTimeRules | undefined {
+  if (!source) return undefined;
+  const overtime = asRecord(source.overtime);
+  const coefficients = asRecord(overtime.coefficients);
+  const dayTypePaymentRules: Partial<Record<DayTypePaymentRuleKey, Partial<DayTypePaymentRule>>> = {};
+  const weeklyRestDayValue = source.weeklyRestDayWork ?? source.fridayWork ?? source.fridayWorkCoefficient ?? source.fridayWorkNoOvertimeCoefficient ?? source.fridayCoefficient;
+  const officialHolidayValue = source.officialHolidayWork ?? source.officialHolidayCoefficient ?? source.holidayWorkCoefficient ?? coefficients.holiday;
+  const companyHolidayValue = source.organizationalHolidayWork ?? source.companyHolidayCoefficient ?? source.companyHolidayWorkCoefficient;
+  if (typeof weeklyRestDayValue === 'number' && Number.isFinite(weeklyRestDayValue)) {
+    dayTypePaymentRules.weekly_rest_day = { workedTimeCoefficient: weeklyRestDayValue };
+  }
+  if (typeof officialHolidayValue === 'number' && Number.isFinite(officialHolidayValue)) {
+    dayTypePaymentRules.official_holiday = { workedTimeCoefficient: officialHolidayValue };
+  }
+  if (typeof companyHolidayValue === 'number' && Number.isFinite(companyHolidayValue)) {
+    dayTypePaymentRules.company_holiday = { workedTimeCoefficient: companyHolidayValue };
+  }
+  return {
+    overtime: {
+      dailyLimitHours: typeof overtime.dailyLimitHours === 'number' ? overtime.dailyLimitHours : undefined,
+      normalCoefficient:
+        typeof overtime.normalCoefficient === 'number'
+          ? overtime.normalCoefficient
+          : typeof coefficients.normal === 'number'
+            ? coefficients.normal
+            : undefined,
+    },
+    nightWork: {
+      coefficient:
+        typeof source.nightWorkCoefficient === 'number'
+          ? source.nightWorkCoefficient
+          : typeof coefficients.night === 'number'
+            ? coefficients.night
+            : undefined,
+    },
+    dayTypePaymentRules,
+    mission: {
+      coefficient:
+        typeof source.missionCoefficient === 'number'
+          ? source.missionCoefficient
+          : typeof coefficients.mission === 'number'
+            ? coefficients.mission
+            : undefined,
     },
   };
 }
@@ -562,18 +988,20 @@ export function normalizePayrollSettings(value: unknown): PayrollSettings {
   const workTimePayRules = source.workTimePayRules && typeof source.workTimePayRules === 'object'
     ? source.workTimePayRules as Record<string, unknown>
     : undefined;
-  const legacyWorkTimeRules = mapLegacyOvertime(source.overtime as LegacyOvertime | undefined);
+  const legacyWorkTimeRules = mapLegacyWorkTimeRules(source);
+  const migratedWorkTimePayRules = workTimePayRules
+    ? legacyWorkTimeRules
+      ? { ...legacyWorkTimeRules, ...workTimePayRules }
+      : workTimePayRules
+    : legacyWorkTimeRules;
   const withMigration = {
     ...source,
-    workTimePayRules: workTimePayRules
-      ? { ...workTimePayRules, coefficientCombination: normalizeCombination(workTimePayRules.coefficientCombination, true) }
-      : legacyWorkTimeRules,
-    leave: {
-      ...(source.leave && typeof source.leave === 'object' ? source.leave as Record<string, unknown> : {}),
-      transferLimits: normalizeLeaveTransferLimits(source.leave && typeof source.leave === 'object' ? (source.leave as Record<string, unknown>).transferLimits : undefined, true),
-    },
+    workTimePayRules: migratedWorkTimePayRules,
+    leave: normalizeLeaveSettings(source.leave, DEFAULT_PAYROLL_SETTINGS.leave),
+    paymentSchedule: normalizePaymentSchedule(source.paymentSchedule ?? source.paymentType, DEFAULT_PAYMENT_SCHEDULE),
   };
   const merged = mergeOverrides(DEFAULT_PAYROLL_SETTINGS, withMigration) as PayrollSettings;
+  merged.workTimePayRules = normalizeWorkTimePayRules(merged.workTimePayRules, DEFAULT_PAYROLL_SETTINGS.workTimePayRules);
 
   // Normalize benefitRules with safe defaults
   const rawBenefitRules = source.benefitRules && typeof source.benefitRules === 'object'
@@ -601,6 +1029,9 @@ export function normalizePayrollSettings(value: unknown): PayrollSettings {
     additions: normalizeVariableRules(merged.variableAmounts.additions, DEFAULT_OPTIONAL_ADDITION_RULES),
     deductions: normalizeVariableRules(merged.variableAmounts.deductions, DEFAULT_OPTIONAL_DEDUCTION_RULES),
   };
+  merged.paymentSchedule = normalizePaymentSchedule(source.paymentSchedule ?? source.paymentType ?? merged.paymentSchedule, DEFAULT_PAYMENT_SCHEDULE);
+  delete (merged as Record<string, unknown>).paymentType;
+  merged.mission = normalizeMissionSettings(source.mission, DEFAULT_MISSION_SETTINGS);
 
   return merged;
 }
@@ -608,23 +1039,42 @@ export function normalizePayrollSettings(value: unknown): PayrollSettings {
 export function normalizePayrollOverrides(value: unknown): PayrollSettingsOverrides {
   const source = value && typeof value === 'object' ? value as Record<string, unknown> : {};
   const normalized: Record<string, unknown> = { ...source };
+  const legacyWorkTimeRules = mapLegacyWorkTimeRules(source);
   if (source.workTimePayRules) {
     const workTimePayRules = source.workTimePayRules as Record<string, unknown>;
     normalized.workTimePayRules = {
+      ...(legacyWorkTimeRules ?? {}),
       ...workTimePayRules,
       coefficientCombination: normalizeCombination(workTimePayRules.coefficientCombination, false),
     };
-  } else if (source.overtime) {
-    normalized.workTimePayRules = mapLegacyOvertime(source.overtime as LegacyOvertime);
+  } else if (
+    [
+      'overtime',
+      'nightWorkCoefficient',
+      'holidayWorkCoefficient',
+      'weeklyRestDayWork',
+      'officialHolidayWork',
+      'organizationalHolidayWork',
+      'fridayWork',
+      'fridayWorkCoefficient',
+      'fridayWorkNoOvertimeCoefficient',
+      'fridayCoefficient',
+      'officialHolidayCoefficient',
+      'companyHolidayCoefficient',
+      'companyHolidayWorkCoefficient',
+      'missionCoefficient',
+    ].some((key) => Object.prototype.hasOwnProperty.call(source, key))
+  ) {
+    normalized.workTimePayRules = legacyWorkTimeRules;
   }
   if (source.leave) {
-    const leave = source.leave as Record<string, unknown>;
-    normalized.leave = {
-      ...leave,
-      transferLimits: normalizeLeaveTransferLimits(leave.transferLimits, false),
-    };
+    normalized.leave = normalizeLeaveSettings(source.leave, DEFAULT_PAYROLL_SETTINGS.leave);
+  }
+  if (source.paymentSchedule || source.paymentType) {
+    normalized.paymentSchedule = normalizePaymentSchedule(source.paymentSchedule ?? source.paymentType, DEFAULT_PAYMENT_SCHEDULE);
   }
   delete normalized.overtime;
+  delete normalized.paymentType;
   return normalized as PayrollSettingsOverrides;
 }
 
@@ -713,9 +1163,9 @@ export function getWorkTimeCoefficients(settings: PayrollSettings): Coefficients
   return {
     normal_overtime: settings.workTimePayRules.overtime.normalCoefficient,
     night_work: settings.workTimePayRules.nightWork.coefficient,
-    weekly_rest_day_work: settings.workTimePayRules.weeklyRestDayWork.coefficient,
-    official_holiday_work: settings.workTimePayRules.officialHolidayWork.coefficient,
-    organizational_holiday_work: settings.workTimePayRules.organizationalHolidayWork.coefficient,
+    weekly_rest_day_work: settings.workTimePayRules.dayTypePaymentRules.weekly_rest_day.workedTimeCoefficient,
+    official_holiday_work: settings.workTimePayRules.dayTypePaymentRules.official_holiday.workedTimeCoefficient,
+    organizational_holiday_work: settings.workTimePayRules.dayTypePaymentRules.company_holiday.workedTimeCoefficient,
     mission: settings.workTimePayRules.mission.coefficient,
   };
 }
@@ -725,9 +1175,10 @@ export const PAYROLL_STEPS: Array<{ id: PayrollStepId; title: string; detail: st
   { id: 'deductions', title: 'کسورات دستمزد', detail: 'بیمه و مالیات' },
   { id: 'benefits', title: 'مزایا', detail: 'اضافات حقوق ثابت' },
   { id: 'variableAmounts', title: 'مبالغ متغیر', detail: 'اضافات و کسورات اختیاری' },
+  { id: 'paymentType', title: 'نوع پرداخت حقوق و مزایا', detail: 'دوره‌ای و ماهانه' },
   { id: 'overtime', title: 'پرداخت زمان کاری', detail: 'ضرایب شرایط زمانی کار' },
   { id: 'leave', title: 'مرخصی', detail: 'انتقال و تسویه نهایی' },
-  { id: 'mission', title: 'ماموریت', detail: 'در حال توسعه' },
+  { id: 'mission', title: 'ماموریت', detail: 'قوانین پرداخت ماموریت' },
 ];
 
 export const BENEFIT_FIELDS: Array<{
@@ -743,10 +1194,40 @@ export const BENEFIT_FIELDS: Array<{
   { key: 'eidBonus', label: 'عیدی', helper: 'پرداختی مناسبتی یا سالانه که معمولاً جدا از حقوق ماهانه پرداخت می شود.' },
 ];
 
-export const VARIABLE_TITLES: Record<VariableAmountType, string[]> = {
-  addition: ['پاداش عملکرد', 'کمک هزینه ایاب و ذهاب', 'کمک هزینه پوشاک', 'کمک هزینه غذا', 'حق تخصص', 'حق سرویس', 'سایر'],
-  deduction: ['مالیات حقوق سفارشی', 'بیمه تامین اجتماعی سفارشی', 'بیمه تکمیلی', 'وام و مساعده', 'جریمه و خسارت', 'سایر کسورات'],
+export const VARIABLE_TITLE_OTHER: Record<VariableAmountType, string> = {
+  addition: 'سایر',
+  deduction: 'سایر کسورات',
 };
+
+export const VARIABLE_TITLES: Record<VariableAmountType, string[]> = {
+  addition: [
+    'پاداش عملکرد',
+    'کمک‌هزینه ایاب‌وذهاب',
+    'کمک‌هزینه پوشاک',
+    'کمک‌هزینه غذا',
+    'حق تخصص',
+    'حق سرپرستی',
+    VARIABLE_TITLE_OTHER.addition,
+  ],
+  deduction: [
+    'مالیات حقوق',
+    'بیمه تامین اجتماعی',
+    'بیمه تکمیلی',
+    'وام و مساعده',
+    'جرایم و خسارات',
+    VARIABLE_TITLE_OTHER.deduction,
+  ],
+};
+
+export function getVariableTitlePresets(type: VariableAmountType) {
+  return VARIABLE_TITLES[type].filter((title) => title !== VARIABLE_TITLE_OTHER[type]);
+}
+
+export function isVariableTitleOther(type: VariableAmountType, title: string) {
+  const trimmed = title.trim();
+  if (!trimmed) return false;
+  return !getVariableTitlePresets(type).includes(trimmed);
+}
 
 export const SETTLEMENT_RULES: Array<{
   key: keyof PayrollSettings['leave']['finalSettlementRules'];
@@ -792,6 +1273,7 @@ export const DEFAULT_PAYROLL_SETTINGS: PayrollSettings = {
     additions: [],
     deductions: [],
   },
+  paymentSchedule: { ...DEFAULT_PAYMENT_SCHEDULE },
   workTimePayRules: {
     overtime: {
       dailyLimitHours: 4,
@@ -803,14 +1285,27 @@ export const DEFAULT_PAYROLL_SETTINGS: PayrollSettings = {
       endTime: '06:00',
       coefficient: 1.35,
     },
-    weeklyRestDayWork: {
-      coefficient: 1.4,
-    },
-    officialHolidayWork: {
-      coefficient: 1.96,
-    },
-    organizationalHolidayWork: {
-      coefficient: 1.4,
+    dayTypePaymentRules: {
+      no_shift_day: {
+        paidWithoutWork: false,
+        unpaidAbsenceImpact: 'none',
+        workedTimeCoefficient: 1.4,
+      },
+      weekly_rest_day: {
+        paidWithoutWork: true,
+        unpaidAbsenceImpact: 'none',
+        workedTimeCoefficient: 1.4,
+      },
+      official_holiday: {
+        paidWithoutWork: true,
+        unpaidAbsenceImpact: 'none',
+        workedTimeCoefficient: 1.96,
+      },
+      company_holiday: {
+        paidWithoutWork: true,
+        unpaidAbsenceImpact: 'none',
+        workedTimeCoefficient: 1.4,
+      },
     },
     mission: {
       coefficient: 1.89,
@@ -822,6 +1317,15 @@ export const DEFAULT_PAYROLL_SETTINGS: PayrollSettings = {
   },
   leave: {
     monthlyQuotaHours: 50,
+    transferPolicy: {
+      mode: 'carry_forward',
+      limits: {
+        monthly: { enabled: true, maxHours: 16 },
+        quarterly: { enabled: true, maxHours: 32 },
+        semiAnnual: { enabled: true, maxHours: 48 },
+        annual: { enabled: true, maxHours: 64 },
+      },
+    },
     transferLimits: {
       monthly: { enabled: true, hours: 16 },
       quarterly: { enabled: true, hours: 32 },
@@ -838,8 +1342,8 @@ export const DEFAULT_PAYROLL_SETTINGS: PayrollSettings = {
     },
   },
   mission: {
-    status: 'coming_soon',
-    readonly: true,
+    ...DEFAULT_MISSION_SETTINGS,
+    rules: DEFAULT_MISSION_SETTINGS.rules.map((rule) => ({ ...rule })),
   },
 };
 
@@ -1043,6 +1547,11 @@ export function validatePayrollStep(stepId: PayrollStepId, settings: PayrollSett
     BENEFIT_FIELDS.forEach((field) => requiredPositive(field.key, settings.benefits[field.key], true));
   }
 
+  if (stepId === 'paymentType') {
+    if (!settings.paymentSchedule?.type) errors.paymentScheduleType = 'نوع پرداخت را انتخاب کنید';
+    if (settings.paymentSchedule?.type === 'time_period' && !settings.paymentSchedule?.period) errors.paymentSchedulePeriod = 'دوره پرداخت را انتخاب کنید';
+  }
+
   if (stepId === 'overtime') {
     const rules = settings.workTimePayRules;
     const validateCoefficient = (key: string, value: number) => {
@@ -1050,14 +1559,29 @@ export function validatePayrollStep(stepId: PayrollStepId, settings: PayrollSett
       else if (value <= 0) errors[key] = 'ضریب باید عددی مثبت باشد.';
       else if (value < 1) errors[key] = 'ضریب باید حداقل ۱ باشد.';
     };
+    const validateDayTypeRule = (ruleKey: DayTypePaymentRuleKey, rule: DayTypePaymentRule) => {
+      const fieldBase = `dayTypePaymentRules.${ruleKey}`;
+      if (!Number.isFinite(rule.workedTimeCoefficient)) errors[`${fieldBase}.workedTimeCoefficient`] = 'ضریب پرداخت الزامی است';
+      else if (rule.workedTimeCoefficient <= 0) errors[`${fieldBase}.workedTimeCoefficient`] = 'ضریب پرداخت باید عددی مثبت باشد';
+      if (rule.paidWithoutWork) {
+        if (
+          rule.unpaidAbsenceImpact !== 'none' &&
+          rule.unpaidAbsenceImpact !== 'full_deduction' &&
+          rule.unpaidAbsenceImpact !== 'proportional_by_minutes'
+        ) {
+          errors[`${fieldBase}.unpaidAbsenceImpact`] = 'اثر غیبت غیرموجه را انتخاب کنید';
+        }
+      }
+    };
     if (!Number.isFinite(rules.overtime.dailyLimitHours)) errors.dailyLimitHours = 'این فیلد الزامی است.';
     else if (rules.overtime.dailyLimitHours <= 0) errors.dailyLimitHours = 'سقف اضافه کاری باید عددی مثبت باشد.';
     if (rules.overtime.dailyLimitHours > 24) errors.dailyLimitHours = 'سقف ساعات روزانه نمی تواند بیشتر از ۲۴ باشد.';
     validateCoefficient('normalCoefficient', rules.overtime.normalCoefficient);
     validateCoefficient('nightCoefficient', rules.nightWork.coefficient);
-    validateCoefficient('weeklyRestDayWorkCoefficient', rules.weeklyRestDayWork.coefficient);
-    validateCoefficient('officialHolidayWorkCoefficient', rules.officialHolidayWork.coefficient);
-    validateCoefficient('organizationalHolidayWorkCoefficient', rules.organizationalHolidayWork.coefficient);
+    validateDayTypeRule('no_shift_day', rules.dayTypePaymentRules.no_shift_day);
+    validateDayTypeRule('weekly_rest_day', rules.dayTypePaymentRules.weekly_rest_day);
+    validateDayTypeRule('official_holiday', rules.dayTypePaymentRules.official_holiday);
+    validateDayTypeRule('company_holiday', rules.dayTypePaymentRules.company_holiday);
     validateCoefficient('missionCoefficient', rules.mission.coefficient);
     if (!rules.coefficientCombination.defaultMethod) errors.defaultCombinationMethod = 'روش محاسبه الزامی است.';
     rules.coefficientCombination.exceptionRules.forEach((rule) => {
@@ -1078,13 +1602,26 @@ export function validatePayrollStep(stepId: PayrollStepId, settings: PayrollSett
   if (stepId === 'leave') {
     requiredPositive('monthlyQuotaHours', settings.leave.monthlyQuotaHours);
     requiredPositive('settlementRatePerHour', settings.leave.settlementRatePerHour, true);
-    Object.entries(settings.leave.transferLimits).forEach(([key, value]) => {
-      if (value.enabled) {
-        if (!Number.isFinite(value.hours ?? Number.NaN)) errors[key] = 'این فیلد الزامی است.';
-        else if ((value.hours ?? 0) < 0) errors[key] = 'ساعت انتقال نمی تواند منفی باشد.';
-        else if ((value.hours ?? 0) <= 0) errors[key] = 'مقدار باید عددی مثبت باشد.';
-      }
-    });
+    if (settings.leave.transferPolicy.mode === 'carry_forward') {
+      Object.entries(settings.leave.transferPolicy.limits).forEach(([key, value]) => {
+        if (value.enabled) {
+          if (!Number.isFinite(value.maxHours ?? Number.NaN)) errors[key] = 'این فیلد الزامی است.';
+          else if ((value.maxHours ?? 0) < 0) errors[key] = 'ساعت انتقال نمی تواند منفی باشد.';
+        }
+      });
+    }
+  }
+
+  if (stepId === 'mission') {
+    if (settings.mission.enabled) {
+      const activeRules = settings.mission.rules.filter((rule) => rule.active);
+      if (!activeRules.length) errors.missionRules = 'برای ماموریت فعال، حداقل یک قانون تعریف کنید';
+      settings.mission.rules.forEach((rule) => {
+        if (!rule.title.trim()) errors[`mission-${rule.id}-title`] = 'عنوان الزامی است';
+        if (!Number.isFinite(rule.coefficient) || rule.coefficient <= 0) errors[`mission-${rule.id}-coefficient`] = 'ضریب باید عددی مثبت باشد';
+        if (!rule.paymentBase) errors[`mission-${rule.id}-paymentBase`] = 'مبنای پرداخت را انتخاب کنید';
+      });
+    }
   }
 
   return errors;

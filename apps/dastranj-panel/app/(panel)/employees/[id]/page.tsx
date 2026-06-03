@@ -1,11 +1,18 @@
 import { notFound } from 'next/navigation';
 import { ModulePageHeader } from '../../../components/module-page/ModulePageHeader';
+import { getSessionContext } from '../../../lib/auth';
 import { getEmployee } from '../../../lib/data';
+import { getCurrentEmployeeContract } from '../../../lib/employee-contracts.server';
 import { EmployeeDetailView } from './_components/EmployeeDetailView';
 
 export default async function EmployeeDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const employee = await getEmployee(id);
+  const session = await getSessionContext();
+  const tenantId = session?.tenantId ?? null;
+  const [employee, currentContract] = await Promise.all([
+    getEmployee(id),
+    getCurrentEmployeeContract(id, tenantId),
+  ]);
 
   if (!employee) notFound();
 
@@ -41,6 +48,7 @@ export default async function EmployeeDetailPage({ params }: { params: Promise<{
     })),
     bankAccountsCount: Array.isArray(employee.bankAccounts) ? employee.bankAccounts.length : 0,
     guaranteeCount: Array.isArray(employee.guarantees) ? employee.guarantees.length : 0,
+    currentContract,
   };
 
   return (

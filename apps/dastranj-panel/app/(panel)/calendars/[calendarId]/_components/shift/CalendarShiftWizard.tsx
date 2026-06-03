@@ -1391,7 +1391,7 @@ export function CalendarShiftWizard({
 
             {dayContext?.isHoliday ? (
               <p className="calendar-shift-holiday-hint">
-                این روز تعطیل است. ثبت شیفت مجاز است، اما در صورت کارکرد ممکن است ضریب تعطیل/جمعه‌کاری در حقوق و
+                این روز تعطیل است. ثبت شیفت مجاز است، اما در صورت کارکرد ممکن است ضریب تعطیل هفتگی در حقوق و
                 دستمزد اعمال شود.
               </p>
             ) : null}

@@ -7,7 +7,6 @@ import {
   ChevronLeft,
   CircleAlert,
   Clock3,
-  Construction,
   Info,
   LockKeyhole,
   Pencil,
@@ -19,8 +18,11 @@ import {
   Wallet,
 } from 'lucide-react';
 import { MinimalScroll } from '../../../components/MinimalScroll';
+import { AdaptiveChipGroup } from '../../../components/AdaptiveChipGroup';
+import { VariableAmountTitlePicker } from '../../../components/VariableAmountTitlePicker';
 import { ConfirmDialog } from '../../../components/ConfirmDialog';
 import { PanelFormModal, PanelFormModalActions } from '../../../components/PanelFormModal';
+import { PanelToggleRow } from '../../../components/PanelToggleRow';
 import { UnsavedChangesDialog, useUnsavedLeaveGuard } from '../../../components/UnsavedChangesGuard';
 import { CalculationRulesBadges, CalcRulesDiffBadge, CalcRulesEditButton, CalculationRulesDialog } from '../../../components/CalculationRulesChips';
 import type { PaymentEffectContext } from '../../../components/CalculationRulesChips';
@@ -28,12 +30,13 @@ import { formatFaNumber, toPersianDigits } from '../../../lib/format-fa';
 import {
   getActiveTenantStorageId,
   BENEFIT_FIELDS,
+  DAY_TYPE_PAYMENT_RULES,
   COEFFICIENT_COMBINATION_METHODS,
   COEFFICIENT_EXCEPTION_METHODS,
   DEFAULT_PAYROLL_SETTINGS,
   PAYROLL_STEPS,
+  UNPAID_ABSENCE_IMPACT_OPTIONS,
   SETTLEMENT_RULES,
-  VARIABLE_TITLES,
   WORK_TIME_CONDITIONS,
   applyPayrollOverrides,
   buildPayrollOverrides,
@@ -42,6 +45,7 @@ import {
   calculateVariableAmount,
   compareCollections,
   compareValues,
+  getDayTypePaymentRuleErrorKey,
   getPayrollSettingsDraftStorageKey,
   getPayrollSettingsStorageKey,
   getPayrollStepperProgressStorageKey,
@@ -50,6 +54,7 @@ import {
   normalizePayrollSettings,
   validatePayrollStep,
   validateTaxBracket,
+  VARIABLE_TITLES,
   DEFAULT_OPTIONAL_ADDITION_RULES,
   DEFAULT_OPTIONAL_DEDUCTION_RULES,
   DEFAULT_FIXED_BENEFIT_RULES,
@@ -62,6 +67,9 @@ import {
   type BaseDifference,
   type BusinessSettingYear,
   type CalculationRules,
+  type DayTypePaymentRule,
+  type DayTypePaymentRuleKey,
+  type DayTypePaymentRules,
   type PaymentEffect,
   type CoefficientCombinationMethod,
   type CoefficientExceptionMethod,
@@ -77,7 +85,16 @@ import {
   type VariableAmountType,
   type VariableCalculationBase,
   type WorkTimeConditionKey,
+  type MissionRule,
 } from '../../../lib/payroll-business-settings';
+import {
+  buildToggleCompareDifference,
+  compareCollectionsForMode,
+  compareNumbersForMode,
+  type PayrollComparisonMode,
+} from '../../../lib/payroll-comparison-labels';
+import { MissionStep, MissionRuleDialog } from '../../employees/[id]/contract-drafts/_components/employee-contract-steps/MissionStep';
+import { PaymentScheduleStep } from '../../employees/[id]/contract-drafts/_components/employee-contract-steps/PaymentScheduleStep';
 
 type StepState = Record<PayrollStepId, { opened: boolean; completed: boolean; dirty: boolean; saved: boolean }>;
 
@@ -102,46 +119,47 @@ function decimal(value: number) {
   return toPersianDigits(Number.isFinite(value) ? String(value) : '');
 }
 
-type TransferLimitKey = keyof PayrollSettings['leave']['transferLimits'];
+type LeaveTransferRuleKey = keyof PayrollSettings['leave']['transferPolicy']['limits'];
 
-const TRANSFER_LIMIT_RULES: Array<{
-  key: TransferLimitKey;
+const LEAVE_TRANSFER_RULES: Array<{
+  key: LeaveTransferRuleKey;
   label: string;
   tooltip: string;
+  defaultHours: number;
 }> = [
-  { key: 'monthly', label: 'انتقال ماهیانه', tooltip: 'سقف انتقال ماهانه' },
-  { key: 'quarterly', label: 'انتقال سه ماهه', tooltip: 'سقف انتقال سه ماهه' },
-  { key: 'semiAnnual', label: 'انتقال شش ماهه / فصلی', tooltip: 'سقف انتقال شش ماهه' },
-  { key: 'annual', label: 'انتقال سالیانه', tooltip: 'سقف انتقال سالیانه' },
+  { key: 'monthly', label: 'انتقال ماهیانه', tooltip: 'سقف انتقال ماهانه', defaultHours: 16 },
+  { key: 'quarterly', label: 'انتقال سه‌ماهه', tooltip: 'سقف انتقال سه‌ماهه', defaultHours: 32 },
+  { key: 'semiAnnual', label: 'انتقال شش‌ماهه / فصلی', tooltip: 'سقف انتقال شش‌ماهه', defaultHours: 48 },
+  { key: 'annual', label: 'انتقال سالیانه', tooltip: 'سقف انتقال سالیانه', defaultHours: 64 },
 ];
 
-function getTransferLimitLabel(key: TransferLimitKey) {
-  return TRANSFER_LIMIT_RULES.find((rule) => rule.key === key)?.label ?? key;
-}
-
-function compareTransferLimit(
-  baseRule: PayrollSettings['leave']['transferLimits'][TransferLimitKey] | undefined,
-  currentRule: PayrollSettings['leave']['transferLimits'][TransferLimitKey],
+function compareLeaveTransferLimit(
+  baseRule: PayrollSettings['leave']['transferPolicy']['limits'][LeaveTransferRuleKey] | undefined,
+  currentRule: PayrollSettings['leave']['transferPolicy']['limits'][LeaveTransferRuleKey],
   label: string,
+  mode: PayrollComparisonMode = 'tenant',
 ) {
   if (!baseRule) return null;
-  if (baseRule.enabled === currentRule.enabled && baseRule.hours === currentRule.hours) return null;
+  if (baseRule.enabled === currentRule.enabled && baseRule.maxHours === currentRule.maxHours) return null;
+  const basePhrase = mode === 'template' ? 'قالب انتخاب‌شده' : 'تنظیمات پایه';
   if (!baseRule.enabled && currentRule.enabled) {
-    return customDifference('فعال شده نسبت به مبنا', `در تنظیمات تاو ادمین، ${label} غیرفعال است.`, 'added');
+    return customDifference(
+      mode === 'template' ? 'فعال شده نسبت به قالب' : 'فعال شده نسبت به مبنا',
+      `در ${basePhrase}، ${label} غیرفعال است.`,
+      'added',
+    );
   }
   if (baseRule.enabled && !currentRule.enabled) {
-    return customDifference('غیرفعال نسبت به مبنا', `در تنظیمات تاو ادمین، ${label} با سقف ${formatFaNumber(baseRule.hours ?? 0)} ساعت فعال است.`, 'removed');
+    return customDifference(
+      mode === 'template' ? 'غیرفعال نسبت به قالب' : 'غیرفعال نسبت به مبنا',
+      `در ${basePhrase}، ${label} با سقف ${formatFaNumber(baseRule.maxHours ?? 0)} ساعت فعال است.`,
+      'removed',
+    );
   }
-  if (baseRule.enabled && currentRule.enabled && baseRule.hours !== currentRule.hours) {
-    return compareValues(baseRule.hours ?? 0, currentRule.hours ?? 0, {
-      changed: 'متفاوت با سقف مبنا',
-      tooltip: `سقف ${label} در مبنای تاو ادمین ${formatFaNumber(baseRule.hours ?? 0)} ساعت است.`,
-    });
+  if (baseRule.enabled && currentRule.enabled && baseRule.maxHours !== currentRule.maxHours) {
+    return compareNumbersForMode(mode, baseRule.maxHours ?? 0, currentRule.maxHours ?? 0, label, { unit: 'ساعت' });
   }
-  return compareCollections(baseRule.enabled, currentRule.enabled, {
-    changed: 'متفاوت با سیاست مبنا',
-    tooltip: `سیاست ${label} در تنظیمات پایه تاو ادمین متفاوت است.`,
-  });
+  return compareCollectionsForMode(mode, baseRule.enabled, currentRule.enabled, label);
 }
 
 function conditionLabel(condition: WorkTimeConditionKey, short = false) {
@@ -195,6 +213,7 @@ function NumericField({
   error,
   decimalValue = false,
   difference,
+  disabled = false,
 }: {
   label: string;
   value: number;
@@ -205,6 +224,7 @@ function NumericField({
   error?: string;
   decimalValue?: boolean;
   difference?: BaseDifference | null;
+  disabled?: boolean;
 }) {
   const displayValue = Number.isFinite(value) ? toPersianDigits(String(value)) : '';
   const [draftValue, setDraftValue] = useState(displayValue);
@@ -222,6 +242,7 @@ function NumericField({
       <span className="business-payroll-input">
         <input
           value={draftValue}
+          disabled={disabled}
           inputMode={decimalValue ? 'decimal' : 'numeric'}
           onChange={(event) => {
             const nextValue = event.target.value;
@@ -268,6 +289,26 @@ function TimeField({
       {helper ? <small>{helper}</small> : null}
       {error ? <em>{error}</em> : null}
     </label>
+  );
+}
+
+function ReadOnlyTimeField({
+  label,
+  value,
+  helper,
+}: {
+  label: string;
+  value: string;
+  helper?: string;
+}) {
+  return (
+    <div className="business-payroll-field business-payroll-field--readonly">
+      <span className="business-payroll-field-label">{label}</span>
+      <span className="business-payroll-readonly-value" dir="ltr">
+        {toPersianDigits(value || '—')}
+      </span>
+      {helper ? <small>{helper}</small> : null}
+    </div>
   );
 }
 
@@ -755,18 +796,11 @@ function VariableAmountDialog({
       footer={<PanelFormModalActions submitLabel="ثبت" onSubmit={submit} onCancel={onClose} />}
     >
       <div className="payroll-variable-amount-dialog-form business-payroll-editor variable">
-        <div className="business-payroll-chips">
-          {VARIABLE_TITLES[item.type].map((title) => (
-            <button
-              key={title}
-              type="button"
-              className={item.title === title ? 'is-selected' : ''}
-              onClick={() => setItem((value) => ({ ...value, title }))}
-            >
-              {title}
-            </button>
-          ))}
-        </div>
+        <VariableAmountTitlePicker
+          type={item.type}
+          title={item.title}
+          onTitleChange={(nextTitle) => setItem((value) => ({ ...value, title: nextTitle }))}
+        />
         <div className="business-payroll-toggle">
           <button
             type="button"
@@ -1015,6 +1049,81 @@ function CoefficientRuleCard({
   );
 }
 
+function DayTypePaymentRuleCard({
+  dayType,
+  value,
+  baseValue,
+  coefficientError,
+  impactError,
+  onChange,
+  comparisonMode = 'tenant',
+}: {
+  dayType: DayTypePaymentRuleKey;
+  value: DayTypePaymentRule;
+  baseValue?: DayTypePaymentRule;
+  coefficientError?: string;
+  impactError?: string;
+  onChange: (value: DayTypePaymentRule) => void;
+  comparisonMode?: PayrollComparisonMode;
+}) {
+  const meta = DAY_TYPE_PAYMENT_RULES.find((item) => item.key === dayType) ?? DAY_TYPE_PAYMENT_RULES[0];
+  const difference = baseValue ? compareCollectionsForMode(comparisonMode, baseValue, value, meta.label) : null;
+
+  return (
+    <article className="business-payroll-day-type-card">
+      <div className="business-payroll-day-type-card-head">
+        <div className="business-payroll-day-type-card-title">
+          <strong>{meta.label}</strong>
+          <InfoTooltip text={meta.helper} />
+        </div>
+        {baseValue ? <DifferenceBadge difference={difference} /> : null}
+      </div>
+
+      <PanelToggleRow
+        label={
+          <span title="اگر فعال باشد، حتی بدون کارکرد، حقوق این روز برای کارمند محاسبه می‌شود. اگر غیرفعال باشد، در صورت عدم کارکرد، حقوقی برای این روز ثبت نمی‌شود.">
+            این روز با حقوق است
+          </span>
+        }
+        checked={value.paidWithoutWork}
+        onChange={(paidWithoutWork) => onChange({ ...value, paidWithoutWork })}
+      />
+
+      {value.paidWithoutWork ? (
+        <div className="business-payroll-day-type-impact">
+          <strong>
+            اثر غیبت غیرموجه بر حقوق این روز
+            <InfoTooltip text="مشخص می‌کند اگر کارمند در همان هفته غیبت غیرموجه داشته باشد، حقوق این روز چگونه کاهش پیدا کند." />
+          </strong>
+          <AdaptiveChipGroup
+            className="business-payroll-day-type-impact-chips"
+            items={UNPAID_ABSENCE_IMPACT_OPTIONS.map((option) => ({ value: option.value, label: option.label }))}
+            selected={value.unpaidAbsenceImpact}
+            onChange={(next) =>
+              onChange({
+                ...value,
+                unpaidAbsenceImpact: (Array.isArray(next) ? next[0] : next) as DayTypePaymentRule['unpaidAbsenceImpact'],
+              })
+            }
+          />
+          {impactError ? <em>{impactError}</em> : null}
+        </div>
+      ) : null}
+
+      <NumericField
+        label="ضریب پرداخت کارکرد در این روز"
+        value={value.workedTimeCoefficient}
+        unit="ضریب"
+        decimalValue
+        helper="مثلا 1.4 یعنی 40٪ بیشتر از حالت عادی."
+        tooltip="این ضریب فقط زمانی اعمال می‌شود که کارمند در این نوع روز کارکرد ثبت‌شده داشته باشد."
+        onChange={(workedTimeCoefficient) => onChange({ ...value, workedTimeCoefficient })}
+        error={coefficientError}
+      />
+    </article>
+  );
+}
+
 function toggleCondition(list: WorkTimeConditionKey[], condition: WorkTimeConditionKey) {
   return list.includes(condition) ? list.filter((item) => item !== condition) : [...list, condition];
 }
@@ -1043,7 +1152,7 @@ function CombinationMethodPreview({
   const scenarioChips = [
     'اضافه‌کاری',
     'شب‌کاری',
-    'جمعه‌کاری',
+    'تعطیل هفتگی',
   ];
   const formula = method === 'highest_only'
     ? '۱.۴ ← ضریب نهایی'
@@ -1083,11 +1192,13 @@ function CoefficientCombinationSection({
   baseSettings,
   salaryPerHour,
   onChange,
+  comparisonMode = 'tenant',
 }: {
   settings: PayrollSettings;
   baseSettings?: PayrollSettings;
   salaryPerHour: number;
   onChange: (combination: PayrollSettings['workTimePayRules']['coefficientCombination']) => void;
+  comparisonMode?: PayrollComparisonMode;
 }) {
   const combination = settings.workTimePayRules.coefficientCombination;
   const baseCombination = baseSettings?.workTimePayRules.coefficientCombination;
@@ -1095,9 +1206,9 @@ function CoefficientCombinationSection({
   const coefficientsByCondition = {
     normal_overtime: settings.workTimePayRules.overtime.normalCoefficient,
     night_work: settings.workTimePayRules.nightWork.coefficient,
-    weekly_rest_day_work: settings.workTimePayRules.weeklyRestDayWork.coefficient,
-    official_holiday_work: settings.workTimePayRules.officialHolidayWork.coefficient,
-    organizational_holiday_work: settings.workTimePayRules.organizationalHolidayWork.coefficient,
+    weekly_rest_day_work: settings.workTimePayRules.dayTypePaymentRules.weekly_rest_day.workedTimeCoefficient,
+    official_holiday_work: settings.workTimePayRules.dayTypePaymentRules.official_holiday.workedTimeCoefficient,
+    organizational_holiday_work: settings.workTimePayRules.dayTypePaymentRules.company_holiday.workedTimeCoefficient,
     mission: settings.workTimePayRules.mission.coefficient,
   };
   const preview = calculateCombinedCoefficient({
@@ -1116,10 +1227,6 @@ function CoefficientCombinationSection({
           <p>وقتی چند وضعیت کاری هم زمان رخ می دهند، این بخش مشخص می کند ضریب نهایی چگونه محاسبه شود.</p>
         </div>
       </div>
-      <div className="business-payroll-highlight subtle">
-        <Info className="h-4 w-4" />
-        سیاست کاری و تقویم مشخص می کنند چه زمانی یک وضعیت رخ داده است؛ این بخش مشخص می کند آن وضعیت ها با چه روشی در پرداخت ترکیب شوند.
-      </div>
       <div className="business-payroll-combination-card">
         <header>
           <div>
@@ -1127,10 +1234,12 @@ function CoefficientCombinationSection({
             <p>اگر استثنا نداشته باشیم، همین روش اعمال می شود.</p>
           </div>
           <DifferenceBadge
-            difference={baseCombination ? compareValues(baseCombination.defaultMethod, combination.defaultMethod, {
-              changed: 'متفاوت با روش ترکیب مبنا',
-              tooltip: `روش ترکیب تعریف شده توسط تاو ادمین برای این سال «${methodLabel(baseCombination.defaultMethod)}» است.`,
-            }) : null}
+            difference={baseCombination ? compareCollectionsForMode(
+              comparisonMode,
+              baseCombination.defaultMethod,
+              combination.defaultMethod,
+              'روش ترکیب ضرایب',
+            ) : null}
           />
         </header>
         <div className="business-payroll-method-options">
@@ -1213,30 +1322,51 @@ export function WorkTimePayRulesSection({
   derived,
   errors,
   onChange,
+  nightWorkTimesReadOnly = false,
+  businessSettingsHref,
+  embedded = false,
+  comparisonMode = 'tenant',
+  nightWorkTenantSettings,
 }: {
   settings: PayrollSettings;
   baseSettings?: PayrollSettings;
   derived: PayrollDerivedValues;
   errors: Record<string, string>;
   onChange: (rules: PayrollSettings['workTimePayRules']) => void;
+  /** When true, night shift start/end are shown from tenant business settings only. */
+  nightWorkTimesReadOnly?: boolean;
+  businessSettingsHref?: string;
+  /** Hide outer section header when nested in employee contract draft step. */
+  embedded?: boolean;
+  /** Template mode compares field badges against selected draft template. */
+  comparisonMode?: PayrollComparisonMode;
+  /** Tenant settings used for read-only night work time display. */
+  nightWorkTenantSettings?: PayrollSettings;
 }) {
   const rules = settings.workTimePayRules;
   const baseRules = baseSettings?.workTimePayRules;
+  const tenantNightRules = nightWorkTenantSettings?.workTimePayRules ?? baseRules;
+  const nightWorkStartTime = nightWorkTimesReadOnly && tenantNightRules ? tenantNightRules.nightWork.startTime : rules.nightWork.startTime;
+  const nightWorkEndTime = nightWorkTimesReadOnly && tenantNightRules ? tenantNightRules.nightWork.endTime : rules.nightWork.endTime;
   const update = <K extends keyof PayrollSettings['workTimePayRules']>(
     key: K,
     value: PayrollSettings['workTimePayRules'][K],
   ) => onChange({ ...rules, [key]: value });
   return (
     <>
-      <SectionHeader
-        title="قوانین پرداخت زمان کاری"
-        description="تنظیم ضرایب اضافه کاری، شب کاری، جمعه کاری، تعطیلات و ماموریت"
-        icon={<Clock3 className="h-5 w-5" />}
-      />
-      <div className="business-payroll-highlight subtle">
-        <Info className="h-4 w-4" />
-        سیاست کاری و تقویم مشخص می کنند چه زمانی یک وضعیت رخ داده است؛ این بخش مشخص می کند آن وضعیت با چه ضریبی محاسبه شود.
-      </div>
+      {!embedded ? (
+        <>
+          <SectionHeader
+            title="قوانین پرداخت زمان کاری"
+            description="تنظیم ضرایب اضافه کاری، شب کاری، قواعد روزهای خاص و ماموریت"
+            icon={<Clock3 className="h-5 w-5" />}
+          />
+          <div className="business-payroll-highlight subtle">
+            <Info className="h-4 w-4" />
+            سیاست کاری و تقویم مشخص می کنند چه زمانی یک وضعیت رخ داده است؛ این بخش مشخص می کند آن وضعیت با چه ضریبی محاسبه شود.
+          </div>
+        </>
+      ) : null}
       <section className="business-payroll-subcard">
         <h3>اضافه کاری عادی</h3>
         <div className="business-payroll-fields two">
@@ -1248,10 +1378,7 @@ export function WorkTimePayRulesSection({
             helper="حداکثر ساعت اضافه کاری مجاز در هر روز کاری."
             onChange={(dailyLimitHours) => update('overtime', { ...rules.overtime, dailyLimitHours })}
             error={errors.dailyLimitHours}
-            difference={baseRules ? compareValues(baseRules.overtime.dailyLimitHours, rules.overtime.dailyLimitHours, {
-              changed: 'متفاوت با سقف پایه',
-              tooltip: `سقف پایه اضافه کاری روزانه تاو ادمین ${formatFaNumber(baseRules.overtime.dailyLimitHours)} ساعت است.`,
-            }) : null}
+            difference={baseRules ? compareNumbersForMode(comparisonMode, baseRules.overtime.dailyLimitHours, rules.overtime.dailyLimitHours, 'سقف اضافه کاری روزانه', { unit: 'ساعت' }) : null}
           />
           <NumericField
             label="ضریب اضافه کاری عادی"
@@ -1261,10 +1388,7 @@ export function WorkTimePayRulesSection({
             helper="هر ساعت اضافه کاری عادی با این ضریب نسبت به حقوق ساعتی محاسبه می شود."
             onChange={(normalCoefficient) => update('overtime', { ...rules.overtime, normalCoefficient })}
             error={errors.normalCoefficient}
-            difference={baseRules ? compareValues(baseRules.overtime.normalCoefficient, rules.overtime.normalCoefficient, {
-              changed: 'متفاوت با ضریب اضافه کاری مبنا',
-              tooltip: `ضریب اضافه کاری عادی مبنا ${decimal(baseRules.overtime.normalCoefficient)} است.`,
-            }) : null}
+            difference={baseRules ? compareNumbersForMode(comparisonMode, baseRules.overtime.normalCoefficient, rules.overtime.normalCoefficient, 'ضریب اضافه کاری عادی', { unit: 'ضریب', formatAmount: decimal }) : null}
           />
         </div>
         <div className="business-payroll-overtime-limits">
@@ -1301,33 +1425,52 @@ export function WorkTimePayRulesSection({
         </div>
         {baseRules ? (
           <DifferenceBadge
-            difference={compareCollections(baseRules.nightWork.enabled, rules.nightWork.enabled, {
-              changed: 'متفاوت با وضعیت شب کاری مبنا',
-              tooltip: `شب کاری در تنظیمات پایه ${baseRules.nightWork.enabled ? 'فعال' : 'غیرفعال'} است.`,
-            })}
+            difference={buildToggleCompareDifference(comparisonMode, rules.nightWork.enabled, baseRules.nightWork.enabled, 'شب کاری')}
           />
         ) : null}
+        {nightWorkTimesReadOnly ? (
+          <p className="business-payroll-settings-source-note">
+            بازه شب کاری از{' '}
+            {businessSettingsHref ? (
+              <Link href={businessSettingsHref}>تنظیمات ضرایب کسب‌وکار</Link>
+            ) : (
+              'تنظیمات ضرایب کسب‌وکار'
+            )}{' '}
+            خوانده می‌شود و در این قالب قابل تغییر نیست.
+          </p>
+        ) : null}
         <div className="business-payroll-fields three">
-          <TimeField
-            label="شروع بازه شب کاری"
-            value={rules.nightWork.startTime}
-            onChange={(startTime) => update('nightWork', { ...rules.nightWork, startTime })}
-            error={errors.nightStartTime}
-            difference={baseRules ? compareValues(baseRules.nightWork.startTime, rules.nightWork.startTime, {
-              changed: 'متفاوت با بازه شب کاری مبنا',
-              tooltip: `بازه شب کاری پایه ${baseRules.nightWork.startTime} تا ${baseRules.nightWork.endTime} است.`,
-            }) : null}
-          />
-          <TimeField
-            label="پایان بازه شب کاری"
-            value={rules.nightWork.endTime}
-            onChange={(endTime) => update('nightWork', { ...rules.nightWork, endTime })}
-            error={errors.nightEndTime}
-            difference={baseRules ? compareValues(baseRules.nightWork.endTime, rules.nightWork.endTime, {
-              changed: 'متفاوت با بازه شب کاری مبنا',
-              tooltip: `بازه شب کاری پایه ${baseRules.nightWork.startTime} تا ${baseRules.nightWork.endTime} است.`,
-            }) : null}
-          />
+          {nightWorkTimesReadOnly && tenantNightRules ? (
+            <>
+              <ReadOnlyTimeField
+                label="شروع بازه شب کاری"
+                value={tenantNightRules.nightWork.startTime}
+                helper="مقدار نمایشی از تنظیمات کسب‌وکار"
+              />
+              <ReadOnlyTimeField
+                label="پایان بازه شب کاری"
+                value={tenantNightRules.nightWork.endTime}
+                helper="مقدار نمایشی از تنظیمات کسب‌وکار"
+              />
+            </>
+          ) : (
+            <>
+              <TimeField
+                label="شروع بازه شب کاری"
+                value={rules.nightWork.startTime}
+                onChange={(startTime) => update('nightWork', { ...rules.nightWork, startTime })}
+                error={errors.nightStartTime}
+                difference={baseRules ? compareCollectionsForMode(comparisonMode, baseRules.nightWork.startTime, rules.nightWork.startTime, 'شروع بازه شب کاری') : null}
+              />
+              <TimeField
+                label="پایان بازه شب کاری"
+                value={rules.nightWork.endTime}
+                onChange={(endTime) => update('nightWork', { ...rules.nightWork, endTime })}
+                error={errors.nightEndTime}
+                difference={baseRules ? compareCollectionsForMode(comparisonMode, baseRules.nightWork.endTime, rules.nightWork.endTime, 'پایان بازه شب کاری') : null}
+              />
+            </>
+          )}
           <NumericField
             label="ضریب شب کاری"
             value={rules.nightWork.coefficient}
@@ -1335,75 +1478,60 @@ export function WorkTimePayRulesSection({
             decimalValue
             onChange={(coefficient) => update('nightWork', { ...rules.nightWork, coefficient })}
             error={errors.nightCoefficient}
-            difference={baseRules ? compareValues(baseRules.nightWork.coefficient, rules.nightWork.coefficient, {
-              changed: 'متفاوت با ضریب شب کاری مبنا',
-              tooltip: `ضریب شب کاری مبنا ${decimal(baseRules.nightWork.coefficient)} است.`,
-            }) : null}
+            difference={baseRules ? compareNumbersForMode(comparisonMode, baseRules.nightWork.coefficient, rules.nightWork.coefficient, 'ضریب شب کاری', { unit: 'ضریب', formatAmount: decimal }) : null}
           />
         </div>
         <div className="business-payroll-example">
-          <strong>بازه شب کاری: {toPersianDigits(rules.nightWork.startTime)} تا {toPersianDigits(rules.nightWork.endTime)}</strong>
+          <strong>
+            بازه شب کاری: {toPersianDigits(nightWorkStartTime)} تا {toPersianDigits(nightWorkEndTime)}
+          </strong>
           <span>{formatFaNumber((rules.nightWork.coefficient - 1) * 100)}٪ بیشتر از ساعت عادی؛ {money(derived.salaryPerHour * rules.nightWork.coefficient)} به ازای هر ساعت</span>
         </div>
       </section>
       <section className="business-payroll-subcard">
-        <h3>ضرایب شرایط زمانی و ماموریت</h3>
-        <div className="business-payroll-time-rule-cards">
-          <CoefficientRuleCard
-            title="جمعه کاری / کار در تعطیل هفتگی"
-            label="ضریب جمعه کاری"
-            value={rules.weeklyRestDayWork.coefficient}
-            salaryPerHour={derived.salaryPerHour}
-            helper="برای کار در روز تعطیل هفتگی تعیین شده توسط سیاست کاری یا گروه کاری."
-            tooltip="روز تعطیل هفتگی توسط سیاست کاری یا گروه کاری مشخص می شود. اینجا فقط ضریب پرداخت تعیین می شود."
-            onChange={(coefficient) => update('weeklyRestDayWork', { coefficient })}
-            error={errors.weeklyRestDayWorkCoefficient}
-            difference={baseRules ? compareValues(baseRules.weeklyRestDayWork.coefficient, rules.weeklyRestDayWork.coefficient, {
-              changed: 'متفاوت با ضریب جمعه کاری مبنا',
-              tooltip: `ضریب کار در تعطیل هفتگی مبنا ${decimal(baseRules.weeklyRestDayWork.coefficient)} است.`,
-            }) : null}
-          />
-          <CoefficientRuleCard
-            title="تعطیل کاری رسمی"
-            label="ضریب تعطیل کاری رسمی"
-            value={rules.officialHolidayWork.coefficient}
-            salaryPerHour={derived.salaryPerHour}
-            helper="برای کار در تعطیلات رسمی تقویمی استفاده می شود."
-            tooltip="تشخیص تعطیلات رسمی از تقویم انجام می شود. اینجا فقط ضریب پرداخت تعیین می شود."
-            onChange={(coefficient) => update('officialHolidayWork', { coefficient })}
-            error={errors.officialHolidayWorkCoefficient}
-            difference={baseRules ? compareValues(baseRules.officialHolidayWork.coefficient, rules.officialHolidayWork.coefficient, {
-              changed: 'متفاوت با ضریب تعطیل رسمی مبنا',
-              tooltip: `ضریب تعطیل کاری رسمی مبنا ${decimal(baseRules.officialHolidayWork.coefficient)} است.`,
-            }) : null}
-          />
-          <CoefficientRuleCard
-            title="تعطیل کاری سازمانی"
-            label="ضریب تعطیل کاری سازمانی"
-            value={rules.organizationalHolidayWork.coefficient}
-            salaryPerHour={derived.salaryPerHour}
-            helper="برای روزهای تعطیل اعلام شده توسط سازمان، مستقل از تعطیلات رسمی."
-            tooltip="تعطیلات سازمانی از تقویم سازمانی یا تنظیمات تقویم می آیند. اینجا فقط ضریب پرداخت تعیین می شود."
-            onChange={(coefficient) => update('organizationalHolidayWork', { coefficient })}
-            error={errors.organizationalHolidayWorkCoefficient}
-            difference={baseRules ? compareValues(baseRules.organizationalHolidayWork.coefficient, rules.organizationalHolidayWork.coefficient, {
-              changed: 'متفاوت با ضریب تعطیل سازمانی مبنا',
-              tooltip: `ضریب تعطیل کاری سازمانی مبنا ${decimal(baseRules.organizationalHolidayWork.coefficient)} است.`,
-            }) : null}
-          />
+        <div className="business-payroll-subcard-head">
+          <div>
+            <h3>قواعد پرداخت بر اساس نوع روز</h3>
+            <p>رفتار حقوق و ضریب کارکرد را برای انواع روزهای غیرعادی مشخص کنید. روزهای واقعی از تقویم و سیاست کاری تشخیص داده می‌شوند.</p>
+          </div>
+        </div>
+        <div className="business-payroll-day-type-cards">
+          {DAY_TYPE_PAYMENT_RULES.map(({ key }) => {
+            const currentRule = rules.dayTypePaymentRules[key];
+            const baseRule = baseRules?.dayTypePaymentRules?.[key];
+            return (
+              <DayTypePaymentRuleCard
+                key={key}
+                dayType={key}
+                value={currentRule}
+                baseValue={baseRule}
+                comparisonMode={comparisonMode}
+                coefficientError={errors[getDayTypePaymentRuleErrorKey(key, 'workedTimeCoefficient')]}
+                impactError={errors[getDayTypePaymentRuleErrorKey(key, 'unpaidAbsenceImpact')]}
+                onChange={(next) => update('dayTypePaymentRules', { ...rules.dayTypePaymentRules, [key]: next })}
+              />
+            );
+          })}
+        </div>
+      </section>
+      <section className="business-payroll-subcard">
+        <div className="business-payroll-subcard-head">
+          <div>
+            <h3>ماموریت</h3>
+            <p>برای ساعات ماموریت؛ ثبت و تایید ماموریت در ماژول مربوط انجام می‌شود.</p>
+          </div>
+        </div>
+        <div className="business-payroll-coefficients business-payroll-mission-coefficient">
           <CoefficientRuleCard
             title="ماموریت"
             label="ضریب ماموریت"
             value={rules.mission.coefficient}
             salaryPerHour={derived.salaryPerHour}
-            helper="برای ساعات ماموریت؛ ثبت و تایید ماموریت در ماژول مربوط انجام می شود."
-            tooltip="این بخش فقط ضریب پرداخت ماموریت را مشخص می کند. فرآیند ثبت و تایید ماموریت در ماژول جداگانه انجام می شود."
+            helper="برای ساعات ماموریت؛ ثبت و تایید ماموریت در ماژول مربوط انجام می‌شود."
+            tooltip="این بخش فقط ضریب پرداخت ماموریت را مشخص می‌کند. فرآیند ثبت و تایید ماموریت در ماژول جداگانه انجام می‌شود."
             onChange={(coefficient) => update('mission', { coefficient })}
             error={errors.missionCoefficient}
-            difference={baseRules ? compareValues(baseRules.mission.coefficient, rules.mission.coefficient, {
-              changed: 'متفاوت با ضریب ماموریت مبنا',
-              tooltip: `ضریب ماموریت مبنا ${decimal(baseRules.mission.coefficient)} است.`,
-            }) : null}
+            difference={baseRules ? compareNumbersForMode(comparisonMode, baseRules.mission.coefficient, rules.mission.coefficient, 'ضریب ماموریت', { unit: 'ضریب', formatAmount: decimal }) : null}
           />
         </div>
       </section>
@@ -1411,6 +1539,7 @@ export function WorkTimePayRulesSection({
         settings={settings}
         baseSettings={baseSettings}
         salaryPerHour={derived.salaryPerHour}
+        comparisonMode={comparisonMode}
         onChange={(coefficientCombination) => update('coefficientCombination', coefficientCombination)}
       />
     </>
@@ -1422,36 +1551,45 @@ export function LeaveSection({
   baseSettings,
   errors,
   onLeaveChange,
+  embedded = false,
+  comparisonMode = 'tenant',
 }: {
   settings: PayrollSettings;
   baseSettings?: PayrollSettings;
   errors: Record<string, string>;
   onLeaveChange: (settings: PayrollSettings['leave']) => void;
+  embedded?: boolean;
+  comparisonMode?: PayrollComparisonMode;
 }) {
   const [storedHours, setStoredHours] = useState(10);
   const cashSettlement = storedHours * settings.leave.settlementRatePerHour;
-  const enabledTransferRules = TRANSFER_LIMIT_RULES.filter(({ key }) => settings.leave.transferLimits[key].enabled);
-  const transferLimitWarning = (() => {
-    const ordered = TRANSFER_LIMIT_RULES
-      .map(({ key, label }) => ({ key, label, value: settings.leave.transferLimits[key] }))
-      .filter(({ value }) => value.enabled && Number.isFinite(value.hours ?? Number.NaN) && (value.hours ?? 0) > 0);
-    for (let i = 0; i < ordered.length; i += 1) {
-      for (let j = i + 1; j < ordered.length; j += 1) {
-        if ((ordered[i].value.hours ?? 0) > (ordered[j].value.hours ?? 0)) {
-          return `سقف ${ordered[i].label} از ${ordered[j].label} بیشتر است. لطفاً مقادیر را بررسی کنید.`;
-        }
-      }
-    }
-    return '';
-  })();
+  const currentTransferPolicy = settings.leave.transferPolicy;
+  const baseTransferPolicy = baseSettings?.leave.transferPolicy;
+  const modeDifference = baseTransferPolicy
+    ? compareCollectionsForMode(
+        comparisonMode,
+        baseTransferPolicy.mode,
+        currentTransferPolicy.mode,
+        'مدیریت مرخصی‌های استفاده‌نشده',
+      )
+    : null;
+
+  const syncTransferLimits = (policy: PayrollSettings['leave']['transferPolicy']) => ({
+    monthly: { enabled: policy.limits.monthly.enabled, hours: policy.limits.monthly.maxHours },
+    quarterly: { enabled: policy.limits.quarterly.enabled, hours: policy.limits.quarterly.maxHours },
+    semiAnnual: { enabled: policy.limits.semiAnnual.enabled, hours: policy.limits.semiAnnual.maxHours },
+    annual: { enabled: policy.limits.annual.enabled, hours: policy.limits.annual.maxHours },
+  });
 
   return (
     <>
-      <SectionHeader
-        title="مرخصی"
-        description="سهمیه، مقدار قابل انتقال و تصمیم تسویه مرخصی ذخیره شده را مشخص کنید."
-        icon={<Clock3 className="h-5 w-5" />}
-      />
+      {!embedded ? (
+        <SectionHeader
+          title="مرخصی"
+          description="سهمیه، مقدار قابل انتقال و تصمیم تسویه مرخصی ذخیره شده را مشخص کنید."
+          icon={<Clock3 className="h-5 w-5" />}
+        />
+      ) : null}
       <NumericField
         label="سهمیه مرخصی ماهانه"
         value={settings.leave.monthlyQuotaHours}
@@ -1459,68 +1597,121 @@ export function LeaveSection({
         helper="مقدار مرخصی مجاز کارمند در هر ماه."
         onChange={(monthlyQuotaHours) => onLeaveChange({ ...settings.leave, monthlyQuotaHours })}
         error={errors.monthlyQuotaHours}
-        difference={baseSettings ? compareValues(baseSettings.leave.monthlyQuotaHours, settings.leave.monthlyQuotaHours, {
-          changed: 'متفاوت با سیاست پایه',
-          tooltip: `سهمیه مرخصی ماهانه تعریف شده توسط تاو ادمین ${formatFaNumber(baseSettings.leave.monthlyQuotaHours)} ساعت است.`,
-        }) : null}
+        difference={baseSettings ? compareNumbersForMode(
+          comparisonMode,
+          baseSettings?.leave?.monthlyQuotaHours ?? DEFAULT_PAYROLL_SETTINGS.leave.monthlyQuotaHours,
+          settings.leave.monthlyQuotaHours,
+          'سهمیه مرخصی ماهانه',
+          { unit: 'ساعت' },
+        ) : null}
       />
       <section className="business-payroll-subcard">
-        <h3>حداکثر ساعات انتقال</h3>
-        <p>اگر مرخصی کامل استفاده نشود، فقط سقف های فعال شده قابل ذخیره یا انتقال هستند.</p>
-        <div className="business-payroll-transfer-grid">
-          {TRANSFER_LIMIT_RULES.map(({ key, label }) => {
-            const currentRule = settings.leave.transferLimits[key];
-            const baseRule = baseSettings?.leave.transferLimits[key];
-            return (
-              <TransferLimitRuleCard
-                key={key}
-                title={label}
-                baseRule={baseRule}
-                value={currentRule}
-                error={currentRule.enabled ? errors[key] : undefined}
-                onToggle={(enabled) =>
-                  onLeaveChange({
-                    ...settings.leave,
-                    transferLimits: {
-                      ...settings.leave.transferLimits,
-                      [key]: {
+        <h3>مدیریت مرخصی‌های استفاده‌نشده</h3>
+        <p>دو حالت برای مرخصی‌های باقی‌مانده تعریف کنید. اگر ذخیره دوره‌ای فعال باشد، سقف انتقال برای هر بازه نمایش داده می‌شود.</p>
+        <div className="business-payroll-toggle business-payroll-toggle--stacked business-payroll-leave-mode">
+          <button
+            type="button"
+            className={currentTransferPolicy.mode === 'carry_forward' ? 'is-selected' : ''}
+            onClick={() => {
+              const nextPolicy = { ...currentTransferPolicy, mode: 'carry_forward' as const };
+              onLeaveChange({
+                ...settings.leave,
+                transferPolicy: nextPolicy,
+                transferLimits: syncTransferLimits(nextPolicy),
+              });
+            }}
+          >
+            ذخیره دوره‌ای مرخصی
+          </button>
+          <button
+            type="button"
+            className={currentTransferPolicy.mode === 'expire_unused' ? 'is-warning' : ''}
+            onClick={() => {
+              const nextPolicy = { ...currentTransferPolicy, mode: 'expire_unused' as const };
+              onLeaveChange({
+                ...settings.leave,
+                transferPolicy: nextPolicy,
+                transferLimits: syncTransferLimits(nextPolicy),
+              });
+            }}
+          >
+            ابطال مرخصی ذخیره‌شده
+          </button>
+        </div>
+        <DifferenceBadge difference={modeDifference} />
+        {currentTransferPolicy.mode === 'carry_forward' ? (
+          <>
+            <div className="business-payroll-transfer-card-head">
+              <strong>حداکثر ساعات انتقال</strong>
+              <small>هر قاعده فقط وقتی فعال است، سقف ساعت قابل انتقال دارد.</small>
+            </div>
+            <div className="business-payroll-transfer-grid">
+              {LEAVE_TRANSFER_RULES.map(({ key, label, tooltip, defaultHours }) => {
+                const currentRule = currentTransferPolicy.limits[key];
+                const baseRule = baseTransferPolicy?.limits[key];
+                return (
+                  <TransferLimitRuleCard
+                    key={key}
+                    title={label}
+                    tooltip={tooltip}
+                    baseRule={baseRule}
+                    value={currentRule}
+                    comparisonMode={comparisonMode}
+                    error={currentRule.enabled ? errors[key] : undefined}
+                    onToggle={(enabled) => {
+                      const nextRule = {
                         enabled,
-                        hours: enabled ? (currentRule.hours ?? baseRule?.hours ?? (key === 'monthly' ? 16 : key === 'quarterly' ? 32 : key === 'semiAnnual' ? 48 : 64)) : null,
-                      },
-                    },
-                  })
-                }
-                onHoursChange={(hours) =>
-                  onLeaveChange({
-                    ...settings.leave,
-                    transferLimits: {
-                      ...settings.leave.transferLimits,
-                      [key]: {
-                        enabled: true,
-                        hours,
-                      },
-                    },
-                  })
-                }
-              />
-            );
-          })}
-        </div>
-        <div className="business-payroll-example">
-          <strong>مثال انتقال مرخصی</strong>
-          <span>
-            سهمیه {formatFaNumber(settings.leave.monthlyQuotaHours)} ساعت - مصرف {formatFaNumber(20)} ساعت = مانده {formatFaNumber(Math.max(0, settings.leave.monthlyQuotaHours - 20))} ساعت
-          </span>
-          {enabledTransferRules.length ? (
-            enabledTransferRules.map(({ key, label }) => {
-              const hours = settings.leave.transferLimits[key].hours ?? 0;
-              return <span key={key}>{label}: {formatFaNumber(hours)} ساعت</span>;
-            })
-          ) : (
-            <span>انتقال مرخصی غیرفعال است.</span>
-          )}
-          {transferLimitWarning ? <span className="business-payroll-warning">{transferLimitWarning}</span> : null}
-        </div>
+                        maxHours: enabled ? (currentRule.maxHours ?? baseRule?.maxHours ?? defaultHours) : null,
+                      };
+                      const nextPolicy = {
+                        ...currentTransferPolicy,
+                        mode: 'carry_forward' as const,
+                        limits: {
+                          ...currentTransferPolicy.limits,
+                          [key]: nextRule,
+                        },
+                      };
+                      onLeaveChange({
+                        ...settings.leave,
+                        transferPolicy: nextPolicy,
+                        transferLimits: syncTransferLimits(nextPolicy),
+                      });
+                    }}
+                    onHoursChange={(hours) => {
+                      const nextPolicy = {
+                        ...currentTransferPolicy,
+                        mode: 'carry_forward' as const,
+                        limits: {
+                          ...currentTransferPolicy.limits,
+                          [key]: { enabled: true, maxHours: hours },
+                        },
+                      };
+                      onLeaveChange({
+                        ...settings.leave,
+                        transferPolicy: nextPolicy,
+                        transferLimits: syncTransferLimits(nextPolicy),
+                      });
+                    }}
+                  />
+                );
+              })}
+            </div>
+            <div className="business-payroll-example">
+              <strong>نمونه انتقال مرخصی</strong>
+              <span>
+                سهمیه {formatFaNumber(settings.leave.monthlyQuotaHours)} ساعت - مصرف {formatFaNumber(20)} ساعت = مانده {formatFaNumber(Math.max(0, settings.leave.monthlyQuotaHours - 20))} ساعت
+              </span>
+              {LEAVE_TRANSFER_RULES.filter(({ key }) => currentTransferPolicy.limits[key].enabled).map(({ key, label }) => (
+                <span key={key}>{label}: {formatFaNumber(currentTransferPolicy.limits[key].maxHours ?? 0)} ساعت</span>
+              ))}
+            </div>
+          </>
+        ) : (
+          <div className="business-payroll-transfer-disabled">
+            <CircleAlert className="h-4 w-4" />
+            ابطال مرخصی ذخیره‌شده فعال است و قواعد انتقال در محاسبه لحاظ نمی‌شوند.
+          </div>
+        )}
       </section>
       <section className="business-payroll-subcard">
         <h3>تسویه نقدی مرخصی ذخیره شده</h3>
@@ -1532,10 +1723,13 @@ export function LeaveSection({
             helper="برای پرداخت نقدی مرخصی استفاده نشده به کار می رود."
             onChange={(settlementRatePerHour) => onLeaveChange({ ...settings.leave, settlementRatePerHour })}
             error={errors.settlementRatePerHour}
-            difference={baseSettings ? compareValues(baseSettings.leave.settlementRatePerHour, settings.leave.settlementRatePerHour, {
-              changed: 'متفاوت با سیاست پایه',
-              tooltip: `نرخ پایه تسویه نقدی تعریف شده توسط تاو ادمین ${money(baseSettings.leave.settlementRatePerHour)} است.`,
-            }) : null}
+            difference={baseSettings ? compareNumbersForMode(
+              comparisonMode,
+              baseSettings?.leave?.settlementRatePerHour ?? DEFAULT_PAYROLL_SETTINGS.leave.settlementRatePerHour,
+              settings.leave.settlementRatePerHour,
+              'نرخ تسویه نقدی',
+              { unit: 'ریال', formatAmount: money },
+            ) : null}
           />
           <NumericField
             label="ساعت ذخیره برای نمایش محاسبه"
@@ -1555,10 +1749,13 @@ export function LeaveSection({
         <div className="business-payroll-settlement-rules">
           {SETTLEMENT_RULES.map(({ key, label }) => {
             const value = settings.leave.finalSettlementRules[key];
-            const difference = baseSettings ? compareValues(baseSettings.leave.finalSettlementRules[key], value, {
-              changed: 'متفاوت با سیاست پایه',
-              tooltip: `تصمیم پایه تاو ادمین برای ${label} «${baseSettings.leave.finalSettlementRules[key] === 'cash' ? 'تسویه نقدی' : 'ابطال مرخصی'}» است.`,
-            }) : null;
+            const baseDecision = baseSettings?.leave?.finalSettlementRules[key];
+            const difference = baseSettings ? compareCollectionsForMode(
+              comparisonMode,
+              baseDecision,
+              value,
+              `تسویه نهایی: ${label}`,
+            ) : null;
             return (
               <article key={key}>
                 <strong>{label}</strong>
@@ -1603,44 +1800,31 @@ export function LeaveSection({
   );
 }
 
-function MissionSection() {
-  return (
-    <>
-      <SectionHeader
-        title="ماموریت"
-        description="تنظیمات پیشرفته ماموریت در نسخه های بعدی در دسترس قرار می گیرد."
-        icon={<Construction className="h-5 w-5" />}
-      />
-      <section className="business-payroll-coming-soon">
-        <span>در حال توسعه</span>
-        <h3>قوانین پیشرفته ماموریت</h3>
-        <p>ضریب پرداخت ماموریت در بخش قوانین پرداخت زمان کاری تعریف می شود. تنظیمات پیشرفته ماموریت مانند قوانین تایید، سقف ها و شرایط پرداخت در نسخه های بعدی اضافه خواهد شد.</p>
-      </section>
-    </>
-  );
-}
-
 function TransferLimitRuleCard({
   title,
+  tooltip,
   baseRule,
   value,
   error,
   onToggle,
   onHoursChange,
+  comparisonMode = 'tenant',
 }: {
   title: string;
-  baseRule?: { enabled: boolean; hours: number | null };
-  value: { enabled: boolean; hours: number | null };
+  tooltip: string;
+  baseRule?: { enabled: boolean; maxHours: number | null };
+  value: { enabled: boolean; maxHours: number | null };
   error?: string;
   onToggle: (enabled: boolean) => void;
   onHoursChange: (hours: number) => void;
+  comparisonMode?: PayrollComparisonMode;
 }) {
-  const difference = baseRule ? compareTransferLimit(baseRule, value, title) : null;
+  const difference = baseRule ? compareLeaveTransferLimit(baseRule, value, title, comparisonMode) : null;
   return (
     <article className={`business-payroll-transfer-rule ${value.enabled ? 'is-enabled' : 'is-disabled'}`}>
       <div className="business-payroll-transfer-rule-head">
         <div>
-          <strong>{title}</strong>
+          <strong title={tooltip}>{title}</strong>
           {baseRule ? <DifferenceBadge difference={difference} /> : null}
         </div>
         <div className="business-payroll-toggle">
@@ -1655,14 +1839,14 @@ function TransferLimitRuleCard({
       {value.enabled ? (
         <NumericField
           label="حداکثر ساعت قابل انتقال"
-          value={value.hours ?? Number.NaN}
+          value={Number.isFinite(value.maxHours) ? value.maxHours : Number.NaN}
           unit="ساعت"
           onChange={onHoursChange}
           error={error}
         />
       ) : (
         <div className="business-payroll-transfer-rule-muted">
-          این قانون در محاسبه انتقال مرخصی لحاظ نمی شود.
+          این قانون غیرفعال است و سقف انتقال برای آن محاسبه نمی‌شود.
         </div>
       )}
     </article>
@@ -1676,15 +1860,17 @@ function SummarySidebar({ settings, derived }: { settings: PayrollSettings; deri
     coefficientsByCondition: {
       normal_overtime: settings.workTimePayRules.overtime.normalCoefficient,
       night_work: settings.workTimePayRules.nightWork.coefficient,
-      weekly_rest_day_work: settings.workTimePayRules.weeklyRestDayWork.coefficient,
-      official_holiday_work: settings.workTimePayRules.officialHolidayWork.coefficient,
-      organizational_holiday_work: settings.workTimePayRules.organizationalHolidayWork.coefficient,
+      weekly_rest_day_work: settings.workTimePayRules.dayTypePaymentRules.weekly_rest_day.workedTimeCoefficient,
+      official_holiday_work: settings.workTimePayRules.dayTypePaymentRules.official_holiday.workedTimeCoefficient,
+      organizational_holiday_work: settings.workTimePayRules.dayTypePaymentRules.company_holiday.workedTimeCoefficient,
       mission: settings.workTimePayRules.mission.coefficient,
     },
     defaultMethod: settings.workTimePayRules.coefficientCombination.defaultMethod,
     exceptionRules: [],
   });
-  const enabledTransferRules = TRANSFER_LIMIT_RULES.filter(({ key }) => settings.leave.transferLimits[key].enabled);
+  const enabledTransferRules = settings.leave.transferPolicy.mode === 'carry_forward'
+    ? LEAVE_TRANSFER_RULES.filter(({ key }) => settings.leave.transferPolicy.limits[key].enabled)
+    : [];
 
   return (
     <aside className="draft-template-flow-report business-payroll-report" aria-label="خلاصه زنده تنظیمات">
@@ -1762,20 +1948,23 @@ function SummarySidebar({ settings, derived }: { settings: PayrollSettings; deri
             <small>
               شب کاری: {toPersianDigits(settings.workTimePayRules.nightWork.startTime)} تا {toPersianDigits(settings.workTimePayRules.nightWork.endTime)} / ضریب {decimal(settings.workTimePayRules.nightWork.coefficient)}
             </small>
-            <small>جمعه کاری: {decimal(settings.workTimePayRules.weeklyRestDayWork.coefficient)} | تعطیل رسمی: {decimal(settings.workTimePayRules.officialHolidayWork.coefficient)}</small>
-            <small>تعطیل سازمانی: {decimal(settings.workTimePayRules.organizationalHolidayWork.coefficient)} | ماموریت: {decimal(settings.workTimePayRules.mission.coefficient)}</small>
+            <small>تعطیل هفتگی: {decimal(settings.workTimePayRules.dayTypePaymentRules.weekly_rest_day.workedTimeCoefficient)} | تعطیل رسمی: {decimal(settings.workTimePayRules.dayTypePaymentRules.official_holiday.workedTimeCoefficient)}</small>
+            <small>تعطیل سازمانی: {decimal(settings.workTimePayRules.dayTypePaymentRules.company_holiday.workedTimeCoefficient)} | ماموریت: {decimal(settings.workTimePayRules.mission.coefficient)}</small>
             <small>روش پیش فرض: {methodLabel(settings.workTimePayRules.coefficientCombination.defaultMethod)}</small>
             <small>پیش نمایش ضریب: {decimal(Number(combinationPreview.finalCoefficient.toFixed(3)))}</small>
           </div>
           <div className="draft-template-flow-report-card">
+            <span>ماموریت</span>
+            <strong>{settings.mission.enabled ? 'فعال' : 'غیرفعال'}</strong>
+            <small>{formatFaNumber(settings.mission.rules.length)} قانون ثبت شده</small>
+          </div>
+          <div className="draft-template-flow-report-card">
             <span>سیاست مرخصی ذخیره شده</span>
-            {enabledTransferRules.length ? (
-              enabledTransferRules.map(({ key, label }) => (
-                <small key={key}>{label}: {formatFaNumber(settings.leave.transferLimits[key].hours ?? 0)} ساعت</small>
-              ))
-            ) : (
-              <small>قوانین انتقال مرخصی غیرفعال است.</small>
-            )}
+            <small>{settings.leave.transferPolicy.mode === 'carry_forward' ? 'ذخیره دوره‌ای مرخصی' : 'ابطال مرخصی ذخیره‌شده'}</small>
+            {settings.leave.transferPolicy.mode === 'carry_forward' && enabledTransferRules.length ? enabledTransferRules.map(({ key, label }) => (
+              <small key={key}>{label}: {formatFaNumber(settings.leave.transferPolicy.limits[key].maxHours ?? 0)} ساعت</small>
+            )) : null}
+            {settings.leave.transferPolicy.mode === 'expire_unused' ? <small>قواعد انتقال در محاسبه لحاظ نمی‌شوند.</small> : null}
             <small>{formatFaNumber(cancellationCount)} وضعیت با ابطال مرخصی ذخیره شده تنظیم شده است.</small>
           </div>
         </MinimalScroll>
@@ -1839,6 +2028,8 @@ export function PayrollBusinessSettingsFlow({
     () => PAYROLL_STEPS.some(({ id }) => stepState[id]?.dirty),
     [stepState],
   );
+  const [missionEditor, setMissionEditor] = useState<MissionRule | null>(null);
+  const [deletingMissionRule, setDeletingMissionRule] = useState<MissionRule | null>(null);
 
   useEffect(() => {
     let baseSettings = DEFAULT_PAYROLL_SETTINGS;
@@ -1902,6 +2093,33 @@ export function PayrollBusinessSettingsFlow({
     setErrors({});
   };
 
+  const saveMissionRule = (rule: MissionRule) => {
+    update('mission', (current) => {
+      const exists = current.mission.rules.some((item) => item.id === rule.id);
+      return {
+        ...current,
+        mission: {
+          ...current.mission,
+          enabled: true,
+          rules: exists ? current.mission.rules.map((item) => (item.id === rule.id ? rule : item)) : [...current.mission.rules, rule],
+        },
+      };
+    });
+    setMissionEditor(null);
+  };
+
+  const deleteMissionRule = () => {
+    if (!deletingMissionRule) return;
+    update('mission', (current) => ({
+      ...current,
+      mission: {
+        ...current.mission,
+        rules: current.mission.rules.filter((item) => item.id !== deletingMissionRule.id),
+      },
+    }));
+    setDeletingMissionRule(null);
+  };
+
   const scrollToStep = (step: PayrollStepId) => {
     document.getElementById(`business-payroll-${step}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
@@ -1931,10 +2149,14 @@ export function PayrollBusinessSettingsFlow({
             ? { ...currentSaved, benefits: settings.benefits }
             : step === 'variableAmounts'
               ? { ...currentSaved, variableAmounts: settings.variableAmounts }
+              : step === 'paymentType'
+                ? { ...currentSaved, paymentSchedule: settings.paymentSchedule }
               : step === 'overtime'
                 ? { ...currentSaved, workTimePayRules: settings.workTimePayRules }
                 : step === 'leave'
                   ? { ...currentSaved, leave: settings.leave }
+                  : step === 'mission'
+                    ? { ...currentSaved, mission: settings.mission }
                   : currentSaved;
     savedSettingsRef.current = nextSaved;
     if (isTenant) {
@@ -2091,6 +2313,17 @@ export function PayrollBusinessSettingsFlow({
             }
           />
         );
+      case 'paymentType':
+        return (
+          <PaymentScheduleStep
+            paymentSchedule={settings.paymentSchedule}
+            basePaymentSchedule={isTenant ? adminBaseSettings.paymentSchedule : null}
+            comparisonMode={isTenant ? 'tenant' : undefined}
+            comparisonTooltip="در تنظیمات تاو ادمین، نوع پرداخت متفاوت تعریف شده است."
+            helperText="نوع کلی پرداخت حقوق و مزایا را انتخاب کنید."
+            onChange={(paymentSchedule) => update('paymentType', (current) => ({ ...current, paymentSchedule }))}
+          />
+        );
       case 'overtime':
         return (
           <WorkTimePayRulesSection
@@ -2111,7 +2344,30 @@ export function PayrollBusinessSettingsFlow({
           />
         );
       case 'mission':
-        return <MissionSection />;
+        return (
+          <MissionStep
+            mission={settings.mission}
+            baseMission={isTenant ? adminBaseSettings.mission : null}
+            derived={derived}
+            comparisonMode={isTenant ? 'tenant' : undefined}
+            comparisonReferenceWord="مبنا"
+            exclusiveLabel={isTenant ? 'کسب و کار' : 'تنظیمات تاو ادمین'}
+            tag={isTenant ? 'تنظیمات اختصاصی کسب و کار' : 'تنظیمات تاو ادمین'}
+            description="قواعد ماموریت را برای این سال تنظیم کنید."
+            onMissionChange={(mission) => update('mission', (current) => ({ ...current, mission: { ...current.mission, ...mission } }))}
+            onEditRule={setMissionEditor}
+            onDeleteRule={setDeletingMissionRule}
+            onAddRule={() =>
+              setMissionEditor({
+                id: `mission-${Date.now()}`,
+                title: 'ماموریت جدید',
+                coefficient: 1,
+                paymentBase: 'base_salary',
+                active: true,
+              })
+            }
+          />
+        );
     }
   };
 
@@ -2261,6 +2517,24 @@ export function PayrollBusinessSettingsFlow({
           )}
         </div>
       </main>
+      <MissionRuleDialog
+        open={Boolean(missionEditor)}
+        initialRule={missionEditor}
+        monthlyBaseSalary={derived.monthlyBaseSalary}
+        grossPay={derived.grossPay}
+        onClose={() => setMissionEditor(null)}
+        onSubmit={saveMissionRule}
+      />
+      <ConfirmDialog
+        open={Boolean(deletingMissionRule)}
+        title="حذف ماموریت"
+        description={deletingMissionRule ? `آیا از حذف «${deletingMissionRule.title}» مطمئن هستید؟` : ''}
+        confirmLabel="حذف"
+        cancelLabel="انصراف"
+        tone="danger"
+        onConfirm={deleteMissionRule}
+        onCancel={() => setDeletingMissionRule(null)}
+      />
       <UnsavedChangesDialog
         open={unsavedLeaveGuard.dialogOpen}
         saving={unsavedLeaveGuard.saving}

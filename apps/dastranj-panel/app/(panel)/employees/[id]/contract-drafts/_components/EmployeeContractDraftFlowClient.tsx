@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   ArrowLeft,
@@ -15,8 +15,8 @@ import {
   Edit3,
   Eye,
   FileText,
+  Gift,
   Info,
-  RotateCcw,
   Scale,
   Layers3,
   LockKeyhole,
@@ -34,10 +34,13 @@ import {
 import { PersianDatePicker } from '@repo/ui';
 import { CardMenu } from '../../../../../components/CardMenu';
 import { ConfirmDialog } from '../../../../../components/ConfirmDialog';
+import { AttachmentManager } from '../../../../../components/AttachmentManager';
 import { DraftShowcaseField, DraftShowcaseFieldBadge, DraftShowcaseFields } from '../../../../../components/DraftShowcaseField';
 import { MinimalScroll } from '../../../../../components/MinimalScroll';
 import { CalculationRulesBadges, CalcRulesDiffBadge, CalcRulesEditButton, CalculationRulesDialog } from '../../../../../components/CalculationRulesChips';
+import { PanelToggleRow } from '../../../../../components/PanelToggleRow';
 import { PanelFormModal, PanelFormModalActions } from '../../../../../components/PanelFormModal';
+import { VariableAmountTitlePicker } from '../../../../../components/VariableAmountTitlePicker';
 import { UnsavedChangesDialog, useUnsavedLeaveGuard } from '../../../../../components/UnsavedChangesGuard';
 import { formatPersianYmd, getPersianPartsFromDate, parsePersianYmd, persianToDate } from '../../../../../lib/calendar-dates';
 import { normalizePersianDateInput } from '../../../../../lib/calendar-events';
@@ -47,23 +50,53 @@ import { CONTRACT_DRAFT_TEMPLATES_STORAGE_KEY, normalizeContractDraftTemplate, t
 import {
   DEFAULT_PAYROLL_SETTINGS,
   DEFAULT_FIXED_BENEFIT_RULES,
+  DEFAULT_OPTIONAL_ADDITION_RULES,
+  DEFAULT_OPTIONAL_DEDUCTION_RULES,
   getActiveTenantStorageId,
   getPayrollSettingsStorageKey,
   normalizePayrollSettings,
+  calculatePayrollValues,
+  calculateVariableAmount,
+  compareValues,
+  validatePayrollStep,
+  VARIABLE_TITLES,
   type CalculationRules,
   type PayrollSettings,
-  type TaxBracket,
 } from '../../../../../lib/payroll-business-settings';
+import {
+  BusinessOwnershipProfileEditor,
+  createOwnershipEditorDefaults,
+} from '../../../../account/_components/BusinessOwnershipProfileEditor';
+import { DEFAULT_PROFILE_META, createDefaultProfileStore, type ProfileMeta, type ProfileStore } from '../../../../account/profile.types';
+import { fetchProfilePayload, persistProfilePayload } from '../../../../account/profileStorage';
 import { EmployeeSupplementalProfileEditor } from '../../_components/EmployeeSupplementalProfileEditor';
 import { EmployeeSupplementalProfileView } from '../../_components/EmployeeSupplementalProfileView';
+import { EmployeeContractSubjectStep } from './EmployeeContractSubjectStep';
+import { EmployeeContractFinancialStep } from './EmployeeContractFinancialStep';
+import {
+  buildEmployeeDraftCompensationDefaults,
+  getDraftCompensationFingerprint,
+  mergeEmployeeDraftPaymentType,
+  resolveEmployeeDraftCompensation,
+  syncNightWorkTimesFromTenant,
+} from '../../../../../lib/employee-contract-compensation';
+import {
+  EmployeeContractAttachmentsStep,
+  EmployeeContractCommitmentsStep,
+  EmployeeContractLeaveStep,
+  EmployeeContractMissionStep,
+  EmployeeContractWorkTimePayStep,
+  EmployeeMissionRuleDialog,
+} from './employee-contract-steps';
+import { formatDurationMinutes, formatMoneyRial } from '../../../../../lib/contract-financial-calculations';
+import { formatSubjectResponsibilities, parseSubjectResponsibilities } from '../../../../../lib/contract-subject-options';
 import { computeSupplementalCompleteness } from '../../../../../lib/employee-supplemental-fields';
 import {
-  commitDefaultNamingPattern,
-  type NamingPatternContext,
-} from '../../../../../lib/naming-patterns';
-import {
+  buildTemplateSnapshot,
   createInitialEmployeeContractDraft,
   EMPLOYEE_BENEFIT_KEYS,
+  EMPLOYEE_CONTRACT_BENEFIT_DESCRIPTIONS,
+  EMPLOYEE_CONTRACT_BENEFIT_LABELS,
   getEmployeeDraftSteps,
   getEmployeeDraftsByEmployeeId,
   getEmployeeDraftStorageKey,
@@ -75,13 +108,16 @@ import {
   readEmployeeSupplementalProfiles,
   persistEmployeeDrafts,
   persistEmployeeSupplementalProfiles,
+  type EmployeeBenefitPaymentPeriod,
   type EmployeeContractDraft,
   type EmployeeContractDraftStepId,
   type EmployeeContractDraftTemplateChoice,
   type EmployeeContractDraftUsageType,
   type EmployeeSupplementalProfile,
+  type EmployeePaymentCycle,
+  type EmployeeMissionRule,
 } from '../../../../../lib/employee-contract-drafts';
-
+import type { VariableTemplateItem } from '../../../../../lib/contract-draft-templates';
 type EmployeeDraftEmployee = {
   id: string;
   firstName: string;
@@ -145,25 +181,56 @@ function normalizeDisplay(value: string | null | undefined) {
   return trimmed ? trimmed : '';
 }
 
+function buildBusinessProfileFromPayload(store: ProfileStore, meta: ProfileMeta): BusinessProfile {
+  const ownership = store.ownership;
+  const owner = meta.owner;
+
+  return {
+    ownershipKind: ownership.ownershipKind,
+    companyName: ownership.companyName || null,
+    brandName: ownership.brandName || null,
+    legalName: ownership.legalName || null,
+    registrationNumber: ownership.registrationNumber || null,
+    nationalId: ownership.nationalId || null,
+    taxFileNumber: ownership.taxFileNumber || null,
+    economicCode: ownership.economicCode || null,
+    ownerName: owner.fullName || null,
+    contactEmail: owner.email || null,
+    phone: owner.mobile || null,
+    address: null,
+  };
+}
+
 function buildBusinessProfileFromApi(payload: AccountProfileApiResponse | null | undefined): BusinessProfile | null {
   const ownership = payload?.store?.ownership;
   const owner = payload?.meta?.owner;
   if (!ownership && !owner) return null;
 
-  return {
-    ownershipKind: ownership?.ownershipKind,
-    companyName: ownership?.companyName ?? null,
-    brandName: ownership?.brandName ?? null,
-    legalName: ownership?.legalName ?? null,
-    registrationNumber: ownership?.registrationNumber ?? null,
-    nationalId: ownership?.nationalId ?? null,
-    taxFileNumber: ownership?.taxFileNumber ?? null,
-    economicCode: ownership?.economicCode ?? null,
-    ownerName: owner?.fullName ?? null,
-    contactEmail: owner?.email ?? null,
-    phone: owner?.mobile ?? null,
-    address: null,
+  const store = createDefaultProfileStore();
+  if (ownership) {
+    store.ownership = {
+      ...store.ownership,
+      ownershipKind: ownership.ownershipKind === 'natural' ? 'natural' : 'legal',
+      companyName: ownership.companyName ?? store.ownership.companyName,
+      brandName: ownership.brandName ?? store.ownership.brandName,
+      legalName: ownership.legalName ?? store.ownership.legalName,
+      registrationNumber: ownership.registrationNumber ?? store.ownership.registrationNumber,
+      nationalId: ownership.nationalId ?? store.ownership.nationalId,
+      taxFileNumber: ownership.taxFileNumber ?? store.ownership.taxFileNumber,
+      economicCode: ownership.economicCode ?? store.ownership.economicCode,
+    };
+  }
+
+  const meta: ProfileMeta = {
+    ...DEFAULT_PROFILE_META,
+    owner: {
+      fullName: owner?.fullName ?? DEFAULT_PROFILE_META.owner.fullName,
+      mobile: owner?.mobile ?? DEFAULT_PROFILE_META.owner.mobile,
+      email: owner?.email ?? DEFAULT_PROFILE_META.owner.email,
+    },
   };
+
+  return buildBusinessProfileFromPayload(store, meta);
 }
 
 function displayStatValue(value: string) {
@@ -229,15 +296,29 @@ function buildBusinessPartyFirstDisplay(profile: BusinessProfile | null | undefi
   };
 }
 
-function ContractFirstPartyCard({ profile }: { profile: BusinessProfile | null | undefined }) {
+function ContractFirstPartyCard({
+  profile,
+  onEdit,
+}: {
+  profile: BusinessProfile | null | undefined;
+  onEdit?: () => void;
+}) {
   const display = buildBusinessPartyFirstDisplay(profile);
   const IdentityIcon = display?.kind === 'natural' ? UserRound : Building2;
+  const showEdit = Boolean(display?.missing && onEdit);
 
   return (
     <div className="business-payroll-subcard contract-party-card">
-      <div className="business-draft-section-title">
-        <h3>طرف اول قرارداد</h3>
-        <span className="contract-draft-reg-badge contract-draft-reg-badge--internal">کارفرما</span>
+      <div className="contract-party-card-toolbar">
+        <div className="business-draft-section-title">
+          <h3>طرف اول قرارداد</h3>
+          <span className="contract-draft-reg-badge contract-draft-reg-badge--internal">کارفرما</span>
+        </div>
+        {showEdit ? (
+          <button type="button" className="contract-party-card-edit" aria-label="ویرایش اطلاعات کارفرما" onClick={onEdit}>
+            <Pencil className="h-4 w-4" aria-hidden />
+          </button>
+        ) : null}
       </div>
 
       {display ? (
@@ -281,12 +362,7 @@ function ContractFirstPartyCard({ profile }: { profile: BusinessProfile | null |
           ) : null}
 
           {display.missing ? (
-            <div className="contract-party-card-footer">
-              {fieldBadge('اطلاعات کارفرما ناقص است', 'warning')}
-              <Link href="/business-settings/profile" className="draft-template-flow-action is-primary">
-                تکمیل اطلاعات کسب و کار
-              </Link>
-            </div>
+            <div className="contract-party-card-footer">{fieldBadge('اطلاعات کارفرما ناقص است', 'warning')}</div>
           ) : null}
         </>
       ) : (
@@ -295,73 +371,11 @@ function ContractFirstPartyCard({ profile }: { profile: BusinessProfile | null |
             {fieldBadge('اطلاعات کارفرما ناقص است', 'warning')}
             {fieldBadge('پروفایل کسب و کار یافت نشد', 'warning')}
           </div>
-          <Link href="/business-settings/profile" className="draft-template-flow-action is-primary" style={{ width: 'fit-content' }}>
-            تکمیل اطلاعات کسب و کار
-          </Link>
         </div>
       )}
     </div>
   );
 }
-
-const CONTRACT_TYPE_GROUPS = [
-  {
-    title: 'قراردادهای رسمی و استخدام دائم',
-    options: ['استخدام دائم تمام‌وقت', 'استخدام دائم پاره‌وقت', 'استخدام با دوره آزمایشی اولیه', 'استخدام با مزایای کامل', 'استخدام داخلی سازمان'],
-  },
-  {
-    title: 'قراردادهای موقت و پروژه‌ای',
-    options: ['قرارداد مدت‌معین', 'قرارداد پروژه‌ای', 'قرارداد فصلی', 'قرارداد جایگزینی موقت', 'قرارداد تا پایان مأموریت/پروژه'],
-  },
-  {
-    title: 'قراردادهای نیمه‌وقت و منعطف',
-    options: ['نیمه‌وقت ثابت', 'ساعتی', 'شیفتی منعطف', 'دورکاری منعطف', 'همکاری شناور'],
-  },
-  {
-    title: 'قراردادهای آزمایشی و آموزشی',
-    options: ['دوره آزمایشی استخدام', 'کارآموزی', 'آموزش حین کار', 'دوره مهارت‌آموزی', 'همکاری آموزشی بدون تعهد استخدام'],
-  },
-  {
-    title: 'قراردادهای ویژه و خاص',
-    options: ['قرارداد با شرایط خاص پرداخت', 'قرارداد محرمانه/حساس', 'قرارداد با دسترسی ویژه', 'قرارداد کوتاه‌مدت اضطراری', 'قرارداد ویژه مدیران یا افراد کلیدی'],
-  },
-  {
-    title: 'قراردادهای مشاوره‌ای و تخصصی',
-    options: ['مشاوره ساعتی', 'مشاوره پروژه‌ای', 'خدمات تخصصی', 'قرارداد فریلنسری', 'قرارداد پیمانکاری فردی'],
-  },
-] as const;
-
-const JOB_GROUPS = [
-  { title: 'مدیریتی و سرپرستی', options: ['مدیر واحد', 'سرپرست تیم', 'مدیر پروژه', 'مدیر عملیاتی', 'مسئول شیفت'] },
-  { title: 'کارشناسی و فنی', options: ['کارشناس فنی', 'تکنسین', 'کارشناس کنترل کیفیت', 'کارشناس نگهداری و تعمیرات', 'کارشناس اجرایی'] },
-  { title: 'پشتیبانی اداری', options: ['امور اداری', 'دفتر و دبیرخانه', 'پذیرش', 'خدمات عمومی', 'بایگانی و اسناد'] },
-  { title: 'فروش و بازاریابی', options: ['فروش حضوری', 'فروش تلفنی', 'بازاریابی دیجیتال', 'پشتیبانی مشتری', 'مدیریت ارتباط با مشتری'] },
-  { title: 'حسابداری و مالی', options: ['حسابداری', 'خزانه‌داری', 'حقوق و دستمزد', 'حسابرسی داخلی', 'امور مالیاتی'] },
-  { title: 'منابع انسانی', options: ['جذب و استخدام', 'آموزش', 'امور پرسنلی', 'ارزیابی عملکرد', 'رفاه و مزایا'] },
-  { title: 'فناوری اطلاعات', options: ['برنامه‌نویسی', 'پشتیبانی IT', 'شبکه و زیرساخت', 'امنیت اطلاعات', 'تحلیل سیستم'] },
-  { title: 'حمل و نقل', options: ['راننده', 'پیک', 'لجستیک', 'توزیع', 'حمل بار'] },
-  { title: 'تولید و عملیات', options: ['اپراتور تولید', 'کارگر خط تولید', 'کنترل تولید', 'انبارداری', 'بسته‌بندی'] },
-] as const;
-
-const LOCATION_MAIN_GROUPS = [
-  'دسته‌بندی بر اساس نوع حضور فیزیکی',
-  'دسته‌بندی بر اساس نوع محیط کاری',
-  'دسته‌بندی بر اساس ارتباط با مشتری و ذینفعان',
-  'دسته‌بندی بر اساس پویایی و جابجایی شغلی',
-] as const;
-
-const PHYSICAL_LOCATION_OPTIONS = [
-  { label: 'ثابت', helper: 'محل کار تغییر نمی‌کند و همواره مشخص است.' },
-  { label: 'دورکاری', helper: 'کار از خارج از محل سازمان انجام می‌شود.' },
-  { label: 'ترکیبی / هیبریدی', helper: 'بخشی از کار حضوری و بخشی به‌صورت دورکاری انجام می‌شود.' },
-  { label: 'حضوری شیفتی', helper: 'حضور فیزیکی بر اساس شیفت‌های کاری انجام می‌شود.' },
-  { label: 'حضور موردی', helper: 'حضور در محل کار فقط در زمان‌های مشخص یا موردنیاز انجام می‌شود.' },
-  { label: 'شناور', helper: 'زمان و محل حضور می‌تواند بر اساس توافق تغییر کند.' },
-] as const;
-
-const ENVIRONMENT_LOCATION_OPTIONS = ['دفتر اداری', 'کارخانه', 'کارگاه', 'فروشگاه / شعبه', 'انبار', 'سایت پروژه', 'مرکز تماس', 'محیط عملیاتی', 'محل مشتری'] as const;
-const RELATION_LOCATION_OPTIONS = ['بدون ارتباط مستقیم با مشتری', 'ارتباط مستقیم با مشتری', 'ارتباط با تأمین‌کننده', 'ارتباط با پیمانکار', 'ارتباط با سازمان‌های بیرونی', 'نماینده سازمان نزد مشتری', 'کار در محل مشتری'] as const;
-const DYNAMIC_LOCATION_OPTIONS = ['ثابت', 'چندبخشی', 'پروژه‌ای', 'مأموریتی', 'سفرهای بین‌المللی', 'بین شعب', 'میدانی', 'سیار'] as const;
 
 function normalizeDigits(value: string) {
   return value
@@ -428,6 +442,37 @@ function formatRegistrationNumberDisplay(value: string) {
   const trimmed = value.trim();
   if (!trimmed) return '—';
   return trimmed.replace(/\d/g, (digit) => toPersianDigits(digit));
+}
+
+function getContractNumberSortIndex(value: string) {
+  const match = value.match(/(\d+)\s*$/);
+  return match ? Number(match[1]) : 0;
+}
+
+function getRegistrationNumberPlaceholder(drafts: EmployeeContractDraft[], currentDraftId: string) {
+  const numbers = [
+    ...new Set(
+      drafts
+        .filter((draft) => draft.id !== currentDraftId)
+        .flatMap((draft) => [draft.timing.registrationNumber.trim(), draft.contractNumber.trim()])
+        .filter(Boolean),
+    ),
+  ];
+
+  if (numbers.length === 0) {
+    return {
+      placeholder: toPersianDigits('1'),
+      hint: 'این اولین قرارداد است؛ شماره پیشنهادی ۱',
+    };
+  }
+
+  const previous = [...numbers].sort((left, right) => getContractNumberSortIndex(left) - getContractNumberSortIndex(right)).at(-1)!;
+  const previousDisplay = formatRegistrationNumberDisplay(previous);
+
+  return {
+    placeholder: `شماره قرارداد قبلی: ${previousDisplay}`,
+    hint: 'شماره قرارداد قبلی',
+  };
 }
 
 function displayValue(value: string | number | null | undefined) {
@@ -529,8 +574,9 @@ function computeEmployeeCompleteness(employee: EmployeeDraftEmployee, supplement
   });
 }
 
-function countDifferences(draft: EmployeeContractDraft) {
-  const snapshot = draft.templateSnapshot;
+function countDifferences(draft: EmployeeContractDraft, baseSettings: PayrollSettings, template: ContractDraftTemplate | null) {
+  const resolved = resolveEmployeeDraftCompensation(draft, baseSettings, template);
+  const snapshot = resolved.templateSnapshot;
   if (!snapshot) return 0;
   let count = 0;
   if (snapshot.classification.contractType && snapshot.classification.contractType !== draft.subject.contractType) count += 1;
@@ -549,7 +595,114 @@ function countDifferences(draft: EmployeeContractDraft) {
     const base = snapshot.insuranceTax.taxBrackets.find((item) => item.id === bracket.id);
     return !base || base.from !== bracket.from || base.to !== bracket.to || base.percent !== bracket.percent;
   }).length;
+  const benefitsEndBase = snapshot.benefitsEnd ?? buildEmployeeDraftCompensationDefaults(snapshot, baseSettings).benefitsEnd;
+  if (resolved.benefitsEnd.eidBonus.amount !== benefitsEndBase.eidBonus.amount) count += 1;
+  if (resolved.benefitsEnd.eidBonus.period !== benefitsEndBase.eidBonus.period) count += 1;
+  if (resolved.benefitsEnd.endOfService.enabled !== benefitsEndBase.endOfService.enabled) count += 1;
+  if (resolved.benefitsEnd.endOfService.severancePaymentMethod !== benefitsEndBase.endOfService.severancePaymentMethod) count += 1;
+  if (resolved.benefitsEnd.endOfService.finalSettlementEnabled !== benefitsEndBase.endOfService.finalSettlementEnabled) count += 1;
+  if (JSON.stringify(resolved.paymentSchedule) !== JSON.stringify(snapshot.paymentSchedule ?? snapshot.paymentType)) count += 1;
+  const variablePaymentsBase = snapshot.variablePayments ?? buildEmployeeDraftCompensationDefaults(snapshot, baseSettings).variablePayments;
+  if (resolved.variablePayments.enabled !== variablePaymentsBase.enabled) count += 1;
+  const compareVariableItem = (current: VariableTemplateItem, base: VariableTemplateItem | undefined) => {
+    if (!base) return 1;
+    let itemCount = 0;
+    if (current.title !== base.title) itemCount += 1;
+    if (current.type !== base.type) itemCount += 1;
+    if (current.method !== base.method) itemCount += 1;
+    if (current.method === 'fixed' && current.amount !== base.amount) itemCount += 1;
+    if (current.method === 'percentage' && current.percent !== base.percent) itemCount += 1;
+    if (current.method === 'percentage' && current.base !== base.base) itemCount += 1;
+    if (JSON.stringify(current.calculationRules) !== JSON.stringify(base.calculationRules)) itemCount += 1;
+    return itemCount;
+  };
+  count += resolved.variablePayments.additions.reduce((acc, item) => {
+    const baseItem = variablePaymentsBase.additions.find((entry) => entry.id === item.id);
+    return acc + compareVariableItem(item, baseItem);
+  }, 0);
+  count += resolved.variablePayments.deductions.reduce((acc, item) => {
+    const baseItem = variablePaymentsBase.deductions.find((entry) => entry.id === item.id);
+    return acc + compareVariableItem(item, baseItem);
+  }, 0);
+  count += variablePaymentsBase.additions.filter((baseItem) => !resolved.variablePayments.additions.some((item) => item.id === baseItem.id)).length;
+  count += variablePaymentsBase.deductions.filter((baseItem) => !resolved.variablePayments.deductions.some((item) => item.id === baseItem.id)).length;
+  if (snapshot.workTimePayRules) {
+    const templateRules = syncNightWorkTimesFromTenant(snapshot.workTimePayRules, baseSettings);
+    const currentRules = syncNightWorkTimesFromTenant(resolved.workTimePayRules, baseSettings);
+    if (JSON.stringify(currentRules) !== JSON.stringify(templateRules)) count += 1;
+  }
+  if (snapshot.leave && JSON.stringify(resolved.leave) !== JSON.stringify(snapshot.leave)) count += 1;
+  const missionBase = snapshot.mission ?? buildEmployeeDraftCompensationDefaults(snapshot, baseSettings).mission;
+  if (resolved.mission.enabled !== missionBase.enabled) count += 1;
+  count += resolved.mission.rules.filter((rule) => {
+    const baseRule = missionBase.rules.find((item) => item.id === rule.id);
+    return !baseRule || JSON.stringify(baseRule) !== JSON.stringify(rule);
+  }).length;
+  count += missionBase.rules.filter((baseRule) => !resolved.mission.rules.some((rule) => rule.id === baseRule.id)).length;
+  const commitmentsBase = snapshot.specialCommitments ?? { selected: [], attachments: [] };
+  const currentCommitments = resolved.specialCommitments;
+  if (JSON.stringify([...currentCommitments.selected].sort()) !== JSON.stringify([...commitmentsBase.selected].sort())) count += 1;
+  if (currentCommitments.attachments.length !== commitmentsBase.attachments.length) count += 1;
+  const attachmentsBase = snapshot.attachments ?? { requiredDocuments: {}, files: [] };
+  const currentAttachments = resolved.attachments;
+  if (JSON.stringify(currentAttachments.requiredDocuments) !== JSON.stringify(attachmentsBase.requiredDocuments)) count += 1;
+  if (currentAttachments.files.length !== attachmentsBase.files.length) count += 1;
   return count;
+}
+
+const DEFAULT_EMPLOYEE_PAYMENT_TYPE = 'پرداخت بر اساس دوره‌های زمانی';
+
+const EMPLOYEE_BENEFIT_END_PAYMENT_PERIODS: Array<{ value: EmployeeBenefitPaymentPeriod; label: string }> = [
+  { value: 'monthly', label: 'ماهیانه' },
+  { value: 'quarterly', label: 'سه‌ماهه' },
+  { value: 'semiAnnual', label: 'شش‌ماهه' },
+  { value: 'annual', label: 'سالانه' },
+  { value: 'none', label: 'بدون عیدی' },
+];
+
+const EMPLOYEE_PAYMENT_MAIN_OPTIONS = [
+  { value: DEFAULT_EMPLOYEE_PAYMENT_TYPE, label: DEFAULT_EMPLOYEE_PAYMENT_TYPE, enabled: true },
+  { value: 'پرداخت بر اساس نوع شغل و فعالیت', label: 'پرداخت بر اساس نوع شغل و فعالیت', enabled: false },
+  { value: 'پرداخت ترکیبی و روش‌های خاص', label: 'پرداخت ترکیبی و روش‌های خاص', enabled: false },
+] as const;
+
+const EMPLOYEE_PAYMENT_CYCLE_OPTIONS: Array<{ value: EmployeePaymentCycle; label: string }> = [
+  { value: 'monthly', label: 'پرداخت ماهانه' },
+  { value: 'weekly', label: 'پرداخت هفتگی' },
+  { value: 'biweekly', label: 'پرداخت دو هفته یکبار' },
+  { value: 'daily', label: 'پرداخت روزانه' },
+  { value: 'project', label: 'پرداخت پروژه‌ای' },
+  { value: 'seasonal', label: 'پرداخت فصلی' },
+];
+
+function createEmployeeVariablePaymentItem(type: 'addition' | 'deduction'): VariableTemplateItem {
+  return {
+    id: `${type}-${Date.now()}`,
+    title: VARIABLE_TITLES[type][0],
+    type,
+    method: 'fixed',
+    amount: 0,
+    percent: 0,
+    base: 'baseSalary',
+    calculationRules: type === 'addition' ? { ...DEFAULT_OPTIONAL_ADDITION_RULES } : { ...DEFAULT_OPTIONAL_DEDUCTION_RULES },
+  };
+}
+
+function calculateEmployeeVariableAmount(item: VariableTemplateItem, monthlyBaseSalary: number, grossPay: number) {
+  return calculateVariableAmount(
+    {
+      id: item.id,
+      title: item.title,
+      type: item.type,
+      calculationMethod: item.method,
+      amount: item.amount,
+      percent: item.percent,
+      calculationBase: item.base,
+      calculationRules: item.calculationRules,
+    } as Parameters<typeof calculateVariableAmount>[0],
+    monthlyBaseSalary,
+    grossPay,
+  );
 }
 
 function buildSectionTone(filled: boolean) {
@@ -574,51 +727,6 @@ function getCurrentStepId(draft: EmployeeContractDraft) {
   return current ?? steps[0];
 }
 
-function validateTaxBrackets(brackets: TaxBracket[]) {
-  for (const bracket of brackets) {
-    if (!Number.isFinite(bracket.from) || !Number.isFinite(bracket.to) || !Number.isFinite(bracket.percent)) return 'همه فیلدهای جدول مالیاتی الزامی هستند.';
-    if (bracket.from >= bracket.to) return 'مقدار «از» باید کمتر از «تا» باشد.';
-    if (bracket.percent < 0 || bracket.percent > 100) return 'درصد باید بین ۰ تا ۱۰۰ باشد.';
-  }
-  const sorted = [...brackets].sort((a, b) => a.from - b.from);
-  for (let index = 1; index < sorted.length; index += 1) {
-    const prev = sorted[index - 1];
-    const current = sorted[index];
-    if (current.from < prev.to) return 'بازه مالیاتی با بازه دیگر تداخل دارد.';
-  }
-  return '';
-}
-
-function getTemplateBracketState(draft: EmployeeContractDraft, bracket: TaxBracket) {
-  const base = draft.templateSnapshot?.insuranceTax.taxBrackets.find((item) => item.id === bracket.id);
-  if (!base) {
-    return differenceBadge('اختصاصی این پیش‌نویس', 'این بازه در قالب انتخاب‌شده وجود نداشت.');
-  }
-  if (base.from !== bracket.from || base.to !== bracket.to || base.percent !== bracket.percent) {
-    return differenceBadge('متفاوت با جدول مالیات قالب', 'این بازه با قالب انتخاب‌شده تفاوت دارد.');
-  }
-  return fieldBadge('همسان با قالب', 'success');
-}
-
-function getBenefitStateLabel(
-  draft: EmployeeContractDraft,
-  key: keyof EmployeeContractDraft['benefits'],
-  baseSettings: PayrollSettings,
-) {
-  const item = draft.benefits[key];
-  const templateAmount = draft.templateSnapshot?.benefits[key];
-  const legalAmount = baseSettings.benefits[key];
-  if (templateAmount !== undefined) {
-    if (!item.enabled && templateAmount) return differenceBadge('غیرفعال نسبت به قالب', 'در قالب انتخاب‌شده این مورد فعال بود.');
-    if (item.enabled && !templateAmount) return differenceBadge('فعال شده نسبت به قالب', 'در قالب انتخاب‌شده این مورد غیرفعال بود.');
-    if (item.enabled && item.amount !== templateAmount) return differenceBadge('متفاوت با قالب', `مقدار این فیلد در قالب انتخاب‌شده ${money(templateAmount)} است.`);
-    if (!item.enabled && !templateAmount) return fieldBadge('همسان با قالب', 'success');
-  }
-  if (item.enabled && item.amount < legalAmount) return fieldBadge('کمتر از حداقل قانون کار', 'warning');
-  if (item.enabled && item.amount === legalAmount) return fieldBadge('برابر با مبنای قانون کار', 'success');
-  return null;
-}
-
 function isEligibleForChildAllowance(employee: EmployeeDraftEmployee) {
   return (employee.childrenCount ?? 0) > 0;
 }
@@ -633,10 +741,6 @@ function isEligibleForSeniorityAllowance(employee: EmployeeDraftEmployee, supple
   if (Number.isNaN(firstDate.getTime())) return true;
   const diffYears = (Date.now() - firstDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
   return diffYears >= 1;
-}
-
-function createBlankTaxBracket(id = `tax-${Date.now()}`): TaxBracket {
-  return { id, from: Number.NaN, to: Number.NaN, percent: Number.NaN };
 }
 
 function StepShell({
@@ -690,6 +794,42 @@ function ContractTimingLegalBadge() {
   );
 }
 
+function ContractTimingRegistrationField({
+  label,
+  value,
+  placeholder,
+  hint,
+  error,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  placeholder: string;
+  hint: string;
+  error?: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div className="contract-timing-date-field">
+      <span className="contract-timing-date-label">
+        {label} <em aria-hidden>*</em>
+      </span>
+      <div className={`contract-timing-date-input contract-timing-text-input${error ? ' has-error' : ''}`}>
+        <input
+          type="text"
+          className="contract-timing-text-control"
+          value={value}
+          placeholder={placeholder}
+          dir="ltr"
+          onChange={(event) => onChange(event.target.value)}
+        />
+      </div>
+      <p className="contract-timing-registration-hint">{hint}</p>
+      {error ? <em className="contract-timing-field-error">{error}</em> : null}
+    </div>
+  );
+}
+
 function ContractTimingDateField({
   label,
   value,
@@ -720,66 +860,6 @@ function ContractTimingDateField({
       </div>
       {error ? <em className="contract-timing-field-error">{error}</em> : null}
     </div>
-  );
-}
-
-function TaxBracketDialog({
-  open,
-  bracket,
-  existing,
-  onCancel,
-  onSubmit,
-}: {
-  open: boolean;
-  bracket: TaxBracket | null;
-  existing: TaxBracket[];
-  onCancel: () => void;
-  onSubmit: (bracket: TaxBracket) => void;
-}) {
-  const [draft, setDraft] = useState<TaxBracket>(bracket ?? createBlankTaxBracket());
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    if (!open) return;
-    setDraft(bracket ?? createBlankTaxBracket());
-    setError('');
-  }, [bracket, open]);
-
-  const submit = () => {
-    const validation = validateTaxBrackets(existing.filter((item) => item.id !== draft.id).concat(draft));
-    if (validation) {
-      setError(validation);
-      return;
-    }
-    onSubmit(draft);
-  };
-
-  return (
-    <PanelFormModal
-      open={open}
-      title={bracket ? 'ویرایش بازه مالیاتی' : 'افزودن بازه مالیاتی'}
-      lead="بازه‌های مالیاتی باید بدون همپوشانی و با ترتیب صحیح ثبت شوند."
-      onClose={onCancel}
-      error={error}
-      footer={<PanelFormModalActions submitLabel="ثبت بازه" onSubmit={submit} onCancel={onCancel} />}
-    >
-      <div className="business-draft-dialog">
-        <div className="business-draft-option-grid">
-          <label className="business-draft-field">
-            <span>از</span>
-            <input value={Number.isFinite(draft.from) ? moneyInput(draft.from) : ''} onChange={(event) => setDraft((current) => ({ ...current, from: parseNumber(event.target.value) }))} />
-          </label>
-          <label className="business-draft-field">
-            <span>تا</span>
-            <input value={Number.isFinite(draft.to) ? moneyInput(draft.to) : ''} onChange={(event) => setDraft((current) => ({ ...current, to: parseNumber(event.target.value) }))} />
-          </label>
-          <label className="business-draft-field">
-            <span>درصد</span>
-            <input value={Number.isFinite(draft.percent) ? toPersianDigits(String(draft.percent)) : ''} onChange={(event) => setDraft((current) => ({ ...current, percent: parseNumber(event.target.value) }))} />
-          </label>
-        </div>
-      </div>
-    </PanelFormModal>
   );
 }
 
@@ -866,31 +946,6 @@ function DraftCreationDialog({
     const baseSettings = readSettingsForTemplate(selectedTemplate);
     const allDrafts = readEmployeeDrafts();
     const supplemental = readEmployeeSupplementalProfiles()[employee.id] ?? getDefaultEmployeeSupplementalProfile();
-    const patternContext: NamingPatternContext = {
-      date: new Date().toISOString().slice(0, 10),
-      employee: {
-        name: `${employee.firstName} ${employee.lastName}`.trim(),
-        code: employee.personnelCode,
-        nationalCode: employee.nationalId,
-        jobTitle: supplemental.jobTitle,
-      },
-      business: {
-        name: businessProfile?.brandName?.trim() || businessProfile?.legalName?.trim() || '',
-      },
-      contract: {
-        type: selectedTemplate?.data.classification.contractType || usageLabel(usageType),
-      },
-      template: {
-        type: selectedTemplate?.name ?? '',
-      },
-    };
-    const existingNumbers = allDrafts.flatMap((draft) => [draft.contractNumber, draft.timing.registrationNumber]).filter(Boolean);
-    const generatedNumber =
-      commitDefaultNamingPattern({
-        usageType: 'contract_number',
-        context: patternContext,
-        existingOutputs: existingNumbers,
-      });
     const nextDraft = createInitialEmployeeContractDraft({
       employeeId: employee.id,
       employeeName: `${employee.firstName} ${employee.lastName}`.trim(),
@@ -900,7 +955,6 @@ function DraftCreationDialog({
       template: selectedTemplate,
       baseSettings,
       supplemental,
-      contractNumberOverride: generatedNumber,
     });
     onCreated(nextDraft);
   };
@@ -1075,14 +1129,14 @@ function DraftShowcaseCard({
   const locationCategory = displayValue(subject.locationGroup);
   const locationSubType = subject.locationType.trim();
   const jobCategory = displayValue(subject.jobGroup);
-  const jobSubType = subject.responsibility.trim();
+  const jobSubType = formatSubjectResponsibilities(parseSubjectResponsibilities(subject));
   const templateMeta = draft.templateName
     ? draft.templateName
     : 'بدون قالب مبنا';
   const templateBaseYear = draft.templateSnapshot
     ? formatFaNumber(draft.templateSnapshot.baseSettingsYear, { useGrouping: false })
     : null;
-  const differenceCount = countDifferences(draft);
+  const differenceCount = countDifferences(draft, DEFAULT_PAYROLL_SETTINGS, null);
 
   const showDetails = () => {
     setExpanded(true);
@@ -1273,6 +1327,7 @@ export function EmployeeContractDraftsClient({
         draft.subject.contractType,
         draft.subject.contractSubType,
         draft.subject.jobGroup,
+        ...parseSubjectResponsibilities(draft.subject),
         draft.subject.responsibility,
         draft.subject.locationGroup,
         draft.subject.locationType,
@@ -1383,6 +1438,170 @@ function EmployeeSummaryCard({
   );
 }
 
+function EmployeeVariablePaymentEditorDialog({
+  open,
+  initialType,
+  initialItem,
+  baseItem,
+  monthlyBaseSalary,
+  grossPay,
+  onClose,
+  onSubmit,
+}: {
+  open: boolean;
+  initialType: 'addition' | 'deduction';
+  initialItem: VariableTemplateItem | null;
+  baseItem?: VariableTemplateItem | null;
+  monthlyBaseSalary: number;
+  grossPay: number;
+  onClose: () => void;
+  onSubmit: (item: VariableTemplateItem) => void;
+}) {
+  const [item, setItem] = useState<VariableTemplateItem>(initialItem ?? createEmployeeVariablePaymentItem(initialType));
+  const [error, setError] = useState('');
+  const [rulesDialog, setRulesDialog] = useState<VariableTemplateItem | null>(null);
+  const editingType = initialItem?.type ?? initialType;
+  const isEditing = Boolean(initialItem);
+  const rules = item.calculationRules ?? (editingType === 'addition' ? DEFAULT_OPTIONAL_ADDITION_RULES : DEFAULT_OPTIONAL_DEDUCTION_RULES);
+  const baseRules = baseItem?.calculationRules ?? null;
+  const calculatedAmount = calculateEmployeeVariableAmount(item, monthlyBaseSalary, grossPay);
+
+  useEffect(() => {
+    if (!open) {
+      setRulesDialog(null);
+      return;
+    }
+    setItem(initialItem ?? createEmployeeVariablePaymentItem(initialType));
+    setError('');
+    setRulesDialog(null);
+  }, [initialItem, initialType, open]);
+
+  const submit = () => {
+    if (!item.title.trim()) return setError('عنوان الزامی است.');
+    if (item.method === 'fixed' && (!Number.isFinite(item.amount) || item.amount < 0)) {
+      return setError('مبلغ وارد شده معتبر نیست.');
+    }
+    if (item.method === 'percentage' && (!Number.isFinite(item.percent) || item.percent <= 0 || item.percent > 100)) {
+      return setError('درصد باید بزرگتر از صفر و حداکثر ۱۰۰ باشد.');
+    }
+    onSubmit({ ...item, type: editingType });
+  };
+
+  const amountDifference =
+    baseItem && item.method === 'fixed' && baseItem.method === 'fixed'
+      ? compareValues(baseItem.amount, item.amount, {
+          changed: 'متفاوت با قالب',
+          tooltip: `مبلغ قالب انتخاب‌شده ${money(baseItem.amount)} است.`,
+          higher: (diff) => `${money(diff)} بیشتر از قالب`,
+          lower: (diff) => `${money(diff)} کمتر از قالب`,
+        })
+      : null;
+  const percentDifference =
+    baseItem && item.method === 'percentage' && baseItem.method === 'percentage'
+      ? compareValues(baseItem.percent, item.percent, {
+          changed: 'متفاوت با قالب',
+          tooltip: `درصد قالب انتخاب‌شده ${formatFaNumber(baseItem.percent)}٪ است.`,
+          higher: (diff) => `${formatFaNumber(diff)}٪ بیشتر از قالب`,
+          lower: (diff) => `${formatFaNumber(diff)}٪ کمتر از قالب`,
+        })
+      : null;
+  const baseDifference = baseItem && item.method === 'percentage' && baseItem.method === 'percentage' && baseItem.base !== item.base;
+
+  return (
+    <>
+      <PanelFormModal
+        open={open}
+        title={isEditing ? 'ویرایش آیتم پرداخت متغیر' : editingType === 'addition' ? 'افزودن اضافه اختیاری' : 'افزودن کسور اختیاری'}
+        lead={
+          editingType === 'addition'
+            ? 'این آیتم به پرداخت‌های این قرارداد اضافه می‌شود.'
+            : 'این آیتم از پرداخت‌های این قرارداد کسر می‌شود.'
+        }
+        error={error}
+        onClose={onClose}
+        footer={<PanelFormModalActions submitLabel="ثبت" onSubmit={submit} onCancel={onClose} />}
+      >
+        <div className="payroll-variable-amount-dialog-form business-payroll-editor variable">
+          <VariableAmountTitlePicker
+            type={editingType}
+            title={item.title}
+            onTitleChange={(nextTitle) => setItem((value) => ({ ...value, title: nextTitle }))}
+          />
+
+          <div className="business-payroll-toggle">
+            <button type="button" className={item.method === 'fixed' ? 'is-selected' : ''} onClick={() => setItem((value) => ({ ...value, method: 'fixed' }))}>
+              مبلغ ثابت
+            </button>
+            <button type="button" className={item.method === 'percentage' ? 'is-selected' : ''} onClick={() => setItem((value) => ({ ...value, method: 'percentage' }))}>
+              ضریب محاسبه
+            </button>
+          </div>
+
+          {item.method === 'fixed' ? (
+            <label className="business-payroll-field">
+              <span className="business-payroll-field-label">مبلغ</span>
+              <span className="business-payroll-input">
+                <input value={moneyInput(item.amount)} onChange={(event) => setItem((value) => ({ ...value, amount: parseNumber(event.target.value) }))} />
+                <b>ریال</b>
+              </span>
+            </label>
+          ) : (
+            <div className="business-payroll-fields two">
+              <label className="business-payroll-field">
+                <span className="business-payroll-field-label">درصد محاسبه</span>
+                <span className="business-payroll-input">
+                  <input value={moneyInput(item.percent)} onChange={(event) => setItem((value) => ({ ...value, percent: parseNumber(event.target.value) }))} />
+                  <b>%</b>
+                </span>
+              </label>
+              <label className="business-payroll-field">
+                <span className="business-payroll-field-label">مبنای پرداخت</span>
+                <select value={item.base} onChange={(event) => setItem((value) => ({ ...value, base: event.target.value as VariableTemplateItem['base'] }))}>
+                  <option value="baseSalary">درصدی از حقوق پایه ماهانه</option>
+                  <option value="grossPay">درصدی از جمع حقوق دریافتی</option>
+                </select>
+              </label>
+            </div>
+          )}
+
+          {baseItem ? (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              {amountDifference ? differenceBadge(amountDifference.message, amountDifference.tooltip) : null}
+              {percentDifference ? differenceBadge(percentDifference.message, percentDifference.tooltip) : null}
+              {baseDifference ? differenceBadge('متفاوت با قالب', 'مبنای محاسبه این آیتم با قالب انتخاب‌شده متفاوت است.') : null}
+            </div>
+          ) : null}
+
+          <div className="calc-badges-row">
+            <CalculationRulesBadges rules={rules} />
+            {baseRules ? <CalcRulesDiffBadge baseRules={baseRules} currentRules={rules} baseLabel="قالب انتخاب‌شده" differenceLabel="متفاوت با قواعد قالب" /> : null}
+            <CalcRulesEditButton onClick={() => setRulesDialog(item)} />
+          </div>
+
+          {Number.isFinite(calculatedAmount) ? <div className="business-payroll-formula">مبلغ نهایی محاسبه‌شده: {money(calculatedAmount)}</div> : null}
+        </div>
+      </PanelFormModal>
+
+      {rulesDialog ? (
+        <CalculationRulesDialog
+          open={Boolean(rulesDialog)}
+          itemTitle={rulesDialog.title}
+          rules={rulesDialog.calculationRules ?? (rulesDialog.type === 'addition' ? DEFAULT_OPTIONAL_ADDITION_RULES : DEFAULT_OPTIONAL_DEDUCTION_RULES)}
+          baseRules={baseRules}
+          baseLabel="قالب انتخاب‌شده"
+          differenceLabel="متفاوت با قواعد قالب"
+          effectContext={rulesDialog.type === 'addition' ? 'benefit_or_addition' : 'deduction'}
+          onClose={() => setRulesDialog(null)}
+          onSubmit={(next) => {
+            setItem((value) => ({ ...value, calculationRules: next }));
+            setRulesDialog(null);
+          }}
+        />
+      ) : null}
+    </>
+  );
+}
+
 function valueOrEmpty(value: string | number | null | undefined) {
   if (typeof value === 'number') return Number.isFinite(value) ? value.toLocaleString('fa-IR') : 'ثبت نشده';
   const trimmed = String(value ?? '').trim();
@@ -1403,10 +1622,10 @@ function useEmployeeDraftContext(employee: EmployeeDraftEmployee, draftId: strin
     setLoaded(true);
   }, [draftId, employee.id]);
 
-  const persist = (nextDrafts: EmployeeContractDraft[]) => {
+  const persist = useCallback((nextDrafts: EmployeeContractDraft[]) => {
     setDrafts(nextDrafts);
     persistEmployeeDrafts(nextDrafts);
-  };
+  }, []);
 
   const persistSupp = (profiles: Record<string, EmployeeSupplementalProfile>) => {
     setSupplementalProfiles(profiles);
@@ -1508,27 +1727,40 @@ export function EmployeeContractDraftBuilderClient({
   const router = useRouter();
   const { drafts, templates, supplementalProfiles, loaded, persist, persistSupp, activeDraft } = useEmployeeDraftContext(employee, draftId);
   const [accountProfile, setAccountProfile] = useState<BusinessProfile | null>(businessProfile);
+  const [accountProfilePayload, setAccountProfilePayload] = useState(() => {
+    const defaults = createOwnershipEditorDefaults();
+    return {
+      store: defaults.store,
+      meta: defaults.meta,
+    };
+  });
   const [activeStep, setActiveStep] = useState<EmployeeContractDraftStepId>('parties');
   const [supplementalOpen, setSupplementalOpen] = useState(false);
-  const [editingRegistration, setEditingRegistration] = useState(false);
-  const [taxBracketEditor, setTaxBracketEditor] = useState<{ open: boolean; bracket: TaxBracket | null }>({ open: false, bracket: null });
+  const [ownershipEditorOpen, setOwnershipEditorOpen] = useState(false);
   const [employeeInfoEditor, setEmployeeInfoEditor] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [notice, setNotice] = useState('');
   const [currentDraft, setCurrentDraft] = useState<EmployeeContractDraft | null>(null);
   const [benefitRulesDialog, setBenefitRulesDialog] = useState<keyof EmployeeContractDraft['benefits'] | null>(null);
+  const [variablePaymentEditor, setVariablePaymentEditor] = useState<{ type: 'addition' | 'deduction'; item: VariableTemplateItem | null } | null>(null);
+  const [variablePaymentRulesDialog, setVariablePaymentRulesDialog] = useState<VariableTemplateItem | null>(null);
+  const [deletingVariablePayment, setDeletingVariablePayment] = useState<VariableTemplateItem | null>(null);
+  const [missionEditor, setMissionEditor] = useState<EmployeeMissionRule | null>(null);
+  const [deletingMissionRule, setDeletingMissionRule] = useState<EmployeeMissionRule | null>(null);
+  const [finalizeConfirmOpen, setFinalizeConfirmOpen] = useState(false);
+  const [finalizing, setFinalizing] = useState(false);
+  const [paymentTypeComingSoonLabel, setPaymentTypeComingSoonLabel] = useState<string | null>(null);
+  const compensationHydratedRef = useRef<string | null>(null);
 
   useEffect(() => {
     let ignore = false;
 
     const loadAccountProfile = async () => {
       try {
-        const response = await fetch('/api/account/profile', { cache: 'no-store' });
-        if (!response.ok) return;
-        const payload = (await response.json()) as AccountProfileApiResponse;
+        const payload = await fetchProfilePayload();
         if (ignore) return;
-        const resolved = buildBusinessProfileFromApi(payload);
-        if (resolved) setAccountProfile(resolved);
+        setAccountProfilePayload(payload);
+        setAccountProfile(buildBusinessProfileFromPayload(payload.store, payload.meta));
       } catch {
         // keep the prop value when the API request fails
       }
@@ -1543,32 +1775,57 @@ export function EmployeeContractDraftBuilderClient({
 
   const resolvedBusinessProfile = accountProfile ?? businessProfile;
 
-  useEffect(() => {
-    if (!loaded || !activeDraft) return;
-    const template = activeDraft.templateId ? templates.find((item) => item.id === activeDraft.templateId) ?? null : null;
-    const snapshot = activeDraft.templateSnapshot ?? (template ? {
-      ...createInitialEmployeeContractDraft({
-        employeeId: employee.id,
-        employeeName: `${employee.firstName} ${employee.lastName}`.trim(),
-        usageType: activeDraft.usageType,
-        drafts,
-        businessProfile,
-        template,
-        baseSettings: readSettingsForTemplate(template),
-        supplemental: supplementalProfiles[employee.id] ?? getDefaultEmployeeSupplementalProfile(),
-      }).templateSnapshot,
-    } : null);
-    const draft = snapshot && !activeDraft.templateSnapshot ? { ...activeDraft, templateSnapshot: snapshot } : activeDraft;
-    if (draft !== activeDraft) {
-      const next = drafts.map((item) => (item.id === draft.id ? draft : item));
-      persist(next);
+  const saveOwnershipProfile = async ({ store, meta }: { store: ProfileStore; meta: ProfileMeta }) => {
+    try {
+      const saved = await persistProfilePayload(store, meta.owner);
+      setAccountProfilePayload(saved);
+      setAccountProfile(buildBusinessProfileFromPayload(saved.store, saved.meta));
+      setOwnershipEditorOpen(false);
+      setNotice('اطلاعات کارفرما با موفقیت ذخیره شد.');
+    } catch {
+      setNotice('ثبت اطلاعات کارفرما با خطا مواجه شد.');
     }
+  };
+
+  useEffect(() => {
+    if (!loaded || !activeDraft) {
+      setCurrentDraft(null);
+      return;
+    }
+    const template = activeDraft.templateId ? templates.find((item) => item.id === activeDraft.templateId) ?? null : null;
+    const resolved = resolveEmployeeDraftCompensation(
+      activeDraft,
+      readSettingsForTemplate(template),
+      template,
+    );
+    const draft = resolved.draft;
+    const hydratedKey = `${draft.id}:${draft.updatedAt}`;
+    const needsPersist =
+      getDraftCompensationFingerprint(draft) !== getDraftCompensationFingerprint(activeDraft);
+
+    if (needsPersist) {
+      persist(drafts.map((item) => (item.id === draft.id ? draft : item)));
+    }
+
     setCurrentDraft(draft);
-    setActiveStep(getCurrentStepId(draft));
-  }, [activeDraft, businessProfile, drafts, employee.firstName, employee.id, employee.lastName, loaded, persist, supplementalProfiles, templates]);
+
+    if (compensationHydratedRef.current !== hydratedKey) {
+      compensationHydratedRef.current = hydratedKey;
+      setActiveStep(getCurrentStepId(draft));
+    }
+  }, [activeDraft, drafts, loaded, persist, templates]);
 
   const supplemental = supplementalProfiles[employee.id] ?? getDefaultEmployeeSupplementalProfile();
-  const baseSettings = currentDraft?.templateId ? readSettingsForTemplate(templates.find((item) => item.id === currentDraft.templateId) ?? null) : DEFAULT_PAYROLL_SETTINGS;
+  const currentTemplate = currentDraft?.templateId ? templates.find((item) => item.id === currentDraft.templateId) ?? null : null;
+  const baseSettings = currentTemplate ? readSettingsForTemplate(currentTemplate) : DEFAULT_PAYROLL_SETTINGS;
+  const derived = useMemo(
+    () =>
+      calculatePayrollValues({
+        ...baseSettings,
+        financial: currentDraft?.financial ?? baseSettings.financial,
+      }),
+    [baseSettings, currentDraft?.financial],
+  );
   const steps = currentDraft ? getEmployeeDraftSteps(currentDraft.usageType) : [];
   const hasUnsavedChanges = useMemo(
     () => Boolean(currentDraft) && steps.some(({ id }) => currentDraft.progress[id]?.dirty),
@@ -1660,53 +1917,10 @@ export function EmployeeContractDraftBuilderClient({
     setSupplementalOpen(false);
   };
 
-  const regenerateRegistrationNumber = () => {
-    if (!currentDraft) return;
-    const patternContext: NamingPatternContext = {
-      date: currentDraft.timing.contractDate || new Date().toISOString().slice(0, 10),
-      employee: {
-        name: currentDraft.employeeName,
-        code: employee.personnelCode,
-        nationalCode: employee.nationalId,
-        jobTitle: supplemental.jobTitle,
-      },
-      business: {
-        name: resolvedBusinessProfile?.brandName?.trim() || resolvedBusinessProfile?.legalName?.trim() || '',
-      },
-      contract: {
-        type: currentDraft.subject.contractType || usageLabel(currentDraft.usageType),
-      },
-      template: {
-        type: currentDraft.templateName ?? '',
-      },
-    };
-    const existingNumbers = drafts
-      .filter((draft) => draft.id !== currentDraft.id)
-      .flatMap((draft) => [draft.contractNumber, draft.timing.registrationNumber])
-      .filter(Boolean);
-    const patternedNumber =
-      commitDefaultNamingPattern({
-        usageType: 'contract_number',
-        context: patternContext,
-        existingOutputs: existingNumbers,
-      });
-    if (patternedNumber) {
-      updateDraft((draft) => ({
-        ...draft,
-        contractNumber: patternedNumber,
-        timing: { ...draft.timing, registrationNumber: patternedNumber },
-      }));
-      return;
-    }
-    const prefix = `CN-${new Date().getFullYear()}-`;
-    const nextIndex = drafts.filter((draft) => draft.contractNumber.startsWith(prefix)).length + 1;
-    const nextNumber = `${prefix}${String(nextIndex).padStart(3, '0')}`;
-    updateDraft((draft) => ({
-      ...draft,
-      contractNumber: nextNumber,
-      timing: { ...draft.timing, registrationNumber: nextNumber },
-    }));
-  };
+  const registrationPlaceholder = useMemo(
+    () => (currentDraft ? getRegistrationNumberPlaceholder(drafts, currentDraft.id) : null),
+    [currentDraft, drafts],
+  );
 
   const scrollToStep = (step: EmployeeContractDraftStepId) => {
     setActiveStep(step);
@@ -1785,7 +1999,7 @@ export function EmployeeContractDraftBuilderClient({
     setCurrentDraft(nextDraft);
     persist(nextDrafts);
     setErrors({});
-    setNotice('ØªØºÛŒÛŒØ±Ø§Øª Ø°Ø®ÛŒØ±Ù‡ Ø´Ø¯.');
+    setNotice('تغییرات ذخیره شد.');
     return true;
   };
 
@@ -1796,7 +2010,7 @@ export function EmployeeContractDraftBuilderClient({
   });
 
   const completedCount = currentDraft ? getProgressCompleted(currentDraft) : 0;
-  const diffCount = currentDraft ? countDifferences(currentDraft) : 0;
+  const diffCount = currentDraft ? countDifferences(currentDraft, baseSettings, currentTemplate) : 0;
   const employeeCompletion = computeEmployeeCompleteness(employee, supplemental);
   const contractStep = currentDraft?.progress.timing;
   const templateName = currentDraft?.templateName;
@@ -1817,6 +2031,7 @@ export function EmployeeContractDraftBuilderClient({
   }
 
   const stepsToRender = steps;
+  const compensation = currentDraft ? resolveEmployeeDraftCompensation(currentDraft, baseSettings, currentTemplate) : null;
 
   const renderStepFooter = (step: EmployeeContractDraftStepId) => {
     const index = stepsToRender.findIndex((item) => item.id === step);
@@ -1837,25 +2052,8 @@ export function EmployeeContractDraftBuilderClient({
 
   const benefitSection = (key: keyof EmployeeContractDraft['benefits']) => {
     const item = currentDraft.benefits[key];
-    const label = key === 'workerAllowance'
-      ? 'بن کارگری'
-      : key === 'housingAllowance'
-        ? 'حق مسکن'
-        : key === 'childAllowance'
-          ? 'حق اولاد'
-          : key === 'marriageAllowance'
-            ? 'حق تأهل'
-            : 'مزد پایه سنوات';
-    const description =
-      key === 'workerAllowance'
-        ? 'مبلغ بن یا کمک هزینه معیشت ماهانه'
-        : key === 'housingAllowance'
-          ? 'کمک هزینه مسکن ماهانه'
-          : key === 'childAllowance'
-            ? 'مبلغ مرتبط با فرزند واجد شرایط'
-            : key === 'marriageAllowance'
-              ? 'مبلغ مرتبط با کارمند متأهل'
-              : 'مزد پایه سنوات و سابقه کار';
+    const label = EMPLOYEE_CONTRACT_BENEFIT_LABELS[key];
+    const description = EMPLOYEE_CONTRACT_BENEFIT_DESCRIPTIONS[key];
     const eligibilityWarning =
       key === 'childAllowance' && !isEligibleForChildAllowance(employee)
         ? 'این کارمند شرایط دریافت حق اولاد را ندارد'
@@ -1864,7 +2062,6 @@ export function EmployeeContractDraftBuilderClient({
           : key === 'seniorityAllowance' && !isEligibleForSeniorityAllowance(employee, supplemental)
             ? 'این کارمند شرایط دریافت مزد پایه سنوات را ندارد'
             : '';
-    const legalAmount = baseSettings.benefits[key];
     const templateAmount = currentDraft.templateSnapshot?.benefits[key];
     const compareBadge =
       currentDraft.templateSnapshot && templateAmount !== undefined
@@ -1876,12 +2073,6 @@ export function EmployeeContractDraftBuilderClient({
             ? differenceBadge('غیرفعال نسبت به قالب', 'در قالب انتخاب‌شده این مورد فعال بود.')
             : fieldBadge('همسان با قالب', 'success')
         : null;
-    const legalBadge =
-      item.enabled && item.amount < legalAmount
-        ? fieldBadge('کمتر از حداقل قانون کار', 'warning')
-        : item.enabled && item.amount === legalAmount
-          ? fieldBadge('برابر با مبنای قانون کار', 'success')
-          : null;
     const currentRules = item.calculationRules ?? DEFAULT_FIXED_BENEFIT_RULES;
     const templateRules = currentDraft.templateSnapshot?.benefitRules?.[key] ?? baseSettings.benefitRules?.[key] ?? DEFAULT_FIXED_BENEFIT_RULES;
     return (
@@ -1889,10 +2080,9 @@ export function EmployeeContractDraftBuilderClient({
         <div className="business-payroll-transfer-rule-head">
           <div>
             <strong>{label}</strong>
-            <small>{description}</small>
+            <p className="contract-benefit-section-lead">{description}</p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-              {currentDraft.templateSnapshot ? compareBadge : null}
-              {legalBadge}
+              {compareBadge}
               {eligibilityWarning ? fieldBadge(eligibilityWarning, 'warning') : null}
             </div>
           </div>
@@ -1950,6 +2140,616 @@ export function EmployeeContractDraftBuilderClient({
         </div>
       </article>
     );
+  };
+
+  const renderBenefitsEndSection = () => {
+    const value = compensation?.benefitsEnd;
+    const snapshot = compensation?.templateSnapshot;
+    if (!value) return <SectionPlaceholder />;
+
+    const periodLabels: Record<EmployeeBenefitPaymentPeriod, string> = {
+      monthly: 'ماهیانه',
+      quarterly: 'سه‌ماهه',
+      semiAnnual: 'شش‌ماهه',
+      annual: 'سالانه',
+      none: 'بدون عیدی',
+    };
+    const templateEidBonusAmount = snapshot?.benefitsEnd?.eidBonus.amount;
+    const templateEidBonusPeriod = snapshot?.benefitsEnd?.eidBonus.period ?? (templateEidBonusAmount && templateEidBonusAmount > 0 ? 'annual' : 'none');
+    const amountDifference = snapshot
+      ? compareValues(templateEidBonusAmount ?? 0, value.eidBonus.amount, {
+          changed: 'متفاوت با قالب',
+          tooltip: `مبلغ عیدی در قالب انتخاب‌شده ${money(templateEidBonusAmount ?? 0)} است.`,
+          higher: (diff) => `${money(diff)} بیشتر از قالب`,
+          lower: (diff) => `${money(diff)} کمتر از قالب`,
+        })
+      : null;
+    const periodDifference =
+      snapshot && templateEidBonusPeriod === value.eidBonus.period
+        ? null
+        : snapshot
+          ? differenceBadge('متفاوت با قالب', `دوره پرداخت عیدی در قالب انتخاب‌شده ${periodLabels[templateEidBonusPeriod ?? 'annual'] ?? 'سالانه'} بود.`)
+          : null;
+    const templateEndOfService = snapshot?.benefitsEnd?.endOfService ?? null;
+    const endOfServiceStatus =
+      snapshot && templateEndOfService
+        ? templateEndOfService.enabled === value.endOfService.enabled
+          ? fieldBadge('همسان با قالب', 'success')
+          : differenceBadge(
+              value.endOfService.enabled ? 'فعال شده نسبت به قالب' : 'غیرفعال نسبت به قالب',
+              `وضعیت مزایای پایان کار در قالب انتخاب‌شده ${templateEndOfService.enabled ? 'فعال' : 'غیرفعال'} بود.`,
+            )
+        : null;
+    const endOfServiceMethod =
+      snapshot && templateEndOfService
+        ? templateEndOfService.severancePaymentMethod === value.endOfService.severancePaymentMethod
+          ? fieldBadge('همسان با قالب', 'success')
+          : differenceBadge('متفاوت با قالب', `روش پرداخت حق سنوات در قالب انتخاب‌شده ${templateEndOfService.severancePaymentMethod === 'end_of_work' ? 'پرداخت در پایان همکاری' : 'پرداخت دوره‌ای'} بود.`)
+        : null;
+    const finalSettlementDifference =
+      snapshot && templateEndOfService
+        ? templateEndOfService.finalSettlementEnabled === value.endOfService.finalSettlementEnabled
+          ? fieldBadge('همسان با قالب', 'success')
+          : differenceBadge(
+              value.endOfService.finalSettlementEnabled ? 'فعال شده نسبت به قالب' : 'غیرفعال نسبت به قالب',
+              'وضعیت پرداخت حقوق و مزایای پرداخت‌نشده در زمان تسویه نهایی با قالب انتخاب‌شده متفاوت است.',
+            )
+        : null;
+
+    return (
+      <StepShell
+        title="مزایای پایان سال و پایان کار"
+        tag={snapshot ? 'قالب انتخاب‌شده' : 'بدون قالب'}
+        description="عیدی و حق سنوات را بر اساس قالب انتخاب‌شده تنظیم کنید."
+        icon={<Gift className="h-4 w-4" />}
+      >
+        <div className="business-payroll-fields two">
+          <article className="business-payroll-transfer-rule">
+            <div className="business-payroll-transfer-rule-head">
+              <div>
+                <strong>عیدی</strong>
+                <p className="contract-benefit-section-lead">مبلغ و دوره پرداخت عیدی را مشخص کنید.</p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {snapshot ? (amountDifference ? differenceBadge(amountDifference.message, amountDifference.tooltip) : fieldBadge('همسان با قالب', 'success')) : null}
+                  {snapshot ? periodDifference ?? fieldBadge('همسان با قالب', 'success') : null}
+                </div>
+              </div>
+            </div>
+            <div className="business-payroll-chips">
+              {(Object.keys(periodLabels) as EmployeeBenefitPaymentPeriod[]).map((period) => (
+                <button
+                  key={period}
+                  type="button"
+                  className={value.eidBonus.period === period ? 'is-selected' : ''}
+                  onClick={() =>
+                    updateDraft((draft) => ({
+                      ...draft,
+                      benefitsEnd: {
+                        ...(draft.benefitsEnd ?? value),
+                        eidBonus: {
+                          ...(draft.benefitsEnd?.eidBonus ?? value.eidBonus),
+                          period,
+                        },
+                        endOfService: draft.benefitsEnd?.endOfService ?? value.endOfService,
+                      },
+                    }))
+                  }
+                >
+                  {periodLabels[period]}
+                </button>
+              ))}
+            </div>
+            <label className="business-payroll-field">
+              <span className="business-payroll-field-label">مبلغ</span>
+              <span className="business-payroll-input">
+                <input
+                  value={moneyInput(value.eidBonus.amount)}
+                  disabled={value.eidBonus.period === 'none'}
+                  onChange={(event) =>
+                    updateDraft((draft) => ({
+                      ...draft,
+                      benefitsEnd: {
+                        ...(draft.benefitsEnd ?? value),
+                        eidBonus: {
+                          ...(draft.benefitsEnd?.eidBonus ?? value.eidBonus),
+                          amount: parseNumber(event.target.value),
+                        },
+                        endOfService: draft.benefitsEnd?.endOfService ?? value.endOfService,
+                      },
+                    }))
+                  }
+                />
+                <b>ریال</b>
+              </span>
+            </label>
+            {errors.benefitsEnd_eidBonusAmount ? <em className="contract-timing-field-error">{errors.benefitsEnd_eidBonusAmount}</em> : null}
+          </article>
+
+          <article className="business-payroll-transfer-rule">
+            <div className="business-payroll-transfer-rule-head">
+              <div>
+                <strong>مزایای پایان کار</strong>
+                <p className="contract-benefit-section-lead">فعال‌سازی، روش پرداخت و تسویه نهایی را مشخص کنید.</p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {endOfServiceStatus}
+                  {endOfServiceMethod}
+                  {finalSettlementDifference}
+                </div>
+              </div>
+            </div>
+            <div className="business-payroll-toggle">
+              <button
+                type="button"
+                className={value.endOfService.enabled ? 'is-selected' : ''}
+                onClick={() =>
+                  updateDraft((draft) => ({
+                    ...draft,
+                    benefitsEnd: {
+                      ...(draft.benefitsEnd ?? value),
+                      eidBonus: draft.benefitsEnd?.eidBonus ?? value.eidBonus,
+                      endOfService: { ...(draft.benefitsEnd?.endOfService ?? value.endOfService), enabled: true },
+                    },
+                  }))
+                }
+              >
+                فعال
+              </button>
+              <button
+                type="button"
+                className={!value.endOfService.enabled ? 'is-selected' : ''}
+                onClick={() =>
+                  updateDraft((draft) => ({
+                    ...draft,
+                    benefitsEnd: {
+                      ...(draft.benefitsEnd ?? value),
+                      eidBonus: draft.benefitsEnd?.eidBonus ?? value.eidBonus,
+                      endOfService: { ...(draft.benefitsEnd?.endOfService ?? value.endOfService), enabled: false },
+                    },
+                  }))
+                }
+              >
+                غیرفعال
+              </button>
+            </div>
+            <div className="business-payroll-chips" style={{ marginTop: 12 }}>
+              {[
+                { value: 'end_of_work' as const, label: 'پرداخت در پایان همکاری' },
+                { value: 'periodic' as const, label: 'پرداخت دوره‌ای' },
+              ].map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  className={value.endOfService.severancePaymentMethod === option.value ? 'is-selected' : ''}
+                  onClick={() =>
+                    updateDraft((draft) => ({
+                      ...draft,
+                      benefitsEnd: {
+                        ...(draft.benefitsEnd ?? value),
+                        eidBonus: draft.benefitsEnd?.eidBonus ?? value.eidBonus,
+                        endOfService: {
+                          ...(draft.benefitsEnd?.endOfService ?? value.endOfService),
+                          severancePaymentMethod: option.value,
+                        },
+                      },
+                    }))
+                  }
+                  disabled={!value.endOfService.enabled}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+            <PanelToggleRow
+              label="کلیه حقوق و مزایای پرداخت‌نشده، در زمان تسویه‌حساب نهایی پرداخت خواهد شد."
+              checked={value.endOfService.finalSettlementEnabled}
+              onChange={(finalSettlementEnabled) =>
+                updateDraft((draft) => ({
+                  ...draft,
+                  benefitsEnd: {
+                    ...(draft.benefitsEnd ?? value),
+                    eidBonus: draft.benefitsEnd?.eidBonus ?? value.eidBonus,
+                    endOfService: {
+                      ...(draft.benefitsEnd?.endOfService ?? value.endOfService),
+                      finalSettlementEnabled,
+                    },
+                  },
+                }))
+              }
+            />
+          </article>
+        </div>
+      </StepShell>
+    );
+  };
+
+  const renderVariablePaymentsSection = () => {
+    const value = compensation?.variablePayments;
+    const snapshot = compensation?.templateSnapshot;
+    if (!value) return <SectionPlaceholder />;
+
+    const baseAdditions = snapshot?.variablePayments?.additions ?? [];
+    const baseDeductions = snapshot?.variablePayments?.deductions ?? [];
+    const additionCount = value.additions.length;
+    const deductionCount = value.deductions.length;
+
+    const sameVariableItem = (item: VariableTemplateItem, baseItem: VariableTemplateItem | undefined) =>
+      Boolean(
+        baseItem &&
+          item.title === baseItem.title &&
+          item.type === baseItem.type &&
+          item.method === baseItem.method &&
+          (item.method !== 'fixed' || item.amount === baseItem.amount) &&
+          (item.method !== 'percentage' || item.percent === baseItem.percent) &&
+          (item.method !== 'percentage' || item.base === baseItem.base) &&
+          JSON.stringify(item.calculationRules) === JSON.stringify(baseItem.calculationRules),
+      );
+
+    const renderVariableItem = (item: VariableTemplateItem, baseItem: VariableTemplateItem | undefined) => {
+      const amount = calculateEmployeeVariableAmount(item, derived.monthlyBaseSalary, derived.grossPay);
+      const differenceBadgeNode = snapshot
+        ? baseItem
+          ? sameVariableItem(item, baseItem)
+            ? fieldBadge('همسان با قالب', 'success')
+            : differenceBadge('متفاوت با قالب', 'جزئیات این آیتم با قالب انتخاب‌شده متفاوت است.')
+          : fieldBadge('اختصاصی این قرارداد', 'warning')
+        : null;
+      const rules = item.calculationRules ?? (item.type === 'addition' ? DEFAULT_OPTIONAL_ADDITION_RULES : DEFAULT_OPTIONAL_DEDUCTION_RULES);
+      const baseRules = baseItem?.calculationRules ?? null;
+
+      return (
+        <article key={item.id} className="business-payroll-transfer-rule">
+          <div className="business-payroll-transfer-rule-head">
+            <div>
+              <strong>{item.title}</strong>
+              <p className="contract-benefit-section-lead">
+                {item.type === 'addition' ? 'اضافه اختیاری' : 'کسورات اختیاری'} ·{' '}
+                {item.method === 'fixed'
+                  ? `مبلغ ثابت ${money(item.amount)}`
+                  : `${formatFaNumber(item.percent)}٪ از ${item.base === 'baseSalary' ? 'حقوق پایه ماهانه' : 'جمع حقوق دریافتی'}`}
+              </p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                {differenceBadgeNode}
+                {snapshot && baseRules ? (
+                  <CalcRulesDiffBadge
+                    baseRules={baseRules}
+                    currentRules={rules}
+                    baseLabel="قالب انتخاب‌شده"
+                    differenceLabel="متفاوت با قواعد قالب"
+                  />
+                ) : null}
+              </div>
+            </div>
+            <div className="business-payroll-item-actions">
+              <button type="button" aria-label="ویرایش آیتم" onClick={() => setVariablePaymentEditor({ type: item.type, item })}>
+                <Pencil className="h-4 w-4" />
+              </button>
+              <button type="button" aria-label="حذف آیتم" onClick={() => setDeletingVariablePayment(item)}>
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+
+          <div className="business-payroll-fields two">
+            <div className="business-payroll-formula">مبلغ محاسبه‌شده: {money(amount)}</div>
+            <div className="calc-badges-row">
+              <CalculationRulesBadges rules={rules} />
+              <CalcRulesEditButton onClick={() => setVariablePaymentRulesDialog(item)} />
+            </div>
+          </div>
+        </article>
+      );
+    };
+
+    return (
+      <StepShell
+        title="پرداخت‌های متغیر"
+        tag={snapshot ? 'قالب انتخاب‌شده' : 'بدون قالب'}
+        description="اضافات و کسورات اختیاری را برای این قرارداد بر اساس قالب انتخاب‌شده تنظیم کنید."
+        icon={<Wallet className="h-4 w-4" />}
+      >
+        <div className="business-payroll-subcard" style={{ marginTop: 10 }}>
+          <div className="business-draft-section-title">
+            <h3>اضافات اختیاری</h3>
+            <button type="button" className="business-payroll-outline-button" onClick={() => setVariablePaymentEditor({ type: 'addition', item: createEmployeeVariablePaymentItem('addition') })}>
+              <Plus className="h-4 w-4" /> افزودن اضافه
+            </button>
+          </div>
+          <p className="contract-benefit-section-lead">اضافات اختیاری این قرارداد را با قالب انتخاب‌شده مقایسه کنید.</p>
+          <div className="business-payroll-items" style={{ marginTop: 12 }}>
+            {value.additions.length
+              ? value.additions.map((item) => renderVariableItem(item, baseAdditions.find((baseItem) => baseItem.id === item.id)))
+              : <p className="business-payroll-empty">هنوز اضافه اختیاری‌ای ثبت نشده است.</p>}
+          </div>
+          {snapshot && baseAdditions.some((baseItem) => !value.additions.some((item) => item.id === baseItem.id)) ? (
+            <div className="business-payroll-removed-items" style={{ marginTop: 12 }}>
+              {baseAdditions
+                .filter((baseItem) => !value.additions.some((item) => item.id === baseItem.id))
+                .map((baseItem) => (
+                  <span key={`removed-addition-${baseItem.id}`}>
+                    {fieldBadge(`غیرفعال نسبت به قالب: ${baseItem.title}`, 'warning')}
+                  </span>
+                ))}
+            </div>
+          ) : null}
+        </div>
+
+        <div className="business-payroll-subcard" style={{ marginTop: 12 }}>
+          <div className="business-draft-section-title">
+            <h3>کسورات اختیاری</h3>
+            <button type="button" className="business-payroll-outline-button" onClick={() => setVariablePaymentEditor({ type: 'deduction', item: createEmployeeVariablePaymentItem('deduction') })}>
+              <Plus className="h-4 w-4" /> افزودن کسور
+            </button>
+          </div>
+          <p className="contract-benefit-section-lead">کسورات اختیاری این قرارداد را با قالب انتخاب‌شده مقایسه کنید.</p>
+          <div className="business-payroll-items" style={{ marginTop: 12 }}>
+            {value.deductions.length
+              ? value.deductions.map((item) => renderVariableItem(item, baseDeductions.find((baseItem) => baseItem.id === item.id)))
+              : <p className="business-payroll-empty">هنوز کسور اختیاری‌ای ثبت نشده است.</p>}
+          </div>
+          {snapshot && baseDeductions.some((baseItem) => !value.deductions.some((item) => item.id === baseItem.id)) ? (
+            <div className="business-payroll-removed-items" style={{ marginTop: 12 }}>
+              {baseDeductions
+                .filter((baseItem) => !value.deductions.some((item) => item.id === baseItem.id))
+                .map((baseItem) => (
+                  <span key={`removed-deduction-${baseItem.id}`}>
+                    {fieldBadge(`غیرفعال نسبت به قالب: ${baseItem.title}`, 'warning')}
+                  </span>
+                ))}
+            </div>
+          ) : null}
+        </div>
+
+        <div className="business-payroll-highlight subtle" style={{ marginTop: 12 }}>
+          تعداد اضافه‌ها: {formatFaNumber(additionCount, { useGrouping: false })} · تعداد کسورات: {formatFaNumber(deductionCount, { useGrouping: false })}
+        </div>
+      </StepShell>
+    );
+  };
+
+  const renderPaymentTypeSection = () => {
+    const value = compensation?.paymentType;
+    const snapshot = compensation?.templateSnapshot;
+    if (!value) return <SectionPlaceholder />;
+
+    const isMainTypeSelected = value.type === DEFAULT_EMPLOYEE_PAYMENT_TYPE;
+    const templateType = snapshot?.paymentType?.type ?? DEFAULT_EMPLOYEE_PAYMENT_TYPE;
+    const templatePeriod = snapshot?.paymentType?.period ?? 'monthly';
+    const typeDifference = snapshot && (templateType !== value.type || templatePeriod !== value.period)
+      ? differenceBadge('متفاوت با قالب', 'نوع یا دوره پرداخت حقوق و مزایا با قالب انتخاب‌شده متفاوت است.')
+      : snapshot
+        ? fieldBadge('همسان با قالب', 'success')
+        : null;
+
+    const updatePaymentType = (patch: Partial<{ type: string; period: EmployeePaymentCycle }>) => {
+      updateDraft(
+        (draft) => ({
+          ...draft,
+          paymentType: mergeEmployeeDraftPaymentType(draft, value, patch),
+        }),
+        { dirtyStep: 'paymentType' },
+      );
+    };
+
+    return (
+      <StepShell
+        title="نوع پرداخت حقوق و مزایا"
+        tag={snapshot ? 'قالب انتخاب‌شده' : 'بدون قالب'}
+        description="نوع کلی پرداخت و در صورت انتخاب «دوره‌ای»، بازه پرداخت را مشخص کنید."
+        icon={<Wallet className="h-4 w-4" />}
+      >
+        <section className="business-payroll-subcard">
+          <div className="business-draft-section-title">
+            <h3>نوع پرداخت</h3>
+          </div>
+          <div className="business-payroll-chips" role="radiogroup" aria-label="نوع پرداخت حقوق و مزایا">
+            {EMPLOYEE_PAYMENT_MAIN_OPTIONS.map((option) => {
+              const isDisabled = !option.enabled;
+              const isSelected = !isDisabled && value.type === option.value;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  role="radio"
+                  aria-checked={isSelected}
+                  aria-disabled={isDisabled}
+                  className={[isSelected ? 'is-selected' : '', isDisabled ? 'is-disabled' : ''].filter(Boolean).join(' ')}
+                  onClick={() => {
+                    if (isDisabled) {
+                      setPaymentTypeComingSoonLabel(option.label);
+                      return;
+                    }
+                    updatePaymentType({ type: option.value, period: value.period ?? 'monthly' });
+                  }}
+                >
+                  {option.label}
+                  {isDisabled ? <small>در حال توسعه</small> : null}
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        <div className="business-payroll-highlight subtle" style={{ marginTop: 12 }}>
+          {typeDifference}
+          {!typeDifference ? 'نوع پرداخت فعلی با قالب انتخاب‌شده هم‌راستا است.' : null}
+        </div>
+
+        {isMainTypeSelected ? (
+          <section className="business-payroll-subcard" style={{ marginTop: 12 }}>
+            <div className="business-draft-section-title">
+              <h3>دوره پرداخت</h3>
+              <span className="contract-draft-reg-badge contract-draft-reg-badge--internal">پیش‌فرض: ماهانه</span>
+            </div>
+            <div className="business-payroll-chips" role="radiogroup" aria-label="دوره پرداخت حقوق">
+              {EMPLOYEE_PAYMENT_CYCLE_OPTIONS.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  role="radio"
+                  aria-checked={value.period === option.value}
+                  className={value.period === option.value ? 'is-selected' : ''}
+                  onClick={() => updatePaymentType({ type: DEFAULT_EMPLOYEE_PAYMENT_TYPE, period: option.value })}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </section>
+        ) : null}
+      </StepShell>
+    );
+  };
+
+  const saveVariablePayment = (item: VariableTemplateItem) => {
+    updateDraft((draft) => {
+      const defaults = buildEmployeeDraftCompensationDefaults(draft.templateSnapshot, baseSettings);
+      const current = draft.variablePayments ?? defaults.variablePayments;
+      const key = item.type === 'addition' ? 'additions' : 'deductions';
+      const items = current[key];
+      const nextItems = items.some((entry) => entry.id === item.id)
+        ? items.map((entry) => (entry.id === item.id ? item : entry))
+        : [...items, item];
+      return {
+        ...draft,
+        variablePayments: {
+          ...current,
+          enabled: true,
+          [key]: nextItems,
+        },
+      };
+    });
+    setVariablePaymentEditor(null);
+  };
+
+  const saveVariablePaymentRules = (item: VariableTemplateItem, rules: CalculationRules) => {
+    updateDraft((draft) => {
+      const defaults = buildEmployeeDraftCompensationDefaults(draft.templateSnapshot, baseSettings);
+      const current = draft.variablePayments ?? defaults.variablePayments;
+      const key = item.type === 'addition' ? 'additions' : 'deductions';
+      return {
+        ...draft,
+        variablePayments: {
+          ...current,
+          enabled: true,
+          [key]: current[key].map((entry) => (entry.id === item.id ? { ...entry, calculationRules: rules } : entry)),
+        },
+      };
+    });
+    setVariablePaymentRulesDialog(null);
+  };
+
+  const deleteVariablePayment = () => {
+    if (!deletingVariablePayment) return;
+    updateDraft((draft) => {
+      const defaults = buildEmployeeDraftCompensationDefaults(draft.templateSnapshot, baseSettings);
+      const current = draft.variablePayments ?? defaults.variablePayments;
+      const key = deletingVariablePayment.type === 'addition' ? 'additions' : 'deductions';
+      const nextAdditions = key === 'additions' ? current.additions.filter((entry) => entry.id !== deletingVariablePayment.id) : current.additions;
+      const nextDeductions = key === 'deductions' ? current.deductions.filter((entry) => entry.id !== deletingVariablePayment.id) : current.deductions;
+      return {
+        ...draft,
+        variablePayments: {
+          ...current,
+          enabled: current.enabled || nextAdditions.length + nextDeductions.length > 0,
+          additions: nextAdditions,
+          deductions: nextDeductions,
+        },
+      };
+    });
+    setDeletingVariablePayment(null);
+  };
+
+  const saveMissionRule = (rule: EmployeeMissionRule) => {
+    updateDraft((draft) => {
+      const defaults = buildEmployeeDraftCompensationDefaults(draft.templateSnapshot, baseSettings);
+      const current = draft.mission ?? defaults.mission;
+      const exists = current.rules.some((item) => item.id === rule.id);
+      return {
+        ...draft,
+        mission: {
+          ...current,
+          enabled: true,
+          rules: exists ? current.rules.map((item) => (item.id === rule.id ? rule : item)) : [...current.rules, rule],
+        },
+      };
+    });
+    setMissionEditor(null);
+  };
+
+  const deleteMissionRule = () => {
+    if (!deletingMissionRule) return;
+    updateDraft((draft) => {
+      const defaults = buildEmployeeDraftCompensationDefaults(draft.templateSnapshot, baseSettings);
+      const current = draft.mission ?? defaults.mission;
+      return {
+        ...draft,
+        mission: {
+          ...current,
+          rules: current.rules.filter((item) => item.id !== deletingMissionRule.id),
+        },
+      };
+    });
+    setDeletingMissionRule(null);
+  };
+
+  const saveContractDraftOnly = () => {
+    if (!currentDraft) return;
+    const now = new Date().toISOString();
+    const nextDraft: EmployeeContractDraft = {
+      ...currentDraft,
+      status: 'draft',
+      updatedAt: now,
+      progress: {
+        ...currentDraft.progress,
+        attachments: { ...currentDraft.progress.attachments, opened: true, dirty: false, saved: true },
+      },
+    };
+    setCurrentDraft(nextDraft);
+    persist(drafts.map((item) => (item.id === nextDraft.id ? nextDraft : item)));
+    setNotice('قرارداد به عنوان پیش‌نویس ذخیره شد.');
+  };
+
+  const finalizeContract = async () => {
+    if (!currentDraft) return;
+    const requiredErrors = validateStep('timing', currentDraft, employee, supplemental, baseSettings);
+    if (Object.keys(requiredErrors).length) {
+      setErrors(requiredErrors);
+      setFinalizeConfirmOpen(false);
+      scrollToStep('timing');
+      return;
+    }
+    setFinalizing(true);
+    try {
+      const response = await fetch(`/api/employees/${employee.id}/contracts/finalize`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ draft: currentDraft }),
+      });
+      if (!response.ok) throw new Error('finalize failed');
+      const now = new Date().toISOString();
+      const finalized: EmployeeContractDraft = {
+        ...currentDraft,
+        status: 'active',
+        isCurrent: true,
+        finalizedAt: now,
+        updatedAt: now,
+        progress: Object.fromEntries(
+          getEmployeeDraftSteps(currentDraft.usageType).map((step) => [
+            step.id,
+            { ...currentDraft.progress[step.id], opened: true, completed: true, dirty: false, saved: true },
+          ]),
+        ) as EmployeeContractDraft['progress'],
+      };
+      const nextDrafts = drafts.map((item) => (item.id === finalized.id ? finalized : { ...item, isCurrent: item.employeeId === employee.id ? false : item.isCurrent }));
+      setCurrentDraft(finalized);
+      persist(nextDrafts);
+      setFinalizeConfirmOpen(false);
+      router.replace(`/employees/${employee.id}`);
+    } catch {
+      setNotice('ثبت نهایی قرارداد با خطا مواجه شد.');
+    } finally {
+      setFinalizing(false);
+    }
   };
 
   return (
@@ -2010,8 +2810,12 @@ export function EmployeeContractDraftBuilderClient({
             {currentDraft.usageType === 'payroll_attendance' ? (
               <EmployeeSummaryCard title="حقوق و مزایا">
                 <div style={{ display: 'grid', gap: 8, fontSize: 12, lineHeight: 1.9 }}>
-                  <div>حقوق پایه روزانه: <strong>{money(currentDraft.financial.dailyBaseSalary)}</strong></div>
-                  <div>دقایق موظفی روزانه: <strong>{formatFaNumber(currentDraft.financial.dailyRequiredMinutes)} دقیقه</strong></div>
+                  <div>
+                    حقوق پایه روزانه: <strong>{formatMoneyRial(currentDraft.financial.dailyBaseSalary)}</strong>
+                  </div>
+                  <div>
+                    دقایق موظفی روزانه: <strong>{formatDurationMinutes(currentDraft.financial.dailyRequiredMinutes)}</strong>
+                  </div>
                   <div>بیمه/مالیات: <strong>{currentDraft.insuranceTax.insuranceEnabled ? 'بیمه فعال' : 'بیمه غیرفعال'} / {currentDraft.insuranceTax.taxEnabled ? 'مالیات فعال' : 'مالیات غیرفعال'}</strong></div>
                   <div>مزایای فعال: <strong>{EMPLOYEE_BENEFIT_KEYS.filter((key) => currentDraft.benefits[key].enabled).length}</strong></div>
                 </div>
@@ -2019,11 +2823,32 @@ export function EmployeeContractDraftBuilderClient({
             ) : (
               <EmployeeSummaryCard title="اطلاعات مالی تردد">
                 <div style={{ display: 'grid', gap: 8, fontSize: 12, lineHeight: 1.9 }}>
-                  <div>دقایق موظفی روزانه: <strong>{formatFaNumber(currentDraft.financial.dailyRequiredMinutes)} دقیقه</strong></div>
+                  <div>
+                    دقایق موظفی روزانه: <strong>{formatDurationMinutes(currentDraft.financial.dailyRequiredMinutes)}</strong>
+                  </div>
                   <div>تقسیم هفتگی: <strong>{formatFaNumber(currentDraft.financial.dailyRequiredMinutes * 6)} دقیقه در هفته</strong></div>
                 </div>
               </EmployeeSummaryCard>
             )}
+
+            {currentDraft.usageType === 'payroll_attendance' && compensation ? (
+              <EmployeeSummaryCard title="مزایای پایان سال و پرداخت متغیر">
+                <div style={{ display: 'grid', gap: 8, fontSize: 12, lineHeight: 1.9 }}>
+                  <div>
+                    عیدی / دوره: <strong>{formatMoneyRial(compensation.benefitsEnd.eidBonus.amount)} / {compensation.benefitsEnd.eidBonus.period === 'monthly' ? 'ماهیانه' : compensation.benefitsEnd.eidBonus.period === 'quarterly' ? 'سه‌ماهه' : compensation.benefitsEnd.eidBonus.period === 'semiAnnual' ? 'شش‌ماهه' : compensation.benefitsEnd.eidBonus.period === 'annual' ? 'سالانه' : 'بدون عیدی'}</strong>
+                  </div>
+                  <div>
+                    سنوات / روش: <strong>{compensation.benefitsEnd.endOfService.enabled ? 'فعال' : 'غیرفعال'} / {compensation.benefitsEnd.endOfService.severancePaymentMethod === 'end_of_work' ? 'پرداخت در پایان همکاری' : 'پرداخت دوره‌ای'}</strong>
+                  </div>
+                  <div>
+                    متغیرات: <strong>{formatFaNumber(compensation.variablePayments.additions.length, { useGrouping: false })} افزایش / {formatFaNumber(compensation.variablePayments.deductions.length, { useGrouping: false })} کاهش</strong>
+                  </div>
+                  <div>
+                    نوع پرداخت: <strong>{compensation.paymentType.period === 'monthly' ? 'پرداخت ماهانه' : 'پرداخت در حال تنظیم'}</strong>
+                  </div>
+                </div>
+              </EmployeeSummaryCard>
+            ) : null}
 
             <EmployeeSummaryCard title="مدارک و تعهدات">
               <div style={{ display: 'grid', gap: 8, fontSize: 12, lineHeight: 1.9 }}>
@@ -2091,7 +2916,10 @@ export function EmployeeContractDraftBuilderClient({
                     description="این بخش شامل اطلاعات سازمان و کارمند است که در این قرارداد حضور دارند. لطفاً تمام اطلاعات را با دقت وارد کنید."
                     icon={<ShieldCheck className="h-4 w-4" />}
                   >
-                    <ContractFirstPartyCard profile={resolvedBusinessProfile} />
+                    <ContractFirstPartyCard
+                      profile={resolvedBusinessProfile}
+                      onEdit={() => setOwnershipEditorOpen(true)}
+                    />
 
                     <EmployeeSupplementalProfileView
                       employeeName={`${employee.firstName} ${employee.lastName}`.trim()}
@@ -2102,8 +2930,6 @@ export function EmployeeContractDraftBuilderClient({
                       }}
                       supplemental={supplemental}
                       onEdit={() => setSupplementalOpen(true)}
-                      showFooterLink
-                      profileHref={`/employees/${employee.id}/profile`}
                     />
                     {renderStepFooter('parties')}
                   </StepShell>
@@ -2142,68 +2968,20 @@ export function EmployeeContractDraftBuilderClient({
                             با سیستم ثبت قراردادهای سازمان باشد.
                           </span>
                         </p>
-                        <div className="contract-timing-registration-line">
-                          <div
-                            className={`contract-timing-registration-field${editingRegistration ? ' is-editing' : ''}`}
-                            onClick={() => {
-                              if (!editingRegistration) setEditingRegistration(true);
-                            }}
-                            onKeyDown={(event) => {
-                              if (event.key === 'Enter' || event.key === ' ') {
-                                event.preventDefault();
-                                if (!editingRegistration) setEditingRegistration(true);
-                              }
-                            }}
-                            role={editingRegistration ? undefined : 'button'}
-                            tabIndex={editingRegistration ? undefined : 0}
-                          >
-                            <span className="contract-timing-registration-label">شماره ثبت قرارداد</span>
-                            {editingRegistration ? (
-                              <input
-                                className="contract-timing-registration-value"
-                                value={currentDraft.timing.registrationNumber}
-                                autoFocus
-                                dir="ltr"
-                                onClick={(event) => event.stopPropagation()}
-                                onChange={(event) =>
-                                  updateDraft((draft) => ({
-                                    ...draft,
-                                    contractNumber: event.target.value,
-                                    timing: { ...draft.timing, registrationNumber: event.target.value },
-                                  }))
-                                }
-                              />
-                            ) : (
-                              <strong className="contract-timing-registration-value" dir="ltr">
-                                {formatRegistrationNumberDisplay(currentDraft.timing.registrationNumber)}
-                              </strong>
-                            )}
-                          </div>
-                          <div className="contract-timing-registration-actions">
-                            <button
-                              type="button"
-                              className="contract-timing-registration-action"
-                              aria-label="تولید مجدد شماره ثبت"
-                              onClick={regenerateRegistrationNumber}
-                            >
-                              <RotateCcw className="h-4 w-4" aria-hidden />
-                            </button>
-                            <button
-                              type="button"
-                              className="contract-timing-registration-action"
-                              aria-label={editingRegistration ? 'قفل شماره ثبت' : 'ویرایش شماره ثبت'}
-                              onClick={() => setEditingRegistration((value) => !value)}
-                            >
-                              <Pencil className="h-4 w-4" aria-hidden />
-                            </button>
-                          </div>
-                        </div>
-                        {errors.timing_registrationNumber ? (
-                          <em className="contract-timing-field-error">{errors.timing_registrationNumber}</em>
-                        ) : null}
-                        <p className="contract-timing-registration-note">
-                          این شماره ثبت به‌طور خودکار توسط سیستم ایجاد شده است. در صورت نیاز به تغییر، روی فیلد کلیک کنید.
-                        </p>
+                        <ContractTimingRegistrationField
+                          label="شماره ثبت قرارداد"
+                          value={currentDraft.timing.registrationNumber}
+                          placeholder={registrationPlaceholder?.placeholder ?? toPersianDigits('1')}
+                          hint={registrationPlaceholder?.hint ?? 'این اولین قرارداد است؛ شماره پیشنهادی ۱'}
+                          error={errors.timing_registrationNumber}
+                          onChange={(value) =>
+                            updateDraft((draft) => ({
+                              ...draft,
+                              contractNumber: value,
+                              timing: { ...draft.timing, registrationNumber: value },
+                            }))
+                          }
+                        />
                       </article>
 
                       <article className="contract-timing-card">
@@ -2251,161 +3029,30 @@ export function EmployeeContractDraftBuilderClient({
                     description="نوع همکاری، حوزه فعالیت و محل انجام کار را برای متن قرارداد مشخص کنید."
                     icon={<FileText className="h-4 w-4" />}
                   >
-                    <div className="business-payroll-subcard" style={{ marginTop: 10 }}>
-                      <div className="business-draft-section-title">
-                        <h3>نوع قرارداد</h3>
-                        <span className="contract-draft-reg-badge contract-draft-reg-badge--internal">آیین‌نامه داخلی</span>
-                      </div>
-                      <p className="business-payroll-transfer-rule-muted">نوع همکاری و شرایط کلی قرارداد را مشخص کنید.</p>
-                      <div className="business-draft-option-grid">
-                        {CONTRACT_TYPE_GROUPS.map((group) => (
-                          <button
-                            key={group.title}
-                            type="button"
-                            className={currentDraft.subject.contractType === group.title ? 'is-selected' : ''}
-                            onClick={() =>
-                              updateDraft((draft) => ({
-                                ...draft,
-                                subject: { ...draft.subject, contractType: group.title, contractSubType: group.options[0] ?? '' },
-                              }))
-                            }
-                          >
-                            {group.title}
-                          </button>
-                        ))}
-                      </div>
-                      {currentDraft.subject.contractType ? (
-                        <div style={{ marginTop: 12 }}>
-                          <div className="business-draft-option-grid">
-                            {(CONTRACT_TYPE_GROUPS.find((group) => group.title === currentDraft.subject.contractType)?.options ?? []).map((option) => (
-                              <button
-                                key={option}
-                                type="button"
-                                className={currentDraft.subject.contractSubType === option ? 'is-selected' : ''}
-                                onClick={() => {
-                                  updateDraft((draft) => ({ ...draft, subject: { ...draft.subject, contractSubType: option } }));
-                                }}
-                              >
-                                {option}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      ) : null}
-                      {currentDraft.templateSnapshot && currentDraft.subject.contractType && currentDraft.subject.contractType !== currentDraft.templateSnapshot.classification.contractType ? (
-                        <div style={{ marginTop: 10 }}>{differenceBadge('متفاوت با قالب', `انتخاب این بخش در قالب انتخاب‌شده «${currentDraft.templateSnapshot.classification.contractType || 'ثبت نشده'}» بوده است.`)}</div>
-                      ) : null}
-                    </div>
-
-                    <div className="business-payroll-subcard" style={{ marginTop: 10 }}>
-                      <div className="business-draft-section-title">
-                        <h3>نوع شغل و مسئولیت‌ها</h3>
-                        <span className="contract-draft-reg-badge contract-draft-reg-badge--internal">آیین‌نامه داخلی</span>
-                      </div>
-                      <p className="business-payroll-transfer-rule-muted">حوزه فعالیت و مسئولیت اصلی کارمند را مشخص کنید.</p>
-                      <div className="business-draft-option-grid">
-                        {JOB_GROUPS.map((group) => (
-                          <button
-                            key={group.title}
-                            type="button"
-                            className={currentDraft.subject.jobGroup === group.title ? 'is-selected' : ''}
-                            onClick={() => updateDraft((draft) => ({ ...draft, subject: { ...draft.subject, jobGroup: group.title, responsibility: group.options[0] ?? '' } }))}
-                          >
-                            {group.title}
-                          </button>
-                        ))}
-                      </div>
-                      {currentDraft.subject.jobGroup ? (
-                        <div style={{ marginTop: 12 }}>
-                          <div className="business-draft-option-grid">
-                            {(JOB_GROUPS.find((group) => group.title === currentDraft.subject.jobGroup)?.options ?? []).map((option) => (
-                              <button
-                                key={option}
-                                type="button"
-                                className={currentDraft.subject.responsibility === option ? 'is-selected' : ''}
-                                onClick={() => updateDraft((draft) => ({ ...draft, subject: { ...draft.subject, responsibility: option } }))}
-                              >
-                                {option}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      ) : null}
-                    </div>
-
-                    <div className="business-payroll-subcard" style={{ marginTop: 10 }}>
-                      <div className="business-draft-section-title">
-                        <h3>محل انجام کار</h3>
-                        <span className="contract-draft-reg-badge contract-draft-reg-badge--internal">آیین‌نامه داخلی</span>
-                      </div>
-                      <p className="business-payroll-transfer-rule-muted">محل یا شیوه انجام کار را برای متن قرارداد مشخص کنید.</p>
-                      <div className="business-draft-option-grid">
-                        {LOCATION_MAIN_GROUPS.map((group) => (
-                          <button
-                            key={group}
-                            type="button"
-                            className={currentDraft.subject.locationGroup === group ? 'is-selected' : ''}
-                            onClick={() => updateDraft((draft) => ({ ...draft, subject: { ...draft.subject, locationGroup: group, locationType: '' } }))}
-                          >
-                            {group}
-                          </button>
-                        ))}
-                      </div>
-                      {currentDraft.subject.locationGroup === 'دسته‌بندی بر اساس نوع حضور فیزیکی' ? (
-                        <div style={{ marginTop: 12 }}>
-                          <div className="business-draft-option-grid">
-                            {PHYSICAL_LOCATION_OPTIONS.map((option) => (
-                              <button
-                                key={option.label}
-                                type="button"
-                                className={currentDraft.subject.locationType === option.label ? 'is-selected' : ''}
-                                onClick={() => updateDraft((draft) => ({ ...draft, subject: { ...draft.subject, locationType: option.label } }))}
-                              >
-                                {option.label}
-                              </button>
-                            ))}
-                          </div>
-                          {currentDraft.subject.locationType ? (
-                            <div className="business-payroll-transfer-rule-muted" style={{ marginTop: 10 }}>
-                              {PHYSICAL_LOCATION_OPTIONS.find((item) => item.label === currentDraft.subject.locationType)?.helper}
-                            </div>
-                          ) : null}
-                        </div>
-                      ) : currentDraft.subject.locationGroup === 'دسته‌بندی بر اساس نوع محیط کاری' ? (
-                        <div style={{ marginTop: 12 }}>
-                          <div className="business-draft-option-grid">
-                            {ENVIRONMENT_LOCATION_OPTIONS.map((option) => (
-                              <button key={option} type="button" className={currentDraft.subject.locationType === option ? 'is-selected' : ''} onClick={() => updateDraft((draft) => ({ ...draft, subject: { ...draft.subject, locationType: option } }))}>
-                                {option}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      ) : currentDraft.subject.locationGroup === 'دسته‌بندی بر اساس ارتباط با مشتری و ذینفعان' ? (
-                        <div style={{ marginTop: 12 }}>
-                          <div className="business-draft-option-grid">
-                            {RELATION_LOCATION_OPTIONS.map((option) => (
-                              <button key={option} type="button" className={currentDraft.subject.locationType === option ? 'is-selected' : ''} onClick={() => updateDraft((draft) => ({ ...draft, subject: { ...draft.subject, locationType: option } }))}>
-                                {option}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      ) : currentDraft.subject.locationGroup === 'دسته‌بندی بر اساس پویایی و جابجایی شغلی' ? (
-                        <div style={{ marginTop: 12 }}>
-                          <div className="business-draft-option-grid">
-                            {DYNAMIC_LOCATION_OPTIONS.map((option) => (
-                              <button key={option} type="button" className={currentDraft.subject.locationType === option ? 'is-selected' : ''} onClick={() => updateDraft((draft) => ({ ...draft, subject: { ...draft.subject, locationType: option } }))}>
-                                {option}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      ) : null}
-                      {currentDraft.templateSnapshot && currentDraft.subject.locationGroup && currentDraft.subject.locationGroup !== currentDraft.templateSnapshot.classification.locationGroup ? (
-                        <div style={{ marginTop: 10 }}>{differenceBadge('متفاوت با قالب', `انتخاب این بخش در قالب انتخاب‌شده «${currentDraft.templateSnapshot.classification.locationGroup || 'ثبت نشده'}» بوده است.`)}</div>
-                      ) : null}
-                    </div>
+                    <EmployeeContractSubjectStep
+                      subject={currentDraft.subject}
+                      onSubjectChange={(patch) => updateDraft((draft) => ({ ...draft, subject: { ...draft.subject, ...patch } }))}
+                      templateDiff={{
+                        contract:
+                          currentDraft.templateSnapshot &&
+                          currentDraft.subject.contractType &&
+                          currentDraft.subject.contractType !== currentDraft.templateSnapshot.classification.contractType
+                            ? differenceBadge(
+                                'متفاوت با قالب',
+                                `انتخاب این بخش در قالب انتخاب‌شده «${currentDraft.templateSnapshot.classification.contractType || 'ثبت نشده'}» بوده است.`,
+                              )
+                            : undefined,
+                        location:
+                          currentDraft.templateSnapshot &&
+                          currentDraft.subject.locationGroup &&
+                          currentDraft.subject.locationGroup !== currentDraft.templateSnapshot.classification.locationGroup
+                            ? differenceBadge(
+                                'متفاوت با قالب',
+                                `انتخاب این بخش در قالب انتخاب‌شده «${currentDraft.templateSnapshot.classification.locationGroup || 'ثبت نشده'}» بوده است.`,
+                              )
+                            : undefined,
+                      }}
+                    />
                     {renderStepFooter('subject')}
                   </StepShell>
                 ) : step.id === 'financial' ? (
@@ -2415,89 +3062,13 @@ export function EmployeeContractDraftBuilderClient({
                     description={currentDraft.usageType === 'attendance_only' ? 'برای قراردادهای تردد، دقایق موظفی روزانه را مشخص کنید.' : 'حقوق پایه روزانه و دقایق موظفی روزانه را مشخص کنید.'}
                     icon={<Wallet className="h-4 w-4" />}
                   >
-                    <div className="business-payroll-subcard" style={{ marginTop: 10 }}>
-                      <div className="business-draft-section-title">
-                        <h3>دقایق موظفی روزانه</h3>
-                        <span className="contract-draft-reg-badge contract-draft-reg-badge--internal">آیین‌نامه حقوقی</span>
-                      </div>
-                      <label className="business-payroll-field">
-                        <span className="business-payroll-field-label">دقایق موظفی روزانه</span>
-                        <span className="business-payroll-input">
-                            <input
-                              value={moneyInput(currentDraft.financial.dailyRequiredMinutes)}
-                              onChange={(event) => {
-                                updateDraft((draft) => ({ ...draft, financial: { ...draft.financial, dailyRequiredMinutes: parseNumber(event.target.value) } }));
-                              }}
-                            />
-                          <b>دقیقه</b>
-                        </span>
-                        {errors.financial_dailyRequiredMinutes ? <em>{errors.financial_dailyRequiredMinutes}</em> : null}
-                      </label>
-                      <div className="business-payroll-calculation-grid" style={{ marginTop: 12 }}>
-                        <div>
-                          <span>به ازای یک روز</span>
-                          <strong>{formatFaNumber(currentDraft.financial.dailyRequiredMinutes)} دقیقه</strong>
-                        </div>
-                        <div>
-                          <span>به ازای یک هفته کاری</span>
-                          <strong>{formatFaNumber(currentDraft.financial.dailyRequiredMinutes * 6)} دقیقه</strong>
-                        </div>
-                        <div>
-                          <span>به ازای هر ماه ۳۰ روزه</span>
-                          <strong>{formatFaNumber(currentDraft.financial.dailyRequiredMinutes * 30)} دقیقه</strong>
-                        </div>
-                        <div>
-                          <span>به ازای ۱۲ ماه کاری</span>
-                          <strong>{formatFaNumber(currentDraft.financial.dailyRequiredMinutes * 360)} دقیقه</strong>
-                        </div>
-                      </div>
-                      {currentDraft.templateSnapshot ? (
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
-                          {currentDraft.financial.dailyRequiredMinutes === currentDraft.templateSnapshot.financial.dailyRequiredMinutes ? fieldBadge('همسان با قالب', 'success') : differenceBadge(
-                            currentDraft.financial.dailyRequiredMinutes < currentDraft.templateSnapshot.financial.dailyRequiredMinutes
-                              ? `${formatFaNumber(currentDraft.templateSnapshot.financial.dailyRequiredMinutes - currentDraft.financial.dailyRequiredMinutes)} دقیقه کمتر از قالب`
-                              : `${formatFaNumber(currentDraft.financial.dailyRequiredMinutes - currentDraft.templateSnapshot.financial.dailyRequiredMinutes)} دقیقه بیشتر از قالب`,
-                            `دقایق موظفی روزانه در قالب انتخاب‌شده ${formatFaNumber(currentDraft.templateSnapshot.financial.dailyRequiredMinutes)} دقیقه است.`,
-                          )}
-                        </div>
-                      ) : null}
-                    </div>
-                    {currentDraft.usageType === 'payroll_attendance' ? (
-                      <div className="business-payroll-subcard" style={{ marginTop: 10 }}>
-                        <div className="business-draft-section-title">
-                          <h3>حقوق پایه به ازای روز</h3>
-                          <span className="contract-draft-reg-badge contract-draft-reg-badge--internal">آیین‌نامه حقوقی</span>
-                        </div>
-                        <label className="business-payroll-field">
-                          <span className="business-payroll-field-label">حقوق پایه به ازای روز</span>
-                          <span className="business-payroll-input">
-                            <input
-                              value={moneyInput(currentDraft.financial.dailyBaseSalary)}
-                              onChange={(event) => {
-                                updateDraft((draft) => ({ ...draft, financial: { ...draft.financial, dailyBaseSalary: parseNumber(event.target.value) } }));
-                              }}
-                            />
-                            <b>ریال</b>
-                          </span>
-                          {errors.financial_dailyBaseSalary ? <em>{errors.financial_dailyBaseSalary}</em> : null}
-                        </label>
-                        {currentDraft.templateSnapshot ? (
-                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
-                            {currentDraft.financial.dailyBaseSalary === currentDraft.templateSnapshot.financial.dailyBaseSalary ? fieldBadge('همسان با قالب', 'success') : differenceBadge(
-                              currentDraft.financial.dailyBaseSalary < currentDraft.templateSnapshot.financial.dailyBaseSalary
-                                ? `${money(currentDraft.templateSnapshot.financial.dailyBaseSalary - currentDraft.financial.dailyBaseSalary)} کمتر از قالب`
-                                : `${money(currentDraft.financial.dailyBaseSalary - currentDraft.templateSnapshot.financial.dailyBaseSalary)} بیشتر از قالب`,
-                              `مقدار این فیلد در قالب انتخاب‌شده ${money(currentDraft.templateSnapshot.financial.dailyBaseSalary)} است.`,
-                            )}
-                          </div>
-                        ) : null}
-                        {currentDraft.financial.dailyBaseSalary < baseSettings.financial.dailyBaseSalary ? (
-                          <div style={{ marginTop: 12 }}>{fieldBadge('کمتر از حداقل قانون کار', 'warning')}</div>
-                        ) : currentDraft.financial.dailyBaseSalary === baseSettings.financial.dailyBaseSalary ? (
-                          <div style={{ marginTop: 12 }}>{fieldBadge('برابر با مبنای قانون کار', 'success')}</div>
-                        ) : null}
-                      </div>
-                    ) : null}
+                    <EmployeeContractFinancialStep
+                      financial={currentDraft.financial}
+                      templateSnapshot={currentDraft.templateSnapshot}
+                      usageType={currentDraft.usageType}
+                      errors={errors}
+                      onFinancialChange={(patch) => updateDraft((draft) => ({ ...draft, financial: { ...draft.financial, ...patch } }))}
+                    />
                     {renderStepFooter('financial')}
                   </StepShell>
                 ) : step.id === 'insuranceTax' ? (
@@ -2594,50 +3165,6 @@ export function EmployeeContractDraftBuilderClient({
                               {differenceBadge('متفاوت با قالب', currentDraft.templateSnapshot.insuranceTax.taxPayer === 'employee' ? 'در قالب انتخاب‌شده مالیات به عهده کارگر بود.' : 'در قالب انتخاب‌شده مالیات به عهده کارفرما بود.')}
                             </div>
                           ) : null}
-                          <div className="business-payroll-subcard" style={{ marginTop: 10 }}>
-                            <div className="business-payroll-subcard-head">
-                              <h3>جدول مالیات قرارداد</h3>
-                              <button type="button" className="business-payroll-outline-button" onClick={() => setTaxBracketEditor({ open: true, bracket: null })}>
-                                <Plus className="h-4 w-4" /> افزودن بازه مالیاتی
-                              </button>
-                            </div>
-                            <div style={{ display: 'grid', gap: 8 }}>
-                              {currentDraft.insuranceTax.taxBrackets.length ? (
-                                <div className="business-payroll-table">
-                                  {currentDraft.insuranceTax.taxBrackets.map((bracket) => (
-                                    <div key={bracket.id} className="business-payroll-table-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 0.7fr auto', gap: 8, alignItems: 'center' }}>
-                                      <span>{formatFaNumber(bracket.from)}</span>
-                                      <span>{formatFaNumber(bracket.to)}</span>
-                                      <span>{formatFaNumber(bracket.percent)}%</span>
-                                      <span style={{ display: 'flex', gap: 6, justifyContent: 'flex-start' }}>
-                                        <button type="button" className="draft-template-flow-action is-secondary" onClick={() => setTaxBracketEditor({ open: true, bracket })}>
-                                          <Pencil className="h-4 w-4" /> ویرایش
-                                        </button>
-                                        <button type="button" className="draft-template-flow-action is-secondary" onClick={() => updateDraft((draft) => ({ ...draft, insuranceTax: { ...draft.insuranceTax, taxBrackets: draft.insuranceTax.taxBrackets.filter((item) => item.id !== bracket.id) } }))}>
-                                          <Trash2 className="h-4 w-4" /> حذف
-                                        </button>
-                                      </span>
-                                      <span style={{ gridColumn: '1 / -1' }}>
-                                        {currentDraft.templateSnapshot ? getTemplateBracketState(currentDraft, bracket) : null}
-                                      </span>
-                                    </div>
-                                  ))}
-                                </div>
-                              ) : (
-                                <div className="business-payroll-transfer-rule-muted">هنوز بازه مالیاتی ثبت نشده است.</div>
-                              )}
-                              {errors.taxBrackets ? <p className="business-payroll-warning"><CircleAlert className="h-4 w-4" aria-hidden /> {errors.taxBrackets}</p> : null}
-                              {currentDraft.templateSnapshot ? (
-                                <div style={{ display: 'grid', gap: 8 }}>
-                                  {currentDraft.templateSnapshot.insuranceTax.taxBrackets.filter((baseBracket) => !currentDraft.insuranceTax.taxBrackets.some((item) => item.id === baseBracket.id)).length ? (
-                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                                      {fieldBadge('حذف شده نسبت به قالب', 'warning')}
-                                    </div>
-                                  ) : null}
-                                </div>
-                              ) : null}
-                            </div>
-                          </div>
                         </>
                       ) : null}
                     </div>
@@ -2687,6 +3214,99 @@ export function EmployeeContractDraftBuilderClient({
                     ) : null}
                     {renderStepFooter('benefits')}
                   </StepShell>
+                ) : step.id === 'benefitsEnd' ? (
+                  <>
+                    {renderBenefitsEndSection()}
+                    {renderStepFooter('benefitsEnd')}
+                  </>
+                ) : step.id === 'variablePayments' ? (
+                  <>
+                    {renderVariablePaymentsSection()}
+                    {renderStepFooter('variablePayments')}
+                  </>
+                ) : step.id === 'paymentType' ? (
+                  <>
+                    {renderPaymentTypeSection()}
+                    {renderStepFooter('paymentType')}
+                  </>
+                ) : step.id === 'workTimePayRules' ? (
+                  <>
+                    <EmployeeContractWorkTimePayStep
+                      workTimePayRules={compensation?.workTimePayRules}
+                      templateSnapshot={compensation?.templateSnapshot ?? null}
+                      financial={currentDraft.financial}
+                      tenantSettings={baseSettings}
+                      currentTemplate={currentTemplate}
+                      errors={errors}
+                      onWorkTimePayRulesChange={(workTimePayRules) =>
+                        updateDraft((draft) => ({ ...draft, workTimePayRules }), { dirtyStep: 'workTimePayRules' })
+                      }
+                    />
+                    {renderStepFooter('workTimePayRules')}
+                  </>
+                ) : step.id === 'leave' ? (
+                  <>
+                    <EmployeeContractLeaveStep
+                      leave={compensation?.leave}
+                      templateSnapshot={compensation?.templateSnapshot ?? null}
+                      financial={currentDraft.financial}
+                      tenantSettings={baseSettings}
+                      errors={errors}
+                      onLeaveChange={(leave) => updateDraft((draft) => ({ ...draft, leave }), { dirtyStep: 'leave' })}
+                    />
+                    {renderStepFooter('leave')}
+                  </>
+                ) : step.id === 'mission' ? (
+                  <>
+                    <EmployeeContractMissionStep
+                      mission={compensation?.mission}
+                      templateSnapshot={compensation?.templateSnapshot ?? null}
+                      derived={derived}
+                      onMissionChange={(patch) =>
+                        updateDraft(
+                          (draft) => ({
+                            ...draft,
+                            mission: { ...(draft.mission ?? compensation!.mission!), ...patch },
+                          }),
+                          { dirtyStep: 'mission' },
+                        )
+                      }
+                      onEditRule={setMissionEditor}
+                      onDeleteRule={setDeletingMissionRule}
+                      onAddRule={() =>
+                        setMissionEditor({
+                          id: `mission-${Date.now()}`,
+                          title: 'ماموریت جدید',
+                          coefficient: 1,
+                          paymentBase: 'base_salary',
+                          active: true,
+                        })
+                      }
+                    />
+                    {renderStepFooter('mission')}
+                  </>
+                ) : step.id === 'specialCommitments' ? (
+                  <>
+                    <EmployeeContractCommitmentsStep
+                      specialCommitments={compensation?.specialCommitments}
+                      templateSnapshot={compensation?.templateSnapshot ?? null}
+                      draftId={currentDraft.id}
+                      onCommitmentsChange={(specialCommitments) =>
+                        updateDraft((draft) => ({ ...draft, specialCommitments }), { dirtyStep: 'specialCommitments' })
+                      }
+                    />
+                    {renderStepFooter('specialCommitments')}
+                  </>
+                ) : step.id === 'attachments' ? (
+                  <EmployeeContractAttachmentsStep
+                    attachments={compensation?.attachments}
+                    draftId={currentDraft.id}
+                    onAttachmentsChange={(attachments) =>
+                      updateDraft((draft) => ({ ...draft, attachments }), { dirtyStep: 'attachments' })
+                    }
+                    onSaveDraft={saveContractDraftOnly}
+                    onFinalize={() => setFinalizeConfirmOpen(true)}
+                  />
                 ) : (
                   <StepShell
                     title={step.title}
@@ -2703,6 +3323,14 @@ export function EmployeeContractDraftBuilderClient({
           })}
         </div>
       </main>
+
+      <BusinessOwnershipProfileEditor
+        open={ownershipEditorOpen}
+        store={accountProfilePayload.store}
+        meta={accountProfilePayload.meta}
+        onCancel={() => setOwnershipEditorOpen(false)}
+        onSubmit={saveOwnershipProfile}
+      />
 
       <EmployeeSupplementalProfileEditor
         open={supplementalOpen}
@@ -2728,23 +3356,92 @@ export function EmployeeContractDraftBuilderClient({
         onCancel={() => setEmployeeInfoEditor(false)}
         onSubmit={createOrUpdateSupplemental}
       />
-      <TaxBracketDialog
-        open={taxBracketEditor.open}
-        bracket={taxBracketEditor.bracket}
-        existing={currentDraft.insuranceTax.taxBrackets}
-        onCancel={() => setTaxBracketEditor({ open: false, bracket: null })}
-        onSubmit={(bracket) => {
-          updateDraft((draft) => ({
-            ...draft,
-            insuranceTax: {
-              ...draft.insuranceTax,
-              taxBrackets: draft.insuranceTax.taxBrackets.some((item) => item.id === bracket.id)
-                ? draft.insuranceTax.taxBrackets.map((item) => (item.id === bracket.id ? bracket : item))
-                : [...draft.insuranceTax.taxBrackets, bracket].sort((left, right) => left.from - right.from),
-            },
-          }));
-          setTaxBracketEditor({ open: false, bracket: null });
+      <EmployeeVariablePaymentEditorDialog
+        open={Boolean(variablePaymentEditor)}
+        initialType={variablePaymentEditor?.type ?? 'addition'}
+        initialItem={variablePaymentEditor?.item ?? null}
+        baseItem={
+          variablePaymentEditor
+            ? (
+                compensation?.templateSnapshot?.variablePayments?.[variablePaymentEditor.type === 'addition' ? 'additions' : 'deductions'].find(
+                  (item) => item.id === variablePaymentEditor.item?.id,
+                ) ?? null
+              )
+            : null
+        }
+        monthlyBaseSalary={derived.monthlyBaseSalary}
+        grossPay={derived.grossPay}
+        onClose={() => {
+          setVariablePaymentEditor(null);
         }}
+        onSubmit={saveVariablePayment}
+      />
+      {variablePaymentRulesDialog ? (
+        <CalculationRulesDialog
+          open={Boolean(variablePaymentRulesDialog)}
+          itemTitle={variablePaymentRulesDialog.title}
+          rules={variablePaymentRulesDialog.calculationRules ?? (variablePaymentRulesDialog.type === 'addition' ? DEFAULT_OPTIONAL_ADDITION_RULES : DEFAULT_OPTIONAL_DEDUCTION_RULES)}
+          baseRules={
+            compensation?.templateSnapshot?.variablePayments?.[variablePaymentRulesDialog.type === 'addition' ? 'additions' : 'deductions'].find(
+              (item) => item.id === variablePaymentRulesDialog.id,
+            )?.calculationRules ?? null
+          }
+          baseLabel="قالب انتخاب‌شده"
+          differenceLabel="متفاوت با قواعد قالب"
+          effectContext={variablePaymentRulesDialog.type === 'addition' ? 'benefit_or_addition' : 'deduction'}
+          onClose={() => setVariablePaymentRulesDialog(null)}
+          onSubmit={(next) => saveVariablePaymentRules(variablePaymentRulesDialog, next)}
+        />
+      ) : null}
+      <ConfirmDialog
+        open={Boolean(deletingVariablePayment)}
+        title="حذف آیتم پرداخت متغیر"
+        description={deletingVariablePayment ? `آیا از حذف «${deletingVariablePayment.title}» مطمئن هستید؟` : ''}
+        confirmLabel="حذف"
+        cancelLabel="انصراف"
+        tone="danger"
+        onConfirm={deleteVariablePayment}
+        onCancel={() => setDeletingVariablePayment(null)}
+      />
+      <EmployeeMissionRuleDialog
+        open={Boolean(missionEditor)}
+        initialRule={missionEditor}
+        monthlyBaseSalary={derived.monthlyBaseSalary}
+        grossPay={derived.grossPay}
+        onClose={() => setMissionEditor(null)}
+        onSubmit={saveMissionRule}
+      />
+      <ConfirmDialog
+        open={Boolean(deletingMissionRule)}
+        title="حذف قاعده ماموریت"
+        description={deletingMissionRule ? `آیا از حذف «${deletingMissionRule.title}» مطمئن هستید؟` : ''}
+        confirmLabel="حذف"
+        cancelLabel="انصراف"
+        tone="danger"
+        onConfirm={deleteMissionRule}
+        onCancel={() => setDeletingMissionRule(null)}
+      />
+      <ConfirmDialog
+        open={Boolean(paymentTypeComingSoonLabel)}
+        title="در حال توسعه"
+        description={
+          paymentTypeComingSoonLabel
+            ? `گزینه «${paymentTypeComingSoonLabel}» هنوز فعال نشده و به‌زودی در دسترس قرار می‌گیرد.`
+            : ''
+        }
+        confirmLabel="متوجه شدم"
+        cancelLabel="بستن"
+        onConfirm={() => setPaymentTypeComingSoonLabel(null)}
+        onCancel={() => setPaymentTypeComingSoonLabel(null)}
+      />
+      <ConfirmDialog
+        open={finalizeConfirmOpen}
+        title="ثبت نهایی و شروع قرارداد"
+        description="با ثبت نهایی، این قرارداد به عنوان قرارداد جاری کارمند فعال می‌شود و مبنای محاسبات درخواست‌ها، مرخصی، اضافه‌کاری و اطلاعات کارمند خواهد بود."
+        confirmLabel={finalizing ? 'در حال ثبت...' : 'تأیید و شروع قرارداد'}
+        cancelLabel="انصراف"
+        onConfirm={finalizeContract}
+        onCancel={() => setFinalizeConfirmOpen(false)}
       />
       <UnsavedChangesDialog
         open={unsavedLeaveGuard.dialogOpen}
@@ -2765,6 +3462,9 @@ function validateStep(
   baseSettings: PayrollSettings,
 ) {
   const errors: Record<string, string> = {};
+  void employee;
+  void supplemental;
+  void baseSettings;
   if (!draft) return errors;
   if (step === 'timing') {
     if (!draft.timing.contractDate) errors.timing_contractDate = 'تاریخ عقد قرارداد الزامی است';
@@ -2785,9 +3485,28 @@ function validateStep(
       }
     }
   }
-  if (step === 'insuranceTax') {
-    const validation = validateTaxBrackets(draft.insuranceTax.taxBrackets);
-    if (validation) errors.taxBrackets = validation;
+  if (step === 'benefitsEnd') {
+    if (draft.benefitsEnd?.eidBonus.period !== 'none') {
+      if (!Number.isFinite(draft.benefitsEnd?.eidBonus.amount ?? Number.NaN) || (draft.benefitsEnd?.eidBonus.amount ?? 0) < 0) {
+        errors.benefitsEnd_eidBonusAmount = 'مبلغ عیدی باید معتبر باشد';
+      }
+    }
+  }
+  if (step === 'workTimePayRules' || step === 'leave') {
+    const resolved = resolveEmployeeDraftCompensation(draft, baseSettings, null);
+    const payrollSettings: PayrollSettings = {
+      ...baseSettings,
+      financial: draft.financial,
+      workTimePayRules: resolved.workTimePayRules,
+      leave: resolved.leave,
+    };
+    Object.assign(errors, validatePayrollStep(step === 'workTimePayRules' ? 'overtime' : 'leave', payrollSettings));
+  }
+  if (step === 'mission') {
+    const resolved = resolveEmployeeDraftCompensation(draft, baseSettings, null);
+    if (!resolved.mission.rules.length) {
+      errors.mission_rules = 'حداقل یک قاعده ماموریت باید ثبت شود.';
+    }
   }
   return errors;
 }

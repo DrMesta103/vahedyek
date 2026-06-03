@@ -16,7 +16,6 @@ import {
   getPersianWeekdayName,
   parsePersianYmd,
   PERSIAN_WEEKDAY_NAMES,
-  PERSIAN_WEEKDAY_LABELS,
 } from '../../../../lib/calendar-dates';
 import type { CalendarDayCell } from '../../../../lib/calendar-grid';
 import { getDayDetails } from '../../../../lib/calendar-grid';
@@ -26,6 +25,7 @@ import {
   type StoredCalendarShift,
 } from '../../../../lib/calendar-shifts';
 import { CardMenu } from '../../../../components/CardMenu';
+import { PersianMonthCalendarEmptyDay, PersianMonthCalendarGrid } from '../../../../components/PersianMonthCalendarGrid';
 import { calendarBreadcrumbs } from '../../../../components/module-page/module-breadcrumbs';
 import { getPersianDateParts } from './persian-date';
 import { DeleteCalendarRangeDialog } from './bulk/DeleteCalendarRangeDialog';
@@ -296,54 +296,27 @@ export function CalendarDetailsView({ calendar }: CalendarDetailsViewProps) {
             ))}
           </div>
 
-          <div className="calendar-details-month-shell">
-            <header className="calendar-details-month-toolbar">
-              <button
-                type="button"
-                className="calendar-details-month-nav"
-                aria-label="ماه قبل"
-                disabled={!calendar.canGoPrev}
-                onClick={() => goToMonth(calendar.prevMonth.year, calendar.prevMonth.month)}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
-              <div className="calendar-details-month-title">
-                <CalendarDays className="h-4 w-4" aria-hidden />
-                <strong>
-                  {calendar.monthName} {calendar.viewYear}
-                </strong>
-                <ChevronLeft className="h-3.5 w-3.5 opacity-70" aria-hidden />
-              </div>
-              <button
-                type="button"
-                className="calendar-details-month-nav"
-                aria-label="ماه بعد"
-                disabled={!calendar.canGoNext}
-                onClick={() => goToMonth(calendar.nextMonth.year, calendar.nextMonth.month)}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-            </header>
-
-            <div className="calendar-details-month-grid">
-              <div className="calendar-details-weekdays">
-                {PERSIAN_WEEKDAY_LABELS.map((label) => (
-                  <span key={label}>{label}</span>
-                ))}
-              </div>
-              <div className="calendar-details-days">
-                {cells.map((cell, index) => (
-                  <DayCellButton
-                    key={`${cell.date ?? 'empty'}-${index}`}
-                    cell={cell}
-                    onSelect={() => {
-                      if (cell.day) setSelectedDay(cell.day);
-                    }}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
+          <PersianMonthCalendarGrid
+            monthTitle={`${calendar.monthName} ${calendar.viewYear}`}
+            onPrev={() => goToMonth(calendar.prevMonth.year, calendar.prevMonth.month)}
+            onNext={() => goToMonth(calendar.nextMonth.year, calendar.nextMonth.month)}
+            canGoPrev={calendar.canGoPrev}
+            canGoNext={calendar.canGoNext}
+          >
+            {cells.map((cell, index) =>
+              cell.day ? (
+                <DayCellButton
+                  key={`${cell.date ?? 'day'}-${index}`}
+                  cell={cell}
+                  onSelect={() => {
+                    if (cell.day) setSelectedDay(cell.day);
+                  }}
+                />
+              ) : (
+                <PersianMonthCalendarEmptyDay key={`empty-${index}`} />
+              ),
+            )}
+          </PersianMonthCalendarGrid>
         </section>
 
         <aside className="calendar-details-sidebar">
@@ -625,10 +598,6 @@ function DayCellButton({
   cell: CalendarDayCell & { isSelected?: boolean; isToday?: boolean };
   onSelect: () => void;
 }) {
-  if (!cell.day) {
-    return <span className="calendar-details-day is-empty" />;
-  }
-
   const shiftBars = orderedShiftTypes(cell.shiftTypes);
 
   return (

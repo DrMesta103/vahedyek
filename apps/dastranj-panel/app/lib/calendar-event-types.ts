@@ -24,9 +24,9 @@ export const CALENDAR_HOLIDAY_TYPE_OPTIONS: Array<{
 
 export const CALENDAR_FRIDAY_HOLIDAY_TYPE = {
   id: 'friday' as const,
-  label: 'تعطیلی جمعه',
+  label: 'تعطیل هفتگی',
   tooltip:
-    'این نوع فقط برای روز جمعه ثبت می‌شود و قابل تغییر نیست. اگر کارمند در این روز کارکرد داشته باشد، ضریب جمعه‌کاری در حقوق و دستمزد اعمال می‌شود.',
+    'این نوع فقط برای روز تعطیل هفتگی ثبت می‌شود و قابل تغییر نیست. اگر کارمند در این روز کارکرد داشته باشد، ضریب تعطیل هفتگی در حقوق و دستمزد اعمال می‌شود.',
 };
 
 export function resolveCalendarEventTitle(input: {
@@ -76,7 +76,7 @@ export function inferHolidayTypeFromLegacyEvent(input: {
   if (category === 'تعطیلات سازمانی') return 'organizational';
 
   const title = input.title?.trim();
-  if (title === CALENDAR_FRIDAY_HOLIDAY_TYPE.label) return 'friday';
+  if (title === CALENDAR_FRIDAY_HOLIDAY_TYPE.label || title === 'تعطیلی جمعه') return 'friday';
 
   return undefined;
 }
