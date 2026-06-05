@@ -171,15 +171,6 @@ const SUPPORTED_PART_TYPES = new Set<NamingPatternPartType>([
 const PERSIAN_ALPHABET = ['الف', 'ب', 'پ', 'ت', 'ث', 'ج', 'چ', 'ح', 'خ', 'د', 'ذ', 'ر', 'ز', 'ژ', 'س', 'ش', 'ص', 'ض', 'ط', 'ظ', 'ع', 'غ', 'ف', 'ق', 'ک', 'گ', 'ل', 'م', 'ن', 'و', 'ه', 'ی'];
 const ENGLISH_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
-function getBrowserLocalStorage() {
-  if (typeof window === 'undefined') return null;
-  try {
-    return window.localStorage;
-  } catch {
-    return null;
-  }
-}
-
 function scopeStorageKey(key: string, tenantId?: string | null) {
   const scope = tenantId ?? getActiveTenantStorageId();
   return scope ? `${key}:${scope}` : key;
@@ -187,6 +178,16 @@ function scopeStorageKey(key: string, tenantId?: string | null) {
 
 export function getNamingPatternsStorageKey(tenantId?: string | null) {
   return scopeStorageKey(NAMING_PATTERNS_STORAGE_KEY, tenantId);
+}
+
+export function getNamingPatternsFromStorage(raw: string | null | undefined) {
+  if (!raw) return [] as NamingPattern[];
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    return Array.isArray(parsed) ? parsed.map(normalizeNamingPattern).filter(Boolean) as NamingPattern[] : [];
+  } catch {
+    return [] as NamingPattern[];
+  }
 }
 
 export function createNamingPatternId() {
@@ -600,48 +601,8 @@ export function validateNamingPattern(pattern: NamingPattern) {
   return errors;
 }
 
-export function readNamingPatterns(tenantId?: string | null) {
-  const storage = getBrowserLocalStorage();
-  if (!storage) return [] as NamingPattern[];
-  const raw = storage.getItem(getNamingPatternsStorageKey(tenantId));
-  if (!raw) return [] as NamingPattern[];
-  try {
-    const parsed = JSON.parse(raw) as unknown;
-    return Array.isArray(parsed) ? parsed.map(normalizeNamingPattern).filter(Boolean) as NamingPattern[] : [];
-  } catch {
-    storage.removeItem(getNamingPatternsStorageKey(tenantId));
-    return [] as NamingPattern[];
-  }
-}
-
-export function persistNamingPatterns(patterns: NamingPattern[], tenantId?: string | null) {
-  const storage = getBrowserLocalStorage();
-  if (!storage) return;
-  storage.setItem(getNamingPatternsStorageKey(tenantId), JSON.stringify(patterns));
-}
-
 export function findDefaultNamingPattern(patterns: NamingPattern[], usageType: NamingPatternUsageType) {
   return patterns.find((pattern) => pattern.usageType === usageType && pattern.isActive) ?? null;
-}
-
-export function commitDefaultNamingPattern({
-  usageType,
-  context,
-  existingOutputs,
-  tenantId,
-}: {
-  usageType: NamingPatternUsageType;
-  context?: NamingPatternContext;
-  existingOutputs?: string[];
-  tenantId?: string | null;
-}) {
-  const patterns = readNamingPatterns(tenantId);
-  const pattern = findDefaultNamingPattern(patterns, usageType);
-  if (!pattern) return null;
-  const generated = generateUniqueNamingPattern({ pattern, context, existingOutputs });
-  if (!generated.output || generated.conflict) return null;
-  persistNamingPatterns(patterns.map((item) => (item.id === pattern.id ? generated.pattern : item)), tenantId);
-  return generated.output;
 }
 
 export function getNamingPatternSequenceLabel(pattern: NamingPattern) {

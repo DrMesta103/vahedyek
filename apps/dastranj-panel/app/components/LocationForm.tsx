@@ -8,6 +8,7 @@ import {
   toWorkplaceLocationDraft,
   validateWorkplaceLocationDraft,
 } from '../lib/workplace-location';
+import { mockAddressFromMapPick, WORKPLACE_LOCATION_FIELD_TOOLTIPS } from '../lib/workplace-location-ui';
 
 type LocationFormProps = {
   action: (formData: FormData) => void | Promise<void>;
@@ -93,6 +94,15 @@ export function LocationForm({ action, submitLabel, initialValues }: LocationFor
     window.setTimeout(() => setMapStatus('ready'), 220);
   };
 
+  const handlePickCoordinates = ({ latitude: nextLatitude, longitude: nextLongitude }: { latitude: number; longitude: number }) => {
+    setGeolocationDenied(false);
+    setLatitude(String(nextLatitude));
+    setLongitude(String(nextLongitude));
+    setAddress(mockAddressFromMapPick(nextLatitude, nextLongitude));
+    clearError('latitude');
+    clearError('address');
+  };
+
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     const validation = validateWorkplaceLocationDraft(draft);
     setErrors(validation.valid ? {} : validation.errors);
@@ -112,6 +122,17 @@ export function LocationForm({ action, submitLabel, initialValues }: LocationFor
       <input type="hidden" name="latitude" value={latitude} />
       <input type="hidden" name="longitude" value={longitude} />
 
+      <WorkplaceLocationPicker
+        latitude={latitude}
+        longitude={longitude}
+        radius={Number(radius) || WORKPLACE_LOCATION_DEFAULT_RADIUS}
+        status={mapStatus}
+        geolocationDenied={geolocationDenied}
+        onPickCoordinates={handlePickCoordinates}
+        onUseCurrentLocation={handleUseCurrentLocation}
+        onRetryMap={handleMapRetry}
+      />
+
       <div className="location-form-panel">
         <div className="form-grid">
           <label>
@@ -125,6 +146,7 @@ export function LocationForm({ action, submitLabel, initialValues }: LocationFor
               }}
               aria-invalid={Boolean(errors.title)}
             />
+            <small className="location-form-hint">{WORKPLACE_LOCATION_FIELD_TOOLTIPS.title}</small>
             {errors.title ? <small className="location-form-error">{errors.title}</small> : null}
           </label>
 
@@ -139,12 +161,14 @@ export function LocationForm({ action, submitLabel, initialValues }: LocationFor
               }}
               aria-invalid={Boolean(errors.address)}
             />
+            <small className="location-form-hint">{WORKPLACE_LOCATION_FIELD_TOOLTIPS.address}</small>
             {errors.address ? <small className="location-form-error">{errors.address}</small> : null}
           </label>
 
           <label className="full-span">
             <span>توضیحات تکمیلی</span>
             <textarea name="description" rows={4} value={description} onChange={(event) => setDescription(event.target.value)} />
+            <small className="location-form-hint">{WORKPLACE_LOCATION_FIELD_TOOLTIPS.description}</small>
           </label>
 
           <label className="full-span">
@@ -184,6 +208,7 @@ export function LocationForm({ action, submitLabel, initialValues }: LocationFor
               }}
               aria-invalid={Boolean(errors.radius)}
             />
+            <small className="location-form-hint">{WORKPLACE_LOCATION_FIELD_TOOLTIPS.radius}</small>
             {errors.radius ? <small className="location-form-error">{errors.radius}</small> : null}
             {Number(radius) > 50 ? <small className="location-form-warning">شعاع زیاد ممکن است دقت کنترل تردد را کاهش دهد.</small> : null}
           </label>
@@ -195,6 +220,7 @@ export function LocationForm({ action, submitLabel, initialValues }: LocationFor
             <strong>
               {latitude && longitude ? `${Number(latitude).toFixed(6)} ، ${Number(longitude).toFixed(6)}` : 'هنوز نقطه‌ای روی نقشه انتخاب نشده است.'}
             </strong>
+            <small className="location-form-hint">{WORKPLACE_LOCATION_FIELD_TOOLTIPS.coordinates}</small>
             {errors.latitude ? <small className="location-form-error">{errors.latitude}</small> : null}
           </div>
           <div>
@@ -204,28 +230,11 @@ export function LocationForm({ action, submitLabel, initialValues }: LocationFor
         </div>
 
         <div className="full-span">
-          <button type="submit" className="primary-button">
+          <button type="submit" className="location-indigo-action">
             {submitLabel}
           </button>
         </div>
       </div>
-
-      <WorkplaceLocationPicker
-        latitude={latitude}
-        longitude={longitude}
-      radius={Number(radius) || WORKPLACE_LOCATION_DEFAULT_RADIUS}
-      status={mapStatus}
-        geolocationDenied={geolocationDenied}
-        onPickCoordinates={({ latitude: nextLatitude, longitude: nextLongitude }) => {
-          setGeolocationDenied(false);
-          setLatitude(String(nextLatitude));
-          setLongitude(String(nextLongitude));
-          clearError('latitude');
-        }}
-        onUseCurrentLocation={handleUseCurrentLocation}
-        onRetryMap={handleMapRetry}
-      />
     </form>
   );
 }
-

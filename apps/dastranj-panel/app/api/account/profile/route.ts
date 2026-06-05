@@ -6,28 +6,6 @@ import { handlePrismaApiError } from '../../../lib/prismaApiError';
 import { createDefaultProfileStore, normalizeProfileStore, type ProfileMeta } from '../../../(panel)/account/profile.types';
 
 const TABLE_NAME = '"TenantBusinessProfileSettings"';
-const INDEX_NAME = '"TenantBusinessProfileSettings_tenantId_idx"';
-
-async function ensureProfileSettingsTable() {
-  await prisma.$executeRawUnsafe(`
-    CREATE TABLE IF NOT EXISTS ${TABLE_NAME} (
-      "id" TEXT PRIMARY KEY,
-      "tenantId" TEXT NOT NULL UNIQUE,
-      "profilePayload" JSONB NOT NULL DEFAULT '{}'::jsonb,
-      "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      CONSTRAINT "TenantBusinessProfileSettings_tenantId_fkey"
-        FOREIGN KEY ("tenantId") REFERENCES "Tenant"("id")
-        ON DELETE CASCADE
-        ON UPDATE CASCADE
-    );
-  `);
-
-  await prisma.$executeRawUnsafe(`
-    CREATE INDEX IF NOT EXISTS ${INDEX_NAME}
-    ON ${TABLE_NAME} ("tenantId");
-  `);
-}
 
 async function getProfileMeta(
   tenantId: string,
@@ -88,13 +66,10 @@ export async function GET() {
     const session = await requireSessionContext();
     if (session instanceof NextResponse) return session;
 
-    await ensureProfileSettingsTable();
-
     const rows = (await prisma.$queryRawUnsafe(
       `SELECT "profilePayload" FROM ${TABLE_NAME} WHERE "tenantId" = $1 LIMIT 1`,
       session.tenantId,
     )) as Array<{ profilePayload: unknown }>;
-
     const store = normalizeProfileStore(rows[0]?.profilePayload ?? {});
     const meta = await getProfileMeta(
       session.tenantId,
@@ -122,8 +97,6 @@ export async function PUT(request: Request) {
       };
     };
     const store = normalizeProfileStore(body.store ?? createDefaultProfileStore());
-
-    await ensureProfileSettingsTable();
 
     await prisma.$executeRawUnsafe(
       `

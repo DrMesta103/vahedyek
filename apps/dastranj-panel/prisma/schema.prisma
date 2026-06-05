@@ -40,12 +40,14 @@ model Tenant {
   calendars           Calendar[]
   policies            WorkPolicy[]
   employees           Employee[]
+  employeeImportJobs  EmployeeImportJob[]
   workGroups          WorkGroup[]
   organizationUnits   OrganizationUnit[]
   requestReasons      RequestReason[]
   shiftTemplates      ShiftTemplate[]
   draftTemplates      DraftTemplate[]
   clientStorageStates ClientStorageState[]
+  businessProfileSettings TenantBusinessProfileSettings[]
   employeeRequests    EmployeeRequest[]
   employeeContracts   EmployeeContract[]
   companyLoans        CompanyLoan[]
@@ -163,6 +165,41 @@ enum EmployeeRequestStatus {
   approved
   rejected
   canceled
+}
+
+enum EmployeeImportJobType {
+  excel_add
+  excel_add_and_invite
+}
+
+enum EmployeeImportJobStatus {
+  queued
+  processing
+  completed
+  completed_with_errors
+  failed
+}
+
+enum EmployeeImportJobRowStatus {
+  created
+  existing_employee
+  duplicate_in_file
+  invalid
+  failed
+  mock_invited
+  mock_invite_failed
+}
+
+enum EmployeeImportJobMockInvitationStatus {
+  none
+  mock_sent
+  mock_failed
+  not_required
+}
+
+enum EmployeeImportJobInvitationChannel {
+  sms
+  email
 }
 
 enum EmployeeRequestSubmissionMode {
@@ -345,6 +382,10 @@ model Employee {
   identityPhotoUrl     String?
   bankAccounts         Json                       @default("[]")
   guarantees           Json                       @default("[]")
+  quickSetupStatus     String?
+  quickSetupAddMethod  String?
+  quickSetupInvitationStatus String?
+  quickSetupLastActionAt DateTime?
   createdAt            DateTime                   @default(now())
   updatedAt            DateTime                   @updatedAt
   tenant               Tenant?                    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
@@ -352,6 +393,51 @@ model Employee {
   workGroupMemberships WorkGroupMember[]
   requests             EmployeeRequest[]
   contracts            EmployeeContract[]
+}
+
+model EmployeeImportJob {
+  id               String                 @id @default(cuid())
+  tenantId         String
+  type             EmployeeImportJobType
+  fileName         String
+  status           EmployeeImportJobStatus @default(queued)
+  totalCount       Int                    @default(0)
+  processedCount   Int                    @default(0)
+  createdCount     Int                    @default(0)
+  existingCount    Int                    @default(0)
+  duplicateCount   Int                    @default(0)
+  invalidCount     Int                    @default(0)
+  failedCount      Int                    @default(0)
+  mockInvitedCount Int                    @default(0)
+  createdById      String?
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+  tenant           Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  rows             EmployeeImportJobRow[]
+
+  @@index([tenantId, createdAt])
+  @@index([tenantId, status])
+}
+
+model EmployeeImportJobRow {
+  id                   String                               @id @default(cuid())
+  jobId                String
+  rowNumber            Int
+  firstName            String
+  lastName             String
+  email                String?
+  mobile               String?
+  employeeId           String?
+  status               EmployeeImportJobRowStatus
+  message              String?
+  mockInvitationStatus EmployeeImportJobMockInvitationStatus @default(none)
+  invitationChannel    EmployeeImportJobInvitationChannel?
+  processedAt          DateTime?
+  createdAt            DateTime                             @default(now())
+  updatedAt            DateTime                             @updatedAt
+  job                  EmployeeImportJob                    @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([jobId, rowNumber])
 }
 
 model EmployeeContract {
@@ -531,4 +617,15 @@ model ClientStorageState {
   @@unique([scope, storageKey])
   @@index([tenantId])
   @@index([scope])
+}
+
+model TenantBusinessProfileSettings {
+  id             String   @id @default(cuid())
+  tenantId       String   @unique
+  profilePayload Json     @default("{}")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  tenant         Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
 }

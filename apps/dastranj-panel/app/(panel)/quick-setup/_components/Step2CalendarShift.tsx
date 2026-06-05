@@ -892,7 +892,6 @@ function ShiftSummary({
   floatDayCoreEnd,
   floatDayCoreEnabled,
   floatAbsRequiredMinutes,
-  floatAbsRangeEnabled,
   floatAbsRangeStart,
   floatAbsRangeEnd,
   split1Start,
@@ -921,7 +920,6 @@ function ShiftSummary({
   floatDayCoreEnd: string;
   floatDayCoreEnabled: boolean;
   floatAbsRequiredMinutes: number;
-  floatAbsRangeEnabled: boolean;
   floatAbsRangeStart: string;
   floatAbsRangeEnd: string;
   split1Start: string;
@@ -996,7 +994,7 @@ function ShiftSummary({
         ) : null}
         {shiftType === 'float-abs' ? <div>ملاک محاسبه: مجموع کارکرد روزانه</div> : null}
         {shiftType === 'float-abs' ? <div>حداقل کارکرد لازم: {formatHoursLabel(floatAbsRequiredMinutes)}</div> : null}
-        {shiftType === 'float-abs' ? <div>محدوده مجاز ثبت تردد: {floatAbsRangeEnabled ? `${floatAbsRangeStart} تا ${floatAbsRangeEnd}` : 'بدون محدودیت زمانی'}</div> : null}
+        {shiftType === 'float-abs' ? <div>محدوده مجاز ثبت تردد: {floatAbsRangeStart && floatAbsRangeEnd ? `${floatAbsRangeStart} تا ${floatAbsRangeEnd}` : '-'}</div> : null}
         {shiftType === 'float-abs' ? <div>استراحت قابل کسر: {formatHoursLabel(deducted)}</div> : null}
         {shiftType === 'float-abs' ? <div>مدت کارکرد مفید مورد انتظار: {formatHoursLabel(netWork)}</div> : null}
         {shiftType === 'split' ? (
@@ -1112,14 +1110,10 @@ export default function Step2CalendarShift({
 
   const [floatAbsWorkingDays, setFloatAbsWorkingDays] = useState<string[]>(stringArray(baseShiftConfig.floatAbsWorkingDays, DEFAULT_WORKING_DAYS));
   const [floatAbsRequiredMinutes, setFloatAbsRequiredMinutes] = useState(Number(floatAbsConfig.requiredMinutes ?? 480) || 480);
-  const initialFloatAbsRangeEnabled = Boolean(
-    floatAbsConfig.registrationRangeEnabled ?? ('startTime' in floatAbsConfig || 'endTime' in floatAbsConfig || 'endsNextDay' in floatAbsConfig),
-  );
-  const [floatAbsRangeEnabled, setFloatAbsRangeEnabled] = useState(initialFloatAbsRangeEnabled);
   const [floatAbsStart, setFloatAbsStart] = useState(String(floatAbsConfig.startTime ?? '08:00'));
   const [floatAbsEnd, setFloatAbsEnd] = useState(String(floatAbsConfig.endTime ?? '16:00'));
   const [floatAbsRests, setFloatAbsRests] = useState<RestItem[]>(
-    normalizeAbsoluteFloatingRests(floatAbsConfig.rests ?? baseShiftConfig.floatAbsRests, initialFloatAbsRangeEnabled),
+    normalizeAbsoluteFloatingRests(floatAbsConfig.rests ?? baseShiftConfig.floatAbsRests, true),
   );
 
   const [splitWorkingDays, setSplitWorkingDays] = useState<string[]>(stringArray(baseShiftConfig.splitWorkingDays, DEFAULT_WORKING_DAYS));
@@ -1158,33 +1152,13 @@ export default function Step2CalendarShift({
       ? 'بعد از بازه'
       : 'مجاز';
   const floatAbsWorkRange = useMemo<WorkRange | undefined>(() => {
-    if (!floatAbsRangeEnabled) return undefined;
     if (!floatAbsStart || !floatAbsEnd) return undefined;
     if (parseTime(floatAbsEnd) <= parseTime(floatAbsStart)) return undefined;
     return { start: floatAbsStart, end: floatAbsEnd, nextDay: false };
-  }, [floatAbsEnd, floatAbsRangeEnabled, floatAbsStart]);
+  }, [floatAbsEnd, floatAbsStart]);
   const floatAbsFixedBreaksAllowed = Boolean(floatAbsWorkRange);
   const split1WorkRange = useMemo<WorkRange>(() => ({ start: split1Start, end: split1End, nextDay: split1NextDay }), [split1End, split1NextDay, split1Start]);
   const split2WorkRange = useMemo<WorkRange>(() => ({ start: split2Start, end: split2End, nextDay: split2NextDay }), [split2End, split2NextDay, split2Start]);
-
-  const setFloatAbsRangeEnabledWithConversion = (checked: boolean) => {
-    if (!checked && floatAbsRangeEnabled && floatAbsRests.some((item) => item.type === 'fixed')) {
-      const confirmed = window.confirm(
-        'با غیرفعال کردن محدودیت زمانی ثبت تردد، استراحت‌های بازه ثابت دیگر معتبر نیستند و به مدت شناور تبدیل یا حذف می‌شوند. ادامه می‌دهید؟',
-      );
-      if (!confirmed) return;
-      setFloatAbsRests((prev) => prev.flatMap((item) => {
-        if (item.type !== 'fixed') return [item];
-        const converted = convertRestToFloating(item);
-        return converted ? [converted] : [];
-      }));
-    }
-    setFloatAbsRangeEnabled(checked);
-    if (!checked) {
-      setFloatAbsStart('');
-      setFloatAbsEnd('');
-    }
-  };
 
   const handleFloatAbsBreakChange = (items: RestItem[]) => {
     if (!floatAbsFixedBreaksAllowed) {
@@ -1268,14 +1242,12 @@ export default function Step2CalendarShift({
     if (shiftType === 'float-abs') {
       if (!floatAbsRequiredMinutes) errors.push('حداقل مدت کار روزانه را وارد کنید.');
       if (floatAbsRequiredMinutes <= 0) errors.push('حداقل مدت کار روزانه باید بیشتر از صفر باشد.');
-      if (floatAbsRangeEnabled) {
-        if (!floatAbsStart || !floatAbsEnd) errors.push('محدوده مجاز ثبت تردد را کامل کنید.');
-        if (floatAbsStart && floatAbsEnd && parseTime(floatAbsEnd) <= parseTime(floatAbsStart)) {
-          errors.push('پایان محدوده مجاز ثبت تردد باید بعد از شروع آن باشد.');
-        }
-        if (validateTimeRangeUnder24Hours(floatAbsStart, floatAbsEnd)) {
-          errors.push('بازه زمانی نمی‌تواند ۲۴ ساعت یا بیشتر باشد.');
-        }
+      if (!floatAbsStart || !floatAbsEnd) errors.push('محدوده مجاز ثبت تردد را کامل کنید.');
+      if (floatAbsStart && floatAbsEnd && parseTime(floatAbsEnd) <= parseTime(floatAbsStart)) {
+        errors.push('پایان محدوده مجاز ثبت تردد باید بعد از شروع آن باشد.');
+      }
+      if (validateTimeRangeUnder24Hours(floatAbsStart, floatAbsEnd)) {
+        errors.push('بازه زمانی نمی‌تواند ۲۴ ساعت یا بیشتر باشد.');
       }
       if (totalDeductedRestMinutes(floatAbsRests) > floatAbsRequiredMinutes) {
         errors.push('مدت استراحت نمی‌تواند از حداقل مدت کار روزانه بیشتر باشد.');
@@ -1432,9 +1404,9 @@ export default function Step2CalendarShift({
     floatDayWorkingDays,
     absoluteFloatingShift: {
       requiredMinutes: floatAbsRequiredMinutes,
-      registrationRangeEnabled: floatAbsRangeEnabled,
-      startTime: floatAbsRangeEnabled ? floatAbsStart : '',
-      endTime: floatAbsRangeEnabled ? floatAbsEnd : '',
+      registrationRangeEnabled: true,
+      startTime: floatAbsStart,
+      endTime: floatAbsEnd,
       endsNextDay: false,
       rests: floatAbsRests,
     },
@@ -1957,40 +1929,30 @@ export default function Step2CalendarShift({
                       ) : null}
                     </div>
                     <div className="space-y-3 rounded-[18px] border border-white/10 bg-slate-900/40 p-4">
-                      <InlineToggle
-                        label="محدودیت زمانی برای ثبت تردد فعال شود"
-                        checked={floatAbsRangeEnabled}
-                        onChange={(checked) => {
-                          markDirty();
-                          setFloatAbsRangeEnabledWithConversion(checked);
-                        }}
-                      />
-                      <div className="text-sm font-bold text-white">محدوده مجاز ثبت تردد، اختیاری</div>
-                      <p className="text-xs leading-6 text-slate-400">در صورت نیاز، می‌توانید مشخص کنید ثبت ورود و خروج فقط در یک بازه زمانی خاص از روز مجاز باشد.</p>
-                      {floatAbsRangeEnabled ? (
-                        <div className="grid grid-cols-2 gap-4">
-                          <TimeField
-                            label="از ساعت"
-                            value={floatAbsStart}
-                            onChange={(value) => {
-                              markDirty();
-                              setFloatAbsStart(value);
-                            }}
-                            hint="زودترین زمانی که ثبت تردد در این شیفت مجاز است."
-                          />
-                          <TimeField
-                            label="تا ساعت"
-                            value={floatAbsEnd}
-                            onChange={(value) => {
-                              markDirty();
-                              setFloatAbsEnd(value);
-                            }}
-                            hint="آخرین زمانی که ثبت تردد در این شیفت مجاز است."
-                          />
-                        </div>
-                      ) : (
-                        <div className="rounded-xl border border-dashed border-white/10 bg-slate-950/30 px-3 py-2 text-xs leading-6 text-slate-300">بدون محدودیت زمانی</div>
-                      )}
+                      <div className="text-sm font-bold text-white">
+                        <b>*</b> محدوده مجاز ثبت تردد
+                      </div>
+                      <p className="text-xs leading-6 text-slate-400">ثبت ورود و خروج فقط در بازه زمانی مشخص‌شده مجاز است.</p>
+                      <div className="grid grid-cols-2 gap-4">
+                        <TimeField
+                          label="از ساعت"
+                          value={floatAbsStart}
+                          onChange={(value) => {
+                            markDirty();
+                            setFloatAbsStart(value);
+                          }}
+                          hint="زودترین زمانی که ثبت تردد در این شیفت مجاز است."
+                        />
+                        <TimeField
+                          label="تا ساعت"
+                          value={floatAbsEnd}
+                          onChange={(value) => {
+                            markDirty();
+                            setFloatAbsEnd(value);
+                          }}
+                          hint="آخرین زمانی که ثبت تردد در این شیفت مجاز است."
+                        />
+                      </div>
                     </div>
                     <BreakEditor
                       items={floatAbsRests}
@@ -2123,7 +2085,6 @@ export default function Step2CalendarShift({
                 split2Rests={split2Rests}
                 floatDayRests={floatDayRests}
                 floatAbsRests={floatAbsRests}
-                floatAbsRangeEnabled={floatAbsRangeEnabled}
                 floatAbsRangeStart={floatAbsStart}
                 floatAbsRangeEnd={floatAbsEnd}
               />

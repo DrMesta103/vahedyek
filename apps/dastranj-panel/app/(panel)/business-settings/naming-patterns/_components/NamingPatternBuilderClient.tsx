@@ -3,19 +3,21 @@
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowDown, ArrowLeft, ArrowUp, Braces, Eye, FileCode2, Plus, Save, Trash2 } from 'lucide-react';
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useMemo, useState, type FormEvent } from 'react';
+import { upsertClientStorageStateAction } from '../../../../lib/client-storage-actions';
+import type { HydratedClientStorageState } from '../../../../lib/client-storage-persistence';
 import {
   NAMING_PATTERN_PART_OPTIONS,
   NAMING_PATTERN_SEPARATOR_OPTIONS,
   NAMING_PATTERN_USAGE_OPTIONS,
   createEmptyNamingPattern,
   createNamingPatternPart,
+  getNamingPatternsFromStorage,
+  getNamingPatternsStorageKey,
   getNamingPatternPartLabel,
   getNamingPatternPlaceholderParts,
   getNamingPatternPreview,
   getNamingPatternUsageLabel,
-  persistNamingPatterns,
-  readNamingPatterns,
   validateNamingPattern,
   type NamingPattern,
   type NamingPatternPart,
@@ -225,29 +227,30 @@ export function NamingPatternBuilderClient({
   tenantId = null,
   mode,
   patternId,
+  storageStates,
 }: {
   tenantId?: string | null;
   mode: BuilderMode;
   patternId?: string;
+  storageStates: HydratedClientStorageState[];
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialUsage = resolveInitialUsage(searchParams.get('usage'));
-  const [patterns, setPatterns] = useState<NamingPattern[]>([]);
-  const [draft, setDraft] = useState<NamingPattern>(() => buildPreset(searchParams.get('preset'), tenantId, initialUsage));
+  const initialPatterns = useMemo(() => {
+    const raw = storageStates.find((item) => item.storageKey === getNamingPatternsStorageKey(tenantId))?.value ?? null;
+    return getNamingPatternsFromStorage(raw);
+  }, [storageStates, tenantId]);
+  const [patterns] = useState<NamingPattern[]>(initialPatterns);
+  const [draft, setDraft] = useState<NamingPattern>(() => {
+    if (mode === 'edit' && patternId) {
+      const found = initialPatterns.find((item) => item.id === patternId);
+      if (found) return found;
+    }
+    return buildPreset(searchParams.get('preset'), tenantId, initialUsage);
+  });
   const [error, setError] = useState('');
   const [placeholderValues, setPlaceholderValues] = useState<Record<string, string>>({});
-
-  useEffect(() => {
-    const stored = readNamingPatterns(tenantId);
-    setPatterns(stored);
-    if (mode === 'edit') {
-      const found = stored.find((item) => item.id === patternId);
-      if (found) setDraft(found);
-      return;
-    }
-    setDraft(buildPreset(searchParams.get('preset'), tenantId, resolveInitialUsage(searchParams.get('usage'))));
-  }, [mode, patternId, searchParams, tenantId]);
 
   const placeholderParts = useMemo(() => getNamingPatternPlaceholderParts(draft), [draft]);
   const preview = useMemo(
@@ -294,9 +297,10 @@ export function NamingPatternBuilderClient({
       setError('برای این کاربرد قبلاً یک الگو تعریف شده است.');
       return;
     }
-    const base = exists ? patterns : [normalized, ...patterns];
-    persistNamingPatterns(base.map((item) => (item.id === normalized.id ? normalized : item)), tenantId);
-    router.push('/business-settings/naming-patterns');
+    const nextPatterns = (exists ? patterns : [normalized, ...patterns]).map((item) => (item.id === normalized.id ? normalized : item));
+    void upsertClientStorageStateAction(getNamingPatternsStorageKey(tenantId), JSON.stringify(nextPatterns)).then(() => {
+      router.push('/business-settings/naming-patterns');
+    });
   };
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {

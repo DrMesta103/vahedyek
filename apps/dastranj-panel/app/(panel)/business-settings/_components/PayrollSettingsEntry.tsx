@@ -6,12 +6,12 @@ import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { PanelFormModal, PanelFormModalActions } from '../../../components/PanelFormModal';
 import { CardMenu } from '../../../components/CardMenu';
 import { ConfirmDialog } from '../../../components/ConfirmDialog';
+import { upsertClientStorageStateAction, removeClientStorageStateAction } from '../../../lib/client-storage-actions';
 import { getPersianPartsFromDate } from '../../../lib/calendar-dates';
 import { formatFaNumber } from '../../../lib/format-fa';
 import {
   ACTIVE_TENANT_STORAGE_KEY,
   getActiveTenantStorageId,
-  PAYROLL_SETTINGS_STORAGE_KEY,
   getPayrollSettingsStorageKey,
   getPayrollSettingsDraftStorageKey,
   getPayrollSettingsYearsStorageKey,
@@ -19,6 +19,7 @@ import {
   type BusinessSettingYear,
   type PayrollSettingsMode,
 } from '../../../lib/payroll-business-settings';
+import type { HydratedClientStorageState } from '../../../lib/client-storage-persistence';
 import { PayrollBusinessSettingsFlow } from './PayrollBusinessSettingsFlow';
 
 function normalizeDigits(value: string) {
@@ -63,36 +64,38 @@ function getEditableYears(existingYears: BusinessSettingYear[], currentYear: num
     }));
 }
 
-function readYears(currentYear: number, tenantId?: string | null) {
+function getStorageValue(storageStates: HydratedClientStorageState[], storageKey: string) {
+  return storageStates.find((item) => item.storageKey === storageKey)?.value ?? null;
+}
+
+function readYears(currentYear: number, storageStates: HydratedClientStorageState[], tenantId?: string | null) {
   const yearsStorageKey = getPayrollSettingsYearsStorageKey(tenantId);
-  const raw = window.localStorage.getItem(yearsStorageKey);
+  const raw = getStorageValue(storageStates, yearsStorageKey);
   if (raw) {
     try {
       const parsed = JSON.parse(raw) as BusinessSettingYear[];
       if (Array.isArray(parsed)) return parsed;
     } catch {
-      window.localStorage.removeItem(yearsStorageKey);
+      return [];
     }
   }
-
-  const legacySettings = tenantId ? null : window.localStorage.getItem(PAYROLL_SETTINGS_STORAGE_KEY);
-  if (legacySettings) {
-    const initialYears = [createYear(currentYear, currentYear)];
-    window.localStorage.setItem(yearsStorageKey, JSON.stringify(initialYears));
-    window.localStorage.setItem(getPayrollSettingsStorageKey(currentYear), legacySettings);
-    return initialYears;
-  }
-  window.localStorage.setItem(yearsStorageKey, '[]');
   return [];
 }
 
-function removeYearStorage(year: number, tenantId?: string | null) {
-  window.localStorage.removeItem(getPayrollSettingsStorageKey(year, tenantId));
-  window.localStorage.removeItem(getPayrollStepperProgressStorageKey('admin', year, tenantId));
-  window.localStorage.removeItem(getPayrollSettingsDraftStorageKey('admin', year, tenantId));
+async function removeYearStorage(year: number, tenantId?: string | null) {
+  await Promise.all([
+    removeClientStorageStateAction(getPayrollSettingsStorageKey(year, tenantId)),
+    removeClientStorageStateAction(getPayrollStepperProgressStorageKey('admin', year, tenantId)),
+    removeClientStorageStateAction(getPayrollSettingsDraftStorageKey('admin', year, tenantId)),
+  ]);
 }
 
-function moveYearStorage(fromYear: number, toYear: number, tenantId?: string | null) {
+async function moveYearStorage(
+  storageStates: HydratedClientStorageState[],
+  fromYear: number,
+  toYear: number,
+  tenantId?: string | null,
+) {
   if (fromYear === toYear) return;
   const storagePairs = [
     [getPayrollSettingsStorageKey(fromYear, tenantId), getPayrollSettingsStorageKey(toYear, tenantId)],
@@ -100,12 +103,14 @@ function moveYearStorage(fromYear: number, toYear: number, tenantId?: string | n
     [getPayrollSettingsDraftStorageKey('admin', fromYear, tenantId), getPayrollSettingsDraftStorageKey('admin', toYear, tenantId)],
   ] as const;
 
-  storagePairs.forEach(([fromKey, toKey]) => {
-    const value = window.localStorage.getItem(fromKey);
-    if (value === null) return;
-    window.localStorage.setItem(toKey, value);
-    window.localStorage.removeItem(fromKey);
-  });
+  await Promise.all(
+    storagePairs.map(async ([fromKey, toKey]) => {
+      const value = getStorageValue(storageStates, fromKey);
+      if (value === null) return;
+      await upsertClientStorageStateAction(toKey, value);
+      await removeClientStorageStateAction(fromKey);
+    }),
+  );
 }
 
 function YearDialog({
@@ -233,12 +238,19 @@ function YearDialog({
   );
 }
 
-export function PayrollSettingsEntry({ mode = 'admin', tenantId = null }: { mode?: PayrollSettingsMode; tenantId?: string | null }) {
+export function PayrollSettingsEntry({
+  mode = 'admin',
+  tenantId = null,
+  storageStates,
+}: {
+  mode?: PayrollSettingsMode;
+  tenantId?: string | null;
+  storageStates: HydratedClientStorageState[];
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentYear = getPersianPartsFromDate().year;
-  const [years, setYears] = useState<BusinessSettingYear[]>([]);
-  const [loaded, setLoaded] = useState(false);
+  const [years, setYears] = useState<BusinessSettingYear[]>(() => readYears(currentYear, storageStates, null));
   const [query, setQuery] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editDialog, setEditDialog] = useState<{ open: boolean; year: BusinessSettingYear | null }>({ open: false, year: null });
@@ -252,11 +264,6 @@ export function PayrollSettingsEntry({ mode = 'admin', tenantId = null }: { mode
     if (!isTenant || !tenantId) return;
     window.sessionStorage.setItem(ACTIVE_TENANT_STORAGE_KEY, tenantId);
   }, [isTenant, tenantId]);
-
-  useEffect(() => {
-    setYears(readYears(currentYear, null));
-    setLoaded(true);
-  }, [currentYear]);
 
   const selectedYearNumber = Number(searchParams.get('year'));
   const selectedYear = years.find((item) => item.year === selectedYearNumber);
@@ -278,7 +285,7 @@ export function PayrollSettingsEntry({ mode = 'admin', tenantId = null }: { mode
       ? years.map((item) => ({ ...item, isCurrent: false })).concat(year)
       : years.concat(year);
     setYears(nextYears);
-    window.localStorage.setItem(yearsStorageKey, JSON.stringify(nextYears));
+    void upsertClientStorageStateAction(yearsStorageKey, JSON.stringify(nextYears));
     setDialogOpen(false);
     openYear(year);
   };
@@ -288,8 +295,8 @@ export function PayrollSettingsEntry({ mode = 'admin', tenantId = null }: { mode
     if (!previous) return;
     const nextYears = years.map((item) => (item.id === previous.id ? year : item));
     setYears(nextYears);
-    window.localStorage.setItem(yearsStorageKey, JSON.stringify(nextYears));
-    moveYearStorage(previous.year, year.year, tenantStorageId);
+    void upsertClientStorageStateAction(yearsStorageKey, JSON.stringify(nextYears));
+    void moveYearStorage(storageStates, previous.year, year.year, tenantStorageId);
     setEditDialog({ open: false, year: null });
     openYear(year);
   };
@@ -299,12 +306,10 @@ export function PayrollSettingsEntry({ mode = 'admin', tenantId = null }: { mode
     if (!target) return;
     const nextYears = years.filter((item) => item.id !== target.id);
     setYears(nextYears);
-    window.localStorage.setItem(yearsStorageKey, JSON.stringify(nextYears));
-    removeYearStorage(target.year, tenantStorageId);
+    void upsertClientStorageStateAction(yearsStorageKey, JSON.stringify(nextYears));
+    void removeYearStorage(target.year, tenantStorageId);
     setDeleteDialog({ open: false, year: null });
   };
-
-  if (!loaded) return null;
 
   if (selectedYear) {
     return (
@@ -313,6 +318,7 @@ export function PayrollSettingsEntry({ mode = 'admin', tenantId = null }: { mode
         mode={mode}
         selectedYear={selectedYear}
         tenantId={tenantStorageId}
+        storageStates={storageStates}
         onBackToYears={() => router.push(listPath)}
       />
     );

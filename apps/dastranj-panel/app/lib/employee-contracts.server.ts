@@ -52,31 +52,34 @@ function contractRowToSummary(row: ContractRow): EmployeeCurrentContractSummary 
   };
 }
 
+function employeeContractTenantFilter(tenantId?: string | null) {
+  return tenantId != null ? { tenantId } : {};
+}
+
 async function queryCurrentEmployeeContractRows(employeeIds: string[], tenantId?: string | null) {
   if (!employeeIds.length) return [] as ContractRow[];
-  if (employeeIds.length === 1) {
-    const [employeeId] = employeeIds;
-    return prisma.$queryRaw<ContractRow[]>`
-      SELECT id, "employeeId", status::text AS status, "isCurrent", "startDate", "endDate", "contractNumber", "templateId", data, "finalizedAt"
-      FROM "EmployeeContract"
-      WHERE "employeeId" = ${employeeId}
-        AND "isCurrent" = true
-        AND status = 'active'
-        AND (${tenantId ?? null}::text IS NULL OR "tenantId" = ${tenantId ?? null})
-      ORDER BY "finalizedAt" DESC NULLS LAST, "updatedAt" DESC
-      LIMIT 1
-    `;
-  }
-  return prisma.$queryRaw<ContractRow[]>`
-    SELECT DISTINCT ON ("employeeId")
-      id, "employeeId", status::text AS status, "isCurrent", "startDate", "endDate", "contractNumber", "templateId", data, "finalizedAt"
-    FROM "EmployeeContract"
-    WHERE "employeeId" IN (${Prisma.join(employeeIds)})
-      AND "isCurrent" = true
-      AND status = 'active'
-      AND (${tenantId ?? null}::text IS NULL OR "tenantId" = ${tenantId ?? null})
-    ORDER BY "employeeId", "finalizedAt" DESC NULLS LAST, "updatedAt" DESC
-  `;
+
+  return prisma.employeeContract.findMany({
+    where: {
+      employeeId: { in: employeeIds },
+      isCurrent: true,
+      status: 'active',
+      ...employeeContractTenantFilter(tenantId),
+    },
+    orderBy: [{ employeeId: 'asc' }, { finalizedAt: 'desc' }, { updatedAt: 'desc' }],
+    select: {
+      id: true,
+      employeeId: true,
+      status: true,
+      isCurrent: true,
+      startDate: true,
+      endDate: true,
+      contractNumber: true,
+      templateId: true,
+      data: true,
+      finalizedAt: true,
+    },
+  });
 }
 
 export async function getCurrentEmployeeContract(employeeId: string, tenantId?: string | null) {

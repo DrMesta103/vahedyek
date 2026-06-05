@@ -13,8 +13,6 @@ const BUSINESS_STORAGE_PREFIXES = [
   'dastranj-employee-supplemental-profile-v1',
 ] as const;
 
-const CONTRACT_TEMPLATES_KEY = 'dastranj-contract-draft-templates-v1';
-
 function shouldPersistStorageKey(key: string) {
   return BUSINESS_STORAGE_PREFIXES.some((prefix) => key === prefix || key.startsWith(`${prefix}:`) || key.startsWith(`${prefix}-`));
 }
@@ -60,24 +58,11 @@ export function ClientStoragePersistenceBridge({ tenantId }: { tenantId: string 
       flushTimer = window.setTimeout(flush, 250);
     };
 
-    const mirrorTemplateCompatibilityKey = (storageKey: string, value: string) => {
-      if (!tenantId) return;
-      const scopedTemplatesKey = `${CONTRACT_TEMPLATES_KEY}:${tenantId}`;
-      if (storageKey === scopedTemplatesKey) {
-        originalSetItem.call(window.localStorage, CONTRACT_TEMPLATES_KEY, value);
-        queuePersist(CONTRACT_TEMPLATES_KEY, value);
-      } else if (storageKey === CONTRACT_TEMPLATES_KEY) {
-        originalSetItem.call(window.localStorage, scopedTemplatesKey, value);
-        queuePersist(scopedTemplatesKey, value);
-      }
-    };
-
     storagePrototype.setItem = function patchedSetItem(key: string, value: string) {
       const result = originalSetItem.call(this, key, value);
       if (this === window.localStorage && shouldPersistStorageKey(String(key))) {
         const storageKey = String(key);
         const stringValue = String(value);
-        mirrorTemplateCompatibilityKey(storageKey, stringValue);
         queuePersist(storageKey, stringValue);
       }
       return result;
@@ -87,10 +72,6 @@ export function ClientStoragePersistenceBridge({ tenantId }: { tenantId: string 
       const result = originalRemoveItem.call(this, key);
       if (this === window.localStorage && shouldPersistStorageKey(String(key))) {
         const storageKey = String(key);
-        if (tenantId && storageKey === `${CONTRACT_TEMPLATES_KEY}:${tenantId}`) {
-          originalRemoveItem.call(window.localStorage, CONTRACT_TEMPLATES_KEY);
-          void removeClientStorageStateAction(CONTRACT_TEMPLATES_KEY);
-        }
         pending.delete(storageKey);
         void removeClientStorageStateAction(storageKey);
       }
@@ -99,7 +80,11 @@ export function ClientStoragePersistenceBridge({ tenantId }: { tenantId: string 
 
     const initialEntries = listCurrentBusinessStorageEntries();
     if (initialEntries.length) {
-      void upsertClientStorageStatesAction(initialEntries);
+      void upsertClientStorageStatesAction(initialEntries).then(() => {
+        for (const entry of initialEntries) {
+          originalRemoveItem.call(window.localStorage, entry.storageKey);
+        }
+      });
     }
 
     const flushOnHidden = () => {

@@ -3,10 +3,11 @@
 import dynamic from 'next/dynamic';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Clock3, GitBranch, Hourglass, RefreshCw, Timer } from 'lucide-react';
 import { MinimalScroll } from '../../../../components/MinimalScroll';
 import type { CalendarShiftType } from '../../../../../lib/calendar-shifts';
 import type { ShiftTemplatePickerItem } from '../../../../../lib/shift-template-picker';
+import { RotateShiftComingSoonModal } from './RotateShiftComingSoonModal';
+import { SHIFT_TYPE_CARDS } from './shift-type-cards';
 import type { CalendarShiftDayContext, CalendarShiftWizardCalendar } from './types';
 
 const CalendarShiftWizard = dynamic(
@@ -20,56 +21,6 @@ const CalendarShiftWizard = dynamic(
     ),
   },
 );
-
-const SHIFT_TYPE_CARDS: Array<{
-  id: CalendarShiftType;
-  label: string;
-  icon: typeof Clock3;
-  tone: 'green' | 'blue' | 'cyan' | 'amber' | 'purple';
-  description: string;
-  example: string;
-}> = [
-  {
-    id: 'fixed',
-    label: 'شیفت ثابت',
-    icon: Clock3,
-    tone: 'green',
-    description: 'شیفت ثابت برای تیم‌هایی مناسب است که ساعت ورود و خروج مشخص و تکرارشونده دارند.',
-    example: 'مثال: ۸:۰۰ تا ۱۶:۳۰',
-  },
-  {
-    id: 'float-day',
-    label: 'شیفت شناور شروع روز',
-    icon: Hourglass,
-    tone: 'blue',
-    description: 'در این نوع شیفت، کارمند می‌تواند در یک بازه مشخص وارد شود، اما باید مدت کار موظف را کامل کند. ساعت خروج بر اساس زمان ورود واقعی محاسبه می‌شود.',
-    example: 'مثال: بازه ورود ۷:۰۰ تا ۹:۰۰، مدت کار موظف ۸ ساعت و ورود ۸:۳۰ با خروج ۱۶:۳۰.',
-  },
-  {
-    id: 'float-abs',
-    label: 'شیفت شناور مطلق',
-    icon: Timer,
-    tone: 'cyan',
-    description: 'برای تیم‌هایی که فقط مجموع زمان کار روزانه اهمیت دارد.',
-    example: '',
-  },
-  {
-    id: 'split',
-    label: 'شیفت دو تکه',
-    icon: GitBranch,
-    tone: 'amber',
-    description: 'وقتی ساعت کاری در دو بازه جدا از هم انجام می‌شود.',
-    example: '',
-  },
-  {
-    id: 'rotate',
-    label: 'شیفت چرخشی',
-    icon: RefreshCw,
-    tone: 'purple',
-    description: 'برای مجموعه‌هایی که الگوی شیفت بین افراد یا روزها جابه‌جا می‌شود.',
-    example: '',
-  },
-];
 
 type CreateWorkShiftDialogProps = {
   open: boolean;
@@ -302,29 +253,7 @@ export function CreateWorkShiftDialog({
         </div>
       ) : null}
 
-      {rotateComingSoonOpen ? (
-        <div className="fixed inset-0 z-[110] bg-black/65" onClick={() => setRotateComingSoonOpen(false)}>
-          <div
-            className="fixed left-1/2 top-1/2 z-[111] w-[min(100%-2rem,26rem)] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-white/10 bg-slate-900 p-5 text-right text-slate-100 shadow-2xl"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="text-lg font-black text-white">شیفت چرخشی</div>
-            <p className="mt-3 text-sm leading-7 text-slate-300">این قابلیت به‌زودی اضافه می‌شود.</p>
-            <p className="mt-2 text-xs leading-6 text-slate-400">
-              زیرساخت این بخش آماده است، اما تعریف و مدیریت شیفت‌های چرخشی در نسخه‌های بعدی فعال خواهد شد.
-            </p>
-            <div className="mt-6 flex justify-end">
-              <button
-                type="button"
-                onClick={() => setRotateComingSoonOpen(false)}
-                className="rounded-full bg-orange-500 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-orange-400"
-              >
-                متوجه شدم
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+      <RotateShiftComingSoonModal open={rotateComingSoonOpen} onClose={() => setRotateComingSoonOpen(false)} />
     </div>,
     document.body,
   );

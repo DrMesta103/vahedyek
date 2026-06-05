@@ -25,7 +25,14 @@ import {
   type StoredCalendarShift,
 } from './calendar-shifts';
 import { prisma } from './prisma';
-import type { QuickSetupStep } from '../(panel)/quick-setup/_components/quick-setup.types';
+import { listEmployeeImportJobsForTenant } from './employee-import-jobs';
+import { normalizeContractDraftTemplate, type ContractDraftTemplate } from './contract-draft-templates';
+import type {
+  QuickEmployeeAddMethod,
+  QuickEmployeeImportJobSummary,
+  QuickEmployeeStatus,
+  QuickSetupStep,
+} from '../(panel)/quick-setup/_components/quick-setup.types';
 
 type LocationListRow = {
   id: string;
@@ -90,6 +97,48 @@ async function listLocationsForTenant(tenantId: string, take?: number) {
 async function getTenantId(): Promise<string | null> {
   const session = await getSessionContext();
   return session?.tenantId ?? null;
+}
+
+const QUICK_EMPLOYEE_STATUSES: QuickEmployeeStatus[] = [
+  'registered',
+  'invite_sent',
+  'pending_completion',
+  'completed',
+  'active',
+  'failed_send',
+  'error',
+];
+
+const QUICK_EMPLOYEE_ADD_METHODS: QuickEmployeeAddMethod[] = [
+  'single',
+  'excel',
+  'invitation_link',
+  'email_invite',
+  'sms_invite',
+];
+
+function normalizeQuickEmployeeStatus(value: unknown): QuickEmployeeStatus | null {
+  return typeof value === 'string' && QUICK_EMPLOYEE_STATUSES.includes(value as QuickEmployeeStatus)
+    ? (value as QuickEmployeeStatus)
+    : null;
+}
+
+function normalizeQuickEmployeeAddMethod(value: unknown): QuickEmployeeAddMethod | null {
+  return typeof value === 'string' && QUICK_EMPLOYEE_ADD_METHODS.includes(value as QuickEmployeeAddMethod)
+    ? (value as QuickEmployeeAddMethod)
+    : null;
+}
+
+function deriveQuickEmployeeStatus(item: { isActive: boolean; email: string | null; mobile1: string | null }) {
+  if (!item.isActive) return 'pending_completion';
+  if (item.email || item.mobile1) return 'registered';
+  return 'error';
+}
+
+function formatEmployeeLastActionAt(value: Date | string | null | undefined) {
+  if (!value) return null;
+  if (typeof value === 'string') return value;
+  return value.toISOString();
 }
 
 async function getSelectTenantRedirectTarget() {
@@ -168,6 +217,7 @@ export async function getQuickSetupChecklist() {
     prisma.workGroup.count({ where }),
     getGlobalDefaultCalendarTemplate(),
   ]);
+  const employeeImportJobs = (await listEmployeeImportJobsForTenant(tenantId, 10)) as QuickEmployeeImportJobSummary[];
 
   const primaryLocation = locationList.find((item) => item.isPrimaryOnboarding) ?? null;
 
@@ -208,24 +258,43 @@ export async function getQuickSetupChecklist() {
       generatedPolicyDescription: String((item.sectionValues as { generatedPolicyDescription?: string } | null)?.generatedPolicyDescription ?? (item.description ?? '')),
       year: item.calendar?.yearLabel ?? '',
     })),
-    employeeItems: employeeList.map((item) => ({
-      id: item.id,
-      firstName: item.firstName,
-      lastName: item.lastName,
-      nationalId: item.nationalId ?? '',
-      contact: item.email
-        ? { type: 'email' as const, value: item.email }
-        : { type: 'phone' as const, value: item.mobile1 ?? '' },
-      avatarUrl: item.avatarUrl ?? undefined,
-    })),
+    employeeItems: employeeList.map((item) => {
+      const raw = item as unknown as Record<string, unknown>;
+      const addMethod =
+        normalizeQuickEmployeeAddMethod(raw.addMethod) ??
+        normalizeQuickEmployeeAddMethod(raw.creationMethod) ??
+        normalizeQuickEmployeeAddMethod(raw.source) ??
+        normalizeQuickEmployeeAddMethod(raw.quickSetupAddMethod) ??
+        'single';
+      const status =
+        normalizeQuickEmployeeStatus(raw.status) ??
+        normalizeQuickEmployeeStatus(raw.invitationStatus) ??
+        normalizeQuickEmployeeStatus(raw.onboardingStatus) ??
+        normalizeQuickEmployeeStatus(raw.quickSetupStatus) ??
+        deriveQuickEmployeeStatus(item);
+
+      return {
+        id: item.id,
+        firstName: item.firstName,
+        lastName: item.lastName,
+        email: item.email ?? null,
+        mobile: item.mobile1 ?? null,
+        status,
+        addMethod,
+        invitationStatus: typeof raw.quickSetupInvitationStatus === 'string' ? (raw.quickSetupInvitationStatus as 'sent' | 'failed') : undefined,
+        lastActionAt: formatEmployeeLastActionAt((raw.quickSetupLastActionAt as Date | string | null | undefined) ?? item.updatedAt ?? item.createdAt ?? null),
+        avatarUrl: item.avatarUrl ?? undefined,
+      };
+    }),
     workGroupItems: workGroupList.map((item) => ({ id: item.id, title: item.title })),
+    employeeImportJobs,
     defaultCalendarTemplate,
     tenantId,
     steps: [
       { key: 'location', title: 'محل کار اصلی', subtitle: 'ثبت محل کار اصلی و شعاع مجاز', done: Boolean(primaryLocation), href: '/locations/new', manageHref: '/locations', count: primaryLocation ? 1 : 0 },
       { key: 'calendar', title: 'تقویم کاری', subtitle: 'تقویم، تعطیلات و شیفت', done: calendars > 0, href: '/calendars?create=1', manageHref: '/calendars', count: calendars },
       { key: 'policy', title: 'سیاست‌های کاری', subtitle: 'قوانین حضور و غیاب', done: policies > 0, href: '/policies', manageHref: '/policies', count: policies },
-      { key: 'employee', title: 'مدیریت کارکنان', subtitle: 'ساخت پرونده پرسنلی', done: employees > 0, href: '/employees/new', manageHref: '/employees', count: employees },
+      { key: 'employee', title: 'مدیریت کارکنان', subtitle: 'ثبت و دعوت اولیه کارکنان', done: employees > 0, href: '/employees/new', manageHref: '/employees', count: employees },
       { key: 'work-group', title: 'گروه‌های کاری', subtitle: 'اتصال افراد، محل و سیاست', done: workGroups > 0, href: '/work-groups/new', manageHref: '/work-groups', count: workGroups },
     ] satisfies QuickSetupStep[],
   };
@@ -561,12 +630,42 @@ export async function getWorkGroup(id: string) {
   });
 }
 
-export async function listDraftTemplates() {
-  const tenantId = await requireTenantId();
-  return prisma.draftTemplate.findMany({ where: { tenantId }, orderBy: { updatedAt: 'desc' } });
+function parseDraftTemplateBody(body: string | null | undefined): ContractDraftTemplate | null {
+  if (!body) return null;
+  try {
+    return normalizeContractDraftTemplate(JSON.parse(body));
+  } catch {
+    return null;
+  }
 }
 
-export async function getDraftTemplate(id: string) {
+export async function listDraftTemplates(): Promise<ContractDraftTemplate[]> {
   const tenantId = await requireTenantId();
-  return prisma.draftTemplate.findFirst({ where: { id, tenantId } });
+  const rows = await prisma.draftTemplate.findMany({ where: { tenantId }, orderBy: { updatedAt: 'desc' } });
+  return rows.map((row) => parseDraftTemplateBody(row.body) ?? normalizeContractDraftTemplate({
+    id: row.id,
+    name: row.title,
+    usageType: 'payroll_attendance',
+    baseSettingsYear: new Date(row.createdAt).getFullYear(),
+    baseSettingsId: '',
+    status: 'draft',
+    createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
+    stepsProgress: {
+      openedStepIds: [],
+      completedStepIds: [],
+      currentStepId: 'classification',
+      dirtyStepIds: [],
+      savedStepIds: [],
+    },
+    data: {},
+  }))
+    .filter((item): item is ContractDraftTemplate => Boolean(item));
+}
+
+export async function getDraftTemplate(id: string): Promise<ContractDraftTemplate | null> {
+  const tenantId = await requireTenantId();
+  const row = await prisma.draftTemplate.findFirst({ where: { id, tenantId } });
+  if (!row) return null;
+  return parseDraftTemplateBody(row.body) ?? null;
 }

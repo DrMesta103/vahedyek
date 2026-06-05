@@ -88,6 +88,16 @@ function SelectTenantPageContent() {
   });
 
   useEffect(() => {
+    document.documentElement.classList.add('tenant-select-route');
+    document.body.classList.add('tenant-select-route');
+
+    return () => {
+      document.documentElement.classList.remove('tenant-select-route');
+      document.body.classList.remove('tenant-select-route');
+    };
+  }, []);
+
+  useEffect(() => {
     let mounted = true;
 
     const load = async () => {
@@ -222,221 +232,237 @@ function SelectTenantPageContent() {
             </div>
 
             {step === 'list' ? (
-              <div className="tenant-select-stack">
-                <div className="tenant-select-list">
-                  {tenants.map((tenant) => (
-                    <button
-                      key={tenant.id}
-                      type="button"
-                      onClick={() => selectTenant(tenant.id)}
-                      disabled={selecting === tenant.id}
-                      className="tenant-card tenant-select-item"
-                    >
-                      <div className="tenant-avatar tenant-select-avatar">{tenant.brandCode}</div>
-                      <div className="tenant-select-copy">
-                        <div className="tenant-select-item-title">{tenant.name}</div>
-                        <div className="tenant-select-item-subtitle">{tenant.slug}</div>
-                      </div>
-                      <div className="tenant-select-item-meta">
-                        {selecting === tenant.id ? 'در حال ورود...' : <i className="fa fa-chevron-left" />}
-                      </div>
-                    </button>
-                  ))}
+              <div className="tenant-select-step">
+                <div className="tenant-select-step-body">
+                  <div className="tenant-select-list">
+                    {tenants.map((tenant) => (
+                      <button
+                        key={tenant.id}
+                        type="button"
+                        onClick={() => selectTenant(tenant.id)}
+                        disabled={selecting === tenant.id}
+                        className="tenant-card tenant-select-item"
+                      >
+                        <div className="tenant-avatar tenant-select-avatar">{tenant.brandCode}</div>
+                        <div className="tenant-select-copy">
+                          <div className="tenant-select-item-title">{tenant.name}</div>
+                          <div className="tenant-select-item-subtitle">{tenant.slug}</div>
+                        </div>
+                        <div className="tenant-select-item-meta">
+                          {selecting === tenant.id ? 'در حال ورود...' : <i className="fa fa-chevron-left" />}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    setCreateError('');
-                    setStep('packages');
-                  }}
-                  className="tenant-create-btn tenant-select-create"
-                >
-                  <i className="fa fa-plus" />
-                  ساخت کسب‌وکار جدید
-                </button>
+                <div className="tenant-select-step-footer">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCreateError('');
+                      setStep('packages');
+                    }}
+                    className="tenant-create-btn tenant-select-create"
+                  >
+                    <i className="fa fa-plus" />
+                    ساخت کسب‌وکار جدید
+                  </button>
+                </div>
               </div>
             ) : null}
 
             {step === 'packages' ? (
-              <div className="tenant-select-stack">
-                <div className="tenant-select-switch">
-                  {(['monthly', 'yearly'] as BillingCycle[]).map((cycle) => (
-                    <button
-                      key={cycle}
-                      type="button"
-                      onClick={() => setBillingCycle(cycle)}
-                      className={`tenant-select-switch-btn${billingCycle === cycle ? ' is-active' : ''}`}
-                    >
-                      {cycle === 'monthly' ? 'ماهانه' : 'سالانه'}
-                    </button>
-                  ))}
-                </div>
+              <div className="tenant-select-step">
+                <div className="tenant-select-step-body">
+                  <div className="tenant-select-switch">
+                    {(['monthly', 'yearly'] as BillingCycle[]).map((cycle) => (
+                      <button
+                        key={cycle}
+                        type="button"
+                        onClick={() => setBillingCycle(cycle)}
+                        className={`tenant-select-switch-btn${billingCycle === cycle ? ' is-active' : ''}`}
+                      >
+                        {cycle === 'monthly' ? 'ماهانه' : 'سالانه'}
+                      </button>
+                    ))}
+                  </div>
 
-                <div className="tenant-select-packages">
-                  {PACKAGE_OPTIONS.map((pkg) => (
-                    <button
-                      key={pkg.id}
-                      type="button"
-                      onClick={() => setSelectedPackageId(pkg.id)}
-                      className={`tenant-select-package${selectedPackageId === pkg.id ? ' is-selected' : ''}`}
-                    >
-                      <div className="tenant-select-package-head">
-                        <div>
-                          <div className="tenant-select-item-title">{pkg.title}</div>
-                          <div className="tenant-select-muted tenant-select-package-desc">{pkg.description}</div>
+                  <div className="tenant-select-packages">
+                    {PACKAGE_OPTIONS.map((pkg) => (
+                      <button
+                        key={pkg.id}
+                        type="button"
+                        onClick={() => setSelectedPackageId(pkg.id)}
+                        className={`tenant-select-package${selectedPackageId === pkg.id ? ' is-selected' : ''}`}
+                      >
+                        <div className="tenant-select-package-head">
+                          <div>
+                            <div className="tenant-select-item-title">{pkg.title}</div>
+                            <div className="tenant-select-muted tenant-select-package-desc">{pkg.description}</div>
+                          </div>
+                          <div className="tenant-select-package-price">
+                            {billingCycle === 'monthly' ? pkg.monthlyPrice : pkg.yearlyPrice}
+                          </div>
                         </div>
-                        <div className="tenant-select-package-price">
-                          {billingCycle === 'monthly' ? pkg.monthlyPrice : pkg.yearlyPrice}
+                        <div className="tenant-select-tags">
+                          {pkg.features.map((feature) => (
+                            <span key={feature} className="tenant-select-tag">
+                              {feature}
+                            </span>
+                          ))}
                         </div>
-                      </div>
-                      <div className="tenant-select-tags">
-                        {pkg.features.map((feature) => (
-                          <span key={feature} className="tenant-select-tag">
-                            {feature}
-                          </span>
-                        ))}
-                      </div>
-                    </button>
-                  ))}
-                </div>
-
-                <button type="button" onClick={() => setStep('profile')} className="auth-btn tenant-select-next-btn">
-                  ادامه
-                </button>
-              </div>
-            ) : null}
-
-            {step === 'profile' ? (
-              <div className="tenant-select-stack">
-                <div className="tenant-select-profile">
-                  <label className="auth-field">
-                    <span>شماره موبایل</span>
-                    <input value={user?.mobile ?? ''} disabled dir="ltr" />
-                  </label>
-
-                  <label className="auth-field">
-                    <span>نام</span>
-                    <input value={user?.firstName ?? ''} disabled />
-                  </label>
-
-                  <label className="auth-field">
-                    <span>نام خانوادگی</span>
-                    <input value={user?.lastName ?? ''} disabled />
-                  </label>
-
-                  <label className="auth-field tenant-select-business">
-                    <span>نام کسب‌وکار</span>
-                    <input
-                      value={businessName}
-                      onChange={(e) => setBusinessName(e.target.value)}
-                      placeholder="نام کسب‌وکار را وارد کنید"
-                    />
-                  </label>
-
-                  <div className="tenant-select-history">
-                    <div className="tenant-select-history-head">
-                      <span>نام‌های قبلی</span>
-                      <span>{recentBusinessNames.length ? `${recentBusinessNames.length} مورد` : 'بدون داده'}</span>
-                    </div>
-                    <div className="tenant-select-suggestions">
-                      {(visibleSuggestions.length ? visibleSuggestions : recentBusinessNames).map((item) => (
-                        <button key={item} type="button" onClick={() => setBusinessName(item)} className="tenant-select-suggestion">
-                          {item}
-                        </button>
-                      ))}
-                    </div>
+                      </button>
+                    ))}
                   </div>
                 </div>
 
-                {createError ? <div className="auth-alert auth-alert-error">{createError}</div> : null}
-
-                <div className="tenant-select-actions">
-                  <button type="button" onClick={() => setStep('packages')} className="tenant-select-back">
-                    بازگشت
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (!businessName.trim()) {
-                        setCreateError('نام کسب‌وکار الزامی است.');
-                        return;
-                      }
-                      setCreateError('');
-                      setStep('payment');
-                    }}
-                    className="auth-btn tenant-select-next-btn"
-                  >
+                <div className="tenant-select-step-footer">
+                  <button type="button" onClick={() => setStep('profile')} className="auth-btn tenant-select-next-btn">
                     ادامه
                   </button>
                 </div>
               </div>
             ) : null}
 
-            {step === 'payment' ? (
-              <form onSubmit={createTenant} className="tenant-select-stack">
-                <div className="tenant-select-summary">
-                  <div className="tenant-select-muted">مبلغ قابل پرداخت</div>
-                  <div className="tenant-select-summary-price">
-                    {billingCycle === 'monthly' ? selectedPackage.monthlyPrice : selectedPackage.yearlyPrice}
+            {step === 'profile' ? (
+              <div className="tenant-select-step">
+                <div className="tenant-select-step-body">
+                  <div className="tenant-select-profile">
+                    <label className="auth-field">
+                      <span>شماره موبایل</span>
+                      <input value={user?.mobile ?? ''} disabled dir="ltr" />
+                    </label>
+
+                    <label className="auth-field">
+                      <span>نام</span>
+                      <input value={user?.firstName ?? ''} disabled />
+                    </label>
+
+                    <label className="auth-field">
+                      <span>نام خانوادگی</span>
+                      <input value={user?.lastName ?? ''} disabled />
+                    </label>
+
+                    <label className="auth-field tenant-select-business">
+                      <span>نام کسب‌وکار</span>
+                      <input
+                        value={businessName}
+                        onChange={(e) => setBusinessName(e.target.value)}
+                        placeholder="نام کسب‌وکار را وارد کنید"
+                      />
+                    </label>
+
+                    <div className="tenant-select-history">
+                      <div className="tenant-select-history-head">
+                        <span>نام‌های قبلی</span>
+                        <span>{recentBusinessNames.length ? `${recentBusinessNames.length} مورد` : 'بدون داده'}</span>
+                      </div>
+                      <div className="tenant-select-suggestions">
+                        {(visibleSuggestions.length ? visibleSuggestions : recentBusinessNames).map((item) => (
+                          <button key={item} type="button" onClick={() => setBusinessName(item)} className="tenant-select-suggestion">
+                            {item}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   </div>
-                  <div className="tenant-select-muted">
-                    {selectedPackage.title} - {billingCycle === 'monthly' ? 'ماهانه' : 'سالانه'}
-                  </div>
+
+                  {createError ? <div className="auth-alert auth-alert-error">{createError}</div> : null}
                 </div>
 
-                <label className="auth-field">
-                  <span>شماره کارت</span>
-                  <input
-                    value={paymentForm.cardNumber}
-                    onChange={(e) => setPaymentForm((current) => ({ ...current, cardNumber: e.target.value.replace(/\D/g, '').slice(0, 16) }))}
-                    placeholder="6219861034567890"
-                    dir="ltr"
-                    inputMode="numeric"
-                  />
-                </label>
+                <div className="tenant-select-step-footer">
+                  <div className="tenant-select-actions">
+                    <button type="button" onClick={() => setStep('packages')} className="tenant-select-back">
+                      بازگشت
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!businessName.trim()) {
+                          setCreateError('نام کسب‌وکار الزامی است.');
+                          return;
+                        }
+                        setCreateError('');
+                        setStep('payment');
+                      }}
+                      className="auth-btn tenant-select-next-btn"
+                    >
+                      ادامه
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : null}
 
-                <label className="auth-field">
-                  <span>نام دارنده کارت</span>
-                  <input
-                    value={paymentForm.cardHolder}
-                    onChange={(e) => setPaymentForm((current) => ({ ...current, cardHolder: e.target.value }))}
-                    placeholder={user?.fullName ?? 'نام و نام خانوادگی'}
-                  />
-                </label>
+            {step === 'payment' ? (
+              <form onSubmit={createTenant} className="tenant-select-step">
+                <div className="tenant-select-step-body">
+                  <div className="tenant-select-summary">
+                    <div className="tenant-select-muted">مبلغ قابل پرداخت</div>
+                    <div className="tenant-select-summary-price">
+                      {billingCycle === 'monthly' ? selectedPackage.monthlyPrice : selectedPackage.yearlyPrice}
+                    </div>
+                    <div className="tenant-select-muted">
+                      {selectedPackage.title} - {billingCycle === 'monthly' ? 'ماهانه' : 'سالانه'}
+                    </div>
+                  </div>
 
-                <div className="tenant-select-grid-two">
                   <label className="auth-field">
-                    <span>تاریخ انقضا</span>
+                    <span>شماره کارت</span>
                     <input
-                      value={paymentForm.expiry}
-                      onChange={(e) => setPaymentForm((current) => ({ ...current, expiry: e.target.value.slice(0, 5) }))}
-                      placeholder="08/06"
-                      dir="ltr"
-                    />
-                  </label>
-
-                  <label className="auth-field">
-                    <span>CVV2</span>
-                    <input
-                      value={paymentForm.cvv2}
-                      onChange={(e) => setPaymentForm((current) => ({ ...current, cvv2: e.target.value.replace(/\D/g, '').slice(0, 4) }))}
-                      placeholder="123"
+                      value={paymentForm.cardNumber}
+                      onChange={(e) => setPaymentForm((current) => ({ ...current, cardNumber: e.target.value.replace(/\D/g, '').slice(0, 16) }))}
+                      placeholder="6219861034567890"
                       dir="ltr"
                       inputMode="numeric"
                     />
                   </label>
+
+                  <label className="auth-field">
+                    <span>نام دارنده کارت</span>
+                    <input
+                      value={paymentForm.cardHolder}
+                      onChange={(e) => setPaymentForm((current) => ({ ...current, cardHolder: e.target.value }))}
+                      placeholder={user?.fullName ?? 'نام و نام خانوادگی'}
+                    />
+                  </label>
+
+                  <div className="tenant-select-grid-two">
+                    <label className="auth-field">
+                      <span>تاریخ انقضا</span>
+                      <input
+                        value={paymentForm.expiry}
+                        onChange={(e) => setPaymentForm((current) => ({ ...current, expiry: e.target.value.slice(0, 5) }))}
+                        placeholder="08/06"
+                        dir="ltr"
+                      />
+                    </label>
+
+                    <label className="auth-field">
+                      <span>CVV2</span>
+                      <input
+                        value={paymentForm.cvv2}
+                        onChange={(e) => setPaymentForm((current) => ({ ...current, cvv2: e.target.value.replace(/\D/g, '').slice(0, 4) }))}
+                        placeholder="123"
+                        dir="ltr"
+                        inputMode="numeric"
+                      />
+                    </label>
+                  </div>
+
+                  {createError ? <div className="auth-alert auth-alert-error">{createError}</div> : null}
                 </div>
 
-                {createError ? <div className="auth-alert auth-alert-error">{createError}</div> : null}
-
-                <div className="tenant-select-actions">
-                  <button type="button" onClick={() => setStep('profile')} className="tenant-select-back">
-                    بازگشت
-                  </button>
-                  <button type="submit" disabled={creating} className="auth-btn tenant-select-next-btn">
-                    {creating ? 'در حال ساخت...' : 'پرداخت و ساخت tenant'}
-                  </button>
+                <div className="tenant-select-step-footer">
+                  <div className="tenant-select-actions">
+                    <button type="button" onClick={() => setStep('profile')} className="tenant-select-back">
+                      بازگشت
+                    </button>
+                    <button type="submit" disabled={creating} className="auth-btn tenant-select-next-btn">
+                      {creating ? 'در حال ساخت...' : 'پرداخت و ساخت tenant'}
+                    </button>
+                  </div>
                 </div>
               </form>
             ) : null}

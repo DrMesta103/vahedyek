@@ -85,8 +85,6 @@ export async function persistProfileStore(store: ProfileStore, owner?: Partial<P
 }
 
 export async function persistProfilePayload(store: ProfileStore, owner?: Partial<ProfileMeta['owner']>) {
-  saveProfileStore(store);
-
   const response = await fetch(PROFILE_API_ENDPOINT, {
     method: 'PUT',
     credentials: 'same-origin',

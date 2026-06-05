@@ -12,6 +12,7 @@ import {
   toWorkplaceLocationDraft,
   validateWorkplaceLocationDraft,
 } from '../../../lib/workplace-location';
+import { mockAddressFromMapPick, WORKPLACE_LOCATION_FIELD_TOOLTIPS } from '../../../lib/workplace-location-ui';
 import type { LocationSummaryItem } from './quick-setup.types';
 
 type Step1LocationProps = {
@@ -176,6 +177,15 @@ export default forwardRef<Step1LocationHandle, Step1LocationProps>(function Step
     window.setTimeout(() => setMapStatus('ready'), 220);
   };
 
+  const handlePickCoordinates = ({ latitude: nextLatitude, longitude: nextLongitude }: { latitude: number; longitude: number }) => {
+    setGeolocationDenied(false);
+    setLatitude(String(nextLatitude));
+    setLongitude(String(nextLongitude));
+    setAddress(mockAddressFromMapPick(nextLatitude, nextLongitude));
+    clearError('latitude');
+    clearError('address');
+  };
+
   const saveLocation = async (advance: boolean) => {
     const validation = validateWorkplaceLocationDraft(currentDraft);
     setErrors(validation.valid ? {} : validation.errors);
@@ -264,19 +274,6 @@ export default forwardRef<Step1LocationHandle, Step1LocationProps>(function Step
             <h2>محل کار اصلی را تعریف کنید</h2>
             <p>این محل برای کنترل ثبت ورود و خروج موبایلی کارکنان استفاده می‌شود.</p>
           </div>
-          <button
-            type="button"
-            className="quick-setup-exit"
-            onClick={() => {
-              if (hasUnsavedChanges) {
-                setExitOpen(true);
-                return;
-              }
-              router.push('/business-settings');
-            }}
-          >
-            خروج موقت از راه‌اندازی
-          </button>
         </div>
 
         <div className="quick-setup-stage-body">
@@ -291,6 +288,19 @@ export default forwardRef<Step1LocationHandle, Step1LocationProps>(function Step
           </div>
 
           <div className="quick-setup-location-layout">
+            <div className="quick-setup-map-panel">
+              <WorkplaceLocationPicker
+                latitude={latitude}
+                longitude={longitude}
+                radius={Number(radius) || WORKPLACE_LOCATION_DEFAULT_RADIUS}
+                status={mapStatus}
+                geolocationDenied={geolocationDenied}
+                onPickCoordinates={handlePickCoordinates}
+                onUseCurrentLocation={handleUseCurrentLocation}
+                onRetryMap={handleMapRetry}
+              />
+            </div>
+
             <div className="quick-setup-location-form">
               <label className="quick-setup-field">
                 <span><b>*</b> عنوان محل کار</span>
@@ -302,6 +312,7 @@ export default forwardRef<Step1LocationHandle, Step1LocationProps>(function Step
                   }}
                   aria-invalid={Boolean(errors.title)}
                 />
+                <small className="quick-setup-field-hint">{WORKPLACE_LOCATION_FIELD_TOOLTIPS.title}</small>
                 {errors.title ? <small className="quick-setup-field-error">{errors.title}</small> : null}
               </label>
 
@@ -315,6 +326,7 @@ export default forwardRef<Step1LocationHandle, Step1LocationProps>(function Step
                   }}
                   aria-invalid={Boolean(errors.address)}
                 />
+                <small className="quick-setup-field-hint">{WORKPLACE_LOCATION_FIELD_TOOLTIPS.address}</small>
                 {errors.address ? <small className="quick-setup-field-error">{errors.address}</small> : null}
               </label>
 
@@ -326,6 +338,7 @@ export default forwardRef<Step1LocationHandle, Step1LocationProps>(function Step
                   rows={4}
                   className="quick-setup-textarea"
                 />
+                <small className="quick-setup-field-hint">{WORKPLACE_LOCATION_FIELD_TOOLTIPS.description}</small>
               </label>
 
               <div className="quick-setup-field">
@@ -366,6 +379,7 @@ export default forwardRef<Step1LocationHandle, Step1LocationProps>(function Step
                   inputMode="numeric"
                   aria-invalid={Boolean(errors.radius)}
                 />
+                <small className="quick-setup-field-hint">{WORKPLACE_LOCATION_FIELD_TOOLTIPS.radius}</small>
                 {errors.radius ? <small className="quick-setup-field-error">{errors.radius}</small> : null}
                 {Number(radius) > 50 ? <small className="quick-setup-warning">شعاع زیاد ممکن است دقت کنترل تردد را کاهش دهد.</small> : null}
               </div>
@@ -379,6 +393,7 @@ export default forwardRef<Step1LocationHandle, Step1LocationProps>(function Step
                     <strong>هنوز نقطه‌ای روی نقشه انتخاب نشده است.</strong>
                   )}
                 </div>
+                <small className="quick-setup-field-hint">{WORKPLACE_LOCATION_FIELD_TOOLTIPS.coordinates}</small>
                 {errors.latitude ? <small className="quick-setup-field-error">{errors.latitude}</small> : null}
               </div>
 
@@ -395,24 +410,6 @@ export default forwardRef<Step1LocationHandle, Step1LocationProps>(function Step
                 </div>
               ) : null}
             </div>
-
-            <div className="quick-setup-map-panel">
-                <WorkplaceLocationPicker
-                latitude={latitude}
-                longitude={longitude}
-                radius={Number(radius) || WORKPLACE_LOCATION_DEFAULT_RADIUS}
-                status={mapStatus}
-                geolocationDenied={geolocationDenied}
-                onPickCoordinates={({ latitude: nextLatitude, longitude: nextLongitude }) => {
-                  setGeolocationDenied(false);
-                  setLatitude(String(nextLatitude));
-                  setLongitude(String(nextLongitude));
-                  clearError('latitude');
-                }}
-                onUseCurrentLocation={handleUseCurrentLocation}
-                onRetryMap={handleMapRetry}
-              />
-            </div>
           </div>
         </div>
 
@@ -422,7 +419,7 @@ export default forwardRef<Step1LocationHandle, Step1LocationProps>(function Step
           </button>
           <button
             type="button"
-            className="quick-setup-primary-action"
+            className="quick-setup-indigo-action"
             onClick={async () => {
               await saveLocation(true);
             }}
@@ -443,7 +440,7 @@ export default forwardRef<Step1LocationHandle, Step1LocationProps>(function Step
             <div className="unsaved-guard-actions">
               <button
                 type="button"
-                className="quick-setup-primary-action"
+                className="quick-setup-indigo-action"
                 onClick={async () => {
                   const saved = await saveLocation(false);
                   if (!saved) return;

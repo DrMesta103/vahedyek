@@ -1,6 +1,7 @@
 import {
   DEFAULT_PAYROLL_SETTINGS,
   DEFAULT_FIXED_BENEFIT_RULES,
+  DEFAULT_SENIORITY_BENEFIT_RULES,
   DEFAULT_OPTIONAL_ADDITION_RULES,
   DEFAULT_OPTIONAL_DEDUCTION_RULES,
   getActiveTenantStorageId,
@@ -254,15 +255,6 @@ export type EmployeeContractDraftTemplateChoice = {
 
 export const EMPLOYEE_CONTRACT_DRAFTS_STORAGE_KEY = 'dastranj-employee-contract-drafts-v1';
 export const EMPLOYEE_SUPPLEMENTAL_PROFILE_STORAGE_KEY = 'dastranj-employee-supplemental-profile-v1';
-
-function getBrowserLocalStorage() {
-  if (typeof window === 'undefined') return null;
-  try {
-    return window.localStorage;
-  } catch {
-    return null;
-  }
-}
 
 function scopeStorageKey(key: string, tenantId?: string | null) {
   const scope = tenantId ?? getActiveTenantStorageId();
@@ -620,7 +612,7 @@ export function buildTemplateSnapshot(
       housingAllowance: normalizeCalculationRules(template.data.benefits.housingAllowance.calculationRules, baseSettings.benefitRules.housingAllowance),
       childAllowance: normalizeCalculationRules(template.data.benefits.childAllowance.calculationRules, baseSettings.benefitRules.childAllowance),
       marriageAllowance: normalizeCalculationRules(template.data.benefits.marriageAllowance.calculationRules, baseSettings.benefitRules.marriageAllowance),
-      seniorityAllowance: normalizeCalculationRules(template.data.benefits.seniorityAllowance.calculationRules, baseSettings.benefitRules.seniorityAllowance),
+      seniorityAllowance: normalizeCalculationRules(template.data.benefits.seniorityAllowance.calculationRules, baseSettings.benefitRules.seniorityAllowance ?? DEFAULT_SENIORITY_BENEFIT_RULES),
     },
     benefitsEnd: {
       eidBonus: {
@@ -694,7 +686,7 @@ export function normalizeEmployeeContractDraft(value: unknown): EmployeeContract
             housingAllowance: normalizeCalculationRules(draft.templateSnapshot.benefitRules?.housingAllowance, DEFAULT_FIXED_BENEFIT_RULES),
             childAllowance: normalizeCalculationRules(draft.templateSnapshot.benefitRules?.childAllowance, DEFAULT_FIXED_BENEFIT_RULES),
             marriageAllowance: normalizeCalculationRules(draft.templateSnapshot.benefitRules?.marriageAllowance, DEFAULT_FIXED_BENEFIT_RULES),
-            seniorityAllowance: normalizeCalculationRules(draft.templateSnapshot.benefitRules?.seniorityAllowance, DEFAULT_FIXED_BENEFIT_RULES),
+            seniorityAllowance: normalizeCalculationRules(draft.templateSnapshot.benefitRules?.seniorityAllowance, DEFAULT_SENIORITY_BENEFIT_RULES),
           },
           paymentSchedule: normalizePaymentSchedule(
             draft.templateSnapshot.paymentSchedule ?? draft.templateSnapshot.paymentType,
@@ -776,7 +768,7 @@ export function normalizeEmployeeContractDraft(value: unknown): EmployeeContract
       housingAllowance: normalizeBenefitState(draft.benefits?.housingAllowance, baseSettings.benefits.housingAllowance, baseSettings.benefitRules?.housingAllowance ?? DEFAULT_FIXED_BENEFIT_RULES),
       childAllowance: normalizeBenefitState(draft.benefits?.childAllowance, baseSettings.benefits.childAllowance, baseSettings.benefitRules?.childAllowance ?? DEFAULT_FIXED_BENEFIT_RULES),
       marriageAllowance: normalizeBenefitState(draft.benefits?.marriageAllowance, baseSettings.benefits.marriageAllowance, baseSettings.benefitRules?.marriageAllowance ?? DEFAULT_FIXED_BENEFIT_RULES),
-      seniorityAllowance: normalizeBenefitState(draft.benefits?.seniorityAllowance, baseSettings.benefits.seniorityAllowance, baseSettings.benefitRules?.seniorityAllowance ?? DEFAULT_FIXED_BENEFIT_RULES),
+      seniorityAllowance: normalizeBenefitState(draft.benefits?.seniorityAllowance, baseSettings.benefits.seniorityAllowance, baseSettings.benefitRules?.seniorityAllowance ?? DEFAULT_SENIORITY_BENEFIT_RULES),
     },
     benefitsEnd: draft.benefitsEnd,
     variablePayments: draft.variablePayments,
@@ -886,7 +878,7 @@ export function createInitialEmployeeContractDraft({
       housingAllowance: { enabled: true, amount: snapshot?.benefits.housingAllowance ?? resolvedBase.benefits.housingAllowance, calculationRules: { ...(resolvedBase.benefitRules?.housingAllowance ?? DEFAULT_FIXED_BENEFIT_RULES) } },
       childAllowance: { enabled: true, amount: snapshot?.benefits.childAllowance ?? resolvedBase.benefits.childAllowance, calculationRules: { ...(resolvedBase.benefitRules?.childAllowance ?? DEFAULT_FIXED_BENEFIT_RULES) } },
       marriageAllowance: { enabled: true, amount: snapshot?.benefits.marriageAllowance ?? resolvedBase.benefits.marriageAllowance, calculationRules: { ...(resolvedBase.benefitRules?.marriageAllowance ?? DEFAULT_FIXED_BENEFIT_RULES) } },
-      seniorityAllowance: { enabled: true, amount: snapshot?.benefits.seniorityAllowance ?? resolvedBase.benefits.seniorityAllowance, calculationRules: { ...(resolvedBase.benefitRules?.seniorityAllowance ?? DEFAULT_FIXED_BENEFIT_RULES) } },
+      seniorityAllowance: { enabled: true, amount: snapshot?.benefits.seniorityAllowance ?? resolvedBase.benefits.seniorityAllowance, calculationRules: { ...(resolvedBase.benefitRules?.seniorityAllowance ?? DEFAULT_SENIORITY_BENEFIT_RULES) } },
     },
     benefitsEnd: snapshot?.benefitsEnd,
     variablePayments: snapshot?.variablePayments,
@@ -932,55 +924,4 @@ export function getEmployeeDraftsByEmployeeId(drafts: EmployeeContractDraft[], e
 
 export function findEmployeeDraft(drafts: EmployeeContractDraft[], employeeId: string, draftId: string) {
   return drafts.find((draft) => draft.employeeId === employeeId && draft.id === draftId) ?? null;
-}
-
-export function persistEmployeeDrafts(drafts: EmployeeContractDraft[], tenantId?: string | null) {
-  const storage = getBrowserLocalStorage();
-  if (!storage) return;
-  storage.setItem(getEmployeeContractDraftsStorageKey(tenantId), JSON.stringify(drafts));
-}
-
-export function readEmployeeDrafts(tenantId?: string | null) {
-  const storage = getBrowserLocalStorage();
-  if (!storage) return [];
-  return getEmployeeDraftsFromStorage(storage.getItem(getEmployeeContractDraftsStorageKey(tenantId)));
-}
-
-export function readEmployeeSupplementalProfiles(tenantId?: string | null): Record<string, EmployeeSupplementalProfile> {
-  const storage = getBrowserLocalStorage();
-  if (!storage) return {};
-
-  const raw = storage.getItem(getEmployeeSupplementalStorageKey(tenantId));
-  if (!raw) return {};
-  try {
-    const parsed = JSON.parse(raw) as unknown;
-    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {};
-    return Object.entries(parsed as Record<string, unknown>).reduce<Record<string, EmployeeSupplementalProfile>>((result, [key, value]) => {
-      result[key] = normalizeEmployeeSupplementalProfile(value);
-      return result;
-    }, {});
-  } catch {
-    storage.removeItem(getEmployeeSupplementalStorageKey(tenantId));
-    return {};
-  }
-}
-
-export function persistEmployeeSupplementalProfiles(profiles: Record<string, EmployeeSupplementalProfile>, tenantId?: string | null) {
-  const storage = getBrowserLocalStorage();
-  if (!storage) return;
-  storage.setItem(getEmployeeSupplementalStorageKey(tenantId), JSON.stringify(profiles));
-}
-
-export function readBaseSettingsByTemplate(template: ContractDraftTemplate | null | undefined) {
-  if (!template) return DEFAULT_PAYROLL_SETTINGS;
-  const storage = getBrowserLocalStorage();
-  if (!storage) return DEFAULT_PAYROLL_SETTINGS;
-
-  const raw = storage.getItem(getPayrollSettingsStorageKey(template.baseSettingsYear, getActiveTenantStorageId()));
-  if (!raw) return DEFAULT_PAYROLL_SETTINGS;
-  try {
-    return normalizePayrollSettings(JSON.parse(raw));
-  } catch {
-    return DEFAULT_PAYROLL_SETTINGS;
-  }
 }

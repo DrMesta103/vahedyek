@@ -11,6 +11,7 @@ import {
   templateTypeToCalendarShiftType,
   type ShiftTemplateCategory,
 } from '../../../lib/shift-template-map';
+import { RotateShiftComingSoonModal } from '../../calendars/[calendarId]/_components/shift/RotateShiftComingSoonModal';
 import { CreateShiftTemplateDialog } from './CreateShiftTemplateDialog';
 import { ShiftTemplateCard, type ShiftTemplateListItem } from './ShiftTemplateCard';
 
@@ -49,6 +50,8 @@ function ShiftTemplatesPageClientInner({ items }: ShiftTemplatesPageClientProps)
   const searchParams = useSearchParams();
   const [activeCategory, setActiveCategory] = useState<ShiftTemplateCategory>('fixed');
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [createDialogInitialType, setCreateDialogInitialType] = useState<ShiftTemplateCategory | null>(null);
+  const [rotateComingSoonOpen, setRotateComingSoonOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   const normalizedItems = useMemo(() => normalizeItems(items), [items]);
@@ -62,10 +65,18 @@ function ShiftTemplatesPageClientInner({ items }: ShiftTemplatesPageClientProps)
     });
   }, [activeCategory, normalizedItems, searchQuery]);
 
-  const openCreateDialog = () => setCreateDialogOpen(true);
+  const openCreateDialog = (preferredType: ShiftTemplateCategory | null = null) => {
+    if (preferredType === 'rotate') {
+      setRotateComingSoonOpen(true);
+      return;
+    }
+    setCreateDialogInitialType(preferredType);
+    setCreateDialogOpen(true);
+  };
 
   const closeCreateDialog = () => {
     setCreateDialogOpen(false);
+    setCreateDialogInitialType(null);
     if (searchParams.get('create') === '1') {
       const params = new URLSearchParams(searchParams.toString());
       params.delete('create');
@@ -80,13 +91,22 @@ function ShiftTemplatesPageClientInner({ items }: ShiftTemplatesPageClientProps)
   };
 
   useEffect(() => {
-    if (searchParams.get('create') === '1') {
-      setCreateDialogOpen(true);
-    }
-
     const typeParam = searchParams.get('type');
     if (typeParam && SHIFT_TEMPLATE_CATEGORIES.some((item) => item.id === typeParam)) {
       setActiveCategory(typeParam as ShiftTemplateCategory);
+    }
+
+    if (searchParams.get('create') === '1') {
+      const preferredType =
+        typeParam && SHIFT_TEMPLATE_CATEGORIES.some((item) => item.id === typeParam)
+          ? (typeParam as ShiftTemplateCategory)
+          : undefined;
+      if (preferredType === 'rotate') {
+        setRotateComingSoonOpen(true);
+        return;
+      }
+      setCreateDialogInitialType(preferredType ?? null);
+      setCreateDialogOpen(true);
     }
   }, [searchParams]);
 
@@ -97,7 +117,7 @@ function ShiftTemplatesPageClientInner({ items }: ShiftTemplatesPageClientProps)
         title="قالب‌های شیفت"
         subtitle="الگوهای شیفت برای استفاده در تقویم و سیاست‌های کاری."
         addLabel="افزودن"
-        onAddClick={openCreateDialog}
+        onAddClick={() => openCreateDialog()}
       />
 
       <div className="shift-templates-toolbar">
@@ -142,15 +162,20 @@ function ShiftTemplatesPageClientInner({ items }: ShiftTemplatesPageClientProps)
         {filteredItems.map((item) => (
           <ShiftTemplateCard key={item.id} item={item} />
         ))}
-        <ModuleAddTile onClick={openCreateDialog} label="برای افزودن قالب شیفت جدید کلیک کنید." />
+        <ModuleAddTile
+          onClick={() => openCreateDialog(activeCategory === 'rotate' ? 'rotate' : activeCategory)}
+          label="برای افزودن قالب شیفت جدید کلیک کنید."
+        />
       </div>
 
       <CreateShiftTemplateDialog
         open={createDialogOpen}
-        shiftType={activeCategory}
+        initialShiftType={createDialogInitialType}
         onClose={closeCreateDialog}
         onSaved={handleSaved}
       />
+
+      <RotateShiftComingSoonModal open={rotateComingSoonOpen} onClose={() => setRotateComingSoonOpen(false)} />
     </>
   );
 }

@@ -18,18 +18,21 @@ import {
   Wallet,
 } from 'lucide-react';
 import { MinimalScroll } from '../../../components/MinimalScroll';
+import { PayrollBaseSummaryPanel, type PayrollBaseSummaryItem } from '../../../components/PayrollBaseSummaryPanel';
 import { AdaptiveChipGroup } from '../../../components/AdaptiveChipGroup';
 import { VariableAmountTitlePicker } from '../../../components/VariableAmountTitlePicker';
 import { ConfirmDialog } from '../../../components/ConfirmDialog';
 import { PanelFormModal, PanelFormModalActions } from '../../../components/PanelFormModal';
-import { PanelToggleRow } from '../../../components/PanelToggleRow';
 import { UnsavedChangesDialog, useUnsavedLeaveGuard } from '../../../components/UnsavedChangesGuard';
+import { removeClientStorageStateAction, upsertClientStorageStateAction } from '../../../lib/client-storage-actions';
 import { CalculationRulesBadges, CalcRulesDiffBadge, CalcRulesEditButton, CalculationRulesDialog } from '../../../components/CalculationRulesChips';
 import type { PaymentEffectContext } from '../../../components/CalculationRulesChips';
 import { formatFaNumber, toPersianDigits } from '../../../lib/format-fa';
 import {
   getActiveTenantStorageId,
+  ACTIVE_TENANT_STORAGE_KEY,
   BENEFIT_FIELDS,
+  DAY_TYPE_PAYMENT_BASE_OPTIONS,
   DAY_TYPE_PAYMENT_RULES,
   COEFFICIENT_COMBINATION_METHODS,
   COEFFICIENT_EXCEPTION_METHODS,
@@ -68,6 +71,7 @@ import {
   type BusinessSettingYear,
   type CalculationRules,
   type DayTypePaymentRule,
+  type DayTypePaymentBase,
   type DayTypePaymentRuleKey,
   type DayTypePaymentRules,
   type PaymentEffect,
@@ -87,6 +91,7 @@ import {
   type WorkTimeConditionKey,
   type MissionRule,
 } from '../../../lib/payroll-business-settings';
+import type { HydratedClientStorageState } from '../../../lib/client-storage-persistence';
 import {
   buildToggleCompareDifference,
   compareCollectionsForMode,
@@ -1079,15 +1084,40 @@ function DayTypePaymentRuleCard({
         {baseValue ? <DifferenceBadge difference={difference} /> : null}
       </div>
 
-      <PanelToggleRow
-        label={
-          <span title="اگر فعال باشد، حتی بدون کارکرد، حقوق این روز برای کارمند محاسبه می‌شود. اگر غیرفعال باشد، در صورت عدم کارکرد، حقوقی برای این روز ثبت نمی‌شود.">
-            این روز با حقوق است
+      <div className="business-payroll-day-type-toggle">
+        <div className="business-payroll-day-type-toggle-head">
+          <div className="business-payroll-day-type-toggle-copy">
+            <span className="business-payroll-day-type-toggle-label">
+              <InfoTooltip text="اگر این روز با حقوق باشد، حتی بدون کارکرد هم حقوق این روز برای کارمند محاسبه می‌شود. اگر بی‌حقوق باشد، در صورت عدم کارکرد حقوقی برای این روز ثبت نمی‌شود." />
+              وضعیت پرداخت این روز
+            </span>
+            <small>تعیین کنید این روز برای کارمند «با حقوق» محسوب شود یا «بی‌حقوق».</small>
+          </div>
+          <span className={`business-payroll-day-type-state ${value.paidWithoutWork ? 'is-paid' : 'is-unpaid'}`}>
+            {value.paidWithoutWork ? 'با حقوق' : 'بی‌حقوق'}
           </span>
-        }
-        checked={value.paidWithoutWork}
-        onChange={(paidWithoutWork) => onChange({ ...value, paidWithoutWork })}
-      />
+        </div>
+        <div className="business-payroll-day-type-toggle-controls" role="radiogroup" aria-label="وضعیت پرداخت این روز">
+          <button
+            type="button"
+            className={`business-payroll-day-type-toggle-option ${value.paidWithoutWork ? 'is-selected' : ''}`}
+            aria-pressed={value.paidWithoutWork}
+            onClick={() => onChange({ ...value, paidWithoutWork: true })}
+          >
+            <strong>با حقوق</strong>
+            <span>اگر کارکردی هم ثبت نشود، حقوق این روز لحاظ می‌شود.</span>
+          </button>
+          <button
+            type="button"
+            className={`business-payroll-day-type-toggle-option ${!value.paidWithoutWork ? 'is-selected' : ''}`}
+            aria-pressed={!value.paidWithoutWork}
+            onClick={() => onChange({ ...value, paidWithoutWork: false })}
+          >
+            <strong>بی‌حقوق</strong>
+            <span>در صورت عدم کارکرد، این روز در محاسبه حقوق نمی‌آید.</span>
+          </button>
+        </div>
+      </div>
 
       {value.paidWithoutWork ? (
         <div className="business-payroll-day-type-impact">
@@ -1107,6 +1137,31 @@ function DayTypePaymentRuleCard({
             }
           />
           {impactError ? <em>{impactError}</em> : null}
+        </div>
+      ) : null}
+
+      {value.paidWithoutWork ? (
+        <div className="business-payroll-day-type-base">
+          <strong>
+            مبنای پرداخت
+            <InfoTooltip text="اگر این روز برای کارمند شیفتی ثبت نشود، مبلغ آن بر اساس این مبنا محاسبه می‌شود." />
+          </strong>
+          <AdaptiveChipGroup
+            className="business-payroll-day-type-base-chips"
+            items={DAY_TYPE_PAYMENT_BASE_OPTIONS.map((option) => ({
+              value: option.value,
+              label: option.label,
+              tooltip: option.tooltip,
+            }))}
+            selected={value.paymentBase}
+            onChange={(next) =>
+              onChange({
+                ...value,
+                paymentBase: (Array.isArray(next) ? next[0] : next) as DayTypePaymentBase,
+              })
+            }
+          />
+          <small>اگر «با حقوق» فعال باشد، یکی از این دو مبنا برای محاسبه مبلغ روز انتخاب می‌شود.</small>
         </div>
       ) : null}
 
@@ -1853,6 +1908,36 @@ function TransferLimitRuleCard({
   );
 }
 
+function buildPayrollBaseSummaryItems(settings: PayrollSettings, derived: PayrollDerivedValues): PayrollBaseSummaryItem[] {
+  const benefitLabels = new Map(BENEFIT_FIELDS.map((field) => [field.key, field.label] as const));
+
+  const benefitItems = (Object.keys(settings.benefits) as Array<keyof PayrollSettings['benefits']>).map((key) => {
+    const rules = settings.benefitRules?.[key] ?? DEFAULT_FIXED_BENEFIT_RULES;
+    return {
+      id: `benefit-${key}`,
+      title: benefitLabels.get(key) ?? String(key),
+      amount: settings.benefits[key],
+      paymentEffect: rules.paymentEffect,
+      includedInWageBase: rules.includedInWageBase,
+      system: rules.systemGenerated,
+    } satisfies PayrollBaseSummaryItem;
+  });
+
+  const additionItems = settings.variableAmounts.additions.map((item) => {
+    const rules = item.calculationRules ?? DEFAULT_OPTIONAL_ADDITION_RULES;
+    return {
+      id: `addition-${item.id}`,
+      title: item.title,
+      amount: calculateVariableAmount(item, derived.monthlyBaseSalary, derived.grossPay),
+      paymentEffect: rules.paymentEffect,
+      includedInWageBase: rules.includedInWageBase,
+      system: rules.systemGenerated,
+    } satisfies PayrollBaseSummaryItem;
+  });
+
+  return [...benefitItems, ...additionItems];
+}
+
 function SummarySidebar({ settings, derived }: { settings: PayrollSettings; derived: PayrollDerivedValues }) {
   const cancellationCount = SETTLEMENT_RULES.filter(({ key }) => settings.leave.finalSettlementRules[key] === 'cancel').length;
   const combinationPreview = calculateCombinedCoefficient({
@@ -1871,6 +1956,7 @@ function SummarySidebar({ settings, derived }: { settings: PayrollSettings; deri
   const enabledTransferRules = settings.leave.transferPolicy.mode === 'carry_forward'
     ? LEAVE_TRANSFER_RULES.filter(({ key }) => settings.leave.transferPolicy.limits[key].enabled)
     : [];
+  const baseSummaryItems = buildPayrollBaseSummaryItems(settings, derived);
 
   return (
     <aside className="draft-template-flow-report business-payroll-report" aria-label="خلاصه زنده تنظیمات">
@@ -1904,6 +1990,7 @@ function SummarySidebar({ settings, derived }: { settings: PayrollSettings; deri
             <strong>{money(derived.monthlyBaseSalary)}</strong>
             <small>حقوق پایه روزانه × ۳۰ روز</small>
           </div>
+          <PayrollBaseSummaryPanel baseSalaryAmount={derived.monthlyBaseSalary} items={baseSummaryItems} />
           <div className="draft-template-flow-report-card">
             <span>مجموع مزایای تنظیم شده</span>
             <strong className="is-positive">{money(derived.totalBenefits)}</strong>
@@ -1998,32 +2085,84 @@ function createStepperProgress(selectedYear: number, state: StepState, currentSt
   };
 }
 
+function getClientStorageStateValue(storageStates: HydratedClientStorageState[], storageKey: string) {
+  return storageStates.find((item) => item.storageKey === storageKey)?.value ?? null;
+}
+
+function parsePayrollSettingsValue(storageStates: HydratedClientStorageState[], storageKey: string, fallback = DEFAULT_PAYROLL_SETTINGS) {
+  const raw = getClientStorageStateValue(storageStates, storageKey);
+  if (!raw) return fallback;
+  try {
+    return normalizePayrollSettings(JSON.parse(raw));
+  } catch {
+    return fallback;
+  }
+}
+
+function parsePayrollOverridesValue(storageStates: HydratedClientStorageState[], storageKey: string, fallbackBase: PayrollSettings, fallbackSettings = fallbackBase) {
+  const raw = getClientStorageStateValue(storageStates, storageKey);
+  if (!raw) return { settings: fallbackSettings, overrides: buildPayrollOverrides(fallbackBase, fallbackSettings) };
+  try {
+    const overrides = normalizePayrollOverrides(JSON.parse(raw));
+    const settings = normalizePayrollSettings(applyPayrollOverrides(fallbackBase, overrides));
+    return { settings, overrides };
+  } catch {
+    return { settings: fallbackSettings, overrides: buildPayrollOverrides(fallbackBase, fallbackSettings) };
+  }
+}
+
+function parsePayrollProgressValue(storageStates: HydratedClientStorageState[], storageKey: string) {
+  const raw = getClientStorageStateValue(storageStates, storageKey);
+  if (!raw) return undefined;
+  try {
+    return JSON.parse(raw) as PayrollStepperProgress;
+  } catch {
+    return undefined;
+  }
+}
+
 export function PayrollBusinessSettingsFlow({
   mode,
   selectedYear,
   tenantId = null,
+  storageStates,
   onBackToYears,
 }: {
   mode: PayrollSettingsMode;
   selectedYear: BusinessSettingYear;
   tenantId?: string | null;
+  storageStates: HydratedClientStorageState[];
   onBackToYears: () => void;
 }) {
   const isTenant = mode === 'tenant';
-  const [settings, setSettings] = useState<PayrollSettings>(DEFAULT_PAYROLL_SETTINGS);
-  const [adminBaseSettings, setAdminBaseSettings] = useState<PayrollSettings>(DEFAULT_PAYROLL_SETTINGS);
-  const [activeStep, setActiveStep] = useState<PayrollStepId>('financial');
-  const [stepState, setStepState] = useState<StepState>(INITIAL_STEP_STATE);
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [notice, setNotice] = useState('');
-  const savedSettingsRef = useRef<PayrollSettings>(DEFAULT_PAYROLL_SETTINGS);
-  const tenantOverridesRef = useRef<PayrollSettingsOverrides>({});
-  const derived = useMemo(() => calculatePayrollValues(settings), [settings]);
   const tenantStorageId = isTenant ? tenantId ?? getActiveTenantStorageId() : null;
   const adminStorageKey = getPayrollSettingsStorageKey(selectedYear.year);
   const storageKey = isTenant ? getTenantPayrollSettingsStorageKey(selectedYear.year, tenantStorageId) : adminStorageKey;
   const progressStorageKey = getPayrollStepperProgressStorageKey(mode, selectedYear.year, tenantStorageId);
   const draftStorageKey = getPayrollSettingsDraftStorageKey(mode, selectedYear.year, tenantStorageId);
+  const adminBaseSettings = useMemo(
+    () => parsePayrollSettingsValue(storageStates, adminStorageKey),
+    [adminStorageKey, storageStates],
+  );
+  const storedSettings = useMemo(() => {
+    if (isTenant) {
+      return parsePayrollOverridesValue(storageStates, storageKey, adminBaseSettings);
+    }
+    return { settings: parsePayrollSettingsValue(storageStates, storageKey, adminBaseSettings), overrides: {} as PayrollSettingsOverrides };
+  }, [adminBaseSettings, isTenant, storageKey, storageStates]);
+  const storedProgress = useMemo(() => parsePayrollProgressValue(storageStates, progressStorageKey), [progressStorageKey, storageStates]);
+  const initialStepState = useMemo(() => stepStateFromProgress(storedProgress), [storedProgress]);
+  const initialActiveStep = storedProgress?.currentStepId && initialStepState[storedProgress.currentStepId]?.opened
+    ? storedProgress.currentStepId
+    : 'financial';
+  const [settings, setSettings] = useState<PayrollSettings>(storedSettings.settings);
+  const [activeStep, setActiveStep] = useState<PayrollStepId>(initialActiveStep);
+  const [stepState, setStepState] = useState<StepState>(initialStepState);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [notice, setNotice] = useState('');
+  const savedSettingsRef = useRef<PayrollSettings>(storedSettings.settings);
+  const tenantOverridesRef = useRef<PayrollSettingsOverrides>(storedSettings.overrides);
+  const derived = useMemo(() => calculatePayrollValues(settings), [settings]);
   const hasUnsavedChanges = useMemo(
     () => PAYROLL_STEPS.some(({ id }) => stepState[id]?.dirty),
     [stepState],
@@ -2032,63 +2171,25 @@ export function PayrollBusinessSettingsFlow({
   const [deletingMissionRule, setDeletingMissionRule] = useState<MissionRule | null>(null);
 
   useEffect(() => {
-    let baseSettings = DEFAULT_PAYROLL_SETTINGS;
-    const rawBase = window.localStorage.getItem(adminStorageKey);
-    try {
-      if (rawBase) baseSettings = normalizePayrollSettings(JSON.parse(rawBase));
-    } catch {
-      window.localStorage.removeItem(adminStorageKey);
-    }
-    setAdminBaseSettings(baseSettings);
-
-    const raw = window.localStorage.getItem(storageKey);
-    try {
-      const storedSettings = isTenant
-        ? normalizePayrollSettings(applyPayrollOverrides(baseSettings, raw ? normalizePayrollOverrides(JSON.parse(raw)) : {}))
-        : raw
-          ? normalizePayrollSettings(JSON.parse(raw))
-          : baseSettings;
-      if (isTenant) tenantOverridesRef.current = buildPayrollOverrides(baseSettings, storedSettings);
-      savedSettingsRef.current = storedSettings;
-      const rawProgress = window.localStorage.getItem(progressStorageKey);
-      const progress = rawProgress ? JSON.parse(rawProgress) as PayrollStepperProgress : undefined;
-      const restoredState = stepStateFromProgress(progress);
-      const restoredStep = progress?.currentStepId && restoredState[progress.currentStepId]?.opened ? progress.currentStepId : 'financial';
-      const rawDraft = progress?.dirtyStepIds.length ? window.localStorage.getItem(draftStorageKey) : null;
-      setSettings(rawDraft ? normalizePayrollSettings(JSON.parse(rawDraft)) : storedSettings);
-      setStepState(restoredState);
-      setActiveStep(restoredStep);
-    } catch {
-      window.localStorage.removeItem(storageKey);
-      window.localStorage.removeItem(progressStorageKey);
-      window.localStorage.removeItem(draftStorageKey);
-      if (isTenant) tenantOverridesRef.current = {};
-      savedSettingsRef.current = baseSettings;
-      setSettings(baseSettings);
-      setStepState(INITIAL_STEP_STATE);
-      setActiveStep('financial');
-    }
-  }, [adminStorageKey, draftStorageKey, isTenant, progressStorageKey, storageKey]);
+    if (!isTenant || !tenantId) return;
+    window.sessionStorage.setItem(ACTIVE_TENANT_STORAGE_KEY, tenantId);
+  }, [isTenant, tenantId]);
 
   const persistProgress = (state: StepState, step: PayrollStepId) => {
-    window.localStorage.setItem(progressStorageKey, JSON.stringify(createStepperProgress(selectedYear.year, state, step)));
+    void upsertClientStorageStateAction(progressStorageKey, JSON.stringify(createStepperProgress(selectedYear.year, state, step)));
   };
 
   const markDirty = (step: PayrollStepId) => {
-    setStepState((current) => {
-      const next = { ...current, [step]: { ...current[step], dirty: true, saved: false } };
-      persistProgress(next, activeStep);
-      return next;
-    });
+    const next = { ...stepState, [step]: { ...stepState[step], dirty: true, saved: false } };
+    setStepState(next);
+    persistProgress(next, activeStep);
     setNotice('');
   };
 
   const update = (step: PayrollStepId, apply: (value: PayrollSettings) => PayrollSettings) => {
-    setSettings((current) => {
-      const next = apply(current);
-      window.localStorage.setItem(draftStorageKey, JSON.stringify(next));
-      return next;
-    });
+    const next = apply(settings);
+    setSettings(next);
+    void upsertClientStorageStateAction(draftStorageKey, JSON.stringify(next));
     markDirty(step);
     setErrors({});
   };
@@ -2161,16 +2262,14 @@ export function PayrollBusinessSettingsFlow({
     savedSettingsRef.current = nextSaved;
     if (isTenant) {
       tenantOverridesRef.current = buildPayrollOverrides(adminBaseSettings, nextSaved);
-      window.localStorage.setItem(storageKey, JSON.stringify(tenantOverridesRef.current));
+      void upsertClientStorageStateAction(storageKey, JSON.stringify(tenantOverridesRef.current));
     } else {
-      window.localStorage.setItem(storageKey, JSON.stringify(nextSaved));
+      void upsertClientStorageStateAction(storageKey, JSON.stringify(nextSaved));
     }
     setErrors({});
-    setStepState((current) => {
-      const next = { ...current, [step]: { ...current[step], dirty: false, saved: true } };
-      persistProgress(next, activeStep);
-      return next;
-    });
+    const nextStepState = { ...stepState, [step]: { ...stepState[step], dirty: false, saved: true } };
+    setStepState(nextStepState);
+    persistProgress(nextStepState, activeStep);
     setNotice('تغییرات این مرحله ذخیره شد.');
     return true;
   };
@@ -2179,15 +2278,13 @@ export function PayrollBusinessSettingsFlow({
     const index = PAYROLL_STEPS.findIndex((item) => item.id === step);
     const next = PAYROLL_STEPS[index + 1];
     if (!next) return;
-    setStepState((current) => {
-      const updated = {
-        ...current,
-        [step]: { ...current[step], completed: true },
-        [next.id]: { ...current[next.id], opened: true },
-      };
-      persistProgress(updated, next.id);
-      return updated;
-    });
+    const updated = {
+      ...stepState,
+      [step]: { ...stepState[step], completed: true },
+      [next.id]: { ...stepState[next.id], opened: true },
+    };
+    setStepState(updated);
+    persistProgress(updated, next.id);
     setActiveStep(next.id);
     setNotice('');
     requestAnimationFrame(() => scrollToStep(next.id));
@@ -2209,11 +2306,9 @@ export function PayrollBusinessSettingsFlow({
     for (const step of PAYROLL_STEPS) {
       const validation = validatePayrollStep(step.id, settings);
       if (Object.keys(validation).length) {
-        setStepState((current) => {
-          const next = { ...current, [step.id]: { ...current[step.id], opened: true } };
-          persistProgress(next, step.id);
-          return next;
-        });
+        const next = { ...stepState, [step.id]: { ...stepState[step.id], opened: true } };
+        setStepState(next);
+        persistProgress(next, step.id);
         setActiveStep(step.id);
         setErrors(validation);
         setNotice('برای ثبت تنظیمات، خطاهای نمایش داده شده را برطرف کنید.');
@@ -2224,18 +2319,16 @@ export function PayrollBusinessSettingsFlow({
     savedSettingsRef.current = settings;
     if (isTenant) {
       tenantOverridesRef.current = buildPayrollOverrides(adminBaseSettings, settings);
-      window.localStorage.setItem(storageKey, JSON.stringify(tenantOverridesRef.current));
+      void upsertClientStorageStateAction(storageKey, JSON.stringify(tenantOverridesRef.current));
     } else {
-      window.localStorage.setItem(storageKey, JSON.stringify(settings));
+      void upsertClientStorageStateAction(storageKey, JSON.stringify(settings));
     }
-    setStepState((current) => {
-      const next = Object.fromEntries(
-        PAYROLL_STEPS.map(({ id }) => [id, { ...current[id], opened: true, completed: true, dirty: false, saved: true }]),
-      ) as StepState;
-      persistProgress(next, activeStep);
-      return next;
-    });
-    window.localStorage.removeItem(draftStorageKey);
+    const nextStepState = Object.fromEntries(
+      PAYROLL_STEPS.map(({ id }) => [id, { ...stepState[id], opened: true, completed: true, dirty: false, saved: true }]),
+    ) as StepState;
+    setStepState(nextStepState);
+    persistProgress(nextStepState, activeStep);
+    void removeClientStorageStateAction(draftStorageKey);
     setErrors({});
     setNotice('تنظیمات حقوق، حضور و غیاب با موفقیت ثبت شد.');
   };
@@ -2246,7 +2339,7 @@ export function PayrollBusinessSettingsFlow({
       if (!saveStep(step)) return false;
     }
     if (dirtySteps.length) {
-      window.localStorage.removeItem(draftStorageKey);
+      void removeClientStorageStateAction(draftStorageKey);
     }
     return true;
   };

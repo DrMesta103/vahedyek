@@ -65,6 +65,11 @@ export function CalculationRulesBadges({ rules }: { rules: CalculationRules }) {
         active={rules.paymentEffect === 'earning'}
         tooltip={RULE_TOOLTIPS[rules.paymentEffect]}
       />
+      <RuleBadge
+        label={rules.includedInWageBase ? 'جزو مزد مبنا' : 'خارج از مزد مبنا'}
+        active={rules.includedInWageBase}
+        tooltip={rules.includedInWageBase ? 'این آیتم در محاسبه مزد مبنا لحاظ می‌شود.' : 'این آیتم در محاسبه مزد مبنا لحاظ نمی‌شود.'}
+      />
       {showBaseFlags ? (
         <>
           <RuleBadge
@@ -108,6 +113,9 @@ export function CalcRulesDiffBadge({
   if (baseRules.includedInTaxBase !== currentRules.includedInTaxBase) {
     parts.push(baseRules.includedInTaxBase ? 'مشمول مالیات' : 'غیرمشمول مالیات');
   }
+  if (baseRules.includedInWageBase !== currentRules.includedInWageBase) {
+    parts.push(baseRules.includedInWageBase ? 'جزو مزد مبنا' : 'خارج از مزد مبنا');
+  }
 
   const tooltip = `در ${baseLabel}، این آیتم با قواعد: ${parts.join('، ')} تعریف شده است.`;
 
@@ -121,16 +129,18 @@ export function CalcRulesDiffBadge({
 
 // ─── Dialog selectable chip ───────────────────────────────────────────────────
 
-function SelectChip({ label, active, onClick, tooltip }: {
+function SelectChip({ label, active, onClick, tooltip, disabled = false }: {
   label: string;
   active: boolean;
   onClick: () => void;
   tooltip?: string;
+  disabled?: boolean;
 }) {
   return (
     <button
       type="button"
       className={`calc-select-chip ${active ? 'is-active' : ''}`}
+      disabled={disabled}
       onClick={onClick}
       aria-pressed={active}
       title={tooltip}
@@ -185,8 +195,13 @@ export function CalculationRulesDialog({
   const setEffect = (effect: PaymentEffect) => {
     if (locked) return;
     let next = { ...draft, paymentEffect: effect };
-    if (effect === 'informational') {
-      next = { ...next, includedInInsuranceBase: false, includedInTaxBase: false };
+    if (effect !== 'earning') {
+      next = {
+        ...next,
+        includedInInsuranceBase: false,
+        includedInTaxBase: false,
+        includedInWageBase: false,
+      };
     }
     setDraft(next);
   };
@@ -210,6 +225,7 @@ export function CalculationRulesDialog({
     !locked &&
     draft.paymentEffect === 'employer_cost' &&
     (draft.includedInInsuranceBase || draft.includedInTaxBase);
+  const showWageBaseSection = draft.paymentEffect === 'earning';
 
   const hasDiff = baseRules ? compareCalculationRules(baseRules, draft) : false;
 
@@ -246,6 +262,7 @@ export function CalculationRulesDialog({
                 active={draft.paymentEffect === effect}
                 onClick={() => setEffect(effect)}
                 tooltip={RULE_TOOLTIPS[effect]}
+                disabled={locked}
               />
             ))}
           </div>
@@ -261,18 +278,49 @@ export function CalculationRulesDialog({
               active={draft.includedInInsuranceBase}
               onClick={toggleInsurance}
               tooltip={draft.includedInInsuranceBase ? RULE_TOOLTIPS.insurance_yes : RULE_TOOLTIPS.insurance_no}
+              disabled={locked || draft.paymentEffect === 'informational'}
             />
             <SelectChip
               label="مشمول مالیات"
               active={draft.includedInTaxBase}
               onClick={toggleTax}
               tooltip={draft.includedInTaxBase ? RULE_TOOLTIPS.tax_yes : RULE_TOOLTIPS.tax_no}
+              disabled={locked || draft.paymentEffect === 'informational'}
             />
           </div>
-          {draft.paymentEffect === 'informational' ? (
-            <p className="calc-dialog-helper">آیتم‌های فقط قراردادی وارد محاسبات بیمه، مالیات یا پرداخت نمی‌شوند.</p>
-          ) : null}
-        </div>
+        {draft.paymentEffect === 'informational' ? (
+          <p className="calc-dialog-helper">آیتم‌های فقط قراردادی وارد محاسبات بیمه، مالیات یا پرداخت نمی‌شوند.</p>
+        ) : null}
+      </div>
+
+        {showWageBaseSection ? (
+          <div className="calc-dialog-section">
+            <span className="calc-dialog-section-label">جزو مزد مبنا</span>
+            <div className="calc-dialog-chips">
+              <SelectChip
+                label="جزو مزد مبنا"
+                active={draft.includedInWageBase}
+                onClick={() => {
+                  if (locked) return;
+                  setDraft((current) => ({ ...current, includedInWageBase: true }));
+                }}
+                tooltip={locked ? 'فقط آیتم‌های افزاینده دریافتی می‌توانند جزو مزد مبنا باشند.' : 'این آیتم در محاسبه مزد مبنا لحاظ می‌شود.'}
+                disabled={locked}
+              />
+              <SelectChip
+                label="خارج از مزد مبنا"
+                active={!draft.includedInWageBase}
+                onClick={() => {
+                  if (locked) return;
+                  setDraft((current) => ({ ...current, includedInWageBase: false }));
+                }}
+                tooltip={locked ? 'فقط آیتم‌های افزاینده دریافتی می‌توانند جزو مزد مبنا باشند.' : 'این آیتم در محاسبه مزد مبنا لحاظ نمی‌شود.'}
+                disabled={locked}
+              />
+            </div>
+            <p className="calc-dialog-helper">این آیتم در محاسبه مزد مبنا لحاظ می‌شود.</p>
+          </div>
+        ) : null}
 
         {/* Warnings */}
         {showDeductionWarning ? (

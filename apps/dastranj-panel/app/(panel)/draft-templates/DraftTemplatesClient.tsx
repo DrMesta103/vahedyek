@@ -8,15 +8,13 @@ import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { DraftShowcaseField, DraftShowcaseFieldBadge, DraftShowcaseFields } from '../../components/DraftShowcaseField';
 import { PanelFormModal, PanelFormModalActions } from '../../components/PanelFormModal';
 import {
-  getActiveContractDraftTemplateStorageKey,
-  getContractDraftTemplatesStorageKey,
   createContractDraftTemplate,
-  normalizeContractDraftTemplate,
   type ContractDraftTemplate,
   type ContractDraftTemplateUsageType,
 } from '../../lib/contract-draft-templates';
-import { readEmployeeDrafts, type EmployeeContractDraft } from '../../lib/employee-contract-drafts';
+import { getEmployeeContractDraftsStorageKey, getEmployeeDraftsFromStorage, type EmployeeContractDraft } from '../../lib/employee-contract-drafts';
 import { formatFaNumber, formatPersianJalaliDate } from '../../lib/format-fa';
+import { deleteDraftTemplateAction, upsertContractDraftTemplateAction } from '../../lib/actions';
 import {
   ACTIVE_TENANT_STORAGE_KEY,
   getPayrollSettingsStorageKey,
@@ -27,44 +25,40 @@ import {
   normalizePayrollOverrides,
   type BusinessSettingYear,
 } from '../../lib/payroll-business-settings';
+import type { HydratedClientStorageState } from '../../lib/client-storage-persistence';
 
-function readTemplates(tenantId?: string | null) {
-  const raw = window.localStorage.getItem(getContractDraftTemplatesStorageKey(tenantId));
-  if (!raw) return [];
-  try {
-    const parsed = JSON.parse(raw) as unknown[];
-    return Array.isArray(parsed) ? parsed.map(normalizeContractDraftTemplate).filter(Boolean) as ContractDraftTemplate[] : [];
-  } catch {
-    window.localStorage.removeItem(getContractDraftTemplatesStorageKey(tenantId));
-    return [];
-  }
+function getStorageValue(storageStates: HydratedClientStorageState[], storageKey: string) {
+  return storageStates.find((item) => item.storageKey === storageKey)?.value ?? null;
 }
 
-function readYears() {
-  const raw = window.localStorage.getItem(getPayrollSettingsYearsStorageKey(null));
+function readTemplatesFromServer(templates: ContractDraftTemplate[]) {
+  return templates;
+}
+
+function readYears(storageStates: HydratedClientStorageState[]) {
+  const raw = getStorageValue(storageStates, getPayrollSettingsYearsStorageKey(null));
   if (!raw) return [];
   try {
     const parsed = JSON.parse(raw) as BusinessSettingYear[];
     return Array.isArray(parsed) ? parsed : [];
   } catch {
-    window.localStorage.removeItem(getPayrollSettingsYearsStorageKey(null));
     return [];
   }
 }
 
-function readTenantPayrollBaseSettings(year: number, tenantId?: string | null) {
-  const rawAdminBase = window.localStorage.getItem(getPayrollSettingsStorageKey(year));
+function readTenantPayrollBaseSettings(year: number, storageStates: HydratedClientStorageState[], tenantId?: string | null) {
+  const rawAdminBase = getStorageValue(storageStates, getPayrollSettingsStorageKey(year));
   const adminBase = rawAdminBase ? normalizePayrollSettings(JSON.parse(rawAdminBase)) : normalizePayrollSettings({});
   if (!tenantId) return adminBase;
 
-  const rawTenantOverrides = window.localStorage.getItem(getTenantPayrollSettingsStorageKey(year, tenantId));
+  const rawTenantOverrides = getStorageValue(storageStates, getTenantPayrollSettingsStorageKey(year, tenantId));
   if (rawTenantOverrides) {
     return normalizePayrollSettings(
       applyPayrollOverrides(adminBase, normalizePayrollOverrides(JSON.parse(rawTenantOverrides))),
     );
   }
 
-  const rawLegacyTenantSettings = window.localStorage.getItem(getPayrollSettingsStorageKey(year, tenantId));
+  const rawLegacyTenantSettings = getStorageValue(storageStates, getPayrollSettingsStorageKey(year, tenantId));
   return rawLegacyTenantSettings ? normalizePayrollSettings(JSON.parse(rawLegacyTenantSettings)) : adminBase;
 }
 
@@ -255,7 +249,7 @@ function TemplateListCard({
         cancelLabel="انصراف"
         tone="danger"
         onConfirm={() => {
-          onDelete();
+          void onDelete();
           setDeleteOpen(false);
         }}
         onCancel={() => setDeleteOpen(false)}
@@ -268,6 +262,7 @@ function CreateTemplateDialog({
   open,
   years,
   tenantId,
+  storageStates,
   existingTemplateNames,
   onClose,
   onCreated,
@@ -275,9 +270,10 @@ function CreateTemplateDialog({
   open: boolean;
   years: BusinessSettingYear[];
   tenantId?: string | null;
+  storageStates: HydratedClientStorageState[];
   existingTemplateNames: string[];
   onClose: () => void;
-  onCreated: (template: ContractDraftTemplate) => void;
+  onCreated: (template: ContractDraftTemplate) => void | Promise<void>;
 }) {
   const [name, setName] = useState('');
   const [usageType, setUsageType] = useState<ContractDraftTemplateUsageType | ''>('');
@@ -312,9 +308,9 @@ function CreateTemplateDialog({
     }
 
     const year = Number(baseYear);
-    const baseSettings = readTenantPayrollBaseSettings(year, tenantId);
+    const baseSettings = readTenantPayrollBaseSettings(year, storageStates, tenantId);
     const template = createContractDraftTemplate({ name: resolvedName, usageType, baseSettingsYear: year, baseSettings });
-    onCreated(template);
+    void onCreated(template);
   };
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -418,12 +414,23 @@ function buildTemplateUsageMap(drafts: EmployeeContractDraft[]) {
   return map;
 }
 
-export function DraftTemplatesClient({ tenantId = null }: { tenantId?: string | null }) {
+export function DraftTemplatesClient({
+  tenantId = null,
+  templates: initialTemplates,
+  storageStates,
+}: {
+  tenantId?: string | null;
+  templates: ContractDraftTemplate[];
+  storageStates: HydratedClientStorageState[];
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [templates, setTemplates] = useState<ContractDraftTemplate[]>([]);
-  const [years, setYears] = useState<BusinessSettingYear[]>([]);
-  const [drafts, setDrafts] = useState<EmployeeContractDraft[]>([]);
+  const [templates, setTemplates] = useState<ContractDraftTemplate[]>(() => readTemplatesFromServer(initialTemplates));
+  const [years] = useState<BusinessSettingYear[]>(() => readYears(storageStates));
+  const [drafts] = useState<EmployeeContractDraft[]>(() => {
+    const raw = getStorageValue(storageStates, getEmployeeContractDraftsStorageKey(tenantId));
+    return getEmployeeDraftsFromStorage(raw);
+  });
   const [dialogOpen, setDialogOpen] = useState(false);
   const [query, setQuery] = useState('');
 
@@ -431,9 +438,6 @@ export function DraftTemplatesClient({ tenantId = null }: { tenantId?: string | 
     if (tenantId) {
       window.sessionStorage.setItem(ACTIVE_TENANT_STORAGE_KEY, tenantId);
     }
-    setTemplates(readTemplates(tenantId));
-    setYears(readYears());
-    setDrafts(readEmployeeDrafts(tenantId));
     if (searchParams.get('create') === '1') setDialogOpen(true);
   }, [searchParams, tenantId]);
 
@@ -444,28 +448,25 @@ export function DraftTemplatesClient({ tenantId = null }: { tenantId?: string | 
     [query, templates],
   );
 
-  const persistTemplates = (next: ContractDraftTemplate[]) => {
+  const persistTemplates = async (next: ContractDraftTemplate[]) => {
     setTemplates(next);
-    window.localStorage.setItem(getContractDraftTemplatesStorageKey(tenantId), JSON.stringify(next));
+    await Promise.all(next.map((template) => upsertContractDraftTemplateAction(template)));
   };
 
   const openTemplate = (template: ContractDraftTemplate) => {
-    window.localStorage.setItem(getActiveContractDraftTemplateStorageKey(tenantId), template.id);
-    router.push('/draft-templates/builder');
+    router.push(`/draft-templates/builder?templateId=${template.id}`);
   };
 
-  const createTemplate = (template: ContractDraftTemplate) => {
+  const createTemplate = async (template: ContractDraftTemplate) => {
     const next = [template, ...templates];
-    persistTemplates(next);
+    await persistTemplates(next);
     setDialogOpen(false);
     openTemplate(template);
   };
 
-  const deleteTemplate = (templateId: string) => {
-    persistTemplates(templates.filter((item) => item.id !== templateId));
-    if (window.localStorage.getItem(getActiveContractDraftTemplateStorageKey(tenantId)) === templateId) {
-      window.localStorage.removeItem(getActiveContractDraftTemplateStorageKey(tenantId));
-    }
+  const deleteTemplate = async (templateId: string) => {
+    await deleteDraftTemplateAction(templateId);
+    setTemplates((current) => current.filter((item) => item.id !== templateId));
   };
 
   return (
@@ -525,6 +526,7 @@ export function DraftTemplatesClient({ tenantId = null }: { tenantId?: string | 
         open={dialogOpen}
         years={years}
         tenantId={tenantId}
+        storageStates={storageStates}
         existingTemplateNames={templates.map((template) => template.name)}
         onClose={() => setDialogOpen(false)}
         onCreated={createTemplate}

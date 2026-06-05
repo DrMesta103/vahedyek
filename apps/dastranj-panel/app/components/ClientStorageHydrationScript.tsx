@@ -3,6 +3,19 @@
 import { useServerInsertedHTML } from 'next/navigation';
 import type { HydratedClientStorageState } from '../lib/client-storage-persistence';
 
+const NON_HYDRATED_PREFIXES = [
+  'dastranj-contract-draft-templates-v1',
+  'dastranj-business-payroll-settings-v1',
+  'dastranj-business-payroll-years-v1',
+  'dastranj-business-payroll-stepper-progress-v1',
+  'dastranj-employee-contract-drafts-v1',
+  'dastranj-employee-supplemental-profile-v1',
+] as const;
+
+function shouldHydrateToLocalStorage(storageKey: string) {
+  return !NON_HYDRATED_PREFIXES.some((prefix) => storageKey === prefix || storageKey.startsWith(`${prefix}:`) || storageKey.startsWith(`${prefix}-`));
+}
+
 function escapeJsonForScript(value: unknown) {
   return JSON.stringify(value)
     .replace(/</g, '\\u003c')
@@ -34,14 +47,9 @@ export function ClientStorageHydrationScript({
     }
     for (const item of payload.states || []) {
       if (typeof item.storageKey === 'string' && typeof item.value === 'string') {
-        window.localStorage.setItem(item.storageKey, item.value);
-      }
-    }
-    if (payload.tenantId) {
-      const scopedTemplatesKey = 'dastranj-contract-draft-templates-v1:' + payload.tenantId;
-      const legacyTemplates = window.localStorage.getItem(scopedTemplatesKey);
-      if (legacyTemplates) {
-        window.localStorage.setItem('dastranj-contract-draft-templates-v1', legacyTemplates);
+        if (shouldHydrateToLocalStorage(item.storageKey)) {
+          window.localStorage.setItem(item.storageKey, item.value);
+        }
       }
     }
   } catch {}

@@ -34,9 +34,11 @@ export type DayTypePaymentRuleKey =
   | 'company_holiday';
 
 export type UnpaidAbsenceImpact = 'none' | 'full_deduction' | 'proportional_by_minutes';
+export type DayTypePaymentBase = 'wageBase' | 'grossPay';
 
 export type DayTypePaymentRule = {
   paidWithoutWork: boolean;
+  paymentBase: DayTypePaymentBase;
   unpaidAbsenceImpact: UnpaidAbsenceImpact;
   workedTimeCoefficient: number;
 };
@@ -146,6 +148,7 @@ export type CalculationRules = {
   paymentEffect: PaymentEffect;
   includedInInsuranceBase: boolean;
   includedInTaxBase: boolean;
+  includedInWageBase: boolean;
   systemGenerated: boolean;
   lockedRules: boolean;
 };
@@ -154,14 +157,21 @@ export const DEFAULT_FIXED_BENEFIT_RULES: CalculationRules = {
   paymentEffect: 'earning',
   includedInInsuranceBase: true,
   includedInTaxBase: true,
+  includedInWageBase: false,
   systemGenerated: false,
   lockedRules: false,
+};
+
+export const DEFAULT_SENIORITY_BENEFIT_RULES: CalculationRules = {
+  ...DEFAULT_FIXED_BENEFIT_RULES,
+  includedInWageBase: true,
 };
 
 export const DEFAULT_OPTIONAL_ADDITION_RULES: CalculationRules = {
   paymentEffect: 'earning',
   includedInInsuranceBase: false,
   includedInTaxBase: true,
+  includedInWageBase: false,
   systemGenerated: false,
   lockedRules: false,
 };
@@ -170,6 +180,7 @@ export const DEFAULT_OPTIONAL_DEDUCTION_RULES: CalculationRules = {
   paymentEffect: 'deduction',
   includedInInsuranceBase: false,
   includedInTaxBase: false,
+  includedInWageBase: false,
   systemGenerated: false,
   lockedRules: false,
 };
@@ -198,6 +209,7 @@ export const EMPLOYEE_INSURANCE_RULES: CalculationRules = {
   paymentEffect: 'deduction',
   includedInInsuranceBase: false,
   includedInTaxBase: false,
+  includedInWageBase: false,
   systemGenerated: true,
   lockedRules: true,
 };
@@ -206,6 +218,7 @@ export const EMPLOYER_INSURANCE_RULES: CalculationRules = {
   paymentEffect: 'employer_cost',
   includedInInsuranceBase: false,
   includedInTaxBase: false,
+  includedInWageBase: false,
   systemGenerated: true,
   lockedRules: true,
 };
@@ -214,6 +227,7 @@ export const TAX_RULES: CalculationRules = {
   paymentEffect: 'deduction',
   includedInInsuranceBase: false,
   includedInTaxBase: false,
+  includedInWageBase: false,
   systemGenerated: true,
   lockedRules: true,
 };
@@ -237,6 +251,11 @@ export function normalizeCalculationRules(value: unknown, defaults: CalculationR
     paymentEffect,
     includedInInsuranceBase: typeof source.includedInInsuranceBase === 'boolean' ? source.includedInInsuranceBase : defaults.includedInInsuranceBase,
     includedInTaxBase: typeof source.includedInTaxBase === 'boolean' ? source.includedInTaxBase : defaults.includedInTaxBase,
+    includedInWageBase: paymentEffect === 'earning'
+      ? typeof source.includedInWageBase === 'boolean'
+        ? source.includedInWageBase
+        : defaults.includedInWageBase
+      : false,
     systemGenerated: typeof source.systemGenerated === 'boolean' ? source.systemGenerated : defaults.systemGenerated,
     lockedRules: typeof source.lockedRules === 'boolean' ? source.lockedRules : defaults.lockedRules,
   };
@@ -246,7 +265,8 @@ export function compareCalculationRules(base: CalculationRules, current: Calcula
   return (
     base.paymentEffect !== current.paymentEffect ||
     base.includedInInsuranceBase !== current.includedInInsuranceBase ||
-    base.includedInTaxBase !== current.includedInTaxBase
+    base.includedInTaxBase !== current.includedInTaxBase ||
+    base.includedInWageBase !== current.includedInWageBase
   );
 }
 
@@ -384,6 +404,8 @@ export type PayrollDerivedValues = {
   salaryPerMinute: number;
   salaryPerHour: number;
   monthlyBaseSalary: number;
+  wageBaseAmount: number;
+  totalEarningAmount: number;
   totalBenefits: number;
   totalOptionalAdditions: number;
   totalOptionalDeductions: number;
@@ -460,24 +482,44 @@ export const UNPAID_ABSENCE_IMPACT_OPTIONS: Array<{
   { value: 'proportional_by_minutes', label: 'کسر نسبی بر اساس دقایق غیبت' },
 ];
 
+export const DAY_TYPE_PAYMENT_BASE_OPTIONS: Array<{
+  value: DayTypePaymentBase;
+  label: string;
+  tooltip: string;
+}> = [
+  {
+    value: 'wageBase',
+    label: 'بر اساس مزد مبنا',
+    tooltip: 'مبلغ این روز بر اساس حقوق پایه و آیتم‌هایی که به عنوان «جزو مزد مبنا» مشخص شده‌اند محاسبه می‌شود.',
+  },
+  {
+    value: 'grossPay',
+    label: 'بر اساس جمع حقوق دریافتی',
+    tooltip: 'مبلغ این روز بر اساس همه آیتم‌های افزاینده دریافتی کارمند محاسبه می‌شود.',
+  },
+];
 export const DEFAULT_DAY_TYPE_PAYMENT_RULES: DayTypePaymentRules = {
   no_shift_day: {
     paidWithoutWork: false,
+    paymentBase: 'wageBase',
     unpaidAbsenceImpact: 'none',
     workedTimeCoefficient: 1.4,
   },
   weekly_rest_day: {
     paidWithoutWork: true,
+    paymentBase: 'wageBase',
     unpaidAbsenceImpact: 'none',
     workedTimeCoefficient: 1.4,
   },
   official_holiday: {
     paidWithoutWork: true,
+    paymentBase: 'wageBase',
     unpaidAbsenceImpact: 'none',
     workedTimeCoefficient: 1.96,
   },
   company_holiday: {
     paidWithoutWork: true,
+    paymentBase: 'wageBase',
     unpaidAbsenceImpact: 'none',
     workedTimeCoefficient: 1.4,
   },
@@ -833,8 +875,13 @@ function normalizeDayTypePaymentRule(value: unknown, fallback: DayTypePaymentRul
       : typeof source.coefficient === 'number' && Number.isFinite(source.coefficient)
         ? source.coefficient
         : fallback.workedTimeCoefficient;
+  const paymentBase =
+    source.paymentBase === 'wageBase' || source.paymentBase === 'grossPay'
+      ? source.paymentBase
+      : fallback.paymentBase;
   return {
     paidWithoutWork: typeof source.paidWithoutWork === 'boolean' ? source.paidWithoutWork : fallback.paidWithoutWork,
+    paymentBase,
     unpaidAbsenceImpact,
     workedTimeCoefficient,
   };
@@ -1012,7 +1059,7 @@ export function normalizePayrollSettings(value: unknown): PayrollSettings {
     housingAllowance: normalizeCalculationRules(rawBenefitRules.housingAllowance, DEFAULT_FIXED_BENEFIT_RULES),
     childAllowance: normalizeCalculationRules(rawBenefitRules.childAllowance, DEFAULT_FIXED_BENEFIT_RULES),
     marriageAllowance: normalizeCalculationRules(rawBenefitRules.marriageAllowance, DEFAULT_FIXED_BENEFIT_RULES),
-    seniorityAllowance: normalizeCalculationRules(rawBenefitRules.seniorityAllowance, DEFAULT_FIXED_BENEFIT_RULES),
+    seniorityAllowance: normalizeCalculationRules(rawBenefitRules.seniorityAllowance, { ...DEFAULT_FIXED_BENEFIT_RULES, includedInWageBase: true }),
     eidBonus: normalizeCalculationRules(rawBenefitRules.eidBonus, DEFAULT_FIXED_BENEFIT_RULES),
   };
 
@@ -1266,7 +1313,7 @@ export const DEFAULT_PAYROLL_SETTINGS: PayrollSettings = {
     housingAllowance: { ...DEFAULT_FIXED_BENEFIT_RULES },
     childAllowance: { ...DEFAULT_FIXED_BENEFIT_RULES },
     marriageAllowance: { ...DEFAULT_FIXED_BENEFIT_RULES },
-    seniorityAllowance: { ...DEFAULT_FIXED_BENEFIT_RULES },
+    seniorityAllowance: { ...DEFAULT_FIXED_BENEFIT_RULES, includedInWageBase: true },
     eidBonus: { ...DEFAULT_FIXED_BENEFIT_RULES },
   },
   variableAmounts: {
@@ -1288,21 +1335,25 @@ export const DEFAULT_PAYROLL_SETTINGS: PayrollSettings = {
     dayTypePaymentRules: {
       no_shift_day: {
         paidWithoutWork: false,
+        paymentBase: 'wageBase',
         unpaidAbsenceImpact: 'none',
         workedTimeCoefficient: 1.4,
       },
       weekly_rest_day: {
         paidWithoutWork: true,
+        paymentBase: 'wageBase',
         unpaidAbsenceImpact: 'none',
         workedTimeCoefficient: 1.4,
       },
       official_holiday: {
         paidWithoutWork: true,
+        paymentBase: 'wageBase',
         unpaidAbsenceImpact: 'none',
         workedTimeCoefficient: 1.96,
       },
       company_holiday: {
         paidWithoutWork: true,
+        paymentBase: 'wageBase',
         unpaidAbsenceImpact: 'none',
         workedTimeCoefficient: 1.4,
       },
@@ -1366,22 +1417,40 @@ export function calculatePayrollValues(settings: PayrollSettings): PayrollDerive
   const salaryPerHour = salaryPerMinute * 60;
   const monthlyBaseSalary = settings.financial.dailyBaseSalary * 30;
 
-  // Benefits: sum all benefit amounts (earnings)
-  const totalBenefits = Object.values(settings.benefits).reduce((sum, amount) => sum + amount, 0);
-  const initialGrossPay = monthlyBaseSalary + totalBenefits;
+  let wageBaseAmount = monthlyBaseSalary;
+  let earningBenefitsAmount = 0;
+
+  // Benefits: only earning items are part of payroll totals
+  (Object.keys(settings.benefits) as Array<keyof typeof settings.benefits>).forEach((key) => {
+    const rules = settings.benefitRules?.[key] ?? DEFAULT_FIXED_BENEFIT_RULES;
+    const amount = settings.benefits[key];
+    if (rules.paymentEffect === 'earning') {
+      earningBenefitsAmount += amount;
+      if (rules.includedInWageBase) {
+        wageBaseAmount += amount;
+      }
+    }
+  });
+
+  const initialGrossPay = monthlyBaseSalary + earningBenefitsAmount;
 
   // Variable additions with earning effect
   const totalOptionalAdditions = settings.variableAmounts.additions.reduce(
     (sum, item) => {
       const rules = item.calculationRules ?? DEFAULT_OPTIONAL_ADDITION_RULES;
       if (rules.paymentEffect === 'earning') {
-        return sum + calculateVariableAmount(item, monthlyBaseSalary, initialGrossPay);
+        const amount = calculateVariableAmount(item, monthlyBaseSalary, initialGrossPay);
+        if (rules.includedInWageBase) {
+          wageBaseAmount += amount;
+        }
+        return sum + amount;
       }
       return sum;
     },
     0,
   );
-  const grossPay = initialGrossPay + totalOptionalAdditions;
+  const totalEarningAmount = initialGrossPay + totalOptionalAdditions;
+  const grossPay = totalEarningAmount;
 
   // Variable deductions with deduction effect
   const totalOptionalDeductions = settings.variableAmounts.deductions.reduce(
@@ -1409,7 +1478,8 @@ export function calculatePayrollValues(settings: PayrollSettings): PayrollDerive
   settings.variableAmounts.additions.forEach((item) => {
     const rules = item.calculationRules ?? DEFAULT_OPTIONAL_ADDITION_RULES;
     if (rules.includedInInsuranceBase && rules.paymentEffect === 'earning') {
-      insuranceBase += calculateVariableAmount(item, monthlyBaseSalary, grossPay);
+        const amount = calculateVariableAmount(item, monthlyBaseSalary, grossPay);
+        insuranceBase += amount;
     }
   });
 
@@ -1451,7 +1521,9 @@ export function calculatePayrollValues(settings: PayrollSettings): PayrollDerive
     salaryPerMinute,
     salaryPerHour,
     monthlyBaseSalary,
-    totalBenefits,
+    wageBaseAmount,
+    totalEarningAmount,
+    totalBenefits: earningBenefitsAmount,
     totalOptionalAdditions,
     totalOptionalDeductions,
     grossPay,
@@ -1564,6 +1636,9 @@ export function validatePayrollStep(stepId: PayrollStepId, settings: PayrollSett
       if (!Number.isFinite(rule.workedTimeCoefficient)) errors[`${fieldBase}.workedTimeCoefficient`] = 'ضریب پرداخت الزامی است';
       else if (rule.workedTimeCoefficient <= 0) errors[`${fieldBase}.workedTimeCoefficient`] = 'ضریب پرداخت باید عددی مثبت باشد';
       if (rule.paidWithoutWork) {
+        if (rule.paymentBase !== 'wageBase' && rule.paymentBase !== 'grossPay') {
+          errors[`${fieldBase}.paymentBase`] = 'مبنای پرداخت این روز را انتخاب کنید';
+        }
         if (
           rule.unpaidAbsenceImpact !== 'none' &&
           rule.unpaidAbsenceImpact !== 'full_deduction' &&

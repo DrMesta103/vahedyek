@@ -37,6 +37,7 @@ import { ConfirmDialog } from '../../../../../components/ConfirmDialog';
 import { AttachmentManager } from '../../../../../components/AttachmentManager';
 import { DraftShowcaseField, DraftShowcaseFieldBadge, DraftShowcaseFields } from '../../../../../components/DraftShowcaseField';
 import { MinimalScroll } from '../../../../../components/MinimalScroll';
+import { PayrollBaseSummaryPanel, type PayrollBaseSummaryItem } from '../../../../../components/PayrollBaseSummaryPanel';
 import { CalculationRulesBadges, CalcRulesDiffBadge, CalcRulesEditButton, CalculationRulesDialog } from '../../../../../components/CalculationRulesChips';
 import { PanelToggleRow } from '../../../../../components/PanelToggleRow';
 import { PanelFormModal, PanelFormModalActions } from '../../../../../components/PanelFormModal';
@@ -46,10 +47,12 @@ import { formatPersianYmd, getPersianPartsFromDate, parsePersianYmd, persianToDa
 import { normalizePersianDateInput } from '../../../../../lib/calendar-events';
 import { formatFaNumber, formatPersianJalaliDate, toPersianDigits } from '../../../../../lib/format-fa';
 import { formatPersianDate } from '../../../../../lib/format-date';
-import { CONTRACT_DRAFT_TEMPLATES_STORAGE_KEY, normalizeContractDraftTemplate, type ContractDraftTemplate } from '../../../../../lib/contract-draft-templates';
+import type { ContractDraftTemplate } from '../../../../../lib/contract-draft-templates';
+import { upsertClientStorageStateAction } from '../../../../../lib/client-storage-actions';
 import {
   DEFAULT_PAYROLL_SETTINGS,
   DEFAULT_FIXED_BENEFIT_RULES,
+  DEFAULT_SENIORITY_BENEFIT_RULES,
   DEFAULT_OPTIONAL_ADDITION_RULES,
   DEFAULT_OPTIONAL_DEDUCTION_RULES,
   getActiveTenantStorageId,
@@ -97,17 +100,13 @@ import {
   EMPLOYEE_BENEFIT_KEYS,
   EMPLOYEE_CONTRACT_BENEFIT_DESCRIPTIONS,
   EMPLOYEE_CONTRACT_BENEFIT_LABELS,
+  getEmployeeContractDraftsStorageKey,
   getEmployeeDraftSteps,
   getEmployeeDraftsByEmployeeId,
-  getEmployeeDraftStorageKey,
+  getEmployeeDraftsFromStorage,
   getEmployeeSupplementalStorageKey,
   getDefaultEmployeeSupplementalProfile,
   normalizeEmployeeSupplementalProfile,
-  readBaseSettingsByTemplate,
-  readEmployeeDrafts,
-  readEmployeeSupplementalProfiles,
-  persistEmployeeDrafts,
-  persistEmployeeSupplementalProfiles,
   type EmployeeBenefitPaymentPeriod,
   type EmployeeContractDraft,
   type EmployeeContractDraftStepId,
@@ -117,6 +116,7 @@ import {
   type EmployeePaymentCycle,
   type EmployeeMissionRule,
 } from '../../../../../lib/employee-contract-drafts';
+import type { HydratedClientStorageState } from '../../../../../lib/client-storage-persistence';
 import type { VariableTemplateItem } from '../../../../../lib/contract-draft-templates';
 type EmployeeDraftEmployee = {
   id: string;
@@ -529,27 +529,37 @@ function differenceBadge(text: string, tooltip: string, tone: 'diff' | 'warning'
   return fieldBadge(text, tone === 'warning' ? 'warning' : 'success');
 }
 
-function readTemplates(): ContractDraftTemplate[] {
-  if (typeof window === 'undefined') return [];
-  const raw = window.localStorage.getItem(CONTRACT_DRAFT_TEMPLATES_STORAGE_KEY);
-  if (!raw) return [];
-  try {
-    const parsed = JSON.parse(raw) as unknown[];
-    return Array.isArray(parsed) ? parsed.map(normalizeContractDraftTemplate).filter(Boolean) as ContractDraftTemplate[] : [];
-  } catch {
-    window.localStorage.removeItem(CONTRACT_DRAFT_TEMPLATES_STORAGE_KEY);
-    return [];
-  }
+function getStorageValue(storageStates: HydratedClientStorageState[], storageKey: string) {
+  return storageStates.find((item) => item.storageKey === storageKey)?.value ?? null;
 }
 
-function readSettingsForTemplate(template: ContractDraftTemplate | null | undefined) {
-  if (!template || typeof window === 'undefined') return DEFAULT_PAYROLL_SETTINGS;
-  const raw = window.localStorage.getItem(getPayrollSettingsStorageKey(template.baseSettingsYear, getActiveTenantStorageId()));
+function readSettingsForTemplate(template: ContractDraftTemplate | null | undefined, storageStates: HydratedClientStorageState[]) {
+  if (!template) return DEFAULT_PAYROLL_SETTINGS;
+  const raw = getStorageValue(storageStates, getPayrollSettingsStorageKey(template.baseSettingsYear, getActiveTenantStorageId()));
   if (!raw) return DEFAULT_PAYROLL_SETTINGS;
   try {
     return normalizePayrollSettings(JSON.parse(raw));
   } catch {
     return DEFAULT_PAYROLL_SETTINGS;
+  }
+}
+
+function readEmployeeDraftsFromStorageStates(storageStates: HydratedClientStorageState[], tenantId?: string | null) {
+  return getEmployeeDraftsFromStorage(getStorageValue(storageStates, getEmployeeContractDraftsStorageKey(tenantId)));
+}
+
+function readEmployeeSupplementalProfilesFromStorageStates(storageStates: HydratedClientStorageState[], tenantId?: string | null) {
+  const raw = getStorageValue(storageStates, getEmployeeSupplementalStorageKey(tenantId));
+  if (!raw) return {} as Record<string, EmployeeSupplementalProfile>;
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {};
+    return Object.entries(parsed as Record<string, unknown>).reduce<Record<string, EmployeeSupplementalProfile>>((result, [key, value]) => {
+      result[key] = normalizeEmployeeSupplementalProfile(value);
+      return result;
+    }, {});
+  } catch {
+    return {};
   }
 }
 
@@ -863,30 +873,20 @@ function ContractTimingDateField({
   );
 }
 
-function useDraftStorage(employeeId: string) {
-  const [drafts, setDrafts] = useState<EmployeeContractDraft[]>([]);
-  const [templates, setTemplates] = useState<ContractDraftTemplate[]>([]);
-  const [supplementalProfiles, setSupplementalProfiles] = useState<Record<string, EmployeeSupplementalProfile>>({});
-  const [loaded, setLoaded] = useState(false);
-
-  useEffect(() => {
-    const nextDrafts = getEmployeeDraftsByEmployeeId(readEmployeeDrafts(), employeeId);
-    setDrafts(nextDrafts);
-    setTemplates(readTemplates());
-    setSupplementalProfiles(readEmployeeSupplementalProfiles());
-    setLoaded(true);
-  }, [employeeId]);
+function useDraftStorage(employeeId: string, storageStates: HydratedClientStorageState[], templates: ContractDraftTemplate[]) {
+  const tenantStorageId = getActiveTenantStorageId();
+  const [drafts, setDrafts] = useState<EmployeeContractDraft[]>(() => getEmployeeDraftsByEmployeeId(readEmployeeDraftsFromStorageStates(storageStates, tenantStorageId), employeeId));
+  const [supplementalProfiles, setSupplementalProfiles] = useState<Record<string, EmployeeSupplementalProfile>>(() => readEmployeeSupplementalProfilesFromStorageStates(storageStates, tenantStorageId));
+  const loaded = true;
 
   const persist = (nextDrafts: EmployeeContractDraft[]) => {
-    const otherDrafts = readEmployeeDrafts().filter((draft) => draft.employeeId !== employeeId);
-    const mergedDrafts = [...otherDrafts, ...nextDrafts];
-    setDrafts(getEmployeeDraftsByEmployeeId(mergedDrafts, employeeId));
-    persistEmployeeDrafts(mergedDrafts);
+    setDrafts(getEmployeeDraftsByEmployeeId(nextDrafts, employeeId));
+    void upsertClientStorageStateAction(getEmployeeContractDraftsStorageKey(tenantStorageId), JSON.stringify(nextDrafts));
   };
 
   const persistSupp = (profiles: Record<string, EmployeeSupplementalProfile>) => {
     setSupplementalProfiles(profiles);
-    persistEmployeeSupplementalProfiles(profiles);
+    void upsertClientStorageStateAction(getEmployeeSupplementalStorageKey(tenantStorageId), JSON.stringify(profiles));
   };
 
   return { drafts, templates, supplementalProfiles, loaded, persist, persistSupp, setDrafts };
@@ -898,6 +898,7 @@ function DraftCreationDialog({
   businessProfile,
   drafts,
   templates,
+  storageStates,
   onClose,
   onCreated,
 }: {
@@ -906,6 +907,7 @@ function DraftCreationDialog({
   businessProfile: BusinessProfile | null;
   drafts: EmployeeContractDraft[];
   templates: ContractDraftTemplate[];
+  storageStates: HydratedClientStorageState[];
   onClose: () => void;
   onCreated: (draft: EmployeeContractDraft) => void;
 }) {
@@ -943,14 +945,14 @@ function DraftCreationDialog({
       return;
     }
 
-    const baseSettings = readSettingsForTemplate(selectedTemplate);
-    const allDrafts = readEmployeeDrafts();
-    const supplemental = readEmployeeSupplementalProfiles()[employee.id] ?? getDefaultEmployeeSupplementalProfile();
+    const baseSettings = readSettingsForTemplate(selectedTemplate, storageStates);
+    const supplementalProfiles = readEmployeeSupplementalProfilesFromStorageStates(storageStates, getActiveTenantStorageId());
+    const supplemental = supplementalProfiles[employee.id] ?? getDefaultEmployeeSupplementalProfile();
     const nextDraft = createInitialEmployeeContractDraft({
       employeeId: employee.id,
       employeeName: `${employee.firstName} ${employee.lastName}`.trim(),
       usageType,
-      drafts: allDrafts,
+      drafts,
       businessProfile,
       template: selectedTemplate,
       baseSettings,
@@ -1280,15 +1282,19 @@ function DraftShowcaseCard({
 export function EmployeeContractDraftsClient({
   employee,
   businessProfile,
+  templates: initialTemplates,
+  storageStates,
 }: {
   employee: EmployeeDraftEmployee;
   businessProfile: BusinessProfile | null;
+  templates: ContractDraftTemplate[];
+  storageStates: HydratedClientStorageState[];
 }) {
   const router = useRouter();
   const [creating, setCreating] = useState(false);
   const [query, setQuery] = useState('');
   const [accountProfile, setAccountProfile] = useState<BusinessProfile | null>(businessProfile);
-  const { drafts, templates, loaded, persist } = useDraftStorage(employee.id);
+  const { drafts, templates, loaded, persist } = useDraftStorage(employee.id, storageStates, initialTemplates);
   const employeeDrafts = useMemo(() => getEmployeeDraftsByEmployeeId(drafts, employee.id), [drafts, employee.id]);
   const employeeName = `${employee.firstName} ${employee.lastName}`.trim();
 
@@ -1416,6 +1422,7 @@ export function EmployeeContractDraftsClient({
         businessProfile={businessProfile}
         drafts={drafts}
         templates={templates}
+        storageStates={storageStates}
         onClose={() => setCreating(false)}
         onCreated={createDraft}
       />
@@ -1436,6 +1443,48 @@ function EmployeeSummaryCard({
       <div>{children}</div>
     </section>
   );
+}
+
+function buildEmployeePayrollBaseSummaryItems(
+  draft: EmployeeContractDraft,
+  derived: ReturnType<typeof calculatePayrollValues>,
+): PayrollBaseSummaryItem[] {
+  const benefitItems = EMPLOYEE_BENEFIT_KEYS.flatMap((key) => {
+    const benefit = draft.benefits[key];
+    const rules =
+      benefit.calculationRules ??
+      (key === 'seniorityAllowance' ? DEFAULT_SENIORITY_BENEFIT_RULES : DEFAULT_FIXED_BENEFIT_RULES);
+    if (!benefit.enabled || rules.paymentEffect !== 'earning') return [];
+    return [
+      {
+        id: `benefit-${key}`,
+        title: EMPLOYEE_CONTRACT_BENEFIT_LABELS[key],
+        amount: benefit.amount,
+        paymentEffect: rules.paymentEffect,
+        includedInWageBase: rules.includedInWageBase,
+        system: rules.systemGenerated,
+        note: EMPLOYEE_CONTRACT_BENEFIT_DESCRIPTIONS[key],
+      } satisfies PayrollBaseSummaryItem,
+    ];
+  });
+
+  const variableItems = (draft.variablePayments?.additions ?? []).map((item) => {
+    const rules = item.calculationRules ?? DEFAULT_OPTIONAL_ADDITION_RULES;
+    const amount =
+      item.method === 'fixed'
+        ? item.amount
+        : (item.percent / 100) * (item.base === 'grossPay' ? derived.grossPay : derived.monthlyBaseSalary);
+    return {
+      id: item.id,
+      title: item.title,
+      amount,
+      paymentEffect: rules.paymentEffect,
+      includedInWageBase: rules.includedInWageBase,
+      system: rules.systemGenerated,
+    } satisfies PayrollBaseSummaryItem;
+  });
+
+  return [...benefitItems, ...variableItems];
 }
 
 function EmployeeVariablePaymentEditorDialog({
@@ -1608,28 +1657,27 @@ function valueOrEmpty(value: string | number | null | undefined) {
   return trimmed ? trimmed : 'ثبت نشده';
 }
 
-function useEmployeeDraftContext(employee: EmployeeDraftEmployee, draftId: string) {
-  const [drafts, setDrafts] = useState<EmployeeContractDraft[]>([]);
-  const [templates, setTemplates] = useState<ContractDraftTemplate[]>([]);
-  const [supplementalProfiles, setSupplementalProfiles] = useState<Record<string, EmployeeSupplementalProfile>>({});
-  const [loaded, setLoaded] = useState(false);
-
-  useEffect(() => {
-    const nextDrafts = readEmployeeDrafts();
-    setDrafts(nextDrafts);
-    setTemplates(readTemplates());
-    setSupplementalProfiles(readEmployeeSupplementalProfiles());
-    setLoaded(true);
-  }, [draftId, employee.id]);
+function useEmployeeDraftContext(
+  employee: EmployeeDraftEmployee,
+  draftId: string,
+  storageStates: HydratedClientStorageState[],
+  templates: ContractDraftTemplate[],
+) {
+  const tenantStorageId = getActiveTenantStorageId();
+  const [drafts, setDrafts] = useState<EmployeeContractDraft[]>(() => readEmployeeDraftsFromStorageStates(storageStates, tenantStorageId));
+  const [supplementalProfiles, setSupplementalProfiles] = useState<Record<string, EmployeeSupplementalProfile>>(() =>
+    readEmployeeSupplementalProfilesFromStorageStates(storageStates, tenantStorageId),
+  );
+  const loaded = true;
 
   const persist = useCallback((nextDrafts: EmployeeContractDraft[]) => {
     setDrafts(nextDrafts);
-    persistEmployeeDrafts(nextDrafts);
-  }, []);
+    void upsertClientStorageStateAction(getEmployeeContractDraftsStorageKey(tenantStorageId), JSON.stringify(nextDrafts));
+  }, [tenantStorageId]);
 
   const persistSupp = (profiles: Record<string, EmployeeSupplementalProfile>) => {
     setSupplementalProfiles(profiles);
-    persistEmployeeSupplementalProfiles(profiles);
+    void upsertClientStorageStateAction(getEmployeeSupplementalStorageKey(tenantStorageId), JSON.stringify(profiles));
   };
 
   const activeDraft = useMemo(
@@ -1719,13 +1767,22 @@ export function EmployeeContractDraftBuilderClient({
   employee,
   businessProfile,
   draftId,
+  templates: initialTemplates,
+  storageStates,
 }: {
   employee: EmployeeDraftEmployee;
   businessProfile: BusinessProfile | null;
   draftId: string;
+  templates: ContractDraftTemplate[];
+  storageStates: HydratedClientStorageState[];
 }) {
   const router = useRouter();
-  const { drafts, templates, supplementalProfiles, loaded, persist, persistSupp, activeDraft } = useEmployeeDraftContext(employee, draftId);
+  const { drafts, templates, supplementalProfiles, loaded, persist, persistSupp, activeDraft } = useEmployeeDraftContext(
+    employee,
+    draftId,
+    storageStates,
+    initialTemplates,
+  );
   const [accountProfile, setAccountProfile] = useState<BusinessProfile | null>(businessProfile);
   const [accountProfilePayload, setAccountProfilePayload] = useState(() => {
     const defaults = createOwnershipEditorDefaults();
@@ -1795,7 +1852,7 @@ export function EmployeeContractDraftBuilderClient({
     const template = activeDraft.templateId ? templates.find((item) => item.id === activeDraft.templateId) ?? null : null;
     const resolved = resolveEmployeeDraftCompensation(
       activeDraft,
-      readSettingsForTemplate(template),
+      readSettingsForTemplate(template, storageStates),
       template,
     );
     const draft = resolved.draft;
@@ -1813,11 +1870,11 @@ export function EmployeeContractDraftBuilderClient({
       compensationHydratedRef.current = hydratedKey;
       setActiveStep(getCurrentStepId(draft));
     }
-  }, [activeDraft, drafts, loaded, persist, templates]);
+  }, [activeDraft, drafts, loaded, persist, storageStates, templates]);
 
   const supplemental = supplementalProfiles[employee.id] ?? getDefaultEmployeeSupplementalProfile();
   const currentTemplate = currentDraft?.templateId ? templates.find((item) => item.id === currentDraft.templateId) ?? null : null;
-  const baseSettings = currentTemplate ? readSettingsForTemplate(currentTemplate) : DEFAULT_PAYROLL_SETTINGS;
+  const baseSettings = currentTemplate ? readSettingsForTemplate(currentTemplate, storageStates) : DEFAULT_PAYROLL_SETTINGS;
   const derived = useMemo(
     () =>
       calculatePayrollValues({
@@ -1825,6 +1882,10 @@ export function EmployeeContractDraftBuilderClient({
         financial: currentDraft?.financial ?? baseSettings.financial,
       }),
     [baseSettings, currentDraft?.financial],
+  );
+  const payrollSummaryItems = useMemo(
+    () => (currentDraft ? buildEmployeePayrollBaseSummaryItems(currentDraft, derived) : []),
+    [currentDraft, derived],
   );
   const steps = currentDraft ? getEmployeeDraftSteps(currentDraft.usageType) : [];
   const hasUnsavedChanges = useMemo(
@@ -2073,8 +2134,12 @@ export function EmployeeContractDraftBuilderClient({
             ? differenceBadge('غیرفعال نسبت به قالب', 'در قالب انتخاب‌شده این مورد فعال بود.')
             : fieldBadge('همسان با قالب', 'success')
         : null;
-    const currentRules = item.calculationRules ?? DEFAULT_FIXED_BENEFIT_RULES;
-    const templateRules = currentDraft.templateSnapshot?.benefitRules?.[key] ?? baseSettings.benefitRules?.[key] ?? DEFAULT_FIXED_BENEFIT_RULES;
+  const currentRules =
+    item.calculationRules ?? (key === 'seniorityAllowance' ? DEFAULT_SENIORITY_BENEFIT_RULES : DEFAULT_FIXED_BENEFIT_RULES);
+  const templateRules =
+    currentDraft.templateSnapshot?.benefitRules?.[key] ??
+    baseSettings.benefitRules?.[key] ??
+    (key === 'seniorityAllowance' ? DEFAULT_SENIORITY_BENEFIT_RULES : DEFAULT_FIXED_BENEFIT_RULES);
     return (
       <article className="business-payroll-transfer-rule" key={key}>
         <div className="business-payroll-transfer-rule-head">
@@ -2808,18 +2873,25 @@ export function EmployeeContractDraftBuilderClient({
             </EmployeeSummaryCard>
 
             {currentDraft.usageType === 'payroll_attendance' ? (
-              <EmployeeSummaryCard title="حقوق و مزایا">
-                <div style={{ display: 'grid', gap: 8, fontSize: 12, lineHeight: 1.9 }}>
-                  <div>
-                    حقوق پایه روزانه: <strong>{formatMoneyRial(currentDraft.financial.dailyBaseSalary)}</strong>
+              <>
+                <EmployeeSummaryCard title="حقوق و مزایا">
+                  <div style={{ display: 'grid', gap: 8, fontSize: 12, lineHeight: 1.9 }}>
+                    <div>
+                      حقوق پایه روزانه: <strong>{formatMoneyRial(currentDraft.financial.dailyBaseSalary)}</strong>
+                    </div>
+                    <div>
+                      دقایق موظفی روزانه: <strong>{formatDurationMinutes(currentDraft.financial.dailyRequiredMinutes)}</strong>
+                    </div>
+                    <div>بیمه/مالیات: <strong>{currentDraft.insuranceTax.insuranceEnabled ? 'بیمه فعال' : 'بیمه غیرفعال'} / {currentDraft.insuranceTax.taxEnabled ? 'مالیات فعال' : 'مالیات غیرفعال'}</strong></div>
+                    <div>مزایای فعال: <strong>{EMPLOYEE_BENEFIT_KEYS.filter((key) => currentDraft.benefits[key].enabled).length}</strong></div>
                   </div>
-                  <div>
-                    دقایق موظفی روزانه: <strong>{formatDurationMinutes(currentDraft.financial.dailyRequiredMinutes)}</strong>
-                  </div>
-                  <div>بیمه/مالیات: <strong>{currentDraft.insuranceTax.insuranceEnabled ? 'بیمه فعال' : 'بیمه غیرفعال'} / {currentDraft.insuranceTax.taxEnabled ? 'مالیات فعال' : 'مالیات غیرفعال'}</strong></div>
-                  <div>مزایای فعال: <strong>{EMPLOYEE_BENEFIT_KEYS.filter((key) => currentDraft.benefits[key].enabled).length}</strong></div>
-                </div>
-              </EmployeeSummaryCard>
+                </EmployeeSummaryCard>
+                <PayrollBaseSummaryPanel
+                  baseSalaryAmount={derived.monthlyBaseSalary}
+                  items={payrollSummaryItems}
+                  className="employee-contract-summary-payroll"
+                />
+              </>
             ) : (
               <EmployeeSummaryCard title="اطلاعات مالی تردد">
                 <div style={{ display: 'grid', gap: 8, fontSize: 12, lineHeight: 1.9 }}>

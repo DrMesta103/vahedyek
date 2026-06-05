@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { MinimalScroll } from '../../../components/MinimalScroll';
 import { PanelFormModal, PanelFormModalActions } from '../../../components/PanelFormModal';
+import { PayrollBaseSummaryPanel, type PayrollBaseSummaryItem } from '../../../components/PayrollBaseSummaryPanel';
 import { VariableAmountTitlePicker } from '../../../components/VariableAmountTitlePicker';
 import { ConfirmDialog } from '../../../components/ConfirmDialog';
 import { UnsavedChangesDialog, useUnsavedLeaveGuard } from '../../../components/UnsavedChangesGuard';
@@ -33,18 +34,17 @@ import { PanelToggleRow } from '../../../components/PanelToggleRow';
 import { CalculationRulesBadges, CalcRulesDiffBadge, CalcRulesEditButton, CalculationRulesDialog } from '../../../components/CalculationRulesChips';
 import type { PaymentEffectContext } from '../../../components/CalculationRulesChips';
 import {
-  getActiveContractDraftTemplateStorageKey,
-  getContractDraftTemplatesStorageKey,
   getTemplateSteps,
-  normalizeContractDraftTemplate,
   type ContractDraftTemplate,
   type ContractDraftTemplateStepId,
   type VariableTemplateItem,
 } from '../../../lib/contract-draft-templates';
 import { formatFaNumber, toPersianDigits } from '../../../lib/format-fa';
+import { upsertContractDraftTemplateAction } from '../../../lib/actions';
 import {
   DEFAULT_PAYROLL_SETTINGS,
   DEFAULT_FIXED_BENEFIT_RULES,
+  DEFAULT_SENIORITY_BENEFIT_RULES,
   DEFAULT_OPTIONAL_ADDITION_RULES,
   DEFAULT_OPTIONAL_DEDUCTION_RULES,
   ACTIVE_TENANT_STORAGE_KEY,
@@ -64,6 +64,7 @@ import {
   type PayrollSettings,
   type VariableAmount,
 } from '../../../lib/payroll-business-settings';
+import type { HydratedClientStorageState } from '../../../lib/client-storage-persistence';
 import { LeaveSection, WorkTimePayRulesSection } from './PayrollBusinessSettingsFlow';
 import { MissionStep, MissionRuleDialog } from '../../employees/[id]/contract-drafts/_components/employee-contract-steps/MissionStep';
 import { PaymentScheduleStep } from '../../employees/[id]/contract-drafts/_components/employee-contract-steps/PaymentScheduleStep';
@@ -142,34 +143,69 @@ function decimal(value: number) {
   return toPersianDigits(Number.isFinite(value) ? String(value) : '');
 }
 
-function readTemplates(tenantId?: string | null) {
-  const raw = window.localStorage.getItem(getContractDraftTemplatesStorageKey(tenantId));
-  if (!raw) return [];
-  try {
-    const parsed = JSON.parse(raw) as unknown[];
-    return Array.isArray(parsed) ? parsed.map(normalizeContractDraftTemplate).filter(Boolean) as ContractDraftTemplate[] : [];
-  } catch {
-    window.localStorage.removeItem(getContractDraftTemplatesStorageKey(tenantId));
-    return [];
-  }
+function getStorageValue(storageStates: HydratedClientStorageState[], storageKey: string) {
+  return storageStates.find((item) => item.storageKey === storageKey)?.value ?? null;
 }
 
-function readTenantPayrollBaseSettings(year: number, tenantId?: string | null) {
-  if (typeof window === 'undefined') return DEFAULT_PAYROLL_SETTINGS;
-  const rawAdminBase = window.localStorage.getItem(getPayrollSettingsStorageKey(year));
+function readTemplates(templates: ContractDraftTemplate[]) {
+  return templates;
+}
+
+function readTenantPayrollBaseSettings(year: number, storageStates: HydratedClientStorageState[], tenantId?: string | null) {
+  const rawAdminBase = getStorageValue(storageStates, getPayrollSettingsStorageKey(year));
   const adminBase = rawAdminBase ? normalizePayrollSettings(JSON.parse(rawAdminBase)) : DEFAULT_PAYROLL_SETTINGS;
   const storageTenantId = tenantId ?? getActiveTenantStorageId();
   if (!storageTenantId) return adminBase;
 
-  const rawTenantOverrides = window.localStorage.getItem(getTenantPayrollSettingsStorageKey(year, storageTenantId));
+  const rawTenantOverrides = getStorageValue(storageStates, getTenantPayrollSettingsStorageKey(year, storageTenantId));
   if (rawTenantOverrides) {
     return normalizePayrollSettings(
       applyPayrollOverrides(adminBase, normalizePayrollOverrides(JSON.parse(rawTenantOverrides))),
     );
   }
 
-  const rawLegacyTenantSettings = window.localStorage.getItem(getPayrollSettingsStorageKey(year, storageTenantId));
+  const rawLegacyTenantSettings = getStorageValue(storageStates, getPayrollSettingsStorageKey(year, storageTenantId));
   return rawLegacyTenantSettings ? normalizePayrollSettings(JSON.parse(rawLegacyTenantSettings)) : adminBase;
+}
+
+function buildPayrollBaseSummaryItems(
+  template: ContractDraftTemplate,
+  derived: ReturnType<typeof calculatePayrollValues>,
+): PayrollBaseSummaryItem[] {
+  const benefitItems = BENEFIT_TEMPLATE_FIELDS.flatMap(({ key, label, description }) => {
+    const benefit = template.data.benefits[key];
+    const rules = benefit.calculationRules ?? (key === 'seniorityAllowance' ? DEFAULT_SENIORITY_BENEFIT_RULES : DEFAULT_FIXED_BENEFIT_RULES);
+    if (!benefit.enabled || rules.paymentEffect !== 'earning') return [];
+    return [
+      {
+        id: `benefit-${key}`,
+        title: label,
+        amount: benefit.amount,
+        paymentEffect: rules.paymentEffect,
+        includedInWageBase: rules.includedInWageBase,
+        system: rules.systemGenerated,
+        note: description,
+      } satisfies PayrollBaseSummaryItem,
+    ];
+  });
+
+  const variableItems = template.data.variablePayments.additions.map((item) => {
+    const amount =
+      item.method === 'fixed'
+        ? item.amount
+        : (item.percent / 100) * (item.base === 'grossPay' ? derived.grossPay : derived.monthlyBaseSalary);
+    const rules = item.calculationRules ?? DEFAULT_OPTIONAL_ADDITION_RULES;
+    return {
+      id: item.id,
+      title: item.title,
+      amount,
+      paymentEffect: rules.paymentEffect,
+      includedInWageBase: rules.includedInWageBase,
+      system: rules.systemGenerated,
+    } satisfies PayrollBaseSummaryItem;
+  });
+
+  return [...benefitItems, ...variableItems];
 }
 
 function differenceBadge(difference?: BaseDifference | null) {
@@ -448,14 +484,30 @@ function AttachmentDialog({
   );
 }
 
-export function ContractDraftTemplateBuilder({ tenantId = null }: { tenantId?: string | null }) {
+export function ContractDraftTemplateBuilder({
+  tenantId = null,
+  templates: initialTemplates,
+  selectedTemplateId = null,
+  storageStates,
+}: {
+  tenantId?: string | null;
+  templates: ContractDraftTemplate[];
+  selectedTemplateId?: string | null;
+  storageStates: HydratedClientStorageState[];
+}) {
   const router = useRouter();
   const tenantStorageId = tenantId ?? getActiveTenantStorageId();
-  const [templates, setTemplates] = useState<ContractDraftTemplate[]>([]);
-  const [template, setTemplate] = useState<ContractDraftTemplate | null>(null);
-  const [baseSettings, setBaseSettings] = useState<PayrollSettings>(DEFAULT_PAYROLL_SETTINGS);
-  const [stepState, setStepState] = useState<StepState | null>(null);
-  const [activeStep, setActiveStep] = useState<ContractDraftTemplateStepId>('classification');
+  const [templates, setTemplates] = useState<ContractDraftTemplate[]>(() => readTemplates(initialTemplates));
+  const [template, setTemplate] = useState<ContractDraftTemplate | null>(() => {
+    const selected = initialTemplates.find((item) => item.id === selectedTemplateId) ?? initialTemplates[0] ?? null;
+    return selected;
+  });
+  const [baseSettings, setBaseSettings] = useState<PayrollSettings>(() => {
+    const templateYear = initialTemplates.find((item) => item.id === selectedTemplateId)?.baseSettingsYear ?? initialTemplates[0]?.baseSettingsYear;
+    return templateYear ? readTenantPayrollBaseSettings(templateYear, storageStates, tenantStorageId) : DEFAULT_PAYROLL_SETTINGS;
+  });
+  const [stepState, setStepState] = useState<StepState | null>(() => (template ? createStepState(template) : null));
+  const [activeStep, setActiveStep] = useState<ContractDraftTemplateStepId>(() => template?.stepsProgress.currentStepId || 'classification');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [attachmentCategory, setAttachmentCategory] = useState<typeof DOCUMENT_CATEGORIES[number] | null>(null);
   const [missionEditor, setMissionEditor] = useState<MissionRule | null>(null);
@@ -466,18 +518,7 @@ export function ContractDraftTemplateBuilder({ tenantId = null }: { tenantId?: s
     if (tenantId) {
       window.sessionStorage.setItem(ACTIVE_TENANT_STORAGE_KEY, tenantId);
     }
-    const all = readTemplates(tenantStorageId);
-    const activeId = window.localStorage.getItem(getActiveContractDraftTemplateStorageKey(tenantStorageId));
-    const current = all.find((item) => item.id === activeId) ?? all[0] ?? null;
-    setTemplates(all);
-    setTemplate(current);
-    savedTemplateRef.current = current;
-    if (!current) return;
-    setBaseSettings(readTenantPayrollBaseSettings(current.baseSettingsYear, tenantStorageId));
-    const state = createStepState(current);
-    setStepState(state);
-    setActiveStep(current.stepsProgress.currentStepId || getTemplateSteps(current.usageType)[0].id);
-  }, [tenantId, tenantStorageId]);
+  }, [tenantId]);
 
   const steps = template ? getTemplateSteps(template.usageType) : [];
   const hasUnsavedChanges = useMemo(
@@ -486,16 +527,19 @@ export function ContractDraftTemplateBuilder({ tenantId = null }: { tenantId?: s
   );
   const settings = useMemo(() => template ? composeSettings(template, baseSettings) : DEFAULT_PAYROLL_SETTINGS, [template, baseSettings]);
   const derived = useMemo(() => calculatePayrollValues(settings), [settings]);
+  const payrollSummaryItems = useMemo(
+    () => (template ? buildPayrollBaseSummaryItems(template, derived) : []),
+    [template, derived],
+  );
 
-  const persist = (nextTemplate: ContractDraftTemplate, nextState = stepState, nextStep = activeStep) => {
+  const persist = async (nextTemplate: ContractDraftTemplate, nextState = stepState, nextStep = activeStep) => {
     const withProgress = nextState ? updateProgress(nextTemplate, nextState, nextStep) : nextTemplate;
     setTemplate(withProgress);
     const nextTemplates = templates.some((item) => item.id === withProgress.id)
       ? templates.map((item) => (item.id === withProgress.id ? withProgress : item))
       : [withProgress, ...templates];
     setTemplates(nextTemplates);
-    window.localStorage.setItem(getContractDraftTemplatesStorageKey(tenantStorageId), JSON.stringify(nextTemplates));
-    window.localStorage.setItem(getActiveContractDraftTemplateStorageKey(tenantStorageId), withProgress.id);
+    await upsertContractDraftTemplateAction(withProgress);
   };
 
   const updateTemplate = (step: ContractDraftTemplateStepId, apply: (current: ContractDraftTemplate) => ContractDraftTemplate) => {
@@ -503,7 +547,7 @@ export function ContractDraftTemplateBuilder({ tenantId = null }: { tenantId?: s
     const next = apply(template);
     const nextState = { ...stepState, [step]: { ...stepState[step], dirty: true, saved: false } };
     setStepState(nextState);
-    persist(next, nextState, activeStep);
+    void persist(next, nextState, activeStep);
     setErrors({});
   };
 
@@ -524,7 +568,7 @@ export function ContractDraftTemplateBuilder({ tenantId = null }: { tenantId?: s
     setStepState(nextState);
     const nextTemplate = updateProgress(template, nextState, activeStep);
     savedTemplateRef.current = nextTemplate;
-    persist(nextTemplate, nextState, activeStep);
+    void persist(nextTemplate, nextState, activeStep);
     setErrors({});
     return true;
   };
@@ -551,7 +595,7 @@ export function ContractDraftTemplateBuilder({ tenantId = null }: { tenantId?: s
     };
     setStepState(nextState);
     setActiveStep(nextStep.id);
-    persist(template, nextState, nextStep.id);
+    void persist(template, nextState, nextStep.id);
     requestAnimationFrame(() => scrollToStep(nextStep.id));
   };
 
@@ -578,7 +622,7 @@ export function ContractDraftTemplateBuilder({ tenantId = null }: { tenantId?: s
     const nextTemplate = updateProgress(template, nextState, activeStep);
     setStepState(nextState);
     savedTemplateRef.current = nextTemplate;
-    persist(nextTemplate, nextState, activeStep);
+    void persist(nextTemplate, nextState, activeStep);
     setErrors({});
     return true;
   };
@@ -640,7 +684,7 @@ export function ContractDraftTemplateBuilder({ tenantId = null }: { tenantId?: s
                     onClick={() => {
                       if (!state.opened) return;
                       setActiveStep(step.id);
-                      persist(template, stepState, step.id);
+                      void persist(template, stepState, step.id);
                       requestAnimationFrame(() => scrollToStep(step.id));
                     }}
                   >
@@ -711,6 +755,12 @@ export function ContractDraftTemplateBuilder({ tenantId = null }: { tenantId?: s
               </div>
               <small>{formatFaNumber(progressPercent, { useGrouping: false })}٪ تکمیل شده</small>
             </div>
+
+            <PayrollBaseSummaryPanel
+              baseSalaryAmount={derived.monthlyBaseSalary}
+              items={payrollSummaryItems}
+              className="contract-draft-summary-payroll"
+            />
 
             <div className="draft-template-flow-report-grid">
               <div>
@@ -1400,7 +1450,11 @@ function BenefitsTemplateStep({ template, baseSettings, updateTemplate }: { temp
 
   const activeKey = rulesDialog?.key;
   const activeItem = activeKey ? template.data.benefits[activeKey] : null;
-  const activeBaseRules = activeKey ? baseSettings.benefitRules?.[activeKey] ?? DEFAULT_FIXED_BENEFIT_RULES : null;
+  const activeBaseRules =
+    activeKey
+      ? baseSettings.benefitRules?.[activeKey] ??
+        (activeKey === 'seniorityAllowance' ? DEFAULT_SENIORITY_BENEFIT_RULES : DEFAULT_FIXED_BENEFIT_RULES)
+      : null;
   const activeLabel = activeKey ? BENEFIT_TEMPLATE_FIELDS.find((f) => f.key === activeKey)?.label : undefined;
 
   return (
@@ -1411,7 +1465,7 @@ function BenefitsTemplateStep({ template, baseSettings, updateTemplate }: { temp
           const item = template.data.benefits[key];
           const baseAmount = baseSettings.benefits[baseKey];
           const baseRules = baseSettings.benefitRules?.[baseKey] ?? DEFAULT_FIXED_BENEFIT_RULES;
-          const currentRules = item.calculationRules ?? DEFAULT_FIXED_BENEFIT_RULES;
+          const currentRules = item.calculationRules ?? (key === 'seniorityAllowance' ? DEFAULT_SENIORITY_BENEFIT_RULES : DEFAULT_FIXED_BENEFIT_RULES);
           const amountDiff = !item.enabled
             ? customDifference('غیرفعال نسبت به مبنا', `مبلغ مبنا برای ${label} ${money(baseAmount)} است.`)
             : compareValues(baseAmount, item.amount, { changed: 'متفاوت با مبلغ مبنا', tooltip: `مبلغ مبنا برای ${label} ${money(baseAmount)} است.` });
@@ -1463,7 +1517,7 @@ function BenefitsTemplateStep({ template, baseSettings, updateTemplate }: { temp
         <CalculationRulesDialog
           open={Boolean(rulesDialog)}
           itemTitle={activeLabel}
-          rules={activeItem.calculationRules ?? DEFAULT_FIXED_BENEFIT_RULES}
+          rules={activeItem.calculationRules ?? (activeKey === 'seniorityAllowance' ? DEFAULT_SENIORITY_BENEFIT_RULES : DEFAULT_FIXED_BENEFIT_RULES)}
           baseRules={activeBaseRules}
           baseLabel="تنظیمات مبنا"
           effectContext="benefit_or_addition"

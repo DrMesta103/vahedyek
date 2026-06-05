@@ -19,6 +19,7 @@ import { normalizePersianDateInput } from '../../../../../lib/calendar-events';
 import { resolveCalendarShiftTitle } from '../../../../../lib/calendar-shifts';
 import { calculateTimeRangeDurationMinutes, validateTimeRangeUnder24Hours } from '../../../../../lib/time-range-validation';
 import type { ShiftTemplatePickerItem } from '../../../../../lib/shift-template-picker';
+import { RotateShiftComingSoonModal } from './RotateShiftComingSoonModal';
 import type { CalendarShiftDayContext, CalendarShiftWizardCalendar } from './types';
 
 export type { CalendarShiftDayContext, CalendarShiftWizardCalendar } from './types';
@@ -970,14 +971,10 @@ export function CalendarShiftWizard({
     stringArray(baseShiftConfig.floatAbsWorkingDays, defaultWorkingDaysForContext),
   );
   const [floatAbsRequiredMinutes, setFloatAbsRequiredMinutes] = useState(Number(floatAbsConfig.requiredMinutes ?? 480) || 480);
-  const initialFloatAbsRangeEnabled = Boolean(
-    floatAbsConfig.registrationRangeEnabled ?? ('startTime' in floatAbsConfig || 'endTime' in floatAbsConfig || 'endsNextDay' in floatAbsConfig),
-  );
-  const [floatAbsRangeEnabled, setFloatAbsRangeEnabled] = useState(initialFloatAbsRangeEnabled);
   const [floatAbsStart, setFloatAbsStart] = useState(String(floatAbsConfig.startTime ?? '08:00'));
   const [floatAbsEnd, setFloatAbsEnd] = useState(String(floatAbsConfig.endTime ?? '16:00'));
   const [floatAbsRests, setFloatAbsRests] = useState<RestItem[]>(
-    normalizeAbsoluteFloatingRests(floatAbsConfig.rests ?? baseShiftConfig.floatAbsRests, initialFloatAbsRangeEnabled),
+    normalizeAbsoluteFloatingRests(floatAbsConfig.rests ?? baseShiftConfig.floatAbsRests, true),
   );
 
   const [splitWorkingDays, setSplitWorkingDays] = useState<string[]>(
@@ -1000,10 +997,11 @@ export function CalendarShiftWizard({
   };
 
   const fixedWorkRange = useMemo<WorkRange>(() => ({ start: startTime, end: endTime, nextDay }), [endTime, nextDay, startTime]);
-  const floatAbsWorkRange = useMemo<WorkRange | undefined>(
-    () => (floatAbsRangeEnabled ? { start: floatAbsStart, end: floatAbsEnd, nextDay: false } : undefined),
-    [floatAbsEnd, floatAbsRangeEnabled, floatAbsStart],
-  );
+  const floatAbsWorkRange = useMemo<WorkRange | undefined>(() => {
+    if (!floatAbsStart || !floatAbsEnd) return undefined;
+    if (parseTime(floatAbsEnd) <= parseTime(floatAbsStart)) return undefined;
+    return { start: floatAbsStart, end: floatAbsEnd, nextDay: false };
+  }, [floatAbsEnd, floatAbsStart]);
   const floatAbsFixedBreaksAllowed = Boolean(floatAbsWorkRange);
   const floatAbsDeducted = useMemo(() => totalDeductedRestMinutes(floatAbsRests), [floatAbsRests]);
   const floatAbsNetMinutes = useMemo(() => Math.max(floatAbsRequiredMinutes - floatAbsDeducted, 0), [floatAbsDeducted, floatAbsRequiredMinutes]);
@@ -1032,25 +1030,6 @@ export function CalendarShiftWizard({
     () => shiftDuration(split1Start, split1End, split1NextDay, split1Rests) + shiftDuration(split2Start, split2End, split2NextDay, split2Rests),
     [split1End, split1NextDay, split1Rests, split1Start, split2End, split2NextDay, split2Rests, split2Start],
   );
-
-  const setFloatAbsRangeEnabledWithConversion = (checked: boolean) => {
-    if (!checked && floatAbsRangeEnabled && floatAbsRests.some((item) => item.type === 'fixed')) {
-      const confirmed = window.confirm(
-        'با غیرفعال کردن محدودیت زمانی ثبت تردد، استراحت‌های بازه ثابت دیگر معتبر نیستند و به مدت شناور تبدیل یا حذف می‌شوند. ادامه می‌دهید؟',
-      );
-      if (!confirmed) return;
-      setFloatAbsRests((prev) => prev.flatMap((item) => {
-        if (item.type !== 'fixed') return [item];
-        const converted = convertRestToFloating(item);
-        return converted ? [converted] : [];
-      }));
-    }
-    setFloatAbsRangeEnabled(checked);
-    if (!checked) {
-      setFloatAbsStart('');
-      setFloatAbsEnd('');
-    }
-  };
 
   const handleFloatAbsBreakChange = (items: RestItem[]) => {
     if (!floatAbsFixedBreaksAllowed) {
@@ -1128,14 +1107,12 @@ export function CalendarShiftWizard({
     if (!dayContext && floatAbsWorkingDays.length === 0) errors.push('حداقل یک روز برای این شیفت انتخاب کنید.');
     if (!floatAbsRequiredMinutes) errors.push('حداقل مدت کار روزانه را وارد کنید.');
     if (floatAbsRequiredMinutes <= 0) errors.push('حداقل مدت کار روزانه باید بیشتر از صفر باشد.');
-    if (floatAbsRangeEnabled) {
-      if (!floatAbsStart || !floatAbsEnd) errors.push('محدوده مجاز ثبت تردد را کامل کنید.');
-      if (floatAbsStart && floatAbsEnd && parseTime(floatAbsEnd) <= parseTime(floatAbsStart)) {
-        errors.push('پایان محدوده مجاز ثبت تردد باید بعد از شروع آن باشد.');
-      }
-      if (validateTimeRangeUnder24Hours(floatAbsStart, floatAbsEnd)) {
-        errors.push('بازه زمانی نمی‌تواند ۲۴ ساعت یا بیشتر باشد.');
-      }
+    if (!floatAbsStart || !floatAbsEnd) errors.push('محدوده مجاز ثبت تردد را کامل کنید.');
+    if (floatAbsStart && floatAbsEnd && parseTime(floatAbsEnd) <= parseTime(floatAbsStart)) {
+      errors.push('پایان محدوده مجاز ثبت تردد باید بعد از شروع آن باشد.');
+    }
+    if (validateTimeRangeUnder24Hours(floatAbsStart, floatAbsEnd)) {
+      errors.push('بازه زمانی نمی‌تواند ۲۴ ساعت یا بیشتر باشد.');
     }
     if (floatAbsDeducted > floatAbsRequiredMinutes) {
       errors.push('مدت استراحت نمی‌تواند از حداقل مدت کار روزانه بیشتر باشد.');
@@ -1244,13 +1221,11 @@ export function CalendarShiftWizard({
 
     if (template.shiftType === 'float-abs') {
       const floatAbs = asObject(config.absoluteFloatingShift);
-      const rangeEnabled = Boolean(floatAbs.registrationRangeEnabled ?? ('startTime' in floatAbs || 'endTime' in floatAbs || 'endsNextDay' in floatAbs));
       setFloatAbsWorkingDays(template.weekDays.length > 0 ? template.weekDays : stringArray(config.floatAbsWorkingDays, DEFAULT_WORKING_DAYS));
       setFloatAbsRequiredMinutes(Number(floatAbs.requiredMinutes ?? 480) || 480);
-      setFloatAbsRangeEnabled(rangeEnabled);
       setFloatAbsStart(String(floatAbs.startTime ?? '08:00'));
       setFloatAbsEnd(String(floatAbs.endTime ?? '16:00'));
-      setFloatAbsRests(normalizeAbsoluteFloatingRests(floatAbs.rests, rangeEnabled));
+      setFloatAbsRests(normalizeAbsoluteFloatingRests(floatAbs.rests, true));
       return;
     }
 
@@ -1327,9 +1302,9 @@ export function CalendarShiftWizard({
       },
       absoluteFloatingShift: {
         requiredMinutes: floatAbsRequiredMinutes,
-        registrationRangeEnabled: floatAbsRangeEnabled,
-        startTime: floatAbsRangeEnabled ? floatAbsStart : '',
-        endTime: floatAbsRangeEnabled ? floatAbsEnd : '',
+        registrationRangeEnabled: true,
+        startTime: floatAbsStart,
+        endTime: floatAbsEnd,
         endsNextDay: false,
         rests: floatAbsRests,
       },
@@ -1544,7 +1519,7 @@ export function CalendarShiftWizard({
                       <div className="text-lg font-black text-white">خلاصه شیفت</div>
                       <div className="mt-4 space-y-2 text-sm leading-7 text-slate-200">
                         <div>نوع شیفت: شیفت ثابت</div>
-                        <div>روش تعریف: {shiftMode === 'template' ? 'انتخاب از قالب آماده' : 'تعریف دستی'}</div>
+                        {!isTemplatePurpose ? <div>روش تعریف: {shiftMode === 'template' ? 'انتخاب از قالب آماده' : 'تعریف دستی'}</div> : null}
                         <div>عنوان: {shiftTitle || '-'}</div>
                         <div>روزهای فعال: {formatWorkingDaysLabel(workingDays)}</div>
                         <div>ساعت کار: {startTime} تا {endTime}{nextDay ? ' (روز بعد)' : ''}</div>
@@ -1580,7 +1555,7 @@ export function CalendarShiftWizard({
                     <SlidersHorizontal className="h-5 w-5 text-indigo-300" />
                     <div className="text-xl font-black text-white">تعریف شیفت شناور شروع روز</div>
                   </div>
-                  <ModeSwitch mode={shiftMode} setMode={setShiftMode} noTemplateMessage />
+                  {enableBuiltinTemplatePicker ? <ModeSwitch mode={shiftMode} setMode={setShiftMode} /> : null}
                   <div className="mt-3 rounded-xl border border-indigo-400/20 bg-indigo-950/30 p-4 text-right">
                     <div className="text-sm font-bold text-white">کارمند فقط در این بازه می‌تواند ورود خود را بدون تأخیر ثبت کند.</div>
                     <p className="mt-2 text-xs leading-6 text-slate-300">ورود قبل از شروع بازه، طبق سیاست‌های تردد سازمان در مراحل بعدی قابل تنظیم است. ورود بعد از پایان بازه مجاز می‌تواند در گزارش‌ها به‌عنوان تأخیر نمایش داده شود.</p>
@@ -1666,7 +1641,7 @@ export function CalendarShiftWizard({
                       <div className="text-lg font-black text-white">خلاصه شیفت</div>
                       <div className="mt-4 space-y-2 text-sm leading-7 text-slate-200">
                         <div>نوع شیفت: شیفت شناور شروع روز</div>
-                        <div>روش تعریف: {shiftMode === 'template' ? 'انتخاب از قالب آماده' : 'تعریف دستی'}</div>
+                        {!isTemplatePurpose ? <div>روش تعریف: {shiftMode === 'template' ? 'انتخاب از قالب آماده' : 'تعریف دستی'}</div> : null}
                         <div>عنوان: {shiftTitle || '-'}</div>
                         <div>روزهای فعال: {formatWorkingDaysLabel(floatDayWorkingDays)}</div>
                         <div>بازه مجاز ورود: {floatDayEntryStart} تا {floatDayEntryEnd}</div>
@@ -1703,7 +1678,7 @@ export function CalendarShiftWizard({
                     <SlidersHorizontal className="h-5 w-5 text-indigo-300" />
                     <div className="text-xl font-black text-white">تعریف شیفت شناور مطلق</div>
                   </div>
-                  <ModeSwitch mode={shiftMode} setMode={setShiftMode} noTemplateMessage />
+                  {enableBuiltinTemplatePicker ? <ModeSwitch mode={shiftMode} setMode={setShiftMode} /> : null}
                   <div className="mt-3 rounded-xl border border-indigo-400/20 bg-indigo-950/30 p-4 text-right">
                     <div className="text-sm font-bold text-white">در این نوع شیفت، ساعت ورود و خروج ثابت کنترل نمی‌شود. ملاک اصلی، مجموع کارکرد روزانه کارمند است.</div>
                     <p className="mt-2 text-xs leading-6 text-slate-300">
@@ -1731,21 +1706,14 @@ export function CalendarShiftWizard({
                       ) : null}
                     </div>
                     <div className="space-y-3 rounded-[18px] border border-white/10 bg-slate-900/40 p-4">
-                      <InlineToggle
-                        label="محدودیت زمانی برای ثبت تردد فعال شود"
-                        checked={floatAbsRangeEnabled}
-                        onChange={(checked) => setFloatAbsRangeEnabledWithConversion(checked)}
-                      />
-                      <div className="text-sm font-bold text-white">محدوده مجاز ثبت تردد، اختیاری</div>
-                      <p className="text-xs leading-6 text-slate-400">در صورت نیاز، می‌توانید مشخص کنید ثبت ورود و خروج فقط در یک بازه زمانی خاص از روز مجاز باشد.</p>
-                      {floatAbsRangeEnabled ? (
-                        <div className="grid grid-cols-2 gap-4">
-                          <TimeField label="از ساعت" value={floatAbsStart} onChange={setFloatAbsStart} hint="زودترین زمانی که ثبت تردد در این شیفت مجاز است." />
-                          <TimeField label="تا ساعت" value={floatAbsEnd} onChange={setFloatAbsEnd} hint="آخرین زمانی که ثبت تردد در این شیفت مجاز است." />
-                        </div>
-                      ) : (
-                        <div className="rounded-xl border border-dashed border-white/10 bg-slate-950/30 px-3 py-2 text-xs leading-6 text-slate-300">بدون محدودیت زمانی</div>
-                      )}
+                      <div className="text-sm font-bold text-white">
+                        <b>*</b> محدوده مجاز ثبت تردد
+                      </div>
+                      <p className="text-xs leading-6 text-slate-400">ثبت ورود و خروج فقط در بازه زمانی مشخص‌شده مجاز است.</p>
+                      <div className="grid grid-cols-2 gap-4">
+                        <TimeField label="از ساعت" value={floatAbsStart} onChange={setFloatAbsStart} hint="زودترین زمانی که ثبت تردد در این شیفت مجاز است." />
+                        <TimeField label="تا ساعت" value={floatAbsEnd} onChange={setFloatAbsEnd} hint="آخرین زمانی که ثبت تردد در این شیفت مجاز است." />
+                      </div>
                     </div>
                     <BreakEditor
                       items={floatAbsRests}
@@ -1767,12 +1735,12 @@ export function CalendarShiftWizard({
                       <div className="text-lg font-black text-white">خلاصه شیفت</div>
                       <div className="mt-4 space-y-2 text-sm leading-7 text-slate-200">
                         <div>نوع شیفت: شیفت شناور مطلق</div>
-                        <div>روش تعریف: {shiftMode === 'template' ? 'انتخاب از قالب آماده' : 'تعریف دستی'}</div>
+                        {!isTemplatePurpose ? <div>روش تعریف: {shiftMode === 'template' ? 'انتخاب از قالب آماده' : 'تعریف دستی'}</div> : null}
                         <div>عنوان: {shiftTitle || '-'}</div>
                         <div>روزهای فعال: {formatWorkingDaysLabel(floatAbsWorkingDays)}</div>
                         <div>ملاک محاسبه: مجموع کارکرد روزانه</div>
                         <div>حداقل کارکرد لازم: {formatDuration(floatAbsRequiredMinutes)}</div>
-                        <div>محدوده مجاز ثبت تردد: {floatAbsRangeEnabled ? `${floatAbsStart} تا ${floatAbsEnd}` : 'بدون محدودیت زمانی'}</div>
+                        <div>محدوده مجاز ثبت تردد: {floatAbsStart && floatAbsEnd ? `${floatAbsStart} تا ${floatAbsEnd}` : '-'}</div>
                         <div>استراحت قابل کسر: {formatDuration(floatAbsDeducted)}</div>
                         <div>مدت کارکرد مفید مورد انتظار: {formatDuration(floatAbsNetMinutes)}</div>
                         <div className="rounded-xl bg-slate-900/50 px-3 py-2 text-xs leading-6 text-indigo-100">
@@ -1797,7 +1765,7 @@ export function CalendarShiftWizard({
                     <SlidersHorizontal className="h-5 w-5 text-indigo-300" />
                     <div className="text-xl font-black text-white">تعریف شیفت دو تکه</div>
                   </div>
-                  <ModeSwitch mode={shiftMode} setMode={setShiftMode} noTemplateMessage />
+                  {enableBuiltinTemplatePicker ? <ModeSwitch mode={shiftMode} setMode={setShiftMode} /> : null}
                   <div className="mt-6 space-y-5">
                     {!dayContext ? (
                       <WeekDaysEditor
@@ -1836,7 +1804,7 @@ export function CalendarShiftWizard({
                       <div className="text-lg font-black text-white">خلاصه شیفت</div>
                       <div className="mt-4 space-y-2 text-sm leading-7 text-slate-200">
                         <div>نوع شیفت: شیفت دو تکه</div>
-                        <div>روش تعریف: {shiftMode === 'template' ? 'انتخاب از قالب آماده' : 'تعریف دستی'}</div>
+                        {!isTemplatePurpose ? <div>روش تعریف: {shiftMode === 'template' ? 'انتخاب از قالب آماده' : 'تعریف دستی'}</div> : null}
                         <div>عنوان: {shiftTitle || '-'}</div>
                         <div>روزهای فعال: {formatWorkingDaysLabel(splitWorkingDays)}</div>
                         <div>بازه‌های کاری:</div>
@@ -1867,7 +1835,7 @@ export function CalendarShiftWizard({
                     <SlidersHorizontal className="h-5 w-5 text-indigo-300" />
                     <div className="text-xl font-black text-white">تعریف شیفت چرخشی</div>
                   </div>
-                  <ModeSwitch mode={shiftMode} setMode={setShiftMode} noTemplateMessage />
+                  {enableBuiltinTemplatePicker ? <ModeSwitch mode={shiftMode} setMode={setShiftMode} /> : null}
                   <div className="mt-6 space-y-4">
                     <div className="flex flex-row-reverse items-center justify-between text-right">
                       <button
@@ -1993,29 +1961,7 @@ export function CalendarShiftWizard({
           </div>
       </div>
 
-      {rotateComingSoonOpen ? (
-        <div className="fixed inset-0 z-[100] bg-black/65" onClick={() => setRotateComingSoonOpen(false)}>
-          <div
-            className="fixed left-1/2 top-1/2 z-[101] w-[min(100%-2rem,26rem)] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-white/10 bg-slate-900 p-5 text-right text-slate-100 shadow-2xl"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="text-lg font-black text-white">شیفت چرخشی</div>
-            <p className="mt-3 text-sm leading-7 text-slate-300">این قابلیت به‌زودی اضافه می‌شود.</p>
-            <p className="mt-2 text-xs leading-6 text-slate-400">
-              زیرساخت این بخش آماده است، اما تعریف و مدیریت شیفت‌های چرخشی در نسخه‌های بعدی فعال خواهد شد.
-            </p>
-            <div className="mt-6 flex justify-end">
-              <button
-                type="button"
-                onClick={() => setRotateComingSoonOpen(false)}
-                className="rounded-full bg-orange-500 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-orange-400"
-              >
-                متوجه شدم
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+      <RotateShiftComingSoonModal open={rotateComingSoonOpen} onClose={() => setRotateComingSoonOpen(false)} />
     </section>
   );
 }

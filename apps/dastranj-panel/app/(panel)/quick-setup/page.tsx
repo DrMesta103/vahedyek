@@ -13,6 +13,7 @@ export default async function QuickSetupPage() {
       defaultCalendarTemplate={data.defaultCalendarTemplate}
       policyItems={data.policyItems}
       employeeItems={data.employeeItems}
+      employeeImportJobs={data.employeeImportJobs}
       workGroupItems={data.workGroupItems}
       tenantId={data.tenantId}
     />

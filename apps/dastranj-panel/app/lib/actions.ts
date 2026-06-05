@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { Decimal } from '@prisma/client/runtime/library';
+import { randomUUID } from 'node:crypto';
 import { Prisma, WorkGroupAccessLevel } from './prisma-client';
 import { prisma } from './prisma';
 import {
@@ -10,6 +11,8 @@ import {
   validateWorkplaceLocationDraft,
 } from './workplace-location';
 import { getSessionContext } from './auth';
+import { isValidIranMobile, normalizeEmail, sanitizeIranMobileInput } from './contact';
+import { getEmployeeImportJobDetailsForTenant, listEmployeeImportJobsForTenant } from './employee-import-jobs';
 import { isPersianYmdInRange, parsePersianYmd } from './calendar-dates';
 import { ensureGlobalDefaultCalendar } from './calendar-defaults';
 import { getOfficialHolidaysForYear } from './calendar-official-holidays';
@@ -33,6 +36,18 @@ import {
 import { serializeShiftTemplateFromWizard } from './shift-template-map';
 import { getPolicyFamilyMeta, getPolicySectionValues } from './policy-workspaces';
 import { seedSampleData } from './seed';
+import type { ContractDraftTemplate } from './contract-draft-templates';
+import { normalizeContractDraftTemplate } from './contract-draft-templates';
+import * as XLSX from 'xlsx';
+import type {
+  QuickEmployeeImportJobDetails,
+  QuickEmployeeImportJobInvitationChannel,
+  QuickEmployeeImportJobMockInvitationStatus,
+  QuickEmployeeImportJobRowStatus,
+  QuickEmployeeImportJobStatus,
+  QuickEmployeeImportJobSummary,
+  QuickEmployeeImportJobType,
+} from '../(panel)/quick-setup/_components/quick-setup.types';
 
 function value(formData: FormData, key: string) {
   return String(formData.get(key) ?? '').trim();
@@ -1617,6 +1632,600 @@ export async function deleteEmployeeFromQuickSetupAction(id: string) {
   revalidatePath('/quick-setup');
 }
 
+type QuickCompletionInviteContact = {
+  type: 'mobile' | 'email';
+  value: string;
+};
+
+type QuickCompletionInviteRow = {
+  contactType: 'mobile' | 'email';
+  contactValue: string;
+  employeeId: string;
+  completionLink: string;
+  created: boolean;
+  existingEmployee: boolean;
+  employee: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string | null;
+    mobile: string | null;
+    status: 'registered' | 'invite_sent' | 'pending_completion' | 'completed' | 'active' | 'failed_send' | 'error';
+    addMethod: 'single' | 'excel' | 'invitation_link' | 'email_invite' | 'sms_invite';
+    invitationStatus: 'sent' | 'failed' | null;
+    lastActionAt: string | null;
+    avatarUrl?: string;
+  };
+};
+
+function normalizeQuickInviteContact(value: string, type: QuickCompletionInviteContact['type']) {
+  return type === 'mobile' ? sanitizeIranMobileInput(value) : normalizeEmail(value);
+}
+
+function buildQuickInviteCompletionLink(employeeId: string) {
+  return `/quick-setup/invite/${employeeId}?token=${randomUUID()}`;
+}
+
+export async function createQuickCompletionInvitesAction(data: { contacts: QuickCompletionInviteContact[] }) {
+  const tenantId = await getTenantId();
+  const now = new Date();
+  const seen = new Set<string>();
+  const rows: QuickCompletionInviteRow[] = [];
+  let createdCount = 0;
+  let existingCount = 0;
+  let sentCount = 0;
+  let failedCount = 0;
+
+  for (const contact of data.contacts) {
+    const normalized = normalizeQuickInviteContact(contact.value, contact.type);
+    if (!normalized) {
+      failedCount += 1;
+      continue;
+    }
+
+    const key = `${contact.type}:${normalized}`;
+    if (seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+
+    const where =
+      contact.type === 'email'
+        ? { tenantId, email: { contains: normalized, mode: 'insensitive' as const } }
+        : {
+            tenantId,
+            OR: [
+              { mobile1: normalized },
+              { mobile2: normalized },
+              { mobile1: { contains: normalized } },
+              { mobile2: { contains: normalized } },
+            ],
+          };
+
+    const existing = await prisma.employee.findFirst({
+      where,
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        mobile1: true,
+        avatarUrl: true,
+      },
+      orderBy: [{ updatedAt: 'desc' }, { createdAt: 'desc' }],
+    } as any);
+
+    const quickSetupStatus = 'invite_sent' as const;
+    const quickSetupAddMethod = 'invitation_link' as const;
+
+    if (existing) {
+      existingCount += 1;
+      const employee = await prisma.employee.update({
+        where: { id: existing.id },
+        data: {
+          ...(contact.type === 'email' ? { email: normalized } : { mobile1: normalized }),
+          quickSetupStatus,
+          quickSetupAddMethod,
+          quickSetupInvitationStatus: 'sent',
+          quickSetupLastActionAt: now,
+        } as any,
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+          mobile1: true,
+          avatarUrl: true,
+        },
+      } as any);
+
+      rows.push({
+        contactType: contact.type,
+        contactValue: normalized,
+        employeeId: employee.id,
+        created: false,
+        existingEmployee: true,
+        employee: {
+          id: employee.id,
+          firstName: employee.firstName,
+          lastName: employee.lastName,
+          email: employee.email ?? null,
+          mobile: employee.mobile1 ?? null,
+          status: quickSetupStatus,
+          addMethod: quickSetupAddMethod,
+          invitationStatus: 'sent',
+          lastActionAt: now.toISOString(),
+          avatarUrl: employee.avatarUrl ?? undefined,
+        },
+        completionLink: buildQuickInviteCompletionLink(employee.id),
+      });
+      sentCount += 1;
+      continue;
+    }
+
+    const employee = await prisma.employee.create({
+      data: {
+        tenantId,
+        firstName: 'کارمند',
+        lastName: 'جدید',
+        email: contact.type === 'email' ? normalized : null,
+        mobile1: contact.type === 'mobile' ? normalized : null,
+        quickSetupStatus,
+        quickSetupAddMethod,
+        quickSetupInvitationStatus: 'sent',
+        quickSetupLastActionAt: now,
+      } as any,
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        mobile1: true,
+        avatarUrl: true,
+      },
+    } as any);
+
+    createdCount += 1;
+    sentCount += 1;
+    rows.push({
+      contactType: contact.type,
+      contactValue: normalized,
+      employeeId: employee.id,
+      created: true,
+      existingEmployee: false,
+      employee: {
+        id: employee.id,
+        firstName: employee.firstName,
+        lastName: employee.lastName,
+        email: employee.email ?? null,
+        mobile: employee.mobile1 ?? null,
+        status: quickSetupStatus,
+        addMethod: quickSetupAddMethod,
+        invitationStatus: 'sent',
+        lastActionAt: now.toISOString(),
+        avatarUrl: employee.avatarUrl ?? undefined,
+      },
+      completionLink: buildQuickInviteCompletionLink(employee.id),
+    });
+  }
+
+  revalidatePath('/employees');
+  revalidatePath('/quick-setup');
+
+  return {
+    total: data.contacts.length,
+    processedCount: rows.length,
+    createdCount,
+    existingCount,
+    sentCount,
+    failedCount,
+    rows,
+  };
+}
+
+function normalizeExcelHeader(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[\u200c\u200d]/g, '')
+    .replace(/[\s\-_]+/g, '');
+}
+
+function isValidEmailAddress(value: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+}
+
+function parseExcelImportRow(row: Record<string, unknown>, rowNumber: number) {
+  const entries = Object.entries(row).map(([key, value]) => [normalizeExcelHeader(key), String(value ?? '').trim()] as const);
+  const findByAliases = (aliases: string[]) => {
+    const normalizedAliases = aliases.map((item) => normalizeExcelHeader(item));
+    return entries.find(([key]) => normalizedAliases.includes(key))?.[1] ?? '';
+  };
+
+  return {
+    rowNumber,
+    firstName: findByAliases(['نام', 'firstName', 'first name', 'firstname']).trim(),
+    lastName: findByAliases(['نام خانوادگی', 'lastName', 'last name', 'lastname', 'family']).trim(),
+    email: findByAliases(['ایمیل', 'email']).trim(),
+    mobile: findByAliases(['شماره موبایل', 'موبایل', 'mobile', 'phone', 'cell']).trim(),
+  };
+}
+
+function getContactCandidatesForImport(row: { email: string; mobile: string }) {
+  const candidates: Array<{ channel: QuickEmployeeImportJobInvitationChannel; value: string }> = [];
+
+  if (row.email) {
+    const email = normalizeEmail(row.email);
+    if (isValidEmailAddress(email)) candidates.push({ channel: 'email', value: email });
+  }
+
+  if (row.mobile) {
+    const mobile = sanitizeIranMobileInput(row.mobile);
+    if (isValidIranMobile(mobile)) candidates.push({ channel: 'sms', value: mobile });
+  }
+
+  return candidates;
+}
+
+function buildContactWhereClause(candidates: Array<{ channel: QuickEmployeeImportJobInvitationChannel; value: string }>) {
+  const orClauses: Array<Record<string, string>> = [];
+  for (const candidate of candidates) {
+    if (candidate.channel === 'email') {
+      orClauses.push({ email: candidate.value });
+      continue;
+    }
+    orClauses.push({ mobile1: candidate.value });
+    orClauses.push({ mobile2: candidate.value });
+  }
+  return orClauses;
+}
+
+function mapImportModeToJobType(mode: string): QuickEmployeeImportJobType {
+  return mode === 'excel_import_invite' ? 'excel_add_and_invite' : 'excel_add';
+}
+
+function mapImportModeToInvitationStatus(mode: string, hasContact: boolean): QuickEmployeeImportJobMockInvitationStatus {
+  if (mode !== 'excel_import_invite') return 'not_required';
+  return hasContact ? 'mock_sent' : 'mock_failed';
+}
+
+function mapImportModeToRowStatus(mode: string, created: boolean, existing: boolean, invalid: boolean, duplicate: boolean, failed: boolean) {
+  if (failed) return 'failed' satisfies QuickEmployeeImportJobRowStatus;
+  if (duplicate) return 'duplicate_in_file' satisfies QuickEmployeeImportJobRowStatus;
+  if (invalid) return 'invalid' satisfies QuickEmployeeImportJobRowStatus;
+  if (existing) return 'existing_employee' satisfies QuickEmployeeImportJobRowStatus;
+  if (mode === 'excel_import_invite' && created) return 'mock_invited' satisfies QuickEmployeeImportJobRowStatus;
+  if (created) return 'created' satisfies QuickEmployeeImportJobRowStatus;
+  return 'invalid' satisfies QuickEmployeeImportJobRowStatus;
+}
+
+function importRowMessage(status: QuickEmployeeImportJobRowStatus, mode: string) {
+  switch (status) {
+    case 'created':
+      return 'کارمند با موفقیت ثبت شد.';
+    case 'mock_invited':
+      return mode === 'excel_import_invite' ? 'کارمند ثبت شد و دعوت آزمایشی برای تکمیل اطلاعات ثبت شد.' : 'کارمند ثبت شد.';
+    case 'existing_employee':
+      return 'این کارمند قبلاً در همین کسب‌وکار ثبت شده است.';
+    case 'duplicate_in_file':
+      return 'این ردیف در فایل تکرار شده است.';
+    case 'invalid':
+      return 'ردیف دارای اطلاعات نامعتبر است.';
+    case 'failed':
+      return 'ثبت این ردیف ناموفق بود.';
+    default:
+      return 'در انتظار پردازش';
+  }
+}
+
+export async function listEmployeeImportJobsAction() {
+  const tenantId = await getTenantId();
+  return listEmployeeImportJobsForTenant(tenantId, 10);
+}
+
+export async function getEmployeeImportJobDetailsAction(jobId: string) {
+  const tenantId = await getTenantId();
+  return getEmployeeImportJobDetailsForTenant(tenantId, jobId);
+}
+
+export async function createEmployeeImportJobAction(formData: FormData): Promise<QuickEmployeeImportJobDetails> {
+  const tenantId = await getTenantId();
+  const session = await getSessionContext();
+  const file = formData.get('file');
+  const mode = String(formData.get('mode') ?? 'excel_import');
+  if (!(file instanceof File)) {
+    throw new Error('Excel file is required.');
+  }
+
+  const workbookBuffer = Buffer.from(await file.arrayBuffer());
+  const workbook = XLSX.read(workbookBuffer, { type: 'buffer' });
+  const sheetName = workbook.SheetNames[0];
+  if (!sheetName) {
+    throw new Error('Excel sheet is missing.');
+  }
+
+  const worksheet = workbook.Sheets[sheetName];
+  const rawRows = XLSX.utils.sheet_to_json<Record<string, unknown>>(worksheet, { defval: '' });
+  const jobType = mapImportModeToJobType(mode);
+
+  const job = await prisma.employeeImportJob.create({
+    data: {
+      tenantId,
+      type: jobType,
+      fileName: file.name || 'employees.xlsx',
+      status: 'processing',
+      totalCount: rawRows.length,
+      createdById: session?.userId ?? null,
+    },
+  });
+
+  try {
+    if (!rawRows.length) {
+      throw new Error('Excel file does not contain any rows.');
+    }
+    if (rawRows.length > 500) {
+      throw new Error('Maximum 500 rows are supported.');
+    }
+
+    const headerKeys = new Set(Object.keys(rawRows[0] ?? {}).map((value) => normalizeExcelHeader(value)));
+    const requiredHeaderGroups = [
+      ['نام', 'firstName', 'first name', 'firstname'],
+      ['نام خانوادگی', 'lastName', 'last name', 'lastname', 'family'],
+      ['ایمیل', 'email'],
+      ['شماره موبایل', 'موبایل', 'mobile', 'phone', 'cell'],
+    ];
+    const hasRequiredHeaders = requiredHeaderGroups.every((aliases, index) => {
+      if (index < 2) return aliases.some((alias) => headerKeys.has(normalizeExcelHeader(alias)));
+      return aliases.some((alias) => headerKeys.has(normalizeExcelHeader(alias)));
+    });
+    if (!hasRequiredHeaders) {
+      throw new Error('Required columns are missing from the Excel file.');
+    }
+
+    const seenKeys = new Set<string>();
+    let createdCount = 0;
+    let existingCount = 0;
+    let duplicateCount = 0;
+    let invalidCount = 0;
+    let failedCount = 0;
+    let mockInvitedCount = 0;
+    const now = new Date();
+
+    for (let index = 0; index < rawRows.length; index += 1) {
+      const row = parseExcelImportRow(rawRows[index], index + 2);
+      const contactCandidates = getContactCandidatesForImport(row);
+      const contactKeys = contactCandidates.map((candidate) => `${candidate.channel}:${candidate.value}`);
+      const duplicateInFile = contactKeys.some((key) => seenKeys.has(key));
+      contactKeys.forEach((key) => seenKeys.add(key));
+
+      const hasName = Boolean(row.firstName.trim() && row.lastName.trim());
+      const hasContact = contactCandidates.length > 0;
+      const invalid = !hasName || !hasContact;
+
+      let employeeId: string | null = null;
+      let status: QuickEmployeeImportJobRowStatus = 'invalid';
+      let message = '';
+      let mockInvitationStatus: QuickEmployeeImportJobMockInvitationStatus = mapImportModeToInvitationStatus(mode, hasContact);
+      let invitationChannel: QuickEmployeeImportJobInvitationChannel | null = contactCandidates[0]?.channel ?? null;
+
+      if (duplicateInFile) {
+        duplicateCount += 1;
+        status = 'duplicate_in_file';
+        message = importRowMessage(status, mode);
+        mockInvitationStatus = 'not_required';
+        invitationChannel = null;
+      } else if (invalid) {
+        invalidCount += 1;
+        status = 'invalid';
+        message = !hasName ? 'نام و نام خانوادگی برای ثبت کارمند جدید لازم است.' : 'ایمیل یا شماره موبایل معتبر لازم است.';
+        mockInvitationStatus = 'not_required';
+        invitationChannel = null;
+      } else {
+        const existingEmployee = await prisma.employee.findFirst({
+          where: {
+            tenantId,
+            OR: buildContactWhereClause(contactCandidates) as any,
+          },
+          select: { id: true },
+        });
+
+        if (existingEmployee) {
+          existingCount += 1;
+          status = 'existing_employee';
+          message = importRowMessage(status, mode);
+          employeeId = existingEmployee.id;
+          mockInvitationStatus = 'not_required';
+          invitationChannel = null;
+        } else {
+          try {
+            const employee = await prisma.employee.create({
+              data: {
+                tenantId,
+                firstName: row.firstName,
+                lastName: row.lastName,
+                email: contactCandidates.find((candidate) => candidate.channel === 'email')?.value ?? null,
+                mobile1: contactCandidates.find((candidate) => candidate.channel === 'sms')?.value ?? null,
+                isActive: true,
+              },
+              select: { id: true },
+            });
+
+            employeeId = employee.id;
+            createdCount += 1;
+            if (mode === 'excel_import_invite') {
+              mockInvitedCount += 1;
+            }
+            status = mapImportModeToRowStatus(mode, true, false, false, false, false);
+            message = importRowMessage(status, mode);
+          } catch {
+            failedCount += 1;
+            status = 'failed';
+            message = importRowMessage(status, mode);
+            mockInvitationStatus = 'mock_failed';
+          }
+        }
+      }
+
+      await prisma.employeeImportJobRow.create({
+        data: {
+          jobId: job.id,
+          rowNumber: row.rowNumber,
+          firstName: row.firstName,
+          lastName: row.lastName,
+          email: contactCandidates.find((candidate) => candidate.channel === 'email')?.value ?? null,
+          mobile: contactCandidates.find((candidate) => candidate.channel === 'sms')?.value ?? null,
+          employeeId,
+          status,
+          message,
+          mockInvitationStatus,
+          invitationChannel,
+          processedAt: now,
+        },
+      });
+    }
+
+    const processedCount = createdCount + existingCount + duplicateCount + invalidCount + failedCount;
+    const finalStatus: QuickEmployeeImportJobStatus = failedCount > 0 || invalidCount > 0 || duplicateCount > 0 || existingCount > 0
+      ? 'completed_with_errors'
+      : 'completed';
+
+    await prisma.employeeImportJob.update({
+      where: { id: job.id },
+      data: {
+        status: finalStatus,
+        processedCount,
+        createdCount,
+        existingCount,
+        duplicateCount,
+        invalidCount,
+        failedCount,
+        mockInvitedCount,
+      },
+    });
+  } catch (error) {
+    await prisma.employeeImportJob.update({
+      where: { id: job.id },
+      data: {
+        status: 'failed',
+        processedCount: 0,
+      },
+    });
+    throw error;
+  }
+
+  revalidatePath('/employees');
+  revalidatePath('/quick-setup');
+
+  const details = await getEmployeeImportJobDetailsForTenant(tenantId, job.id);
+  if (!details) {
+    throw new Error('Import job was saved but could not be loaded.');
+  }
+  return details;
+}
+
+function normalizeQuickSetupSearchQuery(value: string) {
+  return value.trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
+function digitsOnlyText(value: string) {
+  return value
+    .replace(/[۰-۹]/g, (digit) => String(digit.charCodeAt(0) - 1776))
+    .replace(/[٠-٩]/g, (digit) => String(digit.charCodeAt(0) - 1632))
+    .replace(/\D/g, '');
+}
+
+export async function searchQuickSetupEmployeeSuggestionsAction(data: {
+  query: string;
+  contactMethod: 'mobile' | 'email';
+}) {
+  const tenantId = await getTenantId();
+  const query = normalizeQuickSetupSearchQuery(data.query);
+  if (query.length < 3) return { items: [] as Array<{ id: string; firstName: string; lastName: string; email: string | null; mobile: string | null; status: string; source: 'employee' | 'tenant_user' }> };
+
+  const mobileDigits = data.contactMethod === 'mobile' ? digitsOnlyText(query) : '';
+  const employeeWhere = {
+    tenantId,
+    OR: [
+      { firstName: { contains: query, mode: 'insensitive' as const } },
+      { lastName: { contains: query, mode: 'insensitive' as const } },
+      { email: { contains: query, mode: 'insensitive' as const } },
+      { mobile1: { contains: query, mode: 'insensitive' as const } },
+      ...(mobileDigits ? [{ mobile1: { contains: mobileDigits, mode: 'insensitive' as const } }] : []),
+    ],
+  };
+
+  const [employees, memberships] = await Promise.all([
+    prisma.employee.findMany({
+      where: employeeWhere as any,
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        mobile1: true,
+        isActive: true,
+        updatedAt: true,
+      },
+      orderBy: [{ updatedAt: 'desc' }, { createdAt: 'desc' }],
+      take: 6,
+    }),
+    prisma.userTenantMembership.findMany({
+      where: {
+        tenantId,
+        user: {
+          OR: [
+            { firstName: { contains: query, mode: 'insensitive' as const } },
+            { lastName: { contains: query, mode: 'insensitive' as const } },
+            { fullName: { contains: query, mode: 'insensitive' as const } },
+            { email: { contains: query, mode: 'insensitive' as const } },
+            { mobile: { contains: query, mode: 'insensitive' as const } },
+            ...(mobileDigits ? [{ mobile: { contains: mobileDigits, mode: 'insensitive' as const } }] : []),
+          ],
+        },
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            mobile: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 6,
+    }),
+  ]);
+
+  const employeeItems = employees.map((item) => ({
+    id: item.id,
+    firstName: item.firstName,
+    lastName: item.lastName,
+    email: item.email ?? null,
+    mobile: item.mobile1 ?? null,
+    status: item.isActive ? 'ثبت‌شده' : 'در انتظار تکمیل',
+    source: 'employee' as const,
+  }));
+
+  const userItems = memberships
+    .map((item) => item.user)
+    .filter((item, index, items) => items.findIndex((candidate) => candidate.id === item.id) === index)
+    .filter((user) => !employeeItems.some((employee) => employee.email && user.email && employee.email === user.email) && !employeeItems.some((employee) => employee.mobile && user.mobile && employee.mobile === user.mobile))
+    .map((user) => ({
+      id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email ?? null,
+      mobile: user.mobile ?? null,
+      status: 'عضو کسب‌وکار',
+      source: 'tenant_user' as const,
+    }));
+
+  return { items: [...employeeItems, ...userItems].slice(0, 6) };
+}
+
 export async function updateEmployeeAction(formData: FormData) {
   const tenantId = await getTenantId();
   const id = value(formData, 'id');
@@ -1985,6 +2594,51 @@ export async function createDraftTemplateAction(formData: FormData) {
   });
   revalidatePath('/draft-templates');
   redirect('/draft-templates');
+}
+
+export async function upsertContractDraftTemplateAction(template: ContractDraftTemplate) {
+  const tenantId = await getTenantId();
+  const normalized = normalizeContractDraftTemplate(template);
+  if (!normalized) throw new Error('Draft template is invalid.');
+
+  const data = {
+    tenantId,
+    title: normalized.name,
+    description: null,
+    category: 'hr' as const,
+    body: JSON.stringify(normalized),
+    version: 1,
+    isActive: true,
+  };
+
+  const current = await prisma.draftTemplate.findFirst({ where: { id: normalized.id, tenantId }, select: { id: true } });
+  if (current) {
+    await prisma.draftTemplate.update({
+      where: { id: normalized.id },
+      data,
+    });
+  } else {
+    await prisma.draftTemplate.create({
+      data: {
+        id: normalized.id,
+        ...data,
+      },
+    });
+  }
+
+  revalidatePath('/draft-templates');
+  revalidatePath('/draft-templates/builder');
+  return { ok: true as const, id: normalized.id };
+}
+
+export async function deleteDraftTemplateAction(templateId: string) {
+  const tenantId = await getTenantId();
+  const current = await prisma.draftTemplate.findFirst({ where: { id: templateId, tenantId }, select: { id: true } });
+  if (!current) throw new Error('Draft template not found for the active tenant.');
+  await prisma.draftTemplate.delete({ where: { id: templateId } });
+  revalidatePath('/draft-templates');
+  revalidatePath('/draft-templates/builder');
+  return { ok: true as const };
 }
 
 export async function saveDraftTemplateStepAction(formData: FormData) {

@@ -1,10 +1,19 @@
 import { notFound } from 'next/navigation';
+import { getSessionContext } from '../../../../lib/auth';
+import { listClientStorageStates } from '../../../../lib/client-storage-persistence';
 import { getBusinessProfile, getEmployee } from '../../../../lib/data';
+import { listDraftTemplates } from '../../../../lib/data';
 import { EmployeeContractDraftsClient } from './_components/EmployeeContractDraftFlowClient';
 
 export default async function EmployeeContractDraftsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const [employee, businessProfile] = await Promise.all([getEmployee(id), getBusinessProfile()]);
+  const session = await getSessionContext();
+  const [employee, businessProfile, templates, storageStates] = await Promise.all([
+    getEmployee(id),
+    getBusinessProfile(),
+    listDraftTemplates(),
+    listClientStorageStates(session?.tenantId ?? null),
+  ]);
 
   if (!employee) notFound();
 
@@ -36,6 +45,8 @@ export default async function EmployeeContractDraftsPage({ params }: { params: P
         bankAccountsCount: Array.isArray(employee.bankAccounts) ? employee.bankAccounts.length : 0,
         guaranteeCount: Array.isArray(employee.guarantees) ? employee.guarantees.length : 0,
       }}
+      templates={templates}
+      storageStates={storageStates}
       businessProfile={businessProfile
         ? {
             brandName: businessProfile.brandName,

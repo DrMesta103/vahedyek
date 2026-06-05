@@ -2,16 +2,18 @@
 
 import Link from 'next/link';
 import { Eye, FileCode2, Pencil, Plus, Search, Trash2, X } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { CardMenu } from '../../../../components/CardMenu';
 import { ConfirmDialog } from '../../../../components/ConfirmDialog';
+import { upsertClientStorageStateAction } from '../../../../lib/client-storage-actions';
+import type { HydratedClientStorageState } from '../../../../lib/client-storage-persistence';
 import {
   NAMING_PATTERN_USAGE_OPTIONS,
   generateNamingPattern,
+  getNamingPatternsFromStorage,
+  getNamingPatternsStorageKey,
   getNamingPatternSequenceLabel,
   getNamingPatternUsageLabel,
-  persistNamingPatterns,
-  readNamingPatterns,
   type NamingPattern,
   type NamingPatternUsageType,
 } from '../../../../lib/naming-patterns';
@@ -90,14 +92,21 @@ function PatternCard({
   );
 }
 
-export function NamingPatternsClient({ tenantId = null }: { tenantId?: string | null }) {
-  const [patterns, setPatterns] = useState<NamingPattern[]>([]);
+function parseNamingPatterns(storageStates: HydratedClientStorageState[], tenantId?: string | null) {
+  const raw = storageStates.find((item) => item.storageKey === getNamingPatternsStorageKey(tenantId))?.value ?? null;
+  return getNamingPatternsFromStorage(raw);
+}
+
+export function NamingPatternsClient({
+  tenantId = null,
+  storageStates,
+}: {
+  tenantId?: string | null;
+  storageStates: HydratedClientStorageState[];
+}) {
+  const [patterns, setPatterns] = useState<NamingPattern[]>(() => parseNamingPatterns(storageStates, tenantId));
   const [query, setQuery] = useState('');
   const [usageFilter, setUsageFilter] = useState<NamingPatternUsageType | 'all'>('all');
-
-  useEffect(() => {
-    setPatterns(readNamingPatterns(tenantId));
-  }, [tenantId]);
 
   const onePatternPerUsage = useMemo(() => {
     const map = new Map<NamingPatternUsageType, NamingPattern>();
@@ -123,7 +132,7 @@ export function NamingPatternsClient({ tenantId = null }: { tenantId?: string | 
 
   const persist = (next: NamingPattern[]) => {
     setPatterns(next);
-    persistNamingPatterns(next, tenantId);
+    void upsertClientStorageStateAction(getNamingPatternsStorageKey(tenantId), JSON.stringify(next));
   };
 
   return (

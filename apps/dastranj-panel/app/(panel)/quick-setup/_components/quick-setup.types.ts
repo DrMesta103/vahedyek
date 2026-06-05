@@ -72,21 +72,100 @@ export type QuickPolicySummary = {
   year: string;
 };
 
+export type QuickEmployeeStatus =
+  | 'registered'
+  | 'invite_sent'
+  | 'pending_completion'
+  | 'completed'
+  | 'active'
+  | 'failed_send'
+  | 'error';
+
+export type QuickEmployeeAddMethod =
+  | 'single'
+  | 'excel'
+  | 'invitation_link'
+  | 'email_invite'
+  | 'sms_invite';
+
 export type QuickEmployeeSummary = {
   id: string;
   firstName: string;
   lastName: string;
-  nationalId: string;
-  contact: {
-    type: 'phone' | 'email';
-    value: string;
-  };
+  email: string | null;
+  mobile: string | null;
+  status: QuickEmployeeStatus;
+  addMethod: QuickEmployeeAddMethod;
+  invitationStatus?: 'sent' | 'failed' | null;
+  lastActionAt: string | null;
   avatarUrl?: string;
 };
 
 export type QuickWorkGroupSummary = {
   id: string;
   title: string;
+};
+
+export type QuickWorkGroupDraft = {
+  title: string;
+  logoUrl: string;
+  selectedLocationId: string;
+  selectedEmployees: Array<{ id: string; name: string; selectedRole: 'employee' | 'lead' | 'manager' }>;
+  employeeSearch: string;
+  selectedPolicyIds: string[];
+};
+
+export type QuickEmployeeImportJobType = 'excel_add' | 'excel_add_and_invite';
+
+export type QuickEmployeeImportJobStatus = 'queued' | 'processing' | 'completed' | 'completed_with_errors' | 'failed';
+
+export type QuickEmployeeImportJobRowStatus =
+  | 'created'
+  | 'existing_employee'
+  | 'duplicate_in_file'
+  | 'invalid'
+  | 'failed'
+  | 'mock_invited'
+  | 'mock_invite_failed';
+
+export type QuickEmployeeImportJobMockInvitationStatus = 'none' | 'mock_sent' | 'mock_failed' | 'not_required';
+
+export type QuickEmployeeImportJobInvitationChannel = 'sms' | 'email';
+
+export type QuickEmployeeImportJobSummary = {
+  id: string;
+  type: QuickEmployeeImportJobType;
+  fileName: string;
+  status: QuickEmployeeImportJobStatus;
+  totalCount: number;
+  processedCount: number;
+  createdCount: number;
+  existingCount: number;
+  duplicateCount: number;
+  invalidCount: number;
+  failedCount: number;
+  mockInvitedCount: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type QuickEmployeeImportJobRowSummary = {
+  id: string;
+  rowNumber: number;
+  firstName: string;
+  lastName: string;
+  email: string | null;
+  mobile: string | null;
+  employeeId: string | null;
+  status: QuickEmployeeImportJobRowStatus;
+  message: string | null;
+  mockInvitationStatus: QuickEmployeeImportJobMockInvitationStatus;
+  invitationChannel: QuickEmployeeImportJobInvitationChannel | null;
+  processedAt: string | null;
+};
+
+export type QuickEmployeeImportJobDetails = QuickEmployeeImportJobSummary & {
+  rows: QuickEmployeeImportJobRowSummary[];
 };
 
 export const STEP_META: Record<

@@ -12,9 +12,11 @@ import type {
   CompletedCalendarItem,
   DefaultCalendarTemplate,
   LocationSummaryItem,
+  QuickEmployeeImportJobSummary,
   QuickEmployeeSummary,
   QuickPolicySummary,
   QuickSetupStep,
+  QuickWorkGroupDraft,
   QuickWorkGroupSummary,
 } from './quick-setup.types';
 
@@ -24,9 +26,42 @@ const STEPS: Array<{ id: Step; key: QuickSetupStep['key']; title: string; descri
   { id: 1, key: 'location', title: 'محل کار اصلی', description: 'ثبت محل کار اصلی و شعاع مجاز' },
   { id: 2, key: 'calendar', title: 'تقویم کاری', description: 'تقویم، تعطیلات و شیفت' },
   { id: 3, key: 'policy', title: 'سیاست کاری', description: 'انتخاب قالب اولیه قوانین تردد و درخواست' },
-  { id: 4, key: 'employee', title: 'مدیریت کارکنان', description: 'ثبت و تکمیل کارکنان' },
-  { id: 5, key: 'work-group', title: 'گروه های کاری', description: 'ساخت گروه کاری و اتمام راه اندازی' },
+  { id: 4, key: 'employee', title: 'مدیریت کارکنان', description: 'ثبت و دعوت اولیه کارکنان' },
+  { id: 5, key: 'work-group', title: 'گروه های کاری', description: 'ساخت گروه کاری و اتصال اعضا، محل و سیاست' },
 ];
+
+const STEP_HEADER_COPY: Record<Step, { label: string; title: string; description: string }> = {
+  1: {
+    label: 'مرحله ۱ از ۵ — محل کار اصلی',
+    title: 'محل کار اصلی را تعریف کنید',
+    description:
+      'اطلاعات پایه محل کار سازمان را ثبت کنید تا تقویم، شیفت‌ها و سیاست‌های کاری بر اساس آن تنظیم شوند.',
+  },
+  2: {
+    label: 'مرحله ۲ از ۵ — تقویم کاری',
+    title: 'تقویم کاری را تعریف کنید',
+    description:
+      'روزهای کاری، تعطیلات و روزهای غیرکاری سازمان را مشخص کنید تا مبنای محاسبه حضور و غیاب باشد.',
+  },
+  3: {
+    label: 'مرحله ۳ از ۵ — سیاست کاری',
+    title: 'انتخاب سیاست کاری',
+    description:
+      'سیاست کاری مشخص می‌کند سیستم تردد، ساعت کار، مرخصی، اضافه‌کاری و درخواست‌های کارکنان را بر چه قواعدی مدیریت کند.',
+  },
+  4: {
+    label: 'مرحله ۴ از ۵ — مدیریت کارکنان',
+    title: 'ثبت و دعوت کارکنان',
+    description:
+      'کارکنان سازمان را به لیست کسب‌وکار اضافه کنید. برای شروع سریع، فقط اطلاعات حداقلی دریافت می‌شود و اطلاعات تکمیلی می‌تواند بعداً توسط مدیر یا خود کارکنان تکمیل شود.',
+  },
+  5: {
+    label: 'مرحله ۵ از ۵ — گروه‌های کاری',
+    title: 'تعریف گروه کاری',
+    description:
+      'برای شروع استفاده از دستانژ، یک گروه کاری بسازید و محل کار، اعضا و سیاست کاری آن را مشخص کنید. هر گروه کاری می‌تواند محل، اعضا و سیاست کاری مخصوص خود را داشته باشد.',
+  },
+};
 
 function cn(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ');
@@ -78,6 +113,7 @@ type QuickSetupFlowProps = {
   defaultCalendarTemplate?: DefaultCalendarTemplate | null;
   policyItems?: QuickPolicySummary[];
   employeeItems?: QuickEmployeeSummary[];
+  employeeImportJobs?: QuickEmployeeImportJobSummary[];
   workGroupItems?: QuickWorkGroupSummary[];
   tenantId?: string | null;
 };
@@ -90,6 +126,7 @@ export function QuickSetupFlow({
   defaultCalendarTemplate = null,
   policyItems = [],
   employeeItems = [],
+  employeeImportJobs = [],
   workGroupItems = [],
 }: QuickSetupFlowProps) {
   const initialCompleted = useMemo(
@@ -107,18 +144,23 @@ export function QuickSetupFlow({
   const [policy, setPolicy] = useState<QuickPolicySummary | null>(policyItems.find((item) => item.isDefault) ?? policyItems[0] ?? null);
   const [employees, setEmployees] = useState<QuickEmployeeSummary[]>(employeeItems);
   const [workGroup, setWorkGroup] = useState<QuickWorkGroupSummary | null>(workGroupItems[0] ?? null);
-  const employeesRef = useRef<QuickEmployeeSummary[]>(employeeItems);
+  const initialPolicy = policyItems.find((item) => item.isDefault) ?? policyItems[0] ?? null;
+  const [workGroupDraft, setWorkGroupDraft] = useState<QuickWorkGroupDraft>({
+    title: workGroupItems[0]?.title ?? '',
+    logoUrl: '',
+    selectedLocationId: locationItems[0]?.id ?? '',
+    selectedEmployees: [],
+    employeeSearch: '',
+    selectedPolicyIds: initialPolicy?.id ? [initialPolicy.id] : [],
+  });
+  const [workGroupResumeSection, setWorkGroupResumeSection] = useState<1 | 2 | 3 | 4 | null>(null);
   const locationStepRef = useRef<Step1LocationHandle | null>(null);
-
-  useEffect(() => {
-    employeesRef.current = employees;
-  }, [employees]);
 
   const completedCount = completedSteps.length;
   const progress = useMemo(() => (completedCount / STEPS.length) * 100, [completedCount]);
   const accessibleUntil = useMemo(() => Math.min(STEPS.length, completedCount + 1) as Step, [completedCount]);
   const currentStepMeta = STEPS.find((item) => item.id === step)!;
-  const showFooterNavigation = step === 4;
+  const currentStepHeader = STEP_HEADER_COPY[step];
 
   const markStepCompleted = (targetStep: Step) => {
     setCompletedSteps((prev) => (prev.includes(targetStep) ? prev : ([...prev, targetStep].sort((a, b) => a - b) as Step[])));
@@ -134,11 +176,6 @@ export function QuickSetupFlow({
       return;
     }
     setStep((prev) => (prev - 1) as Step);
-  };
-
-  const goNext = () => {
-    markStepCompleted(step);
-    setStep((prev) => (prev + 1) as Step);
   };
 
   const handleExit = () => {
@@ -177,10 +214,11 @@ export function QuickSetupFlow({
             <div className="order-1 flex flex-col justify-center text-right lg:order-2">
               <div className="mb-3 inline-flex items-center gap-2 self-start rounded-full text-xs text-slate-200">
                 <CheckCircle2 className="h-4 w-4 text-indigo-300" />
-                وضعیت راه اندازی سیستم
+                {currentStepHeader.label}
               </div>
-              <h1 className="text-xl font-black text-white sm:text-xl">خوش آمدید</h1>
-              <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-300">
+              <h1 className="text-xl font-black text-white sm:text-2xl">{currentStepHeader.title}</h1>
+              <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-300">{currentStepHeader.description}</p>
+              <p className="mt-3 max-w-3xl text-xs leading-6 text-slate-400">
                 برای استفاده کامل از امکانات پنل{profileName ? ` ${profileName}` : ''}، این مراحل را به ترتیب تکمیل کنید. اطلاعات این بخش ها برای محاسبه دقیق حضور و دستمزد ضروری است.
               </p>
             </div>
@@ -217,7 +255,7 @@ export function QuickSetupFlow({
               onComplete={(value) => {
                 setLocation(value);
                 markStepCompleted(1);
-                setStep(2);
+                setStep(workGroupResumeSection ? 5 : 2);
               }}
             />
           </div>
@@ -247,51 +285,72 @@ export function QuickSetupFlow({
               onComplete={(value) => {
                 setPolicy(value);
                 markStepCompleted(3);
-                setStep(4);
+                setStep(workGroupResumeSection ? 5 : 4);
               }}
               onBack={goBack}
             />
           </div>
 
           <div className={step === 4 ? 'block' : 'hidden'}>
-            <Step4Employees employees={employees} onChange={setEmployees} />
+            <Step4Employees
+              employees={employees}
+              importJobs={employeeImportJobs}
+              onChange={setEmployees}
+              onBack={goBack}
+              onNext={() => {
+                markStepCompleted(4);
+                setStep(5);
+              }}
+              onExit={handleExit}
+            />
           </div>
 
           <div className={step === 5 ? 'block' : 'hidden'}>
             <Step5WorkGroup
+              key={`work-group-${workGroupResumeSection ?? 'default'}`}
               initialWorkGroup={workGroup}
-              locations={location ? [{ id: location.id, name: location.title, description: location.description ?? 'توضیحات ثبت نشده است', radius: location.radius }] : []}
+              draft={workGroupDraft}
+              initialSection={workGroupResumeSection ?? 1}
+              locations={locationItems.map((item) => ({
+                id: item.id,
+                name: item.title,
+                description: item.description ?? 'توضیحات ثبت نشده است',
+                radius: item.radius,
+              }))}
               employees={employees.map((employee) => ({
                 id: employee.id,
-                name: `${employee.firstName} ${employee.lastName}`.trim() || employee.contact.value,
-                contactValue: employee.contact.value,
+                name: `${employee.firstName} ${employee.lastName}`.trim() || employee.email || employee.mobile || 'بدون نام',
+                contactValue: employee.email || employee.mobile || 'ثبت نشده',
               }))}
-              policies={
-                policy
-                  ? [{ id: policy.id, name: policy.title, calendarName: policy.calendarTitle, isActive: true, yearUsed: policy.year, isDefault: policy.isDefault ?? true }]
-                  : []
-              }
+              policies={policyItems.map((item) => ({
+                id: item.id,
+                name: item.title,
+                description: item.description,
+                calendarName: item.calendarTitle,
+                isActive: Boolean(item.isDefault),
+                yearUsed: item.year,
+                isDefault: item.isDefault,
+              }))}
+              onDraftChange={setWorkGroupDraft}
+              onGoToPolicyStep={() => {
+                setWorkGroupResumeSection(2);
+                setStep(3);
+              }}
+              onGoToLocationStep={() => {
+                setWorkGroupResumeSection(3);
+                setStep(1);
+              }}
+              onBack={goBack}
               onSave={(value) => {
                 setWorkGroup(value);
                 markStepCompleted(5);
+                setWorkGroupResumeSection(null);
                 setCompletedOpen(true);
               }}
             />
           </div>
         </div>
 
-        {showFooterNavigation ? (
-          <section className="rounded-xl border border-white/10 bg-slate-900/60 p-4">
-            <div className="flex items-center justify-between gap-3">
-              <button type="button" onClick={goBack} className="rounded-xl border border-white/10 bg-slate-800 px-5 py-2.5 text-sm text-slate-100 transition-colors hover:border-white/20">
-                مرحله قبل
-              </button>
-              <button type="button" onClick={goNext} disabled={employees.length === 0} className="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50">
-                تایید و ادامه
-              </button>
-            </div>
-          </section>
-        ) : null}
       </div>
 
       {exitOpen ? (

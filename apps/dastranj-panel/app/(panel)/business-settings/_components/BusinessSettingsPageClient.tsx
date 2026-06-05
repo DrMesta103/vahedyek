@@ -2,15 +2,21 @@
 
 import { Search, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { BUSINESS_SETTINGS_CATALOG, filterBusinessSettingsCatalog } from '../../../lib/business-settings';
+import { BUSINESS_SETTINGS_CATEGORIES, filterBusinessSettingsCategories } from '../../../lib/business-settings';
 import { BusinessSettingsCard } from './BusinessSettingsCard';
 
 export function BusinessSettingsPageClient() {
   const [query, setQuery] = useState('');
-  const filteredItems = useMemo(() => filterBusinessSettingsCatalog(BUSINESS_SETTINGS_CATALOG, query), [query]);
+  const filteredCategories = useMemo(() => filterBusinessSettingsCategories(BUSINESS_SETTINGS_CATEGORIES, query), [query]);
 
   return (
-    <div className="mx-auto flex w-full max-w-[860px] flex-col gap-2.5 px-2" dir="rtl" lang="fa">
+    <div className="business-settings-page-shell" dir="rtl" lang="fa">
+      <header className="business-settings-page-intro">
+        <p>مرکز کنترل تنظیمات</p>
+        <h1>تنظیمات کسب‌وکار</h1>
+        <span>تنظیمات پایه، عملیاتی، منابع انسانی، تردد، قراردادها و حقوق و دستمزد کسب‌وکار را از اینجا مدیریت کنید.</span>
+      </header>
+
       <div className="business-settings-search-wrap">
         <div className="business-settings-search-pattern" aria-hidden />
         <label className="business-settings-search">
@@ -19,23 +25,38 @@ export function BusinessSettingsPageClient() {
             type="search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="جستجو"
-            aria-label="جستجو در تنظیمات کسب و کار"
+            placeholder="جست‌وجو در تنظیمات کسب‌وکار"
+            aria-label="جست‌وجو در تنظیمات کسب‌وکار"
           />
           {query ? (
-            <button type="button" className="business-settings-search-clear" onClick={() => setQuery('')} aria-label="پاک کردن جستجو">
+            <button type="button" className="business-settings-search-clear" onClick={() => setQuery('')} aria-label="پاک کردن جست‌وجو">
               <X className="h-4 w-4" />
             </button>
           ) : null}
         </label>
       </div>
 
-      {filteredItems.length ? (
-        filteredItems.map((item) => <BusinessSettingsCard key={`${item.href}-${item.icon}-${item.title}`} {...item} />)
-      ) : (
-        <div className="rounded-[18px] border border-white/10 bg-slate-900/35 px-4 py-8 text-center text-sm text-slate-400 [html[data-theme=light]_&]:border-slate-200/90 [html[data-theme=light]_&]:bg-white/80 [html[data-theme=light]_&]:text-slate-500">
-          موردی یافت نشد
+      {filteredCategories.length ? (
+        <div className="business-settings-sections">
+          {filteredCategories.map((category) => (
+            <section key={category.id} className="business-settings-section-card" aria-label={category.title}>
+              <div className="business-settings-section-head">
+                <div>
+                  <h2>{category.title}</h2>
+                  <p>{category.description}</p>
+                </div>
+                <span className="business-settings-section-count">{category.items.length} مورد</span>
+              </div>
+              <div className="business-settings-section-items">
+                {category.items.map((item) => (
+                  <BusinessSettingsCard key={`${item.href}-${item.icon}-${item.title}`} {...item} />
+                ))}
+              </div>
+            </section>
+          ))}
         </div>
+      ) : (
+        <div className="business-settings-empty-state">موردی یافت نشد</div>
       )}
     </div>
   );

@@ -8,6 +8,7 @@ export type AdaptiveChipItem = {
   label: ReactNode;
   icon?: ReactNode;
   disabled?: boolean;
+  tooltip?: string;
 };
 
 type AdaptiveChipGroupProps = {
@@ -39,6 +40,7 @@ export function AdaptiveChipGroup({
             type="button"
             className={`adaptive-chip${isSelected ? ' is-selected' : ''}${item.disabled ? ' is-disabled' : ''}`}
             disabled={item.disabled}
+            title={item.tooltip}
             onClick={() => onChange(multi && Array.isArray(selected) ? (selected.includes(item.value) ? selected.filter((entry) => entry !== item.value) : [...selected, item.value]) : item.value)}
           >
             {isSelected ? (
