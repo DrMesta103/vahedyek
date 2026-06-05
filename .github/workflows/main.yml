@@ -28,3 +28,4 @@ jobs:
           docker compose up -d
           cd /deploy/dastranj-plus/
           docker compose up -d
+          docker image prune -f
