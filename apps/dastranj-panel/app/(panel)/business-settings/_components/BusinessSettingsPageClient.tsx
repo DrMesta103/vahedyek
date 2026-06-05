@@ -3,11 +3,29 @@
 import { Search, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { BUSINESS_SETTINGS_CATEGORIES, filterBusinessSettingsCategories } from '../../../lib/business-settings';
+import type { TenantSetupHealth } from '../../../lib/setup-health';
 import { BusinessSettingsCard } from './BusinessSettingsCard';
 
-export function BusinessSettingsPageClient() {
+type BusinessSettingsPageClientProps = {
+  setupHealth: TenantSetupHealth | null;
+};
+
+const STATUS_BADGE_BY_ROUTE = {
+  '/locations': 'workplace',
+  '/calendars': 'calendar',
+  '/shift-templates': 'shift_template',
+  '/policies': 'work_policy',
+  '/employees': 'employees',
+  '/work-groups': 'work_groups',
+} as const;
+
+export function BusinessSettingsPageClient({ setupHealth }: BusinessSettingsPageClientProps) {
   const [query, setQuery] = useState('');
   const filteredCategories = useMemo(() => filterBusinessSettingsCategories(BUSINESS_SETTINGS_CATEGORIES, query), [query]);
+  const criticalStatusMap = useMemo(
+    () => new Map(setupHealth?.criticalItems.map((item) => [item.key, item.status]) ?? []),
+    [setupHealth],
+  );
 
   return (
     <div className="business-settings-page-shell" dir="rtl" lang="fa">
@@ -48,9 +66,22 @@ export function BusinessSettingsPageClient() {
                 <span className="business-settings-section-count">{category.items.length} مورد</span>
               </div>
               <div className="business-settings-section-items">
-                {category.items.map((item) => (
-                  <BusinessSettingsCard key={`${item.href}-${item.icon}-${item.title}`} {...item} />
-                ))}
+                {category.items.map((item) => {
+                  const statusKey = STATUS_BADGE_BY_ROUTE[item.href as keyof typeof STATUS_BADGE_BY_ROUTE];
+                  const status = statusKey ? criticalStatusMap.get(statusKey) : null;
+
+                  return (
+                    <BusinessSettingsCard
+                      key={`${item.href}-${item.icon}-${item.title}`}
+                      {...item}
+                      badges={[
+                        ...(item.badges ?? []),
+                        ...(status === 'completed' ? [{ label: 'تکمیل‌شده', tone: 'success' as const }] : []),
+                        ...(status === 'incomplete' ? [{ label: 'ناقص', tone: 'important' as const }] : []),
+                      ]}
+                    />
+                  );
+                })}
               </div>
             </section>
           ))}

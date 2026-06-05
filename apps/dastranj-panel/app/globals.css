@@ -25148,3 +25148,362 @@ body.tenant-select-route {
     margin-inline-start: 0;
   }
 }
+.setup-reminder-banner {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  border: 1px solid rgba(245, 158, 11, 0.28);
+  background:
+    radial-gradient(circle at top right, rgba(245, 158, 11, 0.16), transparent 32%),
+    linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(17, 24, 39, 0.92));
+  border-radius: 28px;
+  padding: 1.3rem 1.4rem;
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.24);
+}
+
+.setup-reminder-banner-kicker,
+.setup-health-eyebrow {
+  margin: 0 0 0.35rem;
+  font-size: 0.74rem;
+  font-weight: 800;
+  color: rgba(251, 191, 36, 0.92);
+}
+
+.setup-reminder-banner h2,
+.setup-health-card h2,
+.setup-health-next-card h3,
+.setup-health-complete-card h3 {
+  margin: 0;
+  color: #f8fafc;
+}
+
+.setup-reminder-banner p,
+.setup-health-card p,
+.setup-health-status-item,
+.setup-health-score span {
+  color: rgba(226, 232, 240, 0.82);
+}
+
+.setup-reminder-banner-description {
+  margin-top: 0.45rem;
+}
+
+.setup-reminder-banner-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+.setup-reminder-primary-link,
+.setup-health-next-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0.75rem 1.1rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #14b8a6, #0f766e);
+  color: #f8fafc;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.setup-reminder-secondary-button {
+  min-height: 44px;
+  padding: 0.75rem 1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  color: #e2e8f0;
+  font-weight: 700;
+}
+
+.setup-health-card {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background:
+    radial-gradient(circle at top left, rgba(20, 184, 166, 0.12), transparent 28%),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.76));
+  padding: 1.4rem;
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.16);
+}
+
+.setup-health-card-head {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.setup-health-copy,
+.setup-health-progress-text,
+.setup-health-next-card p,
+.setup-health-complete-card p {
+  margin: 0.35rem 0 0;
+  line-height: 1.9;
+}
+
+.setup-health-score {
+  min-width: 120px;
+  padding: 0.9rem 1rem;
+  border-radius: 22px;
+  border: 1px solid rgba(20, 184, 166, 0.22);
+  background: rgba(15, 118, 110, 0.12);
+  text-align: center;
+}
+
+.setup-health-score strong {
+  display: block;
+  color: #f8fafc;
+  font-size: 1.8rem;
+  font-weight: 900;
+}
+
+.setup-health-next-card,
+.setup-health-complete-card,
+.setup-health-unavailable {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 1rem 1.1rem;
+}
+
+.setup-health-next-label {
+  display: inline-flex;
+  margin-bottom: 0.45rem;
+  color: rgba(251, 191, 36, 0.9);
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.setup-health-status-list {
+  display: grid;
+  gap: 0.65rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.setup-health-status-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.8rem 0.9rem;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.setup-health-status-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.26rem 0.7rem;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.setup-health-status-pill-completed {
+  background: rgba(16, 185, 129, 0.15);
+  color: #86efac;
+}
+
+.setup-health-status-pill-incomplete {
+  background: rgba(245, 158, 11, 0.14);
+  color: #fcd34d;
+}
+
+.setup-health-unavailable {
+  margin-bottom: 1rem;
+  color: rgba(226, 232, 240, 0.82);
+}
+
+.setup-reminder-dialog-body {
+  display: grid;
+  gap: 1rem;
+}
+
+.setup-reminder-dialog-hero,
+.setup-reminder-dialog-card {
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background:
+    radial-gradient(circle at top right, rgba(20, 184, 166, 0.12), transparent 34%),
+    rgba(15, 23, 42, 0.72);
+  padding: 1rem 1.1rem;
+}
+
+.setup-reminder-dialog-kicker {
+  display: inline-flex;
+  margin-bottom: 0.5rem;
+  color: rgba(251, 191, 36, 0.92);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.setup-reminder-dialog-hero h3,
+.setup-reminder-dialog-card strong {
+  margin: 0;
+  color: #f8fafc;
+}
+
+.setup-reminder-dialog-hero p,
+.setup-reminder-dialog-card-head span,
+.setup-reminder-dialog-list-item span {
+  color: rgba(226, 232, 240, 0.82);
+}
+
+.setup-reminder-dialog-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.9rem;
+}
+
+.setup-reminder-dialog-list {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.setup-reminder-dialog-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.8rem 0.9rem;
+}
+
+.setup-reminder-dialog-list-item b {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  background: rgba(245, 158, 11, 0.16);
+  color: #fcd34d;
+  padding: 0.22rem 0.68rem;
+  font-size: 0.76rem;
+}
+
+.setup-reminder-dialog-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.setup-reminder-dialog-primary,
+.setup-reminder-dialog-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  border-radius: 999px;
+  padding: 0.78rem 1.1rem;
+  font-weight: 800;
+}
+
+.setup-reminder-dialog-primary {
+  background: linear-gradient(135deg, #14b8a6, #0f766e);
+  color: #f8fafc;
+  text-decoration: none;
+}
+
+.setup-reminder-dialog-secondary {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  color: #e2e8f0;
+}
+
+[data-theme='light'] .setup-reminder-banner,
+[data-theme='light'] .setup-health-card {
+  border-color: rgba(148, 163, 184, 0.28);
+  background:
+    radial-gradient(circle at top right, rgba(20, 184, 166, 0.12), transparent 32%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.98));
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
+}
+
+[data-theme='light'] .setup-reminder-banner h2,
+[data-theme='light'] .setup-health-card h2,
+[data-theme='light'] .setup-health-next-card h3,
+[data-theme='light'] .setup-health-complete-card h3 {
+  color: #0f172a;
+}
+
+[data-theme='light'] .setup-reminder-banner p,
+[data-theme='light'] .setup-health-card p,
+[data-theme='light'] .setup-health-status-item,
+[data-theme='light'] .setup-health-score span,
+[data-theme='light'] .setup-health-unavailable {
+  color: #475569;
+}
+
+[data-theme='light'] .setup-reminder-secondary-button,
+[data-theme='light'] .setup-health-next-card,
+[data-theme='light'] .setup-health-complete-card,
+[data-theme='light'] .setup-health-unavailable,
+[data-theme='light'] .setup-reminder-dialog-hero,
+[data-theme='light'] .setup-reminder-dialog-card,
+[data-theme='light'] .setup-reminder-dialog-secondary,
+[data-theme='light'] .setup-health-status-item,
+[data-theme='light'] .setup-health-score {
+  border-color: rgba(148, 163, 184, 0.24);
+  background: rgba(255, 255, 255, 0.72);
+}
+
+[data-theme='light'] .setup-reminder-dialog-hero h3,
+[data-theme='light'] .setup-reminder-dialog-card strong {
+  color: #0f172a;
+}
+
+[data-theme='light'] .setup-reminder-dialog-hero p,
+[data-theme='light'] .setup-reminder-dialog-card-head span,
+[data-theme='light'] .setup-reminder-dialog-list-item span {
+  color: #475569;
+}
+
+@media (max-width: 900px) {
+  .setup-reminder-banner,
+  .setup-health-card-head,
+  .setup-health-next-card,
+  .setup-health-complete-card {
+    grid-template-columns: 1fr;
+    display: grid;
+  }
+
+  .setup-reminder-banner-actions,
+  .setup-health-next-link {
+    justify-content: stretch;
+    width: 100%;
+  }
+
+  .setup-reminder-primary-link,
+  .setup-health-next-link,
+  .setup-reminder-secondary-button,
+  .setup-reminder-dialog-primary,
+  .setup-reminder-dialog-secondary {
+    width: 100%;
+  }
+
+  .setup-reminder-dialog-card-head,
+  .setup-reminder-dialog-list-item,
+  .setup-reminder-dialog-footer {
+    grid-template-columns: 1fr;
+    display: grid;
+  }
+}

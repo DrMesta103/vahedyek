@@ -9,16 +9,32 @@ import { OrbitMenu } from './OrbitMenu';
 import PageDocsWidget from './PageDocsWidget';
 import { minimalScrollClass } from './MinimalScroll';
 import { Sidebar } from './Sidebar';
+import type { SetupHealthItem, SetupHealthReminder } from '../lib/setup-health';
+import { SetupReminderDialog } from './setup-health/SetupReminderDialog';
 
-export function PanelShell({ children }: { children: ReactNode }) {
+type PanelShellProps = {
+  children: ReactNode;
+  tenantId?: string | null;
+  setupReminder?: SetupHealthReminder | null;
+  setupCriticalItems?: SetupHealthItem[];
+};
+
+export function PanelShell({ children, tenantId = null, setupReminder = null, setupCriticalItems = [] }: PanelShellProps) {
   return (
     <Suspense fallback={null}>
-      <PanelShellContent>{children}</PanelShellContent>
+      <PanelShellContent tenantId={tenantId} setupReminder={setupReminder} setupCriticalItems={setupCriticalItems}>
+        {children}
+      </PanelShellContent>
     </Suspense>
   );
 }
 
-function PanelShellContent({ children }: { children: ReactNode }) {
+function PanelShellContent({
+  children,
+  tenantId,
+  setupReminder,
+  setupCriticalItems,
+}: PanelShellProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const activeItem = getActiveNavigationItem(pathname);
@@ -33,6 +49,9 @@ function PanelShellContent({ children }: { children: ReactNode }) {
   return (
     <div className="app-shell">
       <PageDocsWidget />
+      {tenantId && setupReminder ? (
+        <SetupReminderDialog tenantId={tenantId} reminder={setupReminder} criticalItems={setupCriticalItems} />
+      ) : null}
       <Sidebar
         activeItem={activeItem.id}
         forceCollapsed={lockMainSidebar}

@@ -22,6 +22,7 @@ model AppUser {
   createdAt    DateTime               @default(now())
   updatedAt    DateTime               @updatedAt
   memberships  UserTenantMembership[]
+  setupReminderStates TenantSetupReminderState[]
 }
 
 model Tenant {
@@ -52,6 +53,7 @@ model Tenant {
   employeeContracts   EmployeeContract[]
   companyLoans        CompanyLoan[]
   attachments         Attachment[]
+  setupReminderStates TenantSetupReminderState[]
 }
 
 model UserTenantMembership {
@@ -628,4 +630,23 @@ model TenantBusinessProfileSettings {
   tenant         Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
+}
+
+model TenantSetupReminderState {
+  id             String   @id @default(cuid())
+  tenantId       String
+  userId         String
+  reminderKey    String
+  dismissedUntil DateTime?
+  dismissedCount Int      @default(0)
+  lastShownAt    DateTime?
+  lastActionAt   DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  tenant         Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user           AppUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, userId, reminderKey])
+  @@index([tenantId, userId])
+  @@index([tenantId, reminderKey])
 }

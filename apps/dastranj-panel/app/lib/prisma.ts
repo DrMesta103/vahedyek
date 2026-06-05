@@ -37,6 +37,7 @@ function isCompatiblePrismaClient(client: PrismaClient | undefined): client is P
     'workGroup',
     'workGroupMember',
     'draftTemplate',
+    'tenantSetupReminderState',
   ] as const;
 
   return requiredDelegates.every((delegate) => delegate in client);
