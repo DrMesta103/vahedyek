@@ -1,0 +1,30 @@
+name: ci-cd
+'on':
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: self-hosted
+    steps:
+      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
+      - run: echo "🐧 This job is now running on a ${{ runner.os }} server!"
+      - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
+
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+      - name: Build Project as Docker image
+        run: docker compose build . && docker buildx prune -f
+
+  deploy:
+    runs-on: self-hosted
+    needs: build
+    steps:
+      - name: Deploy to server
+        run: |
+          cd /deploy/vahed1/
+          docker compose up -d
+          cd /deploy/dastranj-plus/
+          docker compose up -d
