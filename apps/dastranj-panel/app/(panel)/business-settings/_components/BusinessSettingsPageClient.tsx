@@ -4,6 +4,7 @@ import { Search, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { BUSINESS_SETTINGS_CATEGORIES, filterBusinessSettingsCategories } from '../../../lib/business-settings';
 import type { TenantSetupHealth } from '../../../lib/setup-health';
+import { SetupHealthCard } from '../../../components/setup-health/SetupHealthCard';
 import { BusinessSettingsCard } from './BusinessSettingsCard';
 
 type BusinessSettingsPageClientProps = {
@@ -13,7 +14,6 @@ type BusinessSettingsPageClientProps = {
 const STATUS_BADGE_BY_ROUTE = {
   '/locations': 'workplace',
   '/calendars': 'calendar',
-  '/shift-templates': 'shift_template',
   '/policies': 'work_policy',
   '/employees': 'employees',
   '/work-groups': 'work_groups',
@@ -32,8 +32,15 @@ export function BusinessSettingsPageClient({ setupHealth }: BusinessSettingsPage
       <header className="business-settings-page-intro">
         <p>مرکز کنترل تنظیمات</p>
         <h1>تنظیمات کسب‌وکار</h1>
-        <span>تنظیمات پایه، عملیاتی، منابع انسانی، تردد، قراردادها و حقوق و دستمزد کسب‌وکار را از اینجا مدیریت کنید.</span>
+        <span>
+          تنظیمات پایه، عملیاتی، منابع انسانی، تردد، قراردادها و حقوق و دستمزد کسب‌وکار را از اینجا مدیریت کنید.
+        </span>
+        <span>
+          راه‌اندازی سریع فقط اطلاعات اولیه را ثبت می‌کند؛ در این بخش می‌توانید تنظیمات سازمان را کامل‌تر و دقیق‌تر مدیریت کنید.
+        </span>
       </header>
+
+      {setupHealth?.nextReminder ? <SetupHealthCard setupHealth={setupHealth} /> : null}
 
       <div className="business-settings-search-wrap">
         <div className="business-settings-search-pattern" aria-hidden />
@@ -43,11 +50,11 @@ export function BusinessSettingsPageClient({ setupHealth }: BusinessSettingsPage
             type="search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="جست‌وجو در تنظیمات کسب‌وکار"
-            aria-label="جست‌وجو در تنظیمات کسب‌وکار"
+            placeholder="جستجو در تنظیمات کسب‌وکار"
+            aria-label="جستجو در تنظیمات کسب‌وکار"
           />
           {query ? (
-            <button type="button" className="business-settings-search-clear" onClick={() => setQuery('')} aria-label="پاک کردن جست‌وجو">
+            <button type="button" className="business-settings-search-clear" onClick={() => setQuery('')} aria-label="پاک کردن جستجو">
               <X className="h-4 w-4" />
             </button>
           ) : null}
@@ -65,6 +72,7 @@ export function BusinessSettingsPageClient({ setupHealth }: BusinessSettingsPage
                 </div>
                 <span className="business-settings-section-count">{category.items.length} مورد</span>
               </div>
+
               <div className="business-settings-section-items">
                 {category.items.map((item) => {
                   const statusKey = STATUS_BADGE_BY_ROUTE[item.href as keyof typeof STATUS_BADGE_BY_ROUTE];
@@ -87,7 +95,7 @@ export function BusinessSettingsPageClient({ setupHealth }: BusinessSettingsPage
           ))}
         </div>
       ) : (
-        <div className="business-settings-empty-state">موردی یافت نشد</div>
+        <div className="business-settings-empty-state">نتیجه‌ای برای جست‌وجوی شما پیدا نشد.</div>
       )}
     </div>
   );

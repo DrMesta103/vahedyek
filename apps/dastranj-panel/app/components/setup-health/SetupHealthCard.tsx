@@ -4,6 +4,7 @@ import { SetupCriticalItemStatusList } from './SetupCriticalItemStatusList';
 
 export function SetupHealthCard({ setupHealth }: { setupHealth: TenantSetupHealth }) {
   const { score, completedCount, totalCriticalCount, nextReminder, criticalItems } = setupHealth;
+  const isComplete = completedCount === totalCriticalCount;
 
   return (
     <section className="setup-health-card" dir="rtl" lang="fa">
@@ -16,7 +17,7 @@ export function SetupHealthCard({ setupHealth }: { setupHealth: TenantSetupHealt
           </p>
         </div>
         <div className="setup-health-score">
-          <strong>{score}٪</strong>
+          <strong>{score}%</strong>
           <span>تکمیل شده</span>
         </div>
       </div>
@@ -38,8 +39,8 @@ export function SetupHealthCard({ setupHealth }: { setupHealth: TenantSetupHealt
         </div>
       ) : (
         <div className="setup-health-complete-card">
-          <h3>تنظیمات ضروری کسب‌وکار تکمیل شده است.</h3>
-          <p>اکنون سیستم برای استفاده اولیه آماده است. می‌توانید تنظیمات پیشرفته را در همین بخش مدیریت کنید.</p>
+          <h3>تنظیمات اصلی کسب‌وکار کامل است.</h3>
+          <p>می‌توانید جزئیات پیشرفته را در هر بخش مدیریت کنید.</p>
         </div>
       )}
 

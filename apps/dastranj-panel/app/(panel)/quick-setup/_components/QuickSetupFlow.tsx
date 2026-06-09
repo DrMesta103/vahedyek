@@ -1,7 +1,8 @@
 ﻿'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Check, CheckCircle2 } from 'lucide-react';
+import { Check, CheckCircle2, ChevronLeft, CircleAlert } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { MinimalScroll } from '../../../components/MinimalScroll';
 import Step1Location, { type Step1LocationHandle } from './Step1Location';
 import Step2CalendarShift from './Step2CalendarShift';
@@ -138,6 +139,7 @@ export function QuickSetupFlow({
   const [completedSteps, setCompletedSteps] = useState<Step[]>(initialCompleted);
   const [exitOpen, setExitOpen] = useState(false);
   const [completedOpen, setCompletedOpen] = useState(false);
+  const [redirectError, setRedirectError] = useState<string | null>(null);
   const [location, setLocation] = useState<LocationSummaryItem | null>(locationItems.find((item) => item.isPrimaryOnboarding) ?? null);
   const [calendar, setCalendar] = useState<CompletedCalendarItem | null>(calendarItems[0] ?? null);
   const [calendars, setCalendars] = useState<CompletedCalendarItem[]>(calendarItems);
@@ -155,6 +157,15 @@ export function QuickSetupFlow({
   });
   const [workGroupResumeSection, setWorkGroupResumeSection] = useState<1 | 2 | 3 | 4 | null>(null);
   const locationStepRef = useRef<Step1LocationHandle | null>(null);
+  const router = useRouter();
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   const completedCount = completedSteps.length;
   const progress = useMemo(() => (completedCount / STEPS.length) * 100, [completedCount]);
@@ -176,6 +187,23 @@ export function QuickSetupFlow({
       return;
     }
     setStep((prev) => (prev - 1) as Step);
+  };
+
+  const handleEnterDashboard = () => {
+    setRedirectError(null);
+    try {
+      router.push('/');
+      window.setTimeout(() => {
+        if (!mountedRef.current) return;
+        if (window.location.pathname !== '/') {
+          setRedirectError('راه‌اندازی تکمیل شد، اما ورود به داشبورد انجام نشد. دوباره تلاش کنید.');
+        }
+      }, 350);
+    } catch {
+      if (mountedRef.current) {
+        setRedirectError('راه‌اندازی تکمیل شد، اما ورود به داشبورد انجام نشد. دوباره تلاش کنید.');
+      }
+    }
   };
 
   const handleExit = () => {
@@ -345,7 +373,9 @@ export function QuickSetupFlow({
                 setWorkGroup(value);
                 markStepCompleted(5);
                 setWorkGroupResumeSection(null);
-                setCompletedOpen(true);
+                if ([1, 2, 3, 4].every((id) => completedSteps.includes(id as Step))) {
+                  setCompletedOpen(true);
+                }
               }}
             />
           </div>
@@ -367,13 +397,58 @@ export function QuickSetupFlow({
       ) : null}
 
       {completedOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 p-4">
-          <div className="w-full max-w-[500px] rounded-xl border border-white/10 bg-[#0b1228] px-5 py-8 text-center text-slate-100">
-            <div className="text-xl font-black text-white">راه اندازی سریع تکمیل شد</div>
-            <p className="mx-auto mt-5 max-w-[360px] text-base leading-8 text-slate-200">تنظیمات پایه انجام شد و حالا می توانید کار را از صفحه اصلی ادامه دهید.</p>
-            <a href="/business-settings" className="mt-8 inline-flex w-full justify-center rounded-xl bg-indigo-600 px-4 py-3 text-base font-bold text-white transition-colors hover:bg-indigo-500">
-              ورود به خانه
-            </a>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-[540px] rounded-[28px] border border-emerald-400/20 bg-[linear-gradient(180deg,rgba(10,18,40,0.98),rgba(8,14,30,0.96))] px-5 py-6 text-right text-slate-100 shadow-[0_24px_80px_rgba(0,0,0,0.45)] sm:px-6 sm:py-7">
+            <div className="flex items-start gap-4">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-emerald-400/20 bg-emerald-500/10 text-emerald-300 shadow-[0_0_0_1px_rgba(16,185,129,0.08),0_10px_30px_rgba(16,185,129,0.18)]">
+                <CheckCircle2 className="h-7 w-7" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-500/10 px-3 py-1 text-[11px] font-bold tracking-[0.08em] text-emerald-200">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
+                  موفقیت
+                </div>
+                <div className="mt-3 text-2xl font-black leading-10 text-white">راه‌اندازی سریع با موفقیت تکمیل شد</div>
+              </div>
+            </div>
+
+            <p className="mt-5 text-sm leading-8 text-slate-200 sm:text-[15px]">
+              تبریک! تنظیمات اولیه سازمان شما آماده است و حالا می‌توانید استفاده از دسترنج را شروع کنید.
+              <span className="mt-2 block text-slate-300">
+                محل کار، تقویم، سیاست کاری، کارکنان و گروه کاری اولیه ثبت شده‌اند و هر زمان لازم باشد می‌توانید جزئیات را از بخش تنظیمات کامل‌تر کنید.
+              </span>
+            </p>
+
+            <div className="mt-5 flex flex-wrap gap-2">
+              {['محل کار', 'تقویم', 'سیاست کاری', 'کارکنان', 'گروه کاری اولیه'].map((item) => (
+                <span key={item} className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-bold text-slate-200">
+                  {item}
+                </span>
+              ))}
+            </div>
+
+            <div className="mt-6 rounded-2xl border border-white/8 bg-white/5 px-4 py-3 text-xs leading-6 text-slate-300">
+              تنظیمات پیشرفته همیشه از منوی تنظیمات در دسترس است.
+            </div>
+
+            {redirectError ? (
+              <div className="mt-4 rounded-2xl border border-rose-400/20 bg-rose-500/10 px-4 py-3 text-sm leading-7 text-rose-100" role="alert">
+                <span className="inline-flex items-center gap-2 font-bold text-rose-50">
+                  <CircleAlert className="h-4 w-4" />
+                  خطا
+                </span>
+                <div className="mt-1">{redirectError}</div>
+              </div>
+            ) : null}
+
+            <button
+              type="button"
+              onClick={handleEnterDashboard}
+              className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-4 py-3.5 text-base font-black text-[#031b18] transition-colors hover:bg-emerald-400"
+            >
+              <ChevronLeft className="h-4 w-4 rotate-180" />
+              ورود به داشبورد دسترنج
+            </button>
           </div>
         </div>
       ) : null}
