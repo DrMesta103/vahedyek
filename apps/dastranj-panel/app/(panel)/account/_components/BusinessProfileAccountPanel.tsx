@@ -47,6 +47,7 @@ function createBankAccount(): BankAccountRecord {
     sheba: '',
     cardNumber: '',
     showInContracts: true,
+    ownerName: '',
     owners: [],
     accountType: 'current',
     usage: 'primary',

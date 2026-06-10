@@ -4,7 +4,6 @@ import { getSessionContext } from './auth';
 export type SetupHealthItemKey =
   | 'workplace'
   | 'calendar'
-  | 'shift_template'
   | 'work_policy'
   | 'employees'
   | 'work_groups';
@@ -77,18 +76,9 @@ export const SETUP_HEALTH_ITEMS: SetupHealthDefinition[] = [
     ctaLabel: 'تکمیل تقویم کاری',
   },
   {
-    key: 'shift_template',
-    label: 'قالب شیفت',
-    priority: 3,
-    route: '/shift-templates',
-    title: 'قالب شیفت هنوز تعریف نشده است.',
-    description: 'برای محاسبه ساعت ورود، خروج، تاخیر، تعجیل و مدت کارکرد، باید حداقل یک قالب شیفت تعریف شود.',
-    ctaLabel: 'تعریف قالب شیفت',
-  },
-  {
     key: 'work_policy',
     label: 'سیاست کاری',
-    priority: 4,
+    priority: 3,
     route: '/policies',
     title: 'سیاست کاری هنوز تکمیل نشده است.',
     description: 'سیاست کاری مشخص می‌کند قوانین تردد، فرجه ورود و خروج، مرخصی، اضافه‌کاری و درخواست‌ها چگونه مدیریت شوند.',
@@ -258,7 +248,7 @@ function isReminderSnoozed(state: ReminderStateRecord | undefined, now: Date) {
 
 export async function getTenantSetupHealth(tenantId: string, userId?: string | null): Promise<TenantSetupHealth> {
   const now = new Date();
-  const [locations, calendars, shiftTemplates, workPolicies, employees, workGroups, reminderStates] = await Promise.all([
+  const [locations, calendars, workPolicies, employees, workGroups, reminderStates] = await Promise.all([
     prisma.location.count({
       where: {
         tenantId,
@@ -271,13 +261,6 @@ export async function getTenantSetupHealth(tenantId: string, userId?: string | n
       where: {
         tenantId,
         status: 'active',
-        title: { not: '' },
-      },
-    }),
-    prisma.shiftTemplate.count({
-      where: {
-        tenantId,
-        isActive: true,
         title: { not: '' },
       },
     }),
@@ -307,7 +290,6 @@ export async function getTenantSetupHealth(tenantId: string, userId?: string | n
   const completionMap: Record<SetupHealthItemKey, boolean> = {
     workplace: locations > 0,
     calendar: calendars > 0,
-    shift_template: shiftTemplates > 0,
     work_policy: workPolicies > 0,
     employees: employees > 0,
     work_groups: workGroups > 0,

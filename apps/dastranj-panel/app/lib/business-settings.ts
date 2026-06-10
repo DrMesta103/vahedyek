@@ -228,9 +228,12 @@ export function filterBusinessSettingsCategories(categories: BusinessSettingsCat
   if (!normalizedQuery) return categories;
 
   return categories
-    .map((category) => ({
-      ...category,
-      items: filterBusinessSettingsCatalog(category.items, query),
-    }))
+    .map((category) => {
+      const categoryMatches = normalizeBusinessSettingsSearch(`${category.title} ${category.description}`).includes(normalizedQuery);
+      return {
+        ...category,
+        items: categoryMatches ? category.items : filterBusinessSettingsCatalog(category.items, query),
+      };
+    })
     .filter((category) => category.items.length > 0);
 }

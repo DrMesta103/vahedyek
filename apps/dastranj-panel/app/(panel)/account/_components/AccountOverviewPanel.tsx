@@ -18,35 +18,47 @@ type OverviewSection = {
   description: string;
   href: string;
   span?: 'full' | 'half';
+  badge: string;
+  badgeTone: 'pending' | 'completed' | 'in_progress';
 };
 
-const overviewSections: OverviewSection[] = [
-  {
-    title: 'نوع مالکیت و اطلاعات پایه',
-    description: 'ورود این اطلاعات در تنظیمات قرارداد ضروری است',
-    href: BUSINESS_PROFILE_OWNERSHIP,
-    span: 'full',
-  },
-  {
-    title: 'شماره حساب',
-    description: 'ورود این اطلاعات در تنظیمات قرارداد ضروری است',
-    href: BUSINESS_PROFILE_BANK_ACCOUNTS,
-    span: 'full',
-  },
-  {
-    title: 'لوگو و مهر',
-    description: 'فایل‌های رسمی برند را برای استفاده در خروجی‌ها و اسناد ثبت کنید',
-    href: BUSINESS_PROFILE_BRANDING,
-    span: 'full',
-  },
-];
+const overviewSections = (store: ProfileStore, meta: ProfileMeta): OverviewSection[] => {
+  const displayBrandName = store.ownership.brandName.trim() && store.ownership.brandName.trim() !== 'دسترنج' ? store.ownership.brandName.trim() : '';
+  const hasBaseInfo = Boolean(store.ownership.companyName.trim() || displayBrandName || meta.businessName.trim()) && Boolean(meta.owner.fullName.trim());
+  const hasBankAccounts = store.bankAccounts.length > 0;
+  const hasBrandingData = Boolean(store.branding.logoImage.trim() || store.branding.sealImage.trim() || store.branding.headerImage.trim() || store.branding.footerImage.trim());
 
-function OverviewSectionCard({ title, description, href, span = 'half' }: OverviewSection) {
+  return [
+    {
+      title: 'اطلاعات پایه کسب‌وکار',
+      description: 'اطلاعات هویتی و رسمی کسب‌وکار را برای استفاده در قراردادها، گزارش‌ها و خروجی‌های رسمی آماده کنید.',
+      href: BUSINESS_PROFILE_OWNERSHIP,
+      span: 'full',
+      badge: hasBaseInfo ? 'تکمیل‌شده' : 'ناقص',
+      badgeTone: hasBaseInfo ? 'completed' : 'pending',
+    },
+    {
+      title: 'حساب‌های بانکی',
+      description: 'حساب‌های بانکی کسب‌وکار را برای استفاده در قراردادها، گزارش‌ها و فرآیندهای مالی مدیریت کنید.',
+      href: BUSINESS_PROFILE_BANK_ACCOUNTS,
+      span: 'full',
+      badge: hasBankAccounts ? 'تکمیل‌شده' : 'ناقص',
+      badgeTone: hasBankAccounts ? 'completed' : 'pending',
+    },
+    {
+      title: 'لوگو، مهر و سربرگ',
+      description: 'فایل‌های رسمی برند و تنظیمات ظاهری خروجی‌های سازمانی را برای مراحل بعدی آماده نگه دارید.',
+      href: BUSINESS_PROFILE_BRANDING,
+      span: 'full',
+      badge: hasBrandingData ? 'تکمیل‌شده' : 'ناقص',
+      badgeTone: hasBrandingData ? 'completed' : 'pending',
+    },
+  ];
+};
+
+function OverviewSectionCard({ title, description, href, span = 'half', badge, badgeTone }: OverviewSection) {
   return (
-    <Link
-      href={href}
-      className={`business-profile-section-card${span === 'full' ? ' is-full' : ''}`}
-    >
+    <Link href={href} className={`business-profile-section-card${span === 'full' ? ' is-full' : ''}`}>
       <div className="business-profile-section-card-head">
         <div className="business-profile-section-card-pattern" aria-hidden="true" />
         <ChevronLeft className="business-profile-section-card-arrow" aria-hidden="true" />
@@ -54,6 +66,11 @@ function OverviewSectionCard({ title, description, href, span = 'half' }: Overvi
       </div>
 
       <div className="business-profile-section-card-body">
+        <div className="mb-3 flex justify-center">
+          <span className={`status-chip ${badgeTone === 'completed' ? 'status-chip-completed' : badgeTone === 'in_progress' ? 'status-chip-in_progress' : 'status-chip-pending'}`}>
+            {badge}
+          </span>
+        </div>
         <p>{description}</p>
       </div>
     </Link>
@@ -95,17 +112,24 @@ export default function AccountOverviewPanel() {
     };
   }, [router]);
 
-  const businessName =
-    store.ownership.companyName.trim() ||
-    store.ownership.brandName.trim() ||
-    meta.businessName.trim() ||
-    'دسترنج';
-  const avatarText = store.ownership.brandName.trim().charAt(0) || businessName.charAt(0) || meta.brandCode || 'د';
+  const displayBrandName = store.ownership.brandName.trim() && store.ownership.brandName.trim() !== 'دسترنج' ? store.ownership.brandName.trim() : '';
+  const businessName = store.ownership.companyName.trim() || displayBrandName || meta.businessName.trim() || 'ثبت نشده';
+  const avatarText = displayBrandName.charAt(0) || store.ownership.companyName.trim().charAt(0) || meta.businessName.trim().charAt(0) || meta.brandCode || 'د';
+  const ownerName = meta.owner.fullName.trim() || 'ثبت نشده';
+  const ownerMobile = meta.owner.mobile?.trim() || 'ثبت نشده';
+  const businessType = store.ownership.ownershipKind === 'natural' ? 'حقیقی' : 'حقوقی';
+  const profileComplete =
+    Boolean(store.ownership.companyName.trim() || store.ownership.brandName.trim() || meta.businessName.trim()) &&
+    Boolean(meta.owner.fullName.trim()) &&
+    Boolean(meta.owner.mobile?.trim());
+
   const summaryItems = [
-    { label: 'نام شرکت', value: businessName },
-    { label: 'مالک کسب‌وکار', value: meta.owner.fullName || 'ثبت نشده' },
-    { label: 'موبایل مالک', value: meta.owner.mobile || 'ثبت نشده' },
-  ];
+    { label: 'نام کسب‌وکار', value: businessName, status: businessName === 'ثبت نشده' ? 'ثبت نشده' : 'ثبت شده' },
+    { label: 'مالک اکانت کسب‌وکار', value: ownerName, status: ownerName === 'ثبت نشده' ? 'ثبت نشده' : 'نمایش داده شده' },
+    { label: 'موبایل مالک', value: ownerMobile, status: ownerMobile === 'ثبت نشده' ? 'ثبت نشده' : 'نمایش داده شده' },
+    { label: 'نوع کسب‌وکار', value: businessType, status: 'در پروفایل' },
+    { label: 'وضعیت پروفایل', value: profileComplete ? 'تکمیل‌شده' : 'ناقص', status: profileComplete ? 'تکمیل‌شده' : 'ناقص' },
+  ] as const;
 
   if (loading) {
     return <div className="profile-summary-card">در حال بارگذاری...</div>;
@@ -122,8 +146,7 @@ export default function AccountOverviewPanel() {
           <div className="business-profile-summary-copy">
             <h1>{businessName}</h1>
             <p>
-              این بخش خلاصه اطلاعات پایه کسب‌وکار و داده‌هایی را نشان می‌دهد که در ثبت‌نام، خرید و تنظیمات
-              پروفایل ثبت شده‌اند.
+              این بخش خلاصه اطلاعات پایه کسب‌وکار را نشان می‌دهد که در ثبت‌نام، تنظیمات پروفایل و خروجی‌های رسمی استفاده می‌شوند.
             </p>
           </div>
         </div>
@@ -131,7 +154,12 @@ export default function AccountOverviewPanel() {
         <div className="business-profile-summary-grid">
           {summaryItems.map((item) => (
             <div key={item.label} className="business-profile-summary-item">
-              <span>{item.label}</span>
+              <div className="flex items-center justify-between gap-2">
+                <span>{item.label}</span>
+                <span className={`status-chip ${item.status === 'تکمیل‌شده' ? 'status-chip-completed' : item.status === 'نمایش داده شده' ? 'status-chip-in_progress' : 'status-chip-pending'}`}>
+                  {item.status}
+                </span>
+              </div>
               <strong>{item.value}</strong>
             </div>
           ))}
@@ -139,12 +167,11 @@ export default function AccountOverviewPanel() {
       </section>
 
       <p className="business-profile-overview-note">
-        در پروفایل کسب‌وکار اطلاعات هویتی، حقوقی، مالی و تماس شرکت ثبت می‌شود تا مبنای قراردادها، پروژه‌ها و ارتباطات رسمی
-        در سیستم باشد.
+        این بخش برای نمایش اطلاعات پایه کسب‌وکار، وضعیت حساب‌های بانکی و ارتباط آن‌ها با خروجی‌های رسمی تهیه شده است.
       </p>
 
       <div className="business-profile-sections-grid">
-        {overviewSections.map((section) => (
+        {overviewSections(store, meta).map((section) => (
           <OverviewSectionCard key={section.title} {...section} />
         ))}
       </div>

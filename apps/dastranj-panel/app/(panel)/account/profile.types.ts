@@ -34,6 +34,7 @@ export type BankAccountRecord = {
   sheba: string;
   cardNumber: string;
   showInContracts: boolean;
+  ownerName: string;
   owners: string[];
   accountType: BankAccountType;
   usage: BankAccountUsage;
@@ -42,9 +43,13 @@ export type BankAccountRecord = {
 
 export type BrandingSettings = {
   logoImage: string;
+  logoFileName: string;
   sealImage: string;
+  sealFileName: string;
   headerImage: string;
+  headerFileName: string;
   footerImage: string;
+  footerFileName: string;
   legalStatement: string;
 };
 
@@ -102,9 +107,13 @@ export function createDefaultProfileStore(): ProfileStore {
     bankAccounts: [],
     branding: {
       logoImage: '',
+      logoFileName: '',
       sealImage: '',
+      sealFileName: '',
       headerImage: '',
+      headerFileName: '',
       footerImage: '',
+      footerFileName: '',
       legalStatement: '',
     },
   };
@@ -146,6 +155,12 @@ function normalizeBankAccounts(value: unknown): BankAccountRecord[] {
       sheba: typeof item.sheba === 'string' ? item.sheba : '',
       cardNumber: typeof item.cardNumber === 'string' ? item.cardNumber : '',
       showInContracts: typeof item.showInContracts === 'boolean' ? item.showInContracts : true,
+      ownerName:
+        typeof item.ownerName === 'string' && item.ownerName.trim()
+          ? item.ownerName.trim()
+          : Array.isArray(item.owners) && typeof item.owners[0] === 'string'
+            ? item.owners[0].trim()
+            : '',
       owners: Array.isArray(item.owners) ? item.owners.filter((owner): owner is string => typeof owner === 'string') : [],
       accountType:
         item.accountType === 'short' || item.accountType === 'long' || item.accountType === 'loan' || item.accountType === 'foreign'
@@ -169,9 +184,13 @@ function normalizeBranding(value: unknown): BrandingSettings {
   if (!isRecord(value)) return base;
   return {
     logoImage: typeof value.logoImage === 'string' ? value.logoImage : base.logoImage,
+    logoFileName: typeof value.logoFileName === 'string' ? value.logoFileName : base.logoFileName,
     sealImage: typeof value.sealImage === 'string' ? value.sealImage : base.sealImage,
+    sealFileName: typeof value.sealFileName === 'string' ? value.sealFileName : base.sealFileName,
     headerImage: typeof value.headerImage === 'string' ? value.headerImage : base.headerImage,
+    headerFileName: typeof value.headerFileName === 'string' ? value.headerFileName : base.headerFileName,
     footerImage: typeof value.footerImage === 'string' ? value.footerImage : base.footerImage,
+    footerFileName: typeof value.footerFileName === 'string' ? value.footerFileName : base.footerFileName,
     legalStatement: typeof value.legalStatement === 'string' ? value.legalStatement : base.legalStatement,
   };
 }
