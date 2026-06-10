@@ -2355,10 +2355,59 @@ textarea::placeholder {
     min-width: 0;
   }
 
+  .contract-flow-sidebar {
+    position: sticky;
+    top: 0;
+    z-index: 25;
+  }
+
   .contract-flow-sidebar-panel {
     height: auto;
     border-right: 1px solid var(--border-soft);
     border-bottom: 1px solid var(--border-color);
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+  }
+
+  .contract-flow-sidebar-body {
+    overflow-x: visible;
+  }
+
+  .contract-flow-nav-list {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    overflow-x: auto;
+    overflow-y: hidden;
+    gap: 10px;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+
+  .contract-flow-nav-item {
+    flex: 0 0 auto;
+    width: min(220px, 72vw);
+    min-height: 74px;
+  }
+
+  .contract-flow-nav-main {
+    height: 100%;
+  }
+
+  .contract-flow-nav-content {
+    padding-right: 30px;
+    padding-left: 50px;
+  }
+
+  .contract-flow-nav-number {
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
+  }
+
+  .contract-flow-nav-save-slot {
+    left: 8px;
   }
 
   .contract-flow-report-panel {

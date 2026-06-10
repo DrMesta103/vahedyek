@@ -679,15 +679,6 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
                             <div className="text-xs font-semibold text-slate-500">
                               {typeRule ? `خلاصه: ${formatRuleSummary(typeRule)}` : 'هنوز جریمه‌ای ثبت نشده است.'}
                             </div>
-                            {typeRule ? (
-                              <button
-                                type="button"
-                                onClick={() => setRules((current) => current.filter((item) => item.penaltyTypeId !== type.id))}
-                                className="rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-bold text-rose-600 hover:bg-rose-50"
-                              >
-                                حذف جریمه
-                              </button>
-                            ) : null}
                           </div>
 
                           <section className="space-y-3">

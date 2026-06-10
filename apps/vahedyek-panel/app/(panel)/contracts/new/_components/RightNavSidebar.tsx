@@ -15,11 +15,6 @@ type SectionItem = {
   title: string;
 };
 
-type FinancialLineNavItem = {
-  id: string;
-  title: string;
-};
-
 export type ApprovalSubmissionBlocker = { title: string; detail: string };
 
 interface RightNavSidebarProps {
@@ -36,8 +31,6 @@ interface RightNavSidebarProps {
   loading: boolean;
   approvalSubmissionReady: boolean;
   approvalSubmissionBlockers: ApprovalSubmissionBlocker[];
-  financialLineSections?: FinancialLineNavItem[];
-  onFinancialLineClick?: (lineId: string) => void;
   onOpenPreviewDialog: () => void;
 }
 
@@ -65,12 +58,9 @@ export function RightNavSidebar({
   loading,
   approvalSubmissionReady,
   approvalSubmissionBlockers,
-  financialLineSections = [],
-  onFinancialLineClick,
   onOpenPreviewDialog,
 }: RightNavSidebarProps) {
   const router = useRouter();
-  const [activeFinancialLineId, setActiveFinancialLineId] = useState<string | null>(null);
   const [blockersOpen, setBlockersOpen] = useState(false);
   const [approvalNavBusy, setApprovalNavBusy] = useState(false);
   const [approvalNavError, setApprovalNavError] = useState('');
@@ -153,19 +143,18 @@ export function RightNavSidebar({
 
               return (
                 <Fragment key={section.id}>
-                  <div
-                    className={`contract-flow-nav-item text-right transition-colors lg:w-full ${
-                      isActive && !(section.id === 'financial' && activeFinancialLineId) ? 'is-active' : ''
-                    } ${isLocked ? 'is-locked' : ''}`}
+                <div
+                  className={`contract-flow-nav-item text-right transition-colors lg:w-full ${
+                    isActive ? 'is-active' : ''
+                  } ${isLocked ? 'is-locked' : ''}`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => {
+                      isLocked ? onLockedClick(section.id) : onScrollTo(section.id);
+                    }}
+                    className="contract-flow-nav-main"
                   >
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setActiveFinancialLineId(null);
-                        isLocked ? onLockedClick(section.id) : onScrollTo(section.id);
-                      }}
-                      className="contract-flow-nav-main"
-                    >
                       <span className="contract-flow-nav-content">
                         <span className="contract-flow-nav-title-wrap">
                           <span className="contract-flow-nav-title">{section.title}</span>
@@ -183,7 +172,9 @@ export function RightNavSidebar({
                       <div className="contract-flow-nav-save-slot">
                         <button
                           type="button"
-                          onClick={() => onSave(section.id)}
+                          onClick={() => {
+                            onSave(section.id);
+                          }}
                           disabled={isSaving}
                           className="contract-flow-nav-save"
                         >
@@ -192,37 +183,6 @@ export function RightNavSidebar({
                       </div>
                     ) : null}
                   </div>
-
-                  {section.id === 'financial' && financialLineSections.length ? (
-                    <div
-                      className={`contract-flow-nav-item contract-flow-nav-item--financial-line text-right transition-colors lg:w-full ${
-                        activeFinancialLineId ? 'is-active' : ''
-                      }`}
-                    >
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const firstLine = financialLineSections[0];
-                          if (!firstLine) return;
-                          setActiveFinancialLineId(firstLine.id);
-                          onFinancialLineClick?.(firstLine.id);
-                        }}
-                        className="contract-flow-nav-main"
-                      >
-                        <span className="contract-flow-nav-content">
-                          <span className="contract-flow-nav-title-wrap">
-                            <span className="contract-flow-nav-title">سایر هزینه‌ها</span>
-                            <span className="contract-flow-nav-updated">
-                              {new Intl.NumberFormat('fa-IR').format(financialLineSections.length)} ردیف مالی
-                            </span>
-                          </span>
-                          <span className="contract-flow-nav-number">
-                            {new Intl.NumberFormat('fa-IR').format(index + 1)}.{new Intl.NumberFormat('fa-IR').format(1)}
-                          </span>
-                        </span>
-                      </button>
-                    </div>
-                  ) : null}
                 </Fragment>
               );
             })}

@@ -258,6 +258,7 @@ model ContractDraft {
   parties                     ContractParties?
   penalties                   ContractPenalties?
   receipts                    ContractReceipt[]
+  ruleDraftSettings           ContractDraftRuleSettings[]
   subject                     ContractSubject?
   technicalSpecs              ContractTechnicalSpecs?
   terminationRules            TerminationRules?
@@ -533,6 +534,19 @@ model ContractPenalties {
   draft   ContractDraft         @relation(fields: [draftId], references: [id], onDelete: Cascade)
   rules   ContractPenaltyRule[]
   types   ContractPenaltyType[]
+}
+
+model ContractDraftRuleSettings {
+  id        String        @id @default(cuid())
+  draftId   String
+  ruleId    String
+  payload   Json          @default("{}")
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  draft     ContractDraft @relation(fields: [draftId], references: [id], onDelete: Cascade)
+
+  @@unique([draftId, ruleId])
+  @@index([draftId])
 }
 
 model ContractPenaltyType {

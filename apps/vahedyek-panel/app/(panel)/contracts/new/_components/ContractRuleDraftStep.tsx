@@ -9,10 +9,16 @@ import {
   type ContractRuleId,
   type ContractRuleState,
 } from '../../../../lib/businessContractRules';
-import { ensureActiveDraftId, getFrontendStepDraft, setFrontendStepDraft } from '../../../../lib/contractDraftClient';
-import { ForgivenessRuleSection } from '../../../business-settings/_components/ForgivenessRuleSection';
+import {
+  ensureActiveDraftId,
+  getDraftRuleStepData,
+  getFrontendStepDraft,
+  saveDraftRuleStepData,
+  setFrontendStepDraft,
+} from '../../../../lib/contractDraftClient';
 import { InterestRuleSection } from '../../../business-settings/_components/InterestRuleSection';
 import { ContractStepLoader } from './ContractStepLoader';
+import { ForgivenessDraftRuleSection } from './ForgivenessDraftRuleSection';
 import { dispatchContractFlowDirty, dispatchContractFlowSavedForDraft, type ContractFlowSectionId } from './contractFlowSignals';
 
 type SupportedDraftRuleId = Extract<ContractRuleId, 'interest' | 'forgiveness'>;
@@ -20,6 +26,16 @@ type SupportedDraftSectionId = Extract<ContractFlowSectionId, 'interest' | 'forg
 
 function serializePayload(payload: ContractRuleState) {
   return JSON.stringify(payload);
+}
+
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number, fallback: T): Promise<T> {
+  return new Promise((resolve) => {
+    const timer = window.setTimeout(() => resolve(fallback), timeoutMs);
+    promise
+      .then((value) => resolve(value))
+      .catch(() => resolve(fallback))
+      .finally(() => window.clearTimeout(timer));
+  });
 }
 
 function applyPanelValue(
@@ -48,6 +64,17 @@ async function fetchBusinessRule(ruleId: SupportedDraftRuleId) {
     return createInitialRuleState(ruleId);
   }
   return normalizeRuleState(ruleId, await response.json());
+}
+
+async function fetchDraftRuleState(draftId: string, stepId: SupportedDraftSectionId, ruleId: SupportedDraftRuleId) {
+  if (stepId !== 'forgiveness') return null;
+  const payload = await getDraftRuleStepData<ContractRuleState>(draftId, stepId);
+  return payload ? normalizeRuleState(ruleId, payload) : null;
+}
+
+async function saveDraftRuleState(draftId: string, stepId: SupportedDraftSectionId, payload: ContractRuleState) {
+  if (stepId !== 'forgiveness') return;
+  await saveDraftRuleStepData(draftId, stepId, payload);
 }
 
 export function ContractRuleDraftStep({
@@ -84,7 +111,10 @@ export function ContractRuleDraftStep({
 
       try {
         const frontendDraft = getFrontendStepDraft<ContractRuleState>(nextDraftId, stepId);
-        const nextState = frontendDraft ? normalizeRuleState(ruleId, frontendDraft) : await fetchBusinessRule(ruleId);
+        const persistedDraft = await withTimeout(fetchDraftRuleState(nextDraftId, stepId, ruleId), 1500, null);
+        const fallbackState = createInitialRuleState(ruleId);
+        const businessRule = persistedDraft ? null : await withTimeout(fetchBusinessRule(ruleId), 2000, fallbackState);
+        const nextState = frontendDraft ? normalizeRuleState(ruleId, frontendDraft) : persistedDraft ?? businessRule ?? fallbackState;
         if (!mounted) return;
         setState(nextState);
         initialSnapshotRef.current = serializePayload(nextState);
@@ -122,6 +152,7 @@ export function ContractRuleDraftStep({
       setSaving(true);
       setFormError('');
       setFrontendStepDraft(draftId, stepId, state);
+      await saveDraftRuleState(draftId, stepId, state);
       initialSnapshotRef.current = serializePayload(state);
       setDirty(false);
       dispatchContractFlowDirty(stepId, false);
@@ -135,6 +166,38 @@ export function ContractRuleDraftStep({
 
   if (loading || !state) {
     return <ContractStepLoader title={sectionTitle} description="در حال بارگذاری تنظیمات پیش‌نویس قرارداد..." />;
+  }
+
+  if (ruleId === 'forgiveness') {
+    return (
+      <div className="space-y-5">
+        {!embedded ? (
+          <div className="text-right">
+            <h1 className="text-2xl font-bold text-[color:var(--text-strong)]">{sectionTitle}</h1>
+            <p className="mt-1 text-sm leading-7 text-[color:var(--text-muted)]">
+              بخشودگی‌های قابل استفاده در این پیش‌نویس را مانند بخش جریمه فعال و تنظیم کنید.
+            </p>
+          </div>
+        ) : null}
+
+        <ForgivenessDraftRuleSection
+          state={state}
+          onValueChange={(key, value) => applyPanelValue(setState, key, value)}
+          onSave={() => void handleSubmit()}
+        />
+
+        {formError ? <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{formError}</div> : null}
+
+        <StickySubmitBar
+          label={`ثبت ${sectionTitle}`}
+          loadingLabel={loading ? 'در حال بارگذاری...' : 'در حال ذخیره...'}
+          disabled={loading || saving}
+          onClick={handleSubmit}
+          embedded={embedded}
+          submitId={stepId}
+        />
+      </div>
+    );
   }
 
   return (
@@ -166,13 +229,7 @@ export function ContractRuleDraftStep({
         </div>
       </section>
 
-      {state.active ? (
-        ruleId === 'interest' ? (
-          <InterestRuleSection state={state} onValueChange={(key, value) => applyPanelValue(setState, key, value)} />
-        ) : (
-          <ForgivenessRuleSection state={state} onValueChange={(key, value) => applyPanelValue(setState, key, value)} />
-        )
-      ) : null}
+      {state.active ? <InterestRuleSection state={state} onValueChange={(key, value) => applyPanelValue(setState, key, value)} /> : null}
 
       {formError ? <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{formError}</div> : null}
 

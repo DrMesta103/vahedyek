@@ -169,13 +169,31 @@ export async function saveStepData<T>(draftId: string, step: 'subject' | 'partie
   });
 }
 
+export async function getDraftRuleStepData<T>(draftId: string, step: 'forgiveness') {
+  return readJson<T | null>(`/api/contracts/drafts/${draftId}/${step}`);
+}
+
+export async function saveDraftRuleStepData<T>(draftId: string, step: 'forgiveness', payload: T) {
+  return readJson<{ success: true }>(`/api/contracts/drafts/${draftId}/${step}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  });
+}
+
 /** بارگذاری قواعد فسخ خریدار از ستون buyerRules در پایگاه. */
-export async function fetchTerminationBuyerRules(draftId: string): Promise<{ buyerRules: unknown } | null> {
+export async function fetchTerminationBuyerRules(draftId: string): Promise<{ buyerRules: unknown; payload?: unknown } | null> {
   try {
-    return await readJson<{ buyerRules: unknown }>(`/api/contracts/drafts/${draftId}/termination`);
+    return await readJson<{ buyerRules: unknown; payload?: unknown }>(`/api/contracts/drafts/${draftId}/termination`);
   } catch {
     return null;
   }
+}
+
+export async function saveTerminationStepData<T>(draftId: string, payload: T) {
+  return readJson<{ success: true }>(`/api/contracts/drafts/${draftId}/termination`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  });
 }
 
 export async function getReferenceData(draftId?: string | null) {
