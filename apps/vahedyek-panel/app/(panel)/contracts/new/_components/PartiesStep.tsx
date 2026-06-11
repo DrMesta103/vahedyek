@@ -151,6 +151,23 @@ function getBusinessPartyOneMissingFields(profileStore: ProfileStore, profileMet
   return missingFields;
 }
 
+function mapProfileBuyersToDirectoryItems(profileStore: ProfileStore) {
+  return {
+    buyerNaturals: (profileStore.naturalBuyers ?? []).map((item) => ({
+      id: String(item.id),
+      directoryId: null,
+      personType: 'natural' as const,
+      name: String(item.fullName || item.mobile || item.email || 'خریدار'),
+    })),
+    buyerLegals: (profileStore.legalBuyers ?? []).map((item) => ({
+      id: String(item.id),
+      directoryId: null,
+      personType: 'legal' as const,
+      name: String(item.companyName || item.brandName || 'خریدار حقوقی'),
+    })),
+  };
+}
+
 async function getAuthMe() {
   const response = await fetch('/api/auth/me', { cache: 'no-store' });
   if (!response.ok) return null;
@@ -179,16 +196,24 @@ export function PartiesStep({ stepId, title, embedded = false }: { stepId: strin
   const [inlineHint, setInlineHint] = useState('');
   const [businessProfile, setBusinessProfile] = useState<{ store: ProfileStore; meta: ProfileMeta; auth: AuthMePayload } | null>(null);
 
-  const applyReferenceData = (referenceData: ReferenceDataResponse) => {
-    setBuyerNaturals(referenceData.directory.buyer.natural.map((item) => ({ ...item, personType: 'natural' as const, directoryId: item.id })));
-    setBuyerLegals(referenceData.directory.buyer.legal.map((item) => ({ ...item, personType: 'legal' as const, directoryId: item.id })));
+  const applyReferenceData = (referenceData: ReferenceDataResponse, profileStore?: ProfileStore | null) => {
+    const profileBuyers = profileStore ? mapProfileBuyersToDirectoryItems(profileStore) : { buyerNaturals: [], buyerLegals: [] };
+
+    setBuyerNaturals([
+      ...referenceData.directory.buyer.natural.map((item) => ({ ...item, personType: 'natural' as const, directoryId: item.id })),
+      ...profileBuyers.buyerNaturals,
+    ]);
+    setBuyerLegals([
+      ...referenceData.directory.buyer.legal.map((item) => ({ ...item, personType: 'legal' as const, directoryId: item.id })),
+      ...profileBuyers.buyerLegals,
+    ]);
   };
 
   const reloadReferenceData = async () => {
     setDirectoryLoading(true);
     try {
-      const referenceData = await getReferenceData();
-      applyReferenceData(referenceData);
+      const [referenceData, profilePayload] = await Promise.all([getReferenceData(), fetchProfilePayload()]);
+      applyReferenceData(referenceData, profilePayload.store);
     } finally {
       setDirectoryLoading(false);
     }
@@ -217,7 +242,7 @@ export function PartiesStep({ stepId, title, embedded = false }: { stepId: strin
         };
         setDraftId(id);
         setBusinessProfile(businessContext);
-        applyReferenceData(referenceData);
+        applyReferenceData(referenceData, profilePayload.store);
 
         const computedDefaultPartyOneRow = buildDefaultPartyOneRow('dang', profilePayload.store, profilePayload.meta, resolvedAuth);
         setDefaultPartyOneRow(computedDefaultPartyOneRow);
