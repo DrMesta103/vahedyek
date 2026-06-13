@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { ConfirmDialog } from './ConfirmDialog';
 
@@ -42,11 +43,23 @@ type CardMenuProps = {
 
 const OPEN_EVENT = 'dastranj:card-menu-open';
 
+function isRedirectError(error: unknown) {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'digest' in error &&
+    typeof (error as { digest?: unknown }).digest === 'string' &&
+    String((error as { digest?: string }).digest).startsWith('NEXT_REDIRECT')
+  );
+}
+
 export function CardMenu({ items }: CardMenuProps) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [pendingItemIndex, setPendingItemIndex] = useState<number | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const rootRef = useRef<HTMLDivElement | null>(null);
-  const confirmFormRef = useRef<HTMLFormElement | null>(null);
   const menuId = useId();
 
   useEffect(() => {
@@ -74,10 +87,37 @@ export function CardMenu({ items }: CardMenuProps) {
     };
   }, [menuId, open]);
 
+  const runSubmitAction = async (item: Extract<CardMenuItem, { kind: 'submit' }>) => {
+    const formData = new FormData();
+    Object.entries(item.hiddenFields ?? {}).forEach(([name, value]) => {
+      formData.set(name, value);
+    });
+
+    setSubmitting(true);
+    setSubmitError(null);
+
+    try {
+      await item.action(formData);
+      router.refresh();
+      setPendingItemIndex(null);
+    } catch (error) {
+      if (isRedirectError(error)) {
+        setPendingItemIndex(null);
+        return;
+      }
+      setSubmitError(
+        error instanceof Error ? error.message : '\u0627\u0646\u062c\u0627\u0645 \u0639\u0645\u0644\u06cc\u0627\u062a \u0628\u0627 \u062e\u0637\u0627 \u0645\u0648\u0627\u062c\u0647 \u0634\u062f.',
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const toggleMenu = () => {
     const next = !open;
     if (next) {
       window.dispatchEvent(new CustomEvent(OPEN_EVENT, { detail: { menuId } }));
+      setSubmitError(null);
     }
     setOpen(next);
   };
@@ -87,8 +127,13 @@ export function CardMenu({ items }: CardMenuProps) {
   return (
     <>
       <div className={`card-menu ${open ? 'is-open' : ''}`} ref={rootRef}>
-        <button type="button" className="card-menu-trigger" aria-label="منوی عملیات" onClick={toggleMenu}>
-          <span aria-hidden>⋮</span>
+        <button
+          type="button"
+          className="card-menu-trigger"
+          aria-label="\u0645\u0646\u0648\u06cc \u0639\u0645\u0644\u06cc\u0627\u062a"
+          onClick={toggleMenu}
+        >
+          <span aria-hidden>{'\u22EE'}</span>
         </button>
         {open ? (
           <div className="card-menu-dropdown">
@@ -110,6 +155,7 @@ export function CardMenu({ items }: CardMenuProps) {
                   className={item.tone === 'danger' ? 'card-menu-delete' : 'card-menu-link'}
                   onClick={() => {
                     setOpen(false);
+                    setSubmitError(null);
                     setPendingItemIndex(index);
                   }}
                 >
@@ -130,15 +176,18 @@ export function CardMenu({ items }: CardMenuProps) {
                   <span>{item.label}</span>
                 </button>
               ) : (
-                <form key={`${item.kind}-${item.label}`} action={item.action}>
-                  {Object.entries(item.hiddenFields ?? {}).map(([name, value]) => (
-                    <input key={name} type="hidden" name={name} value={value} />
-                  ))}
-                  <button type="submit" className={item.tone === 'danger' ? 'card-menu-delete' : 'card-menu-link'}>
-                    {item.icon ? <span className="card-menu-item-icon">{item.icon}</span> : null}
-                    <span>{item.label}</span>
-                  </button>
-                </form>
+                <button
+                  key={`${item.kind}-${item.label}`}
+                  type="button"
+                  className={item.tone === 'danger' ? 'card-menu-delete' : 'card-menu-link'}
+                  onClick={() => {
+                    setOpen(false);
+                    void runSubmitAction(item);
+                  }}
+                >
+                  {item.icon ? <span className="card-menu-item-icon">{item.icon}</span> : null}
+                  <span>{item.label}</span>
+                </button>
               ),
             )}
           </div>
@@ -146,26 +195,26 @@ export function CardMenu({ items }: CardMenuProps) {
       </div>
 
       {pendingItem && pendingItem.kind === 'submit' && pendingItem.confirm ? (
-        <>
-          <form ref={confirmFormRef} action={pendingItem.action}>
-            {Object.entries(pendingItem.hiddenFields ?? {}).map(([name, value]) => (
-              <input key={name} type="hidden" name={name} value={value} />
-            ))}
-          </form>
-          <ConfirmDialog
-            open
-            title={pendingItem.confirm.title}
-            description={pendingItem.confirm.description}
-            confirmLabel={pendingItem.confirm.confirmLabel}
-            cancelLabel={pendingItem.confirm.cancelLabel}
-            tone={pendingItem.tone}
-            onCancel={() => setPendingItemIndex(null)}
-            onConfirm={() => {
-              confirmFormRef.current?.requestSubmit();
-              setPendingItemIndex(null);
-            }}
-          />
-        </>
+        <ConfirmDialog
+          open
+          title={pendingItem.confirm.title}
+          description={pendingItem.confirm.description}
+          error={submitError}
+          confirmLabel={
+            submitting ? '\u062f\u0631 \u062d\u0627\u0644 \u0627\u0646\u062c\u0627\u0645...' : pendingItem.confirm.confirmLabel
+          }
+          cancelLabel={pendingItem.confirm.cancelLabel}
+          tone={pendingItem.tone}
+          confirmDisabled={submitting}
+          cancelDisabled={submitting}
+          onCancel={() => {
+            setPendingItemIndex(null);
+            setSubmitError(null);
+          }}
+          onConfirm={() => {
+            void runSubmitAction(pendingItem);
+          }}
+        />
       ) : null}
     </>
   );

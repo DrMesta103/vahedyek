@@ -177,11 +177,19 @@ export default forwardRef<Step1LocationHandle, Step1LocationProps>(function Step
     window.setTimeout(() => setMapStatus('ready'), 220);
   };
 
-  const handlePickCoordinates = ({ latitude: nextLatitude, longitude: nextLongitude }: { latitude: number; longitude: number }) => {
+  const handlePickCoordinates = ({
+    latitude: nextLatitude,
+    longitude: nextLongitude,
+    address: pickedAddress,
+  }: {
+    latitude: number;
+    longitude: number;
+    address?: string;
+  }) => {
     setGeolocationDenied(false);
     setLatitude(String(nextLatitude));
     setLongitude(String(nextLongitude));
-    setAddress(mockAddressFromMapPick(nextLatitude, nextLongitude));
+    setAddress(pickedAddress ?? mockAddressFromMapPick(nextLatitude, nextLongitude));
     clearError('latitude');
     clearError('address');
   };
@@ -295,7 +303,7 @@ export default forwardRef<Step1LocationHandle, Step1LocationProps>(function Step
                 radius={Number(radius) || WORKPLACE_LOCATION_DEFAULT_RADIUS}
                 status={mapStatus}
                 geolocationDenied={geolocationDenied}
-                onPickCoordinates={handlePickCoordinates}
+                onPickLocation={handlePickCoordinates}
                 onUseCurrentLocation={handleUseCurrentLocation}
                 onRetryMap={handleMapRetry}
               />

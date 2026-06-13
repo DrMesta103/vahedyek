@@ -7,7 +7,7 @@ export function panelBreadcrumbs(current: string): ModuleBreadcrumb[] {
 export function businessSettingsBreadcrumbs(current: string): ModuleBreadcrumb[] {
   return [
     { label: 'دسترنج', href: '/' },
-    { label: 'تنظیمات کسب و کار', href: '/business-settings' },
+    { label: 'تنظیمات کسب‌وکار', href: '/business-settings' },
     { label: current },
   ];
 }
@@ -15,7 +15,7 @@ export function businessSettingsBreadcrumbs(current: string): ModuleBreadcrumb[]
 export function policyBreadcrumbs(...trail: ModuleBreadcrumb[]): ModuleBreadcrumb[] {
   return [
     { label: 'دسترنج', href: '/' },
-    { label: 'تنظیمات کسب و کار', href: '/business-settings' },
+    { label: 'تنظیمات کسب‌وکار', href: '/business-settings' },
     { label: 'سیاست‌های کاری', href: '/policies' },
     ...trail,
   ];
@@ -24,7 +24,7 @@ export function policyBreadcrumbs(...trail: ModuleBreadcrumb[]): ModuleBreadcrum
 export function calendarBreadcrumbs(...trail: ModuleBreadcrumb[]): ModuleBreadcrumb[] {
   return [
     { label: 'دسترنج', href: '/' },
-    { label: 'تنظیمات کسب و کار', href: '/business-settings' },
+    { label: 'تنظیمات کسب‌وکار', href: '/business-settings' },
     { label: 'تقویم', href: '/calendars' },
     ...trail,
   ];

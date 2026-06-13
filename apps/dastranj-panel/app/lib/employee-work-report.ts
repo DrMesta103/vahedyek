@@ -906,7 +906,12 @@ async function getCurrentWorkGroupContext(employeeId: string, tenantId: string):
     include: {
       workGroup: {
         include: {
-          location: true,
+          location: {
+            select: {
+              id: true,
+              title: true,
+            },
+          },
           policy: {
             include: { calendar: true },
           },

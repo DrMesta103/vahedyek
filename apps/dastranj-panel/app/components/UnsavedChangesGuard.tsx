@@ -149,8 +149,8 @@ export function UnsavedChangesDialog({
   return (
     <PanelFormModal
       open={open}
-      title="تغییرات ذخیره نشده"
-      lead="در این مرحله تغییرات ذخیره نشده دارید. یکی از گزینه‌های زیر را انتخاب کنید."
+      title="خروج بدون ذخیره"
+      lead="تغییرات شما ذخیره نشده است. آیا می‌خواهید بدون ذخیره خارج شوید؟"
       onClose={onCancel}
       footer={
         <div className="unsaved-guard-actions">

@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { LocationForm } from '../../../../components/LocationForm';
 import { updateLocationAction } from '../../../../lib/actions';
@@ -23,17 +22,14 @@ export default async function EditLocationPage({ params }: EditLocationPageProps
     <div className="page-stack">
       <PageIntro
         title="ویرایش محل کار"
-        description="مشخصات محل و نقطه‌ی انتخاب‌شده را به‌روزرسانی کنید."
-        action={
-          <Link href="/locations" className="secondary-link">
-            بازگشت به لیست
-          </Link>
-        }
+        description="عنوان، آدرس، نقطه انتخاب‌شده و شعاع مجاز این محل را به‌روزرسانی کنید."
       />
       <FormCard title="مشخصات محل">
         <LocationForm
           action={updateLocationAction}
           submitLabel="ذخیره تغییرات"
+          backHref="/locations"
+          backLabel="بازگشت به فهرست"
           initialValues={{
             id: location.id,
             title: location.title,
