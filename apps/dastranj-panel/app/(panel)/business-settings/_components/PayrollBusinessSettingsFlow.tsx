@@ -190,16 +190,33 @@ function InfoTooltip({ text }: { text: string }) {
   );
 }
 
-function DifferenceBadge({ difference }: { difference?: BaseDifference | null }) {
+function DifferenceBadge({ difference, variant = 'template' }: { difference?: BaseDifference | null; variant?: 'template' | 'tenant_base' }) {
   if (!difference) return null;
+  const variantClass = variant === 'tenant_base' ? ' business-payroll-difference-badge--tenant-base' : '';
   return (
     <span
-      className="business-payroll-difference-badge"
+      className={`business-payroll-difference-badge${variantClass}`}
       title={difference.tooltip}
       aria-label={`${difference.message}. ${difference.tooltip}`}
     >
       <Info className="h-3.5 w-3.5" />
       {difference.message}
+    </span>
+  );
+}
+
+function DualDifferenceBadges({
+  difference,
+  secondaryDifference,
+}: {
+  difference?: BaseDifference | null;
+  secondaryDifference?: BaseDifference | null;
+}) {
+  if (!difference && !secondaryDifference) return null;
+  return (
+    <span className="employee-contract-comparison-badges">
+      <DifferenceBadge difference={difference} />
+      <DifferenceBadge difference={secondaryDifference} variant="tenant_base" />
     </span>
   );
 }
@@ -218,6 +235,7 @@ function NumericField({
   error,
   decimalValue = false,
   difference,
+  secondaryDifference,
   disabled = false,
 }: {
   label: string;
@@ -229,6 +247,7 @@ function NumericField({
   error?: string;
   decimalValue?: boolean;
   difference?: BaseDifference | null;
+  secondaryDifference?: BaseDifference | null;
   disabled?: boolean;
 }) {
   const displayValue = Number.isFinite(value) ? toPersianDigits(String(value)) : '';
@@ -257,7 +276,7 @@ function NumericField({
         />
         <b>{unit}</b>
       </span>
-      <DifferenceBadge difference={difference} />
+      <DualDifferenceBadges difference={difference} secondaryDifference={secondaryDifference} />
       {helper ? <small>{helper}</small> : null}
       {error ? <em>{error}</em> : null}
     </label>
@@ -1381,6 +1400,9 @@ export function WorkTimePayRulesSection({
   businessSettingsHref,
   embedded = false,
   comparisonMode = 'tenant',
+  secondaryComparisonMode,
+  secondaryBaseSettings,
+  secondaryComparisonYear,
   nightWorkTenantSettings,
 }: {
   settings: PayrollSettings;
@@ -1395,11 +1417,15 @@ export function WorkTimePayRulesSection({
   embedded?: boolean;
   /** Template mode compares field badges against selected draft template. */
   comparisonMode?: PayrollComparisonMode;
+  secondaryComparisonMode?: PayrollComparisonMode;
+  secondaryBaseSettings?: PayrollSettings;
+  secondaryComparisonYear?: number;
   /** Tenant settings used for read-only night work time display. */
   nightWorkTenantSettings?: PayrollSettings;
 }) {
   const rules = settings.workTimePayRules;
   const baseRules = baseSettings?.workTimePayRules;
+  const secondaryRules = secondaryBaseSettings?.workTimePayRules;
   const tenantNightRules = nightWorkTenantSettings?.workTimePayRules ?? baseRules;
   const nightWorkStartTime = nightWorkTimesReadOnly && tenantNightRules ? tenantNightRules.nightWork.startTime : rules.nightWork.startTime;
   const nightWorkEndTime = nightWorkTimesReadOnly && tenantNightRules ? tenantNightRules.nightWork.endTime : rules.nightWork.endTime;
@@ -1434,6 +1460,17 @@ export function WorkTimePayRulesSection({
             onChange={(dailyLimitHours) => update('overtime', { ...rules.overtime, dailyLimitHours })}
             error={errors.dailyLimitHours}
             difference={baseRules ? compareNumbersForMode(comparisonMode, baseRules.overtime.dailyLimitHours, rules.overtime.dailyLimitHours, 'سقف اضافه کاری روزانه', { unit: 'ساعت' }) : null}
+            secondaryDifference={
+              secondaryRules && secondaryComparisonMode && secondaryComparisonYear
+                ? compareNumbersForMode(
+                    secondaryComparisonMode,
+                    secondaryRules.overtime.dailyLimitHours,
+                    rules.overtime.dailyLimitHours,
+                    'سقف اضافه کاری روزانه',
+                    { unit: 'ساعت', baseYear: secondaryComparisonYear },
+                  )
+                : null
+            }
           />
           <NumericField
             label="ضریب اضافه کاری عادی"
@@ -1444,6 +1481,17 @@ export function WorkTimePayRulesSection({
             onChange={(normalCoefficient) => update('overtime', { ...rules.overtime, normalCoefficient })}
             error={errors.normalCoefficient}
             difference={baseRules ? compareNumbersForMode(comparisonMode, baseRules.overtime.normalCoefficient, rules.overtime.normalCoefficient, 'ضریب اضافه کاری عادی', { unit: 'ضریب', formatAmount: decimal }) : null}
+            secondaryDifference={
+              secondaryRules && secondaryComparisonMode && secondaryComparisonYear
+                ? compareNumbersForMode(
+                    secondaryComparisonMode,
+                    secondaryRules.overtime.normalCoefficient,
+                    rules.overtime.normalCoefficient,
+                    'ضریب اضافه کاری عادی',
+                    { unit: 'ضریب', formatAmount: decimal, baseYear: secondaryComparisonYear },
+                  )
+                : null
+            }
           />
         </div>
         <div className="business-payroll-overtime-limits">
@@ -1608,6 +1656,9 @@ export function LeaveSection({
   onLeaveChange,
   embedded = false,
   comparisonMode = 'tenant',
+  secondaryComparisonMode,
+  secondaryBaseSettings,
+  secondaryComparisonYear,
 }: {
   settings: PayrollSettings;
   baseSettings?: PayrollSettings;
@@ -1615,6 +1666,9 @@ export function LeaveSection({
   onLeaveChange: (settings: PayrollSettings['leave']) => void;
   embedded?: boolean;
   comparisonMode?: PayrollComparisonMode;
+  secondaryComparisonMode?: PayrollComparisonMode;
+  secondaryBaseSettings?: PayrollSettings;
+  secondaryComparisonYear?: number;
 }) {
   const [storedHours, setStoredHours] = useState(10);
   const cashSettlement = storedHours * settings.leave.settlementRatePerHour;
@@ -1659,6 +1713,17 @@ export function LeaveSection({
           'سهمیه مرخصی ماهانه',
           { unit: 'ساعت' },
         ) : null}
+        secondaryDifference={
+          secondaryBaseSettings && secondaryComparisonMode && secondaryComparisonYear
+            ? compareNumbersForMode(
+                secondaryComparisonMode,
+                secondaryBaseSettings.leave.monthlyQuotaHours,
+                settings.leave.monthlyQuotaHours,
+                'سهمیه مرخصی ماهانه',
+                { unit: 'ساعت', baseYear: secondaryComparisonYear },
+              )
+            : null
+        }
       />
       <section className="business-payroll-subcard">
         <h3>مدیریت مرخصی‌های استفاده‌نشده</h3>

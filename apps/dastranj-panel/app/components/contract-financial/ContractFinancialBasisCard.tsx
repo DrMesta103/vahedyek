@@ -1,6 +1,6 @@
 'use client';
 
-import { Info, Scale } from 'lucide-react';
+import { Scale } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { BaseDifference } from '../../lib/payroll-business-settings';
 import { ContractFinancialDifferenceBadge } from './ContractFinancialDifferenceBadge';
@@ -25,6 +25,7 @@ type ContractFinancialBasisCardProps = {
   footnote?: string;
   derivedItems: ContractFinancialDerivedItem[];
   templateDifference?: BaseDifference | null;
+  tenantBaseDifference?: BaseDifference | null;
   workDaysNote?: string;
   tone?: 'minutes' | 'salary';
 };
@@ -40,6 +41,7 @@ export function ContractFinancialBasisCard({
   footnote,
   derivedItems,
   templateDifference,
+  tenantBaseDifference,
   workDaysNote,
   tone = 'minutes',
 }: ContractFinancialBasisCardProps) {
@@ -79,15 +81,15 @@ export function ContractFinancialBasisCard({
             <b>{unit}</b>
           </span>
         </label>
-        <ContractFinancialDifferenceBadge difference={templateDifference} softenLowerTone={tone === 'minutes'} />
+        <span className="contract-financial-difference-badges">
+          <ContractFinancialDifferenceBadge difference={templateDifference} softenLowerTone={tone === 'minutes'} />
+          <ContractFinancialDifferenceBadge
+            difference={tenantBaseDifference}
+            softenLowerTone={tone === 'minutes'}
+            variant="tenant_base"
+          />
+        </span>
       </div>
-
-      {footnote ? (
-        <p className="contract-financial-basis-footnote">
-          <Info className="h-3.5 w-3.5 shrink-0" aria-hidden />
-          <span>{footnote}</span>
-        </p>
-      ) : null}
 
       {error ? <em className="contract-timing-field-error">{error}</em> : null}
 

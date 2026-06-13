@@ -8,13 +8,16 @@ import {
   hasWorkTimePayRulesTemplateDiff,
   syncNightWorkTimesFromTenant,
 } from '../../../../../../lib/employee-contract-compensation';
+import { buildComparisonBasePayrollSettings } from '../../../../../../lib/employee-draft-comparison';
 import type { ContractDraftTemplate } from '../../../../../../lib/contract-draft-templates';
 import type { EmployeeContractDraft } from '../../../../../../lib/employee-contract-drafts';
-import { EmployeeContractStepShell, SectionPlaceholder, TemplateDiffBanner } from './employee-contract-ui';
+import { EmployeeContractStepShell, SectionPlaceholder, TemplateDiffBanner, TenantBaseDiffBanner } from './employee-contract-ui';
 
 type Props = {
   workTimePayRules: PayrollSettings['workTimePayRules'] | undefined;
   templateSnapshot: EmployeeContractDraft['templateSnapshot'];
+  comparisonBaseSnapshot?: EmployeeContractDraft['comparisonBaseSettingsSnapshot'];
+  comparisonBaseYear?: number | null;
   financial: EmployeeContractDraft['financial'];
   tenantSettings: PayrollSettings;
   currentTemplate: ContractDraftTemplate | null;
@@ -25,6 +28,8 @@ type Props = {
 export function EmployeeContractWorkTimePayStep({
   workTimePayRules,
   templateSnapshot,
+  comparisonBaseSnapshot,
+  comparisonBaseYear,
   financial,
   tenantSettings,
   currentTemplate,
@@ -35,6 +40,9 @@ export function EmployeeContractWorkTimePayStep({
 
   const templateComparisonSettings = templateSnapshot
     ? buildTemplateComparisonPayrollSettings(tenantSettings, templateSnapshot)
+    : undefined;
+  const tenantBaseComparisonSettings = comparisonBaseSnapshot
+    ? buildComparisonBasePayrollSettings(tenantSettings, comparisonBaseSnapshot)
     : undefined;
   const syncedValue = syncNightWorkTimesFromTenant(workTimePayRules, tenantSettings);
   const settings: PayrollSettings = {
@@ -48,22 +56,34 @@ export function EmployeeContractWorkTimePayStep({
   const hasTemplateDiff = templateComparisonSettings
     ? hasWorkTimePayRulesTemplateDiff(syncedValue, templateComparisonSettings.workTimePayRules, tenantSettings)
     : false;
+  const hasTenantBaseDiff = tenantBaseComparisonSettings
+    ? hasWorkTimePayRulesTemplateDiff(syncedValue, tenantBaseComparisonSettings.workTimePayRules, tenantSettings)
+    : false;
 
   return (
     <EmployeeContractStepShell
       title="پرداخت زمان کاری"
-      tag={templateSnapshot ? 'قالب انتخاب‌شده' : 'بدون قالب'}
-      description="اضافه‌کاری، شب‌کاری، قواعد روزهای خاص و روش ترکیب ضرایب را بر اساس قالب انتخاب‌شده تنظیم کنید."
+      tag={templateSnapshot ? 'قالب انتخاب‌شده' : comparisonBaseSnapshot ? 'مبنای تنظیمات' : 'بدون قالب'}
+      description="اضافه‌کاری، شب‌کاری، قواعد روزهای خاص و روش ترکیب ضرایب را بر اساس مبنای انتخاب‌شده تنظیم کنید."
       icon={<CalendarDays className="h-4 w-4" />}
     >
       {hasTemplateDiff ? (
         <TemplateDiffBanner message="قوانین پرداخت زمان کاری با قالب انتخاب‌شده متفاوت است." />
+      ) : null}
+      {hasTenantBaseDiff && comparisonBaseYear ? (
+        <TenantBaseDiffBanner
+          baseYear={comparisonBaseYear}
+          message={`قوانین پرداخت زمان کاری با ${comparisonBaseSnapshot?.name ?? 'مبنای تنظیمات'} متفاوت است.`}
+        />
       ) : null}
       <WorkTimePayRulesSection
         embedded
         comparisonMode="template"
         settings={settings}
         baseSettings={templateComparisonSettings}
+        secondaryComparisonMode={comparisonBaseSnapshot ? 'tenant_base' : undefined}
+        secondaryBaseSettings={tenantBaseComparisonSettings}
+        secondaryComparisonYear={comparisonBaseYear ?? undefined}
         nightWorkTenantSettings={tenantSettings}
         derived={calculatePayrollValues(settings)}
         errors={errors}
@@ -71,7 +91,9 @@ export function EmployeeContractWorkTimePayStep({
         businessSettingsHref={
           currentTemplate
             ? `/business-settings/payroll-attendance/tenant?year=${currentTemplate.baseSettingsYear}`
-            : undefined
+            : comparisonBaseYear
+              ? `/business-settings/payroll-attendance/tenant?year=${comparisonBaseYear}`
+              : undefined
         }
         onChange={(nextRules) =>
           onWorkTimePayRulesChange(

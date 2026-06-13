@@ -21877,6 +21877,21 @@ body.tenant-select-route {
   cursor: help;
 }
 
+.business-payroll-difference-badge--tenant-base {
+  border-color: rgba(167, 139, 250, 0.38);
+  background: rgba(109, 40, 217, 0.82);
+  color: #f5f3ff;
+}
+
+.employee-contract-comparison-badges,
+.contract-financial-difference-badges {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+}
+
 .business-payroll-field em,
 .business-payroll-table-row > em {
   color: #ffb7b7;
@@ -22125,6 +22140,24 @@ body.tenant-select-route {
   border: 1px solid rgba(250, 204, 21, 0.35);
   background: rgba(250, 204, 21, 0.12);
   color: #fde68a;
+}
+
+.contract-financial-difference-badge--tenant-base.is-higher {
+  border: 1px solid rgba(167, 139, 250, 0.42);
+  background: rgba(109, 40, 217, 0.18);
+  color: #ddd6fe;
+}
+
+.contract-financial-difference-badge--tenant-base.is-lower {
+  border: 1px solid rgba(251, 191, 36, 0.42);
+  background: rgba(245, 158, 11, 0.16);
+  color: #fde68a;
+}
+
+.contract-financial-difference-badge--tenant-base.is-changed {
+  border: 1px solid rgba(167, 139, 250, 0.38);
+  background: rgba(109, 40, 217, 0.14);
+  color: #e9d5ff;
 }
 
 .contract-financial-derived-grid {

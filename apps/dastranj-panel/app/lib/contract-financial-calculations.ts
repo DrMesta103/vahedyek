@@ -37,10 +37,30 @@ export function compareFinancialToTemplate(
 ): BaseDifference | null {
   const formatAmount = config.formatAmount ?? ((value: number) => formatFaNumber(value));
   return compareValues(templateValue, currentValue, {
-    changed: 'متفاوت با مبنای قالب',
-    tooltip: `${config.fieldLabel} در قالب انتخاب‌شده ${formatAmount(templateValue)} ${config.unit} است.`,
-    higher: (difference) => `${formatAmount(difference)} ${config.unit} بیشتر از مبنای قالب`,
-    lower: (difference) => `${formatAmount(difference)} ${config.unit} کمتر از مبنای قالب`,
+    changed: 'متفاوت با قالب',
+    tooltip: `در قالب انتخاب‌شده، مقدار این فیلد ${formatAmount(templateValue)} ${config.unit} است.`,
+    higher: (difference) => `${formatAmount(difference)} ${config.unit} بیشتر از قالب`,
+    lower: (difference) => `${formatAmount(difference)} ${config.unit} کمتر از قالب`,
+  });
+}
+
+export function compareFinancialToTenantBase(
+  baseValue: number,
+  currentValue: number,
+  baseYear: number,
+  config: {
+    fieldLabel: string;
+    unit: string;
+    formatAmount?: (value: number) => string;
+  },
+): BaseDifference | null {
+  const formatAmount = config.formatAmount ?? ((value: number) => formatFaNumber(value));
+  const baseLabel = `مبنای ${formatFaNumber(baseYear, { useGrouping: false })}`;
+  return compareValues(baseValue, currentValue, {
+    changed: `متفاوت با ${baseLabel}`,
+    tooltip: `در تنظیمات ${baseLabel}، مقدار این فیلد ${formatAmount(baseValue)} ${config.unit} است.`,
+    higher: (difference) => `${formatAmount(difference)} ${config.unit} بیشتر از ${baseLabel}`,
+    lower: (difference) => `${formatAmount(difference)} ${config.unit} کمتر از ${baseLabel}`,
   });
 }
 
