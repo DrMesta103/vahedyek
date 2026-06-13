@@ -25,6 +25,7 @@ import {
   fetchTerminationBuyerRules,
   getFrontendStepDraft,
   getStepData,
+  saveTerminationStepData,
   setFrontendStepDraft,
 } from '../../../../lib/contractDraftClient';
 import { validateTerminationStep, validateTerminationSubsection, validateBuyerTerminationSubsection } from '../../../../lib/contractValidation';
@@ -63,6 +64,35 @@ import { useContractFlowBasePath } from './useContractFlowBasePath';
 
 function serializePayload(payload: ContractTerminationData) {
   return JSON.stringify(payload);
+}
+
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number, fallback: T): Promise<T> {
+  return new Promise((resolve) => {
+    const timer = window.setTimeout(() => resolve(fallback), timeoutMs);
+    promise
+      .then((value) => resolve(value))
+      .catch(() => resolve(fallback))
+      .finally(() => window.clearTimeout(timer));
+  });
+}
+
+function hasEnabledSellerTermination(data: ContractTerminationData) {
+  return CONSTRUCTOR_SUBSECTION_IDS.some((id) => data.constructorTerms[id].ruleEnabled);
+}
+
+function hasEnabledBuyerTermination(data: ContractTerminationData) {
+  return BUYER_SUBSECTION_IDS.some((id) => data.buyerTerms[id].ruleEnabled);
+}
+
+function syncTerminationActivation(data: ContractTerminationData): ContractTerminationData {
+  const sellerEnabled = hasEnabledSellerTermination(data);
+  const buyerEnabled = hasEnabledBuyerTermination(data);
+  return {
+    ...data,
+    terminationEnabled: sellerEnabled || buyerEnabled,
+    sellerTerminationEngaged: sellerEnabled,
+    buyerTerminationEngaged: buyerEnabled,
+  };
 }
 
 const SUBSECTION_META: Record<ConstructorTerminationSubsectionId, { title: string; description: string; icon: ReactNode }> = {
@@ -314,6 +344,7 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
   const [subsectionBusy, setSubsectionBusy] = useState<ConstructorTerminationSubsectionId | null>(null);
   const [subsectionBuyerBusy, setSubsectionBuyerBusy] = useState<BuyerTerminationSubsectionId | null>(null);
   const [formError, setFormError] = useState('');
+  const [saveNotice, setSaveNotice] = useState('');
   const [expandedSellerId, setExpandedSellerId] = useState<ConstructorTerminationSubsectionId | null>('lateInstallment');
   const [expandedBuyerId, setExpandedBuyerId] = useState<BuyerTerminationSubsectionId | null>('lateDelivery');
 
@@ -329,17 +360,22 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
       try {
         const [frontendDraft, subject, remoteTermination] = await Promise.all([
           Promise.resolve(getFrontendStepDraft<ContractTerminationData | Record<string, unknown>>(nextDraftId, 'termination')),
-          getStepData<ContractSubjectData>(nextDraftId, 'subject'),
-          fetchTerminationBuyerRules(nextDraftId),
+          withTimeout(getStepData<ContractSubjectData>(nextDraftId, 'subject'), 2000, null),
+          withTimeout(fetchTerminationBuyerRules(nextDraftId), 2000, null),
         ]);
 
         if (!mounted) return;
         const fromServer =
           remoteTermination?.buyerRules != null ? normalizePersistedBuyerRules(remoteTermination.buyerRules) : null;
+        const serverRecord =
+          remoteTermination?.payload && typeof remoteTermination.payload === 'object'
+            ? (remoteTermination.payload as Record<string, unknown>)
+            : {};
         const localRecord =
           frontendDraft && typeof frontendDraft === 'object' ? (frontendDraft as Record<string, unknown>) : {};
 
-        const nextPayload = normalizeTerminationPayload({
+        const nextPayload = syncTerminationActivation(normalizeTerminationPayload({
+          ...serverRecord,
           ...(fromServer
             ? {
                 buyerTerms: fromServer.buyerTerms,
@@ -348,7 +384,7 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
               }
             : {}),
           ...localRecord,
-        });
+        }));
         setPayload(nextPayload);
         setSubjectData(subject);
         initialSnapshotRef.current = serializePayload(nextPayload);
@@ -380,6 +416,7 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
 
   const updatePayload = (updater: (current: ContractTerminationData) => ContractTerminationData) => {
     setFormError('');
+    setSaveNotice('');
     setPayload((current) => updater(current));
   };
 
@@ -403,17 +440,16 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
       return;
     }
     setSaving(true);
+    setFormError('');
+    setSaveNotice('');
     try {
-      const remote = await upsertTerminationBuyerRulesFromStepPayload(draftId, {
-        buyerTerms: payload.buyerTerms,
-        buyerCompletion: payload.buyerCompletion,
-        terminationBuyerPanel: payload.terminationBuyerPanel,
-      });
-      if (remote.ok === false) {
-        setFormError(remote.message);
-        return;
-      }
-      persistDraft(payload, true);
+      const next = syncTerminationActivation(payload);
+      await saveTerminationStepData(draftId, next);
+      setPayload(next);
+      persistDraft(next, true);
+      setSaveNotice('شرایط فسخ برای این پیش‌نویس ذخیره شد.');
+    } catch (error) {
+      setFormError(error instanceof Error ? error.message : 'Ø«Ø¨Øª Ø´Ø±Ø§ÛŒØ· ÙØ³Ø® Ø§Ù†Ø¬Ø§Ù… Ù†Ø´Ø¯.');
     } finally {
       setSaving(false);
     }
@@ -729,44 +765,7 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
       ) : null}
 
       <div className="overflow-hidden rounded-[30px] border border-gray-200 bg-white text-right shadow-sm">
-        <div className="border-b border-gray-100 px-5 py-5 sm:px-6">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <h2 className="text-lg font-bold text-gray-900">جریان فسخ قرارداد</h2>
-            </div>
-            <div className="lg:min-w-[280px]">
-              <TerminationFlowToggleRow
-                checked={payload.terminationEnabled}
-                onChange={(checked) =>
-                  updatePayload((current) =>
-                    checked
-                      ? {
-                          ...current,
-                          terminationEnabled: true,
-                          terminationPartyTab: 'seller',
-                          terminationConstructorPanel: 'list',
-                          sellerTerminationEngaged: true,
-                        }
-                      : {
-                          ...current,
-                          terminationEnabled: false,
-                          terminationPartyTab: 'seller',
-                          terminationConstructorPanel: 'list',
-                          terminationBuyerPanel: 'list',
-                          sellerTerminationEngaged: false,
-                          buyerTerminationEngaged: false,
-                        },
-                  )
-                }
-              />
-            </div>
-          </div>
-        </div>
-
-        {!payload.terminationEnabled ? (
-          <div className="px-6 py-10 text-center text-sm text-slate-500">برای دسترسی به منوی فسخ، گزینهٔ بالا را فعال کنید.</div>
-        ) : (
-          <div className="space-y-0">
+        <div className="space-y-0">
             <TerminationPartyTabBar
               activeTab={payload.terminationPartyTab}
               sellerLabel={partyLabels.sellerLabel}
@@ -797,16 +796,19 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
                           expanded={expanded}
                           onExpand={() => setExpandedSellerId((current) => (current === sid ? null : sid))}
                           onToggle={(next) => {
-                            updatePayload((p) => ({
-                              ...p,
-                              constructorTerms: {
-                                ...p.constructorTerms,
-                                [sid]: {
-                                  ...p.constructorTerms[sid],
-                                  ruleEnabled: next,
+                            updatePayload((p) =>
+                              syncTerminationActivation({
+                                ...p,
+                                terminationPartyTab: 'seller',
+                                constructorTerms: {
+                                  ...p.constructorTerms,
+                                  [sid]: {
+                                    ...p.constructorTerms[sid],
+                                    ruleEnabled: next,
+                                  },
                                 },
-                              },
-                            }));
+                              }),
+                            );
                             if (next) {
                               setExpandedSellerId(sid);
                             } else {
@@ -846,16 +848,19 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
                           expanded={expanded}
                           onExpand={() => setExpandedBuyerId((current) => (current === sid ? null : sid))}
                           onToggle={(next) => {
-                            updatePayload((p) => ({
-                              ...p,
-                              buyerTerms: {
-                                ...p.buyerTerms,
-                                [sid]: {
-                                  ...p.buyerTerms[sid],
-                                  ruleEnabled: next,
+                            updatePayload((p) =>
+                              syncTerminationActivation({
+                                ...p,
+                                terminationPartyTab: 'buyer',
+                                buyerTerms: {
+                                  ...p.buyerTerms,
+                                  [sid]: {
+                                    ...p.buyerTerms[sid],
+                                    ruleEnabled: next,
+                                  },
                                 },
-                              },
-                            }));
+                              }),
+                            );
                             if (next) {
                               setExpandedBuyerId(sid);
                             } else {
@@ -876,7 +881,6 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
               </div>
             )}
           </div>
-        )}
       </div>
 
       {formError ? (
@@ -889,11 +893,17 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
         </div>
       ) : null}
 
+      {saveNotice ? (
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">
+          {saveNotice}
+        </div>
+      ) : null}
+
       <StickySubmitBar
         label="ثبت شرایط فسخ"
         loadingLabel="در حال ثبت..."
         onClick={handleSaveAll}
-        disabled={saving}
+        disabled={loading || saving}
         embedded={embedded}
         submitId={stepId}
       />
@@ -901,11 +911,3 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
   );
 }
 
-function TerminationFlowToggleRow({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
-  return (
-    <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50/60 px-4 py-3">
-      <p className="text-sm font-bold text-slate-900">فعال‌سازی جریان فسخ</p>
-      <BusinessSwitch checked={checked} onChange={onChange} />
-    </div>
-  );
-}

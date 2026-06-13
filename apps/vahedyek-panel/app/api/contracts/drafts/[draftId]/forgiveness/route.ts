@@ -1,23 +1,16 @@
 import { NextResponse } from 'next/server';
-import type { Prisma } from '@/lib/prisma-client';
+import { Prisma } from '@/lib/prisma-client';
 import { getActorName, recordAuditLog } from '../../../../../lib/audit-log';
 import { requireSessionContext } from '../../../../../lib/auth';
-import { prisma } from '../../../../../lib/prisma';
-import { handlePrismaApiError } from '../../../../../lib/prismaApiError';
+import { normalizeRuleState } from '../../../../../lib/businessContractRules';
 import {
   getContractDraftRuleSettingsRow,
   upsertContractDraftRuleSettingsRow,
 } from '../../../../../lib/contractDraftRuleSettingsDb';
-import { normalizePersistedBuyerRules } from '../../../../../lib/terminationBuyerRules';
-import { getTerminationBuyerRulesRow, upsertTerminationBuyerRulesRow } from '../../../../../lib/terminationRulesDb';
-import type { BuyerRulesPersisted } from '../../../../../types/contract';
+import { prisma } from '../../../../../lib/prisma';
+import { handlePrismaApiError } from '../../../../../lib/prismaApiError';
 
-function parseBuyerRulesBody(body: unknown): BuyerRulesPersisted | null {
-  if (!body || typeof body !== 'object') return null;
-  const o = body as Record<string, unknown>;
-  const br = o.buyerRules ?? body;
-  return normalizePersistedBuyerRules(br);
-}
+const RULE_ID = 'forgiveness';
 
 export async function GET(_: Request, { params }: { params: Promise<{ draftId: string }> }) {
   try {
@@ -34,9 +27,8 @@ export async function GET(_: Request, { params }: { params: Promise<{ draftId: s
       return NextResponse.json({ message: 'پیش‌نویس موردنظر در این کارپوشه پیدا نشد.' }, { status: 404 });
     }
 
-    const buyerRules = await getTerminationBuyerRulesRow(draftId);
-    const payload = await getContractDraftRuleSettingsRow(draftId, 'termination');
-    return NextResponse.json({ buyerRules, payload });
+    const payload = await getContractDraftRuleSettingsRow(draftId, RULE_ID);
+    return NextResponse.json(payload ? normalizeRuleState(RULE_ID, payload) : null);
   } catch (error) {
     return handlePrismaApiError(error);
   }
@@ -62,25 +54,19 @@ export async function PUT(request: Request, { params }: { params: Promise<{ draf
     }
 
     const body = await request.json();
-    const normalized = parseBuyerRulesBody(body);
-    if (!normalized) {
-      return NextResponse.json({ message: 'ساختار buyerRules معتبر نیست.' }, { status: 400 });
-    }
+    const normalized = normalizeRuleState(RULE_ID, body);
 
-    const buyerRules = normalized as unknown as Prisma.InputJsonValue;
-
-    await upsertTerminationBuyerRulesRow(draftId, buyerRules);
-    await upsertContractDraftRuleSettingsRow(draftId, 'termination', body as Prisma.InputJsonValue);
+    await upsertContractDraftRuleSettingsRow(draftId, RULE_ID, normalized as unknown as Prisma.InputJsonValue);
     await recordAuditLog({
       tenantId: session.tenantId,
       actorUserId: session.userId,
       actorName: getActorName(session),
-      action: 'contract.termination.update',
+      action: 'contract.forgiveness.update',
       entityType: 'contract_draft',
       entityId: draftId,
       entityLabel: `پیش‌نویس ${draftId}`,
-      summary: `${getActorName(session)} شرایط فسخ قرارداد را ویرایش کرد.`,
-      details: { buyerRules: normalized as unknown as Prisma.InputJsonValue },
+      summary: `${getActorName(session)} تنظیمات بخشودگی قرارداد را ویرایش کرد.`,
+      details: { ruleId: RULE_ID, active: normalized.active },
       request,
     });
 

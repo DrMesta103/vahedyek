@@ -136,6 +136,13 @@ export const currentAppConfig: AppConfig = {
       requiredPermission: 'platform.reports.view',
     },
     {
+      id: 'phase-management',
+      label: 'مدیریت فازها',
+      icon: 'fa-clipboard-list',
+      href: '/phase-management',
+      requiredPermission: 'platform.reports.view',
+    },
+    {
       id: 'audit-logs',
       label: 'لاگ‌ها',
       icon: 'fa-clipboard-list',
@@ -197,5 +204,6 @@ export const currentAppConfig: AppConfig = {
     { id: 'reports', label: 'گزارش‌های مدیریتی', routePrefix: '/reports', requiredPermission: 'platform.reports.view' },
     { id: 'settings', label: 'تنظیمات کلی', routePrefix: '/settings', requiredPermission: 'platform.settings.view' },
     { id: 'customer-portal', label: 'پنل خریدار', routePrefix: '/customer-portal', requiredPermission: 'customer.portal.access' },
+    { id: 'phase-management', label: 'مدیریت فازها', routePrefix: '/phase-management', requiredPermission: 'platform.reports.view' },
   ],
 };

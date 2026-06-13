@@ -1,11 +1,94 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import Link from 'next/link';
 import { StickySubmitBar, Input } from '@repo/ui';
 import { dispatchContractFlowDirty, dispatchContractFlowSavedForDraft } from './contractFlowSignals';
 import { ensureActiveDraftId } from '../../../../lib/contractDraftClient';
 import { FieldGroup, SectionCard, SectionHeader } from './ContractFormPrimitives';
 import { getContractTechnicalSpecs, upsertContractTechnicalSpecs, type TechnicalSpecItem } from '../../../../actions/contractSteps789';
+
+type ProjectTechnicalSpecs = {
+  structureSystem: string;
+  facadeMaterial: string;
+  cabinetType: string;
+  floorMaterial: string;
+  coolingSystem: string;
+  heatingSystem: string;
+  windowType: string;
+  elevatorCount: number;
+  securitySystem: string;
+  fireSystem: string;
+  internetStatus: string;
+  parkingAccess: string;
+  technicalNotes: string;
+};
+
+const PROJECT_TECHNICAL_SPEC_FIELDS: Array<{ key: keyof ProjectTechnicalSpecs; title: string; location: string }> = [
+  { key: 'structureSystem', title: 'سیستم سازه', location: 'اسکلت و سازه' },
+  { key: 'facadeMaterial', title: 'نمای پروژه', location: 'نما' },
+  { key: 'cabinetType', title: 'کابینت', location: 'آشپزخانه' },
+  { key: 'floorMaterial', title: 'کف واحد', location: 'کف' },
+  { key: 'coolingSystem', title: 'سیستم سرمایش', location: 'تاسیسات مکانیکی' },
+  { key: 'heatingSystem', title: 'سیستم گرمایش', location: 'تاسیسات مکانیکی' },
+  { key: 'windowType', title: 'پنجره‌ها', location: 'بازشوها' },
+  { key: 'securitySystem', title: 'سیستم امنیتی', location: 'مشاعات و امنیت' },
+  { key: 'fireSystem', title: 'سیستم حریق', location: 'ایمنی' },
+  { key: 'internetStatus', title: 'زیرساخت اینترنت', location: 'زیرساخت ارتباطی' },
+  { key: 'parkingAccess', title: 'دسترسی پارکینگ', location: 'پارکینگ' },
+];
+
+const PROJECT_TECHNICAL_SPECS_SHORTCUT_HREF = `/business-settings/project/technical-specs?returnTo=${encodeURIComponent('/contracts/new?section=technicalSpecs')}`;
+
+function normalizeProjectSpecText(value: unknown) {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+function projectTechnicalSpecsToItems(projectSpecs: ProjectTechnicalSpecs | null): TechnicalSpecItem[] {
+  if (!projectSpecs) return [];
+
+  const items = PROJECT_TECHNICAL_SPEC_FIELDS.map<TechnicalSpecItem | null>((field) => {
+    const standard = normalizeProjectSpecText(projectSpecs[field.key]);
+    if (!standard || standard === 'ندارد') return null;
+    return {
+      id: `project-${field.key}`,
+      systemKey: `project-${field.key}`,
+      title: field.title,
+      standard,
+      location: field.location,
+    };
+  }).filter((item): item is TechnicalSpecItem => Boolean(item));
+
+  if (projectSpecs.elevatorCount > 0) {
+    items.push({
+      id: 'project-elevatorCount',
+      systemKey: 'project-elevatorCount',
+      title: 'آسانسور',
+      standard: `${projectSpecs.elevatorCount} دستگاه`,
+      location: 'مشاعات',
+    });
+  }
+
+  const technicalNotes = normalizeProjectSpecText(projectSpecs.technicalNotes);
+  if (technicalNotes) {
+    items.push({
+      id: 'project-technicalNotes',
+      systemKey: 'project-technicalNotes',
+      title: 'توضیحات فنی پروژه',
+      standard: technicalNotes,
+      location: 'عمومی',
+    });
+  }
+
+  return items;
+}
+
+async function fetchProjectTechnicalSpecs() {
+  const response = await fetch('/api/business-settings/project/technical-specs', { cache: 'no-store' });
+  const data = (await response.json()) as { technicalSpecs?: ProjectTechnicalSpecs; message?: string };
+  if (!response.ok) throw new Error(data.message ?? 'دریافت مشخصات فنی پروژه ناموفق بود.');
+  return data.technicalSpecs ?? null;
+}
 
 function normalizeInitial(items: TechnicalSpecItem[] | null) {
   const base = items?.length ? items : [];
@@ -26,6 +109,8 @@ export function TechnicalSpecsStep({ title }: { title: string }) {
   const [formError, setFormError] = useState('');
 
   const [specs, setSpecs] = useState<TechnicalSpecItem[]>([]);
+  const [projectSpecs, setProjectSpecs] = useState<ProjectTechnicalSpecs | null>(null);
+  const [projectSpecsAvailable, setProjectSpecsAvailable] = useState(false);
   const [adding, setAdding] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -36,14 +121,21 @@ export function TechnicalSpecsStep({ title }: { title: string }) {
     const load = async () => {
       try {
         const id = await ensureActiveDraftId();
-        const remote = await getContractTechnicalSpecs(id);
+        const [remote, projectTechnicalSpecs] = await Promise.all([getContractTechnicalSpecs(id), fetchProjectTechnicalSpecs().catch(() => null)]);
         if (!mounted) return;
+
+        const projectItems = projectTechnicalSpecsToItems(projectTechnicalSpecs);
+        const remoteItems = remote.ok ? normalizeInitial(remote.specs) : [];
+
         setDraftId(id);
+        setProjectSpecs(projectTechnicalSpecs);
+        setProjectSpecsAvailable(projectItems.length > 0);
+
         if (remote.ok) {
-          setSpecs(normalizeInitial(remote.specs));
+          setSpecs(remote.exists ? remoteItems : normalizeInitial(projectItems));
         } else {
           setFormError('message' in remote ? remote.message : 'بارگذاری اطلاعات انجام نشد.');
-          setSpecs(normalizeInitial(null));
+          setSpecs(normalizeInitial(projectItems));
         }
       } catch (error) {
         if (mounted) setFormError(error instanceof Error ? error.message : 'بارگذاری اطلاعات انجام نشد.');
@@ -70,19 +162,29 @@ export function TechnicalSpecsStep({ title }: { title: string }) {
     setNewTitle('');
   };
 
+  const importFromProjectSpecs = () => {
+    const projectItems = projectTechnicalSpecsToItems(projectSpecs);
+    if (!projectItems.length) {
+      setFormError('برای بارگذاری، ابتدا مشخصات فنی پروژه را در اطلاعات مجتمع ثبت کنید.');
+      return;
+    }
+    setFormError('');
+    setSpecs(normalizeInitial(projectItems));
+  };
+
   const startEdit = (spec: TechnicalSpecItem) => {
     setEditingId(spec.id);
     setEditTitle(spec.title ?? '');
   };
 
   const confirmAdd = () => {
-    const title = newTitle.trim();
-    if (!title) return;
+    const newSpecTitle = newTitle.trim();
+    if (!newSpecTitle) return;
     setSpecs((current) => [
       ...current,
       {
         id: `custom-${crypto.randomUUID()}`,
-        title,
+        title: newSpecTitle,
         standard: '',
         location: '',
       },
@@ -93,9 +195,9 @@ export function TechnicalSpecsStep({ title }: { title: string }) {
 
   const confirmEdit = () => {
     if (!editingId) return;
-    const title = editTitle.trim();
-    if (!title) return;
-    setSpecs((current) => current.map((s) => (s.id === editingId ? { ...s, title } : s)));
+    const nextTitle = editTitle.trim();
+    if (!nextTitle) return;
+    setSpecs((current) => current.map((s) => (s.id === editingId ? { ...s, title: nextTitle } : s)));
     setEditingId(null);
     setEditTitle('');
   };
@@ -140,26 +242,45 @@ export function TechnicalSpecsStep({ title }: { title: string }) {
       <SectionCard>
         <SectionHeader
           label={title}
-          description="مشخص می‌کند چه متریالی در ساخت این واحد به کار رفته است. مواد و مصالح استفاده‌شده در بخش‌های مختلف واحد از جمله نما، سقف، درب‌ها و سایر جزئیات باید دقیق انتخاب شوند. این اطلاعات در قرارداد ثبت شده و تعهدات سازنده را مشخص می‌کند."
+          description="مشخص می‌کند چه متریالی در ساخت این واحد به کار رفته است. اگر مشخصات فنی در اطلاعات مجتمع ثبت شده باشد، می‌توانید آن را مستقیم وارد پیش‌نویس قرارداد کنید."
         />
 
         <div className="space-y-4 px-5 py-4">
-          <div className="flex items-center justify-between">
-            <button
-              type="button"
-              onClick={startAdd}
-              className="app-button rounded-xl border border-slate-200 bg-white px-4 py-2 text-[13px] font-bold text-slate-700 hover:bg-slate-50"
-            >
-              ثبت مشخصات فنی
-            </button>
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-cyan-100 bg-cyan-50/60 px-4 py-3">
+            <div>
+              <div className="text-[13px] font-extrabold text-cyan-950">اطلاعات مجتمع</div>
+              <p className="mt-1 text-[12px] leading-6 text-slate-500">
+                مشخصات فنی ثبت‌شده در بخش اطلاعات مجتمع، مرجع اصلی این مرحله است.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={importFromProjectSpecs}
+                disabled={!projectSpecsAvailable}
+                className="app-button rounded-xl border border-cyan-200 bg-white px-4 py-2 text-[13px] font-bold text-cyan-800 hover:bg-cyan-50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                بارگذاری از اطلاعات مجتمع
+              </button>
+              <Link
+                href={PROJECT_TECHNICAL_SPECS_SHORTCUT_HREF}
+                className="rounded-xl border border-teal-200 bg-white px-4 py-2 text-[13px] font-bold text-teal-700 transition hover:bg-teal-50"
+              >
+                افزودن در اطلاعات مجتمع
+              </Link>
+              <button
+                type="button"
+                onClick={startAdd}
+                className="app-button rounded-xl border border-slate-200 bg-white px-4 py-2 text-[13px] font-bold text-slate-700 hover:bg-slate-50"
+              >
+                افزودن مورد دستی
+              </button>
+            </div>
           </div>
 
           {adding ? (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4" onClick={() => setAdding(false)}>
-              <div
-                className="w-full max-w-lg rounded-3xl border border-slate-200 bg-white shadow-2xl"
-                onClick={(event) => event.stopPropagation()}
-              >
+              <div className="w-full max-w-lg rounded-3xl border border-slate-200 bg-white shadow-2xl" onClick={(event) => event.stopPropagation()}>
                 <div className="border-b border-slate-100 px-5 py-4">
                   <div className="text-[14px] font-extrabold text-slate-900">ثبت مشخصات فنی</div>
                   <div className="mt-1 text-[12px] text-slate-500">فقط عنوان مشخصه را وارد کنید.</div>
@@ -167,12 +288,7 @@ export function TechnicalSpecsStep({ title }: { title: string }) {
 
                 <div className="px-5 py-4">
                   <FieldGroup label="عنوان مشخصه">
-                    <Input
-                      value={newTitle}
-                      onChange={(e) => setNewTitle(e.target.value)}
-                      placeholder="مثال: متریال نما"
-                      autoFocus
-                    />
+                    <Input value={newTitle} onChange={(e) => setNewTitle(e.target.value)} placeholder="مثال: متریال نما" autoFocus />
                   </FieldGroup>
                 </div>
 
@@ -184,12 +300,7 @@ export function TechnicalSpecsStep({ title }: { title: string }) {
                   >
                     انصراف
                   </button>
-                  <button
-                    type="button"
-                    className="app-button app-button-primary rounded-xl px-4 py-2 text-[13px] font-bold"
-                    onClick={confirmAdd}
-                    disabled={!newTitle.trim()}
-                  >
+                  <button type="button" className="app-button app-button-primary rounded-xl px-4 py-2 text-[13px] font-bold" onClick={confirmAdd} disabled={!newTitle.trim()}>
                     ثبت
                   </button>
                 </div>
@@ -199,10 +310,7 @@ export function TechnicalSpecsStep({ title }: { title: string }) {
 
           {editingId ? (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4" onClick={() => setEditingId(null)}>
-              <div
-                className="w-full max-w-lg rounded-3xl border border-slate-200 bg-white shadow-2xl"
-                onClick={(event) => event.stopPropagation()}
-              >
+              <div className="w-full max-w-lg rounded-3xl border border-slate-200 bg-white shadow-2xl" onClick={(event) => event.stopPropagation()}>
                 <div className="border-b border-slate-100 px-5 py-4">
                   <div className="text-[14px] font-extrabold text-slate-900">ویرایش مشخصه</div>
                   <div className="mt-1 text-[12px] text-slate-500">عنوان مشخصه را ویرایش کنید.</div>
@@ -210,12 +318,7 @@ export function TechnicalSpecsStep({ title }: { title: string }) {
 
                 <div className="px-5 py-4">
                   <FieldGroup label="عنوان مشخصه">
-                    <Input
-                      value={editTitle}
-                      onChange={(e) => setEditTitle(e.target.value)}
-                      placeholder="عنوان..."
-                      autoFocus
-                    />
+                    <Input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} placeholder="عنوان..." autoFocus />
                   </FieldGroup>
                 </div>
 
@@ -227,12 +330,7 @@ export function TechnicalSpecsStep({ title }: { title: string }) {
                   >
                     انصراف
                   </button>
-                  <button
-                    type="button"
-                    className="app-button app-button-primary rounded-xl px-4 py-2 text-[13px] font-bold"
-                    onClick={confirmEdit}
-                    disabled={!editTitle.trim()}
-                  >
+                  <button type="button" className="app-button app-button-primary rounded-xl px-4 py-2 text-[13px] font-bold" onClick={confirmEdit} disabled={!editTitle.trim()}>
                     ذخیره
                   </button>
                 </div>
@@ -254,6 +352,12 @@ export function TechnicalSpecsStep({ title }: { title: string }) {
                     <tr key={spec.id} className="border-t border-slate-100">
                       <td className="px-4 py-3">
                         <div className="font-bold text-slate-800">{spec.title}</div>
+                        {spec.standard || spec.location ? (
+                          <div className="mt-1 flex flex-wrap gap-2 text-[12px] text-slate-500">
+                            {spec.standard ? <span>مقدار: {spec.standard}</span> : null}
+                            {spec.location ? <span>محل استفاده: {spec.location}</span> : null}
+                          </div>
+                        ) : null}
                       </td>
                       <td className="px-4 py-3 text-left">
                         <div className="flex items-center justify-end gap-2 space-x-reverse">
@@ -267,7 +371,7 @@ export function TechnicalSpecsStep({ title }: { title: string }) {
                           <button
                             type="button"
                             className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700 hover:bg-rose-100"
-                            onClick={() => setSpecs((c) => c.filter((s) => s.id !== spec.id))}
+                            onClick={() => setSpecs((current) => current.filter((s) => s.id !== spec.id))}
                           >
                             حذف
                           </button>
@@ -281,7 +385,7 @@ export function TechnicalSpecsStep({ title }: { title: string }) {
           ) : (
             <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/40 px-6 py-10 text-center">
               <p className="text-[13px] font-bold text-slate-600">هنوز مشخصه‌ای ثبت نشده است.</p>
-              <p className="mt-1 text-[12px] text-slate-400">برای شروع روی «ثبت مشخصات فنی» کلیک کنید.</p>
+              <p className="mt-1 text-[12px] text-slate-400">برای شروع، از اطلاعات مجتمع بارگذاری کنید یا یک مورد دستی اضافه کنید.</p>
             </div>
           )}
         </div>
@@ -298,4 +402,3 @@ export function TechnicalSpecsStep({ title }: { title: string }) {
     </div>
   );
 }
-

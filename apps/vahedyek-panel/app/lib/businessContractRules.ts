@@ -991,6 +991,25 @@ export function normalizeRuleState(ruleId: ContractRuleId, payload: unknown): Co
     });
   }
 
+  if (ruleId === 'forgiveness') {
+    values.forgiveEnabledEntryIds = typeof valuesInput.forgiveEnabledEntryIds === 'string' ? valuesInput.forgiveEnabledEntryIds : '';
+    values.forgiveEntryValues = typeof valuesInput.forgiveEntryValues === 'string' ? valuesInput.forgiveEntryValues : '';
+  }
+
+  const normalizedActive =
+    typeof input.active === 'boolean'
+      ? input.active
+      : ruleId === 'forgiveness'
+        ? Boolean(values.forgiveAllowed)
+        : initial.active;
+
+  if (ruleId === 'forgiveness' && normalizedActive) {
+    values.forgiveAllowed = true;
+    if (!values.forgiveEnabledEntryIds && values.forgiveScope === 'itemized' && typeof values.forgiveEntryId === 'string') {
+      values.forgiveEnabledEntryIds = JSON.stringify([values.forgiveEntryId]);
+    }
+  }
+
   const activeTab = typeof input.activeTab === 'string' && rule.tabs.some((tab) => tab.id === input.activeTab) ? input.activeTab : initial.activeTab;
   const activeChip =
     rule.chips && typeof input.activeChip === 'string' && rule.chips.includes(input.activeChip)
@@ -998,7 +1017,7 @@ export function normalizeRuleState(ruleId: ContractRuleId, payload: unknown): Co
       : initial.activeChip;
 
   return {
-    active: typeof input.active === 'boolean' ? input.active : initial.active,
+    active: normalizedActive,
     activeTab,
     activeChip,
     values,

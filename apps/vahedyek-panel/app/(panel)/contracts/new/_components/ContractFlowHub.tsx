@@ -1,7 +1,7 @@
 'use client';
 
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { AlertCircle, CheckCircle2, Info, Lock, X } from 'lucide-react';
 import { getActiveDraftId, getFrontendStepDraft, getStepData } from '../../../../lib/contractDraftClient';
 import { computeContractTotalRialFromFinancial } from '../../../../lib/contractFinancialPricing';
@@ -254,6 +254,7 @@ function FinancialDonut({ slices }: { slices: Array<{ id: string; name: string; 
 export function ContractFlowHub() {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const leavingRef = useRef(false);
   /** Count of pushState \"trap\" layers we added on top of the real history stack (multiple entries can share the same URL). */
   const leaveTrapPushCountRef = useRef(0);
@@ -448,9 +449,17 @@ export function ContractFlowHub() {
   const interestComplete = true;
   const forgivenessComplete = true;
   const terminationComplete = Boolean(terminationData && validateTerminationStep(terminationData).valid);
-  const extraCostsComplete = extraCostsExists;
+  const extraCostsComplete = true;
   const technicalSpecsComplete = technicalSpecsExists;
   const attachmentsComplete = attachmentsExists;
+  const extraCostsApplicable = extraCostsExists;
+  const sectionPrerequisites = useMemo<Record<ContractFlowSectionId, ContractFlowSectionId[]>>(
+    () => ({
+      ...SECTION_PREREQUISITES,
+      technicalSpecs: extraCostsApplicable ? ['extraCosts'] : ['termination'],
+    }),
+    [extraCostsApplicable],
+  );
   const completionMap: Record<ContractFlowSectionId, boolean> = {
     subject: subjectComplete,
     parties: partiesComplete,
@@ -468,6 +477,7 @@ export function ContractFlowHub() {
   const approvalSubmissionBlockers = useMemo(() => {
     const out: { title: string; detail: string }[] = [];
     for (const sectionId of SECTION_ORDER) {
+      if (sectionId === 'extraCosts' && !extraCostsApplicable) continue;
       const dirty = Boolean(dirtyMap[sectionId]);
       const saved = Boolean(lastUpdatedMap[sectionId]);
       const contentOk = Boolean(completionMap[sectionId]);
@@ -479,7 +489,7 @@ export function ContractFlowHub() {
       out.push({ title: SECTION_TITLES[sectionId], detail });
     }
     return out;
-  }, [completionMap, dirtyMap, lastUpdatedMap]);
+  }, [completionMap, dirtyMap, extraCostsApplicable, lastUpdatedMap]);
 
   const approvalSubmissionReady = approvalSubmissionBlockers.length === 0 && !loading;
 
@@ -487,7 +497,16 @@ export function ContractFlowHub() {
     const result = {} as Record<ContractFlowSectionId, SectionAccess>;
 
     SECTION_ORDER.forEach((sectionId) => {
-      const requirements = SECTION_PREREQUISITES[sectionId].map((requiredId) => {
+      if (sectionId === 'extraCosts' && !extraCostsApplicable) {
+        result[sectionId] = {
+          locked: true,
+          requirements: [],
+          info: 'این بخش تا زمانی که «سایر هزینه‌های قرارداد» ثبت نشود، نمایش داده نمی‌شود.',
+        };
+        return;
+      }
+
+      const requirements = sectionPrerequisites[sectionId].map((requiredId) => {
         const dirty = Boolean(dirtyMap[requiredId]);
         const saved = Boolean(lastUpdatedMap[requiredId]);
         const complete = Boolean(completionMap[requiredId]) && saved && !dirty;
@@ -517,7 +536,7 @@ export function ContractFlowHub() {
     };
 
     return result;
-  }, [completionMap, dirtyMap, lastUpdatedMap]);
+  }, [completionMap, dirtyMap, extraCostsApplicable, lastUpdatedMap, sectionPrerequisites]);
 
   useEffect(() => {
     if (loading) return;
@@ -526,8 +545,8 @@ export function ContractFlowHub() {
     const draftId = getActiveDraftId();
     if (!draftId) return;
 
-    // Go to the latest unfinished section (closest to completion).
-    // We prefer the first section in order that's not "done" yet.
+    const requestedSection = searchParams.get('section') as ContractFlowSectionId | null;
+    const queryTarget = requestedSection && SECTION_ORDER.includes(requestedSection) ? requestedSection : null;
     const firstIncomplete = SECTION_ORDER.find((sectionId) => {
       if (accessMap[sectionId]?.locked) return false;
       const dirty = Boolean(dirtyMap[sectionId]);
@@ -537,12 +556,12 @@ export function ContractFlowHub() {
     });
 
     const fallback = SECTION_ORDER.find((sectionId) => !accessMap[sectionId]?.locked) ?? 'subject';
-    const target = (firstIncomplete ?? fallback) as ContractFlowSectionId;
+    const target = (queryTarget && !accessMap[queryTarget]?.locked ? queryTarget : firstIncomplete ?? fallback) as ContractFlowSectionId;
 
     didAutoScrollRef.current = true;
     setPendingScrollSection(target);
     setActiveSection(target);
-  }, [accessMap, completionMap, dirtyMap, lastUpdatedMap, loading]);
+  }, [accessMap, completionMap, dirtyMap, lastUpdatedMap, loading, searchParams]);
 
   useEffect(() => {
     const renderedSections = Array.from(document.querySelectorAll<HTMLElement>('[data-contract-section]'));
@@ -705,12 +724,16 @@ export function ContractFlowHub() {
       navLabel: 'Termination Terms',
       render: () => <TerminationStep stepId="termination" title="شرایط فسخ" embedded />,
     },
-    {
-      id: 'extraCosts',
-      title: 'سایر هزینه‌های قرارداد',
-      navLabel: 'Extra Costs',
-      render: () => <ExtraCostsStep title="سایر هزینه‌های قرارداد" />,
-    },
+    ...(extraCostsApplicable
+      ? [
+          {
+            id: 'extraCosts',
+            title: 'سایر هزینه‌های قرارداد',
+            navLabel: 'Extra Costs',
+            render: () => <ExtraCostsStep title="سایر هزینه‌های قرارداد" />,
+          } as SectionItem,
+        ]
+      : []),
     {
       id: 'technicalSpecs',
       title: 'مشخصات فنی پروژه',
@@ -728,13 +751,6 @@ export function ContractFlowHub() {
   const visibleSections = sections.filter((section) => !accessMap[section.id]?.locked);
 
   const reportData = financialLiveData ?? financialData;
-  const financialLineSections = useMemo(
-    () =>
-      (reportData?.categories ?? [])
-        .filter((item) => isFinancialLineHeaderCategoryId(item.id) || (!item.system && item.id !== 'principal'))
-        .map((item) => ({ id: item.id, title: item.name || 'ردیف مالی' })),
-    [reportData],
-  );
   const contractTotal = getContractTotal(reportData);
   const additionalFinancialTotal = getAdditionalFinancialTotal(reportData);
   const paidSlices = getFinancialSlices(reportData);
@@ -1061,11 +1077,6 @@ export function ContractFlowHub() {
         loading={loading}
         approvalSubmissionReady={approvalSubmissionReady}
         approvalSubmissionBlockers={approvalSubmissionBlockers}
-        financialLineSections={financialLineSections}
-        onFinancialLineClick={(lineId) => {
-          scrollToSection('financial');
-          window.dispatchEvent(new CustomEvent('contract-flow:focus-financial-line', { detail: { lineId } }));
-        }}
         onOpenPreviewDialog={() => setPreviewDialogOpen(true)}
       />
 

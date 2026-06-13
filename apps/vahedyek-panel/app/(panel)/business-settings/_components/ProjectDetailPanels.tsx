@@ -1125,7 +1125,8 @@ function TechnicalSpecField({
   );
 }
 
-export function ProjectTechnicalSpecsPanel() {
+export function ProjectTechnicalSpecsPanel({ returnTo = '' }: { returnTo?: string }) {
+  const router = useRouter();
   const [specs, setSpecs] = useState<ProjectTechnicalSpecs>(defaultTechnicalSpecs);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -1166,6 +1167,7 @@ export function ProjectTechnicalSpecsPanel() {
       const data = (await response.json()) as { technicalSpecs?: ProjectTechnicalSpecs; message?: string };
       if (!response.ok) throw new Error(data.message ?? 'ذخیره مشخصات فنی ناموفق بود.');
       setSpecs({ ...defaultTechnicalSpecs, ...data.technicalSpecs });
+      if (returnTo) router.push(returnTo);
     } catch (err) {
       setMessage(err instanceof Error ? err.message : 'ذخیره مشخصات فنی ناموفق بود.');
     } finally {
