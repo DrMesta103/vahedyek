@@ -4,12 +4,15 @@ import { CalendarDays } from 'lucide-react';
 import { LeaveSection } from '../../../../../business-settings/_components/PayrollBusinessSettingsFlow';
 import { type PayrollSettings } from '../../../../../../lib/payroll-business-settings';
 import { buildTemplateComparisonPayrollSettings } from '../../../../../../lib/employee-contract-compensation';
+import { buildComparisonBasePayrollSettings } from '../../../../../../lib/employee-draft-comparison';
 import type { EmployeeContractDraft } from '../../../../../../lib/employee-contract-drafts';
-import { EmployeeContractStepShell, SectionPlaceholder, TemplateDiffBanner } from './employee-contract-ui';
+import { EmployeeContractStepShell, SectionPlaceholder, TemplateDiffBanner, TenantBaseDiffBanner } from './employee-contract-ui';
 
 type Props = {
   leave: PayrollSettings['leave'] | undefined;
   templateSnapshot: EmployeeContractDraft['templateSnapshot'];
+  comparisonBaseSnapshot?: EmployeeContractDraft['comparisonBaseSettingsSnapshot'];
+  comparisonBaseYear?: number | null;
   financial: EmployeeContractDraft['financial'];
   tenantSettings: PayrollSettings;
   errors: Record<string, string>;
@@ -19,6 +22,8 @@ type Props = {
 export function EmployeeContractLeaveStep({
   leave,
   templateSnapshot,
+  comparisonBaseSnapshot,
+  comparisonBaseYear,
   financial,
   tenantSettings,
   errors,
@@ -28,6 +33,9 @@ export function EmployeeContractLeaveStep({
 
   const templateComparisonSettings = templateSnapshot
     ? buildTemplateComparisonPayrollSettings(tenantSettings, templateSnapshot)
+    : undefined;
+  const tenantBaseComparisonSettings = comparisonBaseSnapshot
+    ? buildComparisonBasePayrollSettings(tenantSettings, comparisonBaseSnapshot)
     : undefined;
   const settings: PayrollSettings = {
     ...tenantSettings,
@@ -40,20 +48,32 @@ export function EmployeeContractLeaveStep({
   const hasTemplateDiff = templateComparisonSettings
     ? JSON.stringify(templateComparisonSettings.leave) !== JSON.stringify(leave)
     : false;
+  const hasTenantBaseDiff = tenantBaseComparisonSettings
+    ? JSON.stringify(tenantBaseComparisonSettings.leave) !== JSON.stringify(leave)
+    : false;
 
   return (
     <EmployeeContractStepShell
       title="مرخصی"
-      tag={templateSnapshot ? 'قالب انتخاب‌شده' : 'بدون قالب'}
-      description="سهمیه، انتقال، ابطال و تسویه مرخصی ذخیره‌شده را بر اساس قالب انتخاب‌شده تنظیم کنید."
+      tag={templateSnapshot ? 'قالب انتخاب‌شده' : comparisonBaseSnapshot ? 'مبنای تنظیمات' : 'بدون قالب'}
+      description="سهمیه، انتقال، ابطال و تسویه مرخصی ذخیره‌شده را بر اساس مبنای انتخاب‌شده تنظیم کنید."
       icon={<CalendarDays className="h-4 w-4" />}
     >
       {hasTemplateDiff ? <TemplateDiffBanner message="قوانین مرخصی با قالب انتخاب‌شده متفاوت است." /> : null}
+      {hasTenantBaseDiff && comparisonBaseYear ? (
+        <TenantBaseDiffBanner
+          baseYear={comparisonBaseYear}
+          message={`قوانین مرخصی با ${comparisonBaseSnapshot?.name ?? 'مبنای تنظیمات'} متفاوت است.`}
+        />
+      ) : null}
       <LeaveSection
         embedded
         comparisonMode="template"
         settings={settings}
         baseSettings={templateComparisonSettings}
+        secondaryComparisonMode={comparisonBaseSnapshot ? 'tenant_base' : undefined}
+        secondaryBaseSettings={tenantBaseComparisonSettings}
+        secondaryComparisonYear={comparisonBaseYear ?? undefined}
         errors={errors}
         onLeaveChange={onLeaveChange}
       />

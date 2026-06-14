@@ -57,6 +57,10 @@ import {
   DEFAULT_OPTIONAL_DEDUCTION_RULES,
   getActiveTenantStorageId,
   getPayrollSettingsStorageKey,
+  getTenantPayrollSettingsStorageKey,
+  getPayrollSettingsYearsStorageKey,
+  applyPayrollOverrides,
+  normalizePayrollOverrides,
   normalizePayrollSettings,
   calculatePayrollValues,
   calculateVariableAmount,
@@ -65,7 +69,13 @@ import {
   VARIABLE_TITLES,
   type CalculationRules,
   type PayrollSettings,
+  type BusinessSettingYear,
 } from '../../../../../lib/payroll-business-settings';
+import {
+  buildComparisonBaseSnapshot,
+  countDraftComparisonDifferences,
+  formatComparisonBaseLabel,
+} from '../../../../../lib/employee-draft-comparison';
 import {
   BusinessOwnershipProfileEditor,
   createOwnershipEditorDefaults,
@@ -517,7 +527,15 @@ function fieldBadge(text: string, tone: 'success' | 'warning' | 'muted' = 'muted
   );
 }
 
-function differenceBadge(text: string, tooltip: string, tone: 'diff' | 'warning' | 'success' = 'diff') {
+function differenceBadge(text: string, tooltip: string, tone: 'diff' | 'warning' | 'success' | 'tenant_base' = 'diff') {
+  if (tone === 'tenant_base') {
+    return (
+      <span className="business-payroll-difference-badge business-payroll-difference-badge--tenant-base" title={tooltip}>
+        <ShieldCheck className="h-3.5 w-3.5" />
+        {text}
+      </span>
+    );
+  }
   if (tone === 'diff') {
     return (
       <span className="business-payroll-difference-badge" title={tooltip}>
@@ -533,16 +551,55 @@ function getStorageValue(storageStates: HydratedClientStorageState[], storageKey
   return storageStates.find((item) => item.storageKey === storageKey)?.value ?? null;
 }
 
-function readSettingsForTemplate(template: ContractDraftTemplate | null | undefined, storageStates: HydratedClientStorageState[]) {
+function readSettingsForTemplate(
+  template: ContractDraftTemplate | null | undefined,
+  storageStates: HydratedClientStorageState[],
+  tenantId?: string | null,
+) {
   if (!template) return DEFAULT_PAYROLL_SETTINGS;
-  const raw = getStorageValue(storageStates, getPayrollSettingsStorageKey(template.baseSettingsYear, getActiveTenantStorageId()));
-  if (!raw) return DEFAULT_PAYROLL_SETTINGS;
+  return readTenantPayrollBaseSettings(template.baseSettingsYear, storageStates, tenantId);
+}
+
+function readTenantPayrollBaseSettings(
+  year: number,
+  storageStates: HydratedClientStorageState[],
+  tenantId?: string | null,
+) {
+  const rawAdminBase = getStorageValue(storageStates, getPayrollSettingsStorageKey(year));
+  const adminBase = rawAdminBase ? normalizePayrollSettings(JSON.parse(rawAdminBase)) : normalizePayrollSettings({});
+  if (!tenantId) return adminBase;
+
+  const rawTenantOverrides = getStorageValue(storageStates, getTenantPayrollSettingsStorageKey(year, tenantId));
+  if (rawTenantOverrides) {
+    return normalizePayrollSettings(
+      applyPayrollOverrides(adminBase, normalizePayrollOverrides(JSON.parse(rawTenantOverrides))),
+    );
+  }
+
+  const rawLegacyTenantSettings = getStorageValue(storageStates, getPayrollSettingsStorageKey(year, tenantId));
+  return rawLegacyTenantSettings ? normalizePayrollSettings(JSON.parse(rawLegacyTenantSettings)) : adminBase;
+}
+
+function readTenantSettingsForYear(
+  year: number,
+  storageStates: HydratedClientStorageState[],
+  tenantId?: string | null,
+) {
+  return readTenantPayrollBaseSettings(year, storageStates, tenantId);
+}
+
+function readTenantSettingsYears(storageStates: HydratedClientStorageState[]) {
+  const raw = getStorageValue(storageStates, getPayrollSettingsYearsStorageKey(null));
+  if (!raw) return [] as BusinessSettingYear[];
   try {
-    return normalizePayrollSettings(JSON.parse(raw));
+    const parsed = JSON.parse(raw) as BusinessSettingYear[];
+    return Array.isArray(parsed) ? parsed : [];
   } catch {
-    return DEFAULT_PAYROLL_SETTINGS;
+    return [] as BusinessSettingYear[];
   }
 }
+
+type DraftComparisonBaseMode = 'template_own' | 'select_other' | 'none';
 
 function readEmployeeDraftsFromStorageStates(storageStates: HydratedClientStorageState[], tenantId?: string | null) {
   return getEmployeeDraftsFromStorage(getStorageValue(storageStates, getEmployeeContractDraftsStorageKey(tenantId)));
@@ -585,79 +642,8 @@ function computeEmployeeCompleteness(employee: EmployeeDraftEmployee, supplement
 }
 
 function countDifferences(draft: EmployeeContractDraft, baseSettings: PayrollSettings, template: ContractDraftTemplate | null) {
-  const resolved = resolveEmployeeDraftCompensation(draft, baseSettings, template);
-  const snapshot = resolved.templateSnapshot;
-  if (!snapshot) return 0;
-  let count = 0;
-  if (snapshot.classification.contractType && snapshot.classification.contractType !== draft.subject.contractType) count += 1;
-  if (snapshot.classification.locationGroup && snapshot.classification.locationGroup !== draft.subject.locationGroup) count += 1;
-  if (snapshot.financial.dailyRequiredMinutes !== draft.financial.dailyRequiredMinutes) count += 1;
-  if (snapshot.financial.dailyBaseSalary !== draft.financial.dailyBaseSalary) count += 1;
-  if (snapshot.insuranceTax.insuranceEnabled !== draft.insuranceTax.insuranceEnabled) count += 1;
-  if (snapshot.insuranceTax.taxEnabled !== draft.insuranceTax.taxEnabled) count += 1;
-  if (snapshot.insuranceTax.taxPayer !== draft.insuranceTax.taxPayer) count += 1;
-  count += EMPLOYEE_BENEFIT_KEYS.filter((key) => {
-    const current = draft.benefits[key];
-    const templateEnabled = snapshot.benefits[key] > 0;
-    return templateEnabled !== current.enabled || (current.enabled && snapshot.benefits[key] !== current.amount);
-  }).length;
-  count += draft.insuranceTax.taxBrackets.filter((bracket) => {
-    const base = snapshot.insuranceTax.taxBrackets.find((item) => item.id === bracket.id);
-    return !base || base.from !== bracket.from || base.to !== bracket.to || base.percent !== bracket.percent;
-  }).length;
-  const benefitsEndBase = snapshot.benefitsEnd ?? buildEmployeeDraftCompensationDefaults(snapshot, baseSettings).benefitsEnd;
-  if (resolved.benefitsEnd.eidBonus.amount !== benefitsEndBase.eidBonus.amount) count += 1;
-  if (resolved.benefitsEnd.eidBonus.period !== benefitsEndBase.eidBonus.period) count += 1;
-  if (resolved.benefitsEnd.endOfService.enabled !== benefitsEndBase.endOfService.enabled) count += 1;
-  if (resolved.benefitsEnd.endOfService.severancePaymentMethod !== benefitsEndBase.endOfService.severancePaymentMethod) count += 1;
-  if (resolved.benefitsEnd.endOfService.finalSettlementEnabled !== benefitsEndBase.endOfService.finalSettlementEnabled) count += 1;
-  if (JSON.stringify(resolved.paymentSchedule) !== JSON.stringify(snapshot.paymentSchedule ?? snapshot.paymentType)) count += 1;
-  const variablePaymentsBase = snapshot.variablePayments ?? buildEmployeeDraftCompensationDefaults(snapshot, baseSettings).variablePayments;
-  if (resolved.variablePayments.enabled !== variablePaymentsBase.enabled) count += 1;
-  const compareVariableItem = (current: VariableTemplateItem, base: VariableTemplateItem | undefined) => {
-    if (!base) return 1;
-    let itemCount = 0;
-    if (current.title !== base.title) itemCount += 1;
-    if (current.type !== base.type) itemCount += 1;
-    if (current.method !== base.method) itemCount += 1;
-    if (current.method === 'fixed' && current.amount !== base.amount) itemCount += 1;
-    if (current.method === 'percentage' && current.percent !== base.percent) itemCount += 1;
-    if (current.method === 'percentage' && current.base !== base.base) itemCount += 1;
-    if (JSON.stringify(current.calculationRules) !== JSON.stringify(base.calculationRules)) itemCount += 1;
-    return itemCount;
-  };
-  count += resolved.variablePayments.additions.reduce((acc, item) => {
-    const baseItem = variablePaymentsBase.additions.find((entry) => entry.id === item.id);
-    return acc + compareVariableItem(item, baseItem);
-  }, 0);
-  count += resolved.variablePayments.deductions.reduce((acc, item) => {
-    const baseItem = variablePaymentsBase.deductions.find((entry) => entry.id === item.id);
-    return acc + compareVariableItem(item, baseItem);
-  }, 0);
-  count += variablePaymentsBase.additions.filter((baseItem) => !resolved.variablePayments.additions.some((item) => item.id === baseItem.id)).length;
-  count += variablePaymentsBase.deductions.filter((baseItem) => !resolved.variablePayments.deductions.some((item) => item.id === baseItem.id)).length;
-  if (snapshot.workTimePayRules) {
-    const templateRules = syncNightWorkTimesFromTenant(snapshot.workTimePayRules, baseSettings);
-    const currentRules = syncNightWorkTimesFromTenant(resolved.workTimePayRules, baseSettings);
-    if (JSON.stringify(currentRules) !== JSON.stringify(templateRules)) count += 1;
-  }
-  if (snapshot.leave && JSON.stringify(resolved.leave) !== JSON.stringify(snapshot.leave)) count += 1;
-  const missionBase = snapshot.mission ?? buildEmployeeDraftCompensationDefaults(snapshot, baseSettings).mission;
-  if (resolved.mission.enabled !== missionBase.enabled) count += 1;
-  count += resolved.mission.rules.filter((rule) => {
-    const baseRule = missionBase.rules.find((item) => item.id === rule.id);
-    return !baseRule || JSON.stringify(baseRule) !== JSON.stringify(rule);
-  }).length;
-  count += missionBase.rules.filter((baseRule) => !resolved.mission.rules.some((rule) => rule.id === baseRule.id)).length;
-  const commitmentsBase = snapshot.specialCommitments ?? { selected: [], attachments: [] };
-  const currentCommitments = resolved.specialCommitments;
-  if (JSON.stringify([...currentCommitments.selected].sort()) !== JSON.stringify([...commitmentsBase.selected].sort())) count += 1;
-  if (currentCommitments.attachments.length !== commitmentsBase.attachments.length) count += 1;
-  const attachmentsBase = snapshot.attachments ?? { requiredDocuments: {}, files: [] };
-  const currentAttachments = resolved.attachments;
-  if (JSON.stringify(currentAttachments.requiredDocuments) !== JSON.stringify(attachmentsBase.requiredDocuments)) count += 1;
-  if (currentAttachments.files.length !== attachmentsBase.files.length) count += 1;
-  return count;
+  void template;
+  return countDraftComparisonDifferences(draft, baseSettings);
 }
 
 const DEFAULT_EMPLOYEE_PAYMENT_TYPE = 'پرداخت بر اساس دوره‌های زمانی';
@@ -873,8 +859,13 @@ function ContractTimingDateField({
   );
 }
 
-function useDraftStorage(employeeId: string, storageStates: HydratedClientStorageState[], templates: ContractDraftTemplate[]) {
-  const tenantStorageId = getActiveTenantStorageId();
+function useDraftStorage(
+  employeeId: string,
+  storageStates: HydratedClientStorageState[],
+  templates: ContractDraftTemplate[],
+  tenantId?: string | null,
+) {
+  const tenantStorageId = tenantId ?? getActiveTenantStorageId();
   const [drafts, setDrafts] = useState<EmployeeContractDraft[]>(() => getEmployeeDraftsByEmployeeId(readEmployeeDraftsFromStorageStates(storageStates, tenantStorageId), employeeId));
   const [supplementalProfiles, setSupplementalProfiles] = useState<Record<string, EmployeeSupplementalProfile>>(() => readEmployeeSupplementalProfilesFromStorageStates(storageStates, tenantStorageId));
   const loaded = true;
@@ -899,6 +890,7 @@ function DraftCreationDialog({
   drafts,
   templates,
   storageStates,
+  tenantId,
   onClose,
   onCreated,
 }: {
@@ -908,27 +900,47 @@ function DraftCreationDialog({
   drafts: EmployeeContractDraft[];
   templates: ContractDraftTemplate[];
   storageStates: HydratedClientStorageState[];
+  tenantId?: string | null;
   onClose: () => void;
   onCreated: (draft: EmployeeContractDraft) => void;
 }) {
   const [usageType, setUsageType] = useState<EmployeeContractDraftUsageType>('payroll_attendance');
   const [useTemplate, setUseTemplate] = useState(false);
   const [templateId, setTemplateId] = useState('');
+  const [comparisonBaseMode, setComparisonBaseMode] = useState<DraftComparisonBaseMode>('none');
+  const [comparisonBaseYearId, setComparisonBaseYearId] = useState('');
   const [error, setError] = useState('');
+
+  const tenantYears = useMemo(() => readTenantSettingsYears(storageStates), [storageStates]);
 
   useEffect(() => {
     if (!open) return;
     setUsageType('payroll_attendance');
     setUseTemplate(false);
     setTemplateId('');
+    setComparisonBaseMode('none');
+    setComparisonBaseYearId('');
     setError('');
   }, [open]);
 
   const filteredTemplates = useMemo(() => groupByUsage(templates, usageType), [templates, usageType]);
+  const selectedTemplate = useTemplate ? filteredTemplates.find((item) => item.id === templateId) ?? null : null;
+  const canUseTemplateOwnBase = Boolean(selectedTemplate?.baseSettingsYear);
+  const templateOwnYearRecord = selectedTemplate
+    ? tenantYears.find((item) => item.year === selectedTemplate.baseSettingsYear) ?? {
+        id: `year-${selectedTemplate.baseSettingsYear}`,
+        year: selectedTemplate.baseSettingsYear,
+        title: formatComparisonBaseLabel(selectedTemplate.baseSettingsYear),
+        isCurrent: false,
+        createdAt: '',
+        updatedAt: '',
+      }
+    : null;
 
   useEffect(() => {
     if (!useTemplate) {
       setTemplateId('');
+      setComparisonBaseMode('select_other');
       return;
     }
     if (filteredTemplates.length === 1) {
@@ -938,15 +950,72 @@ function DraftCreationDialog({
     setTemplateId((current) => (filteredTemplates.some((item) => item.id === current) ? current : ''));
   }, [filteredTemplates, useTemplate]);
 
+  useEffect(() => {
+    if (!useTemplate) return;
+    if (comparisonBaseMode === 'template_own' && !canUseTemplateOwnBase) {
+      setComparisonBaseMode('none');
+    }
+  }, [canUseTemplateOwnBase, comparisonBaseMode, useTemplate]);
+
+  useEffect(() => {
+    if (comparisonBaseMode !== 'select_other') return;
+    if (tenantYears.length === 1) {
+      setComparisonBaseYearId(tenantYears[0].id);
+      return;
+    }
+    setComparisonBaseYearId((current) => (tenantYears.some((item) => item.id === current) ? current : ''));
+  }, [comparisonBaseMode, tenantYears]);
+
   const submit = () => {
-    const selectedTemplate = useTemplate ? filteredTemplates.find((item) => item.id === templateId) ?? null : null;
+    if (!usageType) {
+      setError('نوع قرارداد الزامی است');
+      return;
+    }
+
+    if (!useTemplate && !comparisonBaseYearId) {
+      setError('مبنای تنظیمات را انتخاب کنید');
+      return;
+    }
+
     if (useTemplate && !selectedTemplate) {
       setError('قالب پیش‌نویس را انتخاب کنید');
       return;
     }
 
-    const baseSettings = readSettingsForTemplate(selectedTemplate, storageStates);
-    const supplementalProfiles = readEmployeeSupplementalProfilesFromStorageStates(storageStates, getActiveTenantStorageId());
+    if (comparisonBaseMode === 'select_other' && !comparisonBaseYearId) {
+      setError('مبنای تنظیمات را انتخاب کنید');
+      return;
+    }
+
+    const templateBaseSettings = readSettingsForTemplate(selectedTemplate, storageStates, tenantId);
+    let comparisonBaseSnapshot = null;
+    let comparisonBaseSettingsId: string | null = null;
+    let comparisonBaseYear: number | null = null;
+    let comparisonBaseSettings: PayrollSettings | null = null;
+
+    if (comparisonBaseMode === 'template_own' && templateOwnYearRecord) {
+      comparisonBaseSettings = readTenantPayrollBaseSettings(templateOwnYearRecord.year, storageStates, tenantId);
+      comparisonBaseSnapshot = buildComparisonBaseSnapshot(comparisonBaseSettings, templateOwnYearRecord);
+      comparisonBaseSettingsId = templateOwnYearRecord.id;
+      comparisonBaseYear = templateOwnYearRecord.year;
+    } else if (comparisonBaseMode === 'select_other') {
+      const yearRecord = tenantYears.find((item) => item.id === comparisonBaseYearId) ?? null;
+      if (!yearRecord) {
+        setError('مبنای تنظیمات را انتخاب کنید');
+        return;
+      }
+      comparisonBaseSettings = readTenantPayrollBaseSettings(yearRecord.year, storageStates, tenantId);
+      comparisonBaseSnapshot = buildComparisonBaseSnapshot(comparisonBaseSettings, yearRecord);
+      comparisonBaseSettingsId = yearRecord.id;
+      comparisonBaseYear = yearRecord.year;
+    }
+
+    if (!selectedTemplate && !comparisonBaseSnapshot) {
+      setError('قالب یا مبنای تنظیمات را انتخاب کنید');
+      return;
+    }
+
+    const supplementalProfiles = readEmployeeSupplementalProfilesFromStorageStates(storageStates, tenantId ?? getActiveTenantStorageId());
     const supplemental = supplementalProfiles[employee.id] ?? getDefaultEmployeeSupplementalProfile();
     const nextDraft = createInitialEmployeeContractDraft({
       employeeId: employee.id,
@@ -955,7 +1024,10 @@ function DraftCreationDialog({
       drafts,
       businessProfile,
       template: selectedTemplate,
-      baseSettings,
+      baseSettings: templateBaseSettings,
+      comparisonBaseSnapshot,
+      comparisonBaseSettingsId,
+      comparisonBaseYear,
       supplemental,
     });
     onCreated(nextDraft);
@@ -1021,7 +1093,7 @@ function DraftCreationDialog({
               <p>
                 {useTemplate
                   ? 'یک قالب انتخاب کنید تا مقادیر اولیه از آن پر شود.'
-                  : 'پیش‌نویس با مقادیر پیش‌فرض خالی شروع می‌شود.'}
+                  : 'مقادیر اولیه از مبنای تنظیمات انتخاب‌شده پر می‌شود.'}
               </p>
             </div>
           </div>
@@ -1074,9 +1146,96 @@ function DraftCreationDialog({
               </div>
             ) : (
               <p className="business-draft-field-note business-draft-template-empty-note">
-                هنوز قالب سازگار با «{usageLabel(usageType)}» ثبت نشده است. می‌توانید بدون قالب ادامه دهید.
+                هنوز قالب سازگار با «{usageLabel(usageType)}» ثبت نشده است. می‌توانید بدون قالب و با انتخاب مبنای تنظیمات ادامه دهید.
               </p>
             )
+          ) : null}
+        </div>
+
+        <div className="business-draft-dialog-card business-draft-template-card">
+          <div className="business-draft-dialog-card-head">
+            <div>
+              <span className="business-draft-dialog-kicker">
+                <Scale className="h-4 w-4" />
+                مبنای مقایسه تنظیمات
+              </span>
+              <h3>مبنای مقایسه مستقل</h3>
+              <p>
+                {useTemplate
+                  ? 'در صورت نیاز، مبنای مقایسه جدا از قالب انتخاب کنید تا تفاوت‌ها با تنظیمات Tenant هم نمایش داده شود.'
+                  : 'حداقل یک مبنای تنظیمات Tenant برای شروع پیش‌نویس لازم است.'}
+              </p>
+            </div>
+          </div>
+
+          {useTemplate ? (
+            <div className="business-draft-template-mode-row" role="radiogroup" aria-label="مبنای مقایسه تنظیمات">
+              <button
+                type="button"
+                role="radio"
+                aria-checked={comparisonBaseMode === 'none'}
+                className={comparisonBaseMode === 'none' ? 'is-selected' : ''}
+                onClick={() => setComparisonBaseMode('none')}
+              >
+                بدون مبنای مستقل
+              </button>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={comparisonBaseMode === 'template_own'}
+                disabled={!canUseTemplateOwnBase}
+                className={comparisonBaseMode === 'template_own' ? 'is-selected' : ''}
+                onClick={() => setComparisonBaseMode('template_own')}
+              >
+                استفاده از مبنای خود قالب
+              </button>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={comparisonBaseMode === 'select_other'}
+                className={comparisonBaseMode === 'select_other' ? 'is-selected' : ''}
+                onClick={() => setComparisonBaseMode('select_other')}
+              >
+                انتخاب مبنای دیگر
+              </button>
+            </div>
+          ) : null}
+
+          {comparisonBaseMode === 'select_other' || !useTemplate ? (
+            tenantYears.length ? (
+              <div className="business-draft-template-picker" role="radiogroup" aria-label="انتخاب مبنای تنظیمات Tenant">
+                {tenantYears.map((yearRecord) => {
+                  const selected = comparisonBaseYearId === yearRecord.id;
+                  return (
+                    <button
+                      key={yearRecord.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={selected}
+                      className={`business-draft-template-option${selected ? ' is-selected' : ''}`}
+                      onClick={() => {
+                        setComparisonBaseMode('select_other');
+                        setComparisonBaseYearId(yearRecord.id);
+                      }}
+                    >
+                      <span className="business-draft-template-option-copy">
+                        <strong>{yearRecord.title?.trim() || formatComparisonBaseLabel(yearRecord.year)}</strong>
+                        <small>مبنای {formatFaNumber(yearRecord.year, { useGrouping: false })} · تنظیمات Tenant</small>
+                      </span>
+                      {selected ? <Check className="h-4 w-4 business-draft-template-option-check" aria-hidden /> : null}
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="business-draft-field-note business-draft-template-empty-note">
+                هنوز مبنای تنظیمات Tenant ثبت نشده است. از بخش تنظیمات کسب‌وکار یک مبنای سالانه ایجاد کنید.
+              </p>
+            )
+          ) : comparisonBaseMode === 'template_own' && selectedTemplate ? (
+            <p className="business-draft-field-note">
+              مبنای مقایسه: {formatComparisonBaseLabel(selectedTemplate.baseSettingsYear)} (همان مبنای قالب انتخاب‌شده)
+            </p>
           ) : null}
         </div>
       </div>
@@ -1284,17 +1443,19 @@ export function EmployeeContractDraftsClient({
   businessProfile,
   templates: initialTemplates,
   storageStates,
+  tenantId,
 }: {
   employee: EmployeeDraftEmployee;
   businessProfile: BusinessProfile | null;
   templates: ContractDraftTemplate[];
   storageStates: HydratedClientStorageState[];
+  tenantId?: string | null;
 }) {
   const router = useRouter();
   const [creating, setCreating] = useState(false);
   const [query, setQuery] = useState('');
   const [accountProfile, setAccountProfile] = useState<BusinessProfile | null>(businessProfile);
-  const { drafts, templates, loaded, persist } = useDraftStorage(employee.id, storageStates, initialTemplates);
+  const { drafts, templates, loaded, persist } = useDraftStorage(employee.id, storageStates, initialTemplates, tenantId);
   const employeeDrafts = useMemo(() => getEmployeeDraftsByEmployeeId(drafts, employee.id), [drafts, employee.id]);
   const employeeName = `${employee.firstName} ${employee.lastName}`.trim();
 
@@ -1423,6 +1584,7 @@ export function EmployeeContractDraftsClient({
         drafts={drafts}
         templates={templates}
         storageStates={storageStates}
+        tenantId={tenantId}
         onClose={() => setCreating(false)}
         onCreated={createDraft}
       />
@@ -1662,8 +1824,9 @@ function useEmployeeDraftContext(
   draftId: string,
   storageStates: HydratedClientStorageState[],
   templates: ContractDraftTemplate[],
+  tenantId?: string | null,
 ) {
-  const tenantStorageId = getActiveTenantStorageId();
+  const tenantStorageId = tenantId ?? getActiveTenantStorageId();
   const [drafts, setDrafts] = useState<EmployeeContractDraft[]>(() => readEmployeeDraftsFromStorageStates(storageStates, tenantStorageId));
   const [supplementalProfiles, setSupplementalProfiles] = useState<Record<string, EmployeeSupplementalProfile>>(() =>
     readEmployeeSupplementalProfilesFromStorageStates(storageStates, tenantStorageId),
@@ -1769,12 +1932,14 @@ export function EmployeeContractDraftBuilderClient({
   draftId,
   templates: initialTemplates,
   storageStates,
+  tenantId,
 }: {
   employee: EmployeeDraftEmployee;
   businessProfile: BusinessProfile | null;
   draftId: string;
   templates: ContractDraftTemplate[];
   storageStates: HydratedClientStorageState[];
+  tenantId?: string | null;
 }) {
   const router = useRouter();
   const { drafts, templates, supplementalProfiles, loaded, persist, persistSupp, activeDraft } = useEmployeeDraftContext(
@@ -1782,6 +1947,7 @@ export function EmployeeContractDraftBuilderClient({
     draftId,
     storageStates,
     initialTemplates,
+    tenantId,
   );
   const [accountProfile, setAccountProfile] = useState<BusinessProfile | null>(businessProfile);
   const [accountProfilePayload, setAccountProfilePayload] = useState(() => {
@@ -1852,7 +2018,7 @@ export function EmployeeContractDraftBuilderClient({
     const template = activeDraft.templateId ? templates.find((item) => item.id === activeDraft.templateId) ?? null : null;
     const resolved = resolveEmployeeDraftCompensation(
       activeDraft,
-      readSettingsForTemplate(template, storageStates),
+      readSettingsForTemplate(template, storageStates, tenantId),
       template,
     );
     const draft = resolved.draft;
@@ -1870,11 +2036,17 @@ export function EmployeeContractDraftBuilderClient({
       compensationHydratedRef.current = hydratedKey;
       setActiveStep(getCurrentStepId(draft));
     }
-  }, [activeDraft, drafts, loaded, persist, storageStates, templates]);
+  }, [activeDraft, drafts, loaded, persist, storageStates, templates, tenantId]);
 
   const supplemental = supplementalProfiles[employee.id] ?? getDefaultEmployeeSupplementalProfile();
   const currentTemplate = currentDraft?.templateId ? templates.find((item) => item.id === currentDraft.templateId) ?? null : null;
-  const baseSettings = currentTemplate ? readSettingsForTemplate(currentTemplate, storageStates) : DEFAULT_PAYROLL_SETTINGS;
+  const comparisonBaseSnapshot = currentDraft?.comparisonBaseSettingsSnapshot ?? null;
+  const comparisonBaseYear = currentDraft?.comparisonBaseYear ?? comparisonBaseSnapshot?.baseSettingsYear ?? null;
+  const baseSettings = currentTemplate
+    ? readSettingsForTemplate(currentTemplate, storageStates, tenantId)
+    : comparisonBaseYear
+      ? readTenantPayrollBaseSettings(comparisonBaseYear, storageStates, tenantId)
+      : DEFAULT_PAYROLL_SETTINGS;
   const derived = useMemo(
     () =>
       calculatePayrollValues({
@@ -2124,21 +2296,39 @@ export function EmployeeContractDraftBuilderClient({
             ? 'این کارمند شرایط دریافت مزد پایه سنوات را ندارد'
             : '';
     const templateAmount = currentDraft.templateSnapshot?.benefits[key];
-    const compareBadge =
-      currentDraft.templateSnapshot && templateAmount !== undefined
-        ? item.enabled
-          ? item.amount === templateAmount
-            ? fieldBadge('همسان با قالب', 'success')
-            : differenceBadge('متفاوت با قالب', `مقدار این فیلد در قالب انتخاب‌شده ${money(templateAmount)} است.`)
-          : templateAmount
-            ? differenceBadge('غیرفعال نسبت به قالب', 'در قالب انتخاب‌شده این مورد فعال بود.')
-            : fieldBadge('همسان با قالب', 'success')
-        : null;
+    const baseAmount = currentDraft.comparisonBaseSettingsSnapshot?.benefits[key];
+    const baseYear = currentDraft.comparisonBaseYear;
+    const baseLabel = baseYear ? formatComparisonBaseLabel(baseYear) : 'مبنای تنظیمات';
+    const compareBadge = (
+      <>
+        {currentDraft.templateSnapshot && templateAmount !== undefined
+          ? item.enabled
+            ? item.amount === templateAmount
+              ? fieldBadge('همسان با قالب', 'success')
+              : differenceBadge('متفاوت با قالب', `در قالب انتخاب‌شده، مقدار این فیلد ${money(templateAmount)} است.`)
+            : templateAmount
+              ? differenceBadge('غیرفعال نسبت به قالب', 'در قالب انتخاب‌شده این مورد فعال بود.')
+              : fieldBadge('همسان با قالب', 'success')
+          : null}
+        {currentDraft.comparisonBaseSettingsSnapshot && baseAmount !== undefined && baseYear
+          ? item.enabled
+            ? item.amount === baseAmount
+              ? fieldBadge(`همسان با ${baseLabel}`, 'success')
+              : differenceBadge(`متفاوت با ${baseLabel}`, `در تنظیمات ${baseLabel}، مقدار این فیلد ${money(baseAmount)} است.`, 'tenant_base')
+            : baseAmount
+              ? differenceBadge(`غیرفعال نسبت به ${baseLabel}`, `در تنظیمات ${baseLabel} این مورد فعال بود.`, 'tenant_base')
+              : fieldBadge(`همسان با ${baseLabel}`, 'success')
+          : null}
+      </>
+    );
   const currentRules =
     item.calculationRules ?? (key === 'seniorityAllowance' ? DEFAULT_SENIORITY_BENEFIT_RULES : DEFAULT_FIXED_BENEFIT_RULES);
   const templateRules =
     currentDraft.templateSnapshot?.benefitRules?.[key] ??
     baseSettings.benefitRules?.[key] ??
+    (key === 'seniorityAllowance' ? DEFAULT_SENIORITY_BENEFIT_RULES : DEFAULT_FIXED_BENEFIT_RULES);
+  const comparisonBaseRules =
+    currentDraft.comparisonBaseSettingsSnapshot?.benefitRules?.[key] ??
     (key === 'seniorityAllowance' ? DEFAULT_SENIORITY_BENEFIT_RULES : DEFAULT_FIXED_BENEFIT_RULES);
     return (
       <article className="business-payroll-transfer-rule" key={key}>
@@ -2201,6 +2391,14 @@ export function EmployeeContractDraftBuilderClient({
         <div className="calc-badges-row">
           <CalculationRulesBadges rules={currentRules} />
           <CalcRulesDiffBadge baseRules={templateRules} currentRules={currentRules} baseLabel="قالب انتخاب‌شده" differenceLabel="متفاوت با قواعد قالب" />
+          {currentDraft.comparisonBaseSettingsSnapshot ? (
+            <CalcRulesDiffBadge
+              baseRules={comparisonBaseRules}
+              currentRules={currentRules}
+              baseLabel={comparisonBaseYear ? formatComparisonBaseLabel(comparisonBaseYear) : 'مبنای تنظیمات'}
+              differenceLabel={`متفاوت با ${comparisonBaseYear ? formatComparisonBaseLabel(comparisonBaseYear) : 'مبنای تنظیمات'}`}
+            />
+          ) : null}
           <CalcRulesEditButton onClick={() => setBenefitRulesDialog(key)} />
         </div>
       </article>
@@ -3137,6 +3335,8 @@ export function EmployeeContractDraftBuilderClient({
                     <EmployeeContractFinancialStep
                       financial={currentDraft.financial}
                       templateSnapshot={currentDraft.templateSnapshot}
+                      comparisonBaseSnapshot={comparisonBaseSnapshot}
+                      comparisonBaseYear={comparisonBaseYear}
                       usageType={currentDraft.usageType}
                       errors={errors}
                       onFinancialChange={(patch) => updateDraft((draft) => ({ ...draft, financial: { ...draft.financial, ...patch } }))}
@@ -3306,6 +3506,8 @@ export function EmployeeContractDraftBuilderClient({
                     <EmployeeContractWorkTimePayStep
                       workTimePayRules={compensation?.workTimePayRules}
                       templateSnapshot={compensation?.templateSnapshot ?? null}
+                      comparisonBaseSnapshot={comparisonBaseSnapshot}
+                      comparisonBaseYear={comparisonBaseYear}
                       financial={currentDraft.financial}
                       tenantSettings={baseSettings}
                       currentTemplate={currentTemplate}
@@ -3321,6 +3523,8 @@ export function EmployeeContractDraftBuilderClient({
                     <EmployeeContractLeaveStep
                       leave={compensation?.leave}
                       templateSnapshot={compensation?.templateSnapshot ?? null}
+                      comparisonBaseSnapshot={comparisonBaseSnapshot}
+                      comparisonBaseYear={comparisonBaseYear}
                       financial={currentDraft.financial}
                       tenantSettings={baseSettings}
                       errors={errors}
@@ -3333,6 +3537,8 @@ export function EmployeeContractDraftBuilderClient({
                     <EmployeeContractMissionStep
                       mission={compensation?.mission}
                       templateSnapshot={compensation?.templateSnapshot ?? null}
+                      comparisonBaseSnapshot={comparisonBaseSnapshot}
+                      comparisonBaseYear={comparisonBaseYear}
                       derived={derived}
                       onMissionChange={(patch) =>
                         updateDraft(

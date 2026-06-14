@@ -2,6 +2,8 @@
 
 import type { ReactNode } from 'react';
 import { Info, ShieldCheck } from 'lucide-react';
+import type { BaseDifference } from '../../../../../../lib/payroll-business-settings';
+import { formatFaNumber } from '../../../../../../lib/format-fa';
 
 export function fieldBadge(text: string, tone: 'success' | 'warning' | 'muted' = 'muted') {
   const styles =
@@ -29,7 +31,15 @@ export function fieldBadge(text: string, tone: 'success' | 'warning' | 'muted' =
   );
 }
 
-export function differenceBadge(text: string, tooltip: string, tone: 'diff' | 'warning' | 'success' = 'diff') {
+export function differenceBadge(text: string, tooltip: string, tone: 'diff' | 'warning' | 'success' | 'tenant_base' = 'diff') {
+  if (tone === 'tenant_base') {
+    return (
+      <span className="business-payroll-difference-badge business-payroll-difference-badge--tenant-base" title={tooltip}>
+        <ShieldCheck className="h-3.5 w-3.5" />
+        {text}
+      </span>
+    );
+  }
   if (tone === 'diff') {
     return (
       <span className="business-payroll-difference-badge" title={tooltip}>
@@ -39,6 +49,32 @@ export function differenceBadge(text: string, tooltip: string, tone: 'diff' | 'w
     );
   }
   return fieldBadge(text, tone === 'warning' ? 'warning' : 'success');
+}
+
+export function tenantBaseDifferenceBadge(difference: BaseDifference | null | undefined) {
+  if (!difference) return null;
+  return differenceBadge(difference.message, difference.tooltip, 'tenant_base');
+}
+
+export function templateDifferenceBadge(difference: BaseDifference | null | undefined) {
+  if (!difference) return null;
+  return differenceBadge(difference.message, difference.tooltip, 'diff');
+}
+
+export function DualComparisonBadges({
+  templateDifference,
+  tenantBaseDifference,
+}: {
+  templateDifference?: BaseDifference | null;
+  tenantBaseDifference?: BaseDifference | null;
+}) {
+  if (!templateDifference && !tenantBaseDifference) return null;
+  return (
+    <span className="employee-contract-comparison-badges">
+      {templateDifferenceBadge(templateDifference)}
+      {tenantBaseDifferenceBadge(tenantBaseDifference)}
+    </span>
+  );
 }
 
 export function EmployeeContractStepShell({
@@ -79,6 +115,14 @@ export function TemplateDiffBanner({ message }: { message: string }) {
   return (
     <div className="business-payroll-highlight subtle employee-contract-template-diff-banner">
       {differenceBadge('متفاوت با قالب', message)}
+    </div>
+  );
+}
+
+export function TenantBaseDiffBanner({ message, baseYear }: { message: string; baseYear: number }) {
+  return (
+    <div className="business-payroll-highlight subtle employee-contract-tenant-base-diff-banner">
+      {differenceBadge(`متفاوت با مبنای ${formatFaNumber(baseYear, { useGrouping: false })}`, message, 'tenant_base')}
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { PanelFormModal, PanelFormModalActions } from '../../../../../../components/PanelFormModal';
 import { formatFaNumber } from '../../../../../../lib/format-fa';
 import type { MissionRule, MissionSettings, PayrollDerivedValues } from '../../../../../../lib/payroll-business-settings';
+import type { BaseDifference } from '../../../../../../lib/payroll-business-settings';
 import { buildToggleCompareDifference, type PayrollComparisonMode } from '../../../../../../lib/payroll-comparison-labels';
 import { differenceBadge, EmployeeContractStepShell, fieldBadge, SectionPlaceholder } from './employee-contract-ui';
 
@@ -22,15 +23,21 @@ function parseNumber(value: string) {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
-function compareRule(
+function compareMissionRuleDifference(
   rule: MissionRule,
   baseRule: MissionRule | undefined,
   mode?: PayrollComparisonMode,
   referenceWord = 'مبنا',
-  exclusiveLabel = 'اختصاصی',
-) {
+): BaseDifference | null {
   if (!mode) return null;
-  if (!baseRule) return fieldBadge(`اختصاصی ${exclusiveLabel}`, 'warning');
+  if (!baseRule) {
+    return {
+      isDifferent: true,
+      direction: 'added',
+      message: `اختصاصی ${referenceWord}`,
+      tooltip: `این قانون در ${referenceWord} وجود نداشت.`,
+    };
+  }
 
   const currentActive = rule.active !== false;
   const baseActive = baseRule.active !== false;
@@ -46,16 +53,46 @@ function compareRule(
   };
 
   if (JSON.stringify(sharedComparison) === JSON.stringify(baseComparison)) {
-    return currentActive === baseActive
-      ? null
-      : fieldBadge(currentActive ? `فعال شده نسبت به ${referenceWord}` : `غیرفعال نسبت به ${referenceWord}`, currentActive ? 'success' : 'warning');
+    if (currentActive === baseActive) return null;
+    return {
+      isDifferent: true,
+      direction: currentActive ? 'added' : 'removed',
+      message: currentActive ? `فعال شده نسبت به ${referenceWord}` : `غیرفعال نسبت به ${referenceWord}`,
+      tooltip: `${rule.title} در ${referenceWord} ${baseActive ? 'فعال' : 'غیرفعال'} بود.`,
+    };
   }
 
   if (currentActive !== baseActive && baseRule.active !== rule.active) {
-    return fieldBadge(currentActive ? `فعال شده نسبت به ${referenceWord}` : `غیرفعال نسبت به ${referenceWord}`, currentActive ? 'success' : 'warning');
+    return {
+      isDifferent: true,
+      direction: currentActive ? 'added' : 'removed',
+      message: currentActive ? `فعال شده نسبت به ${referenceWord}` : `غیرفعال نسبت به ${referenceWord}`,
+      tooltip: `${rule.title} در ${referenceWord} ${baseActive ? 'فعال' : 'غیرفعال'} بود.`,
+    };
   }
 
-  return differenceBadge(`متفاوت با ${referenceWord}`, `قانون ماموریت با ${referenceWord} انتخاب‌شده متفاوت است.`);
+  return {
+    isDifferent: true,
+    direction: 'changed',
+    message: `متفاوت با ${referenceWord}`,
+    tooltip: `قانون ماموریت «${rule.title}» با ${referenceWord} انتخاب‌شده متفاوت است.`,
+  };
+}
+
+function compareRule(
+  rule: MissionRule,
+  baseRule: MissionRule | undefined,
+  mode?: PayrollComparisonMode,
+  referenceWord = 'مبنا',
+  exclusiveLabel = 'اختصاصی',
+) {
+  const difference = compareMissionRuleDifference(rule, baseRule, mode, referenceWord);
+  if (!difference) return null;
+  if (difference.message.startsWith('اختصاصی')) return fieldBadge(difference.message, 'warning');
+  if (difference.direction === 'added' || difference.direction === 'removed') {
+    return fieldBadge(difference.message, difference.direction === 'added' ? 'success' : 'warning');
+  }
+  return differenceBadge(difference.message, difference.tooltip, mode === 'tenant_base' ? 'tenant_base' : 'diff');
 }
 
 export function MissionRuleDialog({
@@ -151,6 +188,7 @@ export function MissionRuleDialog({
 export function MissionStep({
   mission,
   baseMission,
+  secondaryBaseMission,
   derived,
   onMissionChange,
   onEditRule,
@@ -160,12 +198,15 @@ export function MissionStep({
   tag,
   description = 'قوانین پرداخت ماموریت را برای این قرارداد تنظیم کنید.',
   comparisonMode,
+  secondaryComparisonMode,
   comparisonReferenceWord = comparisonMode === 'template' ? 'قالب' : 'مبنا',
+  secondaryComparisonReferenceWord = 'مبنای تنظیمات',
   exclusiveLabel = comparisonMode === 'tenant' ? 'کسب و کار' : comparisonMode === 'template' ? 'این قالب' : 'این قرارداد',
   showEnabledToggle = true,
 }: {
   mission: MissionSettings | undefined;
   baseMission?: MissionSettings | null;
+  secondaryBaseMission?: MissionSettings | null;
   derived: PayrollDerivedValues;
   onMissionChange: (patch: Partial<MissionSettings>) => void;
   onEditRule: (rule: MissionRule) => void;
@@ -175,13 +216,16 @@ export function MissionStep({
   tag?: string;
   description?: string;
   comparisonMode?: PayrollComparisonMode;
-  comparisonReferenceWord?: 'مبنا' | 'قالب';
+  secondaryComparisonMode?: PayrollComparisonMode;
+  comparisonReferenceWord?: string;
+  secondaryComparisonReferenceWord?: string;
   exclusiveLabel?: string;
   showEnabledToggle?: boolean;
 }) {
   if (!mission) return <SectionPlaceholder />;
 
   const baseRules = baseMission?.rules ?? [];
+  const secondaryBaseRules = secondaryBaseMission?.rules ?? [];
   const comparisonLabel = comparisonReferenceWord;
   const removedFromBase = baseMission
     ? baseRules.filter((baseRule) => !mission.rules.some((rule) => rule.id === baseRule.id))
@@ -230,6 +274,14 @@ export function MissionStep({
             {mission.rules.map((rule) => {
               const base = rule.paymentBase === 'total_payable' ? derived.grossPay : derived.monthlyBaseSalary;
               const baseRule = baseRules.find((item) => item.id === rule.id);
+              const secondaryBaseRule = secondaryBaseRules.find((item) => item.id === rule.id);
+              const templateDiff = compareRule(rule, baseRule, comparisonMode, comparisonLabel, exclusiveLabel);
+              const tenantBaseDifference = compareMissionRuleDifference(
+                rule,
+                secondaryBaseRule,
+                secondaryComparisonMode,
+                secondaryComparisonReferenceWord,
+              );
               return (
                 <article key={rule.id} className="business-payroll-transfer-rule">
                   <div className="business-payroll-transfer-rule-head">
@@ -240,7 +292,8 @@ export function MissionStep({
                         {rule.paymentBase === 'total_payable' ? 'بر مبنای جمع حقوق دریافتی' : 'بر مبنای حقوق پایه'}
                       </p>
                       <div className="employee-contract-mission-badges">
-                        {compareRule(rule, baseRule, comparisonMode, comparisonLabel, exclusiveLabel) ?? (rule.active ? null : fieldBadge(`غیرفعال نسبت به ${comparisonLabel || 'مبنا'}`, 'warning'))}
+                        {templateDiff ?? (rule.active ? null : fieldBadge(`غیرفعال نسبت به ${comparisonLabel || 'مبنا'}`, 'warning'))}
+                        {tenantBaseDifference ? differenceBadge(tenantBaseDifference.message, tenantBaseDifference.tooltip, 'tenant_base') : null}
                       </div>
                     </div>
                     <div className="business-payroll-item-actions">

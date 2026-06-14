@@ -68,12 +68,13 @@ export function validateWorkplaceLocationDraft(input: WorkplaceLocationDraft) {
   const radius = parseNumber(radiusText);
 
   if (!title) errors.title = 'عنوان محل کار را وارد کنید.';
-  if (!address) errors.address = 'آدرس محل کار را وارد یا تأیید کنید.';
+  if (!address) errors.address = 'آدرس محل کار را وارد کنید.';
   if (latitude == null || longitude == null) errors.latitude = 'محل کار را روی نقشه انتخاب کنید.';
-  if (!radiusText) errors.radius = 'شعاع مجاز ثبت تردد را وارد کنید.';
-  else if (radius == null) errors.radius = 'شعاع مجاز باید به‌صورت عدد و بر حسب متر وارد شود.';
-  else if (radius < WORKPLACE_LOCATION_MIN_RADIUS) errors.radius = 'شعاع مجاز نمی‌تواند کمتر از ۵ متر باشد.';
-  else if (radius > WORKPLACE_LOCATION_MAX_RADIUS) errors.radius = 'شعاع مجاز نمی‌تواند بیشتر از ۵۰۰ متر باشد.';
+  if (!radiusText) errors.radius = 'مقدار دلخواه شعاع را وارد کنید.';
+  else if (radius == null) errors.radius = 'شعاع مجاز باید عددی و بر حسب متر باشد.';
+  else if (radius <= 0) errors.radius = 'شعاع مجاز باید عددی و بر حسب متر باشد.';
+  else if (radius < WORKPLACE_LOCATION_MIN_RADIUS) errors.radius = `شعاع مجاز نباید کمتر از ${WORKPLACE_LOCATION_MIN_RADIUS.toLocaleString('fa-IR')} متر باشد.`;
+  else if (radius > WORKPLACE_LOCATION_MAX_RADIUS) errors.radius = `شعاع مجاز نباید بیشتر از ${WORKPLACE_LOCATION_MAX_RADIUS.toLocaleString('fa-IR')} متر باشد.`;
 
   if (Object.keys(errors).length) {
     return { valid: false as const, errors };
@@ -92,4 +93,3 @@ export function validateWorkplaceLocationDraft(input: WorkplaceLocationDraft) {
     } satisfies WorkplaceLocationValues,
   };
 }
-

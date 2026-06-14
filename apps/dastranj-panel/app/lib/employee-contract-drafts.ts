@@ -168,6 +168,9 @@ export type EmployeeContractDraft = {
   templateId: string | null;
   templateName: string | null;
   templateSnapshot: EmployeeDraftTemplateSnapshot | null;
+  comparisonBaseSettingsId: string | null;
+  comparisonBaseSettingsSnapshot: EmployeeDraftTemplateSnapshot | null;
+  comparisonBaseYear: number | null;
   createdAt: string;
   updatedAt: string;
   contractNumber: string;
@@ -705,6 +708,51 @@ export function normalizeEmployeeContractDraft(value: unknown): EmployeeContract
           ),
         }
       : null,
+    comparisonBaseSettingsId: draft.comparisonBaseSettingsId ?? null,
+    comparisonBaseYear: Number.isFinite(draft.comparisonBaseYear) ? Number(draft.comparisonBaseYear) : null,
+    comparisonBaseSettingsSnapshot: draft.comparisonBaseSettingsSnapshot
+      ? {
+          ...draft.comparisonBaseSettingsSnapshot,
+          benefitRules: {
+            workerAllowance: normalizeCalculationRules(
+              draft.comparisonBaseSettingsSnapshot.benefitRules?.workerAllowance,
+              DEFAULT_FIXED_BENEFIT_RULES,
+            ),
+            housingAllowance: normalizeCalculationRules(
+              draft.comparisonBaseSettingsSnapshot.benefitRules?.housingAllowance,
+              DEFAULT_FIXED_BENEFIT_RULES,
+            ),
+            childAllowance: normalizeCalculationRules(
+              draft.comparisonBaseSettingsSnapshot.benefitRules?.childAllowance,
+              DEFAULT_FIXED_BENEFIT_RULES,
+            ),
+            marriageAllowance: normalizeCalculationRules(
+              draft.comparisonBaseSettingsSnapshot.benefitRules?.marriageAllowance,
+              DEFAULT_FIXED_BENEFIT_RULES,
+            ),
+            seniorityAllowance: normalizeCalculationRules(
+              draft.comparisonBaseSettingsSnapshot.benefitRules?.seniorityAllowance,
+              DEFAULT_SENIORITY_BENEFIT_RULES,
+            ),
+          },
+          paymentSchedule: normalizePaymentSchedule(
+            draft.comparisonBaseSettingsSnapshot.paymentSchedule ?? draft.comparisonBaseSettingsSnapshot.paymentType,
+            DEFAULT_PAYMENT_SCHEDULE,
+          ),
+          paymentType:
+            draft.comparisonBaseSettingsSnapshot.paymentType ??
+            toLegacyPaymentType(
+              normalizePaymentSchedule(
+                draft.comparisonBaseSettingsSnapshot.paymentSchedule ?? draft.comparisonBaseSettingsSnapshot.paymentType,
+                DEFAULT_PAYMENT_SCHEDULE,
+              ),
+            ),
+          workTimePayRules: normalizeWorkTimePayRules(
+            draft.comparisonBaseSettingsSnapshot.workTimePayRules ?? baseSettings.workTimePayRules,
+            baseSettings.workTimePayRules,
+          ),
+        }
+      : null,
     createdAt: draft.createdAt ?? new Date().toISOString(),
     updatedAt: draft.updatedAt ?? draft.createdAt ?? new Date().toISOString(),
     contractNumber: draft.contractNumber ?? '',
@@ -800,6 +848,9 @@ export function createInitialEmployeeContractDraft({
   businessProfile,
   template,
   baseSettings,
+  comparisonBaseSnapshot,
+  comparisonBaseSettingsId,
+  comparisonBaseYear,
   supplemental,
   contractNumberOverride,
 }: {
@@ -816,11 +867,15 @@ export function createInitialEmployeeContractDraft({
   } | null;
   template?: ContractDraftTemplate | null;
   baseSettings?: PayrollSettings | null;
+  comparisonBaseSnapshot?: EmployeeDraftTemplateSnapshot | null;
+  comparisonBaseSettingsId?: string | null;
+  comparisonBaseYear?: number | null;
   supplemental?: EmployeeSupplementalProfile | null;
   contractNumberOverride?: string | null;
 }): EmployeeContractDraft {
   const resolvedBase = baseSettings ? normalizePayrollSettings(baseSettings) : DEFAULT_PAYROLL_SETTINGS;
-  const snapshot = template ? buildTemplateSnapshot(template, resolvedBase) : null;
+  const templateSnapshot = template ? buildTemplateSnapshot(template, resolvedBase) : null;
+  const valueSource = templateSnapshot ?? comparisonBaseSnapshot ?? null;
   const steps = getEmployeeDraftSteps(usageType).map((item) => item.id);
   const progress = buildProgress(steps, steps[0]);
   const now = new Date();
@@ -834,7 +889,10 @@ export function createInitialEmployeeContractDraft({
     status: 'draft',
     templateId: template?.id ?? null,
     templateName: template?.name ?? null,
-    templateSnapshot: snapshot,
+    templateSnapshot,
+    comparisonBaseSettingsId: comparisonBaseSettingsId ?? null,
+    comparisonBaseYear: comparisonBaseYear ?? comparisonBaseSnapshot?.baseSettingsYear ?? null,
+    comparisonBaseSettingsSnapshot: comparisonBaseSnapshot ?? null,
     createdAt: now.toISOString(),
     updatedAt: now.toISOString(),
     contractNumber: registrationNumber,
@@ -853,48 +911,48 @@ export function createInitialEmployeeContractDraft({
       durationMonths: 12,
     },
     subject: {
-      contractType: snapshot?.classification.contractType ?? '',
+      contractType: valueSource?.classification.contractType ?? '',
       contractSubType: '',
       jobGroup: '',
       responsibility: '',
       responsibilities: [],
-      locationGroup: snapshot?.classification.locationGroup ?? '',
+      locationGroup: valueSource?.classification.locationGroup ?? '',
       locationType: '',
     },
     financial: {
-      dailyRequiredMinutes: snapshot?.financial.dailyRequiredMinutes ?? resolvedBase.financial.dailyRequiredMinutes,
-      dailyBaseSalary: snapshot?.financial.dailyBaseSalary ?? resolvedBase.financial.dailyBaseSalary,
+      dailyRequiredMinutes: valueSource?.financial.dailyRequiredMinutes ?? resolvedBase.financial.dailyRequiredMinutes,
+      dailyBaseSalary: valueSource?.financial.dailyBaseSalary ?? resolvedBase.financial.dailyBaseSalary,
     },
     insuranceTax: {
-      insuranceEnabled: snapshot?.insuranceTax.insuranceEnabled ?? false,
-      employerInsurancePercent: snapshot?.insuranceTax.employerInsurancePercent ?? resolvedBase.deductions.employerInsurancePercent,
-      employeeInsurancePercent: snapshot?.insuranceTax.employeeInsurancePercent ?? resolvedBase.deductions.employeeInsurancePercent,
-      taxEnabled: snapshot?.insuranceTax.taxEnabled ?? false,
-      taxPayer: snapshot?.insuranceTax.taxPayer ?? 'employee',
-      taxBrackets: snapshot?.insuranceTax.taxBrackets.map((item) => ({ ...item })) ?? resolvedBase.deductions.taxBrackets.map((item) => ({ ...item })),
+      insuranceEnabled: valueSource?.insuranceTax.insuranceEnabled ?? false,
+      employerInsurancePercent: valueSource?.insuranceTax.employerInsurancePercent ?? resolvedBase.deductions.employerInsurancePercent,
+      employeeInsurancePercent: valueSource?.insuranceTax.employeeInsurancePercent ?? resolvedBase.deductions.employeeInsurancePercent,
+      taxEnabled: valueSource?.insuranceTax.taxEnabled ?? false,
+      taxPayer: valueSource?.insuranceTax.taxPayer ?? 'employee',
+      taxBrackets: valueSource?.insuranceTax.taxBrackets.map((item) => ({ ...item })) ?? resolvedBase.deductions.taxBrackets.map((item) => ({ ...item })),
     },
     benefits: {
-      workerAllowance: { enabled: true, amount: snapshot?.benefits.workerAllowance ?? resolvedBase.benefits.workerAllowance, calculationRules: { ...(resolvedBase.benefitRules?.workerAllowance ?? DEFAULT_FIXED_BENEFIT_RULES) } },
-      housingAllowance: { enabled: true, amount: snapshot?.benefits.housingAllowance ?? resolvedBase.benefits.housingAllowance, calculationRules: { ...(resolvedBase.benefitRules?.housingAllowance ?? DEFAULT_FIXED_BENEFIT_RULES) } },
-      childAllowance: { enabled: true, amount: snapshot?.benefits.childAllowance ?? resolvedBase.benefits.childAllowance, calculationRules: { ...(resolvedBase.benefitRules?.childAllowance ?? DEFAULT_FIXED_BENEFIT_RULES) } },
-      marriageAllowance: { enabled: true, amount: snapshot?.benefits.marriageAllowance ?? resolvedBase.benefits.marriageAllowance, calculationRules: { ...(resolvedBase.benefitRules?.marriageAllowance ?? DEFAULT_FIXED_BENEFIT_RULES) } },
-      seniorityAllowance: { enabled: true, amount: snapshot?.benefits.seniorityAllowance ?? resolvedBase.benefits.seniorityAllowance, calculationRules: { ...(resolvedBase.benefitRules?.seniorityAllowance ?? DEFAULT_SENIORITY_BENEFIT_RULES) } },
+      workerAllowance: { enabled: true, amount: valueSource?.benefits.workerAllowance ?? resolvedBase.benefits.workerAllowance, calculationRules: { ...(valueSource?.benefitRules?.workerAllowance ?? resolvedBase.benefitRules?.workerAllowance ?? DEFAULT_FIXED_BENEFIT_RULES) } },
+      housingAllowance: { enabled: true, amount: valueSource?.benefits.housingAllowance ?? resolvedBase.benefits.housingAllowance, calculationRules: { ...(valueSource?.benefitRules?.housingAllowance ?? resolvedBase.benefitRules?.housingAllowance ?? DEFAULT_FIXED_BENEFIT_RULES) } },
+      childAllowance: { enabled: true, amount: valueSource?.benefits.childAllowance ?? resolvedBase.benefits.childAllowance, calculationRules: { ...(valueSource?.benefitRules?.childAllowance ?? resolvedBase.benefitRules?.childAllowance ?? DEFAULT_FIXED_BENEFIT_RULES) } },
+      marriageAllowance: { enabled: true, amount: valueSource?.benefits.marriageAllowance ?? resolvedBase.benefits.marriageAllowance, calculationRules: { ...(valueSource?.benefitRules?.marriageAllowance ?? resolvedBase.benefitRules?.marriageAllowance ?? DEFAULT_FIXED_BENEFIT_RULES) } },
+      seniorityAllowance: { enabled: true, amount: valueSource?.benefits.seniorityAllowance ?? resolvedBase.benefits.seniorityAllowance, calculationRules: { ...(valueSource?.benefitRules?.seniorityAllowance ?? resolvedBase.benefitRules?.seniorityAllowance ?? DEFAULT_SENIORITY_BENEFIT_RULES) } },
     },
-    benefitsEnd: snapshot?.benefitsEnd,
-    variablePayments: snapshot?.variablePayments,
-    paymentSchedule: snapshot?.paymentSchedule ?? normalizePaymentSchedule(snapshot?.paymentType, DEFAULT_PAYMENT_SCHEDULE),
-    paymentType: snapshot?.paymentType ?? toLegacyPaymentType(snapshot?.paymentSchedule ?? DEFAULT_PAYMENT_SCHEDULE),
-    workTimePayRules: normalizeWorkTimePayRules(snapshot?.workTimePayRules ?? resolvedBase.workTimePayRules, resolvedBase.workTimePayRules),
-    leave: normalizeLeaveSettings(snapshot?.leave ?? resolvedBase.leave, resolvedBase.leave),
-    mission: snapshot?.mission ?? normalizeMissionSettings(undefined, {
+    benefitsEnd: valueSource?.benefitsEnd,
+    variablePayments: valueSource?.variablePayments,
+    paymentSchedule: valueSource?.paymentSchedule ?? normalizePaymentSchedule(valueSource?.paymentType, DEFAULT_PAYMENT_SCHEDULE),
+    paymentType: valueSource?.paymentType ?? toLegacyPaymentType(valueSource?.paymentSchedule ?? DEFAULT_PAYMENT_SCHEDULE),
+    workTimePayRules: normalizeWorkTimePayRules(valueSource?.workTimePayRules ?? resolvedBase.workTimePayRules, resolvedBase.workTimePayRules),
+    leave: normalizeLeaveSettings(valueSource?.leave ?? resolvedBase.leave, resolvedBase.leave),
+    mission: valueSource?.mission ?? normalizeMissionSettings(undefined, {
       enabled: true,
       rules: [
         { id: 'mission-with-stay', title: 'ماموریت با اقامتگاه', coefficient: resolvedBase.workTimePayRules.mission.coefficient, paymentBase: 'base_salary', active: true },
         { id: 'mission-without-stay', title: 'ماموریت بدون اقامتگاه', coefficient: resolvedBase.workTimePayRules.mission.coefficient, paymentBase: 'base_salary', active: true },
       ],
     }),
-    specialCommitments: snapshot?.specialCommitments ?? { selected: [], attachments: [] },
-    attachments: snapshot?.attachments ?? { requiredDocuments: {}, files: [] },
+    specialCommitments: valueSource?.specialCommitments ?? { selected: [], attachments: [] },
+    attachments: valueSource?.attachments ?? { requiredDocuments: {}, files: [] },
     progress,
   };
 }

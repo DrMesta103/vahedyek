@@ -1,9 +1,13 @@
 'use client';
 
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
+import { useRouter } from 'next/navigation';
 import { WorkplaceLocationPicker } from './WorkplaceLocationPicker';
+import { UnsavedChangesDialog, useUnsavedLeaveGuard } from './UnsavedChangesGuard';
 import {
   WORKPLACE_LOCATION_DEFAULT_RADIUS,
+  WORKPLACE_LOCATION_MAX_RADIUS,
+  WORKPLACE_LOCATION_MIN_RADIUS,
   WORKPLACE_LOCATION_RADIUS_PRESETS,
   toWorkplaceLocationDraft,
   validateWorkplaceLocationDraft,
@@ -13,6 +17,8 @@ import { mockAddressFromMapPick, WORKPLACE_LOCATION_FIELD_TOOLTIPS } from '../li
 type LocationFormProps = {
   action: (formData: FormData) => void | Promise<void>;
   submitLabel: string;
+  backHref?: string;
+  backLabel?: string;
   initialValues?: {
     id?: string;
     title?: string;
@@ -24,7 +30,21 @@ type LocationFormProps = {
   };
 };
 
-export function LocationForm({ action, submitLabel, initialValues }: LocationFormProps) {
+function formatRadius(value: string) {
+  const normalized = value.trim();
+  if (!normalized) return '—';
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed.toLocaleString('fa-IR') : normalized;
+}
+
+function formatCoordinate(value: string) {
+  const normalized = value.trim();
+  if (!normalized) return '—';
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed.toFixed(6) : normalized;
+}
+
+export function LocationForm({ action, submitLabel, backHref, backLabel, initialValues }: LocationFormProps) {
   const [title, setTitle] = useState(initialValues?.title ?? '');
   const [address, setAddress] = useState(initialValues?.address ?? '');
   const [description, setDescription] = useState(initialValues?.description ?? '');
@@ -32,6 +52,10 @@ export function LocationForm({ action, submitLabel, initialValues }: LocationFor
   const [latitude, setLatitude] = useState(initialValues?.latitude ?? '');
   const [longitude, setLongitude] = useState(initialValues?.longitude ?? '');
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [saveError, setSaveError] = useState('');
+  const [saving, setSaving] = useState(false);
+  const formRef = useRef<HTMLFormElement | null>(null);
+  const router = useRouter();
   const [radiusMode, setRadiusMode] = useState<'preset' | 'custom'>(
     WORKPLACE_LOCATION_RADIUS_PRESETS.some((value) => value === Number(initialValues?.radius ?? WORKPLACE_LOCATION_DEFAULT_RADIUS))
       ? 'preset'
@@ -39,19 +63,24 @@ export function LocationForm({ action, submitLabel, initialValues }: LocationFor
   );
   const [mapStatus, setMapStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [geolocationDenied, setGeolocationDenied] = useState(false);
-  const clearError = (key: string) => {
-    setErrors((prev) => {
-      if (!(key in prev)) return prev;
-      const next = { ...prev };
-      delete next[key];
-      return next;
-    });
-  };
 
   useEffect(() => {
     const timer = window.setTimeout(() => setMapStatus('ready'), 180);
     return () => window.clearTimeout(timer);
   }, [initialValues?.id]);
+
+  const initialDraft = useMemo(
+    () =>
+      toWorkplaceLocationDraft({
+        title: initialValues?.title ?? '',
+        address: initialValues?.address ?? '',
+        description: initialValues?.description ?? '',
+        radius: String(initialValues?.radius ?? WORKPLACE_LOCATION_DEFAULT_RADIUS),
+        latitude: initialValues?.latitude ?? '',
+        longitude: initialValues?.longitude ?? '',
+      }),
+    [initialValues?.address, initialValues?.description, initialValues?.latitude, initialValues?.longitude, initialValues?.radius, initialValues?.title],
+  );
 
   const draft = useMemo(
     () =>
@@ -65,6 +94,40 @@ export function LocationForm({ action, submitLabel, initialValues }: LocationFor
       }),
     [address, description, latitude, longitude, radius, title],
   );
+
+  const validation = useMemo(() => validateWorkplaceLocationDraft(draft), [draft]);
+  const hasUnsavedChanges =
+    draft.title !== initialDraft.title ||
+    draft.address !== initialDraft.address ||
+    draft.description !== initialDraft.description ||
+    draft.radius !== initialDraft.radius ||
+    draft.latitude !== initialDraft.latitude ||
+    draft.longitude !== initialDraft.longitude;
+  const radiusLabel = formatRadius(radius);
+  const hasPoint = Boolean(latitude && longitude);
+  const summaryText = validation.valid
+    ? `نقطه روی نقشه انتخاب شد و شعاع مجاز ثبت تردد ${radiusLabel} متر است.`
+    : `شعاع مجاز ثبت تردد: ${radiusLabel} متر`;
+
+  function isRedirectError(error: unknown) {
+    return (
+      typeof error === 'object' &&
+      error !== null &&
+      'digest' in error &&
+      typeof (error as { digest?: unknown }).digest === 'string' &&
+      String((error as { digest?: string }).digest).startsWith('NEXT_REDIRECT')
+    );
+  }
+
+  const clearError = (key: string) => {
+    setSaveError('');
+    setErrors((prev) => {
+      if (!(key in prev)) return prev;
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+  };
 
   const handleUseCurrentLocation = () => {
     if (!navigator.geolocation) {
@@ -94,21 +157,53 @@ export function LocationForm({ action, submitLabel, initialValues }: LocationFor
     window.setTimeout(() => setMapStatus('ready'), 220);
   };
 
-  const handlePickCoordinates = ({ latitude: nextLatitude, longitude: nextLongitude }: { latitude: number; longitude: number }) => {
+  const handlePickLocation = ({
+    latitude: nextLatitude,
+    longitude: nextLongitude,
+    address: pickedAddress,
+  }: {
+    latitude: number;
+    longitude: number;
+    address?: string;
+  }) => {
     setGeolocationDenied(false);
     setLatitude(String(nextLatitude));
     setLongitude(String(nextLongitude));
-    setAddress(mockAddressFromMapPick(nextLatitude, nextLongitude));
+    setAddress(pickedAddress ?? mockAddressFromMapPick(nextLatitude, nextLongitude));
     clearError('latitude');
     clearError('address');
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    const validation = validateWorkplaceLocationDraft(draft);
+  async function saveDraft() {
+    setSaveError('');
     setErrors(validation.valid ? {} : validation.errors);
     if (!validation.valid) {
-      event.preventDefault();
+      return false;
     }
+    const formElement = formRef.current;
+    if (!formElement) return false;
+
+    setSaving(true);
+    try {
+      await action(new FormData(formElement));
+      return true;
+    } catch (error) {
+      if (isRedirectError(error)) return true;
+      setSaveError('محل کار ذخیره نشد. دوباره تلاش کنید.');
+      return false;
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const unsavedLeaveGuard = useUnsavedLeaveGuard({
+    hasUnsavedChanges,
+    onSaveAndLeave: saveDraft,
+  });
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    void saveDraft();
   };
 
   const updateRadius = (nextValue: number, mode: 'preset' | 'custom' = 'preset') => {
@@ -117,24 +212,25 @@ export function LocationForm({ action, submitLabel, initialValues }: LocationFor
   };
 
   return (
-    <form action={action} className="location-form-layout" onSubmit={handleSubmit}>
-      {initialValues?.id ? <input type="hidden" name="id" value={initialValues.id} /> : null}
-      <input type="hidden" name="latitude" value={latitude} />
-      <input type="hidden" name="longitude" value={longitude} />
+    <>
+      <form ref={formRef} className="location-form-layout" onSubmit={handleSubmit}>
+        {initialValues?.id ? <input type="hidden" name="id" value={initialValues.id} /> : null}
+        <input type="hidden" name="latitude" value={latitude} />
+        <input type="hidden" name="longitude" value={longitude} />
 
-      <WorkplaceLocationPicker
-        latitude={latitude}
-        longitude={longitude}
-        radius={Number(radius) || WORKPLACE_LOCATION_DEFAULT_RADIUS}
-        status={mapStatus}
-        geolocationDenied={geolocationDenied}
-        onPickCoordinates={handlePickCoordinates}
-        onUseCurrentLocation={handleUseCurrentLocation}
-        onRetryMap={handleMapRetry}
-      />
+        <WorkplaceLocationPicker
+          latitude={latitude}
+          longitude={longitude}
+          radius={Number(radius) || WORKPLACE_LOCATION_DEFAULT_RADIUS}
+          status={mapStatus}
+          geolocationDenied={geolocationDenied}
+          onPickLocation={handlePickLocation}
+          onUseCurrentLocation={handleUseCurrentLocation}
+          onRetryMap={handleMapRetry}
+        />
 
-      <div className="location-form-panel">
-        <div className="form-grid">
+        <div className="location-form-panel">
+          <div className="form-grid">
           <label>
             <span>عنوان محل کار</span>
             <input
@@ -150,10 +246,11 @@ export function LocationForm({ action, submitLabel, initialValues }: LocationFor
             {errors.title ? <small className="location-form-error">{errors.title}</small> : null}
           </label>
 
-          <label>
+          <label className="full-span">
             <span>آدرس محل کار</span>
-            <input
+            <textarea
               name="address"
+              rows={4}
               value={address}
               onChange={(event) => {
                 setAddress(event.target.value);
@@ -167,13 +264,21 @@ export function LocationForm({ action, submitLabel, initialValues }: LocationFor
 
           <label className="full-span">
             <span>توضیحات تکمیلی</span>
-            <textarea name="description" rows={4} value={description} onChange={(event) => setDescription(event.target.value)} />
+            <textarea
+              name="description"
+              rows={4}
+              value={description}
+              onChange={(event) => {
+                setDescription(event.target.value);
+                setSaveError('');
+              }}
+            />
             <small className="location-form-hint">{WORKPLACE_LOCATION_FIELD_TOOLTIPS.description}</small>
           </label>
 
           <label className="full-span">
             <span>شعاع مجاز ثبت تردد</span>
-            <div className="location-radius-presets">
+            <div className="location-radius-presets" role="group" aria-label="شعاع مجاز ثبت تردد">
               {WORKPLACE_LOCATION_RADIUS_PRESETS.map((preset) => (
                 <button
                   key={preset}
@@ -190,51 +295,79 @@ export function LocationForm({ action, submitLabel, initialValues }: LocationFor
               <button
                 type="button"
                 className={radiusMode === 'custom' ? 'is-selected' : ''}
-                onClick={() => setRadiusMode('custom')}
+                onClick={() => {
+                  setRadiusMode('custom');
+                  setSaveError('');
+                }}
               >
                 مقدار دلخواه
               </button>
             </div>
-            <input
-              name="radius"
-              type="number"
-              min={5}
-              max={500}
-              value={radius}
-              onChange={(event) => {
-                setRadius(event.target.value);
-                setRadiusMode('custom');
-                clearError('radius');
-              }}
-              aria-invalid={Boolean(errors.radius)}
-            />
+            <div className="location-radius-input-row">
+              <input
+                name="radius"
+                type="number"
+                min={WORKPLACE_LOCATION_MIN_RADIUS}
+                max={WORKPLACE_LOCATION_MAX_RADIUS}
+                value={radius}
+                onChange={(event) => {
+                  setRadius(event.target.value);
+                  setRadiusMode('custom');
+                  clearError('radius');
+                }}
+                placeholder="مثلاً ۳۰"
+                aria-invalid={Boolean(errors.radius)}
+              />
+              <span>متر</span>
+            </div>
             <small className="location-form-hint">{WORKPLACE_LOCATION_FIELD_TOOLTIPS.radius}</small>
             {errors.radius ? <small className="location-form-error">{errors.radius}</small> : null}
-            {Number(radius) > 50 ? <small className="location-form-warning">شعاع زیاد ممکن است دقت کنترل تردد را کاهش دهد.</small> : null}
           </label>
         </div>
 
-        <div className="location-coord-strip">
-          <div>
-            <span>مختصات انتخاب‌شده</span>
-            <strong>
-              {latitude && longitude ? `${Number(latitude).toFixed(6)} ، ${Number(longitude).toFixed(6)}` : 'هنوز نقطه‌ای روی نقشه انتخاب نشده است.'}
-            </strong>
-            <small className="location-form-hint">{WORKPLACE_LOCATION_FIELD_TOOLTIPS.coordinates}</small>
-            {errors.latitude ? <small className="location-form-error">{errors.latitude}</small> : null}
+          <div className="location-coord-strip">
+            <label>
+              <span>عرض جغرافیایی</span>
+              <input readOnly value={formatCoordinate(latitude)} />
+            </label>
+            <label>
+              <span>طول جغرافیایی</span>
+              <input readOnly value={formatCoordinate(longitude)} />
+            </label>
           </div>
-          <div>
-            <span>پیش‌نمایش شعاع</span>
-            <strong>{Number(radius || WORKPLACE_LOCATION_DEFAULT_RADIUS).toLocaleString('fa-IR')} متر</strong>
-          </div>
-        </div>
 
-        <div className="full-span">
-          <button type="submit" className="location-indigo-action">
-            {submitLabel}
-          </button>
+          <div className="location-save-summary" aria-live="polite">
+            <strong>{validation.valid ? 'محل آماده ثبت است.' : 'هنوز نقطه‌ای روی نقشه انتخاب نشده است.'}</strong>
+            <span>{summaryText}</span>
+            <small>{hasPoint ? 'مختصات از انتخاب روی نقشه گرفته می‌شود و دستی ویرایش نمی‌شود.' : 'ابتدا نقطه محل کار را روی نقشه انتخاب کنید.'}</small>
+            {errors.latitude ? <small className="location-form-error">{errors.latitude}</small> : null}
+            {saveError ? <small className="location-form-error" role="alert">{saveError}</small> : null}
+          </div>
+
+          <div className="full-span location-form-actions">
+            <button type="submit" className="location-indigo-action">
+              {saving ? 'در حال ذخیره...' : submitLabel}
+            </button>
+            {backHref ? (
+              <button
+                type="button"
+                className="calendar-create-cancel"
+                onClick={() => unsavedLeaveGuard.requestLeave(() => router.push(backHref))}
+              >
+                {backLabel ?? 'بازگشت'}
+              </button>
+            ) : null}
+          </div>
         </div>
-      </div>
-    </form>
+      </form>
+
+      <UnsavedChangesDialog
+        open={unsavedLeaveGuard.dialogOpen}
+        saving={unsavedLeaveGuard.saving || saving}
+        onSaveAndLeave={unsavedLeaveGuard.confirmSaveAndLeave}
+        onDiscardAndLeave={unsavedLeaveGuard.confirmDiscardAndLeave}
+        onCancel={unsavedLeaveGuard.closeDialog}
+      />
+    </>
   );
 }

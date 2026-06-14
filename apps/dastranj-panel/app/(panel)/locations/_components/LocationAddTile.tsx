@@ -7,7 +7,7 @@ export function LocationAddTile() {
       <span className="location-add-tile-icon" aria-hidden>
         <Plus className="h-7 w-7" strokeWidth={2.4} />
       </span>
-      <span className="location-add-tile-text">برای افزودن محل کار کلیک کنید.</span>
+      <span className="location-add-tile-text">افزودن محل کار جدید</span>
     </Link>
   );
 }

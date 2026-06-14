@@ -42,12 +42,22 @@ type LocationListRow = {
   radius: number;
   latitude: { toString(): string } | null;
   longitude: { toString(): string } | null;
+  isActive: boolean;
   isPrimaryOnboarding?: boolean;
 };
 
 function isMissingPrimaryOnboardingColumn(error: unknown) {
   return error instanceof Error && error.message.includes('The column `Location.isPrimaryOnboarding` does not exist');
 }
+
+function isMissingLocationActiveColumn(error: unknown) {
+  return error instanceof Error && (error.message.includes('Unknown argument `isActive`') || error.message.includes('The column `Location.isActive` does not exist'));
+}
+
+const locationSummarySelect = {
+  id: true,
+  title: true,
+} as const;
 
 const locationListSelect = {
   id: true,
@@ -57,7 +67,13 @@ const locationListSelect = {
   radius: true,
   latitude: true,
   longitude: true,
+  isActive: true,
   isPrimaryOnboarding: true,
+  _count: {
+    select: {
+      workGroups: true,
+    },
+  },
 } as const;
 
 const legacyLocationListSelect = {
@@ -68,28 +84,62 @@ const legacyLocationListSelect = {
   radius: true,
   latitude: true,
   longitude: true,
+  isActive: true,
+  _count: {
+    select: {
+      workGroups: true,
+    },
+  },
+} as const;
+
+const minimalLocationListSelect = {
+  id: true,
+  title: true,
+  address: true,
+  description: true,
+  radius: true,
+  latitude: true,
+  longitude: true,
+  _count: {
+    select: {
+      workGroups: true,
+    },
+  },
 } as const;
 
 async function listLocationsForTenant(tenantId: string, take?: number) {
   const where = { tenantId };
 
   try {
-    return (await prisma.location.findMany({
-      where,
-      orderBy: [{ isPrimaryOnboarding: 'desc' }, { updatedAt: 'desc' }],
-      select: locationListSelect,
-      ...(typeof take === 'number' ? { take } : {}),
-    } as any)) as LocationListRow[];
-  } catch (error) {
-    if (!isMissingPrimaryOnboardingColumn(error)) throw error;
     return ((await prisma.location.findMany({
       where,
-      select: legacyLocationListSelect,
-      orderBy: { updatedAt: 'desc' },
+      orderBy: [{ isPrimaryOnboarding: 'desc' }, { isActive: 'desc' }, { updatedAt: 'desc' }],
+      select: locationListSelect,
       ...(typeof take === 'number' ? { take } : {}),
-    })) as Array<Omit<LocationListRow, 'isPrimaryOnboarding'>>).map((item) => ({
+    } as any)) as unknown as Array<LocationListRow & { _count: { workGroups: number } }>).map((item) => ({
       ...item,
-      isPrimaryOnboarding: false,
+      usageCount: item._count?.workGroups ?? 0,
+    }));
+  } catch (error) {
+    if (!isMissingPrimaryOnboardingColumn(error) && !isMissingLocationActiveColumn(error)) throw error;
+    const select = isMissingLocationActiveColumn(error) ? minimalLocationListSelect : legacyLocationListSelect;
+    const orderBy = isMissingPrimaryOnboardingColumn(error)
+      ? [{ updatedAt: 'desc' }]
+      : isMissingLocationActiveColumn(error)
+        ? [{ updatedAt: 'desc' }]
+        : [{ isActive: 'desc' }, { updatedAt: 'desc' }];
+    return ((await prisma.location.findMany({
+      where,
+      select,
+      orderBy: orderBy as any,
+      ...(typeof take === 'number' ? { take } : {}),
+    })) as unknown as Array<
+      Omit<LocationListRow, 'isPrimaryOnboarding' | 'isActive'> & { _count?: { workGroups?: number } }
+    >).map((item) => ({
+      ...item,
+      isActive: 'isActive' in item ? item.isActive : true,
+      isPrimaryOnboarding: 'isPrimaryOnboarding' in item ? item.isPrimaryOnboarding : false,
+      usageCount: item._count?.workGroups ?? 0,
     }));
   }
 }
@@ -307,7 +357,36 @@ export async function listLocations() {
 
 export async function getLocation(id: string) {
   const tenantId = await requireTenantId();
-  return prisma.location.findFirst({ where: { id, tenantId } });
+  try {
+    return await prisma.location.findFirst({
+      where: { id, tenantId },
+      select: {
+        id: true,
+        title: true,
+        address: true,
+        description: true,
+        radius: true,
+        latitude: true,
+        longitude: true,
+        isActive: true,
+        isPrimaryOnboarding: true,
+      },
+    });
+  } catch (error) {
+    if (!isMissingLocationActiveColumn(error) && !isMissingPrimaryOnboardingColumn(error)) throw error;
+    return prisma.location.findFirst({
+      where: { id, tenantId },
+      select: {
+        id: true,
+        title: true,
+        address: true,
+        description: true,
+        radius: true,
+        latitude: true,
+        longitude: true,
+      },
+    });
+  }
 }
 
 export async function listRequestReasons() {
@@ -602,7 +681,7 @@ export async function listWorkGroups() {
   return prisma.workGroup.findMany({
     where: { tenantId },
     include: {
-      location: true,
+      location: { select: locationSummarySelect },
       policy: { include: { calendar: true } },
       members: {
         where: { employee: { tenantId } },
@@ -619,7 +698,7 @@ export async function getWorkGroup(id: string) {
   return prisma.workGroup.findFirst({
     where: { id, tenantId },
     include: {
-      location: true,
+      location: { select: locationSummarySelect },
       policy: { include: { calendar: true } },
       members: {
         where: { employee: { tenantId } },

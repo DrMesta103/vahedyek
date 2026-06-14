@@ -47,6 +47,7 @@ export default async function EmployeeContractDraftsPage({ params }: { params: P
       }}
       templates={templates}
       storageStates={storageStates}
+      tenantId={session?.tenantId ?? null}
       businessProfile={businessProfile
         ? {
             brandName: businessProfile.brandName,

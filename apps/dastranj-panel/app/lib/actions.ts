@@ -87,6 +87,23 @@ function parseJsonRecord(value: string | null | undefined) {
   }
 }
 
+const EMPLOYEE_CONTRACT_DRAFTS_STORAGE_KEY = 'dastranj-employee-contract-drafts-v1';
+
+const DELETE_GUARD_MESSAGES = {
+  locationUsed:
+    '\u0627\u06cc\u0646 \u0645\u062d\u0644 \u06a9\u0627\u0631 \u0628\u0647 \u06af\u0631\u0648\u0647 \u06a9\u0627\u0631\u06cc \u0645\u062a\u0635\u0644 \u0627\u0633\u062a \u0648 \u0642\u0627\u0628\u0644 \u062d\u0630\u0641 \u0646\u06cc\u0633\u062a. \u062f\u0631 \u0635\u0648\u0631\u062a \u0646\u06cc\u0627\u0632 \u0622\u0646 \u0631\u0627 \u063a\u06cc\u0631\u0641\u0639\u0627\u0644 \u06a9\u0646\u06cc\u062f.',
+  calendarUsed:
+    '\u0627\u06cc\u0646 \u062a\u0642\u0648\u06cc\u0645 \u0628\u0647 \u06cc\u06a9 \u0633\u06cc\u0627\u0633\u062a \u06a9\u0627\u0631\u06cc \u0645\u062a\u0635\u0644 \u0627\u0633\u062a \u0648 \u062a\u0627 \u0632\u0645\u0627\u0646 \u062c\u062f\u0627\u0633\u0627\u0632\u06cc \u0622\u0646 \u0642\u0627\u0628\u0644 \u062d\u0630\u0641 \u0646\u06cc\u0633\u062a.',
+  policyUsed:
+    '\u0627\u06cc\u0646 \u0633\u06cc\u0627\u0633\u062a \u06a9\u0627\u0631\u06cc \u0628\u0647 \u06af\u0631\u0648\u0647 \u06a9\u0627\u0631\u06cc \u0645\u062a\u0635\u0644 \u0627\u0633\u062a \u0648 \u062a\u0627 \u0632\u0645\u0627\u0646 \u062c\u062f\u0627\u0633\u0627\u0632\u06cc \u0622\u0646 \u0642\u0627\u0628\u0644 \u062d\u0630\u0641 \u0646\u06cc\u0633\u062a.',
+  draftTemplateUsed:
+    '\u0627\u0632 \u0627\u06cc\u0646 \u0642\u0627\u0644\u0628 \u0628\u0631\u0627\u06cc \u0633\u0627\u062e\u062a \u067e\u06cc\u0634\u200c\u0646\u0648\u06cc\u0633 \u0642\u0631\u0627\u0631\u062f\u0627\u062f \u06a9\u0627\u0631\u0645\u0646\u062f \u0627\u0633\u062a\u0641\u0627\u062f\u0647 \u0634\u062f\u0647 \u0627\u0633\u062a \u0648 \u0642\u0627\u0628\u0644 \u062d\u0630\u0641 \u0646\u06cc\u0633\u062a.',
+  requestReasonUsed:
+    '\u0627\u06cc\u0646 \u062f\u0644\u06cc\u0644 \u062f\u0631\u062e\u0648\u0627\u0633\u062a \u0642\u0628\u0644\u0627\u064b \u062f\u0631 \u062f\u0631\u062e\u0648\u0627\u0633\u062a\u200c\u0647\u0627\u06cc \u06a9\u0627\u0631\u06a9\u0646\u0627\u0646 \u0627\u0633\u062a\u0641\u0627\u062f\u0647 \u0634\u062f\u0647 \u0627\u0633\u062a \u0648 \u0642\u0627\u0628\u0644 \u062d\u0630\u0641 \u0646\u06cc\u0633\u062a. \u062f\u0631 \u0635\u0648\u0631\u062a \u0646\u06cc\u0627\u0632 \u0641\u0642\u0637 \u0622\u0646 \u0631\u0627 \u063a\u06cc\u0631\u0641\u0639\u0627\u0644 \u06a9\u0646\u06cc\u062f.',
+  organizationUnitUsed:
+    '\u0627\u06cc\u0646 \u0648\u0627\u062d\u062f \u0633\u0627\u0632\u0645\u0627\u0646\u06cc \u0628\u0647 \u06a9\u0627\u0631\u0645\u0646\u062f \u0645\u062a\u0635\u0644 \u0627\u0633\u062a \u0648 \u0642\u0627\u0628\u0644 \u062d\u0630\u0641 \u0646\u06cc\u0633\u062a.',
+} as const;
+
 function decimalValue(formData: FormData, key: string) {
   const raw = value(formData, key);
   return raw ? new Decimal(raw) : null;
@@ -405,7 +422,71 @@ export async function updateLocationAction(formData: FormData) {
 export async function deleteLocationAction(formData: FormData) {
   const tenantId = await getTenantId();
   const id = value(formData, 'id');
-  await prisma.location.deleteMany({ where: { id, tenantId } });
+  const current = await prisma.location.findFirst({
+    where: { id, tenantId },
+    select: { id: true, isPrimaryOnboarding: true, _count: { select: { workGroups: true } } },
+  });
+  if (!current) throw new Error('Location not found for active tenant.');
+  if (current._count.workGroups > 0) {
+    throw new Error(DELETE_GUARD_MESSAGES.locationUsed);
+  }
+
+  const replacement = current.isPrimaryOnboarding
+    ? await prisma.location.findFirst({
+        where: { tenantId, id: { not: id } },
+        orderBy: [{ isActive: 'desc' }, { updatedAt: 'desc' }],
+        select: { id: true },
+      })
+    : null;
+
+  await prisma.$transaction(async (tx) => {
+    await tx.location.delete({ where: { id } });
+    if (replacement) {
+      await tx.location.updateMany({
+        where: { id: replacement.id, tenantId },
+        data: { isPrimaryOnboarding: true, isActive: true },
+      });
+    }
+  });
+  revalidatePath('/locations');
+  revalidatePath('/quick-setup');
+  redirect('/locations');
+}
+
+export async function setPrimaryLocationAction(formData: FormData) {
+  const tenantId = await getTenantId();
+  const id = value(formData, 'id');
+  const current = await prisma.location.findFirst({ where: { id, tenantId }, select: { id: true } });
+  if (!current) throw new Error('Location not found for active tenant.');
+
+  await prisma.$transaction(async (tx) => {
+    await tx.location.updateMany({
+      where: { tenantId, isPrimaryOnboarding: true, id: { not: id } } as any,
+      data: { isPrimaryOnboarding: false },
+    });
+    await tx.location.update({
+      where: { id },
+      data: { isPrimaryOnboarding: true, isActive: true } as any,
+    });
+  });
+
+  revalidatePath('/locations');
+  revalidatePath('/quick-setup');
+  redirect('/locations');
+}
+
+export async function toggleLocationActiveAction(formData: FormData) {
+  const tenantId = await getTenantId();
+  const id = value(formData, 'id');
+  const nextIsActive = value(formData, 'isActive') === 'true';
+  const current = await prisma.location.findFirst({ where: { id, tenantId }, select: { id: true } });
+  if (!current) throw new Error('Location not found for active tenant.');
+
+  await prisma.location.update({
+    where: { id },
+    data: { isActive: nextIsActive } as any,
+  });
+
   revalidatePath('/locations');
   revalidatePath('/quick-setup');
   redirect('/locations');
@@ -484,6 +565,14 @@ export async function deleteRequestReasonAction(formData: FormData) {
   const tenantId = await getTenantId();
   const id = value(formData, 'id');
   const category = value(formData, 'category');
+  const current = await prisma.requestReason.findFirst({
+    where: { id, tenantId },
+    select: { id: true, _count: { select: { employeeRequests: true } } },
+  });
+  if (!current) throw new Error('Request reason not found for active tenant.');
+  if (current._count.employeeRequests > 0) {
+    throw new Error(DELETE_GUARD_MESSAGES.requestReasonUsed);
+  }
   await prisma.requestReason.deleteMany({ where: { id, tenantId } });
   revalidatePath('/request-reasons');
   redirect(category ? `/request-reasons?category=${category}` : '/request-reasons');
@@ -560,6 +649,14 @@ export async function updateOrganizationUnitAction(formData: FormData) {
 export async function deleteOrganizationUnitAction(formData: FormData) {
   const tenantId = await getTenantId();
   const id = value(formData, 'id');
+  const current = await prisma.organizationUnit.findFirst({
+    where: { id, tenantId },
+    select: { id: true, _count: { select: { employees: true } } },
+  });
+  if (!current) throw new Error('Organization unit not found for active tenant.');
+  if (current._count.employees > 0) {
+    throw new Error(DELETE_GUARD_MESSAGES.organizationUnitUsed);
+  }
   await prisma.organizationUnit.deleteMany({ where: { id, tenantId } });
   revalidatePath('/organization-units');
   redirect('/organization-units');
@@ -665,6 +762,14 @@ export async function createCalendarAction(formData: FormData) {
 export async function deleteCalendarAction(formData: FormData) {
   const tenantId = await getTenantId();
   const id = value(formData, 'id');
+  const current = await prisma.calendar.findFirst({
+    where: { id, tenantId },
+    select: { id: true, _count: { select: { policies: true } } },
+  });
+  if (!current) throw new Error('Calendar not found for active tenant.');
+  if (current._count.policies > 0) {
+    throw new Error(DELETE_GUARD_MESSAGES.calendarUsed);
+  }
   await prisma.calendar.deleteMany({ where: { id, tenantId } });
   revalidatePath('/calendars');
   revalidatePath('/quick-setup');
@@ -1520,6 +1625,14 @@ export async function savePolicyWorkspaceAction(formData: FormData) {
 export async function deletePolicyAction(formData: FormData) {
   const tenantId = await getTenantId();
   const id = value(formData, 'id');
+  const current = await prisma.workPolicy.findFirst({
+    where: { id, tenantId },
+    select: { id: true, _count: { select: { workGroups: true } } },
+  });
+  if (!current) throw new Error('Policy not found for active tenant.');
+  if (current._count.workGroups > 0) {
+    throw new Error(DELETE_GUARD_MESSAGES.policyUsed);
+  }
   await prisma.workPolicy.deleteMany({ where: { id, tenantId } });
   revalidatePath('/policies');
   revalidatePath('/quick-setup');
@@ -2635,6 +2748,28 @@ export async function deleteDraftTemplateAction(templateId: string) {
   const tenantId = await getTenantId();
   const current = await prisma.draftTemplate.findFirst({ where: { id: templateId, tenantId }, select: { id: true } });
   if (!current) throw new Error('Draft template not found for the active tenant.');
+  const [contractUsageCount, clientDraftUsageCount] = await Promise.all([
+    prisma.employeeContract.count({
+      where: {
+        tenantId,
+        templateId,
+      },
+    }),
+    prisma.clientStorageState.count({
+      where: {
+        tenantId,
+        storageKey: {
+          startsWith: EMPLOYEE_CONTRACT_DRAFTS_STORAGE_KEY,
+        },
+        value: {
+          contains: `"templateId":"${templateId}"`,
+        },
+      },
+    }),
+  ]);
+  if (contractUsageCount > 0 || clientDraftUsageCount > 0) {
+    throw new Error(DELETE_GUARD_MESSAGES.draftTemplateUsed);
+  }
   await prisma.draftTemplate.delete({ where: { id: templateId } });
   revalidatePath('/draft-templates');
   revalidatePath('/draft-templates/builder');

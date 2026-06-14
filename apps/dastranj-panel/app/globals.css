@@ -1273,9 +1273,13 @@ textarea {
 }
 
 .location-form-panel textarea {
-  min-height: 100px;
+  min-height: 104px;
   padding: 12px 14px;
   resize: vertical;
+}
+
+.location-form-panel textarea[name='address'] {
+  min-height: 132px;
 }
 
 .location-form-panel input[aria-invalid='true'],
@@ -1297,6 +1301,16 @@ textarea {
   padding: 12px 14px;
   display: grid;
   gap: 6px;
+}
+
+.location-coord-strip label {
+  display: grid;
+  gap: 8px;
+}
+
+.location-coord-strip input[readonly] {
+  cursor: default;
+  opacity: 0.95;
 }
 
 .location-coord-strip span,
@@ -1425,6 +1439,33 @@ textarea {
   font-size: 12px;
 }
 
+.location-save-summary {
+  display: grid;
+  gap: 6px;
+  border: 1px solid rgba(126, 142, 187, 0.22);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 14px 16px;
+}
+
+.location-save-summary strong {
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.location-save-summary span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.location-save-summary small {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
 .location-map-search {
   position: absolute;
   top: 12px;
@@ -1449,6 +1490,65 @@ textarea {
   color: inherit;
   outline: none;
   text-align: right;
+}
+
+.location-map-search-help {
+  position: absolute;
+  top: 62px;
+  left: 12px;
+  right: 12px;
+  z-index: 4;
+  border: 1px solid rgba(8, 17, 31, 0.08);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #4b5563;
+  padding: 9px 12px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.location-map-search-results {
+  position: absolute;
+  top: 112px;
+  left: 12px;
+  right: 12px;
+  z-index: 4;
+  display: grid;
+  gap: 8px;
+  max-height: 164px;
+  overflow: auto;
+}
+
+.location-map-search-result,
+.location-map-search-empty {
+  border: 1px solid rgba(8, 17, 31, 0.08);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.94);
+  color: #1a2332;
+  padding: 10px 12px;
+  text-align: right;
+}
+
+.location-map-search-result {
+  display: grid;
+  gap: 4px;
+}
+
+.location-map-search-result strong {
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.location-map-search-result span,
+.location-map-search-empty {
+  color: #5b6478;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.location-map-search-result:hover {
+  border-color: rgba(20, 184, 166, 0.36);
+  background: rgba(20, 184, 166, 0.08);
 }
 
 .location-map-status {
@@ -12813,8 +12913,17 @@ body.tenant-select-route {
 
 .location-workplace-card-top {
   display: flex;
-  justify-content: flex-end;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
   margin-bottom: 10px;
+}
+
+.location-workplace-badges {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .location-workplace-actions {
@@ -12882,6 +12991,20 @@ body.tenant-select-route {
   background-size: 18px 18px, 18px 18px, auto, auto, auto;
 }
 
+.location-workplace-map-note {
+  position: absolute;
+  inset-inline: 10px;
+  top: 10px;
+  z-index: 1;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.88);
+  color: #475569;
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 800;
+  text-align: center;
+}
+
 .location-workplace-map-pin {
   position: absolute;
   transform: translate(-50%, -100%);
@@ -12912,6 +13035,67 @@ body.tenant-select-route {
   color: #94a3b8;
   font-size: 14px;
   font-weight: 600;
+}
+
+.location-workplace-title-row {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.location-workplace-radius {
+  flex-shrink: 0;
+  border: 1px solid rgba(20, 184, 166, 0.2);
+  border-radius: 999px;
+  background: rgba(20, 184, 166, 0.12);
+  color: #8ff0dd;
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.location-workplace-address,
+.location-workplace-description {
+  display: block;
+  color: #cbd5e1;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.75;
+}
+
+.location-workplace-meta {
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.location-workplace-status-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.location-workplace-status-badge.is-active {
+  border: 1px solid rgba(34, 197, 94, 0.22);
+  background: rgba(34, 197, 94, 0.12);
+  color: #7ef0a2;
+}
+
+.location-workplace-status-badge.is-inactive {
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(148, 163, 184, 0.12);
+  color: #cbd5e1;
+}
+
+.location-workplace-status-badge.is-warning {
+  border: 1px solid rgba(245, 158, 11, 0.22);
+  background: rgba(245, 158, 11, 0.12);
+  color: #fdba74;
 }
 
 [data-theme='light'] .module-page-title {
@@ -21693,6 +21877,21 @@ body.tenant-select-route {
   cursor: help;
 }
 
+.business-payroll-difference-badge--tenant-base {
+  border-color: rgba(167, 139, 250, 0.38);
+  background: rgba(109, 40, 217, 0.82);
+  color: #f5f3ff;
+}
+
+.employee-contract-comparison-badges,
+.contract-financial-difference-badges {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+}
+
 .business-payroll-field em,
 .business-payroll-table-row > em {
   color: #ffb7b7;
@@ -21941,6 +22140,24 @@ body.tenant-select-route {
   border: 1px solid rgba(250, 204, 21, 0.35);
   background: rgba(250, 204, 21, 0.12);
   color: #fde68a;
+}
+
+.contract-financial-difference-badge--tenant-base.is-higher {
+  border: 1px solid rgba(167, 139, 250, 0.42);
+  background: rgba(109, 40, 217, 0.18);
+  color: #ddd6fe;
+}
+
+.contract-financial-difference-badge--tenant-base.is-lower {
+  border: 1px solid rgba(251, 191, 36, 0.42);
+  background: rgba(245, 158, 11, 0.16);
+  color: #fde68a;
+}
+
+.contract-financial-difference-badge--tenant-base.is-changed {
+  border: 1px solid rgba(167, 139, 250, 0.38);
+  background: rgba(109, 40, 217, 0.14);
+  color: #e9d5ff;
 }
 
 .contract-financial-derived-grid {

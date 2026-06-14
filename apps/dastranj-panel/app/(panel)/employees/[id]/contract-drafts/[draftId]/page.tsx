@@ -61,6 +61,7 @@ export default async function EmployeeContractDraftBuilderPage({
         : null}
       templates={templates}
       storageStates={storageStates}
+      tenantId={session?.tenantId ?? null}
     />
   );
 }

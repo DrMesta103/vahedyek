@@ -82,7 +82,6 @@ export const BUSINESS_SETTINGS_CATEGORIES: BusinessSettingsCategory[] = [
         description: 'الگوهای ساعت کاری، شیفت ثابت، شناور، دو تکه، شبانه و استراحت‌ها را مدیریت کنید.',
         href: '/shift-templates',
         icon: 'shift',
-        badges: [{ label: 'حیاتی', tone: 'critical' }],
       },
       {
         title: 'سیاست‌های کاری',
