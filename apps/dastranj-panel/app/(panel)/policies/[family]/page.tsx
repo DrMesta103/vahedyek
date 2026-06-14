@@ -26,8 +26,13 @@ import {
   PolicyVariantTabs,
 } from '../_components/PolicyWorkspaceShell';
 import { LeavePolicyEditor } from '../_components/LeavePolicyEditor';
+import { ManualPolicyEditor } from '../_components/ManualPolicyEditor';
 import { NightPolicyEditor } from '../_components/NightPolicyEditor';
+import { RemotePolicyEditor } from '../_components/RemotePolicyEditor';
+import { SplitShiftPolicyEditor } from '../_components/SplitShiftPolicyEditor';
 import { SearchablePolicySelect } from '../_components/SearchablePolicySelect';
+import { parseSplitShiftSegmentRules } from '../../../lib/split-shift-policy';
+import { parseRemoteWorkPolicy } from '../../../lib/remote-work-policy';
 
 function fieldNumber(value: unknown, fallback = 0) {
   return typeof value === 'number' ? value : fallback;
@@ -154,6 +159,20 @@ export default async function PolicyFamilyPage({
     allowManualApproval: Boolean(sectionValues.allowManualApproval),
     allowOutsideShift: Boolean(sectionValues.allowOutsideShift),
     manualEntryEnabled: Boolean(sectionValues.manualEntryEnabled),
+    manualRequireReason: Boolean(sectionValues.manualRequireReason),
+    manualPastDaysEnabled: Boolean(sectionValues.manualPastDaysEnabled),
+    manualMaxPastDays:
+      typeof sectionValues.manualMaxPastDays === 'number'
+        ? sectionValues.manualMaxPastDays
+        : typeof sectionValues.maxDelayMinutes === 'number'
+          ? sectionValues.maxDelayMinutes
+          : 0,
+    manualMonthlyCapPerUser:
+      typeof sectionValues.manualMonthlyCapPerUser === 'number'
+        ? sectionValues.manualMonthlyCapPerUser
+        : typeof sectionValues.monthlyLimit === 'number'
+          ? sectionValues.monthlyLimit
+          : 0,
     requiresManagerApproval: Boolean(sectionValues.requiresManagerApproval),
     maxMissionHours: typeof sectionValues.maxMissionHours === 'number' ? sectionValues.maxMissionHours : 0,
     nightEnabled:
@@ -163,8 +182,6 @@ export default async function PolicyFamilyPage({
             (typeof sectionValues.nightStart === 'string' && sectionValues.nightStart) ||
               (typeof sectionValues.nightEnd === 'string' && sectionValues.nightEnd),
           ),
-    nightStart: typeof sectionValues.nightStart === 'string' ? sectionValues.nightStart : '',
-    nightEnd: typeof sectionValues.nightEnd === 'string' ? sectionValues.nightEnd : '',
     cycleCount: typeof sectionValues.cycleCount === 'number' ? sectionValues.cycleCount : 2,
     cycleType: typeof sectionValues.cycleType === 'string' ? sectionValues.cycleType : 'daily',
     note: typeof sectionValues.note === 'string' ? sectionValues.note : '',
@@ -181,16 +198,29 @@ export default async function PolicyFamilyPage({
     { value: 'lenient', label: 'ملایم', hint: 'فقط مازادِ فرجه به عنوان تاخیر یا تعجیل محاسبه می‌شود.' },
     { value: 'strict', label: 'سخت گیرانه', hint: 'کل تاخیر یا تعجیل از همان نقطه شروع محاسبه می‌شود.' },
   ];
+  const splitShiftSegments = parseSplitShiftSegmentRules(sectionValues);
+  const remoteWorkPolicy = parseRemoteWorkPolicy(sectionValues);
+
+  const fromWorkHub = (familyKey === 'manual' || familyKey === 'night' || familyKey === 'remote') && Boolean(policyId);
+  const backHref = fromWorkHub ? `/policies/work?policyId=${policyId}` : '/policies';
 
   return (
     <PolicyPageShell
       title={familyMeta.pageTitle}
       subtitle={familyMeta.pageHint}
-      breadcrumb={policyBreadcrumbs({ label: familyMeta.pageTitle })}
-      actionHref="/policies"
-      actionLabel="بازگشت به فهرست"
+      breadcrumb={
+        fromWorkHub && familyKey === 'manual'
+          ? policyBreadcrumbs({ label: 'ویرایش سیاست کاری', href: backHref }, { label: 'سیاست‌های تردد دستی' })
+          : fromWorkHub && familyKey === 'night'
+            ? policyBreadcrumbs({ label: 'ویرایش سیاست کاری', href: backHref }, { label: 'سیاست‌های شب‌کاری' })
+            : fromWorkHub && familyKey === 'remote'
+              ? policyBreadcrumbs({ label: 'ویرایش سیاست کاری', href: backHref }, { label: 'سیاست‌های دورکاری' })
+              : policyBreadcrumbs({ label: familyMeta.pageTitle })
+      }
+      actionHref={fromWorkHub ? backHref : '/policies'}
+      actionLabel={fromWorkHub ? 'بازگشت به سیاست کاری' : 'بازگشت به فهرست'}
     >
-      {familyKey !== 'shift' && familyPolicies.length > 0 ? (
+      {familyKey !== 'shift' && familyPolicies.length > 0 && !fromWorkHub ? (
         <PolicyFamilyList
           title="سیاست‌های این خانواده"
           description="ویرایش مستقیم، ایجاد رکورد جدید و مدیریت چند سیاست مستقل"
@@ -257,33 +287,39 @@ export default async function PolicyFamilyPage({
               <PolicyVariantTabs familyKey={familyKey} variant={activeVariant} />
 
               <div className="shift-policy-sections">
-                {activeVariant === 'fixed' || activeVariant === 'split' || activeVariant === 'rotate' ? (
+                {activeVariant === 'split' ? (
+                  <SplitShiftPolicyEditor segments={splitShiftSegments} calculationOptions={calculationOptions} />
+                ) : (
                   <>
-                    <ShiftPolicyPanel title="قوانین ورود">
-                      <ShiftPolicyField name="entryGraceMinutes" label="فرجه مجاز ورود" required unit="دقیقه" defaultValue={defaults.entryGraceMinutes} hint="این فرجه برای هر دو بخش شیفت (صبح و عصر) اعمال می‌شود. کارمند در هر بخش می‌تواند تا این مدت بعد از شروع، وارد شود." />
-                      <ShiftPolicySearchSelectField name="delayCalculationMode" label="نحوه محاسبه تاخیر" required value={defaults.delayCalculationMode} options={calculationOptions} hint="ملایم: فقط مازاد فرجه کسر می‌شود. سخت‌گیر: کل تاخیر کسر می‌شود. این قانون برای هر دو بخش شیفت یکسان است." />
-                      <ShiftPolicyField name="maxDelayMinutes" label="حداکثر تاخیر برای غیبت" required unit="دقیقه" defaultValue={defaults.maxDelayMinutes} hint="اگر در هر بخش شیفت، تاخیر از این مقدار بیشتر شود آن بخش به صورت غیبت ثبت می‌شود. اگر هر دو بخش غیبت باشند، کل روز غیبت محسوب می‌شود." />
-                    </ShiftPolicyPanel>
-                    <ShiftPolicyPanel title="قوانین خروج">
-                      <ShiftPolicyField name="exitGraceMinutes" label="فرجه مجاز خروج" required unit="دقیقه" defaultValue={defaults.exitGraceMinutes} hint="کارمند در پایان هر بخش شیفت می‌تواند تا این مدت زودتر خارج شود بدون محاسبه تعجیل." />
-                      <ShiftPolicySearchSelectField name="earlyLeaveCalculationMode" label="نحوه محاسبه تعجیل" required value={defaults.earlyLeaveCalculationMode} options={calculationOptions} hint="ملایم: فقط مازاد فرجه کسر می‌شود. سخت‌گیر: کل تعجیل کسر می‌شود." />
-                    </ShiftPolicyPanel>
+                    {activeVariant === 'fixed' || activeVariant === 'rotate' ? (
+                      <>
+                        <ShiftPolicyPanel title="قوانین ورود">
+                          <ShiftPolicyField name="entryGraceMinutes" label="فرجه مجاز ورود" required unit="دقیقه" defaultValue={defaults.entryGraceMinutes} hint="کارمند می‌تواند تا این مدت بعد از شروع شیفت وارد شود." />
+                          <ShiftPolicySearchSelectField name="delayCalculationMode" label="نحوه محاسبه تاخیر" required value={defaults.delayCalculationMode} options={calculationOptions} hint="ملایم: فقط مازاد فرجه کسر می‌شود. سخت‌گیر: کل تاخیر کسر می‌شود." />
+                          <ShiftPolicyField name="maxDelayMinutes" label="حداکثر تاخیر برای غیبت" required unit="دقیقه" defaultValue={defaults.maxDelayMinutes} hint="اگر تاخیر از این مقدار بیشتر شود، روز به صورت غیبت ثبت می‌شود." />
+                        </ShiftPolicyPanel>
+                        <ShiftPolicyPanel title="قوانین خروج">
+                          <ShiftPolicyField name="exitGraceMinutes" label="فرجه مجاز خروج" required unit="دقیقه" defaultValue={defaults.exitGraceMinutes} hint="کارمند می‌تواند تا این مدت زودتر از پایان شیفت خارج شود بدون محاسبه تعجیل." />
+                          <ShiftPolicySearchSelectField name="earlyLeaveCalculationMode" label="نحوه محاسبه تعجیل" required value={defaults.earlyLeaveCalculationMode} options={calculationOptions} hint="ملایم: فقط مازاد فرجه کسر می‌شود. سخت‌گیر: کل تعجیل کسر می‌شود." />
+                        </ShiftPolicyPanel>
+                      </>
+                    ) : null}
+
+                    {activeVariant === 'floating-day' ? (
+                      <ShiftPolicyPanel title="محاسبه تاخیر">
+                        <ShiftPolicyField name="maxDelayMinutes" label="حداکثر تاخیر برای غیبت" required unit="دقیقه" defaultValue={defaults.maxDelayMinutes} hint="اگر تاخیر از این مقدار بیشتر شود، روز به صورت غیبت ثبت می‌شود." />
+                      </ShiftPolicyPanel>
+                    ) : null}
+
+                    {activeVariant === 'floating-absolute' ? (
+                      <ShiftPolicyPanel title="شرایط تایید حضور">
+                        <ShiftPolicyField name="requiredHours" label="حداقل ساعات حضور روزانه" required unit="ساعت" defaultValue={defaults.requiredHours} hint="کارمند باید حداقل این تعداد ساعت در محل کار یا به صورت remote حضور داشته باشد تا روز به عنوان حضور کامل محاسبه شود. کمتر از این مقدار ممکن است به عنوان حضور ناقص یا غیبت ثبت شود." />
+                      </ShiftPolicyPanel>
+                    ) : null}
+
+                    <PolicyFormActions cancelHref="/policies" submitLabel="ویرایش" />
                   </>
-                ) : null}
-
-                {activeVariant === 'floating-day' ? (
-                  <ShiftPolicyPanel title="محاسبه تاخیر">
-                    <ShiftPolicyField name="maxDelayMinutes" label="حداکثر تاخیر برای غیبت" required unit="دقیقه" defaultValue={defaults.maxDelayMinutes} hint="اگر تاخیر از این مقدار بیشتر شود، روز به صورت غیبت ثبت می‌شود." />
-                  </ShiftPolicyPanel>
-                ) : null}
-
-                {activeVariant === 'floating-absolute' ? (
-                  <ShiftPolicyPanel title="شرایط تایید حضور">
-                    <ShiftPolicyField name="requiredHours" label="حداقل ساعات حضور روزانه" required unit="ساعت" defaultValue={defaults.requiredHours} hint="کارمند باید حداقل این تعداد ساعت در محل کار یا به صورت remote حضور داشته باشد تا روز به عنوان حضور کامل محاسبه شود. کمتر از این مقدار ممکن است به عنوان حضور ناقص یا غیبت ثبت شود." />
-                  </ShiftPolicyPanel>
-                ) : null}
-
-                <PolicyFormActions cancelHref="/policies" submitLabel="ویرایش" />
+                )}
               </div>
             </div>
           ) : null}
@@ -452,39 +488,27 @@ export default async function PolicyFamilyPage({
             <LeavePolicyEditor
               familyKey={familyKey}
               variant={activeVariant}
-              monthlyLimit={defaults.monthlyLimit}
-              requireAttachment={defaults.requireAttachment}
+              sectionValues={sectionValues}
             />
           ) : null}
 
           {familyKey === 'manual' ? (
-            <div className="policy-form-card">
-              <PolicyInfoStrip text="در تردد دستی، ثبت به‌صورت دستی انجام می‌شود و تایید مدیر یا سرپرست می‌تواند الزامی باشد." />
-              <div className="policy-field-grid policy-field-grid-2">
-                <PolicyToggleField name="manualEntryEnabled" label="فعال‌سازی تردد دستی" hint="اجازه ثبت ورود/خروج دستی برای کاربران" defaultChecked={defaults.manualEntryEnabled} />
-                <PolicyToggleField name="requiresManagerApproval" label="نیاز به تایید مدیر" hint="ثبت بدون تایید مدیر نهایی نشود" defaultChecked={defaults.requiresManagerApproval} />
-              </div>
-              <div className="policy-field-grid policy-field-grid-2">
-                <label className="policy-field-stack">
-                  <PolicyFieldLabel label="حداکثر کار مجاز در تعطیل" required />
-                  <PolicyFieldInput name="maxDelayMinutes" type="number" defaultValue={defaults.maxDelayMinutes || 0} />
-                </label>
-                <label className="policy-field-stack">
-                  <PolicyFieldLabel label="الزام به پیوست" hint="در صورت نیاز به فایل یا دلیل" />
-                  <PolicyFieldInput name="note" defaultValue={defaults.note || ''} />
-                </label>
-              </div>
-              <PolicyToggleField name="breakDeduct" label="کسر از ساعات کاری" hint="ثبت دستی نیز می‌تواند از ساعت موظفی کسر شود." defaultChecked={defaults.breakDeduct} />
-              <PolicyFormActions cancelHref="/policies" submitLabel="ذخیره تغییرات" />
-            </div>
+            <ManualPolicyEditor
+              backHref={backHref}
+              policyId={policyId}
+              manualEntryEnabled={defaults.manualEntryEnabled}
+              manualRequireReason={defaults.manualRequireReason}
+              requireAttachment={defaults.requireAttachment}
+              manualPastDaysEnabled={defaults.manualPastDaysEnabled}
+              manualMaxPastDays={defaults.manualMaxPastDays}
+              manualMonthlyCapPerUser={defaults.manualMonthlyCapPerUser}
+            />
           ) : null}
 
-          {familyKey === 'night' ? (
-            <NightPolicyEditor
-              nightEnabled={defaults.nightEnabled}
-              nightStart={defaults.nightStart || '20:00'}
-              nightEnd={defaults.nightEnd || '08:00'}
-            />
+          {familyKey === 'night' ? <NightPolicyEditor backHref={backHref} nightEnabled={defaults.nightEnabled} /> : null}
+
+          {familyKey === 'remote' ? (
+            <RemotePolicyEditor backHref={backHref} policyId={policyId} policy={remoteWorkPolicy} />
           ) : null}
         </PolicySectionCard>
       </form>

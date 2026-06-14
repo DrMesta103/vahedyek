@@ -12428,26 +12428,35 @@ body.tenant-select-route {
   padding: 0 16px;
 }
 
-.policy-form-stack:has(.overtime-policy-editor) {
+.policy-form-stack:has(.overtime-policy-editor),
+.policy-form-stack:has(.other-policy-editor),
+.policy-form-stack:has(.manual-policy-editor) {
   max-width: 1140px;
 }
 
-.policy-section-card:has(.overtime-policy-editor) {
+.policy-section-card:has(.overtime-policy-editor),
+.policy-section-card:has(.other-policy-editor),
+.policy-section-card:has(.manual-policy-editor) {
   border: 0;
   background: transparent;
   padding: 0;
 }
 
-.policy-section-card:has(.overtime-policy-editor) > .policy-section-card-header {
+.policy-section-card:has(.overtime-policy-editor) > .policy-section-card-header,
+.policy-section-card:has(.other-policy-editor) > .policy-section-card-header,
+.policy-section-card:has(.manual-policy-editor) > .policy-section-card-header {
   display: none;
 }
 
-.overtime-policy-editor {
+.overtime-policy-editor,
+.other-policy-editor,
+.manual-policy-editor {
   display: grid;
   gap: 22px;
 }
 
-.overtime-policy-editor .policy-info-strip {
+.overtime-policy-editor .policy-info-strip,
+.other-policy-editor .policy-info-strip {
   min-height: 48px;
   align-items: center;
   border-radius: 8px;
@@ -12456,34 +12465,49 @@ body.tenant-select-route {
   font-weight: 700;
 }
 
-.overtime-policy-panel-header {
+.overtime-policy-panel-header,
+.other-policy-panel-header,
+.manual-policy-panel-header {
   display: grid;
   gap: 8px;
   text-align: right;
 }
 
-.overtime-policy-panel-header p {
+.overtime-policy-panel-header p,
+.other-policy-panel-header p,
+.manual-policy-panel-header p {
   margin: 0;
   color: #94a3b8;
   font-size: 13px;
   line-height: 1.8;
 }
 
-.overtime-policy-toggles {
+.overtime-policy-toggles,
+.other-policy-toggles,
+.manual-policy-toggles {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 18px 24px;
 }
 
-.overtime-policy-editor .policy-form-actions {
+.overtime-policy-editor .policy-form-actions,
+.other-policy-editor .policy-form-actions,
+.manual-policy-editor .policy-form-actions {
   justify-content: flex-end;
   direction: rtl;
 }
 
-.overtime-policy-editor .policy-btn {
+.overtime-policy-editor .policy-btn,
+.other-policy-editor .policy-btn,
+.manual-policy-editor .policy-btn {
   min-height: 36px;
   border-radius: 10px;
   padding: 0 16px;
+}
+
+.other-policy-field,
+.manual-policy-field.is-full-width {
+  grid-column: 1 / -1;
 }
 
 .night-policy-editor .policy-btn {
@@ -12558,6 +12582,65 @@ body.tenant-select-route {
 
 .shift-policy-panel-grid > .shift-policy-field:nth-child(3):last-child {
   grid-column: 1 / -1;
+}
+
+.split-shift-policy-editor {
+  display: grid;
+  gap: 18px;
+}
+
+.split-shift-segment-panel {
+  gap: 16px;
+}
+
+.split-shift-segment-rules-header h3 {
+  margin: 0;
+  color: #f8fafc;
+  font-size: 16px;
+  font-weight: 800;
+  text-align: right;
+}
+
+.split-shift-segment-rules-header p {
+  margin: 6px 0 0;
+  color: rgba(148, 163, 184, 0.95);
+  font-size: 13px;
+  text-align: right;
+}
+
+.split-shift-preview-segment {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.employee-request-meta-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.employee-request-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(15, 23, 42, 0.72);
+  color: #e2e8f0;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 10px;
+}
+
+.employee-request-badge.is-blue {
+  color: #93c5fd;
+  border-color: rgba(59, 130, 246, 0.25);
+}
+
+.employee-request-badge.is-green {
+  color: #86efac;
+  border-color: rgba(34, 197, 94, 0.25);
 }
 
 .shift-policy-field {
@@ -12855,11 +12938,15 @@ body.tenant-select-route {
 
   .shift-policy-editor .policy-form-actions,
   .leave-policy-editor .policy-form-actions,
-  .overtime-policy-editor .policy-form-actions {
+  .overtime-policy-editor .policy-form-actions,
+  .other-policy-editor .policy-form-actions,
+  .manual-policy-editor .policy-form-actions {
     flex-direction: column;
   }
 
-  .overtime-policy-toggles {
+  .overtime-policy-toggles,
+  .other-policy-toggles,
+  .manual-policy-toggles {
     grid-template-columns: 1fr;
   }
 

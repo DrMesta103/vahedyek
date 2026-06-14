@@ -35,6 +35,12 @@ import {
 } from './calendar-shifts';
 import { serializeShiftTemplateFromWizard } from './shift-template-map';
 import { getPolicyFamilyMeta, getPolicySectionValues } from './policy-workspaces';
+import { applyVariantRule, getDefaultLeaveRule, LEAVE_VARIANT_TO_TYPE } from './leave-policy';
+import {
+  buildSplitShiftSegmentsPayload,
+  validateSplitShiftSegmentRules,
+} from './split-shift-policy';
+import { buildRemoteWorkPolicyPayload } from './remote-work-policy';
 import { seedSampleData } from './seed';
 import type { ContractDraftTemplate } from './contract-draft-templates';
 import { normalizeContractDraftTemplate } from './contract-draft-templates';
@@ -1480,11 +1486,20 @@ export async function savePolicyWorkspaceAction(formData: FormData) {
       ? (existingPolicy.sectionValues as Record<string, unknown>)
       : {};
 
-  const preserveWorkMeta = familyKey === 'work' && workSection === 'overtime' && existingPolicy;
-  const title = preserveWorkMeta
+  const preserveWorkMeta = familyKey === 'work' && (workSection === 'overtime' || workSection === 'other') && existingPolicy;
+  const preserveManualWorkMeta =
+    familyKey === 'manual' && existingPolicy && previousSectionValues.familyKey === 'work';
+  const preserveNightWorkMeta =
+    familyKey === 'night' && existingPolicy && previousSectionValues.familyKey === 'work';
+  const preserveRemoteWorkMeta =
+    familyKey === 'remote' && existingPolicy && previousSectionValues.familyKey === 'work';
+  const title = preserveWorkMeta || preserveManualWorkMeta || preserveNightWorkMeta || preserveRemoteWorkMeta
     ? existingPolicy.title
     : value(formData, 'title') || family.title;
-  const description = preserveWorkMeta ? existingPolicy.description : value(formData, 'description') || null;
+  const description =
+    preserveWorkMeta || preserveManualWorkMeta || preserveNightWorkMeta || preserveRemoteWorkMeta
+      ? existingPolicy.description
+      : value(formData, 'description') || null;
 
   const monthlyLimitInput = value(formData, 'monthlyLimit');
   const monthlyLimit =
@@ -1497,6 +1512,16 @@ export async function savePolicyWorkspaceAction(formData: FormData) {
   const preservedBool = (key: string) =>
     typeof previousSectionValues[key] === 'boolean' ? (previousSectionValues[key] as boolean) : false;
   const previousCalendarId = typeof previousSectionValues.calendarId === 'string' ? previousSectionValues.calendarId : null;
+  const previousLeavePolicy =
+    previousSectionValues.leavePolicy &&
+    typeof previousSectionValues.leavePolicy === 'object' &&
+    !Array.isArray(previousSectionValues.leavePolicy)
+      ? (previousSectionValues.leavePolicy as Record<string, unknown>)
+      : null;
+  const leaveType = LEAVE_VARIANT_TO_TYPE[variant];
+  const leaveRuleDefaults = leaveType ? getDefaultLeaveRule(leaveType) : null;
+  const leaveMonthlyLimitMinutes = Number(value(formData, 'monthlyLimit') || '0');
+  const leaveMaxUsageMinutes = Number(value(formData, 'maxUsageHours') || '0');
 
   const sectionValues =
     familyKey === 'work' && workSection === 'overtime'
@@ -1512,6 +1537,19 @@ export async function savePolicyWorkspaceAction(formData: FormData) {
           overtimeBeforeShift: boolValue(formData, 'overtimeBeforeShift'),
           overtimeAfterShift: boolValue(formData, 'overtimeAfterShift'),
         })
+      : familyKey === 'work' && workSection === 'other'
+        ? jsonValue({
+            ...previousSectionValues,
+            familyKey,
+            variant,
+            title,
+            description,
+            calendarId: calendarId || previousCalendarId,
+            requireGeofence: boolValue(formData, 'requireGeofence'),
+            faceRecognitionInFlow: boolValue(formData, 'faceRecognitionInFlow'),
+            consecutiveAbsenceWarning: boolValue(formData, 'consecutiveAbsenceWarning'),
+            maxConsecutiveAbsenceDays: Number(value(formData, 'maxConsecutiveAbsenceDays') || '0'),
+          })
       : familyKey === 'work' && workSection === 'base'
         ? jsonValue({
             ...previousSectionValues,
@@ -1531,6 +1569,119 @@ export async function savePolicyWorkspaceAction(formData: FormData) {
             overtimeBeforeShift: preservedBool('overtimeBeforeShift'),
             overtimeAfterShift: preservedBool('overtimeAfterShift'),
           })
+      : familyKey === 'leave' && leaveType && leaveRuleDefaults
+        ? jsonValue({
+            ...previousSectionValues,
+            familyKey,
+            variant,
+            title,
+            description,
+            calendarId: calendarId || previousCalendarId,
+            enabled: boolValue(formData, 'enabled'),
+            paid: boolValue(formData, 'paid'),
+            deductsFromEntitlementBalance: boolValue(formData, 'deductsFromEntitlementBalance'),
+            requireAttachment: boolValue(formData, 'requireAttachment'),
+            dailyModeEnabled: boolValue(formData, 'dailyModeEnabled'),
+            hourlyModeEnabled: boolValue(formData, 'hourlyModeEnabled'),
+            multiDayModeEnabled: boolValue(formData, 'multiDayModeEnabled'),
+            monthlyLimit:
+              leaveMonthlyLimitMinutes > 0 ? Math.round(leaveMonthlyLimitMinutes / 60) : null,
+            maxUsageHours:
+              leaveMaxUsageMinutes > 0 ? Math.round(leaveMaxUsageMinutes / 60) : null,
+            leavePolicy: applyVariantRule(previousLeavePolicy as any, leaveType, {
+              enabled: boolValue(formData, 'enabled'),
+              paid: boolValue(formData, 'paid'),
+              deductsFromEntitlementBalance: boolValue(formData, 'deductsFromEntitlementBalance'),
+              requiresAttachment: boolValue(formData, 'requireAttachment'),
+              requestModes: {
+                daily: boolValue(formData, 'dailyModeEnabled'),
+                hourly:
+                  leaveType === 'entitlement'
+                    ? boolValue(formData, 'hourlyModeEnabled')
+                    : leaveRuleDefaults.requestModes.hourly,
+                multiDay: boolValue(formData, 'multiDayModeEnabled'),
+              },
+              monthlyUsageCapHours:
+                leaveMonthlyLimitMinutes > 0 ? Math.round(leaveMonthlyLimitMinutes / 60) : null,
+              maxUsageHours:
+                leaveMaxUsageMinutes > 0 ? Math.round(leaveMaxUsageMinutes / 60) : null,
+            }),
+            rule: {
+              enabled: boolValue(formData, 'enabled'),
+              paid: boolValue(formData, 'paid'),
+              deductsFromEntitlementBalance: boolValue(formData, 'deductsFromEntitlementBalance'),
+              requiresAttachment: boolValue(formData, 'requireAttachment'),
+              requestModes: {
+                daily: boolValue(formData, 'dailyModeEnabled'),
+                hourly:
+                  leaveType === 'entitlement'
+                    ? boolValue(formData, 'hourlyModeEnabled')
+                    : leaveRuleDefaults.requestModes.hourly,
+                multiDay: boolValue(formData, 'multiDayModeEnabled'),
+              },
+              monthlyUsageCapHours:
+                leaveMonthlyLimitMinutes > 0 ? Math.round(leaveMonthlyLimitMinutes / 60) : null,
+              maxUsageHours:
+                leaveMaxUsageMinutes > 0 ? Math.round(leaveMaxUsageMinutes / 60) : null,
+            },
+          })
+        : familyKey === 'night'
+          ? jsonValue({
+              ...previousSectionValues,
+              familyKey: preserveNightWorkMeta ? 'work' : 'night',
+              variant,
+              title,
+              description,
+              calendarId: calendarId || previousCalendarId,
+              nightEnabled: boolValue(formData, 'nightEnabled'),
+              nightStart: null,
+              nightEnd: null,
+            })
+        : familyKey === 'manual'
+          ? jsonValue({
+              ...previousSectionValues,
+              familyKey: preserveManualWorkMeta ? 'work' : 'manual',
+              variant,
+              title,
+              description,
+              calendarId: calendarId || previousCalendarId,
+              manualEntryEnabled: boolValue(formData, 'manualEntryEnabled'),
+              manualRequireReason: boolValue(formData, 'manualRequireReason'),
+              requireAttachment: boolValue(formData, 'requireAttachment'),
+              manualPastDaysEnabled: boolValue(formData, 'manualPastDaysEnabled'),
+              manualMaxPastDays: Number(value(formData, 'manualMaxPastDays') || '0'),
+              manualMonthlyCapPerUser: Number(value(formData, 'manualMonthlyCapPerUser') || '0'),
+            })
+        : familyKey === 'remote'
+          ? jsonValue({
+              ...previousSectionValues,
+              familyKey: preserveRemoteWorkMeta ? 'work' : 'remote',
+              variant,
+              title,
+              description,
+              calendarId: calendarId || previousCalendarId,
+              ...buildRemoteWorkPolicyPayload(formData, previousSectionValues),
+            })
+        : familyKey === 'shift' && variant === 'split'
+          ? (() => {
+              const splitPayload = buildSplitShiftSegmentsPayload(formData, previousSectionValues);
+              const segments = splitPayload.splitShiftSegments;
+              const validationErrors = validateSplitShiftSegmentRules(segments);
+              if (validationErrors.length) throw new Error(validationErrors[0]);
+              return jsonValue({
+                ...previousSectionValues,
+                familyKey,
+                variant,
+                title,
+                description,
+                calendarId,
+                ...splitPayload,
+                startTime: segments[0]?.startTime ?? null,
+                endTime: segments[0]?.endTime ?? null,
+                workStartWindow: segments[1]?.startTime ?? null,
+                workEndWindow: segments[1]?.endTime ?? null,
+              });
+            })()
         : jsonValue({
             familyKey,
             variant,

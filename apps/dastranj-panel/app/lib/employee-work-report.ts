@@ -5,6 +5,7 @@ import { DEFAULT_PAYROLL_SETTINGS } from './payroll-business-settings';
 import { getEmployee } from './data';
 import { getCurrentEmployeeContract } from './employee-contracts.server';
 import { getPolicySectionValues } from './policy-workspaces';
+import { parseRemoteWorkPolicy } from './remote-work-policy';
 import { getDayDetails } from './calendar-grid';
 import { parseCalendarStoredEvents, type CalendarStoredEvent } from './calendar-events';
 import {
@@ -255,6 +256,7 @@ type RawRequestRow = {
   endTime: string | null;
   dateTime: string | null;
   calculatedDurationMinutes: number | null;
+  calculationMeta: unknown;
   description: string | null;
   createdAt: Date;
   updatedAt: Date;
@@ -675,6 +677,40 @@ function isEntitledLeaveRequest(type: RequestType) {
   return type === 'daily_leave' || type === 'hourly_leave';
 }
 
+function requestMetaObject(request: RawRequestRow) {
+  return request.calculationMeta && typeof request.calculationMeta === 'object' && !Array.isArray(request.calculationMeta)
+    ? (request.calculationMeta as Record<string, unknown>)
+    : {};
+}
+
+function requestLeaveType(request: RawRequestRow) {
+  const meta = requestMetaObject(request);
+  if (typeof meta.leaveType === 'string') return meta.leaveType;
+  if (request.requestType === 'daily_leave' || request.requestType === 'hourly_leave') return 'entitlement';
+  if (request.requestType === 'reward_leave') return 'bonus';
+  if (request.requestType === 'unpaid_leave') return 'unpaid';
+  if (request.requestType === 'sick_leave') return 'sick';
+  return null;
+}
+
+function requestIsLeave(request: RawRequestRow) {
+  return requestLeaveType(request) != null;
+}
+
+function requestDeductsEntitlement(request: RawRequestRow) {
+  const meta = requestMetaObject(request);
+  if (typeof meta.deductsFromEntitlementBalance === 'boolean') {
+    return meta.deductsFromEntitlementBalance;
+  }
+  return request.requestType === 'daily_leave' || request.requestType === 'hourly_leave';
+}
+
+function requestIsPaidLeave(request: RawRequestRow) {
+  const meta = requestMetaObject(request);
+  if (typeof meta.paid === 'boolean') return meta.paid;
+  return request.requestType !== 'unpaid_leave';
+}
+
 function requestFamily(type: RequestType) {
   if (isLeaveRequest(type)) return 'leave';
   if (type === 'overtime') return 'overtime';
@@ -793,6 +829,7 @@ function resolveDailyRequiredMinutes(contract: EmployeeCurrentContractSummary | 
 
 function resolvePolicyConfig(policy: WorkReportPolicy | null) {
   const values = policy?.sectionValues ?? {};
+  const remotePolicy = parseRemoteWorkPolicy(values);
   return {
     startTime: typeof values.startTime === 'string' ? values.startTime : '',
     endTime: typeof values.endTime === 'string' ? values.endTime : '',
@@ -803,7 +840,7 @@ function resolvePolicyConfig(policy: WorkReportPolicy | null) {
     maxEarlyLeaveMinutes: Number(values.maxEarlyLeaveMinutes ?? 0) || 0,
     entryGraceMinutes: Number(values.entryGraceMinutes ?? 0) || 0,
     exitGraceMinutes: Number(values.exitGraceMinutes ?? 0) || 0,
-    allowRemote: typeof values.allowRemote === 'boolean' ? values.allowRemote : true,
+    allowRemote: remotePolicy.enabled,
   };
 }
 
@@ -1182,19 +1219,19 @@ export async function getEmployeeWorkReportData(
     const deductedBreakMinutes = calculateDeductedBreakMinutes(date, expectedShifts, attendanceSessions);
 
     const leaveMinutes = approvedRequests
-      .filter((request) => isLeaveRequest(request.requestType))
+      .filter((request) => requestIsLeave(request))
       .reduce((sum, request) => sum + requestDurationForDate(request, date, requiredMinutesBase), 0);
     const entitledLeaveMinutes = approvedRequests
-      .filter((request) => isEntitledLeaveRequest(request.requestType))
+      .filter((request) => requestDeductsEntitlement(request))
       .reduce((sum, request) => sum + requestDurationForDate(request, date, requiredMinutesBase), 0);
     const unpaidLeaveMinutes = approvedRequests
-      .filter((request) => request.requestType === 'unpaid_leave')
+      .filter((request) => requestIsLeave(request) && !requestIsPaidLeave(request))
       .reduce((sum, request) => sum + requestDurationForDate(request, date, requiredMinutesBase), 0);
     const sickLeaveMinutes = approvedRequests
-      .filter((request) => request.requestType === 'sick_leave')
+      .filter((request) => requestLeaveType(request) === 'sick')
       .reduce((sum, request) => sum + requestDurationForDate(request, date, requiredMinutesBase), 0);
     const encouragementLeaveMinutes = approvedRequests
-      .filter((request) => request.requestType === 'reward_leave')
+      .filter((request) => requestLeaveType(request) === 'bonus')
       .reduce((sum, request) => sum + requestDurationForDate(request, date, requiredMinutesBase), 0);
     const missionMinutes = approvedRequests
       .filter((request) => request.requestType === 'mission')
