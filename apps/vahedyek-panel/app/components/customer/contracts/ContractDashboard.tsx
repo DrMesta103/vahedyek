@@ -2,22 +2,12 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { buildBuyerFinancialSummary, type BuyerFinancialSummary } from '../../../lib/contractBuyerFinancialSummary';
+import { getContractDetails } from '../../../lib/contractDraftClient';
+import { getReceiptsStorageKey, normalizeReceiptRecords } from '../../../lib/contractReceipts';
 
 interface ContractDashboardProps {
   contractId: string;
-}
-
-interface ContractInfo {
-  contractNumber: string;
-  contractDate: string;
-  type: string;
-  status: string;
-  blockName: string;
-  floorNumber: string;
-  unitIdentifier: string;
-  totalAmount: number;
-  paidAmount: number;
-  remainingAmount: number;
 }
 
 const DASHBOARD_SECTIONS = [
@@ -46,7 +36,7 @@ const DASHBOARD_SECTIONS = [
     id: 'financial-report',
     title: 'گزارش مالی',
     icon: 'fa-chart-pie',
-    description: 'نمودارها و گزارش‌های مالی',
+    description: 'خلاصه مالی امن همان قرارداد',
     color: '#f59e0b',
   },
   {
@@ -65,32 +55,67 @@ const DASHBOARD_SECTIONS = [
   },
 ];
 
+function formatCurrency(amount: number) {
+  return `${new Intl.NumberFormat('fa-IR').format(amount)} ریال`;
+}
+
+function statusLabel(status: string | null) {
+  switch (status) {
+    case 'completed':
+      return 'تکمیل شده';
+    case 'pending_approval':
+      return 'در انتظار تأیید';
+    case 'appendix_draft':
+      return 'متمم پیش‌نویس';
+    case 'draft':
+      return 'پیش‌نویس';
+    default:
+      return 'فعال';
+  }
+}
+
 export default function ContractDashboard({ contractId }: ContractDashboardProps) {
-  const [contract, setContract] = useState<ContractInfo | null>(null);
+  const [summary, setSummary] = useState<BuyerFinancialSummary | null>(null);
+  const [contractStatus, setContractStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // TODO: Fetch real data from API
-    setTimeout(() => {
-      setContract({
-        contractNumber: '1001',
-        contractDate: '1402/05/12',
-        type: 'پیش‌فروش',
-        status: 'فعال',
-        blockName: 'بلوک A',
-        floorNumber: '3',
-        unitIdentifier: 'واحد 12',
-        totalAmount: 1500000000,
-        paidAmount: 900000000,
-        remainingAmount: 600000000,
-      });
-      setLoading(false);
-    }, 500);
-  }, [contractId]);
+    let mounted = true;
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('fa-IR').format(amount) + ' ریال';
-  };
+    const load = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const contract = await getContractDetails(contractId, { view: 'buyer-safe' });
+        const storedReceipts = typeof window === 'undefined' ? null : window.localStorage.getItem(getReceiptsStorageKey(contractId));
+        let rawReceipts: unknown = [];
+        try {
+          rawReceipts = storedReceipts ? JSON.parse(storedReceipts) : [];
+        } catch {
+          rawReceipts = [];
+        }
+        const receipts = normalizeReceiptRecords(rawReceipts);
+
+        if (!mounted) return;
+        setContractStatus(String(contract?.status ?? ''));
+        setSummary(buildBuyerFinancialSummary(contract, receipts));
+      } catch (loadError) {
+        if (!mounted) return;
+        setSummary(null);
+        setContractStatus(null);
+        setError(loadError instanceof Error ? loadError.message : 'خطا در دریافت اطلاعات قرارداد');
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    void load();
+
+    return () => {
+      mounted = false;
+    };
+  }, [contractId]);
 
   if (loading) {
     return (
@@ -101,12 +126,12 @@ export default function ContractDashboard({ contractId }: ContractDashboardProps
     );
   }
 
-  if (!contract) {
+  if (error || !summary) {
     return (
       <div className="empty-state">
         <i className="fa fa-exclamation-triangle" style={{ fontSize: '64px', color: '#ef4444' }}></i>
         <h3>قرارداد یافت نشد</h3>
-        <p>قرارداد مورد نظر یافت نشد یا دسترسی به آن ندارید.</p>
+        <p>{error || 'قرارداد مورد نظر یافت نشد یا دسترسی به آن ندارید.'}</p>
       </div>
     );
   }
@@ -115,19 +140,19 @@ export default function ContractDashboard({ contractId }: ContractDashboardProps
     <div className="contract-dashboard">
       <div className="contract-info-header">
         <div className="contract-info-main">
-          <h1>قرارداد {contract.contractNumber}</h1>
+          <h1>قرارداد {summary.contractNumber}</h1>
           <div className="contract-info-details">
             <span>
               <i className="fa fa-calendar"></i>
-              {contract.contractDate}
+              {summary.contractDate}
             </span>
             <span>
               <i className="fa fa-tag"></i>
-              {contract.type}
+              {summary.contractTypeLabel}
             </span>
             <span>
               <i className="fa fa-building"></i>
-              {contract.blockName} - طبقه {contract.floorNumber} - {contract.unitIdentifier}
+              {summary.unitLabel}
             </span>
           </div>
         </div>
@@ -135,18 +160,24 @@ export default function ContractDashboard({ contractId }: ContractDashboardProps
         <div className="contract-financial-summary">
           <div className="financial-summary-item">
             <span className="label">مبلغ کل</span>
-            <span className="value">{formatCurrency(contract.totalAmount)}</span>
+            <span className="value">{formatCurrency(summary.totalAmountRial ?? 0)}</span>
           </div>
           <div className="financial-summary-item">
-            <span className="label">پرداخت شده</span>
+            <span className="label">وضعیت</span>
+            <span className="value" style={{ color: '#0f766e' }}>
+              {statusLabel(contractStatus)}
+            </span>
+          </div>
+          <div className="financial-summary-item">
+            <span className="label">پرداخت شده تأییدشده</span>
             <span className="value" style={{ color: '#10b981' }}>
-              {formatCurrency(contract.paidAmount)}
+              {formatCurrency(summary.confirmedPaidRial ?? 0)}
             </span>
           </div>
           <div className="financial-summary-item">
             <span className="label">مانده بدهی</span>
             <span className="value" style={{ color: '#ef4444' }}>
-              {formatCurrency(contract.remainingAmount)}
+              {formatCurrency(summary.remainingDebtRial ?? 0)}
             </span>
           </div>
         </div>
@@ -160,7 +191,7 @@ export default function ContractDashboard({ contractId }: ContractDashboardProps
             className="dashboard-section-card"
             style={{ borderTopColor: section.color }}
           >
-            <div className="section-icon" style={{ background: section.color + '20', color: section.color }}>
+            <div className="section-icon" style={{ background: `${section.color}20`, color: section.color }}>
               <i className={`fa ${section.icon}`}></i>
             </div>
             <div className="section-content">

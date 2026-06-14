@@ -13,10 +13,14 @@ import { createPortal } from 'react-dom';
 import type { LucideIcon } from 'lucide-react';
 import { FileText, Layers, Wallet, X } from 'lucide-react';
 import { useParams } from 'next/navigation';
+import { useAuthContext } from '../../../../hooks/useAuthContext';
 import PanelLayout from '../../../../components/PanelLayout';
 import { DueMonthAccordionList, type DueRegisterReceiptPayload } from '../../../../components/contracts/DueMonthAccordionList';
+import ContractFinancialCharts from '../../../../components/contracts/financial-report/ContractFinancialCharts';
+import { HistoryTimelineView } from '../../../../components/contracts/history/HistoryTimelineView';
 import { FieldHint } from '../../../../components/ui/field-hint';
-import { getContractDetails } from '../../../../lib/contractDraftClient';
+import { getContractDetails, getContractHistory } from '../../../../lib/contractDraftClient';
+import { buildApprovedReceiptTrend, buildInstallmentStatusItems } from '../../../../lib/contractFinancialChartUtils';
 import {
   buildReceiptAllocation,
   type ContractReceiptAllocationResult,
@@ -26,6 +30,7 @@ import { computeContractTotalRialFromFinancial } from '../../../../lib/contractF
 import { getReceiptsStorageKey, normalizeReceiptRecords, type RegisteredReceiptRecord } from '../../../../lib/contractReceipts';
 import { buildPaymentHistoryMonthBucketsFromRows } from '../../../../lib/contractPaymentMonthBuckets';
 import { buildContractPenaltyTimeline } from '../../../../lib/contractPenaltyEngine';
+import type { ContractHistoryResponse } from '../../../../lib/contractHistory';
 import {
   isFinancialLineHeaderCategoryId,
   isFinancialLineSubtreeCategoryId,
@@ -117,11 +122,16 @@ function formatMoneyRialNullable(valueRial: number | null | undefined) {
   return formatMoneyRial(valueRial);
 }
 
+function formatMoneyRialOrUnknown(valueRial: number | null | undefined) {
+  if (valueRial == null) return 'نامشخص';
+  return formatMoneyRial(valueRial);
+}
+
 const TOOLTIP_LINE_BASE =
   'مبلغ این ردیف بر اساس سقف زیربخش‌ها؛ بدون لحاظ جریمه‌ها و تخفیف قرارداد.';
 
 const TT_LEDGER_PAID_TOTAL =
-  'جمع پرداخت اصل (بر اساس فیش‌های ثبت‌شده و تخصیص به سررسیدها) به‌علاوهٔ پرداخت جریمه در صورت وجود در API؛ اگر جریمهٔ پرداختی ثبت نشده باشد، همان پرداخت اصل در مجموع لحاظ می‌شود.';
+  'جمع پرداخت اصل بر اساس فیش‌های ثبت‌شده و تخصیص به سررسیدها، به‌علاوهٔ پرداخت جریمه در صورت وجود در داده دریافتی است؛ اگر جریمهٔ پرداختی ثبت نشده باشد، همان پرداخت اصل در مجموع لحاظ می‌شود.';
 
 function LedgerDetailPopover({
   icon: Icon,
@@ -227,6 +237,64 @@ type SummaryFinancialRowMetrics = {
   paidTotalRial: number | null;
 };
 
+type PenaltyReportRow = {
+  id: string;
+  causeLabel: string;
+  relatedDueLabel: string;
+  startDelayDateLabel: string;
+  startDelayDateValue: string | null;
+  delayDays: number | null;
+  delayDaysLabel: string;
+  amountRial: number;
+  amountLabel: string;
+  statusLabel: string;
+  statusTone: 'emerald' | 'amber' | 'rose' | 'slate';
+  paidRial: number;
+  paidLabel: string;
+  forgivenRial: number | null;
+  forgivenLabel: string;
+  remainingRial: number;
+  remainingLabel: string;
+};
+
+type ContractRuleSnapshotSource = 'contract' | 'business-default' | 'default';
+
+type ContractRuleSnapshot = {
+  source: ContractRuleSnapshotSource;
+  updatedAt: string | null;
+  state: {
+    active: boolean;
+    activeTab: string;
+    values: Record<string, string | boolean>;
+  };
+};
+
+type ContractRuleSummaryCard = {
+  id: string;
+  title: string;
+  tone: 'emerald' | 'amber' | 'slate';
+  statusLabel: string;
+  sourceLabel: string;
+  updatedAtLabel: string;
+  details: Array<{ label: string; value: string }>;
+  note: string;
+};
+
+type DueStatusFilter = 'all' | 'overdue' | 'future' | 'paid' | 'partial';
+type ReceiptStatusFilter = 'all' | 'pending' | 'approved' | 'rejected';
+type PenaltyStatusFilter = 'all' | 'open' | 'paid' | 'forgiven';
+type SortMode = 'due-asc' | 'due-desc' | 'amount-asc' | 'amount-desc';
+
+function toNumberOrZero(value: unknown) {
+  const num = Number(value ?? 0);
+  return Number.isFinite(num) ? num : 0;
+}
+
+function compareByAmount(a: number, b: number, mode: SortMode) {
+  const diff = a - b;
+  return mode === 'amount-desc' ? -diff : diff;
+}
+
 function buildPaidByCategoryIdFromAllocation(
   allocation: ContractReceiptAllocationResult,
   sourceKind: 'principal' | 'penalty',
@@ -325,6 +393,301 @@ function formatSubjectUnitLocation(subject: { unitName?: string; floorName?: str
   return parts.join(' ، ');
 }
 
+function formatDateFa(value?: string | null) {
+  if (!value) return '—';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '—';
+  return date.toLocaleDateString('fa-IR');
+}
+
+function countDelayDays(fromDate: Date | null, toDate: Date) {
+  if (!fromDate) return null;
+  const start = new Date(fromDate);
+  const end = new Date(toDate);
+  start.setHours(0, 0, 0, 0);
+  end.setHours(0, 0, 0, 0);
+  const diff = end.getTime() - start.getTime();
+  if (diff < 0) return null;
+  return Math.floor(diff / 86_400_000) + 1;
+}
+
+function formatRuleSourceLabel(source: ContractRuleSnapshotSource) {
+  if (source === 'contract') return 'ذخیره‌شده روی همین قرارداد';
+  if (source === 'business-default') return 'برداشته‌شده از تنظیمات کسب‌وکار';
+  return 'مقدار پیش‌فرض سیستم';
+}
+
+function formatRuleSourceNote(source: ContractRuleSnapshotSource) {
+  if (source === 'contract') return 'این مقدار از داده ذخیره‌شده همین قرارداد خوانده شده است.';
+  if (source === 'business-default') return 'برای این قرارداد تنظیم اختصاصی پیدا نشد و نمایش از تنظیمات کسب‌وکار پر شده است.';
+  return 'هیچ تنظیم ذخیره‌شده‌ای پیدا نشد و مقدار پیش‌فرض سیستم نمایش داده می‌شود.';
+}
+
+function formatRuleBoolean(value: string | boolean | undefined) {
+  return value ? 'بله' : 'خیر';
+}
+
+function formatRuleText(value: string | boolean | undefined, fallback = 'ثبت نشده') {
+  if (typeof value !== 'string') return fallback;
+  const normalized = value.trim();
+  return normalized ? normalized : fallback;
+}
+
+function formatRuleAmount(value: string | boolean | undefined, suffix: 'ریال' | '٪') {
+  const normalized = formatRuleText(value, '');
+  return normalized ? `${normalized} ${suffix}` : 'ثبت نشده';
+}
+
+function parseRuleJsonArray(value: string | boolean | undefined) {
+  if (typeof value !== 'string' || !value.trim()) return [] as string[];
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed.map((item) => String(item ?? '').trim()).filter(Boolean) : [];
+  } catch {
+    return [];
+  }
+}
+
+function getInterestModeMeta(activeTab: string) {
+  if (activeTab === 'compound-interest') {
+    return {
+      label: 'سود مرکب',
+      aprKey: 'interestAprCompound',
+      penaltyKey: 'interestPenaltyEnabledCompound',
+      togetherKey: 'interestTogetherPaymentCompound',
+      endKey: 'interestPrincipalAtEndCompound',
+      reducingKey: 'interestReducingPrincipalCompound',
+      extraLabel: 'دوره محاسبه',
+      extraValueKey: 'interestCompoundPeriod',
+    };
+  }
+  if (activeTab === 'remaining-debt-interest') {
+    return {
+      label: 'سود بر مانده بدهی',
+      aprKey: 'interestAprRemaining',
+      penaltyKey: 'interestPenaltyEnabledRemaining',
+      togetherKey: 'interestTogetherPaymentRemaining',
+      endKey: 'interestPrincipalAtEndRemaining',
+      reducingKey: 'interestReducingPrincipalRemaining',
+      extraLabel: null,
+      extraValueKey: null,
+    };
+  }
+  return {
+    label: 'سود ساده',
+    aprKey: 'interestApr',
+    penaltyKey: 'interestPenaltyEnabled',
+    togetherKey: 'interestTogetherPayment',
+    endKey: 'interestPrincipalAtEnd',
+    reducingKey: 'interestReducingPrincipal',
+    extraLabel: null,
+    extraValueKey: null,
+  };
+}
+
+function describeInterestPaymentPattern(values: Record<string, string | boolean>, activeTab: string) {
+  const meta = getInterestModeMeta(activeTab);
+  if (values[meta.endKey]) return 'فقط سود در دوره و تسویه اصل در پایان';
+  if (values[meta.togetherKey]) return 'پرداخت همزمان اصل و سود';
+  if (values[meta.reducingKey]) return 'سود کاهشی بر مبنای اصل';
+  return 'الگوی ویژه‌ای ثبت نشده';
+}
+
+function describeBuilderPenaltyMode(mode: string | boolean | undefined) {
+  if (mode === 'percent') return 'درصدی';
+  if (mode === 'progressive') return 'تصاعدی';
+  return 'ثابت';
+}
+
+function describeBuilderPenaltySection(
+  values: Record<string, string | boolean>,
+  {
+    enabledKey,
+    modeKey,
+    periodKey,
+    fixedKey,
+    percentKey,
+  }: {
+    enabledKey: string;
+    modeKey: string;
+    periodKey: string;
+    fixedKey: string;
+    percentKey: string;
+  },
+) {
+  if (!values[enabledKey]) return 'غیرفعال';
+  const mode = String(values[modeKey] ?? 'fixed');
+  const period = formatRuleText(values[periodKey], 'بدون دوره');
+  if (mode === 'percent') {
+    return `${describeBuilderPenaltyMode(mode)} · ${formatRuleAmount(values[percentKey], '٪')} · ${period}`;
+  }
+  if (mode === 'progressive') {
+    return `${describeBuilderPenaltyMode(mode)} · ${period}`;
+  }
+  return `${describeBuilderPenaltyMode(mode)} · ${formatRuleAmount(values[fixedKey], 'ریال')} · ${period}`;
+}
+
+function buildForgivenessRuleCard(snapshot: ContractRuleSnapshot | null | undefined): ContractRuleSummaryCard {
+  const state = snapshot?.state ?? { active: false, activeTab: '', values: {} };
+  const values = state.values;
+  const enabledEntries = parseRuleJsonArray(values.forgiveEnabledEntryIds);
+  const scopeLabel = values.forgiveScope === 'itemized' ? 'موردی' : 'کل قرارداد';
+  const modeLabel = values.forgiveValueMode === 'percent' ? 'درصدی' : 'مبلغی';
+  const statusActive = state.active || Boolean(values.forgiveAllowed);
+
+  return {
+    id: 'forgiveness',
+    title: 'بخشودگی',
+    tone: statusActive ? 'emerald' : 'slate',
+    statusLabel: statusActive ? 'فعال' : 'غیرفعال',
+    sourceLabel: formatRuleSourceLabel(snapshot?.source ?? 'default'),
+    updatedAtLabel: formatDateFa(snapshot?.updatedAt),
+    details: [
+      { label: 'دامنه اعمال', value: scopeLabel },
+      { label: 'نوع مقدار', value: modeLabel },
+      {
+        label: 'پوشش آیتم‌ها',
+        value: scopeLabel === 'موردی' ? `${enabledEntries.length.toLocaleString('fa-IR')} مورد` : 'کل قرارداد',
+      },
+      { label: 'نیاز به تایید مدیر', value: formatRuleBoolean(values.forgiveManagerApproval) },
+    ],
+    note: `${formatRuleSourceNote(snapshot?.source ?? 'default')} مبلغ بخشودگیِ اعمال‌شده روی جریمه‌ها فقط وقتی در گزارش مالی دیده می‌شود که داده واقعی آن ثبت شده باشد.`,
+  };
+}
+
+function buildInterestRuleCard(snapshot: ContractRuleSnapshot | null | undefined): ContractRuleSummaryCard {
+  const state = snapshot?.state ?? { active: false, activeTab: '', values: {} };
+  const values = state.values;
+  const meta = getInterestModeMeta(state.activeTab);
+  const details: Array<{ label: string; value: string }> = [
+    { label: 'مدل محاسبه', value: meta.label },
+    { label: 'نرخ APR', value: formatRuleAmount(values[meta.aprKey], '٪') },
+    { label: 'جریمه سود معوق', value: formatRuleBoolean(values[meta.penaltyKey]) },
+    { label: 'الگوی بازپرداخت', value: describeInterestPaymentPattern(values, state.activeTab) },
+  ];
+
+  if (meta.extraLabel && meta.extraValueKey) {
+    details.splice(2, 0, { label: meta.extraLabel, value: formatRuleText(values[meta.extraValueKey]) });
+  }
+
+  return {
+    id: 'interest',
+    title: 'سود دریافتی',
+    tone: state.active ? 'emerald' : 'slate',
+    statusLabel: state.active ? 'فعال' : 'غیرفعال',
+    sourceLabel: formatRuleSourceLabel(snapshot?.source ?? 'default'),
+    updatedAtLabel: formatDateFa(snapshot?.updatedAt),
+    details,
+    note: `${formatRuleSourceNote(snapshot?.source ?? 'default')} موتور اعمال خودکار سود در جدول timeline این صفحه فقط به اندازه داده فعلی قرارداد قابل تفسیر است.`,
+  };
+}
+
+function buildBuilderPenaltyRuleCard(snapshot: ContractRuleSnapshot | null | undefined): ContractRuleSummaryCard {
+  const state = snapshot?.state ?? { active: false, activeTab: '', values: {} };
+  const values = state.values;
+  const enabledCount = [values.unitDeliveryDelayEnabled, values.materialSpecsChangeEnabled, values.areaDifferenceEnabled].filter(Boolean).length;
+
+  return {
+    id: 'builder-penalty',
+    title: 'جریمه سازنده',
+    tone: state.active && enabledCount > 0 ? 'amber' : 'slate',
+    statusLabel: state.active ? (enabledCount > 0 ? 'فعال' : 'بدون سناریوی فعال') : 'غیرفعال',
+    sourceLabel: formatRuleSourceLabel(snapshot?.source ?? 'default'),
+    updatedAtLabel: formatDateFa(snapshot?.updatedAt),
+    details: [
+      { label: 'موارد فعال', value: enabledCount > 0 ? `${enabledCount.toLocaleString('fa-IR')} مورد` : 'هیچ‌کدام' },
+      {
+        label: 'تاخیر تحویل واحد',
+        value: describeBuilderPenaltySection(values, {
+          enabledKey: 'unitDeliveryDelayEnabled',
+          modeKey: 'unitDeliveryDelayMode',
+          periodKey: 'unitDeliveryDelayPeriod',
+          fixedKey: 'unitDeliveryDelayFixedAmount',
+          percentKey: 'unitDeliveryDelayPercentAmount',
+        }),
+      },
+      {
+        label: 'تغییر مصالح/مشخصات',
+        value: describeBuilderPenaltySection(values, {
+          enabledKey: 'materialSpecsChangeEnabled',
+          modeKey: 'materialSpecsChangeMode',
+          periodKey: 'materialSpecsChangePeriod',
+          fixedKey: 'materialSpecsChangeFixedAmount',
+          percentKey: 'materialSpecsChangePercentAmount',
+        }),
+      },
+      {
+        label: 'اختلاف متراژ',
+        value: describeBuilderPenaltySection(values, {
+          enabledKey: 'areaDifferenceEnabled',
+          modeKey: 'areaDifferenceMode',
+          periodKey: 'areaDifferencePeriod',
+          fixedKey: 'areaDifferenceFixedAmount',
+          percentKey: 'areaDifferencePercentAmount',
+        }),
+      },
+    ],
+    note: `${formatRuleSourceNote(snapshot?.source ?? 'default')} اجرای کامل مالی این سناریوها در گزارش فقط در حد داده عملیاتی ثبت‌شده قابل نمایش است.`,
+  };
+}
+
+function formatDaysFa(days: number | null | undefined) {
+  if (days == null) return '—';
+  return `${days.toLocaleString('fa-IR')} روز`;
+}
+
+type FinancialHistoryEventTone = 'emerald' | 'amber' | 'rose' | 'slate' | 'cyan';
+
+type FinancialHistoryEventDetail = {
+  label: string;
+  value: string;
+};
+
+type FinancialHistoryEventRow = {
+  id: string;
+  kind: 'receipt-created' | 'receipt-reviewed' | 'receipt-partial' | 'penalty-applied';
+  title: string;
+  tone: FinancialHistoryEventTone;
+  sourceLabel: string;
+  happenedAtValue: string | null;
+  happenedAtLabel: string;
+  details: FinancialHistoryEventDetail[];
+};
+
+function resolveTimelineTimestamp(value?: string | null) {
+  if (!value) return null;
+  const fromDueString = toComparableDateFromDueString(value);
+  if (fromDueString) return fromDueString.getTime();
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed.getTime();
+}
+
+function getReceiptReviewLabel(status: RegisteredReceiptRecord['reviewStatus'] | undefined) {
+  if (status === 'approved') return 'تأیید شده';
+  if (status === 'rejected') return 'رد شده';
+  if (status === 'pending') return 'در انتظار بررسی';
+  return 'ثبت‌شده / نامشخص';
+}
+
+function getReceiptReviewTone(status: RegisteredReceiptRecord['reviewStatus'] | undefined): FinancialHistoryEventTone {
+  if (status === 'approved') return 'emerald';
+  if (status === 'rejected') return 'rose';
+  if (status === 'pending') return 'amber';
+  return 'slate';
+}
+
+function getFinancialHistoryToneClasses(tone: FinancialHistoryEventTone) {
+  if (tone === 'emerald') return 'border-emerald-200 bg-emerald-50 text-emerald-800';
+  if (tone === 'rose') return 'border-rose-200 bg-rose-50 text-rose-700';
+  if (tone === 'amber') return 'border-amber-200 bg-amber-50 text-amber-800';
+  if (tone === 'cyan') return 'border-cyan-200 bg-cyan-50 text-cyan-800';
+  return 'border-slate-200 bg-slate-100 text-slate-700';
+}
+
+function getStatusToneClasses(tone: 'emerald' | 'amber' | 'rose' | 'slate' | 'cyan') {
+  return getFinancialHistoryToneClasses(tone);
+}
+
 export default function ContractReportsPage() {
   const params = useParams<{ contractId: string }>();
   const contractId = params?.contractId;
@@ -332,6 +695,8 @@ export default function ContractReportsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [contract, setContract] = useState<any>(null);
+  const [financialHistory, setFinancialHistory] = useState<ContractHistoryResponse | null>(null);
+  const [financialHistoryError, setFinancialHistoryError] = useState('');
 
   useEffect(() => {
     let mounted = true;
@@ -346,6 +711,27 @@ export default function ContractReportsPage() {
         if (mounted) setError(e instanceof Error ? e.message : 'دریافت گزارشات انجام نشد.');
       } finally {
         if (mounted) setLoading(false);
+      }
+    };
+    void load();
+    return () => {
+      mounted = false;
+    };
+  }, [contractId]);
+
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      if (!contractId) return;
+      try {
+        setFinancialHistoryError('');
+        const data = await getContractHistory(String(contractId));
+        if (mounted) setFinancialHistory(data as ContractHistoryResponse);
+      } catch (e) {
+        if (mounted) {
+          setFinancialHistory(null);
+          setFinancialHistoryError(e instanceof Error ? e.message : 'بازیابی تاریخچه مالی انجام نشد.');
+        }
       }
     };
     void load();
@@ -386,6 +772,12 @@ export default function ContractReportsPage() {
   const [selectedSummaryGroupId, setSelectedSummaryGroupId] = useState<string | null>(null);
   const [registeredReceipts, setRegisteredReceipts] = useState<RegisteredReceiptRecord[]>([]);
   const [receiptDetails, setReceiptDetails] = useState<ReceiptDetailsState>(null);
+  const [dueStatusFilter, setDueStatusFilter] = useState<DueStatusFilter>('all');
+  const [receiptStatusFilter, setReceiptStatusFilter] = useState<ReceiptStatusFilter>('all');
+  const [penaltyStatusFilter, setPenaltyStatusFilter] = useState<PenaltyStatusFilter>('all');
+  const [dueSortMode, setDueSortMode] = useState<SortMode>('due-asc');
+  const [receiptSortMode, setReceiptSortMode] = useState<SortMode>('due-desc');
+  const [penaltySortMode, setPenaltySortMode] = useState<SortMode>('due-asc');
 
   useEffect(() => {
     if (!contractId || typeof window === 'undefined') return;
@@ -417,6 +809,560 @@ export default function ContractReportsPage() {
     () => buildReceiptAllocation({ buckets: paymentMonthBuckets, receipts: registeredReceipts }),
     [paymentMonthBuckets, registeredReceipts],
   );
+
+  const receiptReportRows = useMemo(
+    () =>
+      registeredReceipts.map((receipt) => {
+        const allocation = receiptAllocation.receiptById[receipt.id];
+        const allocatedAmountRial = allocation?.allocatedAmountRial ?? 0;
+        const dueAmountRial = Number(receipt.dueAmount ?? 0) > 0 ? Number(receipt.dueAmount) : null;
+        const shortageRial = dueAmountRial != null && receipt.paidAmountRial < dueAmountRial ? dueAmountRial - receipt.paidAmountRial : null;
+        const overpaymentRial =
+          dueAmountRial != null
+            ? receipt.paidAmountRial > dueAmountRial
+              ? receipt.paidAmountRial - dueAmountRial
+              : allocation?.walletAmountRial ?? null
+            : allocation?.walletAmountRial ?? null;
+        const reviewStatus = receipt.reviewStatus ?? null;
+        const statusLabel =
+          reviewStatus === 'approved'
+            ? 'تأییدشده'
+            : reviewStatus === 'rejected'
+              ? 'ردشده'
+              : reviewStatus === 'pending'
+                ? 'در انتظار بررسی'
+                : 'ثبت‌شده / نامشخص';
+        const reviewStatusTone =
+          reviewStatus === 'approved'
+            ? 'emerald'
+            : reviewStatus === 'rejected'
+              ? 'rose'
+              : reviewStatus === 'pending'
+                ? 'amber'
+                : 'slate';
+
+        return {
+          id: receipt.id,
+          receipt,
+          createdAtLabel: formatDateFa(receipt.createdAt),
+          amountLabel: formatMoneyRial(receipt.paidAmountRial),
+          depositorLabel: receipt.depositorName.trim() || '—',
+          statusLabel,
+          reviewStatusTone,
+          reviewedByLabel: receipt.reviewedBy?.trim() || '—',
+          rejectionReasonLabel:
+            reviewStatus === 'rejected' ? receipt.rejectionReason?.trim() || 'اطلاعات علت رد در داده موجود نیست' : '—',
+          allocatedAmountRial,
+          allocatedAmountLabel: formatMoneyRial(allocatedAmountRial),
+          discrepancyLabel:
+            shortageRial != null
+              ? `کسری: ${formatMoneyRial(shortageRial)}`
+              : overpaymentRial != null && overpaymentRial > 0
+                ? `اضافه‌پرداخت: ${formatMoneyRial(overpaymentRial)}`
+                : '—',
+          shortageRial,
+          overpaymentRial,
+          dueAmountRial,
+        };
+      }),
+    [receiptAllocation.receiptById, registeredReceipts],
+  );
+
+  const receiptReportGaps = useMemo(() => {
+    const gaps: string[] = [];
+    if (registeredReceipts.length === 0) return gaps;
+    const hasReviewMeta = registeredReceipts.some((receipt) => Boolean(receipt.reviewStatus));
+    const hasReviewerName = registeredReceipts.some((receipt) => Boolean(receipt.reviewedBy?.trim()));
+    const hasRejectionReason = registeredReceipts.some(
+      (receipt) => receipt.reviewStatus !== 'rejected' || Boolean(receipt.rejectionReason?.trim()),
+    );
+    const hasCreatorName = registeredReceipts.some((receipt) => Boolean(receipt.depositorName?.trim()));
+    const hasAllocationInfo = receiptReportRows.some(
+      (row) => row.allocatedAmountRial > 0 || row.shortageRial != null || (row.overpaymentRial ?? 0) > 0,
+    );
+
+    if (!hasReviewMeta) {
+      gaps.push('وضعیت بررسی برخی رسیدها در داده فعلی ثبت نمی‌شود؛ برای بیشتر رسیدها فقط «ثبت‌شده / نامشخص» قابل نمایش است.');
+    }
+    if (!hasReviewerName) {
+      gaps.push('نام تأییدکننده یا ردکننده در داده فعلی ذخیره نشده است.');
+    }
+    if (!hasRejectionReason) {
+      gaps.push('علت رد برای رسیدهای ردشده در همه داده‌ها موجود نیست.');
+    }
+    if (!hasCreatorName) {
+      gaps.push('نام ثبت‌کننده یا واریزکننده برای برخی رسیدها خالی است.');
+    }
+    if (!hasAllocationInfo && receiptReportRows.length > 0) {
+      gaps.push('مبلغ تخصیص‌یافته هنوز برای این قرارداد از داده موجود پر نشده است.');
+    }
+
+    return gaps;
+  }, [receiptReportRows, registeredReceipts]);
+
+  const penaltyReportRows = useMemo(() => {
+    const penalties = contract?.data?.penalties ?? null;
+    const penaltyTypes = Array.isArray(penalties?.types) ? penalties.types : [];
+    const penaltyTypeById = new Map<string, { title?: string }>(
+      penaltyTypes.map((type: any) => [String(type?.id ?? ''), { title: String(type?.title ?? '') }]),
+    );
+    const principalById = new Map(penaltyTimeline.principalRows.map((row) => [row.id, row]));
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    return penaltyTimeline.penaltyRows.map((row) => {
+      const allocation = receiptAllocation.dueById[row.id];
+      const paidRial = allocation?.paidAmountRial ?? 0;
+      const remainingRial = allocation?.remainingAmountRial ?? Math.max(0, Number(row.amount ?? 0) - paidRial);
+      const forgivenRial = null;
+      const principalRow = principalById.get(String(row.principalDueRowId ?? '').trim()) ?? null;
+      const penaltyType = penaltyTypeById.get(String(row.penaltyTypeId ?? '').trim()) ?? null;
+      const causeLabel = String(penaltyType?.title ?? '').trim() || 'جریمه تأخیر';
+      const relatedDueLabel = principalRow
+        ? `${principalRow.title}${principalRow.categoryTitle ? ` · ${principalRow.categoryTitle}` : ''}`
+        : row.principalDueRowId || '—';
+      const delayDays = countDelayDays(toComparableDateFromDueString(row.dueDate), today);
+      const statusLabel =
+        forgivenRial != null && forgivenRial > 0
+          ? 'بخشوده‌شده'
+          : remainingRial <= 0 && paidRial > 0
+            ? 'پرداخت‌شده'
+            : paidRial > 0
+              ? 'باقی‌مانده'
+              : 'اعمال‌شده';
+      const statusTone =
+        statusLabel === 'پرداخت‌شده'
+          ? 'emerald'
+          : statusLabel === 'بخشوده‌شده'
+            ? 'slate'
+            : statusLabel === 'باقی‌مانده'
+              ? 'amber'
+              : 'rose';
+
+        return {
+        id: row.id,
+        causeLabel,
+        relatedDueLabel,
+        startDelayDateLabel: formatDateFa(row.dueDate),
+        startDelayDateValue: String(row.dueDate ?? '').trim() || null,
+        delayDays,
+        delayDaysLabel: formatDaysFa(delayDays),
+        amountRial: Math.max(0, Number(row.amount ?? 0)),
+        amountLabel: formatMoneyRial(Math.max(0, Number(row.amount ?? 0))),
+        statusLabel,
+        statusTone,
+        paidRial,
+        paidLabel: formatMoneyRial(paidRial),
+        forgivenRial,
+        forgivenLabel: formatMoneyRialNullable(forgivenRial),
+        remainingRial,
+        remainingLabel: formatMoneyRial(remainingRial),
+      } satisfies PenaltyReportRow;
+    });
+  }, [contract?.data?.penalties, penaltyTimeline.penaltyRows, penaltyTimeline.principalRows, receiptAllocation.dueById]);
+
+  const penaltyReportGaps = useMemo(() => {
+    const gaps: string[] = [];
+    if (penaltyTimeline.penaltyRows.length === 0) return gaps;
+    const penalties = contract?.data?.penalties ?? null;
+    const penaltyTypes = Array.isArray(penalties?.types) ? penalties.types : [];
+    const hasPenaltyTypes = penaltyTypes.length > 0;
+    const hasForgivenessData = false;
+    const hasMissingRelatedDue = penaltyTimeline.penaltyRows.some((row) => !String(row.principalDueRowId ?? '').trim());
+
+    if (!hasPenaltyTypes) {
+      gaps.push('عنوان و علت برخی جریمه‌ها در اطلاعات نوع جریمه کامل نیست و بخشی از ردیف‌ها با عنوان عمومی نمایش داده می‌شوند.');
+    }
+    if (hasMissingRelatedDue) {
+      gaps.push('برای برخی جریمه‌ها، اتصال مستقیم به قسط یا تعهد اصلی در داده فعلی موجود نیست.');
+    }
+    if (!hasForgivenessData) {
+      gaps.push('مبلغ بخشودگی اعمال‌شده روی جریمه‌ها در داده فعلی این قرارداد ثبت نشده است؛ ستون بخشودگی فقط با داده واقعی پر می‌شود.');
+    }
+    gaps.push('در مدل فعلی، جریمه‌های محاسبه‌شده و اعمال‌شده به‌صورت جداگانه ذخیره نمی‌شوند و این جدول آن‌ها را بر اساس اطلاعات فعلی نمایش می‌دهد.');
+
+    return gaps;
+  }, [contract?.data?.penalties, penaltyTimeline.penaltyRows]);
+
+  const financialHistorySections = useMemo(() => {
+    const allowedTags = new Set(['contract-base-costs', 'side-costs', 'loan', 'adjustment']);
+    return (financialHistory?.sections ?? []).filter((section) => allowedTags.has(section.tagKey));
+  }, [financialHistory]);
+
+  const financialHistoryEvents = useMemo<FinancialHistoryEventRow[]>(() => {
+    const receiptEvents = receiptReportRows.flatMap((row) => {
+      const receipt = row.receipt;
+      const createdAtValue = String(receipt.createdAt ?? receipt.depositDate ?? '').trim() || null;
+      const reviewedAtValue = String(receipt.reviewedAt ?? '').trim() || null;
+      const reviewStatus = receipt.reviewStatus ?? undefined;
+      const receiptLabel =
+        receipt.receiptNumber?.trim() || receipt.trackingNumber?.trim() || receipt.referenceNumber?.trim() || row.depositorLabel;
+      const allocatedLabel = row.allocatedAmountLabel;
+      const discrepancyLabel = row.discrepancyLabel;
+      const baseDetails: FinancialHistoryEventDetail[] = [
+        { label: 'مبلغ رسید', value: row.amountLabel },
+        { label: 'ثبت‌کننده', value: row.depositorLabel },
+        { label: 'وضعیت رسید', value: getReceiptReviewLabel(reviewStatus) },
+        { label: 'مبلغ تخصیص‌یافته', value: allocatedLabel },
+        { label: 'کسری / اضافه', value: discrepancyLabel },
+      ];
+
+      const events: FinancialHistoryEventRow[] = [
+        {
+          id: `receipt-${row.id}-created`,
+          kind: 'receipt-created',
+          title: 'ثبت رسید',
+          tone: getReceiptReviewTone(reviewStatus),
+          sourceLabel: receiptLabel,
+          happenedAtValue: createdAtValue,
+          happenedAtLabel: formatDateFa(createdAtValue),
+          details: [
+            ...baseDetails,
+            { label: 'تاریخ ثبت', value: formatDateFa(createdAtValue) },
+            { label: 'تاریخ واریز', value: formatDateFa(receipt.depositDate) },
+          ],
+        },
+      ];
+
+      if (reviewStatus === 'pending') {
+        events.push({
+          id: `receipt-${row.id}-pending`,
+          kind: 'receipt-reviewed',
+          title: 'رسید در انتظار بررسی',
+          tone: 'amber',
+          sourceLabel: receiptLabel,
+          happenedAtValue: createdAtValue,
+          happenedAtLabel: formatDateFa(createdAtValue),
+          details: [
+            { label: 'وضعیت', value: 'در انتظار بررسی' },
+            { label: 'مبلغ تخصیص‌یافته', value: allocatedLabel },
+            { label: 'کسری / اضافه', value: discrepancyLabel },
+          ],
+        });
+      } else if (reviewStatus === 'approved') {
+        events.push({
+          id: `receipt-${row.id}-approved`,
+          kind: 'receipt-reviewed',
+          title: 'تأیید پرداخت',
+          tone: 'emerald',
+          sourceLabel: receiptLabel,
+          happenedAtValue: reviewedAtValue ?? createdAtValue,
+          happenedAtLabel: formatDateFa(reviewedAtValue ?? createdAtValue),
+          details: [
+            { label: 'تأییدکننده', value: row.reviewedByLabel },
+            { label: 'تاریخ تأیید', value: formatDateFa(reviewedAtValue ?? createdAtValue) },
+            { label: 'مبلغ تخصیص‌یافته', value: allocatedLabel },
+            { label: 'کسری / اضافه', value: discrepancyLabel },
+          ],
+        });
+      } else if (reviewStatus === 'rejected') {
+        events.push({
+          id: `receipt-${row.id}-rejected`,
+          kind: 'receipt-reviewed',
+          title: 'رد پرداخت',
+          tone: 'rose',
+          sourceLabel: receiptLabel,
+          happenedAtValue: reviewedAtValue ?? createdAtValue,
+          happenedAtLabel: formatDateFa(reviewedAtValue ?? createdAtValue),
+          details: [
+            { label: 'ردکننده', value: row.reviewedByLabel },
+            { label: 'علت رد', value: row.rejectionReasonLabel },
+            { label: 'تاریخ رد', value: formatDateFa(reviewedAtValue ?? createdAtValue) },
+          ],
+        });
+      }
+
+      if (row.shortageRial != null && row.shortageRial > 0 && reviewStatus !== 'rejected') {
+        events.push({
+          id: `receipt-${row.id}-partial`,
+          kind: 'receipt-partial',
+          title: 'پرداخت ناقص',
+          tone: 'amber',
+          sourceLabel: receiptLabel,
+          happenedAtValue: createdAtValue,
+          happenedAtLabel: formatDateFa(createdAtValue),
+          details: [
+            { label: 'مبلغ مورد انتظار', value: row.dueAmountRial != null ? formatMoneyRial(row.dueAmountRial) : '—' },
+            { label: 'مبلغ پرداختی', value: row.amountLabel },
+            { label: 'مانده', value: formatMoneyRial(row.shortageRial) },
+          ],
+        });
+      }
+
+      return events;
+    });
+
+    const penaltyEvents = penaltyReportRows.map((row) => ({
+      id: `penalty-${row.id}`,
+      kind: 'penalty-applied' as const,
+      title: 'اعمال جریمه',
+      tone: (row.statusTone === 'emerald' ? 'emerald' : row.statusTone === 'rose' ? 'rose' : row.statusTone === 'amber' ? 'amber' : 'slate') as FinancialHistoryEventTone,
+      sourceLabel: row.relatedDueLabel,
+      happenedAtValue: row.startDelayDateValue,
+      happenedAtLabel: formatDateFa(row.startDelayDateValue),
+      details: [
+        { label: 'علت جریمه', value: row.causeLabel },
+        { label: 'قسط / تعهد مرتبط', value: row.relatedDueLabel },
+        { label: 'تاریخ شروع تأخیر', value: row.startDelayDateLabel },
+        { label: 'تعداد روز تأخیر', value: row.delayDaysLabel },
+        { label: 'مبلغ جریمه', value: row.amountLabel },
+        { label: 'وضعیت جریمه', value: row.statusLabel },
+        { label: 'پرداخت‌شده', value: row.paidLabel },
+        { label: 'بخشوده‌شده', value: row.forgivenLabel },
+        { label: 'باقی‌مانده', value: row.remainingLabel },
+      ],
+    }));
+
+    return [...receiptEvents, ...penaltyEvents].sort((a, b) => {
+      const at = resolveTimelineTimestamp(a.happenedAtValue);
+      const bt = resolveTimelineTimestamp(b.happenedAtValue);
+      if (at == null && bt == null) return a.title.localeCompare(b.title, 'fa-IR');
+      if (at == null) return 1;
+      if (bt == null) return -1;
+      if (at !== bt) return at - bt;
+      return a.title.localeCompare(b.title, 'fa-IR');
+    });
+  }, [penaltyReportRows, receiptReportRows]);
+
+  const financialHistoryGaps = useMemo(() => {
+    const gaps: string[] = [];
+
+    if (financialHistoryError) {
+      gaps.push(`تاریخچه مالی قرارداد از داده‌های موجود بازگردانده نشد: ${financialHistoryError}`);
+    }
+
+    if (!financialHistory?.sections.length) {
+      gaps.push('در تاریخچه قرارداد، بخش مالی قابل نمایش از متمم‌ها یا نسخه‌های قبلی یافت نشد.');
+    } else if (!financialHistorySections.length) {
+      gaps.push('تغییر مالی قابل نمایش در بخش‌های مبلغ پایه قرارداد، هزینه‌های جانبی، تسهیلات یا تعدیلات یافت نشد.');
+    }
+
+    const hasReceiptStatusGap = registeredReceipts.some((receipt) => !receipt.reviewStatus);
+    const hasReviewedAtGap = registeredReceipts.some(
+      (receipt) => (receipt.reviewStatus === 'approved' || receipt.reviewStatus === 'rejected') && !receipt.reviewedAt,
+    );
+    const hasRejectedReasonGap = registeredReceipts.some(
+      (receipt) => receipt.reviewStatus === 'rejected' && !receipt.rejectionReason?.trim(),
+    );
+    const hasForgivenessData = penaltyReportRows.some((row) => row.forgivenRial != null && row.forgivenRial > 0);
+
+    if (hasReceiptStatusGap) {
+      gaps.push('برای بخشی از رسیدهای ثبت‌شده، وضعیت بررسی در داده فعلی کامل نیست و همه موارد به‌صورت «در انتظار بررسی»، «تأییدشده» یا «ردشده» قابل تشخیص نیستند.');
+    }
+    if (hasReviewedAtGap) {
+      gaps.push('زمان تأیید یا رد برای بخشی از رسیدهای بررسی‌شده در داده فعلی ذخیره نشده است.');
+    }
+    if (hasRejectedReasonGap) {
+      gaps.push('علت رد برای بخشی از رسیدهای ردشده در داده فعلی موجود نیست.');
+    }
+    if (!hasForgivenessData) {
+      gaps.push('مبلغ بخشودگی اعمال‌شده روی جریمه‌ها در داده فعلی قرارداد ذخیره نشده است؛ فقط در صورت وجود مقدار واقعی نمایش داده می‌شود.');
+    }
+
+    gaps.push('در سوابق فعلی، امکان تفکیک تاریخچه مالی اختصاصی این قرارداد بر اساس شناسه قرارداد یا شناسه رخداد وجود ندارد.');
+    gaps.push('رویداد مستقلِ مالی برای انتقال، فسخ یا اقاله در داده فعلی این قرارداد پیدا نشد.');
+
+    return gaps;
+  }, [financialHistory?.sections.length, financialHistoryError, financialHistorySections.length, penaltyReportRows, registeredReceipts]);
+
+  const specialFinancialStatus = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const approvedReceipts = registeredReceipts.filter((receipt) => receipt.reviewStatus === 'approved');
+    const pendingReceipts = registeredReceipts.filter((receipt) => receipt.reviewStatus === 'pending');
+    const rejectedReceipts = registeredReceipts.filter((receipt) => receipt.reviewStatus === 'rejected');
+    const unidentifiedReceipts = registeredReceipts.filter((receipt) => !receipt.reviewStatus);
+
+    const approvedPenaltyTimeline = buildContractPenaltyTimeline({
+      financial: view.financial,
+      penalties: contract?.data?.penalties ?? null,
+      receipts: approvedReceipts,
+    });
+    const approvedReceiptAllocation = buildReceiptAllocation({
+      buckets: approvedPenaltyTimeline.combinedBuckets,
+      receipts: approvedReceipts,
+    });
+
+    const dueSummaries = Object.values(approvedReceiptAllocation.dueById);
+    const principalSummaries = dueSummaries.filter((summary) => summary.row.sourceKind !== 'penalty');
+    const penaltySummaries = dueSummaries.filter((summary) => summary.row.sourceKind === 'penalty');
+
+    const confirmedPaidRial = approvedReceiptAllocation.totalAllocatedRial;
+    const pendingReviewRial = pendingReceipts.reduce((sum, receipt) => sum + Number(receipt.paidAmountRial ?? 0), 0);
+    const unidentifiedRial = unidentifiedReceipts.reduce((sum, receipt) => sum + Number(receipt.paidAmountRial ?? 0), 0);
+    const rejectedRial = rejectedReceipts.reduce((sum, receipt) => sum + Number(receipt.paidAmountRial ?? 0), 0);
+
+    const principalRemainingRial = principalSummaries.reduce((sum, summary) => sum + summary.remainingAmountRial, 0);
+    const overdueDebtRial = principalSummaries.reduce((sum, summary) => {
+      const dueDate = toComparableDateFromDueString(summary.row.dueDate);
+      if (!dueDate || dueDate >= today) return sum;
+      return sum + summary.remainingAmountRial;
+    }, 0);
+    const futureDebtRial = Math.max(0, principalRemainingRial - overdueDebtRial);
+    const openPenaltyRial = penaltySummaries.reduce((sum, summary) => sum + summary.remainingAmountRial, 0);
+    const hasUnknownDueDates = principalSummaries.some((summary) => !toComparableDateFromDueString(summary.row.dueDate));
+    const hasFinancialAppendix = financialHistorySections.length > 0;
+    const terminationEnabled = Boolean(contract?.data?.termination?.terminationEnabled);
+    const hasDeliveryDate = Boolean(contract?.data?.subject?.deliveryDate);
+
+    const settlementStatus = (() => {
+      if (
+        principalRemainingRial <= 0 &&
+        openPenaltyRial <= 0 &&
+        pendingReviewRial <= 0 &&
+        unidentifiedRial <= 0 &&
+        !hasUnknownDueDates
+      ) {
+        return { label: 'تسویه کامل', tone: 'emerald' as const };
+      }
+      if (overdueDebtRial > 0) {
+        return { label: 'دارای معوقه', tone: 'rose' as const };
+      }
+      if (futureDebtRial > 0) {
+        return { label: 'دارای بدهی آینده', tone: 'amber' as const };
+      }
+      if (openPenaltyRial > 0) {
+        return { label: 'دارای جریمه باز', tone: 'amber' as const };
+      }
+      if (pendingReviewRial > 0) {
+        return { label: 'دارای رسید در انتظار بررسی', tone: 'amber' as const };
+      }
+      if (unidentifiedRial > 0 || hasUnknownDueDates) {
+        return { label: 'نیازمند بررسی مالی', tone: 'slate' as const };
+      }
+      return { label: 'تسویه مشروط', tone: 'amber' as const };
+    })();
+
+    const readinessStatus = (() => {
+      const financiallySettled =
+        principalRemainingRial <= 0 &&
+        openPenaltyRial <= 0 &&
+        pendingReviewRial <= 0 &&
+        unidentifiedRial <= 0 &&
+        !hasUnknownDueDates;
+
+      if (!view.financial) {
+        return { label: 'نیازمند بررسی مالی', tone: 'slate' as const };
+      }
+      if (financiallySettled) {
+        return { label: 'آماده است', tone: 'emerald' as const };
+      }
+      if (pendingReviewRial > 0 && principalRemainingRial <= 0 && openPenaltyRial <= 0) {
+        return { label: 'مشروط است', tone: 'amber' as const };
+      }
+      if (unidentifiedRial > 0 || hasUnknownDueDates) {
+        return { label: 'نیازمند بررسی مالی', tone: 'slate' as const };
+      }
+      if (terminationEnabled && (principalRemainingRial > 0 || openPenaltyRial > 0 || pendingReviewRial > 0)) {
+        return { label: 'نیازمند بررسی حقوقی', tone: 'rose' as const };
+      }
+      return { label: 'آماده نیست', tone: 'rose' as const };
+    })();
+
+    const stateCards = [
+      {
+        label: 'پرداخت‌شده قطعی',
+        value: formatMoneyRialOrUnknown(confirmedPaidRial),
+        tone: 'emerald',
+        note: 'فقط رسیدهای تاییدشده در این عدد لحاظ شده‌اند.',
+      },
+      {
+        label: 'وضعیت تسویه',
+        value: settlementStatus.label,
+        tone: settlementStatus.tone,
+        note: 'فقط رسیدهای تأییدشده در محاسبه این وضعیت لحاظ می‌شوند.',
+      },
+      {
+        label: 'بدهی آینده',
+        value: formatMoneyRialOrUnknown(futureDebtRial),
+        tone: futureDebtRial > 0 ? 'amber' : 'emerald',
+        note: 'بدهیِ سررسیدنشده از معوقه جدا شده است.',
+      },
+      {
+        label: 'معوقه',
+        value: formatMoneyRialOrUnknown(overdueDebtRial),
+        tone: overdueDebtRial > 0 ? 'rose' : 'emerald',
+        note: 'فقط بخش سررسید گذشته در این عدد می‌آید.',
+      },
+      {
+        label: 'رسید در انتظار بررسی',
+        value: formatMoneyRialOrUnknown(pendingReviewRial),
+        tone: pendingReviewRial > 0 ? 'amber' : 'emerald',
+        note: 'این مبلغ در تسویه قطعی حساب نمی‌شود.',
+      },
+      {
+        label: 'جریمه باز',
+        value: formatMoneyRialOrUnknown(openPenaltyRial),
+        tone: openPenaltyRial > 0 ? 'amber' : 'emerald',
+        note: 'جریمه با اصل بدهی قاطی نشده است.',
+      },
+      {
+        label: 'آمادگی مالی',
+        value: readinessStatus.label,
+        tone: readinessStatus.tone,
+        note: hasDeliveryDate ? 'تاریخ تحویل در داده موجود است.' : 'برای تحویل یا سند، سیاست اجرایی صریحی در داده فعلی پیدا نشد.',
+      },
+      {
+        label: 'متمم مالی',
+        value: hasFinancialAppendix ? 'دارد' : 'نامشخص',
+        tone: hasFinancialAppendix ? 'cyan' : 'slate',
+        note: hasFinancialAppendix ? 'اثر متمم‌ها در تاریخچه مالی دیده می‌شود.' : 'منشأ مالی ناشی از متمم در داده فعلی پیدا نشد.',
+      },
+      {
+        label: 'قواعد فسخ',
+        value: terminationEnabled ? 'فعال' : 'نامشخص',
+        tone: terminationEnabled ? 'amber' : 'slate',
+        note: terminationEnabled ? 'تنظیمات فسخ موجود است، اما اجرای آن ثبت نشده است.' : 'تنظیمات فسخ در داده فعلی پیدا نشد.',
+      },
+      {
+        label: 'وضعیت اجرایی فسخ/اقاله',
+        value: 'نامشخص',
+        tone: 'slate',
+        note: 'در داده فعلی، رخداد اجراییِ فسخ یا اقاله برای همین قرارداد ثبت نشده است.',
+      },
+      {
+        label: 'وضعیت انتقال',
+        value: 'نامشخص',
+        tone: 'slate',
+        note: 'شناسه یا رخداد انتقال برای همین قرارداد در جزئیات فعلی قرارداد در دسترس نیست.',
+      },
+    ] as const;
+
+    const gaps: string[] = [];
+    if (rejectedRial > 0 && rejectedReceipts.some((receipt) => !receipt.rejectionReason?.trim())) {
+      gaps.push('علت رد برای بخشی از رسیدهای ردشده در داده فعلی موجود نیست.');
+    }
+    if (unidentifiedRial > 0) {
+      gaps.push('برای بخشی از رسیدها، وضعیت بررسی در داده فعلی ثبت نشده است؛ این رسیدها در تسویه قطعی لحاظ نشده‌اند.');
+    }
+    if (terminationEnabled) {
+      gaps.push('تنظیمات فسخ در داده فعلی موجود است، اما وضعیت اجرای فسخ/اقاله برای همین قرارداد ثبت نشده است.');
+    } else {
+      gaps.push('وضعیت اجرایی فسخ/اقاله برای همین قرارداد در داده فعلی موجود نیست.');
+    }
+    gaps.push('در جزئیات فعلی قرارداد، امکان تفکیک وضعیت مالی قبل و بعد از انتقال قرارداد وجود ندارد.');
+    if (!hasFinancialAppendix) {
+      gaps.push('متمم مالی قابل تشخیص در تاریخچه فعلی پیدا نشد؛ منشأ بدهی ناشی از متمم قابل تأیید نیست.');
+    }
+
+    return {
+      confirmedPaidRial,
+      pendingReviewRial,
+      unidentifiedRial,
+      rejectedRial,
+      principalRemainingRial,
+      overdueDebtRial,
+      futureDebtRial,
+      openPenaltyRial,
+      settlementStatus,
+      readinessStatus,
+      stateCards,
+      gaps,
+      hasFinancialAppendix,
+      terminationEnabled,
+    };
+  }, [contract?.data?.penalties, contract?.data?.subject?.deliveryDate, contract?.data?.termination?.terminationEnabled, financialHistorySections.length, registeredReceipts, view.financial]);
 
   const paidPrincipalByCategoryId = useMemo(
     () => buildPaidByCategoryIdFromAllocation(receiptAllocation, 'principal'),
@@ -504,6 +1450,20 @@ export default function ContractReportsPage() {
     };
   }, [penaltyTimeline, summaryFooter]);
 
+  const hasSpecialStateGaps = specialFinancialStatus.gaps.length > 0;
+  const { data: authContext, loading: authLoading } = useAuthContext();
+  const canSeeInternalTrace = useMemo(() => {
+    if (authLoading) return false;
+    const access = authContext?.access;
+    if (!access) return false;
+    if (access.isOwner) return true;
+    return (
+      access.permissionKeys.includes('audit.logs.view') ||
+      access.permissionKeys.includes('platform.reports.view') ||
+      access.permissionKeys.includes('contracts.update')
+    );
+  }, [authContext?.access, authLoading]);
+
   const defaultSummaryGroupId = useMemo(
     () => reportGroups.find((g) => g.id === 'group-principal')?.id ?? reportGroups[0]?.id ?? null,
     [reportGroups],
@@ -542,11 +1502,24 @@ export default function ContractReportsPage() {
     return { dues, sum };
   }, [selectedReportGroup, penaltyTimeline.combinedRows]);
 
-  /** سررسیدهای همان گروه مالی انتخاب‌شده در خلاصه (برای ستون جزئیات) */
-  const summaryDetailMonthBuckets = useMemo(
-    () => buildPaymentHistoryMonthBucketsFromRows(selectedGroupDueMeta.dues),
-    [selectedGroupDueMeta.dues],
-  );
+  const paymentDueRowsWithStatus = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    return penaltyTimeline.combinedRows
+      .filter((row) => row.sourceKind !== 'penalty')
+      .map((row) => {
+        const summary = receiptAllocation.dueById[row.id];
+        const paidRial = summary?.paidAmountRial ?? 0;
+        const remainingRial = summary?.remainingAmountRial ?? Math.max(0, Number(row.amount ?? 0));
+        const dueDate = toComparableDateFromDueString(row.dueDate);
+        const overdue = Boolean(dueDate && dueDate < today && remainingRial > 0);
+        const status: DueStatusFilter =
+          remainingRial <= 0 ? 'paid' : paidRial > 0 ? 'partial' : overdue ? 'overdue' : 'future';
+
+        return { row, summary, paidRial, remainingRial, overdue, status };
+      });
+  }, [penaltyTimeline.combinedRows, receiptAllocation.dueById]);
 
   const [collapsedPaymentMonths, setCollapsedPaymentMonths] = useState<Set<string>>(() => new Set());
   const [collapsedSummaryDueMonths, setCollapsedSummaryDueMonths] = useState<Set<string>>(() => new Set());
@@ -554,6 +1527,12 @@ export default function ContractReportsPage() {
   useEffect(() => {
     setCollapsedPaymentMonths(new Set());
     setCollapsedSummaryDueMonths(new Set());
+    setDueStatusFilter('all');
+    setReceiptStatusFilter('all');
+    setPenaltyStatusFilter('all');
+    setDueSortMode('due-asc');
+    setReceiptSortMode('due-desc');
+    setPenaltySortMode('due-asc');
   }, [contractId]);
 
   const togglePaymentMonth = (monthKey: string) => {
@@ -574,17 +1553,248 @@ export default function ContractReportsPage() {
     });
   };
 
+  const dueRowsWithStatus = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    return selectedGroupDueMeta.dues
+      .filter((row) => row.sourceKind !== 'penalty')
+      .map((row) => {
+        const summary = receiptAllocation.dueById[row.id];
+        const paidRial = summary?.paidAmountRial ?? 0;
+        const remainingRial = summary?.remainingAmountRial ?? Math.max(0, Number(row.amount ?? 0));
+        const dueDate = toComparableDateFromDueString(row.dueDate);
+        const overdue = Boolean(dueDate && dueDate < today && remainingRial > 0);
+        const status: DueStatusFilter =
+          remainingRial <= 0 ? 'paid' : paidRial > 0 ? 'partial' : overdue ? 'overdue' : 'future';
+
+        return { row, summary, paidRial, remainingRial, overdue, status };
+      });
+  }, [receiptAllocation.dueById, selectedGroupDueMeta.dues]);
+
+  const filteredDueRows = useMemo(
+    () =>
+      dueRowsWithStatus.filter((item) => {
+        if (dueStatusFilter === 'all') return true;
+        return item.status === dueStatusFilter;
+      }),
+    [dueRowsWithStatus, dueStatusFilter],
+  );
+
+  const filteredDueBuckets = useMemo(() => {
+    const buckets = buildPaymentHistoryMonthBucketsFromRows(filteredDueRows.map((item) => item.row));
+    const bucketsWithOrder = buckets.map((bucket) => {
+      const sourceOrder = new Map(filteredDueRows.map((item, index) => [item.row.id, index]));
+      const sortedItems = [...bucket.items].sort((a, b) => {
+        if (dueSortMode === 'amount-asc' || dueSortMode === 'amount-desc') {
+          const amountDiff = compareByAmount(a.amount, b.amount, dueSortMode);
+          if (amountDiff !== 0) return amountDiff;
+        } else {
+          const da = toComparableDateFromDueString(a.dueDate)?.getTime() ?? Number.POSITIVE_INFINITY;
+          const db = toComparableDateFromDueString(b.dueDate)?.getTime() ?? Number.POSITIVE_INFINITY;
+          if (dueSortMode === 'due-desc' && da !== db) return db - da;
+          if (dueSortMode === 'due-asc' && da !== db) return da - db;
+        }
+        return (sourceOrder.get(a.id) ?? 0) - (sourceOrder.get(b.id) ?? 0);
+      });
+      return { ...bucket, items: sortedItems };
+    });
+
+    if (dueSortMode === 'amount-asc' || dueSortMode === 'amount-desc') {
+      return bucketsWithOrder.sort((a, b) => compareByAmount(a.totalRial, b.totalRial, dueSortMode));
+    }
+
+    return bucketsWithOrder;
+  }, [dueSortMode, filteredDueRows]);
+
+  const filteredPaymentDueRows = useMemo(
+    () =>
+      paymentDueRowsWithStatus.filter((item) => {
+        if (dueStatusFilter === 'all') return true;
+        return item.status === dueStatusFilter;
+      }),
+    [dueStatusFilter, paymentDueRowsWithStatus],
+  );
+
+  const filteredPaymentDueBuckets = useMemo(() => {
+    const buckets = buildPaymentHistoryMonthBucketsFromRows(filteredPaymentDueRows.map((item) => item.row));
+    const bucketsWithOrder = buckets.map((bucket) => {
+      const sourceOrder = new Map(filteredPaymentDueRows.map((item, index) => [item.row.id, index]));
+      const sortedItems = [...bucket.items].sort((a, b) => {
+        if (dueSortMode === 'amount-asc' || dueSortMode === 'amount-desc') {
+          const amountDiff = compareByAmount(toNumberOrZero(a.amount), toNumberOrZero(b.amount), dueSortMode);
+          if (amountDiff !== 0) return amountDiff;
+        } else {
+          const da = toComparableDateFromDueString(a.dueDate)?.getTime() ?? Number.POSITIVE_INFINITY;
+          const db = toComparableDateFromDueString(b.dueDate)?.getTime() ?? Number.POSITIVE_INFINITY;
+          if (dueSortMode === 'due-desc' && da !== db) return db - da;
+          if (dueSortMode === 'due-asc' && da !== db) return da - db;
+        }
+        return (sourceOrder.get(a.id) ?? 0) - (sourceOrder.get(b.id) ?? 0);
+      });
+      return { ...bucket, items: sortedItems };
+    });
+
+    if (dueSortMode === 'amount-asc' || dueSortMode === 'amount-desc') {
+      return bucketsWithOrder.sort((a, b) => compareByAmount(a.totalRial, b.totalRial, dueSortMode));
+    }
+
+    return bucketsWithOrder;
+  }, [dueSortMode, filteredPaymentDueRows]);
+
+  const filteredReceiptRows = useMemo(
+    () =>
+      receiptReportRows
+        .filter((row) => {
+          if (receiptStatusFilter === 'all') return true;
+          const receiptStatus = row.receipt.reviewStatus ?? 'unidentified';
+          return receiptStatus === receiptStatusFilter;
+        })
+        .sort((a, b) => {
+          if (receiptSortMode === 'amount-asc' || receiptSortMode === 'amount-desc') {
+            return compareByAmount(a.receipt.paidAmountRial, b.receipt.paidAmountRial, receiptSortMode);
+          }
+          const at = new Date(a.receipt.createdAt).getTime();
+          const bt = new Date(b.receipt.createdAt).getTime();
+          return receiptSortMode === 'due-desc' ? bt - at : at - bt;
+        }),
+    [receiptReportRows, receiptSortMode, receiptStatusFilter],
+  );
+
+  const visibleReceiptReportRows = useMemo(
+    () =>
+      canSeeInternalTrace
+        ? filteredReceiptRows
+        : filteredReceiptRows.map((row) => ({
+            ...row,
+            reviewedByLabel: '—',
+            rejectionReasonLabel: '—',
+          })),
+    [canSeeInternalTrace, filteredReceiptRows],
+  );
+
+  const visibleReceiptReportGaps = canSeeInternalTrace ? receiptReportGaps : [];
+  const visiblePenaltyReportGaps = canSeeInternalTrace ? penaltyReportGaps : [];
+  const visibleFinancialHistorySections = canSeeInternalTrace ? financialHistorySections : [];
+  const visibleFinancialHistoryEvents = canSeeInternalTrace ? financialHistoryEvents : [];
+  const visibleFinancialHistoryGaps = canSeeInternalTrace ? financialHistoryGaps : [];
+  const visibleSpecialStateGaps = canSeeInternalTrace ? specialFinancialStatus.gaps : [];
+
+  const filteredPenaltyRows = useMemo(
+    () =>
+      penaltyReportRows
+        .filter((row) => {
+          if (penaltyStatusFilter === 'all') return true;
+          if (penaltyStatusFilter === 'forgiven') return row.forgivenRial != null && row.forgivenRial > 0;
+          if (penaltyStatusFilter === 'paid') return row.remainingRial <= 0 && row.paidRial > 0;
+          return row.remainingRial > 0;
+        })
+        .sort((a, b) => {
+          if (penaltySortMode === 'amount-asc' || penaltySortMode === 'amount-desc') {
+            return compareByAmount(a.amountRial, b.amountRial, penaltySortMode);
+          }
+          const at = toComparableDateFromDueString(a.startDelayDateValue ?? '')?.getTime() ?? Number.POSITIVE_INFINITY;
+          const bt = toComparableDateFromDueString(b.startDelayDateValue ?? '')?.getTime() ?? Number.POSITIVE_INFINITY;
+          return penaltySortMode === 'due-desc' ? bt - at : at - bt;
+        }),
+    [penaltyReportRows, penaltySortMode, penaltyStatusFilter],
+  );
+
+  const businessAlerts = useMemo(() => {
+    const overdueInstallments = paymentDueRowsWithStatus.filter((item) => item.status === 'overdue').length;
+    const partialInstallments = paymentDueRowsWithStatus.filter((item) => item.status === 'partial').length;
+    const pendingReceipts = receiptReportRows.filter((row) => row.receipt.reviewStatus === 'pending').length;
+    const openPenalties = penaltyReportRows.filter((row) => row.remainingRial > 0).length;
+    const readiness = specialFinancialStatus.readinessStatus?.label ?? 'نامشخص';
+
+    return [
+      overdueInstallments > 0 ? `قسط معوق: ${overdueInstallments.toLocaleString('fa-IR')}` : null,
+      partialInstallments > 0 ? `پرداخت ناقص: ${partialInstallments.toLocaleString('fa-IR')}` : null,
+      pendingReceipts > 0 ? `رسید در انتظار بررسی: ${pendingReceipts.toLocaleString('fa-IR')}` : null,
+      openPenalties > 0 ? `جریمه باز: ${openPenalties.toLocaleString('fa-IR')}` : null,
+      readiness !== 'آماده است' ? `آمادگی مالی: ${readiness}` : null,
+    ].filter((item): item is string => Boolean(item));
+  }, [paymentDueRowsWithStatus, penaltyReportRows, receiptReportRows, specialFinancialStatus.readinessStatus]);
+
+  const financialCharts = useMemo(() => {
+    const installmentStatus = buildInstallmentStatusItems(
+      paymentDueRowsWithStatus.map((item) => ({
+        paidRial: item.paidRial,
+        remainingRial: item.remainingRial,
+        dueDate: item.row.dueDate,
+      })),
+    );
+
+    const paymentTrend = buildApprovedReceiptTrend(registeredReceipts);
+    const penaltyAppliedRial = penaltyReportRows.reduce((sum, row) => sum + Math.max(0, row.amountRial), 0);
+    const penaltyPaidRial = penaltyReportRows.reduce((sum, row) => sum + Math.max(0, row.paidRial), 0);
+    const penaltyRemainingRial = penaltyReportRows.reduce((sum, row) => sum + Math.max(0, row.remainingRial), 0);
+    const hasForgivenessData = penaltyReportRows.some((row) => (row.forgivenRial ?? 0) > 0);
+
+    return {
+      payment: {
+        confirmedPaidRial: Math.max(0, specialFinancialStatus.confirmedPaidRial ?? 0),
+        pendingReviewRial: Math.max(0, specialFinancialStatus.pendingReviewRial ?? 0),
+        remainingDebtRial: Math.max(0, specialFinancialStatus.principalRemainingRial ?? 0),
+        settled: specialFinancialStatus.settlementStatus?.label === 'تسویه کامل',
+        note: 'رسیدهای در انتظار بررسی از پرداخت قطعی جدا نگه داشته می‌شوند و در تسویه حساب ادغام نمی‌شوند.',
+      },
+      installments: {
+        totalCount: installmentStatus.totalCount,
+        items: installmentStatus.items,
+        emptyMessage: 'برای این قرارداد هنوز برنامه اقساط قابل نمایش ثبت نشده است.',
+        note: 'اقساط تغییریافته با متمم فقط زمانی جدا نشان داده می‌شوند که در داده فعلی قابل تشخیص باشند.',
+      },
+      trend: {
+        points: paymentTrend.points,
+        approvedReceiptCount: paymentTrend.approvedReceiptCount,
+        missingTimelineCount: paymentTrend.missingTimelineCount,
+        emptyMessage: 'هنوز پرداخت تأییدشده‌ای برای این قرارداد ثبت نشده است.',
+        note:
+          paymentTrend.points.length > 0
+            ? 'در این نسخه فعلا فقط روند پرداخت‌های تأییدشده نمایش داده می‌شود و مقایسه با برنامه پرداخت به داده معتبر بیشتر نیاز دارد.'
+            : 'در این نسخه فقط روند پرداخت‌های تأییدشده نمایش داده می‌شود.',
+      },
+      penalties: {
+        calculatedRial: null,
+        appliedRial: penaltyAppliedRial,
+        paidRial: penaltyPaidRial,
+        forgivenRial: hasForgivenessData
+          ? penaltyReportRows.reduce((sum, row) => sum + Math.max(0, row.forgivenRial ?? 0), 0)
+          : null,
+        remainingRial: penaltyRemainingRial,
+        totalCount: penaltyReportRows.length,
+        emptyMessage: 'برای این قرارداد جریمه‌ای ثبت یا اعمال نشده است.',
+        note: hasForgivenessData
+          ? 'جریمه بخشوده‌شده جدا از جریمه پرداخت‌شده نمایش داده می‌شود.'
+          : 'مبلغ بخشودگی اعمال‌شده روی جریمه‌ها در داده فعلی به‌صورت معتبر در دسترس نیست.',
+      },
+    };
+  }, [paymentDueRowsWithStatus, penaltyReportRows, registeredReceipts, specialFinancialStatus]);
+
+  const ruleSettingsCards = useMemo(() => {
+    const ruleSettings = contract?.data?.ruleSettings ?? null;
+    return [
+      buildForgivenessRuleCard(ruleSettings?.forgiveness),
+      buildInterestRuleCard(ruleSettings?.interest),
+      buildBuilderPenaltyRuleCard(ruleSettings?.builderPenalty),
+    ];
+  }, [contract?.data?.ruleSettings]);
+
   return (
     <PanelLayout>
       <main className="w-full max-w-none min-w-0" dir="rtl" lang="fa">
         <div className="w-full max-w-none py-6 sm:py-8">
           {loading ? (
             <section className="rounded-[28px] border border-white/70 bg-white/95 p-10 text-center text-sm font-bold text-slate-500 shadow-[0_20px_50px_-24px_rgba(15,23,42,0.14)]">
-              در حال بارگذاری…
+              در حال دریافت اطلاعات مالی قرارداد...
             </section>
           ) : error || !contractId ? (
-            <section className="rounded-[28px] border border-rose-200 bg-rose-50/95 p-8 text-center text-sm font-bold text-rose-800 shadow-sm">
-              {error || 'شناسه قرارداد نامعتبر است.'}
+            <section className="rounded-[28px] border border-rose-200 bg-rose-50/95 p-8 text-center shadow-sm">
+              <div className="text-sm font-bold text-rose-800">
+                امکان نمایش نمودار مالی قرارداد در حال حاضر وجود ندارد. لطفاً بعداً دوباره بررسی کنید.
+              </div>
+              {error ? <div className="mt-2 text-[11px] font-semibold text-rose-700/90">{error}</div> : null}
             </section>
           ) : (
             <>
@@ -734,6 +1944,90 @@ export default function ContractReportsPage() {
                 </div>
               </div>
 
+              <section className="mt-5 rounded-[22px] border border-slate-200/80 bg-white/95 px-4 py-4 text-right shadow-sm md:px-5 md:py-5">
+                <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 pb-4">
+                  <div>
+                    <div className="text-[15px] font-black text-slate-900">وضعیت‌های خاص قرارداد</div>
+                    <p className="mt-1.5 text-[11px] font-semibold leading-5 text-slate-500">
+                      این بخش فقط بر اساس داده‌های موجود قرارداد تفسیر می‌شود و برای رسیدهای تاییدنشده، انتقال، فسخ و اقاله از وضعیت‌های قطعی استفاده نمی‌کند.
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+                  {specialFinancialStatus.stateCards.map((card) => (
+                    <div key={card.label} className={`rounded-2xl border px-4 py-3 ${getStatusToneClasses(card.tone)}`}>
+                      <div className="text-[11px] font-bold opacity-80">{card.label}</div>
+                      <div className="mt-1 text-[14px] font-black leading-6">{card.value}</div>
+                      <p className="mt-2 text-[10px] font-semibold leading-5 opacity-80">{card.note}</p>
+                    </div>
+                  ))}
+                </div>
+                {canSeeInternalTrace && hasSpecialStateGaps ? (
+                  <div className="mt-4 rounded-2xl border border-dashed border-amber-200 bg-amber-50/70 px-4 py-3">
+                    <div className="text-[12px] font-black text-amber-900">موارد ناقص در تشخیص وضعیت قرارداد</div>
+                    <ul className="mt-2 space-y-1 text-[11px] font-semibold leading-6 text-amber-900/90">
+                      {specialFinancialStatus.gaps.map((gap) => (
+                        <li key={gap}>• {gap}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : !canSeeInternalTrace ? (
+                  <div className="mt-4 rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 px-4 py-3 text-[11px] font-semibold leading-6 text-slate-600">
+                    این نسخه برای سطح دسترسی فعلی محدود شده است و جزئیات داخلی موارد ناقص و یادداشت‌های محرمانه نمایش داده نمی‌شود.
+                  </div>
+                ) : null}
+              </section>
+
+              {tab === 'summary' ? (
+                <section className="mt-6">
+                  <section className="mb-6 rounded-[22px] border border-slate-200/80 bg-white/95 p-5 text-right shadow-sm md:p-6">
+                    <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 pb-4">
+                      <div>
+                        <div className="text-[15px] font-black text-slate-900">تنظیمات سود، بخشودگی و جریمه سازنده</div>
+                        <p className="mt-1.5 text-[11px] font-semibold leading-5 text-slate-500">
+                          این بخش snapshot تنظیمات موجود در داده فعلی قرارداد را نشان می‌دهد و اگر تنظیم اختصاصی قرارداد ثبت نشده باشد، منبع آن را از تنظیمات کسب‌وکار مشخص می‌کند.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 grid gap-4 xl:grid-cols-3">
+                      {ruleSettingsCards.map((card) => (
+                        <article key={card.id} className={`rounded-2xl border px-4 py-4 ${getStatusToneClasses(card.tone)}`}>
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <div className="text-[13px] font-black">{card.title}</div>
+                              <div className="mt-1 text-[11px] font-semibold opacity-80">{card.statusLabel}</div>
+                            </div>
+                            <div className="text-left text-[10px] font-bold opacity-80">
+                              <div>{card.sourceLabel}</div>
+                              <div className="mt-1">به‌روزرسانی: {card.updatedAtLabel}</div>
+                            </div>
+                          </div>
+
+                          <div className="mt-4 space-y-2 text-[11px] font-semibold leading-6">
+                            {card.details.map((detail) => (
+                              <div key={`${card.id}-${detail.label}`} className="flex items-start justify-between gap-3 border-t border-black/5 pt-2 first:border-t-0 first:pt-0">
+                                <span className="opacity-80">{detail.label}</span>
+                                <span className="text-left font-black">{detail.value}</span>
+                              </div>
+                            ))}
+                          </div>
+
+                          <p className="mt-4 border-t border-black/5 pt-3 text-[10px] font-semibold leading-5 opacity-80">{card.note}</p>
+                        </article>
+                      ))}
+                    </div>
+                  </section>
+
+                  <ContractFinancialCharts
+                    payment={financialCharts.payment}
+                    installments={financialCharts.installments}
+                    trend={financialCharts.trend}
+                    penalties={financialCharts.penalties}
+                  />
+                </section>
+              ) : null}
+
               {tab === 'payments' ? (
                 <section className="mt-6 rounded-[22px] border border-slate-200/80 bg-white/90 p-5 text-right shadow-sm md:p-7">
                   <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 pb-4">
@@ -746,30 +2040,482 @@ export default function ContractReportsPage() {
                     </div>
                   </div>
 
-                  {paymentMonthBuckets.length === 0 ? (
+                  {businessAlerts.length > 0 ? (
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {businessAlerts.map((alert) => (
+                        <span
+                          key={alert}
+                          className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-[11px] font-black text-amber-900"
+                        >
+                          {alert}
+                        </span>
+                      ))}
+                    </div>
+                  ) : null}
+
+                  <div className="mt-4 grid gap-3 xl:grid-cols-3">
+                    <div className="rounded-2xl border border-slate-200/80 bg-slate-50/60 p-4">
+                      <div className="text-[12px] font-black text-slate-900">فیلتر اقساط</div>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {[
+                          ['all', 'همه'],
+                          ['overdue', 'معوق'],
+                          ['future', 'آینده'],
+                          ['partial', 'پرداخت ناقص'],
+                          ['paid', 'پرداخت‌شده'],
+                        ].map(([value, label]) => {
+                          const active = dueStatusFilter === value;
+                          return (
+                            <button
+                              key={value}
+                              type="button"
+                              onClick={() => setDueStatusFilter(value as DueStatusFilter)}
+                              className={`rounded-full border px-3 py-1.5 text-[11px] font-black transition ${
+                                active
+                                  ? 'border-[color-mix(in_srgb,var(--dark-teal)_38%,transparent)] bg-[color-mix(in_srgb,var(--dark-teal)_12%,white)] text-[color-mix(in_srgb,var(--dark-teal)_90%,black)]'
+                                  : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                              }`}
+                            >
+                              {label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <label className="mt-3 block text-[11px] font-bold text-slate-500">
+                        مرتب‌سازی
+                        <select
+                          value={dueSortMode}
+                          onChange={(event) => setDueSortMode(event.target.value as SortMode)}
+                          className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-[12px] font-semibold text-slate-800 outline-none focus:border-[color-mix(in_srgb,var(--dark-teal)_38%,transparent)]"
+                        >
+                          <option value="due-asc">نزدیک‌ترین سررسید</option>
+                          <option value="due-desc">دورترین سررسید</option>
+                          <option value="amount-asc">مبلغ کم به زیاد</option>
+                          <option value="amount-desc">مبلغ زیاد به کم</option>
+                        </select>
+                      </label>
+                    </div>
+
+                    <div className="rounded-2xl border border-slate-200/80 bg-slate-50/60 p-4">
+                      <div className="text-[12px] font-black text-slate-900">فیلتر رسیدها</div>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {[
+                          ['all', 'همه'],
+                          ['pending', 'در انتظار بررسی'],
+                          ['approved', 'تأییدشده'],
+                          ['rejected', 'ردشده'],
+                        ].map(([value, label]) => {
+                          const active = receiptStatusFilter === value;
+                          return (
+                            <button
+                              key={value}
+                              type="button"
+                              onClick={() => setReceiptStatusFilter(value as ReceiptStatusFilter)}
+                              className={`rounded-full border px-3 py-1.5 text-[11px] font-black transition ${
+                                active
+                                  ? 'border-[color-mix(in_srgb,var(--dark-teal)_38%,transparent)] bg-[color-mix(in_srgb,var(--dark-teal)_12%,white)] text-[color-mix(in_srgb,var(--dark-teal)_90%,black)]'
+                                  : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                              }`}
+                            >
+                              {label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <label className="mt-3 block text-[11px] font-bold text-slate-500">
+                        مرتب‌سازی
+                        <select
+                          value={receiptSortMode}
+                          onChange={(event) => setReceiptSortMode(event.target.value as SortMode)}
+                          className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-[12px] font-semibold text-slate-800 outline-none focus:border-[color-mix(in_srgb,var(--dark-teal)_38%,transparent)]"
+                        >
+                          <option value="due-desc">جدیدترین ثبت</option>
+                          <option value="due-asc">قدیمی‌ترین ثبت</option>
+                          <option value="amount-asc">مبلغ کم به زیاد</option>
+                          <option value="amount-desc">مبلغ زیاد به کم</option>
+                        </select>
+                      </label>
+                    </div>
+
+                    <div className="rounded-2xl border border-slate-200/80 bg-slate-50/60 p-4">
+                      <div className="text-[12px] font-black text-slate-900">فیلتر جریمه‌ها</div>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {[
+                          ['all', 'همه'],
+                          ['open', 'باز'],
+                          ['paid', 'پرداخت‌شده'],
+                          ['forgiven', 'بخشوده‌شده'],
+                        ].map(([value, label]) => {
+                          const active = penaltyStatusFilter === value;
+                          return (
+                            <button
+                              key={value}
+                              type="button"
+                              onClick={() => setPenaltyStatusFilter(value as PenaltyStatusFilter)}
+                              className={`rounded-full border px-3 py-1.5 text-[11px] font-black transition ${
+                                active
+                                  ? 'border-[color-mix(in_srgb,var(--dark-teal)_38%,transparent)] bg-[color-mix(in_srgb,var(--dark-teal)_12%,white)] text-[color-mix(in_srgb,var(--dark-teal)_90%,black)]'
+                                  : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                              }`}
+                            >
+                              {label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <label className="mt-3 block text-[11px] font-bold text-slate-500">
+                        مرتب‌سازی
+                        <select
+                          value={penaltySortMode}
+                          onChange={(event) => setPenaltySortMode(event.target.value as SortMode)}
+                          className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-[12px] font-semibold text-slate-800 outline-none focus:border-[color-mix(in_srgb,var(--dark-teal)_38%,transparent)]"
+                        >
+                          <option value="due-asc">قدیمی‌ترین شروع تأخیر</option>
+                          <option value="due-desc">جدیدترین شروع تأخیر</option>
+                          <option value="amount-asc">مبلغ کم به زیاد</option>
+                          <option value="amount-desc">مبلغ زیاد به کم</option>
+                        </select>
+                      </label>
+                    </div>
+                  </div>
+
+                  {filteredPaymentDueBuckets.length === 0 ? (
                     <div className="mt-6 rounded-3xl border border-dashed border-slate-200 bg-slate-50/40 px-4 py-10 text-center text-[13px] font-semibold text-slate-500">
                       برای این قرارداد هیچ ردیف سررسیدی در دادهٔ مالی ثبت نشده است.
                     </div>
                   ) : (
                     <div className="mt-5 space-y-3">
                       <DueMonthAccordionList
-                        buckets={paymentMonthBuckets}
+                        buckets={filteredPaymentDueBuckets}
                         collapsedMonths={collapsedPaymentMonths}
                         toggleMonth={togglePaymentMonth}
                         allocationByDueId={receiptAllocation.dueById}
                       />
                     </div>
                   )}
+
+                  <section className="mt-6 rounded-[22px] border border-slate-200/80 bg-white/90 p-5 text-right shadow-sm md:p-7">
+                    <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 pb-4">
+                      <div>
+                        <div className="text-[15px] font-black text-slate-900">جدول رسیدهای پرداخت همین قرارداد</div>
+                        <p className="mt-1.5 text-[11px] font-semibold leading-5 text-slate-500">
+                          فقط رسیدهایی که در همین قرارداد ثبت شده‌اند نمایش داده می‌شوند. اگر وضعیت بررسی، علت رد یا اطلاعات
+                          تخصیص در داده فعلی موجود نباشد، به‌جای حدس‌زدن به‌عنوان مورد نیازمند تکمیل نمایش داده می‌شود.
+                        </p>
+                      </div>
+                    </div>
+
+                    {visibleReceiptReportRows.length === 0 ? (
+                      <div className="mt-6 rounded-3xl border border-dashed border-slate-200 bg-slate-50/40 px-4 py-10 text-center text-[13px] font-semibold text-slate-500">
+                        برای این قرارداد هیچ رسیدی ثبت نشده است.
+                      </div>
+                    ) : (
+                      <div className="mt-5 overflow-x-auto rounded-2xl border border-slate-200/90">
+                        <table className="w-full min-w-[1100px] border-collapse text-[10px] sm:text-[11px]" dir="rtl">
+                          <thead>
+                            <tr className="border-b border-slate-200 bg-slate-50/90 text-slate-500">
+                              <th className="px-2 py-3 text-center font-black whitespace-nowrap">تاریخ ثبت رسید</th>
+                              <th className="px-2 py-3 text-center font-black whitespace-nowrap">مبلغ رسید</th>
+                              <th className="px-2 py-3 text-center font-black whitespace-nowrap">ثبت‌کننده</th>
+                              <th className="px-2 py-3 text-center font-black whitespace-nowrap">وضعیت رسید</th>
+                              <th className="px-2 py-3 text-center font-black whitespace-nowrap">تأییدکننده / ردکننده</th>
+                              <th className="px-2 py-3 text-center font-black whitespace-nowrap">علت رد</th>
+                              <th className="px-2 py-3 text-center font-black whitespace-nowrap">مبلغ تخصیص‌یافته</th>
+                              <th className="px-2 py-3 text-center font-black whitespace-nowrap">کسری / اضافه‌پرداخت</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {visibleReceiptReportRows.map((row, idx) => (
+                              <tr
+                                key={row.id}
+                                className={`border-b border-slate-100 ${idx % 2 === 1 ? 'bg-slate-50/40' : ''}`}
+                              >
+                                <td className="px-2 py-3 text-center font-semibold text-slate-800">{row.createdAtLabel}</td>
+                                <td className="px-2 py-3 text-center tabular-nums font-black text-slate-900">
+                                  {row.amountLabel}
+                                </td>
+                                <td className="px-2 py-3 text-center font-semibold text-slate-800">{row.depositorLabel}</td>
+                                <td className="px-2 py-3 text-center">
+                                  <span
+                                    className={`inline-flex rounded-full px-3 py-1 text-[10px] font-black ${
+                                      row.reviewStatusTone === 'emerald'
+                                        ? 'bg-emerald-50 text-emerald-700'
+                                        : row.reviewStatusTone === 'rose'
+                                          ? 'bg-rose-50 text-rose-700'
+                                          : row.reviewStatusTone === 'amber'
+                                            ? 'bg-amber-50 text-amber-800'
+                                            : 'bg-slate-100 text-slate-700'
+                                    }`}
+                                  >
+                                    {row.statusLabel}
+                                  </span>
+                                </td>
+                                <td className="px-2 py-3 text-center font-semibold text-slate-800">{row.reviewedByLabel}</td>
+                                <td className="px-2 py-3 text-center font-semibold text-slate-800">
+                                  {row.rejectionReasonLabel === '—' ? (
+                                    '—'
+                                  ) : (
+                                    <span className="inline-flex rounded-lg bg-rose-50 px-2 py-1 text-[10px] font-bold leading-5 text-rose-700">
+                                      {row.rejectionReasonLabel}
+                                    </span>
+                                  )}
+                                </td>
+                                <td className="px-2 py-3 text-center tabular-nums font-bold text-emerald-900">
+                                  {row.allocatedAmountLabel}
+                                </td>
+                                <td className="px-2 py-3 text-center font-bold text-slate-800">
+                                  {row.discrepancyLabel}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+
+                    <div className="mt-4 rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-3 text-[11px] font-semibold leading-6 text-slate-600">
+                      <div className="font-black text-slate-800">موارد ناقص در اطلاعات رسیدها</div>
+                      {visibleReceiptReportGaps.length > 0 ? (
+                        <ul className="mt-1 space-y-1">
+                          {visibleReceiptReportGaps.map((gap) => (
+                            <li key={gap}>• {gap}</li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <div className="mt-1 text-emerald-700">برای این قرارداد، اطلاعات پایه رسیدها کامل‌تر از مدل فعلی در دسترس بود.</div>
+                      )}
+                    </div>
+                  </section>
+
+                  <section className="mt-6 rounded-[22px] border border-slate-200/80 bg-white/90 p-5 text-right shadow-sm md:p-7">
+                    <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 pb-4">
+                      <div>
+                        <div className="text-[15px] font-black text-slate-900">جدول جریمه‌های همین قرارداد</div>
+                        <p className="mt-1.5 text-[11px] font-semibold leading-5 text-slate-500">
+                          جریمه‌ها بر اساس اطلاعات جریمه فعلی ساخته می‌شوند و جدا از اصل بدهی و اقساط نمایش داده می‌شوند. یادداشت‌های داخلی یا سیاست‌های
+                          ناموجود در داده فعلی نمایش داده نمی‌شوند.
+                        </p>
+                      </div>
+                    </div>
+
+                    {filteredPenaltyRows.length === 0 ? (
+                      <div className="mt-6 rounded-3xl border border-dashed border-slate-200 bg-slate-50/40 px-4 py-10 text-center text-[13px] font-semibold text-slate-500">
+                        برای این قرارداد جریمه فعالی در داده فعلی شناسایی نشده است.
+                      </div>
+                    ) : (
+                      <div className="mt-5 overflow-x-auto rounded-2xl border border-slate-200/90">
+                        <table className="w-full min-w-[1320px] border-collapse text-[10px] sm:text-[11px]" dir="rtl">
+                          <thead>
+                            <tr className="border-b border-slate-200 bg-slate-50/90 text-slate-500">
+                              <th className="px-2 py-3 text-center font-black whitespace-nowrap">علت جریمه</th>
+                              <th className="px-2 py-3 text-center font-black whitespace-nowrap">قسط / تعهد مرتبط</th>
+                              <th className="px-2 py-3 text-center font-black whitespace-nowrap">تاریخ شروع تأخیر</th>
+                              <th className="px-2 py-3 text-center font-black whitespace-nowrap">تعداد روز تأخیر</th>
+                              <th className="px-2 py-3 text-center font-black whitespace-nowrap">مبلغ جریمه</th>
+                              <th className="px-2 py-3 text-center font-black whitespace-nowrap">وضعیت جریمه</th>
+                              <th className="px-2 py-3 text-center font-black whitespace-nowrap">پرداخت‌شده</th>
+                              <th className="px-2 py-3 text-center font-black whitespace-nowrap">بخشوده‌شده</th>
+                              <th className="px-2 py-3 text-center font-black whitespace-nowrap">باقی‌مانده</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {filteredPenaltyRows.map((row, idx) => (
+                              <tr
+                                key={row.id}
+                                className={`border-b border-slate-100 ${idx % 2 === 1 ? 'bg-slate-50/40' : ''}`}
+                              >
+                                <td className="px-2 py-3 text-center font-semibold text-slate-800">{row.causeLabel}</td>
+                                <td className="px-2 py-3 text-center font-semibold text-slate-800">{row.relatedDueLabel}</td>
+                                <td className="px-2 py-3 text-center font-semibold text-slate-800">{row.startDelayDateLabel}</td>
+                                <td className="px-2 py-3 text-center font-bold text-slate-800">{row.delayDaysLabel}</td>
+                                <td className="px-2 py-3 text-center tabular-nums font-black text-slate-900">
+                                  {row.amountLabel}
+                                </td>
+                                <td className="px-2 py-3 text-center">
+                                  <span
+                                    className={`inline-flex rounded-full px-3 py-1 text-[10px] font-black ${
+                                      row.statusTone === 'emerald'
+                                        ? 'bg-emerald-50 text-emerald-700'
+                                        : row.statusTone === 'amber'
+                                          ? 'bg-amber-50 text-amber-800'
+                                          : row.statusTone === 'rose'
+                                            ? 'bg-rose-50 text-rose-700'
+                                            : 'bg-slate-100 text-slate-700'
+                                    }`}
+                                  >
+                                    {row.statusLabel}
+                                  </span>
+                                </td>
+                                <td className="px-2 py-3 text-center tabular-nums font-bold text-emerald-900">
+                                  {row.paidLabel}
+                                </td>
+                                <td className="px-2 py-3 text-center text-slate-700">
+                                  {row.forgivenRial == null ? (
+                                    '—'
+                                  ) : (
+                                    <span className="tabular-nums font-bold text-slate-700">{row.forgivenLabel}</span>
+                                  )}
+                                </td>
+                                <td className="px-2 py-3 text-center tabular-nums font-bold text-slate-900">
+                                  {row.remainingLabel}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+
+                    <div className="mt-4 rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-3 text-[11px] font-semibold leading-6 text-slate-600">
+                      <div className="font-black text-slate-800">موارد ناقص در اطلاعات جریمه</div>
+                      {visiblePenaltyReportGaps.length > 0 ? (
+                        <ul className="mt-1 space-y-1">
+                          {visiblePenaltyReportGaps.map((gap) => (
+                            <li key={gap}>• {gap}</li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <div className="mt-1 text-emerald-700">برای این قرارداد، اطلاعات جریمه بدون مورد ناقص قابل نمایش بود.</div>
+                      )}
+                    </div>
+
+                    <section className="mt-6 rounded-[22px] border border-slate-200/80 bg-white/90 p-5 text-right shadow-sm md:p-7">
+                      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 pb-4">
+                        <div>
+                          <div className="text-[15px] font-black text-slate-900">تاریخچه مالی قرارداد</div>
+                          <p className="mt-1.5 text-[11px] font-semibold leading-5 text-slate-500">
+                            فقط تغییرات مالی همین قرارداد از متمم‌ها، ثبت و بررسی رسیدها، و جریمه‌های تولیدشده در داده فعلی نمایش داده می‌شوند.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="mt-5">
+                        <div className="mb-3 text-[13px] font-black text-slate-900">تغییرات مالی ناشی از متمم‌ها</div>
+                        {visibleFinancialHistorySections.length > 0 ? (
+                          <HistoryTimelineView
+                            meta={{
+                              title: 'تغییرات مالی ناشی از متمم‌ها',
+                              description: 'این نما فقط بخش‌های مالی قرارداد را از تاریخچه متمم‌های تأییدشده نشان می‌دهد.',
+                              currentLabel: financialHistory ? 'نسخه مالی فعلی' : undefined,
+                              stats: financialHistory
+                                ? [
+                                    {
+                                      label: 'نسخه‌ها',
+                                      value: financialHistory.stats.versionCount.toLocaleString('fa-IR'),
+                                      accent: true,
+                                    },
+                                    {
+                                      label: 'بخش‌ها',
+                                      value: financialHistory.stats.sectionCount.toLocaleString('fa-IR'),
+                                    },
+                                    {
+                                      label: 'بخش‌های دارای تغییر',
+                                      value: financialHistory.stats.changedSectionCount.toLocaleString('fa-IR'),
+                                    },
+                                  ]
+                                : undefined,
+                            }}
+                            sections={visibleFinancialHistorySections}
+                            versions={financialHistory?.versions ?? []}
+                            embedded
+                          />
+                        ) : (
+                          <div className="rounded-3xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-8 text-center text-[12px] font-semibold text-slate-500">
+                            دادهٔ قابل نمایش برای تغییرات مالی ناشی از متمم‌ها در تاریخچه فعلی پیدا نشد.
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="mt-6 border-t border-slate-100 pt-5">
+                        <div className="text-[13px] font-black text-slate-900">رویدادهای مالی زمان‌مند</div>
+                        <p className="mt-1 text-[11px] font-semibold leading-5 text-slate-500">
+                          این بخش رویدادهای ثبت رسید، تأیید یا رد پرداخت، پرداخت ناقص و اعمال جریمه را به ترتیب زمان نشان می‌دهد.
+                        </p>
+
+                        {visibleFinancialHistoryEvents.length > 0 ? (
+                          <div className="mt-4 space-y-3">
+                            {visibleFinancialHistoryEvents.map((event) => (
+                              <article
+                                key={event.id}
+                                className="rounded-3xl border border-slate-200 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(248,250,252,0.94))] p-4 shadow-sm"
+                              >
+                                <div className="flex flex-wrap items-start justify-between gap-3">
+                                  <div className="min-w-0">
+                                    <div className="flex flex-wrap items-center gap-2">
+                                      <span
+                                        className={`inline-flex min-h-[30px] items-center rounded-full border px-3 py-1 text-[11px] font-black ${getFinancialHistoryToneClasses(
+                                          event.tone,
+                                        )}`}
+                                      >
+                                        {event.title}
+                                      </span>
+                                      <span className="text-[11px] font-semibold text-slate-500">{event.happenedAtLabel}</span>
+                                    </div>
+                                    <div className="mt-2 text-[14px] font-black text-slate-900">{event.sourceLabel}</div>
+                                  </div>
+                                  <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[10px] font-bold text-slate-600">
+                                    {event.kind === 'receipt-created'
+                                      ? 'ثبت رسید'
+                                      : event.kind === 'receipt-reviewed'
+                                        ? 'بررسی رسید'
+                                        : event.kind === 'receipt-partial'
+                                          ? 'اختلاف مبلغ'
+                                          : 'جریمه'}
+                                  </span>
+                                </div>
+
+                                <div className="mt-4 grid gap-2 md:grid-cols-2">
+                                  {event.details.map((detail) => (
+                                    <div key={`${event.id}-${detail.label}`} className="rounded-2xl border border-slate-100 bg-white px-4 py-2.5">
+                                      <div className="text-[10px] font-bold text-slate-400">{detail.label}</div>
+                                      <div className="mt-0.5 text-[12px] font-semibold leading-6 text-slate-800">{detail.value}</div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </article>
+                            ))}
+                          </div>
+                        ) : canSeeInternalTrace ? (
+                          <div className="mt-4 rounded-3xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-8 text-center text-[12px] font-semibold text-slate-500">
+                            برای این قرارداد رویداد زمان‌مند مالی قابل نمایش پیدا نشد.
+                          </div>
+                        ) : (
+                          <div className="mt-4 rounded-3xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-8 text-center text-[12px] font-semibold text-slate-500">
+                            این نسخه، تاریخچه مالی داخلی را نمایش نمی‌دهد.
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="mt-6 border-t border-slate-100 pt-5">
+                        <div className="text-[13px] font-black text-slate-900">موارد ناقص در تاریخچه مالی</div>
+                        {visibleFinancialHistoryGaps.length > 0 ? (
+                          <ul className="mt-3 space-y-2 rounded-3xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-4 text-[11px] font-semibold leading-6 text-slate-600">
+                            {visibleFinancialHistoryGaps.map((gap) => (
+                              <li key={gap}>• {gap}</li>
+                            ))}
+                          </ul>
+                        ) : canSeeInternalTrace ? (
+                          <div className="mt-3 rounded-3xl border border-emerald-200 bg-emerald-50 px-4 py-4 text-[11px] font-semibold leading-6 text-emerald-700">
+                            در دادهٔ فعلی، مورد ناقص آشکاری برای تاریخچه مالی این قرارداد ثبت نشده است.
+                          </div>
+                        ) : (
+                          <div className="mt-3 rounded-3xl border border-slate-200 bg-slate-50 px-4 py-4 text-[11px] font-semibold leading-6 text-slate-600">
+                            این نسخه، گپ‌های داخلی تاریخچه مالی را نمایش نمی‌دهد.
+                          </div>
+                        )}
+                      </div>
+                    </section>
+                  </section>
                 </section>
               ) : (
                 <div className="mt-6 grid grid-cols-1 gap-5 xl:grid-cols-2 xl:gap-5 2xl:gap-6">
                   {/* موبایل: جزئیات، خلاصه؛ دسکتاپ: دو ستون مساوی + ردیف تمام‌عرض فقط برای سررسیدها */}
                   <aside className="order-2 grid w-full content-start gap-4 xl:order-1 xl:self-start">
                     <section className="rounded-[22px] border border-slate-200/80 bg-white/95 p-4 text-right shadow-sm md:p-5">
-                      <div className="text-[13px] font-black text-slate-900">خلاصه گزارشات</div>
+                      <div className="text-[13px] font-black text-slate-900">خلاصه گزارش‌ها</div>
                       <p className="mt-2 text-[10px] font-semibold leading-5 text-slate-500">
                         روی هر ردیف کلیک کنید تا همان بخش در «جزئیات مالی» باز شود. ستون پرداخت‌شده از فیش‌های ثبت‌شده و تخصیص به
-                        سررسید پر می‌شود؛ جریمه تا اتصال API به‌صورت «—» می‌ماند مگر از سرور بیاید.
+                        سررسید پر می‌شود؛ مبلغ جریمه تا زمان دریافت اطلاعات از سرور به‌صورت «—» نمایش داده می‌شود.
                       </p>
 
                       {summaryFinancialRows.length === 0 ? (
@@ -885,7 +2631,7 @@ export default function ContractReportsPage() {
                         <section className="rounded-[22px] border border-slate-200/80 bg-white/90 p-4 text-right shadow-sm md:p-6 lg:p-8">
                           <h3 className="text-[13px] font-black text-slate-800">تفکیک زیربخش‌ها</h3>
                           <p className="mt-1 text-[11px] font-semibold text-slate-500">
-                            مبالغ کل زیربخش از قرارداد است؛ جریمه و پرداخت زیربخش تنها با دادهٔ برگشتی از API پر می‌شود.
+                            مبالغ کل زیربخش از قرارداد است؛ جریمه و پرداخت زیربخش تنها با دادهٔ برگشتی از سرور پر می‌شود.
                           </p>
                           <div className="mt-3 overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-[0_1px_0_rgba(15,23,42,0.04)]">
                             <table className="w-full min-w-[640px] border-collapse text-[11px] md:min-w-[720px] md:text-[12px]" dir="rtl">
@@ -976,7 +2722,7 @@ export default function ContractReportsPage() {
                           </p>
                         </div>
                       </div>
-                      {summaryDetailMonthBuckets.length === 0 ? (
+                      {filteredDueBuckets.length === 0 ? (
                         <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-[12px] font-semibold text-amber-900">
                           سررسید ثبت‌شده تشخیص داده نشد؛ اگر تاریخ سررسید خارج از فرمت معمول ذخیره شده، در بخش تاریخچه پرداخت بررسی
                           کنید.
@@ -984,7 +2730,7 @@ export default function ContractReportsPage() {
                       ) : (
                         <div className="mt-5 space-y-3">
                           <DueMonthAccordionList
-                            buckets={summaryDetailMonthBuckets}
+                            buckets={filteredDueBuckets}
                             collapsedMonths={collapsedSummaryDueMonths}
                             toggleMonth={toggleSummaryDueMonth}
                             allocationByDueId={receiptAllocation.dueById}

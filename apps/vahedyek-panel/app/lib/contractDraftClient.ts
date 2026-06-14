@@ -219,8 +219,9 @@ export async function getContractsList(status: ContractStatus) {
   return readJson<ContractsListResponse>(`/api/contracts?status=${status}`);
 }
 
-export async function getContractDetails(contractId: string) {
-  return readJson<any>(`/api/contracts/${contractId}`);
+export async function getContractDetails(contractId: string, options?: { view?: 'buyer-safe' }) {
+  const query = options?.view ? `?view=${encodeURIComponent(options.view)}` : '';
+  return readJson<any>(`/api/contracts/${contractId}${query}`);
 }
 
 export async function getContractAppendices(contractId: string) {
