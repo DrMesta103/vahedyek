@@ -122,7 +122,7 @@ export function buildMonthCells(input: {
   excludedShiftDates?: string[];
   weekendOverrideDates?: string[];
 }): CalendarDayCell[] {
-  const excludedDates = new Set((input.excludedShiftDates ?? []).map((item) => item.trim()));
+  const excludedDates = new Set((input.excludedShiftDates ?? []).map((item) => normalizePersianDateInput(item)));
   const weekendOverrides = new Set((input.weekendOverrideDates ?? []).map((item) => normalizePersianDateInput(item)));
   const daysInMonth = getPersianMonthLength(input.year, input.month);
   const startWeekday = getPersianWeekdayIndex({ year: input.year, month: input.month, day: 1 });
@@ -191,8 +191,9 @@ export function getDayDetails(input: {
   shifts: StoredCalendarShift[];
   excludedShiftDates?: string[];
   weekendOverrideDates?: string[];
+  bounds?: { start: PersianYmd; end: PersianYmd };
 }): { isHoliday: boolean; shifts: CalendarDayShift[]; events: CalendarDayEvent[] } {
-  const excludedDates = new Set((input.excludedShiftDates ?? []).map((item) => item.trim()));
+  const excludedDates = new Set((input.excludedShiftDates ?? []).map((item) => normalizePersianDateInput(item)));
   const weekendOverrides = new Set((input.weekendOverrideDates ?? []).map((item) => normalizePersianDateInput(item)));
   const parts = input.date.match(/^(\d{4})\/(\d{2})\/(\d{2})$/);
   if (!parts) {
@@ -204,6 +205,11 @@ export function getDayDetails(input: {
     month: Number(parts[2]),
     day: Number(parts[3]),
   };
+  const inRange = input.bounds ? isPersianYmdInRange(ymd, input.bounds.start, input.bounds.end) : true;
+  if (!inRange) {
+    return { isHoliday: false, shifts: [], events: [] };
+  }
+
   const weekdayName = getPersianWeekdayName(ymd);
   const dayEvents = findEventsForDate(input.date, input.singleHolidays);
   const holidayEvent = dayEvents.find((item) => isCalendarHolidayEvent(item));

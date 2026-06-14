@@ -140,6 +140,42 @@ export async function getEmployeeContractForDate(employeeId: string, dateIso: st
   }
 }
 
+export async function getEmployeeContractsForMonth(
+  employeeId: string,
+  monthStart: string,
+  monthEnd: string,
+  tenantId?: string | null,
+) {
+  try {
+    const rows = await prisma.employeeContract.findMany({
+      where: {
+        employeeId,
+        status: 'active',
+        OR: [{ startDate: null }, { startDate: { lte: monthEnd } }],
+        AND: [{ OR: [{ endDate: null }, { endDate: { gte: monthStart } }] }],
+        ...employeeContractTenantFilter(tenantId),
+      },
+      orderBy: [{ finalizedAt: 'desc' }, { updatedAt: 'desc' }],
+      select: {
+        id: true,
+        employeeId: true,
+        status: true,
+        isCurrent: true,
+        startDate: true,
+        endDate: true,
+        contractNumber: true,
+        templateId: true,
+        data: true,
+        finalizedAt: true,
+      },
+    });
+    return rows.map(contractRowToSummary);
+  } catch (error) {
+    if (isMissingEmployeeContractTable(error)) return [];
+    throw error;
+  }
+}
+
 export async function finalizeEmployeeContractDraft(employeeId: string, draft: EmployeeContractDraft) {
   const session = await getSessionContext();
   if (!session?.tenantId) throw new Error('tenant_not_selected');

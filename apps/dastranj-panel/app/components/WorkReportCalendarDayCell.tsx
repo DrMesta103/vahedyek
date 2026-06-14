@@ -26,6 +26,7 @@ export function WorkReportCalendarDayCell({
   const dayNumber = Number(day.date.split('/')[2]);
   const indicators = day.statusBadges.slice(0, 3);
   const hasMission = day.status === 'مأموریت';
+  const hasExpectedShift = day.expectedShifts.length > 0;
 
   return (
     <button
@@ -35,7 +36,7 @@ export function WorkReportCalendarDayCell({
         day.isHoliday ? 'is-holiday' : '',
         day.isToday ? 'is-today' : '',
         isSelected ? 'is-selected' : '',
-        indicators.length > 0 ? 'has-shifts' : '',
+        indicators.length > 0 || hasExpectedShift ? 'has-shifts' : '',
         isDimmed ? 'is-dimmed' : '',
       ]
         .filter(Boolean)
@@ -43,11 +44,12 @@ export function WorkReportCalendarDayCell({
       onClick={onSelect}
       aria-pressed={isSelected}
       aria-current={day.isToday ? 'date' : undefined}
-      aria-label={`${day.jalaliDate}، ${day.status}`}
-      title={day.status}
+      aria-label={`${day.jalaliDate}، ${hasExpectedShift ? day.expectedShifts.map((shift) => shift.title).join('، ') : day.status}`}
+      title={hasExpectedShift ? day.expectedShifts.map((shift) => shift.title).join('، ') : day.status}
     >
       {day.isHoliday ? <span className="calendar-details-day-dot is-holiday" aria-hidden /> : null}
       {!day.isHoliday && hasMission ? <span className="calendar-details-day-dot is-other" aria-hidden /> : null}
+      {!day.isHoliday && hasExpectedShift ? <span className="calendar-details-day-dot is-shift" aria-hidden /> : null}
       <span className={['calendar-details-day-num', day.isToday ? 'is-today-mark' : ''].filter(Boolean).join(' ')}>
         {formatFaNumber(dayNumber, { useGrouping: false })}
       </span>

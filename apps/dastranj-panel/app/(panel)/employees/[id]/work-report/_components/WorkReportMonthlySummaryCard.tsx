@@ -83,12 +83,17 @@ export function WorkReportMonthlySummaryCard({
 
       <div className="employee-work-report-summary-section">
         <div className="employee-work-report-summary-grid-metrics is-work">
+          <SummaryMetric label="موظفی کل" minutes={summary.requiredMinutes} tone="blue" />
+          <SummaryMetric label="کارکرد واقعی" minutes={summary.workedMinutes} tone="green" />
           <SummaryMetric label="حضور" minutes={summary.presenceMinutes} tone="green" />
           <SummaryMetric label="غیبت" minutes={summary.absenceMinutes} tone="red" />
+          <SummaryMetric label="کسرکار" minutes={summary.shortageMinutes} tone="red" />
           <SummaryMetric label="اضافه‌کاری" minutes={summary.overtimeMinutes} tone="orange" />
+          <SummaryMetric label="شب‌کاری" minutes={summary.nightWorkMinutes} tone="cyan" />
           <SummaryMetric label="مأموریت" minutes={summary.missionMinutes} tone="cyan" />
-          <SummaryMetric label="تعجیل مجاز" minutes={summary.earlyLeaveMinutes} tone="yellow" />
-          <SummaryMetric label="تأخیر مجاز" minutes={summary.delayMinutes} tone="pink" />
+          <SummaryMetric label="دورکاری" minutes={summary.remoteWorkMinutes} tone="blue" />
+          <SummaryMetric label="تأخیر" minutes={summary.delayMinutes} tone="pink" />
+          <SummaryMetric label="تعجیل" minutes={summary.earlyLeaveMinutes} tone="yellow" />
         </div>
 
         <div className="employee-work-report-summary-divider">
@@ -96,10 +101,19 @@ export function WorkReportMonthlySummaryCard({
         </div>
 
         <div className="employee-work-report-summary-grid-metrics is-leave">
-          <SummaryMetric label="استحقاقی" minutes={summary.entitledLeaveMinutes} tone="blue" />
-          <SummaryMetric label="بدون حقوق" minutes={summary.unpaidLeaveMinutes} tone="blue" />
-          <SummaryMetric label="تشویقی" minutes={summary.encouragementLeaveMinutes} tone="blue" />
-          <SummaryMetric label="استعلاجی" minutes={summary.sickLeaveMinutes} tone="blue" />
+          <SummaryMetric label="مرخصی استحقاقی" minutes={summary.entitledLeaveMinutes} tone="blue" />
+          <SummaryMetric label="مرخصی بدون حقوق" minutes={summary.unpaidLeaveMinutes} tone="blue" />
+          <SummaryMetric label="مرخصی تشویقی" minutes={summary.encouragementLeaveMinutes} tone="blue" />
+          <SummaryMetric label="مرخصی استعلاجی" minutes={summary.sickLeaveMinutes} tone="blue" />
+        </div>
+
+        <div className="employee-work-report-summary-divider">
+          <span>درخواست‌ها</span>
+        </div>
+        <div className="employee-work-report-summary-request-stats">
+          <span>تأییدشده: {formatFaNumber(summary.approvedRequestsCount, { useGrouping: false })}</span>
+          <span>در انتظار: {formatFaNumber(summary.pendingRequestsCount, { useGrouping: false })}</span>
+          <span>تردد ناقص: {formatFaNumber(summary.incompleteAttendanceCount, { useGrouping: false })} روز</span>
         </div>
       </div>
 

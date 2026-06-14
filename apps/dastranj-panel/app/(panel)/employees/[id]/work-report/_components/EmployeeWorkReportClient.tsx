@@ -10,6 +10,7 @@ import type { EmployeeWorkReportData, WorkReportDay } from '../../../../../lib/e
 import { formatFaNumber } from '../../../../../lib/format-fa';
 import { PERSIAN_MONTH_NAMES } from '../../../../../lib/calendar-dates';
 import { WorkReportMonthlySummaryCard } from './WorkReportMonthlySummaryCard';
+import { WorkReportPayrollPreviewPanel } from './WorkReportPayrollPreviewPanel';
 
 function formatDuration(minutes: number) {
   const safe = Math.max(0, Math.round(minutes));
@@ -86,20 +87,37 @@ function dayTypeLabel(day: WorkReportDay) {
   }
 }
 
-type WorkReportFilterKey = 'attendance' | 'absence' | 'shift' | 'holiday' | 'incomplete_attendance';
+type WorkReportFilterKey =
+  | 'all'
+  | 'attendance'
+  | 'absence'
+  | 'leave'
+  | 'overtime'
+  | 'incomplete_attendance'
+  | 'holiday'
+  | 'remote'
+  | 'mission';
 
 function filterLabel(key: WorkReportFilterKey) {
   switch (key) {
+    case 'all':
+      return 'همه';
     case 'attendance':
-      return 'تردد';
+      return 'حضور';
     case 'absence':
       return 'غیبت';
-    case 'shift':
-      return 'شیفت';
-    case 'holiday':
-      return 'تعطیلی';
+    case 'leave':
+      return 'مرخصی';
+    case 'overtime':
+      return 'اضافه‌کاری';
     case 'incomplete_attendance':
       return 'تردد ناقص';
+    case 'holiday':
+      return 'تعطیل';
+    case 'remote':
+      return 'دورکاری';
+    case 'mission':
+      return 'مأموریت';
     default:
       return key;
   }
@@ -107,16 +125,24 @@ function filterLabel(key: WorkReportFilterKey) {
 
 function matchesFilter(day: WorkReportDay, key: WorkReportFilterKey) {
   switch (key) {
+    case 'all':
+      return true;
     case 'attendance':
-      return day.attendanceMinutes > 0 || day.attendanceRecords.length > 0;
+      return day.status === 'حضور' || day.attendanceMinutes > 0;
     case 'absence':
       return day.status === 'غیبت';
-    case 'shift':
-      return day.expectedShifts.length > 0;
+    case 'leave':
+      return day.leaveMinutes > 0 || day.status === 'مرخصی';
+    case 'overtime':
+      return day.overtimeMinutes > 0 || day.status === 'اضافه‌کاری';
+    case 'incomplete_attendance':
+      return day.isIncompleteAttendance || day.status === 'تردد ناقص';
     case 'holiday':
       return day.isHoliday;
-    case 'incomplete_attendance':
-      return day.status === 'تردد ناقص';
+    case 'remote':
+      return day.remoteWorkMinutes > 0 || day.status === 'دورکاری';
+    case 'mission':
+      return day.missionMinutes > 0 || day.status === 'مأموریت';
     default:
       return false;
   }
@@ -163,7 +189,16 @@ export function EmployeeWorkReportClient({
   }, [report.days]);
 
   const filterCounts = useMemo(() => {
-    const keys: WorkReportFilterKey[] = ['attendance', 'absence', 'shift', 'holiday', 'incomplete_attendance'];
+    const keys: WorkReportFilterKey[] = [
+      'attendance',
+      'absence',
+      'leave',
+      'overtime',
+      'incomplete_attendance',
+      'holiday',
+      'remote',
+      'mission',
+    ];
     const counts = Object.fromEntries(keys.map((key) => [key, 0])) as Record<WorkReportFilterKey, number>;
     for (const day of report.days) {
       for (const key of keys) {
@@ -243,10 +278,12 @@ export function EmployeeWorkReportClient({
         periodRequests={report.periodRequests}
       />
 
+      <WorkReportPayrollPreviewPanel report={report} />
+
       <div className="employee-work-report-panels calendar-details-body">
         <section className="calendar-details-main employee-work-report-calendar-panel">
           <PersianMonthCalendarGrid
-            monthTitle={`${PERSIAN_MONTH_NAMES[report.period.month - 1] ?? ''} ${formatFaNumber(report.period.year, { useGrouping: false })}`}
+            monthTitle={`گزارش کارکرد ${PERSIAN_MONTH_NAMES[report.period.month - 1] ?? ''} ${formatFaNumber(report.period.year, { useGrouping: false })}`}
             onPrev={() => navigateMonth(report.period.year, report.period.month === 1 ? 12 : report.period.month - 1)}
             onNext={() => navigateMonth(report.period.year, report.period.month === 12 ? 1 : report.period.month + 1)}
             toolbarExtra={
@@ -261,7 +298,18 @@ export function EmployeeWorkReportClient({
                     <span>همه</span>
                     <strong>{formatFaNumber(report.days.length, { useGrouping: false })}</strong>
                   </button>
-                  {(['attendance', 'absence', 'shift', 'holiday', 'incomplete_attendance'] as const).map((key) => {
+                  {(
+                    [
+                      'attendance',
+                      'absence',
+                      'leave',
+                      'overtime',
+                      'incomplete_attendance',
+                      'holiday',
+                      'remote',
+                      'mission',
+                    ] as const
+                  ).map((key) => {
                     const isActive = activeFilters.includes(key);
                     return (
                       <button
@@ -372,8 +420,12 @@ export function EmployeeWorkReportClient({
                   <strong>{formatDuration(selectedDay.deductedBreakMinutes)}</strong>
                 </div>
                 <div className="employee-work-report-day-quick-item">
-                  <span>کارکرد</span>
-                  <strong>{formatDuration(selectedDay.workedMinutes)}</strong>
+                  <span>شب‌کاری</span>
+                  <strong>{formatDuration(selectedDay.nightWorkMinutes)}</strong>
+                </div>
+                <div className="employee-work-report-day-quick-item">
+                  <span>قرارداد</span>
+                  <strong>{selectedDay.contractLabel ?? 'ثبت نشده'}</strong>
                 </div>
               </div>
 
@@ -460,6 +512,9 @@ export function EmployeeWorkReportClient({
                     موظفی <em>{formatDuration(selectedDay.requiredMinutes)}</em>
                   </span>
                   <span>
+                    شب‌کاری <em>{formatDuration(selectedDay.nightWorkMinutes)}</em>
+                  </span>
+                  <span>
                     کارکرد <em>{formatDuration(selectedDay.workedMinutes)}</em>
                   </span>
                   <span>
@@ -511,6 +566,38 @@ export function EmployeeWorkReportClient({
                   <p className="calendar-details-muted">رکورد ترددی برای این روز ثبت نشده است.</p>
                 )}
               </div>
+
+              {selectedDay.incompleteSegments.length > 0 ? (
+                <div className="calendar-details-day-block">
+                  <div className="calendar-details-day-block-head">
+                    <h3>بخش‌های ناقص شیفت</h3>
+                  </div>
+                  <div className="employee-work-report-pending-list">
+                    {selectedDay.incompleteSegments.map((segment) => (
+                      <span key={segment}>{segment}</span>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
+              {selectedDay.payrollEffect ? (
+                <div className="calendar-details-day-block">
+                  <div className="calendar-details-day-block-head">
+                    <h3>اثر مالی روز</h3>
+                  </div>
+                  <div className="employee-work-report-day-metrics">
+                    <span>
+                      حقوق پایه <em>{formatFaNumber(selectedDay.payrollEffect.baseSalaryPortion)} ریال</em>
+                    </span>
+                    <span>
+                      اضافه‌کاری <em>{formatFaNumber(selectedDay.payrollEffect.overtimePortion)} ریال</em>
+                    </span>
+                    <span>
+                      شب‌کاری <em>{formatFaNumber(selectedDay.payrollEffect.nightWorkPortion)} ریال</em>
+                    </span>
+                  </div>
+                </div>
+              ) : null}
 
               {selectedDay.warnings.length > 0 ? (
                 <div className="calendar-details-day-block">

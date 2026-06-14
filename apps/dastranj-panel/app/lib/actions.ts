@@ -13,7 +13,7 @@ import {
 import { getSessionContext } from './auth';
 import { isValidIranMobile, normalizeEmail, sanitizeIranMobileInput } from './contact';
 import { getEmployeeImportJobDetailsForTenant, listEmployeeImportJobsForTenant } from './employee-import-jobs';
-import { isPersianYmdInRange, parsePersianYmd } from './calendar-dates';
+import { isPersianYmdInRange, parsePersianYmd, persianToDate } from './calendar-dates';
 import { ensureGlobalDefaultCalendar } from './calendar-defaults';
 import { getOfficialHolidaysForYear } from './calendar-official-holidays';
 import { expandCalendarEventDates, normalizePersianDateInput, parseCalendarStoredEvents } from './calendar-events';
@@ -2574,7 +2574,21 @@ function parseTagList(raw: string) {
 }
 
 function parseJoinDate(raw: string) {
-  const parsed = new Date(raw);
+  const trimmed = raw.trim();
+  if (!trimmed) return new Date();
+
+  const persianParts = parsePersianYmd(normalizePersianDateInput(trimmed));
+  if (persianParts) {
+    try {
+      const iso = persianToDate(persianParts).toISOString().slice(0, 10);
+      return new Date(`${iso}T12:00:00.000Z`);
+    } catch {
+      // fall through to ISO parsing
+    }
+  }
+
+  const isoCandidate = /^\d{4}-\d{2}-\d{2}$/.test(trimmed) ? `${trimmed}T12:00:00.000Z` : trimmed;
+  const parsed = new Date(isoCandidate);
   return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
 }
 
@@ -2641,6 +2655,29 @@ async function syncWorkGroupMembers(
           employeeId: assignment.employeeId,
           isCurrent: true,
         },
+        data: {
+          accessLevel: assignment.accessLevel,
+          joinedAt: assignment.joinedAt,
+          leftAt: null,
+          isCurrent: true,
+        },
+      });
+      continue;
+    }
+
+    const archivedInGroup = await tx.workGroupMember.findFirst({
+      where: {
+        workGroupId: params.workGroupId,
+        employeeId: assignment.employeeId,
+        isCurrent: false,
+      },
+      orderBy: { joinedAt: 'desc' },
+      select: { id: true },
+    });
+
+    if (archivedInGroup) {
+      await tx.workGroupMember.update({
+        where: { id: archivedInGroup.id },
         data: {
           accessLevel: assignment.accessLevel,
           joinedAt: assignment.joinedAt,
@@ -2765,6 +2802,9 @@ async function persistWorkGroupUpdate(
   revalidatePath('/quick-setup');
   if (workGroupId) {
     revalidatePath(`/work-groups/${workGroup.id}/edit`);
+  }
+  for (const assignment of assignments) {
+    revalidatePath(`/employees/${assignment.employeeId}/work-report`);
   }
 
   return workGroup;
