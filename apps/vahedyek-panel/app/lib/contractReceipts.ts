@@ -1,6 +1,7 @@
 export type ReceiptTransferKind = 'cash' | 'cheque' | 'remittance' | 'account_transfer' | 'card_to_card';
 
 export type ReceiptAllocationMode = 'direct' | 'auto';
+export type ReceiptReviewStatus = 'pending' | 'approved' | 'rejected';
 
 export type ReceiptDocumentFile = {
   id: string;
@@ -58,6 +59,10 @@ export type RegisteredReceiptRecord = {
   documents: ReceiptDocument[];
   createdAt: string;
   paymentFields?: ReceiptPaymentFieldsPersisted;
+  reviewStatus?: ReceiptReviewStatus;
+  reviewedBy?: string;
+  reviewedAt?: string;
+  rejectionReason?: string;
 };
 
 export function getReceiptsStorageKey(contractId: string) {
@@ -66,7 +71,11 @@ export function getReceiptsStorageKey(contractId: string) {
 
 export function normalizeReceiptRecord(raw: unknown): RegisteredReceiptRecord | null {
   if (!raw || typeof raw !== 'object') return null;
-  const item = raw as Partial<RegisteredReceiptRecord>;
+  const item = raw as Partial<RegisteredReceiptRecord> & {
+    status?: unknown;
+    reviewerName?: unknown;
+    rejectReason?: unknown;
+  };
   const id = String(item.id ?? '').trim();
   if (!id) return null;
 
@@ -102,6 +111,25 @@ export function normalizeReceiptRecord(raw: unknown): RegisteredReceiptRecord | 
       item.paymentFields && typeof item.paymentFields === 'object'
         ? (item.paymentFields as ReceiptPaymentFieldsPersisted)
         : undefined,
+    reviewStatus:
+      item.reviewStatus === 'pending' || item.reviewStatus === 'approved' || item.reviewStatus === 'rejected'
+        ? item.reviewStatus
+        : item.status === 'pending' || item.status === 'approved' || item.status === 'rejected'
+          ? item.status
+          : undefined,
+    reviewedBy:
+      item.reviewedBy != null
+        ? String(item.reviewedBy)
+        : item.reviewerName != null
+          ? String(item.reviewerName)
+          : undefined,
+    reviewedAt: item.reviewedAt != null ? String(item.reviewedAt) : undefined,
+    rejectionReason:
+      item.rejectionReason != null
+        ? String(item.rejectionReason)
+        : item.rejectReason != null
+          ? String(item.rejectReason)
+          : undefined,
   };
 }
 

@@ -162,6 +162,43 @@ async function applyContextualMenuAccess(userId: string, tenantId: string, allow
   return allowedMenuItemIds.filter((id) => id !== CUSTOMER_CONTRACTS_MENU_ID);
 }
 
+export async function canViewBuyerContract(userId: string, tenantId: string, contractId: string) {
+  const user = await prisma.appUser.findUnique({
+    where: { id: userId },
+    select: { id: true, fullName: true, email: true, mobile: true },
+  });
+
+  if (!user) return false;
+
+  const profileBuyerIds = await getBuyerIdsForUserProfile(tenantId, user);
+  const partyIds = unique([user.id, ...profileBuyerIds]);
+  const partyNames = unique([user.fullName.trim()]);
+  const partyConditions = [
+    ...partyIds.flatMap((id) => [{ personId: id }, { directoryId: id }]),
+    ...partyNames.map((name) => ({ name })),
+  ];
+
+  if (!partyConditions.length) return false;
+
+  const contract = await prisma.contractDraft.findFirst({
+    where: {
+      id: contractId,
+      tenantId,
+      parties: {
+        members: {
+          some: {
+            side: PartySide.party_two,
+            OR: partyConditions,
+          },
+        },
+      },
+    },
+    select: { id: true },
+  });
+
+  return Boolean(contract);
+}
+
 export async function ensureTenantDefaultRoles(tenantId: string) {
   const roles = [] as Awaited<ReturnType<typeof prisma.tenantRole.upsert>>[];
   for (const role of DEFAULT_TENANT_ROLES) {

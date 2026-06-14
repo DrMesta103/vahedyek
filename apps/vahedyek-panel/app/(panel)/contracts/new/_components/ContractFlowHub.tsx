@@ -679,49 +679,49 @@ export function ContractFlowHub() {
     {
       id: 'subject',
       title: 'اطلاعات پایه',
-      navLabel: 'Basic Info',
+      navLabel: 'اطلاعات پایه',
       render: () => <SubjectStep stepId="subject" title="اطلاعات پایه" embedded />,
     },
     {
       id: 'parties',
       title: 'طرفین',
-      navLabel: 'Parties',
+      navLabel: 'طرفین',
       render: () => <PartiesStep stepId="parties" title="طرفین" embedded />,
     },
     {
       id: 'financial',
       title: 'اطلاعات مالی',
-      navLabel: 'Financial Info',
+      navLabel: 'اطلاعات مالی',
       render: () => <FinancialStep stepId="financial" title="اطلاعات مالی قرارداد" embedded />,
     },
     {
       id: 'penalties',
       title: 'جرایم',
-      navLabel: 'Penalties',
+      navLabel: 'جرایم',
       render: () => <PenaltiesStep stepId="penalties" title="جرایم" embedded />,
     },
     {
       id: 'discounts',
       title: 'تخفیف‌ها',
-      navLabel: 'Discounts',
+      navLabel: 'تخفیف‌ها',
       render: () => <DiscountsStep stepId="discounts" title="تخفیف‌ها" embedded />,
     },
     {
       id: 'interest',
       title: 'سود دریافتی',
-      navLabel: 'Interest',
+      navLabel: 'سود دریافتی',
       render: () => <ContractRuleDraftStep stepId="interest" ruleId="interest" title="سود دریافتی" embedded />,
     },
     {
       id: 'forgiveness',
       title: 'بخشودگی',
-      navLabel: 'Forgiveness',
+      navLabel: 'بخشودگی',
       render: () => <ContractRuleDraftStep stepId="forgiveness" ruleId="forgiveness" title="بخشودگی" embedded />,
     },
     {
       id: 'termination',
       title: 'شرایط فسخ',
-      navLabel: 'Termination Terms',
+      navLabel: 'شرایط فسخ',
       render: () => <TerminationStep stepId="termination" title="شرایط فسخ" embedded />,
     },
     ...(extraCostsApplicable
@@ -729,7 +729,7 @@ export function ContractFlowHub() {
           {
             id: 'extraCosts',
             title: 'سایر هزینه‌های قرارداد',
-            navLabel: 'Extra Costs',
+            navLabel: 'هزینه‌های اضافی',
             render: () => <ExtraCostsStep title="سایر هزینه‌های قرارداد" />,
           } as SectionItem,
         ]
@@ -737,13 +737,13 @@ export function ContractFlowHub() {
     {
       id: 'technicalSpecs',
       title: 'مشخصات فنی پروژه',
-      navLabel: 'Technical Specs',
+      navLabel: 'مشخصات فنی',
       render: () => <TechnicalSpecsStep title="مشخصات فنی پروژه" />,
     },
     {
       id: 'contractAttachments',
       title: 'پیوست و اسناد قرارداد',
-      navLabel: 'Attachments',
+      navLabel: 'پیوست‌ها',
       render: () => <ContractAttachmentsStep title="پیوست و اسناد قرارداد" />,
     },
   ];

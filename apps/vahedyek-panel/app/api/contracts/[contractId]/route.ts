@@ -4,7 +4,7 @@ import { requireSessionContext } from '../../../lib/auth';
 import { serializeContractorType, serializeContractType } from '../../../lib/subjectUtils';
 import { prisma } from '../../../lib/prisma';
 import { handlePrismaApiError } from '../../../lib/prismaApiError';
-import { getMembershipAccess } from '../../../lib/access-control';
+import { canViewBuyerContract, getMembershipAccess, hasPermission } from '../../../lib/access-control';
 import { userCanDecideApprovalOnContract } from '../../../lib/contractApprovalAccess';
 import { resolveDisplayedContractStatus } from '../../../lib/contractApprovalStatus';
 import { fetchDraftApprovalFlagsRaw } from '../../../lib/contractDraftApprovalRaw';
@@ -13,11 +13,16 @@ import type { ContractStatus } from '../../../types/contract';
 import { validatePenaltiesStep } from '../../../lib/contractValidation';
 import { normalizeAreaPricingMode } from '../../../lib/contractFinancialPricing';
 import { normalizeWorkflowSteps } from '../../../lib/workflowTypes';
+import { normalizeBuilderPenaltyRuleState } from '../../../lib/builderPenalty';
+import { normalizeRuleState } from '../../../lib/businessContractRules';
 import {
   mapFinancialCategoriesForClientApi,
   mapFinancialDueItemsForClientApi,
   resolveFinancialActiveTabForClientApi,
 } from '../../../lib/financialCategoriesApiSerialize';
+
+const REPORT_RULE_IDS = ['forgiveness', 'interest', 'builder-penalty'] as const;
+type ReportRuleId = (typeof REPORT_RULE_IDS)[number];
 
 function serializeShareMode(value: ShareMode) {
   return value === ShareMode.percent ? 'percent' : 'dang';
@@ -61,6 +66,53 @@ function serializePenalties(penalties: any) {
   };
 }
 
+function normalizeContractRuleSnapshot(ruleId: ReportRuleId, payload: unknown) {
+  const normalized = normalizeRuleState(ruleId, payload);
+  return ruleId === 'builder-penalty' ? normalizeBuilderPenaltyRuleState(normalized) : normalized;
+}
+
+function serializeContractRuleSnapshots(
+  ruleRows: Array<{ ruleId: string; payload: unknown; updatedAt: Date }>,
+  tenantRulesPayload: unknown,
+) {
+  const tenantRules =
+    tenantRulesPayload && typeof tenantRulesPayload === 'object' ? (tenantRulesPayload as Record<string, unknown>) : {};
+  const rowByRuleId = new Map(ruleRows.map((row) => [row.ruleId, row]));
+
+  return {
+    forgiveness: (() => {
+      const row = rowByRuleId.get('forgiveness');
+      const tenantPayload = tenantRules['forgiveness'];
+      const source = row ? 'contract' : tenantPayload ? 'business-default' : 'default';
+      return {
+        source,
+        updatedAt: row?.updatedAt?.toISOString() ?? null,
+        state: normalizeContractRuleSnapshot('forgiveness', row?.payload ?? tenantPayload),
+      };
+    })(),
+    interest: (() => {
+      const row = rowByRuleId.get('interest');
+      const tenantPayload = tenantRules['interest'];
+      const source = row ? 'contract' : tenantPayload ? 'business-default' : 'default';
+      return {
+        source,
+        updatedAt: row?.updatedAt?.toISOString() ?? null,
+        state: normalizeContractRuleSnapshot('interest', row?.payload ?? tenantPayload),
+      };
+    })(),
+    builderPenalty: (() => {
+      const row = rowByRuleId.get('builder-penalty');
+      const tenantPayload = tenantRules['builder-penalty'];
+      const source = row ? 'contract' : tenantPayload ? 'business-default' : 'default';
+      return {
+        source,
+        updatedAt: row?.updatedAt?.toISOString() ?? null,
+        state: normalizeContractRuleSnapshot('builder-penalty', row?.payload ?? tenantPayload),
+      };
+    })(),
+  };
+}
+
 function isFormCompleteForApprovalGate(draft: any): boolean {
   const hasSubject = Boolean(draft.subject?.contractNumber && draft.subject?.contractDate && draft.subject?.blockId && draft.subject?.unitId);
   const hasParties = Boolean(
@@ -99,6 +151,8 @@ export async function GET(request: Request, context: { params: Promise<{ contrac
     if (session instanceof NextResponse) return session;
 
     const { contractId } = await context.params;
+    const { searchParams } = new URL(request.url);
+    const view = searchParams.get('view');
     const draft = await prisma.contractDraft.findFirst({
       where: { id: contractId, tenantId: session.tenantId },
       select: {
@@ -110,6 +164,10 @@ export async function GET(request: Request, context: { params: Promise<{ contrac
         parties: { include: { members: { orderBy: { createdAt: 'asc' } } } },
         financial: { include: { categories: true, dueItems: true } },
         penalties: { include: { types: true, rules: true } },
+        ruleDraftSettings: {
+          where: { ruleId: { in: [...REPORT_RULE_IDS] } },
+          select: { ruleId: true, payload: true, updatedAt: true },
+        },
         terminationRules: true,
         extraCosts: true,
         technicalSpecs: true,
@@ -138,7 +196,22 @@ export async function GET(request: Request, context: { params: Promise<{ contrac
     );
 
     const membershipAccess = await getMembershipAccess(session.userId, session.tenantId);
+    const canViewInternalContract = hasPermission(membershipAccess, 'contracts.view');
+    const canViewBuyerSafeContract = await canViewBuyerContract(session.userId, session.tenantId, contractId);
+
+    if (view === 'buyer-safe') {
+      if (!canViewBuyerSafeContract && !canViewInternalContract) {
+        return NextResponse.json({ message: 'شما به این قرارداد دسترسی ندارید.' }, { status: 403 });
+      }
+    } else if (!canViewInternalContract) {
+      return NextResponse.json({ message: 'شما به مشاهده قراردادها دسترسی ندارید.' }, { status: 403 });
+    }
+
     const approvalProcessConfig = await fetchTenantApprovalProcessConfigRaw(session.tenantId);
+    const tenantRuleSettings = await prisma.tenantContractRuleSettings.findUnique({
+      where: { tenantId: session.tenantId },
+      select: { rulesPayload: true },
+    });
 
     const stepsSnap = normalizeWorkflowSteps(draft.approvalInstance?.stepsSnapshot);
     const workflowCurrentStep =
@@ -157,7 +230,7 @@ export async function GET(request: Request, context: { params: Promise<{ contrac
       }),
     };
 
-    return NextResponse.json({
+    const fullResponse = {
       id: draft.id,
       status,
       approvalDecision,
@@ -259,12 +332,31 @@ export async function GET(request: Request, context: { params: Promise<{ contrac
             })()
           : null,
         penalties: serializePenalties(draft.penalties),
+        ruleSettings: serializeContractRuleSnapshots(draft.ruleDraftSettings, tenantRuleSettings?.rulesPayload),
         terminationRules: draft.terminationRules ? { buyerRules: draft.terminationRules.buyerRules ?? {} } : null,
         extraCosts: draft.extraCosts ? { payload: draft.extraCosts.payload ?? [] } : null,
         technicalSpecs: draft.technicalSpecs ? { specs: draft.technicalSpecs.specs ?? [] } : null,
         attachments: draft.attachments ? { documents: draft.attachments.documents ?? [], notes: draft.attachments.notes ?? '' } : null,
       },
-    });
+    };
+
+    if (view === 'buyer-safe') {
+      return NextResponse.json({
+        id: fullResponse.id,
+        status: fullResponse.status,
+        createdAt: fullResponse.createdAt,
+        updatedAt: fullResponse.updatedAt,
+        data: {
+          subject: fullResponse.data.subject,
+          parties: fullResponse.data.parties,
+          financial: fullResponse.data.financial,
+          penalties: fullResponse.data.penalties,
+          terminationRules: fullResponse.data.terminationRules,
+        },
+      });
+    }
+
+    return NextResponse.json(fullResponse);
   } catch (error) {
     void request;
     return handlePrismaApiError(error);
