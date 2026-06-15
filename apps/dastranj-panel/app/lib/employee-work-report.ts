@@ -550,7 +550,9 @@ export async function getEmployeeWorkReportData(
           where: { id: { in: calendarIds }, tenantId },
         })
       : [];
-  const calendarContextMap = new Map(calendarRows.map((row) => [row.id, buildCalendarContextFromRow(row)]));
+  const calendarContextMap = new Map<string, WorkReportCalendarContext>(
+    calendarRows.map((row) => [row.id, buildCalendarContextFromRow(row)]),
+  );
 
   const currentMembership =
     memberships.find((item) => item.isCurrent) ??

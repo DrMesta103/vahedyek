@@ -10,6 +10,10 @@
     "strict": false,
     "noEmit": true,
     "incremental": true,
+    "typeRoots": [
+      "./types",
+      "../../node_modules/@types"
+    ],
     "module": "esnext",
     "esModuleInterop": true,
     "moduleResolution": "bundler",

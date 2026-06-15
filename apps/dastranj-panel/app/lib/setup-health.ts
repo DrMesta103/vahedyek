@@ -227,7 +227,7 @@ export async function resolveTenantSetupHealthForCurrentUser(options?: { fallbac
   }
 }
 
-async function listReminderStates(tenantId: string, userId: string) {
+async function listReminderStates(tenantId: string, userId: string): Promise<Map<string, ReminderStateRecord>> {
   const rows = await prisma.tenantSetupReminderState.findMany({
     where: {
       tenantId,
@@ -239,7 +239,7 @@ async function listReminderStates(tenantId: string, userId: string) {
     },
   });
 
-  return new Map(rows.map((row) => [row.reminderKey, row] satisfies [string, ReminderStateRecord]));
+  return new Map<string, ReminderStateRecord>(rows.map((row) => [row.reminderKey, row] satisfies [string, ReminderStateRecord]));
 }
 
 function isReminderSnoozed(state: ReminderStateRecord | undefined, now: Date) {
