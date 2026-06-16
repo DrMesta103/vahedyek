@@ -416,6 +416,29 @@ function membershipAnchorDate(value: string) {
   return new Date(`${value}T12:00:00Z`);
 }
 
+function getPolicyCalendarId(
+  policy:
+    | {
+        calendarId?: string | null;
+        sectionValues?: unknown;
+      }
+    | null
+    | undefined,
+) {
+  if (policy?.calendarId) return policy.calendarId;
+  const sectionValues =
+    policy?.sectionValues && typeof policy.sectionValues === 'object' && !Array.isArray(policy.sectionValues)
+      ? (policy.sectionValues as Record<string, unknown>)
+      : {};
+  const embeddedCalendarId =
+    typeof sectionValues.calendarId === 'string'
+      ? sectionValues.calendarId
+      : typeof sectionValues.selectedCalendarId === 'string'
+        ? sectionValues.selectedCalendarId
+        : null;
+  return embeddedCalendarId?.trim() ? embeddedCalendarId : null;
+}
+
 type ResolvedLeaveContext = {
   workGroupId: string | null;
   workGroupTitle: string | null;
@@ -698,6 +721,22 @@ async function resolveEmployeeLeaveContext(employeeId: string, tenantId: string,
     policy?.sectionValues && typeof policy.sectionValues === 'object' && !Array.isArray(policy.sectionValues)
       ? (policy.sectionValues as Record<string, unknown>)
       : {};
+  const resolvedCalendarId = getPolicyCalendarId(policy);
+  const resolvedCalendar =
+    policy?.calendar && (!resolvedCalendarId || policy.calendar.id === resolvedCalendarId)
+      ? policy.calendar
+      : resolvedCalendarId
+        ? await prisma.calendar.findFirst({
+            where: { id: resolvedCalendarId, tenantId },
+            select: {
+              id: true,
+              title: true,
+              weekends: true,
+              singleHolidays: true,
+              shiftConfig: true,
+            },
+          })
+        : null;
   const workPolicyLeaveRules = parseLeavePolicyRules(policySectionValues.leavePolicy);
   if (workPolicyLeaveRules) {
     leaveRules = mergeLeavePolicyRules(leaveRules, workPolicyLeaveRules);
@@ -710,18 +749,18 @@ async function resolveEmployeeLeaveContext(employeeId: string, tenantId: string,
     hasWorkPolicy: Boolean(policy),
     workPolicyId: policy?.id ?? null,
     workPolicyTitle: policy?.title ?? null,
-    calendarId: policy?.calendar?.id ?? null,
-    calendarTitle: policy?.calendar?.title ?? null,
+    calendarId: resolvedCalendar?.id ?? resolvedCalendarId,
+    calendarTitle: resolvedCalendar?.title ?? null,
     leaveRules,
     remoteWorkPolicy: parseRemoteWorkPolicy(policySectionValues),
     policySectionValues,
-    weekends: Array.isArray(policy?.calendar?.weekends)
-      ? policy?.calendar?.weekends.filter((item): item is string => typeof item === 'string')
+    weekends: Array.isArray(resolvedCalendar?.weekends)
+      ? resolvedCalendar.weekends.filter((item): item is string => typeof item === 'string')
       : [],
-    singleHolidays: policy?.calendar ? parseCalendarStoredEvents(policy.calendar.singleHolidays) : [],
-    shifts: policy?.calendar ? listCalendarShifts(policy.calendar.shiftConfig) : [],
-    excludedShiftDates: policy?.calendar ? listExcludedShiftDates(policy.calendar.shiftConfig) : [],
-    weekendOverrideDates: policy?.calendar ? listWeekendOverrideDates(policy.calendar.shiftConfig) : [],
+    singleHolidays: resolvedCalendar ? parseCalendarStoredEvents(resolvedCalendar.singleHolidays) : [],
+    shifts: resolvedCalendar ? listCalendarShifts(resolvedCalendar.shiftConfig) : [],
+    excludedShiftDates: resolvedCalendar ? listExcludedShiftDates(resolvedCalendar.shiftConfig) : [],
+    weekendOverrideDates: resolvedCalendar ? listWeekendOverrideDates(resolvedCalendar.shiftConfig) : [],
     overtimePolicy: {
       requireAttachment: Boolean(policySectionValues.overtimeRequireAttachment ?? policySectionValues.requireAttachment),
       fromAttendance: Boolean(policySectionValues.overtimeFromAttendance),

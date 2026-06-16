@@ -1512,6 +1512,7 @@ export async function savePolicyWorkspaceAction(formData: FormData) {
   const preservedBool = (key: string) =>
     typeof previousSectionValues[key] === 'boolean' ? (previousSectionValues[key] as boolean) : false;
   const previousCalendarId = typeof previousSectionValues.calendarId === 'string' ? previousSectionValues.calendarId : null;
+  const effectiveCalendarId = calendarId || previousCalendarId;
   const previousLeavePolicy =
     previousSectionValues.leavePolicy &&
     typeof previousSectionValues.leavePolicy === 'object' &&
@@ -1531,7 +1532,7 @@ export async function savePolicyWorkspaceAction(formData: FormData) {
           variant,
           title,
           description,
-          calendarId: calendarId || previousCalendarId,
+          calendarId: effectiveCalendarId,
           overtimeFromAttendance: boolValue(formData, 'overtimeFromAttendance'),
           overtimeRequireAttachment: boolValue(formData, 'overtimeRequireAttachment'),
           overtimeBeforeShift: boolValue(formData, 'overtimeBeforeShift'),
@@ -1544,7 +1545,7 @@ export async function savePolicyWorkspaceAction(formData: FormData) {
             variant,
             title,
             description,
-            calendarId: calendarId || previousCalendarId,
+            calendarId: effectiveCalendarId,
             requireGeofence: boolValue(formData, 'requireGeofence'),
             faceRecognitionInFlow: boolValue(formData, 'faceRecognitionInFlow'),
             consecutiveAbsenceWarning: boolValue(formData, 'consecutiveAbsenceWarning'),
@@ -1557,7 +1558,7 @@ export async function savePolicyWorkspaceAction(formData: FormData) {
             variant,
             title,
             description,
-            calendarId: calendarId || previousCalendarId,
+            calendarId: effectiveCalendarId,
             startTime: value(formData, 'startTime') || null,
             endTime: value(formData, 'endTime') || null,
             maxDelayMinutes: Number(value(formData, 'maxDelayMinutes') || '0'),
@@ -1576,7 +1577,7 @@ export async function savePolicyWorkspaceAction(formData: FormData) {
             variant,
             title,
             description,
-            calendarId: calendarId || previousCalendarId,
+            calendarId: effectiveCalendarId,
             enabled: boolValue(formData, 'enabled'),
             paid: boolValue(formData, 'paid'),
             deductsFromEntitlementBalance: boolValue(formData, 'deductsFromEntitlementBalance'),
@@ -1632,7 +1633,7 @@ export async function savePolicyWorkspaceAction(formData: FormData) {
               variant,
               title,
               description,
-              calendarId: calendarId || previousCalendarId,
+              calendarId: effectiveCalendarId,
               nightEnabled: boolValue(formData, 'nightEnabled'),
               nightStart: null,
               nightEnd: null,
@@ -1644,7 +1645,7 @@ export async function savePolicyWorkspaceAction(formData: FormData) {
               variant,
               title,
               description,
-              calendarId: calendarId || previousCalendarId,
+              calendarId: effectiveCalendarId,
               manualEntryEnabled: boolValue(formData, 'manualEntryEnabled'),
               manualRequireReason: boolValue(formData, 'manualRequireReason'),
               requireAttachment: boolValue(formData, 'requireAttachment'),
@@ -1659,7 +1660,7 @@ export async function savePolicyWorkspaceAction(formData: FormData) {
               variant,
               title,
               description,
-              calendarId: calendarId || previousCalendarId,
+              calendarId: effectiveCalendarId,
               ...buildRemoteWorkPolicyPayload(formData, previousSectionValues),
             })
         : familyKey === 'shift' && variant === 'split'
@@ -1742,7 +1743,7 @@ export async function savePolicyWorkspaceAction(formData: FormData) {
       data: {
         title,
         description,
-        calendarId,
+        calendarId: effectiveCalendarId,
         sectionValues,
       },
     });
@@ -1753,7 +1754,7 @@ export async function savePolicyWorkspaceAction(formData: FormData) {
         tenantId,
         title,
         description,
-        calendarId,
+        calendarId: effectiveCalendarId,
         employeeCount: 0,
         sectionValues,
       },
