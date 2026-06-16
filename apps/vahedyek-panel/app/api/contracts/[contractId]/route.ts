@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { PartySide, PersonType, PricingType, ShareMode } from '@/lib/prisma-client';
+import { Prisma, PartySide, PersonType, PricingType, ShareMode } from '@/lib/prisma-client';
 import { requireSessionContext } from '../../../lib/auth';
 import { serializeContractorType, serializeContractType } from '../../../lib/subjectUtils';
 import { prisma } from '../../../lib/prisma';
@@ -164,10 +164,6 @@ export async function GET(request: Request, context: { params: Promise<{ contrac
         parties: { include: { members: { orderBy: { createdAt: 'asc' } } } },
         financial: { include: { categories: true, dueItems: true } },
         penalties: { include: { types: true, rules: true } },
-        ruleDraftSettings: {
-          where: { ruleId: { in: [...REPORT_RULE_IDS] } },
-          select: { ruleId: true, payload: true, updatedAt: true },
-        },
         terminationRules: true,
         extraCosts: true,
         technicalSpecs: true,
@@ -212,6 +208,17 @@ export async function GET(request: Request, context: { params: Promise<{ contrac
       where: { tenantId: session.tenantId },
       select: { rulesPayload: true },
     });
+    const ruleDraftSettings = await prisma.$queryRaw<
+      Array<{ ruleId: string; payload: unknown; updatedAt: Date }>
+    >`
+      SELECT
+        "ruleId",
+        "payload",
+        "updatedAt"
+      FROM "ContractDraftRuleSettings"
+      WHERE "draftId" = ${contractId}
+        AND "ruleId" IN (${Prisma.join([...REPORT_RULE_IDS])})
+    `;
 
     const stepsSnap = normalizeWorkflowSteps(draft.approvalInstance?.stepsSnapshot);
     const workflowCurrentStep =
@@ -332,7 +339,7 @@ export async function GET(request: Request, context: { params: Promise<{ contrac
             })()
           : null,
         penalties: serializePenalties(draft.penalties),
-        ruleSettings: serializeContractRuleSnapshots(draft.ruleDraftSettings, tenantRuleSettings?.rulesPayload),
+        ruleSettings: serializeContractRuleSnapshots(ruleDraftSettings, tenantRuleSettings?.rulesPayload),
         terminationRules: draft.terminationRules ? { buyerRules: draft.terminationRules.buyerRules ?? {} } : null,
         extraCosts: draft.extraCosts ? { payload: draft.extraCosts.payload ?? [] } : null,
         technicalSpecs: draft.technicalSpecs ? { specs: draft.technicalSpecs.specs ?? [] } : null,
