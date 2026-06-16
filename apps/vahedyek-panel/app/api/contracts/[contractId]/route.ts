@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { Prisma, PartySide, PersonType, PricingType, ShareMode } from '@/lib/prisma-client';
+import { PartySide, PersonType, PricingType, ShareMode } from '@/lib/prisma-client';
 import { requireSessionContext } from '../../../lib/auth';
 import { serializeContractorType, serializeContractType } from '../../../lib/subjectUtils';
 import { prisma } from '../../../lib/prisma';
@@ -208,17 +208,19 @@ export async function GET(request: Request, context: { params: Promise<{ contrac
       where: { tenantId: session.tenantId },
       select: { rulesPayload: true },
     });
-    const ruleDraftSettings = await prisma.$queryRaw<
-      Array<{ ruleId: string; payload: unknown; updatedAt: Date }>
-    >`
-      SELECT
-        "ruleId",
-        "payload",
-        "updatedAt"
-      FROM "ContractDraftRuleSettings"
-      WHERE "draftId" = ${contractId}
-        AND "ruleId" IN (${Prisma.join([...REPORT_RULE_IDS])})
-    `;
+    const ruleDraftSettings = await prisma.contractDraftRuleSettings.findMany({
+      where: {
+        draftId: contractId,
+        ruleId: {
+          in: [...REPORT_RULE_IDS],
+        },
+      },
+      select: {
+        ruleId: true,
+        payload: true,
+        updatedAt: true,
+      },
+    });
 
     const stepsSnap = normalizeWorkflowSteps(draft.approvalInstance?.stepsSnapshot);
     const workflowCurrentStep =

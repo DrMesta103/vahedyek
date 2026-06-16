@@ -15,7 +15,7 @@ import {
 } from '../lib/workflowRuntime';
 import { resolveApprovalCapabilities } from '../lib/contractApprovalAccess';
 import { clearContractDraftApprovalReturnRaw, setContractDraftReturnForRevisionRaw } from '../lib/contractDraftApprovalRaw';
-import { isDraftReadyForApprovalGate } from '../lib/draftReadiness';
+import { getDraftApprovalBlockers, isDraftReadyForApprovalGate } from '../lib/draftReadiness';
 
 const REASON_MAX = 4000;
 
@@ -157,6 +157,39 @@ export async function getContractApprovalStateAction(draftId: string) {
   };
 }
 
+export async function getContractApprovalBlockersAction(draftId: string) {
+  const s = await requireActiveTenantSession();
+  if (!s.ok) return { ok: false as const, message: s.message, blockers: [] };
+
+  const draft = await prisma.contractDraft.findFirst({
+    where: { id: draftId, tenantId: s.tenantId },
+    include: {
+      subject: { include: { unit: true } },
+      parties: { include: { members: true } },
+      financial: {
+        include: {
+          categories: true,
+          dueItems: true,
+        },
+      },
+      penalties: { include: { types: true, rules: true } },
+      terminationRules: true,
+      extraCosts: true,
+      technicalSpecs: true,
+      attachments: true,
+    },
+  });
+
+  if (!draft) {
+    return { ok: false as const, message: 'Ù‚Ø±Ø§Ø±Ø¯Ø§Ø¯ ÛŒØ§ÙØª Ù†Ø´Ø¯.', blockers: [] };
+  }
+
+  return {
+    ok: true as const,
+    blockers: getDraftApprovalBlockers(draft),
+  };
+}
+
 export async function submitContractApprovalWorkflowAction(draftId: string) {
   const s = await requireActiveTenantSession();
   if (!s.ok) return { ok: false, message: s.message };
@@ -172,7 +205,12 @@ export async function submitContractApprovalWorkflowAction(draftId: string) {
       subject: { include: { unit: true } },
       approvalInstance: true,
       parties: { include: { members: true } },
-      financial: true,
+      financial: {
+        include: {
+          categories: true,
+          dueItems: true,
+        },
+      },
       penalties: { include: { types: true, rules: true } },
       terminationRules: true,
       extraCosts: true,

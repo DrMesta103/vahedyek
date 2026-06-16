@@ -1,3 +1,7 @@
+import {
+  calculateBuyerPenalties,
+  type BuyerPenaltyCalculationDetail,
+} from './buyerPenaltyCalculation';
 import { buildReceiptAllocation } from './contractReceiptAllocation';
 import { computeContractTotalRialFromFinancial } from './contractFinancialPricing';
 import {
@@ -17,6 +21,8 @@ type PenaltyRowDetail = PaymentHistoryDueRow & {
   penaltyRuleId: string;
   penaltyTypeId: string;
   lineBaseAmountRial: number;
+  mainPenaltyRial: number;
+  lateFeeRial: number;
 };
 
 type PenaltyEngineParams = {
@@ -31,25 +37,11 @@ type PenaltyEngineResult = {
   principalRows: PaymentHistoryDueRow[];
   principalBuckets: PaymentHistoryMonthBucket[];
   penaltyRows: PenaltyRowDetail[];
+  penaltyDetailsByPrincipalDueId: Record<string, BuyerPenaltyCalculationDetail>;
+  penaltyCalculation: ReturnType<typeof calculateBuyerPenalties>;
   combinedRows: PaymentHistoryDueRow[];
   combinedBuckets: PaymentHistoryMonthBucket[];
 };
-
-const PERIOD_DAY_COUNT: Record<string, number> = {
-  daily: 1,
-  monthly: 30,
-  yearly: 365,
-};
-
-function toNumber(value: unknown) {
-  const normalized = typeof value === 'string' ? Number(String(value).replace(/,/g, '')) : Number(value ?? 0);
-  return Number.isFinite(normalized) ? normalized : 0;
-}
-
-function roundAmount(value: number, rule: string | null | undefined) {
-  const unit = rule === '1000' ? 1000 : rule === '100' ? 100 : 1;
-  return Math.max(0, Math.round(value / unit) * unit);
-}
 
 function addDaysJalali(value: string, offsetDays: number) {
   const baseDate = toComparableDateFromDueString(value);
@@ -57,51 +49,6 @@ function addDaysJalali(value: string, offsetDays: number) {
   const nextDate = new Date(baseDate);
   nextDate.setDate(nextDate.getDate() + offsetDays);
   return formatJalaliDate(nextDate);
-}
-
-function diffDaysInclusive(fromDate: Date, toDate: Date) {
-  const start = new Date(fromDate);
-  const end = new Date(toDate);
-  start.setHours(0, 0, 0, 0);
-  end.setHours(0, 0, 0, 0);
-  const diff = end.getTime() - start.getTime();
-  if (diff < 0) return 0;
-  return Math.floor(diff / 86_400_000) + 1;
-}
-
-function countStartedPeriods(fromDate: Date, toDate: Date, period: string) {
-  if (period === 'daily') return diffDaysInclusive(fromDate, toDate);
-
-  const from = new Date(fromDate);
-  const to = new Date(toDate);
-  from.setHours(0, 0, 0, 0);
-  to.setHours(0, 0, 0, 0);
-
-  if (period === 'monthly') {
-    const rawMonths = (to.getFullYear() - from.getFullYear()) * 12 + (to.getMonth() - from.getMonth());
-    return rawMonths + 1;
-  }
-
-  return to.getFullYear() - from.getFullYear() + 1;
-}
-
-function computeProgressivePercent(rows: unknown[], overdueDays: number) {
-  const normalizedRows = Array.isArray(rows) ? rows : [];
-  let totalPercent = 0;
-
-  for (const raw of normalizedRows) {
-    if (!raw || typeof raw !== 'object') continue;
-    const row = raw as { fromDay?: unknown; toDay?: unknown; rate?: unknown; openEnded?: unknown };
-    const fromDay = Math.max(1, Math.trunc(toNumber(row.fromDay)));
-    const openEnded = Boolean(row.openEnded);
-    const toDay = openEnded ? Number.POSITIVE_INFINITY : Math.max(fromDay, Math.trunc(toNumber(row.toDay)));
-    const rate = toNumber(row.rate);
-    if (!(rate > 0) || overdueDays < fromDay) continue;
-    const coveredDays = Math.min(overdueDays, toDay) - fromDay + 1;
-    if (coveredDays > 0) totalPercent += coveredDays * rate;
-  }
-
-  return totalPercent;
 }
 
 function createPrincipalRows(financial: ContractFinancialData | null | undefined) {
@@ -126,94 +73,43 @@ function createPrincipalRows(financial: ContractFinancialData | null | undefined
   };
 }
 
-function buildPenaltyRows(params: {
+function buildPenaltyRowsFromCalculation(params: {
   principalRows: PaymentHistoryDueRow[];
-  remainingPrincipalByDueId: Record<string, number>;
+  penaltyDetailsByPrincipalDueId: Record<string, BuyerPenaltyCalculationDetail>;
   penalties: ContractPenaltiesData | null | undefined;
-  contractBaseTotalRial: number;
-  asOfDate: Date;
 }) {
-  const payload = params.penalties;
-  if (!payload) return [] as PenaltyRowDetail[];
-
-  const activeTypeIds = new Set(
-    (Array.isArray(payload.types) ? payload.types : [])
-      .filter((type) => Boolean(type?.active))
-      .map((type) => String(type.id)),
+  const penaltyTypeTitleById = new Map(
+    (Array.isArray(params.penalties?.types) ? params.penalties.types : []).map((type) => [
+      String(type.id),
+      String(type.title ?? type.id),
+    ]),
   );
   const rows: PenaltyRowDetail[] = [];
 
   for (const principalRow of params.principalRows) {
-    const dueDate = String(principalRow.dueDate ?? '').trim();
-    if (!dueDate || dueDate === '—') continue;
+    const detail = params.penaltyDetailsByPrincipalDueId[principalRow.id];
+    if (!detail || detail.totalPenaltyRial <= 0) continue;
 
-    const parsedDueDate = toComparableDateFromDueString(dueDate);
-    if (!parsedDueDate) continue;
+    const penaltyTypeTitle = penaltyTypeTitleById.get(detail.penaltyTypeId) ?? detail.penaltyTypeTitle;
+    const graceDays = detail.gracePeriodDays;
 
-    const baseRemainingAmount = Math.max(0, Math.round(params.remainingPrincipalByDueId[principalRow.id] ?? principalRow.amount ?? 0));
-    if (baseRemainingAmount <= 0) continue;
-
-    for (const rule of Array.isArray(payload.rules) ? payload.rules : []) {
-      if (!rule?.penaltyTypeId) continue;
-      if (activeTypeIds.size > 0 && !activeTypeIds.has(String(rule.penaltyTypeId))) continue;
-
-      const graceDays = Math.max(0, Math.trunc(toNumber(rule.graceDays)));
-      const effectiveDate = new Date(parsedDueDate);
-      effectiveDate.setDate(effectiveDate.getDate() + graceDays);
-      if (effectiveDate > params.asOfDate) continue;
-
-      const period = String(rule.period || 'daily');
-      const periods = countStartedPeriods(effectiveDate, params.asOfDate, period);
-      const overdueDays = diffDaysInclusive(effectiveDate, params.asOfDate);
-      if (periods <= 0 || overdueDays <= 0) continue;
-
-      const mode = String(rule.mode || 'fixed');
-      const baseAmount = mode === 'contract' ? Math.max(0, Math.round(params.contractBaseTotalRial)) : baseRemainingAmount;
-      let rawPenaltyAmount = 0;
-
-      if (mode === 'fixed') {
-        rawPenaltyAmount += toNumber(rule.fixedAmount) * periods;
-      } else if (mode === 'progressive') {
-        const progressivePercent = computeProgressivePercent(rule.progressiveRows, overdueDays);
-        rawPenaltyAmount += (baseAmount * progressivePercent) / 100;
-      } else {
-        const percentPerPeriod = toNumber(rule.penaltyPercent);
-        rawPenaltyAmount += ((baseAmount * percentPerPeriod) / 100) * periods;
-      }
-
-      const bankInterestPercent = toNumber(rule.bankInterestPercent);
-      if (bankInterestPercent > 0) {
-        rawPenaltyAmount += ((baseAmount * bankInterestPercent) / 100) * periods;
-      }
-
-      let roundedPenaltyAmount = roundAmount(rawPenaltyAmount, rule.roundRule);
-      if (!(roundedPenaltyAmount > 0)) continue;
-
-      if (rule.extraFeeEnabled) {
-        const extraFeeAmount = toNumber(rule.extraFeeAmount);
-        const extraFeeRaw =
-          String(rule.extraFeeType || 'fixed') === 'percent' ? (baseAmount * extraFeeAmount) / 100 : extraFeeAmount;
-        roundedPenaltyAmount += roundAmount(extraFeeRaw, rule.extraFeeRoundRule);
-      }
-
-      if (!(roundedPenaltyAmount > 0)) continue;
-
-      rows.push({
-        id: `penalty:${principalRow.id}:${String(rule.id)}`,
-        categoryId: principalRow.categoryId,
-        categoryTitle: `${principalRow.categoryTitle} · جریمه`,
-        title: `جریمه ${principalRow.title}`,
-        amount: Math.round(roundedPenaltyAmount),
-        dueDate: addDaysJalali(dueDate, graceDays),
-        isOverdueUnpaid: true,
-        sourceKind: 'penalty',
-        sourceId: `penalty:${principalRow.id}:${String(rule.id)}`,
-        principalDueRowId: principalRow.id,
-        penaltyRuleId: String(rule.id),
-        penaltyTypeId: String(rule.penaltyTypeId),
-        lineBaseAmountRial: baseAmount,
-      });
-    }
+    rows.push({
+      id: `penalty:${principalRow.id}:${detail.ruleId || detail.penaltyTypeId}`,
+      categoryId: principalRow.categoryId,
+      categoryTitle: `${principalRow.categoryTitle} · جریمه`,
+      title: `جریمه ${principalRow.title}`,
+      amount: Math.round(detail.totalPenaltyRial),
+      dueDate: addDaysJalali(String(principalRow.dueDate ?? ''), graceDays),
+      isOverdueUnpaid: true,
+      sourceKind: 'penalty',
+      sourceId: `penalty:${principalRow.id}:${detail.ruleId || detail.penaltyTypeId}`,
+      principalDueRowId: principalRow.id,
+      penaltyRuleId: detail.ruleId,
+      penaltyTypeId: detail.penaltyTypeId,
+      lineBaseAmountRial: detail.overdueRemainingDebtRial,
+      mainPenaltyRial: detail.mainPenaltyRoundedRial,
+      lateFeeRial: detail.lateFeeRoundedRial,
+    });
   }
 
   return rows;
@@ -225,19 +121,39 @@ export function buildContractPenaltyTimeline({
   receipts = [],
   asOfDate = new Date(),
 }: PenaltyEngineParams): PenaltyEngineResult {
+  const normalizedAsOfDate = new Date(asOfDate);
+  normalizedAsOfDate.setHours(0, 0, 0, 0);
+
   const contractBaseTotalRial = Math.max(0, Math.round(computeContractTotalRialFromFinancial(financial ?? null)));
   const { rows: principalRows, buckets: principalBuckets } = createPrincipalRows(financial);
   const principalOnlyAllocation = buildReceiptAllocation({ buckets: principalBuckets, receipts });
-  const remainingPrincipalByDueId = Object.fromEntries(
-    Object.values(principalOnlyAllocation.dueById).map((summary) => [summary.row.id, summary.remainingAmountRial]),
+  const penaltyTypeTitleById = Object.fromEntries(
+    (Array.isArray(penalties?.types) ? penalties.types : []).map((type) => [String(type.id), String(type.title ?? type.id)]),
   );
 
-  const penaltyRows = buildPenaltyRows({
-    principalRows,
-    remainingPrincipalByDueId,
+  const penaltyCalculation = calculateBuyerPenalties({
+    dues: principalRows.map((row) => {
+      const summary = principalOnlyAllocation.dueById[row.id];
+      return {
+        id: row.id,
+        categoryId: row.categoryId,
+        title: row.title,
+        dueDate: row.dueDate,
+        dueAmountRial: Math.max(0, Math.round(Number(row.amount ?? 0))),
+        paidAmountRial: Math.max(0, Math.round(summary?.paidAmountRial ?? 0)),
+      };
+    }),
     penalties,
-    contractBaseTotalRial,
-    asOfDate,
+    totalMainContractAmountRial: contractBaseTotalRial,
+    calculationDate: normalizedAsOfDate,
+    penaltyTypeTitleById,
+  });
+
+  const penaltyDetailsByPrincipalDueId = penaltyCalculation.byDueId;
+  const penaltyRows = buildPenaltyRowsFromCalculation({
+    principalRows,
+    penaltyDetailsByPrincipalDueId,
+    penalties,
   });
 
   const combinedRows = [...principalRows, ...penaltyRows];
@@ -248,6 +164,8 @@ export function buildContractPenaltyTimeline({
     principalRows,
     principalBuckets,
     penaltyRows,
+    penaltyDetailsByPrincipalDueId,
+    penaltyCalculation,
     combinedRows,
     combinedBuckets,
   };
@@ -276,3 +194,5 @@ export function estimateContractPenaltiesTotalRial(
     asOfDate,
   }).penaltyRows.reduce((sum, row) => sum + row.amount, 0);
 }
+
+export type { PenaltyEngineResult, PenaltyRowDetail, BuyerPenaltyCalculationDetail };

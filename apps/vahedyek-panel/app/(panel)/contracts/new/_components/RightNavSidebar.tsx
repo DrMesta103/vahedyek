@@ -4,7 +4,7 @@ import { Fragment } from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Eye, Lock, Plus, ShieldCheck, X } from 'lucide-react';
-import { submitContractApprovalWorkflowAction } from '../../../../actions/contractApprovalActions';
+import { getContractApprovalBlockersAction, submitContractApprovalWorkflowAction } from '../../../../actions/contractApprovalActions';
 import { listApprovalWorkflowsAction } from '../../../../actions/workflowActions';
 import type { ContractFlowSectionId } from './contractFlowSignals';
 
@@ -62,6 +62,8 @@ export function RightNavSidebar({
 }: RightNavSidebarProps) {
   const router = useRouter();
   const [blockersOpen, setBlockersOpen] = useState(false);
+  const [blockersMessage, setBlockersMessage] = useState('');
+  const [serverBlockers, setServerBlockers] = useState<ApprovalSubmissionBlocker[]>([]);
   const [approvalNavBusy, setApprovalNavBusy] = useState(false);
   const [approvalNavError, setApprovalNavError] = useState('');
   const [approvalSubmitted, setApprovalSubmitted] = useState(false);
@@ -103,14 +105,42 @@ export function RightNavSidebar({
     onOpenPreviewDialog();
   };
 
+  const openBlockersDialog = (message: string, blockers: ApprovalSubmissionBlocker[]) => {
+    setBlockersMessage(message);
+    setServerBlockers(blockers);
+    setBlockersOpen(true);
+  };
+
+  const loadServerBlockers = async (message: string) => {
+    if (!draftId) {
+      openBlockersDialog(message, []);
+      return;
+    }
+    try {
+      const res = await getContractApprovalBlockersAction(draftId);
+      if (!res.ok) {
+        openBlockersDialog(message, []);
+        return;
+      }
+      const blockers = (res.blockers ?? []).map((item) => ({
+        title: item.title,
+        detail: item.detail,
+      }));
+      openBlockersDialog(message, blockers);
+    } catch {
+      openBlockersDialog(message, []);
+    }
+  };
+
   const onApprovalClick = async () => {
     if (loading || !draftId || approvalNavBusy) return;
     if (!canAttemptApproval) return;
     if (!approvalSubmissionReady) {
-      setBlockersOpen(true);
+      openBlockersDialog('پیش‌نویس هنوز برای ارسال به فرایند تأیید کامل نیست.', approvalSubmissionBlockers);
       return;
     }
     setApprovalNavError('');
+    setServerBlockers([]);
     try {
       setApprovalNavBusy(true);
       const res = await submitContractApprovalWorkflowAction(draftId);
@@ -118,11 +148,17 @@ export function RightNavSidebar({
       setApprovalSubmitted(true);
       router.push(`/contracts/${encodeURIComponent(draftId)}`);
     } catch (e) {
-      setApprovalNavError(e instanceof Error ? e.message : 'امکان ادامهٔ فرایند تأیید نبود.');
+      const message = e instanceof Error ? e.message : 'امکان ادامهٔ فرایند تأیید نبود.';
+      setApprovalNavError(message);
+      if (/کامل نیست|ناقص|آماده نیست/.test(message)) {
+        await loadServerBlockers(message);
+      }
     } finally {
       setApprovalNavBusy(false);
     }
   };
+
+  const displayedBlockers = serverBlockers.length ? serverBlockers : approvalSubmissionBlockers;
 
   return (
     <aside className="contract-flow-sidebar shrink-0">
@@ -252,7 +288,11 @@ export function RightNavSidebar({
         <div
           className="fixed inset-0 z-[60] flex items-center justify-center bg-black/45 p-4 backdrop-blur-sm"
           dir="rtl"
-          onClick={() => setBlockersOpen(false)}
+          onClick={() => {
+            setBlockersOpen(false);
+            setBlockersMessage('');
+            setServerBlockers([]);
+          }}
         >
           <div
             className="w-full max-w-md overflow-hidden rounded-3xl border border-[var(--border-color)] bg-[var(--surface)] shadow-2xl"
@@ -265,28 +305,49 @@ export function RightNavSidebar({
               </div>
               <button
                 type="button"
-                onClick={() => setBlockersOpen(false)}
+                onClick={() => {
+                  setBlockersOpen(false);
+                  setBlockersMessage('');
+                  setServerBlockers([]);
+                }}
                 className="rounded-lg p-1 text-[var(--text-faint)] transition-colors hover:bg-[var(--surface-soft)]"
                 aria-label="بستن"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <ul className="max-h-[min(52vh,420px)] space-y-2 overflow-y-auto px-5 py-4">
-              {approvalSubmissionBlockers.map((item) => (
-                <li
-                  key={item.title}
-                  className="rounded-2xl border border-[var(--theme-warning-border)] bg-[var(--theme-warning-bg)] px-4 py-3 text-right"
-                >
-                  <div className="text-sm font-extrabold text-[var(--theme-warning-text)]">{item.title}</div>
-                  <div className="mt-1 text-xs font-semibold leading-relaxed text-[var(--text-body)]">{item.detail}</div>
-                </li>
-              ))}
-            </ul>
+            {blockersMessage ? (
+              <div className="border-b border-[var(--border-color)] bg-[color-mix(in_srgb,var(--theme-warning-bg)_20%,var(--surface))] px-5 py-3 text-right text-[12px] font-bold leading-7 text-[var(--text-body)]">
+                {blockersMessage}
+              </div>
+            ) : null}
+            <div className="max-h-[min(52vh,420px)] overflow-y-auto px-5 py-4">
+              {displayedBlockers.length ? (
+                <ul className="space-y-2">
+                  {displayedBlockers.map((item) => (
+                    <li
+                      key={`${item.title}:${item.detail}`}
+                      className="rounded-2xl border border-[var(--theme-warning-border)] bg-[var(--theme-warning-bg)] px-4 py-3 text-right"
+                    >
+                      <div className="text-sm font-extrabold text-[var(--theme-warning-text)]">{item.title}</div>
+                      <div className="mt-1 text-xs font-semibold leading-relaxed text-[var(--text-body)]">{item.detail}</div>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--surface-soft)] px-4 py-3 text-right text-[12px] font-semibold leading-7 text-[var(--text-muted)]">
+                  در وضعیت فعلی مانع مشخصی پیدا نشد. اگر همچنان خطا می‌بینید، صفحه را یک‌بار تازه‌سازی کنید تا وضعیت مراحل دوباره از سرور خوانده شود.
+                </div>
+              )}
+            </div>
             <div className="flex justify-end border-t border-[var(--border-color)] px-5 py-4">
               <button
                 type="button"
-                onClick={() => setBlockersOpen(false)}
+                onClick={() => {
+                  setBlockersOpen(false);
+                  setBlockersMessage('');
+                  setServerBlockers([]);
+                }}
                 className="rounded-xl border border-[var(--border-color)] bg-[var(--surface)] px-4 py-2 text-xs font-extrabold text-[var(--text-body)] transition-colors hover:bg-[var(--surface-soft)]"
               >
                 متوجه شدم

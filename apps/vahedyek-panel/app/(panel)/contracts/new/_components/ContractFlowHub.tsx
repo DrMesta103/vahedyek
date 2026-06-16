@@ -6,6 +6,7 @@ import { AlertCircle, CheckCircle2, Info, Lock, X } from 'lucide-react';
 import { getActiveDraftId, getFrontendStepDraft, getStepData } from '../../../../lib/contractDraftClient';
 import { computeContractTotalRialFromFinancial } from '../../../../lib/contractFinancialPricing';
 import { isFinancialLineHeaderCategoryId, isFinancialLineSubtreeCategoryId, isLegacyCustomRootCategoryId } from '../../../../lib/financialUtils';
+import { getDraftApprovalBlockers } from '../../../../lib/draftReadiness';
 import { validateDiscountsStep, validateFinancialStep, validatePenaltiesStep, validateStep1, validateStep2, validateTerminationStep } from '../../../../lib/contractValidation';
 import type { ContractDiscountsData, ContractFinancialData, ContractPartiesData, ContractPenaltiesData, ContractSubjectData, ContractTerminationData } from '../../../../types/contract';
 import { DiscountsStep } from './DiscountsStep';
@@ -445,7 +446,7 @@ export function ContractFlowHub() {
   const partiesComplete = Boolean(partiesData && validateStep2(partiesData).valid);
   const financialComplete = Boolean(financialData && validateFinancialStep(financialData).valid);
   const penaltiesComplete = Boolean(penaltiesData && validatePenaltiesStep(penaltiesData).valid);
-  const discountsComplete = Boolean(discountsData && validateDiscountsStep(discountsData).valid);
+  const discountsComplete = !discountsData || validateDiscountsStep(discountsData).valid;
   const interestComplete = true;
   const forgivenessComplete = true;
   const terminationComplete = Boolean(terminationData && validateTerminationStep(terminationData).valid);
@@ -475,6 +476,20 @@ export function ContractFlowHub() {
   };
 
   const approvalSubmissionBlockers = useMemo(() => {
+    const validationBlockers = new Map(
+      getDraftApprovalBlockers({
+        subject: subjectData,
+        parties: partiesData,
+        financial: financialLiveData,
+        penalties: penaltiesData,
+        discounts: discountsData,
+        terminationRules: terminationData,
+        extraCosts: extraCostsExists ? {} : null,
+        technicalSpecs: technicalSpecsExists ? {} : null,
+        attachments: attachmentsExists ? {} : null,
+      }).map((item) => [item.sectionId, item]),
+    );
+
     const out: { title: string; detail: string }[] = [];
     for (const sectionId of SECTION_ORDER) {
       if (sectionId === 'extraCosts' && !extraCostsApplicable) continue;
@@ -482,14 +497,17 @@ export function ContractFlowHub() {
       const saved = Boolean(lastUpdatedMap[sectionId]);
       const contentOk = Boolean(completionMap[sectionId]);
       if (contentOk && saved && !dirty) continue;
-      let detail = 'این مرحله باید کامل و ذخیره شود.';
+
+      const blocker = validationBlockers.get(sectionId);
+      let detail = blocker?.detail ?? 'این مرحله باید کامل و ذخیره شود.';
       if (dirty) detail = 'تغییرات ذخیره نشده است؛ ابتدا دکمهٔ «ذخیره» این مرحله را بزنید.';
-      else if (!contentOk) detail = 'اطلاعات این بخش هنوز طبق قواعد سیستم کامل نیست.';
+      else if (!contentOk) detail = blocker?.detail ?? 'اطلاعات این بخش هنوز طبق قواعد سیستم کامل نیست.';
       else if (!saved) detail = 'این بخش هنوز حداقل یک‌بار ذخیره نشده است.';
+
       out.push({ title: SECTION_TITLES[sectionId], detail });
     }
     return out;
-  }, [completionMap, dirtyMap, extraCostsApplicable, lastUpdatedMap]);
+  }, [attachmentsExists, completionMap, discountsData, dirtyMap, extraCostsApplicable, extraCostsExists, financialLiveData, lastUpdatedMap, partiesData, penaltiesData, subjectData, technicalSpecsExists, terminationData]);
 
   const approvalSubmissionReady = approvalSubmissionBlockers.length === 0 && !loading;
 

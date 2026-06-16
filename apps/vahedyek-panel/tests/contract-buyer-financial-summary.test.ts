@@ -96,11 +96,11 @@ function buildReceipt(
 function buildPenaltyRules() {
   return {
     activeTab: '',
-    types: [{ id: 'late', title: 'تاخیر', description: '', active: true }],
+    types: [{ id: 'installment-delay', title: 'تاخیر اقساط', description: '', active: true }],
     rules: [
       {
         id: 'rule-fixed',
-        penaltyTypeId: 'late',
+        penaltyTypeId: 'installment-delay',
         mode: 'fixed',
         period: 'daily',
         fixedAmount: '1000',
