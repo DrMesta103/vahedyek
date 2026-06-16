@@ -93,7 +93,7 @@ async function renderHtmlToPdfBlob(html: string, filename: string, title: string
   });
 
   const { default: html2canvas } = await import('html2canvas');
-  const { jsPDF } = await import('jspdf');
+  const { jsPDF } = await import('../../../../../lib/simple-pdf');
 
   const canvas = await html2canvas(doc.body, {
     scale: 2,
@@ -116,13 +116,13 @@ async function renderHtmlToPdfBlob(html: string, filename: string, title: string
   let heightLeft = imgHeight;
   let position = 0;
 
-  pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
+  pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
   heightLeft -= pageHeight;
 
   while (heightLeft > 0) {
     position = heightLeft - imgHeight;
     pdf.addPage();
-    pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
+    pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
     heightLeft -= pageHeight;
   }
 

@@ -118,12 +118,16 @@ export default async function PolicyFamilyPage({
   const requestedVariant = resolvedSearchParams?.variant ?? POLICY_VARIANTS[familyKey][0]?.key ?? 'default';
   const policies = await listPolicies();
   const familyPolicies = listPoliciesByFamilyKey(policies, familyKey);
+  const defaultPolicyForFamily =
+    familyKey === 'leave'
+      ? findPolicyByFamilyKey(policies, 'work')
+      : findPolicyByFamilyKey(policies, familyKey);
   const policy =
-    resolvedSearchParams?.mode === 'new'
+    resolvedSearchParams?.mode === 'new' && familyKey !== 'leave'
       ? null
       : resolvedSearchParams?.policyId
         ? policies.find((item) => item.id === resolvedSearchParams.policyId) ?? null
-        : findPolicyByFamilyKey(policies, familyKey);
+        : defaultPolicyForFamily;
   const policyId = policy?.id ?? '';
   const sectionValues = getPolicySectionValues(policy);
   const availableVariants = POLICY_VARIANTS[familyKey].map((item) => item.key as string);
@@ -201,7 +205,9 @@ export default async function PolicyFamilyPage({
   const splitShiftSegments = parseSplitShiftSegmentRules(sectionValues);
   const remoteWorkPolicy = parseRemoteWorkPolicy(sectionValues);
 
-  const fromWorkHub = (familyKey === 'manual' || familyKey === 'night' || familyKey === 'remote') && Boolean(policyId);
+  const fromWorkHub =
+    (familyKey === 'leave' || familyKey === 'manual' || familyKey === 'night' || familyKey === 'remote') &&
+    Boolean(policyId);
   const backHref = fromWorkHub ? `/policies/work?policyId=${policyId}` : '/policies';
 
   return (
@@ -220,7 +226,7 @@ export default async function PolicyFamilyPage({
       actionHref={fromWorkHub ? backHref : '/policies'}
       actionLabel={fromWorkHub ? 'بازگشت به سیاست کاری' : 'بازگشت به فهرست'}
     >
-      {familyKey !== 'shift' && familyPolicies.length > 0 && !fromWorkHub ? (
+      {familyKey !== 'shift' && familyKey !== 'leave' && familyPolicies.length > 0 && !fromWorkHub ? (
         <PolicyFamilyList
           title="سیاست‌های این خانواده"
           description="ویرایش مستقیم، ایجاد رکورد جدید و مدیریت چند سیاست مستقل"

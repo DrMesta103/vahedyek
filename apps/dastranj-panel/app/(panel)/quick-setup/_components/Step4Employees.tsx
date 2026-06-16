@@ -16,7 +16,7 @@ import {
   Upload,
   Users,
 } from 'lucide-react';
-import * as XLSX from 'xlsx';
+import * as XLSX from '../../../lib/xlsx';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { CardMenu } from '../../../components/CardMenu';
@@ -416,7 +416,7 @@ function createSampleWorkbookDownload() {
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, worksheet, 'کارکنان');
   const array = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-  downloadBlob(new Blob([array], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), 'نمونه-کارکنان.xlsx');
+  downloadBlob(new Blob([array], { type: 'text/csv;charset=utf-8' }), 'نمونه-کارکنان.csv');
 }
 
 function normalizeExcelRow(row: Record<string, unknown>, rowNumber: number): ParsedExcelRow {

@@ -44,7 +44,7 @@ import { buildRemoteWorkPolicyPayload } from './remote-work-policy';
 import { seedSampleData } from './seed';
 import type { ContractDraftTemplate } from './contract-draft-templates';
 import { normalizeContractDraftTemplate } from './contract-draft-templates';
-import * as XLSX from 'xlsx';
+import * as XLSX from './xlsx';
 import type {
   QuickEmployeeImportJobDetails,
   QuickEmployeeImportJobInvitationChannel,
@@ -1493,11 +1493,13 @@ export async function savePolicyWorkspaceAction(formData: FormData) {
     familyKey === 'night' && existingPolicy && previousSectionValues.familyKey === 'work';
   const preserveRemoteWorkMeta =
     familyKey === 'remote' && existingPolicy && previousSectionValues.familyKey === 'work';
-  const title = preserveWorkMeta || preserveManualWorkMeta || preserveNightWorkMeta || preserveRemoteWorkMeta
+  const preserveLeaveWorkMeta =
+    familyKey === 'leave' && existingPolicy && previousSectionValues.familyKey === 'work';
+  const title = preserveWorkMeta || preserveLeaveWorkMeta || preserveManualWorkMeta || preserveNightWorkMeta || preserveRemoteWorkMeta
     ? existingPolicy.title
     : value(formData, 'title') || family.title;
   const description =
-    preserveWorkMeta || preserveManualWorkMeta || preserveNightWorkMeta || preserveRemoteWorkMeta
+    preserveWorkMeta || preserveLeaveWorkMeta || preserveManualWorkMeta || preserveNightWorkMeta || preserveRemoteWorkMeta
       ? existingPolicy.description
       : value(formData, 'description') || null;
 
@@ -1573,7 +1575,7 @@ export async function savePolicyWorkspaceAction(formData: FormData) {
       : familyKey === 'leave' && leaveType && leaveRuleDefaults
         ? jsonValue({
             ...previousSectionValues,
-            familyKey,
+            familyKey: preserveLeaveWorkMeta ? 'work' : 'leave',
             variant,
             title,
             description,
