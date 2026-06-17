@@ -1,8 +1,10 @@
 'use client';
 
 import { CalendarDays, ChevronDown, Eye, ReceiptText } from 'lucide-react';
+import type { BuyerPenaltyCalculationDetail } from '../../lib/buyerPenaltyCalculation';
 import type { DueReceiptAllocationSummary } from '../../lib/contractReceiptAllocation';
 import type { PaymentHistoryDueRow, PaymentHistoryMonthBucket } from '../../lib/contractPaymentMonthBuckets';
+import { PenaltyInfoButton } from './PenaltyDetailsDialog';
 
 function formatMoneyRial(valueRial: number) {
   if (!valueRial) return '۰ ریال';
@@ -15,6 +17,16 @@ export type DueRegisterReceiptPayload = {
   row: PaymentHistoryDueRow;
 };
 
+function monthPenaltyTotal(
+  bucket: PaymentHistoryMonthBucket,
+  penaltyDetailsByPrincipalDueId?: Record<string, BuyerPenaltyCalculationDetail>,
+) {
+  if (!penaltyDetailsByPrincipalDueId) return bucket.penaltyRial;
+  return bucket.items
+    .filter((row) => (row.sourceKind ?? 'principal') !== 'penalty')
+    .reduce((sum, row) => sum + (penaltyDetailsByPrincipalDueId[row.id]?.totalPenaltyRial ?? 0), 0);
+}
+
 export function DueMonthAccordionList({
   buckets,
   collapsedMonths,
@@ -22,6 +34,8 @@ export function DueMonthAccordionList({
   onRegisterReceipt,
   allocationByDueId,
   onViewReceipts,
+  penaltyDetailsByPrincipalDueId,
+  onOpenPenaltyDetails,
 }: {
   buckets: PaymentHistoryMonthBucket[];
   collapsedMonths: Set<string>;
@@ -29,23 +43,33 @@ export function DueMonthAccordionList({
   onRegisterReceipt?: (payload: DueRegisterReceiptPayload) => void;
   allocationByDueId?: Record<string, DueReceiptAllocationSummary>;
   onViewReceipts?: (payload: DueRegisterReceiptPayload, summary: DueReceiptAllocationSummary | undefined) => void;
+  penaltyDetailsByPrincipalDueId?: Record<string, BuyerPenaltyCalculationDetail>;
+  onOpenPenaltyDetails?: (payload: {
+    mode: 'single' | 'monthly';
+    monthHeading?: string;
+    row?: PaymentHistoryDueRow;
+    bucket?: PaymentHistoryMonthBucket;
+  }) => void;
 }) {
   return (
     <>
       {buckets.map((bucket) => {
         const isOpen = !collapsedMonths.has(bucket.key);
+        const monthPenaltyRial = monthPenaltyTotal(bucket, penaltyDetailsByPrincipalDueId);
+        const principalItems = bucket.items.filter((row) => (row.sourceKind ?? 'principal') !== 'penalty');
+
         return (
           <div
             key={bucket.key}
             className="overflow-hidden rounded-[18px] border border-slate-200/90 bg-white shadow-[0_8px_30px_-18px_rgba(15,23,42,0.12)]"
           >
-            <button
-              type="button"
-              onClick={() => toggleMonth(bucket.key)}
-              aria-expanded={isOpen}
-              className="flex w-full items-start gap-3 px-4 py-3.5 text-right transition hover:bg-slate-50/80 sm:items-center sm:px-5 sm:py-4"
-            >
-              <div className="order-1 flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+            <div className="flex w-full items-start gap-3 px-4 py-3.5 text-right sm:items-center sm:px-5 sm:py-4">
+              <button
+                type="button"
+                onClick={() => toggleMonth(bucket.key)}
+                aria-expanded={isOpen}
+                className="order-1 flex min-w-0 flex-1 flex-col gap-2 text-right transition hover:opacity-90 sm:flex-row sm:items-center sm:gap-4"
+              >
                 <div className="flex shrink-0 items-center gap-2">
                   <CalendarDays
                     className="h-5 w-5 shrink-0 text-[color-mix(in_srgb,var(--dark-teal)_85%,black)]"
@@ -57,8 +81,11 @@ export function DueMonthAccordionList({
                   <span>
                     مبلغ کل: <span className="font-black text-slate-900">{formatMoneyRial(bucket.totalRial)}</span>
                   </span>
-                  <span>
-                    جریمه: <span className="font-black text-slate-900">{bucket.penaltyRial > 0 ? formatMoneyRial(bucket.penaltyRial) : '-'}</span>
+                  <span className="inline-flex items-center gap-1">
+                    جریمه:{' '}
+                    <span className="font-black text-slate-900">
+                      {monthPenaltyRial > 0 ? formatMoneyRial(monthPenaltyRial) : '-'}
+                    </span>
                   </span>
                   <span>
                     بدهی معوق:{' '}
@@ -67,24 +94,37 @@ export function DueMonthAccordionList({
                     </span>
                   </span>
                 </div>
-              </div>
-              <ChevronDown
-                className={`order-2 h-5 w-5 shrink-0 text-slate-400 transition-transform duration-200 ${
-                  isOpen ? 'rotate-180' : ''
-                }`}
-                aria-hidden
-              />
-            </button>
+              </button>
+              {principalItems.some((row) => penaltyDetailsByPrincipalDueId?.[row.id]) && onOpenPenaltyDetails ? (
+                <PenaltyInfoButton
+                  onClick={() => onOpenPenaltyDetails({ mode: 'monthly', monthHeading: bucket.heading, bucket })}
+                />
+              ) : null}
+              <button
+                type="button"
+                onClick={() => toggleMonth(bucket.key)}
+                aria-expanded={isOpen}
+                className="order-2 rounded-lg p-1 text-slate-400 transition hover:bg-slate-100"
+                aria-label={isOpen ? 'بستن ماه' : 'باز کردن ماه'}
+              >
+                <ChevronDown
+                  className={`h-5 w-5 shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+                  aria-hidden
+                />
+              </button>
+            </div>
 
             {isOpen ? (
               <div className="border-t border-slate-100 bg-slate-50/40 px-4 py-4 sm:px-5">
                 <div className="text-[11px] font-black uppercase tracking-wide text-slate-500">سررسیدها</div>
                 <div className="mt-3 space-y-2.5">
-                  {bucket.items.map((row, rowIdx) => {
+                  {principalItems.map((row, rowIdx) => {
                     const summary = allocationByDueId?.[row.id];
                     const paidRial = summary?.paidAmountRial ?? 0;
                     const remainingRial = summary?.remainingAmountRial ?? Math.max(0, Number(row.amount || 0));
                     const rowReceipts = summary?.receipts ?? [];
+                    const penaltyDetail = penaltyDetailsByPrincipalDueId?.[row.id];
+                    const penaltyRial = penaltyDetail?.totalPenaltyRial ?? 0;
                     const payload = { bucketKey: bucket.key, monthHeading: bucket.heading, row };
 
                     return (
@@ -97,12 +137,6 @@ export function DueMonthAccordionList({
                             <div className="text-[13px] font-black text-slate-900">{row.title}</div>
                             <div className="mt-1 flex flex-wrap gap-x-2 gap-y-0.5 text-[11px] font-semibold text-slate-500">
                               <span>{row.categoryTitle}</span>
-                              {row.sourceKind === 'penalty' ? (
-                                <>
-                                  <span className="text-slate-300">·</span>
-                                  <span className="font-bold text-rose-600">جریمه</span>
-                                </>
-                              ) : null}
                               <span className="text-slate-300">·</span>
                               <span>سررسید: {row.dueDate}</span>
                               {row.isOverdueUnpaid ? (
@@ -121,7 +155,7 @@ export function DueMonthAccordionList({
                           </div>
                         </div>
 
-                        <div className="mt-3 grid gap-2 rounded-2xl border border-slate-100 bg-slate-50/55 px-3 py-2.5 sm:grid-cols-3">
+                        <div className="mt-3 grid gap-2 rounded-2xl border border-slate-100 bg-slate-50/55 px-3 py-2.5 sm:grid-cols-4">
                           <div>
                             <div className="text-[10px] font-bold text-slate-500">پرداختی</div>
                             <div className="mt-0.5 text-[12px] font-black tabular-nums text-emerald-700">{formatMoneyRial(paidRial)}</div>
@@ -129,6 +163,17 @@ export function DueMonthAccordionList({
                           <div>
                             <div className="text-[10px] font-bold text-slate-500">مانده</div>
                             <div className="mt-0.5 text-[12px] font-black tabular-nums text-slate-900">{formatMoneyRial(remainingRial)}</div>
+                          </div>
+                          <div>
+                            <div className="text-[10px] font-bold text-slate-500">جریمه</div>
+                            <div className="mt-0.5 inline-flex items-center gap-1 text-[12px] font-black tabular-nums text-rose-700">
+                              {penaltyRial > 0 ? formatMoneyRial(penaltyRial) : '—'}
+                              {penaltyDetail && onOpenPenaltyDetails ? (
+                                <PenaltyInfoButton
+                                  onClick={() => onOpenPenaltyDetails({ mode: 'single', row })}
+                                />
+                              ) : null}
+                            </div>
                           </div>
                           <div>
                             <div className="text-[10px] font-bold text-slate-500">فیش‌های تخصیص‌یافته</div>

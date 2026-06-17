@@ -33,6 +33,8 @@ import {
 } from '../../../../../lib/employee-request-actions';
 import type {
   CompanyLoanItem,
+  EmployeeLeaveRequestContext,
+  EmployeeRemoteWorkRequestContext,
   EmployeeRequestFormPayload,
   EmployeeRequestItem,
   EmployeeRequestStatus,
@@ -41,6 +43,12 @@ import type {
   LeaveBalanceSummary,
   RequestReasonOption,
 } from '../../../../../lib/employee-requests';
+import {
+  mapRangeTypeToRemoteWorkMode,
+  REMOTE_WORK_ATTENDANCE_EFFECT_LABELS,
+  REMOTE_WORK_MODE_LABELS,
+  REMOTE_WORK_PAYMENT_EFFECT_LABELS,
+} from '../../../../../lib/remote-work-policy';
 
 const REQUEST_TABS: Array<{ type: EmployeeRequestType; label: string }> = [
   { type: 'daily_leave', label: 'مرخصی روزانه' },
@@ -474,6 +482,23 @@ function RequestDialog({
   );
 }
 
+function remoteWorkMetaBadges(request: EmployeeRequestItem) {
+  if (request.requestType !== 'remote_work') return null;
+  const meta = request.calculationMeta ?? {};
+  const mode = mapRangeTypeToRemoteWorkMode(request.rangeType);
+  const attendanceEffect =
+    typeof meta.attendanceEffect === 'string' ? REMOTE_WORK_ATTENDANCE_EFFECT_LABELS[meta.attendanceEffect as keyof typeof REMOTE_WORK_ATTENDANCE_EFFECT_LABELS] : null;
+  const paymentEffect =
+    typeof meta.paymentEffect === 'string' ? REMOTE_WORK_PAYMENT_EFFECT_LABELS[meta.paymentEffect as keyof typeof REMOTE_WORK_PAYMENT_EFFECT_LABELS] : null;
+  return (
+    <div className="employee-request-meta-badges">
+      {mode ? <span className="employee-request-badge">{REMOTE_WORK_MODE_LABELS[mode]}</span> : null}
+      {attendanceEffect ? <span className="employee-request-badge is-blue">{attendanceEffect}</span> : null}
+      {paymentEffect ? <span className="employee-request-badge is-green">{paymentEffect}</span> : null}
+    </div>
+  );
+}
+
 function RequestCard({
   request,
   employee,
@@ -507,6 +532,7 @@ function RequestCard({
           <span><BadgeCheck className="h-4 w-4" /> {formatFaNumber(request.attachmentCount, { useGrouping: false })} پیوست</span>
         </div>
         {request.description ? <p className="employee-request-description-text">{request.description}</p> : null}
+        {remoteWorkMetaBadges(request)}
         <div className="employee-request-card-foot">
           <span>ثبت‌کننده: {request.createdBy ?? 'نامشخص'}</span>
           <span>ایجاد: {new Date(request.createdAt).toLocaleDateString('fa-IR')}</span>
@@ -540,12 +566,16 @@ export function EmployeeRequestsClient({
   reasons,
   loans,
   leaveBalance,
+  leaveRequestContext,
+  remoteWorkRequestContext,
 }: {
   employee: EmployeeRequestsEmployee;
   requests: EmployeeRequestItem[];
   reasons: RequestReasonOption[];
   loans: CompanyLoanItem[];
   leaveBalance: LeaveBalanceSummary;
+  leaveRequestContext: EmployeeLeaveRequestContext;
+  remoteWorkRequestContext: EmployeeRemoteWorkRequestContext;
 }) {
   const router = useRouter();
   const [activeType, setActiveType] = useState<(typeof REQUEST_TAB_CONFIG)[number]['key']>('leave');
@@ -765,6 +795,8 @@ export function EmployeeRequestsClient({
           reasons={reasons}
           loans={loans}
           leaveBalance={liveLeaveBalance}
+          leaveRequestContext={leaveRequestContext}
+          remoteWorkRequestContext={remoteWorkRequestContext}
           saving={isPending}
           onChange={setForm}
           onClose={() => {

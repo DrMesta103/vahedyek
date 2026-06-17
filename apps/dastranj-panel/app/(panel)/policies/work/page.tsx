@@ -32,7 +32,7 @@ export default async function WorkPolicyOverviewPage({ searchParams }: WorkPolic
     { title: 'سیاست‌های مرخصی', href: policyId ? `/policies/leave?policyId=${policyId}` : '/policies/leave' },
     { title: 'سیاست‌های اضافه‌کاری', href: policyId ? `/policies/work/base?policyId=${policyId}&section=overtime` : '/policies/work/base?section=overtime' },
     { title: 'سیاست‌های تردد دستی', href: policyId ? `/policies/manual?policyId=${policyId}` : '/policies/manual' },
-    { title: 'سیاست‌های روز تعطیل', href: policyId ? `/policies/work/base?policyId=${policyId}&section=holiday` : '/policies/work/base?section=holiday' },
+    { title: 'سیاست‌های دورکاری', href: policyId ? `/policies/remote?policyId=${policyId}` : '/policies/remote' },
     { title: 'سایر سیاست‌ها', href: policyId ? `/policies/work/base?policyId=${policyId}&section=other` : '/policies/work/base?section=other' },
   ];
 

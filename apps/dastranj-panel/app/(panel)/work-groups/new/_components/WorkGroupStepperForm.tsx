@@ -1,9 +1,12 @@
 ﻿'use client';
 
+import { PersianDatePicker } from '@repo/ui';
 import { AlertTriangle, Camera, Check, Grid3X3, MapPin, Plus, Search, Trash2, UserRound, UsersRound } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { saveWorkGroupDraftAction } from '../../../../lib/actions';
+import { formatPersianYmd, getPersianPartsFromDate, parsePersianYmd, persianToDate } from '../../../../lib/calendar-dates';
+import { normalizePersianDateInput } from '../../../../lib/calendar-events';
 
 type LocationOption = {
   id: string;
@@ -44,7 +47,35 @@ type WorkGroupStepperFormInitialValues = {
   selectedEmployees?: SelectedEmployee[];
 };
 
-const today = new Date().toISOString().slice(0, 10);
+const todayPersianDate = () => formatPersianYmd(getPersianPartsFromDate());
+
+function persianMonthStartDate() {
+  const today = getPersianPartsFromDate();
+  return formatPersianYmd({ year: today.year, month: today.month, day: 1 });
+}
+
+function persianYearStartDate() {
+  const today = getPersianPartsFromDate();
+  return formatPersianYmd({ year: today.year, month: 1, day: 1 });
+}
+
+function isoDateToPickerValue(value?: string | null) {
+  const trimmed = value?.trim().slice(0, 10) ?? '';
+  if (!trimmed) return '';
+  const parsed = new Date(`${trimmed}T12:00:00`);
+  if (Number.isNaN(parsed.getTime())) return '';
+  return formatPersianYmd(getPersianPartsFromDate(parsed));
+}
+
+function pickerValueToIsoDate(value: string) {
+  const parts = parsePersianYmd(normalizePersianDateInput(value));
+  if (!parts) return '';
+  try {
+    return persianToDate(parts).toISOString().slice(0, 10);
+  } catch {
+    return '';
+  }
+}
 
 const criticalStyles = `
 .work-group-create-page.module-page{width:min(100%,1040px);max-width:1040px}
@@ -153,7 +184,27 @@ function ConfirmEmployeeDialog({
   onCancel: () => void;
   onConfirm: (date: string) => void;
 }) {
-  const [date, setDate] = useState(today);
+  const [date, setDate] = useState(todayPersianDate);
+  const [activePreset, setActivePreset] = useState<'today' | 'month' | 'year' | 'custom'>('today');
+
+  const applyPreset = (preset: 'today' | 'month' | 'year', nextDate: string) => {
+    setActivePreset(preset);
+    setDate(nextDate);
+  };
+
+  const handleDateChange = (nextDate: string) => {
+    setActivePreset('custom');
+    setDate(nextDate);
+  };
+
+  const handleConfirm = () => {
+    const isoDate = pickerValueToIsoDate(date);
+    if (!isoDate) {
+      window.alert('تاریخ عضویت معتبر نیست.');
+      return;
+    }
+    onConfirm(isoDate);
+  };
 
   return (
     <div className="work-group-modal-backdrop">
@@ -168,21 +219,47 @@ function ConfirmEmployeeDialog({
             </span>
           </div>
         ) : null}
-        <input type="date" value={date} onChange={(event) => setDate(event.target.value)} />
+        <div className="contract-timing-date-field">
+          <span className="contract-timing-date-label">
+            تاریخ عضویت <em aria-hidden>*</em>
+          </span>
+          <div className="contract-timing-date-input">
+            <PersianDatePicker
+              value={date}
+              onChange={handleDateChange}
+              placeholder="۱۴۰۵/۰۱/۰۱"
+              className="contract-timing-date-picker-control"
+              containerClassName="contract-timing-date-picker"
+              calendarIconAriaLabel="باز کردن تقویم تاریخ عضویت"
+            />
+          </div>
+        </div>
         <div className="work-group-modal-presets">
-          <button type="button" className="is-active" onClick={() => setDate(today)}>
+          <button
+            type="button"
+            className={activePreset === 'today' ? 'is-active' : undefined}
+            onClick={() => applyPreset('today', todayPersianDate())}
+          >
             امروز
             <Check />
           </button>
-          <button type="button" onClick={() => setDate(`${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-01`)}>
+          <button
+            type="button"
+            className={activePreset === 'month' ? 'is-active' : undefined}
+            onClick={() => applyPreset('month', persianMonthStartDate())}
+          >
             شروع ماه
           </button>
-          <button type="button" onClick={() => setDate(`${new Date().getFullYear()}-01-01`)}>
+          <button
+            type="button"
+            className={activePreset === 'year' ? 'is-active' : undefined}
+            onClick={() => applyPreset('year', persianYearStartDate())}
+          >
             شروع سال
           </button>
         </div>
         <div className="work-group-modal-actions">
-          <button type="button" className="work-group-modal-submit" onClick={() => onConfirm(date)}>
+          <button type="button" className="work-group-modal-submit" onClick={handleConfirm}>
             تایید و افزودن
           </button>
           <button type="button" className="work-group-modal-cancel" onClick={onCancel}>
@@ -323,6 +400,14 @@ export function WorkGroupStepperForm({
       ];
     });
     setPendingEmployee(null);
+  };
+
+  const updateEmployeeJoinedAt = (employeeId: string, persianDate: string) => {
+    const isoDate = pickerValueToIsoDate(persianDate);
+    if (!isoDate) return;
+    setSelectedEmployees((current) =>
+      current.map((item) => (item.id === employeeId ? { ...item, joinedAt: isoDate } : item)),
+    );
   };
 
   const requestEmployee = (employee: EmployeeOption) => setPendingEmployee(employee);
@@ -515,9 +600,21 @@ export function WorkGroupStepperForm({
                       </select>
                       <RoleSelectTooltip />
                     </div>
-                    <div>
+                    <div className="work-group-selected-person-meta">
                       <strong>{employee.name}</strong>
-                      <span>تاریخ عضویت: {employee.joinedAt}</span>
+                      <div className="work-group-selected-person-date">
+                        <span className="contract-timing-date-label">تاریخ عضویت</span>
+                        <div className="contract-timing-date-input">
+                          <PersianDatePicker
+                            value={isoDateToPickerValue(employee.joinedAt)}
+                            onChange={(next) => updateEmployeeJoinedAt(employee.id, next)}
+                            placeholder="۱۴۰۵/۰۳/۰۱"
+                            className="contract-timing-date-picker-control"
+                            containerClassName="contract-timing-date-picker"
+                            calendarIconAriaLabel={`باز کردن تقویم تاریخ عضویت ${employee.name}`}
+                          />
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ))

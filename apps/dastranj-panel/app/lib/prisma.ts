@@ -3,9 +3,9 @@ import { applyCurrentDatabaseUrl } from '../config/database';
 
 applyCurrentDatabaseUrl();
 
-const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
+const globalForPrisma = globalThis as unknown as { prisma?: any };
 
-function createPrismaClient() {
+function createPrismaClient(): any {
   const options = {
     log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
     __internal: {
@@ -13,10 +13,10 @@ function createPrismaClient() {
     },
   };
 
-  return new (PrismaClient as any)(options) as PrismaClient;
+  return new (PrismaClient as any)(options);
 }
 
-function isCompatiblePrismaClient(client: PrismaClient | undefined): client is PrismaClient {
+function isCompatiblePrismaClient(client: any): client is any {
   if (!client) return false;
 
   const requiredDelegates = [
@@ -43,7 +43,7 @@ function isCompatiblePrismaClient(client: PrismaClient | undefined): client is P
   return requiredDelegates.every((delegate) => delegate in client);
 }
 
-export const prisma = isCompatiblePrismaClient(globalForPrisma.prisma)
+export const prisma: any = isCompatiblePrismaClient(globalForPrisma.prisma)
   ? globalForPrisma.prisma
   : createPrismaClient();
 

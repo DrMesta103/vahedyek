@@ -164,10 +164,6 @@ export async function GET(request: Request, context: { params: Promise<{ contrac
         parties: { include: { members: { orderBy: { createdAt: 'asc' } } } },
         financial: { include: { categories: true, dueItems: true } },
         penalties: { include: { types: true, rules: true } },
-        ruleDraftSettings: {
-          where: { ruleId: { in: [...REPORT_RULE_IDS] } },
-          select: { ruleId: true, payload: true, updatedAt: true },
-        },
         terminationRules: true,
         extraCosts: true,
         technicalSpecs: true,
@@ -211,6 +207,19 @@ export async function GET(request: Request, context: { params: Promise<{ contrac
     const tenantRuleSettings = await prisma.tenantContractRuleSettings.findUnique({
       where: { tenantId: session.tenantId },
       select: { rulesPayload: true },
+    });
+    const ruleDraftSettings = await prisma.contractDraftRuleSettings.findMany({
+      where: {
+        draftId: contractId,
+        ruleId: {
+          in: [...REPORT_RULE_IDS],
+        },
+      },
+      select: {
+        ruleId: true,
+        payload: true,
+        updatedAt: true,
+      },
     });
 
     const stepsSnap = normalizeWorkflowSteps(draft.approvalInstance?.stepsSnapshot);
@@ -332,7 +341,7 @@ export async function GET(request: Request, context: { params: Promise<{ contrac
             })()
           : null,
         penalties: serializePenalties(draft.penalties),
-        ruleSettings: serializeContractRuleSnapshots(draft.ruleDraftSettings, tenantRuleSettings?.rulesPayload),
+        ruleSettings: serializeContractRuleSnapshots(ruleDraftSettings, tenantRuleSettings?.rulesPayload),
         terminationRules: draft.terminationRules ? { buyerRules: draft.terminationRules.buyerRules ?? {} } : null,
         extraCosts: draft.extraCosts ? { payload: draft.extraCosts.payload ?? [] } : null,
         technicalSpecs: draft.technicalSpecs ? { specs: draft.technicalSpecs.specs ?? [] } : null,

@@ -4,19 +4,28 @@ import { revalidatePath } from 'next/cache';
 import {
   deleteCompanyLoan,
   deleteEmployeeRequest,
+  previewEmployeeRequest,
   updateEmployeeRequestStatus,
   upsertCompanyLoan,
   upsertEmployeeRequest,
   type CompanyLoanItem,
   type EmployeeRequestFormPayload,
+  type EmployeeRequestPreview,
   type EmployeeRequestStatus,
 } from './employee-requests';
+import { getSessionContext } from './auth';
 
 export async function saveEmployeeRequestAction(payload: EmployeeRequestFormPayload) {
   const result = await upsertEmployeeRequest(payload);
   revalidatePath(`/employees/${payload.employeeId}/requests`);
   revalidatePath(`/employees/${payload.employeeId}`);
   return result;
+}
+
+export async function previewEmployeeRequestAction(payload: EmployeeRequestFormPayload): Promise<EmployeeRequestPreview> {
+  const session = await getSessionContext();
+  if (!session?.tenantId) throw new Error('tenant_not_selected');
+  return previewEmployeeRequest(payload, session.tenantId);
 }
 
 export async function changeEmployeeRequestStatusAction(

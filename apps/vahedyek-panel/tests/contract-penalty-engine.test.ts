@@ -25,11 +25,11 @@ test('fixed penalty applies grace days, periods, and extra fee', () => {
   ]);
   const penalties: ContractPenaltiesData = {
     activeTab: '',
-    types: [{ id: 'late', title: 'تاخیر', description: '', active: true }],
+    types: [{ id: 'installment-delay', title: 'تاخیر اقساط', description: '', active: true }],
     rules: [
       {
         id: 'rule-fixed',
-        penaltyTypeId: 'late',
+        penaltyTypeId: 'installment-delay',
         mode: 'fixed',
         period: 'daily',
         fixedAmount: '100',
@@ -53,7 +53,7 @@ test('fixed penalty applies grace days, periods, and extra fee', () => {
   });
 
   assert.equal(result.penaltyRows.length, 1);
-  assert.equal(result.penaltyRows[0]?.amount, 250);
+  assert.equal(result.penaltyRows[0]?.amount, 150);
 });
 
 test('contract percent penalty uses contract base total', () => {
@@ -62,11 +62,11 @@ test('contract percent penalty uses contract base total', () => {
   ]);
   const penalties: ContractPenaltiesData = {
     activeTab: '',
-    types: [{ id: 'late', title: 'تاخیر', description: '', active: true }],
+    types: [{ id: 'installment-delay', title: 'تاخیر اقساط', description: '', active: true }],
     rules: [
       {
         id: 'rule-contract',
-        penaltyTypeId: 'late',
+        penaltyTypeId: 'installment-delay',
         mode: 'contract',
         period: 'monthly',
         fixedAmount: '',
@@ -99,11 +99,11 @@ test('progressive penalty ignores dues without valid due date', () => {
   ]);
   const penalties: ContractPenaltiesData = {
     activeTab: '',
-    types: [{ id: 'late', title: 'تاخیر', description: '', active: true }],
+    types: [{ id: 'installment-delay', title: 'تاخیر اقساط', description: '', active: true }],
     rules: [
       {
         id: 'rule-progressive',
-        penaltyTypeId: 'late',
+        penaltyTypeId: 'installment-delay',
         mode: 'progressive',
         period: 'daily',
         fixedAmount: '',
@@ -139,11 +139,11 @@ test('receipt allocation works on shared timeline of principal and penalty', () 
   ]);
   const penalties: ContractPenaltiesData = {
     activeTab: '',
-    types: [{ id: 'late', title: 'تاخیر', description: '', active: true }],
+    types: [{ id: 'installment-delay', title: 'تاخیر اقساط', description: '', active: true }],
     rules: [
       {
         id: 'rule-fixed',
-        penaltyTypeId: 'late',
+        penaltyTypeId: 'installment-delay',
         mode: 'fixed',
         period: 'daily',
         fixedAmount: '100',

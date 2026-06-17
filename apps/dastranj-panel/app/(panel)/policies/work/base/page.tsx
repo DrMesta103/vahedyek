@@ -3,6 +3,7 @@ import { listPolicies } from '../../../../lib/data';
 import { findPolicyByFamilyKey, getPolicySectionValues } from '../../../../lib/policy-workspaces';
 import { policyBreadcrumbs } from '../../../../components/module-page/module-breadcrumbs';
 import { OvertimePolicyEditor } from '../../_components/OvertimePolicyEditor';
+import { OtherPolicyEditor } from '../../_components/OtherPolicyEditor';
 import {
   PolicyFieldInput,
   PolicyFieldLabel,
@@ -49,6 +50,41 @@ export default async function WorkPolicyBasePage({ searchParams }: WorkPolicyBas
     overtimeAfterShift: boolDefault(sectionValues.overtimeAfterShift),
   };
 
+  const otherDefaults = {
+    requireGeofence: boolDefault(sectionValues.requireGeofence),
+    faceRecognitionInFlow: boolDefault(sectionValues.faceRecognitionInFlow),
+    consecutiveAbsenceWarning: boolDefault(sectionValues.consecutiveAbsenceWarning),
+    maxConsecutiveAbsenceDays:
+      typeof sectionValues.maxConsecutiveAbsenceDays === 'number' ? sectionValues.maxConsecutiveAbsenceDays : 0,
+  };
+
+  if (section === 'other') {
+    return (
+      <PolicyPageShell
+        title="ویرایش سایر سیاست‌ها"
+        subtitle="تنظیمات تکمیلی حضور و غیاب"
+        breadcrumb={policyBreadcrumbs({ label: 'ویرایش سیاست کاری', href: backHref }, { label: 'سایر سیاست‌ها' })}
+        actionHref={backHref}
+        actionLabel="بازگشت به سیاست کاری"
+      >
+        <form action={savePolicyWorkspaceAction} className="policy-form-stack">
+          <input type="hidden" name="familyKey" value="work" />
+          <input type="hidden" name="variant" value="default" />
+          <input type="hidden" name="policyId" value={policyId} />
+          <input type="hidden" name="calendarId" value={policy?.calendarId ?? ''} />
+          <input type="hidden" name="workSection" value="other" />
+
+          <PolicySectionCard
+            title="سایر سیاست‌ها"
+            description="تنظیمات تکمیلی حضور و غیاب که در سایر تب‌ها پوشش داده نشده‌اند"
+          >
+            <OtherPolicyEditor backHref={backHref} policyId={policyId} {...otherDefaults} />
+          </PolicySectionCard>
+        </form>
+      </PolicyPageShell>
+    );
+  }
+
   if (section === 'overtime') {
     return (
       <PolicyPageShell
@@ -81,11 +117,7 @@ export default async function WorkPolicyBasePage({ searchParams }: WorkPolicyBas
   }
 
   const sectionHint =
-    section === 'holiday'
-      ? 'این صفحه فعلاً با همان تنظیمات پایه موجود کار می‌کند و برای تنظیمات روز تعطیل استفاده می‌شود.'
-      : section === 'other'
-        ? 'این صفحه فعلاً با همان تنظیمات پایه موجود کار می‌کند و برای سایر سیاست‌ها استفاده می‌شود.'
-        : 'در سیاست کاری فقط پارامترهای پایه و قواعد سازمانی قابل تنظیم است و سایر خانواده‌ها از آن تبعیت می‌کنند.';
+    'در سیاست کاری فقط پارامترهای پایه و قواعد سازمانی قابل تنظیم است و سایر خانواده‌ها از آن تبعیت می‌کنند.';
 
   return (
     <PolicyPageShell

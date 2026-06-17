@@ -1,6 +1,6 @@
 import type { WorkPolicy } from './prisma-client';
 
-export type PolicyFamilyKey = 'work' | 'shift' | 'leave' | 'manual' | 'night';
+export type PolicyFamilyKey = 'work' | 'shift' | 'leave' | 'manual' | 'night' | 'remote';
 
 export type PolicyVariantKey =
   | 'fixed'
@@ -59,7 +59,7 @@ export const POLICY_FAMILIES: PolicyFamilyMeta[] = [
     title: 'سیاست های تردد دستی',
     subtitle: 'ثبت دستی ورود و خروج و قواعد جایگزین',
     pageTitle: 'ویرایش سیاست‌های تردد دستی',
-    pageHint: 'تعریف شرایط ثبت دستی و تاییدهای لازم',
+    pageHint: 'تعریف شرایط ثبت دستی ورود و خروج، محدودیت‌ها و تاییدها',
     infoBanner: 'در تردد دستی فقط زمانی که ثبت خودکار ممکن نیست، رفتار ثبت و تایید مدیریت می‌شود.',
     route: '/policies/manual',
   },
@@ -71,6 +71,15 @@ export const POLICY_FAMILIES: PolicyFamilyMeta[] = [
     pageHint: 'تعریف قوانین ورود، خروج و محاسبه برای شب‌کاری',
     infoBanner: 'در شب‌کاری فقط بازه‌های زمانی، الزام‌ها و قواعد محاسبه‌ی اضافه قابل تنظیم است.',
     route: '/policies/night',
+  },
+  {
+    key: 'remote',
+    title: 'سیاست های دورکاری',
+    subtitle: 'مجوز دورکاری، اثر حضور و پرداخت',
+    pageTitle: 'ویرایش سیاست‌های دورکاری',
+    pageHint: 'تعریف نحوه ثبت، تأثیر حضور/غیاب و محدودیت‌های دورکاری',
+    infoBanner: 'دورکاری تأییدشده می‌تواند به عنوان حضور معتبر در گزارش کارکرد لحاظ شود.',
+    route: '/policies/remote',
   },
 ];
 
@@ -91,9 +100,10 @@ export const POLICY_VARIANTS: Record<PolicyFamilyKey, Array<{ key: PolicyVariant
   ],
   manual: [{ key: 'default', title: 'تردد دستی', subtitle: 'قواعد ثبت دستی و تایید' }],
   night: [{ key: 'default', title: 'شب‌کاری', subtitle: 'ورود و خروج شبانه' }],
+  remote: [{ key: 'default', title: 'دورکاری', subtitle: 'مجوز و اثر حضور/پرداخت' }],
 };
 
-export const POLICY_FAMILY_ORDER: PolicyFamilyKey[] = ['work', 'shift', 'leave', 'manual', 'night'];
+export const POLICY_FAMILY_ORDER: PolicyFamilyKey[] = ['work', 'shift', 'leave', 'manual', 'night', 'remote'];
 
 export function getPolicyFamilyMeta(key: string) {
   return POLICY_FAMILIES.find((item) => item.key === key) ?? null;

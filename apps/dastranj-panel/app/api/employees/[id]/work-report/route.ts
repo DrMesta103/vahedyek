@@ -7,12 +7,18 @@ function parseMonthParam(value: string | null) {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+function parseBooleanParam(value: string | null) {
+  if (!value) return null;
+  return value === 'true' || value === '1';
+}
+
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const url = new URL(request.url);
     const year = parseMonthParam(url.searchParams.get('year') ?? url.searchParams.get('jy'));
     const month = parseMonthParam(url.searchParams.get('month') ?? url.searchParams.get('jm'));
+    const includeInsuranceTax = parseBooleanParam(url.searchParams.get('includeInsuranceTax'));
     const report = await getEmployeeWorkReportPageData(id, {
       year: year ?? undefined,
       month: month ?? undefined,
@@ -20,6 +26,23 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
     if (!report) {
       return NextResponse.json({ error: 'employee_not_found' }, { status: 404 });
+    }
+
+    if (includeInsuranceTax === true) {
+      return NextResponse.json({
+        report: {
+          ...report,
+          payrollPreview: report.payrollPreviewWithInsuranceTax,
+        },
+      });
+    }
+    if (includeInsuranceTax === false) {
+      return NextResponse.json({
+        report: {
+          ...report,
+          payrollPreview: report.payrollPreviewWithoutInsuranceTax,
+        },
+      });
     }
 
     return NextResponse.json({ report });

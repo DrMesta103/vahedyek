@@ -82,6 +82,33 @@ async function queryCurrentEmployeeContractRows(employeeIds: string[], tenantId?
   });
 }
 
+async function queryEmployeeContractRowsByDate(employeeIds: string[], dateIso: string, tenantId?: string | null) {
+  if (!employeeIds.length) return [] as ContractRow[];
+
+  return prisma.employeeContract.findMany({
+    where: {
+      employeeId: { in: employeeIds },
+      status: 'active',
+      OR: [{ startDate: null }, { startDate: { lte: dateIso } }],
+      AND: [{ OR: [{ endDate: null }, { endDate: { gte: dateIso } }] }],
+      ...employeeContractTenantFilter(tenantId),
+    },
+    orderBy: [{ employeeId: 'asc' }, { finalizedAt: 'desc' }, { updatedAt: 'desc' }],
+    select: {
+      id: true,
+      employeeId: true,
+      status: true,
+      isCurrent: true,
+      startDate: true,
+      endDate: true,
+      contractNumber: true,
+      templateId: true,
+      data: true,
+      finalizedAt: true,
+    },
+  });
+}
+
 export async function getCurrentEmployeeContract(employeeId: string, tenantId?: string | null) {
   try {
     const rows = await queryCurrentEmployeeContractRows([employeeId], tenantId);
@@ -99,6 +126,52 @@ export async function getCurrentEmployeeContracts(employeeIds: string[], tenantI
     return new Map(rows.map((row) => [row.employeeId, contractRowToSummary(row)]));
   } catch (error) {
     if (isMissingEmployeeContractTable(error)) return new Map();
+    throw error;
+  }
+}
+
+export async function getEmployeeContractForDate(employeeId: string, dateIso: string, tenantId?: string | null) {
+  try {
+    const rows = await queryEmployeeContractRowsByDate([employeeId], dateIso, tenantId);
+    return rows[0] ? contractRowToSummary(rows[0]) : null;
+  } catch (error) {
+    if (isMissingEmployeeContractTable(error)) return null;
+    throw error;
+  }
+}
+
+export async function getEmployeeContractsForMonth(
+  employeeId: string,
+  monthStart: string,
+  monthEnd: string,
+  tenantId?: string | null,
+) {
+  try {
+    const rows = await prisma.employeeContract.findMany({
+      where: {
+        employeeId,
+        status: 'active',
+        OR: [{ startDate: null }, { startDate: { lte: monthEnd } }],
+        AND: [{ OR: [{ endDate: null }, { endDate: { gte: monthStart } }] }],
+        ...employeeContractTenantFilter(tenantId),
+      },
+      orderBy: [{ finalizedAt: 'desc' }, { updatedAt: 'desc' }],
+      select: {
+        id: true,
+        employeeId: true,
+        status: true,
+        isCurrent: true,
+        startDate: true,
+        endDate: true,
+        contractNumber: true,
+        templateId: true,
+        data: true,
+        finalizedAt: true,
+      },
+    });
+    return rows.map(contractRowToSummary);
+  } catch (error) {
+    if (isMissingEmployeeContractTable(error)) return [];
     throw error;
   }
 }

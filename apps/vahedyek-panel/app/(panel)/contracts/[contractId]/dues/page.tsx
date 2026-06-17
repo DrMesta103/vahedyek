@@ -5,6 +5,12 @@ import { ArrowRight, FileText, Pencil, ReceiptText, Trash2, X } from 'lucide-rea
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import PanelLayout from '../../../../components/PanelLayout';
 import { DueMonthAccordionList, type DueRegisterReceiptPayload } from '../../../../components/contracts/DueMonthAccordionList';
+import {
+  PenaltyCalculationBody,
+  PenaltyDetailsDialog,
+  PenaltyInfoButton,
+  type PenaltyDetailsDialogState,
+} from '../../../../components/contracts/PenaltyDetailsDialog';
 import { RegisterReceiptDialog } from '../../../../components/contracts/RegisterReceiptDialog';
 import { useAppToast } from '../../../../components/feedback/AppToastProvider';
 import { buildReceiptAllocation, type DueReceiptAllocationSummary } from '../../../../lib/contractReceiptAllocation';
@@ -18,6 +24,8 @@ import {
 import { getContractDetails } from '../../../../lib/contractDraftClient';
 import { resolveDueRegisterPayload } from '../../../../lib/contractPaymentMonthBuckets';
 import { buildContractPenaltyTimeline } from '../../../../lib/contractPenaltyEngine';
+import type { BuyerPenaltyCalculationDetail } from '../../../../lib/buyerPenaltyCalculation';
+import type { PaymentHistoryMonthBucket } from '../../../../lib/contractPaymentMonthBuckets';
 
 function formatMoneyRial(valueRial: number) {
   if (!valueRial) return '۰ ریال';
@@ -31,7 +39,10 @@ const TT_PAID_EX_PENALTY =
   'جمع پرداخت‌هایی که روی ردیف‌های اصل بدهی تخصیص یافته‌اند؛ پرداخت‌های تخصیص‌یافته به جریمه از این عدد جدا شده‌اند.';
 
 const TT_PENALTY_TOTAL =
-  'جمع جریمه‌های محاسبه‌شده از روی قوانین فعال قرارداد تا تاریخ امروز، بر اساس سررسیدهای واقعی و مهلت تنفس.';
+  'جمع جریمه اصلی و جریمه دیرکرد محاسبه‌شده از روی قوانین فعال قرارداد تا تاریخ امروز، بر اساس سررسیدهای واقعی و مهلت تنفس.';
+
+const TT_PENALTY_PAYABLE =
+  'مانده جریمه قابل وصول پس از کسر پرداخت‌های تخصیص‌یافته به ردیف‌های جریمه.';
 
 const TT_PENALTY_PAID =
   'مجموع پرداخت‌هایی که در تخصیص زمانی روی ردیف‌های جریمه نشسته‌اند.';
@@ -58,6 +69,7 @@ export default function ContractDuesPage() {
   const [autoReceiptOpen, setAutoReceiptOpen] = useState(false);
   const [registeredReceipts, setRegisteredReceipts] = useState<RegisteredReceiptRecord[]>([]);
   const [receiptDetails, setReceiptDetails] = useState<ReceiptDetailsState>(null);
+  const [penaltyDetailsState, setPenaltyDetailsState] = useState<PenaltyDetailsDialogState>(null);
   const [editingReceipt, setEditingReceipt] = useState<RegisteredReceiptRecord | null>(null);
   const [editingDueContext, setEditingDueContext] = useState<DueRegisterReceiptPayload | null>(null);
   const { showError, showSuccess } = useAppToast();
@@ -151,11 +163,15 @@ export default function ContractDuesPage() {
     const penaltyPaidRial = Object.values(receiptAllocation.dueById)
       .filter((summary) => summary.row.sourceKind === 'penalty')
       .reduce((sum, summary) => sum + summary.paidAmountRial, 0);
-    const penaltyTotalRial = penaltyTimeline.penaltyRows.reduce((sum, row) => sum + row.amount, 0);
+    const penaltyTotalRial = penaltyTimeline.penaltyCalculation.totalPenaltyRial;
+    const penaltyRemainingRial = Object.values(receiptAllocation.dueById)
+      .filter((summary) => summary.row.sourceKind === 'penalty')
+      .reduce((sum, summary) => sum + summary.remainingAmountRial, 0);
 
     return {
       contractBaseExPenaltyRial: penaltyTimeline.contractBaseTotalRial,
       penaltyTotalRial,
+      penaltyPayableRial: penaltyRemainingRial,
       paidExPenaltyRial: principalPaidRial,
       penaltyPaidRial,
       totalDebtRial: receiptAllocation.totalRemainingRial,
@@ -215,6 +231,89 @@ export default function ContractDuesPage() {
     showSuccess('فیش حذف شد.');
   };
 
+  const openPenaltyDetails = (payload: {
+    mode: 'single' | 'monthly';
+    monthHeading?: string;
+    row?: { id: string; title: string };
+    bucket?: PaymentHistoryMonthBucket;
+  }) => {
+    if (payload.mode === 'single' && payload.row) {
+      const detail = penaltyTimeline.penaltyDetailsByPrincipalDueId[payload.row.id];
+      if (!detail) {
+        showError('جزئیات جریمه برای این سررسید در دسترس نیست.');
+        return;
+      }
+      setPenaltyDetailsState({
+        mode: 'single',
+        title: 'جزئیات جریمه سررسید',
+        subtitle: `${payload.row.title} · سررسید ${detail.dueDate}`,
+        detail,
+      });
+      return;
+    }
+
+    if (payload.mode === 'monthly' && payload.bucket) {
+      const details = payload.bucket.items
+        .filter((row) => (row.sourceKind ?? 'principal') !== 'penalty')
+        .map((row) => ({
+          title: row.title,
+          detail: penaltyTimeline.penaltyDetailsByPrincipalDueId[row.id],
+        }))
+        .filter((item): item is { title: string; detail: NonNullable<typeof item.detail> } => Boolean(item.detail));
+
+      if (details.length === 0) {
+        setPenaltyDetailsState({
+          mode: 'single',
+          title: 'جزئیات جریمه ماهانه',
+          subtitle: payload.monthHeading ?? payload.bucket.heading,
+          detail: {
+            principalDueId: '',
+            penaltyTypeId: '',
+            penaltyTypeTitle: '—',
+            ruleId: '',
+            ruleSettings: null,
+            calculationMethod: 'fixed',
+            period: 'daily',
+            dueDate: '—',
+            calculationDate: '—',
+            rawDelayDays: 0,
+            gracePeriodDays: 0,
+            chargeableDelayDays: 0,
+            periodCount: 0,
+            overdueRemainingDebtRial: 0,
+            totalMainContractAmountRial: 0,
+            mainPenaltyCoreRawRial: 0,
+            mainPenaltyCoreRoundedRial: 0,
+            mainPenaltyRawRial: 0,
+            mainPenaltyRoundedRial: 0,
+            bankInterestRawRial: 0,
+            bankInterestRoundedRial: 0,
+            lateFeeType: null,
+            lateFeeConfiguredValue: null,
+            lateFeeBaseRial: 0,
+            lateFeeRawRial: 0,
+            lateFeeRoundedRial: 0,
+            totalPenaltyRial: 0,
+            totalCollectibleRial: 0,
+            roundingRule: '0',
+            lateFeeRoundingRule: '0',
+            progressiveBreakdown: null,
+            calculationNotes: [],
+            zeroReason: 'برای سررسیدهای این ماه جریمه‌ای محاسبه نشده است.',
+          },
+        });
+        return;
+      }
+
+      setPenaltyDetailsState({
+        mode: 'monthly',
+        title: 'جزئیات جریمه ماهانه',
+        subtitle: payload.monthHeading ?? payload.bucket.heading,
+        details,
+      });
+    }
+  };
+
   const backHref = contractId ? `/contracts/${contractId}${listQuery ? `?${listQuery}` : ''}` : '/contracts';
   const receiptsHref = contractId
     ? `/contracts/${contractId}/dues/receipts${listQuery ? `?${listQuery}` : ''}`
@@ -270,7 +369,7 @@ export default function ContractDuesPage() {
 
             <section className="rounded-[22px] border border-slate-200/80 bg-white/90 p-5 text-right shadow-sm md:p-7">
               <div
-                className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5"
+                className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6"
                 role="group"
                 aria-label="خلاصه مبلغ قرارداد، پرداخت، جریمه و مجموع بدهی"
               >
@@ -317,6 +416,21 @@ export default function ContractDuesPage() {
                   </div>
                   <div className="mt-1.5 text-[15px] font-black tabular-nums text-slate-900">
                     {formatMoneyRial(duesTotals.penaltyTotalRial)}
+                  </div>
+                </div>
+                <div
+                  tabIndex={0}
+                  className="rounded-2xl border border-slate-200/90 bg-white px-4 py-3.5 shadow-[0_1px_0_rgba(15,23,42,0.04)] outline-none focus-visible:ring-2 focus-visible:ring-[color-mix(in_srgb,var(--dark-teal)_40%,transparent)] focus-visible:ring-offset-2"
+                  title={TT_PENALTY_PAYABLE}
+                >
+                  <div
+                    className="text-[10px] font-black uppercase tracking-wide text-slate-500 underline decoration-dotted decoration-slate-300 underline-offset-2 cursor-help"
+                    title={TT_PENALTY_PAYABLE}
+                  >
+                    جریمه قابل وصول
+                  </div>
+                  <div className="mt-1.5 text-[15px] font-black tabular-nums text-slate-900">
+                    {formatMoneyRial(duesTotals.penaltyPayableRial)}
                   </div>
                 </div>
                 <div
@@ -390,6 +504,8 @@ export default function ContractDuesPage() {
                     toggleMonth={toggleMonth}
                     onRegisterReceipt={setRegisterReceiptContext}
                     allocationByDueId={receiptAllocation.dueById}
+                    penaltyDetailsByPrincipalDueId={penaltyTimeline.penaltyDetailsByPrincipalDueId}
+                    onOpenPenaltyDetails={openPenaltyDetails}
                     onViewReceipts={(payload, summary) => setReceiptDetails({ payload, receipts: summary?.receipts ?? [], summary })}
                   />
                 </div>
@@ -435,6 +551,15 @@ export default function ContractDuesPage() {
 
         <ReceiptDetailsDialog
           state={receiptDetails}
+          penaltyDetail={
+            receiptDetails?.payload.row.sourceKind !== 'penalty'
+              ? penaltyTimeline.penaltyDetailsByPrincipalDueId[receiptDetails?.payload.row.id ?? '']
+              : undefined
+          }
+          onOpenPenaltyDetails={() => {
+            if (!receiptDetails?.payload.row.id) return;
+            openPenaltyDetails({ mode: 'single', row: receiptDetails.payload.row });
+          }}
           onClose={() => setReceiptDetails(null)}
           onEditReceipt={(receipt) => {
             if (!receiptDetails?.payload) return;
@@ -444,6 +569,8 @@ export default function ContractDuesPage() {
           }}
           onDeleteReceipt={handleDeleteReceipt}
         />
+
+        <PenaltyDetailsDialog state={penaltyDetailsState} onClose={() => setPenaltyDetailsState(null)} />
       </main>
     </PanelLayout>
   );
@@ -477,11 +604,15 @@ function ReceiptSummaryCard({ label, value, tone }: { label: string; value: stri
 
 function ReceiptDetailsDialog({
   state,
+  penaltyDetail,
+  onOpenPenaltyDetails,
   onClose,
   onEditReceipt,
   onDeleteReceipt,
 }: {
   state: ReceiptDetailsState;
+  penaltyDetail?: BuyerPenaltyCalculationDetail;
+  onOpenPenaltyDetails?: () => void;
   onClose: () => void;
   onEditReceipt?: (receipt: RegisteredReceiptRecord) => void;
   onDeleteReceipt?: (receiptId: string) => void;
@@ -511,6 +642,17 @@ function ReceiptDetailsDialog({
             <ReceiptSummaryCard label="پرداختی تخصیص‌یافته" value={formatMoneyRial(allocatedPaid)} tone="teal" />
             <ReceiptSummaryCard label="مانده" value={formatMoneyRial(remaining)} />
           </div>
+
+          {penaltyDetail ? (
+            <div className="mt-4">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <div className="text-[12px] font-black text-rose-950">جزئیات جریمه این سررسید</div>
+                {onOpenPenaltyDetails ? <PenaltyInfoButton onClick={onOpenPenaltyDetails} label="نمایش در پنجره جداگانه" /> : null}
+              </div>
+              <PenaltyCalculationBody detail={penaltyDetail} />
+            </div>
+          ) : null}
+
           <div className="mt-4 space-y-3">
             {state.receipts.length === 0 ? (
               <div className="rounded-3xl border border-dashed border-slate-200 bg-white px-4 py-10 text-center">
