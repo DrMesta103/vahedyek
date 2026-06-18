@@ -4,7 +4,9 @@
   "description": "Shared UI component library for vahedyek monorepo apps.",
   "license": "UNLICENSED",
   "private": true,
-  "sideEffects": false,
+  "sideEffects": [
+    "**/*.css"
+  ],
   "files": [
     "dist",
     "README.md"
@@ -22,7 +24,53 @@
       "types": "./dist/server.d.ts",
       "import": "./dist/server.mjs",
       "require": "./dist/server.js"
-    }
+    },
+    "./taav": {
+      "types": "./dist/taav.d.ts",
+      "import": "./dist/taav.mjs",
+      "require": "./dist/taav.js"
+    },
+    "./taav/primitives": {
+      "types": "./dist/taav-primitives.d.ts",
+      "import": "./dist/taav-primitives.mjs",
+      "require": "./dist/taav-primitives.js"
+    },
+    "./taav/forms": {
+      "types": "./dist/taav-forms.d.ts",
+      "import": "./dist/taav-forms.mjs",
+      "require": "./dist/taav-forms.js"
+    },
+    "./taav/overlays": {
+      "types": "./dist/taav-overlays.d.ts",
+      "import": "./dist/taav-overlays.mjs",
+      "require": "./dist/taav-overlays.js"
+    },
+    "./taav/navigation": {
+      "types": "./dist/taav-navigation.d.ts",
+      "import": "./dist/taav-navigation.mjs",
+      "require": "./dist/taav-navigation.js"
+    },
+    "./taav/data-display": {
+      "types": "./dist/taav-data-display.d.ts",
+      "import": "./dist/taav-data-display.mjs",
+      "require": "./dist/taav-data-display.js"
+    },
+    "./taav/data-display/interactive": {
+      "types": "./dist/taav-data-display-interactive.d.ts",
+      "import": "./dist/taav-data-display-interactive.mjs",
+      "require": "./dist/taav-data-display-interactive.js"
+    },
+    "./taav/layout": {
+      "types": "./dist/taav-layout.d.ts",
+      "import": "./dist/taav-layout.mjs",
+      "require": "./dist/taav-layout.js"
+    },
+    "./taav/layout/interactive": {
+      "types": "./dist/taav-layout-interactive.d.ts",
+      "import": "./dist/taav-layout-interactive.mjs",
+      "require": "./dist/taav-layout-interactive.js"
+    },
+    "./taav-tokens.css": "./src/tokens/taav-tokens.css"
   },
   "scripts": {
     "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
@@ -31,8 +79,16 @@
     "prepack": "npm run build"
   },
   "dependencies": {
+    "@radix-ui/react-dialog": "^1.1.17",
+    "@radix-ui/react-dropdown-menu": "^2.1.18",
+    "@radix-ui/react-popover": "^1.1.17",
+    "@radix-ui/react-tabs": "^1.1.15",
+    "@radix-ui/react-tooltip": "^1.2.7",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "react-date-object": "^2.1.9",
-    "react-multi-date-picker": "^4.5.2"
+    "react-multi-date-picker": "^4.5.2",
+    "tailwind-merge": "^3.3.1"
   },
   "peerDependencies": {
     "next": "^16.2.4",

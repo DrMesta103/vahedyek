@@ -10,6 +10,7 @@
     "build:ui": "npm --workspace @repo/ui run build",
     "dev:vahedyek": "npm run build:ui && npm --workspace @apps/vahedyek-panel run dev",
     "dev:dastranj": "npm run build:ui && npm --workspace @apps/dastranj-panel run dev",
+    "dev:taav-ui": "npm run build:ui && npm --workspace @apps/taav-ui-lab run dev",
     "build": "npm run build:vahedyek",
     "build:all": "npm run build:vahedyek && npm run build:dastranj",
     "build:vahedyek": "npm run build:ui && npm --workspace @apps/vahedyek-panel run build",

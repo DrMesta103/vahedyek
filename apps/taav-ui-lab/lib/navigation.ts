@@ -1,0 +1,138 @@
+export type LabNavItem = {
+  href: string;
+  label: string;
+  badge?: string;
+};
+
+export const LAB_MAIN_NAV: LabNavItem[] = [
+  { href: '/', label: 'خانه' },
+  { href: '/getting-started', label: 'شروع سریع' },
+  { href: '/components', label: 'Primitives' },
+  { href: '/forms', label: 'Forms' },
+  { href: '/overlays', label: 'Overlays' },
+  { href: '/navigation', label: 'Navigation' },
+  { href: '/data-display', label: 'Data Display' },
+  { href: '/layout', label: 'Layout' },
+  { href: '/tokens', label: 'توکن‌ها' },
+  { href: '/roadmap', label: 'نقشه راه' },
+];
+
+export const LAB_COMPONENT_NAV: LabNavItem[] = [
+  { href: '/components/button', label: 'دکمه', badge: 'TaavButton' },
+  { href: '/components/badge', label: 'نشان', badge: 'TaavBadge' },
+  { href: '/components/card', label: 'کارت', badge: 'TaavCard' },
+  { href: '/components/tooltip', label: 'راهنمای شناور', badge: 'TaavTooltip' },
+  { href: '/components/field-hint', label: 'راهنمای فیلد', badge: 'TaavFieldHint' },
+];
+
+export const LAB_FORM_NAV: LabNavItem[] = [
+  { href: '/forms/input', label: 'ورودی', badge: 'TaavInput' },
+  { href: '/forms/textarea', label: 'متن چندخطی', badge: 'TaavTextarea' },
+  { href: '/forms/select', label: 'انتخاب', badge: 'TaavSelect' },
+  { href: '/forms/checkbox', label: 'چک‌باکس', badge: 'TaavCheckbox' },
+  { href: '/forms/radio', label: 'رادیو', badge: 'TaavRadio' },
+  { href: '/forms/switch', label: 'سوییچ', badge: 'TaavSwitch' },
+  { href: '/forms/segmented-control', label: 'سگمنت', badge: 'TaavSegmentedControl' },
+  { href: '/forms/option-card', label: 'کارت گزینه', badge: 'TaavOptionCard' },
+  { href: '/forms/form-field', label: 'فیلد فرم', badge: 'TaavFormField' },
+];
+
+export const LAB_OVERLAY_NAV: LabNavItem[] = [
+  { href: '/overlays/dialog', label: 'دیالوگ', badge: 'TaavDialog' },
+  { href: '/overlays/drawer', label: 'دراور', badge: 'TaavDrawer' },
+  { href: '/overlays/popover', label: 'پاپ‌اور', badge: 'TaavPopover' },
+  { href: '/overlays/dropdown', label: 'منو', badge: 'TaavDropdown' },
+];
+
+export const LAB_NAVIGATION_NAV: LabNavItem[] = [
+  { href: '/navigation/tabs', label: 'تب‌ها', badge: 'TaavTabs' },
+  { href: '/navigation/stepper', label: 'استپر', badge: 'TaavStepper' },
+];
+
+export const LAB_DATA_DISPLAY_NAV: LabNavItem[] = [
+  { href: '/data-display/chip', label: 'چیپ', badge: 'TaavChip' },
+  { href: '/data-display/status-badge', label: 'وضعیت', badge: 'TaavStatusBadge' },
+  { href: '/data-display/empty-state', label: 'خالی', badge: 'TaavEmptyState' },
+  { href: '/data-display/skeleton', label: 'اسکلت', badge: 'TaavSkeleton' },
+  { href: '/data-display/pagination', label: 'صفحه‌بندی', badge: 'TaavPagination' },
+  { href: '/data-display/filter-bar', label: 'فیلتر', badge: 'TaavFilterBar' },
+  { href: '/data-display/table-shell', label: 'جدول', badge: 'TaavTableShell' },
+  { href: '/data-display/key-value', label: 'کلید/مقدار', badge: 'TaavKeyValue' },
+];
+
+export const LAB_LAYOUT_NAV: LabNavItem[] = [
+  { href: '/layout/page-shell', label: 'پوسته صفحه', badge: 'TaavPageShell' },
+  { href: '/layout/page-header', label: 'سرصفحه', badge: 'TaavPageHeader' },
+  { href: '/layout/section', label: 'بخش', badge: 'TaavSection' },
+  { href: '/layout/settings-section', label: 'بخش تنظیمات', badge: 'TaavSettingsSection' },
+  { href: '/layout/detail-header', label: 'سرصفحه جزئیات', badge: 'TaavDetailHeader' },
+  { href: '/layout/sticky-action-bar', label: 'نوار اقدام', badge: 'TaavStickyActionBar' },
+  { href: '/layout/sidebar-panel', label: 'پنل کناری', badge: 'TaavSidebarPanel' },
+  { href: '/layout/stats-card', label: 'کارت آمار', badge: 'TaavStatsCard' },
+  { href: '/layout/progress-summary', label: 'خلاصه پیشرفت', badge: 'TaavProgressSummary' },
+];
+
+export const LAB_CATEGORIES = [
+  {
+    title: 'Primitives',
+    titleFa: 'پایه',
+    description: 'دکمه، نشان، کارت و اجزای سطح پایین رابط کاربری',
+    status: 'active' as const,
+    count: 5,
+  },
+  {
+    title: 'Forms',
+    titleFa: 'فرم‌ها',
+    description: 'Text fields، form controls و field composition استاندارد',
+    status: 'active' as const,
+    count: 13,
+  },
+  {
+    title: 'Overlays',
+    titleFa: 'اورلی',
+    description: 'Dialog، Drawer، Popover و Dropdown',
+    status: 'active' as const,
+    count: 4,
+  },
+  {
+    title: 'Navigation',
+    titleFa: 'ناوبری',
+    description: 'Tabs و Stepper برای صفحات و جریان‌های چندمرحله‌ای',
+    status: 'active' as const,
+    count: 2,
+  },
+  {
+    title: 'Data Display',
+    titleFa: 'نمایش داده',
+    description: 'Chip، status، empty، skeleton، pagination، filter، table shell',
+    status: 'active' as const,
+    count: 9,
+  },
+  {
+    title: 'Layout',
+    titleFa: 'چیدمان',
+    description: 'Page shell، header، section، settings، detail، sticky actions، sidebar، stats',
+    status: 'active' as const,
+    count: 9,
+  },
+  {
+    title: 'Business Components',
+    titleFa: 'کامپوننت‌های کسب‌وکار',
+    description: 'اجزای تخصصی DastRanj و VahedYek',
+    status: 'planned' as const,
+    count: 0,
+  },
+];
+
+export const LAB_STATUS_ITEMS = [
+  { key: 'foundation', label: 'Foundation', status: 'قرارداد مصرف', progress: 85 },
+  { key: 'tokens', label: 'Tokens', status: 'form tokens', progress: 85 },
+  { key: 'primitives', label: 'Primitives', status: '۵ کامپوننت', progress: 70 },
+  { key: 'forms', label: 'Forms P2', status: '۱۳ کامپوننت', progress: 75 },
+  { key: 'overlays', label: 'Overlays', status: '۴ primitive', progress: 70 },
+  { key: 'navigation', label: 'Navigation', status: 'Tabs + Stepper', progress: 65 },
+  { key: 'data-display', label: 'Data Display', status: '۹ کامپوننت', progress: 70 },
+  { key: 'layout', label: 'Layout', status: '۹ الگو', progress: 75 },
+  { key: 'ui-lab', label: 'UI Lab', status: 'مستندات', progress: 90 },
+  { key: 'migration', label: 'Migration', status: 'شروع نشده', progress: 0 },
+];
