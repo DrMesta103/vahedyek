@@ -16,6 +16,7 @@ export * from './data-display/interactive';
 export * from './layout';
 export { PersianDatePicker, type PersianDatePickerProps } from './components/PersianDatePicker';
 export { SegmentedToggle } from './components/SegmentedToggle';
+export { Input, type InputProps } from './components/Input';
 export * from './components/DastranjPrimitives';
 export * as formStyles from './styles/formStyles';
 export {

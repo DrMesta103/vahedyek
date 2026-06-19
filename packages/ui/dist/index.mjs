@@ -3765,6 +3765,44 @@ function SegmentedToggle({
 }) {
   return /* @__PURE__ */ jsx(BusinessSwitch, { checked, onChange, activeLabel, inactiveLabel });
 }
+var Input = React.forwardRef(
+  ({
+    className = "",
+    startAdornment,
+    endAdornment,
+    startAdornmentClassName = "",
+    endAdornmentClassName = "",
+    containerClassName = "",
+    startAdornmentWrapperClassName = "",
+    endAdornmentWrapperClassName = "",
+    ...props
+  }, ref) => {
+    const invalid = props["aria-invalid"] === true || props["aria-invalid"] === "true";
+    const baseClassName = `h-10 w-full rounded-lg border bg-white px-3 text-[13px] text-slate-800 placeholder:text-slate-400 outline-none transition-all disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400 ${invalid ? "border-rose-400 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/10" : "border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10"}`;
+    const inputClassName = `${baseClassName} ${startAdornment ? "pl-11" : ""} ${endAdornment ? "pr-11" : ""} ${className}`;
+    if (!startAdornment && !endAdornment) {
+      return /* @__PURE__ */ jsx("input", { ref, className: inputClassName, ...props });
+    }
+    return /* @__PURE__ */ jsxs("div", { className: `relative w-full ${containerClassName}`, children: [
+      startAdornment ? /* @__PURE__ */ jsx(
+        "span",
+        {
+          className: `pointer-events-none absolute left-3 top-1/2 z-10 inline-flex -translate-y-1/2 items-center justify-center ${startAdornmentWrapperClassName} ${startAdornmentClassName}`,
+          children: startAdornment
+        }
+      ) : null,
+      /* @__PURE__ */ jsx("input", { ref, className: inputClassName, ...props }),
+      endAdornment ? /* @__PURE__ */ jsx(
+        "span",
+        {
+          className: `pointer-events-none absolute right-3 top-1/2 z-10 inline-flex -translate-y-1/2 items-center justify-center ${endAdornmentWrapperClassName} ${endAdornmentClassName}`,
+          children: endAdornment
+        }
+      ) : null
+    ] });
+  }
+);
+Input.displayName = "Input";
 function PageIntro({
   title,
   description,
@@ -3893,44 +3931,6 @@ var primaryButtonStyle = {
   color: "#fff",
   boxShadow: "0 4px 12px rgba(0, 128, 128, 0.18)"
 };
-var Input = React.forwardRef(
-  ({
-    className = "",
-    startAdornment,
-    endAdornment,
-    startAdornmentClassName = "",
-    endAdornmentClassName = "",
-    containerClassName = "",
-    startAdornmentWrapperClassName = "",
-    endAdornmentWrapperClassName = "",
-    ...props
-  }, ref) => {
-    const invalid = props["aria-invalid"] === true || props["aria-invalid"] === "true";
-    const baseClassName = `h-10 w-full rounded-lg border bg-white px-3 text-[13px] text-slate-800 placeholder:text-slate-400 outline-none transition-all disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400 ${invalid ? "border-rose-400 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/10" : "border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10"}`;
-    const inputClassName = `${baseClassName} ${startAdornment ? "pl-11" : ""} ${endAdornment ? "pr-11" : ""} ${className}`;
-    if (!startAdornment && !endAdornment) {
-      return /* @__PURE__ */ jsx("input", { ref, className: inputClassName, ...props });
-    }
-    return /* @__PURE__ */ jsxs("div", { className: `relative w-full ${containerClassName}`, children: [
-      startAdornment ? /* @__PURE__ */ jsx(
-        "span",
-        {
-          className: `pointer-events-none absolute left-3 top-1/2 z-10 inline-flex -translate-y-1/2 items-center justify-center ${startAdornmentWrapperClassName} ${startAdornmentClassName}`,
-          children: startAdornment
-        }
-      ) : null,
-      /* @__PURE__ */ jsx("input", { ref, className: inputClassName, ...props }),
-      endAdornment ? /* @__PURE__ */ jsx(
-        "span",
-        {
-          className: `pointer-events-none absolute right-3 top-1/2 z-10 inline-flex -translate-y-1/2 items-center justify-center ${endAdornmentWrapperClassName} ${endAdornmentClassName}`,
-          children: endAdornment
-        }
-      ) : null
-    ] });
-  }
-);
-Input.displayName = "Input";
 
 // src/components/rules/rulePanelClassNames.ts
 var RULE_PANEL_FIELD_FOCUS = "focus:!border-[color:var(--theme-action-border)] focus:!ring-2 focus:!ring-[color:var(--theme-action-bg)]/20";
@@ -5055,6 +5055,6 @@ lucide-react/dist/esm/lucide-react.js:
    *)
 */
 
-export { BusinessSwitch, ChoicePills, ChoicePillsField, ContractIssuerTags, ContractTypeTags, DEV_DOC_PRIORITY_LABELS, DEV_DOC_THREAD_PRIORITIES, DEV_DOC_THREAD_STATUSES, DataTable, DevDocThreadsBoard, EmptyState, ExpandableTagGroup, FormCard, PageIntro, PersianDatePicker, PrimaryLink, RULE_PANEL_SELECT_CLASSNAME, RULE_PANEL_TEXT_INPUT_CLASSNAME, RuleAmountInput, RuleFieldLabel, RuleTabButton, SearchableSelect, SegmentedToggle, ShareModePills, StatGrid, StickySubmitBar, TAAV_BUTTON_HEIGHT, TAAV_DURATION, TAAV_RADIUS, TAAV_SHADOW, TAAV_SPACING, TAAV_TOKEN_CATALOG, TAAV_TOKEN_SECTIONS, TAAV_TONE_LABELS, TaavBadge, TaavButton, TaavCard, TaavCheckbox, TaavChip, TaavChipGroup, TaavDetailHeader, TaavDialog, TaavDialogClose, TaavDialogContent, TaavDialogDescription, TaavDialogFooter, TaavDialogHeader, TaavDialogOverlay, TaavDialogPortal, TaavDialogTitle, TaavDialogTrigger, TaavDrawer, TaavDrawerClose, TaavDrawerContent, TaavDrawerDescription, TaavDrawerFooter, TaavDrawerHeader, TaavDrawerOverlay, TaavDrawerPortal, TaavDrawerTitle, TaavDrawerTrigger, TaavDropdown, TaavDropdownContent, TaavDropdownGroup, TaavDropdownItem, TaavDropdownLabel, TaavDropdownPortal, TaavDropdownSeparator, TaavDropdownTrigger, TaavEmptyState, TaavFieldHint, TaavFilterBar, TaavFormDescription, TaavFormField, TaavFormMessage, TaavInput, TaavKeyValue, TaavLabel, TaavOptionCard, TaavPageHeader, TaavPageShell, TaavPagination, TaavPopover, TaavPopoverAnchor, TaavPopoverClose, TaavPopoverContent, TaavPopoverTrigger, TaavProgressSummary, TaavRadio, TaavRadioGroup, TaavRequiredMark, TaavSection, TaavSegmentedControl, TaavSelect, TaavSettingsSection, TaavSidebarPanel, TaavSkeleton, TaavStatsCard, TaavStatusBadge, TaavStepper, TaavStickyActionBar, TaavSwitch, TaavTableActions, TaavTableBody, TaavTableCell, TaavTableHead, TaavTableHeader, TaavTableRow, TaavTableShell, TaavTabs, TaavTabsContent, TaavTabsList, TaavTabsTrigger, TaavTextarea, TaavTooltip, TaavTooltipProvider, TagPills, cn, compactTextareaStyle, formControlMutedDisabledStyle, formControlStyle, formErrorStyle, formLabelStyle, formMetaLabelStyle, formStyles_exports as formStyles, normalizeDevDocLabels, normalizeDevDocThreadPriority, normalizeDevDocThreadStatus, outlineButtonStyle, primaryButtonStyle, rulePanelNumericInputClassName };
+export { BusinessSwitch, ChoicePills, ChoicePillsField, ContractIssuerTags, ContractTypeTags, DEV_DOC_PRIORITY_LABELS, DEV_DOC_THREAD_PRIORITIES, DEV_DOC_THREAD_STATUSES, DataTable, DevDocThreadsBoard, EmptyState, ExpandableTagGroup, FormCard, Input, PageIntro, PersianDatePicker, PrimaryLink, RULE_PANEL_SELECT_CLASSNAME, RULE_PANEL_TEXT_INPUT_CLASSNAME, RuleAmountInput, RuleFieldLabel, RuleTabButton, SearchableSelect, SegmentedToggle, ShareModePills, StatGrid, StickySubmitBar, TAAV_BUTTON_HEIGHT, TAAV_DURATION, TAAV_RADIUS, TAAV_SHADOW, TAAV_SPACING, TAAV_TOKEN_CATALOG, TAAV_TOKEN_SECTIONS, TAAV_TONE_LABELS, TaavBadge, TaavButton, TaavCard, TaavCheckbox, TaavChip, TaavChipGroup, TaavDetailHeader, TaavDialog, TaavDialogClose, TaavDialogContent, TaavDialogDescription, TaavDialogFooter, TaavDialogHeader, TaavDialogOverlay, TaavDialogPortal, TaavDialogTitle, TaavDialogTrigger, TaavDrawer, TaavDrawerClose, TaavDrawerContent, TaavDrawerDescription, TaavDrawerFooter, TaavDrawerHeader, TaavDrawerOverlay, TaavDrawerPortal, TaavDrawerTitle, TaavDrawerTrigger, TaavDropdown, TaavDropdownContent, TaavDropdownGroup, TaavDropdownItem, TaavDropdownLabel, TaavDropdownPortal, TaavDropdownSeparator, TaavDropdownTrigger, TaavEmptyState, TaavFieldHint, TaavFilterBar, TaavFormDescription, TaavFormField, TaavFormMessage, TaavInput, TaavKeyValue, TaavLabel, TaavOptionCard, TaavPageHeader, TaavPageShell, TaavPagination, TaavPopover, TaavPopoverAnchor, TaavPopoverClose, TaavPopoverContent, TaavPopoverTrigger, TaavProgressSummary, TaavRadio, TaavRadioGroup, TaavRequiredMark, TaavSection, TaavSegmentedControl, TaavSelect, TaavSettingsSection, TaavSidebarPanel, TaavSkeleton, TaavStatsCard, TaavStatusBadge, TaavStepper, TaavStickyActionBar, TaavSwitch, TaavTableActions, TaavTableBody, TaavTableCell, TaavTableHead, TaavTableHeader, TaavTableRow, TaavTableShell, TaavTabs, TaavTabsContent, TaavTabsList, TaavTabsTrigger, TaavTextarea, TaavTooltip, TaavTooltipProvider, TagPills, cn, compactTextareaStyle, formControlMutedDisabledStyle, formControlStyle, formErrorStyle, formLabelStyle, formMetaLabelStyle, formStyles_exports as formStyles, normalizeDevDocLabels, normalizeDevDocThreadPriority, normalizeDevDocThreadStatus, outlineButtonStyle, primaryButtonStyle, rulePanelNumericInputClassName };
 //# sourceMappingURL=index.mjs.map
 //# sourceMappingURL=index.mjs.map

@@ -3797,6 +3797,44 @@ function SegmentedToggle({
 }) {
   return /* @__PURE__ */ jsxRuntime.jsx(BusinessSwitch, { checked, onChange, activeLabel, inactiveLabel });
 }
+var Input = React__namespace.forwardRef(
+  ({
+    className = "",
+    startAdornment,
+    endAdornment,
+    startAdornmentClassName = "",
+    endAdornmentClassName = "",
+    containerClassName = "",
+    startAdornmentWrapperClassName = "",
+    endAdornmentWrapperClassName = "",
+    ...props
+  }, ref) => {
+    const invalid = props["aria-invalid"] === true || props["aria-invalid"] === "true";
+    const baseClassName = `h-10 w-full rounded-lg border bg-white px-3 text-[13px] text-slate-800 placeholder:text-slate-400 outline-none transition-all disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400 ${invalid ? "border-rose-400 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/10" : "border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10"}`;
+    const inputClassName = `${baseClassName} ${startAdornment ? "pl-11" : ""} ${endAdornment ? "pr-11" : ""} ${className}`;
+    if (!startAdornment && !endAdornment) {
+      return /* @__PURE__ */ jsxRuntime.jsx("input", { ref, className: inputClassName, ...props });
+    }
+    return /* @__PURE__ */ jsxRuntime.jsxs("div", { className: `relative w-full ${containerClassName}`, children: [
+      startAdornment ? /* @__PURE__ */ jsxRuntime.jsx(
+        "span",
+        {
+          className: `pointer-events-none absolute left-3 top-1/2 z-10 inline-flex -translate-y-1/2 items-center justify-center ${startAdornmentWrapperClassName} ${startAdornmentClassName}`,
+          children: startAdornment
+        }
+      ) : null,
+      /* @__PURE__ */ jsxRuntime.jsx("input", { ref, className: inputClassName, ...props }),
+      endAdornment ? /* @__PURE__ */ jsxRuntime.jsx(
+        "span",
+        {
+          className: `pointer-events-none absolute right-3 top-1/2 z-10 inline-flex -translate-y-1/2 items-center justify-center ${endAdornmentWrapperClassName} ${endAdornmentClassName}`,
+          children: endAdornment
+        }
+      ) : null
+    ] });
+  }
+);
+Input.displayName = "Input";
 function PageIntro({
   title,
   description,
@@ -3925,44 +3963,6 @@ var primaryButtonStyle = {
   color: "#fff",
   boxShadow: "0 4px 12px rgba(0, 128, 128, 0.18)"
 };
-var Input = React__namespace.forwardRef(
-  ({
-    className = "",
-    startAdornment,
-    endAdornment,
-    startAdornmentClassName = "",
-    endAdornmentClassName = "",
-    containerClassName = "",
-    startAdornmentWrapperClassName = "",
-    endAdornmentWrapperClassName = "",
-    ...props
-  }, ref) => {
-    const invalid = props["aria-invalid"] === true || props["aria-invalid"] === "true";
-    const baseClassName = `h-10 w-full rounded-lg border bg-white px-3 text-[13px] text-slate-800 placeholder:text-slate-400 outline-none transition-all disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400 ${invalid ? "border-rose-400 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/10" : "border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10"}`;
-    const inputClassName = `${baseClassName} ${startAdornment ? "pl-11" : ""} ${endAdornment ? "pr-11" : ""} ${className}`;
-    if (!startAdornment && !endAdornment) {
-      return /* @__PURE__ */ jsxRuntime.jsx("input", { ref, className: inputClassName, ...props });
-    }
-    return /* @__PURE__ */ jsxRuntime.jsxs("div", { className: `relative w-full ${containerClassName}`, children: [
-      startAdornment ? /* @__PURE__ */ jsxRuntime.jsx(
-        "span",
-        {
-          className: `pointer-events-none absolute left-3 top-1/2 z-10 inline-flex -translate-y-1/2 items-center justify-center ${startAdornmentWrapperClassName} ${startAdornmentClassName}`,
-          children: startAdornment
-        }
-      ) : null,
-      /* @__PURE__ */ jsxRuntime.jsx("input", { ref, className: inputClassName, ...props }),
-      endAdornment ? /* @__PURE__ */ jsxRuntime.jsx(
-        "span",
-        {
-          className: `pointer-events-none absolute right-3 top-1/2 z-10 inline-flex -translate-y-1/2 items-center justify-center ${endAdornmentWrapperClassName} ${endAdornmentClassName}`,
-          children: endAdornment
-        }
-      ) : null
-    ] });
-  }
-);
-Input.displayName = "Input";
 
 // src/components/rules/rulePanelClassNames.ts
 var RULE_PANEL_FIELD_FOCUS = "focus:!border-[color:var(--theme-action-border)] focus:!ring-2 focus:!ring-[color:var(--theme-action-bg)]/20";
@@ -5100,6 +5100,7 @@ exports.DevDocThreadsBoard = DevDocThreadsBoard;
 exports.EmptyState = EmptyState;
 exports.ExpandableTagGroup = ExpandableTagGroup;
 exports.FormCard = FormCard;
+exports.Input = Input;
 exports.PageIntro = PageIntro;
 exports.PersianDatePicker = PersianDatePicker;
 exports.PrimaryLink = PrimaryLink;

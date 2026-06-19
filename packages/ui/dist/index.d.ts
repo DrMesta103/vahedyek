@@ -11,8 +11,9 @@ export { TaavDetailHeader, TaavDetailHeaderProps, TaavDetailHeaderVariant, TaavP
 export { TaavSection, TaavSectionProps, TaavSectionVariant, TaavSidebarPanel, TaavSidebarPanelProps, TaavSidebarPanelVariant, TaavSidebarPanelWidth } from './taav-layout-interactive.js';
 export { T as TaavLayoutDensity, a as TaavLayoutPadding, b as TaavLayoutTone } from './layout.variants-CvMtAmDy.js';
 import * as react_jsx_runtime from 'react/jsx-runtime';
-export { DataTable, EmptyState, FormCard, PageIntro, PrimaryLink, StatGrid } from './server.js';
+import * as react from 'react';
 import { CSSProperties, ReactNode, ElementType } from 'react';
+export { DataTable, EmptyState, FormCard, PageIntro, PrimaryLink, StatGrid } from './server.js';
 import 'clsx';
 import '@radix-ui/react-dialog';
 import '@radix-ui/react-popover';
@@ -37,6 +38,17 @@ declare function SegmentedToggle({ checked, onChange, activeLabel, inactiveLabel
     activeLabel?: string;
     inactiveLabel?: string;
 }): react_jsx_runtime.JSX.Element;
+
+interface InputProps extends react.InputHTMLAttributes<HTMLInputElement> {
+    startAdornment?: react.ReactNode;
+    endAdornment?: react.ReactNode;
+    startAdornmentClassName?: string;
+    endAdornmentClassName?: string;
+    containerClassName?: string;
+    startAdornmentWrapperClassName?: string;
+    endAdornmentWrapperClassName?: string;
+}
+declare const Input: react.ForwardRefExoticComponent<InputProps & react.RefAttributes<HTMLInputElement>>;
 
 declare const formControlStyle: CSSProperties;
 declare const compactTextareaStyle: CSSProperties;
@@ -255,4 +267,4 @@ type AppThemeTokens = {
     radius: string;
 };
 
-export { type AppThemeTokens, BusinessSwitch, ChoicePills, ChoicePillsField, type ChoicePillsOption, ContractIssuerTags, type ContractIssuerType, type ContractType, ContractTypeTags, DEV_DOC_PRIORITY_LABELS, DEV_DOC_THREAD_PRIORITIES, DEV_DOC_THREAD_STATUSES, type DevDocThreadPriority, type DevDocThreadRecord, type DevDocThreadStatus, DevDocThreadsBoard, type DevDocThreadsBoardProps, ExpandableTagGroup, type ExpandableTagGroupItem, PersianDatePicker, type PersianDatePickerProps, RULE_PANEL_SELECT_CLASSNAME, RULE_PANEL_TEXT_INPUT_CLASSNAME, RuleAmountInput, RuleFieldLabel, RuleTabButton, SearchableSelect, type SearchableSelectOption, SegmentedToggle, type ShareMode, ShareModePills, StickySubmitBar, TagPills, compactTextareaStyle, formControlMutedDisabledStyle, formControlStyle, formErrorStyle, formLabelStyle, formMetaLabelStyle, formStyles, normalizeDevDocLabels, normalizeDevDocThreadPriority, normalizeDevDocThreadStatus, outlineButtonStyle, primaryButtonStyle, rulePanelNumericInputClassName };
+export { type AppThemeTokens, BusinessSwitch, ChoicePills, ChoicePillsField, type ChoicePillsOption, ContractIssuerTags, type ContractIssuerType, type ContractType, ContractTypeTags, DEV_DOC_PRIORITY_LABELS, DEV_DOC_THREAD_PRIORITIES, DEV_DOC_THREAD_STATUSES, type DevDocThreadPriority, type DevDocThreadRecord, type DevDocThreadStatus, DevDocThreadsBoard, type DevDocThreadsBoardProps, ExpandableTagGroup, type ExpandableTagGroupItem, Input, type InputProps, PersianDatePicker, type PersianDatePickerProps, RULE_PANEL_SELECT_CLASSNAME, RULE_PANEL_TEXT_INPUT_CLASSNAME, RuleAmountInput, RuleFieldLabel, RuleTabButton, SearchableSelect, type SearchableSelectOption, SegmentedToggle, type ShareMode, ShareModePills, StickySubmitBar, TagPills, compactTextareaStyle, formControlMutedDisabledStyle, formControlStyle, formErrorStyle, formLabelStyle, formMetaLabelStyle, formStyles, normalizeDevDocLabels, normalizeDevDocThreadPriority, normalizeDevDocThreadStatus, outlineButtonStyle, primaryButtonStyle, rulePanelNumericInputClassName };
