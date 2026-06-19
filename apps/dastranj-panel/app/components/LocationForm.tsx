@@ -1,5 +1,6 @@
 'use client';
 
+import { TaavChoiceChipGroup } from '@repo/ui/taav/forms';
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { WorkplaceLocationPicker } from './WorkplaceLocationPicker';
@@ -43,6 +44,8 @@ function formatCoordinate(value: string) {
   const parsed = Number(normalized);
   return Number.isFinite(parsed) ? parsed.toFixed(6) : normalized;
 }
+
+const CUSTOM_RADIUS_VALUE = '__custom_radius__';
 
 export function LocationForm({ action, submitLabel, backHref, backLabel, initialValues }: LocationFormProps) {
   const [title, setTitle] = useState(initialValues?.title ?? '');
@@ -278,31 +281,27 @@ export function LocationForm({ action, submitLabel, backHref, backLabel, initial
 
           <label className="full-span">
             <span>شعاع مجاز ثبت تردد</span>
-            <div className="location-radius-presets" role="group" aria-label="شعاع مجاز ثبت تردد">
-              {WORKPLACE_LOCATION_RADIUS_PRESETS.map((preset) => (
-                <button
-                  key={preset}
-                  type="button"
-                  className={radius === String(preset) ? 'is-selected' : ''}
-                  onClick={() => {
-                    updateRadius(preset, 'preset');
-                    clearError('radius');
-                  }}
-                >
-                  {preset.toLocaleString('fa-IR')} متر
-                </button>
-              ))}
-              <button
-                type="button"
-                className={radiusMode === 'custom' ? 'is-selected' : ''}
-                onClick={() => {
+            <TaavChoiceChipGroup
+              ariaLabel="شعاع مجاز ثبت تردد"
+              options={[
+                ...WORKPLACE_LOCATION_RADIUS_PRESETS.map((preset) => ({
+                  value: String(preset),
+                  label: `${preset.toLocaleString('fa-IR')} متر`,
+                })),
+                { value: CUSTOM_RADIUS_VALUE, label: 'مقدار دلخواه' },
+              ]}
+              value={radiusMode === 'custom' ? CUSTOM_RADIUS_VALUE : radius}
+              onValueChange={(next) => {
+                const value = Array.isArray(next) ? next[0] ?? '' : next;
+                if (value === CUSTOM_RADIUS_VALUE) {
                   setRadiusMode('custom');
                   setSaveError('');
-                }}
-              >
-                مقدار دلخواه
-              </button>
-            </div>
+                  return;
+                }
+                updateRadius(Number(value), 'preset');
+                clearError('radius');
+              }}
+            />
             <div className="location-radius-input-row">
               <input
                 name="radius"

@@ -1,6 +1,7 @@
 'use client';
 
 import { Building2, Pencil, Plus, Trash2 } from 'lucide-react';
+import { TaavChoiceChipGroup } from '@repo/ui/taav/forms';
 import { useEffect, useState } from 'react';
 import { PanelFormModal, PanelFormModalActions } from '../../../../../../components/PanelFormModal';
 import { formatFaNumber } from '../../../../../../lib/format-fa';
@@ -248,14 +249,14 @@ export function MissionStep({
                 </div>
               ) : null}
             </div>
-            <div className="business-payroll-toggle">
-              <button type="button" className={mission.enabled ? 'is-selected' : ''} onClick={() => onMissionChange({ enabled: true })}>
-                فعال
-              </button>
-              <button type="button" className={!mission.enabled ? 'is-selected' : ''} onClick={() => onMissionChange({ enabled: false })}>
-                غیرفعال
-              </button>
-            </div>
+            <TaavChoiceChipGroup
+              options={[
+                { value: 'true', label: 'فعال' },
+                { value: 'false', label: 'غیرفعال' },
+              ]}
+              value={mission.enabled ? 'true' : 'false'}
+              onValueChange={(next) => onMissionChange({ enabled: (Array.isArray(next) ? next[0] : next) === 'true' })}
+            />
           </div>
         </section>
       ) : null}

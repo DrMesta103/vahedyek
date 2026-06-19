@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   Badge,
+  BookOpen,
   Box,
   CircleDot,
   CreditCard,
@@ -22,21 +23,40 @@ import {
   Tags,
   Workflow,
 } from 'lucide-react';
-import { LAB_COMPONENT_NAV, LAB_DATA_DISPLAY_NAV, LAB_FORM_NAV, LAB_LAYOUT_NAV, LAB_MAIN_NAV, LAB_NAVIGATION_NAV, LAB_OVERLAY_NAV } from '@/lib/navigation';
+import {
+  LAB_BUSINESS_NAV,
+  LAB_COMPONENT_NAV,
+  LAB_DATA_DISPLAY_NAV,
+  LAB_FOUNDATION_NAV,
+  LAB_FORM_NAV,
+  LAB_LAYOUT_NAV,
+  LAB_MAIN_NAV,
+  LAB_NAVIGATION_NAV,
+  LAB_OVERLAY_NAV,
+} from '@/lib/navigation';
 import { cn } from '@repo/ui/taav/primitives';
 import { LabThemeToggle } from './LabThemeToggle';
 
 const MAIN_ICONS: Record<string, typeof Home> = {
   '/': Home,
-  '/getting-started': FileText,
   '/components': LayoutGrid,
   '/forms': FormInput,
   '/overlays': SquareStack,
   '/navigation': Workflow,
   '/data-display': Table2,
   '/layout': PanelRight,
+  '/business': PanelRight,
+};
+
+const FOUNDATION_ICONS: Record<string, typeof FileText> = {
+  '/getting-started': FileText,
+  '/foundation/principles': BookOpen,
   '/tokens': Layers,
   '/roadmap': Map,
+};
+
+const BUSINESS_ICONS: Record<string, typeof PanelRight> = {
+  '/business/sidebar': PanelRight,
 };
 
 const FORM_ICONS: Record<string, typeof FormInput> = {
@@ -49,6 +69,9 @@ const FORM_ICONS: Record<string, typeof FormInput> = {
   '/forms/segmented-control': LayoutGrid,
   '/forms/option-card': CreditCard,
   '/forms/form-field': CircleDot,
+  '/forms/field-block': FormInput,
+  '/forms/field-grid': LayoutGrid,
+  '/forms/choice-chip': Tags,
 };
 
 const OVERLAY_ICONS: Record<string, typeof SquareStack> = {
@@ -148,6 +171,13 @@ export function LabSidebar() {
           ))}
         </div>
 
+        <p className="lab-sidebar-section-label mt-6">Foundation</p>
+        <div className="grid gap-1">
+          {LAB_FOUNDATION_NAV.map((item) => (
+            <NavLink key={item.href} {...item} icon={FOUNDATION_ICONS[item.href]} />
+          ))}
+        </div>
+
         <p className="lab-sidebar-section-label mt-6">Forms</p>
         <div className="grid gap-1">
           {LAB_FORM_NAV.map((item) => (
@@ -173,6 +203,13 @@ export function LabSidebar() {
         <div className="grid gap-1">
           {LAB_DATA_DISPLAY_NAV.map((item) => (
             <NavLink key={item.href} {...item} icon={DATA_DISPLAY_ICONS[item.href]} />
+          ))}
+        </div>
+
+        <p className="lab-sidebar-section-label mt-6">Business</p>
+        <div className="grid gap-1">
+          {LAB_BUSINESS_NAV.map((item) => (
+            <NavLink key={item.href} {...item} icon={BUSINESS_ICONS[item.href]} />
           ))}
         </div>
 
@@ -205,9 +242,9 @@ export function LabMobileNav() {
   const pathname = usePathname();
   const items = [
     { href: '/', label: 'خانه', icon: Home },
-    { href: '/components', label: 'کامپوننت', icon: LayoutGrid },
+    { href: '/foundation/principles', label: 'اصول', icon: BookOpen },
     { href: '/tokens', label: 'توکن', icon: Layers },
-    { href: '/roadmap', label: 'نقشه', icon: Map },
+    { href: '/components', label: 'کامپوننت', icon: LayoutGrid },
   ];
 
   return (

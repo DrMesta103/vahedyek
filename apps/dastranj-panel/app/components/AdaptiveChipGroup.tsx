@@ -1,6 +1,6 @@
 'use client';
 
-import { Check } from 'lucide-react';
+import { TaavChoiceChipGroup } from '@repo/ui/taav/forms';
 import type { ReactNode } from 'react';
 
 export type AdaptiveChipItem = {
@@ -19,8 +19,8 @@ type AdaptiveChipGroupProps = {
   onChange: (value: string | string[]) => void;
 };
 
-function isSelectedValue(selected: string | string[], value: string) {
-  return Array.isArray(selected) ? selected.includes(value) : selected === value;
+function toOptionLabel(label: ReactNode) {
+  return typeof label === 'string' || typeof label === 'number' ? String(label) : String(label);
 }
 
 export function AdaptiveChipGroup({
@@ -31,31 +31,17 @@ export function AdaptiveChipGroup({
   onChange,
 }: AdaptiveChipGroupProps) {
   return (
-    <div className={`adaptive-chip-group ${className}`.trim()}>
-      {items.map((item) => {
-        const isSelected = isSelectedValue(selected, item.value);
-        return (
-          <button
-            key={item.value}
-            type="button"
-            className={`adaptive-chip${isSelected ? ' is-selected' : ''}${item.disabled ? ' is-disabled' : ''}`}
-            disabled={item.disabled}
-            title={item.tooltip}
-            onClick={() => onChange(multi && Array.isArray(selected) ? (selected.includes(item.value) ? selected.filter((entry) => entry !== item.value) : [...selected, item.value]) : item.value)}
-          >
-            {isSelected ? (
-              <span className="adaptive-chip-check" aria-hidden>
-                <Check className="h-3.5 w-3.5" strokeWidth={2.8} />
-              </span>
-            ) : item.icon ? (
-              <span className="adaptive-chip-icon" aria-hidden>
-                {item.icon}
-              </span>
-            ) : null}
-            <span className="adaptive-chip-label">{item.label}</span>
-          </button>
-        );
-      })}
-    </div>
+    <TaavChoiceChipGroup
+      className={className}
+      options={items.map((item) => ({
+        value: item.value,
+        label: toOptionLabel(item.label),
+        disabled: item.disabled,
+        icon: item.icon,
+      }))}
+      value={selected}
+      selectionMode={multi ? 'multiple' : 'single'}
+      onValueChange={onChange}
+    />
   );
 }

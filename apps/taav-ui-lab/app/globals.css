@@ -54,7 +54,7 @@ body {
   background: color-mix(in srgb, var(--taav-brand) 28%, transparent);
 }
 
-/* ─── Lab shell ─── */
+/* Lab shell */
 .lab-shell-bg {
   background:
     radial-gradient(ellipse 90% 60% at 80% -10%, color-mix(in srgb, var(--taav-brand) 10%, transparent), transparent 55%),
@@ -349,6 +349,37 @@ body {
   .lab-hero {
     padding: var(--taav-space-10);
   }
+}
+
+.lab-principles-hero {
+  display: grid;
+  gap: var(--taav-space-4);
+}
+
+.lab-principle-chip {
+  display: flex;
+  align-items: center;
+  gap: var(--taav-space-2);
+  border: var(--taav-border-width) solid var(--taav-border-subtle);
+  border-radius: var(--taav-radius-lg);
+  background: color-mix(in srgb, var(--taav-surface-soft) 92%, transparent);
+  padding: var(--taav-space-3) var(--taav-space-4);
+  font-size: var(--taav-text-sm);
+  font-weight: var(--taav-font-weight-medium);
+  color: var(--taav-text-body);
+}
+
+.lab-principle-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--taav-space-2);
+  border: var(--taav-border-width) solid var(--taav-border-subtle);
+  border-radius: var(--taav-radius-lg);
+  background: var(--taav-surface);
+  padding: var(--taav-space-4);
+  font-size: var(--taav-text-sm);
+  line-height: var(--taav-leading-relaxed);
+  color: var(--taav-text-muted);
 }
 
 .lab-mobile-nav {

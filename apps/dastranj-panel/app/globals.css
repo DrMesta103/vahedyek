@@ -1,7 +1,27 @@
 ﻿@import "tailwindcss";
+@import "@repo/ui/taav-tokens.css";
 
 @source "../app/**/*.{js,ts,jsx,tsx,mdx}";
 @source "../../../packages/ui/src/**/*.{js,ts,jsx,tsx}";
+
+/* TaavUI nav path — align with DastRanj theme tokens */
+html[data-theme="dark"] {
+  --taav-business-nav-path-bg: var(--bg-elevated);
+  --taav-business-nav-path-border: var(--line);
+  --taav-business-nav-path-text: var(--muted);
+  --taav-business-nav-path-text-hover: var(--text);
+  --taav-business-nav-path-text-current: var(--text);
+  --taav-business-nav-path-separator: var(--muted);
+}
+
+html[data-theme="light"] {
+  --taav-business-nav-path-bg: var(--bg-elevated);
+  --taav-business-nav-path-border: var(--line);
+  --taav-business-nav-path-text: var(--muted);
+  --taav-business-nav-path-text-hover: var(--text);
+  --taav-business-nav-path-text-current: var(--text);
+  --taav-business-nav-path-separator: var(--muted);
+}
 
 @font-face {
   font-family: 'IRANSans';
@@ -9513,12 +9533,12 @@ body.tenant-select-route {
   overflow: hidden;
 }
 
-.app-shell:has(.draft-template-flow-page) > .main-content {
+.app-shell:has(.draft-template-flow-page) .main-content {
   height: 100%;
   min-height: 0;
 }
 
-.app-shell:has(.draft-template-flow-page) > .sidebar {
+.app-shell:has(.draft-template-flow-page) [data-taav-business-sidebar] {
   height: 100%;
   min-height: 0;
 }

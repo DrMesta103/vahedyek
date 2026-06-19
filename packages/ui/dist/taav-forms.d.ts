@@ -1,4 +1,4 @@
-export { T as TAAV_BUTTON_HEIGHT, a as TAAV_DURATION, b as TAAV_RADIUS, c as TAAV_SHADOW, d as TAAV_SPACING, e as TAAV_TOKEN_CATALOG, f as TAAV_TOKEN_SECTIONS, g as TAAV_TONE_LABELS, h as TaavTone, i as TokenCategory, j as TokenEntry, k as cn } from './index-NU-uTFUF.js';
+export { T as TAAV_BUTTON_HEIGHT, a as TAAV_DURATION, b as TAAV_RADIUS, c as TAAV_SHADOW, d as TAAV_SPACING, e as TAAV_TOKEN_CATALOG, f as TAAV_TOKEN_SECTIONS, g as TAAV_TONE_LABELS, h as TaavTone, i as TokenCategory, j as TokenEntry, k as cn } from './index-DNbuF2UL.js';
 import * as react_jsx_runtime from 'react/jsx-runtime';
 import { ReactNode, LabelHTMLAttributes, InputHTMLAttributes, TextareaHTMLAttributes, SelectHTMLAttributes } from 'react';
 import 'clsx';
@@ -51,6 +51,58 @@ type TaavInputProps = {
 } & Omit<InputHTMLAttributes<HTMLInputElement>, 'className' | 'size'>;
 declare function TaavInput({ size, variant, tone, width, radius, disabled, readOnly, invalid, required, loading, iconStart, iconEnd, prefix, suffix, wrapperClassName, inputClassName, type, ...props }: TaavInputProps): react_jsx_runtime.JSX.Element;
 
+type TaavCurrencyInputProps = {
+    value?: number | string;
+    defaultValue?: number | string;
+    onValueChange?: (value: number | null) => void;
+    currency?: 'rial' | 'toman';
+    currencyLabel?: ReactNode;
+    min?: number;
+    max?: number;
+    step?: number;
+    placeholder?: string;
+    disabled?: boolean;
+    readOnly?: boolean;
+    invalid?: boolean;
+    required?: boolean;
+    size?: TaavFieldSize;
+    tone?: TaavFieldTone;
+    name?: string;
+    id?: string;
+    inputMode?: 'numeric' | 'decimal';
+    autoComplete?: string;
+    ariaLabel?: string;
+    wrapperClassName?: string;
+    inputClassName?: string;
+    unsafeClassName?: string;
+};
+declare function TaavCurrencyInput({ value, defaultValue, onValueChange, currency, currencyLabel, min, max, placeholder, disabled, readOnly, invalid, required, size, tone, name, id, inputMode, autoComplete, ariaLabel, wrapperClassName, inputClassName, unsafeClassName, }: TaavCurrencyInputProps): react_jsx_runtime.JSX.Element;
+
+type TaavPercentageInputProps = {
+    value?: number | string;
+    defaultValue?: number | string;
+    onValueChange?: (value: number | null) => void;
+    min?: number;
+    max?: number;
+    step?: number;
+    placeholder?: string;
+    disabled?: boolean;
+    readOnly?: boolean;
+    invalid?: boolean;
+    required?: boolean;
+    size?: TaavFieldSize;
+    tone?: TaavFieldTone;
+    name?: string;
+    id?: string;
+    inputMode?: 'numeric' | 'decimal';
+    autoComplete?: string;
+    ariaLabel?: string;
+    wrapperClassName?: string;
+    inputClassName?: string;
+    unsafeClassName?: string;
+};
+declare function TaavPercentageInput({ value, defaultValue, onValueChange, min, max, placeholder, disabled, readOnly, invalid, required, size, tone, name, id, inputMode, autoComplete, ariaLabel, wrapperClassName, inputClassName, unsafeClassName, }: TaavPercentageInputProps): react_jsx_runtime.JSX.Element;
+
 type TaavTextareaProps = {
     size?: TaavFieldSize;
     variant?: TaavFieldVariant;
@@ -96,6 +148,84 @@ type TaavFormFieldProps = {
     contentClassName?: string;
 };
 declare function TaavFormField({ label, required, optional, description, message, messageTone, error, htmlFor, disabled, children, wrapperClassName, contentClassName, }: TaavFormFieldProps): react_jsx_runtime.JSX.Element;
+
+type TaavFieldBlockSize = 'sm' | 'md' | 'lg';
+type TaavFieldBlockAlign = 'start' | 'center' | 'end' | 'stretch';
+type TaavFieldTextAlign = 'start' | 'center' | 'end';
+type TaavFieldGridColumns = 1 | 2 | 3 | 4;
+type TaavFieldGridGap = 'sm' | 'md' | 'lg' | 'xl';
+type TaavFieldGridDensity = 'compact' | 'comfortable' | 'spacious';
+
+type TaavFieldBlockProps = {
+    label: ReactNode;
+    required?: boolean;
+    optional?: boolean;
+    tooltip?: ReactNode;
+    hint?: ReactNode;
+    supportText?: ReactNode;
+    description?: ReactNode;
+    error?: ReactNode;
+    success?: ReactNode;
+    warning?: ReactNode;
+    htmlFor?: string;
+    disabled?: boolean;
+    invalid?: boolean;
+    size?: TaavFieldBlockSize;
+    align?: TaavFieldBlockAlign;
+    tooltipAlign?: TaavFieldTextAlign;
+    labelAlign?: TaavFieldTextAlign;
+    children: ReactNode;
+    wrapperClassName?: string;
+    labelClassName?: string;
+    controlClassName?: string;
+    supportClassName?: string;
+    unsafeClassName?: string;
+};
+declare function TaavFieldBlock({ label, required, optional, tooltip, hint, supportText, description, error, success, warning, htmlFor, disabled, invalid, size, align, tooltipAlign, labelAlign, children, wrapperClassName, labelClassName, controlClassName, supportClassName, unsafeClassName, }: TaavFieldBlockProps): react_jsx_runtime.JSX.Element;
+
+type TaavFieldGridProps = {
+    columns?: TaavFieldGridColumns;
+    gap?: TaavFieldGridGap;
+    density?: TaavFieldGridDensity;
+    responsive?: boolean;
+    children: ReactNode;
+};
+declare function TaavFieldGrid({ columns, gap, density, responsive, children, }: TaavFieldGridProps): react_jsx_runtime.JSX.Element;
+
+type TaavChoiceChipTone = 'neutral' | 'brand' | 'success' | 'warning' | 'danger' | 'info';
+type TaavChoiceChipSize = 'sm' | 'md' | 'lg';
+type TaavChoiceChipShape = 'pill' | 'rounded';
+type TaavChoiceChipGap = 'sm' | 'md' | 'lg';
+
+type TaavChoiceChipOption = {
+    label: string;
+    value: string;
+    disabled?: boolean;
+    icon?: ReactNode;
+};
+type TaavChoiceChipGroupProps = {
+    options: TaavChoiceChipOption[];
+    value?: string | string[];
+    defaultValue?: string | string[];
+    onValueChange?: (value: string | string[]) => void;
+    selectionMode?: 'single' | 'multiple';
+    label?: ReactNode;
+    description?: ReactNode;
+    hint?: ReactNode;
+    required?: boolean;
+    size?: TaavChoiceChipSize;
+    tone?: TaavChoiceChipTone;
+    disabled?: boolean;
+    invalid?: boolean;
+    wrap?: boolean;
+    gap?: TaavChoiceChipGap;
+    align?: 'start' | 'center' | 'end';
+    ariaLabel?: string;
+    className?: string;
+    labelClassName?: string;
+    descriptionClassName?: string;
+};
+declare function TaavChoiceChipGroup({ options, value, defaultValue, onValueChange, selectionMode, label, description, hint, required, size, tone, disabled, invalid, wrap, gap, align, ariaLabel, className, labelClassName, descriptionClassName, }: TaavChoiceChipGroupProps): react_jsx_runtime.JSX.Element;
 
 type TaavFormDescriptionSize = 'sm' | 'md';
 type TaavFormDescriptionTone = 'muted' | 'neutral' | 'info';
@@ -240,4 +370,4 @@ type TaavOptionCardProps = {
 } & Omit<InputHTMLAttributes<HTMLInputElement>, 'className' | 'size' | 'type' | 'value' | 'checked' | 'defaultChecked' | 'onChange'>;
 declare function TaavOptionCard({ size, tone, selected, disabled, invalid, title, description, meta, icon, badge, inputType, name, value, checked, defaultChecked, onClick, wrapperClassName, contentClassName, unsafeClassName, id, ...inputProps }: TaavOptionCardProps): react_jsx_runtime.JSX.Element;
 
-export { TaavCheckbox, type TaavCheckboxProps, type TaavChoiceSize, type TaavChoiceTone, type TaavFieldRadius, type TaavFieldSize, type TaavFieldTone, type TaavFieldVariant, type TaavFieldWidth, TaavFormDescription, type TaavFormDescriptionProps, type TaavFormDescriptionSize, type TaavFormDescriptionTone, TaavFormField, type TaavFormFieldProps, TaavFormMessage, type TaavFormMessageProps, type TaavFormMessageSize, type TaavFormMessageTone, TaavInput, type TaavInputProps, TaavLabel, type TaavLabelProps, type TaavLabelSize, type TaavLabelTone, TaavOptionCard, type TaavOptionCardInputType, type TaavOptionCardProps, type TaavOptionCardSize, type TaavOptionCardTone, TaavRadio, TaavRadioGroup, type TaavRadioGroupProps, type TaavRadioOption, type TaavRadioProps, TaavRequiredMark, type TaavRequiredMarkProps, type TaavRequiredMarkTone, TaavSegmentedControl, type TaavSegmentedControlProps, type TaavSegmentedOption, type TaavSegmentedTone, type TaavSegmentedVariant, type TaavSegmentedWidth, TaavSelect, type TaavSelectOption, type TaavSelectProps, TaavSwitch, type TaavSwitchProps, TaavTextarea, type TaavTextareaProps };
+export { TaavCheckbox, type TaavCheckboxProps, type TaavChoiceChipGap, TaavChoiceChipGroup, type TaavChoiceChipGroupProps, type TaavChoiceChipOption, type TaavChoiceChipShape, type TaavChoiceChipSize, type TaavChoiceChipTone, type TaavChoiceSize, type TaavChoiceTone, TaavCurrencyInput, type TaavCurrencyInputProps, TaavFieldBlock, type TaavFieldBlockProps, TaavFieldGrid, type TaavFieldGridProps, type TaavFieldRadius, type TaavFieldSize, type TaavFieldTone, type TaavFieldVariant, type TaavFieldWidth, TaavFormDescription, type TaavFormDescriptionProps, type TaavFormDescriptionSize, type TaavFormDescriptionTone, TaavFormField, type TaavFormFieldProps, TaavFormMessage, type TaavFormMessageProps, type TaavFormMessageSize, type TaavFormMessageTone, TaavInput, type TaavInputProps, TaavLabel, type TaavLabelProps, type TaavLabelSize, type TaavLabelTone, TaavOptionCard, type TaavOptionCardInputType, type TaavOptionCardProps, type TaavOptionCardSize, type TaavOptionCardTone, TaavPercentageInput, type TaavPercentageInputProps, TaavRadio, TaavRadioGroup, type TaavRadioGroupProps, type TaavRadioOption, type TaavRadioProps, TaavRequiredMark, type TaavRequiredMarkProps, type TaavRequiredMarkTone, TaavSegmentedControl, type TaavSegmentedControlProps, type TaavSegmentedOption, type TaavSegmentedTone, type TaavSegmentedVariant, type TaavSegmentedWidth, TaavSelect, type TaavSelectOption, type TaavSelectProps, TaavSwitch, type TaavSwitchProps, TaavTextarea, type TaavTextareaProps };

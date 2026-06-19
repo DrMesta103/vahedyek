@@ -12,13 +12,22 @@ export default function ChipDocPage() {
 
   return (
     <DocPageShell breadcrumbs={[{ label: 'خانه', href: '/' }, { label: 'Data Display', href: '/data-display' }, { label: 'چیپ' }]}>
-      <DocPageHeader eyebrow="Chip System" title="TaavChip & TaavChipGroup" description="فیلتر، tag، انتخاب removable — interactive chip." importCode={`import { TaavChip, TaavChipGroup } from "@repo/ui/taav/data-display";`} />
+      <DocPageHeader
+        eyebrow="Chip System"
+        title="TaavChip & TaavChipGroup"
+        description="فیلتر، tag، انتخاب removable و interactive chip. برای انتخاب گزینه‌های فرم فقط از TaavChoiceChipGroup استفاده کنید."
+        importCode={`import { TaavChip, TaavChipGroup } from "@repo/ui/taav/data-display";`}
+      />
       <DocSection title="Variants & behaviors">
         <DocPreview label="RTL Preview">
           <div className="flex flex-wrap gap-2">
             <TaavChip>static</TaavChip>
-            <TaavChip behavior="selectable" selected tone="brand">selected</TaavChip>
-            <TaavChip behavior="removable" onRemove={() => undefined}>removable</TaavChip>
+            <TaavChip behavior="selectable" selected tone="brand">
+              selected
+            </TaavChip>
+            <TaavChip behavior="removable" onRemove={() => undefined}>
+              removable
+            </TaavChip>
             <TaavChip loading>loading</TaavChip>
           </div>
         </DocPreview>
@@ -37,9 +46,21 @@ export default function ChipDocPage() {
           />
         </DocPreview>
       </DocSection>
-      <DocSection title="Props"><DocPropsTable rows={CHIP_PROPS} /></DocSection>
-      <DocSection title="Design Specs"><DocSpecGrid items={[{ label: 'Height md', value: 'var(--taav-chip-height-md)' }, { label: 'Selected ring', value: 'var(--taav-chip-selected-ring)' }]} /></DocSection>
-      <DocSection title="Do / Don't"><DocDoDont doItems={['برای filter/tag interactive از TaavChip استفاده کنید']} dontItems={['TaavBadge را به‌جای chip clickable استفاده نکنید']} /></DocSection>
+      <DocSection title="Props">
+        <DocPropsTable rows={CHIP_PROPS} />
+      </DocSection>
+      <DocSection title="Design Specs">
+        <DocSpecGrid items={[{ label: 'Height md', value: 'var(--taav-chip-height-md)' }, { label: 'Selected ring', value: 'var(--taav-chip-selected-ring)' }]} />
+      </DocSection>
+      <DocSection title="Do / Don’t">
+        <DocDoDont
+          doItems={['برای filter/tag interactive از TaavChip استفاده کنید']}
+          dontItems={[
+            'برای انتخاب گزینه‌های فرم، TaavChip را به‌جای TaavChoiceChipGroup استفاده نکنید',
+            'TaavBadge را به‌جای chip clickable استفاده نکنید',
+          ]}
+        />
+      </DocSection>
     </DocPageShell>
   );
 }

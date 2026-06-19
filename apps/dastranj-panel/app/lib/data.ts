@@ -26,10 +26,21 @@ import {
 } from './calendar-shifts';
 import { prisma } from './prisma';
 import { listEmployeeImportJobsForTenant } from './employee-import-jobs';
+import { listClientStorageStates } from './client-storage-persistence';
 import { normalizeContractDraftTemplate, type ContractDraftTemplate } from './contract-draft-templates';
+import {
+  applyPayrollOverrides,
+  DEFAULT_PAYROLL_SETTINGS,
+  getPayrollSettingsStorageKey,
+  getPayrollSettingsYearsStorageKey,
+  getTenantPayrollSettingsStorageKey,
+  normalizePayrollOverrides,
+  normalizePayrollSettings,
+} from './payroll-business-settings';
 import type {
   QuickEmployeeAddMethod,
   QuickEmployeeImportJobSummary,
+  QuickSetupHolidayCoefficients,
   QuickEmployeeStatus,
   QuickSetupStep,
 } from '../(panel)/quick-setup/_components/quick-setup.types';
@@ -179,6 +190,62 @@ function normalizeQuickEmployeeAddMethod(value: unknown): QuickEmployeeAddMethod
     : null;
 }
 
+function getStorageValue(
+  storageStates: Array<{ storageKey: string; value: string }>,
+  storageKey: string,
+) {
+  return storageStates.find((item) => item.storageKey === storageKey)?.value ?? null;
+}
+
+async function getQuickSetupHolidayCoefficients(
+  tenantId: string,
+): Promise<QuickSetupHolidayCoefficients> {
+  const currentYear = getPersianPartsFromDate().year;
+  const storageStates = await listClientStorageStates(tenantId);
+  const yearsRaw = getStorageValue(storageStates, getPayrollSettingsYearsStorageKey());
+  const hasCurrentYear =
+    yearsRaw &&
+    (() => {
+      try {
+        const parsed = JSON.parse(yearsRaw) as Array<{ year?: unknown }>;
+        return Array.isArray(parsed) && parsed.some((item) => Number(item?.year) === currentYear);
+      } catch {
+        return false;
+      }
+    })();
+
+  const adminBaseRaw = getStorageValue(storageStates, getPayrollSettingsStorageKey(currentYear));
+  const adminBase =
+    hasCurrentYear && adminBaseRaw
+      ? normalizePayrollSettings(JSON.parse(adminBaseRaw))
+      : DEFAULT_PAYROLL_SETTINGS;
+
+  const tenantOverrideRaw = getStorageValue(
+    storageStates,
+    getTenantPayrollSettingsStorageKey(currentYear, tenantId),
+  );
+  const legacyTenantRaw = getStorageValue(
+    storageStates,
+    getPayrollSettingsStorageKey(currentYear, tenantId),
+  );
+
+  const resolved =
+    tenantOverrideRaw
+      ? normalizePayrollSettings(
+          applyPayrollOverrides(adminBase, normalizePayrollOverrides(JSON.parse(tenantOverrideRaw))),
+        )
+      : legacyTenantRaw
+        ? normalizePayrollSettings(JSON.parse(legacyTenantRaw))
+        : adminBase;
+
+  return {
+    year: currentYear,
+    weeklyRestDay: resolved.workTimePayRules.dayTypePaymentRules.weekly_rest_day.workedTimeCoefficient,
+    officialHoliday: resolved.workTimePayRules.dayTypePaymentRules.official_holiday.workedTimeCoefficient,
+    organizationalHoliday: resolved.workTimePayRules.dayTypePaymentRules.company_holiday.workedTimeCoefficient,
+  };
+}
+
 function deriveQuickEmployeeStatus(item: { isActive: boolean; email: string | null; mobile1: string | null }) {
   if (!item.isActive) return 'pending_completion';
   if (item.email || item.mobile1) return 'registered';
@@ -254,7 +321,7 @@ export async function getQuickSetupChecklist() {
   const tenantId = await requireTenantId();
   const where = { tenantId };
 
-  const [profile, locationList, calendarList, policyList, employeeList, workGroupList, calendars, policies, employees, workGroups, defaultCalendarTemplate] = await Promise.all([
+  const [profile, locationList, calendarList, policyList, employeeList, workGroupList, calendars, policies, employees, workGroups, defaultCalendarTemplate, holidayCoefficients] = await Promise.all([
     getBusinessProfile(),
     listLocationsForTenant(tenantId, 10),
     prisma.calendar.findMany({ where, orderBy: { updatedAt: 'desc' }, take: 20 }),
@@ -266,6 +333,7 @@ export async function getQuickSetupChecklist() {
     prisma.employee.count({ where }),
     prisma.workGroup.count({ where }),
     getGlobalDefaultCalendarTemplate(),
+    getQuickSetupHolidayCoefficients(tenantId),
   ]);
   const employeeImportJobs = (await listEmployeeImportJobsForTenant(tenantId, 10)) as QuickEmployeeImportJobSummary[];
 
@@ -339,6 +407,7 @@ export async function getQuickSetupChecklist() {
     workGroupItems: workGroupList.map((item) => ({ id: item.id, title: item.title })),
     employeeImportJobs,
     defaultCalendarTemplate,
+    holidayCoefficients,
     tenantId,
     steps: [
       { key: 'location', title: 'محل کار اصلی', subtitle: 'ثبت محل کار اصلی و شعاع مجاز', done: Boolean(primaryLocation), href: '/locations/new', manageHref: '/locations', count: primaryLocation ? 1 : 0 },

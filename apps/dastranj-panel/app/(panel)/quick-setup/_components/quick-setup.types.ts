@@ -56,6 +56,13 @@ export type DefaultCalendarTemplate = CompletedCalendarItem & {
   totalEventDays: number;
 };
 
+export type QuickSetupHolidayCoefficients = {
+  year: number;
+  weeklyRestDay: number;
+  officialHoliday: number;
+  organizationalHoliday: number;
+};
+
 export type QuickPolicySummary = {
   id: string;
   title: string;

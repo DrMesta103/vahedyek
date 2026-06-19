@@ -1,6 +1,7 @@
 'use client';
 
 import { BriefcaseBusiness, GraduationCap, MapPin, Plus, ShieldCheck, Trash2, UserRound } from 'lucide-react';
+import { TaavChoiceChipGroup } from '@repo/ui/taav/forms';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { PanelFormModal, PanelFormModalActions } from '../../../../components/PanelFormModal';
 import { computeSupplementalCompleteness } from '../../../../lib/employee-supplemental-fields';
@@ -148,24 +149,16 @@ function EditorField({
 }) {
   if (type === 'gender') {
     return (
-      <div className="employee-supplemental-gender-row" role="radiogroup" aria-label={label}>
-        {[
+      <TaavChoiceChipGroup
+        ariaLabel={label}
+        options={[
           { value: 'male', label: 'مرد' },
           { value: 'female', label: 'زن' },
           { value: 'other', label: 'سایر' },
-        ].map((option) => (
-          <button
-            key={option.value}
-            type="button"
-            role="radio"
-            aria-checked={value === option.value}
-            className={value === option.value ? 'is-selected' : ''}
-            onClick={() => onChange(option.value)}
-          >
-            {option.label}
-          </button>
-        ))}
-      </div>
+        ]}
+        value={value}
+        onValueChange={(next) => onChange(Array.isArray(next) ? next[0] ?? '' : next)}
+      />
     );
   }
 

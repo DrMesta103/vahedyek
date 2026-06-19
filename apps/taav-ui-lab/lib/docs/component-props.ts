@@ -59,6 +59,30 @@ export const INPUT_PROPS: DocPropRow[] = [
   { name: 'prefix / suffix', type: 'ReactNode', description: 'متن یا واحد کنار input' },
 ];
 
+export const CURRENCY_INPUT_PROPS: DocPropRow[] = [
+  { name: 'value / defaultValue', type: 'number | string', description: 'مقدار کنترل‌شده یا اولیه' },
+  { name: 'onValueChange', type: '(value: number | null) => void', description: 'عدد خام بدون جداکننده' },
+  { name: 'currency', type: "'rial' | 'toman'", defaultValue: 'rial', description: 'واحد پول پیش‌فرض' },
+  { name: 'currencyLabel', type: 'ReactNode', description: 'جایگزین برچسب واحد' },
+  { name: 'min / max', type: 'number', description: 'محدودیت عددی — clamp در blur' },
+  { name: 'size', type: "'sm' | 'md' | 'lg'", defaultValue: 'md', description: 'ارتفاع کنترل' },
+  { name: 'tone', type: "'neutral' | 'success' | 'warning' | 'danger'", defaultValue: 'neutral', description: 'رنگ مرز' },
+  { name: 'invalid', type: 'boolean', defaultValue: 'false', description: 'خطای خارجی یا خارج از بازه' },
+  { name: 'inputMode', type: "'numeric' | 'decimal'", defaultValue: 'numeric', description: 'نوع ورودی موبایل' },
+  { name: 'disabled / readOnly', type: 'boolean', description: 'حالت غیرفعال یا فقط خواندنی' },
+];
+
+export const PERCENTAGE_INPUT_PROPS: DocPropRow[] = [
+  { name: 'value / defaultValue', type: 'number | string', description: 'مقدار کنترل‌شده یا اولیه' },
+  { name: 'onValueChange', type: '(value: number | null) => void', description: 'عدد نرمال‌شده' },
+  { name: 'min / max', type: 'number', defaultValue: '0 / 100', description: 'بازه مجاز — clamp در blur' },
+  { name: 'size', type: "'sm' | 'md' | 'lg'", defaultValue: 'md', description: 'ارتفاع کنترل' },
+  { name: 'tone', type: "'neutral' | 'success' | 'warning' | 'danger'", defaultValue: 'neutral', description: 'رنگ مرز' },
+  { name: 'invalid', type: 'boolean', defaultValue: 'false', description: 'خطای خارجی یا خارج از بازه' },
+  { name: 'inputMode', type: "'numeric' | 'decimal'", defaultValue: 'numeric', description: 'ورود اعشاری اختیاری' },
+  { name: 'disabled / readOnly', type: 'boolean', description: 'حالت غیرفعال یا فقط خواندنی' },
+];
+
 export const TEXTAREA_PROPS: DocPropRow[] = [
   { name: 'size', type: "'sm' | 'md' | 'lg'", defaultValue: 'md', description: 'padding و min-height' },
   { name: 'variant', type: "'default' | 'filled' | 'soft' | 'ghost'", defaultValue: 'default', description: 'پس‌زمینه' },
@@ -76,6 +100,28 @@ export const FORM_FIELD_PROPS: DocPropRow[] = [
   { name: 'error', type: 'ReactNode', description: 'پیام خطا — tone را danger می‌کند' },
   { name: 'htmlFor', type: 'string', description: 'اتصال label به control' },
   { name: 'children', type: 'ReactNode', required: true, description: 'TaavInput یا TaavTextarea' },
+];
+
+export const FIELD_BLOCK_PROPS: DocPropRow[] = [
+  { name: 'label', type: 'ReactNode', required: true, description: 'عنوان فیلد بالای کنترل' },
+  { name: 'required / optional', type: 'boolean', description: 'نمایش ستاره الزامی یا برچسب اختیاری' },
+  { name: 'tooltip / hint / supportText', type: 'ReactNode', description: 'متن راهنمای ثابت زیر فیلد؛ نه hover tooltip' },
+  { name: 'description', type: 'ReactNode', description: 'fallback برای support text وقتی tooltip/hint/supportText داده نشده باشد' },
+  { name: 'error / warning / success', type: 'ReactNode', description: 'پیام وضعیت زیر support text؛ error اولویت بالاتر دارد' },
+  { name: 'htmlFor', type: 'string', description: 'اتصال label به کنترل' },
+  { name: 'size', type: "'sm' | 'md' | 'lg'", defaultValue: 'md', description: 'spacing و تایپوگرافی الگو' },
+  { name: 'align', type: "'start' | 'center' | 'end' | 'stretch'", defaultValue: 'stretch', description: 'تراز container کلی' },
+  { name: 'labelAlign / tooltipAlign', type: "'start' | 'center' | 'end'", defaultValue: 'start', description: 'تراز label و متن راهنما' },
+  { name: 'invalid / disabled', type: 'boolean', description: 'state بصری wrapper' },
+  { name: 'children', type: 'ReactNode', required: true, description: 'TaavInput / TaavSelect / TaavTextarea یا کنترل سفارشی' },
+];
+
+export const FIELD_GRID_PROPS: DocPropRow[] = [
+  { name: 'columns', type: '1 | 2 | 3 | 4', defaultValue: '2', description: 'تعداد ستون هدف در دسکتاپ' },
+  { name: 'gap', type: "'sm' | 'md' | 'lg' | 'xl'", defaultValue: 'md', description: 'گتر افقی بین ستون‌ها' },
+  { name: 'density', type: "'compact' | 'comfortable' | 'spacious'", defaultValue: 'comfortable', description: 'فاصله عمودی ردیف‌ها' },
+  { name: 'responsive', type: 'boolean', defaultValue: 'true', description: 'رفتار تک‌ستونه در نمایشگر کوچک' },
+  { name: 'children', type: 'ReactNode', required: true, description: 'ترکیبی از TaavFieldBlock یا field wrappers دیگر' },
 ];
 
 export const SELECT_PROPS: DocPropRow[] = [
@@ -126,6 +172,23 @@ export const OPTION_CARD_PROPS: DocPropRow[] = [
   { name: 'inputType', type: "'radio' | 'checkbox' | 'none'", defaultValue: 'none', description: 'نوع input پنهان' },
   { name: 'title / description / meta', type: 'ReactNode', description: 'محتوای کارت' },
   { name: 'icon / badge', type: 'ReactNode', description: 'آیکون یا badge' },
+];
+
+export const CHOICE_CHIP_GROUP_PROPS: DocPropRow[] = [
+  { name: 'options', type: 'TaavChoiceChipOption[]', required: true, description: 'لیست label/value/disabled/icon' },
+  { name: 'label', type: 'ReactNode', description: 'عنوان اختیاری بالای گروه' },
+  { name: 'description / hint', type: 'ReactNode', description: 'توضیح اختیاری زیر عنوان' },
+  { name: 'required', type: 'boolean', defaultValue: 'false', description: 'نشان الزامی کنار عنوان' },
+  { name: 'value / defaultValue', type: 'string | string[]', description: 'حالت controlled یا uncontrolled' },
+  { name: 'onValueChange', type: '(value: string | string[]) => void', description: 'بازگشت مقدار جدید گروه' },
+  { name: 'selectionMode', type: "'single' | 'multiple'", defaultValue: 'single', description: 'single بدون تیک، multiple با تیک' },
+  { name: 'size', type: "'sm' | 'md' | 'lg'", defaultValue: 'md', description: 'سایز چیپ‌ها و تایپوگرافی label/description' },
+  { name: 'tone', type: "'neutral' | 'brand' | 'success' | 'warning' | 'danger' | 'info'", defaultValue: 'brand', description: 'رنگ حالت انتخاب‌شده' },
+  { name: 'wrap', type: 'boolean', defaultValue: 'true', description: 'شکستن به خط بعد' },
+  { name: 'gap', type: "'sm' | 'md' | 'lg'", defaultValue: 'md', description: 'فاصله بین chipها' },
+  { name: 'align', type: "'start' | 'center' | 'end'", defaultValue: 'start', description: 'تراز ردیف چیپ‌ها' },
+  { name: 'invalid / disabled', type: 'boolean', description: 'حالت خطا یا غیرفعال' },
+  { name: 'ariaLabel', type: 'string', description: 'وقتی label مرئی ندارید — مثلاً داخل TaavFieldBlock' },
 ];
 
 export const DIALOG_PROPS: DocPropRow[] = [
@@ -285,6 +348,116 @@ export const SIDEBAR_PANEL_PROPS: DocPropRow[] = [
   { name: 'sticky / collapsible', type: 'boolean', description: 'panel چسبان/تاشو' },
   { name: 'title / description / status / actions / footer', type: 'ReactNode', description: 'اسلات‌های panel' },
   { name: 'density', type: "'compact' | 'comfortable'", defaultValue: 'comfortable', description: 'تراکم' },
+];
+
+export const BUSINESS_SIDEBAR_PROPS: DocPropRow[] = [
+  { name: 'navPath', type: 'TaavBusinessSidebarNavPathItem[]', defaultValue: '[{ label: "خانه" }]', description: 'breadcrumb بالای محتوا — هم‌راستا با سایدبار' },
+  { name: 'navPath[].label', type: 'string', description: 'برچسب هر سطح' },
+  { name: 'navPath[].href / onClick', type: 'string / fn', description: 'سطوح قبل از آخر قابل کلیک' },
+  { name: 'showNavPath', type: 'boolean', defaultValue: 'true', description: 'نمایش نوار مسیر' },
+  { name: 'children', type: 'ReactNode', description: 'محتوای اصلی صفحه (سمت چپ سایدبار در RTL)' },
+  { name: 'user', type: 'TaavBusinessSidebarUser', description: 'نام، subtitle، avatar' },
+  { name: 'tenant', type: 'TaavBusinessSidebarTenant', description: 'tenant name، label/slug، status' },
+  { name: 'items', type: 'TaavBusinessSidebarItem[]', description: 'آیتم‌های منوی navigation' },
+  { name: 'quickActions', type: 'TaavBusinessSidebarQuickAction[]', description: 'میانبرهای toolbar' },
+  { name: 'activeItemId', type: 'string', description: 'شناسه آیتم فعال (از app)' },
+  { name: 'variant', type: "'dastranj' | 'default'", defaultValue: 'dastranj', description: 'تم بصری' },
+  { name: 'placement', type: "'left' | 'right'", defaultValue: 'right', description: 'لنگر فیزیکی سایدبار — DastRanj از right استفاده می‌کند' },
+  { name: 'width', type: "'compact' | 'default' | 'wide'", defaultValue: 'default', description: 'عرض expanded' },
+  { name: 'collapsed', type: 'boolean', description: 'حالت جمع‌شده controlled' },
+  { name: 'defaultCollapsed', type: 'boolean', defaultValue: 'false', description: 'حالت جمع‌شده uncontrolled' },
+  { name: 'collapsible', type: 'boolean', defaultValue: 'true', description: 'نمایش دکمه collapse/expand' },
+  { name: 'lockCollapsed', type: 'boolean', description: 'قفل collapsed و مخفی کردن toggle' },
+  { name: 'loading', type: 'boolean', description: 'placeholder loading برای user/tenant' },
+  { name: 'version', type: 'string', description: 'برچسب نسخه در footer' },
+  { name: 'onNavigate', type: '(item) => void', description: 'کلیک آیتم منو' },
+  { name: 'onTenantSwitch', type: '() => void', description: 'دکمه تغییر tenant' },
+  { name: 'onTenantPanelClick', type: '() => void', description: 'کلیک پنل tenant پایین' },
+  { name: 'onLogout', type: '() => void', description: 'handler خروج (fallback toolbar)' },
+  { name: 'onCollapsedChange', type: '(collapsed: boolean) => void', description: 'تغییر collapse' },
+];
+
+export const MODULE_CARD_PROPS: DocPropRow[] = [
+  { name: 'title', type: 'ReactNode', required: true, description: 'عنوان ماژول یا بخش تنظیمات (RTL، راست‌چین در هدر)' },
+  { name: 'description', type: 'ReactNode', description: 'توضیح کوتاه زیر هدر — می‌تواند شامل وضعیت مثل «(تکمیل نشده)» باشد' },
+  { name: 'eyebrow', type: 'ReactNode', description: 'متن کمکی بالای توضیح' },
+  { name: 'status', type: "'default' | 'active' | 'complete' | 'incomplete' | 'locked' | 'disabled' | 'warning' | 'error'", defaultValue: 'default', description: 'وضعیت بصری — از اپ پاس داده می‌شود' },
+  { name: 'statusLabel', type: 'ReactNode', description: 'برچسب وضعیت جداگانه (اختیاری)' },
+  { name: 'icon / arrowIcon', type: 'ReactNode', description: 'آیکون سفارشی بدنه یا فلش هدر' },
+  { name: 'href', type: 'string', description: 'لینک navigation — بدون وابستگی به Next.js Link' },
+  { name: 'onClick', type: '() => void', description: 'handler کلیک — در صورت نبود href، دکمه رندر می‌شود' },
+  { name: 'disabled / loading / selected', type: 'boolean', description: 'حالت‌های تعاملی' },
+  { name: 'variant', type: "'default' | 'setup' | 'imageHeader' | 'compact' | 'flat'", defaultValue: 'setup', description: 'الگوی بصری کارت' },
+  { name: 'tone', type: "'neutral' | 'brand' | 'success' | 'warning' | 'danger' | 'info'", defaultValue: 'neutral', description: 'تن رنگ هدر/مرز' },
+  { name: 'themeMode', type: "'auto' | 'light' | 'dark'", defaultValue: 'auto', description: 'تم اجباری کارت یا همگام با shell' },
+  { name: 'size', type: "'sm' | 'md' | 'lg'", defaultValue: 'md', description: 'اندازه تایپوگرافی و padding' },
+  { name: 'width', type: "'auto' | 'full'", defaultValue: 'auto', description: 'عرض کارت داخل گرید' },
+  { name: 'headerPattern', type: "'geometric' | 'subtle' | 'none'", defaultValue: 'geometric', description: 'الگوی CSS هدر — بدون asset تصویری' },
+  { name: 'align', type: "'start' | 'center' | 'end'", defaultValue: 'start', description: 'تراز متن بدنه — پیش‌فرض راست‌چین RTL' },
+  { name: 'direction', type: "'enter' | 'back'", defaultValue: 'enter', description: 'جهت فلش هدر (RTL)' },
+  { name: 'ariaLabel', type: 'string', description: 'برچسب دسترس‌پذیری در صورت ناکافی بودن title/description' },
+];
+
+export const MODULE_CARD_GRID_PROPS: DocPropRow[] = [
+  { name: 'columns', type: '1 | 2 | 3 | 4', defaultValue: '2', description: 'تعداد ستون دسکتاپ — پیش‌فرض دو ستونه مانند ERP' },
+  { name: 'gap', type: "'sm' | 'md' | 'lg' | 'xl'", defaultValue: 'md', description: 'فاصله بین کارت‌ها' },
+  { name: 'density', type: "'compact' | 'comfortable' | 'spacious'", defaultValue: 'comfortable', description: 'تراکم فاصله‌گذاری' },
+  { name: 'responsive', type: 'boolean', defaultValue: 'true', description: 'در موبایل تک‌ستونه شود' },
+  { name: 'children', type: 'ReactNode', required: true, description: 'کارت‌ها — ترجیحاً داخل TaavModuleCardGridItem' },
+];
+
+export const MODULE_CARD_GRID_ITEM_PROPS: DocPropRow[] = [
+  { name: 'span', type: '1 | 2 | 3 | 4', defaultValue: '1', description: 'پوشش چند ستون — برای کارت full-width' },
+  { name: 'responsive', type: 'boolean', defaultValue: 'true', description: 'span واکنش‌گرا در breakpointهای کوچک' },
+];
+
+export const BUSINESS_INTRO_CARD_PROPS: DocPropRow[] = [
+  { name: 'title', type: 'ReactNode', required: true, description: 'عنوان بخش بیزینسی (RTL)' },
+  { name: 'description', type: 'ReactNode', description: 'توضیح کوتاه زیر عنوان' },
+  { name: 'icon / actionIcon', type: 'ReactNode', description: 'آیکون بخش یا آیکون اکشن سفارشی' },
+  { name: 'actionLabel', type: 'string', description: 'برچسب دسترس‌پذیری اکشن — پیش‌فرض «بازگشت» وقتی اکشن فعال است' },
+  { name: 'href', type: 'string', description: 'لینک anchor-style برای اکشن — بدون Next.js Link' },
+  { name: 'onAction', type: '() => void', description: 'handler دکمه اکشن وقتی href نیست' },
+  { name: 'disabled / loading', type: 'boolean', description: 'غیرفعال‌سازی اکشن یا نمایش skeleton' },
+  { name: 'size', type: "'sm' | 'md' | 'lg'", defaultValue: 'md', description: 'padding، آیکون و تایپوگرافی' },
+  { name: 'width', type: "'normal' | 'wide' | 'full'", defaultValue: 'normal', description: 'عرض محدود کارت در صفحه' },
+  { name: 'tone', type: "'brand' | 'neutral' | 'success' | 'warning' | 'danger' | 'info'", defaultValue: 'brand', description: 'تن رنگ آیکون' },
+  { name: 'variant', type: "'default' | 'soft' | 'outlined'", defaultValue: 'default', description: 'سطح بصری کارت' },
+  { name: 'themeMode', type: "'auto' | 'light' | 'dark'", defaultValue: 'auto', description: 'تم اجباری یا همگام با shell' },
+  { name: 'children', type: 'ReactNode', description: 'محتوای اضافه زیر توضیح' },
+  { name: 'wrapperClassName / contentClassName / actionClassName', type: 'string', description: 'escape hatchهای محدود نام‌گذاری‌شده' },
+];
+
+export const ACTIVATION_SWITCH_PROPS: DocPropRow[] = [
+  { name: 'value / defaultValue', type: "'active' | 'inactive'", defaultValue: 'inactive', description: 'controlled / uncontrolled' },
+  { name: 'onValueChange', type: '(value) => void', description: 'تغییر وضعیت' },
+  { name: 'activeLabel / inactiveLabel', type: 'ReactNode', defaultValue: 'فعال / غیرفعال', description: 'برچسب سگمنت‌ها' },
+  { name: 'disabled / loading', type: 'boolean', description: 'غیرفعال یا skeleton' },
+  { name: 'size', type: "'sm' | 'md' | 'lg'", defaultValue: 'md', description: 'اندازه سگمنت' },
+  { name: 'tone', type: "'brand' | 'success' | 'warning' | 'danger' | 'neutral'", defaultValue: 'brand', description: 'رنگ سگمنت انتخاب‌شده' },
+  { name: 'ariaLabel', type: 'string', description: 'برچسب radiogroup' },
+];
+
+export const DETAILS_LINK_PROPS: DocPropRow[] = [
+  { name: 'children', type: 'ReactNode', required: true, description: 'متن لینک جزئیات' },
+  { name: 'href', type: 'string', description: 'لینک anchor-style' },
+  { name: 'onClick', type: '() => void', description: 'رفتار دکمه‌ای بدون href' },
+  { name: 'disabled', type: 'boolean', description: 'غیرفعال‌سازی' },
+  { name: 'tone', type: "'neutral' | 'brand' | 'info'", defaultValue: 'neutral', description: 'تن رنگ متن' },
+  { name: 'size', type: "'sm' | 'md' | 'lg'", defaultValue: 'md', description: 'اندازه تایپوگرافی' },
+  { name: 'underline', type: "'always' | 'hover' | 'none'", defaultValue: 'always', description: 'زیرخط' },
+  { name: 'ariaLabel', type: 'string', description: 'برچسب دسترس‌پذیری' },
+];
+
+export const BUSINESS_RECOMMENDATION_CARD_PROPS: DocPropRow[] = [
+  { name: 'title / description', type: 'ReactNode', required: true, description: 'محتوای کارت' },
+  { name: 'icon / actionIcon', type: 'ReactNode', description: 'آیکون بخش و chevron اکشن' },
+  { name: 'href / onAction / actionLabel', type: 'string / fn', description: 'اکشن chevron سمت راست' },
+  { name: 'activationValue / defaultActivationValue / onActivationChange', type: "'active' | 'inactive'", description: 'TaavActivationSwitch داخلی' },
+  { name: 'activeLabel / inactiveLabel / activationDisabled', type: 'ReactNode / boolean', description: 'تنظیمات سوییچ' },
+  { name: 'detailsLabel / detailsHref / onDetailsClick', type: 'ReactNode / string / fn', description: 'TaavDetailsLink داخلی' },
+  { name: 'disabled / loading', type: 'boolean', description: 'حالت‌های کارت' },
+  { name: 'size / width / tone / variant / themeMode', type: 'enum', description: 'ظاهر و تم' },
 ];
 
 export const STATS_CARD_PROPS: DocPropRow[] = [

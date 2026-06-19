@@ -1,5 +1,6 @@
 'use client';
 
+import { TaavFieldBlock, TaavInput } from '@repo/ui/taav/forms';
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
@@ -329,29 +330,30 @@ function SelectTenantPageContent() {
               <div className="tenant-select-step">
                 <div className="tenant-select-step-body">
                   <div className="tenant-select-profile">
-                    <label className="auth-field">
-                      <span>شماره موبایل</span>
-                      <input value={user?.mobile ?? ''} disabled dir="ltr" />
-                    </label>
+                    <TaavFieldBlock label="شماره موبایل" htmlFor="tenant-profile-mobile">
+                      <TaavInput id="tenant-profile-mobile" value={user?.mobile ?? ''} disabled dir="ltr" />
+                    </TaavFieldBlock>
 
-                    <label className="auth-field">
-                      <span>نام</span>
-                      <input value={user?.firstName ?? ''} disabled />
-                    </label>
+                    <TaavFieldBlock label="نام" htmlFor="tenant-profile-first-name">
+                      <TaavInput id="tenant-profile-first-name" value={user?.firstName ?? ''} disabled />
+                    </TaavFieldBlock>
 
-                    <label className="auth-field">
-                      <span>نام خانوادگی</span>
-                      <input value={user?.lastName ?? ''} disabled />
-                    </label>
+                    <TaavFieldBlock label="نام خانوادگی" htmlFor="tenant-profile-last-name">
+                      <TaavInput id="tenant-profile-last-name" value={user?.lastName ?? ''} disabled />
+                    </TaavFieldBlock>
 
-                    <label className="auth-field tenant-select-business">
-                      <span>نام کسب‌وکار</span>
-                      <input
+                    <TaavFieldBlock
+                      label="نام کسب‌وکار"
+                      htmlFor="tenant-business-name"
+                      wrapperClassName="tenant-select-business"
+                    >
+                      <TaavInput
+                        id="tenant-business-name"
                         value={businessName}
                         onChange={(e) => setBusinessName(e.target.value)}
                         placeholder="نام کسب‌وکار را وارد کنید"
                       />
-                    </label>
+                    </TaavFieldBlock>
 
                     <div className="tenant-select-history">
                       <div className="tenant-select-history-head">

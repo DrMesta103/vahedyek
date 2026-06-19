@@ -37,6 +37,13 @@ export default function ComponentsOverviewPage() {
           </Link>
         ))}
       </div>
+      <TaavCard variant="soft" padding="md" radius="lg">
+        <p className="m-0 text-[length:var(--taav-text-sm)] leading-[var(--taav-leading-relaxed)] text-[var(--taav-text-muted)]">
+          تفاوت مهم: <code className="lab-code">TaavTooltip</code> برای راهنمای شناور است، اما field tooltip در TaavUI داخل{' '}
+          <code className="lab-code">TaavFieldBlock</code> به‌صورت متن ثابت زیر فیلد پیاده‌سازی می‌شود. مستندات آن در{' '}
+          <code className="lab-code">/forms/field-block</code> قرار دارد.
+        </p>
+      </TaavCard>
     </DocPageShell>
   );
 }

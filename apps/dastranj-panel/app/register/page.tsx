@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { TaavFieldBlock, TaavInput } from '@repo/ui/taav/forms';
 import { parseAuthIdentifier, sanitizeIranMobileInput } from '../lib/contact';
 
 async function readJsonResponse(response: Response) {
@@ -96,61 +97,66 @@ export default function RegisterPage() {
 
           <form onSubmit={handleSubmit} className="auth-form">
             <div className="auth-grid-two">
-              <label className="auth-field">
-                <span>نام</span>
-                <input value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
-              </label>
-              <label className="auth-field">
-                <span>نام خانوادگی</span>
-                <input value={lastName} onChange={(e) => setLastName(e.target.value)} required />
-              </label>
+              <TaavFieldBlock label="نام" required htmlFor="register-first-name">
+                <TaavInput
+                  id="register-first-name"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  required
+                />
+              </TaavFieldBlock>
+              <TaavFieldBlock label="نام خانوادگی" required htmlFor="register-last-name">
+                <TaavInput
+                  id="register-last-name"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  required
+                />
+              </TaavFieldBlock>
             </div>
 
-            <label className="auth-field">
-              <span>ایمیل یا شماره موبایل</span>
-              <div className="auth-input-shell">
-                {showIranPrefix ? (
-                  <span className="auth-prefix" dir="ltr">
-                    IR +98
-                  </span>
-                ) : null}
-                <input
-                  type={identifierType === 'email' ? 'email' : 'text'}
-                  value={identifier}
-                  onChange={(e) => handleIdentifierChange(e.target.value)}
-                  required
-                  dir="ltr"
-                  inputMode={identifierType === 'email' ? 'email' : 'numeric'}
-                  maxLength={identifierType === 'email' ? undefined : 10}
-                  placeholder={identifierType === 'email' ? 'example@email.com' : '9352720114'}
-                />
-              </div>
-            </label>
+            <TaavFieldBlock label="ایمیل یا شماره موبایل" required htmlFor="register-identifier">
+              <TaavInput
+                id="register-identifier"
+                type={identifierType === 'email' ? 'email' : 'text'}
+                value={identifier}
+                onChange={(e) => handleIdentifierChange(e.target.value)}
+                required
+                dir="ltr"
+                inputMode={identifierType === 'email' ? 'email' : 'numeric'}
+                maxLength={identifierType === 'email' ? undefined : 10}
+                placeholder={identifierType === 'email' ? 'example@email.com' : '9352720114'}
+                prefix={showIranPrefix ? 'IR +98' : undefined}
+              />
+            </TaavFieldBlock>
 
             {needsSeparateMobile ? (
-              <label className="auth-field">
-                <span>شماره موبایل</span>
-                <div className="auth-input-shell">
-                  <span className="auth-prefix" dir="ltr">
-                    IR +98
-                  </span>
-                  <input
-                    value={mobile}
-                    onChange={(e) => setMobile(sanitizeIranMobileInput(e.target.value))}
-                    required
-                    dir="ltr"
-                    inputMode="numeric"
-                    maxLength={10}
-                    placeholder="9352720114"
-                  />
-                </div>
-              </label>
+              <TaavFieldBlock label="شماره موبایل" required htmlFor="register-mobile">
+                <TaavInput
+                  id="register-mobile"
+                  value={mobile}
+                  onChange={(e) => setMobile(sanitizeIranMobileInput(e.target.value))}
+                  required
+                  dir="ltr"
+                  inputMode="numeric"
+                  maxLength={10}
+                  placeholder="9352720114"
+                  prefix="IR +98"
+                />
+              </TaavFieldBlock>
             ) : null}
 
-            <label className="auth-field">
-              <span>رمز عبور</span>
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} placeholder="حداقل ۶ کاراکتر" />
-            </label>
+            <TaavFieldBlock label="رمز عبور" required htmlFor="register-password">
+              <TaavInput
+                id="register-password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+                placeholder="حداقل ۶ کاراکتر"
+              />
+            </TaavFieldBlock>
 
             {error ? <div className="auth-alert auth-alert-error">{error}</div> : null}
 

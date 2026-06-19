@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Fragment, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   CalendarDays,
   ChevronLeft,
@@ -26,7 +26,7 @@ import {
 } from '../../../../lib/calendar-shifts';
 import { CardMenu } from '../../../../components/CardMenu';
 import { PersianMonthCalendarEmptyDay, PersianMonthCalendarGrid } from '../../../../components/PersianMonthCalendarGrid';
-import { calendarBreadcrumbs } from '../../../../components/module-page/module-breadcrumbs';
+import { CalendarNavPath } from '../../../../components/business-sidebar/CalendarNavPath';
 import { getPersianDateParts } from './persian-date';
 import { DeleteCalendarRangeDialog } from './bulk/DeleteCalendarRangeDialog';
 import { AddCalendarEventDialog } from './event/AddCalendarEventDialog';
@@ -93,7 +93,6 @@ export function CalendarDetailsView({ calendar }: CalendarDetailsViewProps) {
   const [eventDialogFromDay, setEventDialogFromDay] = useState(false);
   const [deleteShiftsDialogOpen, setDeleteShiftsDialogOpen] = useState(false);
   const [deleteEventsDialogOpen, setDeleteEventsDialogOpen] = useState(false);
-  const breadcrumbs = calendarBreadcrumbs({ label: 'جزئیات تقویم' });
 
   useEffect(() => {
     setSelectedDay(calendar.defaultSelectedDay);
@@ -220,16 +219,8 @@ export function CalendarDetailsView({ calendar }: CalendarDetailsViewProps) {
 
   return (
     <div className="page-stack module-page calendar-details-page" dir="rtl" lang="fa">
+      <CalendarNavPath calendarTitle={calendar.title} />
       <header className="calendar-details-header">
-        <nav className="module-breadcrumb" aria-label="مسیر صفحه">
-          {breadcrumbs.map((crumb, index) => (
-            <Fragment key={`${crumb.label}-${index}`}>
-              {index > 0 ? <ChevronLeft className="h-3 w-3 shrink-0 opacity-70" aria-hidden /> : null}
-              {crumb.href ? <Link href={crumb.href}>{crumb.label}</Link> : <span>{crumb.label}</span>}
-            </Fragment>
-          ))}
-        </nav>
-
         <div className="calendar-details-title-row">
           <Link href="/calendars" className="calendar-details-back" aria-label="بازگشت به فهرست تقویم‌ها">
             <ChevronLeft className="h-5 w-5" aria-hidden />
