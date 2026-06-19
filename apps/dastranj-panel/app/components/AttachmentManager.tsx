@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { Paperclip, Plus, Trash2, Upload, X } from 'lucide-react';
+import { TaavFieldBlock, TaavInput, TaavTextarea } from '@repo/ui/taav/forms';
 import { PanelFormModal, PanelFormModalActions } from './PanelFormModal';
 import { formatFaNumber } from '../lib/format-fa';
 import type { AttachmentDraft } from '../lib/employee-requests';
@@ -258,14 +259,22 @@ export function AttachmentManager({
           </section>
 
           <div className="employee-request-form-grid attachment-manager-fields">
-            <label className="business-payroll-field">
-              <span className="business-payroll-field-label">تاریخ فایل</span>
-              <input value={issuedAt} onChange={(event) => setIssuedAt(event.target.value)} placeholder="۱۴۰۵/۰۱/۰۱" />
-            </label>
-            <label className="business-payroll-field">
-              <span className="business-payroll-field-label">توضیحات</span>
-              <textarea value={description} onChange={(event) => setDescription(event.target.value)} rows={2} />
-            </label>
+            <TaavFieldBlock label="تاریخ فایل" htmlFor="attachment-issued-at">
+              <TaavInput
+                id="attachment-issued-at"
+                value={issuedAt}
+                onChange={(event) => setIssuedAt(event.target.value)}
+                placeholder="۱۴۰۵/۰۱/۰۱"
+              />
+            </TaavFieldBlock>
+            <TaavFieldBlock label="توضیحات" htmlFor="attachment-description">
+              <TaavTextarea
+                id="attachment-description"
+                value={description}
+                onChange={(event) => setDescription(event.target.value)}
+                rows={2}
+              />
+            </TaavFieldBlock>
             <label className="attachment-manager-dropzone">
               <Upload className="h-5 w-5" aria-hidden />
               <span>{files.length ? `${formatFaNumber(files.length, { useGrouping: false })} فایل انتخاب شده` : 'انتخاب فایل یا تصویر'}</span>

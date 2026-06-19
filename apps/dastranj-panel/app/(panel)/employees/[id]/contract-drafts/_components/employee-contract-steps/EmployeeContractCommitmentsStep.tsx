@@ -1,6 +1,7 @@
 'use client';
 
 import { Scale } from 'lucide-react';
+import { TaavChoiceChipGroup } from '@repo/ui/taav/forms';
 import { AttachmentManager } from '../../../../../../components/AttachmentManager';
 import type { EmployeeContractDraft } from '../../../../../../lib/employee-contract-drafts';
 import { EMPLOYEE_CONTRACT_COMMITMENT_CATEGORIES } from './employee-contract-commitment-categories';
@@ -13,6 +14,19 @@ type Props = {
   onCommitmentsChange: (next: NonNullable<EmployeeContractDraft['specialCommitments']>) => void;
 };
 
+function commitmentLabel(
+  item: string,
+  snapshot: EmployeeContractDraft['templateSnapshot'],
+  isSelected: boolean,
+  isTemplateSelected: boolean,
+) {
+  if (!snapshot) return item;
+  if (isSelected && !isTemplateSelected) return `${item} · اختصاصی این قرارداد`;
+  if (!isSelected && isTemplateSelected) return `${item} · غیرفعال نسبت به قالب`;
+  if (isSelected && isTemplateSelected) return `${item} · مطابق قالب`;
+  return item;
+}
+
 export function EmployeeContractCommitmentsStep({
   specialCommitments,
   templateSnapshot,
@@ -22,18 +36,7 @@ export function EmployeeContractCommitmentsStep({
   if (!specialCommitments) return <SectionPlaceholder />;
 
   const snapshot = templateSnapshot?.specialCommitments;
-  const selected = new Set(specialCommitments.selected);
   const templateSelected = new Set(snapshot?.selected ?? []);
-
-  const toggleCommitment = (item: string) => {
-    const exists = specialCommitments.selected.includes(item);
-    onCommitmentsChange({
-      ...specialCommitments,
-      selected: exists
-        ? specialCommitments.selected.filter((entry) => entry !== item)
-        : [...specialCommitments.selected, item],
-    });
-  };
 
   return (
     <EmployeeContractStepShell
@@ -48,25 +51,25 @@ export function EmployeeContractCommitmentsStep({
             <h3>{category.title}</h3>
             <span className="contract-draft-reg-badge contract-draft-reg-badge--internal">پیوست هر دسته اختیاری است</span>
           </div>
-          <div className="business-payroll-chips">
-            {category.items.map((item) => {
-              const isSelected = selected.has(item);
-              const isTemplateSelected = templateSelected.has(item);
-              return (
-                <button
-                  key={item}
-                  type="button"
-                  className={isSelected ? 'is-selected' : ''}
-                  onClick={() => toggleCommitment(item)}
-                >
-                  {item}
-                  {snapshot && isSelected && !isTemplateSelected ? <small>اختصاصی این قرارداد</small> : null}
-                  {snapshot && !isSelected && isTemplateSelected ? <small>غیرفعال نسبت به قالب</small> : null}
-                  {snapshot && isSelected && isTemplateSelected ? <small>مطابق قالب</small> : null}
-                </button>
-              );
-            })}
-          </div>
+          <TaavChoiceChipGroup
+            selectionMode="multiple"
+            options={category.items.map((item) => ({
+              value: item,
+              label: commitmentLabel(
+                item,
+                templateSnapshot,
+                specialCommitments.selected.includes(item),
+                templateSelected.has(item),
+              ),
+            }))}
+            value={specialCommitments.selected}
+            onValueChange={(next) =>
+              onCommitmentsChange({
+                ...specialCommitments,
+                selected: Array.isArray(next) ? next : [next],
+              })
+            }
+          />
           <div className="employee-contract-commitment-attachments">
             <AttachmentManager
               value={specialCommitments.attachments.filter((item) => item.categoryName === category.title)}

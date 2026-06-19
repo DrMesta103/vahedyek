@@ -11,6 +11,7 @@ export default async function QuickSetupPage() {
       locationItems={data.locationItems}
       calendarItems={data.calendarItems}
       defaultCalendarTemplate={data.defaultCalendarTemplate}
+      holidayCoefficients={data.holidayCoefficients}
       policyItems={data.policyItems}
       employeeItems={data.employeeItems}
       employeeImportJobs={data.employeeImportJobs}

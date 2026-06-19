@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react';
 import { CreditCard } from 'lucide-react';
+import { TaavChoiceChipGroup } from '@repo/ui/taav/forms';
 import { type PaymentSchedule, PAYMENT_SCHEDULE_PERIOD_OPTIONS, PAYMENT_SCHEDULE_TYPE_OPTIONS } from '../../../../../../lib/payroll-business-settings';
 import { type PayrollComparisonMode } from '../../../../../../lib/payroll-comparison-labels';
 import { differenceBadge, fieldBadge, SectionPlaceholder } from './employee-contract-ui';
@@ -14,6 +15,10 @@ function differenceTooltip(mode?: PayrollComparisonMode, referenceWord?: string)
   if (mode === 'template') return 'در قالب انتخاب‌شده، نوع پرداخت متفاوت تعریف شده است.';
   if (mode === 'tenant') return 'در تنظیمات تاو ادمین، نوع پرداخت متفاوت تعریف شده است.';
   return `در ${referenceWord ?? 'مبنا'}، نوع پرداخت متفاوت تعریف شده است.`;
+}
+
+function toSingleValue(next: string | string[]) {
+  return Array.isArray(next) ? next[0] ?? '' : next;
 }
 
 export function PaymentScheduleStep({
@@ -56,29 +61,21 @@ export function PaymentScheduleStep({
         </span>
       </div>
 
-      <div className="business-payroll-chips" role="radiogroup" aria-label="نوع پرداخت حقوق و مزایا">
-        {PAYMENT_SCHEDULE_TYPE_OPTIONS.map((option) => {
-          const isDisabled = !option.enabled;
-          const isSelected = current.type === option.value;
-          return (
-            <button
-              key={option.value}
-              type="button"
-              role="radio"
-              aria-checked={isSelected}
-              aria-disabled={isDisabled}
-              className={[isSelected ? 'is-selected' : '', isDisabled ? 'is-disabled' : ''].filter(Boolean).join(' ')}
-              onClick={() => {
-                if (isDisabled) return;
-                onChange({ ...current, type: option.value });
-              }}
-            >
-              {option.label}
-              {isDisabled ? <small>در حال توسعه</small> : null}
-            </button>
-          );
-        })}
-      </div>
+      <TaavChoiceChipGroup
+        ariaLabel="نوع پرداخت حقوق و مزایا"
+        options={PAYMENT_SCHEDULE_TYPE_OPTIONS.map((option) => ({
+          value: option.value,
+          label: option.enabled ? option.label : `${option.label} · در حال توسعه`,
+          disabled: !option.enabled,
+        }))}
+        value={current.type}
+        onValueChange={(next) => {
+          const type = toSingleValue(next) as PaymentSchedule['type'];
+          const selected = PAYMENT_SCHEDULE_TYPE_OPTIONS.find((option) => option.value === type);
+          if (!selected?.enabled) return;
+          onChange({ ...current, type });
+        }}
+      />
 
       <div className="business-payroll-highlight subtle" style={{ marginTop: 12 }}>
         {difference ?? (hasComparison ? <span className="contract-draft-reg-badge contract-draft-reg-badge--internal">همسان با {baseLabel}</span> : null)}
@@ -90,29 +87,21 @@ export function PaymentScheduleStep({
             <h3>دوره پرداخت</h3>
             <span className="contract-draft-reg-badge contract-draft-reg-badge--internal">پیش‌فرض: ماهانه</span>
           </div>
-          <div className="business-payroll-chips" role="radiogroup" aria-label="دوره پرداخت حقوق">
-            {PAYMENT_SCHEDULE_PERIOD_OPTIONS.map((option) => {
-              const isDisabled = !option.enabled;
-              const isSelected = current.period === option.value;
-              return (
-                <button
-                  key={option.value}
-                  type="button"
-                  role="radio"
-                  aria-checked={isSelected}
-                  aria-disabled={isDisabled}
-                  className={[isSelected ? 'is-selected' : '', isDisabled ? 'is-disabled' : ''].filter(Boolean).join(' ')}
-                  onClick={() => {
-                    if (isDisabled) return;
-                    onChange({ ...current, period: option.value });
-                  }}
-                >
-                  {option.label}
-                  {isDisabled ? <small>در حال توسعه</small> : null}
-                </button>
-              );
-            })}
-          </div>
+          <TaavChoiceChipGroup
+            ariaLabel="دوره پرداخت حقوق"
+            options={PAYMENT_SCHEDULE_PERIOD_OPTIONS.map((option) => ({
+              value: option.value,
+              label: option.enabled ? option.label : `${option.label} · در حال توسعه`,
+              disabled: !option.enabled,
+            }))}
+            value={current.period ?? 'monthly'}
+            onValueChange={(next) => {
+              const period = toSingleValue(next) as NonNullable<PaymentSchedule['period']>;
+              const selected = PAYMENT_SCHEDULE_PERIOD_OPTIONS.find((option) => option.value === period);
+              if (!selected?.enabled) return;
+              onChange({ ...current, period });
+            }}
+          />
         </section>
       ) : null}
     </div>

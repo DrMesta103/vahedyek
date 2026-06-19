@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { TaavFieldBlock, TaavInput } from '@repo/ui/taav/forms';
 import { parseAuthIdentifier, sanitizeIranMobileInput } from '../lib/contact';
 
 async function readJsonResponse(response: Response) {
@@ -83,31 +84,30 @@ function LoginPageContent() {
         <form onSubmit={handleSubmit} className="auth-form">
           {registered ? <div className="auth-alert auth-alert-success">ثبت‌نام انجام شد. حالا با همان اطلاعات وارد شوید.</div> : null}
 
-          <label className="auth-field">
-            <span>ایمیل یا شماره موبایل</span>
-            <div className="auth-input-shell">
-              {showIranPrefix ? (
-                <span className="auth-prefix" dir="ltr">
-                  IR +98
-                </span>
-              ) : null}
-              <input
-                type={identifierType === 'email' ? 'email' : 'text'}
-                value={identifier}
-                onChange={(e) => handleIdentifierChange(e.target.value)}
-                required
-                dir="ltr"
-                inputMode={identifierType === 'email' ? 'email' : 'numeric'}
-                maxLength={identifierType === 'email' ? undefined : 10}
-                placeholder={identifierType === 'email' ? 'example@email.com' : '9352720114'}
-              />
-            </div>
-          </label>
+          <TaavFieldBlock label="ایمیل یا شماره موبایل" required htmlFor="login-identifier">
+            <TaavInput
+              id="login-identifier"
+              type={identifierType === 'email' ? 'email' : 'text'}
+              value={identifier}
+              onChange={(e) => handleIdentifierChange(e.target.value)}
+              required
+              dir="ltr"
+              inputMode={identifierType === 'email' ? 'email' : 'numeric'}
+              maxLength={identifierType === 'email' ? undefined : 10}
+              placeholder={identifierType === 'email' ? 'example@email.com' : '9352720114'}
+              prefix={showIranPrefix ? 'IR +98' : undefined}
+            />
+          </TaavFieldBlock>
 
-          <label className="auth-field">
-            <span>رمز عبور</span>
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-          </label>
+          <TaavFieldBlock label="رمز عبور" required htmlFor="login-password">
+            <TaavInput
+              id="login-password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </TaavFieldBlock>
 
           {error ? <div className="auth-alert auth-alert-error">{error}</div> : null}
 

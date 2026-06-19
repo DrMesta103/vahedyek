@@ -13,6 +13,7 @@ export default defineConfig({
     'src/taav-data-display-interactive.ts',
     'src/taav-layout.ts',
     'src/taav-layout-interactive.ts',
+    'src/taav-business.ts',
   ],
   outDir: 'dist',
   format: ['esm', 'cjs'],

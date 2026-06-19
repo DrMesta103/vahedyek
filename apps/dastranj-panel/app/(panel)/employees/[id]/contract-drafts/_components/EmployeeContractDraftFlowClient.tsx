@@ -32,6 +32,7 @@ import {
   X,
 } from 'lucide-react';
 import { PersianDatePicker } from '@repo/ui';
+import { TaavChoiceChipGroup } from '@repo/ui/taav/forms';
 import { CardMenu } from '../../../../../components/CardMenu';
 import { ConfirmDialog } from '../../../../../components/ConfirmDialog';
 import { AttachmentManager } from '../../../../../components/AttachmentManager';
@@ -2478,30 +2479,27 @@ export function EmployeeContractDraftBuilderClient({
                 </div>
               </div>
             </div>
-            <div className="business-payroll-chips">
-              {(Object.keys(periodLabels) as EmployeeBenefitPaymentPeriod[]).map((period) => (
-                <button
-                  key={period}
-                  type="button"
-                  className={value.eidBonus.period === period ? 'is-selected' : ''}
-                  onClick={() =>
-                    updateDraft((draft) => ({
-                      ...draft,
-                      benefitsEnd: {
-                        ...(draft.benefitsEnd ?? value),
-                        eidBonus: {
-                          ...(draft.benefitsEnd?.eidBonus ?? value.eidBonus),
-                          period,
-                        },
-                        endOfService: draft.benefitsEnd?.endOfService ?? value.endOfService,
-                      },
-                    }))
-                  }
-                >
-                  {periodLabels[period]}
-                </button>
-              ))}
-            </div>
+            <TaavChoiceChipGroup
+              options={(Object.keys(periodLabels) as EmployeeBenefitPaymentPeriod[]).map((period) => ({
+                value: period,
+                label: periodLabels[period],
+              }))}
+              value={value.eidBonus.period}
+              onValueChange={(next) => {
+                const period = (Array.isArray(next) ? next[0] : next) as EmployeeBenefitPaymentPeriod;
+                updateDraft((draft) => ({
+                  ...draft,
+                  benefitsEnd: {
+                    ...(draft.benefitsEnd ?? value),
+                    eidBonus: {
+                      ...(draft.benefitsEnd?.eidBonus ?? value.eidBonus),
+                      period,
+                    },
+                    endOfService: draft.benefitsEnd?.endOfService ?? value.endOfService,
+                  },
+                }));
+              }}
+            />
             <label className="business-payroll-field">
               <span className="business-payroll-field-label">مبلغ</span>
               <span className="business-payroll-input">
@@ -2540,68 +2538,46 @@ export function EmployeeContractDraftBuilderClient({
                 </div>
               </div>
             </div>
-            <div className="business-payroll-toggle">
-              <button
-                type="button"
-                className={value.endOfService.enabled ? 'is-selected' : ''}
-                onClick={() =>
-                  updateDraft((draft) => ({
-                    ...draft,
-                    benefitsEnd: {
-                      ...(draft.benefitsEnd ?? value),
-                      eidBonus: draft.benefitsEnd?.eidBonus ?? value.eidBonus,
-                      endOfService: { ...(draft.benefitsEnd?.endOfService ?? value.endOfService), enabled: true },
+            <TaavChoiceChipGroup
+              options={[
+                { value: 'true', label: 'فعال' },
+                { value: 'false', label: 'غیرفعال' },
+              ]}
+              value={value.endOfService.enabled ? 'true' : 'false'}
+              onValueChange={(next) => {
+                const enabled = (Array.isArray(next) ? next[0] : next) === 'true';
+                updateDraft((draft) => ({
+                  ...draft,
+                  benefitsEnd: {
+                    ...(draft.benefitsEnd ?? value),
+                    eidBonus: draft.benefitsEnd?.eidBonus ?? value.eidBonus,
+                    endOfService: { ...(draft.benefitsEnd?.endOfService ?? value.endOfService), enabled },
+                  },
+                }));
+              }}
+            />
+            <TaavChoiceChipGroup
+              options={[
+                { value: 'end_of_work', label: 'پرداخت در پایان همکاری' },
+                { value: 'periodic', label: 'پرداخت دوره‌ای' },
+              ]}
+              value={value.endOfService.severancePaymentMethod}
+              disabled={!value.endOfService.enabled}
+              onValueChange={(next) => {
+                const severancePaymentMethod = (Array.isArray(next) ? next[0] : next) as 'end_of_work' | 'periodic';
+                updateDraft((draft) => ({
+                  ...draft,
+                  benefitsEnd: {
+                    ...(draft.benefitsEnd ?? value),
+                    eidBonus: draft.benefitsEnd?.eidBonus ?? value.eidBonus,
+                    endOfService: {
+                      ...(draft.benefitsEnd?.endOfService ?? value.endOfService),
+                      severancePaymentMethod,
                     },
-                  }))
-                }
-              >
-                فعال
-              </button>
-              <button
-                type="button"
-                className={!value.endOfService.enabled ? 'is-selected' : ''}
-                onClick={() =>
-                  updateDraft((draft) => ({
-                    ...draft,
-                    benefitsEnd: {
-                      ...(draft.benefitsEnd ?? value),
-                      eidBonus: draft.benefitsEnd?.eidBonus ?? value.eidBonus,
-                      endOfService: { ...(draft.benefitsEnd?.endOfService ?? value.endOfService), enabled: false },
-                    },
-                  }))
-                }
-              >
-                غیرفعال
-              </button>
-            </div>
-            <div className="business-payroll-chips" style={{ marginTop: 12 }}>
-              {[
-                { value: 'end_of_work' as const, label: 'پرداخت در پایان همکاری' },
-                { value: 'periodic' as const, label: 'پرداخت دوره‌ای' },
-              ].map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  className={value.endOfService.severancePaymentMethod === option.value ? 'is-selected' : ''}
-                  onClick={() =>
-                    updateDraft((draft) => ({
-                      ...draft,
-                      benefitsEnd: {
-                        ...(draft.benefitsEnd ?? value),
-                        eidBonus: draft.benefitsEnd?.eidBonus ?? value.eidBonus,
-                        endOfService: {
-                          ...(draft.benefitsEnd?.endOfService ?? value.endOfService),
-                          severancePaymentMethod: option.value,
-                        },
-                      },
-                    }))
-                  }
-                  disabled={!value.endOfService.enabled}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
+                  },
+                }));
+              }}
+            />
             <PanelToggleRow
               label="کلیه حقوق و مزایای پرداخت‌نشده، در زمان تسویه‌حساب نهایی پرداخت خواهد شد."
               checked={value.endOfService.finalSettlementEnabled}
@@ -2804,32 +2780,21 @@ export function EmployeeContractDraftBuilderClient({
           <div className="business-draft-section-title">
             <h3>نوع پرداخت</h3>
           </div>
-          <div className="business-payroll-chips" role="radiogroup" aria-label="نوع پرداخت حقوق و مزایا">
-            {EMPLOYEE_PAYMENT_MAIN_OPTIONS.map((option) => {
-              const isDisabled = !option.enabled;
-              const isSelected = !isDisabled && value.type === option.value;
-              return (
-                <button
-                  key={option.value}
-                  type="button"
-                  role="radio"
-                  aria-checked={isSelected}
-                  aria-disabled={isDisabled}
-                  className={[isSelected ? 'is-selected' : '', isDisabled ? 'is-disabled' : ''].filter(Boolean).join(' ')}
-                  onClick={() => {
-                    if (isDisabled) {
-                      setPaymentTypeComingSoonLabel(option.label);
-                      return;
-                    }
-                    updatePaymentType({ type: option.value, period: value.period ?? 'monthly' });
-                  }}
-                >
-                  {option.label}
-                  {isDisabled ? <small>در حال توسعه</small> : null}
-                </button>
-              );
-            })}
-          </div>
+          <TaavChoiceChipGroup
+            ariaLabel="نوع پرداخت حقوق و مزایا"
+            options={EMPLOYEE_PAYMENT_MAIN_OPTIONS.map((option) => ({
+              value: option.value,
+              label: option.enabled ? option.label : `${option.label} · در حال توسعه`,
+              disabled: !option.enabled,
+            }))}
+            value={value.type}
+            onValueChange={(next) => {
+              const type = Array.isArray(next) ? next[0] ?? '' : next;
+              const selected = EMPLOYEE_PAYMENT_MAIN_OPTIONS.find((option) => option.value === type);
+              if (!selected?.enabled) return;
+              updatePaymentType({ type, period: value.period ?? 'monthly' });
+            }}
+          />
         </section>
 
         <div className="business-payroll-highlight subtle" style={{ marginTop: 12 }}>
@@ -2843,20 +2808,18 @@ export function EmployeeContractDraftBuilderClient({
               <h3>دوره پرداخت</h3>
               <span className="contract-draft-reg-badge contract-draft-reg-badge--internal">پیش‌فرض: ماهانه</span>
             </div>
-            <div className="business-payroll-chips" role="radiogroup" aria-label="دوره پرداخت حقوق">
-              {EMPLOYEE_PAYMENT_CYCLE_OPTIONS.map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  role="radio"
-                  aria-checked={value.period === option.value}
-                  className={value.period === option.value ? 'is-selected' : ''}
-                  onClick={() => updatePaymentType({ type: DEFAULT_EMPLOYEE_PAYMENT_TYPE, period: option.value })}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
+            <TaavChoiceChipGroup
+              ariaLabel="دوره پرداخت حقوق"
+              options={EMPLOYEE_PAYMENT_CYCLE_OPTIONS.map((option) => ({
+                value: option.value,
+                label: option.label,
+              }))}
+              value={value.period ?? 'monthly'}
+              onValueChange={(next) => {
+                const period = (Array.isArray(next) ? next[0] : next) as EmployeePaymentCycle;
+                updatePaymentType({ type: DEFAULT_EMPLOYEE_PAYMENT_TYPE, period });
+              }}
+            />
           </section>
         ) : null}
       </StepShell>

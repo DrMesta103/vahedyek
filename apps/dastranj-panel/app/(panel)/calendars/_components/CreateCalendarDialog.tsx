@@ -4,6 +4,7 @@ import { Info } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
+import { TaavFieldBlock, TaavInput, TaavTextarea } from '@repo/ui/taav/forms';
 import { createCalendarDraftFromDefaultAction } from '../../../lib/actions';
 import { MinimalScroll } from '../../../components/MinimalScroll';
 
@@ -111,28 +112,26 @@ export function CreateCalendarDialog({ open, yearLabel, onClose }: CreateCalenda
         </header>
 
         <div className="calendar-create-modal-body">
-          <label className="calendar-create-field">
-            <span>
-              عنوان <em>*</em>
-            </span>
-            <input
+          <TaavFieldBlock label="عنوان" required htmlFor="calendar-create-title">
+            <TaavInput
+              id="calendar-create-title"
               type="text"
               value={title}
               onChange={(event) => setTitle(event.target.value)}
               placeholder="عنوان تقویم را وارد کنید"
               autoFocus
             />
-          </label>
+          </TaavFieldBlock>
 
-          <label className="calendar-create-field">
-            <span>توضیحات</span>
-            <textarea
+          <TaavFieldBlock label="توضیحات" htmlFor="calendar-create-description">
+            <TaavTextarea
+              id="calendar-create-description"
               value={description}
               onChange={(event) => setDescription(event.target.value)}
               placeholder="توضیحات تقویم (اختیاری)"
               rows={3}
             />
-          </label>
+          </TaavFieldBlock>
 
           <div className="calendar-create-official-row">
             <span>افزودن رویداد های رسمی</span>

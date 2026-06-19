@@ -42,9 +42,11 @@ export const ROADMAP_STAGES: RoadmapStage[] = [
     description: 'Text fields، form controls و field composition',
     items: [
       'TaavInput / TaavTextarea / TaavSelect',
+      'TaavChoiceChipGroup',
       'TaavCheckbox / TaavRadio / TaavSwitch',
       'TaavSegmentedControl / TaavOptionCard',
       'TaavFormField composition',
+      'TaavFieldBlock / TaavFieldGrid business layout',
     ],
   },
   {

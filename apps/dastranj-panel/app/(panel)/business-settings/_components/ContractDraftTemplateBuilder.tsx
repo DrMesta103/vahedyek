@@ -30,6 +30,7 @@ import { VariableAmountTitlePicker } from '../../../components/VariableAmountTit
 import { ConfirmDialog } from '../../../components/ConfirmDialog';
 import { UnsavedChangesDialog, useUnsavedLeaveGuard } from '../../../components/UnsavedChangesGuard';
 import { AdaptiveChipGroup } from '../../../components/AdaptiveChipGroup';
+import { TaavChoiceChipGroup } from '@repo/ui/taav/forms';
 import { PanelToggleRow } from '../../../components/PanelToggleRow';
 import { CalculationRulesBadges, CalcRulesDiffBadge, CalcRulesEditButton, CalculationRulesDialog } from '../../../components/CalculationRulesChips';
 import type { PaymentEffectContext } from '../../../components/CalculationRulesChips';
@@ -1437,10 +1438,14 @@ function ToggleCard({ title, first, second, selected, onChange }: { title: strin
   return (
     <article className="business-payroll-transfer-rule">
       <strong>{title}</strong>
-      <div className="business-payroll-toggle">
-        <button type="button" className={selected ? 'is-selected' : ''} onClick={() => onChange(true)}>{first}</button>
-        <button type="button" className={!selected ? 'is-selected' : ''} onClick={() => onChange(false)}>{second}</button>
-      </div>
+      <TaavChoiceChipGroup
+        options={[
+          { value: 'true', label: first },
+          { value: 'false', label: second },
+        ]}
+        value={selected ? 'true' : 'false'}
+        onValueChange={(next) => onChange((Array.isArray(next) ? next[0] : next) === 'true')}
+      />
     </article>
   );
 }
@@ -2017,18 +2022,23 @@ function SpecialCommitmentsStep({ template, updateTemplate }: { template: Contra
           <article key={category.title} className="business-payroll-subcard">
             <h3>{category.title}</h3>
             <p>{category.description}</p>
-            <div className="business-payroll-chips">
-              {category.chips.map((chip) => (
-                <button
-                  key={chip}
-                  type="button"
-                  className={template.data.specialCommitments.selected.includes(chip) ? 'is-selected' : ''}
-                  onClick={() => updateTemplate('specialCommitments', (current) => ({ ...current, data: { ...current.data, specialCommitments: { ...current.data.specialCommitments, selected: toggle(current.data.specialCommitments.selected, chip) } } }))}
-                >
-                  {chip}
-                </button>
-              ))}
-            </div>
+            <TaavChoiceChipGroup
+              selectionMode="multiple"
+              options={category.chips.map((chip) => ({ value: chip, label: chip }))}
+              value={template.data.specialCommitments.selected}
+              onValueChange={(next) =>
+                updateTemplate('specialCommitments', (current) => ({
+                  ...current,
+                  data: {
+                    ...current.data,
+                    specialCommitments: {
+                      ...current.data.specialCommitments,
+                      selected: Array.isArray(next) ? next : [next],
+                    },
+                  },
+                }))
+              }
+            />
             <div className="business-draft-card-actions">
               <button type="button" className="business-payroll-outline-button"><FileText className="h-4 w-4" /> نمونه فایل تعهدات</button>
               <button type="button" className="business-payroll-outline-button"><Upload className="h-4 w-4" /> بارگذاری فایل</button>

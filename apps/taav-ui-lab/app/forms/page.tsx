@@ -10,8 +10,8 @@ export default function FormsOverviewPage() {
       <DocPageHeader
         eyebrow="Forms · Phase 2"
         title="فرم‌های TaavUI"
-        description="Text fields، form controls و field composition — بدون React Hook Form / Zod / DatePicker."
-        importCode={`import { TaavSelect, TaavCheckbox, TaavFormField } from "@repo/ui/taav/forms";`}
+        description="Text fields، form controls و field composition بدون React Hook Form / Zod / DatePicker."
+        importCode={`import { TaavFieldBlock, TaavFieldGrid, TaavChoiceChipGroup } from "@repo/ui/taav/forms";`}
       />
       <DocApiNote />
       <div className="grid gap-4 md:grid-cols-2">
@@ -36,10 +36,16 @@ export default function FormsOverviewPage() {
         ))}
       </div>
       <TaavCard variant="soft" padding="md" radius="lg">
-        <p className="m-0 text-[length:var(--taav-text-sm)] text-[var(--taav-text-muted)]">
+        <p className="m-0 text-[length:var(--taav-text-sm)] leading-[var(--taav-leading-relaxed)] text-[var(--taav-text-muted)]">
+          برای انتخاب‌های محدود و قابل مشاهده در فرم‌های ERP، از{' '}
+          <code className="lab-code">TaavChoiceChipGroup</code> استفاده کنید؛ نه Dropdown. مثال‌ها: نوع شرکت، نوع
+          قرارداد، وضعیت ساده، دسته‌بندی‌های کوتاه.
+        </p>
+        <p className="mb-0 mt-3 text-[length:var(--taav-text-sm)] leading-[var(--taav-leading-relaxed)] text-[var(--taav-text-muted)]">
           همچنین export شده: <code className="lab-code">TaavLabel</code>,{' '}
           <code className="lab-code">TaavRequiredMark</code>, <code className="lab-code">TaavFormMessage</code>,{' '}
-          <code className="lab-code">TaavFormDescription</code>, <code className="lab-code">TaavRadioGroup</code>
+          <code className="lab-code">TaavFormDescription</code>, <code className="lab-code">TaavFieldBlock</code>,{' '}
+          <code className="lab-code">TaavFieldGrid</code>, <code className="lab-code">TaavChoiceChipGroup</code>, <code className="lab-code">TaavRadioGroup</code>
         </p>
       </TaavCard>
     </DocPageShell>
