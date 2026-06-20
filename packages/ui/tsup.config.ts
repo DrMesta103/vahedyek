@@ -1,7 +1,19 @@
 import { defineConfig } from 'tsup';
 
 export default defineConfig({
-  entry: ['src/index.ts', 'src/server.ts'],
+  entry: [
+    'src/index.ts',
+    'src/server.ts',
+    'src/taav.ts',
+    'src/taav-primitives.ts',
+    'src/taav-forms.ts',
+    'src/taav-overlays.ts',
+    'src/taav-navigation.ts',
+    'src/taav-data-display.ts',
+    'src/taav-data-display-interactive.ts',
+    'src/taav-layout.ts',
+    'src/taav-layout-interactive.ts',
+  ],
   outDir: 'dist',
   format: ['esm', 'cjs'],
   dts: true,
@@ -18,5 +30,13 @@ export default defineConfig({
     'react-multi-date-picker',
     'react-date-object',
     'react-date-object/*',
+    '@radix-ui/react-tooltip',
+    '@radix-ui/react-dialog',
+    '@radix-ui/react-popover',
+    '@radix-ui/react-dropdown-menu',
+    '@radix-ui/react-tabs',
+    'class-variance-authority',
+    'clsx',
+    'tailwind-merge',
   ],
 });
