@@ -50,7 +50,7 @@ export function DastRanjBusinessSidebar({
       onTenantSwitch={sidebar.onTenantSwitch}
       onTenantPanelClick={sidebar.onTenantPanelClick}
       onCollapsedChange={sidebar.onCollapsedChange}
-      shellClassName="app-shell h-screen overflow-hidden"
+      shellClassName="dastranj-app-shell h-screen overflow-hidden"
       className="h-full"
     >
       {children}
