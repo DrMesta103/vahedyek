@@ -14,6 +14,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { useMemo, useState, type ReactNode } from 'react';
+import { ConfirmDialog } from '../../../../../components/ConfirmDialog';
 import { addCalendarShiftAction } from '../../../../../lib/actions';
 import { normalizePersianDateInput } from '../../../../../lib/calendar-events';
 import { resolveCalendarShiftTitle } from '../../../../../lib/calendar-shifts';
@@ -276,6 +277,17 @@ function intervalsOverlap(a: WorkRange, b: WorkRange) {
   const bStart = parseTime(b.start);
   const bEnd = rangeEndMinutes(b);
   return aStart < bEnd && bStart < aEnd;
+}
+
+function intervalGapMinutes(first: WorkRange, second: WorkRange) {
+  const firstEnd = rangeEndMinutes(first);
+  let secondStart = parseTime(second.start);
+
+  while (secondStart < firstEnd) {
+    secondStart += 24 * 60;
+  }
+
+  return Math.max(secondStart - firstEnd, 0);
 }
 
 function fixedRestInterval(item: RestItem, range: WorkRange) {
@@ -606,14 +618,12 @@ function TitleCard({
   setTitle,
   helper,
   error,
-  required = false,
-  placeholder = 'مثلاً: شیفت صبح اداری',
+  placeholder = 'مثلاً: شیفت صبح اداری، شیفت عصر فروشگاه، شیفت ویژه تعطیل',
 }: {
   title: string;
   setTitle: (value: string) => void;
   helper?: string;
   error?: string;
-  required?: boolean;
   placeholder?: string;
 }) {
   return (
@@ -623,7 +633,7 @@ function TitleCard({
         <div className="text-xl font-black text-white">اطلاعات پایه شیفت</div>
       </div>
       <label className="mt-6 block space-y-2 text-right">
-        <span className="text-sm font-bold text-white">{required ? 'عنوان شیفت' : 'عنوان شیفت (اختیاری)'}</span>
+        <span className="text-sm font-bold text-white">عنوان شیفت</span>
         <input
           value={title}
           onChange={(event) => setTitle(event.target.value)}
@@ -636,7 +646,7 @@ function TitleCard({
         {helper ? (
           <p className="text-xs leading-6 text-slate-400">{helper}</p>
         ) : (
-          <p className="text-xs leading-6 text-slate-400">در صورت خالی بودن، نام پیش‌فرض بر اساس نوع شیفت استفاده می‌شود.</p>
+          <p className="text-xs leading-6 text-slate-400">نامی برای این شیفت وارد کنید؛ مثل شیفت صبح اداری یا شیفت عصر فروشگاه.</p>
         )}
         {error ? <small className="block text-xs font-bold text-rose-300">{error}</small> : null}
       </label>
@@ -714,13 +724,14 @@ function LockedDayField({ dayContext }: { dayContext: CalendarShiftDayContext })
   return (
     <div className="calendar-shift-locked-day text-right">
       <div className="flex flex-row-reverse items-center justify-end gap-2 text-base font-black text-white">
-        <span>تاریخ شیفت</span>
+        <span>تاریخ اعمال شیفت</span>
         <CalendarDays className="h-5 w-5 text-slate-300" />
       </div>
       <div className="calendar-shift-locked-day-value">
         <strong>{dayContext.date}</strong>
+        <span>{dayContext.weekdayName}</span>
       </div>
-      <p className="calendar-shift-locked-day-hint">تاریخ ثابت است؛ عنوان، ساعات، استراحت و سایر جزئیات شیفت مانند عملیات گروهی قابل تنظیم است.</p>
+      <p className="calendar-shift-locked-day-hint">این شیفت فقط برای همین روز ثبت می‌شود.</p>
     </div>
   );
 }
@@ -766,7 +777,7 @@ function BreakTypeSelect({
 }
 
 function DeductToggle({ checked, onChange }: { checked: boolean; onChange: (checked: boolean) => void }) {
-  return <InlineToggle label="کسر استراحت از کارکرد" checked={checked} onChange={onChange} />;
+  return <InlineToggle label="کسر از کارکرد روزانه" checked={checked} onChange={onChange} />;
 }
 
 function BreakEditor({
@@ -798,6 +809,7 @@ function BreakEditor({
         </button>
         <div dir="rtl" className="flex flex-row-reverse items-center gap-2 text-xl font-black text-white">
           <span>استراحت ها</span>
+          <FieldTooltip text="اگر فعال باشد، مدت این استراحت از کارکرد روزانه کم می‌شود." />
           <Coffee className="h-5 w-5 text-slate-300" />
         </div>
       </div>
@@ -888,6 +900,8 @@ export type CalendarShiftWizardProps = {
   calendar: CalendarShiftWizardCalendar;
   initialShiftType: ShiftType;
   dayContext?: CalendarShiftDayContext;
+  forcedIncludedDates?: string[];
+  hideWorkingDaysEditor?: boolean;
   persistedTemplates?: ShiftTemplatePickerItem[];
   hideTypePicker?: boolean;
   compact?: boolean;
@@ -904,6 +918,8 @@ export function CalendarShiftWizard({
   calendar,
   initialShiftType,
   dayContext,
+  forcedIncludedDates = [],
+  hideWorkingDaysEditor = false,
   persistedTemplates = [],
   hideTypePicker = true,
   compact = false,
@@ -919,12 +935,12 @@ export function CalendarShiftWizard({
   const baseShiftConfig: Record<string, unknown> = {};
   const defaultWorkingDaysForContext = dayContext ? [] : DEFAULT_WORKING_DAYS;
   const singleDayDate = dayContext ? normalizePersianDateInput(dayContext.date) : null;
+  const groupedIncludedDates = forcedIncludedDates.map((item) => normalizePersianDateInput(item)).filter(Boolean);
   const fixedShift = asObject(baseShiftConfig.fixedShift);
   const floatDayConfig = asObject(baseShiftConfig.floatingShiftStartOfDay);
   const floatAbsConfig = asObject(baseShiftConfig.absoluteFloatingShift);
   const splitConfig = asObject(baseShiftConfig.splitShift);
 
-  const [holidayConfirmed] = useState(true);
   const [draftCalendarId] = useState(calendar.id);
   const [title] = useState(calendar.title);
   const [description] = useState(calendar.description ?? '');
@@ -940,6 +956,7 @@ export function CalendarShiftWizard({
   const [selectedTemplateId, setSelectedTemplateId] = useState(String(baseShiftConfig.templateId ?? ''));
   const [shiftTitle, setShiftTitle] = useState('');
   const [saveError, setSaveError] = useState('');
+  const [holidayConfirmOpen, setHolidayConfirmOpen] = useState(false);
   const [rotateComingSoonOpen, setRotateComingSoonOpen] = useState(false);
   const [templateDescription, setTemplateDescription] = useState(initialDescription);
 
@@ -1030,6 +1047,7 @@ export function CalendarShiftWizard({
     () => shiftDuration(split1Start, split1End, split1NextDay, split1Rests) + shiftDuration(split2Start, split2End, split2NextDay, split2Rests),
     [split1End, split1NextDay, split1Rests, split1Start, split2End, split2NextDay, split2Rests, split2Start],
   );
+  const splitGapMinutes = useMemo(() => intervalGapMinutes(split1WorkRange, split2WorkRange), [split1WorkRange, split2WorkRange]);
 
   const handleFloatAbsBreakChange = (items: RestItem[]) => {
     if (!floatAbsFixedBreaksAllowed) {
@@ -1045,11 +1063,12 @@ export function CalendarShiftWizard({
 
   const getFixedShiftErrors = () => {
     const errors: string[] = [];
-    if (!dayContext && workingDays.length === 0) errors.push('حداقل یک روز برای این شیفت انتخاب کنید.');
-    if (!startTime) errors.push('ساعت ورود را مشخص کنید.');
-    if (!endTime) errors.push('ساعت خروج را مشخص کنید.');
+    if (!dayContext && groupedIncludedDates.length === 0 && workingDays.length === 0) errors.push('حداقل یک روز برای این شیفت انتخاب کنید.');
+    if (!shiftTitle.trim()) errors.push('عنوان شیفت را وارد کنید.');
+    if (!startTime) errors.push('ساعت ورود را وارد کنید.');
+    if (!endTime) errors.push('ساعت خروج را وارد کنید.');
     if (startTime && endTime && !nextDay && parseTime(endTime) <= parseTime(startTime)) {
-      errors.push('ساعت خروج قبل از ساعت ورود است. اگر این شیفت شبانه است، گزینه «خروج در روز بعد» را فعال کنید.');
+      errors.push('اگر خروج در روز بعد انجام می‌شود، گزینه خروج در روز بعد را فعال کنید.');
     }
     if (validateTimeRangeUnder24Hours(startTime, endTime, nextDay)) {
       errors.push('بازه زمانی نمی‌تواند ۲۴ ساعت یا بیشتر باشد.');
@@ -1064,7 +1083,7 @@ export function CalendarShiftWizard({
 
   const getFloatDayErrors = () => {
     const errors: string[] = [];
-    if (!dayContext && floatDayWorkingDays.length === 0) errors.push('حداقل یک روز برای این شیفت انتخاب کنید.');
+    if (!dayContext && groupedIncludedDates.length === 0 && floatDayWorkingDays.length === 0) errors.push('حداقل یک روز برای این شیفت انتخاب کنید.');
     if (!shiftTitle.trim()) errors.push('عنوان شیفت را وارد کنید.');
     if (!floatDayEntryStart || !floatDayEntryEnd) errors.push('بازه مجاز ورود را کامل کنید.');
     if (floatDayEntryStart && floatDayEntryEnd && parseTime(floatDayEntryEnd) <= parseTime(floatDayEntryStart)) {
@@ -1104,7 +1123,7 @@ export function CalendarShiftWizard({
     if (shiftType !== 'float-abs') return [] as string[];
     const errors: string[] = [];
     if (!shiftTitle.trim()) errors.push('عنوان شیفت را وارد کنید.');
-    if (!dayContext && floatAbsWorkingDays.length === 0) errors.push('حداقل یک روز برای این شیفت انتخاب کنید.');
+    if (!dayContext && groupedIncludedDates.length === 0 && floatAbsWorkingDays.length === 0) errors.push('حداقل یک روز برای این شیفت انتخاب کنید.');
     if (!floatAbsRequiredMinutes) errors.push('حداقل مدت کار روزانه را وارد کنید.');
     if (floatAbsRequiredMinutes <= 0) errors.push('حداقل مدت کار روزانه باید بیشتر از صفر باشد.');
     if (!floatAbsStart || !floatAbsEnd) errors.push('محدوده مجاز ثبت تردد را کامل کنید.');
@@ -1126,36 +1145,72 @@ export function CalendarShiftWizard({
     return errors;
   })();
 
+  const splitErrors = (() => {
+    if (shiftType !== 'split') return [] as string[];
+    const errors: string[] = [];
+    if (!shiftTitle.trim()) errors.push('عنوان شیفت را وارد کنید.');
+    if (!dayContext && groupedIncludedDates.length === 0 && splitWorkingDays.length === 0) errors.push('حداقل یک روز برای این شیفت انتخاب کنید.');
+    if (!split1Start || !split1End) errors.push('شروع و پایان بازه اول کاری را کامل کنید.');
+    if (!split2Start || !split2End) errors.push('شروع و پایان بازه دوم کاری را کامل کنید.');
+
+    if (split1Start && split1End && !split1NextDay && parseTime(split1End) <= parseTime(split1Start)) {
+      errors.push('پایان بازه اول باید بعد از شروع آن باشد. اگر پایان در روز بعد است، گزینه خروج در روز بعد را فعال کنید.');
+    }
+    if (split2Start && split2End && !split2NextDay && parseTime(split2End) <= parseTime(split2Start)) {
+      errors.push('پایان بازه دوم باید بعد از شروع آن باشد. اگر پایان در روز بعد است، گزینه خروج در روز بعد را فعال کنید.');
+    }
+    if (validateTimeRangeUnder24Hours(split1Start, split1End, split1NextDay)) {
+      errors.push('بازه اول نمی‌تواند ۲۴ ساعت یا بیشتر باشد.');
+    }
+    if (validateTimeRangeUnder24Hours(split2Start, split2End, split2NextDay)) {
+      errors.push('بازه دوم نمی‌تواند ۲۴ ساعت یا بیشتر باشد.');
+    }
+    if (intervalsOverlap(split1WorkRange, split2WorkRange)) {
+      errors.push('دو بازه کاری نباید با یکدیگر هم‌پوشانی داشته باشند.');
+    }
+    if (split1Start && split1End && split2Start && split2End && rangeEndMinutes(split1WorkRange) > parseTime(split2Start) && split2NextDay === false) {
+      errors.push('بازه دوم باید بعد از بازه اول شروع شود.');
+    }
+    if (hasFixedRestError(split1Rests, split1WorkRange)) {
+      errors.push('استراحت‌های بازه اول باید داخل همان بازه ثبت شوند.');
+    }
+    if (hasFixedRestError(split2Rests, split2WorkRange)) {
+      errors.push('استراحت‌های بازه دوم باید داخل همان بازه ثبت شوند.');
+    }
+    if (hasOverlappingFixedRests(split1Rests, split1WorkRange)) {
+      errors.push('استراحت‌های بازه اول با هم تداخل دارند.');
+    }
+    if (hasOverlappingFixedRests(split2Rests, split2WorkRange)) {
+      errors.push('استراحت‌های بازه دوم با هم تداخل دارند.');
+    }
+    if (totalDeductedRestMinutes([...split1Rests, ...split2Rests]) > grossShiftMinutes(split1Start, split1End, split1NextDay) + grossShiftMinutes(split2Start, split2End, split2NextDay)) {
+      errors.push('مدت استراحت نمی‌تواند از مدت کل دو بازه بیشتر باشد.');
+    }
+    return errors;
+  })();
+
   const hasWeekdaySchedule = (days: string[]) => Boolean(dayContext) || days.length > 0;
+  const hasGroupSchedule = groupedIncludedDates.length > 0;
+  const hasSchedule = (days: string[]) => Boolean(dayContext) || hasGroupSchedule || days.length > 0;
   const fixedReady =
     shiftType === 'fixed' &&
     fixedShiftErrors.length === 0 &&
-    hasWeekdaySchedule(workingDays) &&
+    hasSchedule(workingDays) &&
     grossShiftMinutes(startTime, endTime, nextDay) < 24 * 60;
   const floatDayReady =
     shiftType === 'float-day' &&
     floatDayErrors.length === 0 &&
-    hasWeekdaySchedule(floatDayWorkingDays);
+    hasSchedule(floatDayWorkingDays);
   const floatAbsReady =
     shiftType === 'float-abs' &&
     floatAbsErrors.length === 0 &&
-    hasWeekdaySchedule(floatAbsWorkingDays);
+    hasSchedule(floatAbsWorkingDays);
   const splitGrossMinutes = grossShiftMinutes(split1Start, split1End, split1NextDay) + grossShiftMinutes(split2Start, split2End, split2NextDay);
   const splitReady =
     shiftType === 'split' &&
-    Boolean(split1Start && split1End && split2Start && split2End) &&
-    !(split1Start && split1End && parseTime(split1End) <= parseTime(split1Start) && !split1NextDay) &&
-    !(split2Start && split2End && parseTime(split2End) <= parseTime(split2Start) && !split2NextDay) &&
-    !validateTimeRangeUnder24Hours(split1Start, split1End, split1NextDay) &&
-    !validateTimeRangeUnder24Hours(split2Start, split2End, split2NextDay) &&
-    hasWeekdaySchedule(splitWorkingDays) &&
-    splitTotalMinutes <= 24 * 60 &&
-    !intervalsOverlap(split1WorkRange, split2WorkRange) &&
-    !hasFixedRestError(split1Rests, split1WorkRange) &&
-    !hasFixedRestError(split2Rests, split2WorkRange) &&
-    !hasOverlappingFixedRests(split1Rests, split1WorkRange) &&
-    !hasOverlappingFixedRests(split2Rests, split2WorkRange) &&
-    totalDeductedRestMinutes([...split1Rests, ...split2Rests]) <= splitGrossMinutes;
+    splitErrors.length === 0 &&
+    hasSchedule(splitWorkingDays) &&
+    splitTotalMinutes <= 24 * 60;
   const rotateReady =
     shiftType === 'rotate' &&
     rotateSegments.length > 0 &&
@@ -1269,9 +1324,10 @@ export function CalendarShiftWizard({
   const selectablePersistedTemplates = persistedTemplates.filter((item) => item.shiftType === shiftType);
 
   const buildShiftConfig = () => {
-    const scheduleFields = singleDayDate
+    const scheduleDates = singleDayDate ? [singleDayDate] : groupedIncludedDates;
+    const scheduleFields = scheduleDates.length > 0
       ? {
-          includedDates: [singleDayDate],
+          includedDates: scheduleDates,
           workingDays: [] as string[],
           floatDayWorkingDays: [] as string[],
           floatAbsWorkingDays: [] as string[],
@@ -1323,7 +1379,7 @@ export function CalendarShiftWizard({
     };
   };
 
-  const save = async () => {
+  const persistShift = async () => {
     if (!canSave) return;
     setSaving(true);
     setSaveError('');
@@ -1351,6 +1407,15 @@ export function CalendarShiftWizard({
     } finally {
       setSaving(false);
     }
+  };
+
+  const save = async () => {
+    if (!canSave) return;
+    if (dayContext?.isHoliday && !holidayConfirmOpen) {
+      setHolidayConfirmOpen(true);
+      return;
+    }
+    await persistShift();
   };
 
   const resolvedSubmitLabel = submitLabel ?? (isTemplatePurpose ? 'ثبت قالب' : 'ذخیره شیفت');
@@ -1431,14 +1496,19 @@ export function CalendarShiftWizard({
               </div>
             ) : null}
 
+            {dayContext && enableBuiltinTemplatePicker && shiftMode === 'template' ? (
+              <div className="rounded-xl border border-indigo-400/20 bg-indigo-950/30 px-4 py-3 text-right text-xs leading-6 text-indigo-100">
+                اگر قالب آماده را تغییر دهید، تغییرات فقط برای این روز ذخیره می‌شود و قالب اصلی تغییر نمی‌کند.
+              </div>
+            ) : null}
+
             {shiftType === 'fixed' ? (
               <>
                 <TitleCard
                   title={shiftTitle}
                   setTitle={setShiftTitle}
-                  helper="این عنوان بعداً در گزارش‌ها، تنظیمات کاربران و گروه‌های کاری نمایش داده می‌شود."
-                  required
-                  placeholder="مثلاً: شیفت شناور اداری"
+                  helper="نامی برای این شیفت وارد کنید؛ مثل شیفت صبح اداری یا شیفت عصر فروشگاه."
+                  placeholder="مثلاً: شیفت صبح اداری، شیفت عصر فروشگاه، شیفت ویژه تعطیل"
                 />
                 <div className="rounded-xl border border-emerald-400/20 bg-emerald-500/10 p-4 text-right">
                   <div className="text-sm font-bold text-emerald-100">شیفت ثابت برای تیم‌هایی مناسب است که ساعت ورود و خروج مشخص و تکرارشونده دارند.</div>
@@ -1489,7 +1559,7 @@ export function CalendarShiftWizard({
                         </div>
                       </div>
                     ) : null}
-                    {!dayContext ? (
+                    {!dayContext && !hideWorkingDaysEditor ? (
                       <WeekDaysEditor
                         days={workingDays}
                         calendarHolidayDays={weekends}
@@ -1503,6 +1573,7 @@ export function CalendarShiftWizard({
                         <div className="flex justify-end">
                           <CheckboxField label="خروج در روز بعد" checked={nextDay} onChange={setNextDay} />
                         </div>
+                        <p className="text-xs leading-6 text-slate-400">اگر ساعت خروج بعد از نیمه‌شب و در روز بعد است، این گزینه را فعال کنید.</p>
                       </div>
                     </div>
                     <BreakEditor items={rests} onChange={setRests} workRange={fixedWorkRange} allowFixedRestEndsNextDay />
@@ -1517,20 +1588,25 @@ export function CalendarShiftWizard({
                     ) : null}
                     <div className="rounded-[18px] border border-indigo-400/25 bg-indigo-950/35 p-5 text-right">
                       <div className="text-lg font-black text-white">خلاصه شیفت</div>
-                      <div className="mt-4 space-y-2 text-sm leading-7 text-slate-200">
-                        <div>نوع شیفت: شیفت ثابت</div>
-                        {!isTemplatePurpose ? <div>روش تعریف: {shiftMode === 'template' ? 'انتخاب از قالب آماده' : 'تعریف دستی'}</div> : null}
-                        <div>عنوان: {shiftTitle || '-'}</div>
-                        <div>روزهای فعال: {formatWorkingDaysLabel(workingDays)}</div>
-                        <div>ساعت کار: {startTime} تا {endTime}{nextDay ? ' (روز بعد)' : ''}</div>
-                        <div>خروج در روز بعد: {nextDay ? 'فعال' : 'غیرفعال'}</div>
-                        <div>استراحت قابل کسر: {formatDuration(totalDeductedRestMinutes(rests))}</div>
-                        <div>
-                          مدت کل شیفت:{' '}
-                          {validateTimeRangeUnder24Hours(startTime, endTime, nextDay) ? 'نامعتبر' : formatDuration(grossShiftMinutes(startTime, endTime, nextDay))}
+                      {fixedReady ? (
+                        <div className="mt-4 space-y-2 text-sm leading-7 text-slate-200">
+                          <div>نوع شیفت: شیفت ثابت</div>
+                          {dayContext ? <div>تاریخ اعمال: فقط همان روز انتخاب‌شده ({dayContext.date})</div> : null}
+                          {!isTemplatePurpose ? <div>روش تعریف: {shiftMode === 'template' ? 'انتخاب از قالب آماده' : 'تعریف دستی'}</div> : null}
+                          <div>عنوان: {shiftTitle}</div>
+                          <div>{dayContext ? 'تاریخ انتخاب‌شده' : 'روزهای اعمال شیفت'}: {dayContext ? dayContext.date : formatWorkingDaysLabel(workingDays)}</div>
+                          <div>ساعت شروع کار: {startTime}</div>
+                          <div>ساعت پایان کار: {endTime}{nextDay ? ' (روز بعد)' : ''}</div>
+                          <div>خروج در روز بعد: {nextDay ? 'بله' : 'خیر'}</div>
+                          <div>مدت استراحت: {formatDuration(totalDeductedRestMinutes(rests))}</div>
+                          <div>مدت کل شیفت: {formatDuration(grossShiftMinutes(startTime, endTime, nextDay))}</div>
+                          <div>مدت کار خالص: {formatDuration(fixedTotalMinutes)}</div>
                         </div>
-                        <div>مدت کارکرد مفید: {formatDuration(fixedTotalMinutes)}</div>
-                      </div>
+                      ) : (
+                        <p className="mt-4 rounded-xl border border-white/10 bg-slate-950/40 px-3 py-2 text-sm leading-7 text-slate-300">
+                          برای نمایش خلاصه، اطلاعات شیفت را کامل کنید.
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1561,7 +1637,7 @@ export function CalendarShiftWizard({
                     <p className="mt-2 text-xs leading-6 text-slate-300">ورود قبل از شروع بازه، طبق سیاست‌های تردد سازمان در مراحل بعدی قابل تنظیم است. ورود بعد از پایان بازه مجاز می‌تواند در گزارش‌ها به‌عنوان تأخیر نمایش داده شود.</p>
                   </div>
                   <div className="mt-6 space-y-5">
-                    {!dayContext ? (
+                    {!dayContext && !hideWorkingDaysEditor ? (
                       <WeekDaysEditor
                         days={floatDayWorkingDays}
                         calendarHolidayDays={weekends}
@@ -1590,9 +1666,12 @@ export function CalendarShiftWizard({
                       <div className="rounded-[18px] border border-white/10 bg-slate-900/40 p-4">
                         <div className="flex flex-row-reverse items-start justify-between gap-3">
                           <div>
-                            <div className="text-sm font-bold text-white">هسته حضور</div>
+                            <div className="flex items-center gap-2 text-sm font-bold text-white">
+                              <span>بازه حضور الزامی</span>
+                              <FieldTooltip text="اگر فعال باشد، کارمند باید در این بازه حتماً حاضر باشد؛ حتی اگر زمان ورود شناور باشد." />
+                            </div>
                             <p className="mt-2 text-xs leading-6 text-slate-400">
-                              هسته حضور بازه‌ای است که با وجود شناور بودن زمان ورود، انتظار می‌رود کارمند در آن بازه حاضر باشد.
+                              بازه حضور الزامی، بخشی از روز است که انتظار می‌رود کارمند در آن حاضر باشد.
                             </p>
                           </div>
                           <div className="flex shrink-0 flex-row-reverse gap-2">
@@ -1606,14 +1685,14 @@ export function CalendarShiftWizard({
                         </div>
                         <div className="mt-4 grid gap-4 md:grid-cols-2">
                           <TimeField
-                            label="شروع هسته حضور"
+                            label="شروع بازه حضور الزامی"
                             value={floatDayCoreStart}
                             onChange={setFloatDayCoreStart}
                             hint="زمان شروع بازه‌ای که حضور کارمند از آن به بعد الزامی‌تر می‌شود."
                             disabled={!floatDayCoreEnabled}
                           />
                           <TimeField
-                            label="پایان هسته حضور"
+                            label="پایان بازه حضور الزامی"
                             value={floatDayCoreEnd}
                             onChange={setFloatDayCoreEnd}
                             hint="زمان پایان بازه‌ای که حضور کارمند تا آن زمان باید حفظ شود."
@@ -1639,31 +1718,36 @@ export function CalendarShiftWizard({
                     ) : null}
                     <div className="rounded-[18px] border border-indigo-400/25 bg-indigo-950/35 p-5 text-right">
                       <div className="text-lg font-black text-white">خلاصه شیفت</div>
-                      <div className="mt-4 space-y-2 text-sm leading-7 text-slate-200">
-                        <div>نوع شیفت: شیفت شناور شروع روز</div>
-                        {!isTemplatePurpose ? <div>روش تعریف: {shiftMode === 'template' ? 'انتخاب از قالب آماده' : 'تعریف دستی'}</div> : null}
-                        <div>عنوان: {shiftTitle || '-'}</div>
-                        <div>روزهای فعال: {formatWorkingDaysLabel(floatDayWorkingDays)}</div>
-                        <div>بازه مجاز ورود: {floatDayEntryStart} تا {floatDayEntryEnd}</div>
-                        <div>
-                          بازه مجاز خروج:{' '}
-                          {formatFloatDayPermittedExitRange(floatDayEntryStart, floatDayEntryEnd, floatDayRequiredMinutes)}
+                      {floatDayReady ? (
+                        <div className="mt-4 space-y-2 text-sm leading-7 text-slate-200">
+                          <div>نوع شیفت: شیفت شناور شروع روز</div>
+                          {dayContext ? <div>تاریخ اعمال: فقط همان روز انتخاب‌شده ({dayContext.date})</div> : null}
+                          {!isTemplatePurpose ? <div>روش تعریف: {shiftMode === 'template' ? 'انتخاب از قالب آماده' : 'تعریف دستی'}</div> : null}
+                          <div>عنوان: {shiftTitle}</div>
+                          <div>روزهای اعمال شیفت: {formatWorkingDaysLabel(floatDayWorkingDays)}</div>
+                          <div>بازه مجاز ورود: {floatDayEntryStart} تا {floatDayEntryEnd}</div>
+                          <div>
+                            بازه مجاز خروج:{' '}
+                            {formatFloatDayPermittedExitRange(floatDayEntryStart, floatDayEntryEnd, floatDayRequiredMinutes)}
+                          </div>
+                          <div>مدت کار مورد انتظار: {formatDuration(floatDayRequiredMinutes)}</div>
+                          {floatDayCoreEnabled && floatDayCoreStart && floatDayCoreEnd ? (
+                            <div>بازه حضور الزامی: {floatDayCoreStart} تا {floatDayCoreEnd}</div>
+                          ) : null}
+                          <div>استراحت قابل کسر: {formatDuration(floatDayDeducted)}</div>
+                          <div>مدت کارکرد مفید در گزارش: {formatDuration(floatDayNetMinutes)}</div>
+                          <div className="rounded-xl bg-slate-900/50 px-3 py-2 text-xs leading-6 text-indigo-100">
+                            <div>نمونه محاسبه:</div>
+                            <div>اگر کارمند ساعت {floatDaySampleEntry} وارد شود:</div>
+                            <div>خروج مورد انتظار: {floatDaySampleExit}</div>
+                            <div>وضعیت ورود: {floatDaySampleStatus}</div>
+                          </div>
                         </div>
-                        <div>مدت کار موظف: {formatDuration(floatDayRequiredMinutes)}</div>
-                        {floatDayCoreEnabled && floatDayCoreStart && floatDayCoreEnd ? (
-                          <div>هسته حضور: {floatDayCoreStart} تا {floatDayCoreEnd}</div>
-                        ) : null}
-                        <div>استراحت قابل کسر: {formatDuration(floatDayDeducted)}</div>
-                        <div>مدت کارکرد مفید در گزارش: {formatDuration(floatDayNetMinutes)}</div>
-                        <div className="rounded-xl bg-slate-900/50 px-3 py-2 text-xs leading-6 text-indigo-100">
-                          <div>نمونه محاسبه:</div>
-                          <div>اگر کارمند ساعت {floatDaySampleEntry} وارد شود:</div>
-                          <div>خروج مورد انتظار: {floatDaySampleExit}</div>
-                          <div>وضعیت ورود: {floatDaySampleStatus}</div>
-                          <div className="mt-2">ورود قبل از شروع بازه، طبق سیاست‌های تردد سازمان در مراحل بعدی قابل تنظیم است.</div>
-                          <div>ورود بعد از پایان بازه مجاز می‌تواند در گزارش‌ها به‌عنوان تأخیر نمایش داده شود.</div>
-                        </div>
-                      </div>
+                      ) : (
+                        <p className="mt-4 rounded-xl border border-white/10 bg-slate-950/40 px-3 py-2 text-sm leading-7 text-slate-300">
+                          برای نمایش خلاصه، اطلاعات شیفت را کامل کنید.
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1686,7 +1770,7 @@ export function CalendarShiftWizard({
                     </p>
                   </div>
                   <div className="mt-6 space-y-5">
-                    {!dayContext ? (
+                    {!dayContext && !hideWorkingDaysEditor ? (
                       <WeekDaysEditor
                         days={floatAbsWorkingDays}
                         calendarHolidayDays={weekends}
@@ -1707,12 +1791,22 @@ export function CalendarShiftWizard({
                     </div>
                     <div className="space-y-3 rounded-[18px] border border-white/10 bg-slate-900/40 p-4">
                       <div className="text-sm font-bold text-white">
-                        <b>*</b> محدوده مجاز ثبت تردد
+                        <b>*</b> بازه مجاز ثبت تردد
                       </div>
-                      <p className="text-xs leading-6 text-slate-400">ثبت ورود و خروج فقط در بازه زمانی مشخص‌شده مجاز است.</p>
+                      <p className="text-xs leading-6 text-slate-400">ثبت ورود و خروج فقط در این بازه زمانی مجاز است.</p>
                       <div className="grid grid-cols-2 gap-4">
-                        <TimeField label="از ساعت" value={floatAbsStart} onChange={setFloatAbsStart} hint="زودترین زمانی که ثبت تردد در این شیفت مجاز است." />
-                        <TimeField label="تا ساعت" value={floatAbsEnd} onChange={setFloatAbsEnd} hint="آخرین زمانی که ثبت تردد در این شیفت مجاز است." />
+                        <TimeField
+                          label="شروع بازه مجاز ثبت تردد"
+                          value={floatAbsStart}
+                          onChange={setFloatAbsStart}
+                          hint="زودترین زمانی که ثبت تردد در این شیفت مجاز است."
+                        />
+                        <TimeField
+                          label="پایان بازه مجاز ثبت تردد"
+                          value={floatAbsEnd}
+                          onChange={setFloatAbsEnd}
+                          hint="آخرین زمانی که ثبت تردد در این شیفت مجاز است."
+                        />
                       </div>
                     </div>
                     <BreakEditor
@@ -1733,24 +1827,26 @@ export function CalendarShiftWizard({
                     ) : null}
                     <div className="rounded-[18px] border border-indigo-400/25 bg-indigo-950/35 p-5 text-right">
                       <div className="text-lg font-black text-white">خلاصه شیفت</div>
-                      <div className="mt-4 space-y-2 text-sm leading-7 text-slate-200">
-                        <div>نوع شیفت: شیفت شناور مطلق</div>
-                        {!isTemplatePurpose ? <div>روش تعریف: {shiftMode === 'template' ? 'انتخاب از قالب آماده' : 'تعریف دستی'}</div> : null}
-                        <div>عنوان: {shiftTitle || '-'}</div>
-                        <div>روزهای فعال: {formatWorkingDaysLabel(floatAbsWorkingDays)}</div>
-                        <div>ملاک محاسبه: مجموع کارکرد روزانه</div>
-                        <div>حداقل کارکرد لازم: {formatDuration(floatAbsRequiredMinutes)}</div>
-                        <div>محدوده مجاز ثبت تردد: {floatAbsStart && floatAbsEnd ? `${floatAbsStart} تا ${floatAbsEnd}` : '-'}</div>
-                        <div>استراحت قابل کسر: {formatDuration(floatAbsDeducted)}</div>
-                        <div>مدت کارکرد مفید مورد انتظار: {formatDuration(floatAbsNetMinutes)}</div>
-                        <div className="rounded-xl bg-slate-900/50 px-3 py-2 text-xs leading-6 text-indigo-100">
-                          <div>در این نوع شیفت، تأخیر بر اساس ساعت ورود محاسبه نمی‌شود؛ ملاک، تکمیل حداقل کارکرد روزانه است.</div>
-                          <div className="mt-1">ورود اول: ۹:۰۰ تا ۱۲:۰۰</div>
-                          <div>ورود دوم: ۱۵:۰۰ تا ۱۸:۰۰</div>
-                          <div>مجموع کارکرد: ۶ ساعت</div>
-                          <div>وضعیت: تکمیل‌شده</div>
+                      {floatAbsReady ? (
+                        <div className="mt-4 space-y-2 text-sm leading-7 text-slate-200">
+                          <div>نوع شیفت: شیفت شناور مطلق</div>
+                          {dayContext ? <div>تاریخ اعمال: فقط همان روز انتخاب‌شده ({dayContext.date})</div> : null}
+                          {!isTemplatePurpose ? <div>روش تعریف: {shiftMode === 'template' ? 'انتخاب از قالب آماده' : 'تعریف دستی'}</div> : null}
+                          <div>عنوان: {shiftTitle}</div>
+                          <div>روزهای اعمال شیفت: {formatWorkingDaysLabel(floatAbsWorkingDays)}</div>
+                          <div>مدت کار مورد انتظار: {formatDuration(floatAbsRequiredMinutes)}</div>
+                          <div>بازه مجاز ثبت تردد: {floatAbsStart && floatAbsEnd ? `${floatAbsStart} تا ${floatAbsEnd}` : 'نامشخص'}</div>
+                          <div>استراحت قابل کسر: {formatDuration(floatAbsDeducted)}</div>
+                          <div>مدت کارکرد مفید مورد انتظار: {formatDuration(floatAbsNetMinutes)}</div>
+                          <div className="rounded-xl bg-slate-900/50 px-3 py-2 text-xs leading-6 text-indigo-100">
+                            <div>در این نوع شیفت، تأخیر بر اساس ساعت ورود محاسبه نمی‌شود؛ ملاک، تکمیل حداقل کارکرد روزانه است.</div>
+                          </div>
                         </div>
-                      </div>
+                      ) : (
+                        <p className="mt-4 rounded-xl border border-white/10 bg-slate-950/40 px-3 py-2 text-sm leading-7 text-slate-300">
+                          برای نمایش خلاصه، اطلاعات شیفت را کامل کنید.
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1759,70 +1855,124 @@ export function CalendarShiftWizard({
 
             {shiftType === 'split' ? (
               <>
-                <TitleCard title={shiftTitle} setTitle={setShiftTitle} />
-                <div className="rounded-[22px] border border-white/10 p-5">
+                <div className="space-y-4 rounded-[22px] border border-white/10 p-5">
                   <div className="flex flex-row-reverse items-center justify-between gap-3 border-b border-white/10 pb-4 text-right">
+                    <div className="flex flex-row-reverse items-center gap-3">
+                      <span className="flex h-8 w-8 items-center justify-center rounded-full border border-indigo-500/70 bg-indigo-500/10 text-sm font-black text-indigo-200">1</span>
+                      <div className="text-xl font-black text-white">اطلاعات پایه شیفت</div>
+                    </div>
                     <SlidersHorizontal className="h-5 w-5 text-indigo-300" />
-                    <div className="text-xl font-black text-white">تعریف شیفت دو تکه</div>
                   </div>
+                  <TitleCard title={shiftTitle} setTitle={setShiftTitle} />
                   {enableBuiltinTemplatePicker ? <ModeSwitch mode={shiftMode} setMode={setShiftMode} /> : null}
-                  <div className="mt-6 space-y-5">
-                    {!dayContext ? (
-                      <WeekDaysEditor
-                        days={splitWorkingDays}
-                        calendarHolidayDays={weekends}
-                        onToggle={(day) => setSplitWorkingDays((prev) => toggle(prev, day))}
-                      />
-                    ) : null}
-                    <div className="space-y-4 rounded-[18px] border border-indigo-500/30 bg-slate-900/40 p-4">
-                      <div className="text-right text-base font-black text-indigo-300">بازه کاری اول</div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <TimeField label="شروع بازه کاری" value={split1Start} onChange={setSplit1Start} />
-                        <div className="min-w-0 space-y-2">
-                          <TimeField label="پایان بازه کاری" value={split1End} onChange={setSplit1End} />
-                          <div className="flex justify-end">
-                            <CheckboxField label="خروج در روز بعد" checked={split1NextDay} onChange={setSplit1NextDay} />
-                          </div>
-                        </div>
-                      </div>
-                      <BreakEditor items={split1Rests} onChange={setSplit1Rests} workRange={split1WorkRange} />
+                  {!dayContext && !hideWorkingDaysEditor ? (
+                    <WeekDaysEditor
+                      days={splitWorkingDays}
+                      calendarHolidayDays={weekends}
+                      onToggle={(day) => setSplitWorkingDays((prev) => toggle(prev, day))}
+                    />
+                  ) : null}
+                  <div className="rounded-xl border border-indigo-400/20 bg-indigo-950/25 px-4 py-3 text-xs leading-6 text-indigo-100">
+                    این نوع شیفت فقط زمانی ذخیره می‌شود که هر دو بازه کاری و استراحت‌های هر بازه جداگانه تکمیل شوند.
+                  </div>
+                </div>
+
+                <div className="space-y-4 rounded-[22px] border border-white/10 p-5">
+                  <div className="flex flex-row-reverse items-center justify-between gap-3 border-b border-white/10 pb-4 text-right">
+                    <div className="flex flex-row-reverse items-center gap-3">
+                      <span className="flex h-8 w-8 items-center justify-center rounded-full border border-indigo-500/70 bg-indigo-500/10 text-sm font-black text-indigo-200">2</span>
+                      <div className="text-xl font-black text-white">بازه اول کاری</div>
                     </div>
-                    <div className="space-y-4 rounded-[18px] border border-indigo-500/30 bg-slate-900/40 p-4">
-                      <div className="text-right text-base font-black text-indigo-300">بازه کاری دوم</div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <TimeField label="شروع بازه کاری" value={split2Start} onChange={setSplit2Start} />
-                        <div className="min-w-0 space-y-2">
-                          <TimeField label="پایان بازه کاری" value={split2End} onChange={setSplit2End} />
-                          <div className="flex justify-end">
-                            <CheckboxField label="خروج در روز بعد" checked={split2NextDay} onChange={setSplit2NextDay} />
-                          </div>
-                        </div>
-                      </div>
-                      <BreakEditor items={split2Rests} onChange={setSplit2Rests} workRange={split2WorkRange} />
-                    </div>
-                    <div className="rounded-[18px] border border-indigo-400/25 bg-indigo-950/35 p-5 text-right">
-                      <div className="text-lg font-black text-white">خلاصه شیفت</div>
-                      <div className="mt-4 space-y-2 text-sm leading-7 text-slate-200">
-                        <div>نوع شیفت: شیفت دو تکه</div>
-                        {!isTemplatePurpose ? <div>روش تعریف: {shiftMode === 'template' ? 'انتخاب از قالب آماده' : 'تعریف دستی'}</div> : null}
-                        <div>عنوان: {shiftTitle || '-'}</div>
-                        <div>روزهای فعال: {formatWorkingDaysLabel(splitWorkingDays)}</div>
-                        <div>بازه‌های کاری:</div>
-                        <div>
-                          ۱. {split1Start} تا {split1End}{split1NextDay ? ' (روز بعد)' : ''} —{' '}
-                          {validateTimeRangeUnder24Hours(split1Start, split1End, split1NextDay) ? 'نامعتبر' : formatDuration(grossShiftMinutes(split1Start, split1End, split1NextDay))}
-                        </div>
-                        <div>
-                          ۲. {split2Start} تا {split2End}{split2NextDay ? ' (روز بعد)' : ''} —{' '}
-                          {validateTimeRangeUnder24Hours(split2Start, split2End, split2NextDay) ? 'نامعتبر' : formatDuration(grossShiftMinutes(split2Start, split2End, split2NextDay))}
-                        </div>
-                        <div>مدت کارکرد کل: {formatDuration(grossShiftMinutes(split1Start, split1End, split1NextDay) + grossShiftMinutes(split2Start, split2End, split2NextDay))}</div>
-                        <div>استراحت قابل کسر: {formatDuration(totalDeductedRestMinutes([...split1Rests, ...split2Rests]))}</div>
-                        <div>مدت کارکرد مفید: {formatDuration(splitTotalMinutes)}</div>
-                        <div className="rounded-xl bg-slate-900/50 px-3 py-2 text-xs leading-6 text-indigo-100">فاصله بین بازه‌های کاری به‌صورت خودکار استراحت محسوب نمی‌شود.</div>
+                    <div className="text-xs font-bold text-slate-400">استراحت‌های این بخش فقط از همین بازه کسر می‌شوند.</div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <TimeField label="شروع بازه اول کاری" value={split1Start} onChange={setSplit1Start} />
+                    <div className="min-w-0 space-y-2">
+                      <TimeField label="پایان بازه اول کاری" value={split1End} onChange={setSplit1End} />
+                      <div className="flex justify-end">
+                        <CheckboxField label="پایان در روز بعد" checked={split1NextDay} onChange={setSplit1NextDay} />
                       </div>
                     </div>
                   </div>
+                  <BreakEditor items={split1Rests} onChange={setSplit1Rests} workRange={split1WorkRange} />
+                </div>
+
+                <div className="space-y-4 rounded-[22px] border border-white/10 p-5">
+                  <div className="flex flex-row-reverse items-center justify-between gap-3 border-b border-white/10 pb-4 text-right">
+                    <div className="flex flex-row-reverse items-center gap-3">
+                      <span className="flex h-8 w-8 items-center justify-center rounded-full border border-indigo-500/70 bg-indigo-500/10 text-sm font-black text-indigo-200">3</span>
+                      <div className="text-xl font-black text-white">بازه دوم کاری</div>
+                    </div>
+                    <div className="text-xs font-bold text-slate-400">این بازه مستقل از بازه اول است و استراحت‌های خودش را دارد.</div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <TimeField label="شروع بازه دوم کاری" value={split2Start} onChange={setSplit2Start} />
+                    <div className="min-w-0 space-y-2">
+                      <TimeField label="پایان بازه دوم کاری" value={split2End} onChange={setSplit2End} />
+                      <div className="flex justify-end">
+                        <CheckboxField label="پایان در روز بعد" checked={split2NextDay} onChange={setSplit2NextDay} />
+                      </div>
+                    </div>
+                  </div>
+                  <BreakEditor items={split2Rests} onChange={setSplit2Rests} workRange={split2WorkRange} />
+                </div>
+
+                <div className="rounded-[18px] border border-indigo-400/25 bg-indigo-950/35 p-5 text-right">
+                  <div className="flex flex-row-reverse items-center justify-between gap-3 border-b border-indigo-400/20 pb-4">
+                    <div className="flex flex-row-reverse items-center gap-3">
+                      <span className="flex h-8 w-8 items-center justify-center rounded-full border border-indigo-300/50 bg-indigo-400/10 text-sm font-black text-indigo-100">4</span>
+                      <div className="text-lg font-black text-white">خلاصه شیفت</div>
+                    </div>
+                    <FieldTooltip text="فاصله بین دو نوبت کاری، استراحت محسوب نمی‌شود و از کارکرد کسر نمی‌شود." />
+                  </div>
+                  {splitErrors.length > 0 ? (
+                    <div className="mt-4 space-y-2 rounded-xl border border-rose-400/25 bg-rose-950/35 px-4 py-3 text-xs leading-6 text-rose-200">
+                      {splitErrors.map((error) => (
+                        <div key={error} className="font-bold">
+                          {error}
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+                  {splitReady ? (
+                    <div className="mt-4 space-y-2 text-sm leading-7 text-slate-200">
+                      <div>نوع شیفت: شیفت دو تکه</div>
+                      {dayContext ? <div>تاریخ اعمال: فقط همان روز انتخاب‌شده ({dayContext.date})</div> : null}
+                      {!isTemplatePurpose ? <div>روش تعریف: {shiftMode === 'template' ? 'انتخاب از قالب آماده' : 'تعریف دستی'}</div> : null}
+                      <div>عنوان: {shiftTitle || '-'}</div>
+                      <div>روزهای اعمال شیفت: {formatWorkingDaysLabel(splitWorkingDays)}</div>
+                      <div>
+                        بازه اول کاری: {split1Start} تا {split1End}
+                        {split1NextDay ? ' (روز بعد)' : ''} - {formatDuration(grossShiftMinutes(split1Start, split1End, split1NextDay))}
+                      </div>
+                      <div>
+                        بازه دوم کاری: {split2Start} تا {split2End}
+                        {split2NextDay ? ' (روز بعد)' : ''} - {formatDuration(grossShiftMinutes(split2Start, split2End, split2NextDay))}
+                      </div>
+                      <div>فاصله بین دو نوبت کاری: {formatDuration(splitGapMinutes)}</div>
+                      <div>مدت کارکرد کل: {formatDuration(splitGrossMinutes)}</div>
+                      <div>استراحت قابل کسر بازه اول: {formatDuration(totalDeductedRestMinutes(split1Rests))}</div>
+                      <div>استراحت قابل کسر بازه دوم: {formatDuration(totalDeductedRestMinutes(split2Rests))}</div>
+                      <div>استراحت قابل کسر کل: {formatDuration(totalDeductedRestMinutes([...split1Rests, ...split2Rests]))}</div>
+                      <div>مدت کارکرد مفید: {formatDuration(splitTotalMinutes)}</div>
+                      <div
+                        className={cn(
+                          'rounded-xl px-3 py-2 text-xs leading-6',
+                          splitGapMinutes < 30 || splitGapMinutes > 8 * 60 ? 'border border-amber-400/25 bg-amber-950/35 text-amber-100' : 'bg-slate-900/50 text-indigo-100',
+                        )}
+                      >
+                        {splitGapMinutes < 30
+                          ? 'فاصله بین دو نوبت کاری خیلی کوتاه است؛ اگر این فاصله عمدی نیست، دوباره بررسی کنید.'
+                          : splitGapMinutes > 8 * 60
+                            ? 'فاصله بین دو نوبت کاری طولانی است؛ مطمئن شوید این فاصله عمداً به‌عنوان زمان بدون کار تعریف شده است.'
+                            : 'این فاصله نه استراحت است و نه کارکرد؛ فقط فاصله بین دو نوبت کاری است.'}
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="mt-4 rounded-xl border border-white/10 bg-slate-950/40 px-3 py-2 text-sm leading-7 text-slate-300">
+                      برای نمایش خلاصه، اطلاعات شیفت را کامل کنید.
+                    </p>
+                  )}
                 </div>
               </>
             ) : null}
@@ -1960,6 +2110,19 @@ export function CalendarShiftWizard({
             )}
           </div>
       </div>
+
+      <ConfirmDialog
+        open={holidayConfirmOpen}
+        title="ثبت شیفت در روز تعطیل"
+        description="این روز به‌عنوان تعطیل ثبت شده است. افزودن شیفت در روز تعطیل ممکن است به‌عنوان کار در تعطیل یا اضافه‌کاری محاسبه شود. آیا ادامه می‌دهید؟"
+        confirmLabel="ادامه و افزودن شیفت"
+        cancelLabel="انصراف"
+        onCancel={() => setHolidayConfirmOpen(false)}
+        onConfirm={() => {
+          setHolidayConfirmOpen(false);
+          void persistShift();
+        }}
+      />
 
       <RotateShiftComingSoonModal open={rotateComingSoonOpen} onClose={() => setRotateComingSoonOpen(false)} />
     </section>

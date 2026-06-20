@@ -13,6 +13,7 @@ import { DocPageShell } from '@/components/lab/DocPageShell';
 import {
   BusinessIntroCardDarkDemo,
   BusinessIntroCardDisabledActionDemo,
+  BusinessIntroCardHubDemo,
   BusinessIntroCardLightDemo,
   BusinessIntroCardLoadingDemo,
   BusinessIntroCardWithActionDemo,
@@ -49,6 +50,15 @@ export default function BusinessIntroCardDocPage() {
           این کامپوننت برای معرفی کوتاه یک بخش بیزینسی در ابتدای صفحه استفاده می‌شود و شامل آیکون، عنوان، توضیح و اکشن
           اختیاری برگشت یا ورود است. route، permission و business logic باید از اپ (DastRanj / VahedYek) پاس داده شود.
         </StateNote>
+      </DocSection>
+
+      <DocSection title="الگوی hub — مرکز تنظیمات">
+        <StateNote>
+          برای صفحات مرکزی مثل «تنظیمات کسب‌وکار» با eyebrow، badge، footnote و پس‌زمینه decorative — بدون اکشن.
+        </StateNote>
+        <DocPreview label="layout=hub · business settings hub">
+          <BusinessIntroCardHubDemo />
+        </DocPreview>
       </DocSection>
 
       <DocSection title="تم روشن — نمونه نزدیک اسکرین‌شات">

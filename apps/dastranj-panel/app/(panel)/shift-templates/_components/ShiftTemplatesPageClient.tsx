@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Clock3, GitBranch, Hourglass, RefreshCw, Search, Timer } from 'lucide-react';
 import { ModuleAddTile } from '../../../components/module-page/ModuleAddTile';
 import { ModulePageHeader } from '../../../components/module-page/ModulePageHeader';
-import { panelBreadcrumbs } from '../../../components/module-page/module-breadcrumbs';
 import {
   SHIFT_TEMPLATE_CATEGORIES,
   templateTypeToCalendarShiftType,
@@ -113,7 +112,6 @@ function ShiftTemplatesPageClientInner({ items }: ShiftTemplatesPageClientProps)
   return (
     <>
       <ModulePageHeader
-        breadcrumbs={panelBreadcrumbs('قالب شیفت')}
         title="قالب‌های شیفت"
         subtitle="الگوهای شیفت برای استفاده در تقویم و سیاست‌های کاری."
         addLabel="افزودن"

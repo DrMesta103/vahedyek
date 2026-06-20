@@ -36,6 +36,7 @@ import {
 } from '@/lib/navigation';
 import { cn } from '@repo/ui/taav/primitives';
 import { LabThemeToggle } from './LabThemeToggle';
+import { LabTopbarSearch } from './LabTopbarSearch';
 
 const MAIN_ICONS: Record<string, typeof Home> = {
   '/': Home,
@@ -57,6 +58,10 @@ const FOUNDATION_ICONS: Record<string, typeof FileText> = {
 
 const BUSINESS_ICONS: Record<string, typeof PanelRight> = {
   '/business/sidebar': PanelRight,
+  '/business/intro-card': FileText,
+  '/business/recommendation-card': CreditCard,
+  '/business/module-card': SquareStack,
+  '/business/module-card-grid': LayoutGrid,
 };
 
 const FORM_ICONS: Record<string, typeof FormInput> = {
@@ -272,23 +277,12 @@ export function LabMobileNav() {
 export function LabTopbar() {
   return (
     <header className="lab-topbar">
-      <div className="flex items-center gap-3 px-4 py-3 lg:px-6">
-        <div className="relative hidden flex-1 md:block">
-          <Search className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--taav-text-subtle)]" />
-          <input
-            type="search"
-            placeholder="جستجو در مستندات TaavUI..."
-            className="h-10 w-full max-w-md rounded-[var(--taav-radius-md)] border border-[color:var(--taav-border)] bg-[var(--taav-surface-soft)] pr-10 pl-3 text-[length:var(--taav-text-sm)] text-[var(--taav-text-body)] placeholder:text-[var(--taav-text-subtle)] focus:border-[color:var(--taav-brand-border)] focus:outline-none focus:shadow-[var(--taav-focus-ring)]"
-            readOnly
-            aria-label="جستجو در مستندات"
-          />
-        </div>
-        <div className="flex flex-1 items-center justify-between gap-3 md:justify-end">
-          <div className="lg:hidden">
-            <strong className="text-[length:var(--taav-text-sm)] font-black text-[var(--taav-text-strong)]">
-              TaavUI Lab
-            </strong>
-          </div>
+      <div className="flex flex-col gap-3 px-4 py-3 lg:flex-row lg:items-center lg:px-6">
+        <LabTopbarSearch />
+        <div className="flex items-center justify-between gap-3 lg:shrink-0 lg:justify-end">
+          <strong className="text-[length:var(--taav-text-sm)] font-black text-[var(--taav-text-strong)] lg:hidden">
+            TaavUI Lab
+          </strong>
           <LabThemeToggle />
         </div>
       </div>

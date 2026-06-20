@@ -1,41 +1,29 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
-import {
-  CalendarDays,
-  ChevronLeft,
-  ChevronRight,
-  Pencil,
-  Plus,
-  Trash2,
-  X,
-} from 'lucide-react';
+import { CalendarDays, ChevronLeft } from 'lucide-react';
 import {
   getPersianWeekdayName,
   parsePersianYmd,
   PERSIAN_WEEKDAY_NAMES,
+  type PersianYmd,
 } from '../../../../lib/calendar-dates';
 import type { CalendarDayCell } from '../../../../lib/calendar-grid';
 import { getDayDetails } from '../../../../lib/calendar-grid';
-import {
-  CALENDAR_SHIFT_TYPE_COLORS,
-  type CalendarShiftType,
-  type StoredCalendarShift,
-} from '../../../../lib/calendar-shifts';
-import { CardMenu } from '../../../../components/CardMenu';
+import { CALENDAR_SHIFT_TYPE_COLORS, type CalendarShiftType, type StoredCalendarShift } from '../../../../lib/calendar-shifts';
 import { PersianMonthCalendarEmptyDay, PersianMonthCalendarGrid } from '../../../../components/PersianMonthCalendarGrid';
 import { CalendarNavPath } from '../../../../components/business-sidebar/CalendarNavPath';
 import { getPersianDateParts } from './persian-date';
-import { DeleteCalendarRangeDialog } from './bulk/DeleteCalendarRangeDialog';
+import type { CalendarHolidayCoefficients } from '../../../../lib/calendar-event-types';
 import { AddCalendarEventDialog } from './event/AddCalendarEventDialog';
+import { GroupCalendarOperationsDialog } from './bulk/GroupCalendarOperationsDialog';
 import { CreateWorkShiftDialog } from './shift/CreateWorkShiftDialog';
 import {
-  deleteCalendarEventsInRangeAction,
-  deleteCalendarShiftsInRangeAction,
-  deleteCalendarStoredEventAction,
   addCalendarWeekendOverrideAction,
+  deleteCalendarStoredEventAction,
+  deleteCalendarShiftsInRangeAction,
 } from '../../../../lib/actions';
 import type { CalendarShiftDayContext, CalendarShiftWizardCalendar } from './shift/types';
 import type { CalendarStoredEvent } from '../../../../lib/calendar-events';
@@ -46,6 +34,7 @@ export type CalendarDetailsData = {
   title: string;
   description: string | null;
   status: 'active' | 'inactive';
+  isIncomplete: boolean;
   yearLabel: string;
   yearNumber: number;
   viewYear: number;
@@ -60,10 +49,13 @@ export type CalendarDetailsData = {
   shifts: StoredCalendarShift[];
   excludedShiftDates: string[];
   shiftCount: number;
+  shiftTypes: CalendarShiftType[];
   shiftLegend: Array<{ key: string; label: string; color: string; count: number }>;
   eventCount: number;
   holidayCount: number;
   otherEventCount: number;
+  policyCount: number;
+  workGroupCount: number;
   gridLegend: Array<{ label: string; color: string }>;
   cells: CalendarDayCell[];
   defaultSelectedDay: number;
@@ -72,6 +64,7 @@ export type CalendarDetailsData = {
   prevMonth: { year: number; month: number };
   nextMonth: { year: number; month: number };
   shiftTemplates: ShiftTemplatePickerItem[];
+  holidayCoefficients: CalendarHolidayCoefficients;
 };
 
 type CalendarDetailsViewProps = {
@@ -84,19 +77,85 @@ function formatSelectedDate(year: number, month: number, day: number) {
   return `${year}/${monthPart}/${dayPart}`;
 }
 
+function resolveCalendarStatus(status: 'active' | 'inactive', isIncomplete: boolean) {
+  if (status === 'inactive') {
+    return { label: 'غیرفعال', className: 'is-inactive' };
+  }
+
+  if (isIncomplete) {
+    return { label: 'ناقص', className: 'is-incomplete' };
+  }
+
+  return { label: 'فعال', className: 'is-active' };
+}
+
+function incrementMonth(value: PersianYmd) {
+  if (value.month === 12) {
+    return { year: value.year + 1, month: 1, day: 1 };
+  }
+  return { year: value.year, month: value.month + 1, day: 1 };
+}
+
+function compareYearMonth(a: PersianYmd, b: PersianYmd) {
+  if (a.year !== b.year) return a.year - b.year;
+  return a.month - b.month;
+}
+
+function buildMonthOptions(startDate: string, endDate: string) {
+  const start = parsePersianYmd(startDate);
+  const end = parsePersianYmd(endDate);
+  if (!start || !end) return [];
+
+  const options: Array<{ year: number; month: number; value: string; label: string }> = [];
+  let cursor: PersianYmd = { year: start.year, month: start.month, day: 1 };
+
+  while (compareYearMonth(cursor, end) <= 0) {
+    options.push({
+      year: cursor.year,
+      month: cursor.month,
+      value: `${cursor.year}-${cursor.month}`,
+      label: `${cursor.month.toLocaleString('fa-IR')} / ${cursor.year.toLocaleString('fa-IR')}`,
+    });
+    cursor = incrementMonth(cursor);
+  }
+
+  return options;
+}
+
+function deriveDayStatus(input: {
+  isHoliday: boolean;
+  shiftCount: number;
+  eventCount: number;
+}) {
+  if (input.isHoliday) return 'تعطیل';
+  if (input.shiftCount > 0 || input.eventCount > 0) return 'کاری';
+  return 'بدون تنظیم';
+}
+
 export function CalendarDetailsView({ calendar }: CalendarDetailsViewProps) {
   const router = useRouter();
-  const [selectedDay, setSelectedDay] = useState(calendar.defaultSelectedDay);
+  const searchParams = useSearchParams();
+  const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [shiftDialogOpen, setShiftDialogOpen] = useState(false);
   const [shiftDialogFromDay, setShiftDialogFromDay] = useState(false);
   const [eventDialogOpen, setEventDialogOpen] = useState(false);
   const [eventDialogFromDay, setEventDialogFromDay] = useState(false);
-  const [deleteShiftsDialogOpen, setDeleteShiftsDialogOpen] = useState(false);
-  const [deleteEventsDialogOpen, setDeleteEventsDialogOpen] = useState(false);
+  const [groupOpsDialogOpen, setGroupOpsDialogOpen] = useState(false);
+  const [toastVisible, setToastVisible] = useState(searchParams.get('created') === '1');
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    setSelectedDay(calendar.defaultSelectedDay);
-  }, [calendar.defaultSelectedDay, calendar.viewMonth, calendar.viewYear]);
+    setSelectedDay(null);
+  }, [calendar.viewMonth, calendar.viewYear]);
+
+  useEffect(() => {
+    if (!toastVisible && !toastMessage) return;
+    const timer = window.setTimeout(() => {
+      setToastVisible(false);
+      setToastMessage(null);
+    }, 4000);
+    return () => window.clearTimeout(timer);
+  }, [toastMessage, toastVisible]);
 
   const wizardCalendar: CalendarShiftWizardCalendar = useMemo(
     () => ({
@@ -122,6 +181,17 @@ export function CalendarDetailsView({ calendar }: CalendarDetailsViewProps) {
     return persianToday.day;
   }, [calendar.viewMonth, calendar.viewYear]);
 
+  const monthOptions = useMemo(() => buildMonthOptions(calendar.startDate, calendar.endDate), [calendar.endDate, calendar.startDate]);
+  const yearOptions = useMemo(
+    () => Array.from(new Set(monthOptions.map((item) => item.year))).sort((a, b) => a - b),
+    [monthOptions],
+  );
+
+  const filteredMonthOptions = useMemo(
+    () => monthOptions.filter((item) => item.year === calendar.viewYear),
+    [calendar.viewYear, monthOptions],
+  );
+
   const cells = useMemo(
     () =>
       calendar.cells.map((cell) => ({
@@ -132,32 +202,116 @@ export function CalendarDetailsView({ calendar }: CalendarDetailsViewProps) {
     [calendar.cells, selectedDay, todayDay],
   );
 
-  const selectedCell = cells.find((cell) => cell.day === selectedDay) ?? null;
-  const selectedDate = selectedCell?.date ?? formatSelectedDate(calendar.viewYear, calendar.viewMonth, selectedDay);
+  const selectedCell = selectedDay === null ? null : cells.find((cell) => cell.day === selectedDay) ?? null;
+  const selectedDate =
+    selectedCell?.date ?? (selectedDay ? formatSelectedDate(calendar.viewYear, calendar.viewMonth, selectedDay) : null);
 
   const dayDetails = useMemo(
     () =>
-      getDayDetails({
-        date: selectedDate,
-        weekends: calendar.weekends,
-        singleHolidays: calendar.singleHolidays,
-        shifts: calendar.shifts,
-        excludedShiftDates: calendar.excludedShiftDates,
-        weekendOverrideDates: calendar.weekendOverrideDates,
-      }),
-    [calendar.excludedShiftDates, calendar.shifts, calendar.singleHolidays, calendar.weekends, calendar.weekendOverrideDates, selectedDate],
+      selectedDate
+        ? getDayDetails({
+            date: selectedDate,
+            weekends: calendar.weekends,
+            singleHolidays: calendar.singleHolidays,
+            shifts: calendar.shifts,
+            excludedShiftDates: calendar.excludedShiftDates,
+            weekendOverrideDates: calendar.weekendOverrideDates,
+          })
+        : { isHoliday: false, shifts: [], events: [] },
+    [
+      calendar.excludedShiftDates,
+      calendar.shifts,
+      calendar.singleHolidays,
+      calendar.weekends,
+      calendar.weekendOverrideDates,
+      selectedDate,
+    ],
   );
 
+  const selectedDayStatus = deriveDayStatus({
+    isHoliday: dayDetails.isHoliday,
+    shiftCount: dayDetails.shifts.length,
+    eventCount: dayDetails.events.length,
+  });
+
+  const supportedGridLegend = useMemo(() => {
+    const shiftLegend = calendar.shiftLegend.filter((item) => item.count > 0).map((item) => ({ label: item.label, color: item.color }));
+    const eventLegend = [
+      ...(calendar.holidayCount > 0 ? [{ label: 'تعطیل', color: '#ef4444' }] : []),
+      ...(calendar.eventCount > calendar.holidayCount ? [{ label: 'رویداد', color: '#94a3b8' }] : []),
+    ];
+    return [...shiftLegend, ...eventLegend];
+  }, [calendar.eventCount, calendar.holidayCount, calendar.shiftLegend]);
+
   const shiftDayContext = useMemo((): CalendarShiftDayContext | undefined => {
-    if (!shiftDialogFromDay) return undefined;
+    if (!shiftDialogFromDay || !selectedDate) return undefined;
     const ymd = parsePersianYmd(selectedDate);
     if (!ymd) return undefined;
     return {
       date: selectedDate,
       weekdayName: getPersianWeekdayName(ymd),
       isHoliday: dayDetails.isHoliday,
+      shiftCount: dayDetails.shifts.length,
+      eventCount: dayDetails.events.length,
     };
-  }, [dayDetails.isHoliday, selectedDate, shiftDialogFromDay]);
+  }, [dayDetails.events.length, dayDetails.isHoliday, dayDetails.shifts.length, selectedDate, shiftDialogFromDay]);
+
+  const eventDayContext = useMemo(() => {
+    if (!eventDialogFromDay || !selectedDate) return undefined;
+    const ymd = parsePersianYmd(selectedDate);
+    return {
+      date: selectedDate,
+      weekdayName: ymd ? getPersianWeekdayName(ymd) : '',
+      isHoliday: dayDetails.isHoliday,
+      shiftCount: dayDetails.shifts.length,
+      eventCount: dayDetails.events.length,
+    };
+  }, [dayDetails.events.length, dayDetails.isHoliday, dayDetails.shifts.length, eventDialogFromDay, selectedDate]);
+
+  const refreshDayDetails = () => router.refresh();
+
+  const handleDeleteShiftsOnDay = async () => {
+    if (!selectedDate) return;
+    if (!window.confirm('آیا از حذف شیفت این روز مطمئن هستید؟')) return;
+
+    await deleteCalendarShiftsInRangeAction({
+      calendarId: calendar.id,
+      startDate: selectedDate,
+      endDate: selectedDate,
+      weekdays: [...PERSIAN_WEEKDAY_NAMES],
+    });
+    refreshDayDetails();
+  };
+
+  const handleDeleteEvent = async (eventId: string) => {
+    if (!selectedDate) return;
+    if (!window.confirm('آیا از حذف این رویداد مطمئن هستید؟')) return;
+
+    if (eventId.startsWith('weekend-')) {
+      await addCalendarWeekendOverrideAction({ calendarId: calendar.id, date: selectedDate });
+    } else {
+      await deleteCalendarStoredEventAction({ calendarId: calendar.id, eventId });
+    }
+    refreshDayDetails();
+  };
+
+  const goToMonth = (year: number, month: number) => {
+    router.push(`/calendars/${calendar.id}?jy=${year}&jm=${month}`, { scroll: false });
+  };
+
+  const handleYearChange = (nextYear: number) => {
+    const nextMonth = monthOptions.some((item) => item.year === nextYear && item.month === calendar.viewMonth)
+      ? calendar.viewMonth
+      : monthOptions.find((item) => item.year === nextYear)?.month;
+    if (!nextMonth) return;
+    goToMonth(nextYear, nextMonth);
+  };
+
+  const handleMonthChange = (value: string) => {
+    const [year, month] = value.split('-').map(Number);
+    if (!Number.isFinite(year) || !Number.isFinite(month)) return;
+    goToMonth(year, month);
+  };
 
   const openShiftDialog = (fromDay: boolean) => {
     setShiftDialogFromDay(fromDay);
@@ -179,47 +333,15 @@ export function CalendarDetailsView({ calendar }: CalendarDetailsViewProps) {
     setEventDialogFromDay(false);
   };
 
-  const eventDayContext = useMemo(() => {
-    if (!eventDialogFromDay) return undefined;
-    const ymd = parsePersianYmd(selectedDate);
-    return {
-      date: selectedDate,
-      weekdayName: ymd ? getPersianWeekdayName(ymd) : '',
-    };
-  }, [eventDialogFromDay, selectedDate]);
-
-  const refreshDayDetails = () => router.refresh();
-
-  const handleDeleteShiftsOnDay = async () => {
-    if (!window.confirm('آیا از حذف شیفت‌های این روز مطمئن هستید؟')) return;
-
-    await deleteCalendarShiftsInRangeAction({
-      calendarId: calendar.id,
-      startDate: selectedDate,
-      endDate: selectedDate,
-      weekdays: [...PERSIAN_WEEKDAY_NAMES],
-    });
-    refreshDayDetails();
-  };
-
-  const handleDeleteEvent = async (eventId: string) => {
-    if (!window.confirm('آیا از حذف این رویداد مطمئن هستید؟')) return;
-
-    if (eventId.startsWith('weekend-')) {
-      await addCalendarWeekendOverrideAction({ calendarId: calendar.id, date: selectedDate });
-    } else {
-      await deleteCalendarStoredEventAction({ calendarId: calendar.id, eventId });
-    }
-    refreshDayDetails();
-  };
-
-  const goToMonth = (year: number, month: number) => {
-    router.push(`/calendars/${calendar.id}?jy=${year}&jm=${month}`, { scroll: false });
-  };
+  const headerStatus = resolveCalendarStatus(calendar.status, calendar.isIncomplete);
 
   return (
     <div className="page-stack module-page calendar-details-page" dir="rtl" lang="fa">
+      {toastVisible ? <div className="calendar-page-toast">تقویم کاری با موفقیت ایجاد شد.</div> : null}
+      {toastMessage ? <div className="calendar-page-toast">{toastMessage}</div> : null}
+
       <CalendarNavPath calendarTitle={calendar.title} />
+
       <header className="calendar-details-header">
         <div className="calendar-details-title-row">
           <Link href="/calendars" className="calendar-details-back" aria-label="بازگشت به فهرست تقویم‌ها">
@@ -228,11 +350,10 @@ export function CalendarDetailsView({ calendar }: CalendarDetailsViewProps) {
           <div className="calendar-details-title-copy">
             <div className="calendar-details-title-line">
               <h1>{calendar.title}</h1>
-              <span className={`calendar-details-status-pill${calendar.status === 'active' ? '' : ' is-inactive'}`}>
-                {calendar.status === 'active' ? 'فعال' : 'غیرفعال'}
-              </span>
+              <span className={`module-status-pill ${headerStatus.className}`}>{headerStatus.label}</span>
             </div>
-            <p>توضیحات : {calendar.description?.trim() ? calendar.description : 'ثبت نشده'}</p>
+            <p className="calendar-details-subtitle">روزهای کاری، شیفت‌ها و رویدادهای این تقویم را مدیریت کنید.</p>
+            <p>توضیحات: {calendar.description?.trim() ? calendar.description : 'ثبت نشده'}</p>
           </div>
         </div>
       </header>
@@ -243,16 +364,23 @@ export function CalendarDetailsView({ calendar }: CalendarDetailsViewProps) {
             <CalendarDays className="h-5 w-5" />
           </div>
           <div className="calendar-details-summary-content">
-            <h2>شیفت ها : {calendar.shiftCount}</h2>
-            <div className="calendar-details-shift-legend">
-              {calendar.shiftLegend.map((item) => (
-                <span key={item.key}>
-                  <i style={{ background: item.color }} />
-                  {item.label}
-                  <em>{item.count}</em>
-                </span>
-              ))}
-            </div>
+            <h2>شیفت‌ها</h2>
+            <strong>{calendar.shiftCount.toLocaleString('fa-IR')}</strong>
+            {calendar.shiftCount > 0 ? (
+              <div className="calendar-details-shift-legend">
+                {calendar.shiftLegend
+                  .filter((item) => item.count > 0)
+                  .map((item) => (
+                    <span key={item.key}>
+                      <i style={{ background: item.color }} />
+                      {item.label}
+                      <em>{item.count.toLocaleString('fa-IR')}</em>
+                    </span>
+                  ))}
+              </div>
+            ) : (
+              <p className="calendar-details-summary-empty">هنوز شیفتی برای این تقویم ثبت نشده است.</p>
+            )}
           </div>
         </article>
 
@@ -261,47 +389,106 @@ export function CalendarDetailsView({ calendar }: CalendarDetailsViewProps) {
             <CalendarDays className="h-5 w-5" />
           </div>
           <div className="calendar-details-summary-content">
-            <h2>رویداد ها : {calendar.eventCount}</h2>
-            <div className="calendar-details-event-metrics">
-              <span>
-                <i className="is-holiday" />
-                تعطیلات: <em>{calendar.holidayCount}</em>
-              </span>
-              <span>
-                <i className="is-muted" />
-                سایر رویداد ها: <em>{calendar.otherEventCount}</em>
-              </span>
-            </div>
+            <h2>رویدادها و تعطیلات</h2>
+            <strong>{calendar.eventCount.toLocaleString('fa-IR')}</strong>
+            {calendar.eventCount > 0 ? (
+              <div className="calendar-details-event-metrics">
+                <span>
+                  <i className="is-holiday" />
+                  تعطیلات <em>{calendar.holidayCount.toLocaleString('fa-IR')}</em>
+                </span>
+                <span>
+                  <i className="is-muted" />
+                  مناسبت‌ها <em>{calendar.otherEventCount.toLocaleString('fa-IR')}</em>
+                </span>
+              </div>
+            ) : (
+              <p className="calendar-details-summary-empty">هنوز رویدادی برای این تقویم ثبت نشده است.</p>
+            )}
+          </div>
+        </article>
+
+        <article className="calendar-details-summary-card">
+          <div className="calendar-details-summary-icon is-slate" aria-hidden>
+            <CalendarDays className="h-5 w-5" />
+          </div>
+          <div className="calendar-details-summary-content">
+            <h2>سیاست‌های مرتبط</h2>
+            <strong>{calendar.policyCount.toLocaleString('fa-IR')}</strong>
+            <p className="calendar-details-summary-empty">
+              {calendar.policyCount > 0 ? 'این تقویم در سیاست‌های کاری استفاده شده است.' : 'سیاست مرتبطی برای این تقویم ثبت نشده است.'}
+            </p>
+          </div>
+        </article>
+
+        <article className="calendar-details-summary-card">
+          <div className="calendar-details-summary-icon is-slate" aria-hidden>
+            <CalendarDays className="h-5 w-5" />
+          </div>
+          <div className="calendar-details-summary-content">
+            <h2>گروه‌های کاری مرتبط</h2>
+            <strong>{calendar.workGroupCount.toLocaleString('fa-IR')}</strong>
+            <p className="calendar-details-summary-empty">
+              {calendar.workGroupCount > 0 ? 'این تقویم از طریق سیاست‌ها به گروه‌های کاری متصل است.' : 'گروه کاری مرتبطی ثبت نشده است.'}
+            </p>
           </div>
         </article>
       </div>
 
       <div className="calendar-details-body">
         <section className="calendar-details-main">
-          <div className="calendar-details-grid-legend">
-            {calendar.gridLegend.map((item) => (
-              <span key={item.label}>
-                <i style={{ background: item.color }} />
-                {item.label}
-              </span>
-            ))}
-          </div>
+          {supportedGridLegend.length > 0 ? (
+            <div className="calendar-details-grid-legend">
+              {supportedGridLegend.map((item) => (
+                <span key={item.label}>
+                  <i style={{ background: item.color }} />
+                  {item.label}
+                </span>
+              ))}
+            </div>
+          ) : null}
 
           <PersianMonthCalendarGrid
-            monthTitle={`${calendar.monthName} ${calendar.viewYear}`}
+            monthTitle={`${calendar.monthName} ${calendar.viewYear.toLocaleString('fa-IR')}`}
             onPrev={() => goToMonth(calendar.prevMonth.year, calendar.prevMonth.month)}
             onNext={() => goToMonth(calendar.nextMonth.year, calendar.nextMonth.month)}
             canGoPrev={calendar.canGoPrev}
             canGoNext={calendar.canGoNext}
+            toolbarExtra={
+              <div className="calendar-details-toolbar-selects">
+                <select
+                  className="calendar-details-toolbar-select"
+                  value={String(calendar.viewYear)}
+                  onChange={(event) => handleYearChange(Number(event.target.value))}
+                  aria-label="انتخاب سال"
+                >
+                  {yearOptions.map((year) => (
+                    <option key={year} value={year}>
+                      {year.toLocaleString('fa-IR')}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  className="calendar-details-toolbar-select"
+                  value={`${calendar.viewYear}-${calendar.viewMonth}`}
+                  onChange={(event) => handleMonthChange(event.target.value)}
+                  aria-label="انتخاب ماه"
+                >
+                  {filteredMonthOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            }
           >
             {cells.map((cell, index) =>
               cell.day ? (
                 <DayCellButton
                   key={`${cell.date ?? 'day'}-${index}`}
                   cell={cell}
-                  onSelect={() => {
-                    if (cell.day) setSelectedDay(cell.day);
-                  }}
+                  onSelect={() => setSelectedDay(cell.day ?? null)}
                 />
               ) : (
                 <PersianMonthCalendarEmptyDay key={`empty-${index}`} />
@@ -315,198 +502,120 @@ export function CalendarDetailsView({ calendar }: CalendarDetailsViewProps) {
             <header className="calendar-details-side-head">
               <CalendarDays className="h-5 w-5" aria-hidden />
               <div>
-                <h2>عملیات گروهی</h2>
-                <p>برای بازه زمانی انتخابی روی شیفت‌ها و رویدادها عملیات انجام دهید.</p>
+                <h2>عملیات گروهی تقویم</h2>
+                <p>
+                  از این بخش برای اعمال تغییرات روی چند روز یا یک بازه زمانی استفاده کنید؛ مثل افزودن شیفت یا حذف
+                  رویداد در یک بازه.
+                </p>
               </div>
             </header>
-            <div className="calendar-details-bulk-grid">
-              <button
-                type="button"
-                className="calendar-details-bulk-tile is-blue"
-                onClick={() => openShiftDialog(false)}
-              >
-                <Plus className="h-5 w-5" />
-                <span>افزودن شیفت</span>
-              </button>
-              <button
-                type="button"
-                className="calendar-details-bulk-tile is-indigo"
-                onClick={() => openEventDialog(false)}
-              >
-                <Plus className="h-5 w-5" />
-                <span>افزودن رویداد</span>
-              </button>
-              <button
-                type="button"
-                className="calendar-details-bulk-tile is-danger"
-                onClick={() => setDeleteShiftsDialogOpen(true)}
-              >
-                <X className="h-5 w-5" />
-                <span>حذف شیفت‌ها</span>
-              </button>
-              <button
-                type="button"
-                className="calendar-details-bulk-tile is-danger"
-                onClick={() => setDeleteEventsDialogOpen(true)}
-              >
-                <Trash2 className="h-5 w-5" />
-                <span>حذف رویدادها</span>
-              </button>
-            </div>
+            <button type="button" className="calendar-details-bulk-entry" onClick={() => setGroupOpsDialogOpen(true)}>
+              عملیات گروهی تقویم
+            </button>
           </section>
 
           <section className="calendar-details-side-card">
             <header className="calendar-details-day-panel-head">
               <div>
-                <h2>جزئیات روز</h2>
-                <p>{selectedDate}</p>
+                <h2>جزئیات روز انتخاب‌شده</h2>
+                {selectedDate ? <p>{selectedDate}</p> : null}
               </div>
-              {dayDetails.isHoliday ? <span className="calendar-details-holiday-pill">تعطیل</span> : null}
+              {selectedDate ? <span className="calendar-details-holiday-pill">{selectedDayStatus}</span> : null}
             </header>
 
-            <div className="calendar-details-day-block">
-              <div className="calendar-details-day-block-head">
-                <h3>
-                  شیفت‌های امروز <span>({dayDetails.shifts.length})</span>
-                </h3>
-                <button
-                  type="button"
-                  className="calendar-details-round-btn"
-                  aria-label="افزودن شیفت"
-                  onClick={() => openShiftDialog(true)}
-                >
-                  <Plus className="h-4 w-4" />
-                </button>
-              </div>
-
-              {dayDetails.shifts.length > 0 ? (
-                <div className="calendar-details-shift-list">
-                  {dayDetails.shifts.map((shift) => {
-                    const shiftColor = CALENDAR_SHIFT_TYPE_COLORS[shift.shiftType];
-
-                    return (
-                    <article
-                      key={shift.id}
-                      className="calendar-details-shift-item"
-                      style={{ borderColor: `${shiftColor}66` }}
+            {!selectedDate ? (
+              <p className="calendar-details-muted">برای مشاهده جزئیات، یک روز را از تقویم انتخاب کنید.</p>
+            ) : (
+              <>
+                <div className="calendar-details-day-actions">
+                  <button type="button" className="calendar-details-side-action" onClick={() => openShiftDialog(true)}>
+                    افزودن شیفت به این روز
+                  </button>
+                  <button type="button" className="calendar-details-side-action" onClick={() => openEventDialog(true)}>
+                    افزودن رویداد به این روز
+                  </button>
+                  {dayDetails.shifts.length > 0 ? (
+                    <button
+                      type="button"
+                      className="calendar-details-side-action is-danger"
+                      onClick={() => void handleDeleteShiftsOnDay()}
                     >
-                      <span
-                        className="calendar-details-shift-item-dot"
-                        style={{ background: shiftColor }}
-                        aria-hidden
-                      />
-                      <div className="calendar-details-shift-item-body">
-                        <h4>
-                          <span>عنوان:</span> {shift.title} ({shift.shiftTypeLabel})
-                        </h4>
-                        <p>
-                          <span>توضیحات:</span> {shift.description}
-                        </p>
-                        <p>
-                          <span>بازه زمانی شیفت:</span> {shift.timeRange}
-                        </p>
-                        <p>
-                          <span>تعداد استراحت‌ها:</span>{' '}
-                          {new Intl.NumberFormat('fa-IR').format(shift.breakCount)}
-                        </p>
-                        {shift.breakSummaries.map((line, index) => (
-                          <p key={`${shift.id}-break-${index}`}>{line}</p>
-                        ))}
-                      </div>
-                      <CardMenu
-                        items={[
-                          {
-                            kind: 'action',
-                            label: 'ویرایش',
-                            icon: <Pencil className="h-4 w-4" strokeWidth={2.2} />,
-                            onClick: () => openShiftDialog(true),
-                          },
-                          {
-                            kind: 'action',
-                            label: 'حذف',
-                            tone: 'danger',
-                            icon: <Trash2 className="h-4 w-4" strokeWidth={2.2} />,
-                            onClick: () => void handleDeleteShiftsOnDay(),
-                          },
-                        ]}
-                      />
-                    </article>
-                    );
-                  })}
+                      حذف شیفت این روز
+                    </button>
+                  ) : null}
                 </div>
-              ) : (
-                <p className="calendar-details-muted">
-                  {dayDetails.isHoliday
-                    ? 'این روز تعطیل است؛ می‌توانید شیفت ثبت کنید، اما در صورت کارکرد احتمال اعمال ضریب بیشتر (تعطیل/جمعه) وجود دارد.'
-                    : 'هنوز شیفتی برای این روز ثبت نشده است.'}
-                </p>
-              )}
-            </div>
 
-            <div className="calendar-details-day-block">
-              <div className="calendar-details-day-block-head">
-                <h3>
-                  رویدادها و تعطیلات <span>({dayDetails.events.length})</span>
-                </h3>
-                <button
-                  type="button"
-                  className="calendar-details-round-btn"
-                  aria-label="افزودن رویداد"
-                  onClick={() => openEventDialog(true)}
-                >
-                  <Plus className="h-4 w-4" />
-                </button>
-              </div>
+                <div className="calendar-details-day-block">
+                  <div className="calendar-details-day-block-head">
+                    <h3>
+                      شیفت‌های این روز <span>({dayDetails.shifts.length.toLocaleString('fa-IR')})</span>
+                    </h3>
+                  </div>
 
-              {dayDetails.events.length > 0 ? (
-                <div className="calendar-details-event-list">
-                  {dayDetails.events.map((event) => {
-                    const isHolidayTone = event.tone === 'holiday' || event.tone === 'weekend';
+                  {dayDetails.shifts.length > 0 ? (
+                    <div className="calendar-details-shift-list">
+                      {dayDetails.shifts.map((shift) => {
+                        const shiftColor = CALENDAR_SHIFT_TYPE_COLORS[shift.shiftType];
 
-                    return (
-                      <article
-                        key={event.id}
-                        className={`calendar-details-event-item${isHolidayTone ? ' is-holiday' : ' is-other'}`}
-                      >
-                        <span className="calendar-details-event-item-dot" aria-hidden />
-                        <div className="calendar-details-event-item-body">
-                          <h4>
-                            <span>عنوان:</span> {event.title}
-                          </h4>
-                          {event.holidayTypeLabel ? (
-                            <p>
-                              <span>نوع تعطیلی:</span> {event.holidayTypeLabel}
-                            </p>
-                          ) : null}
-                          <p>
-                            <span>توضیحات:</span> {event.description}
-                          </p>
-                        </div>
-                        <CardMenu
-                          items={[
-                            {
-                              kind: 'action',
-                              label: 'ویرایش',
-                              icon: <Pencil className="h-4 w-4" strokeWidth={2.2} />,
-                              onClick: () => openEventDialog(true),
-                            },
-                            {
-                              kind: 'action',
-                              label: 'حذف',
-                              tone: 'danger',
-                              icon: <Trash2 className="h-4 w-4" strokeWidth={2.2} />,
-                              onClick: () => void handleDeleteEvent(event.id),
-                            },
-                          ]}
-                        />
-                      </article>
-                    );
-                  })}
+                        return (
+                          <article key={shift.id} className="calendar-details-shift-item" style={{ borderColor: `${shiftColor}66` }}>
+                            <span className="calendar-details-shift-item-dot" style={{ background: shiftColor }} aria-hidden />
+                            <div className="calendar-details-shift-item-body">
+                              <h4>{shift.title}</h4>
+                              <p>{shift.shiftTypeLabel}</p>
+                              <p>{shift.timeRange}</p>
+                              <p>تعداد استراحت‌ها: {shift.breakCount.toLocaleString('fa-IR')}</p>
+                            </div>
+                          </article>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <p className="calendar-details-muted">
+                      {dayDetails.isHoliday
+                        ? 'این روز تعطیل است؛ در صورت نیاز می‌توانید برای همان روز شیفت تعریف کنید.'
+                        : 'هنوز شیفتی برای این روز ثبت نشده است.'}
+                    </p>
+                  )}
                 </div>
-              ) : (
-                <p className="calendar-details-muted">رویدادی برای این روز ثبت نشده است.</p>
-              )}
-            </div>
+
+                <div className="calendar-details-day-block">
+                  <div className="calendar-details-day-block-head">
+                    <h3>
+                      رویدادها و تعطیلات <span>({dayDetails.events.length.toLocaleString('fa-IR')})</span>
+                    </h3>
+                  </div>
+
+                  {dayDetails.events.length > 0 ? (
+                    <div className="calendar-details-event-list">
+                      {dayDetails.events.map((event) => {
+                        const isHolidayTone = event.tone === 'holiday' || event.tone === 'weekend';
+
+                        return (
+                          <article key={event.id} className={`calendar-details-event-item${isHolidayTone ? ' is-holiday' : ' is-other'}`}>
+                            <span className="calendar-details-event-item-dot" aria-hidden />
+                            <div className="calendar-details-event-item-body">
+                              <h4>{event.title}</h4>
+                              {event.holidayTypeLabel ? <p>نوع تعطیلی: {event.holidayTypeLabel}</p> : null}
+                              <p>{event.description}</p>
+                            </div>
+                            <button
+                              type="button"
+                              className="calendar-details-inline-danger"
+                              onClick={() => void handleDeleteEvent(event.id)}
+                            >
+                              حذف
+                            </button>
+                          </article>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <p className="calendar-details-muted">رویدادی برای این روز ثبت نشده است.</p>
+                  )}
+                </div>
+              </>
+            )}
           </section>
         </aside>
       </div>
@@ -519,6 +628,7 @@ export function CalendarDetailsView({ calendar }: CalendarDetailsViewProps) {
         onClose={closeShiftDialog}
         onSaved={() => {
           closeShiftDialog();
+          setToastMessage('شیفت برای روز انتخاب‌شده ثبت شد.');
           router.refresh();
         }}
       />
@@ -528,47 +638,35 @@ export function CalendarDetailsView({ calendar }: CalendarDetailsViewProps) {
         calendarId={calendar.id}
         startDate={calendar.startDate}
         endDate={calendar.endDate}
-        defaultDate={selectedDate}
+        defaultDate={selectedDate ?? calendar.startDate}
         dayContext={eventDayContext}
+        holidayCoefficients={calendar.holidayCoefficients}
         onClose={closeEventDialog}
         onSaved={() => {
           closeEventDialog();
+          setToastMessage('رویداد برای روز انتخاب‌شده ثبت شد.');
           router.refresh();
         }}
       />
 
-      <DeleteCalendarRangeDialog
-        open={deleteShiftsDialogOpen}
-        title="حذف بازه‌ای شیفت"
-        lead="بازه حذف را انتخاب کنید."
-        warning="توجه: تمام شیفت‌های موجود در بازه انتخابی حذف می‌شوند."
-        submitLabel="حذف شیفت‌ها"
-        calendarBounds={{ startDate: calendar.startDate, endDate: calendar.endDate }}
-        defaultDate={selectedDate}
-        onClose={() => setDeleteShiftsDialogOpen(false)}
-        onConfirm={async (data) => {
-          await deleteCalendarShiftsInRangeAction({
-            calendarId: calendar.id,
-            ...data,
-          });
-          router.refresh();
+      <GroupCalendarOperationsDialog
+        open={groupOpsDialogOpen}
+        calendar={{
+          id: calendar.id,
+          startDate: calendar.startDate,
+          endDate: calendar.endDate,
+          weekends: calendar.weekends,
+          weekendOverrideDates: calendar.weekendOverrideDates,
+          singleHolidays: calendar.singleHolidays,
+          shifts: calendar.shifts,
+          excludedShiftDates: calendar.excludedShiftDates,
+          shiftTemplates: calendar.shiftTemplates,
+          holidayCoefficients: calendar.holidayCoefficients,
         }}
-      />
-
-      <DeleteCalendarRangeDialog
-        open={deleteEventsDialogOpen}
-        title="حذف بازه‌ی رویداد"
-        lead="بازه حذف را انتخاب کنید."
-        warning="توجه: تمام رویدادهای موجود در بازه انتخابی حذف می‌شوند."
-        submitLabel="حذف رویدادها"
-        calendarBounds={{ startDate: calendar.startDate, endDate: calendar.endDate }}
-        defaultDate={selectedDate}
-        onClose={() => setDeleteEventsDialogOpen(false)}
-        onConfirm={async (data) => {
-          await deleteCalendarEventsInRangeAction({
-            calendarId: calendar.id,
-            ...data,
-          });
+        onClose={() => setGroupOpsDialogOpen(false)}
+        onCompleted={(message) => {
+          setGroupOpsDialogOpen(false);
+          setToastMessage(message);
           router.refresh();
         }}
       />

@@ -3094,15 +3094,6 @@ export function EmployeeContractDraftBuilderClient({
 
       <main className="draft-template-flow-content business-payroll-content">
         <header className="draft-template-flow-page-header">
-          <nav className="draft-template-flow-breadcrumb" aria-label="مسیر صفحه">
-            <Link href="/">دسترنج</Link>
-            <ChevronLeft className="h-3.5 w-3.5" />
-            <button
-              type="button"
-              className="business-payroll-year-back"
-              onClick={() => unsavedLeaveGuard.requestLeave(() => router.push(`/employees/${employee.id}/contract-drafts`))}
-            >بازگشت به فهرست پیش‌نویس‌ها</button>
-          </nav>
           <div className="business-payroll-title-row">
             <h1>پیش‌نویس قرارداد کارمند</h1>
             <span className="business-payroll-mode-badge">صاحب کسب و کار</span>

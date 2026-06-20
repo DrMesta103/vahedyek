@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { CalendarYearFilter } from '../../../components/CalendarYearFilter';
 import { ModuleAddTile } from '../../../components/module-page/ModuleAddTile';
 import { ModulePageHeader } from '../../../components/module-page/ModulePageHeader';
-import { panelBreadcrumbs } from '../../../components/module-page/module-breadcrumbs';
 import { CalendarCard, type CalendarCardItem } from './CalendarCard';
 import { CreateCalendarDialog } from './CreateCalendarDialog';
 
@@ -14,6 +13,7 @@ type CalendarsPageClientProps = {
   yearOptions: string[];
   selectedYear: string;
   defaultYearLabel: string;
+  createYearOptions: string[];
 };
 
 export function CalendarsPageClient({
@@ -21,6 +21,7 @@ export function CalendarsPageClient({
   yearOptions,
   selectedYear,
   defaultYearLabel,
+  createYearOptions,
 }: CalendarsPageClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -46,9 +47,8 @@ export function CalendarsPageClient({
   return (
     <>
       <ModulePageHeader
-        breadcrumbs={panelBreadcrumbs('تقویم')}
         title="تقویم‌های کاری"
-        subtitle="مدیریت شیفت‌ها و رویدادها برای سازمان شما."
+        subtitle="تقویم‌های کاری مبنای تشخیص روزهای کاری، تعطیلات، شیفت‌ها و رویدادهای سازمان هستند."
         addLabel="افزودن تقویم کاری"
         onAddClick={openCreateDialog}
       />
@@ -61,12 +61,17 @@ export function CalendarsPageClient({
 
       <div className="module-page-grid">
         {filteredItems.map((item) => (
-          <CalendarCard key={item.id} item={item} onCreateCalendar={openCreateDialog} />
+          <CalendarCard key={item.id} item={item} />
         ))}
-        <ModuleAddTile onClick={openCreateDialog} label="برای افزودن تقویم کاری کلیک کنید." />
+        <ModuleAddTile onClick={openCreateDialog} label="افزودن تقویم کاری جدید" />
       </div>
 
-      <CreateCalendarDialog open={createDialogOpen} yearLabel={defaultYearLabel} onClose={closeCreateDialog} />
+      <CreateCalendarDialog
+        open={createDialogOpen}
+        yearLabel={defaultYearLabel}
+        yearOptions={createYearOptions}
+        onClose={closeCreateDialog}
+      />
     </>
   );
 }

@@ -1,34 +1,44 @@
 'use client';
 
-import { Info } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
-import { TaavFieldBlock, TaavInput, TaavTextarea } from '@repo/ui/taav/forms';
+import { TaavInput, TaavTextarea } from '@repo/ui/taav/forms';
 import { createCalendarDraftFromDefaultAction } from '../../../lib/actions';
 import { MinimalScroll } from '../../../components/MinimalScroll';
 
 type CreateCalendarDialogProps = {
   open: boolean;
   yearLabel: string;
+  yearOptions: string[];
   onClose: () => void;
 };
 
-function toPersianDigits(value: string) {
-  return value.replace(/\d/g, (digit) => '۰۱۲۳۴۵۶۷۸۹'[Number(digit)] ?? digit);
+type FormErrors = {
+  title?: string;
+  yearLabel?: string;
+  summary?: string;
+};
+
+function normalizeDigits(value: string) {
+  return value.replace(/[۰-۹]/g, (digit) => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(digit)));
 }
 
-export function CreateCalendarDialog({ open, yearLabel, onClose }: CreateCalendarDialogProps) {
+export function CreateCalendarDialog({ open, yearLabel, yearOptions, onClose }: CreateCalendarDialogProps) {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [title, setTitle] = useState('');
+  const [selectedYear, setSelectedYear] = useState(yearLabel);
   const [description, setDescription] = useState('');
   const [includeOfficialEvents, setIncludeOfficialEvents] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [errors, setErrors] = useState<FormErrors>({});
   const ignoreBackdropClickRef = useRef(false);
 
-  const yearLabelFa = toPersianDigits(yearLabel);
+  const resolvedYearOptions = useMemo(
+    () => Array.from(new Set([yearLabel, ...yearOptions.map((item) => normalizeDigits(item))])).sort(),
+    [yearLabel, yearOptions],
+  );
 
   useEffect(() => {
     setMounted(true);
@@ -38,9 +48,10 @@ export function CreateCalendarDialog({ open, yearLabel, onClose }: CreateCalenda
     if (!open) return;
 
     setTitle('');
+    setSelectedYear(yearLabel);
     setDescription('');
     setIncludeOfficialEvents(false);
-    setError(null);
+    setErrors({});
 
     ignoreBackdropClickRef.current = true;
     const timer = window.setTimeout(() => {
@@ -60,30 +71,46 @@ export function CreateCalendarDialog({ open, yearLabel, onClose }: CreateCalenda
       document.body.style.overflow = previousOverflow;
       window.removeEventListener('keydown', onKeyDown);
     };
-  }, [onClose, open]);
+  }, [onClose, open, yearLabel]);
 
   if (!open || !mounted) return null;
 
-  const canSubmit = Boolean(title.trim());
+  const validate = () => {
+    const nextErrors: FormErrors = {};
+
+    if (!title.trim()) {
+      nextErrors.title = 'عنوان تقویم را وارد کنید.';
+    }
+
+    if (!selectedYear.trim()) {
+      nextErrors.yearLabel = 'سال تقویم را انتخاب کنید.';
+    }
+
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
+  };
 
   const handleSubmit = async () => {
-    if (!canSubmit || saving) return;
+    if (saving) return;
+    if (!validate()) return;
 
     setSaving(true);
-    setError(null);
+    setErrors({});
 
     try {
       const result = await createCalendarDraftFromDefaultAction({
         title: title.trim(),
         description: description.trim() || undefined,
-        yearLabel,
+        yearLabel: selectedYear,
         includeOfficialEvents,
       });
       onClose();
-      router.push(`/calendars/${result.id}`);
+      router.push(`/calendars/${result.id}?created=1`);
       router.refresh();
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : 'ثبت تقویم انجام نشد.');
+      const message =
+        submitError instanceof Error ? submitError.message : 'تقویم کاری ثبت نشد. دوباره تلاش کنید.';
+      setErrors((current) => ({ ...current, summary: message }));
     } finally {
       setSaving(false);
     }
@@ -108,56 +135,97 @@ export function CreateCalendarDialog({ open, yearLabel, onClose }: CreateCalenda
         onMouseDown={(event) => event.stopPropagation()}
       >
         <header className="calendar-create-modal-head">
-          <h2 id="calendar-create-modal-title">تقویم جدید</h2>
+          <h2 id="calendar-create-modal-title">ایجاد تقویم کاری جدید</h2>
         </header>
 
         <div className="calendar-create-modal-body">
-          <TaavFieldBlock label="عنوان" required htmlFor="calendar-create-title">
+          <div className="calendar-create-form-row">
+            <label className="calendar-create-label" htmlFor="calendar-create-title">
+              عنوان تقویم
+            </label>
             <TaavInput
               id="calendar-create-title"
               type="text"
               value={title}
-              onChange={(event) => setTitle(event.target.value)}
-              placeholder="عنوان تقویم را وارد کنید"
+              invalid={Boolean(errors.title)}
+              onChange={(event) => {
+                setTitle(event.target.value);
+                if (errors.title) setErrors((current) => ({ ...current, title: undefined }));
+              }}
+              placeholder="مثلاً: تقویم کاری ۱۴۰۵، تقویم شعبه تهران، تقویم پروژه شمال"
               autoFocus
             />
-          </TaavFieldBlock>
+            <p className="calendar-create-helper">
+              نامی برای شناسایی این تقویم وارد کنید؛ مثل تقویم کاری ۱۴۰۵ یا تقویم شعبه تهران.
+            </p>
+            {errors.title ? <p className="calendar-create-field-error">{errors.title}</p> : null}
+          </div>
 
-          <TaavFieldBlock label="توضیحات" htmlFor="calendar-create-description">
+          <div className="calendar-create-form-row">
+            <label className="calendar-create-label" htmlFor="calendar-create-year">
+              سال تقویم
+            </label>
+            <select
+              id="calendar-create-year"
+              className={`calendar-create-select${errors.yearLabel ? ' is-invalid' : ''}`}
+              value={selectedYear}
+              onChange={(event) => {
+                setSelectedYear(event.target.value);
+                if (errors.yearLabel) setErrors((current) => ({ ...current, yearLabel: undefined }));
+              }}
+            >
+              <option value="">انتخاب سال</option>
+              {resolvedYearOptions.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+            <p className="calendar-create-helper">سالی را انتخاب کنید که این تقویم برای آن ساخته می‌شود.</p>
+            {errors.yearLabel ? <p className="calendar-create-field-error">{errors.yearLabel}</p> : null}
+          </div>
+
+          <div className="calendar-create-form-row">
+            <label className="calendar-create-label" htmlFor="calendar-create-description">
+              توضیحات تقویم
+            </label>
             <TaavTextarea
               id="calendar-create-description"
               value={description}
               onChange={(event) => setDescription(event.target.value)}
-              placeholder="توضیحات تقویم (اختیاری)"
-              rows={3}
+              placeholder="مثلاً: تقویم مخصوص شعبه تهران یا تیم‌های اداری"
+              rows={4}
             />
-          </TaavFieldBlock>
-
-          <div className="calendar-create-official-row">
-            <span>افزودن رویداد های رسمی</span>
-            <button
-              type="button"
-              className={`calendar-create-check${includeOfficialEvents ? ' is-on' : ''}`}
-              role="checkbox"
-              aria-checked={includeOfficialEvents}
-              aria-label="افزودن رویداد های رسمی"
-              onClick={() => setIncludeOfficialEvents((prev) => !prev)}
-            >
-              <span className="calendar-create-check-mark" aria-hidden />
-            </button>
+            <p className="calendar-create-helper">
+              اگر این تقویم برای شعبه، پروژه، گروه یا شرایط خاصی استفاده می‌شود، اینجا توضیح دهید.
+            </p>
           </div>
 
-          <div className="calendar-create-year-bar">
-            <Info className="h-4 w-4" aria-hidden />
-            <strong>{yearLabelFa}</strong>
+          <div className="calendar-create-form-row">
+            <div className="calendar-create-official-row">
+              <div className="calendar-create-toggle-copy">
+                <strong>افزودن تعطیلات رسمی سال</strong>
+                <p>با فعال‌سازی این گزینه، تعطیلات رسمی سال انتخاب‌شده به تقویم اضافه می‌شود.</p>
+              </div>
+              <button
+                type="button"
+                className={`calendar-create-check${includeOfficialEvents ? ' is-on' : ''}`}
+                role="checkbox"
+                aria-checked={includeOfficialEvents}
+                aria-label="افزودن تعطیلات رسمی سال"
+                onClick={() => setIncludeOfficialEvents((prev) => !prev)}
+              >
+                <span className="calendar-create-check-mark" aria-hidden />
+              </button>
+            </div>
           </div>
         </div>
 
-        {error ? <p className="calendar-create-error">{error}</p> : null}
+        {errors.summary ? <p className="calendar-create-error">{errors.summary}</p> : null}
 
         <footer className="calendar-create-modal-footer">
-          <button type="button" className="calendar-create-submit" disabled={!canSubmit || saving} onClick={handleSubmit}>
-            {saving ? 'در حال ثبت...' : 'تأیید'}
+          <button type="button" className="calendar-create-submit" disabled={saving} onClick={handleSubmit}>
+            {saving ? 'در حال ایجاد...' : 'ایجاد تقویم کاری'}
           </button>
           <button type="button" className="calendar-create-cancel" disabled={saving} onClick={onClose}>
             انصراف

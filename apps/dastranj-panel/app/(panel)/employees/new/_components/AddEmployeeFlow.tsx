@@ -83,22 +83,6 @@ export function AddEmployeeFlow() {
   const parsedContact = useMemo(() => parseContactInput(contactLookup), [contactLookup]);
   const nationalIdError = nationalId.trim() && !isNationalIdValid(nationalId) ? 'کد ملی باید ۱۰ رقم باشد.' : '';
 
-  const breadcrumbs =
-    step === 'lookup'
-      ? [
-          { label: 'دسترنج', href: '/' },
-          { label: 'تنظیمات کسب و کار', href: '/business-settings' },
-          { label: 'کارمندان', href: '/employees' },
-          { label: 'افزودن کارمند' },
-        ]
-      : [
-          { label: 'دسترنج', href: '/' },
-          { label: 'تنظیمات کسب و کار', href: '/business-settings' },
-          { label: 'کارمندان', href: '/employees' },
-          { label: 'افزودن کارمند', href: '/employees/new' },
-          { label: 'تکمیل اطلاعات کارمند' },
-        ];
-
   const pageTitle = step === 'lookup' ? 'افزودن کارمند' : 'تکمیل اطلاعات کارمند';
 
   const handleLookupConfirm = () => {
@@ -142,7 +126,6 @@ export function AddEmployeeFlow() {
   return (
     <div className="employee-add-page">
       <ModulePageHeader
-        breadcrumbs={breadcrumbs}
         title={pageTitle}
         onTitleClick={step === 'lookup' ? undefined : handleBack}
       />

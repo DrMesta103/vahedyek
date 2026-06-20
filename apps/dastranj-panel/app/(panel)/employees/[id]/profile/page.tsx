@@ -13,17 +13,9 @@ export default async function EmployeeSupplementalProfilePage({ params }: { para
 
   if (!employee) notFound();
 
-  const breadcrumbs = [
-    { label: 'دسترنج', href: '/' },
-    { label: 'تنظیمات کسب و کار', href: '/business-settings' },
-    { label: 'کارمندان', href: '/employees' },
-    { label: 'جزییات کارمند', href: `/employees/${employee.id}` },
-    { label: 'مشخصات کارمند' },
-  ];
-
   return (
     <div className="page-stack module-page employee-supplemental-profile-shell" dir="rtl" lang="fa">
-      <ModulePageHeader breadcrumbs={breadcrumbs} title="مشخصات کارمند" titleHref={`/employees/${employee.id}`} />
+      <ModulePageHeader title="مشخصات کارمند" titleHref={`/employees/${employee.id}`} />
       <EmployeeSupplementalProfileClient
         tenantId={session?.tenantId ?? null}
         storageStates={storageStates}

@@ -1,102 +1,75 @@
 'use client';
 
-import { Search, X } from 'lucide-react';
-import { useMemo, useState } from 'react';
-import { BUSINESS_SETTINGS_CATEGORIES, filterBusinessSettingsCategories } from '../../../lib/business-settings';
+import { Briefcase } from 'lucide-react';
+import { TaavBusinessIntroCard } from '@repo/ui/taav/business';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useCallback, useMemo } from 'react';
+import { DastRanjNavPath } from '../../../components/business-sidebar/DastRanjNavPathProvider';
+import { BUSINESS_SETTINGS_CATEGORIES, type BusinessSettingsCategory } from '../../../lib/business-settings';
 import type { TenantSetupHealth } from '../../../lib/setup-health';
 import { SetupHealthCard } from '../../../components/setup-health/SetupHealthCard';
-import { BusinessSettingsCard } from './BusinessSettingsCard';
+import { BusinessSettingsCategoryCards, BusinessSettingsItemCards } from './BusinessSettingsModuleCards';
 
 type BusinessSettingsPageClientProps = {
   setupHealth: TenantSetupHealth | null;
 };
 
-const STATUS_BADGE_BY_ROUTE = {
-  '/locations': 'workplace',
-  '/calendars': 'calendar',
-  '/policies': 'work_policy',
-  '/employees': 'employees',
-  '/work-groups': 'work_groups',
-} as const;
-
 export function BusinessSettingsPageClient({ setupHealth }: BusinessSettingsPageClientProps) {
-  const [query, setQuery] = useState('');
-  const filteredCategories = useMemo(() => filterBusinessSettingsCategories(BUSINESS_SETTINGS_CATEGORIES, query), [query]);
-  const criticalStatusMap = useMemo(
-    () => new Map(setupHealth?.criticalItems.map((item) => [item.key, item.status]) ?? []),
-    [setupHealth],
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const selectedCategoryId = searchParams.get('category') as BusinessSettingsCategory['id'] | null;
+  const selectedCategory = useMemo(
+    () => BUSINESS_SETTINGS_CATEGORIES.find((category) => category.id === selectedCategoryId) ?? null,
+    [selectedCategoryId],
+  );
+
+  const openCategory = useCallback(
+    (categoryId: BusinessSettingsCategory['id']) => {
+      router.push(`/business-settings?category=${categoryId}`);
+    },
+    [router],
   );
 
   return (
     <div className="business-settings-page-shell" dir="rtl" lang="fa">
-      <header className="business-settings-page-intro">
-        <p>مرکز کنترل تنظیمات</p>
-        <h1>تنظیمات کسب‌وکار</h1>
-        <span>
-          تنظیمات پایه، عملیاتی، منابع انسانی، تردد، قراردادها و حقوق و دستمزد کسب‌وکار را از اینجا مدیریت کنید.
-        </span>
-        <span>
-          راه‌اندازی سریع فقط اطلاعات اولیه را ثبت می‌کند؛ در این بخش می‌توانید تنظیمات سازمان را کامل‌تر و دقیق‌تر مدیریت کنید.
-        </span>
-      </header>
+      {selectedCategory ? (
+        <DastRanjNavPath
+          tail={[
+            {
+              label: selectedCategory.title,
+              id: `business-settings-category-${selectedCategory.id}`,
+            },
+          ]}
+        />
+      ) : null}
 
-      {setupHealth?.nextReminder ? <SetupHealthCard setupHealth={setupHealth} /> : null}
-
-      <div className="business-settings-search-wrap">
-        <div className="business-settings-search-pattern" aria-hidden />
-        <label className="business-settings-search">
-          <Search className="business-settings-search-icon" aria-hidden />
-          <input
-            type="search"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="جستجو در تنظیمات کسب‌وکار"
-            aria-label="جستجو در تنظیمات کسب‌وکار"
+      {!selectedCategory ? (
+        <>
+          <TaavBusinessIntroCard
+            layout="hub"
+            size="lg"
+            width="full"
+            themeMode="auto"
+            eyebrow="مرکز کنترل تنظیمات"
+            badge={`${BUSINESS_SETTINGS_CATEGORIES.length} دسته`}
+            title="تنظیمات کسب‌وکار"
+            description="تنظیمات پایه، عملیاتی، منابع انسانی، تردد، قراردادها و حقوق و دستمزد کسب‌وکار را از اینجا مدیریت کنید."
+            footnote="راه‌اندازی سریع فقط اطلاعات اولیه را ثبت می‌کند؛ در این بخش می‌توانید تنظیمات سازمان را کامل‌تر و دقیق‌تر مدیریت کنید."
+            icon={<Briefcase strokeWidth={2.1} />}
           />
-          {query ? (
-            <button type="button" className="business-settings-search-clear" onClick={() => setQuery('')} aria-label="پاک کردن جستجو">
-              <X className="h-4 w-4" />
-            </button>
-          ) : null}
-        </label>
+
+          {setupHealth?.nextReminder ? <SetupHealthCard setupHealth={setupHealth} /> : null}
+        </>
+      ) : null}
+
+      <div className="business-settings-cards-wrap">
+        {selectedCategory ? (
+          <BusinessSettingsItemCards items={selectedCategory.items} setupHealth={setupHealth} />
+        ) : (
+          <BusinessSettingsCategoryCards categories={BUSINESS_SETTINGS_CATEGORIES} onCategorySelect={openCategory} />
+        )}
       </div>
-
-      {filteredCategories.length ? (
-        <div className="business-settings-sections">
-          {filteredCategories.map((category) => (
-            <section key={category.id} className="business-settings-section-card" aria-label={category.title}>
-              <div className="business-settings-section-head">
-                <div>
-                  <h2>{category.title}</h2>
-                  <p>{category.description}</p>
-                </div>
-                <span className="business-settings-section-count">{category.items.length} مورد</span>
-              </div>
-
-              <div className="business-settings-section-items">
-                {category.items.map((item) => {
-                  const statusKey = STATUS_BADGE_BY_ROUTE[item.href as keyof typeof STATUS_BADGE_BY_ROUTE];
-                  const status = statusKey ? criticalStatusMap.get(statusKey) : null;
-
-                  return (
-                    <BusinessSettingsCard
-                      key={`${item.href}-${item.icon}-${item.title}`}
-                      {...item}
-                      badges={[
-                        ...(item.badges ?? []),
-                        ...(status === 'completed' ? [{ label: 'تکمیل‌شده', tone: 'success' as const }] : []),
-                        ...(status === 'incomplete' ? [{ label: 'ناقص', tone: 'important' as const }] : []),
-                      ]}
-                    />
-                  );
-                })}
-              </div>
-            </section>
-          ))}
-        </div>
-      ) : (
-        <div className="business-settings-empty-state">نتیجه‌ای برای جست‌وجوی شما پیدا نشد.</div>
-      )}
     </div>
   );
 }

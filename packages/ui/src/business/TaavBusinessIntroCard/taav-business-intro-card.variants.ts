@@ -144,3 +144,62 @@ export const businessIntroCardTone = cva('', {
     tone: 'brand',
   },
 });
+
+export const businessIntroCardHubRoot = cva(
+  [
+    'relative overflow-hidden',
+    'bg-[var(--taav-business-intro-card-hub-surface)]',
+    'shadow-[var(--taav-business-intro-card-hub-shadow)]',
+  ],
+  {
+    variants: {
+      size: {
+        sm: '',
+        md: '',
+        lg: '',
+      },
+    },
+    defaultVariants: {
+      size: 'md',
+    },
+  },
+);
+
+export const businessIntroCardHubPattern = cva(
+  'pointer-events-none absolute inset-0 opacity-[var(--taav-business-intro-card-hub-pattern-opacity)] [background-image:var(--taav-business-intro-card-hub-pattern)]',
+);
+
+export const businessIntroCardHubContent = cva('relative z-[1] grid gap-[var(--taav-business-intro-card-hub-content-gap)]');
+
+export const businessIntroCardHubTop = cva('flex items-center justify-between gap-[var(--taav-space-3)]');
+
+export const businessIntroCardEyebrow = cva(
+  'inline-flex min-h-[28px] items-center rounded-[var(--taav-radius-pill)] border border-solid px-[10px] text-[length:var(--taav-text-xs)] font-extrabold',
+  {
+    variants: {
+      tone: {
+        brand:
+          'border-[color:var(--taav-business-intro-card-eyebrow-border)] bg-[var(--taav-business-intro-card-eyebrow-bg)] text-[var(--taav-business-intro-card-eyebrow-text)]',
+        neutral:
+          'border-[color:var(--taav-business-intro-card-badge-border)] bg-[var(--taav-business-intro-card-badge-bg)] text-[var(--taav-business-intro-card-badge-text)]',
+        success: '',
+        warning: '',
+        danger: '',
+        info: '',
+      },
+    },
+    defaultVariants: {
+      tone: 'brand',
+    },
+  },
+);
+
+export const businessIntroCardBadge = cva(
+  'inline-flex min-h-[28px] items-center whitespace-nowrap rounded-[var(--taav-radius-pill)] border border-solid px-[10px] text-[length:var(--taav-text-xs)] font-extrabold border-[color:var(--taav-business-intro-card-badge-border)] bg-[var(--taav-business-intro-card-badge-bg)] text-[var(--taav-business-intro-card-badge-text)]',
+);
+
+export const businessIntroCardFootnote = cva(
+  'm-0 rounded-[var(--taav-radius-lg)] border border-solid px-[14px] py-[12px] text-right text-[length:var(--taav-text-xs)] font-semibold leading-[var(--taav-leading-relaxed)] border-[color:var(--taav-business-intro-card-footnote-border)] bg-[var(--taav-business-intro-card-footnote-bg)] text-[var(--taav-business-intro-card-footnote-text)]',
+);
+
+export const businessIntroCardHubTitleRow = cva('flex items-start gap-[var(--taav-business-intro-card-leading-gap)]');

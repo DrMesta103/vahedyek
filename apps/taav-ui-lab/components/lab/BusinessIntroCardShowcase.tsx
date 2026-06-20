@@ -113,3 +113,24 @@ export function BusinessIntroCardDisabledActionDemo() {
     </div>
   );
 }
+
+export function BusinessIntroCardHubDemo() {
+  return (
+    <BusinessIntroCardPreviewFrame
+      theme="dark"
+      className="overflow-hidden rounded-[var(--taav-radius-xl)] border border-[color:var(--taav-border-subtle)]"
+    >
+      <TaavBusinessIntroCard
+        layout="hub"
+        size="lg"
+        width="full"
+        themeMode="dark"
+        eyebrow="مرکز کنترل تنظیمات"
+        badge="۷ دسته"
+        title="تنظیمات کسب‌وکار"
+        description="تنظیمات پایه، عملیاتی، منابع انسانی، تردد، قراردادها و حقوق و دستمزد کسب‌وکار را از اینجا مدیریت کنید."
+        footnote="راه‌اندازی سریع فقط اطلاعات اولیه را ثبت می‌کند؛ در این بخش می‌توانید تنظیمات سازمان را کامل‌تر و دقیق‌تر مدیریت کنید."
+      />
+    </BusinessIntroCardPreviewFrame>
+  );
+}

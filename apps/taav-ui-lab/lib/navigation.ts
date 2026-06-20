@@ -2,6 +2,8 @@ export type LabNavItem = {
   href: string;
   label: string;
   badge?: string;
+  description?: string;
+  keywords?: string[];
 };
 
 export const LAB_MAIN_NAV: LabNavItem[] = [
@@ -83,11 +85,41 @@ export const LAB_LAYOUT_NAV: LabNavItem[] = [
 ];
 
 export const LAB_BUSINESS_NAV: LabNavItem[] = [
-  { href: '/business/sidebar', label: 'سایدبار کسب‌وکار', badge: 'TaavBusinessSidebar' },
-  { href: '/business/intro-card', label: 'کارت معرفی بخش', badge: 'TaavBusinessIntroCard' },
-  { href: '/business/recommendation-card', label: 'کارت پیشنهاد تنظیمات', badge: 'TaavBusinessRecommendationCard' },
-  { href: '/business/module-card', label: 'کارت ماژول', badge: 'TaavModuleCard' },
-  { href: '/business/module-card-grid', label: 'گرید کارت ماژول', badge: 'TaavModuleCardGrid' },
+  {
+    href: '/business/sidebar',
+    label: 'سایدبار کسب‌وکار',
+    badge: 'TaavBusinessSidebar',
+    description: 'سایدبار ERP با nav path، tenant و quick actions',
+    keywords: ['sidebar', 'navigation', 'dastranj'],
+  },
+  {
+    href: '/business/intro-card',
+    label: 'کارت معرفی بخش',
+    badge: 'TaavBusinessIntroCard',
+    description: 'intro استاندارد و layout=hub برای مرکز تنظیمات کسب‌وکار',
+    keywords: ['hub', 'eyebrow', 'footnote', 'badge', 'تنظیمات کسب‌وکار', 'business settings'],
+  },
+  {
+    href: '/business/recommendation-card',
+    label: 'کارت پیشنهاد تنظیمات',
+    badge: 'TaavBusinessRecommendationCard',
+    description: 'تنظیم پیشنهادی با TaavActivationSwitch و لینک جزئیات',
+    keywords: ['activation', 'switch', 'recommendation', 'details link'],
+  },
+  {
+    href: '/business/module-card',
+    label: 'کارت ماژول',
+    badge: 'TaavModuleCard',
+    description: 'کارت navigation برای ماژول‌ها و مراحل راه‌اندازی',
+    keywords: ['setup', 'module', 'navigation card'],
+  },
+  {
+    href: '/business/module-card-grid',
+    label: 'گرید کارت ماژول',
+    badge: 'TaavModuleCardGrid',
+    description: 'چیدمان responsive کارت‌های TaavModuleCard',
+    keywords: ['grid', 'setup cards', 'two column'],
+  },
 ];
 
 export const LAB_CATEGORIES = [
@@ -151,7 +183,7 @@ export const LAB_STATUS_ITEMS = [
   { key: 'navigation', label: 'Navigation', status: 'Tabs + Stepper', progress: 65 },
   { key: 'data-display', label: 'Data Display', status: '۹ کامپوننت', progress: 70 },
   { key: 'layout', label: 'Layout', status: '۹ الگو', progress: 75 },
-  { key: 'business', label: 'Business', status: 'Sidebar + IntroCard + ModuleCard', progress: 40 },
+  { key: 'business', label: 'Business', status: 'IntroCard hub + ModuleCard + Sidebar', progress: 55 },
   { key: 'ui-lab', label: 'UI Lab', status: 'مستندات', progress: 92 },
   { key: 'migration', label: 'Migration', status: 'شروع نشده', progress: 0 },
 ];

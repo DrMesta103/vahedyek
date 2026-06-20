@@ -690,6 +690,55 @@ var businessIntroCardTone = classVarianceAuthority.cva("", {
     tone: "brand"
   }
 });
+var businessIntroCardHubRoot = classVarianceAuthority.cva(
+  [
+    "relative overflow-hidden",
+    "bg-[var(--taav-business-intro-card-hub-surface)]",
+    "shadow-[var(--taav-business-intro-card-hub-shadow)]"
+  ],
+  {
+    variants: {
+      size: {
+        sm: "",
+        md: "",
+        lg: ""
+      }
+    },
+    defaultVariants: {
+      size: "md"
+    }
+  }
+);
+var businessIntroCardHubPattern = classVarianceAuthority.cva(
+  "pointer-events-none absolute inset-0 opacity-[var(--taav-business-intro-card-hub-pattern-opacity)] [background-image:var(--taav-business-intro-card-hub-pattern)]"
+);
+var businessIntroCardHubContent = classVarianceAuthority.cva("relative z-[1] grid gap-[var(--taav-business-intro-card-hub-content-gap)]");
+var businessIntroCardHubTop = classVarianceAuthority.cva("flex items-center justify-between gap-[var(--taav-space-3)]");
+var businessIntroCardEyebrow = classVarianceAuthority.cva(
+  "inline-flex min-h-[28px] items-center rounded-[var(--taav-radius-pill)] border border-solid px-[10px] text-[length:var(--taav-text-xs)] font-extrabold",
+  {
+    variants: {
+      tone: {
+        brand: "border-[color:var(--taav-business-intro-card-eyebrow-border)] bg-[var(--taav-business-intro-card-eyebrow-bg)] text-[var(--taav-business-intro-card-eyebrow-text)]",
+        neutral: "border-[color:var(--taav-business-intro-card-badge-border)] bg-[var(--taav-business-intro-card-badge-bg)] text-[var(--taav-business-intro-card-badge-text)]",
+        success: "",
+        warning: "",
+        danger: "",
+        info: ""
+      }
+    },
+    defaultVariants: {
+      tone: "brand"
+    }
+  }
+);
+var businessIntroCardBadge = classVarianceAuthority.cva(
+  "inline-flex min-h-[28px] items-center whitespace-nowrap rounded-[var(--taav-radius-pill)] border border-solid px-[10px] text-[length:var(--taav-text-xs)] font-extrabold border-[color:var(--taav-business-intro-card-badge-border)] bg-[var(--taav-business-intro-card-badge-bg)] text-[var(--taav-business-intro-card-badge-text)]"
+);
+var businessIntroCardFootnote = classVarianceAuthority.cva(
+  "m-0 rounded-[var(--taav-radius-lg)] border border-solid px-[14px] py-[12px] text-right text-[length:var(--taav-text-xs)] font-semibold leading-[var(--taav-leading-relaxed)] border-[color:var(--taav-business-intro-card-footnote-border)] bg-[var(--taav-business-intro-card-footnote-bg)] text-[var(--taav-business-intro-card-footnote-text)]"
+);
+var businessIntroCardHubTitleRow = classVarianceAuthority.cva("flex items-start gap-[var(--taav-business-intro-card-leading-gap)]");
 function resolveHasAction({
   href,
   onAction,
@@ -701,6 +750,9 @@ function resolveHasAction({
 function TaavBusinessIntroCard({
   title,
   description,
+  eyebrow,
+  badge,
+  footnote,
   icon,
   actionIcon,
   actionLabel,
@@ -713,6 +765,9 @@ function TaavBusinessIntroCard({
   tone = "brand",
   variant = "default",
   themeMode = "auto",
+  layout = "standard",
+  headingLevel,
+  showPattern = true,
   children,
   wrapperClassName,
   contentClassName,
@@ -723,8 +778,12 @@ function TaavBusinessIntroCard({
   const hasAction = resolveHasAction({ href, onAction, disabled, loading });
   const showDefaultIcon = icon === void 0;
   const resolvedActionLabel = actionLabel ?? (hasAction ? "\u0628\u0627\u0632\u06AF\u0634\u062A" : void 0);
+  const resolvedHeadingLevel = headingLevel ?? (layout === "hub" ? "h1" : "h2");
+  const HeadingTag = resolvedHeadingLevel;
+  const resolvedWidth = layout === "hub" && width === "normal" ? "full" : width;
   const rootClass = cn(
-    businessIntroCardRoot({ size, width, variant, loading }),
+    businessIntroCardRoot({ size, width: resolvedWidth, variant, loading }),
+    layout === "hub" ? businessIntroCardHubRoot({ size }) : null,
     businessIntroCardTone({ tone }),
     wrapperClassName,
     unsafeClassName
@@ -754,7 +813,10 @@ function TaavBusinessIntroCard({
       children: actionContent
     }
   ) : null;
-  const body = loading ? /* @__PURE__ */ jsxRuntime.jsxs("div", { className: businessIntroCardLayout(), children: [
+  const titleBlock = loading ? /* @__PURE__ */ jsxRuntime.jsx(TaavSkeleton, { variant: "title", width: "55%", contentClassName: "h-6" }) : /* @__PURE__ */ jsxRuntime.jsx(HeadingTag, { className: businessIntroCardTitle({ size }), children: title });
+  const descriptionBlock = description && !loading ? /* @__PURE__ */ jsxRuntime.jsx("p", { className: businessIntroCardDescription({ size }), children: description }) : null;
+  const iconBlock = loading ? /* @__PURE__ */ jsxRuntime.jsx(TaavSkeleton, { variant: "custom", width: 48, height: 48, radius: "lg" }) : /* @__PURE__ */ jsxRuntime.jsx("span", { className: businessIntroCardIconBox({ size }), "aria-hidden": showDefaultIcon, children: icon ?? /* @__PURE__ */ jsxRuntime.jsx(BusinessIntroCardBuildingIcon, {}) });
+  const standardBody = loading ? /* @__PURE__ */ jsxRuntime.jsxs("div", { className: businessIntroCardLayout(), children: [
     /* @__PURE__ */ jsxRuntime.jsxs("div", { className: businessIntroCardLeading(), children: [
       /* @__PURE__ */ jsxRuntime.jsx(TaavSkeleton, { variant: "custom", width: 48, height: 48, radius: "lg" }),
       /* @__PURE__ */ jsxRuntime.jsxs("div", { className: cn(businessIntroCardCopy(), "flex-1"), children: [
@@ -765,22 +827,51 @@ function TaavBusinessIntroCard({
     /* @__PURE__ */ jsxRuntime.jsx(TaavSkeleton, { variant: "custom", width: 36, height: 36, radius: "md" })
   ] }) : /* @__PURE__ */ jsxRuntime.jsxs("div", { className: businessIntroCardLayout(), children: [
     /* @__PURE__ */ jsxRuntime.jsxs("div", { className: cn(businessIntroCardLeading(), contentClassName), children: [
-      /* @__PURE__ */ jsxRuntime.jsx("span", { className: businessIntroCardIconBox({ size }), "aria-hidden": showDefaultIcon, children: icon ?? /* @__PURE__ */ jsxRuntime.jsx(BusinessIntroCardBuildingIcon, {}) }),
+      iconBlock,
       /* @__PURE__ */ jsxRuntime.jsxs("div", { className: businessIntroCardCopy(), children: [
-        /* @__PURE__ */ jsxRuntime.jsx("h2", { className: businessIntroCardTitle({ size }), children: title }),
-        description ? /* @__PURE__ */ jsxRuntime.jsx("p", { className: businessIntroCardDescription({ size }), children: description }) : null,
+        titleBlock,
+        descriptionBlock,
         children
       ] })
     ] }),
     actionNode
   ] });
-  return /* @__PURE__ */ jsxRuntime.jsx(
+  const hubBody = loading ? /* @__PURE__ */ jsxRuntime.jsxs("div", { className: businessIntroCardHubContent(), children: [
+    /* @__PURE__ */ jsxRuntime.jsx(TaavSkeleton, { variant: "custom", width: 140, height: 28, radius: "pill" }),
+    /* @__PURE__ */ jsxRuntime.jsxs("div", { className: businessIntroCardHubTitleRow(), children: [
+      /* @__PURE__ */ jsxRuntime.jsx(TaavSkeleton, { variant: "custom", width: 52, height: 52, radius: "lg" }),
+      /* @__PURE__ */ jsxRuntime.jsxs("div", { className: cn(businessIntroCardCopy(), "flex-1"), children: [
+        /* @__PURE__ */ jsxRuntime.jsx(TaavSkeleton, { variant: "title", width: "48%", contentClassName: "h-6" }),
+        /* @__PURE__ */ jsxRuntime.jsx(TaavSkeleton, { lines: 2, size: "sm" })
+      ] })
+    ] }),
+    /* @__PURE__ */ jsxRuntime.jsx(TaavSkeleton, { variant: "custom", width: "100%", height: 52, radius: "lg" })
+  ] }) : /* @__PURE__ */ jsxRuntime.jsxs("div", { className: businessIntroCardHubContent(), children: [
+    eyebrow || badge ? /* @__PURE__ */ jsxRuntime.jsxs("div", { className: businessIntroCardHubTop(), children: [
+      eyebrow ? /* @__PURE__ */ jsxRuntime.jsx("span", { className: businessIntroCardEyebrow({ tone: "brand" }), children: eyebrow }) : /* @__PURE__ */ jsxRuntime.jsx("span", {}),
+      badge ? /* @__PURE__ */ jsxRuntime.jsx("span", { className: businessIntroCardBadge(), children: badge }) : null
+    ] }) : null,
+    /* @__PURE__ */ jsxRuntime.jsxs("div", { className: businessIntroCardLayout(), children: [
+      /* @__PURE__ */ jsxRuntime.jsxs("div", { className: cn(businessIntroCardHubTitleRow(), "min-w-0 flex-1", contentClassName), children: [
+        iconBlock,
+        /* @__PURE__ */ jsxRuntime.jsxs("div", { className: businessIntroCardCopy(), children: [
+          titleBlock,
+          descriptionBlock,
+          children
+        ] })
+      ] }),
+      actionNode
+    ] }),
+    footnote ? /* @__PURE__ */ jsxRuntime.jsx("p", { className: businessIntroCardFootnote(), children: footnote }) : null
+  ] });
+  return /* @__PURE__ */ jsxRuntime.jsxs(
     "article",
     {
       ...rest,
       "data-taav-business-intro-card": true,
+      "data-layout": layout,
       "data-size": size,
-      "data-width": width,
+      "data-width": resolvedWidth,
       "data-tone": tone,
       "data-variant": variant,
       "data-loading": loading || void 0,
@@ -789,7 +880,10 @@ function TaavBusinessIntroCard({
       className: rootClass,
       "aria-busy": loading || void 0,
       "aria-disabled": disabled || void 0,
-      children: body
+      children: [
+        layout === "hub" && showPattern ? /* @__PURE__ */ jsxRuntime.jsx("div", { className: businessIntroCardHubPattern(), "aria-hidden": true }) : null,
+        layout === "hub" ? hubBody : standardBody
+      ]
     }
   );
 }

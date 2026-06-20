@@ -96,6 +96,7 @@ const DEFAULT_HOLIDAY_COEFFICIENTS: QuickSetupHolidayCoefficients = {
   weeklyRestDay: 1.4,
   officialHoliday: 1.96,
   organizationalHoliday: 1.4,
+  isConfigured: false,
 };
 const ORGANIZATIONAL_RECURRING_HOLIDAY_TITLE = 'تعطیل سازمانی';
 

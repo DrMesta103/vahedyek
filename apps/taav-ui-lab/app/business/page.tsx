@@ -11,7 +11,13 @@ export default function BusinessOverviewPage() {
         eyebrow="Business Components"
         title="کامپوننت‌های کسب‌وکار"
         description="اجزای presentation تخصصی DastRanj و VahedYek — data-driven، بدون business logic داخلی."
-        importCode={`import { TaavBusinessSidebar, TaavBusinessIntroCard, TaavModuleCard, TaavModuleCardGrid } from '@repo/ui/taav/business';`}
+        importCode={`import {
+  TaavBusinessSidebar,
+  TaavBusinessIntroCard,
+  TaavBusinessRecommendationCard,
+  TaavModuleCard,
+  TaavModuleCardGrid,
+} from '@repo/ui/taav/business';`}
       />
       <DocApiNote />
       <div className="grid gap-4 md:grid-cols-2">
@@ -23,8 +29,8 @@ export default function BusinessOverviewPage() {
                   <h2 className="m-0 text-[length:var(--taav-text-lg)] font-black text-[var(--taav-text-strong)]">
                     {item.label}
                   </h2>
-                  <p className="mt-2 text-[length:var(--taav-text-sm)] text-[var(--taav-text-muted)]">
-                    مستندات، variants، props table و RTL preview
+                  <p className="mt-2 text-[length:var(--taav-text-sm)] leading-7 text-[var(--taav-text-muted)]">
+                    {item.description ?? 'مستندات، variants، props table و RTL preview'}
                   </p>
                 </div>
                 {item.badge ? (

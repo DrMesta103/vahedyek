@@ -17,7 +17,7 @@ export const DASHRANJ_ROUTE_SEGMENT_LABELS: Record<string, string> = {
   'payroll-attendance': 'حضور و غیاب حقوق',
   'naming-patterns': 'الگوهای نام‌گذاری',
   'company-loans': 'وام‌های سازمانی',
-  ownership: 'مالکیت',
+  ownership: 'نوع کسب‌وکار',
   branding: 'برندینگ',
   representatives: 'نمایندگان',
   shareholders: 'سهامداران',
@@ -48,6 +48,13 @@ export const DASHRANJ_ROUTE_PATH_OVERRIDES: Record<string, string[]> = {
   '/draft-templates/builder': ['قالب پیش‌نویس', 'سازنده'],
   '/draft-templates/new': ['قالب پیش‌نویس', 'افزودن قالب'],
   '/business-settings/profile': ['تنظیمات کسب و کار', 'پروفایل کسب و کار'],
+  '/business-settings/profile/ownership': ['تنظیمات کسب و کار', 'پروفایل کسب و کار', 'نوع کسب‌وکار'],
+  '/business-settings/profile/bank-accounts': ['تنظیمات کسب و کار', 'پروفایل کسب و کار', 'حساب‌های بانکی'],
+  '/business-settings/profile/bank-accounts/new': ['تنظیمات کسب و کار', 'پروفایل کسب و کار', 'حساب‌های بانکی', 'افزودن'],
+  '/business-settings/profile/branding': ['تنظیمات کسب و کار', 'پروفایل کسب و کار', 'لوگو، مهر و سربرگ'],
+  '/business-settings/profile/representatives': ['تنظیمات کسب و کار', 'پروفایل کسب و کار', 'نمایندگان'],
+  '/business-settings/profile/shareholders': ['تنظیمات کسب و کار', 'پروفایل کسب و کار', 'سهامداران'],
+  '/business-settings/profile/board-members': ['تنظیمات کسب و کار', 'پروفایل کسب و کار', 'اعضای هیئت‌مدیره'],
 };
 
 export function isDynamicRouteSegment(segment: string): boolean {

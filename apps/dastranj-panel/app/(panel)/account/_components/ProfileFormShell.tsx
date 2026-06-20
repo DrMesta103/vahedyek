@@ -1,7 +1,6 @@
 'use client';
 
 import { Camera, Info, LockKeyhole } from 'lucide-react';
-import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { TaavChoiceChipGroup } from '@repo/ui/taav/forms';
 import { Input, PersianDatePicker } from '@repo/ui';
@@ -226,13 +225,5 @@ export function ProfileSubmitBar({
         {label}
       </button>
     </div>
-  );
-}
-
-export function ProfileBackLink({ href, children }: { href: string; children: ReactNode }) {
-  return (
-    <Link href={href} className="text-[13px] font-semibold text-[color:var(--accent)] no-underline">
-      {children}
-    </Link>
   );
 }

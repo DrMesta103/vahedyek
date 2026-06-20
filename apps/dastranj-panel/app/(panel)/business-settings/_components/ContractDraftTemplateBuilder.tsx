@@ -814,13 +814,6 @@ export function ContractDraftTemplateBuilder({
 
       <main className="draft-template-flow-main draft-template-flow-content business-payroll-content">
         <header className="draft-template-flow-page-header contract-draft-page-header">
-          <nav className="draft-template-flow-breadcrumb contract-draft-breadcrumb" aria-label="مسیر صفحه">
-            <Link href="/">دسترنج</Link>
-            <ChevronLeft className="contract-draft-breadcrumb-chevron" aria-hidden />
-            <Link href="/business-settings">تنظیمات کسب و کار</Link>
-            <ChevronLeft className="contract-draft-breadcrumb-chevron" aria-hidden />
-            <span className="contract-draft-breadcrumb-current">قالب پیش‌نویس قرارداد</span>
-          </nav>
           <div className="business-payroll-flow-title contract-draft-title-row">
             <div className="contract-draft-title-block">
               <div className="business-payroll-title-row contract-draft-heading-line">

@@ -17,13 +17,6 @@ export default async function EmployeeDetailPage({ params }: { params: Promise<{
 
   if (!employee) notFound();
 
-  const breadcrumbs = [
-    { label: 'دسترنج', href: '/' },
-    { label: 'تنظیمات کسب و کار', href: '/business-settings' },
-    { label: 'کارمندان', href: '/employees' },
-    { label: 'جزییات کارمند' },
-  ];
-
   const employeeName = `${employee.firstName} ${employee.lastName}`.trim();
 
   const serialized = {
@@ -57,7 +50,7 @@ export default async function EmployeeDetailPage({ params }: { params: Promise<{
   return (
     <div className="page-stack module-page employee-detail-page" dir="rtl" lang="fa">
       <EmployeeNavPath employeeId={employee.id} employeeName={employeeName} currentLabel="جزییات کارمند" />
-      <ModulePageHeader breadcrumbs={breadcrumbs} title="جزییات کارمند" titleHref="/employees" />
+      <ModulePageHeader title="جزییات کارمند" titleHref="/employees" />
       <EmployeeDetailView employee={serialized} />
     </div>
   );

@@ -1,13 +1,7 @@
 import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
 
-export type ModuleBreadcrumb = {
-  label: string;
-  href?: string;
-};
-
 type ModulePageHeaderProps = {
-  breadcrumbs: ModuleBreadcrumb[];
   title: string;
   subtitle?: string;
   addHref?: string;
@@ -18,7 +12,6 @@ type ModulePageHeaderProps = {
 };
 
 export function ModulePageHeader({
-  breadcrumbs: _breadcrumbs,
   title,
   subtitle,
   addHref,

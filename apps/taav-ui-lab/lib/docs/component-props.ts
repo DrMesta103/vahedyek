@@ -414,6 +414,10 @@ export const MODULE_CARD_GRID_ITEM_PROPS: DocPropRow[] = [
 export const BUSINESS_INTRO_CARD_PROPS: DocPropRow[] = [
   { name: 'title', type: 'ReactNode', required: true, description: 'عنوان بخش بیزینسی (RTL)' },
   { name: 'description', type: 'ReactNode', description: 'توضیح کوتاه زیر عنوان' },
+  { name: 'eyebrow / badge / footnote', type: 'ReactNode', description: 'فقط در layout=hub — برچسب بالا، متا و یادداشت پایین' },
+  { name: 'layout', type: "'standard' | 'hub'", defaultValue: 'standard', description: 'hub برای intro مرکز تنظیمات با pattern و footnote' },
+  { name: 'headingLevel', type: "'h1' | 'h2'", description: 'سطح heading — پیش‌فرض h1 در hub و h2 در standard' },
+  { name: 'showPattern', type: 'boolean', defaultValue: 'true', description: 'pattern decorative در layout=hub' },
   { name: 'icon / actionIcon', type: 'ReactNode', description: 'آیکون بخش یا آیکون اکشن سفارشی' },
   { name: 'actionLabel', type: 'string', description: 'برچسب دسترس‌پذیری اکشن — پیش‌فرض «بازگشت» وقتی اکشن فعال است' },
   { name: 'href', type: 'string', description: 'لینک anchor-style برای اکشن — بدون Next.js Link' },

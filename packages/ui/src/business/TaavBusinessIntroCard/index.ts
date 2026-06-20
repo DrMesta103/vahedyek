@@ -1,5 +1,7 @@
 export {
   TaavBusinessIntroCard,
+  type TaavBusinessIntroCardHeadingLevel,
+  type TaavBusinessIntroCardLayout,
   type TaavBusinessIntroCardProps,
   type TaavBusinessIntroCardSize,
   type TaavBusinessIntroCardThemeMode,

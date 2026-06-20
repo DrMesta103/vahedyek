@@ -3,7 +3,6 @@
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ModulePageHeader } from '../../../components/module-page/ModulePageHeader';
-import { panelBreadcrumbs } from '../../../components/module-page/module-breadcrumbs';
 import { requestReasonCategories, requestReasonLabels } from '../../../lib/constants';
 import { CreateRequestReasonDialog } from './CreateRequestReasonDialog';
 import { RequestReasonsClient, type RequestReasonListItem } from './RequestReasonsClient';
@@ -41,7 +40,6 @@ function RequestReasonsPageClientInner({ items, activeCategory }: RequestReasons
   return (
     <>
       <ModulePageHeader
-        breadcrumbs={panelBreadcrumbs('دلایل درخواست')}
         title="دلایل درخواست"
         subtitle="مدیریت علت‌ها با ترتیب‌دهی، فعال‌سازی و ویرایش سریع."
         addLabel="افزودن علت درخواست"

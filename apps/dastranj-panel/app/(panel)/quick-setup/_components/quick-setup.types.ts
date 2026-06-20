@@ -61,6 +61,7 @@ export type QuickSetupHolidayCoefficients = {
   weeklyRestDay: number;
   officialHoliday: number;
   organizationalHoliday: number;
+  isConfigured: boolean;
 };
 
 export type QuickPolicySummary = {

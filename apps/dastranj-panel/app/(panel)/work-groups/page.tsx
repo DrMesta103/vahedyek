@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { Plus, Search, UsersRound } from 'lucide-react';
 import { ModulePageHeader } from '../../components/module-page/ModulePageHeader';
-import { panelBreadcrumbs } from '../../components/module-page/module-breadcrumbs';
 import { listCalendars, listEmployees, listLocations, listPolicies, listWorkGroups } from '../../lib/data';
 import { WorkGroupFiltersSidebar } from './_components/WorkGroupFiltersSidebar';
 import { WorkGroupCardActions } from './_components/WorkGroupCardActions';
@@ -91,7 +90,6 @@ export default async function WorkGroupsPage({ searchParams }: WorkGroupsPagePro
 
       <div className="work-groups-main module-page" dir="rtl">
         <ModulePageHeader
-          breadcrumbs={panelBreadcrumbs('گروه کاری')}
           title="گروه‌های کاری"
           subtitle="مدیریت گروه‌های کاری، اعضا، سیاست‌ها و محل‌های کار"
           addHref="/work-groups/new"

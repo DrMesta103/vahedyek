@@ -8,17 +8,9 @@ export default async function EmployeeRequestsPage({ params }: { params: Promise
   const data = await getEmployeeRequestsPageData(id);
   if (!data) notFound();
 
-  const employeeName = `${data.employee.firstName} ${data.employee.lastName}`.trim();
-
   return (
     <div className="page-stack module-page employee-requests-page" dir="rtl" lang="fa">
       <ModulePageHeader
-        breadcrumbs={[
-          { label: 'دسترنج', href: '/' },
-          { label: 'کارمندان', href: '/employees' },
-          { label: employeeName || 'جزئیات کارمند', href: `/employees/${id}` },
-          { label: 'درخواست‌ها' },
-        ]}
         title="درخواست‌های کارمند"
         subtitle="ثبت، بررسی و مدیریت درخواست‌ها برای همین کارمند"
         titleHref={`/employees/${id}`}
