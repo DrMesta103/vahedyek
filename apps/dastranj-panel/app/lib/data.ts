@@ -339,13 +339,24 @@ export async function getDashboardData() {
 export async function getQuickSetupChecklist() {
   const tenantId = await requireTenantId();
   const where = { tenantId };
+  const employeeQuickSetupSelect = {
+    id: true,
+    firstName: true,
+    lastName: true,
+    email: true,
+    mobile1: true,
+    avatarUrl: true,
+    isActive: true,
+    createdAt: true,
+    updatedAt: true,
+  } as const;
 
   const [profile, locationList, calendarList, policyList, employeeList, workGroupList, calendars, policies, employees, workGroups, defaultCalendarTemplate, holidayCoefficients] = await Promise.all([
     getBusinessProfile(),
     listLocationsForTenant(tenantId, 10),
     prisma.calendar.findMany({ where, orderBy: { updatedAt: 'desc' }, take: 20 }),
     prisma.workPolicy.findMany({ where, include: { calendar: true }, orderBy: { updatedAt: 'desc' }, take: 5 }),
-    prisma.employee.findMany({ where, orderBy: { createdAt: 'desc' }, take: 20 }),
+    prisma.employee.findMany({ where, select: employeeQuickSetupSelect as any, orderBy: { createdAt: 'desc' }, take: 20 }),
     prisma.workGroup.findMany({ where, orderBy: { updatedAt: 'desc' }, take: 5 }),
     prisma.calendar.count({ where }),
     prisma.workPolicy.count({ where }),
@@ -800,19 +811,31 @@ export async function listEmployees(options?: EmployeeListFilters) {
   }
 
   const where = andConditions.length ? { tenantId, AND: andConditions } : { tenantId };
+  const employeeListSelect = {
+    id: true,
+    firstName: true,
+    lastName: true,
+    personnelCode: true,
+    email: true,
+    mobile1: true,
+    mobile2: true,
+    avatarUrl: true,
+    isActive: true,
+    createdAt: true,
+    updatedAt: true,
+    organizationUnits: {
+      where: { organizationUnit: { tenantId } },
+      include: { organizationUnit: { select: { id: true, title: true } } },
+    },
+    workGroupMemberships: {
+      where: { workGroup: { tenantId }, isCurrent: true },
+      include: { workGroup: { select: { id: true, title: true } } },
+    },
+  } as const;
 
   return prisma.employee.findMany({
     where,
-    include: {
-      organizationUnits: {
-        where: { organizationUnit: { tenantId } },
-        include: { organizationUnit: { select: { id: true, title: true } } },
-      },
-      workGroupMemberships: {
-        where: { workGroup: { tenantId }, isCurrent: true },
-        include: { workGroup: { select: { id: true, title: true } } },
-      },
-    },
+    select: employeeListSelect as any,
     orderBy: [{ isActive: 'desc' }, { createdAt: 'desc' }],
   });
 }

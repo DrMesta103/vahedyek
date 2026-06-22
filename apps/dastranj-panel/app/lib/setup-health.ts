@@ -138,6 +138,15 @@ type ReminderStateRecord = {
   dismissedUntil: Date | null;
 };
 
+function isMissingTenantSetupReminderStateTableError(error: unknown) {
+  return Boolean(
+    error &&
+      typeof error === 'object' &&
+      'code' in error &&
+      (error as { code?: string }).code === 'P2021',
+  );
+}
+
 function normalizeRoleKey(value: string) {
   return value.trim().toLowerCase();
 }
@@ -228,18 +237,29 @@ export async function resolveTenantSetupHealthForCurrentUser(options?: { fallbac
 }
 
 async function listReminderStates(tenantId: string, userId: string): Promise<Map<string, ReminderStateRecord>> {
-  const rows = await prisma.tenantSetupReminderState.findMany({
-    where: {
-      tenantId,
-      userId,
-    },
-    select: {
-      reminderKey: true,
-      dismissedUntil: true,
-    },
-  });
+  try {
+    const rows = await prisma.tenantSetupReminderState.findMany({
+      where: {
+        tenantId,
+        userId,
+      },
+      select: {
+        reminderKey: true,
+        dismissedUntil: true,
+      },
+    });
 
-  return new Map<string, ReminderStateRecord>(rows.map((row) => [row.reminderKey, row] satisfies [string, ReminderStateRecord]));
+    return new Map<string, ReminderStateRecord>(rows.map((row) => [row.reminderKey, row] satisfies [string, ReminderStateRecord]));
+  } catch (error) {
+    if (isMissingTenantSetupReminderStateTableError(error)) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.warn('[setup-health]', 'tenantSetupReminderState table missing, skipping reminder states');
+      }
+      return new Map<string, ReminderStateRecord>();
+    }
+
+    throw error;
+  }
 }
 
 function isReminderSnoozed(state: ReminderStateRecord | undefined, now: Date) {

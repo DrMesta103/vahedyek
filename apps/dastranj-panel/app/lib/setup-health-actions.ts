@@ -18,6 +18,15 @@ async function requireSetupReminderAccess() {
   return access;
 }
 
+function isMissingTenantSetupReminderStateTableError(error: unknown) {
+  return Boolean(
+    error &&
+      typeof error === 'object' &&
+      'code' in error &&
+      (error as { code?: string }).code === 'P2021',
+  );
+}
+
 export async function getTenantSetupHealthAction() {
   const access = await getSetupReminderAccess();
   if (!access.allowed || !access.tenantId) return null;
@@ -30,28 +39,32 @@ export async function snoozeTenantSetupReminderAction(reminderKey: string, hours
   const now = new Date();
   const dismissedUntil = new Date(now.getTime() + Math.max(1, hours) * 60 * 60 * 1000);
 
-  await prisma.tenantSetupReminderState.upsert({
-    where: {
-      tenantId_userId_reminderKey: {
+  try {
+    await prisma.tenantSetupReminderState.upsert({
+      where: {
+        tenantId_userId_reminderKey: {
+          tenantId: access.tenantId,
+          userId: access.userId,
+          reminderKey,
+        },
+      },
+      update: {
+        dismissedUntil,
+        dismissedCount: { increment: 1 },
+        lastActionAt: now,
+      },
+      create: {
         tenantId: access.tenantId,
         userId: access.userId,
         reminderKey,
+        dismissedUntil,
+        dismissedCount: 1,
+        lastActionAt: now,
       },
-    },
-    update: {
-      dismissedUntil,
-      dismissedCount: { increment: 1 },
-      lastActionAt: now,
-    },
-    create: {
-      tenantId: access.tenantId,
-      userId: access.userId,
-      reminderKey,
-      dismissedUntil,
-      dismissedCount: 1,
-      lastActionAt: now,
-    },
-  });
+    });
+  } catch (error) {
+    if (!isMissingTenantSetupReminderStateTableError(error)) throw error;
+  }
 
   revalidatePath('/');
   revalidatePath('/business-settings');
@@ -62,22 +75,26 @@ export async function markReminderShownAction(reminderKey: string) {
   const access = await requireSetupReminderAccess();
   const now = new Date();
 
-  await prisma.tenantSetupReminderState.upsert({
-    where: {
-      tenantId_userId_reminderKey: {
+  try {
+    await prisma.tenantSetupReminderState.upsert({
+      where: {
+        tenantId_userId_reminderKey: {
+          tenantId: access.tenantId,
+          userId: access.userId,
+          reminderKey,
+        },
+      },
+      update: {
+        lastShownAt: now,
+      },
+      create: {
         tenantId: access.tenantId,
         userId: access.userId,
         reminderKey,
+        lastShownAt: now,
       },
-    },
-    update: {
-      lastShownAt: now,
-    },
-    create: {
-      tenantId: access.tenantId,
-      userId: access.userId,
-      reminderKey,
-      lastShownAt: now,
-    },
-  });
+    });
+  } catch (error) {
+    if (!isMissingTenantSetupReminderStateTableError(error)) throw error;
+  }
 }
