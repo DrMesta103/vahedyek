@@ -26,6 +26,7 @@ import {
 import { MinimalScroll } from '../../../components/MinimalScroll';
 import { PanelFormModal, PanelFormModalActions } from '../../../components/PanelFormModal';
 import { PayrollBaseSummaryPanel, type PayrollBaseSummaryItem } from '../../../components/PayrollBaseSummaryPanel';
+import { VariablePaymentItemDialog, type VariablePaymentDialogValue } from '../../../components/VariablePaymentItemDialog';
 import { VariableAmountTitlePicker } from '../../../components/VariableAmountTitlePicker';
 import { ConfirmDialog } from '../../../components/ConfirmDialog';
 import { UnsavedChangesDialog, useUnsavedLeaveGuard } from '../../../components/UnsavedChangesGuard';
@@ -194,7 +195,7 @@ function buildPayrollBaseSummaryItems(
     const amount =
       item.method === 'fixed'
         ? item.amount
-        : (item.percent / 100) * (item.base === 'grossPay' ? derived.grossPay : derived.monthlyBaseSalary);
+        : (item.percent / 100) * (item.base === 'total_earnings' ? derived.grossPay : derived.monthlyBaseSalary);
     const rules = item.calculationRules ?? DEFAULT_OPTIONAL_ADDITION_RULES;
     return {
       id: item.id,
@@ -237,13 +238,39 @@ function normalizeDecimalInput(value: string) {
 function newVariableTemplateItem(type: 'addition' | 'deduction'): VariableTemplateItem {
   return {
     id: `${type}-${Date.now()}`,
-    title: VARIABLE_TITLES[type][0],
+    title: '',
     type,
     method: 'fixed',
     amount: 0,
     percent: 0,
-    base: 'baseSalary',
+    base: 'wage_base',
     calculationRules: type === 'addition' ? { ...DEFAULT_OPTIONAL_ADDITION_RULES } : { ...DEFAULT_OPTIONAL_DEDUCTION_RULES },
+  };
+}
+
+function templateItemToDialogValue(item: VariableTemplateItem): VariablePaymentDialogValue {
+  return {
+    id: item.id,
+    title: item.title,
+    type: item.type,
+    method: item.method,
+    amount: item.amount,
+    percent: item.percent,
+    base: item.base,
+    calculationRules: item.calculationRules,
+  };
+}
+
+function dialogValueToTemplateItem(item: VariablePaymentDialogValue): VariableTemplateItem {
+  return {
+    id: item.id,
+    title: item.title,
+    type: item.type,
+    method: item.method,
+    amount: item.amount,
+    percent: item.percent,
+    base: item.base,
+    calculationRules: item.calculationRules,
   };
 }
 
@@ -1540,15 +1567,17 @@ function BenefitsTemplateStep({ template, baseSettings, updateTemplate }: { temp
 }
 
 function VariablePaymentsStep({ template, baseSettings, updateTemplate }: { template: ContractDraftTemplate; baseSettings: PayrollSettings; updateTemplate: (step: ContractDraftTemplateStepId, apply: (current: ContractDraftTemplate) => ContractDraftTemplate) => void }) {
+  const derived = useMemo(() => calculatePayrollValues(baseSettings), [baseSettings]);
+
   const addItem = (type: 'addition' | 'deduction') => {
     const item: VariableTemplateItem = {
       id: `${type}-${Date.now()}`,
-      title: VARIABLE_TITLES[type][0],
+      title: '',
       type,
       method: 'fixed',
       amount: 0,
       percent: 0,
-      base: 'baseSalary',
+      base: 'wage_base',
       calculationRules: type === 'addition' ? { ...DEFAULT_OPTIONAL_ADDITION_RULES } : { ...DEFAULT_OPTIONAL_DEDUCTION_RULES },
     };
     updateTemplate('variablePayments', (current) => ({
@@ -1606,6 +1635,8 @@ function VariablePaymentsStep({ template, baseSettings, updateTemplate }: { temp
             title="اضافات اختیاری"
             items={template.data.variablePayments.additions}
             baseItems={baseSettings.variableAmounts.additions}
+            monthlyBaseSalary={derived.monthlyBaseSalary}
+            grossPay={derived.grossPay}
             onAdd={() => addItem('addition')}
             onUpdate={updateItem}
             onRemove={removeItem}
@@ -1615,6 +1646,8 @@ function VariablePaymentsStep({ template, baseSettings, updateTemplate }: { temp
             title="کسورات اختیاری"
             items={template.data.variablePayments.deductions}
             baseItems={baseSettings.variableAmounts.deductions}
+            monthlyBaseSalary={derived.monthlyBaseSalary}
+            grossPay={derived.grossPay}
             onAdd={() => addItem('deduction')}
             onUpdate={updateItem}
             onRemove={removeItem}
@@ -1858,10 +1891,62 @@ function VariableAmountDialog({
   );
 }
 
+function SharedVariableAmountDialog({
+  open,
+  initialItem,
+  baseItem,
+  monthlyBaseSalary,
+  grossPay,
+  onClose,
+  onSubmit,
+}: {
+  open: boolean;
+  initialItem: VariableTemplateItem | null;
+  baseItem?: VariableAmount | null;
+  monthlyBaseSalary: number;
+  grossPay: number;
+  onClose: () => void;
+  onSubmit: (item: VariableTemplateItem) => void;
+}) {
+  return (
+    <VariablePaymentItemDialog
+      open={open}
+      mode={initialItem?.type ?? 'addition'}
+      initialValue={initialItem ? templateItemToDialogValue(initialItem) : undefined}
+      comparison={baseItem ? {
+        baseValue: templateItemToDialogValue({
+          id: baseItem.id,
+          title: baseItem.title,
+          type: baseItem.type,
+          method: baseItem.calculationMethod,
+          amount: baseItem.amount,
+          percent: baseItem.percent,
+          base: baseItem.calculationBase,
+          calculationRules: baseItem.calculationRules,
+        }),
+        differenceLabel: 'متفاوت با مبنا',
+        amountTooltip: (reference) => `مبلغ مبنا برای این آیتم ${money(reference.amount)} است.`,
+        percentTooltip: (reference) => `درصد مبنا برای این آیتم ${decimal(reference.percent)}٪ است.`,
+        baseTooltip: 'مبنای محاسبه این آیتم با تنظیمات پایه متفاوت است.',
+        baseRules: baseItem.calculationRules,
+        baseLabel: 'تنظیمات مبنا',
+      } : undefined}
+      calculateAmount={(item) => {
+        if (item.method === 'fixed') return item.amount;
+        return (item.percent / 100) * (item.base === 'total_earnings' ? grossPay : monthlyBaseSalary);
+      }}
+      onClose={onClose}
+      onSubmit={(item) => onSubmit(dialogValueToTemplateItem(item))}
+    />
+  );
+}
+
 function VariableListDialog({
   title,
   items,
   baseItems,
+  monthlyBaseSalary,
+  grossPay,
   onAdd,
   onUpdate,
   onRemove,
@@ -1870,6 +1955,8 @@ function VariableListDialog({
   title: string;
   items: VariableTemplateItem[];
   baseItems?: VariableAmount[];
+  monthlyBaseSalary: number;
+  grossPay: number;
   onAdd: () => void;
   onUpdate: (item: VariableTemplateItem) => void;
   onRemove: (item: VariableTemplateItem) => void;
@@ -1905,10 +1992,12 @@ function VariableListDialog({
           <Plus className="h-4 w-4" /> افزودن
         </button>
       </div>
-      <VariableAmountDialog
+      <SharedVariableAmountDialog
         open={Boolean(editor)}
         initialItem={editor}
         baseItem={editor ? baseItems?.find((b) => b.id === editor.id) ?? null : null}
+        monthlyBaseSalary={monthlyBaseSalary}
+        grossPay={grossPay}
         onClose={() => setEditor(null)}
         onSubmit={saveItem}
       />
@@ -1938,7 +2027,7 @@ function VariableListDialog({
                 <p>
                   {item.method === 'fixed'
                     ? 'مبلغ ثابت'
-                    : `${formatFaNumber(item.percent)}٪ از ${item.base === 'baseSalary' ? 'حقوق پایه ماهانه' : 'جمع حقوق دریافتی'}`}
+                    : `${formatFaNumber(item.percent)}٪ از ${item.base === 'total_earnings' ? 'جمع حقوق دریافتی' : 'مزد مبنا'}`}
                 </p>
                 <b>{item.method === 'fixed' ? money(item.amount) : `${formatFaNumber(item.percent)}٪`}</b>
                 <div className="calc-badges-row" style={{ gridColumn: '1 / -1' }}>

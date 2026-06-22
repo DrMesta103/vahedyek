@@ -28,6 +28,7 @@ import { LeavePolicyEditor } from '../_components/LeavePolicyEditor';
 import { ManualPolicyEditor } from '../_components/ManualPolicyEditor';
 import { NightPolicyEditor } from '../_components/NightPolicyEditor';
 import { RemotePolicyEditor } from '../_components/RemotePolicyEditor';
+import { FloatingShiftPolicyEditor } from '../_components/FloatingShiftPolicyEditor';
 import { SplitShiftPolicyEditor } from '../_components/SplitShiftPolicyEditor';
 import { SearchablePolicySelect } from '../_components/SearchablePolicySelect';
 import { parseSplitShiftSegmentRules } from '../../../lib/split-shift-policy';
@@ -185,6 +186,8 @@ export default async function PolicyFamilyPage({
             (typeof sectionValues.nightStart === 'string' && sectionValues.nightStart) ||
               (typeof sectionValues.nightEnd === 'string' && sectionValues.nightEnd),
           ),
+    nightStart: typeof sectionValues.nightStart === 'string' ? sectionValues.nightStart : '',
+    nightEnd: typeof sectionValues.nightEnd === 'string' ? sectionValues.nightEnd : '',
     cycleCount: typeof sectionValues.cycleCount === 'number' ? sectionValues.cycleCount : 2,
     cycleType: typeof sectionValues.cycleType === 'string' ? sectionValues.cycleType : 'daily',
     note: typeof sectionValues.note === 'string' ? sectionValues.note : '',
@@ -301,19 +304,21 @@ export default async function PolicyFamilyPage({
                       </>
                     ) : null}
 
-                    {activeVariant === 'floating-day' ? (
-                      <ShiftPolicyPanel title="محاسبه تاخیر">
-                        <ShiftPolicyField name="maxDelayMinutes" label="حداکثر تاخیر برای غیبت" required unit="دقیقه" defaultValue={defaults.maxDelayMinutes} hint="اگر تاخیر از این مقدار بیشتر شود، روز به صورت غیبت ثبت می‌شود." />
-                      </ShiftPolicyPanel>
+                    {activeVariant === 'floating-day' || activeVariant === 'floating-absolute' ? (
+                      <FloatingShiftPolicyEditor
+                        variant={activeVariant}
+                        entryGraceMinutes={defaults.entryGraceMinutes}
+                        delayCalculationMode={defaults.delayCalculationMode}
+                        maxDelayMinutes={defaults.maxDelayMinutes}
+                        preservedRequiredHours={
+                          activeVariant === 'floating-absolute' ? defaults.requiredHours : undefined
+                        }
+                      />
                     ) : null}
 
-                    {activeVariant === 'floating-absolute' ? (
-                      <ShiftPolicyPanel title="شرایط تایید حضور">
-                        <ShiftPolicyField name="requiredHours" label="حداقل ساعات حضور روزانه" required unit="ساعت" defaultValue={defaults.requiredHours} hint="کارمند باید حداقل این تعداد ساعت در محل کار یا به صورت remote حضور داشته باشد تا روز به عنوان حضور کامل محاسبه شود. کمتر از این مقدار ممکن است به عنوان حضور ناقص یا غیبت ثبت شود." />
-                      </ShiftPolicyPanel>
+                    {activeVariant !== 'floating-day' && activeVariant !== 'floating-absolute' ? (
+                      <PolicyFormActions cancelHref="/policies" submitLabel="ویرایش" />
                     ) : null}
-
-                    <PolicyFormActions cancelHref="/policies" submitLabel="ویرایش" />
                   </>
                 )}
               </div>
@@ -501,7 +506,14 @@ export default async function PolicyFamilyPage({
             />
           ) : null}
 
-          {familyKey === 'night' ? <NightPolicyEditor backHref={backHref} nightEnabled={defaults.nightEnabled} /> : null}
+          {familyKey === 'night' ? (
+            <NightPolicyEditor
+              backHref={backHref}
+              nightEnabled={defaults.nightEnabled}
+              nightStart={defaults.nightStart}
+              nightEnd={defaults.nightEnd}
+            />
+          ) : null}
 
           {familyKey === 'remote' ? (
             <RemotePolicyEditor backHref={backHref} policyId={policyId} policy={remoteWorkPolicy} />

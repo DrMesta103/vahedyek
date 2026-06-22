@@ -46,7 +46,7 @@ function variableAmountToTemplateItem(item: VariableAmount, type: 'addition' | '
     method: item.calculationMethod === 'percentage' ? 'percentage' : 'fixed',
     amount: item.amount,
     percent: item.percent,
-    base: item.calculationBase === 'grossPay' ? 'grossPay' : 'baseSalary',
+    base: item.calculationBase === 'total_earnings' ? 'total_earnings' : 'wage_base',
     calculationRules: normalizeCalculationRules(
       item.calculationRules,
       type === 'addition' ? DEFAULT_OPTIONAL_ADDITION_RULES : DEFAULT_OPTIONAL_DEDUCTION_RULES,

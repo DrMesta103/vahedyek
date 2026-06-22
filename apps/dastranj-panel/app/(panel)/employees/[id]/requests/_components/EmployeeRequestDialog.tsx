@@ -349,7 +349,7 @@ function AttendancePreviewCard({ preview }: { preview: EmployeeRequestPreview })
         <span>بازه شیفت: <strong>{attendance.bases.shiftWindowLabel ?? 'نامشخص'}</strong></span>
         <span>شب‌کاری (سیاست): <strong>{attendance.bases.nightPolicyEnabled ? 'فعال' : 'غیرفعال'}</strong></span>
         {attendance.bases.tenantNightWorkStart && attendance.bases.tenantNightWorkEnd ? (
-          <span>بازه شب (تنظیمات سازمان): <strong>{attendance.bases.tenantNightWorkStart} تا {attendance.bases.tenantNightWorkEnd}</strong></span>
+          <span>بازه شب (سیاست کاری): <strong>{attendance.bases.tenantNightWorkStart} تا {attendance.bases.tenantNightWorkEnd}</strong></span>
         ) : null}
         {attendance.proposedTimestamp ? <span>تردد پیشنهادی: <strong>{attendance.proposedTimestamp}</strong></span> : null}
         {attendance.proposedSegmentLabel ? <span>بخش مرتبط: <strong>{attendance.proposedSegmentLabel}</strong></span> : null}

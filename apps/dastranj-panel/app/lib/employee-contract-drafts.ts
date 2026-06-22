@@ -7,6 +7,7 @@ import {
   getActiveTenantStorageId,
   normalizePayrollSettings,
   normalizeCalculationRules,
+  normalizeVariableCalculationBase,
   normalizeLeaveSettings,
   normalizeMissionSettings,
   normalizePaymentSchedule,
@@ -334,7 +335,7 @@ function normalizeVariableTemplateItem(raw: unknown, type: 'addition' | 'deducti
     method: source.method === 'percentage' ? 'percentage' : 'fixed',
     amount: Number.isFinite(source.amount) ? Number(source.amount) : 0,
     percent: Number.isFinite(source.percent) ? Number(source.percent) : 0,
-    base: source.base === 'grossPay' ? 'grossPay' : 'baseSalary',
+    base: normalizeVariableCalculationBase(source.base),
     calculationRules: normalizeCalculationRules(
       source.calculationRules,
       type === 'addition' ? DEFAULT_OPTIONAL_ADDITION_RULES : DEFAULT_OPTIONAL_DEDUCTION_RULES,

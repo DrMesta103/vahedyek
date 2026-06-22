@@ -17,6 +17,7 @@ import {
   MessageSquareText,
   MousePointerClick,
   PanelRight,
+  Percent,
   Search,
   SquareStack,
   Table2,
@@ -62,6 +63,10 @@ const BUSINESS_ICONS: Record<string, typeof PanelRight> = {
   '/business/recommendation-card': CreditCard,
   '/business/module-card': SquareStack,
   '/business/module-card-grid': LayoutGrid,
+  '/business/currency-input': CreditCard,
+  '/business/percentage-input': Percent,
+  '/business/field-block': FormInput,
+  '/business/choice-chip': Tags,
 };
 
 const FORM_ICONS: Record<string, typeof FormInput> = {
@@ -138,13 +143,15 @@ function NavLink({
 
   return (
     <Link href={href} className={cn('lab-sidebar-link', isActive && 'is-active')}>
-      {Icon ? <Icon className="h-4 w-4 shrink-0 opacity-80" /> : null}
-      <span className="flex-1 truncate">{label}</span>
-      {badge ? (
-        <span className="rounded-[var(--taav-radius-sm)] bg-[var(--taav-surface-muted)] px-1.5 py-0.5 text-[length:var(--taav-text-2xs)] font-bold text-[var(--taav-text-subtle)]">
-          {badge}
-        </span>
-      ) : null}
+      {Icon ? <Icon className="mt-0.5 h-4 w-4 shrink-0 self-start opacity-80" /> : null}
+      <span className="min-w-0 flex-1">
+        <span className="block truncate leading-5">{label}</span>
+        {badge ? (
+          <span className="mt-1 block max-w-full truncate rounded-[var(--taav-radius-sm)] bg-[var(--taav-surface-muted)] px-1.5 py-0.5 text-[length:var(--taav-text-2xs)] font-bold leading-4 text-[var(--taav-text-subtle)]">
+            {badge}
+          </span>
+        ) : null}
+      </span>
     </Link>
   );
 }

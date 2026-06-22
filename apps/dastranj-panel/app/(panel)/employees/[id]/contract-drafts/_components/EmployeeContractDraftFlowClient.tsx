@@ -42,6 +42,7 @@ import { PayrollBaseSummaryPanel, type PayrollBaseSummaryItem } from '../../../.
 import { CalculationRulesBadges, CalcRulesDiffBadge, CalcRulesEditButton, CalculationRulesDialog } from '../../../../../components/CalculationRulesChips';
 import { PanelToggleRow } from '../../../../../components/PanelToggleRow';
 import { PanelFormModal, PanelFormModalActions } from '../../../../../components/PanelFormModal';
+import { VariablePaymentItemDialog, type VariablePaymentDialogValue } from '../../../../../components/VariablePaymentItemDialog';
 import { VariableAmountTitlePicker } from '../../../../../components/VariableAmountTitlePicker';
 import { UnsavedChangesDialog, useUnsavedLeaveGuard } from '../../../../../components/UnsavedChangesGuard';
 import { formatPersianYmd, getPersianPartsFromDate, parsePersianYmd, persianToDate } from '../../../../../lib/calendar-dates';
@@ -675,13 +676,39 @@ const EMPLOYEE_PAYMENT_CYCLE_OPTIONS: Array<{ value: EmployeePaymentCycle; label
 function createEmployeeVariablePaymentItem(type: 'addition' | 'deduction'): VariableTemplateItem {
   return {
     id: `${type}-${Date.now()}`,
-    title: VARIABLE_TITLES[type][0],
+    title: '',
     type,
     method: 'fixed',
     amount: 0,
     percent: 0,
-    base: 'baseSalary',
+    base: 'wage_base',
     calculationRules: type === 'addition' ? { ...DEFAULT_OPTIONAL_ADDITION_RULES } : { ...DEFAULT_OPTIONAL_DEDUCTION_RULES },
+  };
+}
+
+function employeeVariableItemToDialogValue(item: VariableTemplateItem): VariablePaymentDialogValue {
+  return {
+    id: item.id,
+    title: item.title,
+    type: item.type,
+    method: item.method,
+    amount: item.amount,
+    percent: item.percent,
+    base: item.base,
+    calculationRules: item.calculationRules,
+  };
+}
+
+function dialogValueToEmployeeVariableItem(item: VariablePaymentDialogValue): VariableTemplateItem {
+  return {
+    id: item.id,
+    title: item.title,
+    type: item.type,
+    method: item.method,
+    amount: item.amount,
+    percent: item.percent,
+    base: item.base,
+    calculationRules: item.calculationRules,
   };
 }
 
@@ -1636,7 +1663,7 @@ function buildEmployeePayrollBaseSummaryItems(
     const amount =
       item.method === 'fixed'
         ? item.amount
-        : (item.percent / 100) * (item.base === 'grossPay' ? derived.grossPay : derived.monthlyBaseSalary);
+        : (item.percent / 100) * (item.base === 'total_earnings' ? derived.grossPay : derived.monthlyBaseSalary);
     return {
       id: item.id,
       title: item.title,
@@ -1811,6 +1838,53 @@ function EmployeeVariablePaymentEditorDialog({
         />
       ) : null}
     </>
+  );
+}
+
+function SharedEmployeeVariablePaymentEditorDialog({
+  open,
+  initialType,
+  initialItem,
+  baseItem,
+  monthlyBaseSalary,
+  grossPay,
+  onClose,
+  onSubmit,
+}: {
+  open: boolean;
+  initialType: 'addition' | 'deduction';
+  initialItem: VariableTemplateItem | null;
+  baseItem?: VariableTemplateItem | null;
+  monthlyBaseSalary: number;
+  grossPay: number;
+  onClose: () => void;
+  onSubmit: (item: VariableTemplateItem) => void;
+}) {
+  const editingType = initialItem?.type ?? initialType;
+
+  return (
+    <VariablePaymentItemDialog
+      open={open}
+      mode={editingType}
+      initialValue={initialItem ? employeeVariableItemToDialogValue(initialItem) : undefined}
+      comparison={baseItem ? {
+        baseValue: employeeVariableItemToDialogValue(baseItem),
+        differenceLabel: 'متفاوت با قالب',
+        amountTooltip: (reference) => `مبلغ قالب انتخاب‌شده ${money(reference.amount)} است.`,
+        percentTooltip: (reference) => `درصد قالب انتخاب‌شده ${formatFaNumber(reference.percent)}٪ است.`,
+        baseTooltip: 'مبنای محاسبه این آیتم با قالب انتخاب‌شده متفاوت است.',
+        amountHigher: (diff) => `${money(diff)} بیشتر از قالب`,
+        amountLower: (diff) => `${money(diff)} کمتر از قالب`,
+        percentHigher: (diff) => `${formatFaNumber(diff)}٪ بیشتر از قالب`,
+        percentLower: (diff) => `${formatFaNumber(diff)}٪ کمتر از قالب`,
+        baseRules: baseItem.calculationRules,
+        baseLabel: 'قالب انتخاب‌شده',
+        rulesDifferenceLabel: 'متفاوت با قواعد قالب',
+      } : undefined}
+      calculateAmount={(item) => calculateEmployeeVariableAmount(dialogValueToEmployeeVariableItem(item), monthlyBaseSalary, grossPay)}
+      onClose={onClose}
+      onSubmit={(item) => onSubmit(dialogValueToEmployeeVariableItem({ ...item, type: editingType }))}
+    />
   );
 }
 
@@ -2644,7 +2718,7 @@ export function EmployeeContractDraftBuilderClient({
                 {item.type === 'addition' ? 'اضافه اختیاری' : 'کسورات اختیاری'} ·{' '}
                 {item.method === 'fixed'
                   ? `مبلغ ثابت ${money(item.amount)}`
-                  : `${formatFaNumber(item.percent)}٪ از ${item.base === 'baseSalary' ? 'حقوق پایه ماهانه' : 'جمع حقوق دریافتی'}`}
+                  : `${formatFaNumber(item.percent)}٪ از ${item.base === 'total_earnings' ? 'جمع حقوق دریافتی' : 'مزد مبنا'}`}
               </p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                 {differenceBadgeNode}
@@ -3588,7 +3662,7 @@ export function EmployeeContractDraftBuilderClient({
         onCancel={() => setEmployeeInfoEditor(false)}
         onSubmit={createOrUpdateSupplemental}
       />
-      <EmployeeVariablePaymentEditorDialog
+      <SharedEmployeeVariablePaymentEditorDialog
         open={Boolean(variablePaymentEditor)}
         initialType={variablePaymentEditor?.type ?? 'addition'}
         initialItem={variablePaymentEditor?.item ?? null}

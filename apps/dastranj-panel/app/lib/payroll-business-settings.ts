@@ -68,7 +68,7 @@ export type TaxBracket = {
 
 export type VariableAmountType = 'addition' | 'deduction';
 export type VariableCalculationMethod = 'fixed' | 'percentage';
-export type VariableCalculationBase = 'baseSalary' | 'grossPay';
+export type VariableCalculationBase = 'wage_base' | 'total_earnings';
 export type PaymentScheduleType = 'time_period' | 'job_activity' | 'hybrid_special';
 export type PaymentSchedulePeriod = 'monthly' | 'weekly' | 'biweekly' | 'daily' | 'project' | 'seasonal';
 export type PaymentSchedule = {
@@ -476,10 +476,27 @@ export const DAY_TYPE_PAYMENT_RULES: Array<{
 export const UNPAID_ABSENCE_IMPACT_OPTIONS: Array<{
   value: UnpaidAbsenceImpact;
   label: string;
+  shortLabel: string;
+  tooltip: string;
 }> = [
-  { value: 'none', label: 'بدون اثر' },
-  { value: 'full_deduction', label: 'کسر کامل با هر غیبت غیرموجه' },
-  { value: 'proportional_by_minutes', label: 'کسر نسبی بر اساس دقایق غیبت' },
+  {
+    value: 'none',
+    label: 'بدون اثر',
+    shortLabel: 'بدون اثر',
+    tooltip: 'غیبت غیرموجه در طول هفته، پرداخت این روز را تغییر نمی‌دهد.',
+  },
+  {
+    value: 'full_deduction',
+    label: 'کسر کامل با هر غیبت غیرموجه',
+    shortLabel: 'کسر کامل',
+    tooltip: 'اگر در طول هفته حتی یک غیبت غیرموجه ثبت شود، پرداخت این روز به صورت کامل حذف می‌شود.',
+  },
+  {
+    value: 'proportional_by_minutes',
+    label: 'کسر نسبی بر اساس دقایق غیبت',
+    shortLabel: 'کسر نسبی',
+    tooltip: 'مبلغ این روز به نسبت دقایق غیبت غیرموجه در طول هفته کاهش پیدا می‌کند.',
+  },
 ];
 
 export const DAY_TYPE_PAYMENT_BASE_OPTIONS: Array<{
@@ -498,6 +515,70 @@ export const DAY_TYPE_PAYMENT_BASE_OPTIONS: Array<{
     tooltip: 'مبلغ این روز بر اساس همه آیتم‌های افزاینده دریافتی کارمند محاسبه می‌شود.',
   },
 ];
+
+export const VARIABLE_PAYMENT_BASE_OPTIONS: Array<{
+  value: VariableCalculationBase;
+  label: string;
+  tooltip: string;
+}> = [
+  {
+    value: 'wage_base',
+    label: 'مزد مبنا',
+    tooltip: 'مبلغ این آیتم بر اساس حقوق پایه و آیتم‌هایی که به عنوان «جزو مزد مبنا» مشخص شده‌اند محاسبه می‌شود.',
+  },
+  {
+    value: 'total_earnings',
+    label: 'جمع حقوق دریافتی',
+    tooltip: 'مبلغ این آیتم بر اساس همه آیتم‌های افزاینده دریافتی محاسبه می‌شود.',
+  },
+];
+
+export function normalizeVariableCalculationBase(
+  value: unknown,
+  fallback: VariableCalculationBase = 'wage_base',
+): VariableCalculationBase {
+  if (
+    value === 'wage_base' ||
+    value === 'baseSalary' ||
+    value === 'base_salary' ||
+    value === 'base_salary_monthly' ||
+    value === 'monthly_base_salary' ||
+    value === 'salary_base'
+  ) {
+    return 'wage_base';
+  }
+  if (
+    value === 'total_earnings' ||
+    value === 'grossPay' ||
+    value === 'gross_earnings' ||
+    value === 'total_pay' ||
+    value === 'total_payable'
+  ) {
+    return 'total_earnings';
+  }
+  return fallback;
+}
+
+export function getVariableCalculationBaseLabel(base: VariableCalculationBase) {
+  return base === 'total_earnings' ? 'جمع حقوق دریافتی' : 'مزد مبنا';
+}
+
+export function getDayTypePaymentBaseShortLabel(base: DayTypePaymentBase) {
+  return base === 'grossPay' ? 'جمع حقوق دریافتی' : 'مزد مبنا';
+}
+
+export function getUnpaidAbsenceImpactShortLabel(impact: UnpaidAbsenceImpact) {
+  return UNPAID_ABSENCE_IMPACT_OPTIONS.find((option) => option.value === impact)?.shortLabel ?? 'بدون اثر';
+}
+
+export function compareDayTypePaymentRules(a: DayTypePaymentRule, b: DayTypePaymentRule) {
+  return (
+    a.paidWithoutWork === b.paidWithoutWork &&
+    a.paymentBase === b.paymentBase &&
+    a.unpaidAbsenceImpact === b.unpaidAbsenceImpact &&
+    a.workedTimeCoefficient === b.workedTimeCoefficient
+  );
+}
 export const DEFAULT_DAY_TYPE_PAYMENT_RULES: DayTypePaymentRules = {
   no_shift_day: {
     paidWithoutWork: false,
@@ -1067,6 +1148,7 @@ export function normalizePayrollSettings(value: unknown): PayrollSettings {
   const normalizeVariableRules = (items: VariableAmount[], defaultRules: CalculationRules): VariableAmount[] =>
     items.map((item) => ({
       ...item,
+      calculationBase: normalizeVariableCalculationBase(item.calculationBase),
       calculationRules: normalizeCalculationRules(
         (item as unknown as Record<string, unknown>).calculationRules,
         defaultRules,
@@ -1400,7 +1482,7 @@ export const DEFAULT_PAYROLL_SETTINGS: PayrollSettings = {
 
 export function calculateVariableAmount(item: VariableAmount, monthlyBaseSalary: number, grossPay: number) {
   if (item.calculationMethod === 'fixed') return item.amount;
-  const baseAmount = item.calculationBase === 'baseSalary' ? monthlyBaseSalary : grossPay;
+  const baseAmount = item.calculationBase === 'total_earnings' ? grossPay : monthlyBaseSalary;
   return (baseAmount * item.percent) / 100;
 }
 
@@ -1633,11 +1715,9 @@ export function validatePayrollStep(stepId: PayrollStepId, settings: PayrollSett
     };
     const validateDayTypeRule = (ruleKey: DayTypePaymentRuleKey, rule: DayTypePaymentRule) => {
       const fieldBase = `dayTypePaymentRules.${ruleKey}`;
-      if (!Number.isFinite(rule.workedTimeCoefficient)) errors[`${fieldBase}.workedTimeCoefficient`] = 'ضریب پرداخت الزامی است';
-      else if (rule.workedTimeCoefficient <= 0) errors[`${fieldBase}.workedTimeCoefficient`] = 'ضریب پرداخت باید عددی مثبت باشد';
       if (rule.paidWithoutWork) {
         if (rule.paymentBase !== 'wageBase' && rule.paymentBase !== 'grossPay') {
-          errors[`${fieldBase}.paymentBase`] = 'مبنای پرداخت این روز را انتخاب کنید';
+          errors[`${fieldBase}.paymentBase`] = 'مبنای پرداخت را انتخاب کنید';
         }
         if (
           rule.unpaidAbsenceImpact !== 'none' &&
@@ -1645,6 +1725,11 @@ export function validatePayrollStep(stepId: PayrollStepId, settings: PayrollSett
           rule.unpaidAbsenceImpact !== 'proportional_by_minutes'
         ) {
           errors[`${fieldBase}.unpaidAbsenceImpact`] = 'اثر غیبت غیرموجه را انتخاب کنید';
+        }
+        if (!Number.isFinite(rule.workedTimeCoefficient)) {
+          errors[`${fieldBase}.workedTimeCoefficient`] = 'ضریب پرداخت را وارد کنید';
+        } else if (rule.workedTimeCoefficient <= 0) {
+          errors[`${fieldBase}.workedTimeCoefficient`] = 'ضریب باید عددی مثبت باشد';
         }
       }
     };
@@ -1665,13 +1750,6 @@ export function validatePayrollStep(stepId: PayrollStepId, settings: PayrollSett
         errors[`combinationRule-${rule.id}`] = Object.values(ruleErrors)[0];
       }
     });
-    if (rules.nightWork.enabled) {
-      const validTime = /^([01]\d|2[0-3]):[0-5]\d$/;
-      if (!rules.nightWork.startTime) errors.nightStartTime = 'این فیلد الزامی است.';
-      else if (!validTime.test(rules.nightWork.startTime)) errors.nightStartTime = 'ساعت وارد شده معتبر نیست.';
-      if (!rules.nightWork.endTime) errors.nightEndTime = 'این فیلد الزامی است.';
-      else if (!validTime.test(rules.nightWork.endTime)) errors.nightEndTime = 'ساعت وارد شده معتبر نیست.';
-    }
   }
 
   if (stepId === 'leave') {

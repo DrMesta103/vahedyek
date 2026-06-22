@@ -392,13 +392,13 @@ export function buildPayrollPreview(input: {
         nightAmount,
         DEFAULT_OPTIONAL_ADDITION_RULES,
         {
-          formula: `${nightHours.hours.toLocaleString('fa-IR', { maximumFractionDigits: 2 })} ساعت در بازه ${settings.workTimePayRules.nightWork.startTime} تا ${settings.workTimePayRules.nightWork.endTime} × نرخ مبنا × ضریب ${nightCoefficient}`,
+          formula: `${nightHours.hours.toLocaleString('fa-IR', { maximumFractionDigits: 2 })} ساعت شب‌کاری بر اساس سیاست کاری × نرخ مبنا × ضریب ${nightCoefficient}`,
           sourceDates: input.days.filter((day) => day.nightWorkMinutes > 0).map((day) => day.date),
           sourceRequests: [],
           contractLabel,
           policyLabel: null,
           components: [
-            { label: 'بازه شب‌کاری', value: `${settings.workTimePayRules.nightWork.startTime} – ${settings.workTimePayRules.nightWork.endTime}` },
+            { label: 'منبع بازه شب‌کاری', value: 'سیاست کاری کارمند' },
             { label: 'ضریب', value: String(nightCoefficient) },
           ],
         },

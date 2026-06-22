@@ -120,6 +120,34 @@ export const LAB_BUSINESS_NAV: LabNavItem[] = [
     description: 'چیدمان responsive کارت‌های TaavModuleCard',
     keywords: ['grid', 'setup cards', 'two column'],
   },
+  {
+    href: '/business/currency-input',
+    label: 'ورودی مبلغ',
+    badge: 'TaavCurrencyInput',
+    description: 'ورود مبلغ با جداکننده سه‌رقمی و واحد پول — قرارداد، حقوق، وام',
+    keywords: ['currency', 'rial', 'toman', 'amount', 'payroll', 'contract'],
+  },
+  {
+    href: '/business/percentage-input',
+    label: 'ورودی درصد',
+    badge: 'TaavPercentageInput',
+    description: 'ورود درصد با affix و محدوده min/max — پیش‌پرداخت، جریمه، تخفیف',
+    keywords: ['percent', 'rate', 'contract', 'discount', 'penalty'],
+  },
+  {
+    href: '/business/field-block',
+    label: 'بلوک فیلد',
+    badge: 'TaavFieldBlock',
+    description: 'الگوی فیلد کسب‌وکاری با label، tooltip ثابت و پیام وضعیت',
+    keywords: ['field block', 'business form', 'label', 'tooltip', 'validation'],
+  },
+  {
+    href: '/business/choice-chip',
+    label: 'چیپ انتخابی',
+    badge: 'TaavChoiceChipGroup',
+    description: 'انتخاب محدود کسب‌وکار — نوع شرکت، نوع قرارداد، وضعیت ساده',
+    keywords: ['choice chip', 'company type', 'contract type', 'selection'],
+  },
 ];
 
 export const LAB_CATEGORIES = [
@@ -170,7 +198,7 @@ export const LAB_CATEGORIES = [
     titleFa: 'کامپوننت‌های کسب‌وکار',
     description: 'اجزای تخصصی DastRanj و VahedYek',
     status: 'active' as const,
-    count: 5,
+    count: 9,
   },
 ];
 
@@ -183,7 +211,7 @@ export const LAB_STATUS_ITEMS = [
   { key: 'navigation', label: 'Navigation', status: 'Tabs + Stepper', progress: 65 },
   { key: 'data-display', label: 'Data Display', status: '۹ کامپوننت', progress: 70 },
   { key: 'layout', label: 'Layout', status: '۹ الگو', progress: 75 },
-  { key: 'business', label: 'Business', status: 'IntroCard hub + ModuleCard + Sidebar', progress: 55 },
+  { key: 'business', label: 'Business', status: '۹ کامپوننت — layout + form patterns', progress: 65 },
   { key: 'ui-lab', label: 'UI Lab', status: 'مستندات', progress: 92 },
   { key: 'migration', label: 'Migration', status: 'شروع نشده', progress: 0 },
 ];

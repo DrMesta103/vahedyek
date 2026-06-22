@@ -624,8 +624,16 @@ export async function getEmployeeWorkReportData(
   if (currentWorkGroupContext?.policy && !currentWorkGroupContext.calendar) {
     warnings.push('برای سیاست کاری این کارمند، تقویم کاری تعریف نشده است.');
   }
-  if (!tenantPayrollSettings.workTimePayRules.nightWork.enabled) {
-    warnings.push('تنظیمات شب‌کاری سال گزارش فعال نیست یا تکمیل نشده است.');
+  const currentPolicyValues = currentWorkGroupContext?.policy?.sectionValues ?? null;
+  const nightPolicyConfigured =
+    currentPolicyValues != null &&
+    currentPolicyValues.nightEnabled === true &&
+    typeof currentPolicyValues.nightStart === 'string' &&
+    currentPolicyValues.nightStart.trim() &&
+    typeof currentPolicyValues.nightEnd === 'string' &&
+    currentPolicyValues.nightEnd.trim();
+  if (currentWorkGroupContext?.policy && !nightPolicyConfigured) {
+    warnings.push('تنظیمات شب‌کاری در سیاست کاری فعلی فعال نیست یا بازه آن کامل نشده است.');
   }
 
   const payrollSummary: WorkReportSummaryForPayroll = {

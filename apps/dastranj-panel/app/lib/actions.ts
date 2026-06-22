@@ -1653,8 +1653,8 @@ export async function savePolicyWorkspaceAction(formData: FormData) {
               description,
               calendarId: effectiveCalendarId,
               nightEnabled: boolValue(formData, 'nightEnabled'),
-              nightStart: null,
-              nightEnd: null,
+              nightStart: boolValue(formData, 'nightEnabled') ? value(formData, 'nightStart') || null : null,
+              nightEnd: boolValue(formData, 'nightEnabled') ? value(formData, 'nightEnd') || null : null,
             })
         : familyKey === 'manual'
           ? jsonValue({

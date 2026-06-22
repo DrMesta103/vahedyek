@@ -6,6 +6,7 @@ import {
   DEFAULT_OPTIONAL_DEDUCTION_RULES,
   DEFAULT_MISSION_SETTINGS,
   DEFAULT_PAYMENT_SCHEDULE,
+  normalizeVariableCalculationBase,
   normalizeCalculationRules,
   normalizeLeaveSettings,
   normalizeMissionSettings,
@@ -15,6 +16,7 @@ import {
   type MissionSettings,
   type PaymentSchedule,
   type PayrollSettings,
+  type VariableCalculationBase,
   getActiveTenantStorageId,
 } from './payroll-business-settings';
 
@@ -54,7 +56,7 @@ export type VariableTemplateItem = {
   method: 'fixed' | 'percentage';
   amount: number;
   percent: number;
-  base: 'baseSalary' | 'grossPay';
+  base: VariableCalculationBase;
   calculationRules: CalculationRules;
 };
 
@@ -286,7 +288,7 @@ export function normalizeContractDraftTemplate(value: unknown): ContractDraftTem
       method: src.method === 'percentage' ? 'percentage' : 'fixed',
       amount: Number.isFinite(src.amount) ? Number(src.amount) : 0,
       percent: Number.isFinite(src.percent) ? Number(src.percent) : 0,
-      base: src.base === 'grossPay' ? 'grossPay' : 'baseSalary',
+      base: normalizeVariableCalculationBase(src.base),
       calculationRules: normalizeCalculationRules(
         src.calculationRules,
         type === 'addition' ? DEFAULT_OPTIONAL_ADDITION_RULES : DEFAULT_OPTIONAL_DEDUCTION_RULES,

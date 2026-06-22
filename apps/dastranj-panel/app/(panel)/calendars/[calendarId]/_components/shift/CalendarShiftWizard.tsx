@@ -13,7 +13,7 @@ import {
   SlidersHorizontal,
   Trash2,
 } from 'lucide-react';
-import { useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { ConfirmDialog } from '../../../../../components/ConfirmDialog';
 import { addCalendarShiftAction } from '../../../../../lib/actions';
 import { normalizePersianDateInput } from '../../../../../lib/calendar-events';
@@ -896,6 +896,12 @@ export type ShiftWizardSavePayload = {
   description?: string;
 };
 
+export type CalendarShiftWizardSubmitHandle = {
+  submit: () => Promise<void>;
+  canSave: boolean;
+  saving: boolean;
+};
+
 export type CalendarShiftWizardProps = {
   calendar: CalendarShiftWizardCalendar;
   initialShiftType: ShiftType;
@@ -909,6 +915,9 @@ export type CalendarShiftWizardProps = {
   enableBuiltinTemplatePicker?: boolean;
   submitLabel?: string;
   initialDescription?: string;
+  hideFooter?: boolean;
+  beforeSummarySlot?: ReactNode;
+  onRegisterSubmit?: (handle: CalendarShiftWizardSubmitHandle | null) => void;
   onSaveShift?: (payload: ShiftWizardSavePayload) => Promise<void>;
   onSaved: () => void;
   onCancel: () => void;
@@ -927,6 +936,9 @@ export function CalendarShiftWizard({
   enableBuiltinTemplatePicker = true,
   submitLabel,
   initialDescription = '',
+  hideFooter = false,
+  beforeSummarySlot,
+  onRegisterSubmit,
   onSaveShift,
   onSaved,
   onCancel,
@@ -1418,6 +1430,19 @@ export function CalendarShiftWizard({
     await persistShift();
   };
 
+  const saveRef = useRef(save);
+  saveRef.current = save;
+
+  useEffect(() => {
+    if (!onRegisterSubmit) return;
+    onRegisterSubmit({
+      submit: () => saveRef.current(),
+      canSave,
+      saving,
+    });
+    return () => onRegisterSubmit(null);
+  }, [onRegisterSubmit, canSave, saving]);
+
   const resolvedSubmitLabel = submitLabel ?? (isTemplatePurpose ? 'ثبت قالب' : 'ذخیره شیفت');
 
   return (
@@ -1586,6 +1611,7 @@ export function CalendarShiftWizard({
                         ))}
                       </div>
                     ) : null}
+                    {beforeSummarySlot}
                     <div className="rounded-[18px] border border-indigo-400/25 bg-indigo-950/35 p-5 text-right">
                       <div className="text-lg font-black text-white">خلاصه شیفت</div>
                       {fixedReady ? (
@@ -1716,6 +1742,7 @@ export function CalendarShiftWizard({
                         ))}
                       </div>
                     ) : null}
+                    {beforeSummarySlot}
                     <div className="rounded-[18px] border border-indigo-400/25 bg-indigo-950/35 p-5 text-right">
                       <div className="text-lg font-black text-white">خلاصه شیفت</div>
                       {floatDayReady ? (
@@ -1825,6 +1852,7 @@ export function CalendarShiftWizard({
                         ))}
                       </div>
                     ) : null}
+                    {beforeSummarySlot}
                     <div className="rounded-[18px] border border-indigo-400/25 bg-indigo-950/35 p-5 text-right">
                       <div className="text-lg font-black text-white">خلاصه شیفت</div>
                       {floatAbsReady ? (
@@ -1917,6 +1945,7 @@ export function CalendarShiftWizard({
                   <BreakEditor items={split2Rests} onChange={setSplit2Rests} workRange={split2WorkRange} />
                 </div>
 
+                {beforeSummarySlot}
                 <div className="rounded-[18px] border border-indigo-400/25 bg-indigo-950/35 p-5 text-right">
                   <div className="flex flex-row-reverse items-center justify-between gap-3 border-b border-indigo-400/20 pb-4">
                     <div className="flex flex-row-reverse items-center gap-3">
@@ -2077,7 +2106,7 @@ export function CalendarShiftWizard({
               <div className="rounded-xl border border-rose-400/25 bg-rose-950/40 px-4 py-3 text-right text-sm font-bold text-rose-200">{saveError}</div>
             ) : null}
 
-            {compact ? (
+            {compact && !hideFooter ? (
               <footer className="calendar-shift-wizard-actions">
                 <button
                   type="button"
@@ -2091,7 +2120,7 @@ export function CalendarShiftWizard({
                   انصراف
                 </button>
               </footer>
-            ) : (
+            ) : !hideFooter ? (
               <div className="flex items-center justify-between gap-3">
                 <button type="button" onClick={onCancel} className="rounded-xl border border-white/10 px-4 py-2.5 text-sm text-slate-200">
                   انصراف
@@ -2107,7 +2136,7 @@ export function CalendarShiftWizard({
                   <Check className="h-4 w-4" />
                 </button>
               </div>
-            )}
+            ) : null}
           </div>
       </div>
 

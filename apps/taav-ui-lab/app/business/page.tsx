@@ -10,14 +10,21 @@ export default function BusinessOverviewPage() {
       <DocPageHeader
         eyebrow="Business Components"
         title="کامپوننت‌های کسب‌وکار"
-        description="اجزای presentation تخصصی DastRanj و VahedYek — data-driven، بدون business logic داخلی."
+        description="اجزای presentation تخصصی DastRanj و VahedYek — layout، navigation و الگوهای فرم کسب‌وکار؛ data-driven و بدون business logic داخلی."
         importCode={`import {
   TaavBusinessSidebar,
   TaavBusinessIntroCard,
   TaavBusinessRecommendationCard,
   TaavModuleCard,
   TaavModuleCardGrid,
-} from '@repo/ui/taav/business';`}
+} from '@repo/ui/taav/business';
+
+import {
+  TaavCurrencyInput,
+  TaavPercentageInput,
+  TaavFieldBlock,
+  TaavChoiceChipGroup,
+} from '@repo/ui/taav/forms';`}
       />
       <DocApiNote />
       <div className="grid gap-4 md:grid-cols-2">

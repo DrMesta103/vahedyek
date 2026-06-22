@@ -86,6 +86,8 @@ export type AttendancePolicyBundle = {
   consecutiveAbsenceWarning: boolean;
   maxConsecutiveAbsenceDays: number;
   nightPolicyEnabled: boolean;
+  nightStart: string | null;
+  nightEnd: string | null;
   entryGraceMinutes: number;
   exitGraceMinutes: number;
   maxDelayMinutes: number;
@@ -291,6 +293,8 @@ export function readAttendancePolicyBundle(sectionValues: Record<string, unknown
     consecutiveAbsenceWarning: boolValue(sectionValues.consecutiveAbsenceWarning),
     maxConsecutiveAbsenceDays: numberValue(sectionValues.maxConsecutiveAbsenceDays, 0),
     nightPolicyEnabled: boolValue(sectionValues.nightEnabled),
+    nightStart: typeof sectionValues.nightStart === 'string' && sectionValues.nightStart ? sectionValues.nightStart : null,
+    nightEnd: typeof sectionValues.nightEnd === 'string' && sectionValues.nightEnd ? sectionValues.nightEnd : null,
     entryGraceMinutes: numberValue(sectionValues.entryGraceMinutes, 0),
     exitGraceMinutes: numberValue(sectionValues.exitGraceMinutes, 0),
     maxDelayMinutes: numberValue(sectionValues.maxDelayMinutes, 0),
@@ -524,7 +528,6 @@ function analyzeSplitShiftAttendance(input: {
   segments: ShiftSegment[];
   dateKey: string;
   policy: AttendancePolicyBundle;
-  nightWindow: { enabled: boolean; startTime: string; endTime: string };
   onlyApprovedForTotals?: boolean;
 }): AttendanceDayAnalysis {
   const effectivePoints = input.timestamps.filter((point) =>
@@ -551,10 +554,9 @@ function analyzeSplitShiftAttendance(input: {
   const nightWorkMinutes = calculateNightWorkMinutes(
     completeIntervals,
     input.dateKey,
-    input.nightWindow.startTime,
-    input.nightWindow.endTime,
+    input.policy.nightStart ?? '',
+    input.policy.nightEnd ?? '',
     input.policy.nightPolicyEnabled,
-    input.nightWindow.enabled,
   );
 
   let status = 'بدون تردد';
@@ -618,9 +620,8 @@ export function calculateNightWorkMinutes(
   nightStart: string,
   nightEnd: string,
   nightPolicyEnabled: boolean,
-  tenantNightEnabled: boolean,
 ) {
-  if (!nightPolicyEnabled || !tenantNightEnabled) return 0;
+  if (!nightPolicyEnabled) return 0;
   const nightStartTs = timestampForPersianDateTime(dateKey, nightStart);
   if (nightStartTs == null) return 0;
   let nightEndTs = timestampForPersianDateTime(dateKey, nightEnd);
@@ -653,7 +654,6 @@ export function analyzeAttendanceForShiftWindow(input: {
   segments: ShiftSegment[];
   dateKey: string;
   policy: AttendancePolicyBundle;
-  nightWindow: { enabled: boolean; startTime: string; endTime: string };
   onlyApprovedForTotals?: boolean;
 }): AttendanceDayAnalysis {
   if (input.segments.some((segment) => segment.shiftType === 'split')) {
@@ -705,10 +705,9 @@ export function analyzeAttendanceForShiftWindow(input: {
   const nightWorkMinutes = calculateNightWorkMinutes(
     completeIntervals,
     input.dateKey,
-    input.nightWindow.startTime,
-    input.nightWindow.endTime,
+    input.policy.nightStart ?? '',
+    input.policy.nightEnd ?? '',
     input.policy.nightPolicyEnabled,
-    input.nightWindow.enabled,
   );
 
   let outsideShiftWindow = false;
@@ -829,7 +828,6 @@ export function previewAttendanceCorrection(input: {
     segments: input.segments,
     dateKey: input.persianDateKey,
     policy: input.policy,
-    nightWindow: nightWork,
     onlyApprovedForTotals: true,
   });
 
@@ -845,7 +843,6 @@ export function previewAttendanceCorrection(input: {
         segments: input.segments,
         dateKey: input.persianDateKey,
         policy: input.policy,
-        nightWindow: nightWork,
         onlyApprovedForTotals: true,
       })
     : null;
@@ -858,7 +855,6 @@ export function previewAttendanceCorrection(input: {
     segments: input.segments,
     dateKey: input.persianDateKey,
     policy: input.policy,
-    nightWindow: nightWork,
     onlyApprovedForTotals: input.submissionMode === 'approved',
   });
 
@@ -953,9 +949,9 @@ export function previewAttendanceCorrection(input: {
       shiftTypeLabel: input.shiftTypeLabel,
       shiftWindowLabel: input.shiftWindowLabel,
       nightPolicyEnabled: input.policy.nightPolicyEnabled,
-      tenantNightWorkStart: nightWork.enabled ? nightWork.startTime : null,
-      tenantNightWorkEnd: nightWork.enabled ? nightWork.endTime : null,
-      tenantNightWorkCoefficient: nightWork.enabled ? nightWork.coefficient : null,
+      tenantNightWorkStart: input.policy.nightPolicyEnabled ? input.policy.nightStart : null,
+      tenantNightWorkEnd: input.policy.nightPolicyEnabled ? input.policy.nightEnd : null,
+      tenantNightWorkCoefficient: input.policy.nightPolicyEnabled ? nightWork.coefficient : null,
     },
     currentTimestamps: currentTimestamps.map((item) => item.timeLabel),
     proposedTimestamp: proposedTimestamp?.timeLabel ?? null,

@@ -748,11 +748,6 @@ export function calculateWorkReportDay(input: {
     segments: shiftContext.segments,
     dateKey: input.date,
     policy: policyConfig.bundle,
-    nightWindow: {
-      enabled: nightWorkRule.enabled,
-      startTime: nightWorkRule.startTime,
-      endTime: nightWorkRule.endTime,
-    },
     onlyApprovedForTotals: true,
   });
 

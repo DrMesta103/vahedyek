@@ -19,7 +19,8 @@ import {
 } from 'lucide-react';
 import { MinimalScroll } from '../../../components/MinimalScroll';
 import { PayrollBaseSummaryPanel, type PayrollBaseSummaryItem } from '../../../components/PayrollBaseSummaryPanel';
-import { AdaptiveChipGroup } from '../../../components/AdaptiveChipGroup';
+import { DayTypePaymentRuleCard } from '../../../components/DayTypePaymentRuleDialog';
+import { VariablePaymentItemDialog, type VariablePaymentDialogValue } from '../../../components/VariablePaymentItemDialog';
 import { VariableAmountTitlePicker } from '../../../components/VariableAmountTitlePicker';
 import { ConfirmDialog } from '../../../components/ConfirmDialog';
 import { PanelFormModal, PanelFormModalActions } from '../../../components/PanelFormModal';
@@ -32,15 +33,13 @@ import {
   getActiveTenantStorageId,
   ACTIVE_TENANT_STORAGE_KEY,
   BENEFIT_FIELDS,
-  DAY_TYPE_PAYMENT_BASE_OPTIONS,
   DAY_TYPE_PAYMENT_RULES,
   COEFFICIENT_COMBINATION_METHODS,
   COEFFICIENT_EXCEPTION_METHODS,
   DEFAULT_PAYROLL_SETTINGS,
   PAYROLL_STEPS,
-  UNPAID_ABSENCE_IMPACT_OPTIONS,
-  SETTLEMENT_RULES,
   WORK_TIME_CONDITIONS,
+  SETTLEMENT_RULES,
   applyPayrollOverrides,
   buildPayrollOverrides,
   calculateCombinedCoefficient,
@@ -70,9 +69,6 @@ import {
   type BaseDifference,
   type BusinessSettingYear,
   type CalculationRules,
-  type DayTypePaymentRule,
-  type DayTypePaymentBase,
-  type DayTypePaymentRuleKey,
   type DayTypePaymentRules,
   type PaymentEffect,
   type CoefficientCombinationMethod,
@@ -93,7 +89,6 @@ import {
 } from '../../../lib/payroll-business-settings';
 import type { HydratedClientStorageState } from '../../../lib/client-storage-persistence';
 import {
-  buildToggleCompareDifference,
   compareCollectionsForMode,
   compareNumbersForMode,
   type PayrollComparisonMode,
@@ -280,59 +275,6 @@ function NumericField({
       {helper ? <small>{helper}</small> : null}
       {error ? <em>{error}</em> : null}
     </label>
-  );
-}
-
-function TimeField({
-  label,
-  value,
-  onChange,
-  helper,
-  tooltip,
-  error,
-  difference,
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  helper?: string;
-  tooltip?: string;
-  error?: string;
-  difference?: BaseDifference | null;
-}) {
-  return (
-    <label className={`business-payroll-field ${error ? 'has-error' : ''}`}>
-      <span className="business-payroll-field-label">
-        {label}
-        {tooltip ? <InfoTooltip text={tooltip} /> : null}
-      </span>
-      <span className="business-payroll-input" dir="ltr">
-        <input value={value} inputMode="numeric" placeholder="22:00" onChange={(event) => onChange(event.target.value)} />
-      </span>
-      <DifferenceBadge difference={difference} />
-      {helper ? <small>{helper}</small> : null}
-      {error ? <em>{error}</em> : null}
-    </label>
-  );
-}
-
-function ReadOnlyTimeField({
-  label,
-  value,
-  helper,
-}: {
-  label: string;
-  value: string;
-  helper?: string;
-}) {
-  return (
-    <div className="business-payroll-field business-payroll-field--readonly">
-      <span className="business-payroll-field-label">{label}</span>
-      <span className="business-payroll-readonly-value" dir="ltr">
-        {toPersianDigits(value || '—')}
-      </span>
-      {helper ? <small>{helper}</small> : null}
-    </div>
   );
 }
 
@@ -755,13 +697,39 @@ function BenefitsSection({
 function newVariableAmount(type: VariableAmountType): VariableAmount {
   return {
     id: `amount-${Date.now()}`,
-    title: VARIABLE_TITLES[type][0],
+    title: '',
     type,
     calculationMethod: 'fixed',
     amount: Number.NaN,
     percent: Number.NaN,
-    calculationBase: 'baseSalary',
+    calculationBase: 'wage_base',
     calculationRules: type === 'addition' ? { ...DEFAULT_OPTIONAL_ADDITION_RULES } : { ...DEFAULT_OPTIONAL_DEDUCTION_RULES },
+  };
+}
+
+function variableAmountToDialogValue(item: VariableAmount): VariablePaymentDialogValue {
+  return {
+    id: item.id,
+    title: item.title,
+    type: item.type,
+    method: item.calculationMethod,
+    amount: item.amount,
+    percent: item.percent,
+    base: item.calculationBase,
+    calculationRules: item.calculationRules,
+  };
+}
+
+function dialogValueToVariableAmount(item: VariablePaymentDialogValue): VariableAmount {
+  return {
+    id: item.id,
+    title: item.title,
+    type: item.type,
+    calculationMethod: item.method,
+    amount: item.amount,
+    percent: item.percent,
+    calculationBase: item.base,
+    calculationRules: item.calculationRules,
   };
 }
 
@@ -871,6 +839,31 @@ function VariableAmountDialog({
   );
 }
 
+function SharedVariableAmountDialog({
+  open,
+  initialItem,
+  derived,
+  onClose,
+  onSubmit,
+}: {
+  open: boolean;
+  initialItem: VariableAmount | null;
+  derived: PayrollDerivedValues;
+  onClose: () => void;
+  onSubmit: (item: VariableAmount) => void;
+}) {
+  return (
+    <VariablePaymentItemDialog
+      open={open}
+      mode={initialItem?.type ?? 'addition'}
+      initialValue={initialItem ? variableAmountToDialogValue(initialItem) : undefined}
+      calculateAmount={(item) => calculateVariableAmount(dialogValueToVariableAmount(item), derived.monthlyBaseSalary, derived.grossPay)}
+      onClose={onClose}
+      onSubmit={(item) => onSubmit(dialogValueToVariableAmount(item))}
+    />
+  );
+}
+
 function VariableAmountsSection({
   settings,
   baseSettings,
@@ -923,11 +916,10 @@ function VariableAmountsSection({
           <Plus className="h-4 w-4" /> افزودن کسورات
         </button>
       </div>
-      <VariableAmountDialog
+      <SharedVariableAmountDialog
         open={amountEditor.open}
         initialItem={amountEditor.item}
         derived={derived}
-        baseSettings={baseSettings}
         onClose={() => setAmountEditor({ open: false, item: null })}
         onSubmit={upsert}
       />
@@ -956,7 +948,7 @@ function VariableAmountsSection({
                 <p>
                   {item.calculationMethod === 'fixed'
                     ? 'مبلغ ثابت'
-                    : `${formatFaNumber(item.percent)}٪ از ${item.calculationBase === 'baseSalary' ? 'حقوق پایه ماهانه' : 'جمع حقوق دریافتی'}`}
+                    : `${formatFaNumber(item.percent)}٪ از ${item.calculationBase === 'total_earnings' ? 'جمع حقوق دریافتی' : 'مزد مبنا'}`}
                 </p>
                 <b>{money(amount)}</b>
                 <div className="calc-badges-row">
@@ -1069,131 +1061,6 @@ function CoefficientRuleCard({
         <span>{money(salaryPerHour * value)} به ازای هر ساعت</span>
         <small>{helper}</small>
       </div>
-    </article>
-  );
-}
-
-function DayTypePaymentRuleCard({
-  dayType,
-  value,
-  baseValue,
-  coefficientError,
-  impactError,
-  onChange,
-  comparisonMode = 'tenant',
-}: {
-  dayType: DayTypePaymentRuleKey;
-  value: DayTypePaymentRule;
-  baseValue?: DayTypePaymentRule;
-  coefficientError?: string;
-  impactError?: string;
-  onChange: (value: DayTypePaymentRule) => void;
-  comparisonMode?: PayrollComparisonMode;
-}) {
-  const meta = DAY_TYPE_PAYMENT_RULES.find((item) => item.key === dayType) ?? DAY_TYPE_PAYMENT_RULES[0];
-  const difference = baseValue ? compareCollectionsForMode(comparisonMode, baseValue, value, meta.label) : null;
-
-  return (
-    <article className="business-payroll-day-type-card">
-      <div className="business-payroll-day-type-card-head">
-        <div className="business-payroll-day-type-card-title">
-          <strong>{meta.label}</strong>
-          <InfoTooltip text={meta.helper} />
-        </div>
-        {baseValue ? <DifferenceBadge difference={difference} /> : null}
-      </div>
-
-      <div className="business-payroll-day-type-toggle">
-        <div className="business-payroll-day-type-toggle-head">
-          <div className="business-payroll-day-type-toggle-copy">
-            <span className="business-payroll-day-type-toggle-label">
-              <InfoTooltip text="اگر این روز با حقوق باشد، حتی بدون کارکرد هم حقوق این روز برای کارمند محاسبه می‌شود. اگر بی‌حقوق باشد، در صورت عدم کارکرد حقوقی برای این روز ثبت نمی‌شود." />
-              وضعیت پرداخت این روز
-            </span>
-            <small>تعیین کنید این روز برای کارمند «با حقوق» محسوب شود یا «بی‌حقوق».</small>
-          </div>
-          <span className={`business-payroll-day-type-state ${value.paidWithoutWork ? 'is-paid' : 'is-unpaid'}`}>
-            {value.paidWithoutWork ? 'با حقوق' : 'بی‌حقوق'}
-          </span>
-        </div>
-        <div className="business-payroll-day-type-toggle-controls" role="radiogroup" aria-label="وضعیت پرداخت این روز">
-          <button
-            type="button"
-            className={`business-payroll-day-type-toggle-option ${value.paidWithoutWork ? 'is-selected' : ''}`}
-            aria-pressed={value.paidWithoutWork}
-            onClick={() => onChange({ ...value, paidWithoutWork: true })}
-          >
-            <strong>با حقوق</strong>
-            <span>اگر کارکردی هم ثبت نشود، حقوق این روز لحاظ می‌شود.</span>
-          </button>
-          <button
-            type="button"
-            className={`business-payroll-day-type-toggle-option ${!value.paidWithoutWork ? 'is-selected' : ''}`}
-            aria-pressed={!value.paidWithoutWork}
-            onClick={() => onChange({ ...value, paidWithoutWork: false })}
-          >
-            <strong>بی‌حقوق</strong>
-            <span>در صورت عدم کارکرد، این روز در محاسبه حقوق نمی‌آید.</span>
-          </button>
-        </div>
-      </div>
-
-      {value.paidWithoutWork ? (
-        <div className="business-payroll-day-type-impact">
-          <strong>
-            اثر غیبت غیرموجه بر حقوق این روز
-            <InfoTooltip text="مشخص می‌کند اگر کارمند در همان هفته غیبت غیرموجه داشته باشد، حقوق این روز چگونه کاهش پیدا کند." />
-          </strong>
-          <AdaptiveChipGroup
-            className="business-payroll-day-type-impact-chips"
-            items={UNPAID_ABSENCE_IMPACT_OPTIONS.map((option) => ({ value: option.value, label: option.label }))}
-            selected={value.unpaidAbsenceImpact}
-            onChange={(next) =>
-              onChange({
-                ...value,
-                unpaidAbsenceImpact: (Array.isArray(next) ? next[0] : next) as DayTypePaymentRule['unpaidAbsenceImpact'],
-              })
-            }
-          />
-          {impactError ? <em>{impactError}</em> : null}
-        </div>
-      ) : null}
-
-      {value.paidWithoutWork ? (
-        <div className="business-payroll-day-type-base">
-          <strong>
-            مبنای پرداخت
-            <InfoTooltip text="اگر این روز برای کارمند شیفتی ثبت نشود، مبلغ آن بر اساس این مبنا محاسبه می‌شود." />
-          </strong>
-          <AdaptiveChipGroup
-            className="business-payroll-day-type-base-chips"
-            items={DAY_TYPE_PAYMENT_BASE_OPTIONS.map((option) => ({
-              value: option.value,
-              label: option.label,
-              tooltip: option.tooltip,
-            }))}
-            selected={value.paymentBase}
-            onChange={(next) =>
-              onChange({
-                ...value,
-                paymentBase: (Array.isArray(next) ? next[0] : next) as DayTypePaymentBase,
-              })
-            }
-          />
-          <small>اگر «با حقوق» فعال باشد، یکی از این دو مبنا برای محاسبه مبلغ روز انتخاب می‌شود.</small>
-        </div>
-      ) : null}
-
-      <NumericField
-        label="ضریب پرداخت کارکرد در این روز"
-        value={value.workedTimeCoefficient}
-        unit="ضریب"
-        decimalValue
-        helper="مثلا 1.4 یعنی 40٪ بیشتر از حالت عادی."
-        tooltip="این ضریب فقط زمانی اعمال می‌شود که کارمند در این نوع روز کارکرد ثبت‌شده داشته باشد."
-        onChange={(workedTimeCoefficient) => onChange({ ...value, workedTimeCoefficient })}
-        error={coefficientError}
-      />
     </article>
   );
 }
@@ -1390,21 +1257,7 @@ function CoefficientCombinationSection({
   );
 }
 
-export function WorkTimePayRulesSection({
-  settings,
-  baseSettings,
-  derived,
-  errors,
-  onChange,
-  nightWorkTimesReadOnly = false,
-  businessSettingsHref,
-  embedded = false,
-  comparisonMode = 'tenant',
-  secondaryComparisonMode,
-  secondaryBaseSettings,
-  secondaryComparisonYear,
-  nightWorkTenantSettings,
-}: {
+export function WorkTimePayRulesSection(props: {
   settings: PayrollSettings;
   baseSettings?: PayrollSettings;
   derived: PayrollDerivedValues;
@@ -1423,12 +1276,21 @@ export function WorkTimePayRulesSection({
   /** Tenant settings used for read-only night work time display. */
   nightWorkTenantSettings?: PayrollSettings;
 }) {
+  const {
+    settings,
+    baseSettings,
+    derived,
+    errors,
+    onChange,
+    embedded = false,
+    comparisonMode = 'tenant',
+    secondaryComparisonMode,
+    secondaryBaseSettings,
+    secondaryComparisonYear,
+  } = props;
   const rules = settings.workTimePayRules;
   const baseRules = baseSettings?.workTimePayRules;
   const secondaryRules = secondaryBaseSettings?.workTimePayRules;
-  const tenantNightRules = nightWorkTenantSettings?.workTimePayRules ?? baseRules;
-  const nightWorkStartTime = nightWorkTimesReadOnly && tenantNightRules ? tenantNightRules.nightWork.startTime : rules.nightWork.startTime;
-  const nightWorkEndTime = nightWorkTimesReadOnly && tenantNightRules ? tenantNightRules.nightWork.endTime : rules.nightWork.endTime;
   const update = <K extends keyof PayrollSettings['workTimePayRules']>(
     key: K,
     value: PayrollSettings['workTimePayRules'][K],
@@ -1506,88 +1368,27 @@ export function WorkTimePayRulesSection({
       <section className="business-payroll-subcard">
         <div className="business-payroll-subcard-head">
           <div>
-            <h3>شب کاری</h3>
-            <p>شب کاری ممکن است داخل ساعت موظفی یا خارج از آن رخ دهد و همیشه اضافه کاری نیست.</p>
-          </div>
-          <div className="business-payroll-toggle">
-            <button
-              type="button"
-              className={rules.nightWork.enabled ? 'is-selected' : ''}
-              onClick={() => update('nightWork', { ...rules.nightWork, enabled: true })}
-            >
-              فعال
-            </button>
-            <button
-              type="button"
-              className={!rules.nightWork.enabled ? 'is-selected' : ''}
-              onClick={() => update('nightWork', { ...rules.nightWork, enabled: false })}
-            >
-              غیرفعال
-            </button>
+            <h3>شب‌کاری</h3>
+            <p>بازه شب‌کاری از سیاست کاری کارمند خوانده می‌شود. اینجا فقط ضریب پرداخت شب‌کاری را مشخص کنید.</p>
           </div>
         </div>
-        {baseRules ? (
-          <DifferenceBadge
-            difference={buildToggleCompareDifference(comparisonMode, rules.nightWork.enabled, baseRules.nightWork.enabled, 'شب کاری')}
-          />
-        ) : null}
-        {nightWorkTimesReadOnly ? (
-          <p className="business-payroll-settings-source-note">
-            بازه شب کاری از{' '}
-            {businessSettingsHref ? (
-              <Link href={businessSettingsHref}>تنظیمات ضرایب کسب‌وکار</Link>
-            ) : (
-              'تنظیمات ضرایب کسب‌وکار'
-            )}{' '}
-            خوانده می‌شود و در این قالب قابل تغییر نیست.
-          </p>
-        ) : null}
-        <div className="business-payroll-fields three">
-          {nightWorkTimesReadOnly && tenantNightRules ? (
-            <>
-              <ReadOnlyTimeField
-                label="شروع بازه شب کاری"
-                value={tenantNightRules.nightWork.startTime}
-                helper="مقدار نمایشی از تنظیمات کسب‌وکار"
-              />
-              <ReadOnlyTimeField
-                label="پایان بازه شب کاری"
-                value={tenantNightRules.nightWork.endTime}
-                helper="مقدار نمایشی از تنظیمات کسب‌وکار"
-              />
-            </>
-          ) : (
-            <>
-              <TimeField
-                label="شروع بازه شب کاری"
-                value={rules.nightWork.startTime}
-                onChange={(startTime) => update('nightWork', { ...rules.nightWork, startTime })}
-                error={errors.nightStartTime}
-                difference={baseRules ? compareCollectionsForMode(comparisonMode, baseRules.nightWork.startTime, rules.nightWork.startTime, 'شروع بازه شب کاری') : null}
-              />
-              <TimeField
-                label="پایان بازه شب کاری"
-                value={rules.nightWork.endTime}
-                onChange={(endTime) => update('nightWork', { ...rules.nightWork, endTime })}
-                error={errors.nightEndTime}
-                difference={baseRules ? compareCollectionsForMode(comparisonMode, baseRules.nightWork.endTime, rules.nightWork.endTime, 'پایان بازه شب کاری') : null}
-              />
-            </>
-          )}
+        <p className="business-payroll-settings-source-note">
+          برای تعیین بازه و فعال‌سازی شب‌کاری به <Link href="/policies/night">تنظیمات شب‌کاری سیاست کاری</Link> بروید.
+        </p>
+        <div className="business-payroll-fields">
           <NumericField
-            label="ضریب شب کاری"
+            label="ضریب شب‌کاری"
             value={rules.nightWork.coefficient}
             unit="ضریب"
             decimalValue
             onChange={(coefficient) => update('nightWork', { ...rules.nightWork, coefficient })}
             error={errors.nightCoefficient}
-            difference={baseRules ? compareNumbersForMode(comparisonMode, baseRules.nightWork.coefficient, rules.nightWork.coefficient, 'ضریب شب کاری', { unit: 'ضریب', formatAmount: decimal }) : null}
+            helper="مثلاً ۱.۳۵ یعنی ۳۵٪ بیشتر از ساعت عادی."
+            difference={baseRules ? compareNumbersForMode(comparisonMode, baseRules.nightWork.coefficient, rules.nightWork.coefficient, 'ضریب شب‌کاری', { unit: 'ضریب', formatAmount: decimal }) : null}
           />
         </div>
         <div className="business-payroll-example">
-          <strong>
-            بازه شب کاری: {toPersianDigits(nightWorkStartTime)} تا {toPersianDigits(nightWorkEndTime)}
-          </strong>
+          <strong>ضریب شب‌کاری: {decimal(rules.nightWork.coefficient)}</strong>
           <span>{formatFaNumber((rules.nightWork.coefficient - 1) * 100)}٪ بیشتر از ساعت عادی؛ {money(derived.salaryPerHour * rules.nightWork.coefficient)} به ازای هر ساعت</span>
         </div>
       </section>
@@ -1602,15 +1403,22 @@ export function WorkTimePayRulesSection({
           {DAY_TYPE_PAYMENT_RULES.map(({ key }) => {
             const currentRule = rules.dayTypePaymentRules[key];
             const baseRule = baseRules?.dayTypePaymentRules?.[key];
+            const secondaryBaseRule = secondaryRules?.dayTypePaymentRules?.[key];
             return (
               <DayTypePaymentRuleCard
                 key={key}
                 dayType={key}
                 value={currentRule}
                 baseValue={baseRule}
+                secondaryBaseValue={secondaryBaseRule}
                 comparisonMode={comparisonMode}
-                coefficientError={errors[getDayTypePaymentRuleErrorKey(key, 'workedTimeCoefficient')]}
-                impactError={errors[getDayTypePaymentRuleErrorKey(key, 'unpaidAbsenceImpact')]}
+                secondaryComparisonMode={secondaryComparisonMode}
+                secondaryComparisonYear={secondaryComparisonYear}
+                errors={{
+                  paymentBase: errors[getDayTypePaymentRuleErrorKey(key, 'paymentBase')],
+                  unpaidAbsenceImpact: errors[getDayTypePaymentRuleErrorKey(key, 'unpaidAbsenceImpact')],
+                  workedTimeCoefficient: errors[getDayTypePaymentRuleErrorKey(key, 'workedTimeCoefficient')],
+                }}
                 onChange={(next) => update('dayTypePaymentRules', { ...rules.dayTypePaymentRules, [key]: next })}
               />
             );
@@ -2097,9 +1905,7 @@ function SummarySidebar({ settings, derived }: { settings: PayrollSettings; deri
           <div className="draft-template-flow-report-card business-payroll-time-summary">
             <span>ضرایب پرداخت زمان کاری</span>
             <small>اضافه کاری: {decimal(settings.workTimePayRules.overtime.normalCoefficient)}</small>
-            <small>
-              شب کاری: {toPersianDigits(settings.workTimePayRules.nightWork.startTime)} تا {toPersianDigits(settings.workTimePayRules.nightWork.endTime)} / ضریب {decimal(settings.workTimePayRules.nightWork.coefficient)}
-            </small>
+            <small>شب‌کاری: ضریب {decimal(settings.workTimePayRules.nightWork.coefficient)} / بازه از سیاست کاری</small>
             <small>تعطیل هفتگی: {decimal(settings.workTimePayRules.dayTypePaymentRules.weekly_rest_day.workedTimeCoefficient)} | تعطیل رسمی: {decimal(settings.workTimePayRules.dayTypePaymentRules.official_holiday.workedTimeCoefficient)}</small>
             <small>تعطیل سازمانی: {decimal(settings.workTimePayRules.dayTypePaymentRules.company_holiday.workedTimeCoefficient)} | ماموریت: {decimal(settings.workTimePayRules.mission.coefficient)}</small>
             <small>روش پیش فرض: {methodLabel(settings.workTimePayRules.coefficientCombination.defaultMethod)}</small>

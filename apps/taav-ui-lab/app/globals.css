@@ -63,7 +63,7 @@ body {
 }
 
 .lab-sidebar {
-  width: 280px;
+  width: 300px;
   background: var(--taav-surface);
   border-left: var(--taav-border-width) solid var(--taav-border);
 }
@@ -85,7 +85,7 @@ body {
 .lab-sidebar-link {
   position: relative;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--taav-space-3);
   border-radius: var(--taav-radius-md);
   padding: 0.6rem 0.75rem;

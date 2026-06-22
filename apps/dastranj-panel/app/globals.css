@@ -12634,6 +12634,81 @@ body.tenant-select-route {
   text-align: right;
 }
 
+.floating-shift-policy-panel-header {
+  display: grid;
+  gap: 8px;
+  text-align: right;
+}
+
+.floating-shift-policy-panel-header p {
+  margin: 0;
+  color: #94a3b8;
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.floating-shift-policy-panel-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px 24px;
+}
+
+.floating-shift-policy-field-label {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.floating-shift-policy-field-label .policy-field-label {
+  flex: 1;
+  min-width: 0;
+}
+
+.floating-shift-policy-info-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.72);
+  color: #94a3b8;
+  cursor: help;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+.floating-shift-policy-info-btn:hover,
+.floating-shift-policy-info-btn:focus-visible {
+  border-color: rgba(99, 102, 241, 0.34);
+  background: rgba(99, 102, 241, 0.12);
+  color: #c7d2fe;
+  outline: none;
+}
+
+.floating-shift-policy-field {
+  gap: 10px;
+}
+
+.floating-shift-policy-field.is-full-width {
+  grid-column: 1 / -1;
+}
+
+.floating-shift-policy-control-narrow {
+  max-width: 280px;
+}
+
+.floating-shift-policy-tooltip {
+  max-width: 22rem;
+}
+
+.floating-shift-tooltip-content {
+  display: grid;
+  gap: 10px;
+}
+
 .shift-policy-panel-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -12991,6 +13066,7 @@ body.tenant-select-route {
   }
 
   .shift-policy-panel-grid,
+  .floating-shift-policy-panel-grid,
   .shift-policy-editor .policy-variant-tabs,
   .leave-policy-editor .policy-variant-tabs {
     grid-template-columns: 1fr;
@@ -23564,252 +23640,81 @@ body.tenant-select-route {
 
 .business-payroll-day-type-cards {
   display: grid;
-  gap: 11px;
+  gap: 8px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.business-payroll-day-type-card {
+.day-type-rule-preview-card {
   display: grid;
-  gap: 10px;
+  gap: 6px;
   border: 1px solid rgba(151, 182, 215, 0.14);
   border-radius: 12px;
   background: rgba(13, 31, 56, 0.2);
-  padding: 12px;
+  padding: 10px 12px;
 }
 
-.business-payroll-day-type-card-head {
+.day-type-rule-preview-head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
+  gap: 10px;
 }
 
-.business-payroll-day-type-card-title {
+.day-type-rule-preview-title {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 6px;
   min-width: 0;
 }
 
-.business-payroll-day-type-card-title strong {
+.day-type-rule-preview-title strong {
   color: #f8fafc;
-  font-size: 14px;
-  font-weight: 950;
-  line-height: 1.6;
-}
-
-.business-payroll-day-type-toggle {
-  display: grid;
-  gap: 10px;
-  border-radius: 14px;
-  border: 1px solid rgba(151, 182, 215, 0.16);
-  background: linear-gradient(180deg, rgba(17, 40, 70, 0.72), rgba(12, 30, 53, 0.82));
-  padding: 12px;
-}
-
-.business-payroll-day-type-toggle-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.business-payroll-day-type-toggle-copy {
-  display: grid;
-  gap: 4px;
-  min-width: 0;
-}
-
-.business-payroll-day-type-toggle-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: #eef6ff;
-  font-size: 12px;
-  font-weight: 900;
-  line-height: 1.6;
-}
-
-.business-payroll-day-type-toggle-copy small {
-  color: #b7c8d9;
-  font-size: 10px;
-  font-weight: 700;
-  line-height: 1.8;
-}
-
-.business-payroll-day-type-state {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 74px;
-  border-radius: 999px;
-  padding: 7px 12px;
-  font-size: 11px;
-  font-weight: 900;
-  line-height: 1;
-  white-space: nowrap;
-}
-
-.business-payroll-day-type-state.is-paid {
-  background: rgba(246, 174, 52, 0.18);
-  color: #ffc75c;
-  border: 1px solid rgba(246, 174, 52, 0.44);
-}
-
-.business-payroll-day-type-state.is-unpaid {
-  background: rgba(113, 139, 170, 0.18);
-  color: #d7e3ef;
-  border: 1px solid rgba(151, 182, 215, 0.24);
-}
-
-.business-payroll-day-type-toggle-controls {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.business-payroll-day-type-toggle-option {
-  display: grid;
-  gap: 4px;
-  align-items: start;
-  text-align: right;
-  border: 1px solid rgba(151, 182, 215, 0.18);
-  border-radius: 14px;
-  background: rgba(10, 25, 46, 0.72);
-  color: #d7e5f4;
-  padding: 12px 14px;
-  font: inherit;
-  cursor: pointer;
-  transition:
-    border-color 150ms ease,
-    background-color 150ms ease,
-    transform 150ms ease,
-    box-shadow 150ms ease;
-}
-
-.business-payroll-day-type-toggle-option strong {
-  color: inherit;
   font-size: 13px;
-  font-weight: 950;
-}
-
-.business-payroll-day-type-toggle-option span {
-  color: #aebfd1;
-  font-size: 10px;
-  font-weight: 700;
-  line-height: 1.8;
-}
-
-.business-payroll-day-type-toggle-option:hover,
-.business-payroll-day-type-toggle-option:focus-visible {
-  border-color: rgba(246, 174, 52, 0.42);
-  background: rgba(17, 42, 73, 0.88);
-  transform: translateY(-1px);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.16);
-}
-
-.business-payroll-day-type-toggle-option.is-selected {
-  border-color: rgba(246, 174, 52, 0.84);
-  background: linear-gradient(180deg, rgba(246, 174, 52, 0.25), rgba(246, 174, 52, 0.16));
-  color: #fff2cd;
-}
-
-.business-payroll-day-type-toggle-option.is-selected span {
-  color: rgba(255, 244, 204, 0.9);
-}
-
-.business-payroll-day-type-toggle-option.is-selected strong {
-  color: #fff5d6;
-}
-
-.business-payroll-day-type-base {
-  display: grid;
-  gap: 8px;
-  padding-top: 2px;
-  border-top: 1px dashed rgba(151, 182, 215, 0.18);
-}
-
-.business-payroll-day-type-base strong {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: #f8fafc;
-  font-size: 12px;
   font-weight: 900;
   line-height: 1.6;
 }
 
-.business-payroll-day-type-base small {
+.day-type-rule-preview-summary {
+  margin: 0;
   color: #b7c8d9;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   line-height: 1.8;
 }
 
-.business-payroll-day-type-base-chips {
+.day-type-rule-preview-error {
+  color: #fb7185;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 1.6;
+}
+
+.day-type-rule-edit-btn {
+  margin-top: 0;
+  flex-shrink: 0;
+}
+
+.day-type-rule-summary-chips {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
 }
 
-@media (max-width: 720px) {
-  .business-payroll-day-type-toggle-head {
-    flex-direction: column;
-  }
-
-  .business-payroll-day-type-state {
-    align-self: flex-start;
-  }
-
-  .business-payroll-day-type-toggle-controls {
-    grid-template-columns: 1fr;
-  }
-}
-
-.business-payroll-day-type-impact {
-  display: grid;
-  gap: 8px;
-  border-radius: 10px;
-  background: rgba(13, 31, 56, 0.34);
-  padding: 10px 12px;
-}
-
-.business-payroll-day-type-impact strong {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: #e9f2fc;
-  font-size: 12px;
-  font-weight: 900;
-  line-height: 1.7;
-}
-
-.business-payroll-day-type-impact em {
+.day-type-rule-field-error {
+  margin: 0;
   color: #fb7185;
-  font-size: 11px;
-  font-style: normal;
-  font-weight: 800;
+  font-size: var(--text-xs);
+  line-height: 1.6;
 }
 
-.business-payroll-day-type-impact-chips {
-  gap: 8px;
+.day-type-rule-coefficient-field {
+  margin: 0;
 }
 
-.business-payroll-day-type-impact-chips .adaptive-chip {
-  min-height: 32px;
-  padding: 7px 11px;
-  border-radius: 11px;
-  font-size: 11px;
-}
-
-.business-payroll-day-type-impact-chips .adaptive-chip-check,
-.business-payroll-day-type-impact-chips .adaptive-chip-icon {
-  width: 18px;
-  height: 18px;
-}
-
-.business-payroll-day-type-impact-chips .adaptive-chip-label {
-  line-height: 1.45;
+.day-type-rule-coefficient-field .business-payroll-input input {
+  min-height: 36px;
 }
 
 .business-payroll-rule-title {
