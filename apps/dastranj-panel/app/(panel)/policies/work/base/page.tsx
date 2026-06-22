@@ -1,7 +1,6 @@
 import { savePolicyWorkspaceAction } from '../../../../lib/actions';
 import { listPolicies } from '../../../../lib/data';
 import { findPolicyByFamilyKey, getPolicySectionValues } from '../../../../lib/policy-workspaces';
-import { policyBreadcrumbs } from '../../../../components/module-page/module-breadcrumbs';
 import { OvertimePolicyEditor } from '../../_components/OvertimePolicyEditor';
 import { OtherPolicyEditor } from '../../_components/OtherPolicyEditor';
 import {
@@ -63,7 +62,6 @@ export default async function WorkPolicyBasePage({ searchParams }: WorkPolicyBas
       <PolicyPageShell
         title="ویرایش سایر سیاست‌ها"
         subtitle="تنظیمات تکمیلی حضور و غیاب"
-        breadcrumb={policyBreadcrumbs({ label: 'ویرایش سیاست کاری', href: backHref }, { label: 'سایر سیاست‌ها' })}
         actionHref={backHref}
         actionLabel="بازگشت به سیاست کاری"
       >
@@ -90,7 +88,6 @@ export default async function WorkPolicyBasePage({ searchParams }: WorkPolicyBas
       <PolicyPageShell
         title="ویرایش سیاست‌های اضافه‌کاری"
         subtitle="تعریف قوانین ثبت و محاسبه اضافه‌کاری"
-        breadcrumb={policyBreadcrumbs({ label: 'ویرایش سیاست کاری', href: backHref }, { label: 'سیاست‌های اضافه‌کاری' })}
         actionHref={backHref}
         actionLabel="بازگشت به سیاست کاری"
       >
@@ -123,7 +120,6 @@ export default async function WorkPolicyBasePage({ searchParams }: WorkPolicyBas
     <PolicyPageShell
       title="ویرایش سیاست کاری"
       subtitle="تنظیم قوانین حضور و غیاب کارمندان"
-      breadcrumb={policyBreadcrumbs({ label: 'ویرایش سیاست کاری', href: backHref }, { label: 'اطلاعات پایه' })}
       actionHref={backHref}
       actionLabel="بازگشت به سیاست کاری"
     >

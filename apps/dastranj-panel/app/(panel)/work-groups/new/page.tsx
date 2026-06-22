@@ -1,5 +1,4 @@
 import { ModulePageHeader } from '../../../components/module-page/ModulePageHeader';
-import { panelBreadcrumbs } from '../../../components/module-page/module-breadcrumbs';
 import { listEmployees, listLocations, listPolicies } from '../../../lib/data';
 import { WorkGroupStepperForm } from './_components/WorkGroupStepperForm';
 
@@ -8,10 +7,7 @@ export default async function NewWorkGroupPage() {
 
   return (
     <div className="work-group-create-page module-page" dir="rtl" lang="fa">
-      <ModulePageHeader
-        breadcrumbs={panelBreadcrumbs('افزودن گروه کاری')}
-        title="افزودن گروه کاری"
-      />
+      <ModulePageHeader title="افزودن گروه کاری" />
 
       <WorkGroupStepperForm
         locations={locations.map((item) => ({

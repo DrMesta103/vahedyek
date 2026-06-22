@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import type { InputHTMLAttributes, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from 'react';
 import { Check, ChevronLeft, Info } from 'lucide-react';
-import { ModulePageHeader, type ModuleBreadcrumb } from '../../../components/module-page/ModulePageHeader';
+import { ModulePageHeader } from '../../../components/module-page/ModulePageHeader';
 import { POLICY_FAMILIES, POLICY_VARIANTS, type PolicyFamilyKey } from '../../../lib/policy-workspaces';
 
 function cn(...classes: Array<string | false | null | undefined>) {
@@ -11,7 +11,6 @@ function cn(...classes: Array<string | false | null | undefined>) {
 export function PolicyPageShell({
   title,
   subtitle,
-  breadcrumb,
   banner,
   actionHref,
   actionLabel,
@@ -19,7 +18,6 @@ export function PolicyPageShell({
 }: {
   title: string;
   subtitle?: string;
-  breadcrumb: ModuleBreadcrumb[];
   banner?: string;
   actionHref?: string;
   actionLabel?: string;
@@ -28,7 +26,6 @@ export function PolicyPageShell({
   return (
     <div className="page-stack module-page policy-page" dir="rtl" lang="fa">
       <ModulePageHeader
-        breadcrumbs={breadcrumb}
         title={title}
         subtitle={subtitle}
         addHref={actionHref}

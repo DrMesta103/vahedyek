@@ -43,14 +43,6 @@ export function EmployeeBankAccountsManager({ employeeId, employeeName, initialA
   const [accountNumber, setAccountNumber] = useState('');
   const [isPrimary, setIsPrimary] = useState(false);
 
-  const breadcrumbs = [
-    { label: 'دسترنج', href: '/' },
-    { label: 'تنظیمات کسب و کار', href: '/business-settings' },
-    { label: 'کارمندان', href: '/employees' },
-    { label: 'جزییات کارمند', href: `/employees/${employeeId}` },
-    { label: 'حساب‌های بانکی کارمند' },
-  ];
-
   const resetForm = () => {
     setBankName('');
     setCardSegments(['', '', '', '']);
@@ -120,7 +112,6 @@ export function EmployeeBankAccountsManager({ employeeId, employeeName, initialA
   return (
     <div className="employee-sub-page">
       <ModulePageHeader
-        breadcrumbs={breadcrumbs}
         title="حساب‌های بانکی کارمند"
         subtitle="مدیریت حساب‌های بانکی ثبت‌شده برای هر کارمند"
         titleHref={`/employees/${employeeId}`}

@@ -6,12 +6,12 @@ import { createPortal } from 'react-dom';
 import { addCalendarEventsAction } from '../../../../../lib/actions';
 import { PERSIAN_WEEKDAY_NAMES, parsePersianYmd } from '../../../../../lib/calendar-dates';
 import {
-  CALENDAR_FRIDAY_HOLIDAY_TYPE,
-  isPersianFridayDate,
+  type CalendarHolidayCoefficients,
   type CalendarHolidayType,
 } from '../../../../../lib/calendar-event-types';
-import { MinimalScroll } from '../../../../components/MinimalScroll';
 import { buildPersianDatePreset, normalizePersianDateInput } from '../../../../../lib/calendar-events';
+import { ConfirmDialog } from '../../../../../components/ConfirmDialog';
+import { MinimalScroll } from '../../../../../components/MinimalScroll';
 import { CalendarHolidayTypeField } from './CalendarHolidayTypeField';
 import type { CalendarEventDayContext } from './types';
 
@@ -22,6 +22,7 @@ type AddCalendarEventDialogProps = {
   endDate: string;
   defaultDate?: string;
   dayContext?: CalendarEventDayContext;
+  holidayCoefficients: CalendarHolidayCoefficients;
   onClose: () => void;
   onSaved: () => void;
 };
@@ -39,7 +40,7 @@ function LockedEventDayField({ dayContext }: { dayContext: CalendarEventDayConte
         <strong>{dayContext.date}</strong>
         <span>{dayContext.weekdayName}</span>
       </div>
-      <p className="calendar-shift-locked-day-hint">این رویداد فقط برای همین روز ثبت می‌شود.</p>
+      <p className="calendar-shift-locked-day-hint">این رویداد فقط برای تاریخ انتخاب‌شده ثبت می‌شود.</p>
     </div>
   );
 }
@@ -55,6 +56,7 @@ export function AddCalendarEventDialog({
   endDate,
   defaultDate,
   dayContext,
+  holidayCoefficients,
   onClose,
   onSaved,
 }: AddCalendarEventDialogProps) {
@@ -66,12 +68,10 @@ export function AddCalendarEventDialog({
   const [weekdays, setWeekdays] = useState<string[]>([]);
   const [eventMode, setEventMode] = useState<EventMode>('regular');
   const [holidayType, setHolidayType] = useState<CalendarHolidayType | null>(null);
-  const [holidayConfirmOpen, setHolidayConfirmOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const ignoreBackdropClickRef = useRef(false);
-  const holidayConfirmOpenRef = useRef(false);
-  holidayConfirmOpenRef.current = holidayConfirmOpen;
 
   const anchorDate = useMemo(() => {
     const preferred = defaultDate ? parsePersianYmd(normalizePersianDateInput(defaultDate)) : null;
@@ -82,12 +82,12 @@ export function AddCalendarEventDialog({
   }, [defaultDate, startDate]);
 
   const isSingleDay = Boolean(dayContext);
-  const isFridayDay = dayContext?.weekdayName === 'جمعه' || (dayContext ? isPersianFridayDate(dayContext.date) : false);
-  const onlyFridayInRange = !isSingleDay && weekdays.length > 0 && weekdays.every((day) => day === 'جمعه');
-  const rangeIncludesFriday = !isSingleDay && weekdays.includes('جمعه');
-  /** جمعه بودن روز / بازه؛ مستقل از eventMode (برای تأیید قبل از سوییچ مود) */
-  const fridayOnlySelection = isFridayDay || onlyFridayInRange;
-  const lockedFridayHoliday = eventMode === 'holiday' && fridayOnlySelection;
+  const requiresHolidayType = eventMode === 'holiday';
+  const holidayWarningDescription =
+    dayContext && (dayContext.shiftCount ?? 0) > 0
+      ? 'این روز دارای شیفت ثبت‌شده است. با ثبت رویداد تعطیلی، این روز به‌عنوان تعطیل شناخته می‌شود و ممکن است شیفت‌های آن روی محاسبات حقوق و دستمزد اثر متفاوت داشته باشند. آیا ادامه می‌دهید؟'
+      : 'این رویداد باعث تعطیل شدن روز انتخاب‌شده می‌شود و ممکن است روی محاسبه حقوق و دستمزد، اضافه‌کاری و گزارش‌های حضور و غیاب اثر بگذارد. آیا ادامه می‌دهید؟';
+  const holidayWarningConfirmLabel = dayContext && (dayContext.shiftCount ?? 0) > 0 ? 'ادامه و ثبت تعطیلی' : 'بله، ادامه';
 
   useEffect(() => {
     setMounted(true);
@@ -104,7 +104,7 @@ export function AddCalendarEventDialog({
     setWeekdays([]);
     setEventMode('regular');
     setHolidayType(null);
-    setHolidayConfirmOpen(false);
+    setConfirmOpen(false);
     setError(null);
 
     ignoreBackdropClickRef.current = true;
@@ -116,12 +116,13 @@ export function AddCalendarEventDialog({
     document.body.style.overflow = 'hidden';
 
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return;
-      if (holidayConfirmOpenRef.current) {
-        setHolidayConfirmOpen(false);
-        return;
+      if (event.key === 'Escape') {
+        if (confirmOpen) {
+          setConfirmOpen(false);
+          return;
+        }
+        onClose();
       }
-      onClose();
     };
     window.addEventListener('keydown', onKeyDown);
 
@@ -130,35 +131,27 @@ export function AddCalendarEventDialog({
       document.body.style.overflow = previousOverflow;
       window.removeEventListener('keydown', onKeyDown);
     };
-  }, [anchorDate, defaultDate, onClose, open]);
+  }, [anchorDate, confirmOpen, defaultDate, onClose, open]);
 
   useEffect(() => {
     if (eventMode !== 'holiday') {
       setHolidayType(null);
-      return;
     }
+  }, [eventMode]);
 
-    if (lockedFridayHoliday) {
-      setHolidayType('friday');
-      return;
+  const validationError = useMemo(() => {
+    if (!title.trim()) return 'عنوان رویداد را وارد کنید.';
+    if (!eventMode) return 'نوع رویداد را مشخص کنید.';
+    if (requiresHolidayType && holidayType !== 'official' && holidayType !== 'organizational' && holidayType !== 'friday') {
+      return 'نوع تعطیلی را انتخاب کنید.';
     }
-
-    setHolidayType((current) =>
-      current === 'friday' ? null : current === 'official' || current === 'organizational' ? current : null,
-    );
-  }, [eventMode, lockedFridayHoliday]);
-
-  const canSave = useMemo(() => {
-    if (eventMode === 'holiday') {
-      if (lockedFridayHoliday) {
-        if (holidayType !== 'friday') return false;
-      } else if (holidayType !== 'official' && holidayType !== 'organizational') {
-        return false;
-      }
+    if (!isSingleDay && (!rangeStart.trim() || !rangeEnd.trim() || weekdays.length === 0)) {
+      return 'نوع رویداد را مشخص کنید.';
     }
-    if (isSingleDay) return true;
-    return Boolean(rangeStart.trim() && rangeEnd.trim() && weekdays.length > 0);
-  }, [eventMode, holidayType, isSingleDay, lockedFridayHoliday, rangeEnd, rangeStart, weekdays.length]);
+    return null;
+  }, [eventMode, holidayType, isSingleDay, rangeEnd, rangeStart, requiresHolidayType, title, weekdays.length]);
+
+  const canSave = validationError === null;
 
   const applyPresetToField = (field: 'start' | 'end', preset: 'today' | 'month-start' | 'month-end' | 'year-start' | 'year-end') => {
     const source = field === 'start' ? rangeStart : rangeEnd;
@@ -168,15 +161,7 @@ export function AddCalendarEventDialog({
     else setRangeEnd(value);
   };
 
-  const handleEventModeChange = (mode: EventMode) => {
-    if (mode === 'holiday' && eventMode !== 'holiday') {
-      setHolidayConfirmOpen(true);
-      return;
-    }
-    setEventMode(mode);
-  };
-
-  const handleSave = async () => {
+  const persistEvent = async () => {
     if (!canSave || saving) return;
     setSaving(true);
     setError(null);
@@ -195,10 +180,22 @@ export function AddCalendarEventDialog({
       });
       onSaved();
     } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : 'ثبت رویداد انجام نشد.');
+      setError(saveError instanceof Error ? saveError.message : 'رویداد ثبت نشد. دوباره تلاش کنید.');
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleSave = async () => {
+    if (!canSave || saving) {
+      if (validationError) setError(validationError);
+      return;
+    }
+    if (eventMode === 'holiday') {
+      setConfirmOpen(true);
+      return;
+    }
+    await persistEvent();
   };
 
   if (!open || !mounted) return null;
@@ -211,7 +208,7 @@ export function AddCalendarEventDialog({
         dir="rtl"
         lang="fa"
         onMouseDown={() => {
-          if (ignoreBackdropClickRef.current || holidayConfirmOpen) return;
+          if (ignoreBackdropClickRef.current || confirmOpen) return;
           onClose();
         }}
       >
@@ -223,10 +220,8 @@ export function AddCalendarEventDialog({
           onMouseDown={(event) => event.stopPropagation()}
         >
           <header className="calendar-event-modal-head">
-            <h2 id="calendar-event-modal-title">{dayContext ? 'افزودن رویداد برای روز' : 'افزودن رویداد'}</h2>
-            {dayContext ? (
-              <p className="calendar-event-modal-lead">رویداد فقط برای {dayContext.date} ثبت می‌شود.</p>
-            ) : null}
+            <h2 id="calendar-event-modal-title">{dayContext ? 'افزودن رویداد برای روز انتخاب‌شده' : 'افزودن رویداد'}</h2>
+            {dayContext ? <p className="calendar-event-modal-lead">این رویداد فقط برای تاریخ انتخاب‌شده ثبت می‌شود.</p> : null}
           </header>
 
           <div className="calendar-event-modal-sections">
@@ -243,23 +238,25 @@ export function AddCalendarEventDialog({
               </header>
 
               <label className="calendar-event-field">
-                <span>عنوان</span>
+                <span>عنوان رویداد</span>
                 <input
                   type="text"
                   value={title}
                   onChange={(event) => setTitle(event.target.value)}
-                  placeholder="عنوان رویداد (اختیاری)"
+                  placeholder="مثلاً: جلسه عمومی، تعطیلی سازمانی، مناسبت داخلی"
                 />
+                <small>عنوانی برای این رویداد وارد کنید؛ مثل تعطیلی سازمانی یا جلسه عمومی.</small>
               </label>
 
               <label className="calendar-event-field">
-                <span>توضیحات</span>
+                <span>توضیحات رویداد</span>
                 <textarea
                   value={description}
                   onChange={(event) => setDescription(event.target.value)}
-                  placeholder="توضیحات رویداد (اختیاری)"
+                  placeholder="توضیحات تکمیلی رویداد"
                   rows={2}
                 />
+                <small>اگر توضیح بیشتری درباره این رویداد لازم است، اینجا وارد کنید.</small>
               </label>
             </section>
 
@@ -339,9 +336,6 @@ export function AddCalendarEventDialog({
                       </button>
                     ))}
                   </div>
-                  {weekdays.length === 0 ? (
-                    <p className="calendar-event-hint">حداقل یک روز هفته را انتخاب کنید.</p>
-                  ) : null}
                 </section>
               </>
             ) : null}
@@ -351,19 +345,15 @@ export function AddCalendarEventDialog({
                 <h3 id="calendar-event-mode-heading">نوع رویداد</h3>
                 <CalendarDays className="h-4 w-4" aria-hidden />
               </header>
-              <p className="calendar-event-mode-intro">نوع را انتخاب کنید؛ تعطیلی روی محاسبه حقوق و دستمزد اثر دارد.</p>
+              <p className="calendar-event-mode-intro">نوع را انتخاب کنید تا اثر این ثبت روی روز انتخاب‌شده روشن باشد.</p>
 
-              <div
-                className="calendar-event-mode-grid"
-                role="radiogroup"
-                aria-labelledby="calendar-event-mode-heading"
-              >
+              <div className="calendar-event-mode-grid" role="radiogroup" aria-labelledby="calendar-event-mode-heading">
                 <button
                   type="button"
                   role="radio"
                   aria-checked={eventMode === 'regular'}
                   className={`calendar-event-mode-card is-regular${eventMode === 'regular' ? ' is-active' : ''}`}
-                  onClick={() => handleEventModeChange('regular')}
+                  onClick={() => setEventMode('regular')}
                 >
                   <span className="calendar-event-mode-card-icon" aria-hidden>
                     <Bell className="h-5 w-5" strokeWidth={2.1} />
@@ -373,7 +363,7 @@ export function AddCalendarEventDialog({
                       <strong>رویداد عادی</strong>
                       <span className="calendar-event-mode-card-badge is-muted">یادآوری</span>
                     </span>
-                    <p>برای یادآوری یا رویدادهای غیرتعطیلی که در محاسبه حقوق به‌عنوان تعطیل محسوب نمی‌شوند.</p>
+                    <p>رویداد عادی فقط برای یادآوری یا اطلاع‌رسانی است و روز را تعطیل نمی‌کند.</p>
                   </span>
                   <span className="calendar-event-mode-card-check" aria-hidden>
                     {eventMode === 'regular' ? <Check className="h-4 w-4" strokeWidth={2.6} /> : null}
@@ -384,7 +374,7 @@ export function AddCalendarEventDialog({
                   role="radio"
                   aria-checked={eventMode === 'holiday'}
                   className={`calendar-event-mode-card is-holiday${eventMode === 'holiday' ? ' is-active' : ''}`}
-                  onClick={() => handleEventModeChange('holiday')}
+                  onClick={() => setEventMode('holiday')}
                 >
                   <span className="calendar-event-mode-card-icon" aria-hidden>
                     <ShieldAlert className="h-5 w-5" strokeWidth={2.1} />
@@ -394,7 +384,7 @@ export function AddCalendarEventDialog({
                       <strong>رویداد تعطیلی</strong>
                       <span className="calendar-event-mode-card-badge is-payroll">حقوق و دستمزد</span>
                     </span>
-                    <p>برای ثبت تعطیل با نوع مشخص (رسمی، سازمانی یا جمعه) که در سیستم حقوق و دستمزد اعمال می‌شود.</p>
+                    <p>رویداد تعطیلی باعث می‌شود این روز به‌عنوان تعطیل شناخته شود و می‌تواند روی محاسبه حقوق و دستمزد، اضافه‌کاری و گزارش‌های حضور و غیاب اثر بگذارد.</p>
                   </span>
                   <span className="calendar-event-mode-card-check" aria-hidden>
                     {eventMode === 'holiday' ? <Check className="h-4 w-4" strokeWidth={2.6} /> : null}
@@ -403,12 +393,7 @@ export function AddCalendarEventDialog({
               </div>
 
               {eventMode === 'holiday' ? (
-                <CalendarHolidayTypeField
-                  value={holidayType}
-                  lockedFriday={lockedFridayHoliday}
-                  rangeIncludesFriday={rangeIncludesFriday && !onlyFridayInRange}
-                  onChange={setHolidayType}
-                />
+                <CalendarHolidayTypeField value={holidayType} coefficients={holidayCoefficients} onChange={setHolidayType} />
               ) : null}
             </section>
 
@@ -419,8 +404,7 @@ export function AddCalendarEventDialog({
                   <AlertTriangle className="h-4 w-4" aria-hidden />
                 </header>
                 <p className="calendar-event-hint">
-                  انتخاب نوع تعطیلی (رسمی، سازمانی یا جمعه) مستقیماً در محاسبه حقوق و دستمزد اثر دارد. در روز تعطیل
-                  همچنان می‌توانید شیفت ثبت کنید؛ در صورت کارکرد، ضریب مربوطه اعمال می‌شود.
+                  ثبت رویداد تعطیلی می‌تواند در گزارش‌ها و محاسبات مرتبط با کار در تعطیل اثر بگذارد. این هشدار فقط برای شفاف‌سازی است و در این فاز منطق جدیدی برای حقوق و دستمزد اضافه نمی‌شود.
                 </p>
               </section>
             ) : null}
@@ -439,56 +423,18 @@ export function AddCalendarEventDialog({
         </MinimalScroll>
       </div>
 
-      {holidayConfirmOpen ? (
-        <div
-          className="calendar-event-confirm-backdrop"
-          role="presentation"
-          dir="rtl"
-          lang="fa"
-          onMouseDown={(event) => {
-            event.stopPropagation();
-            setHolidayConfirmOpen(false);
-          }}
-        >
-          <div
-            className="calendar-event-confirm"
-            role="alertdialog"
-            aria-modal="true"
-            aria-labelledby="calendar-event-confirm-title"
-            onMouseDown={(event) => event.stopPropagation()}
-          >
-            <header className="calendar-event-confirm-head">
-              <h3 id="calendar-event-confirm-title">ثبت رویداد تعطیلی</h3>
-              <AlertTriangle className="h-5 w-5" aria-hidden />
-            </header>
-            <p>
-              {fridayOnlySelection
-                ? `برای این روزها فقط «${CALENDAR_FRIDAY_HOLIDAY_TYPE.label}» ثبت می‌شود و امکان انتخاب رسمی/سازمانی وجود ندارد. در صورت کارکرد، ضریب تعطیل هفتگی اعمال می‌شود. ادامه می‌دهید؟`
-                : 'برای روزهای غیرتعطیل هفتگی باید یکی از دو نوع «تعطیلات رسمی» یا «تعطیلات سازمانی» را انتخاب کنید؛ ضرایب حقوق و دستمزد متفاوت است. در روز تعطیل هم می‌توانید شیفت ثبت کنید. ادامه می‌دهید؟'}
-            </p>
-            <footer className="calendar-event-confirm-actions">
-              <button
-                type="button"
-                className="calendar-event-confirm-accept"
-                onClick={() => {
-                  setEventMode('holiday');
-                  if (fridayOnlySelection) {
-                    setHolidayType('friday');
-                  } else {
-                    setHolidayType(null);
-                  }
-                  setHolidayConfirmOpen(false);
-                }}
-              >
-                بله، ادامه
-              </button>
-              <button type="button" className="calendar-event-confirm-decline" onClick={() => setHolidayConfirmOpen(false)}>
-                انصراف
-              </button>
-            </footer>
-          </div>
-        </div>
-      ) : null}
+      <ConfirmDialog
+        open={confirmOpen}
+        title="ثبت رویداد تعطیلی"
+        description={holidayWarningDescription}
+        confirmLabel={holidayWarningConfirmLabel}
+        cancelLabel="انصراف"
+        onCancel={() => setConfirmOpen(false)}
+        onConfirm={() => {
+          setConfirmOpen(false);
+          void persistEvent();
+        }}
+      />
     </>,
     document.body,
   );

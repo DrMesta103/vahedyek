@@ -3,6 +3,7 @@
 import dynamic from 'next/dynamic';
 import {
   ArrowLeft,
+  Building2,
   CalendarDays,
   Check,
   ChevronDown,
@@ -10,17 +11,33 @@ import {
   CircleHelp,
   Clock3,
   Coffee,
+  Landmark,
+  Pencil,
   Plus,
   SlidersHorizontal,
   Trash2,
 } from 'lucide-react';
 import { useMemo, useState, type ReactNode } from 'react';
+import { CardMenu } from '../../../components/CardMenu';
+import { ConfirmDialog } from '../../../components/ConfirmDialog';
 import { createCalendarDraftFromDefaultAction, updateCalendarFromQuickSetupAction, updateCalendarHolidaysFromQuickSetupAction } from '../../../lib/actions';
+import { getPersianWeekdayName, parsePersianYmd, persianToDate, PERSIAN_MONTH_NAMES } from '../../../lib/calendar-dates';
+import {
+  CALENDAR_HOLIDAY_TYPE_OPTIONS,
+  getCalendarHolidayTypeLabel,
+  type CalendarHolidayType,
+} from '../../../lib/calendar-event-types';
+import { expandCalendarEventDates, normalizePersianDateInput } from '../../../lib/calendar-events';
 import { resolveCalendarShiftTitle } from '../../../lib/calendar-shifts';
+import { formatFaNumber } from '../../../lib/format-fa';
 import { calculateTimeRangeDurationMinutes, validateTimeRangeUnder24Hours } from '../../../lib/time-range-validation';
 import type { ShiftWizardSavePayload } from '../../calendars/[calendarId]/_components/shift/CalendarShiftWizard';
 import type { CalendarShiftWizardCalendar } from '../../calendars/[calendarId]/_components/shift/types';
-import type { CompletedCalendarItem, DefaultCalendarTemplate } from './quick-setup.types';
+import type {
+  CompletedCalendarItem,
+  DefaultCalendarTemplate,
+  QuickSetupHolidayCoefficients,
+} from './quick-setup.types';
 
 const CalendarShiftWizard = dynamic(
   () =>
@@ -43,8 +60,14 @@ type ShiftMode = 'manual' | 'template';
 type RestType = 'fixed' | 'floating';
 type RestUnit = 'minutes' | 'hours';
 type RotateKind = 'morning' | 'evening' | 'night' | 'off';
-
-type HolidayItem = { id: string; date: string; title: string };
+type WeekdayMode = 'working' | 'weekly_rest' | 'organizational';
+type HolidayItem = {
+  id: string;
+  date: string;
+  title: string;
+  holidayType: Exclude<CalendarHolidayType, 'friday'>;
+  description?: string;
+};
 type RestItem = {
   id: string;
   type: RestType;
@@ -68,6 +91,41 @@ type RotateSegment = {
 
 const WEEK_DAYS = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
 const DEFAULT_WORKING_DAYS = WEEK_DAYS.slice(1, 6);
+const DEFAULT_HOLIDAY_COEFFICIENTS: QuickSetupHolidayCoefficients = {
+  year: 1405,
+  weeklyRestDay: 1.4,
+  officialHoliday: 1.96,
+  organizationalHoliday: 1.4,
+  isConfigured: false,
+};
+const ORGANIZATIONAL_RECURRING_HOLIDAY_TITLE = 'تعطیل سازمانی';
+
+const WEEKDAY_MODE_META: Record<
+  WeekdayMode,
+  { label: string; title: string; description: string; coefficientLabel: string; tone: string }
+> = {
+  working: {
+    label: 'روز کاری',
+    title: 'روز کاری',
+    description: 'روزهای کاری معمول که مشمول ضریب پایه حقوق هستند.',
+    coefficientLabel: 'ضریب حقوق: ۱ (ضریب پایه)',
+    tone: 'border-white/10 bg-slate-900/45 text-slate-200',
+  },
+  weekly_rest: {
+    label: 'تعطیل هفتگی',
+    title: 'تعطیل هفتگی',
+    description: 'روزهای تعطیل هفتگی طبق سیاست‌های کاری سازمان.',
+    coefficientLabel: 'ضریب حقوق: کمتر از ۱ (طبق قوانین کار)',
+    tone: 'border-indigo-400/60 bg-[linear-gradient(135deg,rgba(99,102,241,0.32),rgba(67,56,202,0.24))] text-white',
+  },
+  organizational: {
+    label: 'تعطیل سازمانی',
+    title: 'تعطیل سازمانی',
+    description: 'تعطیلی‌های خاص که توسط شرکت یا سازمان تعیین می‌شود.',
+    coefficientLabel: 'ضریب حقوق: معمولاً ۰ (بدون محاسبه حقوق)',
+    tone: 'border-sky-400/35 bg-sky-500/10 text-sky-50',
+  },
+};
 
 const SHIFT_OPTIONS: Array<{
   id: ShiftType;
@@ -165,6 +223,70 @@ function asObject(value: unknown): Record<string, unknown> {
 
 function stringArray(value: unknown, fallback: string[]) {
   return Array.isArray(value) && value.every((item) => typeof item === 'string') ? value : fallback;
+}
+
+function buildWeekdayModes(weeklyRestDays: string[]) {
+  return WEEK_DAYS.reduce<Record<string, WeekdayMode>>((result, day) => {
+    result[day] = weeklyRestDays.includes(day) ? 'weekly_rest' : 'working';
+    return result;
+  }, {});
+}
+
+function weekdayModeLabel(mode: WeekdayMode) {
+  return WEEKDAY_MODE_META[mode].label;
+}
+
+function formatCoefficient(value: number) {
+  return formatFaNumber(value, { useGrouping: false, fractionDigits: value % 1 === 0 ? 0 : 2 });
+}
+
+function formatHolidayDateLabel(value: string) {
+  const normalized = normalizePersianDateInput(value);
+  const parts = parsePersianYmd(normalized);
+  if (!parts) return { persian: normalized, gregorian: '' };
+
+  try {
+    const gregorianDate = persianToDate(parts);
+    const gregorian = new Intl.DateTimeFormat('fa-IR', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    }).format(gregorianDate);
+
+    return {
+      persian: `${getPersianWeekdayName(parts)} ${formatFaNumber(parts.day, { useGrouping: false })} ${
+        PERSIAN_MONTH_NAMES[parts.month - 1] ?? ''
+      } ${formatFaNumber(parts.year, { useGrouping: false })}`,
+      gregorian,
+    };
+  } catch {
+    return { persian: normalized, gregorian: '' };
+  }
+}
+
+function buildRecurringOrganizationalHolidays(yearLabel: string, weekDays: string[]): HolidayItem[] {
+  if (!yearLabel.trim() || weekDays.length === 0) return [];
+
+  return expandCalendarEventDates({
+    startDate: `${yearLabel}/01/01`,
+    endDate: `${yearLabel}/12/29`,
+    weekdays: weekDays,
+  }).map((date) => ({
+    id: `recurring-organizational-${date}`,
+    title: ORGANIZATIONAL_RECURRING_HOLIDAY_TITLE,
+    date,
+    holidayType: 'organizational',
+  }));
+}
+
+function mergeHolidayItems(primary: HolidayItem[], secondary: HolidayItem[]) {
+  const seen = new Set<string>();
+  return [...primary, ...secondary].filter((item) => {
+    const normalizedDate = normalizePersianDateInput(item.date);
+    if (seen.has(normalizedDate)) return false;
+    seen.add(normalizedDate);
+    return true;
+  });
 }
 
 function parseTime(value: string) {
@@ -417,6 +539,100 @@ function DetailToggle({ active, onClick, children }: { active: boolean; onClick:
     >
       {children}
     </button>
+  );
+}
+
+function HolidayTypeBadge({ type }: { type: Exclude<CalendarHolidayType, 'friday'> }) {
+  const classes =
+    type === 'official'
+      ? 'border-emerald-400/20 bg-emerald-500/15 text-emerald-200'
+      : 'border-sky-400/20 bg-sky-500/15 text-sky-100';
+
+  return (
+    <span className={cn('inline-flex rounded-full border px-3 py-1 text-xs font-bold', classes)}>
+      {getCalendarHolidayTypeLabel(type)}
+    </span>
+  );
+}
+
+function WeekdayModeOptionCard({
+  mode,
+  selected,
+  coefficient,
+  onClick,
+}: {
+  mode: WeekdayMode;
+  selected: boolean;
+  coefficient: number;
+  onClick: () => void;
+}) {
+  const meta = WEEKDAY_MODE_META[mode];
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        'flex w-full items-center justify-between gap-4 rounded-[24px] border px-5 py-5 text-right transition-all',
+        selected ? 'border-indigo-400 bg-indigo-500/10 shadow-[0_0_0_1px_rgba(129,140,248,0.24)]' : 'border-white/10 bg-slate-900/45 hover:border-white/20',
+      )}
+    >
+      <div className="flex h-8 w-8 items-center justify-center rounded-full border border-white/15">
+        <span className={cn('h-4 w-4 rounded-full border-2', selected ? 'border-indigo-300 bg-indigo-400' : 'border-slate-400')} />
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="text-lg font-black text-white">{meta.title}</div>
+        <p className="mt-2 text-sm leading-7 text-slate-300">{meta.description}</p>
+        <div className="mt-3 text-sm font-bold text-indigo-200">
+          ضریب حقوق: {formatCoefficient(coefficient)}
+        </div>
+      </div>
+    </button>
+  );
+}
+
+function SingleHolidayCard({
+  item,
+  onEdit,
+  onDelete,
+}: {
+  item: HolidayItem;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const formatted = formatHolidayDateLabel(item.date);
+
+  return (
+    <article className="rounded-[22px] border border-white/10 bg-slate-900/45 p-4 text-right">
+      <div className="flex items-start justify-between gap-3">
+        <CardMenu
+          items={[
+            {
+              kind: 'action',
+              label: 'ویرایش',
+              icon: <Pencil className="h-4 w-4" />,
+              onClick: onEdit,
+            },
+            {
+              kind: 'action',
+              label: 'حذف',
+              icon: <Trash2 className="h-4 w-4" />,
+              tone: 'danger',
+              onClick: onDelete,
+            },
+          ]}
+        />
+        <div className="min-w-0 flex-1">
+          <div className="text-sm text-slate-300">{formatted.persian}</div>
+          {formatted.gregorian ? <div className="mt-1 text-sm text-slate-400">{formatted.gregorian}</div> : null}
+          <div className="mt-4 text-2xl font-black text-white">{item.title}</div>
+          <div className="mt-3">
+            <HolidayTypeBadge type={item.holidayType} />
+          </div>
+          {item.description?.trim() ? <p className="mt-3 text-sm leading-7 text-slate-300">{item.description}</p> : null}
+        </div>
+      </div>
+    </article>
   );
 }
 
@@ -1044,16 +1260,22 @@ export default function Step2CalendarShift({
   isCompleted,
   initialCalendar,
   defaultCalendarTemplate,
+  holidayCoefficients,
   onComplete,
   onBack,
 }: {
   isCompleted: boolean;
   initialCalendar: CompletedCalendarItem | null;
   defaultCalendarTemplate: DefaultCalendarTemplate | null;
+  holidayCoefficients: QuickSetupHolidayCoefficients | null;
   onComplete: (summary: CompletedCalendarItem) => void;
   onBack: () => void;
 }) {
   const baseCalendar = initialCalendar ?? defaultCalendarTemplate;
+  const resolvedHolidayCoefficients = holidayCoefficients ?? {
+    ...DEFAULT_HOLIDAY_COEFFICIENTS,
+    year: Number((baseCalendar?.yearLabel ?? '').replace(/[^\d]/g, '')) || DEFAULT_HOLIDAY_COEFFICIENTS.year,
+  };
   const baseShiftConfig = asObject(defaultCalendarTemplate?.shiftConfig);
   const fixedShift = asObject(baseShiftConfig.fixedShift);
   const floatDayConfig = asObject(baseShiftConfig.floatingShiftStartOfDay);
@@ -1067,14 +1289,29 @@ export default function Step2CalendarShift({
   const [title] = useState(baseCalendar?.title ?? 'تقویم کاری');
   const [description] = useState(baseCalendar?.description ?? 'تقویم پایه شرکت');
   const [year] = useState(baseCalendar?.yearLabel ?? '');
-  const [weekends, setWeekends] = useState<string[]>(defaultCalendarTemplate?.weekends?.length ? defaultCalendarTemplate.weekends : ['جمعه']);
   const [holidays, setHolidays] = useState<HolidayItem[]>(
-    defaultCalendarTemplate?.singleHolidays?.map((item) => ({ id: item.id, title: item.title, date: item.date })) ?? [],
+    defaultCalendarTemplate?.singleHolidays?.map((item) => ({
+      id: item.id,
+      title: item.title,
+      date: item.date,
+      holidayType: 'official',
+    })) ?? [],
   );
+  const [weekDayModes, setWeekDayModes] = useState<Record<string, WeekdayMode>>(
+    () => buildWeekdayModes(defaultCalendarTemplate?.weekends?.length ? defaultCalendarTemplate.weekends : ['جمعه']),
+  );
+  const [selectedWeekDay, setSelectedWeekDay] = useState<string | null>(null);
+  const [selectedWeekDayMode, setSelectedWeekDayMode] = useState<WeekdayMode>('working');
+  const [weekDayDialogOpen, setWeekDayDialogOpen] = useState(false);
   const [holidayTitle, setHolidayTitle] = useState('');
   const [holidayDate, setHolidayDate] = useState('');
+  const [holidayType, setHolidayType] = useState<Exclude<CalendarHolidayType, 'friday'>>('official');
+  const [holidayDescription, setHolidayDescription] = useState('');
+  const [editingHolidayId, setEditingHolidayId] = useState<string | null>(null);
+  const [pendingDeleteHoliday, setPendingDeleteHoliday] = useState<HolidayItem | null>(null);
   const [singleHolidayDialogOpen, setSingleHolidayDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [holidaySaving, setHolidaySaving] = useState(false);
   const [saveError, setSaveError] = useState('');
   const [formErrors, setFormErrors] = useState<string[]>([]);
   const [shiftTypeChangeOpen, setShiftTypeChangeOpen] = useState(false);
@@ -1175,6 +1412,18 @@ export default function Step2CalendarShift({
   const markDirty = () => {
     if (!isDirty) setIsDirty(true);
   };
+
+  const weekends = useMemo(
+    () => WEEK_DAYS.filter((day) => weekDayModes[day] === 'weekly_rest'),
+    [weekDayModes],
+  );
+  const recurringOrganizationalDays = useMemo(
+    () => WEEK_DAYS.filter((day) => weekDayModes[day] === 'organizational'),
+    [weekDayModes],
+  );
+
+  const buildHolidaySubmissionData = () =>
+    mergeHolidayItems(holidays, buildRecurringOrganizationalHolidays(year, recurringOrganizationalDays));
 
   const validateShiftForm = (): string[] => {
     const errors: string[] = [];
@@ -1299,12 +1548,18 @@ export default function Step2CalendarShift({
 
   const toggle = (list: string[], value: string) => (list.includes(value) ? list.filter((item) => item !== value) : [...list, value]);
 
-  const removeDayFromWorkingDays = (day: string) => {
-    const remove = (days: string[]) => days.filter((item) => item !== day);
-    setWorkingDays(remove);
-    setFloatDayWorkingDays(remove);
-    setFloatAbsWorkingDays(remove);
-    setSplitWorkingDays(remove);
+  const setDayInWorkingDays = (day: string, shouldBeWorking: boolean) => {
+    const apply = (days: string[]) => {
+      const next = days.filter((item) => item !== day);
+      if (!shouldBeWorking) return next;
+      const ordered = WEEK_DAYS.filter((item) => item === day || next.includes(item));
+      return ordered;
+    };
+
+    setWorkingDays(apply);
+    setFloatDayWorkingDays(apply);
+    setFloatAbsWorkingDays(apply);
+    setSplitWorkingDays(apply);
   };
 
   const stripHolidayDaysFromWorkingDays = (holidayDays: string[]) => {
@@ -1315,14 +1570,21 @@ export default function Step2CalendarShift({
     setSplitWorkingDays(strip);
   };
 
-  const toggleWeekendDay = (day: string) => {
-    setWeekends((prev) => {
-      const next = toggle(prev, day);
-      if (next.includes(day) && !prev.includes(day)) {
-        removeDayFromWorkingDays(day);
-      }
-      return next;
-    });
+  const openWeekDayDialog = (day: string) => {
+    setSaveError('');
+    setSelectedWeekDay(day);
+    setSelectedWeekDayMode(weekDayModes[day] ?? 'working');
+    setWeekDayDialogOpen(true);
+  };
+
+  const applyWeekDayMode = () => {
+    if (!selectedWeekDay) return;
+    markDirty();
+    setSaveError('');
+    setWeekDayModes((prev) => ({ ...prev, [selectedWeekDay]: selectedWeekDayMode }));
+    setDayInWorkingDays(selectedWeekDay, selectedWeekDayMode === 'working');
+    setWeekDayDialogOpen(false);
+    setSelectedWeekDay(null);
   };
 
   const applyTemplate = (id: string) => {
@@ -1451,8 +1713,9 @@ export default function Step2CalendarShift({
   const confirmHolidays = async () => {
     if (!draftCalendarId) return;
 
-    stripHolidayDaysFromWorkingDays(weekends);
-    setSaving(true);
+    const singleHolidays = buildHolidaySubmissionData();
+    stripHolidayDaysFromWorkingDays([...weekends, ...recurringOrganizationalDays]);
+    setHolidaySaving(true);
     setSaveError('');
     try {
       await updateCalendarHolidaysFromQuickSetupAction({
@@ -1460,14 +1723,14 @@ export default function Step2CalendarShift({
         startDate: `${year}/01/01`,
         endDate: `${year}/12/29`,
         weekends,
-        singleHolidays: holidays,
+        singleHolidays,
       });
       setHolidayConfirmed(true);
       setActiveSection('shift');
     } catch {
       setSaveError('تعطیلات ذخیره نشد. دوباره تلاش کنید.');
     } finally {
-      setSaving(false);
+      setHolidaySaving(false);
     }
   };
 
@@ -1479,6 +1742,7 @@ export default function Step2CalendarShift({
     setSaving(true);
     setSaveError('');
     try {
+      const singleHolidays = buildHolidaySubmissionData();
       const result = await updateCalendarFromQuickSetupAction({
         calendarId: draftCalendarId,
         title: title.trim(),
@@ -1487,7 +1751,7 @@ export default function Step2CalendarShift({
         startDate: `${year}/01/01`,
         endDate: `${year}/12/29`,
         weekends,
-        singleHolidays: holidays,
+        singleHolidays,
         shiftType,
         shiftTitle: resolveCalendarShiftTitle(shiftTitle, shiftType),
         shiftConfig: buildShiftConfig(),
@@ -1535,9 +1799,9 @@ export default function Step2CalendarShift({
       startDate: `${year}/01/01`,
       endDate: `${year}/12/29`,
       weekends,
-      singleHolidays: holidays,
+      singleHolidays: holidayConfirmed ? buildHolidaySubmissionData() : holidays,
     }),
-    [description, draftCalendarId, holidays, title, weekends, year],
+    [description, draftCalendarId, holidayConfirmed, holidays, recurringOrganizationalDays, title, weekends, year],
   );
 
   const saveRotateShift = async (payload: ShiftWizardSavePayload) => {
@@ -1545,6 +1809,7 @@ export default function Step2CalendarShift({
 
     setSaveError('');
     try {
+      const singleHolidays = buildHolidaySubmissionData();
       const result = await updateCalendarFromQuickSetupAction({
         calendarId: draftCalendarId,
         title: title.trim(),
@@ -1553,7 +1818,7 @@ export default function Step2CalendarShift({
         startDate: `${year}/01/01`,
         endDate: `${year}/12/29`,
         weekends,
-        singleHolidays: holidays,
+        singleHolidays,
         shiftType: payload.shiftType,
         shiftTitle: payload.shiftTitle,
         shiftConfig: payload.shiftConfig,
@@ -1574,11 +1839,52 @@ export default function Step2CalendarShift({
     }
   };
 
-  const addSingleHoliday = () => {
-    if (!holidayTitle.trim() || !holidayDate.trim()) return;
-    setHolidays((prev) => [...prev, { id: `${Date.now()}`, title: holidayTitle.trim(), date: holidayDate.trim() }]);
+  const openCreateSingleHoliday = () => {
+    setSaveError('');
+    setEditingHolidayId(null);
     setHolidayTitle('');
     setHolidayDate('');
+    setHolidayType('official');
+    setHolidayDescription('');
+    setSingleHolidayDialogOpen(true);
+  };
+
+  const openEditSingleHoliday = (item: HolidayItem) => {
+    setSaveError('');
+    setEditingHolidayId(item.id);
+    setHolidayTitle(item.title);
+    setHolidayDate(item.date);
+    setHolidayType(item.holidayType);
+    setHolidayDescription(item.description ?? '');
+    setSingleHolidayDialogOpen(true);
+  };
+
+  const saveSingleHoliday = () => {
+    if (!holidayTitle.trim() || !holidayDate.trim()) return;
+    const normalizedDate = normalizePersianDateInput(holidayDate.trim());
+    if (!parsePersianYmd(normalizedDate)) {
+      setSaveError('تاریخ تعطیلی معتبر نیست. فرمت درست: 1405/01/01');
+      return;
+    }
+    markDirty();
+    setSaveError('');
+    setHolidays((prev) => {
+      const nextItem: HolidayItem = {
+        id: editingHolidayId ?? `${Date.now()}`,
+        title: holidayTitle.trim(),
+        date: normalizedDate,
+        holidayType,
+        description: holidayDescription.trim() || undefined,
+      };
+
+      if (!editingHolidayId) return [...prev, nextItem];
+      return prev.map((item) => (item.id === editingHolidayId ? nextItem : item));
+    });
+    setHolidayTitle('');
+    setHolidayDate('');
+    setHolidayType('official');
+    setHolidayDescription('');
+    setEditingHolidayId(null);
     setSingleHolidayDialogOpen(false);
   };
 
@@ -1632,53 +1938,127 @@ export default function Step2CalendarShift({
 
         <SectionShell title="تعطیلات و روزهای غیرکاری" icon={<Coffee className="h-5 w-5" />} isOpen={activeSection === 'holiday'} canOpen={calendarConfirmed} onToggle={() => setActiveSection('holiday')}>
           <div className="space-y-5 text-right">
-            <div className="space-y-3">
-              <div className="text-lg font-black text-white">تعطیلات هفتگی</div>
-              <p className="text-xs leading-6 text-slate-400">
-                روزهای انتخاب‌شده در تمام بازهٔ سال کاری ({year}) به‌عنوان تعطیل ثبت می‌شوند.
-              </p>
-              <div className="flex flex-wrap justify-start gap-2">
-                {[...WEEK_DAYS].reverse().map((day) => (
-                  <DetailToggle key={day} active={weekends.includes(day)} onClick={() => toggleWeekendDay(day)}>
-                    {weekends.includes(day) ? `${day} ✓` : day}
-                  </DetailToggle>
-                ))}
+            <div className="space-y-4">
+              <div className="flex flex-row-reverse items-start justify-between gap-4">
+                <div>
+                  <div className="text-lg font-black text-white">تعطیلات هفتگی</div>
+                  <p className="mt-2 text-sm leading-7 text-slate-300">
+                    برای هر روز هفته مشخص کنید که روز کاری است، تعطیل هفتگی محسوب می‌شود یا به عنوان تعطیل سازمانی در کل سال ({year}) ثبت شود.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                {[...WEEK_DAYS].reverse().map((day) => {
+                  const mode = weekDayModes[day] ?? 'working';
+                  const modeMeta = WEEKDAY_MODE_META[mode];
+                  const coefficient =
+                    mode === 'weekly_rest'
+                      ? resolvedHolidayCoefficients.weeklyRestDay
+                      : mode === 'organizational'
+                        ? resolvedHolidayCoefficients.organizationalHoliday
+                        : 1;
+
+                  return (
+                    <button
+                      key={day}
+                      type="button"
+                      onClick={() => openWeekDayDialog(day)}
+                      className={cn(
+                        'rounded-[24px] border p-4 text-right transition-all hover:-translate-y-0.5',
+                        modeMeta.tone,
+                      )}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-full border border-white/15 px-2 text-xs font-bold">
+                          {mode === 'working' ? '•' : '✓'}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <div className="text-xl font-black">{day}</div>
+                          <div className="mt-2 text-sm font-bold opacity-90">{weekdayModeLabel(mode)}</div>
+                          <div className="mt-2 text-xs opacity-80">ضریب: {formatCoefficient(coefficient)}</div>
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="rounded-[22px] border border-white/10 bg-slate-900/40 p-5">
+                <div className="flex flex-row-reverse items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <CircleHelp className="h-5 w-5 text-slate-300" />
+                    <div className="text-lg font-black text-white">ضرایب متفاوت در حقوق و دستمزد</div>
+                  </div>
+                </div>
+                <p className="mt-3 text-sm leading-7 text-slate-300">
+                  ضرایب این بخش از تنظیمات کسب‌وکار در
+                  {' '}
+                  <span className="font-bold text-indigo-200">سال {formatFaNumber(resolvedHolidayCoefficients.year, { useGrouping: false })}</span>
+                  {' '}
+                  خوانده می‌شوند و مبنای نمایش مرحله راه‌اندازی سریع هستند.
+                </p>
+                <div className="mt-4 grid gap-3 md:grid-cols-3">
+                  <div className="rounded-2xl border border-indigo-400/20 bg-indigo-500/10 p-4">
+                    <div className="text-sm font-bold text-slate-200">تعطیل هفتگی</div>
+                    <div className="mt-2 text-2xl font-black text-white">{formatCoefficient(resolvedHolidayCoefficients.weeklyRestDay)}</div>
+                  </div>
+                  <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/10 p-4">
+                    <div className="text-sm font-bold text-slate-200">تعطیل رسمی</div>
+                    <div className="mt-2 text-2xl font-black text-white">{formatCoefficient(resolvedHolidayCoefficients.officialHoliday)}</div>
+                  </div>
+                  <div className="rounded-2xl border border-sky-400/20 bg-sky-500/10 p-4">
+                    <div className="text-sm font-bold text-slate-200">تعطیل سازمانی</div>
+                    <div className="mt-2 text-2xl font-black text-white">{formatCoefficient(resolvedHolidayCoefficients.organizationalHoliday)}</div>
+                  </div>
+                </div>
               </div>
             </div>
-            <div className="rounded-xl border border-white/10 bg-slate-900/40 p-4">
-              <div className="flex flex-row-reverse items-center justify-between gap-3">
-                <div className="text-base font-bold text-white">تعطیلات تکی</div>
-                <button type="button" onClick={() => setSingleHolidayDialogOpen(true)} className="inline-flex flex-row-reverse items-center gap-2 rounded-full bg-indigo-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-indigo-500">
+
+            <div className="rounded-[24px] border border-white/10 bg-slate-900/40 p-4 sm:p-5">
+              <div className="flex flex-row-reverse items-start justify-between gap-3">
+                <div>
+                  <div className="text-2xl font-black text-white">تعطیلات تکی</div>
+                  <p className="mt-2 text-sm leading-7 text-slate-300">
+                    تعطیلات تکی فقط در تاریخ مشخص‌شده اعمال می‌شوند. تعطیلات سازمانی تکرارشونده از بخش بالا مدیریت می‌شوند.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={openCreateSingleHoliday}
+                  className="inline-flex flex-row-reverse items-center gap-2 rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-indigo-500"
+                >
                   <Plus className="h-4 w-4" />
                   افزودن تعطیلات تکی
                 </button>
               </div>
-            </div>
-            {holidays.length > 0 ? (
-              <div className="flex flex-row-reverse flex-wrap justify-end gap-2">
-                {holidays.map((item) => (
-                  <div key={item.id} className="inline-flex flex-row-reverse items-center gap-2 rounded-full bg-indigo-500 px-4 py-2 text-sm text-white">
-                    <button type="button" onClick={() => setHolidays((prev) => prev.filter((holiday) => holiday.id !== item.id))} className="text-rose-100 transition hover:text-white">
-                      ×
-                    </button>
-                    <span>
-                      {item.title} - {item.date}
-                    </span>
+
+              <div className="mt-5 grid gap-3 lg:grid-cols-2">
+                {holidays.length > 0 ? (
+                  holidays.map((item) => (
+                    <SingleHolidayCard
+                      key={item.id}
+                      item={item}
+                      onEdit={() => openEditSingleHoliday(item)}
+                      onDelete={() => setPendingDeleteHoliday(item)}
+                    />
+                  ))
+                ) : (
+                  <div className="rounded-[22px] border border-dashed border-white/10 bg-slate-950/30 px-5 py-8 text-center text-sm leading-7 text-slate-400 lg:col-span-2">
+                    هنوز تعطیلی تکی ثبت نشده است.
                   </div>
-                ))}
+                )}
               </div>
-            ) : (
-              <div className="text-sm text-slate-400">هنوز تعطیلی تکی ثبت نشده است.</div>
-            )}
+            </div>
           </div>
           <div className="mt-4 flex justify-end">
             <button
               type="button"
               onClick={confirmHolidays}
-              disabled={!draftCalendarId || saving}
+              disabled={!draftCalendarId || holidaySaving}
               className="rounded-full bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50"
             >
-              {saving && !holidayConfirmed ? 'در حال ذخیره...' : 'تکمیل مرحله 2'}
+              {holidaySaving ? 'در حال ذخیره...' : 'تکمیل مرحله 2'}
             </button>
           </div>
         </SectionShell>
@@ -2189,40 +2569,200 @@ export default function Step2CalendarShift({
         </div>
       ) : null}
 
+      <ConfirmDialog
+        open={Boolean(pendingDeleteHoliday)}
+        title="حذف تعطیلی"
+        description={
+          pendingDeleteHoliday
+            ? `آیا از حذف «${pendingDeleteHoliday.title}» مطمئن هستید؟`
+            : ''
+        }
+        tone="danger"
+        confirmLabel="حذف"
+        cancelLabel="انصراف"
+        onCancel={() => setPendingDeleteHoliday(null)}
+        onConfirm={() => {
+          if (!pendingDeleteHoliday) return;
+          markDirty();
+          setHolidays((prev) => prev.filter((holiday) => holiday.id !== pendingDeleteHoliday.id));
+          setPendingDeleteHoliday(null);
+        }}
+      />
+
+      {weekDayDialogOpen && selectedWeekDay ? (
+        <div className="fixed inset-0 z-[100] bg-black/65" onClick={() => setWeekDayDialogOpen(false)}>
+          <div
+            className="fixed left-1/2 top-1/2 z-[101] w-[min(100%-2rem,56rem)] -translate-x-1/2 -translate-y-1/2 rounded-[28px] border border-white/10 bg-slate-900 p-5 text-right text-slate-100 shadow-[0_24px_80px_rgba(0,0,0,0.45)]"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-4">
+              <button type="button" onClick={() => setWeekDayDialogOpen(false)} className="text-slate-300 transition-colors hover:text-white">
+                <ArrowLeft className="h-5 w-5" />
+              </button>
+              <div>
+                <div className="text-3xl font-black text-white">تنظیم نوع روز</div>
+                <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-300">
+                  نوع این روز را مشخص کنید. این تنظیم در محاسبه ضرایب حقوق و دستمزد اعمال می‌شود.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-6 rounded-[22px] border border-white/10 bg-slate-800/45 p-4">
+              <div className="text-sm text-slate-300">روز انتخاب شده:</div>
+              <div className="mt-3 inline-flex items-center gap-3 rounded-2xl bg-indigo-500/15 px-4 py-3 text-lg font-black text-indigo-100">
+                <CalendarDays className="h-5 w-5" />
+                {selectedWeekDay}
+              </div>
+            </div>
+
+            <div className="mt-6 space-y-4">
+              <div className="text-2xl font-black text-white">نوع روز را انتخاب کنید</div>
+              <WeekdayModeOptionCard
+                mode="working"
+                selected={selectedWeekDayMode === 'working'}
+                coefficient={1}
+                onClick={() => setSelectedWeekDayMode('working')}
+              />
+              <WeekdayModeOptionCard
+                mode="weekly_rest"
+                selected={selectedWeekDayMode === 'weekly_rest'}
+                coefficient={resolvedHolidayCoefficients.weeklyRestDay}
+                onClick={() => setSelectedWeekDayMode('weekly_rest')}
+              />
+              <WeekdayModeOptionCard
+                mode="organizational"
+                selected={selectedWeekDayMode === 'organizational'}
+                coefficient={resolvedHolidayCoefficients.organizationalHoliday}
+                onClick={() => setSelectedWeekDayMode('organizational')}
+              />
+            </div>
+
+            <div className="mt-8 flex items-center justify-start gap-3 border-t border-white/10 pt-5">
+              <button
+                type="button"
+                onClick={applyWeekDayMode}
+                className="rounded-2xl bg-indigo-600 px-8 py-3 text-base font-black text-white transition-colors hover:bg-indigo-500"
+              >
+                ذخیره
+              </button>
+              <button
+                type="button"
+                onClick={() => setWeekDayDialogOpen(false)}
+                className="rounded-2xl border border-white/10 px-6 py-3 text-base font-bold text-slate-200"
+              >
+                انصراف
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       {singleHolidayDialogOpen ? (
         <div className="fixed inset-0 z-[100] bg-black/65" onClick={() => setSingleHolidayDialogOpen(false)}>
           <div
-            className="fixed left-1/2 top-1/2 z-[101] w-[min(100%-2rem,32rem)] -translate-x-1/2 -translate-y-1/2 rounded-xl border border-white/10 bg-slate-900 p-4 text-right text-slate-100 shadow-[0_24px_80px_rgba(0,0,0,0.45)]"
+            className="fixed left-1/2 top-1/2 z-[101] w-[min(100%-2rem,52rem)] -translate-x-1/2 -translate-y-1/2 rounded-[28px] border border-white/10 bg-slate-900 p-5 text-right text-slate-100 shadow-[0_24px_80px_rgba(0,0,0,0.45)]"
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="text-xl font-black text-white">افزودن تعطیلات تکی</div>
-            <p className="mt-3 text-sm leading-7 text-slate-300">برای ثبت هر تعطیلی، عنوان مناسب و تاریخ دقیق آن روز را وارد کنید.</p>
-            <div className="mt-5 space-y-4">
-              <label className="block space-y-2">
-                <span className="text-sm font-bold text-white">عنوان تعطیلی</span>
-                <input
-                  value={holidayTitle}
-                  onChange={(event) => setHolidayTitle(event.target.value)}
-                  placeholder="مثلا تاسیس شرکت"
-                  className="w-full rounded-xl border border-slate-600 bg-slate-900/60 px-3 py-3 text-sm text-white outline-none focus:border-indigo-400"
-                />
-              </label>
+            <div className="flex items-start justify-between gap-4">
+              <button type="button" onClick={() => setSingleHolidayDialogOpen(false)} className="text-slate-300 transition-colors hover:text-white">
+                <ArrowLeft className="h-5 w-5" />
+              </button>
+              <div>
+                <div className="text-3xl font-black text-white">{editingHolidayId ? 'ویرایش تعطیلات تکی' : 'افزودن تعطیلات تکی'}</div>
+                <p className="mt-3 text-sm leading-7 text-slate-300">
+                  یک روز تعطیل را مشخص کنید. تاثیر این تعطیلی در حقوق و دستمزد بسته به نوع آن متفاوت است.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-6 grid gap-4">
               <label className="block space-y-2">
                 <span className="text-sm font-bold text-white">تاریخ تعطیلی</span>
                 <input
                   value={holidayDate}
                   onChange={(event) => setHolidayDate(event.target.value)}
                   placeholder="1405/01/01"
-                  className="w-full rounded-xl border border-slate-600 bg-slate-900/60 px-3 py-3 text-sm text-white outline-none focus:border-indigo-400"
+                  className="w-full rounded-2xl border border-slate-600 bg-slate-900/60 px-4 py-3 text-sm text-white outline-none focus:border-indigo-400"
+                />
+              </label>
+              <label className="block space-y-2">
+                <span className="text-sm font-bold text-white">عنوان تعطیلی</span>
+                <input
+                  value={holidayTitle}
+                  onChange={(event) => setHolidayTitle(event.target.value)}
+                  placeholder="مثلا روز کارگر"
+                  className="w-full rounded-2xl border border-slate-600 bg-slate-900/60 px-4 py-3 text-sm text-white outline-none focus:border-indigo-400"
+                />
+              </label>
+              <label className="block space-y-2">
+                <span className="text-sm font-bold text-white">نوع تعطیلی</span>
+                <div className="grid gap-3 md:grid-cols-2">
+                  {CALENDAR_HOLIDAY_TYPE_OPTIONS.map((option) => {
+                    const selected = holidayType === option.id;
+                    const coefficient =
+                      option.id === 'official'
+                        ? resolvedHolidayCoefficients.officialHoliday
+                        : resolvedHolidayCoefficients.organizationalHoliday;
+                    const Icon = option.id === 'official' ? Landmark : Building2;
+
+                    return (
+                      <button
+                        key={option.id}
+                        type="button"
+                        onClick={() => setHolidayType(option.id)}
+                        className={cn(
+                          'rounded-[22px] border p-4 text-right transition-all',
+                          selected ? 'border-indigo-400 bg-indigo-500/10 text-white' : 'border-white/10 bg-slate-900/45 text-slate-200',
+                        )}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-500/15 text-indigo-200">
+                            <Icon className="h-5 w-5" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="text-lg font-black">{option.label}</div>
+                            <div className="mt-2 text-sm leading-7 text-slate-300">{option.id === 'official' ? 'تعطیلات مصوب تقویم رسمی کشور' : 'تعطیلات داخلی شرکت یا سازمان'}</div>
+                            <div className="mt-3 text-sm font-bold text-indigo-200">ضریب: {formatCoefficient(coefficient)}</div>
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </label>
+              <label className="block space-y-2">
+                <span className="text-sm font-bold text-white">توضیحات (اختیاری)</span>
+                <textarea
+                  value={holidayDescription}
+                  onChange={(event) => setHolidayDescription(event.target.value)}
+                  placeholder="جزئیات بیشتر درباره این تعطیلی..."
+                  rows={4}
+                  className="w-full rounded-2xl border border-slate-600 bg-slate-900/60 px-4 py-3 text-sm text-white outline-none focus:border-indigo-400"
                 />
               </label>
             </div>
-            <div className="mt-6 flex items-center justify-between gap-3">
-              <button type="button" onClick={addSingleHoliday} disabled={!holidayTitle.trim() || !holidayDate.trim()} className="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50">
-                ثبت تعطیلی
+
+            <div className="mt-6 rounded-[22px] border border-white/10 bg-slate-800/40 px-4 py-3 text-sm leading-7 text-slate-300">
+              <span className="font-bold text-indigo-200">نکته:</span>
+              {' '}
+              تاثیر تعطیلات رسمی و سازمانی در محاسبه حقوق و مزایا متفاوت است.
+            </div>
+
+            <div className="mt-6 flex items-center justify-start gap-3">
+              <button
+                type="button"
+                onClick={saveSingleHoliday}
+                disabled={!holidayTitle.trim() || !holidayDate.trim()}
+                className="rounded-2xl bg-indigo-600 px-8 py-3 text-base font-black text-white transition-colors hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {editingHolidayId ? 'ذخیره تغییرات' : 'ثبت تعطیلی'}
               </button>
-              <button type="button" onClick={() => setSingleHolidayDialogOpen(false)} className="rounded-xl border border-white/10 px-4 py-2.5 text-sm text-slate-200">
-                بستن
+              <button
+                type="button"
+                onClick={() => setSingleHolidayDialogOpen(false)}
+                className="rounded-2xl border border-white/10 px-6 py-3 text-base font-bold text-slate-200"
+              >
+                انصراف
               </button>
             </div>
           </div>

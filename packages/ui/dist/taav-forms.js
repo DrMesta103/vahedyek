@@ -74,6 +74,27 @@ var TAAV_TOKEN_CATALOG = [
   { name: "form-label-md", cssVar: "--taav-form-label-md", value: "13px", description: "\u062A\u0627\u06CC\u067E\u0648\u06AF\u0631\u0627\u0641\u06CC label", category: "typography", preview: "text" },
   { name: "form-message-sm", cssVar: "--taav-form-message-sm", value: "11px", description: "\u067E\u06CC\u0627\u0645 \u062E\u0637\u0627/\u0631\u0627\u0647\u0646\u0645\u0627", category: "typography", preview: "text" },
   { name: "required-mark", cssVar: "--taav-required-mark", value: "theme", description: "\u0631\u0646\u06AF \u0633\u062A\u0627\u0631\u0647 \u0627\u0644\u0632\u0627\u0645\u06CC", category: "color", preview: "color", themeAware: true },
+  { name: "field-block-gap-md", cssVar: "--taav-field-block-gap-md", value: "12px", description: "\u0641\u0627\u0635\u0644\u0647 \u0639\u0645\u0648\u062F\u06CC \u067E\u06CC\u0634\u200C\u0641\u0631\u0636 TaavFieldBlock", category: "spacing", preview: "spacing" },
+  { name: "field-block-label-md", cssVar: "--taav-field-block-label-md", value: "14px", description: "\u062A\u0627\u06CC\u067E\u0648\u06AF\u0631\u0627\u0641\u06CC label business form", category: "typography", preview: "text" },
+  { name: "field-block-support-md", cssVar: "--taav-field-block-support-md", value: "13px", description: "\u062A\u0627\u06CC\u067E\u0648\u06AF\u0631\u0627\u0641\u06CC \u0645\u062A\u0646 \u0631\u0627\u0647\u0646\u0645\u0627\u06CC \u062B\u0627\u0628\u062A \u0632\u06CC\u0631 \u0641\u06CC\u0644\u062F", category: "typography", preview: "text" },
+  { name: "field-block-support-color", cssVar: "--taav-field-block-support-color", value: "theme", description: "\u0631\u0646\u06AF \u0645\u062A\u0646 \u0631\u0627\u0647\u0646\u0645\u0627\u06CC \u062B\u0627\u0628\u062A \u0641\u06CC\u0644\u062F", category: "color", preview: "color", themeAware: true },
+  { name: "field-block-error-color", cssVar: "--taav-field-block-error-color", value: "theme", description: "\u0631\u0646\u06AF \u067E\u06CC\u0627\u0645 \u062E\u0637\u0627 \u062F\u0631 business field block", category: "color", preview: "color", themeAware: true },
+  { name: "field-grid-gap-md", cssVar: "--taav-field-grid-gap-md", value: "16px", description: "\u06AF\u062A\u0631 \u0627\u0641\u0642\u06CC \u067E\u06CC\u0634\u200C\u0641\u0631\u0636 TaavFieldGrid", category: "spacing", preview: "spacing" },
+  { name: "field-grid-responsive-gap", cssVar: "--taav-field-grid-responsive-gap", value: "16px", description: "\u0641\u0627\u0635\u0644\u0647 \u0631\u06CC\u0633\u067E\u0627\u0646\u0633\u06CC\u0648 business forms", category: "spacing", preview: "spacing" },
+  { name: "choice-chip-height-md", cssVar: "--taav-choice-chip-height-md", value: "40px", description: "\u0627\u0631\u062A\u0641\u0627\u0639 \u067E\u06CC\u0634\u200C\u0641\u0631\u0636 TaavChoiceChip", category: "component", preview: "spacing" },
+  { name: "choice-chip-px-md", cssVar: "--taav-choice-chip-px-md", value: "16px", description: "\u067E\u062F\u06CC\u0646\u06AF \u0627\u0641\u0642\u06CC TaavChoiceChip", category: "component", preview: "spacing" },
+  { name: "choice-chip-radius-pill", cssVar: "--taav-choice-chip-radius-pill", value: "9999px", description: "\u0634\u0639\u0627\u0639 pill \u0628\u0631\u0627\u06CC TaavChoiceChip", category: "radius", preview: "radius" },
+  { name: "choice-chip-bg", cssVar: "--taav-choice-chip-bg", value: "theme", description: "\u067E\u0633\u200C\u0632\u0645\u06CC\u0646\u0647 \u062D\u0627\u0644\u062A \u0639\u0627\u062F\u06CC choice chip", category: "color", preview: "color", themeAware: true },
+  { name: "choice-chip-border", cssVar: "--taav-choice-chip-border", value: "theme", description: "\u0645\u0631\u0632 \u062D\u0627\u0644\u062A \u0639\u0627\u062F\u06CC choice chip", category: "color", preview: "color", themeAware: true },
+  { name: "choice-chip-text", cssVar: "--taav-choice-chip-text", value: "theme", description: "\u0631\u0646\u06AF \u0645\u062A\u0646 \u062D\u0627\u0644\u062A \u0639\u0627\u062F\u06CC choice chip", category: "color", preview: "color", themeAware: true },
+  { name: "choice-chip-gap", cssVar: "--taav-choice-chip-gap", value: "8px", description: "\u0641\u0627\u0635\u0644\u0647 \u0628\u06CC\u0646 \u0622\u06CC\u06A9\u0646 \u062A\u06CC\u06A9 \u0648 \u0645\u062A\u0646 \u062F\u0627\u062E\u0644 choice chip", category: "spacing", preview: "spacing" },
+  { name: "choice-chip-selected-bg", cssVar: "--taav-choice-chip-selected-bg", value: "#ccfbf1", description: "\u067E\u0633\u200C\u0632\u0645\u06CC\u0646\u0647 \u0627\u0646\u062A\u062E\u0627\u0628\u200C\u0634\u062F\u0647 choice chip", category: "color", preview: "color", themeAware: true },
+  { name: "choice-chip-selected-border", cssVar: "--taav-choice-chip-selected-border", value: "transparent", description: "\u0645\u0631\u0632 \u062D\u0627\u0644\u062A \u0627\u0646\u062A\u062E\u0627\u0628\u200C\u0634\u062F\u0647 choice chip", category: "color", preview: "color" },
+  { name: "choice-chip-selected-text", cssVar: "--taav-choice-chip-selected-text", value: "theme", description: "\u0631\u0646\u06AF \u0645\u062A\u0646 \u0627\u0646\u062A\u062E\u0627\u0628\u200C\u0634\u062F\u0647 choice chip", category: "color", preview: "color", themeAware: true },
+  { name: "choice-chip-selected-icon", cssVar: "--taav-choice-chip-selected-icon", value: "theme", description: "\u0631\u0646\u06AF \u0622\u06CC\u06A9\u0646 \u062A\u06CC\u06A9 \u0627\u0646\u062A\u062E\u0627\u0628\u200C\u0634\u062F\u0647", category: "color", preview: "color", themeAware: true },
+  { name: "choice-chip-hover-bg", cssVar: "--taav-choice-chip-hover-bg", value: "theme", description: "\u067E\u0633\u200C\u0632\u0645\u06CC\u0646\u0647 hover \u062D\u0627\u0644\u062A \u0639\u0627\u062F\u06CC choice chip", category: "color", preview: "color", themeAware: true },
+  { name: "choice-chip-focus-ring", cssVar: "--taav-choice-chip-focus-ring", value: "brand ring", description: "\u062D\u0644\u0642\u0647 \u0641\u0648\u06A9\u0648\u0633 TaavChoiceChip", category: "focus", preview: "none", themeAware: true },
+  { name: "choice-chip-group-gap-md", cssVar: "--taav-choice-chip-group-gap-md", value: "12px", description: "\u0641\u0627\u0635\u0644\u0647 \u0628\u06CC\u0646 choice chip\u0647\u0627 \u062F\u0631 \u06AF\u0631\u0648\u0647", category: "spacing", preview: "spacing" },
   { name: "control-size-md", cssVar: "--taav-control-size-md", value: "18px", description: "\u0627\u0646\u062F\u0627\u0632\u0647 checkbox/radio md", category: "component", preview: "spacing" },
   { name: "control-focus-ring", cssVar: "--taav-control-focus-ring", value: "brand ring", description: "\u062D\u0644\u0642\u0647 \u0641\u0648\u06A9\u0648\u0633 \u06A9\u0646\u062A\u0631\u0644\u200C\u0647\u0627", category: "focus", preview: "none", themeAware: true },
   { name: "switch-track-w-md", cssVar: "--taav-switch-track-w-md", value: "42px", description: "\u0639\u0631\u0636 track \u0633\u0648\u06CC\u06CC\u0686", category: "component", preview: "spacing" },
@@ -112,7 +133,72 @@ var TAAV_TOKEN_CATALOG = [
   { name: "stats-tone-brand", cssVar: "--taav-stats-tone-brand", value: "theme", description: "\u0633\u0637\u062D stats card brand", category: "component", preview: "color", themeAware: true },
   { name: "progress-height-md", cssVar: "--taav-progress-height-md", value: "8px", description: "\u0627\u0631\u062A\u0641\u0627\u0639 progress bar", category: "component", preview: "spacing" },
   { name: "progress-bg", cssVar: "--taav-progress-bg", value: "theme", description: "\u067E\u0633\u200C\u0632\u0645\u06CC\u0646\u0647 progress bar", category: "component", preview: "color", themeAware: true },
-  { name: "progress-fill-brand", cssVar: "--taav-progress-fill-brand", value: "theme", description: "\u0631\u0646\u06AF fill progress brand", category: "color", preview: "color", themeAware: true }
+  { name: "progress-fill-brand", cssVar: "--taav-progress-fill-brand", value: "theme", description: "\u0631\u0646\u06AF fill progress brand", category: "color", preview: "color", themeAware: true },
+  /* Business sidebar tokens */
+  { name: "business-sidebar-width-default", cssVar: "--taav-business-sidebar-width-default", value: "192px", description: "\u0639\u0631\u0636 \u0633\u0627\u06CC\u062F\u0628\u0627\u0631 \u06A9\u0633\u0628\u200C\u0648\u06A9\u0627\u0631 (DastRanj)", category: "business-sidebar", preview: "spacing" },
+  { name: "business-sidebar-width-collapsed", cssVar: "--taav-business-sidebar-width-collapsed", value: "52px", description: "\u0639\u0631\u0636 \u0633\u0627\u06CC\u062F\u0628\u0627\u0631 \u062C\u0645\u0639\u200C\u0634\u062F\u0647", category: "business-sidebar", preview: "spacing" },
+  { name: "business-sidebar-bg", cssVar: "--taav-business-sidebar-bg", value: "rgba navy", description: "\u067E\u0633\u200C\u0632\u0645\u06CC\u0646\u0647 \u0633\u0627\u06CC\u062F\u0628\u0627\u0631 enterprise", category: "business-sidebar", preview: "color" },
+  { name: "business-sidebar-border", cssVar: "--taav-business-sidebar-border", value: "rgba line", description: "\u0645\u0631\u0632 \u0633\u0627\u06CC\u062F\u0628\u0627\u0631", category: "business-sidebar", preview: "color" },
+  { name: "business-sidebar-text", cssVar: "--taav-business-sidebar-text", value: "#eef6ff", description: "\u0645\u062A\u0646 \u0627\u0635\u0644\u06CC \u0633\u0627\u06CC\u062F\u0628\u0627\u0631", category: "business-sidebar", preview: "color" },
+  { name: "business-sidebar-text-muted", cssVar: "--taav-business-sidebar-text-muted", value: "#97adc7", description: "\u0645\u062A\u0646 muted \u0645\u0646\u0648", category: "business-sidebar", preview: "color" },
+  { name: "business-sidebar-icon", cssVar: "--taav-business-sidebar-icon", value: "#14b8a6", description: "\u0631\u0646\u06AF \u0622\u06CC\u06A9\u0648\u0646 toolbar", category: "business-sidebar", preview: "color" },
+  { name: "business-sidebar-active-bg", cssVar: "--taav-business-sidebar-active-bg", value: "teal tint", description: "\u067E\u0633\u200C\u0632\u0645\u06CC\u0646\u0647 \u0622\u06CC\u062A\u0645 \u0641\u0639\u0627\u0644", category: "business-sidebar", preview: "color" },
+  { name: "business-sidebar-toolbar-bg", cssVar: "--taav-business-sidebar-toolbar-bg", value: "teal tint", description: "\u067E\u0633\u200C\u0632\u0645\u06CC\u0646\u0647 \u0646\u0648\u0627\u0631 \u0645\u06CC\u0627\u0646\u0628\u0631", category: "business-sidebar", preview: "color" },
+  { name: "business-sidebar-menu-item-height", cssVar: "--taav-business-sidebar-menu-item-height", value: "32px", description: "\u0627\u0631\u062A\u0641\u0627\u0639 \u0622\u06CC\u062A\u0645 \u0645\u0646\u0648", category: "business-sidebar", preview: "spacing" },
+  { name: "business-sidebar-tenant-active-bg", cssVar: "--taav-business-sidebar-tenant-active-bg", value: "gradient", description: "\u067E\u0633\u200C\u0632\u0645\u06CC\u0646\u0647 \u067E\u0646\u0644 tenant \u0641\u0639\u0627\u0644", category: "business-sidebar", preview: "color" },
+  { name: "business-sidebar-tenant-btn-bg", cssVar: "--taav-business-sidebar-tenant-btn-bg", value: "gradient", description: "\u062F\u06A9\u0645\u0647 tenant", category: "business-sidebar", preview: "color" },
+  { name: "business-sidebar-footer-bg", cssVar: "--taav-business-sidebar-footer-bg", value: "teal tint", description: "\u067E\u0633\u200C\u0632\u0645\u06CC\u0646\u0647 footer \u0646\u0633\u062E\u0647", category: "business-sidebar", preview: "color" },
+  { name: "business-sidebar-badge-bg", cssVar: "--taav-business-sidebar-badge-bg", value: "#ef4444", description: "\u0646\u0634\u0627\u0646 \u0627\u0639\u0644\u0627\u0646 \u0642\u0631\u0645\u0632", category: "business-sidebar", preview: "color" },
+  { name: "business-sidebar-scroll-thumb", cssVar: "--taav-business-sidebar-scroll-thumb", value: "rgba subtle", description: "\u0631\u0646\u06AF thumb scrollbar \u0645\u0646\u0648", category: "business-sidebar", preview: "color" },
+  { name: "business-sidebar-scroll-thumb-hover", cssVar: "--taav-business-sidebar-scroll-thumb-hover", value: "rgba subtle", description: "hover thumb scrollbar \u0645\u0646\u0648", category: "business-sidebar", preview: "color" },
+  { name: "business-sidebar-header-back-bg", cssVar: "--taav-business-sidebar-header-back-bg", value: "teal tint", description: "\u067E\u0633\u200C\u0632\u0645\u06CC\u0646\u0647 \u062F\u06A9\u0645\u0647 \u0628\u0627\u0632\u06AF\u0634\u062A \u0647\u062F\u0631 \u0645\u0633\u06CC\u0631", category: "business-sidebar", preview: "color", themeAware: true },
+  { name: "business-sidebar-header-text", cssVar: "--taav-business-sidebar-header-text", value: "theme", description: "\u0645\u062A\u0646 \u0628\u0631\u0686\u0633\u0628 \u0645\u0633\u06CC\u0631 \u062F\u0631 \u0647\u062F\u0631", category: "business-sidebar", preview: "color", themeAware: true },
+  { name: "business-nav-path-bg", cssVar: "--taav-business-nav-path-bg", value: "#f4f7f8", description: "\u067E\u0633\u200C\u0632\u0645\u06CC\u0646\u0647 breadcrumb \u06A9\u0646\u0627\u0631 \u0633\u0627\u06CC\u062F\u0628\u0627\u0631", category: "business-sidebar", preview: "color", themeAware: true },
+  { name: "business-nav-path-text-current", cssVar: "--taav-business-nav-path-text-current", value: "theme", description: "\u0645\u062A\u0646 \u0635\u0641\u062D\u0647 \u0641\u0639\u0644\u06CC \u062F\u0631 breadcrumb", category: "business-sidebar", preview: "color", themeAware: true },
+  { name: "business-sidebar-preview-bg", cssVar: "--taav-business-sidebar-preview-bg", value: "#0a1018", description: "\u067E\u0633\u200C\u0632\u0645\u06CC\u0646\u0647 mock viewport \u062F\u0631 Lab", category: "business-sidebar", preview: "color" },
+  { name: "business-sidebar-preview-border", cssVar: "--taav-business-sidebar-preview-border", value: "rgba line", description: "\u0645\u0631\u0632 mock viewport \u062F\u0631 Lab", category: "business-sidebar", preview: "color" },
+  { name: "business-sidebar-collapsed-item-height", cssVar: "--taav-business-sidebar-collapsed-item-height", value: "36px", description: "\u0627\u0631\u062A\u0641\u0627\u0639 \u0622\u06CC\u062A\u0645 \u0645\u0646\u0648 \u062F\u0631 collapsed", category: "business-sidebar", preview: "spacing" },
+  { name: "business-sidebar-collapsed-icon-size", cssVar: "--taav-business-sidebar-collapsed-icon-size", value: "14px", description: "\u0627\u0646\u062F\u0627\u0632\u0647 \u0622\u06CC\u06A9\u0648\u0646 collapsed", category: "business-sidebar", preview: "spacing" },
+  { name: "business-sidebar-collapsed-active-bg", cssVar: "--taav-business-sidebar-collapsed-active-bg", value: "teal tint", description: "\u067E\u0633\u200C\u0632\u0645\u06CC\u0646\u0647 \u0622\u06CC\u062A\u0645 \u0641\u0639\u0627\u0644 collapsed", category: "business-sidebar", preview: "color" },
+  { name: "business-sidebar-collapsed-tenant-strip-height", cssVar: "--taav-business-sidebar-collapsed-tenant-strip-height", value: "36px", description: "\u0627\u0631\u062A\u0641\u0627\u0639 \u0646\u0648\u0627\u0631 tenant \u062F\u0631 collapsed", category: "business-sidebar", preview: "spacing" },
+  { name: "scroll-minimal-size", cssVar: "--taav-scroll-minimal-size", value: "3px", description: "\u0639\u0631\u0636 scrollbar \u0645\u06CC\u0646\u06CC\u0645\u0627\u0644", category: "business-sidebar", preview: "spacing" },
+  { name: "scroll-minimal-thumb", cssVar: "--taav-scroll-minimal-thumb", value: "rgba low", description: "thumb scrollbar \u0645\u06CC\u0646\u06CC\u0645\u0627\u0644", category: "business-sidebar", preview: "color" },
+  { name: "scroll-minimal-thumb-hover", cssVar: "--taav-scroll-minimal-thumb-hover", value: "rgba hover", description: "hover thumb scrollbar \u0645\u06CC\u0646\u06CC\u0645\u0627\u0644", category: "business-sidebar", preview: "color" },
+  { name: "scroll-thumb", cssVar: "--taav-scroll-thumb", value: "rgba subtle", description: "thumb \u0639\u0645\u0648\u0645\u06CC taav-scrollarea", category: "component", preview: "color" },
+  { name: "module-card-surface", cssVar: "--taav-module-card-surface", value: "theme", description: "\u0633\u0637\u062D \u06A9\u0627\u0631\u062A \u0645\u0627\u0698\u0648\u0644 ERP", category: "module-card", preview: "color", themeAware: true },
+  { name: "module-card-border", cssVar: "--taav-module-card-border", value: "theme", description: "\u0645\u0631\u0632 \u06A9\u0627\u0631\u062A \u0645\u0627\u0698\u0648\u0644", category: "module-card", preview: "color", themeAware: true },
+  { name: "module-card-radius", cssVar: "--taav-module-card-radius", value: "var(--taav-radius-lg)", description: "\u0634\u0639\u0627\u0639 \u06AF\u0648\u0634\u0647 \u06A9\u0627\u0631\u062A \u0645\u0627\u0698\u0648\u0644", category: "module-card", preview: "radius" },
+  { name: "module-card-shadow", cssVar: "--taav-module-card-shadow", value: "theme", description: "\u0633\u0627\u06CC\u0647 \u067E\u06CC\u0634\u200C\u0641\u0631\u0636 \u06A9\u0627\u0631\u062A \u0645\u0627\u0698\u0648\u0644", category: "module-card", preview: "shadow", themeAware: true },
+  { name: "module-card-shadow-hover", cssVar: "--taav-module-card-shadow-hover", value: "theme", description: "\u0633\u0627\u06CC\u0647 hover \u06A9\u0627\u0631\u062A \u0645\u0627\u0698\u0648\u0644", category: "module-card", preview: "shadow", themeAware: true },
+  { name: "module-card-header-height", cssVar: "--taav-module-card-header-height", value: "52px", description: "\u0627\u0631\u062A\u0641\u0627\u0639 \u0647\u062F\u0631 \u0627\u0644\u06AF\u0648\u06CC\u06CC \u06A9\u0627\u0631\u062A \u0645\u0627\u0698\u0648\u0644", category: "module-card", preview: "spacing" },
+  { name: "module-card-header-pattern-geometric", cssVar: "--taav-module-card-header-pattern-geometric", value: "gradient", description: "\u0627\u0644\u06AF\u0648\u06CC \u0647\u0646\u062F\u0633\u06CC \u0647\u062F\u0631 (light/dark)", category: "module-card", preview: "color", themeAware: true },
+  { name: "module-card-title-md", cssVar: "--taav-module-card-title-md", value: "var(--taav-text-md)", description: "\u062A\u0627\u06CC\u067E\u0648\u06AF\u0631\u0627\u0641\u06CC \u0639\u0646\u0648\u0627\u0646 \u06A9\u0627\u0631\u062A \u0645\u0627\u0698\u0648\u0644", category: "module-card", preview: "text" },
+  { name: "module-card-description-md", cssVar: "--taav-module-card-description-md", value: "var(--taav-text-sm)", description: "\u062A\u0627\u06CC\u067E\u0648\u06AF\u0631\u0627\u0641\u06CC \u062A\u0648\u0636\u06CC\u062D \u06A9\u0627\u0631\u062A \u0645\u0627\u0698\u0648\u0644", category: "module-card", preview: "text" },
+  { name: "module-card-body-padding-md", cssVar: "--taav-module-card-body-padding-md", value: "18px 18px 20px", description: "padding \u0628\u062F\u0646\u0647 \u06A9\u0627\u0631\u062A \u0645\u0627\u0698\u0648\u0644", category: "module-card", preview: "spacing" },
+  { name: "module-card-surface-hover", cssVar: "--taav-module-card-surface-hover", value: "theme", description: "\u067E\u0633\u200C\u0632\u0645\u06CC\u0646\u0647 hover \u06A9\u0627\u0631\u062A \u0645\u0627\u0698\u0648\u0644", category: "module-card", preview: "color", themeAware: true },
+  { name: "module-card-surface-selected", cssVar: "--taav-module-card-surface-selected", value: "theme", description: "\u067E\u0633\u200C\u0632\u0645\u06CC\u0646\u0647 \u0627\u0646\u062A\u062E\u0627\u0628\u200C\u0634\u062F\u0647 \u06A9\u0627\u0631\u062A \u0645\u0627\u0698\u0648\u0644", category: "module-card", preview: "color", themeAware: true },
+  { name: "module-card-disabled-opacity", cssVar: "--taav-module-card-disabled-opacity", value: "0.58", description: "\u0634\u0641\u0627\u0641\u06CC\u062A \u062D\u0627\u0644\u062A disabled/locked", category: "module-card", preview: "none" },
+  { name: "module-card-grid-gap-md", cssVar: "--taav-module-card-grid-gap-md", value: "var(--taav-space-4)", description: "\u0641\u0627\u0635\u0644\u0647 \u067E\u06CC\u0634\u200C\u0641\u0631\u0636 \u06AF\u0631\u06CC\u062F \u06A9\u0627\u0631\u062A \u0645\u0627\u0698\u0648\u0644", category: "module-card", preview: "spacing" },
+  { name: "module-card-preview-bg-dark", cssVar: "--taav-module-card-preview-bg-dark", value: "#0a1018", description: "\u067E\u0633\u200C\u0632\u0645\u06CC\u0646\u0647 mock \u062A\u06CC\u0631\u0647 \u062F\u0631 Lab", category: "module-card", preview: "color" },
+  { name: "module-card-preview-bg-light", cssVar: "--taav-module-card-preview-bg-light", value: "#f2f5f7", description: "\u067E\u0633\u200C\u0632\u0645\u06CC\u0646\u0647 mock \u0631\u0648\u0634\u0646 \u062F\u0631 Lab", category: "module-card", preview: "color" },
+  { name: "business-intro-card-surface", cssVar: "--taav-business-intro-card-surface", value: "theme", description: "\u0633\u0637\u062D \u06A9\u0627\u0631\u062A \u0645\u0639\u0631\u0641\u06CC \u0628\u062E\u0634 \u0628\u06CC\u0632\u06CC\u0646\u0633\u06CC", category: "business-intro-card", preview: "color", themeAware: true },
+  { name: "business-intro-card-border", cssVar: "--taav-business-intro-card-border", value: "theme", description: "\u0645\u0631\u0632 \u06A9\u0627\u0631\u062A \u0645\u0639\u0631\u0641\u06CC \u0628\u062E\u0634", category: "business-intro-card", preview: "color", themeAware: true },
+  { name: "business-intro-card-radius", cssVar: "--taav-business-intro-card-radius", value: "var(--taav-radius-xl)", description: "\u0634\u0639\u0627\u0639 \u06AF\u0648\u0634\u0647 \u06A9\u0627\u0631\u062A \u0645\u0639\u0631\u0641\u06CC", category: "business-intro-card", preview: "radius" },
+  { name: "business-intro-card-padding-md", cssVar: "--taav-business-intro-card-padding-md", value: "18px 20px", description: "padding \u067E\u06CC\u0634\u200C\u0641\u0631\u0636 \u06A9\u0627\u0631\u062A \u0645\u0639\u0631\u0641\u06CC", category: "business-intro-card", preview: "spacing" },
+  { name: "business-intro-card-title-md", cssVar: "--taav-business-intro-card-title-md", value: "var(--taav-text-lg)", description: "\u062A\u0627\u06CC\u067E\u0648\u06AF\u0631\u0627\u0641\u06CC \u0639\u0646\u0648\u0627\u0646 \u06A9\u0627\u0631\u062A \u0645\u0639\u0631\u0641\u06CC", category: "business-intro-card", preview: "text" },
+  { name: "business-intro-card-description-md", cssVar: "--taav-business-intro-card-description-md", value: "var(--taav-text-sm)", description: "\u062A\u0627\u06CC\u067E\u0648\u06AF\u0631\u0627\u0641\u06CC \u062A\u0648\u0636\u06CC\u062D \u06A9\u0627\u0631\u062A \u0645\u0639\u0631\u0641\u06CC", category: "business-intro-card", preview: "text" },
+  { name: "business-intro-card-icon-bg", cssVar: "--taav-business-intro-card-icon-bg", value: "teal tint", description: "\u067E\u0633\u200C\u0632\u0645\u06CC\u0646\u0647 \u0622\u06CC\u06A9\u0648\u0646 \u06A9\u0627\u0631\u062A \u0645\u0639\u0631\u0641\u06CC", category: "business-intro-card", preview: "color", themeAware: true },
+  { name: "business-intro-card-icon-color", cssVar: "--taav-business-intro-card-icon-color", value: "brand strong", description: "\u0631\u0646\u06AF \u0622\u06CC\u06A9\u0648\u0646 \u06A9\u0627\u0631\u062A \u0645\u0639\u0631\u0641\u06CC", category: "business-intro-card", preview: "color", themeAware: true },
+  { name: "business-intro-card-action-color", cssVar: "--taav-business-intro-card-action-color", value: "theme", description: "\u0631\u0646\u06AF \u0627\u06A9\u0634\u0646 \u0628\u0631\u06AF\u0634\u062A/\u0648\u0631\u0648\u062F", category: "business-intro-card", preview: "color", themeAware: true },
+  { name: "business-intro-card-action-hover-bg", cssVar: "--taav-business-intro-card-action-hover-bg", value: "theme", description: "\u067E\u0633\u200C\u0632\u0645\u06CC\u0646\u0647 hover \u0627\u06A9\u0634\u0646", category: "business-intro-card", preview: "color", themeAware: true },
+  { name: "business-intro-card-max-width-normal", cssVar: "--taav-business-intro-card-max-width-normal", value: "720px", description: "\u0639\u0631\u0636 \u0645\u062D\u062F\u0648\u062F \u067E\u06CC\u0634\u200C\u0641\u0631\u0636 \u06A9\u0627\u0631\u062A \u0645\u0639\u0631\u0641\u06CC", category: "business-intro-card", preview: "spacing" },
+  { name: "business-intro-card-preview-bg-dark", cssVar: "--taav-business-intro-card-preview-bg-dark", value: "#0a1018", description: "\u067E\u0633\u200C\u0632\u0645\u06CC\u0646\u0647 mock \u062A\u06CC\u0631\u0647 \u062F\u0631 Lab", category: "business-intro-card", preview: "color" },
+  { name: "activation-switch-active-bg", cssVar: "--taav-activation-switch-active-bg", value: "#14b8a6", description: "\u067E\u0633\u200C\u0632\u0645\u06CC\u0646\u0647 \u0633\u06AF\u0645\u0646\u062A \u0641\u0639\u0627\u0644", category: "activation-switch", preview: "color", themeAware: true },
+  { name: "activation-switch-inactive-bg", cssVar: "--taav-activation-switch-inactive-bg", value: "gray", description: "\u067E\u0633\u200C\u0632\u0645\u06CC\u0646\u0647 \u0633\u06AF\u0645\u0646\u062A \u063A\u06CC\u0631\u0641\u0639\u0627\u0644", category: "activation-switch", preview: "color", themeAware: true },
+  { name: "details-link-text", cssVar: "--taav-details-link-text", value: "muted gray", description: "\u0645\u062A\u0646 \u0644\u06CC\u0646\u06A9 \u062C\u0632\u0626\u06CC\u0627\u062A", category: "details-link", preview: "color", themeAware: true },
+  { name: "recommendation-card-surface", cssVar: "--taav-recommendation-card-surface", value: "theme", description: "\u0633\u0637\u062D \u06A9\u0627\u0631\u062A \u067E\u06CC\u0634\u0646\u0647\u0627\u062F \u062A\u0646\u0638\u06CC\u0645\u0627\u062A", category: "recommendation-card", preview: "color", themeAware: true },
+  { name: "recommendation-card-border", cssVar: "--taav-recommendation-card-border", value: "theme", description: "\u0645\u0631\u0632 \u06A9\u0627\u0631\u062A \u067E\u06CC\u0634\u0646\u0647\u0627\u062F", category: "recommendation-card", preview: "color", themeAware: true },
+  { name: "recommendation-card-max-width-wide", cssVar: "--taav-recommendation-card-max-width-wide", value: "1040px", description: "\u0639\u0631\u0636 wide \u06A9\u0627\u0631\u062A \u067E\u06CC\u0634\u0646\u0647\u0627\u062F", category: "recommendation-card", preview: "spacing" }
 ];
 var TAAV_TOKEN_SECTIONS = [
   { id: "semantic", title: "Semantic Colors", titleFa: "\u0631\u0646\u06AF\u200C\u0647\u0627\u06CC \u0645\u0639\u0646\u0627\u06CC\u06CC", categories: ["semantic", "color"] },
@@ -122,7 +208,13 @@ var TAAV_TOKEN_SECTIONS = [
   { id: "shadow", title: "Shadow", titleFa: "\u0633\u0627\u06CC\u0647", categories: ["shadow"] },
   { id: "focus", title: "Focus Ring", titleFa: "\u062D\u0644\u0642\u0647 \u0641\u0648\u06A9\u0648\u0633", categories: ["focus"] },
   { id: "motion", title: "Motion", titleFa: "\u062D\u0631\u06A9\u062A", categories: ["motion"] },
-  { id: "component", title: "Component Sizing", titleFa: "\u0627\u0646\u062F\u0627\u0632\u0647 \u06A9\u0627\u0645\u067E\u0648\u0646\u0646\u062A", categories: ["component"] }
+  { id: "component", title: "Component Sizing", titleFa: "\u0627\u0646\u062F\u0627\u0632\u0647 \u06A9\u0627\u0645\u067E\u0648\u0646\u0646\u062A", categories: ["component"] },
+  { id: "business-sidebar", title: "Business Sidebar", titleFa: "\u0633\u0627\u06CC\u062F\u0628\u0627\u0631 \u06A9\u0633\u0628\u200C\u0648\u06A9\u0627\u0631", categories: ["business-sidebar"] },
+  { id: "module-card", title: "Module Card", titleFa: "\u06A9\u0627\u0631\u062A \u0645\u0627\u0698\u0648\u0644 ERP", categories: ["module-card"] },
+  { id: "business-intro-card", title: "Business Intro Card", titleFa: "\u06A9\u0627\u0631\u062A \u0645\u0639\u0631\u0641\u06CC \u0628\u062E\u0634", categories: ["business-intro-card"] },
+  { id: "activation-switch", title: "Activation Switch", titleFa: "\u0633\u0648\u06CC\u06CC\u0686 \u0641\u0639\u0627\u0644\u200C\u0633\u0627\u0632\u06CC", categories: ["activation-switch"] },
+  { id: "details-link", title: "Details Link", titleFa: "\u0644\u06CC\u0646\u06A9 \u062C\u0632\u0626\u06CC\u0627\u062A", categories: ["details-link"] },
+  { id: "recommendation-card", title: "Recommendation Card", titleFa: "\u06A9\u0627\u0631\u062A \u067E\u06CC\u0634\u0646\u0647\u0627\u062F \u062A\u0646\u0638\u06CC\u0645\u0627\u062A", categories: ["recommendation-card"] }
 ];
 
 // src/tokens/index.ts
@@ -237,6 +329,8 @@ var TAAV_INTERACTION = {
     "duration-[var(--taav-duration-normal)]",
     "ease-[var(--taav-ease-standard)]"
   ].join(" "),
+  pressable: "active:scale-[0.98] active:brightness-[0.97] disabled:active:scale-100 disabled:active:brightness-100",
+  focus: "focus-visible:outline-none focus-visible:shadow-[var(--taav-focus-ring)]",
   iconSlot: "inline-flex shrink-0 [&_svg]:pointer-events-none"
 };
 var toneBorderMap = {
@@ -393,6 +487,315 @@ function TaavInput({
         ),
         !loading && suffix ? /* @__PURE__ */ jsxRuntime.jsx("span", { className: "shrink-0 text-[length:var(--taav-text-xs)] text-[var(--taav-text-subtle)]", children: suffix }) : null,
         !loading && iconEnd ? /* @__PURE__ */ jsxRuntime.jsx("span", { className: TAAV_INTERACTION.iconSlot, children: iconEnd }) : null
+      ]
+    }
+  );
+}
+var taavNumericAffixShellVariants = classVarianceAuthority.cva("", {
+  variants: {
+    size: {
+      sm: "gap-[var(--taav-input-affix-gap-sm)]",
+      md: "gap-[var(--taav-input-affix-gap-md)]",
+      lg: "gap-[var(--taav-input-affix-gap-lg)]"
+    }
+  },
+  defaultVariants: {
+    size: "md"
+  }
+});
+var taavNumericAffixLabelVariants = classVarianceAuthority.cva(
+  "pointer-events-none shrink-0 select-none font-semibold text-[color:var(--taav-input-affix-color)]",
+  {
+    variants: {
+      size: {
+        sm: "min-w-[var(--taav-input-affix-min-width-sm)] text-[length:var(--taav-input-affix-font-size-sm)]",
+        md: "min-w-[var(--taav-input-affix-min-width-md)] text-[length:var(--taav-input-affix-font-size-md)]",
+        lg: "min-w-[var(--taav-input-affix-min-width-lg)] text-[length:var(--taav-input-affix-font-size-lg)]"
+      },
+      align: {
+        start: "text-start",
+        end: "text-end"
+      }
+    },
+    defaultVariants: {
+      size: "md",
+      align: "start"
+    }
+  }
+);
+var taavNumericAffixInputClass = "text-left tabular-nums tracking-normal placeholder:text-[var(--taav-input-placeholder)]";
+function taavNumericAffixShellClass(size) {
+  return taavFieldShellVariants({ size, width: "full", radius: "xl" });
+}
+
+// src/forms/shared/numeric-input.utils.ts
+function normalizeDigits(input) {
+  return input.replace(/[\u0660-\u0669\u06F0-\u06F9]/g, (char) => {
+    const code = char.charCodeAt(0);
+    return String(code >= 1776 ? code - 1776 : code - 1632);
+  });
+}
+function parsePropNumericValue(value, decimal) {
+  if (value === void 0 || value === null || value === "") return null;
+  if (typeof value === "number") return Number.isFinite(value) ? value : null;
+  const normalized = normalizeDigits(String(value)).replace(decimal ? /[^\d.]/g : /\D/g, "");
+  if (!normalized) return null;
+  const parsed = decimal ? Number.parseFloat(normalized) : Number.parseInt(normalized, 10);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+function formatIntegerInput(raw) {
+  const digits = normalizeDigits(raw).replace(/\D/g, "");
+  if (!digits) return { display: "", numeric: null };
+  const numeric = Number.parseInt(digits, 10);
+  return {
+    display: numeric.toLocaleString("en-US"),
+    numeric
+  };
+}
+function formatDecimalInput(raw) {
+  const normalized = normalizeDigits(raw).replace(/[٫,]/g, ".");
+  const cleaned = normalized.replace(/[^\d.]/g, "");
+  if (!cleaned) return { display: "", numeric: null };
+  const [integerPart = "", ...fractionParts] = cleaned.split(".");
+  const fractionPart = fractionParts.join("");
+  const hasFraction = fractionParts.length > 0;
+  const display = hasFraction ? `${integerPart}.${fractionPart}` : integerPart;
+  const numeric = Number.parseFloat(display);
+  if (!Number.isFinite(numeric)) {
+    return { display: hasFraction ? `${integerPart}.` : integerPart, numeric: null };
+  }
+  return { display, numeric };
+}
+function formatNumericDisplay(value, decimal) {
+  if (value === null) return "";
+  if (decimal) return String(value);
+  return value.toLocaleString("en-US");
+}
+function isOutOfRange(value, min, max) {
+  if (value === null) return false;
+  if (min !== void 0 && value < min) return true;
+  if (max !== void 0 && value > max) return true;
+  return false;
+}
+function clampNumericValue(value, min, max) {
+  if (value === null) return null;
+  let result = value;
+  if (min !== void 0 && result < min) result = min;
+  if (max !== void 0 && result > max) result = max;
+  return result;
+}
+
+// src/forms/shared/useTaavNumericInputState.ts
+function useTaavNumericInputState({
+  value,
+  defaultValue,
+  onValueChange,
+  min,
+  max,
+  decimal = false
+}) {
+  const isControlled = value !== void 0;
+  const formatInput = decimal ? formatDecimalInput : formatIntegerInput;
+  const [internalValue, setInternalValue] = react.useState(
+    () => parsePropNumericValue(defaultValue, decimal)
+  );
+  const [displayValue, setDisplayValue] = react.useState(
+    () => formatNumericDisplay(parsePropNumericValue(defaultValue, decimal), decimal)
+  );
+  const [isFocused, setIsFocused] = react.useState(false);
+  const [rangeInvalid, setRangeInvalid] = react.useState(false);
+  const onValueChangeRef = react.useRef(onValueChange);
+  onValueChangeRef.current = onValueChange;
+  const resolvedValue = isControlled ? parsePropNumericValue(value, decimal) : internalValue;
+  react.useEffect(() => {
+    if (isFocused) return;
+    setDisplayValue(formatNumericDisplay(resolvedValue, decimal));
+    setRangeInvalid(isOutOfRange(resolvedValue, min, max));
+  }, [resolvedValue, isFocused, decimal, min, max]);
+  const commitValue = react.useCallback(
+    (nextValue, notify = true) => {
+      if (!isControlled) {
+        setInternalValue(nextValue);
+      }
+      setRangeInvalid(isOutOfRange(nextValue, min, max));
+      if (notify) {
+        onValueChangeRef.current?.(nextValue);
+      }
+    },
+    [isControlled, min, max]
+  );
+  const handleFocus = react.useCallback(() => {
+    setIsFocused(true);
+  }, []);
+  const handleChange = react.useCallback(
+    (raw) => {
+      const { display, numeric } = formatInput(raw);
+      setDisplayValue(display);
+      commitValue(numeric);
+    },
+    [commitValue, formatInput]
+  );
+  const handleBlur = react.useCallback(() => {
+    setIsFocused(false);
+    const parsed = parsePropNumericValue(displayValue, decimal);
+    const clamped = clampNumericValue(parsed, min, max);
+    const nextDisplay = formatNumericDisplay(clamped, decimal);
+    setDisplayValue(nextDisplay);
+    commitValue(clamped);
+  }, [commitValue, decimal, displayValue, min, max]);
+  return {
+    displayValue,
+    rangeInvalid,
+    handleFocus,
+    handleChange,
+    handleBlur
+  };
+}
+var CURRENCY_LABELS = {
+  rial: "\u0631\u06CC\u0627\u0644",
+  toman: "\u062A\u0648\u0645\u0627\u0646"
+};
+function TaavCurrencyInput({
+  value,
+  defaultValue,
+  onValueChange,
+  currency = "rial",
+  currencyLabel,
+  min,
+  max,
+  placeholder,
+  disabled,
+  readOnly,
+  invalid = false,
+  required,
+  size = "md",
+  tone = "neutral",
+  name,
+  id,
+  inputMode = "numeric",
+  autoComplete,
+  ariaLabel,
+  wrapperClassName,
+  inputClassName,
+  unsafeClassName
+}) {
+  const decimal = inputMode === "decimal";
+  const { displayValue, rangeInvalid, handleFocus, handleChange, handleBlur } = useTaavNumericInputState({
+    value,
+    defaultValue,
+    onValueChange,
+    min,
+    max,
+    decimal
+  });
+  const showInvalid = invalid || rangeInvalid;
+  const resolvedCurrencyLabel = currencyLabel ?? CURRENCY_LABELS[currency];
+  return /* @__PURE__ */ jsxRuntime.jsxs(
+    "div",
+    {
+      dir: "rtl",
+      className: cn(
+        taavNumericAffixShellClass(size),
+        taavNumericAffixShellVariants({ size }),
+        getTaavFieldToneClasses(tone, showInvalid),
+        wrapperClassName,
+        unsafeClassName
+      ),
+      children: [
+        /* @__PURE__ */ jsxRuntime.jsx("span", { className: taavNumericAffixLabelVariants({ size, align: "end" }), "aria-hidden": "true", children: resolvedCurrencyLabel }),
+        /* @__PURE__ */ jsxRuntime.jsx(
+          "input",
+          {
+            id,
+            name,
+            type: "text",
+            dir: "ltr",
+            value: displayValue,
+            placeholder,
+            disabled,
+            readOnly,
+            required,
+            inputMode,
+            autoComplete,
+            "aria-label": ariaLabel,
+            "aria-invalid": showInvalid || void 0,
+            onFocus: handleFocus,
+            onBlur: handleBlur,
+            onChange: (event) => handleChange(event.target.value),
+            className: cn(taavFieldControlClass, taavNumericAffixInputClass, inputClassName)
+          }
+        )
+      ]
+    }
+  );
+}
+function TaavPercentageInput({
+  value,
+  defaultValue,
+  onValueChange,
+  min = 0,
+  max = 100,
+  placeholder,
+  disabled,
+  readOnly,
+  invalid = false,
+  required,
+  size = "md",
+  tone = "neutral",
+  name,
+  id,
+  inputMode = "numeric",
+  autoComplete,
+  ariaLabel,
+  wrapperClassName,
+  inputClassName,
+  unsafeClassName
+}) {
+  const decimal = inputMode === "decimal";
+  const { displayValue, rangeInvalid, handleFocus, handleChange, handleBlur } = useTaavNumericInputState({
+    value,
+    defaultValue,
+    onValueChange,
+    min,
+    max,
+    decimal
+  });
+  const showInvalid = invalid || rangeInvalid;
+  return /* @__PURE__ */ jsxRuntime.jsxs(
+    "div",
+    {
+      dir: "ltr",
+      className: cn(
+        taavNumericAffixShellClass(size),
+        taavNumericAffixShellVariants({ size }),
+        getTaavFieldToneClasses(tone, showInvalid),
+        wrapperClassName,
+        unsafeClassName
+      ),
+      children: [
+        /* @__PURE__ */ jsxRuntime.jsx("span", { className: taavNumericAffixLabelVariants({ size, align: "start" }), "aria-hidden": "true", children: "%" }),
+        /* @__PURE__ */ jsxRuntime.jsx(
+          "input",
+          {
+            id,
+            name,
+            type: "text",
+            dir: "ltr",
+            value: displayValue,
+            placeholder,
+            disabled,
+            readOnly,
+            required,
+            inputMode,
+            autoComplete,
+            "aria-label": ariaLabel,
+            "aria-invalid": showInvalid || void 0,
+            onFocus: handleFocus,
+            onBlur: handleBlur,
+            onChange: (event) => handleChange(event.target.value),
+            className: cn(taavFieldControlClass, taavNumericAffixInputClass, inputClassName)
+          }
+        )
       ]
     }
   );
@@ -554,6 +957,519 @@ function TaavFormField({
       ]
     }
   );
+}
+var itemAlignmentClass = {
+  start: "items-start",
+  center: "items-center",
+  end: "items-end",
+  stretch: "items-stretch"
+};
+var textAlignmentClass = {
+  start: "text-start justify-start",
+  center: "text-center justify-center",
+  end: "text-end justify-end"
+};
+var blockGapClass = {
+  sm: "gap-[var(--taav-field-block-gap-sm)]",
+  md: "gap-[var(--taav-field-block-gap-md)]",
+  lg: "gap-[var(--taav-field-block-gap-lg)]"
+};
+var labelSizeClass = {
+  sm: "text-[length:var(--taav-field-block-label-sm)]",
+  md: "text-[length:var(--taav-field-block-label-md)]",
+  lg: "text-[length:var(--taav-field-block-label-lg)]"
+};
+var supportSizeClass = {
+  sm: "text-[length:var(--taav-field-block-support-sm)]",
+  md: "text-[length:var(--taav-field-block-support-md)]",
+  lg: "text-[length:var(--taav-field-block-support-lg)]"
+};
+var feedbackSizeClass = {
+  sm: "text-[length:var(--taav-field-block-feedback-sm)]",
+  md: "text-[length:var(--taav-field-block-feedback-md)]",
+  lg: "text-[length:var(--taav-field-block-feedback-lg)]"
+};
+var taavFieldBlockVariants = classVarianceAuthority.cva("grid w-full", {
+  variants: {
+    size: blockGapClass,
+    align: itemAlignmentClass
+  },
+  defaultVariants: {
+    size: "md",
+    align: "stretch"
+  }
+});
+var taavFieldBlockLabelVariants = classVarianceAuthority.cva(
+  "inline-flex w-full items-center gap-[var(--taav-space-1)] font-[var(--taav-font-weight-black)] leading-[var(--taav-leading-tight)] text-[var(--taav-field-block-label-color)]",
+  {
+    variants: {
+      size: labelSizeClass,
+      align: textAlignmentClass
+    },
+    defaultVariants: {
+      size: "md",
+      align: "start"
+    }
+  }
+);
+var taavFieldBlockControlVariants = classVarianceAuthority.cva("w-full", {
+  variants: {
+    size: {
+      sm: "min-h-[var(--taav-field-block-control-min-height-sm)]",
+      md: "min-h-[var(--taav-field-block-control-min-height-md)]",
+      lg: "min-h-[var(--taav-field-block-control-min-height-lg)]"
+    }
+  },
+  defaultVariants: {
+    size: "md"
+  }
+});
+var taavFieldBlockSupportVariants = classVarianceAuthority.cva(
+  "m-0 w-full leading-[var(--taav-leading-relaxed)] text-[var(--taav-field-block-support-color)]",
+  {
+    variants: {
+      size: supportSizeClass,
+      align: textAlignmentClass
+    },
+    defaultVariants: {
+      size: "md",
+      align: "start"
+    }
+  }
+);
+var taavFieldBlockFeedbackVariants = classVarianceAuthority.cva("w-full", {
+  variants: {
+    size: feedbackSizeClass,
+    align: textAlignmentClass
+  },
+  defaultVariants: {
+    size: "md",
+    align: "start"
+  }
+});
+var gridGapClass = {
+  sm: "[column-gap:var(--taav-field-grid-gap-sm)]",
+  md: "[column-gap:var(--taav-field-grid-gap-md)]",
+  lg: "[column-gap:var(--taav-field-grid-gap-lg)]",
+  xl: "[column-gap:var(--taav-field-grid-gap-xl)]"
+};
+var gridRowGapClass = {
+  compact: "[row-gap:var(--taav-field-grid-row-gap-compact)]",
+  comfortable: "[row-gap:var(--taav-field-grid-row-gap-comfortable)]",
+  spacious: "[row-gap:var(--taav-field-grid-row-gap-spacious)]"
+};
+var responsiveColumnsClass = {
+  1: "grid-cols-1",
+  2: "grid-cols-1 md:grid-cols-2",
+  3: "grid-cols-1 md:grid-cols-2 xl:grid-cols-3",
+  4: "grid-cols-1 md:grid-cols-2 xl:grid-cols-4"
+};
+var staticColumnsClass = {
+  1: "grid-cols-1",
+  2: "grid-cols-2",
+  3: "grid-cols-3",
+  4: "grid-cols-4"
+};
+function getTaavFieldGridColumnsClass(columns, responsive) {
+  return responsive ? responsiveColumnsClass[columns] : staticColumnsClass[columns];
+}
+var taavFieldGridVariants = classVarianceAuthority.cva("grid w-full", {
+  variants: {
+    gap: gridGapClass,
+    density: gridRowGapClass,
+    responsive: {
+      true: "max-md:[row-gap:var(--taav-field-grid-responsive-gap)]",
+      false: ""
+    }
+  },
+  defaultVariants: {
+    gap: "md",
+    density: "comfortable",
+    responsive: true
+  }
+});
+function withDescribedBy(children, describedBy, invalid) {
+  if (!react.isValidElement(children)) return children;
+  const element = children;
+  const existingDescribedBy = typeof element.props["aria-describedby"] === "string" ? element.props["aria-describedby"] : void 0;
+  const mergedDescribedBy = [existingDescribedBy, describedBy].filter(Boolean).join(" ") || void 0;
+  return react.cloneElement(element, {
+    "aria-describedby": mergedDescribedBy,
+    "aria-invalid": invalid || void 0
+  });
+}
+function TaavFieldBlock({
+  label,
+  required = false,
+  optional = false,
+  tooltip,
+  hint,
+  supportText,
+  description,
+  error,
+  success,
+  warning,
+  htmlFor,
+  disabled = false,
+  invalid = false,
+  size = "md",
+  align = "stretch",
+  tooltipAlign = "start",
+  labelAlign = "start",
+  children,
+  wrapperClassName,
+  labelClassName,
+  controlClassName,
+  supportClassName,
+  unsafeClassName
+}) {
+  const generatedId = react.useId();
+  const supportId = `${generatedId}-support`;
+  const messageId = `${generatedId}-message`;
+  const resolvedSupport = supportText ?? hint ?? tooltip ?? description;
+  const resolvedStatus = error ?? warning ?? success;
+  const resolvedTone = error ? "danger" : warning ? "warning" : success ? "success" : void 0;
+  const describedBy = [resolvedSupport ? supportId : null, resolvedStatus ? messageId : null].filter(Boolean).join(" ");
+  const isInvalid = invalid || Boolean(error);
+  return /* @__PURE__ */ jsxRuntime.jsxs(
+    "div",
+    {
+      className: cn(taavFieldBlockVariants({ size, align }), wrapperClassName, unsafeClassName),
+      "data-disabled": disabled || void 0,
+      "data-invalid": isInvalid || void 0,
+      "data-required": required || void 0,
+      children: [
+        /* @__PURE__ */ jsxRuntime.jsx(
+          TaavLabel,
+          {
+            htmlFor,
+            required,
+            optional,
+            disabled,
+            tone: isInvalid ? "danger" : "default",
+            wrapperClassName: cn(taavFieldBlockLabelVariants({ size, align: labelAlign }), labelClassName),
+            children: label
+          }
+        ),
+        /* @__PURE__ */ jsxRuntime.jsx("div", { className: cn(taavFieldBlockControlVariants({ size }), controlClassName), children: withDescribedBy(children, describedBy || void 0, isInvalid) }),
+        resolvedSupport ? /* @__PURE__ */ jsxRuntime.jsx(
+          TaavFormDescription,
+          {
+            size: size === "sm" ? "sm" : "md",
+            unsafeClassName: cn(taavFieldBlockSupportVariants({ size, align: tooltipAlign }), supportClassName),
+            children: /* @__PURE__ */ jsxRuntime.jsx("span", { id: supportId, children: resolvedSupport })
+          }
+        ) : null,
+        resolvedStatus && resolvedTone ? /* @__PURE__ */ jsxRuntime.jsx(
+          TaavFormMessage,
+          {
+            tone: resolvedTone,
+            size: size === "sm" ? "sm" : "md",
+            unsafeClassName: cn(
+              taavFieldBlockFeedbackVariants({ size, align: tooltipAlign }),
+              resolvedTone === "danger" && "text-[var(--taav-field-block-error-color)]"
+            ),
+            children: /* @__PURE__ */ jsxRuntime.jsx("span", { id: messageId, children: resolvedStatus })
+          }
+        ) : null
+      ]
+    }
+  );
+}
+function TaavFieldGrid({
+  columns = 2,
+  gap = "md",
+  density = "comfortable",
+  responsive = true,
+  children
+}) {
+  return /* @__PURE__ */ jsxRuntime.jsx("div", { className: cn(taavFieldGridVariants({ gap, density, responsive }), getTaavFieldGridColumnsClass(columns, responsive)), children });
+}
+var selectedToneClass = {
+  neutral: "bg-[var(--taav-neutral-soft)] text-[var(--taav-choice-chip-selected-text)] border-[color:var(--taav-choice-chip-selected-border)] shadow-none",
+  brand: "bg-[var(--taav-choice-chip-selected-bg)] text-[var(--taav-choice-chip-selected-text)] border-[color:var(--taav-choice-chip-selected-border)] shadow-none",
+  success: "bg-[var(--taav-success-muted)] text-[var(--taav-success-strong)] border-[color:var(--taav-choice-chip-selected-border)] shadow-none",
+  warning: "bg-[var(--taav-warning-muted)] text-[var(--taav-warning-strong)] border-[color:var(--taav-choice-chip-selected-border)] shadow-none",
+  danger: "bg-[var(--taav-danger-muted)] text-[var(--taav-danger-strong)] border-[color:var(--taav-choice-chip-selected-border)] shadow-none",
+  info: "bg-[var(--taav-info-muted)] text-[var(--taav-info-strong)] border-[color:var(--taav-choice-chip-selected-border)] shadow-none"
+};
+var taavChoiceChipVariants = classVarianceAuthority.cva(
+  [
+    "inline-flex max-w-full items-center justify-center gap-[var(--taav-choice-chip-gap)] border border-solid",
+    "font-[var(--taav-font-weight-medium)] leading-none text-[var(--taav-choice-chip-text)]",
+    "bg-[var(--taav-choice-chip-bg)] border-[color:var(--taav-choice-chip-border)]",
+    "hover:bg-[var(--taav-choice-chip-hover-bg)]",
+    TAAV_INTERACTION.base,
+    TAAV_INTERACTION.focus,
+    "focus-visible:shadow-[var(--taav-choice-chip-focus-ring)]",
+    TAAV_INTERACTION.pressable,
+    "disabled:pointer-events-none disabled:opacity-50"
+  ],
+  {
+    variants: {
+      size: {
+        sm: "h-[var(--taav-choice-chip-height-sm)] px-[var(--taav-choice-chip-px-sm)] text-[length:var(--taav-text-xs)]",
+        md: "h-[var(--taav-choice-chip-height-md)] px-[var(--taav-choice-chip-px-md)] text-[length:var(--taav-text-sm)]",
+        lg: "h-[var(--taav-choice-chip-height-lg)] px-[var(--taav-choice-chip-px-lg)] text-[length:var(--taav-text-md)]"
+      },
+      shape: {
+        pill: "rounded-[var(--taav-choice-chip-radius-pill)]",
+        rounded: "rounded-[var(--taav-choice-chip-radius-rounded)]"
+      },
+      tone: {
+        neutral: "",
+        brand: "",
+        success: "",
+        warning: "",
+        danger: "",
+        info: ""
+      },
+      selected: {
+        true: "",
+        false: ""
+      },
+      invalid: {
+        true: "border-[color:var(--taav-danger-border)]",
+        false: ""
+      }
+    },
+    compoundVariants: [
+      { selected: true, tone: "neutral", className: selectedToneClass.neutral },
+      { selected: true, tone: "brand", className: selectedToneClass.brand },
+      { selected: true, tone: "success", className: selectedToneClass.success },
+      { selected: true, tone: "warning", className: selectedToneClass.warning },
+      { selected: true, tone: "danger", className: selectedToneClass.danger },
+      { selected: true, tone: "info", className: selectedToneClass.info }
+    ],
+    defaultVariants: {
+      size: "md",
+      shape: "pill",
+      selected: false,
+      invalid: false
+    }
+  }
+);
+var taavChoiceChipCheckClass = "inline-flex shrink-0 text-[var(--taav-choice-chip-selected-icon)] [&_svg]:h-4 [&_svg]:w-4";
+var taavChoiceChipIconSlotClass = "inline-flex shrink-0 text-[var(--taav-text-muted)] [&_svg]:h-4 [&_svg]:w-4";
+var taavChoiceChipGroupGapClass = {
+  sm: "gap-[var(--taav-choice-chip-group-gap-sm)]",
+  md: "gap-[var(--taav-choice-chip-group-gap-md)]",
+  lg: "gap-[var(--taav-choice-chip-group-gap-lg)]"
+};
+var taavChoiceChipGroupShellClass = "grid w-full gap-[var(--taav-choice-chip-group-shell-gap)]";
+var choiceChipGroupLabelSizeClass = {
+  sm: "text-[length:var(--taav-text-sm)]",
+  md: "text-[length:var(--taav-text-md)]",
+  lg: "text-[length:var(--taav-text-lg)]"
+};
+var choiceChipGroupDescriptionSizeClass = {
+  sm: "text-[length:var(--taav-text-xs)]",
+  md: "text-[length:var(--taav-text-sm)]",
+  lg: "text-[length:var(--taav-text-md)]"
+};
+function taavChoiceChipGroupLabelClass(size = "md") {
+  return [
+    "m-0 inline-flex w-full items-center gap-[var(--taav-space-1)] font-[var(--taav-font-weight-black)] leading-[var(--taav-leading-tight)] text-[var(--taav-text-strong)]",
+    choiceChipGroupLabelSizeClass[size]
+  ].join(" ");
+}
+function taavChoiceChipGroupDescriptionClass(size = "md") {
+  return [
+    "m-0 leading-[var(--taav-leading-relaxed)] text-[var(--taav-text-muted)]",
+    choiceChipGroupDescriptionSizeClass[size]
+  ].join(" ");
+}
+var taavChoiceChipGroupOptionsClass = "flex w-full";
+function ChoiceCheckIcon() {
+  return /* @__PURE__ */ jsxRuntime.jsx("svg", { "aria-hidden": true, viewBox: "0 0 16 16", fill: "none", children: /* @__PURE__ */ jsxRuntime.jsx("path", { d: "M4 8.25 6.6 10.8 12 5.5", stroke: "currentColor", strokeWidth: "1.8", strokeLinecap: "round", strokeLinejoin: "round" }) });
+}
+var TaavChoiceChip = react.forwardRef(function TaavChoiceChip2({
+  children,
+  selected = false,
+  disabled = false,
+  invalid = false,
+  size = "md",
+  tone = "brand",
+  shape = "pill",
+  showCheck,
+  iconStart,
+  iconEnd,
+  value,
+  type = "button",
+  onClick,
+  checked,
+  role,
+  wrapperClassName,
+  unsafeClassName,
+  ...props
+}, ref) {
+  const isSelected = selected || checked || false;
+  const shouldShowCheck = showCheck === true;
+  return /* @__PURE__ */ jsxRuntime.jsxs(
+    "button",
+    {
+      ref,
+      type,
+      value,
+      disabled,
+      onClick,
+      role,
+      "aria-checked": role ? isSelected : void 0,
+      "aria-pressed": !role ? isSelected : void 0,
+      "aria-invalid": invalid || void 0,
+      "data-state": isSelected ? "selected" : "unselected",
+      className: cn(
+        taavChoiceChipVariants({ size, shape, selected: isSelected, invalid, tone }),
+        "whitespace-nowrap",
+        wrapperClassName,
+        unsafeClassName
+      ),
+      ...props,
+      children: [
+        shouldShowCheck ? /* @__PURE__ */ jsxRuntime.jsx("span", { className: taavChoiceChipCheckClass, "aria-hidden": true, children: /* @__PURE__ */ jsxRuntime.jsx(ChoiceCheckIcon, {}) }) : iconStart ? /* @__PURE__ */ jsxRuntime.jsx("span", { className: taavChoiceChipIconSlotClass, children: iconStart }) : null,
+        /* @__PURE__ */ jsxRuntime.jsx("span", { className: "min-w-0 truncate", children }),
+        iconEnd ? /* @__PURE__ */ jsxRuntime.jsx("span", { className: taavChoiceChipIconSlotClass, children: iconEnd }) : null
+      ]
+    }
+  );
+});
+function normalizeValue(value) {
+  if (value === void 0) return [];
+  return Array.isArray(value) ? value : value ? [value] : [];
+}
+var alignClass = {
+  start: "justify-start",
+  center: "justify-center",
+  end: "justify-end"
+};
+function TaavChoiceChipGroup({
+  options,
+  value,
+  defaultValue,
+  onValueChange,
+  selectionMode = "single",
+  label,
+  description,
+  hint,
+  required = false,
+  size = "md",
+  tone = "brand",
+  disabled = false,
+  invalid = false,
+  wrap = true,
+  gap = "md",
+  align = "start",
+  ariaLabel,
+  className,
+  labelClassName,
+  descriptionClassName
+}) {
+  const generatedLabelId = react.useId();
+  const descriptionId = react.useId();
+  const visibleLabelId = react.useId();
+  const supportText = description ?? hint;
+  const [internalValue, setInternalValue] = react.useState(
+    defaultValue ?? (selectionMode === "multiple" ? [] : "")
+  );
+  const buttonRefs = react.useRef([]);
+  const isControlled = value !== void 0;
+  const currentValue = isControlled ? value : internalValue;
+  const selectedValues = react.useMemo(() => normalizeValue(currentValue), [currentValue]);
+  const accessibleName = label ?? ariaLabel;
+  const updateValue = (nextValues) => {
+    const next = selectionMode === "multiple" ? nextValues : nextValues[0] ?? "";
+    if (!isControlled) {
+      setInternalValue(next);
+    }
+    onValueChange?.(next);
+  };
+  const toggleValue = (optionValue) => {
+    if (selectionMode === "multiple") {
+      const nextValues = selectedValues.includes(optionValue) ? selectedValues.filter((valueItem) => valueItem !== optionValue) : [...selectedValues, optionValue];
+      updateValue(nextValues);
+      return;
+    }
+    updateValue([optionValue]);
+  };
+  const focusNext = (currentIndex, direction) => {
+    const enabledIndexes = options.map((option, index) => ({ option, index })).filter(({ option }) => !(disabled || option.disabled)).map(({ index }) => index);
+    const activeListIndex = enabledIndexes.indexOf(currentIndex);
+    if (activeListIndex === -1) return;
+    const nextIndex = enabledIndexes[(activeListIndex + direction + enabledIndexes.length) % enabledIndexes.length];
+    buttonRefs.current[nextIndex]?.focus();
+  };
+  const handleKeyDown = (event, index, optionValue) => {
+    if (selectionMode === "single") {
+      if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
+        event.preventDefault();
+        focusNext(index, 1);
+        return;
+      }
+      if (event.key === "ArrowRight" || event.key === "ArrowDown") {
+        event.preventDefault();
+        focusNext(index, -1);
+        return;
+      }
+    }
+    if (event.key === " " || event.key === "Enter") {
+      event.preventDefault();
+      toggleValue(optionValue);
+    }
+  };
+  return /* @__PURE__ */ jsxRuntime.jsxs("div", { className: cn(taavChoiceChipGroupShellClass, className), children: [
+    label ? /* @__PURE__ */ jsxRuntime.jsxs("div", { id: visibleLabelId, className: cn(taavChoiceChipGroupLabelClass(size), labelClassName), children: [
+      /* @__PURE__ */ jsxRuntime.jsx("span", { children: label }),
+      required ? /* @__PURE__ */ jsxRuntime.jsx(TaavRequiredMark, {}) : null
+    ] }) : null,
+    supportText ? /* @__PURE__ */ jsxRuntime.jsx("p", { id: descriptionId, className: cn(taavChoiceChipGroupDescriptionClass(size), descriptionClassName), children: supportText }) : null,
+    /* @__PURE__ */ jsxRuntime.jsxs(
+      "div",
+      {
+        role: selectionMode === "single" ? "radiogroup" : "group",
+        "aria-label": !label ? ariaLabel : void 0,
+        "aria-labelledby": label ? visibleLabelId : !ariaLabel ? generatedLabelId : void 0,
+        "aria-describedby": supportText ? descriptionId : void 0,
+        "aria-invalid": invalid || void 0,
+        "aria-required": required || void 0,
+        className: cn(
+          taavChoiceChipGroupOptionsClass,
+          alignClass[align],
+          wrap ? "flex-wrap" : "flex-nowrap overflow-x-auto pb-1",
+          taavChoiceChipGroupGapClass[gap]
+        ),
+        children: [
+          !accessibleName ? /* @__PURE__ */ jsxRuntime.jsx("span", { id: generatedLabelId, className: "sr-only", children: "\u06AF\u0631\u0648\u0647 \u0627\u0646\u062A\u062E\u0627\u0628 \u06AF\u0632\u06CC\u0646\u0647" }) : null,
+          options.map((option, index) => {
+            const isSelected = selectedValues.includes(option.value);
+            const isDisabled = disabled || option.disabled;
+            const showCheck = selectionMode === "multiple" && isSelected;
+            return /* @__PURE__ */ jsxRuntime.jsx(
+              TaavChoiceChip,
+              {
+                ref: (node) => {
+                  buttonRefs.current[index] = node;
+                },
+                selected: isSelected,
+                showCheck,
+                disabled: isDisabled,
+                invalid,
+                size,
+                tone,
+                iconStart: showCheck ? void 0 : option.icon,
+                role: selectionMode === "single" ? "radio" : "checkbox",
+                tabIndex: selectionMode === "single" ? isSelected || !selectedValues.length && index === 0 ? 0 : -1 : 0,
+                "aria-label": option.label,
+                onClick: () => toggleValue(option.value),
+                onKeyDown: (event) => handleKeyDown(event, index, option.value),
+                children: option.label
+              },
+              option.value
+            );
+          })
+        ]
+      }
+    )
+  ] });
 }
 function SelectChevron() {
   return /* @__PURE__ */ jsxRuntime.jsx(
@@ -1160,12 +2076,17 @@ exports.TAAV_TOKEN_CATALOG = TAAV_TOKEN_CATALOG;
 exports.TAAV_TOKEN_SECTIONS = TAAV_TOKEN_SECTIONS;
 exports.TAAV_TONE_LABELS = TAAV_TONE_LABELS;
 exports.TaavCheckbox = TaavCheckbox;
+exports.TaavChoiceChipGroup = TaavChoiceChipGroup;
+exports.TaavCurrencyInput = TaavCurrencyInput;
+exports.TaavFieldBlock = TaavFieldBlock;
+exports.TaavFieldGrid = TaavFieldGrid;
 exports.TaavFormDescription = TaavFormDescription;
 exports.TaavFormField = TaavFormField;
 exports.TaavFormMessage = TaavFormMessage;
 exports.TaavInput = TaavInput;
 exports.TaavLabel = TaavLabel;
 exports.TaavOptionCard = TaavOptionCard;
+exports.TaavPercentageInput = TaavPercentageInput;
 exports.TaavRadio = TaavRadio;
 exports.TaavRadioGroup = TaavRadioGroup;
 exports.TaavRequiredMark = TaavRequiredMark;

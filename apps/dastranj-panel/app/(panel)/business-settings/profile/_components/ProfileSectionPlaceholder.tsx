@@ -1,6 +1,3 @@
-import Link from 'next/link';
-import { BUSINESS_PROFILE_ROOT } from '../../../account/routes';
-
 export default function ProfileSectionPlaceholder({
   title,
   description,
@@ -25,12 +22,6 @@ export default function ProfileSectionPlaceholder({
             <span>وضعیت</span>
             <strong>فلو بعدا پیاده‌سازی می‌شود</strong>
           </div>
-        </div>
-
-        <div className="flex justify-start">
-          <Link href={BUSINESS_PROFILE_ROOT} className="primary-button no-underline">
-            بازگشت به پروفایل کسب‌وکار
-          </Link>
         </div>
       </article>
     </div>

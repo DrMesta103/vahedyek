@@ -1,6 +1,7 @@
 'use client';
 
 import { Building2, UserRound } from 'lucide-react';
+import { TaavChoiceChipGroup } from '@repo/ui/taav/forms';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { PanelFormModal, PanelFormModalActions } from '../../../components/PanelFormModal';
 import { createDefaultProfileStore, type ProfileMeta, type ProfileStore } from '../profile.types';
@@ -203,23 +204,12 @@ export function BusinessOwnershipProfileEditor({
               </div>
             </div>
 
-            <div className="business-ownership-legal-type-field">
-              <span className="business-ownership-legal-type-label">نوع شخصیت حقوقی</span>
-              <div className="business-ownership-legal-type-row" role="radiogroup" aria-label="نوع شخصیت حقوقی">
-                {LEGAL_TYPE_OPTIONS.map((option) => (
-                  <button
-                    key={option}
-                    type="button"
-                    role="radio"
-                    aria-checked={store.ownership.legalType === option}
-                    className={store.ownership.legalType === option ? 'is-selected' : ''}
-                    onClick={() => updateOwnership({ legalType: option })}
-                  >
-                    {option}
-                  </button>
-                ))}
-              </div>
-            </div>
+            <TaavChoiceChipGroup
+              label="نوع شخصیت حقوقی"
+              options={LEGAL_TYPE_OPTIONS.map((option) => ({ value: option, label: option }))}
+              value={store.ownership.legalType}
+              onValueChange={(next) => updateOwnership({ legalType: (Array.isArray(next) ? next[0] : next) as typeof store.ownership.legalType })}
+            />
 
             <div className="employee-supplemental-editor-grid">
               <EditorFieldLabel label="نام تجاری / برند" required>

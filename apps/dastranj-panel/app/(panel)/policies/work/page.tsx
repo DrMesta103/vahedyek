@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import { policyBreadcrumbs } from '../../../components/module-page/module-breadcrumbs';
 import { listPolicies } from '../../../lib/data';
 import { getPolicyFamilyKey, getPolicySectionValues } from '../../../lib/policy-workspaces';
 import { PolicyInfoStrip, PolicyNavLink, PolicyPageShell } from '../_components/PolicyWorkspaceShell';
@@ -40,7 +39,6 @@ export default async function WorkPolicyOverviewPage({ searchParams }: WorkPolic
     <PolicyPageShell
       title="ویرایش سیاست کاری"
       subtitle="تنظیم قوانین حضور و غیاب کارمندان"
-      breadcrumb={policyBreadcrumbs({ label: 'ویرایش سیاست کاری' })}
     >
       <div className="policy-work-layout">
         {selectedPolicy ? (

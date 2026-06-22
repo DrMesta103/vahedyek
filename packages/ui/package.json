@@ -70,6 +70,11 @@
       "import": "./dist/taav-layout-interactive.mjs",
       "require": "./dist/taav-layout-interactive.js"
     },
+    "./taav/business": {
+      "types": "./dist/taav-business.d.ts",
+      "import": "./dist/taav-business.mjs",
+      "require": "./dist/taav-business.js"
+    },
     "./taav-tokens.css": "./src/tokens/taav-tokens.css"
   },
   "scripts": {

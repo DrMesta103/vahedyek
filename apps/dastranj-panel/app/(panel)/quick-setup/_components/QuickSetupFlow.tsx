@@ -15,6 +15,7 @@ import type {
   LocationSummaryItem,
   QuickEmployeeImportJobSummary,
   QuickEmployeeSummary,
+  QuickSetupHolidayCoefficients,
   QuickPolicySummary,
   QuickSetupStep,
   QuickWorkGroupDraft,
@@ -112,6 +113,7 @@ type QuickSetupFlowProps = {
   locationItems?: LocationSummaryItem[];
   calendarItems?: CompletedCalendarItem[];
   defaultCalendarTemplate?: DefaultCalendarTemplate | null;
+  holidayCoefficients?: QuickSetupHolidayCoefficients | null;
   policyItems?: QuickPolicySummary[];
   employeeItems?: QuickEmployeeSummary[];
   employeeImportJobs?: QuickEmployeeImportJobSummary[];
@@ -125,6 +127,7 @@ export function QuickSetupFlow({
   locationItems = [],
   calendarItems = [],
   defaultCalendarTemplate = null,
+  holidayCoefficients = null,
   policyItems = [],
   employeeItems = [],
   employeeImportJobs = [],
@@ -293,6 +296,7 @@ export function QuickSetupFlow({
               isCompleted={completedSteps.includes(2)}
               initialCalendar={calendar}
               defaultCalendarTemplate={defaultCalendarTemplate}
+              holidayCoefficients={holidayCoefficients}
               onComplete={(value) => {
                 setCalendar(value);
                 setCalendars((prev) => [value, ...prev.filter((item) => item.id !== value.id)]);

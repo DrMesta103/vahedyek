@@ -1,5 +1,6 @@
 'use client';
 
+import { TaavChoiceChipGroup } from '@repo/ui/taav/forms';
 import { useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
@@ -286,15 +287,15 @@ export function CompanyLoansClient({ loans }: { loans: CompanyLoanItem[] }) {
             <input value={form.interestRate} onChange={(event) => updateForm({ interestRate: event.target.value })} inputMode="decimal" />
             {fieldErrors.interestRate ? <small>{fieldErrors.interestRate}</small> : null}
           </label>
-          <div className="company-loan-status-picker">
-            <span>وضعیت</span>
-            <button type="button" className={form.isActive ? 'is-selected' : ''} onClick={() => updateForm({ isActive: true })}>
-              فعال
-            </button>
-            <button type="button" className={!form.isActive ? 'is-selected' : ''} onClick={() => updateForm({ isActive: false })}>
-              غیرفعال
-            </button>
-          </div>
+          <TaavChoiceChipGroup
+            label="وضعیت"
+            options={[
+              { value: 'active', label: 'فعال' },
+              { value: 'inactive', label: 'غیرفعال' },
+            ]}
+            value={form.isActive ? 'active' : 'inactive'}
+            onValueChange={(next) => updateForm({ isActive: (Array.isArray(next) ? next[0] : next) === 'active' })}
+          />
         </div>
       </PanelFormModal>
 

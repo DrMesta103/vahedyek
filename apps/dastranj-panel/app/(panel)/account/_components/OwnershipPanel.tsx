@@ -5,11 +5,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createDefaultProfileStore, DEFAULT_PROFILE_META, type OwnershipKind, type ProfileMeta, type ProfileStore } from '../profile.types';
 import { fetchProfilePayload, loadProfileStore, persistProfileStore } from '../profileStorage';
-import { BUSINESS_PROFILE_OWNERSHIP, BUSINESS_PROFILE_ROOT, getSelectTenantPath } from '../routes';
-import { Breadcrumbs, LoadingCard } from './account-ui';
+import { BUSINESS_PROFILE_OWNERSHIP, getSelectTenantPath } from '../routes';
+import { LoadingCard } from './account-ui';
 import { PanelFormModal, PanelFormModalActions } from '../../../components/PanelFormModal';
 import {
-  ProfileBackLink,
   ProfileCard,
   ProfileChipGroup,
   ProfileDateField,
@@ -205,15 +204,6 @@ export default function OwnershipPanel() {
 
   return (
     <>
-      <Breadcrumbs
-        items={[
-          { label: 'خانه', href: BUSINESS_PROFILE_ROOT },
-          { label: 'تنظیمات کسب و کار', href: '/business-settings' },
-          { label: 'پروفایل کسب‌وکار', href: BUSINESS_PROFILE_ROOT },
-          { label: 'نوع کسب‌وکار' },
-        ]}
-      />
-
       {notice ? (
         <div
           className={`profile-summary-card ${
@@ -229,10 +219,6 @@ export default function OwnershipPanel() {
       ) : null}
 
       <ProfilePageShell className="ownership-reference-page">
-        <div className="flex items-center justify-between gap-3 ownership-reference-backlink">
-          <ProfileBackLink href={BUSINESS_PROFILE_ROOT}>بازگشت به پروفایل کسب‌وکار</ProfileBackLink>
-        </div>
-
         <ProfileCard className="ownership-profile-card">
           <ProfileHeading
             title="نوع کسب‌وکار"

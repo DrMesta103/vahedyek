@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { EmployeeNavPath } from '../../../components/business-sidebar/EmployeeNavPath';
 import { ModulePageHeader } from '../../../components/module-page/ModulePageHeader';
 import { getSessionContext } from '../../../lib/auth';
 import { getEmployee } from '../../../lib/data';
@@ -16,12 +17,7 @@ export default async function EmployeeDetailPage({ params }: { params: Promise<{
 
   if (!employee) notFound();
 
-  const breadcrumbs = [
-    { label: 'دسترنج', href: '/' },
-    { label: 'تنظیمات کسب و کار', href: '/business-settings' },
-    { label: 'کارمندان', href: '/employees' },
-    { label: 'جزییات کارمند' },
-  ];
+  const employeeName = `${employee.firstName} ${employee.lastName}`.trim();
 
   const serialized = {
     id: employee.id,
@@ -53,7 +49,8 @@ export default async function EmployeeDetailPage({ params }: { params: Promise<{
 
   return (
     <div className="page-stack module-page employee-detail-page" dir="rtl" lang="fa">
-      <ModulePageHeader breadcrumbs={breadcrumbs} title="جزییات کارمند" titleHref="/employees" />
+      <EmployeeNavPath employeeId={employee.id} employeeName={employeeName} currentLabel="جزییات کارمند" />
+      <ModulePageHeader title="جزییات کارمند" titleHref="/employees" />
       <EmployeeDetailView employee={serialized} />
     </div>
   );

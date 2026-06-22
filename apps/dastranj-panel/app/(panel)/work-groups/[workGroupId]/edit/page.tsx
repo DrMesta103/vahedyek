@@ -1,6 +1,5 @@
 import { notFound } from 'next/navigation';
 import { ModulePageHeader } from '../../../../components/module-page/ModulePageHeader';
-import { panelBreadcrumbs } from '../../../../components/module-page/module-breadcrumbs';
 import { getWorkGroup, listEmployees, listLocations, listPolicies } from '../../../../lib/data';
 import { WorkGroupStepperForm } from '../../new/_components/WorkGroupStepperForm';
 
@@ -27,10 +26,7 @@ export default async function EditWorkGroupPage({ params }: EditWorkGroupPagePro
 
   return (
     <div className="work-group-create-page module-page" dir="rtl" lang="fa">
-      <ModulePageHeader
-        breadcrumbs={panelBreadcrumbs('ویرایش گروه کاری')}
-        title="ویرایش گروه کاری"
-      />
+      <ModulePageHeader title="ویرایش گروه کاری" />
 
       <WorkGroupStepperForm
         mode="edit"

@@ -1,45 +1,72 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState, useTransition, type KeyboardEvent } from 'react';
+import { useMemo, useState, useTransition, type KeyboardEvent } from 'react';
 import { CardMenu } from '../../../components/CardMenu';
 import { deleteCalendarAction, toggleCalendarStatusAction } from '../../../lib/actions';
+import { getCalendarShiftTypeLabel, type CalendarShiftType } from '../../../lib/calendar-shifts';
 
 export type CalendarCardItem = {
   id: string;
   title: string;
   description: string | null;
   status: 'active' | 'inactive';
+  isIncomplete: boolean;
   yearLabel: string;
+  shiftCount: number;
+  shiftTypes: CalendarShiftType[];
   totalShiftDays: number;
-  totalEventDays: number;
+  eventCount: number;
+  holidayCount: number;
+  otherEventCount: number;
+  policyCount: number;
+  workGroupCount: number;
 };
 
-function statusMeta(status: 'active' | 'inactive') {
-  if (status === 'active') {
-    return { label: 'فعال', className: 'is-active' };
+function resolveCalendarStatus(item: Pick<CalendarCardItem, 'status' | 'isIncomplete'>) {
+  if (item.status === 'inactive') {
+    return { label: 'غیرفعال', className: 'is-inactive' };
   }
 
-  return { label: 'غیرفعال', className: 'is-inactive' };
+  if (item.isIncomplete) {
+    return { label: 'ناقص', className: 'is-incomplete' };
+  }
+
+  return { label: 'فعال', className: 'is-active' };
 }
 
-function metricProgress(value: number, max: number) {
-  if (max <= 0) return 8;
-  return Math.min(100, Math.max(8, Math.round((value / max) * 100)));
-}
-
-export function CalendarCard({
-  item,
-  onCreateCalendar,
-}: {
-  item: CalendarCardItem;
-  onCreateCalendar?: () => void;
-}) {
+export function CalendarCard({ item }: { item: CalendarCardItem }) {
   const router = useRouter();
   const [status, setStatus] = useState(item.status);
   const [pending, startTransition] = useTransition();
-  const statusDisplay = statusMeta(status);
+  const statusDisplay = resolveCalendarStatus({ status, isIncomplete: item.isIncomplete });
   const detailsHref = `/calendars/${item.id}`;
+
+  const shiftSummary = useMemo(() => {
+    if (item.shiftCount <= 0) {
+      return { label: 'بدون شیفت', tone: 'is-empty' as const };
+    }
+
+    const labels = item.shiftTypes.slice(0, 2).map((type) => getCalendarShiftTypeLabel(type));
+    const summary = labels.join('، ');
+    return {
+      label: `${item.shiftCount.toLocaleString('fa-IR')} شیفت ثبت شده${summary ? ` • ${summary}` : ''}`,
+      tone: 'is-filled' as const,
+    };
+  }, [item.shiftCount, item.shiftTypes]);
+
+  const eventSummary = useMemo(() => {
+    if (item.eventCount <= 0) {
+      return { label: 'بدون رویداد', tone: 'is-empty' as const };
+    }
+
+    const holidayLabel = item.holidayCount > 0 ? `${item.holidayCount.toLocaleString('fa-IR')} تعطیلی` : null;
+    const otherLabel = item.otherEventCount > 0 ? `${item.otherEventCount.toLocaleString('fa-IR')} مناسبت` : null;
+    return {
+      label: [holidayLabel, otherLabel].filter(Boolean).join(' • ') || `${item.eventCount.toLocaleString('fa-IR')} رویداد`,
+      tone: 'is-filled' as const,
+    };
+  }, [item.eventCount, item.holidayCount, item.otherEventCount]);
 
   const openDetails = () => {
     router.push(detailsHref);
@@ -70,17 +97,27 @@ export function CalendarCard({
       tabIndex={0}
       onClick={openDetails}
       onKeyDown={handleCardKeyDown}
-      aria-label={`مشاهده جزئیات ${item.title}`}
+      aria-label={`مشاهده جزئیات تقویم ${item.title}`}
     >
       <div className="module-grid-card-top">
         <div className="module-grid-card-body">
-          <h3>{item.title}</h3>
-          <p>توضیحات : {item.description ?? 'ثبت نشده'}</p>
+          <div className="module-grid-card-title-row">
+            <h3>{item.title}</h3>
+            <span className={`module-status-pill ${statusDisplay.className}`}>{statusDisplay.label}</span>
+          </div>
+          <p>سال: {item.yearLabel}</p>
+          <p>{item.description?.trim() ? item.description : 'توضیحات: ثبت نشده'}</p>
         </div>
 
-        <div className="module-grid-card-top-actions" onClick={(event) => event.stopPropagation()} onKeyDown={(event) => event.stopPropagation()}>
-          <span className={`module-status-pill ${statusDisplay.className}`}>{statusDisplay.label}</span>
-          <label className="request-reason-toggle module-grid-card-toggle" aria-label={status === 'active' ? 'غیرفعال کردن تقویم' : 'فعال کردن تقویم'}>
+        <div
+          className="module-grid-card-top-actions"
+          onClick={(event) => event.stopPropagation()}
+          onKeyDown={(event) => event.stopPropagation()}
+        >
+          <label
+            className="request-reason-toggle module-grid-card-toggle"
+            aria-label={status === 'active' ? 'غیرفعال کردن تقویم' : 'فعال کردن تقویم'}
+          >
             <input
               type="checkbox"
               checked={status === 'active'}
@@ -91,11 +128,22 @@ export function CalendarCard({
           </label>
           <CardMenu
             items={[
-              { kind: 'link', href: detailsHref, label: 'جزئیات تقویم' },
-              ...(onCreateCalendar
-                ? [{ kind: 'action' as const, label: 'تقویم جدید', onClick: onCreateCalendar }]
+              { kind: 'link', href: detailsHref, label: 'مشاهده جزئیات تقویم' },
+              ...(item.policyCount > 0 ? [{ kind: 'link' as const, href: '/policies', label: 'سیاست‌های مرتبط' }] : []),
+              ...(item.workGroupCount > 0
+                ? [
+                    {
+                      kind: 'link' as const,
+                      href: `/work-groups?calendarId=${item.id}`,
+                      label: 'گروه‌های کاری مرتبط',
+                    },
+                  ]
                 : []),
-              { kind: 'link', href: '/policies', label: 'سیاست‌ها' },
+              {
+                kind: 'action' as const,
+                label: status === 'active' ? 'غیرفعال‌سازی تقویم' : 'فعال‌سازی تقویم',
+                onClick: () => handleToggle(status !== 'active'),
+              },
               {
                 kind: 'submit',
                 label: 'حذف تقویم',
@@ -104,8 +152,11 @@ export function CalendarCard({
                 hiddenFields: { id: item.id },
                 confirm: {
                   title: 'حذف تقویم کاری',
-                  description: `آیا از حذف «${item.title}» مطمئن هستید؟ این تقویم از فهرست شما حذف می‌شود.`,
-                  confirmLabel: 'بله، حذف شود',
+                  description:
+                    item.policyCount > 0 || item.workGroupCount > 0
+                      ? 'آیا از حذف این تقویم کاری مطمئن هستید؟ در صورت وجود وابستگی، حذف مستقیم متوقف می‌شود.'
+                      : 'آیا از حذف این تقویم کاری مطمئن هستید؟',
+                  confirmLabel: 'حذف تقویم',
                   cancelLabel: 'انصراف',
                 },
               },
@@ -116,19 +167,15 @@ export function CalendarCard({
 
       <div className="module-card-metrics">
         <div className="module-metric-panel">
-          <span>روز های کاری / شیفت ها</span>
-          <strong>{item.totalShiftDays}</strong>
-          <div className="module-metric-progress" aria-hidden>
-            <span style={{ width: `${metricProgress(item.totalShiftDays, 365)}%` }} />
-          </div>
+          <span>خلاصه شیفت‌ها</span>
+          <strong>{item.shiftCount.toLocaleString('fa-IR')}</strong>
+          <b className={`module-card-summary-chip ${shiftSummary.tone}`}>{shiftSummary.label}</b>
         </div>
 
         <div className="module-metric-panel">
-          <span>رویداد ها / روز های تعطیل</span>
-          <strong>{item.totalEventDays}</strong>
-          <div className="module-metric-progress" aria-hidden>
-            <span style={{ width: `${metricProgress(item.totalEventDays, 50)}%` }} />
-          </div>
+          <span>خلاصه رویدادها و تعطیلات</span>
+          <strong>{item.eventCount.toLocaleString('fa-IR')}</strong>
+          <b className={`module-card-summary-chip ${eventSummary.tone}`}>{eventSummary.label}</b>
         </div>
       </div>
     </article>

@@ -4,6 +4,10 @@
 
 TaavUI is the shared design system for DastRanj and VahedYek. It lives in `packages/ui` and is documented in `apps/taav-ui-lab`.
 
+## References and principles
+
+TaavUI's enterprise reference layer, design principles, and governance rules live in `packages/ui/TAAVUI_REFERENCES.md`.
+
 
 
 ## Consumption contract
@@ -266,11 +270,65 @@ Domain widgets (contract tags, rule panels) should use Taav primitives internall
 
 
 
+## Field Block Rules
+
+
+1. Use `TaavFieldBlock` for business forms that require a label above the field and fixed helper/tooltip text below the field.
+
+2. Use `TaavFieldGrid` for two-column and responsive business form layouts.
+
+3. Do not create app-local label/input/helper layouts when `TaavFieldBlock` supports the pattern.
+
+4. The field tooltip is always-visible support text under the field, not a hover tooltip.
+
+5. Use `required` for required fields instead of manually adding red stars.
+
+6. Use `error` for validation messages instead of custom red helper text.
+
+7. Do not put validation or business logic inside `TaavFieldBlock`.
+
+8. Do not pass arbitrary Tailwind classes for visual changes.
+
+9. If a new field layout is needed, add a variant to TaavUI instead of page-local CSS.
+
+10. For limited, visible business choices (company type, contract type, simple status), use `TaavChoiceChipGroup` inside `TaavFieldBlock` — not `TaavSelect`.
+
+11. Use `TaavSelect` only for long lists, dynamic lists, or when there are too many options to display as chips.
+
+
+## Choice Chip Rules
+
+
+1. Use `TaavChoiceChipGroup` when the user must choose one or more options from a small, visible list.
+
+2. Use optional `label` and `description` props on `TaavChoiceChipGroup` for standalone fields; inside `TaavFieldBlock`, prefer the block label and pass `ariaLabel` to the group.
+
+3. Use selected state instead of manually changing border/background.
+
+4. Selected choice chips should have filled light teal/cyan background and no obvious neutral border.
+
+5. In **single-select** mode, selected chips show fill only — **no check icon**.
+
+6. In **multi-select** mode, each selected chip shows a check icon on the right side of the label in RTL.
+
+7. Use `TaavChip` for tags/removable filters.
+
+8. Use `TaavStatusBadge` for statuses.
+
+9. Do not create app-local pill/chip styles for business forms.
+
+10. Do not put business logic inside `TaavChoiceChipGroup`.
+
+11. Do not pass arbitrary Tailwind classes for visual changes.
+
+12. Do not use `TaavSelect` as the default pattern for limited business choice fields — prefer choice chips.
+
+
 ## Form controls rules
 
 
 
-1. Use `TaavSelect` instead of app-local select styling.
+1. Use `TaavSelect` for long lists, dynamic lists, or when options cannot be shown as chips — not as the default for limited business choices.
 
 2. Use `TaavCheckbox` and `TaavRadioGroup` instead of custom checkbox/radio rows.
 
@@ -380,6 +438,67 @@ Domain widgets (contract tags, rule panels) should use Taav primitives internall
 
 
 
+## Business Sidebar Rules
+
+
+
+1. Use `TaavBusinessSidebar` for business app side navigation instead of app-local sidebar styling.
+
+2. Keep routing, tenant switching, auth, and permissions outside the component.
+
+3. Pass navigation data as props (`items`, `quickActions`).
+
+4. Pass active state from the app (`activeItemId` or `item.active`).
+
+5. Do not hardcode DastRanj business logic inside TaavUI.
+
+6. Do not create page-local sidebar variants.
+
+7. If a new sidebar visual state is needed, add it to TaavUI tokens/props.
+
+8. DastRanj migration must happen in a separate commit.
+
+9. Use `placement="right"` for RTL business apps; anchor the sidebar in an app shell, not as a floating card.
+
+10. Only the menu nav region scrolls — use `taav-scrollarea--subtle` tokens/classes, not default browser scrollbars.
+
+
+
+## Module Card Rules
+
+
+
+1. Use `TaavModuleCard` for ERP module entry cards, setup sections, workflow entry cards, and settings section navigation.
+
+2. Use `TaavModuleCardGrid` for responsive card layouts.
+
+3. Do not use raw `TaavCard` for module navigation when `TaavModuleCard` fits the pattern.
+
+4. Do not put route detection, permission logic, completion calculation, or fetching inside `TaavModuleCard`.
+
+5. Pass `status`, `disabled`, `locked`, `href`, and handlers from the app.
+
+6. Use dark/light theme modes through tokens (`themeMode` or shell theme), not local CSS overrides.
+
+7. Do not use external image assets for the default header pattern.
+
+8. Do not create app-local clones of this card pattern.
+
+
+
+### Difference from other cards
+
+
+
+| Component | Purpose |
+|-----------|---------|
+| `TaavCard` | Generic primitive surface |
+| `TaavModuleCard` | Business/ERP navigation card |
+| `TaavStatsCard` | Metric/stat card |
+| `TaavOptionCard` | Selectable form option card |
+
+
+
 ## Tokens
 
 
@@ -395,11 +514,15 @@ Key groups:
 - Semantic: `--taav-surface`, `--taav-text-muted`, `--taav-border`
 
 - Form: `--taav-input-height-md`, `--taav-input-focus-ring`, `--taav-form-label-md`
+- Field block/grid: `--taav-field-block-gap-md`, `--taav-field-block-label-md`, `--taav-field-block-support-color`, `--taav-field-grid-gap-md`
+- Choice chip: `--taav-choice-chip-height-md`, `--taav-choice-chip-radius-pill`, `--taav-choice-chip-selected-bg`, `--taav-choice-chip-group-gap-md`
 - Controls: `--taav-control-size-md`, `--taav-switch-track-w-md`, `--taav-segmented-height-md`, `--taav-option-card-selected-border`
 - Overlays: `--taav-overlay-backdrop`, `--taav-dialog-width-md`, `--taav-drawer-width-md`, `--taav-dropdown-item-height-md`
 - Navigation: `--taav-tabs-indicator`, `--taav-stepper-current`, `--taav-stepper-connector`
 - Data display: `--taav-chip-height-md`, `--taav-table-row-height-comfortable`, `--taav-skeleton-bg`, `--taav-kv-label-size-md`
 - Layout: `--taav-page-container-normal`, `--taav-section-padding-md`, `--taav-action-bar-height`, `--taav-sidebar-width-md`, `--taav-stats-value-md`, `--taav-progress-height-md`
+- Business sidebar: `--taav-business-sidebar-width-default`, `--taav-business-sidebar-bg`, `--taav-business-sidebar-active-bg`, `--taav-business-sidebar-tenant-active-bg`
+- Module card: `--taav-module-card-surface`, `--taav-module-card-header-height`, `--taav-module-card-header-pattern-geometric`, `--taav-module-card-grid-gap-md`, `--taav-module-card-border-selected`
 
 
 

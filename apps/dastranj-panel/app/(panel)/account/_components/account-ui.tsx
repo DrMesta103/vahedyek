@@ -1,26 +1,6 @@
 'use client';
 
-import Link from 'next/link';
 import { useId, type ReactNode } from 'react';
-
-export function Breadcrumbs({ items }: { items: Array<{ label: string; href?: string }> }) {
-  return (
-    <nav className="flex flex-wrap items-center justify-end gap-2 text-[13px] font-semibold text-[color:var(--muted)]">
-      {items.map((item, index) => (
-        <span key={`${item.label}-${index}`} className="inline-flex items-center gap-2">
-          {item.href ? (
-            <Link href={item.href} className="text-[color:var(--text)] no-underline transition hover:text-[color:var(--accent)]">
-              {item.label}
-            </Link>
-          ) : (
-            <span className="text-[color:var(--text)]">{item.label}</span>
-          )}
-          {index < items.length - 1 ? <span aria-hidden="true">‹</span> : null}
-        </span>
-      ))}
-    </nav>
-  );
-}
 
 export function SectionCard({
   title,

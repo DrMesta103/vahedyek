@@ -1,13 +1,15 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Check } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { TaavChoiceChipGroup } from '@repo/ui/taav/forms';
 import {
   VARIABLE_TITLE_OTHER,
   getVariableTitlePresets,
   isVariableTitleOther,
   type VariableAmountType,
 } from '../lib/payroll-business-settings';
+
+const OTHER_VALUE = '__variable_title_other__';
 
 type Props = {
   type: VariableAmountType;
@@ -30,41 +32,38 @@ export function VariableAmountTitlePicker({
     setOtherMode(isVariableTitleOther(type, title));
   }, [type, title]);
 
-  const selectPreset = (preset: string) => {
-    setOtherMode(false);
-    onTitleChange(preset);
-  };
+  const options = useMemo(
+    () => [
+      ...presets.map((preset) => ({ value: preset, label: preset })),
+      { value: OTHER_VALUE, label: otherLabel },
+    ],
+    [otherLabel, presets],
+  );
 
-  const selectOther = () => {
-    setOtherMode(true);
-    if (!otherMode || presets.includes(title.trim())) {
-      onTitleChange('');
+  const chipValue = otherMode ? OTHER_VALUE : presets.includes(title.trim()) ? title : OTHER_VALUE;
+
+  const handleValueChange = (next: string | string[]) => {
+    const value = Array.isArray(next) ? next[0] ?? '' : next;
+    if (value === OTHER_VALUE) {
+      setOtherMode(true);
+      if (!otherMode || presets.includes(title.trim())) {
+        onTitleChange('');
+      }
+      return;
     }
+
+    setOtherMode(false);
+    onTitleChange(value);
   };
 
   return (
     <div className="variable-amount-type-picker">
-      <span className="variable-amount-type-picker-label">نوع مبلغ</span>
-      <div className="variable-amount-type-picker-chips business-payroll-chips">
-        {presets.map((preset) => {
-          const selected = !otherMode && title === preset;
-          return (
-            <button
-              key={preset}
-              type="button"
-              className={selected ? 'is-selected' : ''}
-              onClick={() => selectPreset(preset)}
-            >
-              {selected ? <Check className="h-3.5 w-3.5" aria-hidden /> : null}
-              {preset}
-            </button>
-          );
-        })}
-        <button type="button" className={otherMode ? 'is-selected' : ''} onClick={selectOther}>
-          {otherMode ? <Check className="h-3.5 w-3.5" aria-hidden /> : null}
-          {otherLabel}
-        </button>
-      </div>
+      <TaavChoiceChipGroup
+        label="نوع مبلغ"
+        options={options}
+        value={chipValue}
+        onValueChange={handleValueChange}
+      />
       {otherMode ? (
         <label className="business-payroll-field variable-amount-type-picker-custom">
           <span className="business-payroll-field-label">{customFieldLabel}</span>

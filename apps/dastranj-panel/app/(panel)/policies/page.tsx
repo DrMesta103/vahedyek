@@ -1,7 +1,6 @@
 import { CardMenu } from '../../components/CardMenu';
 import { ModuleAddTile } from '../../components/module-page/ModuleAddTile';
 import { ModulePageHeader } from '../../components/module-page/ModulePageHeader';
-import { businessSettingsBreadcrumbs } from '../../components/module-page/module-breadcrumbs';
 import { deletePolicyAction } from '../../lib/actions';
 import { listPolicies } from '../../lib/data';
 import {
@@ -58,7 +57,6 @@ export default async function PoliciesPage({ searchParams }: PoliciesPageProps) 
   return (
     <div className="page-stack module-page" dir="rtl" lang="fa">
       <ModulePageHeader
-        breadcrumbs={businessSettingsBreadcrumbs('سیاست‌های کاری')}
         title="سیاست‌های کاری"
         subtitle="مدیریت قوانین و سیاست‌های حضور و غیاب کارمندان"
         addHref="/policies/new"
