@@ -1,8 +1,13 @@
 export * from './TaavLabel';
 export * from './TaavRequiredMark';
 export * from './TaavInput';
+export * from './TaavCurrencyInput';
+export * from './TaavPercentageInput';
 export * from './TaavTextarea';
 export * from './TaavFormField';
+export * from './TaavFieldBlock';
+export * from './TaavFieldGrid';
+export * from './TaavChoiceChipGroup';
 export * from './TaavFormMessage';
 export * from './TaavFormDescription';
 export * from './TaavSelect';
@@ -19,6 +24,13 @@ export type {
   TaavFieldVariant,
   TaavFieldWidth,
 } from './shared/field-control.variants';
+
+export type {
+  TaavChoiceChipGap,
+  TaavChoiceChipShape,
+  TaavChoiceChipSize,
+  TaavChoiceChipTone,
+} from './shared/choice-chip.variants';
 
 export type {
   TaavChoiceSize,

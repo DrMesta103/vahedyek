@@ -37,14 +37,6 @@ export function EmployeeGuaranteeManager({ employeeId, initialGuarantees }: Empl
   const [promissoryNumber, setPromissoryNumber] = useState('');
   const [amount, setAmount] = useState('');
 
-  const breadcrumbs = [
-    { label: 'دسترنج', href: '/' },
-    { label: 'تنظیمات کسب و کار', href: '/business-settings' },
-    { label: 'کارمندان', href: '/employees' },
-    { label: 'جزییات کارمند', href: `/employees/${employeeId}` },
-    { label: 'ضمانت کارمند' },
-  ];
-
   const checks = useMemo(() => guarantees.filter((item) => item.kind === 'check'), [guarantees]);
   const promissories = useMemo(() => guarantees.filter((item) => item.kind === 'promissory'), [guarantees]);
   const visibleItems = tab === 'check' ? checks : promissories;
@@ -136,7 +128,6 @@ export function EmployeeGuaranteeManager({ employeeId, initialGuarantees }: Empl
   return (
     <div className="employee-sub-page">
       <ModulePageHeader
-        breadcrumbs={breadcrumbs}
         title="ضمانت کارمند"
         subtitle="مدیریت چک‌ها و سفته‌های ثبت‌شده برای هر کارمند"
         titleHref={`/employees/${employeeId}`}

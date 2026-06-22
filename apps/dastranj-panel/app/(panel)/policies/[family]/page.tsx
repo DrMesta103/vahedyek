@@ -1,6 +1,5 @@
 import { notFound } from 'next/navigation';
 import type { ReactNode } from 'react';
-import { policyBreadcrumbs } from '../../../components/module-page/module-breadcrumbs';
 import { listPolicies } from '../../../lib/data';
 import {
   POLICY_VARIANTS,
@@ -214,15 +213,6 @@ export default async function PolicyFamilyPage({
     <PolicyPageShell
       title={familyMeta.pageTitle}
       subtitle={familyMeta.pageHint}
-      breadcrumb={
-        fromWorkHub && familyKey === 'manual'
-          ? policyBreadcrumbs({ label: 'ویرایش سیاست کاری', href: backHref }, { label: 'سیاست‌های تردد دستی' })
-          : fromWorkHub && familyKey === 'night'
-            ? policyBreadcrumbs({ label: 'ویرایش سیاست کاری', href: backHref }, { label: 'سیاست‌های شب‌کاری' })
-            : fromWorkHub && familyKey === 'remote'
-              ? policyBreadcrumbs({ label: 'ویرایش سیاست کاری', href: backHref }, { label: 'سیاست‌های دورکاری' })
-              : policyBreadcrumbs({ label: familyMeta.pageTitle })
-      }
       actionHref={fromWorkHub ? backHref : '/policies'}
       actionLabel={fromWorkHub ? 'بازگشت به سیاست کاری' : 'بازگشت به فهرست'}
     >

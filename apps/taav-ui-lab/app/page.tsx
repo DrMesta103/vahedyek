@@ -14,22 +14,22 @@ export default function HomePage() {
           <div className="grid gap-[var(--taav-space-6)] lg:grid-cols-[1fr_280px] lg:items-end">
             <div className="grid gap-[var(--taav-space-4)]">
               <TaavBadge tone="brand" variant="soft" iconStart={<Sparkles className="h-3 w-3" />}>
-                TaavUI · Layout Patterns
+                TaavUI · Foundation Layer
               </TaavBadge>
               <h1 className="m-0 text-[length:var(--taav-text-3xl)] font-black leading-[var(--taav-leading-tight)] text-[var(--taav-text-strong)] lg:text-4xl">
                 سیستم طراحی داخلی
                 <span className="mt-2 block text-[var(--taav-brand-strong)]">DastRanj · VahedYek</span>
               </h1>
               <p className="m-0 max-w-2xl text-[length:var(--taav-text-sm)] leading-[var(--taav-leading-relaxed)] text-[var(--taav-text-muted)]">
-                TaavUI زبان بصری مشترک برای پنل‌های DastRanj و VahedYek است.
-                این commit Layout Patterns را اضافه می‌کند: PageShell، PageHeader، Section، SettingsSection، DetailHeader، StickyActionBar، SidebarPanel، StatsCard و ProgressSummary.
+                TaavUI زبان بصری مشترک برای پنل‌های DastRanj و VahedYek است. این commit لایه مرجع و اصول طراحی را به Lab
+                اضافه می‌کند تا componentهای آینده با منطق سیستمی ساخته شوند، نه صفحه‌به‌صفحه و سلیقه‌ای.
               </p>
               <div className="flex flex-wrap gap-3">
-                <LabNavButton href="/getting-started" size="lg" iconEnd={<BookOpen className="h-4 w-4" />}>
-                  شروع سریع
+                <LabNavButton href="/foundation/principles" size="lg" iconEnd={<BookOpen className="h-4 w-4" />}>
+                  اصول TaavUI
                 </LabNavButton>
-                <LabNavButton href="/layout" size="lg">
-                  Layout
+                <LabNavButton href="/getting-started" size="lg">
+                  شروع سریع
                 </LabNavButton>
                 <LabNavButton href="/components" variant="outline" tone="neutral" size="lg">
                   Primitives
@@ -48,7 +48,7 @@ export default function HomePage() {
             <TaavCard variant="soft" padding="md" radius="xl" wrapperClassName="min-w-0">
               <p className="m-0 text-[length:var(--taav-text-xs)] font-bold text-[var(--taav-text-subtle)]">وضعیت</p>
               <p className="mt-2 text-[length:var(--taav-text-sm)] font-black text-[var(--taav-text-strong)]">
-                Layout Patterns
+                Reference + Principles
               </p>
               <p className="mt-2 text-[length:var(--taav-text-xs)] leading-[var(--taav-leading-relaxed)] text-[var(--taav-text-muted)]">
                 صفحات DastRanj و VahedYek هنوز مهاجرت داده نشده‌اند.
@@ -125,7 +125,8 @@ export default function HomePage() {
                 قوانین توسعه
               </strong>
               <p className="mt-2 text-[length:var(--taav-text-sm)] leading-[var(--taav-leading-relaxed)] text-[var(--taav-text-muted)]">
-                جزئیات کامل در <code className="lab-code">packages/ui/TAAVUI.md</code> موجود است.
+                جزئیات کامل در <code className="lab-code">packages/ui/TAAVUI.md</code> و{' '}
+                <code className="lab-code">packages/ui/TAAVUI_REFERENCES.md</code> موجود است.
               </p>
             </div>
           </div>

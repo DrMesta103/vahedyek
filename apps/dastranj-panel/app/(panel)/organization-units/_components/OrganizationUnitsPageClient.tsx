@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ModuleListRow } from '../../../components/module-page/ModuleListRow';
 import { ModulePageHeader } from '../../../components/module-page/ModulePageHeader';
-import { panelBreadcrumbs } from '../../../components/module-page/module-breadcrumbs';
 import { deleteOrganizationUnitAction } from '../../../lib/actions';
 import { CreateOrganizationUnitDialog } from './CreateOrganizationUnitDialog';
 
@@ -41,7 +40,6 @@ export function OrganizationUnitsPageClient({ items }: OrganizationUnitsPageClie
   return (
     <>
       <ModulePageHeader
-        breadcrumbs={panelBreadcrumbs('واحد سازمانی')}
         title="واحدهای سازمانی"
         subtitle="فهرست ساده‌ای واحدهای سازمانی برای مدیریت سریع‌تر."
         addLabel="افزودن واحد سازمانی"

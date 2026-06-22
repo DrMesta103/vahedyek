@@ -203,6 +203,16 @@
   --taav-input-radius-md: var(--taav-radius-md);
   --taav-input-radius-lg: var(--taav-radius-lg);
   --taav-input-radius-xl: var(--taav-radius-xl);
+  --taav-input-affix-color: var(--taav-text-subtle);
+  --taav-input-affix-font-size-sm: var(--taav-text-xs);
+  --taav-input-affix-font-size-md: var(--taav-text-sm);
+  --taav-input-affix-font-size-lg: var(--taav-text-sm);
+  --taav-input-affix-min-width-sm: 2.75rem;
+  --taav-input-affix-min-width-md: 3rem;
+  --taav-input-affix-min-width-lg: 3.25rem;
+  --taav-input-affix-gap-sm: var(--taav-space-2);
+  --taav-input-affix-gap-md: var(--taav-space-2);
+  --taav-input-affix-gap-lg: var(--taav-space-3);
   --taav-textarea-min-height-sm: 88px;
   --taav-textarea-min-height-md: 108px;
   --taav-textarea-min-height-lg: 128px;
@@ -216,6 +226,54 @@
   --taav-required-mark: var(--taav-danger-strong);
   --taav-required-mark-muted: var(--taav-text-subtle);
   --taav-form-field-gap: var(--taav-space-2);
+  --taav-field-block-gap-sm: var(--taav-space-2);
+  --taav-field-block-gap-md: var(--taav-space-3);
+  --taav-field-block-gap-lg: var(--taav-space-4);
+  --taav-field-block-label-sm: var(--taav-text-sm);
+  --taav-field-block-label-md: var(--taav-text-md);
+  --taav-field-block-label-lg: var(--taav-text-lg);
+  --taav-field-block-label-color: var(--taav-text-strong);
+  --taav-field-block-support-sm: var(--taav-text-xs);
+  --taav-field-block-support-md: var(--taav-text-sm);
+  --taav-field-block-support-lg: var(--taav-text-md);
+  --taav-field-block-support-color: var(--taav-text-muted);
+  --taav-field-block-feedback-sm: var(--taav-text-xs);
+  --taav-field-block-feedback-md: var(--taav-text-sm);
+  --taav-field-block-feedback-lg: var(--taav-text-md);
+  --taav-field-block-error-color: var(--taav-danger-strong);
+  --taav-field-block-control-min-height-sm: var(--taav-input-height-sm);
+  --taav-field-block-control-min-height-md: var(--taav-input-height-lg);
+  --taav-field-block-control-min-height-lg: 56px;
+  --taav-field-grid-gap-sm: var(--taav-space-3);
+  --taav-field-grid-gap-md: var(--taav-space-4);
+  --taav-field-grid-gap-lg: var(--taav-space-5);
+  --taav-field-grid-gap-xl: var(--taav-space-6);
+  --taav-field-grid-responsive-gap: var(--taav-space-4);
+  --taav-field-grid-row-gap-compact: var(--taav-space-3);
+  --taav-field-grid-row-gap-comfortable: var(--taav-space-5);
+  --taav-field-grid-row-gap-spacious: var(--taav-space-6);
+  --taav-choice-chip-height-sm: 34px;
+  --taav-choice-chip-height-md: 40px;
+  --taav-choice-chip-height-lg: 46px;
+  --taav-choice-chip-px-sm: 12px;
+  --taav-choice-chip-px-md: 16px;
+  --taav-choice-chip-px-lg: 18px;
+  --taav-choice-chip-radius-pill: var(--taav-radius-pill);
+  --taav-choice-chip-radius-rounded: var(--taav-radius-lg);
+  --taav-choice-chip-bg: var(--taav-surface);
+  --taav-choice-chip-border: var(--taav-border);
+  --taav-choice-chip-text: var(--taav-text-strong);
+  --taav-choice-chip-gap: var(--taav-space-2);
+  --taav-choice-chip-selected-bg: #ccfbf1;
+  --taav-choice-chip-selected-border: transparent;
+  --taav-choice-chip-selected-text: var(--taav-text-strong);
+  --taav-choice-chip-selected-icon: var(--taav-text-strong);
+  --taav-choice-chip-hover-bg: var(--taav-surface-soft);
+  --taav-choice-chip-focus-ring: var(--taav-focus-ring);
+  --taav-choice-chip-group-gap-sm: var(--taav-space-2);
+  --taav-choice-chip-group-gap-md: var(--taav-space-3);
+  --taav-choice-chip-group-gap-lg: var(--taav-space-4);
+  --taav-choice-chip-group-shell-gap: var(--taav-space-2);
 
   /* Form control tokens — select, checkbox, radio, switch, segmented, option card */
   --taav-select-icon-gap: var(--taav-space-2);
@@ -407,6 +465,319 @@
   --taav-sidebar-width-lg: 380px;
   --taav-sidebar-surface: var(--taav-surface);
   --taav-sidebar-border: var(--taav-border-subtle);
+
+  /* Business sidebar tokens — TaavBusinessSidebar (DastRanj-style enterprise nav) */
+  --taav-business-sidebar-width-compact: 168px;
+  --taav-business-sidebar-width-default: 192px;
+  --taav-business-sidebar-width-wide: 220px;
+  --taav-business-sidebar-width-collapsed: 52px;
+  --taav-business-sidebar-bg: rgba(3, 10, 20, 0.84);
+  --taav-business-sidebar-surface: rgba(8, 17, 31, 0.92);
+  --taav-business-sidebar-border: rgba(187, 220, 255, 0.12);
+  --taav-business-sidebar-section-border: rgba(187, 220, 255, 0.08);
+  --taav-business-sidebar-section-px: 14px;
+  --taav-business-sidebar-profile-py: 9px;
+  --taav-business-sidebar-text: #eef6ff;
+  --taav-business-sidebar-text-muted: #97adc7;
+  --taav-business-sidebar-icon: #14b8a6;
+  --taav-business-sidebar-icon-active: #eef6ff;
+  --taav-business-sidebar-active-bg: rgba(20, 184, 166, 0.12);
+  --taav-business-sidebar-active-radius-right: 18px 0 0 18px;
+  --taav-business-sidebar-active-radius-left: 0 18px 18px 0;
+  --taav-business-sidebar-item-hover-bg: rgba(20, 184, 166, 0.06);
+  --taav-business-sidebar-toolbar-bg: rgba(20, 184, 166, 0.08);
+  --taav-business-sidebar-menu-item-height: 32px;
+  --taav-business-sidebar-menu-text: 10px;
+  --taav-business-sidebar-user-avatar-bg: #fb923c;
+  --taav-business-sidebar-tenant-avatar-bg: rgba(255, 255, 255, 0.08);
+  --taav-business-sidebar-tenant-avatar-text: #d7ecff;
+  --taav-business-sidebar-tenant-name: #90a4bb;
+  --taav-business-sidebar-switch-bg: rgba(56, 189, 248, 0.12);
+  --taav-business-sidebar-switch-text: #38bdf8;
+  --taav-business-sidebar-tenant-text: #d7ecff;
+  --taav-business-sidebar-tenant-active-bg: linear-gradient(180deg, rgba(20, 184, 166, 0.22), rgba(56, 189, 248, 0.18));
+  --taav-business-sidebar-tenant-loading-bg: linear-gradient(180deg, rgba(20, 184, 166, 0.14), rgba(56, 189, 248, 0.1));
+  --taav-business-sidebar-tenant-inactive-bg: rgba(148, 163, 184, 0.12);
+  --taav-business-sidebar-tenant-error-bg: rgba(239, 68, 68, 0.14);
+  --taav-business-sidebar-tenant-btn-bg: linear-gradient(135deg, #14b8a6, #38bdf8);
+  --taav-business-sidebar-tenant-btn-text: #03121c;
+  --taav-business-sidebar-footer-bg: rgba(20, 184, 166, 0.12);
+  --taav-business-sidebar-footer-text: #bce3ff;
+  --taav-business-sidebar-badge-bg: #ef4444;
+  --taav-business-sidebar-collapse-bg: rgba(255, 255, 255, 0.12);
+  --taav-business-sidebar-collapse-border: rgba(236, 253, 245, 0.35);
+  --taav-business-sidebar-collapse-text: #ecfdf5;
+  --taav-business-sidebar-radius: 20px;
+  --taav-business-sidebar-shadow-right: -10px 0 40px rgba(2, 6, 23, 0.28);
+  --taav-business-sidebar-shadow-left: 10px 0 40px rgba(2, 6, 23, 0.28);
+  --taav-business-sidebar-shadow: var(--taav-business-sidebar-shadow-right);
+  --taav-business-sidebar-scroll-thumb: rgba(148, 163, 184, 0.28);
+  --taav-business-sidebar-scroll-track: transparent;
+  --taav-business-sidebar-scroll-thumb-hover: rgba(148, 163, 184, 0.42);
+  --taav-business-sidebar-collapsed-avatar-size: 30px;
+  --taav-business-sidebar-collapsed-icon-size: 14px;
+  --taav-business-sidebar-collapsed-item-height: 36px;
+  --taav-business-sidebar-collapsed-item-py: 8px;
+  --taav-business-sidebar-collapsed-action-size: 30px;
+  --taav-business-sidebar-collapsed-active-bg: rgba(20, 184, 166, 0.16);
+  --taav-business-sidebar-collapsed-active-border: rgba(45, 212, 191, 0.28);
+  --taav-business-sidebar-collapsed-tenant-strip-height: 36px;
+  --taav-business-sidebar-collapsed-footer-btn-size: 34px;
+  --taav-scroll-minimal-size: 3px;
+  --taav-scroll-minimal-thumb: rgba(148, 163, 184, 0.12);
+  --taav-scroll-minimal-thumb-hover: rgba(148, 163, 184, 0.28);
+  --taav-scroll-minimal-track: transparent;
+  --taav-business-sidebar-preview-bg: #0a1018;
+  --taav-business-sidebar-preview-border: rgba(187, 220, 255, 0.14);
+  --taav-business-sidebar-shell-py: 10px;
+  --taav-business-sidebar-shell-pr: 10px;
+
+  --taav-business-nav-path-height: 44px;
+  --taav-business-nav-path-px: 20px;
+  --taav-business-nav-path-py: 10px;
+  --taav-business-nav-path-gap: 8px;
+  --taav-business-nav-path-bg: #f4f7f8;
+  --taav-business-nav-path-border: var(--taav-border-subtle);
+  --taav-business-nav-path-text: var(--taav-text-muted);
+  --taav-business-nav-path-text-hover: var(--taav-text-body);
+  --taav-business-nav-path-text-current: var(--taav-text-strong);
+  --taav-business-nav-path-text-size: 12px;
+  --taav-business-nav-path-separator: var(--taav-text-subtle);
+
+  /* Module card tokens */
+  --taav-module-card-surface: #ffffff;
+  --taav-module-card-surface-hover: #fbfcfd;
+  --taav-module-card-surface-selected: #f8fafc;
+  --taav-module-card-border: rgba(15, 23, 42, 0.1);
+  --taav-module-card-border-hover: rgba(15, 23, 42, 0.16);
+  --taav-module-card-border-selected: rgba(20, 184, 166, 0.42);
+  --taav-module-card-border-incomplete: rgba(245, 158, 11, 0.28);
+  --taav-module-card-ring-selected: rgba(20, 184, 166, 0.22);
+  --taav-module-card-radius: var(--taav-radius-lg);
+  --taav-module-card-shadow: var(--taav-shadow-xs);
+  --taav-module-card-shadow-hover: var(--taav-shadow-sm);
+  --taav-module-card-shadow-selected: var(--taav-shadow-sm);
+  --taav-module-card-disabled-opacity: 0.58;
+  --taav-module-card-header-height: 52px;
+  --taav-module-card-header-height-compact: 44px;
+  --taav-module-card-header-px: 16px;
+  --taav-module-card-header-bg: #eef1f4;
+  --taav-module-card-header-bg-brand: linear-gradient(135deg, rgba(20, 184, 166, 0.12), rgba(56, 189, 248, 0.08));
+  --taav-module-card-header-bg-success: var(--taav-success-soft);
+  --taav-module-card-header-bg-warning: var(--taav-warning-soft);
+  --taav-module-card-header-bg-danger: var(--taav-danger-soft);
+  --taav-module-card-header-bg-info: var(--taav-info-soft);
+  --taav-module-card-header-border: rgba(15, 23, 42, 0.06);
+  --taav-module-card-header-pattern-geometric: linear-gradient(160deg, #f3f5f7 0%, #e8ecf0 34%, #f7f9fb 68%, #e2e8ee 100%);
+  --taav-module-card-header-pattern-subtle: linear-gradient(180deg, #f5f7f9 0%, #eef1f4 100%);
+  --taav-module-card-title-sm: var(--taav-text-sm);
+  --taav-module-card-title-md: var(--taav-text-md);
+  --taav-module-card-title-lg: var(--taav-text-lg);
+  --taav-module-card-description-sm: var(--taav-text-xs);
+  --taav-module-card-description-md: var(--taav-text-xs);
+  --taav-module-card-description-lg: var(--taav-text-sm);
+  --taav-module-card-description: var(--taav-text-muted);
+  --taav-module-card-title: var(--taav-text-strong);
+  --taav-module-card-eyebrow: var(--taav-text-subtle);
+  --taav-module-card-status-label: var(--taav-warning-strong);
+  --taav-module-card-icon: var(--taav-text-muted);
+  --taav-module-card-arrow: var(--taav-text-subtle);
+  --taav-module-card-arrow-size: 16px;
+  --taav-module-card-body-padding-sm: 14px 16px 16px;
+  --taav-module-card-body-padding-md: 18px 18px 20px;
+  --taav-module-card-body-padding-lg: 22px 22px 24px;
+  --taav-module-card-min-height-sm: 132px;
+  --taav-module-card-min-height-md: 156px;
+  --taav-module-card-min-height-lg: 176px;
+  --taav-module-card-grid-gap-sm: var(--taav-space-3);
+  --taav-module-card-grid-gap-md: var(--taav-space-4);
+  --taav-module-card-grid-gap-lg: var(--taav-space-5);
+  --taav-module-card-grid-gap-xl: var(--taav-space-6);
+  --taav-module-card-preview-bg-light: #f2f5f7;
+  --taav-module-card-preview-bg-dark: #0a1018;
+  --taav-module-card-preview-pattern-light: radial-gradient(circle at 20% 20%, rgba(148, 163, 184, 0.08), transparent 42%),
+    radial-gradient(circle at 80% 0%, rgba(20, 184, 166, 0.05), transparent 36%);
+  --taav-module-card-preview-pattern-dark: radial-gradient(circle at 20% 20%, rgba(56, 189, 248, 0.06), transparent 42%),
+    radial-gradient(circle at 80% 0%, rgba(20, 184, 166, 0.05), transparent 36%);
+
+  /* Business intro card tokens */
+  --taav-business-intro-card-surface: #ffffff;
+  --taav-business-intro-card-surface-soft: #f8fafb;
+  --taav-business-intro-card-border: rgba(15, 23, 42, 0.1);
+  --taav-business-intro-card-border-hover: rgba(15, 23, 42, 0.16);
+  --taav-business-intro-card-radius: var(--taav-radius-xl);
+  --taav-business-intro-card-padding-sm: 14px 16px;
+  --taav-business-intro-card-padding-md: 18px 20px;
+  --taav-business-intro-card-padding-lg: 22px 24px;
+  --taav-business-intro-card-gap: var(--taav-space-4);
+  --taav-business-intro-card-leading-gap: var(--taav-space-3);
+  --taav-business-intro-card-copy-gap: var(--taav-space-2);
+  --taav-business-intro-card-max-width-normal: 720px;
+  --taav-business-intro-card-max-width-wide: 960px;
+  --taav-business-intro-card-title-sm: var(--taav-text-md);
+  --taav-business-intro-card-title-md: var(--taav-text-lg);
+  --taav-business-intro-card-title-lg: var(--taav-text-xl);
+  --taav-business-intro-card-title: var(--taav-text-strong);
+  --taav-business-intro-card-description-sm: var(--taav-text-xs);
+  --taav-business-intro-card-description-md: var(--taav-text-sm);
+  --taav-business-intro-card-description-lg: var(--taav-text-md);
+  --taav-business-intro-card-description: var(--taav-text-muted);
+  --taav-business-intro-card-icon-bg: rgba(20, 184, 166, 0.12);
+  --taav-business-intro-card-icon-color: var(--taav-brand-strong);
+  --taav-business-intro-card-icon-bg-neutral: var(--taav-surface-muted);
+  --taav-business-intro-card-icon-color-neutral: var(--taav-text-muted);
+  --taav-business-intro-card-icon-bg-success: var(--taav-success-soft);
+  --taav-business-intro-card-icon-color-success: var(--taav-success-strong);
+  --taav-business-intro-card-icon-bg-warning: var(--taav-warning-soft);
+  --taav-business-intro-card-icon-color-warning: var(--taav-warning-strong);
+  --taav-business-intro-card-icon-bg-danger: var(--taav-danger-soft);
+  --taav-business-intro-card-icon-color-danger: var(--taav-danger-strong);
+  --taav-business-intro-card-icon-bg-info: var(--taav-info-soft);
+  --taav-business-intro-card-icon-color-info: var(--taav-info-strong);
+  --taav-business-intro-card-icon-size-sm: 40px;
+  --taav-business-intro-card-icon-size-md: 48px;
+  --taav-business-intro-card-icon-size-lg: 56px;
+  --taav-business-intro-card-icon-glyph-size: 22px;
+  --taav-business-intro-card-icon-radius: var(--taav-radius-lg);
+  --taav-business-intro-card-action-color: var(--taav-text-subtle);
+  --taav-business-intro-card-action-hover-bg: rgba(15, 23, 42, 0.05);
+  --taav-business-intro-card-action-hover-color: var(--taav-text-body);
+  --taav-business-intro-card-action-size: 36px;
+  --taav-business-intro-card-action-radius: var(--taav-radius-md);
+  --taav-business-intro-card-action-icon-size: 18px;
+  --taav-business-intro-card-shadow: var(--taav-shadow-xs);
+  --taav-business-intro-card-disabled-opacity: 0.55;
+  --taav-business-intro-card-preview-bg-light: #f2f5f7;
+  --taav-business-intro-card-preview-bg-dark: #0a1018;
+  --taav-business-intro-card-preview-pattern-light: radial-gradient(circle at 20% 20%, rgba(148, 163, 184, 0.08), transparent 42%),
+    radial-gradient(circle at 80% 0%, rgba(20, 184, 166, 0.05), transparent 36%);
+  --taav-business-intro-card-preview-pattern-dark: radial-gradient(circle at 20% 20%, rgba(56, 189, 248, 0.06), transparent 42%),
+    radial-gradient(circle at 80% 0%, rgba(20, 184, 166, 0.05), transparent 36%);
+  --taav-business-intro-card-hub-surface: radial-gradient(circle at top right, rgba(20, 184, 166, 0.08), transparent 34%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.94));
+  --taav-business-intro-card-hub-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 12px 28px rgba(15, 23, 42, 0.06);
+  --taav-business-intro-card-hub-pattern-opacity: 0.22;
+  --taav-business-intro-card-hub-pattern: repeating-linear-gradient(-32deg, rgba(15, 23, 42, 0.04) 0, rgba(15, 23, 42, 0.04) 1px, transparent 1px, transparent 12px),
+    radial-gradient(circle at 18% 22%, rgba(56, 189, 248, 0.1), transparent 24%),
+    radial-gradient(circle at 82% 78%, rgba(20, 184, 166, 0.08), transparent 28%);
+  --taav-business-intro-card-hub-content-gap: var(--taav-space-3);
+  --taav-business-intro-card-eyebrow-border: rgba(14, 116, 144, 0.18);
+  --taav-business-intro-card-eyebrow-bg: rgba(224, 242, 254, 0.9);
+  --taav-business-intro-card-eyebrow-text: #0e7490;
+  --taav-business-intro-card-badge-border: rgba(148, 163, 184, 0.24);
+  --taav-business-intro-card-badge-bg: rgba(241, 245, 249, 0.92);
+  --taav-business-intro-card-badge-text: #475569;
+  --taav-business-intro-card-footnote-border: rgba(148, 163, 184, 0.18);
+  --taav-business-intro-card-footnote-bg: rgba(241, 245, 249, 0.72);
+  --taav-business-intro-card-footnote-text: #64748b;
+
+  /* Activation switch tokens */
+  --taav-activation-switch-radius: var(--taav-radius-pill);
+  --taav-activation-switch-segment-radius: var(--taav-radius-pill);
+  --taav-activation-switch-padding: 3px;
+  --taav-activation-switch-gap-sm: 3px;
+  --taav-activation-switch-gap-md: 4px;
+  --taav-activation-switch-gap-lg: 4px;
+  --taav-activation-switch-border: rgba(15, 23, 42, 0.12);
+  --taav-activation-switch-track-bg: #e2e8f0;
+  --taav-activation-switch-active-bg: #14b8a6;
+  --taav-activation-switch-active-text: #ffffff;
+  --taav-activation-switch-active-text-on-tone: #ffffff;
+  --taav-activation-switch-active-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
+  --taav-activation-switch-inactive-bg: #94a3b8;
+  --taav-activation-switch-inactive-text: #ffffff;
+  --taav-activation-switch-inactive-hover-bg: #7c8da3;
+  --taav-activation-switch-active-bg-success: var(--taav-success);
+  --taav-activation-switch-active-bg-warning: var(--taav-warning);
+  --taav-activation-switch-active-bg-danger: var(--taav-danger);
+  --taav-activation-switch-active-bg-neutral: #64748b;
+  --taav-activation-switch-text-sm: var(--taav-text-xs);
+  --taav-activation-switch-text-md: var(--taav-text-sm);
+  --taav-activation-switch-text-lg: var(--taav-text-md);
+  --taav-activation-switch-segment-min-width-sm: 52px;
+  --taav-activation-switch-segment-min-width-md: 60px;
+  --taav-activation-switch-segment-min-width-lg: 72px;
+  --taav-activation-switch-segment-px-sm: 10px;
+  --taav-activation-switch-segment-px-md: 14px;
+  --taav-activation-switch-segment-px-lg: 16px;
+  --taav-activation-switch-segment-py-sm: 6px;
+  --taav-activation-switch-segment-py-md: 8px;
+  --taav-activation-switch-segment-py-lg: 10px;
+  --taav-activation-switch-disabled-opacity: 0.55;
+
+  /* Details link tokens */
+  --taav-details-link-gap: 6px;
+  --taav-details-link-text-sm: var(--taav-text-xs);
+  --taav-details-link-text-md: var(--taav-text-sm);
+  --taav-details-link-text-lg: var(--taav-text-md);
+  --taav-details-link-text: #94a3b8;
+  --taav-details-link-text-hover: #64748b;
+  --taav-details-link-text-brand: var(--taav-brand-strong);
+  --taav-details-link-text-brand-hover: var(--taav-brand);
+  --taav-details-link-text-info: var(--taav-info-strong);
+  --taav-details-link-text-info-hover: var(--taav-info);
+  --taav-details-link-underline: rgba(148, 163, 184, 0.55);
+  --taav-details-link-underline-hover: rgba(100, 116, 139, 0.75);
+  --taav-details-link-underline-thickness: 1px;
+  --taav-details-link-underline-offset: 3px;
+  --taav-details-link-disabled-opacity: 0.55;
+
+  /* Business recommendation card tokens */
+  --taav-recommendation-card-surface: #ffffff;
+  --taav-recommendation-card-surface-soft: #f8fafb;
+  --taav-recommendation-card-border: rgba(15, 23, 42, 0.1);
+  --taav-recommendation-card-radius: var(--taav-radius-xl);
+  --taav-recommendation-card-padding-sm: 14px 16px;
+  --taav-recommendation-card-padding-md: 18px 20px;
+  --taav-recommendation-card-padding-lg: 22px 24px;
+  --taav-recommendation-card-gap: var(--taav-space-4);
+  --taav-recommendation-card-leading-gap: var(--taav-space-3);
+  --taav-recommendation-card-copy-gap: var(--taav-space-2);
+  --taav-recommendation-card-trailing-gap: var(--taav-space-3);
+  --taav-recommendation-card-max-width-normal: 720px;
+  --taav-recommendation-card-max-width-wide: 1040px;
+  --taav-recommendation-card-title-sm: var(--taav-text-sm);
+  --taav-recommendation-card-title-md: var(--taav-text-md);
+  --taav-recommendation-card-title-lg: var(--taav-text-lg);
+  --taav-recommendation-card-title: var(--taav-text-strong);
+  --taav-recommendation-card-description-sm: var(--taav-text-xs);
+  --taav-recommendation-card-description-md: var(--taav-text-sm);
+  --taav-recommendation-card-description-lg: var(--taav-text-md);
+  --taav-recommendation-card-description: var(--taav-text-muted);
+  --taav-recommendation-card-icon-bg: rgba(20, 184, 166, 0.12);
+  --taav-recommendation-card-icon-color: var(--taav-brand-strong);
+  --taav-recommendation-card-icon-bg-neutral: var(--taav-surface-muted);
+  --taav-recommendation-card-icon-color-neutral: var(--taav-text-muted);
+  --taav-recommendation-card-icon-bg-success: var(--taav-success-soft);
+  --taav-recommendation-card-icon-color-success: var(--taav-success-strong);
+  --taav-recommendation-card-icon-bg-warning: var(--taav-warning-soft);
+  --taav-recommendation-card-icon-color-warning: var(--taav-warning-strong);
+  --taav-recommendation-card-icon-bg-danger: var(--taav-danger-soft);
+  --taav-recommendation-card-icon-color-danger: var(--taav-danger-strong);
+  --taav-recommendation-card-icon-bg-info: var(--taav-info-soft);
+  --taav-recommendation-card-icon-color-info: var(--taav-info-strong);
+  --taav-recommendation-card-icon-size-sm: 40px;
+  --taav-recommendation-card-icon-size-md: 48px;
+  --taav-recommendation-card-icon-size-lg: 56px;
+  --taav-recommendation-card-icon-glyph-size: 24px;
+  --taav-recommendation-card-icon-radius: var(--taav-radius-lg);
+  --taav-recommendation-card-action-color: var(--taav-brand-strong);
+  --taav-recommendation-card-action-color-neutral: var(--taav-text-subtle);
+  --taav-recommendation-card-action-hover-color: var(--taav-brand);
+  --taav-recommendation-card-action-icon-size: 18px;
+  --taav-recommendation-card-shadow: var(--taav-shadow-xs);
+  --taav-recommendation-card-disabled-opacity: 0.55;
+  --taav-recommendation-card-preview-bg-light: #f2f5f7;
+  --taav-recommendation-card-preview-bg-dark: #0a1018;
+  --taav-recommendation-card-preview-pattern-light: radial-gradient(circle at 20% 20%, rgba(148, 163, 184, 0.08), transparent 42%),
+    radial-gradient(circle at 80% 0%, rgba(20, 184, 166, 0.05), transparent 36%);
+  --taav-recommendation-card-preview-pattern-dark: radial-gradient(circle at 20% 20%, rgba(56, 189, 248, 0.06), transparent 42%),
+    radial-gradient(circle at 80% 0%, rgba(20, 184, 166, 0.05), transparent 36%);
+
+  --taav-scroll-thumb: rgba(148, 163, 184, 0.28);
+  --taav-scroll-track: transparent;
+  --taav-scroll-thumb-hover: rgba(148, 163, 184, 0.42);
+  --taav-scroll-size: 5px;
   --taav-stats-value-sm: var(--taav-text-xl);
   --taav-stats-value-md: var(--taav-text-2xl);
   --taav-stats-value-lg: var(--taav-text-3xl);
@@ -502,4 +873,329 @@
 
   --taav-focus-ring: 0 0 0 3px color-mix(in srgb, var(--taav-brand) 32%, transparent);
   --taav-focus-ring-danger: 0 0 0 3px color-mix(in srgb, var(--taav-danger) 32%, transparent);
+  --taav-choice-chip-selected-bg: rgba(45, 212, 191, 0.2);
+  --taav-choice-chip-selected-border: transparent;
+  --taav-choice-chip-selected-text: var(--taav-text-strong);
+  --taav-choice-chip-selected-icon: var(--taav-text-strong);
+  --taav-choice-chip-hover-bg: #162032;
+
+  --taav-business-nav-path-bg: var(--taav-surface);
+  --taav-business-nav-path-border: var(--taav-border-subtle);
+  --taav-business-nav-path-text: var(--taav-text-muted);
+  --taav-business-nav-path-text-hover: var(--taav-text-body);
+  --taav-business-nav-path-text-current: var(--taav-text-strong);
+  --taav-business-nav-path-separator: var(--taav-text-subtle);
+
+  --taav-module-card-surface: #0f172a;
+  --taav-module-card-surface-hover: #131d2e;
+  --taav-module-card-surface-selected: #152030;
+  --taav-module-card-border: rgba(148, 163, 184, 0.16);
+  --taav-module-card-border-hover: rgba(148, 163, 184, 0.28);
+  --taav-module-card-border-selected: rgba(45, 212, 191, 0.42);
+  --taav-module-card-border-incomplete: rgba(251, 191, 36, 0.28);
+  --taav-module-card-ring-selected: rgba(45, 212, 191, 0.2);
+  --taav-module-card-shadow: 0 1px 2px rgba(0, 0, 0, 0.28);
+  --taav-module-card-shadow-hover: 0 6px 20px rgba(0, 0, 0, 0.32);
+  --taav-module-card-shadow-selected: 0 6px 20px rgba(0, 0, 0, 0.28);
+  --taav-module-card-header-bg: #111c2b;
+  --taav-module-card-header-border: rgba(148, 163, 184, 0.1);
+  --taav-module-card-header-pattern-geometric: linear-gradient(160deg, #0d1520 0%, #111c2b 34%, #0a121c 68%, #152030 100%);
+  --taav-module-card-header-pattern-subtle: linear-gradient(180deg, #111c2b 0%, #0d1520 100%);
+  --taav-module-card-description: var(--taav-text-muted);
+  --taav-module-card-title: var(--taav-text-strong);
+  --taav-module-card-arrow: var(--taav-text-muted);
+
+  --taav-business-intro-card-surface: #0f172a;
+  --taav-business-intro-card-surface-soft: #111c2b;
+  --taav-business-intro-card-border: rgba(148, 163, 184, 0.16);
+  --taav-business-intro-card-border-hover: rgba(148, 163, 184, 0.28);
+  --taav-business-intro-card-title: var(--taav-text-strong);
+  --taav-business-intro-card-description: var(--taav-text-muted);
+  --taav-business-intro-card-icon-bg: rgba(45, 212, 191, 0.14);
+  --taav-business-intro-card-icon-color: #5eead4;
+  --taav-business-intro-card-icon-bg-neutral: rgba(148, 163, 184, 0.12);
+  --taav-business-intro-card-icon-color-neutral: #94a3b8;
+  --taav-business-intro-card-action-color: var(--taav-text-muted);
+  --taav-business-intro-card-action-hover-bg: rgba(148, 163, 184, 0.1);
+  --taav-business-intro-card-action-hover-color: var(--taav-text-body);
+  --taav-business-intro-card-shadow: 0 1px 2px rgba(0, 0, 0, 0.28);
+  --taav-business-intro-card-hub-surface: radial-gradient(circle at top right, rgba(45, 212, 191, 0.14), transparent 34%),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.92), rgba(15, 23, 42, 0.78));
+  --taav-business-intro-card-hub-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 16px 36px rgba(2, 6, 23, 0.18);
+  --taav-business-intro-card-hub-pattern-opacity: 0.16;
+  --taav-business-intro-card-hub-pattern: repeating-linear-gradient(-32deg, rgba(255, 255, 255, 0.05) 0, rgba(255, 255, 255, 0.05) 1px, transparent 1px, transparent 12px),
+    radial-gradient(circle at 18% 22%, rgba(56, 189, 248, 0.18), transparent 24%),
+    radial-gradient(circle at 82% 78%, rgba(20, 184, 166, 0.16), transparent 28%);
+  --taav-business-intro-card-hub-content-gap: var(--taav-space-3);
+  --taav-business-intro-card-eyebrow-border: rgba(34, 211, 238, 0.22);
+  --taav-business-intro-card-eyebrow-bg: rgba(8, 145, 178, 0.12);
+  --taav-business-intro-card-eyebrow-text: #67e8f9;
+  --taav-business-intro-card-badge-border: rgba(148, 163, 184, 0.16);
+  --taav-business-intro-card-badge-bg: rgba(255, 255, 255, 0.04);
+  --taav-business-intro-card-badge-text: #cbd5e1;
+  --taav-business-intro-card-footnote-border: rgba(255, 255, 255, 0.06);
+  --taav-business-intro-card-footnote-bg: rgba(255, 255, 255, 0.03);
+  --taav-business-intro-card-footnote-text: #94a3b8;
+
+  --taav-activation-switch-border: rgba(148, 163, 184, 0.2);
+  --taav-activation-switch-track-bg: #1e293b;
+  --taav-activation-switch-active-bg: #14b8a6;
+  --taav-activation-switch-inactive-bg: #64748b;
+  --taav-activation-switch-inactive-hover-bg: #78859a;
+
+  --taav-details-link-text: #94a3b8;
+  --taav-details-link-text-hover: #cbd5e1;
+  --taav-details-link-underline: rgba(148, 163, 184, 0.45);
+  --taav-details-link-underline-hover: rgba(203, 213, 225, 0.65);
+
+  --taav-recommendation-card-surface: #0f172a;
+  --taav-recommendation-card-surface-soft: #111c2b;
+  --taav-recommendation-card-border: rgba(148, 163, 184, 0.16);
+  --taav-recommendation-card-title: var(--taav-text-strong);
+  --taav-recommendation-card-description: var(--taav-text-muted);
+  --taav-recommendation-card-icon-bg: rgba(45, 212, 191, 0.14);
+  --taav-recommendation-card-icon-color: #5eead4;
+  --taav-recommendation-card-action-color: #5eead4;
+  --taav-recommendation-card-action-hover-color: #2dd4bf;
+  --taav-recommendation-card-shadow: 0 1px 2px rgba(0, 0, 0, 0.28);
+}
+
+/* ─── TaavUI scroll area utilities (sidebar nav, panels) ─── */
+.taav-scrollarea {
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--taav-scroll-thumb) var(--taav-scroll-track);
+}
+
+.taav-scrollarea--subtle {
+  scrollbar-color: var(--taav-business-sidebar-scroll-thumb) var(--taav-business-sidebar-scroll-track);
+}
+
+.taav-scrollarea--subtle::-webkit-scrollbar {
+  width: var(--taav-scroll-size);
+  height: var(--taav-scroll-size);
+}
+
+.taav-scrollarea--subtle::-webkit-scrollbar-track {
+  background: var(--taav-business-sidebar-scroll-track);
+}
+
+.taav-scrollarea--subtle::-webkit-scrollbar-thumb {
+  background: var(--taav-business-sidebar-scroll-thumb);
+  border-radius: 999px;
+}
+
+.taav-scrollarea--subtle::-webkit-scrollbar-thumb:hover {
+  background: var(--taav-business-sidebar-scroll-thumb-hover);
+}
+
+.taav-scrollarea--minimal {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+.taav-scrollarea--minimal:hover,
+.taav-scrollarea--minimal:focus-within {
+  scrollbar-color: var(--taav-scroll-minimal-thumb) var(--taav-scroll-minimal-track);
+}
+
+.taav-scrollarea--minimal::-webkit-scrollbar {
+  width: var(--taav-scroll-minimal-size);
+  height: var(--taav-scroll-minimal-size);
+}
+
+.taav-scrollarea--minimal::-webkit-scrollbar-track {
+  background: var(--taav-scroll-minimal-track);
+}
+
+.taav-scrollarea--minimal::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 999px;
+}
+
+.taav-scrollarea--minimal:hover::-webkit-scrollbar-thumb,
+.taav-scrollarea--minimal:focus-within::-webkit-scrollbar-thumb {
+  background: var(--taav-scroll-minimal-thumb);
+}
+
+.taav-scrollarea--minimal:hover::-webkit-scrollbar-thumb:hover,
+.taav-scrollarea--minimal:focus-within::-webkit-scrollbar-thumb:hover {
+  background: var(--taav-scroll-minimal-thumb-hover);
+}
+
+.taav-sidebar-scrollarea {
+  scrollbar-gutter: stable;
+}
+
+.taav-scrollarea--hidden {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.taav-scrollarea--hidden::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/* ─── TaavUI module card header patterns ─── */
+.taav-module-card-header-pattern--geometric::before,
+.taav-module-card-header-pattern--subtle::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 1;
+}
+
+.taav-module-card-header-pattern--geometric::before {
+  background:
+    linear-gradient(125deg, transparent 42%, rgba(255, 255, 255, 0.08) 42%, rgba(255, 255, 255, 0.08) 48%, transparent 48%),
+    linear-gradient(305deg, transparent 58%, rgba(0, 0, 0, 0.05) 58%, rgba(0, 0, 0, 0.05) 64%, transparent 64%),
+    var(--taav-module-card-header-pattern-geometric);
+}
+
+.taav-module-card-header-pattern--subtle::before {
+  background: var(--taav-module-card-header-pattern-subtle);
+}
+
+[data-taav-theme='dark'] .taav-module-card-header-pattern--geometric::before {
+  background:
+    linear-gradient(125deg, transparent 42%, rgba(255, 255, 255, 0.04) 42%, rgba(255, 255, 255, 0.04) 48%, transparent 48%),
+    linear-gradient(305deg, transparent 58%, rgba(0, 0, 0, 0.22) 58%, rgba(0, 0, 0, 0.22) 64%, transparent 64%),
+    var(--taav-module-card-header-pattern-geometric);
+}
+
+[data-taav-module-card-theme='light'] {
+  --taav-module-card-surface: #ffffff;
+  --taav-module-card-surface-hover: #fbfcfd;
+  --taav-module-card-surface-selected: #f8fafc;
+  --taav-module-card-border: rgba(15, 23, 42, 0.1);
+  --taav-module-card-border-hover: rgba(15, 23, 42, 0.16);
+  --taav-module-card-border-selected: rgba(20, 184, 166, 0.42);
+  --taav-module-card-border-incomplete: rgba(245, 158, 11, 0.28);
+  --taav-module-card-ring-selected: rgba(20, 184, 166, 0.22);
+  --taav-module-card-shadow: var(--taav-shadow-xs);
+  --taav-module-card-shadow-hover: var(--taav-shadow-sm);
+  --taav-module-card-shadow-selected: var(--taav-shadow-sm);
+  --taav-module-card-header-bg: #eef1f4;
+  --taav-module-card-header-border: rgba(15, 23, 42, 0.06);
+  --taav-module-card-header-pattern-geometric: linear-gradient(160deg, #f3f5f7 0%, #e8ecf0 34%, #f7f9fb 68%, #e2e8ee 100%);
+  --taav-module-card-header-pattern-subtle: linear-gradient(180deg, #f5f7f9 0%, #eef1f4 100%);
+  --taav-module-card-description: #64748b;
+  --taav-module-card-title: #0f172a;
+  --taav-module-card-arrow: #94a3b8;
+}
+
+[data-taav-module-card-theme='dark'] {
+  --taav-module-card-surface: #0f172a;
+  --taav-module-card-surface-hover: #131d2e;
+  --taav-module-card-surface-selected: #152030;
+  --taav-module-card-border: rgba(148, 163, 184, 0.16);
+  --taav-module-card-border-hover: rgba(148, 163, 184, 0.28);
+  --taav-module-card-border-selected: rgba(45, 212, 191, 0.42);
+  --taav-module-card-border-incomplete: rgba(251, 191, 36, 0.28);
+  --taav-module-card-ring-selected: rgba(45, 212, 191, 0.2);
+  --taav-module-card-shadow: 0 1px 2px rgba(0, 0, 0, 0.28);
+  --taav-module-card-shadow-hover: 0 6px 20px rgba(0, 0, 0, 0.32);
+  --taav-module-card-shadow-selected: 0 6px 20px rgba(0, 0, 0, 0.28);
+  --taav-module-card-header-bg: #111c2b;
+  --taav-module-card-header-border: rgba(148, 163, 184, 0.1);
+  --taav-module-card-header-pattern-geometric: linear-gradient(160deg, #0d1520 0%, #111c2b 34%, #0a121c 68%, #152030 100%);
+  --taav-module-card-header-pattern-subtle: linear-gradient(180deg, #111c2b 0%, #0d1520 100%);
+  --taav-module-card-description: #94a3b8;
+  --taav-module-card-title: #f8fafc;
+  --taav-module-card-arrow: #94a3b8;
+}
+
+[data-taav-business-intro-card-theme='light'] {
+  --taav-business-intro-card-surface: #ffffff;
+  --taav-business-intro-card-surface-soft: #f8fafb;
+  --taav-business-intro-card-border: rgba(15, 23, 42, 0.1);
+  --taav-business-intro-card-border-hover: rgba(15, 23, 42, 0.16);
+  --taav-business-intro-card-title: #0f172a;
+  --taav-business-intro-card-description: #64748b;
+  --taav-business-intro-card-icon-bg: rgba(20, 184, 166, 0.12);
+  --taav-business-intro-card-icon-color: #0f766e;
+  --taav-business-intro-card-action-color: #94a3b8;
+  --taav-business-intro-card-action-hover-bg: rgba(15, 23, 42, 0.05);
+  --taav-business-intro-card-action-hover-color: #334155;
+  --taav-business-intro-card-shadow: var(--taav-shadow-xs);
+}
+
+[data-taav-business-intro-card-theme='dark'] {
+  --taav-business-intro-card-surface: #0f172a;
+  --taav-business-intro-card-surface-soft: #111c2b;
+  --taav-business-intro-card-border: rgba(148, 163, 184, 0.16);
+  --taav-business-intro-card-border-hover: rgba(148, 163, 184, 0.28);
+  --taav-business-intro-card-title: #f8fafc;
+  --taav-business-intro-card-description: #94a3b8;
+  --taav-business-intro-card-icon-bg: rgba(45, 212, 191, 0.14);
+  --taav-business-intro-card-icon-color: #5eead4;
+  --taav-business-intro-card-action-color: #94a3b8;
+  --taav-business-intro-card-action-hover-bg: rgba(148, 163, 184, 0.1);
+  --taav-business-intro-card-action-hover-color: #e2e8f0;
+  --taav-business-intro-card-shadow: 0 1px 2px rgba(0, 0, 0, 0.28);
+}
+
+[data-taav-business-recommendation-card-theme='light'] {
+  --taav-recommendation-card-surface: #ffffff;
+  --taav-recommendation-card-surface-soft: #f8fafb;
+  --taav-recommendation-card-border: rgba(15, 23, 42, 0.1);
+  --taav-recommendation-card-title: #0f172a;
+  --taav-recommendation-card-description: #64748b;
+  --taav-recommendation-card-icon-bg: rgba(20, 184, 166, 0.12);
+  --taav-recommendation-card-icon-color: #0f766e;
+  --taav-recommendation-card-action-color: #0f766e;
+  --taav-recommendation-card-action-hover-color: #14b8a6;
+  --taav-recommendation-card-shadow: var(--taav-shadow-xs);
+  --taav-details-link-text: #94a3b8;
+  --taav-details-link-text-hover: #64748b;
+}
+
+[data-taav-business-recommendation-card-theme='dark'] {
+  --taav-recommendation-card-surface: #0f172a;
+  --taav-recommendation-card-surface-soft: #111c2b;
+  --taav-recommendation-card-border: rgba(148, 163, 184, 0.16);
+  --taav-recommendation-card-title: #f8fafc;
+  --taav-recommendation-card-description: #94a3b8;
+  --taav-recommendation-card-icon-bg: rgba(45, 212, 191, 0.14);
+  --taav-recommendation-card-icon-color: #5eead4;
+  --taav-recommendation-card-action-color: #5eead4;
+  --taav-recommendation-card-action-hover-color: #2dd4bf;
+  --taav-recommendation-card-shadow: 0 1px 2px rgba(0, 0, 0, 0.28);
+  --taav-details-link-text: #94a3b8;
+  --taav-details-link-text-hover: #cbd5e1;
+}
+
+[data-taav-business-recommendation-card-theme='light'] {
+  --taav-recommendation-card-surface: #ffffff;
+  --taav-recommendation-card-surface-soft: #f8fafb;
+  --taav-recommendation-card-border: rgba(15, 23, 42, 0.1);
+  --taav-recommendation-card-title: #0f172a;
+  --taav-recommendation-card-description: #64748b;
+  --taav-recommendation-card-icon-bg: rgba(20, 184, 166, 0.12);
+  --taav-recommendation-card-icon-color: #0f766e;
+  --taav-recommendation-card-action-color: #0f766e;
+  --taav-recommendation-card-action-hover-color: #14b8a6;
+  --taav-recommendation-card-shadow: var(--taav-shadow-xs);
+  --taav-details-link-text: #94a3b8;
+  --taav-details-link-text-hover: #64748b;
+}
+
+[data-taav-business-recommendation-card-theme='dark'] {
+  --taav-recommendation-card-surface: #0f172a;
+  --taav-recommendation-card-surface-soft: #111c2b;
+  --taav-recommendation-card-border: rgba(148, 163, 184, 0.16);
+  --taav-recommendation-card-title: #f8fafc;
+  --taav-recommendation-card-description: #94a3b8;
+  --taav-recommendation-card-icon-bg: rgba(45, 212, 191, 0.14);
+  --taav-recommendation-card-icon-color: #5eead4;
+  --taav-recommendation-card-action-color: #5eead4;
+  --taav-recommendation-card-action-hover-color: #2dd4bf;
+  --taav-recommendation-card-shadow: 0 1px 2px rgba(0, 0, 0, 0.28);
+  --taav-details-link-text: #94a3b8;
+  --taav-details-link-text-hover: #cbd5e1;
 }

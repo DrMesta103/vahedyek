@@ -18,11 +18,8 @@ import { ensureGlobalDefaultCalendar } from './calendar-defaults';
 import { getOfficialHolidaysForYear } from './calendar-official-holidays';
 import { expandCalendarEventDates, normalizePersianDateInput, parseCalendarStoredEvents } from './calendar-events';
 import {
-  CALENDAR_FRIDAY_HOLIDAY_TYPE,
   getCalendarHolidayTypeLabel,
-  isPersianFridayDate,
   resolveCalendarEventTitle,
-  resolveHolidayTypeForDate,
   type CalendarHolidayType,
 } from './calendar-event-types';
 import { countCalendarHolidayDays } from './calendar-grid';
@@ -770,10 +767,23 @@ export async function deleteCalendarAction(formData: FormData) {
   const id = value(formData, 'id');
   const current = await prisma.calendar.findFirst({
     where: { id, tenantId },
-    select: { id: true, _count: { select: { policies: true } } },
+    select: {
+      id: true,
+      _count: { select: { policies: true } },
+      policies: {
+        select: {
+          _count: {
+            select: {
+              workGroups: true,
+            },
+          },
+        },
+      },
+    },
   });
   if (!current) throw new Error('Calendar not found for active tenant.');
-  if (current._count.policies > 0) {
+  const workGroupCount = current.policies.reduce((total, policy) => total + policy._count.workGroups, 0);
+  if (current._count.policies > 0 || workGroupCount > 0) {
     throw new Error(DELETE_GUARD_MESSAGES.calendarUsed);
   }
   await prisma.calendar.deleteMany({ where: { id, tenantId } });
@@ -888,24 +898,12 @@ export async function addCalendarEventsAction(data: {
       throw new Error('نوع تعطیلی را انتخاب کنید.');
     }
 
-    if (data.singleDate) {
-      const norm = normalizePersianDateInput(data.singleDate);
-      if (isPersianFridayDate(norm)) {
-        if (data.holidayType !== 'friday') {
-          throw new Error('برای روز جمعه فقط «تعطیلی جمعه» مجاز است؛ رسمی یا سازمانی انتخاب نشود.');
-        }
-      } else if (data.holidayType !== 'official' && data.holidayType !== 'organizational') {
-        throw new Error('برای این روز باید نوع تعطیلی «رسمی» یا «سازمانی» را مشخص کنید.');
-      }
-    } else {
-      if (data.holidayType === 'friday') {
-        const allFriday = dates.every((d) => isPersianFridayDate(normalizePersianDateInput(d)));
-        if (!allFriday) {
-          throw new Error('نوع «تعطیلی جمعه» فقط وقتی مجاز است که همهٔ روزهای انتخاب‌شده جمعه باشند.');
-        }
-      } else if (data.holidayType !== 'official' && data.holidayType !== 'organizational') {
-        throw new Error('نوع تعطیلی را مشخص کنید.');
-      }
+    if (
+      data.holidayType !== 'official' &&
+      data.holidayType !== 'organizational' &&
+      data.holidayType !== 'friday'
+    ) {
+      throw new Error('نوع تعطیلی را مشخص کنید.');
     }
   }
 
@@ -918,13 +916,7 @@ export async function addCalendarEventsAction(data: {
     .filter((date) => !existingDates.has(date))
     .map((date) => {
       const normalizedDate = normalizePersianDateInput(date);
-      const baseHolidayType: 'official' | 'organizational' =
-        data.holidayType === 'organizational' ? 'organizational' : 'official';
-      const resolvedHolidayType = data.isHoliday
-        ? data.holidayType === 'friday'
-          ? 'friday'
-          : resolveHolidayTypeForDate(normalizedDate, baseHolidayType)
-        : undefined;
+      const resolvedHolidayType = data.isHoliday ? data.holidayType : undefined;
 
       const resolvedTitle = resolveCalendarEventTitle({
         title: data.title,
@@ -1223,7 +1215,31 @@ export async function createCalendarDraftFromDefaultAction(data: {
   includeOfficialEvents?: boolean;
 }) {
   const tenantId = await getTenantId();
-  const source = await ensureGlobalDefaultCalendar(data.yearLabel);
+  const title = data.title.trim();
+  const yearLabel = data.yearLabel.trim();
+
+  if (!title) {
+    throw new Error('عنوان تقویم را وارد کنید.');
+  }
+
+  if (!yearLabel) {
+    throw new Error('سال تقویم را انتخاب کنید.');
+  }
+
+  const duplicate = await prisma.calendar.findFirst({
+    where: {
+      tenantId,
+      title,
+      yearLabel,
+    },
+    select: { id: true },
+  });
+
+  if (duplicate) {
+    throw new Error('تقویمی با این عنوان یا سال قبلاً ثبت شده است.');
+  }
+
+  const source = await ensureGlobalDefaultCalendar(yearLabel);
   const includeOfficialEvents = data.includeOfficialEvents === true;
   const templateWeekends = Array.isArray(source.weekends) ? (source.weekends as string[]) : ['جمعه'];
   const templateHolidays = Array.isArray(source.singleHolidays)
@@ -1233,16 +1249,16 @@ export async function createCalendarDraftFromDefaultAction(data: {
   const singleHolidays = includeOfficialEvents
     ? templateHolidays.length > 0
       ? templateHolidays
-      : getOfficialHolidaysForYear(data.yearLabel)
+      : getOfficialHolidaysForYear(yearLabel)
     : [];
   const holidayCount = weekends.length + singleHolidays.length;
 
   const draft = await prisma.calendar.create({
     data: {
       tenantId,
-      title: data.title,
+      title,
       description: data.description?.trim() || null,
-      yearLabel: data.yearLabel,
+      yearLabel,
       startDate: source.startDate,
       endDate: source.endDate,
       weekends: jsonValue(weekends as any),

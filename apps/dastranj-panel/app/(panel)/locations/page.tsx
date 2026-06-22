@@ -1,7 +1,6 @@
 import { listLocations } from '../../lib/data';
 import { ModuleAddTile } from '../../components/module-page/ModuleAddTile';
 import { ModulePageHeader } from '../../components/module-page/ModulePageHeader';
-import { businessSettingsBreadcrumbs } from '../../components/module-page/module-breadcrumbs';
 import { LocationWorkplaceCard } from './_components/LocationWorkplaceCard';
 
 export default async function LocationsPage() {
@@ -10,7 +9,6 @@ export default async function LocationsPage() {
   return (
     <div className="page-stack module-page" dir="rtl" lang="fa">
       <ModulePageHeader
-        breadcrumbs={businessSettingsBreadcrumbs('محل‌های کار')}
         title="محل‌های کار"
         subtitle="مدیریت محل‌های جغرافیایی مجاز برای ثبت تردد، شیفت‌ها و گروه‌های کاری"
         addHref="/locations/new"

@@ -2,17 +2,24 @@ export type LabNavItem = {
   href: string;
   label: string;
   badge?: string;
+  description?: string;
+  keywords?: string[];
 };
 
 export const LAB_MAIN_NAV: LabNavItem[] = [
   { href: '/', label: 'خانه' },
-  { href: '/getting-started', label: 'شروع سریع' },
   { href: '/components', label: 'Primitives' },
   { href: '/forms', label: 'Forms' },
   { href: '/overlays', label: 'Overlays' },
   { href: '/navigation', label: 'Navigation' },
   { href: '/data-display', label: 'Data Display' },
   { href: '/layout', label: 'Layout' },
+  { href: '/business', label: 'Business' },
+];
+
+export const LAB_FOUNDATION_NAV: LabNavItem[] = [
+  { href: '/getting-started', label: 'شروع سریع' },
+  { href: '/foundation/principles', label: 'اصول', badge: 'Principles' },
   { href: '/tokens', label: 'توکن‌ها' },
   { href: '/roadmap', label: 'نقشه راه' },
 ];
@@ -27,6 +34,8 @@ export const LAB_COMPONENT_NAV: LabNavItem[] = [
 
 export const LAB_FORM_NAV: LabNavItem[] = [
   { href: '/forms/input', label: 'ورودی', badge: 'TaavInput' },
+  { href: '/forms/currency-input', label: 'ورودی مبلغ', badge: 'TaavCurrencyInput' },
+  { href: '/forms/percentage-input', label: 'ورودی درصد', badge: 'TaavPercentageInput' },
   { href: '/forms/textarea', label: 'متن چندخطی', badge: 'TaavTextarea' },
   { href: '/forms/select', label: 'انتخاب', badge: 'TaavSelect' },
   { href: '/forms/checkbox', label: 'چک‌باکس', badge: 'TaavCheckbox' },
@@ -35,6 +44,9 @@ export const LAB_FORM_NAV: LabNavItem[] = [
   { href: '/forms/segmented-control', label: 'سگمنت', badge: 'TaavSegmentedControl' },
   { href: '/forms/option-card', label: 'کارت گزینه', badge: 'TaavOptionCard' },
   { href: '/forms/form-field', label: 'فیلد فرم', badge: 'TaavFormField' },
+  { href: '/forms/field-block', label: 'بلوک فیلد', badge: 'TaavFieldBlock' },
+  { href: '/forms/field-grid', label: 'گرید فیلد', badge: 'TaavFieldGrid' },
+  { href: '/forms/choice-chip', label: 'چیپ انتخابی', badge: 'TaavChoiceChipGroup' },
 ];
 
 export const LAB_OVERLAY_NAV: LabNavItem[] = [
@@ -72,6 +84,44 @@ export const LAB_LAYOUT_NAV: LabNavItem[] = [
   { href: '/layout/progress-summary', label: 'خلاصه پیشرفت', badge: 'TaavProgressSummary' },
 ];
 
+export const LAB_BUSINESS_NAV: LabNavItem[] = [
+  {
+    href: '/business/sidebar',
+    label: 'سایدبار کسب‌وکار',
+    badge: 'TaavBusinessSidebar',
+    description: 'سایدبار ERP با nav path، tenant و quick actions',
+    keywords: ['sidebar', 'navigation', 'dastranj'],
+  },
+  {
+    href: '/business/intro-card',
+    label: 'کارت معرفی بخش',
+    badge: 'TaavBusinessIntroCard',
+    description: 'intro استاندارد و layout=hub برای مرکز تنظیمات کسب‌وکار',
+    keywords: ['hub', 'eyebrow', 'footnote', 'badge', 'تنظیمات کسب‌وکار', 'business settings'],
+  },
+  {
+    href: '/business/recommendation-card',
+    label: 'کارت پیشنهاد تنظیمات',
+    badge: 'TaavBusinessRecommendationCard',
+    description: 'تنظیم پیشنهادی با TaavActivationSwitch و لینک جزئیات',
+    keywords: ['activation', 'switch', 'recommendation', 'details link'],
+  },
+  {
+    href: '/business/module-card',
+    label: 'کارت ماژول',
+    badge: 'TaavModuleCard',
+    description: 'کارت navigation برای ماژول‌ها و مراحل راه‌اندازی',
+    keywords: ['setup', 'module', 'navigation card'],
+  },
+  {
+    href: '/business/module-card-grid',
+    label: 'گرید کارت ماژول',
+    badge: 'TaavModuleCardGrid',
+    description: 'چیدمان responsive کارت‌های TaavModuleCard',
+    keywords: ['grid', 'setup cards', 'two column'],
+  },
+];
+
 export const LAB_CATEGORIES = [
   {
     title: 'Primitives',
@@ -85,7 +135,7 @@ export const LAB_CATEGORIES = [
     titleFa: 'فرم‌ها',
     description: 'Text fields، form controls و field composition استاندارد',
     status: 'active' as const,
-    count: 13,
+    count: 18,
   },
   {
     title: 'Overlays',
@@ -119,20 +169,21 @@ export const LAB_CATEGORIES = [
     title: 'Business Components',
     titleFa: 'کامپوننت‌های کسب‌وکار',
     description: 'اجزای تخصصی DastRanj و VahedYek',
-    status: 'planned' as const,
-    count: 0,
+    status: 'active' as const,
+    count: 5,
   },
 ];
 
 export const LAB_STATUS_ITEMS = [
-  { key: 'foundation', label: 'Foundation', status: 'قرارداد مصرف', progress: 85 },
+  { key: 'foundation', label: 'Foundation', status: 'principles + refs', progress: 92 },
   { key: 'tokens', label: 'Tokens', status: 'form tokens', progress: 85 },
   { key: 'primitives', label: 'Primitives', status: '۵ کامپوننت', progress: 70 },
-  { key: 'forms', label: 'Forms P2', status: '۱۳ کامپوننت', progress: 75 },
+  { key: 'forms', label: 'Forms P2', status: '۱۶ کامپوننت', progress: 86 },
   { key: 'overlays', label: 'Overlays', status: '۴ primitive', progress: 70 },
   { key: 'navigation', label: 'Navigation', status: 'Tabs + Stepper', progress: 65 },
   { key: 'data-display', label: 'Data Display', status: '۹ کامپوننت', progress: 70 },
   { key: 'layout', label: 'Layout', status: '۹ الگو', progress: 75 },
-  { key: 'ui-lab', label: 'UI Lab', status: 'مستندات', progress: 90 },
+  { key: 'business', label: 'Business', status: 'IntroCard hub + ModuleCard + Sidebar', progress: 55 },
+  { key: 'ui-lab', label: 'UI Lab', status: 'مستندات', progress: 92 },
   { key: 'migration', label: 'Migration', status: 'شروع نشده', progress: 0 },
 ];

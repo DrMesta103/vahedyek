@@ -26,10 +26,21 @@ import {
 } from './calendar-shifts';
 import { prisma } from './prisma';
 import { listEmployeeImportJobsForTenant } from './employee-import-jobs';
+import { listClientStorageStates } from './client-storage-persistence';
 import { normalizeContractDraftTemplate, type ContractDraftTemplate } from './contract-draft-templates';
+import {
+  applyPayrollOverrides,
+  DEFAULT_PAYROLL_SETTINGS,
+  getPayrollSettingsStorageKey,
+  getPayrollSettingsYearsStorageKey,
+  getTenantPayrollSettingsStorageKey,
+  normalizePayrollOverrides,
+  normalizePayrollSettings,
+} from './payroll-business-settings';
 import type {
   QuickEmployeeAddMethod,
   QuickEmployeeImportJobSummary,
+  QuickSetupHolidayCoefficients,
   QuickEmployeeStatus,
   QuickSetupStep,
 } from '../(panel)/quick-setup/_components/quick-setup.types';
@@ -179,6 +190,81 @@ function normalizeQuickEmployeeAddMethod(value: unknown): QuickEmployeeAddMethod
     : null;
 }
 
+function getStorageValue(
+  storageStates: Array<{ storageKey: string; value: string }>,
+  storageKey: string,
+) {
+  return storageStates.find((item) => item.storageKey === storageKey)?.value ?? null;
+}
+
+async function getHolidayCoefficients(
+  tenantId: string,
+  year: number,
+): Promise<QuickSetupHolidayCoefficients> {
+  const storageStates = await listClientStorageStates(tenantId);
+  const yearsRaw = getStorageValue(storageStates, getPayrollSettingsYearsStorageKey());
+  const hasAdminYear =
+    yearsRaw &&
+    (() => {
+      try {
+        const parsed = JSON.parse(yearsRaw) as Array<{ year?: unknown }>;
+        return Array.isArray(parsed) && parsed.some((item) => Number(item?.year) === year);
+      } catch {
+        return false;
+      }
+    })();
+
+  const adminBaseRaw = getStorageValue(storageStates, getPayrollSettingsStorageKey(year));
+  const adminBase =
+    hasAdminYear && adminBaseRaw
+      ? normalizePayrollSettings(JSON.parse(adminBaseRaw))
+      : DEFAULT_PAYROLL_SETTINGS;
+
+  const tenantOverrideRaw = getStorageValue(
+    storageStates,
+    getTenantPayrollSettingsStorageKey(year, tenantId),
+  );
+  const legacyTenantRaw = getStorageValue(
+    storageStates,
+    getPayrollSettingsStorageKey(year, tenantId),
+  );
+  const tenantYearsRaw = getStorageValue(storageStates, getPayrollSettingsYearsStorageKey(tenantId));
+  const hasTenantYear =
+    tenantYearsRaw &&
+    (() => {
+      try {
+        const parsed = JSON.parse(tenantYearsRaw) as Array<{ year?: unknown }>;
+        return Array.isArray(parsed) && parsed.some((item) => Number(item?.year) === year);
+      } catch {
+        return false;
+      }
+    })();
+
+  const resolved =
+    tenantOverrideRaw
+      ? normalizePayrollSettings(
+          applyPayrollOverrides(adminBase, normalizePayrollOverrides(JSON.parse(tenantOverrideRaw))),
+        )
+      : legacyTenantRaw
+        ? normalizePayrollSettings(JSON.parse(legacyTenantRaw))
+        : adminBase;
+
+  return {
+    year,
+    weeklyRestDay: resolved.workTimePayRules.dayTypePaymentRules.weekly_rest_day.workedTimeCoefficient,
+    officialHoliday: resolved.workTimePayRules.dayTypePaymentRules.official_holiday.workedTimeCoefficient,
+    organizationalHoliday: resolved.workTimePayRules.dayTypePaymentRules.company_holiday.workedTimeCoefficient,
+    isConfigured: Boolean(tenantOverrideRaw || legacyTenantRaw || hasTenantYear),
+  };
+}
+
+async function getQuickSetupHolidayCoefficients(
+  tenantId: string,
+): Promise<QuickSetupHolidayCoefficients> {
+  const currentYear = getPersianPartsFromDate().year;
+  return getHolidayCoefficients(tenantId, currentYear);
+}
+
 function deriveQuickEmployeeStatus(item: { isActive: boolean; email: string | null; mobile1: string | null }) {
   if (!item.isActive) return 'pending_completion';
   if (item.email || item.mobile1) return 'registered';
@@ -254,7 +340,7 @@ export async function getQuickSetupChecklist() {
   const tenantId = await requireTenantId();
   const where = { tenantId };
 
-  const [profile, locationList, calendarList, policyList, employeeList, workGroupList, calendars, policies, employees, workGroups, defaultCalendarTemplate] = await Promise.all([
+  const [profile, locationList, calendarList, policyList, employeeList, workGroupList, calendars, policies, employees, workGroups, defaultCalendarTemplate, holidayCoefficients] = await Promise.all([
     getBusinessProfile(),
     listLocationsForTenant(tenantId, 10),
     prisma.calendar.findMany({ where, orderBy: { updatedAt: 'desc' }, take: 20 }),
@@ -266,6 +352,7 @@ export async function getQuickSetupChecklist() {
     prisma.employee.count({ where }),
     prisma.workGroup.count({ where }),
     getGlobalDefaultCalendarTemplate(),
+    getQuickSetupHolidayCoefficients(tenantId),
   ]);
   const employeeImportJobs = (await listEmployeeImportJobsForTenant(tenantId, 10)) as QuickEmployeeImportJobSummary[];
 
@@ -339,6 +426,7 @@ export async function getQuickSetupChecklist() {
     workGroupItems: workGroupList.map((item) => ({ id: item.id, title: item.title })),
     employeeImportJobs,
     defaultCalendarTemplate,
+    holidayCoefficients,
     tenantId,
     steps: [
       { key: 'location', title: 'محل کار اصلی', subtitle: 'ثبت محل کار اصلی و شعاع مجاز', done: Boolean(primaryLocation), href: '/locations/new', manageHref: '/locations', count: primaryLocation ? 1 : 0 },
@@ -428,7 +516,45 @@ export async function listShiftTemplates() {
 
 export async function listCalendars() {
   const tenantId = await requireTenantId();
-  return prisma.calendar.findMany({ where: { tenantId }, orderBy: { updatedAt: 'desc' } });
+  const rows = await prisma.calendar.findMany({
+    where: { tenantId },
+    orderBy: { updatedAt: 'desc' },
+    include: {
+      _count: {
+        select: {
+          policies: true,
+        },
+      },
+      policies: {
+        select: {
+          _count: {
+            select: {
+              workGroups: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  return rows.map((calendar) => {
+    const shifts = listCalendarShifts(calendar.shiftConfig);
+    const events = parseCalendarStoredEvents(calendar.singleHolidays);
+    const workGroupCount = calendar.policies.reduce((total, policy) => total + policy._count.workGroups, 0);
+    const otherEventCount = events.filter((item) => item.isHoliday === false).length;
+
+    return {
+      ...calendar,
+      shiftCount: shifts.length,
+      shiftTypes: [...new Set(shifts.map((item) => item.shiftType))],
+      eventCount: calendar.totalEventDays,
+      holidayEventCount: events.filter((item) => item.isHoliday !== false).length,
+      otherEventCount,
+      policyCount: calendar._count.policies,
+      workGroupCount,
+      isIncomplete: shifts.length === 0 || calendar.totalEventDays === 0,
+    };
+  });
 }
 
 function jsonArray<T>(value: unknown): T[] {
@@ -441,7 +567,25 @@ export async function getCalendarDetails(
 ) {
   const tenantId = await requireTenantId();
   const [calendar, shiftTemplateRows] = await Promise.all([
-    prisma.calendar.findFirst({ where: { id: calendarId, tenantId } }),
+    prisma.calendar.findFirst({
+      where: { id: calendarId, tenantId },
+      include: {
+        _count: {
+          select: {
+            policies: true,
+          },
+        },
+        policies: {
+          select: {
+            _count: {
+              select: {
+                workGroups: true,
+              },
+            },
+          },
+        },
+      },
+    }),
     prisma.shiftTemplate.findMany({ where: { tenantId, isActive: true }, orderBy: { updatedAt: 'desc' } }),
   ]);
   if (!calendar) return null;
@@ -467,6 +611,8 @@ export async function getCalendarDetails(
     normalizePersianDateInput(date),
   );
   const shiftCounts = countShiftsByType(shifts);
+  const policyCount = calendar._count.policies;
+  const workGroupCount = calendar.policies.reduce((total, policy) => total + policy._count.workGroups, 0);
 
   const start = parsePersianYmd(calendar.startDate);
   const end = parsePersianYmd(calendar.endDate);
@@ -497,6 +643,7 @@ export async function getCalendarDetails(
   });
 
   const yearNumber = Number(calendar.yearLabel.replace(/[^\d]/g, '')) || viewYear;
+  const holidayCoefficients = await getHolidayCoefficients(tenantId, yearNumber);
   const defaultSelectedDay =
     today.year === viewYear && today.month === viewMonth && isPersianYmdInRange(today, start, end)
       ? today.day
@@ -522,6 +669,7 @@ export async function getCalendarDetails(
     title: calendar.title,
     description: calendar.description,
     status: calendar.status,
+    isIncomplete: shifts.length === 0 || calendar.totalEventDays === 0,
     yearLabel: calendar.yearLabel,
     yearNumber,
     viewYear,
@@ -537,10 +685,13 @@ export async function getCalendarDetails(
     excludedShiftDates,
     weekendOverrideDates,
     shiftCount: shifts.length,
+    shiftTypes: [...new Set(shifts.map((item) => item.shiftType))],
     shiftLegend: CALENDAR_SHIFT_LEGEND.map((item) => ({ ...item, count: shiftCounts[item.key] })),
     eventCount: calendar.totalEventDays,
     holidayCount: calendar.holidayCount,
     otherEventCount: singleHolidays.filter((item) => item.isHoliday === false).length,
+    policyCount,
+    workGroupCount,
     gridLegend: [
       ...CALENDAR_SHIFT_LEGEND.map((item) => ({ label: item.label, color: item.color })),
       { label: 'تعطیلات', color: '#ef4444' },
@@ -553,6 +704,7 @@ export async function getCalendarDetails(
     prevMonth,
     nextMonth,
     shiftTemplates,
+    holidayCoefficients,
   };
 }
 

@@ -28,17 +28,9 @@ export default async function EmployeeWorkReportPage({
 
   if (!report) notFound();
 
-  const employeeName = `${report.employee.firstName} ${report.employee.lastName}`.trim();
-
   return (
     <div className="page-stack module-page employee-work-report-page" dir="rtl" lang="fa">
       <ModulePageHeader
-        breadcrumbs={[
-          { label: 'دسترنج', href: '/' },
-          { label: 'کارمندان', href: '/employees' },
-          { label: employeeName || 'جزئیات کارمند', href: `/employees/${id}` },
-          { label: 'گزارش کارکرد' },
-        ]}
         title="گزارش کارکرد"
         subtitle="گزارش ماهانه حضور، مرخصی، مأموریت، اضافه‌کاری و وضعیت تردد"
         titleHref={`/employees/${id}`}

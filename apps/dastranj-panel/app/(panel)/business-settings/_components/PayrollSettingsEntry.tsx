@@ -3,6 +3,7 @@
 import { CalendarDays, ChevronLeft, Eye, Plus, Search, Trash2, X, Pencil } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { TaavChoiceChipGroup, TaavFieldBlock, TaavInput } from '@repo/ui/taav/forms';
 import { PanelFormModal, PanelFormModalActions } from '../../../components/PanelFormModal';
 import { CardMenu } from '../../../components/CardMenu';
 import { ConfirmDialog } from '../../../components/ConfirmDialog';
@@ -186,44 +187,34 @@ function YearDialog({
       footer={<PanelFormModalActions submitLabel={submitLabel} onSubmit={submit} onCancel={onClose} />}
     >
       <form className="payroll-year-dialog-form" onSubmit={handleSubmit}>
-        <div className="calendar-create-field payroll-year-field">
-          <span>
-            سال <em>*</em>
-          </span>
+        <TaavFieldBlock label="سال" required>
           {selectableYears.every((item) => item.disabled) ? (
             <p className="payroll-year-empty-hint">همه سال‌های مجاز قبلاً ثبت شده‌اند.</p>
           ) : (
-            <div className="payroll-year-chips" role="radiogroup" aria-label="انتخاب سال">
-              {selectableYears.map((yearOption) => {
-                const isSelected = yearOption.year === Number(yearValue);
-                return (
-                  <label
-                    key={yearOption.year}
-                    className={`payroll-year-chip ${isSelected ? 'is-selected' : ''} ${yearOption.disabled ? 'is-disabled' : ''}`}
-                  >
-                    <input
-                      type="radio"
-                      name="payroll-year"
-                      value={yearOption.year}
-                      checked={isSelected}
-                      disabled={yearOption.disabled}
-                      onChange={() => {
-                        setYearValue(String(yearOption.year));
-                        setError(null);
-                      }}
-                    />
-                    <span className="payroll-year-chip-year">{yearOption.label}</span>
-                    {yearOption.relativeLabel ? <small>{yearOption.relativeLabel}</small> : null}
-                    {yearOption.disabled ? <small className="payroll-year-chip-badge">ثبت شده</small> : null}
-                  </label>
-                );
-              })}
-            </div>
+            <TaavChoiceChipGroup
+              ariaLabel="انتخاب سال"
+              options={selectableYears.map((yearOption) => ({
+                value: String(yearOption.year),
+                label: [
+                  yearOption.label,
+                  yearOption.relativeLabel,
+                  yearOption.disabled ? 'ثبت شده' : '',
+                ]
+                  .filter(Boolean)
+                  .join(' · '),
+                disabled: yearOption.disabled,
+              }))}
+              value={yearValue}
+              onValueChange={(next) => {
+                setYearValue(Array.isArray(next) ? next[0] ?? '' : next);
+                setError(null);
+              }}
+            />
           )}
-        </div>
-        <label className="calendar-create-field">
-          <span>عنوان نمایشی</span>
-          <input
+        </TaavFieldBlock>
+        <TaavFieldBlock label="عنوان نمایشی" htmlFor="payroll-year-display-title">
+          <TaavInput
+            id="payroll-year-display-title"
             type="text"
             value={draftTitle}
             placeholder="مثلا سال ۱۴۰۳"
@@ -232,7 +223,7 @@ function YearDialog({
               setError(null);
             }}
           />
-        </label>
+        </TaavFieldBlock>
       </form>
     </PanelFormModal>
   );

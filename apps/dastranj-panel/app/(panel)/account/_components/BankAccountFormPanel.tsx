@@ -14,10 +14,9 @@ import {
   type ProfileStore,
 } from '../profile.types';
 import { addBankAccount, fetchProfilePayload, fetchProfileStore, loadProfileStore, persistProfileStore, updateBankAccount } from '../profileStorage';
-import { BUSINESS_PROFILE_BANK_ACCOUNTS, BUSINESS_PROFILE_ROOT, getSelectTenantPath } from '../routes';
-import { Breadcrumbs, LoadingCard } from './account-ui';
+import { BUSINESS_PROFILE_BANK_ACCOUNTS, getSelectTenantPath } from '../routes';
+import { LoadingCard } from './account-ui';
 import {
-  ProfileBackLink,
   ProfileCard,
   ProfileChipGroup,
   ProfileHeading,
@@ -287,16 +286,6 @@ export default function BankAccountFormPanel({ accountId }: { accountId?: string
 
   return (
     <>
-      <Breadcrumbs
-        items={[
-          { label: 'خانه', href: BUSINESS_PROFILE_ROOT },
-          { label: 'تنظیمات کسب‌وکار', href: '/business-settings' },
-          { label: 'پروفایل کسب‌وکار', href: BUSINESS_PROFILE_ROOT },
-          { label: 'حساب بانکی', href: BUSINESS_PROFILE_BANK_ACCOUNTS },
-          { label: accountId ? 'ویرایش' : 'افزودن' },
-        ]}
-      />
-
       {notice ? (
         <div className="profile-summary-card border-rose-500/20 bg-rose-500/10 text-rose-100" role="status" aria-live="polite">
           {notice}
@@ -304,15 +293,14 @@ export default function BankAccountFormPanel({ accountId }: { accountId?: string
       ) : null}
 
       <ProfilePageShell className="bank-account-reference-page">
-        <div className="bank-account-form-toolbar">
-          <ProfileBackLink href={returnTo || BUSINESS_PROFILE_BANK_ACCOUNTS}>بازگشت به فهرست حساب‌ها</ProfileBackLink>
-          {returnTo ? (
+        {returnTo ? (
+          <div className="bank-account-form-toolbar">
             <Link href={returnTo} className="bank-account-return-link">
               <ArrowRight className="h-4 w-4" />
               بازگشت به ثبت فیش
             </Link>
-          ) : null}
-        </div>
+          </div>
+        ) : null}
 
         <ProfileCard className="bank-account-form-card">
           <ProfileHeading

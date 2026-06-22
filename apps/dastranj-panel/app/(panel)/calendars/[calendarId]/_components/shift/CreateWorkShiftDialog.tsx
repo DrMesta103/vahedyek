@@ -3,10 +3,10 @@
 import dynamic from 'next/dynamic';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { ConfirmDialog } from '../../../../../components/ConfirmDialog';
 import { MinimalScroll } from '../../../../components/MinimalScroll';
 import type { CalendarShiftType } from '../../../../../lib/calendar-shifts';
 import type { ShiftTemplatePickerItem } from '../../../../../lib/shift-template-picker';
-import { RotateShiftComingSoonModal } from './RotateShiftComingSoonModal';
 import { SHIFT_TYPE_CARDS } from './shift-type-cards';
 import type { CalendarShiftDayContext, CalendarShiftWizardCalendar } from './types';
 
@@ -41,7 +41,6 @@ export function CreateWorkShiftDialog({
 }: CreateWorkShiftDialogProps) {
   const [selectedType, setSelectedType] = useState<CalendarShiftType | null>(null);
   const [changeTypeConfirmOpen, setChangeTypeConfirmOpen] = useState(false);
-  const [rotateComingSoonOpen, setRotateComingSoonOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const ignoreBackdropClickRef = useRef(false);
 
@@ -53,7 +52,6 @@ export function CreateWorkShiftDialog({
     if (!open) {
       setSelectedType(null);
       setChangeTypeConfirmOpen(false);
-      setRotateComingSoonOpen(false);
       return;
     }
 
@@ -67,10 +65,6 @@ export function CreateWorkShiftDialog({
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        if (rotateComingSoonOpen) {
-          setRotateComingSoonOpen(false);
-          return;
-        }
         if (changeTypeConfirmOpen) {
           setChangeTypeConfirmOpen(false);
           return;
@@ -90,14 +84,13 @@ export function CreateWorkShiftDialog({
       document.body.style.overflow = previousOverflow;
       window.removeEventListener('keydown', onKeyDown);
     };
-  }, [changeTypeConfirmOpen, open, onClose, rotateComingSoonOpen, selectedType]);
+  }, [changeTypeConfirmOpen, open, onClose, selectedType]);
 
   if (!open || !mounted) return null;
 
   const handleClose = () => {
     setSelectedType(null);
     setChangeTypeConfirmOpen(false);
-    setRotateComingSoonOpen(false);
     onClose();
   };
 
@@ -109,12 +102,11 @@ export function CreateWorkShiftDialog({
   const handleSaved = () => {
     setSelectedType(null);
     setChangeTypeConfirmOpen(false);
-    setRotateComingSoonOpen(false);
     onSaved();
   };
 
   const selectedCard = SHIFT_TYPE_CARDS.find((item) => item.id === selectedType);
-  const visibleShiftTypes = dayContext ? SHIFT_TYPE_CARDS.filter((item) => item.id !== 'rotate') : SHIFT_TYPE_CARDS;
+  const visibleShiftTypes = SHIFT_TYPE_CARDS.filter((item) => item.id === 'fixed' || item.id === 'float-day' || item.id === 'float-abs' || item.id === 'split');
 
   return createPortal(
     <div
@@ -132,11 +124,11 @@ export function CreateWorkShiftDialog({
         onMouseDown={(event) => event.stopPropagation()}
       >
         <header className="calendar-shift-modal-head">
-          <h2 id="calendar-shift-modal-title">{dayContext ? 'افزودن شیفت برای روز' : 'ایجاد شیفت کاری'}</h2>
+          <h2 id="calendar-shift-modal-title">{dayContext ? 'افزودن شیفت برای روز انتخاب‌شده' : 'ایجاد شیفت کاری'}</h2>
           <p>
             {selectedCard
               ? dayContext
-                ? `جزئیات شیفت را برای ${dayContext.date} تکمیل کنید.`
+                ? 'این شیفت فقط برای تاریخ انتخاب‌شده ثبت می‌شود و روی روزهای دیگر تقویم اثری ندارد.'
                 : 'جزئیات شیفت را تکمیل کنید.'
               : dayContext
                 ? `نوع شیفت را برای ${dayContext.date} انتخاب کنید.`
@@ -144,8 +136,7 @@ export function CreateWorkShiftDialog({
           </p>
           {dayContext?.isHoliday ? (
             <p className="calendar-shift-holiday-hint">
-              این روز تعطیل است. ثبت شیفت مجاز است، اما در صورت کارکرد ممکن است ضریب تعطیل هفتگی در حقوق و دستمزد
-              اعمال شود.
+              این روز تعطیل است. اگر شیفتی ثبت شود، قبل از ذخیره درباره ثبت کار در روز تعطیل به شما هشدار داده می‌شود.
             </p>
           ) : null}
         </header>
@@ -173,7 +164,7 @@ export function CreateWorkShiftDialog({
                   setChangeTypeConfirmOpen(true);
                 }}
               >
-                تغییر
+                تغییر نوع شیفت
               </button>
             </div>
 
@@ -200,19 +191,19 @@ export function CreateWorkShiftDialog({
                   <button
                     key={item.id}
                     type="button"
-                    className={`calendar-shift-type-chip is-${item.tone}`}
-                    onClick={() => {
-                      if (item.id === 'rotate') {
-                        setRotateComingSoonOpen(true);
-                        return;
-                      }
-                      setSelectedType(item.id);
-                    }}
+                    className={`calendar-shift-type-card is-${item.tone}${selectedType === item.id ? ' is-selected' : ''}`}
+                    title={item.tooltip}
+                    aria-label={`${item.label} - ${item.description} - ${item.example}`}
+                    onClick={() => setSelectedType(item.id)}
                   >
                     <span className={`calendar-shift-type-icon is-${item.tone}`}>
                       <Icon className="h-4 w-4" />
                     </span>
-                    <span>{item.label}</span>
+                    <span className="calendar-shift-type-card-copy">
+                      <strong>{item.label}</strong>
+                      <small>{item.description}</small>
+                      <em>{item.example}</em>
+                    </span>
                   </button>
                 );
               })}
@@ -227,33 +218,20 @@ export function CreateWorkShiftDialog({
         )}
       </MinimalScroll>
       {changeTypeConfirmOpen ? (
-        <div className="fixed inset-0 z-[110] bg-black/65" onClick={() => setChangeTypeConfirmOpen(false)}>
-          <div
-            className="fixed left-1/2 top-1/2 z-[111] w-[min(100%-2rem,28rem)] -translate-x-1/2 -translate-y-1/2 rounded-xl border border-white/10 bg-slate-900 p-4 text-right text-slate-100"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="text-lg font-black text-white">تغییر نوع شیفت</div>
-            <p className="mt-3 text-sm leading-7 text-slate-300">با تغییر نوع شیفت، برخی اطلاعات واردشده پاک یا غیرقابل استفاده می‌شود. ادامه می‌دهید؟</p>
-            <div className="mt-6 flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedType(null);
-                  setChangeTypeConfirmOpen(false);
-                }}
-                className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-bold text-white"
-              >
-                ادامه
-              </button>
-              <button type="button" onClick={() => setChangeTypeConfirmOpen(false)} className="rounded-xl border border-white/10 px-4 py-2 text-sm">
-                انصراف
-              </button>
-            </div>
-          </div>
-        </div>
+        <ConfirmDialog
+          open={changeTypeConfirmOpen}
+          title="تغییر نوع شیفت"
+          description="با تغییر نوع شیفت، اطلاعات واردشده در فرم فعلی ممکن است حذف شود. آیا ادامه می‌دهید؟"
+          confirmLabel="تغییر نوع شیفت"
+          cancelLabel="انصراف"
+          onCancel={() => setChangeTypeConfirmOpen(false)}
+          onConfirm={() => {
+            setSelectedType(null);
+            setChangeTypeConfirmOpen(false);
+          }}
+        />
       ) : null}
 
-      <RotateShiftComingSoonModal open={rotateComingSoonOpen} onClose={() => setRotateComingSoonOpen(false)} />
     </div>,
     document.body,
   );

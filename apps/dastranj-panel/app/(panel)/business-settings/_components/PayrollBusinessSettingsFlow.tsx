@@ -2620,21 +2620,6 @@ export function PayrollBusinessSettingsFlow({
       <SummarySidebar settings={settings} derived={derived} />
       <main className="draft-template-flow-content business-payroll-content">
         <header className="draft-template-flow-page-header">
-          <nav className="draft-template-flow-breadcrumb" aria-label="مسیر صفحه">
-            <Link href="/">دسترنج</Link>
-            <ChevronLeft className="h-3.5 w-3.5" />
-            <Link href="/business-settings">تنظیمات کسب و کار</Link>
-            <ChevronLeft className="h-3.5 w-3.5" />
-            <button
-              type="button"
-              className="business-payroll-year-back"
-              onClick={() => unsavedLeaveGuard.requestLeave(onBackToYears)}
-            >
-              {isTenant ? 'تنظیمات اختصاصی حقوق و دستمزد کسب و کار' : 'قوانین حقوق و حضور و غیاب'}
-            </button>
-            <ChevronLeft className="h-3.5 w-3.5" />
-            <span>{selectedYear.title}</span>
-          </nav>
           <div className="business-payroll-title-row">
             <h1>قوانین حقوق و حضور و غیاب</h1>
             {isTenant ? <strong className="business-payroll-mode-badge">صاحب کسب و کار</strong> : null}

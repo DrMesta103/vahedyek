@@ -8,12 +8,11 @@ import { createDefaultProfileStore, DEFAULT_PROFILE_META, type BankAccountRecord
 import { fetchProfilePayload, loadProfileStore, persistProfileStore, removeBankAccount } from '../profileStorage';
 import {
   BUSINESS_PROFILE_BANK_ACCOUNTS,
-  BUSINESS_PROFILE_ROOT,
   getBusinessProfileBankAccountEditPath,
   getBusinessProfileBankAccountNewPath,
   getSelectTenantPath,
 } from '../routes';
-import { Breadcrumbs, LoadingCard } from './account-ui';
+import { LoadingCard } from './account-ui';
 import { PanelFormModal } from '../../../components/PanelFormModal';
 import { ConfirmDialog } from '../../../components/ConfirmDialog';
 import { CardMenu } from '../../../components/CardMenu';
@@ -133,15 +132,6 @@ export default function BankAccountsPanel() {
 
   return (
     <>
-      <Breadcrumbs
-        items={[
-          { label: 'خانه', href: BUSINESS_PROFILE_ROOT },
-          { label: 'تنظیمات کسب‌وکار', href: '/business-settings' },
-          { label: 'پروفایل کسب‌وکار', href: BUSINESS_PROFILE_ROOT },
-          { label: 'حساب بانکی' },
-        ]}
-      />
-
       {notice ? (
         <div className="profile-summary-card border-emerald-500/20 bg-emerald-500/10 text-emerald-100" role="status" aria-live="polite">
           {notice}

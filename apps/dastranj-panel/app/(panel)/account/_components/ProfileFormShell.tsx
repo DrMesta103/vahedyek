@@ -1,9 +1,9 @@
 'use client';
 
 import { Camera, Info, LockKeyhole } from 'lucide-react';
-import Link from 'next/link';
 import type { ReactNode } from 'react';
-import { ChoicePillsField, Input, PersianDatePicker } from '@repo/ui';
+import { TaavChoiceChipGroup } from '@repo/ui/taav/forms';
+import { Input, PersianDatePicker } from '@repo/ui';
 
 export function ProfilePageShell({ children, className = '' }: { children: ReactNode; className?: string }) {
   return <section className={`mx-auto flex w-full max-w-[920px] flex-col gap-4 px-3 py-1 sm:px-5 lg:px-6 ${className}`}>{children}</section>;
@@ -129,7 +129,14 @@ export function ProfileChipGroup<T extends string>({
 }) {
   return (
     <div className={`profile-chip-group-shell grid gap-2 ${className}`}>
-      <ChoicePillsField label={label} options={items} value={value} onChange={onChange} wrap pillsClassName={pillsClassName} pillClassName={pillClassName} />
+      <TaavChoiceChipGroup
+        className={pillsClassName || pillClassName ? `${pillsClassName} ${pillClassName}`.trim() : undefined}
+        label={label}
+        options={items.map((item) => ({ value: item.value, label: item.label }))}
+        value={value ?? ''}
+        onValueChange={(next) => onChange((Array.isArray(next) ? next[0] : next) as T)}
+        wrap
+      />
       {hint ? <small className="profile-field-hint text-[11px] leading-6 text-[color:var(--text-muted)]">{hint}</small> : null}
     </div>
   );
@@ -218,13 +225,5 @@ export function ProfileSubmitBar({
         {label}
       </button>
     </div>
-  );
-}
-
-export function ProfileBackLink({ href, children }: { href: string; children: ReactNode }) {
-  return (
-    <Link href={href} className="text-[13px] font-semibold text-[color:var(--accent)] no-underline">
-      {children}
-    </Link>
   );
 }

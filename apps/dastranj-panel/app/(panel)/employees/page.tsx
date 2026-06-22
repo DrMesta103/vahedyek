@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { CalendarDays, Check, Plus, Search, Users2 } from 'lucide-react';
 import { ModulePageHeader } from '../../components/module-page/ModulePageHeader';
-import { businessSettingsBreadcrumbs } from '../../components/module-page/module-breadcrumbs';
 import { getSessionContext } from '../../lib/auth';
 import { listEmployees } from '../../lib/data';
 import { getCurrentEmployeeContracts } from '../../lib/employee-contracts.server';
@@ -125,7 +124,6 @@ export default async function EmployeesPage({ searchParams }: EmployeesPageProps
   return (
     <div className="page-stack module-page employees-page" dir="rtl" lang="fa">
       <ModulePageHeader
-        breadcrumbs={businessSettingsBreadcrumbs('کارمندان')}
         title="کارمندان"
         subtitle="مدیریت اطلاعات کارمندان، فیلترهای سریع و دسترسی مستقیم به عملیات مربوط به اعضای تیم."
       />

@@ -1,5 +1,4 @@
 import { ChevronDown } from 'lucide-react';
-import { policyBreadcrumbs } from '../../../components/module-page/module-breadcrumbs';
 import { savePolicyWorkspaceAction } from '../../../lib/actions';
 import { listCalendars } from '../../../lib/data';
 import {
@@ -19,7 +18,6 @@ export default async function NewPolicyPage() {
     <PolicyPageShell
       title="ثبت سیاست کاری جدید"
       subtitle="تنظیم قوانین حضور و غیاب کارمندان"
-      breadcrumb={policyBreadcrumbs({ label: 'افزودن سیاست کاری' })}
     >
       <form action={savePolicyWorkspaceAction} className="policy-form-stack">
         <input type="hidden" name="familyKey" value="work" />

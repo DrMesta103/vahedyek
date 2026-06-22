@@ -19,7 +19,8 @@ export function CalendarYearFilter({ value, options }: CalendarYearFilterProps) 
 
   return (
     <div className="module-year-filter">
-      <select value={value} onChange={(event) => handleChange(event.target.value)} aria-label="سال کاری">
+      <select value={value} onChange={(event) => handleChange(event.target.value)} aria-label="سال تقویم">
+        <option value="all">همه سال‌ها</option>
         {options.map((year) => (
           <option key={year} value={year}>
             {year}

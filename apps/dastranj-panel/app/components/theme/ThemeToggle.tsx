@@ -15,6 +15,7 @@ function getInitialTheme(): ThemeMode {
 
 function applyTheme(theme: ThemeMode) {
   document.documentElement.setAttribute('data-theme', theme);
+  document.documentElement.setAttribute('data-taav-theme', theme);
   window.localStorage.setItem('dastranj-theme', theme);
 }
 

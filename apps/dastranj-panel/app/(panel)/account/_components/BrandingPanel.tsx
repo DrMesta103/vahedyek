@@ -5,10 +5,10 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { createDefaultProfileStore, DEFAULT_PROFILE_META, type BrandingSettings, type ProfileMeta, type ProfileStore } from '../profile.types';
 import { fetchProfilePayload, loadProfileStore, persistProfileStore } from '../profileStorage';
-import { BUSINESS_PROFILE_BRANDING, BUSINESS_PROFILE_ROOT, getSelectTenantPath } from '../routes';
-import { Breadcrumbs, LoadingCard } from './account-ui';
+import { BUSINESS_PROFILE_BRANDING, getSelectTenantPath } from '../routes';
+import { LoadingCard } from './account-ui';
 import { PanelFormModal } from '../../../components/PanelFormModal';
-import { ProfileBackLink, ProfileCard, ProfileHeading, ProfilePageShell, ProfileSubmitBar } from './ProfileFormShell';
+import { ProfileCard, ProfileHeading, ProfilePageShell, ProfileSubmitBar } from './ProfileFormShell';
 
 const MAX_UPLOAD_SIZE_BYTES = 5 * 1024 * 1024;
 
@@ -398,15 +398,6 @@ export default function BrandingPanel() {
 
   return (
     <>
-      <Breadcrumbs
-        items={[
-          { label: 'خانه', href: BUSINESS_PROFILE_ROOT },
-          { label: 'تنظیمات کسب و کار', href: '/business-settings' },
-          { label: 'پروفایل کسب‌وکار', href: BUSINESS_PROFILE_ROOT },
-          { label: 'لوگو، مهر و سربرگ' },
-        ]}
-      />
-
       {notice ? (
         <div
           className={`profile-summary-card ${
@@ -422,8 +413,7 @@ export default function BrandingPanel() {
       ) : null}
 
       <ProfilePageShell className="branding-reference-page">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <ProfileBackLink href={BUSINESS_PROFILE_ROOT}>بازگشت به پروفایل کسب‌وکار</ProfileBackLink>
+        <div className="flex justify-end">
           <span className="status-chip status-chip-completed">{meta.brandCode || 'DS'}</span>
         </div>
 

@@ -3,6 +3,14 @@ import { normalizePersianDateInput } from './calendar-events';
 
 export type CalendarHolidayType = 'official' | 'organizational' | 'friday';
 
+export type CalendarHolidayCoefficients = {
+  year: number;
+  weeklyRestDay: number;
+  officialHoliday: number;
+  organizationalHoliday: number;
+  isConfigured: boolean;
+};
+
 export const CALENDAR_HOLIDAY_TYPE_OPTIONS: Array<{
   id: Exclude<CalendarHolidayType, 'friday'>;
   label: string;
@@ -22,12 +30,54 @@ export const CALENDAR_HOLIDAY_TYPE_OPTIONS: Array<{
   },
 ];
 
+export const CALENDAR_ALL_HOLIDAY_TYPE_OPTIONS: Array<{
+  id: CalendarHolidayType;
+  label: string;
+  tooltip: string;
+  summary: string;
+}> = [
+  {
+    id: 'official',
+    label: 'تعطیلات رسمی',
+    summary: 'تعطیلات مصوب تقویم رسمی کشور',
+    tooltip:
+      'برای تعطیلات قانونی و مصوب (رسمی) استفاده کنید. در محاسبه حقوق و دستمزد، کارکرد این روزها با ضریب تعطیلات رسمی لحاظ می‌شود؛ انتخاب درست این نوع برای گزارش‌های حقوقی اهمیت دارد.',
+  },
+  {
+    id: 'organizational',
+    label: 'تعطیلات سازمانی',
+    summary: 'تعطیلات داخلی شرکت یا سازمان',
+    tooltip:
+      'برای تعطیلات داخلی و تصمیم سازمان استفاده کنید. این نوع جدا از تعطیلات رسمی در محاسبه حقوق و دستمزد اعمال می‌شود و نباید به‌جای تعطیلات قانونی ثبت شود.',
+  },
+  {
+    id: 'friday',
+    label: 'تعطیلات هفتگی',
+    summary: 'روزهای تعطیل هفتگی مانند جمعه',
+    tooltip:
+      'برای ثبت روز به‌عنوان تعطیل هفتگی استفاده کنید. اگر کارمند در این روز کارکرد داشته باشد، ضریب تعطیلات هفتگی در حقوق و دستمزد اعمال می‌شود.',
+  },
+];
+
 export const CALENDAR_FRIDAY_HOLIDAY_TYPE = {
   id: 'friday' as const,
-  label: 'تعطیل هفتگی',
+  label: 'تعطیلات هفتگی',
   tooltip:
-    'این نوع فقط برای روز تعطیل هفتگی ثبت می‌شود و قابل تغییر نیست. اگر کارمند در این روز کارکرد داشته باشد، ضریب تعطیل هفتگی در حقوق و دستمزد اعمال می‌شود.',
+    'برای ثبت روز به‌عنوان تعطیل هفتگی استفاده کنید. اگر کارمند در این روز کارکرد داشته باشد، ضریب تعطیلات هفتگی در حقوق و دستمزد اعمال می‌شود.',
 };
+
+export function getHolidayTypeCoefficient(
+  type: CalendarHolidayType,
+  coefficients: Pick<CalendarHolidayCoefficients, 'weeklyRestDay' | 'officialHoliday' | 'organizationalHoliday'>,
+) {
+  if (type === 'official') return coefficients.officialHoliday;
+  if (type === 'organizational') return coefficients.organizationalHoliday;
+  return coefficients.weeklyRestDay;
+}
+
+export function getPayrollSettingsHrefForYear(year: number) {
+  return `/business-settings/payroll-attendance/tenant?year=${year}`;
+}
 
 export function resolveCalendarEventTitle(input: {
   title: string;
@@ -76,7 +126,7 @@ export function inferHolidayTypeFromLegacyEvent(input: {
   if (category === 'تعطیلات سازمانی') return 'organizational';
 
   const title = input.title?.trim();
-  if (title === CALENDAR_FRIDAY_HOLIDAY_TYPE.label || title === 'تعطیلی جمعه') return 'friday';
+  if (title === CALENDAR_FRIDAY_HOLIDAY_TYPE.label || title === 'تعطیلی جمعه' || title === 'تعطیل هفتگی') return 'friday';
 
   return undefined;
 }
