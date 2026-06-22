@@ -268,6 +268,7 @@ type PenaltyReportRow = {
   paidLabel: string;
   forgivenRial: number | null;
   forgivenLabel: string;
+  claimableRial: number;
   remainingRial: number;
   remainingLabel: string;
 };
@@ -320,9 +321,22 @@ function buildPaidByCategoryIdFromAllocation(
     if ((ds.row.sourceKind ?? 'principal') !== sourceKind) continue;
     const cid = String(ds.row.categoryId ?? '').trim();
     if (!cid) continue;
+    const normalizedCid = normalizeSummaryCategoryKey(cid);
+    m.set(normalizedCid, (m.get(normalizedCid) ?? 0) + ds.paidAmountRial);
     m.set(cid, (m.get(cid) ?? 0) + ds.paidAmountRial);
   }
   return m;
+}
+
+function normalizeSummaryCategoryKey(categoryId: string) {
+  const trimmed = String(categoryId ?? '').trim();
+  const suffix = trimmed.includes(':') ? trimmed.slice(trimmed.lastIndexOf(':') + 1) : trimmed;
+  if (suffix.startsWith('advance')) return 'advance';
+  if (suffix.startsWith('installment')) return 'installment';
+  if (suffix.startsWith('loan')) return 'loan';
+  if (suffix.startsWith('handover')) return 'handover';
+  if (suffix.startsWith('document')) return 'document';
+  return suffix;
 }
 
 function computePaidTotalForGroup(group: FinancialReportGroup, paidByCategoryId: Map<string, number>): number {
@@ -550,13 +564,14 @@ function buildForgivenessRuleCard(snapshot: ContractRuleSnapshot | null | undefi
   const scopeLabel = values.forgiveScope === 'itemized' ? 'موردی' : 'کل قرارداد';
   const modeLabel = values.forgiveValueMode === 'percent' ? 'درصدی' : 'مبلغی';
   const statusActive = state.active || Boolean(values.forgiveAllowed);
+  const statusPending = statusActive && Boolean(values.forgiveManagerApproval);
 
   return {
     id: 'forgiveness',
     title: 'بخشودگی',
-    tone: statusActive ? 'emerald' : 'slate',
+    tone: statusPending ? 'amber' : statusActive ? 'emerald' : 'slate',
     isActive: statusActive,
-    statusLabel: statusActive ? 'فعال' : 'غیرفعال',
+    statusLabel: statusPending ? 'در انتظار تایید' : statusActive ? 'فعال' : 'غیرفعال',
     sourceLabel: formatRuleSourceLabel(snapshot?.source ?? 'default'),
     updatedAtLabel: formatDateFa(snapshot?.updatedAt),
     details: [
@@ -826,8 +841,9 @@ export default function ContractReportsPage() {
         financial: view.financial,
         penalties: contract?.data?.penalties ?? null,
         receipts: registeredReceipts,
+        forgiveness: contract?.data?.ruleSettings?.forgiveness ?? null,
       }),
-    [view.financial, contract?.data?.penalties, registeredReceipts],
+    [view.financial, contract?.data?.penalties, contract?.data?.ruleSettings?.forgiveness, registeredReceipts],
   );
 
   const paymentMonthBuckets = penaltyTimeline.combinedBuckets;
@@ -940,8 +956,9 @@ export default function ContractReportsPage() {
     return penaltyTimeline.penaltyRows.map((row) => {
       const allocation = receiptAllocation.dueById[row.id];
       const paidRial = allocation?.paidAmountRial ?? 0;
-      const remainingRial = allocation?.remainingAmountRial ?? Math.max(0, Number(row.amount ?? 0) - paidRial);
-      const forgivenRial = null;
+      const claimableRial = Math.max(0, Number(row.claimableAmountRial ?? row.amount ?? 0));
+      const remainingRial = allocation?.remainingAmountRial ?? Math.max(0, claimableRial - paidRial);
+      const forgivenRial = row.forgivenRial ?? null;
       const principalRow = principalById.get(String(row.principalDueRowId ?? '').trim()) ?? null;
       const penaltyType = penaltyTypeById.get(String(row.penaltyTypeId ?? '').trim()) ?? null;
       const causeLabel = String(penaltyType?.title ?? '').trim() || 'جریمه تأخیر';
@@ -952,14 +969,18 @@ export default function ContractReportsPage() {
       const statusLabel =
         forgivenRial != null && forgivenRial > 0
           ? 'بخشوده‌شده'
-          : remainingRial <= 0 && paidRial > 0
-            ? 'پرداخت‌شده'
-            : paidRial > 0
-              ? 'باقی‌مانده'
-              : 'اعمال‌شده';
+          : row.forgivenessStatus === 'pending'
+            ? 'در انتظار تایید'
+            : remainingRial <= 0 && paidRial > 0
+              ? 'پرداخت‌شده'
+              : paidRial > 0
+                ? 'باقی‌مانده'
+                : 'اعمال‌شده';
       const statusTone =
         statusLabel === 'پرداخت‌شده'
           ? 'emerald'
+          : statusLabel === 'در انتظار تایید'
+            ? 'amber'
           : statusLabel === 'بخشوده‌شده'
             ? 'slate'
             : statusLabel === 'باقی‌مانده'
@@ -982,6 +1003,7 @@ export default function ContractReportsPage() {
         paidLabel: formatMoneyRial(paidRial),
         forgivenRial,
         forgivenLabel: formatMoneyRialNullable(forgivenRial),
+        claimableRial,
         remainingRial,
         remainingLabel: formatMoneyRial(remainingRial),
       } satisfies PenaltyReportRow;
@@ -994,7 +1016,7 @@ export default function ContractReportsPage() {
     const penalties = contract?.data?.penalties ?? null;
     const penaltyTypes = Array.isArray(penalties?.types) ? penalties.types : [];
     const hasPenaltyTypes = penaltyTypes.length > 0;
-    const hasForgivenessData = false;
+    const hasForgivenessData = penaltyTimeline.penaltyRows.some((row) => (row.forgivenRial ?? 0) > 0);
     const hasMissingRelatedDue = penaltyTimeline.penaltyRows.some((row) => !String(row.principalDueRowId ?? '').trim());
 
     if (!hasPenaltyTypes) {
@@ -1205,6 +1227,7 @@ export default function ContractReportsPage() {
       financial: view.financial,
       penalties: contract?.data?.penalties ?? null,
       receipts: approvedReceipts,
+      forgiveness: contract?.data?.ruleSettings?.forgiveness ?? null,
     });
     const approvedReceiptAllocation = buildReceiptAllocation({
       buckets: approvedPenaltyTimeline.combinedBuckets,
@@ -1406,7 +1429,10 @@ export default function ContractReportsPage() {
     for (const row of penaltyTimeline.penaltyRows) {
       const categoryId = String(row.categoryId ?? '').trim();
       if (!categoryId) continue;
-      map.set(categoryId, (map.get(categoryId) ?? 0) + row.amount);
+      const normalizedCategoryId = normalizeSummaryCategoryKey(categoryId);
+      const amount = Math.max(0, Number(row.claimableAmountRial ?? row.amount ?? 0));
+      map.set(normalizedCategoryId, (map.get(normalizedCategoryId) ?? 0) + amount);
+      map.set(categoryId, (map.get(categoryId) ?? 0) + amount);
     }
     return map;
   }, [penaltyTimeline.penaltyRows]);
@@ -1456,7 +1482,10 @@ export default function ContractReportsPage() {
 
   const ledgerSnapshot = useMemo(() => {
     const contractTotalRial = penaltyTimeline.contractBaseTotalRial;
-    const penaltyTotalRial = penaltyTimeline.penaltyRows.reduce((sum, row) => sum + row.amount, 0);
+    const penaltyTotalRial = penaltyTimeline.penaltyRows.reduce(
+      (sum, row) => sum + Math.max(0, Number(row.claimableAmountRial ?? row.amount ?? 0)),
+      0,
+    );
     const paidPrincipalRial = summaryFooter?.paidTotal;
     const paidPenaltyRial = summaryFooter?.penaltyPaid;
 
@@ -1793,7 +1822,8 @@ export default function ContractReportsPage() {
     );
 
     const paymentTrend = buildApprovedReceiptTrend(registeredReceipts);
-    const penaltyAppliedRial = penaltyReportRows.reduce((sum, row) => sum + Math.max(0, row.amountRial), 0);
+    const penaltyCalculatedRial = penaltyTimeline.penaltyRows.reduce((sum, row) => sum + Math.max(0, Number(row.amount ?? 0)), 0);
+    const penaltyAppliedRial = penaltyReportRows.reduce((sum, row) => sum + Math.max(0, row.claimableRial), 0);
     const penaltyPaidRial = penaltyReportRows.reduce((sum, row) => sum + Math.max(0, row.paidRial), 0);
     const penaltyRemainingRial = penaltyReportRows.reduce((sum, row) => sum + Math.max(0, row.remainingRial), 0);
     const hasForgivenessData = penaltyReportRows.some((row) => (row.forgivenRial ?? 0) > 0);
@@ -1823,7 +1853,7 @@ export default function ContractReportsPage() {
             : 'در این نسخه فقط روند پرداخت‌های تأییدشده نمایش داده می‌شود.',
       },
       penalties: {
-        calculatedRial: null,
+        calculatedRial: penaltyCalculatedRial,
         appliedRial: penaltyAppliedRial,
         paidRial: penaltyPaidRial,
         forgivenRial: hasForgivenessData
@@ -2559,6 +2589,7 @@ export default function ContractReportsPage() {
                         collapsedMonths={collapsedPaymentMonths}
                         toggleMonth={togglePaymentMonth}
                         allocationByDueId={receiptAllocation.dueById}
+                        penaltyDetailsByPrincipalDueId={penaltyTimeline.penaltyDetailsByPrincipalDueId}
                       />
                     </div>
                   )}
@@ -3121,6 +3152,7 @@ export default function ContractReportsPage() {
                             collapsedMonths={collapsedSummaryDueMonths}
                             toggleMonth={toggleSummaryDueMonth}
                             allocationByDueId={receiptAllocation.dueById}
+                            penaltyDetailsByPrincipalDueId={penaltyTimeline.penaltyDetailsByPrincipalDueId}
                             onViewReceipts={(payload, summary) =>
                               setReceiptDetails({
                                 payload,

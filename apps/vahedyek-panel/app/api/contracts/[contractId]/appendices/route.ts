@@ -147,13 +147,15 @@ export async function POST(request: Request, context: { params: Promise<{ contra
         const normalizedPayload = normalizeAppendixPayload(item.tagKey, cleanPayload);
         if (payload.submitMode === 'pending_approval') {
           const validationMessage = validateAppendixPayload(item.tagKey, normalizedPayload);
-          if (validationMessage) {
+        if (validationMessage) {
             if (item.tagKey === 'unit-delivery-date') throw new Error('INVALID_DELIVERY_DATE_PAYLOAD');
             if (item.tagKey === 'loan') throw new Error('INVALID_LOAN_APPENDIX_PAYLOAD');
             if (item.tagKey === 'first-party' || item.tagKey === 'second-party') throw new Error('INVALID_PARTIES_APPENDIX_PAYLOAD');
             if (item.tagKey === 'adjustment') throw new Error('INVALID_ADJUSTMENT_APPENDIX_PAYLOAD');
             if (item.tagKey === 'contract-base-costs') throw new Error('INVALID_CONTRACT_BASE_COSTS_APPENDIX_PAYLOAD');
             if (item.tagKey === 'side-costs') throw new Error('INVALID_SIDE_COSTS_APPENDIX_PAYLOAD');
+            if (item.tagKey === 'penalty-waiver') throw new Error('INVALID_PENALTY_WAIVER_APPENDIX_PAYLOAD');
+            if (item.tagKey === 'builder-penalty') throw new Error('INVALID_BUILDER_PENALTY_APPENDIX_PAYLOAD');
           }
         }
         payloadToStore = normalizedPayload as unknown as Record<string, unknown>;
@@ -213,6 +215,8 @@ export async function POST(request: Request, context: { params: Promise<{ contra
       if (error.message === 'INVALID_ADJUSTMENT_APPENDIX_PAYLOAD') return NextResponse.json({ message: 'اطلاعات ردیف مالی تعدیل معتبر نیست.' }, { status: 400 });
       if (error.message === 'INVALID_CONTRACT_BASE_COSTS_APPENDIX_PAYLOAD') return NextResponse.json({ message: 'اطلاعات ردیف مالی اصل قرارداد معتبر نیست.' }, { status: 400 });
       if (error.message === 'INVALID_SIDE_COSTS_APPENDIX_PAYLOAD') return NextResponse.json({ message: 'اطلاعات ردیف های مالی جانبی معتبر نیست.' }, { status: 400 });
+      if (error.message === 'INVALID_PENALTY_WAIVER_APPENDIX_PAYLOAD') return NextResponse.json({ message: 'اطلاعات جرائم کارفرما معتبر نیست.' }, { status: 400 });
+      if (error.message === 'INVALID_BUILDER_PENALTY_APPENDIX_PAYLOAD') return NextResponse.json({ message: 'اطلاعات جرائم سازنده معتبر نیست.' }, { status: 400 });
     }
     return handlePrismaApiError(error);
   }

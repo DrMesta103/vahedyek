@@ -282,7 +282,7 @@ function buildBusinessSettingsBreadcrumb(pathname: string): Crumb[] {
           const builderPenaltySection = pathname.split('/')[4];
           const builderPenaltyMap: Record<string, string> = {
             'unit-delivery-delay': 'تاخیر در تحویل واحد',
-            'material-specs-change': 'تغییرات مهم مصالح و مشخصات واحد',
+            'material-specs-change': 'تغییرات مشخصات فنی پروژه',
           };
 
           if (builderPenaltySection && builderPenaltyMap[builderPenaltySection]) {
@@ -439,6 +439,7 @@ export default function PanelLayout({ children }: PanelLayoutProps) {
   const isContractsNewHub = pathname === '/contracts/new';
   const isContractsListPage = pathname === '/contracts';
   const isContractReportsPage = /^\/contracts\/[^/]+\/reports(?:\/|$)/.test(pathname);
+  const isContractModernPage = /^\/contracts\/[^/]+\/modern(?:\/|$)/.test(pathname);
   const isAuditLogsPage = pathname === '/audit-logs';
 
   useEffect(() => {
@@ -545,13 +546,15 @@ export default function PanelLayout({ children }: PanelLayoutProps) {
           {children}
         </main>
       ) : (
-        <main
-          className={`main-content${isContractsListPage ? ' contracts-page-main' : ''}${isContractReportsPage ? ' reports-page-shell' : ''}${isAuditLogsPage ? ' audit-page-shell' : ''}`}
+      <main
+        className={`main-content${isContractsListPage ? ' contracts-page-main' : ''}${isContractReportsPage ? ' reports-page-shell' : ''}${isAuditLogsPage ? ' audit-page-shell' : ''}${isContractModernPage ? ' contract-modern-page-shell' : ''}`}
+      >
+        <div
+          className={`main-stage${isContractsListPage || isContractReportsPage || isAuditLogsPage || isContractModernPage ? ' main-stage-wide' : ''}${isContractModernPage ? ' contract-modern-stage' : ''}`}
         >
-          <div className={`main-stage${isContractsListPage || isContractReportsPage || isAuditLogsPage ? ' main-stage-wide' : ''}`}>
-            <div
-              className={`main-stage-content${isContractsNewHub ? ' contract-flow-stage-content' : ''}${isContractsListPage || isAuditLogsPage ? ' main-stage-content-wide' : ''}${isContractReportsPage ? ' reports-stage-content' : ''}${isAuditLogsPage ? ' audit-stage-content' : ''}`}
-            >
+          <div
+            className={`main-stage-content${isContractsNewHub ? ' contract-flow-stage-content' : ''}${isContractsListPage || isAuditLogsPage ? ' main-stage-content-wide' : ''}${isContractReportsPage ? ' reports-stage-content' : ''}${isAuditLogsPage ? ' audit-stage-content' : ''}${isContractModernPage ? ' contract-modern-stage-content' : ''}`}
+          >
               {!isContractsNewHub ? (
                 <div
                   className={`top-header${isContractsListPage || isAuditLogsPage ? ' top-header-compact' : ''}${isContractReportsPage ? ' top-header-reports-dense' : ''}${isAuditLogsPage ? ' top-header-audit-dense' : ''}`}
@@ -576,7 +579,7 @@ export default function PanelLayout({ children }: PanelLayoutProps) {
                 children
               ) : (
                 <div
-                  className={`content-body${isContractsNewHub || isContractReportsPage || isAuditLogsPage ? ' content-body-wide' : ''}${isContractReportsPage ? ' content-body-contract-reports' : ''}${isAuditLogsPage ? ' content-body-audit' : ''}`}
+                  className={`content-body${isContractsNewHub || isContractReportsPage || isAuditLogsPage || isContractModernPage ? ' content-body-wide' : ''}${isContractReportsPage ? ' content-body-contract-reports' : ''}${isAuditLogsPage ? ' content-body-audit' : ''}${isContractModernPage ? ' content-body-contract-modern' : ''}`}
                 >
                   {children}
                 </div>

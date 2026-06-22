@@ -32,6 +32,8 @@ function validationMessageByTag(tagKey: string) {
   if (tagKey === 'adjustment') return 'اطلاعات ردیف مالی تعدیل معتبر نیست.';
   if (tagKey === 'contract-base-costs') return 'اطلاعات ردیف مالی اصل قرارداد معتبر نیست.';
   if (tagKey === 'side-costs') return 'اطلاعات ردیف های مالی جانبی معتبر نیست.';
+  if (tagKey === 'penalty-waiver') return 'اطلاعات جرائم کارفرما معتبر نیست.';
+  if (tagKey === 'builder-penalty') return 'اطلاعات جرائم سازنده معتبر نیست.';
   return 'اطلاعات متمم معتبر نیست.';
 }
 

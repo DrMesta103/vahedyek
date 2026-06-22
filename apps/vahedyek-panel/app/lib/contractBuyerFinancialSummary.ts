@@ -109,6 +109,7 @@ export function buildBuyerFinancialSummary(contract: any, receipts: RegisteredRe
   const subject = contract?.data?.subject ?? null;
   const financial = contract?.data?.financial ?? null;
   const penalties = contract?.data?.penalties ?? null;
+  const forgiveness = contract?.data?.ruleSettings?.forgiveness ?? null;
   const terminationRules = contract?.data?.terminationRules ?? null;
 
   const contractNumber = String(subject?.contractNumber ?? 'نامشخص');
@@ -148,6 +149,7 @@ export function buildBuyerFinancialSummary(contract: any, receipts: RegisteredRe
     financial,
     penalties,
     receipts: approvedReceipts,
+    forgiveness,
   });
 
   const approvedReceiptAllocation = buildReceiptAllocation({
@@ -184,7 +186,15 @@ export function buildBuyerFinancialSummary(contract: any, receipts: RegisteredRe
   );
 
   const paymentTrend = buildApprovedReceiptTrend(approvedReceipts);
-  const penaltyAppliedRial = approvedPenaltyTimeline.penaltyRows.reduce((sum, row) => sum + Math.max(0, Number(row.amount ?? 0)), 0);
+  const penaltyCalculatedRial = approvedPenaltyTimeline.penaltyCalculation.totalPenaltyRial;
+  const penaltyAppliedRial = approvedPenaltyTimeline.penaltyRows.reduce(
+    (sum, row) => sum + Math.max(0, Number(row.claimableAmountRial ?? row.amount ?? 0)),
+    0,
+  );
+  const penaltyForgivenRial = approvedPenaltyTimeline.penaltyRows.reduce(
+    (sum, row) => sum + Math.max(0, Number(row.forgivenRial ?? 0)),
+    0,
+  );
   const penaltyPaidRial = penaltySummaries.reduce((sum, summary) => sum + Math.max(0, summary.paidAmountRial), 0);
   const penaltyRemainingRial = penaltySummaries.reduce((sum, summary) => sum + Math.max(0, summary.remainingAmountRial), 0);
 
@@ -281,10 +291,10 @@ export function buildBuyerFinancialSummary(contract: any, receipts: RegisteredRe
       installmentStatus,
       paymentTrend,
       penalties: {
-        calculatedRial: null,
+        calculatedRial: penaltyCalculatedRial,
         appliedRial: penaltyAppliedRial,
         paidRial: penaltyPaidRial,
-        forgivenRial: null,
+        forgivenRial: penaltyForgivenRial > 0 ? penaltyForgivenRial : null,
         remainingRial: penaltyRemainingRial,
         totalCount: approvedPenaltyTimeline.penaltyRows.length,
       },

@@ -1,6 +1,7 @@
 import {
   calculateBuyerPenalties,
   type BuyerPenaltyCalculationDetail,
+  penaltyTypeKeysMatch,
 } from './buyerPenaltyCalculation';
 import { buildReceiptAllocation } from './contractReceiptAllocation';
 import { computeContractTotalRialFromFinancial } from './contractFinancialPricing';
@@ -23,6 +24,33 @@ type PenaltyRowDetail = PaymentHistoryDueRow & {
   lineBaseAmountRial: number;
   mainPenaltyRial: number;
   lateFeeRial: number;
+  forgivenRial?: number | null;
+  claimableAmountRial?: number;
+  forgivenessStatus?: 'applied' | 'pending' | 'inactive';
+};
+
+type ForgivenessRuleSnapshot = {
+  active?: boolean;
+  activeTab?: string;
+  values?: Record<string, string | boolean>;
+};
+
+type ForgivenessRuleConfig = {
+  entryId: string;
+  scope: 'whole' | 'itemized';
+  active: boolean;
+  valueMode: 'amount' | 'percent';
+  minValue: number;
+  maxValue: number;
+  maxDelayCount: number;
+  outsideBuyerControl: boolean;
+  managerApproval: boolean;
+};
+
+type ForgivenessApplication = {
+  forgivenRial: number | null;
+  claimableAmountRial: number;
+  forgivenessStatus: 'applied' | 'pending' | 'inactive';
 };
 
 type PenaltyEngineParams = {
@@ -30,6 +58,7 @@ type PenaltyEngineParams = {
   penalties: ContractPenaltiesData | null | undefined;
   receipts?: RegisteredReceiptRecord[];
   asOfDate?: Date;
+  forgiveness?: ForgivenessRuleSnapshot | null;
 };
 
 type PenaltyEngineResult = {
@@ -71,6 +100,153 @@ function createPrincipalRows(financial: ContractFinancialData | null | undefined
     rows: buckets.flatMap((bucket) => bucket.items),
     buckets,
   };
+}
+
+function toNumber(value: unknown) {
+  const parsed = typeof value === 'string' ? Number(String(value).replace(/,/g, '')) : Number(value ?? 0);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function parseEnabledIds(value: unknown) {
+  if (typeof value !== 'string' || !value.trim()) return [] as string[];
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed.map((item) => String(item ?? '').trim()).filter(Boolean) : [];
+  } catch {
+    return [];
+  }
+}
+
+function parseEntryValueMap(value: unknown): Record<string, Record<string, string | boolean>> {
+  if (typeof value !== 'string' || !value.trim()) return {};
+  try {
+    const parsed = JSON.parse(value);
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {};
+    return Object.fromEntries(
+      Object.entries(parsed as Record<string, unknown>)
+        .filter(([, entryValue]) => entryValue && typeof entryValue === 'object' && !Array.isArray(entryValue))
+        .map(([entryId, entryValue]) => [entryId, entryValue as Record<string, string | boolean>]),
+    );
+  } catch {
+    return {};
+  }
+}
+
+function parseForgivenessRuleConfigs(snapshot: ForgivenessRuleSnapshot | null | undefined): ForgivenessRuleConfig[] {
+  const values = snapshot?.values ?? {};
+  const active = Boolean(snapshot?.active || values.forgiveAllowed);
+  if (!active) return [];
+
+  const currentScope = String(values.forgiveScope ?? 'whole') === 'itemized' ? 'itemized' : 'whole';
+  const enabledEntryIds = parseEnabledIds(values.forgiveEnabledEntryIds);
+  const entryValuesMap = parseEntryValueMap(values.forgiveEntryValues);
+
+  const buildConfigFromValues = (entryId: string, scope: 'whole' | 'itemized', entryValues: Record<string, string | boolean>): ForgivenessRuleConfig => ({
+    entryId,
+    scope,
+    active: true,
+    valueMode: String(entryValues.forgiveValueMode ?? values.forgiveValueMode ?? 'amount') === 'percent' ? 'percent' : 'amount',
+    minValue: Math.max(0, toNumber(entryValues.forgiveMinValue ?? values.forgiveMinValue)),
+    maxValue: Math.max(0, toNumber(entryValues.forgiveMaxValue ?? values.forgiveMaxValue)),
+    maxDelayCount: Math.max(0, Math.trunc(toNumber(entryValues.forgiveMaxDelayCount ?? values.forgiveMaxDelayCount))),
+    outsideBuyerControl: Boolean(entryValues.forgiveOutsideBuyerControl ?? values.forgiveOutsideBuyerControl),
+    managerApproval: Boolean(entryValues.forgiveManagerApproval ?? values.forgiveManagerApproval),
+  });
+
+  const configs: ForgivenessRuleConfig[] = [];
+
+  if (enabledEntryIds.length > 0 || currentScope === 'itemized') {
+    const itemizedIds =
+      enabledEntryIds.length > 0
+        ? enabledEntryIds
+        : String(values.forgiveEntryId ?? '').trim()
+          ? [String(values.forgiveEntryId).trim()]
+          : [];
+    for (const entryId of itemizedIds) {
+      const entryValues = entryValuesMap[entryId] ?? values;
+      configs.push(buildConfigFromValues(entryId, 'itemized', entryValues));
+    }
+  }
+
+  if (currentScope === 'whole') {
+    configs.push(buildConfigFromValues('whole-contract', 'whole', values));
+  }
+
+  return configs;
+}
+
+function calculateForgivenMainPenaltyRial(baseRial: number, config: ForgivenessRuleConfig): number {
+  if (!(baseRial > 0)) return 0;
+  if (config.managerApproval) return 0;
+  if (!(config.maxValue > 0)) return 0;
+
+  const minValue = Math.max(0, config.minValue);
+  const maxValue = Math.max(0, config.maxValue);
+  if (baseRial < minValue) return 0;
+
+  if (config.valueMode === 'percent') {
+    if (maxValue < minValue) return 0;
+    return Math.max(0, Math.min(baseRial, baseRial * (maxValue / 100)));
+  }
+
+  if (maxValue < minValue) return 0;
+  return Math.max(0, Math.min(baseRial, maxValue));
+}
+
+function selectPenaltyRowsForForgiveness(
+  rows: PenaltyRowDetail[],
+  config: ForgivenessRuleConfig,
+  alreadyAppliedRowIds: Set<string>,
+) {
+  const matched = rows.filter((row) => !alreadyAppliedRowIds.has(row.id) && (config.scope === 'whole' || penaltyTypeKeysMatch(String(row.penaltyTypeId ?? ''), config.entryId)));
+  const limit = config.maxDelayCount > 0 ? config.maxDelayCount : matched.length;
+  return matched.slice(0, limit);
+}
+
+function applyForgivenessToPenaltyRows(rows: PenaltyRowDetail[], forgiveness: ForgivenessRuleSnapshot | null | undefined) {
+  const configs = parseForgivenessRuleConfigs(forgiveness);
+  if (configs.length === 0) {
+    return rows.map((row) => ({
+      ...row,
+      forgivenRial: null,
+      claimableAmountRial: Math.max(0, Math.round(Number(row.amount ?? 0))),
+      forgivenessStatus: 'inactive' as const,
+    }));
+  }
+
+  const appliedRowIds = new Set<string>();
+  const outputRows: PenaltyRowDetail[] = rows.map((row) => ({
+    ...row,
+    forgivenRial: null as number | null,
+    claimableAmountRial: Math.max(0, Math.round(Number(row.amount ?? 0))),
+    forgivenessStatus: 'inactive' as const,
+  }));
+  const indexById = new Map(outputRows.map((row, index) => [row.id, index]));
+
+  for (const config of configs.sort((a, b) => {
+    if (a.scope !== b.scope) return a.scope === 'itemized' ? -1 : 1;
+    return a.entryId.localeCompare(b.entryId);
+  })) {
+    const matchedRows = selectPenaltyRowsForForgiveness(outputRows, config, appliedRowIds);
+    for (const row of matchedRows) {
+      const forgivenMainRial = calculateForgivenMainPenaltyRial(row.mainPenaltyRial, config);
+      if (!(forgivenMainRial > 0)) continue;
+
+      const index = indexById.get(row.id);
+      if (index == null) continue;
+
+      const claimableAmountRial = Math.max(0, Math.round(row.amount - forgivenMainRial));
+      outputRows[index] = {
+        ...row,
+        forgivenRial: forgivenMainRial,
+        claimableAmountRial,
+        forgivenessStatus: 'applied',
+      } satisfies PenaltyRowDetail;
+      appliedRowIds.add(row.id);
+    }
+  }
+
+  return outputRows;
 }
 
 function buildPenaltyRowsFromCalculation(params: {
@@ -120,6 +296,7 @@ export function buildContractPenaltyTimeline({
   penalties,
   receipts = [],
   asOfDate = new Date(),
+  forgiveness = null,
 }: PenaltyEngineParams): PenaltyEngineResult {
   const normalizedAsOfDate = new Date(asOfDate);
   normalizedAsOfDate.setHours(0, 0, 0, 0);
@@ -155,15 +332,16 @@ export function buildContractPenaltyTimeline({
     penaltyDetailsByPrincipalDueId,
     penalties,
   });
+  const penaltyRowsWithForgiveness = applyForgivenessToPenaltyRows(penaltyRows, forgiveness);
 
-  const combinedRows = [...principalRows, ...penaltyRows];
+  const combinedRows = [...principalRows, ...penaltyRowsWithForgiveness];
   const combinedBuckets = buildPaymentHistoryMonthBucketsFromRows(combinedRows);
 
   return {
     contractBaseTotalRial,
     principalRows,
     principalBuckets,
-    penaltyRows,
+    penaltyRows: penaltyRowsWithForgiveness,
     penaltyDetailsByPrincipalDueId,
     penaltyCalculation,
     combinedRows,

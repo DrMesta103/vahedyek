@@ -58,8 +58,8 @@ export function AppendixMaterialSpecsChangeEditor({
     <div className="mt-6 space-y-5">
       <SectionCard>
         <SectionHeader
-          label="پرونده تغییر"
-          description="این بخش پرونده اجرایی تغییر مصالح و مشخصات را ثبت می‌کند تا نتیجه قراردادی، جبران یا حق فسخ از روی آن فعال شود."
+          label="پرونده تغییرات مشخصات فنی پروژه"
+          description="این بخش پرونده اجرایی تغییرات مشخصات فنی پروژه را ثبت می‌کند تا نتیجه قراردادی، جبران یا حق فسخ از روی آن فعال شود."
         />
         <div className="grid gap-5 px-5 py-5">
           <FieldGroup label="نوع تغییرات مشمول" hint="مشخص می‌کند این پرونده دقیقاً کدام نوع تغییر را پوشش می‌دهد.">

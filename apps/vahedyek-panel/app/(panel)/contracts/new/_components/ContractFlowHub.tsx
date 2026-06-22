@@ -20,7 +20,7 @@ import { RightNavSidebar } from './RightNavSidebar';
 import { SubjectStep } from './SubjectStep';
 import { TerminationStep } from './TerminationStep';
 import { ExtraCostsStep } from './ExtraCostsStep';
-import { TechnicalSpecsStep } from './TechnicalSpecsStep';
+import { TechnicalSpecsStep } from './TechnicalSpecsGroupedStep';
 import { ContractAttachmentsStep } from './ContractAttachmentsStep';
 import { getContractAttachments, getContractExtraCosts, getContractTechnicalSpecs } from '../../../../actions/contractSteps789';
 import {

@@ -18,6 +18,9 @@ export type AppendixTagKey =
   | 'forgiveness'
   | 'contract-costs'
   | 'penalty-waiver'
+  | 'builder-penalty'
+  | 'builder-cancellation'
+  | 'buyer-cancellation'
   | 'workshop-conditions'
   | 'arbitration'
   | 'first-party'
@@ -136,20 +139,43 @@ export interface AppendixSideCostsPayload {
   dueItems: FinancialDueItemData[];
 }
 
+export interface AppendixTechnicalSpecGroup {
+  id: string;
+  title: string;
+  selectedSpecIds: string[];
+}
+
 export interface AppendixMaterialSpecsChangePayload {
-  changeTypes: string[];
-  importanceLevel: string;
-  comparisonReferences: string[];
-  equivalentReplacementAllowed: boolean;
-  equivalentReplacementApplied: boolean;
-  buyerApprovalRequired: boolean;
-  buyerApproved: boolean;
-  selectedOutcomes: string[];
-  requiredDocuments: string[];
-  enforcementEnabled: boolean;
-  enforcementReason: string;
-  caseSummary: string;
-  internalNotes: string;
+  specs: AppendixTechnicalSpecGroup[];
+  groups?: AppendixTechnicalSpecGroup[];
+  changeTypes?: string[];
+  importanceLevel?: string;
+  comparisonReferences?: string[];
+  equivalentReplacementAllowed?: boolean;
+  equivalentReplacementApplied?: boolean;
+  buyerApprovalRequired?: boolean;
+  buyerApproved?: boolean;
+  selectedOutcomes?: string[];
+  requiredDocuments?: string[];
+  enforcementEnabled?: boolean;
+  enforcementReason?: string;
+  caseSummary?: string;
+  internalNotes?: string;
+}
+
+export interface AppendixPenaltyWaiverPayload {
+  mode: PenaltyMode;
+  period: PenaltyPeriod;
+  fixedAmount: string;
+  penaltyPercent: string;
+  bankInterestPercent: string;
+  graceDays: string;
+  roundRule: PenaltyRoundRule;
+  extraFeeEnabled: boolean;
+  extraFeeType: PenaltyExtraFeeType;
+  extraFeeAmount: string;
+  extraFeeRoundRule: PenaltyRoundRule;
+  progressiveRows: PenaltyProgressiveRowData[];
 }
 
 export type AppendixLoanPaymentStatus = 'unselected' | 'full' | 'less' | 'more' | 'none';
@@ -595,7 +621,18 @@ export type SupportedAppendixTagKey =
   | 'adjustment'
   | 'contract-base-costs'
   | 'side-costs'
-  | 'material-specs-change';
+  | 'material-specs-change'
+  | 'unit-delivery'
+  | 'forgiveness'
+  | 'contract-costs'
+  | 'penalty-waiver'
+  | 'builder-penalty'
+  | 'builder-cancellation'
+  | 'buyer-cancellation'
+  | 'workshop-conditions'
+  | 'arbitration'
+  | 'due-dates'
+  | 'commitment-date';
 
 export interface ContractAppendix {
   id: string;

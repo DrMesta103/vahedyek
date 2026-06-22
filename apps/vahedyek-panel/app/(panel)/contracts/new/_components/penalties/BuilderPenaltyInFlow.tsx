@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronLeft } from 'lucide-react';
+import { BadgePercent, ChevronLeft, CircleDollarSign, TrendingUp } from 'lucide-react';
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { ProfileAwareUnitInput } from '../../../../../components/ProfileAwareUnitInput';
 import type { ContractRuleState } from '../../../../../lib/businessContractRules';
@@ -31,7 +31,6 @@ import {
   ContractRegistrationSwitch,
   FieldLabel,
   FinancialAmountInput,
-  LoanChoicePills,
   LoanError,
   LoanLoadingState,
   LoanSuccess,
@@ -66,6 +65,24 @@ const SECTION_COPY: Record<BuilderPenaltySectionId, { activationDescription: str
       'در صورت فعال بودن، تغییرات مهم در مصالح یا مشخصات واحد طبق این تنظیمات بررسی می‌شود و می‌تواند منجر به جبران، اصلاح، توافق مالی یا حق فسخ شود.',
   },
 };
+
+const MODE_CARD_META = {
+  fixed: {
+    title: 'مبلغ ثابت برای هر روز/ماه',
+    description: 'در این حالت، برای هر دوره تاخیر مبلغ ثابتی به‌عنوان جریمه محاسبه می‌شود.',
+    icon: CircleDollarSign,
+  },
+  percent: {
+    title: 'درصدی از مانده بدهی معوق',
+    description: 'جریمه به‌صورت درصدی از مانده بدهی معوق محاسبه می‌شود.',
+    icon: BadgePercent,
+  },
+  progressive: {
+    title: 'جریمه تصاعدی با روزهای تاخیر',
+    description: 'مبلغ جریمه با افزایش مدت تاخیر بر اساس بازه‌های زمانی مختلف افزایش پیدا می‌کند.',
+    icon: TrendingUp,
+  },
+} as const;
 
 function AmountField({
   label,
@@ -119,6 +136,43 @@ function TextField({
       />
       {helper ? <p className="text-right text-sm text-slate-500">{helper}</p> : null}
     </div>
+  );
+}
+
+function ModeCard({
+  value,
+  active,
+  onSelect,
+}: {
+  value: BuilderPenaltyMode;
+  active: boolean;
+  onSelect: (mode: BuilderPenaltyMode) => void;
+}) {
+  const meta = MODE_CARD_META[value];
+  const Icon = meta.icon;
+
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(value)}
+      className={`flex min-h-[124px] items-center gap-3 rounded-[22px] border px-4 py-4 text-right transition ${
+        active
+          ? 'border-cyan-300 bg-cyan-50/80 shadow-[0_4px_18px_rgba(34,211,238,0.10)]'
+          : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
+      }`}
+    >
+      <span
+        className={`inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border ${
+          active ? 'border-cyan-200 bg-white text-cyan-700' : 'border-slate-200 bg-slate-50 text-slate-500'
+        }`}
+      >
+        <Icon className="h-5 w-5" />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className={`block text-[14px] font-black leading-6 ${active ? 'text-cyan-900' : 'text-slate-800'}`}>{meta.title}</span>
+        <span className="mt-1 block text-[12px] font-semibold leading-6 text-slate-500">{meta.description}</span>
+      </span>
+    </button>
   );
 }
 
@@ -556,7 +610,7 @@ export const BuilderPenaltyInFlow = forwardRef<
 
                   <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
                     {isMaterialSpecsSection ? (
-                      <div className="space-y-6 p-4">
+                      <div className="space-y-8 p-5 md:p-10">
                         <div className="rounded-2xl border border-cyan-200 bg-cyan-50/70 px-4 py-3 text-right">
                           <p className="text-xs leading-6 text-slate-700">تغییرات این بخش مستقیماً تنظیمات سازمانی جرایم سازنده را به‌روزرسانی می‌کند. نتیجه آن بلافاصله در همین فلو دیده می‌شود و برای قراردادهای بعدی نیز به‌عنوان مرجع پیش‌فرض باقی می‌ماند.</p>
                         </div>
@@ -635,32 +689,27 @@ export const BuilderPenaltyInFlow = forwardRef<
                         />
                       </div>
                     ) : (
-                      <div className="space-y-6 p-4">
-                        <div className="space-y-3">
-                          <div className="text-right">
-                            <h5 className="text-sm font-extrabold text-slate-800">روش محاسبه</h5>
-                            <p className="mt-1 text-xs leading-6 text-slate-500">یکی از روش‌ها را انتخاب کنید.</p>
-                          </div>
-                          <LoanChoicePills
-                            ariaLabel="روش محاسبه جریمه"
-                            options={BUILDER_PENALTY_MODE_OPTIONS}
-                            value={activeMode}
-                            onChange={(value) => setValue(section.modeKey, value, item.id)}
-                          />
+                      <div className="space-y-8 p-5 md:p-10">
+                        <div className="grid gap-3 md:grid-cols-3">
+                          {BUILDER_PENALTY_MODE_OPTIONS.map((mode) => (
+                            <ModeCard key={mode.value} value={mode.value} active={activeMode === mode.value} onSelect={(value) => setValue(section.modeKey, value, item.id)} />
+                          ))}
                         </div>
 
-                        <div className="space-y-3">
-                          <div className="text-right">
-                            <h5 className="text-sm font-extrabold text-slate-800">دوره محاسبه جریمه</h5>
-                            <p className="mt-1 text-xs leading-6 text-slate-500">دوره را انتخاب کنید.</p>
-                          </div>
-                          <LoanChoicePills
-                            ariaLabel="دوره محاسبه جریمه"
+                        <p className="text-center text-base leading-8 text-slate-600">
+                          {MODE_CARD_META[activeMode as keyof typeof MODE_CARD_META]?.description ?? 'یکی از روش‌ها را انتخاب کنید.'}
+                        </p>
+
+                        <section className="space-y-5">
+                          <h5 className="text-right text-[17px] font-black text-slate-800">دوره محاسبه جریمه</h5>
+                          <p className="text-right text-sm leading-7 text-slate-600">دوره را برای محاسبه جریمه انتخاب کنید.</p>
+                          <TagPills
                             options={BUILDER_PENALTY_PERIOD_OPTIONS.map((option) => ({ value: option.value, label: option.label }))}
                             value={periodLabel}
                             onChange={(value) => setValue(section.periodKey, value, item.id)}
+                            className="justify-end flex-row-reverse"
                           />
-                        </div>
+                        </section>
 
                         {activeMode === 'fixed' ? (
                           <AmountField
@@ -687,11 +736,11 @@ export const BuilderPenaltyInFlow = forwardRef<
                                   <h5 className="text-sm font-extrabold text-slate-800">مبنای محاسبه درصد</h5>
                                   <p className="mt-1 text-xs leading-6 text-slate-500">مشخص کنید درصد جریمه از چه مبنایی محاسبه شود.</p>
                                 </div>
-                                <LoanChoicePills
-                                  ariaLabel="مبنای محاسبه درصد"
+                                <TagPills
                                   options={BUILDER_PENALTY_PERCENT_BASIS_OPTIONS.map((option) => ({ value: option, label: option }))}
                                   value={selectedPercentBasis}
                                   onChange={(value) => setValue(section.percentBasisKey!, value, item.id)}
+                                  className="justify-end flex-row-reverse"
                                 />
                               </div>
                             ) : null}

@@ -66,6 +66,16 @@ function serializePenalties(penalties: any) {
   };
 }
 
+function serializeTechnicalSpecs(value: unknown) {
+  if (Array.isArray(value)) return value;
+  if (value && typeof value === 'object') {
+    const raw = value as { specs?: unknown; groups?: unknown };
+    if (Array.isArray(raw.specs)) return raw.specs;
+    if (Array.isArray(raw.groups)) return raw.groups;
+  }
+  return [];
+}
+
 function normalizeContractRuleSnapshot(ruleId: ReportRuleId, payload: unknown) {
   const normalized = normalizeRuleState(ruleId, payload);
   return ruleId === 'builder-penalty' ? normalizeBuilderPenaltyRuleState(normalized) : normalized;
@@ -208,19 +218,27 @@ export async function GET(request: Request, context: { params: Promise<{ contrac
       where: { tenantId: session.tenantId },
       select: { rulesPayload: true },
     });
-    const ruleDraftSettings = await prisma.contractDraftRuleSettings.findMany({
-      where: {
-        draftId: contractId,
-        ruleId: {
-          in: [...REPORT_RULE_IDS],
+    const ruleDraftSettings = await prisma.contractDraftRuleSettings
+      .findMany({
+        where: {
+          draftId: contractId,
+          ruleId: {
+            in: [...REPORT_RULE_IDS],
+          },
         },
-      },
-      select: {
-        ruleId: true,
-        payload: true,
-        updatedAt: true,
-      },
-    });
+        select: {
+          ruleId: true,
+          payload: true,
+          updatedAt: true,
+        },
+      })
+      .catch((error) => {
+        const message = error instanceof Error ? error.message : String(error ?? '');
+        if (message.includes('ContractDraftRuleSettings') || message.includes('P2021')) {
+          return [];
+        }
+        throw error;
+      });
 
     const stepsSnap = normalizeWorkflowSteps(draft.approvalInstance?.stepsSnapshot);
     const workflowCurrentStep =
@@ -344,7 +362,7 @@ export async function GET(request: Request, context: { params: Promise<{ contrac
         ruleSettings: serializeContractRuleSnapshots(ruleDraftSettings, tenantRuleSettings?.rulesPayload),
         terminationRules: draft.terminationRules ? { buyerRules: draft.terminationRules.buyerRules ?? {} } : null,
         extraCosts: draft.extraCosts ? { payload: draft.extraCosts.payload ?? [] } : null,
-        technicalSpecs: draft.technicalSpecs ? { specs: draft.technicalSpecs.specs ?? [] } : null,
+        technicalSpecs: draft.technicalSpecs ? { specs: serializeTechnicalSpecs(draft.technicalSpecs) } : null,
         attachments: draft.attachments ? { documents: draft.attachments.documents ?? [], notes: draft.attachments.notes ?? '' } : null,
       },
     };
@@ -360,6 +378,9 @@ export async function GET(request: Request, context: { params: Promise<{ contrac
           parties: fullResponse.data.parties,
           financial: fullResponse.data.financial,
           penalties: fullResponse.data.penalties,
+          ruleSettings: {
+            forgiveness: fullResponse.data.ruleSettings.forgiveness,
+          },
           terminationRules: fullResponse.data.terminationRules,
         },
       });

@@ -5,6 +5,8 @@ import { useSearchParams } from 'next/navigation';
 import type { Contract, ContractFormData, ContractStatus, FilterState } from '../types/contract';
 import { getContractsList } from '../lib/contractDraftClient';
 
+const ACTIVE_TAB_KEY = 'contracts-active-tab';
+
 const EMPTY_FILTERS: FilterState = {
   contractType: null,
   dateFrom: null,
@@ -38,7 +40,21 @@ export function useContracts(): UseContractsReturn {
   const searchParams = useSearchParams();
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<ContractStatus>('draft');
+  const [activeTab, setActiveTab] = useState<ContractStatus>(() => {
+    const raw = (searchParams.get('tab') ?? searchParams.get('status') ?? '').trim();
+    if (raw === 'draft' || raw === 'appendix_draft' || raw === 'pending_approval' || raw === 'completed') {
+      return raw satisfies ContractStatus;
+    }
+
+    if (typeof window !== 'undefined') {
+      const saved = window.localStorage.getItem(ACTIVE_TAB_KEY);
+      if (saved === 'draft' || saved === 'appendix_draft' || saved === 'pending_approval' || saved === 'completed') {
+        return saved;
+      }
+    }
+
+    return 'draft';
+  });
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [filters, setFilters] = useState<FilterState>(EMPTY_FILTERS);
@@ -59,6 +75,11 @@ export function useContracts(): UseContractsReturn {
     if (!urlTab) return;
     setActiveTab((current) => (current === urlTab ? current : urlTab));
   }, [urlTab]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem(ACTIVE_TAB_KEY, activeTab);
+  }, [activeTab]);
 
   const refresh = useCallback(async () => {
     setLoading(true);

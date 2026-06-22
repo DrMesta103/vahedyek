@@ -1,5 +1,5 @@
 import PanelLayout from '../../../../components/PanelLayout';
-import { ProjectTechnicalSpecsPanel } from '../../_components/ProjectDetailPanels';
+import { ProjectTechnicalSpecsPanel } from '../../_components/ProjectTechnicalSpecsPanel';
 
 function normalizeReturnTo(value: string | string[] | undefined) {
   const candidate = Array.isArray(value) ? value[0] : value;
