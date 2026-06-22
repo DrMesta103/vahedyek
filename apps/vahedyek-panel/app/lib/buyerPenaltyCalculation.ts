@@ -1,4 +1,4 @@
-import { isPrimaryFinancialCategoryId } from './financialLineShared';
+﻿import { isPrimaryFinancialCategoryId, structuralFinancialSubSuffix } from './financialLineShared';
 import { formatJalaliDate, toComparableDateFromDueString } from './financialUtils';
 import type { ContractPenaltiesData, PenaltyMode, PenaltyPeriod, PenaltyRuleData } from '../types/contract';
 
@@ -151,12 +151,21 @@ export function penaltyTypeKeysMatch(storedId: string, logicalKey: string) {
 }
 
 export function resolvePenaltyTypeId(categoryId: string) {
-  if (categoryId.includes(':') || categoryId.startsWith('custom-')) {
+  const suffix = extractPenaltyTypeKey(categoryId);
+  const structuralKey = structuralFinancialSubSuffix(categoryId) ?? suffix ?? categoryId;
+
+  if (structuralKey === 'principal' || suffix === 'principal') {
     return MISC_COST_PENALTY_TYPE_ID;
   }
 
-  if (isPrimaryFinancialCategoryId(categoryId) && categoryId !== 'principal') {
-    const mapped = PENALTY_TYPE_BY_SECTION[categoryId as keyof typeof PENALTY_TYPE_BY_SECTION];
+  if (suffix.startsWith('advance')) return PENALTY_TYPE_BY_SECTION.advance;
+  if (suffix.startsWith('installment')) return PENALTY_TYPE_BY_SECTION.installment;
+  if (suffix.startsWith('loan')) return PENALTY_TYPE_BY_SECTION.loan;
+  if (suffix.startsWith('handover')) return PENALTY_TYPE_BY_SECTION.handover;
+  if (suffix.startsWith('document')) return PENALTY_TYPE_BY_SECTION.document;
+
+  if (isPrimaryFinancialCategoryId(structuralKey) && structuralKey !== 'principal') {
+    const mapped = PENALTY_TYPE_BY_SECTION[structuralKey as keyof typeof PENALTY_TYPE_BY_SECTION];
     if (mapped) return mapped;
   }
 
@@ -247,13 +256,13 @@ function resolveStoredPenaltyTypeId(
 function methodLabel(mode: PenaltyMode) {
   switch (mode) {
     case 'fixed':
-      return 'مبلغ ثابت';
+      return 'Ù…Ø¨Ù„Øº Ø«Ø§Ø¨Øª';
     case 'overdue':
-      return 'درصد مانده بدهی معوق';
+      return 'Ø¯Ø±ØµØ¯ Ù…Ø§Ù†Ø¯Ù‡ Ø¨Ø¯Ù‡ÛŒ Ù…Ø¹ÙˆÙ‚';
     case 'contract':
-      return 'درصد مبلغ کل قرارداد';
+      return 'Ø¯Ø±ØµØ¯ Ù…Ø¨Ù„Øº Ú©Ù„ Ù‚Ø±Ø§Ø±Ø¯Ø§Ø¯';
     case 'progressive':
-      return 'تصاعدی بر اساس روزهای تأخیر';
+      return 'ØªØµØ§Ø¹Ø¯ÛŒ Ø¨Ø± Ø§Ø³Ø§Ø³ Ø±ÙˆØ²Ù‡Ø§ÛŒ ØªØ£Ø®ÛŒØ±';
     default:
       return mode;
   }
@@ -262,29 +271,29 @@ function methodLabel(mode: PenaltyMode) {
 function periodLabel(period: PenaltyPeriod) {
   switch (period) {
     case 'daily':
-      return 'روزانه';
+      return 'Ø±ÙˆØ²Ø§Ù†Ù‡';
     case 'monthly':
-      return 'ماهانه';
+      return 'Ù…Ø§Ù‡Ø§Ù†Ù‡';
     case 'yearly':
-      return 'سالانه';
+      return 'Ø³Ø§Ù„Ø§Ù†Ù‡';
     default:
       return period;
   }
 }
 
 function formatMoneyRialLabel(valueRial: number) {
-  if (!valueRial) return '۰ ریال';
-  return `${Math.round(valueRial).toLocaleString('fa-IR')} ریال`;
+  if (!valueRial) return 'Û° Ø±ÛŒØ§Ù„';
+  return `${Math.round(valueRial).toLocaleString('fa-IR')} Ø±ÛŒØ§Ù„`;
 }
 
 function formatPercentLabel(value: number) {
-  return `${value.toLocaleString('fa-IR', { maximumFractionDigits: 4 })}٪`;
+  return `${value.toLocaleString('fa-IR', { maximumFractionDigits: 4 })}Ùª`;
 }
 
 export function getPenaltyRoundRuleLabel(rule: string | null | undefined) {
-  if (rule === '1000') return 'گرد به ۱٬۰۰۰ ریال';
-  if (rule === '100' || rule === '00') return 'گرد به ۱۰۰ ریال';
-  return 'بدون گرد کردن';
+  if (rule === '1000') return 'Ú¯Ø±Ø¯ Ø¨Ù‡ Û±Ù¬Û°Û°Û° Ø±ÛŒØ§Ù„';
+  if (rule === '100' || rule === '00') return 'Ú¯Ø±Ø¯ Ø¨Ù‡ Û±Û°Û° Ø±ÛŒØ§Ù„';
+  return 'Ø¨Ø¯ÙˆÙ† Ú¯Ø±Ø¯ Ú©Ø±Ø¯Ù†';
 }
 
 export function buildPenaltyRuleSettingsSnapshot(rule: PenaltyRuleData | null): BuyerPenaltyRuleSettingsSnapshot | null {
@@ -320,16 +329,16 @@ export function buildPenaltyRuleSettingsSnapshot(rule: PenaltyRuleData | null): 
   let summaryLine = '';
   switch (mode) {
     case 'fixed':
-      summaryLine = `${formatMoneyRialLabel(fixedAmountRial ?? 0)} · ${periodLabel(period)}`;
+      summaryLine = `${formatMoneyRialLabel(fixedAmountRial ?? 0)} Â· ${periodLabel(period)}`;
       break;
     case 'overdue':
-      summaryLine = `${formatPercentLabel(penaltyPercent ?? 0)} از مانده بدهی معوق · ${periodLabel(period)}`;
+      summaryLine = `${formatPercentLabel(penaltyPercent ?? 0)} Ø§Ø² Ù…Ø§Ù†Ø¯Ù‡ Ø¨Ø¯Ù‡ÛŒ Ù…Ø¹ÙˆÙ‚ Â· ${periodLabel(period)}`;
       break;
     case 'contract':
-      summaryLine = `${formatPercentLabel(penaltyPercent ?? 0)} از مبلغ کل قرارداد · ${periodLabel(period)}`;
+      summaryLine = `${formatPercentLabel(penaltyPercent ?? 0)} Ø§Ø² Ù…Ø¨Ù„Øº Ú©Ù„ Ù‚Ø±Ø§Ø±Ø¯Ø§Ø¯ Â· ${periodLabel(period)}`;
       break;
     case 'progressive':
-      summaryLine = `${progressiveRows.length.toLocaleString('fa-IR')} بازه تصاعدی · ${periodLabel(period)}`;
+      summaryLine = `${progressiveRows.length.toLocaleString('fa-IR')} Ø¨Ø§Ø²Ù‡ ØªØµØ§Ø¹Ø¯ÛŒ Â· ${periodLabel(period)}`;
       break;
     default:
       summaryLine = methodLabel(mode);
@@ -356,41 +365,41 @@ export function getPenaltyRuleSettingRows(snapshot: BuyerPenaltyRuleSettingsSnap
   if (!snapshot) return [] as Array<{ label: string; value: string }>;
 
   const rows: Array<{ label: string; value: string }> = [
-    { label: 'روش محاسبه جریمه', value: methodLabel(snapshot.mode) },
-    { label: 'دوره محاسبه', value: periodLabel(snapshot.period) },
-    { label: 'مهلت تنفس', value: `${snapshot.graceDays.toLocaleString('fa-IR')} روز` },
-    { label: 'قاعده گرد کردن جریمه اصلی', value: getPenaltyRoundRuleLabel(snapshot.roundRule) },
+    { label: 'Ø±ÙˆØ´ Ù…Ø­Ø§Ø³Ø¨Ù‡ Ø¬Ø±ÛŒÙ…Ù‡', value: methodLabel(snapshot.mode) },
+    { label: 'Ø¯ÙˆØ±Ù‡ Ù…Ø­Ø§Ø³Ø¨Ù‡', value: periodLabel(snapshot.period) },
+    { label: 'Ù…Ù‡Ù„Øª ØªÙ†ÙØ³', value: `${snapshot.graceDays.toLocaleString('fa-IR')} Ø±ÙˆØ²` },
+    { label: 'Ù‚Ø§Ø¹Ø¯Ù‡ Ú¯Ø±Ø¯ Ú©Ø±Ø¯Ù† Ø¬Ø±ÛŒÙ…Ù‡ Ø§ØµÙ„ÛŒ', value: getPenaltyRoundRuleLabel(snapshot.roundRule) },
   ];
 
   if (snapshot.mode === 'fixed' && snapshot.fixedAmountRial != null) {
-    rows.push({ label: 'مبلغ ثابت هر دوره', value: formatMoneyRialLabel(snapshot.fixedAmountRial) });
+    rows.push({ label: 'Ù…Ø¨Ù„Øº Ø«Ø§Ø¨Øª Ù‡Ø± Ø¯ÙˆØ±Ù‡', value: formatMoneyRialLabel(snapshot.fixedAmountRial) });
   }
   if ((snapshot.mode === 'overdue' || snapshot.mode === 'contract') && snapshot.penaltyPercent != null) {
     rows.push({
-      label: snapshot.mode === 'contract' ? 'درصد از مبلغ کل قرارداد' : 'درصد از مانده بدهی معوق',
-      value: `${formatPercentLabel(snapshot.penaltyPercent)} در هر دوره`,
+      label: snapshot.mode === 'contract' ? 'Ø¯Ø±ØµØ¯ Ø§Ø² Ù…Ø¨Ù„Øº Ú©Ù„ Ù‚Ø±Ø§Ø±Ø¯Ø§Ø¯' : 'Ø¯Ø±ØµØ¯ Ø§Ø² Ù…Ø§Ù†Ø¯Ù‡ Ø¨Ø¯Ù‡ÛŒ Ù…Ø¹ÙˆÙ‚',
+      value: `${formatPercentLabel(snapshot.penaltyPercent)} Ø¯Ø± Ù‡Ø± Ø¯ÙˆØ±Ù‡`,
     });
   }
   if (snapshot.bankInterestPercent != null) {
     rows.push({
-      label: 'درصد سود بانکی اضافه',
-      value: `${formatPercentLabel(snapshot.bankInterestPercent)} در هر دوره`,
+      label: 'Ø¯Ø±ØµØ¯ Ø³ÙˆØ¯ Ø¨Ø§Ù†Ú©ÛŒ Ø§Ø¶Ø§ÙÙ‡',
+      value: `${formatPercentLabel(snapshot.bankInterestPercent)} Ø¯Ø± Ù‡Ø± Ø¯ÙˆØ±Ù‡`,
     });
   }
   if (snapshot.extraFeeEnabled) {
     rows.push({
-      label: 'هزینه دیرکرد',
+      label: 'Ù‡Ø²ÛŒÙ†Ù‡ Ø¯ÛŒØ±Ú©Ø±Ø¯',
       value:
         snapshot.extraFeeType === 'percent'
-          ? `${formatPercentLabel(snapshot.extraFeeAmount ?? 0)} از مانده بدهی معوق (یک‌بار)`
-          : `${formatMoneyRialLabel(snapshot.extraFeeAmount ?? 0)} ثابت (یک‌بار)`,
+          ? `${formatPercentLabel(snapshot.extraFeeAmount ?? 0)} Ø§Ø² Ù…Ø§Ù†Ø¯Ù‡ Ø¨Ø¯Ù‡ÛŒ Ù…Ø¹ÙˆÙ‚ (ÛŒÚ©â€ŒØ¨Ø§Ø±)`
+          : `${formatMoneyRialLabel(snapshot.extraFeeAmount ?? 0)} Ø«Ø§Ø¨Øª (ÛŒÚ©â€ŒØ¨Ø§Ø±)`,
     });
     rows.push({
-      label: 'قاعده گرد کردن هزینه دیرکرد',
+      label: 'Ù‚Ø§Ø¹Ø¯Ù‡ Ú¯Ø±Ø¯ Ú©Ø±Ø¯Ù† Ù‡Ø²ÛŒÙ†Ù‡ Ø¯ÛŒØ±Ú©Ø±Ø¯',
       value: getPenaltyRoundRuleLabel(snapshot.extraFeeRoundRule),
     });
   } else {
-    rows.push({ label: 'هزینه دیرکرد', value: 'غیرفعال' });
+    rows.push({ label: 'Ù‡Ø²ÛŒÙ†Ù‡ Ø¯ÛŒØ±Ú©Ø±Ø¯', value: 'ØºÛŒØ±ÙØ¹Ø§Ù„' });
   }
 
   return rows;
@@ -448,15 +457,15 @@ export function calculateBuyerPenaltyForDue(params: {
   };
 
   if (!dueDateParsed) {
-    return { ...baseDetail, zeroReason: 'تاریخ سررسید معتبر نیست.' };
+    return { ...baseDetail, zeroReason: 'ØªØ§Ø±ÛŒØ® Ø³Ø±Ø±Ø³ÛŒØ¯ Ù…Ø¹ØªØ¨Ø± Ù†ÛŒØ³Øª.' };
   }
 
   if (!rule) {
-    return { ...baseDetail, zeroReason: 'قانون جریمه برای این نوع فعال یا ثبت نشده است.' };
+    return { ...baseDetail, zeroReason: 'Ù‚Ø§Ù†ÙˆÙ† Ø¬Ø±ÛŒÙ…Ù‡ Ø¨Ø±Ø§ÛŒ Ø§ÛŒÙ† Ù†ÙˆØ¹ ÙØ¹Ø§Ù„ ÛŒØ§ Ø«Ø¨Øª Ù†Ø´Ø¯Ù‡ Ø§Ø³Øª.' };
   }
 
   if (overdueRemainingDebtRial <= 0) {
-    return { ...baseDetail, zeroReason: 'مانده بدهی معوق برای این سررسید صفر است.' };
+    return { ...baseDetail, zeroReason: 'Ù…Ø§Ù†Ø¯Ù‡ Ø¨Ø¯Ù‡ÛŒ Ù…Ø¹ÙˆÙ‚ Ø¨Ø±Ø§ÛŒ Ø§ÛŒÙ† Ø³Ø±Ø±Ø³ÛŒØ¯ ØµÙØ± Ø§Ø³Øª.' };
   }
 
   const rawDelayDays = diffCalendarDays(dueDateParsed, calculationDate);
@@ -474,8 +483,8 @@ export function calculateBuyerPenaltyForDue(params: {
       chargeableDelayDays,
       zeroReason:
         rawDelayDays <= 0
-          ? 'سررسید هنوز فرا نرسیده است.'
-          : 'این سررسید هنوز در مهلت تنفس است یا روز قابل محاسبه‌ای ندارد.',
+          ? 'Ø³Ø±Ø±Ø³ÛŒØ¯ Ù‡Ù†ÙˆØ² ÙØ±Ø§ Ù†Ø±Ø³ÛŒØ¯Ù‡ Ø§Ø³Øª.'
+          : 'Ø§ÛŒÙ† Ø³Ø±Ø±Ø³ÛŒØ¯ Ù‡Ù†ÙˆØ² Ø¯Ø± Ù…Ù‡Ù„Øª ØªÙ†ÙØ³ Ø§Ø³Øª ÛŒØ§ Ø±ÙˆØ² Ù‚Ø§Ø¨Ù„ Ù…Ø­Ø§Ø³Ø¨Ù‡â€ŒØ§ÛŒ Ù†Ø¯Ø§Ø±Ø¯.',
     };
   }
 
@@ -529,36 +538,36 @@ export function calculateBuyerPenaltyForDue(params: {
 
   if (mode === 'fixed' && ruleSettings?.fixedAmountRial != null) {
     calculationNotes.push(
-      `جریمه اصلی = ${formatMoneyRialLabel(ruleSettings.fixedAmountRial)} × ${periodCount.toLocaleString('fa-IR')} دوره ${periodLabel(period)} = ${formatMoneyRialLabel(mainPenaltyRawRial)}`,
+      `Ø¬Ø±ÛŒÙ…Ù‡ Ø§ØµÙ„ÛŒ = ${formatMoneyRialLabel(ruleSettings.fixedAmountRial)} Ã— ${periodCount.toLocaleString('fa-IR')} Ø¯ÙˆØ±Ù‡ ${periodLabel(period)} = ${formatMoneyRialLabel(mainPenaltyRawRial)}`,
     );
   } else if (mode === 'overdue' && ruleSettings?.penaltyPercent != null) {
     calculationNotes.push(
-      `جریمه اصلی = ${formatMoneyRialLabel(percentBaseAmountRial)} × ${formatPercentLabel(ruleSettings.penaltyPercent)} × ${periodCount.toLocaleString('fa-IR')} دوره = ${formatMoneyRialLabel(mainPenaltyRawRial)}`,
+      `Ø¬Ø±ÛŒÙ…Ù‡ Ø§ØµÙ„ÛŒ = ${formatMoneyRialLabel(percentBaseAmountRial)} Ã— ${formatPercentLabel(ruleSettings.penaltyPercent)} Ã— ${periodCount.toLocaleString('fa-IR')} Ø¯ÙˆØ±Ù‡ = ${formatMoneyRialLabel(mainPenaltyRawRial)}`,
     );
   } else if (mode === 'contract' && ruleSettings?.penaltyPercent != null) {
     calculationNotes.push(
-      `جریمه اصلی = ${formatMoneyRialLabel(percentBaseAmountRial)} × ${formatPercentLabel(ruleSettings.penaltyPercent)} × ${periodCount.toLocaleString('fa-IR')} دوره = ${formatMoneyRialLabel(mainPenaltyRawRial)}`,
+      `Ø¬Ø±ÛŒÙ…Ù‡ Ø§ØµÙ„ÛŒ = ${formatMoneyRialLabel(percentBaseAmountRial)} Ã— ${formatPercentLabel(ruleSettings.penaltyPercent)} Ã— ${periodCount.toLocaleString('fa-IR')} Ø¯ÙˆØ±Ù‡ = ${formatMoneyRialLabel(mainPenaltyRawRial)}`,
     );
   } else if (mode === 'progressive' && progressiveBreakdown && progressiveBreakdown.length > 0) {
     for (const range of progressiveBreakdown) {
       calculationNotes.push(
-        `بازه ${range.fromDay.toLocaleString('fa-IR')}${range.openEnded ? ' به بعد' : ` تا ${String(range.toDay ?? '').toLocaleString('fa-IR')}`}: ${formatMoneyRialLabel(range.baseAmountRial)} × ${formatPercentLabel(range.ratePercent)} × ${range.daysInsideRange.toLocaleString('fa-IR')} روز = ${formatMoneyRialLabel(range.calculatedAmountRial)}`,
+        `Ø¨Ø§Ø²Ù‡ ${range.fromDay.toLocaleString('fa-IR')}${range.openEnded ? ' Ø¨Ù‡ Ø¨Ø¹Ø¯' : ` ØªØ§ ${range.toDay?.toLocaleString('fa-IR') ?? '—'}`}: ${formatMoneyRialLabel(range.baseAmountRial)} Ã— ${formatPercentLabel(range.ratePercent)} Ã— ${range.daysInsideRange.toLocaleString('fa-IR')} Ø±ÙˆØ² = ${formatMoneyRialLabel(range.calculatedAmountRial)}`,
       );
     }
   }
 
   if (bankInterestRawRial > 0 && ruleSettings?.bankInterestPercent != null) {
     calculationNotes.push(
-      `سود بانکی = ${formatMoneyRialLabel(percentBaseAmountRial)} × ${formatPercentLabel(ruleSettings.bankInterestPercent)} × ${periodCount.toLocaleString('fa-IR')} دوره = ${formatMoneyRialLabel(bankInterestRawRial)}`,
+      `Ø³ÙˆØ¯ Ø¨Ø§Ù†Ú©ÛŒ = ${formatMoneyRialLabel(percentBaseAmountRial)} Ã— ${formatPercentLabel(ruleSettings.bankInterestPercent)} Ã— ${periodCount.toLocaleString('fa-IR')} Ø¯ÙˆØ±Ù‡ = ${formatMoneyRialLabel(bankInterestRawRial)}`,
     );
   }
 
   if (lateFeeType === 'percent' && lateFeeConfiguredValue != null) {
     calculationNotes.push(
-      `هزینه دیرکرد = ${formatMoneyRialLabel(overdueRemainingDebtRial)} × ${formatPercentLabel(lateFeeConfiguredValue)} = ${formatMoneyRialLabel(lateFeeRawRial)}`,
+      `Ù‡Ø²ÛŒÙ†Ù‡ Ø¯ÛŒØ±Ú©Ø±Ø¯ = ${formatMoneyRialLabel(overdueRemainingDebtRial)} Ã— ${formatPercentLabel(lateFeeConfiguredValue)} = ${formatMoneyRialLabel(lateFeeRawRial)}`,
     );
   } else if (lateFeeType === 'fixed' && lateFeeConfiguredValue != null) {
-    calculationNotes.push(`هزینه دیرکرد = ${formatMoneyRialLabel(lateFeeConfiguredValue)} (ثابت، یک‌بار)`);
+    calculationNotes.push(`Ù‡Ø²ÛŒÙ†Ù‡ Ø¯ÛŒØ±Ú©Ø±Ø¯ = ${formatMoneyRialLabel(lateFeeConfiguredValue)} (Ø«Ø§Ø¨ØªØŒ ÛŒÚ©â€ŒØ¨Ø§Ø±)`);
   }
 
   const totalPenaltyRial = mainPenaltyRoundedRial + bankInterestRoundedRial + lateFeeRoundedRial;
@@ -585,7 +594,7 @@ export function calculateBuyerPenaltyForDue(params: {
     totalCollectibleRial,
     progressiveBreakdown,
     calculationNotes,
-    zeroReason: totalPenaltyRial > 0 ? null : 'مبلغ جریمه پس از گرد کردن صفر شد.',
+    zeroReason: totalPenaltyRial > 0 ? null : 'Ù…Ø¨Ù„Øº Ø¬Ø±ÛŒÙ…Ù‡ Ù¾Ø³ Ø§Ø² Ú¯Ø±Ø¯ Ú©Ø±Ø¯Ù† ØµÙØ± Ø´Ø¯.',
   };
 }
 
@@ -636,3 +645,6 @@ export function getPenaltyMethodLabel(mode: PenaltyMode) {
 export function getPenaltyPeriodLabel(period: PenaltyPeriod) {
   return periodLabel(period);
 }
+
+
+

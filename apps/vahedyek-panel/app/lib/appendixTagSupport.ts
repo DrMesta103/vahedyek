@@ -9,6 +9,17 @@ export const SUPPORTED_APPENDIX_TAGS: SupportedAppendixTagKey[] = [
   'contract-base-costs',
   'side-costs',
   'material-specs-change',
+  'unit-delivery',
+  'forgiveness',
+  'contract-costs',
+  'penalty-waiver',
+  'builder-penalty',
+  'builder-cancellation',
+  'buyer-cancellation',
+  'workshop-conditions',
+  'arbitration',
+  'due-dates',
+  'commitment-date',
 ];
 
 const SUPPORTED_APPENDIX_TAG_SET = new Set<AppendixTagKey>(SUPPORTED_APPENDIX_TAGS);

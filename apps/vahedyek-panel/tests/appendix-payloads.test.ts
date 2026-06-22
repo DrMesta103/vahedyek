@@ -6,9 +6,10 @@ import {
   createInitialAppendixPayload,
   normalizeAppendixPayload,
   validateAdjustmentPayload,
+  validateAppendixPayload,
 } from '../app/lib/appendixPayloads';
 import { filterSupportedAppendixTags } from '../app/lib/appendixTagSupport';
-import type { AppendixAdjustmentPayload, AppendixTagKey } from '../app/types/contract';
+import type { AppendixAdjustmentPayload, AppendixPenaltyWaiverPayload, AppendixTagKey } from '../app/types/contract';
 import type { AppendixLoanPayload } from '../app/types/contract';
 
 test('createInitialAppendixPayload builds a fixed single adjustment line', () => {
@@ -92,4 +93,41 @@ test('normalizeAppendixPayload keeps loan details step only for less-than-contra
   assert.equal(payload.paymentStatus, 'less');
   assert.equal(payload.contractLoanAmount, '1200000000');
   assert.equal(payload.loanAmount, '500000000');
+});
+
+test('createInitialAppendixPayload builds a penalty waiver payload compatible with the draft penalty section', () => {
+  const payload = createInitialAppendixPayload('penalty-waiver') as AppendixPenaltyWaiverPayload;
+
+  assert.equal(payload.mode, 'fixed');
+  assert.equal(payload.period, 'monthly');
+  assert.equal(payload.fixedAmount, '100,000');
+  assert.equal(payload.penaltyPercent, '0.5');
+  assert.equal(validateAppendixPayload('penalty-waiver', payload), '');
+});
+
+test('normalizeAppendixPayload preserves penalty waiver progressive rows', () => {
+  const payload = normalizeAppendixPayload('penalty-waiver', {
+    mode: 'progressive',
+    period: 'daily',
+    fixedAmount: '250000',
+    penaltyPercent: '0.75',
+    bankInterestPercent: '0.2',
+    graceDays: '3',
+    roundRule: '0',
+    extraFeeEnabled: true,
+    extraFeeType: 'fixed',
+    extraFeeAmount: '5000',
+    extraFeeRoundRule: '1000',
+    progressiveRows: [
+      { id: 'a', fromDay: '1', toDay: '5', rate: '0.5', openEnded: false },
+      { id: 'b', fromDay: '6', toDay: '', rate: '1.25', openEnded: true },
+    ],
+  }) as AppendixPenaltyWaiverPayload;
+
+  assert.equal(payload.mode, 'progressive');
+  assert.equal(payload.period, 'daily');
+  assert.equal(payload.fixedAmount, '250000');
+  assert.equal(payload.penaltyPercent, '0.75');
+  assert.equal(payload.progressiveRows[0]?.fromDay, '1');
+  assert.equal(validateAppendixPayload('penalty-waiver', payload), '');
 });

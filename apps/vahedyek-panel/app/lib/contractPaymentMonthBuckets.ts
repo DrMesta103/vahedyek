@@ -41,6 +41,9 @@ export type PaymentHistoryDueRow = {
   principalDueRowId?: string | null;
   penaltyRuleId?: string | null;
   penaltyTypeId?: string | null;
+  forgivenRial?: number | null;
+  claimableAmountRial?: number | null;
+  forgivenessStatus?: 'applied' | 'pending' | 'inactive';
 };
 
 export type PaymentHistoryMonthBucket = {
@@ -71,7 +74,7 @@ function buildMonthBucketsFromRows(rows: PaymentHistoryDueRow[]) {
   today.setHours(0, 0, 0, 0);
 
   for (const row of rows) {
-    const amount = Math.max(0, Math.round(Number(row.amount) || 0));
+    const amount = Math.max(0, Math.round(Number(row.claimableAmountRial ?? row.amount) || 0));
     const dueDateRaw = String(row.dueDate ?? '').trim();
     const parsedYm = dueDateRaw ? parseDueDateFlexible(dueDateRaw) : null;
     const key = parsedYm ? `${parsedYm.year}-${String(parsedYm.month).padStart(2, '0')}` : PAYMENT_HISTORY_UNKNOWN_MONTH_KEY;

@@ -27,6 +27,16 @@ export type TechnicalSpecItem = {
   systemKey?: string;
 };
 
+export type ContractTechnicalSpecGroup = {
+  id: string;
+  title: string;
+  selectedSpecIds: string[];
+};
+
+export type ContractTechnicalSpecsPayload = {
+  specs: ContractTechnicalSpecGroup[];
+};
+
 export type AttachmentItem = {
   id: string;
   category?: string;
@@ -65,6 +75,65 @@ async function ensureDraftAccess(draftId: string): Promise<{ ok: true } | { ok: 
   return { ok: true as const };
 }
 
+function normalizeTechnicalSpecId(value: unknown) {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+function normalizeTechnicalSpecGroup(input: unknown, index: number): ContractTechnicalSpecGroup | null {
+  if (!input || typeof input !== 'object') return null;
+
+  const raw = input as Record<string, unknown> & Partial<TechnicalSpecItem>;
+  const title = typeof raw.title === 'string' ? raw.title.trim() : typeof raw.name === 'string' ? raw.name.trim() : '';
+  const fromSelectedIds = Array.isArray(raw.selectedSpecIds)
+    ? raw.selectedSpecIds
+        .map((item) => normalizeTechnicalSpecId(item))
+        .filter(Boolean)
+    : [];
+  const fromSpecIds = Array.isArray(raw.specIds)
+    ? raw.specIds
+        .map((item) => normalizeTechnicalSpecId(item))
+        .filter(Boolean)
+    : [];
+  const fromItems = Array.isArray(raw.items)
+    ? raw.items
+        .map((item) => (item && typeof item === 'object' ? normalizeTechnicalSpecId((item as Partial<TechnicalSpecItem>).id) : ''))
+        .filter(Boolean)
+    : [];
+  const legacySingleId = normalizeTechnicalSpecId(raw.id);
+  const selectedSpecIds = fromSelectedIds.length ? fromSelectedIds : fromSpecIds.length ? fromSpecIds : fromItems;
+  const normalizedSelectedSpecIds =
+    selectedSpecIds.length || (!title && !selectedSpecIds.length && (raw.standard || raw.location || raw.systemKey)) ? selectedSpecIds : [];
+  if (!title && !normalizedSelectedSpecIds.length && !legacySingleId) return null;
+
+  return {
+    id: legacySingleId || `group-${index + 1}`,
+    title: title || `گروه ${index + 1}`,
+    selectedSpecIds: normalizedSelectedSpecIds.length ? normalizedSelectedSpecIds : legacySingleId ? [legacySingleId] : [],
+  };
+}
+
+function normalizeTechnicalSpecsPayload(input: unknown): ContractTechnicalSpecsPayload {
+  if (Array.isArray(input)) {
+    return {
+      specs: input
+        .map((item, index) => normalizeTechnicalSpecGroup(item, index))
+        .filter((item): item is ContractTechnicalSpecGroup => Boolean(item)),
+    };
+  }
+
+  const raw = input && typeof input === 'object' ? (input as Record<string, unknown>) : {};
+  const directSpecs = Array.isArray(raw.specs) ? raw.specs : Array.isArray(raw.groups) ? raw.groups : null;
+  if (directSpecs) {
+    return {
+      specs: directSpecs
+        .map((item, index) => normalizeTechnicalSpecGroup(item, index))
+        .filter((item): item is ContractTechnicalSpecGroup => Boolean(item)),
+    };
+  }
+
+  return { specs: [] };
+}
+
 export async function getContractExtraCosts(
   draftId: string,
 ): Promise<{ ok: true; exists: boolean; payload: ContractRelatedExpense[] } | { ok: false; message: string }> {
@@ -88,22 +157,24 @@ export async function upsertContractExtraCosts(
 
 export async function getContractTechnicalSpecs(
   draftId: string,
-): Promise<{ ok: true; exists: boolean; specs: TechnicalSpecItem[] } | { ok: false; message: string }> {
+): Promise<{ ok: true; exists: boolean; specs: any[] } | { ok: false; message: string }> {
   const access = await ensureDraftAccess(draftId);
   if (access.ok === false) return { ok: false, message: access.message };
 
   const row = await getTechnicalSpecsRow(draftId);
-  return { ok: true, exists: row !== null, specs: (Array.isArray(row) ? row : []) as TechnicalSpecItem[] };
+  const payload = normalizeTechnicalSpecsPayload(row);
+  return { ok: true, exists: payload.specs.length > 0, specs: payload.specs as any[] };
 }
 
 export async function upsertContractTechnicalSpecs(
   draftId: string,
-  specs: TechnicalSpecItem[],
+  payload: ContractTechnicalSpecsPayload | ContractTechnicalSpecGroup[] | any,
 ): Promise<{ ok: true } | { ok: false; message: string }> {
   const access = await ensureDraftAccess(draftId);
   if (access.ok === false) return { ok: false, message: access.message };
 
-  await upsertTechnicalSpecsRow(draftId, specs as unknown as Prisma.InputJsonValue);
+  const normalized = normalizeTechnicalSpecsPayload(payload);
+  await upsertTechnicalSpecsRow(draftId, normalized as unknown as Prisma.InputJsonValue);
   return { ok: true };
 }
 

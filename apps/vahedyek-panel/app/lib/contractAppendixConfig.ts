@@ -23,7 +23,30 @@ export const CONTRACT_APPENDIX_TAG_GROUPS: Array<{
       { key: 'unit-delivery', groupKey: 'financial', title: 'تحویل واحد', description: 'تغییرات مالی مرتبط با تحویل واحد' },
       { key: 'forgiveness', groupKey: 'financial', title: 'بخشودگی', description: 'بخشودگی اقلام قرارداد' },
       { key: 'contract-costs', groupKey: 'financial', title: 'هزینه مربوط به قرارداد', description: 'هزینه‌های جدید مربوط به قرارداد' },
-      { key: 'penalty-waiver', groupKey: 'financial', title: 'جرائم کارفرما', description: 'اصلاح جرائم یا وجه التزام' },
+      {
+        key: 'penalty-waiver',
+        groupKey: 'financial',
+        title: 'جرائم کارفرما',
+        description: 'تنظیم جرائم کارفرما با همان ساختار بخش پیش‌نویس جریمه',
+      },
+      {
+        key: 'builder-penalty',
+        groupKey: 'financial',
+        title: 'جرائم سازنده',
+        description: 'تنظیم جرائم سازنده با همان ساختار بخش پیش‌نویس جریمه',
+      },
+      {
+        key: 'builder-cancellation',
+        groupKey: 'financial',
+        title: 'فسخ سازنده',
+        description: 'تنظیم و ثبت شرایط فسخ سازنده با همان ساختار پیش‌نویس',
+      },
+      {
+        key: 'buyer-cancellation',
+        groupKey: 'financial',
+        title: 'فسخ خریدار',
+        description: 'تنظیم و ثبت شرایط فسخ خریدار با همان ساختار پیش‌نویس',
+      },
     ],
   },
   {
@@ -37,14 +60,14 @@ export const CONTRACT_APPENDIX_TAG_GROUPS: Array<{
   },
   {
     key: 'quality',
-    title: 'تغییرات کیفی و مشخصات واحد',
-    helper: 'در این بخش می‌توانید پرونده تغییر مصالح، مشخصات و نتایج قراردادی ناشی از آن را ثبت و پیگیری کنید.',
+    title: 'مشخصات فنی پروژه',
+    helper: 'در این بخش می‌توانید پرونده‌های مرتبط با مشخصات فنی پروژه را به قرارداد اضافه و پیگیری کنید.',
     tags: [
       {
         key: 'material-specs-change',
         groupKey: 'quality',
-        title: 'تغییر مصالح و مشخصات',
-        description: 'ثبت پرونده تغییر مصالح یا مشخصات واحد و فعال‌سازی نتیجه قراردادی بر اساس آن',
+        title: 'تغییرات مشخصات فنی پروژه',
+        description: 'ثبت پرونده تغییرات مشخصات فنی پروژه و فعال‌سازی نتیجه قراردادی بر اساس آن',
       },
     ],
   },

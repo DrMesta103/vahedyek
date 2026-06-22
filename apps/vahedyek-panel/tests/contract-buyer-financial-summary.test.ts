@@ -9,6 +9,7 @@ type DueItem = { id: string; categoryId: string; title: string; amount: number; 
 function buildContract(overrides: {
   dueItems?: DueItem[];
   penalties?: any;
+  ruleSettings?: any;
   deliveryDate?: string;
   terminationRules?: any;
   financial?: any;
@@ -61,6 +62,7 @@ function buildContract(overrides: {
       },
       financial,
       penalties: overrides.penalties ?? null,
+      ruleSettings: overrides.ruleSettings ?? null,
       terminationRules: overrides.terminationRules ?? null,
     },
   };
@@ -310,6 +312,41 @@ test('applied penalty stays separate from principal debt and forgiveness is not 
   assert.equal(summary.charts.penalties.paidRial, 0);
   assert.equal(summary.charts.penalties.forgivenRial, null);
   assert.notEqual(summary.settlementStatus?.label, 'تسویه کامل');
+});
+
+test('buyer financial summary reflects forgiveness on claimable penalties without changing raw calculated total', () => {
+  const contract = buildContract({
+    dueItems: [{ id: 'due-1', categoryId: 'installment', title: 'قسط اول', amount: 1000000, dueDate: '1404/01/01' }],
+    penalties: buildPenaltyRules(),
+    ruleSettings: {
+      forgiveness: {
+        active: true,
+        activeTab: '',
+        values: {
+          forgiveAllowed: true,
+          forgiveScope: 'whole',
+          forgiveValueMode: 'amount',
+          forgiveMinValue: '0',
+          forgiveMaxValue: '250000',
+          forgiveMaxDelayCount: '1',
+          forgiveOutsideBuyerControl: false,
+          forgiveManagerApproval: false,
+        },
+      },
+    },
+  });
+
+  const summary = buildBuyerFinancialSummary(contract, []);
+
+  assert.ok((summary.openPenaltyRial ?? 0) > 0);
+  assert.ok((summary.charts.penalties.calculatedRial ?? 0) > 0);
+  assert.ok(summary.charts.penalties.forgivenRial != null && summary.charts.penalties.forgivenRial > 0);
+  assert.ok(summary.charts.penalties.appliedRial > 0);
+  assert.equal(
+    summary.charts.penalties.appliedRial + (summary.charts.penalties.forgivenRial ?? 0),
+    summary.charts.penalties.calculatedRial,
+  );
+  assert.equal(summary.charts.penalties.remainingRial, summary.openPenaltyRial);
 });
 
 test('termination-enabled contract with debt stays out of ready state without leaking extra internal detail', () => {

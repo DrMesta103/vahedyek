@@ -9,10 +9,12 @@ import type {
   AppendixPartiesPayload,
   AppendixSideCostsPayload,
   AppendixTagKey,
+  ContractTerminationData,
   ContractParty,
   FinancialCategoryData,
   FinancialDueItemData,
 } from '../../../types/contract';
+import { normalizeTechnicalSpecGroups } from '../../../lib/appendixPayloads';
 import { formatHistoryMoney } from './historyFormat';
 
 export function stableSerialize(value: unknown): string {
@@ -238,6 +240,27 @@ function renderJoinedValue(values: string[]) {
 
 function renderMaterialSpecsChangePayload(payload: Record<string, unknown>) {
   const row = payload as unknown as AppendixMaterialSpecsChangePayload;
+  const specs = normalizeTechnicalSpecGroups(row.specs ?? row.groups);
+
+  if (specs.length) {
+    return (
+      <div className="space-y-2">
+        {specs.map((group, index) => (
+          <div key={group.id} className="rounded-2xl border border-slate-100 bg-white px-4 py-3">
+            <div className="flex items-start justify-between gap-3">
+              <div className="text-right">
+                <div className="text-[13px] font-black text-slate-800">{group.title}</div>
+                <div className="mt-1 text-[11px] font-semibold text-slate-500">
+                  {group.selectedSpecIds.length.toLocaleString('fa-IR')} مشخصه انتخاب شده
+                </div>
+              </div>
+              <div className="shrink-0 text-[11px] font-bold text-slate-400">{(index + 1).toLocaleString('fa-IR')}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-2">
@@ -258,6 +281,67 @@ function renderMaterialSpecsChangePayload(payload: Record<string, unknown>) {
   );
 }
 
+function renderBuilderPenaltyPayload(payload: Record<string, unknown>) {
+  const unitEnabled = Boolean(payload.unitDeliveryDelayEnabled);
+  const materialEnabled = Boolean(payload.materialSpecsChangeEnabled);
+  const unitMode = String(payload.unitDeliveryDelayMode ?? 'fixed');
+  const materialMode = String(payload.materialSpecsChangeMode ?? 'fixed');
+  const unitPeriod = String(payload.unitDeliveryDelayPeriod ?? 'روزانه');
+  const materialPeriod = String(payload.materialSpecsChangePeriod ?? 'روزانه');
+  const includedTypes = Array.isArray(payload.materialSpecsChangeIncludedTypes) ? payload.materialSpecsChangeIncludedTypes : [];
+  const importanceLevel = String(payload.materialSpecsChangeImportanceLevel ?? '').trim();
+
+  return (
+    <div className="space-y-2">
+      {renderValueRow('تأخیر در تحویل واحد', unitEnabled ? 'فعال' : 'غیرفعال', true)}
+      {unitEnabled ? renderValueRow('روش محاسبه', unitMode) : null}
+      {unitEnabled ? renderValueRow('دوره', unitPeriod) : null}
+      {renderValueRow('تغییرات مشخصات فنی پروژه', materialEnabled ? 'فعال' : 'غیرفعال', true)}
+      {materialEnabled ? renderValueRow('روش محاسبه', materialMode) : null}
+      {materialEnabled ? renderValueRow('دوره', materialPeriod) : null}
+      {includedTypes.length ? renderValueRow('نوع تغییرات مشمول', includedTypes.map((item) => String(item)).join('، ')) : null}
+      {importanceLevel ? renderValueRow('سطح اهمیت', importanceLevel) : null}
+    </div>
+  );
+}
+
+const BUILDER_TERMINATION_SECTION_LABELS: Record<string, string> = {
+  lateInstallment: 'تاخیر در پرداخت اقساط',
+  financialObligations: 'عدم انجام تعهدات مالی',
+  documentDeficiencies: 'نقص مدارک / تعهدات',
+  otherBreach: 'نقض سایر تعهدات قراردادی',
+  notifications: 'اطلاع‌رسانی',
+};
+
+const BUYER_TERMINATION_SECTION_LABELS: Record<string, string> = {
+  lateDelivery: 'تاخیر در تحویل واحد',
+  specificationChanges: 'تغییر مشخصات',
+  breachOfObligations: 'نقض تعهدات سازنده',
+  physicalProgressDelay: 'تاخیر در تحقق مراحل پیشرفت پروژه',
+  areaDiscrepancy: 'اختلاف متراژ واحد',
+  notification: 'اطلاع‌رسانی',
+};
+
+function renderTerminationPayload(payload: Record<string, unknown>, side: 'builder' | 'buyer') {
+  const data = payload as unknown as ContractTerminationData;
+  const enabledSections =
+    side === 'builder'
+      ? Object.entries(data.constructorTerms ?? {}).filter(([, section]) => Boolean(section?.ruleEnabled))
+      : Object.entries(data.buyerTerms ?? {}).filter(([, section]) => Boolean(section?.ruleEnabled));
+  const labels = enabledSections
+    .map(([key]) => (side === 'builder' ? BUILDER_TERMINATION_SECTION_LABELS[key] : BUYER_TERMINATION_SECTION_LABELS[key]) ?? key)
+    .filter(Boolean);
+
+  return (
+    <div className="space-y-2">
+      {renderValueRow('وضعیت کلی', data.terminationEnabled ? 'فعال' : 'غیرفعال', true)}
+      {renderValueRow('تب فعال', data.terminationPartyTab === 'seller' ? 'فسخ سازنده' : 'فسخ خریدار')}
+      {renderValueRow('بخش‌های فعال', `${enabledSections.length.toLocaleString('fa-IR')} مورد`)}
+      {renderValueRow('فهرست بخش‌ها', labels.length ? labels.slice(0, 3).join('، ') : 'بدون بخش فعال')}
+    </div>
+  );
+}
+
 function renderGenericPayload(payload: Record<string, unknown>) {
   const entries = Object.entries(payload ?? {}).filter(([, value]) => value !== null && value !== undefined && value !== '');
   if (!entries.length) return renderValueRow('محتوا', '—');
@@ -274,5 +358,8 @@ export function HistoryPayloadContent({ payload, tagKey }: { payload: Record<str
   if (tagKey === 'loan') return renderLoanPayload(payload);
   if (tagKey === 'adjustment' || tagKey === 'contract-base-costs' || tagKey === 'side-costs') return renderFinancialPayload(payload);
   if (tagKey === 'material-specs-change') return renderMaterialSpecsChangePayload(payload);
+  if (tagKey === 'builder-penalty') return renderBuilderPenaltyPayload(payload);
+  if (tagKey === 'builder-cancellation') return renderTerminationPayload(payload, 'builder');
+  if (tagKey === 'buyer-cancellation') return renderTerminationPayload(payload, 'buyer');
   return renderGenericPayload(payload);
 }

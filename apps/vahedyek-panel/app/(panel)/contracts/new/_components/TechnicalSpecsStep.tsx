@@ -44,6 +44,10 @@ function normalizeProjectSpecText(value: unknown) {
   return typeof value === 'string' ? value.trim() : '';
 }
 
+function normalizeProjectTechnicalSpecs(projectSpecs: TechnicalSpecItem[] | null): TechnicalSpecItem[] {
+  return normalizeInitial(projectSpecs);
+}
+
 function projectTechnicalSpecsToItems(projectSpecs: ProjectTechnicalSpecs | null): TechnicalSpecItem[] {
   if (!projectSpecs) return [];
 
@@ -83,22 +87,25 @@ function projectTechnicalSpecsToItems(projectSpecs: ProjectTechnicalSpecs | null
   return items;
 }
 
-async function fetchProjectTechnicalSpecs() {
+async function fetchProjectTechnicalSpecs(): Promise<Array<Partial<TechnicalSpecItem>>> {
   const response = await fetch('/api/business-settings/project/technical-specs', { cache: 'no-store' });
-  const data = (await response.json()) as { technicalSpecs?: ProjectTechnicalSpecs; message?: string };
+  const data = (await response.json()) as { technicalSpecs?: unknown; message?: string };
   if (!response.ok) throw new Error(data.message ?? 'دریافت مشخصات فنی پروژه ناموفق بود.');
-  return data.technicalSpecs ?? null;
+  return Array.isArray(data.technicalSpecs) ? (data.technicalSpecs as Array<Partial<TechnicalSpecItem>>) : [];
 }
 
-function normalizeInitial(items: TechnicalSpecItem[] | null) {
+function normalizeInitial(items: Array<Partial<TechnicalSpecItem> | null | undefined> | null) {
   const base = items?.length ? items : [];
-  return base.map((item, idx) => ({
-    ...item,
-    id: item.id || `${item.systemKey ?? 'custom'}-${idx + 1}`,
-    title: item.title ?? '',
-    standard: item.standard ?? '',
-    location: item.location ?? '',
-  }));
+  return base.map((item, idx) => {
+    const spec = (item ?? {}) as Partial<TechnicalSpecItem>;
+    return {
+      ...spec,
+      id: spec.id || `${spec.systemKey ?? 'custom'}-${idx + 1}`,
+      title: spec.title ?? '',
+      standard: spec.standard ?? '',
+      location: spec.location ?? '',
+    };
+  });
 }
 
 export function TechnicalSpecsStep({ title }: { title: string }) {
@@ -109,8 +116,7 @@ export function TechnicalSpecsStep({ title }: { title: string }) {
   const [formError, setFormError] = useState('');
 
   const [specs, setSpecs] = useState<TechnicalSpecItem[]>([]);
-  const [projectSpecs, setProjectSpecs] = useState<ProjectTechnicalSpecs | null>(null);
-  const [projectSpecsAvailable, setProjectSpecsAvailable] = useState(false);
+  const [projectSpecs, setProjectSpecs] = useState<TechnicalSpecItem[]>([]);
   const [adding, setAdding] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -121,15 +127,14 @@ export function TechnicalSpecsStep({ title }: { title: string }) {
     const load = async () => {
       try {
         const id = await ensureActiveDraftId();
-        const [remote, projectTechnicalSpecs] = await Promise.all([getContractTechnicalSpecs(id), fetchProjectTechnicalSpecs().catch(() => null)]);
+        const [remote, projectTechnicalSpecs] = await Promise.all([getContractTechnicalSpecs(id), fetchProjectTechnicalSpecs().catch(() => [])]);
         if (!mounted) return;
 
-        const projectItems = projectTechnicalSpecsToItems(projectTechnicalSpecs);
+        const projectItems = normalizeInitial(projectTechnicalSpecs);
         const remoteItems = remote.ok ? normalizeInitial(remote.specs) : [];
 
         setDraftId(id);
-        setProjectSpecs(projectTechnicalSpecs);
-        setProjectSpecsAvailable(projectItems.length > 0);
+        setProjectSpecs(normalizeInitial(projectTechnicalSpecs));
 
         if (remote.ok) {
           setSpecs(remote.exists ? remoteItems : normalizeInitial(projectItems));
@@ -163,7 +168,7 @@ export function TechnicalSpecsStep({ title }: { title: string }) {
   };
 
   const importFromProjectSpecs = () => {
-    const projectItems = projectTechnicalSpecsToItems(projectSpecs);
+    const projectItems = normalizeProjectTechnicalSpecs(projectSpecs);
     if (!projectItems.length) {
       setFormError('برای بارگذاری، ابتدا مشخصات فنی پروژه را در اطلاعات مجتمع ثبت کنید.');
       return;
@@ -257,7 +262,7 @@ export function TechnicalSpecsStep({ title }: { title: string }) {
               <button
                 type="button"
                 onClick={importFromProjectSpecs}
-                disabled={!projectSpecsAvailable}
+                disabled={projectSpecs.length === 0}
                 className="app-button rounded-xl border border-cyan-200 bg-white px-4 py-2 text-[13px] font-bold text-cyan-800 hover:bg-cyan-50 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 بارگذاری از اطلاعات مجتمع

@@ -19,6 +19,14 @@ function buildFinancial(dueItems: ContractFinancialData['dueItems']): ContractFi
   };
 }
 
+function buildForgivenessSnapshot(values: Record<string, string | boolean>) {
+  return {
+    active: true,
+    activeTab: '',
+    values,
+  };
+}
+
 test('fixed penalty applies grace days, periods, and extra fee', () => {
   const financial = buildFinancial([
     { id: 'due-1', categoryId: 'installment', title: 'قسط اول', amount: 1000, dueDate: '1405/01/01' },
@@ -194,4 +202,140 @@ test('receipt allocation works on shared timeline of principal and penalty', () 
   assert.ok(penaltyRow);
   assert.equal(allocation.dueById['due-1']?.paidAmountRial, 1000);
   assert.equal(allocation.dueById[penaltyRow.id]?.paidAmountRial, 100);
+});
+
+test('forgiveness is applied after penalty calculation and reduces only the claimable amount', () => {
+  const financial = buildFinancial([
+    { id: 'due-1', categoryId: 'installment', title: 'قسط اول', amount: 1000, dueDate: '1405/01/01' },
+  ]);
+  const penalties: ContractPenaltiesData = {
+    activeTab: '',
+    types: [{ id: 'installment-delay', title: 'تاخیر اقساط', description: '', active: true }],
+    rules: [
+      {
+        id: 'rule-fixed',
+        penaltyTypeId: 'installment-delay',
+        mode: 'fixed',
+        period: 'daily',
+        fixedAmount: '100',
+        penaltyPercent: '',
+        bankInterestPercent: '',
+        graceDays: '0',
+        roundRule: '0',
+        extraFeeEnabled: true,
+        extraFeeType: 'fixed',
+        extraFeeAmount: '50',
+        extraFeeRoundRule: '0',
+        progressiveRows: [],
+      },
+    ],
+  };
+
+  const timeline = buildContractPenaltyTimeline({
+    financial,
+    penalties,
+    asOfDate: new Date(2026, 2, 22),
+    forgiveness: buildForgivenessSnapshot({
+      forgiveAllowed: true,
+      forgiveScope: 'itemized',
+      forgiveEnabledEntryIds: JSON.stringify(['installment-delay']),
+      forgiveEntryValues: JSON.stringify({
+        'installment-delay': {
+          forgiveScope: 'itemized',
+          forgiveValueMode: 'amount',
+          forgiveMinValue: '0',
+          forgiveMaxValue: '50',
+          forgiveMaxDelayCount: '1',
+          forgiveOutsideBuyerControl: false,
+          forgiveManagerApproval: false,
+        },
+      }),
+    }),
+  });
+
+  const penaltyRow = timeline.penaltyRows[0];
+  assert.ok(penaltyRow);
+  assert.equal(timeline.penaltyCalculation.totalPenaltyRial, 150);
+  assert.equal(penaltyRow?.amount, 150);
+  assert.equal(penaltyRow?.forgivenRial, 50);
+  assert.equal(penaltyRow?.claimableAmountRial, 100);
+
+  const allocation = buildReceiptAllocation({
+    buckets: timeline.combinedBuckets,
+    receipts: [
+      {
+        id: 'receipt-1',
+        allocationMode: 'auto',
+        allocationDate: '1405/01/02',
+        transferKind: 'cash',
+        depositorName: 'خریدار',
+        paidAmountRial: 1100,
+        depositDate: '1405/01/02',
+        depositTime: '',
+        destinationValue: '',
+        destinationHolder: '',
+        destinationHolders: [],
+        trackingNumber: '',
+        referenceNumber: '',
+        receiptNumber: '',
+        notes: '',
+        documents: [],
+        createdAt: new Date().toISOString(),
+      },
+    ],
+  });
+
+  assert.equal(allocation.dueById[penaltyRow.id]?.paidAmountRial, 100);
+});
+
+test('whole-contract forgiveness limits how many penalty rows are affected', () => {
+  const financial = buildFinancial([
+    { id: 'due-1', categoryId: 'installment', title: 'قسط اول', amount: 1000, dueDate: '1405/01/01' },
+    { id: 'due-2', categoryId: 'installment', title: 'قسط دوم', amount: 1000, dueDate: '1405/01/02' },
+  ]);
+  const penalties: ContractPenaltiesData = {
+    activeTab: '',
+    types: [{ id: 'installment-delay', title: 'تاخیر اقساط', description: '', active: true }],
+    rules: [
+      {
+        id: 'rule-fixed',
+        penaltyTypeId: 'installment-delay',
+        mode: 'fixed',
+        period: 'daily',
+        fixedAmount: '100',
+        penaltyPercent: '',
+        bankInterestPercent: '',
+        graceDays: '0',
+        roundRule: '0',
+        extraFeeEnabled: false,
+        extraFeeType: 'fixed',
+        extraFeeAmount: '',
+        extraFeeRoundRule: '0',
+        progressiveRows: [],
+      },
+    ],
+  };
+
+  const timeline = buildContractPenaltyTimeline({
+    financial,
+    penalties,
+    asOfDate: new Date(2030, 0, 1),
+    forgiveness: buildForgivenessSnapshot({
+      forgiveAllowed: true,
+      forgiveScope: 'whole',
+      forgiveValueMode: 'amount',
+      forgiveMinValue: '0',
+      forgiveMaxValue: '60',
+      forgiveMaxDelayCount: '1',
+      forgiveOutsideBuyerControl: false,
+      forgiveManagerApproval: false,
+    }),
+  });
+
+  assert.equal(timeline.penaltyRows.length, 2);
+  assert.ok((timeline.penaltyRows[0]?.forgivenRial ?? 0) > 0);
+  assert.equal(timeline.penaltyRows[1]?.forgivenRial ?? 0, 0);
+  assert.ok((timeline.penaltyRows[0]?.claimableAmountRial ?? 0) > 0);
+  assert.equal(timeline.penaltyRows[0]?.claimableAmountRial, (timeline.penaltyRows[0]?.amount ?? 0) - (timeline.penaltyRows[0]?.forgivenRial ?? 0));
+  assert.equal(timeline.penaltyRows[1]?.claimableAmountRial, timeline.penaltyRows[1]?.amount);
 });

@@ -1,6 +1,7 @@
 import { Prisma } from '@/lib/prisma-client';
 import { prisma } from '../../../../lib/prisma';
 import { ensureTenantProjectSettingsColumns } from '../../../../lib/tenantProjectSettingsColumns';
+import type { TechnicalSpecItem } from '../../../../actions/contractSteps789';
 
 export type ProjectUnitTypeRecord = {
   id: string;
@@ -27,21 +28,7 @@ export type ProjectReportPayload = {
   reportNotes?: string;
 };
 
-export type ProjectTechnicalSpecsPayload = {
-  structureSystem?: string;
-  facadeMaterial?: string;
-  cabinetType?: string;
-  floorMaterial?: string;
-  coolingSystem?: string;
-  heatingSystem?: string;
-  windowType?: string;
-  elevatorCount?: number;
-  securitySystem?: string;
-  fireSystem?: string;
-  internetStatus?: string;
-  parkingAccess?: string;
-  technicalNotes?: string;
-};
+export type ProjectTechnicalSpecsPayload = TechnicalSpecItem[];
 
 export type ProjectAddressPayload = {
   province?: string;
@@ -167,23 +154,93 @@ function normalizeTechnicalSpecChoice(value: unknown) {
   return normalizeText(value, 80) || technicalSpecNoneValue;
 }
 
-export function normalizeTechnicalSpecs(input: unknown): Required<ProjectTechnicalSpecsPayload> {
-  const raw = typeof input === 'object' && input ? (input as ProjectTechnicalSpecsPayload) : {};
+type LegacyProjectTechnicalSpecs = {
+  structureSystem?: string;
+  facadeMaterial?: string;
+  cabinetType?: string;
+  floorMaterial?: string;
+  coolingSystem?: string;
+  heatingSystem?: string;
+  windowType?: string;
+  elevatorCount?: number;
+  securitySystem?: string;
+  fireSystem?: string;
+  internetStatus?: string;
+  parkingAccess?: string;
+  technicalNotes?: string;
+  items?: unknown;
+  specs?: unknown;
+};
+
+function normalizeTechnicalSpecItem(input: unknown, index: number): TechnicalSpecItem | null {
+  const raw = typeof input === 'object' && input ? (input as Partial<TechnicalSpecItem> & { description?: unknown }) : {};
+  const title = normalizeText(raw.title, 100);
+  const standard = normalizeText((raw.standard ?? raw.description) as unknown, 240);
+  const location = normalizeText(raw.location, 120);
+  const normalizedTitle = title || standard || `مشخصه ${index + 1}`;
+  if (!normalizedTitle && !standard) return null;
+
   return {
-    structureSystem: normalizeTechnicalSpecChoice(raw.structureSystem),
-    facadeMaterial: normalizeTechnicalSpecChoice(raw.facadeMaterial),
-    cabinetType: normalizeTechnicalSpecChoice(raw.cabinetType),
-    floorMaterial: normalizeTechnicalSpecChoice(raw.floorMaterial),
-    coolingSystem: normalizeTechnicalSpecChoice(raw.coolingSystem),
-    heatingSystem: normalizeTechnicalSpecChoice(raw.heatingSystem),
-    windowType: normalizeTechnicalSpecChoice(raw.windowType),
-    elevatorCount: Math.max(0, Math.floor(normalizeNumber(raw.elevatorCount, 0))),
-    securitySystem: normalizeTechnicalSpecChoice(raw.securitySystem),
-    fireSystem: normalizeTechnicalSpecChoice(raw.fireSystem),
-    internetStatus: normalizeTechnicalSpecChoice(raw.internetStatus),
-    parkingAccess: normalizeTechnicalSpecChoice(raw.parkingAccess),
-    technicalNotes: normalizeText(raw.technicalNotes, 800),
+    id: normalizeText(raw.id, 80) || crypto.randomUUID(),
+    title: normalizedTitle,
+    standard,
+    location,
+    systemKey: normalizeText(raw.systemKey, 80) || undefined,
   };
+}
+
+function legacyProjectTechnicalSpecsToItems(raw: LegacyProjectTechnicalSpecs): TechnicalSpecItem[] {
+  const items: TechnicalSpecItem[] = [];
+
+  const push = (key: string, title: string, standard: unknown, location: string) => {
+    const text = normalizeText(standard, 240);
+    if (!text || text === technicalSpecNoneValue) return;
+    items.push({
+      id: `legacy-${key}`,
+      title,
+      standard: text,
+      location,
+      systemKey: `legacy-${key}`,
+    });
+  };
+
+  push('structureSystem', 'سیستم سازه', raw.structureSystem, 'اسکلت و سازه');
+  push('facadeMaterial', 'نمای پروژه', raw.facadeMaterial, 'نما');
+  push('cabinetType', 'کابینت', raw.cabinetType, 'آشپزخانه');
+  push('floorMaterial', 'کف واحد', raw.floorMaterial, 'کف');
+  push('coolingSystem', 'سیستم سرمایش', raw.coolingSystem, 'تأسیسات مکانیکی');
+  push('heatingSystem', 'سیستم گرمایش', raw.heatingSystem, 'تأسیسات مکانیکی');
+  push('windowType', 'پنجره‌ها', raw.windowType, 'بازشوها');
+  if (Number(raw.elevatorCount ?? 0) > 0) {
+    items.push({
+      id: 'legacy-elevatorCount',
+      title: 'آسانسور',
+      standard: `${Math.max(0, Math.floor(Number(raw.elevatorCount ?? 0)))} دستگاه`,
+      location: 'مشاعات',
+      systemKey: 'legacy-elevatorCount',
+    });
+  }
+  push('securitySystem', 'سیستم امنیتی', raw.securitySystem, 'مشاعات و امنیت');
+  push('fireSystem', 'سیستم حریق', raw.fireSystem, 'ایمنی');
+  push('internetStatus', 'زیرساخت اینترنت', raw.internetStatus, 'زیرساخت ارتباطی');
+  push('parkingAccess', 'دسترسی پارکینگ', raw.parkingAccess, 'پارکینگ');
+  push('technicalNotes', 'توضیحات فنی پروژه', raw.technicalNotes, 'عمومی');
+
+  return items;
+}
+
+export function normalizeTechnicalSpecs(input: unknown): ProjectTechnicalSpecsPayload {
+  if (Array.isArray(input)) {
+    return input.map((item, index) => normalizeTechnicalSpecItem(item, index)).filter((item): item is TechnicalSpecItem => Boolean(item));
+  }
+
+  const raw = typeof input === 'object' && input ? (input as LegacyProjectTechnicalSpecs) : {};
+  const directItems = Array.isArray(raw.items) ? raw.items : Array.isArray(raw.specs) ? raw.specs : null;
+  if (directItems?.length) {
+    return directItems.map((item, index) => normalizeTechnicalSpecItem(item, index)).filter((item): item is TechnicalSpecItem => Boolean(item));
+  }
+
+  return legacyProjectTechnicalSpecsToItems(raw);
 }
 
 export function normalizeProjectAddress(input: unknown): Required<ProjectAddressPayload> {

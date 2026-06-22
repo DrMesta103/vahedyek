@@ -46,6 +46,8 @@ const BASELINE_TAGS: SupportedAppendixTagKey[] = [
   'side-costs',
   'loan',
   'adjustment',
+  'builder-cancellation',
+  'buyer-cancellation',
 ];
 
 function cloneHistoryPayload(payload: Record<string, unknown>) {
@@ -78,6 +80,14 @@ function hasVisibleFinancialPayload(payload: Record<string, unknown>) {
   );
 }
 
+function hasVisibleTerminationPayload(payload: Record<string, unknown>, side: 'builder' | 'buyer') {
+  if (side === 'builder') {
+    return Object.values((payload as any).constructorTerms ?? {}).some((section: any) => Boolean(section?.ruleEnabled));
+  }
+
+  return Object.values((payload as any).buyerTerms ?? {}).some((section: any) => Boolean(section?.ruleEnabled));
+}
+
 function hasVisibleBaselinePayload(tagKey: SupportedAppendixTagKey, payload: Record<string, unknown>) {
   if (tagKey === 'first-party' || tagKey === 'second-party') {
     return Array.isArray(payload.parties) && payload.parties.length > 0;
@@ -90,6 +100,12 @@ function hasVisibleBaselinePayload(tagKey: SupportedAppendixTagKey, payload: Rec
   }
   if (tagKey === 'adjustment' || tagKey === 'contract-base-costs' || tagKey === 'side-costs') {
     return hasVisibleFinancialPayload(payload);
+  }
+  if (tagKey === 'builder-cancellation') {
+    return hasVisibleTerminationPayload(payload, 'builder');
+  }
+  if (tagKey === 'buyer-cancellation') {
+    return hasVisibleTerminationPayload(payload, 'buyer');
   }
   return Object.keys(payload).length > 0;
 }

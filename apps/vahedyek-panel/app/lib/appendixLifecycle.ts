@@ -1,13 +1,28 @@
 import type { ContractAppendixStatus as PrismaAppendixStatus } from '@/lib/prisma-client';
 import { CONTRACT_APPENDIX_TAG_MAP } from './contractAppendixConfig';
 import {
+  GENERIC_CONDITION_APPENDIX_TAGS,
+  GENERIC_DATE_APPENDIX_TAGS,
+  GENERIC_FINANCIAL_APPENDIX_TAGS,
+  normalizeTechnicalSpecGroups,
+} from './appendixPayloads';
+import {
   APPENDIX_ADJUSTMENT_LINE_ID,
   APPENDIX_ADJUSTMENT_TITLE,
   APPENDIX_CONTRACT_BASE_TITLE,
   createInitialAppendixPayload,
   getContractBaselinePayload,
 } from './appendixPayloads';
-import type { AppendixSourceKind, AppendixStatus, AppendixTagKey, ContractAppendix, ContractAppendixItem, ContractPartiesData, SupportedAppendixTagKey } from '../types/contract';
+import type {
+  AppendixSourceKind,
+  AppendixStatus,
+  AppendixTagKey,
+  ContractAppendix,
+  ContractAppendixItem,
+  ContractPartiesData,
+  ContractTerminationData,
+  SupportedAppendixTagKey,
+} from '../types/contract';
 
 type ContractLike = {
   id: string;
@@ -104,7 +119,58 @@ function summarizeLoanPayload(item: ContractAppendixItem) {
     .join(' • ');
 }
 
+function summarizePenaltyWaiverPayload(item: ContractAppendixItem) {
+  const mode = String(item.payload.mode ?? 'fixed');
+  const period = String(item.payload.period ?? 'monthly');
+  const fixedAmount = String(item.payload.fixedAmount ?? item.payload.amount ?? '').trim();
+  const penaltyPercent = String(item.payload.penaltyPercent ?? '').trim();
+  const bankInterestPercent = String(item.payload.bankInterestPercent ?? '').trim();
+  const graceDays = String(item.payload.graceDays ?? '').trim();
+  const roundRule = String(item.payload.roundRule ?? '').trim();
+  const extraFeeEnabled = Boolean(item.payload.extraFeeEnabled);
+  const extraFeeType = String(item.payload.extraFeeType ?? 'percent');
+  const extraFeeAmount = String(item.payload.extraFeeAmount ?? '').trim();
+  const progressiveRows = Array.isArray(item.payload.progressiveRows) ? item.payload.progressiveRows : [];
+
+  return [
+    `روش: ${
+      mode === 'fixed'
+        ? 'مبلغ ثابت'
+        : mode === 'overdue'
+          ? 'درصدی از مانده بدهی معوق'
+          : mode === 'contract'
+            ? 'درصدی از کل قرارداد'
+            : 'جریمه تصاعدی'
+    }`,
+    `دوره: ${period === 'daily' ? 'روزانه' : period === 'yearly' ? 'سالانه' : 'ماهانه'}`,
+    fixedAmount ? `مبلغ ثابت: ${fixedAmount} تومان` : '',
+    penaltyPercent ? `درصد جریمه: ${penaltyPercent}%` : '',
+    bankInterestPercent ? `درصد سود بانکی: ${bankInterestPercent}%` : '',
+    mode === 'progressive' ? `${progressiveRows.length.toLocaleString('fa-IR')} بازه تصاعدی` : '',
+    graceDays ? `مهلت تنفس: ${graceDays} روز` : '',
+    roundRule ? `قاعده گرد کردن: ${roundRule}` : '',
+    extraFeeEnabled ? `هزینه دیرکرد: ${extraFeeType === 'fixed' ? 'مبلغ ثابت' : 'درصدی'}${extraFeeAmount ? ` ${extraFeeAmount}` : ''}` : '',
+  ]
+    .filter(Boolean)
+    .join(' â€¢ ');
+}
+
 function summarizeMaterialSpecsChangePayload(item: ContractAppendixItem) {
+  const specs = normalizeTechnicalSpecGroups(item.payload.specs ?? item.payload.groups);
+  if (specs.length) {
+    const groupCount = specs.length.toLocaleString('fa-IR');
+    const selectedCount = specs.reduce((sum, group) => sum + group.selectedSpecIds.length, 0).toLocaleString('fa-IR');
+    const titles = specs.map((group) => group.title).filter(Boolean);
+
+    return [
+      `گروه‌ها: ${groupCount}`,
+      `مشخصه‌های انتخاب‌شده: ${selectedCount}`,
+      titles.length ? titles.slice(0, 3).join('، ') : '',
+    ]
+      .filter(Boolean)
+      .join(' • ');
+  }
+
   const changeTypes = Array.isArray(item.payload.changeTypes) ? item.payload.changeTypes.map((entry) => String(entry).trim()).filter(Boolean) : [];
   const outcomes = Array.isArray(item.payload.selectedOutcomes) ? item.payload.selectedOutcomes.map((entry) => String(entry).trim()).filter(Boolean) : [];
   const importanceLevel = String(item.payload.importanceLevel ?? '').trim();
@@ -115,6 +181,110 @@ function summarizeMaterialSpecsChangePayload(item: ContractAppendixItem) {
     importanceLevel ? `سطح اهمیت: ${importanceLevel}` : '',
     outcomes.length ? `خروجی: ${outcomes.join('، ')}` : '',
     enforcementEnabled ? 'اقدام قراردادی فعال شده است' : 'ثبت پرونده بدون اقدام قراردادی',
+  ]
+    .filter(Boolean)
+    .join(' • ');
+}
+
+function builderModeLabel(mode: string) {
+  switch (mode) {
+    case 'fixed':
+      return 'مبلغ ثابت';
+    case 'percent':
+      return 'درصدی';
+    case 'progressive':
+      return 'تصاعدی';
+    default:
+      return '—';
+  }
+}
+
+function builderPeriodLabel(period: string) {
+  switch (period) {
+    case 'روزانه':
+      return 'روزانه';
+    case 'ماهانه':
+      return 'ماهانه';
+    case 'سالانه':
+      return 'سالانه';
+    default:
+      return '—';
+  }
+}
+
+function summarizeBuilderPenaltyPayload(item: ContractAppendixItem) {
+  const unitEnabled = Boolean(item.payload.unitDeliveryDelayEnabled);
+  const materialEnabled = Boolean(item.payload.materialSpecsChangeEnabled);
+  const unitMode = String(item.payload.unitDeliveryDelayMode ?? 'fixed');
+  const materialMode = String(item.payload.materialSpecsChangeMode ?? 'fixed');
+  const unitPeriod = String(item.payload.unitDeliveryDelayPeriod ?? 'روزانه');
+  const materialPeriod = String(item.payload.materialSpecsChangePeriod ?? 'روزانه');
+  const includedTypes = Array.isArray(item.payload.materialSpecsChangeIncludedTypes) ? item.payload.materialSpecsChangeIncludedTypes : [];
+  const importanceLevel = String(item.payload.materialSpecsChangeImportanceLevel ?? '').trim();
+
+  return [
+    unitEnabled ? `تأخیر در تحویل واحد: ${builderModeLabel(unitMode)} • ${builderPeriodLabel(unitPeriod)}` : '',
+    materialEnabled ? `تغییرات مشخصات فنی پروژه: ${builderModeLabel(materialMode)} • ${builderPeriodLabel(materialPeriod)}` : '',
+    includedTypes.length ? `حوزه تغییرات: ${includedTypes.length.toLocaleString('fa-IR')} مورد` : '',
+    importanceLevel ? `سطح اهمیت: ${importanceLevel}` : '',
+  ]
+    .filter(Boolean)
+    .join(' • ');
+}
+
+const BUILDER_TERMINATION_SECTION_LABELS: Record<string, string> = {
+  lateInstallment: 'تاخیر در پرداخت اقساط',
+  financialObligations: 'عدم انجام تعهدات مالی',
+  documentDeficiencies: 'نقص مدارک / تعهدات',
+  otherBreach: 'نقض سایر تعهدات قراردادی',
+  notifications: 'اطلاع‌رسانی',
+};
+
+const BUYER_TERMINATION_SECTION_LABELS: Record<string, string> = {
+  lateDelivery: 'تاخیر در تحویل واحد',
+  specificationChanges: 'تغییر مشخصات',
+  breachOfObligations: 'نقض تعهدات سازنده',
+  physicalProgressDelay: 'تاخیر در تحقق مراحل پیشرفت پروژه',
+  areaDiscrepancy: 'اختلاف متراژ واحد',
+  notification: 'اطلاع‌رسانی',
+};
+
+function summarizeTerminationPayload(item: ContractAppendixItem, side: 'builder' | 'buyer') {
+  const payload = item.payload as unknown as ContractTerminationData;
+  const enabledSections =
+    side === 'builder'
+      ? Object.entries(payload.constructorTerms ?? {}).filter(([, section]) => Boolean(section?.ruleEnabled))
+      : Object.entries(payload.buyerTerms ?? {}).filter(([, section]) => Boolean(section?.ruleEnabled));
+  const labels = enabledSections
+    .map(([key]) => (side === 'builder' ? BUILDER_TERMINATION_SECTION_LABELS[key] : BUYER_TERMINATION_SECTION_LABELS[key]) ?? key)
+    .filter(Boolean);
+  const rootEnabled =
+    side === 'builder'
+      ? Boolean(payload.terminationEnabled && payload.sellerTerminationEngaged)
+      : Boolean(payload.terminationEnabled && payload.buyerTerminationEngaged);
+
+  return [
+    rootEnabled ? 'فعال' : 'غیرفعال',
+    `${enabledSections.length.toLocaleString('fa-IR')} بخش فعال`,
+    labels.length ? labels.slice(0, 3).join('، ') : 'بدون بخش فعال',
+  ].join(' • ');
+}
+
+function summarizeGenericPayload(item: ContractAppendixItem) {
+  const title = String(item.payload.title ?? item.description ?? '').trim();
+  const detailText = String(item.payload.detailText ?? '').trim();
+  const amount = String(item.payload.amount ?? '').trim();
+  const previousDate = String(item.payload.previousDate ?? '').trim();
+  const nextDate = String(item.payload.nextDate ?? '').trim();
+  const notes = String(item.payload.notes ?? '').trim();
+
+  return [
+    title ? `عنوان: ${title}` : '',
+    detailText ? detailText : '',
+    amount ? `مبلغ: ${Math.round(Number(amount)).toLocaleString('fa-IR')} تومان` : '',
+    previousDate ? `تاریخ قبلی: ${previousDate}` : '',
+    nextDate ? `تاریخ جدید: ${nextDate}` : '',
+    notes ? `یادداشت: ${notes}` : '',
   ]
     .filter(Boolean)
     .join(' • ');
@@ -157,6 +327,30 @@ export function appendixItemValueText(item: ContractAppendixItem) {
 
   if (item.tagKey === 'material-specs-change') {
     return summarizeMaterialSpecsChangePayload(item);
+  }
+
+  if (item.tagKey === 'penalty-waiver') {
+    return summarizePenaltyWaiverPayload(item);
+  }
+
+  if (item.tagKey === 'builder-penalty') {
+    return summarizeBuilderPenaltyPayload(item);
+  }
+
+  if (item.tagKey === 'builder-cancellation') {
+    return summarizeTerminationPayload(item, 'builder');
+  }
+
+  if (item.tagKey === 'buyer-cancellation') {
+    return summarizeTerminationPayload(item, 'buyer');
+  }
+
+  if (
+    GENERIC_FINANCIAL_APPENDIX_TAGS.includes(item.tagKey as (typeof GENERIC_FINANCIAL_APPENDIX_TAGS)[number]) ||
+    GENERIC_CONDITION_APPENDIX_TAGS.includes(item.tagKey as (typeof GENERIC_CONDITION_APPENDIX_TAGS)[number]) ||
+    GENERIC_DATE_APPENDIX_TAGS.includes(item.tagKey as (typeof GENERIC_DATE_APPENDIX_TAGS)[number])
+  ) {
+    return summarizeGenericPayload(item);
   }
 
   return String(item.payload.detailText ?? '').trim() || item.description;
@@ -273,6 +467,9 @@ export function getContractComparePayload(contract: any, tagKey: SupportedAppend
   }
   if (tagKey === 'first-party' || tagKey === 'second-party') {
     return { parties: (payload as any).parties ?? [] };
+  }
+  if (tagKey === 'builder-cancellation' || tagKey === 'buyer-cancellation') {
+    return payload;
   }
   return payload;
 }

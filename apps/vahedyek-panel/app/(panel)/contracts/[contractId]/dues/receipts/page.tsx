@@ -103,8 +103,9 @@ export default function CustomerReceiptsPage() {
         financial: contract?.data?.financial ?? null,
         penalties: contract?.data?.penalties ?? null,
         receipts: registeredReceipts,
+        forgiveness: contract?.data?.ruleSettings?.forgiveness ?? null,
       }),
-    [contract?.data?.financial, contract?.data?.penalties, registeredReceipts],
+    [contract?.data?.financial, contract?.data?.penalties, contract?.data?.ruleSettings?.forgiveness, registeredReceipts],
   );
 
   const paymentMonthBuckets = penaltyTimeline.combinedBuckets;

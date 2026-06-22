@@ -6,22 +6,37 @@ import { AppendixDeliveryDateEditor } from './AppendixDeliveryDateEditor';
 import { AppendixPartiesEditor } from './AppendixPartiesEditor';
 import { AppendixAdjustmentEditor } from './AppendixAdjustmentEditor';
 import { AppendixContractBaseCostsEditor } from './AppendixContractBaseCostsEditor';
+import { AppendixGenericTagEditor } from './AppendixGenericTagEditor';
 import { AppendixLoanEditor } from './AppendixLoanEditor';
-import { AppendixMaterialSpecsChangeEditor } from './AppendixMaterialSpecsChangeEditor';
+import { AppendixMaterialSpecsChangeEditor } from './AppendixTechnicalSpecsEditor';
+import { AppendixPenaltyWaiverEditor } from './AppendixPenaltyWaiverEditor';
+import { AppendixBuilderPenaltyEditor } from './AppendixBuilderPenaltyEditor';
+import { AppendixBuilderCancellationEditor, AppendixBuyerCancellationEditor } from './AppendixTerminationEditor';
 import { AppendixSideCostsEditor } from './AppendixSideCostsEditor';
 import { useAppendixEditor } from './AppendixEditorContext';
+import { CONTRACT_APPENDIX_TAG_MAP } from '../../../lib/contractAppendixConfig';
+import {
+  GENERIC_CONDITION_APPENDIX_TAGS,
+  GENERIC_DATE_APPENDIX_TAGS,
+  GENERIC_FINANCIAL_APPENDIX_TAGS,
+  type AppendixBuilderPenaltyPayload,
+  type AppendixGenericPayload,
+} from '../../../lib/appendixPayloads';
 import type {
   AppendixAdjustmentPayload,
   AppendixContractBaseCostsPayload,
   AppendixDeliveryDatePayload,
   AppendixLoanPayload,
   AppendixMaterialSpecsChangePayload,
+  AppendixPenaltyWaiverPayload,
   AppendixPartiesPayload,
   AppendixSideCostsPayload,
   SupportedAppendixTagKey,
 } from '../../../types/contract';
 
 function getTagTitle(tag: SupportedAppendixTagKey) {
+  const definition = CONTRACT_APPENDIX_TAG_MAP.get(tag);
+  if (definition?.title) return definition.title;
   switch (tag) {
     case 'loan':
       return 'وام';
@@ -32,17 +47,41 @@ function getTagTitle(tag: SupportedAppendixTagKey) {
     case 'side-costs':
       return 'هزینه های جانبی';
     case 'material-specs-change':
-      return 'تغییر مصالح و مشخصات';
+      return 'تغییرات مشخصات فنی پروژه';
     case 'first-party':
       return 'طرف اول';
     case 'second-party':
       return 'طرف دوم';
     case 'unit-delivery-date':
       return 'تاریخ تحویل واحد';
+    case 'unit-delivery':
+      return 'تحویل واحد';
+    case 'forgiveness':
+      return 'بخشودگی';
+    case 'contract-costs':
+      return 'هزینه مربوط به قرارداد';
+    case 'penalty-waiver':
+      return 'جرائم کارفرما';
+    case 'builder-penalty':
+      return 'جرائم سازنده';
+    case 'builder-cancellation':
+      return 'فسخ سازنده';
+    case 'buyer-cancellation':
+      return 'فسخ خریدار';
+    case 'workshop-conditions':
+      return 'شرایط ساخت';
+    case 'arbitration':
+      return 'داوری';
+    case 'due-dates':
+      return 'تاریخ سررسید ها';
+    case 'commitment-date':
+      return 'تاریخ وجه التزام';
   }
 }
 
 function getTagDescription(tag: SupportedAppendixTagKey) {
+  const definition = CONTRACT_APPENDIX_TAG_MAP.get(tag);
+  if (definition?.description) return definition.description;
   switch (tag) {
     case 'loan':
       return 'ثبت وضعیت پرداخت و تنظیمات الحاقیه وام';
@@ -53,9 +92,31 @@ function getTagDescription(tag: SupportedAppendixTagKey) {
     case 'side-costs':
       return 'مدیریت ردیف های مالی جانبی قرارداد';
     case 'material-specs-change':
-      return 'ثبت پرونده تغییر مصالح و مشخصات و فعال‌سازی نتیجه قراردادی بر اساس مستندات و وضعیت تأیید خریدار';
+      return 'ثبت پرونده تغییرات مشخصات فنی پروژه و فعال‌سازی نتیجه قراردادی بر اساس مستندات و وضعیت تأیید خریدار';
     case 'unit-delivery-date':
       return 'ثبت تاریخ جدید تحویل واحد';
+    case 'unit-delivery':
+      return 'تغییرات مالی مرتبط با تحویل واحد';
+    case 'forgiveness':
+      return 'بخشودگی اقلام قرارداد';
+    case 'contract-costs':
+      return 'هزینه‌های جدید مربوط به قرارداد';
+    case 'penalty-waiver':
+      return 'تنظیم جرائم کارفرما با ساختاری مشابه بخش پیش‌نویس جریمه';
+    case 'builder-penalty':
+      return 'تنظیم جرائم سازنده با ساختاری مشابه بخش پیش‌نویس جریمه';
+    case 'builder-cancellation':
+      return 'تنظیم فسخ سازنده با ساختاری مشابه بخش پیش‌نویس فسخ';
+    case 'buyer-cancellation':
+      return 'تنظیم فسخ خریدار با ساختاری مشابه بخش پیش‌نویس فسخ';
+    case 'workshop-conditions':
+      return 'اصلاح شرایط ساخت و تعهدات پروژه';
+    case 'arbitration':
+      return 'تغییر در بندهای داوری و حل اختلاف';
+    case 'due-dates':
+      return 'تغییر در تاریخ سررسیدها';
+    case 'commitment-date':
+      return 'تغییر در تاریخ‌های وجه التزام';
     default:
       return 'اصلاح اطلاعات و سهم طرفین در الحاقیه';
   }
@@ -109,6 +170,27 @@ export function AppendixTagPageRenderer({ tag }: { tag: SupportedAppendixTagKey 
 
   const handleMaterialSpecsChange = useCallback(
     (value: AppendixMaterialSpecsChangePayload) => {
+      updateTagPayload(tag, value);
+    },
+    [tag, updateTagPayload],
+  );
+
+  const handlePenaltyWaiverChange = useCallback(
+    (value: AppendixPenaltyWaiverPayload) => {
+      updateTagPayload(tag, value);
+    },
+    [tag, updateTagPayload],
+  );
+
+  const handleBuilderPenaltyChange = useCallback(
+    (value: AppendixBuilderPenaltyPayload) => {
+      updateTagPayload(tag, value);
+    },
+    [tag, updateTagPayload],
+  );
+
+  const handleGenericChange = useCallback(
+    (value: AppendixGenericPayload) => {
       updateTagPayload(tag, value);
     },
     [tag, updateTagPayload],
@@ -182,6 +264,36 @@ export function AppendixTagPageRenderer({ tag }: { tag: SupportedAppendixTagKey 
         <div className="mt-6">
           <AppendixMaterialSpecsChangeEditor value={payload as AppendixMaterialSpecsChangePayload} onChange={handleMaterialSpecsChange} />
         </div>
+      ) : null}
+
+      {tag === 'penalty-waiver' ? (
+        <div className="mt-6">
+          <AppendixPenaltyWaiverEditor value={payload as AppendixPenaltyWaiverPayload} onChange={handlePenaltyWaiverChange} />
+        </div>
+      ) : null}
+
+      {tag === 'builder-penalty' ? (
+        <div className="mt-6">
+          <AppendixBuilderPenaltyEditor value={payload as AppendixBuilderPenaltyPayload} onChange={handleBuilderPenaltyChange} />
+        </div>
+      ) : null}
+
+      {tag === 'builder-cancellation' ? (
+        <div className="mt-6">
+          <AppendixBuilderCancellationEditor />
+        </div>
+      ) : null}
+
+      {tag === 'buyer-cancellation' ? (
+        <div className="mt-6">
+          <AppendixBuyerCancellationEditor />
+        </div>
+      ) : null}
+
+      {GENERIC_FINANCIAL_APPENDIX_TAGS.includes(tag as (typeof GENERIC_FINANCIAL_APPENDIX_TAGS)[number]) ||
+      GENERIC_CONDITION_APPENDIX_TAGS.includes(tag as (typeof GENERIC_CONDITION_APPENDIX_TAGS)[number]) ||
+      GENERIC_DATE_APPENDIX_TAGS.includes(tag as (typeof GENERIC_DATE_APPENDIX_TAGS)[number]) ? (
+        <AppendixGenericTagEditor tag={tag} value={payload as AppendixGenericPayload} onChange={handleGenericChange} />
       ) : null}
     </div>
   );

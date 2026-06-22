@@ -39,7 +39,7 @@ const TT_PAID_EX_PENALTY =
   'جمع پرداخت‌هایی که روی ردیف‌های اصل بدهی تخصیص یافته‌اند؛ پرداخت‌های تخصیص‌یافته به جریمه از این عدد جدا شده‌اند.';
 
 const TT_PENALTY_TOTAL =
-  'جمع جریمه اصلی و جریمه دیرکرد محاسبه‌شده از روی قوانین فعال قرارداد تا تاریخ امروز، بر اساس سررسیدهای واقعی و مهلت تنفس.';
+  'جمع جریمه قابل وصول قرارداد پس از اعمال بخشودگی‌های ثبت‌شده، بر اساس سررسیدهای واقعی و مهلت تنفس تا تاریخ امروز.';
 
 const TT_PENALTY_PAYABLE =
   'مانده جریمه قابل وصول پس از کسر پرداخت‌های تخصیص‌یافته به ردیف‌های جریمه.';
@@ -114,8 +114,9 @@ export default function ContractDuesPage() {
         financial: contract?.data?.financial ?? null,
         penalties: contract?.data?.penalties ?? null,
         receipts: registeredReceipts,
+        forgiveness: contract?.data?.ruleSettings?.forgiveness ?? null,
       }),
-    [contract?.data?.financial, contract?.data?.penalties, registeredReceipts],
+    [contract?.data?.financial, contract?.data?.penalties, contract?.data?.ruleSettings?.forgiveness, registeredReceipts],
   );
 
   const paymentMonthBuckets = penaltyTimeline.combinedBuckets;
@@ -163,7 +164,10 @@ export default function ContractDuesPage() {
     const penaltyPaidRial = Object.values(receiptAllocation.dueById)
       .filter((summary) => summary.row.sourceKind === 'penalty')
       .reduce((sum, summary) => sum + summary.paidAmountRial, 0);
-    const penaltyTotalRial = penaltyTimeline.penaltyCalculation.totalPenaltyRial;
+    const penaltyTotalRial = penaltyTimeline.penaltyRows.reduce(
+      (sum, row) => sum + Math.max(0, Number(row.claimableAmountRial ?? row.amount ?? 0)),
+      0,
+    );
     const penaltyRemainingRial = Object.values(receiptAllocation.dueById)
       .filter((summary) => summary.row.sourceKind === 'penalty')
       .reduce((sum, summary) => sum + summary.remainingAmountRial, 0);

@@ -152,6 +152,14 @@ function getInstallmentOriginLabel(categoryId: string | null | undefined, catego
   }
 }
 
+function getContractSummaryStatusLabel(status: ContractStatus | null | undefined, approvalStatus: string | null | undefined) {
+  if (approvalStatus === 'IN_REVIEW') return 'در انتظار تایید';
+  if (status === 'completed') return 'تکمیل شده';
+  if (status === 'pending_approval') return 'در انتظار تایید';
+  if (status === 'draft') return 'پیش‌نویس';
+  return 'نامشخص';
+}
+
 export default function ContractDetailsPage() {
   const params = useParams<{ contractId: string }>();
   const router = useRouter();
@@ -234,7 +242,7 @@ export default function ContractDetailsPage() {
       if (id === 'reports') return 'گزارش‌های مربوط به قرارداد (مالی/عملکردی/وضعیت).'
       if (id === 'dues') return 'مدیریت سررسیدها و فیش‌های پرداختی/واریزی مرتبط با قرارداد.'
       if (id === 'appendix') return 'ثبت و مدیریت متمم‌های قرارداد پس از نهایی شدن.'
-      if (id === 'material-specs-change') return 'ثبت پرونده تغییر مصالح و مشخصات، انتخاب مستندات، و فعال‌سازی جبران یا اقدام قراردادی بر اساس آن.'
+      if (id === 'material-specs-change') return 'ثبت پرونده تغییرات مشخصات فنی پروژه، انتخاب مستندات، و فعال‌سازی جبران یا اقدام قراردادی بر اساس آن.'
       if (id === 'history') return 'مشاهده سیر تغییرات قرارداد از نسخه اصلی تا آخرین متمم تاییدشده.'
       if (id === 'docs') return 'بارگذاری و مدیریت مدارک و پیوست‌های قرارداد.'
       if (id === 'court') return 'ثبت و مدیریت اقاله و تغییر وضعیت‌های مرتبط.'
@@ -264,7 +272,7 @@ export default function ContractDetailsPage() {
       { id: 'reports', title: 'گزارشات', icon: 'fa-solid fa-money-bill-transfer' },
       { id: 'dues', title: 'سر رسید ها و فیش ها', icon: 'fa-solid fa-calendar-check' },
       { id: 'appendix', title: 'متمم ها', icon: 'fa-solid fa-file-circle-plus' },
-      { id: 'material-specs-change', title: 'تغییر مصالح و مشخصات', icon: 'fa-solid fa-swatchbook' },
+      { id: 'material-specs-change', title: 'تغییرات مشخصات فنی پروژه', icon: 'fa-solid fa-swatchbook' },
       { id: 'history', title: 'تاریخچه ی قرارداد', icon: 'fa-solid fa-clock-rotate-left' },
       // 7: always visible (click shows toast until implemented)
       { id: 'docs', title: 'مدارک قرارداد', icon: 'fa-solid fa-folder-open' },
@@ -338,6 +346,12 @@ export default function ContractDetailsPage() {
       contractTypeLabel: subject?.contractType === 'pre-sale' ? 'پیش فروش' : subject?.contractType === 'sale' ? 'فروش' : '—',
     };
   }, [contract]);
+
+  const modernSummaryHref = useMemo(() => {
+    if (!contractId) return '/contracts';
+    const q = searchParams?.toString();
+    return `/contracts/${String(contractId)}/modern${q ? `?${q}` : ''}`;
+  }, [contractId, searchParams]);
 
   if (loading) {
     return (
@@ -426,6 +440,22 @@ export default function ContractDetailsPage() {
       </section>
 
       <section className="contract-details-panel contract-details-summary">
+        <div className="mb-3 flex items-center justify-between gap-3 px-1" dir="rtl">
+          <div className="flex items-center gap-2">
+            <span className="text-[13px] font-semibold text-slate-600">خلاصه قرارداد</span>
+            <span className={`contract-status-badge ${contract?.status === 'completed' ? 'is-finalized' : contract?.status === 'pending_approval' ? 'is-pending' : 'is-draft'}`}>
+              {getContractSummaryStatusLabel((contract?.status as ContractStatus) ?? null, contract?.approvalInstance?.status ?? null)}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => router.push(modernSummaryHref)}
+            className="inline-flex h-9 items-center gap-2 rounded-full border border-slate-200 bg-white px-4 text-[12px] font-black text-slate-600 transition hover:bg-slate-50"
+          >
+            مدرن
+          </button>
+        </div>
+
         <div dir="rtl" className="rounded-[22px] border border-slate-200/80 bg-white/90 px-4 py-3 shadow-sm">
           <div className="flex w-full flex-row items-stretch justify-start divide-x divide-slate-200/70 divide-x-reverse">
             {(

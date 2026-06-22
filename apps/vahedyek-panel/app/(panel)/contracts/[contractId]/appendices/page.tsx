@@ -230,7 +230,7 @@ export default function ContractAppendicesPage() {
                     </div>
                     {selectedFilterTags.length === 1 && selectedFilterTags[0] === 'material-specs-change' ? (
                       <div className="mt-3 rounded-2xl border border-cyan-200 bg-cyan-50/80 px-4 py-3 text-[12px] font-semibold leading-7 text-cyan-900">
-                        در این بخش پرونده‌های اجرایی تغییر مصالح و مشخصات ثبت می‌شود؛ از همین مسیر می‌توانید مستندات لازم، نتیجه رسیدگی و فعال‌سازی اقدام قراردادی را روی قرارداد نگه دارید.
+                        در این بخش پرونده‌های اجرایی تغییرات مشخصات فنی پروژه ثبت می‌شود؛ از همین مسیر می‌توانید مستندات لازم، نتیجه رسیدگی و فعال‌سازی اقدام قراردادی را روی قرارداد نگه دارید.
                       </div>
                     ) : null}
                   </div>
@@ -247,7 +247,7 @@ export default function ContractAppendicesPage() {
                   }}
                   className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-2xl bg-[linear-gradient(180deg,color-mix(in_srgb,var(--dark-teal)_92%,black),color-mix(in_srgb,var(--dark-teal)_78%,#0f766e))] px-5 py-3 text-[13px] font-black text-white shadow-sm transition hover:brightness-105"
                 >
-                  {selectedFilterTags.length === 1 && selectedFilterTags[0] === 'material-specs-change' ? 'ثبت پرونده تغییر' : 'افزودن متمم'}
+                  {selectedFilterTags.length === 1 && selectedFilterTags[0] === 'material-specs-change' ? 'ثبت پرونده مشخصات فنی' : 'افزودن متمم'}
                   <Plus className="h-4 w-4" />
                 </button>
               </div>
