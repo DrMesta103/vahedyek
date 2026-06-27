@@ -49,7 +49,6 @@ type ForgivenessRuleConfig = {
 
 type ForgivenessApplication = {
   forgivenRial: number | null;
-  claimableAmountRial: number;
   forgivenessStatus: 'applied' | 'pending' | 'inactive';
 };
 
@@ -193,6 +192,42 @@ function calculateForgivenMainPenaltyRial(baseRial: number, config: ForgivenessR
   return Math.max(0, Math.min(baseRial, maxValue));
 }
 
+function evaluateForgivenessApplication(baseRial: number, config: ForgivenessRuleConfig): ForgivenessApplication {
+  if (!(baseRial > 0) || !(config.maxValue > 0)) {
+    return {
+      forgivenRial: null,
+      forgivenessStatus: 'inactive',
+    };
+  }
+
+  if (config.managerApproval) {
+    const eligibleWithoutApproval = Math.max(0, Math.round(calculateForgivenMainPenaltyRial(baseRial, { ...config, managerApproval: false })));
+    if (eligibleWithoutApproval <= 0) {
+      return {
+        forgivenRial: null,
+        forgivenessStatus: 'inactive',
+      };
+    }
+    return {
+      forgivenRial: null,
+      forgivenessStatus: 'pending',
+    };
+  }
+
+  const forgivenRial = calculateForgivenMainPenaltyRial(baseRial, config);
+  if (!(forgivenRial > 0)) {
+    return {
+      forgivenRial: null,
+      forgivenessStatus: 'inactive',
+    };
+  }
+
+  return {
+    forgivenRial,
+    forgivenessStatus: 'applied',
+  };
+}
+
 function selectPenaltyRowsForForgiveness(
   rows: PenaltyRowDetail[],
   config: ForgivenessRuleConfig,
@@ -229,18 +264,19 @@ function applyForgivenessToPenaltyRows(rows: PenaltyRowDetail[], forgiveness: Fo
   })) {
     const matchedRows = selectPenaltyRowsForForgiveness(outputRows, config, appliedRowIds);
     for (const row of matchedRows) {
-      const forgivenMainRial = calculateForgivenMainPenaltyRial(row.mainPenaltyRial, config);
-      if (!(forgivenMainRial > 0)) continue;
-
+      const evaluation = evaluateForgivenessApplication(row.mainPenaltyRial, config);
+      if (evaluation.forgivenessStatus === 'inactive') continue;
       const index = indexById.get(row.id);
       if (index == null) continue;
 
-      const claimableAmountRial = Math.max(0, Math.round(row.amount - forgivenMainRial));
       outputRows[index] = {
         ...row,
-        forgivenRial: forgivenMainRial,
-        claimableAmountRial,
-        forgivenessStatus: 'applied',
+        forgivenRial: evaluation.forgivenessStatus === 'applied' ? evaluation.forgivenRial : null,
+        claimableAmountRial:
+          evaluation.forgivenessStatus === 'applied' && evaluation.forgivenRial != null
+            ? Math.max(0, Math.round(Number(row.amount ?? 0) - evaluation.forgivenRial))
+            : Math.max(0, Math.round(Number(row.amount ?? 0))),
+        forgivenessStatus: evaluation.forgivenessStatus,
       } satisfies PenaltyRowDetail;
       appliedRowIds.add(row.id);
     }

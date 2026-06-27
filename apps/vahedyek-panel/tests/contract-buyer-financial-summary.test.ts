@@ -349,6 +349,37 @@ test('buyer financial summary reflects forgiveness on claimable penalties withou
   assert.equal(summary.charts.penalties.remainingRial, summary.openPenaltyRial);
 });
 
+test('buyer financial summary keeps manager-approved forgiveness pending and does not reduce payable penalties', () => {
+  const contract = buildContract({
+    dueItems: [{ id: 'due-1', categoryId: 'installment', title: 'قسط اول', amount: 1000000, dueDate: '1404/01/01' }],
+    penalties: buildPenaltyRules(),
+    ruleSettings: {
+      forgiveness: {
+        active: true,
+        activeTab: '',
+        values: {
+          forgiveAllowed: true,
+          forgiveScope: 'whole',
+          forgiveValueMode: 'amount',
+          forgiveMinValue: '0',
+          forgiveMaxValue: '250000',
+          forgiveMaxDelayCount: '1',
+          forgiveOutsideBuyerControl: false,
+          forgiveManagerApproval: true,
+        },
+      },
+    },
+  });
+
+  const summary = buildBuyerFinancialSummary(contract, []);
+
+  assert.ok((summary.openPenaltyRial ?? 0) > 0);
+  assert.ok((summary.charts.penalties.calculatedRial ?? 0) > 0);
+  assert.equal(summary.charts.penalties.forgivenRial, null);
+  assert.equal(summary.charts.penalties.appliedRial, summary.charts.penalties.calculatedRial);
+  assert.equal(summary.charts.penalties.remainingRial, summary.openPenaltyRial);
+});
+
 test('termination-enabled contract with debt stays out of ready state without leaking extra internal detail', () => {
   const contract = buildContract({
     terminationRules: { enabled: true },

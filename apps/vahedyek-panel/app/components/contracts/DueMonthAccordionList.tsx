@@ -35,6 +35,7 @@ export function DueMonthAccordionList({
   allocationByDueId,
   onViewReceipts,
   penaltyDetailsByPrincipalDueId,
+  penaltyRowsByPrincipalDueId,
   onOpenPenaltyDetails,
 }: {
   buckets: PaymentHistoryMonthBucket[];
@@ -44,6 +45,15 @@ export function DueMonthAccordionList({
   allocationByDueId?: Record<string, DueReceiptAllocationSummary>;
   onViewReceipts?: (payload: DueRegisterReceiptPayload, summary: DueReceiptAllocationSummary | undefined) => void;
   penaltyDetailsByPrincipalDueId?: Record<string, BuyerPenaltyCalculationDetail>;
+  penaltyRowsByPrincipalDueId?: Record<
+    string,
+    {
+      amount?: number | null;
+      forgivenRial?: number | null;
+      claimableAmountRial?: number | null;
+      forgivenessStatus?: 'applied' | 'pending' | 'inactive';
+    }
+  >;
   onOpenPenaltyDetails?: (payload: {
     mode: 'single' | 'monthly';
     monthHeading?: string;
@@ -125,6 +135,12 @@ export function DueMonthAccordionList({
                     const rowReceipts = summary?.receipts ?? [];
                     const penaltyDetail = penaltyDetailsByPrincipalDueId?.[row.id];
                     const penaltyRial = penaltyDetail?.totalPenaltyRial ?? 0;
+                    const penaltyRow = penaltyRowsByPrincipalDueId?.[row.id] ?? null;
+                    const forgivenRial = Math.max(0, Number(penaltyRow?.forgivenRial ?? 0));
+                    const claimableRial = Math.max(
+                      0,
+                      Number(penaltyRow?.claimableAmountRial ?? penaltyRow?.amount ?? penaltyRial),
+                    );
                     const payload = { bucketKey: bucket.key, monthHeading: bucket.heading, row };
 
                     return (
@@ -166,13 +182,29 @@ export function DueMonthAccordionList({
                           </div>
                           <div>
                             <div className="text-[10px] font-bold text-slate-500">جریمه</div>
-                            <div className="mt-0.5 inline-flex items-center gap-1 text-[12px] font-black tabular-nums text-rose-700">
-                              {penaltyRial > 0 ? formatMoneyRial(penaltyRial) : '—'}
-                              {penaltyDetail && onOpenPenaltyDetails ? (
-                                <PenaltyInfoButton
-                                  onClick={() => onOpenPenaltyDetails({ mode: 'single', row })}
-                                />
-                              ) : null}
+                            <div className="mt-0.5 space-y-1 text-[12px] font-black tabular-nums text-rose-700">
+                              <div className="inline-flex items-center gap-1">
+                                <span>{penaltyRial > 0 ? formatMoneyRial(penaltyRial) : '—'}</span>
+                                {penaltyDetail && onOpenPenaltyDetails ? (
+                                  <PenaltyInfoButton onClick={() => onOpenPenaltyDetails({ mode: 'single', row })} />
+                                ) : null}
+                              </div>
+                              <div className="rounded-lg bg-slate-50 px-2 py-1 text-[10px] font-semibold leading-5 text-slate-600">
+                                <div className="flex items-center justify-between gap-2">
+                                  <span>بخشودگی</span>
+                                  <span className="tabular-nums font-black text-slate-800">
+                                    {penaltyRow?.forgivenessStatus === 'pending'
+                                      ? 'در انتظار تایید'
+                                      : forgivenRial > 0
+                                        ? formatMoneyRial(forgivenRial)
+                                        : '۰ ریال'}
+                                  </span>
+                                </div>
+                                <div className="mt-0.5 flex items-center justify-between gap-2">
+                                  <span>قابل مطالبه</span>
+                                  <span className="tabular-nums font-black text-slate-800">{formatMoneyRial(claimableRial)}</span>
+                                </div>
+                              </div>
                             </div>
                           </div>
                           <div>
