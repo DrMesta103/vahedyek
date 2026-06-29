@@ -7,15 +7,16 @@ import {
   FileText,
   History,
   MoreHorizontal,
-  ShieldAlert,
   X,
 } from 'lucide-react';
 import type { AttachmentItem } from '../../actions/contractSteps789';
 import type {
   ContractFinancialData,
+  ContractDiscountsData,
   ContractPartiesData,
   ContractPenaltiesData,
   ContractSubjectData,
+  ContractTerminationData,
   ShareMode,
 } from '../../types/contract';
 import { buildFinancialSlices, computeContractTotalRial, type FinancialSlice } from '../../lib/contractDraftPreviewFinancial';
@@ -31,10 +32,33 @@ export type PreviewContractPayload = {
   parties: ContractPartiesData | null;
   financial: ContractFinancialData | null;
   penalties: ContractPenaltiesData | null;
+  discounts?: ContractDiscountsData | null;
+  ruleSettings?: {
+    forgiveness?: {
+      source?: string | null;
+      updatedAt?: string | null;
+      state?: {
+        active?: boolean;
+        values?: Record<string, string | boolean>;
+      } | null;
+    } | null;
+  } | null;
   terminationRules?: { buyerRules?: unknown } | null;
+  termination?: ContractTerminationData | null;
   extraCosts?: { payload?: unknown } | null;
   technicalSpecs?: { specs?: unknown } | null;
   attachments?: { documents?: AttachmentItem[]; notes?: string | null } | null;
+  contractMeta?: {
+    id?: string | null;
+    status?: string | null;
+    createdAt?: string | null;
+    updatedAt?: string | null;
+    entityKind?: string | null;
+    baseContractId?: string | null;
+    sourceAppendixId?: string | null;
+    latestApprovedAppendixId?: string | null;
+    appendixNumber?: number | null;
+  } | null;
 };
 
 export const EMPTY_PREVIEW_CONTRACT_PAYLOAD: PreviewContractPayload = {
@@ -42,24 +66,58 @@ export const EMPTY_PREVIEW_CONTRACT_PAYLOAD: PreviewContractPayload = {
   parties: null,
   financial: null,
   penalties: null,
+  discounts: null,
+  ruleSettings: null,
   terminationRules: null,
+  termination: null,
   extraCosts: null,
   technicalSpecs: null,
   attachments: null,
+  contractMeta: null,
 };
 
 /** پاسخ خام getContractDetails یا GET /api/contracts/:id */
-export function mapContractDetailsToPreviewPayload(contract: { data?: Record<string, unknown> } | null | undefined): PreviewContractPayload {
+export function mapContractDetailsToPreviewPayload(
+  contract:
+    | {
+        id?: string;
+        status?: string;
+        createdAt?: string;
+        updatedAt?: string;
+        entityKind?: string;
+        baseContractId?: string | null;
+        sourceAppendixId?: string | null;
+        latestApprovedAppendixId?: string | null;
+        appendixNumber?: number | null;
+        data?: Record<string, unknown>;
+      }
+    | null
+    | undefined,
+): PreviewContractPayload {
   const d = contract?.data ?? {};
   return {
     subject: (d.subject as PreviewContractPayload['subject']) ?? null,
     parties: (d.parties as PreviewContractPayload['parties']) ?? null,
     financial: (d.financial as PreviewContractPayload['financial']) ?? null,
     penalties: (d.penalties as PreviewContractPayload['penalties']) ?? null,
+    discounts: (d.discounts as PreviewContractPayload['discounts']) ?? null,
+    ruleSettings: (d.ruleSettings as PreviewContractPayload['ruleSettings']) ?? null,
     terminationRules: (d.terminationRules as PreviewContractPayload['terminationRules']) ?? null,
+    termination: (d.termination as PreviewContractPayload['termination']) ?? null,
     extraCosts: (d.extraCosts as PreviewContractPayload['extraCosts']) ?? null,
     technicalSpecs: (d.technicalSpecs as PreviewContractPayload['technicalSpecs']) ?? null,
     attachments: (d.attachments as PreviewContractPayload['attachments']) ?? null,
+    contractMeta: {
+      id: typeof contract?.id === 'string' ? contract.id : null,
+      status: typeof contract?.status === 'string' ? contract.status : null,
+      createdAt: typeof contract?.createdAt === 'string' ? contract.createdAt : null,
+      updatedAt: typeof contract?.updatedAt === 'string' ? contract.updatedAt : null,
+      entityKind: typeof contract?.entityKind === 'string' ? contract.entityKind : null,
+      baseContractId: typeof contract?.baseContractId === 'string' ? contract.baseContractId : null,
+      sourceAppendixId: typeof contract?.sourceAppendixId === 'string' ? contract.sourceAppendixId : null,
+      latestApprovedAppendixId: typeof contract?.latestApprovedAppendixId === 'string' ? contract.latestApprovedAppendixId : null,
+      appendixNumber: typeof contract?.appendixNumber === 'number' ? contract.appendixNumber : null,
+    },
   };
 }
 
@@ -76,6 +134,16 @@ function formatMoneyTomanFromRial(valueRial: number) {
   if (!valueRial) return '—';
   const toman = Math.round(valueRial / 10);
   return `${formatNumberFa(toman)} تومان`;
+}
+
+function isMeaningfulPreviewValue(value: React.ReactNode) {
+  if (value == null || value === false) return false;
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    return Boolean(trimmed) && trimmed !== '—' && trimmed !== 'null';
+  }
+  if (typeof value === 'number') return Number.isFinite(value);
+  return true;
 }
 
 function getUnitUsageLabel(usage: string | null | undefined) {
@@ -117,6 +185,65 @@ function contractTypeFa(t: ContractSubjectData['contractType'] | undefined) {
   return '—';
 }
 
+function forgivenessEntryLabel(entryId: string | null | undefined) {
+  const id = String(entryId ?? '').trim();
+  if (!id) return '—';
+  const labels: Record<string, string> = {
+    'whole-contract': 'کل قرارداد',
+    'unit-handover-delay': 'تاخیر تحویل واحد',
+    'installment-delay': 'تاخیر اقساط',
+    'document-delay': 'تاخیر اسناد',
+    'advance-payment-delay': 'پیش‌پرداخت',
+    'misc-cost-delay': 'هزینه‌های جانبی',
+    'adjustment-delay': 'تعدیل',
+    'penalty-payment-delay': 'پرداخت جریمه',
+    'bank-loan-case-delay': 'وام بانکی',
+    'lawsuit-cost': 'هزینه دعوی',
+    'document-transfer-followup': 'پیگیری انتقال سند',
+  };
+  return labels[id] ?? id;
+}
+
+function parseForgivenessEntryIds(value: unknown) {
+  if (typeof value !== 'string' || !value.trim()) return [] as string[];
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed.map((item) => String(item ?? '').trim()).filter(Boolean) : [];
+  } catch {
+    return [];
+  }
+}
+
+function describeForgivenessRuleSnapshot(
+  snapshot:
+    | {
+        state?: { active?: boolean; values?: Record<string, string | boolean> } | null;
+        source?: string | null;
+        updatedAt?: string | null;
+      }
+    | null
+    | undefined,
+) {
+  const state = snapshot?.state ?? { active: false, values: {} };
+  const values = state.values ?? {};
+  const scope = String(values.forgiveScope ?? 'whole') === 'itemized' ? 'موردی' : 'کل قرارداد';
+  const mode = String(values.forgiveValueMode ?? 'amount') === 'percent' ? 'درصدی' : 'مبلغی';
+  const entryId = String(values.forgiveEntryId ?? '').trim();
+  const enabledEntries = parseForgivenessEntryIds(values.forgiveEnabledEntryIds);
+  const enabledEntryLabels = enabledEntries.map((item) => forgivenessEntryLabel(String(item))).filter(Boolean);
+
+  return {
+    active: Boolean(state.active || values.forgiveAllowed),
+    scope,
+    mode,
+    entryLabel: forgivenessEntryLabel(entryId),
+    enabledEntryLabels,
+    managerApproval: Boolean(values.forgiveManagerApproval),
+    source: snapshot?.source ?? 'default',
+    updatedAt: snapshot?.updatedAt ?? null,
+  };
+}
+
 function PreviewField({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div
@@ -125,6 +252,78 @@ function PreviewField({ label, value }: { label: string; value: React.ReactNode 
     >
       <span className="shrink-0 text-[12px] font-semibold text-slate-500">{label}</span>
       <span className="min-w-0 truncate text-right text-[13px] font-extrabold text-slate-800">{value}</span>
+    </div>
+  );
+}
+
+function formatPreviewValue(value: unknown) {
+  if (value == null) return '—';
+  if (typeof value === 'boolean') return value ? 'بله' : 'خیر';
+  if (typeof value === 'number') return formatNumberFa(value);
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    return trimmed || '—';
+  }
+  if (Array.isArray(value)) return `${value.length.toLocaleString('fa-IR')} مورد`;
+  if (typeof value === 'object') return 'دارای داده';
+  return '—';
+}
+
+function JsonBlock({
+  title,
+  value,
+  summary,
+}: {
+  title: string;
+  value: unknown;
+  summary?: Array<{ label: string; value: React.ReactNode }>;
+  }) {
+  const isEmptyObject = value && typeof value === 'object' && !Array.isArray(value) && Object.keys(value as Record<string, unknown>).length === 0;
+  const isEmptyArray = Array.isArray(value) && value.length === 0;
+  const hasValue = value != null && !isEmptyObject && !isEmptyArray;
+
+  return (
+    <div className="space-y-3 rounded-2xl border border-slate-100 bg-white/85 p-4">
+      <div className="flex items-center justify-between gap-3">
+        <div className="font-extrabold text-slate-800">{title}</div>
+        <div className="text-[11px] font-bold text-slate-500">{formatPreviewValue(value)}</div>
+      </div>
+      {summary && summary.length > 0 ? (
+        <div className="grid gap-2 sm:grid-cols-2">
+          {summary.map((item) => (
+            <PreviewField key={`${title}-${item.label}`} label={item.label} value={item.value} />
+          ))}
+        </div>
+      ) : null}
+      {hasValue ? (
+        <details className="rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-2">
+          <summary className="cursor-pointer list-none text-[12px] font-bold text-[var(--dark-teal)] marker:content-none">
+            مشاهده داده خام
+          </summary>
+          <pre className="mt-3 max-h-[240px] overflow-auto rounded-lg bg-white p-3 text-left text-[11px] leading-6 text-slate-700" dir="ltr">
+            {JSON.stringify(value ?? null, null, 2)}
+          </pre>
+        </details>
+      ) : (
+        <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-5 text-center text-[12px] font-semibold text-slate-500">
+          داده‌ای برای نمایش ثبت نشده است.
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SimpleList({ items }: { items: Array<{ label: string; value: React.ReactNode }> }) {
+  const visibleItems = items.filter((item) => isMeaningfulPreviewValue(item.value));
+  if (!visibleItems.length) {
+    return <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 px-4 py-6 text-center text-[12px] font-semibold text-slate-500">اطلاعاتی ثبت نشده است.</div>;
+  }
+
+  return (
+    <div className="grid gap-3 sm:grid-cols-2">
+      {visibleItems.map((item) => (
+        <PreviewField key={item.label} label={item.label} value={item.value} />
+      ))}
     </div>
   );
 }
@@ -276,6 +475,12 @@ export function ContractDraftPreviewContent({
   }, [payload.attachments]);
 
   const partyTwo = payload.parties?.partyTwo ?? [];
+  const meta = payload.contractMeta ?? null;
+  const discountRules = payload.discounts?.rules ?? [];
+  const discountTypes = payload.discounts?.types ?? [];
+  const penaltyRules = payload.penalties?.rules ?? [];
+  const penaltyTypes = payload.penalties?.types ?? [];
+  const forgivenessSummary = describeForgivenessRuleSnapshot(payload.ruleSettings?.forgiveness ?? null);
 
   const innerMaxWidthClass = layout === 'embedded' ? 'w-full max-w-none px-4 sm:px-5' : 'mx-auto w-[min(1120px,calc(100%-28px))]';
 
@@ -445,45 +650,127 @@ export function ContractDraftPreviewContent({
               ) : null}
             </div>
 
-            <details className="group rounded-2xl border border-slate-100 bg-slate-50/40 px-4 py-2 open:bg-white open:shadow-sm">
-              <summary className="cursor-pointer list-none py-3 text-[13px] font-extrabold text-slate-700 marker:content-none">
-                <span className="flex items-center justify-between gap-2">
-                  <span className="flex items-center gap-2">
-                    <ShieldAlert className="h-4 w-4 text-slate-500" />
-                    سایر اطلاعات (مالی جزئی، جرائم، فسخ…)
-                  </span>
-                  <span className="text-[11px] font-bold text-[var(--dark-teal)] group-open:hidden">باز کن</span>
-                  <span className="hidden text-[11px] font-bold text-[var(--dark-teal)] group-open:inline">ببند</span>
-                </span>
-              </summary>
-              <div className="border-t border-slate-100 pb-5 pt-4">
-                <div className="mb-6 grid gap-3 sm:grid-cols-2">
-                  <PreviewField label="نوع قیمت‌گذاری" value={payload.financial?.pricingType === 'metered' ? 'متری' : payload.financial ? 'ثابت' : '—'} />
-                  <PreviewField
-                    label="مبنای فروش"
-                    value={payload.financial ? getAreaPricingModePresentation(normalizeAreaPricingMode(payload.financial.areaPricingMode)).label : '—'}
+            <div className="space-y-4">
+              <TealSectionHeader>اطلاعات کامل قرارداد</TealSectionHeader>
+              <div className="grid gap-4 lg:grid-cols-2">
+                <div className="space-y-3 rounded-2xl border border-slate-100 bg-slate-50/50 p-4">
+                  <div className="text-[12px] font-extrabold text-slate-700">وضعیت و متادیتا</div>
+                  <SimpleList
+                    items={[
+                      { label: 'شناسه قرارداد', value: meta?.id ?? '—' },
+                      { label: 'وضعیت', value: meta?.status ?? '—' },
+                      { label: 'نوع موجودیت', value: meta?.entityKind ?? '—' },
+                      { label: 'شماره متمم', value: meta?.appendixNumber != null ? formatNumberFa(meta.appendixNumber) : '—' },
+                      { label: 'مبدأ متمم', value: meta?.sourceAppendixId ?? '—' },
+                      { label: 'قرارداد پایه', value: meta?.baseContractId ?? '—' },
+                      { label: 'آخرین نسخه تاییدشده', value: meta?.latestApprovedAppendixId ?? '—' },
+                      { label: 'تاریخ ایجاد', value: meta?.createdAt ?? '—' },
+                      { label: 'تاریخ بروزرسانی', value: meta?.updatedAt ?? '—' },
+                    ]}
                   />
-                  <PreviewField label="زیربنا (متر)" value={payload.financial?.unitArea || '—'} />
-                  <PreviewField label="پارکینگ (متر)" value={payload.financial?.parkingArea ?? '—'} />
-                  <PreviewField label="انباری (متر)" value={payload.financial?.storageArea ?? '—'} />
                 </div>
 
-                <div className="space-y-3 text-[12px] font-semibold text-slate-600">
-                  <div className="font-extrabold text-slate-800">جریمه‌ها</div>
-                  <pre className="max-h-[200px] overflow-auto rounded-xl border border-slate-200 bg-white p-3 text-left text-[11px]" dir="ltr">
-                    {JSON.stringify(payload.penalties ?? null, null, 2)}
-                  </pre>
-                  <div className="font-extrabold text-slate-800">فسخ خریدار (خلاصه)</div>
-                  <pre className="max-h-[200px] overflow-auto rounded-xl border border-slate-200 bg-white p-3 text-left text-[11px]" dir="ltr">
-                    {JSON.stringify(payload.terminationRules?.buyerRules ?? {}, null, 2)}
-                  </pre>
-                  <div className="font-extrabold text-slate-800">هزینه‌های جانبی و فنی</div>
-                  <pre className="max-h-[160px] overflow-auto rounded-xl border border-slate-200 bg-white p-3 text-left text-[11px]" dir="ltr">
-                    {JSON.stringify({ extra: payload.extraCosts?.payload ?? null, tech: payload.technicalSpecs?.specs ?? null }, null, 2)}
-                  </pre>
+                <div className="space-y-3 rounded-2xl border border-slate-100 bg-slate-50/50 p-4">
+                  <div className="text-[12px] font-extrabold text-slate-700">اطلاعات مالی و محاسبات</div>
+                  <SimpleList
+                    items={[
+                      { label: 'نوع قیمت‌گذاری', value: payload.financial?.pricingType === 'metered' ? 'متری' : payload.financial ? 'ثابت' : '—' },
+                      {
+                        label: 'مبنای فروش',
+                        value: payload.financial ? getAreaPricingModePresentation(normalizeAreaPricingMode(payload.financial.areaPricingMode)).label : '—',
+                      },
+                      { label: 'زیربنا (متر)', value: payload.financial?.unitArea || '—' },
+                      { label: 'پارکینگ (متر)', value: payload.financial?.parkingArea ?? '—' },
+                      { label: 'انباری (متر)', value: payload.financial?.storageArea ?? '—' },
+                      { label: 'مبلغ کل قرارداد', value: formatMoneyTomanFromRial(totalRial) },
+                    ]}
+                  />
+                </div>
+
+                <div className="space-y-3 rounded-2xl border border-slate-100 bg-slate-50/50 p-4">
+                  <div className="text-[12px] font-extrabold text-slate-700">خلاصه جرائم و بخشودگی</div>
+                  <SimpleList
+                    items={[
+                      { label: 'تعداد انواع جریمه', value: formatNumberFa(penaltyTypes.length) },
+                      { label: 'تعداد قواعد جریمه', value: formatNumberFa(penaltyRules.length) },
+                      { label: 'نوع بخشودگی', value: forgivenessSummary.active ? `${forgivenessSummary.scope} · ${forgivenessSummary.mode}` : '—' },
+                      {
+                        label: 'آیتم‌های بخشودگی',
+                        value:
+                          forgivenessSummary.scope === 'موردی'
+                            ? forgivenessSummary.enabledEntryLabels.length > 0
+                              ? forgivenessSummary.enabledEntryLabels.join('، ')
+                              : forgivenessSummary.entryLabel
+                            : 'کل قرارداد',
+                      },
+                      { label: 'نیاز به تایید مدیر', value: forgivenessSummary.managerApproval ? 'بله' : 'خیر' },
+                    ]}
+                  />
+                  <JsonBlock
+                    title="جرائم"
+                    value={payload.penalties ?? null}
+                    summary={[
+                      { label: 'وضعیت تب', value: payload.penalties?.activeTab || '—' },
+                      { label: 'انواع فعال', value: formatNumberFa((payload.penalties?.types ?? []).filter((item) => item?.active).length) },
+                      { label: 'قواعد ثبت‌شده', value: formatNumberFa((payload.penalties?.rules ?? []).length) },
+                    ]}
+                  />
+                </div>
+
+                <div className="space-y-3 rounded-2xl border border-slate-100 bg-slate-50/50 p-4">
+                  <div className="text-[12px] font-extrabold text-slate-700">تخفیف و فسخ</div>
+                  <SimpleList
+                    items={[
+                      { label: 'تعداد انواع تخفیف', value: formatNumberFa(discountTypes.length) },
+                      { label: 'تعداد قواعد تخفیف', value: formatNumberFa(discountRules.length) },
+                      { label: 'بخش فسخ', value: payload.termination ? 'ثبت شده' : '—' },
+                      { label: 'فعالسازی فسخ', value: payload.termination?.terminationEnabled ? 'بله' : payload.termination ? 'خیر' : '—' },
+                    ]}
+                  />
+                  <JsonBlock
+                    title="تخفیف‌ها"
+                    value={payload.discounts ?? null}
+                    summary={[
+                      { label: 'انواع تخفیف', value: formatNumberFa((payload.discounts?.types ?? []).length) },
+                      { label: 'قواعد تخفیف', value: formatNumberFa((payload.discounts?.rules ?? []).length) },
+                      { label: 'تب فعال', value: payload.discounts?.activeTab || '—' },
+                    ]}
+                  />
+                  <JsonBlock
+                    title="فسخ خریدار"
+                    value={payload.terminationRules?.buyerRules ?? payload.termination ?? null}
+                    summary={[
+                      { label: 'فعال', value: payload.termination?.terminationEnabled ? 'بله' : payload.termination ? 'خیر' : '—' },
+                      { label: 'پنل خریدار', value: payload.termination?.terminationBuyerPanel ?? '—' },
+                      { label: 'پنل سازنده', value: payload.termination?.terminationConstructorPanel ?? '—' },
+                    ]}
+                  />
                 </div>
               </div>
-            </details>
+
+              <div className="grid gap-4 lg:grid-cols-2">
+                <JsonBlock
+                  title="جزئیات مالی"
+                  value={payload.financial ?? null}
+                  summary={[
+                    { label: 'نوع قیمت‌گذاری', value: payload.financial?.pricingType === 'metered' ? 'متری' : payload.financial ? 'ثابت' : '—' },
+                    { label: 'زیربنا', value: payload.financial?.unitArea || '—' },
+                    { label: 'پارکینگ', value: payload.financial?.parkingArea ?? '—' },
+                    { label: 'انباری', value: payload.financial?.storageArea ?? '—' },
+                  ]}
+                />
+                <JsonBlock
+                  title="پیوست‌ها و مشخصات فنی"
+                  value={{ extra: payload.extraCosts?.payload ?? null, tech: payload.technicalSpecs?.specs ?? null, attachments: payload.attachments ?? null }}
+                  summary={[
+                    { label: 'پیوست‌ها', value: payload.attachments?.documents?.length ? `${payload.attachments.documents.length.toLocaleString('fa-IR')} سند` : '—' },
+                    { label: 'یادداشت', value: payload.attachments?.notes?.trim() ? 'دارد' : '—' },
+                    { label: 'مشخصات فنی', value: payload.technicalSpecs?.specs ? 'ثبت شده' : '—' },
+                    { label: 'هزینه جانبی', value: payload.extraCosts?.payload ? 'ثبت شده' : '—' },
+                  ]}
+                />
+              </div>
+            </div>
           </div>
         </section>
     </div>
@@ -503,3 +790,4 @@ export function ContractDraftPreviewContent({
     </div>
   );
 }
+

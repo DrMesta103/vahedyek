@@ -130,6 +130,40 @@ function formatMoneyRialOrUnknown(valueRial: number | null | undefined) {
   return formatMoneyRial(valueRial);
 }
 
+function buildReceiptPenaltySummary(
+  receiptId: string,
+  receiptAllocation: ContractReceiptAllocationResult,
+  penaltyRowsById: Map<string, { forgivenRial?: number | null; claimableAmountRial?: number | null }>,
+) {
+  const receiptSummary = receiptAllocation.receiptById[receiptId];
+  if (!receiptSummary) {
+    return {
+      penaltyAllocatedRial: 0,
+      penaltyForgivenRial: 0,
+      penaltyClaimableRial: 0,
+    };
+  }
+
+  let penaltyAllocatedRial = 0;
+  let penaltyForgivenRial = 0;
+  let penaltyClaimableRial = 0;
+
+  for (const allocation of receiptSummary.allocations) {
+    if ((allocation.due.sourceKind ?? 'principal') !== 'penalty') continue;
+    const allocatedRial = Math.max(0, Number(allocation.amountRial ?? 0));
+    const penaltyRow = penaltyRowsById.get(String(allocation.due.id ?? ''));
+    penaltyAllocatedRial += allocatedRial;
+    penaltyForgivenRial += Math.max(0, Number(penaltyRow?.forgivenRial ?? 0));
+    penaltyClaimableRial += Math.max(0, Number(penaltyRow?.claimableAmountRial ?? allocation.due.amount ?? allocatedRial));
+  }
+
+  return {
+    penaltyAllocatedRial,
+    penaltyForgivenRial,
+    penaltyClaimableRial,
+  };
+}
+
 const TOOLTIP_LINE_BASE =
   'مبلغ این ردیف بر اساس سقف زیربخش‌ها؛ بدون لحاظ جریمه‌ها و تخفیف قرارداد.';
 
@@ -478,6 +512,25 @@ function parseRuleJsonArray(value: string | boolean | undefined) {
   }
 }
 
+function formatForgivenessEntryLabel(entryId: string) {
+  const id = String(entryId ?? '').trim();
+  if (!id) return '—';
+  const labels: Record<string, string> = {
+    'whole-contract': 'کل قرارداد',
+    'unit-handover-delay': 'تاخیر تحویل واحد',
+    'installment-delay': 'تاخیر اقساط',
+    'document-delay': 'تاخیر اسناد',
+    'advance-payment-delay': 'پیش‌پرداخت',
+    'misc-cost-delay': 'هزینه‌های جانبی',
+    'adjustment-delay': 'تعدیل',
+    'penalty-payment-delay': 'پرداخت جریمه',
+    'bank-loan-case-delay': 'وام بانکی',
+    'lawsuit-cost': 'هزینه دعوی',
+    'document-transfer-followup': 'پیگیری انتقال سند',
+  };
+  return labels[id] ?? id;
+}
+
 function getInterestModeMeta(activeTab: string) {
   if (activeTab === 'compound-interest') {
     return {
@@ -563,6 +616,7 @@ function buildForgivenessRuleCard(snapshot: ContractRuleSnapshot | null | undefi
   const enabledEntries = parseRuleJsonArray(values.forgiveEnabledEntryIds);
   const scopeLabel = values.forgiveScope === 'itemized' ? 'موردی' : 'کل قرارداد';
   const modeLabel = values.forgiveValueMode === 'percent' ? 'درصدی' : 'مبلغی';
+  const enabledEntryLabels = enabledEntries.map(formatForgivenessEntryLabel);
   const statusActive = state.active || Boolean(values.forgiveAllowed);
   const statusPending = statusActive && Boolean(values.forgiveManagerApproval);
 
@@ -579,7 +633,12 @@ function buildForgivenessRuleCard(snapshot: ContractRuleSnapshot | null | undefi
       { label: 'نوع مقدار', value: modeLabel },
       {
         label: 'پوشش آیتم‌ها',
-        value: scopeLabel === 'موردی' ? `${enabledEntries.length.toLocaleString('fa-IR')} مورد` : 'کل قرارداد',
+        value:
+          scopeLabel === 'موردی'
+            ? enabledEntryLabels.length > 0
+              ? enabledEntryLabels.join('، ')
+              : `${enabledEntries.length.toLocaleString('fa-IR')} مورد`
+            : 'کل قرارداد',
       },
       { label: 'نیاز به تایید مدیر', value: formatRuleBoolean(values.forgiveManagerApproval) },
     ],
@@ -853,11 +912,28 @@ export default function ContractReportsPage() {
     [paymentMonthBuckets, registeredReceipts],
   );
 
+  const penaltyRowsById = useMemo(
+    () => new Map(penaltyTimeline.penaltyRows.map((row) => [row.id, row] as const)),
+    [penaltyTimeline.penaltyRows],
+  );
+
+  const penaltyRowsByPrincipalDueId = useMemo(
+    () =>
+      penaltyTimeline.penaltyRows.reduce((acc, row) => {
+        const principalDueId = String(row.principalDueRowId ?? '').trim();
+        if (!principalDueId) return acc;
+        acc[principalDueId] = row;
+        return acc;
+      }, {} as Record<string, (typeof penaltyTimeline.penaltyRows)[number]>),
+    [penaltyTimeline.penaltyRows],
+  );
+
   const receiptReportRows = useMemo(
     () =>
       registeredReceipts.map((receipt) => {
         const allocation = receiptAllocation.receiptById[receipt.id];
         const allocatedAmountRial = allocation?.allocatedAmountRial ?? 0;
+        const penaltySummary = buildReceiptPenaltySummary(receipt.id, receiptAllocation, penaltyRowsById);
         const dueAmountRial = Number(receipt.dueAmount ?? 0) > 0 ? Number(receipt.dueAmount) : null;
         const shortageRial = dueAmountRial != null && receipt.paidAmountRial < dueAmountRial ? dueAmountRial - receipt.paidAmountRial : null;
         const overpaymentRial =
@@ -897,6 +973,12 @@ export default function ContractReportsPage() {
             reviewStatus === 'rejected' ? receipt.rejectionReason?.trim() || 'اطلاعات علت رد در داده موجود نیست' : '—',
           allocatedAmountRial,
           allocatedAmountLabel: formatMoneyRial(allocatedAmountRial),
+          penaltyAllocatedRial: penaltySummary.penaltyAllocatedRial,
+          penaltyAllocatedLabel: formatMoneyRialOrUnknown(penaltySummary.penaltyAllocatedRial),
+          penaltyForgivenRial: penaltySummary.penaltyForgivenRial,
+          penaltyForgivenLabel: formatMoneyRialOrUnknown(penaltySummary.penaltyForgivenRial),
+          penaltyClaimableRial: penaltySummary.penaltyClaimableRial,
+          penaltyClaimableLabel: formatMoneyRialOrUnknown(penaltySummary.penaltyClaimableRial),
           discrepancyLabel:
             shortageRial != null
               ? `کسری: ${formatMoneyRial(shortageRial)}`
@@ -908,7 +990,7 @@ export default function ContractReportsPage() {
           dueAmountRial,
         };
       }),
-    [receiptAllocation.receiptById, registeredReceipts],
+    [penaltyRowsById, receiptAllocation.receiptById, registeredReceipts],
   );
 
   const receiptReportGaps = useMemo(() => {
@@ -2590,6 +2672,7 @@ export default function ContractReportsPage() {
                         toggleMonth={togglePaymentMonth}
                         allocationByDueId={receiptAllocation.dueById}
                         penaltyDetailsByPrincipalDueId={penaltyTimeline.penaltyDetailsByPrincipalDueId}
+                        penaltyRowsByPrincipalDueId={penaltyRowsByPrincipalDueId}
                       />
                     </div>
                   )}
@@ -2611,7 +2694,7 @@ export default function ContractReportsPage() {
                       </div>
                     ) : (
                       <div className="mt-5 overflow-x-auto rounded-2xl border border-slate-200/90">
-                        <table className="w-full min-w-[1100px] border-collapse text-[10px] sm:text-[11px]" dir="rtl">
+                        <table className="w-full min-w-[920px] border-collapse text-[10px] sm:text-[11px]" dir="rtl">
                           <thead>
                             <tr className="border-b border-slate-200 bg-slate-50/90 text-slate-500">
                               <th className="px-2 py-3 text-center font-black whitespace-nowrap">تاریخ ثبت رسید</th>
@@ -2620,7 +2703,7 @@ export default function ContractReportsPage() {
                               <th className="px-2 py-3 text-center font-black whitespace-nowrap">وضعیت رسید</th>
                               <th className="px-2 py-3 text-center font-black whitespace-nowrap">تأییدکننده / ردکننده</th>
                               <th className="px-2 py-3 text-center font-black whitespace-nowrap">علت رد</th>
-                              <th className="px-2 py-3 text-center font-black whitespace-nowrap">مبلغ تخصیص‌یافته</th>
+                              <th className="px-2 py-3 text-center font-black whitespace-nowrap">تخصیص و بخشودگی</th>
                               <th className="px-2 py-3 text-center font-black whitespace-nowrap">کسری / اضافه‌پرداخت</th>
                             </tr>
                           </thead>
@@ -2660,8 +2743,26 @@ export default function ContractReportsPage() {
                                     </span>
                                   )}
                                 </td>
-                                <td className="px-2 py-3 text-center tabular-nums font-bold text-emerald-900">
-                                  {row.allocatedAmountLabel}
+                                <td className="px-2 py-3 text-center">
+                                  <div className="space-y-1">
+                                    <div className="tabular-nums font-bold text-emerald-900">{row.allocatedAmountLabel}</div>
+                                    <div className="rounded-xl bg-slate-50 px-2 py-1 text-[10px] font-semibold leading-5 text-slate-600">
+                                      <div className="flex items-center justify-between gap-2">
+                                        <span>جریمه تخصیص‌یافته</span>
+                                        <span className="tabular-nums font-bold text-slate-800">{row.penaltyAllocatedLabel}</span>
+                                      </div>
+                                      <div className="mt-0.5 flex items-center justify-between gap-2">
+                                        <span>بخشودگی</span>
+                                        <span className="tabular-nums font-bold text-slate-800">
+                                          {row.penaltyForgivenRial > 0 ? row.penaltyForgivenLabel : '۰ ریال'}
+                                        </span>
+                                      </div>
+                                      <div className="mt-0.5 flex items-center justify-between gap-2">
+                                        <span>قابل مطالبه</span>
+                                        <span className="tabular-nums font-bold text-slate-800">{row.penaltyClaimableLabel}</span>
+                                      </div>
+                                    </div>
+                                  </div>
                                 </td>
                                 <td className="px-2 py-3 text-center font-bold text-slate-800">
                                   {row.discrepancyLabel}
@@ -3153,6 +3254,7 @@ export default function ContractReportsPage() {
                             toggleMonth={toggleSummaryDueMonth}
                             allocationByDueId={receiptAllocation.dueById}
                             penaltyDetailsByPrincipalDueId={penaltyTimeline.penaltyDetailsByPrincipalDueId}
+                            penaltyRowsByPrincipalDueId={penaltyRowsByPrincipalDueId}
                             onViewReceipts={(payload, summary) =>
                               setReceiptDetails({
                                 payload,

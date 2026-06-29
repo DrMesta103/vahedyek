@@ -288,6 +288,56 @@ test('forgiveness is applied after penalty calculation and reduces only the clai
   assert.equal(allocation.dueById[penaltyRow.id]?.paidAmountRial, 100);
 });
 
+test('manager approval keeps forgiveness pending without reducing claimable amount', () => {
+  const financial = buildFinancial([
+    { id: 'due-1', categoryId: 'installment', title: 'قسط اول', amount: 1000, dueDate: '1405/01/01' },
+  ]);
+  const penalties: ContractPenaltiesData = {
+    activeTab: '',
+    types: [{ id: 'installment-delay', title: 'تاخیر اقساط', description: '', active: true }],
+    rules: [
+      {
+        id: 'rule-fixed',
+        penaltyTypeId: 'installment-delay',
+        mode: 'fixed',
+        period: 'daily',
+        fixedAmount: '100',
+        penaltyPercent: '',
+        bankInterestPercent: '',
+        graceDays: '0',
+        roundRule: '0',
+        extraFeeEnabled: false,
+        extraFeeType: 'fixed',
+        extraFeeAmount: '',
+        extraFeeRoundRule: '0',
+        progressiveRows: [],
+      },
+    ],
+  };
+
+  const timeline = buildContractPenaltyTimeline({
+    financial,
+    penalties,
+    asOfDate: new Date(2026, 2, 22),
+    forgiveness: buildForgivenessSnapshot({
+      forgiveAllowed: true,
+      forgiveScope: 'whole',
+      forgiveValueMode: 'amount',
+      forgiveMinValue: '0',
+      forgiveMaxValue: '50',
+      forgiveMaxDelayCount: '1',
+      forgiveOutsideBuyerControl: false,
+      forgiveManagerApproval: true,
+    }),
+  });
+
+  const penaltyRow = timeline.penaltyRows[0];
+  assert.ok(penaltyRow);
+  assert.equal(penaltyRow?.forgivenessStatus, 'pending');
+  assert.equal(penaltyRow?.forgivenRial, null);
+  assert.equal(penaltyRow?.claimableAmountRial, penaltyRow?.amount);
+});
+
 test('whole-contract forgiveness limits how many penalty rows are affected', () => {
   const financial = buildFinancial([
     { id: 'due-1', categoryId: 'installment', title: 'قسط اول', amount: 1000, dueDate: '1405/01/01' },
