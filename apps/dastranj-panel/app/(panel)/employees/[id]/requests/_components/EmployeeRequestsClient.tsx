@@ -5,21 +5,22 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   ArrowLeft,
-  BadgeCheck,
   CalendarDays,
-  Clock3,
+  ChevronDown,
   Eye,
   FileText,
+  MoreVertical,
   Pencil,
+  PieChart,
   Plus,
   RotateCcw,
+  Search,
   Trash2,
   User,
+  X,
 } from 'lucide-react';
-import { PanelFormModal, PanelFormModalActions } from '../../../../../components/PanelFormModal';
+import { TaavChoiceChipGroup } from '@repo/ui/taav/forms';
 import { ConfirmDialog } from '../../../../../components/ConfirmDialog';
-import { AttachmentManager } from '../../../../../components/AttachmentManager';
-import { AdaptiveChipGroup } from '../../../../../components/AdaptiveChipGroup';
 import { formatFaNumber } from '../../../../../lib/format-fa';
 import {
   EmployeeRequestDialog,
@@ -49,6 +50,14 @@ import {
   REMOTE_WORK_MODE_LABELS,
   REMOTE_WORK_PAYMENT_EFFECT_LABELS,
 } from '../../../../../lib/remote-work-policy';
+
+const CATEGORY_TABS = REQUEST_TAB_CONFIG.filter((tab) =>
+  ['leave', 'overtime', 'attendance', 'remote_work', 'mission'].includes(tab.key),
+);
+
+const CATEGORY_TAB_LABELS: Partial<Record<(typeof REQUEST_TAB_CONFIG)[number]['key'], string>> = {
+  attendance: 'تردد',
+};
 
 const REQUEST_TABS: Array<{ type: EmployeeRequestType; label: string }> = [
   { type: 'daily_leave', label: 'مرخصی روزانه' },
@@ -83,18 +92,6 @@ const RANGE_LABELS: Record<string, string> = {
 
 const YEARS = ['1400', '1401', '1402', '1403', '1404', '1405', '1406', '1407'];
 
-function normalizeNumber(value: string) {
-  const latin = value
-    .replace(/[۰-۹]/g, (digit) => String(digit.charCodeAt(0) - 1776))
-    .replace(/[٠-٩]/g, (digit) => String(digit.charCodeAt(0) - 1632))
-    .replace(/[^\d.]/g, '');
-  return latin ? Number(latin) : Number.NaN;
-}
-
-function money(value: number | null | undefined) {
-  return `${formatFaNumber(Math.round(value ?? 0))} ریال`;
-}
-
 function durationLabel(minutes?: number | null) {
   if (!minutes) return 'محاسبه نشده';
   const hours = Math.floor(minutes / 60);
@@ -106,41 +103,70 @@ function requestTitle(type: EmployeeRequestType) {
   return REQUEST_TABS.find((tab) => tab.type === type)?.label ?? type;
 }
 
+function categoryTabLabel(key: (typeof REQUEST_TAB_CONFIG)[number]['key']) {
+  return CATEGORY_TAB_LABELS[key] ?? REQUEST_TAB_CONFIG.find((tab) => tab.key === key)?.label ?? key;
+}
+
+function contractDurationSummary(employee: EmployeeRequestsEmployee) {
+  if (!employee.hasActiveContract || !employee.contractStartDate || !employee.contractEndDate) return null;
+  const start = new Date(`${employee.contractStartDate.slice(0, 10)}T12:00:00`);
+  const end = new Date(`${employee.contractEndDate.slice(0, 10)}T12:00:00`);
+  const today = new Date();
+  today.setHours(12, 0, 0, 0);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end <= start) return null;
+  const totalDays = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / 86400000));
+  const elapsedDays = Math.min(totalDays, Math.max(0, Math.ceil((today.getTime() - start.getTime()) / 86400000)));
+  const remainingDays = Math.max(0, totalDays - elapsedDays);
+  const progressPercent = Math.round((elapsedDays / totalDays) * 100);
+  return { totalDays, elapsedDays, remainingDays, progressPercent };
+}
+
+function formatPersianTimestamp(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '—';
+  const time = date.toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit', hour12: false });
+  const day = date.toLocaleDateString('fa-IR');
+  return `${time} - ${day}`;
+}
+
+function requestDetailLines(request: EmployeeRequestItem) {
+  const meta = request.calculationMeta ?? {};
+  const lines: Array<{ label: string; value: string }> = [];
+
+  if (request.startDate && request.startTime) {
+    lines.push({ label: 'ساعت', value: request.startTime });
+    lines.push({ label: 'تاریخ', value: request.startDate });
+  } else if (request.startDate && request.endDate && request.startDate !== request.endDate) {
+    lines.push({ label: 'بازه', value: `${request.startDate} تا ${request.endDate}` });
+  } else if (request.startDate) {
+    lines.push({ label: 'تاریخ', value: request.startDate });
+  } else if (request.dateTime) {
+    lines.push({ label: 'زمان', value: request.dateTime });
+  }
+
+  const shiftWindow = typeof meta.shiftWindowLabel === 'string' ? meta.shiftWindowLabel : null;
+  if (shiftWindow) {
+    lines.push({ label: 'شیفت کاری از ساعت', value: shiftWindow.replace(' تا ', ' - ') });
+  }
+
+  const delayMinutes = typeof meta.delayMinutes === 'number' ? meta.delayMinutes : null;
+  if (delayMinutes != null) {
+    lines.push({ label: 'تاخیر', value: `${formatFaNumber(delayMinutes, { useGrouping: false })} دقیقه` });
+  }
+
+  if (request.reasonTitle) {
+    lines.push({ label: 'علت', value: request.reasonTitle });
+  }
+
+  if (request.calculatedDurationMinutes) {
+    lines.push({ label: 'مدت', value: durationLabel(request.calculatedDurationMinutes) });
+  }
+
+  return lines;
+}
+
 function fullName(employee: EmployeeRequestsEmployee) {
   return `${employee.firstName} ${employee.lastName}`.trim();
-}
-
-function compactDate(request: EmployeeRequestItem) {
-  if (request.dateTime) return request.dateTime;
-  if (request.startDate && request.endDate && request.startDate !== request.endDate) {
-    return `${request.startDate} تا ${request.endDate}`;
-  }
-  if (request.startDate && request.startTime && request.endTime) return `${request.startDate}، ${request.startTime} تا ${request.endTime}`;
-  if (request.startDate) return request.startDate;
-  return 'تاریخ ثبت نشده';
-}
-
-function initialForm(type: EmployeeRequestType, employeeId: string): EmployeeRequestFormPayload {
-  const rangeType = type === 'hourly_leave' ? 'hourly' : LEAVE_TYPES.includes(type) ? 'full_day' : type === 'attendance' ? 'point' : 'range';
-  return {
-    employeeId,
-    requestType: type,
-    status: 'pending',
-    submissionMode: 'pending',
-    rangeType,
-    attendanceActionType: null,
-    startDate: '',
-    endDate: '',
-    startTime: '',
-    endTime: '',
-    dateTime: '',
-    amount: null,
-    loanId: null,
-    installments: null,
-    reasonId: null,
-    description: '',
-    attachments: [],
-  };
 }
 
 function formFromRequest(request: EmployeeRequestItem): EmployeeRequestFormPayload {
@@ -164,322 +190,6 @@ function formFromRequest(request: EmployeeRequestItem): EmployeeRequestFormPaylo
     description: request.description ?? '',
     attachments: request.attachments,
   };
-}
-
-function EmployeeMiniHeader({ employee }: { employee: EmployeeRequestsEmployee }) {
-  return (
-    <div className="employee-request-person">
-      <div className="employee-request-avatar">
-        {employee.avatarUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={employee.avatarUrl} alt="" />
-        ) : (
-          <User className="h-5 w-5" />
-        )}
-      </div>
-      <div>
-        <strong>{fullName(employee) || 'کارمند بدون نام'}</strong>
-        <span>{employee.jobTitle || employee.organizationUnitTitle || employee.workGroupTitle || 'عنوان شغلی ثبت نشده'}</span>
-      </div>
-      <b className={employee.hasActiveContract ? 'is-approved' : 'is-muted'}>
-        {employee.hasActiveContract ? 'دارای قرارداد فعال' : 'فاقد قرارداد'}
-      </b>
-    </div>
-  );
-}
-
-function ReasonPicker({
-  reasons,
-  selected,
-  disabled,
-  onChange,
-}: {
-  reasons: RequestReasonOption[];
-  selected: string | null | undefined;
-  disabled?: boolean;
-  onChange: (id: string) => void;
-}) {
-  const [expanded, setExpanded] = useState(false);
-  const visible = expanded ? reasons : reasons.slice(0, 6);
-
-  return (
-    <section className="employee-request-dialog-section">
-      <div className="employee-request-section-title">علت درخواست</div>
-      {visible.length ? (
-        <AdaptiveChipGroup
-          className="employee-request-chip-grid"
-          selected={selected ?? ''}
-          items={visible.map((reason) => ({ value: reason.id, label: reason.title, disabled }))}
-          onChange={(value) => onChange(String(value))}
-        />
-      ) : (
-        <p className="employee-request-empty-note">برای این نوع درخواست علتی تعریف نشده است.</p>
-      )}
-      {reasons.length > 6 ? (
-        <button type="button" className="employee-request-more-btn" disabled={disabled} onClick={() => setExpanded((value) => !value)}>
-          {expanded ? 'نمایش کمتر' : 'موارد بیشتر'}
-        </button>
-      ) : null}
-    </section>
-  );
-}
-
-function SubmissionModePicker({
-  value,
-  disabled,
-  onChange,
-}: {
-  value: 'approved' | 'pending';
-  disabled?: boolean;
-  onChange: (value: 'approved' | 'pending') => void;
-}) {
-  return (
-    <section className="employee-request-dialog-section">
-      <div className="employee-request-section-title">نحوه ثبت درخواست</div>
-      <AdaptiveChipGroup
-        className="employee-request-chip-grid"
-        selected={value}
-        items={[
-          { value: 'approved', label: 'ثبت نهایی / تأیید شده', disabled },
-          { value: 'pending', label: 'ثبت در انتظار تأیید', disabled },
-        ]}
-        onChange={(next) => onChange(next as 'approved' | 'pending')}
-      />
-    </section>
-  );
-}
-
-function RequestDialog({
-  mode,
-  employee,
-  form,
-  reasons,
-  loans,
-  leaveBalance,
-  onChange,
-  onClose,
-  onSubmit,
-  saving,
-}: {
-  mode: 'create' | 'edit' | 'view';
-  employee: EmployeeRequestsEmployee;
-  form: EmployeeRequestFormPayload;
-  reasons: RequestReasonOption[];
-  loans: CompanyLoanItem[];
-  leaveBalance: LeaveBalanceSummary;
-  onChange: (next: EmployeeRequestFormPayload) => void;
-  onClose: () => void;
-  onSubmit: () => void;
-  saving: boolean;
-}) {
-  const [error, setError] = useState('');
-  const readonly = mode === 'view';
-  const typeReasons = reasons.filter((reason) => reason.category === form.requestType);
-  const selectedLoan = loans.find((loan) => loan.id === form.loanId);
-  const isLeave = LEAVE_TYPES.includes(form.requestType);
-
-  const submit = () => {
-    if (readonly) return onClose();
-    if (form.requestType !== 'mission' && !form.reasonId) return setError('علت درخواست الزامی است.');
-    if (isLeave && form.rangeType === 'hourly' && (!form.startTime || !form.endTime)) return setError('ساعت شروع و پایان الزامی است.');
-    if (isLeave && !form.startDate) return setError('تاریخ مرخصی الزامی است.');
-    if (isLeave && form.rangeType === 'multi_day' && !form.endDate) return setError('تاریخ پایان مرخصی الزامی است.');
-    if (isLeave && form.rangeType === 'multi_day' && form.endDate && form.startDate && form.endDate < form.startDate) return setError('تاریخ پایان نباید قبل از تاریخ شروع باشد.');
-    if (isLeave && form.rangeType === 'hourly' && form.startTime && form.endTime && form.endTime <= form.startTime) return setError('ساعت پایان باید بعد از ساعت شروع باشد.');
-    if (['overtime', 'remote_work'].includes(form.requestType) && (!form.startDate || !form.endDate || !form.startTime || !form.endTime)) {
-      return setError('بازه تاریخ و ساعت را کامل وارد کنید.');
-    }
-    if (['overtime', 'remote_work'].includes(form.requestType) && form.startDate && form.endDate && form.endDate < form.startDate) return setError('تاریخ پایان نباید قبل از تاریخ شروع باشد.');
-    if (['overtime', 'remote_work'].includes(form.requestType) && form.startDate === form.endDate && form.startTime && form.endTime && form.endTime <= form.startTime) return setError('ساعت پایان باید بعد از ساعت شروع باشد.');
-    if (form.requestType === 'attendance' && (!form.startDate || !form.startTime)) return setError('تاریخ و ساعت تردد الزامی است.');
-    if (form.requestType === 'salary_advance' && (!form.amount || form.amount <= 0)) return setError('مبلغ باید عددی مثبت باشد.');
-    if (form.requestType === 'loan') {
-      if (!selectedLoan) return setError('انتخاب وام الزامی است.');
-      if (!form.amount || form.amount < selectedLoan.minAmount || form.amount > selectedLoan.maxAmount) return setError('مبلغ درخواستی خارج از بازه وام است.');
-      if (!form.installments || form.installments < selectedLoan.minInstallments || form.installments > selectedLoan.maxInstallments) return setError('تعداد اقساط خارج از بازه وام است.');
-    }
-    setError('');
-    onSubmit();
-  };
-
-  return (
-    <PanelFormModal
-      open
-      title={requestTitle(form.requestType)}
-      lead={mode === 'view' ? 'مشاهده جزئیات درخواست ثبت‌شده' : 'اطلاعات درخواست را تکمیل کنید.'}
-      error={error}
-      onClose={onClose}
-      footer={
-        <PanelFormModalActions
-          submitLabel={readonly ? 'بستن' : 'ثبت'}
-          cancelLabel={readonly ? 'بازگشت' : 'انصراف'}
-          saving={saving}
-          savingLabel="در حال ثبت..."
-          onSubmit={submit}
-          onCancel={onClose}
-        />
-      }
-    >
-      <div className="employee-request-dialog">
-        <EmployeeMiniHeader employee={employee} />
-
-        {isLeave ? (
-          <>
-            {employee.hasActiveContract ? (
-              <div className="employee-request-balance">
-                <span>مرخصی سالانه (قرارداد فعال): <strong>{durationLabel(leaveBalance.annualMinutes)}</strong></span>
-                <span>مرخصی باقی‌مانده: <strong>{durationLabel(leaveBalance.remainingMinutes)}</strong></span>
-              </div>
-            ) : (
-              <div className="employee-request-balance is-empty">
-                <span>مرخصی سالانه: <strong>فاقد قرارداد</strong></span>
-                <span>مرخصی باقی‌مانده: <strong>فاقد قرارداد</strong></span>
-              </div>
-            )}
-            <section className="employee-request-dialog-section">
-              <div className="employee-request-section-title">نوع بازه مرخصی</div>
-              <AdaptiveChipGroup
-                className="employee-request-chip-grid"
-                selected={form.rangeType ?? 'full_day'}
-                items={[
-                  { value: 'full_day', label: 'یک روز کامل' },
-                  { value: 'multi_day', label: 'چند روز متوالی' },
-                  { value: 'hourly', label: 'چند ساعت از یک روز' },
-                ].map((item) => ({ ...item, disabled: readonly }))}
-                onChange={(value) => onChange({ ...form, rangeType: value as EmployeeRequestFormPayload['rangeType'] })}
-              />
-              <p className="employee-request-tooltip">
-                {form.rangeType === 'multi_day'
-                  ? 'فقط روزهای کاری/شیفت‌های قابل محاسبه در بازه لحاظ می‌شود.'
-                  : form.rangeType === 'hourly'
-                    ? 'ساعت شروع و پایان باید معتبر باشد.'
-                    : 'کل شیفت‌های کاری کارمند در آن روز محاسبه می‌شود.'}
-              </p>
-            </section>
-          </>
-        ) : null}
-
-        <div className="employee-request-form-grid">
-          {form.requestType === 'attendance' ? (
-            <>
-              <p className="employee-request-tooltip" style={{ gridColumn: '1 / -1' }}>
-                سیستم بر اساس ترتیب ثبت، ترددهای متوالی را به‌صورت خودکار به «تردد کامل» زوج می‌کند.
-              </p>
-              <label className="business-payroll-field">
-                <span className="business-payroll-field-label">تاریخ</span>
-                <input disabled={readonly} value={form.startDate ?? ''} onChange={(event) => onChange({ ...form, startDate: event.target.value, dateTime: `${event.target.value} ${form.startTime ?? ''}`.trim() })} placeholder="۱۴۰۵/۰۱/۰۱" />
-              </label>
-              <label className="business-payroll-field">
-                <span className="business-payroll-field-label">ساعت</span>
-                <input disabled={readonly} value={form.startTime ?? ''} onChange={(event) => onChange({ ...form, startTime: event.target.value, dateTime: `${form.startDate ?? ''} ${event.target.value}`.trim() })} placeholder="08:30" />
-              </label>
-            </>
-          ) : null}
-
-          {isLeave ? (
-            <>
-              <label className="business-payroll-field">
-                <span className="business-payroll-field-label">{form.rangeType === 'multi_day' ? 'تاریخ شروع' : 'تاریخ'}</span>
-                <input disabled={readonly} value={form.startDate ?? ''} onChange={(event) => onChange({ ...form, startDate: event.target.value })} placeholder="۱۴۰۵/۰۱/۰۱" />
-              </label>
-              {form.rangeType === 'multi_day' ? (
-                <label className="business-payroll-field">
-                  <span className="business-payroll-field-label">تاریخ پایان</span>
-                  <input disabled={readonly} value={form.endDate ?? ''} onChange={(event) => onChange({ ...form, endDate: event.target.value })} placeholder="۱۴۰۵/۰۱/۰۳" />
-                </label>
-              ) : null}
-              {form.rangeType === 'hourly' ? (
-                <>
-                  <label className="business-payroll-field">
-                    <span className="business-payroll-field-label">ساعت شروع</span>
-                    <input disabled={readonly} value={form.startTime ?? ''} onChange={(event) => onChange({ ...form, startTime: event.target.value })} placeholder="08:00" />
-                  </label>
-                  <label className="business-payroll-field">
-                    <span className="business-payroll-field-label">ساعت پایان</span>
-                    <input disabled={readonly} value={form.endTime ?? ''} onChange={(event) => onChange({ ...form, endTime: event.target.value })} placeholder="12:00" />
-                  </label>
-                </>
-              ) : null}
-            </>
-          ) : null}
-
-          {['overtime', 'remote_work'].includes(form.requestType) ? (
-            <>
-              <label className="business-payroll-field">
-                <span className="business-payroll-field-label">تاریخ شروع</span>
-                <input disabled={readonly} value={form.startDate ?? ''} onChange={(event) => onChange({ ...form, startDate: event.target.value })} placeholder="۱۴۰۵/۰۱/۰۱" />
-              </label>
-              <label className="business-payroll-field">
-                <span className="business-payroll-field-label">ساعت شروع</span>
-                <input disabled={readonly} value={form.startTime ?? ''} onChange={(event) => onChange({ ...form, startTime: event.target.value })} placeholder="17:00" />
-              </label>
-              <label className="business-payroll-field">
-                <span className="business-payroll-field-label">تاریخ پایان</span>
-                <input disabled={readonly} value={form.endDate ?? ''} onChange={(event) => onChange({ ...form, endDate: event.target.value })} placeholder="۱۴۰۵/۰۱/۰۱" />
-              </label>
-              <label className="business-payroll-field">
-                <span className="business-payroll-field-label">ساعت پایان</span>
-                <input disabled={readonly} value={form.endTime ?? ''} onChange={(event) => onChange({ ...form, endTime: event.target.value })} placeholder="20:00" />
-              </label>
-            </>
-          ) : null}
-
-          {form.requestType === 'salary_advance' ? (
-            <label className="business-payroll-field">
-              <span className="business-payroll-field-label">مبلغ</span>
-              <input disabled={readonly} value={form.amount ? String(form.amount) : ''} onChange={(event) => onChange({ ...form, amount: normalizeNumber(event.target.value) })} />
-            </label>
-          ) : null}
-
-          {form.requestType === 'loan' ? (
-            loans.length ? (
-              <>
-                <label className="business-payroll-field">
-                  <span className="business-payroll-field-label">وام سازمانی</span>
-                  <select disabled={readonly} value={form.loanId ?? ''} onChange={(event) => onChange({ ...form, loanId: event.target.value || null })}>
-                    <option value="">انتخاب کنید</option>
-                    {loans.filter((loan) => loan.isActive).map((loan) => <option key={loan.id} value={loan.id}>{loan.title}</option>)}
-                  </select>
-                </label>
-                <label className="business-payroll-field">
-                  <span className="business-payroll-field-label">مبلغ درخواستی</span>
-                  <input disabled={readonly} value={form.amount ? String(form.amount) : ''} onChange={(event) => onChange({ ...form, amount: normalizeNumber(event.target.value) })} />
-                </label>
-                <label className="business-payroll-field">
-                  <span className="business-payroll-field-label">تعداد اقساط</span>
-                  <input disabled={readonly} value={form.installments ? String(form.installments) : ''} onChange={(event) => onChange({ ...form, installments: Math.floor(normalizeNumber(event.target.value)) })} />
-                </label>
-                {selectedLoan ? (
-                  <div className="employee-request-loan-summary">
-                    <span>حداقل مبلغ: {money(selectedLoan.minAmount)}</span>
-                    <span>حداکثر مبلغ: {money(selectedLoan.maxAmount)}</span>
-                    <span>اقساط: {formatFaNumber(selectedLoan.minInstallments)} تا {formatFaNumber(selectedLoan.maxInstallments)}</span>
-                    <span>ضامن: {formatFaNumber(selectedLoan.guarantorCount)}</span>
-                    <span>کارمزد: {formatFaNumber(selectedLoan.feeRate)}٪</span>
-                    <span>سود: {formatFaNumber(selectedLoan.interestRate)}٪</span>
-                  </div>
-                ) : null}
-              </>
-            ) : (
-              <div className="employee-request-empty-loan">
-                <strong>هنوز وامی در تنظیمات کسب و کار تعریف نشده است</strong>
-                <Link href="/business-settings/company-loans">رفتن به تنظیمات وام‌های سازمانی</Link>
-              </div>
-            )
-          ) : null}
-
-          <label className="business-payroll-field employee-request-description">
-            <span className="business-payroll-field-label">توضیحات</span>
-            <textarea disabled={readonly} value={form.description ?? ''} onChange={(event) => onChange({ ...form, description: event.target.value })} rows={3} />
-          </label>
-        </div>
-
-        <ReasonPicker reasons={typeReasons} selected={form.reasonId} disabled={readonly} onChange={(reasonId) => onChange({ ...form, reasonId })} />
-        <AttachmentManager value={form.attachments ?? []} ownerType="employee_request" ownerId={form.id ?? 'draft'} readonly={readonly} onChange={(attachments) => onChange({ ...form, attachments })} />
-        <SubmissionModePicker value={form.submissionMode} disabled={readonly} onChange={(submissionMode) => onChange({ ...form, submissionMode, status: submissionMode === 'approved' ? 'approved' : 'pending' })} />
-      </div>
-    </PanelFormModal>
-  );
 }
 
 function remoteWorkMetaBadges(request: EmployeeRequestItem) {
@@ -514,47 +224,101 @@ function RequestCard({
   onStatus: (status: EmployeeRequestStatus) => void;
   onDelete: () => void;
 }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const contractSummary = contractDurationSummary(employee);
+  const details = requestDetailLines(request);
+
   return (
-    <article className="employee-request-card">
-      <div className="employee-request-card-main">
-        <div className="employee-request-card-head">
-          <div>
-            <strong>{requestTitle(request.requestType)}</strong>
-            <span>{compactDate(request)}</span>
-          </div>
-          <span className={`employee-request-status is-${request.status}`}>{STATUS_LABELS[request.status]}</span>
+    <article className="employee-request-card-v2">
+      <div className="employee-request-card-v2-contract">
+        <div className="employee-request-card-v2-menu-wrap">
+          <button
+            type="button"
+            className="employee-request-card-v2-menu-btn"
+            aria-label="عملیات درخواست"
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen((value) => !value)}
+          >
+            <MoreVertical className="h-4 w-4" />
+          </button>
+          {menuOpen ? (
+            <div className="employee-request-card-v2-menu" role="menu">
+              <button type="button" role="menuitem" onClick={() => { setMenuOpen(false); onView(); }}><Eye className="h-4 w-4" /> مشاهده</button>
+              <button type="button" role="menuitem" onClick={() => { setMenuOpen(false); onEdit(); }}><Pencil className="h-4 w-4" /> ویرایش</button>
+              {request.status === 'pending' ? (
+                <>
+                  <button type="button" role="menuitem" onClick={() => { setMenuOpen(false); onStatus('approved'); }}>تأیید</button>
+                  <button type="button" role="menuitem" onClick={() => { setMenuOpen(false); onStatus('rejected'); }}>رد</button>
+                </>
+              ) : null}
+              {request.status === 'approved' ? (
+                <>
+                  <button type="button" role="menuitem" onClick={() => { setMenuOpen(false); onStatus('pending'); }}><RotateCcw className="h-4 w-4" /> بازگرداندن</button>
+                  <button type="button" role="menuitem" onClick={() => { setMenuOpen(false); onStatus('rejected'); }}>رد</button>
+                </>
+              ) : null}
+              {request.status !== 'canceled' ? (
+                <button type="button" role="menuitem" onClick={() => { setMenuOpen(false); onStatus('canceled'); }}>لغو</button>
+              ) : null}
+              <button type="button" role="menuitem" className="is-danger" onClick={() => { setMenuOpen(false); onDelete(); }}><Trash2 className="h-4 w-4" /> حذف</button>
+            </div>
+          ) : null}
         </div>
-        <EmployeeMiniHeader employee={employee} />
-        <div className="employee-request-meta-grid">
-          <span><CalendarDays className="h-4 w-4" /> {compactDate(request)}</span>
-          <span><Clock3 className="h-4 w-4" /> {durationLabel(request.calculatedDurationMinutes)}</span>
-          <span><FileText className="h-4 w-4" /> {request.reasonTitle ?? 'علت ثبت نشده'}</span>
-          <span><BadgeCheck className="h-4 w-4" /> {formatFaNumber(request.attachmentCount, { useGrouping: false })} پیوست</span>
-        </div>
-        {request.description ? <p className="employee-request-description-text">{request.description}</p> : null}
-        {remoteWorkMetaBadges(request)}
-        <div className="employee-request-card-foot">
-          <span>ثبت‌کننده: {request.createdBy ?? 'نامشخص'}</span>
-          <span>ایجاد: {new Date(request.createdAt).toLocaleDateString('fa-IR')}</span>
+
+        <span className={`employee-request-contract-badge${employee.hasActiveContract ? '' : ' is-empty'}`}>
+          {employee.hasActiveContract ? 'دارای قرارداد' : 'فاقد قرارداد'}
+        </span>
+
+        <div className="employee-request-card-v2-gauge-block">
+          <div className="employee-request-section-title">وضعیت قرارداد</div>
+          {contractSummary ? (
+            <>
+              <div className="employee-request-card-arc-gauge" style={{ ['--progress' as never]: `${contractSummary.progressPercent}%` }} aria-hidden>
+                <div className="employee-request-card-arc-gauge-track" />
+                <div className="employee-request-card-arc-gauge-fill" />
+                <div className="employee-request-card-arc-gauge-value">
+                  <span>باقیمانده:</span>
+                  <strong>{formatFaNumber(contractSummary.remainingDays, { useGrouping: false })} روز</strong>
+                </div>
+              </div>
+              <div className="employee-request-card-v2-gauge-meta">
+                <span>مدت کل قرارداد: <strong>{formatFaNumber(contractSummary.totalDays, { useGrouping: false })} روز</strong></span>
+                <span>سپری شده: <strong>{formatFaNumber(contractSummary.elapsedDays, { useGrouping: false })} روز</strong></span>
+              </div>
+            </>
+          ) : (
+            <p className="employee-request-card-v2-empty-contract">قرارداد فعالی برای نمایش وضعیت ثبت نشده است.</p>
+          )}
         </div>
       </div>
-      <div className="employee-request-actions">
-        <button type="button" onClick={onView}><Eye className="h-4 w-4" /> مشاهده</button>
-        <button type="button" onClick={onEdit}><Pencil className="h-4 w-4" /> ویرایش</button>
-        {request.status === 'pending' ? (
-          <>
-            <button type="button" onClick={() => onStatus('approved')}>تأیید</button>
-            <button type="button" onClick={() => onStatus('rejected')}>رد</button>
-          </>
-        ) : null}
-        {request.status === 'approved' ? (
-          <>
-            <button type="button" onClick={() => onStatus('pending')}><RotateCcw className="h-4 w-4" /> بازگرداندن</button>
-            <button type="button" onClick={() => onStatus('rejected')}>رد</button>
-          </>
-        ) : null}
-        {request.status !== 'canceled' ? <button type="button" onClick={() => onStatus('canceled')}>لغو</button> : null}
-        <button type="button" className="is-danger" onClick={onDelete}><Trash2 className="h-4 w-4" /> حذف</button>
+
+      <div className="employee-request-card-v2-details">
+        <span className={`employee-request-status-v2 is-${request.status}`}>{STATUS_LABELS[request.status]}</span>
+        <div className="employee-request-card-v2-detail-lines">
+          {details.map((line) => (
+            <p key={`${line.label}-${line.value}`}>
+              <span>{line.label}:</span> {line.value}
+            </p>
+          ))}
+          {request.description ? <p className="employee-request-card-v2-description">{request.description}</p> : null}
+        </div>
+        <p className="employee-request-card-v2-created-at">
+          تاریخ ثبت درخواست {formatPersianTimestamp(request.createdAt)}
+        </p>
+        {remoteWorkMetaBadges(request)}
+      </div>
+
+      <div className="employee-request-card-v2-profile">
+        <span className="employee-request-type-badge">{requestTitle(request.requestType)}</span>
+        <div className="employee-request-card-v2-avatar">
+          {employee.avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={employee.avatarUrl} alt="" />
+          ) : (
+            <User className="h-6 w-6" />
+          )}
+        </div>
+        <strong>{fullName(employee) || 'کارمند بدون نام'}</strong>
       </div>
     </article>
   );
@@ -584,6 +348,7 @@ export function EmployeeRequestsClient({
   const [year, setYear] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [dialogMode, setDialogMode] = useState<'create' | 'edit' | 'view' | null>(null);
   const [form, setForm] = useState<EmployeeRequestFormPayload | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<EmployeeRequestItem | null>(null);
@@ -608,14 +373,30 @@ export function EmployeeRequestsClient({
   const activeTab = REQUEST_TAB_CONFIG.find((tab) => tab.key === activeType) ?? REQUEST_TAB_CONFIG[0];
 
   const currentRequests = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
     const filtered = requests
       .filter((request) => activeTab.requestTypes.includes(request.requestType))
       .filter((request) => !statuses.length || statuses.includes(request.status))
-      .filter((request) => !year || (request.startDate ?? request.dateTime ?? '').startsWith(year))
-      .filter((request) => !dateFrom || (request.startDate ?? request.dateTime ?? '') >= dateFrom)
-      .filter((request) => !dateTo || (request.startDate ?? request.dateTime ?? '') <= dateTo);
+      .filter((request) => !year || (request.startDate ?? request.dateTime ?? request.createdAt ?? '').includes(year))
+      .filter((request) => !dateFrom || (request.startDate ?? request.dateTime ?? request.createdAt ?? '') >= dateFrom)
+      .filter((request) => !dateTo || (request.startDate ?? request.dateTime ?? request.createdAt ?? '') <= dateTo)
+      .filter((request) => {
+        if (!query) return true;
+        const haystack = [
+          requestTitle(request.requestType),
+          request.reasonTitle,
+          request.description,
+          request.startDate,
+          request.dateTime,
+          STATUS_LABELS[request.status],
+        ]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase();
+        return haystack.includes(query);
+      });
     return filtered.sort((a, b) => sort === 'newest' ? b.createdAt.localeCompare(a.createdAt) : a.createdAt.localeCompare(b.createdAt));
-  }, [activeTab.requestTypes, dateFrom, dateTo, requests, sort, statuses, year]);
+  }, [activeTab.requestTypes, dateFrom, dateTo, requests, searchQuery, sort, statuses, year]);
 
   const openCreate = () => {
     setForm(createInitialEmployeeRequestForm(activeType, employee.id));
@@ -655,95 +436,131 @@ export function EmployeeRequestsClient({
     });
   };
 
-  const setQuickDate = (kind: 'today' | 'yesterday' | 'week') => {
-    const today = new Date();
-    const toFa = (date: Date) => date.toLocaleDateString('fa-IR-u-nu-latn').replace(/-/g, '/');
-    if (kind === 'today') {
-      const value = toFa(today);
-      setDateFrom(value);
-      setDateTo(value);
-    }
-    if (kind === 'yesterday') {
-      const date = new Date(today);
-      date.setDate(date.getDate() - 1);
-      const value = toFa(date);
-      setDateFrom(value);
-      setDateTo(value);
-    }
-    if (kind === 'week') {
-      const date = new Date(today);
-      date.setDate(date.getDate() - 7);
-      setDateFrom(toFa(date));
-      setDateTo(toFa(today));
-    }
+  const toggleStatus = (status: EmployeeRequestStatus) => {
+    setStatuses((current) => (current.includes(status) ? current.filter((item) => item !== status) : [...current, status]));
   };
 
   return (
-    <div className="employee-requests-layout" dir="rtl" lang="fa">
-      <aside className="employee-requests-filter">
-        <strong>فیلترها</strong>
+    <div className="employee-requests-layout employee-requests-layout-v2" dir="rtl" lang="fa">
+      <aside className="employee-requests-filter employee-requests-filter-v2">
         <div className="employee-filter-block">
-          <span>مرتب‌سازی</span>
-          <AdaptiveChipGroup
-            selected={sort}
-            items={[
-              { value: 'newest', label: 'جدیدترین درخواست‌ها' },
-              { value: 'oldest', label: 'قدیمی‌ترین درخواست‌ها' },
-            ]}
-            onChange={(value) => setSort(value as 'newest' | 'oldest')}
-          />
+          <button
+            type="button"
+            className={`employee-filter-sort-btn${sort === 'newest' ? ' is-active' : ''}`}
+            onClick={() => setSort('newest')}
+          >
+            جدیدترین درخواست‌ها
+          </button>
+          <button
+            type="button"
+            className={`employee-filter-sort-btn${sort === 'oldest' ? ' is-active' : ''}`}
+            onClick={() => setSort('oldest')}
+          >
+            قدیمی‌ترین درخواست‌ها
+          </button>
         </div>
+
         <div className="employee-filter-block">
-          <span>کارمند</span>
-          <div className="employee-filter-readonly">{fullName(employee)}</div>
+          <span className="employee-filter-block-label">کارمند</span>
+          <div className="employee-filter-employee-field">
+            <span>{fullName(employee) || 'انتخاب کارمند'}</span>
+            <ChevronDown className="h-4 w-4" aria-hidden />
+          </div>
         </div>
+
         <div className="employee-filter-block">
-          <span>وضعیت</span>
-          <AdaptiveChipGroup
-            multi
-            selected={statuses}
-            items={(Object.keys(STATUS_LABELS) as EmployeeRequestStatus[]).map((status) => ({ value: status, label: STATUS_LABELS[status] }))}
-            onChange={(value) => setStatuses(value as EmployeeRequestStatus[])}
-          />
+          <span className="employee-filter-block-label">وضعیت</span>
+          <div className="employee-filter-status-stack">
+            {(Object.keys(STATUS_LABELS) as EmployeeRequestStatus[]).map((status) => (
+              <button
+                key={status}
+                type="button"
+                className={`employee-filter-status-btn${statuses.includes(status) ? ' is-active' : ''}`}
+                onClick={() => toggleStatus(status)}
+              >
+                {STATUS_LABELS[status]}
+              </button>
+            ))}
+          </div>
         </div>
+
         <div className="employee-filter-block">
-          <span>سال</span>
-          <AdaptiveChipGroup selected={year} items={YEARS.map((item) => ({ value: item, label: formatFaNumber(Number(item), { useGrouping: false }) }))} onChange={(value) => setYear(String(value))} />
-        </div>
-        <div className="employee-filter-block">
-          <span>تاریخ</span>
-          <input value={dateFrom} onChange={(event) => setDateFrom(event.target.value)} placeholder="از تاریخ" />
-          <input value={dateTo} onChange={(event) => setDateTo(event.target.value)} placeholder="تا تاریخ" />
-          <div className="employee-filter-quick">
-            <button type="button" onClick={() => setQuickDate('today')}>درخواست‌های امروز</button>
-            <button type="button" onClick={() => setQuickDate('yesterday')}>درخواست‌های دیروز</button>
-            <button type="button" onClick={() => setQuickDate('week')}>درخواست‌های هفته اخیر</button>
+          <span className="employee-filter-block-label">تاریخ</span>
+          <div className="employee-filter-year-grid">
+            {YEARS.map((item) => (
+              <button
+                key={item}
+                type="button"
+                className={`employee-filter-year-btn${year === item ? ' is-active' : ''}`}
+                onClick={() => setYear((current) => (current === item ? '' : item))}
+              >
+                {formatFaNumber(Number(item), { useGrouping: false })}
+              </button>
+            ))}
+          </div>
+          <div className="employee-filter-date-row">
+            <label className="employee-filter-date-field">
+              <span>از</span>
+              <div className="employee-filter-date-input">
+                <CalendarDays className="h-4 w-4" aria-hidden />
+                <input value={dateFrom} onChange={(event) => setDateFrom(event.target.value)} placeholder="۱۴۰۵/۰۱/۰۱" />
+              </div>
+            </label>
+            <label className="employee-filter-date-field">
+              <span>تا</span>
+              <div className="employee-filter-date-input">
+                <CalendarDays className="h-4 w-4" aria-hidden />
+                <input value={dateTo} onChange={(event) => setDateTo(event.target.value)} placeholder="۱۴۰۵/۱۲/۲۹" />
+              </div>
+            </label>
           </div>
         </div>
       </aside>
 
-      <main className="employee-requests-main">
-        <section className="employee-requests-hero">
-          <EmployeeMiniHeader employee={employee} />
-          <Link href={`/employees/${employee.id}`} className="employee-request-back-link">
-            بازگشت به جزئیات کارمند
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
-        </section>
+      <main className="employee-requests-main employee-requests-main-v2">
+        <div className="employee-requests-category-row">
+          <TaavChoiceChipGroup
+            ariaLabel="نوع درخواست"
+            options={CATEGORY_TABS.map((tab) => ({ value: tab.key, label: categoryTabLabel(tab.key) }))}
+            value={activeType}
+            onValueChange={(next) => setActiveType((Array.isArray(next) ? next[0] : next) as (typeof REQUEST_TAB_CONFIG)[number]['key'])}
+            tone="brand"
+            size="md"
+            wrap
+          />
+        </div>
+
+        <div className="employee-requests-toolbar-v2">
+          <label className="employee-requests-search">
+            <Search className="h-4 w-4" aria-hidden />
+            <input
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="جستجو"
+              aria-label="جستجو در درخواست‌ها"
+            />
+            {searchQuery ? (
+              <button type="button" className="employee-requests-search-clear" aria-label="پاک کردن جستجو" onClick={() => setSearchQuery('')}>
+                <X className="h-4 w-4" />
+              </button>
+            ) : null}
+          </label>
+          <button type="button" className="employee-requests-add-btn" onClick={openCreate}>
+            <Plus className="h-4 w-4" />
+            افزودن درخواست
+          </button>
+        </div>
+
+        <div className="employee-requests-reports-bar">
+          <PieChart className="h-4 w-4" aria-hidden />
+          <span>گزارشات</span>
+        </div>
 
         {!employee.hasActiveContract ? (
-          <div className="business-payroll-warning" style={{ marginBottom: 12 }}>
+          <div className="business-payroll-warning employee-requests-inline-warning">
             برای محاسبه مرخصی و اضافه‌کاری، قرارداد فعال وجود ندارد.
           </div>
         ) : null}
-
-        <div className="employee-request-tabs" role="tablist">
-          {REQUEST_TAB_CONFIG.map((tab) => (
-            <button key={tab.key} type="button" className={activeType === tab.key ? 'is-active' : ''} onClick={() => setActiveType(tab.key)}>
-              {tab.label}
-            </button>
-          ))}
-        </div>
 
         {activeType === 'mission' ? (
           <section className="employee-request-placeholder">
@@ -751,40 +568,32 @@ export function EmployeeRequestsClient({
             <p>ثبت و مدیریت درخواست‌های ماموریت در نسخه‌های بعدی اضافه خواهد شد.</p>
           </section>
         ) : (
-          <>
-            <div className="employee-requests-toolbar">
-              <div>
-                <strong>{activeTab.label}</strong>
-                <span>{formatFaNumber(currentRequests.length, { useGrouping: false })} درخواست</span>
+          <div className="employee-request-list employee-request-list-v2">
+            {currentRequests.length ? (
+              currentRequests.map((request) => (
+                <RequestCard
+                  key={request.id}
+                  request={request}
+                  employee={employee}
+                  onView={() => openRequest(request, 'view')}
+                  onEdit={() => openRequest(request, 'edit')}
+                  onStatus={(status) => changeStatus(request, status)}
+                  onDelete={() => setDeleteTarget(request)}
+                />
+              ))
+            ) : (
+              <div className="employee-request-empty-state">
+                <FileText className="h-8 w-8" />
+                <strong>درخواستی برای این فیلتر ثبت نشده است.</strong>
               </div>
-              <button type="button" className="module-page-add-btn" onClick={openCreate}>
-                <Plus className="h-4 w-4" />
-                {activeType === 'leave' ? 'ثبت مرخصی جدید' : 'ثبت درخواست جدید'}
-              </button>
-            </div>
-
-            <div className="employee-request-list">
-              {currentRequests.length ? (
-                currentRequests.map((request) => (
-                  <RequestCard
-                    key={request.id}
-                    request={request}
-                    employee={employee}
-                    onView={() => openRequest(request, 'view')}
-                    onEdit={() => openRequest(request, 'edit')}
-                    onStatus={(status) => changeStatus(request, status)}
-                    onDelete={() => setDeleteTarget(request)}
-                  />
-                ))
-              ) : (
-                <div className="employee-request-empty-state">
-                  <FileText className="h-8 w-8" />
-                  <strong>درخواستی برای این تب ثبت نشده است.</strong>
-                </div>
-              )}
-            </div>
-          </>
+            )}
+          </div>
         )}
+
+        <Link href={`/employees/${employee.id}`} className="employee-request-back-link employee-request-back-link-v2">
+          بازگشت به جزئیات کارمند
+          <ArrowLeft className="h-4 w-4" />
+        </Link>
       </main>
 
       {dialogMode && form ? (

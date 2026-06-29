@@ -179,7 +179,7 @@ export const businessSidebarCollapsedTenantStrip = cva(
 
 /** Full app shell: content column + sidebar rail, top-aligned via shared shell padding. */
 export const businessSidebarShell = cva(
-  'flex h-full min-h-0 w-full flex-row',
+  'flex min-h-screen w-full flex-row items-stretch',
   {
     variants: {
       placement: {
@@ -194,7 +194,7 @@ export const businessSidebarShell = cva(
 );
 
 export const businessSidebarContentColumn = cva(
-  'relative flex min-w-0 flex-1 flex-col overflow-hidden',
+  'relative flex min-h-screen min-w-0 flex-1 flex-col overflow-hidden',
 );
 
 export const businessSidebarContentBody = cva('relative min-h-0 flex-1 overflow-hidden');

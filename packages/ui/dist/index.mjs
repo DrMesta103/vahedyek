@@ -5669,7 +5669,7 @@ var businessSidebarCollapsedTenantStrip = cva(
   "flex shrink-0 items-center justify-center px-2 py-3"
 );
 var businessSidebarShell = cva(
-  "flex h-full min-h-0 w-full flex-row",
+  "flex min-h-screen w-full flex-row items-stretch",
   {
     variants: {
       placement: {
@@ -5683,7 +5683,7 @@ var businessSidebarShell = cva(
   }
 );
 var businessSidebarContentColumn = cva(
-  "relative flex min-w-0 flex-1 flex-col overflow-hidden"
+  "relative flex min-h-screen min-w-0 flex-1 flex-col overflow-hidden"
 );
 var businessSidebarContentBody = cva("relative min-h-0 flex-1 overflow-hidden");
 var businessSidebarRailWrap = cva("flex h-full shrink-0 self-stretch");

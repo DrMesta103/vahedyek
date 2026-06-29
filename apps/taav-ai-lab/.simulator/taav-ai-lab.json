@@ -1,0 +1,68 @@
+{
+  "users": [
+    {
+      "id": "user_809b94232d130699",
+      "fullName": "علی علینقی پور",
+      "firstName": "علی",
+      "lastName": "علینقی پور",
+      "email": "a@gmail.com",
+      "passwordHash": "4714d8a690bad0721a4206b946a4096a653838283afd0928e959104bad4648a9f14b9c76bf4cc46b84397d996b933e07ce73a6bb62a5e7008e0ab8e5dbfc1569",
+      "passwordSalt": "cd1cd16c7a90c740082f9cbd91ab5649",
+      "createdAt": "2026-06-23T06:26:21.105Z",
+      "updatedAt": "2026-06-23T06:26:21.105Z"
+    },
+    {
+      "id": "user_1092f9d03b2c865a",
+      "fullName": "ali",
+      "firstName": "ali",
+      "lastName": "",
+      "email": "demo@taav.lab",
+      "passwordHash": "f78ece5218b6c0a47b30bf64ff580d11e0c2ef6a079af2a4c86d884550d776b24ca61abee56beabfa9245e0b3d4b3cd4205c2a31cc7ddb4b2b896461aef370f2",
+      "passwordSalt": "f5c15332471d8bab1a2195fd3d38cd5f",
+      "createdAt": "2026-06-27T06:52:38.036Z",
+      "updatedAt": "2026-06-27T06:52:38.036Z"
+    },
+    {
+      "id": "user_d1338b9a9156dc39",
+      "fullName": "علی علینقی پور",
+      "firstName": "علی",
+      "lastName": "علینقی پور",
+      "email": null,
+      "mobile": "9165786475",
+      "passwordHash": "6d7288ee002c08dfd294e2929a8f9f8ec354fe2613927b92abf4c1a514b96ca54849b53761b0a71061279d671962d59bf27bf9bb6ced8188a96215a1824ad834",
+      "passwordSalt": "e5ef4f224e93b80add7422be92159661",
+      "createdAt": "2026-06-29T13:23:21.079Z",
+      "updatedAt": "2026-06-29T13:23:21.079Z"
+    }
+  ],
+  "tenants": [
+    {
+      "id": "tenant_4697356674cf1f3d",
+      "ownerUserId": "user_1092f9d03b2c865a",
+      "name": "تاو سیستم",
+      "logoUrl": "",
+      "tokenLimit": 250000,
+      "usedTokens": 0,
+      "ocrTestsCount": 0,
+      "lastActivity": "2026-06-27T06:53:02.099Z",
+      "createdAt": "2026-06-27T06:53:02.099Z",
+      "updatedAt": "2026-06-27T06:53:02.099Z"
+    },
+    {
+      "id": "tenant_c6d8ff6def1b8e38",
+      "ownerUserId": "user_d1338b9a9156dc39",
+      "name": "تاو سیستم",
+      "slug": "tenant-c3c295a3-8eae6e",
+      "brandCode": "تا",
+      "packageKey": "growth",
+      "billingCycle": "monthly",
+      "logoUrl": "",
+      "tokenLimit": 500000,
+      "usedTokens": 0,
+      "ocrTestsCount": 0,
+      "lastActivity": "2026-06-29T13:23:35.312Z",
+      "createdAt": "2026-06-29T13:23:35.312Z",
+      "updatedAt": "2026-06-29T13:23:35.312Z"
+    }
+  ]
+}

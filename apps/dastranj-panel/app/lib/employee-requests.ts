@@ -136,6 +136,8 @@ export type EmployeeRequestsEmployee = {
   workGroupTitle: string;
   hasActiveContract: boolean;
   currentContractId?: string | null;
+  contractStartDate?: string | null;
+  contractEndDate?: string | null;
   overtimeRules?: ReturnType<typeof getContractOvertimeRules> | null;
 };
 
@@ -1388,6 +1390,8 @@ export async function getEmployeeRequestsPageData(employeeId: string) {
     jobTitle: currentContract?.jobTitle ?? '',
     hasActiveContract: Boolean(currentContract),
     currentContractId: currentContract?.id ?? null,
+    contractStartDate: currentContract?.startDate ?? null,
+    contractEndDate: currentContract?.endDate ?? null,
     overtimeRules,
   };
 
