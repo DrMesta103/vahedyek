@@ -1,5 +1,5 @@
 import { CheckCircle2, Clock3, Loader2, TriangleAlert } from 'lucide-react';
-import type { OcrSimulationJob } from '@/app/lib/simulator-store';
+import type { OcrSimulationJob } from '@/app/lib/data';
 
 export function getStatusMeta(status: OcrSimulationJob['status']) {
   switch (status) {

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { FileText, PieChart, Plus, ScanSearch } from 'lucide-react';
 import { TaavBadge, TaavButton } from '@repo/ui/taav/primitives';
-import type { OcrSimulationJob, Tenant } from '@/app/lib/simulator-store';
+import type { OcrSimulationJob, Tenant } from '@/app/lib/data';
 import { formatActivityLabel, formatRelativeActivityLabel, formatTokenCount } from '@/app/lib/business-utils';
 import { buildOcrStats, formatConfidence, getStatusMeta } from '@/components/ocr/utils';
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { Beaker, Boxes, Building2, Cpu, Home, LogOut, ScanText, Sparkles } from 'lucide-react';
+import { Beaker, Boxes, Building2, Cpu, Home, LogOut, ScanText, Settings, Sparkles } from 'lucide-react';
 import {
   TaavBusinessSidebar,
   type TaavBusinessSidebarItem,
@@ -35,6 +35,7 @@ const SIDEBAR_ICONS = {
   scan: <ScanText className="h-4 w-4" />,
   building: <Building2 className="h-4 w-4" />,
   sparkles: <Sparkles className="h-4 w-4" />,
+  settings: <Settings className="h-4 w-4" />,
 } as const;
 
 function buildNavPath(
@@ -48,6 +49,10 @@ function buildNavPath(
     navPath.push({ label: 'کسب‌وکارها', id: 'businesses', href: '/businesses' });
   }
 
+  if (pathname.startsWith('/settings')) {
+    navPath.push({ label: 'تنظیمات کسب‌وکار', id: 'settings', href: '/settings' });
+  }
+
   if (currentTenantId) {
     navPath.push({
       label: currentTenantName?.trim() || 'فضای کاری',
@@ -58,7 +63,15 @@ function buildNavPath(
 
   const activeItem = getActiveNavItem(pathname, currentTenantId);
   if (activeItem.id !== 'home' || !isWorkspaceHomePath(pathname, currentTenantId)) {
-    navPath.push({ label: activeItem.label, id: activeItem.id });
+    if (pathname.startsWith('/settings/')) {
+      if (pathname.includes('/token-pricing')) {
+        navPath.push({ label: 'قیمت‌گذاری توکن‌ها', id: 'token-pricing' });
+      } else if (pathname.includes('/usd-rate')) {
+        navPath.push({ label: 'تنظیمات قیمت دلار', id: 'usd-rate' });
+      }
+    } else if (!(pathname.startsWith('/settings') && activeItem.id === 'settings')) {
+      navPath.push({ label: activeItem.label, id: activeItem.id });
+    }
   }
 
   return navPath;
@@ -91,7 +104,6 @@ export function AiLabShell({
   const workspaceHomeHref = currentTenantId ? `/businesses/${currentTenantId}` : '/businesses';
   const workspaceAiHref = currentTenantId ? `/businesses/${currentTenantId}/ai-tools` : '/businesses';
   const workspaceProductsHref = currentTenantId ? `/businesses/${currentTenantId}/products` : '/businesses';
-  const tenantSwitchNext = encodeURIComponent(pathname || workspaceHomeHref);
 
   const quickActions: TaavBusinessSidebarQuickAction[] = [
     {
@@ -181,7 +193,7 @@ export function AiLabShell({
         }
       }}
       onTenantSwitch={() => {
-        router.push(`/select-tenant?next=${tenantSwitchNext}`);
+        router.push('/businesses');
         router.refresh();
       }}
       onTenantPanelClick={() => {

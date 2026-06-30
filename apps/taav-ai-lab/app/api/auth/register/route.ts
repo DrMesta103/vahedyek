@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { isValidIranMobile, parseAuthIdentifier, sanitizeIranMobileInput } from '@/app/lib/contact';
 import { createAuthToken, setAuthCookie } from '@/app/lib/auth-token';
-import { createSimulatorUser, getUserByIdentifier } from '@/app/lib/simulator-store';
+import { createSimulatorUser, getUserByIdentifier } from '@/app/lib/data';
 
 type RegisterPayload = {
   firstName?: string;

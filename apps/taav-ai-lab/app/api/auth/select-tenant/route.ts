@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createAuthToken, setAuthCookie } from '@/app/lib/auth-token';
 import { getOptionalSession } from '@/app/lib/session';
-import { getTenantForUser } from '@/app/lib/simulator-store';
+import { getTenantForUser } from '@/app/lib/data';
 
 type SelectTenantPayload = { tenantId?: string };
 

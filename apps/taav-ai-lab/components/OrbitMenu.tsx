@@ -3,7 +3,7 @@
 import type { MouseEvent as ReactMouseEvent } from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Beaker, Boxes, Building2, Cpu, Home, ScanText, Sparkles } from 'lucide-react';
+import { Beaker, Boxes, Building2, Cpu, Home, ScanText, Settings, Sparkles } from 'lucide-react';
 import type { AiLabNavItem } from '@/app/lib/navigation';
 
 type OrbitMenuItem = AiLabNavItem & {
@@ -23,7 +23,12 @@ const ICONS = {
   scan: ScanText,
   building: Building2,
   sparkles: Sparkles,
+  settings: Settings,
 } as const;
+
+function formatOrbitNumber(value: number) {
+  return Number.isInteger(value) ? String(value) : value.toFixed(4).replace(/\.?0+$/, '');
+}
 
 function OrbitIcon({ iconKey }: { iconKey: AiLabNavItem['iconKey'] }) {
   const Icon = ICONS[iconKey];
@@ -111,11 +116,11 @@ export function OrbitMenu({ items, activeItem }: OrbitMenuProps) {
   return (
     <div className="ai-lab-orbit-wrapper">
       <div ref={gearRef} className="ai-lab-gear-system" onMouseDown={handleMouseDown}>
-        <div className="ai-lab-orbit-line" style={{ transform: `rotate(${currentRotation}rad)` }}>
+        <div className="ai-lab-orbit-line" style={{ transform: `rotate(${formatOrbitNumber(currentRotation)}rad)` }}>
           {items.map((item, index) => {
             const angle = index * stepAngle;
-            const x = Math.cos(angle) * 260 + 260 - 27;
-            const y = Math.sin(angle) * 260 + 260 - 27;
+            const x = Math.round((Math.cos(angle) * 260 + 260 - 27) * 10000) / 10000;
+            const y = Math.round((Math.sin(angle) * 260 + 260 - 27) * 10000) / 10000;
             const isActive = index === activeIndex;
             const isNeighbor = index === prevIndex || index === nextIndex;
 
@@ -124,7 +129,11 @@ export function OrbitMenu({ items, activeItem }: OrbitMenuProps) {
                 key={item.id}
                 type="button"
                 className={`ai-lab-orbit-node${isActive ? ' active' : ''}${isNeighbor ? ' neighbor' : ''}`}
-                style={{ left: `${x}px`, top: `${y}px`, transform: `rotate(${-currentRotation}rad)` }}
+                style={{
+                  left: `${formatOrbitNumber(x)}px`,
+                  top: `${formatOrbitNumber(y)}px`,
+                  transform: `rotate(${formatOrbitNumber(-currentRotation)}rad)`,
+                }}
                 onMouseDown={handleMouseDown}
                 onClick={() => navigateTo(index)}
                 disabled={item.disabled}

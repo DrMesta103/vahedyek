@@ -68,8 +68,10 @@ function LoginFormContent() {
         throw new Error(payload.message || 'ورود انجام نشد.');
       }
 
-      const next = searchParams.get('next') || '/';
-      router.replace(`/select-tenant?userId=${payload.user?.id ?? ''}&next=${encodeURIComponent(next)}`);
+      const rawNext = searchParams.get('next') || '/businesses';
+      const next =
+        rawNext === '/' || rawNext.startsWith('/select-tenant') ? '/businesses' : rawNext;
+      router.replace(next);
       router.refresh();
     } catch (loginError) {
       setError(loginError instanceof Error ? loginError.message : 'ورود انجام نشد.');
@@ -98,7 +100,7 @@ function LoginFormContent() {
                 </TaavBadge>
                 <h1 className="m-0 text-3xl font-black text-white">ورود به آزمایشگاه هوش مصنوعی تاو</h1>
                 <p className="m-0 text-sm leading-8 text-slate-300">
-                  این مسیر ورود فعلا برای شبیه‌ساز داخلی فعال است و بعد از آن شما را به انتخاب tenant و داشبورد هدایت می‌کند.
+                  این مسیر ورود فعلا برای شبیه‌ساز داخلی فعال است و بعد از آن شما را مستقیم به فهرست کسب‌وکارها هدایت می‌کند.
                 </p>
               </div>
             </div>
@@ -110,7 +112,7 @@ function LoginFormContent() {
                 </TaavBadge>
                 <h2 className="m-0 text-2xl font-black text-[var(--taav-text-strong)]">با ایمیل یا موبایل وارد شوید</h2>
                 <p className="m-0 text-sm leading-7 text-[var(--taav-text-muted)]">
-                  بعد از ورود، صفحه‌ی انتخاب tenant را خواهید دید.
+                  بعد از ورود، مستقیم وارد فهرست کسب‌وکارها می‌شوید.
                 </p>
               </div>
 

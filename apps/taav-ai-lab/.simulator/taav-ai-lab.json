@@ -42,11 +42,11 @@
       "name": "تاو سیستم",
       "logoUrl": "",
       "tokenLimit": 250000,
-      "usedTokens": 0,
-      "ocrTestsCount": 0,
-      "lastActivity": "2026-06-27T06:53:02.099Z",
+      "usedTokens": 1800,
+      "ocrTestsCount": 1,
+      "lastActivity": "2026-06-30T17:54:05.112Z",
       "createdAt": "2026-06-27T06:53:02.099Z",
-      "updatedAt": "2026-06-27T06:53:02.099Z"
+      "updatedAt": "2026-06-30T17:54:05.112Z"
     },
     {
       "id": "tenant_c6d8ff6def1b8e38",
@@ -241,6 +241,60 @@
       "readyAt": "2026-06-30T12:50:41.890Z",
       "completedAt": "2026-06-30T12:50:42.444Z",
       "updatedAt": "2026-06-30T12:50:42.444Z"
+    },
+    {
+      "id": "ocr_8fd2ea4f6e3bb430",
+      "tenantId": "tenant_4697356674cf1f3d",
+      "sourceType": "upload",
+      "sourceName": "taavsys_logo.jpg",
+      "sourceLabel": "taavsys_logo.jpg",
+      "fileType": "image/jpeg",
+      "fileSize": 564600,
+      "sampleId": null,
+      "status": "completed",
+      "progress": 100,
+      "confidence": 74,
+      "pageCount": 1,
+      "tokensUsed": 1800,
+      "summary": "فایل «taavsys_logo.jpg» در حالت شبیه‌سازی OCR پردازش شد و خروجی ساختارمند تولید شد.",
+      "previewText": "Document: taavsys_logo.jpg\nType: image/jpeg\nMode: simulated OCR",
+      "extractedJson": {
+        "fileName": "taavsys_logo.jpg",
+        "fileType": "image/jpeg",
+        "mode": "simulated OCR",
+        "source": "upload"
+      },
+      "extractedFields": [
+        {
+          "key": "fileName",
+          "label": "نام فایل",
+          "value": "taavsys_logo.jpg"
+        },
+        {
+          "key": "fileType",
+          "label": "نوع فایل",
+          "value": "image/jpeg"
+        },
+        {
+          "key": "mode",
+          "label": "حالت",
+          "value": "شبیه‌سازی Next.js"
+        },
+        {
+          "key": "result",
+          "label": "نتیجه",
+          "value": "استخراج ساختارمند"
+        }
+      ],
+      "warnings": [
+        "خروجی با منطق شبیه‌سازی تولید شده است."
+      ],
+      "error": null,
+      "createdAt": "2026-06-30T17:53:59.637Z",
+      "startedAt": "2026-06-30T17:53:59.637Z",
+      "readyAt": "2026-06-30T17:54:03.855Z",
+      "completedAt": "2026-06-30T17:54:05.112Z",
+      "updatedAt": "2026-06-30T17:54:05.112Z"
     }
   ]
 }

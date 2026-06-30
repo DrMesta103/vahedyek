@@ -5,16 +5,7 @@
 @source "../../../packages/ui/src/**/*.{js,ts,jsx,tsx}";
 
 @theme {
-  --font-sans: "IRANSans", Tahoma, sans-serif;
-}
-
-@font-face {
-  font-family: 'IRANSans';
-  src: url('/fonts/iran.woff2') format('woff2'),
-       url('/fonts/iran.woff') format('woff');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
+  --font-sans: var(--font-iran-sans), Tahoma, sans-serif;
 }
 
 * {
@@ -343,13 +334,50 @@ textarea {
   background: linear-gradient(180deg, rgba(48, 47, 56, 0.98), rgba(43, 43, 51, 0.98));
   box-shadow: 0 12px 28px rgba(2, 6, 23, 0.22);
   overflow: hidden;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+.ai-lab-business-card:has(.ai-lab-business-card-interactive:hover),
+.ai-lab-business-card:has(.ai-lab-business-card-interactive:focus-visible) {
+  border-color: rgba(34, 211, 238, 0.34);
+  box-shadow:
+    0 16px 36px rgba(2, 6, 23, 0.28),
+    0 0 0 1px rgba(34, 211, 238, 0.08);
+  transform: translateY(-2px);
+}
+
+.ai-lab-business-card.is-entering {
+  pointer-events: none;
+  opacity: 0.92;
+}
+
+.ai-lab-business-card-interactive {
+  position: relative;
+  cursor: pointer;
+  outline: none;
+}
+
+.ai-lab-business-card-interactive:focus-visible {
+  box-shadow: inset 0 0 0 2px rgba(34, 211, 238, 0.45);
+  border-radius: 18px;
+}
+
+.ai-lab-business-card-loading {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: rgba(7, 18, 31, 0.18);
+  backdrop-filter: blur(1px);
 }
 
 .ai-lab-business-card-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(160px, 180px);
-  gap: 12px;
-  padding: 14px 16px 12px;
+  grid-template-columns: minmax(0, 1fr) minmax(148px, 168px);
+  gap: 14px;
+  padding: 16px 18px 14px;
 }
 
 .ai-lab-business-card-main {
@@ -360,10 +388,9 @@ textarea {
 
 .ai-lab-business-card-head {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 10px;
-  direction: ltr;
+  align-items: center;
+  gap: 14px;
+  direction: rtl;
 }
 
 .ai-lab-business-card-headline {
@@ -392,15 +419,15 @@ textarea {
 .ai-lab-business-card-lede {
   margin: 0;
   max-width: 44ch;
-  color: #e3e8f1;
+  color: #9fb0c4;
   font-size: 12px;
-  line-height: 1.7;
+  line-height: 1.65;
 }
 
 .ai-lab-business-card-avatar {
   flex: 0 0 auto;
-  width: 72px;
-  height: 72px;
+  width: 64px;
+  height: 64px;
 }
 
 .ai-lab-business-avatar {
@@ -422,32 +449,70 @@ textarea {
 
 .ai-lab-business-card-meta {
   display: grid;
-  gap: 8px 12px;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .ai-lab-business-card-meta-item {
   display: grid;
-  gap: 2px;
+  gap: 3px;
+  min-width: 0;
 }
 
 .ai-lab-business-card-meta-item span {
   font-size: 10px;
-  color: #b5c0cf;
+  color: #94a3b8;
 }
 
 .ai-lab-business-card-meta-item strong {
   color: #f8fbff;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ai-lab-business-card-footnote {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 2px;
+  color: #94a3b8;
   font-size: 11px;
+}
+
+.ai-lab-business-card-enter-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #7fe6ef;
+  font-size: 11px;
+  font-weight: 800;
+  transition: gap 180ms ease, color 180ms ease;
+}
+
+.ai-lab-business-card-interactive:hover .ai-lab-business-card-enter-hint,
+.ai-lab-business-card-interactive:focus-visible .ai-lab-business-card-enter-hint {
+  gap: 8px;
+  color: #a5f3fc;
 }
 
 .ai-lab-business-card-meter-shell {
   display: grid;
   align-content: center;
   justify-items: center;
-  gap: 8px;
+  gap: 10px;
   min-width: 0;
-  padding: 4px 2px 2px;
+  padding: 6px 4px 4px;
+  border-right: 1px solid rgba(148, 163, 184, 0.1);
+  padding-right: 14px;
+  margin-right: 2px;
 }
 
 .ai-lab-business-meter {
@@ -506,13 +571,11 @@ textarea {
 }
 
 .ai-lab-business-card-meter-actions {
-  display: grid;
-  justify-items: center;
-  gap: 6px;
+  display: none;
 }
 
 .ai-lab-business-card-cta {
-  display: inline-flex;
+  display: none;
 }
 
 .ai-lab-business-card-footer {
@@ -589,9 +652,26 @@ textarea {
   background: linear-gradient(180deg, rgba(15, 23, 42, 0.82), rgba(15, 23, 42, 0.7)) !important;
 }
 
-.ai-lab-business-card {
-  border: 1px solid rgba(148, 163, 184, 0.14) !important;
-  background: linear-gradient(180deg, rgba(15, 23, 42, 0.84), rgba(15, 23, 42, 0.72)) !important;
+@media (max-width: 720px) {
+  .ai-lab-business-card-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ai-lab-business-card-meter-shell {
+    border-right: 0;
+    border-top: 1px solid rgba(148, 163, 184, 0.1);
+    padding: 12px 0 0;
+    margin: 0;
+  }
+
+  .ai-lab-business-card-meta {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ai-lab-business-card-footnote {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 
 .ai-lab-dialog {
@@ -599,6 +679,55 @@ textarea {
   border-radius: 24px !important;
   border-color: rgba(148, 163, 184, 0.16) !important;
   background: linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(17, 24, 39, 0.96)) !important;
+}
+
+.ai-lab-dialog .ai-lab-form-grid {
+  gap: 16px;
+}
+
+.ai-lab-logo-upload-preview {
+  display: grid;
+  place-items: center;
+  min-height: 170px;
+  overflow: hidden;
+  border-radius: 20px;
+  border: 1px dashed rgba(148, 163, 184, 0.2);
+  background:
+    radial-gradient(circle at top right, rgba(45, 212, 191, 0.12), transparent 28%),
+    rgba(255, 255, 255, 0.03);
+  padding: 14px;
+}
+
+.ai-lab-logo-upload-image {
+  width: 100%;
+  max-width: 280px;
+  max-height: 170px;
+  object-fit: contain;
+  border-radius: 16px;
+  box-shadow: 0 14px 32px rgba(2, 6, 23, 0.26);
+}
+
+.ai-lab-logo-upload-empty {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  text-align: right;
+  color: #cbd5e1;
+}
+
+.ai-lab-logo-upload-empty strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 800;
+  color: #f8fbff;
+}
+
+.ai-lab-logo-upload-empty span {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  line-height: 1.6;
+  color: #91a4ba;
 }
 
 .ai-lab-stat-grid {
@@ -1070,7 +1199,7 @@ textarea {
 
 .ocr-registration-tabs-bar {
   display: flex;
-  justify-content: flex-start;
+  justify-content: flex-end;
   width: 100%;
 }
 
@@ -1082,6 +1211,75 @@ textarea {
 .ocr-registration-lane-body {
   display: grid;
   gap: 12px;
+}
+
+.ocr-registration-template-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  border-radius: 20px;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  background: linear-gradient(180deg, rgba(8, 17, 31, 0.62), rgba(8, 17, 31, 0.42));
+  padding: 18px;
+}
+
+.ocr-registration-template-copy {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  flex: 1 1 420px;
+}
+
+.ocr-registration-template-title {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.25;
+  font-weight: 900;
+  color: #f8fbff;
+}
+
+.ocr-registration-template-description {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.8;
+  color: #91a4ba;
+}
+
+.ocr-registration-template-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.ocr-registration-scenario-panel {
+  display: grid;
+  gap: 12px;
+  border-radius: 20px;
+  border: 1px solid rgba(45, 212, 191, 0.14);
+  background: linear-gradient(180deg, rgba(6, 24, 29, 0.82), rgba(6, 24, 29, 0.5));
+  padding: 16px;
+}
+
+.ocr-registration-scenario-copy {
+  display: grid;
+  gap: 8px;
+}
+
+.ocr-registration-scenario-copy p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.8;
+  color: #c5e7e1;
+}
+
+.ocr-registration-scenario-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .ocr-registration-tab-hint {
@@ -1206,6 +1404,376 @@ textarea {
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
 }
 
+.business-settings-page-shell {
+  width: min(100%, 980px);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 0 8px;
+}
+
+.business-settings-module-grid {
+  width: 100%;
+}
+
+.ai-lab-settings-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--taav-text-sm);
+}
+
+.ai-lab-settings-table th,
+.ai-lab-settings-table td {
+  padding: 10px 12px;
+  text-align: right;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+  vertical-align: middle;
+}
+
+.ai-lab-settings-table th {
+  font-size: var(--taav-text-xs);
+  font-weight: 700;
+  color: var(--taav-text-muted);
+}
+
+.ai-lab-api-key-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.ai-lab-usd-rate-display {
+  display: grid;
+  gap: 4px;
+}
+
+.taavia-agent-workspace {
+  display: grid;
+  grid-template-columns: minmax(220px, 260px) minmax(0, 1fr);
+  gap: 20px;
+  align-items: stretch;
+}
+
+.taavia-agent-helper {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+  padding: 18px;
+  border-radius: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
+}
+
+.taavia-agent-helper-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--taav-text-sm);
+  font-weight: 700;
+  color: var(--taav-text-strong);
+}
+
+.taavia-agent-helper-list {
+  margin: 0;
+  padding-inline-start: 1.1rem;
+  display: grid;
+  gap: 8px;
+  color: var(--taav-text-muted);
+  font-size: var(--taav-text-sm);
+  line-height: 1.7;
+}
+
+.taavia-agent-helper-note {
+  margin: 0;
+  padding-top: 10px;
+  border-top: 1px solid rgba(148, 163, 184, 0.12);
+  color: var(--taav-text-muted);
+  font-size: var(--taav-text-xs);
+  line-height: 1.8;
+}
+
+.taavia-agent-chat-panel {
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  min-height: min(72vh, 720px);
+  border-radius: 20px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: rgba(15, 23, 42, 0.42);
+  overflow: hidden;
+  box-shadow: 0 18px 48px rgba(2, 6, 23, 0.22);
+}
+
+.taavia-agent-chat-panel-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 20px 12px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+.taavia-agent-chat-panel-title {
+  display: grid;
+  gap: 4px;
+}
+
+.taavia-agent-chat-eyebrow {
+  font-size: var(--taav-text-xs);
+  color: var(--taav-text-muted);
+}
+
+.taavia-agent-chat-panel-title strong {
+  font-size: var(--taav-text-lg);
+  color: var(--taav-text-strong);
+}
+
+.taavia-agent-chat-sim-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(45, 212, 191, 0.18);
+  background: rgba(45, 212, 191, 0.08);
+  color: #99f6e4;
+  font-size: var(--taav-text-xs);
+  font-weight: 600;
+}
+
+.taavia-agent-chat-description {
+  margin: 0;
+  padding: 0 20px 14px;
+  color: var(--taav-text-muted);
+  font-size: var(--taav-text-sm);
+  line-height: 1.8;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+}
+
+.taavia-agent-chat-error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 12px 20px 0;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(248, 113, 113, 0.24);
+  background: rgba(248, 113, 113, 0.08);
+  color: #fecaca;
+  font-size: var(--taav-text-sm);
+}
+
+.taavia-agent-chat-messages {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow-y: auto;
+  padding: 18px 20px;
+  min-height: 0;
+}
+
+.taavia-agent-chat-bubble {
+  max-width: min(100%, 78%);
+  border-radius: 18px;
+  padding: 12px 14px;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.taavia-agent-chat-bubble.is-assistant {
+  align-self: flex-start;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.taavia-agent-chat-bubble.is-user {
+  align-self: flex-end;
+  background: rgba(45, 212, 191, 0.1);
+  border-color: rgba(45, 212, 191, 0.2);
+}
+
+.taavia-agent-chat-bubble-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.taavia-agent-chat-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.12);
+  color: var(--taav-text-strong);
+}
+
+.taavia-agent-chat-bubble.is-user .taavia-agent-chat-avatar {
+  background: rgba(45, 212, 191, 0.16);
+  color: #99f6e4;
+}
+
+.taavia-agent-chat-role {
+  font-size: var(--taav-text-xs);
+  font-weight: 700;
+  color: var(--taav-text-muted);
+}
+
+.taavia-agent-chat-time {
+  margin-inline-start: auto;
+  font-size: var(--taav-text-xs);
+  color: var(--taav-text-muted);
+  opacity: 0.8;
+}
+
+.taavia-agent-chat-content {
+  margin: 0;
+  white-space: pre-wrap;
+  line-height: 1.85;
+  color: var(--taav-text-strong);
+  font-size: var(--taav-text-sm);
+}
+
+.taavia-agent-chat-skeleton {
+  height: 72px;
+  border-radius: 18px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04));
+  background-size: 200% 100%;
+  animation: taavia-agent-shimmer 1.4s ease infinite;
+}
+
+.taavia-agent-chat-typing {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  align-self: flex-start;
+  padding: 10px 12px;
+  border-radius: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.taavia-agent-chat-typing-dots {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.taavia-agent-chat-typing-dots span {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.7);
+  animation: taavia-agent-dot 1.2s ease-in-out infinite;
+}
+
+.taavia-agent-chat-typing-dots span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.taavia-agent-chat-typing-dots span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.taavia-agent-chat-composer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+  padding: 16px 20px 18px;
+  border-top: 1px solid rgba(148, 163, 184, 0.12);
+  background: rgba(2, 6, 23, 0.28);
+}
+
+.taavia-agent-chat-textarea {
+  width: 100%;
+  min-height: 52px;
+  max-height: 160px;
+  resize: vertical;
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(15, 23, 42, 0.72);
+  color: var(--taav-text-strong);
+  padding: 12px 14px;
+  font: inherit;
+  line-height: 1.7;
+}
+
+.taavia-agent-chat-textarea::placeholder {
+  color: var(--taav-text-muted);
+}
+
+.taavia-agent-chat-textarea:focus {
+  outline: none;
+  border-color: rgba(45, 212, 191, 0.42);
+  box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.12);
+}
+
+.taavia-agent-chat-textarea:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+@keyframes taavia-agent-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes taavia-agent-dot {
+  0%,
+  80%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.45;
+  }
+  40% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
+
+@media (max-width: 980px) {
+  .taavia-agent-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .taavia-agent-chat-panel {
+    min-height: min(68vh, 640px);
+  }
+
+  .taavia-agent-chat-bubble {
+    max-width: 100%;
+  }
+}
+
+/* Legacy aliases kept for compatibility */
+.taavia-agent-chat {
+  display: grid;
+  gap: 16px;
+  min-height: 420px;
+}
+
+.taavia-agent-chat-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+}
+
 @media (max-width: 980px) {
   .ai-lab-grid {
     grid-template-columns: 1fr;
@@ -1233,5 +1801,9 @@ textarea {
 
   .ai-lab-hero {
     padding: var(--taav-space-6);
+  }
+
+  .ocr-registration-template-head {
+    padding: 16px;
   }
 }

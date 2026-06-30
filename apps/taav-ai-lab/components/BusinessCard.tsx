@@ -1,13 +1,16 @@
-import Link from 'next/link';
-import { ArrowLeft, ArrowRight, Coins, ShieldAlert, ShieldCheck } from 'lucide-react';
-import { TaavBadge, TaavButton, TaavCard } from '@repo/ui/taav/primitives';
+'use client';
+
+import { useRouter } from 'next/navigation';
+import { useCallback, useState } from 'react';
+import { ArrowLeft, Coins, LoaderCircle, ShieldAlert, ShieldCheck } from 'lucide-react';
+import { TaavBadge, TaavCard } from '@repo/ui/taav/primitives';
 import {
   formatPackageLabel,
   formatRelativeActivityLabel,
   formatTokenCount,
   formatTokenRatioLabel,
 } from '@/app/lib/business-utils';
-import type { Tenant } from '@/app/lib/simulator-store';
+import type { Tenant } from '@/app/lib/data';
 import { BusinessLogo } from './BusinessLogo';
 
 function getUsageTone(usedTokens: number, tokenLimit: number) {
@@ -50,6 +53,9 @@ function UsageMeter({ usedTokens, tokenLimit }: { usedTokens: number; tokenLimit
 }
 
 export function BusinessCard({ business }: { business: Tenant }) {
+  const router = useRouter();
+  const [entering, setEntering] = useState(false);
+
   const usageTone = getUsageTone(business.usedTokens, business.tokenLimit);
   const packageLabel = formatPackageLabel(business.packageKey, business.billingCycle);
   const activityLabel = formatRelativeActivityLabel(business.lastActivity);
@@ -60,11 +66,58 @@ export function BusinessCard({ business }: { business: Tenant }) {
     <ShieldCheck className="h-3.5 w-3.5" />
   );
 
+  const enterBusiness = useCallback(async () => {
+    if (entering) return;
+    setEntering(true);
+
+    try {
+      const response = await fetch('/api/auth/select-tenant', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tenantId: business.id }),
+      });
+
+      if (!response.ok) {
+        throw new Error('select-failed');
+      }
+
+      router.push(`/businesses/${business.id}`);
+      router.refresh();
+    } catch {
+      setEntering(false);
+    }
+  }, [business.id, entering, router]);
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      void enterBusiness();
+    }
+  };
+
   return (
-    <TaavCard variant="outlined" padding="none" radius="xl" wrapperClassName="ai-lab-business-card">
-      <div className="ai-lab-business-card-grid" dir="rtl">
+    <TaavCard
+      variant="outlined"
+      padding="none"
+      radius="xl"
+      wrapperClassName={['ai-lab-business-card', entering ? 'is-entering' : ''].filter(Boolean).join(' ')}
+    >
+      <div
+        className="ai-lab-business-card-grid ai-lab-business-card-interactive"
+        dir="rtl"
+        role="button"
+        tabIndex={0}
+        aria-label={`ورود به ${business.name}`}
+        aria-busy={entering}
+        onClick={() => void enterBusiness()}
+        onKeyDown={handleKeyDown}
+      >
         <div className="ai-lab-business-card-main">
           <div className="ai-lab-business-card-head">
+            <div className="ai-lab-business-card-avatar">
+              <BusinessLogo business={business} />
+            </div>
+
             <div className="ai-lab-business-card-headline">
               <div className="ai-lab-business-card-title-row">
                 <h2>{business.name}</h2>
@@ -76,11 +129,7 @@ export function BusinessCard({ business }: { business: Tenant }) {
                   {statusLabel}
                 </TaavBadge>
               </div>
-              <p className="ai-lab-business-card-lede">tenant مستقل برای OCR، فایل‌ها و گزارش‌ها.</p>
-            </div>
-
-            <div className="ai-lab-business-card-avatar">
-              <BusinessLogo business={business} />
+              <p className="ai-lab-business-card-lede">فضای کاری OCR، فایل‌ها و گزارش‌های هوش مصنوعی</p>
             </div>
           </div>
 
@@ -88,10 +137,6 @@ export function BusinessCard({ business }: { business: Tenant }) {
             <div className="ai-lab-business-card-meta-item">
               <span>نام بسته</span>
               <strong>{packageLabel}</strong>
-            </div>
-            <div className="ai-lab-business-card-meta-item">
-              <span>شناسه نمایشی</span>
-              <strong>{business.brandCode || business.slug || 'بدون شناسه'}</strong>
             </div>
             <div className="ai-lab-business-card-meta-item">
               <span>سقف توکن</span>
@@ -105,33 +150,31 @@ export function BusinessCard({ business }: { business: Tenant }) {
 
           <div className="ai-lab-business-card-footnote">
             <span>آخرین فعالیت: {activityLabel}</span>
-            <Link href={`/businesses/${business.id}`}>
-              <TaavButton size="sm" variant="ghost" iconStart={<ArrowLeft className="h-4 w-4" />}>
-                ورود
-              </TaavButton>
-            </Link>
+            <span className="ai-lab-business-card-enter-hint">
+              {entering ? (
+                <>
+                  <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
+                  در حال ورود...
+                </>
+              ) : (
+                <>
+                  ورود به فضای کاری
+                  <ArrowLeft className="h-3.5 w-3.5" />
+                </>
+              )}
+            </span>
           </div>
         </div>
 
         <div className="ai-lab-business-card-meter-shell">
           <UsageMeter usedTokens={business.usedTokens} tokenLimit={business.tokenLimit} />
 
-          <div className="ai-lab-business-card-meter-actions">
-            <TaavBadge tone="neutral" variant="soft" iconStart={<Coins className="h-3.5 w-3.5" />}>
-              {formatTokenCount(business.usedTokens)} مصرف
-            </TaavBadge>
-
-            <Link href={`/businesses/${business.id}`} className="ai-lab-business-card-cta">
-              <TaavButton
-                size="sm"
-                variant={usageTone === 'danger' ? 'danger' : 'secondary'}
-                iconEnd={<ArrowRight className="h-4 w-4" />}
-              >
-                {usageTone === 'danger' ? 'تمدید' : 'ورود'}
-              </TaavButton>
-            </Link>
-          </div>
+          <TaavBadge tone="neutral" variant="soft" iconStart={<Coins className="h-3.5 w-3.5" />}>
+            {formatTokenCount(business.usedTokens)} مصرف
+          </TaavBadge>
         </div>
+
+        {entering ? <div className="ai-lab-business-card-loading" aria-hidden="true" /> : null}
       </div>
     </TaavCard>
   );

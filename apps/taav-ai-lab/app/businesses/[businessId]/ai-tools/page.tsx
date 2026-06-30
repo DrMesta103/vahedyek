@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { ArrowLeft, FileSearch, ScanSearch } from 'lucide-react';
 import { TaavBadge, TaavButton, TaavCard } from '@repo/ui/taav/primitives';
-import { getTenantForUser } from '@/app/lib/simulator-store';
+import { getTenantForUser } from '@/app/lib/data';
 import { getCurrentTenant, requireSession } from '@/app/lib/session';
 import { AiLabPage, AiLabSectionCard } from '@/components/AiLabPage';
 import { AiLabShell } from '@/components/AiLabShell';

@@ -1,4 +1,4 @@
-import { getTenantsForUser } from '@/app/lib/simulator-store';
+import { getTenantsForUser } from '@/app/lib/data';
 import { getCurrentTenant, requireSession } from '@/app/lib/session';
 import { AiLabShell } from '@/components/AiLabShell';
 import { BusinessesClient } from '@/components/BusinessesClient';

@@ -1,6 +1,6 @@
 import { Building2 } from 'lucide-react';
 import { fallbackLogoLabel } from '@/app/lib/business-utils';
-import type { Tenant } from '@/app/lib/simulator-store';
+import type { Tenant } from '@/app/lib/data';
 
 export function BusinessLogo({ business, small = false }: { business: Pick<Tenant, 'name' | 'logoUrl'>; small?: boolean }) {
   if (business.logoUrl) {

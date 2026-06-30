@@ -1,4 +1,4 @@
-import { getTenantForUser } from '@/app/lib/simulator-store';
+import { getTenantForUser } from '@/app/lib/data';
 import { getCurrentTenant, requireSession } from '@/app/lib/session';
 import { AiLabShell } from '@/components/AiLabShell';
 import { OcrRegistrationClient } from '@/components/OcrRegistrationClient';

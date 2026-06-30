@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { iranSans } from '@/app/lib/fonts';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -13,11 +14,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       dir="rtl"
       data-theme="dark"
       data-taav-theme="dark"
-      className="dark"
+      className={`${iranSans.variable} dark`}
       style={{ colorScheme: 'dark' }}
       suppressHydrationWarning
     >
-      <body>{children}</body>
+      <body className={iranSans.className}>{children}</body>
     </html>
   );
 }

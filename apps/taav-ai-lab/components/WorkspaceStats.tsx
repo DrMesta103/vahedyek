@@ -1,7 +1,7 @@
 import { Coins, FileSearch, History, Orbit } from 'lucide-react';
 import { TaavCard } from '@repo/ui/taav/primitives';
 import { formatActivityLabel, formatTokenCount } from '@/app/lib/business-utils';
-import type { Tenant } from '@/app/lib/simulator-store';
+import type { Tenant } from '@/app/lib/data';
 
 const statCards = (business: Tenant) => [
   {

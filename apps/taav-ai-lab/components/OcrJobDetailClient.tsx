@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { ArrowLeft, FileText, TriangleAlert } from 'lucide-react';
 import { TaavBadge, TaavButton } from '@repo/ui/taav/primitives';
 import { TaavTextarea } from '@repo/ui/taav/forms';
-import type { OcrSimulationJob } from '@/app/lib/simulator-store';
+import type { OcrSimulationJob } from '@/app/lib/data';
 import { formatTokenCount } from '@/app/lib/business-utils';
 import { formatConfidence, getJobProgress, getStatusMeta } from '@/components/ocr/utils';
 
@@ -46,7 +46,9 @@ export function OcrJobDetailClient({ businessId, initialJob }: OcrJobDetailClien
   const progress = getJobProgress(job, clockTick);
   const statusMeta = getStatusMeta(job.status);
   const StatusIcon = statusMeta.icon;
-  const jsonPreview = JSON.stringify(job.extractedJson, null, 2);
+  const jsonPreview = JSON.stringify(job.resultJson ?? job.extractedJson, null, 2);
+  const outputFields = job.resultJson?.fields ?? job.extractedFields;
+  const overallStatus = job.resultJson?.overall_status ?? (job.status === 'failed' ? 'failed' : 'processing');
 
   return (
     <section className="ocr-job-detail-page">
@@ -67,6 +69,21 @@ export function OcrJobDetailClient({ businessId, initialJob }: OcrJobDetailClien
           <TaavBadge tone="neutral" variant="soft">
             {job.sourceType === 'sample' ? 'نمونه' : 'آپلود'}
           </TaavBadge>
+          {job.templateLabel ? (
+            <TaavBadge tone="brand" variant="soft">
+              {job.templateLabel}
+            </TaavBadge>
+          ) : null}
+          {job.scenario ? (
+            <TaavBadge tone={job.scenario === 'miss' ? 'danger' : 'success'} variant="soft">
+              {job.scenario === 'miss' ? 'تشخیص ندهد' : 'تشخیص بدهد'}
+            </TaavBadge>
+          ) : null}
+          {job.resultJson?.overall_status ? (
+            <TaavBadge tone={overallStatus === 'failed' ? 'danger' : overallStatus === 'completed_with_review_required' ? 'warning' : 'success'} variant="soft">
+              {overallStatus}
+            </TaavBadge>
+          ) : null}
           <TaavBadge tone={statusMeta.tone} variant="soft" iconStart={<StatusIcon className={statusMeta.tone === 'brand' ? 'h-3.5 w-3.5 animate-spin' : 'h-3.5 w-3.5'} />}>
             {statusMeta.label}
           </TaavBadge>
@@ -111,10 +128,26 @@ export function OcrJobDetailClient({ businessId, initialJob }: OcrJobDetailClien
         <div className="grid gap-3">
           <span className="text-xs font-semibold text-[var(--taav-text-subtle)]">فیلدهای استخراج‌شده</span>
           <div className="grid gap-2">
-            {job.extractedFields.map((field) => (
+            {outputFields.map((field) => (
               <div key={field.key} className="flex items-center justify-between gap-3 rounded-xl border border-white/8 bg-black/12 px-3 py-2">
-                <span className="text-xs text-[var(--taav-text-subtle)]">{field.label}</span>
-                <strong className="text-sm text-white">{field.value}</strong>
+                {(() => {
+                  const fieldLabel = 'label' in field ? field.label : field.key;
+                  const fieldConfidence = 'confidence' in field ? field.confidence : null;
+                  const normalizedValue = 'normalized_value' in field ? field.normalized_value : null;
+
+                  return (
+                    <>
+                      <div className="grid gap-0.5">
+                        <span className="text-xs text-[var(--taav-text-subtle)]">{fieldLabel}</span>
+                        {normalizedValue !== null ? <span className="text-[10px] text-slate-500">normalized: {normalizedValue || '—'}</span> : null}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {fieldConfidence !== null ? <span className="text-[10px] text-slate-500">{Math.round(fieldConfidence * 100)}%</span> : null}
+                        <strong className="text-sm text-white">{field.value}</strong>
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
             ))}
           </div>

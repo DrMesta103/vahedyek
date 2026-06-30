@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { AUTH_COOKIE, type AuthTokenPayload, verifyAuthToken } from './auth-token';
-import { getTenantForUser, getUserById } from './simulator-store';
+import { getTenantForUser, getUserById } from './data';
 
 export async function getOptionalSession(): Promise<AuthTokenPayload | null> {
   const cookieStore = await cookies();

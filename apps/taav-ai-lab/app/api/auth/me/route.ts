@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getCurrentTenant, getOptionalSession } from '@/app/lib/session';
-import { getUserById } from '@/app/lib/simulator-store';
+import { getUserById } from '@/app/lib/data';
 
 export async function GET() {
   const session = await getOptionalSession();

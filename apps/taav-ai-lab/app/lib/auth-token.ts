@@ -16,7 +16,9 @@ type JwtPayload = AuthTokenPayload & {
   exp: number;
 };
 
-const secret = process.env.AUTH_JWT_SECRET ?? 'dev-insecure-jwt-secret-taav-ai-lab';
+const secret = process.env.AUTH_JWT_SECRET ?? (
+  process.env.NODE_ENV === 'development' ? 'dev-insecure-jwt-secret-taav-ai-lab' : ''
+);
 const secretData = new TextEncoder().encode(secret);
 const ACTIVE_TTL = 60 * 60 * 24 * 7;
 
@@ -52,6 +54,9 @@ async function verify(value: string, signature: string) {
 }
 
 export async function createAuthToken(payload: AuthTokenPayload) {
+  if (!secret) {
+    throw new Error('AUTH_JWT_SECRET is not configured.');
+  }
   const iat = Math.floor(Date.now() / 1000);
   const exp = iat + ACTIVE_TTL;
   const header = toBase64Url(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
@@ -62,6 +67,7 @@ export async function createAuthToken(payload: AuthTokenPayload) {
 }
 
 export async function verifyAuthToken(token: string): Promise<AuthTokenPayload | null> {
+  if (!secret) return null;
   try {
     const [header, body, signature] = token.split('.');
     if (!header || !body || !signature) return null;

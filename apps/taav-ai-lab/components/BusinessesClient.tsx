@@ -4,14 +4,14 @@ import { useRouter } from 'next/navigation';
 import { Building2, PlusCircle } from 'lucide-react';
 import { TaavButton, TaavCard } from '@repo/ui/taav/primitives';
 import { TaavEmptyState } from '@repo/ui/taav/data-display';
-import type { Tenant } from '@/app/lib/simulator-store';
+import type { Tenant } from '@/app/lib/data';
 import { BusinessCard } from './BusinessCard';
 
 export function BusinessesClient({ businesses }: { businesses: Tenant[] }) {
   const router = useRouter();
 
   const openCreateTenantFlow = () => {
-    router.push('/select-tenant?next=/businesses');
+    router.push('/businesses/new');
   };
 
   return (

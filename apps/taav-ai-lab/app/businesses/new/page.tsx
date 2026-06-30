@@ -1,7 +1,21 @@
-import { redirect } from 'next/navigation';
-import { requireSession } from '@/app/lib/session';
+import { getCurrentTenant, requireSession } from '@/app/lib/session';
+import { AiLabShell } from '@/components/AiLabShell';
+import { CreateBusinessDialog } from '@/components/CreateBusinessDialog';
 
 export default async function NewBusinessPage() {
-  await requireSession();
-  redirect('/select-tenant?next=/businesses');
+  const session = await requireSession();
+  const currentTenant = await getCurrentTenant();
+
+  return (
+    <AiLabShell
+      pathname="/businesses/new"
+      fullName={session.fullName}
+      email={session.email}
+      mobile={session.mobile}
+      currentTenantId={currentTenant?.id ?? session.activeTenantId ?? null}
+      currentTenantName={currentTenant?.name ?? null}
+    >
+      <CreateBusinessDialog open />
+    </AiLabShell>
+  );
 }

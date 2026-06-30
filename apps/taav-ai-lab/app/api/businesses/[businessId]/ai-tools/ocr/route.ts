@@ -4,7 +4,7 @@ import {
   createOcrJobForTenant,
   getOcrJobsForTenant,
   type CreateOcrSimulationInput,
-} from '@/app/lib/simulator-store';
+} from '@/app/lib/data';
 import { getOptionalSession } from '@/app/lib/session';
 
 type RouteContext = {
@@ -20,7 +20,7 @@ export async function GET(_request: Request, context: RouteContext) {
   const { businessId } = await context.params;
   const jobs = await getOcrJobsForTenant(session.userId, businessId);
 
-  return NextResponse.json({ jobs, simulator: true });
+  return NextResponse.json({ jobs, source: 'database' });
 }
 
 export async function POST(request: Request, context: RouteContext) {
@@ -51,6 +51,8 @@ export async function POST(request: Request, context: RouteContext) {
     fileType: body.fileType?.trim() || null,
     fileSize: typeof body.fileSize === 'number' ? body.fileSize : null,
     sampleId: body.sampleId?.trim() || null,
+    templateId: body.templateId?.trim() || null,
+    scenario: body.scenario === 'miss' ? 'miss' : body.scenario === 'recognize' ? 'recognize' : null,
     sampleText: body.sampleText?.trim() || null,
   });
 
@@ -58,5 +60,5 @@ export async function POST(request: Request, context: RouteContext) {
     return NextResponse.json({ message: 'این کسب‌وکار برای شما در دسترس نیست.' }, { status: 404 });
   }
 
-  return NextResponse.json({ job, simulator: true }, { status: 201 });
+  return NextResponse.json({ job, source: 'database' }, { status: 201 });
 }

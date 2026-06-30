@@ -1,8 +1,8 @@
 import { randomUUID } from 'node:crypto';
 import { NextResponse } from 'next/server';
-import { createAuthToken, setAuthCookie } from '@/app/lib/auth-token';
+import { createAuthSessionForUser, setAuthCookie } from '@/app/lib/auth';
 import { getOptionalSession } from '@/app/lib/session';
-import { createTenantForUser } from '@/app/lib/simulator-store';
+import { createTenantForUser } from '@/app/lib/data';
 
 const ALLOWED_PACKAGES = new Set(['starter', 'growth', 'enterprise']);
 const ALLOWED_BILLING_CYCLES = new Set(['monthly', 'yearly']);
@@ -79,13 +79,15 @@ export async function POST(request: Request) {
     },
   });
 
-  const token = await createAuthToken({
-    userId: session.userId,
-    email: session.email,
-    fullName: session.fullName,
-    mobile: session.mobile,
-    activeTenantId: tenant.id,
-  });
+  const token = await createAuthSessionForUser(
+    {
+      id: session.userId,
+      email: session.email,
+      fullName: session.fullName,
+      mobile: session.mobile ?? null,
+    },
+    tenant.id,
+  );
   setAuthCookie(response, token);
   return response;
 }

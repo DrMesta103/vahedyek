@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { parseAuthIdentifier } from '@/app/lib/contact';
+import { verifyPassword } from '@/app/lib/auth';
 import { createAuthToken, setAuthCookie } from '@/app/lib/auth-token';
-import { getUserByIdentifier, verifyPassword } from '@/app/lib/simulator-store';
+import { getUserByIdentifier } from '@/app/lib/data';
 
 type LoginPayload = { identifier?: string; password?: string };
 

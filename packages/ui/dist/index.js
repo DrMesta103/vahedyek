@@ -5773,7 +5773,7 @@ function BusinessSidebarNavPath({
       ...props,
       children: /* @__PURE__ */ jsxRuntime.jsx("ol", { className: cn(businessSidebarNavPathList(), listClassName), children: pathItems.map((item, index) => {
         const isCurrent = index === pathItems.length - 1;
-        const key = item.id ?? `${item.label}-${index}`;
+        const key = item.id ? `${item.id}-${index}` : `${item.label}-${index}`;
         return /* @__PURE__ */ jsxRuntime.jsxs(React.Fragment, { children: [
           index > 0 ? /* @__PURE__ */ jsxRuntime.jsx("li", { className: "inline-flex shrink-0 items-center", "aria-hidden": true, children: /* @__PURE__ */ jsxRuntime.jsx(PathSeparator, {}) }) : null,
           /* @__PURE__ */ jsxRuntime.jsx("li", { className: "inline-flex min-w-0 max-w-full items-center", children: isCurrent ? /* @__PURE__ */ jsxRuntime.jsx("span", { className: businessSidebarNavPathCurrent(), "aria-current": "page", children: item.label }) : item.href ? /* @__PURE__ */ jsxRuntime.jsx("a", { href: item.href, className: businessSidebarNavPathLink(), onClick: item.onClick, children: /* @__PURE__ */ jsxRuntime.jsx("span", { className: "truncate", children: item.label }) }) : /* @__PURE__ */ jsxRuntime.jsx("button", { type: "button", className: businessSidebarNavPathLink(), onClick: item.onClick, children: /* @__PURE__ */ jsxRuntime.jsx("span", { className: "truncate", children: item.label }) }) })

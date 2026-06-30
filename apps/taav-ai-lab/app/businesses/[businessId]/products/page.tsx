@@ -1,12 +1,12 @@
 import Link from 'next/link';
-import { ArrowLeft, Boxes, FileSearch, Layers3 } from 'lucide-react';
+import { ArrowLeft, BarChart3, Bot, Building2 } from 'lucide-react';
 import { TaavBadge, TaavButton, TaavCard } from '@repo/ui/taav/primitives';
-import { getTenantForUser } from '@/app/lib/simulator-store';
+import { getTenantForUser } from '@/app/lib/data';
 import { getCurrentTenant, requireSession } from '@/app/lib/session';
 import { AiLabPage, AiLabSectionCard } from '@/components/AiLabPage';
 import { AiLabShell } from '@/components/AiLabShell';
 
-export default async function ProductsPlaceholderPage({ params }: { params: Promise<{ businessId: string }> }) {
+export default async function ProductsPage({ params }: { params: Promise<{ businessId: string }> }) {
   const session = await requireSession();
   const currentTenant = await getCurrentTenant();
   const { businessId } = await params;
@@ -37,37 +37,69 @@ export default async function ProductsPlaceholderPage({ params }: { params: Prom
       currentTenantName={business.name}
     >
       <AiLabPage
-        eyebrow="placeholder محصولات"
+        eyebrow="محصولات"
         title={`${business.name} · محصولات`}
-        description="این بخش عمدا قابل مشاهده نگه‌داشته شده تا مسیر انتقال از تست مستقل OCR به سناریوی محصول واقعی برای تیم‌ها روشن باشد."
-        badge="مرحله بعد"
+        description="محصولات هوش مصنوعی تاو برای شبیه‌سازی و مدیریت قابلیت‌های کسب‌وکار."
+        badge="کاتالوگ"
       >
-        <AiLabSectionCard title="پیش‌نمایش Unit 1" description="در این مرحله پیاده‌سازی کامل محصول انجام نمی‌شود.">
-          <TaavCard variant="outlined" padding="lg" radius="xl">
-            <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
-              <div className="grid gap-3">
-                <div className="flex items-center gap-2">
-                  <Boxes className="h-5 w-5 text-[var(--taav-info-strong)]" />
-                  <h2 className="m-0 text-[length:var(--taav-text-lg)] font-black text-[var(--taav-text-strong)]">Unit 1</h2>
-                  <TaavBadge tone="info" variant="soft">مرحله بعد</TaavBadge>
+        <AiLabSectionCard title="محصولات موجود" description="یک محصول را انتخاب کنید تا وارد فضای کاری آن شوید.">
+          <div className="ai-lab-card-grid">
+            <TaavCard variant="outlined" padding="md" radius="xl">
+              <div className="grid gap-4">
+                <div className="flex items-center justify-between gap-3">
+                  <Bot className="h-5 w-5 text-[var(--taav-brand-strong)]" />
+                  <TaavBadge tone="brand" variant="soft">فعال</TaavBadge>
                 </div>
-                <p className="m-0 text-[length:var(--taav-text-sm)] text-[var(--taav-text-muted)]">
-                  بعد از تست مستقل OCR، مرحله بعدی این است که رفتار خروجی OCR در جریان محصول Unit 1 شبیه‌سازی و بررسی شود.
-                </p>
-                <div className="ai-lab-info-row">
-                  <TaavBadge tone="brand" variant="outline" iconStart={<FileSearch className="h-3.5 w-3.5" />}>
-                    ابتدا OCR
-                  </TaavBadge>
-                  <TaavBadge tone="neutral" variant="soft" iconStart={<Layers3 className="h-3.5 w-3.5" />}>
-                    سپس اتصال به محصول
-                  </TaavBadge>
+                <div>
+                  <h2 className="m-0 text-[length:var(--taav-text-lg)] font-black text-[var(--taav-text-strong)]">
+                    تاویا
+                  </h2>
+                  <p className="mt-2 text-[length:var(--taav-text-sm)] text-[var(--taav-text-muted)]">
+                    شبیه‌ساز چت‌بات پشتیبانی برندها و مدیریت دانش با هوش مصنوعی
+                  </p>
+                </div>
+                <Link href={`/businesses/${business.id}/products/taavia`}>
+                  <TaavButton width="full" iconStart={<ArrowLeft className="h-4 w-4" />}>
+                    ورود به تاویا
+                  </TaavButton>
+                </Link>
+              </div>
+            </TaavCard>
+
+            <TaavCard variant="soft" padding="md" radius="xl">
+              <div className="grid gap-4">
+                <div className="flex items-center justify-between gap-3">
+                  <Building2 className="h-5 w-5 text-[var(--taav-text-subtle)]" />
+                  <TaavBadge tone="neutral" variant="soft">به‌زودی</TaavBadge>
+                </div>
+                <div>
+                  <h2 className="m-0 text-[length:var(--taav-text-lg)] font-black text-[var(--taav-text-strong)]">
+                    Unit 1
+                  </h2>
+                  <p className="mt-2 text-[length:var(--taav-text-sm)] text-[var(--taav-text-muted)]">
+                    محصول بعدی برای اتصال خروجی OCR به جریان‌های عملیاتی کسب‌وکار.
+                  </p>
                 </div>
               </div>
-              <Link href={`/businesses/${business.id}/ai-tools/ocr`}>
-                <TaavButton iconStart={<ArrowLeft className="h-4 w-4" />}>بازگشت به placeholder OCR</TaavButton>
-              </Link>
-            </div>
-          </TaavCard>
+            </TaavCard>
+
+            <TaavCard variant="soft" padding="md" radius="xl">
+              <div className="grid gap-4">
+                <div className="flex items-center justify-between gap-3">
+                  <BarChart3 className="h-5 w-5 text-[var(--taav-text-subtle)]" />
+                  <TaavBadge tone="neutral" variant="soft">به‌زودی</TaavBadge>
+                </div>
+                <div>
+                  <h2 className="m-0 text-[length:var(--taav-text-lg)] font-black text-[var(--taav-text-strong)]">
+                    محصولات بعدی
+                  </h2>
+                  <p className="mt-2 text-[length:var(--taav-text-sm)] text-[var(--taav-text-muted)]">
+                    در مراحل بعد، محصولات بیشتری به این کاتالوگ اضافه می‌شوند.
+                  </p>
+                </div>
+              </div>
+            </TaavCard>
+          </div>
         </AiLabSectionCard>
       </AiLabPage>
     </AiLabShell>

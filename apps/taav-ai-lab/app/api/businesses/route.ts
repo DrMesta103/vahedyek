@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createTenantForUser } from '@/app/lib/simulator-store';
+import { createTenantForUser } from '@/app/lib/data';
 import { getOptionalSession } from '@/app/lib/session';
 
 type CreateBusinessPayload = {
@@ -33,5 +33,5 @@ export async function POST(request: Request) {
     tokenLimit,
   });
 
-  return NextResponse.json({ business, simulator: true }, { status: 201 });
+  return NextResponse.json({ business, source: 'database' }, { status: 201 });
 }

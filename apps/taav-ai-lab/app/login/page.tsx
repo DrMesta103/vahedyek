@@ -5,7 +5,7 @@ import { LoginForm } from '@/components/LoginForm';
 export default async function LoginPage() {
   const session = await getOptionalSession();
   if (session) {
-    redirect(session.activeTenantId ? '/businesses' : '/select-tenant');
+    redirect('/businesses');
   }
 
   return <LoginForm />;

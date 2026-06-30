@@ -1,4 +1,4 @@
-import { getOcrJobsForTenant, getTenantForUser } from '@/app/lib/simulator-store';
+import { getOcrJobsForTenant, getTenantForUser } from '@/app/lib/data';
 import { getCurrentTenant, requireSession } from '@/app/lib/session';
 import { AiLabShell } from '@/components/AiLabShell';
 import { OcrHubClient } from '@/components/OcrHubClient';

@@ -1,4 +1,4 @@
-import type { Tenant } from './simulator-store';
+import type { Tenant } from './types/domain';
 
 export function formatTokenCount(value: number) {
   return new Intl.NumberFormat('fa-IR').format(value);
