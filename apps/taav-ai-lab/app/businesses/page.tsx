@@ -1,6 +1,5 @@
 import { getTenantsForUser } from '@/app/lib/simulator-store';
 import { getCurrentTenant, requireSession } from '@/app/lib/session';
-import { AiLabPage, AiLabSectionCard } from '@/components/AiLabPage';
 import { AiLabShell } from '@/components/AiLabShell';
 import { BusinessesClient } from '@/components/BusinessesClient';
 
@@ -18,14 +17,7 @@ export default async function BusinessesPage() {
       currentTenantId={currentTenant?.id ?? session.activeTenantId ?? null}
       currentTenantName={currentTenant?.name ?? null}
     >
-      <AiLabPage
-        eyebrow="آزمایشگاه هوش مصنوعی تاو"
-        title="مدیریت کسب‌وکارها"
-        description="فهرست tenantهای متعلق به حساب فعلی برای تست مستقل قابلیت‌های هوش مصنوعی."
-        badge="فاز ۱"
-      >
-        <BusinessesClient businesses={businesses} />
-      </AiLabPage>
+      <BusinessesClient businesses={businesses} />
     </AiLabShell>
   );
 }

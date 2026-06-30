@@ -7,5 +7,5 @@ export default async function HomePage() {
     redirect('/login');
   }
 
-  redirect(session.activeTenantId ? '/businesses' : '/select-tenant');
+  redirect(session.activeTenantId ? `/businesses/${session.activeTenantId}` : '/select-tenant');
 }

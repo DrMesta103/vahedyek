@@ -58,11 +58,189 @@
       "billingCycle": "monthly",
       "logoUrl": "",
       "tokenLimit": 500000,
-      "usedTokens": 0,
-      "ocrTestsCount": 0,
-      "lastActivity": "2026-06-29T13:23:35.312Z",
+      "usedTokens": 9100,
+      "ocrTestsCount": 3,
+      "lastActivity": "2026-06-30T12:50:42.444Z",
       "createdAt": "2026-06-29T13:23:35.312Z",
-      "updatedAt": "2026-06-29T13:23:35.312Z"
+      "updatedAt": "2026-06-30T12:50:42.444Z"
+    }
+  ],
+  "ocrJobs": [
+    {
+      "id": "ocr_a823afa9618b8595",
+      "tenantId": "tenant_c6d8ff6def1b8e38",
+      "sourceType": "sample",
+      "sourceName": "melli-taav-front.jpg",
+      "sourceLabel": "کارت ملی",
+      "fileType": "image/jpeg",
+      "fileSize": null,
+      "sampleId": "id-card",
+      "status": "completed",
+      "progress": 100,
+      "confidence": 92,
+      "pageCount": 1,
+      "tokensUsed": 2800,
+      "summary": "فیلدهای هویتی ساختارمند شناسایی شد و برای اعتبارسنجی آماده است.",
+      "previewText": "نام و نام خانوادگی\nشماره ملی\nتاریخ تولد\nمحل صدور",
+      "extractedJson": {
+        "fullName": "علی علوی",
+        "nationalId": "۱۲۳۴۵۶۷۸۹۰",
+        "birthDate": "۱۳۷۵/۰۳/۱۸",
+        "issueCity": "تهران",
+        "match": "موفق"
+      },
+      "extractedFields": [
+        {
+          "key": "fullName",
+          "label": "نام",
+          "value": "علی علوی"
+        },
+        {
+          "key": "nationalId",
+          "label": "شماره ملی",
+          "value": "۱۲۳۴۵۶۷۸۹۰"
+        },
+        {
+          "key": "birthDate",
+          "label": "تاریخ تولد",
+          "value": "۱۳۷۵/۰۳/۱۸"
+        },
+        {
+          "key": "issueCity",
+          "label": "محل صدور",
+          "value": "تهران"
+        },
+        {
+          "key": "match",
+          "label": "تطبیق",
+          "value": "موفق"
+        }
+      ],
+      "warnings": [],
+      "error": null,
+      "createdAt": "2026-06-30T12:22:33.562Z",
+      "startedAt": "2026-06-30T12:22:33.562Z",
+      "readyAt": "2026-06-30T12:22:37.307Z",
+      "completedAt": "2026-06-30T12:22:38.106Z",
+      "updatedAt": "2026-06-30T12:22:38.106Z"
+    },
+    {
+      "id": "ocr_7ab3bb750834e636",
+      "tenantId": "tenant_c6d8ff6def1b8e38",
+      "sourceType": "sample",
+      "sourceName": "receipt-taav-8991.png",
+      "sourceLabel": "رسید پرداخت",
+      "fileType": "image/png",
+      "fileSize": null,
+      "sampleId": "receipt",
+      "status": "completed",
+      "progress": 100,
+      "confidence": 90,
+      "pageCount": 1,
+      "tokensUsed": 2100,
+      "summary": "رسید پرداخت با چند فیلد کوتاه و قابل اتصال به جریان مالی استخراج شد.",
+      "previewText": "رسید پرداخت\nکد پیگیری: 8991\nمبلغ: 780,000\nوضعیت: موفق",
+      "extractedJson": {
+        "tracking": "8991",
+        "amount": "780,000 تومان",
+        "status": "موفق",
+        "channel": "درگاه آنلاین",
+        "confidence": "90%"
+      },
+      "extractedFields": [
+        {
+          "key": "tracking",
+          "label": "کد پیگیری",
+          "value": "8991"
+        },
+        {
+          "key": "amount",
+          "label": "مبلغ",
+          "value": "780,000 تومان"
+        },
+        {
+          "key": "status",
+          "label": "وضعیت",
+          "value": "موفق"
+        },
+        {
+          "key": "channel",
+          "label": "کانال",
+          "value": "درگاه آنلاین"
+        },
+        {
+          "key": "confidence",
+          "label": "اعتماد",
+          "value": "90%"
+        }
+      ],
+      "warnings": [
+        "فایل نمونه فقط برای دمو است و امضای دیجیتال ندارد."
+      ],
+      "error": null,
+      "createdAt": "2026-06-30T12:22:51.557Z",
+      "startedAt": "2026-06-30T12:22:51.557Z",
+      "readyAt": "2026-06-30T12:22:54.661Z",
+      "completedAt": "2026-06-30T12:22:55.206Z",
+      "updatedAt": "2026-06-30T12:22:55.206Z"
+    },
+    {
+      "id": "ocr_3ddab6c2bc82bb53",
+      "tenantId": "tenant_c6d8ff6def1b8e38",
+      "sourceType": "sample",
+      "sourceName": "invoice-taav-1048.pdf",
+      "sourceLabel": "فاکتور فروش",
+      "fileType": "application/pdf",
+      "fileSize": null,
+      "sampleId": "invoice",
+      "status": "completed",
+      "progress": 100,
+      "confidence": 98,
+      "pageCount": 2,
+      "tokensUsed": 4200,
+      "summary": "اطلاعات اصلی فاکتور با دقت بالا استخراج شد و برای اتصال به مرحله‌ی بعدی آماده است.",
+      "previewText": "TAAV Trading\nInvoice #1048\nTotal: 5,400,000 IRR\nVAT: 9%",
+      "extractedJson": {
+        "invoiceNumber": "1048",
+        "invoiceDate": "1405/04/08",
+        "seller": "آزمایشگاه هوش مصنوعی تاو",
+        "total": "5,400,000 تومان",
+        "status": "تأیید شده"
+      },
+      "extractedFields": [
+        {
+          "key": "invoiceNumber",
+          "label": "شماره فاکتور",
+          "value": "1048"
+        },
+        {
+          "key": "invoiceDate",
+          "label": "تاریخ",
+          "value": "1405/04/08"
+        },
+        {
+          "key": "seller",
+          "label": "فروشنده",
+          "value": "آزمایشگاه هوش مصنوعی تاو"
+        },
+        {
+          "key": "total",
+          "label": "مبلغ کل",
+          "value": "5,400,000 تومان"
+        },
+        {
+          "key": "status",
+          "label": "وضعیت",
+          "value": "تأیید شده"
+        }
+      ],
+      "warnings": [],
+      "error": null,
+      "createdAt": "2026-06-30T12:50:37.976Z",
+      "startedAt": "2026-06-30T12:50:37.976Z",
+      "readyAt": "2026-06-30T12:50:41.890Z",
+      "completedAt": "2026-06-30T12:50:42.444Z",
+      "updatedAt": "2026-06-30T12:50:42.444Z"
     }
   ]
 }

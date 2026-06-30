@@ -9,22 +9,24 @@ export function AiLabPage({
   badge,
   children,
 }: {
-  eyebrow: string;
-  title: string;
-  description: string;
+  eyebrow?: string;
+  title?: string;
+  description?: string;
   badge?: string;
   children?: React.ReactNode;
 }) {
   return (
     <div className="ai-lab-page-stack">
-      <TaavPageHeader
-        variant="hero"
-        icon={<Beaker className="h-5 w-5" />}
-        eyebrow={eyebrow}
-        title={title}
-        description={description}
-        badge={badge ? <TaavBadge tone="brand" variant="soft">{badge}</TaavBadge> : undefined}
-      />
+      {title ? (
+        <TaavPageHeader
+          variant="hero"
+          icon={<Beaker className="h-5 w-5" />}
+          eyebrow={eyebrow}
+          title={title}
+          description={description}
+          badge={badge ? <TaavBadge tone="brand" variant="soft">{badge}</TaavBadge> : undefined}
+        />
+      ) : null}
       {children}
     </div>
   );

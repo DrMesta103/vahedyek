@@ -39,10 +39,10 @@ export default async function AiToolsPage({ params }: { params: Promise<{ busine
       <AiLabPage
         eyebrow="کاتالوگ ابزارها"
         title={`${business.name} · ابزارهای هوش مصنوعی`}
-        description="در فاز ۱ ابتدا OCR / Document AI فعال است و بقیه ابزارها به عنوان نقشه راه نمایش داده می‌شوند."
+        description="در فاز ۱ فقط OCR / Document AI فعال است و سایر ابزارها به‌عنوان نقشه‌ی راه نمایش داده می‌شوند."
         badge="تمرکز فاز ۱"
       >
-        <AiLabSectionCard title="ابزارهای موجود" description="از کارت فعال وارد placeholder مربوط به OCR شوید.">
+        <AiLabSectionCard title="ابزارهای موجود" description="از کارت فعال وارد شبیه‌ساز OCR شوید.">
           <div className="ai-lab-card-grid">
             <TaavCard variant="outlined" padding="md" radius="xl">
               <div className="grid gap-4">
@@ -60,7 +60,7 @@ export default async function AiToolsPage({ params }: { params: Promise<{ busine
                 </div>
                 <Link href={`/businesses/${business.id}/ai-tools/ocr`}>
                   <TaavButton width="full" iconStart={<ArrowLeft className="h-4 w-4" />}>
-                    ورود به placeholder OCR
+                    ورود به شبیه‌ساز OCR
                   </TaavButton>
                 </Link>
               </div>

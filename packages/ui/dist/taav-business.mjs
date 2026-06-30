@@ -1511,7 +1511,7 @@ var businessSidebarShell = cva(
   {
     variants: {
       placement: {
-        right: "py-[var(--taav-business-sidebar-shell-py)] pr-[var(--taav-business-sidebar-shell-pr)] pl-0",
+        right: "py-0 pr-0 pl-0",
         left: "py-[var(--taav-business-sidebar-shell-py)] pl-[var(--taav-business-sidebar-shell-pr)] pr-0"
       }
     },
