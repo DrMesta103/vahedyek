@@ -61,7 +61,9 @@ export function BusinessSidebarNavPath({
       <ol className={cn(businessSidebarNavPathList(), listClassName)}>
         {pathItems.map((item, index) => {
           const isCurrent = index === pathItems.length - 1;
-          const key = item.id ?? `${item.label}-${index}`;
+          // Breadcrumb items can legitimately reuse ids across parent/current crumbs.
+          // Include the index so React keys stay unique for the rendered list.
+          const key = item.id ? `${item.id}-${index}` : `${item.label}-${index}`;
 
           return (
             <Fragment key={key}>

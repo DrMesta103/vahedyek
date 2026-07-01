@@ -5660,11 +5660,11 @@ var businessSidebarCollapsedTenantStrip = cva(
   "flex shrink-0 items-center justify-center px-2 py-3"
 );
 var businessSidebarShell = cva(
-  "flex h-full min-h-0 w-full flex-row",
+  "flex min-h-screen w-full flex-row items-stretch",
   {
     variants: {
       placement: {
-        right: "py-[var(--taav-business-sidebar-shell-py)] pr-[var(--taav-business-sidebar-shell-pr)] pl-0",
+        right: "py-0 pr-0 pl-0",
         left: "py-[var(--taav-business-sidebar-shell-py)] pl-[var(--taav-business-sidebar-shell-pr)] pr-0"
       }
     },
@@ -5674,7 +5674,7 @@ var businessSidebarShell = cva(
   }
 );
 var businessSidebarContentColumn = cva(
-  "relative flex min-w-0 flex-1 flex-col overflow-hidden"
+  "relative flex min-h-screen min-w-0 flex-1 flex-col overflow-hidden"
 );
 var businessSidebarContentBody = cva("relative min-h-0 flex-1 overflow-hidden");
 var businessSidebarRailWrap = cva("flex h-full shrink-0 self-stretch");
@@ -5732,7 +5732,7 @@ function BusinessSidebarNavPath({
       ...props,
       children: /* @__PURE__ */ jsx("ol", { className: cn(businessSidebarNavPathList(), listClassName), children: pathItems.map((item, index) => {
         const isCurrent = index === pathItems.length - 1;
-        const key = item.id ?? `${item.label}-${index}`;
+        const key = item.id ? `${item.id}-${index}` : `${item.label}-${index}`;
         return /* @__PURE__ */ jsxs(Fragment$1, { children: [
           index > 0 ? /* @__PURE__ */ jsx("li", { className: "inline-flex shrink-0 items-center", "aria-hidden": true, children: /* @__PURE__ */ jsx(PathSeparator, {}) }) : null,
           /* @__PURE__ */ jsx("li", { className: "inline-flex min-w-0 max-w-full items-center", children: isCurrent ? /* @__PURE__ */ jsx("span", { className: businessSidebarNavPathCurrent(), "aria-current": "page", children: item.label }) : item.href ? /* @__PURE__ */ jsx("a", { href: item.href, className: businessSidebarNavPathLink(), onClick: item.onClick, children: /* @__PURE__ */ jsx("span", { className: "truncate", children: item.label }) }) : /* @__PURE__ */ jsx("button", { type: "button", className: businessSidebarNavPathLink(), onClick: item.onClick, children: /* @__PURE__ */ jsx("span", { className: "truncate", children: item.label }) }) })

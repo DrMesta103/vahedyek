@@ -1,0 +1,39 @@
+{
+  "name": "@apps/taav-ai-lab",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "predev": "npm run prisma:generate && npm --workspace @repo/ui run build",
+    "dev": "next dev -p 3070 --hostname 0.0.0.0",
+    "build": "npm run prisma:generate && npm --workspace @repo/ui run build && next build",
+    "start": "next start -p 3070",
+    "lint": "next lint",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:deploy": "prisma migrate deploy",
+    "prisma:push": "prisma db push",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:verify": "tsx scripts/verify-db-persistence.ts",
+    "db:import-simulator": "tsx scripts/import-simulator-json.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.7.0",
+    "@repo/ui": "*",
+    "dotenv": "^16.5.0",
+    "lucide-react": "^0.487.0",
+    "next": "^16.2.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.2.2",
+    "@types/node": "^22.15.3",
+    "@types/react": "^18.3.23",
+    "@types/react-dom": "^18.3.7",
+    "postcss": "^8.5.10",
+    "prisma": "^6.7.0",
+    "tailwindcss": "^4.2.2",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3"
+  }
+}

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { PersianDatePicker } from '@repo/ui';
-import { AdaptiveChipGroup } from '../../../../../components/AdaptiveChipGroup';
+import { TaavChoiceChipGroup } from '@repo/ui/taav/forms';
 import { AttachmentManager } from '../../../../../components/AttachmentManager';
 import { PanelFormModal, PanelFormModalActions } from '../../../../../components/PanelFormModal';
 import { formatFaNumber } from '../../../../../lib/format-fa';
@@ -247,61 +247,13 @@ function normalizeRangeForSubmission(form: EmployeeRequestFormPayload) {
   };
 }
 
-function PreviewBaseCard({ preview }: { preview: EmployeeRequestPreview }) {
-  return (
-    <section className="employee-request-dialog-section">
-      <div className="employee-request-section-title">مبنای محاسبه</div>
-      <div className="employee-request-balance">
-        <span>قرارداد: <strong>{preview.activeContractLabel ?? 'یافت نشد'}</strong></span>
-        <span>گروه کاری: <strong>{preview.workGroupTitle ?? 'یافت نشد'}</strong></span>
-        <span>سیاست کاری: <strong>{preview.workPolicyTitle ?? 'یافت نشد'}</strong></span>
-        {preview.calendarTitle ? <span>تقویم: <strong>{preview.calendarTitle}</strong></span> : null}
-        {preview.shiftLabel ? <span>شیفت: <strong>{preview.shiftLabel}</strong></span> : null}
-      </div>
-    </section>
-  );
-}
-
 function PreviewWarnings({ preview, previewError }: { preview: EmployeeRequestPreview | null; previewError: string }) {
-  const warnings = preview?.warnings ?? [];
   const blockingErrors = preview?.blockingErrors ?? [];
   return (
     <>
       {previewError ? <div className="business-payroll-warning">{previewError}</div> : null}
       {blockingErrors.map((item) => <div key={item} className="business-payroll-warning">{item}</div>)}
-      {warnings.map((item) => <div key={item} className="employee-request-tooltip">{item}</div>)}
     </>
-  );
-}
-
-function PreviewEffectCard({ preview, leaveBalance }: { preview: EmployeeRequestPreview; leaveBalance: LeaveBalanceSummary }) {
-  const leaveRule = preview.leaveRule;
-  const tokens = leaveRule
-    ? [
-        leaveRule.paid ? 'با حقوق' : 'بدون حقوق',
-        leaveRule.deductsFromEntitlementBalance ? 'کسر از مانده استحقاقی' : 'بدون کسر از مانده استحقاقی',
-        leaveRule.requiresAttachment ? 'نیازمند پیوست' : 'بدون نیاز به پیوست',
-      ]
-    : [];
-
-  return (
-    <section className="employee-request-dialog-section">
-      <div className="employee-request-section-title">اثر درخواست</div>
-      {tokens.length ? <div className="employee-request-tooltip">{tokens.join(' · ')}</div> : null}
-      <div className="employee-request-balance">
-        <span>مدت درخواست: <strong>{durationLabel(preview.requestedDurationMinutes)}</strong></span>
-        <span>مدت قابل پرداخت: <strong>{durationLabel(preview.payableDurationMinutes, 'ندارد')}</strong></span>
-        <span>مدت بدون پرداخت: <strong>{durationLabel(preview.unpaidDurationMinutes, 'ندارد')}</strong></span>
-        {preview.attendanceEffectTitle ? <span>اثر حضور و غیاب: <strong>{preview.attendanceEffectTitle}</strong></span> : null}
-        {preview.estimatedPayTitle ? <span>اثر حقوق: <strong>{preview.estimatedPayTitle}</strong></span> : null}
-        {leaveRule?.deductsFromEntitlementBalance ? (
-          <>
-            <span>مانده فعلی: <strong>{durationLabel(preview.leaveBalanceRemainingMinutes ?? leaveBalance.remainingMinutes)}</strong></span>
-            <span>مانده پس از تأیید: <strong>{durationLabel(preview.leaveBalanceAfterApprovalMinutes)}</strong></span>
-          </>
-        ) : null}
-      </div>
-    </section>
   );
 }
 
@@ -418,11 +370,13 @@ function RemoteWorkModeField({
   return (
     <section className="employee-request-dialog-section">
       <div className="employee-request-section-title">نوع دورکاری مجاز</div>
-      <AdaptiveChipGroup
-        className="employee-request-chip-grid"
-        selected={currentMode}
-        items={options.map((option) => ({ value: option.value, label: option.label, disabled }))}
-        onChange={(next) => onChange(next as RemoteWorkModeKey)}
+      <TaavChoiceChipGroup
+        ariaLabel="نوع دورکاری مجاز"
+        options={options.map((option) => ({ value: option.value, label: option.label, disabled }))}
+        value={currentMode}
+        onValueChange={(next) => onChange((Array.isArray(next) ? next[0] : next) as RemoteWorkModeKey)}
+        tone="brand"
+        size="md"
       />
     </section>
   );
@@ -547,15 +501,16 @@ function LeaveSelectionField({
   return (
     <section className="employee-request-dialog-section">
       <div className="employee-request-section-title">نوع مرخصی</div>
-      <AdaptiveChipGroup
-        className="employee-request-chip-grid"
-        selected={leaveType}
-        items={LEAVE_TYPE_OPTIONS.map((option) => ({
-          ...option,
+      <TaavChoiceChipGroup
+        ariaLabel="نوع مرخصی"
+        options={LEAVE_TYPE_OPTIONS.map((option) => ({
+          value: option.value,
+          label: option.label,
           disabled: disabled || !leaveRequestContext.leaveRules[option.value].enabled,
         }))}
-        onChange={(next) => {
-          const nextLeaveType = next as LeaveTypeKey;
+        value={leaveType}
+        onValueChange={(next) => {
+          const nextLeaveType = (Array.isArray(next) ? next[0] : next) as LeaveTypeKey;
           const nextRequestType = mapLeaveSelectionToRequestType(nextLeaveType, selectedMode) as EmployeeRequestType;
           const nextForm = normalizeRequestFormForType(form, nextRequestType);
           onChange({
@@ -564,19 +519,22 @@ function LeaveSelectionField({
             endDate: selectedMode === 'hourly' ? '' : form.rangeType === 'multi_day' ? nextForm.endDate ?? '' : '',
           });
         }}
+        tone="brand"
+        size="md"
       />
       <div className="employee-request-tooltip">{LEAVE_TYPE_DESCRIPTIONS[leaveType]}</div>
 
       <div className="employee-request-section-title">نوع درخواست</div>
-      <AdaptiveChipGroup
-        className="employee-request-chip-grid"
-        selected={selectedMode}
-        items={LEAVE_MODE_OPTIONS.map((option) => ({
-          ...option,
+      <TaavChoiceChipGroup
+        ariaLabel="نوع درخواست"
+        options={LEAVE_MODE_OPTIONS.map((option) => ({
+          value: option.value,
+          label: option.label,
           disabled: disabled || (option.value === 'daily' ? !rule.requestModes.daily : !rule.requestModes.hourly),
         }))}
-        onChange={(next) => {
-          const nextMode = next as LeaveModeKey;
+        value={selectedMode}
+        onValueChange={(next) => {
+          const nextMode = (Array.isArray(next) ? next[0] : next) as LeaveModeKey;
           const nextRequestType = mapLeaveSelectionToRequestType(leaveType, nextMode) as EmployeeRequestType;
           const nextForm = normalizeRequestFormForType(form, nextRequestType);
           onChange({
@@ -585,6 +543,8 @@ function LeaveSelectionField({
             endDate: nextMode === 'hourly' ? '' : form.rangeType === 'multi_day' ? nextForm.endDate ?? '' : '',
           });
         }}
+        tone="brand"
+        size="md"
       />
       <div className="employee-request-tooltip">{LEAVE_TYPE_MODE_TOOLTIPS[leaveType][selectedMode]}</div>
     </section>
@@ -619,14 +579,17 @@ function LeaveRangeField({
   return (
     <section className="employee-request-dialog-section">
       <div className="employee-request-section-title">نوع بازه مرخصی</div>
-      <AdaptiveChipGroup
-        className="employee-request-chip-grid"
-        selected={form.rangeType ?? 'full_day'}
-        items={LEAVE_RANGE_OPTIONS.map((option) => ({
-          ...option,
+      <TaavChoiceChipGroup
+        ariaLabel="نوع بازه مرخصی"
+        options={LEAVE_RANGE_OPTIONS.map((option) => ({
+          value: option.value,
+          label: option.label,
           disabled: disabled || (option.value === 'full_day' ? !rule.requestModes.daily : !rule.requestModes.multiDay),
         }))}
-        onChange={(next) => onChange(next as EmployeeRequestFormPayload['rangeType'])}
+        value={form.rangeType ?? 'full_day'}
+        onValueChange={(next) => onChange((Array.isArray(next) ? next[0] : next) as EmployeeRequestFormPayload['rangeType'])}
+        tone="brand"
+        size="md"
       />
     </section>
   );
@@ -640,7 +603,14 @@ function ReasonPicker({ reasons, selected, disabled, onChange }: { reasons: Requ
     <section className="employee-request-dialog-section">
       <div className="employee-request-section-title">علت درخواست</div>
       {visible.length ? (
-        <AdaptiveChipGroup className="employee-request-chip-grid" selected={selected ?? ''} items={visible.map((reason) => ({ value: reason.id, label: reason.title, disabled }))} onChange={(value) => onChange(String(value))} />
+        <TaavChoiceChipGroup
+          ariaLabel="علت درخواست"
+          options={visible.map((reason) => ({ value: reason.id, label: reason.title, disabled }))}
+          value={selected ?? ''}
+          onValueChange={(next) => onChange(String(Array.isArray(next) ? next[0] : next))}
+          tone="brand"
+          size="md"
+        />
       ) : (
         <p className="employee-request-empty-note">برای این نوع درخواست علتی تعریف نشده است.</p>
       )}
@@ -758,7 +728,6 @@ export function EmployeeRequestDialog({
       <div className="employee-request-dialog">
         <EmployeeMiniHeader employee={employee} />
 
-        {preview ? <PreviewBaseCard preview={preview} /> : null}
         <PreviewWarnings preview={preview} previewError={previewError} />
 
         {isLeave ? (
@@ -779,9 +748,7 @@ export function EmployeeRequestDialog({
         {isLeave ? <LeaveRangeField form={form} leaveRequestContext={leaveRequestContext} disabled={readonly} onChange={(rangeType) => onChange({ ...form, rangeType })} /> : null}
 
         {preview && form.requestType === 'attendance' ? <AttendancePreviewCard preview={preview} /> : null}
-        {preview && isLeave ? <PreviewEffectCard preview={preview} leaveBalance={leaveBalance} /> : null}
         {preview && form.requestType === 'remote_work' ? <RemotePreviewCard preview={preview} /> : null}
-        {preview && form.requestType === 'mission' ? <PreviewEffectCard preview={preview} leaveBalance={leaveBalance} /> : null}
         {preview && form.requestType === 'overtime' ? <OvertimePreviewCard preview={preview} /> : null}
 
         {isRemote ? (
@@ -878,14 +845,19 @@ export function EmployeeRequestDialog({
 
         <section className="employee-request-dialog-section">
           <div className="employee-request-section-title">نحوه ثبت درخواست</div>
-          <AdaptiveChipGroup
-            className="employee-request-chip-grid"
-            selected={form.submissionMode}
-            items={[
+          <TaavChoiceChipGroup
+            ariaLabel="نحوه ثبت درخواست"
+            options={[
               { value: 'approved', label: 'ثبت نهایی / تأیید شده', disabled: readonly },
               { value: 'pending', label: 'ثبت در انتظار تأیید', disabled: readonly },
             ]}
-            onChange={(next) => onChange({ ...normalizedForm, submissionMode: next as 'approved' | 'pending', status: next === 'approved' ? 'approved' : 'pending' })}
+            value={form.submissionMode}
+            onValueChange={(next) => {
+              const mode = (Array.isArray(next) ? next[0] : next) as 'approved' | 'pending';
+              onChange({ ...normalizedForm, submissionMode: mode, status: mode === 'approved' ? 'approved' : 'pending' });
+            }}
+            tone="brand"
+            size="md"
           />
         </section>
       </div>
