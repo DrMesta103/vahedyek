@@ -146,10 +146,6 @@ export function OcrJobDetailClient({ businessId, initialJob }: OcrJobDetailClien
             <TaavTextarea readOnly value={job.previewText} rows={6} inputClassName="text-sm leading-7" />
           </OcrSectionCard>
 
-          <OcrSectionCard title="خروجی ساختاریافته">
-            <TaavTextarea readOnly value={jsonPreview} rows={8} inputClassName="font-mono text-[11px] leading-6" dir="ltr" />
-          </OcrSectionCard>
-
           <OcrSectionCard title="فیلدهای استخراج‌شده">
             <div className="ocr-flow-field-list">
               {outputFields.map((field) => {
@@ -185,6 +181,10 @@ export function OcrJobDetailClient({ businessId, initialJob }: OcrJobDetailClien
                 );
               })}
             </div>
+          </OcrSectionCard>
+
+          <OcrSectionCard title="خروجی ساختاریافته">
+            <TaavTextarea readOnly value={jsonPreview} rows={8} inputClassName="font-mono text-[11px] leading-6" dir="ltr" />
           </OcrSectionCard>
         </>
       ) : (

@@ -3028,21 +3028,21 @@ textarea {
 
 .taavia-brand-grid {
   display: grid;
-  grid-template-columns: 1fr;
-  justify-items: start;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: start;
   gap: 18px;
 }
 
 .taavia-brand-stack {
   display: grid;
   gap: 14px;
-  width: min(100%, 420px);
-  margin-inline-start: auto;
+  width: 100%;
+  margin-inline: 0;
 }
 
 .taavia-brand-card {
-  width: min(100%, 420px);
-  max-width: 420px;
+  width: 100%;
+  max-width: none;
   overflow: hidden;
   border: 1px solid rgba(148, 163, 184, 0.18);
   border-radius: 20px;
@@ -3154,7 +3154,12 @@ textarea {
   }
 
   .taavia-brand-grid {
-    justify-items: stretch;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .taavia-brand-card {
+    width: 100%;
   }
 }
 
@@ -3165,7 +3170,12 @@ textarea {
   }
 
   .taavia-brand-grid {
-    justify-items: stretch;
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .taavia-brand-card {
+    width: 100%;
   }
 
   .taavia-brand-card-body {
