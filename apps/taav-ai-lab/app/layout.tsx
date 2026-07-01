@@ -1,5 +1,9 @@
 import type { Metadata } from 'next';
 import { iranSans } from '@/app/lib/fonts';
+import { AiLabTooltipProvider } from '@/components/AiLabTooltip';
+import { ThemeFloatingToggle } from '@/components/theme/ThemeFloatingToggle';
+import { AiLabThemeProvider } from '@/components/theme/ThemeProvider';
+import { ThemeInitScript } from '@/components/theme/ThemeInitScript';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -12,13 +16,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html
       lang="fa"
       dir="rtl"
-      data-theme="dark"
-      data-taav-theme="dark"
-      className={`${iranSans.variable} dark`}
-      style={{ colorScheme: 'dark' }}
+      className={iranSans.variable}
       suppressHydrationWarning
     >
-      <body className={iranSans.className}>{children}</body>
+      <body className={iranSans.className}>
+        <AiLabThemeProvider>
+          <ThemeInitScript />
+          <ThemeFloatingToggle />
+          <AiLabTooltipProvider>{children}</AiLabTooltipProvider>
+        </AiLabThemeProvider>
+      </body>
     </html>
   );
 }

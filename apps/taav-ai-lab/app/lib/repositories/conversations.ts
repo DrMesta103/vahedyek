@@ -2,13 +2,14 @@ import { generateSimulatedAdminAgentReply } from '../admin-agent-simulator';
 import { assertTenantAccess } from '../auth';
 import { prisma } from '../prisma';
 import { INITIAL_ASSISTANT_MESSAGE } from './taavia-brands';
-import type { TaaviaChatMessage } from '../types/domain';
+import type { TaaviaBrandSetup, TaaviaChatMessage, TaaviaUseCaseKey } from '../types/domain';
 
 function mapMessage(message: {
   id: string;
   role: string;
   content: string;
   status: string;
+  metadata: unknown;
   createdAt: Date;
 }): TaaviaChatMessage {
   return {
@@ -16,6 +17,7 @@ function mapMessage(message: {
     role: message.role as TaaviaChatMessage['role'],
     content: message.content,
     status: message.status,
+    metadata: (message.metadata as Record<string, unknown> | null) ?? null,
     createdAt: message.createdAt.toISOString(),
   };
 }
@@ -93,6 +95,7 @@ export async function getOrCreateAdminAgentConversation(
             role: 'assistant',
             content: INITIAL_ASSISTANT_MESSAGE,
             status: 'completed',
+            metadata: { setup: { selectedUseCases: [] } satisfies TaaviaBrandSetup },
           },
         },
       },
@@ -110,6 +113,7 @@ export async function getOrCreateAdminAgentConversation(
         role: 'assistant',
         content: INITIAL_ASSISTANT_MESSAGE,
         status: 'completed',
+        metadata: { setup: { selectedUseCases: [] } satisfies TaaviaBrandSetup },
       },
     });
 
@@ -122,6 +126,76 @@ export async function getOrCreateAdminAgentConversation(
   }
 
   return mapConversation(conversation);
+}
+
+export async function getAdminAgentSetupState(userId: string, tenantId: string, brandId: string) {
+  if (!(await assertTenantAccess(userId, tenantId))) return null;
+
+  const brand = await findBrandForTenant(tenantId, brandId);
+  if (!brand) return null;
+
+  const conversation = await prisma.taaviaConversation.findUnique({
+    where: { brandId_type: { brandId, type: 'admin_agent' } },
+    include: {
+      messages: {
+        where: { role: 'assistant' },
+        orderBy: { createdAt: 'asc' },
+        take: 1,
+      },
+    },
+  });
+
+  const setup = (conversation?.messages[0]?.metadata as { setup?: TaaviaBrandSetup } | null | undefined)?.setup;
+  return {
+    selectedUseCases: setup?.selectedUseCases ?? [],
+    isComplete: Boolean(setup?.selectedUseCases?.length),
+  };
+}
+
+export async function updateAdminAgentSetupState(
+  userId: string,
+  tenantId: string,
+  brandId: string,
+  selectedUseCases: TaaviaUseCaseKey[],
+) {
+  if (!(await assertTenantAccess(userId, tenantId))) return null;
+
+  const brand = await findBrandForTenant(tenantId, brandId);
+  if (!brand) return null;
+
+  const conversation = await prisma.taaviaConversation.findUnique({
+    where: { brandId_type: { brandId, type: 'admin_agent' } },
+    include: {
+      messages: {
+        where: { role: 'assistant' },
+        orderBy: { createdAt: 'asc' },
+        take: 1,
+      },
+    },
+  });
+
+  if (!conversation?.messages[0]) return null;
+
+  const assistantMessage = conversation.messages[0];
+  const currentMetadata = (assistantMessage.metadata as { setup?: TaaviaBrandSetup } | null | undefined) ?? {};
+  const updatedMetadata = {
+    ...currentMetadata,
+    setup: {
+      selectedUseCases,
+    },
+  };
+
+  await prisma.taaviaMessage.update({
+    where: { id: assistantMessage.id },
+    data: {
+      metadata: updatedMetadata,
+    },
+  });
+
+  return {
+    selectedUseCases,
+    isComplete: selectedUseCases.length > 0,
+  };
 }
 
 export async function addAdminAgentUserMessage(

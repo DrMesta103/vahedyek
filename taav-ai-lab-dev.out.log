@@ -1,0 +1,112 @@
+
+> vahedyek-monorepo@0.1.0 dev:ai-lab
+> npm run build:ui && npm --workspace @apps/taav-ai-lab run dev
+
+
+> vahedyek-monorepo@0.1.0 build:ui
+> npm --workspace @repo/ui run build
+
+
+> @repo/ui@0.1.0 build
+> tsup
+
+[34mCLI[39m Building entry: src/index.ts, src/server.ts, src/taav-business.ts, src/taav-data-display-interactive.ts, src/taav-data-display.ts, src/taav-forms.ts, src/taav-layout-interactive.ts, src/taav-layout.ts, src/taav-navigation.ts, src/taav-overlays.ts, src/taav-primitives.ts, src/taav.ts
+[34mCLI[39m Using tsconfig: tsconfig.json
+[34mCLI[39m tsup v8.5.1
+[34mCLI[39m Using tsup config: C:\Users\Administrator\Desktop\first-unit-next\vahedyek\packages\ui\tsup.config.ts
+[34mCLI[39m Target: es2020
+[34mESM[39m Build start
+[34mCJS[39m Build start
+[34mDTS[39m Build start
+[32mCJS[39m [1mdist\server.js                            [22m[32m4.00 KB[39m
+[32mCJS[39m [1mdist\taav-business.js                     [22m[32m131.02 KB[39m
+[32mCJS[39m [1mdist\taav-data-display-interactive.js     [22m[32m94.16 KB[39m
+[32mCJS[39m [1mdist\taav-data-display.js                 [22m[32m71.00 KB[39m
+[32mCJS[39m [1mdist\taav-layout.js                       [22m[32m82.49 KB[39m
+[32mCJS[39m [1mdist\taav-forms.js                        [22m[32m110.20 KB[39m
+[32mCJS[39m [1mdist\taav-layout-interactive.js           [22m[32m64.50 KB[39m
+[32mCJS[39m [1mdist\index.js                             [22m[32m375.82 KB[39m
+[32mCJS[39m [1mdist\taav-navigation.js                   [22m[32m56.08 KB[39m
+[32mCJS[39m [1mdist\taav-primitives.js                   [22m[32m67.40 KB[39m
+[32mCJS[39m [1mdist\taav-overlays.js                     [22m[32m62.88 KB[39m
+[32mCJS[39m [1mdist\taav.js                              [22m[32m304.74 KB[39m
+[32mCJS[39m [1mdist\server.js.map                        [22m[32m6.50 KB[39m
+[32mCJS[39m [1mdist\taav-data-display.js.map             [22m[32m113.42 KB[39m
+[32mCJS[39m [1mdist\taav-business.js.map                 [22m[32m223.68 KB[39m
+[32mCJS[39m [1mdist\taav-layout.js.map                   [22m[32m136.40 KB[39m
+[32mCJS[39m [1mdist\taav-forms.js.map                    [22m[32m199.89 KB[39m
+[32mCJS[39m [1mdist\taav-layout-interactive.js.map       [22m[32m101.25 KB[39m
+[32mCJS[39m [1mdist\taav-data-display-interactive.js.map [22m[32m157.67 KB[39m
+[32mCJS[39m [1mdist\taav-navigation.js.map               [22m[32m82.27 KB[39m
+[32mCJS[39m [1mdist\taav-primitives.js.map               [22m[32m101.98 KB[39m
+[32mCJS[39m [1mdist\taav-overlays.js.map                 [22m[32m95.06 KB[39m
+[32mCJS[39m [1mdist\index.js.map                         [22m[32m698.49 KB[39m
+[32mCJS[39m [1mdist\taav.js.map                          [22m[32m569.08 KB[39m
+[32mCJS[39m ⚡️ Build success in 1958ms
+[32mESM[39m [1mdist\server.mjs                            [22m[32m3.40 KB[39m
+[32mESM[39m [1mdist\taav-forms.mjs                        [22m[32m108.00 KB[39m
+[32mESM[39m [1mdist\taav-data-display.mjs                 [22m[32m69.88 KB[39m
+[32mESM[39m [1mdist\taav-business.mjs                     [22m[32m126.34 KB[39m
+[32mESM[39m [1mdist\taav-data-display-interactive.mjs     [22m[32m92.51 KB[39m
+[32mESM[39m [1mdist\taav-layout.mjs                       [22m[32m80.72 KB[39m
+[32mESM[39m [1mdist\taav-navigation.mjs                   [22m[32m54.95 KB[39m
+[32mESM[39m [1mdist\taav-layout-interactive.mjs           [22m[32m63.70 KB[39m
+[32mESM[39m [1mdist\taav-overlays.mjs                     [22m[32m60.25 KB[39m
+[32mESM[39m [1mdist\taav-primitives.mjs                   [22m[32m66.07 KB[39m
+[32mESM[39m [1mdist\taav.mjs                              [22m[32m292.38 KB[39m
+[32mESM[39m [1mdist\index.mjs                             [22m[32m359.60 KB[39m
+[32mESM[39m [1mdist\server.mjs.map                        [22m[32m6.45 KB[39m
+[32mESM[39m [1mdist\taav-data-display.mjs.map             [22m[32m113.37 KB[39m
+[32mESM[39m [1mdist\taav-forms.mjs.map                    [22m[32m199.76 KB[39m
+[32mESM[39m [1mdist\taav-business.mjs.map                 [22m[32m223.53 KB[39m
+[32mESM[39m [1mdist\taav-data-display-interactive.mjs.map [22m[32m157.61 KB[39m
+[32mESM[39m [1mdist\taav-layout.mjs.map                   [22m[32m136.36 KB[39m
+[32mESM[39m [1mdist\taav-navigation.mjs.map               [22m[32m82.18 KB[39m
+[32mESM[39m [1mdist\taav-layout-interactive.mjs.map       [22m[32m101.21 KB[39m
+[32mESM[39m [1mdist\taav-primitives.mjs.map               [22m[32m101.90 KB[39m
+[32mESM[39m [1mdist\taav-overlays.mjs.map                 [22m[32m94.90 KB[39m
+[32mESM[39m [1mdist\taav.mjs.map                          [22m[32m568.59 KB[39m
+[32mESM[39m [1mdist\index.mjs.map                         [22m[32m697.92 KB[39m
+[32mESM[39m ⚡️ Build success in 1962ms
+[32mDTS[39m ⚡️ Build success in 5714ms
+[32mDTS[39m [1mdist\taav.d.mts                          [22m[32m7.18 KB[39m
+[32mDTS[39m [1mdist\index.d.mts                         [22m[32m17.63 KB[39m
+[32mDTS[39m [1mdist\server.d.mts                        [22m[32m1.12 KB[39m
+[32mDTS[39m [1mdist\taav-business.d.mts                 [22m[32m13.17 KB[39m
+[32mDTS[39m [1mdist\taav-data-display-interactive.d.mts [22m[32m4.13 KB[39m
+[32mDTS[39m [1mdist\taav-data-display.d.mts             [22m[32m6.38 KB[39m
+[32mDTS[39m [1mdist\taav-forms.d.mts                    [22m[32m15.90 KB[39m
+[32mDTS[39m [1mdist\taav-layout-interactive.d.mts       [22m[32m2.67 KB[39m
+[32mDTS[39m [1mdist\taav-layout.d.mts                   [22m[32m7.75 KB[39m
+[32mDTS[39m [1mdist\taav-navigation.d.mts               [22m[32m2.94 KB[39m
+[32mDTS[39m [1mdist\taav-overlays.d.mts                 [22m[32m7.78 KB[39m
+[32mDTS[39m [1mdist\taav-primitives.d.mts               [22m[32m4.21 KB[39m
+[32mDTS[39m [1mdist\layout.variants-CvMtAmDy.d.mts      [22m[32m303.00 B[39m
+[32mDTS[39m [1mdist\TaavStatusBadge-Bkr6L0VQ.d.mts      [22m[32m992.00 B[39m
+[32mDTS[39m [1mdist\taav-badge.variants-DM1buIc6.d.mts  [22m[32m427.00 B[39m
+[32mDTS[39m [1mdist\index-DNbuF2UL.d.mts                [22m[32m2.48 KB[39m
+[32mDTS[39m [1mdist\taav.d.ts                           [22m[32m7.17 KB[39m
+[32mDTS[39m [1mdist\index.d.ts                          [22m[32m17.61 KB[39m
+[32mDTS[39m [1mdist\server.d.ts                         [22m[32m1.12 KB[39m
+[32mDTS[39m [1mdist\taav-business.d.ts                  [22m[32m13.16 KB[39m
+[32mDTS[39m [1mdist\taav-data-display-interactive.d.ts  [22m[32m4.13 KB[39m
+[32mDTS[39m [1mdist\taav-data-display.d.ts              [22m[32m6.37 KB[39m
+[32mDTS[39m [1mdist\taav-forms.d.ts                     [22m[32m15.90 KB[39m
+[32mDTS[39m [1mdist\taav-layout-interactive.d.ts        [22m[32m2.66 KB[39m
+[32mDTS[39m [1mdist\taav-layout.d.ts                    [22m[32m7.74 KB[39m
+[32mDTS[39m [1mdist\taav-navigation.d.ts                [22m[32m2.94 KB[39m
+[32mDTS[39m [1mdist\taav-overlays.d.ts                  [22m[32m7.78 KB[39m
+[32mDTS[39m [1mdist\taav-primitives.d.ts                [22m[32m4.21 KB[39m
+[32mDTS[39m [1mdist\layout.variants-CvMtAmDy.d.ts       [22m[32m303.00 B[39m
+[32mDTS[39m [1mdist\TaavStatusBadge-D6Hiep5s.d.ts       [22m[32m991.00 B[39m
+[32mDTS[39m [1mdist\taav-badge.variants-DM1buIc6.d.ts   [22m[32m427.00 B[39m
+[32mDTS[39m [1mdist\index-DNbuF2UL.d.ts                 [22m[32m2.48 KB[39m
+
+> @apps/taav-ai-lab@0.1.0 predev
+> npm run prisma:generate && npm --workspace @repo/ui run build
+
+
+> @apps/taav-ai-lab@0.1.0 prisma:generate
+> prisma generate
+
+Prisma schema loaded from prisma\schema.prisma

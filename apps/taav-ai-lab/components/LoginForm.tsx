@@ -7,6 +7,9 @@ import { FlaskConical, LockKeyhole, Mail, Smartphone } from 'lucide-react';
 import { TaavBadge, TaavButton, TaavCard } from '@repo/ui/taav/primitives';
 import { TaavFieldBlock, TaavInput } from '@repo/ui/taav/forms';
 import { parseAuthIdentifier, sanitizeIranMobileInput } from '@/app/lib/contact';
+import { AI_LAB_TOOLTIPS } from '@/app/lib/tooltips';
+import { AiLabLabelWithTooltip, AiLabTooltipIcon } from '@/components/AiLabTooltip';
+import { ThemeToggle } from '@/components/theme/ThemeToggle';
 
 async function readJsonResponse(response: Response) {
   const contentType = response.headers.get('content-type') ?? '';
@@ -81,22 +84,25 @@ function LoginFormContent() {
   };
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,#10253a,transparent_36%),linear-gradient(135deg,#07121f,#0d1726_60%,#07101a)] px-4 py-6 text-right text-slate-100 sm:px-6 lg:px-8">
+    <div className="ai-lab-auth-screen px-4 py-6 text-right sm:px-6 lg:px-8">
       <div className="mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-4xl items-center justify-center">
         <TaavCard
           variant="outlined"
           padding="lg"
           radius="xl"
-          wrapperClassName="w-full border-white/10 bg-[rgba(8,14,25,0.78)] shadow-[0_24px_120px_rgba(0,0,0,0.45)] backdrop-blur-xl"
+          wrapperClassName="ai-lab-auth-card-shell w-full backdrop-blur-xl"
         >
           <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-            <div className="grid gap-4 rounded-3xl border border-white/6 bg-white/4 p-6">
+            <div className="ai-lab-auth-hero grid gap-4 rounded-3xl p-6">
               <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-400/25 bg-cyan-400/10 text-cyan-200">
                 <FlaskConical className="h-7 w-7" />
               </div>
               <div className="grid gap-3">
                 <TaavBadge tone="brand" variant="soft" unsafeClassName="w-fit">
-                  فاز ۱ · محیط شبیه‌ساز
+                  <span className="inline-flex items-center gap-1">
+                    فاز ۱ · محیط شبیه‌ساز
+                    <AiLabTooltipIcon content={AI_LAB_TOOLTIPS.shell.phaseBadge} label="راهنمای فاز ۱" />
+                  </span>
                 </TaavBadge>
                 <h1 className="m-0 text-3xl font-black text-white">ورود به آزمایشگاه هوش مصنوعی تاو</h1>
                 <p className="m-0 text-sm leading-8 text-slate-300">
@@ -123,7 +129,11 @@ function LoginFormContent() {
                   </div>
                 ) : null}
 
-                <TaavFieldBlock label="ایمیل یا شماره موبایل" required htmlFor="login-identifier">
+                <TaavFieldBlock
+                  label={<AiLabLabelWithTooltip label="ایمیل یا شماره موبایل" tooltip={AI_LAB_TOOLTIPS.auth.identifier} required />}
+                  required
+                  htmlFor="login-identifier"
+                >
                   <TaavInput
                     id="login-identifier"
                     type={identifierType === 'email' ? 'email' : 'text'}
@@ -139,7 +149,11 @@ function LoginFormContent() {
                   />
                 </TaavFieldBlock>
 
-                <TaavFieldBlock label="رمز عبور" required htmlFor="login-password">
+                <TaavFieldBlock
+                  label={<AiLabLabelWithTooltip label="رمز عبور" tooltip={AI_LAB_TOOLTIPS.auth.password} required />}
+                  required
+                  htmlFor="login-password"
+                >
                   <TaavInput
                     id="login-password"
                     type="password"
@@ -173,7 +187,7 @@ function LoginFormContent() {
 
 export function LoginForm() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[radial-gradient(circle_at_top,#10253a,transparent_36%),linear-gradient(135deg,#07121f,#0d1726_60%,#07101a)]" />}>
+    <Suspense fallback={<div className="ai-lab-auth-screen min-h-screen" />}>
       <LoginFormContent />
     </Suspense>
   );

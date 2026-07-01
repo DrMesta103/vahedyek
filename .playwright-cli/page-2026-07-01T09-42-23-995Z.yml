@@ -1,0 +1,157 @@
+- generic:
+  - button "Open Next.js Dev Tools" [ref=f2e143] [cursor=pointer]:
+    - img [ref=f2e144]
+  - alert
+  - generic:
+    - generic:
+      - generic:
+        - navigation:
+          - list:
+            - listitem:
+              - link:
+                - /url: /businesses
+                - generic: خانه
+            - listitem:
+              - generic:
+                - img
+            - listitem:
+              - link:
+                - /url: /businesses
+                - generic: کسب‌وکارها
+            - listitem:
+              - generic:
+                - img
+            - listitem:
+              - generic: ایجاد کسب‌وکار
+    - generic:
+      - complementary:
+        - generic:
+          - generic: A
+          - generic:
+            - generic: Admin Local
+            - generic: admin@local.dev
+        - generic:
+          - generic: TAAV
+          - generic:
+            - generic: آزمایشگاه
+            - generic: آزمایشگاه هوش مصنوعی تاو
+          - button:
+            - img
+        - generic:
+          - button:
+            - generic:
+              - img
+          - link:
+            - /url: /businesses
+            - generic:
+              - img
+          - link:
+            - /url: /businesses
+            - generic:
+              - img
+          - link:
+            - /url: /businesses
+            - generic:
+              - img
+          - link:
+            - /url: /businesses
+            - generic:
+              - img
+        - navigation:
+          - generic:
+            - generic:
+              - img
+            - generic: ابزارهای هوش مصنوعی
+          - generic:
+            - generic:
+              - img
+            - generic: OCR
+          - generic:
+            - generic:
+              - img
+            - generic: محصولات
+          - link:
+            - /url: /businesses
+            - generic:
+              - img
+            - generic: کسب‌وکارها
+          - link:
+            - /url: /businesses/new
+            - generic:
+              - img
+            - generic: ایجاد کسب‌وکار
+          - link:
+            - /url: /settings
+            - generic:
+              - img
+            - generic: تنظیمات کسب‌وکار
+        - button:
+          - paragraph: tenant غیرفعال
+          - button: آزمایشگاه
+        - generic:
+          - generic:
+            - button [expanded]:
+              - img
+          - generic: فاز ۱
+  - dialog "ثبت کسب‌وکار جدید" [ref=f2e149]:
+    - generic [ref=f2e150]:
+      - heading "ثبت کسب‌وکار جدید" [level=2] [ref=f2e151]
+      - paragraph [ref=f2e152]: اطلاعات اولیه tenant جدید را وارد کنید. اگر برای لوگو فایل تصویر انتخاب کنید، پیش‌نمایش آن همین‌جا نمایش داده می‌شود.
+    - generic [ref=f2e153]:
+      - generic [ref=f2e154]:
+        - generic [ref=f2e155]:
+          - generic [ref=f2e157]:
+            - generic [ref=f2e158]: نام کسب‌وکار
+            - generic [ref=f2e159]: "*"
+            - button "راهنمای نام کسب‌وکار" [active] [ref=f2e161]:
+              - img [ref=f2e162]
+          - generic [ref=f2e165]:
+            - generic [ref=f2e166]: "*"
+            - generic [ref=f2e167]: الزامی
+        - textbox "نام کسب‌وکار * راهنمای نام کسب‌وکار الزامی" [ref=f2e170]:
+          - /placeholder: "مثال: بازرگانی فراتک"
+      - generic [ref=f2e171]:
+        - generic [ref=f2e174]:
+          - generic [ref=f2e175]: لوگوی کسب‌وکار
+          - button "راهنمای لوگوی کسب‌وکار" [ref=f2e177]:
+            - img [ref=f2e178]
+        - generic [ref=f2e182]:
+          - generic [ref=f2e183]:
+            - button "Choose File" [ref=f2e184]
+            - button "انتخاب عکس لوگو" [ref=f2e185]:
+              - generic [ref=f2e186]:
+                - img
+              - generic [ref=f2e187]: انتخاب عکس لوگو
+          - generic [ref=f2e189]:
+            - img [ref=f2e190]
+            - generic [ref=f2e194]:
+              - strong [ref=f2e195]: هنوز لوگویی انتخاب نشده
+              - generic [ref=f2e196]: PNG، JPG، WEBP یا SVG را انتخاب کنید.
+        - paragraph [ref=f2e197]: یک فایل تصویری واقعی انتخاب کنید تا همان‌جا پیش‌نمایش آن را ببینید و در فرم ذخیره شود.
+      - generic [ref=f2e198]:
+        - generic [ref=f2e199]:
+          - generic [ref=f2e201]:
+            - generic [ref=f2e202]: سقف کل توکن
+            - generic [ref=f2e203]: "*"
+            - button "راهنمای سقف کل توکن" [ref=f2e205]:
+              - img [ref=f2e206]
+          - generic [ref=f2e209]:
+            - generic [ref=f2e210]: "*"
+            - generic [ref=f2e211]: الزامی
+        - spinbutton "سقف کل توکن * راهنمای سقف کل توکن الزامی" [ref=f2e214]: "250000"
+      - generic [ref=f2e215]:
+        - button "انصراف" [ref=f2e216]:
+          - generic [ref=f2e217]: انصراف
+        - button "ثبت کسب‌وکار" [ref=f2e218]:
+          - generic [ref=f2e219]: ثبت کسب‌وکار
+    - button "بستن" [ref=f2e220]:
+      - img [ref=f2e221]
+  - generic [ref=f2e223]:
+    - generic [ref=f2e224]:
+      - generic [ref=f2e225]: نام نمایشی tenant در لیست و sidebar.
+      - generic [ref=f2e226]: "مثال: بازرگانی فراتک"
+    - img [ref=f2e228]
+    - 'tooltip "نام نمایشی tenant در لیست و sidebar. مثال: بازرگانی فراتک" [ref=f2e230]':
+      - generic [ref=f2e231]:
+        - generic [ref=f2e232]: نام نمایشی tenant در لیست و sidebar.
+        - generic [ref=f2e233]: "مثال: بازرگانی فراتک"

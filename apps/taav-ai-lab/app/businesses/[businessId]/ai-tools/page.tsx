@@ -1,8 +1,8 @@
-import Link from 'next/link';
 import { ArrowLeft, FileSearch, ScanSearch } from 'lucide-react';
-import { TaavBadge, TaavButton, TaavCard } from '@repo/ui/taav/primitives';
+import { AI_LAB_TOOLTIPS } from '@/app/lib/tooltips';
 import { getTenantForUser } from '@/app/lib/data';
 import { getCurrentTenant, requireSession } from '@/app/lib/session';
+import { AiLabFeatureCard } from '@/components/AiLabFeatureCard';
 import { AiLabPage, AiLabSectionCard } from '@/components/AiLabPage';
 import { AiLabShell } from '@/components/AiLabShell';
 
@@ -41,47 +41,27 @@ export default async function AiToolsPage({ params }: { params: Promise<{ busine
         title={`${business.name} · ابزارهای هوش مصنوعی`}
         description="در فاز ۱ فقط OCR / Document AI فعال است و سایر ابزارها به‌عنوان نقشه‌ی راه نمایش داده می‌شوند."
         badge="تمرکز فاز ۱"
+        titleTooltip={AI_LAB_TOOLTIPS.nav['ai-tools']}
       >
-        <AiLabSectionCard title="ابزارهای موجود" description="از کارت فعال وارد شبیه‌ساز OCR شوید.">
+        <AiLabSectionCard title="ابزارهای موجود" description="از کارت فعال وارد شبیه‌ساز OCR شوید." titleTooltip={AI_LAB_TOOLTIPS.aiTools.ocr}>
           <div className="ai-lab-card-grid">
-            <TaavCard variant="outlined" padding="md" radius="xl">
-              <div className="grid gap-4">
-                <div className="flex items-center justify-between gap-3">
-                  <FileSearch className="h-5 w-5 text-[var(--taav-brand-strong)]" />
-                  <TaavBadge tone="brand" variant="soft">فعال</TaavBadge>
-                </div>
-                <div>
-                  <h2 className="m-0 text-[length:var(--taav-text-lg)] font-black text-[var(--taav-text-strong)]">
-                    OCR / Document AI
-                  </h2>
-                  <p className="mt-2 text-[length:var(--taav-text-sm)] text-[var(--taav-text-muted)]">
-                    نقطه ورود برای تست دریافت سند، اعتبارسنجی استخراج، مشاهده خروجی و سناریوهای آینده OCR.
-                  </p>
-                </div>
-                <Link href={`/businesses/${business.id}/ai-tools/ocr`}>
-                  <TaavButton width="full" iconStart={<ArrowLeft className="h-4 w-4" />}>
-                    ورود به شبیه‌ساز OCR
-                  </TaavButton>
-                </Link>
-              </div>
-            </TaavCard>
-
-            <TaavCard variant="soft" padding="md" radius="xl">
-              <div className="grid gap-4">
-                <div className="flex items-center justify-between gap-3">
-                  <ScanSearch className="h-5 w-5 text-[var(--taav-text-subtle)]" />
-                  <TaavBadge tone="neutral" variant="soft">به‌زودی</TaavBadge>
-                </div>
-                <div>
-                  <h2 className="m-0 text-[length:var(--taav-text-lg)] font-black text-[var(--taav-text-strong)]">
-                    ابزارهای بعدی
-                  </h2>
-                  <p className="mt-2 text-[length:var(--taav-text-sm)] text-[var(--taav-text-muted)]">
-                    در مراحل بعد، ابزارهای دیگری مثل طبقه‌بندی، خلاصه‌سازی و agentهای عملیاتی به این بخش اضافه می‌شوند.
-                  </p>
-                </div>
-              </div>
-            </TaavCard>
+            <AiLabFeatureCard
+              icon={<FileSearch className="h-5 w-5 text-[var(--taav-brand-strong)]" />}
+              title="OCR / Document AI"
+              description="نقطه ورود برای تست دریافت سند، اعتبارسنجی استخراج، مشاهده خروجی و سناریوهای آینده OCR."
+              tooltip={AI_LAB_TOOLTIPS.aiTools.ocr}
+              badge={{ label: 'فعال', tone: 'brand' }}
+              href={`/businesses/${business.id}/ai-tools/ocr`}
+              buttonLabel="ورود به شبیه‌ساز OCR"
+            />
+            <AiLabFeatureCard
+              icon={<ScanSearch className="h-5 w-5 text-[var(--taav-text-subtle)]" />}
+              title="ابزارهای بعدی"
+              description="در مراحل بعد، ابزارهای دیگری مثل طبقه‌بندی، خلاصه‌سازی و agentهای عملیاتی به این بخش اضافه می‌شوند."
+              tooltip={AI_LAB_TOOLTIPS.aiTools.future}
+              badge={{ label: 'به‌زودی', tone: 'neutral' }}
+              variant="soft"
+            />
           </div>
         </AiLabSectionCard>
       </AiLabPage>

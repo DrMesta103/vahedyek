@@ -54,18 +54,24 @@ export {
   getTaaviaBrandsForTenant,
   getTaaviaBrandForTenant,
   createTaaviaBrandForTenant,
+  updateTaaviaBrandForTenant,
+  deleteTaaviaBrandForTenant,
 } from './repositories/taavia-brands';
 
 export {
   getAdminAgentConversation,
   getOrCreateAdminAgentConversation,
+  getAdminAgentSetupState,
   addAdminAgentUserMessage,
+  updateAdminAgentSetupState,
   sendAdminAgentMessage,
 } from './repositories/conversations';
 
 export {
   getGlobalSettings,
+  createModelSettings,
   updateUsdToToman,
   updateModelPrice,
+  updateModelSettings,
   verifyPlatformAdmin,
 } from './repositories/global-settings';

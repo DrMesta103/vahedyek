@@ -51,6 +51,27 @@ export type TaaviaBrand = {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  intake?: {
+    description?: string;
+    iconName?: string;
+    iconDataUrl?: string;
+  };
+};
+
+export type TaaviaUseCaseKey =
+  | 'support'
+  | 'sales'
+  | 'marketing'
+  | 'operations'
+  | 'finance'
+  | 'hr'
+  | 'product'
+  | 'management'
+  | 'it'
+  | 'all';
+
+export type TaaviaBrandSetup = {
+  selectedUseCases: TaaviaUseCaseKey[];
 };
 
 export type OcrSimulationJob = {
@@ -107,6 +128,15 @@ export type CreateTenantInput = {
 export type CreateTaaviaBrandInput = {
   tenantId: string;
   name: string;
+  intake?: {
+    description?: string;
+    iconName?: string;
+    iconDataUrl?: string;
+  };
+};
+
+export type UpdateTaaviaBrandInput = CreateTaaviaBrandInput & {
+  brandId: string;
 };
 
 export type CreateOcrSimulationInput = {
@@ -126,5 +156,6 @@ export type TaaviaChatMessage = {
   role: 'system' | 'assistant' | 'user';
   content: string;
   status: string;
+  metadata?: Record<string, unknown> | null;
   createdAt: string;
 };

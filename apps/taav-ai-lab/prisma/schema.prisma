@@ -167,6 +167,7 @@ model AiPricingModel {
   name                 String
   category             String
   pricePer100TokensUsd Decimal  @db.Decimal(10, 4)
+  relatedModelIds      String[] @default([])
   isActive             Boolean  @default(true)
   updatedAt            DateTime @updatedAt
 }

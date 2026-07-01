@@ -1,10 +1,12 @@
 import Link from 'next/link';
 import { ArrowLeft, BarChart3, Building2, Headphones } from 'lucide-react';
-import { TaavBadge, TaavButton, TaavCard } from '@repo/ui/taav/primitives';
+import { AI_LAB_TOOLTIPS } from '@/app/lib/tooltips';
 import { getTenantForUser } from '@/app/lib/data';
 import { getCurrentTenant, requireSession } from '@/app/lib/session';
+import { AiLabFeatureCard } from '@/components/AiLabFeatureCard';
 import { AiLabPage, AiLabSectionCard } from '@/components/AiLabPage';
 import { AiLabShell } from '@/components/AiLabShell';
+import { TaavButton } from '@repo/ui/taav/primitives';
 
 export default async function TaaviaPage({ params }: { params: Promise<{ businessId: string }> }) {
   const session = await requireSession();
@@ -41,6 +43,7 @@ export default async function TaaviaPage({ params }: { params: Promise<{ busines
         title="تاویا"
         description="مدیریت برندها، نالج‌بیس و چت‌بات‌های پشتیبانی هوشمند"
         badge="فعال"
+        titleTooltip={AI_LAB_TOOLTIPS.products.taavia}
       >
         <div className="mb-4">
           <Link href={`/businesses/${business.id}/products`}>
@@ -50,69 +53,47 @@ export default async function TaaviaPage({ params }: { params: Promise<{ busines
           </Link>
         </div>
 
-        <AiLabSectionCard title="بخش‌های تاویا" description="از اینجا وارد مدیریت برندها، گزارشات یا اپراتورها شوید.">
-          <div className="ai-lab-card-grid">
-            <TaavCard variant="outlined" padding="md" radius="xl">
-              <div className="grid gap-4">
-                <div className="flex items-center justify-between gap-3">
-                  <Building2 className="h-5 w-5 text-[var(--taav-brand-strong)]" />
-                  <TaavBadge tone="brand" variant="soft">فعال</TaavBadge>
-                </div>
-                <div>
-                  <h2 className="m-0 text-[length:var(--taav-text-lg)] font-black text-[var(--taav-text-strong)]">برندها</h2>
-                  <p className="mt-2 text-[length:var(--taav-text-sm)] text-[var(--taav-text-muted)]">
-                    ایجاد و مدیریت برندها و ورود به ایجنت مدیریت برند
-                  </p>
-                </div>
-                <Link href={`/businesses/${business.id}/products/taavia/brands`}>
-                  <TaavButton width="full" iconStart={<ArrowLeft className="h-4 w-4" />}>
-                    ورود به برندها
-                  </TaavButton>
-                </Link>
-              </div>
-            </TaavCard>
-
-            <TaavCard variant="soft" padding="md" radius="xl">
-              <div className="grid gap-4">
-                <div className="flex items-center justify-between gap-3">
-                  <BarChart3 className="h-5 w-5 text-[var(--taav-text-subtle)]" />
-                  <TaavBadge tone="neutral" variant="soft">به‌زودی</TaavBadge>
-                </div>
-                <div>
-                  <h2 className="m-0 text-[length:var(--taav-text-lg)] font-black text-[var(--taav-text-strong)]">گزارشات</h2>
-                  <p className="mt-2 text-[length:var(--taav-text-sm)] text-[var(--taav-text-muted)]">
-                    گزارش‌های عملکرد چت‌بات‌ها و تحلیل مکالمات
-                  </p>
-                </div>
-                <Link href={`/businesses/${business.id}/products/taavia/reports`}>
-                  <TaavButton width="full" variant="secondary" iconStart={<ArrowLeft className="h-4 w-4" />}>
-                    مشاهده placeholder
-                  </TaavButton>
-                </Link>
-              </div>
-            </TaavCard>
-
-            <TaavCard variant="soft" padding="md" radius="xl">
-              <div className="grid gap-4">
-                <div className="flex items-center justify-between gap-3">
-                  <Headphones className="h-5 w-5 text-[var(--taav-text-subtle)]" />
-                  <TaavBadge tone="neutral" variant="soft">به‌زودی</TaavBadge>
-                </div>
-                <div>
-                  <h2 className="m-0 text-[length:var(--taav-text-lg)] font-black text-[var(--taav-text-strong)]">اپراتورها</h2>
-                  <p className="mt-2 text-[length:var(--taav-text-sm)] text-[var(--taav-text-muted)]">
-                    مدیریت اپراتورهای انسانی و هم‌افزایی با چت‌بات
-                  </p>
-                </div>
-                <Link href={`/businesses/${business.id}/products/taavia/operators`}>
-                  <TaavButton width="full" variant="secondary" iconStart={<ArrowLeft className="h-4 w-4" />}>
-                    مشاهده placeholder
-                  </TaavButton>
-                </Link>
-              </div>
-            </TaavCard>
-          </div>
-        </AiLabSectionCard>
+        <div className="taavia-sections-shell">
+          <AiLabSectionCard
+            title="بخش‌های تاویا"
+            description="از اینجا وارد مدیریت برندها، گزارش‌ها یا اپراتورها شوید."
+            titleTooltip={AI_LAB_TOOLTIPS.products.brands}
+          >
+            <div className="ai-lab-card-grid taavia-section-grid">
+            <AiLabFeatureCard
+              icon={<Building2 className="h-5 w-5 text-[var(--taav-brand-strong)]" />}
+              title="برندها"
+              description="ایجاد و مدیریت برندها و ورود به ایجنت مدیریت برند"
+              tooltip={AI_LAB_TOOLTIPS.products.brands}
+              badge={{ label: 'فعال', tone: 'brand' }}
+              href={`/businesses/${business.id}/products/taavia/brands`}
+              buttonLabel="ورود"
+            />
+            <AiLabFeatureCard
+              icon={<BarChart3 className="h-5 w-5 text-[var(--taav-text-subtle)]" />}
+              title="گزارش‌ها"
+              description="گزارش عملکرد چت‌بات‌ها و تحلیل مکالمات"
+              tooltip={AI_LAB_TOOLTIPS.products.reports}
+              badge={{ label: 'به‌زودی', tone: 'neutral' }}
+              href={`/businesses/${business.id}/products/taavia/reports`}
+              buttonLabel="مشاهده"
+              buttonVariant="secondary"
+              variant="soft"
+            />
+            <AiLabFeatureCard
+              icon={<Headphones className="h-5 w-5 text-[var(--taav-text-subtle)]" />}
+              title="اپراتورها"
+              description="مدیریت اپراتورهای انسانی و هم‌افزایی با چت‌بات"
+              tooltip={AI_LAB_TOOLTIPS.products.operators}
+              badge={{ label: 'به‌زودی', tone: 'neutral' }}
+              href={`/businesses/${business.id}/products/taavia/operators`}
+              buttonLabel="مشاهده"
+              buttonVariant="secondary"
+              variant="soft"
+            />
+            </div>
+          </AiLabSectionCard>
+        </div>
       </AiLabPage>
     </AiLabShell>
   );

@@ -184,7 +184,7 @@ export function AiLabShell({
       version="فاز ۱"
       variant="dastranj"
       placement="right"
-      width="default"
+      width="wide"
       navPath={navPath}
       showNavPath
       onNavigate={(item) => {

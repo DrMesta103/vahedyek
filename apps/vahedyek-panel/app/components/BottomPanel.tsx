@@ -9,10 +9,10 @@ export default function BottomPanel() {
           <span className="text-white font-bold text-lg">6.6.88</span>
         </div>
         <button className="bg-white text-green-600 px-6 py-2 rounded-[8px] font-medium hover:bg-gray-50 transition-colors">
-          ???? ????????????
+          بازگشت به بالا
         </button>
         <div className="text-white text-sm">
-          ????? ?? ????? ? ????? ?? ??? ?????
+          نسخه جاری 6.6.88 آماده استفاده است
         </div>
       </div>
     </div>

@@ -1,0 +1,195 @@
+- generic [active] [ref=f13e1]:
+  - button [ref=f13e3]:
+    - generic [ref=f13e4]:
+      - img
+  - generic [ref=f13e5]:
+    - generic [ref=f13e6]:
+      - navigation "مسیر صفحه" [ref=f13e8]:
+        - list [ref=f13e9]:
+          - listitem [ref=f13e10]:
+            - link "خانه" [ref=f13e11] [cursor=pointer]:
+              - /url: /businesses
+              - generic [ref=f13e12]: خانه
+          - listitem [ref=f13e13]:
+            - img [ref=f13e15]
+          - listitem [ref=f13e17]:
+            - link "کسب‌وکارها" [ref=f13e18] [cursor=pointer]:
+              - /url: /businesses
+              - generic [ref=f13e19]: کسب‌وکارها
+          - listitem [ref=f13e20]:
+            - img [ref=f13e22]
+          - listitem [ref=f13e24]:
+            - link "AI Lab QA Studio" [ref=f13e25] [cursor=pointer]:
+              - /url: /businesses/cmr1w16d50001oydowsb1yyei
+              - generic [ref=f13e26]: AI Lab QA Studio
+          - listitem [ref=f13e27]:
+            - img [ref=f13e29]
+          - listitem [ref=f13e31]:
+            - generic [ref=f13e32]: کسب‌وکارها
+      - generic [ref=f13e36]:
+        - banner [ref=f13e37]:
+          - generic [ref=f13e38]:
+            - generic [ref=f13e39]:
+              - img [ref=f13e41]
+              - generic [ref=f13e43]: محصولات
+            - generic [ref=f13e45]:
+              - generic [ref=f13e46]:
+                - heading "AI Lab QA Studio · محصولات" [level=1] [ref=f13e47]
+                - generic [ref=f13e49]: کاتالوگ
+              - paragraph [ref=f13e50]: محصولات هوش مصنوعی تاو برای شبیه‌سازی و مدیریت قابلیت‌های کسب‌وکار.
+        - generic [ref=f13e51]:
+          - generic [ref=f13e53]:
+            - strong [ref=f13e54]: محصولات موجود
+            - generic [ref=f13e55]: یک محصول را انتخاب کنید تا وارد فضای کاری آن شوید.
+          - generic [ref=f13e57]:
+            - button "باز کردن جزئیات تاویا" [ref=f13e58] [cursor=pointer]:
+              - generic [ref=f13e60]:
+                - generic [ref=f13e61]:
+                  - img [ref=f13e63]
+                  - generic [ref=f13e67]: فعال
+                - generic [ref=f13e68]:
+                  - heading "تاویا" [level=2] [ref=f13e69]
+                  - paragraph [ref=f13e70]: دستیار هوشمند برای جمع‌آوری داده‌های موردنیاز برند و آماده‌سازی مسیرهای بعدی گفت‌وگو و عملیات.
+                - generic [ref=f13e71]:
+                  - generic [ref=f13e72]: مشاهده جزئیات
+                  - generic [ref=f13e73]: ‹
+            - generic [ref=f13e76]:
+              - generic [ref=f13e77]:
+                - img [ref=f13e78]
+                - generic [ref=f13e83]: به زودی
+              - generic [ref=f13e84]:
+                - heading "واحد یک" [level=2] [ref=f13e85]
+                - paragraph [ref=f13e86]: راهکار آینده برای مدیریت جریان‌های عملیاتی و داده‌های کسب‌وکار.
+              - generic [ref=f13e87]: در نوبت انتشار
+            - generic [ref=f13e90]:
+              - generic [ref=f13e91]:
+                - img [ref=f13e92]
+                - generic [ref=f13e96]: به زودی
+              - generic [ref=f13e97]:
+                - heading "دسترنج" [level=2] [ref=f13e98]
+                - paragraph [ref=f13e99]: محصولی برای فلوهای منابع انسانی، درخواست‌ها و عملیات سازمانی.
+              - generic [ref=f13e100]: در نوبت انتشار
+            - generic [ref=f13e103]:
+              - generic [ref=f13e104]:
+                - img [ref=f13e105]
+                - generic [ref=f13e109]: به زودی
+              - generic [ref=f13e110]:
+                - heading "دیوان" [level=2] [ref=f13e111]
+                - paragraph [ref=f13e112]: فضای بعدی برای مدیریت اسناد، پرونده‌ها و گردش‌های اداری.
+              - generic [ref=f13e113]: در نوبت انتشار
+            - generic [ref=f13e116]:
+              - generic [ref=f13e117]:
+                - img [ref=f13e118]
+                - generic [ref=f13e124]: به زودی
+              - generic [ref=f13e125]:
+                - heading "سامانه استخدام و ارزیابی" [level=2] [ref=f13e126]
+                - paragraph [ref=f13e127]: برای جذب، ارزیابی و پیگیری مسیر استخدام نیروها.
+              - generic [ref=f13e128]: در نوبت انتشار
+            - generic [ref=f13e131]:
+              - generic [ref=f13e132]:
+                - img [ref=f13e133]
+                - generic [ref=f13e138]: به زودی
+              - generic [ref=f13e139]:
+                - heading "درخواست خرید" [level=2] [ref=f13e140]
+                - paragraph [ref=f13e141]: برای ثبت، بررسی و تأیید درخواست‌های خرید داخلی.
+              - generic [ref=f13e142]: در نوبت انتشار
+            - generic [ref=f13e145]:
+              - generic [ref=f13e146]:
+                - img [ref=f13e147]
+                - generic [ref=f13e150]: به زودی
+              - generic [ref=f13e151]:
+                - heading "منشی" [level=2] [ref=f13e152]
+                - paragraph [ref=f13e153]: دستیار ارتباطی و پاسخ‌گویی برای مدیریت پیام‌ها و هماهنگی‌ها.
+              - generic [ref=f13e154]: در نوبت انتشار
+            - generic [ref=f13e157]:
+              - generic [ref=f13e158]:
+                - img [ref=f13e159]
+                - generic [ref=f13e162]: به زودی
+              - generic [ref=f13e163]:
+                - heading "قرارملاقات" [level=2] [ref=f13e164]
+                - paragraph [ref=f13e165]: ابزار زمان‌بندی و مدیریت جلسه‌ها و ملاقات‌ها.
+              - generic [ref=f13e166]: در نوبت انتشار
+            - generic [ref=f13e169]:
+              - generic [ref=f13e170]:
+                - img [ref=f13e171]
+                - generic [ref=f13e174]: به زودی
+              - generic [ref=f13e175]:
+                - heading "کندو" [level=2] [ref=f13e176]
+                - paragraph [ref=f13e177]: مرکز تجمیع و سازمان‌دهی داده‌ها و بسته‌های کاری.
+              - generic [ref=f13e178]: در نوبت انتشار
+            - generic [ref=f13e181]:
+              - generic [ref=f13e182]:
+                - img [ref=f13e183]
+                - generic [ref=f13e189]: به زودی
+              - generic [ref=f13e190]:
+                - heading "اکسپو" [level=2] [ref=f13e191]
+                - paragraph [ref=f13e192]: نمایشگاه محصول و ویترین ارائه‌ی سرویس‌ها و قابلیت‌ها.
+              - generic [ref=f13e193]: در نوبت انتشار
+            - generic [ref=f13e196]:
+              - generic [ref=f13e197]:
+                - img [ref=f13e198]
+                - generic [ref=f13e202]: به زودی
+              - generic [ref=f13e203]:
+                - heading "یوز" [level=2] [ref=f13e204]
+                - paragraph [ref=f13e205]: ابزار جست‌وجو و کشف سریع اطلاعات در فلوهای کاری.
+              - generic [ref=f13e206]: در نوبت انتشار
+    - complementary [ref=f13e208]:
+      - generic [ref=f13e209]:
+        - generic [ref=f13e210]: A
+        - generic [ref=f13e211]:
+          - generic [ref=f13e212]: Admin Local
+          - generic [ref=f13e213]: admin@local.dev
+      - generic [ref=f13e214]:
+        - generic [ref=f13e215]: TAAV
+        - generic [ref=f13e216]:
+          - generic [ref=f13e217]: AI Lab QA Studio
+          - generic [ref=f13e218]: آزمایشگاه هوش مصنوعی تاو
+        - button "تغییر کسب و کار" [ref=f13e219]:
+          - img [ref=f13e220]
+      - generic [ref=f13e222]:
+        - button "خروج" [ref=f13e223]:
+          - img [ref=f13e225]
+        - link "داشبورد" [ref=f13e228] [cursor=pointer]:
+          - /url: /businesses/cmr1w16d50001oydowsb1yyei
+          - img [ref=f13e230]
+        - link "کسب‌وکارها" [ref=f13e233] [cursor=pointer]:
+          - /url: /businesses
+          - img [ref=f13e235]
+        - link "ابزارهای هوش مصنوعی" [ref=f13e239] [cursor=pointer]:
+          - /url: /businesses/cmr1w16d50001oydowsb1yyei/ai-tools
+          - img [ref=f13e241]
+        - link "محصولات" [ref=f13e244] [cursor=pointer]:
+          - /url: /businesses/cmr1w16d50001oydowsb1yyei/products
+          - img [ref=f13e246]
+      - navigation "منوی اصلی" [ref=f13e256]:
+        - link "ابزارهای هوش مصنوعی" [ref=f13e257] [cursor=pointer]:
+          - /url: /businesses/cmr1w16d50001oydowsb1yyei/ai-tools
+          - img [ref=f13e259]
+          - generic [ref=f13e262]: ابزارهای هوش مصنوعی
+        - link "OCR" [ref=f13e263] [cursor=pointer]:
+          - /url: /businesses/cmr1w16d50001oydowsb1yyei/ai-tools/ocr
+          - img [ref=f13e265]
+          - generic [ref=f13e270]: OCR
+        - link "محصولات" [ref=f13e271] [cursor=pointer]:
+          - /url: /businesses/cmr1w16d50001oydowsb1yyei/products
+          - img [ref=f13e273]
+          - generic [ref=f13e283]: محصولات
+        - link "کسب‌وکارها" [ref=f13e284] [cursor=pointer]:
+          - /url: /businesses
+          - img [ref=f13e286]
+          - generic [ref=f13e290]: کسب‌وکارها
+        - link "ایجاد کسب‌وکار" [ref=f13e291] [cursor=pointer]:
+          - /url: /businesses/new
+          - img [ref=f13e293]
+          - generic [ref=f13e295]: ایجاد کسب‌وکار
+        - link "تنظیمات کسب‌وکار" [ref=f13e296] [cursor=pointer]:
+          - /url: /settings
+          - img [ref=f13e298]
+          - generic [ref=f13e301]: تنظیمات کسب‌وکار
+      - button "tenant فعال AI Lab QA Studio" [ref=f13e302] [cursor=pointer]:
+        - paragraph [ref=f13e303]: tenant فعال
+        - button "AI Lab QA Studio" [ref=f13e304]
+      - generic [ref=f13e305]:
+        - button "جمع کردن سایدبار" [expanded] [ref=f13e307]:
+          - img [ref=f13e308]
+        - generic [ref=f13e310]: فاز ۱

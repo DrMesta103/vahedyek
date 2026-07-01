@@ -7,6 +7,8 @@ import { FlaskConical, LockKeyhole, Mail, Smartphone, UserRound } from 'lucide-r
 import { TaavBadge, TaavButton, TaavCard } from '@repo/ui/taav/primitives';
 import { TaavFieldBlock, TaavInput } from '@repo/ui/taav/forms';
 import { parseAuthIdentifier, sanitizeIranMobileInput } from '@/app/lib/contact';
+import { AI_LAB_TOOLTIPS } from '@/app/lib/tooltips';
+import { AiLabLabelWithTooltip, AiLabTooltipIcon } from '@/components/AiLabTooltip';
 
 async function readJsonResponse(response: Response) {
   const contentType = response.headers.get('content-type') ?? '';
@@ -80,22 +82,25 @@ export function RegisterForm() {
   };
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,#10253a,transparent_36%),linear-gradient(135deg,#07121f,#0d1726_60%,#07101a)] px-4 py-6 text-right text-slate-100 sm:px-6 lg:px-8">
+    <div className="ai-lab-auth-screen px-4 py-6 text-right sm:px-6 lg:px-8">
       <div className="mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-5xl items-center justify-center">
         <TaavCard
           variant="outlined"
           padding="lg"
           radius="xl"
-          wrapperClassName="w-full border-white/10 bg-[rgba(8,14,25,0.78)] shadow-[0_24px_120px_rgba(0,0,0,0.45)] backdrop-blur-xl"
+          wrapperClassName="ai-lab-auth-card-shell w-full backdrop-blur-xl"
         >
           <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
-            <div className="grid gap-4 rounded-3xl border border-white/6 bg-white/4 p-6">
+            <div className="ai-lab-auth-hero grid gap-4 rounded-3xl p-6">
               <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-400/25 bg-cyan-400/10 text-cyan-200">
                 <FlaskConical className="h-7 w-7" />
               </div>
               <div className="grid gap-3">
                 <TaavBadge tone="brand" variant="soft" unsafeClassName="w-fit">
-                  ساخت حساب جدید
+                  <span className="inline-flex items-center gap-1">
+                    ساخت حساب جدید
+                    <AiLabTooltipIcon content={AI_LAB_TOOLTIPS.shell.phaseBadge} label="راهنمای ثبت‌نام" />
+                  </span>
                 </TaavBadge>
                 <h1 className="m-0 text-3xl font-black text-white">ثبت‌نام در آزمایشگاه هوش مصنوعی تاو</h1>
                 <p className="m-0 text-sm leading-8 text-slate-300">
@@ -117,7 +122,11 @@ export function RegisterForm() {
 
               <form className="mt-6 grid gap-4" onSubmit={handleSubmit}>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <TaavFieldBlock label="نام" required htmlFor="register-first-name">
+                  <TaavFieldBlock
+                    label={<AiLabLabelWithTooltip label="نام" tooltip={AI_LAB_TOOLTIPS.auth.firstName} required />}
+                    required
+                    htmlFor="register-first-name"
+                  >
                     <TaavInput
                       id="register-first-name"
                       value={firstName}
@@ -126,7 +135,11 @@ export function RegisterForm() {
                       iconStart={<UserRound className="h-4 w-4" />}
                     />
                   </TaavFieldBlock>
-                  <TaavFieldBlock label="نام خانوادگی" required htmlFor="register-last-name">
+                  <TaavFieldBlock
+                    label={<AiLabLabelWithTooltip label="نام خانوادگی" tooltip={AI_LAB_TOOLTIPS.auth.lastName} required />}
+                    required
+                    htmlFor="register-last-name"
+                  >
                     <TaavInput
                       id="register-last-name"
                       value={lastName}
@@ -137,7 +150,11 @@ export function RegisterForm() {
                   </TaavFieldBlock>
                 </div>
 
-                <TaavFieldBlock label="ایمیل یا شماره موبایل" required htmlFor="register-identifier">
+                <TaavFieldBlock
+                  label={<AiLabLabelWithTooltip label="ایمیل یا شماره موبایل" tooltip={AI_LAB_TOOLTIPS.auth.identifier} required />}
+                  required
+                  htmlFor="register-identifier"
+                >
                   <TaavInput
                     id="register-identifier"
                     type={identifierType === 'email' ? 'email' : 'text'}
@@ -154,7 +171,11 @@ export function RegisterForm() {
                 </TaavFieldBlock>
 
                 {needsSeparateMobile ? (
-                  <TaavFieldBlock label="شماره موبایل" required htmlFor="register-mobile">
+                  <TaavFieldBlock
+                    label={<AiLabLabelWithTooltip label="شماره موبایل" tooltip={AI_LAB_TOOLTIPS.auth.mobile} required />}
+                    required
+                    htmlFor="register-mobile"
+                  >
                     <TaavInput
                       id="register-mobile"
                       value={mobile}
@@ -170,7 +191,11 @@ export function RegisterForm() {
                   </TaavFieldBlock>
                 ) : null}
 
-                <TaavFieldBlock label="رمز عبور" required htmlFor="register-password">
+                <TaavFieldBlock
+                  label={<AiLabLabelWithTooltip label="رمز عبور" tooltip={AI_LAB_TOOLTIPS.auth.password} required />}
+                  required
+                  htmlFor="register-password"
+                >
                   <TaavInput
                     id="register-password"
                     type="password"

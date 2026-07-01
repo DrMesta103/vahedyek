@@ -5,6 +5,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Beaker, Boxes, Building2, Cpu, Home, ScanText, Settings, Sparkles } from 'lucide-react';
 import type { AiLabNavItem } from '@/app/lib/navigation';
+import { AI_LAB_TOOLTIPS } from '@/app/lib/tooltips';
+import { AiLabTooltipWrap } from '@/components/AiLabTooltip';
 
 type OrbitMenuItem = AiLabNavItem & {
   href: string;
@@ -125,22 +127,28 @@ export function OrbitMenu({ items, activeItem }: OrbitMenuProps) {
             const isNeighbor = index === prevIndex || index === nextIndex;
 
             return (
-              <button
+              <AiLabTooltipWrap
                 key={item.id}
-                type="button"
-                className={`ai-lab-orbit-node${isActive ? ' active' : ''}${isNeighbor ? ' neighbor' : ''}`}
-                style={{
-                  left: `${formatOrbitNumber(x)}px`,
-                  top: `${formatOrbitNumber(y)}px`,
-                  transform: `rotate(${formatOrbitNumber(-currentRotation)}rad)`,
-                }}
-                onMouseDown={handleMouseDown}
-                onClick={() => navigateTo(index)}
-                disabled={item.disabled}
+                content={AI_LAB_TOOLTIPS.nav[item.id as keyof typeof AI_LAB_TOOLTIPS.nav] ?? item.label}
+                side="top"
+                align="center"
               >
-                <OrbitIcon iconKey={item.iconKey} />
-                <span className="ai-lab-orbit-node-label">{item.label}</span>
-              </button>
+                <button
+                  type="button"
+                  className={`ai-lab-orbit-node${isActive ? ' active' : ''}${isNeighbor ? ' neighbor' : ''}`}
+                  style={{
+                    left: `${formatOrbitNumber(x)}px`,
+                    top: `${formatOrbitNumber(y)}px`,
+                    transform: `rotate(${formatOrbitNumber(-currentRotation)}rad)`,
+                  }}
+                  onMouseDown={handleMouseDown}
+                  onClick={() => navigateTo(index)}
+                  disabled={item.disabled}
+                >
+                  <OrbitIcon iconKey={item.iconKey} />
+                  <span className="ai-lab-orbit-node-label">{item.label}</span>
+                </button>
+              </AiLabTooltipWrap>
             );
           })}
         </div>

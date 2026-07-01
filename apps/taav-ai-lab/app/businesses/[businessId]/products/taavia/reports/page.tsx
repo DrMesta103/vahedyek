@@ -26,7 +26,11 @@ export default async function TaaviaReportsPlaceholderPage({
         currentTenantId={currentTenant?.id ?? session.activeTenantId ?? null}
         currentTenantName={currentTenant?.name ?? null}
       >
-        <AiLabPage eyebrow="عدم دسترسی" title="این کسب‌وکار برای شما در دسترس نیست" description="از فهرست کسب‌وکارها یکی از tenantهای خودتان را انتخاب کنید." />
+        <AiLabPage
+          eyebrow="عدم دسترسی"
+          title="این کسب‌وکار برای شما در دسترس نیست"
+          description="از فهرست کسب‌وکارها یکی از tenantهای خودتان را انتخاب کنید."
+        />
       </AiLabShell>
     );
   }
@@ -40,7 +44,7 @@ export default async function TaaviaReportsPlaceholderPage({
       currentTenantId={business.id}
       currentTenantName={business.name}
     >
-      <AiLabPage eyebrow="تاویا" title="گزارشات" description="این بخش در فاز بعدی پیاده‌سازی می‌شود.">
+      <AiLabPage eyebrow="تاویا" title="گزارش‌ها" description="این بخش در فاز بعدی فعال می‌شود.">
         <Link href={`/businesses/${business.id}/products/taavia`}>
           <TaavButton variant="secondary" iconStart={<ArrowLeft className="h-4 w-4" />}>
             بازگشت به تاویا
@@ -49,7 +53,7 @@ export default async function TaaviaReportsPlaceholderPage({
         <AiLabSectionCard title="به‌زودی" description="گزارش‌های عملکرد چت‌بات و تحلیل مکالمات هنوز فعال نیست.">
           <TaavCard variant="soft" padding="lg" radius="xl">
             <p className="m-0 text-[length:var(--taav-text-sm)] text-[var(--taav-text-muted)]">
-              این صفحه به‌عنوان placeholder نگه‌داشته شده است.
+              این صفحه به‌عنوان موقت نگه‌داری شده است.
             </p>
           </TaavCard>
         </AiLabSectionCard>

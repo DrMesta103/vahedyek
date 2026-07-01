@@ -1,5 +1,38 @@
 import { CheckCircle2, Clock3, Loader2, TriangleAlert } from 'lucide-react';
 import type { OcrSimulationJob } from '@/app/lib/data';
+import type { OcrFieldReviewStatus, OcrFieldValidationStatus, OcrOverallStatus } from '@/app/lib/ocr-simulator-data';
+
+const OVERALL_STATUS_LABELS: Record<OcrOverallStatus, string> = {
+  completed: 'تکمیل شده',
+  completed_with_review_required: 'تکمیل · نیاز به بازبینی',
+  failed: 'ناموفق',
+  needs_review: 'نیاز به بازبینی',
+};
+
+const VALIDATION_STATUS_LABELS: Record<OcrFieldValidationStatus, string> = {
+  valid: 'معتبر',
+  invalid: 'نامعتبر',
+  missing: 'خالی',
+  not_applicable: 'غیرمرتبط',
+};
+
+const REVIEW_STATUS_LABELS: Record<OcrFieldReviewStatus, string> = {
+  accepted: 'پذیرفته',
+  needs_review: 'نیاز به بازبینی',
+  rejected: 'رد شده',
+};
+
+export function formatOverallStatus(status: string) {
+  return OVERALL_STATUS_LABELS[status as OcrOverallStatus] ?? status.replaceAll('_', ' · ');
+}
+
+export function formatValidationStatus(status: OcrFieldValidationStatus) {
+  return VALIDATION_STATUS_LABELS[status];
+}
+
+export function formatReviewStatus(status: OcrFieldReviewStatus) {
+  return REVIEW_STATUS_LABELS[status];
+}
 
 export function getStatusMeta(status: OcrSimulationJob['status']) {
   switch (status) {
@@ -16,9 +49,11 @@ export function getStatusMeta(status: OcrSimulationJob['status']) {
 
 export function toReadableFileSize(size: number) {
   if (!Number.isFinite(size) || size <= 0) return 'نامشخص';
-  if (size < 1024) return `${size} بایت`;
-  if (size < 1024 * 1024) return `${new Intl.NumberFormat('fa-IR').format(Math.round(size / 1024))} KB`;
-  return `${new Intl.NumberFormat('fa-IR', { maximumFractionDigits: 1 }).format(size / (1024 * 1024))} MB`;
+  if (size < 1024) return `${new Intl.NumberFormat('fa-IR').format(size)} بایت`;
+  if (size < 1024 * 1024) {
+    return `${new Intl.NumberFormat('fa-IR').format(Math.round(size / 1024))} کیلوبایت`;
+  }
+  return `${new Intl.NumberFormat('fa-IR', { maximumFractionDigits: 1 }).format(size / (1024 * 1024))} مگابایت`;
 }
 
 export function getJobProgress(job: OcrSimulationJob, clockTick: number) {

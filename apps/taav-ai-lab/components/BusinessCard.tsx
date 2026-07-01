@@ -11,6 +11,8 @@ import {
   formatTokenRatioLabel,
 } from '@/app/lib/business-utils';
 import type { Tenant } from '@/app/lib/data';
+import { AI_LAB_TOOLTIPS } from '@/app/lib/tooltips';
+import { AiLabSectionLabel, AiLabTooltipIcon } from '@/components/AiLabTooltip';
 import { BusinessLogo } from './BusinessLogo';
 
 function getUsageTone(usedTokens: number, tokenLimit: number) {
@@ -60,6 +62,12 @@ export function BusinessCard({ business }: { business: Tenant }) {
   const packageLabel = formatPackageLabel(business.packageKey, business.billingCycle);
   const activityLabel = formatRelativeActivityLabel(business.lastActivity);
   const statusLabel = usageTone === 'danger' ? 'منقضی شده' : usageTone === 'warning' ? 'نزدیک سقف' : 'فعال';
+  const statusTooltip =
+    usageTone === 'danger'
+      ? AI_LAB_TOOLTIPS.businesses.statusExpired
+      : usageTone === 'warning'
+        ? AI_LAB_TOOLTIPS.businesses.statusWarning
+        : AI_LAB_TOOLTIPS.businesses.statusActive;
   const statusIcon = usageTone === 'danger' ? (
     <ShieldAlert className="h-3.5 w-3.5" />
   ) : (
@@ -128,6 +136,7 @@ export function BusinessCard({ business }: { business: Tenant }) {
                 >
                   {statusLabel}
                 </TaavBadge>
+                <AiLabTooltipIcon content={statusTooltip} label={`راهنمای وضعیت ${statusLabel}`} />
               </div>
               <p className="ai-lab-business-card-lede">فضای کاری OCR، فایل‌ها و گزارش‌های هوش مصنوعی</p>
             </div>
@@ -135,21 +144,24 @@ export function BusinessCard({ business }: { business: Tenant }) {
 
           <div className="ai-lab-business-card-meta">
             <div className="ai-lab-business-card-meta-item">
-              <span>نام بسته</span>
+              <AiLabSectionLabel label="نام بسته" tooltip={AI_LAB_TOOLTIPS.businesses.packageName} />
               <strong>{packageLabel}</strong>
             </div>
             <div className="ai-lab-business-card-meta-item">
-              <span>سقف توکن</span>
+              <AiLabSectionLabel label="سقف توکن" tooltip={AI_LAB_TOOLTIPS.businesses.tokenLimit} />
               <strong>{formatTokenCount(business.tokenLimit)}</strong>
             </div>
             <div className="ai-lab-business-card-meta-item">
-              <span>OCR تست</span>
+              <AiLabSectionLabel label="OCR تست" tooltip={AI_LAB_TOOLTIPS.businesses.ocrTests} />
               <strong>{formatTokenCount(business.ocrTestsCount)}</strong>
             </div>
           </div>
 
           <div className="ai-lab-business-card-footnote">
-            <span>آخرین فعالیت: {activityLabel}</span>
+            <span className="inline-flex items-center gap-1">
+              آخرین فعالیت: {activityLabel}
+              <AiLabTooltipIcon content={AI_LAB_TOOLTIPS.businesses.lastActivity} label="راهنمای آخرین فعالیت" />
+            </span>
             <span className="ai-lab-business-card-enter-hint">
               {entering ? (
                 <>
@@ -167,6 +179,9 @@ export function BusinessCard({ business }: { business: Tenant }) {
         </div>
 
         <div className="ai-lab-business-card-meter-shell">
+          <div className="inline-flex w-full items-start justify-end">
+            <AiLabTooltipIcon content={AI_LAB_TOOLTIPS.businesses.usageMeter} label="راهنمای نمودار مصرف" />
+          </div>
           <UsageMeter usedTokens={business.usedTokens} tokenLimit={business.tokenLimit} />
 
           <TaavBadge tone="neutral" variant="soft" iconStart={<Coins className="h-3.5 w-3.5" />}>

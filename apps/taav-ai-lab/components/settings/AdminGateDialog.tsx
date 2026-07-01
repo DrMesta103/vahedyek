@@ -13,6 +13,8 @@ import {
 import { TaavFieldBlock } from '@repo/ui/taav/forms';
 import { TaavButton } from '@repo/ui/taav/primitives';
 import { TaavInput } from '@repo/ui/taav/forms';
+import { AI_LAB_TOOLTIPS } from '@/app/lib/tooltips';
+import { AiLabLabelWithTooltip } from '@/components/AiLabTooltip';
 
 type AdminGateDialogProps = {
   open: boolean;
@@ -48,7 +50,11 @@ export function AdminGateDialog({ open, error, loading = false, onOpenChange, on
         </TaavDialogHeader>
 
         <div className="grid gap-4 py-2">
-          <TaavFieldBlock label="نام کاربری" required htmlFor="admin-username">
+          <TaavFieldBlock
+            label={<AiLabLabelWithTooltip label="نام کاربری" tooltip={AI_LAB_TOOLTIPS.auth.adminUsername} required />}
+            required
+            htmlFor="admin-username"
+          >
             <TaavInput
               id="admin-username"
               value={username}
@@ -57,7 +63,11 @@ export function AdminGateDialog({ open, error, loading = false, onOpenChange, on
               disabled={loading}
             />
           </TaavFieldBlock>
-          <TaavFieldBlock label="رمز عبور" required htmlFor="admin-password">
+          <TaavFieldBlock
+            label={<AiLabLabelWithTooltip label="رمز عبور" tooltip={AI_LAB_TOOLTIPS.auth.adminPassword} required />}
+            required
+            htmlFor="admin-password"
+          >
             <TaavInput
               id="admin-password"
               type="password"

@@ -1,0 +1,110 @@
+- generic [active] [ref=f2e1]:
+  - button "Open Next.js Dev Tools" [ref=f2e143] [cursor=pointer]:
+    - img [ref=f2e144]
+  - alert [ref=f2e147]
+  - generic [ref=f2e234]:
+    - generic [ref=f2e235]:
+      - navigation "مسیر صفحه" [ref=f2e237]:
+        - list [ref=f2e238]:
+          - listitem [ref=f2e239]:
+            - link "خانه" [ref=f2e240] [cursor=pointer]:
+              - /url: /businesses
+              - generic [ref=f2e241]: خانه
+          - listitem [ref=f2e242]:
+            - img [ref=f2e244]
+          - listitem [ref=f2e246]:
+            - link "کسب‌وکارها" [ref=f2e247] [cursor=pointer]:
+              - /url: /businesses
+              - generic [ref=f2e248]: کسب‌وکارها
+          - listitem [ref=f2e249]:
+            - img [ref=f2e251]
+          - listitem [ref=f2e253]:
+            - link "AI Lab QA Studio" [ref=f2e254] [cursor=pointer]:
+              - /url: /businesses/cmr1w16d50001oydowsb1yyei
+              - generic [ref=f2e255]: AI Lab QA Studio
+          - listitem [ref=f2e256]:
+            - img [ref=f2e258]
+          - listitem [ref=f2e260]:
+            - generic [ref=f2e261]: کسب‌وکارها
+      - generic [ref=f2e266]:
+        - button "داشبورد" [ref=f2e267]:
+          - img [ref=f2e268]
+          - generic: داشبورد
+        - button "ابزارهای هوش مصنوعی" [ref=f2e271]:
+          - img [ref=f2e272]
+          - generic: ابزارهای هوش مصنوعی
+        - button "OCR" [ref=f2e280]:
+          - img [ref=f2e281]
+          - generic: OCR
+        - button "محصولات" [ref=f2e288]:
+          - img [ref=f2e289]
+          - generic: محصولات
+        - button "کسب‌وکارها" [ref=f2e300]:
+          - img [ref=f2e301]
+          - generic: کسب‌وکارها
+        - button "ایجاد کسب‌وکار" [ref=f2e307]:
+          - img [ref=f2e308]
+          - generic: ایجاد کسب‌وکار
+        - button "تنظیمات کسب‌وکار" [ref=f2e311]:
+          - img [ref=f2e312]
+          - generic: تنظیمات کسب‌وکار
+    - complementary [ref=f2e316]:
+      - generic [ref=f2e317]:
+        - generic [ref=f2e318]: A
+        - generic [ref=f2e319]:
+          - generic [ref=f2e320]: Admin Local
+          - generic [ref=f2e321]: admin@local.dev
+      - generic [ref=f2e322]:
+        - generic [ref=f2e323]: TAAV
+        - generic [ref=f2e324]:
+          - generic [ref=f2e325]: AI Lab QA Studio
+          - generic [ref=f2e326]: آزمایشگاه هوش مصنوعی تاو
+        - button "تغییر کسب و کار" [ref=f2e327]:
+          - img [ref=f2e328]
+      - generic [ref=f2e330]:
+        - button "خروج" [ref=f2e331]:
+          - img [ref=f2e333]
+        - link "داشبورد" [ref=f2e336] [cursor=pointer]:
+          - /url: /businesses/cmr1w16d50001oydowsb1yyei
+          - img [ref=f2e338]
+        - link "کسب‌وکارها" [ref=f2e341] [cursor=pointer]:
+          - /url: /businesses
+          - img [ref=f2e343]
+        - link "ابزارهای هوش مصنوعی" [ref=f2e347] [cursor=pointer]:
+          - /url: /businesses/cmr1w16d50001oydowsb1yyei/ai-tools
+          - img [ref=f2e349]
+        - link "محصولات" [ref=f2e352] [cursor=pointer]:
+          - /url: /businesses/cmr1w16d50001oydowsb1yyei/products
+          - img [ref=f2e354]
+      - navigation "منوی اصلی" [ref=f2e364]:
+        - link "ابزارهای هوش مصنوعی" [ref=f2e365] [cursor=pointer]:
+          - /url: /businesses/cmr1w16d50001oydowsb1yyei/ai-tools
+          - img [ref=f2e367]
+          - generic [ref=f2e370]: ابزارهای هوش مصنوعی
+        - link "OCR" [ref=f2e371] [cursor=pointer]:
+          - /url: /businesses/cmr1w16d50001oydowsb1yyei/ai-tools/ocr
+          - img [ref=f2e373]
+          - generic [ref=f2e378]: OCR
+        - link "محصولات" [ref=f2e379] [cursor=pointer]:
+          - /url: /businesses/cmr1w16d50001oydowsb1yyei/products
+          - img [ref=f2e381]
+          - generic [ref=f2e391]: محصولات
+        - link "کسب‌وکارها" [ref=f2e392] [cursor=pointer]:
+          - /url: /businesses
+          - img [ref=f2e394]
+          - generic [ref=f2e398]: کسب‌وکارها
+        - link "ایجاد کسب‌وکار" [ref=f2e399] [cursor=pointer]:
+          - /url: /businesses/new
+          - img [ref=f2e401]
+          - generic [ref=f2e403]: ایجاد کسب‌وکار
+        - link "تنظیمات کسب‌وکار" [ref=f2e404] [cursor=pointer]:
+          - /url: /settings
+          - img [ref=f2e406]
+          - generic [ref=f2e409]: تنظیمات کسب‌وکار
+      - button "tenant فعال AI Lab QA Studio" [ref=f2e410] [cursor=pointer]:
+        - paragraph [ref=f2e411]: tenant فعال
+        - button "AI Lab QA Studio" [ref=f2e412]
+      - generic [ref=f2e413]:
+        - button "جمع کردن سایدبار" [expanded] [ref=f2e415]:
+          - img [ref=f2e416]
+        - generic [ref=f2e418]: فاز ۱

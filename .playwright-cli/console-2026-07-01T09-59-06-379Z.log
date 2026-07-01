@@ -1,0 +1,1308 @@
+[     121ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[     407ms] [LOG] [Fast Refresh] done in 388ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[    1550ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[    1867ms] [LOG] [HMR] connected @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[    2172ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[    7498ms] [LOG] [Fast Refresh] done in 5254ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[    7669ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[    7677ms] [LOG] [Fast Refresh] done in 109ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[    7810ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[    7816ms] [LOG] [Fast Refresh] done in 106ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[    8593ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[    8911ms] [LOG] [HMR] connected @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   13796ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   15276ms] [LOG] [Fast Refresh] done in 1586ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   15445ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   15489ms] [LOG] [Fast Refresh] done in 159ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   15599ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   15682ms] [LOG] [Fast Refresh] done in 188ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   16246ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   16265ms] [LOG] [Fast Refresh] done in 122ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   17531ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   17549ms] [LOG] [Fast Refresh] done in 120ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   22897ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   22898ms] [LOG] [Fast Refresh] done in 104ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   81458ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   81647ms] [LOG] [Fast Refresh] done in 255ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   93693ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   94182ms] [LOG] [Fast Refresh] done in 511ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   94287ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   94315ms] [LOG] [Fast Refresh] done in 132ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   94423ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   94516ms] [LOG] [Fast Refresh] done in 195ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  104370ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  104387ms] [LOG] [Fast Refresh] done in 128ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  113580ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  113672ms] [LOG] [Fast Refresh] done in 174ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  113807ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  113840ms] [LOG] [Fast Refresh] done in 148ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  113993ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  114158ms] [LOG] [Fast Refresh] done in 276ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  122140ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  122209ms] [LOG] [Fast Refresh] done in 168ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  122360ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  122432ms] [LOG] [Fast Refresh] done in 174ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  122639ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  122677ms] [LOG] [Fast Refresh] done in 145ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  123313ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  123361ms] [LOG] [Fast Refresh] done in 151ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  125640ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  126036ms] [LOG] [HMR] connected @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  191543ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  191662ms] [LOG] [Fast Refresh] done in 228ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  192091ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  192124ms] [LOG] [Fast Refresh] done in 142ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  203280ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  204072ms] [ERROR] ./apps/taav-ai-lab/components/TaaviaProductDialog.tsx:50:36
+Expected '</', got 'string literal'
+  48 |
+  49 |       <TaavDialog open={open} onOpenChange={setOpen}>
+> 50 |         <TaavDialogContent size="sm" contentClassName="ai-lab-dialog">
+     |                                    ^^^^^^^^^^^^^^^^^^^^
+  51 |           <TaavDialogHeader>
+  52 |             <TaavDialogTitle className="flex items-center gap-2">
+  53 |               <Bot className="h-5 w-5 text-[var(--taav-brand-strong)]" />
+
+Parsing ecmascript source code failed
+
+Import trace:
+  Server Component:
+    ./apps/taav-ai-lab/components/TaaviaProductDialog.tsx
+    ./apps/taav-ai-lab/app/businesses/[businessId]/products/page.tsx @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[  204175ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  204325ms] [ERROR] ./apps/taav-ai-lab/components/TaaviaProductDialog.tsx:50:36
+Expected '</', got 'string literal'
+  48 |
+  49 |       <TaavDialog open={open} onOpenChange={setOpen}>
+> 50 |         <TaavDialogContent size="sm" contentClassName="ai-lab-dialog">
+     |                                    ^^^^^^^^^^^^^^^^^^^^
+  51 |           <TaavDialogHeader>
+  52 |             <TaavDialogTitle className="flex items-center gap-2">
+  53 |               <Bot className="h-5 w-5 text-[var(--taav-brand-strong)]" />
+
+Parsing ecmascript source code failed
+
+Import trace:
+  Server Component:
+    ./apps/taav-ai-lab/components/TaaviaProductDialog.tsx
+    ./apps/taav-ai-lab/app/businesses/[businessId]/products/page.tsx @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[  204329ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3070/businesses/cmr1w16d50001oydowsb1yyei/products?_rsc=1pnm1:0
+[  204372ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3070/businesses/cmr1w16d50001oydowsb1yyei/products?_rsc=1pnm1:0
+[  204392ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3070/businesses/cmr1w16d50001oydowsb1yyei/products:0
+[  204539ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3070/_next/static/chunks/node_modules_react-dom_cjs_react-dom_development_07i0ttg.js:25055
+[  204614ms] Error: ./apps/taav-ai-lab/components/TaaviaProductDialog.tsx:50:36
+Expected '</', got 'string literal'
+  48 |
+  49 |       <TaavDialog open={open} onOpenChange={setOpen}>
+> 50 |         <TaavDialogContent size="sm" contentClassName="ai-lab-dialog">
+     |                                    ^^^^^^^^^^^^^^^^^^^^
+  51 |           <TaavDialogHeader>
+  52 |             <TaavDialogTitle className="flex items-center gap-2">
+  53 |               <Bot className="h-5 w-5 text-[var(--taav-brand-strong)]" />
+
+Parsing ecmascript source code failed
+
+Import trace:
+  Server Component:
+    ./apps/taav-ai-lab/components/TaaviaProductDialog.tsx
+    ./apps/taav-ai-lab/app/businesses/[businessId]/products/page.tsx
+
+
+    at <unknown> (Error: ./apps/taav-ai-lab/components/TaaviaProductDialog.tsx:50:36)
+    at Object.getCompilationErrors (file://C:\Users\Administrator\Desktop\first-unit-next\vahedyek\node_modules\next\dist\server\dev\hot-reloader-turbopack.js:1186:59)
+    at DevBundlerService.getCompilationError (file://C:\Users\Administrator\Desktop\first-unit-next\vahedyek\node_modules\next\dist\server\lib\dev-bundler-service.js:44:55)
+    at DevServer.getCompilationError (file://C:\Users\Administrator\Desktop\first-unit-next\vahedyek\node_modules\next\dist\server\dev\next-dev-server.js:719:42)
+    at DevServer.findPageComponents (file://C:\Users\Administrator\Desktop\first-unit-next\vahedyek\node_modules\next\dist\server\dev\next-dev-server.js:689:43)
+    at async DevServer.renderErrorToResponseImpl (file://C:\Users\Administrator\Desktop\first-unit-next\vahedyek\node_modules\next\dist\server\base-server.js:1745:26)
+[  204907ms] [LOG] [HMR] connected @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[  204912ms] [ERROR] ./apps/taav-ai-lab/components/TaaviaProductDialog.tsx:50:36
+Expected '</', got 'string literal'
+  48 |
+  49 |       <TaavDialog open={open} onOpenChange={setOpen}>
+> 50 |         <TaavDialogContent size="sm" contentClassName="ai-lab-dialog">
+     |                                    ^^^^^^^^^^^^^^^^^^^^
+  51 |           <TaavDialogHeader>
+  52 |             <TaavDialogTitle className="flex items-center gap-2">
+  53 |               <Bot className="h-5 w-5 text-[var(--taav-brand-strong)]" />
+
+Parsing ecmascript source code failed
+
+Import trace:
+  Server Component:
+    ./apps/taav-ai-lab/components/TaaviaProductDialog.tsx
+    ./apps/taav-ai-lab/app/businesses/[businessId]/products/page.tsx @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1945
+[  204987ms] [ERROR] ./apps/taav-ai-lab/components/TaaviaProductDialog.tsx:50:36
+Expected '</', got 'string literal'
+  48 |
+  49 |       <TaavDialog open={open} onOpenChange={setOpen}>
+> 50 |         <TaavDialogContent size="sm" contentClassName="ai-lab-dialog">
+     |                                    ^^^^^^^^^^^^^^^^^^^^
+  51 |           <TaavDialogHeader>
+  52 |             <TaavDialogTitle className="flex items-center gap-2">
+  53 |               <Bot className="h-5 w-5 text-[var(--taav-brand-strong)]" />
+
+Parsing ecmascript source code failed
+
+Import trace:
+  Server Component:
+    ./apps/taav-ai-lab/components/TaaviaProductDialog.tsx
+    ./apps/taav-ai-lab/app/businesses/[businessId]/products/page.tsx @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1945
+[  211103ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[  211135ms] [ERROR] ./apps/taav-ai-lab/components/TaaviaProductDialog.tsx:50:36
+Expected '</', got 'string literal'
+  48 |
+  49 |       <TaavDialog open={open} onOpenChange={setOpen}>
+> 50 |         <TaavDialogContent size="sm" contentClassName="ai-lab-dialog">
+     |                                    ^^^^^^^^^^^^^^^^^^^^
+  51 |           <TaavDialogHeader>
+  52 |             <TaavDialogTitle className="flex items-center gap-2">
+  53 |               <Bot className="h-5 w-5 text-[var(--taav-brand-strong)]" />
+
+Parsing ecmascript source code failed
+
+Import trace:
+  Server Component:
+    ./apps/taav-ai-lab/components/TaaviaProductDialog.tsx
+    ./apps/taav-ai-lab/app/businesses/[businessId]/products/page.tsx @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1945
+[  217842ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[  218250ms] [ERROR] ./apps/taav-ai-lab/components/TaaviaProductDialog.tsx:50:36
+Expected '</', got 'string literal'
+  48 |
+  49 |       <TaavDialog open={open} onOpenChange={setOpen}>
+> 50 |         <TaavDialogContent size="sm" contentClassName="ai-lab-dialog">
+     |                                    ^^^^^^^^^^^^^^^^^^^^
+  51 |           <TaavDialogHeader>
+  52 |             <TaavDialogTitle className="flex items-center gap-2">
+  53 |               <Bot className="h-5 w-5 text-[var(--taav-brand-strong)]" />
+
+Parsing ecmascript source code failed
+
+Import trace:
+  Server Component:
+    ./apps/taav-ai-lab/components/TaaviaProductDialog.tsx
+    ./apps/taav-ai-lab/app/businesses/[businessId]/products/page.tsx @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1945
+[  243188ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[  243469ms] [LOG] [Fast Refresh] done in 378ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[  243891ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[  244084ms] [LOG] [Fast Refresh] done in 297ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[  245232ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3070/businesses/cmr1w16d50001oydowsb1yyei/products:0
+[  246085ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  246405ms] [LOG] [HMR] connected @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  250656ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  250686ms] [LOG] [Fast Refresh] done in 131ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  259777ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  260105ms] [LOG] [HMR] connected @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  298713ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  298919ms] [LOG] [Fast Refresh] done in 322ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  349263ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  349513ms] [LOG] [Fast Refresh] done in 302ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  356761ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  356872ms] [LOG] [Fast Refresh] done in 162ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  363304ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  365412ms] [LOG] [Fast Refresh] done in 2222ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  365583ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  365849ms] [LOG] [Fast Refresh] done in 369ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  366022ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  366090ms] [LOG] [Fast Refresh] done in 173ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  366775ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  367152ms] [LOG] [HMR] connected @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  400291ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  400394ms] [LOG] [Fast Refresh] done in 200ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  400563ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  400669ms] [LOG] [Fast Refresh] done in 207ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  408053ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  408105ms] [LOG] [Fast Refresh] done in 150ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  408585ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  408852ms] [LOG] [Fast Refresh] done in 372ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  426574ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  427189ms] [LOG] [Fast Refresh] done in 686ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  427325ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  427647ms] [LOG] [Fast Refresh] done in 427ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  428363ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  428432ms] [LOG] [Fast Refresh] done in 177ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  428759ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  428760ms] [LOG] [Fast Refresh] done in 102ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  439943ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  440164ms] [LOG] [Fast Refresh] done in 268ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  456327ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  456375ms] [LOG] [Fast Refresh] done in 150ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  487029ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  487043ms] [WARNING] [Fast Refresh] performing full reload
+
+Fast Refresh will perform a full reload when you edit a file that's imported by modules outside of the React rendering tree.
+You might have a file which exports a React component but also exports a value that is imported by a non-React component file.
+Consider migrating the non-React component export to a separate file and importing it into both files.
+
+It is also possible the parent component of the component you edited is a class component, which disables Fast Refresh.
+Fast Refresh requires at least one parent function component in your React tree. @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  487106ms] [LOG] [Fast Refresh] done in 169ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  487494ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  487820ms] [LOG] [Fast Refresh] done in 435ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  488364ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  488695ms] [LOG] [HMR] connected @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  488825ms] Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <__next_root_layout_boundary__>
+      <SegmentViewNode type="layout" pagePath="layout.tsx">
+        <SegmentTrieNode>
+        <link>
+        <script>
+        <script>
+        <script>
+        <RootLayout>
+          <html lang="fa" dir="rtl" className="iransans_5..." suppressHydrationWarning={true}>
+            <body className="iransans_5...">
+              <AiLabThemeProvider>
+                <ThemeInitScript>
+                <ThemeFloatingToggle>
+                  <div className="fixed left...">
+                    <ThemeToggle compact={true}>
+                      <TaavButton type="button" variant="ghost" tone="neutral" size="sm" ...>
+                        <button type="button" disabled={false} aria-busy={undefined} aria-label={undefined} ...>
+                          <span className={"inline-f..."}>
+                            <MoonStar className="h-4 w-4">
+                              <svg
+                                ref={null}
+                                xmlns="http://www.w3.org/2000/svg"
+                                width={24}
+                                height={24}
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth={2}
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
++                               className="lucide lucide-moon-star h-4 w-4"
+-                               className="lucide lucide-sun-medium h-4 w-4"
+                              >
++                               <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9">
+-                               <circle cx="12" cy="12" r="4">
+                                ...
+                ...
+
+    at throwOnHydrationMismatch (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:3318:56)
+    at beginWork (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6758:918)
+    at runWithFiberInDEV (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:965:74)
+    at performUnitOfWork (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9555:97)
+    at workLoopConcurrentByScheduler (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9551:58)
+    at renderRootConcurrent (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9534:71)
+    at performWorkOnRoot (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9061:150)
+    at performWorkOnRootViaSchedulerTask (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:2647:64)
+[  496268ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  496363ms] [LOG] [Fast Refresh] done in 196ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  497686ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  499712ms] [LOG] [Fast Refresh] done in 2136ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  521258ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  521409ms] [LOG] [Fast Refresh] done in 252ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  559819ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  560005ms] [LOG] [Fast Refresh] done in 270ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  560160ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  560224ms] [LOG] [Fast Refresh] done in 174ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  570503ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  570520ms] [LOG] [Fast Refresh] done in 118ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  584324ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  584425ms] [LOG] [Fast Refresh] done in 207ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  584628ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  584954ms] [LOG] [HMR] connected @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  585086ms] Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <__next_root_layout_boundary__>
+      <SegmentViewNode type="layout" pagePath="layout.tsx">
+        <SegmentTrieNode>
+        <link>
+        <script>
+        <script>
+        <script>
+        <RootLayout>
+          <html lang="fa" dir="rtl" className="iransans_5..." suppressHydrationWarning={true}>
+            <body className="iransans_5...">
+              <AiLabThemeProvider>
+                <ThemeInitScript>
+                <ThemeFloatingToggle>
+                  <div className="fixed left...">
+                    <ThemeToggle compact={true}>
+                      <TaavButton type="button" variant="ghost" tone="neutral" size="sm" ...>
+                        <button type="button" disabled={false} aria-busy={undefined} aria-label={undefined} ...>
+                          <span className={"inline-f..."}>
+                            <MoonStar className="h-4 w-4">
+                              <svg
+                                ref={null}
+                                xmlns="http://www.w3.org/2000/svg"
+                                width={24}
+                                height={24}
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth={2}
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
++                               className="lucide lucide-moon-star h-4 w-4"
+-                               className="lucide lucide-sun-medium h-4 w-4"
+                              >
++                               <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9">
+-                               <circle cx="12" cy="12" r="4">
+                                ...
+                ...
+
+    at throwOnHydrationMismatch (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:3318:56)
+    at beginWork (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6758:918)
+    at runWithFiberInDEV (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:965:74)
+    at performUnitOfWork (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9555:97)
+    at workLoopConcurrentByScheduler (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9551:58)
+    at renderRootConcurrent (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9534:71)
+    at performWorkOnRoot (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9061:150)
+    at performWorkOnRootViaSchedulerTask (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:2647:64)
+[  638786ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  638790ms] [LOG] [Fast Refresh] done in 118ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  644591ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  644617ms] [LOG] [Fast Refresh] done in 140ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  644807ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  644807ms] [LOG] [Fast Refresh] done in 105ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  652915ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  652971ms] [LOG] [Fast Refresh] done in 158ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  653197ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  653261ms] [LOG] [Fast Refresh] done in 177ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  730072ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  730388ms] [ERROR] ./apps/taav-ai-lab/app/businesses/[businessId]/products/page.tsx:18:1
+Module not found: Can't resolve '@/components/TaaviaProductDialog'
+  16 | import { AiLabPage, AiLabSectionCard } from '@/components/AiLabPage';
+  17 | import { AiLabShell } from '@/components/AiLabShell';
+> 18 | import { TaaviaProductDialog } from '@/components/TaaviaProductDialog';
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  19 |
+  20 | const upcomingProducts = [
+  21 |   {
+
+Import map: aliased to relative './components/TaaviaProductDialog' inside of [project]/apps/taav-ai-lab
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[  730571ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3070/businesses/cmr1w16d50001oydowsb1yyei/products?_rsc=1pnm1:0
+[  730584ms] [ERROR] ./apps/taav-ai-lab/app/businesses/[businessId]/products/page.tsx:18:1
+Module not found: Can't resolve '@/components/TaaviaProductDialog'
+  16 | import { AiLabPage, AiLabSectionCard } from '@/components/AiLabPage';
+  17 | import { AiLabShell } from '@/components/AiLabShell';
+> 18 | import { TaaviaProductDialog } from '@/components/TaaviaProductDialog';
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  19 |
+  20 | const upcomingProducts = [
+  21 |   {
+
+Import map: aliased to relative './components/TaaviaProductDialog' inside of [project]/apps/taav-ai-lab
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[  730629ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3070/businesses/cmr1w16d50001oydowsb1yyei/products?_rsc=1pnm1:0
+[  730661ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3070/businesses/cmr1w16d50001oydowsb1yyei/products:0
+[  730758ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3070/_next/static/chunks/node_modules_react-dom_cjs_react-dom_development_07i0ttg.js:25055
+[  730810ms] Error: ./apps/taav-ai-lab/app/businesses/[businessId]/products/page.tsx:18:1
+Module not found: Can't resolve '@/components/TaaviaProductDialog'
+  16 | import { AiLabPage, AiLabSectionCard } from '@/components/AiLabPage';
+  17 | import { AiLabShell } from '@/components/AiLabShell';
+> 18 | import { TaaviaProductDialog } from '@/components/TaaviaProductDialog';
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  19 |
+  20 | const upcomingProducts = [
+  21 |   {
+
+Import map: aliased to relative './components/TaaviaProductDialog' inside of [project]/apps/taav-ai-lab
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+    at <unknown> (Error: ./apps/taav-ai-lab/app/businesses/[businessId]/products/page.tsx:18:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at Object.getCompilationErrors (file://C:\Users\Administrator\Desktop\first-unit-next\vahedyek\node_modules\next\dist\server\dev\hot-reloader-turbopack.js:1186:59)
+    at DevBundlerService.getCompilationError (file://C:\Users\Administrator\Desktop\first-unit-next\vahedyek\node_modules\next\dist\server\lib\dev-bundler-service.js:44:55)
+    at DevServer.getCompilationError (file://C:\Users\Administrator\Desktop\first-unit-next\vahedyek\node_modules\next\dist\server\dev\next-dev-server.js:719:42)
+    at DevServer.findPageComponents (file://C:\Users\Administrator\Desktop\first-unit-next\vahedyek\node_modules\next\dist\server\dev\next-dev-server.js:689:43)
+    at async DevServer.renderErrorToResponseImpl (file://C:\Users\Administrator\Desktop\first-unit-next\vahedyek\node_modules\next\dist\server\base-server.js:1745:26)
+[  731118ms] [LOG] [HMR] connected @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[  731122ms] [ERROR] ./apps/taav-ai-lab/app/businesses/[businessId]/products/page.tsx:18:1
+Module not found: Can't resolve '@/components/TaaviaProductDialog'
+  16 | import { AiLabPage, AiLabSectionCard } from '@/components/AiLabPage';
+  17 | import { AiLabShell } from '@/components/AiLabShell';
+> 18 | import { TaaviaProductDialog } from '@/components/TaaviaProductDialog';
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  19 |
+  20 | const upcomingProducts = [
+  21 |   {
+
+Import map: aliased to relative './components/TaaviaProductDialog' inside of [project]/apps/taav-ai-lab
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1945
+[  731164ms] [ERROR] ./apps/taav-ai-lab/app/businesses/[businessId]/products/page.tsx:18:1
+Module not found: Can't resolve '@/components/TaaviaProductDialog'
+  16 | import { AiLabPage, AiLabSectionCard } from '@/components/AiLabPage';
+  17 | import { AiLabShell } from '@/components/AiLabShell';
+> 18 | import { TaaviaProductDialog } from '@/components/TaaviaProductDialog';
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  19 |
+  20 | const upcomingProducts = [
+  21 |   {
+
+Import map: aliased to relative './components/TaaviaProductDialog' inside of [project]/apps/taav-ai-lab
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1945
+[  731254ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[  759899ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[  760288ms] [LOG] [Fast Refresh] done in 486ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[  760695ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[  760794ms] [LOG] [Fast Refresh] done in 211ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[  760914ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[  761141ms] [LOG] [Fast Refresh] done in 335ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[  761869ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  762227ms] [LOG] [HMR] connected @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  762423ms] Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <__next_root_layout_boundary__>
+      <SegmentViewNode type="layout" pagePath="layout.tsx">
+        <SegmentTrieNode>
+        <link>
+        <script>
+        <script>
+        <script>
+        <RootLayout>
+          <html lang="fa" dir="rtl" className="iransans_5..." suppressHydrationWarning={true}>
+            <body className="iransans_5...">
+              <AiLabThemeProvider>
+                <ThemeInitScript>
+                <ThemeFloatingToggle>
+                  <div className="fixed left...">
+                    <ThemeToggle compact={true}>
+                      <TaavButton type="button" variant="ghost" tone="neutral" size="sm" ...>
+                        <button type="button" disabled={false} aria-busy={undefined} aria-label={undefined} ...>
+                          <span className={"inline-f..."}>
+                            <MoonStar className="h-4 w-4">
+                              <svg
+                                ref={null}
+                                xmlns="http://www.w3.org/2000/svg"
+                                width={24}
+                                height={24}
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth={2}
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
++                               className="lucide lucide-moon-star h-4 w-4"
+-                               className="lucide lucide-sun-medium h-4 w-4"
+                              >
++                               <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9">
+-                               <circle cx="12" cy="12" r="4">
+                                ...
+                ...
+
+    at throwOnHydrationMismatch (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:3318:56)
+    at beginWork (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6758:918)
+    at runWithFiberInDEV (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:965:74)
+    at performUnitOfWork (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9555:97)
+    at workLoopConcurrentByScheduler (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9551:58)
+    at renderRootConcurrent (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9534:71)
+    at performWorkOnRoot (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9061:150)
+    at performWorkOnRootViaSchedulerTask (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:2647:64)
+[  762570ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  763110ms] [LOG] [Fast Refresh] done in 642ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  770191ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  770223ms] [LOG] [Fast Refresh] done in 135ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  914288ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  914348ms] [LOG] [Fast Refresh] done in 160ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  915005ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  915073ms] [LOG] [Fast Refresh] done in 182ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  915227ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  915457ms] [LOG] [Fast Refresh] done in 331ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  915993ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  916095ms] [LOG] [Fast Refresh] done in 206ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  916318ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  916324ms] [LOG] [Fast Refresh] done in 110ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  917159ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  917237ms] [LOG] [Fast Refresh] done in 178ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  923830ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  923867ms] [LOG] [Fast Refresh] done in 146ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  924064ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  924065ms] [LOG] [Fast Refresh] done in 107ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  930514ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  930542ms] [LOG] [Fast Refresh] done in 140ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  947927ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  948155ms] [LOG] [Fast Refresh] done in 326ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  948305ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  948368ms] [LOG] [Fast Refresh] done in 172ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  948490ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  948583ms] [LOG] [Fast Refresh] done in 200ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  955990ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  956023ms] [LOG] [Fast Refresh] done in 138ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  966906ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  967223ms] [LOG] [HMR] connected @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  967351ms] Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <__next_root_layout_boundary__>
+      <SegmentViewNode type="layout" pagePath="layout.tsx">
+        <SegmentTrieNode>
+        <link>
+        <script>
+        <script>
+        <script>
+        <RootLayout>
+          <html lang="fa" dir="rtl" className="iransans_5..." suppressHydrationWarning={true}>
+            <body className="iransans_5...">
+              <AiLabThemeProvider>
+                <ThemeInitScript>
+                <ThemeFloatingToggle>
+                  <div className="fixed left...">
+                    <ThemeToggle compact={true}>
+                      <TaavButton type="button" variant="ghost" tone="neutral" size="sm" ...>
+                        <button type="button" disabled={false} aria-busy={undefined} aria-label={undefined} ...>
+                          <span className={"inline-f..."}>
+                            <MoonStar className="h-4 w-4">
+                              <svg
+                                ref={null}
+                                xmlns="http://www.w3.org/2000/svg"
+                                width={24}
+                                height={24}
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth={2}
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
++                               className="lucide lucide-moon-star h-4 w-4"
+-                               className="lucide lucide-sun-medium h-4 w-4"
+                              >
++                               <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9">
+-                               <circle cx="12" cy="12" r="4">
+                                ...
+                ...
+
+    at throwOnHydrationMismatch (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:3318:56)
+    at beginWork (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6758:918)
+    at runWithFiberInDEV (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:965:74)
+    at performUnitOfWork (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9555:97)
+    at workLoopConcurrentByScheduler (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9551:58)
+    at renderRootConcurrent (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9534:71)
+    at performWorkOnRoot (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9061:150)
+    at performWorkOnRootViaSchedulerTask (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:2647:64)
+[ 1040035ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1040147ms] [LOG] [Fast Refresh] done in 216ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1042288ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1042305ms] [LOG] [Fast Refresh] done in 121ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1047995ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1048012ms] [LOG] [Fast Refresh] done in 121ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1058940ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1058941ms] [LOG] [Fast Refresh] done in 105ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1068956ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1068957ms] [LOG] [Fast Refresh] done in 103ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1091832ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1092455ms] [LOG] [Fast Refresh] done in 724ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1092862ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1092907ms] [LOG] [Fast Refresh] done in 156ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1117929ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1117980ms] [LOG] [Fast Refresh] done in 163ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1125608ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1126755ms] [LOG] [Fast Refresh] done in 1244ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1126909ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1127055ms] [LOG] [Fast Refresh] done in 249ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1147048ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1147496ms] [LOG] [Fast Refresh] done in 555ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1147658ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1147729ms] [LOG] [Fast Refresh] done in 181ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1154112ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1154159ms] [LOG] [Fast Refresh] done in 144ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1154317ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1154447ms] [LOG] [Fast Refresh] done in 241ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1155017ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1155053ms] [LOG] [Fast Refresh] done in 133ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1155206ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1155287ms] [LOG] [Fast Refresh] done in 182ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1155845ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1155979ms] [LOG] [Fast Refresh] done in 244ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1156143ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1156238ms] [LOG] [Fast Refresh] done in 209ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1157142ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1157306ms] [LOG] [Fast Refresh] done in 263ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1157474ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1157679ms] [LOG] [Fast Refresh] done in 310ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1205196ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1205465ms] [LOG] [Fast Refresh] done in 322ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1224869ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1226039ms] [ERROR] ./apps/taav-ai-lab/app/settings/token-pricing/page.tsx:5:1
+Module not found: Can't resolve '@/components/settings/TokenPricingSettingsClient'
+  3 | import { AiLabShell } from '@/components/AiLabShell';
+  4 | import { SettingsClientShell } from '@/components/settings/SettingsClientShell';
+> 5 | import { TokenPricingSettingsClient } from '@/components/settings/TokenPricingSettingsClient';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  6 |
+  7 | export default async function TokenPricingSettingsPage() {
+  8 |   const session = await requireSession();
+
+Import map: aliased to relative './components/settings/TokenPricingSettingsClient' inside of [project]/apps/taav-ai-lab
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[ 1226136ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3070/businesses/cmr1w16d50001oydowsb1yyei/products?_rsc=1pnm1:0
+[ 1226148ms] [ERROR] ./apps/taav-ai-lab/app/settings/token-pricing/page.tsx:5:1
+Module not found: Can't resolve '@/components/settings/TokenPricingSettingsClient'
+  3 | import { AiLabShell } from '@/components/AiLabShell';
+  4 | import { SettingsClientShell } from '@/components/settings/SettingsClientShell';
+> 5 | import { TokenPricingSettingsClient } from '@/components/settings/TokenPricingSettingsClient';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  6 |
+  7 | export default async function TokenPricingSettingsPage() {
+  8 |   const session = await requireSession();
+
+Import map: aliased to relative './components/settings/TokenPricingSettingsClient' inside of [project]/apps/taav-ai-lab
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[ 1226170ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3070/businesses/cmr1w16d50001oydowsb1yyei/products?_rsc=1pnm1:0
+[ 1226210ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3070/businesses/cmr1w16d50001oydowsb1yyei/products:0
+[ 1226438ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3070/_next/static/chunks/node_modules_react-dom_cjs_react-dom_development_07i0ttg.js:25055
+[ 1226487ms] Error: ./apps/taav-ai-lab/app/settings/token-pricing/page.tsx:5:1
+Module not found: Can't resolve '@/components/settings/TokenPricingSettingsClient'
+  3 | import { AiLabShell } from '@/components/AiLabShell';
+  4 | import { SettingsClientShell } from '@/components/settings/SettingsClientShell';
+> 5 | import { TokenPricingSettingsClient } from '@/components/settings/TokenPricingSettingsClient';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  6 |
+  7 | export default async function TokenPricingSettingsPage() {
+  8 |   const session = await requireSession();
+
+Import map: aliased to relative './components/settings/TokenPricingSettingsClient' inside of [project]/apps/taav-ai-lab
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+    at <unknown> (Error: ./apps/taav-ai-lab/app/settings/token-pricing/page.tsx:5:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at Object.getCompilationErrors (file://C:\Users\Administrator\Desktop\first-unit-next\vahedyek\node_modules\next\dist\server\dev\hot-reloader-turbopack.js:1186:59)
+    at DevBundlerService.getCompilationError (file://C:\Users\Administrator\Desktop\first-unit-next\vahedyek\node_modules\next\dist\server\lib\dev-bundler-service.js:44:55)
+    at DevServer.getCompilationError (file://C:\Users\Administrator\Desktop\first-unit-next\vahedyek\node_modules\next\dist\server\dev\next-dev-server.js:719:42)
+    at DevServer.findPageComponents (file://C:\Users\Administrator\Desktop\first-unit-next\vahedyek\node_modules\next\dist\server\dev\next-dev-server.js:689:43)
+    at async DevServer.renderErrorToResponseImpl (file://C:\Users\Administrator\Desktop\first-unit-next\vahedyek\node_modules\next\dist\server\base-server.js:1745:26)
+[ 1226803ms] [LOG] [HMR] connected @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[ 1226808ms] [ERROR] ./apps/taav-ai-lab/app/settings/token-pricing/page.tsx:5:1
+Module not found: Can't resolve '@/components/settings/TokenPricingSettingsClient'
+  3 | import { AiLabShell } from '@/components/AiLabShell';
+  4 | import { SettingsClientShell } from '@/components/settings/SettingsClientShell';
+> 5 | import { TokenPricingSettingsClient } from '@/components/settings/TokenPricingSettingsClient';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  6 |
+  7 | export default async function TokenPricingSettingsPage() {
+  8 |   const session = await requireSession();
+
+Import map: aliased to relative './components/settings/TokenPricingSettingsClient' inside of [project]/apps/taav-ai-lab
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1945
+[ 1226850ms] [ERROR] ./apps/taav-ai-lab/app/settings/token-pricing/page.tsx:5:1
+Module not found: Can't resolve '@/components/settings/TokenPricingSettingsClient'
+  3 | import { AiLabShell } from '@/components/AiLabShell';
+  4 | import { SettingsClientShell } from '@/components/settings/SettingsClientShell';
+> 5 | import { TokenPricingSettingsClient } from '@/components/settings/TokenPricingSettingsClient';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  6 |
+  7 | export default async function TokenPricingSettingsPage() {
+  8 |   const session = await requireSession();
+
+Import map: aliased to relative './components/settings/TokenPricingSettingsClient' inside of [project]/apps/taav-ai-lab
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1945
+[ 1226967ms] [ERROR] ./apps/taav-ai-lab/app/settings/token-pricing/page.tsx:5:1
+Module not found: Can't resolve '@/components/settings/TokenPricingSettingsClient'
+  3 | import { AiLabShell } from '@/components/AiLabShell';
+  4 | import { SettingsClientShell } from '@/components/settings/SettingsClientShell';
+> 5 | import { TokenPricingSettingsClient } from '@/components/settings/TokenPricingSettingsClient';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  6 |
+  7 | export default async function TokenPricingSettingsPage() {
+  8 |   const session = await requireSession();
+
+Import map: aliased to relative './components/settings/TokenPricingSettingsClient' inside of [project]/apps/taav-ai-lab
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1945
+[ 1227023ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[ 1287279ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[ 1287779ms] [LOG] [Fast Refresh] done in 600ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[ 1287997ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[ 1288151ms] [LOG] [Fast Refresh] done in 266ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[ 1288572ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1288939ms] [LOG] [HMR] connected @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1289135ms] Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <__next_root_layout_boundary__>
+      <SegmentViewNode type="layout" pagePath="layout.tsx">
+        <SegmentTrieNode>
+        <link>
+        <script>
+        <script>
+        <script>
+        <RootLayout>
+          <html lang="fa" dir="rtl" className="iransans_5..." suppressHydrationWarning={true}>
+            <body className="iransans_5...">
+              <AiLabThemeProvider>
+                <ThemeInitScript>
+                <ThemeFloatingToggle>
+                  <div className="fixed left...">
+                    <ThemeToggle compact={true}>
+                      <TaavButton type="button" variant="ghost" tone="neutral" size="sm" ...>
+                        <button type="button" disabled={false} aria-busy={undefined} aria-label={undefined} ...>
+                          <span className={"inline-f..."}>
+                            <MoonStar className="h-4 w-4">
+                              <svg
+                                ref={null}
+                                xmlns="http://www.w3.org/2000/svg"
+                                width={24}
+                                height={24}
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth={2}
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
++                               className="lucide lucide-moon-star h-4 w-4"
+-                               className="lucide lucide-sun-medium h-4 w-4"
+                              >
++                               <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9">
+-                               <circle cx="12" cy="12" r="4">
+                                ...
+                ...
+
+    at throwOnHydrationMismatch (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:3318:56)
+    at beginWork (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6758:918)
+    at runWithFiberInDEV (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:965:74)
+    at performUnitOfWork (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9555:97)
+    at workLoopConcurrentByScheduler (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9551:58)
+    at renderRootConcurrent (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9534:71)
+    at performWorkOnRoot (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9061:150)
+    at performWorkOnRootViaSchedulerTask (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:2647:64)
+[ 1294430ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1294991ms] [LOG] [Fast Refresh] done in 675ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1302247ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1308903ms] [LOG] [Fast Refresh] done in 6763ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1309174ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1309243ms] [LOG] [Fast Refresh] done in 182ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1311257ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1311261ms] [LOG] [Fast Refresh] done in 107ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1312776ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1312792ms] [LOG] [Fast Refresh] done in 116ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1312981ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1312997ms] [LOG] [Fast Refresh] done in 121ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1313960ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1313986ms] [LOG] [Fast Refresh] done in 132ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1314604ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1314632ms] [LOG] [Fast Refresh] done in 130ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1314894ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1314915ms] [LOG] [Fast Refresh] done in 126ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1315259ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1315264ms] [LOG] [Fast Refresh] done in 108ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1321135ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1321299ms] [LOG] [Fast Refresh] done in 261ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1321480ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1321581ms] [LOG] [Fast Refresh] done in 205ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1332173ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1332221ms] [LOG] [Fast Refresh] done in 149ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1343569ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1343717ms] [LOG] [Fast Refresh] done in 259ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1345977ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1346003ms] [LOG] [Fast Refresh] done in 132ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1351371ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1351583ms] [LOG] [Fast Refresh] done in 259ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1351685ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1351723ms] [LOG] [Fast Refresh] done in 139ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1351836ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1351922ms] [LOG] [Fast Refresh] done in 195ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1365332ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1365380ms] [LOG] [Fast Refresh] done in 161ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1376064ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1383109ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1383504ms] [LOG] [HMR] connected @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1383726ms] Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <__next_root_layout_boundary__>
+      <SegmentViewNode type="layout" pagePath="layout.tsx">
+        <SegmentTrieNode>
+        <link>
+        <script>
+        <script>
+        <script>
+        <RootLayout>
+          <html lang="fa" dir="rtl" className="iransans_5..." suppressHydrationWarning={true}>
+            <body className="iransans_5...">
+              <AiLabThemeProvider>
+                <ThemeInitScript>
+                <ThemeFloatingToggle>
+                  <div className="fixed left...">
+                    <ThemeToggle compact={true}>
+                      <TaavButton type="button" variant="ghost" tone="neutral" size="sm" ...>
+                        <button type="button" disabled={false} aria-busy={undefined} aria-label={undefined} ...>
+                          <span className={"inline-f..."}>
+                            <MoonStar className="h-4 w-4">
+                              <svg
+                                ref={null}
+                                xmlns="http://www.w3.org/2000/svg"
+                                width={24}
+                                height={24}
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth={2}
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
++                               className="lucide lucide-moon-star h-4 w-4"
+-                               className="lucide lucide-sun-medium h-4 w-4"
+                              >
++                               <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9">
+-                               <circle cx="12" cy="12" r="4">
+                                ...
+                ...
+
+    at throwOnHydrationMismatch (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:3318:56)
+    at beginWork (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6758:918)
+    at runWithFiberInDEV (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:965:74)
+    at performUnitOfWork (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9555:97)
+    at workLoopConcurrentByScheduler (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9551:58)
+    at renderRootConcurrent (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9534:71)
+    at performWorkOnRoot (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9061:150)
+    at performWorkOnRootViaSchedulerTask (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:2647:64)
+[ 1398535ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1398581ms] [LOG] [Fast Refresh] done in 152ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1489019ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1564828ms] [LOG] [Fast Refresh] done in 75917ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1565146ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1565328ms] [LOG] [Fast Refresh] done in 284ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1565604ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1565912ms] [LOG] [Fast Refresh] done in 408ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1566213ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1566256ms] [LOG] [Fast Refresh] done in 144ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1571095ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1571156ms] [LOG] [Fast Refresh] done in 161ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1573159ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1581347ms] [LOG] [Fast Refresh] done in 8287ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1581672ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1581966ms] [LOG] [Fast Refresh] done in 395ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1583173ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1583262ms] [LOG] [Fast Refresh] done in 190ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1583838ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1583977ms] [LOG] [Fast Refresh] done in 239ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1584799ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1584846ms] [LOG] [Fast Refresh] done in 149ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1586431ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1586477ms] [LOG] [Fast Refresh] done in 148ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1588230ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1588260ms] [LOG] [Fast Refresh] done in 129ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1588439ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1588467ms] [LOG] [Fast Refresh] done in 129ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1590681ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1590690ms] [LOG] [Fast Refresh] done in 110ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1595920ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1612369ms] [LOG] [Fast Refresh] done in 14775ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1612503ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1612513ms] [LOG] [Fast Refresh] done in 124ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1613546ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1613549ms] [LOG] [Fast Refresh] done in 104ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1616217ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1616279ms] [LOG] [Fast Refresh] done in 165ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1617488ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1617489ms] [LOG] [Fast Refresh] done in 114ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1618521ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1619183ms] [LOG] [Fast Refresh] done in 773ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1623467ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1623769ms] [LOG] [Fast Refresh] done in 404ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1626034ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1626118ms] [LOG] [Fast Refresh] done in 197ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1630344ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1630354ms] [LOG] [Fast Refresh] done in 115ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1643864ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1644686ms] [ERROR] ./apps/taav-ai-lab/app/settings/token-pricing/page.tsx:5:1
+Module not found: Can't resolve '@/components/settings/TokenPricingSettingsClient'
+  3 | import { AiLabShell } from '@/components/AiLabShell';
+  4 | import { SettingsClientShell } from '@/components/settings/SettingsClientShell';
+> 5 | import { TokenPricingSettingsClient } from '@/components/settings/TokenPricingSettingsClient';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  6 |
+  7 | export default async function TokenPricingSettingsPage() {
+  8 |   const session = await requireSession();
+
+Import map: aliased to relative './components/settings/TokenPricingSettingsClient' inside of [project]/apps/taav-ai-lab
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[ 1644781ms] [ERROR] ./apps/taav-ai-lab/app/settings/token-pricing/page.tsx:5:1
+Module not found: Can't resolve '@/components/settings/TokenPricingSettingsClient'
+  3 | import { AiLabShell } from '@/components/AiLabShell';
+  4 | import { SettingsClientShell } from '@/components/settings/SettingsClientShell';
+> 5 | import { TokenPricingSettingsClient } from '@/components/settings/TokenPricingSettingsClient';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  6 |
+  7 | export default async function TokenPricingSettingsPage() {
+  8 |   const session = await requireSession();
+
+Import map: aliased to relative './components/settings/TokenPricingSettingsClient' inside of [project]/apps/taav-ai-lab
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[ 1644888ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1645054ms] [ERROR] ./apps/taav-ai-lab/app/settings/token-pricing/page.tsx:5:1
+Module not found: Can't resolve '@/components/settings/TokenPricingSettingsClient'
+  3 | import { AiLabShell } from '@/components/AiLabShell';
+  4 | import { SettingsClientShell } from '@/components/settings/SettingsClientShell';
+> 5 | import { TokenPricingSettingsClient } from '@/components/settings/TokenPricingSettingsClient';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  6 |
+  7 | export default async function TokenPricingSettingsPage() {
+  8 |   const session = await requireSession();
+
+Import map: aliased to relative './components/settings/TokenPricingSettingsClient' inside of [project]/apps/taav-ai-lab
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[ 1645059ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3070/businesses/cmr1w16d50001oydowsb1yyei/products/taavia/brands/cmr1xhd7e000doydo7jh2zfve?_rsc=16vy6:0
+[ 1645092ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3070/businesses/cmr1w16d50001oydowsb1yyei/products/taavia/brands/cmr1xhd7e000doydo7jh2zfve?_rsc=16vy6:0
+[ 1645118ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3070/businesses/cmr1w16d50001oydowsb1yyei/products/taavia/brands/cmr1xhd7e000doydo7jh2zfve:0
+[ 1645444ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3070/_next/static/chunks/node_modules_react-dom_cjs_react-dom_development_07i0ttg.js:25055
+[ 1645494ms] Error: ./apps/taav-ai-lab/app/settings/token-pricing/page.tsx:5:1
+Module not found: Can't resolve '@/components/settings/TokenPricingSettingsClient'
+  3 | import { AiLabShell } from '@/components/AiLabShell';
+  4 | import { SettingsClientShell } from '@/components/settings/SettingsClientShell';
+> 5 | import { TokenPricingSettingsClient } from '@/components/settings/TokenPricingSettingsClient';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  6 |
+  7 | export default async function TokenPricingSettingsPage() {
+  8 |   const session = await requireSession();
+
+Import map: aliased to relative './components/settings/TokenPricingSettingsClient' inside of [project]/apps/taav-ai-lab
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+    at <unknown> (Error: ./apps/taav-ai-lab/app/settings/token-pricing/page.tsx:5:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at Object.getCompilationErrors (file://C:\Users\Administrator\Desktop\first-unit-next\vahedyek\node_modules\next\dist\server\dev\hot-reloader-turbopack.js:1186:59)
+    at DevBundlerService.getCompilationError (file://C:\Users\Administrator\Desktop\first-unit-next\vahedyek\node_modules\next\dist\server\lib\dev-bundler-service.js:44:55)
+    at DevServer.getCompilationError (file://C:\Users\Administrator\Desktop\first-unit-next\vahedyek\node_modules\next\dist\server\dev\next-dev-server.js:719:42)
+    at DevServer.findPageComponents (file://C:\Users\Administrator\Desktop\first-unit-next\vahedyek\node_modules\next\dist\server\dev\next-dev-server.js:689:43)
+    at async DevServer.renderErrorToResponseImpl (file://C:\Users\Administrator\Desktop\first-unit-next\vahedyek\node_modules\next\dist\server\base-server.js:1745:26)
+[ 1645797ms] [LOG] [HMR] connected @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[ 1645801ms] [ERROR] ./apps/taav-ai-lab/app/settings/token-pricing/page.tsx:5:1
+Module not found: Can't resolve '@/components/settings/TokenPricingSettingsClient'
+  3 | import { AiLabShell } from '@/components/AiLabShell';
+  4 | import { SettingsClientShell } from '@/components/settings/SettingsClientShell';
+> 5 | import { TokenPricingSettingsClient } from '@/components/settings/TokenPricingSettingsClient';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  6 |
+  7 | export default async function TokenPricingSettingsPage() {
+  8 |   const session = await requireSession();
+
+Import map: aliased to relative './components/settings/TokenPricingSettingsClient' inside of [project]/apps/taav-ai-lab
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1945
+[ 1646032ms] [ERROR] ./apps/taav-ai-lab/app/settings/token-pricing/page.tsx:5:1
+Module not found: Can't resolve '@/components/settings/TokenPricingSettingsClient'
+  3 | import { AiLabShell } from '@/components/AiLabShell';
+  4 | import { SettingsClientShell } from '@/components/settings/SettingsClientShell';
+> 5 | import { TokenPricingSettingsClient } from '@/components/settings/TokenPricingSettingsClient';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  6 |
+  7 | export default async function TokenPricingSettingsPage() {
+  8 |   const session = await requireSession();
+
+Import map: aliased to relative './components/settings/TokenPricingSettingsClient' inside of [project]/apps/taav-ai-lab
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1945
+[ 1713499ms] [ERROR] ./apps/taav-ai-lab/app/settings/token-pricing/page.tsx:5:1
+Module not found: Can't resolve '@/components/settings/TokenPricingSettingsClient'
+  3 | import { AiLabShell } from '@/components/AiLabShell';
+  4 | import { SettingsClientShell } from '@/components/settings/SettingsClientShell';
+> 5 | import { TokenPricingSettingsClient } from '@/components/settings/TokenPricingSettingsClient';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  6 |
+  7 | export default async function TokenPricingSettingsPage() {
+  8 |   const session = await requireSession();
+
+Import map: aliased to relative './components/settings/TokenPricingSettingsClient' inside of [project]/apps/taav-ai-lab
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1945
+[ 1713538ms] [ERROR] ./apps/taav-ai-lab/app/settings/token-pricing/page.tsx:5:1
+Module not found: Can't resolve '@/components/settings/TokenPricingSettingsClient'
+  3 | import { AiLabShell } from '@/components/AiLabShell';
+  4 | import { SettingsClientShell } from '@/components/settings/SettingsClientShell';
+> 5 | import { TokenPricingSettingsClient } from '@/components/settings/TokenPricingSettingsClient';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  6 |
+  7 | export default async function TokenPricingSettingsPage() {
+  8 |   const session = await requireSession();
+
+Import map: aliased to relative './components/settings/TokenPricingSettingsClient' inside of [project]/apps/taav-ai-lab
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1945
+[ 1713600ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[ 1713776ms] [ERROR] ./apps/taav-ai-lab/app/settings/token-pricing/page.tsx:5:1
+Module not found: Can't resolve '@/components/settings/TokenPricingSettingsClient'
+  3 | import { AiLabShell } from '@/components/AiLabShell';
+  4 | import { SettingsClientShell } from '@/components/settings/SettingsClientShell';
+> 5 | import { TokenPricingSettingsClient } from '@/components/settings/TokenPricingSettingsClient';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  6 |
+  7 | export default async function TokenPricingSettingsPage() {
+  8 |   const session = await requireSession();
+
+Import map: aliased to relative './components/settings/TokenPricingSettingsClient' inside of [project]/apps/taav-ai-lab
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1945
+[ 1713834ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[ 1713960ms] [ERROR] ./apps/taav-ai-lab/app/settings/token-pricing/page.tsx:5:1
+Module not found: Can't resolve '@/components/settings/TokenPricingSettingsClient'
+  3 | import { AiLabShell } from '@/components/AiLabShell';
+  4 | import { SettingsClientShell } from '@/components/settings/SettingsClientShell';
+> 5 | import { TokenPricingSettingsClient } from '@/components/settings/TokenPricingSettingsClient';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  6 |
+  7 | export default async function TokenPricingSettingsPage() {
+  8 |   const session = await requireSession();
+
+Import map: aliased to relative './components/settings/TokenPricingSettingsClient' inside of [project]/apps/taav-ai-lab
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1945
+[ 1714016ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[ 1714998ms] [ERROR] ./apps/taav-ai-lab/app/settings/token-pricing/page.tsx:5:1
+Module not found: Can't resolve '@/components/settings/TokenPricingSettingsClient'
+  3 | import { AiLabShell } from '@/components/AiLabShell';
+  4 | import { SettingsClientShell } from '@/components/settings/SettingsClientShell';
+> 5 | import { TokenPricingSettingsClient } from '@/components/settings/TokenPricingSettingsClient';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  6 |
+  7 | export default async function TokenPricingSettingsPage() {
+  8 |   const session = await requireSession();
+
+Import map: aliased to relative './components/settings/TokenPricingSettingsClient' inside of [project]/apps/taav-ai-lab
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1945
+[ 1715045ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[ 1715167ms] [ERROR] ./apps/taav-ai-lab/app/settings/token-pricing/page.tsx:5:1
+Module not found: Can't resolve '@/components/settings/TokenPricingSettingsClient'
+  3 | import { AiLabShell } from '@/components/AiLabShell';
+  4 | import { SettingsClientShell } from '@/components/settings/SettingsClientShell';
+> 5 | import { TokenPricingSettingsClient } from '@/components/settings/TokenPricingSettingsClient';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  6 |
+  7 | export default async function TokenPricingSettingsPage() {
+  8 |   const session = await requireSession();
+
+Import map: aliased to relative './components/settings/TokenPricingSettingsClient' inside of [project]/apps/taav-ai-lab
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1945
+[ 1715246ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[ 1715386ms] [ERROR] ./apps/taav-ai-lab/app/settings/token-pricing/page.tsx:5:1
+Module not found: Can't resolve '@/components/settings/TokenPricingSettingsClient'
+  3 | import { AiLabShell } from '@/components/AiLabShell';
+  4 | import { SettingsClientShell } from '@/components/settings/SettingsClientShell';
+> 5 | import { TokenPricingSettingsClient } from '@/components/settings/TokenPricingSettingsClient';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  6 |
+  7 | export default async function TokenPricingSettingsPage() {
+  8 |   const session = await requireSession();
+
+Import map: aliased to relative './components/settings/TokenPricingSettingsClient' inside of [project]/apps/taav-ai-lab
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1945
+[ 1715447ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[ 1717233ms] [ERROR] ./apps/taav-ai-lab/app/settings/token-pricing/page.tsx:5:1
+Module not found: Can't resolve '@/components/settings/TokenPricingSettingsClient'
+  3 | import { AiLabShell } from '@/components/AiLabShell';
+  4 | import { SettingsClientShell } from '@/components/settings/SettingsClientShell';
+> 5 | import { TokenPricingSettingsClient } from '@/components/settings/TokenPricingSettingsClient';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  6 |
+  7 | export default async function TokenPricingSettingsPage() {
+  8 |   const session = await requireSession();
+
+Import map: aliased to relative './components/settings/TokenPricingSettingsClient' inside of [project]/apps/taav-ai-lab
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1945
+[ 1717292ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[ 1717485ms] [ERROR] ./apps/taav-ai-lab/app/settings/token-pricing/page.tsx:5:1
+Module not found: Can't resolve '@/components/settings/TokenPricingSettingsClient'
+  3 | import { AiLabShell } from '@/components/AiLabShell';
+  4 | import { SettingsClientShell } from '@/components/settings/SettingsClientShell';
+> 5 | import { TokenPricingSettingsClient } from '@/components/settings/TokenPricingSettingsClient';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  6 |
+  7 | export default async function TokenPricingSettingsPage() {
+  8 |   const session = await requireSession();
+
+Import map: aliased to relative './components/settings/TokenPricingSettingsClient' inside of [project]/apps/taav-ai-lab
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1945
+[ 1717549ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[ 1717641ms] [ERROR] ./apps/taav-ai-lab/app/settings/token-pricing/page.tsx:5:1
+Module not found: Can't resolve '@/components/settings/TokenPricingSettingsClient'
+  3 | import { AiLabShell } from '@/components/AiLabShell';
+  4 | import { SettingsClientShell } from '@/components/settings/SettingsClientShell';
+> 5 | import { TokenPricingSettingsClient } from '@/components/settings/TokenPricingSettingsClient';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  6 |
+  7 | export default async function TokenPricingSettingsPage() {
+  8 |   const session = await requireSession();
+
+Import map: aliased to relative './components/settings/TokenPricingSettingsClient' inside of [project]/apps/taav-ai-lab
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1945
+[ 1717705ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[ 1754532ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[ 1755539ms] [LOG] [Fast Refresh] done in 1106ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[ 1755749ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[ 1756143ms] [LOG] [Fast Refresh] done in 494ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[ 1757602ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1757994ms] [LOG] [HMR] connected @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1758169ms] Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <__next_root_layout_boundary__>
+      <SegmentViewNode type="layout" pagePath="layout.tsx">
+        <SegmentTrieNode>
+        <link>
+        <script>
+        <script>
+        <script>
+        <RootLayout>
+          <html lang="fa" dir="rtl" className="iransans_5..." suppressHydrationWarning={true}>
+            <body className="iransans_5...">
+              <AiLabThemeProvider>
+                <ThemeInitScript>
+                <ThemeFloatingToggle>
+                  <div className="fixed left...">
+                    <ThemeToggle compact={true}>
+                      <TaavButton type="button" variant="ghost" tone="neutral" size="sm" ...>
+                        <button type="button" disabled={false} aria-busy={undefined} aria-label={undefined} ...>
+                          <span className={"inline-f..."}>
+                            <MoonStar className="h-4 w-4">
+                              <svg
+                                ref={null}
+                                xmlns="http://www.w3.org/2000/svg"
+                                width={24}
+                                height={24}
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth={2}
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
++                               className="lucide lucide-moon-star h-4 w-4"
+-                               className="lucide lucide-sun-medium h-4 w-4"
+                              >
++                               <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9">
+-                               <circle cx="12" cy="12" r="4">
+                                ...
+                ...
+
+    at throwOnHydrationMismatch (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:3318:56)
+    at beginWork (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6758:918)
+    at runWithFiberInDEV (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:965:74)
+    at performUnitOfWork (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9555:97)
+    at workLoopConcurrentByScheduler (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9551:58)
+    at renderRootConcurrent (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9534:71)
+    at performWorkOnRoot (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9061:150)
+    at performWorkOnRootViaSchedulerTask (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (http://localhost:3070/_next/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:2647:64)
+[ 1767877ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1767894ms] [LOG] [Fast Refresh] done in 119ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1776396ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1778606ms] [LOG] [Fast Refresh] done in 2308ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1778802ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1778872ms] [LOG] [Fast Refresh] done in 173ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1780098ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1780187ms] [LOG] [Fast Refresh] done in 205ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1780479ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1780482ms] [LOG] [Fast Refresh] done in 104ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1782201ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1782224ms] [LOG] [Fast Refresh] done in 124ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1784835ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1784837ms] [LOG] [Fast Refresh] done in 110ms @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 1817876ms] [ERROR] WebSocket connection to 'ws://localhost:3070/_next/webpack-hmr?id=HRuNA-EBfZI0ZEnnEd_Da' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13299
+[ 1821255ms] [ERROR] WebSocket connection to 'ws://localhost:3070/_next/webpack-hmr?id=HRuNA-EBfZI0ZEnnEd_Da' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13299
+[ 1824631ms] [ERROR] WebSocket connection to 'ws://localhost:3070/_next/webpack-hmr?id=HRuNA-EBfZI0ZEnnEd_Da' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13299
+[ 1828005ms] [ERROR] WebSocket connection to 'ws://localhost:3070/_next/webpack-hmr?id=HRuNA-EBfZI0ZEnnEd_Da' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13299
+[ 1831375ms] [ERROR] WebSocket connection to 'ws://localhost:3070/_next/webpack-hmr?id=HRuNA-EBfZI0ZEnnEd_Da' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13299
+[ 1838755ms] [ERROR] WebSocket connection to 'ws://localhost:3070/_next/webpack-hmr?id=HRuNA-EBfZI0ZEnnEd_Da' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13299
+[ 1846098ms] [ERROR] WebSocket connection to 'ws://localhost:3070/_next/webpack-hmr?id=HRuNA-EBfZI0ZEnnEd_Da' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13299
+[ 1853445ms] [ERROR] WebSocket connection to 'ws://localhost:3070/_next/webpack-hmr?id=HRuNA-EBfZI0ZEnnEd_Da' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13299
+[ 1860786ms] [ERROR] WebSocket connection to 'ws://localhost:3070/_next/webpack-hmr?id=HRuNA-EBfZI0ZEnnEd_Da' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13299
+[ 1868132ms] [ERROR] WebSocket connection to 'ws://localhost:3070/_next/webpack-hmr?id=HRuNA-EBfZI0ZEnnEd_Da' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13299
+[ 1875483ms] [ERROR] WebSocket connection to 'ws://localhost:3070/_next/webpack-hmr?id=HRuNA-EBfZI0ZEnnEd_Da' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13299
+[ 1882839ms] [ERROR] WebSocket connection to 'ws://localhost:3070/_next/webpack-hmr?id=HRuNA-EBfZI0ZEnnEd_Da' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3070/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13299

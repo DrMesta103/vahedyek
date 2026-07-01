@@ -1,4 +1,5 @@
 import { getTaaviaBrandsForTenant, getTenantForUser } from '@/app/lib/data';
+import { AI_LAB_TOOLTIPS } from '@/app/lib/tooltips';
 import { getCurrentTenant, requireSession } from '@/app/lib/session';
 import { AiLabPage, AiLabSectionCard } from '@/components/AiLabPage';
 import { AiLabShell } from '@/components/AiLabShell';
@@ -40,8 +41,9 @@ export default async function TaaviaBrandsPage({ params }: { params: Promise<{ b
         eyebrow="تاویا"
         title="برندها"
         description="برندهای این کسب‌وکار را مدیریت کنید و برای هر برند ایجنت مدیریت را آغاز کنید."
+        titleTooltip={AI_LAB_TOOLTIPS.products.brands}
       >
-        <AiLabSectionCard title="فهرست برندها" description="پس از ایجاد برند، مستقیماً وارد ایجنت مدیریت برند می‌شوید.">
+        <AiLabSectionCard title="فهرست برندها" description="پس از ایجاد برند، مستقیماً وارد ایجنت مدیریت برند می‌شوید." titleTooltip={AI_LAB_TOOLTIPS.forms.brandName}>
           <TaaviaBrandsClient tenantId={business.id} initialBrands={brands} />
         </AiLabSectionCard>
       </AiLabPage>

@@ -1,0 +1,167 @@
+- generic [active] [ref=f2e1]:
+  - button "Open Next.js Dev Tools" [ref=f2e143] [cursor=pointer]:
+    - img [ref=f2e144]
+  - alert [ref=f2e147]
+  - generic [ref=f2e834]:
+    - generic [ref=f2e835]:
+      - navigation "مسیر صفحه" [ref=f2e837]:
+        - list [ref=f2e838]:
+          - listitem [ref=f2e839]:
+            - link "خانه" [ref=f2e840] [cursor=pointer]:
+              - /url: /businesses
+              - generic [ref=f2e841]: خانه
+          - listitem [ref=f2e842]:
+            - img [ref=f2e844]
+          - listitem [ref=f2e846]:
+            - link "کسب‌وکارها" [ref=f2e847] [cursor=pointer]:
+              - /url: /businesses
+              - generic [ref=f2e848]: کسب‌وکارها
+          - listitem [ref=f2e849]:
+            - img [ref=f2e851]
+          - listitem [ref=f2e853]:
+            - link "AI Lab QA Studio" [ref=f2e854] [cursor=pointer]:
+              - /url: /businesses/cmr1w16d50001oydowsb1yyei
+              - generic [ref=f2e855]: AI Lab QA Studio
+          - listitem [ref=f2e856]:
+            - img [ref=f2e858]
+          - listitem [ref=f2e860]:
+            - generic [ref=f2e861]: OCR
+      - generic [ref=f2e865]:
+        - generic [ref=f2e866]:
+          - generic [ref=f2e867]:
+            - generic [ref=f2e868]:
+              - generic [ref=f2e869]:
+                - img
+              - generic [ref=f2e870]: ثبت OCR جدید
+            - heading "ثبت تست OCR راهنمای ثبت OCR" [level=1] [ref=f2e871]:
+              - text: ثبت تست OCR
+              - button "راهنمای ثبت OCR" [ref=f2e873]:
+                - img [ref=f2e874]
+            - paragraph [ref=f2e877]: AI Lab QA Studio · نوع سند را انتخاب کنید و اجرای شبیه‌سازی را شروع کنید.
+          - link "بازگشت به تاریخچه" [ref=f2e878] [cursor=pointer]:
+            - /url: /businesses/cmr1w16d50001oydowsb1yyei/ai-tools/ocr
+            - button "بازگشت به تاریخچه" [ref=f2e879]:
+              - generic [ref=f2e880]:
+                - img
+              - generic [ref=f2e881]: بازگشت به تاریخچه
+        - generic [ref=f2e882]:
+          - generic [ref=f2e883]:
+            - generic [ref=f2e885]:
+              - tablist [ref=f2e886]:
+                - tab "سریع" [selected] [ref=f2e887]:
+                  - img [ref=f2e888]
+                  - text: سریع
+                - tab "زمان‌بر" [ref=f2e895]:
+                  - img [ref=f2e896]
+                  - text: زمان‌بر
+              - button "راهنمای نوع اجرا" [ref=f2e900]:
+                - img [ref=f2e901]
+            - tabpanel "انتخاب نوع سند" [ref=f2e904]:
+              - paragraph [ref=f2e905]: فاکتور، کارت ملی و رسید پرداخت برای اجرای سریع طراحی شده‌اند.
+              - radiogroup "نوع سند سریع" [ref=f2e907]:
+                - radio "فاکتور فروش" [checked] [ref=f2e908]:
+                  - generic [ref=f2e909]: فاکتور فروش
+                - radio "کارت ملی" [ref=f2e910]:
+                  - generic [ref=f2e911]: کارت ملی
+                - radio "رسید پرداخت" [ref=f2e912]:
+                  - generic [ref=f2e913]: رسید پرداخت
+          - generic [ref=f2e914]:
+            - generic [ref=f2e915]:
+              - generic [ref=f2e916]:
+                - generic [ref=f2e918]: قالب انتخاب شده
+                - generic [ref=f2e920]: سریع
+              - heading "فاکتور فروش" [level=2] [ref=f2e921]
+              - paragraph [ref=f2e922]: قالبی برای استخراج ساختاریافته‌ی فیلدهای مالی از فاکتور فروش.
+            - generic [ref=f2e923]:
+              - button "مشاهده قالب" [ref=f2e924]:
+                - generic [ref=f2e925]:
+                  - img
+                - generic [ref=f2e926]: مشاهده قالب
+              - button "راهنمای قالب OCR" [ref=f2e928]:
+                - img [ref=f2e929]
+          - generic [ref=f2e932]:
+            - generic [ref=f2e934]: فاکتور فروش
+            - generic [ref=f2e935]: ۹۸% دقت · ۲ صفحه
+          - generic [ref=f2e936]:
+            - generic [ref=f2e937]:
+              - generic [ref=f2e940]:
+                - generic [ref=f2e941]: عنوان سند
+                - button "راهنمای عنوان سند" [ref=f2e943]:
+                  - img [ref=f2e944]
+              - textbox "عنوان سند راهنمای عنوان سند" [ref=f2e949]:
+                - /placeholder: "مثلا: فاکتور فروش تیرماه"
+                - text: فاکتور فروش
+            - generic [ref=f2e950]:
+              - generic [ref=f2e951]:
+                - generic [ref=f2e952]:
+                  - generic [ref=f2e953]: آپلود فایل (اختیاری)
+                  - button "راهنمای آپلود فایل (اختیاری)" [ref=f2e955]:
+                    - img [ref=f2e956]
+                - button "انتخاب فایل" [ref=f2e959]:
+                  - img [ref=f2e960]
+                  - text: انتخاب فایل
+              - paragraph [ref=f2e964]: در صورت نیاز می‌توانید فایل خودتان را جایگزین نمونه کنید.
+          - button "شروع شبیه‌سازی OCR" [ref=f2e966]:
+            - generic [ref=f2e967]:
+              - img
+            - generic [ref=f2e968]: شروع شبیه‌سازی OCR
+    - complementary [ref=f2e970]:
+      - generic [ref=f2e971]:
+        - generic [ref=f2e972]: A
+        - generic [ref=f2e973]:
+          - generic [ref=f2e974]: Admin Local
+          - generic [ref=f2e975]: admin@local.dev
+      - generic [ref=f2e976]:
+        - generic [ref=f2e977]: TAAV
+        - generic [ref=f2e978]:
+          - generic [ref=f2e979]: AI Lab QA Studio
+          - generic [ref=f2e980]: آزمایشگاه هوش مصنوعی تاو
+        - button "تغییر کسب و کار" [ref=f2e981]:
+          - img [ref=f2e982]
+      - generic [ref=f2e984]:
+        - button "خروج" [ref=f2e985]:
+          - img [ref=f2e987]
+        - link "داشبورد" [ref=f2e990] [cursor=pointer]:
+          - /url: /businesses/cmr1w16d50001oydowsb1yyei
+          - img [ref=f2e992]
+        - link "کسب‌وکارها" [ref=f2e995] [cursor=pointer]:
+          - /url: /businesses
+          - img [ref=f2e997]
+        - link "ابزارهای هوش مصنوعی" [ref=f2e1001] [cursor=pointer]:
+          - /url: /businesses/cmr1w16d50001oydowsb1yyei/ai-tools
+          - img [ref=f2e1003]
+        - link "محصولات" [ref=f2e1006] [cursor=pointer]:
+          - /url: /businesses/cmr1w16d50001oydowsb1yyei/products
+          - img [ref=f2e1008]
+      - navigation "منوی اصلی" [ref=f2e1018]:
+        - link "ابزارهای هوش مصنوعی" [ref=f2e1019] [cursor=pointer]:
+          - /url: /businesses/cmr1w16d50001oydowsb1yyei/ai-tools
+          - img [ref=f2e1021]
+          - generic [ref=f2e1024]: ابزارهای هوش مصنوعی
+        - link "OCR" [ref=f2e1025] [cursor=pointer]:
+          - /url: /businesses/cmr1w16d50001oydowsb1yyei/ai-tools/ocr
+          - img [ref=f2e1027]
+          - generic [ref=f2e1032]: OCR
+        - link "محصولات" [ref=f2e1033] [cursor=pointer]:
+          - /url: /businesses/cmr1w16d50001oydowsb1yyei/products
+          - img [ref=f2e1035]
+          - generic [ref=f2e1045]: محصولات
+        - link "کسب‌وکارها" [ref=f2e1046] [cursor=pointer]:
+          - /url: /businesses
+          - img [ref=f2e1048]
+          - generic [ref=f2e1052]: کسب‌وکارها
+        - link "ایجاد کسب‌وکار" [ref=f2e1053] [cursor=pointer]:
+          - /url: /businesses/new
+          - img [ref=f2e1055]
+          - generic [ref=f2e1057]: ایجاد کسب‌وکار
+        - link "تنظیمات کسب‌وکار" [ref=f2e1058] [cursor=pointer]:
+          - /url: /settings
+          - img [ref=f2e1060]
+          - generic [ref=f2e1063]: تنظیمات کسب‌وکار
+      - button "tenant فعال AI Lab QA Studio" [ref=f2e1064] [cursor=pointer]:
+        - paragraph [ref=f2e1065]: tenant فعال
+        - button "AI Lab QA Studio" [ref=f2e1066]
+      - generic [ref=f2e1067]:
+        - button "جمع کردن سایدبار" [expanded] [ref=f2e1069]:
+          - img [ref=f2e1070]
+        - generic [ref=f2e1072]: فاز ۱

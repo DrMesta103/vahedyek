@@ -1,0 +1,307 @@
+- generic:
+  - generic [ref=f16e315] [cursor=pointer]:
+    - button "Open Next.js Dev Tools" [ref=f16e316]:
+      - img [ref=f16e317]
+    - generic [ref=f16e320]:
+      - button "Open issues overlay" [ref=f16e321]:
+        - generic [ref=f16e322]:
+          - generic [ref=f16e323]: "0"
+          - generic [ref=f16e324]: "1"
+        - generic [ref=f16e325]: Issue
+      - button "Collapse issues badge" [ref=f16e326]:
+        - img [ref=f16e327]
+  - generic:
+    - button:
+      - generic:
+        - img
+  - generic:
+    - generic:
+      - generic:
+        - navigation:
+          - list:
+            - listitem:
+              - link:
+                - /url: /businesses
+                - generic: خانه
+            - listitem:
+              - generic:
+                - img
+            - listitem:
+              - link:
+                - /url: /businesses
+                - generic: کسب‌وکارها
+            - listitem:
+              - generic:
+                - img
+            - listitem:
+              - link:
+                - /url: /businesses/cmr1w16d50001oydowsb1yyei
+                - generic: AI Lab QA Studio
+            - listitem:
+              - generic:
+                - img
+            - listitem:
+              - generic: کسب‌وکارها
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - banner:
+                - generic:
+                  - generic:
+                    - generic:
+                      - img
+                    - generic: محصولات
+                  - generic:
+                    - generic:
+                      - generic:
+                        - heading [level=1]: AI Lab QA Studio · محصولات
+                        - generic:
+                          - generic: کاتالوگ
+                      - paragraph: محصولات هوش مصنوعی تاو برای شبیه‌سازی و مدیریت قابلیت‌های کسب‌وکار.
+              - generic:
+                - generic:
+                  - generic:
+                    - strong: محصولات موجود
+                    - generic: یک محصول را انتخاب کنید تا وارد فضای کاری آن شوید.
+                - generic:
+                  - generic:
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - img
+                            - generic:
+                              - generic: فعال
+                          - generic:
+                            - heading [level=2]: تاویا
+                            - paragraph: دستیار هوشمند برای جمع‌آوری داده‌های موردنیاز برند و ساخت خودکار برند در ادامه.
+                          - generic:
+                            - generic: مشاهده جزئیات
+                            - generic: ‹
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - img
+                            - generic:
+                              - generic: به زودی
+                          - generic:
+                            - heading [level=2]: واحد یک
+                            - paragraph: راهکار آینده برای مدیریت جریان‌های عملیاتی و داده‌های کسب‌وکار.
+                          - generic: در نوبت انتشار
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - img
+                            - generic:
+                              - generic: به زودی
+                          - generic:
+                            - heading [level=2]: دسترنج
+                            - paragraph: محصولی برای فلوهای منابع انسانی، درخواست‌ها و عملیات سازمانی.
+                          - generic: در نوبت انتشار
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - img
+                            - generic:
+                              - generic: به زودی
+                          - generic:
+                            - heading [level=2]: دیوان
+                            - paragraph: فضای بعدی برای مدیریت اسناد، پرونده‌ها و گردش‌های اداری.
+                          - generic: در نوبت انتشار
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - img
+                            - generic:
+                              - generic: به زودی
+                          - generic:
+                            - heading [level=2]: سامانه استخدام و ارزیابی
+                            - paragraph: برای جذب، ارزیابی و پیگیری مسیر استخدام نیروها.
+                          - generic: در نوبت انتشار
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - img
+                            - generic:
+                              - generic: به زودی
+                          - generic:
+                            - heading [level=2]: درخواست خرید
+                            - paragraph: برای ثبت، بررسی و تأیید درخواست‌های خرید داخلی.
+                          - generic: در نوبت انتشار
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - img
+                            - generic:
+                              - generic: به زودی
+                          - generic:
+                            - heading [level=2]: منشی
+                            - paragraph: دستیار ارتباطی و پاسخ‌گویی برای مدیریت پیام‌ها و هماهنگی‌ها.
+                          - generic: در نوبت انتشار
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - img
+                            - generic:
+                              - generic: به زودی
+                          - generic:
+                            - heading [level=2]: قرارملاقات
+                            - paragraph: ابزار زمان‌بندی و مدیریت جلسه‌ها و ملاقات‌ها.
+                          - generic: در نوبت انتشار
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - img
+                            - generic:
+                              - generic: به زودی
+                          - generic:
+                            - heading [level=2]: کندو
+                            - paragraph: مرکز تجمیع و سازمان‌دهی داده‌ها و بسته‌های کاری.
+                          - generic: در نوبت انتشار
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - img
+                            - generic:
+                              - generic: به زودی
+                          - generic:
+                            - heading [level=2]: اکسپو
+                            - paragraph: نمایشگاه محصول و ویترین ارائه‌ی سرویس‌ها و قابلیت‌ها.
+                          - generic: در نوبت انتشار
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - img
+                            - generic:
+                              - generic: به زودی
+                          - generic:
+                            - heading [level=2]: یوز
+                            - paragraph: ابزار جست‌وجو و کشف سریع اطلاعات در فلوهای کاری.
+                          - generic: در نوبت انتشار
+    - generic:
+      - complementary:
+        - generic:
+          - generic: A
+          - generic:
+            - generic: Admin Local
+            - generic: admin@local.dev
+        - generic:
+          - generic: TAAV
+          - generic:
+            - generic: AI Lab QA Studio
+            - generic: آزمایشگاه هوش مصنوعی تاو
+          - button:
+            - img
+        - generic:
+          - button:
+            - generic:
+              - img
+          - link:
+            - /url: /businesses/cmr1w16d50001oydowsb1yyei
+            - generic:
+              - img
+          - link:
+            - /url: /businesses
+            - generic:
+              - img
+          - link:
+            - /url: /businesses/cmr1w16d50001oydowsb1yyei/ai-tools
+            - generic:
+              - img
+          - link:
+            - /url: /businesses/cmr1w16d50001oydowsb1yyei/products
+            - generic:
+              - img
+        - navigation:
+          - link:
+            - /url: /businesses/cmr1w16d50001oydowsb1yyei/ai-tools
+            - generic:
+              - img
+            - generic: ابزارهای هوش مصنوعی
+          - link:
+            - /url: /businesses/cmr1w16d50001oydowsb1yyei/ai-tools/ocr
+            - generic:
+              - img
+            - generic: OCR
+          - link:
+            - /url: /businesses/cmr1w16d50001oydowsb1yyei/products
+            - generic:
+              - img
+            - generic: محصولات
+          - link:
+            - /url: /businesses
+            - generic:
+              - img
+            - generic: کسب‌وکارها
+          - link:
+            - /url: /businesses/new
+            - generic:
+              - img
+            - generic: ایجاد کسب‌وکار
+          - link:
+            - /url: /settings
+            - generic:
+              - img
+            - generic: تنظیمات کسب‌وکار
+        - button:
+          - paragraph: tenant فعال
+          - button: AI Lab QA Studio
+        - generic:
+          - generic:
+            - button [expanded]:
+              - img
+          - generic: فاز ۱
+  - alert
+  - dialog "تاویا" [ref=f16e701]:
+    - generic [ref=f16e703]:
+      - img [ref=f16e705]
+      - generic [ref=f16e708]:
+        - heading "تاویا" [level=2] [ref=f16e709]
+        - paragraph [ref=f16e710]:
+          - text: این بخش برای جمع‌آوری دیتاهای موردنیاز برند است.
+          - generic [ref=f16e711]: فلوهای بعدی مثل پشتیبانی، فروش، بازاریابی، عملیات و سایر مسیرها بعداً اضافه می‌شوند.
+    - generic [ref=f16e714]:
+      - strong [ref=f16e715]: داده‌های اولیه موردنیاز برند
+      - generic [ref=f16e716]:
+        - generic [ref=f16e717]:
+          - generic [ref=f16e718]: نام برند
+          - generic [ref=f16e719]:
+            - generic [ref=f16e720]: "*"
+            - generic [ref=f16e721]: الزامی
+        - textbox "نام برند الزامی" [active] [ref=f16e724]:
+          - /placeholder: "مثلا: برند نمونه"
+      - generic [ref=f16e725]:
+        - generic [ref=f16e727]: هویت برند
+        - textbox "هویت برند" [ref=f16e731]:
+          - /placeholder: لحن، شخصیت و هویت برند را بنویسید
+      - generic [ref=f16e732]:
+        - generic [ref=f16e734]: خدمات، محصولات و حوزه فعالیت
+        - textbox "خدمات، محصولات و حوزه فعالیت" [ref=f16e738]:
+          - /placeholder: خدمات، محصولات و حوزه فعالیت برند
+      - generic [ref=f16e739]:
+        - generic [ref=f16e741]: سوالات پرتکرار و قوانین پاسخ‌گویی
+        - textbox "سوالات پرتکرار و قوانین پاسخ‌گویی" [ref=f16e745]:
+          - /placeholder: پرسش‌های پرتکرار، پاسخ‌های استاندارد و قوانین پاسخ‌گویی
+      - generic [ref=f16e746]:
+        - generic [ref=f16e748]: فایل‌ها، منابع و دانش داخلی قابل استفاده
+        - textbox "فایل‌ها، منابع و دانش داخلی قابل استفاده" [ref=f16e752]:
+          - /placeholder: لینک فایل‌ها، منابع داخلی و هر دانش قابل استفاده
+    - generic [ref=f16e753]:
+      - button "بستن" [ref=f16e754]:
+        - generic [ref=f16e755]: بستن
+      - button "ثبت و ساخت برند" [disabled]:
+        - generic: ثبت و ساخت برند
+    - button "بستن" [ref=f16e756]:
+      - img [ref=f16e757]

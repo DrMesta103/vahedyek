@@ -5,6 +5,8 @@ import { Building2, PlusCircle } from 'lucide-react';
 import { TaavButton, TaavCard } from '@repo/ui/taav/primitives';
 import { TaavEmptyState } from '@repo/ui/taav/data-display';
 import type { Tenant } from '@/app/lib/data';
+import { AI_LAB_TOOLTIPS } from '@/app/lib/tooltips';
+import { AiLabTooltipIcon } from '@/components/AiLabTooltip';
 import { BusinessCard } from './BusinessCard';
 
 export function BusinessesClient({ businesses }: { businesses: Tenant[] }) {
@@ -19,13 +21,19 @@ export function BusinessesClient({ businesses }: { businesses: Tenant[] }) {
       <header className="ai-lab-businesses-header">
         <div className="ai-lab-businesses-heading-copy">
           <p className="ai-lab-businesses-kicker">آزمایشگاه هوش مصنوعی تاو</p>
-          <h1>فهرست کسب‌وکارهای شما</h1>
+          <h1 className="inline-flex items-center gap-2">
+            فهرست کسب‌وکارهای شما
+            <AiLabTooltipIcon content={AI_LAB_TOOLTIPS.businesses.pageTitle} label="راهنمای فهرست کسب‌وکارها" />
+          </h1>
           <p>فقط tenantهای متعلق به حساب فعلی در این نما نمایش داده می‌شوند.</p>
         </div>
 
-        <TaavButton iconStart={<PlusCircle className="h-4 w-4" />} onClick={openCreateTenantFlow}>
-          افزودن جدید
-        </TaavButton>
+        <div className="flex items-center gap-2">
+          <TaavButton iconStart={<PlusCircle className="h-4 w-4" />} onClick={openCreateTenantFlow}>
+            افزودن جدید
+          </TaavButton>
+          <AiLabTooltipIcon content={AI_LAB_TOOLTIPS.businesses.addNew} label="راهنمای افزودن کسب‌وکار" />
+        </div>
       </header>
 
       {businesses.length === 0 ? (

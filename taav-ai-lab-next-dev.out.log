@@ -1,0 +1,9 @@
+
+> @apps/taav-ai-lab@0.1.0 predev
+> npm run prisma:generate && npm --workspace @repo/ui run build
+
+
+> @apps/taav-ai-lab@0.1.0 prisma:generate
+> prisma generate
+
+Prisma schema loaded from prisma\schema.prisma

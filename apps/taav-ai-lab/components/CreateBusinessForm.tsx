@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import { ImageIcon, Upload, X } from 'lucide-react';
 import { TaavButton } from '@repo/ui/taav/primitives';
 import { TaavFieldBlock, TaavInput } from '@repo/ui/taav/forms';
+import { AI_LAB_TOOLTIPS } from '@/app/lib/tooltips';
+import { AiLabLabelWithTooltip } from '@/components/AiLabTooltip';
 
 async function fileToDataUrl(file: File) {
   return await new Promise<string>((resolve, reject) => {
@@ -123,7 +125,11 @@ export function CreateBusinessForm({
 
   return (
     <form className="ai-lab-form-grid" onSubmit={handleSubmit}>
-      <TaavFieldBlock label="نام کسب‌وکار" required htmlFor="business-name">
+      <TaavFieldBlock
+        label={<AiLabLabelWithTooltip label="نام کسب‌وکار" tooltip={AI_LAB_TOOLTIPS.forms.businessName} required />}
+        required
+        htmlFor="business-name"
+      >
         <TaavInput
           id="business-name"
           value={name}
@@ -135,7 +141,7 @@ export function CreateBusinessForm({
       </TaavFieldBlock>
 
       <TaavFieldBlock
-        label="لوگوی کسب‌وکار"
+        label={<AiLabLabelWithTooltip label="لوگوی کسب‌وکار" tooltip={AI_LAB_TOOLTIPS.forms.businessLogo} />}
         description="یک فایل تصویری واقعی انتخاب کنید تا همان‌جا پیش‌نمایش آن را ببینید و در فرم ذخیره شود."
       >
         <div className="grid gap-3">
@@ -191,7 +197,11 @@ export function CreateBusinessForm({
         </div>
       </TaavFieldBlock>
 
-      <TaavFieldBlock label="سقف کل توکن" required htmlFor="business-token-limit">
+      <TaavFieldBlock
+        label={<AiLabLabelWithTooltip label="سقف کل توکن" tooltip={AI_LAB_TOOLTIPS.forms.tokenLimit} required />}
+        required
+        htmlFor="business-token-limit"
+      >
         <TaavInput
           id="business-token-limit"
           type="number"

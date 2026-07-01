@@ -9,6 +9,7 @@ export type PricingModel = {
   name: string;
   category: ModelCategory;
   pricePer100TokensUsd: number;
+  relatedModelIds: string[];
 };
 
 export type ApiKeyEntry = {
@@ -49,6 +50,7 @@ export const GLOBAL_SETTINGS_MOCK: GlobalSettingsData = {
       name: 'GPT-4.5',
       category: 'chat',
       pricePer100TokensUsd: 2.0,
+      relatedModelIds: ['text-embedding-3-large', 'gpt-4o-ocr'],
     },
     {
       id: 'text-embedding-3-large',
@@ -57,6 +59,7 @@ export const GLOBAL_SETTINGS_MOCK: GlobalSettingsData = {
       name: 'text-embedding-3-large',
       category: 'embedding',
       pricePer100TokensUsd: 0.5,
+      relatedModelIds: ['gpt-4.5'],
     },
     {
       id: 'gpt-4o-ocr',
@@ -65,6 +68,7 @@ export const GLOBAL_SETTINGS_MOCK: GlobalSettingsData = {
       name: 'GPT-4o OCR',
       category: 'ocr',
       pricePer100TokensUsd: 2.5,
+      relatedModelIds: ['gpt-4.5'],
     },
     {
       id: 'gemini-2-flash',
@@ -73,6 +77,7 @@ export const GLOBAL_SETTINGS_MOCK: GlobalSettingsData = {
       name: 'Gemini 2.0 Flash',
       category: 'chat',
       pricePer100TokensUsd: 0.8,
+      relatedModelIds: ['text-embedding-004'],
     },
     {
       id: 'text-embedding-004',
@@ -81,6 +86,7 @@ export const GLOBAL_SETTINGS_MOCK: GlobalSettingsData = {
       name: 'text-embedding-004',
       category: 'embedding',
       pricePer100TokensUsd: 0.3,
+      relatedModelIds: ['gemini-2-flash'],
     },
     {
       id: 'grok-2',
@@ -89,6 +95,7 @@ export const GLOBAL_SETTINGS_MOCK: GlobalSettingsData = {
       name: 'Grok-2',
       category: 'chat',
       pricePer100TokensUsd: 1.5,
+      relatedModelIds: [],
     },
     {
       id: 'deepseek-v3',
@@ -97,6 +104,7 @@ export const GLOBAL_SETTINGS_MOCK: GlobalSettingsData = {
       name: 'DeepSeek-V3',
       category: 'chat',
       pricePer100TokensUsd: 0.6,
+      relatedModelIds: ['deepseek-ocr'],
     },
     {
       id: 'deepseek-ocr',
@@ -105,6 +113,7 @@ export const GLOBAL_SETTINGS_MOCK: GlobalSettingsData = {
       name: 'DeepSeek-OCR',
       category: 'ocr',
       pricePer100TokensUsd: 1.2,
+      relatedModelIds: ['deepseek-v3'],
     },
   ],
   apiKeys: [

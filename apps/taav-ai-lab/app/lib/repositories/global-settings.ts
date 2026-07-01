@@ -1,7 +1,7 @@
 import { verifyPassword } from '../auth';
 import { GLOBAL_SETTINGS_MOCK } from '../global-settings-mock';
 import { prisma } from '../prisma';
-import type { GlobalSettingsData } from '../global-settings-mock';
+import type { GlobalSettingsData, ModelCategory, Provider } from '../global-settings-mock';
 
 export async function getGlobalSettings(): Promise<GlobalSettingsData> {
   const [usdRate, models, apiKeys] = await Promise.all([
@@ -25,6 +25,7 @@ export async function getGlobalSettings(): Promise<GlobalSettingsData> {
             name: model.name,
             category: model.category as GlobalSettingsData['models'][number]['category'],
             pricePer100TokensUsd: Number(model.pricePer100TokensUsd),
+            relatedModelIds: model.relatedModelIds,
           }))
         : GLOBAL_SETTINGS_MOCK.models,
     apiKeys:
@@ -53,6 +54,52 @@ export async function updateModelPrice(modelId: string, pricePer100TokensUsd: nu
   return prisma.aiPricingModel.update({
     where: { id: modelId },
     data: { pricePer100TokensUsd },
+  });
+}
+
+export async function updateModelSettings(
+  modelId: string,
+  data: {
+    pricePer100TokensUsd?: number;
+    relatedModelIds?: string[];
+    name?: string;
+    provider?: Provider;
+    providerLabel?: string;
+    category?: ModelCategory;
+  },
+) {
+  return prisma.aiPricingModel.update({
+    where: { id: modelId },
+    data: {
+      ...(data.pricePer100TokensUsd !== undefined ? { pricePer100TokensUsd: data.pricePer100TokensUsd } : {}),
+      ...(data.relatedModelIds !== undefined ? { relatedModelIds: data.relatedModelIds } : {}),
+      ...(data.name !== undefined ? { name: data.name } : {}),
+      ...(data.provider !== undefined ? { provider: data.provider } : {}),
+      ...(data.providerLabel !== undefined ? { providerLabel: data.providerLabel } : {}),
+      ...(data.category !== undefined ? { category: data.category } : {}),
+    },
+  });
+}
+
+export async function createModelSettings(data: {
+  id: string;
+  provider: Provider;
+  providerLabel: string;
+  name: string;
+  category: ModelCategory;
+  pricePer100TokensUsd: number;
+  relatedModelIds?: string[];
+}) {
+  return prisma.aiPricingModel.create({
+    data: {
+      id: data.id,
+      provider: data.provider,
+      providerLabel: data.providerLabel,
+      name: data.name,
+      category: data.category,
+      pricePer100TokensUsd: data.pricePer100TokensUsd,
+      relatedModelIds: data.relatedModelIds ?? [],
+    },
   });
 }
 

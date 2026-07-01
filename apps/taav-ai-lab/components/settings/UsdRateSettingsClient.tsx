@@ -15,6 +15,8 @@ import {
   type GlobalSettingsData,
 } from '@/app/lib/global-settings-mock';
 import { useAdminGate } from './AdminGateProvider';
+import { AI_LAB_TOOLTIPS } from '@/app/lib/tooltips';
+import { AiLabLabelWithTooltip, AiLabTooltipIcon } from '@/components/AiLabTooltip';
 
 type UsdRateSettingsClientProps = {
   initialData?: GlobalSettingsData;
@@ -60,8 +62,9 @@ export function UsdRateSettingsClient({ initialData = GLOBAL_SETTINGS_MOCK }: Us
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="grid gap-1">
           <span className="text-[length:var(--taav-text-xs)] text-[var(--taav-text-muted)]">تنظیمات سراسری</span>
-          <h1 className="m-0 text-[length:var(--taav-text-xl)] font-black text-[var(--taav-text-strong)]">
+          <h1 className="m-0 inline-flex items-center gap-2 text-[length:var(--taav-text-xl)] font-black text-[var(--taav-text-strong)]">
             تنظیمات قیمت دلار
+            <AiLabTooltipIcon content={AI_LAB_TOOLTIPS.settings.usdRate} label="راهنمای نرخ دلار" />
           </h1>
           <p className="m-0 text-[length:var(--taav-text-sm)] text-[var(--taav-text-muted)]">
             نرخ تبدیل دلار به تومان برای شبیه‌سازی هزینه توکن‌ها
@@ -91,7 +94,11 @@ export function UsdRateSettingsClient({ initialData = GLOBAL_SETTINGS_MOCK }: Us
 
             {isEditing ? (
               <div className="grid gap-3">
-                <TaavFieldBlock label="نرخ جدید (تومان)" required htmlFor="usd-to-toman">
+                <TaavFieldBlock
+                  label={<AiLabLabelWithTooltip label="نرخ جدید (تومان)" tooltip={AI_LAB_TOOLTIPS.forms.usdRate} required />}
+                  required
+                  htmlFor="usd-to-toman"
+                >
                   <TaavInput
                     id="usd-to-toman"
                     type="number"

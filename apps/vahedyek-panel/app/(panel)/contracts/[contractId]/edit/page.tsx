@@ -23,7 +23,7 @@ export default function ContractEditRedirectPage() {
   return (
     <PanelLayout>
       <div className="rounded-[8px] border border-gray-200 bg-white p-10 text-center text-sm text-gray-500">
-        ?? ??? ?????? ?? ???? ?????? ??? ????...
+        در حال انتقال به فرم ویرایش قرارداد...
       </div>
     </PanelLayout>
   );

@@ -1,11 +1,18 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
-import { getOrCreateAdminAgentConversation, getTaaviaBrandForTenant, getTenantForUser } from '@/app/lib/data';
+import {
+  getAdminAgentSetupState,
+  getOrCreateAdminAgentConversation,
+  getTaaviaBrandForTenant,
+  getTenantForUser,
+} from '@/app/lib/data';
 import { getCurrentTenant, requireSession } from '@/app/lib/session';
 import { AiLabPage } from '@/components/AiLabPage';
 import { AiLabShell } from '@/components/AiLabShell';
 import { AdminAgentChatClient } from '@/components/taavia/AdminAgentChatClient';
+import { DeleteBrandButton } from '@/components/taavia/DeleteBrandButton';
+import { TaaviaBrandSetupClient } from '@/components/taavia/TaaviaBrandSetupClient';
 import { TaavBadge, TaavButton } from '@repo/ui/taav/primitives';
 
 export default async function TaaviaBrandDetailPage({
@@ -36,6 +43,7 @@ export default async function TaaviaBrandDetailPage({
   const brand = await getTaaviaBrandForTenant(session.userId, business.id, brandId);
   if (!brand) notFound();
 
+  const setup = await getAdminAgentSetupState(session.userId, business.id, brandId);
   const conversation = await getOrCreateAdminAgentConversation(session.userId, business.id, brandId);
 
   return (
@@ -54,18 +62,28 @@ export default async function TaaviaBrandDetailPage({
               بازگشت به برندها
             </TaavButton>
           </Link>
+          <DeleteBrandButton tenantId={business.id} brandId={brand.id} brandName={brand.name} />
           <TaavBadge tone="brand" variant="soft">
             ایجنت مدیریت برند
           </TaavBadge>
         </div>
 
-        <AdminAgentChatClient
-          tenantId={business.id}
-          brandId={brand.id}
-          brandName={brand.name}
-          initialConversationId={conversation?.id ?? null}
-          initialMessages={conversation?.messages ?? []}
-        />
+        {setup?.isComplete ? (
+          <AdminAgentChatClient
+            tenantId={business.id}
+            brandId={brand.id}
+            brandName={brand.name}
+            initialConversationId={conversation?.id ?? null}
+            initialMessages={conversation?.messages ?? []}
+          />
+        ) : (
+          <TaaviaBrandSetupClient
+            tenantId={business.id}
+            brandId={brand.id}
+            brandName={brand.name}
+            initialSelectedUseCases={setup?.selectedUseCases ?? []}
+          />
+        )}
       </AiLabPage>
     </AiLabShell>
   );

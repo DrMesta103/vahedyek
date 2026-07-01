@@ -1,0 +1,21 @@
+Loaded Prisma config from prisma.config.ts.
+
+Prisma config detected, skipping environment variable loading.
+Error: 
+EPERM: operation not permitted, rename 'C:\Users\Administrator\Desktop\first-unit-next\vahedyek\apps\taav-ai-lab\node_modules\.prisma\client\query_engine-windows.dll.node.tmp9352' -> 'C:\Users\Administrator\Desktop\first-unit-next\vahedyek\apps\taav-ai-lab\node_modules\.prisma\client\query_engine-windows.dll.node'
+
+
+npm error Lifecycle script `prisma:generate` failed with error:
+npm error code 1
+npm error path C:\Users\Administrator\Desktop\first-unit-next\vahedyek\apps\taav-ai-lab
+npm error workspace @apps/taav-ai-lab@0.1.0
+npm error location C:\Users\Administrator\Desktop\first-unit-next\vahedyek\apps\taav-ai-lab
+npm error command failed
+npm error command C:\Windows\system32\cmd.exe /d /s /c prisma generate
+npm error Lifecycle script `dev` failed with error:
+npm error code 1
+npm error path C:\Users\Administrator\Desktop\first-unit-next\vahedyek\apps\taav-ai-lab
+npm error workspace @apps/taav-ai-lab@0.1.0
+npm error location C:\Users\Administrator\Desktop\first-unit-next\vahedyek\apps\taav-ai-lab
+npm error command failed
+npm error command C:\Windows\system32\cmd.exe /d /s /c npm run prisma:generate && npm --workspace @repo/ui run build

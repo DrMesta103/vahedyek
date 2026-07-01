@@ -4,6 +4,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Bot, Loader2, RefreshCw, Send, Sparkles, UserRound } from 'lucide-react';
 import { TaavButton } from '@repo/ui/taav/primitives';
 import type { TaaviaChatMessage } from '@/app/lib/types/domain';
+import { AI_LAB_TOOLTIPS } from '@/app/lib/tooltips';
+import { AiLabSectionLabel, AiLabTooltipIcon } from '@/components/AiLabTooltip';
 
 type AdminAgentChatClientProps = {
   tenantId: string;
@@ -137,7 +139,7 @@ export function AdminAgentChatClient({
       <aside className="taavia-agent-helper" aria-label="راهنمای گفتگو">
         <div className="taavia-agent-helper-header">
           <Sparkles className="h-4 w-4" aria-hidden />
-          <span>هدف این گفتگو</span>
+          <AiLabSectionLabel label="هدف این گفتگو" tooltip={AI_LAB_TOOLTIPS.taavia.chatGoal} />
         </div>
         <ul className="taavia-agent-helper-list">
           <li>معرفی برند</li>
@@ -153,10 +155,16 @@ export function AdminAgentChatClient({
       <section className="taavia-agent-chat-panel" aria-label={`گفتگوی ایجنت مدیریت برند ${brandName}`}>
         <header className="taavia-agent-chat-panel-header">
           <div className="taavia-agent-chat-panel-title">
-            <span className="taavia-agent-chat-eyebrow">ایجنت مدیریت برند</span>
+            <span className="taavia-agent-chat-eyebrow inline-flex items-center gap-1">
+              ایجنت مدیریت برند
+              <AiLabTooltipIcon content={AI_LAB_TOOLTIPS.taavia.adminAgent} label="راهنمای ایجنت" />
+            </span>
             <strong>{brandName}</strong>
           </div>
-          <span className="taavia-agent-chat-sim-badge">پاسخ شبیه‌سازی‌شده</span>
+          <span className="taavia-agent-chat-sim-badge inline-flex items-center gap-1">
+            پاسخ شبیه‌سازی‌شده
+            <AiLabTooltipIcon content={AI_LAB_TOOLTIPS.taavia.simBadge} label="راهنمای شبیه‌سازی" />
+          </span>
         </header>
 
         <p className="taavia-agent-chat-description">
@@ -219,7 +227,9 @@ export function AdminAgentChatClient({
         </div>
 
         <footer className="taavia-agent-chat-composer">
-          <textarea
+          <div className="grid flex-1 gap-1">
+            <AiLabSectionLabel label="پیام" tooltip={AI_LAB_TOOLTIPS.taavia.messageInput} />
+            <textarea
             ref={textareaRef}
             className="taavia-agent-chat-textarea"
             value={draft}
@@ -234,6 +244,7 @@ export function AdminAgentChatClient({
               }
             }}
           />
+          </div>
           <TaavButton
             iconStart={sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             onClick={() => void handleSend()}

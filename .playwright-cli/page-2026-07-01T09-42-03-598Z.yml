@@ -1,0 +1,102 @@
+- generic [ref=f2e2]:
+  - generic [ref=f2e3]:
+    - navigation "مسیر صفحه" [ref=f2e5]:
+      - list [ref=f2e6]:
+        - listitem [ref=f2e7]:
+          - link "خانه" [ref=f2e8] [cursor=pointer]:
+            - /url: /businesses
+            - generic [ref=f2e9]: خانه
+        - listitem [ref=f2e10]:
+          - img [ref=f2e12]
+        - listitem [ref=f2e14]:
+          - link "کسب‌وکارها" [ref=f2e15] [cursor=pointer]:
+            - /url: /businesses
+            - generic [ref=f2e16]: کسب‌وکارها
+        - listitem [ref=f2e17]:
+          - img [ref=f2e19]
+        - listitem [ref=f2e21]:
+          - generic [ref=f2e22]: کسب‌وکارها
+    - generic [ref=f2e26]:
+      - generic [ref=f2e27]:
+        - generic [ref=f2e28]:
+          - paragraph [ref=f2e29]: آزمایشگاه هوش مصنوعی تاو
+          - heading "فهرست کسب‌وکارهای شما راهنمای فهرست کسب‌وکارها" [level=1] [ref=f2e30]:
+            - text: فهرست کسب‌وکارهای شما
+            - button "راهنمای فهرست کسب‌وکارها" [ref=f2e32]:
+              - img [ref=f2e33]
+          - paragraph [ref=f2e36]: فقط tenantهای متعلق به حساب فعلی در این نما نمایش داده می‌شوند.
+        - generic [ref=f2e37]:
+          - button "افزودن جدید" [ref=f2e38]:
+            - generic [ref=f2e39]:
+              - img
+            - generic [ref=f2e40]: افزودن جدید
+          - button "راهنمای افزودن کسب‌وکار" [ref=f2e42]:
+            - img [ref=f2e43]
+      - generic [ref=f2e49]:
+        - img [ref=f2e51]
+        - heading "هنوز کسب‌وکاری ایجاد نشده است" [level=3] [ref=f2e55]
+        - paragraph [ref=f2e56]: برای شروع، اولین tenant خود را بسازید تا مسیرهای آزمایشی و داده‌های AI روی همان فضا نگهداری شوند.
+        - button "ایجاد کسب‌وکار" [ref=f2e58]:
+          - generic [ref=f2e59]:
+            - img
+          - generic [ref=f2e60]: ایجاد کسب‌وکار
+  - complementary [ref=f2e62]:
+    - generic [ref=f2e63]:
+      - generic [ref=f2e64]: A
+      - generic [ref=f2e65]:
+        - generic [ref=f2e66]: Admin Local
+        - generic [ref=f2e67]: admin@local.dev
+    - generic [ref=f2e68]:
+      - generic [ref=f2e69]: TAAV
+      - generic [ref=f2e70]:
+        - generic [ref=f2e71]: آزمایشگاه
+        - generic [ref=f2e72]: آزمایشگاه هوش مصنوعی تاو
+      - button "تغییر کسب و کار" [ref=f2e73]:
+        - img [ref=f2e74]
+    - generic [ref=f2e76]:
+      - button "خروج" [ref=f2e77]:
+        - img [ref=f2e79]
+      - link "داشبورد" [ref=f2e82] [cursor=pointer]:
+        - /url: /businesses
+        - img [ref=f2e84]
+      - link "کسب‌وکارها" [ref=f2e87] [cursor=pointer]:
+        - /url: /businesses
+        - img [ref=f2e89]
+      - link "ابزارهای هوش مصنوعی" [ref=f2e93] [cursor=pointer]:
+        - /url: /businesses
+        - img [ref=f2e95]
+      - link "محصولات" [ref=f2e98] [cursor=pointer]:
+        - /url: /businesses
+        - img [ref=f2e100]
+    - navigation "منوی اصلی" [ref=f2e110]:
+      - generic "ابزارهای هوش مصنوعی":
+        - generic:
+          - img
+        - generic: ابزارهای هوش مصنوعی
+      - generic "OCR":
+        - generic:
+          - img
+        - generic: OCR
+      - generic "محصولات":
+        - generic:
+          - img
+        - generic: محصولات
+      - link "کسب‌وکارها" [ref=f2e111] [cursor=pointer]:
+        - /url: /businesses
+        - img [ref=f2e113]
+        - generic [ref=f2e117]: کسب‌وکارها
+      - link "ایجاد کسب‌وکار" [ref=f2e118] [cursor=pointer]:
+        - /url: /businesses/new
+        - img [ref=f2e120]
+        - generic [ref=f2e122]: ایجاد کسب‌وکار
+      - link "تنظیمات کسب‌وکار" [ref=f2e123] [cursor=pointer]:
+        - /url: /settings
+        - img [ref=f2e125]
+        - generic [ref=f2e128]: تنظیمات کسب‌وکار
+    - button "tenant غیرفعال آزمایشگاه" [ref=f2e129] [cursor=pointer]:
+      - paragraph [ref=f2e130]: tenant غیرفعال
+      - button "آزمایشگاه" [ref=f2e131]
+    - generic [ref=f2e132]:
+      - button "جمع کردن سایدبار" [expanded] [ref=f2e134]:
+        - img [ref=f2e135]
+      - generic [ref=f2e137]: فاز ۱

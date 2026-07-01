@@ -1,0 +1,49 @@
+- generic [ref=e6]:
+  - generic [ref=e7]:
+    - img [ref=e9]
+    - generic [ref=e11]:
+      - generic [ref=e13]: فاز ۱ · محیط شبیه‌ساز
+      - heading "ورود به آزمایشگاه هوش مصنوعی تاو" [level=1] [ref=e14]
+      - paragraph [ref=e15]: این مسیر ورود فعلا برای شبیه‌ساز داخلی فعال است و بعد از آن شما را مستقیم به فهرست کسب‌وکارها هدایت می‌کند.
+  - generic [ref=e17]:
+    - generic [ref=e18]:
+      - generic [ref=e20]: ورود
+      - heading "با ایمیل یا موبایل وارد شوید" [level=2] [ref=e21]
+      - paragraph [ref=e22]: بعد از ورود، مستقیم وارد فهرست کسب‌وکارها می‌شوید.
+    - generic [ref=e23]:
+      - generic [ref=e24]:
+        - generic [ref=e25]:
+          - generic [ref=e27]:
+            - generic [ref=e28]: ایمیل یا شماره موبایل
+            - generic [ref=e29]: "*"
+            - button "راهنمای ایمیل یا شماره موبایل" [ref=e31]:
+              - img [ref=e32]
+          - generic [ref=e35]:
+            - generic [ref=e36]: "*"
+            - generic [ref=e37]: الزامی
+        - generic [ref=e39]:
+          - generic [ref=e40]:
+            - img
+          - generic [ref=e41]: IR +98
+          - textbox "ایمیل یا شماره موبایل * راهنمای ایمیل یا شماره موبایل الزامی" [ref=e42]:
+            - /placeholder: "9352720114"
+      - generic [ref=e43]:
+        - generic [ref=e44]:
+          - generic [ref=e46]:
+            - generic [ref=e47]: رمز عبور
+            - generic [ref=e48]: "*"
+            - button "راهنمای رمز عبور" [ref=e50]:
+              - img [ref=e51]
+          - generic [ref=e54]:
+            - generic [ref=e55]: "*"
+            - generic [ref=e56]: الزامی
+        - generic [ref=e58]:
+          - generic [ref=e59]:
+            - img
+          - textbox "رمز عبور * راهنمای رمز عبور الزامی" [ref=e60]
+      - button "ورود" [ref=e61]:
+        - generic [ref=e62]: ورود
+      - paragraph [ref=e63]:
+        - text: حساب ندارید؟
+        - link "ثبت‌نام" [ref=e64] [cursor=pointer]:
+          - /url: /register
