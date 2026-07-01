@@ -71,7 +71,7 @@ function ContractListContextSection({ status }: { status: ContractStatus }) {
     <section
       dir="rtl"
       lang="fa"
-      className="contract-details-panel rounded-[22px] border border-slate-200/80 bg-white/90 px-4 py-3.5 shadow-sm"
+      className="contract-details-panel rounded-[8px] border border-slate-200/80 bg-white/90 px-4 py-3.5 shadow-sm"
       aria-label="دستهٔ فهرست قراردادها"
     >
       {/* ترتیب DOM با dir=rtl: اول سمت راست (عنوان + تگ)، دوم سمت چپ (توضیح) */}
@@ -101,7 +101,7 @@ function ContractDetailsBackToListRow({ fallbackStatus }: { fallbackStatus: Cont
       <button
         type="button"
         onClick={() => router.push(href)}
-        className="inline-flex h-10 shrink-0 items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-[13px] font-bold text-slate-700 shadow-sm transition hover:border-[color-mix(in_srgb,var(--dark-teal)_35%,transparent)] hover:bg-slate-50"
+        className="inline-flex h-10 shrink-0 items-center gap-2 rounded-[8px] border border-slate-200 bg-white px-4 text-[13px] font-bold text-slate-700 shadow-sm transition hover:border-[color-mix(in_srgb,var(--dark-teal)_35%,transparent)] hover:bg-slate-50"
       >
         بازگشت به فهرست قراردادها
         <ArrowRight className="h-4 w-4" aria-hidden />
@@ -404,7 +404,7 @@ export default function ContractDetailsPage() {
                   <article
                     key={buyerItem.personId ?? buyerItem.name}
                     dir="rtl"
-                    className="min-w-[260px] flex-none snap-start rounded-[22px] border border-slate-200/80 bg-white/90 px-4 py-3 text-right shadow-sm"
+                    className="min-w-[260px] flex-none snap-start rounded-[8px] border border-slate-200/80 bg-white/90 px-4 py-3 text-right shadow-sm"
                     role="listitem"
                   >
                     <div className="flex flex-row items-center gap-3">
@@ -415,7 +415,7 @@ export default function ContractDetailsPage() {
                         <div className="truncate text-[18px] font-extrabold text-[#454a52]">{buyerItem.name ?? '—'}</div>
                         <div className="mt-1 flex flex-row items-center justify-between gap-3 text-[13px] text-[color:var(--text-muted)]">
                           <span className="truncate">کد ملی {view.buyerNationalCode}</span>
-                          <span className="inline-flex h-8 w-8 flex-none items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                          <span className="inline-flex h-8 w-8 flex-none items-center justify-center rounded-[8px] bg-emerald-50 text-emerald-600">
                             <i className="fa-solid fa-phone" />
                           </span>
                         </div>
@@ -456,7 +456,7 @@ export default function ContractDetailsPage() {
           </button>
         </div>
 
-        <div dir="rtl" className="rounded-[22px] border border-slate-200/80 bg-white/90 px-4 py-3 shadow-sm">
+        <div dir="rtl" className="rounded-[8px] border border-slate-200/80 bg-white/90 px-4 py-3 shadow-sm">
           <div className="flex w-full flex-row items-stretch justify-start divide-x divide-slate-200/70 divide-x-reverse">
             {(
               [
@@ -582,7 +582,7 @@ export default function ContractDetailsPage() {
             <div className="border-b border-slate-100 bg-gradient-to-br from-amber-50/90 to-white px-5 py-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex min-w-0 flex-1 items-start gap-3">
-                  <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-amber-200 bg-amber-100 text-amber-800">
+                  <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[8px] border border-amber-200 bg-amber-100 text-amber-800">
                     <AlertTriangle className="h-5 w-5" aria-hidden />
                   </span>
                   <div className="min-w-0 text-right">
@@ -597,7 +597,7 @@ export default function ContractDetailsPage() {
                 <button
                   type="button"
                   disabled={reopenEditBusy}
-                  className="shrink-0 rounded-xl p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 disabled:opacity-40"
+                  className="shrink-0 rounded-[8px] p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 disabled:opacity-40"
                   aria-label="بستن"
                   onClick={() => setReopenEditDialogOpen(false)}
                 >
@@ -626,7 +626,7 @@ export default function ContractDetailsPage() {
                 type="button"
                 disabled={reopenEditBusy}
                 onClick={() => setReopenEditDialogOpen(false)}
-                className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
+                className="rounded-[8px] border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
               >
                 انصراف
               </button>
@@ -634,7 +634,7 @@ export default function ContractDetailsPage() {
                 type="button"
                 disabled={reopenEditBusy}
                 onClick={() => void confirmReopenApprovedAndEdit()}
-                className="rounded-xl bg-[color-mix(in_srgb,var(--dark-teal)_92%,black)] px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:opacity-95 disabled:opacity-60"
+                className="rounded-[8px] bg-[color-mix(in_srgb,var(--dark-teal)_92%,black)] px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:opacity-95 disabled:opacity-60"
               >
                 {reopenEditBusy ? 'در حال آماده‌سازی…' : 'تأیید و رفتن به ویرایش'}
               </button>
@@ -646,4 +646,6 @@ export default function ContractDetailsPage() {
     </PanelLayout>
   );
 }
+
+
 

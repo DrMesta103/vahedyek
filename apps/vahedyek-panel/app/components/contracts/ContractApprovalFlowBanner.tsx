@@ -205,7 +205,7 @@ export function ContractApprovalFlowBanner({ contractId, contractStatus }: Banne
 
   if (loading && !stateRes) {
     return (
-      <section dir="rtl" className="contract-details-approval-banner mb-6 rounded-2xl border border-[var(--border-color)] bg-[var(--surface)] px-5 py-4 shadow-sm">
+      <section dir="rtl" className="contract-details-approval-banner mb-6 rounded-[8px] border border-[var(--border-color)] bg-[var(--surface)] px-5 py-4 shadow-sm">
         <div className="flex items-center justify-end gap-2 text-[13px] font-bold text-[var(--text-muted)]">
           <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
           در حال بارگذاری فرایند تأیید…
@@ -216,7 +216,7 @@ export function ContractApprovalFlowBanner({ contractId, contractStatus }: Banne
 
   if (!stateRes?.ok || !stateRes.state) {
     return error ? (
-      <section dir="rtl" className="contract-details-approval-banner mb-6 rounded-2xl border border-rose-200 bg-rose-50/90 px-4 py-3 text-right text-[13px] font-bold text-rose-800">
+      <section dir="rtl" className="contract-details-approval-banner mb-6 rounded-[8px] border border-rose-200 bg-rose-50/90 px-4 py-3 text-right text-[13px] font-bold text-rose-800">
         {error}
       </section>
     ) : null;
@@ -227,11 +227,11 @@ export function ContractApprovalFlowBanner({ contractId, contractStatus }: Banne
   const readOnlyBlock = (text: React.ReactNode, actions?: React.ReactNode) => (
     <section
       dir="rtl"
-      className="contract-details-approval-banner mb-6 overflow-hidden rounded-2xl border border-[color-mix(in_srgb,var(--theme-info-border)_55%,transparent)] bg-[color-mix(in_srgb,var(--theme-info-bg)_28%,var(--surface))] shadow-[0_10px_36px_-24px_rgba(15,23,42,0.22)]"
+      className="contract-details-approval-banner mb-6 overflow-hidden rounded-[8px] border border-[color-mix(in_srgb,var(--theme-info-border)_55%,transparent)] bg-[color-mix(in_srgb,var(--theme-info-bg)_28%,var(--surface))] shadow-[0_10px_36px_-24px_rgba(15,23,42,0.22)]"
     >
       <div className="border-b border-[color-mix(in_srgb,var(--theme-info-border)_40%,transparent)] bg-[color-mix(in_srgb,var(--theme-info-bg)_42%,transparent)] px-5 py-3.5">
         <div className="flex min-w-0 flex-row-reverse items-center gap-2.5 text-right">
-          <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[color-mix(in_srgb,var(--theme-info-border)_50%,transparent)] bg-[var(--surface)] text-[var(--theme-info-text)] shadow-sm">
+          <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[8px] border border-[color-mix(in_srgb,var(--theme-info-border)_50%,transparent)] bg-[var(--surface)] text-[var(--theme-info-text)] shadow-sm">
             <ClipboardList className="h-[18px] w-[18px]" aria-hidden />
           </span>
           <div className="min-w-0">
@@ -241,9 +241,9 @@ export function ContractApprovalFlowBanner({ contractId, contractStatus }: Banne
         </div>
       </div>
       <div className="space-y-4 px-5 py-5">
-        <div className="flex flex-col gap-4 rounded-xl border border-[var(--border-color)] bg-[var(--surface)]/85 p-4 sm:flex-row-reverse sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-4 rounded-[8px] border border-[var(--border-color)] bg-[var(--surface)]/85 p-4 sm:flex-row-reverse sm:items-center sm:justify-between">
           <div className="flex min-w-0 flex-1 items-start gap-3 text-right sm:items-center">
-            <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[var(--surface-soft)] text-[var(--theme-info-text)] ring-1 ring-[var(--border-color)]">
+            <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[8px] bg-[var(--surface-soft)] text-[var(--theme-info-text)] ring-1 ring-[var(--border-color)]">
               <ShieldOff className="h-5 w-5" aria-hidden />
             </span>
             <div className="min-w-0 whitespace-pre-line text-[13px] font-semibold leading-7 text-[var(--text-body)]">
@@ -288,7 +288,7 @@ export function ContractApprovalFlowBanner({ contractId, contractStatus }: Banne
             <button
               type="button"
               onClick={() => setDetailsOpen(false)}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--border-color)] bg-[var(--surface)] text-[var(--text-muted)] hover:bg-[var(--surface-soft)]"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-[8px] border border-[var(--border-color)] bg-[var(--surface)] text-[var(--text-muted)] hover:bg-[var(--surface-soft)]"
               aria-label="بستن"
             >
               <X className="h-5 w-5" aria-hidden />
@@ -296,7 +296,7 @@ export function ContractApprovalFlowBanner({ contractId, contractStatus }: Banne
           </div>
 
           <div className="space-y-4">
-            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--surface-soft)]/35 p-4">
+            <div className="rounded-[8px] border border-[var(--border-color)] bg-[var(--surface-soft)]/35 p-4">
               <div className="mb-2 text-[12px] font-black text-[var(--text-strong)]">مراحل فرایند</div>
               <div className="flex flex-row-reverse flex-wrap gap-2">
                 {st.steps.map((step, idx) => {
@@ -334,7 +334,7 @@ export function ContractApprovalFlowBanner({ contractId, contractStatus }: Banne
               const pendingApprovers = selectedStep.approvers.filter((uid) => !decidedUserIds.has(uid));
 
               return (
-                <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--surface-soft)]/35 p-4">
+                <div className="rounded-[8px] border border-[var(--border-color)] bg-[var(--surface-soft)]/35 p-4">
                   <div className="mb-2 flex flex-row-reverse flex-wrap items-center justify-between gap-2">
                     <div className="text-[12px] font-black text-[var(--text-strong)]">
                       مرحله: {selectedStep.title}{' '}
@@ -370,12 +370,12 @@ export function ContractApprovalFlowBanner({ contractId, contractStatus }: Banne
                   </div>
 
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    <div className="rounded-xl border border-[var(--border-color)] bg-[var(--surface)] p-3">
+                    <div className="rounded-[8px] border border-[var(--border-color)] bg-[var(--surface)] p-3">
                       <div className="mb-2 text-[11px] font-black text-[var(--text-muted)]">رأی داده‌اند</div>
                       {decisionsThisStep.length ? (
                         <ul className="space-y-2 text-[11px] font-semibold text-[var(--text-body)]">
                           {decisionsThisStep.map((d) => (
-                            <li key={d.id} className="rounded-lg border border-[var(--border-color)]/70 bg-[var(--surface)]/70 px-2.5 py-2">
+                            <li key={d.id} className="rounded-[8px] border border-[var(--border-color)]/70 bg-[var(--surface)]/70 px-2.5 py-2">
                               <div className="flex flex-row-reverse flex-wrap items-center justify-between gap-2">
                                 <span className="text-[11px] font-extrabold text-[var(--text-strong)]">
                                   {st.userMap?.[d.approverUserId] ?? `${d.approverUserId.slice(0, 8)}…`}
@@ -403,7 +403,7 @@ export function ContractApprovalFlowBanner({ contractId, contractStatus }: Banne
                       )}
                     </div>
 
-                    <div className="rounded-xl border border-[var(--border-color)] bg-[var(--surface)] p-3">
+                    <div className="rounded-[8px] border border-[var(--border-color)] bg-[var(--surface)] p-3">
                       <div className="mb-2 text-[11px] font-black text-[var(--text-muted)]">هنوز رأی نداده‌اند</div>
                       {pendingApprovers.length ? (
                         <ul className="flex flex-row-reverse flex-wrap gap-2">
@@ -439,12 +439,12 @@ export function ContractApprovalFlowBanner({ contractId, contractStatus }: Banne
     return (
       <section
         dir="rtl"
-        className="contract-details-approval-banner mb-6 overflow-hidden rounded-2xl border border-[var(--border-color)] bg-[var(--surface)] shadow-[0_8px_30px_-18px_rgba(15,23,42,0.12)]"
+        className="contract-details-approval-banner mb-6 overflow-hidden rounded-[8px] border border-[var(--border-color)] bg-[var(--surface)] shadow-[0_8px_30px_-18px_rgba(15,23,42,0.12)]"
       >
         <div className="border-b border-[var(--border-color)] bg-[var(--surface-soft)]/80 px-5 py-3.5">
           <div className="flex min-w-0 flex-row-reverse flex-wrap items-center justify-between gap-3 text-right">
             <div className="flex min-w-0 flex-row-reverse items-center gap-2.5">
-              <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[color-mix(in_srgb,var(--dark-teal)_22%,transparent)] bg-white text-[var(--dark-teal)]">
+              <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[8px] border border-[color-mix(in_srgb,var(--dark-teal)_22%,transparent)] bg-white text-[var(--dark-teal)]">
                 <Send className="h-4 w-4" aria-hidden />
               </span>
               <div className="min-w-0">
@@ -456,7 +456,7 @@ export function ContractApprovalFlowBanner({ contractId, contractStatus }: Banne
               type="button"
               onClick={() => void reload()}
               disabled={busy !== null}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border-color)] bg-[var(--surface)] px-3 py-1.5 text-[11px] font-bold text-[var(--text-muted)] hover:bg-[var(--surface-soft)] disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-[8px] border border-[var(--border-color)] bg-[var(--surface)] px-3 py-1.5 text-[11px] font-bold text-[var(--text-muted)] hover:bg-[var(--surface-soft)] disabled:opacity-50"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} aria-hidden />
               بروزرسانی وضعیت
@@ -465,7 +465,7 @@ export function ContractApprovalFlowBanner({ contractId, contractStatus }: Banne
         </div>
         <div className="space-y-3 px-5 py-4 text-right">
           {error ? (
-            <div className="rounded-xl border border-rose-200/80 bg-rose-50/90 px-3 py-2 text-right text-[12px] font-bold text-rose-800">{error}</div>
+            <div className="rounded-[8px] border border-rose-200/80 bg-rose-50/90 px-3 py-2 text-right text-[12px] font-bold text-rose-800">{error}</div>
           ) : null}
           <p className="text-right text-[13px] font-semibold leading-6 text-[var(--text-body)]">
             با ارسال، مسیر چندمرحله‌ای تعریف‌شده در <span className="font-extrabold">تنظیمات فرایند تأیید</span> برای این نوع کاربری اجرا
@@ -475,7 +475,7 @@ export function ContractApprovalFlowBanner({ contractId, contractStatus }: Banne
             type="button"
             onClick={() => void handleSubmit()}
             disabled={busy !== null}
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[var(--dark-teal)] px-5 text-[13px] font-extrabold text-white shadow-sm transition-[filter] hover:brightness-[1.06] disabled:opacity-55"
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-[8px] bg-[var(--dark-teal)] px-5 text-[13px] font-extrabold text-white shadow-sm transition-[filter] hover:brightness-[1.06] disabled:opacity-55"
           >
             {busy === 'submit' ? <Loader2 className="h-4 w-4 animate-spin opacity-95" aria-hidden /> : <Send className="h-4 w-4 opacity-95" aria-hidden />}
             ارسال به فرایند تأیید
@@ -500,7 +500,7 @@ export function ContractApprovalFlowBanner({ contractId, contractStatus }: Banne
             type="button"
             onClick={() => setDetailsOpen(true)}
             disabled={busy !== null}
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-[var(--border-color)] bg-[var(--surface)] px-4 text-[12px] font-extrabold text-[var(--text-body)] hover:bg-[var(--surface-soft)] disabled:opacity-55"
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-[8px] border border-[var(--border-color)] bg-[var(--surface)] px-4 text-[12px] font-extrabold text-[var(--text-body)] hover:bg-[var(--surface-soft)] disabled:opacity-55"
           >
             جزئیات فرایند
           </button>
@@ -512,7 +512,7 @@ export function ContractApprovalFlowBanner({ contractId, contractStatus }: Banne
         {detailsDialog}
         <section
           dir="rtl"
-          className="contract-details-approval-banner mb-6 overflow-hidden rounded-2xl border border-amber-200/90 bg-[color-mix(in_srgb,var(--theme-warning-bg)_22%,var(--surface))] shadow-sm"
+          className="contract-details-approval-banner mb-6 overflow-hidden rounded-[8px] border border-amber-200/90 bg-[color-mix(in_srgb,var(--theme-warning-bg)_22%,var(--surface))] shadow-sm"
         >
           <div className="border-b border-amber-200/70 bg-[color-mix(in_srgb,var(--theme-warning-bg)_35%,transparent)] px-5 py-3.5">
             <div className="flex min-w-0 flex-row-reverse items-center gap-2.5 text-right">
@@ -527,7 +527,7 @@ export function ContractApprovalFlowBanner({ contractId, contractStatus }: Banne
           </div>
           <div className="space-y-3 px-5 py-4 text-right">
             {error ? (
-              <div className="rounded-xl border border-rose-200/80 bg-rose-50/90 px-3 py-2 text-right text-[12px] font-bold text-rose-800">{error}</div>
+              <div className="rounded-[8px] border border-rose-200/80 bg-rose-50/90 px-3 py-2 text-right text-[12px] font-bold text-rose-800">{error}</div>
             ) : null}
             <p className="text-right text-[13px] font-semibold text-[var(--text-body)]">
               این وضعیت تا زمانی نمایش داده می‌شود که یک فرایند جدید برای همین قرارداد شروع شود (ارسال مجدد به فرایند تأیید).
@@ -537,7 +537,7 @@ export function ContractApprovalFlowBanner({ contractId, contractStatus }: Banne
                 type="button"
                 onClick={() => setDetailsOpen(true)}
                 disabled={busy !== null}
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-[var(--border-color)] bg-[var(--surface)] px-5 text-[13px] font-extrabold text-[var(--text-body)] hover:bg-[var(--surface-soft)] disabled:opacity-55"
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-[8px] border border-[var(--border-color)] bg-[var(--surface)] px-5 text-[13px] font-extrabold text-[var(--text-body)] hover:bg-[var(--surface-soft)] disabled:opacity-55"
               >
                 جزئیات فرایند
               </button>
@@ -545,7 +545,7 @@ export function ContractApprovalFlowBanner({ contractId, contractStatus }: Banne
                 type="button"
                 onClick={() => void handleSubmit()}
                 disabled={busy !== null}
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[var(--dark-teal)] px-5 text-[13px] font-extrabold text-white shadow-sm disabled:opacity-55"
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-[8px] bg-[var(--dark-teal)] px-5 text-[13px] font-extrabold text-white shadow-sm disabled:opacity-55"
               >
                 {busy === 'submit' ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <RefreshCw className="h-4 w-4" aria-hidden />}
                 ارسال مجدد به فرایند تأیید
@@ -577,7 +577,7 @@ export function ContractApprovalFlowBanner({ contractId, contractStatus }: Banne
                 type="button"
                 onClick={() => setDetailsOpen(true)}
                 disabled={busy !== null}
-                className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-[var(--border-color)] bg-[var(--surface)] px-4 text-[12px] font-extrabold text-[var(--text-body)] hover:bg-[var(--surface-soft)] disabled:opacity-55"
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-[8px] border border-[var(--border-color)] bg-[var(--surface)] px-4 text-[12px] font-extrabold text-[var(--text-body)] hover:bg-[var(--surface-soft)] disabled:opacity-55"
               >
                 جزئیات فرایند
               </button>
@@ -587,7 +587,7 @@ export function ContractApprovalFlowBanner({ contractId, contractStatus }: Banne
                     type="button"
                     onClick={() => void handleRevokeDecision()}
                     disabled={busy !== null}
-                    className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-[var(--border-color)] bg-[var(--surface)] px-4 text-[12px] font-extrabold text-[var(--text-body)] hover:bg-[var(--surface-soft)] disabled:opacity-55"
+                    className="inline-flex h-10 items-center justify-center gap-2 rounded-[8px] border border-[var(--border-color)] bg-[var(--surface)] px-4 text-[12px] font-extrabold text-[var(--text-body)] hover:bg-[var(--surface-soft)] disabled:opacity-55"
                   >
                     حذف رأی من
                   </button>
@@ -595,7 +595,7 @@ export function ContractApprovalFlowBanner({ contractId, contractStatus }: Banne
                     type="button"
                     onClick={() => void handleRevokeDecision()}
                     disabled={busy !== null}
-                    className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-[var(--dark-teal)] px-4 text-[12px] font-extrabold text-white shadow-sm disabled:opacity-55"
+                    className="inline-flex h-10 items-center justify-center gap-2 rounded-[8px] bg-[var(--dark-teal)] px-4 text-[12px] font-extrabold text-white shadow-sm disabled:opacity-55"
                   >
                     ویرایش رأی (ثبت مجدد)
                   </button>
@@ -613,12 +613,12 @@ export function ContractApprovalFlowBanner({ contractId, contractStatus }: Banne
       {detailsDialog}
       <section
         dir="rtl"
-        className="contract-details-approval-banner mb-6 overflow-hidden rounded-2xl border border-[var(--border-color)] bg-[var(--surface)] shadow-[0_8px_30px_-18px_rgba(15,23,42,0.12)]"
+        className="contract-details-approval-banner mb-6 overflow-hidden rounded-[8px] border border-[var(--border-color)] bg-[var(--surface)] shadow-[0_8px_30px_-18px_rgba(15,23,42,0.12)]"
       >
       <div className="border-b border-[var(--border-color)] bg-[var(--surface-soft)]/80 px-5 py-3.5">
         <div className="flex min-w-0 flex-row-reverse flex-wrap items-center justify-between gap-3 text-right">
           <div className="flex min-w-0 flex-row-reverse items-center gap-2.5">
-            <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[color-mix(in_srgb,var(--dark-teal)_22%,transparent)] bg-white text-[var(--dark-teal)]">
+            <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[8px] border border-[color-mix(in_srgb,var(--dark-teal)_22%,transparent)] bg-white text-[var(--dark-teal)]">
               <Shield className="h-4 w-4" aria-hidden />
             </span>
             <div className="min-w-0">
@@ -646,7 +646,7 @@ export function ContractApprovalFlowBanner({ contractId, contractStatus }: Banne
             type="button"
             onClick={() => void reload()}
             disabled={busy !== null}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border-color)] bg-[var(--surface)] px-3 py-1.5 text-[11px] font-bold text-[var(--text-muted)] hover:bg-[var(--surface-soft)] disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 rounded-[8px] border border-[var(--border-color)] bg-[var(--surface)] px-3 py-1.5 text-[11px] font-bold text-[var(--text-muted)] hover:bg-[var(--surface-soft)] disabled:opacity-50"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} aria-hidden />
             بروزرسانی
@@ -656,7 +656,7 @@ export function ContractApprovalFlowBanner({ contractId, contractStatus }: Banne
 
       <div className="space-y-4 px-5 py-4">
         {error ? (
-          <div className="rounded-xl border border-rose-200/80 bg-rose-50/90 px-3 py-2 text-right text-[12px] font-bold text-rose-800">{error}</div>
+          <div className="rounded-[8px] border border-rose-200/80 bg-rose-50/90 px-3 py-2 text-right text-[12px] font-bold text-rose-800">{error}</div>
         ) : null}
 
         <ol className="space-y-2 text-right text-[12px] font-semibold text-[var(--text-body)]">
@@ -670,7 +670,7 @@ export function ContractApprovalFlowBanner({ contractId, contractStatus }: Banne
             return (
               <li
                 key={step.id}
-                className={`flex flex-col gap-2 rounded-lg border px-3 py-2 ${
+                className={`flex flex-col gap-2 rounded-[8px] border px-3 py-2 ${
                   isCurrent
                     ? 'border-[var(--dark-teal)] bg-[color-mix(in_srgb,var(--dark-teal)_8%,transparent)]'
                     : 'border-[var(--border-color)] bg-[var(--surface-soft)]/40'
@@ -682,10 +682,10 @@ export function ContractApprovalFlowBanner({ contractId, contractStatus }: Banne
                       {idx + 1}. {step.title}
                     </span>
                     {isCurrent ? (
-                      <span className="rounded-md bg-emerald-100 px-2 py-0.5 text-[10px] font-black text-emerald-900">جاری</span>
+                      <span className="rounded-[8px] bg-emerald-100 px-2 py-0.5 text-[10px] font-black text-emerald-900">جاری</span>
                     ) : null}
                     {step.isFinal ? (
-                      <span className="rounded-md bg-amber-100 px-2 py-0.5 text-[10px] font-black text-amber-900">نهایی</span>
+                      <span className="rounded-[8px] bg-amber-100 px-2 py-0.5 text-[10px] font-black text-amber-900">نهایی</span>
                     ) : null}
                   </div>
                   <div className="flex flex-row-reverse flex-wrap items-center gap-2 text-[10px] font-black">
@@ -724,7 +724,7 @@ export function ContractApprovalFlowBanner({ contractId, contractStatus }: Banne
             type="button"
             onClick={() => setDetailsOpen(true)}
             disabled={busy !== null}
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-[var(--border-color)] bg-[var(--surface)] px-5 text-[13px] font-extrabold text-[var(--text-body)] hover:bg-[var(--surface-soft)] disabled:opacity-55"
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-[8px] border border-[var(--border-color)] bg-[var(--surface)] px-5 text-[13px] font-extrabold text-[var(--text-body)] hover:bg-[var(--surface-soft)] disabled:opacity-55"
           >
             جزئیات فرایند
           </button>
@@ -733,7 +733,7 @@ export function ContractApprovalFlowBanner({ contractId, contractStatus }: Banne
               type="button"
               onClick={() => void handleApprove()}
               disabled={busy !== null}
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[var(--dark-teal)] px-5 text-[13px] font-extrabold text-white shadow-sm disabled:opacity-55"
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-[8px] bg-[var(--dark-teal)] px-5 text-[13px] font-extrabold text-white shadow-sm disabled:opacity-55"
             >
               {busy === 'approve' ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <CheckCircle2 className="h-4 w-4" aria-hidden />}
               تأیید مرحله
@@ -749,7 +749,7 @@ export function ContractApprovalFlowBanner({ contractId, contractStatus }: Banne
                 setError('');
               }}
               disabled={busy !== null}
-              className={`inline-flex h-11 items-center justify-center gap-2 rounded-xl border px-5 text-[13px] font-extrabold transition-colors disabled:opacity-55 ${
+              className={`inline-flex h-11 items-center justify-center gap-2 rounded-[8px] border px-5 text-[13px] font-extrabold transition-colors disabled:opacity-55 ${
                 revisionOpen ? 'border-amber-400 bg-amber-50 text-amber-950' : 'border-[var(--border-color)] bg-[var(--surface)] text-[var(--text-body)]'
               }`}
             >
@@ -766,7 +766,7 @@ export function ContractApprovalFlowBanner({ contractId, contractStatus }: Banne
                 setError('');
               }}
               disabled={busy !== null}
-              className={`inline-flex h-11 items-center justify-center gap-2 rounded-xl border px-5 text-[13px] font-extrabold transition-colors disabled:opacity-55 ${
+              className={`inline-flex h-11 items-center justify-center gap-2 rounded-[8px] border px-5 text-[13px] font-extrabold transition-colors disabled:opacity-55 ${
                 rejectOpen ? 'border-rose-400 bg-rose-50 text-rose-950' : 'border-[var(--border-color)] bg-[var(--surface)] text-[var(--text-body)]'
               }`}
             >
@@ -777,7 +777,7 @@ export function ContractApprovalFlowBanner({ contractId, contractStatus }: Banne
         </div>
 
         {revisionOpen && canShowRevision ? (
-          <div className="rounded-xl border border-[var(--border-color)] bg-[var(--surface-soft)]/50 p-4">
+          <div className="rounded-[8px] border border-[var(--border-color)] bg-[var(--surface-soft)]/50 p-4">
             <label htmlFor="wf-revision-reason" className="mb-2 block text-right text-[12px] font-extrabold text-[var(--text-strong)]">
               توضیح اصلاحیه <span className="text-rose-700">*</span>
             </label>
@@ -788,7 +788,7 @@ export function ContractApprovalFlowBanner({ contractId, contractStatus }: Banne
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               disabled={busy !== null}
-              className="w-full resize-y rounded-xl border border-[var(--border-color)] bg-[var(--surface)] px-3 py-2 text-right text-[13px] outline-none"
+              className="w-full resize-y rounded-[8px] border border-[var(--border-color)] bg-[var(--surface)] px-3 py-2 text-right text-[13px] outline-none"
             />
             <div className="mt-2 flex flex-wrap items-center justify-end gap-2">
               <span className="text-[11px] text-[var(--text-muted)]">{reasonTrim.length}</span>
@@ -796,7 +796,7 @@ export function ContractApprovalFlowBanner({ contractId, contractStatus }: Banne
                 type="button"
                 onClick={() => void handleRevision()}
                 disabled={busy !== null}
-                className="rounded-xl bg-amber-600 px-4 py-2 text-[12px] font-extrabold text-white disabled:opacity-45"
+                className="rounded-[8px] bg-amber-600 px-4 py-2 text-[12px] font-extrabold text-white disabled:opacity-45"
               >
                 {busy === 'revision' ? 'در حال ثبت…' : 'ثبت درخواست اصلاح'}
               </button>
@@ -805,7 +805,7 @@ export function ContractApprovalFlowBanner({ contractId, contractStatus }: Banne
         ) : null}
 
         {rejectOpen && capabilities.canRejectToDraft ? (
-          <div className="rounded-xl border border-rose-200/80 bg-rose-50/40 p-4">
+          <div className="rounded-[8px] border border-rose-200/80 bg-rose-50/40 p-4">
             <label htmlFor="wf-reject-reason" className="mb-2 block text-right text-[12px] font-extrabold text-[var(--text-strong)]">
               علت رد کامل <span className="text-rose-700">*</span>
             </label>
@@ -816,7 +816,7 @@ export function ContractApprovalFlowBanner({ contractId, contractStatus }: Banne
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               disabled={busy !== null}
-              className="w-full resize-y rounded-xl border border-[var(--border-color)] bg-[var(--surface)] px-3 py-2 text-right text-[13px] outline-none"
+              className="w-full resize-y rounded-[8px] border border-[var(--border-color)] bg-[var(--surface)] px-3 py-2 text-right text-[13px] outline-none"
             />
             <div className="mt-2 flex flex-wrap items-center justify-end gap-2">
               <span className="text-[11px] text-[var(--text-muted)]">{reasonTrim.length}</span>
@@ -824,7 +824,7 @@ export function ContractApprovalFlowBanner({ contractId, contractStatus }: Banne
                 type="button"
                 onClick={() => void handleReject()}
                 disabled={busy !== null}
-                className="rounded-xl bg-rose-600 px-4 py-2 text-[12px] font-extrabold text-white disabled:opacity-45"
+                className="rounded-[8px] bg-rose-600 px-4 py-2 text-[12px] font-extrabold text-white disabled:opacity-45"
               >
                 {busy === 'reject' ? 'در حال ثبت…' : 'ثبت رد'}
               </button>
@@ -836,3 +836,5 @@ export function ContractApprovalFlowBanner({ contractId, contractStatus }: Banne
     </>
   );
 }
+
+

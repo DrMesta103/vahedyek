@@ -16,7 +16,7 @@ function formatDate(value: string) {
 }
 
 function iconButtonClass(active = false) {
-  return `inline-flex h-10 w-10 items-center justify-center rounded-xl border transition ${
+  return `inline-flex h-10 w-10 items-center justify-center rounded-[8px] border transition ${
     active
       ? 'border-[color:var(--theme-accent)] bg-[color:var(--surface-soft)] text-[color:var(--theme-accent-strong)]'
       : 'border-[color:var(--border-color)] bg-[color:var(--surface)] text-[color:var(--text-body)] hover:border-[color:var(--theme-accent)] hover:text-[color:var(--theme-accent-strong)]'
@@ -115,7 +115,7 @@ export default function DevDocEventsPageClient() {
   if (process.env.NODE_ENV !== 'development') {
     return (
       <section className="mx-auto max-w-5xl p-6">
-        <div className="rounded-[24px] border border-[color:var(--border-color)] bg-[color:var(--surface)] p-6 text-center text-sm text-[color:var(--text-muted)]">
+        <div className="rounded-[8px] border border-[color:var(--border-color)] bg-[color:var(--surface)] p-6 text-center text-sm text-[color:var(--text-muted)]">
           این صفحه فقط در حالت development فعال است.
         </div>
       </section>
@@ -124,20 +124,20 @@ export default function DevDocEventsPageClient() {
 
   return (
     <section className="mx-auto max-w-6xl p-4 sm:p-6">
-      <div className="mb-5 rounded-[24px] border border-[color:var(--border-color)] bg-[color:var(--surface)] p-5">
+      <div className="mb-5 rounded-[8px] border border-[color:var(--border-color)] bg-[color:var(--surface)] p-5">
         <h1 className="text-xl font-black text-[color:var(--text-strong)]">لاگ مستندات توسعه</h1>
         <p className="mt-2 text-sm text-[color:var(--text-muted)]">
           رویدادهای ثبت، ویرایش و حذف مستندات اپ <strong>{currentAppConfig.appName}</strong> در همین tenant
         </p>
         <div className="mt-4 flex flex-wrap gap-3">
-          <div className="rounded-2xl bg-[color:var(--surface-soft)] px-4 py-3 text-sm text-[color:var(--text-body)]">ایجاد: {groupedCount.create}</div>
-          <div className="rounded-2xl bg-[color:var(--surface-soft)] px-4 py-3 text-sm text-[color:var(--text-body)]">ویرایش: {groupedCount.update}</div>
-          <div className="rounded-2xl bg-[color:var(--surface-soft)] px-4 py-3 text-sm text-[color:var(--text-body)]">حذف: {groupedCount.delete}</div>
-          <div className="rounded-2xl bg-[color:var(--surface-soft)] px-4 py-3 text-sm text-[color:var(--text-body)]">نتیجه فیلتر: {filteredEvents.length}</div>
+          <div className="rounded-[8px] bg-[color:var(--surface-soft)] px-4 py-3 text-sm text-[color:var(--text-body)]">ایجاد: {groupedCount.create}</div>
+          <div className="rounded-[8px] bg-[color:var(--surface-soft)] px-4 py-3 text-sm text-[color:var(--text-body)]">ویرایش: {groupedCount.update}</div>
+          <div className="rounded-[8px] bg-[color:var(--surface-soft)] px-4 py-3 text-sm text-[color:var(--text-body)]">حذف: {groupedCount.delete}</div>
+          <div className="rounded-[8px] bg-[color:var(--surface-soft)] px-4 py-3 text-sm text-[color:var(--text-body)]">نتیجه فیلتر: {filteredEvents.length}</div>
         </div>
       </div>
 
-      <div className="mb-5 grid gap-3 rounded-[24px] border border-[color:var(--border-color)] bg-[color:var(--surface)] p-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="mb-5 grid gap-3 rounded-[8px] border border-[color:var(--border-color)] bg-[color:var(--surface)] p-4 md:grid-cols-2 xl:grid-cols-4">
         <label className="grid gap-2">
           <span className="text-xs font-semibold text-[color:var(--text-muted)]">جستجو</span>
           <div className="relative">
@@ -150,7 +150,7 @@ export default function DevDocEventsPageClient() {
           <select
             value={eventTypeFilter}
             onChange={(event) => setEventTypeFilter(event.target.value as 'all' | PageDocEventType)}
-            className="h-10 rounded-lg border border-[color:var(--border-color)] bg-[color:var(--surface)] px-3 text-[13px] text-[color:var(--text-body)] outline-none"
+            className="h-10 rounded-[8px] border border-[color:var(--border-color)] bg-[color:var(--surface)] px-3 text-[13px] text-[color:var(--text-body)] outline-none"
           >
             <option value="all">همه</option>
             {PAGE_DOC_EVENT_TYPES.map((eventType) => (
@@ -165,7 +165,7 @@ export default function DevDocEventsPageClient() {
           <select
             value={docTypeFilter}
             onChange={(event) => setDocTypeFilter(event.target.value as 'all' | PageDocType)}
-            className="h-10 rounded-lg border border-[color:var(--border-color)] bg-[color:var(--surface)] px-3 text-[13px] text-[color:var(--text-body)] outline-none"
+            className="h-10 rounded-[8px] border border-[color:var(--border-color)] bg-[color:var(--surface)] px-3 text-[13px] text-[color:var(--text-body)] outline-none"
           >
             <option value="all">همه</option>
             {PAGE_DOC_TYPES.map((docType) => (
@@ -180,7 +180,7 @@ export default function DevDocEventsPageClient() {
           <select
             value={readFilter}
             onChange={(event) => setReadFilter(event.target.value as ReadFilter)}
-            className="h-10 rounded-lg border border-[color:var(--border-color)] bg-[color:var(--surface)] px-3 text-[13px] text-[color:var(--text-body)] outline-none"
+            className="h-10 rounded-[8px] border border-[color:var(--border-color)] bg-[color:var(--surface)] px-3 text-[13px] text-[color:var(--text-body)] outline-none"
           >
             <option value="all">همه</option>
             <option value="read">خوانده‌شده</option>
@@ -203,7 +203,7 @@ export default function DevDocEventsPageClient() {
         <div className="flex items-end">
           <button
             type="button"
-            className="app-button rounded-xl border border-[color:var(--border-color)] bg-[color:var(--surface)] px-4 py-2 text-sm font-medium text-[color:var(--text-body)]"
+            className="app-button rounded-[8px] border border-[color:var(--border-color)] bg-[color:var(--surface)] px-4 py-2 text-sm font-medium text-[color:var(--text-body)]"
             onClick={() => {
               setSearch('');
               setEventTypeFilter('all');
@@ -220,20 +220,20 @@ export default function DevDocEventsPageClient() {
       </div>
 
       {loading ? (
-        <div className="rounded-[24px] border border-[color:var(--border-color)] bg-[color:var(--surface)] p-8 text-center text-sm text-[color:var(--text-muted)]">
+        <div className="rounded-[8px] border border-[color:var(--border-color)] bg-[color:var(--surface)] p-8 text-center text-sm text-[color:var(--text-muted)]">
           <Loader2 className="mx-auto mb-3 h-5 w-5 animate-spin" />
           در حال بارگذاری لاگ‌ها...
         </div>
       ) : error ? (
-        <div className="rounded-[24px] border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">{error}</div>
+        <div className="rounded-[8px] border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">{error}</div>
       ) : filteredEvents.length === 0 ? (
-        <div className="rounded-[24px] border border-[color:var(--border-color)] bg-[color:var(--surface)] p-8 text-center text-sm text-[color:var(--text-muted)]">
+        <div className="rounded-[8px] border border-[color:var(--border-color)] bg-[color:var(--surface)] p-8 text-center text-sm text-[color:var(--text-muted)]">
           نتیجه‌ای برای فیلتر فعلی پیدا نشد.
         </div>
       ) : (
         <div className="space-y-3">
           {filteredEvents.map((event) => (
-            <article key={event.id} className="rounded-[24px] border border-[color:var(--border-color)] bg-[color:var(--surface)] p-4">
+            <article key={event.id} className="rounded-[8px] border border-[color:var(--border-color)] bg-[color:var(--surface)] p-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="space-y-2">
                   <div className="flex flex-wrap items-center gap-2">
@@ -289,3 +289,5 @@ export default function DevDocEventsPageClient() {
     </section>
   );
 }
+
+

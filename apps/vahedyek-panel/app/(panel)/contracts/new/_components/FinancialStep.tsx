@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
@@ -47,12 +47,12 @@ type DueMode = 'irregular' | 'regular';
 type RegularDuePreset = 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'bimonthly' | 'quarterly' | 'semiannual' | 'annual';
 
 const SYSTEM_FINANCIAL_CATEGORIES = [
-  { id: 'principal', name: 'مبلغ اصل قرارداد', requiresDue: false },
-  { id: 'advance', name: 'پیش پرداخت', requiresDue: true },
-  { id: 'installment', name: 'اقساط ثابت', requiresDue: true },
-  { id: 'loan', name: 'وام بانکی', requiresDue: false },
-  { id: 'handover', name: 'تحویل واحد', requiresDue: false },
-  { id: 'document', name: 'تحویل سند', requiresDue: false },
+  { id: 'principal', name: 'اصل قرارداد', requiresDue: false },
+  { id: 'advance', name: 'پیش‌پرداخت', requiresDue: true },
+  { id: 'installment', name: 'اقساط', requiresDue: true },
+  { id: 'loan', name: 'وام', requiresDue: false },
+  { id: 'handover', name: 'تحویل', requiresDue: false },
+  { id: 'document', name: 'مدارک', requiresDue: false },
 ] as const;
 const LOCKED_CATEGORY_IDS = SYSTEM_FINANCIAL_CATEGORIES.map((item) => item.id);
 const FINANCIAL_SUB_CATEGORY_IDS = ['advance', 'installment', 'loan', 'handover', 'document'] as const;
@@ -68,12 +68,12 @@ const REGULAR_DUE_PRESETS: Array<{
 }> = [
   { value: 'daily', label: 'روزانه', frequency: 'daily', period: 1, unitLabel: 'روز' },
   { value: 'weekly', label: 'هفتگی', frequency: 'daily', period: 7, unitLabel: 'روز' },
-  { value: 'biweekly', label: 'دو هفتگی', frequency: 'daily', period: 14, unitLabel: 'روز' },
-  { value: 'monthly', label: 'ماهیانه', frequency: 'monthly', period: 1, unitLabel: 'ماه' },
-  { value: 'bimonthly', label: 'دو ماهیانه', frequency: 'monthly', period: 2, unitLabel: 'ماه' },
-  { value: 'quarterly', label: 'سه ماهیانه', frequency: 'monthly', period: 3, unitLabel: 'ماه' },
-  { value: 'semiannual', label: '6 ماهیانه', frequency: 'monthly', period: 6, unitLabel: 'ماه' },
-  { value: 'annual', label: 'سالیانه', frequency: 'monthly', period: 12, unitLabel: 'ماه' },
+  { value: 'biweekly', label: 'دو هفته یک‌بار', frequency: 'daily', period: 14, unitLabel: 'روز' },
+  { value: 'monthly', label: 'ماهانه', frequency: 'monthly', period: 1, unitLabel: 'ماه' },
+  { value: 'bimonthly', label: 'دو ماه یک‌بار', frequency: 'monthly', period: 2, unitLabel: 'ماه' },
+  { value: 'quarterly', label: 'سه‌ماهه', frequency: 'monthly', period: 3, unitLabel: 'ماه' },
+  { value: 'semiannual', label: 'شش‌ماهه', frequency: 'monthly', period: 6, unitLabel: 'ماه' },
+  { value: 'annual', label: 'سالانه', frequency: 'monthly', period: 12, unitLabel: 'ماه' },
 ];
 
 function isPrimaryFinancialCategoryId(categoryId: string) {
@@ -261,14 +261,14 @@ function usesAdvanceDueDefaultTitle(categoryId: string) {
 function buildDefaultDueTitle(categoryId: string, dueItems: DueItem[]) {
   if (!usesAdvanceDueDefaultTitle(categoryId)) return '';
   const sequence = dueItems.filter((item) => item.categoryId === categoryId).length + 1;
-  return sequence <= 1 ? 'پیش پرداخت' : `پیش پرداخت ${sequence}`;
+  return sequence <= 1 ? 'آیتم جدید' : `آیتم جدید ${sequence}`;
 }
 
 const TAG_NAME_TO_SUB_ID = Object.fromEntries(
   SYSTEM_FINANCIAL_CATEGORIES.filter((x) => x.id !== 'principal').map((x) => [x.name, x.id]),
 ) as Record<string, string>;
 
-/** ردیف‌های قدیمی custom-* را به ساختار fin-line-migr-… + ۵ زیرردیف تبدیل می‌کند (شناسه پایدار). اگر درخت همان خط از قبل وجود داشته باشد، فقط ردیف و سررسیدها اصلاح می‌شود. */
+/** مهاجرت ردیف‌های custom-* به ساختار fin-line-migr-* برای سازگاری با مدل جدید. */
 function migrateLegacyCustomFinancialRows(
   categories: FinancialCategory[],
   dueItems: DueItem[],
@@ -399,7 +399,7 @@ function formatInput(value: string) {
 }
 
 function formatMoney(value: number) {
-  return `${Math.round(value).toLocaleString('en-US')} تومان`;
+  return `${Math.round(value).toLocaleString('en-US')} ریال`;
 }
 
 function formatArea(value: number) {
@@ -506,18 +506,18 @@ function FinancialCategoriesPieChart({
 
   if (!total) {
     return (
-      <div className="rounded-2xl border border-dashed border-gray-200 bg-white/70 p-6 text-center text-sm text-gray-400">
-        هنوز برای ردیف‌های مالی مبلغی ثبت نشده تا چارت نمایش داده شود.
+      <div className="rounded-[8px] border border-dashed border-gray-200 bg-white/70 p-6 text-center text-sm text-gray-400">
+        هیچ دسته‌ای هنوز مبلغی ندارد تا برای نمودار نمایش داده شود.
       </div>
     );
   }
 
   return (
-    <div className="rounded-2xl border border-teal-100 bg-gradient-to-br from-white to-teal-50/70 p-4">
+    <div className="rounded-[8px] border border-teal-100 bg-gradient-to-br from-white to-teal-50/70 p-4">
       <div className="mb-4 flex items-center justify-between gap-3">
         <div>
-          <p className="text-sm font-bold text-gray-800">چارت دسته‌بندی ردیف‌های مالی</p>
-          <p className="mt-1 text-xs text-gray-500">سهم هر ردیف از جمع مالی قرارداد در این نمودار نمایش داده می‌شود.</p>
+          <p className="text-sm font-bold text-gray-800">نمودار توزیع مبالغ</p>
+          <p className="mt-1 text-xs text-gray-500">این نمودار سهم هر دسته از مبلغ کل قرارداد را نشان می‌دهد.</p>
         </div>
         <div className="rounded-full bg-white px-3 py-1 text-xs font-medium text-teal-700 shadow-sm">
           جمع: {formatMoney(total)}
@@ -538,10 +538,10 @@ function FinancialCategoriesPieChart({
             })}
             <circle cx={center} cy={center} r="42" fill="white" />
             <text x={center} y={center - 4} textAnchor="middle" className="fill-gray-800 text-[12px] font-bold">
-              {chartData.length} ردیف
+              {chartData.length} دسته
             </text>
             <text x={center} y={center + 16} textAnchor="middle" className="fill-gray-500 text-[9px]">
-              از مبلغ قرارداد
+              از مبلغ کل
             </text>
           </svg>
         </div>
@@ -552,7 +552,7 @@ function FinancialCategoriesPieChart({
             const contractShare = totalContractAmount ? Math.round((item.capAmount / totalContractAmount) * 100) : 0;
 
             return (
-              <div key={item.id} className="rounded-lg border border-white/70 bg-white/90 px-2.5 py-2 shadow-sm">
+              <div key={item.id} className="rounded-[8px] border border-white/70 bg-white/90 px-2.5 py-2 shadow-sm">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
                     <span className="h-3.5 w-3.5 rounded-full" style={{ backgroundColor: item.color }} />
@@ -597,7 +597,7 @@ function Modal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
       <div
-        className={`w-full max-w-lg rounded-2xl border border-gray-200 bg-white shadow-2xl ${panelClassName}`}
+        className={`w-full max-w-lg rounded-[8px] border border-gray-200 bg-white shadow-2xl ${panelClassName}`}
         onClick={(event) => event.stopPropagation()}
       >
         <div className="flex items-start justify-between border-b border-gray-100 p-5">
@@ -605,7 +605,7 @@ function Modal({
             <h3 className="text-base font-bold text-gray-800">{title}</h3>
             {description ? <p className="mt-1 text-sm text-gray-500">{description}</p> : null}
           </div>
-          <button type="button" onClick={onClose} className="rounded-lg p-1 text-gray-400 hover:bg-gray-100">
+          <button type="button" onClick={onClose} className="rounded-[8px] p-1 text-gray-400 hover:bg-gray-100">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -917,17 +917,17 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
         buildValidationSummary(
           mainValidation.errors,
           {
-            totalArea: 'متراژ کل',
-            pricePerMeter: 'مبلغ هر مترمربع واحد',
-            parkingPricePerMeter: 'مبلغ هر مترمربع پارکینگ',
-            storagePricePerMeter: 'مبلغ هر مترمربع انباری',
-            fixedTotalAmount: 'مبلغ کلی پایه',
-            parkingFixedAmount: 'مبلغ کلی پارکینگ',
-            storageFixedAmount: 'مبلغ کلی انباری',
-            categories: 'ردیف مالی',
-            dueItems: 'سررسیدها',
+            totalArea: '????? ??',
+            pricePerMeter: '???? ?? ???',
+            parkingPricePerMeter: '???? ?? ??? ???????',
+            storagePricePerMeter: '???? ?? ??? ?????',
+            fixedTotalAmount: '???? ??',
+            parkingFixedAmount: '???? ???????',
+            storageFixedAmount: '???? ?????',
+            categories: '???????? ????',
+            dueItems: '???????? ??????',
           },
-          'اطلاعات مالی معتبر نیست.',
+          '??? ???? ???? ???? ???? ???.',
         ),
       );
       return false;
@@ -943,7 +943,7 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
       finalizePersistedPayload(mainSavePayload);
       return true;
     } catch (error) {
-      setFormError(error instanceof Error ? error.message : 'ثبت اطلاعات مالی انجام نشد.');
+      setFormError(error instanceof Error ? error.message : '???? ?????????? ??????? ???? ?? ???.');
       return false;
     } finally {
       setSaving(false);
@@ -961,10 +961,10 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
         buildValidationSummary(
           additionalValidation.errors,
           {
-            categories: 'سایر هزینه‌ها',
-            dueItems: 'سررسیدهای سایر هزینه‌ها',
+            categories: '???????? ?????',
+            dueItems: '???????? ?????? ?????',
           },
-          'ذخیره سایر هزینه‌ها انجام نشد.',
+          '??? ????????? ????? ???? ???? ???? ???.',
         ),
       );
       return false;
@@ -978,7 +978,7 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
       finalizePersistedPayload(additionalPayload);
       return true;
     } catch (error) {
-      setAdditionalFormError(error instanceof Error ? error.message : 'ثبت سایر هزینه‌ها انجام نشد.');
+      setAdditionalFormError(error instanceof Error ? error.message : '???? ?????????? ????????? ????? ?? ???.');
       return false;
     } finally {
       setSaving(false);
@@ -995,17 +995,17 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
         buildValidationSummary(
           fullValidation.errors,
           {
-            totalArea: 'متراژ کل',
-            pricePerMeter: 'مبلغ هر مترمربع واحد',
-            parkingPricePerMeter: 'مبلغ هر مترمربع پارکینگ',
-            storagePricePerMeter: 'مبلغ هر مترمربع انباری',
-            fixedTotalAmount: 'مبلغ کلی پایه',
-            parkingFixedAmount: 'مبلغ کلی پارکینگ',
-            storageFixedAmount: 'مبلغ کلی انباری',
-            categories: 'ردیف مالی',
-            dueItems: 'سررسیدها',
+            totalArea: '????? ??',
+            pricePerMeter: '???? ?? ???',
+            parkingPricePerMeter: '???? ?? ??? ???????',
+            storagePricePerMeter: '???? ?? ??? ?????',
+            fixedTotalAmount: '???? ??',
+            parkingFixedAmount: '???? ???????',
+            storageFixedAmount: '???? ?????',
+            categories: '???????? ????',
+            dueItems: '???????? ??????',
           },
-          'اطلاعات مالی معتبر نیست.',
+          '??? ???? ???? ???? ???? ???.',
         ),
       );
       return false;
@@ -1026,7 +1026,7 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
       dispatchContractFlowSavedForDraft(draftId, stepId as 'financial', Date.now(), payload);
       return true;
     } catch (error) {
-      setFormError(error instanceof Error ? error.message : 'ثبت اطلاعات مالی انجام نشد.');
+      setFormError(error instanceof Error ? error.message : '???? ?????????? ??????? ???? ?? ???.');
       return false;
     } finally {
       setSaving(false);
@@ -1252,12 +1252,12 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
 
   const submitDue = () => {
     if (!dueTitle.trim()) {
-      setDueFormError('عنوان سررسید را وارد کنید.');
+      setDueFormError('???? ?????? ???? ???? ???.');
       return;
     }
 
     if (parseNum(dueAmount) <= 0) {
-      setDueFormError('مبلغ سررسید باید بیشتر از صفر باشد.');
+      setDueFormError('???? ???????? ????? ????? ????? ? ????? ???? ???? ???? ???.');
       return;
     }
 
@@ -1265,7 +1265,7 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
 
     if (dueMode === 'irregular' || !activeCategorySupportsRegular) {
       if (!dueDate.trim()) {
-        setDueFormError('تاریخ سررسید را وارد کنید.');
+        setDueFormError('???? ?????? ???? ???? ???.');
         return;
       }
 
@@ -1283,12 +1283,12 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
     } else {
       const count = Number(regularCount);
       if (!Number.isFinite(count) || count <= 0) {
-        setDueFormError('تعداد اقساط منظم را وارد کنید.');
+        setDueFormError('????? ?????? ???? ???? ???.');
         return;
       }
 
       if (!regularStartDate.trim()) {
-        setDueFormError('تاریخ شروع اقساط منظم را وارد کنید.');
+        setDueFormError('???? ????? ???? ???? ???? ???.');
         return;
       }
 
@@ -1307,7 +1307,7 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
       });
 
       if (generatedItems.some((item) => !item.dueDate)) {
-        setDueFormError('تاریخ شروع اقساط معتبر نیست.');
+        setDueFormError('????? ????? ???? ???? ???? ???.');
         return;
       }
 
@@ -1493,7 +1493,7 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
   };
 
   if (loading) {
-    return <ContractStepLoader title={title} description="در حال بارگذاری اطلاعات مالی قرارداد..." />;
+      return <ContractStepLoader title={title} description="در حال بارگذاری اطلاعات مالی، لطفاً کمی صبر کنید..." />;
   }
 
   return (
@@ -1501,14 +1501,14 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
       {!embedded ? <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">{title}</h1>
-          <p className="mt-1 text-sm text-gray-500">مدل قیمت‌گذاری، جمع مالی و دسته‌بندی‌های مالی قرارداد را در این بخش مدیریت کنید.</p>
+          <p className="mt-1 text-sm text-gray-500">در این مرحله مبلغ‌گذاری، پرداخت‌ها و آیتم‌های سررسید را تنظیم می‌کنید.</p>
         </div>
-        <button type="button" onClick={() => requestNavigation(basePath)} className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">
+        <button type="button" onClick={() => requestNavigation(basePath)} className="rounded-[8px] border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">
           بازگشت به مراحل
         </button>
       </div> : null}
 
-      <div className={visibleErrors.totalArea || visibleErrors.pricePerMeter || visibleErrors.parkingPricePerMeter || visibleErrors.storagePricePerMeter || visibleErrors.fixedTotalAmount || visibleErrors.parkingFixedAmount || visibleErrors.storageFixedAmount ? 'rounded-2xl border border-rose-300 bg-rose-50/20 p-1' : ''}>
+      <div className={visibleErrors.totalArea || visibleErrors.pricePerMeter || visibleErrors.parkingPricePerMeter || visibleErrors.storagePricePerMeter || visibleErrors.fixedTotalAmount || visibleErrors.parkingFixedAmount || visibleErrors.storageFixedAmount ? 'rounded-[8px] border border-rose-300 bg-rose-50/20 p-1' : ''}>
         <FinancialPricingBox
           pricingType={pricingType}
           onPricingTypeChange={setPricingType}
@@ -1544,7 +1544,7 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
         />
       </div>
 
-      {formError ? <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{formError}</div> : null}
+      {formError ? <div className="rounded-[8px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{formError}</div> : null}
 
       <div>
         <FinancialPaymentFlow
@@ -1574,8 +1574,8 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
       </div>
 
       <StickySubmitBar
-        label="ثبت اطلاعات مالی"
-        loadingLabel={loading ? 'در حال بارگذاری...' : activeSaveTarget === 'main' ? 'در حال ذخیره...' : undefined}
+        label="ذخیره اطلاعات مالی"
+        loadingLabel={loading ? 'در حال آماده‌سازی...' : activeSaveTarget === 'main' ? 'در حال ذخیره...' : undefined}
         disabled={loading || saving}
         onClick={handleSubmit}
         embedded={embedded}
@@ -1610,10 +1610,10 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
                 showPrincipalSection={false}
                 additionalCostsFooter={
                   <>
-                    {additionalFormError ? <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{additionalFormError}</div> : null}
+                    {additionalFormError ? <div className="mb-4 rounded-[8px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{additionalFormError}</div> : null}
 
                     <StickySubmitBar
-                      label="ثبت سایر هزینه‌ها"
+                      label="ذخیره بخش‌های تکمیلی"
                       loadingLabel={activeSaveTarget === 'additional' ? 'در حال ذخیره...' : undefined}
                       disabled={loading || saving}
                       onClick={handleAdditionalCostsSubmit}
@@ -1630,21 +1630,21 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
       <Modal
         open={Boolean(pendingDeleteCategoryId)}
         onClose={() => setPendingDeleteCategoryId(null)}
-        title="حذف ردیف مالی"
+        title="حذف دسته مالی"
         description={(() => {
           if (!pendingDeleteCategoryId) return undefined;
           const label =
-            categories.find((row) => row.id === pendingDeleteCategoryId)?.name?.trim() || 'این ردیف';
+            categories.find((row) => row.id === pendingDeleteCategoryId)?.name?.trim() || 'دسته مالی';
           return isFinancialLineHeaderCategoryId(pendingDeleteCategoryId)
-            ? `آیا از حذف «${label}» و تمام زیربخش‌های آن مطمئن هستید؟ سررسیدهای این ردیف نیز حذف می‌شوند.`
-            : `آیا از حذف «${label}» مطمئن هستید؟ سررسیدهای مرتبط نیز حذف می‌شوند.`;
+            ? `اگر «${label}» حذف شود، تمام زیرمجموعه‌های آن و آیتم‌های مرتبط هم حذف می‌شوند.`
+            : `اگر «${label}» حذف شود، آیتم‌های سررسید مربوطه هم حذف خواهند شد.`;
         })()}
         footer={
           <>
             <button
               type="button"
               onClick={() => setPendingDeleteCategoryId(null)}
-              className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50"
+              className="rounded-[8px] border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50"
             >
               انصراف
             </button>
@@ -1655,7 +1655,7 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
                 performDeleteCategory(pendingDeleteCategoryId);
                 setPendingDeleteCategoryId(null);
               }}
-              className="rounded-lg border border-rose-200 bg-rose-600 px-4 py-2 text-sm font-medium text-white hover:bg-rose-700"
+              className="rounded-[8px] border border-rose-200 bg-rose-600 px-4 py-2 text-sm font-medium text-white hover:bg-rose-700"
             >
               حذف
             </button>
@@ -1669,19 +1669,19 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
       <Modal
         open={Boolean(pendingNavigation)}
         onClose={() => setPendingNavigation(null)}
-        title="خروج از صفحه مالی"
-        description="اطلاعات این مرحله تغییر کرده است. قبل از خروج تصمیم بگیرید با این تغییرات چه شود."
+        title="خروج از مرحله مالی"
+        description="تغییرات ذخیره‌نشده وجود دارد. اگر ادامه دهید، ممکن است داده‌ها از دست بروند."
         footer={
           <>
-            <button type="button" onClick={() => setPendingNavigation(null)} className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">
+            <button type="button" onClick={() => setPendingNavigation(null)} className="rounded-[8px] border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">
               ماندن در صفحه
             </button>
             <button
               type="button"
               onClick={() => pendingNavigation && continueNavigation(pendingNavigation)}
-              className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-medium text-rose-700 hover:bg-rose-100"
+              className="rounded-[8px] border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-medium text-rose-700 hover:bg-rose-100"
             >
-              خروج بدون ذخیره
+              ادامه بدون ذخیره
             </button>
             <button
               type="button"
@@ -1692,52 +1692,52 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
                   continueNavigation(pendingNavigation);
                 }
               }}
-              className="rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700"
+              className="rounded-[8px] bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700"
             >
-              ذخیره و خروج
+              ذخیره و ادامه
             </button>
           </>
         }
       >
-        <div className="rounded-xl border border-teal-100 bg-teal-50 px-4 py-3 text-sm text-teal-800">
-          اگر از این صفحه خارج شوید و ذخیره نکنید، تغییرات اطلاعات مالی از بین می‌رود.
+        <div className="rounded-[8px] border border-teal-100 bg-teal-50 px-4 py-3 text-sm text-teal-800">
+          تغییرات را قبل از خروج ذخیره کنید تا چیزی از دست نرود.
         </div>
       </Modal>
 
       <Modal
         open={catDialogOpen}
         onClose={() => setCatDialogOpen(false)}
-        title={editingId ? 'ویرایش ردیف مالی' : 'افزودن ردیف مالی'}
+        title={editingId ? 'ویرایش دسته مالی' : 'افزودن دسته مالی'}
         panelClassName="!max-w-[320px]"
         footerClassName="justify-start border-gray-100 px-5 py-3"
         footer={
           <>
             <button type="button" onClick={() => setCatDialogOpen(false)} className="px-1 py-1 text-sm font-bold text-[#0e989d] transition hover:text-[#0b7f84]">
-              لغو
+              ???
             </button>
             <button type="button" onClick={submitCategory} className="px-1 py-1 text-sm font-bold text-[#0e989d] transition hover:text-[#0b7f84]">
-              ثبت
+              ???
             </button>
           </>
         }
       >
         {editingLockedCategory ? (
           <div>
-            <FieldLabel label="دسته‌بندی ردیف" />
-            <div className="mt-2 flex h-10 items-center rounded-md border border-gray-200 bg-gray-50 px-3 text-sm font-medium text-gray-700">
+            <FieldLabel label="??? ????" />
+            <div className="mt-2 flex h-10 items-center rounded-[8px] border border-gray-200 bg-gray-50 px-3 text-sm font-medium text-gray-700">
               {editingCategory?.name}
             </div>
           </div>
         ) : (
           <div>
-            <FieldLabel label="نام دسته‌بندی" />
-            <Input value={customName} onChange={(event) => setCustomName(event.target.value)} placeholder="مثال: انشعابات آب" className="mt-2" />
+            <FieldLabel label="????? ??????" />
+            <Input value={customName} onChange={(event) => setCustomName(event.target.value)} placeholder="????: ????? ??????????" className="mt-2" />
           </div>
         )}
 
         <div>
-          <FieldLabel label="سقف مبلغ" />
-          <Input value={capAmount} onChange={(event) => setCapAmount(formatInput(event.target.value))} placeholder="مثال: 10,000,000" className="mt-2" />
+          <FieldLabel label="??? ????" />
+          <Input value={capAmount} onChange={(event) => setCapAmount(formatInput(event.target.value))} placeholder="????: 10,000,000" className="mt-2" />
         </div>
       </Modal>
 
@@ -1750,8 +1750,8 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
           setDueTag('');
           setDueFormError('');
         }}
-        title={editingRegularGroupId ? 'ویرایش اقساط منظم' : editingDueId ? 'ویرایش سررسید' : 'ثبت سررسید'}
-        description={`سررسید برای ${categories.find((item) => item.id === activeTab)?.name ?? 'دسته‌بندی فعال'} ثبت می‌شود.`}
+        title={editingRegularGroupId ? '?????? ???? ????' : editingDueId ? '?????? ???? ??????' : '?????? ???? ??????'}
+        description={`???? ???? ???? ${categories.find((item) => item.id === activeTab)?.name ?? '???? ????'} ??? ??????.`}
         panelClassName="!max-w-[27vw]"
         footerClassName="justify-start border-gray-100 px-5 py-3"
         footer={
@@ -1767,10 +1767,10 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
               }}
               className="px-1 py-1 text-sm font-bold text-[#0e989d] transition hover:text-[#0b7f84]"
             >
-              لغو
+              ???
             </button>
             <button type="button" onClick={submitDue} className="px-1 py-1 text-sm font-bold text-[#0e989d] transition hover:text-[#0b7f84]">
-              {editingDueId ? 'ذخیره تغییرات' : 'ثبت'}
+              {editingDueId ? '????? ???????' : '??????'}
             </button>
           </>
         }
@@ -1779,14 +1779,14 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
           {activeCategorySupportsRegular ? (
             <section className="space-y-2">
               <div className="flex items-center justify-between gap-3">
-                <FieldLabel label="نوع سررسید" />
+                <FieldLabel label="??? ????" />
                 <TwoOptionSwitch<DueMode>
                   value={dueMode}
                   onChange={setDueMode}
                   onValue="regular"
                   offValue="irregular"
-                  onText="منظم"
-                  offText="نامنظم"
+                  onText="???"
+                  offText="???"
                   disabled={Boolean(editingDueId || editingRegularGroupId)}
                 />
               </div>
@@ -1794,11 +1794,11 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
           ) : null}
 
           <section className="space-y-3 border-t border-gray-100 pt-4">
-            <div className="text-[13px] font-bold text-gray-800">اطلاعات اصلی</div>
+            <div className="text-[13px] font-bold text-gray-800">??????? ??????</div>
             <div className="grid gap-3">
               {activeCategoryIsCustom ? (
-                <div className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-3">
-                  <FieldLabel label="تگ" />
+                <div className="rounded-[8px] border border-slate-200 bg-slate-50/80 px-3 py-3">
+                  <FieldLabel label="??" />
                   <TagPills<string>
                     value={dueTag}
                     onChange={setDueTag}
@@ -1808,25 +1808,25 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
                 </div>
               ) : null}
               <div>
-                <FieldLabel label="عنوان" />
+                <FieldLabel label="????" />
                 <Input
                   value={dueTitle}
                   onChange={(event) => setDueTitle(event.target.value)}
-                  placeholder={activeCategorySupportsRegular && dueMode === 'regular' ? 'مثال: اقساط ماهانه' : 'مثال: انشعابات آب'}
-                  className="mt-2 h-10 rounded-lg border-gray-200 bg-[#fcfdfd] px-3 text-[13px]"
+                  placeholder={activeCategorySupportsRegular && dueMode === 'regular' ? '????: 500,000' : '????: 1,500,000'}
+                  className="mt-2 h-10 rounded-[8px] border-gray-200 bg-[#fcfdfd] px-3 text-[13px]"
                 />
               </div>
 
               <div>
-                <FieldLabel label={activeCategorySupportsRegular && dueMode === 'regular' ? 'مبلغ کل اقساط' : 'مبلغ'} />
+                <FieldLabel label={activeCategorySupportsRegular && dueMode === 'regular' ? '???? ?????' : '????'} />
                 <div className="relative mt-2">
                   <Input
                     value={dueAmount}
                     onChange={(event) => setDueAmount(formatInput(event.target.value))}
-                    placeholder={activeCategorySupportsRegular && dueMode === 'regular' ? 'مبلغ کل را وارد کنید' : 'مبلغ سررسید'}
-                    className="h-10 rounded-lg border-gray-200 bg-[#fcfdfd] pr-3 pl-12 text-[13px]"
+                    placeholder={activeCategorySupportsRegular && dueMode === 'regular' ? '????: ?? 1 ???' : '????: 1,000,000'}
+                    className="h-10 rounded-[8px] border-gray-200 bg-[#fcfdfd] pr-3 pl-12 text-[13px]"
                   />
-                  <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-xs text-gray-400">تومان</span>
+                  <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-xs text-gray-400">????</span>
                 </div>
               </div>
             </div>
@@ -1834,7 +1834,7 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
 
           <section className="space-y-3 border-t border-gray-100 pt-4">
               <div className="flex items-center justify-between gap-3">
-                <div className="text-[13px] font-bold text-gray-800">{activeCategorySupportsRegular && dueMode === 'regular' ? 'زمان‌بندی اقساط' : 'زمان سررسید'}</div>
+                <div className="text-[13px] font-bold text-gray-800">{activeCategorySupportsRegular && dueMode === 'regular' ? '????????? ????? ????' : '????????? ????'}</div>
                 {activeCategorySupportsRegular && dueMode === 'regular' ? (
                 <TagPills<RegularDuePreset>
                   value={regularPreset}
@@ -1845,56 +1845,58 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
             </div>
 
             {!activeCategorySupportsRegular || dueMode === 'irregular' ? (
-              <DateField label="تاریخ سررسید" value={dueDate} onChange={setDueDate} placeholder="تاریخ سررسید را انتخاب کنید" />
+              <DateField label="????? ??????" value={dueDate} onChange={setDueDate} placeholder="????? ?????? ?? ?????? ????" />
             ) : (
               <>
                 <div className="grid gap-3">
                   <div>
-                    <FieldLabel label="بازه تکرار" />
-                    <div className="mt-2 flex h-10 items-center rounded-lg border border-gray-200 bg-gray-50 px-3 text-[13px] text-gray-700">
+                    <FieldLabel label="????? ????" />
+                    <div className="mt-2 flex h-10 items-center rounded-[8px] border border-gray-200 bg-gray-50 px-3 text-[13px] text-gray-700">
                       {regularPresetConfig.label}
                     </div>
                   </div>
                   <div>
-                    <FieldLabel label={`تعداد اقساط ${regularPresetConfig.label}`} />
+                    <FieldLabel label={`????? ${regularPresetConfig.label}`} />
                     <Input
                       value={regularCount}
                       onChange={(event) => setRegularCount(event.target.value.replace(/\D/g, ''))}
-                      placeholder="مثال: 6"
-                      className="mt-2 h-10 rounded-lg border-gray-200 bg-white px-3 text-[13px]"
+                      placeholder="????: 6"
+                      className="mt-2 h-10 rounded-[8px] border-gray-200 bg-white px-3 text-[13px]"
                     />
                   </div>
                   <DateField
-                    label={`شروع اقساط ${regularPresetConfig.label}`}
+                    label={`????? ${regularPresetConfig.label}`}
                     value={regularStartDate}
                     onChange={setRegularStartDate}
-                    placeholder="تاریخ شروع را انتخاب کنید"
+                    placeholder="????: ?? 1 ???"
                   />
                   <div>
-                    <FieldLabel label="پایان اقساط" />
-                    <div className="mt-2 flex h-10 items-center rounded-lg border border-gray-200 bg-gray-50 px-3 text-[13px] text-gray-600">
+                    <FieldLabel label="????? ????" />
+                    <div className="mt-2 flex h-10 items-center rounded-[8px] border border-gray-200 bg-gray-50 px-3 text-[13px] text-gray-600">
                       {regularEndDate}
                     </div>
                   </div>
                   <div>
-                    <FieldLabel label="مبلغ هر قسط" />
-                    <div className="mt-2 flex h-10 items-center rounded-lg border border-gray-200 bg-gray-50 px-3 text-[13px] font-medium text-teal-700">
-                      {regularPreviewAmounts.length ? formatMoney(regularPreviewAmounts[0]) : 'بعد از تعیین مبلغ و تعداد'}
+                    <FieldLabel label="???? ?? ???" />
+                    <div className="mt-2 flex h-10 items-center rounded-[8px] border border-gray-200 bg-gray-50 px-3 text-[13px] font-medium text-teal-700">
+                      {regularPreviewAmounts.length ? formatMoney(regularPreviewAmounts[0]) : '???? ??? ???? ?????? ???? ???'}
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between gap-3 rounded-lg bg-[#f6f7f4] px-3 py-2 text-xs text-gray-500">
-                  <span>{`فاصله ثبت اقساط: هر ${regularIntervalPeriod} ${regularPresetConfig.unitLabel}`}</span>
-                  <span>{regularInstallmentCount > 0 ? `${regularInstallmentCount} سررسید` : 'تعداد سررسید نامشخص'}</span>
+                <div className="flex items-center justify-between gap-3 rounded-[8px] bg-[#f6f7f4] px-3 py-2 text-xs text-gray-500">
+                  <span>{`????? ?????: ?? ${regularIntervalPeriod} ${regularPresetConfig.unitLabel}`}</span>
+                  <span>{regularInstallmentCount > 0 ? `${regularInstallmentCount} ???` : '????? ??? ???? ????'}</span>
                 </div>
               </>
             )}
           </section>
 
-          {dueFormError ? <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{dueFormError}</div> : null}
+          {dueFormError ? <div className="rounded-[8px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{dueFormError}</div> : null}
         </div>
       </Modal>
     </div>
   );
 }
+
+

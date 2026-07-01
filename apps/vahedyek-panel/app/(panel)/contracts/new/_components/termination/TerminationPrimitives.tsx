@@ -15,7 +15,7 @@ export function ToggleRow({
   description?: string;
 }) {
   return (
-    <div className="flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50/60 px-4 py-3">
+    <div className="flex items-center justify-between gap-4 rounded-[8px] border border-slate-200 bg-slate-50/60 px-4 py-3">
       <div className="min-w-0 flex-1 text-right">
         <p className="text-sm font-bold text-slate-900">{label}</p>
         {description ? <p className="mt-1 text-xs leading-6 text-slate-500">{description}</p> : null}
@@ -36,7 +36,7 @@ export function RadioRow({
 }) {
   return (
     <label
-      className={`flex cursor-pointer items-center gap-3 rounded-xl border px-3 py-3 text-right text-sm transition-all ${
+      className={`flex cursor-pointer items-center gap-3 rounded-[8px] border px-3 py-3 text-right text-sm transition-all ${
         checked ? 'border-cyan-500 bg-cyan-50' : 'border-slate-200 bg-white'
       }`}
     >
@@ -53,7 +53,7 @@ export function SubsectionSubmitRow({ onSave, saving, disabled }: { onSave: () =
         type="button"
         onClick={onSave}
         disabled={saving || disabled}
-        className="inline-flex min-h-[44px] min-w-[120px] items-center justify-center rounded-xl bg-emerald-600 px-6 py-2.5 text-sm font-bold text-white transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-emerald-300"
+        className="inline-flex min-h-[44px] min-w-[120px] items-center justify-center rounded-[8px] bg-emerald-600 px-6 py-2.5 text-sm font-bold text-white transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-emerald-300"
       >
         {saving ? 'در حال ثبت...' : 'ثبت'}
       </button>
@@ -65,3 +65,5 @@ export function firstErrorMessage(errors: Record<string, string>) {
   const key = Object.keys(errors)[0];
   return key ? errors[key] : '';
 }
+
+

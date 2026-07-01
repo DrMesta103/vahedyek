@@ -197,11 +197,11 @@ export function AppendixTagPageRenderer({ tag }: { tag: SupportedAppendixTagKey 
   );
 
   if (!payload) {
-    return <div className="rounded-2xl border border-slate-200 bg-slate-50/70 px-4 py-6 text-center text-sm font-semibold text-slate-500">داده این بخش هنوز آماده نشده است.</div>;
+    return <div className="rounded-[8px] border border-slate-200 bg-slate-50/70 px-4 py-6 text-center text-sm font-semibold text-slate-500">داده این بخش هنوز آماده نشده است.</div>;
   }
 
   return (
-    <div className="rounded-[24px] border border-slate-200 bg-slate-50/50 p-5 sm:p-6">
+    <div className="rounded-[8px] border border-slate-200 bg-slate-50/50 p-5 sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="text-right">
           <div className="text-[18px] font-black text-slate-900">{getTagTitle(tag)}</div>
@@ -211,7 +211,7 @@ export function AppendixTagPageRenderer({ tag }: { tag: SupportedAppendixTagKey 
         <button
           type="button"
           onClick={() => openPreviousDialog(tag)}
-          className="inline-flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-[12px] font-extrabold text-slate-700"
+          className="inline-flex h-11 items-center gap-2 rounded-[8px] border border-slate-200 bg-white px-4 text-[12px] font-extrabold text-slate-700"
         >
           <Eye className="h-4 w-4" />
           مشاهده داده قبلی
@@ -298,3 +298,5 @@ export function AppendixTagPageRenderer({ tag }: { tag: SupportedAppendixTagKey 
     </div>
   );
 }
+
+

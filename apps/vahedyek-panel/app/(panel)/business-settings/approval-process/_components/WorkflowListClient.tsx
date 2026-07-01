@@ -162,7 +162,7 @@ export function WorkflowListClient() {
       </div>
 
       {error ? (
-        <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-right text-[13px] font-bold text-rose-800">
+        <div className="mb-4 rounded-[8px] border border-rose-200 bg-rose-50 px-4 py-3 text-right text-[13px] font-bold text-rose-800">
           {error}
         </div>
       ) : null}
@@ -192,19 +192,19 @@ export function WorkflowListClient() {
                 <div className="relative shrink-0">
                   <button
                     type="button"
-                    className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-50"
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-[8px] border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-50"
                     aria-label={`گزینه‌های ${workflow.title}`}
                     onClick={() => setOpenMenuId((current) => (current === workflow.id ? '' : workflow.id))}
                   >
                     <MoreVertical className="h-4 w-4" />
                   </button>
                   {openMenuId === workflow.id ? (
-                    <div className="absolute left-0 top-10 z-30 w-40 overflow-hidden rounded-2xl border border-slate-200 bg-white p-1 text-right shadow-lg">
+                    <div className="absolute left-0 top-10 z-30 w-40 overflow-hidden rounded-[8px] border border-slate-200 bg-white p-1 text-right shadow-lg">
                       <button
                         type="button"
                         onClick={() => router.push(`/business-settings/approval-process/${workflow.id}`)}
                         disabled={isPending}
-                        className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-[12px] font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+                        className="flex w-full items-center gap-2 rounded-[8px] px-3 py-2 text-[12px] font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
                       >
                         <Settings2 className="h-4 w-4" />
                         مدیریت
@@ -213,7 +213,7 @@ export function WorkflowListClient() {
                         type="button"
                         onClick={() => deleteOne(workflow.id)}
                         disabled={isPending}
-                        className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-[12px] font-bold text-rose-700 hover:bg-rose-50 disabled:opacity-60"
+                        className="flex w-full items-center gap-2 rounded-[8px] px-3 py-2 text-[12px] font-bold text-rose-700 hover:bg-rose-50 disabled:opacity-60"
                       >
                         <Trash2 className="h-4 w-4" />
                         حذف
@@ -225,14 +225,14 @@ export function WorkflowListClient() {
 
               <div className="mt-2 grid gap-2 md:grid-cols-2">
                 <div className="grid gap-2 text-right text-[11px] font-normal text-slate-600">
-                  <div className="rounded-xl border border-slate-100 px-3 py-1.5">
+                  <div className="rounded-[8px] border border-slate-100 px-3 py-1.5">
                     <span className="block text-[10px] font-bold text-slate-400">مراحل</span>
                     <span className="mt-0.5 block truncate leading-5 text-slate-700">
                       {workflow.stepPreview}
                       {workflow.hasMoreSteps ? ' و مراحل دیگر' : ''}
                     </span>
                   </div>
-                  <div className="rounded-xl border border-slate-100 px-3 py-1.5">
+                  <div className="rounded-[8px] border border-slate-100 px-3 py-1.5">
                     <span className="block text-[10px] font-bold text-slate-400">تاییدکنندگان</span>
                     <div className="mt-1.5 flex flex-wrap gap-1.5">
                       {workflow.approverPreview.length ? (
@@ -250,7 +250,7 @@ export function WorkflowListClient() {
                 </div>
 
                 <div className="grid gap-2 text-right text-[11px] font-normal text-slate-600">
-                  <div className="rounded-xl bg-slate-50/80 px-3 py-1.5">
+                  <div className="rounded-[8px] bg-slate-50/80 px-3 py-1.5">
                     <div className="flex items-center gap-2">
                       <UsersRound className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
                       <span className="truncate">{workflow.processingHint}</span>
@@ -270,7 +270,7 @@ export function WorkflowListClient() {
                       {workflow.incompleteStepCount ? `، ${workflow.incompleteStepCount} ناقص` : ''}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 rounded-xl border border-slate-100 px-3 py-1.5 text-[10px] font-normal text-slate-400">
+                  <div className="flex items-center gap-2 rounded-[8px] border border-slate-100 px-3 py-1.5 text-[10px] font-normal text-slate-400">
                     <CalendarClock className="h-3.5 w-3.5" aria-hidden />
                     <span>آخرین تغییر: {workflow.updatedText}</span>
                   </div>
@@ -283,3 +283,5 @@ export function WorkflowListClient() {
     </div>
   );
 }
+
+

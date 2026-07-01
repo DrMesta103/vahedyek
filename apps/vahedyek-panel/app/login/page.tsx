@@ -75,7 +75,7 @@ function LoginPageContent() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top,#d8fff4,transparent_35%),linear-gradient(135deg,#f7fbfa,#eef6f4)] px-4">
-      <div className="w-full max-w-md rounded-[28px] border border-white/70 bg-white/90 p-8 shadow-[0_30px_80px_rgba(0,0,0,0.08)] backdrop-blur">
+      <div className="w-full max-w-md rounded-[8px] border border-white/70 bg-white/90 p-8 shadow-[0_30px_80px_rgba(0,0,0,0.08)] backdrop-blur">
         <div className="mb-8 text-right">
           <div className="mb-3 inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
             ورود به سامانه قرارداد
@@ -86,14 +86,14 @@ function LoginPageContent() {
 
         <form onSubmit={handleSubmit} className="space-y-4 text-right">
           {registered ? (
-            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+            <div className="rounded-[8px] border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
               ثبت‌نام انجام شد. حالا با ایمیل یا شماره موبایل و رمز عبور وارد شوید.
             </div>
           ) : null}
 
           <label className="block">
             <span className="mb-2 block text-sm font-semibold text-slate-700">ایمیل یا شماره موبایل</span>
-            <div className="flex items-center gap-2 rounded-[14px] border border-slate-200 bg-slate-50 px-3 focus-within:border-emerald-500">
+            <div className="flex items-center gap-2 rounded-[8px] border border-slate-200 bg-slate-50 px-3 focus-within:border-emerald-500">
               {showIranPrefix ? (
                 <span className="shrink-0 text-sm font-semibold text-slate-500" dir="ltr">
                   🇮🇷 +98
@@ -126,7 +126,7 @@ function LoginPageContent() {
           </label>
 
           {error ? (
-            <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div>
+            <div className="rounded-[8px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div>
           ) : null}
 
           <button
@@ -156,3 +156,5 @@ export default function LoginPage() {
     </Suspense>
   );
 }
+
+

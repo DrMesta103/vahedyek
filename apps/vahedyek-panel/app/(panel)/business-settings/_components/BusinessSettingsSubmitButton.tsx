@@ -11,8 +11,8 @@ export function BusinessSettingsSubmitButton({
   onClick,
   minimal = false,
   disabled = false,
-  label = 'ثبت',
-  savingLabel = 'در حال ثبت',
+  label = '???',
+  savingLabel = '?? ??? ???',
   widthClass = 'w-[120px]',
 }: {
   saving: boolean;
@@ -30,7 +30,7 @@ export function BusinessSettingsSubmitButton({
       disabled={saving || disabled}
       aria-busy={saving}
       className={cn(
-        'pointer-events-auto inline-flex h-10 whitespace-nowrap items-center justify-center gap-1.5 rounded-md border border-[#065f46] bg-[#065f46] px-3 py-1.5 text-sm font-semibold text-white transition-all duration-200 ease-out hover:-translate-y-0.5 hover:bg-[#054e39] hover:shadow-[0_10px_20px_rgba(6,95,70,0.16)] active:translate-y-0 active:shadow-none disabled:hover:translate-y-0',
+        'pointer-events-auto inline-flex h-10 whitespace-nowrap items-center justify-center gap-1.5 rounded-[8px] border border-[#065f46] bg-[#065f46] px-3 py-1.5 text-sm font-semibold text-white transition-all duration-200 ease-out hover:-translate-y-0.5 hover:bg-[#054e39] hover:shadow-[0_10px_20px_rgba(6,95,70,0.16)] active:translate-y-0 active:shadow-none disabled:hover:translate-y-0',
         saving ? 'disabled:cursor-wait' : 'disabled:cursor-not-allowed',
         widthClass,
         minimal ? 'shadow-none' : 'shadow-[0_10px_24px_rgba(6,95,70,0.28)]',
@@ -50,3 +50,4 @@ export function BusinessSettingsSubmitButton({
     </button>
   );
 }
+

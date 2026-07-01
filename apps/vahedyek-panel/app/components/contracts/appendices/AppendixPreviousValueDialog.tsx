@@ -51,13 +51,13 @@ function AccordionToggle({ open }: { open: boolean }) {
 
 function FinancialDueList({ dueItems }: { dueItems: FinancialDueItemData[] }) {
   if (!dueItems.length) {
-    return <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-[12px] font-semibold text-slate-500">برای این بخش سررسیدی ثبت نشده است.</div>;
+    return <div className="rounded-[8px] border border-slate-200 bg-slate-50 px-4 py-3 text-[12px] font-semibold text-slate-500">برای این بخش سررسیدی ثبت نشده است.</div>;
   }
 
   return (
     <div className="space-y-2">
       {dueItems.map((item) => (
-        <div key={item.id} className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+        <div key={item.id} className="rounded-[8px] border border-slate-200 bg-white px-4 py-3">
           <div className="flex items-start justify-between gap-3">
             <div className="text-right">
               <div className="text-[13px] font-black text-slate-800">{item.title}</div>
@@ -84,7 +84,7 @@ function FinancialSubCategoryCard({
   const percent = Number(category.capAmount ?? 0) > 0 ? Math.min(Math.round((registered / Number(category.capAmount ?? 0)) * 100), 100) : 0;
 
   return (
-    <div className="rounded-[22px] border border-slate-200 bg-white/90 p-4">
+    <div className="rounded-[8px] border border-slate-200 bg-white/90 p-4">
       <button type="button" onClick={() => setOpen((current) => !current)} className="flex w-full items-center justify-between gap-3 text-right">
         <AccordionToggle open={open} />
         <div className="flex-1 text-right">
@@ -102,7 +102,7 @@ function FinancialSubCategoryCard({
 
       {open ? (
         <>
-          <div className="mt-4 grid gap-3 rounded-2xl bg-[#c4e8ea]/35 px-4 py-3 text-[12px] font-bold text-slate-700 sm:grid-cols-3">
+          <div className="mt-4 grid gap-3 rounded-[8px] bg-[#c4e8ea]/35 px-4 py-3 text-[12px] font-bold text-slate-700 sm:grid-cols-3">
             <div className="text-right">
               <div className="text-slate-500">سررسید</div>
               <div className="mt-1">{dueItems.length.toLocaleString('fa-IR')} مورد</div>
@@ -140,7 +140,7 @@ function FinancialLineCard({
   const [open, setOpen] = useState(true);
 
   return (
-    <div className="rounded-[26px] border border-slate-200 bg-white/80 p-4 sm:p-5">
+    <div className="rounded-[8px] border border-slate-200 bg-white/80 p-4 sm:p-5">
       <button type="button" onClick={() => setOpen((current) => !current)} className="flex w-full items-center justify-between gap-3 border-b border-slate-200 pb-4 text-right">
         <AccordionToggle open={open} />
         <div className="flex-1 text-right">
@@ -185,7 +185,7 @@ function SideCostsFinancialPreview({ payload }: { payload: Record<string, unknow
   const lineHeaders = categories.filter((item) => isFinancialLineHeaderCategoryId(item.id));
 
   if (!lineHeaders.length) {
-    return <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-[13px] font-semibold text-slate-500">ردیف مالی جانبی معتبری در داده قبلی ثبت نشده است.</div>;
+    return <div className="rounded-[8px] border border-slate-200 bg-slate-50 px-4 py-4 text-[13px] font-semibold text-slate-500">ردیف مالی جانبی معتبری در داده قبلی ثبت نشده است.</div>;
   }
 
   return (
@@ -238,7 +238,7 @@ function FinancialPreviewSection({
   return (
     <section className="rounded-3xl border border-slate-200 bg-slate-50/70 p-4">
       <div className="flex items-center justify-between gap-3">
-        <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-slate-700 shadow-sm">
+        <span className="inline-flex h-10 w-10 items-center justify-center rounded-[8px] bg-white text-slate-700 shadow-sm">
           <WalletCards className="h-4 w-4" />
         </span>
         <div className="text-right">
@@ -262,7 +262,7 @@ function PartySection({ tag, payload }: { tag: AppendixTagKey; payload: Record<s
   return (
     <section className="rounded-3xl border border-slate-200 bg-slate-50/70 p-4">
       <div className="flex items-center justify-between gap-3">
-        <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-slate-700 shadow-sm">
+        <span className="inline-flex h-10 w-10 items-center justify-center rounded-[8px] bg-white text-slate-700 shadow-sm">
           <Users className="h-4 w-4" />
         </span>
         <div className="text-right">
@@ -271,7 +271,7 @@ function PartySection({ tag, payload }: { tag: AppendixTagKey; payload: Record<s
         </div>
       </div>
 
-      <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+      <div className="mt-4 overflow-hidden rounded-[8px] border border-slate-200 bg-white">
         {parties.length ? (
           parties.map((party: any, index: number) => (
             <div key={`${party?.personId ?? party?.name ?? index}`} className={`grid gap-2 px-4 py-3 text-right sm:grid-cols-[140px_minmax(0,1fr)] ${index > 0 ? 'border-t border-slate-100' : ''}`}>
@@ -298,7 +298,7 @@ function DeliveryDateSection({ payload }: { payload: Record<string, unknown> }) 
   return (
     <section className="rounded-3xl border border-slate-200 bg-slate-50/70 p-4">
       <div className="flex items-center justify-between gap-3">
-        <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-slate-700 shadow-sm">
+        <span className="inline-flex h-10 w-10 items-center justify-center rounded-[8px] bg-white text-slate-700 shadow-sm">
           <FileClock className="h-4 w-4" />
         </span>
         <div className="text-right">
@@ -307,7 +307,7 @@ function DeliveryDateSection({ payload }: { payload: Record<string, unknown> }) 
         </div>
       </div>
 
-      <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+      <div className="mt-4 overflow-hidden rounded-[8px] border border-slate-200 bg-white">
         <div className="grid gap-2 px-4 py-3 text-right sm:grid-cols-[140px_minmax(0,1fr)]">
           <div className="text-[11px] font-black text-slate-500">تاریخ تحویل ثبت‌شده</div>
           <div className="text-[13px] font-semibold leading-7 text-slate-700">{resolvedDate}</div>
@@ -334,7 +334,7 @@ function LoanSection({ payload }: { payload: Record<string, unknown> }) {
   return (
     <section className="rounded-3xl border border-slate-200 bg-slate-50/70 p-4">
       <div className="flex items-center justify-between gap-3">
-        <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-slate-700 shadow-sm">
+        <span className="inline-flex h-10 w-10 items-center justify-center rounded-[8px] bg-white text-slate-700 shadow-sm">
           <WalletCards className="h-4 w-4" />
         </span>
         <div className="text-right">
@@ -343,7 +343,7 @@ function LoanSection({ payload }: { payload: Record<string, unknown> }) {
         </div>
       </div>
 
-      <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+      <div className="mt-4 overflow-hidden rounded-[8px] border border-slate-200 bg-white">
         <div className="grid gap-2 px-4 py-3 text-right sm:grid-cols-[180px_minmax(0,1fr)]">
           <div className="text-[11px] font-black text-slate-500">وضعیت پرداخت</div>
           <div className="text-[13px] font-semibold leading-7 text-slate-700">{paymentStatusLabel}</div>
@@ -367,7 +367,7 @@ function GenericPayloadSection({ title, payload }: { title: string; payload: Rec
   return (
     <section className="rounded-3xl border border-slate-200 bg-slate-50/70 p-4">
       <div className="flex items-center justify-between gap-3">
-        <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-slate-700 shadow-sm">
+        <span className="inline-flex h-10 w-10 items-center justify-center rounded-[8px] bg-white text-slate-700 shadow-sm">
           <ListChecks className="h-4 w-4" />
         </span>
         <div className="text-right">
@@ -376,7 +376,7 @@ function GenericPayloadSection({ title, payload }: { title: string; payload: Rec
         </div>
       </div>
 
-      <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+      <div className="mt-4 overflow-hidden rounded-[8px] border border-slate-200 bg-white">
         {entries.length ? (
           entries.map(([key, value], index) => (
             <div key={key} className={`grid gap-2 px-4 py-3 text-right sm:grid-cols-[180px_minmax(0,1fr)] ${index > 0 ? 'border-t border-slate-100' : ''}`}>
@@ -404,7 +404,7 @@ function TechnicalSpecsPayloadSection({ payload }: { payload: Record<string, unk
   return (
     <section className="rounded-3xl border border-slate-200 bg-slate-50/70 p-4">
       <div className="flex items-center justify-between gap-3">
-        <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-slate-700 shadow-sm">
+        <span className="inline-flex h-10 w-10 items-center justify-center rounded-[8px] bg-white text-slate-700 shadow-sm">
           <ListChecks className="h-4 w-4" />
         </span>
         <div className="text-right">
@@ -415,7 +415,7 @@ function TechnicalSpecsPayloadSection({ payload }: { payload: Record<string, unk
 
       <div className="mt-4 space-y-2">
         {specs.map((group, index) => (
-          <div key={group.id} className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+          <div key={group.id} className="rounded-[8px] border border-slate-200 bg-white px-4 py-3">
             <div className="flex items-start justify-between gap-3">
               <div className="text-right">
                 <div className="text-[13px] font-black text-slate-800">{group.title}</div>
@@ -448,7 +448,7 @@ export function AppendixPreviousValueDialog({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
       <div
-        className="w-full max-w-5xl rounded-[28px] border border-slate-200 bg-white p-5 shadow-2xl sm:p-6"
+        className="w-full max-w-5xl rounded-[8px] border border-slate-200 bg-white p-5 shadow-2xl sm:p-6"
         dir="rtl"
         lang="fa"
         onClick={(event) => event.stopPropagation()}
@@ -457,7 +457,7 @@ export function AppendixPreviousValueDialog({
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 text-slate-600"
+            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[8px] border border-slate-200 bg-slate-50 text-slate-600"
             aria-label="بستن"
           >
             <span className="text-lg leading-none">×</span>
@@ -559,7 +559,7 @@ function BuilderPenaltySection({ payload }: { payload: Record<string, unknown> }
   return (
     <section className="rounded-3xl border border-slate-200 bg-slate-50/70 p-4">
       <div className="flex items-center justify-between gap-3">
-        <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-slate-700 shadow-sm">
+        <span className="inline-flex h-10 w-10 items-center justify-center rounded-[8px] bg-white text-slate-700 shadow-sm">
           <WalletCards className="h-4 w-4" />
         </span>
         <div className="text-right">
@@ -568,7 +568,7 @@ function BuilderPenaltySection({ payload }: { payload: Record<string, unknown> }
         </div>
       </div>
 
-      <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+      <div className="mt-4 overflow-hidden rounded-[8px] border border-slate-200 bg-white">
         <div className="grid gap-2 px-4 py-3 text-right sm:grid-cols-[180px_minmax(0,1fr)]">
           <div className="text-[11px] font-black text-slate-500">تأخیر در تحویل واحد</div>
           <div className="text-[13px] font-semibold leading-7 text-slate-700">{unitEnabled ? 'فعال' : 'غیرفعال'}</div>
@@ -626,7 +626,7 @@ function TerminationSection({ payload, side }: { payload: Record<string, unknown
   return (
     <section className="rounded-3xl border border-slate-200 bg-slate-50/70 p-4">
       <div className="flex items-center justify-between gap-3">
-        <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-slate-700 shadow-sm">
+        <span className="inline-flex h-10 w-10 items-center justify-center rounded-[8px] bg-white text-slate-700 shadow-sm">
           <Scale className="h-4 w-4" />
         </span>
         <div className="text-right">
@@ -635,7 +635,7 @@ function TerminationSection({ payload, side }: { payload: Record<string, unknown
         </div>
       </div>
 
-      <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+      <div className="mt-4 overflow-hidden rounded-[8px] border border-slate-200 bg-white">
         {renderValueRow('وضعیت کلی', data.terminationEnabled ? 'فعال' : 'غیرفعال')}
         {renderValueRow('تب فعال', data.terminationPartyTab === 'seller' ? 'فسخ سازنده' : 'فسخ خریدار')}
         {renderValueRow('بخش‌های فعال', `${enabledSections.length.toLocaleString('fa-IR')} مورد`)}
@@ -662,7 +662,7 @@ function PenaltyWaiverSection({ payload }: { payload: Record<string, unknown> })
   return (
     <section className="rounded-3xl border border-slate-200 bg-slate-50/70 p-4">
       <div className="flex items-center justify-between gap-3">
-        <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-slate-700 shadow-sm">
+        <span className="inline-flex h-10 w-10 items-center justify-center rounded-[8px] bg-white text-slate-700 shadow-sm">
           <WalletCards className="h-4 w-4" />
         </span>
         <div className="text-right">
@@ -671,7 +671,7 @@ function PenaltyWaiverSection({ payload }: { payload: Record<string, unknown> })
         </div>
       </div>
 
-      <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+      <div className="mt-4 overflow-hidden rounded-[8px] border border-slate-200 bg-white">
         <div className="grid gap-2 px-4 py-3 text-right sm:grid-cols-[180px_minmax(0,1fr)]">
           <div className="text-[11px] font-black text-slate-500">روش محاسبه</div>
           <div className="text-[13px] font-semibold leading-7 text-slate-700">{penaltyModeLabel(mode)}</div>
@@ -734,3 +734,5 @@ function PenaltyWaiverSection({ payload }: { payload: Record<string, unknown> })
     </section>
   );
 }
+
+

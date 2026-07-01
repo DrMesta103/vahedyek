@@ -113,7 +113,7 @@ export function LoanSharedResponsibilitySettingsPanel({
     if (!state) return;
 
     if (!state[policyKey] && !String(state[rateKey]).trim()) {
-      setError(`${inputLabel} را وارد کنید.`);
+      setError(`${inputLabel} ?? ???? ????.`);
       return;
     }
 
@@ -150,19 +150,19 @@ export function LoanSharedResponsibilitySettingsPanel({
       <div className="border-b border-[color:var(--border-soft)] pb-4 text-center">
         <h1 className="text-xl font-black text-[color:var(--text-strong)] sm:text-2xl">{title}</h1>
         <p className="mt-3 text-sm leading-8 text-[color:var(--text-muted)]">
-          در این بخش مشخص می‌کنید مبلغ وام از ابتدا عدد مشخصی دارد یا در زمان عقد قرارداد مشخص می‌شود
+          ?? ??? ??? ???? ??????? ???? ??? ?? ????? ??? ????? ???? ?? ?? ???? ??? ??????? ???? ??????
         </p>
       </div>
 
-      <section className="mt-4 rounded-[24px] bg-[color:var(--surface)] px-4 py-6 text-right">
+      <section className="mt-4 rounded-[8px] bg-[color:var(--surface)] px-4 py-6 text-right">
         <p className="text-sm leading-8 text-[color:var(--text-muted)]">{introText}</p>
         <h2 className="mt-2 text-[20px] font-black text-[color:var(--text-strong)]">{responsibilityTitle}</h2>
       </section>
 
-      <section className="mt-4 space-y-6 rounded-[24px] bg-[color:var(--surface)] px-4 py-6">
+      <section className="mt-4 space-y-6 rounded-[8px] bg-[color:var(--surface)] px-4 py-6">
         <ResponsibilityRow
-          title="با خریدار است"
-          description={`خریدار میبایست ${title} را پرداخت کند`}
+          title="?? ?????? ???"
+          description={`?????? ??????? ${title} ?? ?????? ???`}
           checked={Boolean(state[buyerKey])}
           onChange={(value) => {
             setState((current) => (current ? { ...current, [buyerKey]: value } : current));
@@ -172,8 +172,8 @@ export function LoanSharedResponsibilitySettingsPanel({
         />
 
         <ResponsibilityRow
-          title="با سازنده است"
-          description={`سازنده میبایست ${title} را پرداخت کند`}
+          title="?? ?????? ???"
+          description={`?????? ??????? ${title} ?? ?????? ???`}
           checked={Boolean(state[sellerKey])}
           onChange={(value) => {
             setState((current) => (current ? { ...current, [sellerKey]: value } : current));
@@ -183,7 +183,7 @@ export function LoanSharedResponsibilitySettingsPanel({
         />
       </section>
 
-      <section className="mt-4 rounded-[24px] bg-[color:var(--surface)] px-4 py-6">
+      <section className="mt-4 rounded-[8px] bg-[color:var(--surface)] px-4 py-6">
         <div dir="ltr" className="flex items-start justify-between gap-4">
           <ContractRegistrationSwitch
             checked={Boolean(state[policyKey])}
@@ -209,7 +209,7 @@ export function LoanSharedResponsibilitySettingsPanel({
       </section>
 
       {!state[policyKey] ? (
-        <section className="mt-4 rounded-[24px] bg-[color:var(--surface)] px-4 py-6">
+        <section className="mt-4 rounded-[8px] bg-[color:var(--surface)] px-4 py-6">
           <div className="space-y-4 text-right">
             <FieldLabel label={inputLabel} required />
             <FinancialAmountInput
@@ -233,3 +233,4 @@ export function LoanSharedResponsibilitySettingsPanel({
     </section>
   );
 }
+

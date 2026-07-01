@@ -23,8 +23,9 @@ export default function ContractAppendixTagPage() {
   }, [buildTagHref, loading, router, selectedTags, supportedTag]);
 
   if (!supportedTag || !selectedTags.includes(supportedTag)) {
-    return <div className="rounded-2xl border border-slate-200 bg-slate-50/70 px-4 py-6 text-center text-sm font-semibold text-slate-500">در حال بارگذاری بخش الحاقیه...</div>;
+    return <div className="rounded-[8px] border border-slate-200 bg-slate-50/70 px-4 py-6 text-center text-sm font-semibold text-slate-500">در حال بارگذاری بخش الحاقیه...</div>;
   }
 
   return <AppendixTagPageRenderer tag={supportedTag} />;
 }
+

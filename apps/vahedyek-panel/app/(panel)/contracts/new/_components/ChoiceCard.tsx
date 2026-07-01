@@ -14,7 +14,7 @@ export const ChoiceCard: React.FC<ChoiceCardProps> = ({ title, active, onClick, 
       <button
         type="button"
         onClick={onClick}
-        className={`inline-flex h-8 items-center gap-1.5 rounded-md border px-3.5 text-[13px] font-medium transition-all ${
+        className={`inline-flex h-8 items-center gap-1.5 rounded-[8px] border px-3.5 text-[13px] font-medium transition-all ${
           active
             ? 'border-blue-500 bg-blue-50 text-blue-700'
             : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50'
@@ -30,7 +30,7 @@ export const ChoiceCard: React.FC<ChoiceCardProps> = ({ title, active, onClick, 
     <button
       type="button"
       onClick={onClick}
-      className={`w-full rounded-lg border px-4 py-2.5 text-center text-[13px] font-medium transition-all ${
+      className={`w-full rounded-[8px] border px-4 py-2.5 text-center text-[13px] font-medium transition-all ${
         active
           ? 'border-blue-500 bg-blue-50 text-blue-700'
           : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50'
@@ -40,3 +40,4 @@ export const ChoiceCard: React.FC<ChoiceCardProps> = ({ title, active, onClick, 
     </button>
   );
 };
+

@@ -58,12 +58,12 @@ function ModeCard({
     <button
       type="button"
       onClick={() => onSelect(value)}
-      className={`flex min-h-[124px] items-center gap-3 rounded-[22px] border px-4 py-4 text-right transition ${
+      className={`flex min-h-[124px] items-center gap-3 rounded-[8px] border px-4 py-4 text-right transition ${
         active ? 'border-cyan-300 bg-cyan-50/80 shadow-[0_4px_18px_rgba(34,211,238,0.10)]' : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
       }`}
     >
       <span
-        className={`inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border ${
+        className={`inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-[8px] border ${
           active ? 'border-cyan-200 bg-white text-cyan-700' : 'border-slate-200 bg-slate-50 text-slate-500'
         }`}
       >
@@ -144,7 +144,7 @@ function ProgressiveGrid({
   return (
     <div className="space-y-4">
       {visibleRows.map((row, index) => (
-        <div key={row.fromKey} className="grid gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3 lg:grid-cols-[1.25fr_1.75fr]">
+        <div key={row.fromKey} className="grid gap-3 rounded-[8px] border border-slate-200 bg-slate-50 p-3 lg:grid-cols-[1.25fr_1.75fr]">
           <div className="space-y-2">
             <FieldLabel label={`مبلغ جریمه ${periodLabel} - پله ${index + 1}`} />
             <FinancialAmountInput value={row.amount} onChange={(value) => onValueChange(row.rateKey, value)} suffix="تومان" />
@@ -253,7 +253,7 @@ function BuilderPenaltySectionCard({ sectionId, state, onChange }: AppendixBuild
                 <input
                   value={String(state.values[section.marketValueReferenceKey!] ?? '')}
                   onChange={(event) => setSectionValue(section.marketValueReferenceKey!, event.target.value)}
-                  className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-right text-slate-900"
+                  className="h-11 w-full rounded-[8px] border border-slate-200 bg-white px-4 text-right text-slate-900"
                 />
               </div>
             </div>
@@ -270,7 +270,7 @@ function BuilderPenaltySectionCard({ sectionId, state, onChange }: AppendixBuild
                 <input
                   value={String(state.values[section.expertReferenceKey!] ?? '')}
                   onChange={(event) => setSectionValue(section.expertReferenceKey!, event.target.value)}
-                  className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-right text-slate-900"
+                  className="h-11 w-full rounded-[8px] border border-slate-200 bg-white px-4 text-right text-slate-900"
                 />
               </div>
             </div>
@@ -283,7 +283,7 @@ function BuilderPenaltySectionCard({ sectionId, state, onChange }: AppendixBuild
                 <input
                   value={String(state.values[section.customBasisTitleKey!] ?? '')}
                   onChange={(event) => setSectionValue(section.customBasisTitleKey!, event.target.value)}
-                  className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-right text-slate-900"
+                  className="h-11 w-full rounded-[8px] border border-slate-200 bg-white px-4 text-right text-slate-900"
                 />
               </div>
               <div className="space-y-3">
@@ -295,7 +295,7 @@ function BuilderPenaltySectionCard({ sectionId, state, onChange }: AppendixBuild
                 <input
                   value={String(state.values[section.customBasisReferenceKey!] ?? '')}
                   onChange={(event) => setSectionValue(section.customBasisReferenceKey!, event.target.value)}
-                  className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-right text-slate-900"
+                  className="h-11 w-full rounded-[8px] border border-slate-200 bg-white px-4 text-right text-slate-900"
                 />
               </div>
             </div>
@@ -327,7 +327,7 @@ function BuilderPenaltySectionCard({ sectionId, state, onChange }: AppendixBuild
             />
           </div>
 
-          <div className="space-y-5 rounded-[28px] border border-slate-200 bg-white p-5">
+          <div className="space-y-5 rounded-[8px] border border-slate-200 bg-white p-5">
             <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
               <div className="space-y-2 text-right">
                 <h4 className="text-sm font-bold text-slate-700">سقف جریمه</h4>
@@ -489,7 +489,7 @@ function MaterialToggle({
   onChange: (checked: boolean) => void;
 }) {
   return (
-    <div className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 lg:flex-row lg:items-center lg:justify-between">
+    <div className="flex flex-col gap-4 rounded-[8px] border border-slate-200 bg-slate-50 p-4 lg:flex-row lg:items-center lg:justify-between">
       <div className="space-y-2 text-right">
         <div className="text-sm font-extrabold text-slate-800">{title}</div>
         <p className="text-xs leading-6 text-slate-500">{description}</p>
@@ -509,8 +509,8 @@ export function AppendixBuilderPenaltyEditor({
   onChange: (next: ContractRuleState) => void;
 }) {
   return (
-    <div className="space-y-6 rounded-[24px] border border-slate-200 bg-white/95 p-5 shadow-sm sm:p-6">
-      <div className="rounded-2xl border border-[color-mix(in_srgb,var(--dark-teal)_16%,#cbd5e1)] bg-[color-mix(in_srgb,var(--dark-teal)_06%,white)] px-4 py-3 text-right">
+    <div className="space-y-6 rounded-[8px] border border-slate-200 bg-white/95 p-5 shadow-sm sm:p-6">
+      <div className="rounded-[8px] border border-[color-mix(in_srgb,var(--dark-teal)_16%,#cbd5e1)] bg-[color-mix(in_srgb,var(--dark-teal)_06%,white)] px-4 py-3 text-right">
         <div className="text-[13px] font-black text-[color-mix(in_srgb,var(--dark-teal)_88%,black)]">این بخش با منطق جریمه سازنده در پیش‌نویس هم‌ساخت است.</div>
         <p className="mt-1 text-[12px] font-semibold leading-6 text-slate-600">
           هر دو زیر‌بخش جریمه سازنده، یعنی تأخیر در تحویل واحد و تغییر مصالح و مشخصات، از همین‌جا در الحاقیه ثبت می‌شوند.
@@ -522,3 +522,5 @@ export function AppendixBuilderPenaltyEditor({
     </div>
   );
 }
+
+

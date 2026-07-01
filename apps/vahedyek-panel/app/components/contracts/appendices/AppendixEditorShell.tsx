@@ -338,7 +338,7 @@ export function AppendixEditorShell({ children }: { children: React.ReactNode })
           <button
             type="button"
             onClick={() => router.push(backHref)}
-            className="inline-flex h-10 shrink-0 items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-[13px] font-bold text-slate-700 shadow-sm transition hover:bg-slate-50"
+            className="inline-flex h-10 shrink-0 items-center gap-2 rounded-[8px] border border-slate-200 bg-white px-4 text-[13px] font-bold text-slate-700 shadow-sm transition hover:bg-slate-50"
           >
             بازگشت به فهرست متمم‌ها
             <ArrowRight className="h-4 w-4" />
@@ -346,15 +346,15 @@ export function AppendixEditorShell({ children }: { children: React.ReactNode })
         </div>
 
         {loading ? (
-          <section className="rounded-[28px] border border-white/70 bg-white/95 p-10 text-center text-sm font-bold text-slate-500 shadow-sm">در حال بارگذاری...</section>
+          <section className="rounded-[8px] border border-white/70 bg-white/95 p-10 text-center text-sm font-bold text-slate-500 shadow-sm">در حال بارگذاری...</section>
         ) : error ? (
-          <section className="rounded-[28px] border border-rose-200 bg-rose-50/95 p-8 text-center text-sm font-bold text-rose-800 shadow-sm">{error}</section>
+          <section className="rounded-[8px] border border-rose-200 bg-rose-50/95 p-8 text-center text-sm font-bold text-rose-800 shadow-sm">{error}</section>
         ) : (
           <>
-            <section className="rounded-[30px] border border-slate-200/80 bg-white/95 px-5 py-5 shadow-sm sm:px-6">
+            <section className="rounded-[8px] border border-slate-200/80 bg-white/95 px-5 py-5 shadow-sm sm:px-6">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div className="flex min-w-0 flex-1 items-start gap-3">
-                  <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[color-mix(in_srgb,var(--dark-teal)_12%,white)] text-[color-mix(in_srgb,var(--dark-teal)_90%,black)]">
+                  <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-[8px] bg-[color-mix(in_srgb,var(--dark-teal)_12%,white)] text-[color-mix(in_srgb,var(--dark-teal)_90%,black)]">
                     <FileText className="h-6 w-6" />
                   </span>
                   <div className="min-w-0 flex-1 text-right">
@@ -370,11 +370,11 @@ export function AppendixEditorShell({ children }: { children: React.ReactNode })
                 </div>
 
                 <div className="grid gap-3 sm:grid-cols-2 lg:min-w-[360px]">
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50/70 px-4 py-3 text-right">
+                  <div className="rounded-[8px] border border-slate-200 bg-slate-50/70 px-4 py-3 text-right">
                     <div className="text-[11px] font-bold text-slate-500">شماره متمم</div>
                     <div className="mt-1 text-[18px] font-black text-slate-900">{appendixNumber != null ? appendixNumber.toLocaleString('fa-IR') : ''}</div>
                   </div>
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50/70 px-4 py-3 text-right">
+                  <div className="rounded-[8px] border border-slate-200 bg-slate-50/70 px-4 py-3 text-right">
                     <div className="text-[11px] font-bold text-slate-500">تاریخ تحویل فعلی</div>
                     <div className="mt-1 text-[18px] font-black text-slate-900">{contractView.deliveryDate}</div>
                   </div>
@@ -383,7 +383,7 @@ export function AppendixEditorShell({ children }: { children: React.ReactNode })
             </section>
 
             <section className="space-y-5">
-              <div className="rounded-[28px] border border-slate-200/80 bg-white p-5 shadow-sm sm:p-6 lg:p-7">
+              <div className="rounded-[8px] border border-slate-200/80 bg-white p-5 shadow-sm sm:p-6 lg:p-7">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <h2 className="text-[18px] font-black text-slate-900">اطلاعات پایه متمم</h2>
                   <span className="inline-flex items-center rounded-full border border-orange-300 px-3 py-1 text-[11px] font-black text-orange-600">مرحله ۱</span>
@@ -437,7 +437,7 @@ export function AppendixEditorShell({ children }: { children: React.ReactNode })
                 </div>
               </div>
 
-              <div className="rounded-[28px] border border-slate-200/80 bg-white p-5 shadow-sm sm:p-6 lg:p-7">
+              <div className="rounded-[8px] border border-slate-200/80 bg-white p-5 shadow-sm sm:p-6 lg:p-7">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <h2 className="text-[18px] font-black text-slate-900">بخش‌های الحاقیه</h2>
                   <div className="text-[11px] font-semibold text-slate-500">{selectedTags.length.toLocaleString('fa-IR')} بخش انتخاب شده</div>
@@ -452,7 +452,7 @@ export function AppendixEditorShell({ children }: { children: React.ReactNode })
                           key={tag}
                           type="button"
                           onClick={() => router.push(buildTagHref(tag), { scroll: false })}
-                          className={`rounded-2xl border px-4 py-3 text-[13px] font-black transition ${
+                          className={`rounded-[8px] border px-4 py-3 text-[13px] font-black transition ${
                             active
                               ? 'border-cyan-300 bg-cyan-50 text-cyan-900 shadow-[0_0_0_1px_rgba(34,211,238,0.14)]'
                               : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
@@ -469,7 +469,7 @@ export function AppendixEditorShell({ children }: { children: React.ReactNode })
               </div>
 
               <div className="flex justify-start">
-                <Button type="button" variant="primary" onClick={() => setSubmitDialogOpen(true)} disabled={saving} className="min-w-[180px] rounded-2xl">
+                <Button type="button" variant="primary" onClick={() => setSubmitDialogOpen(true)} disabled={saving} className="min-w-[180px] rounded-[8px]">
                   {saving ? 'در حال ثبت...' : appendixId ? 'ذخیره متمم' : 'ثبت متمم'}
                   <Save className="h-4 w-4" />
                 </Button>
@@ -486,11 +486,11 @@ export function AppendixEditorShell({ children }: { children: React.ReactNode })
                 مشخص کنید این متمم در پیش‌نویس باقی بماند یا مستقیم وارد فرآیند تأیید شود.
               </p>
               <div className="mt-5 flex flex-col gap-3">
-                <button type="button" onClick={() => void saveAppendix('draft')} className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white text-[13px] font-extrabold text-slate-800">
+                <button type="button" onClick={() => void saveAppendix('draft')} className="inline-flex h-12 items-center justify-center gap-2 rounded-[8px] border border-slate-200 bg-white text-[13px] font-extrabold text-slate-800">
                   <Save className="h-4 w-4" />
                   ذخیره در پیش‌نویس
                 </button>
-                <button type="button" onClick={() => void saveAppendix('pending_approval')} className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-[color-mix(in_srgb,var(--dark-teal)_92%,black)] text-[13px] font-extrabold text-white">
+                <button type="button" onClick={() => void saveAppendix('pending_approval')} className="inline-flex h-12 items-center justify-center gap-2 rounded-[8px] bg-[color-mix(in_srgb,var(--dark-teal)_92%,black)] text-[13px] font-extrabold text-white">
                   <Send className="h-4 w-4" />
                   ارسال به فرآیند تأیید
                 </button>
@@ -509,3 +509,5 @@ export function AppendixEditorShell({ children }: { children: React.ReactNode })
     </AppendixEditorContextProvider>
   );
 }
+
+

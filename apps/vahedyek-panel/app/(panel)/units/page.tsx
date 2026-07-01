@@ -100,10 +100,10 @@ export default function UnitsPage() {
   return (
     <PanelLayout>
       <main className="space-y-5" dir="rtl">
-        <section className="rounded-[28px] border border-[color:var(--border-color)] bg-[color:var(--surface-overlay)] p-5 shadow-[0_18px_45px_var(--shadow-soft)]">
+        <section className="rounded-[8px] border border-[color:var(--border-color)] bg-[color:var(--surface-overlay)] p-5 shadow-[0_18px_45px_var(--shadow-soft)]">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-start gap-3">
-              <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-[color-mix(in_srgb,var(--dark-teal)_12%,white)] text-[color-mix(in_srgb,var(--dark-teal)_85%,black)]">
+              <span className="inline-flex h-12 w-12 items-center justify-center rounded-[8px] bg-[color-mix(in_srgb,var(--dark-teal)_12%,white)] text-[color-mix(in_srgb,var(--dark-teal)_85%,black)]">
                 <Building2 className="h-6 w-6" />
               </span>
               <div>
@@ -116,14 +116,14 @@ export default function UnitsPage() {
               <input
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                className="h-11 w-full rounded-2xl border border-slate-200 bg-white pr-10 pl-4 text-sm outline-none focus:border-[color:var(--theme-action-border)]"
+                className="h-11 w-full rounded-[8px] border border-slate-200 bg-white pr-10 pl-4 text-sm outline-none focus:border-[color:var(--theme-action-border)]"
                 placeholder="جستجو در واحدها..."
               />
             </div>
           </div>
         </section>
 
-        <section className="rounded-[24px] border border-[color:var(--border-soft)] bg-[color:var(--surface)] p-4">
+        <section className="rounded-[8px] border border-[color:var(--border-soft)] bg-[color:var(--surface)] p-4">
           <div className="flex flex-wrap gap-2">
             {(['all', 'unit', 'parking', 'storage', 'amenity'] as const).map((item) => (
               <button
@@ -140,7 +140,7 @@ export default function UnitsPage() {
           </div>
         </section>
 
-        <section className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-sm">
+        <section className="overflow-hidden rounded-[8px] border border-slate-200 bg-white shadow-sm">
           {loading ? (
             <div className="p-10 text-center text-sm font-bold text-slate-500">در حال بارگذاری...</div>
           ) : error ? (
@@ -210,3 +210,5 @@ export default function UnitsPage() {
     </PanelLayout>
   );
 }
+
+

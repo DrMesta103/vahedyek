@@ -24,7 +24,7 @@ function MenuCard({ title, description, href }: { title: string; description: st
   return (
     <Link
       href={href}
-      className="group flex min-h-[136px] flex-col justify-between rounded-[20px] border border-[color:var(--theme-accent-border)] bg-[color:var(--surface)] p-4 transition duration-200 hover:border-[color:var(--theme-action-border)]"
+      className="group flex min-h-[136px] flex-col justify-between rounded-[8px] border border-[color:var(--theme-accent-border)] bg-[color:var(--surface)] p-4 transition duration-200 hover:border-[color:var(--theme-action-border)]"
     >
       <div className="flex flex-row-reverse items-start gap-3">
         <ChevronLeft className="mt-1 h-4 w-4 shrink-0 text-[color:var(--text-faint)] transition group-hover:text-[color:var(--theme-action-text)]" />
@@ -47,13 +47,13 @@ export function ContractRuleMenuPanel() {
 
   return (
     <section className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
-      <div className="rounded-[28px] border border-[color:var(--border-color)] bg-[color:var(--surface-overlay)] p-5 shadow-[0_18px_45px_var(--shadow-soft)] backdrop-blur sm:p-6">
+      <div className="rounded-[8px] border border-[color:var(--border-color)] bg-[color:var(--surface-overlay)] p-5 shadow-[0_18px_45px_var(--shadow-soft)] backdrop-blur sm:p-6">
         <div className="flex flex-col gap-4 border-b border-[color:var(--border-soft)] pb-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-2 text-right">
             <p className="text-sm text-[color:var(--text-muted)]">تنظیمات کسب و کار / تنظیمات جریمه خریدار</p>
             <h1 className="text-2xl font-black text-[color:var(--text-strong)] sm:text-3xl">تنظیمات جریمه خریدار</h1>
           </div>
-          <div className="flex h-12 w-12 items-center justify-center self-end rounded-2xl border border-[color:var(--theme-action-border)] bg-[color:var(--theme-action-bg)] text-[color:var(--theme-action-text)] sm:self-auto">
+          <div className="flex h-12 w-12 items-center justify-center self-end rounded-[8px] border border-[color:var(--theme-action-border)] bg-[color:var(--theme-action-bg)] text-[color:var(--theme-action-text)] sm:self-auto">
             <Landmark className="h-5 w-5" />
           </div>
         </div>
@@ -86,3 +86,5 @@ export function ContractRuleMenuPanel() {
     </section>
   );
 }
+
+

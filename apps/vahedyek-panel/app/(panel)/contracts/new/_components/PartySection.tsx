@@ -46,7 +46,7 @@ export function PartySection({
             rows.map((row) => (
               <div
                 key={row.id}
-                className={`relative rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-[0_6px_22px_rgba(15,23,42,0.06)] ${
+                className={`relative rounded-[8px] border border-slate-200 bg-white px-4 py-3 shadow-[0_6px_22px_rgba(15,23,42,0.06)] ${
                   layout === 'grid' ? 'h-full' : ''
                 }`}
               >
@@ -54,7 +54,7 @@ export function PartySection({
                   <button
                     type="button"
                     onClick={() => onRemove(row.id)}
-                    className="absolute left-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-xl border border-rose-100 bg-rose-50 text-rose-600 shadow-sm transition hover:bg-rose-100"
+                    className="absolute left-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-[8px] border border-rose-100 bg-rose-50 text-rose-600 shadow-sm transition hover:bg-rose-100"
                     aria-label="حذف"
                     title="حذف"
                   >
@@ -97,7 +97,7 @@ export function PartySection({
                     <div className="text-right">
                       <div className="text-[11px] font-semibold text-slate-500">مقدار سهم</div>
                       <div className="mt-1 flex items-center gap-2">
-                        <span className="inline-flex h-9 items-center rounded-xl border border-slate-200 bg-slate-50 px-3 text-[12px] font-bold text-slate-700">
+                        <span className="inline-flex h-9 items-center rounded-[8px] border border-slate-200 bg-slate-50 px-3 text-[12px] font-bold text-slate-700">
                           {shareMode === 'dang' ? 'دانگ' : 'درصد'}
                         </span>
                         <Input
@@ -108,7 +108,7 @@ export function PartySection({
                           value={row.shareValue === 0 ? '' : row.shareValue}
                           onChange={(event) => onShareChange(row.id, event.target.value)}
                           disabled={row.lockShare}
-                          className="h-9 w-28 rounded-xl text-sm"
+                          className="h-9 w-28 rounded-[8px] text-sm"
                           placeholder={shareMode === 'dang' ? 'مثلا 1.5' : 'مثلا 25'}
                         />
                       </div>
@@ -144,7 +144,7 @@ export function PartySection({
                         title="طرف اصلی"
                         aria-label="طرف اصلی"
                         disabled={isSingleRow}
-                        className={`inline-flex items-center gap-2 rounded-2xl border px-3 py-2 text-[12px] font-bold transition-colors ${
+                        className={`inline-flex items-center gap-2 rounded-[8px] border px-3 py-2 text-[12px] font-bold transition-colors ${
                           row.isPrimary
                             ? 'border-[color-mix(in_srgb,var(--dark-teal)_35%,transparent)] bg-[color-mix(in_srgb,var(--dark-teal)_10%,white)] text-[color-mix(in_srgb,var(--dark-teal)_90%,black)]'
                             : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
@@ -159,7 +159,7 @@ export function PartySection({
               </div>
             ))
           ) : (
-            <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/70 px-4 py-6 text-center text-sm text-slate-400 sm:col-span-2">
+            <div className="rounded-[8px] border border-dashed border-slate-200 bg-slate-50/70 px-4 py-6 text-center text-sm text-slate-400 sm:col-span-2">
               طرفی اضافه نشده است.
             </div>
           )}
@@ -169,7 +169,7 @@ export function PartySection({
               <button
                 type="button"
                 onClick={onOpenDialog}
-                className="inline-flex h-10 items-center gap-2 rounded-lg border border-[var(--theme-action-border)] bg-[var(--theme-action-bg)] px-4 text-sm font-bold text-[var(--theme-action-text)] transition-colors hover:bg-[var(--theme-action-bg-hover)]"
+                className="inline-flex h-10 items-center gap-2 rounded-[8px] border border-[var(--theme-action-border)] bg-[var(--theme-action-bg)] px-4 text-sm font-bold text-[var(--theme-action-text)] transition-colors hover:bg-[var(--theme-action-bg-hover)]"
               >
                 <Plus className="h-4 w-4" />
                 {addButtonLabel}
@@ -181,3 +181,5 @@ export function PartySection({
     </div>
   );
 }
+
+

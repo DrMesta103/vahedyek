@@ -35,7 +35,7 @@ export const StickySubmitBar: React.FC<StickySubmitBarProps> = ({
           onClick={onClick}
           disabled={disabled}
           data-contract-save-button={submitId}
-          className="inline-flex h-9 items-center gap-2 rounded-lg bg-teal-700 px-5 text-[13px] font-semibold text-white transition-all hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-600/30 disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex h-9 items-center gap-2 rounded-[8px] bg-teal-700 px-5 text-[13px] font-semibold text-white transition-all hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-600/30 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isLoading ? (
             <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
@@ -48,3 +48,4 @@ export const StickySubmitBar: React.FC<StickySubmitBarProps> = ({
     </div>
   );
 };
+

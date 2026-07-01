@@ -148,14 +148,14 @@ export function PartySelectionDialog({
           <Input
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
-            className="h-11 rounded-2xl pl-10"
+            className="h-11 rounded-[8px] pl-10"
             placeholder="جستجو"
           />
         </div>
 
         <div className="space-y-3">
           {loading ? (
-            <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm font-semibold text-slate-400">
+            <div className="rounded-[8px] border border-slate-200 bg-white p-8 text-center text-sm font-semibold text-slate-400">
               در حال بارگذاری…
             </div>
           ) : availableItems.length ? (
@@ -168,7 +168,7 @@ export function PartySelectionDialog({
                   onClick={() =>
                     setSelectedIds((current) => (current.includes(item.id) ? current.filter((itemId) => itemId !== item.id) : [...current, item.id]))
                   }
-                  className={`relative flex w-full flex-row-reverse items-center justify-between gap-4 rounded-2xl border px-4 py-4 text-right shadow-sm transition-colors ${
+                  className={`relative flex w-full flex-row-reverse items-center justify-between gap-4 rounded-[8px] border px-4 py-4 text-right shadow-sm transition-colors ${
                     checked
                       ? 'border-[color-mix(in_srgb,var(--dark-teal)_40%,transparent)] bg-[color-mix(in_srgb,var(--dark-teal)_18%,white)]'
                       : 'border-slate-200 bg-white hover:bg-slate-50'
@@ -202,14 +202,14 @@ export function PartySelectionDialog({
               );
             })
           ) : (
-            <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center text-sm font-semibold text-slate-400">
+            <div className="rounded-[8px] border border-dashed border-slate-200 bg-white p-8 text-center text-sm font-semibold text-slate-400">
               موردی پیدا نشد.
             </div>
           )}
         </div>
 
         {newItemMode ? (
-          <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
+          <div className="rounded-[8px] border border-slate-200 bg-white px-4 py-4">
             <div className="text-right text-[12px] font-bold text-slate-700">
               نام {personTab === 'natural' ? 'شخص حقیقی' : 'شخص حقوقی'}
             </div>
@@ -217,14 +217,14 @@ export function PartySelectionDialog({
               <Input
                 value={newName}
                 onChange={(event) => setNewName(event.target.value)}
-                className="h-11 flex-1 rounded-2xl"
+                className="h-11 flex-1 rounded-[8px]"
                 placeholder={personTab === 'natural' ? 'مثلا مهدی علینقی پور' : 'مثلا شرکت نمونه'}
               />
               <button
                 type="button"
                 onClick={() => void handleCreate()}
                 disabled={!newName.trim() || creating}
-                className="shrink-0 rounded-2xl bg-[color-mix(in_srgb,var(--dark-teal)_92%,black)] px-4 py-3 text-[12px] font-black text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
+                className="shrink-0 rounded-[8px] bg-[color-mix(in_srgb,var(--dark-teal)_92%,black)] px-4 py-3 text-[12px] font-black text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {creating ? '...' : 'ثبت'}
               </button>
@@ -268,3 +268,4 @@ export function PartySelectionDialog({
     </ContractModal>
   );
 }
+

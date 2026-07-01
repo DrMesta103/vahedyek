@@ -52,7 +52,7 @@ const PACKAGE_OPTIONS = [
 
 function ProvisioningScreen() {
   return (
-    <div className="w-full max-w-2xl rounded-[32px] border border-white/70 bg-white/90 p-10 text-center shadow-[0_30px_90px_rgba(15,23,42,0.12)] backdrop-blur">
+    <div className="w-full max-w-2xl rounded-[8px] border border-white/70 bg-white/90 p-10 text-center shadow-[0_30px_90px_rgba(15,23,42,0.12)] backdrop-blur">
       <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100 text-3xl text-emerald-700">
         <i className="fa fa-building" />
       </div>
@@ -212,7 +212,7 @@ function SelectTenantPageContent() {
   const frameClassName =
     step === 'provisioning'
       ? 'w-full max-w-2xl'
-      : 'w-full max-w-6xl rounded-[32px] border border-white/70 bg-white/90 p-6 shadow-[0_30px_90px_rgba(15,23,42,0.12)] backdrop-blur md:p-8';
+      : 'w-full max-w-6xl rounded-[8px] border border-white/70 bg-white/90 p-6 shadow-[0_30px_90px_rgba(15,23,42,0.12)] backdrop-blur md:p-8';
 
   return (
     <div className="relative z-[80] isolate flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top,#d8fff4,transparent_35%),linear-gradient(135deg,#f7fbfa,#eef6f4)] px-4 py-8">
@@ -225,7 +225,7 @@ function SelectTenantPageContent() {
 
         {step !== 'loading' && step !== 'provisioning' ? (
           <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-            <section className="rounded-[28px] bg-[linear-gradient(160deg,#0f172a,#134e4a_55%,#0f766e)] p-7 text-white">
+            <section className="rounded-[8px] bg-[linear-gradient(160deg,#0f172a,#134e4a_55%,#0f766e)] p-7 text-white">
               <div className="inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold">
                 ساخت کسب‌وکار چند tenant
               </div>
@@ -237,19 +237,19 @@ function SelectTenantPageContent() {
               </p>
 
               <div className="mt-8 space-y-3">
-                <div className={`rounded-2xl border px-4 py-3 text-sm ${step === 'packages' ? 'border-white/35 bg-white/14' : 'border-white/10 bg-white/5'}`}>
+                <div className={`rounded-[8px] border px-4 py-3 text-sm ${step === 'packages' ? 'border-white/35 bg-white/14' : 'border-white/10 bg-white/5'}`}>
                   ۱. انتخاب پکیج و دوره
                 </div>
-                <div className={`rounded-2xl border px-4 py-3 text-sm ${step === 'profile' ? 'border-white/35 bg-white/14' : 'border-white/10 bg-white/5'}`}>
+                <div className={`rounded-[8px] border px-4 py-3 text-sm ${step === 'profile' ? 'border-white/35 bg-white/14' : 'border-white/10 bg-white/5'}`}>
                   ۲. تایید مالک و نام کسب‌وکار
                 </div>
-                <div className={`rounded-2xl border px-4 py-3 text-sm ${step === 'payment' ? 'border-white/35 bg-white/14' : 'border-white/10 bg-white/5'}`}>
+                <div className={`rounded-[8px] border px-4 py-3 text-sm ${step === 'payment' ? 'border-white/35 bg-white/14' : 'border-white/10 bg-white/5'}`}>
                   ۳. پرداخت ماک و ورود به داشبورد
                 </div>
               </div>
 
               {selectedPackage ? (
-                <div className="mt-8 rounded-[24px] border border-white/15 bg-black/15 p-5">
+                <div className="mt-8 rounded-[8px] border border-white/15 bg-black/15 p-5">
                   <div className="text-sm text-emerald-100">پکیج انتخاب‌شده</div>
                   <div className="mt-2 text-2xl font-bold">{selectedPackage.title}</div>
                   <div className="mt-1 text-sm text-emerald-100/80">
@@ -259,9 +259,9 @@ function SelectTenantPageContent() {
               ) : null}
             </section>
 
-            <section className="rounded-[28px] border border-slate-200 bg-white p-6 text-right shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
+            <section className="rounded-[8px] border border-slate-200 bg-white p-6 text-right shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
               {loadError ? (
-                <div className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{loadError}</div>
+                <div className="mb-4 rounded-[8px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{loadError}</div>
               ) : null}
 
               {step === 'list' ? (
@@ -277,9 +277,9 @@ function SelectTenantPageContent() {
                         key={tenant.id}
                         onClick={() => selectTenant(tenant.id)}
                         disabled={selecting === tenant.id}
-                        className="app-card-action flex w-full items-center gap-4 rounded-[16px] border border-slate-200 bg-slate-50 px-4 py-3 text-right transition hover:border-emerald-400 hover:bg-emerald-50 disabled:opacity-60"
+                        className="app-card-action flex w-full items-center gap-4 rounded-[8px] border border-slate-200 bg-slate-50 px-4 py-3 text-right transition hover:border-emerald-400 hover:bg-emerald-50 disabled:opacity-60"
                       >
-                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-800 text-xs font-bold text-white">
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[8px] bg-slate-800 text-xs font-bold text-white">
                           {tenant.brandCode}
                         </div>
                         <div className="flex-1">
@@ -295,7 +295,7 @@ function SelectTenantPageContent() {
                         setCreateError('');
                         setStep('packages');
                       }}
-                      className="app-card-action flex w-full items-center justify-center gap-2 rounded-[16px] border-2 border-dashed border-emerald-300 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700 transition hover:border-emerald-500 hover:bg-emerald-100"
+                      className="app-card-action flex w-full items-center justify-center gap-2 rounded-[8px] border-2 border-dashed border-emerald-300 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700 transition hover:border-emerald-500 hover:bg-emerald-100"
                     >
                       <i className="fa fa-plus" />
                       ساخت کسب‌وکار جدید
@@ -337,7 +337,7 @@ function SelectTenantPageContent() {
                         key={pkg.id}
                         type="button"
                         onClick={() => setSelectedPackageId(pkg.id)}
-                        className={`w-full rounded-[20px] border p-4 text-right transition ${
+                        className={`w-full rounded-[8px] border p-4 text-right transition ${
                           selectedPackageId === pkg.id ? 'border-emerald-500 bg-emerald-50 shadow-[0_12px_35px_rgba(5,150,105,0.12)]' : 'border-slate-200 bg-slate-50 hover:border-slate-300'
                         }`}
                       >
@@ -383,7 +383,7 @@ function SelectTenantPageContent() {
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <label className="block">
                       <span className="mb-2 block text-sm font-semibold text-slate-700">شماره موبایل</span>
-                      <div className="flex items-center gap-2 rounded-[14px] border border-slate-200 bg-slate-100 px-3">
+                      <div className="flex items-center gap-2 rounded-[8px] border border-slate-200 bg-slate-100 px-3">
                         <span className="shrink-0 text-sm font-semibold text-slate-500" dir="ltr">
                           🇮🇷 +98
                         </span>
@@ -430,7 +430,7 @@ function SelectTenantPageContent() {
                   </div>
 
                   {createError ? (
-                    <div className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{createError}</div>
+                    <div className="mt-4 rounded-[8px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{createError}</div>
                   ) : null}
 
                   <button
@@ -462,7 +462,7 @@ function SelectTenantPageContent() {
                   </div>
 
                   <form onSubmit={createTenant} className="space-y-4">
-                    <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
+                    <div className="rounded-[8px] border border-slate-200 bg-slate-50 p-4">
                       <div className="flex items-center justify-between gap-4">
                         <div>
                           <div className="text-sm text-slate-500">مبلغ قابل پرداخت</div>
@@ -524,7 +524,7 @@ function SelectTenantPageContent() {
                     </div>
 
                     {createError ? (
-                      <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{createError}</div>
+                      <div className="rounded-[8px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{createError}</div>
                     ) : null}
 
                     <button type="submit" disabled={creating} className="app-button app-auth-button transition hover:bg-emerald-700">
@@ -548,3 +548,5 @@ export default function SelectTenantPage() {
     </Suspense>
   );
 }
+
+

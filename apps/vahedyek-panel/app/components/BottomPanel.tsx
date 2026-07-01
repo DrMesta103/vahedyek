@@ -8,13 +8,14 @@ export default function BottomPanel() {
           <ChevronLeft className="w-6 h-6 text-white" />
           <span className="text-white font-bold text-lg">6.6.88</span>
         </div>
-        <button className="bg-white text-green-600 px-6 py-2 rounded-lg font-medium hover:bg-gray-50 transition-colors">
-          شروع ثبت‌نام‌گیری
+        <button className="bg-white text-green-600 px-6 py-2 rounded-[8px] font-medium hover:bg-gray-50 transition-colors">
+          ???? ????????????
         </button>
         <div className="text-white text-sm">
-          دستور از سیستم و سیستم در حال انجام
+          ????? ?? ????? ? ????? ?? ??? ?????
         </div>
       </div>
     </div>
   );
 }
+

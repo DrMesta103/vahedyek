@@ -349,6 +349,7 @@ export interface DiscountRuleData {
   scope: DiscountScope;
   entryId: string;
   valueMode: DiscountValueMode;
+  enabled?: boolean;
   minValue: string;
   maxValue: string;
   conditionNote: string;
@@ -369,7 +370,7 @@ export interface ContractDiscountsData {
   rules: DiscountRuleData[];
 }
 
-/** Sub-views after opening «تنظیمات فسخ سازنده» */
+/** زیربخش‌های قابل نمایش بعد از باز کردن بخش فسخ */
 export type ConstructorTerminationSubsectionId =
   | 'lateInstallment'
   | 'financialObligations'
@@ -377,10 +378,10 @@ export type ConstructorTerminationSubsectionId =
   | 'otherBreach'
   | 'notifications';
 
-/** تب اصلی: فسخ سازنده/فروشنده در برابر فسخ خریدار */
+/** تب طرفین: فروشنده یا خریدار */
 export type TerminationPartyTab = 'seller' | 'buyer';
 
-/** محتوای تب فسخ سازنده: فهرست زیربخش‌ها یا یک زیربخش باز شده */
+/** پنل سازنده در بخش فسخ: لیست یا یک زیربخش */
 export type TerminationConstructorPanel = 'list' | ConstructorTerminationSubsectionId;
 
 /** زیربخش‌های فسخ خریدار */
@@ -423,8 +424,8 @@ export type PhysicalProgressTimelinePreset = '1' | '3' | '6' | '9' | '12' | '18'
 export type PhysicalProgressGracePreset = '15' | '30' | '45' | '60' | '90' | 'other';
 
 /**
- * پیکربندی مستقل هر مرحله پیشرفت برای سناریوی فسخ بر مبنای تأخیر.
- * هر مرحله باید هم زمان هدف داشته باشد و هم مهلت مجاز تأخیر.
+ * پیکربندی مهلت و زمان‌بندی برای فسخ مبتنی بر پیشرفت فیزیکی.
+ * این تنظیمات هم برای بازه زمانی و هم برای مهلت تنفس استفاده می‌شود.
  */
 export interface MilestoneTerminationConfig {
   milestoneType?: PhysicalProgressMilestoneType;
@@ -497,7 +498,7 @@ export interface BuyerTerminationTerms {
   };
 }
 
-/** ذخیره در ستون JSONB «buyerRules» جدول TerminationRules */
+/** نسخه‌ی ذخیره‌شده‌ی JSONB برای buyerRules در TerminationRules */
 export interface BuyerRulesPersisted {
   buyerTerms: BuyerTerminationTerms;
   buyerCompletion: BuyerTerminationCompletion;
@@ -516,15 +517,15 @@ export interface ContractTerminationData {
   terminationEnabled: boolean;
   terminationPartyTab: TerminationPartyTab;
   terminationConstructorPanel: TerminationConstructorPanel;
-  /** محتوای تب فسخ خریدار: فهرست یا جزئیات یک زیربخش */
+  /** پنل خریدار در بخش فسخ: لیست یا یک زیربخش */
   terminationBuyerPanel: TerminationBuyerPanel;
-  /** باز کردن مسیر «فسخ سازنده» (حداقل یک‌بار تا ثبت کل مرحله معتبر شود). */
+  /** اگر نقش فروشنده/سازنده در فسخ فعال باشد */
   sellerTerminationEngaged: boolean;
-  /** باز کردن مسیر «فسخ خریدار» (حداقل یک‌بار تا ثبت کل مرحله معتبر شود). */
+  /** اگر نقش خریدار در فسخ فعال باشد */
   buyerTerminationEngaged: boolean;
   constructorCompletion: TerminationConstructorCompletion;
   buyerCompletion: BuyerTerminationCompletion;
-  /** تنظیمات فسخ سازنده؛ نام عمداً غیر از `constructor` است تا با نمونهٔ آبجکت جاوااسکریپت تداخل نداشته باشد. */
+  /** تنظیمات فسخ سازنده که برای زیربخش‌های مختلف استفاده می‌شود. */
   constructorTerms: {
     lateInstallment: {
       ruleEnabled: boolean;

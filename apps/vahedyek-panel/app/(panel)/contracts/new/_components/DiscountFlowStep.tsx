@@ -119,7 +119,7 @@ export function DiscountFlowStep({ discountId }: { discountId: string }) {
 
   if (!discountGroup) {
     return (
-      <div className="rounded-2xl border border-rose-200 bg-rose-50 p-8 text-center text-rose-700">
+      <div className="rounded-[8px] border border-rose-200 bg-rose-50 p-8 text-center text-rose-700">
         آیتم تخفیف موردنظر پیدا نشد.
       </div>
     );
@@ -143,7 +143,7 @@ export function DiscountFlowStep({ discountId }: { discountId: string }) {
           </div>
         </div>
 
-        <div className="overflow-hidden rounded-[30px] border border-gray-200 bg-white text-right shadow-sm">
+        <div className="overflow-hidden rounded-[8px] border border-gray-200 bg-white text-right shadow-sm">
           <div className="grid gap-px bg-gray-200 md:grid-cols-2" dir="rtl">
             <ScopeTab
               title="تخفیف روی کل قرارداد"
@@ -168,7 +168,7 @@ export function DiscountFlowStep({ discountId }: { discountId: string }) {
               <Link
                 key={item.id}
                 href={`${basePath}/discounts/${discountId}/${activeScope}/${item.id}`}
-                className="group block rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition-all hover:border-cyan-300 hover:bg-cyan-50/30 hover:shadow-md"
+                className="group block rounded-[8px] border border-gray-200 bg-white p-5 shadow-sm transition-all hover:border-cyan-300 hover:bg-cyan-50/30 hover:shadow-md"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="space-y-2">
@@ -194,3 +194,5 @@ export function DiscountFlowStep({ discountId }: { discountId: string }) {
     </>
   );
 }
+
+

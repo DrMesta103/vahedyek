@@ -33,6 +33,10 @@ type ForgivenessRuleSnapshot = {
   active?: boolean;
   activeTab?: string;
   values?: Record<string, string | boolean>;
+  state?: {
+    active?: boolean;
+    values?: Record<string, string | boolean>;
+  } | null;
 };
 
 type ForgivenessRuleConfig = {
@@ -132,8 +136,8 @@ function parseEntryValueMap(value: unknown): Record<string, Record<string, strin
 }
 
 function parseForgivenessRuleConfigs(snapshot: ForgivenessRuleSnapshot | null | undefined): ForgivenessRuleConfig[] {
-  const values = snapshot?.values ?? {};
-  const active = Boolean(snapshot?.active || values.forgiveAllowed);
+  const values = snapshot?.values ?? snapshot?.state?.values ?? {};
+  const active = Boolean(snapshot?.active ?? snapshot?.state?.active ?? values.forgiveAllowed);
   if (!active) return [];
 
   const currentScope = String(values.forgiveScope ?? 'whole') === 'itemized' ? 'itemized' : 'whole';
@@ -308,7 +312,7 @@ function buildPenaltyRowsFromCalculation(params: {
     rows.push({
       id: `penalty:${principalRow.id}:${detail.ruleId || detail.penaltyTypeId}`,
       categoryId: principalRow.categoryId,
-      categoryTitle: `${principalRow.categoryTitle} · جریمه`,
+      categoryTitle: `${principalRow.categoryTitle} - جریمه`,
       title: `جریمه ${principalRow.title}`,
       amount: Math.round(detail.totalPenaltyRial),
       dueDate: addDaysJalali(String(principalRow.dueDate ?? ''), graceDays),

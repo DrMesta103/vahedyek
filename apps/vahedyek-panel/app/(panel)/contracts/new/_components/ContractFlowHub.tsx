@@ -3,19 +3,35 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { AlertCircle, CheckCircle2, Info, Lock, X } from 'lucide-react';
-import { getActiveDraftId, getFrontendStepDraft, getStepData } from '../../../../lib/contractDraftClient';
+import {
+  clearContractFlowBootstrapSettings,
+  createDraftId,
+  fetchContractFlowBootstrapSettings,
+  getActiveDraftId,
+  getFrontendStepDraft,
+  getStepData,
+  setContractFlowBootstrapSettings,
+} from '../../../../lib/contractDraftClient';
 import { computeContractTotalRialFromFinancial } from '../../../../lib/contractFinancialPricing';
 import { isFinancialLineHeaderCategoryId, isFinancialLineSubtreeCategoryId, isLegacyCustomRootCategoryId } from '../../../../lib/financialUtils';
 import { getDraftApprovalBlockers } from '../../../../lib/draftReadiness';
 import { validateDiscountsStep, validateFinancialStep, validatePenaltiesStep, validateStep1, validateStep2, validateTerminationStep } from '../../../../lib/contractValidation';
-import type { ContractDiscountsData, ContractFinancialData, ContractPartiesData, ContractPenaltiesData, ContractSubjectData, ContractTerminationData } from '../../../../types/contract';
-import { DiscountsStep } from './DiscountsStep';
+import type {
+  ContractDiscountsData,
+  ContractFinancialData,
+  ContractPartiesData,
+  ContractPenaltiesData,
+  ContractSubjectData,
+  ContractTerminationData,
+} from '../../../../types/contract';
 import { FinancialStep } from './FinancialStep';
 import { LeftReportSidebar } from './LeftReportSidebar';
 import { PartiesStep } from './PartiesStep';
 import { PenaltiesStep } from './PenaltiesStep';
+import { DiscountsStep } from './DiscountsStep';
 import { ContractRuleDraftStep } from './ContractRuleDraftStep';
 import { ContractDraftPreviewDialog } from '../../../../components/contracts/ContractDraftPreviewDialog';
+import { ContractDraftSettingsDialog } from './ContractDraftSettingsDialog';
 import { RightNavSidebar } from './RightNavSidebar';
 import { SubjectStep } from './SubjectStep';
 import { TerminationStep } from './TerminationStep';
@@ -282,6 +298,10 @@ export function ContractFlowHub() {
   const [leaveSaving, setLeaveSaving] = useState(false);
   const [leaveSaveError, setLeaveSaveError] = useState<string>('');
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
+  const [bootstrapDialogOpen, setBootstrapDialogOpen] = useState(false);
+  const [bootstrapBusy, setBootstrapBusy] = useState(false);
+  const [bootstrapRunId, setBootstrapRunId] = useState(0);
+  const [bootstrapError, setBootstrapError] = useState('');
 
   useEffect(() => {
     let mounted = true;
@@ -291,7 +311,10 @@ export function ContractFlowHub() {
 
       const draftId = getActiveDraftId();
       if (!draftId) {
-        if (mounted) setLoading(false);
+        if (mounted) {
+          setLoading(false);
+          setBootstrapDialogOpen(true);
+        }
         return;
       }
 
@@ -322,6 +345,7 @@ export function ContractFlowHub() {
         setExtraCostsExists(Boolean(extraCosts.ok && extraCosts.exists));
         setTechnicalSpecsExists(Boolean(technicalSpecs.ok && technicalSpecs.exists));
         setAttachmentsExists(Boolean(attachments.ok && attachments.exists));
+        if (mounted) setBootstrapDialogOpen(false);
       } finally {
         if (mounted) setLoading(false);
       }
@@ -343,7 +367,41 @@ export function ContractFlowHub() {
       window.removeEventListener('focus', load);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, []);
+  }, [bootstrapRunId]);
+
+  const startContractWithBlankDraft = async () => {
+    if (bootstrapBusy) return;
+    try {
+      setBootstrapBusy(true);
+      setBootstrapError('');
+      clearContractFlowBootstrapSettings();
+      await createDraftId();
+      setBootstrapDialogOpen(false);
+      setBootstrapRunId((current) => current + 1);
+    } catch (error) {
+      setBootstrapError(error instanceof Error ? error.message : 'ساخت پیش‌نویس خالی انجام نشد.');
+    } finally {
+      setBootstrapBusy(false);
+    }
+  };
+
+  const startContractWithSettings = async () => {
+    if (bootstrapBusy) return;
+    try {
+      setBootstrapBusy(true);
+      setBootstrapError('');
+      const settings = await fetchContractFlowBootstrapSettings();
+      setContractFlowBootstrapSettings(settings);
+      await createDraftId();
+      setBootstrapDialogOpen(false);
+      setBootstrapRunId((current) => current + 1);
+    } catch (error) {
+      clearContractFlowBootstrapSettings();
+      setBootstrapError(error instanceof Error ? error.message : 'دریافت تنظیمات انجام نشد.');
+    } finally {
+      setBootstrapBusy(false);
+    }
+  };
 
   useEffect(() => {
     setLastUpdatedMap(getStoredLastUpdated(getActiveDraftId()));
@@ -402,7 +460,7 @@ export function ContractFlowHub() {
             ? (inlinePayload as ContractDiscountsData)
             : getFrontendStepDraft<ContractDiscountsData>(draftId, 'discounts');
         setDiscountsData(discounts);
-        if (discounts && validateDiscountsStep(discounts).valid) setPendingScrollSection('interest');
+        setPendingScrollSection('interest');
       } else if (savedSectionId === 'interest') {
         setPendingScrollSection('forgiveness');
       } else if (savedSectionId === 'forgiveness') {
@@ -446,7 +504,7 @@ export function ContractFlowHub() {
   const partiesComplete = Boolean(partiesData && validateStep2(partiesData).valid);
   const financialComplete = Boolean(financialData && validateFinancialStep(financialData).valid);
   const penaltiesComplete = Boolean(penaltiesData && validatePenaltiesStep(penaltiesData).valid);
-  const discountsComplete = !discountsData || validateDiscountsStep(discountsData).valid;
+  const discountsComplete = Boolean(discountsData && validateDiscountsStep(discountsData).valid);
   const interestComplete = true;
   const forgivenessComplete = true;
   const terminationComplete = Boolean(terminationData && validateTerminationStep(terminationData).valid);
@@ -482,8 +540,7 @@ export function ContractFlowHub() {
         parties: partiesData,
         financial: financialLiveData,
         penalties: penaltiesData,
-        discounts: discountsData,
-        terminationRules: terminationData,
+      terminationRules: terminationData,
         extraCosts: extraCostsExists ? {} : null,
         technicalSpecs: technicalSpecsExists ? {} : null,
         attachments: attachmentsExists ? {} : null,
@@ -507,7 +564,7 @@ export function ContractFlowHub() {
       out.push({ title: SECTION_TITLES[sectionId], detail });
     }
     return out;
-  }, [attachmentsExists, completionMap, discountsData, dirtyMap, extraCostsApplicable, extraCostsExists, financialLiveData, lastUpdatedMap, partiesData, penaltiesData, subjectData, technicalSpecsExists, terminationData]);
+  }, [attachmentsExists, completionMap, dirtyMap, extraCostsApplicable, extraCostsExists, financialLiveData, lastUpdatedMap, partiesData, penaltiesData, subjectData, technicalSpecsExists, terminationData]);
 
   const approvalSubmissionReady = approvalSubmissionBlockers.length === 0 && !loading;
 
@@ -633,15 +690,13 @@ export function ContractFlowHub() {
       penalties: financialComplete
         ? { label: 'آماده تنظیم', detail: 'پیش‌نیازهای مالی تکمیل شده و می‌توانید جرایم را تنظیم کنید.', tone: 'blue' }
         : { label: 'در انتظار مالی', detail: 'بهتر است ابتدا اطلاعات مالی قرارداد تکمیل شود.', tone: 'amber' },
-      discounts: !financialComplete
-        ? { label: 'در انتظار مالی', detail: 'این بخش به اطلاعات مالی قرارداد وابسته است.', tone: 'amber' }
+      discounts: !penaltiesComplete
+        ? { label: 'در انتظار جرایم', detail: 'ابتدا بخش جرایم را تکمیل و ذخیره کنید.', tone: 'amber' }
         : discountsComplete
-          ? { label: 'تکمیل شده', detail: 'سناریوهای تخفیف قرارداد ثبت و ذخیره شده‌اند.', tone: 'green' }
-          : discountsData
-            ? { label: 'ناقص', detail: 'بخشی از تنظیمات تخفیف ثبت شده و هنوز کامل نیست.', tone: 'amber' }
-            : { label: 'آماده تنظیم', detail: 'پس از تکمیل بخش مالی، ثبت تخفیف‌ها آماده است.', tone: 'blue' },
+          ? { label: 'تکمیل شده', detail: 'تنظیمات تخفیف برای این پیش‌نویس ذخیره شده است.', tone: 'green' }
+          : { label: 'آماده تنظیم', detail: 'تنظیمات تخفیف از تنظیمات کسب‌وکار خوانده شده و برای این پیش‌نویس قابل تغییر است.', tone: 'blue' },
       interest: !discountsComplete
-        ? { label: 'در انتظار تخفیف‌ها', detail: 'ابتدا بخش تخفیف‌ها را تکمیل و ذخیره کنید.', tone: 'amber' }
+        ? { label: 'در انتظار تخفیف', detail: 'ابتدا بخش تخفیف را تکمیل و ذخیره کنید.', tone: 'amber' }
         : lastUpdatedMap.interest
           ? { label: 'تکمیل شده', detail: 'تنظیمات سود دریافتی برای این پیش‌نویس ذخیره شده است.', tone: 'green' }
           : { label: 'آماده تنظیم', detail: 'تنظیمات سود از تنظیمات کسب‌وکار خوانده شده و برای این پیش‌نویس قابل تغییر است.', tone: 'blue' },
@@ -650,13 +705,13 @@ export function ContractFlowHub() {
         : lastUpdatedMap.forgiveness
           ? { label: 'تکمیل شده', detail: 'تنظیمات بخشودگی برای این پیش‌نویس ذخیره شده است.', tone: 'green' }
           : { label: 'آماده تنظیم', detail: 'تنظیمات بخشودگی از تنظیمات کسب‌وکار خوانده شده و برای این پیش‌نویس قابل تغییر است.', tone: 'blue' },
-      termination: !discountsComplete
-        ? { label: 'Waiting', detail: 'Complete penalties and discounts before finalizing termination clauses.', tone: 'amber' }
+      termination: !lastUpdatedMap.forgiveness
+        ? { label: 'در انتظار بخشودگی', detail: 'ابتدا بخشودگی را تکمیل و ذخیره کنید.', tone: 'amber' }
         : terminationComplete
-          ? { label: 'Completed', detail: 'Balanced termination rights for both parties have been saved.', tone: 'green' }
+          ? { label: 'تکمیل شده', detail: 'شرایط فسخ برای هر دو طرف ذخیره شده است.', tone: 'green' }
           : terminationData
-            ? { label: 'Incomplete', detail: 'Termination clauses were reviewed but are not confirmed yet.', tone: 'amber' }
-            : { label: 'Ready', detail: 'Balanced termination clauses are ready for review.', tone: 'blue' },
+            ? { label: 'ناقص', detail: 'شرایط فسخ بررسی شده اما هنوز تکمیل نشده است.', tone: 'amber' }
+            : { label: 'آماده تنظیم', detail: 'شرایط فسخ برای بررسی و ذخیره آماده است.', tone: 'blue' },
       extraCosts: terminationComplete
         ? extraCostsComplete
           ? { label: 'تکمیل شده', detail: 'هزینه‌های مرتبط با قرارداد ذخیره شده است.', tone: 'green' }
@@ -675,11 +730,11 @@ export function ContractFlowHub() {
     }),
     [
       attachmentsComplete,
-      discountsComplete,
-      discountsData,
       extraCostsComplete,
       financialComplete,
       financialData,
+      discountsData,
+      lastUpdatedMap.discounts,
       lastUpdatedMap.forgiveness,
       lastUpdatedMap.interest,
       loading,
@@ -791,7 +846,6 @@ export function ContractFlowHub() {
     return issues;
   }, [
     dirtyMap.contractAttachments,
-    dirtyMap.discounts,
     dirtyMap.extraCosts,
     dirtyMap.financial,
     dirtyMap.forgiveness,
@@ -1147,7 +1201,7 @@ export function ContractFlowHub() {
 
                 <div className={isSubjectSection ? 'px-4 pb-4 md:px-5 md:pb-5' : ''}>
                   {isLockedSection ? (
-                    <div className="rounded-2xl border border-[var(--theme-warning-border)] bg-[var(--theme-warning-bg)] px-4 py-4 text-right">
+                    <div className="rounded-[8px] border border-[var(--theme-warning-border)] bg-[var(--theme-warning-bg)] px-4 py-4 text-right">
                       <div className="flex items-center justify-end gap-2 text-sm font-extrabold text-[var(--theme-warning-text)]">
                         <span>{SECTION_TITLES[section.id]} هنوز قفل است</span>
                         <Lock className="h-4 w-4" />
@@ -1156,7 +1210,7 @@ export function ContractFlowHub() {
                       <button
                         type="button"
                         onClick={() => setLockedDialogSection(section.id)}
-                        className="mt-3 rounded-xl border border-[var(--theme-warning-border)] bg-[var(--surface)] px-3 py-2 text-xs font-bold text-[var(--theme-warning-text)] transition hover:bg-[var(--surface-soft)]"
+                        className="mt-3 rounded-[8px] border border-[var(--theme-warning-border)] bg-[var(--surface)] px-3 py-2 text-xs font-bold text-[var(--theme-warning-text)] transition hover:bg-[var(--surface-soft)]"
                       >
                         مشاهده پیش‌نیازها
                       </button>
@@ -1181,7 +1235,7 @@ export function ContractFlowHub() {
             <div className="flex items-start justify-between gap-4 border-b border-[var(--border-color)] bg-[var(--surface-soft)] px-5 py-4">
               <div>
                 <div className="flex items-center gap-2 text-[var(--text-strong)]">
-                  <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-[var(--theme-warning-border)] bg-[var(--theme-warning-bg)] text-[var(--theme-warning-text)]">
+                  <span className="inline-flex h-9 w-9 items-center justify-center rounded-[8px] border border-[var(--theme-warning-border)] bg-[var(--theme-warning-bg)] text-[var(--theme-warning-text)]">
                     <AlertCircle className="h-5 w-5" />
                   </span>
                   <h3 className="text-base font-extrabold">خروج از صفحه قرارداد</h3>
@@ -1193,7 +1247,7 @@ export function ContractFlowHub() {
               <button
                 type="button"
                 onClick={() => setPendingLeave(null)}
-                className="rounded-lg p-1 text-[var(--text-faint)] transition-colors hover:bg-[var(--surface-soft)]"
+                className="rounded-[8px] p-1 text-[var(--text-faint)] transition-colors hover:bg-[var(--surface-soft)]"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -1201,17 +1255,17 @@ export function ContractFlowHub() {
 
             <div className="space-y-3 px-5 py-4">
               {leaveSaveError ? (
-                <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">{leaveSaveError}</div>
+                <div className="rounded-[8px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">{leaveSaveError}</div>
               ) : null}
 
-              <div className="rounded-2xl border border-[var(--theme-warning-border)] bg-[var(--theme-warning-bg)] px-4 py-3">
+              <div className="rounded-[8px] border border-[var(--theme-warning-border)] bg-[var(--theme-warning-bg)] px-4 py-3">
                 <div className="mb-3 flex items-center justify-between gap-3">
                   <div className="text-sm font-extrabold text-[var(--theme-warning-text)]">تغییرات ذخیره‌نشده</div>
                   {leaveSaving ? <div className="text-xs font-bold text-[var(--theme-warning-text)]">در حال ذخیره…</div> : null}
                 </div>
                 <div className="grid gap-2">
                   {leaveIssues.map((item) => (
-                    <div key={item.id} className="flex items-center justify-between gap-3 rounded-xl bg-[var(--surface)] px-3 py-2 text-sm">
+                    <div key={item.id} className="flex items-center justify-between gap-3 rounded-[8px] bg-[var(--surface)] px-3 py-2 text-sm">
                       <span className="flex items-center gap-2 font-bold text-[var(--text-body)]">
                         <span className="h-1.5 w-1.5 rounded-full bg-[var(--theme-warning-text)]" />
                         {item.title}
@@ -1230,7 +1284,7 @@ export function ContractFlowHub() {
                 type="button"
                 onClick={() => setPendingLeave(null)}
                 disabled={leaveSaving}
-                className="whitespace-nowrap rounded-lg border border-[var(--border-color)] px-3 py-2 text-xs font-bold text-[var(--text-body)] transition-colors hover:bg-[var(--surface-soft)]"
+                className="whitespace-nowrap rounded-[8px] border border-[var(--border-color)] px-3 py-2 text-xs font-bold text-[var(--text-body)] transition-colors hover:bg-[var(--surface-soft)]"
               >
                 ماندن در صفحه
               </button>
@@ -1239,7 +1293,7 @@ export function ContractFlowHub() {
                   type="button"
                   onClick={saveDirtyThenLeave}
                   disabled={leaveSaving}
-                  className="whitespace-nowrap rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700 transition-colors hover:bg-emerald-100 disabled:opacity-60"
+                  className="whitespace-nowrap rounded-[8px] border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700 transition-colors hover:bg-emerald-100 disabled:opacity-60"
                 >
                   {leaveSaving ? (
                     <span className="ml-2 inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-emerald-700/25 border-t-emerald-700" />
@@ -1251,7 +1305,7 @@ export function ContractFlowHub() {
                 type="button"
                 onClick={continueContractLeave}
                 disabled={leaveSaving}
-                className="whitespace-nowrap rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700 transition-colors hover:bg-rose-100"
+                className="whitespace-nowrap rounded-[8px] border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700 transition-colors hover:bg-rose-100"
               >
                 خروج بدون ذخیره تغییرات
               </button>
@@ -1279,14 +1333,14 @@ export function ContractFlowHub() {
               <button
                 type="button"
                 onClick={() => setLockedDialogSection(null)}
-                className="rounded-lg p-1 text-[var(--text-faint)] transition-colors hover:bg-[var(--surface-soft)]"
+                className="rounded-[8px] p-1 text-[var(--text-faint)] transition-colors hover:bg-[var(--surface-soft)]"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
             <div className="space-y-3 px-5 py-4">
-              <div className="rounded-2xl border border-[var(--theme-warning-border)] bg-[var(--theme-warning-bg)] px-4 py-3">
+              <div className="rounded-[8px] border border-[var(--theme-warning-border)] bg-[var(--theme-warning-bg)] px-4 py-3">
                 <div className="mb-3 flex items-center gap-2 text-sm font-bold text-[var(--theme-warning-text)]">
                   <AlertCircle className="h-4 w-4" />
                   پیش‌نیازهای لازم
@@ -1295,7 +1349,7 @@ export function ContractFlowHub() {
                   {accessMap[lockedDialogSection].requirements.map((item) => {
                     const status = statusMap[item.id];
                     return (
-                      <div key={item.id} className="flex items-center justify-between gap-3 rounded-xl bg-[var(--surface)] px-3 py-2 text-sm">
+                      <div key={item.id} className="flex items-center justify-between gap-3 rounded-[8px] bg-[var(--surface)] px-3 py-2 text-sm">
                         <span className="flex items-center gap-2 font-bold text-[var(--text-body)]">
                           {item.complete ? (
                             <CheckCircle2 className="h-4 w-4 text-[var(--theme-action-text)]" />
@@ -1305,7 +1359,7 @@ export function ContractFlowHub() {
                           {item.title}
                           <span className="group relative inline-flex h-6 w-6 items-center justify-center rounded-full border border-[var(--border-color)] text-[var(--text-muted)]">
                             <Info className="h-3.5 w-3.5" />
-                            <span className="pointer-events-none absolute left-0 top-8 z-10 hidden w-64 rounded-xl border border-[var(--border-color)] bg-[var(--surface)] p-3 text-right text-xs leading-6 text-[var(--text-muted)] shadow-lg group-hover:block">
+                            <span className="pointer-events-none absolute left-0 top-8 z-10 hidden w-64 rounded-[8px] border border-[var(--border-color)] bg-[var(--surface)] p-3 text-right text-xs leading-6 text-[var(--text-muted)] shadow-lg group-hover:block">
                               برای باز شدن {SECTION_TITLES[lockedDialogSection]} باید بخش {item.title} تکمیل و ذخیره شده باشد.
                             </span>
                           </span>
@@ -1323,6 +1377,14 @@ export function ContractFlowHub() {
         </div>
       ) : null}
 
+      <ContractDraftSettingsDialog
+        open={bootstrapDialogOpen}
+        loading={bootstrapBusy}
+        error={bootstrapError}
+        onApplySettings={() => void startContractWithSettings()}
+        onStartBlank={() => void startContractWithBlankDraft()}
+      />
+
       <ContractDraftPreviewDialog
         open={previewDialogOpen}
         draftId={getActiveDraftId()}
@@ -1331,3 +1393,7 @@ export function ContractFlowHub() {
     </div>
   );
 }
+
+
+
+

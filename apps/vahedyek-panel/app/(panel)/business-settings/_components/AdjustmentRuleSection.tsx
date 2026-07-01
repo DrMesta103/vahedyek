@@ -122,7 +122,7 @@ export function AdjustmentRuleSection({
 
   return (
     <div className="space-y-8 text-right">
-      <section className="rounded-[24px] border border-[color:var(--border-soft)] bg-[color:var(--surface)] p-5">
+      <section className="rounded-[8px] border border-[color:var(--border-soft)] bg-[color:var(--surface)] p-5">
         <div className="space-y-5">
           <div className="text-right">
             <h3 className="text-[17px] font-black text-[color:var(--text-strong)]">انتخاب بازه زمانی اعمال تعدیل</h3>
@@ -135,7 +135,7 @@ export function AdjustmentRuleSection({
         </div>
       </section>
 
-      <section className="overflow-visible rounded-[24px] border border-[color:var(--border-soft)] bg-[color:var(--surface)]">
+      <section className="overflow-visible rounded-[8px] border border-[color:var(--border-soft)] bg-[color:var(--surface)]">
         <div className="flex flex-wrap border-b border-[color:var(--border-soft)]">
           <RuleTabButton title="درصد ثابت" icon={BadgePercent} active={activeTab === 'fixed-percent'} onClick={() => onValueChange('activeTab', 'fixed-percent')} />
           <RuleTabButton title="یک شاخص مشخص" icon={ChartNoAxesCombined} active={activeTab === 'specific-indicator'} onClick={() => onValueChange('activeTab', 'specific-indicator')} />
@@ -274,7 +274,7 @@ export function AdjustmentRuleSection({
                 </div>
               ) : null}
 
-              <div className="rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] px-4 py-4 text-right">
+              <div className="rounded-[8px] border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] px-4 py-4 text-right">
                 <div className="text-sm font-black text-[color:var(--text-strong)]">جمع درصد شاخص‌ها: {multiIndicatorTotal}٪</div>
                 <p className={cn('mt-2 text-sm leading-7', multiIndicatorOverflow ? 'text-rose-600' : 'text-[color:var(--text-muted)]')}>
                   مجموع وزن همه شاخص‌های فعال نباید از ۱۰۰٪ بیشتر باشد.
@@ -297,3 +297,5 @@ export function AdjustmentRuleSection({
     </div>
   );
 }
+
+

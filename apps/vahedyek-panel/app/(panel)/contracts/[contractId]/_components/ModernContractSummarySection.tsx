@@ -485,7 +485,7 @@ export function ModernContractSummarySection({
     <section
       dir="rtl"
       lang="fa"
-      className="relative flex h-full min-h-0 flex-1 flex-col overflow-hidden rounded-[30px] border border-[rgba(171,255,230,0.16)] bg-[linear-gradient(130deg,#020403_0%,#061210_42%,#010302_100%)] px-3 py-3 shadow-[0_24px_80px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.08)]"
+      className="relative flex h-full min-h-0 flex-1 flex-col overflow-hidden rounded-[8px] border border-[rgba(171,255,230,0.16)] bg-[linear-gradient(130deg,#020403_0%,#061210_42%,#010302_100%)] px-3 py-3 shadow-[0_24px_80px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.08)]"
       aria-label="گراف دانش مالی قرارداد"
     >
       <div className="modern-aurora modern-aurora-a" aria-hidden />
@@ -1340,4 +1340,3 @@ export function ModernContractSummarySection({
     </section>
   );
 }
-

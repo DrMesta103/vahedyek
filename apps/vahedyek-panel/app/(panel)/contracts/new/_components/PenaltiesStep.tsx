@@ -227,13 +227,13 @@ function Modal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
-      <div className="w-full max-w-3xl rounded-2xl border border-gray-200 bg-white shadow-2xl" onClick={(event) => event.stopPropagation()}>
+      <div className="w-full max-w-3xl rounded-[8px] border border-gray-200 bg-white shadow-2xl" onClick={(event) => event.stopPropagation()}>
         <div className="flex items-start justify-between border-b border-gray-100 p-5">
           <div>
             <h3 className="text-base font-bold text-gray-800">{title}</h3>
             {description ? <p className="mt-1 text-sm text-gray-500">{description}</p> : null}
           </div>
-          <button type="button" onClick={onClose} className="rounded-lg p-1 text-gray-400 hover:bg-gray-100">
+          <button type="button" onClick={onClose} className="rounded-[8px] p-1 text-gray-400 hover:bg-gray-100">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -274,7 +274,7 @@ function PenaltiesPartyTabBar({
   onSelect: (tab: PenaltyPartyTab) => void;
 }) {
   const tabBase =
-    'relative flex min-h-[88px] w-full flex-row items-start gap-3 rounded-2xl border-2 p-4 text-right transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/40 focus-visible:ring-offset-2';
+    'relative flex min-h-[88px] w-full flex-row items-start gap-3 rounded-[8px] border-2 p-4 text-right transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/40 focus-visible:ring-offset-2';
 
   return (
     <div className="border-b border-slate-200 bg-gradient-to-b from-slate-50/90 to-white px-4 py-5 sm:px-6 sm:py-6" role="tablist" aria-label="جرایم خریدار یا سازنده">
@@ -291,7 +291,7 @@ function PenaltiesPartyTabBar({
           }`}
         >
           <span
-            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border ${
+            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-[8px] border ${
               activeTab === 'seller' ? 'border-cyan-200 bg-cyan-50 text-cyan-700' : 'border-slate-200 bg-slate-50 text-slate-600'
             }`}
           >
@@ -300,7 +300,7 @@ function PenaltiesPartyTabBar({
           <span className="min-w-0 flex-1 space-y-1.5">
             <span className={`block text-sm font-bold leading-tight ${activeTab === 'seller' ? 'text-cyan-900' : 'text-slate-800'}`}>جرایم سازنده</span>
             <span
-              className={`inline-flex rounded-lg border px-2 py-0.5 text-[11px] font-semibold ${
+              className={`inline-flex rounded-[8px] border px-2 py-0.5 text-[11px] font-semibold ${
                 activeTab === 'seller' ? 'border-cyan-200 bg-cyan-50/80 text-cyan-800' : 'border-slate-200 bg-slate-50 text-slate-600'
               }`}
             >
@@ -324,7 +324,7 @@ function PenaltiesPartyTabBar({
           }`}
         >
           <span
-            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border ${
+            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-[8px] border ${
               activeTab === 'buyer' ? 'border-cyan-200 bg-cyan-50 text-cyan-700' : 'border-slate-200 bg-slate-50 text-slate-600'
             }`}
           >
@@ -333,7 +333,7 @@ function PenaltiesPartyTabBar({
           <span className="min-w-0 flex-1 space-y-1.5">
             <span className={`block text-sm font-bold leading-tight ${activeTab === 'buyer' ? 'text-cyan-900' : 'text-slate-800'}`}>جرایم خریدار</span>
             <span
-              className={`inline-flex rounded-lg border px-2 py-0.5 text-[11px] font-semibold ${
+              className={`inline-flex rounded-[8px] border px-2 py-0.5 text-[11px] font-semibold ${
                 activeTab === 'buyer' ? 'border-cyan-200 bg-cyan-50/80 text-cyan-800' : 'border-slate-200 bg-slate-50 text-slate-600'
               }`}
             >
@@ -570,14 +570,14 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
           <button
             type="button"
             onClick={() => router.push(basePath)}
-            className="rounded-md border border-gray-300 px-3.5 py-2 text-sm text-gray-600 transition-colors hover:bg-gray-50"
+            className="rounded-[8px] border border-gray-300 px-3.5 py-2 text-sm text-gray-600 transition-colors hover:bg-gray-50"
           >
             بازگشت به مراحل
           </button>
         </div>
       ) : null}
 
-      <div className="overflow-hidden rounded-[30px] border border-gray-200 bg-white text-right shadow-sm" dir="rtl">
+      <div className="overflow-hidden rounded-[8px] border border-gray-200 bg-white text-right shadow-sm" dir="rtl">
         <PenaltiesPartyTabBar
           activeTab={partyTab}
           buyerProgressLabel={`${configuredActiveTypesCount}/${Math.max(activeTypes.length, 1)} ثبت‌شده`}
@@ -588,7 +588,7 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
         {/* Keep both tabs mounted to prevent layout "jump" on switch */}
         <div className={partyTab === 'seller' ? 'block' : 'hidden'} aria-hidden={partyTab !== 'seller'}>
           <div className="p-6 sm:p-8">
-            <div className="mb-5 rounded-2xl border border-cyan-200 bg-cyan-50/70 px-4 py-3 text-right">
+            <div className="mb-5 rounded-[8px] border border-cyan-200 bg-cyan-50/70 px-4 py-3 text-right">
               <p className="text-[12px] leading-6 text-slate-700">
                 این بخش از تنظیمات سازمانی جرایم سازنده استفاده می‌کند. اگر در اینجا گزینه‌ای را تغییر دهید، همان ساختار در قراردادهای بعدی و در صفحه تنظیمات کسب‌وکار نیز مبنای یکسان خواهد داشت.
               </p>
@@ -619,7 +619,7 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
                 return (
                   <div
                     key={type.id}
-                    className={`overflow-hidden rounded-2xl border transition ${
+                    className={`overflow-hidden rounded-[8px] border transition ${
                       type.active ? 'border-cyan-200 bg-cyan-50/40' : 'border-slate-200 bg-white'
                     }`}
                   >
@@ -746,7 +746,7 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
                                   placeholder="در صورت نیاز"
                                 />
                               </FieldBlock>
-                              <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                              <div className="space-y-3 rounded-[8px] border border-slate-200 bg-slate-50 p-4">
                                 <div className="flex items-center justify-between">
                                   <div>
                                     <h4 className="text-sm font-bold text-slate-700">بازه‌های جریمه تصاعدی</h4>
@@ -779,7 +779,7 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
                                 </div>
                                 <div className="space-y-3">
                                   {normalizeProgressiveRows(ruleForm.progressiveRows).map((row, index) => (
-                                    <div key={row.id} className="grid gap-3 rounded-xl border border-slate-200 bg-white p-3 md:grid-cols-[110px_1fr_150px_140px_auto] md:items-end">
+                                    <div key={row.id} className="grid gap-3 rounded-[8px] border border-slate-200 bg-white p-3 md:grid-cols-[110px_1fr_150px_140px_auto] md:items-end">
                                       <FieldBlock label="از روز">
                                         <Input value={row.fromDay} disabled className="bg-slate-50 text-slate-500" />
                                       </FieldBlock>
@@ -799,7 +799,7 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
                                             }
                                             placeholder="تا روز"
                                           />
-                                          <label className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                                          <label className="inline-flex shrink-0 items-center gap-2 rounded-[8px] border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
                                             <input
                                               type="checkbox"
                                               checked={Boolean(row.openEnded)}
@@ -834,7 +834,7 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
                                           placeholder="مثلا 1.25"
                                         />
                                       </FieldBlock>
-                                      <div className="rounded-xl bg-slate-50 px-3 py-2 text-xs leading-6 text-slate-500">
+                                      <div className="rounded-[8px] bg-slate-50 px-3 py-2 text-xs leading-6 text-slate-500">
                                         {row.openEnded ? `از روز ${row.fromDay} به بعد` : row.toDay ? `${row.fromDay} تا ${row.toDay} روز` : 'پایان بازه را وارد کنید'}
                                       </div>
                                       <button
@@ -847,7 +847,7 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
                                             progressiveRows: normalizeProgressiveRows(current.progressiveRows.filter((item) => item.id !== row.id)),
                                           }))
                                         }
-                                        className="h-10 rounded-lg border border-rose-200 px-3 text-sm text-rose-600 hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-40"
+                                        className="h-10 rounded-[8px] border border-rose-200 px-3 text-sm text-rose-600 hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-40"
                                       >
                                         حذف
                                       </button>
@@ -875,7 +875,7 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
                             </FieldBlock>
                           </div>
 
-                          <div className="space-y-4 rounded-2xl border border-cyan-100 bg-cyan-50 p-4">
+                          <div className="space-y-4 rounded-[8px] border border-cyan-100 bg-cyan-50 p-4">
                             <div className="flex items-center justify-between gap-4">
                               <div>
                                 <h4 className="text-sm font-bold text-slate-800">هزینه دیرکرد</h4>
@@ -923,14 +923,14 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
                           </div>
 
                           {dialogError ? (
-                            <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{dialogError}</div>
+                            <div className="rounded-[8px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{dialogError}</div>
                           ) : null}
 
                           <div className="flex justify-end">
                             <button
                               type="button"
                               onClick={() => submitRule()}
-                              className="inline-flex items-center gap-2 rounded-lg bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800"
+                              className="inline-flex items-center gap-2 rounded-[8px] bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800"
                             >
                               <Save className="h-4 w-4" />
                               ذخیره جریمه
@@ -952,7 +952,7 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
             </div>
 
             {activeTypes.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
+              <div className="rounded-[8px] border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
                 هنوز هیچ نوع جریمه‌ای فعال نشده است.
               </div>
             ) : (
@@ -961,7 +961,7 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
                   const typeRules = rules.filter((rule) => rule.penaltyTypeId === type.id);
 
                   return (
-                    <div key={type.id} className="rounded-2xl border border-slate-200 bg-slate-50/50 p-4">
+                    <div key={type.id} className="rounded-[8px] border border-slate-200 bg-slate-50/50 p-4">
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div>
                           <h3 className="text-base font-bold text-slate-800">{type.title}</h3>
@@ -970,7 +970,7 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
                         <button
                           type="button"
                           onClick={() => openRuleDialog(type.id)}
-                          className="mt-2 inline-flex h-8 items-center gap-2 rounded-lg border border-[#14a7ad] bg-white/65 px-3 text-xs font-bold text-[#0e989d] transition hover:bg-[#dff4f3]"
+                          className="mt-2 inline-flex h-8 items-center gap-2 rounded-[8px] border border-[#14a7ad] bg-white/65 px-3 text-xs font-bold text-[#0e989d] transition hover:bg-[#dff4f3]"
                         >
                           <Plus className="h-4 w-4" />
                           افزودن جریمه
@@ -978,13 +978,13 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
                       </div>
 
                       {typeRules.length === 0 ? (
-                        <div className="mt-4 rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-6 text-center text-sm text-slate-500">
+                        <div className="mt-4 rounded-[8px] border border-dashed border-slate-300 bg-white px-4 py-6 text-center text-sm text-slate-500">
                           هنوز جریمه‌ای برای این نوع ثبت نشده است.
                         </div>
                       ) : (
                         <div className="mt-4 grid gap-3">
                           {typeRules.map((rule, index) => (
-                            <div key={rule.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                            <div key={rule.id} className="rounded-[8px] border border-slate-200 bg-white p-4 shadow-sm">
                               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                                 <div className="space-y-2">
                                   <div className="flex items-center gap-2">
@@ -1003,14 +1003,14 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
                                   <button
                                     type="button"
                                     onClick={() => openRuleDialog(type.id, rule)}
-                                    className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
+                                    className="rounded-[8px] border border-slate-200 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
                                   >
                                     ویرایش
                                   </button>
                                   <button
                                     type="button"
                                     onClick={() => setRules((current) => current.filter((item) => item.id !== rule.id))}
-                                    className="rounded-lg border border-rose-200 px-3 py-1.5 text-sm text-rose-600 hover:bg-rose-50"
+                                    className="rounded-[8px] border border-rose-200 px-3 py-1.5 text-sm text-rose-600 hover:bg-rose-50"
                                   >
                                     حذف
                                   </button>
@@ -1028,7 +1028,7 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
           </section>
 
           {formError ? (
-            <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{formError}</div>
+            <div className="rounded-[8px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{formError}</div>
           ) : null}
           </div>
         </div>
@@ -1057,3 +1057,5 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
     </div>
   );
 }
+
+

@@ -227,7 +227,7 @@ export function RightNavSidebar({
 
         <div className="contract-flow-sidebar-footer flex flex-col gap-2" dir="rtl">
           {approvalNavError ? (
-            <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-right text-[11px] font-bold leading-relaxed text-rose-900">
+            <div className="rounded-[8px] border border-rose-200 bg-rose-50 px-3 py-2 text-right text-[11px] font-bold leading-relaxed text-rose-900">
               {approvalNavError}
             </div>
           ) : null}
@@ -266,14 +266,14 @@ export function RightNavSidebar({
                     : 'رفتن به فرایند تایید'}
             </button>
             {isApprovalWorkflowMissing ? (
-              <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-right">
+              <div className="rounded-[8px] border border-amber-200 bg-amber-50 px-3 py-2 text-right">
                 <div className="text-[11px] font-extrabold leading-relaxed text-amber-900">
                   برای ارسال قرارداد به فرایند تایید، ابتدا باید «فرایند تایید» را در تنظیمات ثبت کنید.
                 </div>
                 <button
                   type="button"
                   onClick={() => router.push('/business-settings/approval-process')}
-                  className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-amber-200 bg-white px-2.5 py-1.5 text-[11px] font-bold text-amber-900 transition hover:bg-amber-100/50"
+                  className="mt-2 inline-flex items-center gap-1.5 rounded-[8px] border border-amber-200 bg-white px-2.5 py-1.5 text-[11px] font-bold text-amber-900 transition hover:bg-amber-100/50"
                 >
                   <Plus className="h-3.5 w-3.5" aria-hidden />
                   ساخت فرایند تایید
@@ -310,7 +310,7 @@ export function RightNavSidebar({
                   setBlockersMessage('');
                   setServerBlockers([]);
                 }}
-                className="rounded-lg p-1 text-[var(--text-faint)] transition-colors hover:bg-[var(--surface-soft)]"
+                className="rounded-[8px] p-1 text-[var(--text-faint)] transition-colors hover:bg-[var(--surface-soft)]"
                 aria-label="بستن"
               >
                 <X className="h-5 w-5" />
@@ -327,7 +327,7 @@ export function RightNavSidebar({
                   {displayedBlockers.map((item) => (
                     <li
                       key={`${item.title}:${item.detail}`}
-                      className="rounded-2xl border border-[var(--theme-warning-border)] bg-[var(--theme-warning-bg)] px-4 py-3 text-right"
+                      className="rounded-[8px] border border-[var(--theme-warning-border)] bg-[var(--theme-warning-bg)] px-4 py-3 text-right"
                     >
                       <div className="text-sm font-extrabold text-[var(--theme-warning-text)]">{item.title}</div>
                       <div className="mt-1 text-xs font-semibold leading-relaxed text-[var(--text-body)]">{item.detail}</div>
@@ -335,7 +335,7 @@ export function RightNavSidebar({
                   ))}
                 </ul>
               ) : (
-                <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--surface-soft)] px-4 py-3 text-right text-[12px] font-semibold leading-7 text-[var(--text-muted)]">
+                <div className="rounded-[8px] border border-[var(--border-color)] bg-[var(--surface-soft)] px-4 py-3 text-right text-[12px] font-semibold leading-7 text-[var(--text-muted)]">
                   در وضعیت فعلی مانع مشخصی پیدا نشد. اگر همچنان خطا می‌بینید، صفحه را یک‌بار تازه‌سازی کنید تا وضعیت مراحل دوباره از سرور خوانده شود.
                 </div>
               )}
@@ -348,7 +348,7 @@ export function RightNavSidebar({
                   setBlockersMessage('');
                   setServerBlockers([]);
                 }}
-                className="rounded-xl border border-[var(--border-color)] bg-[var(--surface)] px-4 py-2 text-xs font-extrabold text-[var(--text-body)] transition-colors hover:bg-[var(--surface-soft)]"
+                className="rounded-[8px] border border-[var(--border-color)] bg-[var(--surface)] px-4 py-2 text-xs font-extrabold text-[var(--text-body)] transition-colors hover:bg-[var(--surface-soft)]"
               >
                 متوجه شدم
               </button>
@@ -359,3 +359,5 @@ export function RightNavSidebar({
     </aside>
   );
 }
+
+

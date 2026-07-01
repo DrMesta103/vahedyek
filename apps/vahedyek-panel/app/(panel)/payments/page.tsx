@@ -97,10 +97,10 @@ export default function PaymentsPage() {
   return (
     <PanelLayout>
       <main className="space-y-5" dir="rtl">
-        <section className="rounded-[28px] border border-[color:var(--border-color)] bg-[color:var(--surface-overlay)] p-5 shadow-[0_18px_45px_var(--shadow-soft)]">
+        <section className="rounded-[8px] border border-[color:var(--border-color)] bg-[color:var(--surface-overlay)] p-5 shadow-[0_18px_45px_var(--shadow-soft)]">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-start gap-3">
-              <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-[color-mix(in_srgb,var(--dark-teal)_12%,white)] text-[color-mix(in_srgb,var(--dark-teal)_85%,black)]">
+              <span className="inline-flex h-12 w-12 items-center justify-center rounded-[8px] bg-[color-mix(in_srgb,var(--dark-teal)_12%,white)] text-[color-mix(in_srgb,var(--dark-teal)_85%,black)]">
                 <WalletCards className="h-6 w-6" />
               </span>
               <div>
@@ -109,11 +109,11 @@ export default function PaymentsPage() {
               </div>
             </div>
             <div className="grid gap-2 text-left sm:grid-cols-2">
-              <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+              <div className="rounded-[8px] border border-slate-200 bg-white px-4 py-3">
                 <div className="text-xs font-bold text-slate-500">تعداد فیش</div>
                 <div className="mt-1 text-lg font-black text-slate-900">{filteredRows.length.toLocaleString('fa-IR')}</div>
               </div>
-              <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+              <div className="rounded-[8px] border border-slate-200 bg-white px-4 py-3">
                 <div className="text-xs font-bold text-slate-500">جمع واریزی</div>
                 <div className="mt-1 text-lg font-black text-emerald-800">{formatMoneyRial(totalPaid)}</div>
               </div>
@@ -121,19 +121,19 @@ export default function PaymentsPage() {
           </div>
         </section>
 
-        <section className="rounded-[24px] border border-[color:var(--border-soft)] bg-[color:var(--surface)] p-4">
+        <section className="rounded-[8px] border border-[color:var(--border-soft)] bg-[color:var(--surface)] p-4">
           <div className="relative w-full max-w-lg">
             <Search className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              className="h-11 w-full rounded-2xl border border-slate-200 bg-white pr-10 pl-4 text-sm outline-none focus:border-[color:var(--theme-action-border)]"
+              className="h-11 w-full rounded-[8px] border border-slate-200 bg-white pr-10 pl-4 text-sm outline-none focus:border-[color:var(--theme-action-border)]"
               placeholder="جستجو در قرارداد، مشتری، شماره پیگیری..."
             />
           </div>
         </section>
 
-        <section className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-sm">
+        <section className="overflow-hidden rounded-[8px] border border-slate-200 bg-white shadow-sm">
           {loading ? (
             <div className="p-10 text-center text-sm font-bold text-slate-500">در حال بارگذاری...</div>
           ) : error ? (
@@ -204,3 +204,5 @@ export default function PaymentsPage() {
     </PanelLayout>
   );
 }
+
+

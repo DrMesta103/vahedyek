@@ -24,7 +24,7 @@ export function LoanPageShell({
 }) {
   return (
     <section className="mx-auto w-full max-w-6xl px-4 pb-24 pt-4 sm:px-6 lg:px-8">
-      <div className="space-y-5 rounded-[28px] border border-[color:var(--border-color)] bg-[color:var(--surface-overlay)] p-5 shadow-[0_18px_45px_var(--shadow-soft)] backdrop-blur sm:p-6">
+      <div className="space-y-5 rounded-[8px] border border-[color:var(--border-color)] bg-[color:var(--surface-overlay)] p-5 shadow-[0_18px_45px_var(--shadow-soft)] backdrop-blur sm:p-6">
         <div className="flex flex-col gap-4 border-b border-[color:var(--border-soft)] pb-5 lg:flex-row lg:items-end lg:justify-between">
           <div className="text-right">
             <h1 className="text-xl font-black text-[color:var(--text-strong)] sm:text-2xl">{title}</h1>
@@ -48,7 +48,7 @@ export function LoanPageShell({
 export function LoanLoadingState({ label }: { label: string }) {
   return (
     <section className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
-      <div className="rounded-[28px] border border-[color:var(--border-color)] bg-[color:var(--surface-overlay)] p-8 text-center text-sm text-[color:var(--text-muted)]">
+      <div className="rounded-[8px] border border-[color:var(--border-color)] bg-[color:var(--surface-overlay)] p-8 text-center text-sm text-[color:var(--text-muted)]">
         {label}
       </div>
     </section>
@@ -56,7 +56,7 @@ export function LoanLoadingState({ label }: { label: string }) {
 }
 
 export function LoanSectionCard({ children, className = '' }: { children: React.ReactNode; className?: string }) {
-  return <section className={`rounded-[24px] border border-[color:var(--border-soft)] bg-[color:var(--surface)] ${className}`}>{children}</section>;
+  return <section className={`rounded-[8px] border border-[color:var(--border-soft)] bg-[color:var(--surface)] ${className}`}>{children}</section>;
 }
 
 export function LoanIntroCard({
@@ -69,7 +69,7 @@ export function LoanIntroCard({
   icon?: LucideIcon;
 }) {
   return (
-    <div className="rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] px-4 py-4 text-right">
+    <div className="rounded-[8px] border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] px-4 py-4 text-right">
       <div className="mb-2 inline-flex items-center gap-2 text-base font-black text-[color:var(--text-strong)]">
         {Icon ? <Icon className="h-4 w-4" /> : null}
         {title}
@@ -288,11 +288,11 @@ export function CollapsibleTagSelector<T extends string>({
 }
 
 export function LoanSuccess({ message }: { message: string }) {
-  return <section className="rounded-2xl border border-[#11b5c9]/50 bg-[#11b5c9]/10 p-4 text-sm text-[#0f5f70]">{message}</section>;
+  return <section className="rounded-[8px] border border-[#11b5c9]/50 bg-[#11b5c9]/10 p-4 text-sm text-[#0f5f70]">{message}</section>;
 }
 
 export function LoanError({ error }: { error: string }) {
-  return <div className="rounded-2xl border border-[#fecdd3] bg-[#fff1f2] px-4 py-3 text-sm text-[#be123c]">{error}</div>;
+  return <div className="rounded-[8px] border border-[#fecdd3] bg-[#fff1f2] px-4 py-3 text-sm text-[#be123c]">{error}</div>;
 }
 
 export function LoanSaveBar({
@@ -314,6 +314,8 @@ export function LoanSaveBar({
     </div>
   );
 }
+
+
 
 
 

@@ -103,7 +103,7 @@ function AmountField({
     <div className="space-y-3">
       <FieldLabel label={label} />
       {disabled ? (
-        <input value={value} disabled className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-right text-slate-500" />
+        <input value={value} disabled className="h-11 w-full rounded-[8px] border border-slate-200 bg-slate-50 px-3 text-right text-slate-500" />
       ) : (
         <FinancialAmountInput value={value} onChange={onChange} suffix={suffix} />
       )}
@@ -132,7 +132,7 @@ function TextField({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
-        className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-right text-slate-900 placeholder:text-slate-400"
+        className="h-11 w-full rounded-[8px] border border-slate-200 bg-white px-3 text-right text-slate-900 placeholder:text-slate-400"
       />
       {helper ? <p className="text-right text-sm text-slate-500">{helper}</p> : null}
     </div>
@@ -155,14 +155,14 @@ function ModeCard({
     <button
       type="button"
       onClick={() => onSelect(value)}
-      className={`flex min-h-[124px] items-center gap-3 rounded-[22px] border px-4 py-4 text-right transition ${
+      className={`flex min-h-[124px] items-center gap-3 rounded-[8px] border px-4 py-4 text-right transition ${
         active
           ? 'border-cyan-300 bg-cyan-50/80 shadow-[0_4px_18px_rgba(34,211,238,0.10)]'
           : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
       }`}
     >
       <span
-        className={`inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border ${
+        className={`inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-[8px] border ${
           active ? 'border-cyan-200 bg-white text-cyan-700' : 'border-slate-200 bg-slate-50 text-slate-500'
         }`}
       >
@@ -237,7 +237,7 @@ function ProgressiveGrid({
   return (
     <div className="space-y-4">
       {visibleRows.map((row, index) => (
-        <div key={row.fromKey} className="grid gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3 lg:grid-cols-[1.25fr_1.75fr]">
+        <div key={row.fromKey} className="grid gap-3 rounded-[8px] border border-slate-200 bg-slate-50 p-3 lg:grid-cols-[1.25fr_1.75fr]">
           <div className="space-y-2">
             <FieldLabel label={`مبلغ جریمه ${periodLabel} - پله ${index + 1}`} />
             <FinancialAmountInput value={row.amount} onChange={(value) => onValueChange(row.rateKey, value)} suffix="تومان" />
@@ -321,11 +321,11 @@ function MaterialSpecsMultiSelectField({
         className="justify-end flex-row-reverse"
       />
       {!selectedDetails.length ? (
-        <p className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-3 text-right text-xs leading-6 text-slate-500">{emptyState}</p>
+        <p className="rounded-[8px] border border-dashed border-slate-200 bg-slate-50 px-4 py-3 text-right text-xs leading-6 text-slate-500">{emptyState}</p>
       ) : (
         <div className="space-y-3">
           {selectedDetails.map((item) => (
-            <div key={item.label} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-right">
+            <div key={item.label} className="rounded-[8px] border border-slate-200 bg-slate-50 px-4 py-3 text-right">
               <div className="text-sm font-extrabold text-slate-800">{item.label}</div>
               <p className="mt-1 text-xs leading-6 text-slate-500">{item.meta.description}</p>
             </div>
@@ -333,7 +333,7 @@ function MaterialSpecsMultiSelectField({
         </div>
       )}
       {sectionEffectLabel && sectionEffect ? (
-        <div className="rounded-2xl border border-cyan-100 bg-cyan-50/80 px-4 py-3 text-right">
+        <div className="rounded-[8px] border border-cyan-100 bg-cyan-50/80 px-4 py-3 text-right">
           <p className="text-xs leading-6 text-cyan-800">{sectionEffectLabel}: {sectionEffect}</p>
         </div>
       ) : null}
@@ -370,11 +370,11 @@ function MaterialSpecsImportanceField({
         onChange={onChange}
         className="justify-end flex-row-reverse"
       />
-      <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-right">
+      <div className="rounded-[8px] border border-slate-200 bg-slate-50 px-4 py-3 text-right">
         <p className="text-xs leading-6 text-slate-500">{selectedOption.description}</p>
       </div>
       {sectionEffectLabel && sectionEffect ? (
-        <div className="rounded-2xl border border-cyan-100 bg-cyan-50/80 px-4 py-3 text-right">
+        <div className="rounded-[8px] border border-cyan-100 bg-cyan-50/80 px-4 py-3 text-right">
           <p className="text-xs leading-6 text-cyan-800">{sectionEffectLabel}: {sectionEffect}</p>
         </div>
       ) : null}
@@ -398,7 +398,7 @@ function MaterialSpecsToggleField({
   sectionEffect?: string;
 }) {
   return (
-    <div className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 lg:flex-row lg:items-center lg:justify-between">
+    <div className="flex flex-col gap-4 rounded-[8px] border border-slate-200 bg-slate-50 p-4 lg:flex-row lg:items-center lg:justify-between">
       <div className="space-y-2 text-right">
         <div className="text-sm font-extrabold text-slate-800">{title}</div>
         <p className="text-xs leading-6 text-slate-500">{description}</p>
@@ -549,7 +549,7 @@ export const BuilderPenaltyInFlow = forwardRef<
         const isExpanded = expandedSectionId === item.id;
 
         return (
-          <div key={item.id} className={`overflow-hidden rounded-2xl border transition ${sectionEnabled ? 'border-cyan-200 bg-cyan-50/40' : 'border-slate-200 bg-white'}`}>
+          <div key={item.id} className={`overflow-hidden rounded-[8px] border transition ${sectionEnabled ? 'border-cyan-200 bg-cyan-50/40' : 'border-slate-200 bg-white'}`}>
             <div className="p-4">
               <div className="flex items-start justify-between gap-4">
                 <button
@@ -608,10 +608,10 @@ export const BuilderPenaltyInFlow = forwardRef<
                     <p className="text-xs leading-6 text-slate-500">{copy.activationDescription}</p>
                   </div>
 
-                  <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                  <div className="overflow-hidden rounded-[8px] border border-slate-200 bg-white">
                     {isMaterialSpecsSection ? (
                       <div className="space-y-8 p-5 md:p-10">
-                        <div className="rounded-2xl border border-cyan-200 bg-cyan-50/70 px-4 py-3 text-right">
+                        <div className="rounded-[8px] border border-cyan-200 bg-cyan-50/70 px-4 py-3 text-right">
                           <p className="text-xs leading-6 text-slate-700">تغییرات این بخش مستقیماً تنظیمات سازمانی جرایم سازنده را به‌روزرسانی می‌کند. نتیجه آن بلافاصله در همین فلو دیده می‌شود و برای قراردادهای بعدی نیز به‌عنوان مرجع پیش‌فرض باقی می‌ماند.</p>
                         </div>
 
@@ -746,7 +746,7 @@ export const BuilderPenaltyInFlow = forwardRef<
                             ) : null}
 
                             {selectedPercentBasis === 'ارزش روز واحد' ? (
-                              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                              <div className="rounded-[8px] border border-slate-200 bg-slate-50 p-4">
                                 <div className="mb-4 text-right">
                                   <h4 className="text-sm font-bold text-slate-700">فلو ثبت ارزش روز واحد</h4>
                                   <p className="text-xs leading-6 text-slate-500">چون فلو مستقلی در نرم‌افزار وجود ندارد، مبلغ و مرجع ارزش روز در همین بخش ثبت می‌شود.</p>
@@ -770,7 +770,7 @@ export const BuilderPenaltyInFlow = forwardRef<
                             ) : null}
 
                             {selectedPercentBasis === 'مبلغ تعیین‌شده توسط کارشناس' ? (
-                              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                              <div className="rounded-[8px] border border-slate-200 bg-slate-50 p-4">
                                 <div className="mb-4 text-right">
                                   <h4 className="text-sm font-bold text-slate-700">فلو ثبت مبلغ کارشناسی</h4>
                                   <p className="text-xs leading-6 text-slate-500">برای این مبنا باید مبلغ و مشخصات استنادی کارشناس ثبت شود.</p>
@@ -794,7 +794,7 @@ export const BuilderPenaltyInFlow = forwardRef<
                             ) : null}
 
                             {selectedPercentBasis === 'سفارشی' ? (
-                              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                              <div className="rounded-[8px] border border-slate-200 bg-slate-50 p-4">
                                 <div className="mb-4 text-right">
                                   <h4 className="text-sm font-bold text-slate-700">فلو مبنای سفارشی</h4>
                                   <p className="text-xs leading-6 text-slate-500">در حالت سفارشی باید عنوان و مبلغ مرجع را مشخص کنید.</p>
@@ -842,7 +842,7 @@ export const BuilderPenaltyInFlow = forwardRef<
                               helper="اگر این مقدار ۱۰ باشد، جریمه از روز ۱۱ تاخیر شروع می‌شود."
                             />
 
-                            <div className="space-y-5 rounded-[28px] border border-slate-200 bg-white p-5">
+                            <div className="space-y-5 rounded-[8px] border border-slate-200 bg-white p-5">
                               <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
                                 <div className="space-y-2 text-right">
                                   <h4 className="text-sm font-bold text-slate-700">سقف جریمه</h4>
@@ -871,7 +871,7 @@ export const BuilderPenaltyInFlow = forwardRef<
                       type="button"
                       onClick={saveCurrent}
                       disabled={saving}
-                      className="inline-flex items-center gap-2 rounded-lg bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-60"
+                      className="inline-flex items-center gap-2 rounded-[8px] bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-60"
                     >
                       {saving ? 'در حال ذخیره…' : isMaterialSpecsSection ? 'ذخیره تنظیمات' : 'ثبت'}
                     </button>
@@ -888,3 +888,5 @@ export const BuilderPenaltyInFlow = forwardRef<
     </div>
   );
 });
+
+

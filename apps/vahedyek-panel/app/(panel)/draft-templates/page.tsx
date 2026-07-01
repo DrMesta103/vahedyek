@@ -8,17 +8,17 @@ import PanelLayout from '../../components/PanelLayout';
 const TEMPLATE_ITEMS = [
   {
     id: 'tpl-002',
-    title: 'قالب پیش‌نویس پیش‌فروش با تسویه مرحله‌ای',
-    category: 'پیش‌فروش',
-    updatedAt: '۱۴۰۵/۰۱/۲۵',
-    description: 'مناسب قراردادهای پیش‌فروش با تحویل مرحله‌ای، تعدیل و اقساط زمان‌بندی‌شده.',
+    title: '???? ???????? ???????? ?? ????? ????????',
+    category: '????????',
+    updatedAt: '????/??/??',
+    description: '????? ?????????? ???????? ?? ????? ????????? ????? ? ????? ?????????????.',
   },
   {
     id: 'tpl-003',
-    title: 'قالب پیش‌نویس قرارداد با تخفیف خوش‌حسابی',
-    category: 'تخفیف‌دار',
-    updatedAt: '۱۴۰۵/۰۱/۲۰',
-    description: 'نسخه‌ای برای قراردادهایی که مشوق پرداخت زودتر از موعد و تخفیف‌های موردی دارند.',
+    title: '???? ???????? ??????? ?? ????? ?????????',
+    category: '?????????',
+    updatedAt: '????/??/??',
+    description: '??????? ???? ??????????? ?? ???? ?????? ????? ?? ???? ? ????????? ????? ?????.',
   },
 ];
 
@@ -42,34 +42,34 @@ const DraftTemplatesPage = () => {
       <div className="space-y-5">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">فهرست قالب‌های پیش‌نویس</h1>
-            <p className="mt-1 text-gray-500">قالب‌های آماده را جستجو کنید یا با همان فلو ثبت قرارداد، یک قالب پیش‌نویس جدید بسازید.</p>
+            <h1 className="text-2xl font-bold text-gray-800">????? ???????? ????????</h1>
+            <p className="mt-1 text-gray-500">???????? ????? ?? ????? ???? ?? ?? ???? ??? ??? ???????? ?? ???? ???????? ???? ??????.</p>
           </div>
           <Link
             href="/draft-templates/new"
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-teal-600 px-5 text-sm font-bold text-white shadow transition-all hover:bg-teal-700"
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-[8px] bg-teal-600 px-5 text-sm font-bold text-white shadow transition-all hover:bg-teal-700"
           >
             <FilePlus2 className="h-4 w-4" />
-            <span>افزودن قالب پیش‌نویس</span>
+            <span>?????? ???? ????????</span>
           </Link>
         </div>
 
-        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+        <div className="rounded-[8px] border border-gray-200 bg-white p-4 shadow-sm">
           <div className="relative">
             <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
               value={searchValue}
               onChange={(event) => setSearchValue(event.target.value)}
-              placeholder="جستجو در عنوان، نوع یا توضیحات قالب..."
-              className="h-11 w-full rounded-lg border border-gray-300 bg-white pr-10 pl-4 text-sm text-gray-700 outline-none transition focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
+              placeholder="????? ?? ?????? ??? ?? ??????? ????..."
+              className="h-11 w-full rounded-[8px] border border-gray-300 bg-white pr-10 pl-4 text-sm text-gray-700 outline-none transition focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
             />
           </div>
         </div>
 
         <div className="grid gap-4">
           {filteredTemplates.map((item) => (
-            <article key={item.id} className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition hover:border-teal-300 hover:shadow-md">
+            <article key={item.id} className="rounded-[8px] border border-gray-200 bg-white p-5 shadow-sm transition hover:border-teal-300 hover:shadow-md">
               <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                 <div className="space-y-2">
                   <div className="flex flex-wrap items-center gap-2">
@@ -81,14 +81,14 @@ const DraftTemplatesPage = () => {
                   </div>
                   <p className="text-sm leading-6 text-gray-600">{item.description}</p>
                 </div>
-                <div className="text-sm text-gray-500">آخرین بروزرسانی: {item.updatedAt}</div>
+                <div className="text-sm text-gray-500">????? ?????????: {item.updatedAt}</div>
               </div>
             </article>
           ))}
 
           {!filteredTemplates.length && (
-            <div className="rounded-xl border-2 border-dashed border-gray-200 bg-white p-10 text-center text-sm text-gray-400">
-              قالبی با این عبارت پیدا نشد.
+            <div className="rounded-[8px] border-2 border-dashed border-gray-200 bg-white p-10 text-center text-sm text-gray-400">
+              ????? ?? ??? ????? ???? ???.
             </div>
           )}
         </div>
@@ -98,3 +98,4 @@ const DraftTemplatesPage = () => {
 };
 
 export default DraftTemplatesPage;
+

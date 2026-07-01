@@ -19,7 +19,7 @@ export interface ValidationResult {
   errors: Record<string, string>;
 }
 
-const REQUIRED_MSG = 'این فیلد الزامی است';
+const REQUIRED_MSG = 'این فیلد الزامی است.';
 
 function addPhysicalProgressMilestoneErrors(
   errors: Record<string, string>,
@@ -35,13 +35,16 @@ function addPhysicalProgressMilestoneErrors(
     };
 
     if (setting.timelinePreset === 'other' && !isPositiveIntString(setting.timelineMonthsCustom)) {
-      errors[`buyerTerms.physicalProgressDelay.milestoneSettings.${milestone}.timelineMonthsCustom`] = 'تعداد ماه معتبر را وارد کنید.';
+      errors[`buyerTerms.physicalProgressDelay.milestoneSettings.${milestone}.timelineMonthsCustom`] =
+        'تعیین بازه زمانی این مرحله الزامی است.';
     }
     if (setting.timelinePreset === 'specific-date' && !String(setting.timelineSpecificDate ?? '').trim()) {
-      errors[`buyerTerms.physicalProgressDelay.milestoneSettings.${milestone}.timelineSpecificDate`] = 'تاریخ هدف را مشخص کنید.';
+      errors[`buyerTerms.physicalProgressDelay.milestoneSettings.${milestone}.timelineSpecificDate`] =
+        'تعیین تاریخ این مرحله الزامی است.';
     }
     if (setting.gracePreset === 'other' && !isPositiveIntString(setting.graceDaysCustom)) {
-      errors[`buyerTerms.physicalProgressDelay.milestoneSettings.${milestone}.graceDaysCustom`] = 'مهلت مجاز تأخیر را وارد کنید.';
+      errors[`buyerTerms.physicalProgressDelay.milestoneSettings.${milestone}.graceDaysCustom`] =
+        'تعیین مهلت تنفس این مرحله الزامی است.';
     }
   }
 }
@@ -86,9 +89,9 @@ export function validateShares(parties: ContractParty[], mode: ShareMode): Valid
   const total = parties.reduce((sum, p) => sum + (p.share?.value ?? 0), 0);
 
   if (mode === 'percent' && total > 100) {
-    errors.shares = 'مجموع سهم‌ها نباید از 100٪ تجاوز کند';
+    errors.shares = 'جمع سهم‌ها نباید از 100٪ بیشتر شود.';
   } else if (mode === 'dang' && total > 6) {
-    errors.shares = 'مجموع سهم‌ها نباید از 6 دانگ تجاوز کند';
+    errors.shares = 'جمع سهم‌ها نباید از 6 دانگ بیشتر شود.';
   }
 
   return { valid: Object.keys(errors).length === 0, errors };
@@ -164,12 +167,12 @@ export function validateFinancialStep(data: Partial<ContractFinancialData>): Val
   }
 
   if (!categories.length) {
-    errors.categories = 'حداقل یک ردیف مالی باید ثبت شود';
+    errors.categories = 'حداقل یک دسته مالی باید تعریف شود.';
   }
 
   const validCategoryIds = new Set(categories.map((item) => item.id));
   if (dueItems.some((item) => !validCategoryIds.has(item.categoryId))) {
-    errors.dueItems = 'بعضی از سررسیدها به دسته‌بندی معتبر متصل نیستند';
+    errors.dueItems = 'یکی از آیتم‌های سررسید به یک دسته نامعتبر اشاره می‌کند.';
   }
 
   return { valid: Object.keys(errors).length === 0, errors };
@@ -184,7 +187,7 @@ export function validatePenaltiesStep(data: Partial<ContractPenaltiesData>): Val
   for (const type of activeTypes) {
     const typeRules = rules.filter((item) => item.penaltyTypeId === type.id);
     if (typeRules.length === 0) {
-      errors[`type:${type.id}`] = `برای «${type.title}» باید حداقل یک جریمه ثبت شود.`;
+      errors[`type:${type.id}`] = `برای «${type.title}» حداقل یک قانون باید ثبت شود.`;
     }
   }
 
@@ -202,13 +205,13 @@ export function validatePenaltiesStep(data: Partial<ContractPenaltiesData>): Val
 export function validateDiscountsStep(data: Partial<ContractDiscountsData>): ValidationResult {
   const errors: Record<string, string> = {};
   const types = data.types ?? [];
-  const rules = data.rules ?? [];
+  const rules = (data.rules ?? []).filter((item) => item.enabled !== false);
   const activeTypes = types.filter((item) => item.active);
 
   for (const type of activeTypes) {
     const typeRules = rules.filter((item) => item.discountTypeId === type.id);
     if (typeRules.length === 0) {
-      errors[`type:${type.id}`] = `برای «${type.title}» باید حداقل یک تخفیف ثبت شود.`;
+      errors[`type:${type.id}`] = `برای «${type.title}» حداقل یک قانون باید ثبت شود.`;
     }
   }
 
@@ -218,26 +221,26 @@ export function validateDiscountsStep(data: Partial<ContractDiscountsData>): Val
     const thresholdValue = Number(String(rule.approvalThreshold ?? '').replace(/,/g, ''));
 
     if (!(maxValue > 0)) {
-      errors[`rule:${rule.id || index}:maxValue`] = 'حداکثر مقدار تخفیف را وارد کنید.';
+      errors[`rule:${rule.id || index}:maxValue`] = 'حداکثر مقدار باید تعیین شود.';
     }
 
     if (String(rule.minValue ?? '').trim() !== '' && minValue < 0) {
-      errors[`rule:${rule.id || index}:minValue`] = 'حداقل مقدار تخفیف معتبر نیست.';
+      errors[`rule:${rule.id || index}:minValue`] = 'حداقل مقدار نمی‌تواند منفی باشد.';
     }
 
     if (minValue > maxValue && maxValue > 0) {
-      errors[`rule:${rule.id || index}:range`] = 'حداقل تخفیف نمی‌تواند بیشتر از حداکثر تخفیف باشد.';
+      errors[`rule:${rule.id || index}:range`] = 'بازه مقدارها نامعتبر است.';
     }
 
     if (rule.managerApproval && !(thresholdValue > 0)) {
-      errors[`rule:${rule.id || index}:approvalThreshold`] = 'آستانه تایید مدیر را وارد کنید.';
+      errors[`rule:${rule.id || index}:approvalThreshold`] = 'آستانه تأیید مدیر باید تعیین شود.';
     }
   });
 
   return { valid: Object.keys(errors).length === 0, errors };
 }
 
-/** Validates one constructor subsection before marking it completed (ثبت). */
+/** یک زیربخش از فسخ سازنده را قبل از تکمیل اعتبارسنجی می‌کند. */
 export function validateTerminationSubsection(
   subsection: ConstructorTerminationSubsectionId,
   data: ContractTerminationData,
@@ -254,10 +257,11 @@ export function validateTerminationSubsection(
         errors['constructorTerms.lateInstallment.graceDaysCustom'] = REQUIRED_MSG;
       }
       if (li.detectionBasis === 'total-debt' && !isPositive(li.minDebtAmount)) {
-        errors['constructorTerms.lateInstallment.minDebtAmount'] = 'حداقل مبلغ بدهی را وارد کنید.';
+        errors['constructorTerms.lateInstallment.minDebtAmount'] = 'مبلغ حداقل بدهی باید تعیین شود.';
       }
       if (li.detectionBasis === 'consecutive-installments' && !isPositiveIntString(li.consecutiveInstallmentsCount)) {
-        errors['constructorTerms.lateInstallment.consecutiveInstallmentsCount'] = 'تعداد اقساط متوالی را وارد کنید.';
+        errors['constructorTerms.lateInstallment.consecutiveInstallmentsCount'] =
+          'تعداد اقساط متوالی باید تعیین شود.';
       }
       break;
     }
@@ -272,13 +276,13 @@ export function validateTerminationSubsection(
     case 'documentDeficiencies':
       if (!c.documentDeficiencies.ruleEnabled) return { valid: true, errors: {} };
       if (!c.documentDeficiencies.mandatoryItems.length) {
-        errors['constructorTerms.documentDeficiencies.mandatoryItems'] = 'حداقل یک مورد اجباری را انتخاب کنید.';
+        errors['constructorTerms.documentDeficiencies.mandatoryItems'] = 'حداقل یک مورد الزامی باید تعریف شود.';
       }
       break;
     case 'otherBreach':
       if (!c.otherBreach.ruleEnabled) return { valid: true, errors: {} };
       if (!c.otherBreach.violationTypes.length) {
-        errors['constructorTerms.otherBreach.violationTypes'] = 'حداقل یک نوع تخلف را انتخاب کنید.';
+        errors['constructorTerms.otherBreach.violationTypes'] = 'حداقل یک نوع تخلف باید تعریف شود.';
       }
       if (c.otherBreach.rectificationDays === 'other' && !isPositiveIntString(c.otherBreach.rectificationDaysCustom)) {
         errors['constructorTerms.otherBreach.rectificationDaysCustom'] = REQUIRED_MSG;
@@ -301,7 +305,7 @@ function isPositivePercentString(value: string | undefined) {
   return Number.isFinite(n) && n > 0 && n <= 100;
 }
 
-/** اعتبارسنجی یک زیربخش فسخ خریدار پیش از علامت «ثبت شده». */
+/** اعتبارسنجی زیربخش‌های فسخ خریدار */
 export function validateBuyerTerminationSubsection(
   subsection: BuyerTerminationSubsectionId,
   data: ContractTerminationData,
@@ -313,7 +317,7 @@ export function validateBuyerTerminationSubsection(
     case 'lateDelivery': {
       if (!b.lateDelivery.ruleEnabled) return { valid: true, errors: {} };
       if (!b.lateDelivery.calculationBasis.length) {
-        errors['buyerTerms.lateDelivery.calculationBasis'] = 'حداقل یک مبنای محاسبه تأخیر را انتخاب کنید.';
+        errors['buyerTerms.lateDelivery.calculationBasis'] = 'حداقل یک مبنای محاسبه باید انتخاب شود.';
       }
       if (b.lateDelivery.gracePreset === 'other' && !isPositiveIntString(b.lateDelivery.graceMonthsCustom)) {
         errors['buyerTerms.lateDelivery.graceMonthsCustom'] = REQUIRED_MSG;
@@ -323,18 +327,18 @@ export function validateBuyerTerminationSubsection(
     case 'specificationChanges': {
       if (!b.specificationChanges.ruleEnabled) return { valid: true, errors: {} };
       if (!b.specificationChanges.includedTypes.length) {
-        errors['buyerTerms.specificationChanges.includedTypes'] = 'حداقل یک نوع تغییر مشخصات انتخاب کنید.';
+        errors['buyerTerms.specificationChanges.includedTypes'] = 'حداقل یک نوع تغییر مشخصات باید انتخاب شود.';
       }
       break;
     }
     case 'breachOfObligations': {
       if (!b.breachOfObligations.ruleEnabled && !b.physicalProgressDelay.ruleEnabled) return { valid: true, errors: {} };
       if (b.breachOfObligations.ruleEnabled && !b.breachOfObligations.obligationTypes.length) {
-        errors['buyerTerms.breachOfObligations.obligationTypes'] = 'حداقل یک نوع نقض تعهد انتخاب کنید.';
+        errors['buyerTerms.breachOfObligations.obligationTypes'] = 'حداقل یک تعهد باید انتخاب شود.';
       }
       if (b.physicalProgressDelay.ruleEnabled) {
         if (!b.physicalProgressDelay.milestoneTypes.length) {
-          errors['buyerTerms.physicalProgressDelay.milestoneTypes'] = 'حداقل یک مرحله پیشرفت برای سنجش تأخیر انتخاب کنید.';
+          errors['buyerTerms.physicalProgressDelay.milestoneTypes'] = 'حداقل یک مرحله پیشرفت فیزیکی باید انتخاب شود.';
         }
         addPhysicalProgressMilestoneErrors(errors, b.physicalProgressDelay);
       }
@@ -343,11 +347,11 @@ export function validateBuyerTerminationSubsection(
     case 'physicalProgressDelay': {
       if (!b.physicalProgressDelay.ruleEnabled) return { valid: true, errors: {} };
       if (!b.physicalProgressDelay.milestoneTypes.length) {
-        errors['buyerTerms.physicalProgressDelay.milestoneTypes'] = 'حداقل یک مرحله پیشرفت برای سنجش تأخیر انتخاب کنید.';
+        errors['buyerTerms.physicalProgressDelay.milestoneTypes'] = 'حداقل یک مرحله پیشرفت فیزیکی باید انتخاب شود.';
       }
       addPhysicalProgressMilestoneErrors(errors, b.physicalProgressDelay);
       if (!['any-milestone', 'all-milestones'].includes(b.physicalProgressDelay.triggerCondition)) {
-        errors['buyerTerms.physicalProgressDelay.triggerCondition'] = 'شرط فعال‌سازی اختیار فسخ را انتخاب کنید.';
+        errors['buyerTerms.physicalProgressDelay.triggerCondition'] = 'شرط فعال‌سازی معتبر انتخاب نشده است.';
       }
       if (
         ![
@@ -358,30 +362,30 @@ export function validateBuyerTerminationSubsection(
           'parties-agreement',
         ].includes(b.physicalProgressDelay.progressCertificationSource)
       ) {
-        errors['buyerTerms.physicalProgressDelay.progressCertificationSource'] = 'مرجع تأیید پیشرفت پروژه را انتخاب کنید.';
+        errors['buyerTerms.physicalProgressDelay.progressCertificationSource'] = 'منبع تأیید پیشرفت معتبر انتخاب نشده است.';
       }
       break;
     }
     case 'areaDiscrepancy': {
       if (!b.areaDiscrepancy.ruleEnabled) return { valid: true, errors: {} };
       if (b.areaDiscrepancy.thresholdPreset === 'other' && !isPositivePercentString(b.areaDiscrepancy.thresholdPercentCustom)) {
-        errors['buyerTerms.areaDiscrepancy.thresholdPercentCustom'] = 'درصد معتبر (۰–۱۰۰) وارد کنید.';
+        errors['buyerTerms.areaDiscrepancy.thresholdPercentCustom'] = 'آستانه اختلاف باید تعیین شود.';
       }
       if (!b.areaDiscrepancy.referenceSources.length) {
-        errors['buyerTerms.areaDiscrepancy.referenceSources'] = 'حداقل یک مرجع رسمی انتخاب کنید.';
+        errors['buyerTerms.areaDiscrepancy.referenceSources'] = 'حداقل یک منبع مرجع باید انتخاب شود.';
       }
       if (
         !Array.isArray(b.areaDiscrepancy.discrepancyScopes) ||
         b.areaDiscrepancy.discrepancyScopes.length === 0 ||
         b.areaDiscrepancy.discrepancyScopes.some((item) => item !== 'deficit-only' && item !== 'surplus-only')
       ) {
-        errors['buyerTerms.areaDiscrepancy.discrepancyScopes'] = 'حداقل یک نوع اختلاف مشمول فسخ را انتخاب کنید.';
+        errors['buyerTerms.areaDiscrepancy.discrepancyScopes'] = 'حداقل یک دامنه اختلاف معتبر باید انتخاب شود.';
       }
       if (
         b.areaDiscrepancy.financialSettlementInsteadOfTermination &&
         !['contract-price', 'market-price', 'official-expert'].includes(b.areaDiscrepancy.settlementPricingBasis)
       ) {
-        errors['buyerTerms.areaDiscrepancy.settlementPricingBasis'] = 'مبنای قیمت‌گذاری اختلاف متراژ را انتخاب کنید.';
+        errors['buyerTerms.areaDiscrepancy.settlementPricingBasis'] = 'مبنای تسویه مالی معتبر انتخاب نشده است.';
       }
       break;
     }
@@ -407,7 +411,7 @@ export function validateTerminationStep(data: Partial<ContractTerminationData>):
 
   if (!seller && !buyer) {
     errors['termination.partyEngagement'] =
-      'با فعال بودن فسخ، ابتدا یکی از گزینه‌های «تنظیمات فسخ سازنده» یا «تنظیمات فسخ خریدار» را باز کنید، سپس «ثبت شرایط فسخ» را بزنید.';
+      'حداقل یکی از طرفین باید در بخش فسخ فعال باشد؛ فروشنده، خریدار یا هر دو.';
     return { valid: false, errors };
   }
 

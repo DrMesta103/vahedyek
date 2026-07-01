@@ -12,7 +12,7 @@ export function Button({
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; size?: Size }) {
   const base =
-    'inline-flex items-center justify-center gap-2 rounded-xl font-extrabold transition disabled:opacity-55 disabled:cursor-not-allowed';
+    'inline-flex items-center justify-center gap-2 rounded-[8px] font-extrabold transition disabled:opacity-55 disabled:cursor-not-allowed';
   const sizes = size === 'sm' ? 'h-9 px-3 text-[12px]' : 'h-11 px-5 text-[13px]';
   const v =
     variant === 'primary'
@@ -27,4 +27,5 @@ export function Button({
 
   return <button {...props} className={`${base} ${sizes} ${v} ${className}`.trim()} />;
 }
+
 

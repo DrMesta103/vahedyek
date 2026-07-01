@@ -1,7 +1,7 @@
 'use client';
 
 import { User } from 'lucide-react';
-import { ChoicePillsField } from '@repo/ui';
+import { TagPills } from '@repo/ui';
 import { FieldGroup, FormTextInput, InlineSelect, SectionCard, SectionHeader } from './ContractFormPrimitives';
 
 export type IssuerType = 'self' | 'former' | 'staff';
@@ -31,47 +31,49 @@ export function SubjectContractorBox({
 }) {
   return (
     <SectionCard>
-      <SectionHeader label="منعقدکننده قرارداد" description="فردی که این قرارداد را با مشتری منعقد کرده مشخص کنید" />
-      <div className="space-y-4 p-5">
-        <ChoicePillsField<IssuerType>
-          label="منعقدکننده قرارداد"
-          options={[
-            { value: 'self', label: 'خودم' },
-            { value: 'former', label: 'کارمند سابق' },
-            { value: 'staff', label: 'سایر کارمندان' },
-          ]}
-          value={issuerType}
-          onChange={onIssuerTypeChange}
-          wrap
-        />
+      <SectionHeader label="?????????? ???????" description="???? ?? ??? ??????? ?? ?? ????? ????? ???? ???? ????" />
+      <div className="space-y-5 p-5 sm:p-6">
+        <FieldGroup label="?????????? ???????" required hint="???? ?? ??? ??????? ?? ?? ????? ????? ???? ???? ????.">
+          <TagPills
+            options={[
+              { value: 'self', label: '????' },
+              { value: 'former', label: '?????? ????' },
+              { value: 'staff', label: '???? ????????' },
+            ]}
+            value={issuerType}
+            onChange={onIssuerTypeChange}
+            wrap={false}
+            className="justify-start overflow-x-auto pb-1"
+          />
+        </FieldGroup>
 
         {issuerType === 'former' ? (
           <div className="grid gap-4 sm:grid-cols-2">
-            <FieldGroup label="انتخاب از لیست سابقین">
+            <FieldGroup label="?????? ?? ???? ??????">
               <InlineSelect
                 value={formerEmployeeName}
                 onSelect={onFormerEmployeeNameChange}
                 options={formerEmployeeOptions}
-                placeholder="در صورت وجود انتخاب کنید"
-                searchPlaceholder="جستجو..."
-                emptyText="کارمند سابقی ثبت نشده"
+                placeholder="?? ???? ???? ?????? ????"
+                searchPlaceholder="?????..."
+                emptyText="?????? ????? ??? ????"
               />
             </FieldGroup>
-            <FieldGroup label="نام کامل کارمند سابق" hint="در صورت عدم وجود در لیست، دستی وارد کنید">
-              <FormTextInput value={formerEmployeeName} onChange={onFormerEmployeeNameChange} placeholder="نام و نام خانوادگی" icon={User} />
+            <FieldGroup label="??? ???? ?????? ????" hint="?? ???? ??? ???? ?? ????? ???? ???? ????">
+              <FormTextInput value={formerEmployeeName} onChange={onFormerEmployeeNameChange} placeholder="??? ? ??? ????????" icon={User} />
             </FieldGroup>
           </div>
         ) : null}
 
         {issuerType === 'staff' ? (
-          <FieldGroup label="انتخاب کارمند">
+          <FieldGroup label="?????? ??????">
             <InlineSelect
               value={selectedStaff}
               onSelect={onSelectedStaffChange}
               options={staffOptions}
-              placeholder="یک کارمند را انتخاب کنید"
-              searchPlaceholder="جستجو در کارمندان..."
-              emptyText="کارمندی پیدا نشد"
+              placeholder="?? ?????? ?? ?????? ????"
+              searchPlaceholder="????? ?? ????????..."
+              emptyText="??????? ???? ???"
             />
           </FieldGroup>
         ) : null}

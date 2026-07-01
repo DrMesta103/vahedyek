@@ -28,12 +28,12 @@ export function LoanInterestSettingsPanel() {
         const response = await fetch('/api/business-settings/contract-rules/loan-settings', { cache: 'no-store' });
         if (!response.ok) {
           const payload = (await response.json().catch(() => ({}))) as { message?: string };
-          throw new Error(payload.message || 'بارگذاری تنظیمات نرخ سود وام انجام نشد.');
+          throw new Error(payload.message || '???????? ??????? ??? ??? ??? ????? ???.');
         }
         const payload = (await response.json()) as LoanSettingsState;
         if (mounted) setState(payload);
       } catch (loadError) {
-        if (mounted) setError(loadError instanceof Error ? loadError.message : 'بارگذاری تنظیمات نرخ سود وام انجام نشد.');
+        if (mounted) setError(loadError instanceof Error ? loadError.message : '???????? ??????? ??? ??? ??? ????? ???.');
       } finally {
         if (mounted) setLoading(false);
       }
@@ -49,7 +49,7 @@ export function LoanInterestSettingsPanel() {
     if (!state) return;
 
     if (state.loanBankInterestEnabled && !state.loanBankInterestRate.trim()) {
-      setError('نرخ سود وام را وارد کنید.');
+      setError('??? ??? ??? ?? ???? ????.');
       return;
     }
 
@@ -66,31 +66,31 @@ export function LoanInterestSettingsPanel() {
 
       if (!response.ok) {
         const payload = (await response.json().catch(() => ({}))) as { message?: string };
-        throw new Error(payload.message || 'ذخیره تنظیمات نرخ سود وام انجام نشد.');
+        throw new Error(payload.message || '????? ??????? ??? ??? ??? ????? ???.');
       }
 
-      setMessage('تنظیمات نرخ سود وام با موفقیت ذخیره شد.');
+      setMessage('??????? ??? ??? ??? ?? ?????? ????? ??.');
     } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : 'ذخیره تنظیمات نرخ سود وام انجام نشد.');
+      setError(saveError instanceof Error ? saveError.message : '????? ??????? ??? ??? ??? ????? ???.');
     } finally {
       setSaving(false);
     }
   };
 
   if (loading || !state) {
-    return <LoanLoadingState label="در حال بارگذاری تنظیمات نرخ سود وام..." />;
+    return <LoanLoadingState label="?? ??? ???????? ??????? ??? ??? ???..." />;
   }
 
   return (
     <section className="mx-auto w-full max-w-4xl px-4 pb-28 pt-4 sm:px-6 lg:px-8">
       <div className="border-b border-[color:var(--border-soft)] pb-4 text-center">
-        <h1 className="text-xl font-black text-[color:var(--text-strong)] sm:text-2xl">نرخ سود وام</h1>
+        <h1 className="text-xl font-black text-[color:var(--text-strong)] sm:text-2xl">??? ??? ???</h1>
         <p className="mt-3 text-sm leading-8 text-[color:var(--text-muted)]">
-          در این بخش مشخص می‌کنید مبلغ وام از ابتدا عدد مشخصی دارد یا در زمان عقد قرارداد مشخص میشود
+          ?? ??? ??? ???? ??????? ???? ??? ?? ????? ??? ????? ???? ?? ?? ???? ??? ??????? ???? ?????
         </p>
       </div>
 
-      <section className="mt-4 rounded-[24px] bg-[color:var(--surface)] px-4 py-6">
+      <section className="mt-4 rounded-[8px] bg-[color:var(--surface)] px-4 py-6">
         <div dir="ltr" className="flex items-start justify-between gap-4">
           <ContractRegistrationSwitch
             checked={state.loanBankInterestEnabled}
@@ -110,19 +110,19 @@ export function LoanInterestSettingsPanel() {
           />
           <div dir="rtl" className="space-y-3 text-right">
             <h2 className="text-[20px] font-black leading-8 text-[color:var(--text-strong)]">
-              نرخ سود وام بانکی بر ابرار سیاست های بانکی در زمان دریافت وام مشخص خواهد شد
+              ??? ??? ??? ????? ?? ????? ????? ??? ????? ?? ???? ?????? ??? ???? ????? ??
             </h2>
             <p className="text-sm leading-7 text-[color:var(--text-muted)]">
-              دستوری که سود وام در بانکی متفاوت از سیاست های بانکی میباشد میتوانید این بخش را غیر فعال کرده و میزان سود مدنظر خود را وارد کنید.
+              ?????? ?? ??? ??? ?? ????? ?????? ?? ????? ??? ????? ?????? ???????? ??? ??? ?? ??? ???? ???? ? ????? ??? ????? ??? ?? ???? ????.
             </p>
           </div>
         </div>
       </section>
 
       {!state.loanBankInterestEnabled ? (
-        <section className="mt-4 rounded-[24px] bg-[color:var(--surface)] px-4 py-6">
+        <section className="mt-4 rounded-[8px] bg-[color:var(--surface)] px-4 py-6">
           <div className="space-y-4 text-right">
-            <FieldLabel label="نرخ سود وام" />
+            <FieldLabel label="??? ??? ???" />
             <FinancialAmountInput
               value={state.loanBankInterestRate}
               onChange={(loanBankInterestRate) => {
@@ -132,7 +132,7 @@ export function LoanInterestSettingsPanel() {
               }}
               suffix="%"
             />
-            <p className="text-sm text-[color:var(--text-muted)]">میزان سود وام بانکی را در این بخش مشخص کنید. مثال (۲۴٪)</p>
+            <p className="text-sm text-[color:var(--text-muted)]">????? ??? ??? ????? ?? ?? ??? ??? ???? ????. ???? (??%)</p>
           </div>
         </section>
       ) : null}
@@ -144,3 +144,4 @@ export function LoanInterestSettingsPanel() {
     </section>
   );
 }
+

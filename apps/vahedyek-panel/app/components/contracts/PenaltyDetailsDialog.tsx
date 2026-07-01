@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { ChevronDown, Info, X } from 'lucide-react';
 import { useState } from 'react';
@@ -11,13 +11,13 @@ import {
 } from '../../lib/buyerPenaltyCalculation';
 
 function formatMoneyRial(valueRial: number) {
-  if (!valueRial) return 'Û° Ø±ÛŒØ§Ù„';
-  return `${Math.round(valueRial).toLocaleString('fa-IR')} Ø±ÛŒØ§Ù„`;
+  if (!valueRial) return '۰ ریال';
+  return `${Math.round(valueRial).toLocaleString('fa-IR')} ریال`;
 }
 
 function DetailRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-slate-100 bg-slate-50/70 px-3 py-2.5">
+    <div className="rounded-[8px] border border-slate-100 bg-slate-50/70 px-3 py-2.5">
       <div className="text-[10px] font-bold text-slate-500">{label}</div>
       <div className="mt-0.5 text-[12px] font-black text-slate-900">{value}</div>
     </div>
@@ -55,16 +55,16 @@ export function PenaltyConfiguredSettingsPanel({ detail }: { detail: BuyerPenalt
 
   if (!settings) {
     return (
-      <SectionCard title="ØªÙ†Ø¸ÛŒÙ…Ø§Øª Ø«Ø¨Øªâ€ŒØ´Ø¯Ù‡ Ø¯Ø± Ù‚Ø±Ø§Ø±Ø¯Ø§Ø¯" tone="slate">
-        <p className="text-[11px] font-semibold leading-5 text-slate-500">Ù‚Ø§Ù†ÙˆÙ† Ø¬Ø±ÛŒÙ…Ù‡ Ø¨Ø±Ø§ÛŒ Ø§ÛŒÙ† Ù†ÙˆØ¹ Ø¯Ø± Ù‚Ø±Ø§Ø±Ø¯Ø§Ø¯ Ø«Ø¨Øª Ù†Ø´Ø¯Ù‡ Ø§Ø³Øª.</p>
+      <SectionCard title="تنظیمات ثبت‌شده در قرارداد" tone="slate">
+        <p className="text-[11px] font-semibold leading-5 text-slate-500">قانون جریمه برای این نوع در قرارداد ثبت نشده است.</p>
       </SectionCard>
     );
   }
 
   return (
-    <SectionCard title="ØªÙ†Ø¸ÛŒÙ…Ø§Øª Ø«Ø¨Øªâ€ŒØ´Ø¯Ù‡ Ø¯Ø± Ù‚Ø±Ø§Ø±Ø¯Ø§Ø¯" tone="teal">
-      <div className="mb-3 rounded-2xl border border-[color-mix(in_srgb,var(--dark-teal)_18%,#cbd5e1)] bg-white/80 px-3 py-2.5 text-[11px] font-bold text-[color-mix(in_srgb,var(--dark-teal)_85%,black)]">
-        Ø®Ù„Ø§ØµÙ‡ ØªÙ†Ø¸ÛŒÙ…: {settings.summaryLine}
+    <SectionCard title="تنظیمات ثبت‌شده در قرارداد" tone="teal">
+      <div className="mb-3 rounded-[8px] border border-[color-mix(in_srgb,var(--dark-teal)_18%,#cbd5e1)] bg-white/80 px-3 py-2.5 text-[11px] font-bold text-[color-mix(in_srgb,var(--dark-teal)_85%,black)]">
+        خلاصه تنظیم: {settings.summaryLine}
       </div>
       <div className="grid gap-2 sm:grid-cols-2">
         {getPenaltyRuleSettingRows(settings).map((row) => (
@@ -73,13 +73,13 @@ export function PenaltyConfiguredSettingsPanel({ detail }: { detail: BuyerPenalt
       </div>
       {settings.mode === 'progressive' && settings.progressiveRows.length > 0 ? (
         <div className="mt-3 space-y-2">
-          <div className="text-[10px] font-black uppercase tracking-wide text-slate-500">Ø¨Ø§Ø²Ù‡â€ŒÙ‡Ø§ÛŒ ØªØµØ§Ø¹Ø¯ÛŒ Ø«Ø¨Øªâ€ŒØ´Ø¯Ù‡</div>
+          <div className="text-[10px] font-black uppercase tracking-wide text-slate-500">بازه‌های تصاعدی ثبت‌شده</div>
           {settings.progressiveRows.map((range, index) => (
-            <div key={`${range.fromDay}-${index}`} className="rounded-xl bg-slate-50 px-3 py-2 text-[11px] font-semibold text-slate-700">
-              Ø¨Ø§Ø²Ù‡ {range.fromDay.toLocaleString('fa-IR')}
-              {range.openEnded ? ' Ø¨Ù‡ Ø¨Ø¹Ø¯' : ` ØªØ§ ${range.toDay?.toLocaleString('fa-IR') ?? '—'}`}
-              {' Â· '}
-              Ù†Ø±Ø® {range.ratePercent.toLocaleString('fa-IR')}Ùª Ø±ÙˆØ²Ø§Ù†Ù‡
+            <div key={`${range.fromDay}-${index}`} className="rounded-[8px] bg-slate-50 px-3 py-2 text-[11px] font-semibold text-slate-700">
+              بازه {range.fromDay.toLocaleString('fa-IR')}
+              {range.openEnded ? ' به بعد' : ` تا ${range.toDay?.toLocaleString('fa-IR') ?? '�'}`}
+              {' · '}
+              نرخ {range.ratePercent.toLocaleString('fa-IR')}٪ روزانه
             </div>
           ))}
         </div>
@@ -89,38 +89,38 @@ export function PenaltyConfiguredSettingsPanel({ detail }: { detail: BuyerPenalt
 }
 
 export function PenaltyCalculationResultPanel({ detail }: { detail: BuyerPenaltyCalculationDetail }) {
-  const hasCalculationContext = detail.dueDate !== 'â€”' && detail.calculationDate !== 'â€”';
+  const hasCalculationContext = detail.dueDate !== '—' && detail.calculationDate !== '—';
 
   return (
-    <SectionCard title="Ù†ØªÛŒØ¬Ù‡ Ù…Ø­Ø§Ø³Ø¨Ù‡ ØªØ§ Ø§Ù…Ø±ÙˆØ²" tone="rose">
+    <SectionCard title="نتیجه محاسبه تا امروز" tone="rose">
       {detail.zeroReason && detail.totalPenaltyRial <= 0 ? (
-        <div className="mb-3 rounded-2xl border border-amber-200/80 bg-amber-50/60 px-3 py-2.5">
-          <p className="text-[12px] font-black text-amber-950">Ø¬Ø±ÛŒÙ…Ù‡ Ù…Ø­Ø§Ø³Ø¨Ù‡â€ŒØ´Ø¯Ù‡: ØµÙØ±</p>
+        <div className="mb-3 rounded-[8px] border border-amber-200/80 bg-amber-50/60 px-3 py-2.5">
+          <p className="text-[12px] font-black text-amber-950">جریمه محاسبه‌شده: صفر</p>
           <p className="mt-1 text-[11px] font-semibold leading-5 text-amber-900/80">{detail.zeroReason}</p>
         </div>
       ) : null}
       {!hasCalculationContext ? (
-        <p className="text-[11px] font-semibold leading-5 text-slate-500">Ø§Ø·Ù„Ø§Ø¹Ø§Øª Ù…Ø­Ø§Ø³Ø¨Ù‡ Ø¨Ø±Ø§ÛŒ Ø§ÛŒÙ† Ø³Ø±Ø±Ø³ÛŒØ¯ Ø¯Ø± Ø¯Ø³ØªØ±Ø³ Ù†ÛŒØ³Øª.</p>
+        <p className="text-[11px] font-semibold leading-5 text-slate-500">اطلاعات محاسبه برای این سررسید در دسترس نیست.</p>
       ) : (
       <>
       <div className="grid gap-2 sm:grid-cols-2">
-        <DetailRow label="ØªØ§Ø±ÛŒØ® Ø³Ø±Ø±Ø³ÛŒØ¯" value={detail.dueDate} />
-        <DetailRow label="ØªØ§Ø±ÛŒØ® Ù…Ø­Ø§Ø³Ø¨Ù‡" value={detail.calculationDate} />
-        <DetailRow label="Ø±ÙˆØ²Ù‡Ø§ÛŒ ØªØ£Ø®ÛŒØ± Ø®Ø§Ù…" value={`${detail.rawDelayDays.toLocaleString('fa-IR')} Ø±ÙˆØ²`} />
-        <DetailRow label="Ù…Ù‡Ù„Øª ØªÙ†ÙØ³" value={`${detail.gracePeriodDays.toLocaleString('fa-IR')} Ø±ÙˆØ²`} />
-        <DetailRow label="Ø±ÙˆØ²Ù‡Ø§ÛŒ ØªØ£Ø®ÛŒØ± Ù‚Ø§Ø¨Ù„ Ù…Ø­Ø§Ø³Ø¨Ù‡" value={`${detail.chargeableDelayDays.toLocaleString('fa-IR')} Ø±ÙˆØ²`} />
-        <DetailRow label="ØªØ¹Ø¯Ø§Ø¯ Ø¯ÙˆØ±Ù‡ Ù…Ø­Ø§Ø³Ø¨Ù‡â€ŒØ´Ø¯Ù‡" value={detail.periodCount.toLocaleString('fa-IR')} />
-        <DetailRow label="Ù…Ø§Ù†Ø¯Ù‡ Ø¨Ø¯Ù‡ÛŒ Ù…Ø¹ÙˆÙ‚" value={formatMoneyRial(detail.overdueRemainingDebtRial)} />
+        <DetailRow label="تاریخ سررسید" value={detail.dueDate} />
+        <DetailRow label="تاریخ محاسبه" value={detail.calculationDate} />
+        <DetailRow label="روزهای تأخیر خام" value={`${detail.rawDelayDays.toLocaleString('fa-IR')} روز`} />
+        <DetailRow label="مهلت تنفس" value={`${detail.gracePeriodDays.toLocaleString('fa-IR')} روز`} />
+        <DetailRow label="روزهای تأخیر قابل محاسبه" value={`${detail.chargeableDelayDays.toLocaleString('fa-IR')} روز`} />
+        <DetailRow label="تعداد دوره محاسبه‌شده" value={detail.periodCount.toLocaleString('fa-IR')} />
+        <DetailRow label="مانده بدهی معوق" value={formatMoneyRial(detail.overdueRemainingDebtRial)} />
         {detail.calculationMethod === 'contract' ? (
-          <DetailRow label="Ù…Ø¨Ù†Ø§ÛŒ Ø¯Ø±ØµØ¯ (Ú©Ù„ Ù‚Ø±Ø§Ø±Ø¯Ø§Ø¯)" value={formatMoneyRial(detail.totalMainContractAmountRial)} />
+          <DetailRow label="مبنای درصد (کل قرارداد)" value={formatMoneyRial(detail.totalMainContractAmountRial)} />
         ) : null}
       </div>
 
       {detail.calculationNotes.length > 0 ? (
         <div className="mt-3 space-y-2">
-          <div className="text-[10px] font-black uppercase tracking-wide text-slate-500">Ù…Ø±Ø§Ø­Ù„ Ù…Ø­Ø§Ø³Ø¨Ù‡</div>
+          <div className="text-[10px] font-black uppercase tracking-wide text-slate-500">مراحل محاسبه</div>
           {detail.calculationNotes.map((note) => (
-            <div key={note} className="rounded-xl bg-white/80 px-3 py-2 text-[11px] font-semibold leading-5 text-slate-700">
+            <div key={note} className="rounded-[8px] bg-white/80 px-3 py-2 text-[11px] font-semibold leading-5 text-slate-700">
               {note}
             </div>
           ))}
@@ -128,60 +128,60 @@ export function PenaltyCalculationResultPanel({ detail }: { detail: BuyerPenalty
       ) : null}
 
       <div className="mt-3 grid gap-2 sm:grid-cols-2">
-        <DetailRow label="Ø¬Ø±ÛŒÙ…Ù‡ Ø§ØµÙ„ÛŒ (Ø®Ø§Ù…)" value={formatMoneyRial(detail.mainPenaltyCoreRawRial)} />
-        <DetailRow label="Ø¬Ø±ÛŒÙ…Ù‡ Ø§ØµÙ„ÛŒ (Ú¯Ø±Ø¯Ø´Ø¯Ù‡)" value={formatMoneyRial(detail.mainPenaltyCoreRoundedRial)} />
+        <DetailRow label="جریمه اصلی (خام)" value={formatMoneyRial(detail.mainPenaltyCoreRawRial)} />
+        <DetailRow label="جریمه اصلی (گردشده)" value={formatMoneyRial(detail.mainPenaltyCoreRoundedRial)} />
         {detail.bankInterestRoundedRial > 0 ? (
           <>
-            <DetailRow label="Ø³ÙˆØ¯ Ø¨Ø§Ù†Ú©ÛŒ (Ø®Ø§Ù…)" value={formatMoneyRial(detail.bankInterestRawRial)} />
-            <DetailRow label="Ø³ÙˆØ¯ Ø¨Ø§Ù†Ú©ÛŒ (Ú¯Ø±Ø¯Ø´Ø¯Ù‡)" value={formatMoneyRial(detail.bankInterestRoundedRial)} />
+            <DetailRow label="سود بانکی (خام)" value={formatMoneyRial(detail.bankInterestRawRial)} />
+            <DetailRow label="سود بانکی (گردشده)" value={formatMoneyRial(detail.bankInterestRoundedRial)} />
           </>
         ) : null}
-        <DetailRow label="Ù‚Ø§Ø¹Ø¯Ù‡ Ú¯Ø±Ø¯ Ú©Ø±Ø¯Ù† Ø¬Ø±ÛŒÙ…Ù‡" value={getPenaltyRoundRuleLabel(detail.roundingRule)} />
+        <DetailRow label="قاعده گرد کردن جریمه" value={getPenaltyRoundRuleLabel(detail.roundingRule)} />
       </div>
 
       {detail.lateFeeType ? (
-        <div className="mt-3 rounded-2xl border border-amber-200/80 bg-amber-50/50 px-3 py-3">
-          <div className="text-[11px] font-black text-amber-950">Ù‡Ø²ÛŒÙ†Ù‡ Ø¯ÛŒØ±Ú©Ø±Ø¯ (Ù…Ø­Ø§Ø³Ø¨Ù‡â€ŒØ´Ø¯Ù‡)</div>
+        <div className="mt-3 rounded-[8px] border border-amber-200/80 bg-amber-50/50 px-3 py-3">
+          <div className="text-[11px] font-black text-amber-950">هزینه دیرکرد (محاسبه‌شده)</div>
           <div className="mt-2 grid gap-2 sm:grid-cols-2">
             <DetailRow
-              label="Ù†ÙˆØ¹ Ø«Ø¨Øªâ€ŒØ´Ø¯Ù‡"
+              label="نوع ثبت‌شده"
               value={
                 detail.lateFeeType === 'percent'
-                  ? `Ø¯Ø±ØµØ¯ÛŒ (${detail.lateFeeConfiguredValue?.toLocaleString('fa-IR') ?? 'Û°'}Ùª)`
-                  : `Ø«Ø§Ø¨Øª (${formatMoneyRial(detail.lateFeeConfiguredValue ?? 0)})`
+                  ? `درصدی (${detail.lateFeeConfiguredValue?.toLocaleString('fa-IR') ?? '۰'}٪)`
+                  : `ثابت (${formatMoneyRial(detail.lateFeeConfiguredValue ?? 0)})`
               }
             />
-            <DetailRow label="Ù…Ø¨Ù†Ø§ÛŒ Ù…Ø­Ø§Ø³Ø¨Ù‡" value={formatMoneyRial(detail.lateFeeBaseRial)} />
-            <DetailRow label="Ù…Ø¨Ù„Øº Ø®Ø§Ù…" value={formatMoneyRial(detail.lateFeeRawRial)} />
-            <DetailRow label="Ù…Ø¨Ù„Øº Ú¯Ø±Ø¯Ø´Ø¯Ù‡" value={formatMoneyRial(detail.lateFeeRoundedRial)} />
-            <DetailRow label="Ù‚Ø§Ø¹Ø¯Ù‡ Ú¯Ø±Ø¯ Ú©Ø±Ø¯Ù†" value={getPenaltyRoundRuleLabel(detail.lateFeeRoundingRule)} />
+            <DetailRow label="مبنای محاسبه" value={formatMoneyRial(detail.lateFeeBaseRial)} />
+            <DetailRow label="مبلغ خام" value={formatMoneyRial(detail.lateFeeRawRial)} />
+            <DetailRow label="مبلغ گردشده" value={formatMoneyRial(detail.lateFeeRoundedRial)} />
+            <DetailRow label="قاعده گرد کردن" value={getPenaltyRoundRuleLabel(detail.lateFeeRoundingRule)} />
           </div>
         </div>
       ) : null}
 
       {detail.progressiveBreakdown && detail.progressiveBreakdown.length > 0 ? (
         <div className="mt-3 space-y-2">
-          <div className="text-[10px] font-black uppercase tracking-wide text-slate-500">Ø¬Ø²Ø¦ÛŒØ§Øª Ø¨Ø§Ø²Ù‡â€ŒÙ‡Ø§ÛŒ ØªØµØ§Ø¹Ø¯ÛŒ (Ù…Ø­Ø§Ø³Ø¨Ù‡â€ŒØ´Ø¯Ù‡)</div>
+          <div className="text-[10px] font-black uppercase tracking-wide text-slate-500">جزئیات بازه‌های تصاعدی (محاسبه‌شده)</div>
           {detail.progressiveBreakdown.map((range, index) => (
-            <div key={`${range.fromDay}-${index}`} className="rounded-xl bg-white/80 px-3 py-2 text-[11px] font-semibold text-slate-700">
-              Ø¨Ø§Ø²Ù‡ {range.fromDay.toLocaleString('fa-IR')}
-              {range.openEnded ? ' Ø¨Ù‡ Ø¨Ø¹Ø¯' : ` ØªØ§ ${range.toDay?.toLocaleString('fa-IR') ?? '—'}`}
-              {' Â· '}
-              {range.daysInsideRange.toLocaleString('fa-IR')} Ø±ÙˆØ²
-              {' Â· '}
-              Ù†Ø±Ø® {range.ratePercent.toLocaleString('fa-IR')}Ùª
-              {' Â· '}
-              Ù…Ø¨Ù„Øº {formatMoneyRial(range.calculatedAmountRial)}
+            <div key={`${range.fromDay}-${index}`} className="rounded-[8px] bg-white/80 px-3 py-2 text-[11px] font-semibold text-slate-700">
+              بازه {range.fromDay.toLocaleString('fa-IR')}
+              {range.openEnded ? ' به بعد' : ` تا ${range.toDay?.toLocaleString('fa-IR') ?? '�'}`}
+              {' · '}
+              {range.daysInsideRange.toLocaleString('fa-IR')} روز
+              {' · '}
+              نرخ {range.ratePercent.toLocaleString('fa-IR')}٪
+              {' · '}
+              مبلغ {formatMoneyRial(range.calculatedAmountRial)}
             </div>
           ))}
         </div>
       ) : null}
 
       <div className="mt-3 grid gap-2 sm:grid-cols-2">
-        <DetailRow label="Ø¬Ù…Ø¹ Ø¬Ø±ÛŒÙ…Ù‡ Ø§ØµÙ„ÛŒ + Ø³ÙˆØ¯ Ø¨Ø§Ù†Ú©ÛŒ" value={formatMoneyRial(detail.mainPenaltyRoundedRial)} />
-        <DetailRow label="Ø¬Ù…Ø¹ Ù‡Ø²ÛŒÙ†Ù‡ Ø¯ÛŒØ±Ú©Ø±Ø¯" value={formatMoneyRial(detail.lateFeeRoundedRial)} />
-        <DetailRow label="Ø¬Ù…Ø¹ Ú©Ù„ Ø¬Ø±ÛŒÙ…Ù‡" value={formatMoneyRial(detail.totalPenaltyRial)} />
-        <DetailRow label="Ù…Ø¨Ù„Øº Ù‚Ø§Ø¨Ù„ ÙˆØµÙˆÙ„" value={formatMoneyRial(detail.totalCollectibleRial)} />
+        <DetailRow label="جمع جریمه اصلی + سود بانکی" value={formatMoneyRial(detail.mainPenaltyRoundedRial)} />
+        <DetailRow label="جمع هزینه دیرکرد" value={formatMoneyRial(detail.lateFeeRoundedRial)} />
+        <DetailRow label="جمع کل جریمه" value={formatMoneyRial(detail.totalPenaltyRial)} />
+        <DetailRow label="مبلغ قابل وصول" value={formatMoneyRial(detail.totalCollectibleRial)} />
       </div>
       </>
       )}
@@ -193,9 +193,9 @@ export function PenaltyCalculationBody({ detail }: { detail: BuyerPenaltyCalcula
   return (
     <div className="space-y-3">
       <div className="grid gap-2 sm:grid-cols-2">
-        <DetailRow label="Ù†ÙˆØ¹ Ø¬Ø±ÛŒÙ…Ù‡" value={detail.penaltyTypeTitle} />
-        <DetailRow label="Ø±ÙˆØ´ Ù…Ø­Ø§Ø³Ø¨Ù‡" value={getPenaltyMethodLabel(detail.calculationMethod)} />
-        <DetailRow label="Ø¯ÙˆØ±Ù‡ Ù…Ø­Ø§Ø³Ø¨Ù‡" value={getPenaltyPeriodLabel(detail.period)} />
+        <DetailRow label="نوع جریمه" value={detail.penaltyTypeTitle} />
+        <DetailRow label="روش محاسبه" value={getPenaltyMethodLabel(detail.calculationMethod)} />
+        <DetailRow label="دوره محاسبه" value={getPenaltyPeriodLabel(detail.period)} />
       </div>
       <PenaltyConfiguredSettingsPanel detail={detail} />
       <PenaltyCalculationResultPanel detail={detail} />
@@ -213,7 +213,7 @@ function AggregatedDueRow({
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white px-3 py-3">
+    <div className="rounded-[8px] border border-slate-200 bg-white px-3 py-3">
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
@@ -222,14 +222,14 @@ function AggregatedDueRow({
         <div className="min-w-0 flex-1">
           <div className="text-[12px] font-black text-slate-900">{title}</div>
           <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[10px] font-semibold text-slate-500">
-            <span>Ø³Ø±Ø±Ø³ÛŒØ¯ {detail.dueDate}</span>
-            <span>Ù…Ø§Ù†Ø¯Ù‡ {formatMoneyRial(detail.overdueRemainingDebtRial)}</span>
-            <span>ØªØ£Ø®ÛŒØ± {detail.chargeableDelayDays.toLocaleString('fa-IR')} Ø±ÙˆØ²</span>
-            <span>Ø¬Ø±ÛŒÙ…Ù‡ {formatMoneyRial(detail.totalPenaltyRial)}</span>
+            <span>سررسید {detail.dueDate}</span>
+            <span>مانده {formatMoneyRial(detail.overdueRemainingDebtRial)}</span>
+            <span>تأخیر {detail.chargeableDelayDays.toLocaleString('fa-IR')} روز</span>
+            <span>جریمه {formatMoneyRial(detail.totalPenaltyRial)}</span>
           </div>
           {detail.ruleSettings ? (
             <div className="mt-1 text-[10px] font-bold text-[color-mix(in_srgb,var(--dark-teal)_80%,black)]">
-              ØªÙ†Ø¸ÛŒÙ… Ù‚Ø±Ø§Ø±Ø¯Ø§Ø¯: {detail.ruleSettings.summaryLine}
+              تنظیم قرارداد: {detail.ruleSettings.summaryLine}
             </div>
           ) : null}
         </div>
@@ -261,7 +261,7 @@ export type PenaltyDetailsDialogState =
 
 export function PenaltyInfoButton({
   onClick,
-  label = 'Ø¬Ø²Ø¦ÛŒØ§Øª Ø¬Ø±ÛŒÙ…Ù‡',
+  label = 'جزئیات جریمه',
 }: {
   onClick: () => void;
   label?: string;
@@ -300,13 +300,13 @@ export function PenaltyDetailsDialog({
 
   return (
     <div className="fixed inset-0 z-[120] flex items-end justify-center bg-black/45 p-0 backdrop-blur-[2px] sm:items-center sm:p-6" dir="rtl" role="dialog" aria-modal="true">
-      <div className="flex max-h-[min(860px,calc(100vh-42px))] w-full max-w-3xl flex-col overflow-hidden rounded-t-[26px] border border-white/75 bg-white shadow-2xl sm:rounded-[26px]">
+      <div className="flex max-h-[min(860px,calc(100vh-42px))] w-full max-w-3xl flex-col overflow-hidden rounded-[8px] border border-white/75 bg-white shadow-2xl sm:rounded-[8px]">
         <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-5 py-4">
           <div>
             <div className="text-[15px] font-black text-slate-900">{state.title}</div>
             {state.subtitle ? <div className="mt-1 text-[12px] font-semibold text-slate-500">{state.subtitle}</div> : null}
           </div>
-          <button type="button" onClick={onClose} className="rounded-xl p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700" aria-label="Ø¨Ø³ØªÙ†">
+          <button type="button" onClick={onClose} className="rounded-[8px] p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700" aria-label="بستن">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -315,9 +315,9 @@ export function PenaltyDetailsDialog({
           {state.mode === 'monthly' ? (
             <div className="space-y-4">
               <div className="grid gap-2 sm:grid-cols-3">
-                <DetailRow label="Ø¬Ù…Ø¹ Ø¬Ø±ÛŒÙ…Ù‡ Ø§ØµÙ„ÛŒ + Ø³ÙˆØ¯ Ø¨Ø§Ù†Ú©ÛŒ" value={formatMoneyRial(totalMainPenalty)} />
-                <DetailRow label="Ø¬Ù…Ø¹ Ù‡Ø²ÛŒÙ†Ù‡ Ø¯ÛŒØ±Ú©Ø±Ø¯" value={formatMoneyRial(totalLateFee)} />
-                <DetailRow label="Ø¬Ù…Ø¹ Ú©Ù„ Ø¬Ø±ÛŒÙ…Ù‡" value={formatMoneyRial(totalPenalty)} />
+                <DetailRow label="جمع جریمه اصلی + سود بانکی" value={formatMoneyRial(totalMainPenalty)} />
+                <DetailRow label="جمع هزینه دیرکرد" value={formatMoneyRial(totalLateFee)} />
+                <DetailRow label="جمع کل جریمه" value={formatMoneyRial(totalPenalty)} />
               </div>
               <div className="space-y-2">
                 {state.details.map((item) => (
@@ -333,6 +333,9 @@ export function PenaltyDetailsDialog({
     </div>
   );
 }
+
+
+
 
 
 

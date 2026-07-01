@@ -36,8 +36,8 @@ function getThreadScopeLabel(scope: ThreadScope) {
 
 function actionButtonClass(primary = false) {
   return primary
-    ? 'app-button app-button-primary rounded-xl px-4 py-2 text-sm font-bold'
-    : 'app-button rounded-xl border border-[color:var(--border-color)] bg-[color:var(--surface)] px-4 py-2 text-sm font-medium text-[color:var(--text-body)]';
+    ? 'app-button app-button-primary rounded-[8px] px-4 py-2 text-sm font-bold'
+    : 'app-button rounded-[8px] border border-[color:var(--border-color)] bg-[color:var(--surface)] px-4 py-2 text-sm font-medium text-[color:var(--text-body)]';
 }
 
 function chipClass() {
@@ -757,12 +757,12 @@ export default function PageDocsWidget() {
             void openEditorForRect(rect);
           }}
         >
-          <div className="absolute left-1/2 top-6 -translate-x-1/2 rounded-2xl bg-white/90 px-4 py-2 text-sm font-semibold text-slate-800 shadow">
+          <div className="absolute left-1/2 top-6 -translate-x-1/2 rounded-[8px] bg-white/90 px-4 py-2 text-sm font-semibold text-slate-800 shadow">
             ناحیه را انتخاب کن. (Esc برای خروج)
           </div>
           <button
             type="button"
-            className="absolute left-6 top-6 inline-flex items-center justify-center rounded-2xl bg-white/90 p-2 text-slate-700 shadow"
+            className="absolute left-6 top-6 inline-flex items-center justify-center rounded-[8px] bg-white/90 p-2 text-slate-700 shadow"
             onClick={() => {
               setScreenshotStep(null);
               setOpen(true);
@@ -781,7 +781,7 @@ export default function PageDocsWidget() {
 
           {screenshotStep === 'edit' && screenshotBaseDataUrl ? (
             <div className="absolute inset-0 flex items-center justify-center p-6">
-              <div className="flex h-[min(92vh,860px)] w-[min(92vw,980px)] flex-col overflow-hidden rounded-[26px] border border-white/30 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.25)]">
+              <div className="flex h-[min(92vh,860px)] w-[min(92vw,980px)] flex-col overflow-hidden rounded-[8px] border border-white/30 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.25)]">
                 <div className="flex items-center justify-between gap-3 border-b border-slate-200/80 bg-white px-4 py-3">
                   <div className="text-sm font-black text-slate-900">ویرایش اسکرین‌شات</div>
                   <div className="flex items-center gap-2">
@@ -795,7 +795,7 @@ export default function PageDocsWidget() {
                         title="رنگ"
                       />
                     ))}
-                    <button type="button" className="ml-2 rounded-2xl bg-slate-100 px-3 py-2 text-sm font-semibold" onClick={() => confirmScreenshot()}>
+                    <button type="button" className="ml-2 rounded-[8px] bg-slate-100 px-3 py-2 text-sm font-semibold" onClick={() => confirmScreenshot()}>
                       تایید و ارسال
                     </button>
                   </div>
@@ -807,7 +807,7 @@ export default function PageDocsWidget() {
                     <img
                       src={screenshotBaseDataUrl}
                       alt="screenshot"
-                      className="max-h-[70vh] max-w-[86vw] rounded-2xl border border-slate-200 bg-white"
+                      className="max-h-[70vh] max-w-[86vw] rounded-[8px] border border-slate-200 bg-white"
                       onLoad={(event) => {
                         const img = event.currentTarget;
                         const canvas = drawCanvasRef.current;
@@ -953,7 +953,7 @@ export default function PageDocsWidget() {
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[color:var(--border-color)] bg-[color:var(--surface)] text-[color:var(--text-body)]"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-[8px] border border-[color:var(--border-color)] bg-[color:var(--surface)] text-[color:var(--text-body)]"
                   onClick={() => setMaximized((v) => !v)}
                   title={maximized ? 'خروج از حالت تمام‌صفحه' : 'تمام‌صفحه'}
                 >
@@ -1003,14 +1003,14 @@ export default function PageDocsWidget() {
 
               <div ref={scrollRef} className="flex-1 overflow-auto bg-[color:var(--surface-soft)] p-4">
                 {loadingMessages ? (
-                  <div className="rounded-[22px] border border-[color:var(--border-color)] bg-[color:var(--surface)] p-8 text-center text-sm text-[color:var(--text-muted)]">
+                  <div className="rounded-[8px] border border-[color:var(--border-color)] bg-[color:var(--surface)] p-8 text-center text-sm text-[color:var(--text-muted)]">
                     <Loader2 className="mx-auto mb-3 h-5 w-5 animate-spin" />
                     در حال بارگذاری پیام‌ها...
                   </div>
                 ) : error ? (
-                  <div className="rounded-[18px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div>
+                  <div className="rounded-[8px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div>
                 ) : messages.length === 0 ? (
-                  <div className="rounded-[22px] border border-dashed border-[color:var(--border-color)] bg-[color:var(--surface)] px-6 py-10 text-center">
+                  <div className="rounded-[8px] border border-dashed border-[color:var(--border-color)] bg-[color:var(--surface)] px-6 py-10 text-center">
                     <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[color:var(--surface-soft)] text-[color:var(--theme-accent-strong)]">
                       <FileText className="h-6 w-6" />
                     </div>
@@ -1033,12 +1033,12 @@ export default function PageDocsWidget() {
                             title="ریپلای به این پیام"
                           >
                             <div
-                              className="rounded-[18px] px-4 py-3 shadow-[0_10px_28px_var(--shadow-soft)]"
+                              className="rounded-[8px] px-4 py-3 shadow-[0_10px_28px_var(--shadow-soft)]"
                               style={{ background: bubbleBg, color: `var(${bubbleText})` }}
                             >
                               {message.replyTo ? (
                                 <div
-                                  className="mb-2 rounded-xl px-3 py-2 text-xs"
+                                  className="mb-2 rounded-[8px] px-3 py-2 text-xs"
                                   style={{ background: mine ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.15)' }}
                                 >
                                   <div className="font-bold">ریپلای</div>
@@ -1052,13 +1052,13 @@ export default function PageDocsWidget() {
                                 <div className="mt-1 whitespace-pre-wrap text-sm leading-7">{message.text}</div>
                               ) : message.messageType === 'image' && message.attachmentDataUrl ? (
                                 <div className="mt-2 space-y-2">
-                                  <div className="overflow-hidden rounded-xl bg-white/10">
+                                  <div className="overflow-hidden rounded-[8px] bg-white/10">
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
                                     <img src={message.attachmentDataUrl} alt="attachment" className="h-auto w-full" />
                                   </div>
                                   <div className="flex justify-end">
                                     <a
-                                      className="inline-flex items-center gap-2 rounded-xl bg-white/10 px-3 py-2 text-xs underline"
+                                      className="inline-flex items-center gap-2 rounded-[8px] bg-white/10 px-3 py-2 text-xs underline"
                                       href={message.attachmentDataUrl}
                                       download={message.attachmentName || 'image.png'}
                                     >
@@ -1069,7 +1069,7 @@ export default function PageDocsWidget() {
                                 </div>
                               ) : message.messageType === 'audio' && message.attachmentDataUrl ? (
                                 <div className="mt-2">
-                                  <div className="mb-2 overflow-hidden rounded-xl bg-white/10 px-3 py-2">
+                                  <div className="mb-2 overflow-hidden rounded-[8px] bg-white/10 px-3 py-2">
                                     <div className="relative h-8">
                                       <div className="absolute inset-0 flex items-end justify-between gap-1">
                                         {Array.from({ length: 34 }).map((_, idx) => {
@@ -1134,7 +1134,7 @@ export default function PageDocsWidget() {
                                 </div>
                               ) : message.messageType === 'pdf' && message.attachmentDataUrl ? (
                                 <div className="mt-2 space-y-2">
-                                  <div className="flex items-center gap-2 rounded-xl bg-white/10 px-3 py-2 text-sm">
+                                  <div className="flex items-center gap-2 rounded-[8px] bg-white/10 px-3 py-2 text-sm">
                                     <FileText className="h-4 w-4" />
                                     <span>PDF</span>
                                     <div className="mr-auto flex items-center gap-3">
@@ -1147,7 +1147,7 @@ export default function PageDocsWidget() {
                                       </a>
                                     </div>
                                   </div>
-                                  <div className="overflow-hidden rounded-xl bg-white/10">
+                                  <div className="overflow-hidden rounded-[8px] bg-white/10">
                                     <embed src={message.attachmentDataUrl} type="application/pdf" className="h-72 w-full" />
                                   </div>
                                 </div>
@@ -1167,7 +1167,7 @@ export default function PageDocsWidget() {
 
               <div className="border-t border-[color:var(--border-color)] bg-[color:var(--surface)] p-3">
                 {replyTo ? (
-                  <div className="mb-2 flex items-center justify-between rounded-2xl border border-[color:var(--border-color)] bg-[color:var(--surface-soft)] px-3 py-2 text-xs">
+                  <div className="mb-2 flex items-center justify-between rounded-[8px] border border-[color:var(--border-color)] bg-[color:var(--surface-soft)] px-3 py-2 text-xs">
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 font-bold">
                         <Reply className="h-4 w-4" />
@@ -1175,7 +1175,7 @@ export default function PageDocsWidget() {
                       </div>
                       <div className="mt-1 truncate">{replyTo.text || replyTo.messageType}</div>
                     </div>
-                    <button type="button" className="ml-2 rounded-xl px-2 py-1 text-[color:var(--text-muted)]" onClick={() => setReplyTo(null)}>
+                    <button type="button" className="ml-2 rounded-[8px] px-2 py-1 text-[color:var(--text-muted)]" onClick={() => setReplyTo(null)}>
                       <X className="h-4 w-4" />
                     </button>
                   </div>
@@ -1185,7 +1185,7 @@ export default function PageDocsWidget() {
                   <div className="relative flex items-center gap-2">
                     <button
                       type="button"
-                      className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-[color:var(--border-color)] bg-[color:var(--surface)] text-[color:var(--text-body)]"
+                      className="inline-flex h-12 w-12 items-center justify-center rounded-[8px] border border-[color:var(--border-color)] bg-[color:var(--surface)] text-[color:var(--text-body)]"
                       onClick={() => imageInputRef.current?.click()}
                       title="آپلود عکس"
                     >
@@ -1205,7 +1205,7 @@ export default function PageDocsWidget() {
 
                     <button
                       type="button"
-                      className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-[color:var(--border-color)] bg-[color:var(--surface)] text-[color:var(--text-body)]"
+                      className="inline-flex h-12 w-12 items-center justify-center rounded-[8px] border border-[color:var(--border-color)] bg-[color:var(--surface)] text-[color:var(--text-body)]"
                       onClick={() => pdfInputRef.current?.click()}
                       title="آپلود PDF"
                     >
@@ -1225,7 +1225,7 @@ export default function PageDocsWidget() {
 
                     <button
                       type="button"
-                      className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-[color:var(--border-color)] bg-[color:var(--surface)] text-[color:var(--text-body)]"
+                      className="inline-flex h-12 w-12 items-center justify-center rounded-[8px] border border-[color:var(--border-color)] bg-[color:var(--surface)] text-[color:var(--text-body)]"
                       onClick={() => void toggleRecording()}
                       title={recording ? 'پایان ضبط' : 'ضبط ویس'}
                     >
@@ -1234,7 +1234,7 @@ export default function PageDocsWidget() {
 
                     <button
                       type="button"
-                      className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-[color:var(--border-color)] bg-[color:var(--surface)] text-[color:var(--text-body)]"
+                      className="inline-flex h-12 w-12 items-center justify-center rounded-[8px] border border-[color:var(--border-color)] bg-[color:var(--surface)] text-[color:var(--text-body)]"
                       title="اسکرین‌شات"
                       onClick={() => startScreenshot()}
                     >
@@ -1243,7 +1243,7 @@ export default function PageDocsWidget() {
 
                     <button
                       type="button"
-                      className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-[color:var(--border-color)] bg-[color:var(--surface)] text-[color:var(--text-body)]"
+                      className="inline-flex h-12 w-12 items-center justify-center rounded-[8px] border border-[color:var(--border-color)] bg-[color:var(--surface)] text-[color:var(--text-body)]"
                       title="ایموجی"
                       onClick={() => setEmojiOpen((v) => !v)}
                     >
@@ -1253,14 +1253,14 @@ export default function PageDocsWidget() {
                     {emojiOpen ? (
                       <div
                         ref={emojiPopoverRef}
-                        className="absolute bottom-[56px] right-0 w-56 rounded-2xl border border-[color:var(--border-color)] bg-[color:var(--surface)] p-3 shadow-[0_24px_70px_var(--shadow-soft)]"
+                        className="absolute bottom-[56px] right-0 w-56 rounded-[8px] border border-[color:var(--border-color)] bg-[color:var(--surface)] p-3 shadow-[0_24px_70px_var(--shadow-soft)]"
                       >
                         <div className="grid grid-cols-8 gap-2 text-lg">
                           {['😀', '😂', '😍', '🥲', '😡', '👍', '🙏', '🎯', '✅', '❌', '🔥', '💡', '📌', '🧩', '📝', '📎'].map((emoji) => (
                             <button
                               key={emoji}
                               type="button"
-                              className="h-8 w-8 rounded-xl hover:bg-[color:var(--surface-soft)]"
+                              className="h-8 w-8 rounded-[8px] hover:bg-[color:var(--surface-soft)]"
                               onClick={() => {
                                 setComposerText((v) => `${v}${emoji}`);
                                 setEmojiOpen(false);
@@ -1276,7 +1276,7 @@ export default function PageDocsWidget() {
 
                   <div className="flex-1">
                     {recording ? (
-                      <div className="flex h-12 items-center rounded-2xl border border-[color:var(--border-color)] bg-[color:var(--theme-accent)] px-3">
+                      <div className="flex h-12 items-center rounded-[8px] border border-[color:var(--border-color)] bg-[color:var(--theme-accent)] px-3">
                         <canvas ref={recordingVizCanvasRef} width={420} height={26} className="w-full opacity-95" />
                       </div>
                     ) : (
@@ -1285,7 +1285,7 @@ export default function PageDocsWidget() {
                         onChange={(event) => setComposerText(event.target.value)}
                         placeholder="پیام..."
                         rows={1}
-                        className="h-12 max-h-28 w-full resize-none rounded-2xl border border-[color:var(--border-color)] bg-[color:var(--surface-soft)] px-4 py-3 text-sm leading-6 text-[color:var(--text-body)] outline-none"
+                        className="h-12 max-h-28 w-full resize-none rounded-[8px] border border-[color:var(--border-color)] bg-[color:var(--surface-soft)] px-4 py-3 text-sm leading-6 text-[color:var(--text-body)] outline-none"
                         onKeyDown={(event) => {
                           if (event.key === 'Enter' && !event.shiftKey) {
                             event.preventDefault();
@@ -1297,7 +1297,7 @@ export default function PageDocsWidget() {
                   </div>
                   <button
                     type="button"
-                    className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-[color:var(--theme-accent)] text-white"
+                    className="inline-flex h-12 w-12 items-center justify-center rounded-[8px] bg-[color:var(--theme-accent)] text-white"
                     onClick={() => void sendTextMessage()}
                     title="ارسال"
                   >
@@ -1309,13 +1309,13 @@ export default function PageDocsWidget() {
           ) : (
             <div className="flex-1 overflow-auto bg-[color:var(--surface-soft)] p-4">
               {loading ? (
-                <div className="rounded-[22px] border border-[color:var(--border-color)] bg-[color:var(--surface)] p-8 text-center text-sm text-[color:var(--text-muted)]">
+                <div className="rounded-[8px] border border-[color:var(--border-color)] bg-[color:var(--surface)] p-8 text-center text-sm text-[color:var(--text-muted)]">
                   <Loader2 className="mx-auto mb-3 h-5 w-5 animate-spin" />
                   در حال بارگذاری گفتگوها...
                 </div>
               ) : mode === 'wizard' ? (
                 <div className="space-y-4">
-                  <div className="rounded-[22px] border border-[color:var(--border-color)] bg-[color:var(--surface)] p-4">
+                  <div className="rounded-[8px] border border-[color:var(--border-color)] bg-[color:var(--surface)] p-4">
                     <div className="grid gap-4">
                       <label className="grid gap-2">
                         <span className="text-sm font-semibold text-[color:var(--text-body)]">عنوان</span>
@@ -1412,7 +1412,7 @@ export default function PageDocsWidget() {
                     </button>
                   </div>
 
-                  {error ? <div className="rounded-[18px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
+                  {error ? <div className="rounded-[8px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
 
                   <div className="flex justify-end gap-2">
                     <button type="button" className={actionButtonClass(false)} onClick={() => setMode('threads')}>
@@ -1426,7 +1426,7 @@ export default function PageDocsWidget() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <div className="flex flex-wrap items-center justify-between gap-2 rounded-[22px] border border-[color:var(--border-color)] bg-[color:var(--surface)] p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-2 rounded-[8px] border border-[color:var(--border-color)] bg-[color:var(--surface)] p-4">
                     <button type="button" className={actionButtonClass(true)} onClick={openWizard}>
                       <Plus className="h-4 w-4" />
                       گفتگوی جدید
@@ -1436,12 +1436,12 @@ export default function PageDocsWidget() {
                     </button>
                   </div>
 
-                  {error ? <div className="rounded-[18px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
+                  {error ? <div className="rounded-[8px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
 
                   {threads.length ? (
                     <div className="space-y-3">
                       {threads.map((thread) => (
-                        <article key={thread.id} className="rounded-[22px] border border-[color:var(--border-color)] bg-[color:var(--surface)] p-4">
+                        <article key={thread.id} className="rounded-[8px] border border-[color:var(--border-color)] bg-[color:var(--surface)] p-4">
                           <button type="button" className="w-full text-right" onClick={() => void openChat(thread)}>
                             <div className="flex items-start justify-between gap-3">
                               <div className="min-w-0 space-y-2">
@@ -1478,7 +1478,7 @@ export default function PageDocsWidget() {
                       ))}
                     </div>
                   ) : (
-                    <div className="rounded-[22px] border border-dashed border-[color:var(--border-color)] bg-[color:var(--surface)] px-6 py-10 text-center">
+                    <div className="rounded-[8px] border border-dashed border-[color:var(--border-color)] bg-[color:var(--surface)] px-6 py-10 text-center">
                       <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[color:var(--surface-soft)] text-[color:var(--theme-accent-strong)]">
                         <FileText className="h-6 w-6" />
                       </div>
@@ -1502,3 +1502,5 @@ export default function PageDocsWidget() {
     </>
   );
 }
+
+

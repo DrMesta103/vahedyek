@@ -141,7 +141,7 @@ function ProgressRow({
   onChange: (field: 'from' | 'to' | 'rate', value: string) => void;
 }) {
   return (
-    <div className="grid gap-4 rounded-[18px] border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] p-4 lg:grid-cols-[1fr_24px_170px_170px] lg:items-end">
+    <div className="grid gap-4 rounded-[8px] border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] p-4 lg:grid-cols-[1fr_24px_170px_170px] lg:items-end">
       <div className="space-y-3">
         <RuleFieldLabel label="نرخ جریمه" required />
         <RuleAmountInput value={rate} onChange={(value) => onChange('rate', value)} suffix="%" />
@@ -180,7 +180,7 @@ function SmartProgressRow({
   onChange: (field: 'to' | 'rate' | 'openEnded', value: string | boolean) => void;
 }) {
   return (
-    <div className={`grid gap-4 rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] p-4 lg:grid-cols-[1fr_120px_170px_170px] lg:items-end ${blocked ? 'opacity-60' : ''}`}>
+    <div className={`grid gap-4 rounded-[8px] border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] p-4 lg:grid-cols-[1fr_120px_170px_170px] lg:items-end ${blocked ? 'opacity-60' : ''}`}>
       <div className="space-y-3">
         <RuleFieldLabel label="نرخ جریمه" required />
         <RuleAmountInput value={rate} onChange={(value) => onChange('rate', value)} suffix="%" />
@@ -245,7 +245,7 @@ function ExtraFeeCard({
   onRoundRuleChange: (value: string) => void;
 }) {
   return (
-    <section className="space-y-5 rounded-[22px] border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] p-5">
+    <section className="space-y-5 rounded-[8px] border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] p-5">
       <div className="flex items-center justify-between gap-4">
         <div className="space-y-2 text-right">
           <h3 className="text-xl font-black text-[color:var(--text-strong)]">هزینه دیرکرد</h3>
@@ -403,7 +403,7 @@ export function PenaltyRuleSection({
 
   if (!selectedPenalty) {
     return (
-      <section className="space-y-5 rounded-[24px] border border-[color:var(--border-soft)] bg-[color:var(--surface)] p-5">
+      <section className="space-y-5 rounded-[8px] border border-[color:var(--border-soft)] bg-[color:var(--surface)] p-5">
         <div className="grid gap-3 lg:grid-cols-2">
           {PENALTY_ITEMS.map((item) => (
             <button
@@ -413,12 +413,12 @@ export function PenaltyRuleSection({
                 onValueChange('activeChip', item.id);
                 onValueChange('activeTab', 'fixed');
               }}
-              className="flex items-start justify-between gap-4 rounded-[20px] border border-[color:var(--border-soft)] bg-[color:var(--surface)] px-5 py-5 text-right transition hover:border-[color:var(--theme-action-border)] hover:bg-[color:var(--surface-soft)]"
+              className="flex items-start justify-between gap-4 rounded-[8px] border border-[color:var(--border-soft)] bg-[color:var(--surface)] px-5 py-5 text-right transition hover:border-[color:var(--theme-action-border)] hover:bg-[color:var(--surface-soft)]"
             >
               <div className="flex-1">
                 <div className="flex flex-col flex-nowrap items-start justify-center gap-3">
                   <h3 className="text-lg font-black text-[color:var(--text-strong)]">{item.title}</h3>
-                  <span className="rounded-xl bg-[color:var(--theme-accent-softer)] px-3 py-1 text-xs font-bold text-[color:var(--text-muted)]">
+                  <span className="rounded-[8px] bg-[color:var(--theme-accent-softer)] px-3 py-1 text-xs font-bold text-[color:var(--text-muted)]">
                     تنظیمات انجام‌شده
                   </span>
                 </div>
@@ -434,7 +434,7 @@ export function PenaltyRuleSection({
 
   return (
     <div className="space-y-5">
-      <section className="rounded-[24px] border border-[color:var(--border-soft)] bg-[color:var(--surface)] p-5">
+      <section className="rounded-[8px] border border-[color:var(--border-soft)] bg-[color:var(--surface)] p-5">
         <div className="flex items-center justify-between gap-4">
           <div className="text-right">
             <h3 className="text-xl font-black text-[color:var(--text-strong)]">{selectedPenalty.title}</h3>
@@ -452,7 +452,7 @@ export function PenaltyRuleSection({
         </div>
       </section>
 
-      <section className="overflow-hidden rounded-[24px] border border-[color:var(--border-soft)] bg-[color:var(--surface)]">
+      <section className="overflow-hidden rounded-[8px] border border-[color:var(--border-soft)] bg-[color:var(--surface)]">
         <div className="flex flex-wrap border-b border-[color:var(--border-soft)]">
           {MODE_OPTIONS.map((mode) => (
             <RuleTabButton
@@ -678,3 +678,5 @@ export function PenaltyRuleSection({
     </div>
   );
 }
+
+

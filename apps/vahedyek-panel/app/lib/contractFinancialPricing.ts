@@ -19,22 +19,22 @@ export function getAreaPricingModePresentation(mode: AreaPricingMode) {
     case 'unit-plus-parking':
       return {
         label: 'واحد + پارکینگ',
-        hint: 'متراژ واحد و پارکینگ با هم در مبنای قیمت‌گذاری لحاظ می‌شوند.',
+        hint: '',
       };
     case 'unit-plus-storage':
       return {
-        label: 'واحد + انباری',
-        hint: 'متراژ واحد و انباری با هم در مبنای قیمت‌گذاری لحاظ می‌شوند.',
+        label: 'واحد + انبار',
+        hint: '',
       };
     case 'unit-plus-storage-parking':
       return {
-        label: 'واحد + انباری + پارکینگ',
-        hint: 'متراژ واحد، انباری و پارکینگ یکجا در مبنای قیمت‌گذاری لحاظ می‌شوند.',
+        label: 'واحد + انبار + پارکینگ',
+        hint: '',
       };
     default:
       return {
-        label: 'تفکیک کامل',
-        hint: 'واحد، انباری و پارکینگ تفکیک‌شده قیمت‌گذاری می‌شوند.',
+        label: 'فقط واحد',
+        hint: '',
       };
   }
 }

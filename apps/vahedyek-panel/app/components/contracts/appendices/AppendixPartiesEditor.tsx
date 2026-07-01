@@ -37,7 +37,7 @@ function setPrimaryRow(rows: PartyRow[], id: string) {
   return rows.map((row) => ({
     ...row,
     isPrimary: row.id === id,
-    tags: row.id === id ? ['طرف اصلی'] : undefined,
+    tags: row.id === id ? ['??? ????'] : undefined,
   }));
 }
 
@@ -56,7 +56,7 @@ function removeRow(rows: PartyRow[], id: string) {
       .filter((row) => row.id !== id)
       .map((row) => ({
         ...row,
-        tags: row.isPrimary ? ['طرف اصلی'] : undefined,
+        tags: row.isPrimary ? ['??? ????'] : undefined,
       })),
   );
 }
@@ -70,7 +70,7 @@ function addRows(currentRows: PartyRow[], items: DirectoryItem[]) {
         ...item,
         shareValue: 0,
         isPrimary: currentRows.length === 0,
-        tags: currentRows.length === 0 ? ['طرف اصلی'] : undefined,
+        tags: currentRows.length === 0 ? ['??? ????'] : undefined,
       })),
   ]);
 }
@@ -129,13 +129,13 @@ function applyPartnerDirectoryFromProfile(store: ProfileStore) {
           id: String(item.id),
           directoryId: null,
           personType: 'natural' as const,
-          name: String(item.fullName || item.mobile || item.email || 'شریک'),
+          name: String(item.fullName || item.mobile || item.email || '????'),
         }))
       : (store.naturalShareholders ?? []).map((item: any) => ({
           id: String(item.id),
           directoryId: null,
           personType: 'natural' as const,
-          name: String(item.fullName || item.mobile || item.email || 'سهام‌دار'),
+          name: String(item.fullName || item.mobile || item.email || '????????'),
         }));
 
   const partnerLegals =
@@ -145,7 +145,7 @@ function applyPartnerDirectoryFromProfile(store: ProfileStore) {
           id: String(item.id),
           directoryId: null,
           personType: 'legal' as const,
-          name: String(item.companyName || item.brandName || 'سهام‌دار حقوقی'),
+          name: String(item.companyName || item.brandName || '???????? ?????'),
         }));
 
   return { source, partnerNaturals, partnerLegals };
@@ -157,13 +157,13 @@ function applyBuyerDirectoryFromProfile(store: ProfileStore) {
       id: String(item.id),
       directoryId: null,
       personType: 'natural' as const,
-      name: String(item.fullName || item.mobile || item.email || 'خریدار'),
+      name: String(item.fullName || item.mobile || item.email || '??????'),
     })),
     buyerLegals: (store.legalBuyers ?? []).map((item: any) => ({
       id: String(item.id),
       directoryId: null,
       personType: 'legal' as const,
-      name: String(item.companyName || item.brandName || 'خریدار حقوقی'),
+      name: String(item.companyName || item.brandName || '?????? ?????'),
     })),
   };
 }
@@ -179,7 +179,7 @@ function toPartyRows(parties: ContractParty[]) {
       isPrimary: Boolean(item.isPrimary),
       locked: false,
       lockShare: false,
-      tags: item.isPrimary ? ['طرف اصلی'] : undefined,
+      tags: item.isPrimary ? ['??? ????'] : undefined,
     })),
   );
 }
@@ -293,18 +293,18 @@ export function AppendixPartiesEditor({
   const labels = getEntityLabels(side === 'first-party' ? 'partner' : 'buyer');
   const helperText =
     side === 'first-party'
-      ? 'برای اصلاح طرف اول، می‌توانید افراد را اضافه، حذف و سهم هر کدام را در همین صفحه تنظیم کنید.'
-      : 'برای افزودن خریداران (طرف دوم)، از دکمه + استفاده کنید.';
+      ? '???? ????? ??? ???? ????????? ????? ?? ?????? ??? ? ??? ?? ???? ?? ?? ???? ???? ????? ????.'
+      : '???? ?????? ???????? (??? ???)? ?? ???? + ??????? ????.';
 
   return (
     <div className="space-y-5">
-      <FieldGroup label="نوع سهم">
+      <FieldGroup label="??? ???">
         <TagPills
           value={shareMode}
           onChange={handleShareModeChange}
           options={[
-            { value: 'dang', label: 'دانگ' },
-            { value: 'percent', label: 'درصد' },
+            { value: 'dang', label: '????' },
+            { value: 'percent', label: '????' },
           ]}
           className="justify-end"
         />
@@ -318,8 +318,8 @@ export function AppendixPartiesEditor({
             void reloadReferenceData();
             setDialogOpen(true);
           }}
-          className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[color-mix(in_srgb,var(--dark-teal)_35%,transparent)] bg-[color-mix(in_srgb,var(--dark-teal)_12%,white)] text-[color-mix(in_srgb,var(--dark-teal)_90%,black)] shadow-sm transition hover:bg-[color-mix(in_srgb,var(--dark-teal)_16%,white)]"
-          aria-label={side === 'first-party' ? 'افزودن طرف اول' : 'افزودن طرف دوم'}
+          className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[8px] border border-[color-mix(in_srgb,var(--dark-teal)_35%,transparent)] bg-[color-mix(in_srgb,var(--dark-teal)_12%,white)] text-[color-mix(in_srgb,var(--dark-teal)_90%,black)] shadow-sm transition hover:bg-[color-mix(in_srgb,var(--dark-teal)_16%,white)]"
+          aria-label={side === 'first-party' ? '?????? ??? ???' : '?????? ??? ???'}
         >
           <span className="text-xl leading-none">+</span>
         </button>
@@ -365,3 +365,4 @@ export function AppendixPartiesEditor({
     </div>
   );
 }
+

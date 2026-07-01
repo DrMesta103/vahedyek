@@ -39,8 +39,8 @@ export function FieldHint({ label, text }: { label: string; text: string }) {
         ref={anchorRef}
         type="button"
         tabIndex={0}
-        className="inline-flex shrink-0 rounded-md p-0.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color-mix(in_srgb,var(--dark-teal)_35%,transparent)]"
-        aria-label={`راهنمای ${label}`}
+        className="inline-flex shrink-0 rounded-[8px] p-0.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color-mix(in_srgb,var(--dark-teal)_35%,transparent)]"
+        aria-label={`راهنما برای ${label}`}
         title={text}
         onMouseEnter={() => setOpen(true)}
         onMouseLeave={() => setOpen(false)}
@@ -53,7 +53,7 @@ export function FieldHint({ label, text }: { label: string; text: string }) {
         ? createPortal(
             <div
               role="tooltip"
-              className="pointer-events-none fixed z-[110] w-[260px] rounded-xl border border-[var(--border-color)] bg-[var(--surface)] px-3 py-2 text-right text-[12px] font-normal leading-6 text-[var(--text-body)] shadow-sm"
+              className="pointer-events-none fixed z-[110] w-[260px] rounded-[8px] border border-[var(--border-color)] bg-[var(--surface)] px-3 py-2 text-right text-[12px] font-normal leading-6 text-[var(--text-body)] shadow-sm"
               style={{ top: pos.top, left: pos.left }}
             >
               {text}
@@ -64,3 +64,4 @@ export function FieldHint({ label, text }: { label: string; text: string }) {
     </>
   );
 }
+

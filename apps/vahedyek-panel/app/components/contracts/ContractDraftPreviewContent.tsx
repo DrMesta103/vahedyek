@@ -1,13 +1,23 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   ArrowRight,
+  BadgeCheck,
+  Building2,
+  CalendarDays,
+  CheckCircle2,
+  CircleAlert,
+  FileJson2,
   FileText,
+  FolderOpen,
   History,
+  Landmark,
   MoreHorizontal,
+  ShieldAlert,
   X,
+  Users,
 } from 'lucide-react';
 import type { AttachmentItem } from '../../actions/contractSteps789';
 import type {
@@ -95,6 +105,36 @@ export function mapContractDetailsToPreviewPayload(
     | undefined,
 ): PreviewContractPayload {
   const d = contract?.data ?? {};
+  const buyerRulesRaw = (d.terminationRules as { buyerRules?: unknown } | null | undefined)?.buyerRules;
+  const buyerRulesObject = buyerRulesRaw && typeof buyerRulesRaw === 'object' ? (buyerRulesRaw as Record<string, unknown>) : null;
+  const buyerTerms = buyerRulesObject?.buyerTerms && typeof buyerRulesObject.buyerTerms === 'object' ? (buyerRulesObject.buyerTerms as Record<string, unknown>) : null;
+  const buyerCompletion = buyerRulesObject?.buyerCompletion && typeof buyerRulesObject.buyerCompletion === 'object'
+    ? (buyerRulesObject.buyerCompletion as Record<string, unknown>)
+    : null;
+  const syntheticTermination =
+    buyerRulesObject != null
+      ? ({
+          terminationEnabled:
+            Object.values(buyerTerms ?? {}).some(
+              (item) => Boolean(item && typeof item === 'object' && !Array.isArray(item) && (item as Record<string, unknown>).ruleEnabled),
+            ) || Boolean(buyerRulesObject.terminationBuyerPanel),
+          terminationPartyTab: 'buyer',
+          terminationConstructorPanel: 'list',
+          terminationBuyerPanel: String(buyerRulesObject.terminationBuyerPanel ?? 'list') as never,
+          sellerTerminationEngaged: false,
+          buyerTerminationEngaged: true,
+          constructorCompletion: {
+            lateInstallment: false,
+            financialObligations: false,
+            documentDeficiencies: false,
+            otherBreach: false,
+            notifications: false,
+          },
+          buyerCompletion: (buyerCompletion ?? {}) as never,
+          constructorTerms: {} as never,
+          buyerTerms: buyerTerms ?? {},
+        } as unknown as PreviewContractPayload['termination'])
+      : null;
   return {
     subject: (d.subject as PreviewContractPayload['subject']) ?? null,
     parties: (d.parties as PreviewContractPayload['parties']) ?? null,
@@ -103,7 +143,7 @@ export function mapContractDetailsToPreviewPayload(
     discounts: (d.discounts as PreviewContractPayload['discounts']) ?? null,
     ruleSettings: (d.ruleSettings as PreviewContractPayload['ruleSettings']) ?? null,
     terminationRules: (d.terminationRules as PreviewContractPayload['terminationRules']) ?? null,
-    termination: (d.termination as PreviewContractPayload['termination']) ?? null,
+    termination: (d.termination as PreviewContractPayload['termination']) ?? syntheticTermination,
     extraCosts: (d.extraCosts as PreviewContractPayload['extraCosts']) ?? null,
     technicalSpecs: (d.technicalSpecs as PreviewContractPayload['technicalSpecs']) ?? null,
     attachments: (d.attachments as PreviewContractPayload['attachments']) ?? null,
@@ -136,6 +176,10 @@ function formatMoneyTomanFromRial(valueRial: number) {
   return `${formatNumberFa(toman)} تومان`;
 }
 
+function formatPercentFa(value: number) {
+  return new Intl.NumberFormat('fa-IR', { maximumFractionDigits: 1, minimumFractionDigits: 0 }).format(value);
+}
+
 function isMeaningfulPreviewValue(value: React.ReactNode) {
   if (value == null || value === false) return false;
   if (typeof value === 'string') {
@@ -143,6 +187,20 @@ function isMeaningfulPreviewValue(value: React.ReactNode) {
     return Boolean(trimmed) && trimmed !== '—' && trimmed !== 'null';
   }
   if (typeof value === 'number') return Number.isFinite(value);
+  return true;
+}
+
+function hasMeaningfulData(value: unknown): boolean {
+  if (value == null || value === false) return false;
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    return Boolean(trimmed) && trimmed !== '—' && trimmed !== 'null';
+  }
+  if (typeof value === 'number') return Number.isFinite(value);
+  if (Array.isArray(value)) return value.some((item) => hasMeaningfulData(item));
+  if (typeof value === 'object') {
+    return Object.values(value as Record<string, unknown>).some((item) => hasMeaningfulData(item));
+  }
   return true;
 }
 
@@ -233,7 +291,7 @@ function describeForgivenessRuleSnapshot(
   const enabledEntryLabels = enabledEntries.map((item) => forgivenessEntryLabel(String(item))).filter(Boolean);
 
   return {
-    active: Boolean(state.active || values.forgiveAllowed),
+    active: Boolean(state.active || values.forgiveAllowed || Object.keys(values).length > 0),
     scope,
     mode,
     entryLabel: forgivenessEntryLabel(entryId),
@@ -244,14 +302,107 @@ function describeForgivenessRuleSnapshot(
   };
 }
 
-function PreviewField({ label, value }: { label: string; value: React.ReactNode }) {
+function describeBuyerRulesSnapshot(buyerRules: unknown) {
+  const raw = (buyerRules && typeof buyerRules === 'object' ? buyerRules : {}) as Record<string, unknown>;
+  const buyerTerms = (raw.buyerTerms ?? {}) as Record<string, unknown>;
+  const buyerCompletion = (raw.buyerCompletion ?? {}) as Record<string, unknown>;
+  const panel = String(raw.terminationBuyerPanel ?? 'list');
+  const enabledRuleKeys = Object.entries(buyerTerms)
+    .filter(([, value]) => Boolean(value && typeof value === 'object' && !Array.isArray(value) && (value as Record<string, unknown>).ruleEnabled))
+    .map(([key]) => key);
+  const completedKeys = Object.entries(buyerCompletion)
+    .filter(([, value]) => Boolean(value))
+    .map(([key]) => key);
+  const labels: Record<string, string> = {
+    lateDelivery: 'تأخیر تحویل',
+    specificationChanges: 'تغییر مشخصات',
+    breachOfObligations: 'نقض تعهدات',
+    physicalProgressDelay: 'تاخیر پیشرفت فیزیکی',
+    areaDiscrepancy: 'کسری / اضافه‌متراژ',
+    notification: 'اخطار',
+    draftTemplateUsage: 'استفاده از الگو',
+  };
+
+  return {
+    panel,
+    enabledRuleLabels: enabledRuleKeys.map((key) => labels[key] ?? key),
+    completionCount: completedKeys.length,
+    completionLabels: completedKeys.map((key) => labels[key] ?? key),
+  };
+}
+
+function describeExtraCostsSnapshot(extraCosts: { payload?: unknown } | null | undefined) {
+  const items = Array.isArray(extraCosts?.payload) ? extraCosts?.payload : [];
+  const typeLabels = new Set<string>();
+  let totalValue = 0;
+
+  for (const item of items as Array<{ type?: string; totalValue?: number }>) {
+    const type = String(item?.type ?? '').trim();
+    if (type) {
+      typeLabels.add(
+        ({ COMMISSION: 'کمیسیون', NOTARY: 'حق‌الثبت', LEGAL: 'حق‌الوکاله' } as Record<string, string>)[type] ?? type,
+      );
+    }
+    totalValue += Number(item?.totalValue ?? 0);
+  }
+
+  return {
+    itemCount: items.length,
+    typeLabels: Array.from(typeLabels),
+    totalValue,
+  };
+}
+
+function getTerminationPanelLabel(panel: string | null | undefined) {
+  const value = String(panel ?? '').trim();
+  switch (value) {
+    case 'list':
+      return 'فهرست';
+    case 'grid':
+      return 'شبکه‌ای';
+    case 'cards':
+      return 'کارتی';
+    default:
+      return value || '—';
+  }
+}
+
+function describeTechnicalSpecsSnapshot(technicalSpecs: { specs?: unknown } | null | undefined) {
+  const groups = Array.isArray(technicalSpecs?.specs) ? technicalSpecs?.specs : [];
+  return {
+    groupCount: groups.length,
+    groupTitles: groups
+      .map((group) => (group && typeof group === 'object' ? String((group as { title?: string }).title ?? '').trim() : ''))
+      .filter(Boolean),
+    selectedCount: groups.reduce((sum, group) => {
+      if (!group || typeof group !== 'object') return sum;
+      const selected = (group as { selectedSpecIds?: unknown }).selectedSpecIds;
+      return sum + (Array.isArray(selected) ? selected.length : 0);
+    }, 0),
+  };
+}
+
+function PreviewField({
+  label,
+  value,
+  hint,
+}: {
+  label: string;
+  value: ReactNode;
+  hint?: ReactNode;
+}) {
   return (
     <div
       dir="rtl"
-      className="flex min-h-[52px] items-center justify-between gap-3 rounded-2xl border border-slate-200/70 bg-gradient-to-br from-slate-50 to-white px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]"
+      className="grid min-h-[84px] gap-2 rounded-[8px] border border-slate-200/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(248,250,252,0.98))] px-4 py-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] transition-shadow duration-200 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.92),0_14px_30px_rgba(15,23,42,0.05)]"
     >
-      <span className="shrink-0 text-[12px] font-semibold text-slate-500">{label}</span>
-      <span className="min-w-0 truncate text-right text-[13px] font-extrabold text-slate-800">{value}</span>
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">{label}</span>
+        {hint ? <span className="text-[11px] font-semibold text-slate-400">{hint}</span> : null}
+      </div>
+      <span className="min-w-0 whitespace-normal break-words text-right text-[14px] font-black leading-7 text-slate-900">
+        {value}
+      </span>
     </div>
   );
 }
@@ -278,12 +429,10 @@ function JsonBlock({
   value: unknown;
   summary?: Array<{ label: string; value: React.ReactNode }>;
   }) {
-  const isEmptyObject = value && typeof value === 'object' && !Array.isArray(value) && Object.keys(value as Record<string, unknown>).length === 0;
-  const isEmptyArray = Array.isArray(value) && value.length === 0;
-  const hasValue = value != null && !isEmptyObject && !isEmptyArray;
+  const hasValue = hasMeaningfulData(value);
 
   return (
-    <div className="space-y-3 rounded-2xl border border-slate-100 bg-white/85 p-4">
+    <div className="space-y-3 rounded-[8px] border border-slate-100 bg-white/85 p-4">
       <div className="flex items-center justify-between gap-3">
         <div className="font-extrabold text-slate-800">{title}</div>
         <div className="text-[11px] font-bold text-slate-500">{formatPreviewValue(value)}</div>
@@ -296,16 +445,16 @@ function JsonBlock({
         </div>
       ) : null}
       {hasValue ? (
-        <details className="rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-2">
+        <details className="rounded-[8px] border border-slate-200 bg-slate-50/60 px-3 py-2">
           <summary className="cursor-pointer list-none text-[12px] font-bold text-[var(--dark-teal)] marker:content-none">
             مشاهده داده خام
           </summary>
-          <pre className="mt-3 max-h-[240px] overflow-auto rounded-lg bg-white p-3 text-left text-[11px] leading-6 text-slate-700" dir="ltr">
+          <pre className="mt-3 max-h-[240px] overflow-auto rounded-[8px] bg-white p-3 text-left text-[11px] leading-6 text-slate-700" dir="ltr">
             {JSON.stringify(value ?? null, null, 2)}
           </pre>
         </details>
       ) : (
-        <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-5 text-center text-[12px] font-semibold text-slate-500">
+        <div className="rounded-[8px] border border-dashed border-slate-200 bg-slate-50/60 px-4 py-5 text-center text-[12px] font-semibold text-slate-500">
           داده‌ای برای نمایش ثبت نشده است.
         </div>
       )}
@@ -316,7 +465,7 @@ function JsonBlock({
 function SimpleList({ items }: { items: Array<{ label: string; value: React.ReactNode }> }) {
   const visibleItems = items.filter((item) => isMeaningfulPreviewValue(item.value));
   if (!visibleItems.length) {
-    return <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 px-4 py-6 text-center text-[12px] font-semibold text-slate-500">اطلاعاتی ثبت نشده است.</div>;
+    return <div className="rounded-[8px] border border-dashed border-slate-200 bg-slate-50/70 px-4 py-6 text-center text-[12px] font-semibold text-slate-500">اطلاعاتی ثبت نشده است.</div>;
   }
 
   return (
@@ -332,7 +481,7 @@ function TealSectionHeader({ children }: { children: React.ReactNode }) {
   return (
     <div
       dir="rtl"
-      className="rounded-xl px-4 py-2.5 text-center text-[14px] font-extrabold text-white shadow-sm"
+      className="rounded-[8px] px-4 py-2.5 text-center text-[14px] font-extrabold text-white shadow-sm"
       style={{ background: 'linear-gradient(105deg, var(--dark-teal) 0%, color-mix(in srgb, var(--dark-teal) 82%, #0d9488) 100%)' }}
     >
       {children}
@@ -344,7 +493,7 @@ function PreviewDonut({ slices, totalRial }: { slices: FinancialSlice[]; totalRi
   const total = slices.reduce((sum, item) => sum + item.value, 0);
   if (!total) {
     return (
-      <div className="contract-draft-preview-chart-empty flex min-h-[200px] flex-1 items-center justify-center rounded-3xl border border-dashed border-slate-200/90 bg-white/80 px-6 text-center text-sm font-semibold text-slate-500">
+      <div className="contract-draft-preview-chart-empty flex min-h-[200px] flex-1 items-center justify-center rounded-[8px] border border-dashed border-slate-200/90 bg-white/80 px-6 text-center text-sm font-semibold text-slate-500">
         دسته‌های مالی ثبت نشده‌اند.
       </div>
     );
@@ -361,7 +510,7 @@ function PreviewDonut({ slices, totalRial }: { slices: FinancialSlice[]; totalRi
     .join(', ');
 
   return (
-    <div className="relative flex aspect-square w-full max-w-[240px] shrink-0 items-center justify-center">
+    <div className="relative flex aspect-square w-full max-w-[280px] shrink-0 items-center justify-center">
       <div
         className="contract-draft-preview-donut"
         style={{ backgroundImage: `conic-gradient(${gradient})` }}
@@ -379,20 +528,26 @@ function PreviewDonut({ slices, totalRial }: { slices: FinancialSlice[]; totalRi
 function PreviewLegend({ slices, total }: { slices: FinancialSlice[]; total: number }) {
   if (!total) return null;
   return (
-    <div dir="rtl" className="flex min-h-0 min-w-0 flex-1 flex-col gap-2.5 overflow-y-auto pr-1">
+    <div dir="rtl" className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-1">
       {slices.map((item) => {
         const pct = total > 0 ? (item.value / total) * 100 : 0;
         return (
           <div
             key={item.id}
-            className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-2 rounded-2xl border border-slate-100 bg-white/90 px-3 py-2 shadow-sm"
+            className="rounded-[8px] border border-slate-100 bg-white/95 p-3 shadow-sm transition hover:border-[color-mix(in_srgb,var(--dark-teal)_24%,transparent)] hover:shadow-[0_14px_28px_-18px_rgba(15,118,110,0.45)]"
           >
-            <span className="h-3 w-3 shrink-0 rounded-sm shadow-inner" style={{ backgroundColor: item.color }} aria-hidden />
-            <span className="min-w-0 truncate text-right text-[12px] font-bold text-slate-800">{item.name}</span>
-            <span className="shrink-0 text-[11px] font-semibold tabular-nums text-slate-500" dir="ltr">
-              {new Intl.NumberFormat('fa-IR', { maximumFractionDigits: 2, minimumFractionDigits: 0 }).format(pct)}٪
-            </span>
-            <span className="shrink-0 text-[12px] font-extrabold tabular-nums text-slate-700">{formatRial(item.value)}</span>
+            <div className="flex items-start gap-3">
+              <span className="mt-1.5 h-3.5 w-3.5 shrink-0 rounded-full shadow-inner" style={{ backgroundColor: item.color }} aria-hidden />
+              <div className="min-w-0 flex-1">
+                <div className="line-clamp-2 text-right text-[13px] font-extrabold leading-6 text-slate-800">{item.name}</div>
+                <div className="mt-1 flex flex-wrap items-center justify-between gap-2 text-[11px] font-semibold text-slate-500">
+                  <span className="tabular-nums" dir="ltr">
+                    {formatPercentFa(pct)}٪ مشارکت
+                  </span>
+                  <span className="tabular-nums text-slate-700">{formatRial(item.value)}</span>
+                </div>
+              </div>
+            </div>
           </div>
         );
       })}
@@ -409,17 +564,17 @@ function DocumentThumb({ item }: { item: AttachmentItem }) {
   return (
     <article
       dir="rtl"
-      className="relative w-[140px] shrink-0 rounded-2xl border border-slate-200/80 bg-white shadow-sm transition hover:border-[color-mix(in_srgb,var(--dark-teal)_28%,transparent)]"
+      className="relative w-[140px] shrink-0 rounded-[8px] border border-slate-200/80 bg-white shadow-sm transition hover:border-[color-mix(in_srgb,var(--dark-teal)_28%,transparent)]"
     >
       <div className="absolute left-2 top-2 flex gap-1 text-slate-400">
-        <button type="button" className="rounded-lg p-1 hover:bg-slate-100" aria-label="گزینه‌ها">
+        <button type="button" className="rounded-[8px] p-1 hover:bg-slate-100" aria-label="گزینه‌ها">
           <MoreHorizontal className="h-3.5 w-3.5" />
         </button>
       </div>
-      <div className="absolute right-2 top-2 rounded-lg bg-white/90 p-1 text-slate-400 shadow-sm">
+      <div className="absolute right-2 top-2 rounded-[8px] bg-white/90 p-1 text-slate-400 shadow-sm">
         <MoreHorizontal className="h-3.5 w-3.5 rotate-90" aria-hidden />
       </div>
-      <div className="mx-auto mt-7 aspect-square w-[88px] overflow-hidden rounded-xl bg-slate-200/90">
+      <div className="mx-auto mt-7 aspect-square w-[88px] overflow-hidden rounded-[8px] bg-slate-200/90">
         {isImage && file?.dataUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={file.dataUrl} alt="" className="h-full w-full object-cover" />
@@ -434,6 +589,214 @@ function DocumentThumb({ item }: { item: AttachmentItem }) {
         <div className="mt-1 text-[10px] font-semibold text-slate-500">{item.date?.trim() || '—'}</div>
       </div>
     </article>
+  );
+}
+
+type PreviewCoverageState = 'complete' | 'partial' | 'empty';
+
+function getPreviewCoverageState(filled: number, total: number): PreviewCoverageState {
+  if (!total || filled <= 0) return 'empty';
+  if (filled >= total) return 'complete';
+  return 'partial';
+}
+
+function coverageLabel(state: PreviewCoverageState) {
+  switch (state) {
+    case 'complete':
+      return 'کامل';
+    case 'partial':
+      return 'نیمه‌کامل';
+    default:
+      return 'خالی';
+  }
+}
+
+function coverageToneClasses(state: PreviewCoverageState) {
+  switch (state) {
+    case 'complete':
+      return 'border-emerald-200 bg-emerald-50 text-emerald-700';
+    case 'partial':
+      return 'border-amber-200 bg-amber-50 text-amber-700';
+    default:
+      return 'border-rose-200 bg-rose-50 text-rose-700';
+  }
+}
+
+function coverageDotClasses(state: PreviewCoverageState) {
+  switch (state) {
+    case 'complete':
+      return 'bg-emerald-500';
+    case 'partial':
+      return 'bg-amber-500';
+    default:
+      return 'bg-rose-500';
+  }
+}
+
+function PreviewStatCard({
+  label,
+  value,
+  note,
+  tone = 'default',
+}: {
+  label: string;
+  value: ReactNode;
+  note?: ReactNode;
+  tone?: 'default' | 'accent' | 'success' | 'warning';
+}) {
+  const toneClasses: Record<NonNullable<typeof tone>, string> = {
+    default: 'border-slate-200/80 bg-white/85 text-slate-900',
+    accent: 'border-cyan-200/80 bg-cyan-50/70 text-cyan-950',
+    success: 'border-emerald-200/80 bg-emerald-50/70 text-emerald-950',
+    warning: 'border-amber-200/80 bg-amber-50/70 text-amber-950',
+  };
+
+  return (
+    <div className={`rounded-[8px] border px-4 py-3 shadow-[0_12px_30px_rgba(15,23,42,0.05)] ${toneClasses[tone]}`}>
+      <div className="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">{label}</div>
+      <div className="mt-2 text-[17px] font-black leading-7">{value}</div>
+      {note ? <div className="mt-1 text-[11px] font-semibold leading-6 text-slate-500">{note}</div> : null}
+    </div>
+  );
+}
+
+function PreviewStatusPill({ state }: { state: PreviewCoverageState }) {
+  return (
+    <span
+      className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[11px] font-black ${coverageToneClasses(state)}`}
+    >
+      <span className={`h-2 w-2 rounded-full ${coverageDotClasses(state)}`} aria-hidden />
+      {coverageLabel(state)}
+    </span>
+  );
+}
+
+function PreviewSectionShell({
+  id,
+  title,
+  description,
+  state,
+  icon,
+  children,
+  footer,
+}: {
+  id: string;
+  title: string;
+  description?: string;
+  state: PreviewCoverageState;
+  icon?: ReactNode;
+  children: ReactNode;
+  footer?: ReactNode;
+}) {
+  return (
+    <section
+      id={id}
+      className="overflow-hidden rounded-[8px] border border-slate-200/80 bg-white/94 shadow-[0_18px_48px_rgba(15,23,42,0.07)]"
+    >
+      <div className="border-b border-slate-200/70 bg-[linear-gradient(180deg,rgba(250,252,254,0.96),rgba(244,247,250,0.92))] px-5 py-4 sm:px-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
+            <div className="flex items-center gap-3">
+              {icon ? (
+                <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[8px] border border-slate-200/80 bg-white text-[var(--dark-teal)] shadow-sm">
+                  {icon}
+                </span>
+              ) : null}
+              <div className="min-w-0">
+                <h2 className="text-[16px] font-black text-slate-900">{title}</h2>
+                {description ? <p className="mt-1 text-[12px] font-semibold leading-6 text-slate-500">{description}</p> : null}
+              </div>
+            </div>
+          </div>
+          <PreviewStatusPill state={state} />
+        </div>
+      </div>
+      <div className="space-y-4 px-5 py-5 sm:px-6">{children}</div>
+      {footer ? <div className="border-t border-slate-200/70 bg-slate-50/70 px-5 py-4 sm:px-6">{footer}</div> : null}
+    </section>
+  );
+}
+
+function PreviewNotice({ tone = 'info', children }: { tone?: 'info' | 'warning' | 'danger' | 'success'; children: ReactNode }) {
+  const toneClasses: Record<typeof tone, string> = {
+    info: 'border-cyan-200 bg-cyan-50 text-cyan-900',
+    warning: 'border-amber-200 bg-amber-50 text-amber-900',
+    danger: 'border-rose-200 bg-rose-50 text-rose-900',
+    success: 'border-emerald-200 bg-emerald-50 text-emerald-900',
+  };
+
+  return (
+    <div className={`rounded-[8px] border px-4 py-3 text-[13px] font-semibold leading-7 ${toneClasses[tone]}`}>
+      {children}
+    </div>
+  );
+}
+
+function PreviewEmptyState({ children }: { children: ReactNode }) {
+  return (
+    <div className="rounded-[8px] border border-dashed border-slate-200 bg-slate-50/70 px-4 py-8 text-center text-[13px] font-semibold leading-7 text-slate-500">
+      {children}
+    </div>
+  );
+}
+
+function PartyGroupCard({
+  title,
+  modeLabel,
+  people,
+  emptyLabel,
+  shareLabel,
+}: {
+  title: string;
+  modeLabel: string;
+  people: Array<{ personId: string; name: string; share?: { value: number; mode: 'percent' | 'dang' }; isPrimary?: boolean; personType?: string }>;
+  emptyLabel: string;
+  shareLabel: string;
+}) {
+  return (
+    <div className="rounded-[8px] border border-slate-200/80 bg-slate-50/70 p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <div className="text-[12px] font-black text-slate-900">{title}</div>
+          <div className="mt-1 text-[11px] font-semibold text-slate-500">{modeLabel}</div>
+        </div>
+        <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-black text-slate-600">
+          {people.length.toLocaleString('fa-IR')} نفر
+        </span>
+      </div>
+      <div className="mt-4 space-y-3">
+        {people.length ? (
+          people.map((person) => (
+            <div
+              key={person.personId}
+              dir="rtl"
+              className="grid gap-3 rounded-[8px] border border-white bg-white/96 p-4 shadow-[0_8px_20px_rgba(15,23,42,0.04)] sm:grid-cols-2"
+            >
+              <PreviewField
+                label={shareLabel}
+                value={person.name}
+                hint={person.isPrimary ? 'اصلی' : person.personType === 'legal' ? 'حقوقی' : 'حقیقی'}
+              />
+              <PreviewField
+                label="سهم"
+                value={
+                  person.share?.value != null ? (
+                    <span dir="ltr" className="inline-block tabular-nums">
+                      {formatNumberFa(Number(person.share.value))} {person.share?.mode === 'percent' ? '%' : 'دانگ'}
+                    </span>
+                  ) : (
+                    '—'
+                  )
+                }
+                hint={person.isPrimary ? 'نماینده' : undefined}
+              />
+            </div>
+          ))
+        ) : (
+          <PreviewEmptyState>{emptyLabel}</PreviewEmptyState>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -481,6 +844,9 @@ export function ContractDraftPreviewContent({
   const penaltyRules = payload.penalties?.rules ?? [];
   const penaltyTypes = payload.penalties?.types ?? [];
   const forgivenessSummary = describeForgivenessRuleSnapshot(payload.ruleSettings?.forgiveness ?? null);
+  const buyerRulesSummary = describeBuyerRulesSnapshot(payload.terminationRules?.buyerRules ?? null);
+  const extraCostsSummary = describeExtraCostsSnapshot(payload.extraCosts ?? null);
+  const technicalSpecsSummary = describeTechnicalSpecsSnapshot(payload.technicalSpecs ?? null);
 
   const innerMaxWidthClass = layout === 'embedded' ? 'w-full max-w-none px-4 sm:px-5' : 'mx-auto w-[min(1120px,calc(100%-28px))]';
 
@@ -491,7 +857,7 @@ export function ContractDraftPreviewContent({
           <button
             type="button"
             onClick={() => router.push(`/contracts/${contractId}`)}
-            className="inline-flex h-11 shrink-0 items-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 text-[13px] font-bold text-slate-700 shadow-sm transition hover:border-[color-mix(in_srgb,var(--dark-teal)_35%,transparent)] hover:bg-slate-50"
+            className="inline-flex h-11 shrink-0 items-center gap-2 rounded-[8px] border border-slate-200 bg-white px-5 text-[13px] font-bold text-slate-700 shadow-sm transition hover:border-[color-mix(in_srgb,var(--dark-teal)_35%,transparent)] hover:bg-slate-50"
           >
             بازگشت
             <ArrowRight className="h-4 w-4" />
@@ -510,7 +876,7 @@ export function ContractDraftPreviewContent({
           <button
             type="button"
             onClick={() => onClose?.()}
-            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-slate-50"
+            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[8px] border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-slate-50"
             aria-label="بستن پیش‌نمایش"
           >
             <X className="h-5 w-5" />
@@ -524,15 +890,74 @@ export function ContractDraftPreviewContent({
         </header>
       ) : null}
 
-      <section className="mb-6 rounded-[28px] border border-white/70 bg-white/95 p-5 shadow-[0_20px_50px_-24px_rgba(15,23,42,0.25)] md:p-7">
-        <div className="flex flex-col items-stretch gap-8 lg:flex-row-reverse lg:items-center lg:justify-between lg:gap-10">
-          <PreviewDonut slices={slices} totalRial={totalRial} />
-          <PreviewLegend slices={slices} total={legendTotal} />
+      <section className="mb-6 overflow-hidden rounded-[8px] border border-slate-200/80 bg-white/95 shadow-[0_20px_50px_-24px_rgba(15,23,42,0.22)]">
+        <div className="border-b border-slate-100 bg-[linear-gradient(135deg,rgba(15,118,110,0.08),rgba(255,255,255,0.98))] px-5 py-4 md:px-6">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+            <div dir="rtl" className="text-right">
+              <div className="text-[12px] font-bold text-slate-500">خلاصه و ترکیب مالی قرارداد</div>
+              <h2 className="mt-1 text-[16px] font-black text-[var(--dark-teal)] md:text-[18px]">نمای کلی مبالغ و دسته‌های مالی</h2>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+              <div dir="rtl" className="rounded-[8px] border border-white/80 bg-white px-3 py-2.5 shadow-sm">
+                <div className="text-[11px] font-bold text-slate-500">مبلغ کل قرارداد</div>
+                <div className="mt-1 text-[13px] font-black text-slate-900">{formatMoneyTomanFromRial(totalRial)}</div>
+                <div className="mt-0.5 text-[10px] font-medium text-slate-400">{formatRial(totalRial)}</div>
+              </div>
+              <div dir="rtl" className="rounded-[8px] border border-white/80 bg-white px-3 py-2.5 shadow-sm">
+                <div className="text-[11px] font-bold text-slate-500">دسته‌های مالی</div>
+                <div className="mt-1 text-[13px] font-black text-slate-900">{formatNumberFa(legendTotal)}</div>
+                <div className="mt-0.5 text-[10px] font-medium text-slate-400">مورد ثبت شده</div>
+              </div>
+              <div dir="rtl" className="rounded-[8px] border border-white/80 bg-white px-3 py-2.5 shadow-sm">
+                <div className="text-[11px] font-bold text-slate-500">بزرگ‌ترین سهم</div>
+                <div className="mt-1 truncate text-[13px] font-black text-slate-900">{slices[0]?.name ?? '—'}</div>
+                <div className="mt-0.5 text-[10px] font-medium text-slate-400">{slices[0] ? `${formatPercentFa((slices[0].value / legendTotal) * 100)}٪ از کل` : 'بدون داده'}</div>
+              </div>
+              <div dir="rtl" className="rounded-[8px] border border-white/80 bg-white px-3 py-2.5 shadow-sm">
+                <div className="text-[11px] font-bold text-slate-500">نوع قیمت‌گذاری</div>
+                <div className="mt-1 text-[13px] font-black text-slate-900">{payload.financial?.pricingType === 'metered' ? 'متری' : payload.financial ? 'ثابت' : '—'}</div>
+                <div className="mt-0.5 text-[10px] font-medium text-slate-400">
+                  {payload.financial ? getAreaPricingModePresentation(normalizeAreaPricingMode(payload.financial.areaPricingMode)).label : 'بدون داده'}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid gap-5 p-5 lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)] lg:items-start md:p-6">
+          <div className="flex flex-col items-center gap-4 rounded-[8px] border border-slate-100 bg-slate-50/80 px-5 py-6">
+            <PreviewDonut slices={slices} totalRial={totalRial} />
+            <div dir="rtl" className="grid w-full gap-2 sm:grid-cols-2">
+              <div className="rounded-[8px] border border-white/80 bg-white px-3 py-2 text-right shadow-sm">
+                <div className="text-[11px] font-bold text-slate-500">جمع دسته‌ها</div>
+                <div className="mt-1 text-[13px] font-black text-slate-900">{formatMoneyTomanFromRial(legendTotal)}</div>
+              </div>
+              <div className="rounded-[8px] border border-white/80 bg-white px-3 py-2 text-right shadow-sm">
+                <div className="text-[11px] font-bold text-slate-500">واحدهای دارای سهم</div>
+                <div className="mt-1 text-[13px] font-black text-slate-900">{formatNumberFa(slices.length)}</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-[8px] border border-slate-100 bg-white/80 p-4 md:p-5">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <div dir="rtl" className="text-right">
+                <div className="text-[12px] font-bold text-slate-500">جزئیات دسته‌ها</div>
+                <div className="mt-0.5 text-[14px] font-black text-slate-800">مبالغ بر اساس هر ردیف مالی</div>
+              </div>
+              <div className="rounded-full border border-[color-mix(in_srgb,var(--dark-teal)_18%,transparent)] bg-[color-mix(in_srgb,var(--dark-teal)_8%,white)] px-3 py-1 text-[11px] font-bold text-[var(--dark-teal)]">
+                قابل اسکرول در صورت تعداد زیاد
+              </div>
+            </div>
+            <div className="max-h-[520px] overflow-auto pr-1">
+              <PreviewLegend slices={slices} total={legendTotal} />
+            </div>
+          </div>
         </div>
       </section>
 
       <section
-          className="overflow-hidden rounded-[28px] border-2 bg-white/97 shadow-[0_24px_60px_-30px_rgba(15,118,110,0.35)]"
+          className="overflow-hidden rounded-[8px] border-2 bg-white/97 shadow-[0_24px_60px_-30px_rgba(15,118,110,0.35)]"
           style={{ borderColor: 'color-mix(in srgb, var(--dark-teal) 38%, transparent)' }}
         >
           <div className="border-b px-6 py-4 text-center" style={{ borderColor: 'color-mix(in srgb, var(--dark-teal) 22%, transparent)', background: 'color-mix(in srgb, var(--dark-teal) 9%, white)' }}>
@@ -552,7 +977,7 @@ export function ContractDraftPreviewContent({
               </div>
 
               <div className="mt-5 space-y-3">
-                <div className="rounded-xl bg-white px-3 py-2 text-center text-[13px] font-extrabold text-[var(--dark-teal)] ring-1 ring-[color-mix(in_srgb,var(--dark-teal)_25%,transparent)]">
+                <div className="rounded-[8px] bg-white px-3 py-2 text-center text-[13px] font-extrabold text-[var(--dark-teal)] ring-1 ring-[color-mix(in_srgb,var(--dark-teal)_25%,transparent)]">
                   انتخاب واحد
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
@@ -570,12 +995,12 @@ export function ContractDraftPreviewContent({
                 <PreviewField label="نوع قدرالسهم طرف دوم" value={shareModeFa(payload.parties?.partyTwoMode)} />
               </div>
 
-              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+              <div className="rounded-[8px] border border-slate-100 bg-slate-50/50 p-4">
                 <div className="mb-3 text-[12px] font-extrabold text-slate-600">طرفین قرارداد — طرف اول</div>
                 {(payload.parties?.partyOne ?? []).length ? (
                   <div className="space-y-3">
                     {(payload.parties?.partyOne ?? []).map((p) => (
-                      <div key={p.personId} dir="rtl" className="grid gap-3 rounded-2xl border border-white bg-white/90 p-4 shadow-sm sm:grid-cols-2">
+                      <div key={p.personId} dir="rtl" className="grid gap-3 rounded-[8px] border border-white bg-white/90 p-4 shadow-sm sm:grid-cols-2">
                         <PreviewField label="نام" value={p.name} />
                         <PreviewField
                           label="سهم"
@@ -593,12 +1018,12 @@ export function ContractDraftPreviewContent({
                 )}
               </div>
 
-              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+              <div className="rounded-[8px] border border-slate-100 bg-slate-50/50 p-4">
                 <div className="mb-3 text-[12px] font-extrabold text-slate-600">طرفین قرارداد — طرف دوم (خریداران)</div>
                 {partyTwo.length ? (
                   <div className="space-y-3">
                     {partyTwo.map((p) => (
-                      <div key={p.personId} dir="rtl" className="grid gap-3 rounded-2xl border border-white bg-white/90 p-4 shadow-sm sm:grid-cols-2">
+                      <div key={p.personId} dir="rtl" className="grid gap-3 rounded-[8px] border border-white bg-white/90 p-4 shadow-sm sm:grid-cols-2">
                         <PreviewField label="خریدار" value={p.name} />
                         <PreviewField
                           label="مقدار سهم"
@@ -621,7 +1046,7 @@ export function ContractDraftPreviewContent({
             <div className="space-y-4">
               <TealSectionHeader>اسناد قرارداد</TealSectionHeader>
               {!documentsGrouped.length ? (
-                <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/80 py-12 text-center text-[13px] font-semibold text-slate-500">
+                <div className="rounded-[8px] border border-dashed border-slate-200 bg-slate-50/80 py-12 text-center text-[13px] font-semibold text-slate-500">
                   پیوستی برای نمایش ثبت نشده است.
                 </div>
               ) : (
@@ -643,7 +1068,7 @@ export function ContractDraftPreviewContent({
                 ))
               )}
               {(payload.attachments?.notes ?? '').trim() ? (
-                <div className="rounded-2xl border border-slate-100 bg-slate-50/70 p-4 text-right">
+                <div className="rounded-[8px] border border-slate-100 bg-slate-50/70 p-4 text-right">
                   <div className="text-[11px] font-bold text-slate-500">یادداشت پیوست‌ها</div>
                   <p className="mt-2 text-[13px] font-semibold leading-relaxed text-slate-800">{payload.attachments!.notes!.trim()}</p>
                 </div>
@@ -653,7 +1078,7 @@ export function ContractDraftPreviewContent({
             <div className="space-y-4">
               <TealSectionHeader>اطلاعات کامل قرارداد</TealSectionHeader>
               <div className="grid gap-4 lg:grid-cols-2">
-                <div className="space-y-3 rounded-2xl border border-slate-100 bg-slate-50/50 p-4">
+                <div className="space-y-3 rounded-[8px] border border-slate-100 bg-slate-50/50 p-4">
                   <div className="text-[12px] font-extrabold text-slate-700">وضعیت و متادیتا</div>
                   <SimpleList
                     items={[
@@ -670,7 +1095,7 @@ export function ContractDraftPreviewContent({
                   />
                 </div>
 
-                <div className="space-y-3 rounded-2xl border border-slate-100 bg-slate-50/50 p-4">
+                <div className="space-y-3 rounded-[8px] border border-slate-100 bg-slate-50/50 p-4">
                   <div className="text-[12px] font-extrabold text-slate-700">اطلاعات مالی و محاسبات</div>
                   <SimpleList
                     items={[
@@ -687,7 +1112,7 @@ export function ContractDraftPreviewContent({
                   />
                 </div>
 
-                <div className="space-y-3 rounded-2xl border border-slate-100 bg-slate-50/50 p-4">
+                <div className="space-y-3 rounded-[8px] border border-slate-100 bg-slate-50/50 p-4">
                   <div className="text-[12px] font-extrabold text-slate-700">خلاصه جرائم و بخشودگی</div>
                   <SimpleList
                     items={[
@@ -717,7 +1142,7 @@ export function ContractDraftPreviewContent({
                   />
                 </div>
 
-                <div className="space-y-3 rounded-2xl border border-slate-100 bg-slate-50/50 p-4">
+                <div className="space-y-3 rounded-[8px] border border-slate-100 bg-slate-50/50 p-4">
                   <div className="text-[12px] font-extrabold text-slate-700">تخفیف و فسخ</div>
                   <SimpleList
                     items={[
@@ -741,8 +1166,8 @@ export function ContractDraftPreviewContent({
                     value={payload.terminationRules?.buyerRules ?? payload.termination ?? null}
                     summary={[
                       { label: 'فعال', value: payload.termination?.terminationEnabled ? 'بله' : payload.termination ? 'خیر' : '—' },
-                      { label: 'پنل خریدار', value: payload.termination?.terminationBuyerPanel ?? '—' },
-                      { label: 'پنل سازنده', value: payload.termination?.terminationConstructorPanel ?? '—' },
+                      { label: 'پنل خریدار', value: getTerminationPanelLabel(payload.termination?.terminationBuyerPanel) },
+                      { label: 'پنل سازنده', value: getTerminationPanelLabel(payload.termination?.terminationConstructorPanel) },
                     ]}
                   />
                 </div>
@@ -790,4 +1215,6 @@ export function ContractDraftPreviewContent({
     </div>
   );
 }
+
+
 

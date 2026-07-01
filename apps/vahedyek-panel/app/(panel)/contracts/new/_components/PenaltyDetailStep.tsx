@@ -117,7 +117,7 @@ function LabeledField({
           disabled={disabled}
           onChange={(event) => onChange(event.target.value)}
           placeholder={placeholder}
-          className="h-14 rounded-2xl border-gray-300 px-4 text-lg text-gray-800 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/10 disabled:bg-slate-50 disabled:text-slate-500"
+          className="h-14 rounded-[8px] border-gray-300 px-4 text-lg text-gray-800 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/10 disabled:bg-slate-50 disabled:text-slate-500"
         />
       )}
       {hint && <p className="text-sm text-gray-500">{hint}</p>}
@@ -171,7 +171,7 @@ function ToggleCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-[28px] border border-cyan-100 bg-cyan-50 p-5 text-gray-900">
+    <div className="rounded-[8px] border border-cyan-100 bg-cyan-50 p-5 text-gray-900">
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-2">
           <h3 className="text-2xl font-bold">هزینه دیرکرد</h3>
@@ -298,7 +298,7 @@ export function PenaltyDetailStep({
 
   if (!penalty) {
     return (
-      <div className="rounded-2xl border border-rose-200 bg-rose-50 p-8 text-center text-rose-700">
+      <div className="rounded-[8px] border border-rose-200 bg-rose-50 p-8 text-center text-rose-700">
         آیتم جریمه موردنظر پیدا نشد.
       </div>
     );
@@ -321,7 +321,7 @@ export function PenaltyDetailStep({
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-[30px] border border-gray-200 bg-white text-right shadow-sm">
+      <div className="overflow-hidden rounded-[8px] border border-gray-200 bg-white text-right shadow-sm">
         <div className="grid gap-px bg-gray-200 md:grid-cols-4" dir="rtl">
           {MODE_OPTIONS.map((item) => {
             const Icon = item.icon;
@@ -450,7 +450,7 @@ export function PenaltyDetailStep({
                 </div>
 
                 {formError && (
-                  <p className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                  <p className="mb-4 rounded-[8px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
                     {formError}
                   </p>
                 )}
@@ -495,7 +495,7 @@ export function PenaltyDetailStep({
                         type="button"
                         onClick={() => setProgressiveRows((current) => normalizeProgressiveRows(current.filter((item) => item.id !== row.id)))}
                         disabled={index === 0}
-                        className="h-12 rounded-xl border border-rose-200 px-3 text-sm text-rose-600 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-40"
+                        className="h-12 rounded-[8px] border border-rose-200 px-3 text-sm text-rose-600 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-40"
                       >
                         حذف
                       </button>
@@ -579,3 +579,5 @@ export function PenaltyDetailStep({
     </div>
   );
 }
+
+

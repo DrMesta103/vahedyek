@@ -18,8 +18,8 @@ function cn(...classes: Array<string | false | null | undefined>) {
 function SegmentedToggle({
   checked,
   onChange,
-  activeLabel = 'فعال',
-  inactiveLabel = 'غیرفعال',
+  activeLabel = '????',
+  inactiveLabel = '???????',
 }: {
   checked: boolean;
   onChange: (value: boolean) => void;
@@ -77,12 +77,12 @@ function TopCard({
     <button
       type="button"
       onClick={onClick}
-      className="flex items-start justify-between gap-4 rounded-[20px] border border-[color:var(--border-soft)] bg-[color:var(--surface)] px-5 py-5 text-right transition hover:border-[color:var(--theme-action-border)] hover:bg-[color:var(--surface-soft)]"
+      className="flex items-start justify-between gap-4 rounded-[8px] border border-[color:var(--border-soft)] bg-[color:var(--surface)] px-5 py-5 text-right transition hover:border-[color:var(--theme-action-border)] hover:bg-[color:var(--surface-soft)]"
     >
       <div className="flex-1">
         <div className="flex flex-wrap items-center justify-end gap-3">
           <h3 className="text-lg font-black text-[color:var(--text-strong)]">{title}</h3>
-          {configured ? <span className="rounded-full border border-[color:var(--theme-action-border)] px-3 py-1 text-xs font-bold text-[color:var(--theme-action-text)]">تنظیمات انجام‌شده</span> : null}
+          {configured ? <span className="rounded-full border border-[color:var(--theme-action-border)] px-3 py-1 text-xs font-bold text-[color:var(--theme-action-text)]">??????? ?????????</span> : null}
         </div>
         <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">{description}</p>
       </div>
@@ -138,17 +138,17 @@ function ConfirmModal({
 
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-white/55 px-4 backdrop-blur-sm">
-      <div className="w-full max-w-md overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_24px_80px_rgba(15,23,42,0.12)]">
+      <div className="w-full max-w-md overflow-hidden rounded-[8px] border border-slate-200 bg-white shadow-[0_24px_80px_rgba(15,23,42,0.12)]">
         <div className="space-y-3 px-6 py-6 text-right">
-          <h3 className="text-2xl font-black text-[color:var(--text-strong)]">تغییر بخش و غیرفعال‌سازی</h3>
-          <p className="text-sm leading-7 text-[color:var(--text-muted)]">با تایید این عملیات، در صورت فعال‌سازی موردی در تب بعدی، آیتم قبلی غیرفعال می‌شود.</p>
+          <h3 className="text-2xl font-black text-[color:var(--text-strong)]">????? ??? ? ????????????</h3>
+          <p className="text-sm leading-7 text-[color:var(--text-muted)]">?? ????? ??? ??????? ?? ???? ????????? ????? ?? ?? ????? ???? ???? ??????? ??????.</p>
         </div>
         <div className="flex items-center justify-end gap-8 border-t border-slate-100 px-6 py-5">
           <button type="button" onClick={onCancel} className="text-sm font-bold text-[color:var(--text-muted)] transition hover:text-[color:var(--text-strong)]">
-            لغو
+            ???
           </button>
           <button type="button" onClick={onConfirm} className="text-sm font-black text-[#ff5c5c] transition hover:text-[#ff8a8a]">
-            تایید
+            ?????
           </button>
         </div>
       </div>
@@ -187,7 +187,7 @@ export function DiscountRuleSection({
 
   if (!selectedGroup) {
     return (
-      <section className="rounded-[24px] border border-[color:var(--border-soft)] bg-[color:var(--surface)] p-5">
+      <section className="rounded-[8px] border border-[color:var(--border-soft)] bg-[color:var(--surface)] p-5">
         <div className="grid gap-3 lg:grid-cols-2">
           {DISCOUNT_GROUPS.map((group) => (
             <TopCard
@@ -227,10 +227,10 @@ export function DiscountRuleSection({
         />
 
         <div className="space-y-5">
-          <section className="rounded-[24px] border border-[color:var(--border-soft)] bg-[color:var(--surface)] p-5">
+          <section className="rounded-[8px] border border-[color:var(--border-soft)] bg-[color:var(--surface)] p-5">
             <div className="flex items-center justify-between gap-4">
               <div className="text-right">
-                <h3 className="text-xl font-black text-[color:var(--text-strong)]">اعمال تخفیف روی مبلغ پایه قرارداد</h3>
+                <h3 className="text-xl font-black text-[color:var(--text-strong)]">????? ????? ??? ???? ???? ???????</h3>
               </div>
               <button
                 type="button"
@@ -238,15 +238,15 @@ export function DiscountRuleSection({
                 className="inline-flex items-center gap-2 rounded-full border border-[color:var(--border-color)] px-4 py-2 text-sm font-bold text-[color:var(--text-muted)] transition hover:border-[color:var(--theme-action-border)] hover:text-[color:var(--text-strong)]"
               >
                 <ChevronLeft className="h-4 w-4" />
-                بازگشت
+                ??????
               </button>
             </div>
           </section>
 
-          <section className="overflow-visible rounded-[24px] border border-[color:var(--border-soft)] bg-[color:var(--surface)]">
+          <section className="overflow-visible rounded-[8px] border border-[color:var(--border-soft)] bg-[color:var(--surface)]">
             <div className="flex flex-wrap border-b border-[color:var(--border-soft)]">
               <ValueModeTab
-                title="تخفیف روی کل قرارداد"
+                title="????? ??? ?? ???????"
                 icon={Layers3}
                 active={scope === 'whole'}
                 onClick={() => {
@@ -254,7 +254,7 @@ export function DiscountRuleSection({
                 }}
               />
               <ValueModeTab
-                title="تخفیف موردی قرارداد"
+                title="????? ????? ???????"
                 icon={Filter}
                 active={scope === 'itemized'}
                 onClick={() => {
@@ -289,11 +289,11 @@ export function DiscountRuleSection({
     );
   }
 
-  const detailTitle = selectedGroup === 'early-payment' ? 'تخفیف مشوق پرداخت زودتر از موعد' : selectedEntry?.title ?? '';
+  const detailTitle = selectedGroup === 'early-payment' ? '????? ???? ?????? ????? ?? ????' : selectedEntry?.title ?? '';
 
   return (
     <div className="space-y-5">
-      <section className="rounded-[24px] border border-[color:var(--border-soft)] bg-[color:var(--surface)] p-5">
+      <section className="rounded-[8px] border border-[color:var(--border-soft)] bg-[color:var(--surface)] p-5">
         <div className="flex items-center justify-between gap-4">
           <div className="text-right">
             <h3 className="text-xl font-black text-[color:var(--text-strong)]">{detailTitle}</h3>
@@ -311,42 +311,42 @@ export function DiscountRuleSection({
             className="inline-flex items-center gap-2 rounded-full border border-[color:var(--border-color)] px-4 py-2 text-sm font-bold text-[color:var(--text-muted)] transition hover:border-[color:var(--theme-action-border)] hover:text-[color:var(--text-strong)]"
           >
             <ChevronLeft className="h-4 w-4" />
-            بازگشت
+            ??????
           </button>
         </div>
       </section>
 
-      <section className="overflow-visible rounded-[24px] border border-[color:var(--border-soft)] bg-[color:var(--surface)]">
+      <section className="overflow-visible rounded-[8px] border border-[color:var(--border-soft)] bg-[color:var(--surface)]">
         <div className="flex flex-wrap border-b border-[color:var(--border-soft)]">
-          <ValueModeTab title="مبلغ" icon={CircleDollarSign} active={valueMode === 'amount'} onClick={() => onValueChange('discountValueMode', 'amount')} />
-          <ValueModeTab title="درصد" icon={CirclePercent} active={valueMode === 'percent'} onClick={() => onValueChange('discountValueMode', 'percent')} />
+          <ValueModeTab title="????" icon={CircleDollarSign} active={valueMode === 'amount'} onClick={() => onValueChange('discountValueMode', 'amount')} />
+          <ValueModeTab title="????" icon={CirclePercent} active={valueMode === 'percent'} onClick={() => onValueChange('discountValueMode', 'percent')} />
         </div>
 
         <div className="space-y-8 p-5">
           {valueMode === 'amount' ? (
             <div className="space-y-6">
               <div className="space-y-4">
-                <FieldLabel label="حداقل مبلغ تخفیف" />
-                <RuleTextInput value={String(state.values.discountMinValue ?? '')} onChange={(value) => onValueChange('discountMinValue', value)} suffix="تومان" />
-                <p className="text-right text-sm text-[color:var(--text-muted)]">حداقل مبلغی که در صورت اعمال تخفیف می‌تواند کاهش داده شود. مثال: ۳۰,۰۰۰ تومان</p>
+                <FieldLabel label="????? ???? ?????" />
+                <RuleTextInput value={String(state.values.discountMinValue ?? '')} onChange={(value) => onValueChange('discountMinValue', value)} suffix="?????" />
+                <p className="text-right text-sm text-[color:var(--text-muted)]">????? ????? ?? ?? ???? ????? ????? ???????? ???? ???? ???. ????: ??,??? ?????</p>
               </div>
               <div className="space-y-4">
-                <FieldLabel label="حداکثر مبلغ تخفیف" />
-                <RuleTextInput value={String(state.values.discountMaxValue ?? '')} onChange={(value) => onValueChange('discountMaxValue', value)} suffix="تومان" />
-                <p className="text-right text-sm text-[color:var(--text-muted)]">حداکثر مبلغی که مجاز به تخفیف است. مثال: ۳۰۰,۰۰۰ تومان</p>
+                <FieldLabel label="?????? ???? ?????" />
+                <RuleTextInput value={String(state.values.discountMaxValue ?? '')} onChange={(value) => onValueChange('discountMaxValue', value)} suffix="?????" />
+                <p className="text-right text-sm text-[color:var(--text-muted)]">?????? ????? ?? ???? ?? ????? ???. ????: ???,??? ?????</p>
               </div>
             </div>
           ) : (
             <div className="space-y-6">
               <div className="space-y-4">
-                <FieldLabel label="حداقل درصد تخفیف" />
+                <FieldLabel label="????? ???? ?????" />
                 <RuleTextInput value={String(state.values.discountMinValue ?? '')} onChange={(value) => onValueChange('discountMinValue', value)} suffix="%" />
-                <p className="text-right text-sm text-[color:var(--text-muted)]">حداقل درصدی که در صورت اعمال تخفیف می‌تواند کاهش داده شود. مثال: ۲ درصد</p>
+                <p className="text-right text-sm text-[color:var(--text-muted)]">????? ????? ?? ?? ???? ????? ????? ???????? ???? ???? ???. ????: ? ????</p>
               </div>
               <div className="space-y-4">
-                <FieldLabel label="حداکثر درصد تخفیف" />
+                <FieldLabel label="?????? ???? ?????" />
                 <RuleTextInput value={String(state.values.discountMaxValue ?? '')} onChange={(value) => onValueChange('discountMaxValue', value)} suffix="%" />
-                <p className="text-right text-sm text-[color:var(--text-muted)]">حداکثر درصدی که مجاز به تخفیف است. مثال: ۴ درصد</p>
+                <p className="text-right text-sm text-[color:var(--text-muted)]">?????? ????? ?? ???? ?? ????? ???. ????: ? ????</p>
               </div>
             </div>
           )}
@@ -355,18 +355,18 @@ export function DiscountRuleSection({
             <button
               type="button"
               onClick={() => router.push('/business-settings/contract-rules/discount/condition')}
-              className="flex w-full items-center justify-between rounded-[20px] border border-[color:var(--border-soft)] bg-[color:var(--surface)] px-5 py-5 text-right transition hover:border-[color:var(--theme-action-border)] hover:bg-[color:var(--surface-soft)]"
+              className="flex w-full items-center justify-between rounded-[8px] border border-[color:var(--border-soft)] bg-[color:var(--surface)] px-5 py-5 text-right transition hover:border-[color:var(--theme-action-border)] hover:bg-[color:var(--surface-soft)]"
             >
               <div className="flex-1">
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   {discountConditionConfigured ? (
                     <span className="rounded-full border border-[color:var(--theme-action-border)] px-3 py-1 text-xs font-bold text-[color:var(--theme-action-text)]">
-                      تنظیمات انجام‌شده
+                      ??????? ?????????
                     </span>
                   ) : null}
-                  <h3 className="text-lg font-black text-[color:var(--text-strong)]">شرط تخفیف و خوش‌حسابی تخفیف</h3>
+                  <h3 className="text-lg font-black text-[color:var(--text-strong)]">??? ????? ? ????????? ?????</h3>
                 </div>
-                <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">در این بخش می‌توانید مشخص کنید که تحت چه شرایطی می‌خواهید تخفیف برای کاربر در نظر بگیرید.</p>
+                <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">?? ??? ??? ????????? ???? ???? ?? ??? ?? ?????? ????????? ????? ???? ????? ?? ??? ??????.</p>
               </div>
               <ChevronLeft className="h-5 w-5 shrink-0 text-[color:var(--text-muted)]" />
             </button>
@@ -375,21 +375,21 @@ export function DiscountRuleSection({
           <div className="space-y-5 border-t border-[#415769] pt-6">
             <div className="flex items-start justify-between gap-4">
               <div className="text-right">
-                <h3 className="text-[18px] font-black text-[color:var(--text-strong)]">تایید مدیر برای تخفیف‌های بزرگ</h3>
-                <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">در صورت فعال بودن، تخفیف‌های بالاتر از یک حد مشخص فقط با تایید نقش‌های مدیریتی انجام می‌شود.</p>
+                <h3 className="text-[18px] font-black text-[color:var(--text-strong)]">????? ???? ???? ????????? ????</h3>
+                <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">?? ???? ???? ????? ????????? ?????? ?? ?? ?? ???? ??? ?? ????? ??????? ??????? ????? ??????.</p>
               </div>
               <MiniToggle checked={managerApproval} onChange={(value) => onValueChange('discountManagerApproval', value)} />
             </div>
 
             {managerApproval ? (
               <div className="space-y-4">
-                <FieldLabel label="آستانه تایید مدیر" />
+                <FieldLabel label="?????? ????? ????" />
                 <RuleTextInput
                   value={String(state.values.discountApprovalThreshold ?? '')}
                   onChange={(value) => onValueChange('discountApprovalThreshold', value)}
-                  suffix={valueMode === 'percent' ? '%' : 'تومان'}
+                  suffix={valueMode === 'percent' ? '%' : '?????'}
                 />
-                <p className="text-right text-sm text-[color:var(--text-muted)]">اگر مقدار تخفیف از این حد عبور کند، درخواست باید توسط مدیر یا واحد مالی تایید شود.</p>
+                <p className="text-right text-sm text-[color:var(--text-muted)]">??? ????? ????? ?? ??? ?? ???? ???? ??????? ???? ???? ???? ?? ???? ???? ????? ???.</p>
               </div>
             ) : null}
           </div>
@@ -398,3 +398,4 @@ export function DiscountRuleSection({
     </div>
   );
 }
+

@@ -33,7 +33,7 @@ export function ContractDraftPreviewDialog({ open, draftId, onClose }: ContractD
         if (cancelled) return;
         setPayload(mapContractDetailsToPreviewPayload(data));
       } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : 'بارگذاری پیش‌نمایش انجام نشد.');
+        if (!cancelled) setError(e instanceof Error ? e.message : '???????? ????????? ????? ???.');
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -73,20 +73,20 @@ export function ContractDraftPreviewDialog({ open, draftId, onClose }: ContractD
       onClick={() => onClose()}
     >
       <div
-        className="flex max-h-[min(92vh,900px)] w-full max-w-4xl flex-col overflow-hidden rounded-[28px] border border-[var(--border-color)] bg-[var(--surface)] shadow-2xl"
+        className="flex max-h-[min(92vh,900px)] w-full max-w-4xl flex-col overflow-hidden rounded-[8px] border border-[var(--border-color)] bg-[var(--surface)] shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="contract-draft-preview-dialog-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain">
           {loading ? (
             <div className="flex min-h-[200px] flex-col items-center justify-center gap-2 px-6 py-16 text-sm font-bold text-slate-500">
-              در حال بارگذاری پیش‌نمایش…
+              ?? ??? ???????? ?????????�
             </div>
           ) : error ? (
             <div className="px-6 py-12 text-center text-sm font-bold text-rose-700">{error}</div>
           ) : (
             <>
               <span id="contract-draft-preview-dialog-title" className="sr-only">
-                پیش‌نمایش پیش‌نویس قرارداد
+                ????????? ???????? ???????
               </span>
               <ContractDraftPreviewContent
                 layout="embedded"
@@ -101,3 +101,4 @@ export function ContractDraftPreviewDialog({ open, draftId, onClose }: ContractD
     </div>
   );
 }
+

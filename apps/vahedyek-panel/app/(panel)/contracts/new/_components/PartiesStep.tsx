@@ -72,7 +72,7 @@ function HelpTip({ text }: { text: string }) {
   return (
     <span className="group relative inline-flex h-5 w-5 items-center justify-center align-middle text-slate-400">
       <Info className="h-4 w-4" aria-hidden />
-      <span className="pointer-events-none absolute right-0 top-6 z-10 hidden w-[min(520px,calc(100vw-48px))] rounded-2xl border border-slate-200 bg-white px-4 py-3 text-right text-[12px] font-semibold leading-6 text-slate-700 shadow-xl group-hover:block">
+      <span className="pointer-events-none absolute right-0 top-6 z-10 hidden w-[min(520px,calc(100vw-48px))] rounded-[8px] border border-slate-200 bg-white px-4 py-3 text-right text-[12px] font-semibold leading-6 text-slate-700 shadow-xl group-hover:block">
         {text}
       </span>
     </span>
@@ -474,7 +474,7 @@ export function PartiesStep({ stepId, title, embedded = false }: { stepId: strin
 
   return (
     <div className="space-y-5" dir="rtl" lang="fa">
-      {formError ? <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{formError}</div> : null}
+      {formError ? <div className="rounded-[8px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{formError}</div> : null}
 
       {!embedded ? (
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -485,7 +485,7 @@ export function PartiesStep({ stepId, title, embedded = false }: { stepId: strin
           <button
             type="button"
             onClick={() => router.push(basePath)}
-            className="rounded-md border border-gray-300 px-3.5 py-2 text-sm text-gray-600 transition-colors hover:bg-gray-50"
+            className="rounded-[8px] border border-gray-300 px-3.5 py-2 text-sm text-gray-600 transition-colors hover:bg-gray-50"
           >
             بازگشت به مراحل
           </button>
@@ -493,10 +493,10 @@ export function PartiesStep({ stepId, title, embedded = false }: { stepId: strin
       ) : null}
 
       {inlineHint ? (
-        <div className="rounded-xl border border-slate-200 bg-white/80 px-4 py-3 text-right text-[12px] font-bold text-slate-700">{inlineHint}</div>
+        <div className="rounded-[8px] border border-slate-200 bg-white/80 px-4 py-3 text-right text-[12px] font-bold text-slate-700">{inlineHint}</div>
       ) : null}
 
-      <div className="rounded-2xl border border-slate-200 bg-white/70 px-5 py-4">
+      <div className="rounded-[8px] border border-slate-200 bg-white/70 px-5 py-4">
         <div className="mb-3 text-center text-[13px] font-extrabold text-slate-700">طرفین قرارداد</div>
         <div className="space-y-2 text-right text-[12px] font-semibold leading-6 text-slate-600">
           <div className="flex items-start gap-2">
@@ -565,7 +565,7 @@ export function PartiesStep({ stepId, title, embedded = false }: { stepId: strin
             void reloadReferenceData();
             setPartyTwoDialogOpen(true);
           }}
-          className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[color-mix(in_srgb,var(--dark-teal)_35%,transparent)] bg-[color-mix(in_srgb,var(--dark-teal)_12%,white)] text-[color-mix(in_srgb,var(--dark-teal)_90%,black)] shadow-sm transition hover:bg-[color-mix(in_srgb,var(--dark-teal)_16%,white)]"
+          className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[8px] border border-[color-mix(in_srgb,var(--dark-teal)_35%,transparent)] bg-[color-mix(in_srgb,var(--dark-teal)_12%,white)] text-[color-mix(in_srgb,var(--dark-teal)_90%,black)] shadow-sm transition hover:bg-[color-mix(in_srgb,var(--dark-teal)_16%,white)]"
           aria-label="افزودن طرف دوم"
           title="افزودن طرف دوم"
         >
@@ -618,3 +618,5 @@ export function PartiesStep({ stepId, title, embedded = false }: { stepId: strin
     </div>
   );
 }
+
+

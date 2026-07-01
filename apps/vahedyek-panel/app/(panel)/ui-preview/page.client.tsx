@@ -89,7 +89,7 @@ export default function UiPreviewPageClient() {
   return (
     <div className="min-h-screen bg-[color:var(--bg-body)]">
       <div className="mx-auto grid max-w-7xl grid-cols-1 gap-4 p-4 lg:grid-cols-[280px_minmax(0,1fr)] lg:p-6">
-        <aside className="sticky top-4 h-fit rounded-2xl border border-[color:var(--border-color)] bg-[color:var(--surface)] p-4">
+        <aside className="sticky top-4 h-fit rounded-[8px] border border-[color:var(--border-color)] bg-[color:var(--surface)] p-4">
           <div className="mb-3">
             <div className="text-sm font-black text-[color:var(--text-strong)]">UI Catalog</div>
             <div className="mt-1 text-xs text-[color:var(--text-muted)]">
@@ -105,7 +105,7 @@ export default function UiPreviewPageClient() {
                 key={cat.id}
                 type="button"
                 onClick={() => setActiveCategory(cat.id)}
-                className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-sm transition ${
+                className={`flex w-full items-center justify-between rounded-[8px] px-3 py-2 text-sm transition ${
                   effectiveCategoryId === cat.id
                     ? 'bg-[color:var(--theme-accent-softer)] text-[color:var(--text-strong)]'
                     : 'text-[color:var(--text-muted)] hover:bg-[color:var(--surface-soft)] hover:text-[color:var(--text-strong)]'
@@ -119,7 +119,7 @@ export default function UiPreviewPageClient() {
         </aside>
 
         <main className="space-y-6">
-          <div className="rounded-2xl border border-[color:var(--border-color)] bg-[color:var(--surface)] p-5">
+          <div className="rounded-[8px] border border-[color:var(--border-color)] bg-[color:var(--surface)] p-5">
             <h1 className="text-lg font-black text-[color:var(--text-strong)]">UI Preview</h1>
             <p className="mt-2 text-sm text-[color:var(--text-muted)]">
               اینجا همه کامپوننت‌ها دسته‌بندی شده و قابل preview هستند.
@@ -127,7 +127,7 @@ export default function UiPreviewPageClient() {
           </div>
 
           {effectiveCategoryId === 'forms' ? (
-            <section className="space-y-5 rounded-2xl border border-[color:var(--border-color)] bg-[color:var(--surface)] p-5">
+            <section className="space-y-5 rounded-[8px] border border-[color:var(--border-color)] bg-[color:var(--surface)] p-5">
               <div className="text-sm font-black text-[color:var(--text-strong)]">Form Controls</div>
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
@@ -197,7 +197,7 @@ export default function UiPreviewPageClient() {
                 </div>
                 <div className="space-y-2 md:col-span-2">
                   <div className="text-xs font-semibold text-[color:var(--text-muted)]">BusinessSettingsSubmitButton</div>
-                  <div className="flex flex-wrap items-center gap-4 rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] p-4">
+                  <div className="flex flex-wrap items-center gap-4 rounded-[8px] border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] p-4">
                     <BusinessSettingsSubmitButton
                       saving={buttonSaving}
                       onClick={() => {
@@ -218,9 +218,9 @@ export default function UiPreviewPageClient() {
           ) : null}
 
           {effectiveCategoryId === 'navigation' ? (
-            <section className="space-y-5 rounded-2xl border border-[color:var(--border-color)] bg-[color:var(--surface)] p-5">
+            <section className="space-y-5 rounded-[8px] border border-[color:var(--border-color)] bg-[color:var(--surface)] p-5">
               <div className="text-sm font-black text-[color:var(--text-strong)]">Tabs</div>
-              <div className="grid gap-3 rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] p-3 lg:grid-cols-4">
+              <div className="grid gap-3 rounded-[8px] border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] p-3 lg:grid-cols-4">
                 <RuleTabButton title="درصدی" icon={BadgePercent} active={activeTab === 'percent'} onClick={() => setActiveTab('percent')} />
                 <RuleTabButton title="مبلغ ثابت" icon={CircleDollarSign} active={activeTab === 'fixed'} onClick={() => setActiveTab('fixed')} />
                 <RuleTabButton title="ترکیبی" icon={SlidersHorizontal} active={activeTab === 'combined'} onClick={() => setActiveTab('combined')} />
@@ -230,9 +230,9 @@ export default function UiPreviewPageClient() {
           ) : null}
 
           {effectiveCategoryId === 'layout' ? (
-            <section className="space-y-5 rounded-2xl border border-[color:var(--border-color)] bg-[color:var(--surface)] p-5">
+            <section className="space-y-5 rounded-[8px] border border-[color:var(--border-color)] bg-[color:var(--surface)] p-5">
               <div className="text-sm font-black text-[color:var(--text-strong)]">Layout / Tables</div>
-              <div className="rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] p-4">
+              <div className="rounded-[8px] border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] p-4">
                 <PageIntro title="نمونه PageIntro" description="این بخش از primitives دسترنج داخل @repo/ui آمده است." action={<PrimaryLink href="#">اکشن</PrimaryLink>} />
               </div>
               <StatGrid items={[{ label: 'کارمند', value: 12 }, { label: 'سیاست', value: 3 }, { label: 'تقویم', value: 2 }]} />
@@ -250,9 +250,9 @@ export default function UiPreviewPageClient() {
           ) : null}
 
           {effectiveCategoryId === 'screens' ? (
-            <section className="space-y-5 rounded-2xl border border-[color:var(--border-color)] bg-[color:var(--surface)] p-5">
+            <section className="space-y-5 rounded-[8px] border border-[color:var(--border-color)] bg-[color:var(--surface)] p-5">
               <div className="text-sm font-black text-[color:var(--text-strong)]">Prepayment (sample)</div>
-              <div className="grid gap-3 rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] p-3 lg:grid-cols-4">
+              <div className="grid gap-3 rounded-[8px] border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] p-3 lg:grid-cols-4">
                 <RuleTabButton title="درصدی" icon={BadgePercent} active={activeTab === 'percent'} onClick={() => setActiveTab('percent')} />
                 <RuleTabButton title="مبلغ ثابت" icon={CircleDollarSign} active={activeTab === 'fixed'} onClick={() => setActiveTab('fixed')} />
                 <RuleTabButton title="ترکیبی" icon={SlidersHorizontal} active={activeTab === 'combined'} onClick={() => setActiveTab('combined')} />
@@ -301,4 +301,6 @@ export default function UiPreviewPageClient() {
     </div>
   );
 }
+
+
 

@@ -11,6 +11,8 @@ import {
 } from '../../../../lib/businessContractRules';
 import {
   ensureActiveDraftId,
+  fetchContractFlowBootstrapSettings,
+  getContractFlowBootstrapSettings,
   getDraftRuleStepData,
   getFrontendStepDraft,
   saveDraftRuleStepData,
@@ -18,6 +20,7 @@ import {
 } from '../../../../lib/contractDraftClient';
 import { InterestRuleSection } from '../../../business-settings/_components/InterestRuleSection';
 import { ContractStepLoader } from './ContractStepLoader';
+import { ContractSettingsImportDialog } from './ContractSettingsImportDialog';
 import { ForgivenessDraftRuleSection } from './ForgivenessDraftRuleSection';
 import { dispatchContractFlowDirty, dispatchContractFlowSavedForDraft, type ContractFlowSectionId } from './contractFlowSignals';
 
@@ -96,8 +99,36 @@ export function ContractRuleDraftStep({
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [formError, setFormError] = useState('');
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [importBusy, setImportBusy] = useState(false);
+  const [importError, setImportError] = useState('');
 
   const sectionTitle = useMemo(() => title || rule.title, [rule.title, title]);
+
+  const applySettingsFromBusiness = async () => {
+    if (!draftId || importBusy) return;
+    setImportBusy(true);
+    setImportError('');
+    try {
+      const bootstrap = await fetchContractFlowBootstrapSettings();
+      const bootstrapRule = bootstrap.rules[ruleId] ?? null;
+      if (!bootstrapRule) {
+        throw new Error('??????? ?????? ?? ??? ??????? ???? ???.');
+      }
+      const nextState = normalizeRuleState(ruleId, bootstrapRule);
+      setState(nextState);
+      setFrontendStepDraft(draftId, stepId, nextState);
+      initialSnapshotRef.current = serializePayload(nextState);
+      setDirty(false);
+      dispatchContractFlowDirty(stepId, false);
+      dispatchContractFlowSavedForDraft(draftId, stepId, Date.now(), nextState);
+      setImportDialogOpen(false);
+    } catch (error) {
+      setImportError(error instanceof Error ? error.message : '?????? ??????? ????? ???.');
+    } finally {
+      setImportBusy(false);
+    }
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -110,11 +141,14 @@ export function ContractRuleDraftStep({
       setDraftId(nextDraftId);
 
       try {
+        const bootstrap = getContractFlowBootstrapSettings();
         const frontendDraft = getFrontendStepDraft<ContractRuleState>(nextDraftId, stepId);
         const persistedDraft = await withTimeout(fetchDraftRuleState(nextDraftId, stepId, ruleId), 1500, null);
         const fallbackState = createInitialRuleState(ruleId);
         const businessRule = persistedDraft ? null : await withTimeout(fetchBusinessRule(ruleId), 2000, fallbackState);
-        const nextState = frontendDraft ? normalizeRuleState(ruleId, frontendDraft) : persistedDraft ?? businessRule ?? fallbackState;
+        const bootstrapRule = bootstrap?.rules?.[ruleId] ?? null;
+        const nextState =
+          frontendDraft ? normalizeRuleState(ruleId, frontendDraft) : persistedDraft ?? bootstrapRule ?? businessRule ?? fallbackState;
         if (!mounted) return;
         setState(nextState);
         initialSnapshotRef.current = serializePayload(nextState);
@@ -122,7 +156,7 @@ export function ContractRuleDraftStep({
         dispatchContractFlowDirty(stepId, false);
       } catch (error) {
         if (!mounted) return;
-        setFormError(error instanceof Error ? error.message : 'بارگذاری تنظیمات انجام نشد.');
+        setFormError(error instanceof Error ? error.message : '???????? ??????? ????? ???.');
       } finally {
         if (mounted) setLoading(false);
       }
@@ -158,14 +192,14 @@ export function ContractRuleDraftStep({
       dispatchContractFlowDirty(stepId, false);
       dispatchContractFlowSavedForDraft(draftId, stepId, Date.now(), state);
     } catch (error) {
-      setFormError(error instanceof Error ? error.message : 'ذخیره تنظیمات انجام نشد.');
+      setFormError(error instanceof Error ? error.message : '????? ??????? ????? ???.');
     } finally {
       setSaving(false);
     }
   };
 
   if (loading || !state) {
-    return <ContractStepLoader title={sectionTitle} description="در حال بارگذاری تنظیمات پیش‌نویس قرارداد..." />;
+    return <ContractStepLoader title={sectionTitle} description="?? ??? ???????? ??????? ???????? ???????..." />;
   }
 
   if (ruleId === 'forgiveness') {
@@ -175,7 +209,7 @@ export function ContractRuleDraftStep({
           <div className="text-right">
             <h1 className="text-2xl font-bold text-[color:var(--text-strong)]">{sectionTitle}</h1>
             <p className="mt-1 text-sm leading-7 text-[color:var(--text-muted)]">
-              بخشودگی‌های قابل استفاده در این پیش‌نویس را مانند بخش جریمه فعال و تنظیم کنید.
+              ??????????? ???? ??????? ?? ??? ???????? ?? ????? ??? ????? ???? ? ????? ????.
             </p>
           </div>
         ) : null}
@@ -186,11 +220,11 @@ export function ContractRuleDraftStep({
           onSave={() => void handleSubmit()}
         />
 
-        {formError ? <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{formError}</div> : null}
+        {formError ? <div className="rounded-[8px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{formError}</div> : null}
 
         <StickySubmitBar
-          label={`ثبت ${sectionTitle}`}
-          loadingLabel={loading ? 'در حال بارگذاری...' : 'در حال ذخیره...'}
+          label={`??? ${sectionTitle}`}
+          loadingLabel={loading ? '?? ??? ????????...' : '?? ??? ?????...'}
           disabled={loading || saving}
           onClick={handleSubmit}
           embedded={embedded}
@@ -203,22 +237,43 @@ export function ContractRuleDraftStep({
   return (
     <div className="space-y-5">
       {!embedded ? (
-        <div className="text-right">
-          <h1 className="text-2xl font-bold text-[color:var(--text-strong)]">{sectionTitle}</h1>
-          <p className="mt-1 text-sm leading-7 text-[color:var(--text-muted)]">
-            این بخش از تنظیمات کسب‌وکار مقدار اولیه می‌گیرد و برای همین پیش‌نویس قرارداد قابل تغییر است.
-          </p>
+        <div className="flex flex-col gap-3 text-right sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-[color:var(--text-strong)]">{sectionTitle}</h1>
+            <p className="mt-1 text-sm leading-7 text-[color:var(--text-muted)]">
+              ??? ??? ?? ??????? ???????? ????? ????? ??????? ? ???? ???? ???????? ??????? ???? ????? ???.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setImportDialogOpen(true)}
+            className="rounded-[8px] border border-cyan-200 bg-cyan-50 px-3.5 py-2 text-sm font-bold text-cyan-700 transition-colors hover:bg-cyan-100"
+          >
+            ?????? ?? ???????
+          </button>
         </div>
       ) : null}
 
-      <section className="rounded-[24px] border border-[color:var(--border-soft)] bg-[color:var(--surface)] p-5">
+      {embedded ? (
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={() => setImportDialogOpen(true)}
+            className="rounded-[8px] border border-cyan-200 bg-cyan-50 px-3.5 py-2 text-sm font-bold text-cyan-700 transition-colors hover:bg-cyan-100"
+          >
+            ?????? ?? ???????
+          </button>
+        </div>
+      ) : null}
+
+      <section className="rounded-[8px] border border-[color:var(--border-soft)] bg-[color:var(--surface)] p-5">
         <div className="flex w-full flex-col gap-5 lg:flex-row lg:items-center lg:justify-between lg:[direction:rtl]">
           <div className="flex min-w-0 flex-1 flex-col justify-center space-y-3 text-right [direction:rtl] lg:items-start">
             <h2 className="text-xl font-black text-[color:var(--text-strong)]">{rule.activationTitle}</h2>
             <p className="w-full text-sm leading-7 text-[color:var(--text-muted)]">{rule.activationDescription}</p>
             {!state.active ? (
               <p className="w-full text-sm text-[color:var(--text-muted)]">
-                با فعال کردن این گزینه، جزئیات این بخش در پیش‌نویس قرارداد اعمال می‌شود.
+                ?? ???? ???? ??? ?????? ?????? ??? ??? ?? ???????? ??????? ????? ??????.
               </p>
             ) : null}
           </div>
@@ -231,16 +286,27 @@ export function ContractRuleDraftStep({
 
       {state.active ? <InterestRuleSection state={state} onValueChange={(key, value) => applyPanelValue(setState, key, value)} /> : null}
 
-      {formError ? <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{formError}</div> : null}
+      {formError ? <div className="rounded-[8px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{formError}</div> : null}
 
       <StickySubmitBar
-        label={`ثبت ${sectionTitle}`}
-        loadingLabel={loading ? 'در حال بارگذاری...' : 'در حال ذخیره...'}
+        label={`??? ${sectionTitle}`}
+        loadingLabel={loading ? '?? ??? ????????...' : '?? ??? ?????...'}
         disabled={loading || saving}
         onClick={handleSubmit}
         embedded={embedded}
         submitId={stepId}
       />
+
+      <ContractSettingsImportDialog
+        open={importDialogOpen}
+        loading={importBusy}
+        error={importError}
+        title={`?????? ??????? ${sectionTitle}`}
+        description="?? ?????? ?????? ??????? ?? ??????? ???????? ????? ????? ??? ??? ?? ???????? ???? ????????."
+        onConfirm={() => void applySettingsFromBusiness()}
+        onClose={() => setImportDialogOpen(false)}
+      />
     </div>
   );
 }
+

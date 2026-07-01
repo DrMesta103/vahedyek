@@ -238,7 +238,7 @@ export function TechnicalSpecsStep({ title }: { title: string }) {
   return (
     <div className="space-y-4" dir="rtl">
       {formError ? (
-        <div className="flex items-start gap-2.5 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-[13px] text-rose-700">
+        <div className="flex items-start gap-2.5 rounded-[8px] border border-rose-200 bg-rose-50 px-4 py-3 text-[13px] text-rose-700">
           <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-rose-500" />
           {formError}
         </div>
@@ -251,7 +251,7 @@ export function TechnicalSpecsStep({ title }: { title: string }) {
         />
 
         <div className="space-y-4 px-5 py-4">
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-cyan-100 bg-cyan-50/60 px-4 py-3">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-[8px] border border-cyan-100 bg-cyan-50/60 px-4 py-3">
             <div>
               <div className="text-[13px] font-extrabold text-cyan-950">اطلاعات مجتمع</div>
               <p className="mt-1 text-[12px] leading-6 text-slate-500">
@@ -263,20 +263,20 @@ export function TechnicalSpecsStep({ title }: { title: string }) {
                 type="button"
                 onClick={importFromProjectSpecs}
                 disabled={projectSpecs.length === 0}
-                className="app-button rounded-xl border border-cyan-200 bg-white px-4 py-2 text-[13px] font-bold text-cyan-800 hover:bg-cyan-50 disabled:cursor-not-allowed disabled:opacity-50"
+                className="app-button rounded-[8px] border border-cyan-200 bg-white px-4 py-2 text-[13px] font-bold text-cyan-800 hover:bg-cyan-50 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 بارگذاری از اطلاعات مجتمع
               </button>
               <Link
                 href={PROJECT_TECHNICAL_SPECS_SHORTCUT_HREF}
-                className="rounded-xl border border-teal-200 bg-white px-4 py-2 text-[13px] font-bold text-teal-700 transition hover:bg-teal-50"
+                className="rounded-[8px] border border-teal-200 bg-white px-4 py-2 text-[13px] font-bold text-teal-700 transition hover:bg-teal-50"
               >
                 افزودن در اطلاعات مجتمع
               </Link>
               <button
                 type="button"
                 onClick={startAdd}
-                className="app-button rounded-xl border border-slate-200 bg-white px-4 py-2 text-[13px] font-bold text-slate-700 hover:bg-slate-50"
+                className="app-button rounded-[8px] border border-slate-200 bg-white px-4 py-2 text-[13px] font-bold text-slate-700 hover:bg-slate-50"
               >
                 افزودن مورد دستی
               </button>
@@ -300,12 +300,12 @@ export function TechnicalSpecsStep({ title }: { title: string }) {
                 <div className="flex flex-wrap justify-end gap-2 border-t border-slate-100 px-5 py-4">
                   <button
                     type="button"
-                    className="app-button rounded-xl border border-slate-200 bg-white px-4 py-2 text-[13px] font-bold text-slate-700 hover:bg-slate-50"
+                    className="app-button rounded-[8px] border border-slate-200 bg-white px-4 py-2 text-[13px] font-bold text-slate-700 hover:bg-slate-50"
                     onClick={() => setAdding(false)}
                   >
                     انصراف
                   </button>
-                  <button type="button" className="app-button app-button-primary rounded-xl px-4 py-2 text-[13px] font-bold" onClick={confirmAdd} disabled={!newTitle.trim()}>
+                  <button type="button" className="app-button app-button-primary rounded-[8px] px-4 py-2 text-[13px] font-bold" onClick={confirmAdd} disabled={!newTitle.trim()}>
                     ثبت
                   </button>
                 </div>
@@ -330,12 +330,12 @@ export function TechnicalSpecsStep({ title }: { title: string }) {
                 <div className="flex flex-wrap justify-end gap-2 border-t border-slate-100 px-5 py-4">
                   <button
                     type="button"
-                    className="app-button rounded-xl border border-slate-200 bg-white px-4 py-2 text-[13px] font-bold text-slate-700 hover:bg-slate-50"
+                    className="app-button rounded-[8px] border border-slate-200 bg-white px-4 py-2 text-[13px] font-bold text-slate-700 hover:bg-slate-50"
                     onClick={() => setEditingId(null)}
                   >
                     انصراف
                   </button>
-                  <button type="button" className="app-button app-button-primary rounded-xl px-4 py-2 text-[13px] font-bold" onClick={confirmEdit} disabled={!editTitle.trim()}>
+                  <button type="button" className="app-button app-button-primary rounded-[8px] px-4 py-2 text-[13px] font-bold" onClick={confirmEdit} disabled={!editTitle.trim()}>
                     ذخیره
                   </button>
                 </div>
@@ -344,7 +344,7 @@ export function TechnicalSpecsStep({ title }: { title: string }) {
           ) : null}
 
           {specs.length ? (
-            <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
+            <div className="overflow-x-auto rounded-[8px] border border-slate-200 bg-white">
               <table className="w-full min-w-[420px] text-right text-[13px]">
                 <thead className="bg-slate-50">
                   <tr>
@@ -368,14 +368,14 @@ export function TechnicalSpecsStep({ title }: { title: string }) {
                         <div className="flex items-center justify-end gap-2 space-x-reverse">
                           <button
                             type="button"
-                            className="app-button rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50"
+                            className="app-button rounded-[8px] border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50"
                             onClick={() => startEdit(spec)}
                           >
                             ویرایش
                           </button>
                           <button
                             type="button"
-                            className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700 hover:bg-rose-100"
+                            className="rounded-[8px] border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700 hover:bg-rose-100"
                             onClick={() => setSpecs((current) => current.filter((s) => s.id !== spec.id))}
                           >
                             حذف
@@ -388,7 +388,7 @@ export function TechnicalSpecsStep({ title }: { title: string }) {
               </table>
             </div>
           ) : (
-            <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/40 px-6 py-10 text-center">
+            <div className="rounded-[8px] border border-dashed border-slate-200 bg-slate-50/40 px-6 py-10 text-center">
               <p className="text-[13px] font-bold text-slate-600">هنوز مشخصه‌ای ثبت نشده است.</p>
               <p className="mt-1 text-[12px] text-slate-400">برای شروع، از اطلاعات مجتمع بارگذاری کنید یا یک مورد دستی اضافه کنید.</p>
             </div>
@@ -407,3 +407,5 @@ export function TechnicalSpecsStep({ title }: { title: string }) {
     </div>
   );
 }
+
+

@@ -184,7 +184,7 @@ export default function CustomerReceiptsPage() {
           <button
             type="button"
             onClick={() => router.push(duesHref)}
-            className="inline-flex h-10 shrink-0 items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-[13px] font-bold text-slate-700 shadow-sm transition hover:border-[color-mix(in_srgb,var(--dark-teal)_35%,transparent)] hover:bg-slate-50"
+            className="inline-flex h-10 shrink-0 items-center gap-2 rounded-[8px] border border-slate-200 bg-white px-4 text-[13px] font-bold text-slate-700 shadow-sm transition hover:border-[color-mix(in_srgb,var(--dark-teal)_35%,transparent)] hover:bg-slate-50"
           >
             بازگشت به سررسیدها
             <ArrowRight className="h-4 w-4" aria-hidden />
@@ -192,15 +192,15 @@ export default function CustomerReceiptsPage() {
         </div>
 
         {loading ? (
-          <section className="rounded-[28px] border border-white/70 bg-white/95 p-10 text-center text-sm font-bold text-slate-500 shadow-[0_20px_50px_-24px_rgba(15,23,42,0.14)]">
+          <section className="rounded-[8px] border border-white/70 bg-white/95 p-10 text-center text-sm font-bold text-slate-500 shadow-[0_20px_50px_-24px_rgba(15,23,42,0.14)]">
             در حال بارگذاری...
           </section>
         ) : error || !contractId ? (
-          <section className="rounded-[28px] border border-rose-200 bg-rose-50/95 p-8 text-center text-sm font-bold text-rose-800 shadow-sm">
+          <section className="rounded-[8px] border border-rose-200 bg-rose-50/95 p-8 text-center text-sm font-bold text-rose-800 shadow-sm">
             {error || 'شناسه قرارداد نامعتبر است.'}
           </section>
         ) : (
-          <section className="rounded-[22px] border border-slate-200/80 bg-white/90 p-5 text-right shadow-sm md:p-7">
+          <section className="rounded-[8px] border border-slate-200/80 bg-white/90 p-5 text-right shadow-sm md:p-7">
             <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 pb-4">
               <div>
                 <div className="flex items-center gap-2 text-[17px] font-black text-slate-900">
@@ -298,12 +298,12 @@ export default function CustomerReceiptsPage() {
                       </div>
 
                       <div className="mt-3 grid gap-2 text-[11px] font-semibold text-slate-600 sm:grid-cols-3">
-                        <div className="rounded-2xl bg-slate-50 px-3 py-2">تخصیص‌یافته: {formatMoneyRial(summary.allocatedAmountRial)}</div>
-                        <div className="rounded-2xl bg-slate-50 px-3 py-2">کیف پول: {formatMoneyRial(summary.walletAmountRial)}</div>
-                        <div className="rounded-2xl bg-slate-50 px-3 py-2">مدارک: {receipt.documents.reduce((sum, doc) => sum + doc.files.length, 0).toLocaleString('fa-IR')} فایل</div>
+                        <div className="rounded-[8px] bg-slate-50 px-3 py-2">تخصیص‌یافته: {formatMoneyRial(summary.allocatedAmountRial)}</div>
+                        <div className="rounded-[8px] bg-slate-50 px-3 py-2">کیف پول: {formatMoneyRial(summary.walletAmountRial)}</div>
+                        <div className="rounded-[8px] bg-slate-50 px-3 py-2">مدارک: {receipt.documents.reduce((sum, doc) => sum + doc.files.length, 0).toLocaleString('fa-IR')} فایل</div>
                       </div>
 
-                      <div className="mt-3 rounded-2xl border border-slate-100 bg-slate-50/70 px-3 py-2">
+                      <div className="mt-3 rounded-[8px] border border-slate-100 bg-slate-50/70 px-3 py-2">
                         <div className="text-[11px] font-black text-slate-700">تقسیم روی سررسیدها</div>
                         {summary.allocations.length ? (
                           <div className="mt-2 flex flex-wrap gap-2">
@@ -378,7 +378,7 @@ export default function CustomerReceiptsPage() {
 function ReceiptSummaryCard({ label, value, tone }: { label: string; value: string; tone?: 'teal' | 'wallet' }) {
   return (
     <div
-      className={`rounded-2xl border px-4 py-3.5 shadow-sm ${
+      className={`rounded-[8px] border px-4 py-3.5 shadow-sm ${
         tone === 'teal'
           ? 'border-[color-mix(in_srgb,var(--dark-teal)_22%,#cbd5e1)] bg-[color-mix(in_srgb,var(--dark-teal)_06%,white)]'
           : tone === 'wallet'
@@ -409,7 +409,7 @@ function ReceiptDetailsDialog({
 
   return (
     <div className="fixed inset-0 z-[110] flex items-end justify-center bg-black/45 p-0 backdrop-blur-[2px] sm:items-center sm:p-6" dir="rtl" role="dialog" aria-modal="true">
-      <div className="flex max-h-[min(860px,calc(100vh-42px))] w-full max-w-3xl flex-col overflow-hidden rounded-t-[26px] border border-white/75 bg-white shadow-2xl sm:rounded-[26px]">
+      <div className="flex max-h-[min(860px,calc(100vh-42px))] w-full max-w-3xl flex-col overflow-hidden rounded-[8px] border border-white/75 bg-white shadow-2xl sm:rounded-[8px]">
         <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-5 py-4">
           <div>
             <div className="text-[15px] font-black text-slate-900">جزئیات فیش‌های سررسید</div>
@@ -417,7 +417,7 @@ function ReceiptDetailsDialog({
               {state.payload.row.title} · سررسید {state.payload.row.dueDate}
             </div>
           </div>
-          <button type="button" onClick={onClose} className="rounded-xl p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700" aria-label="بستن">
+          <button type="button" onClick={onClose} className="rounded-[8px] p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700" aria-label="بستن">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -480,3 +480,6 @@ function ReceiptDetailsDialog({
     </div>
   );
 }
+
+
+

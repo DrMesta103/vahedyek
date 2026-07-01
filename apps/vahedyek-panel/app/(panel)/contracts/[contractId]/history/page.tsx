@@ -24,7 +24,7 @@ export default function ContractHistoryPage() {
           <button
             type="button"
             onClick={() => router.push(backHref)}
-            className="inline-flex h-10 items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-[13px] font-bold text-slate-700 shadow-sm transition hover:bg-slate-50"
+            className="inline-flex h-10 items-center gap-2 rounded-[8px] border border-slate-200 bg-white px-4 text-[13px] font-bold text-slate-700 shadow-sm transition hover:bg-slate-50"
           >
             بازگشت به جزئیات قرارداد
             <ArrowRight className="h-4 w-4" />
@@ -36,3 +36,4 @@ export default function ContractHistoryPage() {
     </PanelLayout>
   );
 }
+

@@ -167,7 +167,7 @@ function SummaryRow({ label, value, emphasized = false }: { label: string; value
 
 function LoanSummaryCard({ value }: { value: AppendixLoanPayload }) {
   return (
-    <section className="overflow-hidden rounded-[26px] border border-[#d8b97a] bg-white">
+    <section className="overflow-hidden rounded-[8px] border border-[#d8b97a] bg-white">
       <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
         <a href="#" className="text-[13px] font-black text-[#2563eb] underline underline-offset-4">
           جزئیات شرایط وام
@@ -178,7 +178,7 @@ function LoanSummaryCard({ value }: { value: AppendixLoanPayload }) {
       </div>
 
       <div className="bg-[#f5f8fc] px-5 py-5">
-        <div className="rounded-[18px] border border-[#d8b97a] bg-[#e9eef5] p-4">
+        <div className="rounded-[8px] border border-[#d8b97a] bg-[#e9eef5] p-4">
           <div className="space-y-3">
             <SummaryRow label="مبلغ کل وام در اصل قرارداد" value={toDisplayMoney(value.contractLoanAmount)} />
             <SummaryRow label="مقدار وام اختصاص یافته به الحاقیه تعدیل" value={toDisplayMoney(value.allocations.adjustment)} />
@@ -269,7 +269,7 @@ function LoanTagDropdown<T extends string>({
   const selected = options.find((item) => item.value === value) ?? options[0];
 
   return (
-    <div className="rounded-[22px] border border-slate-200 bg-white">
+    <div className="rounded-[8px] border border-slate-200 bg-white">
       <div className="flex items-center justify-between gap-3 px-4 py-4">
         <button
           type="button"
@@ -408,7 +408,7 @@ export function AppendixLoanEditor({
       <button
         type="button"
         onClick={() => setDetailView('overview')}
-        className="inline-flex h-10 items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-[12px] font-black text-slate-700"
+        className="inline-flex h-10 items-center gap-2 rounded-[8px] border border-slate-200 bg-white px-4 text-[12px] font-black text-slate-700"
       >
         بازگشت
         <ArrowRight className="h-4 w-4" />
@@ -422,7 +422,7 @@ export function AppendixLoanEditor({
     <div className="space-y-5">
       <LoanSummaryCard value={value} />
 
-      <section className="rounded-[26px] border border-slate-200 bg-white px-5">
+      <section className="rounded-[8px] border border-slate-200 bg-white px-5">
         <LoanNavigationRow
           title="مبلغ وام"
           description="در این بخش می‌بایست مبلغ وام از ابتدا عدد مشخصی دارد یا در زمان عقد قرارداد مشخص میشود"
@@ -443,7 +443,7 @@ export function AppendixLoanEditor({
         />
       </section>
 
-      <section className="rounded-[26px] border border-slate-200 bg-white px-5 py-5">
+      <section className="rounded-[8px] border border-slate-200 bg-white px-5 py-5">
         <div className="text-right">
           <div className="text-[18px] font-black text-slate-900">بانک عامل</div>
           <p className="mt-2 text-[13px] font-semibold leading-7 text-slate-500">در این بخش بانک عامل جهت دریافت وام را مشخص کنید</p>
@@ -468,11 +468,11 @@ export function AppendixLoanEditor({
         'در این بخش می‌بایست مبلغ وام از ابتدا عدد مشخصی دارد یا در زمان عقد قرارداد مشخص میشود',
       )}
       <LoanSummaryCard value={value} />
-      <section className="rounded-[26px] border border-slate-200 bg-white px-5 py-5">
+      <section className="rounded-[8px] border border-slate-200 bg-white px-5 py-5">
         <div className="text-right">
           <div className="text-[18px] font-black text-slate-900">مبلغ کل وام در اصل قرارداد</div>
         </div>
-        <div className="mt-3 rounded-2xl bg-slate-100 px-4 py-4 text-right text-[18px] font-black text-slate-700">
+        <div className="mt-3 rounded-[8px] bg-slate-100 px-4 py-4 text-right text-[18px] font-black text-slate-700">
           {value.contractLoanAmount ? `${Number(value.contractLoanAmount).toLocaleString('fa-IR')} ریال` : '۰ ریال'}
         </div>
 
@@ -488,7 +488,7 @@ export function AppendixLoanEditor({
         </div>
 
         {value.paymentStatus === 'full' ? (
-          <div className="mt-4 flex items-center justify-between gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-right text-[12px] font-bold text-emerald-700">
+          <div className="mt-4 flex items-center justify-between gap-3 rounded-[8px] border border-emerald-200 bg-emerald-50 px-4 py-3 text-right text-[12px] font-bold text-emerald-700">
             <span className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-emerald-300 text-emerald-600">✓</span>
             <span className="flex-1">این مبلغ به صورت کامل توسط بانک پرداخت شده است</span>
           </div>
@@ -625,7 +625,7 @@ export function AppendixLoanEditor({
           <button
             type="button"
             onClick={() => setDetailView('overview')}
-            className="inline-flex h-11 items-center justify-center rounded-2xl bg-[color-mix(in_srgb,var(--dark-teal)_90%,black)] px-6 text-[13px] font-black text-white"
+            className="inline-flex h-11 items-center justify-center rounded-[8px] bg-[color-mix(in_srgb,var(--dark-teal)_90%,black)] px-6 text-[13px] font-black text-white"
           >
             ثبت
           </button>
@@ -640,7 +640,7 @@ export function AppendixLoanEditor({
         'نرخ سود وام',
         'در این بخش می‌کنید مبلغ وام از ابتدا عدد مشخصی دارد یا در زمان عقد قرارداد مشخص میشود',
       )}
-      <section className="rounded-[26px] border border-slate-200 bg-white px-5 py-5">
+      <section className="rounded-[8px] border border-slate-200 bg-white px-5 py-5">
         <div className="text-right">
           <div className="text-[18px] font-black text-slate-900">نرخ سود وام</div>
           <p className="mt-2 text-[13px] font-semibold leading-7 text-slate-500">
@@ -648,7 +648,7 @@ export function AppendixLoanEditor({
           </p>
         </div>
 
-        <section className="mt-5 rounded-[24px] bg-white py-2">
+        <section className="mt-5 rounded-[8px] bg-white py-2">
           <div dir="ltr" className="flex items-start justify-between gap-4">
             <ContractRegistrationSwitch
               checked={value.loanBankInterestEnabled}
@@ -692,7 +692,7 @@ export function AppendixLoanEditor({
           <button
             type="button"
             onClick={() => setDetailView('amount')}
-            className="inline-flex h-11 items-center justify-center rounded-2xl bg-[color-mix(in_srgb,var(--dark-teal)_90%,black)] px-6 text-[13px] font-black text-white"
+            className="inline-flex h-11 items-center justify-center rounded-[8px] bg-[color-mix(in_srgb,var(--dark-teal)_90%,black)] px-6 text-[13px] font-black text-white"
           >
             ثبت
           </button>
@@ -707,7 +707,7 @@ export function AppendixLoanEditor({
         'کارمزد وام بانکی',
         'در این بخش می‌کنید مبلغ وام از ابتدا عدد مشخصی دارد یا در زمان عقد قرارداد مشخص میشود',
       )}
-      <section className="rounded-[26px] border border-slate-200 bg-white px-5 py-5">
+      <section className="rounded-[8px] border border-slate-200 bg-white px-5 py-5">
         <div className="text-right">
           <div className="text-[18px] font-black text-slate-900">کارمزد وام بانکی</div>
           <p className="mt-2 text-[13px] font-semibold leading-7 text-slate-500">
@@ -715,7 +715,7 @@ export function AppendixLoanEditor({
           </p>
         </div>
 
-        <section className="mt-5 rounded-[24px] border border-slate-200 bg-white px-4 py-5">
+        <section className="mt-5 rounded-[8px] border border-slate-200 bg-white px-4 py-5">
           <div className="text-right text-[16px] font-black text-slate-900">کارمزد وام بانکی به عهده کیست؟</div>
           <div className="mt-5 space-y-5">
             <label className="flex cursor-pointer items-start justify-between gap-4 text-right">
@@ -775,7 +775,7 @@ export function AppendixLoanEditor({
                       key={option.value}
                       type="button"
                       onClick={() => patch({ loanBankFeeMode: option.value })}
-                      className={`flex flex-col items-center gap-2 rounded-[20px] px-2 py-2 text-center transition ${
+                      className={`flex flex-col items-center gap-2 rounded-[8px] px-2 py-2 text-center transition ${
                         active ? 'bg-slate-50 text-slate-900' : 'text-slate-600'
                       }`}
                     >
@@ -815,7 +815,7 @@ export function AppendixLoanEditor({
           <button
             type="button"
             onClick={() => setDetailView('amount')}
-            className="inline-flex h-12 w-full items-center justify-center rounded-2xl bg-[color-mix(in_srgb,var(--dark-teal)_90%,black)] px-6 text-[16px] font-black text-white"
+            className="inline-flex h-12 w-full items-center justify-center rounded-[8px] bg-[color-mix(in_srgb,var(--dark-teal)_90%,black)] px-6 text-[16px] font-black text-white"
           >
             ثبت
           </button>
@@ -830,7 +830,7 @@ export function AppendixLoanEditor({
         'سود دوران مشارکت',
         'در این بخش می‌کنید مبلغ وام از ابتدا عدد مشخصی دارد یا در زمان عقد قرارداد مشخص میشود',
       )}
-      <section className="rounded-[26px] border border-slate-200 bg-white px-5 py-5">
+      <section className="rounded-[8px] border border-slate-200 bg-white px-5 py-5">
         <div className="text-right">
           <div className="text-[18px] font-black text-slate-900">سود دوران مشارکت</div>
           <p className="mt-2 text-[13px] font-semibold leading-7 text-slate-500">
@@ -838,7 +838,7 @@ export function AppendixLoanEditor({
           </p>
         </div>
 
-        <section className="mt-5 rounded-[24px] border border-slate-200 bg-white px-4 py-5">
+        <section className="mt-5 rounded-[8px] border border-slate-200 bg-white px-4 py-5">
           <div className="text-right text-[16px] font-black text-slate-900">سود مشارکت به عهده کیست؟</div>
           <div className="mt-5 space-y-5">
             <label className="flex cursor-pointer items-start justify-between gap-4 text-right">
@@ -912,7 +912,7 @@ export function AppendixLoanEditor({
           <button
             type="button"
             onClick={() => setDetailView('amount')}
-            className="inline-flex h-11 items-center justify-center rounded-2xl bg-[color-mix(in_srgb,var(--dark-teal)_90%,black)] px-6 text-[13px] font-black text-white"
+            className="inline-flex h-11 items-center justify-center rounded-[8px] bg-[color-mix(in_srgb,var(--dark-teal)_90%,black)] px-6 text-[13px] font-black text-white"
           >
             ثبت
           </button>
@@ -927,7 +927,7 @@ export function AppendixLoanEditor({
         'هزینه کارشناسی',
         'در این بخش می‌کنید مبلغ وام از ابتدا عدد مشخصی دارد یا در زمان عقد قرارداد مشخص میشود',
       )}
-      <section className="rounded-[26px] border border-slate-200 bg-white px-5 py-5">
+      <section className="rounded-[8px] border border-slate-200 bg-white px-5 py-5">
         <div className="text-right">
           <div className="text-[18px] font-black text-slate-900">هزینه کارشناسی</div>
           <p className="mt-2 text-[13px] font-semibold leading-7 text-slate-500">
@@ -935,7 +935,7 @@ export function AppendixLoanEditor({
           </p>
         </div>
 
-        <section className="mt-5 rounded-[24px] border border-slate-200 bg-white px-4 py-5">
+        <section className="mt-5 rounded-[8px] border border-slate-200 bg-white px-4 py-5">
           <div className="text-right text-[16px] font-black text-slate-900">هزینه کارشناسی به عهده کیست؟</div>
           <div className="mt-5 space-y-5">
             <label className="flex cursor-pointer items-start justify-between gap-4 text-right">
@@ -1009,7 +1009,7 @@ export function AppendixLoanEditor({
           <button
             type="button"
             onClick={() => setDetailView('amount')}
-            className="inline-flex h-11 items-center justify-center rounded-2xl bg-[color-mix(in_srgb,var(--dark-teal)_90%,black)] px-6 text-[13px] font-black text-white"
+            className="inline-flex h-11 items-center justify-center rounded-[8px] bg-[color-mix(in_srgb,var(--dark-teal)_90%,black)] px-6 text-[13px] font-black text-white"
           >
             ثبت
           </button>
@@ -1024,7 +1024,7 @@ export function AppendixLoanEditor({
         'هزینه اوراق حق تقدم',
         'در این بخش می‌کنید مبلغ وام از ابتدا عدد مشخصی دارد یا در زمان عقد قرارداد مشخص میشود',
       )}
-      <section className="rounded-[26px] border border-slate-200 bg-white px-5 py-5">
+      <section className="rounded-[8px] border border-slate-200 bg-white px-5 py-5">
         <div className="text-right">
           <div className="text-[18px] font-black text-slate-900">هزینه اوراق حق تقدم</div>
           <p className="mt-2 text-[13px] font-semibold leading-7 text-slate-500">
@@ -1032,7 +1032,7 @@ export function AppendixLoanEditor({
           </p>
         </div>
 
-        <section className="mt-5 rounded-[24px] border border-slate-200 bg-white px-4 py-5">
+        <section className="mt-5 rounded-[8px] border border-slate-200 bg-white px-4 py-5">
           <div className="text-right text-[16px] font-black text-slate-900">هزینه اوراق حق تقدم به عهده کیست؟</div>
           <div className="mt-5 space-y-5">
             <label className="flex cursor-pointer items-start justify-between gap-4 text-right">
@@ -1106,7 +1106,7 @@ export function AppendixLoanEditor({
           <button
             type="button"
             onClick={() => setDetailView('amount')}
-            className="inline-flex h-11 items-center justify-center rounded-2xl bg-[color-mix(in_srgb,var(--dark-teal)_90%,black)] px-6 text-[13px] font-black text-white"
+            className="inline-flex h-11 items-center justify-center rounded-[8px] bg-[color-mix(in_srgb,var(--dark-teal)_90%,black)] px-6 text-[13px] font-black text-white"
           >
             ثبت
           </button>
@@ -1121,7 +1121,7 @@ export function AppendixLoanEditor({
         'جریمه تاخیر وام',
         'در این بخش می‌کنید جریمه تاخیر اقساط بر چه اساسی محاسبه و در قرارداد اعمال می‌شود',
       )}
-      <section className="rounded-[26px] border border-slate-200 bg-white px-5 py-5">
+      <section className="rounded-[8px] border border-slate-200 bg-white px-5 py-5">
         <div className="text-right">
           <div className="text-[18px] font-black text-slate-900">جریمه تاخیر وام</div>
         </div>
@@ -1164,7 +1164,7 @@ export function AppendixLoanEditor({
                       key={option.value}
                       type="button"
                       onClick={() => patch({ loanPenaltyMode: option.value })}
-                      className={`flex min-h-[74px] w-[88px] flex-col items-center justify-center rounded-[22px] border px-3 py-3 text-center text-[12px] font-black transition ${
+                      className={`flex min-h-[74px] w-[88px] flex-col items-center justify-center rounded-[8px] border px-3 py-3 text-center text-[12px] font-black transition ${
                         active ? 'border-[#8aa8c4] bg-[#8ca3bd] text-white' : 'border-slate-300 bg-white text-slate-700'
                       }`}
                     >
@@ -1253,7 +1253,7 @@ export function AppendixLoanEditor({
                 </button>
                 <div className="mt-4 space-y-4">
                   {value.loanPenaltyProgressiveRows.map((row, index) => (
-                    <div key={index} className="rounded-2xl border border-slate-200 p-4">
+                    <div key={index} className="rounded-[8px] border border-slate-200 p-4">
                       <div className="grid grid-cols-[minmax(0,1.4fr)_18px_minmax(84px,0.7fr)_minmax(84px,0.7fr)] gap-3 items-end">
                         <div>
                           <div className="mb-2 text-[13px] font-black text-slate-800">نرخ جریمه <span className="text-rose-500">*</span></div>
@@ -1341,7 +1341,7 @@ export function AppendixLoanEditor({
             </section>
 
             {value.loanPenaltyExtraFeeEnabled ? (
-              <section className="rounded-[24px] bg-[#bfe8ec] px-4 py-5">
+              <section className="rounded-[8px] bg-[#bfe8ec] px-4 py-5">
                 <div className="text-right text-[16px] font-black text-slate-900">مشخص کنید بر اساس درصد میباشد یا مبلغ ثابت</div>
                 <div className="mt-4 flex justify-end gap-3">
                   <button
@@ -1397,7 +1397,7 @@ export function AppendixLoanEditor({
           <button
             type="button"
             onClick={() => setDetailView('amount')}
-            className="inline-flex h-11 items-center justify-center rounded-2xl bg-[color-mix(in_srgb,var(--dark-teal)_90%,black)] px-6 text-[13px] font-black text-white"
+            className="inline-flex h-11 items-center justify-center rounded-[8px] bg-[color-mix(in_srgb,var(--dark-teal)_90%,black)] px-6 text-[13px] font-black text-white"
           >
             ثبت
           </button>
@@ -1409,7 +1409,7 @@ export function AppendixLoanEditor({
   const renderDiscountConditionStep = () => (
     <div className="space-y-5">
       {renderDetailHeader('شرط تخفیف و خوش حسابی تخفیف', 'مشخص کنید تخفیف در چه شرایطی حفظ یا لغو می‌شود')}
-      <section className="rounded-[26px] border border-slate-200 bg-white px-5 py-5">
+      <section className="rounded-[8px] border border-slate-200 bg-white px-5 py-5">
         <div className="text-right">
           <div className="text-[18px] font-black text-slate-900">شرط تخفیف و خوش حسابی تخفیف</div>
         </div>
@@ -1544,7 +1544,7 @@ export function AppendixLoanEditor({
           <button
             type="button"
             onClick={() => setDetailView('discount')}
-            className="inline-flex h-11 items-center justify-center rounded-2xl bg-[color-mix(in_srgb,var(--dark-teal)_90%,black)] px-6 text-[13px] font-black text-white"
+            className="inline-flex h-11 items-center justify-center rounded-[8px] bg-[color-mix(in_srgb,var(--dark-teal)_90%,black)] px-6 text-[13px] font-black text-white"
           >
             ثبت
           </button>
@@ -1556,7 +1556,7 @@ export function AppendixLoanEditor({
   const renderDiscountStep = () => (
     <div className="space-y-5">
       {renderDetailHeader('تخفیف وام', 'در این بخش می‌توانید مبلغ تنظیمات وام را برای قرارداد خود فعال کنید')}
-      <section className="rounded-[26px] border border-slate-200 bg-white px-5 py-5">
+      <section className="rounded-[8px] border border-slate-200 bg-white px-5 py-5">
         <div className="text-right">
           <div className="text-[18px] font-black text-slate-900">تخفیف وام</div>
         </div>
@@ -1667,7 +1667,7 @@ export function AppendixLoanEditor({
           <button
             type="button"
             onClick={() => setDetailView('amount')}
-            className="inline-flex h-11 items-center justify-center rounded-2xl bg-[color-mix(in_srgb,var(--dark-teal)_90%,black)] px-6 text-[13px] font-black text-white"
+            className="inline-flex h-11 items-center justify-center rounded-[8px] bg-[color-mix(in_srgb,var(--dark-teal)_90%,black)] px-6 text-[13px] font-black text-white"
           >
             ثبت
           </button>
@@ -1679,7 +1679,7 @@ export function AppendixLoanEditor({
   const renderForgivenessStep = () => (
     <div className="space-y-5">
       {renderDetailHeader('بخشودگی جریمه وام', 'بخشودگی برای هر بدهی/فاکتور')}
-      <section className="rounded-[26px] border border-slate-200 bg-white px-5 py-5">
+      <section className="rounded-[8px] border border-slate-200 bg-white px-5 py-5">
         <div className="text-right">
           <div className="text-[18px] font-black text-slate-900">به ازای هر بدهی/فاکتور</div>
           <p className="mt-2 text-[13px] font-semibold leading-7 text-slate-500">
@@ -1817,7 +1817,7 @@ export function AppendixLoanEditor({
           <button
             type="button"
             onClick={() => setDetailView('amount')}
-            className="inline-flex h-11 items-center justify-center rounded-2xl bg-[color-mix(in_srgb,var(--dark-teal)_90%,black)] px-6 text-[13px] font-black text-white"
+            className="inline-flex h-11 items-center justify-center rounded-[8px] bg-[color-mix(in_srgb,var(--dark-teal)_90%,black)] px-6 text-[13px] font-black text-white"
           >
             ثبت
           </button>
@@ -1827,9 +1827,9 @@ export function AppendixLoanEditor({
   );
 
   const renderRemainingDebtGauge = (lines: string[], amount: string) => (
-    <div className="rounded-[28px] bg-white px-4 py-5">
+    <div className="rounded-[8px] bg-white px-4 py-5">
       <div className="mx-auto flex w-full max-w-[220px] flex-col items-center">
-        <div className="h-[100px] w-[196px] rounded-t-full border-[8px] border-b-0 border-[#ddf5f7]" />
+        <div className="h-[100px] w-[196px] rounded-[8px] border-[8px] border-b-0 border-[#ddf5f7]" />
         <div className="-mt-12 text-center text-[11px] font-semibold leading-6 text-slate-500">
           {lines.map((line) => (
             <div key={line}>{line}</div>
@@ -1855,7 +1855,7 @@ export function AppendixLoanEditor({
             value={numericValue ? numericValue.toLocaleString('en-US') : ''}
             onChange={(event) => onChange(event.target.value.replace(/\D/g, ''))}
             placeholder="مبلغ را وارد کنید"
-            className="h-10 rounded-xl border-[#aeb9c3] bg-white/70 pr-4 pl-14 text-left text-[14px] font-semibold"
+            className="h-10 rounded-[8px] border-[#aeb9c3] bg-white/70 pr-4 pl-14 text-left text-[14px] font-semibold"
             inputMode="numeric"
           />
           <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-xs font-semibold text-gray-400">تومان</span>
@@ -1903,7 +1903,7 @@ export function AppendixLoanEditor({
     const percent = effectiveTargetAmount > 0 ? Math.min(100, Math.round((registeredAmount / effectiveTargetAmount) * 100)) : 0;
     const remaining = Math.max(0, effectiveTargetAmount - registeredAmount);
     return (
-      <div className="mt-3 rounded-xl bg-[#c4e8ea]/55 px-3 py-3 text-[13px] text-[#4f545d]">
+      <div className="mt-3 rounded-[8px] bg-[#c4e8ea]/55 px-3 py-3 text-[13px] text-[#4f545d]">
         <div className="flex items-center justify-between gap-3">
           <div className="flex min-w-0 flex-1 items-center gap-4">
             {renderRemainingDebtProgressGauge({ percent, overLimit: registeredAmount > targetAmount })}
@@ -1939,7 +1939,7 @@ export function AppendixLoanEditor({
     return (
       <div className="mt-4 grid gap-3 md:grid-cols-2">
         {items.map((item, index) => (
-          <div key={`${item.title}-${index}`} className="rounded-[18px] border border-slate-200 bg-white px-4 py-4 shadow-[0_10px_24px_-22px_rgba(15,23,42,0.42)]">
+          <div key={`${item.title}-${index}`} className="rounded-[8px] border border-slate-200 bg-white px-4 py-4 shadow-[0_10px_24px_-22px_rgba(15,23,42,0.42)]">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3 text-[#ff4c72]">
                 <button type="button" onClick={() => deleteRemainingDebtItem(item.section, item.id)} className="inline-flex h-8 w-8 items-center justify-center rounded-full transition hover:bg-rose-50">
@@ -2112,7 +2112,7 @@ export function AppendixLoanEditor({
     const registeredAmount = cards.reduce((sum, item) => sum + Number(item.amount || 0), 0);
     const targetAmount = Number(amountValue || 0);
     return (
-      <section className="rounded-2xl border border-[#d9dde4] bg-white/45 px-4 py-4 shadow-[0_10px_24px_rgba(15,23,42,0.035)] md:px-5">
+      <section className="rounded-[8px] border border-[#d9dde4] bg-white/45 px-4 py-4 shadow-[0_10px_24px_rgba(15,23,42,0.035)] md:px-5">
         <div className="flex items-start justify-between gap-5">
           <div className="flex items-center gap-2 text-[13px] font-bold text-[#52575f]">
             <ListChecks className="h-5 w-5 text-[#59606a]" />
@@ -2120,7 +2120,7 @@ export function AppendixLoanEditor({
           </div>
           <div className="max-w-[460px] text-right">
             <p className="text-[13px] leading-7 text-[#666b73]">{description}</p>
-            <button type="button" onClick={onAction} className="mt-2 h-8 rounded-lg border border-[#14a7ad] bg-white/65 px-3 text-xs font-bold text-[#0e989d] transition hover:bg-[#dff4f3]">
+            <button type="button" onClick={onAction} className="mt-2 h-8 rounded-[8px] border border-[#14a7ad] bg-white/65 px-3 text-xs font-bold text-[#0e989d] transition hover:bg-[#dff4f3]">
               {actionLabel}
             </button>
           </div>
@@ -2148,7 +2148,7 @@ export function AppendixLoanEditor({
     tone: 'teal' | 'salmon',
     rows: Array<{ label: string; value: string; suffix?: string }>,
   ) => (
-    <div className={`overflow-hidden rounded-[18px] ${tone === 'teal' ? 'border border-[#bfeff4]' : 'border border-[#ffb4a1]'}`}>
+    <div className={`overflow-hidden rounded-[8px] ${tone === 'teal' ? 'border border-[#bfeff4]' : 'border border-[#ffb4a1]'}`}>
       <div className={`${tone === 'teal' ? 'bg-[#bfeff4] text-slate-700' : 'bg-[#ffb4a1] text-[#7a3425]'} px-4 py-3 text-center text-[14px] font-black`}>
         {title}
       </div>
@@ -2212,7 +2212,7 @@ export function AppendixLoanEditor({
           ],
         })}
 
-        <div className="rounded-[26px] border border-slate-200 bg-white px-6 py-5 shadow-[0_16px_36px_-28px_rgba(15,23,42,0.28)]">
+        <div className="rounded-[8px] border border-slate-200 bg-white px-6 py-5 shadow-[0_16px_36px_-28px_rgba(15,23,42,0.28)]">
           <div className="text-right text-[18px] font-black text-slate-800">مانده بدهی وام در زمان تحویل واحد</div>
           <div className="mt-4 grid gap-4 lg:grid-cols-[1fr,320px] lg:items-start">
             <div className="order-2 lg:order-1">
@@ -2232,7 +2232,7 @@ export function AppendixLoanEditor({
           </div>
         </div>
 
-        <div className="rounded-[26px] border border-slate-200 bg-white px-6 py-5 shadow-[0_16px_36px_-28px_rgba(15,23,42,0.28)]">
+        <div className="rounded-[8px] border border-slate-200 bg-white px-6 py-5 shadow-[0_16px_36px_-28px_rgba(15,23,42,0.28)]">
           <div className="text-right text-[18px] font-black text-slate-800">مانده بدهی وام در زمان تحویل سند</div>
           <div className="mt-4 grid gap-4 lg:grid-cols-[1fr,320px] lg:items-start">
             <div className="order-2 lg:order-1">
@@ -2252,11 +2252,11 @@ export function AppendixLoanEditor({
           </div>
         </div>
 
-        <div className="rounded-[26px] border border-transparent bg-transparent px-1 py-1">
+        <div className="rounded-[8px] border border-transparent bg-transparent px-1 py-1">
           <button
             type="button"
             onClick={() => setDetailView('amount')}
-            className="inline-flex h-12 w-full items-center justify-center rounded-2xl bg-[color-mix(in_srgb,var(--dark-teal)_90%,black)] px-6 text-[16px] font-black text-white"
+            className="inline-flex h-12 w-full items-center justify-center rounded-[8px] bg-[color-mix(in_srgb,var(--dark-teal)_90%,black)] px-6 text-[16px] font-black text-white"
           >
             ثبت
           </button>
@@ -2282,13 +2282,13 @@ export function AppendixLoanEditor({
 
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/35 p-4" onClick={() => setRemainingDebtDialog(null)}>
-        <div className="w-full max-w-md rounded-[24px] border border-slate-200 bg-white p-5 shadow-2xl" dir="rtl" onClick={(event) => event.stopPropagation()}>
+        <div className="w-full max-w-md rounded-[8px] border border-slate-200 bg-white p-5 shadow-2xl" dir="rtl" onClick={(event) => event.stopPropagation()}>
           <div className="text-[18px] font-black text-slate-900">{dialogTitle}</div>
           <p className="mt-2 text-[12px] font-semibold leading-6 text-slate-500">عنوان، مبلغ و تاریخ سررسید را برای این بخش ثبت کنید.</p>
 
           <div className="mt-5 space-y-4">
             {remainingDebtDialog.section === 'installment' && !remainingDebtDialog.itemId ? (
-              <div className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-3">
+              <div className="rounded-[8px] border border-slate-200 bg-slate-50/80 px-3 py-3">
                 <div className="mb-2 text-right text-[13px] font-black text-slate-800">نوع ثبت سررسید</div>
                 <div className="flex items-center justify-between gap-3">
                   <button
@@ -2313,7 +2313,7 @@ export function AppendixLoanEditor({
               <Input
                 value={remainingDebtDialog.title}
                 onChange={(event) => setRemainingDebtDialog((current) => (current ? { ...current, title: event.target.value } : current))}
-                className="h-10 rounded-xl border-slate-200 bg-white px-3 text-right text-[13px]"
+                className="h-10 rounded-[8px] border-slate-200 bg-white px-3 text-right text-[13px]"
               />
             </div>
             <div>
@@ -2324,12 +2324,12 @@ export function AppendixLoanEditor({
                   setRemainingDebtDialog((current) => (current ? { ...current, amount: event.target.value.replace(/\D/g, '') } : current))
                 }
                 inputMode="numeric"
-                className="h-10 rounded-xl border-slate-200 bg-white px-3 text-left text-[13px]"
+                className="h-10 rounded-[8px] border-slate-200 bg-white px-3 text-left text-[13px]"
               />
             </div>
             {remainingDebtDialog.section === 'installment' && !remainingDebtDialog.itemId && remainingDebtDialog.mode === 'regular' ? (
               <>
-                <div className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-3">
+                <div className="rounded-[8px] border border-slate-200 bg-slate-50/80 px-3 py-3">
                   <div className="mb-2 text-right text-[13px] font-black text-slate-800">دوره اقساط</div>
                   <div className="flex items-center justify-between gap-3">
                     <button
@@ -2353,7 +2353,7 @@ export function AppendixLoanEditor({
                   <Input
                     value={remainingDebtDialog.period}
                     onChange={(event) => setRemainingDebtDialog((current) => (current ? { ...current, period: event.target.value.replace(/\D/g, '') } : current))}
-                    className="h-10 rounded-xl border-slate-200 bg-white px-3 text-right text-[13px]"
+                    className="h-10 rounded-[8px] border-slate-200 bg-white px-3 text-right text-[13px]"
                   />
                 </div>
                 <div>
@@ -2361,7 +2361,7 @@ export function AppendixLoanEditor({
                   <Input
                     value={remainingDebtDialog.count}
                     onChange={(event) => setRemainingDebtDialog((current) => (current ? { ...current, count: event.target.value.replace(/\D/g, '') } : current))}
-                    className="h-10 rounded-xl border-slate-200 bg-white px-3 text-right text-[13px]"
+                    className="h-10 rounded-[8px] border-slate-200 bg-white px-3 text-right text-[13px]"
                   />
                 </div>
                 <div>
@@ -2372,7 +2372,7 @@ export function AppendixLoanEditor({
                     placeholder="تاریخ شروع را انتخاب کنید"
                   />
                 </div>
-                <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-[12px] font-semibold text-slate-600">
+                <div className="rounded-[8px] border border-slate-200 bg-slate-50 px-3 py-3 text-[12px] font-semibold text-slate-600">
                   مبلغ هر قسط:
                   <span className="mr-2 font-black text-[var(--dark-teal)]">
                     {Number(remainingDebtDialog.amount || 0) > 0 && Number(remainingDebtDialog.count || 0) > 0
@@ -2397,14 +2397,14 @@ export function AppendixLoanEditor({
             <button
               type="button"
               onClick={() => setRemainingDebtDialog(null)}
-              className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-300 px-4 text-[13px] font-black text-slate-700"
+              className="inline-flex h-10 items-center justify-center rounded-[8px] border border-slate-300 px-4 text-[13px] font-black text-slate-700"
             >
               انصراف
             </button>
             <button
               type="button"
               onClick={saveRemainingDebtDialog}
-              className="inline-flex h-10 items-center justify-center rounded-xl bg-[color-mix(in_srgb,var(--dark-teal)_90%,black)] px-4 text-[13px] font-black text-white"
+              className="inline-flex h-10 items-center justify-center rounded-[8px] bg-[color-mix(in_srgb,var(--dark-teal)_90%,black)] px-4 text-[13px] font-black text-white"
             >
               ثبت
             </button>
@@ -2463,7 +2463,7 @@ export function AppendixLoanEditor({
           setRemainingDebtDialogError('');
         }}
       >
-        <div className="w-full max-w-[27rem] rounded-[24px] border border-slate-200 bg-white shadow-2xl" dir="rtl" onClick={(event) => event.stopPropagation()}>
+        <div className="w-full max-w-[27rem] rounded-[8px] border border-slate-200 bg-white shadow-2xl" dir="rtl" onClick={(event) => event.stopPropagation()}>
           <div className="px-5 pt-5">
             <div className="text-[18px] font-black text-slate-900">{dialogTitle}</div>
             <p className="mt-2 text-[12px] font-semibold leading-6 text-slate-500">{dialogDescription}</p>
@@ -2502,7 +2502,7 @@ export function AppendixLoanEditor({
                       setRemainingDebtDialog((current) => (current ? { ...current, title: event.target.value } : current));
                     }}
                     placeholder={isRegularInstallment ? 'مثال: اقساط ماهانه' : 'مثال: پیش پرداخت ۱'}
-                    className="mt-2 h-10 rounded-lg border-gray-200 bg-[#fcfdfd] px-3 text-[13px]"
+                    className="mt-2 h-10 rounded-[8px] border-gray-200 bg-[#fcfdfd] px-3 text-[13px]"
                   />
                 </div>
 
@@ -2517,7 +2517,7 @@ export function AppendixLoanEditor({
                       }}
                       placeholder={isRegularInstallment ? 'مبلغ کل را وارد کنید' : 'مبلغ سررسید'}
                       inputMode="numeric"
-                      className="h-10 rounded-lg border-gray-200 bg-[#fcfdfd] pr-3 pl-12 text-[13px]"
+                      className="h-10 rounded-[8px] border-gray-200 bg-[#fcfdfd] pr-3 pl-12 text-[13px]"
                     />
                     <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-xs text-gray-400">تومان</span>
                   </div>
@@ -2572,7 +2572,7 @@ export function AppendixLoanEditor({
                           setRemainingDebtDialog((current) => (current ? { ...current, period: event.target.value.replace(/\D/g, '') } : current));
                         }}
                         placeholder={remainingDebtDialog.frequency === 'monthly' ? 'مثال: 1 ماه' : 'مثال: 7 روز'}
-                        className="mt-2 h-10 rounded-lg border-gray-200 bg-white px-3 text-[13px]"
+                        className="mt-2 h-10 rounded-[8px] border-gray-200 bg-white px-3 text-[13px]"
                       />
                     </div>
                     <div>
@@ -2584,7 +2584,7 @@ export function AppendixLoanEditor({
                           setRemainingDebtDialog((current) => (current ? { ...current, count: event.target.value.replace(/\D/g, '') } : current));
                         }}
                         placeholder="مثال: 6"
-                        className="mt-2 h-10 rounded-lg border-gray-200 bg-white px-3 text-[13px]"
+                        className="mt-2 h-10 rounded-[8px] border-gray-200 bg-white px-3 text-[13px]"
                       />
                     </div>
                     <div>
@@ -2605,15 +2605,15 @@ export function AppendixLoanEditor({
                     </div>
                     <div>
                       <FieldLabel label="پایان اقساط" />
-                      <div className="mt-2 flex h-10 items-center rounded-lg border border-gray-200 bg-gray-50 px-3 text-[13px] text-gray-600">{regularEndDate}</div>
+                      <div className="mt-2 flex h-10 items-center rounded-[8px] border border-gray-200 bg-gray-50 px-3 text-[13px] text-gray-600">{regularEndDate}</div>
                     </div>
                     <div>
                       <FieldLabel label="مبلغ هر قسط" />
-                      <div className="mt-2 flex h-10 items-center rounded-lg border border-gray-200 bg-gray-50 px-3 text-[13px] font-medium text-teal-700">{regularInstallmentAmount}</div>
+                      <div className="mt-2 flex h-10 items-center rounded-[8px] border border-gray-200 bg-gray-50 px-3 text-[13px] font-medium text-teal-700">{regularInstallmentAmount}</div>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between gap-3 rounded-lg bg-[#f6f7f4] px-3 py-2 text-xs text-gray-500">
+                  <div className="flex items-center justify-between gap-3 rounded-[8px] bg-[#f6f7f4] px-3 py-2 text-xs text-gray-500">
                     <span>{`فاصله ثبت اقساط: هر ${Number(remainingDebtDialog.period || 1)} ${remainingDebtDialog.frequency === 'monthly' ? 'ماه' : 'روز'}`}</span>
                     <span>{regularPreviewItems.length > 0 ? `${regularPreviewItems.length} سررسید` : 'تعداد سررسید نامشخص'}</span>
                   </div>
@@ -2621,7 +2621,7 @@ export function AppendixLoanEditor({
               )}
             </section>
 
-            {remainingDebtDialogError ? <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{remainingDebtDialogError}</div> : null}
+            {remainingDebtDialogError ? <div className="rounded-[8px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{remainingDebtDialogError}</div> : null}
           </div>
 
           <div className="flex justify-start gap-5 border-t border-gray-100 px-5 py-3">
@@ -2650,7 +2650,7 @@ export function AppendixLoanEditor({
         'انتخاب زمان دریافت وام',
         'در این مرحله مشخص می‌کنید وام بانکی در چه زمانی نسبت به قرارداد دریافت شده یا دریافت خواهد شد',
       )}
-      <section className="rounded-[26px] border border-slate-200 bg-white px-5 py-5">
+      <section className="rounded-[8px] border border-slate-200 bg-white px-5 py-5">
         <div className="text-right">
           <div className="text-[18px] font-black text-slate-900">انتخاب زمان دریافت وام</div>
           <p className="mt-2 text-[13px] font-semibold leading-7 text-slate-500">
@@ -2687,7 +2687,7 @@ export function AppendixLoanEditor({
           <button
             type="button"
             onClick={() => setDetailView('overview')}
-            className="inline-flex h-11 items-center justify-center rounded-2xl bg-[color-mix(in_srgb,var(--dark-teal)_90%,black)] px-6 text-[13px] font-black text-white"
+            className="inline-flex h-11 items-center justify-center rounded-[8px] bg-[color-mix(in_srgb,var(--dark-teal)_90%,black)] px-6 text-[13px] font-black text-white"
           >
             ثبت
           </button>
@@ -2702,7 +2702,7 @@ export function AppendixLoanEditor({
         'زمان بازپرداخت اقساط وام',
         'دراین مرحله تعیین می‌کنید بازپرداخت وام از چه زمانی آغاز شده یا خواهد شد',
       )}
-      <section className="rounded-[26px] border border-slate-200 bg-white px-5 py-5">
+      <section className="rounded-[8px] border border-slate-200 bg-white px-5 py-5">
         <div className="text-right">
           <div className="text-[18px] font-black text-slate-900">زمان بازپرداخت اقساط وام</div>
           <p className="mt-2 text-[13px] font-semibold leading-7 text-slate-500">
@@ -2724,7 +2724,7 @@ export function AppendixLoanEditor({
             }
           />
           {value.repaymentTiming === 'before-contract-started' ? (
-            <div className="rounded-[22px] border border-slate-200 bg-[#f8fbff] px-4 py-4">
+            <div className="rounded-[8px] border border-slate-200 bg-[#f8fbff] px-4 py-4">
               <div className="text-right text-[16px] font-black text-slate-900">اقساط پرداخت شده تا زمان عقد قرارداد به عهده کیست؟</div>
 
               <div className="mt-5 space-y-5">
@@ -2802,7 +2802,7 @@ export function AppendixLoanEditor({
           <button
             type="button"
             onClick={() => setDetailView('overview')}
-            className="inline-flex h-11 items-center justify-center rounded-2xl bg-[color-mix(in_srgb,var(--dark-teal)_90%,black)] px-6 text-[13px] font-black text-white"
+            className="inline-flex h-11 items-center justify-center rounded-[8px] bg-[color-mix(in_srgb,var(--dark-teal)_90%,black)] px-6 text-[13px] font-black text-white"
           >
             ثبت
           </button>
@@ -2819,7 +2819,7 @@ export function AppendixLoanEditor({
           <button
             type="button"
             onClick={() => patch({ flowStep: 'status' })}
-            className="inline-flex h-10 items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-[12px] font-black text-slate-700"
+            className="inline-flex h-10 items-center gap-2 rounded-[8px] border border-slate-200 bg-white px-4 text-[12px] font-black text-slate-700"
           >
             بازگشت به وضعیت پرداخت
             <MoveRight className="h-4 w-4" />
@@ -2854,7 +2854,7 @@ export function AppendixLoanEditor({
           <button
             type="button"
             onClick={() => patch({ flowStep: 'status' })}
-            className="inline-flex h-10 items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-[12px] font-black text-slate-700"
+            className="inline-flex h-10 items-center gap-2 rounded-[8px] border border-slate-200 bg-white px-4 text-[12px] font-black text-slate-700"
           >
             بازگشت به وضعیت پرداخت
             <MoveRight className="h-4 w-4" />
@@ -2882,9 +2882,9 @@ export function AppendixLoanEditor({
   }
 
   return (
-    <section className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm">
+    <section className="rounded-[8px] border border-slate-200 bg-white p-5 shadow-sm">
       <div className="flex items-start justify-between gap-3">
-        <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-[color-mix(in_srgb,var(--dark-teal)_10%,white)] text-[color-mix(in_srgb,var(--dark-teal)_92%,black)]">
+        <span className="inline-flex h-11 w-11 items-center justify-center rounded-[8px] bg-[color-mix(in_srgb,var(--dark-teal)_10%,white)] text-[color-mix(in_srgb,var(--dark-teal)_92%,black)]">
           <Building2 className="h-5 w-5" />
         </span>
         <div className="flex-1 text-right">
@@ -2893,7 +2893,7 @@ export function AppendixLoanEditor({
         </div>
       </div>
 
-      <div className="mt-6 overflow-hidden rounded-[22px] border border-slate-200">
+      <div className="mt-6 overflow-hidden rounded-[8px] border border-slate-200">
         {PAYMENT_STATUS_OPTIONS.map((option, index) => {
           const active = value.paymentStatus === option.value;
           return (
@@ -2925,7 +2925,7 @@ export function AppendixLoanEditor({
           <button
             type="button"
             onClick={goToDetails}
-            className="inline-flex h-11 items-center gap-2 rounded-2xl bg-[color-mix(in_srgb,var(--dark-teal)_90%,black)] px-5 text-[13px] font-black text-white"
+            className="inline-flex h-11 items-center gap-2 rounded-[8px] bg-[color-mix(in_srgb,var(--dark-teal)_90%,black)] px-5 text-[13px] font-black text-white"
           >
             ثبت
           </button>
@@ -2934,3 +2934,5 @@ export function AppendixLoanEditor({
     </section>
   );
 }
+
+

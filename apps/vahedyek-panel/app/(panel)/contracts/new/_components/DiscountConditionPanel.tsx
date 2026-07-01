@@ -54,7 +54,7 @@ function InfoToggle({
   onChange: (checked: boolean) => void;
 }) {
   return (
-    <div className="flex items-start justify-between gap-4 rounded-2xl border border-slate-200 bg-white px-4 py-4">
+    <div className="flex items-start justify-between gap-4 rounded-[8px] border border-slate-200 bg-white px-4 py-4">
       <div className="text-right">
         <h4 className="text-sm font-extrabold text-slate-800">{title}</h4>
         <p className="mt-1 text-xs leading-6 text-slate-500">{description}</p>
@@ -90,7 +90,7 @@ export function DiscountConditionPanel({
         <Input
           value={values.maxDelayCount}
           onChange={(event) => onChange({ maxDelayCount: normalizeDigits(event.target.value) })}
-          className="h-12 rounded-xl border-slate-300 bg-white text-right"
+          className="h-12 rounded-[8px] border-slate-300 bg-white text-right"
           inputMode="numeric"
         />
         <p className="text-right text-xs leading-6 text-slate-500">
@@ -103,7 +103,7 @@ export function DiscountConditionPanel({
         <Input
           value={values.graceDays}
           onChange={(event) => onChange({ graceDays: normalizeDigits(event.target.value) })}
-          className="h-12 rounded-xl border-slate-300 bg-white text-right"
+          className="h-12 rounded-[8px] border-slate-300 bg-white text-right"
           inputMode="numeric"
         />
         <p className="text-right text-xs leading-6 text-slate-500">
@@ -153,3 +153,5 @@ export function DiscountConditionPanel({
     </section>
   );
 }
+
+

@@ -75,14 +75,14 @@ export function AppendixApprovalFlowBanner({ appendixId, appendixStatus }: { app
   if (!visible) return null;
 
   return (
-    <section dir="rtl" className="mb-5 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <section dir="rtl" className="mb-5 overflow-hidden rounded-[8px] border border-slate-200 bg-white shadow-sm">
       <div className="border-b border-slate-100 bg-slate-50/80 px-5 py-3">
         <div className="flex items-center justify-between gap-3">
           <button
             type="button"
             onClick={() => void reload()}
             disabled={busy !== null}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-bold text-slate-600 disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 rounded-[8px] border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-bold text-slate-600 disabled:opacity-50"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
             بروزرسانی
@@ -97,7 +97,7 @@ export function AppendixApprovalFlowBanner({ appendixId, appendixStatus }: { app
       </div>
 
       <div className="space-y-4 px-5 py-4 text-right">
-        {error ? <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-[12px] font-bold text-rose-800">{error}</div> : null}
+        {error ? <div className="rounded-[8px] border border-rose-200 bg-rose-50 px-3 py-2 text-[12px] font-bold text-rose-800">{error}</div> : null}
 
         {state?.mode === 'no_instance' ? (
           <div className="space-y-3">
@@ -108,7 +108,7 @@ export function AppendixApprovalFlowBanner({ appendixId, appendixStatus }: { app
               type="button"
               onClick={() => void doSubmit()}
               disabled={busy !== null}
-              className="inline-flex h-11 items-center gap-2 rounded-xl bg-[color-mix(in_srgb,var(--dark-teal)_92%,black)] px-5 text-[13px] font-extrabold text-white disabled:opacity-55"
+              className="inline-flex h-11 items-center gap-2 rounded-[8px] bg-[color-mix(in_srgb,var(--dark-teal)_92%,black)] px-5 text-[13px] font-extrabold text-white disabled:opacity-55"
             >
               {busy === 'submit' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
               ارسال به فرایند تایید
@@ -118,7 +118,7 @@ export function AppendixApprovalFlowBanner({ appendixId, appendixStatus }: { app
 
         {state?.mode === 'instance' ? (
           <div className="space-y-4">
-            <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+            <div className="rounded-[8px] border border-slate-200 bg-slate-50/50 p-4">
               <div className="text-[13px] font-black text-slate-800">مرحله جاری: {state.currentStep?.title ?? '—'}</div>
               <div className="mt-1 text-[12px] font-semibold text-slate-500">
                 وضعیت: {state.status === 'IN_REVIEW' ? 'در انتظار تصمیم' : state.status === 'REVISION_REQUESTED' ? 'نیاز به اصلاح' : 'رد شده'}
@@ -145,7 +145,7 @@ export function AppendixApprovalFlowBanner({ appendixId, appendixStatus }: { app
                   type="button"
                   onClick={() => void doRevoke()}
                   disabled={busy !== null}
-                  className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-[12px] font-extrabold text-slate-700 disabled:opacity-55"
+                  className="inline-flex h-10 items-center gap-2 rounded-[8px] border border-slate-200 bg-white px-4 text-[12px] font-extrabold text-slate-700 disabled:opacity-55"
                 >
                   حذف رأی من
                 </button>
@@ -158,7 +158,7 @@ export function AppendixApprovalFlowBanner({ appendixId, appendixStatus }: { app
                   type="button"
                   onClick={() => void doDecision('APPROVE')}
                   disabled={busy !== null}
-                  className="inline-flex h-11 items-center gap-2 rounded-xl bg-[color-mix(in_srgb,var(--dark-teal)_92%,black)] px-5 text-[13px] font-extrabold text-white disabled:opacity-55"
+                  className="inline-flex h-11 items-center gap-2 rounded-[8px] bg-[color-mix(in_srgb,var(--dark-teal)_92%,black)] px-5 text-[13px] font-extrabold text-white disabled:opacity-55"
                 >
                   {busy === 'APPROVE' ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
                   تایید مرحله
@@ -169,7 +169,7 @@ export function AppendixApprovalFlowBanner({ appendixId, appendixStatus }: { app
                   type="button"
                   onClick={() => setMode(mode === 'revision' ? null : 'revision')}
                   disabled={busy !== null}
-                  className="inline-flex h-11 items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 px-5 text-[13px] font-extrabold text-amber-900 disabled:opacity-55"
+                  className="inline-flex h-11 items-center gap-2 rounded-[8px] border border-amber-300 bg-amber-50 px-5 text-[13px] font-extrabold text-amber-900 disabled:opacity-55"
                 >
                   درخواست اصلاح
                 </button>
@@ -179,7 +179,7 @@ export function AppendixApprovalFlowBanner({ appendixId, appendixStatus }: { app
                   type="button"
                   onClick={() => setMode(mode === 'reject' ? null : 'reject')}
                   disabled={busy !== null}
-                  className="inline-flex h-11 items-center gap-2 rounded-xl border border-rose-300 bg-rose-50 px-5 text-[13px] font-extrabold text-rose-900 disabled:opacity-55"
+                  className="inline-flex h-11 items-center gap-2 rounded-[8px] border border-rose-300 bg-rose-50 px-5 text-[13px] font-extrabold text-rose-900 disabled:opacity-55"
                 >
                   <XCircle className="h-4 w-4" />
                   رد و بازگشت به پیش‌نویس
@@ -188,7 +188,7 @@ export function AppendixApprovalFlowBanner({ appendixId, appendixStatus }: { app
             </div>
 
             {mode ? (
-              <div className="rounded-xl border border-slate-200 bg-white p-4">
+              <div className="rounded-[8px] border border-slate-200 bg-white p-4">
                 <label className="mb-2 block text-[12px] font-extrabold text-slate-800">
                   {mode === 'revision' ? 'توضیح اصلاحیه' : 'علت رد کامل'}
                 </label>
@@ -198,7 +198,7 @@ export function AppendixApprovalFlowBanner({ appendixId, appendixStatus }: { app
                     type="button"
                     onClick={() => void doDecision(mode === 'revision' ? 'REQUEST_REVISION' : 'REJECT_TO_DRAFT')}
                     disabled={busy !== null}
-                    className="rounded-xl bg-slate-900 px-4 py-2 text-[12px] font-extrabold text-white disabled:opacity-55"
+                    className="rounded-[8px] bg-slate-900 px-4 py-2 text-[12px] font-extrabold text-white disabled:opacity-55"
                   >
                     {busy === 'REQUEST_REVISION' || busy === 'REJECT_TO_DRAFT' ? 'در حال ثبت...' : 'ثبت تصمیم'}
                   </button>
@@ -211,3 +211,5 @@ export function AppendixApprovalFlowBanner({ appendixId, appendixStatus }: { app
     </section>
   );
 }
+
+

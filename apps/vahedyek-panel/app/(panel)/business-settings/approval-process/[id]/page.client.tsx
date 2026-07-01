@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Info, Pencil, Plus, ShieldCheck, Trash2, UserRound, Workflow, X } from 'lucide-react';
@@ -25,21 +25,21 @@ function normalizeStageRole(value: unknown): StageRole {
 }
 
 const roleOptions: Array<{ value: StageRole; label: string }> = [
-  { value: 'controller', label: '┌⌐┘å╪¬╪▒┘ä ┌⌐┘å┘å╪»┘ç ┘é╪▒╪º╪▒╪»╪º╪»' },
-  { value: 'intermediate', label: '╪¬╪º█î█î╪» ┌⌐┘å┘å╪»┘ç ┘à█î╪º┘å█î' },
-  { value: 'final', label: '╪¬╪º█î█î╪» ┌⌐┘å┘å╪»┘ç ┘å┘ç╪º█î█î' },
+  { value: 'controller', label: '+�+�+�+�+� +�+�+�+�+� +�+�+�+�+�+�+�' },
+  { value: 'intermediate', label: '+�+����+� +�+�+�+�+� +��+�+��' },
+  { value: 'final', label: '+�+����+� +�+�+�+�+� +�+�+����' },
 ];
 
 const roleDescriptions: Record<StageRole, string> = {
-  controller: '╪º█î┘å ┘à╪▒╪¡┘ä┘ç ╪¿╪▒╪º█î ┌⌐┘å╪¬╪▒┘ä ╪º┘ê┘ä█î┘ç ┘ê ╪¿╪▒╪▒╪│█î ┘╛█î╪┤ ╪º╪▓ ┘ê╪▒┘ê╪» ┘é╪▒╪º╪▒╪»╪º╪» ╪¿┘ç ╪▒┘ê┘å╪» ╪¬╪º█î█î╪» ╪º╪│╪¬┘ü╪º╪»┘ç ┘à█îΓÇî╪┤┘ê╪».',
-  intermediate: '╪º█î┘å ┘à╪▒╪¡┘ä┘ç ╪¿╪▒╪º█î ╪¿╪▒╪▒╪│█îΓÇî┘ç╪º█î ╪¿█î┘åΓÇî╪▒╪º┘ç█î ┘ê ╪╣╪¿┘ê╪▒ ┘é╪▒╪º╪▒╪»╪º╪» ╪¿█î┘å ╪º╪╣╪╢╪º█î ╪│╪º╪▓┘à╪º┘å ╪¬╪╣╪▒█î┘ü ┘à█îΓÇî╪┤┘ê╪».',
-  final: '╪º█î┘å ┘à╪▒╪¡┘ä┘ç ╪º╪«╪¬█î╪º╪▒ ┘å┘ç╪º█î█îΓÇî╪│╪º╪▓█î ┘é╪▒╪º╪▒╪»╪º╪» ╪▒╪º ╪»╪º╪▒╪» ┘ê ╪»╪▒ ╪º┘å╪¬┘ç╪º█î ┘ü╪▒╪ó█î┘å╪» ┘é╪▒╪º╪▒ ┘à█îΓÇî┌»█î╪▒╪».',
+  controller: '+���+� +�+�+�+�+� +�+�+��� +�+�+�+�+� +�+�+��+� +� +�+�+�+��� ++��+� +�+� +�+�+�+� +�+�+�+�+�+�+� +�+� +�+�+�+� +�+����+� +�+�+�+�+�+�+� +��G��+�+�+�.',
+  intermediate: '+���+� +�+�+�+�+� +�+�+��� +�+�+�+���G��+�+��� +���+�G��+�+�+�� +� +�+�+�+� +�+�+�+�+�+�+� +���+� +�+�+�+��� +�+�+�+�+�+� +�+�+���+� +��G��+�+�+�.',
+  final: '+���+� +�+�+�+�+� +�+�+���+�+� +�+�+����G��+�+�+��� +�+�+�+�+�+�+� +�+� +�+�+�+� +� +�+� +�+�+�+�+��� +�+�+��+�+� +�+�+�+� +��G��+���+�+�.',
 };
 
 const roleBadgeLabels: Record<StageRole, string> = {
-  controller: '┌⌐┘å╪¬╪▒┘ä ┌⌐┘å┘å╪»┘ç ┘é╪▒╪º╪▒╪»╪º╪»',
-  intermediate: '╪¬╪º█î█î╪» ┌⌐┘å┘å╪»┘ç ┘à█î╪º┘å█î',
-  final: '╪¬╪º█î█î╪» ┌⌐┘å┘å╪»┘ç ┘å┘ç╪º█î█î',
+  controller: '+�+�+�+�+� +�+�+�+�+� +�+�+�+�+�+�+�',
+  intermediate: '+�+����+� +�+�+�+�+� +��+�+��',
+  final: '+�+����+� +�+�+�+�+� +�+�+����',
 };
 
 export default function ApprovalUsageTypePageClient({ usage }: { usage: ApprovalUsageOption }) {
@@ -175,18 +175,18 @@ export default function ApprovalUsageTypePageClient({ usage }: { usage: Approval
 
   const saveStage = () => {
     const errors: Record<string, string> = {};
-    if (!stageTitle.trim()) errors.stageTitle = '╪º█î┘å ┘ü█î┘ä╪» ╪º┘ä╪▓╪º┘à█î ╪º╪│╪¬';
-    if (!selectedEmployeeId) errors.selectedEmployeeId = '╪º█î┘å ┘ü█î┘ä╪» ╪º┘ä╪▓╪º┘à█î ╪º╪│╪¬';
+    if (!stageTitle.trim()) errors.stageTitle = '+���+� +���+�+� +�+�+�+�+�� +�+�+�';
+    if (!selectedEmployeeId) errors.selectedEmployeeId = '+���+� +���+�+� +�+�+�+�+�� +�+�+�';
     if (Object.keys(errors).length > 0) {
       setShowValidation(true);
       setDialogError(
         buildValidationSummary(
           errors,
           {
-            stageTitle: '╪╣┘å┘ê╪º┘å ┘à╪▒╪¡┘ä┘ç ╪¼╪»█î╪»',
-            selectedEmployeeId: '╪¬╪º█î█î╪» ┌⌐┘å┘å╪»┘ç',
+            stageTitle: '+�+�+�+�+� +�+�+�+�+� +�+���+�',
+            selectedEmployeeId: '+�+����+� +�+�+�+�+�',
           },
-          '╪º╪╖┘ä╪º╪╣╪º╪¬ ┘à╪▒╪¡┘ä┘ç ╪¬╪º█î█î╪» ┌⌐╪º┘à┘ä ┘å█î╪│╪¬.',
+          '+�+++�+�+�+�+� +�+�+�+�+� +�+����+� +�+�+�+� +��+�+�.',
         ),
       );
       return;
@@ -229,10 +229,10 @@ export default function ApprovalUsageTypePageClient({ usage }: { usage: Approval
               <Workflow />
             </div>
             <div className="project-flow-hero-copy">
-              <h1>┘à╪│█î╪▒ ╪¬╪º█î█î╪» ╪¿╪▒╪º█î {usage.shortTitle}</h1>
+              <h1>+�+���+� +�+����+� +�+�+��� {usage.shortTitle}</h1>
               <p>
-                ┘ç┘à┌å┘å█î┘å ┘à█îΓÇî╪¬┘ê╪º┘å█î╪» ┘à╪┤╪«╪╡ ┌⌐┘å█î╪» ┌⌐┘ç ┘╛█î╪┤ΓÇî┘å┘ê█î╪│ ┘é╪¿┘ä ╪º╪▓ ╪º╪▒╪│╪º┘ä ╪¿┘ç ╪│╪º╪▓┘à╪º┘å╪î ╪º╪¿╪¬╪»╪º ╪¬┘ê╪│╪╖ ╪«╪▒█î╪»╪º╪▒ ╪¬╪º█î█î╪» ╪┤┘ê╪» █î╪º ╪«█î╪▒. ╪¬╪º█î█î╪»┌⌐┘å┘å╪»┘ç ┘å┘ç╪º█î█î ┘å█î╪▓
-                ╪º┘à┌⌐╪º┘å ┘å┘ç╪º█î█î ┌⌐╪▒╪»┘å ┘é╪▒╪º╪▒╪»╪º╪» ╪▒╪º ╪¿╪»┘ê┘å ┘å█î╪º╪▓ ╪¿┘ç ╪¬╪º█î█î╪» ╪│╪º█î╪▒ ╪º┘ü╪▒╪º╪» ╪»╪▒ ┘ü╪▒╪ó█î┘å╪» ╪«┘ê╪º┘ç╪» ╪»╪º╪┤╪¬.
+                +�+�+�+��+� +��G��+�+�+�+��+� +�+�+�+� +�+��+� +�+� ++��+�G��+�+��+� +�+�+� +�+� +�+�+�+�+� +�+� +�+�+�+�+�+�+� +�+�+�+�+� +�+�+�++ +�+���+�+�+� +�+����+� +�+�+� ��+� +���+�. +�+����+�+�+�+�+�+� +�+�+���� +��+�
+                +�+�+�+�+� +�+�+���� +�+�+�+� +�+�+�+�+�+�+� +�+� +�+�+�+� +��+�+� +�+� +�+����+� +�+���+� +�+�+�+�+� +�+� +�+�+��+�+� +�+�+�+�+� +�+�+�+�.
               </p>
             </div>
             <div className="project-flow-hero-actions">
@@ -242,7 +242,7 @@ export default function ApprovalUsageTypePageClient({ usage }: { usage: Approval
                 className="app-button app-button-primary inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold"
               >
                 <Plus className="h-4 w-4" />
-                ╪º┘ü╪▓┘ê╪»┘å ╪¬╪º█î█î╪»┌⌐┘å┘å╪»┘ç ╪¿┘ç ┘ü╪▒╪ó█î┘å╪»
+                +�+�+�+�+�+� +�+����+�+�+�+�+�+� +�+� +�+�+��+�+�
               </button>
             </div>
           </div>
@@ -251,10 +251,10 @@ export default function ApprovalUsageTypePageClient({ usage }: { usage: Approval
         <LoanSectionCard className="p-5 sm:p-6">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
             <div className="space-y-2 text-right">
-              <h2 className="text-lg font-black text-[color:var(--text-strong)]">╪«╪▒█î╪»╪º╪▒ ╪»╪▒ ┘ü╪▒╪ó█î┘å╪» ╪¬╪º█î█î╪» ╪¿╪º╪┤╪»</h2>
+              <h2 className="text-lg font-black text-[color:var(--text-strong)]">+�+���+�+�+� +�+� +�+�+��+�+� +�+����+� +�+�+�+�</h2>
               <p className="text-sm leading-8 text-[color:var(--text-muted)]">
-                ╪»╪▒ ╪╡┘ê╪▒╪¬ ┘ü╪╣╪º┘äΓÇî╪│╪º╪▓█î╪î ╪«╪▒█î╪»╪º╪▒ ╪¿╪º█î╪» ┘╛█î╪┤ ╪º╪▓ ╪¿╪▒╪▒╪│█î ╪¬┘ê╪│╪╖ ┌⌐╪º╪▒┘à┘å╪»╪º┘å ╪│╪º╪▓┘à╪º┘å╪î ┘╛█î╪┤ΓÇî┘å┘ê█î╪│ ┘é╪▒╪º╪▒╪»╪º╪» ╪▒╪º ╪¬╪º█î█î╪» ┌⌐┘å╪». ╪»╪▒ ╪║█î╪▒ ╪º█î┘å ╪╡┘ê╪▒╪¬╪î ┘é╪▒╪º╪▒╪»╪º╪»
-                ┘à╪│╪¬┘é█î┘à╪º┘ï ╪¿╪▒╪º█î ╪¿╪▒╪▒╪│█î ╪¿┘ç ┌⌐╪º╪▒╪¿╪▒╪º┘å ╪¬╪╣█î█î┘åΓÇî╪┤╪»┘ç ╪»╪▒ ┘ü╪▒╪ó█î┘å╪» ╪º╪▒╪│╪º┘ä ╪«┘ê╪º┘ç╪» ╪┤╪».
+                +�+� +�+�+�+� +�+�+�+�G��+�+�+���+� +�+���+�+�+� +�+���+� ++��+� +�+� +�+�+�+��� +�+�+�++ +�+�+�+�+�+�+�+� +�+�+�+�+�+�+� ++��+�G��+�+��+� +�+�+�+�+�+�+� +�+� +�+����+� +�+�+�. +�+� +���+� +���+� +�+�+�+�+� +�+�+�+�+�+�+�
+                +�+�+�+��+�+�+� +�+�+��� +�+�+�+��� +�+� +�+�+�+�+�+�+� +�+����+�G��+�+�+� +�+� +�+�+��+�+� +�+�+�+�+� +�+�+�+�+� +�+�.
               </p>
             </div>
             <div className="shrink-0">
@@ -262,8 +262,8 @@ export default function ApprovalUsageTypePageClient({ usage }: { usage: Approval
                 checked={buyerShouldApprove}
                 onChange={setBuyerShouldApprove}
                 variant="segmented"
-                activeLabel="┘ü╪╣╪º┘ä"
-                inactiveLabel="╪║█î╪▒┘ü╪╣╪º┘ä"
+                activeLabel="+�+�+�+�"
+                inactiveLabel="+���+�+�+�+�+�"
               />
             </div>
           </div>
@@ -272,13 +272,13 @@ export default function ApprovalUsageTypePageClient({ usage }: { usage: Approval
         <LoanSectionCard className="p-5 sm:p-6">
           <div className="flex items-start justify-between gap-4 border-b border-[color:var(--border-soft)] pb-4">
             <div className="text-right">
-              <h2 className="text-lg font-black text-[color:var(--text-strong)]">┘à╪▒╪º╪¡┘ä ╪¬╪º█î█î╪» ╪¬╪╣╪▒█î┘üΓÇî╪┤╪»┘ç</h2>
+              <h2 className="text-lg font-black text-[color:var(--text-strong)]">+�+�+�+�+� +�+����+� +�+�+���+�G��+�+�+�</h2>
               <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">
-                ╪¬╪º█î█î╪»┌⌐┘å┘å╪»┘ç ╪º╪▓ ╪¿█î┘å ┌⌐╪º╪▒┘à┘å╪»╪º┘å ╪½╪¿╪¬ΓÇî╪┤╪»┘ç ╪»╪▒ ╪│╪º┘à╪º┘å┘ç ╪º┘å╪¬╪«╪º╪¿ ┘à█îΓÇî╪┤┘ê╪»╪¢ ╪┤┘å╪º╪│┘ç┘ö ┌⌐╪º╪▒╪¿╪▒█î ┘ç┘à╪º┘å ┌⌐╪º╪▒┘à┘å╪» ╪»╪▒ ╪╡┘ü╪¡┘ç┘ö ╪¬╪ú█î█î╪» ┘é╪▒╪º╪▒╪»╪º╪» ╪¿╪▒╪º█î ╪º╪╣╪╖╪º█î ╪»╪│╪¬╪▒╪│█î ╪º╪│╪¬┘ü╪º╪»┘ç ┘à█îΓÇî╪┤┘ê╪». ┘à╪º┘ä┌⌐ ┌⌐╪│╪¿ΓÇî┘ê┌⌐╪º╪▒ ┘ç┘à█î╪┤┘ç ╪º╪«╪¬█î╪º╪▒ ╪¬╪ú█î█î╪»/╪╣╪»┘à ╪¬╪ú█î█î╪» ╪▒╪º ╪»╪º╪▒╪».
+                +�+����+�+�+�+�+�+� +�+� +���+� +�+�+�+�+�+�+�+� +�+�+�G��+�+�+� +�+� +�+�+�+�+�+� +�+�+�+�+�+� +��G��+�+�+�+� +�+�+�+�+�+� +�+�+�+�+��� +�+�+�+� +�+�+�+�+�+� +�+� +�+�+�+�+� +�+����+� +�+�+�+�+�+�+� +�+�+��� +�+�+++��� +�+�+�+�+��� +�+�+�+�+�+�+� +��G��+�+�+�. +�+�+�+� +�+�+�G��+�+�+�+� +�+��+�+� +�+�+���+�+� +�+����+�/+�+�+� +�+����+� +�+� +�+�+�+�.
               </p>
             </div>
             <span className="rounded-full border border-[color:var(--theme-accent-border)] bg-[color:var(--theme-accent-softer)] px-4 py-2 text-xs font-black text-[color:var(--theme-action-text)]">
-              {stages.length} ┘à╪▒╪¡┘ä┘ç
+              {stages.length} +�+�+�+�+�
             </span>
           </div>
 
@@ -290,17 +290,17 @@ export default function ApprovalUsageTypePageClient({ usage }: { usage: Approval
                 return (
                   <div
                     key={stage.id}
-                    className="flex flex-col gap-4 rounded-[22px] border border-[color:var(--border-soft)] bg-white px-4 py-4 text-right shadow-[0_12px_30px_var(--shadow-soft)]"
+                    className="flex flex-col gap-4 rounded-[8px] border border-[color:var(--border-soft)] bg-white px-4 py-4 text-right shadow-[0_12px_30px_var(--shadow-soft)]"
                   >
                     <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                       <div className="flex items-center justify-end gap-2">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-[14px] bg-[color:var(--surface-soft)] text-sm font-black text-[color:var(--text-strong)]">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-[8px] bg-[color:var(--surface-soft)] text-sm font-black text-[color:var(--text-strong)]">
                           {index + 1}
                         </div>
-                        <div className="flex h-10 w-10 items-center justify-center rounded-[14px] bg-[#fff3ec] text-[#ff8d5f]">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-[8px] bg-[#fff3ec] text-[#ff8d5f]">
                           <UserRound className="h-5 w-5" />
                         </div>
-                        <h3 className="text-lg font-black text-[color:var(--text-strong)]">{employee?.label ?? '╪¬╪º█î█î╪»┌⌐┘å┘å╪»┘ç ╪º┘å╪¬╪«╪º╪¿ ┘å╪┤╪»┘ç'}</h3>
+                        <h3 className="text-lg font-black text-[color:var(--text-strong)]">{employee?.label ?? '+�+����+�+�+�+�+�+� +�+�+�+�+�+� +�+�+�+�'}</h3>
                         <span className="rounded-full bg-[#ffe8dd] px-5 py-2 text-sm font-black text-[#6b4b3c]">{stage.title}</span>
                       </div>
                       <div className="flex items-center justify-start gap-3">
@@ -310,16 +310,16 @@ export default function ApprovalUsageTypePageClient({ usage }: { usage: Approval
                         <button
                           type="button"
                           onClick={() => openEditDialog(stage)}
-                          className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[color:var(--surface-soft)] text-[color:var(--theme-action-text)] transition hover:opacity-80"
-                          aria-label="┘ê█î╪▒╪º█î╪┤ ┘à╪▒╪¡┘ä┘ç"
+                          className="inline-flex h-10 w-10 items-center justify-center rounded-[8px] bg-[color:var(--surface-soft)] text-[color:var(--theme-action-text)] transition hover:opacity-80"
+                          aria-label="+��+�+���+� +�+�+�+�+�"
                         >
                           <Pencil className="h-4 w-4" />
                         </button>
                         <button
                           type="button"
                           onClick={() => removeStage(stage.id)}
-                          className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#fff1f2] text-[#ff6b7a] transition hover:opacity-80"
-                          aria-label="╪¡╪░┘ü ┘à╪▒╪¡┘ä┘ç"
+                          className="inline-flex h-10 w-10 items-center justify-center rounded-[8px] bg-[#fff1f2] text-[#ff6b7a] transition hover:opacity-80"
+                          aria-label="+�+�+� +�+�+�+�+�"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -334,8 +334,8 @@ export default function ApprovalUsageTypePageClient({ usage }: { usage: Approval
               })}
             </div>
           ) : (
-            <div className="mt-5 rounded-2xl border border-dashed border-[color:var(--border-color)] bg-[color:var(--surface-soft)] px-4 py-8 text-center text-sm leading-7 text-[color:var(--text-muted)]">
-              ┘ç┘å┘ê╪▓ ┘à╪▒╪¡┘ä┘çΓÇî╪º█î ╪¿╪▒╪º█î ╪º█î┘å ┘å┘ê╪╣ ┌⌐╪º╪▒╪¿╪▒█î ╪½╪¿╪¬ ┘å╪┤╪»┘ç ╪º╪│╪¬. ╪¿╪º ╪»┌⌐┘à┘ç ╪º┘ü╪▓┘ê╪»┘å ╪¬╪º█î█î╪»┌⌐┘å┘å╪»┘ç ╪¿┘ç ┘ü╪▒╪ó█î┘å╪»╪î ╪º┘ê┘ä█î┘å ┘à╪▒╪¡┘ä┘ç ╪▒╪º ╪º█î╪¼╪º╪» ┌⌐┘å█î╪».
+            <div className="mt-5 rounded-[8px] border border-dashed border-[color:var(--border-color)] bg-[color:var(--surface-soft)] px-4 py-8 text-center text-sm leading-7 text-[color:var(--text-muted)]">
+              +�+�+�+� +�+�+�+�+�G��+��� +�+�+��� +���+� +�+�+� +�+�+�+�+��� +�+�+� +�+�+�+� +�+�+�. +�+� +�+�+�+� +�+�+�+�+�+� +�+����+�+�+�+�+�+� +�+� +�+�+��+�+�+� +�+�+��+� +�+�+�+�+� +�+� +���+�+�+� +�+��+�.
             </div>
           )}
         </LoanSectionCard>
@@ -344,34 +344,34 @@ export default function ApprovalUsageTypePageClient({ usage }: { usage: Approval
       {isDialogOpen ? (
         <div className="business-dialog-backdrop" role="presentation" onClick={closeDialog}>
           <div
-            className="business-dialog !w-[min(660px,100%)] !max-w-none !gap-6 !rounded-[28px] !p-7 sm:!p-8"
+            className="business-dialog !w-[min(660px,100%)] !max-w-none !gap-6 !rounded-[8px] !p-7 sm:!p-8"
             role="dialog"
             aria-modal="true"
             aria-labelledby="approval-stage-dialog-title"
             onClick={(event) => event.stopPropagation()}
           >
-            <button type="button" className="business-dialog-close" onClick={closeDialog} aria-label="╪¿╪│╪¬┘å">
+            <button type="button" className="business-dialog-close" onClick={closeDialog} aria-label="+�+�+�+�">
               <X />
             </button>
 
             <div className="space-y-4 text-right">
               <h2 id="approval-stage-dialog-title" className="!text-[32px] !font-black sm:!text-[36px]">
-                {editingStageId ? '┘ê█î╪▒╪º█î╪┤ ╪¬╪º█î█î╪»┌⌐┘å┘å╪»┘ç ┘ü╪▒╪ó█î┘å╪»' : '╪º┘ü╪▓┘ê╪»┘å ╪¬╪º█î█î╪»┌⌐┘å┘å╪»┘ç ╪¿┘ç ┘ü╪▒╪ó█î┘å╪»'}
+                {editingStageId ? '+��+�+���+� +�+����+�+�+�+�+�+� +�+�+��+�+�' : '+�+�+�+�+�+� +�+����+�+�+�+�+�+� +�+� +�+�+��+�+�'}
               </h2>
-              <div className="rounded-[22px] border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] px-5 py-5">
+              <div className="rounded-[8px] border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] px-5 py-5">
                 <div className="flex items-start justify-between gap-3">
                   <Info className="mt-1 h-5 w-5 shrink-0 text-[color:var(--text-muted)]" />
                   <p className="!m-0 text-sm leading-8 text-[color:var(--text-muted)]">
-                    ╪¿╪▒╪º█î ╪¬┌⌐┘à█î┘ä ┘ü╪▒╪ó█î┘å╪» ╪¬╪º█î█î╪» ┘é╪▒╪º╪▒╪»╪º╪»╪î ╪¬╪º█î█î╪»┌⌐┘å┘å╪»┌»╪º┘å ╪▒╪º ╪¿┘ç ╪¬╪▒╪¬█î╪¿ ╪¿╪▒╪▒╪│█î ┘à╪┤╪«╪╡ ┌⌐┘å█î╪». ┘ç╪▒ ╪¬╪º█î█î╪»┌⌐┘å┘å╪»┘ç ┘à█îΓÇî╪¬┘ê╪º┘å╪» ┘å┘é╪┤ ┌⌐┘å╪¬╪▒┘ä ┌⌐┘å┘å╪»┘ç
-                    ┘é╪▒╪º╪▒╪»╪º╪»╪î ╪¬╪º█î█î╪» ┌⌐┘å┘å╪»┘ç ┘à█î╪º┘å█î █î╪º ╪¬╪º█î█î╪» ┌⌐┘å┘å╪»┘ç ┘å┘ç╪º█î█î ╪▒╪º ╪»╪º╪┤╪¬┘ç ╪¿╪º╪┤╪».
+                    +�+�+��� +�+�+��+� +�+�+��+�+� +�+����+� +�+�+�+�+�+�+�+� +�+����+�+�+�+�+�+�+�+� +�+� +�+� +�+�+���+� +�+�+�+��� +�+�+�+� +�+��+�. +�+� +�+����+�+�+�+�+�+� +��G��+�+�+�+�+� +�+�+� +�+�+�+�+� +�+�+�+�+�
+                    +�+�+�+�+�+�+�+� +�+����+� +�+�+�+�+� +��+�+�� ��+� +�+����+� +�+�+�+�+� +�+�+���� +�+� +�+�+�+�+� +�+�+�+�.
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="business-dialog-inline-form !gap-5 !rounded-[22px] !border-[color:var(--border-soft)] !bg-white/80 !p-5">
+            <div className="business-dialog-inline-form !gap-5 !rounded-[8px] !border-[color:var(--border-soft)] !bg-white/80 !p-5">
               {dialogError ? <div className="business-blocks-state is-error">{dialogError}</div> : null}
-              <FieldGroup label="┘å┘é╪┤ ┘à╪▒╪¡┘ä┘ç" required>
+              <FieldGroup label="+�+�+� +�+�+�+�+�" required>
                 <div className="flex flex-wrap justify-end gap-2">
                   {roleOptions.map((option) => (
                     <TagPill
@@ -379,42 +379,42 @@ export default function ApprovalUsageTypePageClient({ usage }: { usage: Approval
                       label={option.label}
                       active={stageRole === option.value}
                       onClick={() => setStageRole(option.value)}
-                      className="!h-11 !rounded-[16px] !px-5 !text-sm !font-black"
+                      className="!h-11 !rounded-[8px] !px-5 !text-sm !font-black"
                     />
                   ))}
                 </div>
               </FieldGroup>
 
-              <FieldGroup label="╪╣┘å┘ê╪º┘å ┘à╪▒╪¡┘ä┘ç ╪¼╪»█î╪»" required invalid={showValidation && !stageTitle.trim()}>
-                <FormTextInput value={stageTitle} onChange={setStageTitle} placeholder="┘à╪½┘ä╪º┘ï ╪¿╪▒╪▒╪│█î ┘à╪»█î╪▒ ┘ü╪▒┘ê╪┤" className="!h-12 !rounded-[16px] !text-sm" invalid={showValidation && !stageTitle.trim()} />
+              <FieldGroup label="+�+�+�+�+� +�+�+�+�+� +�+���+�" required invalid={showValidation && !stageTitle.trim()}>
+                <FormTextInput value={stageTitle} onChange={setStageTitle} placeholder="+�+�+�+�+� +�+�+�+��� +�+���+� +�+�+�+�" className="!h-12 !rounded-[8px] !text-sm" invalid={showValidation && !stageTitle.trim()} />
               </FieldGroup>
 
-              <FieldGroup label="╪¬╪º█î█î╪» ┌⌐┘å┘å╪»┘ç" required invalid={showValidation && !selectedEmployeeId}>
+              <FieldGroup label="+�+����+� +�+�+�+�+�" required invalid={showValidation && !selectedEmployeeId}>
                 <InlineSelect
                   invalid={showValidation && !selectedEmployeeId}
                   value={selectedEmployeeId}
                   onSelect={setSelectedEmployeeId}
                   options={employeeOptions}
-                  placeholder="╪º┘å╪¬╪«╪º╪¿ ╪º╪▓ ╪¿█î┘å ┌⌐╪º╪▒┘à┘å╪»╪º┘å"
-                  searchPlaceholder="╪¼╪│╪¬╪¼┘ê ╪»╪▒ ╪¿█î┘å ┌⌐╪º╪▒┘à┘å╪»╪º┘å"
-                  emptyText={employeeOptions.length ? '┌⌐╪º╪▒┘à┘å╪»█î ┘╛█î╪»╪º ┘å╪┤╪»' : '╪º╪¿╪¬╪»╪º ┌⌐╪º╪▒┘à┘å╪» ╪»╪▒ ╪¿╪«╪┤ ┌⌐╪º╪▒┌⌐┘å╪º┘å ╪½╪¿╪¬ ┌⌐┘å█î╪»'}
+                  placeholder="+�+�+�+�+�+� +�+� +���+� +�+�+�+�+�+�+�+�"
+                  searchPlaceholder="+�+�+�+�+� +�+� +���+� +�+�+�+�+�+�+�+�"
+                  emptyText={employeeOptions.length ? '+�+�+�+�+�+��� ++��+�+� +�+�+�' : '+�+�+�+�+� +�+�+�+�+�+� +�+� +�+�+� +�+�+�+�+�+�+� +�+�+� +�+��+�'}
                 />
               </FieldGroup>
             </div>
 
             <div className="business-dialog-actions !justify-start !gap-3">
               <button type="button" className="profile-primary-button" disabled={!stageTitle.trim() || !selectedEmployeeId} onClick={saveStage}>
-                {editingStageId ? '╪¿╪▒┘ê╪▓╪▒╪│╪º┘å█î' : '╪░╪«█î╪▒┘ç'}
+                {editingStageId ? '+�+�+�+�+�+�+�+��' : '+�+���+�+�'}
               </button>
               <button type="button" className="profile-primary-button is-secondary" onClick={closeDialog}>
-                ╪º┘å╪╡╪▒╪º┘ü ┘ê ╪¿╪º╪▓┌»╪┤╪¬
+                +�+�+�+�+�+� +� +�+�+�+�+�+�
               </button>
             </div>
 
             {selectedEmployee ? (
-              <div className="rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] px-4 py-3 text-right text-sm text-[color:var(--text-muted)]">
-                ╪º█î┘å ┘à╪▒╪¡┘ä┘ç ╪¿╪▒╪º█î <span className="font-black text-[color:var(--text-strong)]">{selectedEmployee.label}</span> ╪¿╪º ┘å┘é╪┤{' '}
-                <span className="font-black text-[color:var(--text-strong)]">{roleBadgeLabels[stageRole]}</span> ╪½╪¿╪¬ ┘à█îΓÇî╪┤┘ê╪».
+              <div className="rounded-[8px] border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] px-4 py-3 text-right text-sm text-[color:var(--text-muted)]">
+                +���+� +�+�+�+�+� +�+�+��� <span className="font-black text-[color:var(--text-strong)]">{selectedEmployee.label}</span> +�+� +�+�+�{' '}
+                <span className="font-black text-[color:var(--text-strong)]">{roleBadgeLabels[stageRole]}</span> +�+�+� +��G��+�+�+�.
               </div>
             ) : null}
           </div>
@@ -423,3 +423,5 @@ export default function ApprovalUsageTypePageClient({ usage }: { usage: Approval
     </>
   );
 }
+
+

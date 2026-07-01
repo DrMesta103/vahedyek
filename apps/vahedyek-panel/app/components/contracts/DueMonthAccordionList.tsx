@@ -71,7 +71,7 @@ export function DueMonthAccordionList({
         return (
           <div
             key={bucket.key}
-            className="overflow-hidden rounded-[18px] border border-slate-200/90 bg-white shadow-[0_8px_30px_-18px_rgba(15,23,42,0.12)]"
+            className="overflow-hidden rounded-[8px] border border-slate-200/90 bg-white shadow-[0_8px_30px_-18px_rgba(15,23,42,0.12)]"
           >
             <div className="flex w-full items-start gap-3 px-4 py-3.5 text-right sm:items-center sm:px-5 sm:py-4">
               <button
@@ -114,7 +114,7 @@ export function DueMonthAccordionList({
                 type="button"
                 onClick={() => toggleMonth(bucket.key)}
                 aria-expanded={isOpen}
-                className="order-2 rounded-lg p-1 text-slate-400 transition hover:bg-slate-100"
+                className="order-2 rounded-[8px] p-1 text-slate-400 transition hover:bg-slate-100"
                 aria-label={isOpen ? 'بستن ماه' : 'باز کردن ماه'}
               >
                 <ChevronDown
@@ -146,7 +146,7 @@ export function DueMonthAccordionList({
                     return (
                       <div
                         key={row.id.trim() ? row.id : `${bucket.key}-${rowIdx}-${row.dueDate}`}
-                        className="rounded-2xl border border-slate-200/90 bg-white px-3.5 py-3 shadow-sm sm:px-4"
+                        className="rounded-[8px] border border-slate-200/90 bg-white px-3.5 py-3 shadow-sm sm:px-4"
                       >
                         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
                           <div className="min-w-0 flex-1">
@@ -171,7 +171,7 @@ export function DueMonthAccordionList({
                           </div>
                         </div>
 
-                        <div className="mt-3 grid gap-2 rounded-2xl border border-slate-100 bg-slate-50/55 px-3 py-2.5 sm:grid-cols-4">
+                        <div className="mt-3 grid gap-2 rounded-[8px] border border-slate-100 bg-slate-50/55 px-3 py-2.5 sm:grid-cols-4">
                           <div>
                             <div className="text-[10px] font-bold text-slate-500">پرداختی</div>
                             <div className="mt-0.5 text-[12px] font-black tabular-nums text-emerald-700">{formatMoneyRial(paidRial)}</div>
@@ -189,7 +189,7 @@ export function DueMonthAccordionList({
                                   <PenaltyInfoButton onClick={() => onOpenPenaltyDetails({ mode: 'single', row })} />
                                 ) : null}
                               </div>
-                              <div className="rounded-lg bg-slate-50 px-2 py-1 text-[10px] font-semibold leading-5 text-slate-600">
+                              <div className="rounded-[8px] bg-slate-50 px-2 py-1 text-[10px] font-semibold leading-5 text-slate-600">
                                 <div className="flex items-center justify-between gap-2">
                                   <span>بخشودگی</span>
                                   <span className="tabular-nums font-black text-slate-800">
@@ -252,3 +252,5 @@ export function DueMonthAccordionList({
     </>
   );
 }
+
+

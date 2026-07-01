@@ -5,14 +5,20 @@ import { Calendar, ChevronDown, ChevronUp, Search, X } from 'lucide-react';
 import { Input, PersianDatePicker } from '@repo/ui';
 
 export function SectionCard({ children, className = '' }: { children: ReactNode; className?: string }) {
-  return <div className={`rounded-xl border border-slate-200 bg-white ${className}`}>{children}</div>;
+  return (
+    <div
+      className={`overflow-hidden rounded-[8px] border border-slate-200/70 bg-white shadow-[0_20px_55px_-42px_rgba(15,23,42,0.3)] ${className}`}
+    >
+      {children}
+    </div>
+  );
 }
 
 export function SectionHeader({ label, description }: { label: string; description?: string }) {
   return (
-    <div className="border-b border-slate-100 px-5 py-4">
-      <p className="text-[13px] font-semibold uppercase tracking-widest text-slate-400">{label}</p>
-      {description ? <p className="mt-0.5 text-[13px] text-slate-500">{description}</p> : null}
+    <div className="border-b border-slate-100/90 px-5 py-5 text-right sm:px-6 sm:py-6">
+      <p className="text-[18px] font-black tracking-tight text-slate-700">{label}</p>
+      {description ? <p className="mt-1.5 text-[13px] leading-6 text-slate-500">{description}</p> : null}
     </div>
   );
 }
@@ -31,13 +37,13 @@ export function FieldGroup({
   invalid?: boolean;
 }) {
   return (
-    <div className="space-y-1.5">
-      <label className="flex items-center gap-1 text-[13px] font-bold text-slate-700">
+    <div className="space-y-2 text-right">
+      <label className="flex items-center justify-start gap-1 text-[14px] font-black text-slate-700">
         {label}
         {required ? <span className="text-rose-500">*</span> : null}
       </label>
-      <div className={invalid ? 'rounded-xl border border-rose-300 bg-rose-50/40 p-2' : ''}>{children}</div>
-      {hint ? <p className="text-[11px] text-slate-400">{hint}</p> : null}
+      <div className={invalid ? 'rounded-[8px] border border-rose-300 bg-rose-50/40 p-2' : ''}>{children}</div>
+      {hint ? <p className="text-[12px] leading-6 text-slate-400">{hint}</p> : null}
     </div>
   );
 }
@@ -73,7 +79,7 @@ export function FormTextInput({
       dir={dir}
       aria-invalid={invalid}
       endAdornment={Icon ? <Icon className="h-4 w-4 text-slate-400" /> : undefined}
-      className={`h-[42px] rounded-xl border bg-[image:var(--control-bg-gradient)] text-[13px] text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] placeholder:text-slate-400 focus:ring-4 ${
+      className={`h-[46px] rounded-[8px] border bg-[image:var(--control-bg-gradient)] text-[14px] text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.92)] placeholder:text-slate-400 focus:ring-4 ${
         invalid ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500/10' : 'border-slate-200 focus:border-cyan-500 focus:ring-cyan-500/10'
       } ${Icon ? 'pr-10 pl-3.5' : 'px-3.5'} ${className}`}
     />
@@ -103,7 +109,7 @@ export function FormDateInput({
         onChange={onChange}
         placeholder={placeholder ?? 'انتخاب تاریخ'}
         withCalendarIcon={!Icon}
-        className={`h-[42px] w-full rounded-xl border bg-[image:var(--control-bg-gradient)] ${Icon ? 'pr-10 pl-3.5' : 'px-3.5'} text-[13px] text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] placeholder:text-slate-400 outline-none transition-all ${
+        className={`h-[46px] w-full rounded-[8px] border bg-[image:var(--control-bg-gradient)] ${Icon ? 'pr-10 pl-3.5' : 'px-3.5'} text-[14px] text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.92)] placeholder:text-slate-400 outline-none transition-all ${
           invalid ? 'border-rose-400 focus:border-rose-500 focus:ring-4 focus:ring-rose-500/10' : 'border-slate-200 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10'
         } ${className}`}
       />
@@ -292,7 +298,7 @@ export function InlineSelect({
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
-        className={`flex h-[42px] w-full items-center justify-between rounded-xl border bg-[image:var(--control-bg-gradient)] px-3.5 text-[13px] text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] outline-none transition-all ${
+        className={`flex h-[42px] w-full items-center justify-between rounded-[8px] border bg-[image:var(--control-bg-gradient)] px-3.5 text-[13px] text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] outline-none transition-all ${
           invalid ? 'border-rose-400 focus:border-rose-500 focus:ring-4 focus:ring-rose-500/10' : 'border-slate-200 hover:border-slate-300 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10'
         }`}
       >
@@ -301,7 +307,7 @@ export function InlineSelect({
       </button>
 
       {open ? (
-        <div className="absolute z-20 mt-1 w-full rounded-xl border border-slate-200 bg-white shadow-[0_18px_45px_rgba(15,23,42,0.12)]">
+        <div className="absolute z-20 mt-1 w-full rounded-[8px] border border-slate-200 bg-white shadow-[0_18px_45px_rgba(15,23,42,0.12)]">
           <div className="flex items-center gap-2 border-b border-slate-100 px-3 py-2">
             <Search className="h-3.5 w-3.5 shrink-0 text-slate-400" />
             <input
@@ -385,7 +391,7 @@ export function ExpandableTagGroup({
   };
 
   return (
-    <div className={`space-y-2 ${invalid ? 'rounded-xl border border-rose-300 bg-rose-50/40 p-3' : ''}`}>
+    <div className={`space-y-2 ${invalid ? 'rounded-[8px] border border-rose-300 bg-rose-50/40 p-3' : ''}`}>
       <div className="flex items-center gap-2">
         <label className="text-[13px] font-bold text-slate-700">
           {label}
@@ -399,7 +405,7 @@ export function ExpandableTagGroup({
         ) : null}
 
         <div
-          className={`relative flex items-center overflow-hidden rounded-md border bg-white transition-[max-width,opacity,border-color] duration-200 ease-out ${
+          className={`relative flex items-center overflow-hidden rounded-[8px] border bg-white transition-[max-width,opacity,border-color] duration-200 ease-out ${
             searchOpen ? 'max-w-[176px] border-slate-300 opacity-100' : 'max-w-0 border-transparent opacity-0'
           }`}
           style={{ height: '22px' }}
@@ -417,7 +423,7 @@ export function ExpandableTagGroup({
             type="button"
             onClick={closeSearch}
             tabIndex={searchOpen ? 0 : -1}
-            className="absolute left-1 flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-sm text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+            className="absolute left-1 flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-[8px] text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
           >
             <X className="h-2.5 w-2.5" />
           </button>
@@ -457,3 +463,5 @@ export function ExpandableTagGroup({
     </div>
   );
 }
+
+

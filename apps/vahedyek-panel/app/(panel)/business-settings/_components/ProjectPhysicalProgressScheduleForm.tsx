@@ -202,7 +202,7 @@ function BlockMultiSelect({
       <button
         type="button"
         onClick={() => !disabled && setOpen((current) => !current)}
-        className={`flex h-11 w-full items-center justify-between rounded-2xl border border-slate-200 px-4 text-sm ${disabled ? 'cursor-not-allowed bg-slate-100 text-slate-500' : 'bg-white text-slate-800'}`}
+        className={`flex h-11 w-full items-center justify-between rounded-[8px] border border-slate-200 px-4 text-sm ${disabled ? 'cursor-not-allowed bg-slate-100 text-slate-500' : 'bg-white text-slate-800'}`}
         title="انتخاب بلوک‌های مرتبط با این برنامه زمان‌بندی"
       >
         <span className={selectedNames.length ? '' : 'text-slate-400'}>
@@ -212,7 +212,7 @@ function BlockMultiSelect({
       </button>
 
       {open && !disabled ? (
-        <div className="absolute z-20 mt-2 w-full rounded-2xl border border-slate-200 bg-white p-3 shadow-[0_18px_45px_rgba(15,23,42,0.12)]">
+        <div className="absolute z-20 mt-2 w-full rounded-[8px] border border-slate-200 bg-white p-3 shadow-[0_18px_45px_rgba(15,23,42,0.12)]">
           <div className="max-h-56 space-y-2 overflow-auto">
             {blocks.map((block) => {
               const checked = selectedBlockIds.includes(block.id);
@@ -220,7 +220,7 @@ function BlockMultiSelect({
                 <button
                   key={block.id}
                   type="button"
-                  className={`flex w-full items-center justify-between rounded-xl border px-3 py-2 text-sm transition ${
+                  className={`flex w-full items-center justify-between rounded-[8px] border px-3 py-2 text-sm transition ${
                     checked
                       ? 'border-[color:var(--dark-teal)] bg-[color-mix(in_srgb,var(--dark-teal)_8%,white)] text-slate-900'
                       : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
@@ -274,7 +274,7 @@ function SortDropdown({
       <button
         type="button"
         onClick={onToggle}
-        className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700"
+        className="inline-flex items-center gap-2 rounded-[8px] border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700"
         title="مرتب‌سازی مراحل بر اساس ترتیب دستی یا تاریخ شروع و پایان"
       >
         <ArrowDownUp className="h-4 w-4" />
@@ -282,12 +282,12 @@ function SortDropdown({
       </button>
 
       {open ? (
-        <div className="absolute left-0 z-20 mt-2 min-w-60 rounded-2xl border border-slate-200 bg-white p-2 shadow-[0_18px_45px_rgba(15,23,42,0.12)]">
+        <div className="absolute left-0 z-20 mt-2 min-w-60 rounded-[8px] border border-slate-200 bg-white p-2 shadow-[0_18px_45px_rgba(15,23,42,0.12)]">
           {options.map((option) => (
             <button
               key={option.value}
               type="button"
-              className={`flex w-full rounded-xl px-3 py-2 text-right text-sm ${option.value === sortMode ? 'bg-slate-100 font-bold text-slate-900' : 'text-slate-700 hover:bg-slate-50'}`}
+              className={`flex w-full rounded-[8px] px-3 py-2 text-right text-sm ${option.value === sortMode ? 'bg-slate-100 font-bold text-slate-900' : 'text-slate-700 hover:bg-slate-50'}`}
               onClick={() => onSelect(option.value)}
             >
               {option.label}
@@ -319,13 +319,13 @@ function StageCard({
     <div
       ref={setNodeRef}
       style={style}
-      className={`rounded-2xl border border-slate-200 bg-white px-4 py-4 ${isDragging ? 'shadow-[0_12px_35px_rgba(15,23,42,0.16)]' : ''}`}
+      className={`rounded-[8px] border border-slate-200 bg-white px-4 py-4 ${isDragging ? 'shadow-[0_12px_35px_rgba(15,23,42,0.16)]' : ''}`}
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-start gap-3">
           <button
             type="button"
-            className="mt-1 cursor-grab rounded-xl border border-slate-200 p-2 text-slate-400 active:cursor-grabbing"
+            className="mt-1 cursor-grab rounded-[8px] border border-slate-200 p-2 text-slate-400 active:cursor-grabbing"
             aria-label="جابجایی مرحله"
             title="برای تغییر ترتیب، این مرحله را بکشید و در جای جدید رها کنید"
             {...attributes}
@@ -349,7 +349,7 @@ function StageCard({
           <div className="relative">
             <button
               type="button"
-              className="rounded-xl border border-slate-200 p-2 text-slate-500"
+              className="rounded-[8px] border border-slate-200 p-2 text-slate-500"
               aria-label="عملیات مرحله"
               title="عملیات مرحله"
               onClick={onToggleMenu}
@@ -622,9 +622,9 @@ export function ProjectPhysicalProgressScheduleForm({ scheduleKey }: { scheduleK
         {loading ? <div className="business-blocks-state">در حال دریافت اطلاعات فرم...</div> : null}
 
         {!loading ? (
-          <div className="mt-6 space-y-5 rounded-[28px] border border-slate-200 bg-white p-5">
+          <div className="mt-6 space-y-5 rounded-[8px] border border-slate-200 bg-white p-5">
             {isEditing ? (
-              <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+              <div className="rounded-[8px] border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
                 ویرایش این برنامه باعث ایجاد نسخه جدید برای قراردادهای آینده خواهد شد. قراردادهای قبلی بدون تغییر باقی می‌مانند.
               </div>
             ) : null}
@@ -653,11 +653,11 @@ export function ProjectPhysicalProgressScheduleForm({ scheduleKey }: { scheduleK
             </div>
 
             <div className="grid gap-3 md:grid-cols-3">
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+              <div className="rounded-[8px] border border-slate-200 bg-slate-50 px-4 py-3">
                 <div className="text-xs text-slate-500">پیشرفت تحقق‌یافته</div>
                 <div className="mt-2 text-lg font-black text-slate-900">{formatWeight(completedWeight)}</div>
               </div>
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+              <div className="rounded-[8px] border border-slate-200 bg-slate-50 px-4 py-3">
                 <div className="text-xs text-slate-500">مانده پروژه</div>
                 <div className="mt-2 text-lg font-black text-slate-900">{formatWeight(remainingWeight)}</div>
               </div>
@@ -713,8 +713,8 @@ export function ProjectPhysicalProgressScheduleForm({ scheduleKey }: { scheduleK
               </DndContext>
 
               {stagePickerOpen ? (
-                <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
-                  <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                <div className="mt-4 rounded-[8px] border border-slate-200 bg-slate-50/60 p-4">
+                  <div className="rounded-[8px] border border-slate-200 bg-white p-4">
                     <div className="mb-5">
                       <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
                         <div>
@@ -812,7 +812,7 @@ export function ProjectPhysicalProgressScheduleForm({ scheduleKey }: { scheduleK
                 </div>
               ) : null}
 
-              <div className={`mt-4 rounded-2xl px-4 py-3 text-sm ${Math.abs(totalWeight - 100) > 0.001 ? 'bg-rose-50 text-rose-700' : 'bg-emerald-50 text-emerald-700'}`}>
+              <div className={`mt-4 rounded-[8px] px-4 py-3 text-sm ${Math.abs(totalWeight - 100) > 0.001 ? 'bg-rose-50 text-rose-700' : 'bg-emerald-50 text-emerald-700'}`}>
                 <div className="flex items-center gap-2">
                   <AlertCircle className="h-4 w-4" />
                   <span>
@@ -841,5 +841,7 @@ export function ProjectPhysicalProgressScheduleForm({ scheduleKey }: { scheduleK
     </section>
   );
 }
+
+
 
 

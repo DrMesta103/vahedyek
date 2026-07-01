@@ -6,10 +6,20 @@ import type {
   ContractAppendixListResponse,
   ContractStatus,
   CreateContractAppendixInput,
+  ContractTerminationData,
 } from '../types/contract';
+import type { ContractRuleId, ContractRuleState, LoanSettingsState } from './businessContractRules';
 
 const ACTIVE_DRAFT_KEY = 'active-contract-draft-id';
 const FRONTEND_STEP_DRAFT_PREFIX = 'contract-flow:frontend-step-draft';
+const BOOTSTRAP_SETTINGS_KEY = 'contract-flow:bootstrap-settings';
+
+export type ContractFlowBootstrapSettings = {
+  rules: Partial<Record<ContractRuleId, ContractRuleState>>;
+  loanSettings: LoanSettingsState | null;
+  termination: ContractTerminationData | null;
+  loadedAt: number;
+};
 export type ReferenceUnit = {
   id: string;
   floorName: string;
@@ -60,7 +70,7 @@ async function readJson<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
   if (response.status >= 300 && response.status < 400) {
     const location = response.headers.get('location') ?? '';
     if (location.startsWith('/login')) {
-      throw new Error('برای استفاده از سامانه باید وارد شوید.');
+      throw new Error('کاربر برای این tenant یافت نشد.');
     }
   }
 
@@ -69,7 +79,7 @@ async function readJson<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
 
     if (contentType.includes('application/json')) {
       const payload = (await response.json()) as { message?: string };
-      throw new Error(payload.message || 'خطا در ارتباط با سرور');
+      throw new Error(payload.message || 'پاسخی از سرور دریافت نشد.');
     }
 
     const message = await response.text();
@@ -80,9 +90,9 @@ async function readJson<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
       contentType.includes('text/html');
 
     if (isHtmlError) {
-      throw new Error(response.status === 404 ? 'صفحه یا مسیر درخواستی یافت نشد.' : 'خطا در ارتباط با سرور');
+      throw new Error(response.status === 404 ? 'مورد درخواستی پیدا نشد.' : 'پاسخی از سرور دریافت نشد.');
     }
-    throw new Error(normalizedMessage || 'خطا در ارتباط با سرور');
+    throw new Error(normalizedMessage || 'پاسخی از سرور دریافت نشد.');
   }
 
   return response.json() as Promise<T>;
@@ -135,6 +145,48 @@ export function clearFrontendStepDraft(draftId: string, step: FrontendDraftStep)
   localStorage.removeItem(`${FRONTEND_STEP_DRAFT_PREFIX}:${draftId}:${step}`);
 }
 
+export function getContractFlowBootstrapSettings() {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(BOOTSTRAP_SETTINGS_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as ContractFlowBootstrapSettings;
+  } catch {
+    return null;
+  }
+}
+
+export function setContractFlowBootstrapSettings(payload: ContractFlowBootstrapSettings) {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(BOOTSTRAP_SETTINGS_KEY, JSON.stringify(payload));
+}
+
+export function clearContractFlowBootstrapSettings() {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem(BOOTSTRAP_SETTINGS_KEY);
+}
+
+export async function fetchContractFlowBootstrapSettings() {
+  const [rulesResponse, loanResponse, terminationResponse] = await Promise.all([
+    readJson<{ rules?: Partial<Record<ContractRuleId, ContractRuleState>> }>('/api/business-settings/contract-rules', {
+      cache: 'no-store',
+    }),
+    readJson<LoanSettingsState>('/api/business-settings/contract-rules/loan-settings', {
+      cache: 'no-store',
+    }),
+    readJson<ContractTerminationData>('/api/business-settings/contract-rules/termination-settings', {
+      cache: 'no-store',
+    }),
+  ]);
+
+  return {
+    rules: rulesResponse.rules ?? {},
+    loanSettings: loanResponse,
+    termination: terminationResponse,
+    loadedAt: Date.now(),
+  } satisfies ContractFlowBootstrapSettings;
+}
+
 export async function ensureActiveDraftId() {
   const existingId = getActiveDraftId();
   if (existingId) return existingId;
@@ -180,7 +232,7 @@ export async function saveDraftRuleStepData<T>(draftId: string, step: 'forgivene
   });
 }
 
-/** بارگذاری قواعد فسخ خریدار از ستون buyerRules در پایگاه. */
+/** تنظیمات فسخ خریدار را از endpoint مربوط به buyerRules می‌گیرد. */
 export async function fetchTerminationBuyerRules(draftId: string): Promise<{ buyerRules: unknown; payload?: unknown } | null> {
   try {
     return await readJson<{ buyerRules: unknown; payload?: unknown }>(`/api/contracts/drafts/${draftId}/termination`);

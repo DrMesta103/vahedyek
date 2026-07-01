@@ -364,7 +364,7 @@ export default function PhaseManagementWorkspace() {
 
   return (
     <main className="space-y-6" dir="rtl">
-      <section className="overflow-hidden rounded-[26px] border border-slate-200 bg-white shadow-sm">
+      <section className="overflow-hidden rounded-[8px] border border-slate-200 bg-white shadow-sm">
         <div className="border-b border-slate-100 px-6 py-4">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
@@ -389,7 +389,7 @@ export default function PhaseManagementWorkspace() {
                 return (
                   <article
                     key={task.id}
-                    className={`rounded-[22px] border px-5 py-5 ${
+                    className={`rounded-[8px] border px-5 py-5 ${
                       task.status === 'done'
                         ? 'border-emerald-200 bg-[linear-gradient(180deg,#ffffff,#f6fffb)]'
                         : 'border-slate-200 bg-[linear-gradient(180deg,#ffffff,#fbfdff)]'
@@ -417,7 +417,7 @@ export default function PhaseManagementWorkspace() {
                         <div className="text-lg font-black text-slate-950">{task.title}</div>
                         <div className="mt-2 text-sm leading-7 text-slate-600">{task.note || 'بدون توضیح'}</div>
                       </div>
-                      <div className="grid gap-2 rounded-2xl bg-slate-50 p-4 text-xs font-semibold text-slate-600">
+                      <div className="grid gap-2 rounded-[8px] bg-slate-50 p-4 text-xs font-semibold text-slate-600">
                         <RowMeta label="بخش" value={task.section || '-'} />
                         <RowMeta label="تاریخ پایان" value={task.dueDate || '-'} />
                       </div>
@@ -430,7 +430,7 @@ export default function PhaseManagementWorkspace() {
             )}
           </div>
 
-          <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-5">
+          <div className="rounded-[8px] border border-slate-200 bg-slate-50 p-5">
             <div className="text-sm font-black text-slate-950">افزودن تسک جدید</div>
             <div className="mt-1 text-xs font-semibold text-slate-500">مثلاً: تنظیمات سود یا تنظیمات وام</div>
             <div className="mt-4 grid gap-3">
@@ -483,7 +483,7 @@ export default function PhaseManagementWorkspace() {
 
 function CompactStat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl bg-slate-50 px-3 py-3">
+    <div className="rounded-[8px] bg-slate-50 px-3 py-3">
       <div className="text-xs font-bold text-slate-500">{label}</div>
       <div className="mt-1 text-lg font-black text-slate-950">{value}</div>
     </div>
@@ -492,7 +492,7 @@ function CompactStat({ label, value }: { label: string; value: string }) {
 
 function RowMeta({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between rounded-xl border border-white bg-white px-3 py-2">
+    <div className="flex items-center justify-between rounded-[8px] border border-white bg-white px-3 py-2">
       <span>{label}</span>
       <span className="font-black text-slate-800">{value}</span>
     </div>
@@ -509,7 +509,7 @@ function BlankWorkspaceCard({
   compact?: boolean;
 }) {
   return (
-    <div className={`rounded-[22px] border border-dashed border-slate-300 bg-slate-50 text-center ${compact ? 'px-4 py-6' : 'px-6 py-10'}`}>
+    <div className={`rounded-[8px] border border-dashed border-slate-300 bg-slate-50 text-center ${compact ? 'px-4 py-6' : 'px-6 py-10'}`}>
       <div className="text-sm font-black text-slate-800">{title}</div>
       <div className="mt-2 text-xs leading-6 text-slate-500">{body}</div>
     </div>
@@ -521,8 +521,10 @@ function toFa(value: number) {
 }
 
 const inputClass =
-  'h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-sm outline-none transition focus:border-slate-300';
+  'h-11 w-full rounded-[8px] border border-slate-200 bg-white px-3 text-sm outline-none transition focus:border-slate-300';
 const textAreaClass =
-  'min-h-[92px] w-full rounded-2xl border border-slate-200 bg-white px-3 py-3 text-sm outline-none transition focus:border-slate-300';
+  'min-h-[92px] w-full rounded-[8px] border border-slate-200 bg-white px-3 py-3 text-sm outline-none transition focus:border-slate-300';
 const primaryButtonClass =
-  'inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-[color:var(--dark-teal)] px-4 text-sm font-black text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50';
+  'inline-flex h-11 items-center justify-center gap-2 rounded-[8px] bg-[color:var(--dark-teal)] px-4 text-sm font-black text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50';
+
+

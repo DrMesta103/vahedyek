@@ -79,7 +79,7 @@ export default function BuyerFinancialReport({ contractId }: { contractId: strin
 
   if (loading) {
     return (
-      <div className="rounded-[28px] border border-slate-200 bg-white/95 p-10 text-center shadow-sm">
+      <div className="rounded-[8px] border border-slate-200 bg-white/95 p-10 text-center shadow-sm">
         <i className="fa fa-spinner fa-spin" style={{ fontSize: '32px', color: '#008080' }}></i>
         <p className="mt-4 text-sm font-semibold text-slate-500">در حال دریافت اطلاعات مالی قرارداد...</p>
       </div>
@@ -88,7 +88,7 @@ export default function BuyerFinancialReport({ contractId }: { contractId: strin
 
   if (error || !summary) {
     return (
-      <div className="rounded-[28px] border border-rose-200 bg-rose-50/90 p-8 text-right shadow-sm">
+      <div className="rounded-[8px] border border-rose-200 bg-rose-50/90 p-8 text-right shadow-sm">
         <h3 className="text-lg font-black text-rose-900">گزارش مالی در دسترس نیست</h3>
         <p className="mt-2 text-sm font-semibold leading-7 text-rose-800">
           امکان نمایش نمودار مالی قرارداد در حال حاضر وجود ندارد. لطفاً بعداً دوباره بررسی کنید.
@@ -98,7 +98,7 @@ export default function BuyerFinancialReport({ contractId }: { contractId: strin
   }
 
   return (
-    <section className="rounded-[28px] border border-slate-200/80 bg-white/95 p-5 text-right shadow-sm md:p-7">
+    <section className="rounded-[8px] border border-slate-200/80 bg-white/95 p-5 text-right shadow-sm md:p-7">
       <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-100 pb-4">
         <div>
           <div className="inline-flex rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-[11px] font-black text-cyan-900">
@@ -110,7 +110,7 @@ export default function BuyerFinancialReport({ contractId }: { contractId: strin
           </p>
         </div>
 
-        <div className="max-w-xl rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 px-4 py-3 text-[12px] font-semibold leading-7 text-slate-600">
+        <div className="max-w-xl rounded-[8px] border border-dashed border-slate-200 bg-slate-50/70 px-4 py-3 text-[12px] font-semibold leading-7 text-slate-600">
           این نسخه فقط اطلاعات مجاز خریدار را نشان می‌دهد. جزئیات داخلی، یادداشت محرمانه و تصمیم‌های بازبینی نمایش داده نمی‌شود.
         </div>
       </div>
@@ -199,3 +199,5 @@ export default function BuyerFinancialReport({ contractId }: { contractId: strin
     </section>
   );
 }
+
+

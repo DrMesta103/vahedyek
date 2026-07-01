@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import type { ReactNode } from 'react';
 import type { ChartTone, InstallmentChartDatum, PaymentTrendPoint } from '../../../lib/contractFinancialChartUtils';
@@ -54,12 +54,12 @@ export type ContractFinancialChartsProps = {
 };
 
 function formatMoneyRial(valueRial: number | null | undefined) {
-  if (valueRial == null) return 'نامشخص';
-  return `${Math.round(valueRial).toLocaleString('fa-IR')} ریال`;
+  if (valueRial == null) return '??????';
+  return `${Math.round(valueRial).toLocaleString('fa-IR')} ????`;
 }
 
 function formatCount(value: number) {
-  return `${Math.max(0, value).toLocaleString('fa-IR')} مورد`;
+  return `${Math.max(0, value).toLocaleString('fa-IR')} ????`;
 }
 
 function cn(...parts: Array<string | false | null | undefined>) {
@@ -94,14 +94,14 @@ function ChartCard({
   note?: string | null;
 }) {
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-4 text-right shadow-sm md:p-5">
+    <section className="rounded-[8px] border border-slate-200 bg-white p-4 text-right shadow-sm md:p-5">
       <div className="border-b border-slate-100 pb-3">
         <div className="text-[14px] font-black text-slate-900">{title}</div>
         <p className="mt-1 text-[11px] font-semibold leading-5 text-slate-500">{description}</p>
       </div>
       <div className="mt-4">{children}</div>
       {note ? (
-        <div className="mt-4 rounded-xl border border-dashed border-slate-200 px-3 py-2.5 text-[11px] font-semibold leading-6 text-slate-500">
+        <div className="mt-4 rounded-[8px] border border-dashed border-slate-200 px-3 py-2.5 text-[11px] font-semibold leading-6 text-slate-500">
           {note}
         </div>
       ) : null}
@@ -111,7 +111,7 @@ function ChartCard({
 
 function EmptyChartState({ message, tone = 'slate' }: { message: string; tone?: ChartTone }) {
   return (
-    <div className={cn('rounded-2xl border border-dashed px-4 py-8 text-center text-[12px] font-semibold leading-6', lightToneClasses(tone))}>
+    <div className={cn('rounded-[8px] border border-dashed px-4 py-8 text-center text-[12px] font-semibold leading-6', lightToneClasses(tone))}>
       {message}
     </div>
   );
@@ -163,7 +163,7 @@ function RingSummaryChart({
         className="mx-auto flex items-center justify-center rounded-full border border-dashed border-slate-200 px-6 text-center text-[12px] font-semibold leading-6 text-slate-500"
         style={{ width: size, height: size }}
       >
-        هنوز داده مالی کافی برای این نمودار ثبت نشده است.
+        ???? ???? ???? ???? ???? ??? ?????? ??? ???? ???.
       </div>
     );
   }
@@ -203,7 +203,7 @@ function LegendRow({
   suffix?: string;
 }) {
   return (
-    <div className={cn('rounded-xl border px-3 py-3', lightToneClasses(tone))}>
+    <div className={cn('rounded-[8px] border px-3 py-3', lightToneClasses(tone))}>
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: toneColor(tone) }} aria-hidden />
@@ -230,7 +230,7 @@ function MiniMetric({
   tone?: ChartTone;
 }) {
   return (
-    <div className={cn('rounded-2xl border px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.76)]', lightToneClasses(tone))}>
+    <div className={cn('rounded-[8px] border px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.76)]', lightToneClasses(tone))}>
       <div className="text-[10px] font-black opacity-80">{label}</div>
       <div className="mt-1 text-[14px] font-black leading-6">{value}</div>
       {note ? <p className="mt-1 text-[10px] font-semibold leading-5 opacity-75">{note}</p> : null}
@@ -252,7 +252,7 @@ function StatusMetricCard({
   return (
     <div
       className={cn(
-        'rounded-[24px] border border-slate-200/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(248,250,252,0.88))] px-5 py-4 shadow-[0_14px_34px_rgba(15,23,42,0.04)]',
+        'rounded-[8px] border border-slate-200/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(248,250,252,0.88))] px-5 py-4 shadow-[0_14px_34px_rgba(15,23,42,0.04)]',
         tone === 'emerald' && 'border-emerald-100',
         tone === 'amber' && 'border-amber-100',
         tone === 'rose' && 'border-rose-100',
@@ -274,47 +274,47 @@ function StatusMetricCard({
 function PaymentBreakdownCard({ chart }: { chart: PaymentBreakdownChart }) {
   const total = chart.confirmedPaidRial + chart.pendingReviewRial + chart.remainingDebtRial;
   const hasNoApprovedPayment = chart.confirmedPaidRial <= 0 && chart.pendingReviewRial <= 0;
-  const settlementStatus = chart.settled ? 'تسویه شده' : chart.remainingDebtRial > 0 ? 'دارای معوقه' : 'در حال بررسی';
+  const settlementStatus = chart.settled ? '????? ???' : chart.remainingDebtRial > 0 ? '????? ?????' : '?? ??? ?????';
   const settlementTone: ChartTone = chart.settled ? 'emerald' : chart.remainingDebtRial > 0 ? 'rose' : 'amber';
 
   return (
     <ChartCard
-      title="پرداخت‌شده و مانده بدهی"
-      description="پرداخت تأییدشده، مبلغ در انتظار بررسی و مانده بدهی همین قرارداد را جدا از هم نشان می‌دهد."
+      title="?????????? ? ????? ????"
+      description="?????? ????????? ???? ?? ?????? ????? ? ????? ???? ???? ??????? ?? ??? ?? ?? ???? ??????."
       note={chart.note}
     >
       {total <= 0 ? (
-        <EmptyChartState message="اطلاعات کافی برای نمایش این نمودار در حال حاضر وجود ندارد." />
+        <EmptyChartState message="??????? ???? ???? ????? ??? ?????? ?? ??? ???? ???? ?????." />
       ) : (
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(300px,0.9fr)] xl:items-start">
           <div className="grid content-start gap-4 sm:grid-cols-2">
             <StatusMetricCard
-              label="وضعیت تسویه"
+              label="????? ?????"
               value={settlementStatus}
-              note={chart.settled ? 'این قرارداد به‌طور کامل تسویه شده است.' : 'فقط رسیدهای تأییدشده در این وضعیت لحاظ می‌شوند.'}
+              note={chart.settled ? '??? ??????? ?????? ???? ????? ??? ???.' : '??? ??????? ???????? ?? ??? ????? ???? ???????.'}
               tone={settlementTone}
             />
             <StatusMetricCard
-              label="پرداخت‌شده قطعی"
+              label="?????????? ????"
               value={formatMoneyRial(chart.confirmedPaidRial)}
-              note="فقط رسیدهای تأییدشده در این عدد لحاظ شده‌اند."
+              note="??? ??????? ???????? ?? ??? ??? ???? ???????."
               tone="emerald"
             />
             <StatusMetricCard
-              label="بدهی آینده"
+              label="???? ?????"
               value={formatMoneyRial(chart.pendingReviewRial)}
-              note="بدهیِ سررسیدنشده از معوقه جدا شده است."
+              note="????? ?????????? ?? ????? ??? ??? ???."
               tone="cyan"
             />
             <StatusMetricCard
-              label="معوقه"
+              label="?????"
               value={formatMoneyRial(chart.remainingDebtRial)}
-              note="فقط بخش سررسید گذشته در این عدد می‌آید."
+              note="??? ??? ?????? ????? ?? ??? ??? ??????."
               tone="rose"
             />
           </div>
 
-          <div className="self-start rounded-[30px] border border-slate-200/75 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(248,250,252,0.9))] p-4 shadow-[0_18px_42px_rgba(15,23,42,0.04)] sm:p-5">
+          <div className="self-start rounded-[8px] border border-slate-200/75 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(248,250,252,0.9))] p-4 shadow-[0_18px_42px_rgba(15,23,42,0.04)] sm:p-5">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <div className="flex items-center gap-2 text-[11px] font-bold text-slate-500">
@@ -322,7 +322,7 @@ function PaymentBreakdownCard({ chart }: { chart: PaymentBreakdownChart }) {
                   Status Overview
                 </div>
                 <div className="mt-2 text-[18px] font-black text-slate-950">{formatMoneyRial(total)}</div>
-                <p className="mt-1 text-[11px] font-semibold leading-5 text-slate-500">بدهی کل قرارداد به تفکیک پرداخت‌شده، آینده و معوقه.</p>
+                <p className="mt-1 text-[11px] font-semibold leading-5 text-slate-500">???? ?? ??????? ?? ????? ??????????? ????? ? ?????.</p>
               </div>
             </div>
 
@@ -330,8 +330,8 @@ function PaymentBreakdownCard({ chart }: { chart: PaymentBreakdownChart }) {
               <RingSummaryChart
                 size={190}
                 centerValue={total.toLocaleString('fa-IR')}
-                centerLabel="ریال"
-                centerHint="بدهی کل"
+                centerLabel="????"
+                centerHint="???? ??"
                 segments={[
                   { key: 'confirmed', value: chart.confirmedPaidRial, tone: 'emerald' },
                   { key: 'pending', value: chart.pendingReviewRial, tone: 'amber' },
@@ -340,8 +340,8 @@ function PaymentBreakdownCard({ chart }: { chart: PaymentBreakdownChart }) {
               />
             </div>
 
-            <div className="mt-4 rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 px-4 py-3 text-[11px] font-semibold leading-6 text-slate-600">
-              فقط رسیدهای تأییدشده در محاسبه‌ی وضعیت نهایی لحاظ می‌شوند و بدهیِ آینده از معوقه جدا نمایش داده شده است.
+            <div className="mt-4 rounded-[8px] border border-dashed border-slate-200 bg-slate-50/70 px-4 py-3 text-[11px] font-semibold leading-6 text-slate-600">
+              ??? ??????? ???????? ?? ???????? ????? ????? ???? ??????? ? ????? ????? ?? ????? ??? ????? ???? ??? ???.
             </div>
           </div>
         </div>
@@ -353,7 +353,7 @@ function PaymentBreakdownCard({ chart }: { chart: PaymentBreakdownChart }) {
 function InstallmentStatusCard({ chart }: { chart: InstallmentStatusChart }) {
   const dominantItem = chart.items.reduce(
     (best, item) => (item.count > best.count ? item : best),
-    chart.items[0] ?? { key: 'paid', label: 'اقساط', count: 0, tone: 'slate' as ChartTone },
+    chart.items[0] ?? { key: 'paid', label: '?????', count: 0, tone: 'slate' as ChartTone },
   );
   const visibleSeries = chart.items.filter((item) => item.count > 0);
   const chartSeries = visibleSeries.length > 0 ? visibleSeries : chart.items;
@@ -361,8 +361,8 @@ function InstallmentStatusCard({ chart }: { chart: InstallmentStatusChart }) {
 
   return (
     <ChartCard
-      title="وضعیت اقساط قرارداد"
-      description="تعداد اقساط پرداخت‌شده، آینده، معوق و ناقص را روی همان برنامه پرداخت قرارداد نشان می‌دهد."
+      title="????? ????? ???????"
+      description="????? ????? ??????????? ?????? ???? ? ???? ?? ??? ???? ?????? ?????? ??????? ???? ??????."
       note={chart.note}
     >
       {chart.totalCount <= 0 ? (
@@ -371,26 +371,26 @@ function InstallmentStatusCard({ chart }: { chart: InstallmentStatusChart }) {
         <div className="space-y-4">
           <div className="project-report-summary-strip">
             <div className="project-report-legend-summary">
-              <strong>تعداد اقساط</strong>
+              <strong>????? ?????</strong>
               <span>{formatCount(chart.totalCount)}</span>
-              <p>تمام اقساطی که در نمودار فعلی دیده می‌شوند</p>
+              <p>???? ?????? ?? ?? ?????? ???? ???? ???????</p>
             </div>
             <div className="project-report-legend-summary">
-              <strong>وضعیت غالب</strong>
+              <strong>????? ????</strong>
               <span>{dominantItem.label}</span>
               <p>{formatCount(dominantItem.count)}</p>
             </div>
             <div className="project-report-legend-summary">
-              <strong>حالات فعال</strong>
+              <strong>????? ????</strong>
               <span>{visibleSeries.length.toLocaleString('fa-IR')}</span>
-              <p>دسته‌هایی که در داده فعلی حضور دارند</p>
+              <p>????????? ?? ?? ???? ???? ???? ?????</p>
             </div>
           </div>
 
-          <div className="rounded-[28px] border border-slate-200/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(248,250,252,0.86))] p-4 shadow-[0_18px_42px_rgba(15,23,42,0.04)] sm:p-5">
+          <div className="rounded-[8px] border border-slate-200/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(248,250,252,0.86))] p-4 shadow-[0_18px_42px_rgba(15,23,42,0.04)] sm:p-5">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div className="min-w-0">
-                <div className="text-[11px] font-bold text-slate-500">اقساط قابل نمایش</div>
+                <div className="text-[11px] font-bold text-slate-500">????? ???? ?????</div>
                 <div className="mt-1 text-[20px] font-black text-slate-950">{formatCount(chart.totalCount)}</div>
               </div>
               <div className="flex flex-wrap justify-end gap-2">
@@ -409,8 +409,8 @@ function InstallmentStatusCard({ chart }: { chart: InstallmentStatusChart }) {
               </div>
             </div>
 
-            <div className="mt-5 rounded-[28px] border border-slate-200/70 bg-white p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.85)] sm:p-5">
-              <div className="h-[240px] rounded-[24px] bg-[linear-gradient(180deg,rgba(248,250,252,0.56),rgba(255,255,255,0.22))] px-3 py-4 sm:px-4">
+            <div className="mt-5 rounded-[8px] border border-slate-200/70 bg-white p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.85)] sm:p-5">
+              <div className="h-[240px] rounded-[8px] bg-[linear-gradient(180deg,rgba(248,250,252,0.56),rgba(255,255,255,0.22))] px-3 py-4 sm:px-4">
                 <div className="relative h-full">
                   <div className="absolute inset-x-0 top-0 space-y-[34px]">
                     <div className="h-px bg-slate-200/80" />
@@ -427,11 +427,11 @@ function InstallmentStatusCard({ chart }: { chart: InstallmentStatusChart }) {
                         <div key={item.key} className="flex min-w-[84px] flex-1 flex-col items-center justify-end gap-2 sm:min-w-[104px]">
                           <div className="flex min-h-[34px] items-end justify-center text-center text-[10px] font-black leading-4 text-slate-700">
                             <span>{formatCount(item.count)}</span>
-                            <span className="ml-1 text-slate-400">({percent.toLocaleString('fa-IR')}٪)</span>
+                            <span className="ml-1 text-slate-400">({percent.toLocaleString('fa-IR')}%)</span>
                           </div>
                           <div className="flex h-[158px] items-end">
                             <div
-                              className="w-[34px] rounded-t-[12px] shadow-[0_16px_22px_rgba(37,99,235,0.14)] sm:w-[38px]"
+                              className="w-[34px] rounded-[8px] shadow-[0_16px_22px_rgba(37,99,235,0.14)] sm:w-[38px]"
                               style={{
                                 height: `${height}px`,
                                 backgroundImage: `linear-gradient(180deg, ${barColor} 0%, ${barColor}dd 55%, ${barColor}99 100%)`,
@@ -453,8 +453,8 @@ function InstallmentStatusCard({ chart }: { chart: InstallmentStatusChart }) {
               ))}
             </div>
 
-            <div className="mt-4 rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 px-4 py-3 text-[11px] font-semibold leading-6 text-slate-600">
-              این نمودار اقساط را به‌صورت Bar Chart نمایش می‌دهد تا تشخیص وضعیت‌های پرشمار و کم‌تعداد در یک نگاه ساده‌تر شود.
+            <div className="mt-4 rounded-[8px] border border-dashed border-slate-200 bg-slate-50/70 px-4 py-3 text-[11px] font-semibold leading-6 text-slate-600">
+              ??? ?????? ????? ?? ??????? Bar Chart ????? ?????? ?? ????? ????????? ?????? ? ???????? ?? ?? ???? ??????? ???.
             </div>
           </div>
         </div>
@@ -469,25 +469,25 @@ function PaymentTrendCard({ chart }: { chart: PaymentTrendChart }) {
 
   return (
     <ChartCard
-      title="روند پرداخت در طول زمان"
-      description="فقط بر اساس پرداخت‌های تأییدشده ساخته می‌شود و روند وصول ماهانه همین قرارداد را نمایش می‌دهد."
+      title="???? ?????? ?? ??? ????"
+      description="??? ?? ???? ?????????? ???????? ????? ?????? ? ???? ???? ?????? ???? ??????? ?? ????? ??????."
       note={chart.note}
     >
       {chart.approvedReceiptCount <= 0 ? (
         <EmptyChartState message={chart.emptyMessage} />
       ) : !hasUsableData ? (
-        <EmptyChartState message="اطلاعات کافی برای نمایش این نمودار در حال حاضر وجود ندارد." tone="amber" />
+        <EmptyChartState message="??????? ???? ???? ????? ??? ?????? ?? ??? ???? ???? ?????." tone="amber" />
       ) : (
         <div className="space-y-4">
-          <div className="rounded-2xl border border-slate-200 p-4">
+          <div className="rounded-[8px] border border-slate-200 p-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <div className="text-[11px] font-bold text-slate-500">بازه‌های زمانی پرداخت تأییدشده</div>
+                <div className="text-[11px] font-bold text-slate-500">???????? ????? ?????? ????????</div>
                 <div className="mt-1 text-[18px] font-black text-slate-950">{formatCount(chart.points.length)}</div>
               </div>
               {chart.missingTimelineCount > 0 ? (
                 <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-[11px] font-black text-amber-900">
-                  برای {chart.missingTimelineCount.toLocaleString('fa-IR')} رسید تاریخ معتبر پیدا نشد.
+                  ???? {chart.missingTimelineCount.toLocaleString('fa-IR')} ???? ????? ????? ???? ???.
                 </span>
               ) : null}
             </div>
@@ -505,7 +505,7 @@ function PaymentTrendCard({ chart }: { chart: PaymentTrendChart }) {
                       </div>
                       <div className="flex h-[160px] items-end">
                         <div
-                          className="w-12 rounded-t-2xl bg-[#6ea9df]"
+                          className="w-12 rounded-[8px] bg-[#6ea9df]"
                           style={{ height: `${height}px` }}
                         />
                       </div>
@@ -529,27 +529,27 @@ function PenaltyCard({ chart }: { chart: PenaltyChart }) {
 
   return (
     <ChartCard
-      title="وضعیت جریمه‌ها"
-      description="جریمه‌ها را جدا از اصل بدهی نشان می‌دهد و بین جریمه پرداخت‌شده، بخشوده‌شده و مانده باز تفکیک می‌گذارد."
+      title="????? ????????"
+      description="???????? ?? ??? ?? ??? ???? ???? ?????? ? ??? ????? ??????????? ?????????? ? ????? ??? ????? ????????."
       note={chart.note}
     >
       {chart.totalCount <= 0 && chart.appliedRial <= 0 && chart.remainingRial <= 0 ? (
         <EmptyChartState message={chart.emptyMessage} />
       ) : (
         <div className="space-y-4">
-          <div className="rounded-2xl border border-slate-200 p-4">
+          <div className="rounded-[8px] border border-slate-200 p-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <div className="text-[11px] font-bold text-slate-500">جریمه اعمال‌شده</div>
+                <div className="text-[11px] font-bold text-slate-500">????? ?????????</div>
                 <div className="mt-1 text-[18px] font-black text-slate-950">{formatMoneyRial(chart.appliedRial)}</div>
               </div>
               <div className="text-[11px] font-semibold text-slate-500">{formatCount(chart.totalCount)}</div>
             </div>
             <div className="mt-5">
               <RingSummaryChart
-                centerValue={`${resolvedPercent.toLocaleString('fa-IR')}٪`}
-                centerLabel="وضعیت جریمه"
-                centerHint="پرداخت یا بخشودگی"
+                centerValue={`${resolvedPercent.toLocaleString('fa-IR')}%`}
+                centerLabel="????? ?????"
+                centerHint="?????? ?? ???????"
                 segments={[
                   { key: 'paid', value: chart.paidRial, tone: 'emerald' },
                   { key: 'forgiven', value: chart.forgivenRial ?? 0, tone: 'cyan' },
@@ -560,21 +560,21 @@ function PenaltyCard({ chart }: { chart: PenaltyChart }) {
           </div>
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <LegendRow
-              label="جریمه محاسبه‌شده"
+              label="????? ??????????"
               value={formatMoneyRial(chart.calculatedRial)}
               tone="slate"
-              suffix={chart.calculatedRial == null ? 'در داده فعلی تفکیک نشده است' : undefined}
+              suffix={chart.calculatedRial == null ? '?? ???? ???? ????? ???? ???' : undefined}
             />
-            <LegendRow label="جریمه اعمال‌شده" value={formatMoneyRial(chart.appliedRial)} tone="amber" />
-            <LegendRow label="جریمه پرداخت‌شده" value={formatMoneyRial(chart.paidRial)} tone="emerald" />
+            <LegendRow label="????? ?????????" value={formatMoneyRial(chart.appliedRial)} tone="amber" />
+            <LegendRow label="????? ??????????" value={formatMoneyRial(chart.paidRial)} tone="emerald" />
             <LegendRow
-              label="جریمه بخشوده‌شده"
+              label="????? ??????????"
               value={formatMoneyRial(chart.forgivenRial)}
               tone="cyan"
-              suffix={chart.forgivenRial == null ? 'در داده فعلی موجود نیست' : undefined}
+              suffix={chart.forgivenRial == null ? '?? ???? ???? ????? ????' : undefined}
             />
             <div className="sm:col-span-2 xl:col-span-4">
-              <LegendRow label="جریمه باقی‌مانده" value={formatMoneyRial(chart.remainingRial)} tone="rose" />
+              <LegendRow label="????? ??????????" value={formatMoneyRial(chart.remainingRial)} tone="rose" />
             </div>
           </div>
         </div>
@@ -599,3 +599,6 @@ export default function ContractFinancialCharts({
     </div>
   );
 }
+
+
+

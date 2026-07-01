@@ -41,7 +41,7 @@ function LabeledField({
           value={value}
           onChange={(event) => onChange(event.target.value)}
           placeholder={placeholder}
-          className="h-14 rounded-2xl border-gray-300 px-4 text-lg text-gray-800 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/10"
+          className="h-14 rounded-[8px] border-gray-300 px-4 text-lg text-gray-800 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/10"
         />
       )}
       {hint && <p className="text-sm text-gray-500">{hint}</p>}
@@ -75,7 +75,7 @@ function SimpleCardLink({ title, description }: { title: string; description: st
   return (
     <button
       type="button"
-      className="flex w-full items-center justify-between rounded-2xl border border-gray-200 bg-white p-5 text-right shadow-sm transition hover:border-cyan-300 hover:bg-cyan-50/30"
+      className="flex w-full items-center justify-between rounded-[8px] border border-gray-200 bg-white p-5 text-right shadow-sm transition hover:border-cyan-300 hover:bg-cyan-50/30"
     >
       <div className="space-y-2">
         <div className="text-lg font-bold text-gray-900">{title}</div>
@@ -110,7 +110,7 @@ export function DiscountEntryDetailStep({
 
   if (!group || !entry) {
     return (
-      <div className="rounded-2xl border border-rose-200 bg-rose-50 p-8 text-center text-rose-700">
+      <div className="rounded-[8px] border border-rose-200 bg-rose-50 p-8 text-center text-rose-700">
         تنظیمات تخفیف موردنظر پیدا نشد.
       </div>
     );
@@ -132,7 +132,7 @@ export function DiscountEntryDetailStep({
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-[30px] border border-gray-200 bg-white text-right shadow-sm">
+      <div className="overflow-hidden rounded-[8px] border border-gray-200 bg-white text-right shadow-sm">
         <div className="space-y-6 p-6 md:p-8">
           {scope === 'itemized' && (
             <div className="flex justify-start">
@@ -260,3 +260,5 @@ export function DiscountEntryDetailStep({
     </div>
   );
 }
+
+

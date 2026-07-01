@@ -80,7 +80,7 @@ function NumberField({
     <div className="space-y-3">
       <FieldLabel label={label} />
       {disabled ? (
-        <input value={value} disabled className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-right text-slate-500" />
+        <input value={value} disabled className="h-12 w-full rounded-[8px] border border-slate-200 bg-slate-50 px-3 text-right text-slate-500" />
       ) : (
         <FinancialAmountInput value={value} onChange={onChange} suffix={suffix} />
       )}
@@ -109,7 +109,7 @@ function TextField({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
-        className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-right text-slate-900 placeholder:text-slate-400"
+        className="h-12 w-full rounded-[8px] border border-slate-200 bg-white px-3 text-right text-slate-900 placeholder:text-slate-400"
       />
       {helper ? <p className="text-right text-sm text-[color:var(--text-muted)]">{helper}</p> : null}
     </div>
@@ -147,7 +147,7 @@ function TooltipHint({ text }: { text: string }) {
   return (
     <span className="group relative inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[color:var(--text-muted)]">
       <Info className="h-4 w-4" aria-hidden="true" />
-      <span className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 w-64 -translate-x-1/2 rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-strong)] px-3 py-2 text-right text-xs leading-6 text-[color:var(--text-body)] opacity-0 shadow-[0_18px_40px_var(--shadow-soft)] transition group-hover:opacity-100 group-focus-within:opacity-100">
+      <span className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 w-64 -translate-x-1/2 rounded-[8px] border border-[color:var(--border-soft)] bg-[color:var(--surface-strong)] px-3 py-2 text-right text-xs leading-6 text-[color:var(--text-body)] opacity-0 shadow-[0_18px_40px_var(--shadow-soft)] transition group-hover:opacity-100 group-focus-within:opacity-100">
         {text}
       </span>
     </span>
@@ -220,7 +220,7 @@ function ProgressiveAmountGrid({
           <div
             key={row.fromKey}
             dir="ltr"
-            className={`grid gap-4 rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] p-4 text-right lg:grid-cols-[minmax(0,1.35fr)_120px_minmax(0,1fr)_minmax(0,1fr)] lg:items-end ${
+            className={`grid gap-4 rounded-[8px] border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] p-4 text-right lg:grid-cols-[minmax(0,1.35fr)_120px_minmax(0,1fr)_minmax(0,1fr)] lg:items-end ${
               isLocked ? 'opacity-60' : ''
             }`}
           >
@@ -335,11 +335,11 @@ function MaterialSpecsMultiSelectField({
         className="justify-end flex-row-reverse"
       />
       {!selectedDetails.length ? (
-        <p className="rounded-2xl border border-dashed border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] px-4 py-3 text-right text-sm leading-7 text-[color:var(--text-muted)]">{emptyState}</p>
+        <p className="rounded-[8px] border border-dashed border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] px-4 py-3 text-right text-sm leading-7 text-[color:var(--text-muted)]">{emptyState}</p>
       ) : (
         <div className="space-y-3">
           {selectedDetails.map((item) => (
-            <div key={item.label} className="rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] px-4 py-3 text-right">
+            <div key={item.label} className="rounded-[8px] border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] px-4 py-3 text-right">
               <div className="text-sm font-black text-[color:var(--text-strong)]">{item.label}</div>
               <p className="mt-1 text-sm leading-7 text-[color:var(--text-muted)]">{item.meta.description}</p>
             </div>
@@ -347,7 +347,7 @@ function MaterialSpecsMultiSelectField({
         </div>
       )}
       {sectionEffectLabel && sectionEffect ? (
-        <div className="rounded-2xl border border-cyan-100 bg-cyan-50/80 px-4 py-3 text-right">
+        <div className="rounded-[8px] border border-cyan-100 bg-cyan-50/80 px-4 py-3 text-right">
           <p className="text-xs leading-6 text-cyan-800">{sectionEffectLabel}: {sectionEffect}</p>
         </div>
       ) : null}
@@ -384,11 +384,11 @@ function MaterialSpecsImportanceField({
         onChange={onChange}
         className="justify-end flex-row-reverse"
       />
-      <div className="rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] px-4 py-3 text-right">
+      <div className="rounded-[8px] border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] px-4 py-3 text-right">
         <p className="text-sm leading-7 text-[color:var(--text-muted)]">{selectedOption.description}</p>
       </div>
       {sectionEffectLabel && sectionEffect ? (
-        <div className="rounded-2xl border border-cyan-100 bg-cyan-50/80 px-4 py-3 text-right">
+        <div className="rounded-[8px] border border-cyan-100 bg-cyan-50/80 px-4 py-3 text-right">
           <p className="text-xs leading-6 text-cyan-800">{sectionEffectLabel}: {sectionEffect}</p>
         </div>
       ) : null}
@@ -412,7 +412,7 @@ function MaterialSpecsToggleField({
   sectionEffect?: string;
 }) {
   return (
-    <div className="flex flex-col gap-4 rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] p-4 lg:flex-row lg:items-center lg:justify-between">
+    <div className="flex flex-col gap-4 rounded-[8px] border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] p-4 lg:flex-row lg:items-center lg:justify-between">
       <div className="space-y-2 text-right">
         <h3 className="text-[17px] font-black text-[color:var(--text-strong)]">{title}</h3>
         <p className="text-sm leading-7 text-[color:var(--text-muted)]">{description}</p>
@@ -551,7 +551,7 @@ export function BuilderPenaltyDetailPanel({ sectionId }: { sectionId: BuilderPen
         {sectionEnabled ? (
           isMaterialSpecsSection ? (
             <LoanSectionCard className="space-y-8 p-5">
-              <div className="rounded-2xl border border-cyan-200 bg-cyan-50/70 px-4 py-3 text-right">
+              <div className="rounded-[8px] border border-cyan-200 bg-cyan-50/70 px-4 py-3 text-right">
                 <p className="text-sm leading-7 text-slate-700">
                   این تنظیمات همان ساختاری را تعیین می‌کنند که در بخش جرایم سازنده داخل پیش‌نویس قرارداد نمایش داده می‌شود. هر تغییر پس از ذخیره، به عنوان مرجع پیش‌فرض قراردادهای بعدی و مبنای بررسی اختلافات مربوط به تغییر مصالح و مشخصات استفاده خواهد شد.
                 </p>
@@ -687,7 +687,7 @@ export function BuilderPenaltyDetailPanel({ sectionId }: { sectionId: BuilderPen
                     ) : null}
 
                     {selectedPercentBasis === 'ارزش روز واحد' ? (
-                      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                      <div className="rounded-[8px] border border-slate-200 bg-slate-50 p-4">
                         <div className="mb-4 text-right">
                           <h4 className="text-sm font-bold text-slate-800">فلو ثبت ارزش روز واحد</h4>
                           <p className="mt-1 text-xs leading-6 text-slate-500">چون فلو مستقلی در نرم‌افزار وجود ندارد، مبلغ و مرجع ارزش روز در همین بخش ثبت می‌شود.</p>
@@ -711,7 +711,7 @@ export function BuilderPenaltyDetailPanel({ sectionId }: { sectionId: BuilderPen
                     ) : null}
 
                     {selectedPercentBasis === 'مبلغ تعیین‌شده توسط کارشناس' ? (
-                      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                      <div className="rounded-[8px] border border-slate-200 bg-slate-50 p-4">
                         <div className="mb-4 text-right">
                           <h4 className="text-sm font-bold text-slate-800">فلو ثبت مبلغ کارشناسی</h4>
                           <p className="mt-1 text-xs leading-6 text-slate-500">برای این مبنا باید مبلغ و مشخصات استنادی کارشناس ثبت شود.</p>
@@ -735,7 +735,7 @@ export function BuilderPenaltyDetailPanel({ sectionId }: { sectionId: BuilderPen
                     ) : null}
 
                     {selectedPercentBasis === 'سفارشی' ? (
-                      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                      <div className="rounded-[8px] border border-slate-200 bg-slate-50 p-4">
                         <div className="mb-4 text-right">
                           <h4 className="text-sm font-bold text-slate-800">فلو مبنای سفارشی</h4>
                           <p className="mt-1 text-xs leading-6 text-slate-500">برای حالت سفارشی باید هم عنوان مبنا و هم مبلغ مرجع را مشخص کنید.</p>
@@ -779,14 +779,14 @@ export function BuilderPenaltyDetailPanel({ sectionId }: { sectionId: BuilderPen
 
                 {sectionId === 'unit-delivery-delay' ? (
                   <>
-                    <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-right text-sm leading-7 text-amber-900">
+                    <div className="rounded-[8px] border border-amber-200 bg-amber-50 px-4 py-3 text-right text-sm leading-7 text-amber-900">
                       <div className="flex items-start gap-2">
                         <Info className="mt-1 h-4 w-4 shrink-0" />
                         <p>اگر مهلت تنفس ۱۰ روز باشد، جریمه از روز ۱۱ تأخیر شروع می‌شود؛ نه از روز اول.</p>
                       </div>
                     </div>
 
-                    <div className="rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-right text-sm leading-7 text-sky-900">
+                    <div className="rounded-[8px] border border-sky-200 bg-sky-50 px-4 py-3 text-right text-sm leading-7 text-sky-900">
                       <div className="flex items-start gap-2">
                         <Info className="mt-1 h-4 w-4 shrink-0" />
                         <p>منطق جریمه و منطق فسخ مستقل هستند. این صفحه فقط نحوه ایجاد و محاسبه جریمه را تعریف می‌کند؛ اگر برای همین تخلف حق فسخ هم لازم است، باید جداگانه در تنظیمات فسخ خریدار پیکربندی شود.</p>
@@ -800,7 +800,7 @@ export function BuilderPenaltyDetailPanel({ sectionId }: { sectionId: BuilderPen
                       helper="تعداد روزهای مجاز بعد از موعد تحویل که هنوز جریمه از آن تاریخ شروع نمی‌شود."
                     />
 
-                    <div className="space-y-5 rounded-[28px] border border-[color:var(--border-soft)] bg-white p-5">
+                    <div className="space-y-5 rounded-[8px] border border-[color:var(--border-soft)] bg-white p-5">
                       <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
                         <div className="space-y-2 text-right">
                           <h3 className="text-[17px] font-black text-[color:var(--text-strong)]">سقف جریمه</h3>
@@ -839,3 +839,5 @@ export function BuilderPenaltyDetailPanel({ sectionId }: { sectionId: BuilderPen
     </>
   );
 }
+
+

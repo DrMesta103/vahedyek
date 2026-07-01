@@ -15,5 +15,6 @@ export function AppendixTagRedirectPage() {
     router.replace(buildTagHref(firstTag));
   }, [buildTagHref, loading, router, selectedTags]);
 
-  return <div className="rounded-2xl border border-slate-200 bg-slate-50/70 px-4 py-6 text-center text-sm font-semibold text-slate-500">در حال انتقال به بخش الحاقیه...</div>;
+  return <div className="rounded-[8px] border border-slate-200 bg-slate-50/70 px-4 py-6 text-center text-sm font-semibold text-slate-500">در حال انتقال به بخش الحاقیه...</div>;
 }
+

@@ -37,7 +37,7 @@ function readHadReload() {
 }
 
 function formatPagePath(path: string | null) {
-  if (!path) return 'صفحه‌ای ثبت نشده است';
+  if (!path) return 'هیچ صفحه‌ای ثبت نشده است';
   return path;
 }
 
@@ -447,7 +447,7 @@ export default function ReminderWidget() {
               ) : null}
               {digest.customNotice ? (
                 <div className="reminder-tour-channel-status">
-                  <span>?????: {describeReminderEmailStatus(digest.customNotice.emailStatus)}</span>
+                  <span>وضعیت ایمیل: {describeReminderEmailStatus(digest.customNotice.emailStatus)}</span>
                   <span>پوش: در صف نمایش</span>
                 </div>
               ) : null}

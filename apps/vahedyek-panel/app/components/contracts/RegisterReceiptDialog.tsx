@@ -41,7 +41,7 @@ const MOCK_DEST_SHEBAS = [
 ];
 
 const inputCls =
-  'h-11 w-full rounded-2xl border border-slate-200/95 bg-[image:var(--control-bg-gradient)] px-4 text-[13px] text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.92)] outline-none transition placeholder:text-slate-400 focus:border-[color-mix(in_srgb,var(--dark-teal)_45%,#94a3b8)] focus:ring-[3px] focus:ring-[color-mix(in_srgb,var(--dark-teal)_22%,transparent)]';
+  'h-11 w-full rounded-[8px] border border-slate-200/95 bg-[image:var(--control-bg-gradient)] px-4 text-[13px] text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.92)] outline-none transition placeholder:text-slate-400 focus:border-[color-mix(in_srgb,var(--dark-teal)_45%,#94a3b8)] focus:ring-[3px] focus:ring-[color-mix(in_srgb,var(--dark-teal)_22%,transparent)]';
 
 const RECEIPT_DIALOG_DRAFT_PREFIX = 'vahedyek.register-receipt-dialog';
 
@@ -651,14 +651,14 @@ export function RegisterReceiptDialog({
       }}
     >
       <div
-        className="flex max-h-[min(920px,calc(100vh-52px))] w-full max-w-xl flex-col overflow-hidden rounded-t-[26px] border border-white/75 bg-[linear-gradient(180deg,#f8fafc,white)] shadow-[0_-24px_60px_-32px_rgba(15,23,42,0.45)] sm:rounded-[26px]"
+        className="flex max-h-[min(920px,calc(100vh-52px))] w-full max-w-xl flex-col overflow-hidden rounded-[8px] border border-white/75 bg-[linear-gradient(180deg,#f8fafc,white)] shadow-[0_-24px_60px_-32px_rgba(15,23,42,0.45)] sm:rounded-[8px]"
         onMouseDown={(e) => e.stopPropagation()}
       >
         <div className="flex shrink-0 items-center gap-3 border-b border-slate-200/85 bg-white/90 px-4 py-3.5 sm:px-5">
           <button
             type="button"
             onClick={onClose}
-            className="rounded-xl p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color-mix(in_srgb,var(--dark-teal)_35%,transparent)]"
+            className="rounded-[8px] p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color-mix(in_srgb,var(--dark-teal)_35%,transparent)]"
             aria-label="بازگشت"
           >
             <ArrowRight className="h-5 w-5" aria-hidden />
@@ -672,7 +672,7 @@ export function RegisterReceiptDialog({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-xl p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+            className="rounded-[8px] p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
             aria-label="بستن"
           >
             <X className="h-5 w-5" aria-hidden />
@@ -681,12 +681,12 @@ export function RegisterReceiptDialog({
 
         <div className="scrollbar-thin flex-1 space-y-4 overflow-y-auto bg-[repeating-linear-gradient(315deg,color-mix(in_srgb,var(--dark-teal)_04%,transparent)_0,color-mix(in_srgb,var(--dark-teal)_04%,transparent)_1px,transparent_0,transparent_8px)] px-4 py-4 sm:px-5">
           {submitError ? (
-            <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-right text-[12px] font-bold text-rose-900">
+            <div className="rounded-[8px] border border-rose-200 bg-rose-50 px-4 py-2.5 text-right text-[12px] font-bold text-rose-900">
               {submitError}
             </div>
           ) : null}
 
-          <section className="rounded-[22px] border border-slate-200/80 bg-white px-4 py-4 shadow-sm sm:px-5">
+          <section className="rounded-[8px] border border-slate-200/80 bg-white px-4 py-4 shadow-sm sm:px-5">
             <div className="flex items-start gap-2 border-b border-slate-100 pb-3">
               <Building2 className="mt-0.5 h-[18px] w-[18px] shrink-0 text-[color-mix(in_srgb,var(--dark-teal)_82%,black)]" />
               <div className="min-w-0 text-right">
@@ -745,7 +745,7 @@ export function RegisterReceiptDialog({
           maxLength={4}
           onChange={(e) => setCardDigitGroup(idx, e.target.value)}
           onKeyDown={(e) => handleSourceCardKeyDown(idx, e)}
-          className="h-11 min-w-[3.75rem] flex-1 rounded-2xl border-slate-200 text-center text-[13px] font-semibold tabular-nums"
+          className="h-11 min-w-[3.75rem] flex-1 rounded-[8px] border-slate-200 text-center text-[13px] font-semibold tabular-nums"
         />
                       ))}
                     </span>
@@ -847,7 +847,7 @@ export function RegisterReceiptDialog({
               {receiptDocuments.length ? (
                 <div className="space-y-2">
                   {receiptDocuments.map((doc) => (
-                    <div key={doc.id} className="rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-right shadow-sm">
+                    <div key={doc.id} className="rounded-[8px] border border-slate-200 bg-white px-3 py-2.5 text-right shadow-sm">
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                           <div className="text-[12px] font-black text-slate-900">{doc.title}</div>
@@ -855,7 +855,7 @@ export function RegisterReceiptDialog({
                             {doc.category || '\u0628\u062f\u0648\u0646 \u062f\u0633\u062a\u0647\u200c\u0628\u0646\u062f\u06cc'} · {doc.files.length} {'\u0641\u0627\u06cc\u0644'}
                           </div>
                         </div>
-                        <button type="button" onClick={() => setReceiptDocuments((current) => current.filter((item) => item.id !== doc.id))} className="rounded-lg p-1 text-slate-400 transition hover:bg-slate-50 hover:text-slate-700" aria-label="حذف سند">
+                        <button type="button" onClick={() => setReceiptDocuments((current) => current.filter((item) => item.id !== doc.id))} className="rounded-[8px] p-1 text-slate-400 transition hover:bg-slate-50 hover:text-slate-700" aria-label="حذف سند">
                           <X className="h-4 w-4" />
                         </button>
                       </div>
@@ -863,7 +863,7 @@ export function RegisterReceiptDialog({
                   ))}
                 </div>
               ) : (
-                <div className="rounded-2xl border border-dashed border-slate-200 bg-white/65 px-4 py-7 text-center">
+                <div className="rounded-[8px] border border-dashed border-slate-200 bg-white/65 px-4 py-7 text-center">
                   <p className="text-[12px] font-black text-slate-600">{'\u0647\u0646\u0648\u0632 \u0633\u0646\u062f\u06cc \u0627\u0636\u0627\u0641\u0647 \u0646\u0634\u062f\u0647 \u0627\u0633\u062a.'}</p>
                   <p className="mt-1 text-[11px] font-semibold text-slate-400">{'\u0628\u0631\u0627\u06cc \u0634\u0631\u0648\u0639 \u0631\u0648\u06cc \u00ab\u0627\u0641\u0632\u0648\u062f\u0646 \u0633\u0646\u062f\u00bb \u06a9\u0644\u06cc\u06a9 \u06a9\u0646\u06cc\u062f.'}</p>
                 </div>
@@ -871,7 +871,7 @@ export function RegisterReceiptDialog({
             </div>
           </section>
 
-          <section className="rounded-[22px] border border-slate-200/80 bg-white px-4 py-4 shadow-sm sm:px-5">
+          <section className="rounded-[8px] border border-slate-200/80 bg-white px-4 py-4 shadow-sm sm:px-5">
             <div className="flex items-start gap-2 border-b border-slate-100 pb-3">
               <Banknote className="mt-0.5 h-[18px] w-[18px] shrink-0 text-[color-mix(in_srgb,var(--dark-teal)_82%,black)]" />
               <div className="min-w-0 text-right">
@@ -913,7 +913,7 @@ export function RegisterReceiptDialog({
                     value={depositDate}
                     onChange={setDepositDate}
                     placeholder="انتخاب تاریخ"
-                    containerClassName="w-full [&_.app-control]:h-11 [&_.app-control]:min-h-[2.75rem] [&_.app-control]:rounded-2xl"
+                    containerClassName="w-full [&_.app-control]:h-11 [&_.app-control]:min-h-[2.75rem] [&_.app-control]:rounded-[8px]"
                   />
                 </FormField>
                 {transferKind !== 'cash' ? (
@@ -992,7 +992,7 @@ export function RegisterReceiptDialog({
             </div>
           </section>
 
-          <section className="rounded-[22px] border border-slate-200/80 bg-white px-4 py-4 shadow-sm sm:px-5">
+          <section className="rounded-[8px] border border-slate-200/80 bg-white px-4 py-4 shadow-sm sm:px-5">
             <div className="flex items-start gap-2 border-b border-slate-100 pb-3">
               <FileText className="mt-0.5 h-[18px] w-[18px] shrink-0 text-[color-mix(in_srgb,var(--dark-teal)_82%,black)]" />
               <div className="min-w-0 text-right">
@@ -1003,7 +1003,7 @@ export function RegisterReceiptDialog({
               </div>
             </div>
             <div className="mt-4 space-y-3">
-              <div className="space-y-3 rounded-2xl border border-dashed border-slate-300/90 bg-slate-50/60 px-4 py-5">
+              <div className="space-y-3 rounded-[8px] border border-dashed border-slate-300/90 bg-slate-50/60 px-4 py-5">
                 <div className="flex items-center justify-between gap-3">
                   <div className="text-right text-[12px] font-black text-slate-700">{'\u0627\u0633\u0646\u0627\u062f \u0648 \u0645\u062f\u0627\u0631\u06a9'}</div>
                   <button type="button" onClick={openDocumentDialog} className="inline-flex items-center gap-2 rounded-full bg-[color-mix(in_srgb,var(--dark-teal)_90%,black)] px-4 py-2 text-[12px] font-black text-white shadow-sm transition hover:brightness-105">
@@ -1014,7 +1014,7 @@ export function RegisterReceiptDialog({
                 {receiptDocuments.length ? (
                   <div className="space-y-2">
                     {receiptDocuments.map((doc) => (
-                      <div key={doc.id} className="rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-right shadow-sm">
+                      <div key={doc.id} className="rounded-[8px] border border-slate-200 bg-white px-3 py-2.5 text-right shadow-sm">
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
                             <div className="text-[12px] font-black text-slate-900">{doc.title}</div>
@@ -1022,7 +1022,7 @@ export function RegisterReceiptDialog({
                               {doc.category || '\u0628\u062f\u0648\u0646 \u062f\u0633\u062a\u0647\u200c\u0628\u0646\u062f\u06cc'} {'\u00b7'} {doc.files.length} {'\u0641\u0627\u06cc\u0644'}
                             </div>
                           </div>
-                          <button type="button" onClick={() => setReceiptDocuments((current) => current.filter((item) => item.id !== doc.id))} className="rounded-lg p-1 text-slate-400 transition hover:bg-slate-50 hover:text-slate-700" aria-label="حذف سند">
+                          <button type="button" onClick={() => setReceiptDocuments((current) => current.filter((item) => item.id !== doc.id))} className="rounded-[8px] p-1 text-slate-400 transition hover:bg-slate-50 hover:text-slate-700" aria-label="حذف سند">
                             <X className="h-4 w-4" />
                           </button>
                         </div>
@@ -1030,7 +1030,7 @@ export function RegisterReceiptDialog({
                     ))}
                   </div>
                 ) : (
-                  <div className="rounded-2xl border border-dashed border-slate-200 bg-white/65 px-4 py-7 text-center">
+                  <div className="rounded-[8px] border border-dashed border-slate-200 bg-white/65 px-4 py-7 text-center">
                     <p className="text-[12px] font-black text-slate-600">{'\u0647\u0646\u0648\u0632 \u0633\u0646\u062f\u06cc \u0627\u0636\u0627\u0641\u0647 \u0646\u0634\u062f\u0647 \u0627\u0633\u062a.'}</p>
                     <p className="mt-1 text-[11px] font-semibold text-slate-400">{'\u0628\u0631\u0627\u06cc \u0634\u0631\u0648\u0639 \u0631\u0648\u06cc \u00ab\u0627\u0641\u0632\u0648\u062f\u0646 \u0633\u0646\u062f\u00bb \u06a9\u0644\u06cc\u06a9 \u06a9\u0646\u06cc\u062f.'}</p>
                   </div>
@@ -1042,13 +1042,13 @@ export function RegisterReceiptDialog({
 
         {documentDialogOpen ? (
           <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/45 p-4" onMouseDown={() => setDocumentDialogOpen(false)}>
-            <div className="flex max-h-[min(760px,calc(100vh-40px))] w-full max-w-2xl flex-col overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-2xl" dir="rtl" onMouseDown={(event) => event.stopPropagation()}>
+            <div className="flex max-h-[min(760px,calc(100vh-40px))] w-full max-w-2xl flex-col overflow-hidden rounded-[8px] border border-slate-200 bg-white shadow-2xl" dir="rtl" onMouseDown={(event) => event.stopPropagation()}>
               <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-4 py-3">
                 <div>
                   <div className="text-[15px] font-black text-slate-900">{'\u0627\u0641\u0632\u0648\u062f\u0646 \u0633\u0646\u062f'}</div>
                   <div className="mt-1 text-[12px] font-semibold text-slate-500">{'\u0627\u0637\u0644\u0627\u0639\u0627\u062a \u0633\u0646\u062f \u0648 \u0641\u0627\u06cc\u0644(\u0647\u0627) \u0631\u0627 \u062b\u0628\u062a \u06a9\u0646\u06cc\u062f.'}</div>
                 </div>
-                <button type="button" onClick={() => setDocumentDialogOpen(false)} className="rounded-lg p-1 text-slate-400 transition hover:bg-slate-50 hover:text-slate-700" aria-label="بستن">
+                <button type="button" onClick={() => setDocumentDialogOpen(false)} className="rounded-[8px] p-1 text-slate-400 transition hover:bg-slate-50 hover:text-slate-700" aria-label="بستن">
                   <X className="h-5 w-5" />
                 </button>
               </div>
@@ -1084,7 +1084,7 @@ export function RegisterReceiptDialog({
                   </div>
                 </FormField>
                 <FormField label={'\u062a\u0627\u0631\u06cc\u062e'}>
-                  <PersianDatePicker value={docDate} onChange={setDocDate} placeholder="انتخاب تاریخ" containerClassName="w-full [&_.app-control]:h-11 [&_.app-control]:min-h-[2.75rem] [&_.app-control]:rounded-2xl" />
+                  <PersianDatePicker value={docDate} onChange={setDocDate} placeholder="انتخاب تاریخ" containerClassName="w-full [&_.app-control]:h-11 [&_.app-control]:min-h-[2.75rem] [&_.app-control]:rounded-[8px]" />
                 </FormField>
                 <FormField label={'\u0641\u0627\u06cc\u0644\u200c\u0647\u0627'} required>
                   <input ref={docCameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => void handleDocumentFilesPicked(Array.from(e.target.files ?? []))} />
@@ -1173,7 +1173,7 @@ function DestinationHolderTags({ holders, fallback }: { holders: string[]; fallb
   }
 
   return (
-    <div className="flex min-h-11 flex-wrap items-center gap-2 rounded-2xl border border-slate-200/95 bg-[image:var(--control-bg-gradient)] px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.92)]">
+    <div className="flex min-h-11 flex-wrap items-center gap-2 rounded-[8px] border border-slate-200/95 bg-[image:var(--control-bg-gradient)] px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.92)]">
       {displayHolders.map((holder) => (
         <span
           key={holder}
@@ -1227,3 +1227,6 @@ function SelectField({
     </label>
   );
 }
+
+
+

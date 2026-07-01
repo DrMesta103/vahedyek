@@ -21,6 +21,8 @@ import { ContractStepLoader } from './ContractStepLoader';
 import { BusinessSwitch } from './ContractFormPrimitives';
 import { upsertTerminationBuyerRulesFromStepPayload } from '../../../../actions/terminationRules';
 import {
+  fetchContractFlowBootstrapSettings,
+  getContractFlowBootstrapSettings,
   ensureActiveDraftId,
   fetchTerminationBuyerRules,
   getFrontendStepDraft,
@@ -61,6 +63,7 @@ import { CONSTRUCTOR_SUBSECTION_IDS } from './termination/migrateLegacyTerminati
 import { normalizeTerminationPayload } from './termination/terminationDefaults';
 import { firstErrorMessage } from './termination/TerminationPrimitives';
 import { useContractFlowBasePath } from './useContractFlowBasePath';
+import { ContractSettingsImportDialog } from './ContractSettingsImportDialog';
 
 function serializePayload(payload: ContractTerminationData) {
   return JSON.stringify(payload);
@@ -187,7 +190,7 @@ function ConstructorMenuCard({
 }) {
   return (
     <div
-      className={`w-full overflow-hidden rounded-2xl border transition ${
+      className={`w-full overflow-hidden rounded-[8px] border transition ${
         enabled ? 'border-cyan-200 bg-cyan-50/40' : 'border-slate-200 bg-white'
       }`}
     >
@@ -248,7 +251,7 @@ function TerminationPartyTabBar({
   onSelect: (tab: TerminationPartyTab) => void;
 }) {
   const tabBase =
-    'relative flex min-h-[88px] w-full flex-row items-start gap-3 rounded-2xl border-2 p-4 text-right transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/40 focus-visible:ring-offset-2';
+    'relative flex min-h-[88px] w-full flex-row items-start gap-3 rounded-[8px] border-2 p-4 text-right transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/40 focus-visible:ring-offset-2';
 
   return (
     <div
@@ -269,7 +272,7 @@ function TerminationPartyTabBar({
           }`}
         >
           <span
-            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border ${
+            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-[8px] border ${
               activeTab === 'seller' ? 'border-cyan-200 bg-cyan-50 text-cyan-700' : 'border-slate-200 bg-slate-50 text-slate-600'
             }`}
           >
@@ -280,7 +283,7 @@ function TerminationPartyTabBar({
               فسخ {sellerLabel}
             </span>
             <span
-              className={`inline-flex rounded-lg border px-2 py-0.5 text-[11px] font-semibold ${
+              className={`inline-flex rounded-[8px] border px-2 py-0.5 text-[11px] font-semibold ${
                 activeTab === 'seller' ? 'border-cyan-200 bg-cyan-50/80 text-cyan-800' : 'border-slate-200 bg-slate-50 text-slate-600'
               }`}
             >
@@ -304,7 +307,7 @@ function TerminationPartyTabBar({
           }`}
         >
           <span
-            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border ${
+            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-[8px] border ${
               activeTab === 'buyer' ? 'border-cyan-200 bg-cyan-50 text-cyan-700' : 'border-slate-200 bg-slate-50 text-slate-600'
             }`}
           >
@@ -315,7 +318,7 @@ function TerminationPartyTabBar({
               فسخ {buyerLabel}
             </span>
             <span
-              className={`inline-flex rounded-lg border px-2 py-0.5 text-[11px] font-semibold ${
+              className={`inline-flex rounded-[8px] border px-2 py-0.5 text-[11px] font-semibold ${
                 activeTab === 'buyer' ? 'border-cyan-200 bg-cyan-50/80 text-cyan-800' : 'border-slate-200 bg-slate-50 text-slate-600'
               }`}
             >
@@ -347,6 +350,9 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
   const [saveNotice, setSaveNotice] = useState('');
   const [expandedSellerId, setExpandedSellerId] = useState<ConstructorTerminationSubsectionId | null>('lateInstallment');
   const [expandedBuyerId, setExpandedBuyerId] = useState<BuyerTerminationSubsectionId | null>('lateDelivery');
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [importBusy, setImportBusy] = useState(false);
+  const [importError, setImportError] = useState('');
 
   useEffect(() => {
     let mounted = true;
@@ -358,6 +364,7 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
       setDraftId(nextDraftId);
 
       try {
+        const bootstrap = getContractFlowBootstrapSettings();
         const [frontendDraft, subject, remoteTermination] = await Promise.all([
           Promise.resolve(getFrontendStepDraft<ContractTerminationData | Record<string, unknown>>(nextDraftId, 'termination')),
           withTimeout(getStepData<ContractSubjectData>(nextDraftId, 'subject'), 2000, null),
@@ -375,6 +382,7 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
           frontendDraft && typeof frontendDraft === 'object' ? (frontendDraft as Record<string, unknown>) : {};
 
         const nextPayload = syncTerminationActivation(normalizeTerminationPayload({
+          ...(bootstrap?.termination ?? {}),
           ...serverRecord,
           ...(fromServer
             ? {
@@ -427,6 +435,26 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
       initialSnapshotRef.current = serializePayload(next);
       dispatchContractFlowDirty(stepId as ContractFlowSectionId, false);
       if (draftId) dispatchContractFlowSavedForDraft(draftId, stepId as ContractFlowSectionId, Date.now(), next);
+    }
+  };
+
+  const applySettingsFromBusiness = async () => {
+    if (!draftId || importBusy) return;
+    setImportBusy(true);
+    setImportError('');
+    try {
+      const bootstrap = await fetchContractFlowBootstrapSettings();
+      const nextPayload = syncTerminationActivation(normalizeTerminationPayload(bootstrap.termination ?? null));
+      setPayload(nextPayload);
+      setFrontendStepDraft(draftId, 'termination', nextPayload);
+      initialSnapshotRef.current = serializePayload(nextPayload);
+      dispatchContractFlowDirty(stepId as ContractFlowSectionId, false);
+      dispatchContractFlowSavedForDraft(draftId, stepId as ContractFlowSectionId, Date.now(), nextPayload);
+      setImportDialogOpen(false);
+    } catch (error) {
+      setImportError(error instanceof Error ? error.message : 'دریافت تنظیمات شرایط فسخ انجام نشد.');
+    } finally {
+      setImportBusy(false);
     }
   };
 
@@ -758,13 +786,34 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
               قواعد فسخ سمت {partyLabels.sellerLabel} و {partyLabels.buyerLabel}؛ پنج دستهٔ فسخ برای خریدار و شش دسته برای {partyLabels.sellerLabel}.
             </p>
           </div>
-          <button type="button" onClick={handleBackToHub} className="rounded-md border px-3.5 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50">
-            بازگشت به مراحل
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setImportDialogOpen(true)}
+              className="rounded-[8px] border border-cyan-200 bg-cyan-50 px-3.5 py-2 text-sm font-bold text-cyan-700 transition-colors hover:bg-cyan-100"
+            >
+              دریافت از تنظیمات
+            </button>
+            <button type="button" onClick={handleBackToHub} className="rounded-[8px] border px-3.5 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50">
+              بازگشت به مراحل
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      {embedded ? (
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={() => setImportDialogOpen(true)}
+            className="rounded-[8px] border border-cyan-200 bg-cyan-50 px-3.5 py-2 text-sm font-bold text-cyan-700 transition-colors hover:bg-cyan-100"
+          >
+            دریافت از تنظیمات
           </button>
         </div>
       ) : null}
 
-      <div className="overflow-hidden rounded-[30px] border border-gray-200 bg-white text-right shadow-sm">
+      <div className="overflow-hidden rounded-[8px] border border-gray-200 bg-white text-right shadow-sm">
         <div className="space-y-0">
             <TerminationPartyTabBar
               activeTab={payload.terminationPartyTab}
@@ -884,7 +933,7 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
       </div>
 
       {formError ? (
-        <div className={`rounded-2xl border px-4 py-3 text-sm text-rose-700 ${formError ? 'border-rose-300 bg-rose-50' : 'border-rose-200 bg-rose-50'}`}>
+        <div className={`rounded-[8px] border px-4 py-3 text-sm text-rose-700 ${formError ? 'border-rose-300 bg-rose-50' : 'border-rose-200 bg-rose-50'}`}>
           <div className="flex items-center gap-2 font-bold">
             <AlertCircle className="h-4 w-4 shrink-0" />
             پیام اعتبارسنجی
@@ -894,7 +943,7 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
       ) : null}
 
       {saveNotice ? (
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">
+        <div className="rounded-[8px] border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">
           {saveNotice}
         </div>
       ) : null}
@@ -907,7 +956,19 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
         embedded={embedded}
         submitId={stepId}
       />
+
+      <ContractSettingsImportDialog
+        open={importDialogOpen}
+        loading={importBusy}
+        error={importError}
+        title="دریافت تنظیمات فسخ"
+        description="در صورت تایید، تنظیمات ذخیره‌شده برای شرایط فسخ به‌عنوان مقدار اولیه این پیش‌نویس اعمال می‌شود."
+        onConfirm={() => void applySettingsFromBusiness()}
+        onClose={() => setImportDialogOpen(false)}
+      />
     </div>
   );
 }
+
+
 

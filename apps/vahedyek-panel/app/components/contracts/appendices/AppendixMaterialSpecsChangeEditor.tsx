@@ -37,7 +37,7 @@ function TextAreaField({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
-        className="min-h-[110px] w-full rounded-2xl border border-slate-200 bg-[image:var(--control-bg-gradient)] px-4 py-3 text-right text-[13px] leading-7 text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10"
+        className="min-h-[110px] w-full rounded-[8px] border border-slate-200 bg-[image:var(--control-bg-gradient)] px-4 py-3 text-right text-[13px] leading-7 text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10"
       />
     </FieldGroup>
   );
@@ -193,3 +193,4 @@ export function AppendixMaterialSpecsChangeEditor({
     </div>
   );
 }
+

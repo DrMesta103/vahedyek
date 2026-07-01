@@ -124,7 +124,7 @@ export function DiscountConditionSettingsPanel() {
 
   return (
     <section className="mx-auto w-full max-w-5xl px-4 pb-24 pt-4 sm:px-6 lg:px-8">
-      <div className="space-y-5 rounded-[28px] border border-[color:var(--border-color)] bg-[color:var(--surface-overlay)] p-5 shadow-[0_18px_45px_var(--shadow-soft)] backdrop-blur sm:p-6">
+      <div className="space-y-5 rounded-[8px] border border-[color:var(--border-color)] bg-[color:var(--surface-overlay)] p-5 shadow-[0_18px_45px_var(--shadow-soft)] backdrop-blur sm:p-6">
         <div className="flex items-center justify-between gap-4">
           <Link
             href="/business-settings/contract-rules/discount"
@@ -148,7 +148,7 @@ export function DiscountConditionSettingsPanel() {
         />
 
         {message ? (
-          <section className="rounded-2xl border border-[#11b5c9]/50 bg-[#11b5c9]/10 p-4 text-sm text-[#0f766e]">
+          <section className="rounded-[8px] border border-[#11b5c9]/50 bg-[#11b5c9]/10 p-4 text-sm text-[#0f766e]">
             <div className="inline-flex items-center gap-2 font-bold">
               <CheckCircle2 className="h-4 w-4" />
               {message}
@@ -156,7 +156,7 @@ export function DiscountConditionSettingsPanel() {
           </section>
         ) : null}
 
-        {error ? <div className="rounded-2xl border border-[#fecdd3] bg-[#fff1f2] px-4 py-3 text-sm text-[#be123c]">{error}</div> : null}
+        {error ? <div className="rounded-[8px] border border-[#fecdd3] bg-[#fff1f2] px-4 py-3 text-sm text-[#be123c]">{error}</div> : null}
       </div>
 
       <div className="pointer-events-none fixed inset-x-0 bottom-6 z-20 px-4 sm:px-6 lg:px-8">
@@ -167,5 +167,7 @@ export function DiscountConditionSettingsPanel() {
     </section>
   );
 }
+
+
 
 

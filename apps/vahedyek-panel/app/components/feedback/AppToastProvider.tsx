@@ -120,7 +120,7 @@ export function AppToastProvider({ children }: { children: ReactNode }) {
       {toast && styles ? (
         <div className="pointer-events-none fixed inset-x-0 top-5 z-[140] flex justify-center px-4" dir="rtl" lang="fa">
           <div
-            className={`pointer-events-auto w-full max-w-xl rounded-[24px] border px-4 py-3 text-right ${styles.wrapper}`}
+            className={`pointer-events-auto w-full max-w-xl rounded-[8px] border px-4 py-3 text-right ${styles.wrapper}`}
             role="status"
             aria-live="polite"
           >
@@ -128,7 +128,7 @@ export function AppToastProvider({ children }: { children: ReactNode }) {
               <button
                 type="button"
                 onClick={clearToast}
-                className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl transition ${styles.close}`}
+                className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[8px] transition ${styles.close}`}
                 aria-label="بستن پیام"
               >
                 <X className="h-4 w-4" />
@@ -140,7 +140,7 @@ export function AppToastProvider({ children }: { children: ReactNode }) {
                     <div className="text-[12px] font-black">{styles.title}</div>
                     <div className="mt-1 text-[14px] font-bold leading-6">{toast.message}</div>
                   </div>
-                  <span className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${styles.iconWrap}`}>
+                  <span className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[8px] ${styles.iconWrap}`}>
                     <styles.Icon className="h-5 w-5" />
                   </span>
                 </div>
@@ -160,3 +160,5 @@ export function useAppToast() {
   }
   return context;
 }
+
+

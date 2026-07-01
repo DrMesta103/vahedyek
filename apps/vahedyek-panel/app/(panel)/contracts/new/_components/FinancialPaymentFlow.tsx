@@ -19,7 +19,7 @@ function MoneyInput({ value, onChange }: { value: number; onChange: (value: stri
           value={value ? value.toLocaleString('en-US') : ''}
           onChange={(event) => onChange(event.target.value)}
           placeholder="مبلغ را وارد کنید"
-          className="h-10 rounded-xl border-[#aeb9c3] bg-white/70 pr-4 pl-14 text-left text-[14px] font-semibold"
+          className="h-10 rounded-[8px] border-[#aeb9c3] bg-white/70 pr-4 pl-14 text-left text-[14px] font-semibold"
           inputMode="numeric"
         />
         <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-xs font-semibold text-gray-400">تومان</span>
@@ -41,7 +41,7 @@ function CollapsedLineSummary({
   formatMoney: (value: number) => string;
 }) {
   return (
-    <div className="mt-2 rounded-xl border border-[#e3e7ec] bg-[#f4f9fa]/90 px-3 py-2.5 text-[12px] leading-6 text-[#4b5159]">
+    <div className="mt-2 rounded-[8px] border border-[#e3e7ec] bg-[#f4f9fa]/90 px-3 py-2.5 text-[12px] leading-6 text-[#4b5159]">
       <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-1">
         <span>
           <span className="text-[#6b7078]">{totalLabel} </span>
@@ -138,7 +138,7 @@ function PaymentSection({
           <button
             type="button"
             onClick={() => onToggle(category.id)}
-            className="flex min-w-0 flex-1 items-center justify-between gap-3 rounded-xl px-2 py-2 text-right transition hover:bg-white/70"
+            className="flex min-w-0 flex-1 items-center justify-between gap-3 rounded-[8px] px-2 py-2 text-right transition hover:bg-white/70"
             aria-expanded={expanded}
           >
             <span className="flex min-w-0 items-center gap-2 text-[13px] font-bold text-[#52575f]">
@@ -166,14 +166,14 @@ function PaymentSection({
               <EllipsisVertical className="h-4 w-4" />
             </button>
             {actionsOpen ? (
-              <div className="absolute left-0 top-9 z-20 min-w-32 rounded-xl border border-gray-200 bg-white p-1.5 text-sm shadow-lg">
+              <div className="absolute left-0 top-9 z-20 min-w-32 rounded-[8px] border border-gray-200 bg-white p-1.5 text-sm shadow-lg">
                 <button
                   type="button"
                   onClick={() => {
                     setActionsOpen(false);
                     onEdit(category);
                   }}
-                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-right text-gray-700 hover:bg-gray-50"
+                  className="flex w-full items-center gap-2 rounded-[8px] px-3 py-2 text-right text-gray-700 hover:bg-gray-50"
                 >
                   <Pencil className="h-4 w-4" />
                   ویرایش
@@ -184,7 +184,7 @@ function PaymentSection({
                     setActionsOpen(false);
                     onDelete(category.id);
                   }}
-                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-right text-rose-600 hover:bg-rose-50"
+                  className="flex w-full items-center gap-2 rounded-[8px] px-3 py-2 text-right text-rose-600 hover:bg-rose-50"
                 >
                   <Trash2 className="h-4 w-4" />
                   حذف
@@ -215,7 +215,7 @@ function PaymentSection({
                 <button
                   type="button"
                   onClick={() => onOpenDueDialog(category.id)}
-                  className="mt-2 h-8 rounded-lg border border-[#14a7ad] bg-white/65 px-3 text-xs font-bold text-[#0e989d] transition hover:bg-[#dff4f3]"
+                  className="mt-2 h-8 rounded-[8px] border border-[#14a7ad] bg-white/65 px-3 text-xs font-bold text-[#0e989d] transition hover:bg-[#dff4f3]"
                 >
                   ثبت سررسید برای {category.name}
                 </button>
@@ -236,7 +236,7 @@ function PaymentSection({
 
           {requiresDue ? (
             <>
-              <div className="mt-3 rounded-xl bg-[#c4e8ea]/55 px-3 py-3 text-[13px] text-[#4f545d] transition-all duration-300 ease-out hover:bg-[#c4e8ea]/70">
+              <div className="mt-3 rounded-[8px] bg-[#c4e8ea]/55 px-3 py-3 text-[13px] text-[#4f545d] transition-all duration-300 ease-out hover:bg-[#c4e8ea]/70">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex min-w-0 flex-1 items-center gap-4">
                     <DueProgressGauge percent={progressPercent} overLimit={remainingAmount < 0} />
@@ -275,17 +275,17 @@ function PaymentSection({
                 <div className="overflow-hidden">
                   <div className="grid gap-2 md:grid-cols-2">
                     {dueItems.map((item) => (
-                      <div key={item.id} className="flex items-center justify-between gap-3 rounded-lg border border-[#e3e7ec] bg-white/85 px-3 py-2.5 text-[13px] transition duration-300 hover:-translate-y-0.5 hover:bg-white hover:shadow-sm">
+                      <div key={item.id} className="flex items-center justify-between gap-3 rounded-[8px] border border-[#e3e7ec] bg-white/85 px-3 py-2.5 text-[13px] transition duration-300 hover:-translate-y-0.5 hover:bg-white hover:shadow-sm">
                         <div>
                           <div className="font-bold text-[#4b5058]">{item.title}</div>
                           <div className="mt-1 text-xs text-gray-500">{item.dueDate}</div>
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="font-bold text-[#0e989d]">{formatMoney(item.amount)}</span>
-                          <button type="button" onClick={() => onEditDueItem(item)} className="rounded-lg p-1 text-gray-500 transition hover:bg-gray-50">
+                          <button type="button" onClick={() => onEditDueItem(item)} className="rounded-[8px] p-1 text-gray-500 transition hover:bg-gray-50">
                             <Pencil className="h-4 w-4" />
                           </button>
-                          <button type="button" onClick={() => onDeleteDueItem(item.id)} className="rounded-lg p-1 text-rose-500 transition hover:bg-rose-50">
+                          <button type="button" onClick={() => onDeleteDueItem(item.id)} className="rounded-[8px] p-1 text-rose-500 transition hover:bg-rose-50">
                             <Trash2 className="h-4 w-4" />
                           </button>
                         </div>
@@ -386,11 +386,11 @@ export function FinancialPaymentFlow({
         <p className="mt-1 text-sm text-gray-500">مبلغ اصل قرارداد و بخش‌های پرداخت اصلی را در این بخش تنظیم کنید.</p>
       </div>
 
-      <section className="rounded-2xl border border-[#d9dde4] bg-white/45 px-4 py-4 md:px-5">
+      <section className="rounded-[8px] border border-[#d9dde4] bg-white/45 px-4 py-4 md:px-5">
         <button
           type="button"
           onClick={onTogglePrincipal}
-          className="flex w-full items-center justify-between gap-3 rounded-xl px-2 py-2 text-right transition hover:bg-white/70"
+          className="flex w-full items-center justify-between gap-3 rounded-[8px] px-2 py-2 text-right transition hover:bg-white/70"
           aria-expanded={principalExpanded}
         >
           <span className="flex items-center gap-2 text-[13px] font-bold text-[#52575f]">
@@ -428,7 +428,7 @@ export function FinancialPaymentFlow({
 
             <div className="mt-4 space-y-4 border-t border-[#d9dde4] pt-4">
               {visibleCategories.map((category) => (
-                <div key={category.id} className="overflow-visible rounded-2xl border border-[#d9dde4] bg-white/70 shadow-[0_8px_18px_rgba(15,23,42,0.025)]">
+                <div key={category.id} className="overflow-visible rounded-[8px] border border-[#d9dde4] bg-white/70 shadow-[0_8px_18px_rgba(15,23,42,0.025)]">
                   <PaymentSection
                     category={category}
                     locked={lockedCategoryIds.includes(category.id)}
@@ -475,13 +475,13 @@ export function FinancialPaymentFlow({
                 <section
                   key={lineHeader.id}
                   id={`financial-line-${lineHeader.id}`}
-                  className="rounded-2xl border border-[#d9dde4] bg-white/45 px-4 py-4 shadow-[0_10px_24px_rgba(15,23,42,0.035)] md:px-5"
+                  className="rounded-[8px] border border-[#d9dde4] bg-white/45 px-4 py-4 shadow-[0_10px_24px_rgba(15,23,42,0.035)] md:px-5"
                 >
                   <div className="mb-4 flex items-center gap-2 border-b border-[#d9dde4] pb-4">
                     <button
                       type="button"
                       onClick={() => onToggleCustomCategory(lineHeader.id)}
-                      className="flex min-w-0 flex-1 items-center justify-between gap-3 rounded-xl px-2 py-2 text-right transition hover:bg-white/70"
+                      className="flex min-w-0 flex-1 items-center justify-between gap-3 rounded-[8px] px-2 py-2 text-right transition hover:bg-white/70"
                       aria-expanded={lineExpanded}
                     >
                       <span className="flex items-center gap-2 text-[13px] font-bold text-[#52575f]">
@@ -502,14 +502,14 @@ export function FinancialPaymentFlow({
                         <EllipsisVertical className="h-4 w-4" />
                       </button>
                       {openLineActionMenuId === lineHeader.id ? (
-                        <div className="absolute left-0 top-9 z-20 min-w-32 rounded-xl border border-gray-200 bg-white p-1.5 text-sm shadow-lg">
+                        <div className="absolute left-0 top-9 z-20 min-w-32 rounded-[8px] border border-gray-200 bg-white p-1.5 text-sm shadow-lg">
                           <button
                             type="button"
                             onClick={() => {
                               setOpenLineActionMenuId(null);
                               onOpenEditCategory(lineHeader);
                             }}
-                            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-right text-gray-700 hover:bg-gray-50"
+                            className="flex w-full items-center gap-2 rounded-[8px] px-3 py-2 text-right text-gray-700 hover:bg-gray-50"
                           >
                             <Pencil className="h-4 w-4" />
                             ویرایش
@@ -520,7 +520,7 @@ export function FinancialPaymentFlow({
                               setOpenLineActionMenuId(null);
                               onDeleteCategory(lineHeader.id);
                             }}
-                            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-right text-rose-600 hover:bg-rose-50"
+                            className="flex w-full items-center gap-2 rounded-[8px] px-3 py-2 text-right text-rose-600 hover:bg-rose-50"
                           >
                             <Trash2 className="h-4 w-4" />
                             حذف
@@ -557,7 +557,7 @@ export function FinancialPaymentFlow({
 
                       <div className="mt-4 space-y-4 border-t border-[#d9dde4] pt-4">
                         {lineSubs.map((category) => (
-                          <div key={category.id} className="overflow-visible rounded-2xl border border-[#d9dde4] bg-white/70 shadow-[0_8px_18px_rgba(15,23,42,0.025)]">
+                          <div key={category.id} className="overflow-visible rounded-[8px] border border-[#d9dde4] bg-white/70 shadow-[0_8px_18px_rgba(15,23,42,0.025)]">
                             <PaymentSection
                               category={category}
                               locked={lockedCategoryIds.includes(category.id)}
@@ -583,12 +583,12 @@ export function FinancialPaymentFlow({
             })}
 
             {legacySingleCustomCategories.map((category) => (
-              <div key={category.id} id={`financial-line-${category.id}`} className="rounded-2xl border border-[#d9dde4] bg-white/45 p-4 shadow-[0_10px_24px_rgba(15,23,42,0.035)] md:p-5">
+              <div key={category.id} id={`financial-line-${category.id}`} className="rounded-[8px] border border-[#d9dde4] bg-white/45 p-4 shadow-[0_10px_24px_rgba(15,23,42,0.035)] md:p-5">
                 <div className="mb-4 border-b border-[#d9dde4] pb-4">
                   <div className="text-lg font-bold text-gray-900">{category.name}</div>
                   <p className="mt-1 text-sm text-gray-500">پرداخت‌ها و سررسیدهای این ردیف مالی را در همین بخش تنظیم کنید.</p>
                 </div>
-                <div className="rounded-2xl border border-[#d9dde4] bg-white/45 shadow-[0_10px_24px_rgba(15,23,42,0.035)]">
+                <div className="rounded-[8px] border border-[#d9dde4] bg-white/45 shadow-[0_10px_24px_rgba(15,23,42,0.035)]">
                   <PaymentSection
                     category={category}
                     locked={lockedCategoryIds.includes(category.id)}
@@ -618,7 +618,7 @@ export function FinancialPaymentFlow({
         <button
           type="button"
           onClick={onOpenAddCategory}
-          className="inline-flex h-8 items-center gap-2 rounded-lg border border-[#14a7ad] bg-white/65 px-3 text-xs font-bold text-[#0e989d] transition hover:bg-[#dff4f3]"
+          className="inline-flex h-8 items-center gap-2 rounded-[8px] border border-[#14a7ad] bg-white/65 px-3 text-xs font-bold text-[#0e989d] transition hover:bg-[#dff4f3]"
         >
           <Plus className="h-4 w-4" />
           افزودن ردیف مالی
@@ -627,3 +627,5 @@ export function FinancialPaymentFlow({
     </div>
   );
 }
+
+

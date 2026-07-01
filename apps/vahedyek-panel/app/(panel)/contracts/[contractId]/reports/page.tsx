@@ -237,7 +237,7 @@ function LedgerDetailPopover({
         aria-expanded={open}
         aria-haspopup="dialog"
         onClick={() => setOpen((v) => !v)}
-        className="inline-flex shrink-0 rounded-lg p-1.5 text-slate-500 transition hover:bg-slate-100 hover:text-[color-mix(in_srgb,var(--dark-teal)_85%,black)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color-mix(in_srgb,var(--dark-teal)_35%,transparent)]"
+        className="inline-flex shrink-0 rounded-[8px] p-1.5 text-slate-500 transition hover:bg-slate-100 hover:text-[color-mix(in_srgb,var(--dark-teal)_85%,black)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color-mix(in_srgb,var(--dark-teal)_35%,transparent)]"
       >
         <Icon className="h-4 w-4" aria-hidden />
       </button>
@@ -247,7 +247,7 @@ function LedgerDetailPopover({
               ref={panelRef}
               role="dialog"
               aria-label={ariaLabel}
-              className="fixed z-[120] w-[min(280px,calc(100vw-16px))] rounded-xl border border-[var(--border-color)] bg-[var(--surface)] px-3 py-2.5 text-[var(--text-body)] shadow-lg"
+              className="fixed z-[120] w-[min(280px,calc(100vw-16px))] rounded-[8px] border border-[var(--border-color)] bg-[var(--surface)] px-3 py-2.5 text-[var(--text-body)] shadow-lg"
               style={{ top: pos.top, left: pos.left }}
             >
               {children}
@@ -327,7 +327,8 @@ type ContractRuleSummaryCard = {
   statusLabel: string;
   sourceLabel: string;
   updatedAtLabel: string;
-  details: Array<{ label: string; value: string }>;
+  tags?: Array<{ label: string; active: boolean }>;
+  details: Array<{ label: string; value: ReactNode }>;
   note: string;
 };
 
@@ -576,6 +577,14 @@ function describeInterestPaymentPattern(values: Record<string, string | boolean>
   return 'الگوی ویژه‌ای ثبت نشده';
 }
 
+function getInterestModeTags(activeTab: string) {
+  return [
+    { label: 'سود ساده', active: activeTab === 'simple-interest' },
+    { label: 'سود مرکب', active: activeTab === 'compound-interest' },
+    { label: 'سود بر مانده بدهی', active: activeTab === 'remaining-debt-interest' },
+  ];
+}
+
 function describeBuilderPenaltyMode(mode: string | boolean | undefined) {
   if (mode === 'percent') return 'درصدی';
   if (mode === 'progressive') return 'تصاعدی';
@@ -669,6 +678,7 @@ function buildInterestRuleCard(snapshot: ContractRuleSnapshot | null | undefined
     statusLabel: state.active ? 'فعال' : 'غیرفعال',
     sourceLabel: formatRuleSourceLabel(snapshot?.source ?? 'default'),
     updatedAtLabel: formatDateFa(snapshot?.updatedAt),
+    tags: getInterestModeTags(state.activeTab),
     details,
     note: `${formatRuleSourceNote(snapshot?.source ?? 'default')} موتور اعمال خودکار سود در جدول timeline این صفحه فقط به اندازه داده فعلی قرارداد قابل تفسیر است.`,
   };
@@ -2074,11 +2084,11 @@ export default function ContractReportsPage() {
       <main className="w-full max-w-none min-w-0" dir="rtl" lang="fa">
         <div className="business-report-page w-full max-w-none py-6 sm:py-8">
           {loading ? (
-            <section className="rounded-[28px] border border-white/70 bg-white/95 p-10 text-center text-sm font-bold text-slate-500 shadow-[0_20px_50px_-24px_rgba(15,23,42,0.14)]">
+            <section className="rounded-[8px] border border-white/70 bg-white/95 p-10 text-center text-sm font-bold text-slate-500 shadow-[0_20px_50px_-24px_rgba(15,23,42,0.14)]">
               در حال دریافت اطلاعات مالی قرارداد...
             </section>
           ) : error || !contractId ? (
-            <section className="rounded-[28px] border border-rose-200 bg-rose-50/95 p-8 text-center shadow-sm">
+            <section className="rounded-[8px] border border-rose-200 bg-rose-50/95 p-8 text-center shadow-sm">
               <div className="text-sm font-bold text-rose-800">
                 امکان نمایش نمودار مالی قرارداد در حال حاضر وجود ندارد. لطفاً بعداً دوباره بررسی کنید.
               </div>
@@ -2330,7 +2340,7 @@ export default function ContractReportsPage() {
 
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-stretch lg:gap-4">
                       <div className="flex shrink-0 justify-center lg:w-[360px]">
-                        <div className="flex w-full max-w-[360px] flex-col items-center rounded-[28px] bg-gradient-to-b from-slate-50/90 to-white px-4 py-5 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
+                        <div className="flex w-full max-w-[360px] flex-col items-center rounded-[8px] bg-gradient-to-b from-slate-50/90 to-white px-4 py-5 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
                           <div className="report-clone-score-wrap report-clone-score-wrap--hero">
                             <div className="report-clone-score report-clone-score--debt report-clone-score--hero">
                               <svg viewBox="0 0 84 84" aria-hidden="true">
@@ -2371,7 +2381,7 @@ export default function ContractReportsPage() {
                         </div>
                       </div>
 
-                      <div className="flex flex-1 flex-col overflow-hidden rounded-2xl bg-white/60">
+                      <div className="flex flex-1 flex-col overflow-hidden rounded-[8px] bg-white/60">
                         {specialStatusTopCardRows.map((row, rowIndex) => (
                           <div key={row.map((card) => card.label).join('|')} className="relative flex flex-col">
                             <div className="grid grid-cols-1 sm:grid-cols-2">
@@ -2405,7 +2415,7 @@ export default function ContractReportsPage() {
                     {specialStatusExtraCards.map((card) => (
                       <div
                         key={card.label}
-                        className={`report-clone-mini-surface report-clone-mini-surface--borderless report-clone-glass-card rounded-2xl px-4 py-3 ${getStatusToneClasses(card.tone)}`}
+                        className={`report-clone-mini-surface report-clone-mini-surface--borderless report-clone-glass-card rounded-[8px] px-4 py-3 ${getStatusToneClasses(card.tone)}`}
                       >
                         <div className="text-[11px] font-bold opacity-80">{card.label}</div>
                         <div className="mt-1 text-[14px] font-black leading-6">{card.value}</div>
@@ -2415,7 +2425,7 @@ export default function ContractReportsPage() {
                   </div>
                 ) : null}
                 {canSeeInternalTrace && hasSpecialStateGaps ? (
-                  <div className="mt-4 rounded-2xl border border-dashed border-amber-200 bg-amber-50/70 px-4 py-3">
+                  <div className="mt-4 rounded-[8px] border border-dashed border-amber-200 bg-amber-50/70 px-4 py-3">
                     <div className="text-[12px] font-black text-amber-900">موارد ناقص در تشخیص وضعیت قرارداد</div>
                     <ul className="mt-2 space-y-1 text-[11px] font-semibold leading-6 text-amber-900/90">
                       {specialFinancialStatus.gaps.map((gap) => (
@@ -2424,7 +2434,7 @@ export default function ContractReportsPage() {
                     </ul>
                   </div>
                 ) : !canSeeInternalTrace ? (
-                  <div className="mt-4 rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 px-4 py-3 text-[11px] font-semibold leading-6 text-slate-600">
+                  <div className="mt-4 rounded-[8px] border border-dashed border-slate-200 bg-slate-50/70 px-4 py-3 text-[11px] font-semibold leading-6 text-slate-600">
                     این نسخه برای سطح دسترسی فعلی محدود شده است و جزئیات داخلی موارد ناقص و یادداشت‌های محرمانه نمایش داده نمی‌شود.
                   </div>
                 ) : null}
@@ -2454,7 +2464,7 @@ export default function ContractReportsPage() {
                       {ruleSettingsCards.map((card) => (
                         <article
                           key={card.id}
-                          className="report-clone-rule-card relative flex h-full flex-col overflow-hidden rounded-[24px] border border-slate-200/80 bg-white/90 px-4 py-4 shadow-[0_14px_34px_rgba(15,23,42,0.05)] backdrop-blur-sm md:px-5 md:py-5"
+                          className="report-clone-rule-card relative flex h-full flex-col overflow-hidden rounded-[8px] border border-slate-200/80 bg-white/90 px-4 py-4 shadow-[0_14px_34px_rgba(15,23,42,0.05)] backdrop-blur-sm md:px-5 md:py-5"
                         >
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0">
@@ -2479,11 +2489,28 @@ export default function ContractReportsPage() {
                             </span>
                           </div>
 
+                          {card.tags?.length ? (
+                            <div className="mt-3 flex flex-wrap gap-2">
+                              {card.tags.map((tag) => (
+                                <span
+                                  key={`${card.id}-${tag.label}`}
+                                  className={`inline-flex items-center rounded-full border px-3 py-1 text-[10px] font-black ${
+                                    tag.active
+                                      ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+                                      : 'border-slate-200 bg-slate-50 text-slate-500'
+                                  }`}
+                                >
+                                  {tag.label}
+                                </span>
+                              ))}
+                            </div>
+                          ) : null}
+
                           <div className="mt-4 grid gap-2 sm:grid-cols-2">
                             {card.details.map((detail) => (
                               <div
                                 key={`${card.id}-${detail.label}`}
-                                className="rounded-2xl border border-slate-200/70 bg-slate-50/80 px-3 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]"
+                                className="rounded-[8px] border border-slate-200/70 bg-slate-50/80 px-3 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]"
                               >
                                 <div className="text-[10px] font-bold text-slate-500">{detail.label}</div>
                                 <div className={`mt-1 text-[13px] font-black leading-6 ${getStatusToneTextClasses(card.tone)}`}>{detail.value}</div>
@@ -2535,7 +2562,7 @@ export default function ContractReportsPage() {
                   ) : null}
 
                   <div className="mt-4 grid gap-3 xl:grid-cols-3">
-                    <div className="report-clone-mini-surface rounded-2xl border border-slate-200/80 bg-slate-50/60 p-4">
+                    <div className="report-clone-mini-surface rounded-[8px] border border-slate-200/80 bg-slate-50/60 p-4">
                       <div className="text-[12px] font-black text-slate-900">فیلتر اقساط</div>
                       <div className="mt-3 flex flex-wrap gap-2">
                         {[
@@ -2567,7 +2594,7 @@ export default function ContractReportsPage() {
                         <select
                           value={dueSortMode}
                           onChange={(event) => setDueSortMode(event.target.value as SortMode)}
-                          className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-[12px] font-semibold text-slate-800 outline-none focus:border-[color-mix(in_srgb,var(--dark-teal)_38%,transparent)]"
+                          className="mt-1 w-full rounded-[8px] border border-slate-200 bg-white px-3 py-2 text-[12px] font-semibold text-slate-800 outline-none focus:border-[color-mix(in_srgb,var(--dark-teal)_38%,transparent)]"
                         >
                           <option value="due-asc">نزدیک‌ترین سررسید</option>
                           <option value="due-desc">دورترین سررسید</option>
@@ -2577,7 +2604,7 @@ export default function ContractReportsPage() {
                       </label>
                     </div>
 
-                    <div className="report-clone-mini-surface rounded-2xl border border-slate-200/80 bg-slate-50/60 p-4">
+                    <div className="report-clone-mini-surface rounded-[8px] border border-slate-200/80 bg-slate-50/60 p-4">
                       <div className="text-[12px] font-black text-slate-900">فیلتر رسیدها</div>
                       <div className="mt-3 flex flex-wrap gap-2">
                         {[
@@ -2608,7 +2635,7 @@ export default function ContractReportsPage() {
                         <select
                           value={receiptSortMode}
                           onChange={(event) => setReceiptSortMode(event.target.value as SortMode)}
-                          className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-[12px] font-semibold text-slate-800 outline-none focus:border-[color-mix(in_srgb,var(--dark-teal)_38%,transparent)]"
+                          className="mt-1 w-full rounded-[8px] border border-slate-200 bg-white px-3 py-2 text-[12px] font-semibold text-slate-800 outline-none focus:border-[color-mix(in_srgb,var(--dark-teal)_38%,transparent)]"
                         >
                           <option value="due-desc">جدیدترین ثبت</option>
                           <option value="due-asc">قدیمی‌ترین ثبت</option>
@@ -2618,7 +2645,7 @@ export default function ContractReportsPage() {
                       </label>
                     </div>
 
-                    <div className="report-clone-mini-surface rounded-2xl border border-slate-200/80 bg-slate-50/60 p-4">
+                    <div className="report-clone-mini-surface rounded-[8px] border border-slate-200/80 bg-slate-50/60 p-4">
                       <div className="text-[12px] font-black text-slate-900">فیلتر جریمه‌ها</div>
                       <div className="mt-3 flex flex-wrap gap-2">
                         {[
@@ -2649,7 +2676,7 @@ export default function ContractReportsPage() {
                         <select
                           value={penaltySortMode}
                           onChange={(event) => setPenaltySortMode(event.target.value as SortMode)}
-                          className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-[12px] font-semibold text-slate-800 outline-none focus:border-[color-mix(in_srgb,var(--dark-teal)_38%,transparent)]"
+                          className="mt-1 w-full rounded-[8px] border border-slate-200 bg-white px-3 py-2 text-[12px] font-semibold text-slate-800 outline-none focus:border-[color-mix(in_srgb,var(--dark-teal)_38%,transparent)]"
                         >
                           <option value="due-asc">قدیمی‌ترین شروع تأخیر</option>
                           <option value="due-desc">جدیدترین شروع تأخیر</option>
@@ -2693,7 +2720,7 @@ export default function ContractReportsPage() {
                         برای این قرارداد هیچ رسیدی ثبت نشده است.
                       </div>
                     ) : (
-                      <div className="mt-5 overflow-x-auto rounded-2xl border border-slate-200/90">
+                      <div className="mt-5 overflow-x-auto rounded-[8px] border border-slate-200/90">
                         <table className="w-full min-w-[920px] border-collapse text-[10px] sm:text-[11px]" dir="rtl">
                           <thead>
                             <tr className="border-b border-slate-200 bg-slate-50/90 text-slate-500">
@@ -2738,7 +2765,7 @@ export default function ContractReportsPage() {
                                   {row.rejectionReasonLabel === '—' ? (
                                     '—'
                                   ) : (
-                                    <span className="inline-flex rounded-lg bg-rose-50 px-2 py-1 text-[10px] font-bold leading-5 text-rose-700">
+                                    <span className="inline-flex rounded-[8px] bg-rose-50 px-2 py-1 text-[10px] font-bold leading-5 text-rose-700">
                                       {row.rejectionReasonLabel}
                                     </span>
                                   )}
@@ -2746,7 +2773,7 @@ export default function ContractReportsPage() {
                                 <td className="px-2 py-3 text-center">
                                   <div className="space-y-1">
                                     <div className="tabular-nums font-bold text-emerald-900">{row.allocatedAmountLabel}</div>
-                                    <div className="rounded-xl bg-slate-50 px-2 py-1 text-[10px] font-semibold leading-5 text-slate-600">
+                                    <div className="rounded-[8px] bg-slate-50 px-2 py-1 text-[10px] font-semibold leading-5 text-slate-600">
                                       <div className="flex items-center justify-between gap-2">
                                         <span>جریمه تخصیص‌یافته</span>
                                         <span className="tabular-nums font-bold text-slate-800">{row.penaltyAllocatedLabel}</span>
@@ -2774,7 +2801,7 @@ export default function ContractReportsPage() {
                       </div>
                     )}
 
-                    <div className="mt-4 rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-3 text-[11px] font-semibold leading-6 text-slate-600">
+                    <div className="mt-4 rounded-[8px] border border-dashed border-slate-200 bg-slate-50/60 px-4 py-3 text-[11px] font-semibold leading-6 text-slate-600">
                       <div className="font-black text-slate-800">موارد ناقص در اطلاعات رسیدها</div>
                       {visibleReceiptReportGaps.length > 0 ? (
                         <ul className="mt-1 space-y-1">
@@ -2804,7 +2831,7 @@ export default function ContractReportsPage() {
                         برای این قرارداد جریمه فعالی در داده فعلی شناسایی نشده است.
                       </div>
                     ) : (
-                      <div className="mt-5 overflow-x-auto rounded-2xl border border-slate-200/90">
+                      <div className="mt-5 overflow-x-auto rounded-[8px] border border-slate-200/90">
                         <table className="w-full min-w-[1320px] border-collapse text-[10px] sm:text-[11px]" dir="rtl">
                           <thead>
                             <tr className="border-b border-slate-200 bg-slate-50/90 text-slate-500">
@@ -2867,7 +2894,7 @@ export default function ContractReportsPage() {
                       </div>
                     )}
 
-                    <div className="mt-4 rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-3 text-[11px] font-semibold leading-6 text-slate-600">
+                    <div className="mt-4 rounded-[8px] border border-dashed border-slate-200 bg-slate-50/60 px-4 py-3 text-[11px] font-semibold leading-6 text-slate-600">
                       <div className="font-black text-slate-800">موارد ناقص در اطلاعات جریمه</div>
                       {visiblePenaltyReportGaps.length > 0 ? (
                         <ul className="mt-1 space-y-1">
@@ -2880,7 +2907,7 @@ export default function ContractReportsPage() {
                       )}
                     </div>
 
-                    <section className="mt-6 rounded-[22px] border border-slate-200/80 bg-white/90 p-5 text-right shadow-sm md:p-7">
+                    <section className="mt-6 rounded-[8px] border border-slate-200/80 bg-white/90 p-5 text-right shadow-sm md:p-7">
                       <div className="report-clone-section-head flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 pb-4">
                         <div>
                           <div className="text-[15px] font-black text-slate-900">تاریخچه مالی قرارداد</div>
@@ -2967,7 +2994,7 @@ export default function ContractReportsPage() {
 
                                 <div className="mt-4 grid gap-2 md:grid-cols-2">
                                   {event.details.map((detail) => (
-                                    <div key={`${event.id}-${detail.label}`} className="rounded-2xl border border-slate-100 bg-white px-4 py-2.5">
+                                    <div key={`${event.id}-${detail.label}`} className="rounded-[8px] border border-slate-100 bg-white px-4 py-2.5">
                                       <div className="text-[10px] font-bold text-slate-400">{detail.label}</div>
                                       <div className="mt-0.5 text-[12px] font-semibold leading-6 text-slate-800">{detail.value}</div>
                                     </div>
@@ -3012,7 +3039,7 @@ export default function ContractReportsPage() {
                 <div className="mt-6 grid grid-cols-1 gap-5 xl:grid-cols-2 xl:gap-5 2xl:gap-6">
                   {/* موبایل: جزئیات، خلاصه؛ دسکتاپ: دو ستون مساوی + ردیف تمام‌عرض فقط برای سررسیدها */}
                   <aside className="order-2 grid w-full content-start gap-4 xl:order-1 xl:self-start">
-                    <section className="rounded-[22px] border border-slate-200/80 bg-white/95 p-4 text-right shadow-sm md:p-5">
+                    <section className="rounded-[8px] border border-slate-200/80 bg-white/95 p-4 text-right shadow-sm md:p-5">
                       <div className="report-clone-section-title text-[13px] font-black text-slate-900">خلاصه گزارش‌ها</div>
                       <p className="mt-2 text-[10px] font-semibold leading-5 text-slate-500">
                         روی هر ردیف کلیک کنید تا همان بخش در «جزئیات مالی» باز شود. ستون پرداخت‌شده از فیش‌های ثبت‌شده و تخصیص به
@@ -3023,7 +3050,7 @@ export default function ContractReportsPage() {
                       {summaryFinancialRows.length === 0 ? (
                         <p className="mt-4 text-[12px] font-semibold text-slate-500">ردیف مالی برای نمایش وجود ندارد.</p>
                       ) : (
-                        <div className="mt-4 overflow-x-auto rounded-2xl border border-slate-200/90">
+                        <div className="mt-4 overflow-x-auto rounded-[8px] border border-slate-200/90">
                           <table className="w-full min-w-[340px] border-collapse text-[10px] sm:min-w-[380px] sm:text-[11px]" dir="rtl">
                             <thead>
                               <tr className="border-b border-slate-200 bg-slate-50/90 text-slate-500">
@@ -3131,7 +3158,7 @@ export default function ContractReportsPage() {
                       )}
 
                       {!canUseCompletedOnly ? (
-                        <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] font-semibold text-amber-900">
+                        <p className="mt-4 rounded-[8px] border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] font-semibold text-amber-900">
                           برای قراردادهای تکمیل‌شده این گزارش کامل‌تر خواهد بود.
                         </p>
                       ) : null}
@@ -3140,19 +3167,19 @@ export default function ContractReportsPage() {
 
                   <div className="order-1 min-w-0 space-y-6 xl:order-2">
                     {!selectedReportGroup ? (
-                      <section className="rounded-[22px] border border-slate-200/80 bg-white/90 p-4 text-right shadow-sm md:p-6 lg:p-8">
-                        <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 px-4 py-10 text-center text-[13px] font-semibold text-slate-500">
+                      <section className="rounded-[8px] border border-slate-200/80 bg-white/90 p-4 text-right shadow-sm md:p-6 lg:p-8">
+                        <div className="rounded-[8px] border border-dashed border-slate-200 bg-slate-50/50 px-4 py-10 text-center text-[13px] font-semibold text-slate-500">
                           ردیف مالی برای نمایش وجود ندارد.
                         </div>
                       </section>
                     ) : (
                       <div className="space-y-5">
-                        <section className="rounded-[22px] border border-slate-200/80 bg-white/90 p-4 text-right shadow-sm md:p-6 lg:p-8">
+                        <section className="rounded-[8px] border border-slate-200/80 bg-white/90 p-4 text-right shadow-sm md:p-6 lg:p-8">
                           <h3 className="report-clone-section-title text-[13px] font-black text-slate-800">تفکیک زیربخش‌ها</h3>
                           <p className="mt-1 text-[11px] font-semibold text-slate-500">
                             مبالغ کل زیربخش از قرارداد است؛ جریمه و پرداخت زیربخش تنها با دادهٔ برگشتی از سرور پر می‌شود.
                           </p>
-                          <div className="mt-3 overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-[0_1px_0_rgba(15,23,42,0.04)]">
+                          <div className="mt-3 overflow-x-auto rounded-[8px] border border-slate-200 bg-white shadow-[0_1px_0_rgba(15,23,42,0.04)]">
                             <table className="w-full min-w-[640px] border-collapse text-[11px] md:min-w-[720px] md:text-[12px]" dir="rtl">
                               <thead>
                                 <tr className="border-b border-slate-200 bg-slate-50 text-slate-600">
@@ -3218,7 +3245,7 @@ export default function ContractReportsPage() {
                     )}
 
                     {!canUseCompletedOnly ? (
-                      <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-right text-[12px] font-semibold text-amber-900">
+                      <div className="rounded-[8px] border border-amber-200 bg-amber-50 px-4 py-3 text-right text-[12px] font-semibold text-amber-900">
                         این گزارشات برای قراردادهای «تکمیل شده» قابل اتکا و کامل است. در حالت‌های دیگر، برخی بخش‌ها به‌مرور فعال می‌شوند.
                       </div>
                     ) : null}
@@ -3230,7 +3257,7 @@ export default function ContractReportsPage() {
                         aria-label="فهرست رسیدها و فیش‌ها"
                       >
                       <div className="flex flex-wrap items-start gap-3 border-b border-slate-100 pb-4">
-                        <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[color-mix(in_srgb,var(--dark-teal)_12%,white)] text-[color-mix(in_srgb,var(--dark-teal)_85%,black)]">
+                        <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[8px] bg-[color-mix(in_srgb,var(--dark-teal)_12%,white)] text-[color-mix(in_srgb,var(--dark-teal)_85%,black)]">
                           <FileText className="h-5 w-5" aria-hidden />
                         </span>
                         <div className="min-w-0 flex-1">
@@ -3242,7 +3269,7 @@ export default function ContractReportsPage() {
                         </div>
                       </div>
                       {filteredDueBuckets.length === 0 ? (
-                        <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-[12px] font-semibold text-amber-900">
+                        <div className="mt-3 rounded-[8px] border border-amber-200 bg-amber-50 px-4 py-3 text-[12px] font-semibold text-amber-900">
                           سررسید ثبت‌شده تشخیص داده نشد؛ اگر تاریخ سررسید خارج از فرمت معمول ذخیره شده، در بخش تاریخچه پرداخت بررسی
                           کنید.
                         </div>
@@ -3299,7 +3326,7 @@ function transferKindLabel(kind: RegisteredReceiptRecord['transferKind']) {
 function ReceiptSummaryCard({ label, value, tone }: { label: string; value: string; tone?: 'teal' }) {
   return (
     <div
-      className={`rounded-2xl border px-4 py-3.5 shadow-sm ${
+      className={`rounded-[8px] border px-4 py-3.5 shadow-sm ${
         tone === 'teal'
           ? 'border-[color-mix(in_srgb,var(--dark-teal)_22%,#cbd5e1)] bg-[color-mix(in_srgb,var(--dark-teal)_06%,white)]'
           : 'border-slate-200 bg-white'
@@ -3330,7 +3357,7 @@ function ReceiptDetailsDialog({
       role="dialog"
       aria-modal="true"
     >
-      <div className="flex max-h-[min(860px,calc(100vh-42px))] w-full max-w-3xl flex-col overflow-hidden rounded-t-[26px] border border-white/75 bg-white shadow-2xl sm:rounded-[26px]">
+      <div className="flex max-h-[min(860px,calc(100vh-42px))] w-full max-w-3xl flex-col overflow-hidden rounded-[8px] border border-white/75 bg-white shadow-2xl sm:rounded-[8px]">
         <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-5 py-4">
           <div>
             <div className="text-[15px] font-black text-slate-900">جزئیات فیش‌های سررسید</div>
@@ -3341,7 +3368,7 @@ function ReceiptDetailsDialog({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-xl p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+            className="rounded-[8px] p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
             aria-label="بستن"
           >
             <X className="h-5 w-5" />
@@ -3382,12 +3409,12 @@ function ReceiptDetailsDialog({
                       <div className="text-[15px] font-black text-emerald-700">{formatMoneyRial(allocatedToDue)}</div>
                     </div>
                     <div className="mt-3 grid gap-2 text-[11px] font-semibold text-slate-600 sm:grid-cols-2">
-                      <div className="rounded-2xl bg-slate-50 px-3 py-2">واریزکننده: {receipt.depositorName || '-'}</div>
-                      <div className="rounded-2xl bg-slate-50 px-3 py-2">
+                      <div className="rounded-[8px] bg-slate-50 px-3 py-2">واریزکننده: {receipt.depositorName || '-'}</div>
+                      <div className="rounded-[8px] bg-slate-50 px-3 py-2">
                         دارنده مقصد: {receipt.destinationHolders.join('، ') || receipt.destinationHolder || '-'}
                       </div>
-                      <div className="rounded-2xl bg-slate-50 px-3 py-2">مقصد: {receipt.destinationValue || '-'}</div>
-                      <div className="rounded-2xl bg-slate-50 px-3 py-2">
+                      <div className="rounded-[8px] bg-slate-50 px-3 py-2">مقصد: {receipt.destinationValue || '-'}</div>
+                      <div className="rounded-[8px] bg-slate-50 px-3 py-2">
                         شماره پیگیری/مرجع: {receipt.trackingNumber || receipt.referenceNumber || receipt.receiptNumber || '-'}
                       </div>
                     </div>
@@ -3396,7 +3423,7 @@ function ReceiptDetailsDialog({
                         <div className="text-[11px] font-black text-slate-700">مدارک</div>
                         <div className="mt-2 space-y-2">
                           {receipt.documents.map((doc) => (
-                            <div key={doc.id} className="rounded-2xl border border-slate-100 bg-slate-50/70 px-3 py-2">
+                            <div key={doc.id} className="rounded-[8px] border border-slate-100 bg-slate-50/70 px-3 py-2">
                               <div className="text-[12px] font-black text-slate-800">{doc.title}</div>
                               <div className="mt-1 text-[11px] font-semibold text-slate-500">
                                 {doc.category || 'بدون دسته‌بندی'} · {doc.files.length.toLocaleString('fa-IR')} فایل
@@ -3416,4 +3443,7 @@ function ReceiptDetailsDialog({
     </div>
   );
 }
+
+
+
 

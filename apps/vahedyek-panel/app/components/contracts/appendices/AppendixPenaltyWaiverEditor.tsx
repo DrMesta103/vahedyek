@@ -165,8 +165,8 @@ export function AppendixPenaltyWaiverEditor({
   };
 
   return (
-    <div className="space-y-5 rounded-[28px] border border-slate-200 bg-white/95 p-5 shadow-sm sm:p-6">
-      <div className="rounded-2xl border border-[color-mix(in_srgb,var(--dark-teal)_16%,#cbd5e1)] bg-[color-mix(in_srgb,var(--dark-teal)_06%,white)] px-4 py-3 text-right">
+    <div className="space-y-5 rounded-[8px] border border-slate-200 bg-white/95 p-5 shadow-sm sm:p-6">
+      <div className="rounded-[8px] border border-[color-mix(in_srgb,var(--dark-teal)_16%,#cbd5e1)] bg-[color-mix(in_srgb,var(--dark-teal)_06%,white)] px-4 py-3 text-right">
         <div className="text-[13px] font-black text-[color-mix(in_srgb,var(--dark-teal)_88%,black)]">این بخش با منطق جریمه در پیش‌نویس هم‌ساخت است.</div>
         <p className="mt-1 text-[12px] font-semibold leading-6 text-slate-600">
           حالت محاسبه، دوره، بازه‌های تصاعدی و هزینهٔ دیرکرد را می‌توانید از همین‌جا تنظیم کنید.
@@ -187,14 +187,14 @@ export function AppendixPenaltyWaiverEditor({
                 key={item.id}
                 type="button"
                 onClick={() => updateValue({ mode: item.id })}
-                className={`flex min-h-[124px] items-center gap-3 rounded-[22px] border px-4 py-4 text-right transition ${
+                className={`flex min-h-[124px] items-center gap-3 rounded-[8px] border px-4 py-4 text-right transition ${
                   isActive
                     ? 'border-cyan-300 bg-cyan-50/80 shadow-[0_4px_18px_rgba(34,211,238,0.10)]'
                     : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
                 }`}
               >
                 <span
-                  className={`inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border ${
+                  className={`inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-[8px] border ${
                     isActive ? 'border-cyan-200 bg-white text-cyan-700' : 'border-slate-200 bg-slate-50 text-slate-500'
                   }`}
                 >
@@ -230,7 +230,7 @@ export function AppendixPenaltyWaiverEditor({
             value={formatMoney(value.fixedAmount)}
             onChange={(event) => updateValue({ fixedAmount: event.target.value.replace(/[^\d,]/g, '') })}
             placeholder="مثلاً: 100,000"
-            className="h-11 rounded-2xl border-slate-200 bg-white px-4 text-right text-slate-900"
+            className="h-11 rounded-[8px] border-slate-200 bg-white px-4 text-right text-slate-900"
           />
           <p className="text-right text-[12px] font-semibold leading-6 text-slate-500">مبلغی که برای هر دوره تاخیر به‌عنوان جریمه در نظر گرفته می‌شود.</p>
         </section>
@@ -245,7 +245,7 @@ export function AppendixPenaltyWaiverEditor({
                 value={value.penaltyPercent}
                 onChange={(event) => updateValue({ penaltyPercent: sanitizeDecimalInput(event.target.value) })}
                 placeholder="مثلاً: 0.5"
-                className="h-11 rounded-2xl border-slate-200 bg-white px-4 text-right text-slate-900"
+                className="h-11 rounded-[8px] border-slate-200 bg-white px-4 text-right text-slate-900"
               />
             </div>
             <div className="space-y-3">
@@ -254,7 +254,7 @@ export function AppendixPenaltyWaiverEditor({
                 value={value.bankInterestPercent}
                 onChange={(event) => updateValue({ bankInterestPercent: sanitizeDecimalInput(event.target.value) })}
                 placeholder="در صورت نیاز"
-                className="h-11 rounded-2xl border-slate-200 bg-white px-4 text-right text-slate-900"
+                className="h-11 rounded-[8px] border-slate-200 bg-white px-4 text-right text-slate-900"
               />
             </div>
           </div>
@@ -262,7 +262,7 @@ export function AppendixPenaltyWaiverEditor({
       ) : null}
 
       {activeMode === 'progressive' ? (
-        <section className="space-y-4 rounded-[24px] border border-slate-200 bg-slate-50/60 p-4">
+        <section className="space-y-4 rounded-[8px] border border-slate-200 bg-slate-50/60 p-4">
           <div className="flex items-start justify-between gap-4">
             <div className="text-right">
               <h3 className="text-[18px] font-black text-slate-900">جدول جریمه‌های تصاعدی</h3>
@@ -272,7 +272,7 @@ export function AppendixPenaltyWaiverEditor({
               type="button"
               onClick={addProgressiveRow}
               disabled={!canAddProgressiveRow(normalizedRows)}
-              className="inline-flex items-center gap-2 rounded-2xl border border-cyan-200 bg-white px-4 py-2 text-[12px] font-black text-cyan-700 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-[8px] border border-cyan-200 bg-white px-4 py-2 text-[12px] font-black text-cyan-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Plus className="h-4 w-4" />
               افزودن بازه
@@ -281,10 +281,10 @@ export function AppendixPenaltyWaiverEditor({
 
           <div className="space-y-3">
             {normalizedRows.map((row, index) => (
-              <div key={row.id} className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-3 md:grid-cols-[120px_minmax(0,1fr)_120px_120px_auto] md:items-end">
+              <div key={row.id} className="grid gap-3 rounded-[8px] border border-slate-200 bg-white p-3 md:grid-cols-[120px_minmax(0,1fr)_120px_120px_auto] md:items-end">
                 <div className="space-y-2">
                   <FieldLabel label="از روز" />
-                  <Input value={row.fromDay} disabled className="h-10 rounded-xl border-slate-200 bg-slate-50 px-3 text-right text-slate-500" />
+                  <Input value={row.fromDay} disabled className="h-10 rounded-[8px] border-slate-200 bg-slate-50 px-3 text-right text-slate-500" />
                 </div>
                 <div className="space-y-2">
                   <FieldLabel label="پایان بازه" />
@@ -294,9 +294,9 @@ export function AppendixPenaltyWaiverEditor({
                       disabled={row.openEnded}
                       onChange={(event) => updateProgressiveRow(row.id, 'toDay', event.target.value)}
                       placeholder="تا روز"
-                      className="h-10 rounded-xl border-slate-200 bg-white px-3 text-right text-slate-900"
+                      className="h-10 rounded-[8px] border-slate-200 bg-white px-3 text-right text-slate-900"
                     />
-                    <label className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-[11px] font-bold text-slate-600">
+                    <label className="inline-flex shrink-0 items-center gap-2 rounded-[8px] border border-slate-200 bg-slate-50 px-3 py-2 text-[11px] font-bold text-slate-600">
                       <input
                         type="checkbox"
                         checked={Boolean(row.openEnded)}
@@ -313,17 +313,17 @@ export function AppendixPenaltyWaiverEditor({
                     value={row.rate}
                     onChange={(event) => updateProgressiveRow(row.id, 'rate', event.target.value)}
                     placeholder="مثلاً: 1.25"
-                    className="h-10 rounded-xl border-slate-200 bg-white px-3 text-right text-slate-900"
+                    className="h-10 rounded-[8px] border-slate-200 bg-white px-3 text-right text-slate-900"
                   />
                 </div>
-                <div className="rounded-xl bg-slate-50 px-3 py-2 text-[12px] font-semibold leading-6 text-slate-500">
+                <div className="rounded-[8px] bg-slate-50 px-3 py-2 text-[12px] font-semibold leading-6 text-slate-500">
                   {row.openEnded ? `از روز ${row.fromDay} به بعد` : row.toDay ? `${row.fromDay} تا ${row.toDay} روز` : 'پایان بازه را وارد کنید'}
                 </div>
                 <button
                   type="button"
                   disabled={index === 0}
                   onClick={() => removeProgressiveRow(row.id)}
-                  className="inline-flex h-10 items-center justify-center rounded-xl border border-rose-200 px-3 text-[12px] font-black text-rose-600 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="inline-flex h-10 items-center justify-center rounded-[8px] border border-rose-200 px-3 text-[12px] font-black text-rose-600 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
@@ -340,7 +340,7 @@ export function AppendixPenaltyWaiverEditor({
             value={value.graceDays}
             onChange={(event) => updateValue({ graceDays: sanitizePositiveIntegerInput(event.target.value) })}
             placeholder="مثلاً: 2"
-            className="h-11 rounded-2xl border-slate-200 bg-white px-4 text-right text-slate-900"
+            className="h-11 rounded-[8px] border-slate-200 bg-white px-4 text-right text-slate-900"
           />
         </section>
       ) : null}
@@ -352,7 +352,7 @@ export function AppendixPenaltyWaiverEditor({
             value={value.graceDays}
             onChange={(event) => updateValue({ graceDays: sanitizePositiveIntegerInput(event.target.value) })}
             placeholder="مثلاً: 2"
-            className="h-11 rounded-2xl border-slate-200 bg-white px-4 text-right text-slate-900"
+            className="h-11 rounded-[8px] border-slate-200 bg-white px-4 text-right text-slate-900"
           />
           <p className="text-right text-[12px] font-semibold leading-6 text-slate-500">تعداد روزهایی که پس از سررسید بدون محاسبه جریمه در نظر گرفته می‌شود.</p>
         </section>
@@ -373,7 +373,7 @@ export function AppendixPenaltyWaiverEditor({
         </section>
       ) : null}
 
-      <section className="space-y-4 rounded-[24px] border border-cyan-100 bg-cyan-50/70 p-4">
+      <section className="space-y-4 rounded-[8px] border border-cyan-100 bg-cyan-50/70 p-4">
         <div className="flex items-start justify-between gap-4">
           <div className="text-right">
             <h3 className="text-[18px] font-black text-slate-900">هزینه دیرکرد</h3>
@@ -410,7 +410,7 @@ export function AppendixPenaltyWaiverEditor({
                   value={value.extraFeeAmount}
                   onChange={(event) => updateValue({ extraFeeAmount: value.extraFeeType === 'fixed' ? formatMoney(event.target.value) : sanitizeDecimalInput(event.target.value) })}
                   placeholder={value.extraFeeType === 'fixed' ? 'مثلاً: 100,000' : 'مثلاً: 0.6'}
-                  className="h-11 rounded-2xl border-slate-200 bg-white px-4 text-right text-slate-900"
+                  className="h-11 rounded-[8px] border-slate-200 bg-white px-4 text-right text-slate-900"
                 />
               </div>
               <div className="space-y-2">
@@ -428,10 +428,12 @@ export function AppendixPenaltyWaiverEditor({
       </section>
 
       {activeMode === 'progressive' && !progressiveValidation.ok ? (
-        <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-right text-[12px] font-semibold leading-6 text-amber-800">
+        <div className="rounded-[8px] border border-amber-200 bg-amber-50 px-4 py-3 text-right text-[12px] font-semibold leading-6 text-amber-800">
           {progressiveValidation.message}
         </div>
       ) : null}
     </div>
   );
 }
+
+

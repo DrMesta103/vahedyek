@@ -52,7 +52,7 @@ function NextPageCard({
 }) {
   const content = (
     <div
-      className={`flex flex-col gap-4 rounded-[20px] border px-5 py-5 transition ${
+      className={`flex flex-col gap-4 rounded-[8px] border px-5 py-5 transition ${
         disabled
           ? 'cursor-not-allowed border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] opacity-55'
           : 'group border-[color:var(--border-soft)] bg-[color:var(--surface)] hover:border-[color:var(--theme-action-border)]'
@@ -185,7 +185,7 @@ export function BuilderPenaltySettingsPanel() {
             <p className="text-sm leading-6 text-[color:var(--text-muted)]">
               همین زیرصفحه‌ها در بخش جرایم سازنده داخل پیش‌نویس قرارداد هم مبنا هستند؛ بنابراین تغییر هر گزینه، روی ساختار پیش‌فرض قراردادهای جدید و نحوه تفسیر اختلافات در همان فلو اثر می‌گذارد.
             </p>
-            <p className="rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] px-4 py-3 text-sm leading-6 text-[color:var(--text-muted)]">
+            <p className="rounded-[8px] border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] px-4 py-3 text-sm leading-6 text-[color:var(--text-muted)]">
               اختلاف متراژ در این ماژول تعریف نمی‌شود، چون ماهیت آن حل‌وفصل مالی یا حق فسخ است، نه جریمه زمان‌محور. این موضوع از مسیر فسخ و تسویه مالی مدیریت می‌شود.
             </p>
             <div className="space-y-3">
@@ -211,3 +211,5 @@ export function BuilderPenaltySettingsPanel() {
     </>
   );
 }
+
+

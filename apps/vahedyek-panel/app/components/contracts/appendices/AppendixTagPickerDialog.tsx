@@ -29,7 +29,7 @@ export function AppendixTagPickerDialog({
       onClick={onClose}
     >
       <div
-        className="flex max-h-[92vh] w-full max-w-[760px] flex-col overflow-hidden rounded-t-[30px] border border-slate-200/90 bg-[#fbfcfb] shadow-[0_24px_80px_rgba(15,23,42,0.24)] sm:rounded-[30px]"
+        className="flex max-h-[92vh] w-full max-w-[760px] flex-col overflow-hidden rounded-[8px] border border-slate-200/90 bg-[#fbfcfb] shadow-[0_24px_80px_rgba(15,23,42,0.24)] sm:rounded-[8px]"
         role="dialog"
         aria-modal="true"
         aria-labelledby="appendix-picker-title"
@@ -47,7 +47,7 @@ export function AppendixTagPickerDialog({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-2xl border border-slate-200 bg-white p-2.5 text-slate-400 transition hover:bg-slate-50 hover:text-slate-700"
+            className="rounded-[8px] border border-slate-200 bg-white p-2.5 text-slate-400 transition hover:bg-slate-50 hover:text-slate-700"
             aria-label="بستن"
           >
             <X className="h-5 w-5" />
@@ -102,10 +102,10 @@ export function AppendixTagPickerDialog({
         </div>
 
         <div className="flex items-center justify-between gap-3 border-t border-slate-200 bg-white px-5 py-4 sm:px-7">
-          <Button type="button" variant="primary" onClick={onConfirm} disabled={selectedTags.length === 0} className="min-w-[112px] rounded-2xl">
+          <Button type="button" variant="primary" onClick={onConfirm} disabled={selectedTags.length === 0} className="min-w-[112px] rounded-[8px]">
             تایید
           </Button>
-          <Button type="button" variant="ghost" onClick={onClose} className="rounded-2xl text-[var(--dark-teal)]">
+          <Button type="button" variant="ghost" onClick={onClose} className="rounded-[8px] text-[var(--dark-teal)]">
             انصراف
           </Button>
         </div>
@@ -113,3 +113,6 @@ export function AppendixTagPickerDialog({
     </div>
   );
 }
+
+
+

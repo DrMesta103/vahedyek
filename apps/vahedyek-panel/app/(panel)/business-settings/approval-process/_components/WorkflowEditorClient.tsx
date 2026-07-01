@@ -198,7 +198,7 @@ function RoadmapModal({
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center bg-[#251d2b]/60 p-4" onClick={onClose}>
       <div
-        className="relative flex max-h-[88vh] w-full max-w-4xl flex-col overflow-hidden rounded-[28px] bg-[#fcfcfb] shadow-[0_30px_90px_rgba(24,24,27,0.24)]"
+        className="relative flex max-h-[88vh] w-full max-w-4xl flex-col overflow-hidden rounded-[8px] bg-[#fcfcfb] shadow-[0_30px_90px_rgba(24,24,27,0.24)]"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="relative overflow-hidden bg-[linear-gradient(135deg,#6f5c75_0%,#5a4b63_100%)] px-6 py-6 text-white sm:px-8">
@@ -206,7 +206,7 @@ function RoadmapModal({
           <button
             type="button"
             onClick={onClose}
-            className="absolute left-5 top-5 inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/20 bg-white/10 text-white transition hover:bg-white/20"
+            className="absolute left-5 top-5 inline-flex h-10 w-10 items-center justify-center rounded-[8px] border border-white/20 bg-white/10 text-white transition hover:bg-white/20"
             aria-label="بستن"
           >
             <X className="h-5 w-5" aria-hidden />
@@ -225,7 +225,7 @@ function RoadmapModal({
 
         <div className="overflow-auto px-4 py-5 sm:px-7 sm:py-7">
           {roadmapItems.length === 0 ? (
-            <div className="rounded-[24px] border border-dashed border-slate-200 bg-white px-6 py-12 text-center text-[14px] font-semibold text-slate-500">
+            <div className="rounded-[8px] border border-dashed border-slate-200 bg-white px-6 py-12 text-center text-[14px] font-semibold text-slate-500">
               هنوز مرحله‌ای برای نمایش رودمپ تعریف نشده است.
             </div>
           ) : (
@@ -240,7 +240,7 @@ function RoadmapModal({
                   <div key={item.id} className="relative sm:min-h-[220px]">
                     <div className="relative grid items-start gap-4 sm:grid-cols-[1fr,96px,1fr]">
                       <div className={`${alignRight ? 'sm:order-3' : 'sm:order-1'} order-2`}>
-                        <div className={`rounded-[24px] border border-slate-200 bg-white px-4 py-4 shadow-[0_16px_40px_rgba(15,23,42,0.06)] ${alignRight ? 'sm:ml-8 text-left' : 'sm:mr-8 text-right'}`}>
+                        <div className={`rounded-[8px] border border-slate-200 bg-white px-4 py-4 shadow-[0_16px_40px_rgba(15,23,42,0.06)] ${alignRight ? 'sm:ml-8 text-left' : 'sm:mr-8 text-right'}`}>
                           <div className={`text-[18px] font-black ${alignRight ? 'text-left' : 'text-right'}`} style={{ color: accent }}>
                             {item.title}
                           </div>
@@ -291,7 +291,7 @@ function RoadmapModal({
                       </div>
 
                       <div className={`${alignRight ? 'sm:order-1' : 'sm:order-3'} order-3`}>
-                        <div className={`rounded-[24px] px-4 py-4 ${alignRight ? 'sm:mr-8 text-right' : 'sm:ml-8 text-left'}`}>
+                        <div className={`rounded-[8px] px-4 py-4 ${alignRight ? 'sm:mr-8 text-right' : 'sm:ml-8 text-left'}`}>
                           {item.finalApproverId ? (
                             <div className={`mb-3 flex ${alignRight ? 'justify-end' : 'justify-start'}`}>
                               <div className="rounded-full px-3 py-1.5 text-[10px] font-black" style={{ backgroundColor: `${accent}18`, color: accent }}>
@@ -377,7 +377,7 @@ function SortableStepAccordion({
               {isDirty ? <Badge variant="warning">ثبت نشده</Badge> : <Badge variant="default">ثبت شده</Badge>}
               <button
                 type="button"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-rose-100 bg-white text-rose-600 hover:bg-rose-50"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-[8px] border border-rose-100 bg-white text-rose-600 hover:bg-rose-50"
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
@@ -388,7 +388,7 @@ function SortableStepAccordion({
               </button>
               <button
                 type="button"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--border-color)] bg-[var(--surface)] text-[var(--text-muted)] hover:bg-[var(--surface-soft)]"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-[8px] border border-[var(--border-color)] bg-[var(--surface)] text-[var(--text-muted)] hover:bg-[var(--surface-soft)]"
                 aria-label="جابجایی مرحله"
                 {...attributes}
                 {...listeners}
@@ -420,13 +420,13 @@ function SortableStepAccordion({
                   dir="rtl"
                   value={step.title}
                   onChange={(e) => onChange({ ...step, title: e.target.value })}
-                  className="h-11 w-full rounded-xl border border-[var(--border-color)] bg-[var(--surface)] px-3 text-right text-[13px] font-semibold outline-none focus:ring-2 focus:ring-[color-mix(in_srgb,var(--dark-teal)_15%,transparent)]"
+                  className="h-11 w-full rounded-[8px] border border-[var(--border-color)] bg-[var(--surface)] px-3 text-right text-[13px] font-semibold outline-none focus:ring-2 focus:ring-[color-mix(in_srgb,var(--dark-teal)_15%,transparent)]"
                 />
               </label>
             </div>
 
             <div className="space-y-3">
-              <div className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--surface-soft)]/30 p-3">
+              <div className="w-full rounded-[8px] border border-[var(--border-color)] bg-[var(--surface-soft)]/30 p-3">
                 <div className="mb-2 flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2 text-right text-[12px] font-extrabold text-[var(--text-strong)]">
                     <span>تاییدکنندگان</span>
@@ -478,7 +478,7 @@ function SortableStepAccordion({
                 </div>
               </div>
 
-              <div className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--surface-soft)]/30 p-3">
+              <div className="w-full rounded-[8px] border border-[var(--border-color)] bg-[var(--surface-soft)]/30 p-3">
                 <div className="mb-2 flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2 text-right text-[12px] font-extrabold text-[var(--text-strong)]">
                     <span>شرط تکمیل مرحله</span>
@@ -489,7 +489,7 @@ function SortableStepAccordion({
                 <div className="mt-3 grid gap-3 sm:grid-cols-2">
                   <button
                     type="button"
-                    className={`rounded-2xl border p-3 text-right transition ${
+                    className={`rounded-[8px] border p-3 text-right transition ${
                       step.logic.mode === 'ALL_MUST_APPROVE'
                         ? 'border-[var(--dark-teal)] bg-[color-mix(in_srgb,var(--dark-teal)_9%,white)] shadow-sm'
                         : 'border-slate-200 bg-white hover:border-teal-200'
@@ -509,7 +509,7 @@ function SortableStepAccordion({
                   </button>
                   <button
                     type="button"
-                    className={`rounded-2xl border p-3 text-right transition ${
+                    className={`rounded-[8px] border p-3 text-right transition ${
                       step.logic.mode === 'MINIMUM_COUNT'
                         ? 'border-[var(--dark-teal)] bg-[color-mix(in_srgb,var(--dark-teal)_9%,white)] shadow-sm'
                         : 'border-slate-200 bg-white hover:border-teal-200'
@@ -535,7 +535,7 @@ function SortableStepAccordion({
                 </div>
 
                 {step.logic.mode === 'MINIMUM_COUNT' ? (
-                  <div className="mt-3 rounded-2xl border border-teal-100 bg-white p-3">
+                  <div className="mt-3 rounded-[8px] border border-teal-100 bg-white p-3">
                     <div className="mb-2 text-right">
                       <span className="text-[12px] font-extrabold text-[var(--text-strong)]">تعداد رای لازم برای تکمیل مرحله</span>
                       <InlineGuide>این عدد نمی‌تواند بیشتر از تعداد تاییدکنندگان مرحله باشد.</InlineGuide>
@@ -545,7 +545,7 @@ function SortableStepAccordion({
                       min={1}
                       max={Math.max(1, step.approvers.length || 1)}
                       dir="ltr"
-                      className="no-number-spin h-11 w-28 rounded-xl border border-[var(--border-color)] bg-[var(--surface)] px-2 text-center text-[14px] font-bold outline-none focus:ring-2 focus:ring-[color-mix(in_srgb,var(--dark-teal)_15%,transparent)]"
+                      className="no-number-spin h-11 w-28 rounded-[8px] border border-[var(--border-color)] bg-[var(--surface)] px-2 text-center text-[14px] font-bold outline-none focus:ring-2 focus:ring-[color-mix(in_srgb,var(--dark-teal)_15%,transparent)]"
                       value={step.logic.count}
                       onChange={(e) =>
                         onChange({
@@ -587,7 +587,7 @@ function SortableStepAccordion({
               <Button
                 type="button"
                 variant={isDirty ? 'primary' : 'outline'}
-                className="h-11 min-w-[160px] rounded-xl px-4 text-[12px] font-bold"
+                className="h-11 min-w-[160px] rounded-[8px] px-4 text-[12px] font-bold"
                 disabled={isSaving || !isDirty}
                 onClick={onSave}
               >
@@ -1052,12 +1052,12 @@ export function WorkflowEditorClient({ workflowId }: { workflowId?: string }) {
       </div>
 
       {error ? (
-        <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-right text-[13px] font-bold text-rose-800">
+        <div className="mb-4 rounded-[8px] border border-rose-200 bg-rose-50 px-4 py-3 text-right text-[13px] font-bold text-rose-800">
           {error}
         </div>
       ) : null}
       {saveOk ? (
-        <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-right text-[13px] font-bold text-emerald-800">
+        <div className="mb-4 rounded-[8px] border border-emerald-200 bg-emerald-50 px-4 py-3 text-right text-[13px] font-bold text-emerald-800">
           {saveOk}
         </div>
       ) : null}
@@ -1103,7 +1103,7 @@ export function WorkflowEditorClient({ workflowId }: { workflowId?: string }) {
                 />
               </FieldWithGuide>
 
-              <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-3">
+              <div className="rounded-[8px] border border-slate-200 bg-slate-50/70 p-3">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="text-right">
                     <div>
@@ -1116,7 +1116,7 @@ export function WorkflowEditorClient({ workflowId }: { workflowId?: string }) {
               </div>
 
               {!isNew ? (
-                <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-3">
+                <div className="rounded-[8px] border border-slate-200 bg-slate-50/70 p-3">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="text-right">
                       <div>
@@ -1129,7 +1129,7 @@ export function WorkflowEditorClient({ workflowId }: { workflowId?: string }) {
                 </div>
               ) : null}
 
-              <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-3">
+              <div className="rounded-[8px] border border-slate-200 bg-slate-50/70 p-3">
                 <div className="mb-3 text-right">
                   <span className="text-[12px] font-extrabold text-[var(--text-strong)]">انتخاب نوع کاربری</span>
                   <InlineGuide>برای هر فرآیند فقط یک نوع کاربری واحد انتخاب می‌شود. نوع‌های دارای فرآیند قبلی غیرفعال هستند.</InlineGuide>
@@ -1187,7 +1187,7 @@ export function WorkflowEditorClient({ workflowId }: { workflowId?: string }) {
             <SectionHeader label="مراحل" description="هر مرحله را جداگانه ثبت کنید. تا قبل از ثبت فرآیند، این بخش قفل است." />
             <div className="p-5">
               {!effectiveWorkflowId ? (
-                <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 px-4 py-8 text-center text-[13px] font-semibold leading-7 text-[var(--text-muted)]">
+                <div className="rounded-[8px] border border-dashed border-slate-200 bg-slate-50/70 px-4 py-8 text-center text-[13px] font-semibold leading-7 text-[var(--text-muted)]">
                   ابتدا اطلاعات فرآیند را با دکمه «ثبت فرآیند» ذخیره کنید. بعد از ثبت، امکان افزودن و ثبت مرحله فعال می‌شود.
                 </div>
               ) : (
@@ -1226,7 +1226,7 @@ export function WorkflowEditorClient({ workflowId }: { workflowId?: string }) {
                   </div>
 
                   {steps.length === 0 ? (
-                    <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 px-4 py-8 text-center text-[13px] font-semibold leading-7 text-[var(--text-muted)]">
+                    <div className="rounded-[8px] border border-dashed border-slate-200 bg-slate-50/70 px-4 py-8 text-center text-[13px] font-semibold leading-7 text-[var(--text-muted)]">
                       هنوز مرحله‌ای تعریف نشده است. برای شروع، «افزودن مرحله» را انتخاب کنید.
                     </div>
                   ) : (
@@ -1275,3 +1275,5 @@ export function WorkflowEditorClient({ workflowId }: { workflowId?: string }) {
     </div>
   );
 }
+
+

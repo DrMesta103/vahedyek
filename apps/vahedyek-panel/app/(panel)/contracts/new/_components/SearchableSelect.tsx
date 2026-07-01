@@ -54,7 +54,7 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
         type="button"
         disabled={disabled}
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex justify-between items-center px-3 py-2 bg-white border border-gray-300 rounded-md text-sm text-right disabled:bg-gray-100 disabled:cursor-not-allowed"
+        className="w-full flex justify-between items-center px-3 py-2 bg-white border border-gray-300 rounded-[8px] text-sm text-right disabled:bg-gray-100 disabled:cursor-not-allowed"
       >
         <span className={selectedOption ? 'text-gray-800' : 'text-gray-500'}>
           {selectedOption?.label || placeholder}
@@ -63,14 +63,14 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
       </button>
 
       {isOpen && !disabled && (
-        <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg">
+        <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-[8px] shadow-lg">
           <div className="p-2">
             <input
               type="text"
               placeholder={searchPlaceholder}
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+              className="w-full px-3 py-2 border border-gray-300 rounded-[8px] text-sm"
             />
           </div>
           <ul className="max-h-60 overflow-auto">
@@ -98,3 +98,4 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
     </div>
   );
 };
+

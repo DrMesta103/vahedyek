@@ -46,7 +46,7 @@ export default function ContractDraftPreviewPage() {
       <PanelLayout>
         <div className="contract-draft-preview-root">
           <div className="mx-auto w-[min(1120px,calc(100%-28px))] py-10">
-            <div className="rounded-[28px] border border-white/70 bg-white/95 p-10 text-center text-sm font-bold text-slate-500 shadow-[0_20px_50px_-24px_rgba(15,23,42,0.14)]">
+            <div className="rounded-[8px] border border-white/70 bg-white/95 p-10 text-center text-sm font-bold text-slate-500 shadow-[0_20px_50px_-24px_rgba(15,23,42,0.14)]">
               در حال بارگذاری…
             </div>
           </div>
@@ -60,7 +60,7 @@ export default function ContractDraftPreviewPage() {
       <PanelLayout>
         <div className="contract-draft-preview-root">
           <div className="mx-auto w-[min(1120px,calc(100%-28px))] py-10">
-            <div className="rounded-[28px] border border-rose-200 bg-rose-50/95 p-8 text-center text-sm font-bold text-rose-800 shadow-sm">
+            <div className="rounded-[8px] border border-rose-200 bg-rose-50/95 p-8 text-center text-sm font-bold text-rose-800 shadow-sm">
               {error || 'شناسه قرارداد نامعتبر است.'}
             </div>
           </div>

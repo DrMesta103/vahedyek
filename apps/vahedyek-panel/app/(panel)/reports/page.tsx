@@ -88,9 +88,9 @@ export default function ReportsPage() {
   return (
     <PanelLayout>
       <main className="space-y-5" dir="rtl">
-        <section className="rounded-[28px] border border-[color:var(--border-color)] bg-[color:var(--surface-overlay)] p-5 shadow-[0_18px_45px_var(--shadow-soft)]">
+        <section className="rounded-[8px] border border-[color:var(--border-color)] bg-[color:var(--surface-overlay)] p-5 shadow-[0_18px_45px_var(--shadow-soft)]">
           <div className="flex items-start gap-3">
-            <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-[color-mix(in_srgb,var(--dark-teal)_12%,white)] text-[color-mix(in_srgb,var(--dark-teal)_85%,black)]">
+            <span className="inline-flex h-12 w-12 items-center justify-center rounded-[8px] bg-[color-mix(in_srgb,var(--dark-teal)_12%,white)] text-[color-mix(in_srgb,var(--dark-teal)_85%,black)]">
               <BarChart3 className="h-6 w-6" />
             </span>
             <div>
@@ -101,9 +101,9 @@ export default function ReportsPage() {
         </section>
 
         {loading ? (
-          <section className="rounded-[24px] border border-slate-200 bg-white p-10 text-center text-sm font-bold text-slate-500">در حال بارگذاری...</section>
+          <section className="rounded-[8px] border border-slate-200 bg-white p-10 text-center text-sm font-bold text-slate-500">در حال بارگذاری...</section>
         ) : error ? (
-          <section className="rounded-[24px] border border-rose-200 bg-rose-50 p-10 text-center text-sm font-bold text-rose-700">{error}</section>
+          <section className="rounded-[8px] border border-rose-200 bg-rose-50 p-10 text-center text-sm font-bold text-rose-700">{error}</section>
         ) : (
           <>
             <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
@@ -114,7 +114,7 @@ export default function ReportsPage() {
             </section>
 
             <section className="grid gap-5 lg:grid-cols-2">
-              <div className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="rounded-[8px] border border-slate-200 bg-white p-5 shadow-sm">
                 <h2 className="text-lg font-black text-slate-900">وضعیت قراردادها</h2>
                 <div className="mt-4 space-y-3">
                   <ProgressRow label="پیش‌نویس" value={stats.draftContracts} total={stats.contractsTotal} />
@@ -126,7 +126,7 @@ export default function ReportsPage() {
                 </Link>
               </div>
 
-              <div className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="rounded-[8px] border border-slate-200 bg-white p-5 shadow-sm">
                 <h2 className="text-lg font-black text-slate-900">خلاصه مجتمع</h2>
                 <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
                   <MiniStat label="بلوک" value={projectSummary?.blockCount ?? 0} />
@@ -148,7 +148,7 @@ export default function ReportsPage() {
 
 function ReportCard({ icon: Icon, title, value, helper }: { icon: LucideIcon; title: string; value: string; helper: string }) {
   return (
-    <article className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm">
+    <article className="rounded-[8px] border border-slate-200 bg-white p-5 shadow-sm">
       <Icon className="h-5 w-5 text-[color-mix(in_srgb,var(--dark-teal)_80%,black)]" />
       <div className="mt-4 text-xs font-bold text-slate-500">{title}</div>
       <div className="mt-1 text-xl font-black text-slate-900">{value}</div>
@@ -174,9 +174,11 @@ function ProgressRow({ label, value, total }: { label: string; value: number; to
 
 function MiniStat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
+    <div className="rounded-[8px] border border-slate-100 bg-slate-50 px-4 py-3">
       <div className="text-xs font-bold text-slate-500">{label}</div>
       <div className="mt-1 text-lg font-black text-slate-900">{value.toLocaleString('fa-IR')}</div>
     </div>
   );
 }
+
+

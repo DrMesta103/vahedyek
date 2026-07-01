@@ -69,7 +69,7 @@ export default function AppendixComparePage() {
           <button
             type="button"
             onClick={() => router.push(backHref)}
-            className="inline-flex h-10 items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-[13px] font-bold text-slate-700 shadow-sm transition hover:bg-slate-50"
+            className="inline-flex h-10 items-center gap-2 rounded-[8px] border border-slate-200 bg-white px-4 text-[13px] font-bold text-slate-700 shadow-sm transition hover:bg-slate-50"
           >
             بازگشت به جزئیات متمم
             <ArrowRight className="h-4 w-4" />
@@ -77,11 +77,11 @@ export default function AppendixComparePage() {
         </div>
 
         {loading ? (
-          <section className="rounded-[28px] border border-white/70 bg-white/95 p-10 text-center text-sm font-bold text-slate-500 shadow-sm">
+          <section className="rounded-[8px] border border-white/70 bg-white/95 p-10 text-center text-sm font-bold text-slate-500 shadow-sm">
             در حال بارگذاری...
           </section>
         ) : error ? (
-          <section className="rounded-[28px] border border-rose-200 bg-rose-50/95 p-8 text-center text-sm font-bold text-rose-800 shadow-sm">
+          <section className="rounded-[8px] border border-rose-200 bg-rose-50/95 p-8 text-center text-sm font-bold text-rose-800 shadow-sm">
             {error}
           </section>
         ) : data && meta ? (
@@ -91,3 +91,5 @@ export default function AppendixComparePage() {
     </PanelLayout>
   );
 }
+
+

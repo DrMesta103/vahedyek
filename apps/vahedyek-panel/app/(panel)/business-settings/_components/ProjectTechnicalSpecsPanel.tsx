@@ -42,7 +42,7 @@ async function fetchTechnicalSpecs() {
 
 function EmptyState() {
   return (
-    <div className="rounded-[22px] border border-dashed border-slate-200 bg-white/70 px-6 py-14 text-center shadow-[0_8px_18px_rgba(15,23,42,0.03)]">
+    <div className="rounded-[8px] border border-dashed border-slate-200 bg-white/70 px-6 py-14 text-center shadow-[0_8px_18px_rgba(15,23,42,0.03)]">
       <p className="text-[15px] font-bold text-slate-600">هنوز مشخصه‌ای ثبت نشده است.</p>
       <p className="mt-2 text-[13px] leading-7 text-slate-400">برای شروع، روی دکمه ثبت مشخصات فنی بزنید و اولین مورد را اضافه کنید.</p>
     </div>
@@ -206,7 +206,7 @@ export function ProjectTechnicalSpecsPanel({ returnTo = '' }: { returnTo?: strin
         <div className="relative min-h-[64px]">
           <Link
             href={backHref}
-            className="absolute left-0 top-0 inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-400 shadow-[0_8px_20px_rgba(15,23,42,0.05)] transition hover:bg-slate-50 hover:text-slate-700"
+            className="absolute left-0 top-0 inline-flex h-11 w-11 items-center justify-center rounded-[8px] border border-slate-200 bg-white text-slate-400 shadow-[0_8px_20px_rgba(15,23,42,0.05)] transition hover:bg-slate-50 hover:text-slate-700"
             aria-label="بازگشت"
           >
             <X className="h-5 w-5" />
@@ -240,7 +240,7 @@ export function ProjectTechnicalSpecsPanel({ returnTo = '' }: { returnTo?: strin
             {specs.map((item) => (
               <article
                 key={item.id}
-                className="relative min-h-[192px] rounded-[20px] border border-slate-300/80 bg-white/90 p-6 shadow-[0_14px_28px_rgba(15,23,42,0.05)] backdrop-blur-[2px]"
+                className="relative min-h-[192px] rounded-[8px] border border-slate-300/80 bg-white/90 p-6 shadow-[0_14px_28px_rgba(15,23,42,0.05)] backdrop-blur-[2px]"
               >
                 <div className="absolute left-4 top-4" data-spec-menu>
                   <button
@@ -287,7 +287,7 @@ export function ProjectTechnicalSpecsPanel({ returnTo = '' }: { returnTo?: strin
           onClick={closeDialog}
         >
           <div
-            className="w-full max-w-[404px] overflow-hidden rounded-[30px] border border-slate-200 bg-white shadow-[0_28px_90px_rgba(15,23,42,0.32)]"
+            className="w-full max-w-[404px] overflow-hidden rounded-[8px] border border-slate-200 bg-white shadow-[0_28px_90px_rgba(15,23,42,0.32)]"
             role="dialog"
             aria-modal="true"
             aria-labelledby="technical-specs-dialog-title"
@@ -313,7 +313,7 @@ export function ProjectTechnicalSpecsPanel({ returnTo = '' }: { returnTo?: strin
                   placeholder="مثال: UPS و ژنراتور"
                   autoFocus
                   maxLength={120}
-                  className="h-12 rounded-[16px] border-slate-300 px-4 text-[14px] font-medium text-slate-700 placeholder:text-slate-400 focus:border-[color:var(--dark-teal)] focus:ring-2 focus:ring-[color-mix(in_srgb,var(--dark-teal)_12%,transparent)]"
+                  className="h-12 rounded-[8px] border-slate-300 px-4 text-[14px] font-medium text-slate-700 placeholder:text-slate-400 focus:border-[color:var(--dark-teal)] focus:ring-2 focus:ring-[color-mix(in_srgb,var(--dark-teal)_12%,transparent)]"
                 />
               </label>
 
@@ -327,7 +327,7 @@ export function ProjectTechnicalSpecsPanel({ returnTo = '' }: { returnTo?: strin
                   placeholder="جزئیات فنی را بنویسید..."
                   minRows={4}
                   maxLength={800}
-                  wrapperClassName="rounded-[18px] border-slate-300"
+                  wrapperClassName="rounded-[8px] border-slate-300"
                   inputClassName="px-0 py-0 text-[14px] leading-8 text-slate-700 placeholder:text-slate-400"
                 />
               </label>
@@ -356,3 +356,5 @@ export function ProjectTechnicalSpecsPanel({ returnTo = '' }: { returnTo?: strin
     </section>
   );
 }
+
+

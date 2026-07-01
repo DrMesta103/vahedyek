@@ -1,14 +1,18 @@
 'use client';
 
-import { BadgePercent, ChartNoAxesCombined, CircleDollarSign } from 'lucide-react';
-import { BusinessSwitch, ChoicePills as UiChoicePills, RuleFieldLabel, RuleTabButton } from '@repo/ui';
+import { BusinessSwitch, RuleFieldLabel, TagPills } from '@repo/ui';
 import type { ContractRuleState } from '../../../lib/businessContractRules';
 import { RuleTextInput as SharedRuleTextInput } from './RuleStylePrimitives';
 
 type InterestMode = 'simple-interest' | 'compound-interest' | 'remaining-debt-interest';
 
-const ROUND_RULE_OPTIONS = ['0.0', '0.00', 'کسر 100', 'کسر 1000'] as const;
-const COMPOUND_PERIOD_OPTIONS = ['روزانه', 'ماهانه', 'سه‌ماهه', 'سالانه'] as const;
+const ROUND_RULE_OPTIONS = ['0.0', '0.00', '??? 100', '??? 1000'] as const;
+const COMPOUND_PERIOD_OPTIONS = ['??????', '??????', '???????', '??????'] as const;
+const MODE_OPTIONS: Array<{ value: InterestMode; label: string }> = [
+  { value: 'simple-interest', label: '??? ????' },
+  { value: 'compound-interest', label: '??? ????' },
+  { value: 'remaining-debt-interest', label: '??? ?? ????? ????' },
+];
 
 function RuleTextInput({
   value,
@@ -22,29 +26,6 @@ function RuleTextInput({
   suffix?: string;
 }) {
   return <SharedRuleTextInput value={value} onChange={onChange} placeholder={placeholder} suffix={suffix} />;
-}
-
-function InterestTagPills({
-  options,
-  value,
-  onChange,
-  ariaLabel,
-}: {
-  options: readonly string[];
-  value: string;
-  onChange: (value: string) => void;
-  ariaLabel?: string;
-}) {
-  return (
-    <UiChoicePills
-      ariaLabel={ariaLabel}
-      options={options.map((option) => ({ value: option, label: option }))}
-      value={value}
-      onChange={onChange}
-      wrap
-      className="justify-end flex-row-reverse"
-    />
-  );
 }
 
 function SwitchRow({
@@ -81,8 +62,8 @@ function getModeConfig(mode: InterestMode) {
         reducingKey: 'interestReducingPrincipal',
         togetherKey: 'interestTogetherPayment',
         endKey: 'interestPrincipalAtEnd',
-        title: 'سود ساده',
-        description: 'در این روش سود به صورت درصد ثابت روی مبلغ قرارداد محاسبه می‌شود و در طول دوره تغییر نمی‌کند.',
+        title: '??? ????',
+        description: '?? ??? ??? ??? ?? ???? ???? ???? ??? ???? ??????? ?????? ?????? ? ?? ??? ???? ????? ???????.',
       };
     case 'compound-interest':
       return {
@@ -93,8 +74,8 @@ function getModeConfig(mode: InterestMode) {
         reducingKey: 'interestReducingPrincipalCompound',
         togetherKey: 'interestTogetherPaymentCompound',
         endKey: 'interestPrincipalAtEndCompound',
-        title: 'سود مرکب',
-        description: 'در این روش سود به همراه سود قبلی محاسبه می‌شود بنابراین سود با گذشت زمان افزایش پیدا می‌کند.',
+        title: '??? ????',
+        description: '?? ??? ??? ??? ?? ????? ??? ???? ?????? ?????? ???????? ??? ?? ???? ???? ?????? ???? ??????.',
       };
     case 'remaining-debt-interest':
       return {
@@ -104,8 +85,8 @@ function getModeConfig(mode: InterestMode) {
         reducingKey: 'interestReducingPrincipalRemaining',
         togetherKey: 'interestTogetherPaymentRemaining',
         endKey: 'interestPrincipalAtEndRemaining',
-        title: 'سود بر مانده بدهی',
-        description: 'در این روش سود در هر دوره بر اساس مانده بدهی باقی‌مانده محاسبه می‌شود.',
+        title: '??? ?? ????? ????',
+        description: '?? ??? ??? ??? ?? ?? ???? ?? ???? ????? ???? ?????????? ?????? ??????.',
       };
   }
 }
@@ -121,21 +102,15 @@ export function InterestRuleSection({
   const config = getModeConfig(mode);
 
   return (
-    <section className="overflow-hidden rounded-[24px] border border-[color:var(--border-soft)] bg-[color:var(--surface)]">
-      <div className="flex flex-wrap border-b border-[color:var(--border-soft)]">
-        <RuleTabButton
-          title="سود بر مانده بدهی"
-          icon={CircleDollarSign}
-          active={mode === 'remaining-debt-interest'}
-          onClick={() => onValueChange('activeTab', 'remaining-debt-interest')}
+    <section className="overflow-hidden rounded-[8px] border border-[color:var(--border-soft)] bg-[color:var(--surface)]">
+      <div className="border-b border-[color:var(--border-soft)] px-5 py-4">
+        <TagPills
+          options={MODE_OPTIONS}
+          value={mode}
+          onChange={(value) => onValueChange('activeTab', value)}
+          wrap={false}
+          className="justify-end overflow-x-auto pb-1"
         />
-        <RuleTabButton
-          title="سود مرکب"
-          icon={ChartNoAxesCombined}
-          active={mode === 'compound-interest'}
-          onClick={() => onValueChange('activeTab', 'compound-interest')}
-        />
-        <RuleTabButton title="سود ساده" icon={BadgePercent} active={mode === 'simple-interest'} onClick={() => onValueChange('activeTab', 'simple-interest')} />
       </div>
 
       <div className="space-y-8 p-5">
@@ -143,63 +118,65 @@ export function InterestRuleSection({
         <div className="border-t border-[color:var(--border-soft)]" />
 
         <div className="space-y-4">
-          <RuleFieldLabel label="نرخ سود سالیانه (APR)" required />
+          <RuleFieldLabel label="??? ??? ??????? (APR)" required />
           <RuleTextInput value={String(state.values[config.aprKey] ?? '')} onChange={(value) => onValueChange(config.aprKey, value)} suffix="%" />
-          <p className="text-right text-sm text-[color:var(--text-muted)]">این نرخ برای محاسبه سود اقساط استفاده می‌شود. مقدار باید بین ۰ تا ۶۰ مثلا باشد.</p>
+          <p className="text-right text-sm text-[color:var(--text-muted)]">??? ??? ???? ?????? ??? ????? ??????? ??????. ????? ???? ??? ? ?? ?? ???? ????.</p>
         </div>
 
         {mode === 'compound-interest' ? (
           <div className="space-y-4 border-t border-[color:var(--border-soft)] pt-5">
-            <RuleFieldLabel label="انتخاب دوره محاسبه سود" required />
-            <InterestTagPills
-              ariaLabel="دوره محاسبه سود مرکب"
-              options={COMPOUND_PERIOD_OPTIONS}
+            <RuleFieldLabel label="?????? ???? ?????? ???" required />
+            <TagPills
+              options={COMPOUND_PERIOD_OPTIONS.map((option) => ({ value: option, label: option }))}
               value={String(state.values[config.periodKey!] || COMPOUND_PERIOD_OPTIONS[0])}
               onChange={(value) => onValueChange(config.periodKey!, value)}
+              wrap={false}
+              className="justify-end overflow-x-auto pb-1"
             />
             <p className="text-right text-sm text-[color:var(--text-muted)]">
-              دوره‌ای که سود مرکب بر اساس آن محاسبه می‌شود. انتخاب بازه کوتاه‌تر باعث افزایش سود نهایی می‌شود.
+              ??????? ?? ??? ???? ?? ???? ?? ?????? ??????. ?????? ???? ???????? ???? ?????? ??? ????? ??????.
             </p>
           </div>
         ) : null}
 
         <SwitchRow
-          title="اعمال جریمه بر مبلغ سود معوق"
-          description="در صورت فعال‌بودن این گزینه، مبلغ سود مانند سایر بدهی‌ها مشمول جریمه تاخیر می‌شود که با توجه به تنظیمات جرایم اعمال می‌شود."
+          title="????? ????? ?? ???? ??? ????"
+          description="?? ???? ????????? ??? ?????? ???? ??? ????? ???? ??????? ????? ????? ????? ?????? ?? ?? ???? ?? ??????? ????? ????? ??????."
           checked={Boolean(state.values[config.penaltyKey])}
           onChange={(value) => onValueChange(config.penaltyKey, value)}
         />
 
         <div className="space-y-4 border-t border-[color:var(--border-soft)] pt-5">
-          <h3 className="text-right text-[18px] font-black text-[color:var(--text-strong)]">قاعده گرد کردن مبلغ سود</h3>
-          <InterestTagPills
-            ariaLabel="قاعده گرد کردن مبلغ سود"
-            options={ROUND_RULE_OPTIONS}
+          <h3 className="text-right text-[18px] font-black text-[color:var(--text-strong)]">????? ??? ???? ???? ???</h3>
+          <TagPills
+            options={ROUND_RULE_OPTIONS.map((option) => ({ value: option, label: option }))}
             value={String(state.values[config.roundKey] || ROUND_RULE_OPTIONS[0])}
             onChange={(value) => onValueChange(config.roundKey, value)}
+            wrap={false}
+            className="justify-end overflow-x-auto pb-1"
           />
           <p className="text-right text-sm text-[color:var(--text-muted)]">
-            مشخص می‌کند عدد نهایی سود پس از محاسبه به چه واحدی گرد شود مثل گرد کردن به ۱۰۰ یا ۱۰۰۰ تومان.
+            ???? ?????? ??? ????? ??? ?? ?? ?????? ?? ?? ????? ??? ??? ??? ??? ???? ?? ??? ?? ???? ?????.
           </p>
         </div>
 
         <SwitchRow
-          title="سهم اصل ثابت سود کاهشی"
-          description="در این حالت، مبلغ باقی از اصل بدهی هر ماه کم می‌شود و سود هر قسط بر اساس مانده بدهی کاهش می‌یابد."
+          title="??? ??? ???? ??? ?????"
+          description="?? ??? ????? ???? ???? ?? ??? ???? ?? ??? ?? ?????? ? ??? ?? ??? ?? ???? ????? ???? ???? ???????."
           checked={Boolean(state.values[config.reducingKey])}
           onChange={(value) => onValueChange(config.reducingKey, value)}
         />
 
         <SwitchRow
-          title="پرداخت همزمان اصل و سود"
-          description="در این روش در هر قسط شامل بخشی از اصل بدهی و سود مربوط به همان دوره است."
+          title="?????? ?????? ??? ? ???"
+          description="?? ??? ??? ?? ?? ??? ???? ???? ?? ??? ???? ? ??? ????? ?? ???? ???? ???."
           checked={Boolean(state.values[config.togetherKey])}
           onChange={(value) => onValueChange(config.togetherKey, value)}
         />
 
         <SwitchRow
-          title="پرداخت فقط سود تسویه اصل در پایان"
-          description="در این روش در کل دوره فقط سود پرداخت می‌شود و مبلغ اصل بدهی در پایان دوره بصورت یکجا تسویه می‌شود."
+          title="?????? ??? ??? ????? ??? ?? ?????"
+          description="?? ??? ??? ?? ?? ???? ??? ??? ?????? ?????? ? ???? ??? ???? ?? ????? ???? ????? ???? ????? ??????."
           checked={Boolean(state.values[config.endKey])}
           onChange={(value) => onValueChange(config.endKey, value)}
         />
@@ -207,3 +184,4 @@ export function InterestRuleSection({
     </section>
   );
 }
+

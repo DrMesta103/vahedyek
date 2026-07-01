@@ -54,7 +54,7 @@ export function Select({
         type="button"
         disabled={disabled}
         onClick={() => setOpen((v) => !v)}
-        className="flex h-11 w-full items-center justify-between gap-2 rounded-xl border border-[var(--border-color)] bg-[var(--surface)] px-3 text-right text-[13px] font-semibold text-[var(--text-body)] disabled:opacity-55"
+        className="flex h-11 w-full items-center justify-between gap-2 rounded-[8px] border border-[var(--border-color)] bg-[var(--surface)] px-3 text-right text-[13px] font-semibold text-[var(--text-body)] disabled:opacity-55"
       >
         <span className={`min-w-0 truncate ${selected ? 'text-[var(--text-body)]' : 'text-[var(--text-muted)]'}`}>
           {renderSelected ? renderSelected(selected) : selected?.label ?? placeholder}
@@ -67,7 +67,7 @@ export function Select({
       </button>
 
       {open && !disabled ? (
-        <div className="absolute right-0 z-50 mt-2 w-full overflow-hidden rounded-2xl border border-[var(--border-color)] bg-[var(--surface)] shadow-sm">
+        <div className="absolute right-0 z-50 mt-2 w-full overflow-hidden rounded-[8px] border border-[var(--border-color)] bg-[var(--surface)] shadow-sm">
           <div className="flex items-center gap-2 border-b border-[var(--border-color)] px-3 py-2">
             <Search className="h-4 w-4 text-[var(--text-faint)]" aria-hidden />
             <input
@@ -128,7 +128,7 @@ export function Select({
                   setQ('');
                   footerAction.onClick();
                 }}
-                className="flex w-full items-center justify-center rounded-xl bg-[var(--surface-soft)] px-3 py-2 text-[12px] font-bold text-[var(--dark-teal)] transition hover:bg-[color-mix(in_srgb,var(--dark-teal)_10%,white)]"
+                className="flex w-full items-center justify-center rounded-[8px] bg-[var(--surface-soft)] px-3 py-2 text-[12px] font-bold text-[var(--dark-teal)] transition hover:bg-[color-mix(in_srgb,var(--dark-teal)_10%,white)]"
               >
                 {footerAction.label}
               </button>
@@ -139,3 +139,5 @@ export function Select({
     </div>
   );
 }
+
+

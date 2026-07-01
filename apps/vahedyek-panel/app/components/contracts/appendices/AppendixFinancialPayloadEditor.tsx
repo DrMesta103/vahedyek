@@ -53,7 +53,7 @@ function Modal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
       <div
-        className="w-full max-w-xl rounded-[28px] border border-slate-200 bg-white shadow-2xl"
+        className="w-full max-w-xl rounded-[8px] border border-slate-200 bg-white shadow-2xl"
         dir="rtl"
         lang="fa"
         onClick={(event) => event.stopPropagation()}
@@ -62,7 +62,7 @@ function Modal({
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 text-slate-600"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-[8px] border border-slate-200 bg-slate-50 text-slate-600"
             aria-label="بستن"
           >
             <X className="h-4 w-4" />
@@ -411,13 +411,13 @@ export function AppendixFinancialPayloadEditor({
       />
 
       {hasFixedLineLabel ? (
-        <div className="rounded-2xl border border-slate-200 bg-slate-50/60 px-4 py-3 text-[12px] font-semibold text-slate-600">
+        <div className="rounded-[8px] border border-slate-200 bg-slate-50/60 px-4 py-3 text-[12px] font-semibold text-slate-600">
           نام این ردیف مالی ثابت است: <span className="font-black text-slate-900">{copy.fixedLineLabel}</span>
         </div>
       ) : null}
 
       {mode === 'side-costs' ? (
-        <div className="rounded-2xl border border-slate-200 bg-slate-50/60 px-4 py-3 text-[12px] font-semibold text-slate-600">
+        <div className="rounded-[8px] border border-slate-200 bg-slate-50/60 px-4 py-3 text-[12px] font-semibold text-slate-600">
           برای افزودن ردیف جدید از دکمه <span className="font-black text-slate-900">افزودن ردیف مالی</span> استفاده کنید.
         </div>
       ) : null}
@@ -428,10 +428,10 @@ export function AppendixFinancialPayloadEditor({
         title={editingDueId ? copy.dueModalTitleEdit : copy.dueModalTitleCreate}
         footer={
           <>
-            <button type="button" onClick={() => setDueDialogOpen(false)} className="rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">
+            <button type="button" onClick={() => setDueDialogOpen(false)} className="rounded-[8px] border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">
               انصراف
             </button>
-            <button type="button" onClick={submitDue} className="rounded-lg bg-[color-mix(in_srgb,var(--dark-teal)_92%,black)] px-4 py-2 text-sm font-bold text-white">
+            <button type="button" onClick={submitDue} className="rounded-[8px] bg-[color-mix(in_srgb,var(--dark-teal)_92%,black)] px-4 py-2 text-sm font-bold text-white">
               ثبت
             </button>
           </>
@@ -456,7 +456,7 @@ export function AppendixFinancialPayloadEditor({
                   value={dueTitle}
                   onChange={(event) => setDueTitle(event.target.value)}
                   placeholder={activeCategorySupportsRegular && dueMode === 'regular' ? 'مثال: اقساط منظم' : copy.duePlaceholder}
-                  className="mt-2 h-10 rounded-lg border-gray-200 bg-[#fcfdfd] px-3 text-[13px]"
+                  className="mt-2 h-10 rounded-[8px] border-gray-200 bg-[#fcfdfd] px-3 text-[13px]"
                 />
               </div>
 
@@ -467,7 +467,7 @@ export function AppendixFinancialPayloadEditor({
                     value={dueAmount}
                     onChange={(event) => setDueAmount(formatMoneyInput(event.target.value))}
                     placeholder="مبلغ را وارد کنید"
-                    className="h-10 rounded-lg border-gray-200 bg-[#fcfdfd] pr-3 pl-12 text-[13px]"
+                    className="h-10 rounded-[8px] border-gray-200 bg-[#fcfdfd] pr-3 pl-12 text-[13px]"
                   />
                   <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-xs text-gray-400">تومان</span>
                 </div>
@@ -496,15 +496,15 @@ export function AppendixFinancialPayloadEditor({
               <div className="grid gap-3">
                 <div>
                   <FieldLabel label={`دوره اقساط ${regularFrequency === 'monthly' ? 'ماهانه' : 'روزانه'}`} />
-                  <Input value={regularPeriod} onChange={(event) => setRegularPeriod(event.target.value.replace(/\D/g, ''))} className="mt-2 h-10 rounded-lg border-gray-200 bg-[#fcfdfd] px-3 text-[13px]" />
+                  <Input value={regularPeriod} onChange={(event) => setRegularPeriod(event.target.value.replace(/\D/g, ''))} className="mt-2 h-10 rounded-[8px] border-gray-200 bg-[#fcfdfd] px-3 text-[13px]" />
                 </div>
                 <div>
                   <FieldLabel label="تعداد اقساط" />
-                  <Input value={regularCount} onChange={(event) => setRegularCount(event.target.value.replace(/\D/g, ''))} className="mt-2 h-10 rounded-lg border-gray-200 bg-[#fcfdfd] px-3 text-[13px]" />
+                  <Input value={regularCount} onChange={(event) => setRegularCount(event.target.value.replace(/\D/g, ''))} className="mt-2 h-10 rounded-[8px] border-gray-200 bg-[#fcfdfd] px-3 text-[13px]" />
                 </div>
                 <DateField label="تاریخ شروع" value={regularStartDate} onChange={setRegularStartDate} placeholder="تاریخ شروع را انتخاب کنید" />
                 {regularStartDate && regularCount ? (
-                  <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-[12px] font-semibold text-slate-600">
+                  <div className="rounded-[8px] border border-slate-200 bg-slate-50 px-3 py-2 text-[12px] font-semibold text-slate-600">
                     تاریخ آخرین قسط: {addIntervalToDate(regularStartDate, Math.max(Number(regularCount) - 1, 0), regularFrequency, Math.max(Number(regularPeriod) || 1, 1))}
                   </div>
                 ) : null}
@@ -512,7 +512,7 @@ export function AppendixFinancialPayloadEditor({
             )}
           </section>
 
-          {dueFormError ? <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{dueFormError}</div> : null}
+          {dueFormError ? <div className="rounded-[8px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{dueFormError}</div> : null}
         </div>
       </Modal>
 
@@ -522,31 +522,33 @@ export function AppendixFinancialPayloadEditor({
         title={editingLineId ? 'ویرایش ردیف مالی جانبی' : 'افزودن ردیف مالی جانبی'}
         footer={
           <>
-            <button type="button" onClick={() => setLineModalOpen(false)} className="rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">
+            <button type="button" onClick={() => setLineModalOpen(false)} className="rounded-[8px] border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">
               انصراف
             </button>
-            <button type="button" onClick={submitLine} className="rounded-lg bg-[color-mix(in_srgb,var(--dark-teal)_92%,black)] px-4 py-2 text-sm font-bold text-white">
+            <button type="button" onClick={submitLine} className="rounded-[8px] bg-[color-mix(in_srgb,var(--dark-teal)_92%,black)] px-4 py-2 text-sm font-bold text-white">
               ثبت
             </button>
           </>
         }
       >
         <div className="space-y-4">
-          <div className="rounded-2xl border border-slate-200 bg-slate-50/70 px-4 py-3 text-[12px] font-semibold text-slate-600">
+          <div className="rounded-[8px] border border-slate-200 bg-slate-50/70 px-4 py-3 text-[12px] font-semibold text-slate-600">
             عنوان ردیف مالی را وارد کنید. زیرردیف‌های ساختاری این خط به‌صورت خودکار ساخته می‌شوند.
           </div>
           <div>
             <FieldLabel label="عنوان ردیف مالی" />
             <div className="mt-2 flex items-center gap-2">
-              <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 text-slate-600">
+              <span className="inline-flex h-10 w-10 items-center justify-center rounded-[8px] border border-slate-200 bg-slate-50 text-slate-600">
                 <Plus className="h-4 w-4" />
               </span>
-              <Input value={lineTitle} onChange={(event) => setLineTitle(event.target.value)} placeholder="مثال: انشعاب آب" className="h-10 rounded-lg border-gray-200 bg-[#fcfdfd] px-3 text-[13px]" />
+              <Input value={lineTitle} onChange={(event) => setLineTitle(event.target.value)} placeholder="مثال: انشعاب آب" className="h-10 rounded-[8px] border-gray-200 bg-[#fcfdfd] px-3 text-[13px]" />
             </div>
           </div>
-          {lineFormError ? <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{lineFormError}</div> : null}
+          {lineFormError ? <div className="rounded-[8px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{lineFormError}</div> : null}
         </div>
       </Modal>
     </div>
   );
 }
+
+

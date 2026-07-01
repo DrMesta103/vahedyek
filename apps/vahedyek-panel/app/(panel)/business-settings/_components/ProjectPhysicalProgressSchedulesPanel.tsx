@@ -77,7 +77,7 @@ function BlockMultiSelect({
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
-        className="flex h-11 w-full items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-800"
+        className="flex h-11 w-full items-center justify-between rounded-[8px] border border-slate-200 bg-white px-4 text-sm text-slate-800"
       >
         <span className={selectedNames.length ? '' : 'text-slate-400'}>
           {selectedNames.length ? selectedNames.join('، ') : 'انتخاب بلوک‌ها'}
@@ -86,12 +86,12 @@ function BlockMultiSelect({
       </button>
 
       {open ? (
-        <div className="absolute z-20 mt-2 w-full rounded-2xl border border-slate-200 bg-white p-3 shadow-[0_18px_45px_rgba(15,23,42,0.12)]">
+        <div className="absolute z-20 mt-2 w-full rounded-[8px] border border-slate-200 bg-white p-3 shadow-[0_18px_45px_rgba(15,23,42,0.12)]">
           <div className="max-h-56 space-y-2 overflow-auto">
             {blocks.map((block) => {
               const checked = selectedBlockIds.includes(block.id);
               return (
-                <label key={block.id} className="flex items-center justify-between rounded-xl border border-slate-200 px-3 py-2 text-sm">
+                <label key={block.id} className="flex items-center justify-between rounded-[8px] border border-slate-200 px-3 py-2 text-sm">
                   <span>{block.name}</span>
                   <input
                     type="checkbox"
@@ -241,7 +241,7 @@ export function ProjectPhysicalProgressSchedulesPanel() {
         {loading ? <div className="business-blocks-state">در حال دریافت برنامه‌های زمان‌بندی...</div> : null}
 
         {!loading ? (
-          <div className="rounded-[28px] border border-slate-200 bg-white p-5">
+          <div className="rounded-[8px] border border-slate-200 bg-white p-5">
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
                 <h2 className="text-base font-black text-slate-800">لیست برنامه‌ها</h2>
@@ -253,7 +253,7 @@ export function ProjectPhysicalProgressSchedulesPanel() {
               </div>
               <div className="flex items-center gap-2">
                 {focusedBlock ? (
-                  <Link href="/business-settings/project/physical-progress-schedules" className="inline-flex h-9 items-center rounded-xl border border-slate-200 px-3 text-[12px] font-bold text-slate-700">
+                  <Link href="/business-settings/project/physical-progress-schedules" className="inline-flex h-9 items-center rounded-[8px] border border-slate-200 px-3 text-[12px] font-bold text-slate-700">
                     همه بلوک‌ها
                   </Link>
                 ) : null}
@@ -346,7 +346,7 @@ export function ProjectPhysicalProgressSchedulesPanel() {
                     {expanded ? (
                       <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                         {schedule.stages.map((stage) => (
-                          <div key={stage.id} className="rounded-2xl border border-slate-200 bg-white p-3">
+                          <div key={stage.id} className="rounded-[8px] border border-slate-200 bg-white p-3">
                             <div className="flex items-center justify-between gap-2">
                               <strong className="text-sm text-slate-800">{stage.title}</strong>
                               <Badge variant="success">{formatWeight(stage.weight)}</Badge>
@@ -395,3 +395,5 @@ export function ProjectPhysicalProgressSchedulesPanel() {
     </section>
   );
 }
+
+

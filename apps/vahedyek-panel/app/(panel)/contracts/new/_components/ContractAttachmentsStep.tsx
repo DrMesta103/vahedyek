@@ -84,13 +84,13 @@ function FilePreview({ file }: { file: NonNullable<NonNullable<AttachmentItem['f
       <img
         src={file.dataUrl}
         alt={file.name}
-        className="h-full w-full rounded-2xl object-cover"
+        className="h-full w-full rounded-[8px] object-cover"
       />
     );
   }
   const Icon = kind === 'pdf' ? FileText : kind === 'audio' ? FileAudio : Upload;
   return (
-    <div className="flex h-full w-full items-center justify-center rounded-2xl bg-slate-50 text-slate-500">
+    <div className="flex h-full w-full items-center justify-center rounded-[8px] bg-slate-50 text-slate-500">
       <Icon className="h-7 w-7" />
     </div>
   );
@@ -284,7 +284,7 @@ export function ContractAttachmentsStep({ title }: { title: string }) {
   return (
     <div className="space-y-4" dir="rtl">
       {formError ? (
-        <div className="flex items-start gap-2.5 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-[13px] text-rose-700">
+        <div className="flex items-start gap-2.5 rounded-[8px] border border-rose-200 bg-rose-50 px-4 py-3 text-[13px] text-rose-700">
           <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-rose-500" />
           {formError}
         </div>
@@ -302,7 +302,7 @@ export function ContractAttachmentsStep({ title }: { title: string }) {
             <button
               type="button"
               onClick={openDialog}
-              className="app-button app-button-primary inline-flex items-center gap-2 rounded-xl px-4 py-2 text-[13px] font-bold"
+              className="app-button app-button-primary inline-flex items-center gap-2 rounded-[8px] px-4 py-2 text-[13px] font-bold"
             >
               <Plus className="h-4 w-4" />
               افزودن سند
@@ -328,7 +328,7 @@ export function ContractAttachmentsStep({ title }: { title: string }) {
                       </div>
                       <button
                         type="button"
-                        className="rounded-lg p-1 text-slate-400 transition-colors hover:bg-slate-50 hover:text-slate-600"
+                        className="rounded-[8px] p-1 text-slate-400 transition-colors hover:bg-slate-50 hover:text-slate-600"
                         onClick={() => setDocuments((current) => current.filter((d) => d.id !== doc.id))}
                         aria-label="حذف"
                       >
@@ -338,11 +338,11 @@ export function ContractAttachmentsStep({ title }: { title: string }) {
 
                     <div className="mt-3 grid grid-cols-3 gap-2">
                       {previewFile ? (
-                        <div className="col-span-1 h-20 w-full overflow-hidden rounded-2xl border border-slate-100">
+                        <div className="col-span-1 h-20 w-full overflow-hidden rounded-[8px] border border-slate-100">
                           <FilePreview file={previewFile} />
                         </div>
                       ) : (
-                        <div className="col-span-1 flex h-20 w-full items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50 text-slate-400">
+                        <div className="col-span-1 flex h-20 w-full items-center justify-center rounded-[8px] border border-dashed border-slate-200 bg-slate-50 text-slate-400">
                           <Upload className="h-6 w-6" />
                         </div>
                       )}
@@ -379,7 +379,7 @@ export function ContractAttachmentsStep({ title }: { title: string }) {
           >
             {dialogUploading ? (
               <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/75 backdrop-blur-sm">
-                <div className="flex flex-col items-center gap-3 rounded-2xl border border-slate-200 bg-white px-6 py-5 shadow-lg">
+                <div className="flex flex-col items-center gap-3 rounded-[8px] border border-slate-200 bg-white px-6 py-5 shadow-lg">
                   <span className="h-8 w-8 animate-spin rounded-full border-2 border-slate-300 border-t-slate-700" />
                   <div className="text-[13px] font-bold text-slate-700">در حال آپلود فایل…</div>
                   <div className="text-[12px] text-slate-500">لطفاً چند لحظه صبر کنید.</div>
@@ -394,7 +394,7 @@ export function ContractAttachmentsStep({ title }: { title: string }) {
               </div>
               <button
                 type="button"
-                className="rounded-lg p-1 text-slate-400 transition-colors hover:bg-slate-50 hover:text-slate-600"
+                className="rounded-[8px] p-1 text-slate-400 transition-colors hover:bg-slate-50 hover:text-slate-600"
                 onClick={() => setDialogOpen(false)}
                 aria-label="بستن"
                 disabled={dialogUploading}
@@ -409,7 +409,7 @@ export function ContractAttachmentsStep({ title }: { title: string }) {
                   <Input value={categoryInput} onChange={(e) => setCategoryInput(e.target.value)} placeholder="مثال: اسناد و مدارک ملکی" />
                   <button
                     type="button"
-                    className="app-button rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50"
+                    className="app-button rounded-[8px] border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50"
                     onClick={() => {
                       const value = categoryInput.trim();
                       if (!value) return;
@@ -440,7 +440,7 @@ export function ContractAttachmentsStep({ title }: { title: string }) {
                   <Input value={titleInput} onChange={(e) => setTitleInput(e.target.value)} placeholder="مثال: بیمه‌نامه ساختمان" />
                   <button
                     type="button"
-                    className="app-button rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50"
+                    className="app-button rounded-[8px] border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50"
                     onClick={() => {
                       const value = titleInput.trim();
                       if (!value) return;
@@ -474,7 +474,7 @@ export function ContractAttachmentsStep({ title }: { title: string }) {
                 <textarea
                   value={docDescription}
                   onChange={(e) => setDocDescription(e.target.value)}
-                  className="app-textarea h-28 w-full resize-none rounded-xl border border-slate-200 bg-white px-4 py-3 text-[13px] text-slate-800 outline-none placeholder:text-slate-400 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10"
+                  className="app-textarea h-28 w-full resize-none rounded-[8px] border border-slate-200 bg-white px-4 py-3 text-[13px] text-slate-800 outline-none placeholder:text-slate-400 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10"
                   placeholder="یادداشت..."
                 />
               </FieldGroup>
@@ -603,8 +603,8 @@ export function ContractAttachmentsStep({ title }: { title: string }) {
                         const kind = getFileKind(f.mimeType);
                         const showImage = kind === 'image' && f.dataUrl;
                         return (
-                          <div key={f.id} className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white p-2">
-                            <div className="h-12 w-12 overflow-hidden rounded-xl border border-slate-100 bg-slate-50">
+                          <div key={f.id} className="flex items-center gap-2 rounded-[8px] border border-slate-200 bg-white p-2">
+                            <div className="h-12 w-12 overflow-hidden rounded-[8px] border border-slate-100 bg-slate-50">
                               {f.loading ? (
                                 <div className="flex h-full w-full items-center justify-center">
                                   <span className="h-5 w-5 animate-spin rounded-full border-2 border-slate-300 border-t-slate-600" />
@@ -644,7 +644,7 @@ export function ContractAttachmentsStep({ title }: { title: string }) {
             <div className="flex flex-wrap justify-end gap-2 border-t border-slate-100 px-4 py-3">
               <button
                 type="button"
-                className="app-button rounded-xl border border-slate-200 bg-white px-4 py-2 text-[13px] font-bold text-slate-700 hover:bg-slate-50"
+                className="app-button rounded-[8px] border border-slate-200 bg-white px-4 py-2 text-[13px] font-bold text-slate-700 hover:bg-slate-50"
                 onClick={() => setDialogOpen(false)}
                 disabled={dialogUploading}
               >
@@ -652,7 +652,7 @@ export function ContractAttachmentsStep({ title }: { title: string }) {
               </button>
               <button
                 type="button"
-                className="app-button app-button-primary rounded-xl px-4 py-2 text-[13px] font-bold"
+                className="app-button app-button-primary rounded-[8px] px-4 py-2 text-[13px] font-bold"
                 onClick={confirmDialog}
                 disabled={dialogUploading || !(selectedTitle || titleInput).trim()}
               >
@@ -674,4 +674,6 @@ export function ContractAttachmentsStep({ title }: { title: string }) {
     </div>
   );
 }
+
+
 

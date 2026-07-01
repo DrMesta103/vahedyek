@@ -30,7 +30,7 @@ function NextPageCard({
   return (
     <Link
       href={href}
-      className="group flex items-center justify-between gap-4 rounded-[20px] border border-[color:var(--border-soft)] bg-[color:var(--surface)] px-5 py-5 transition hover:border-[color:var(--theme-action-border)] hover:bg-[color:var(--surface-soft)]"
+      className="group flex items-center justify-between gap-4 rounded-[8px] border border-[color:var(--border-soft)] bg-[color:var(--surface)] px-5 py-5 transition hover:border-[color:var(--theme-action-border)] hover:bg-[color:var(--surface-soft)]"
     >
       <ChevronLeft className="h-5 w-5 shrink-0 text-[color:var(--text-muted)] transition group-hover:-translate-x-0.5 group-hover:text-[color:var(--theme-action-text)]" />
       <div className="flex-1 text-right">
@@ -195,7 +195,7 @@ export function LoanSettingsPanel() {
                   value={state.selectedBank}
                   onChange={(selectedBank) => setState((current) => (current ? { ...current, selectedBank } : current))}
                 />
-                <div className="rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] px-4 py-4 text-sm leading-7 text-[color:var(--text-muted)]">
+                <div className="rounded-[8px] border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] px-4 py-4 text-sm leading-7 text-[color:var(--text-muted)]">
                   بانک انتخاب‌شده: <span className="font-black text-[color:var(--text-strong)]">{state.selectedBank}</span>
                 </div>
               </div>
@@ -211,3 +211,5 @@ export function LoanSettingsPanel() {
     </>
   );
 }
+
+

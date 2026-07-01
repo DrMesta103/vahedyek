@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -213,13 +213,13 @@ function getTabIcon(ruleId: ContractRuleId, tabId: string): ElementType {
 function getPrepaymentLead(tabId: string) {
   switch (tabId) {
     case 'percent':
-      return 'در این روش مبلغ پیشنهادی پیش‌پرداخت به‌صورت یک درصد از مبلغ کل تعیین می‌شود.';
+      return 'درصد پیش‌پرداخت از مبلغ کل قرارداد محاسبه می‌شود.';
     case 'fixed':
-      return 'در این روش مبلغ پیشنهادی پیش‌پرداخت به‌صورت یک مقدار ثابت تعیین می‌شود.';
+      return 'مبلغ ثابت پیش‌پرداخت مستقیماً از مبلغ قرارداد کم می‌شود.';
     case 'combined':
-      return 'در این روش، بخشی از پیش‌پرداخت به‌صورت درصدی از مبلغ کل قرارداد محاسبه می‌شود و علاوه بر آن یک مبلغ ثابت نیز تعیین می‌شود.';
+      return 'در حالت ترکیبی هم درصد و هم مبلغ ثابت هم‌زمان اعمال می‌شوند.';
     case 'sales':
-      return 'در این روش، مدیر فروش می‌تواند بر اساس سیاست فروش پروژه، مبلغ پیش‌پرداخت پیشنهادی متفاوتی برای قرارداد ثبت کند.';
+      return 'این حالت مخصوص قراردادهای فروش است که پیش‌پرداخت ویژه دارند.';
     default:
       return '';
   }
@@ -228,13 +228,13 @@ function getPrepaymentLead(tabId: string) {
 function getAdditionalCostsLead(tabId: string) {
   switch (tabId) {
     case 'amount':
-      return 'در این روش یک مبلغ مشخص و ثابت بدون توجه به مبلغ قرارداد دریافت می‌شود.';
+      return 'اقساط به‌صورت مبلغ ثابت محاسبه می‌شوند.';
     case 'contract-percent':
-      return 'هزینه بر اساس درصدی از مبلغ کل قرارداد محاسبه می‌شود.';
+      return 'این حالت برای اقساط منظم با زمان‌بندی مشخص است.';
     case 'combined':
-      return 'در این روش هزینه از دو بخش تشکیل می‌شود: یک مبلغ ثابت + درصدی از مبلغ قرارداد.';
+      return 'در این حالت مبلغ اقساط بر اساس دو مؤلفه محاسبه می‌شود.';
     case 'per-installment-fixed':
-      return 'برای هر قسط بر اساس مانده بدهی، یک مبلغ ثابت به عنوان هزینه اعمال می‌شود.';
+      return 'برای هر قسط مبلغ جداگانه و قابل تنظیم ثبت می‌شود.';
     default:
       return '';
   }
@@ -286,7 +286,7 @@ function PrepaymentTabContent({
   const installmentKey = installmentSwitchKeys[activeTab];
   const installmentWindowKey = installmentWindowKeys[activeTab];
   const installmentEnabled = Boolean(state.values[installmentKey]);
-  const installmentWindowOptions = ['در اختیار مدیر فروش', 'یک هفته', 'دو هفته', 'یک ماه', 'چهل و پنج روز', 'دو ماه'];
+  const installmentWindowOptions = ['بدون پنجره', 'یک ماه', 'دو ماه', 'سه ماه', 'شش ماه', 'دوازده ماه'];
   const installmentWindowTagOptions = installmentWindowOptions.map((option) => ({ value: option, label: option }));
 
   return (
@@ -296,39 +296,39 @@ function PrepaymentTabContent({
 
       {activeTab === 'percent' ? (
         <div className="space-y-4">
-          <FieldLabel label="درصدی از مبلغ کل قرارداد" required />
+          <FieldLabel label="درصد پیش‌پرداخت" required />
           <RuleTextInput value={String(state.values.prePercent ?? '')} onChange={(value) => onValueChange('prePercent', value)} suffix="%" />
-          <p className="text-sm text-[color:var(--text-muted)]">در این بخش حداقل درصدی از مبلغ کل قرارداد را که به‌عنوان پیش‌پرداخت دریافت می‌کنید، وارد کنید.</p>
+          <p className="text-sm text-[color:var(--text-muted)]">این درصد از مبلغ کل قرارداد به‌عنوان پیش‌پرداخت دریافت می‌شود.</p>
         </div>
       ) : null}
 
       {activeTab === 'fixed' ? (
         <div className="space-y-4">
-          <FieldLabel label="مبلغ ثابت" required />
-          <RuleTextInput value={String(state.values.preFixedAmount ?? '')} onChange={(value) => onValueChange('preFixedAmount', value)} suffix="تومان" />
-          <p className="text-sm text-[color:var(--text-muted)]">این مبلغ به‌عنوان پیش‌پرداخت پیشنهادی در زمان ثبت قرارداد استفاده می‌شود.</p>
+          <FieldLabel label="مبلغ پیش‌پرداخت" required />
+          <RuleTextInput value={String(state.values.preFixedAmount ?? '')} onChange={(value) => onValueChange('preFixedAmount', value)} suffix="ریال" />
+          <p className="text-sm text-[color:var(--text-muted)]">این مبلغ مستقیماً از مبلغ قرارداد کسر می‌شود.</p>
         </div>
       ) : null}
 
       {activeTab === 'combined' ? (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:[direction:rtl]">
           <div className="space-y-4">
-            <FieldLabel label="درصدی از مبلغ کل قرارداد" required />
+            <FieldLabel label="درصد ترکیبی پیش‌پرداخت" required />
             <RuleTextInput value={String(state.values.preCombinedPercent ?? '')} onChange={(value) => onValueChange('preCombinedPercent', value)} suffix="%" />
-            <p className="text-sm text-[color:var(--text-muted)]">در این بخش حداقل درصدی از مبلغ کل قرارداد را وارد کنید.</p>
+            <p className="text-sm text-[color:var(--text-muted)]">در حالت ترکیبی، این درصد در کنار مبلغ ثابت اعمال می‌شود.</p>
           </div>
 
           <div className="space-y-4">
-            <FieldLabel label="مبلغ ثابت" required />
-            <RuleTextInput value={String(state.values.preCombinedAmount ?? '')} onChange={(value) => onValueChange('preCombinedAmount', value)} suffix="تومان" />
-            <p className="text-sm text-[color:var(--text-muted)]">این مبلغ به‌عنوان بخش ثابت پیش‌پرداخت در زمان ثبت قرارداد استفاده می‌شود.</p>
+            <FieldLabel label="مبلغ ترکیبی پیش‌پرداخت" required />
+            <RuleTextInput value={String(state.values.preCombinedAmount ?? '')} onChange={(value) => onValueChange('preCombinedAmount', value)} suffix="ریال" />
+            <p className="text-sm text-[color:var(--text-muted)]">این مبلغ در کنار درصد ترکیبی اعمال می‌شود.</p>
           </div>
         </div>
       ) : null}
 
       {activeTab === 'sales' ? (
         <RuleSwitchRow
-          title="امکان ثبت پیش‌پرداخت با توجه به سیاست مدیر فروش"
+          title="پیش‌پرداخت برای فروش"
           checked={Boolean(state.values.preSalesEnabled)}
           onChange={(value) => onValueChange('preSalesEnabled', value)}
           useContractRegistrationSwitch
@@ -336,7 +336,7 @@ function PrepaymentTabContent({
       ) : null}
 
       <RuleSwitchRow
-        title="امکان پرداخت اقساطی پیش‌پرداخت"
+        title="فعال‌سازی اقساط"
         checked={installmentEnabled}
         onChange={(value) => onValueChange(installmentKey, value)}
         useContractRegistrationSwitch
@@ -345,12 +345,12 @@ function PrepaymentTabContent({
       {installmentEnabled ? (
         <div className="space-y-5">
           <div className="text-right">
-            <h4 className="text-[17px] font-black text-[color:var(--text-strong)]">چارچوب زمانی پیشنهادی اقساط پیش‌پرداخت</h4>
-            <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">اقساط ثابت (قسط هر دوره یک مبلغ)</p>
+            <h4 className="text-[17px] font-black text-[color:var(--text-strong)]">طراحی زمان‌بندی اقساط</h4>
+            <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">انتخاب کنید اقساط به‌صورت منظم یا بر پایه پیشرفت باشد.</p>
           </div>
 
           <div className="text-right">
-            <h4 className="text-[17px] font-black text-[color:var(--text-strong)]">حداکثر بازه پیشنهادی پس از ثبت قرارداد</h4>
+            <h4 className="text-[17px] font-black text-[color:var(--text-strong)]">تنظیم بازه‌های زمانی اقساط</h4>
           </div>
 
           <TagPills
@@ -507,19 +507,19 @@ function isProgressGroupEmpty(group: ProgressExpandableGroup) {
 }
 
 const INSTALLMENT_TOOLTIPS = {
-  regularInterval: 'الگوی زمانی استاندارد اقساط منظم پروژه را مشخص می‌کند تا کارشناسان قرارداد از همان فاصله پیشنهادی استفاده کنند.',
-  lastDueDate: 'تاریخی که کل برنامه اقساط باید حداکثر تا آن زمان تسویه شود و مبنای محاسبه تعداد یا توزیع اقساط قرار می‌گیرد.',
-  balloonEnabled: 'اگر فعال شود، بخشی از مانده بدهی به‌صورت متمرکز در اقساط پایانی برنامه دریافت می‌شود.',
-  balloonWindow: 'مشخص می‌کند سهم بالونی در کدام بخش انتهایی برنامه اقساط متمرکز شود.',
-  balloonPercent: 'درصدی از مانده بدهی که قرار است به‌صورت بالونی و خارج از توزیع عادی اقساط دریافت شود.',
-  progressAmountMode: 'تعیین می‌کند مبلغ هر قسط مبتنی بر پیشرفت، درصدی از مبلغ قرارداد باشد یا یک عدد ثابت.',
-  progressCompletionAuthority: 'مرجعی که اعلام یا تایید او برای تحقق پیشرفت پروژه و فعال‌شدن قسط معتبر شناخته می‌شود.',
-  progressAllowContractOverride: 'اگر فعال باشد، کارشناس مجاز می‌تواند این سیاست پروژه را در همان قرارداد خاص تغییر دهد.',
-  progressSelectedScheduleKeys: 'می‌توانید در هر بخش پرداخت یک یا چند برنامه ثبت‌شده را به‌عنوان مبنای تعریف مرحله‌ها انتخاب کنید.',
-  progressMilestone: 'مرحله‌های هر برنامه به‌صورت جداگانه نمایش داده می‌شوند و انتخاب آن‌ها، فرم ثبت قسط همان مرحله را باز می‌کند.',
-  progressTriggerPercent: 'در این فیلد، درصد پیشرفت یا میزان تحقق مدنظر برای همان مرحله ثبت می‌شود.',
-  progressAmountValue: 'مقدار قسطی که در اثر تحقق این شرط فعال می‌شود؛ بسته به روش محاسبه می‌تواند درصدی یا مبلغ ثابت باشد.',
-  progressExpandableGroups: 'هر بخش پرداخت یک بسته مستقل از انتخاب برنامه‌ها، مرحله‌ها و مقادیر اقساط مبتنی بر پیشرفت فیزیکی است.',
+  regularInterval: 'بازه‌ی منظم بین اقساط بر اساس تعداد روز یا ماه تنظیم می‌شود.',
+  lastDueDate: 'تاریخ آخرین سررسید کمک می‌کند انتهای برنامه را دقیق ببینید.',
+  balloonEnabled: 'اگر این گزینه فعال باشد، پرداخت بزرگ انتهایی در برنامه لحاظ می‌شود.',
+  balloonWindow: 'بازه‌ی پرداخت نهایی را مشخص می‌کند.',
+  balloonPercent: 'درصد پرداخت نهایی نسبت به مقدار پایه محاسبه می‌شود.',
+  progressAmountMode: 'مشخص می‌کند مبلغ پیشرفت به‌صورت درصدی یا ثابت ثبت شود.',
+  progressCompletionAuthority: 'تعیین می‌کند تأیید پیشرفت توسط چه مرجعی انجام شود.',
+  progressAllowContractOverride: 'به شما اجازه می‌دهد تنظیمات قرارداد را برای این برنامه بازنویسی کنید.',
+  progressSelectedScheduleKeys: 'برنامه‌های پیشرفت انتخاب‌شده برای این گروه.',
+  progressMilestone: 'مرحله‌ای که این پرداخت پیشرفت به آن وابسته است.',
+  progressTriggerPercent: 'درصدی که با رسیدن به آن، مرحله فعال می‌شود.',
+  progressAmountValue: 'مبلغی که برای این مرحله از پیشرفت ثبت می‌شود.',
+  progressExpandableGroups: 'گروه‌های قابل گسترش برای برنامه‌های پیشرفت.',
 } as const;
 
 function SectionTitle({ title, hint }: { title: string; hint?: string }) {
@@ -548,7 +548,7 @@ function MiniRowButton({
       onClick={onClick}
       aria-label={ariaLabel}
       className={cn(
-        'rounded-md border px-3 py-1.5 text-sm font-medium transition',
+        'rounded-[8px] border px-3 py-1.5 text-sm font-medium transition',
         tone === 'danger'
           ? 'border-[#f3c7cf] bg-transparent text-[#be123c] hover:bg-[#fff1f2]'
           : 'border-[color:var(--border-soft)] bg-transparent text-[color:var(--text-strong)] hover:bg-[color:var(--surface-soft)]',
@@ -581,8 +581,8 @@ function InstallmentsTabContent({
   const balloonEnabledKey = isRegular ? 'regularBalloonEnabled' : 'irregularBalloonEnabled';
   const balloonWindowKey = isRegular ? 'regularBalloonWindow' : 'irregularBalloonWindow';
   const balloonPercentKey = isRegular ? 'regularBalloonPercent' : 'irregularBalloonPercent';
-  const intervalOptions = ['در بازه قابل تنظیم در زمان عقد قرارداد', 'دو هفته ای', 'ماهانه', 'دوماهه', 'سه ماهه', 'شش ماهه', 'سالانه'];
-  const balloonOptions = ['ماه آخر', '۳ ماه آخر', '۵ ماه آخر', '۷ ماه آخر'];
+  const intervalOptions = ['?? ???? ???? ????? ?? ???? ??? ???????', '?? ???? ??', '??????', '??????', '?? ????', '?? ????', '??????'];
+  const balloonOptions = ['??? ???', '? ??? ???', '? ??? ???', '? ??? ???'];
   const balloonEnabled = Boolean(state.values[balloonEnabledKey]);
   const intervalTagOptions = intervalOptions.map((option) => ({ value: option, label: option }));
   const balloonTagOptions = balloonOptions.map((option) => ({ value: option, label: option }));
@@ -770,11 +770,11 @@ function InstallmentsTabContent({
   };
 
   const validateProgressGroup = (group: ProgressExpandableGroup) => {
-    if (!group.selectedScheduleKeys.length) return 'حداقل یک برنامه باید در این بخش انتخاب شود.';
-    if (!group.selectedStageIds.length) return 'حداقل یک مرحله باید در این بخش انتخاب شود.';
+    if (!group.selectedScheduleKeys.length) return '????? ?? ?????? ???? ?? ??? ??? ?????? ???.';
+    if (!group.selectedStageIds.length) return '????? ?? ????? ???? ?? ??? ??? ?????? ???.';
     const invalidEntry = group.entries.find((entry) => !entry.progressValue.trim() || !entry.value.trim());
     if (invalidEntry) {
-      return `برای مرحله «${invalidEntry.stageTitle}» هر دو فیلد میزان پیشرفت و مقدار قسط را تکمیل کنید.`;
+      return `???? ????? �${invalidEntry.stageTitle}� ?? ?? ???? ????? ?????? ? ????? ??? ?? ????? ????.`;
     }
     return '';
   };
@@ -823,19 +823,19 @@ function InstallmentsTabContent({
       <div className="space-y-5">
         <div
           className={cn(
-            'space-y-4 rounded-2xl p-4',
+            'space-y-4 rounded-[8px] p-4',
             standaloneProgressMode
               ? 'bg-transparent'
               : 'bg-transparent',
           )}
         >
           <div className="text-right">
-            <FieldLabel label="برنامه‌های ثبت‌شده" required tooltip={INSTALLMENT_TOOLTIPS.progressSelectedScheduleKeys} />
+            <FieldLabel label="?????????? ???????" required tooltip={INSTALLMENT_TOOLTIPS.progressSelectedScheduleKeys} />
           </div>
           <div
             className={cn(
               'flex flex-row-reverse flex-wrap justify-end gap-2 bg-transparent p-3',
-              standaloneProgressMode ? 'rounded-2xl bg-[color:var(--surface-soft)]/55' : 'rounded-2xl bg-[color:var(--surface-soft)]/55',
+              standaloneProgressMode ? 'rounded-[8px] bg-[color:var(--surface-soft)]/55' : 'rounded-[8px] bg-[color:var(--surface-soft)]/55',
             )}
           >
             {progressSchedules.map((schedule) => {
@@ -854,11 +854,11 @@ function InstallmentsTabContent({
 
         {selectedSchedules.length ? (
           <div className="space-y-4">
-            <FieldLabel label="مرحله‌های برنامه‌های منتخب" required tooltip={INSTALLMENT_TOOLTIPS.progressMilestone} />
+            <FieldLabel label="????????? ?????????? ?????" required tooltip={INSTALLMENT_TOOLTIPS.progressMilestone} />
             <div
               className={cn(
                 'space-y-4 bg-transparent p-4',
-                standaloneProgressMode ? 'rounded-2xl bg-[color:var(--surface-soft)]/45' : 'rounded-2xl bg-[color:var(--surface-soft)]/45',
+                standaloneProgressMode ? 'rounded-[8px] bg-[color:var(--surface-soft)]/45' : 'rounded-[8px] bg-[color:var(--surface-soft)]/45',
               )}
             >
               {selectedSchedules.map((schedule) => {
@@ -872,7 +872,7 @@ function InstallmentsTabContent({
                   <div
                     key={schedule.scheduleKey}
                     className={cn(
-                      'space-y-4 rounded-2xl bg-[linear-gradient(180deg,color-mix(in_srgb,var(--dark-teal)_4%,white),white_72%)] p-4 last:border-b-0',
+                      'space-y-4 rounded-[8px] bg-[linear-gradient(180deg,color-mix(in_srgb,var(--dark-teal)_4%,white),white_72%)] p-4 last:border-b-0',
                       standaloneProgressMode ? 'shadow-[inset_0_0_0_1px_rgba(15,23,42,0.04)]' : 'border border-[color:var(--border-soft)]',
                     )}
                   >
@@ -884,12 +884,12 @@ function InstallmentsTabContent({
                     <div
                       className={cn(
                         'flex flex-wrap justify-end gap-2 p-3 [direction:rtl]',
-                        standaloneProgressMode ? 'rounded-2xl bg-white/65' : 'rounded-2xl bg-white/65',
+                        standaloneProgressMode ? 'rounded-[8px] bg-white/65' : 'rounded-[8px] bg-white/65',
                       )}
                     >
                       {schedule.stages.length > 1 ? (
                         <DraftTagPill
-                          label="انتخاب همه"
+                          label="?????? ???"
                           active={allStagesSelected}
                           onClick={() => toggleScheduleStagesSelection(group.id, schedule.scheduleKey)}
                         />
@@ -902,7 +902,7 @@ function InstallmentsTabContent({
                         return (
                           <DraftTagPill
                             key={stage.id}
-                            label={`${stage.title} | ${stage.weight}٪`}
+                            label={`${stage.title} | ${stage.weight}%`}
                             active={checked}
                             onClick={() => {
                               if (!isSingleStageSchedule) toggleSingleStageSelection(group.id, stage.id);
@@ -923,7 +923,7 @@ function InstallmentsTabContent({
                           <div
                             key={`${stage.id}-editor`}
                             className={cn(
-                              'space-y-4 rounded-xl bg-white/70 p-4',
+                              'space-y-4 rounded-[8px] bg-white/70 p-4',
                               standaloneProgressMode ? 'shadow-[inset_0_0_0_1px_rgba(15,23,42,0.06)]' : 'shadow-[inset_0_0_0_1px_rgba(15,23,42,0.05)]',
                             )}
                           >
@@ -934,12 +934,12 @@ function InstallmentsTabContent({
                                 </p>
                               </div>
                               <div className="flex flex-nowrap items-center gap-3 whitespace-nowrap">
-                                <span className="text-xs font-bold text-[color:var(--text-muted)]">روش محاسبه مبلغ</span>
+                                <span className="text-xs font-bold text-[color:var(--text-muted)]">??? ?????? ????</span>
                                 <BusinessSwitch
                                   checked={entry.amountMode === 'percent'}
                                   onChange={(checked) => updateProgressEntry(group.id, entry.stageId, 'amountMode', checked ? 'percent' : 'fixed')}
-                                  activeLabel="درصدی"
-                                  inactiveLabel="مبلغی"
+                                  activeLabel="?????"
+                                  inactiveLabel="?????"
                                   className="business-switch progress-amount-mode-switch"
                                 />
                               </div>
@@ -947,7 +947,7 @@ function InstallmentsTabContent({
 
                             <div className="grid grid-cols-2 gap-4 [direction:rtl]">
                               <div className="flex h-full flex-col justify-between gap-3">
-                                <FieldLabel label="میزان پیشرفت" required tooltip={INSTALLMENT_TOOLTIPS.progressTriggerPercent} />
+                                <FieldLabel label="????? ??????" required tooltip={INSTALLMENT_TOOLTIPS.progressTriggerPercent} />
                                 <RuleTextInput
                                   value={entry.progressValue}
                                   onChange={(value) => updateProgressEntry(group.id, entry.stageId, 'progressValue', value)}
@@ -957,14 +957,14 @@ function InstallmentsTabContent({
 
                               <div className="flex h-full flex-col justify-between gap-3">
                                 <FieldLabel
-                                  label={entry.amountMode === 'percent' ? 'درصد از مبلغ قرارداد' : 'مبلغ ثابت'}
+                                  label={entry.amountMode === 'percent' ? '???? ?? ???? ???????' : '???? ????'}
                                   required
                                   tooltip={INSTALLMENT_TOOLTIPS.progressAmountValue}
                                 />
                                 <RuleTextInput
                                   value={entry.value}
                                   onChange={(value) => updateProgressEntry(group.id, entry.stageId, 'value', value)}
-                                  suffix={entry.amountMode === 'percent' ? '%' : 'تومان'}
+                                  suffix={entry.amountMode === 'percent' ? '%' : '?????'}
                                 />
                               </div>
                             </div>
@@ -983,8 +983,8 @@ function InstallmentsTabContent({
           <div className="flex items-center gap-2">
             <span className="text-xs text-[color:var(--text-muted)]">
               {standaloneProgressMode
-                ? 'پس از ثبت، این بخش به فهرست اقساط مبتنی بر پیشرفت اضافه می‌شود.'
-                : 'ثبت این بخش انجام شد و می‌توانید بخش بعدی را تعریف کنید.'}
+                ? '?? ?? ???? ??? ??? ?? ????? ????? ????? ?? ?????? ????? ??????.'
+                : '??? ??? ??? ????? ?? ? ????????? ??? ???? ?? ????? ????.'}
             </span>
           </div>
           <button
@@ -992,13 +992,13 @@ function InstallmentsTabContent({
             disabled={!canSubmitGroup}
             onClick={() => void submitProgressGroup(group.id)}
             className={cn(
-              'inline-flex min-w-[172px] items-center justify-center rounded-xl px-4 py-2.5 text-sm font-bold transition',
+              'inline-flex min-w-[172px] items-center justify-center rounded-[8px] px-4 py-2.5 text-sm font-bold transition',
               canSubmitGroup
                 ? 'bg-[#0f766e] text-white shadow-[0_10px_24px_rgba(15,118,110,0.22)] hover:bg-[#0b5f59]'
                 : 'cursor-not-allowed bg-[#cbd5e1] text-white shadow-none',
             )}
           >
-            {standaloneProgressMode ? 'ثبت بخش اقساط مبتنی بر پیشرفت' : 'ثبت و رفتن به بخش بعدی'}
+            {standaloneProgressMode ? '??? ??? ????? ????? ?? ??????' : '??? ? ???? ?? ??? ????'}
           </button>
         </div>
       </div>
@@ -1010,12 +1010,12 @@ function InstallmentsTabContent({
       {isRegular ? (
         <>
           <p className="text-right text-base leading-8 text-[color:var(--text-strong)]">
-            در این روش مبلغ پیشنهادی هر قسط ثابت است و در بازه‌های زمانی منظم نمایش داده می‌شود.
+            ?? ??? ??? ???? ???????? ?? ??? ???? ??? ? ?? ???????? ????? ???? ????? ???? ??????.
           </p>
           <div className="border-t border-[color:var(--border-soft)]" />
 
           <div className="space-y-5">
-            <SectionTitle title="بازه زمانی اقساط" hint="فاصله زمانی پیشنهادی بین اقساط منظم را مشخص کنید." />
+            <SectionTitle title="???? ????? ?????" hint="????? ????? ???????? ??? ????? ???? ?? ???? ????." />
 
             <UiChoicePills
               options={intervalTagOptions}
@@ -1032,7 +1032,7 @@ function InstallmentsTabContent({
       {isIrregular ? (
         <>
           <p className="text-right text-base leading-8 text-[color:var(--text-strong)]">
-            در این روش زمان و مبلغ اقساط می‌تواند متناسب با شرایط قرارداد، به‌صورت شناور و غیرمنظم تعیین شود.
+            ?? ??? ??? ???? ? ???? ????? ???????? ?????? ?? ????? ???????? ??????? ????? ? ??????? ????? ???.
           </p>
           <div className="border-t border-[color:var(--border-soft)]" />
         </>
@@ -1041,66 +1041,66 @@ function InstallmentsTabContent({
       {isProgressBased ? (
         <>
           <p className="text-right text-base leading-8 text-[color:var(--text-strong)]">
-            در این مدل، محرک پرداخت وابسته به زمان نیست و اقساط بر اساس انتخاب برنامه‌ها و مرحله‌های ثبت‌شده پروژه تعریف می‌شوند.
+            ?? ??? ???? ???? ?????? ?????? ?? ???? ???? ? ????? ?? ???? ?????? ????????? ? ????????? ??????? ????? ????? ???????.
           </p>
           <div className="border-t border-[color:var(--border-soft)]" />
 
           <div
             className={cn(
               'space-y-5 bg-[color:var(--surface)]',
-              standaloneProgressMode ? 'p-0' : 'rounded-2xl bg-[linear-gradient(180deg,color-mix(in_srgb,var(--dark-teal)_3%,white),white_78%)] p-5',
+              standaloneProgressMode ? 'p-0' : 'rounded-[8px] bg-[linear-gradient(180deg,color-mix(in_srgb,var(--dark-teal)_3%,white),white_78%)] p-5',
             )}
           >
             <div
               className={cn(
                 'space-y-4 bg-transparent',
-                standaloneProgressMode ? 'p-0' : 'rounded-2xl bg-white/70 p-4 shadow-[inset_0_0_0_1px_rgba(15,23,42,0.04)]',
+                standaloneProgressMode ? 'p-0' : 'rounded-[8px] bg-white/70 p-4 shadow-[inset_0_0_0_1px_rgba(15,23,42,0.04)]',
               )}
             >
               {!standaloneProgressMode && progressBasedStandaloneHref ? (
                 <Link
                   href={progressBasedStandaloneHref}
-                  className="flex w-full items-center justify-between rounded-[24px] border border-[color:var(--border-soft)] bg-[color:var(--surface)] px-6 py-6 text-right transition hover:bg-[color:var(--surface-soft)]"
+                  className="flex w-full items-center justify-between rounded-[8px] border border-[color:var(--border-soft)] bg-[color:var(--surface)] px-6 py-6 text-right transition hover:bg-[color:var(--surface-soft)]"
                 >
                   <div className="space-y-2">
-                    <h3 className="text-xl font-black text-[color:var(--text-strong)]">افزودن بخش جدید اقساط مبتنی بر پیشرفت</h3>
+                    <h3 className="text-xl font-black text-[color:var(--text-strong)]">?????? ??? ???? ????? ????? ?? ??????</h3>
                     <p className="text-sm leading-7 text-[color:var(--text-muted)]">
-                      برای تعریف یک بخش جدید، انتخاب برنامه‌ها و مرحله‌های مرتبط را در صفحه بعد انجام دهید.
+                      ???? ????? ?? ??? ????? ?????? ????????? ? ????????? ????? ?? ?? ???? ??? ????? ????.
                     </p>
                   </div>
                   <ChevronLeft className="h-6 w-6 shrink-0 text-[color:var(--text-muted)]" />
                 </Link>
               ) : (
                 <SectionTitle
-                  title={standaloneProgressMode ? 'تعریف بخش جدید اقساط مبتنی بر پیشرفت' : 'بخش‌های پرداخت مبتنی بر پیشرفت'}
+                  title={standaloneProgressMode ? '????? ??? ???? ????? ????? ?? ??????' : '??????? ?????? ????? ?? ??????'}
                   hint={
                     standaloneProgressMode
-                      ? 'ابتدا برنامه‌های مدنظر را انتخاب کنید تا مرحله‌های همان برنامه‌ها نمایش داده شوند.'
-                      : 'بخش‌های ثبت‌شده اقساط مبتنی بر پیشرفت را از اینجا مشاهده و مدیریت کنید.'
+                      ? '????? ?????????? ????? ?? ?????? ???? ?? ????????? ???? ????????? ????? ???? ????.'
+                      : '??????? ??????? ????? ????? ?? ?????? ?? ?? ????? ?????? ? ?????? ????.'
                   }
                 />
               )}
 
               {progressGroupError ? (
-                <div className="rounded-md border border-[#fecdd3] bg-[#fff1f2] px-4 py-3 text-sm leading-7 text-[#be123c]">
+                <div className="rounded-[8px] border border-[#fecdd3] bg-[#fff1f2] px-4 py-3 text-sm leading-7 text-[#be123c]">
                   {progressGroupError}
                 </div>
               ) : null}
 
               {scheduleLoading ? (
-                <div className="rounded-md border border-[color:var(--border-soft)] bg-transparent p-4 text-sm leading-7 text-[color:var(--text-muted)]">
-                  در حال دریافت برنامه‌ها و مرحله‌های پیشرفت فیزیکی...
+                <div className="rounded-[8px] border border-[color:var(--border-soft)] bg-transparent p-4 text-sm leading-7 text-[color:var(--text-muted)]">
+                  ?? ??? ?????? ????????? ? ????????? ?????? ??????...
                 </div>
               ) : null}
 
               {!scheduleLoading && !progressSchedules.length ? (
-                <div className="rounded-md border border-[color:var(--border-soft)] bg-transparent p-4 text-sm leading-7 text-[color:var(--text-muted)]">
-                  هنوز هیچ برنامه پیشرفت فیزیکی برای پروژه ثبت نشده است.
+                <div className="rounded-[8px] border border-[color:var(--border-soft)] bg-transparent p-4 text-sm leading-7 text-[color:var(--text-muted)]">
+                  ???? ??? ?????? ?????? ?????? ???? ????? ??? ???? ???.
                 </div>
               ) : null}
 
               {standaloneProgressMode && standaloneWorkingGroup ? (
-                <div className="rounded-2xl bg-[color:var(--surface)] p-0">
+                <div className="rounded-[8px] bg-[color:var(--surface)] p-0">
                   {renderProgressGroupEditor(standaloneWorkingGroup)}
                 </div>
               ) : null}
@@ -1120,34 +1120,34 @@ function InstallmentsTabContent({
                   return (
                     <div
                       key={group.id}
-                      className="overflow-visible rounded-2xl bg-[linear-gradient(180deg,rgba(255,255,255,0.96),color-mix(in_srgb,var(--dark-teal)_5%,white))] shadow-[inset_0_0_0_1px_rgba(15,23,42,0.05)]"
+                      className="overflow-visible rounded-[8px] bg-[linear-gradient(180deg,rgba(255,255,255,0.96),color-mix(in_srgb,var(--dark-teal)_5%,white))] shadow-[inset_0_0_0_1px_rgba(15,23,42,0.05)]"
                     >
                       <div className="flex w-full items-center justify-between gap-3 px-4 py-4 text-right">
                         <div className="flex-1 space-y-1">
                           <div className="flex flex-wrap items-center justify-end gap-2">
                             <span className="text-sm font-black text-[color:var(--text-strong)]">
-                              بخش {index + 1} اقساط مبتنی بر پیشرفت
+                              ??? {index + 1} ????? ????? ?? ??????
                             </span>
                             <span className="rounded-full bg-white/85 px-3 py-1 text-xs font-bold text-[color:var(--dark-teal)] shadow-[inset_0_0_0_1px_rgba(15,118,110,0.12)]">
-                              {group.selectedScheduleKeys.length} برنامه
+                              {group.selectedScheduleKeys.length} ??????
                             </span>
                             <span className="rounded-full bg-white/85 px-3 py-1 text-xs font-bold text-[color:var(--dark-teal)] shadow-[inset_0_0_0_1px_rgba(15,118,110,0.12)]">
-                              {group.selectedStageIds.length} مرحله
+                              {group.selectedStageIds.length} ?????
                             </span>
                           </div>
                           {selectedBlocks.length ? (
                             <p className="text-xs leading-6 text-[color:var(--text-muted)]">
-                              بلوک‌های درگیر: {selectedBlocks.map((block) => block.name).join('، ')}
+                              ???????? ?????: {selectedBlocks.map((block) => block.name).join('? ')}
                             </p>
                           ) : (
-                            <p className="text-xs leading-6 text-[color:var(--text-muted)]">هنوز برنامه یا مرحله‌ای در این بخش پرداخت انتخاب نشده است.</p>
+                            <p className="text-xs leading-6 text-[color:var(--text-muted)]">???? ?????? ?? ???????? ?? ??? ??? ?????? ?????? ???? ???.</p>
                           )}
                         </div>
                         <div className="relative">
                           <button
                             type="button"
                             className="business-block-card-menu"
-                            aria-label={`گزینه‌های بخش پرداخت ${index + 1}`}
+                            aria-label={`????????? ??? ?????? ${index + 1}`}
                             onClick={() => setOpenProgressGroupMenuId((current) => (current === group.id ? '' : group.id))}
                           >
                             <MoreVertical />
@@ -1158,10 +1158,10 @@ function InstallmentsTabContent({
                                 href={`/business-settings/contract-rules/installments/progress-based?groupId=${group.id}`}
                                 onClick={() => setOpenProgressGroupMenuId('')}
                               >
-                                <Pencil /> ویرایش
+                                <Pencil /> ??????
                               </Link>
                               <button type="button" onClick={() => removeProgressGroup(group.id)}>
-                                <Trash2 /> حذف
+                                <Trash2 /> ???
                               </button>
                             </div>
                           ) : null}
@@ -1174,7 +1174,7 @@ function InstallmentsTabContent({
                           onClick={() => setExpandedProgressDetailsId((current) => (current === group.id ? '' : group.id))}
                           className="inline-flex items-center gap-2 rounded-full bg-white/85 px-4 py-2 text-sm font-bold text-[color:var(--dark-teal)] shadow-[inset_0_0_0_1px_rgba(15,118,110,0.12)] transition hover:bg-white"
                         >
-                          <span>{detailsExpanded ? 'بستن' : 'بیشتر'}</span>
+                          <span>{detailsExpanded ? '????' : '?????'}</span>
                           <ChevronLeft className={cn('h-4 w-4 transition', detailsExpanded ? '-rotate-90' : 'rotate-90')} />
                         </button>
                       </div>
@@ -1182,7 +1182,7 @@ function InstallmentsTabContent({
                       {detailsExpanded ? (
                         <div className="space-y-4 border-t border-white/70 px-4 pb-4 pt-4">
                           <div className="space-y-2 text-right">
-                            <h4 className="text-sm font-black text-[color:var(--text-strong)]">برنامه‌های انتخاب‌شده</h4>
+                            <h4 className="text-sm font-black text-[color:var(--text-strong)]">?????????? ??????????</h4>
                             <div className="flex flex-row-reverse flex-wrap justify-end gap-2">
                               {selectedSchedules.map((schedule) => (
                                 <span
@@ -1196,26 +1196,26 @@ function InstallmentsTabContent({
                           </div>
 
                           <div className="space-y-2 text-right">
-                            <h4 className="text-sm font-black text-[color:var(--text-strong)]">مرحله‌های ثبت‌شده</h4>
+                            <h4 className="text-sm font-black text-[color:var(--text-strong)]">????????? ???????</h4>
                             <div className="grid gap-2">
                               {groupEntries.map((entry) => (
                                 <div
                                   key={`${group.id}-${entry.stageId}`}
-                                  className="rounded-2xl bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] shadow-[inset_0_0_0_1px_rgba(15,23,42,0.05)]"
+                                  className="rounded-[8px] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] shadow-[inset_0_0_0_1px_rgba(15,23,42,0.05)]"
                                 >
                                   <div className="flex flex-wrap items-center justify-between gap-2">
                                     <span className="font-black">{entry.stageTitle}</span>
                                     <span className="text-xs text-[color:var(--text-muted)]">
-                                      {entry.amountMode === 'percent' ? 'درصدی' : 'مبلغی'}
+                                      {entry.amountMode === 'percent' ? '?????' : '?????'}
                                     </span>
                                   </div>
                                   <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-[color:var(--text-muted)]">
                                     <span>{entry.scheduleTitle} | {entry.blockName}</span>
                                     <span>
-                                      پیشرفت: {entry.progressValue}
+                                      ??????: {entry.progressValue}
                                       {` % `}
-                                      | مقدار: {entry.value}
-                                      {entry.amountMode === 'percent' ? '٪' : ' تومان'}
+                                      | ?????: {entry.value}
+                                      {entry.amountMode === 'percent' ? '%' : ' ?????'}
                                     </span>
                                   </div>
                                 </div>
@@ -1228,8 +1228,8 @@ function InstallmentsTabContent({
                   );
                 })}
                   {!visibleProgressGroups.filter((group) => !isProgressGroupEmpty(group)).length ? (
-                    <div className="rounded-2xl bg-white/70 p-4 text-sm leading-7 text-[color:var(--text-muted)] shadow-[inset_0_0_0_1px_rgba(15,23,42,0.04)]">
-                      هنوز بخشی برای اقساط مبتنی بر پیشرفت ثبت نشده است.
+                    <div className="rounded-[8px] bg-white/70 p-4 text-sm leading-7 text-[color:var(--text-muted)] shadow-[inset_0_0_0_1px_rgba(15,23,42,0.04)]">
+                      ???? ???? ???? ????? ????? ?? ?????? ??? ???? ???.
                     </div>
                   ) : null}
                 </div>
@@ -1242,7 +1242,7 @@ function InstallmentsTabContent({
       {(isRegular || isIrregular) ? (
         <>
           <div className="space-y-4">
-            <FieldLabel label="تاریخ آخرین قسط" tooltip={INSTALLMENT_TOOLTIPS.lastDueDate} />
+            <FieldLabel label="????? ????? ???" tooltip={INSTALLMENT_TOOLTIPS.lastDueDate} />
             <PersianDatePicker
               value={String(state.values[lastDueKey] ?? '')}
               onChange={(value) => onValueChange(lastDueKey, value)}
@@ -1250,11 +1250,11 @@ function InstallmentsTabContent({
               containerClassName="w-full"
               className={cn(RULE_PANEL_TEXT_INPUT_CLASSNAME, '!pr-11')}
             />
-            <p className="text-right text-sm leading-7 text-[color:var(--text-muted)]">تاریخی که اقساط باید تا آن زمان به پایان برسند. تعداد و مبلغ اقساط بر اساس این تاریخ محاسبه می‌شود.</p>
+            <p className="text-right text-sm leading-7 text-[color:var(--text-muted)]">?????? ?? ????? ???? ?? ?? ???? ?? ????? ?????. ????? ? ???? ????? ?? ???? ??? ????? ?????? ??????.</p>
           </div>
 
           <RuleSwitchRow
-            title="امکان پرداخت بالونی"
+            title="????? ?????? ??????"
             checked={balloonEnabled}
             onChange={(value) => onValueChange(balloonEnabledKey, value)}
             useContractRegistrationSwitch
@@ -1264,11 +1264,11 @@ function InstallmentsTabContent({
           {balloonEnabled ? (
             <div className="space-y-6">
               <p className="text-right text-sm leading-7 text-[color:var(--text-muted)]">
-                پرداخت بالونی یعنی درصدی از اصل بدهی در یک یا چند قسط و در بازه زمانی مشخص، معمولا در اقساط پایانی، دریافت شود.
+                ?????? ?????? ???? ????? ?? ??? ???? ?? ?? ?? ??? ??? ? ?? ???? ????? ????? ?????? ?? ????? ??????? ?????? ???.
               </p>
 
               <div className="space-y-5">
-                <SectionTitle title="بازه زمانی پیشنهادی پرداخت بالونی" hint="این بازه فاصله زمانی پیشنهادی پرداخت بالونی را مشخص می‌کند." />
+                <SectionTitle title="???? ????? ???????? ?????? ??????" hint="??? ???? ????? ????? ???????? ?????? ?????? ?? ???? ??????." />
 
                 <UiChoicePills
                   options={balloonTagOptions}
@@ -1281,9 +1281,9 @@ function InstallmentsTabContent({
               </div>
 
               <div className="space-y-4">
-                <FieldLabel label="درصد پیشنهادی سهم پرداخت بالونی" required tooltip={INSTALLMENT_TOOLTIPS.balloonPercent} />
+                <FieldLabel label="???? ???????? ??? ?????? ??????" required tooltip={INSTALLMENT_TOOLTIPS.balloonPercent} />
                 <RuleTextInput value={String(state.values[balloonPercentKey] ?? '')} onChange={(value) => onValueChange(balloonPercentKey, value)} suffix="%" />
-                <p className="text-right text-sm leading-7 text-[color:var(--text-muted)]">درصدی از مانده بدهی که باید به‌صورت بالونی دریافت شود را در این بخش وارد کنید.</p>
+                <p className="text-right text-sm leading-7 text-[color:var(--text-muted)]">????? ?? ????? ???? ?? ???? ??????? ?????? ?????? ??? ?? ?? ??? ??? ???? ????.</p>
               </div>
             </div>
           ) : null}
@@ -1304,16 +1304,16 @@ type DeedCostMode = 'buyer' | 'seller' | 'shared';
 const SHARED_ADDITIONAL_COST_ITEMS = new Set(['deed', 'office', 'commission', 'attorney']);
 
 const ADDITIONAL_COST_ITEMS: AdditionalCostItem[] = [
-  { id: 'file-opening', title: 'تشکیل پرونده', description: 'هزینه‌ای که خریدار برای ایجاد پرونده و آماده‌سازی روند اداری پرداخت می‌کند.' },
-  { id: 'processing', title: 'پردازش', description: 'هزینه‌ای که خریدار برای بررسی و ثبت مراحل مختلف قرارداد و عملیات اجرایی پرداخت می‌کند.' },
-  { id: 'installment-management', title: 'مدیریت اقساط', description: 'هزینه‌ای که خریدار برای برنامه‌ریزی، پیگیری و مدیریت اقساط قرارداد پرداخت می‌کند.' },
-  { id: 'services', title: 'خدمات', description: 'هزینه‌ای که خریدار برای خدمات جانبی مرتبط با قرارداد یا واحد، مانند تحویل، سرویس‌ها پرداخت می‌کند.' },
-  { id: 'deed', title: 'سند', description: 'هزینه‌های مربوط به تنظیم و ثبت و پیوست‌های رسمی سند قرارداد یا سند مالکیت.' },
-  { id: 'office', title: 'دفترخانه', description: 'هزینه‌های مربوط به ثبت رسمی قرارداد در دفترخانه یا انتقال سند.' },
-  { id: 'commission', title: 'هزینه کمیسیون فروش', description: 'هزینه‌های مربوط به ثبت رسمی قرارداد در دفترخانه یا انتقال سند.' },
-  { id: 'attorney', title: 'هزینه وکالت', description: 'هزینه‌های مربوط به ثبت رسمی قرارداد در دفترخانه یا انتقال سند.' },
-  { id: 'custom', title: 'هزینه‌های سفارش', description: 'هزینه‌های جانبی که نام مشخصی ندارند و به‌صورت مبلغ ثابت یا درصدی تعیین شده و از خریدار دریافت می‌گردند.' },
-  { id: 'expertise', title: 'کارشناسی', description: 'هزینه‌ای که خریدار برای ارزیابی کارشناسی مالی یا مدارک توسط کارشناس رسمی پرداخت می‌کند.' },
+  { id: 'file-opening', title: '????? ??????', description: '???????? ?? ?????? ???? ????? ?????? ? ?????????? ???? ????? ?????? ??????.' },
+  { id: 'processing', title: '??????', description: '???????? ?? ?????? ???? ????? ? ??? ????? ????? ??????? ? ?????? ?????? ?????? ??????.' },
+  { id: 'installment-management', title: '?????? ?????', description: '???????? ?? ?????? ???? ???????????? ?????? ? ?????? ????? ??????? ?????? ??????.' },
+  { id: 'services', title: '?????', description: '???????? ?? ?????? ???? ????? ????? ????? ?? ??????? ?? ????? ????? ?????? ???????? ?????? ??????.' },
+  { id: 'deed', title: '???', description: '????????? ????? ?? ????? ? ??? ? ????????? ???? ??? ??????? ?? ??? ??????.' },
+  { id: 'office', title: '????????', description: '????????? ????? ?? ??? ???? ??????? ?? ???????? ?? ?????? ???.' },
+  { id: 'commission', title: '????? ??????? ????', description: '????????? ????? ?? ??? ???? ??????? ?? ???????? ?? ?????? ???.' },
+  { id: 'attorney', title: '????? ?????', description: '????????? ????? ?? ??? ???? ??????? ?? ???????? ?? ?????? ???.' },
+  { id: 'custom', title: '????????? ?????', description: '????????? ????? ?? ??? ????? ?????? ? ??????? ???? ???? ?? ????? ????? ??? ? ?? ?????? ?????? ????????.' },
+  { id: 'expertise', title: '????????', description: '???????? ?? ?????? ???? ??????? ???????? ???? ?? ????? ???? ??????? ???? ?????? ??????.' },
 ];
 
 function AdditionalCostCard({
@@ -1353,7 +1353,7 @@ function AdditionalCostsTabContent({
 
   if (!selectedItem) {
     return (
-      <div className="grid grid-cols-1 overflow-hidden rounded-[20px] border border-[color:var(--border-soft)] md:grid-cols-2">
+      <div className="grid grid-cols-1 overflow-hidden rounded-[8px] border border-[color:var(--border-soft)] md:grid-cols-2">
         {ADDITIONAL_COST_ITEMS.map((item) => (
           <AdditionalCostCard key={item.id} item={item} onClick={() => onValueChange('activeChip', item.id)} />
         ))}
@@ -1363,14 +1363,14 @@ function AdditionalCostsTabContent({
 
   return (
     <div className="space-y-8">
-      <section className="rounded-[24px] border border-[color:var(--border-soft)] bg-[color:var(--surface)] p-5">
+      <section className="rounded-[8px] border border-[color:var(--border-soft)] bg-[color:var(--surface)] p-5">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex w-full flex-col items-end space-y-3 text-right">
-            <h3 className="text-xl font-black text-[color:var(--text-strong)]">فعال‌سازی هزینه {selectedItem.title}</h3>
+            <h3 className="text-xl font-black text-[color:var(--text-strong)]">????????? ????? {selectedItem.title}</h3>
             <p className="text-sm leading-7 text-[color:var(--text-muted)]">
               {isSharedCostItem
-                ? `در صورت فعال بودن، هزینه ${selectedItem.title} به قرارداد اضافه می‌شود. در غیر این صورت از محاسبه حذف می‌گردد.`
-                : `با فعال‌سازی این گزینه هزینه‌های مربوط به ${selectedItem.title} به مبلغ کل قرارداد اضافه می‌شود.`}
+                ? `?? ???? ???? ????? ????? ${selectedItem.title} ?? ??????? ????? ??????. ?? ??? ??? ???? ?? ?????? ??? ???????.`
+                : `?? ????????? ??? ????? ????????? ????? ?? ${selectedItem.title} ?? ???? ?? ??????? ????? ??????.`}
             </p>
           </div>
           <div className="self-start lg:self-auto">
@@ -1380,7 +1380,7 @@ function AdditionalCostsTabContent({
       </section>
 
       {isSharedCostItem ? (
-        <section className="overflow-hidden rounded-[24px] border border-[color:var(--border-soft)] bg-[color:var(--surface)]">
+        <section className="overflow-hidden rounded-[8px] border border-[color:var(--border-soft)] bg-[color:var(--surface)]">
           <div className="space-y-0">
             <button
               type="button"
@@ -1391,8 +1391,8 @@ function AdditionalCostsTabContent({
                 <span className={cn('m-[3px] block h-2.5 w-2.5 rounded-full', sharedMode === 'buyer' ? 'bg-[#11b5c9]' : 'bg-transparent')} />
               </span>
               <div className="flex-1">
-                <div className="text-lg font-black text-[color:var(--text-strong)]">با خریدار است</div>
-                <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">تمام هزینه‌های {selectedItem.title} توسط خریدار پرداخت می‌شود.</p>
+                <div className="text-lg font-black text-[color:var(--text-strong)]">?? ?????? ???</div>
+                <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">???? ????????? {selectedItem.title} ???? ?????? ?????? ??????.</p>
               </div>
             </button>
 
@@ -1405,8 +1405,8 @@ function AdditionalCostsTabContent({
                 <span className={cn('m-[3px] block h-2.5 w-2.5 rounded-full', sharedMode === 'seller' ? 'bg-[#11b5c9]' : 'bg-transparent')} />
               </span>
               <div className="flex-1">
-                <div className="text-lg font-black text-[color:var(--text-strong)]">با سازنده است</div>
-                <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">تمام هزینه‌های {selectedItem.title} بر عهده سازنده است و از مبلغ قابل پرداخت خریدار حذف می‌شود.</p>
+                <div className="text-lg font-black text-[color:var(--text-strong)]">?? ?????? ???</div>
+                <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">???? ????????? {selectedItem.title} ?? ???? ?????? ??? ? ?? ???? ???? ?????? ?????? ??? ??????.</p>
               </div>
             </button>
 
@@ -1419,8 +1419,8 @@ function AdditionalCostsTabContent({
                 <span className={cn('m-[3px] block h-2.5 w-2.5 rounded-full', sharedMode === 'shared' ? 'bg-[#11b5c9]' : 'bg-transparent')} />
               </span>
               <div className="flex-1">
-                <div className="text-lg font-black text-[color:var(--text-strong)]">اشتراک بین خریدار و سازنده</div>
-                <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">هزینه {selectedItem.title} بین خریدار و سازنده تقسیم می‌شود. درصد سهم هر طرف را مشخص کنید.</p>
+                <div className="text-lg font-black text-[color:var(--text-strong)]">?????? ??? ?????? ? ??????</div>
+                <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">????? {selectedItem.title} ??? ?????? ? ?????? ????? ??????. ???? ??? ?? ??? ?? ???? ????.</p>
               </div>
             </button>
           </div>
@@ -1428,16 +1428,16 @@ function AdditionalCostsTabContent({
           {sharedMode === 'shared' ? (
             <div className="space-y-6 border-t border-[color:var(--border-soft)] p-5">
               <div className="space-y-4">
-                <FieldLabel label="درصد سهم پیش خریدار" required />
+                <FieldLabel label="???? ??? ??? ??????" required />
                 <RuleTextInput value={String(state.values.costSharedBuyerPercent ?? '')} onChange={(value) => onValueChange('costSharedBuyerPercent', value)} suffix="%" />
-                <div className="text-right text-sm text-[color:var(--text-muted)]">۰ / ۶</div>
-                <p className="text-right text-sm text-[color:var(--text-muted)]">درصدی از هزینه {selectedItem.title} که خریدار باید پرداخت کند.</p>
+                <div className="text-right text-sm text-[color:var(--text-muted)]">? / ?</div>
+                <p className="text-right text-sm text-[color:var(--text-muted)]">????? ?? ????? {selectedItem.title} ?? ?????? ???? ?????? ???.</p>
               </div>
               <div className="space-y-4">
-                <FieldLabel label="درصد سهم سازنده" required />
+                <FieldLabel label="???? ??? ??????" required />
                 <RuleTextInput value={String(state.values.costSharedSellerPercent ?? '')} onChange={(value) => onValueChange('costSharedSellerPercent', value)} suffix="%" />
-                <div className="text-right text-sm text-[color:var(--text-muted)]">۰ / ۶</div>
-                <p className="text-right text-sm text-[color:var(--text-muted)]">درصدی از هزینه {selectedItem.title} که سازنده پرداخت می‌کند. این مقدار باید مکمل سهم خریدار باشد.</p>
+                <div className="text-right text-sm text-[color:var(--text-muted)]">? / ?</div>
+                <p className="text-right text-sm text-[color:var(--text-muted)]">????? ?? ????? {selectedItem.title} ?? ?????? ?????? ??????. ??? ????? ???? ???? ??? ?????? ????.</p>
               </div>
             </div>
           ) : null}
@@ -1445,7 +1445,7 @@ function AdditionalCostsTabContent({
       ) : null}
 
       {!isSharedCostItem ? (
-      <section className="overflow-hidden rounded-[24px] border border-[color:var(--border-soft)] bg-[color:var(--surface)]">
+      <section className="overflow-hidden rounded-[8px] border border-[color:var(--border-soft)] bg-[color:var(--surface)]">
         <div className="flex flex-wrap border-b border-[color:var(--border-soft)]">
           {RULE_CONFIGS['additional-costs'].tabs.map((tab) => (
             <TabButton
@@ -1464,53 +1464,53 @@ function AdditionalCostsTabContent({
 
           {state.activeTab === 'amount' ? (
             <div className="space-y-4">
-              <FieldLabel label="مبلغ متنظر" required />
-              <RuleTextInput value={String(state.values.costAmountValue ?? '')} onChange={(value) => onValueChange('costAmountValue', value)} suffix="تومان" />
-              <p className="text-right text-sm text-[color:var(--text-muted)]">مبلغ ثابت هزینه {selectedItem.title} را وارد کنید.</p>
+              <FieldLabel label="???? ?????" required />
+              <RuleTextInput value={String(state.values.costAmountValue ?? '')} onChange={(value) => onValueChange('costAmountValue', value)} suffix="?????" />
+              <p className="text-right text-sm text-[color:var(--text-muted)]">???? ???? ????? {selectedItem.title} ?? ???? ????.</p>
             </div>
           ) : null}
 
           {state.activeTab === 'contract-percent' ? (
             <div className="space-y-4">
-              <FieldLabel label="درصد متنظر" required />
+              <FieldLabel label="???? ?????" required />
               <RuleTextInput value={String(state.values.costPercentValue ?? '')} onChange={(value) => onValueChange('costPercentValue', value)} suffix="%" />
-              <div className="text-right text-sm text-[color:var(--text-muted)]">۰ / ۶</div>
-              <p className="text-right text-sm text-[color:var(--text-muted)]">این مقدار به صورت درصدی از مبلغ قرارداد محاسبه می‌شود و با تغییر مبلغ قرارداد به‌طور خودکار بروزرسانی می‌شود.</p>
+              <div className="text-right text-sm text-[color:var(--text-muted)]">? / ?</div>
+              <p className="text-right text-sm text-[color:var(--text-muted)]">??? ????? ?? ???? ????? ?? ???? ??????? ?????? ?????? ? ?? ????? ???? ??????? ?????? ?????? ????????? ??????.</p>
             </div>
           ) : null}
 
           {state.activeTab === 'combined' ? (
             <div className="space-y-6">
               <div className="space-y-4">
-                <FieldLabel label="مبلغ متنظر" required />
-                <RuleTextInput value={String(state.values.costCombinedAmount ?? '')} onChange={(value) => onValueChange('costCombinedAmount', value)} suffix="تومان" />
-                <p className="text-right text-sm text-[color:var(--text-muted)]">این مقدار به صورت حداقلی برای هزینه پرداخت مفروض شده و مستقل از درصدها یا شرایط دیگر است.</p>
+                <FieldLabel label="???? ?????" required />
+                <RuleTextInput value={String(state.values.costCombinedAmount ?? '')} onChange={(value) => onValueChange('costCombinedAmount', value)} suffix="?????" />
+                <p className="text-right text-sm text-[color:var(--text-muted)]">??? ????? ?? ???? ?????? ???? ????? ?????? ????? ??? ? ????? ?? ?????? ?? ????? ???? ???.</p>
               </div>
               <div className="space-y-4">
-                <FieldLabel label="درصد متنظر" required />
+                <FieldLabel label="???? ?????" required />
                 <RuleTextInput value={String(state.values.costCombinedPercent ?? '')} onChange={(value) => onValueChange('costCombinedPercent', value)} suffix="%" />
-                <div className="text-right text-sm text-[color:var(--text-muted)]">۰ / ۶</div>
-                <p className="text-right text-sm text-[color:var(--text-muted)]">این مقدار به صورت درصدی از مبلغ قرارداد محاسبه می‌شود و با تغییر مبلغ قرارداد به‌طور خودکار بروزرسانی می‌شود.</p>
+                <div className="text-right text-sm text-[color:var(--text-muted)]">? / ?</div>
+                <p className="text-right text-sm text-[color:var(--text-muted)]">??? ????? ?? ???? ????? ?? ???? ??????? ?????? ?????? ? ?? ????? ???? ??????? ?????? ?????? ????????? ??????.</p>
               </div>
             </div>
           ) : null}
 
           {state.activeTab === 'per-installment-fixed' ? (
             <div className="space-y-4">
-              <FieldLabel label="مبلغ ثابت به ازای هر قسط" required />
-              <RuleTextInput value={String(state.values.costPerInstallmentValue ?? '')} onChange={(value) => onValueChange('costPerInstallmentValue', value)} suffix="تومان" />
-              <p className="text-right text-sm text-[color:var(--text-muted)]">این هزینه به صورت مبلغ ثابت برای هر قسط تعیین می‌شود و در هر پرداخت جداگانه اعمال می‌گردد.</p>
+              <FieldLabel label="???? ???? ?? ???? ?? ???" required />
+              <RuleTextInput value={String(state.values.costPerInstallmentValue ?? '')} onChange={(value) => onValueChange('costPerInstallmentValue', value)} suffix="?????" />
+              <p className="text-right text-sm text-[color:var(--text-muted)]">??? ????? ?? ???? ???? ???? ???? ?? ??? ????? ?????? ? ?? ?? ?????? ??????? ????? ???????.</p>
             </div>
           ) : null}
 
-            <RuleSwitchRow title="فعال کردن محاسبه مالیات برای هزینه‌های جانبی" checked={taxEnabled} onChange={(value) => onValueChange('costTaxEnabled', value)} useContractRegistrationSwitch />
+            <RuleSwitchRow title="???? ???? ?????? ?????? ???? ????????? ?????" checked={taxEnabled} onChange={(value) => onValueChange('costTaxEnabled', value)} useContractRegistrationSwitch />
 
           {taxEnabled ? (
             <div className="space-y-4">
-              <FieldLabel label="نرخ مالیات" required />
+              <FieldLabel label="??? ??????" required />
               <RuleTextInput value={String(state.values.costTaxPercent ?? '')} onChange={(value) => onValueChange('costTaxPercent', value)} suffix="%" />
-              <div className="text-right text-sm text-[color:var(--text-muted)]">۰ / ۶</div>
-              <p className="text-right text-sm text-[color:var(--text-muted)]">درصد مالیات قابل اعمال روی هزینه {selectedItem.title} را وارد کنید.</p>
+              <div className="text-right text-sm text-[color:var(--text-muted)]">? / ?</div>
+              <p className="text-right text-sm text-[color:var(--text-muted)]">???? ?????? ???? ????? ??? ????? {selectedItem.title} ?? ???? ????.</p>
             </div>
           ) : null}
         </div>
@@ -1552,7 +1552,7 @@ export function ContractRuleDetailsPanel({
         const response = await fetch(`/api/business-settings/contract-rules/${ruleId}`, { cache: 'no-store' });
         if (!response.ok) {
           const payload = (await response.json().catch(() => ({}))) as { message?: string };
-          throw new Error(payload.message || 'بارگذاری تنظیمات انجام نشد.');
+          throw new Error(payload.message || '???????? ??????? ????? ???.');
         }
         const payload = (await response.json()) as ContractRuleState;
         if (mounted) {
@@ -1563,7 +1563,7 @@ export function ContractRuleDetailsPanel({
           );
         }
       } catch (loadError) {
-        if (mounted) setError(loadError instanceof Error ? loadError.message : 'بارگذاری تنظیمات انجام نشد.');
+        if (mounted) setError(loadError instanceof Error ? loadError.message : '???????? ??????? ????? ???.');
       } finally {
         if (mounted) setLoading(false);
       }
@@ -1620,12 +1620,12 @@ export function ContractRuleDetailsPanel({
 
       if (!response.ok) {
         const payload = (await response.json().catch(() => ({}))) as { message?: string };
-        throw new Error(payload.message || 'ذخیره تنظیمات انجام نشد.');
+        throw new Error(payload.message || '????? ??????? ????? ???.');
       }
 
-      setMessage('تنظیمات با موفقیت ذخیره شد.');
+      setMessage('??????? ?? ?????? ????? ??.');
     } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : 'ذخیره تنظیمات انجام نشد.');
+      setError(saveError instanceof Error ? saveError.message : '????? ??????? ????? ???.');
     } finally {
       setSaving(false);
     }
@@ -1657,7 +1657,7 @@ export function ContractRuleDetailsPanel({
 
       if (!response.ok) {
         const payload = (await response.json().catch(() => ({}))) as { message?: string };
-        throw new Error(payload.message || 'ذخیره تنظیمات انجام نشد.');
+        throw new Error(payload.message || '????? ??????? ????? ???.');
       }
 
       if (submitRedirectHref) {
@@ -1665,9 +1665,9 @@ export function ContractRuleDetailsPanel({
         return;
       }
 
-      setMessage('تنظیمات با موفقیت ذخیره شد.');
+      setMessage('??????? ?? ?????? ????? ??.');
     } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : 'ذخیره تنظیمات انجام نشد.');
+      setError(saveError instanceof Error ? saveError.message : '????? ??????? ????? ???.');
     } finally {
       setSaving(false);
     }
@@ -1677,7 +1677,7 @@ export function ContractRuleDetailsPanel({
     return (
       <section className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
         <div className="rounded-3xl border border-[color:var(--border-color)] bg-[color:var(--surface)] p-8 text-center text-sm text-[color:var(--text-muted)]">
-          در حال بارگذاری تنظیمات...
+          ?? ??? ???????? ???????...
         </div>
       </section>
     );
@@ -1689,14 +1689,14 @@ export function ContractRuleDetailsPanel({
         className={cn(
           'space-y-5 border border-[color:var(--border-color)] sm:p-6',
           isMinimalInstallments
-            ? 'rounded-lg bg-[color:var(--surface)] p-4 shadow-none'
-            : 'rounded-[28px] bg-[color:var(--surface-overlay)] p-5 shadow-[0_18px_45px_var(--shadow-soft)] backdrop-blur',
+            ? 'rounded-[8px] bg-[color:var(--surface)] p-4 shadow-none'
+            : 'rounded-[8px] bg-[color:var(--surface-overlay)] p-5 shadow-[0_18px_45px_var(--shadow-soft)] backdrop-blur',
         )}
       >
         {backHref ? (
           <div className="flex justify-end">
             <Link href={backHref} className="inline-flex items-center gap-2 text-sm font-bold text-[color:var(--theme-action-text)]">
-              <span>بازگشت</span>
+              <span>??????</span>
               <ChevronLeft className="h-4 w-4" />
             </Link>
           </div>
@@ -1705,7 +1705,7 @@ export function ContractRuleDetailsPanel({
           <section
             className={cn(
               'border border-[color:var(--border-soft)] bg-[color:var(--surface)]',
-              isMinimalInstallments ? 'rounded-md p-4' : 'rounded-[24px] p-5',
+              isMinimalInstallments ? 'rounded-[8px] p-4' : 'rounded-[8px] p-5',
             )}
           >
             <div className="flex w-full flex-col gap-5 lg:flex-row lg:items-center lg:justify-between lg:[direction:rtl]">
@@ -1717,12 +1717,12 @@ export function ContractRuleDetailsPanel({
                   ruleId !== 'adjustment' &&
                   ruleId !== 'discount' &&
                   ruleId !== 'interest' ? (
-                    <span className="rounded-xl bg-[color:var(--theme-accent-softer)] px-4 py-2 text-sm font-bold text-[color:var(--text-muted)]">{rule.detailsLabel}</span>
+                    <span className="rounded-[8px] bg-[color:var(--theme-accent-softer)] px-4 py-2 text-sm font-bold text-[color:var(--text-muted)]">{rule.detailsLabel}</span>
                   ) : null}
                   <h2 className="text-xl font-black text-[color:var(--text-strong)]">{rule.activationTitle}</h2>
                 </div>
                 <p className="w-full text-sm leading-7 text-[color:var(--text-muted)]">{rule.activationDescription}</p>
-                {!state.active ? <p className="w-full text-sm text-[color:var(--text-muted)]">با فعال کردن این گزینه، جزئیات این بخش برای کاربر نمایش داده می‌شود.</p> : null}
+                {!state.active ? <p className="w-full text-sm text-[color:var(--text-muted)]">?? ???? ???? ??? ?????? ?????? ??? ??? ???? ????? ????? ???? ??????.</p> : null}
               </div>
 
               <div className="shrink-0 self-end lg:self-auto">
@@ -1738,10 +1738,10 @@ export function ContractRuleDetailsPanel({
               <section
                 className={cn(
                   'border border-[color:var(--border-soft)] bg-[color:var(--surface)]',
-                  isMinimalInstallments ? 'rounded-md p-4' : 'rounded-[24px] p-5',
+                  isMinimalInstallments ? 'rounded-[8px] p-4' : 'rounded-[8px] p-5',
                 )}
               >
-                <div className="mb-4 text-right text-base font-black text-[color:var(--text-strong)]">بازه اثرگذاری</div>
+                <div className="mb-4 text-right text-base font-black text-[color:var(--text-strong)]">???? ????????</div>
                 <UiChoicePills
                   options={rule.chips.map((chip) => ({ value: chip, label: chip }))}
                   value={String(state.activeChip || rule.chips[0])}
@@ -1769,7 +1769,7 @@ export function ContractRuleDetailsPanel({
               <section
                 className={cn(
                   'overflow-hidden bg-[color:var(--surface)]',
-                  isMinimalInstallments ? 'rounded-md' : 'rounded-[24px]',
+                  isMinimalInstallments ? 'rounded-[8px]' : 'rounded-[8px]',
                 )}
               >
                 {ruleId !== 'adjustment' && !forcedTabId ? (
@@ -1806,7 +1806,7 @@ export function ContractRuleDetailsPanel({
                     />
                   ) : (
                     <>
-                      <div className="rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] px-4 py-4 text-right">
+                      <div className="rounded-[8px] border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] px-4 py-4 text-right">
                         <div className="mb-2 text-base font-black text-[color:var(--text-strong)]">{currentTab.title}</div>
                         <p className="text-sm leading-7 text-[color:var(--text-muted)]">{currentTab.description}</p>
                       </div>
@@ -1834,8 +1834,8 @@ export function ContractRuleDetailsPanel({
             className={cn(
               'border p-4 text-sm',
               isMinimalInstallments
-                ? 'rounded-md border-[color:var(--border-soft)] bg-[color:var(--surface)] text-[color:var(--text-strong)]'
-                : 'rounded-2xl border-[#11b5c9]/50 bg-[#11b5c9]/10 text-[#8ef0ff]',
+                ? 'rounded-[8px] border-[color:var(--border-soft)] bg-[color:var(--surface)] text-[color:var(--text-strong)]'
+                : 'rounded-[8px] border-[#11b5c9]/50 bg-[#11b5c9]/10 text-[#8ef0ff]',
             )}
           >
             <div className="inline-flex items-center gap-2 font-bold">
@@ -1845,7 +1845,7 @@ export function ContractRuleDetailsPanel({
           </section>
         ) : null}
 
-        {error ? <div className={cn('border px-4 py-3 text-sm', isMinimalInstallments ? 'rounded-md border-[#e7c9cf] bg-transparent text-[#be123c]' : 'rounded-2xl border-[#fecdd3] bg-[#fff1f2] text-[#be123c]')}>{error}</div> : null}
+        {error ? <div className={cn('border px-4 py-3 text-sm', isMinimalInstallments ? 'rounded-[8px] border-[#e7c9cf] bg-transparent text-[#be123c]' : 'rounded-[8px] border-[#fecdd3] bg-[#fff1f2] text-[#be123c]')}>{error}</div> : null}
       </div>
 
       {!forcedTabId ? (
@@ -1858,3 +1858,5 @@ export function ContractRuleDetailsPanel({
     </section>
   );
 }
+
+

@@ -190,7 +190,7 @@ export default function ContractAppendicesPage() {
           <button
             type="button"
             onClick={() => router.push(backHref)}
-            className="inline-flex h-10 shrink-0 items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-[13px] font-bold text-slate-700 shadow-sm transition hover:border-[color-mix(in_srgb,var(--dark-teal)_35%,transparent)] hover:bg-slate-50"
+            className="inline-flex h-10 shrink-0 items-center gap-2 rounded-[8px] border border-slate-200 bg-white px-4 text-[13px] font-bold text-slate-700 shadow-sm transition hover:border-[color-mix(in_srgb,var(--dark-teal)_35%,transparent)] hover:bg-slate-50"
           >
             بازگشت به جزئیات قرارداد
             <ArrowRight className="h-4 w-4" aria-hidden />
@@ -198,19 +198,19 @@ export default function ContractAppendicesPage() {
         </div>
 
         {loading ? (
-          <section className="rounded-[28px] border border-white/70 bg-white/95 p-10 text-center text-sm font-bold text-slate-500 shadow-[0_20px_50px_-24px_rgba(15,23,42,0.14)]">
+          <section className="rounded-[8px] border border-white/70 bg-white/95 p-10 text-center text-sm font-bold text-slate-500 shadow-[0_20px_50px_-24px_rgba(15,23,42,0.14)]">
             در حال بارگذاری...
           </section>
         ) : error ? (
-          <section className="rounded-[28px] border border-rose-200 bg-rose-50/95 p-8 text-center text-sm font-bold text-rose-800 shadow-sm">
+          <section className="rounded-[8px] border border-rose-200 bg-rose-50/95 p-8 text-center text-sm font-bold text-rose-800 shadow-sm">
             {error}
           </section>
         ) : (
           <>
-            <section className="rounded-[28px] border border-slate-200/80 bg-white/95 px-5 py-5 shadow-sm sm:px-6">
+            <section className="rounded-[8px] border border-slate-200/80 bg-white/95 px-5 py-5 shadow-sm sm:px-6">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div className="flex min-w-0 flex-1 items-start gap-3">
-                  <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[color-mix(in_srgb,var(--dark-teal)_12%,white)] text-[color-mix(in_srgb,var(--dark-teal)_90%,black)]">
+                  <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-[8px] bg-[color-mix(in_srgb,var(--dark-teal)_12%,white)] text-[color-mix(in_srgb,var(--dark-teal)_90%,black)]">
                     <FileText className="h-6 w-6" />
                   </span>
                   <div className="min-w-0 flex-1 text-right">
@@ -229,7 +229,7 @@ export default function ContractAppendicesPage() {
                       ) : null}
                     </div>
                     {selectedFilterTags.length === 1 && selectedFilterTags[0] === 'material-specs-change' ? (
-                      <div className="mt-3 rounded-2xl border border-cyan-200 bg-cyan-50/80 px-4 py-3 text-[12px] font-semibold leading-7 text-cyan-900">
+                      <div className="mt-3 rounded-[8px] border border-cyan-200 bg-cyan-50/80 px-4 py-3 text-[12px] font-semibold leading-7 text-cyan-900">
                         در این بخش پرونده‌های اجرایی تغییرات مشخصات فنی پروژه ثبت می‌شود؛ از همین مسیر می‌توانید مستندات لازم، نتیجه رسیدگی و فعال‌سازی اقدام قراردادی را روی قرارداد نگه دارید.
                       </div>
                     ) : null}
@@ -245,7 +245,7 @@ export default function ContractAppendicesPage() {
                     }
                     setPickerOpen(true);
                   }}
-                  className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-2xl bg-[linear-gradient(180deg,color-mix(in_srgb,var(--dark-teal)_92%,black),color-mix(in_srgb,var(--dark-teal)_78%,#0f766e))] px-5 py-3 text-[13px] font-black text-white shadow-sm transition hover:brightness-105"
+                  className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-[8px] bg-[linear-gradient(180deg,color-mix(in_srgb,var(--dark-teal)_92%,black),color-mix(in_srgb,var(--dark-teal)_78%,#0f766e))] px-5 py-3 text-[13px] font-black text-white shadow-sm transition hover:brightness-105"
                 >
                   {selectedFilterTags.length === 1 && selectedFilterTags[0] === 'material-specs-change' ? 'ثبت پرونده مشخصات فنی' : 'افزودن متمم'}
                   <Plus className="h-4 w-4" />
@@ -273,7 +273,7 @@ export default function ContractAppendicesPage() {
                   <button
                     type="button"
                     onClick={() => setFilterOpen((current) => !current)}
-                    className="inline-flex h-11 items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-[12px] font-extrabold text-slate-700 shadow-sm transition hover:bg-slate-50"
+                    className="inline-flex h-11 items-center gap-2 rounded-[8px] border border-slate-200 bg-white px-4 text-[12px] font-extrabold text-slate-700 shadow-sm transition hover:bg-slate-50"
                   >
                     <ChevronDown className={`h-4 w-4 transition ${filterOpen ? 'rotate-180' : ''}`} />
                     <span>{selectedFilterTags.length ? `نوع متمم (${selectedFilterTags.length.toLocaleString('fa-IR')})` : 'فیلتر نوع متمم'}</span>
@@ -281,7 +281,7 @@ export default function ContractAppendicesPage() {
                   </button>
 
                   {filterOpen ? (
-                    <div className="absolute left-0 top-[calc(100%+10px)] z-20 w-[290px] rounded-[22px] border border-slate-200 bg-white p-3 shadow-[0_24px_60px_-26px_rgba(15,23,42,0.28)]">
+                    <div className="absolute left-0 top-[calc(100%+10px)] z-20 w-[290px] rounded-[8px] border border-slate-200 bg-white p-3 shadow-[0_24px_60px_-26px_rgba(15,23,42,0.28)]">
                       <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-3">
                         <button
                           type="button"
@@ -298,7 +298,7 @@ export default function ContractAppendicesPage() {
 
                       <div className="mt-3 max-h-72 space-y-2 overflow-y-auto pr-1">
                         {availableFilterTags.length === 0 ? (
-                          <div className="rounded-2xl bg-slate-50 px-4 py-6 text-center text-[12px] font-semibold text-slate-500">
+                          <div className="rounded-[8px] bg-slate-50 px-4 py-6 text-center text-[12px] font-semibold text-slate-500">
                             نوعی برای فیلتر موجود نیست.
                           </div>
                         ) : (
@@ -309,7 +309,7 @@ export default function ContractAppendicesPage() {
                                 key={option.key}
                                 type="button"
                                 onClick={() => toggleFilterTag(option.key)}
-                                className={`flex min-h-[46px] w-full items-center justify-between rounded-2xl border px-3 text-right text-[12px] font-bold transition ${
+                                className={`flex min-h-[46px] w-full items-center justify-between rounded-[8px] border px-3 text-right text-[12px] font-bold transition ${
                                   active
                                     ? 'border-[color-mix(in_srgb,var(--dark-teal)_35%,transparent)] bg-[color-mix(in_srgb,var(--dark-teal)_08%,white)] text-slate-900'
                                     : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
@@ -330,7 +330,7 @@ export default function ContractAppendicesPage() {
               </div>
 
               {filteredAppendices.length === 0 ? (
-                <div className="rounded-[28px] border border-dashed border-slate-200 bg-white/80 px-5 py-14 text-center text-[13px] font-semibold text-slate-500">
+                <div className="rounded-[8px] border border-dashed border-slate-200 bg-white/80 px-5 py-14 text-center text-[13px] font-semibold text-slate-500">
                   {appendices.length === 0 ? 'هنوز متممی برای این قرارداد ثبت نشده است.' : 'متممی با فیلتر انتخاب‌شده یافت نشد.'}
                 </div>
               ) : (
@@ -359,3 +359,5 @@ export default function ContractAppendicesPage() {
     </PanelLayout>
   );
 }
+
+

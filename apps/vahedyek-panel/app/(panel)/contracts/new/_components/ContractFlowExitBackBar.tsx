@@ -43,7 +43,7 @@ export function ContractFlowExitBackBar({ layout = 'flow', onNavigate }: Contrac
       <button
         type="button"
         onClick={handleClick}
-        className="inline-flex h-10 shrink-0 items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-[13px] font-bold text-slate-700 shadow-sm transition hover:border-[color-mix(in_srgb,var(--dark-teal)_35%,transparent)] hover:bg-slate-50"
+        className="inline-flex h-10 shrink-0 items-center gap-2 rounded-[8px] border border-slate-200 bg-white px-4 text-[13px] font-bold text-slate-700 shadow-sm transition hover:border-[color-mix(in_srgb,var(--dark-teal)_35%,transparent)] hover:bg-slate-50"
       >
         بازگشت
         <ArrowRight className="h-4 w-4" aria-hidden />
@@ -51,3 +51,4 @@ export function ContractFlowExitBackBar({ layout = 'flow', onNavigate }: Contrac
     </div>
   );
 }
+

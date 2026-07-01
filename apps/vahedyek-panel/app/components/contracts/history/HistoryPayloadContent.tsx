@@ -34,7 +34,7 @@ export function isSameHistoryPayload(a: Record<string, unknown>, b: Record<strin
 
 function renderValueRow(label: string, value: string, accent = false) {
   return (
-    <div className="flex items-center justify-between gap-3 rounded-2xl border border-slate-100/80 bg-white px-4 py-2.5">
+    <div className="flex items-center justify-between gap-3 rounded-[8px] border border-slate-100/80 bg-white px-4 py-2.5">
       <div className={`min-w-0 text-right text-[12px] font-semibold ${accent ? 'text-slate-900' : 'text-slate-700'}`}>{value || '—'}</div>
       <div className="shrink-0 text-[11px] font-bold text-slate-400">{label}</div>
     </div>
@@ -46,7 +46,7 @@ function renderPartyList(parties: ContractParty[]) {
   return (
     <div className="space-y-2">
       {parties.map((party, index) => (
-        <div key={`${party.personId}-${index}`} className="flex items-center justify-between gap-3 rounded-2xl border border-slate-100/80 bg-white px-4 py-2.5">
+        <div key={`${party.personId}-${index}`} className="flex items-center justify-between gap-3 rounded-[8px] border border-slate-100/80 bg-white px-4 py-2.5">
           <div className="min-w-0 text-right text-[12px] font-semibold text-slate-700">
             {party.name} ({party.share?.value ?? 0} {party.share?.mode === 'percent' ? 'درصد' : 'دانگ'})
           </div>
@@ -60,11 +60,11 @@ function renderPartyList(parties: ContractParty[]) {
 function renderDueItems(dueItems: FinancialDueItemData[]) {
   if (!dueItems.length) return null;
   return (
-    <div className="rounded-[18px] border border-slate-100 bg-slate-50/80 p-3">
+    <div className="rounded-[8px] border border-slate-100 bg-slate-50/80 p-3">
       <div className="mb-2 text-right text-[11px] font-black text-slate-500">سررسیدها</div>
       <div className="space-y-2">
         {dueItems.map((item) => (
-          <div key={item.id} className="grid gap-2 rounded-2xl bg-white px-4 py-3">
+          <div key={item.id} className="grid gap-2 rounded-[8px] bg-white px-4 py-3">
             {renderValueRow('عنوان', item.title || '—')}
             {renderValueRow('مبلغ', formatHistoryMoney(item.amount))}
             {renderValueRow('تاریخ سررسید', item.dueDate || '—')}
@@ -81,7 +81,7 @@ function renderFinancialCategories(categories: FinancialCategoryData[]) {
   return (
     <div className="space-y-2">
       {visible.map((item) => (
-        <div key={item.id} className="grid gap-2 rounded-2xl bg-white px-4 py-3">
+        <div key={item.id} className="grid gap-2 rounded-[8px] bg-white px-4 py-3">
           {renderValueRow('عنوان ردیف', item.name || '—', true)}
           {renderValueRow('سقف مبلغ', formatHistoryMoney(item.capAmount))}
           {renderValueRow('مبلغ سررسیددار', formatHistoryMoney(item.dueAmount))}
@@ -246,7 +246,7 @@ function renderMaterialSpecsChangePayload(payload: Record<string, unknown>) {
     return (
       <div className="space-y-2">
         {specs.map((group, index) => (
-          <div key={group.id} className="rounded-2xl border border-slate-100 bg-white px-4 py-3">
+          <div key={group.id} className="rounded-[8px] border border-slate-100 bg-white px-4 py-3">
             <div className="flex items-start justify-between gap-3">
               <div className="text-right">
                 <div className="text-[13px] font-black text-slate-800">{group.title}</div>
@@ -363,3 +363,5 @@ export function HistoryPayloadContent({ payload, tagKey }: { payload: Record<str
   if (tagKey === 'buyer-cancellation') return renderTerminationPayload(payload, 'buyer');
   return renderGenericPayload(payload);
 }
+
+

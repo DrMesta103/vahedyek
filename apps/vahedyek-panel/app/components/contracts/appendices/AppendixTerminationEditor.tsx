@@ -159,7 +159,7 @@ function SectionCard({
   onExpand: () => void;
 }) {
   return (
-    <div className={`w-full overflow-hidden rounded-2xl border transition ${enabled ? 'border-cyan-200 bg-cyan-50/35' : 'border-slate-200 bg-white'}`}>
+    <div className={`w-full overflow-hidden rounded-[8px] border transition ${enabled ? 'border-cyan-200 bg-cyan-50/35' : 'border-slate-200 bg-white'}`}>
       <div className="p-4">
         <div className="flex items-start justify-between gap-4">
           <button
@@ -170,7 +170,7 @@ function SectionCard({
             }}
             className="flex min-w-0 flex-1 flex-col gap-3 text-right sm:flex-row-reverse sm:items-center sm:gap-4"
           >
-            <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border ${enabled ? 'border-cyan-200 bg-cyan-50 text-cyan-700' : 'border-slate-200 bg-slate-50 text-slate-600'}`}>
+            <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-[8px] border ${enabled ? 'border-cyan-200 bg-cyan-50 text-cyan-700' : 'border-slate-200 bg-slate-50 text-slate-600'}`}>
               <Icon className="h-5 w-5" />
             </span>
             <span className="min-w-0 flex-1 space-y-1">
@@ -318,8 +318,8 @@ export function AppendixBuilderCancellationEditor() {
   };
 
   return (
-    <div className="space-y-6 rounded-[24px] border border-slate-200 bg-white/95 p-5 shadow-sm sm:p-6" dir="rtl">
-      <div className="rounded-2xl border border-[color-mix(in_srgb,var(--dark-teal)_16%,#cbd5e1)] bg-[color-mix(in_srgb,var(--dark-teal)_06%,white)] px-4 py-3 text-right">
+    <div className="space-y-6 rounded-[8px] border border-slate-200 bg-white/95 p-5 shadow-sm sm:p-6" dir="rtl">
+      <div className="rounded-[8px] border border-[color-mix(in_srgb,var(--dark-teal)_16%,#cbd5e1)] bg-[color-mix(in_srgb,var(--dark-teal)_06%,white)] px-4 py-3 text-right">
         <div className="text-[13px] font-black text-[color-mix(in_srgb,var(--dark-teal)_88%,black)]">این بخش با منطق فسخ سازنده در پیش‌نویس هم‌ساخت است.</div>
         <p className="mt-1 text-[12px] font-semibold leading-6 text-slate-600">
           هر زیر‌بخش دقیقا همان قواعد و فیلدهای پیش‌نویس را دارد و تغییرات آن در همان متمم ذخیره می‌شود.
@@ -368,7 +368,7 @@ export function AppendixBuilderCancellationEditor() {
       </section>
 
       {!enabledSections.length ? (
-        <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-right text-xs leading-6 text-slate-500">
+        <div className="rounded-[8px] border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-right text-xs leading-6 text-slate-500">
           هنوز هیچ زیر‌بخشی فعال نشده است. برای ثبت متمم، حداقل یکی از بخش‌های فسخ سازنده را فعال کنید.
         </div>
       ) : null}
@@ -479,8 +479,8 @@ export function AppendixBuyerCancellationEditor() {
   };
 
   return (
-    <div className="space-y-6 rounded-[24px] border border-slate-200 bg-white/95 p-5 shadow-sm sm:p-6" dir="rtl">
-      <div className="rounded-2xl border border-[color-mix(in_srgb,var(--dark-teal)_16%,#cbd5e1)] bg-[color-mix(in_srgb,var(--dark-teal)_06%,white)] px-4 py-3 text-right">
+    <div className="space-y-6 rounded-[8px] border border-slate-200 bg-white/95 p-5 shadow-sm sm:p-6" dir="rtl">
+      <div className="rounded-[8px] border border-[color-mix(in_srgb,var(--dark-teal)_16%,#cbd5e1)] bg-[color-mix(in_srgb,var(--dark-teal)_06%,white)] px-4 py-3 text-right">
         <div className="text-[13px] font-black text-[color-mix(in_srgb,var(--dark-teal)_88%,black)]">این بخش با منطق فسخ خریدار در پیش‌نویس هم‌ساخت است.</div>
         <p className="mt-1 text-[12px] font-semibold leading-6 text-slate-600">
           هر بخش دقیقا همان فرم و منطق پیش‌نویس را دارد و تغییرات آن برای این متمم ذخیره می‌شود.
@@ -529,10 +529,12 @@ export function AppendixBuyerCancellationEditor() {
       </section>
 
       {!enabledSections.length ? (
-        <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-right text-xs leading-6 text-slate-500">
+        <div className="rounded-[8px] border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-right text-xs leading-6 text-slate-500">
           هنوز هیچ زیر‌بخشی فعال نشده است. برای ثبت متمم، حداقل یکی از بخش‌های فسخ خریدار را فعال کنید.
         </div>
       ) : null}
     </div>
   );
 }
+
+

@@ -90,7 +90,7 @@ function ExpenseSection({
   const percentageAmount = state.calculationMethod === 'PERCENTAGE' ? (contractTotal * (Number(state.totalValue || 0) / 100)) : 0;
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4">
+    <div className="rounded-[8px] border border-slate-200 bg-white p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="space-y-1">
           <div className="text-[14px] font-extrabold text-slate-900">{title}</div>
@@ -146,7 +146,7 @@ function ExpenseSection({
             </FieldGroup>
           </div>
 
-          <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4">
+          <div className="rounded-[8px] border border-slate-100 bg-slate-50/50 p-4">
             <div className="mb-3 text-[13px] font-extrabold text-slate-700">تقسیم هزینه</div>
             <div className="grid gap-4 md:grid-cols-3">
               <FieldGroup label="سهم خریدار (%)">
@@ -266,7 +266,7 @@ export function ExtraCostsStep({ title }: { title: string }) {
   return (
     <div className="space-y-4" dir="rtl">
       {formError ? (
-        <div className="flex items-start gap-2.5 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-[13px] text-rose-700">
+        <div className="flex items-start gap-2.5 rounded-[8px] border border-rose-200 bg-rose-50 px-4 py-3 text-[13px] text-rose-700">
           <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-rose-500" />
           {formError}
         </div>
@@ -305,3 +305,5 @@ export function ExtraCostsStep({ title }: { title: string }) {
     </div>
   );
 }
+
+

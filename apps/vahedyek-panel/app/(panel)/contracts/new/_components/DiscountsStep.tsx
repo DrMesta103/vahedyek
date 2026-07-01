@@ -2,14 +2,21 @@
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, Plus, Save, X } from 'lucide-react';
-import { Input, StickySubmitBar } from '@repo/ui';
+import { AlertTriangle, ChevronLeft } from 'lucide-react';
+import { BusinessSwitch, Input, StickySubmitBar } from '@repo/ui';
 import { ContractStepLoader } from './ContractStepLoader';
 import { DiscountConditionPanel, type DiscountConditionValues } from './DiscountConditionPanel';
 import { FieldLabel } from './FieldLabel';
 import { TagPills } from './ContractFormPrimitives';
 import { DISCOUNT_GROUPS, ITEMIZED_DISCOUNT_ENTRIES, WHOLE_DISCOUNT_ENTRY, getDiscountEntry } from './discountsConfig';
-import { ensureActiveDraftId, getFrontendStepDraft, setFrontendStepDraft } from '../../../../lib/contractDraftClient';
+import {
+  ensureActiveDraftId,
+  fetchContractFlowBootstrapSettings,
+  getContractFlowBootstrapSettings,
+  getFrontendStepDraft,
+  setFrontendStepDraft,
+} from '../../../../lib/contractDraftClient';
+import type { ContractRuleState } from '../../../../lib/businessContractRules';
 import { validateDiscountsStep } from '../../../../lib/contractValidation';
 import { buildValidationSummary } from './validationPresentation';
 import type {
@@ -22,6 +29,7 @@ import type {
 import { dispatchContractFlowDirty, dispatchContractFlowSavedForDraft } from './contractFlowSignals';
 import type { ContractFlowSectionId } from './contractFlowSignals';
 import { useContractFlowBasePath } from './useContractFlowBasePath';
+import { ContractSettingsImportDialog } from './ContractSettingsImportDialog';
 
 const SCOPE_OPTIONS: Array<{ value: DiscountScope; label: string }> = [
   { value: 'whole', label: 'روی کل قرارداد' },
@@ -33,11 +41,6 @@ const VALUE_MODE_OPTIONS: Array<{ value: DiscountValueMode; label: string }> = [
   { value: 'percent', label: 'درصد' },
 ];
 
-const ITEMIZED_ENTRY_OPTIONS = ITEMIZED_DISCOUNT_ENTRIES.map((item) => ({
-  value: item.id,
-  label: item.title,
-}));
-
 const INITIAL_TYPES: DiscountTypeStateData[] = DISCOUNT_GROUPS.map((item) => ({
   id: item.id,
   title: item.title,
@@ -45,13 +48,14 @@ const INITIAL_TYPES: DiscountTypeStateData[] = DISCOUNT_GROUPS.map((item) => ({
   active: false,
 }));
 
-function makeEmptyRule(discountTypeId: string): DiscountRuleData {
+function makeEmptyRule(discountTypeId: string, scope: DiscountScope = 'whole', entryId = WHOLE_DISCOUNT_ENTRY.id): DiscountRuleData {
   return {
     id: `discount-rule-${Math.random().toString(36).slice(2, 10)}`,
     discountTypeId,
-    scope: 'whole',
-    entryId: WHOLE_DISCOUNT_ENTRY.id,
+    scope,
+    entryId,
     valueMode: 'amount',
+    enabled: true,
     minValue: '',
     maxValue: '',
     conditionNote: '',
@@ -68,11 +72,14 @@ function makeEmptyRule(discountTypeId: string): DiscountRuleData {
 }
 
 function normalizeRule(rule: DiscountRuleData): DiscountRuleData {
+  const scope = rule.scope === 'itemized' ? 'itemized' : 'whole';
+
   return {
     ...rule,
-    scope: rule.scope === 'itemized' ? 'itemized' : 'whole',
-    entryId: rule.scope === 'itemized' ? rule.entryId || ITEMIZED_DISCOUNT_ENTRIES[0]?.id || '' : WHOLE_DISCOUNT_ENTRY.id,
+    scope,
+    entryId: scope === 'itemized' ? rule.entryId || ITEMIZED_DISCOUNT_ENTRIES[0]?.id || '' : WHOLE_DISCOUNT_ENTRY.id,
     valueMode: rule.valueMode === 'percent' ? 'percent' : 'amount',
+    enabled: rule.enabled === true,
     minValue: String(rule.minValue ?? ''),
     maxValue: String(rule.maxValue ?? ''),
     conditionNote: String(rule.conditionNote ?? ''),
@@ -95,11 +102,69 @@ function normalizeDiscountsPayload(data: ContractDiscountsData | null): Contract
     description: item.description,
     active: typeMap.get(item.id)?.active ?? false,
   }));
+
   const validTypeIds = new Set(types.map((item) => item.id));
-  const rules = (data?.rules ?? []).filter((item) => validTypeIds.has(item.discountTypeId)).map(normalizeRule);
+  const rules = (data?.rules ?? [])
+    .map((rule) => normalizeRule(rule))
+    .filter((rule) => validTypeIds.has(rule.discountTypeId));
   const activeTab = types.find((item) => item.active)?.id ?? types[0]?.id ?? '';
 
   return { activeTab, types, rules };
+}
+
+function buildBootstrapDiscountsPayload(ruleState: ContractRuleState | null): ContractDiscountsData | null {
+  if (!ruleState) return null;
+
+  const activeGroupId = ruleState.active && ruleState.activeChip ? (ruleState.activeChip as 'contract-base' | 'early-payment') : null;
+  const baseTypes = DISCOUNT_GROUPS.map((item) => ({
+    id: item.id,
+    title: item.title,
+    description: item.description,
+    active: activeGroupId === item.id,
+  }));
+
+  if (!activeGroupId) {
+    return {
+      activeTab: baseTypes[0]?.id ?? '',
+      types: baseTypes,
+      rules: [],
+    };
+  }
+
+  const isContractBase = activeGroupId === 'contract-base';
+  const amountValue = isContractBase ? String(ruleState.values.discountContractValue ?? '') : String(ruleState.values.discountEarlyValue ?? '');
+  const scope = String(ruleState.values.discountScope || 'whole') as DiscountScope;
+  const entryId =
+    scope === 'whole'
+      ? WHOLE_DISCOUNT_ENTRY.id
+      : String(ruleState.values.discountEntryId || ITEMIZED_DISCOUNT_ENTRIES[0]?.id || WHOLE_DISCOUNT_ENTRY.id);
+
+  return {
+    activeTab: activeGroupId,
+    types: baseTypes,
+    rules: [
+      normalizeRule({
+        id: `discount-bootstrap-${activeGroupId}`,
+        discountTypeId: activeGroupId,
+        scope,
+        entryId,
+        valueMode: String(ruleState.values.discountValueMode || 'amount') as DiscountValueMode,
+        enabled: true,
+        minValue: amountValue,
+        maxValue: amountValue,
+        conditionNote: isContractBase ? String(ruleState.values.discountContractSettlement ?? '') : String(ruleState.values.discountEarlyDeadline ?? ''),
+        conditionConfigured: Boolean(ruleState.values.discountConditionConfigured),
+        conditionMaxDelayCount: String(ruleState.values.discountApprovalThreshold ?? ''),
+        conditionGraceDays: isContractBase ? '' : String(ruleState.values.discountEarlyDeadline ?? ''),
+        conditionDueBasis: ['all-payment-types'],
+        conditionKeepOnDelay: Boolean(ruleState.values.discountEarlyKeepOnDelay),
+        conditionPenaltyOnDiscount: Boolean(ruleState.values.discountContractNeedApproval),
+        conditionSettlementTiming: String(ruleState.values.discountContractSettlement ?? 'unit-handover'),
+        managerApproval: Boolean(ruleState.values.discountManagerApproval),
+        approvalThreshold: String(ruleState.values.discountApprovalThreshold ?? ''),
+      }),
+    ],
+  };
 }
 
 function serializePayload(payload: ContractDiscountsData) {
@@ -118,8 +183,9 @@ function formatRuleSummary(rule: DiscountRuleData) {
     rule.scope === 'whole'
       ? WHOLE_DISCOUNT_ENTRY.title
       : getDiscountEntry('itemized', rule.entryId)?.title ?? 'تخفیف موردی';
-  const range = `${rule.minValue || '0'} تا ${rule.maxValue || '0'} ${unit}`;
-  return `${target} - ${range}`;
+  const minValue = rule.minValue || '0';
+  const maxValue = rule.maxValue || '0';
+  return `${target} - ${minValue} تا ${maxValue} ${unit}`;
 }
 
 function getConditionValues(rule: DiscountRuleData): DiscountConditionValues {
@@ -134,62 +200,11 @@ function getConditionValues(rule: DiscountRuleData): DiscountConditionValues {
 }
 
 function describeCondition(values: DiscountConditionValues) {
-  const pieces = [];
+  const pieces: string[] = [];
   if (values.maxDelayCount) pieces.push(`حداکثر ${values.maxDelayCount} تاخیر`);
   if (values.graceDays) pieces.push(`${values.graceDays} روز مهلت تنفس`);
   if (values.dueBasis.length) pieces.push(`${values.dueBasis.length} مبنای سررسید`);
   return pieces.join('، ');
-}
-
-function ToggleSwitch({
-  checked,
-  onChange,
-}: {
-  checked: boolean;
-  onChange: (checked: boolean) => void;
-}) {
-  return (
-    <button type="button" className="business-switch" aria-pressed={checked} onClick={() => onChange(!checked)}>
-      <span className="business-switch-option is-on">فعال</span>
-      <span className="business-switch-option is-off">غیرفعال</span>
-    </button>
-  );
-}
-
-function Modal({
-  open,
-  onClose,
-  title,
-  description,
-  children,
-  footer,
-}: {
-  open: boolean;
-  onClose: () => void;
-  title: string;
-  description?: string;
-  children: ReactNode;
-  footer: ReactNode;
-}) {
-  if (!open) return null;
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
-      <div className="w-full max-w-3xl rounded-2xl border border-gray-200 bg-white shadow-2xl" onClick={(event) => event.stopPropagation()}>
-        <div className="flex items-start justify-between border-b border-gray-100 p-5">
-          <div>
-            <h3 className="text-base font-bold text-gray-800">{title}</h3>
-            {description ? <p className="mt-1 text-sm text-gray-500">{description}</p> : null}
-          </div>
-          <button type="button" onClick={onClose} className="rounded-lg p-1 text-gray-400 hover:bg-gray-100">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-        <div className="space-y-5 p-5">{children}</div>
-        <div className="flex justify-end gap-3 border-t border-gray-100 p-4">{footer}</div>
-      </div>
-    </div>
-  );
 }
 
 function FieldBlock({
@@ -202,11 +217,277 @@ function FieldBlock({
   hint?: string;
 }) {
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 text-right">
       <FieldLabel label={label} />
       {children}
-      {hint ? <p className="text-xs text-gray-500">{hint}</p> : null}
+      {hint ? <p className="text-xs leading-6 text-slate-500">{hint}</p> : null}
     </div>
+  );
+}
+
+function Toggle({
+  checked,
+  disabled = false,
+  onInactiveClick,
+  onDisabledClick,
+  onChange,
+}: {
+  checked: boolean;
+  disabled?: boolean;
+  onInactiveClick?: () => void;
+  onDisabledClick?: () => void;
+  onChange: (checked: boolean) => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={(event) => {
+        event.stopPropagation();
+        if (checked) {
+          onChange(false);
+          return;
+        }
+        if (disabled) {
+          onDisabledClick?.();
+          return;
+        }
+        if (onInactiveClick) {
+          onInactiveClick();
+          return;
+        }
+        if (onDisabledClick) {
+          onDisabledClick();
+          return;
+        }
+        onChange(true);
+      }}
+      className={`inline-flex rounded-full transition ${disabled ? 'opacity-55 grayscale' : ''}`}
+      aria-pressed={checked}
+      aria-disabled={disabled}
+    >
+      <span aria-hidden className="pointer-events-none">
+        <BusinessSwitch checked={checked} onChange={() => {}} />
+      </span>
+    </button>
+  );
+}
+
+type ToggleDialogKind = 'contract-base' | 'early-payment' | 'itemized';
+
+function ActivationDialog({
+  open,
+  title,
+  description,
+  confirmLabel = 'فعال‌سازی',
+  onClose,
+  onConfirm,
+}: {
+  open: boolean;
+  title: string;
+  description: string;
+  confirmLabel?: string;
+  onClose: () => void;
+  onConfirm: () => void;
+}) {
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/45 p-4" dir="rtl" role="dialog" aria-modal="true">
+      <div className="w-full max-w-md rounded-[8px] border border-amber-200 bg-white p-6 text-right shadow-2xl">
+        <div className="flex items-start gap-3">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[8px] bg-amber-100 text-amber-700">
+            <AlertTriangle className="h-5 w-5" aria-hidden />
+          </div>
+          <div className="min-w-0 flex-1 space-y-2">
+            <h3 className="text-base font-black text-slate-900">{title}</h3>
+            <p className="text-sm font-medium leading-7 text-slate-600">{description}</p>
+          </div>
+        </div>
+        <div className="mt-6 flex items-center justify-end gap-3">
+          <button type="button" onClick={onClose} className="rounded-[8px] border border-slate-200 px-5 py-2 text-sm font-bold text-slate-600 transition hover:bg-slate-50">
+            انصراف
+          </button>
+          <button type="button" onClick={onConfirm} className="rounded-[8px] bg-teal-700 px-5 py-2 text-sm font-bold text-white transition hover:bg-teal-800">
+            {confirmLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RuleEditor({
+  typeId,
+  rule,
+  onChange,
+  title,
+  entryLabel,
+}: {
+  typeId: string;
+  rule: DiscountRuleData;
+  onChange: (patch: Partial<DiscountRuleData>) => void;
+  title: string;
+  entryLabel?: string;
+}) {
+  const valueMode = rule.valueMode === 'percent' ? 'percent' : 'amount';
+  const conditionValues = getConditionValues(rule);
+
+  return (
+    <div className="space-y-4 rounded-[8px] border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h4 className="text-sm font-bold text-slate-800">{title}</h4>
+          <p className="mt-1 text-xs leading-6 text-slate-500">
+            {entryLabel ? `موضوع: ${entryLabel}` : 'تنظیمات این بخش را مستقل ثبت کنید.'}
+          </p>
+        </div>
+        <span className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${rule.enabled !== false ? 'border-cyan-200 bg-cyan-50 text-cyan-700' : 'border-slate-200 bg-slate-50 text-slate-500'}`}>
+          {rule.enabled !== false ? 'فعال' : 'غیرفعال'}
+        </span>
+      </div>
+
+      <FieldBlock label="نوع مقدار تخفیف">
+        <TagPills
+          options={VALUE_MODE_OPTIONS}
+          value={valueMode}
+          onChange={(value) => onChange({ discountTypeId: typeId, valueMode: value })}
+        />
+      </FieldBlock>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <FieldBlock
+          label={valueMode === 'percent' ? 'حداقل درصد تخفیف' : 'حداقل مبلغ تخفیف'}
+          hint="در صورت نیاز می‌توانید مقدار حداقل را خالی بگذارید یا صفر ثبت کنید."
+        >
+          <Input
+            value={rule.minValue}
+            onChange={(event) =>
+              onChange({
+                discountTypeId: typeId,
+                minValue: valueMode === 'amount' ? formatInput(event.target.value) : event.target.value,
+              })
+            }
+            placeholder={valueMode === 'amount' ? 'مثال: 100,000' : 'مثال: 5'}
+          />
+        </FieldBlock>
+
+        <FieldBlock
+          label={valueMode === 'percent' ? 'حداکثر درصد تخفیف' : 'حداکثر مبلغ تخفیف'}
+          hint="این مقدار برای ثبت نهایی تخفیف الزامی است."
+        >
+          <Input
+            value={rule.maxValue}
+            onChange={(event) =>
+              onChange({
+                discountTypeId: typeId,
+                maxValue: valueMode === 'amount' ? formatInput(event.target.value) : event.target.value,
+              })
+            }
+            placeholder={valueMode === 'amount' ? 'مثال: 250,000' : 'مثال: 12'}
+          />
+        </FieldBlock>
+      </div>
+
+      <DiscountConditionPanel
+        compact
+        values={conditionValues}
+        onChange={(patch) => {
+          const nextCondition = { ...conditionValues, ...patch };
+          onChange({
+            discountTypeId: typeId,
+            conditionConfigured: true,
+            conditionMaxDelayCount: nextCondition.maxDelayCount,
+            conditionGraceDays: nextCondition.graceDays,
+            conditionDueBasis: nextCondition.dueBasis,
+            conditionKeepOnDelay: nextCondition.keepOnDelay,
+            conditionPenaltyOnDiscount: nextCondition.penaltyOnDiscount,
+            conditionSettlementTiming: nextCondition.settlementTiming,
+            conditionNote: describeCondition(nextCondition),
+          });
+        }}
+      />
+
+      <div className="space-y-4 rounded-[8px] border border-cyan-100 bg-cyan-50 p-4">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <h4 className="text-sm font-bold text-slate-800">تایید مدیر برای تخفیف‌های بزرگ</h4>
+            <p className="mt-1 text-xs text-slate-500">در صورت نیاز، برای این rule آستانه تایید مدیریتی تعریف کنید.</p>
+          </div>
+          <Toggle
+            checked={Boolean(rule.managerApproval)}
+            onChange={(checked) => onChange({ discountTypeId: typeId, managerApproval: checked })}
+          />
+        </div>
+
+        {rule.managerApproval ? (
+          <FieldBlock label={valueMode === 'percent' ? 'آستانه تایید مدیر (درصد)' : 'آستانه تایید مدیر (مبلغ)'}>
+            <Input
+              value={rule.approvalThreshold}
+              onChange={(event) =>
+                onChange({
+                  discountTypeId: typeId,
+                  approvalThreshold: valueMode === 'amount' ? formatInput(event.target.value) : event.target.value,
+                })
+              }
+              placeholder={valueMode === 'amount' ? 'مثال: 500,000' : 'مثال: 15'}
+            />
+          </FieldBlock>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function SectionShell({
+  title,
+  description,
+  active,
+  summary,
+  onToggle,
+  toggleDisabled = false,
+  onInactiveToggle,
+  onDisabledToggle,
+  children,
+}: {
+  title: string;
+  description: string;
+  active: boolean;
+  summary?: string;
+  onToggle?: (checked: boolean) => void;
+  toggleDisabled?: boolean;
+  onInactiveToggle?: () => void;
+  onDisabledToggle?: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <section className={`overflow-hidden rounded-[8px] border ${active ? 'border-cyan-200 bg-cyan-50/35' : 'border-slate-200 bg-white'}`}>
+      <div className="space-y-4 p-5 sm:p-6">
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0 flex-1 space-y-1 text-right">
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="text-base font-bold text-slate-800">{title}</h3>
+              <span className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${active ? 'border-cyan-200 bg-white text-cyan-700' : 'border-slate-200 bg-slate-50 text-slate-500'}`}>
+                {active ? 'فعال' : 'غیرفعال'}
+              </span>
+            </div>
+            <p className="text-sm text-slate-500">{description}</p>
+            {summary ? <p className="text-xs font-medium text-slate-500">{summary}</p> : null}
+          </div>
+
+            {onToggle ? (
+              <Toggle
+                checked={active}
+                disabled={toggleDisabled}
+                onInactiveClick={onInactiveToggle}
+                onDisabledClick={onDisabledToggle}
+                onChange={onToggle}
+              />
+            ) : null}
+          </div>
+
+        {children}
+      </div>
+    </section>
   );
 }
 
@@ -220,16 +501,20 @@ export function DiscountsStep({ stepId, title, embedded = false }: { stepId: str
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [formError, setFormError] = useState('');
-  const [showValidation, setShowValidation] = useState(false);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [importBusy, setImportBusy] = useState(false);
+  const [importError, setImportError] = useState('');
 
   const [types, setTypes] = useState<DiscountTypeStateData[]>(INITIAL_TYPES);
   const [rules, setRules] = useState<DiscountRuleData[]>([]);
-
-  const [editingRuleId, setEditingRuleId] = useState<string | null>(null);
-  const [activeDiscountTypeId, setActiveDiscountTypeId] = useState<string>('');
-  const [expandedDiscountTypeId, setExpandedDiscountTypeId] = useState<string>('');
-  const [ruleForm, setRuleForm] = useState<DiscountRuleData>(makeEmptyRule(DISCOUNT_GROUPS[0]?.id ?? ''));
-  const [dialogError, setDialogError] = useState('');
+  const [activationDialog, setActivationDialog] = useState<{
+    kind: ToggleDialogKind;
+    typeId: string;
+    entryId?: string;
+    title: string;
+    description: string;
+    confirmable: boolean;
+  } | null>(null);
 
   const payload = useMemo<ContractDiscountsData>(
     () => ({
@@ -240,22 +525,139 @@ export function DiscountsStep({ stepId, title, embedded = false }: { stepId: str
     [rules, types],
   );
 
-  const validation = useMemo(() => validateDiscountsStep(payload), [payload]);
-  const visibleErrors = showValidation ? validation.errors : {};
   const activeTypes = useMemo(() => types.filter((item) => item.active), [types]);
 
-  useEffect(() => {
-    if (!expandedDiscountTypeId) {
-      const firstActiveTypeId = types.find((item) => item.active)?.id ?? '';
-      if (firstActiveTypeId) setExpandedDiscountTypeId(firstActiveTypeId);
+  const typeRule = (typeId: string, scope: DiscountScope = 'whole', entryId = WHOLE_DISCOUNT_ENTRY.id) =>
+    rules.find((item) => item.discountTypeId === typeId && item.scope === scope && (scope === 'whole' || item.entryId === entryId));
+
+  const ruleForType = (typeId: string, scope: DiscountScope = 'whole', entryId = WHOLE_DISCOUNT_ENTRY.id) =>
+    typeRule(typeId, scope, entryId) ?? makeEmptyRule(typeId, scope, entryId);
+
+  const setRule = (nextRule: DiscountRuleData) => {
+    setRules((current) => {
+      const next = normalizeRule(nextRule);
+      const index = current.findIndex((item) => item.id === next.id);
+      if (index >= 0) {
+        const copy = current.slice();
+        copy[index] = next;
+        return copy;
+      }
+      return [...current, next];
+    });
+  };
+
+  const patchRule = (typeId: string, scope: DiscountScope, entryId: string, patch: Partial<DiscountRuleData>) => {
+    const existing = typeRule(typeId, scope, entryId);
+    setRule({
+      ...(existing ?? makeEmptyRule(typeId, scope, entryId)),
+      ...patch,
+      discountTypeId: typeId,
+      scope,
+      entryId: scope === 'itemized' ? entryId : WHOLE_DISCOUNT_ENTRY.id,
+    });
+  };
+
+  const toggleRulesForType = (typeId: string, checked: boolean) => {
+    if (typeId === 'contract-base' && checked) {
+      const hasItemizedEnabled = ITEMIZED_DISCOUNT_ENTRIES.some((entry) => {
+        const rule = typeRule('contract-base', 'itemized', entry.id);
+        return rule?.enabled === true;
+      });
+      if (hasItemizedEnabled) return;
+    }
+
+    setTypes((current) => current.map((item) => (item.id === typeId ? { ...item, active: checked } : item)));
+
+    setRules((current) => {
+      if (checked) {
+        const next = current.slice();
+        const existingWholeRule = next.find((item) => item.discountTypeId === typeId && item.scope === 'whole');
+        if (existingWholeRule) {
+          return next.map((item) => (item.id === existingWholeRule.id ? { ...item, enabled: true } : item));
+        }
+        next.push(makeEmptyRule(typeId));
+        return next;
+      }
+
+      return current.map((item) => (item.discountTypeId === typeId ? { ...item, enabled: false } : item));
+    });
+  };
+
+  const toggleItemizedRule = (entryId: string, checked: boolean) => {
+    if (checked && contractBaseActive) {
       return;
     }
 
-    const expandedTypeStillActive = types.some((item) => item.id === expandedDiscountTypeId && item.active);
-    if (!expandedTypeStillActive) {
-      setExpandedDiscountTypeId(types.find((item) => item.active)?.id ?? '');
+    setRules((current) => {
+      const existing = current.find((item) => item.discountTypeId === 'contract-base' && item.scope === 'itemized' && item.entryId === entryId);
+      let next = current;
+
+      if (checked) {
+        if (existing) {
+          next = current.map((item) => (item.id === existing.id ? { ...item, enabled: true } : item));
+        } else {
+          next = [...current, makeEmptyRule('contract-base', 'itemized', entryId)];
+        }
+      } else if (existing) {
+        next = current.map((item) => (item.id === existing.id ? { ...item, enabled: false } : item));
+      }
+
+      const anyEnabled = next.some((item) => item.discountTypeId === 'contract-base' && item.enabled === true);
+      setTypes((typesCurrent) => typesCurrent.map((item) => (item.id === 'contract-base' ? { ...item, active: anyEnabled } : item)));
+      return next;
+    });
+  };
+
+  const openActivationDialog = (
+    kind: ToggleDialogKind,
+    typeId: string,
+    title: string,
+    description: string,
+    entryId?: string,
+    confirmable = true,
+  ) => {
+    setActivationDialog({ kind, typeId, entryId, title, description, confirmable });
+  };
+
+  const confirmActivationDialog = () => {
+    if (!activationDialog) return;
+    if (!activationDialog.confirmable) {
+      setActivationDialog(null);
+      return;
     }
-  }, [expandedDiscountTypeId, types]);
+
+    if (activationDialog.kind === 'contract-base' || activationDialog.kind === 'early-payment') {
+      toggleRulesForType(activationDialog.typeId, true);
+    } else if (activationDialog.entryId) {
+      toggleItemizedRule(activationDialog.entryId, true);
+    }
+
+    setActivationDialog(null);
+  };
+
+  const closeActivationDialog = () => setActivationDialog(null);
+
+  const applySettingsFromBusiness = async () => {
+    if (importBusy || !draftId) return;
+    setImportBusy(true);
+    setImportError('');
+    try {
+      const bootstrap = await fetchContractFlowBootstrapSettings();
+      const nextPayload = normalizeDiscountsPayload(buildBootstrapDiscountsPayload(bootstrap.rules.discount ?? null));
+      setTypes(nextPayload.types);
+      setRules(nextPayload.rules);
+      setFrontendStepDraft(draftId, 'discounts', nextPayload);
+      initialSnapshotRef.current = serializePayload(nextPayload);
+      setDirty(false);
+      dispatchContractFlowDirty(stepId as ContractFlowSectionId, false);
+      dispatchContractFlowSavedForDraft(draftId, stepId as ContractFlowSectionId, Date.now(), nextPayload);
+      setImportDialogOpen(false);
+    } catch (error) {
+      setImportError(error instanceof Error ? error.message : 'دریافت تنظیمات تخفیف انجام نشد.');
+    } finally {
+      setImportBusy(false);
+    }
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -267,9 +669,10 @@ export function DiscountsStep({ stepId, title, embedded = false }: { stepId: str
       setDraftId(nextDraftId);
 
       try {
+        const bootstrap = getContractFlowBootstrapSettings();
         const frontendDraft = getFrontendStepDraft<ContractDiscountsData>(nextDraftId, 'discounts');
         if (!mounted) return;
-        const nextPayload = normalizeDiscountsPayload(frontendDraft);
+        const nextPayload = normalizeDiscountsPayload(frontendDraft ?? buildBootstrapDiscountsPayload(bootstrap?.rules.discount ?? null));
         setTypes(nextPayload.types);
         setRules(nextPayload.rules);
         initialSnapshotRef.current = serializePayload(nextPayload);
@@ -301,82 +704,17 @@ export function DiscountsStep({ stepId, title, embedded = false }: { stepId: str
     }
   }, [dirty, draftId, loading, payload, stepId]);
 
-  const loadRuleFormForType = (discountTypeId: string, rule?: DiscountRuleData) => {
-    setActiveDiscountTypeId(discountTypeId);
-    setEditingRuleId(rule?.id ?? null);
-    setRuleForm(rule ? normalizeRule(rule) : makeEmptyRule(discountTypeId));
-    setDialogError('');
-  };
-
-  const validateRuleForm = (rule: DiscountRuleData) => {
-    const minValue = Number(rule.minValue.replace(/,/g, '')) || 0;
-    const maxValue = Number(rule.maxValue.replace(/,/g, '')) || 0;
-    const threshold = Number(rule.approvalThreshold.replace(/,/g, '')) || 0;
-
-    if (!(maxValue > 0)) {
-      return 'حداکثر مقدار تخفیف را وارد کنید.';
-    }
-
-    if (minValue > maxValue) {
-      return 'حداقل تخفیف نمی‌تواند بیشتر از حداکثر تخفیف باشد.';
-    }
-
-    if (rule.managerApproval && !(threshold > 0)) {
-      return 'آستانه تایید مدیر را وارد کنید.';
-    }
-
-    if (rule.conditionConfigured) {
-      const maxDelayCountRaw = String(rule.conditionMaxDelayCount ?? '').trim();
-      const graceDaysRaw = String(rule.conditionGraceDays ?? '').trim();
-      const maxDelayCount = Number(maxDelayCountRaw.replace(/,/g, ''));
-      const graceDays = Number(graceDaysRaw.replace(/,/g, ''));
-      if (!maxDelayCountRaw || !Number.isFinite(maxDelayCount) || maxDelayCount < 0) {
-        return 'حداکثر تعداد دفعات تاخیر را وارد کنید.';
-      }
-      if (!graceDaysRaw || !Number.isFinite(graceDays) || graceDays < 0) {
-        return 'مهلت تنفس شرط تخفیف را وارد کنید.';
-      }
-      if (!Array.isArray(rule.conditionDueBasis) || rule.conditionDueBasis.length === 0) {
-        return 'حداقل یک سررسید متاثر از شرط تخفیف را انتخاب کنید.';
-      }
-      if (!String(rule.conditionSettlementTiming ?? '').trim()) {
-        return 'زمان تسویه تخفیف را انتخاب کنید.';
-      }
-    }
-
-    return '';
-  };
-
-  const submitRule = () => {
-    const error = validateRuleForm(ruleForm);
-    if (error) {
-      setDialogError(error);
-      return;
-    }
-
-    setRules((current) => {
-      if (editingRuleId) {
-        return current.map((item) => (item.id === editingRuleId ? normalizeRule(ruleForm) : item));
-      }
-
-      return [...current, normalizeRule(ruleForm)];
-    });
-    setDialogError('');
-  };
-
   const handleSubmit = async () => {
     if (!draftId) return;
 
     const result = validateDiscountsStep(payload);
     if (!result.valid) {
-      setShowValidation(true);
       setFormError(buildValidationSummary(result.errors, {}, 'اطلاعات تخفیف‌ها کامل نیست.'));
       return;
     }
 
     setSaving(true);
     setFormError('');
-    setShowValidation(false);
 
     try {
       setFrontendStepDraft(draftId, 'discounts', payload);
@@ -395,311 +733,284 @@ export function DiscountsStep({ stepId, title, embedded = false }: { stepId: str
     return <ContractStepLoader title={title} description="در حال بارگذاری اطلاعات تخفیف‌های قرارداد..." />;
   }
 
+  const contractBaseWholeRule = typeRule('contract-base', 'whole');
+  const earlyPaymentRule = typeRule('early-payment', 'whole');
+  const contractBaseActive = Boolean(contractBaseWholeRule && contractBaseWholeRule.enabled === true);
+  const earlyPaymentActive = Boolean(types.find((item) => item.id === 'early-payment')?.active);
+  const itemizedEnabledCount = ITEMIZED_DISCOUNT_ENTRIES.filter((entry) => {
+    const rule = typeRule('contract-base', 'itemized', entry.id);
+    return rule?.enabled === true;
+  }).length;
+  const hasAnyActiveDiscount = contractBaseActive || earlyPaymentActive || itemizedEnabledCount > 0;
+  const activationDialogContent =
+    activationDialog && !activationDialog.confirmable
+      ? {
+          title: activationDialog.title,
+          description: activationDialog.description,
+          confirmLabel: 'متوجه شدم',
+        }
+      : activationDialog?.kind === 'contract-base'
+      ? {
+          title: activationDialog.title,
+          description: activationDialog.description,
+          confirmLabel: 'فعال‌سازی اصل قرارداد',
+        }
+      : activationDialog?.kind === 'early-payment'
+        ? {
+            title: activationDialog.title,
+            description: activationDialog.description,
+            confirmLabel: 'فعال‌سازی مشوق پرداخت',
+          }
+        : activationDialog?.kind === 'itemized'
+          ? {
+              title: activationDialog.title,
+              description: activationDialog.description,
+              confirmLabel: 'فعال‌سازی موردی',
+            }
+          : null;
   return (
     <div className="space-y-5">
       {!embedded ? (
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">{title}</h1>
-            <p className="mt-1 text-gray-500">ابتدا نوع‌های تخفیف را فعال کنید و برای هر نوع فعال، حداقل یک سناریوی تخفیف ثبت کنید.</p>
+          <div className="text-right">
+            <h1 className="text-2xl font-bold text-[color:var(--text-strong)]">{title}</h1>
+            <p className="mt-1 text-sm leading-7 text-[color:var(--text-muted)]">
+              تنظیمات تخفیف روی اصل قرارداد، مشوق پرداخت و تخفیف‌های موردی را جداگانه فعال کنید.
+            </p>
           </div>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setImportDialogOpen(true)}
+              className="rounded-[8px] border border-cyan-200 bg-cyan-50 px-3.5 py-2 text-sm font-bold text-cyan-700 transition-colors hover:bg-cyan-100"
+            >
+              دریافت از تنظیمات
+            </button>
+            <button
+              type="button"
+              onClick={() => router.push(basePath)}
+              className="rounded-[8px] border border-gray-300 px-3.5 py-2 text-sm text-gray-600 transition-colors hover:bg-gray-50"
+            >
+              بازگشت به مراحل
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      {embedded ? (
+        <div className="flex justify-end">
           <button
             type="button"
-            onClick={() => router.push(basePath)}
-            className="rounded-md border border-gray-300 px-3.5 py-2 text-sm text-gray-600 transition-colors hover:bg-gray-50"
+            onClick={() => setImportDialogOpen(true)}
+            className="rounded-[8px] border border-cyan-200 bg-cyan-50 px-3.5 py-2 text-sm font-bold text-cyan-700 transition-colors hover:bg-cyan-100"
           >
-            بازگشت به مراحل
+            دریافت از تنظیمات
           </button>
         </div>
       ) : null}
 
-      <div className="rounded-xl border border-slate-200 bg-white">
-        <div className="border-b border-slate-100 px-5 py-4">
-          <p className="text-[13px] font-semibold uppercase tracking-widest text-slate-400">تعریف سناریوهای تخفیف</p>
-          <p className="mt-0.5 text-[13px] text-slate-500">نوع تخفیف را فعال کنید، سپس برای همان نوع یک یا چند rule ثبت کنید.</p>
-        </div>
+      <div className="space-y-4">
+        <SectionShell
+          title="تخفیف روی اصل قرارداد"
+          description="این بخش برای تنظیم تخفیف اصلی قرارداد استفاده می‌شود."
+          active={contractBaseActive}
+          summary={contractBaseWholeRule && contractBaseWholeRule.enabled === true ? formatRuleSummary(contractBaseWholeRule) : undefined}
+          toggleDisabled={itemizedEnabledCount > 0 && !contractBaseActive}
+          onToggle={(checked) => {
+            if (checked) {
+              toggleRulesForType('contract-base', true);
+              return;
+            }
 
-        <div className="space-y-6 p-5">
-          <section className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h2 className="text-sm font-bold text-slate-700">فهرست انواع تخفیف</h2>
-              <span className="text-xs text-slate-400">{activeTypes.length} مورد فعال</span>
+            toggleRulesForType('contract-base', false);
+          }}
+          onInactiveToggle={() =>
+            hasAnyActiveDiscount
+              ? openActivationDialog(
+                  'contract-base',
+                  'contract-base',
+                  'فعال‌سازی تخفیف روی اصل قرارداد',
+                  'با فعال کردن این بخش، تخفیف‌های موردی دیگر قابل فعال‌سازی نخواهند بود. ادامه می‌دهید؟',
+                  undefined,
+                  true,
+                )
+              : toggleRulesForType('contract-base', true)
+          }
+          onDisabledToggle={() =>
+            openActivationDialog(
+              'contract-base',
+              'contract-base',
+              'فعال‌سازی تخفیف روی اصل قرارداد',
+              'برای فعال‌سازی تخفیف روی اصل قرارداد، ابتدا همه تخفیف‌های موردی فعال را غیرفعال کنید.',
+              undefined,
+              false,
+            )
+          }
+        >
+          {contractBaseActive ? (
+            <div className="space-y-5">
+              <RuleEditor
+                typeId="contract-base"
+                rule={contractBaseWholeRule ?? makeEmptyRule('contract-base')}
+                title="تنظیمات تخفیف اصل قرارداد"
+                entryLabel={WHOLE_DISCOUNT_ENTRY.title}
+                onChange={(patch) => patchRule('contract-base', 'whole', WHOLE_DISCOUNT_ENTRY.id, patch)}
+              />
+              {itemizedEnabledCount > 0 ? (
+                <div className="rounded-[8px] border border-amber-200 bg-amber-50 px-4 py-3 text-right text-sm text-amber-800">
+                  چون تخفیف‌های موردی فعال هستند، نمی‌توانید تخفیف روی اصل قرارداد را هم‌زمان فعال کنید.
+                </div>
+              ) : null}
+              <div className="rounded-[8px] border border-amber-200 bg-amber-50 px-4 py-3 text-right text-sm text-amber-800">
+                تا زمانی که تخفیف روی اصل قرارداد فعال است، تخفیف‌های موردی قابل فعال‌سازی نیستند.
+              </div>
             </div>
+          ) : null}
+        </SectionShell>
+        {itemizedEnabledCount > 0 && !contractBaseActive ? (
+          <div className="rounded-[8px] border border-amber-200 bg-amber-50 px-4 py-3 text-right text-sm text-amber-800">
+            چون تخفیف‌های موردی فعال هستند، تخفیف روی اصل قرارداد را نمی‌توانید فعال کنید.
+          </div>
+        ) : null}
 
-            <div className="space-y-3">
-              {types.map((type) => {
-                const typeRules = rules.filter((rule) => rule.discountTypeId === type.id);
-                const isExpanded = type.active && expandedDiscountTypeId === type.id;
-
-                return (
-                  <div
-                    key={type.id}
-                    className={`overflow-hidden rounded-2xl border transition ${
-                      type.active ? 'border-cyan-200 bg-cyan-50/40' : 'border-slate-200 bg-white'
-                    }`}
-                  >
-                    <div className="p-4">
-                      <div className="flex items-start justify-between gap-4">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (!type.active) return;
-                            setExpandedDiscountTypeId((current) => {
-                              const next = current === type.id ? '' : type.id;
-                              if (next) loadRuleFormForType(next);
-                              return next;
-                            });
-                          }}
-                          className="flex min-w-0 flex-1 flex-col gap-3 text-right sm:flex-row-reverse sm:items-center sm:gap-4"
-                        >
-                          <div className="min-w-0 flex-1 space-y-1">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <h3 className="text-sm font-bold text-slate-800">{type.title}</h3>
-                              {type.active ? (
-                                <span className="rounded-full border border-cyan-200 bg-white px-2 py-0.5 text-[11px] font-medium text-cyan-700">
-                                  {typeRules.length} تخفیف
-                                </span>
-                              ) : (
-                                <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-medium text-slate-500">
-                                  غیرفعال
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-sm text-slate-500">{type.description}</p>
-                          </div>
-                          <ChevronLeft
-                            className={`h-5 w-5 shrink-0 text-slate-400 transition ${isExpanded ? '-rotate-90' : ''}`}
-                            aria-hidden
-                          />
-                        </button>
-
-                        <div className="flex items-center gap-3">
-                          <ToggleSwitch
-                            checked={type.active}
-                            onChange={(checked) => {
-                              setTypes((current) => current.map((item) => (item.id === type.id ? { ...item, active: checked } : item)));
-                              if (checked) {
-                                setExpandedDiscountTypeId(type.id);
-                                loadRuleFormForType(type.id);
-                              } else if (expandedDiscountTypeId === type.id) {
-                                setExpandedDiscountTypeId('');
-                              }
-                            }}
-                          />
+        <div className="space-y-4">
+          <div className="space-y-4">
+            {ITEMIZED_DISCOUNT_ENTRIES.map((entry) => {
+              const entryRule = typeRule('contract-base', 'itemized', entry.id);
+              const isEnabled = Boolean(entryRule && entryRule.enabled === true);
+              return (
+                <section
+                  key={entry.id}
+                  className={`overflow-hidden rounded-[8px] border ${isEnabled ? 'border-cyan-200 bg-cyan-50/35' : 'border-slate-200 bg-white'}`}
+                >
+                  <div className="space-y-4 p-5 sm:p-6">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="min-w-0 flex-1 space-y-1 text-right">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="text-base font-bold text-slate-800">{entry.title}</h3>
+                          <span className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${isEnabled ? 'border-cyan-200 bg-white text-cyan-700' : 'border-slate-200 bg-slate-50 text-slate-500'}`}>
+                            {isEnabled ? 'فعال' : 'غیرفعال'}
+                          </span>
                         </div>
+                        <p className="text-sm text-slate-500">{entry.description}</p>
                       </div>
+
+                      <Toggle
+                        checked={isEnabled}
+                        disabled={contractBaseActive && !isEnabled}
+                        onInactiveClick={
+                          !isEnabled
+                            ? () => {
+                                if (!hasAnyActiveDiscount) {
+                                  toggleItemizedRule(entry.id, true);
+                                  return;
+                                }
+
+                                openActivationDialog(
+                                  'itemized',
+                                  'contract-base',
+                                  `فعال‌سازی ${entry.title}`,
+                                  'با فعال کردن این تخفیف موردی، تخفیف روی اصل قرارداد غیرفعال می‌شود. ادامه می‌دهید؟',
+                                  entry.id,
+                                  true,
+                                );
+                              }
+                            : undefined
+                        }
+                        onDisabledClick={
+                          contractBaseActive && !isEnabled
+                            ? () =>
+                                openActivationDialog(
+                                  'itemized',
+                                  'contract-base',
+                                  `فعال‌سازی ${entry.title}`,
+                                  'برای فعال کردن این تخفیف موردی، ابتدا تخفیف روی اصل قرارداد را غیرفعال کنید.',
+                                  entry.id,
+                                  false,
+                                )
+                            : () =>
+                                openActivationDialog(
+                                  'itemized',
+                                  'contract-base',
+                                  `فعال‌سازی ${entry.title}`,
+                                  'با فعال کردن این تخفیف موردی، تخفیف روی اصل قرارداد غیرفعال می‌شود. ادامه می‌دهید؟',
+                                  entry.id,
+                                )
+                        }
+                        onChange={(checked) => toggleItemizedRule(entry.id, checked)}
+                      />
                     </div>
 
-                    {isExpanded ? (
-                      <div className="border-t border-cyan-100 bg-white/80 p-4">
-                        <div className="space-y-4">
-                          <div className="flex flex-wrap items-center justify-between gap-3">
-                            <div className="text-xs font-semibold text-slate-500">سناریوهای ثبت‌شده: {typeRules.length}</div>
-                            <button
-                              type="button"
-                              onClick={() => loadRuleFormForType(type.id)}
-                              className="inline-flex h-8 items-center gap-2 rounded-lg border border-[#14a7ad] bg-white/65 px-3 text-xs font-bold text-[#0e989d] transition hover:bg-[#dff4f3]"
-                            >
-                              <Plus className="h-4 w-4" />
-                              سناریوی جدید
-                            </button>
-                          </div>
-
-                          {typeRules.length ? (
-                            <div className="flex flex-wrap gap-2">
-                              {typeRules.map((rule, index) => (
-                                <button
-                                  key={rule.id}
-                                  type="button"
-                                  onClick={() => loadRuleFormForType(type.id, rule)}
-                                  className={`rounded-full border px-3 py-1 text-xs font-bold transition ${
-                                    editingRuleId === rule.id
-                                      ? 'border-cyan-300 bg-cyan-50 text-cyan-800'
-                                      : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
-                                  }`}
-                                >
-                                  تخفیف {index + 1}
-                                </button>
-                              ))}
-                            </div>
-                          ) : (
-                            <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-5 text-center text-sm text-slate-500">
-                              هنوز تخفیفی برای این نوع ثبت نشده است.
-                            </div>
-                          )}
-
-                          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                            <div className="grid gap-4">
-                              <section className="space-y-3">
-                                <FieldBlock label="دامنه اعمال تخفیف">
-                                  <TagPills
-                                    options={SCOPE_OPTIONS}
-                                    value={ruleForm.scope}
-                                    onChange={(value) =>
-                                      setRuleForm((current) => ({
-                                        ...current,
-                                        discountTypeId: type.id,
-                                        scope: value,
-                                        entryId: value === 'whole' ? WHOLE_DISCOUNT_ENTRY.id : ITEMIZED_DISCOUNT_ENTRIES[0]?.id ?? '',
-                                      }))
-                                    }
-                                  />
-                                </FieldBlock>
-                              </section>
-
-                              {ruleForm.scope === 'itemized' ? (
-                                <FieldBlock label="موضوع تخفیف موردی">
-                                  <TagPills
-                                    options={ITEMIZED_ENTRY_OPTIONS}
-                                    value={ruleForm.entryId}
-                                    onChange={(value) => setRuleForm((current) => ({ ...current, entryId: value, discountTypeId: type.id }))}
-                                  />
-                                </FieldBlock>
-                              ) : null}
-
-                              <FieldBlock label="نوع مقدار تخفیف">
-                                <TagPills
-                                  options={VALUE_MODE_OPTIONS}
-                                  value={ruleForm.valueMode}
-                                  onChange={(value) => setRuleForm((current) => ({ ...current, valueMode: value, discountTypeId: type.id }))}
-                                />
-                              </FieldBlock>
-
-                              <div className="grid gap-4 md:grid-cols-2">
-                                <FieldBlock
-                                  label={ruleForm.valueMode === 'percent' ? 'حداقل درصد تخفیف' : 'حداقل مبلغ تخفیف'}
-                                  hint="در صورت نیاز می‌توانید حداقل را خالی بگذارید یا صفر ثبت کنید."
-                                >
-                                  <Input
-                                    value={ruleForm.minValue}
-                                    onChange={(event) =>
-                                      setRuleForm((current) => ({
-                                        ...current,
-                                        discountTypeId: type.id,
-                                        minValue: current.valueMode === 'amount' ? formatInput(event.target.value) : event.target.value,
-                                      }))
-                                    }
-                                    placeholder={ruleForm.valueMode === 'amount' ? 'مثال: 100,000' : 'مثال: 5'}
-                                  />
-                                </FieldBlock>
-                                <FieldBlock
-                                  label={ruleForm.valueMode === 'percent' ? 'حداکثر درصد تخفیف' : 'حداکثر مبلغ تخفیف'}
-                                  hint="این مقدار برای اعتبار rule الزامی است."
-                                >
-                                  <Input
-                                    value={ruleForm.maxValue}
-                                    onChange={(event) =>
-                                      setRuleForm((current) => ({
-                                        ...current,
-                                        discountTypeId: type.id,
-                                        maxValue: current.valueMode === 'amount' ? formatInput(event.target.value) : event.target.value,
-                                      }))
-                                    }
-                                    placeholder={ruleForm.valueMode === 'amount' ? 'مثال: 250,000' : 'مثال: 12'}
-                                  />
-                                </FieldBlock>
-                              </div>
-
-                              <FieldBlock label="شرط تخفیف" hint="مثلا پرداخت زودتر از موعد، خوش‌حسابی، یا تایید واحد مالی.">
-                                <textarea
-                                  value={ruleForm.conditionNote}
-                                  onChange={(event) => setRuleForm((current) => ({ ...current, discountTypeId: type.id, conditionNote: event.target.value }))}
-                                  rows={4}
-                                  className="w-full rounded-2xl border border-slate-200 px-3.5 py-3 text-sm text-slate-800 outline-none transition-all focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10"
-                                  placeholder="شرط اعمال این تخفیف را بنویسید."
-                                />
-                              </FieldBlock>
-
-                              <DiscountConditionPanel
-                                compact
-                                values={getConditionValues(ruleForm)}
-                                onChange={(patch) =>
-                                  setRuleForm((current) => {
-                                    const nextCondition = { ...getConditionValues(current), ...patch };
-                                    return {
-                                      ...current,
-                                      discountTypeId: type.id,
-                                      conditionConfigured: true,
-                                      conditionMaxDelayCount: nextCondition.maxDelayCount,
-                                      conditionGraceDays: nextCondition.graceDays,
-                                      conditionDueBasis: nextCondition.dueBasis,
-                                      conditionKeepOnDelay: nextCondition.keepOnDelay,
-                                      conditionPenaltyOnDiscount: nextCondition.penaltyOnDiscount,
-                                      conditionSettlementTiming: nextCondition.settlementTiming,
-                                      conditionNote: describeCondition(nextCondition),
-                                    };
-                                  })
-                                }
-                              />
-
-                              <div className="space-y-4 rounded-2xl border border-cyan-100 bg-cyan-50 p-4">
-                                <div className="flex items-center justify-between gap-4">
-                                  <div>
-                                    <h4 className="text-sm font-bold text-slate-800">تایید مدیر برای تخفیف‌های بزرگ</h4>
-                                    <p className="mt-1 text-xs text-slate-500">در صورت نیاز، برای این rule آستانه تایید مدیریتی تعریف کنید.</p>
-                                  </div>
-                                  <ToggleSwitch
-                                    checked={ruleForm.managerApproval}
-                                    onChange={(checked) => setRuleForm((current) => ({ ...current, discountTypeId: type.id, managerApproval: checked }))}
-                                  />
-                                </div>
-
-                                {ruleForm.managerApproval ? (
-                                  <FieldBlock label="آستانه تایید مدیر">
-                                    <Input
-                                      value={ruleForm.approvalThreshold}
-                                      onChange={(event) =>
-                                        setRuleForm((current) => ({
-                                          ...current,
-                                          discountTypeId: type.id,
-                                          approvalThreshold: current.valueMode === 'amount' ? formatInput(event.target.value) : event.target.value,
-                                        }))
-                                      }
-                                      placeholder={ruleForm.valueMode === 'amount' ? 'مثال: 500,000' : 'مثال: 15'}
-                                    />
-                                  </FieldBlock>
-                                ) : null}
-                              </div>
-
-                              {dialogError ? (
-                                <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{dialogError}</div>
-                              ) : null}
-
-                              <div className="flex flex-wrap justify-end gap-2">
-                                {editingRuleId ? (
-                                  <button
-                                    type="button"
-                                    onClick={() => setRules((current) => current.filter((item) => item.id !== editingRuleId))}
-                                    className="rounded-lg border border-rose-200 px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50"
-                                  >
-                                    حذف سناریو
-                                  </button>
-                                ) : null}
-                                <button
-                                  type="button"
-                                  onClick={() => submitRule()}
-                                  className="inline-flex items-center gap-2 rounded-lg bg-teal-700 px-4 py-2 text-xs font-bold text-white hover:bg-teal-800"
-                                >
-                                  <Save className="h-4 w-4" />
-                                  ذخیره سناریو
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
+                    {isEnabled ? (
+                      <RuleEditor
+                        typeId="contract-base"
+                        rule={entryRule ?? makeEmptyRule('contract-base', 'itemized', entry.id)}
+                        title="تنظیمات این تخفیف موردی"
+                        entryLabel={entry.title}
+                        onChange={(patch) => patchRule('contract-base', 'itemized', entry.id, patch)}
+                      />
+                    ) : contractBaseActive ? (
+                      <div className="rounded-[8px] border border-amber-200 bg-amber-50 px-4 py-3 text-right text-sm text-amber-800">
+                        برای فعال‌سازی این مورد، ابتدا تخفیف روی اصل قرارداد را غیرفعال کنید.
                       </div>
                     ) : null}
                   </div>
-                );
-              })}
-            </div>
-          </section>
-
-          {formError ? (
-            <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{formError}</div>
-          ) : null}
+                </section>
+              );
+            })}
+          </div>
         </div>
+
+        <SectionShell
+          title="تخفیف مشوق پرداخت"
+          description="این بخش برای تخفیف‌های پرداخت زودتر از موعد به‌صورت جداگانه مدیریت می‌شود."
+          active={earlyPaymentActive}
+          summary={earlyPaymentRule && earlyPaymentRule.enabled === true ? formatRuleSummary(earlyPaymentRule) : undefined}
+          onToggle={(checked) => {
+            if (checked) {
+              toggleRulesForType('early-payment', true);
+              return;
+            }
+
+            toggleRulesForType('early-payment', false);
+          }}
+          onInactiveToggle={() =>
+            hasAnyActiveDiscount
+              ? openActivationDialog(
+                  'early-payment',
+                  'early-payment',
+                  'فعال‌سازی تخفیف مشوق پرداخت',
+                  'با فعال کردن این بخش، تنظیمات تخفیف مشوق پرداخت برای این قرارداد قابل ثبت خواهد شد. ادامه می‌دهید؟',
+                  undefined,
+                  true,
+                )
+              : toggleRulesForType('early-payment', true)
+          }
+        >
+          {earlyPaymentActive ? (
+            <RuleEditor
+              typeId="early-payment"
+              rule={earlyPaymentRule ?? makeEmptyRule('early-payment')}
+              title="تنظیمات تخفیف مشوق پرداخت"
+              entryLabel={WHOLE_DISCOUNT_ENTRY.title}
+              onChange={(patch) => patchRule('early-payment', 'whole', WHOLE_DISCOUNT_ENTRY.id, patch)}
+            />
+          ) : null}
+        </SectionShell>
       </div>
+
+      {formError ? (
+        <div className="rounded-[8px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{formError}</div>
+      ) : null}
+
+      <ActivationDialog
+        open={Boolean(activationDialogContent)}
+        title={activationDialogContent?.title ?? ''}
+        description={activationDialogContent?.description ?? ''}
+        confirmLabel={activationDialogContent?.confirmLabel}
+        onClose={closeActivationDialog}
+        onConfirm={confirmActivationDialog}
+      />
 
       <StickySubmitBar
         label="ثبت تخفیف‌ها"
@@ -709,6 +1020,18 @@ export function DiscountsStep({ stepId, title, embedded = false }: { stepId: str
         embedded={embedded}
         submitId={stepId}
       />
+
+      <ContractSettingsImportDialog
+        open={importDialogOpen}
+        loading={importBusy}
+        error={importError}
+        title="دریافت تنظیمات تخفیف"
+        description="اگر تایید کنید، تنظیمات ثبت‌شده در بخش تخفیف به‌عنوان مقدار اولیه این پیش‌نویس اعمال می‌شود."
+        onConfirm={() => void applySettingsFromBusiness()}
+        onClose={() => setImportDialogOpen(false)}
+      />
     </div>
   );
 }
+
+

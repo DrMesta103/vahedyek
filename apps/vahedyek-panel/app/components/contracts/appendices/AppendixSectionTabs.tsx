@@ -21,7 +21,7 @@ export function AppendixSectionTabs({
           key={tag}
           type="button"
           onClick={() => onChange(tag)}
-          className={`rounded-2xl border px-4 py-3 text-[13px] font-black transition ${
+          className={`rounded-[8px] border px-4 py-3 text-[13px] font-black transition ${
             activeTag === tag
               ? 'border-cyan-300 bg-cyan-50 text-cyan-900 shadow-[0_0_0_1px_rgba(34,211,238,0.14)]'
               : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
@@ -33,3 +33,4 @@ export function AppendixSectionTabs({
     </div>
   );
 }
+

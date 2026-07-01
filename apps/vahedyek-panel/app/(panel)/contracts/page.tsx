@@ -49,8 +49,8 @@ export default function ContractsPage() {
           ...data.directory.buyer.legal.map((item) => ({ ...item, personType: 'legal' as const })),
         ]);
       } catch (e) {
-        const message = e instanceof Error ? e.message : 'خطا در دریافت اطلاعات.';
-        if (message.includes('باید وارد شوید')) {
+        const message = e instanceof Error ? e.message : '??? ?? ?????? ???????.';
+        if (message.includes('???? ???? ????')) {
           router.push(`/login?next=${encodeURIComponent('/contracts')}`);
           return;
         }
@@ -70,11 +70,11 @@ export default function ContractsPage() {
   return (
     <PanelLayout>
       {loading ? (
-        <div className="rounded-xl border border-gray-200 bg-white p-10 text-center text-sm text-gray-500">
-          در حال دریافت اطلاعات قراردادها...
+        <div className="rounded-[8px] border border-gray-200 bg-white p-10 text-center text-sm text-gray-500">
+          ?? ??? ?????? ??????? ?????????...
         </div>
       ) : error ? (
-        <div className="rounded-xl border border-rose-200 bg-rose-50 p-10 text-center text-sm text-rose-700">
+        <div className="rounded-[8px] border border-rose-200 bg-rose-50 p-10 text-center text-sm text-rose-700">
           {error}
         </div>
       ) : (
@@ -83,3 +83,4 @@ export default function ContractsPage() {
     </PanelLayout>
   );
 }
+

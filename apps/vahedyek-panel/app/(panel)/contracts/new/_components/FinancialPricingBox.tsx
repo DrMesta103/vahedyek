@@ -36,11 +36,11 @@ function PricingInput({
           placeholder={placeholder}
           inputMode="numeric"
           aria-invalid={invalid || undefined}
-          className={`h-10 rounded-lg bg-white/80 pr-3 pl-14 text-left text-[13px] font-semibold text-[#4e545c] ${
+          className={`h-10 rounded-[8px] bg-white/80 pr-3 pl-14 text-left text-[13px] font-semibold text-[#4e545c] ${
             invalid ? 'border-rose-300 ring-4 ring-rose-500/10' : 'border-[#cfd4db]'
           }`}
         />
-        <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-xs font-semibold text-[#8b9096]">تومان</span>
+        <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-xs font-semibold text-[#8b9096]">ریال</span>
       </div>
       {words ? <div className="mt-1.5 text-[11px] font-bold leading-5 text-[#18a9c3]">{words}</div> : null}
     </div>
@@ -169,32 +169,32 @@ export function FinancialPricingBox({
   if (config.includeParkingInBase && config.includeStorageInBase) {
     meteredRows.push({
       key: 'base',
-      title: 'هر مترمربع واحد، انباری و پارکینگ',
-      description: 'در این حالت کل اجزای قابل فروش با یک نرخ متری مشترک قیمت‌گذاری می‌شوند.',
-      inputLabel: 'مبلغ هر مترمربع کل زیربنای قابل فروش',
+      title: 'واحد، پارکینگ و انبار',
+      description: 'مبنای محاسبه شامل هر سه بخش واحد، پارکینگ و انبار است.',
+      inputLabel: 'قیمت هر متر برای کل پایه',
       value: pricePerMeter,
       onChange: onPricePerMeterChange,
       placeholder: 'مثال: 450,000',
       invalid: pricePerMeterInvalid,
-      areaLabel: 'متراژ تجمیعی',
+      areaLabel: 'متراژ کل',
       areaValue: totalArea,
     });
     fixedRows.push({
       key: 'base',
-      title: 'مبلغ کلی واحد، انباری و پارکینگ',
-      description: 'در این حالت کل اجزای قابل فروش با یک مبلغ ثابت مشترک ثبت می‌شوند.',
-      inputLabel: 'مبلغ کلی کل اجزای قابل فروش',
+      title: 'مبلغ ثابت واحد، پارکینگ و انبار',
+      description: 'مبلغ ثابت به کل پایه قرارداد اعمال می‌شود.',
+      inputLabel: 'مبلغ ثابت برای کل پایه',
       value: fixedTotalAmount,
       onChange: onFixedTotalAmountChange,
-      placeholder: 'مبلغ کل را وارد کنید',
+      placeholder: 'مثال: 1,000,000,000',
       invalid: fixedTotalAmountInvalid,
     });
   } else if (config.includeParkingInBase) {
     meteredRows.push({
       key: 'base',
-      title: 'هر مترمربع واحد و پارکینگ',
-      description: 'واحد و پارکینگ با یک نرخ متری مشترک قیمت‌گذاری می‌شوند و انباری جداگانه قیمت می‌گیرد.',
-      inputLabel: 'مبلغ هر مترمربع واحد و پارکینگ',
+      title: 'واحد و پارکینگ',
+      description: 'واحد و پارکینگ در پایه محاسبه قرار می‌گیرند و انبار جداگانه است.',
+      inputLabel: 'قیمت هر متر برای واحد و پارکینگ',
       value: pricePerMeter,
       onChange: onPricePerMeterChange,
       placeholder: 'مثال: 450,000',
@@ -204,43 +204,43 @@ export function FinancialPricingBox({
     });
     fixedRows.push({
       key: 'base',
-      title: 'مبلغ کلی واحد و پارکینگ',
-      description: 'واحد و پارکینگ با یک مبلغ ثابت مشترک ثبت می‌شوند و انباری جداگانه مبلغ می‌گیرد.',
-      inputLabel: 'مبلغ کلی واحد و پارکینگ',
+      title: 'مبلغ ثابت واحد و پارکینگ',
+      description: 'مبلغ ثابت به واحد و پارکینگ اعمال می‌شود و انبار جداگانه است.',
+      inputLabel: 'مبلغ ثابت واحد و پارکینگ',
       value: fixedTotalAmount,
       onChange: onFixedTotalAmountChange,
-      placeholder: 'مبلغ واحد و پارکینگ را وارد کنید',
+      placeholder: 'مثال: 1,000,000,000',
       invalid: fixedTotalAmountInvalid,
     });
   } else if (config.includeStorageInBase) {
     meteredRows.push({
       key: 'base',
-      title: 'هر مترمربع واحد و انباری',
-      description: 'واحد و انباری با یک نرخ متری مشترک قیمت‌گذاری می‌شوند و پارکینگ جداگانه قیمت می‌گیرد.',
-      inputLabel: 'مبلغ هر مترمربع واحد و انباری',
+      title: 'واحد و انبار',
+      description: 'واحد و انبار در پایه محاسبه قرار می‌گیرند و پارکینگ جداگانه است.',
+      inputLabel: 'قیمت هر متر برای واحد و انبار',
       value: pricePerMeter,
       onChange: onPricePerMeterChange,
       placeholder: 'مثال: 450,000',
       invalid: pricePerMeterInvalid,
-      areaLabel: 'متراژ واحد و انباری',
+      areaLabel: 'متراژ واحد و انبار',
       areaValue: unitAndStorageArea,
     });
     fixedRows.push({
       key: 'base',
-      title: 'مبلغ کلی واحد و انباری',
-      description: 'واحد و انباری با یک مبلغ ثابت مشترک ثبت می‌شوند و پارکینگ جداگانه مبلغ می‌گیرد.',
-      inputLabel: 'مبلغ کلی واحد و انباری',
+      title: 'مبلغ ثابت واحد و انبار',
+      description: 'مبلغ ثابت به واحد و انبار اعمال می‌شود و پارکینگ جداگانه است.',
+      inputLabel: 'مبلغ ثابت واحد و انبار',
       value: fixedTotalAmount,
       onChange: onFixedTotalAmountChange,
-      placeholder: 'مبلغ واحد و انباری را وارد کنید',
+      placeholder: 'مثال: 1,000,000,000',
       invalid: fixedTotalAmountInvalid,
     });
   } else {
     meteredRows.push({
       key: 'unit',
-      title: 'هر مترمربع واحد',
-      description: 'در تفکیک کامل، هر جزء نرخ متری مستقل خودش را دارد.',
-      inputLabel: 'مبلغ هر مترمربع واحد',
+      title: 'فقط واحد',
+      description: 'فقط متراژ خودِ واحد در محاسبه پایه لحاظ می‌شود.',
+      inputLabel: 'قیمت هر متر واحد',
       value: pricePerMeter,
       onChange: onPricePerMeterChange,
       placeholder: 'مثال: 450,000',
@@ -250,12 +250,12 @@ export function FinancialPricingBox({
     });
     fixedRows.push({
       key: 'unit',
-      title: 'مبلغ کلی واحد',
-      description: 'در تفکیک کامل، مبلغ ثابت واحد جداگانه ثبت می‌شود.',
-      inputLabel: 'مبلغ کلی واحد',
+      title: 'مبلغ ثابت واحد',
+      description: 'مبلغ ثابت فقط برای واحد اعمال می‌شود.',
+      inputLabel: 'مبلغ ثابت واحد',
       value: fixedTotalAmount,
       onChange: onFixedTotalAmountChange,
-      placeholder: 'مبلغ واحد را وارد کنید',
+      placeholder: 'مثال: 1,000,000,000',
       invalid: fixedTotalAmountInvalid,
     });
   }
@@ -263,9 +263,9 @@ export function FinancialPricingBox({
   if (!config.includeParkingInBase && parseArea(parkingArea) > 0) {
     meteredRows.push({
       key: 'parking',
-      title: 'هر مترمربع پارکینگ',
-      description: 'پارکینگ در این حالت جداگانه قیمت‌گذاری می‌شود.',
-      inputLabel: 'مبلغ هر مترمربع پارکینگ',
+      title: 'پارکینگ',
+      description: 'پارکینگ جداگانه محاسبه می‌شود.',
+      inputLabel: 'قیمت هر متر پارکینگ',
       value: parkingPricePerMeter,
       onChange: onParkingPricePerMeterChange,
       placeholder: 'مثال: 120,000',
@@ -275,12 +275,12 @@ export function FinancialPricingBox({
     });
     fixedRows.push({
       key: 'parking',
-      title: 'مبلغ کلی پارکینگ',
-      description: 'پارکینگ در این حالت جداگانه مبلغ ثابت دریافت می‌کند.',
-      inputLabel: 'مبلغ کلی پارکینگ',
+      title: 'مبلغ ثابت پارکینگ',
+      description: 'پارکینگ با مبلغ ثابت جداگانه محاسبه می‌شود.',
+      inputLabel: 'مبلغ ثابت پارکینگ',
       value: parkingFixedAmount,
       onChange: onParkingFixedAmountChange,
-      placeholder: 'مبلغ پارکینگ را وارد کنید',
+      placeholder: 'مثال: 120,000,000',
       invalid: parkingFixedAmountInvalid,
     });
   }
@@ -288,68 +288,68 @@ export function FinancialPricingBox({
   if (!config.includeStorageInBase && parseArea(storageArea) > 0) {
     meteredRows.push({
       key: 'storage',
-      title: 'هر مترمربع انباری',
-      description: 'انباری در این حالت جداگانه قیمت‌گذاری می‌شود.',
-      inputLabel: 'مبلغ هر مترمربع انباری',
+      title: 'انبار',
+      description: 'انبار جداگانه محاسبه می‌شود.',
+      inputLabel: 'قیمت هر متر انبار',
       value: storagePricePerMeter,
       onChange: onStoragePricePerMeterChange,
       placeholder: 'مثال: 90,000',
       invalid: storagePricePerMeterInvalid,
-      areaLabel: 'متراژ انباری',
+      areaLabel: 'متراژ انبار',
       areaValue: storageArea,
     });
     fixedRows.push({
       key: 'storage',
-      title: 'مبلغ کلی انباری',
-      description: 'انباری در این حالت جداگانه مبلغ ثابت دریافت می‌کند.',
-      inputLabel: 'مبلغ کلی انباری',
+      title: 'مبلغ ثابت انبار',
+      description: 'انبار با مبلغ ثابت جداگانه محاسبه می‌شود.',
+      inputLabel: 'مبلغ ثابت انبار',
       value: storageFixedAmount,
       onChange: onStorageFixedAmountChange,
-      placeholder: 'مبلغ انباری را وارد کنید',
+      placeholder: 'مثال: 90,000,000',
       invalid: storageFixedAmountInvalid,
     });
   }
 
   return (
     <section className="border-b border-[#d9dde4] pb-5">
-      <div className="mb-3 text-[13px] font-bold text-[#4c5259]">قیمت‌گذاری قرارداد</div>
+      <div className="mb-3 text-[13px] font-bold text-[#4c5259]">نوع قیمت‌گذاری</div>
 
       <div>
         <p className="mb-2 text-[13px] leading-7 text-[#666b73]">
-          مبنای فروش این واحد از تنظیمات پروژه خوانده شده و فرم قیمت‌گذاری بر همان اساس تنظیم می‌شود.
+      این بخش توضیح می‌دهد کدام بخش از واحد، پارکینگ یا انبار در محاسبه نهایی لحاظ می‌شود.
         </p>
-        <div className="mb-4 rounded-xl border border-cyan-100 bg-cyan-50/70 px-4 py-3 text-[13px] text-cyan-900">
+        <div className="mb-4 rounded-[8px] border border-cyan-100 bg-cyan-50/70 px-4 py-3 text-[13px] text-cyan-900">
           <div className="font-bold">{areaPricing.label}</div>
           <div className="mt-1 leading-7 text-cyan-800">{areaPricing.hint}</div>
         </div>
 
-        <FieldGroup label="نوع قیمت‌گذاری" required>
-          <div className={pricingTypeInvalid ? 'rounded-xl border border-rose-300 bg-rose-50/40 p-2' : ''}>
+      <FieldGroup label="نوع قیمت‌گذاری" required>
+          <div className={pricingTypeInvalid ? 'rounded-[8px] border border-rose-300 bg-rose-50/40 p-2' : ''}>
             <TagPills
               value={pricingType}
               onChange={onPricingTypeChange}
               options={[
-                { value: 'metered', label: 'قیمت فروش به صورت متری' },
-                { value: 'fixed', label: 'قیمت فروش کلی' },
+                { value: 'metered', label: 'قیمت‌گذاری متری' },
+                { value: 'fixed', label: 'قیمت‌گذاری ثابت' },
               ]}
             />
           </div>
         </FieldGroup>
 
-        <div className="mt-4 rounded-xl bg-[#ededed] px-3 py-3">
+        <div className="mt-4 rounded-[8px] bg-[#ededed] px-3 py-3">
           {pricingType === 'metered' ? (
             <div className="space-y-3">
               {meteredRows.map((row) => (
                 <PricingRowBlock key={row.key} row={row} formatInput={formatInput} />
               ))}
               <div className="pt-1">
-                <div className="mb-1 text-[13px] text-[#6b7078]">قیمت کل محاسبه‌شده</div>
+                <div className="mb-1 text-[13px] text-[#6b7078]">مبلغ نهایی برآوردی</div>
                 <div
-                  className={`flex min-h-10 items-center justify-between rounded-lg border bg-white/60 px-3 text-[13px] font-bold text-[#4b5159] ${
+                  className={`flex min-h-10 items-center justify-between rounded-[8px] border bg-white/60 px-3 text-[13px] font-bold text-[#4b5159] ${
                     totalAreaInvalid ? 'border-rose-300 ring-4 ring-rose-500/10' : 'border-[#aeb9c3]'
                   }`}
                 >
-                  <span>متراژ کل قابل فروش: {totalArea || '0'} متر مربع</span>
+                  <span>متراژ کل قرارداد: {totalArea || '0'} متر مربع</span>
                   <span>{formatMoney(meteredTotal)}</span>
                 </div>
               </div>
@@ -360,9 +360,9 @@ export function FinancialPricingBox({
                 <PricingRowBlock key={row.key} row={row} formatInput={formatInput} />
               ))}
               <div className="pt-1">
-                <div className="mb-1 text-[13px] text-[#6b7078]">جمع مبلغ‌های ثابت</div>
-                <div className="flex min-h-10 items-center justify-between rounded-lg border border-[#aeb9c3] bg-white/60 px-3 text-[13px] font-bold text-[#4b5159]">
-                  <span>مبلغ کل قرارداد</span>
+                <div className="mb-1 text-[13px] text-[#6b7078]">مبلغ نهایی قرارداد</div>
+                <div className="flex min-h-10 items-center justify-between rounded-[8px] border border-[#aeb9c3] bg-white/60 px-3 text-[13px] font-bold text-[#4b5159]">
+                  <span>مبلغ به تفکیک بخش‌ها</span>
                   <span>{formatMoney(fixedTotal)}</span>
                 </div>
               </div>
@@ -373,3 +373,4 @@ export function FinancialPricingBox({
     </section>
   );
 }
+

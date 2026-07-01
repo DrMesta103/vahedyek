@@ -37,8 +37,8 @@ export function AppendixGenericTagEditor({
   const showDetail = CONDITION_TAGS.has(tag) || showAmount || showDates;
 
   return (
-    <div className="mt-6 space-y-5 rounded-[24px] border border-slate-200 bg-white/90 p-5">
-      <div className="rounded-2xl border border-[color-mix(in_srgb,var(--dark-teal)_14%,#cbd5e1)] bg-[color-mix(in_srgb,var(--dark-teal)_06%,white)] px-4 py-3 text-right">
+    <div className="mt-6 space-y-5 rounded-[8px] border border-slate-200 bg-white/90 p-5">
+      <div className="rounded-[8px] border border-[color-mix(in_srgb,var(--dark-teal)_14%,#cbd5e1)] bg-[color-mix(in_srgb,var(--dark-teal)_06%,white)] px-4 py-3 text-right">
         <div className="text-[12px] font-black text-[color-mix(in_srgb,var(--dark-teal)_92%,black)]">این بخش فعال شده است</div>
         <p className="mt-1 text-[11px] font-semibold leading-6 text-slate-600">
           {definition?.description ?? 'این متمم با فرم عمومی فعال شده و از همین‌جا قابل ثبت است.'}
@@ -52,7 +52,7 @@ export function AppendixGenericTagEditor({
             value={value.title}
             onChange={(event) => patchPayload(value, onChange, { title: event.target.value })}
             placeholder={definition?.title ?? 'عنوان متمم'}
-            className="h-11 rounded-2xl border-slate-200 bg-white px-4 text-[13px]"
+            className="h-11 rounded-[8px] border-slate-200 bg-white px-4 text-[13px]"
           />
         </label>
 
@@ -63,7 +63,7 @@ export function AppendixGenericTagEditor({
               value={value.detailText}
               onChange={(event) => patchPayload(value, onChange, { detailText: event.target.value })}
               placeholder="جزئیات این متمم را بنویسید"
-              className="min-h-[120px] rounded-2xl border border-slate-200 bg-white px-4 py-3 text-[13px] leading-7 text-slate-800 outline-none transition focus:border-[color-mix(in_srgb,var(--dark-teal)_30%,#94a3b8)]"
+              className="min-h-[120px] rounded-[8px] border border-slate-200 bg-white px-4 py-3 text-[13px] leading-7 text-slate-800 outline-none transition focus:border-[color-mix(in_srgb,var(--dark-teal)_30%,#94a3b8)]"
             />
           </label>
         ) : null}
@@ -76,7 +76,7 @@ export function AppendixGenericTagEditor({
                 value={value.amount}
                 onChange={(event) => patchPayload(value, onChange, { amount: event.target.value.replace(/\D/g, '') })}
                 placeholder="مبلغ را وارد کنید"
-                className="h-11 rounded-2xl border-slate-200 bg-white pr-4 pl-14 text-[13px]"
+                className="h-11 rounded-[8px] border-slate-200 bg-white pr-4 pl-14 text-[13px]"
               />
               <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-[11px] font-bold text-slate-400">تومان</span>
             </div>
@@ -112,10 +112,12 @@ export function AppendixGenericTagEditor({
             value={value.notes}
             onChange={(event) => patchPayload(value, onChange, { notes: event.target.value })}
             placeholder="اگر لازم است نکته‌ای برای بایگانی ثبت کنید"
-            className="min-h-[96px] rounded-2xl border border-slate-200 bg-white px-4 py-3 text-[13px] leading-7 text-slate-800 outline-none transition focus:border-[color-mix(in_srgb,var(--dark-teal)_30%,#94a3b8)]"
+            className="min-h-[96px] rounded-[8px] border border-slate-200 bg-white px-4 py-3 text-[13px] leading-7 text-slate-800 outline-none transition focus:border-[color-mix(in_srgb,var(--dark-teal)_30%,#94a3b8)]"
           />
         </label>
       </div>
     </div>
   );
 }
+
+
