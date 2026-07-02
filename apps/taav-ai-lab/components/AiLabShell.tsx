@@ -50,7 +50,7 @@ function buildNavPath(
   }
 
   if (pathname.startsWith('/settings')) {
-    navPath.push({ label: 'تنظیمات کسب‌وکار', id: 'settings', href: '/settings' });
+    navPath.push({ label: 'تنظیمات تاو ادمین', id: 'settings', href: '/settings' });
   }
 
   if (currentTenantId) {

@@ -24,6 +24,7 @@ type AiLabTooltipContentProps = {
   align?: TaavTooltipAlign;
   label?: string;
   className?: string;
+  triggerElement?: 'button' | 'span';
 };
 
 export function AiLabTooltipProvider({ children }: { children: ReactNode }) {
@@ -36,7 +37,10 @@ export function AiLabTooltipIcon({
   align = 'start',
   label = 'راهنما',
   className,
+  triggerElement = 'button',
 }: AiLabTooltipContentProps) {
+  const triggerClassName = ['ai-lab-tooltip-trigger', className].filter(Boolean).join(' ');
+
   return (
     <TaavTooltip
       content={renderTooltipContent(content)}
@@ -44,13 +48,15 @@ export function AiLabTooltipIcon({
       align={align}
       contentClassName="ai-lab-tooltip-content"
     >
-      <button
-        type="button"
-        className={['ai-lab-tooltip-trigger', className].filter(Boolean).join(' ')}
-        aria-label={label}
-      >
-        <CircleHelp className="h-3.5 w-3.5" aria-hidden />
-      </button>
+      {triggerElement === 'span' ? (
+        <span className={triggerClassName} aria-label={label}>
+          <CircleHelp className="h-3.5 w-3.5" aria-hidden />
+        </span>
+      ) : (
+        <button type="button" className={triggerClassName} aria-label={label}>
+          <CircleHelp className="h-3.5 w-3.5" aria-hidden />
+        </button>
+      )}
     </TaavTooltip>
   );
 }

@@ -15,7 +15,7 @@ export const AI_LAB_NAV_ITEMS: AiLabNavItem[] = [
   { id: 'products', label: 'محصولات', iconKey: 'boxes', segment: '/products' },
   { id: 'businesses', label: 'کسب‌وکارها', iconKey: 'building', href: '/businesses' },
   { id: 'businesses-new', label: 'ایجاد کسب‌وکار', iconKey: 'sparkles', href: '/businesses/new' },
-  { id: 'settings', label: 'تنظیمات کسب‌وکار', iconKey: 'settings', href: '/settings' },
+  { id: 'settings', label: 'تنظیمات تاو ادمین', iconKey: 'settings', href: '/settings' },
 ];
 
 export function resolveNavHref(item: AiLabNavItem, businessId?: string | null): string {

@@ -10,9 +10,8 @@ import {
 import { getCurrentTenant, requireSession } from '@/app/lib/session';
 import { AiLabPage } from '@/components/AiLabPage';
 import { AiLabShell } from '@/components/AiLabShell';
-import { AdminAgentChatClient } from '@/components/taavia/AdminAgentChatClient';
 import { DeleteBrandButton } from '@/components/taavia/DeleteBrandButton';
-import { TaaviaBrandSetupClient } from '@/components/taavia/TaaviaBrandSetupClient';
+import { TaaviaBrandWorkspaceClient } from '@/components/taavia/TaaviaBrandWorkspaceClient';
 import { TaavBadge, TaavButton } from '@repo/ui/taav/primitives';
 
 export default async function TaaviaBrandDetailPage({
@@ -68,22 +67,14 @@ export default async function TaaviaBrandDetailPage({
           </TaavBadge>
         </div>
 
-        {setup?.isComplete ? (
-          <AdminAgentChatClient
-            tenantId={business.id}
-            brandId={brand.id}
-            brandName={brand.name}
-            initialConversationId={conversation?.id ?? null}
-            initialMessages={conversation?.messages ?? []}
-          />
-        ) : (
-          <TaaviaBrandSetupClient
-            tenantId={business.id}
-            brandId={brand.id}
-            brandName={brand.name}
-            initialSelectedUseCases={setup?.selectedUseCases ?? []}
-          />
-        )}
+        <TaaviaBrandWorkspaceClient
+          tenantId={business.id}
+          brand={brand}
+          selectedUseCases={setup?.selectedUseCases ?? []}
+          setupComplete={Boolean(setup?.isComplete)}
+          initialConversationId={conversation?.id ?? null}
+          initialMessages={conversation?.messages ?? []}
+        />
       </AiLabPage>
     </AiLabShell>
   );

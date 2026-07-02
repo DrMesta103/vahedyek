@@ -12,6 +12,7 @@ type TaaviaBrandSetupClientProps = {
   brandId: string;
   brandName: string;
   initialSelectedUseCases?: TaaviaUseCaseKey[];
+  onSaved?: () => void;
 };
 
 const USE_CASES: Array<{ key: TaaviaUseCaseKey; title: string; description: string }> = [
@@ -31,6 +32,7 @@ export function TaaviaBrandSetupClient({
   brandId,
   brandName,
   initialSelectedUseCases = [],
+  onSaved,
 }: TaaviaBrandSetupClientProps) {
   const router = useRouter();
   const [selected, setSelected] = useState<TaaviaUseCaseKey[]>(initialSelectedUseCases);
@@ -76,6 +78,7 @@ export function TaaviaBrandSetupClient({
         throw new Error(payload?.message ?? 'ثبت تنظیمات انجام نشد.');
       }
 
+      onSaved?.();
       router.refresh();
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : 'ثبت تنظیمات انجام نشد.');

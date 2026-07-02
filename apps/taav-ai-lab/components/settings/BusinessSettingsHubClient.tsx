@@ -44,7 +44,7 @@ export function BusinessSettingsHubClient() {
         badge={`${SETTINGS_MODULES.length} بخش`}
         title={
           <span className="inline-flex items-center gap-2">
-            تنظیمات کسب‌وکار
+            تنظیمات تاو ادمین
             <AiLabTooltipIcon content={AI_LAB_TOOLTIPS.settings.hub} label="راهنمای تنظیمات" />
           </span>
         }
@@ -60,7 +60,11 @@ export function BusinessSettingsHubClient() {
               title={
                 <span className="inline-flex items-center gap-1.5">
                   {module.title}
-                  <AiLabTooltipIcon content={module.tooltip} label={`راهنمای ${module.title}`} />
+                  <AiLabTooltipIcon
+                    content={module.tooltip}
+                    label={`راهنمای ${module.title}`}
+                    triggerElement="span"
+                  />
                 </span>
               }
               description={module.description}
