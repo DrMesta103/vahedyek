@@ -113,7 +113,7 @@ export function LoanSharedResponsibilitySettingsPanel({
     if (!state) return;
 
     if (!state[policyKey] && !String(state[rateKey]).trim()) {
-      setError(`${inputLabel} ?? ???? ????.`);
+      setError(`${inputLabel} را وارد کنید.`);
       return;
     }
 
@@ -150,7 +150,7 @@ export function LoanSharedResponsibilitySettingsPanel({
       <div className="border-b border-[color:var(--border-soft)] pb-4 text-center">
         <h1 className="text-xl font-black text-[color:var(--text-strong)] sm:text-2xl">{title}</h1>
         <p className="mt-3 text-sm leading-8 text-[color:var(--text-muted)]">
-          ?? ??? ??? ???? ??????? ???? ??? ?? ????? ??? ????? ???? ?? ?? ???? ??? ??????? ???? ??????
+          در این بخش می‌توانید تعیین کنید که هر طرف چه نقشی در تنظیمات این بخش دارد و مقدار نهایی چگونه محاسبه شود.
         </p>
       </div>
 
@@ -161,8 +161,8 @@ export function LoanSharedResponsibilitySettingsPanel({
 
       <section className="mt-4 space-y-6 rounded-[8px] bg-[color:var(--surface)] px-4 py-6">
         <ResponsibilityRow
-          title="?? ?????? ???"
-          description={`?????? ??????? ${title} ?? ?????? ???`}
+          title="سهم خریدار"
+          description={`میزان سهم خریدار در ${title} را مشخص کنید.`}
           checked={Boolean(state[buyerKey])}
           onChange={(value) => {
             setState((current) => (current ? { ...current, [buyerKey]: value } : current));
@@ -172,8 +172,8 @@ export function LoanSharedResponsibilitySettingsPanel({
         />
 
         <ResponsibilityRow
-          title="?? ?????? ???"
-          description={`?????? ??????? ${title} ?? ?????? ???`}
+          title="سهم فروشنده"
+          description={`میزان سهم فروشنده در ${title} را مشخص کنید.`}
           checked={Boolean(state[sellerKey])}
           onChange={(value) => {
             setState((current) => (current ? { ...current, [sellerKey]: value } : current));

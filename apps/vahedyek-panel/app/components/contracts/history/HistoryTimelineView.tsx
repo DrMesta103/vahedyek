@@ -25,7 +25,7 @@ function getEntryTone(entry: AppendixHistoryEntry, unchanged: boolean) {
 
 function EntryStatusBadge({ entry }: { entry: AppendixHistoryEntry }) {
   if (!entry.isCurrent && entry.sourceType === 'contract') return null;
-  const label = entry.sourceType === 'contract' ? '??? ???????' : entry.isCurrent ? '???? ????' : appendixStatusLabel(entry.status);
+  const label = entry.sourceType === 'contract' ? 'اصل قرارداد' : entry.isCurrent ? 'نسخه فعلی' : appendixStatusLabel(entry.status);
   const cls =
     entry.sourceType === 'contract'
       ? 'border-slate-200 bg-slate-100 text-slate-700'
@@ -38,10 +38,10 @@ function EntryStatusBadge({ entry }: { entry: AppendixHistoryEntry }) {
 function UnchangedBanner() {
   return (
     <div className="flex items-center justify-between gap-3 rounded-[8px] border border-slate-200 bg-white/85 px-4 py-3">
-      <div className="text-[12px] font-semibold text-slate-600">??? ??? ???? ?? ???? ???? ?????? ?????? ???.</div>
+      <div className="text-[12px] font-semibold text-slate-600">این بخش نسبت به نسخه قبلی تغییری نداشته است.</div>
       <div className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-[11px] font-black text-slate-600">
         <Sparkles className="h-3.5 w-3.5" />
-        ???? ?????
+        بدون تغییر
       </div>
     </div>
   );
@@ -50,7 +50,7 @@ function UnchangedBanner() {
 function ChangedBadge() {
   return (
     <span className="inline-flex min-h-[30px] items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-black text-emerald-700">
-      ????? ????
+      تغییر کرده
     </span>
   );
 }
@@ -81,7 +81,7 @@ function HistoryEntryCard({
               <div className="flex min-w-0 flex-col gap-2">
                 <div className="text-[15px] font-black text-slate-900">{entry.sourceLabel}</div>
                 <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold text-slate-500">
-                  {entry.effectiveDate ? <span>????? ????: {entry.effectiveDate}</span> : null}
+                  {entry.effectiveDate ? <span>تاریخ موثر: {entry.effectiveDate}</span> : null}
                   {entry.createdAt ? <span>???: {formatDateFa(entry.createdAt, { withTime: true })}</span> : null}
                 </div>
               </div>
@@ -89,7 +89,7 @@ function HistoryEntryCard({
                 {changed ? <ChangedBadge /> : null}
                 {unchanged ? (
                   <span className="inline-flex min-h-[30px] items-center rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-[11px] font-black text-slate-600">
-                    ???? ?????
+                    بدون تغییر
                   </span>
                 ) : null}
                 <EntryStatusBadge entry={entry} />
@@ -127,7 +127,7 @@ function HistorySectionCard({
         <div className="min-w-0">
           <div className="text-[17px] font-black text-slate-900">{section.title}</div>
           <div className="mt-1 text-[11px] font-semibold text-slate-500">
-            {section.entries.length.toLocaleString('fa-IR')} ??? ?? ??????? ??? ???
+            {section.entries.length.toLocaleString('fa-IR')} گره در تاریخچه این بخش
           </div>
         </div>
       </button>
@@ -216,7 +216,7 @@ function VersionRail({
                       onClick={(e) => e.stopPropagation()}
                       className="inline-flex items-center gap-1 rounded-[8px] border border-slate-200 bg-white px-2 py-1 text-[10px] font-bold text-slate-600 hover:bg-slate-50"
                     >
-                      ??????
+                      مشاهده
                       <ExternalLink className="h-3 w-3" />
                     </Link>
                   ) : null}
@@ -226,7 +226,7 @@ function VersionRail({
                       onClick={(e) => e.stopPropagation()}
                       className="inline-flex items-center gap-1 rounded-[8px] border border-cyan-200 bg-cyan-50 px-2 py-1 text-[10px] font-bold text-cyan-800 hover:bg-cyan-100"
                     >
-                      ??????? ??????
+                      تاریخچه بخش‌ها
                       <ExternalLink className="h-3 w-3" />
                     </Link>
                   ) : null}
@@ -318,7 +318,7 @@ export function HistoryTimelineView({
       {versions.length > 1 && onSelectVersion ? (
         <div className="mt-4">
           <div className="mb-2 flex items-center justify-between gap-2">
-            <span className="text-[12px] font-bold text-slate-500">???? ???????</span>
+            <span className="text-[12px] font-bold text-slate-500">مسیر نسخه‌ها</span>
             {meta.currentLabel ? (
               <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-black text-emerald-800">
                 <span className="h-2 w-2 rounded-full bg-emerald-600" />
@@ -336,7 +336,7 @@ export function HistoryTimelineView({
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="????? ?? ?????? (?????? ???? ????)..."
+            placeholder="جستجو در بخش‌ها (عنوان، نوع، نسخه)..."
             className="h-11 w-full rounded-[8px] border border-slate-200 bg-slate-50/80 pr-10 pl-3 text-right text-[13px] font-semibold text-slate-700 outline-none transition focus:border-[color-mix(in_srgb,var(--dark-teal)_35%,transparent)] focus:bg-white"
           />
         </label>
@@ -349,7 +349,7 @@ export function HistoryTimelineView({
             }`}
           >
             <Filter className="h-4 w-4" />
-            ??? ??????? ????? ????? ({changedCount.toLocaleString('fa-IR')})
+            فقط بخش‌های دارای تغییر ({changedCount.toLocaleString('fa-IR')})
           </button>
           <button
             type="button"
@@ -357,7 +357,7 @@ export function HistoryTimelineView({
             className="inline-flex h-11 items-center gap-2 rounded-[8px] border border-slate-200 bg-white px-3 text-[12px] font-bold text-slate-700 hover:bg-slate-50"
           >
             <ChevronsDownUp className="h-4 w-4" />
-            ??? ???? ???
+            باز کردن همه
           </button>
           <button
             type="button"
@@ -365,7 +365,7 @@ export function HistoryTimelineView({
             className="inline-flex h-11 items-center gap-2 rounded-[8px] border border-slate-200 bg-white px-3 text-[12px] font-bold text-slate-700 hover:bg-slate-50"
           >
             <ChevronsUpDown className="h-4 w-4" />
-            ???? ???
+            بستن همه
           </button>
         </div>
       </div>
@@ -391,8 +391,8 @@ export function HistoryTimelineView({
           ))
         ) : (
           <div className="rounded-[8px] border border-dashed border-slate-200 bg-slate-50/80 px-6 py-10 text-center">
-            <p className="text-[13px] font-bold text-slate-600">???? ?? ??? ????? ???? ???.</p>
-            <p className="mt-1 text-[12px] font-medium text-slate-500">????? ????? ?? �??? ??????? ????? ?????� ?? ???????.</p>
+            <p className="text-[13px] font-bold text-slate-600">بخشی با این فیلتر پیدا نشد.</p>
+            <p className="mt-1 text-[12px] font-medium text-slate-500">فیلتر جستجو یا «فقط بخش‌های دارای تغییر» را بردارید.</p>
           </div>
         )}
       </div>
@@ -400,7 +400,7 @@ export function HistoryTimelineView({
       <div className="mt-5 rounded-[8px] border border-slate-200 bg-slate-50/70 px-4 py-3 text-right">
         <div className="flex items-center justify-between gap-3">
           <p className="text-[12px] font-semibold leading-6 text-slate-600">
-            ?? ??? ?? ????????? ??????? ??? ????. ???????? ???? ????? ???? ?? ???? ??? ?? ????? �???? ?????� ???? ???????.
+            هر بخش را می‌توانید جداگانه باز کنید. نسخه‌های بدون تغییر نسبت به نسخه قبل با برچسب «بدون تغییر» مشخص شده‌اند.
           </p>
           <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[8px] bg-white text-slate-500 shadow-sm">
             <History className="h-5 w-5" />

@@ -1,38 +1,25 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
-import { Bot, Camera, Check, Sparkles, X } from 'lucide-react';
-import {
-  TaavBadge,
-  TaavButton,
-  TaavDialog,
-  TaavDialogContent,
-  TaavDialogDescription,
-  TaavDialogFooter,
-  TaavDialogHeader,
-  TaavDialogTitle,
-  TaavStepper,
-} from '@repo/ui/taav';
+import Link from 'next/link';
+import { useMemo, useRef, useState, type ChangeEvent } from 'react';
+import { useRouter } from 'next/navigation';
+import { Bot, Camera, Check, X } from 'lucide-react';
+import { TaavBadge, TaavButton, TaavCard, TaavStepper } from '@repo/ui/taav';
 import { TaavFieldBlock, TaavInput, TaavTextarea } from '@repo/ui/taav/forms';
 import type { TaaviaBrand } from '@/app/lib/data';
 import { AI_LAB_TOOLTIPS } from '@/app/lib/tooltips';
 import type { TaaviaUseCaseKey } from '@/app/lib/types/domain';
 import { AiLabLabelWithTooltip } from '@/components/AiLabTooltip';
 
-type BrandDialogMode = 'create' | 'edit';
-type CreateStep = 'brand' | 'use-cases';
-
-type BrandDialogSeed = Pick<TaaviaBrand, 'id' | 'name' | 'intake'>;
-
-type CreateBrandDialogProps = {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+type CreateBrandPageClientProps = {
   tenantId: string;
-  onSaved: (brandId: string) => void;
-  mode?: BrandDialogMode;
-  initialBrand?: BrandDialogSeed | null;
+  businessId: string;
+  mode?: 'create' | 'edit';
+  initialBrand?: Pick<TaaviaBrand, 'id' | 'name' | 'intake'> | null;
   initialSelectedUseCases?: TaaviaUseCaseKey[];
 };
+
+type CreateStep = 'brand' | 'use-cases';
 
 const USE_CASES: Array<{ key: TaaviaUseCaseKey; title: string; description: string }> = [
   { key: 'support', title: 'پشتیبانی', description: 'پاسخ به سوالات، راهنمایی کاربران و رسیدگی به تیکت‌ها' },
@@ -40,51 +27,30 @@ const USE_CASES: Array<{ key: TaaviaUseCaseKey; title: string; description: stri
   { key: 'marketing', title: 'بازاریابی', description: 'کمپین‌ها، محتوا، لیدسازی و تحلیل عملکرد جذب' },
   { key: 'operations', title: 'عملیات', description: 'فرآیندها، هماهنگی داخلی و اتوماسیون کارهای تکراری' },
   { key: 'finance', title: 'مالی', description: 'صورت‌حساب، پیگیری پرداخت و پرسش‌های مالی' },
-  { key: 'hr', title: 'منابع انسانی', description: 'جذب نیرو، پاسخ‌گویی به کارکنان و فرایندهای منابع انسانی' },
+  { key: 'hr', title: 'منابع انسانی', description: 'جذب نیرو، پاسخگویی به کارمندان و فرآیندهای منابع انسانی' },
   { key: 'product', title: 'محصول', description: 'بازخورد محصول، ایده‌پردازی و بهبود تجربه کاربر' },
   { key: 'management', title: 'مدیریت', description: 'گزارش‌ها، تصمیم‌سازی و پایش وضعیت کسب‌وکار' },
   { key: 'it', title: 'فناوری اطلاعات', description: 'پشتیبانی فنی، راهنمای ابزارها و پاسخ‌های سیستمی' },
 ];
 
-export function CreateBrandDialog({
-  open,
-  onOpenChange,
+export function CreateBrandPageClient({
   tenantId,
-  onSaved,
+  businessId,
   mode = 'create',
   initialBrand = null,
   initialSelectedUseCases = [],
-}: CreateBrandDialogProps) {
+}: CreateBrandPageClientProps) {
+  const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const isEditMode = mode === 'edit';
   const [name, setName] = useState(initialBrand?.name ?? '');
   const [description, setDescription] = useState(initialBrand?.intake?.description ?? '');
   const [iconName, setIconName] = useState(initialBrand?.intake?.iconName ?? '');
   const [iconDataUrl, setIconDataUrl] = useState(initialBrand?.intake?.iconDataUrl ?? '');
-  const [selectedUseCases, setSelectedUseCases] = useState<TaaviaUseCaseKey[]>([]);
+  const [selectedUseCases, setSelectedUseCases] = useState<TaaviaUseCaseKey[]>(initialSelectedUseCases);
   const [currentStep, setCurrentStep] = useState<CreateStep>('brand');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-
-  const initialBrandSnapshot = useMemo(
-    () => ({
-      name: initialBrand?.name ?? '',
-      description: initialBrand?.intake?.description ?? '',
-      iconName: initialBrand?.intake?.iconName ?? '',
-      iconDataUrl: initialBrand?.intake?.iconDataUrl ?? '',
-    }),
-    [
-      initialBrand?.name,
-      initialBrand?.intake?.description,
-      initialBrand?.intake?.iconName,
-      initialBrand?.intake?.iconDataUrl,
-    ],
-  );
-
-  const initialSelectedUseCasesSnapshot = useMemo(
-    () => initialSelectedUseCases,
-    [initialSelectedUseCases.join('|')],
-  );
 
   const allSelected = useMemo(
     () =>
@@ -92,57 +58,6 @@ export function CreateBrandDialog({
       selectedUseCases.filter((item) => item !== 'all').length === USE_CASES.length,
     [selectedUseCases],
   );
-
-  useEffect(() => {
-    if (!open) {
-      return;
-    }
-
-    setName(initialBrandSnapshot.name);
-    setDescription(initialBrandSnapshot.description);
-    setIconName(initialBrandSnapshot.iconName);
-    setIconDataUrl(initialBrandSnapshot.iconDataUrl);
-    setSelectedUseCases(initialSelectedUseCasesSnapshot);
-    setCurrentStep('brand');
-    setError(null);
-    setLoading(false);
-
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  }, [open, initialBrandSnapshot, initialSelectedUseCasesSnapshot]);
-
-  useEffect(() => {
-    const previousUrl = iconDataUrl;
-    return () => {
-      if (previousUrl.startsWith('blob:')) {
-        URL.revokeObjectURL(previousUrl);
-      }
-    };
-  }, [iconDataUrl]);
-
-  const reset = () => {
-    setName(initialBrandSnapshot.name);
-    setDescription(initialBrandSnapshot.description);
-    setIconName(initialBrandSnapshot.iconName);
-    setIconDataUrl(initialBrandSnapshot.iconDataUrl);
-    setSelectedUseCases(initialSelectedUseCasesSnapshot);
-    setCurrentStep('brand');
-    setError(null);
-    setLoading(false);
-
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
-  const handleOpenChange = (nextOpen: boolean) => {
-    if (!nextOpen) {
-      reset();
-    }
-
-    onOpenChange(nextOpen);
-  };
 
   const resetIcon = () => {
     if (fileInputRef.current) {
@@ -196,11 +111,6 @@ export function CreateBrandDialog({
       return false;
     }
 
-    if (isEditMode && !initialBrand?.id) {
-      setError('شناسه برند برای ویرایش یافت نشد.');
-      return false;
-    }
-
     return true;
   };
 
@@ -220,8 +130,12 @@ export function CreateBrandDialog({
   };
 
   const handleSubmit = async () => {
+    const trimmed = name.trim();
     if (!validateBrandStep()) return;
-    if (!validateUseCasesStep()) return;
+    if (!validateUseCasesStep()) {
+      setError('حداقل یک بخش را انتخاب کنید یا گزینه همه موارد را بزنید.');
+      return;
+    }
 
     setLoading(true);
     setError(null);
@@ -232,7 +146,7 @@ export function CreateBrandDialog({
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              name: name.trim(),
+              name: trimmed,
               intake: {
                 description,
                 iconName,
@@ -244,7 +158,7 @@ export function CreateBrandDialog({
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              name: name.trim(),
+              name: trimmed,
               intake: {
                 description,
                 iconName,
@@ -253,14 +167,14 @@ export function CreateBrandDialog({
             }),
           });
 
-      const payload = (await response.json().catch(() => null)) as { brand?: { id: string }; message?: string } | null;
-      if (!response.ok || !payload?.brand?.id) {
-        setError(payload?.message ?? (isEditMode ? 'ویرایش برند انجام نشد.' : 'ایجاد برند انجام نشد.'));
+      const brandPayload = (await response.json().catch(() => null)) as { brand?: { id: string }; message?: string } | null;
+      if (!response.ok || !brandPayload?.brand?.id) {
+        setError(brandPayload?.message ?? (isEditMode ? 'ویرایش برند انجام نشد.' : 'ایجاد برند انجام نشد.'));
         setLoading(false);
         return;
       }
 
-      const setupResponse = await fetch(`/api/businesses/${tenantId}/taavia/brands/${payload.brand.id}/setup`, {
+      const setupResponse = await fetch(`/api/businesses/${tenantId}/taavia/brands/${brandPayload.brand.id}/setup`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ selectedUseCases }),
@@ -273,9 +187,12 @@ export function CreateBrandDialog({
         return;
       }
 
-      reset();
-      onOpenChange(false);
-      onSaved(payload.brand.id);
+      router.push(
+        isEditMode
+          ? `/businesses/${businessId}/products/taavia/brands/${brandPayload.brand.id}`
+          : `/businesses/${businessId}/products/taavia/brands/${brandPayload.brand.id}/entry`,
+      );
+      router.refresh();
     } catch {
       setError('خطا در ارتباط با سرور.');
       setLoading(false);
@@ -286,7 +203,7 @@ export function CreateBrandDialog({
     {
       id: 'brand',
       title: 'ثبت برند',
-      description: 'نام برند و اطلاعات پایه',
+      description: 'نام برند و بخش‌های استفاده',
     },
     {
       id: 'use-cases',
@@ -296,32 +213,24 @@ export function CreateBrandDialog({
   ];
 
   return (
-    <TaavDialog open={open} onOpenChange={handleOpenChange}>
-      <TaavDialogContent size="sm" contentClassName="ai-lab-dialog">
-        <TaavDialogHeader>
-          <div className="flex items-start gap-3">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[var(--taav-radius-lg)] bg-[var(--taav-brand-soft)] text-[var(--taav-brand-strong)]">
-              {isEditMode ? <Bot className="h-6 w-6" /> : <Sparkles className="h-6 w-6" />}
-            </div>
-            <div className="grid gap-1">
-              <TaavDialogTitle className="text-right text-[length:var(--taav-text-xl)] font-black text-[var(--taav-text-strong)]">
-                {isEditMode
-                  ? 'ویرایش برند'
-                  : currentStep === 'brand'
-                    ? 'ثبت برند جدید'
-                    : 'انتخاب بخش‌های استفاده از تاویا'}
-              </TaavDialogTitle>
-              <TaavDialogDescription className="text-right text-[length:var(--taav-text-sm)] leading-7 text-[var(--taav-text-muted)]">
-                {isEditMode
-                  ? 'اطلاعات برند را ویرایش کنید و سپس بخش‌های استفاده را انتخاب کنید.'
-                  : currentStep === 'brand'
-                    ? 'اول اطلاعات پایه‌ی برند را وارد کنید، بعد بخش‌های استفاده از تاویا را انتخاب می‌کنیم.'
-                    : `برای برند ${name.trim() || 'جدید'} مشخص کنید تاویا در کدام بخش‌ها استفاده شود.`}
-              </TaavDialogDescription>
-            </div>
-          </div>
-        </TaavDialogHeader>
+    <div className="mx-auto w-full max-w-4xl">
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <div className="grid gap-1">
+          <TaavBadge tone="brand" variant="soft">
+            ثبت برند جدید
+          </TaavBadge>
+          <h2 className="m-0 text-[length:var(--taav-text-2xl)] font-black text-[var(--taav-text-strong)]">
+            ایجاد برند برای تاویا
+          </h2>
+        </div>
+        <Link href={`/businesses/${businessId}/products/taavia/brands`}>
+          <TaavButton variant="secondary" tone="neutral">
+            بازگشت به برندها
+          </TaavButton>
+        </Link>
+      </div>
 
+      <TaavCard variant="outlined" padding="lg" radius="xl">
         <div className="grid gap-4">
           <TaavStepper
             steps={steps}
@@ -353,7 +262,7 @@ export function CreateBrandDialog({
                         onClick={() => fileInputRef.current?.click()}
                         disabled={loading}
                         className="flex h-[190px] w-[190px] items-center justify-center overflow-hidden rounded-full border border-[rgba(255,255,255,0.08)] bg-[#d6dae7] shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] transition hover:scale-[1.01] disabled:cursor-not-allowed"
-                        aria-label={isEditMode ? 'تغییر آیکون برند' : 'انتخاب آیکون برند'}
+                        aria-label="انتخاب آیکون برند"
                       >
                         {iconDataUrl ? (
                           <img src={iconDataUrl} alt="پیش‌نمایش آیکون انتخاب‌شده" className="h-full w-full object-cover" />
@@ -367,7 +276,7 @@ export function CreateBrandDialog({
                         onClick={() => fileInputRef.current?.click()}
                         disabled={loading}
                         className="absolute bottom-2 left-2 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--taav-brand)] text-white shadow-[0_12px_24px_rgba(13,148,136,0.28)] transition hover:scale-105 disabled:cursor-not-allowed"
-                        aria-label={isEditMode ? 'تغییر آیکون برند' : 'آپلود آیکون برند'}
+                        aria-label="آپلود آیکون برند"
                       >
                         <Camera className="h-5 w-5" />
                       </button>
@@ -442,9 +351,6 @@ export function CreateBrandDialog({
                       می‌توانی یک یا چند بخش را انتخاب کنی. اگر بخواهی تاویا برای کل کسب‌وکار فعال شود، گزینه همه موارد را انتخاب کن.
                     </p>
                   </div>
-                  <div className="flex h-12 w-12 items-center justify-center rounded-[var(--taav-radius-lg)] bg-[var(--taav-brand-soft)] text-[var(--taav-brand-strong)]">
-                    <Sparkles className="h-6 w-6" />
-                  </div>
                 </div>
 
                 <div className="grid gap-3 md:grid-cols-2">
@@ -494,41 +400,35 @@ export function CreateBrandDialog({
                     );
                   })}
                 </div>
+
+                <p className="m-0 text-[length:var(--taav-text-xs)] text-[var(--taav-text-muted)]">
+                  بعد از ثبت این مرحله، مستقیم وارد صفحه مدیریت برند می‌شوی.
+                </p>
               </div>
             </div>
           ) : null}
 
           {error ? <p className="m-0 text-[length:var(--taav-text-sm)] text-[var(--taav-danger-strong)]">{error}</p> : null}
+
+          <div className="ai-lab-form-actions">
+            <Link href={`/businesses/${businessId}/products/taavia/brands`}>
+              <TaavButton type="button" variant="secondary" tone="neutral" disabled={loading}>
+                انصراف
+              </TaavButton>
+            </Link>
+            <div className="mr-auto" />
+            {currentStep === 'brand' ? (
+              <TaavButton type="button" onClick={handleNextStep} disabled={loading || !name.trim()}>
+                ادامه به انتخاب بخش‌ها
+              </TaavButton>
+            ) : (
+              <TaavButton type="button" onClick={() => void handleSubmit()} disabled={loading || selectedUseCases.length === 0}>
+                {loading ? 'در حال ثبت...' : 'ثبت برند و ادامه'}
+              </TaavButton>
+            )}
+          </div>
         </div>
-
-        <TaavDialogFooter>
-          <TaavButton
-            variant="secondary"
-            onClick={() => {
-              if (currentStep === 'use-cases') {
-                setCurrentStep('brand');
-                setError(null);
-                return;
-              }
-
-              handleOpenChange(false);
-            }}
-            disabled={loading}
-          >
-            {currentStep === 'use-cases' ? 'بازگشت' : 'انصراف'}
-          </TaavButton>
-
-          {currentStep === 'brand' ? (
-            <TaavButton onClick={handleNextStep} disabled={loading || !name.trim()}>
-              ادامه به انتخاب بخش‌ها
-            </TaavButton>
-          ) : (
-            <TaavButton onClick={() => void handleSubmit()} disabled={loading || selectedUseCases.length === 0}>
-              {loading ? 'در حال ثبت...' : isEditMode ? 'ثبت تغییرات' : 'ثبت برند و ادامه'}
-            </TaavButton>
-          )}
-        </TaavDialogFooter>
-      </TaavDialogContent>
-    </TaavDialog>
+      </TaavCard>
+    </div>
   );
 }

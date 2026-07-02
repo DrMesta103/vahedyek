@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, MoreVertical, PencilLine, Plus, Trash2 } from 'lucide-react';
@@ -17,7 +16,6 @@ import { TaavEmptyState } from '@repo/ui/taav/data-display';
 import type { TaaviaBrand } from '@/app/lib/data';
 import { AI_LAB_TOOLTIPS } from '@/app/lib/tooltips';
 import { AiLabTooltipIcon } from '@/components/AiLabTooltip';
-import { CreateBrandDialog } from './CreateBrandDialog';
 
 type TaaviaBrandsClientProps = {
   tenantId: string;
@@ -26,30 +24,9 @@ type TaaviaBrandsClientProps = {
 
 export function TaaviaBrandsClient({ tenantId, initialBrands }: TaaviaBrandsClientProps) {
   const router = useRouter();
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
-  const [editingBrand, setEditingBrand] = useState<TaaviaBrand | null>(null);
 
-  const openCreateDialog = () => {
-    setDialogMode('create');
-    setEditingBrand(null);
-    setDialogOpen(true);
-  };
-
-  const openEditDialog = (brand: TaaviaBrand) => {
-    setDialogMode('edit');
-    setEditingBrand(brand);
-    setDialogOpen(true);
-  };
-
-  const handleSaved = (brandId: string) => {
-    setDialogOpen(false);
-    if (dialogMode === 'create') {
-      router.push(`/businesses/${tenantId}/products/taavia/brands/${brandId}`);
-      return;
-    }
-
-    router.refresh();
+  const openCreatePage = () => {
+    router.push(`/businesses/${tenantId}/products/taavia/brands/new`);
   };
 
   const handleDelete = async (brand: TaaviaBrand) => {
@@ -78,7 +55,7 @@ export function TaaviaBrandsClient({ tenantId, initialBrands }: TaaviaBrandsClie
           </TaavButton>
         </Link>
         <div className="flex items-center gap-2">
-          <TaavButton iconStart={<Plus className="h-4 w-4" />} onClick={openCreateDialog}>
+          <TaavButton iconStart={<Plus className="h-4 w-4" />} onClick={openCreatePage}>
             برند جدید
           </TaavButton>
           <AiLabTooltipIcon content={AI_LAB_TOOLTIPS.forms.brandName} label="راهنمای ایجاد برند" />
@@ -92,7 +69,7 @@ export function TaaviaBrandsClient({ tenantId, initialBrands }: TaaviaBrandsClie
             title="هنوز برندی برای تاویا ساخته نشده است."
             description="برای شروع، یک برند جدید ایجاد کنید."
             primaryAction={
-              <TaavButton iconStart={<Plus className="h-4 w-4" />} onClick={openCreateDialog}>
+              <TaavButton iconStart={<Plus className="h-4 w-4" />} onClick={openCreatePage}>
                 ایجاد برند
               </TaavButton>
             }
@@ -107,11 +84,11 @@ export function TaaviaBrandsClient({ tenantId, initialBrands }: TaaviaBrandsClie
                 className="taavia-brand-card"
                 role="button"
                 tabIndex={0}
-                onClick={() => router.push(`/businesses/${tenantId}/products/taavia/brands/${brand.id}`)}
+                onClick={() => router.push(`/businesses/${tenantId}/products/taavia/brands/${brand.id}/entry`)}
                 onKeyDown={(event) => {
                   if (event.key === 'Enter' || event.key === ' ') {
                     event.preventDefault();
-                    router.push(`/businesses/${tenantId}/products/taavia/brands/${brand.id}`);
+                    router.push(`/businesses/${tenantId}/products/taavia/brands/${brand.id}/entry`);
                   }
                 }}
               >
@@ -144,13 +121,16 @@ export function TaaviaBrandsClient({ tenantId, initialBrands }: TaaviaBrandsClie
                           <MoreVertical className="h-5 w-5" />
                         </button>
                       </TaavDropdownTrigger>
-                      <TaavDropdownContent align="end" side="bottom">
+                      <TaavDropdownContent
+                        align="end"
+                        side="bottom"
+                        onClick={(event) => event.stopPropagation()}
+                      >
                         <TaavDropdownItem
                           iconStart={<PencilLine className="h-4 w-4" />}
-                          onSelect={(event) => {
-                            event.preventDefault();
+                          onClick={(event) => {
                             event.stopPropagation();
-                            openEditDialog(brand);
+                            router.push(`/businesses/${tenantId}/products/taavia/brands/new?edit=${brand.id}`);
                           }}
                         >
                           ویرایش
@@ -185,14 +165,6 @@ export function TaaviaBrandsClient({ tenantId, initialBrands }: TaaviaBrandsClie
         </div>
       )}
 
-      <CreateBrandDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        tenantId={tenantId}
-        mode={dialogMode}
-        initialBrand={editingBrand}
-        onSaved={handleSaved}
-      />
     </>
   );
 }

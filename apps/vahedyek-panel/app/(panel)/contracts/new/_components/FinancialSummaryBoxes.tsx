@@ -25,9 +25,9 @@ export function FinancialSummaryBoxes({
 }) {
   return (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-      <SummaryCard title="??? ???????? ????" value={formatMoney(capAmount || totalContractAmount)} />
-      <SummaryCard title="??? ????????" value={formatMoney(dueAmount)} />
-      <SummaryCard title="???? ?? ???????" value={formatMoney(totalContractAmount)} hint={pricingHint} />
+      <SummaryCard title="سقف پرداخت" value={formatMoney(capAmount || totalContractAmount)} />
+      <SummaryCard title="مبلغ بدهی" value={formatMoney(dueAmount)} />
+      <SummaryCard title="جمع کل" value={formatMoney(totalContractAmount)} hint={pricingHint} />
     </div>
   );
 }

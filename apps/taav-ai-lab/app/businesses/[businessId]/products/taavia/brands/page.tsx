@@ -43,7 +43,7 @@ export default async function TaaviaBrandsPage({ params }: { params: Promise<{ b
         description="برندهای این کسب‌وکار را مدیریت کنید و برای هر برند ایجنت مدیریت را آغاز کنید."
         titleTooltip={AI_LAB_TOOLTIPS.products.brands}
       >
-        <AiLabSectionCard title="فهرست برندها" description="پس از ایجاد برند، مستقیماً وارد ایجنت مدیریت برند می‌شوید." titleTooltip={AI_LAB_TOOLTIPS.forms.brandName}>
+        <AiLabSectionCard title="فهرست برندها" description="روی هر برند کلیک کنید تا مسیر AI یا تنظیم دستی را انتخاب کنید." titleTooltip={AI_LAB_TOOLTIPS.forms.brandName}>
           <TaaviaBrandsClient tenantId={business.id} initialBrands={brands} />
         </AiLabSectionCard>
       </AiLabPage>

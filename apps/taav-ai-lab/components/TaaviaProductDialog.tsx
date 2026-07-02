@@ -129,7 +129,7 @@ export function TaaviaProductDialog({ businessId }: TaaviaProductDialogProps) {
       const brandId = payload.brand.id;
       reset();
       setOpen(false);
-      router.push(`/businesses/${businessId}/products/taavia/brands/${brandId}`);
+      router.push(`/businesses/${businessId}/products/taavia/brands/${brandId}/entry`);
       router.refresh();
     } catch {
       setError('خطا در ارتباط با سرور.');

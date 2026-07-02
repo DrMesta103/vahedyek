@@ -799,6 +799,14 @@ function getStatusToneTextClasses(tone: 'emerald' | 'amber' | 'rose' | 'slate' |
   return 'text-slate-700';
 }
 
+function getStatusToneColor(tone: 'emerald' | 'amber' | 'rose' | 'slate' | 'cyan') {
+  if (tone === 'emerald') return '#16a34a';
+  if (tone === 'amber') return '#f59e0b';
+  if (tone === 'rose') return '#f97316';
+  if (tone === 'cyan') return '#0ea5e9';
+  return '#64748b';
+}
+
 export default function ContractReportsPage() {
   const params = useParams<{ contractId: string }>();
   const contractId = params?.contractId;
@@ -2040,31 +2048,9 @@ export default function ContractReportsPage() {
 
   const specialStatusTotalRial = Math.max(1, ledgerSnapshot.liabilityTotalRial);
   const specialStatusDebtRial = Math.max(0, specialFinancialStatus.principalRemainingRial);
-  const specialStatusPaidPercent = Math.max(
-    0,
-    Math.min(99, Math.round((specialFinancialStatus.confirmedPaidRial / specialStatusTotalRial) * 100)),
-  );
   const specialStatusDebtPercent = Math.max(0, Math.min(100, Math.round((specialStatusDebtRial / specialStatusTotalRial) * 100)));
   const specialStatusHasDebt = specialStatusDebtRial > 0;
-  const specialStatusPenaltyCard = specialFinancialStatus.stateCards.find((card) => card.label === 'جریمه باز') ?? null;
-  const specialStatusPendingReviewCard = specialFinancialStatus.stateCards.find((card) => card.label === 'رسید در انتظار بررسی') ?? null;
-  const specialStatusTopCards = specialStatusPenaltyCard
-    ? [
-        ...specialFinancialStatus.stateCards.slice(0, 4),
-        specialStatusPenaltyCard,
-        ...(specialStatusPendingReviewCard ? [specialStatusPendingReviewCard] : []),
-      ]
-    : specialFinancialStatus.stateCards.slice(0, 4);
-  const specialStatusExtraCards = specialFinancialStatus.stateCards
-    .slice(4)
-    .filter((card) => card.label !== 'جریمه باز' && card.label !== 'رسید در انتظار بررسی');
-  const specialStatusTopCardRows = useMemo(() => {
-    const rows: typeof specialStatusTopCards[] = [];
-    for (let index = 0; index < specialStatusTopCards.length; index += 2) {
-      rows.push(specialStatusTopCards.slice(index, index + 2));
-    }
-    return rows;
-  }, [specialStatusTopCards]);
+  const specialStatusQuickCards = specialFinancialStatus.stateCards.slice(0, 4);
 
   const ruleSettingsCards = useMemo(() => {
     const ruleSettings = contract?.data?.ruleSettings ?? null;
@@ -2334,13 +2320,13 @@ export default function ContractReportsPage() {
                     </p>
                   </div>
                 </div>
-                <div className="mt-4 grid gap-4">
+                <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1.06fr)_minmax(0,0.94fr)]">
                   <article className="report-clone-card report-clone-status-main p-4 sm:p-5 md:p-6">
-                    <div className="report-clone-card-title">Status Overview</div>
+                    <div className="report-clone-card-title">نمای کلی وضعیت</div>
 
-                    <div className="flex flex-col gap-4 lg:flex-row lg:items-stretch lg:gap-4">
-                      <div className="flex shrink-0 justify-center lg:w-[360px]">
-                        <div className="flex w-full max-w-[360px] flex-col items-center rounded-[8px] bg-gradient-to-b from-slate-50/90 to-white px-4 py-5 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
+                      <div className="flex shrink-0 justify-center lg:w-[268px]">
+                        <div className="flex w-full max-w-[268px] flex-col items-center rounded-[8px] bg-gradient-to-b from-slate-50/90 to-white px-4 py-5 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
                           <div className="report-clone-score-wrap report-clone-score-wrap--hero">
                             <div className="report-clone-score report-clone-score--debt report-clone-score--hero">
                               <svg viewBox="0 0 84 84" aria-hidden="true">
@@ -2376,54 +2362,63 @@ export default function ContractReportsPage() {
                             </div>
                           </div>
                           <p className="mt-2 text-center text-[11px] font-semibold leading-6 text-slate-500">
-                            این نمودار مقدار بدهی خالص قرارداد را نشان می‌دهد و رنگ آن بر اساس وجود بدهی تغییر می‌کند.
+                            این نمودار مقدار بدهی خالص قرارداد را نشان می‌دهد.
                           </p>
                         </div>
                       </div>
 
-                      <div className="flex flex-1 flex-col overflow-hidden rounded-[8px] bg-white/60">
-                        {specialStatusTopCardRows.map((row, rowIndex) => (
-                          <div key={row.map((card) => card.label).join('|')} className="relative flex flex-col">
-                            <div className="grid grid-cols-1 sm:grid-cols-2">
-                              {row.map((card) => (
-                                <article
-                                  key={card.label}
-                                  className={`report-clone-mini-surface report-clone-mini-surface--flat report-clone-top-card px-4 py-3 ${getStatusToneTextClasses(card.tone)}`}
-                                >
-                                  <div className="text-[11px] font-bold opacity-80">{card.label}</div>
-                                  <div className="mt-1 text-[15px] font-black leading-6">{card.value}</div>
-                                  <p className="mt-2 text-[10px] font-semibold leading-5 opacity-80">{card.note}</p>
-                                </article>
-                              ))}
+                      <div className="min-w-0 flex-1 space-y-3">
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          <div className="rounded-[8px] border border-slate-200 bg-white px-4 py-3 shadow-[0_10px_22px_rgba(15,23,42,0.03)]">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0">
+                                <div className="text-[11px] font-bold text-slate-500">وضعیت بدهی</div>
+                                <div className={`mt-1 text-[15px] font-black leading-6 ${specialStatusHasDebt ? 'text-rose-700' : 'text-emerald-700'}`}>
+                                  {specialStatusHasDebt ? 'مانده دارد' : 'بدون مانده'}
+                                </div>
+                              </div>
+                              <span className={`mt-1 h-2.5 w-2.5 rounded-full ${specialStatusHasDebt ? 'bg-rose-500' : 'bg-emerald-500'}`} aria-hidden />
                             </div>
-                            {row.length > 1 ? (
-                              <div
-                                className="pointer-events-none absolute inset-y-0 left-1/2 hidden w-px -translate-x-1/2 bg-slate-200/80 sm:block"
-                                aria-hidden="true"
-                              />
-                            ) : null}
-                            {rowIndex < specialStatusTopCardRows.length - 1 ? <div className="h-px bg-slate-200/70" aria-hidden="true" /> : null}
                           </div>
-                        ))}
+                          <div className="rounded-[8px] border border-slate-200 bg-white px-4 py-3 shadow-[0_10px_22px_rgba(15,23,42,0.03)]">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0">
+                                <div className="text-[11px] font-bold text-slate-500">سهم بدهی</div>
+                                <div className="mt-1 text-[15px] font-black leading-6 text-slate-900">{specialStatusDebtPercent.toLocaleString('fa-IR')}٪</div>
+                              </div>
+                              <span className="mt-1 h-2.5 w-2.5 rounded-full bg-amber-500" aria-hidden />
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="rounded-[8px] border border-dashed border-slate-200 bg-slate-50/70 px-4 py-3 text-[11px] font-semibold leading-6 text-slate-600">
+                          این بخش فقط یک خلاصه سریع از وضعیت مالی را نشان می‌دهد. جزئیات بیشتر در کارت‌های پایین‌تر دیده می‌شود.
+                        </div>
                       </div>
+                    </div>
+                  </article>
+
+                  <article className="report-clone-card p-4 sm:p-5 md:p-6">
+                    <div className="report-clone-card-title">شاخص‌های سریع</div>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {specialStatusQuickCards.map((card) => (
+                        <div
+                          key={card.label}
+                          className={`rounded-[8px] border px-4 py-3 shadow-[0_10px_22px_rgba(15,23,42,0.03)] ${getStatusToneClasses(card.tone)}`}
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <div className="text-[11px] font-bold opacity-80">{card.label}</div>
+                              <div className="mt-1 text-[16px] font-black leading-6">{card.value}</div>
+                            </div>
+                            <span className="mt-1 h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: getStatusToneColor(card.tone) }} aria-hidden />
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </article>
                 </div>
 
-                {specialStatusExtraCards.length > 0 ? (
-                  <div className="mt-3 grid gap-3 px-2 lg:grid-cols-2 lg:px-3 xl:grid-cols-5">
-                    {specialStatusExtraCards.map((card) => (
-                      <div
-                        key={card.label}
-                        className={`report-clone-mini-surface report-clone-mini-surface--borderless report-clone-glass-card rounded-[8px] px-4 py-3 ${getStatusToneClasses(card.tone)}`}
-                      >
-                        <div className="text-[11px] font-bold opacity-80">{card.label}</div>
-                        <div className="mt-1 text-[14px] font-black leading-6">{card.value}</div>
-                        <p className="mt-2 text-[10px] font-semibold leading-5 opacity-80">{card.note}</p>
-                      </div>
-                    ))}
-                  </div>
-                ) : null}
                 {canSeeInternalTrace && hasSpecialStateGaps ? (
                   <div className="mt-4 rounded-[8px] border border-dashed border-amber-200 bg-amber-50/70 px-4 py-3">
                     <div className="text-[12px] font-black text-amber-900">موارد ناقص در تشخیص وضعیت قرارداد</div>

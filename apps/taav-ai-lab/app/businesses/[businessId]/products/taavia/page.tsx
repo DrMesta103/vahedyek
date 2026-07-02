@@ -67,7 +67,7 @@ export default async function TaaviaPage({ params }: { params: Promise<{ busines
               tooltip={AI_LAB_TOOLTIPS.products.brands}
               badge={{ label: 'فعال', tone: 'brand' }}
               href={`/businesses/${business.id}/products/taavia/brands`}
-              buttonLabel="ورود"
+              buttonLabel="انتخاب"
             />
             <AiLabFeatureCard
               icon={<BarChart3 className="h-5 w-5 text-[var(--taav-text-subtle)]" />}

@@ -43,7 +43,7 @@ export function FinancialCategoriesBox({
   formatMoney: (value: number) => string;
 }) {
   return (
-    <FormBox title="????????????? ????" description="???? ?? ????????? ????????? ??? ???? ? ???????? ?? ?????? ????.">
+    <FormBox title="دسته‌بندی مالی" description="در این بخش، دسته‌های مالی را برای قرارداد تنظیم می‌کنید.">
       <div className="mb-4 space-y-3">
         {chart}
 
@@ -70,7 +70,7 @@ export function FinancialCategoriesBox({
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-bold text-gray-800">{category.name}</span>
-                      {isLocked ? <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] text-gray-400">??????</span> : null}
+                      {isLocked ? <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] text-gray-400">قفل</span> : null}
                     </div>
                     <p className="mt-1 text-xs text-gray-500">{formatMoney(category.capAmount)}</p>
                   </div>
@@ -84,7 +84,7 @@ export function FinancialCategoriesBox({
                         onOpenInfoIdChange(openInfoId === category.id ? null : category.id);
                       }}
                       className="rounded-[8px] p-1 text-sky-500 hover:bg-sky-50"
-                      title="?????? ???? ????"
+                      title="انتخاب سرفصل مالی"
                     >
                       <Info className="h-4 w-4" />
                     </button>
@@ -103,24 +103,24 @@ export function FinancialCategoriesBox({
                     {openInfoId === category.id ? (
                       <div className="absolute left-0 top-8 z-20 w-72 rounded-[8px] border border-sky-100 bg-white p-3 shadow-lg" onClick={(event) => event.stopPropagation()}>
                         <div className="border-b border-gray-100 pb-2">
-                          <div className="text-sm font-bold text-gray-800">?????? ???? ????</div>
+                          <div className="text-sm font-bold text-gray-800">سرفصل مالی</div>
                           <div className="mt-1 text-xs text-gray-500">{category.name}</div>
                         </div>
                         <div className="space-y-2 pt-3 text-xs text-gray-600">
                           <div className="flex items-center justify-between">
-                            <span>??? ????</span>
+                            <span>نوع</span>
                             <span className="font-semibold text-gray-800">{formatMoney(category.capAmount)}</span>
                           </div>
                           <div className="flex items-center justify-between">
-                            <span>????? ????</span>
-                            <span className="font-semibold text-gray-800">{isLocked ? '??????' : '???? ??????'}</span>
+                            <span>وضعیت</span>
+                            <span className="font-semibold text-gray-800">{isLocked ? 'قفل شده' : 'قابل ویرایش'}</span>
                           </div>
                           <div className="flex items-center justify-between">
-                            <span>????? ????????? ?????</span>
+                            <span>جمع هزینه‌ها</span>
                             <span className="font-semibold text-gray-800">{categoryDueItems.length}</span>
                           </div>
                           <div className="border-t border-gray-100 pt-2">
-                            <div className="mb-2 text-[11px] font-semibold text-gray-500">????????? ?????</div>
+                            <div className="mb-2 text-[11px] font-semibold text-gray-500">خلاصه پرداخت</div>
                             {categoryDueItems.length ? (
                               <div className="space-y-1.5">
                                 {categoryDueItems.map((item) => (
@@ -135,7 +135,7 @@ export function FinancialCategoriesBox({
                               </div>
                             ) : (
                               <div className="rounded-[8px] border border-dashed border-gray-200 px-2.5 py-3 text-center text-[11px] text-gray-400">
-                                ???? ??? ???? ???? ??????? ??? ???? ???.
+                                هنوز موردی برای این دسته انتخاب نشده است.
                               </div>
                             )}
                           </div>
@@ -151,7 +151,7 @@ export function FinancialCategoriesBox({
                           className="flex w-full items-center gap-2 rounded-[8px] px-3 py-2 text-right text-sm text-gray-700 hover:bg-gray-50"
                         >
                           <Pencil className="h-4 w-4" />
-                          ??????
+                          ویرایش
                         </button>
                         <button
                           type="button"
@@ -174,7 +174,7 @@ export function FinancialCategoriesBox({
         <div className="flex justify-end">
           <button type="button" onClick={onOpenAddCategory} className="inline-flex h-10 items-center gap-2 rounded-[8px] border border-teal-300 bg-teal-50 px-4 text-sm font-medium text-teal-700 hover:bg-teal-100">
             <Plus className="h-4 w-4" />
-            ?????? ???? ????
+            انتخاب دسته مالی
           </button>
         </div>
       </div>
@@ -182,12 +182,12 @@ export function FinancialCategoriesBox({
       <div className="rounded-[8px] border border-gray-200 bg-gray-50 p-4">
         <div className="mb-4 flex flex-col gap-3 border-b border-gray-200 pb-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="font-semibold text-gray-800">{`????????? ${categories.find((item) => item.id === activeTab)?.name ?? ''}`}</p>
-            <p className="mt-0.5 text-xs text-gray-500">????? ???????? ???? ????????? ???? ?? ??? ??? ????? ???? ??????.</p>
+            <p className="font-semibold text-gray-800">{`دسته انتخاب‌شده: ${categories.find((item) => item.id === activeTab)?.name ?? ''}`}</p>
+            <p className="mt-0.5 text-xs text-gray-500">از بین گزینه‌های زیر، سرفصل مناسب را انتخاب کنید.</p>
           </div>
           <button type="button" onClick={onOpenDueDialog} className="inline-flex h-9 items-center gap-2 rounded-[8px] border border-teal-300 bg-teal-50 px-4 text-sm font-medium text-teal-700 hover:bg-teal-100">
             <Plus className="h-4 w-4" />
-            ??? ??????
+            افزودن مورد
           </button>
         </div>
 
@@ -196,7 +196,7 @@ export function FinancialCategoriesBox({
             <div key={item.id} className="flex items-center justify-between rounded-[8px] border border-teal-100 bg-white p-3.5">
               <div>
                 <p className="text-sm font-semibold text-gray-800">{item.title}</p>
-                <p className="mt-0.5 text-xs text-gray-500">?????: {item.dueDate}</p>
+                <p className="mt-0.5 text-xs text-gray-500">موعد: {item.dueDate}</p>
               </div>
               <div className="flex items-center gap-3">
                 <span className="text-sm font-bold text-teal-700">{formatMoney(item.amount)}</span>
@@ -208,7 +208,7 @@ export function FinancialCategoriesBox({
           ))}
           {!visibleDueItems.length ? (
             <div className="rounded-[8px] border-2 border-dashed border-gray-200 p-6 text-center text-sm text-gray-400">
-              ???? ??? ??? ??????? ??? ???? ???.
+              هیچ موردی هنوز برای این دسته ثبت نشده است.
             </div>
           ) : null}
         </div>

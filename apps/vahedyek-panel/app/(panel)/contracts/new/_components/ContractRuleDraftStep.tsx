@@ -113,7 +113,7 @@ export function ContractRuleDraftStep({
       const bootstrap = await fetchContractFlowBootstrapSettings();
       const bootstrapRule = bootstrap.rules[ruleId] ?? null;
       if (!bootstrapRule) {
-        throw new Error('??????? ?????? ?? ??? ??????? ???? ???.');
+        throw new Error('انتخاب وضعیت قرارداد ناموفق بود.');
       }
       const nextState = normalizeRuleState(ruleId, bootstrapRule);
       setState(nextState);
@@ -124,7 +124,7 @@ export function ContractRuleDraftStep({
       dispatchContractFlowSavedForDraft(draftId, stepId, Date.now(), nextState);
       setImportDialogOpen(false);
     } catch (error) {
-      setImportError(error instanceof Error ? error.message : '?????? ??????? ????? ???.');
+      setImportError(error instanceof Error ? error.message : 'دریافت پیش‌نویس قرارداد ناموفق بود.');
     } finally {
       setImportBusy(false);
     }
@@ -156,7 +156,7 @@ export function ContractRuleDraftStep({
         dispatchContractFlowDirty(stepId, false);
       } catch (error) {
         if (!mounted) return;
-        setFormError(error instanceof Error ? error.message : '???????? ??????? ????? ???.');
+        setFormError(error instanceof Error ? error.message : 'بارگذاری پیش‌نویس قرارداد ناموفق بود.');
       } finally {
         if (mounted) setLoading(false);
       }
@@ -192,14 +192,14 @@ export function ContractRuleDraftStep({
       dispatchContractFlowDirty(stepId, false);
       dispatchContractFlowSavedForDraft(draftId, stepId, Date.now(), state);
     } catch (error) {
-      setFormError(error instanceof Error ? error.message : '????? ??????? ????? ???.');
+      setFormError(error instanceof Error ? error.message : 'ذخیره پیش‌نویس قرارداد ناموفق بود.');
     } finally {
       setSaving(false);
     }
   };
 
   if (loading || !state) {
-    return <ContractStepLoader title={sectionTitle} description="?? ??? ???????? ??????? ???????? ???????..." />;
+    return <ContractStepLoader title={sectionTitle} description="در حال دریافت اطلاعات مرحله قرارداد..." />;
   }
 
   if (ruleId === 'forgiveness') {
@@ -224,7 +224,7 @@ export function ContractRuleDraftStep({
 
         <StickySubmitBar
           label={`??? ${sectionTitle}`}
-          loadingLabel={loading ? '?? ??? ????????...' : '?? ??? ?????...'}
+          loadingLabel={loading ? 'در حال دریافت...' : 'در حال ذخیره...'}
           disabled={loading || saving}
           onClick={handleSubmit}
           embedded={embedded}
@@ -241,7 +241,7 @@ export function ContractRuleDraftStep({
           <div>
             <h1 className="text-2xl font-bold text-[color:var(--text-strong)]">{sectionTitle}</h1>
             <p className="mt-1 text-sm leading-7 text-[color:var(--text-muted)]">
-              ??? ??? ?? ??????? ???????? ????? ????? ??????? ? ???? ???? ???????? ??????? ???? ????? ???.
+              این مرحله برای تنظیم قانون و متن قرارداد استفاده می‌شود.
             </p>
           </div>
           <button
@@ -249,7 +249,7 @@ export function ContractRuleDraftStep({
             onClick={() => setImportDialogOpen(true)}
             className="rounded-[8px] border border-cyan-200 bg-cyan-50 px-3.5 py-2 text-sm font-bold text-cyan-700 transition-colors hover:bg-cyan-100"
           >
-            ?????? ?? ???????
+            ذخیره در پیش‌نویس
           </button>
         </div>
       ) : null}
@@ -261,7 +261,7 @@ export function ContractRuleDraftStep({
             onClick={() => setImportDialogOpen(true)}
             className="rounded-[8px] border border-cyan-200 bg-cyan-50 px-3.5 py-2 text-sm font-bold text-cyan-700 transition-colors hover:bg-cyan-100"
           >
-            ?????? ?? ???????
+            بارگذاری از پیش‌نویس
           </button>
         </div>
       ) : null}
@@ -273,7 +273,7 @@ export function ContractRuleDraftStep({
             <p className="w-full text-sm leading-7 text-[color:var(--text-muted)]">{rule.activationDescription}</p>
             {!state.active ? (
               <p className="w-full text-sm text-[color:var(--text-muted)]">
-                ?? ???? ???? ??? ?????? ?????? ??? ??? ?? ???????? ??????? ????? ??????.
+                برای ادامه، وضعیت‌های مالی و حقوقی را از همین بخش تنظیم کنید.
               </p>
             ) : null}
           </div>
@@ -290,7 +290,7 @@ export function ContractRuleDraftStep({
 
       <StickySubmitBar
         label={`??? ${sectionTitle}`}
-        loadingLabel={loading ? '?? ??? ????????...' : '?? ??? ?????...'}
+        loadingLabel={loading ? 'در حال دریافت...' : 'در حال ذخیره...'}
         disabled={loading || saving}
         onClick={handleSubmit}
         embedded={embedded}
@@ -301,8 +301,8 @@ export function ContractRuleDraftStep({
         open={importDialogOpen}
         loading={importBusy}
         error={importError}
-        title={`?????? ??????? ${sectionTitle}`}
-        description="?? ?????? ?????? ??????? ?? ??????? ???????? ????? ????? ??? ??? ?? ???????? ???? ????????."
+        title={`تنظیمات قرارداد ${sectionTitle}`}
+        description="در این بخش می‌توانید وضعیت قرارداد و قواعد وابسته را نهایی کنید."
         onConfirm={() => void applySettingsFromBusiness()}
         onClose={() => setImportDialogOpen(false)}
       />

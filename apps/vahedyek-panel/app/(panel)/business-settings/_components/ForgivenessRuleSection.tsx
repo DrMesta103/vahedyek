@@ -12,16 +12,16 @@ type ForgiveValueMode = 'amount' | 'percent';
 
 const WHOLE_CONTRACT_ENTRY = {
   id: 'whole-contract',
-  title: '????? ??????? ??? ?? ???????',
-  description: '?? ??? ??? ????????? ????? ? ????? ??????? ????? ?? ???? ?? ??????? ????? ????.',
+  title: 'بخشودگی کل قرارداد',
+  description: 'در این حالت کل قرارداد به‌صورت یک‌جا بررسی می‌شود.',
 };
 
 const ITEMIZED_FORGIVENESS_ENTRIES = PENALTY_ITEMS.filter((item) => item.id !== 'discount-cancelled').map((item) => ({
   id: item.id,
-  title: item.title.replace('?????', '???????'),
+  title: item.title.replace('?????', 'بخشودگی'),
   description: item.description
-    .replace('??????? ?????? ?????', '?? ??? ??? ????????? ????? ? ????? ??????? ?????')
-    .replace('?? ???? ??????.', '?? ????? ????.'),
+    .replace('??????? ?????? ?????', 'در این حالت بخشودگی به‌صورت موردی و برای هر قلم بررسی می‌شود')
+    .replace('?? ???? ??????.', 'این مورد را مشخص کنید.'),
 }));
 
 function RuleTextInput({
@@ -77,15 +77,15 @@ function ConfirmModal({
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-white/55 px-4 backdrop-blur-sm">
       <div className="w-full max-w-md overflow-hidden rounded-[8px] border border-slate-200 bg-white shadow-[0_24px_80px_rgba(15,23,42,0.12)]">
         <div className="space-y-3 px-6 py-6 text-right">
-          <h3 className="text-2xl font-black text-[color:var(--text-strong)]">????? ??? ? ????????????</h3>
-          <p className="text-sm leading-7 text-[color:var(--text-muted)]">?? ????? ??? ??????? ?? ???? ????????? ????? ?? ?? ????? ??? ?? ??????? ??????.</p>
+          <h3 className="text-2xl font-black text-[color:var(--text-strong)]">انتخاب ناحیه و نوع بخشودگی</h3>
+          <p className="text-sm leading-7 text-[color:var(--text-muted)]">ابتدا محدوده بخشودگی را انتخاب کنید، سپس جزئیات مربوط به آن را تنظیم کنید.</p>
         </div>
         <div className="flex items-center justify-end gap-8 border-t border-slate-100 px-6 py-5">
           <button type="button" onClick={onCancel} className="text-sm font-bold text-[color:var(--text-muted)] transition hover:text-[color:var(--text-strong)]">
-            ???
+            لغو
           </button>
           <button type="button" onClick={onConfirm} className="text-sm font-black text-[#ff5c5c] transition hover:text-[#ff8a8a]">
-            ?????
+            حذف
           </button>
         </div>
       </div>
@@ -129,15 +129,15 @@ export function ForgivenessRuleSection({
         <div className="space-y-5">
           <section className="overflow-hidden rounded-[8px] border border-[color:var(--border-soft)] bg-[color:var(--surface)]">
             <div className="flex flex-wrap border-b border-[color:var(--border-soft)]">
-              <RuleTabButton title="??????? ????? ???????" icon={Filter} active={scope === 'itemized'} onClick={() => scope !== 'itemized' && setPendingScope('itemized')} />
-              <RuleTabButton title="??????? ??? ?? ???????" icon={Layers3} active={scope === 'whole'} onClick={() => scope !== 'whole' && setPendingScope('whole')} />
+              <RuleTabButton title="بخش‌بندی‌شده" icon={Filter} active={scope === 'itemized'} onClick={() => scope !== 'itemized' && setPendingScope('itemized')} />
+              <RuleTabButton title="کل قرارداد" icon={Layers3} active={scope === 'whole'} onClick={() => scope !== 'whole' && setPendingScope('whole')} />
             </div>
 
             <div className="space-y-8 p-5">
               <div className="space-y-4">
-                <RuleFieldLabel label="?????? ????? ????? ????? ?? ?? ???????" required />
+                <RuleFieldLabel label="حداکثر روزهای تاخیر برای بخشودگی" required />
                 <RuleTextInput value={String(state.values.forgiveMaxDelayCount ?? '')} onChange={(value) => onValueChange('forgiveMaxDelayCount', value)} />
-                <p className="text-right text-sm text-[color:var(--text-muted)]">?????? ?????? ?? ?? ?? ??????? ? ?? ??? ?????? ????? ????? ????????? ???? ?? ????? ? ???? ??????? ??? ?? ???? ????. ????: ? ????? ????.</p>
+                <p className="text-right text-sm text-[color:var(--text-muted)]">عدد موردنظر را وارد کنید تا مشخص شود بخشودگی برای چه تاخیری اعمال می‌شود.</p>
               </div>
 
               {scope === 'whole' ? (
@@ -169,78 +169,78 @@ export function ForgivenessRuleSection({
             className="inline-flex items-center gap-2 rounded-full border border-[color:var(--border-color)] px-4 py-2 text-sm font-bold text-[color:var(--text-muted)] transition hover:border-[color:var(--theme-action-border)] hover:text-[color:var(--text-strong)]"
           >
             <ChevronLeft className="h-4 w-4" />
-            ??????
+            بازگشت
           </button>
         </div>
       </section>
 
       <section className="overflow-hidden rounded-[8px] border border-[color:var(--border-soft)] bg-[color:var(--surface)]">
         <div className="flex flex-wrap border-b border-[color:var(--border-soft)]">
-          <RuleTabButton title="????" icon={CirclePercent} active={valueMode === 'percent'} onClick={() => onValueChange('forgiveValueMode', 'percent')} />
-          <RuleTabButton title="???? ????" icon={CircleDollarSign} active={valueMode === 'amount'} onClick={() => onValueChange('forgiveValueMode', 'amount')} />
+          <RuleTabButton title="درصد" icon={CirclePercent} active={valueMode === 'percent'} onClick={() => onValueChange('forgiveValueMode', 'percent')} />
+          <RuleTabButton title="مبلغ" icon={CircleDollarSign} active={valueMode === 'amount'} onClick={() => onValueChange('forgiveValueMode', 'amount')} />
         </div>
 
         <div className="space-y-8 p-5">
           <div className="flex items-center justify-between gap-4">
             <div className="text-right">
-              <h3 className="text-[20px] font-black text-[color:var(--text-strong)]">?? ???? ?? ????/??????</h3>
-              <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">??? ??? ????? ???? ????? ????????? ???? ??????? ????? ?? ???? ??? ??????? ????? ????.</p>
+              <h3 className="text-[20px] font-black text-[color:var(--text-strong)]">فعال‌سازی بخشودگی</h3>
+              <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">این گزینه مشخص می‌کند که بخشودگی فعال باشد یا نه.</p>
             </div>
             <BusinessSwitch
               checked={Boolean(state.values.forgiveAllowed)}
               onChange={(value) => onValueChange('forgiveAllowed', value)}
-              activeLabel="????"
-              inactiveLabel="???????"
+              activeLabel="فعال"
+              inactiveLabel="غیرفعال"
             />
           </div>
 
           {valueMode === 'amount' ? (
             <div className="space-y-6 border-t border-[#415769] pt-6">
               <div className="space-y-4">
-                <RuleFieldLabel label="????? ???? ????? ???? ????" required />
-                <RuleTextInput value={String(state.values.forgiveMinValue ?? '')} onChange={(value) => onValueChange('forgiveMinValue', value)} suffix="?????" />
-                <p className="text-right text-sm text-[color:var(--text-muted)]">????? ????? ?? ?? ???? ????? ??????? ???????? ???? ???? ???. ????: ?,???,???</p>
+                <RuleFieldLabel label="حداقل مبلغ بخشودگی" required />
+                <RuleTextInput value={String(state.values.forgiveMinValue ?? '')} onChange={(value) => onValueChange('forgiveMinValue', value)} suffix="ریال" />
+                <p className="text-right text-sm text-[color:var(--text-muted)]">حداقل مبلغی که می‌تواند بخشوده شود را وارد کنید. مثال: 1,000,000</p>
               </div>
 
               <div className="space-y-4">
-                <RuleFieldLabel label="?????? ???? ????? ???? ????" required />
-                <RuleTextInput value={String(state.values.forgiveMaxValue ?? '')} onChange={(value) => onValueChange('forgiveMaxValue', value)} suffix="?????" />
-                <p className="text-right text-sm text-[color:var(--text-muted)]">?????? ????? ?? ???? ?? ??????? ???. ????: ??,???,???</p>
+                <RuleFieldLabel label="حداکثر مبلغ بخشودگی" required />
+                <RuleTextInput value={String(state.values.forgiveMaxValue ?? '')} onChange={(value) => onValueChange('forgiveMaxValue', value)} suffix="ریال" />
+                <p className="text-right text-sm text-[color:var(--text-muted)]">حداکثر مبلغ قابل بخشش را وارد کنید. مثال: 10,000,000</p>
               </div>
             </div>
           ) : (
             <div className="space-y-6 border-t border-[#415769] pt-6">
               <div className="space-y-4">
-                <RuleFieldLabel label="????? ???? ????? ???? ????" required />
+                <RuleFieldLabel label="حداقل درصد بخشودگی" required />
                 <RuleTextInput value={String(state.values.forgiveMinValue ?? '')} onChange={(value) => onValueChange('forgiveMinValue', value)} suffix="%" />
-                <p className="text-right text-sm text-[color:var(--text-muted)]">????? ????? ?? ?? ???? ????? ??????? ???????? ???? ???? ???. ????: ?? ????</p>
+                <p className="text-right text-sm text-[color:var(--text-muted)]">حداقل درصد قابل اعمال را وارد کنید. مثال: 10%</p>
               </div>
 
               <div className="space-y-4">
-                <RuleFieldLabel label="?????? ???? ????? ???? ????" required />
+                <RuleFieldLabel label="حداکثر درصد بخشودگی" required />
                 <RuleTextInput value={String(state.values.forgiveMaxValue ?? '')} onChange={(value) => onValueChange('forgiveMaxValue', value)} suffix="%" />
-                <p className="text-right text-sm text-[color:var(--text-muted)]">?????? ????? ?? ???? ?? ??????? ???. ????: ?? ????</p>
+                <p className="text-right text-sm text-[color:var(--text-muted)]">حداکثر درصد قابل اعمال را وارد کنید. مثال: 50%</p>
               </div>
             </div>
           )}
 
           <div className="flex items-center justify-between gap-4 border-t border-[#415769] pt-6">
             <div className="text-right">
-              <h3 className="text-[18px] font-black text-[color:var(--text-strong)]">????? ???? ?? ?????? ??????</h3>
-              <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">?? ???? ???? ????? ?? ?????? ?? ????? ???? ?? ?????? ?????? ????? ???? ??? ????? ????? ??????? ????? ????? ????? ???.</p>
+              <h3 className="text-[18px] font-black text-[color:var(--text-strong)]">بخشودگی خارج از اختیار خریدار</h3>
+              <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">اگر این گزینه روشن باشد، بخشودگی برای موارد خارج از اختیار خریدار هم در نظر گرفته می‌شود.</p>
             </div>
             <BusinessSwitch
               checked={Boolean(state.values.forgiveOutsideBuyerControl)}
               onChange={(value) => onValueChange('forgiveOutsideBuyerControl', value)}
-              activeLabel="????"
-              inactiveLabel="???????"
+              activeLabel="فعال"
+              inactiveLabel="غیرفعال"
             />
           </div>
 
           <div className="flex items-start justify-between gap-4 border-t border-[#415769] pt-6">
             <div className="text-right">
-              <h3 className="text-[18px] font-black text-[color:var(--text-strong)]">????? ???? ???? ??????????? ????</h3>
-              <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">??? ???? ????? ??????????? ?????? ?? ?? ?? ???? ??? ?? ????? ??????? ??????? ????? ??????.</p>
+              <h3 className="text-[18px] font-black text-[color:var(--text-strong)]">نیاز به تایید مدیریت</h3>
+              <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">اگر این گزینه فعال باشد، اعمال بخشودگی به تایید مدیریت نیاز دارد.</p>
             </div>
             <BusinessSwitch checked={Boolean(state.values.forgiveManagerApproval)} onChange={(value) => onValueChange('forgiveManagerApproval', value)} />
           </div>

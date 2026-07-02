@@ -20,7 +20,7 @@ export function ContractHistoryPanel({ contractId, embedded = true }: { contract
       setData(history);
       setSelectedVersionId(history.currentVersionId);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '?????? ??????? ??????? ????? ???.');
+      setError(err instanceof Error ? err.message : 'دریافت تاریخچه قرارداد انجام نشد.');
     } finally {
       setLoading(false);
     }
@@ -42,29 +42,29 @@ export function ContractHistoryPanel({ contractId, embedded = true }: { contract
     if (!data) return null;
     const current = data.versions.find((v) => v.id === data.currentVersionId);
     return {
-      title: '??????? ???????',
-      description: '??? ??????? ??????? ?? ???? ???? ?? ????? ???? ???????? ?? ?? ??????? ????? ?????? ????.',
-      currentLabel: current ? `????? ????: ${current.title}` : undefined,
+      title: 'تاریخچه قرارداد',
+      description: 'سیر تغییرات قرارداد از نسخه اصلی تا آخرین متمم تاییدشده را در بخش‌های مختلف مشاهده کنید.',
+      currentLabel: current ? `وضعیت فعلی: ${current.title}` : undefined,
       stats: [
-        { label: '????? ???????', value: data.stats.versionCount.toLocaleString('fa-IR') },
-        { label: '????? ??????', value: data.stats.sectionCount.toLocaleString('fa-IR') },
-        { label: '??????? ????? ?????', value: data.stats.changedSectionCount.toLocaleString('fa-IR'), accent: true },
-        { label: '????? ???????', value: data.contractNumber ?? '�' },
+        { label: 'تعداد نسخه‌ها', value: data.stats.versionCount.toLocaleString('fa-IR') },
+        { label: 'تعداد بخش‌ها', value: data.stats.sectionCount.toLocaleString('fa-IR') },
+        { label: 'بخش‌های دارای تغییر', value: data.stats.changedSectionCount.toLocaleString('fa-IR'), accent: true },
+        { label: 'شماره قرارداد', value: data.contractNumber ?? '—' },
       ],
     };
   }, [data]);
 
   if (loading) {
     return (
-      <section className="contract-details-panel mt-4 rounded-[8px] border border-slate-200/80 bg-white/95 px-5 py-10 text-center text-sm font-bold text-slate-500 shadow-sm">
-        ?? ??? ???????? ??????? ???????...
+      <section className="contract-details-panel mt-4 rounded-[28px] border border-slate-200/80 bg-white/95 px-5 py-10 text-center text-sm font-bold text-slate-500 shadow-sm">
+        در حال بارگذاری تاریخچه قرارداد...
       </section>
     );
   }
 
   if (error) {
     return (
-      <section className="contract-details-panel mt-4 rounded-[8px] border border-rose-200 bg-rose-50/95 px-5 py-8 text-center text-sm font-bold text-rose-800 shadow-sm">
+      <section className="contract-details-panel mt-4 rounded-[28px] border border-rose-200 bg-rose-50/95 px-5 py-8 text-center text-sm font-bold text-rose-800 shadow-sm">
         {error}
       </section>
     );
@@ -85,4 +85,3 @@ export function ContractHistoryPanel({ contractId, embedded = true }: { contract
     </div>
   );
 }
-

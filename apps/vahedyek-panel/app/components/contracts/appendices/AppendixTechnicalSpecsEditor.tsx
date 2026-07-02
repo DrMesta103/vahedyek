@@ -52,7 +52,7 @@ function normalizeProjectSpecs(items: Array<Partial<TechnicalSpecItem> | null | 
 async function fetchProjectTechnicalSpecs(): Promise<Array<Partial<TechnicalSpecItem>>> {
   const response = await fetch('/api/business-settings/project/technical-specs', { cache: 'no-store' });
   const data = (await response.json()) as { technicalSpecs?: unknown; message?: string };
-  if (!response.ok) throw new Error(data.message ?? '?????? ?????? ??? ????? ?????? ???.');
+  if (!response.ok) throw new Error(data.message ?? 'دریافت مشخصات فنی پروژه ناموفق بود.');
   return Array.isArray(data.technicalSpecs) ? (data.technicalSpecs as Array<Partial<TechnicalSpecItem>>) : [];
 }
 
@@ -91,7 +91,7 @@ export function AppendixMaterialSpecsChangeEditor({ value: externalValue, onChan
         if (!mounted) return;
         setProjectSpecs(normalizeProjectSpecs(projectTechnicalSpecs));
       } catch (error) {
-        if (mounted) setFormError(error instanceof Error ? error.message : '?????? ?????? ??? ????? ?????? ???.');
+        if (mounted) setFormError(error instanceof Error ? error.message : 'دریافت مشخصات فنی پروژه ناموفق بود.');
       } finally {
         if (mounted) setLoading(false);
       }
@@ -162,7 +162,7 @@ export function AppendixMaterialSpecsChangeEditor({ value: externalValue, onChan
   function removeGroup(groupId: string) {
     const group = groups.find((item) => item.id === groupId);
     if (!group) return;
-    if (!window.confirm(`???? "${group.title}" ??? ????`)) return;
+    if (!window.confirm(`گروه "${group.title}" حذف شود؟`)) return;
     const nextGroups = groups.filter((item) => item.id !== groupId);
     setGroups(nextGroups);
     syncPayload(nextGroups);
@@ -215,21 +215,21 @@ export function AppendixMaterialSpecsChangeEditor({ value: externalValue, onChan
       <section className="rounded-[8px] border border-slate-200 bg-white px-5 py-5 shadow-[0_14px_30px_rgba(15,23,42,0.05)]">
         <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-100 pb-4">
           <div className="max-w-[760px] text-right">
-            <h2 className="text-[24px] font-black text-slate-700">?????? ??? ?????</h2>
+            <h2 className="text-[24px] font-black text-slate-700">مشخصات فنی پروژه</h2>
             <p className="mt-2 text-[13px] leading-7 text-slate-500">
-              ?? ??? ??? ???? ?? ????? ????? ??? ?????? ? ??? ?? ??? ????????? ??? ????????? ?? ?????? ????? ????? ?? ?????? ????.
+              در این بخش برای هر گروه، مشخصه فنی بسازید و سپس از بین مشخصه‌های فنی تعریف‌شده در مجتمع، موارد مرتبط را انتخاب کنید.
             </p>
           </div>
           <button type="button" onClick={openCreateDialog} className="business-blocks-add">
-            <span>??? ????? ???</span>
+            <span>ثبت مشخصه فنی</span>
             <Plus className="h-5 w-5" />
           </button>
         </div>
 
-        {loading ? <div className="business-blocks-state">?? ??? ?????? ?????? ???...</div> : null}
+        {loading ? <div className="business-blocks-state">در حال دریافت مشخصات فنی...</div> : null}
         {!loading && !visibleGroups.length ? (
           <div className="business-blocks-state">
-            ???? ????? ??? ???? ???. ???? ????? ?? ???? ????? ??? ?????? ? ????? ????? ?? ?? ????? ??? ?????? ????.
+            هنوز گروهی ثبت نشده است. برای شروع، یک گروه مشخصه فنی بسازید و موارد مرتبط را از فهرست زیر انتخاب کنید.
           </div>
         ) : null}
 
@@ -240,14 +240,14 @@ export function AppendixMaterialSpecsChangeEditor({ value: externalValue, onChan
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div className="text-right">
                     <div className="text-[20px] font-black text-slate-700">{group.title}</div>
-                    <div className="mt-1 text-[13px] text-slate-500">{group.specs.length} ????? ?????? ???</div>
+                    <div className="mt-1 text-[13px] text-slate-500">{group.specs.length} مشخصه انتخاب شده</div>
                   </div>
                   <div className="flex items-center gap-4">
                     <button
                       type="button"
                       onClick={() => openEditDialog(group)}
                       className="inline-flex h-10 w-10 items-center justify-center rounded-[8px] text-cyan-600 transition hover:bg-cyan-50 hover:text-cyan-700"
-                      aria-label={`?????? ${group.title}`}
+                      aria-label={`ویرایش ${group.title}`}
                     >
                       <Pencil className="h-5 w-5" />
                     </button>
@@ -267,7 +267,7 @@ export function AppendixMaterialSpecsChangeEditor({ value: externalValue, onChan
                     group.specs.map((spec) => <GroupRow key={spec.id} spec={spec} />)
                   ) : (
                     <div className="rounded-[8px] border border-dashed border-slate-200 bg-slate-50/70 px-4 py-4 text-right text-[13px] text-slate-400">
-                      ???? ???????? ???? ??? ???? ?????? ???? ???.
+                      هنوز مشخصه‌ای برای این گروه انتخاب نشده است.
                     </div>
                   )}
                 </div>
@@ -292,22 +292,22 @@ export function AppendixMaterialSpecsChangeEditor({ value: externalValue, onChan
           >
             <div className="px-8 pt-8 text-right">
               <h2 id="technical-specs-dialog-title" className="text-[26px] font-black leading-10 text-slate-700">
-                {dialog.mode === 'edit' ? '?????? ????? ??? ?????' : '?????? ????? ??? ?????'}
+                {dialog.mode === 'edit' ? 'ویرایش مشخصه فنی پروژه' : 'افزودن مشخصه فنی پروژه'}
               </h2>
               <p className="mt-4 text-[13px] leading-7 text-slate-600">
-                ????? ???? ?? ???? ???? ? ??? ?? ??? ????????? ??? ?????? ????? ????? ?? ?????? ????.
+                عنوان گروه را وارد کنید و سپس از بین مشخصه‌های فنی پروژه، موارد مرتبط را انتخاب کنید.
               </p>
             </div>
 
             <div className="grid gap-5 px-8 pb-8 pt-6">
               <label className="grid gap-2 text-right">
                 <span className="text-[15px] font-bold text-slate-600">
-                  ????? <span className="text-rose-500">*</span>
+                  عنوان <span className="text-rose-500">*</span>
                 </span>
                 <Input
                   value={form.title}
                   onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))}
-                  placeholder="?????: ??????? ????"
+                  placeholder="مثلاً: تاسیسات برقی"
                   autoFocus
                   maxLength={120}
                   className="h-12 rounded-[8px] border-slate-300 px-4 text-[14px] font-medium text-slate-700 placeholder:text-slate-400 focus:border-[color:var(--dark-teal)] focus:ring-2 focus:ring-[color-mix(in_srgb,var(--dark-teal)_12%,transparent)]"
@@ -316,9 +316,9 @@ export function AppendixMaterialSpecsChangeEditor({ value: externalValue, onChan
 
               <div className="grid gap-3 text-right">
                 <div>
-                  <h3 className="text-[18px] font-black text-slate-700">?????? ????????? ???</h3>
+                  <h3 className="text-[18px] font-black text-slate-700">انتخاب مشخصه‌های فنی</h3>
                   <p className="mt-1 text-[12px] leading-6 text-slate-500">
-                    ???? ?? ???? ????????? ??? ????? ??? ?????? ????. ????? ??????? ?? ???? ??? ???? ???? ????? ???????.
+                    برای هر گروه می‌توانید چند مشخصه فنی انتخاب کنید. موارد انتخابی به همان شکل داخل متمم ذخیره می‌شوند.
                   </p>
                 </div>
 
@@ -354,7 +354,7 @@ export function AppendixMaterialSpecsChangeEditor({ value: externalValue, onChan
                       })
                     ) : (
                       <div className="rounded-[8px] border border-dashed border-slate-200 bg-white px-4 py-5 text-right text-[13px] text-slate-400">
-                        ???? ???????? ?? ??????? ????? ??? ???? ???.
+                        هنوز مشخصه‌ای در اطلاعات مجتمع ثبت نشده است.
                       </div>
                     )}
                   </div>
@@ -368,7 +368,7 @@ export function AppendixMaterialSpecsChangeEditor({ value: externalValue, onChan
                 className="text-[15px] font-bold text-slate-500 transition hover:text-slate-700"
                 onClick={closeDialog}
               >
-                ??????
+                انصراف
               </button>
               <button
                 type="button"
@@ -376,7 +376,7 @@ export function AppendixMaterialSpecsChangeEditor({ value: externalValue, onChan
                 onClick={submitDialog}
                 disabled={!form.title.trim() || !form.selectedSpecIds.length}
               >
-                ???
+                ثبت
               </button>
             </div>
           </div>
