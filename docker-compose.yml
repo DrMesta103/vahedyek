@@ -14,3 +14,11 @@ services:
       context: .
       dockerfile: apps/dastranj-panel/Dockerfile
     restart: unless-stopped
+
+  ai-lab:
+    image: ai-lab:latest
+    container_name: ai-lab
+    build:
+      context: .
+      dockerfile: apps/taav-ai-lab/Dockerfile
+    restart: unless-stopped
