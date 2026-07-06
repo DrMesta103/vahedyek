@@ -329,15 +329,13 @@ export function TaaviaTestWorkspaceClient({
     [activeTab, kbDirty, knowledgeBaseDocument, canBuild, handleBuildKnowledgeBase, resolveKbSelection],
   );
 
-  const tabs: Array<{ value: TestTab; label: string; icon: typeof BookText }> = [
+  const tabs: Array<{ value: Exclude<TestTab, 'knowledge-base'>; label: string; icon: typeof BookText }> = [
     { value: 'brand', label: 'معرفی برند', icon: BookText },
     { value: 'products', label: 'محصول / خدمات', icon: Boxes },
     { value: 'faq', label: 'سوالات پرتکرار', icon: CircleHelp },
-    ...(knowledgeBaseDocument ? [{ value: 'knowledge-base' as const, label: 'Knowledge Base', icon: FlaskConical }] : []),
   ];
 
   const showCategoriesPreview = activeTab !== 'knowledge-base';
-  const showStatusReport = activeTab !== 'knowledge-base';
 
   return (
     <div className="relative isolate overflow-hidden rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,16,33,0.98)_0%,rgba(11,22,43,0.95)_100%)] px-4 py-5 pb-28 md:px-5 md:py-6">
@@ -353,12 +351,12 @@ export function TaaviaTestWorkspaceClient({
           </Link>
           <div className="inline-flex items-center gap-2 rounded-full border border-[rgba(250,204,21,0.24)] bg-[rgba(250,204,21,0.10)] px-4 py-2 text-[length:var(--taav-text-xs)] font-black text-[rgb(253,224,71)]">
             <FlaskConical className="h-4 w-4" />
-            تست · {brandName}
+            تنظیم دستی · {brandName}
           </div>
         </div>
 
         <div className="text-right">
-          <h1 className="m-0 text-[clamp(1.6rem,2.4vw,2.4rem)] font-black text-white">ساخت Knowledge Base تست</h1>
+          <h1 className="m-0 text-[clamp(1.6rem,2.4vw,2.4rem)] font-black text-white">ساخت Knowledge Base (تنظیم دستی)</h1>
           <p className="mt-2 max-w-3xl text-[length:var(--taav-text-sm)] leading-8 text-[rgba(217,229,255,0.72)]">
             اطلاعات برند، محصول و FAQ را وارد کن. در پایان یک سند قابل ویرایش با تب و زیرتب ساخته می‌شود.
           </p>
@@ -378,69 +376,66 @@ export function TaaviaTestWorkspaceClient({
 
         <div
           className={`grid items-start gap-2 ${
-            showCategoriesPreview || showStatusReport
-              ? showCategoriesPreview && showStatusReport
-                ? 'lg:grid-cols-[minmax(200px,240px)_minmax(0,1fr)_minmax(200px,240px)]'
-                : 'lg:grid-cols-[minmax(200px,240px)_minmax(0,1fr)]'
-              : 'lg:grid-cols-1'
+            showCategoriesPreview
+              ? 'lg:grid-cols-[minmax(200px,240px)_minmax(0,1fr)_minmax(200px,240px)]'
+              : 'lg:grid-cols-[minmax(200px,240px)_minmax(0,1fr)]'
           }`}
         >
-          {showStatusReport ? (
-            <div className="order-3 lg:col-start-1 lg:row-start-1">
-              <TestStatusReportPanel
-                counts={counts}
-                predictedCategories={previewMeta.categories}
-                canBuild={canBuild}
-                sections={statusSections}
-                warnings={warnings}
-              />
-            </div>
-          ) : null}
+          <div className="order-3 lg:col-start-1 lg:row-start-1">
+            <TestStatusReportPanel
+              counts={counts}
+              predictedCategories={previewMeta.categories}
+              canBuild={canBuild}
+              sections={statusSections}
+              warnings={warnings}
+            />
+          </div>
 
-          <TaavTabs
-            value={activeTab}
-            onValueChange={handleTabChange}
-            className={`order-1 min-w-0 grid gap-2 ${showCategoriesPreview || showStatusReport ? 'lg:col-start-2' : ''}`}
-            dir="rtl"
-          >
-            <TaavTabsList className="flex w-full flex-wrap justify-start gap-2 overflow-x-auto bg-transparent p-0">
-              {tabs.map((tab) => {
-                const Icon = tab.icon;
-                return (
-                  <TaavTabsTrigger
-                    key={tab.value}
-                    value={tab.value}
-                    className="shrink-0 gap-2 rounded-[16px] border border-white/8 bg-white/5 px-4 py-2.5 data-[state=active]:border-[rgba(66,237,211,0.24)] data-[state=active]:bg-[rgba(66,237,211,0.12)]"
-                  >
-                    <Icon className="h-4 w-4" />
-                    {tab.label}
-                  </TaavTabsTrigger>
-                );
-              })}
-            </TaavTabsList>
+          <div className="order-1 min-w-0 lg:col-start-2 lg:row-start-1">
+            <TaavTabs value={activeTab === 'knowledge-base' ? 'brand' : activeTab} onValueChange={handleTabChange} dir="rtl">
+              <TaavTabsList className="flex w-full flex-wrap justify-start gap-2 overflow-x-auto bg-transparent p-0">
+                {tabs.map((tab) => {
+                  const Icon = tab.icon;
+                  return (
+                    <TaavTabsTrigger
+                      key={tab.value}
+                      value={tab.value}
+                      className="shrink-0 gap-2 rounded-[16px] border border-white/8 bg-white/5 px-4 py-2.5 data-[state=active]:border-[rgba(66,237,211,0.24)] data-[state=active]:bg-[rgba(66,237,211,0.12)]"
+                    >
+                      <Icon className="h-4 w-4" />
+                      {tab.label}
+                    </TaavTabsTrigger>
+                  );
+                })}
+              </TaavTabsList>
 
-            <TaavTabsContent value="brand" className="m-0">
-              <ContentFeedEditor
-                title="معرفی برند"
-                description="متن، ویس، تصویر، ویدیو و فایل درباره برند"
-                placeholder="معرفی برند، تاریخچه، لحن، ارزش‌ها و مخاطب هدف را بنویس..."
-                emptyTitle="هنوز محتوایی برای برند ثبت نشده"
-                emptyDescription="می‌توانی متن بنویسی، ویس ضبط کنی یا فایل و تصویر اضافه کنی."
-                messages={brandMessages}
-                onMessagesChange={setBrandMessages}
-              />
-            </TaavTabsContent>
+              {activeTab !== 'knowledge-base' ? (
+                <>
+                  <TaavTabsContent value="brand" className="m-0">
+                    <ContentFeedEditor
+                      title="معرفی برند"
+                      description="متن، ویس، تصویر، ویدیو و فایل درباره برند"
+                      placeholder="معرفی برند، تاریخچه، لحن، ارزش‌ها و مخاطب هدف را بنویس..."
+                      emptyTitle="هنوز محتوایی برای برند ثبت نشده"
+                      emptyDescription="می‌توانی متن بنویسی، ویس ضبط کنی یا فایل و تصویر اضافه کنی."
+                      messages={brandMessages}
+                      onMessagesChange={setBrandMessages}
+                    />
+                  </TaavTabsContent>
 
-            <TaavTabsContent value="products" className="m-0">
-              <TestProductCatalogEditor catalog={productCatalog} onChange={setProductCatalog} />
-            </TaavTabsContent>
+                  <TaavTabsContent value="products" className="m-0">
+                    <TestProductCatalogEditor catalog={productCatalog} onChange={setProductCatalog} />
+                  </TaavTabsContent>
 
-            <TaavTabsContent value="faq" className="m-0">
-              <TestFaqEditor items={faqItems} onChange={setFaqItems} />
-            </TaavTabsContent>
+                  <TaavTabsContent value="faq" className="m-0">
+                    <TestFaqEditor items={faqItems} onChange={setFaqItems} />
+                  </TaavTabsContent>
+                </>
+              ) : null}
+            </TaavTabs>
 
-            {knowledgeBaseDocument ? (
-              <TaavTabsContent value="knowledge-base" className="m-0">
+            {activeTab === 'knowledge-base' && knowledgeBaseDocument ? (
+              <div className="mt-2">
                 <TestKnowledgeBaseEditor
                   document={knowledgeBaseDocument}
                   onChange={handleKnowledgeBaseChange}
@@ -452,9 +447,9 @@ export function TaaviaTestWorkspaceClient({
                   selectedSubTabId={kbSelection?.subTabId ?? knowledgeBaseDocument.tabs[0]?.subTabs[0]?.id ?? null}
                   onSelectTab={(tabId, subTabId) => setKbSelection({ tabId, subTabId })}
                 />
-              </TaavTabsContent>
+              </div>
             ) : null}
-          </TaavTabs>
+          </div>
 
           {showCategoriesPreview ? (
             <div className="order-2 lg:col-start-3 lg:row-start-1">
@@ -472,11 +467,11 @@ export function TaaviaTestWorkspaceClient({
       </div>
 
       <TestBuildKnowledgeBaseButton
-        counts={counts}
         canBuild={canBuild}
         previewLines={previewLines}
         categoryHints={previewMeta.categories}
         isBuilding={isBuilding}
+        hidden={activeTab === 'knowledge-base'}
         onBuild={handleBuildKnowledgeBase}
         onError={(message) => setFeedback(message)}
       />

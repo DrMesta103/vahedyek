@@ -26,12 +26,19 @@ export type WorkspaceSectionStatus = {
 
 export type SerializableWorkspaceContentMessage = Omit<WorkspaceContentMessage, 'file' | 'objectUrl'>;
 
-export type ProductFieldType = 'text' | 'number' | 'textarea' | 'date' | 'boolean';
+export type ProductFieldType = 'text' | 'number' | 'textarea' | 'date' | 'select' | 'boolean';
+
+export type ProductFieldOption = {
+  id: string;
+  label: string;
+};
 
 export type ProductField = {
   id: string;
   label: string;
   type: ProductFieldType;
+  options?: ProductFieldOption[];
+  defaultOptionId?: string | null;
 };
 
 export type ProductRow = {

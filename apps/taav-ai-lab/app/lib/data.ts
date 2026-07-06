@@ -67,8 +67,6 @@ export {
   sendAdminAgentMessage,
 } from './repositories/conversations';
 
-export { getTaaviaManualWorkspace, saveTaaviaManualWorkspace } from './repositories/taavia-workspace';
-
 export {
   getGlobalSettings,
   createModelSettings,

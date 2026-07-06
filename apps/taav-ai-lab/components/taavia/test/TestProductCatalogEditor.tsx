@@ -1,16 +1,30 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Pencil, Plus, Trash2, X } from 'lucide-react';
-import type { ProductCatalogSnapshot, ProductField, ProductFieldType, ProductRow } from '@/app/lib/types/taavia-workspace';
+import { Pencil, Plus, Star, Trash2, X } from 'lucide-react';
+import type {
+  ProductCatalogSnapshot,
+  ProductField,
+  ProductFieldOption,
+  ProductFieldType,
+  ProductRow,
+} from '@/app/lib/types/taavia-workspace';
 
 const FIELD_TYPE_OPTIONS: Array<{ value: ProductFieldType; label: string }> = [
   { value: 'text', label: 'متن' },
   { value: 'number', label: 'عدد' },
   { value: 'textarea', label: 'متن بلند' },
   { value: 'date', label: 'تاریخ' },
+  { value: 'select', label: 'انتخابی' },
   { value: 'boolean', label: 'بله / خیر' },
 ];
+
+function createEmptyOption(index: number): ProductFieldOption {
+  return {
+    id: `option-${Date.now()}-${index}`,
+    label: `گزینه ${index}`,
+  };
+}
 
 function createEmptyField(index: number): ProductField {
   return {
@@ -20,15 +34,46 @@ function createEmptyField(index: number): ProductField {
   };
 }
 
+function normalizeSelectField(field: ProductField): ProductField {
+  if (field.type !== 'select') {
+    const { options: _options, defaultOptionId: _defaultOptionId, ...rest } = field;
+    return rest;
+  }
+
+  const options = field.options?.length ? field.options : [createEmptyOption(1)];
+  const defaultOptionId = options.some((option) => option.id === field.defaultOptionId)
+    ? field.defaultOptionId
+    : options[0]?.id ?? null;
+
+  return { ...field, options, defaultOptionId };
+}
+
+function getDefaultSelectValue(field: ProductField) {
+  if (field.type !== 'select') return '';
+  const defaultOption = field.options?.find((option) => option.id === field.defaultOptionId);
+  return defaultOption?.label ?? '';
+}
+
 function createEmptyRow(fields: ProductField[]): ProductRow {
   return {
     id: `product-${Date.now()}-${Math.random().toString(16).slice(2)}`,
-    values: Object.fromEntries(fields.map((field) => [field.id, ''])),
+    values: Object.fromEntries(
+      fields.map((field) => [field.id, field.type === 'select' ? getDefaultSelectValue(field) : '']),
+    ),
   };
 }
 
 function getFieldTypeLabel(type: ProductFieldType) {
   return FIELD_TYPE_OPTIONS.find((option) => option.value === type)?.label ?? type;
+}
+
+function getFieldDisplayValue(field: ProductField, value: string) {
+  if (!value) return '—';
+  if (field.type === 'boolean') {
+    if (value === 'yes') return 'بله';
+    if (value === 'no') return 'خیر';
+  }
+  return value;
 }
 
 type TestProductCatalogEditorProps = {
@@ -55,11 +100,72 @@ export function TestProductCatalogEditor({ catalog, onChange }: TestProductCatal
     });
   };
 
-  const updateField = (fieldId: string, patch: Partial<Pick<ProductField, 'label' | 'type'>>) => {
+  const updateField = (fieldId: string, patch: Partial<Pick<ProductField, 'label' | 'type' | 'options' | 'defaultOptionId'>>) => {
     updateCatalog({
       ...catalog,
-      fields: catalog.fields.map((field) => (field.id === fieldId ? { ...field, ...patch } : field)),
+      fields: catalog.fields.map((field) => {
+        if (field.id !== fieldId) return field;
+        return normalizeSelectField({ ...field, ...patch });
+      }),
     });
+  };
+
+  const addFieldOption = (fieldId: string) => {
+    const field = catalog.fields.find((item) => item.id === fieldId);
+    if (!field || field.type !== 'select') return;
+
+    const nextOption = createEmptyOption((field.options?.length ?? 0) + 1);
+    const options = [...(field.options ?? []), nextOption];
+    updateField(fieldId, {
+      options,
+      defaultOptionId: field.defaultOptionId ?? nextOption.id,
+    });
+  };
+
+  const updateFieldOption = (fieldId: string, optionId: string, label: string) => {
+    const field = catalog.fields.find((item) => item.id === fieldId);
+    if (!field || field.type !== 'select') return;
+
+    const previousOption = field.options?.find((option) => option.id === optionId);
+    const options = (field.options ?? []).map((option) => (option.id === optionId ? { ...option, label } : option));
+
+    updateCatalog({
+      ...catalog,
+      fields: catalog.fields.map((item) => (item.id === fieldId ? { ...item, options } : item)),
+      rows: catalog.rows.map((row) => {
+        if (!previousOption || row.values[fieldId] !== previousOption.label) return row;
+        return { ...row, values: { ...row.values, [fieldId]: label } };
+      }),
+    });
+  };
+
+  const deleteFieldOption = (fieldId: string, optionId: string) => {
+    const field = catalog.fields.find((item) => item.id === fieldId);
+    if (!field || field.type !== 'select' || (field.options?.length ?? 0) <= 1) return;
+
+    const removedOption = field.options?.find((option) => option.id === optionId);
+    const options = (field.options ?? []).filter((option) => option.id !== optionId);
+    const defaultOptionId =
+      field.defaultOptionId === optionId ? options[0]?.id ?? null : field.defaultOptionId ?? options[0]?.id ?? null;
+
+    updateCatalog({
+      ...catalog,
+      fields: catalog.fields.map((item) =>
+        item.id === fieldId ? normalizeSelectField({ ...item, options, defaultOptionId }) : item,
+      ),
+      rows: catalog.rows.map((row) => {
+        if (!removedOption || row.values[fieldId] !== removedOption.label) return row;
+        const fallback = options.find((option) => option.id === defaultOptionId)?.label ?? '';
+        return { ...row, values: { ...row.values, [fieldId]: fallback } };
+      }),
+    });
+  };
+
+  const setDefaultFieldOption = (fieldId: string, optionId: string) => {
+    const field = catalog.fields.find((item) => item.id === fieldId);
+    if (!field || field.type !== 'select') return;
+
+    updateField(fieldId, { defaultOptionId: optionId });
   };
 
   const deleteField = (fieldId: string) => {
@@ -121,6 +227,21 @@ export function TestProductCatalogEditor({ catalog, onChange }: TestProductCatal
       );
     }
 
+    if (field.type === 'select') {
+      const options = field.options ?? [];
+      return (
+        <select value={value} onChange={(event) => onValueChange(event.target.value)} className={inputClassName}>
+          <option value="">انتخاب کن</option>
+          {options.map((option) => (
+            <option key={option.id} value={option.label}>
+              {option.label}
+              {field.defaultOptionId === option.id ? ' (پیش‌فرض)' : ''}
+            </option>
+          ))}
+        </select>
+      );
+    }
+
     if (field.type === 'boolean') {
       return (
         <select value={value} onChange={(event) => onValueChange(event.target.value)} className={inputClassName}>
@@ -164,34 +285,95 @@ export function TestProductCatalogEditor({ catalog, onChange }: TestProductCatal
           {catalog.fields.map((field, index) => (
             <div
               key={field.id}
-              className="grid gap-3 rounded-[18px] border border-white/10 bg-[rgba(8,16,31,0.55)] p-3 md:grid-cols-[auto_minmax(0,1.2fr)_minmax(180px,0.7fr)_auto] md:items-center"
+              className="grid gap-3 rounded-[18px] border border-white/10 bg-[rgba(8,16,31,0.55)] p-3"
             >
-              <span className="text-center text-[11px] font-bold text-[rgba(217,229,255,0.52)]">#{index + 1}</span>
-              <input
-                value={field.label}
-                onChange={(event) => updateField(field.id, { label: event.target.value })}
-                placeholder="نام فیلد"
-                className="w-full rounded-[14px] border border-white/10 bg-[rgba(5,12,25,0.72)] px-3 py-2.5 text-[length:var(--taav-text-sm)] text-white outline-none"
-              />
-              <select
-                value={field.type}
-                onChange={(event) => updateField(field.id, { type: event.target.value as ProductFieldType })}
-                className="w-full rounded-[14px] border border-white/10 bg-[rgba(5,12,25,0.72)] px-3 py-2.5 text-[length:var(--taav-text-sm)] text-white outline-none"
-              >
-                {FIELD_TYPE_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              <button
-                type="button"
-                onClick={() => deleteField(field.id)}
-                disabled={catalog.fields.length === 1}
-                className="inline-flex h-10 w-10 items-center justify-center justify-self-end rounded-full border border-[rgba(248,113,113,0.24)] bg-[rgba(248,113,113,0.10)] text-[rgb(254,202,202)] disabled:opacity-40"
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
+              <div className="grid gap-3 md:grid-cols-[auto_minmax(0,1.2fr)_minmax(180px,0.7fr)_auto] md:items-center">
+                <span className="text-center text-[11px] font-bold text-[rgba(217,229,255,0.52)]">#{index + 1}</span>
+                <input
+                  value={field.label}
+                  onChange={(event) => updateField(field.id, { label: event.target.value })}
+                  placeholder="نام فیلد"
+                  className="w-full rounded-[14px] border border-white/10 bg-[rgba(5,12,25,0.72)] px-3 py-2.5 text-[length:var(--taav-text-sm)] text-white outline-none"
+                />
+                <select
+                  value={field.type}
+                  onChange={(event) => updateField(field.id, { type: event.target.value as ProductFieldType })}
+                  className="w-full rounded-[14px] border border-white/10 bg-[rgba(5,12,25,0.72)] px-3 py-2.5 text-[length:var(--taav-text-sm)] text-white outline-none"
+                >
+                  {FIELD_TYPE_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => deleteField(field.id)}
+                  disabled={catalog.fields.length === 1}
+                  className="inline-flex h-10 w-10 items-center justify-center justify-self-end rounded-full border border-[rgba(248,113,113,0.24)] bg-[rgba(248,113,113,0.10)] text-[rgb(254,202,202)] disabled:opacity-40"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+
+              {field.type === 'select' ? (
+                <div className="grid gap-2 border-t border-white/8 pt-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <button
+                      type="button"
+                      onClick={() => addFieldOption(field.id)}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(130,158,255,0.28)] bg-[rgba(130,158,255,0.10)] px-3 py-1.5 text-[11px] font-bold text-[rgb(199,210,254)]"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      افزودن گزینه
+                    </button>
+                    <div className="text-[11px] font-bold text-[rgba(217,229,255,0.68)]">گزینه‌های انتخابی و مقدار پیش‌فرض</div>
+                  </div>
+
+                  <div className="grid gap-2">
+                    {(field.options ?? []).map((option, optionIndex) => {
+                      const isDefault = field.defaultOptionId === option.id;
+
+                      return (
+                        <div
+                          key={option.id}
+                          className="grid gap-2 rounded-[14px] border border-white/8 bg-[rgba(5,12,25,0.45)] p-2.5 md:grid-cols-[auto_minmax(0,1fr)_auto_auto] md:items-center"
+                        >
+                          <span className="text-center text-[10px] font-bold text-[rgba(217,229,255,0.45)]">
+                            {optionIndex + 1}
+                          </span>
+                          <input
+                            value={option.label}
+                            onChange={(event) => updateFieldOption(field.id, option.id, event.target.value)}
+                            placeholder={`عنوان گزینه ${optionIndex + 1}`}
+                            className="w-full rounded-[12px] border border-white/10 bg-[rgba(5,12,25,0.72)] px-3 py-2 text-[12px] text-white outline-none"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setDefaultFieldOption(field.id, option.id)}
+                            className={`inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-[10px] font-bold transition ${
+                              isDefault
+                                ? 'border-[rgba(250,204,21,0.34)] bg-[rgba(250,204,21,0.12)] text-[rgb(253,224,71)]'
+                                : 'border-white/10 bg-white/5 text-[rgba(217,229,255,0.62)] hover:border-white/20'
+                            }`}
+                          >
+                            <Star className={`h-3.5 w-3.5 ${isDefault ? 'fill-current' : ''}`} />
+                            پیش‌فرض
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => deleteFieldOption(field.id, option.id)}
+                            disabled={(field.options?.length ?? 0) <= 1}
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[rgba(248,113,113,0.24)] bg-[rgba(248,113,113,0.10)] text-[rgb(254,202,202)] disabled:opacity-40"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : null}
             </div>
           ))}
         </div>
@@ -270,7 +452,7 @@ export function TestProductCatalogEditor({ catalog, onChange }: TestProductCatal
                   <tr key={row.id} className="border-b border-white/8 align-top">
                     {catalog.fields.map((field) => (
                       <td key={`${row.id}-${field.id}`} className="px-4 py-3 text-[12px] text-white">
-                        {row.values[field.id] || '—'}
+                        {getFieldDisplayValue(field, row.values[field.id] ?? '')}
                       </td>
                     ))}
                     <td className="px-4 py-3">

@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { Loader2, Sparkles } from 'lucide-react';
-import type { TestWorkspaceCounts } from '@/app/lib/types/taavia-test-workspace';
 import {
   TaavButton,
   TaavDialog,
@@ -14,31 +13,32 @@ import {
 } from '@repo/ui/taav';
 
 type TestBuildKnowledgeBaseButtonProps = {
-  counts: TestWorkspaceCounts;
   canBuild: boolean;
   previewLines: string[];
   categoryHints: string[];
   isBuilding: boolean;
+  hidden?: boolean;
   onBuild: () => Promise<void>;
   onError?: (message: string) => void;
 };
 
 export function TestBuildKnowledgeBaseButton({
-  counts,
   canBuild,
   previewLines,
   categoryHints,
   isBuilding,
+  hidden = false,
   onBuild,
   onError,
 }: TestBuildKnowledgeBaseButtonProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const openDialog = () => {
+  const handleClick = () => {
     if (!canBuild) {
       onError?.('برای ساخت Knowledge Base، حداقل یک مورد اطلاعات وارد کن.');
       return;
     }
+
     setDialogOpen(true);
   };
 
@@ -51,27 +51,50 @@ export function TestBuildKnowledgeBaseButton({
     }
   };
 
+  if (hidden) return null;
+
+  const disabled = isBuilding || !canBuild;
+
   return (
     <>
       <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center p-4 md:p-6">
         <div className="pointer-events-auto w-full max-w-4xl">
           <button
             type="button"
-            onClick={openDialog}
-            disabled={isBuilding}
-            className="group relative w-full overflow-hidden rounded-[24px] border border-[rgba(66,237,211,0.34)] px-5 py-4 shadow-[0_20px_60px_rgba(14,197,173,0.22)] transition hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-70"
+            onClick={handleClick}
+            disabled={disabled}
+            className="group relative w-full overflow-hidden rounded-[24px] p-[2px] text-right transition-transform duration-300 hover:scale-[1.01] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:scale-100"
           >
-            <span className="pointer-events-none absolute inset-0 bg-[linear-gradient(110deg,rgba(66,237,211,0.22)_0%,rgba(130,158,255,0.28)_45%,rgba(66,237,211,0.22)_100%)] bg-[length:200%_100%] [animation:taavia-agent-shimmer_4s_ease-in-out_infinite]" />
-            <span className="pointer-events-none absolute inset-0 rounded-[24px] ring-1 ring-[rgba(255,255,255,0.18)]" />
-            <span className="relative flex flex-wrap items-center justify-between gap-4 text-white">
-              <span className="inline-flex items-center gap-2 text-[length:var(--taav-text-sm)] font-black">
-                {isBuilding ? <Loader2 className="h-5 w-5 animate-spin" /> : <Sparkles className="h-5 w-5" />}
+            <span
+              aria-hidden
+              className="pointer-events-none absolute inset-0 rounded-[24px] bg-[conic-gradient(from_0deg,rgba(66,237,211,0.9),rgba(130,158,255,0.95),rgba(250,204,21,0.9),rgba(66,237,211,0.9))] [animation:taavia-kb-border-spin_3s_linear_infinite]"
+            />
+            <span
+              aria-hidden
+              className="pointer-events-none absolute inset-0 rounded-[24px] bg-[conic-gradient(from_180deg,rgba(66,237,211,0.55),rgba(130,158,255,0.65),rgba(250,204,21,0.55),rgba(66,237,211,0.55))] opacity-70 blur-[8px] [animation:taavia-kb-border-spin_3s_linear_infinite_reverse]"
+            />
+
+            <span className="relative flex items-center justify-center overflow-hidden rounded-[22px] bg-[linear-gradient(145deg,rgba(8,18,38,0.98)_0%,rgba(14,28,54,0.96)_55%,rgba(8,18,38,0.98)_100%)] px-5 py-4">
+              <span
+                aria-hidden
+                className="pointer-events-none absolute inset-0 bg-[linear-gradient(110deg,rgba(66,237,211,0.18)_0%,rgba(130,158,255,0.32)_35%,rgba(250,204,21,0.22)_65%,rgba(66,237,211,0.18)_100%)] bg-[length:220%_100%] opacity-90 [animation:taavia-agent-shimmer_2.2s_ease-in-out_infinite]"
+              />
+              <span
+                aria-hidden
+                className="pointer-events-none absolute -left-1/2 top-0 h-full w-1/2 skew-x-[-18deg] bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.14),transparent)] [animation:taavia-kb-sweep_2.8s_ease-in-out_infinite]"
+              />
+              <span
+                aria-hidden
+                className="pointer-events-none absolute inset-0 rounded-[22px] [animation:taavia-kb-glow-pulse_2.4s_ease-in-out_infinite]"
+              />
+
+              <span className="relative z-10 inline-flex items-center gap-2 text-[length:var(--taav-text-sm)] font-black text-white">
+                {isBuilding ? (
+                  <Loader2 className="h-5 w-5 animate-spin text-[rgb(150,246,231)]" />
+                ) : (
+                  <Sparkles className="h-5 w-5 text-[rgb(253,224,71)] [animation:taavia-kb-icon-float_2.2s_ease-in-out_infinite]" />
+                )}
                 ساخت Knowledge Base
-              </span>
-              <span className="flex flex-wrap items-center gap-2 text-[11px] font-bold text-[rgba(255,255,255,0.88)]">
-                <span className="rounded-full bg-black/20 px-2.5 py-1">{counts.brandItems} برند</span>
-                <span className="rounded-full bg-black/20 px-2.5 py-1">{counts.productRows} محصول</span>
-                <span className="rounded-full bg-black/20 px-2.5 py-1">{counts.faqItems} FAQ</span>
               </span>
             </span>
           </button>
