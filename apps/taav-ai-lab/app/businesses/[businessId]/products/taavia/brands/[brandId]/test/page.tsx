@@ -1,10 +1,10 @@
 import { notFound } from 'next/navigation';
-import { getAdminAgentSetupState, getTaaviaBrandForTenant, getTaaviaManualWorkspace, getTenantForUser } from '@/app/lib/data';
+import { getAdminAgentSetupState, getTaaviaBrandForTenant, getTenantForUser } from '@/app/lib/data';
 import { getCurrentTenant, requireSession } from '@/app/lib/session';
 import { AiLabShell } from '@/components/AiLabShell';
-import { TaaviaManualWorkspaceClient } from '@/components/taavia/TaaviaManualWorkspaceClient';
+import { TaaviaTestWorkspaceClient } from '@/components/taavia/TaaviaTestWorkspaceClient';
 
-export default async function TaaviaBrandManualPage({
+export default async function TaaviaBrandTestPage({
   params,
 }: {
   params: Promise<{ businessId: string; brandId: string }>;
@@ -35,23 +35,21 @@ export default async function TaaviaBrandManualPage({
   if (!brand) notFound();
 
   const setup = await getAdminAgentSetupState(session.userId, business.id, brandId);
-  const workspace = await getTaaviaManualWorkspace(session.userId, business.id, brandId);
 
   return (
     <AiLabShell
-      pathname={`/businesses/${business.id}/products/taavia/brands/${brand.id}/manual`}
+      pathname={`/businesses/${business.id}/products/taavia/brands/${brand.id}/test`}
       fullName={session.fullName}
       email={session.email}
       mobile={session.mobile}
       currentTenantId={business.id}
       currentTenantName={business.name}
     >
-      <TaaviaManualWorkspaceClient
-        brandName={brand.name}
-        tenantId={business.id}
+      <TaaviaTestWorkspaceClient
+        businessId={business.id}
         brandId={brand.id}
+        brandName={brand.name}
         selectedUseCases={setup?.selectedUseCases ?? []}
-        initialWorkspace={workspace}
       />
     </AiLabShell>
   );

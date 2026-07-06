@@ -18,8 +18,8 @@ function cn(...classes: Array<string | false | null | undefined>) {
 function SegmentedToggle({
   checked,
   onChange,
-  activeLabel = '????',
-  inactiveLabel = '???????',
+  activeLabel = 'فعال',
+  inactiveLabel = 'غیرفعال',
 }: {
   checked: boolean;
   onChange: (value: boolean) => void;
@@ -82,7 +82,7 @@ function TopCard({
       <div className="flex-1">
         <div className="flex flex-wrap items-center justify-end gap-3">
           <h3 className="text-lg font-black text-[color:var(--text-strong)]">{title}</h3>
-          {configured ? <span className="rounded-full border border-[color:var(--theme-action-border)] px-3 py-1 text-xs font-bold text-[color:var(--theme-action-text)]">??????? ?????????</span> : null}
+          {configured ? <span className="rounded-full border border-[color:var(--theme-action-border)] px-3 py-1 text-xs font-bold text-[color:var(--theme-action-text)]">تنظیمات فعال</span> : null}
         </div>
         <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">{description}</p>
       </div>
@@ -140,15 +140,15 @@ function ConfirmModal({
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-white/55 px-4 backdrop-blur-sm">
       <div className="w-full max-w-md overflow-hidden rounded-[8px] border border-slate-200 bg-white shadow-[0_24px_80px_rgba(15,23,42,0.12)]">
         <div className="space-y-3 px-6 py-6 text-right">
-          <h3 className="text-2xl font-black text-[color:var(--text-strong)]">????? ??? ? ????????????</h3>
-          <p className="text-sm leading-7 text-[color:var(--text-muted)]">?? ????? ??? ??????? ?? ???? ????????? ????? ?? ?? ????? ???? ???? ??????? ??????.</p>
+          <h3 className="text-2xl font-black text-[color:var(--text-strong)]">تغییر نوع و زیرساخت</h3>
+          <p className="text-sm leading-7 text-[color:var(--text-muted)]">با تغییر این بخش، تنظیمات فعلی ممکن است پاک شود. آیا می‌خواهید ادامه دهید؟</p>
         </div>
         <div className="flex items-center justify-end gap-8 border-t border-slate-100 px-6 py-5">
           <button type="button" onClick={onCancel} className="text-sm font-bold text-[color:var(--text-muted)] transition hover:text-[color:var(--text-strong)]">
-            ???
+            انصراف
           </button>
           <button type="button" onClick={onConfirm} className="text-sm font-black text-[#ff5c5c] transition hover:text-[#ff8a8a]">
-            ?????
+            ادامه
           </button>
         </div>
       </div>
@@ -230,7 +230,7 @@ export function DiscountRuleSection({
           <section className="rounded-[8px] border border-[color:var(--border-soft)] bg-[color:var(--surface)] p-5">
             <div className="flex items-center justify-between gap-4">
               <div className="text-right">
-                <h3 className="text-xl font-black text-[color:var(--text-strong)]">????? ????? ??? ???? ???? ???????</h3>
+                <h3 className="text-xl font-black text-[color:var(--text-strong)]">نوع تخفیف روی کدام بخش باشد</h3>
               </div>
               <button
                 type="button"
@@ -238,7 +238,7 @@ export function DiscountRuleSection({
                 className="inline-flex items-center gap-2 rounded-full border border-[color:var(--border-color)] px-4 py-2 text-sm font-bold text-[color:var(--text-muted)] transition hover:border-[color:var(--theme-action-border)] hover:text-[color:var(--text-strong)]"
               >
                 <ChevronLeft className="h-4 w-4" />
-                ??????
+                بازگشت
               </button>
             </div>
           </section>
@@ -246,7 +246,7 @@ export function DiscountRuleSection({
           <section className="overflow-visible rounded-[8px] border border-[color:var(--border-soft)] bg-[color:var(--surface)]">
             <div className="flex flex-wrap border-b border-[color:var(--border-soft)]">
               <ValueModeTab
-                title="????? ??? ?? ???????"
+                title="تخفیف روی کل سررسیدها"
                 icon={Layers3}
                 active={scope === 'whole'}
                 onClick={() => {
@@ -254,7 +254,7 @@ export function DiscountRuleSection({
                 }}
               />
               <ValueModeTab
-                title="????? ????? ???????"
+                title="تخفیف روی سررسید مشخص"
                 icon={Filter}
                 active={scope === 'itemized'}
                 onClick={() => {
@@ -289,7 +289,7 @@ export function DiscountRuleSection({
     );
   }
 
-  const detailTitle = selectedGroup === 'early-payment' ? '????? ???? ?????? ????? ?? ????' : selectedEntry?.title ?? '';
+  const detailTitle = selectedGroup === 'early-payment' ? 'تخفیف برای پرداخت زودتر از موعد' : selectedEntry?.title ?? '';
 
   return (
     <div className="space-y-5">
@@ -311,42 +311,42 @@ export function DiscountRuleSection({
             className="inline-flex items-center gap-2 rounded-full border border-[color:var(--border-color)] px-4 py-2 text-sm font-bold text-[color:var(--text-muted)] transition hover:border-[color:var(--theme-action-border)] hover:text-[color:var(--text-strong)]"
           >
             <ChevronLeft className="h-4 w-4" />
-            ??????
+            بازگشت
           </button>
         </div>
       </section>
 
       <section className="overflow-visible rounded-[8px] border border-[color:var(--border-soft)] bg-[color:var(--surface)]">
         <div className="flex flex-wrap border-b border-[color:var(--border-soft)]">
-          <ValueModeTab title="????" icon={CircleDollarSign} active={valueMode === 'amount'} onClick={() => onValueChange('discountValueMode', 'amount')} />
-          <ValueModeTab title="????" icon={CirclePercent} active={valueMode === 'percent'} onClick={() => onValueChange('discountValueMode', 'percent')} />
+          <ValueModeTab title="مبلغ" icon={CircleDollarSign} active={valueMode === 'amount'} onClick={() => onValueChange('discountValueMode', 'amount')} />
+          <ValueModeTab title="درصد" icon={CirclePercent} active={valueMode === 'percent'} onClick={() => onValueChange('discountValueMode', 'percent')} />
         </div>
 
         <div className="space-y-8 p-5">
           {valueMode === 'amount' ? (
             <div className="space-y-6">
               <div className="space-y-4">
-                <FieldLabel label="????? ???? ?????" />
-                <RuleTextInput value={String(state.values.discountMinValue ?? '')} onChange={(value) => onValueChange('discountMinValue', value)} suffix="?????" />
-                <p className="text-right text-sm text-[color:var(--text-muted)]">????? ????? ?? ?? ???? ????? ????? ???????? ???? ???? ???. ????: ??,??? ?????</p>
+                <FieldLabel label="حداقل مبلغ تخفیف" />
+                <RuleTextInput value={String(state.values.discountMinValue ?? '')} onChange={(value) => onValueChange('discountMinValue', value)} suffix="ریال" />
+                <p className="text-right text-sm text-[color:var(--text-muted)]">حداقل مبلغی که به این نوع تخفیف اختصاص پیدا می‌کند. مثال: ۱۰,۰۰۰ ریال</p>
               </div>
               <div className="space-y-4">
-                <FieldLabel label="?????? ???? ?????" />
-                <RuleTextInput value={String(state.values.discountMaxValue ?? '')} onChange={(value) => onValueChange('discountMaxValue', value)} suffix="?????" />
-                <p className="text-right text-sm text-[color:var(--text-muted)]">?????? ????? ?? ???? ?? ????? ???. ????: ???,??? ?????</p>
+                <FieldLabel label="حداکثر مبلغ تخفیف" />
+                <RuleTextInput value={String(state.values.discountMaxValue ?? '')} onChange={(value) => onValueChange('discountMaxValue', value)} suffix="ریال" />
+                <p className="text-right text-sm text-[color:var(--text-muted)]">حداکثر مبلغی که مجاز به ثبت آن هستید. مثال: ۵۰۰,۰۰۰ ریال</p>
               </div>
             </div>
           ) : (
             <div className="space-y-6">
               <div className="space-y-4">
-                <FieldLabel label="????? ???? ?????" />
+                <FieldLabel label="حداقل درصد تخفیف" />
                 <RuleTextInput value={String(state.values.discountMinValue ?? '')} onChange={(value) => onValueChange('discountMinValue', value)} suffix="%" />
-                <p className="text-right text-sm text-[color:var(--text-muted)]">????? ????? ?? ?? ???? ????? ????? ???????? ???? ???? ???. ????: ? ????</p>
+                <p className="text-right text-sm text-[color:var(--text-muted)]">حداقل درصدی که به این نوع تخفیف اختصاص پیدا می‌کند. مثال: ۲ درصد</p>
               </div>
               <div className="space-y-4">
-                <FieldLabel label="?????? ???? ?????" />
+                <FieldLabel label="حداکثر درصد تخفیف" />
                 <RuleTextInput value={String(state.values.discountMaxValue ?? '')} onChange={(value) => onValueChange('discountMaxValue', value)} suffix="%" />
-                <p className="text-right text-sm text-[color:var(--text-muted)]">?????? ????? ?? ???? ?? ????? ???. ????: ? ????</p>
+                <p className="text-right text-sm text-[color:var(--text-muted)]">حداکثر درصدی که مجاز به ثبت آن هستید. مثال: ۱۰ درصد</p>
               </div>
             </div>
           )}
@@ -361,12 +361,12 @@ export function DiscountRuleSection({
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   {discountConditionConfigured ? (
                     <span className="rounded-full border border-[color:var(--theme-action-border)] px-3 py-1 text-xs font-bold text-[color:var(--theme-action-text)]">
-                      ??????? ?????????
+                      تنظیمات فعال
                     </span>
                   ) : null}
-                  <h3 className="text-lg font-black text-[color:var(--text-strong)]">??? ????? ? ????????? ?????</h3>
+                  <h3 className="text-lg font-black text-[color:var(--text-strong)]">شرط تخفیف و محدودیت‌ها</h3>
                 </div>
-                <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">?? ??? ??? ????????? ???? ???? ?? ??? ?? ?????? ????????? ????? ???? ????? ?? ??? ??????.</p>
+                <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">در این بخش می‌توانید شرط‌های لازم برای فعال شدن تخفیف را برای هر مورد تعریف کنید.</p>
               </div>
               <ChevronLeft className="h-5 w-5 shrink-0 text-[color:var(--text-muted)]" />
             </button>
@@ -375,21 +375,21 @@ export function DiscountRuleSection({
           <div className="space-y-5 border-t border-[#415769] pt-6">
             <div className="flex items-start justify-between gap-4">
               <div className="text-right">
-                <h3 className="text-[18px] font-black text-[color:var(--text-strong)]">????? ???? ???? ????????? ????</h3>
-                <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">?? ???? ???? ????? ????????? ?????? ?? ?? ?? ???? ??? ?? ????? ??????? ??????? ????? ??????.</p>
+                <h3 className="text-[18px] font-black text-[color:var(--text-strong)]">نیاز به تایید مدیر فروش</h3>
+                <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">اگر مبلغ یا درصد تخفیف از حد مجاز بیشتر شود، قبل از ثبت نهایی نیاز به تایید مدیر خواهد داشت.</p>
               </div>
               <MiniToggle checked={managerApproval} onChange={(value) => onValueChange('discountManagerApproval', value)} />
             </div>
 
             {managerApproval ? (
               <div className="space-y-4">
-                <FieldLabel label="?????? ????? ????" />
+                <FieldLabel label="آستانه تایید مدیر" />
                 <RuleTextInput
                   value={String(state.values.discountApprovalThreshold ?? '')}
                   onChange={(value) => onValueChange('discountApprovalThreshold', value)}
-                  suffix={valueMode === 'percent' ? '%' : '?????'}
+                  suffix={valueMode === 'percent' ? '%' : 'ریال'}
                 />
-                <p className="text-right text-sm text-[color:var(--text-muted)]">??? ????? ????? ?? ??? ?? ???? ???? ??????? ???? ???? ???? ?? ???? ???? ????? ???.</p>
+                <p className="text-right text-sm text-[color:var(--text-muted)]">اگر مقدار تخفیف از این حد عبور کند، ثبت آن فقط با تایید مدیر فروش انجام می‌شود.</p>
               </div>
             ) : null}
           </div>

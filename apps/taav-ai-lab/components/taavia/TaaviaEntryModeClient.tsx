@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowLeft, Bot, ChevronLeft, Sparkles, Wand2 } from 'lucide-react';
+import { ArrowLeft, Bot, ChevronLeft, FlaskConical, Sparkles, Wand2 } from 'lucide-react';
 
 type TaaviaEntryModeClientProps = {
   businessId: string;
@@ -52,7 +52,7 @@ export function TaaviaEntryModeClient({
           </p>
         </div>
 
-        <div className="grid gap-5 lg:grid-cols-2">
+        <div className="grid gap-5 lg:grid-cols-3">
           <Link href={`${basePath}?mode=ai`} className="group">
             <article className="relative overflow-hidden rounded-[30px] border border-white/12 bg-white/8 p-5 backdrop-blur-2xl transition duration-300 hover:-translate-y-1.5 hover:border-[rgba(61,233,208,0.38)] hover:bg-white/12 hover:shadow-[0_20px_60px_rgba(14,197,173,0.18)]">
               <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(61,233,208,0.24)_0%,rgba(61,233,208,0.06)_45%,rgba(255,255,255,0.06)_100%)] opacity-90" />
@@ -118,6 +118,41 @@ export function TaaviaEntryModeClient({
 
                 <div className="inline-flex items-center justify-between rounded-[22px] border border-white/10 bg-[rgba(7,16,30,0.24)] px-4 py-3 text-white">
                   <span className="text-[length:var(--taav-text-sm)] font-black">ورود به مسیر دستی</span>
+                  <ChevronLeft className="h-5 w-5 transition group-hover:-translate-x-1" />
+                </div>
+              </div>
+            </article>
+          </Link>
+
+          <Link href={`${basePath}/test`} className="group">
+            <article className="relative overflow-hidden rounded-[30px] border border-white/12 bg-white/8 p-5 backdrop-blur-2xl transition duration-300 hover:-translate-y-1.5 hover:border-[rgba(250,204,21,0.34)] hover:bg-white/12 hover:shadow-[0_20px_60px_rgba(250,204,21,0.14)]">
+              <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(250,204,21,0.20)_0%,rgba(250,204,21,0.05)_42%,rgba(255,255,255,0.06)_100%)] opacity-90" />
+              <div className="absolute left-1/2 top-5 h-24 w-24 -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(255,255,255,0.18)_0%,rgba(255,255,255,0)_72%)] blur-2xl" />
+              <div className="relative grid gap-6">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="inline-flex h-14 w-14 items-center justify-center rounded-[18px] border border-white/14 bg-[rgba(255,255,255,0.12)] text-white shadow-[0_12px_28px_rgba(0,0,0,0.16)]">
+                    <FlaskConical className="h-7 w-7" />
+                  </div>
+                  <span className="inline-flex items-center gap-2 rounded-full bg-[rgba(8,16,31,0.24)] px-3 py-1 text-[length:var(--taav-text-xs)] font-black text-[rgb(253,224,71)]">
+                    تست
+                    <Sparkles className="h-3.5 w-3.5" />
+                  </span>
+                </div>
+
+                <div className="grid gap-3 text-right">
+                  <h2 className="m-0 text-[clamp(1.7rem,2vw,2.3rem)] font-black text-white">تست</h2>
+                  <p className="m-0 text-[length:var(--taav-text-sm)] leading-8 text-[rgba(233,238,255,0.78)]">
+                    فلو جدید نالج‌بیس برند در این مسیر توسعه داده می‌شود. فعلاً فقط ساختار اولیه آماده است.
+                  </p>
+                </div>
+
+                <div className="grid gap-2 text-right text-[length:var(--taav-text-xs)] text-[rgba(223,229,255,0.78)]">
+                  <span>در حال آماده‌سازی</span>
+                  <span>مناسب برای توسعه فلو آینده</span>
+                </div>
+
+                <div className="inline-flex items-center justify-between rounded-[22px] border border-white/10 bg-[rgba(7,16,30,0.24)] px-4 py-3 text-white">
+                  <span className="text-[length:var(--taav-text-sm)] font-black">ورود به مسیر تست</span>
                   <ChevronLeft className="h-5 w-5 transition group-hover:-translate-x-1" />
                 </div>
               </div>

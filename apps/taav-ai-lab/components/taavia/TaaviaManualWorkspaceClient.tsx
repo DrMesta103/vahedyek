@@ -19,14 +19,24 @@ import {
   MoreVertical,
   Paperclip,
   Plus,
+  Send,
   Sparkles,
   StopCircle,
   Trash2,
-  Type,
   Video,
-  X,
 } from 'lucide-react';
 import type { TaaviaUseCaseKey } from '@/app/lib/types/domain';
+import type { TaaviaWorkspaceSnapshot, WorkspaceContentMessage } from '@/app/lib/types/taavia-workspace';
+import { deriveCategoriesFromAllSources } from '@/app/lib/taavia-workspace-categorization';
+import {
+  getWorkspaceSectionStatuses,
+  hasAnyWorkspaceData,
+  hydrateWorkspaceMessages,
+  serializeWorkspaceMessages,
+} from '@/app/lib/taavia-workspace-knowledge';
+import { ContentFeedEditor } from '@/components/taavia/ContentFeedEditor';
+import { WorkspaceStatusSummary } from '@/components/taavia/WorkspaceStatusSummary';
+import { WorkspaceTransferPanel } from '@/components/taavia/WorkspaceTransferPanel';
 import {
   TaavButton,
   TaavDialog,
@@ -45,7 +55,10 @@ import {
 
 type TaaviaManualWorkspaceClientProps = {
   brandName: string;
+  tenantId: string;
+  brandId: string;
   selectedUseCases?: TaaviaUseCaseKey[];
+  initialWorkspace?: TaaviaWorkspaceSnapshot | null;
 };
 
 type ManualTab = {
@@ -64,13 +77,45 @@ type BrandSectionTab = {
   updatedAt: string;
 };
 
-type EditorAttachment = {
+type BrandIntroMessageKind = 'text' | 'image' | 'video' | 'audio' | 'file';
+
+type BrandIntroMessage = {
   id: string;
-  kind: 'image' | 'video' | 'audio' | 'file';
-  file: File;
+  kind: BrandIntroMessageKind;
+  text?: string;
+  fileName?: string;
   objectUrl?: string;
+  file?: File;
   createdAt: string;
 };
+
+function createBrandIntroTextMessage(text: string): BrandIntroMessage {
+  return {
+    id: `msg-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+    kind: 'text',
+    text,
+    createdAt: new Date().toISOString(),
+  };
+}
+
+function createBrandIntroFileMessage(file: File, kind: BrandIntroMessageKind): BrandIntroMessage {
+  const shouldPreview = kind === 'image' || kind === 'video' || kind === 'audio';
+  return {
+    id: `msg-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+    kind,
+    fileName: file.name,
+    file,
+    objectUrl: shouldPreview ? URL.createObjectURL(file) : undefined,
+    createdAt: new Date().toISOString(),
+  };
+}
+
+function classifyMessageKind(file: File): BrandIntroMessageKind {
+  if (file.type.startsWith('image/')) return 'image';
+  if (file.type.startsWith('video/')) return 'video';
+  if (file.type.startsWith('audio/')) return 'audio';
+  return 'file';
+}
 
 type ProductFieldType = 'text' | 'number' | 'textarea' | 'date' | 'boolean';
 
@@ -153,7 +198,7 @@ function createEmptyProductField(index: number): ProductField {
 
 type BrandBookSnapshot = {
   sections: BrandSectionTab[];
-  draftContent: string;
+  messages: BrandIntroMessage[];
 };
 
 type FaqItem = {
@@ -170,8 +215,8 @@ function createEmptyFaqItem(): FaqItem {
   };
 }
 
-function deriveFaqsFromBrandBook(brandName: string, sections: BrandSectionTab[], draftContent: string) {
-  const combinedText = collectBrandBookText(sections, draftContent);
+function deriveFaqsFromBrandBook(brandName: string, sections: BrandSectionTab[], messages: BrandIntroMessage[]) {
+  const combinedText = collectBrandBookText(sections, messages);
   const hasEnoughData = combinedText.trim().length >= 120;
 
   if (!hasEnoughData) {
@@ -221,11 +266,14 @@ function deriveFaqsFromBrandBook(brandName: string, sections: BrandSectionTab[],
     });
   }
 
-  if (candidates.length === 0 && draftContent.trim()) {
-    candidates.push({
-      question: `معرفی کلی ${brandName} چیست؟`,
-      answer: draftContent.trim(),
-    });
+  if (candidates.length === 0) {
+    const messageText = collectBrandMessagesText(messages);
+    if (messageText.trim()) {
+      candidates.push({
+        question: `معرفی کلی ${brandName} چیست؟`,
+        answer: messageText.trim(),
+      });
+    }
   }
 
   if (candidates.length === 0) {
@@ -349,16 +397,94 @@ function buildSampleBusinessIntroduction(brandName: string) {
 
 لحن ارتباطی ${brandName} صمیمی، حرفه‌ای و راهگشا است. این برند تلاش می‌کند مفاهیم پیچیده فناوری و توسعه کسب‌وکار را با زبانی شفاف و قابل فهم توضیح دهد. پیام اصلی برند این است که فناوری باید به انسان کمک کند و مسیر کار را ساده‌تر، سریع‌تر و قابل اندازه‌گیری‌تر کند. در تمام نقاط تماس با مشتری، از معرفی محصول تا پشتیبانی، تاکید بر صداقت، پاسخ‌گویی و ارائه راه‌حل عملی وجود دارد.
 
-ارزش‌های اصلی برند شامل شفافیت، نوآوری مسئولانه، تعهد به کیفیت، احترام به زمان مشتری، یادگیری مستمر و ساخت رابطه بلندمدت مبتنی بر اعتماد است. ${brandName} فقط به فروش یک محصول یا خدمت فکر نمی‌کند، بلکه تلاش می‌کند در کنار مشتری بماند و برای او نتیجه قابل مشاهده ایجاد کند. مخاطب هدف این برند کسب‌وکارهای در حال رشد، تیم‌های محصول، مدیران بازاریابی، سازمان‌های خدماتی و مجموعه‌هایی هستند که می‌خواهند تجربه مشتری، آموزش داخلی، خودکارسازی فرآیندها و استفاده از داده را بهبود دهند.`;
+ارزش‌های اصلی برند شامل شفافیت، نوآوری مسئولانه، تعهد به کیفیت، احترام به زمان مشتری، یادگیری مستمر و ساخت رابطه بلندمدت مبتنی بر اعتماد است. ${brandName} فقط به فروش یک محصول یا خدمت فکر نمی‌کند، بلکه تلاش می‌کند در کنار مشتری بماند و برای او نتیجه قابل مشاهده ایجاد کند. مخاطب هدف این برند کسب‌وکارهای در حال رشد، تیم‌های محصول، مدیران بازاریابی، سازمان‌های خدماتی و مجموعه‌هایی هستند که می‌خواهند تجربه مشتری، آموزش داخلی، خودکارسازی فرآیندها و استفاده از داده را بهبود دهند.
+
+محصولات و خدمات ${brandName} شامل چند بسته اصلی است. محصول اول «اشتراک رشد هوشمند» است؛ یک سرویس آموزشی و مشاوره‌ای که شامل مسیر آموزشی، تحلیل وضعیت کسب‌وکار، پیشنهادهای عملیاتی و پشتیبانی مرحله‌ای می‌شود و قیمت آن ۴٬۵۰۰٬۰۰۰ تومان است. مزیت کلیدی این محصول ارائه برنامه اجرایی اختصاصی و گزارش قابل اندازه‌گیری است. محصول دوم «مشاوره سریع برند» است؛ یک جلسه مشاوره فشرده برای دریافت بازخورد سریع درباره پیام برند که قیمت آن ۹۰۰٬۰۰۰ تومان است. خدمت سوم «پیاده‌سازی سامانه پشتیبانی هوشمند» است که شامل راه‌اندازی چت‌بات، اتصال به کانال‌های ارتباطی و آموزش تیم پشتیبانی می‌شود و به‌صورت پروژه‌ای قیمت‌گذاری می‌شود.
+
+سوالات پرتکرار مشتریان ${brandName} معمولاً حول چند موضوع است. سوال: ${brandName} چه خدماتی ارائه می‌دهد؟ پاسخ: خدمات آموزشی، مشاوره‌ای و پیاده‌سازی راهکارهای هوشمند برای رشد کسب‌وکار. سوال: هزینه شروع همکاری چقدر است؟ پاسخ: بسته به محصول انتخابی از ۹۰۰٬۰۰۰ تومان برای مشاوره سریع تا بسته‌های پروژه‌ای متغیر است. سوال: پشتیبانی چگونه ارائه می‌شود؟ پاسخ: پشتیبانی مرحله‌ای و مستمر از طریق کانال‌های ارتباطی برند و تیم اختصاصی انجام می‌شود.`;
 }
 
-function collectBrandBookText(sections: BrandSectionTab[], draftContent: string) {
+function collectBrandMessagesText(messages: BrandIntroMessage[]) {
+  return messages
+    .map((message) => {
+      if (message.kind === 'text') return message.text?.trim() ?? '';
+      return `[${getBrandMessageKindLabel(message.kind)}: ${message.fileName ?? 'فایل'}]`;
+    })
+    .filter(Boolean)
+    .join('\n\n');
+}
+
+function getBrandMessageKindLabel(kind: BrandIntroMessageKind) {
+  switch (kind) {
+    case 'text':
+      return 'متن';
+    case 'image':
+      return 'تصویر';
+    case 'video':
+      return 'ویدئو';
+    case 'audio':
+      return 'صوت';
+    default:
+      return 'فایل';
+  }
+}
+
+function collectProductCatalogText(catalog: ProductCatalogSnapshot) {
+  return catalog.rows
+    .map((row, index) => {
+      const productName = row.values['product-name']?.trim() || `محصول ${index + 1}`;
+      const fieldLines = catalog.fields
+        .map((field) => {
+          const value = row.values[field.id]?.trim();
+          if (!value) return null;
+          return `${field.label}: ${value}`;
+        })
+        .filter(Boolean)
+        .join('\n');
+
+      if (!fieldLines) return null;
+      return `${productName}\n${fieldLines}`;
+    })
+    .filter(Boolean)
+    .join('\n\n---\n\n');
+}
+
+function collectFaqText(faqItems: FaqItem[]) {
+  return faqItems
+    .filter((item) => item.question.trim() || item.answer.trim())
+    .map((item) => `س: ${item.question.trim()}\nج: ${item.answer.trim()}`)
+    .join('\n\n');
+}
+
+function collectAllWorkspaceText(
+  messages: BrandIntroMessage[],
+  sections: BrandSectionTab[],
+  products: ProductCatalogSnapshot,
+  faqItems: FaqItem[],
+) {
   const sectionText = sections
     .map((section) => `${section.title}\n${section.content}`.trim())
     .filter(Boolean)
     .join('\n\n');
 
-  return [draftContent.trim(), sectionText].filter(Boolean).join('\n\n');
+  return [
+    collectBrandMessagesText(messages),
+    sectionText,
+    collectProductCatalogText(products),
+    collectFaqText(faqItems),
+  ]
+    .filter(Boolean)
+    .join('\n\n=====\n\n');
+}
+
+function collectBrandBookText(sections: BrandSectionTab[], messages: BrandIntroMessage[]) {
+  const sectionText = sections
+    .map((section) => `${section.title}\n${section.content}`.trim())
+    .filter(Boolean)
+    .join('\n\n');
+
+  const messageText = collectBrandMessagesText(messages);
+  return [messageText, sectionText].filter(Boolean).join('\n\n');
 }
 
 function sectionMatchesDefinition(section: BrandSectionTab, definition: BrandCategoryDefinition | KnowledgeBaseField) {
@@ -420,49 +546,209 @@ function pickBestCategoryForChunk(
   return definitions.find((definition) => definition.title === 'هویت برند') ?? definitions[0] ?? null;
 }
 
-function extractDraftContentForCategory(
-  draftContent: string,
-  definition: BrandCategoryDefinition,
-  definitions: BrandCategoryDefinition[],
-) {
-  const chunks = splitDraftIntoChunks(draftContent);
-  const assignedChunks = chunks.filter((chunk) => {
-    const bestCategory = pickBestCategoryForChunk(chunk, definitions);
-    return bestCategory?.title === definition.title;
+const PRODUCT_CHUNK_KEYWORDS = [
+  'محصول',
+  'خدمت',
+  'خدمات',
+  'سرویس',
+  'قیمت',
+  'بسته',
+  'اشتراک',
+  'فروش',
+  'مزیت کلیدی',
+  'نوع:',
+  'قیمت:',
+  'ارائه می',
+  'کاتالوگ',
+  'محصولات',
+];
+
+const FAQ_CHUNK_KEYWORDS = ['سوال', 'پرسش', 'پاسخ', 'پرتکرار', 'چرا ', 'چگونه ', 'آیا '];
+
+function scoreChunkForProducts(chunk: string) {
+  const normalized = chunk.toLowerCase();
+  let score = 0;
+
+  for (const keyword of PRODUCT_CHUNK_KEYWORDS) {
+    if (normalized.includes(keyword.toLowerCase())) {
+      score += keyword.length >= 4 ? 2 : 1;
+    }
+  }
+
+  if (/\d{4,}/.test(chunk) && /قیمت|تومان|ریال/.test(chunk)) {
+    score += 3;
+  }
+
+  return score;
+}
+
+function scoreChunkForFaq(chunk: string) {
+  let score = 0;
+
+  if (/[؟?]/.test(chunk)) {
+    score += 3;
+  }
+
+  const normalized = chunk.toLowerCase();
+  for (const keyword of FAQ_CHUNK_KEYWORDS) {
+    if (normalized.includes(keyword.toLowerCase())) {
+      score += 2;
+    }
+  }
+
+  if (/^(س:|ج:|سوال)/.test(chunk.trim())) {
+    score += 4;
+  }
+
+  return score;
+}
+
+type WorkspaceChunkDomain = 'brand' | 'products' | 'faq';
+
+function assignWorkspaceChunk(chunk: string): {
+  domain: WorkspaceChunkDomain;
+  brandDefinition: BrandCategoryDefinition;
+} {
+  const productScore = scoreChunkForProducts(chunk);
+  const faqScore = scoreChunkForFaq(chunk);
+  const brandDefinition =
+    pickBestCategoryForChunk(chunk, BRAND_CATEGORY_DEFINITIONS) ?? BRAND_CATEGORY_DEFINITIONS[0]!;
+  const brandScore = scoreTextForCategory(chunk, brandDefinition);
+  const minSpecializedScore = 2;
+
+  if (productScore >= minSpecializedScore && productScore >= faqScore && productScore > brandScore) {
+    return { domain: 'products', brandDefinition };
+  }
+
+  if (faqScore >= minSpecializedScore && faqScore > productScore && faqScore > brandScore) {
+    return { domain: 'faq', brandDefinition };
+  }
+
+  return { domain: 'brand', brandDefinition };
+}
+
+function partitionWorkspaceText(sourceText: string) {
+  const chunks = splitDraftIntoChunks(sourceText);
+  const brandChunksByTitle = new Map<string, string[]>();
+  const productChunks: string[] = [];
+  const faqChunks: string[] = [];
+
+  for (const chunk of chunks) {
+    const { domain, brandDefinition } = assignWorkspaceChunk(chunk);
+
+    if (domain === 'products') {
+      productChunks.push(chunk);
+      continue;
+    }
+
+    if (domain === 'faq') {
+      faqChunks.push(chunk);
+      continue;
+    }
+
+    const list = brandChunksByTitle.get(brandDefinition.title) ?? [];
+    list.push(chunk);
+    brandChunksByTitle.set(brandDefinition.title, list);
+  }
+
+  return { brandChunksByTitle, productChunks, faqChunks };
+}
+
+function isDuplicateContent(content: string, existingContents: string[]) {
+  const normalized = content.trim().toLowerCase();
+  if (!normalized) return true;
+
+  const signature = normalized.slice(0, 60);
+  return existingContents.some((existing) => {
+    const other = existing.trim().toLowerCase();
+    if (!other) return false;
+    return other.includes(signature) || signature.includes(other.slice(0, 60));
   });
-
-  return assignedChunks.join('\n\n').trim();
 }
 
-function deriveCategoriesFromBrandBook(sections: BrandSectionTab[], draftContent: string) {
-  const timestamp = Date.now();
-  const normalizedDraft = draftContent.trim();
+function buildSectionsFromChunks(
+  idPrefix: string,
+  timestamp: number,
+  parentId: string | null,
+  title: string,
+  chunks: string[],
+): BrandSectionTab[] {
+  if (chunks.length === 0) return [];
 
-  return BRAND_CATEGORY_DEFINITIONS.map((definition, index) => {
-    const matchedSections = sections.filter((section) => sectionMatchesDefinition(section, definition));
-    const matchedContent = matchedSections
-      .map((section) => section.content.trim())
-      .filter(Boolean)
-      .join('\n\n');
+  const sectionId = `${idPrefix}-${timestamp}`;
+  const updatedAt = new Date().toISOString();
+  const content = chunks.join('\n\n');
 
-    const content =
-      matchedContent ||
-      (normalizedDraft
-        ? extractDraftContentForCategory(normalizedDraft, definition, BRAND_CATEGORY_DEFINITIONS)
-        : '');
+  if (chunks.length === 1) {
+    return [{ id: sectionId, parentId, title, content, updatedAt }];
+  }
 
-    return {
-      id: matchedSections[0]?.id ?? `section-ai-${timestamp}-${index}`,
+  return [
+    { id: sectionId, parentId, title, content: chunks[0] ?? content, updatedAt },
+    ...chunks.slice(1).map((chunk, index) => ({
+      id: `${sectionId}-sub-${index}`,
+      parentId: sectionId,
+      title: `بخش ${index + 2}`,
+      content: chunk,
+      updatedAt,
+    })),
+  ];
+}
+
+function buildTopLevelCategorySection(
+  idPrefix: string,
+  timestamp: number,
+  title: string,
+  entries: Array<{ title: string; content: string }>,
+): BrandSectionTab[] {
+  if (entries.length === 0) return [];
+
+  const parentId = `${idPrefix}-${timestamp}`;
+  const updatedAt = new Date().toISOString();
+  const parentContent = entries.map((entry) => entry.content).join('\n\n');
+  const sections: BrandSectionTab[] = [
+    {
+      id: parentId,
       parentId: null,
-      title: definition.title,
-      content,
-      updatedAt: new Date().toISOString(),
-    };
-  }).filter((section) => section.content.trim().length > 0);
+      title,
+      content: entries.length === 1 ? entries[0]!.content : parentContent,
+      updatedAt,
+    },
+  ];
+
+  if (entries.length > 1) {
+    entries.forEach((entry, index) => {
+      sections.push({
+        id: `${parentId}-sub-${index}`,
+        parentId,
+        title: entry.title,
+        content: entry.content,
+        updatedAt,
+      });
+    });
+  }
+
+  return sections;
 }
 
-function analyzeKnowledgeBaseReadiness(sections: BrandSectionTab[], draftContent: string) {
-  const combinedText = collectBrandBookText(sections, draftContent).toLowerCase();
+function formatProductRowContent(row: ProductRow, fields: ProductField[], index: number) {
+  const productName = row.values['product-name']?.trim() || `محصول ${index + 1}`;
+  const details = fields
+    .map((field) => {
+      const value = row.values[field.id]?.trim();
+      return value ? `${field.label}: ${value}` : null;
+    })
+    .filter(Boolean)
+    .join('\n');
+
+  return {
+    title: productName,
+    content: details ? `${productName}\n${details}` : productName,
+  };
+}
+
+function analyzeKnowledgeBaseReadiness(sections: BrandSectionTab[], messages: BrandIntroMessage[]) {
+  const combinedText = collectBrandBookText(sections, messages).toLowerCase();
 
   return KNOWLEDGE_BASE_FIELDS.map((field) => {
     const hasSectionMatch = sections.some(
@@ -599,9 +885,9 @@ function checkRequirementReadiness(
   products: ProductCatalogSnapshot,
   faqItems: FaqItem[],
 ) {
-  const { sections, draftContent } = brandBook;
-  const combinedText = collectBrandBookText(sections, draftContent).toLowerCase();
-  const brandReadiness = analyzeKnowledgeBaseReadiness(sections, draftContent);
+  const { sections, messages } = brandBook;
+  const combinedText = collectBrandBookText(sections, messages).toLowerCase();
+  const brandReadiness = analyzeKnowledgeBaseReadiness(sections, messages);
 
   switch (requirementKey) {
     case 'brand-identity':
@@ -880,15 +1166,21 @@ function PlaceholderCanvas({
 
 function ProductIntroEditor({
   brandName,
+  initialCatalog,
+  contentMessages,
+  onContentMessagesChange,
   onProductCatalogChange,
   onTextUpdated,
 }: {
   brandName: string;
+  initialCatalog?: ProductCatalogSnapshot;
+  contentMessages: WorkspaceContentMessage[];
+  onContentMessagesChange: (messages: WorkspaceContentMessage[]) => void;
   onProductCatalogChange?: (snapshot: ProductCatalogSnapshot) => void;
   onTextUpdated?: () => void;
 }) {
-  const [fields, setFields] = useState<ProductField[]>(INITIAL_PRODUCT_FIELDS);
-  const [rows, setRows] = useState<ProductRow[]>(() => createSampleProductRows());
+  const [fields, setFields] = useState<ProductField[]>(initialCatalog?.fields ?? INITIAL_PRODUCT_FIELDS);
+  const [rows, setRows] = useState<ProductRow[]>(initialCatalog?.rows ?? []);
 
   useEffect(() => {
     onProductCatalogChange?.({ fields, rows });
@@ -1006,7 +1298,7 @@ function ProductIntroEditor({
           <div className="text-right">
             <h2 className="m-0 text-[clamp(1.6rem,2vw,2.25rem)] font-black text-white">معرفی محصولات</h2>
             <p className="mt-3 max-w-3xl text-[length:var(--taav-text-sm)] leading-8 text-[rgba(217,229,255,0.72)]">
-              برای برند {brandName} دو مدل محصول نمونه آماده شده است؛ یکی کامل و یکی ناقص تا هنگام انتقال به نالج‌بیس، بخش‌های ناقص مشخص شوند.
+              برای برند {brandName} محصولات را در جدول ساختاریافته یا به‌صورت متن، فایل و ویس ثبت کن. این بخش اختیاری است.
             </p>
           </div>
 
@@ -1029,6 +1321,17 @@ function ProductIntroEditor({
             </button>
           </div>
         </div>
+
+        <ContentFeedEditor
+          title="محتوای آزاد معرفی محصول"
+          description="متن، فایل، تصویر، ویدئو یا ویس درباره محصولات را اینجا اضافه کن"
+          placeholder="توضیح محصول، ویژگی‌ها، مزایا یا کاربردها را بنویس..."
+          emptyTitle="هنوز محتوایی برای محصول ثبت نشده"
+          emptyDescription="می‌توانی از جدول پایین استفاده کنی یا مستقیم متن و فایل اضافه کنی."
+          messages={contentMessages}
+          onMessagesChange={onContentMessagesChange}
+          onUpdated={onTextUpdated}
+        />
 
         <div className="rounded-[24px] border border-white/10 bg-white/5 p-4 md:p-5">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -1170,14 +1473,18 @@ function ProductIntroEditor({
 
 function FaqEditor({
   brandName,
+  brandBookMessages,
   brandBookSections,
-  brandBookDraft,
+  contentMessages,
+  onContentMessagesChange,
   onFaqChange,
   onTextUpdated,
 }: {
   brandName: string;
+  brandBookMessages: BrandIntroMessage[];
   brandBookSections: BrandSectionTab[];
-  brandBookDraft: string;
+  contentMessages: WorkspaceContentMessage[];
+  onContentMessagesChange: (messages: WorkspaceContentMessage[]) => void;
   onFaqChange?: (items: FaqItem[]) => void;
   onTextUpdated?: () => void;
 }) {
@@ -1208,7 +1515,7 @@ function FaqEditor({
   };
 
   const generateFaqsWithAi = async () => {
-    const result = deriveFaqsFromBrandBook(brandName, brandBookSections, brandBookDraft);
+    const result = deriveFaqsFromBrandBook(brandName, brandBookSections, brandBookMessages);
 
     if (result.insufficient) {
       setConfirmAiOpen(false);
@@ -1272,6 +1579,17 @@ function FaqEditor({
             {feedback}
           </div>
         ) : null}
+
+        <ContentFeedEditor
+          title="محتوای آزاد سوالات پرتکرار"
+          description="متن، فایل یا ویس مرتبط با FAQ را اینجا اضافه کن"
+          placeholder="سوالات، پاسخ‌ها یا توضیحات تکمیلی را بنویس..."
+          emptyTitle="هنوز محتوای آزادی برای FAQ ثبت نشده"
+          emptyDescription="می‌توانی سوال و جواب ساختاریافته اضافه کنی یا محتوای آزاد وارد کنی."
+          messages={contentMessages}
+          onMessagesChange={onContentMessagesChange}
+          onUpdated={onTextUpdated}
+        />
 
         <div className="grid gap-4">
           {items.length > 0 ? (
@@ -1381,34 +1699,110 @@ function FaqEditor({
   );
 }
 
+function BrandIntroChatBubble({
+  message,
+  onDelete,
+}: {
+  message: BrandIntroMessage;
+  onDelete: (messageId: string) => void;
+}) {
+  const kindLabel = getBrandMessageKindLabel(message.kind);
+
+  return (
+    <div className="group flex justify-start">
+      <div className="max-w-[min(100%,720px)] rounded-[22px] border border-white/10 bg-[linear-gradient(180deg,rgba(18,30,56,0.92)_0%,rgba(10,19,38,0.88)_100%)] px-4 py-3 text-right shadow-[0_10px_28px_rgba(0,0,0,0.18)]">
+        <div className="mb-2 flex items-center justify-between gap-3">
+          <button
+            type="button"
+            onClick={() => onDelete(message.id)}
+            aria-label="حذف پیام"
+            className="inline-flex h-7 w-7 items-center justify-center rounded-full text-[rgba(217,229,255,0.45)] opacity-0 transition hover:bg-white/10 hover:text-[rgb(254,202,202)] group-hover:opacity-100"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-bold text-[rgba(217,229,255,0.52)]">
+              {formatUpdatedAt(message.createdAt)}
+            </span>
+            <span className="inline-flex items-center rounded-full border border-[rgba(66,237,211,0.22)] bg-[rgba(66,237,211,0.10)] px-2 py-0.5 text-[10px] font-bold text-[rgb(150,246,231)]">
+              {kindLabel}
+            </span>
+          </div>
+        </div>
+
+        {message.kind === 'text' ? (
+          <p className="m-0 whitespace-pre-wrap text-[length:var(--taav-text-sm)] leading-8 text-white">
+            {message.text}
+          </p>
+        ) : null}
+
+        {message.kind === 'image' && message.objectUrl ? (
+          <img
+            src={message.objectUrl}
+            alt={message.fileName ?? 'تصویر'}
+            className="max-h-72 w-full rounded-[16px] object-cover"
+          />
+        ) : null}
+
+        {message.kind === 'video' && message.objectUrl ? (
+          <video src={message.objectUrl} controls className="max-h-72 w-full rounded-[16px]" />
+        ) : null}
+
+        {message.kind === 'audio' && message.objectUrl ? (
+          <audio src={message.objectUrl} controls className="w-full min-w-[260px]" />
+        ) : null}
+
+        {message.kind === 'file' ? (
+          <div className="inline-flex items-center gap-2 rounded-[14px] border border-white/10 bg-white/8 px-3 py-2">
+            <Paperclip className="h-4 w-4 text-[rgb(199,210,254)]" />
+            <span className="text-[length:var(--taav-text-sm)] font-semibold text-white">
+              {message.fileName ?? 'فایل ضمیمه'}
+            </span>
+          </div>
+        ) : null}
+
+        {message.kind !== 'text' && message.kind !== 'file' && message.fileName ? (
+          <div className="mt-2 text-[11px] font-medium text-[rgba(217,229,255,0.58)]">{message.fileName}</div>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
 function BrandIntroEditor({
   brandName,
+  initialSections,
   onBrandBookChange,
   productCatalog,
+  faqItems,
+  productMessages,
+  faqMessages,
   onTextUpdated,
-  onKnowledgeBaseSynced,
 }: {
   brandName: string;
+  initialSections?: BrandSectionTab[];
   onBrandBookChange?: (snapshot: BrandBookSnapshot) => void;
   productCatalog: ProductCatalogSnapshot;
+  faqItems: FaqItem[];
+  productMessages: WorkspaceContentMessage[];
+  faqMessages: WorkspaceContentMessage[];
   onTextUpdated?: () => void;
-  onKnowledgeBaseSynced?: () => void;
 }) {
-  const [sections, setSections] = useState<BrandSectionTab[]>(INITIAL_BRAND_SECTIONS);
-  const [activeSectionId, setActiveSectionId] = useState<string | null>(INITIAL_BRAND_SECTIONS[0]?.id ?? null);
+  const [sections, setSections] = useState<BrandSectionTab[]>(initialSections ?? INITIAL_BRAND_SECTIONS);
+  const [messages, setMessages] = useState<BrandIntroMessage[]>([]);
+  const [composerText, setComposerText] = useState('');
+  const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
   const [titleDraft, setTitleDraft] = useState('');
   const [collapsedSectionIds, setCollapsedSectionIds] = useState<string[]>([]);
-  const [draftContent, setDraftContent] = useState('');
-  const [attachments, setAttachments] = useState<EditorAttachment[]>([]);
   const [isRecording, setIsRecording] = useState(false);
-  const [confirmAction, setConfirmAction] = useState<BrandIntroAction | null>(null);
+  const [confirmAction, setConfirmAction] = useState<'ai-generate' | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isTransferring, setIsTransferring] = useState(false);
   const [actionFeedback, setActionFeedback] = useState<string | null>(null);
   const [aiUsageHistory, setAiUsageHistory] = useState<AiUsageRecord[]>([]);
   const [lastAiUsage, setLastAiUsage] = useState<AiUsageRecord | null>(null);
+  const chatEndRef = useRef<HTMLDivElement | null>(null);
   const recordSessionRef = useRef<{
     recorder: MediaRecorder;
     stream: MediaStream;
@@ -1416,11 +1810,21 @@ function BrandIntroEditor({
   } | null>(null);
 
   const filePickerRef = useRef<HTMLInputElement | null>(null);
-  const filePickerKindRef = useRef<EditorAttachment['kind']>('file');
+  const filePickerKindRef = useRef<BrandIntroMessageKind>('file');
 
   useEffect(() => {
-    onBrandBookChange?.({ sections, draftContent });
-  }, [sections, draftContent, onBrandBookChange]);
+    if (initialSections) {
+      setSections(initialSections);
+    }
+  }, [initialSections]);
+
+  useEffect(() => {
+    onBrandBookChange?.({ sections, messages });
+  }, [sections, messages, onBrandBookChange]);
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   const totalAiUsage = useMemo(
     () =>
@@ -1438,19 +1842,6 @@ function BrandIntroEditor({
     setAiUsageHistory((current) => [...current, record]);
     setLastAiUsage(record);
   }, []);
-
-  const brandKnowledgeBaseReadiness = useMemo(
-    () => analyzeKnowledgeBaseReadiness(sections, draftContent),
-    [sections, draftContent],
-  );
-  const missingBrandFields = useMemo(
-    () => brandKnowledgeBaseReadiness.filter((field) => !field.ready).map((field) => field.label),
-    [brandKnowledgeBaseReadiness],
-  );
-  const missingProductFields = useMemo(
-    () => analyzeProductKnowledgeBaseReadiness(productCatalog.fields, productCatalog.rows),
-    [productCatalog],
-  );
 
   const getSectionById = (sectionId: string) => sections.find((section) => section.id === sectionId) ?? null;
 
@@ -1513,15 +1904,12 @@ function BrandIntroEditor({
       title: isChild
         ? `زیرتب ${nextIndex}`
         : `تب ${sections.filter((item) => item.parentId === null).length + 1}`,
-      content: !isChild && sections.length === 0 ? draftContent : '',
+      content: '',
       updatedAt: new Date().toISOString(),
     };
 
     setSections((current) => [...current, newSection]);
     setActiveSectionId(newSection.id);
-    if (!isChild && sections.length === 0) {
-      setDraftContent('');
-    }
     if (parentId) {
       setCollapsedSectionIds((current) => current.filter((item) => item !== parentId));
     }
@@ -1565,14 +1953,6 @@ function BrandIntroEditor({
   const deleteSection = (sectionId: string) => {
     const branchIds = new Set(collectSectionBranchIds(sectionId));
     const remainingSections = sections.filter((section) => !branchIds.has(section.id));
-    const activeDeleted = Boolean(activeSectionId && branchIds.has(activeSectionId));
-
-    if (activeDeleted && remainingSections.length === 0) {
-      const deletedActiveSection = sections.find((section) => section.id === activeSectionId);
-      if (deletedActiveSection?.content) {
-        setDraftContent(deletedActiveSection.content);
-      }
-    }
 
     setSections(remainingSections);
     setActiveSectionId((currentActiveId) => {
@@ -1724,65 +2104,42 @@ function BrandIntroEditor({
       );
     });
 
-  const updateSectionContent = (value: string) => {
+  const appendMessages = useCallback((nextMessages: BrandIntroMessage[]) => {
+    if (nextMessages.length === 0) return;
+    setMessages((current) => [...current, ...nextMessages]);
     onTextUpdated?.();
+  }, [onTextUpdated]);
 
-    if (!activeSectionId) {
-      setDraftContent(value);
-      return;
-    }
-
-    setSections((current) =>
-      current.map((section) =>
-        section.id === activeSectionId
-          ? {
-              ...section,
-              content: value,
-              updatedAt: new Date().toISOString(),
-            }
-          : section,
-      ),
-    );
+  const sendTextMessage = () => {
+    const text = composerText.trim();
+    if (!text) return;
+    appendMessages([createBrandIntroTextMessage(text)]);
+    setComposerText('');
   };
 
-  const classifyFileKind = (file: File): EditorAttachment['kind'] => {
-    if (file.type.startsWith('image/')) return 'image';
-    if (file.type.startsWith('video/')) return 'video';
-    if (file.type.startsWith('audio/')) return 'audio';
-    return 'file';
-  };
+  const addFilesAsMessages = useCallback(
+    (files: FileList | File[], forcedKind?: BrandIntroMessageKind) => {
+      const list = Array.from(files);
+      if (list.length === 0) return;
+      appendMessages(
+        list.map((file) => createBrandIntroFileMessage(file, forcedKind ?? classifyMessageKind(file))),
+      );
+    },
+    [appendMessages],
+  );
 
-  const addFilesAsAttachments = useCallback((files: FileList | File[], forcedKind?: EditorAttachment['kind']) => {
-    const list = Array.from(files);
-    if (list.length === 0) return;
-
-    const createdAt = new Date().toISOString();
-    const next = list.map((file) => {
-      const kind = forcedKind ?? classifyFileKind(file);
-      const shouldPreview = kind === 'image' || kind === 'video' || kind === 'audio';
-      return {
-        id: `att-${Date.now()}-${Math.random().toString(16).slice(2)}`,
-        kind,
-        file,
-        objectUrl: shouldPreview ? URL.createObjectURL(file) : undefined,
-        createdAt,
-      } satisfies EditorAttachment;
-    });
-
-    setAttachments((current) => [...next, ...current]);
-  }, []);
-
-  const removeAttachment = (attachmentId: string) => {
-    setAttachments((current) => {
-      const target = current.find((item) => item.id === attachmentId);
+  const removeMessage = (messageId: string) => {
+    setMessages((current) => {
+      const target = current.find((item) => item.id === messageId);
       if (target?.objectUrl) {
         URL.revokeObjectURL(target.objectUrl);
       }
-      return current.filter((item) => item.id !== attachmentId);
+      return current.filter((item) => item.id !== messageId);
     });
+    onTextUpdated?.();
   };
 
-  const openFilePicker = (kind: EditorAttachment['kind']) => {
+  const openFilePicker = (kind: BrandIntroMessageKind) => {
     filePickerKindRef.current = kind;
     filePickerRef.current?.click();
   };
@@ -1803,7 +2160,7 @@ function BrandIntroEditor({
     recorder.addEventListener('stop', () => {
       const blob = new Blob(chunks, { type: recorder.mimeType || 'audio/webm' });
       const file = new File([blob], `voice-${Date.now()}.webm`, { type: blob.type });
-      addFilesAsAttachments([file], 'audio');
+      appendMessages([createBrandIntroFileMessage(file, 'audio')]);
       stream.getTracks().forEach((track) => track.stop());
       recordSessionRef.current = null;
       setIsRecording(false);
@@ -1821,28 +2178,22 @@ function BrandIntroEditor({
   };
 
   const closeConfirmDialog = () => {
-    if (isGenerating || isTransferring) return;
+    if (isGenerating) return;
     setConfirmAction(null);
   };
 
   const loadSampleBusiness = () => {
-    setSections([]);
-    setActiveSectionId(null);
-    setDraftContent(buildSampleBusinessIntroduction(brandName));
-    setAttachments([]);
-    setCollapsedSectionIds([]);
-    setOpenMenuId(null);
-    setEditingSectionId(null);
-    setTitleDraft('');
-    onTextUpdated?.();
-    setActionFeedback('متن نمونه معرفی کسب‌وکار بارگذاری شد. برای ساخت دسته‌بندی از دکمه AI استفاده کن.');
+    appendMessages([createBrandIntroTextMessage(buildSampleBusinessIntroduction(brandName))]);
+    setActionFeedback('متن نمونه معرفی کسب‌وکار به گفتگو اضافه شد. برای ساخت دسته‌بندی از دکمه AI استفاده کن.');
   };
 
   const generateCategoriesWithAi = async () => {
-    const brandBookText = collectBrandBookText(sections, draftContent);
-    if (!brandBookText.trim()) {
+    const workspaceText = collectAllWorkspaceText(messages, sections, productCatalog, faqItems);
+    if (!workspaceText.trim() && productMessages.length === 0 && faqMessages.length === 0) {
       setConfirmAction(null);
-      setActionFeedback('برای ساخت دسته‌بندی، ابتدا معرفی برند را تکمیل کنید یا نمونه کسب‌وکار را بارگذاری کنید.');
+      setActionFeedback(
+        'برای ساخت دسته‌بندی، ابتدا در معرفی برند، محصولات یا سوالات پرتکرار اطلاعاتی ثبت کن یا نمونه کسب‌وکار را بارگذاری کن.',
+      );
       return;
     }
 
@@ -1851,79 +2202,44 @@ function BrandIntroEditor({
 
     await new Promise((resolve) => setTimeout(resolve, 1800));
 
-    const derivedSections = deriveCategoriesFromBrandBook(sections, draftContent);
+    const derivedSections = deriveCategoriesFromAllSources(
+      messages,
+      productCatalog,
+      faqItems,
+      productMessages,
+      faqMessages,
+    );
     if (!derivedSections.length) {
       setIsGenerating(false);
       setConfirmAction(null);
-      setActionFeedback('محتوای کافی برای ساخت دسته‌بندی پیدا نشد. ابتدا معرفی برند را کامل‌تر کنید.');
+      setActionFeedback('محتوای کافی برای ساخت دسته‌بندی پیدا نشد. ابتدا اطلاعات بیشتری وارد کن.');
       return;
     }
 
     const generatedText = derivedSections.map((section) => `${section.title}\n${section.content}`).join('\n\n');
-    const usage = calculateAiUsage('ساخت دسته‌بندی با AI', brandBookText, generatedText);
+    const usage = calculateAiUsage('ساخت دسته‌بندی با AI', workspaceText, generatedText);
     registerAiUsage(usage);
 
     setSections(derivedSections);
     setActiveSectionId(derivedSections[0]?.id ?? null);
-    setDraftContent('');
+    setCollapsedSectionIds([]);
     setIsGenerating(false);
     setConfirmAction(null);
     onTextUpdated?.();
     setActionFeedback(
-      `دسته‌بندی‌ها بر اساس محتوای برندبوک ساخته شدند. مصرف این درخواست: ${formatNumberFa(
+      `دسته‌بندی‌های مستقل ساخته شدند: هر بخش فقط محتوای مربوط به خودش را دارد (${formatNumberFa(derivedSections.length)} دسته). مصرف: ${formatNumberFa(
         usage.totalTokens,
-      )} توکن معادل ${formatNumberFa(usage.cost)} ${AI_PRICING_SETTINGS.currency}.`,
+      )} توکن · ${formatNumberFa(usage.cost)} ${AI_PRICING_SETTINGS.currency}.`,
     );
-  };
-
-  const transferToKnowledgeBase = async () => {
-    const brandBookText = collectBrandBookText(sections, draftContent);
-    if (!brandBookText.trim()) {
-      setConfirmAction(null);
-      setActionFeedback('برای انتقال به نالج‌بیس، ابتدا اطلاعات معرفی برند را ثبت کنید.');
-      return;
-    }
-
-    setIsTransferring(true);
-    setActionFeedback(null);
-
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
-    const missingFields = [...missingBrandFields, ...missingProductFields.map((item) => `محصول - ${item}`)];
-
-    const usage = calculateAiUsage('انتقال به نالج‌بیس', brandBookText, missingFields.join('\n') || brandBookText);
-    registerAiUsage(usage);
-
-    setIsTransferring(false);
-    setConfirmAction(null);
-
-    const usageSummary = `مصرف این درخواست: ${formatNumberFa(usage.totalTokens)} توکن معادل ${formatNumberFa(
-      usage.cost,
-    )} ${AI_PRICING_SETTINGS.currency}.`;
-
-    if (missingFields.length > 0) {
-      setActionFeedback(
-        `انتقال به نالج‌بیس انجام نشد. به طور مثال ${missingFields[0]} در دیتاهای شما وجود ندارد. موارد ناقص: ${missingFields.join('، ')}. ${usageSummary}`,
-      );
-      return;
-    }
-
-    onKnowledgeBaseSynced?.();
-    setActionFeedback(`اطلاعات معرفی برند با موفقیت به نالج‌بیس منتقل شد. ${usageSummary}`);
   };
 
   const handleConfirmAction = () => {
     if (confirmAction === 'ai-generate') {
       void generateCategoriesWithAi();
-      return;
-    }
-
-    if (confirmAction === 'kb-transfer') {
-      void transferToKnowledgeBase();
     }
   };
 
-  const isActionBusy = isGenerating || isTransferring;
+  const isActionBusy = isGenerating;
 
   return (
     <section className="min-h-[72vh] rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.025)_100%)] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] md:p-6 xl:p-8">
@@ -1993,22 +2309,13 @@ function BrandIntroEditor({
               )}
               <span className="relative">ساخت دسته‌بندی با AI</span>
             </button>
-
-            <button
-              type="button"
-              onClick={() => setConfirmAction('kb-transfer')}
-              disabled={isActionBusy}
-              className="inline-flex items-center gap-2 rounded-full border border-[rgba(130,158,255,0.28)] bg-[rgba(130,158,255,0.12)] px-4 py-2.5 text-[length:var(--taav-text-sm)] font-black text-[rgb(199,210,254)] transition hover:bg-[rgba(130,158,255,0.18)] disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {isTransferring ? <Loader2 className="h-4 w-4 animate-spin" /> : <Database className="h-4 w-4" />}
-              انتقال به نالج‌بیس
-            </button>
           </div>
 
           <div className="text-right">
             <h2 className="m-0 text-[clamp(1.6rem,2vw,2.25rem)] font-black text-white">معرفی برند</h2>
             <p className="mt-3 max-w-3xl text-[length:var(--taav-text-sm)] leading-8 text-[rgba(217,229,255,0.72)]">
-              برای برند {brandName} می توانی چند ساب تب مجزا بسازی و برای هر کدام متن و محتوای موردنیاز را ثبت کنی.
+              برای برند {brandName} متن، ویس، تصویر، ویدئو و فایل را به‌صورت گفتگو اضافه کن. بعد از «ساخت دسته‌بندی با AI»،
+              دسته‌های مستقل (هویت، محصولات، FAQ و …) در کنار هم سازماندهی می‌شوند.
             </p>
           </div>
         </div>
@@ -2031,9 +2338,9 @@ function BrandIntroEditor({
                 <Plus className="h-4 w-4" />
               </button>
               <div className="text-right">
-                <div className="text-[15px] font-semibold text-white">تب‌های سند</div>
+                <div className="text-[15px] font-semibold text-white">دسته‌بندی‌ها</div>
                 <div className="mt-1 text-[11px] font-medium text-[rgba(217,229,255,0.58)]">
-                  تب‌های اصلی و زیرتب‌ها نامحدود
+                  هر دسته مستقل است و فقط زیرتب‌های خودش را دارد
                 </div>
               </div>
             </div>
@@ -2041,39 +2348,42 @@ function BrandIntroEditor({
               <div className="grid gap-1">{renderSectionTree()}</div>
             ) : (
               <div className="rounded-[22px] border border-dashed border-white/14 bg-white/5 p-5 text-right">
-                <div className="text-[13px] font-semibold text-white">هنوز تبی ساخته نشده</div>
+                <div className="text-[13px] font-semibold text-white">هنوز دسته‌بندی ساخته نشده</div>
                 <div className="mt-2 text-[12px] leading-7 text-[rgba(217,229,255,0.60)]">
-                  می‌تونی همین الان متن رو بنویسی؛ هر وقت «+» رو زدی اولین تب با همین محتوا ساخته می‌شه.
+                  پس از ثبت اطلاعات در گفتگو، محصولات و FAQ، دکمه «ساخت دسته‌بندی با AI» را بزن تا تب‌ها اینجا نمایش داده شوند.
                 </div>
               </div>
             )}
           </aside>
 
           <div className="grid min-w-0 gap-4">
-            <div className="rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(18,30,56,0.78)_0%,rgba(10,19,38,0.78)_100%)] p-5 shadow-[0_18px_48px_rgba(0,0,0,0.22)] md:p-6 xl:min-h-[560px]">
-              <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-                <div className="flex flex-wrap items-center gap-2">
-                  <button
-                    type="button"
-                    className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/8 px-3 py-1.5 text-[length:var(--taav-text-xs)] font-bold text-[rgba(241,245,249,0.90)]"
-                  >
-                    <Type className="h-3.5 w-3.5" />
-                    متن
-                  </button>
-                </div>
-
-                <div className="text-right">
-                  <strong className="block text-[length:var(--taav-text-md)] text-white">
-                    {activeSection?.title ?? 'یادداشت'}
-                  </strong>
-                  <span className="text-[length:var(--taav-text-xs)] text-[rgba(217,229,255,0.58)]">
-                    {activeSection ? 'محتوای این بخش را در این ویرایشگر ثبت کن' : 'فعلاً بدون تب؛ با دکمه + می‌تونی اولین تب رو بسازی'}
+            <div className="flex min-h-[560px] flex-col rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(18,30,56,0.78)_0%,rgba(10,19,38,0.78)_100%)] shadow-[0_18px_48px_rgba(0,0,0,0.22)]">
+              <div className="border-b border-white/10 px-5 py-4 md:px-6">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/8 px-3 py-1.5 text-[11px] font-bold text-[rgba(217,229,255,0.72)]">
+                    {formatNumberFa(messages.length)} پیام
                   </span>
+                  <div className="text-right">
+                    <strong className="block text-[length:var(--taav-text-md)] text-white">گفتگوی معرفی برند</strong>
+                    <span className="text-[length:var(--taav-text-xs)] text-[rgba(217,229,255,0.58)]">
+                      هر محتوایی که اضافه می‌کنی به‌صورت پیام پشت‌سرهم نمایش داده می‌شود
+                    </span>
+                  </div>
                 </div>
               </div>
 
+              {activeSection ? (
+                <div className="border-b border-white/10 bg-[rgba(66,237,211,0.06)] px-5 py-3 md:px-6">
+                  <div className="text-[11px] font-bold text-[rgb(150,246,231)]">پیش‌نمایش دسته‌بندی انتخاب‌شده</div>
+                  <div className="mt-1 text-[13px] font-black text-white">{activeSection.title}</div>
+                  <p className="mt-2 mb-0 line-clamp-3 text-[12px] leading-7 text-[rgba(217,229,255,0.72)]">
+                    {activeSection.content}
+                  </p>
+                </div>
+              ) : null}
+
               <div
-                className="grid gap-3"
+                className="flex-1 overflow-y-auto px-4 py-5 md:px-6"
                 onDragOver={(event) => {
                   event.preventDefault();
                   event.stopPropagation();
@@ -2082,11 +2392,31 @@ function BrandIntroEditor({
                   event.preventDefault();
                   event.stopPropagation();
                   if (event.dataTransfer?.files?.length) {
-                    addFilesAsAttachments(event.dataTransfer.files);
+                    addFilesAsMessages(event.dataTransfer.files);
                   }
                 }}
               >
-                <div className="flex flex-wrap items-center justify-between gap-2">
+                {messages.length > 0 ? (
+                  <div className="grid gap-4">
+                    {messages.map((message) => (
+                      <BrandIntroChatBubble key={message.id} message={message} onDelete={removeMessage} />
+                    ))}
+                    <div ref={chatEndRef} />
+                  </div>
+                ) : (
+                  <div className="grid h-full min-h-[360px] place-items-center rounded-[22px] border border-dashed border-white/14 bg-white/5 p-8 text-center">
+                    <div className="grid max-w-md gap-3">
+                      <strong className="text-[length:var(--taav-text-md)] text-white">گفتگو را شروع کن</strong>
+                      <p className="m-0 text-[length:var(--taav-text-sm)] leading-7 text-[rgba(217,229,255,0.62)]">
+                        متن بنویس، ویس ضبط کن، یا فایل و تصویر اضافه کن. همه چیز مثل چت پشت‌سرهم نمایش داده می‌شود.
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="border-t border-white/10 bg-[rgba(5,12,25,0.55)] p-4 md:p-5">
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                   <div className="flex flex-wrap items-center gap-2">
                     <button
                       type="button"
@@ -2125,9 +2455,8 @@ function BrandIntroEditor({
                       فایل
                     </button>
                   </div>
-
                   <div className="text-[11px] font-medium text-[rgba(217,229,255,0.52)]">
-                    می‌تونی فایل رو drag & drop کنی یا تصویر رو paste کنی.
+                    drag & drop یا paste تصویر
                   </div>
                 </div>
 
@@ -2148,79 +2477,51 @@ function BrandIntroEditor({
                   onChange={(event) => {
                     const files = event.target.files;
                     if (files?.length) {
-                      addFilesAsAttachments(files, filePickerKindRef.current);
+                      addFilesAsMessages(files, filePickerKindRef.current);
                     }
                     event.target.value = '';
                   }}
                 />
 
-                {attachments.length > 0 ? (
-                  <div className="grid gap-3">
-                    <div className="flex flex-wrap justify-end gap-2">
-                      {attachments.map((att) => (
-                        <div
-                          key={att.id}
-                          className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/8 px-3 py-1.5 text-right"
-                        >
-                          <span className="text-[12px] font-semibold text-[rgba(241,245,249,0.92)]">{att.file.name}</span>
-                          <button
-                            type="button"
-                            onClick={() => removeAttachment(att.id)}
-                            className="inline-flex h-6 w-6 items-center justify-center rounded-full text-[rgba(217,229,255,0.62)] transition hover:bg-white/10 hover:text-white"
-                          >
-                            <X className="h-4 w-4" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="grid gap-3 rounded-[18px] border border-white/10 bg-white/5 p-3">
-                      {attachments.slice(0, 3).map((att) => (
-                        <div key={att.id} className="grid gap-2">
-                          {att.kind === 'image' && att.objectUrl ? (
-                            <img
-                              src={att.objectUrl}
-                              alt={att.file.name}
-                              className="max-h-56 w-full rounded-[14px] object-cover"
-                            />
-                          ) : null}
-                          {att.kind === 'video' && att.objectUrl ? (
-                            <video src={att.objectUrl} controls className="max-h-56 w-full rounded-[14px]" />
-                          ) : null}
-                          {att.kind === 'audio' && att.objectUrl ? (
-                            <audio src={att.objectUrl} controls className="w-full" />
-                          ) : null}
-                        </div>
-                      ))}
-                      {attachments.length > 3 ? (
-                        <div className="text-right text-[11px] font-medium text-[rgba(217,229,255,0.58)]">
-                          +{attachments.length - 3} فایل دیگر
-                        </div>
-                      ) : null}
-                    </div>
-                  </div>
-                ) : null}
-
-                <textarea
-                  value={activeSection?.content ?? draftContent}
-                  onChange={(event) => updateSectionContent(event.target.value)}
-                  onPaste={(event) => {
-                    const items = event.clipboardData?.items;
-                    if (!items?.length) return;
-                    const files: File[] = [];
-                    for (const item of Array.from(items)) {
-                      if (item.kind === 'file') {
-                        const file = item.getAsFile();
-                        if (file) files.push(file);
+                <div className="flex items-end gap-3">
+                  <button
+                    type="button"
+                    onClick={sendTextMessage}
+                    disabled={!composerText.trim() || isActionBusy}
+                    className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-[rgba(66,237,211,0.34)] bg-[rgba(66,237,211,0.16)] text-[rgb(150,246,231)] transition hover:bg-[rgba(66,237,211,0.24)] disabled:cursor-not-allowed disabled:opacity-40"
+                    aria-label="ارسال پیام"
+                  >
+                    <Send className="h-4 w-4" />
+                  </button>
+                  <textarea
+                    value={composerText}
+                    onChange={(event) => setComposerText(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' && !event.shiftKey) {
+                        event.preventDefault();
+                        sendTextMessage();
                       }
-                    }
-                    if (files.length) {
-                      addFilesAsAttachments(files);
-                    }
-                  }}
-                  placeholder="اینجا معرفی برند، لحن، داستان، ارزش ها و هر توضیح مهم دیگری را بنویس..."
-                  className="min-h-[520px] w-full resize-none rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(5,12,25,0.82)_0%,rgba(8,16,31,0.74)_100%)] px-6 py-6 text-right text-[length:var(--taav-text-sm)] leading-8 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] outline-none transition placeholder:text-[rgba(217,229,255,0.38)] focus:border-[rgba(66,237,211,0.36)] focus:ring-4 focus:ring-[rgba(66,237,211,0.10)]"
-                />
+                    }}
+                    onPaste={(event) => {
+                      const items = event.clipboardData?.items;
+                      if (!items?.length) return;
+                      const files: File[] = [];
+                      for (const item of Array.from(items)) {
+                        if (item.kind === 'file') {
+                          const file = item.getAsFile();
+                          if (file) files.push(file);
+                        }
+                      }
+                      if (files.length) {
+                        event.preventDefault();
+                        addFilesAsMessages(files);
+                      }
+                    }}
+                    placeholder="متن معرفی برند را بنویس و Enter بزن..."
+                    rows={2}
+                    className="min-h-[52px] flex-1 resize-none rounded-[20px] border border-white/10 bg-[rgba(8,16,31,0.82)] px-4 py-3 text-right text-[length:var(--taav-text-sm)] leading-7 text-white outline-none transition placeholder:text-[rgba(217,229,255,0.38)] focus:border-[rgba(66,237,211,0.36)]"
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -2231,40 +2532,12 @@ function BrandIntroEditor({
         <TaavDialogContent size="sm" contentClassName="ai-lab-dialog">
           <TaavDialogHeader>
             <TaavDialogTitle className="text-right text-[length:var(--taav-text-lg)] font-black text-[var(--taav-text-strong)]">
-              {confirmAction === 'ai-generate' ? 'ساخت دسته‌بندی با AI' : 'انتقال به نالج‌بیس'}
+              ساخت دسته‌بندی با AI
             </TaavDialogTitle>
             <TaavDialogDescription className="text-right text-[length:var(--taav-text-sm)] leading-7 text-[var(--taav-text-muted)]">
-              {confirmAction === 'ai-generate'
-                ? 'آیا مطمئن هستید که می‌خواهید AI بر اساس محتوای فعلی برندبوک، دسته‌بندی‌ها را بسازد و تب‌های سند را بازآرایی کند؟'
-                : 'آیا مطمئن هستید که می‌خواهید اطلاعات ثبت‌شده در برندبوک را برای انتقال به نالج‌بیس بررسی و ارسال کنید؟'}
+              آیا مطمئن هستید که می‌خواهید AI بر اساس گفتگوی معرفی برند، محصولات و سوالات پرتکرار، دسته‌بندی‌ها و زیرتب‌ها را بسازد؟
             </TaavDialogDescription>
           </TaavDialogHeader>
-
-          {confirmAction === 'kb-transfer' ? (
-            <div className="grid gap-3 rounded-[18px] border border-[rgba(248,113,113,0.22)] bg-[rgba(248,113,113,0.08)] p-4 text-right">
-              <div className="text-[13px] font-black text-[rgb(254,202,202)]">بخش‌های ناقص قبل از انتقال</div>
-              {missingBrandFields.length > 0 || missingProductFields.length > 0 ? (
-                <div className="grid gap-2 text-[12px] leading-7 text-[rgba(255,226,226,0.88)]">
-                  {missingBrandFields.length > 0 ? (
-                    <div>
-                      <span className="font-bold text-white">معرفی برند: </span>
-                      {missingBrandFields.join('، ')}
-                    </div>
-                  ) : null}
-                  {missingProductFields.map((item) => (
-                    <div key={item}>
-                      <span className="font-bold text-white">معرفی محصول: </span>
-                      {item}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-[12px] leading-7 text-[rgba(209,250,229,0.90)]">
-                  همه بخش‌های ضروری برند و محصول کامل هستند و آماده انتقال به نالج‌بیس‌اند.
-                </div>
-              )}
-            </div>
-          ) : null}
 
           <TaavDialogFooter>
             <TaavButton variant="secondary" tone="neutral" onClick={closeConfirmDialog} disabled={isActionBusy}>
@@ -2289,19 +2562,35 @@ function BrandIntroEditor({
 
 export function TaaviaManualWorkspaceClient({
   brandName,
+  tenantId,
+  brandId,
   selectedUseCases = [],
+  initialWorkspace = null,
 }: TaaviaManualWorkspaceClientProps) {
   const [brandBookSnapshot, setBrandBookSnapshot] = useState<BrandBookSnapshot>({
-    sections: INITIAL_BRAND_SECTIONS,
-    draftContent: '',
+    sections: initialWorkspace?.knowledgeBaseSections ?? INITIAL_BRAND_SECTIONS,
+    messages: hydrateWorkspaceMessages(initialWorkspace?.brandMessages ?? []) as BrandIntroMessage[],
   });
-  const [productCatalogSnapshot, setProductCatalogSnapshot] = useState<ProductCatalogSnapshot>({
-    fields: INITIAL_PRODUCT_FIELDS,
-    rows: createSampleProductRows(),
-  });
-  const [faqItems, setFaqItems] = useState<FaqItem[]>([]);
-  const [lastTextUpdatedAt, setLastTextUpdatedAt] = useState<string | null>(null);
-  const [lastKnowledgeBaseSyncAt, setLastKnowledgeBaseSyncAt] = useState<string | null>(null);
+  const [productCatalogSnapshot, setProductCatalogSnapshot] = useState<ProductCatalogSnapshot>(
+    initialWorkspace?.productCatalog ?? {
+      fields: INITIAL_PRODUCT_FIELDS,
+      rows: [],
+    },
+  );
+  const [productMessages, setProductMessages] = useState<WorkspaceContentMessage[]>(
+    hydrateWorkspaceMessages(initialWorkspace?.productMessages ?? []),
+  );
+  const [faqMessages, setFaqMessages] = useState<WorkspaceContentMessage[]>(
+    hydrateWorkspaceMessages(initialWorkspace?.faqMessages ?? []),
+  );
+  const [faqItems, setFaqItems] = useState<FaqItem[]>(initialWorkspace?.faqItems ?? []);
+  const [lastTextUpdatedAt, setLastTextUpdatedAt] = useState<string | null>(
+    initialWorkspace?.lastTextUpdatedAt ?? null,
+  );
+  const [lastKnowledgeBaseSyncAt, setLastKnowledgeBaseSyncAt] = useState<string | null>(
+    initialWorkspace?.lastKnowledgeBaseSyncAt ?? null,
+  );
+  const [workspaceFeedback, setWorkspaceFeedback] = useState<string | null>(null);
 
   const handleBrandBookChange = useCallback((snapshot: BrandBookSnapshot) => {
     setBrandBookSnapshot(snapshot);
@@ -2315,9 +2604,78 @@ export function TaaviaManualWorkspaceClient({
   const markTextUpdated = useCallback(() => {
     setLastTextUpdatedAt(new Date().toISOString());
   }, []);
-  const markKnowledgeBaseSynced = useCallback(() => {
-    setLastKnowledgeBaseSyncAt(new Date().toISOString());
+  const markKnowledgeBaseSynced = useCallback((syncedAt: string) => {
+    setLastKnowledgeBaseSyncAt(syncedAt);
   }, []);
+
+  const sectionStatuses = useMemo(
+    () =>
+      getWorkspaceSectionStatuses({
+        brandMessages: brandBookSnapshot.messages,
+        productMessages,
+        faqMessages,
+        productCatalog: productCatalogSnapshot,
+        faqItems,
+      }),
+    [brandBookSnapshot.messages, productMessages, faqMessages, productCatalogSnapshot, faqItems],
+  );
+
+  const canTransfer = useMemo(
+    () =>
+      hasAnyWorkspaceData({
+        brandMessages: brandBookSnapshot.messages,
+        productMessages,
+        faqMessages,
+        productCatalog: productCatalogSnapshot,
+        faqItems,
+      }),
+    [brandBookSnapshot.messages, productMessages, faqMessages, productCatalogSnapshot, faqItems],
+  );
+
+  const buildWorkspaceSnapshot = useCallback(
+    (sections: BrandSectionTab[], syncedAt: string | null): TaaviaWorkspaceSnapshot => ({
+      brandMessages: serializeWorkspaceMessages(brandBookSnapshot.messages),
+      productMessages: serializeWorkspaceMessages(productMessages),
+      faqMessages: serializeWorkspaceMessages(faqMessages),
+      productCatalog: productCatalogSnapshot,
+      faqItems,
+      knowledgeBaseSections: sections,
+      lastTextUpdatedAt,
+      lastKnowledgeBaseSyncAt: syncedAt,
+    }),
+    [
+      brandBookSnapshot.messages,
+      productMessages,
+      faqMessages,
+      productCatalogSnapshot,
+      faqItems,
+      lastTextUpdatedAt,
+    ],
+  );
+
+  const persistWorkspace = useCallback(
+    async (sections: BrandSectionTab[], syncedAt: string | null) => {
+      const workspace = buildWorkspaceSnapshot(sections, syncedAt);
+      const response = await fetch(`/api/businesses/${tenantId}/taavia/brands/${brandId}/workspace`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ workspace }),
+      });
+
+      if (!response.ok) {
+        throw new Error('workspace persist failed');
+      }
+    },
+    [brandId, buildWorkspaceSnapshot, tenantId],
+  );
+
+  const handleTransferComplete = useCallback(
+    (sections: BrandSectionTab[], syncedAt: string) => {
+      setBrandBookSnapshot((current) => ({ ...current, sections }));
+      markKnowledgeBaseSynced(syncedAt);
+    },
+    [markKnowledgeBaseSynced],
+  );
 
   const answeringRequirements = useMemo(
     () => buildAnsweringRequirements(selectedUseCases, brandBookSnapshot, productCatalogSnapshot, faqItems),
@@ -2329,6 +2687,19 @@ export function TaaviaManualWorkspaceClient({
       <div className="absolute inset-x-[-8%] top-[-14%] h-64 rounded-full bg-[radial-gradient(circle,rgba(66,237,211,0.18)_0%,rgba(66,237,211,0)_72%)] blur-3xl" />
       <div className="absolute bottom-[-22%] left-[-8%] h-72 w-72 rounded-full bg-[radial-gradient(circle,rgba(99,121,255,0.20)_0%,rgba(99,121,255,0)_74%)] blur-3xl" />
 
+      <WorkspaceStatusSummary
+        sections={sectionStatuses}
+        lastTextUpdatedAt={lastTextUpdatedAt}
+        lastKnowledgeBaseSyncAt={lastKnowledgeBaseSyncAt}
+        canTransfer={canTransfer}
+      />
+
+      {workspaceFeedback ? (
+        <div className="relative z-[1] mb-4 rounded-[16px] border border-[rgba(248,113,113,0.22)] bg-[rgba(248,113,113,0.08)] px-4 py-3 text-[12px] font-semibold text-[rgb(254,202,202)]">
+          {workspaceFeedback}
+        </div>
+      ) : null}
+
       <AnsweringRequirementsPanel
         brandName={brandName}
         selectedUseCases={selectedUseCases}
@@ -2339,29 +2710,31 @@ export function TaaviaManualWorkspaceClient({
 
       <TaavTabs
         defaultValue="brand"
-        orientation="vertical"
-        className="relative grid gap-5 lg:grid-cols-[320px_minmax(0,1fr)] lg:items-start"
+        orientation="horizontal"
+        className="relative grid gap-5"
         dir="rtl"
       >
-        <aside className="rounded-[28px] border border-white/10 bg-white/6 p-4 backdrop-blur-2xl">
-          <div className="mb-4 grid gap-3 text-right">
-            <div className="inline-flex w-fit items-center gap-2 rounded-full border border-[rgba(66,237,211,0.24)] bg-[rgba(66,237,211,0.10)] px-3 py-1.5 text-[length:var(--taav-text-xs)] font-black text-[rgb(165,248,235)]">
-              <Sparkles className="h-3.5 w-3.5" />
-              تنظیم دستی برند
-            </div>
-            <div>
-              <h1 className="m-0 text-[clamp(1.5rem,2vw,2.2rem)] font-black text-white">دفترچه برند {brandName}</h1>
-              <p className="mt-2 text-[length:var(--taav-text-sm)] leading-7 text-[rgba(217,229,255,0.70)]">
-                ساختار این صفحه مثل یک workspace عمودی است تا بتوانی اطلاعات برند را قدم به قدم و منظم ثبت کنی.
-              </p>
+        <div className="rounded-[28px] border border-white/10 bg-white/6 p-4 backdrop-blur-2xl md:p-5">
+          <div className="mb-5 flex flex-wrap items-end justify-between gap-4 border-b border-white/10 pb-5">
+            <div className="grid gap-3 text-right">
+              <div className="inline-flex w-fit items-center gap-2 rounded-full border border-[rgba(66,237,211,0.24)] bg-[rgba(66,237,211,0.10)] px-3 py-1.5 text-[length:var(--taav-text-xs)] font-black text-[rgb(165,248,235)]">
+                <Sparkles className="h-3.5 w-3.5" />
+                تنظیم دستی برند
+              </div>
+              <div>
+                <h1 className="m-0 text-[clamp(1.5rem,2vw,2.2rem)] font-black text-white">دفترچه برند {brandName}</h1>
+                <p className="mt-2 max-w-3xl text-[length:var(--taav-text-sm)] leading-7 text-[rgba(217,229,255,0.70)]">
+                  هر سه بخش اختیاری‌اند. پس از تکمیل، از دکمه پایین صفحه برای انتقال به نالج‌بیس استفاده کن.
+                </p>
+              </div>
             </div>
           </div>
 
           <TaavTabsList
-            orientation="vertical"
+            orientation="horizontal"
             variant="soft"
             tone="neutral"
-            className="w-full gap-2 bg-transparent p-0"
+            className="w-full flex-wrap justify-start gap-2 overflow-x-auto bg-transparent p-0"
           >
             {MANUAL_TABS.map((tab) => {
               const Icon = tab.icon;
@@ -2371,12 +2744,12 @@ export function TaaviaManualWorkspaceClient({
                   value={tab.value}
                   variant="soft"
                   tone="neutral"
-                  className="w-full justify-between rounded-[20px] border border-white/8 bg-[rgba(255,255,255,0.04)] px-4 py-4 text-right data-[state=active]:border-[rgba(66,237,211,0.22)] data-[state=active]:bg-[linear-gradient(135deg,rgba(66,237,211,0.16)_0%,rgba(255,255,255,0.08)_100%)] data-[state=active]:text-white"
+                  className="shrink-0 justify-start gap-3 rounded-[18px] border border-white/8 bg-[rgba(255,255,255,0.04)] px-4 py-3 text-right data-[state=active]:border-[rgba(66,237,211,0.22)] data-[state=active]:bg-[linear-gradient(135deg,rgba(66,237,211,0.16)_0%,rgba(255,255,255,0.08)_100%)] data-[state=active]:text-white"
                 >
-                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-[14px] bg-[rgba(255,255,255,0.10)] text-white">
-                    <Icon className="h-[18px] w-[18px]" />
+                  <span className="inline-flex h-9 w-9 items-center justify-center rounded-[12px] bg-[rgba(255,255,255,0.10)] text-white">
+                    <Icon className="h-[17px] w-[17px]" />
                   </span>
-                  <span className="grid flex-1 gap-1 text-right">
+                  <span className="grid gap-0.5 text-right">
                     <span className="text-[length:var(--taav-text-2xs)] font-bold text-[rgba(213,223,249,0.60)]">
                       {tab.eyebrow}
                     </span>
@@ -2386,22 +2759,27 @@ export function TaaviaManualWorkspaceClient({
               );
             })}
           </TaavTabsList>
-        </aside>
+        </div>
 
         <div className="rounded-[30px] border border-white/10 bg-[rgba(255,255,255,0.05)] p-3 backdrop-blur-2xl md:p-4">
           <TaavTabsContent value="brand" className="m-0">
             <BrandIntroEditor
               brandName={brandName}
+              initialSections={brandBookSnapshot.sections}
               onBrandBookChange={handleBrandBookChange}
               productCatalog={productCatalogSnapshot}
+              faqItems={faqItems}
+              productMessages={productMessages}
+              faqMessages={faqMessages}
               onTextUpdated={markTextUpdated}
-              onKnowledgeBaseSynced={markKnowledgeBaseSynced}
             />
           </TaavTabsContent>
 
           <TaavTabsContent value="products" className="m-0">
             <ProductIntroEditor
               brandName={brandName}
+              contentMessages={productMessages}
+              onContentMessagesChange={setProductMessages}
               onProductCatalogChange={handleProductCatalogChange}
               onTextUpdated={markTextUpdated}
             />
@@ -2410,8 +2788,10 @@ export function TaaviaManualWorkspaceClient({
           <TaavTabsContent value="faq" className="m-0">
             <FaqEditor
               brandName={brandName}
+              brandBookMessages={brandBookSnapshot.messages}
               brandBookSections={brandBookSnapshot.sections}
-              brandBookDraft={brandBookSnapshot.draftContent}
+              contentMessages={faqMessages}
+              onContentMessagesChange={setFaqMessages}
               onFaqChange={handleFaqChange}
               onTextUpdated={markTextUpdated}
             />
@@ -2429,6 +2809,22 @@ export function TaaviaManualWorkspaceClient({
           ))}
         </div>
       </TaavTabs>
+
+      <WorkspaceTransferPanel
+        canTransfer={canTransfer}
+        sectionStatuses={sectionStatuses}
+        brandMessages={brandBookSnapshot.messages}
+        productMessages={productMessages}
+        faqMessages={faqMessages}
+        productCatalog={productCatalogSnapshot}
+        faqItems={faqItems}
+        existingKnowledgeBaseSections={brandBookSnapshot.sections}
+        onTransferComplete={handleTransferComplete}
+        onPersist={async (sections, syncedAt) => {
+          await persistWorkspace(sections, syncedAt);
+        }}
+        onError={(message) => setWorkspaceFeedback(message)}
+      />
     </div>
   );
 }
