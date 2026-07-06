@@ -1,5 +1,6 @@
 import { CheckCircle2, Clock3, Loader2, TriangleAlert } from 'lucide-react';
 import type { OcrSimulationJob } from '@/app/lib/data';
+import { buildOcrAiMetaFromModel, resolveOcrModel } from '@/app/lib/ocr-models';
 import type { OcrFieldReviewStatus, OcrFieldValidationStatus, OcrOverallStatus } from '@/app/lib/ocr-simulator-data';
 
 const OVERALL_STATUS_LABELS: Record<OcrOverallStatus, string> = {
@@ -81,4 +82,88 @@ export function buildOcrStats(jobs: OcrSimulationJob[]) {
   const tokensUsed = jobs.reduce((sum, job) => sum + job.tokensUsed, 0);
 
   return { total, completed, processing, failed, avgConfidence, tokensUsed };
+}
+
+export type OcrResultFormField = {
+  key: string;
+  label: string;
+  targetValue: string;
+  confidence: number | null;
+};
+
+export function getOcrTransportMode(job: OcrSimulationJob, hint?: 'rest' | 'grpc' | null): 'rest' | 'grpc' {
+  if (hint === 'grpc' || hint === 'rest') return hint;
+  const mode = job.extractedJson?.__transportMode;
+  return mode === 'grpc' ? 'grpc' : 'rest';
+}
+
+export type OcrAiUsage = {
+  modelId: string;
+  modelName: string;
+  providerLabel: string;
+  inputTokens: number;
+  outputTokens: number;
+  totalTokens: number;
+};
+
+export function getOcrAiUsage(job: OcrSimulationJob, transportMode?: 'rest' | 'grpc' | null): OcrAiUsage {
+  const mode = transportMode ?? getOcrTransportMode(job);
+  const model = resolveOcrModel(job.extractedJson?.__aiModelId, mode);
+
+  const storedInput = Number(job.extractedJson?.__inputTokens);
+  const storedOutput = Number(job.extractedJson?.__outputTokens);
+  const storedModelName = job.extractedJson?.__aiModelName;
+  const storedProvider = job.extractedJson?.__aiProviderLabel;
+  const storedModelId = job.extractedJson?.__aiModelId;
+
+  if (storedModelName && Number.isFinite(storedInput) && Number.isFinite(storedOutput)) {
+    return {
+      modelId: storedModelId || model.id,
+      modelName: storedModelName,
+      providerLabel: storedProvider || model.providerLabel,
+      inputTokens: storedInput,
+      outputTokens: storedOutput,
+      totalTokens: storedInput + storedOutput,
+    };
+  }
+
+  const derived = buildOcrAiMetaFromModel(job.tokensUsed, model);
+  const inputTokens = Number(derived.__inputTokens);
+  const outputTokens = Number(derived.__outputTokens);
+
+  return {
+    modelId: model.id,
+    modelName: model.name,
+    providerLabel: model.providerLabel,
+    inputTokens,
+    outputTokens,
+    totalTokens: inputTokens + outputTokens,
+  };
+}
+
+export function getOcrFormFields(job: OcrSimulationJob): OcrResultFormField[] {
+  const resultFields = job.resultJson?.fields ?? [];
+  const schemaFields = job.templateSchema?.fields ?? [];
+
+  if (schemaFields.length > 0) {
+    return schemaFields.map((schemaField) => {
+      const resultField = resultFields.find((field) => field.key === schemaField.key);
+      const extracted = job.extractedFields.find((field) => field.key === schemaField.key);
+      return {
+        key: schemaField.key,
+        label: schemaField.label,
+        targetValue: resultField?.normalized_value || resultField?.value || extracted?.value || '',
+        confidence: resultField?.confidence ?? null,
+      };
+    });
+  }
+
+  return job.extractedFields
+    .filter((field) => !field.key.startsWith('__'))
+    .map((field) => ({
+      key: field.key,
+      label: field.label,
+      targetValue: field.value,
+      confidence: null,
+    }));
 }

@@ -13,6 +13,7 @@ import type {
   OcrSimulationJob,
   OcrSimulationSourceType,
 } from './types/domain';
+import { buildOcrAiMetaFromModel, resolveOcrModel } from './ocr-models';
 
 function createOcrId() {
   return `ocr_${randomBytes(8).toString('hex')}`;
@@ -61,8 +62,32 @@ function buildResultFields(template: OcrSampleDocument, result: OcrTemplateOutpu
   }));
 }
 
-function buildExtractedJson(result: OcrTemplateOutputResult) {
-  return Object.fromEntries(result.fields.map((field) => [field.key, field.normalized_value || field.value]));
+function buildOcrAiMeta(
+  tokensUsed: number,
+  transportMode?: 'rest' | 'grpc' | null,
+  modelId?: string | null,
+) {
+  const model = resolveOcrModel(modelId, transportMode);
+  return buildOcrAiMetaFromModel(tokensUsed, model);
+}
+
+function buildExtractedJson(
+  result: OcrTemplateOutputResult,
+  transportMode?: 'rest' | 'grpc' | null,
+  tokensUsed?: number,
+  modelId?: string | null,
+) {
+  const base = Object.fromEntries(result.fields.map((field) => [field.key, field.normalized_value || field.value]));
+  const meta: Record<string, string> = {};
+
+  if (transportMode === 'grpc' || transportMode === 'rest') {
+    meta.__transportMode = transportMode;
+  }
+  if (tokensUsed && tokensUsed > 0) {
+    Object.assign(meta, buildOcrAiMeta(tokensUsed, transportMode, modelId));
+  }
+
+  return Object.keys(meta).length > 0 ? { ...base, ...meta } : base;
 }
 
 function resolveScenarioResult(template: OcrSampleDocument, scenario: OcrTemplateScenario): OcrTemplateScenarioResult {
@@ -90,7 +115,12 @@ function buildOcrJobFromScenario(
   ).toISOString();
   const fileType = input.fileType?.trim() || sample.fileType;
   const extractedFields = buildResultFields(sample, scenarioResult.result);
-  const extractedJson = buildExtractedJson(scenarioResult.result);
+  const extractedJson = buildExtractedJson(
+    scenarioResult.result,
+    input.transportMode,
+    scenarioResult.tokensUsed,
+    input.modelId,
+  );
 
   return {
     id: createOcrId(),
@@ -196,6 +226,8 @@ function buildOcrJobFromUpload(tenantId: string, input: CreateOcrSimulationInput
       fileType: input.fileType?.trim() || 'application/octet-stream',
       mode: 'simulated OCR',
       source: 'upload',
+      ...(input.transportMode ? { __transportMode: input.transportMode } : {}),
+      ...buildOcrAiMeta(generic.tokensUsed, input.transportMode, input.modelId),
     },
     extractedFields: generic.extractedFields,
     warnings: ['خروجی با منطق شبیه‌سازی تولید شده است.'],
@@ -210,8 +242,17 @@ function buildOcrJobFromUpload(tenantId: string, input: CreateOcrSimulationInput
 }
 
 export function buildOcrSimulationJob(tenantId: string, input: CreateOcrSimulationInput): OcrSimulationJob {
-  const sample = input.sourceType === 'sample' ? lookupOcrTemplateDocument(input.sampleId) : null;
-  return sample ? buildOcrJobFromSample(tenantId, sample) : buildOcrJobFromUpload(tenantId, input);
+  if (input.sourceType === 'sample') {
+    const sample = lookupOcrTemplateDocument(input.sampleId);
+    if (!sample) {
+      return buildOcrJobFromUpload(tenantId, input);
+    }
+
+    const scenario = canUseMissScenario(sample, input.scenario) ? 'miss' : 'recognize';
+    return buildOcrJobFromScenario(tenantId, input, sample, 'sample', scenario);
+  }
+
+  return buildOcrJobFromUpload(tenantId, input);
 }
 
 export function materializeOcrJob(job: OcrSimulationJob): boolean {

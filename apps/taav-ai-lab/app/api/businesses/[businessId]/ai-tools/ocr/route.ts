@@ -5,6 +5,7 @@ import {
   getOcrJobsForTenant,
   type CreateOcrSimulationInput,
 } from '@/app/lib/data';
+import { isOcrModelId, DEFAULT_OCR_MODEL_ID } from '@/app/lib/ocr-models';
 import { getOptionalSession } from '@/app/lib/session';
 
 type RouteContext = {
@@ -54,6 +55,8 @@ export async function POST(request: Request, context: RouteContext) {
     templateId: body.templateId?.trim() || null,
     scenario: body.scenario === 'miss' ? 'miss' : body.scenario === 'recognize' ? 'recognize' : null,
     sampleText: body.sampleText?.trim() || null,
+    transportMode: body.transportMode === 'grpc' ? 'grpc' : 'rest',
+    modelId: isOcrModelId(body.modelId) ? body.modelId : DEFAULT_OCR_MODEL_ID,
   });
 
   if (!job) {

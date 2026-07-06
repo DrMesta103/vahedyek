@@ -3,6 +3,7 @@ import { getCurrentTenant, requireSession } from '@/app/lib/session';
 import { AiLabShell } from '@/components/AiLabShell';
 import { OcrJobDetailClient } from '@/components/OcrJobDetailClient';
 import Link from 'next/link';
+import { Suspense } from 'react';
 import { TaavButton } from '@repo/ui/taav/primitives';
 
 export default async function OcrJobPage({
@@ -64,7 +65,9 @@ export default async function OcrJobPage({
       currentTenantId={business.id}
       currentTenantName={business.name}
     >
-      <OcrJobDetailClient businessId={business.id} initialJob={job} />
+      <Suspense fallback={null}>
+        <OcrJobDetailClient businessId={business.id} initialJob={job} />
+      </Suspense>
     </AiLabShell>
   );
 }

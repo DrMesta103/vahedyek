@@ -26,7 +26,9 @@ export function resolveNavHref(item: AiLabNavItem, businessId?: string | null): 
 }
 
 export function getSidebarNavItems() {
-  return AI_LAB_NAV_ITEMS.filter((item) => !item.toolbarOnly);
+  return AI_LAB_NAV_ITEMS.filter(
+    (item) => !item.toolbarOnly && item.id !== 'ocr' && item.id !== 'businesses-new',
+  );
 }
 
 export function getOrbitNavItems(businessId: string) {
@@ -70,7 +72,7 @@ export function getActiveNavItem(pathname: string, businessId?: string | null) {
   }
 
   if (pathname === '/businesses/new') {
-    return AI_LAB_NAV_ITEMS.find((item) => item.id === 'businesses-new') ?? AI_LAB_NAV_ITEMS[0];
+    return AI_LAB_NAV_ITEMS.find((item) => item.id === 'businesses') ?? AI_LAB_NAV_ITEMS[0];
   }
 
   return AI_LAB_NAV_ITEMS[0];

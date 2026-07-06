@@ -83,8 +83,21 @@ export async function createTenantForUser(userId: string, input: CreateTenantInp
   const slug =
     input.slug?.trim() ||
     `tenant-${input.name.trim().toLowerCase().replace(/\s+/g, '-')}-${randomUUID().slice(0, 6)}`;
+  const ownerFirstName = input.ownerFirstName?.trim() ?? '';
+  const ownerLastName = input.ownerLastName?.trim() ?? '';
 
   const tenant = await prisma.$transaction(async (tx) => {
+    if (ownerFirstName && ownerLastName) {
+      await tx.appUser.update({
+        where: { id: userId },
+        data: {
+          firstName: ownerFirstName,
+          lastName: ownerLastName,
+          fullName: [ownerFirstName, ownerLastName].join(' ').trim(),
+        },
+      });
+    }
+
     const created = await tx.tenant.create({
       data: {
         slug,
@@ -107,4 +120,118 @@ export async function createTenantForUser(userId: string, input: CreateTenantInp
   });
 
   return mapTenantRow(tenant, userId);
+}
+
+export type AdminBusinessRow = {
+  id: string;
+  name: string;
+  logoUrl: string;
+  tokenLimit: number;
+  usedTokens: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  lastActivity: string | null;
+  ownerUserId: string | null;
+  ownerFirstName: string | null;
+  ownerLastName: string | null;
+  ownerFullName: string | null;
+  ownerEmail: string | null;
+  ownerMobile: string | null;
+};
+
+export async function listAllBusinessesForAdmin(): Promise<AdminBusinessRow[]> {
+  const tenants = await prisma.tenant.findMany({
+    orderBy: { updatedAt: 'desc' },
+    include: {
+      memberships: {
+        where: { role: 'owner' },
+        take: 1,
+        orderBy: { createdAt: 'asc' },
+        include: {
+          user: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              fullName: true,
+              email: true,
+              mobile: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  return tenants.map((tenant) => {
+    const owner = tenant.memberships[0]?.user ?? null;
+
+    return {
+      id: tenant.id,
+      name: tenant.name,
+      logoUrl: tenant.logoUrl,
+      tokenLimit: tenant.tokenLimit,
+      usedTokens: tenant.usedTokens,
+      isActive: tenant.isActive,
+      createdAt: tenant.createdAt.toISOString(),
+      updatedAt: tenant.updatedAt.toISOString(),
+      lastActivity: tenant.lastActivity?.toISOString() ?? null,
+      ownerUserId: owner?.id ?? null,
+      ownerFirstName: owner?.firstName ?? null,
+      ownerLastName: owner?.lastName ?? null,
+      ownerFullName: owner?.fullName ?? null,
+      ownerEmail: owner?.email ?? null,
+      ownerMobile: owner?.mobile ?? null,
+    };
+  });
+}
+
+export async function updateTenantTokenLimit(tenantId: string, tokenLimit: number): Promise<AdminBusinessRow | null> {
+  const existing = await prisma.tenant.findUnique({ where: { id: tenantId } });
+  if (!existing) return null;
+
+  const tenant = await prisma.tenant.update({
+    where: { id: tenantId },
+    data: { tokenLimit, updatedAt: new Date() },
+    include: {
+      memberships: {
+        where: { role: 'owner' },
+        take: 1,
+        orderBy: { createdAt: 'asc' },
+        include: {
+          user: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              fullName: true,
+              email: true,
+              mobile: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  const owner = tenant.memberships[0]?.user ?? null;
+
+  return {
+    id: tenant.id,
+    name: tenant.name,
+    logoUrl: tenant.logoUrl,
+    tokenLimit: tenant.tokenLimit,
+    usedTokens: tenant.usedTokens,
+    isActive: tenant.isActive,
+    createdAt: tenant.createdAt.toISOString(),
+    updatedAt: tenant.updatedAt.toISOString(),
+    lastActivity: tenant.lastActivity?.toISOString() ?? null,
+    ownerUserId: owner?.id ?? null,
+    ownerFirstName: owner?.firstName ?? null,
+    ownerLastName: owner?.lastName ?? null,
+    ownerFullName: owner?.fullName ?? null,
+    ownerEmail: owner?.email ?? null,
+    ownerMobile: owner?.mobile ?? null,
+  };
 }

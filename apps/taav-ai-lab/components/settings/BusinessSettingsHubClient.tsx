@@ -1,6 +1,6 @@
 'use client';
 
-import { Briefcase, Coins, DollarSign } from 'lucide-react';
+import { Briefcase, Building2, Coins, DollarSign } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import {
   TaavBusinessIntroCard,
@@ -27,6 +27,16 @@ const SETTINGS_MODULES = [
     href: '/settings/usd-rate',
     icon: <DollarSign className="h-5 w-5" strokeWidth={2.1} />,
     tooltip: AI_LAB_TOOLTIPS.settings.usdRate,
+  },
+  {
+    id: 'businesses',
+    title: 'فهرست کسب‌وکارها',
+    description: 'مشاهده و مدیریت همه کسب‌وکارها و مصرف توکن آن‌ها در کل سیستم.',
+    href: '/settings/businesses',
+    icon: <Building2 className="h-5 w-5" strokeWidth={2.1} />,
+    tooltip: AI_LAB_TOOLTIPS.settings.businesses,
+    eyebrow: 'تاو ادمین',
+    statusLabel: 'مشاهده فهرست',
   },
 ] as const;
 
@@ -68,6 +78,8 @@ export function BusinessSettingsHubClient() {
                 </span>
               }
               description={module.description}
+              eyebrow={'eyebrow' in module ? module.eyebrow : undefined}
+              statusLabel={'statusLabel' in module ? module.statusLabel : undefined}
               themeMode="auto"
               width="full"
               icon={module.icon}

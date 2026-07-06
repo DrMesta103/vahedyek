@@ -68,6 +68,8 @@ function buildNavPath(
         navPath.push({ label: 'قیمت‌گذاری توکن‌ها', id: 'token-pricing' });
       } else if (pathname.includes('/usd-rate')) {
         navPath.push({ label: 'تنظیمات قیمت دلار', id: 'usd-rate' });
+      } else if (pathname.includes('/settings/businesses')) {
+        navPath.push({ label: 'فهرست کسب‌وکارها', id: 'settings-businesses' });
       }
     } else if (!(pathname.startsWith('/settings') && activeItem.id === 'settings')) {
       navPath.push({ label: activeItem.label, id: activeItem.id });

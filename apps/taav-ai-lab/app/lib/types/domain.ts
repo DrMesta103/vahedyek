@@ -119,6 +119,8 @@ export type CreateTenantInput = {
   name: string;
   logoUrl: string;
   tokenLimit: number;
+  ownerFirstName?: string;
+  ownerLastName?: string;
   slug?: string;
   brandCode?: string;
   packageKey?: string | null;
@@ -149,6 +151,8 @@ export type CreateOcrSimulationInput = {
   templateId?: string | null;
   scenario?: OcrTemplateScenario | null;
   sampleText?: string | null;
+  transportMode?: 'rest' | 'grpc' | null;
+  modelId?: string | null;
 };
 
 export type TaaviaChatMessage = {

@@ -42,6 +42,9 @@ export {
   getSuggestedBusinessNames,
   getTenantForUser,
   createTenantForUser,
+  listAllBusinessesForAdmin,
+  updateTenantTokenLimit,
+  type AdminBusinessRow,
 } from './repositories/businesses';
 
 export {

@@ -3,79 +3,94 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
-import { ArrowLeft, CheckCircle2, Clock3, ScanSearch, Sparkles } from 'lucide-react';
-import { TaavBadge, TaavButton } from '@repo/ui/taav/primitives';
-import { TaavChoiceChipGroup, TaavFieldBlock, TaavInput } from '@repo/ui/taav/forms';
-import { TaavTabs, TaavTabsList, TaavTabsTrigger } from '@repo/ui/taav/navigation';
+import {
+  Clock3,
+  Cpu,
+  Loader2,
+  Play,
+  Smartphone,
+  UserRound,
+  X,
+  Zap,
+} from 'lucide-react';
+import {
+  DEFAULT_OCR_MODEL_ID,
+  OCR_MODEL_OPTIONS,
+  type OcrModelProvider,
+} from '@/app/lib/ocr-models';
 import {
   getOcrSampleById,
-  getOcrSamplesByLane,
   type OcrSampleLane,
   type OcrTemplateScenario,
 } from '@/app/lib/ocr-simulator-data';
-import type { OcrSimulationJob, Tenant } from '@/app/lib/data';
-import { OcrPageShell } from '@/components/ocr/OcrPageShell';
-import { OcrSectionCard } from '@/components/ocr/OcrSectionCard';
+import type { OcrSimulationJob } from '@/app/lib/data';
 import { OcrUploadZone, type OcrUploadFileState } from '@/components/ocr/OcrUploadZone';
-import { TemplatePreviewDialog } from '@/components/ocr/TemplatePreviewDialog';
-import { formatConfidence } from '@/components/ocr/utils';
+import './ocr/ocr-create.css';
 
 type OcrRegistrationClientProps = {
-  business: Tenant;
   businessId: string;
 };
 
-const QUICK_SAMPLES = getOcrSamplesByLane('quick');
-const LONG_SAMPLES = getOcrSamplesByLane('long');
+type DocumentTypeKey = 'id-card' | 'receipt';
 
-function toChipOptions(samples: ReturnType<typeof getOcrSamplesByLane>) {
-  return samples.map((sample) => ({ value: sample.id, label: sample.title }));
+const DOCUMENT_TYPES: {
+  key: DocumentTypeKey;
+  sampleId: string;
+  label: string;
+  lane: OcrSampleLane;
+  icon: typeof UserRound;
+}[] = [
+  { key: 'id-card', sampleId: 'id-card', label: 'کارت ملی', lane: 'quick', icon: UserRound },
+  { key: 'receipt', sampleId: 'receipt', label: 'رسید پرداخت', lane: 'quick', icon: Smartphone },
+];
+
+function getDocumentType(key: DocumentTypeKey) {
+  return DOCUMENT_TYPES.find((item) => item.key === key) ?? DOCUMENT_TYPES[0];
 }
 
-function getDefaultSampleId(lane: OcrSampleLane) {
-  return lane === 'quick' ? (QUICK_SAMPLES[0]?.id ?? '') : (LONG_SAMPLES[0]?.id ?? '');
-}
+const MODEL_PROVIDER_LABELS: Record<OcrModelProvider, string> = {
+  openai: 'GPT',
+  deepseek: 'DeepSeek',
+  google: 'Gemini',
+  xai: 'Grok',
+};
 
-function formatPageCount(pageCount: number) {
-  return new Intl.NumberFormat('fa-IR').format(pageCount);
-}
-
-export function OcrRegistrationClient({ business, businessId }: OcrRegistrationClientProps) {
+export function OcrRegistrationClient({ businessId }: OcrRegistrationClientProps) {
   const router = useRouter();
   const [activeLane, setActiveLane] = useState<OcrSampleLane>('quick');
-  const [selectedSampleId, setSelectedSampleId] = useState<string>(getDefaultSampleId('quick'));
+  const [selectedTypeKey, setSelectedTypeKey] = useState<DocumentTypeKey>('id-card');
+  const [selectedModelId, setSelectedModelId] = useState(DEFAULT_OCR_MODEL_ID);
   const [uploadState, setUploadState] = useState<OcrUploadFileState | null>(null);
-  const [submissionLabel, setSubmissionLabel] = useState('');
+  const [submissionLabel, setSubmissionLabel] = useState('کارت ملی');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
 
-  const laneSamples = activeLane === 'quick' ? QUICK_SAMPLES : LONG_SAMPLES;
-  const selectedSample = useMemo(
-    () => laneSamples.find((sample) => sample.id === selectedSampleId) ?? laneSamples[0] ?? null,
-    [laneSamples, selectedSampleId],
-  );
+  const selectedType = getDocumentType(selectedTypeKey);
+  const selectedSample = useMemo(() => {
+    if (activeLane === 'long') return getOcrSampleById('contract');
+    return getOcrSampleById(selectedType.sampleId);
+  }, [activeLane, selectedType.sampleId]);
 
-  const showCardIdScenarios = Boolean(uploadState && selectedSample?.id === 'id-card');
-  const sourceTitle = submissionLabel.trim() || uploadState?.fileName || selectedSample?.title || 'بدون عنوان';
+  const sourceTitle = submissionLabel.trim() || uploadState?.fileName || selectedType.label;
 
   const handleLaneChange = (lane: OcrSampleLane) => {
     setActiveLane(lane);
     setUploadState(null);
     setError('');
-    const nextSample = lane === 'quick' ? QUICK_SAMPLES[0] : LONG_SAMPLES[0];
-    if (nextSample) {
-      setSelectedSampleId(nextSample.id);
-      setSubmissionLabel(nextSample.title);
+
+    if (lane === 'long') {
+      setSubmissionLabel((current) => current.trim() || 'قرارداد');
+      return;
     }
+
+    setSubmissionLabel(selectedType.label);
   };
 
-  const handleSampleChange = (value: string | string[]) => {
-    const sampleId = Array.isArray(value) ? value[0] : value;
-    if (!sampleId) return;
-    const sample = getOcrSampleById(sampleId);
-    setSelectedSampleId(sampleId);
-    setSubmissionLabel(sample?.title ?? '');
+  const handleTypeChange = (key: DocumentTypeKey) => {
+    const nextType = getDocumentType(key);
+    setSelectedTypeKey(key);
+    setActiveLane(nextType.lane);
+    setSubmissionLabel(nextType.label);
     setError('');
   };
 
@@ -84,7 +99,7 @@ export function OcrRegistrationClient({ business, businessId }: OcrRegistrationC
       setError('لطفاً یک نوع سند انتخاب کنید.');
       return false;
     }
-    if (!sourceTitle.trim() || sourceTitle === 'بدون عنوان') {
+    if (!sourceTitle.trim()) {
       setError('عنوان سند را وارد کنید.');
       return false;
     }
@@ -92,7 +107,10 @@ export function OcrRegistrationClient({ business, businessId }: OcrRegistrationC
     return true;
   };
 
-  const runSimulation = async (scenario: OcrTemplateScenario = 'recognize') => {
+  const runSimulation = async (
+    scenario: OcrTemplateScenario = 'recognize',
+    transportMode: 'rest' | 'grpc' = 'rest',
+  ) => {
     if (!validateForm()) return;
 
     const sourceType = uploadState ? 'upload' : 'sample';
@@ -120,6 +138,8 @@ export function OcrRegistrationClient({ business, businessId }: OcrRegistrationC
                 scenario: 'recognize',
                 sourceName,
                 fileType: sample?.fileType,
+                transportMode,
+                modelId: selectedModelId,
               }
             : {
                 sourceType,
@@ -129,6 +149,8 @@ export function OcrRegistrationClient({ business, businessId }: OcrRegistrationC
                 fileType: uploadState?.fileType,
                 fileSize: uploadState?.fileSize,
                 sampleText: uploadState?.contentSnippet,
+                transportMode,
+                modelId: selectedModelId,
               },
         ),
       });
@@ -138,7 +160,12 @@ export function OcrRegistrationClient({ business, businessId }: OcrRegistrationC
         throw new Error(payload?.message || 'ساخت کار نویسه‌خوانی انجام نشد.');
       }
 
-      router.push(`/businesses/${businessId}/ai-tools/ocr/${payload.job.id}`);
+      sessionStorage.setItem(`ocr-transport:${payload.job.id}`, transportMode);
+      if (transportMode === 'grpc') {
+        sessionStorage.removeItem(`ocr-grpc-done:${payload.job.id}`);
+      }
+
+      router.push(`/businesses/${businessId}/ai-tools/ocr/${payload.job.id}?transport=${transportMode}`);
       router.refresh();
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : 'اجرای شبیه‌سازی نویسه‌خوانی ناموفق بود.');
@@ -148,97 +175,140 @@ export function OcrRegistrationClient({ business, businessId }: OcrRegistrationC
   };
 
   return (
-    <OcrPageShell
-      eyebrow="ثبت کار جدید"
-      title="ثبت تست نویسه‌خوانی"
-      description={`${business.name} · نوع سند را انتخاب کنید، عنوان را تنظیم کنید و در صورت نیاز فایل آپلود کنید`}
-      actions={
-        <Link href={`/businesses/${businessId}/ai-tools/ocr`}>
-          <TaavButton variant="secondary" tone="neutral" iconStart={<ArrowLeft className="h-4 w-4" />}>
-            بازگشت به تاریخچه
-          </TaavButton>
-        </Link>
-      }
-    >
-      <TemplatePreviewDialog sample={selectedSample} open={templateDialogOpen} onOpenChange={setTemplateDialogOpen} />
+    <div className="ai-lab-ocr-create-page" dir="rtl" lang="fa">
+      <div className="ai-lab-ocr-create-card">
+        <div className="ai-lab-ocr-create-mode" role="tablist" aria-label="حالت اجرا">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeLane === 'quick'}
+            className={activeLane === 'quick' ? 'is-active' : ''}
+            onClick={() => handleLaneChange('quick')}
+          >
+            <Zap className="h-3.5 w-3.5" aria-hidden />
+            سریع
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeLane === 'long'}
+            className={activeLane === 'long' ? 'is-active' : ''}
+            onClick={() => handleLaneChange('long')}
+          >
+            <Clock3 className="h-3.5 w-3.5" aria-hidden />
+            زمان بر
+          </button>
+        </div>
 
-      <OcrSectionCard title="فرم ثبت کار">
-        <div className="ocr-flow-form-layout">
-          <div className="ocr-flow-field-group">
-            <span className="ocr-flow-field-label">مسیر اجرا</span>
-            <TaavTabs value={activeLane} onValueChange={(value) => handleLaneChange(value as OcrSampleLane)}>
-              <TaavTabsList variant="pill" size="sm">
-                <TaavTabsTrigger value="quick" variant="pill" size="sm">
-                  <ScanSearch className="h-3.5 w-3.5" aria-hidden />
-                  سریع
-                </TaavTabsTrigger>
-                <TaavTabsTrigger value="long" variant="pill" size="sm">
-                  <Clock3 className="h-3.5 w-3.5" aria-hidden />
-                  زمان‌بر
-                </TaavTabsTrigger>
-              </TaavTabsList>
-            </TaavTabs>
-            <p className="ocr-flow-field-hint">
-              {activeLane === 'quick'
-                ? 'نمونه‌های تک‌صفحه‌ای: فاکتور، کارت ملی، رسید'
-                : 'سند چندصفحه‌ای: قرارداد واحد'}
-            </p>
-          </div>
-
-          <div className="ocr-flow-field-group">
-            <span className="ocr-flow-field-label">نوع سند</span>
-            <TaavChoiceChipGroup
-              key={activeLane}
-              ariaLabel={activeLane === 'quick' ? 'نوع سند سریع' : 'نوع سند زمان‌بر'}
-              options={toChipOptions(laneSamples)}
-              value={selectedSampleId}
-              onValueChange={handleSampleChange}
-              size="sm"
-              tone="brand"
-              gap="sm"
-              wrap
-            />
-          </div>
-
-          {selectedSample ? (
-            <div className="ocr-flow-template-card">
-              <div className="ocr-flow-template-card-main">
-                <div className="ocr-flow-template-card-title">
-                  <strong>{selectedSample.title}</strong>
-                  <TaavBadge tone="brand" variant="soft" size="sm">
-                    {selectedSample.lane === 'quick' ? 'سریع' : 'زمان‌بر'}
-                  </TaavBadge>
-                </div>
-                <p>{selectedSample.description}</p>
-                <span className="ocr-flow-template-meta">
-                  {formatConfidence(selectedSample.confidence)} دقت · {formatPageCount(selectedSample.pageCount)} صفحه
-                </span>
-              </div>
-              <TaavButton
-                size="sm"
-                variant="secondary"
-                tone="neutral"
-                iconStart={<Sparkles className="h-4 w-4" />}
-                onClick={() => setTemplateDialogOpen(true)}
-              >
-                مشاهده قالب
-              </TaavButton>
+        <section className="ai-lab-ocr-create-section" aria-labelledby="ocr-doc-type-title">
+          <div className="ai-lab-ocr-create-section-head">
+            <span className="ai-lab-ocr-create-step" aria-hidden>
+              1
+            </span>
+            <div className="ai-lab-ocr-create-section-copy">
+              <h2 id="ocr-doc-type-title">نوع سند</h2>
+              <p>نوع سند خود را انتخاب کنید تا به AI در تشخیص‌تان کمک کند.</p>
             </div>
-          ) : null}
+          </div>
 
-          <div className="ocr-flow-form-divider" aria-hidden />
+          <div className="ai-lab-ocr-create-types" role="group" aria-label="نوع سند">
+            {DOCUMENT_TYPES.map((item) => {
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.key}
+                  type="button"
+                  className={selectedTypeKey === item.key ? 'ai-lab-ocr-create-type is-active' : 'ai-lab-ocr-create-type'}
+                  onClick={() => handleTypeChange(item.key)}
+                >
+                  <Icon aria-hidden />
+                  {item.label}
+                </button>
+              );
+            })}
+          </div>
+        </section>
 
-          <TaavFieldBlock label="عنوان سند" required htmlFor="ocr-source-title">
-            <TaavInput
+        <section className="ai-lab-ocr-create-section" aria-labelledby="ocr-model-title">
+          <div className="ai-lab-ocr-create-section-head">
+            <span className="ai-lab-ocr-create-step" aria-hidden>
+              2
+            </span>
+            <div className="ai-lab-ocr-create-section-copy">
+              <h2 id="ocr-model-title">مدل AI</h2>
+              <p>مدل مورد نظر برای استخراج اطلاعات را انتخاب کنید.</p>
+            </div>
+          </div>
+
+          <div className="ai-lab-ocr-create-models" role="radiogroup" aria-label="مدل AI">
+            {OCR_MODEL_OPTIONS.map((model) => {
+              const isActive = selectedModelId === model.id;
+              return (
+                <button
+                  key={model.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={isActive}
+                  className={[
+                    'ai-lab-ocr-create-model',
+                    `ai-lab-ocr-create-model--${model.provider}`,
+                    isActive ? 'is-active' : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
+                  onClick={() => setSelectedModelId(model.id)}
+                >
+                  <span className="ai-lab-ocr-create-model-icon" aria-hidden>
+                    <Cpu className="h-4 w-4" />
+                  </span>
+                  <span className="ai-lab-ocr-create-model-copy">
+                    <span className="ai-lab-ocr-create-model-provider">
+                      {MODEL_PROVIDER_LABELS[model.provider]}
+                    </span>
+                    <strong>{model.name}</strong>
+                    <small>{model.description}</small>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        <section className="ai-lab-ocr-create-section" aria-labelledby="ocr-doc-title-label">
+          <div className="ai-lab-ocr-create-section-head">
+            <span className="ai-lab-ocr-create-step" aria-hidden>
+              3
+            </span>
+            <div className="ai-lab-ocr-create-section-copy">
+              <h2 id="ocr-doc-title-label">عنوان سند</h2>
+              <p>یک عنوان برای این تست تعیین کنید.</p>
+            </div>
+          </div>
+
+          <div className="ai-lab-ocr-create-field">
+            <input
               id="ocr-source-title"
-              value={submissionLabel || uploadState?.fileName || selectedSample?.title || ''}
+              className="ai-lab-ocr-create-input"
+              value={submissionLabel}
               onChange={(event) => setSubmissionLabel(event.target.value)}
-              placeholder="مثلا: فاکتور فروش تیرماه"
+              placeholder="مثلا: تست فاکتور فروش"
             />
-          </TaavFieldBlock>
+          </div>
+        </section>
+
+        <section className="ai-lab-ocr-create-section" aria-labelledby="ocr-upload-title">
+          <div className="ai-lab-ocr-create-section-head">
+            <span className="ai-lab-ocr-create-step" aria-hidden>
+              4
+            </span>
+            <div className="ai-lab-ocr-create-section-copy">
+              <h2 id="ocr-upload-title">آپلود فایل (اختیاری)</h2>
+              <p>فایل مورد نظر خود را برای استخراج اطلاعات آپلود کنید.</p>
+            </div>
+          </div>
 
           <OcrUploadZone
-            compact
+            variant="inline"
             value={uploadState}
             onChange={(file) => {
               setUploadState(file);
@@ -247,30 +317,37 @@ export function OcrRegistrationClient({ business, businessId }: OcrRegistrationC
             onError={setError}
             disabled={submitting}
           />
+        </section>
 
-          {showCardIdScenarios ? (
-            <div className="ocr-flow-scenario-panel ocr-flow-scenario-panel--compact">
-              <p className="ocr-flow-scenario-lead">سناریوی کارت ملی · رفتار تشخیص را انتخاب کنید</p>
-              <div className="ocr-flow-scenario-actions">
-                <TaavButton variant="secondary" tone="neutral" loading={submitting} onClick={() => runSimulation('miss')}>
-                  تشخیص ندهد
-                </TaavButton>
-                <TaavButton loading={submitting} onClick={() => runSimulation('recognize')}>
-                  تشخیص بدهد
-                </TaavButton>
-              </div>
-            </div>
-          ) : (
-            <div className="ocr-flow-form-footer">
-              <TaavButton loading={submitting} onClick={() => runSimulation()} iconStart={<CheckCircle2 className="h-4 w-4" />}>
-                شروع شبیه‌سازی
-              </TaavButton>
-            </div>
-          )}
-
-          {error ? <div className="ocr-flow-error">{error}</div> : null}
+        <div className="ai-lab-ocr-create-actions">
+          <Link href={`/businesses/${businessId}/ai-tools/ocr`} className="ai-lab-ocr-create-btn-secondary">
+            <X className="h-4 w-4" aria-hidden />
+            انصراف
+          </Link>
+          <div className="ai-lab-ocr-create-start-actions">
+            <button
+              type="button"
+              className="ai-lab-ocr-create-btn-primary"
+              onClick={() => runSimulation('recognize', 'rest')}
+              disabled={submitting}
+            >
+              {submitting ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <Play className="h-4 w-4" aria-hidden />}
+              شروع با REST API
+            </button>
+            <button
+              type="button"
+              className="ai-lab-ocr-create-btn-primary ai-lab-ocr-create-btn-primary--grpc"
+              onClick={() => runSimulation('recognize', 'grpc')}
+              disabled={submitting}
+            >
+              <Play className="h-4 w-4" aria-hidden />
+              شروع با gRPC
+            </button>
+          </div>
         </div>
-      </OcrSectionCard>
-    </OcrPageShell>
+
+        {error ? <p className="ai-lab-ocr-create-error">{error}</p> : null}
+      </div>
+    </div>
   );
 }

@@ -35,7 +35,7 @@ export default async function OcrNewPage({ params }: { params: Promise<{ busines
       currentTenantId={business.id}
       currentTenantName={business.name}
     >
-      <OcrRegistrationClient business={business} businessId={business.id} />
+      <OcrRegistrationClient businessId={business.id} />
     </AiLabShell>
   );
 }
