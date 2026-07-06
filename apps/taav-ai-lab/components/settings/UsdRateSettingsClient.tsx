@@ -14,7 +14,6 @@ import {
   tokensToToman,
   type GlobalSettingsData,
 } from '@/app/lib/global-settings-mock';
-import { useAdminGate } from './AdminGateProvider';
 import { AI_LAB_TOOLTIPS } from '@/app/lib/tooltips';
 import { AiLabLabelWithTooltip, AiLabTooltipIcon } from '@/components/AiLabTooltip';
 
@@ -23,7 +22,6 @@ type UsdRateSettingsClientProps = {
 };
 
 export function UsdRateSettingsClient({ initialData = GLOBAL_SETTINGS_MOCK }: UsdRateSettingsClientProps) {
-  const { requireUnlock } = useAdminGate();
   const [usdToToman, setUsdToToman] = useState(initialData.usdToToman);
   const [draftRate, setDraftRate] = useState(String(initialData.usdToToman));
   const [isEditing, setIsEditing] = useState(false);
@@ -38,10 +36,8 @@ export function UsdRateSettingsClient({ initialData = GLOBAL_SETTINGS_MOCK }: Us
     : 0;
 
   const startEdit = () => {
-    requireUnlock(() => {
-      setDraftRate(String(usdToToman));
-      setIsEditing(true);
-    });
+    setDraftRate(String(usdToToman));
+    setIsEditing(true);
   };
 
   const saveRate = async () => {

@@ -800,6 +800,21 @@ textarea {
   gap: 16px;
 }
 
+.ai-lab-dialog select {
+  color-scheme: dark;
+}
+
+.ai-lab-dialog--scroll {
+  max-height: min(90vh, 860px);
+  overflow: hidden;
+}
+
+.ai-lab-dialog-scroll {
+  max-height: min(62vh, 620px);
+  overflow-y: auto;
+  padding-inline-end: 4px;
+}
+
 .ai-lab-logo-upload-preview {
   display: grid;
   place-items: center;

@@ -50,7 +50,7 @@ function buildNavPath(
   }
 
   if (pathname.startsWith('/settings')) {
-    navPath.push({ label: 'تنظیمات تاو ادمین', id: 'settings', href: '/settings' });
+    navPath.push({ label: 'پنل تاو ادمین', id: 'settings', href: '/settings' });
   }
 
   if (currentTenantId) {
@@ -64,7 +64,9 @@ function buildNavPath(
   const activeItem = getActiveNavItem(pathname, currentTenantId);
   if (activeItem.id !== 'home' || !isWorkspaceHomePath(pathname, currentTenantId)) {
     if (pathname.startsWith('/settings/')) {
-      if (pathname.includes('/token-pricing')) {
+      if (pathname.includes('/ai-accounts')) {
+        navPath.push({ label: 'اکانت‌های هوش مصنوعی', id: 'ai-accounts', href: '/settings/ai-accounts' });
+      } else if (pathname.includes('/token-pricing')) {
         navPath.push({ label: 'قیمت‌گذاری توکن‌ها', id: 'token-pricing' });
       } else if (pathname.includes('/usd-rate')) {
         navPath.push({ label: 'تنظیمات قیمت دلار', id: 'usd-rate' });

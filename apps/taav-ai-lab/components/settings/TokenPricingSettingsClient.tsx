@@ -20,7 +20,6 @@ import {
   type PricingModel,
   type Provider,
 } from '@/app/lib/global-settings-mock';
-import { useAdminGate } from './AdminGateProvider';
 import { AI_LAB_TOOLTIPS } from '@/app/lib/tooltips';
 import { AiLabLabelWithTooltip, AiLabSectionLabel, AiLabTooltipIcon } from '@/components/AiLabTooltip';
 
@@ -55,7 +54,6 @@ function normalizeRelatedIds(ids: string[]) {
 }
 
 export function TokenPricingSettingsClient({ initialData = GLOBAL_SETTINGS_MOCK }: TokenPricingSettingsClientProps) {
-  const { requireUnlock } = useAdminGate();
   const [data, setData] = useState(initialData);
   const [editingModelId, setEditingModelId] = useState<string | null>(null);
   const [editPrice, setEditPrice] = useState('');
@@ -104,11 +102,9 @@ export function TokenPricingSettingsClient({ initialData = GLOBAL_SETTINGS_MOCK 
   const providers = useMemo(() => Array.from(new Set(data.models.map((model) => model.provider))), [data.models]);
 
   const startEditPrice = (model: PricingModel) => {
-    requireUnlock(() => {
-      setEditingModelId(model.id);
-      setEditPrice(String(model.pricePer100TokensUsd));
-      setEditTokenCount(String(modelTokenCounts[model.id] ?? DEFAULT_TOKEN_COUNT));
-    });
+    setEditingModelId(model.id);
+    setEditPrice(String(model.pricePer100TokensUsd));
+    setEditTokenCount(String(modelTokenCounts[model.id] ?? DEFAULT_TOKEN_COUNT));
   };
 
   const saveEditPrice = async (modelId: string) => {
@@ -135,10 +131,8 @@ export function TokenPricingSettingsClient({ initialData = GLOBAL_SETTINGS_MOCK 
   };
 
   const openRelatedDialog = (model: PricingModel) => {
-    requireUnlock(() => {
-      setRelatedDialogModelId(model.id);
-      setRelatedDraftIds(model.relatedModelIds ?? []);
-    });
+    setRelatedDialogModelId(model.id);
+    setRelatedDraftIds(model.relatedModelIds ?? []);
   };
 
   const saveRelatedModels = async () => {
@@ -218,20 +212,16 @@ export function TokenPricingSettingsClient({ initialData = GLOBAL_SETTINGS_MOCK 
   };
 
   const toggleRevealKey = (keyId: string) => {
-    requireUnlock(() => {
-      setRevealedKeyIds((current) => {
-        const next = new Set(current);
-        if (next.has(keyId)) next.delete(keyId);
-        else next.add(keyId);
-        return next;
-      });
+    setRevealedKeyIds((current) => {
+      const next = new Set(current);
+      if (next.has(keyId)) next.delete(keyId);
+      else next.add(keyId);
+      return next;
     });
   };
 
   const copyKey = (key: ApiKeyEntry) => {
-    requireUnlock(async () => {
-      await navigator.clipboard.writeText(key.fullKey);
-    });
+    void navigator.clipboard.writeText(key.fullKey);
   };
 
   const relatedDialogModel = relatedDialogModelId ? modelLookup.get(relatedDialogModelId) ?? null : null;

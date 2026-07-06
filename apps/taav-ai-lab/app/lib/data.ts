@@ -75,3 +75,55 @@ export {
   updateModelSettings,
   verifyPlatformAdmin,
 } from './repositories/global-settings';
+
+export type {
+  AiProviderAccountPublic,
+  AiProviderAccountSummary,
+  AiProviderType,
+  CreateAiProviderAccountInput,
+  UpdateAiProviderAccountInput,
+} from './types/ai-accounts';
+
+export {
+  AI_PROVIDER_LABELS,
+  AI_PROVIDER_TYPES,
+} from './types/ai-accounts';
+
+export {
+  listAiProviderAccounts,
+  getAiProviderAccountById,
+  createAiProviderAccount,
+  updateAiProviderAccount,
+  toggleAiProviderAccountStatus,
+  deleteAiProviderAccount,
+  parseAiProviderType,
+  isValidPurchaseEmail,
+} from './repositories/ai-accounts';
+
+export {
+  calculateAiUsageCost,
+  formatTokenPriceUsd,
+  parseNonNegativeDecimal,
+} from './ai-usage-cost';
+
+export type { AiUsageCostAccount, AiUsageCostResult } from './ai-usage-cost';
+
+export type {
+  AiProviderModelPublic,
+  AiProviderAccountDetail,
+  CreateAiProviderModelInput,
+  UpdateAiProviderModelInput,
+} from './types/ai-provider-models';
+
+export {
+  listAiProviderModels,
+  getAiProviderModelById,
+  getAiProviderAccountDetail,
+  createAiProviderModel,
+  updateAiProviderModel,
+  toggleAiProviderModelStatus,
+  deleteAiProviderModel,
+  parseAiProviderModelType,
+  parseAiProviderPricingUnit,
+  hasAnyPositivePrice,
+} from './repositories/ai-provider-models';

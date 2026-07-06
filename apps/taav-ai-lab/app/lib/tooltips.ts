@@ -422,7 +422,7 @@ export const AI_LAB_TOOLTIPS = {
   },
   settings: {
     hub: {
-      text: 'تنظیمات سراسری برای همه tenantها؛ ویرایش نیاز به gate مدیر.',
+      text: 'تنظیمات سراسری برای همه tenantها.',
       example: 'تغییر نرخ دلار ۹۲۰٬۰۰۰',
     },
     tokenPricing: {
@@ -432,6 +432,78 @@ export const AI_LAB_TOOLTIPS = {
     usdRate: {
       text: 'نرخ تبدیل برای نمایش هزینه به تومان.',
       example: '۱۰۰۰ توکن ≈ ۲۷٬۶۰۰ تومان',
+    },
+    aiAccounts: {
+      text: 'مدیریت اکانت‌های Provider و API Keyهای سراسری برای OCR، تاویا و سایر سرویس‌های AI.',
+      example: 'OpenAI Main · $100 اعتبار · masked key',
+    },
+    aiAccountName: {
+      text: 'نام نمایشی اکانت برای شناسایی در پنل ادمین.',
+      example: 'OpenAI Main Account',
+    },
+    aiAccountProvider: {
+      text: 'ارائه‌دهنده مدل یا سرویس هوش مصنوعی.',
+      example: 'OpenAI، DeepSeek، Gemini',
+    },
+    aiAccountApiKey: {
+      text: 'کلید دسترسی Provider؛ پس از ذخیره فقط masked نمایش داده می‌شود.',
+      example: 'sk-••••••••••••ab12',
+    },
+    aiAccountPurchaseEmail: {
+      text: 'ایمیلی که با آن اعتبار یا اشتراک Provider خریداری شده است.',
+      example: 'billing@company.com',
+    },
+    aiAccountOrgId: {
+      text: 'شناسه سازمان یا پروژه در Provider (اختیاری).',
+      example: 'org_abc123',
+    },
+    aiAccountCredit: {
+      text: 'اعتبار دلاری خریداری‌شده برای این اکانت.',
+      example: '$100.00',
+    },
+    aiAccountInputTokenPrice: {
+      text: 'هزینه دلاری به ازای هر ۱ توکن ورودی؛ مقادیر اعشاری کوچک پشتیبانی می‌شود.',
+      example: '$0.00000015',
+    },
+    aiAccountOutputTokenPrice: {
+      text: 'هزینه دلاری به ازای هر ۱ توکن خروجی؛ مقادیر اعشاری کوچک پشتیبانی می‌شود.',
+      example: '$0.00000060',
+    },
+    aiAccountNotes: {
+      text: 'یادداشت داخلی برای تیم ادمین.',
+      example: 'اکانت production اصلی',
+    },
+    aiAccountStatus: {
+      text: 'اکانت‌های غیرفعال در routing بعدی استفاده نمی‌شوند.',
+      example: 'فعال / غیرفعال',
+    },
+    aiAccountModelsPage: {
+      text: 'تعریف مدل‌ها، قیمت‌ها و قابلیت‌ها برای این اکانت Provider؛ پایه Document AI و strategy resolver.',
+      example: 'GPT-4.1 Mini · Chat · $0.40 / 1M input',
+    },
+    aiModelDisplayName: {
+      text: 'نام نمایشی مدل در پنل ادمین.',
+      example: 'GPT-4.1 Mini',
+    },
+    aiModelProviderName: {
+      text: 'شناسه دقیق مدل در Provider؛ باید در همان اکانت یکتا باشد.',
+      example: 'gpt-4.1-mini',
+    },
+    aiModelType: {
+      text: 'نوع کاربرد مدل؛ OCR و استخراج ساخت‌یافته بعداً در Document AI استفاده می‌شوند.',
+      example: 'Chat، OCR، Vision',
+    },
+    aiModelPricingUnit: {
+      text: 'واحد اصلی قیمت‌گذاری؛ در فاز ۲ فقط پیکربندی است و مصرف واقعی محاسبه نمی‌شود.',
+      example: 'توکن، صفحه، درخواست',
+    },
+    aiModelInputPrice: {
+      text: 'هزینه دلاری به ازای هر ۱ میلیون توکن ورودی.',
+      example: '$0.40',
+    },
+    aiModelOutputPrice: {
+      text: 'هزینه دلاری به ازای هر ۱ میلیون توکن خروجی.',
+      example: '$1.60',
     },
     modelCount: {
       text: 'تعداد مدل‌های فعال در جدول قیمت.',
@@ -454,7 +526,7 @@ export const AI_LAB_TOOLTIPS = {
       example: '$0.15 ≈ ۱۳۸٬۰۰۰ تومان',
     },
     apiKeyReveal: {
-      text: 'نمایش کامل key پس از تأیید مدیر.',
+      text: 'نمایش کامل key در UI.',
       example: 'sk-proj-…',
     },
   },
