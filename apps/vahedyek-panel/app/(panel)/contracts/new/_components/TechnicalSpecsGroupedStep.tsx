@@ -2,10 +2,16 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Input, StickySubmitBar } from '@repo/ui';
-import { Plus, Pencil, Trash2, X } from 'lucide-react';
+import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { dispatchContractFlowDirty, dispatchContractFlowSavedForDraft } from './contractFlowSignals';
 import { ensureActiveDraftId } from '../../../../lib/contractDraftClient';
-import { getContractTechnicalSpecs, upsertContractTechnicalSpecs, type ContractTechnicalSpecGroup, type ContractTechnicalSpecsPayload, type TechnicalSpecItem } from '../../../../actions/contractSteps789';
+import {
+  getContractTechnicalSpecs,
+  upsertContractTechnicalSpecs,
+  type ContractTechnicalSpecGroup,
+  type ContractTechnicalSpecsPayload,
+  type TechnicalSpecItem,
+} from '../../../../actions/contractSteps789';
 
 type DialogState =
   | {
@@ -35,7 +41,7 @@ function normalizeSpecItem(item: Partial<TechnicalSpecItem>, index: number): Tec
 function normalizeGroup(group: Partial<ContractTechnicalSpecGroup>, index: number): ContractTechnicalSpecGroup {
   return {
     id: group.id?.trim() || `group-${index + 1}`,
-    title: group.title?.trim() || `???? ${index + 1}`,
+    title: group.title?.trim() || `گروه ${index + 1}`,
     selectedSpecIds: Array.isArray(group.selectedSpecIds)
       ? [...new Set(group.selectedSpecIds.map((item) => (typeof item === 'string' ? item.trim() : '')).filter(Boolean))]
       : [],
@@ -53,7 +59,7 @@ function normalizeProjectSpecs(items: Array<Partial<TechnicalSpecItem> | null | 
 async function fetchProjectTechnicalSpecs(): Promise<Array<Partial<TechnicalSpecItem>>> {
   const response = await fetch('/api/business-settings/project/technical-specs', { cache: 'no-store' });
   const data = (await response.json()) as { technicalSpecs?: unknown; message?: string };
-  if (!response.ok) throw new Error(data.message ?? '?????? ?????? ??? ????? ?????? ???.');
+  if (!response.ok) throw new Error(data.message ?? 'بارگذاری مشخصات فنی پروژه انجام نشد.');
   return Array.isArray(data.technicalSpecs) ? (data.technicalSpecs as Array<Partial<TechnicalSpecItem>>) : [];
 }
 
@@ -67,7 +73,7 @@ function GroupRow({ spec }: { spec: TechnicalSpecItem }) {
   return (
     <div className="rounded-[8px] border border-slate-300 bg-slate-100/90 px-4 py-3 text-right shadow-[inset_0_1px_0_rgba(255,255,255,0.65)]">
       <div className="text-[14px] font-black text-slate-700">{spec.title}</div>
-      <div className="mt-0.5 text-[12px] leading-5 text-slate-500">{spec.standard || '�'}</div>
+      <div className="mt-0.5 text-[12px] leading-5 text-slate-500">{spec.standard || 'بدون استاندارد'}</div>
     </div>
   );
 }
@@ -97,10 +103,10 @@ export function TechnicalSpecsStep({ title }: { title: string }) {
         setGroups(normalizeGroups(remote.ok ? remote.specs : []));
 
         if (!remote.ok) {
-          setFormError('message' in remote ? remote.message : '???????? ??????? ????? ???.');
+          setFormError('message' in remote ? remote.message : 'بارگذاری مشخصات فنی قرارداد انجام نشد.');
         }
       } catch (error) {
-        if (mounted) setFormError(error instanceof Error ? error.message : '???????? ??????? ????? ???.');
+        if (mounted) setFormError(error instanceof Error ? error.message : 'بارگذاری مشخصات فنی قرارداد انجام نشد.');
       } finally {
         if (mounted) setLoading(false);
       }
@@ -176,7 +182,7 @@ export function TechnicalSpecsStep({ title }: { title: string }) {
   function removeGroup(groupId: string) {
     const group = groups.find((item) => item.id === groupId);
     if (!group) return;
-    if (!window.confirm(`???? "${group.title}" ??? ????`)) return;
+    if (!window.confirm(`گروه "${group.title}" حذف شود؟`)) return;
     setGroups((current) => current.filter((item) => item.id !== groupId));
   }
 
@@ -210,14 +216,14 @@ export function TechnicalSpecsStep({ title }: { title: string }) {
     setFormError('');
     try {
       const response = await upsertContractTechnicalSpecs(draftId, { specs: nextGroups });
-      if (!response.ok) throw new Error('????? ?????? ??? ?????? ???.');
+      if (!response.ok) throw new Error('ذخیره مشخصات فنی انجام نشد.');
       setGroups(normalizeGroups(nextGroups));
       initialSnapshotRef.current = JSON.stringify({ specs: nextGroups });
       dispatchContractFlowDirty('technicalSpecs', false);
       dispatchContractFlowSavedForDraft(draftId, 'technicalSpecs', Date.now(), { specs: nextGroups });
       closeDialog();
     } catch (error) {
-      setFormError(error instanceof Error ? error.message : '????? ?????? ??? ?????? ???.');
+      setFormError(error instanceof Error ? error.message : 'ذخیره مشخصات فنی انجام نشد.');
     } finally {
       setSaving(false);
     }
@@ -243,20 +249,18 @@ export function TechnicalSpecsStep({ title }: { title: string }) {
           <div className="max-w-[760px] text-right">
             <h2 className="text-[24px] font-black text-slate-700">{title}</h2>
             <p className="mt-2 text-[13px] leading-7 text-slate-500">
-              ?? ??? ??? ???? ?? ????? ????? ??? ?????? ? ??? ?? ??? ????????? ??? ????????? ?? ?????? ????? ????? ?? ?????? ????.
+              در این بخش می‌توانید چند گروه از مشخصات فنی پروژه را برای استفاده در قرارداد تعریف و دسته‌بندی کنید.
             </p>
           </div>
           <button type="button" onClick={openCreateDialog} className="business-blocks-add">
-            <span>??? ????? ???</span>
+            <span>افزودن گروه جدید</span>
             <Plus className="h-5 w-5" />
           </button>
         </div>
 
-        {loading ? <div className="business-blocks-state">?? ??? ?????? ?????? ???...</div> : null}
+        {loading ? <div className="business-blocks-state">در حال بارگذاری مشخصات فنی...</div> : null}
         {!loading && !visibleGroups.length ? (
-          <div className="business-blocks-state">
-            ???? ????? ??? ???? ???. ???? ????? ?? ???? ????? ??? ?????? ? ????????? ????? ?? ?????? ????.
-          </div>
+          <div className="business-blocks-state">هنوز گروهی ثبت نشده است. برای شروع، یک گروه جدید بسازید و مشخصات مورد نظر را به آن اضافه کنید.</div>
         ) : null}
 
         {!loading ? (
@@ -266,14 +270,16 @@ export function TechnicalSpecsStep({ title }: { title: string }) {
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div className="text-right">
                     <div className="text-[20px] font-black text-slate-700">{group.title}</div>
-                    <div className="mt-1 text-[13px] text-slate-500">{group.specs.length} ????? ?????? ???</div>
+                    <div className="mt-1 text-[13px] text-slate-500">
+                      {group.specs.length.toLocaleString('fa-IR')} مشخصه انتخاب شده
+                    </div>
                   </div>
                   <div className="flex items-center gap-4">
                     <button
                       type="button"
                       onClick={() => openEditDialog(group)}
                       className="inline-flex h-10 w-10 items-center justify-center rounded-[8px] text-cyan-600 transition hover:bg-cyan-50 hover:text-cyan-700"
-                      aria-label={`?????? ${group.title}`}
+                      aria-label={`ویرایش ${group.title}`}
                     >
                       <Pencil className="h-5 w-5" />
                     </button>
@@ -281,7 +287,7 @@ export function TechnicalSpecsStep({ title }: { title: string }) {
                       type="button"
                       onClick={() => removeGroup(group.id)}
                       className="inline-flex h-10 w-10 items-center justify-center rounded-[8px] text-rose-600 transition hover:bg-rose-50 hover:text-rose-700"
-                      aria-label={`??? ${group.title}`}
+                      aria-label={`حذف ${group.title}`}
                     >
                       <Trash2 className="h-5 w-5" />
                     </button>
@@ -293,7 +299,7 @@ export function TechnicalSpecsStep({ title }: { title: string }) {
                     group.specs.map((spec) => <GroupRow key={spec.id} spec={spec} />)
                   ) : (
                     <div className="rounded-[8px] border border-dashed border-slate-200 bg-slate-50/70 px-4 py-4 text-right text-[13px] text-slate-400">
-                      ???? ???????? ???? ??? ???? ?????? ???? ???.
+                      هنوز مشخصه‌ای برای این گروه انتخاب نشده است.
                     </div>
                   )}
                 </div>
@@ -318,22 +324,22 @@ export function TechnicalSpecsStep({ title }: { title: string }) {
           >
             <div className="px-8 pt-8 text-right">
               <h2 id="technical-specs-dialog-title" className="text-[26px] font-black leading-10 text-slate-700">
-                {dialog.mode === 'edit' ? '?????? ????? ??? ???????' : '?????? ????? ??? ???????'}
+                {dialog.mode === 'edit' ? 'ویرایش گروه مشخصات' : 'افزودن گروه مشخصات'}
               </h2>
               <p className="mt-4 text-[13px] leading-7 text-slate-600">
-                ????? ???? ?? ???? ???? ? ??? ?? ??? ????????? ??? ????????? ?? ?????? ????? ????? ?? ?????? ????.
+                عنوان گروه را وارد کنید و سپس مشخصات فنی مرتبط با این گروه را انتخاب کنید.
               </p>
             </div>
 
             <div className="grid gap-5 px-8 pb-8 pt-6">
               <label className="grid gap-2 text-right">
                 <span className="text-[15px] font-bold text-slate-600">
-                  ????? <span className="text-rose-500">*</span>
+                  عنوان گروه <span className="text-rose-500">*</span>
                 </span>
                 <Input
                   value={form.title}
                   onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))}
-                  placeholder="????: 99"
+                  placeholder="مثلاً سرامیک"
                   autoFocus
                   maxLength={120}
                   className="h-12 rounded-[8px] border-slate-300 px-4 text-[14px] font-medium text-slate-700 placeholder:text-slate-400 focus:border-[color:var(--dark-teal)] focus:ring-2 focus:ring-[color-mix(in_srgb,var(--dark-teal)_12%,transparent)]"
@@ -342,9 +348,9 @@ export function TechnicalSpecsStep({ title }: { title: string }) {
 
               <div className="grid gap-3 text-right">
                 <div>
-                  <h3 className="text-[18px] font-black text-slate-700">?????? ????????? ???</h3>
+                  <h3 className="text-[18px] font-black text-slate-700">مشخصات فنی پروژه</h3>
                   <p className="mt-1 text-[12px] leading-6 text-slate-500">
-                    ???? ?? ???? ????????? ??? ????? ??? ?????? ????. ????? ??????? ?? ???? ??? ???? ??????? ??? ???????.
+                    موردهای موردنیاز این گروه را انتخاب کنید. می‌توانید چند مشخصه را هم‌زمان برای هر گروه ثبت کنید.
                   </p>
                 </div>
 
@@ -369,18 +375,18 @@ export function TechnicalSpecsStep({ title }: { title: string }) {
                                 active ? 'border-[var(--dark-teal)] bg-[var(--dark-teal)]' : 'border-slate-400 bg-white'
                               }`}
                             >
-                              {active ? <span className="text-[11px] font-black leading-none text-white">?</span> : null}
+                              {active ? <span className="text-[11px] font-black leading-none text-white">✓</span> : null}
                             </span>
                             <div className="min-w-0 flex-1">
                               <div className="text-[14px] font-black text-slate-700">{spec.title}</div>
-                              <div className="mt-0.5 text-[12px] leading-5 text-slate-500">{spec.standard || '�'}</div>
+                              <div className="mt-0.5 text-[12px] leading-5 text-slate-500">{spec.standard || 'بدون استاندارد'}</div>
                             </div>
                           </button>
                         );
                       })
                     ) : (
                       <div className="rounded-[8px] border border-dashed border-slate-200 bg-white px-4 py-5 text-right text-[13px] text-slate-400">
-                        ???? ???????? ?? ??????? ????? ??? ???? ???.
+                        هنوز مشخصات فنی پروژه‌ای برای انتخاب ثبت نشده است.
                       </div>
                     )}
                   </div>
@@ -389,12 +395,8 @@ export function TechnicalSpecsStep({ title }: { title: string }) {
             </div>
 
             <div className="flex items-center justify-between gap-3 border-t border-slate-100 px-8 py-6">
-              <button
-                type="button"
-                className="text-[15px] font-bold text-slate-500 transition hover:text-slate-700"
-                onClick={closeDialog}
-              >
-                ??????
+              <button type="button" className="text-[15px] font-bold text-slate-500 transition hover:text-slate-700" onClick={closeDialog}>
+                انصراف
               </button>
               <button
                 type="button"
@@ -402,7 +404,7 @@ export function TechnicalSpecsStep({ title }: { title: string }) {
                 onClick={submitDialog}
                 disabled={!canSubmit || saving}
               >
-                {saving ? '?? ??? ???...' : '???'}
+                {saving ? 'در حال ذخیره...' : 'ذخیره'}
               </button>
             </div>
           </div>
@@ -410,8 +412,8 @@ export function TechnicalSpecsStep({ title }: { title: string }) {
       ) : null}
 
       <StickySubmitBar
-        label="????? ?????? ???"
-        loadingLabel={loading ? '?? ??? ????????...' : '?? ??? ?????...'}
+        label="ذخیره مشخصات فنی"
+        loadingLabel={loading ? 'در حال بارگذاری...' : 'در حال ذخیره...'}
         disabled={loading || saving || !draftId}
         onClick={async () => {
           if (!draftId) return;
@@ -419,12 +421,12 @@ export function TechnicalSpecsStep({ title }: { title: string }) {
           setFormError('');
           try {
             const response = await upsertContractTechnicalSpecs(draftId, payload);
-            if (!response.ok) throw new Error('????? ?????? ??? ?????? ???.');
+            if (!response.ok) throw new Error('ذخیره مشخصات فنی انجام نشد.');
             initialSnapshotRef.current = JSON.stringify(payload);
             dispatchContractFlowDirty('technicalSpecs', false);
             dispatchContractFlowSavedForDraft(draftId, 'technicalSpecs', Date.now(), payload);
           } catch (error) {
-            setFormError(error instanceof Error ? error.message : '????? ?????? ??? ?????? ???.');
+            setFormError(error instanceof Error ? error.message : 'ذخیره مشخصات فنی انجام نشد.');
           } finally {
             setSaving(false);
           }
@@ -435,4 +437,3 @@ export function TechnicalSpecsStep({ title }: { title: string }) {
     </div>
   );
 }
-

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, BookText, Boxes, CircleHelp, FlaskConical } from 'lucide-react';
+import { ArrowLeft, BookText, Boxes, CircleHelp, FlaskConical, Sparkles } from 'lucide-react';
 import type { TaaviaUseCaseKey } from '@/app/lib/types/domain';
 import type { ProductCatalogSnapshot, ProductField, WorkspaceContentMessage } from '@/app/lib/types/taavia-workspace';
 import type { TestFaqItem, TestKnowledgeBaseDocument } from '@/app/lib/types/taavia-test-workspace';
@@ -14,7 +14,7 @@ import {
   hasAnyTestWorkspaceData,
 } from '@/app/lib/taavia-test-requirements';
 import { loadTestWorkspaceSnapshot, saveTestWorkspaceSnapshot } from '@/app/lib/taavia-test-storage';
-import { hydrateWorkspaceMessages } from '@/app/lib/taavia-workspace-knowledge';
+import { createTextMessage, hydrateWorkspaceMessages } from '@/app/lib/taavia-workspace-knowledge';
 import { ContentFeedEditor } from '@/components/taavia/ContentFeedEditor';
 import { TestBuildKnowledgeBaseButton } from '@/components/taavia/test/TestBuildKnowledgeBaseButton';
 import { TestFaqEditor } from '@/components/taavia/test/TestFaqEditor';
@@ -36,6 +36,96 @@ const INITIAL_PRODUCT_FIELDS: ProductField[] = [
   { id: 'product-price', label: 'قیمت', type: 'number' },
   { id: 'product-active', label: 'فعال است؟', type: 'boolean' },
 ];
+
+const USE_CASE_LABELS: Record<TaaviaUseCaseKey, string> = {
+  support: 'پشتیبانی',
+  sales: 'فروش',
+  marketing: 'بازاریابی',
+  operations: 'عملیات',
+  finance: 'مالی',
+  hr: 'منابع انسانی',
+  product: 'محصول',
+  management: 'مدیریت',
+  it: 'فناوری اطلاعات',
+  all: 'همه سناریوها',
+};
+
+function createAutofillFaqItem(index: number, question: string, answer: string, category: string): TestFaqItem {
+  return {
+    id: `faq-autofill-${Date.now()}-${index}`,
+    question,
+    answer,
+    category,
+    tags: [category, 'خودکار'],
+    priority: index === 1 ? 'high' : 'medium',
+    isActive: true,
+    supplementaryNote: 'این مورد به‌صورت خودکار برای راه‌اندازی سریع اولیه تولید شده است.',
+  };
+}
+
+function buildAutofillData(brandName: string, selectedUseCases: TaaviaUseCaseKey[]) {
+  const useCaseKeys = selectedUseCases.filter((item) => item !== 'all');
+  const useCaseLabels = useCaseKeys.map((item) => USE_CASE_LABELS[item]).filter(Boolean);
+  const focusLabel = useCaseLabels.length > 0 ? useCaseLabels.join('، ') : 'پشتیبانی، فروش و راهنمایی مشتری';
+  const generatedAt = new Intl.DateTimeFormat('fa-IR', {
+    dateStyle: 'short',
+    timeStyle: 'short',
+  }).format(new Date());
+
+  const brandMessages: WorkspaceContentMessage[] = [
+    createTextMessage(
+      `${brandName} یک برند در حال راه‌اندازی برای ارائه تجربه‌ای سریع، دقیق و حرفه‌ای است. لحن ارتباطی باید دوستانه، مطمئن و خلاصه باشد.`,
+    ),
+    createTextMessage(
+      `تمرکز اصلی ${brandName} روی ${focusLabel} است. پاسخ‌ها باید شفاف، عملیاتی و قابل اجرا باشند و در صورت نیاز کاربر را به گام بعدی هدایت کنند.`,
+    ),
+    createTextMessage(
+      `بسته خودکار در ${generatedAt} تولید شد تا همه تب‌ها برای ساخت Knowledge Base آماده باشند و فقط مرحله Set Knowledge باقی بماند.`,
+    ),
+  ];
+
+  const serviceSeeds =
+    useCaseLabels.length > 0
+      ? useCaseLabels.slice(0, 3)
+      : ['پشتیبانی', 'فروش', 'آنبوردینگ'];
+
+  const productCatalog: ProductCatalogSnapshot = {
+    fields: INITIAL_PRODUCT_FIELDS,
+    rows: serviceSeeds.map((label, index) => ({
+      id: `product-autofill-${Date.now()}-${index + 1}`,
+      values: {
+        'product-name': `${brandName} ${label}`,
+        'product-type': index === 0 ? 'سرویس اصلی' : index === 1 ? 'پکیج تخصصی' : 'جریان کمکی',
+        'product-description': `${brandName} در بخش ${label} با تمرکز روی سرعت اجرا، شفافیت پاسخ و امکان پیگیری سناریوها طراحی شده است.`,
+        'product-price': `${(index + 1) * 2500000}`,
+        'product-active': 'yes',
+      },
+    })),
+  };
+
+  const faqItems: TestFaqItem[] = [
+    createAutofillFaqItem(
+      1,
+      `${brandName} چه کمکی به کاربر می‌کند؟`,
+      `${brandName} با تمرکز روی ${focusLabel} به کاربر کمک می‌کند سریع‌تر تصمیم بگیرد و پاسخ دقیق‌تر دریافت کند.`,
+      'شناخت برند',
+    ),
+    createAutofillFaqItem(
+      2,
+      `چگونه می‌توان از ${brandName} شروع کرد؟`,
+      `کافی است سناریو یا درخواست خود را ثبت کنید تا ${brandName} متناسب با نیاز شما پیشنهاد و مسیر اجرایی ارائه دهد.`,
+      'شروع کار',
+    ),
+    createAutofillFaqItem(
+      3,
+      `آیا اطلاعات ${brandName} قابل سفارشی‌سازی است؟`,
+      `بله، ساختار Knowledge Base، داده‌های محصول و FAQ همگی قابل ویرایش و شخصی‌سازی هستند.`,
+      'تنظیمات',
+    ),
+  ];
+
+  return { brandMessages, productCatalog, faqItems };
+}
 
 type TestTab = 'brand' | 'products' | 'faq' | 'knowledge-base';
 
@@ -99,25 +189,7 @@ export function TaaviaTestWorkspaceClient({
 
   const canBuild = hasAnyTestWorkspaceData({ brandMessages, productCatalog, faqItems });
 
-  const kbPreviewDocument = useMemo(() => {
-    if (knowledgeBaseDocument) return knowledgeBaseDocument;
-    if (!canBuild) return null;
-    return buildTestKnowledgeBaseDocument({
-      brandName,
-      selectedUseCases,
-      brandMessages,
-      productCatalog,
-      faqItems,
-    });
-  }, [
-    knowledgeBaseDocument,
-    canBuild,
-    brandName,
-    selectedUseCases,
-    brandMessages,
-    productCatalog,
-    faqItems,
-  ]);
+  const kbPreviewDocument = useMemo(() => knowledgeBaseDocument, [knowledgeBaseDocument]);
 
   const previewMeta = useMemo(() => {
     if (!kbPreviewDocument) return { categories: [] as string[], subsectionHints: [] as string[] };
@@ -228,6 +300,30 @@ export function TaaviaTestWorkspaceClient({
     [counts],
   );
 
+  const handleAutofillWorkspace = useCallback(() => {
+    const hasExistingData =
+      brandMessages.length > 0 ||
+      productCatalog.rows.length > 0 ||
+      faqItems.length > 0 ||
+      knowledgeBaseDocument !== null;
+
+    if (hasExistingData) {
+      const confirmed = window.confirm('داده‌های فعلی جایگزین می‌شوند. ادامه می‌دهی؟');
+      if (!confirmed) return;
+    }
+
+    const autofill = buildAutofillData(brandName, selectedUseCases);
+    setBrandMessages(autofill.brandMessages);
+    setProductCatalog(autofill.productCatalog);
+    setFaqItems(autofill.faqItems);
+    setKnowledgeBaseDocument(null);
+    setKbSelection(null);
+    setPendingKbNavigation(null);
+    setKbDirty(false);
+    setActiveTab('brand');
+    setFeedback('همه تب‌ها با موفقیت به‌صورت خودکار پر شدند. حالا می‌توانی روی Set Knowledge بزنی.');
+  }, [brandMessages.length, productCatalog.rows.length, faqItems.length, knowledgeBaseDocument, brandName, selectedUseCases]);
+
   const handleBuildKnowledgeBase = useCallback(async () => {
     if (!canBuild) {
       setFeedback('برای ساخت Knowledge Base، حداقل یک مورد اطلاعات وارد کن.');
@@ -312,12 +408,7 @@ export function TaaviaTestWorkspaceClient({
           setFeedback('برای ورود به این بخش، ابتدا داده وارد کن و Knowledge Base را بساز.');
           return;
         }
-        setPendingKbNavigation({ tabId: previewTabId, subTabId: previewSubTabId });
-        try {
-          await handleBuildKnowledgeBase();
-        } catch {
-          setPendingKbNavigation(null);
-        }
+        setFeedback('برای دیدن Knowledge Base، ابتدا روی دکمه Set Knowledge Base بزن.');
         return;
       }
 
@@ -326,7 +417,7 @@ export function TaaviaTestWorkspaceClient({
       setKbSelection(selection);
       setActiveTab('knowledge-base');
     },
-    [activeTab, kbDirty, knowledgeBaseDocument, canBuild, handleBuildKnowledgeBase, resolveKbSelection],
+    [activeTab, kbDirty, knowledgeBaseDocument, resolveKbSelection],
   );
 
   const tabs: Array<{ value: Exclude<TestTab, 'knowledge-base'>; label: string; icon: typeof BookText }> = [
@@ -343,12 +434,22 @@ export function TaaviaTestWorkspaceClient({
 
       <div className="relative grid gap-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <Link href={entryPath}>
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={handleAutofillWorkspace}
+              className="inline-flex items-center gap-2 rounded-full border border-[rgba(66,237,211,0.24)] bg-[rgba(66,237,211,0.12)] px-4 py-2 text-[length:var(--taav-text-sm)] font-bold text-[rgb(150,246,231)] backdrop-blur-xl transition hover:border-[rgba(66,237,211,0.36)] hover:bg-[rgba(66,237,211,0.18)]"
+            >
+              <Sparkles className="h-4 w-4" />
+              پر کردن خودکار تب‌ها
+            </button>
+            <Link href={entryPath}>
             <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-[length:var(--taav-text-sm)] font-bold text-[var(--taav-text-strong)] backdrop-blur-xl transition hover:border-white/20 hover:bg-white/10">
               <ArrowLeft className="h-4 w-4" />
               بازگشت به انتخاب مسیر
             </span>
-          </Link>
+            </Link>
+          </div>
           <div className="inline-flex items-center gap-2 rounded-full border border-[rgba(250,204,21,0.24)] bg-[rgba(250,204,21,0.10)] px-4 py-2 text-[length:var(--taav-text-xs)] font-black text-[rgb(253,224,71)]">
             <FlaskConical className="h-4 w-4" />
             تنظیم دستی · {brandName}

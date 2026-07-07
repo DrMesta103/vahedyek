@@ -51,11 +51,11 @@ function toCategoryLabel(category: string) {
 function toStatusLabel(status: SubjectUnitOption['lockedByStatus']) {
   switch (status) {
     case 'completed':
-      return 'تکمیل‌شده';
+      return 'تکمیل شده';
     case 'pending_approval':
       return 'در انتظار تایید';
     default:
-      return 'پیش‌نویس';
+      return 'پیش نویس';
   }
 }
 
@@ -110,7 +110,7 @@ function UnitSelector({
             items={selectableUnits.map((unit) => ({
               id: unit.id,
               name: unit.name,
-              sub: unit.isLocked ? `${unit.floorName} · ثبت‌شده` : unit.floorName,
+              sub: unit.isLocked ? `${unit.floorName} · ثبت شده` : unit.floorName,
               disabled: unit.isLocked,
             }))}
             selectedId={selectedUnit}
@@ -126,7 +126,7 @@ function UnitSelector({
         <div className="rounded-[8px] border border-cyan-100 bg-cyan-50/70 p-4">
           <div className="mb-3 flex items-center justify-between gap-3">
             <div>
-              <p className="text-[12px] font-semibold text-cyan-700">اطلاعات واحد انتخاب‌شده</p>
+              <p className="text-[12px] font-semibold text-cyan-700">اطلاعات واحد انتخاب شده</p>
               <h3 className="mt-1 text-[15px] font-bold text-slate-800">{selectedUnitData.title}</h3>
             </div>
             <span className="rounded-full bg-white px-3 py-1 text-[11px] font-bold text-cyan-700 shadow-sm">
@@ -206,7 +206,6 @@ export function SubjectUnitBox({
 }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const blockManagementHref = selectedBlock ? `/business-settings/project/blocks/${selectedBlock}` : '/business-settings/project/blocks';
   const selectedBlockData = blocks.find((block) => block.id === selectedBlock) ?? null;
   const [unitShortcutOpen, setUnitShortcutOpen] = useState(false);
   const [floors, setFloors] = useState<FloorShortcut[]>([]);
@@ -301,9 +300,7 @@ export function SubjectUnitBox({
                 <h3 className="text-[16px] font-black text-slate-900">
                   {selectedBlockData ? `افزودن واحد برای ${selectedBlockData.name}` : 'مدیریت بلوک و واحدها'}
                 </h3>
-                <p className="mt-1 text-[13px] text-slate-500">
-                  طبقه مقصد را انتخاب کنید تا فرم افزودن واحد برای همان طبقه باز شود.
-                </p>
+                <p className="mt-1 text-[13px] text-slate-500">طبقه مقصد را انتخاب کنید تا فرم افزودن واحد برای همان طبقه باز شود.</p>
               </div>
               <button
                 type="button"
@@ -332,9 +329,7 @@ export function SubjectUnitBox({
                       <div className="flex items-center justify-between gap-3">
                         <div>
                           <div className="text-[14px] font-black text-slate-900">{floor.name}</div>
-                          <div className="mt-1 text-[12px] text-slate-500">
-                            {floor.unitCount.toLocaleString('fa-IR')} واحد ثبت‌شده
-                          </div>
+                          <div className="mt-1 text-[12px] text-slate-500">{floor.unitCount.toLocaleString('fa-IR')} واحد ثبت شده</div>
                         </div>
                         <span className="inline-flex h-9 w-9 items-center justify-center rounded-[8px] bg-cyan-50 text-cyan-700">
                           <Home className="h-4 w-4" />
@@ -367,5 +362,3 @@ export function SubjectUnitBox({
     </SectionCard>
   );
 }
-
-

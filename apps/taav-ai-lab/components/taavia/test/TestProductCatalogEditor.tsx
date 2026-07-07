@@ -31,6 +31,7 @@ function createEmptyField(index: number): ProductField {
     id: `field-${Date.now()}-${index}`,
     label: `فیلد ${index}`,
     type: 'text',
+    required: false,
   };
 }
 
@@ -100,7 +101,7 @@ export function TestProductCatalogEditor({ catalog, onChange }: TestProductCatal
     });
   };
 
-  const updateField = (fieldId: string, patch: Partial<Pick<ProductField, 'label' | 'type' | 'options' | 'defaultOptionId'>>) => {
+  const updateField = (fieldId: string, patch: Partial<Pick<ProductField, 'label' | 'type' | 'required' | 'options' | 'defaultOptionId'>>) => {
     updateCatalog({
       ...catalog,
       fields: catalog.fields.map((field) => {
@@ -316,6 +317,15 @@ export function TestProductCatalogEditor({ catalog, onChange }: TestProductCatal
                 </button>
               </div>
 
+              <label className="inline-flex items-center justify-end gap-2 text-[12px] font-bold text-[rgba(217,229,255,0.72)]">
+                <span>این فیلد اجباری است</span>
+                <input
+                  type="checkbox"
+                  checked={Boolean(field.required)}
+                  onChange={(event) => updateField(field.id, { required: event.target.checked })}
+                />
+              </label>
+
               {field.type === 'select' ? (
                 <div className="grid gap-2 border-t border-white/8 pt-3">
                   <div className="flex flex-wrap items-center justify-between gap-2">
@@ -397,7 +407,10 @@ export function TestProductCatalogEditor({ catalog, onChange }: TestProductCatal
           <div className="grid gap-4 md:grid-cols-2">
             {catalog.fields.map((field) => (
               <div key={field.id} className={field.type === 'textarea' ? 'md:col-span-2' : ''}>
-                <label className="mb-2 block text-[12px] font-bold text-[rgba(217,229,255,0.72)]">{field.label}</label>
+                <label className="mb-2 block text-[12px] font-bold text-[rgba(217,229,255,0.72)]">
+                  {field.label}
+                  {field.required ? <span className="mr-1 text-[rgb(253,224,71)]">*</span> : null}
+                </label>
                 {renderFieldInput(draftRow, field, (value) =>
                   setDraftRow((current) =>
                     current ? { ...current, values: { ...current.values, [field.id]: value } } : current,
@@ -439,6 +452,7 @@ export function TestProductCatalogEditor({ catalog, onChange }: TestProductCatal
                   {catalog.fields.map((field) => (
                     <th key={field.id} className="px-4 py-3 text-[12px] font-bold text-[rgba(217,229,255,0.82)]">
                       {field.label}
+                      {field.required ? <span className="mr-1 text-[rgb(253,224,71)]">*</span> : null}
                       <span className="mt-1 block text-[10px] font-medium text-[rgba(217,229,255,0.52)]">
                         {getFieldTypeLabel(field.type)}
                       </span>

@@ -31,7 +31,7 @@ function ContractNumberInput({ value, onChange, invalid = false }: { value: stri
       <input
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        placeholder={suggestedNumber || '???? ????-???'}
+        placeholder={suggestedNumber || 'مثلاً ۱۴۰۵-۱۰۲'}
         aria-invalid={invalid || undefined}
         className={`h-[46px] w-full rounded-[8px] border bg-[image:var(--control-bg-gradient)] pr-10 pl-3.5 text-[14px] text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.92)] placeholder:text-slate-400 outline-none transition-all ${invalid ? 'border-rose-300 ring-4 ring-rose-500/10 focus:border-rose-400 focus:ring-rose-500/20' : 'border-slate-200 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10'}`}
       />
@@ -68,39 +68,39 @@ export function SubjectDetailsBox({
 }) {
   return (
     <SectionCard>
-      <SectionHeader label="?????? ???????" />
+      <SectionHeader label="جزئیات قرارداد" />
       <div className="space-y-6 p-5 sm:p-6">
-        <FieldGroup label="??? ???????" required>
+        <FieldGroup label="نوع قرارداد" required>
           <div className={contractTypeInvalid ? 'rounded-[8px] border border-rose-300 bg-rose-50/40 p-2' : ''}>
             <div className="space-y-2">
               <TagPills
                 options={[
-                  { value: 'sale', label: '????' },
-                  { value: 'pre-sale', label: '????????' },
+                  { value: 'sale', label: 'فروش' },
+                  { value: 'pre-sale', label: 'پیش فروش' },
                 ]}
                 value={selectedContractType}
                 onChange={onContractTypeChange}
                 wrap={false}
                 className="justify-start overflow-x-auto pb-1"
               />
-              <p className="text-[12px] leading-6 text-slate-400">??? ?????? ?? ???? ????: ???? ???? ?? ????????.</p>
+              <p className="text-[12px] leading-6 text-slate-400">نوع قرارداد را متناسب با ماهیت این معامله انتخاب کنید.</p>
             </div>
           </div>
         </FieldGroup>
 
         <div className="grid gap-4 md:grid-cols-2">
-          <FieldGroup label="????? ???????" required hint="???? ???? ????">
+          <FieldGroup label="شماره قرارداد" required hint="شماره مرجع داخلی">
             <ContractNumberInput value={contractNumber} onChange={onContractNumberChange} invalid={contractNumberInvalid} />
           </FieldGroup>
 
-          <FieldGroup label="???? ??? ???????" required>
-            <FormDateInput value={contractDate} onChange={onContractDateChange} placeholder="?????? ?????" />
+          <FieldGroup label="تاریخ قرارداد" required>
+            <FormDateInput value={contractDate} onChange={onContractDateChange} placeholder="انتخاب تاریخ" />
           </FieldGroup>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
-          <FieldGroup label="????? ????? ????" required hint="???? ???? ???? ??????">
-            <FormDateInput value={deliveryDate} onChange={onDeliveryDateChange} placeholder="?????? ?????" icon={CalendarClock} />
+          <FieldGroup label="تاریخ تحویل واحد" required hint="زمان تحویل تقریبی">
+            <FormDateInput value={deliveryDate} onChange={onDeliveryDateChange} placeholder="انتخاب تاریخ" icon={CalendarClock} />
           </FieldGroup>
           <div />
         </div>

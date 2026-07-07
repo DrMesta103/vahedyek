@@ -15,6 +15,7 @@ import {
   Volume2,
 } from 'lucide-react';
 import type { AiToolDefinition, AiToolIconKey } from '@/app/lib/ai-tools-catalog';
+import styles from './ai-tools.module.css';
 
 const ICONS: Record<AiToolIconKey, ReactNode> = {
   ocr: <ScanText className="h-6 w-6" strokeWidth={1.7} />,
@@ -39,22 +40,22 @@ export function AiToolCard({ tool, businessId }: AiToolCardProps) {
 
   const content = (
     <>
-      <div className="ai-lab-ai-tool-card-top">
+      <div className={styles.cardTop}>
         {isActive ? (
-          <span className="ai-lab-ai-tool-badge ai-lab-ai-tool-badge--active">فعال</span>
+          <span className={`${styles.badge} ${styles.badgeActive}`}>فعال</span>
         ) : (
           <>
-            <span className="ai-lab-ai-tool-badge ai-lab-ai-tool-badge--soon">به‌زودی</span>
-            <span className="ai-lab-ai-tool-lock" aria-hidden="true">
+            <span className={`${styles.badge} ${styles.badgeSoon}`}>به‌زودی</span>
+            <span className={styles.lock} aria-hidden="true">
               <Lock className="h-3.5 w-3.5" />
             </span>
           </>
         )}
       </div>
 
-      <div className={`ai-lab-ai-tool-icon ${isActive ? 'is-active' : ''}`}>
+      <div className={`${styles.icon} ${isActive ? styles.iconActive : ''}`}>
         {tool.icon === 'ocr' ? (
-          <div className="ai-lab-ai-tool-icon-ocr">
+          <div className={styles.iconOcr}>
             {ICONS[tool.icon]}
             <span>OCR</span>
           </div>
@@ -63,19 +64,19 @@ export function AiToolCard({ tool, businessId }: AiToolCardProps) {
         )}
       </div>
 
-      <div className="ai-lab-ai-tool-copy">
+      <div className={styles.copy}>
         <h3>{tool.title}</h3>
         <p>{tool.description}</p>
       </div>
 
-      <div className="ai-lab-ai-tool-footer">
+      <div className={styles.footer}>
         {isActive && href && tool.ctaLabel ? (
-          <span className="ai-lab-ai-tool-cta">
+          <span className={styles.cta}>
             <span aria-hidden="true">‹</span>
             {tool.ctaLabel}
           </span>
         ) : (
-          <span className="ai-lab-ai-tool-soon-foot">بعداً توسعه داده می‌شود</span>
+          <span className={styles.soonFoot}>بعداً توسعه داده می‌شود</span>
         )}
       </div>
     </>
@@ -83,14 +84,14 @@ export function AiToolCard({ tool, businessId }: AiToolCardProps) {
 
   if (isActive && href) {
     return (
-      <Link href={href} className="ai-lab-ai-tool-card ai-lab-ai-tool-card--active">
+      <Link href={href} className={`${styles.card} ${styles.cardActive}`}>
         {content}
       </Link>
     );
   }
 
   return (
-    <article className="ai-lab-ai-tool-card ai-lab-ai-tool-card--disabled" aria-disabled="true">
+    <article className={`${styles.card} ${styles.cardDisabled}`} aria-disabled="true">
       {content}
     </article>
   );

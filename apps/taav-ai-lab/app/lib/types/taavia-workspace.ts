@@ -37,6 +37,7 @@ export type ProductField = {
   id: string;
   label: string;
   type: ProductFieldType;
+  required?: boolean;
   options?: ProductFieldOption[];
   defaultOptionId?: string | null;
 };
