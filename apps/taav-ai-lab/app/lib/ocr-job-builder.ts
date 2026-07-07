@@ -13,6 +13,8 @@ import type {
   OcrSimulationJob,
   OcrSimulationSourceType,
 } from './types/domain';
+import { buildOcrAiMetaFromModel, resolveOcrModel } from './ocr-models';
+import { getOcrReadyDelayMs, normalizeOcrTransportMode, type OcrTransportMode } from './ocr-transport';
 
 function createOcrId() {
   return `ocr_${randomBytes(8).toString('hex')}`;
@@ -61,8 +63,32 @@ function buildResultFields(template: OcrSampleDocument, result: OcrTemplateOutpu
   }));
 }
 
-function buildExtractedJson(result: OcrTemplateOutputResult) {
-  return Object.fromEntries(result.fields.map((field) => [field.key, field.normalized_value || field.value]));
+function buildOcrAiMeta(
+  tokensUsed: number,
+  transportMode?: OcrTransportMode | null,
+  modelId?: string | null,
+) {
+  const model = resolveOcrModel(modelId, transportMode);
+  return buildOcrAiMetaFromModel(tokensUsed, model);
+}
+
+function buildExtractedJson(
+  result: OcrTemplateOutputResult,
+  transportMode?: OcrTransportMode | null,
+  tokensUsed?: number,
+  modelId?: string | null,
+) {
+  const base = Object.fromEntries(result.fields.map((field) => [field.key, field.normalized_value || field.value]));
+  const meta: Record<string, string> = {};
+
+  if (transportMode) {
+    meta.__transportMode = normalizeOcrTransportMode(transportMode);
+  }
+  if (tokensUsed && tokensUsed > 0) {
+    Object.assign(meta, buildOcrAiMeta(tokensUsed, transportMode, modelId));
+  }
+
+  return Object.keys(meta).length > 0 ? { ...base, ...meta } : base;
 }
 
 function resolveScenarioResult(template: OcrSampleDocument, scenario: OcrTemplateScenario): OcrTemplateScenarioResult {
@@ -86,11 +112,16 @@ function buildOcrJobFromScenario(
     scenarioResult.result.overall_status === 'failed' || isMiss ? 'failed' : 'completed';
   const now = new Date().toISOString();
   const readyAt = new Date(
-    Date.now() + (sourceType === 'sample' ? 2800 : 3200) + Math.round(Math.random() * (isMiss ? 800 : 1200)),
+    Date.now() + getOcrReadyDelayMs(input.transportMode, sourceType, isMiss),
   ).toISOString();
   const fileType = input.fileType?.trim() || sample.fileType;
   const extractedFields = buildResultFields(sample, scenarioResult.result);
-  const extractedJson = buildExtractedJson(scenarioResult.result);
+  const extractedJson = buildExtractedJson(
+    scenarioResult.result,
+    input.transportMode,
+    scenarioResult.tokensUsed,
+    input.modelId,
+  );
 
   return {
     id: createOcrId(),
@@ -163,7 +194,7 @@ function buildOcrJobFromUpload(tenantId: string, input: CreateOcrSimulationInput
   }
 
   const now = new Date().toISOString();
-  const readyAt = new Date(Date.now() + 3200 + Math.round(Math.random() * 1400)).toISOString();
+  const readyAt = new Date(Date.now() + getOcrReadyDelayMs(input.transportMode, 'upload')).toISOString();
   const generic = buildGenericOcrPayload(
     input.sourceName,
     input.fileType?.trim() || 'application/octet-stream',
@@ -196,6 +227,8 @@ function buildOcrJobFromUpload(tenantId: string, input: CreateOcrSimulationInput
       fileType: input.fileType?.trim() || 'application/octet-stream',
       mode: 'simulated OCR',
       source: 'upload',
+      ...(input.transportMode ? { __transportMode: normalizeOcrTransportMode(input.transportMode) } : {}),
+      ...buildOcrAiMeta(generic.tokensUsed, input.transportMode, input.modelId),
     },
     extractedFields: generic.extractedFields,
     warnings: ['خروجی با منطق شبیه‌سازی تولید شده است.'],
@@ -210,8 +243,17 @@ function buildOcrJobFromUpload(tenantId: string, input: CreateOcrSimulationInput
 }
 
 export function buildOcrSimulationJob(tenantId: string, input: CreateOcrSimulationInput): OcrSimulationJob {
-  const sample = input.sourceType === 'sample' ? lookupOcrTemplateDocument(input.sampleId) : null;
-  return sample ? buildOcrJobFromSample(tenantId, sample) : buildOcrJobFromUpload(tenantId, input);
+  if (input.sourceType === 'sample') {
+    const sample = lookupOcrTemplateDocument(input.sampleId);
+    if (!sample) {
+      return buildOcrJobFromUpload(tenantId, input);
+    }
+
+    const scenario = canUseMissScenario(sample, input.scenario) ? 'miss' : 'recognize';
+    return buildOcrJobFromScenario(tenantId, input, sample, 'sample', scenario);
+  }
+
+  return buildOcrJobFromUpload(tenantId, input);
 }
 
 export function materializeOcrJob(job: OcrSimulationJob): boolean {

@@ -4,11 +4,15 @@
 export type {
   Tenant,
   SimulatorUser,
+  AdminUserRow,
+  UpdateAdminUserInput,
+  UserNotificationEvent,
   TaaviaBrand,
   OcrSimulationJob,
   OcrSimulationField,
   OcrSimulationSourceType,
   CreateSimulatorUserInput,
+  CreateAdminUserInput,
   CreateTenantInput,
   CreateTaaviaBrandInput,
   CreateOcrSimulationInput,
@@ -35,6 +39,12 @@ export {
   getUserById,
   getUserByIdentifier,
   createSimulatorUser,
+  listAllUsersForAdmin,
+  createUserForAdmin,
+  updateUserForAdmin,
+  toggleUserActiveStatus,
+  sendTestNotificationToUser,
+  consumeUnreadNotificationsForUser,
 } from './repositories/users';
 
 export {
@@ -42,6 +52,9 @@ export {
   getSuggestedBusinessNames,
   getTenantForUser,
   createTenantForUser,
+  listAllBusinessesForAdmin,
+  updateTenantTokenLimit,
+  type AdminBusinessRow,
 } from './repositories/businesses';
 
 export {

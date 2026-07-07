@@ -1,10 +1,11 @@
-import { getCurrentTenant, requireSession } from '@/app/lib/session';
+import { getCurrentTenant, getCurrentUser, requireSession } from '@/app/lib/session';
 import { AiLabShell } from '@/components/AiLabShell';
 import { CreateBusinessDialog } from '@/components/CreateBusinessDialog';
 
 export default async function NewBusinessPage() {
   const session = await requireSession();
   const currentTenant = await getCurrentTenant();
+  const currentUser = await getCurrentUser();
 
   return (
     <AiLabShell
@@ -15,7 +16,11 @@ export default async function NewBusinessPage() {
       currentTenantId={currentTenant?.id ?? session.activeTenantId ?? null}
       currentTenantName={currentTenant?.name ?? null}
     >
-      <CreateBusinessDialog open />
+      <CreateBusinessDialog
+        open
+        defaultFirstName={currentUser?.firstName ?? ''}
+        defaultLastName={currentUser?.lastName ?? ''}
+      />
     </AiLabShell>
   );
 }

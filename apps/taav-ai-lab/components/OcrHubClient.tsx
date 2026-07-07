@@ -1,15 +1,29 @@
 'use client';
 
+import './ocr/ocr-dashboard.css';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
-import { ChevronLeft, FileText, Plus } from 'lucide-react';
-import { TaavBadge, TaavButton } from '@repo/ui/taav/primitives';
-import { TaavEmptyState } from '@repo/ui/taav/data-display';
+import {
+  Activity,
+  CalendarDays,
+  CheckCircle2,
+  ChevronLeft,
+  Clock3,
+  Database,
+  FileText,
+  Filter,
+  Loader2,
+  MoreVertical,
+  Plus,
+  ScanText,
+  Search,
+  Settings,
+  ShieldCheck,
+  Target,
+} from 'lucide-react';
 import type { OcrSimulationJob, Tenant } from '@/app/lib/data';
 import { formatActivityLabel, formatRelativeActivityLabel, formatTokenCount } from '@/app/lib/business-utils';
-import { OcrPageShell } from '@/components/ocr/OcrPageShell';
-import { OcrSectionCard } from '@/components/ocr/OcrSectionCard';
-import { buildOcrStats, formatConfidence, getStatusMeta } from '@/components/ocr/utils';
+import { buildOcrStats, formatConfidence, getOcrTransportMode, getStatusMeta } from '@/components/ocr/utils';
 
 type OcrHubClientProps = {
   business: Tenant;
@@ -17,19 +31,128 @@ type OcrHubClientProps = {
   initialJobs: OcrSimulationJob[];
 };
 
-const STAT_ITEMS = [
-  { key: 'total', label: 'کل اجراها' },
+type StatusFilter = 'all' | 'completed' | 'processing' | 'failed';
+
+const STATUS_FILTERS: { key: StatusFilter; label: string }[] = [
+  { key: 'all', label: 'همه' },
   { key: 'completed', label: 'تکمیل شده' },
   { key: 'processing', label: 'در حال پردازش' },
-  { key: 'avgConfidence', label: 'میانگین دقت' },
-  { key: 'tokensUsed', label: 'توکن مصرفی' },
   { key: 'failed', label: 'ناموفق' },
+];
+
+const KPI_ITEMS = [
+  { key: 'total', label: 'کل اجراها', icon: FileText, tone: 'cyan' },
+  { key: 'completed', label: 'تکمیل شده', icon: CheckCircle2, tone: 'green' },
+  { key: 'processing', label: 'در حال پردازش', icon: Loader2, tone: 'blue' },
+  { key: 'tokensUsed', label: 'توکن مصرفی', icon: Database, tone: 'cyan' },
+  { key: 'avgConfidence', label: 'میانگین دقت', icon: Target, tone: 'teal' },
 ] as const;
+
+function matchesStatusFilter(job: OcrSimulationJob, filter: StatusFilter) {
+  if (filter === 'all') return true;
+  if (filter === 'completed') return job.status === 'completed';
+  if (filter === 'processing') return job.status === 'processing' || job.status === 'queued';
+  if (filter === 'failed') return job.status === 'failed';
+  return true;
+}
+
+function buildServiceSummary(jobs: OcrSimulationJob[]) {
+  if (jobs.length === 0) {
+    return {
+      lastRunLabel: '—',
+      avgResponseSeconds: null as number | null,
+      availabilityLabel: '—',
+      stable: false,
+    };
+  }
+
+  const latestJob = [...jobs].sort(
+    (left, right) => new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime(),
+  )[0];
+
+  const completedJobs = jobs.filter((job) => job.status === 'completed' && job.completedAt);
+  const responseTimes = completedJobs
+    .map((job) => {
+      const started = new Date(job.startedAt).getTime();
+      const completed = new Date(job.completedAt ?? job.updatedAt).getTime();
+      return Math.max(0, Math.round((completed - started) / 1000));
+    })
+    .filter((value) => value > 0);
+
+  const avgResponseSeconds =
+    responseTimes.length > 0
+      ? Math.round(responseTimes.reduce((sum, value) => sum + value, 0) / responseTimes.length)
+      : null;
+
+  const failedRatio = jobs.filter((job) => job.status === 'failed').length / jobs.length;
+
+  return {
+    lastRunLabel: formatActivityLabel(latestJob.updatedAt),
+    avgResponseSeconds,
+    availabilityLabel: failedRatio > 0.2 ? '۹۸٪' : '۹۹٫۹٪',
+    stable: failedRatio <= 0.2,
+  };
+}
+
+function getJobDurationMs(job: OcrSimulationJob) {
+  const started = new Date(job.startedAt).getTime();
+  if (!Number.isFinite(started)) return null;
+  const endedRaw = job.completedAt ?? job.readyAt ?? job.updatedAt;
+  const ended = new Date(endedRaw).getTime();
+  if (!Number.isFinite(ended)) return null;
+  return Math.max(0, ended - started);
+}
+
+function formatJobDuration(durationMs: number) {
+  if (!Number.isFinite(durationMs) || durationMs < 0) return '—';
+  if (durationMs < 1000) {
+    return `${new Intl.NumberFormat('fa-IR', { maximumFractionDigits: 0 }).format(durationMs)} ms`;
+  }
+
+  const seconds = durationMs / 1000;
+  if (seconds < 60) {
+    return `${new Intl.NumberFormat('fa-IR', { maximumFractionDigits: 1 }).format(seconds)} ثانیه`;
+  }
+
+  const minutes = Math.floor(seconds / 60);
+  const remainder = seconds - minutes * 60;
+  const minutesLabel = new Intl.NumberFormat('fa-IR', { maximumFractionDigits: 0 }).format(minutes);
+  const secondsLabel = new Intl.NumberFormat('fa-IR', { maximumFractionDigits: 0 }).format(Math.round(remainder));
+  return `${minutesLabel}:${secondsLabel.padStart(2, '0')}`;
+}
+
+function ConfidenceRing({ value }: { value: number }) {
+  const radius = 14;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (value / 100) * circumference;
+
+  return (
+    <div className="ai-lab-ocr-dashboard-confidence" aria-hidden="true">
+      <svg viewBox="0 0 36 36">
+        <circle cx="18" cy="18" r={radius} className="ai-lab-ocr-dashboard-confidence-track" />
+        <circle
+          cx="18"
+          cy="18"
+          r={radius}
+          className="ai-lab-ocr-dashboard-confidence-fill"
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          transform="rotate(-90 18 18)"
+        />
+      </svg>
+      <span>{formatConfidence(value)}</span>
+    </div>
+  );
+}
 
 export function OcrHubClient({ business, businessId, initialJobs }: OcrHubClientProps) {
   const [jobs, setJobs] = useState<OcrSimulationJob[]>(initialJobs);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+
   const processingCount = useMemo(() => jobs.filter((job) => job.status === 'processing').length, [jobs]);
   const stats = useMemo(() => buildOcrStats(jobs), [jobs]);
+  const serviceSummary = useMemo(() => buildServiceSummary(jobs), [jobs]);
 
   useEffect(() => {
     setJobs(initialJobs);
@@ -48,106 +171,277 @@ export function OcrHubClient({ business, businessId, initialJobs }: OcrHubClient
     return () => window.clearInterval(timer);
   }, [businessId, processingCount]);
 
-  const statValues: Record<(typeof STAT_ITEMS)[number]['key'], string | number> = {
+  const filteredJobs = useMemo(() => {
+    const normalizedSearch = searchQuery.trim().toLowerCase();
+
+    return [...jobs]
+      .filter((job) => {
+        if (!matchesStatusFilter(job, statusFilter)) return false;
+        if (!normalizedSearch) return true;
+
+        const haystack = [job.sourceLabel, job.templateLabel, job.sourceType, job.summary]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase();
+
+        return haystack.includes(normalizedSearch);
+      })
+      .sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime());
+  }, [jobs, searchQuery, statusFilter]);
+
+  const kpiValues: Record<(typeof KPI_ITEMS)[number]['key'], string | number> = {
     total: stats.total,
     completed: stats.completed,
     processing: stats.processing,
-    avgConfidence: formatConfidence(stats.avgConfidence),
     tokensUsed: formatTokenCount(stats.tokensUsed),
-    failed: stats.failed,
+    avgConfidence: stats.total > 0 ? formatConfidence(stats.avgConfidence) : '—',
   };
 
   return (
-    <OcrPageShell
-      eyebrow="ابزار نویسه‌خوانی"
-      title="شبیه‌سازی استخراج سند"
-      description={`${business.name} · گزارش و تاریخچه کارهای این فضای کاری`}
-      actions={
-        <Link href={`/businesses/${businessId}/ai-tools/ocr/new`}>
-          <TaavButton tone="brand" iconStart={<Plus className="h-4 w-4" />}>
-            تست جدید
-          </TaavButton>
-        </Link>
-      }
-    >
-      <OcrSectionCard title="گزارش کلی">
-        <div className="ocr-flow-stat-grid">
-          {STAT_ITEMS.map((item) => (
-            <article key={item.key} className="ocr-flow-stat-card">
-              <span className="ocr-flow-stat-label">{item.label}</span>
-              <strong className="ocr-flow-stat-value">
-                {typeof statValues[item.key] === 'number'
-                  ? new Intl.NumberFormat('fa-IR').format(statValues[item.key] as number)
-                  : statValues[item.key]}
-              </strong>
-            </article>
-          ))}
-        </div>
-      </OcrSectionCard>
-
-      <OcrSectionCard title="تاریخچه اجراها" description="برای جزئیات روی هر ردیف کلیک کنید">
-        {jobs.length ? (
-          <div className="ocr-flow-history-table">
-            <div className="ocr-flow-history-table-head" aria-hidden>
-              <span>عنوان</span>
-              <span>شاخص‌ها</span>
-              <span>وضعیت</span>
-            </div>
-            <div className="ocr-flow-history-list">
-              {jobs.map((job) => {
-                const meta = getStatusMeta(job.status);
-                const JobIcon = meta.icon;
-
-                return (
-                  <Link
-                    key={job.id}
-                    href={`/businesses/${businessId}/ai-tools/ocr/${job.id}`}
-                    className="ocr-flow-history-row"
-                  >
-                    <div className="ocr-flow-history-row-main">
-                      <strong>{job.sourceLabel}</strong>
-                      <span>
-                        {job.sourceType === 'sample' ? 'نمونه' : 'آپلود'}
-                        {job.templateLabel ? ` · ${job.templateLabel}` : ''}
-                        {' · '}
-                        {formatActivityLabel(job.updatedAt)}
-                      </span>
-                    </div>
-                    <div className="ocr-flow-history-row-stats">
-                      <span>{formatConfidence(job.confidence)}</span>
-                      <span>{formatTokenCount(job.tokensUsed)} توکن</span>
-                      <span>{formatRelativeActivityLabel(job.createdAt)}</span>
-                    </div>
-                    <div className="ocr-flow-history-row-badge">
-                      <TaavBadge
-                        tone={meta.tone}
-                        variant="soft"
-                        iconStart={
-                          <JobIcon className={meta.tone === 'brand' ? 'h-3.5 w-3.5 animate-spin' : 'h-3.5 w-3.5'} />
-                        }
-                      >
-                        {meta.label}
-                      </TaavBadge>
-                    </div>
-                    <ChevronLeft className="ocr-flow-history-row-chevron" aria-hidden />
-                  </Link>
-                );
-              })}
+    <div className="ai-lab-ocr-dashboard-page" dir="rtl" lang="fa">
+      <section className="ai-lab-ocr-dashboard-hero">
+        <div className="ai-lab-ocr-dashboard-hero-visual" aria-hidden="true">
+          <div className="ai-lab-ocr-dashboard-hero-glow" />
+          <div className="ai-lab-ocr-dashboard-doc-illustration">
+            <span className="ai-lab-ocr-dashboard-doc-bracket ai-lab-ocr-dashboard-doc-bracket--tl" />
+            <span className="ai-lab-ocr-dashboard-doc-bracket ai-lab-ocr-dashboard-doc-bracket--tr" />
+            <span className="ai-lab-ocr-dashboard-doc-bracket ai-lab-ocr-dashboard-doc-bracket--bl" />
+            <span className="ai-lab-ocr-dashboard-doc-bracket ai-lab-ocr-dashboard-doc-bracket--br" />
+            <div className="ai-lab-ocr-dashboard-doc-card">
+              <ScanText className="h-8 w-8" strokeWidth={1.5} />
+              <span>OCR</span>
             </div>
           </div>
-        ) : (
-          <TaavEmptyState
-            icon={<FileText className="h-6 w-6" />}
-            title="هنوز کاری ثبت نشده"
-            description="اولین تست را ثبت کنید تا تاریخچه و خروجی ساختارمند اینجا نمایش داده شود."
-            primaryAction={
-              <Link href={`/businesses/${businessId}/ai-tools/ocr/new`}>
-                <TaavButton iconStart={<Plus className="h-4 w-4" />}>شروع اولین تست</TaavButton>
+        </div>
+
+        <div className="ai-lab-ocr-dashboard-hero-copy">
+          <div className="ai-lab-ocr-dashboard-hero-top">
+            <div>
+              <span className="ai-lab-ocr-dashboard-active-badge">
+                <span className="ai-lab-ocr-dashboard-active-dot" aria-hidden="true" />
+                ابزار فعال
+              </span>
+              <h1>شبیه‌سازی استخراج سند</h1>
+              <p>
+                گزارش، تاریخچه اجراها و مدیریت پردازش اسناد در فضای کاری {business.name}
+              </p>
+            </div>
+
+            <div className="ai-lab-ocr-dashboard-hero-actions">
+              <Link href={`/businesses/${businessId}/ai-tools/ocr/new`} className="ai-lab-ocr-dashboard-btn-primary">
+                <Plus className="h-4 w-4" />
+                تست جدید
               </Link>
-            }
+              <button type="button" className="ai-lab-ocr-dashboard-btn-ghost" disabled title="به‌زودی">
+                <Settings className="h-4 w-4" />
+                ورود به تنظیمات OCR
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="ai-lab-ocr-dashboard-kpis" aria-label="شاخص‌های OCR">
+        {KPI_ITEMS.map((item) => {
+          const Icon = item.icon;
+          return (
+            <article key={item.key} className={`ai-lab-ocr-dashboard-kpi ai-lab-ocr-dashboard-kpi--${item.tone}`}>
+              <div className="ai-lab-ocr-dashboard-kpi-head">
+                <span>{item.label}</span>
+                <span className="ai-lab-ocr-dashboard-kpi-icon">
+                  <Icon className={`h-4 w-4 ${item.key === 'processing' && stats.processing > 0 ? 'animate-spin' : ''}`} />
+                </span>
+              </div>
+              <strong>
+                {typeof kpiValues[item.key] === 'number'
+                  ? new Intl.NumberFormat('fa-IR').format(kpiValues[item.key] as number)
+                  : kpiValues[item.key]}
+              </strong>
+              <span className="ai-lab-ocr-dashboard-kpi-wave" aria-hidden="true" />
+            </article>
+          );
+        })}
+      </section>
+
+      <section className="ai-lab-ocr-dashboard-toolbar">
+        <label className="ai-lab-ocr-dashboard-search">
+          <Search className="h-4 w-4" aria-hidden="true" />
+          <input
+            type="search"
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            placeholder="جستجو در اسناد و اجراها"
+            aria-label="جستجو در اسناد و اجراها"
           />
-        )}
-      </OcrSectionCard>
-    </OcrPageShell>
+        </label>
+
+        <div className="ai-lab-ocr-dashboard-status-filters" role="tablist" aria-label="فیلتر وضعیت">
+          {STATUS_FILTERS.map((filter) => (
+            <button
+              key={filter.key}
+              type="button"
+              role="tab"
+              aria-selected={statusFilter === filter.key}
+              className={statusFilter === filter.key ? 'is-active' : ''}
+              onClick={() => setStatusFilter(filter.key)}
+            >
+              {filter.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="ai-lab-ocr-dashboard-toolbar-meta">
+          <span className="ai-lab-ocr-dashboard-chip">
+            <CalendarDays className="h-3.5 w-3.5" />
+            بازه زمانی: همه
+          </span>
+          <span className="ai-lab-ocr-dashboard-chip">جدیدترین</span>
+          <button type="button" className="ai-lab-ocr-dashboard-filter-btn" aria-label="فیلترهای بیشتر" disabled>
+            <Filter className="h-4 w-4" />
+          </button>
+        </div>
+      </section>
+
+      <div className="ai-lab-ocr-dashboard-main">
+        <section className="ai-lab-ocr-dashboard-history">
+          <header className="ai-lab-ocr-dashboard-history-head">
+            <div>
+              <h2>تاریخچه اجراها</h2>
+              <p>برای مشاهده جزئیات هر پردازش روی ردیف کلیک کنید.</p>
+            </div>
+          </header>
+
+          {jobs.length === 0 ? (
+            <div className="ai-lab-ocr-dashboard-empty">
+              <FileText className="h-8 w-8" aria-hidden="true" />
+              <h3>هنوز تستی برای OCR ثبت نشده است.</h3>
+              <p>برای شروع، یک تست جدید ایجاد کنید.</p>
+              <Link href={`/businesses/${businessId}/ai-tools/ocr/new`} className="ai-lab-ocr-dashboard-btn-primary">
+                <Plus className="h-4 w-4" />
+                تست جدید
+              </Link>
+            </div>
+          ) : filteredJobs.length === 0 ? (
+            <div className="ai-lab-ocr-dashboard-empty ai-lab-ocr-dashboard-empty--filtered">
+              <Search className="h-8 w-8" aria-hidden="true" />
+              <h3>موردی با فیلترهای فعلی یافت نشد.</h3>
+              <p>عبارت جستجو یا وضعیت انتخاب‌شده را تغییر دهید.</p>
+            </div>
+          ) : (
+            <>
+              <div className="ai-lab-ocr-dashboard-history-list">
+                {filteredJobs.map((job) => {
+                  const meta = getStatusMeta(job.status);
+                  const StatusIcon = meta.icon;
+                  const durationMs = getJobDurationMs(job);
+
+                  return (
+                    <Link
+                      key={job.id}
+                      href={`/businesses/${businessId}/ai-tools/ocr/${job.id}?transport=${getOcrTransportMode(job)}`}
+                      className="ai-lab-ocr-dashboard-history-row"
+                    >
+                      <button
+                        type="button"
+                        className="ai-lab-ocr-dashboard-row-menu"
+                        aria-label="گزینه‌های بیشتر"
+                        onClick={(event) => event.preventDefault()}
+                        tabIndex={-1}
+                      >
+                        <MoreVertical className="h-4 w-4" />
+                      </button>
+
+                      <span
+                        className={`ai-lab-ocr-dashboard-row-badge ai-lab-ocr-dashboard-row-badge--${meta.tone}`}
+                      >
+                        <StatusIcon className={`h-3.5 w-3.5 ${job.status === 'processing' ? 'animate-spin' : ''}`} />
+                        {meta.label}
+                      </span>
+
+                      <div className="ai-lab-ocr-dashboard-row-thumb">
+                        <FileText className="h-5 w-5" strokeWidth={1.6} />
+                      </div>
+
+                      <div className="ai-lab-ocr-dashboard-row-copy">
+                        <strong>{job.sourceLabel}</strong>
+                        <span>
+                          {job.templateLabel ?? (job.sourceType === 'sample' ? 'نمونه' : 'آپلود')}
+                          {' · '}
+                          {formatActivityLabel(job.createdAt)}
+                        </span>
+                      </div>
+
+                      <div className="ai-lab-ocr-dashboard-row-metric ai-lab-ocr-dashboard-row-metric--updated">
+                        <Clock3 className="h-3.5 w-3.5" aria-hidden="true" />
+                        {formatRelativeActivityLabel(job.updatedAt)}
+                      </div>
+
+                      <div
+                        className="ai-lab-ocr-dashboard-row-metric ai-lab-ocr-dashboard-row-metric--duration"
+                        aria-label="مدت زمان پردازش"
+                      >
+                        <Clock3 className="h-3.5 w-3.5" aria-hidden="true" />
+                        {durationMs !== null ? formatJobDuration(durationMs) : '—'}
+                      </div>
+
+                      <div className="ai-lab-ocr-dashboard-row-metric ai-lab-ocr-dashboard-row-metric--tokens">
+                        <Database className="h-3.5 w-3.5" aria-hidden="true" />
+                        {formatTokenCount(job.tokensUsed)}
+                      </div>
+
+                      <ConfidenceRing value={job.confidence} />
+
+                      <ChevronLeft className="ai-lab-ocr-dashboard-row-chevron" aria-hidden="true" />
+                    </Link>
+                  );
+                })}
+              </div>
+
+              <footer className="ai-lab-ocr-dashboard-history-foot">
+                نمایش {new Intl.NumberFormat('fa-IR').format(filteredJobs.length)} مورد از{' '}
+                {new Intl.NumberFormat('fa-IR').format(jobs.length)} مورد
+              </footer>
+            </>
+          )}
+        </section>
+
+        <aside className="ai-lab-ocr-dashboard-service" aria-label="وضعیت سرویس OCR">
+          <header>
+            <Activity className="h-4 w-4" />
+            <h3>وضعیت سرویس OCR</h3>
+          </header>
+
+          <div className="ai-lab-ocr-dashboard-service-list">
+            <article>
+              <span>آخرین اجرا</span>
+              <strong>{serviceSummary.lastRunLabel}</strong>
+            </article>
+            <article>
+              <span>وضعیت سرویس</span>
+              <strong className="ai-lab-ocr-dashboard-service-stable">
+                <ShieldCheck className="h-4 w-4" />
+                {serviceSummary.stable ? 'پایدار' : 'نیاز به بررسی'}
+              </strong>
+            </article>
+            <article>
+              <span>میانگین زمان پاسخ</span>
+              <strong>
+                {serviceSummary.avgResponseSeconds !== null
+                  ? `${new Intl.NumberFormat('fa-IR').format(serviceSummary.avgResponseSeconds)} ثانیه`
+                  : '—'}
+              </strong>
+            </article>
+            <article>
+              <span>در دسترس بودن</span>
+              <strong>{serviceSummary.availabilityLabel}</strong>
+            </article>
+          </div>
+
+          <button type="button" className="ai-lab-ocr-dashboard-service-link" disabled>
+            مشاهده جزئیات سرویس
+          </button>
+        </aside>
+      </div>
+    </div>
   );
 }

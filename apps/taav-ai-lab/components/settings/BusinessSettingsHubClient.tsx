@@ -1,6 +1,6 @@
 'use client';
 
-import { Briefcase, DollarSign, KeyRound } from 'lucide-react';
+import { Briefcase, Building2, DollarSign, KeyRound, UsersRound } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import {
   TaavBusinessIntroCard,
@@ -30,6 +30,26 @@ const SETTINGS_MODULES = [
     href: '/settings/usd-rate',
     icon: <DollarSign className="h-5 w-5" strokeWidth={2.1} />,
     tooltip: AI_LAB_TOOLTIPS.settings.usdRate,
+  },
+  {
+    id: 'businesses',
+    title: 'فهرست کسب‌وکارها',
+    description: 'مشاهده و مدیریت همه کسب‌وکارها و مصرف توکن آن‌ها در کل سیستم.',
+    href: '/settings/businesses',
+    icon: <Building2 className="h-5 w-5" strokeWidth={2.1} />,
+    tooltip: AI_LAB_TOOLTIPS.settings.businesses,
+    eyebrow: 'تاو ادمین',
+    statusLabel: 'مشاهده فهرست',
+  },
+  {
+    id: 'users',
+    title: 'مدیریت کاربران',
+    description: 'فهرست سراسری کاربران همه tenantها با جستجو، فیلتر و ثبت کاربر جدید در سطح تاو ادمین.',
+    href: '/settings/users',
+    icon: <UsersRound className="h-5 w-5" strokeWidth={2.1} />,
+    tooltip: AI_LAB_TOOLTIPS.settings.users,
+    eyebrow: 'تاو ادمین',
+    statusLabel: 'ثبت و مدیریت کاربر',
   },
 ] as const;
 

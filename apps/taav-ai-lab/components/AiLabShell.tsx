@@ -16,6 +16,7 @@ import {
   resolveNavHref,
 } from '@/app/lib/navigation';
 import { OrbitMenu } from '@/components/OrbitMenu';
+import { UserNotificationListener } from '@/components/UserNotificationListener';
 
 type AiLabShellProps = {
   children?: React.ReactNode;
@@ -70,6 +71,10 @@ function buildNavPath(
         navPath.push({ label: 'قیمت‌گذاری توکن‌ها', id: 'token-pricing' });
       } else if (pathname.includes('/usd-rate')) {
         navPath.push({ label: 'تنظیمات قیمت دلار', id: 'usd-rate' });
+      } else if (pathname.includes('/settings/businesses')) {
+        navPath.push({ label: 'فهرست کسب‌وکارها', id: 'settings-businesses' });
+      } else if (pathname.includes('/settings/users')) {
+        navPath.push({ label: 'مدیریت کاربران', id: 'settings-users' });
       }
     } else if (!(pathname.startsWith('/settings') && activeItem.id === 'settings')) {
       navPath.push({ label: activeItem.label, id: activeItem.id });
@@ -209,6 +214,7 @@ export function AiLabShell({
       shellClassName="ai-lab-shell ai-lab-backdrop h-screen overflow-hidden"
       contentClassName="ai-lab-main"
     >
+      <UserNotificationListener />
       {mainContent}
     </TaavBusinessSidebar>
   );

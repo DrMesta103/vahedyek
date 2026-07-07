@@ -1,13 +1,11 @@
-import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { AUTH_COOKIE, type AuthTokenPayload, verifyAuthToken } from './auth-token';
+import { getSessionContext } from './auth';
+import type { AuthTokenPayload } from './auth-token';
 import { getTenantForUser, getUserById } from './data';
 
 export async function getOptionalSession(): Promise<AuthTokenPayload | null> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get(AUTH_COOKIE)?.value;
-  if (!token) return null;
-  return verifyAuthToken(token);
+  const session = await getSessionContext();
+  return session?.payload ?? null;
 }
 
 export async function requireSession() {

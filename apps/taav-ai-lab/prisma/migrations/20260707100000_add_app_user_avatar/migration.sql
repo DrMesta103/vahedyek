@@ -1,0 +1,2 @@
+ALTER TABLE "AppUser"
+ADD COLUMN "avatarUrl" TEXT;

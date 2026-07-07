@@ -1,0 +1,112 @@
+import { ArrowDownToLine, ArrowUpFromLine, Bot, Clock3, Cpu } from 'lucide-react';
+import { formatTokenCount } from '@/app/lib/business-utils';
+import { getOcrTransportUsageLabel, type OcrTransportMode } from '@/components/ocr/utils';
+import type { OcrAiUsage } from '@/components/ocr/utils';
+
+type OcrAiUsagePanelProps = {
+  usage: OcrAiUsage;
+  transportMode: OcrTransportMode;
+  confidence?: number;
+  durationMs?: number;
+  compact?: boolean;
+};
+
+function formatConfidence(confidence: number) {
+  return `${new Intl.NumberFormat('fa-IR', { maximumFractionDigits: 0 }).format(confidence)}%`;
+}
+
+function formatDurationMs(durationMs: number) {
+  if (!Number.isFinite(durationMs) || durationMs < 0) return null;
+  if (durationMs < 1000) {
+    return `${new Intl.NumberFormat('fa-IR', { maximumFractionDigits: 0 }).format(durationMs)} ms`;
+  }
+
+  const seconds = durationMs / 1000;
+  if (seconds < 60) {
+    return `${new Intl.NumberFormat('fa-IR', { maximumFractionDigits: 1 }).format(seconds)} ثانیه`;
+  }
+
+  const minutes = Math.floor(seconds / 60);
+  const remainder = seconds - minutes * 60;
+  const minutesLabel = new Intl.NumberFormat('fa-IR', { maximumFractionDigits: 0 }).format(minutes);
+  const secondsLabel = new Intl.NumberFormat('fa-IR', { maximumFractionDigits: 0 }).format(Math.round(remainder));
+  return `${minutesLabel}:${secondsLabel.padStart(2, '0')}`;
+}
+
+export function OcrAiUsagePanel({
+  usage,
+  transportMode,
+  confidence,
+  durationMs,
+  compact = false,
+}: OcrAiUsagePanelProps) {
+  const inputShare = usage.totalTokens > 0 ? (usage.inputTokens / usage.totalTokens) * 100 : 50;
+  const outputShare = 100 - inputShare;
+  const durationLabel = durationMs !== undefined ? formatDurationMs(durationMs) : null;
+  const usageStyleMode = transportMode === 'rest' ? 'rest' : 'grpc';
+
+  return (
+    <aside
+      className={[
+        'ai-lab-ocr-usage',
+        compact ? 'ai-lab-ocr-usage--compact' : '',
+        `ai-lab-ocr-usage--${transportMode}`,
+        `ai-lab-ocr-usage--${usageStyleMode}`,
+      ]
+        .filter(Boolean)
+        .join(' ')}
+      aria-label="مصرف توکن و مدل AI"
+    >
+      <div className="ai-lab-ocr-usage-head">
+        <div className="ai-lab-ocr-usage-model">
+          <span className="ai-lab-ocr-usage-model-icon" aria-hidden>
+            <Cpu className="h-4 w-4" />
+          </span>
+          <div>
+            <span className="ai-lab-ocr-usage-provider">{usage.providerLabel}</span>
+            <strong>{usage.modelName}</strong>
+          </div>
+        </div>
+        <span className={`ai-lab-ocr-usage-transport ai-lab-ocr-usage-transport--${usageStyleMode}`}>
+          <Bot className="h-3 w-3" aria-hidden />
+          {getOcrTransportUsageLabel(transportMode)}
+        </span>
+      </div>
+
+      <div className="ai-lab-ocr-usage-stats">
+        <div className="ai-lab-ocr-usage-stat ai-lab-ocr-usage-stat--input">
+          <span className="ai-lab-ocr-usage-stat-label">
+            <ArrowDownToLine className="h-3.5 w-3.5" aria-hidden />
+            توکن ورودی
+          </span>
+          <strong>{formatTokenCount(usage.inputTokens)}</strong>
+        </div>
+        <div className="ai-lab-ocr-usage-stat ai-lab-ocr-usage-stat--output">
+          <span className="ai-lab-ocr-usage-stat-label">
+            <ArrowUpFromLine className="h-3.5 w-3.5" aria-hidden />
+            توکن خروجی
+          </span>
+          <strong>{formatTokenCount(usage.outputTokens)}</strong>
+        </div>
+      </div>
+
+      <div className="ai-lab-ocr-usage-bar" aria-hidden>
+        <span className="ai-lab-ocr-usage-bar-input" style={{ width: `${inputShare}%` }} />
+        <span className="ai-lab-ocr-usage-bar-output" style={{ width: `${outputShare}%` }} />
+      </div>
+
+      <footer className="ai-lab-ocr-usage-foot">
+        <span>
+          مجموع: <strong>{formatTokenCount(usage.totalTokens)}</strong> توکن
+        </span>
+        {durationLabel ? (
+          <span>
+            <Clock3 className="h-3.5 w-3.5" aria-hidden style={{ display: 'inline', marginInlineEnd: 4 }} />
+            زمان پاسخ: <strong>{durationLabel}</strong>
+          </span>
+        ) : null}
+        {confidence !== undefined ? <span>شباهت: {formatConfidence(confidence)}</span> : null}
+      </footer>
+    </aside>
+  );
+}

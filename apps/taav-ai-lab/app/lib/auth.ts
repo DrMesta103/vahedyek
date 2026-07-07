@@ -87,6 +87,8 @@ export function mapAppUser(user: {
   lastName: string;
   email: string | null;
   mobile: string | null;
+  avatarUrl: string | null;
+  isActive: boolean;
   passwordHash: string;
   passwordSalt: string;
   createdAt: Date;
@@ -99,6 +101,8 @@ export function mapAppUser(user: {
     lastName: user.lastName,
     email: user.email,
     mobile: user.mobile,
+    avatarUrl: user.avatarUrl,
+    isActive: user.isActive,
     passwordHash: user.passwordHash,
     passwordSalt: user.passwordSalt,
     createdAt: user.createdAt.toISOString(),

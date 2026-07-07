@@ -44,7 +44,7 @@ export default async function TaaviaBrandDetailPage({
 
   const setup = await getAdminAgentSetupState(session.userId, business.id, brandId);
   const conversation = await getOrCreateAdminAgentConversation(session.userId, business.id, brandId);
-  const initialView = mode === 'manual' ? 'setup' : mode === 'ai' ? 'chat' : 'auto';
+  const initialView = mode === 'ai' ? 'chat' : 'auto';
 
   return (
     <AiLabShell

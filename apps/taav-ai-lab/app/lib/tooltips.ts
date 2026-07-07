@@ -209,6 +209,22 @@ export const AI_LAB_TOOLTIPS = {
       text: 'ساختار ورودی و خروجی قالب هوش مصنوعی اسناد.',
       example: 'فیلدها و قواعد اعتبارسنجی فاکتور',
     },
+    contractDialog: {
+      text: 'قرارداد ارتباط Domain Backend (.NET) با Document AI (Python) برای نوع سند انتخاب‌شده.',
+      example: 'درخواست sync · پاسخ structured · REST یا gRPC',
+    },
+    contractTransportRest: {
+      text: 'درخواست/پاسخ JSON بین .NET و Python از مسیر POST /api/v1/documents/extract/sync.',
+      example: 'tenant_id · file.download_url · extraction.schema',
+    },
+    contractTransportGrpcStream: {
+      text: 'RPC ExtractStream — رویدادهای تکه‌ای ExtractFieldEvent از Python به .NET.',
+      example: 'is_final=true · confidence per field',
+    },
+    contractTransportGrpcUnary: {
+      text: 'RPC ExtractSync — یک ExtractResponse کامل از Python به .NET.',
+      example: 'ExtractRequest → ExtractResponse',
+    },
     scenarioRecognize: {
       text: 'شبیه‌سازی تشخیص موفق کارت ملی.',
       example: 'سطح اطمینان بالا · فیلدهای پر',
@@ -504,6 +520,14 @@ export const AI_LAB_TOOLTIPS = {
     aiModelOutputPrice: {
       text: 'هزینه دلاری به ازای هر ۱ میلیون توکن خروجی.',
       example: '$1.60',
+    },
+    businesses: {
+      text: 'فهرست سراسری همه کسب‌وکارهای پلتفرم با مالک، مصرف توکن و وضعیت.',
+      example: 'جستجو بر اساس نام کسب‌وکار یا صاحب آن',
+    },
+    users: {
+      text: 'فهرست سراسری همه کاربران در همه tenantها با امکان جستجو، فیلتر کسب‌وکار و ثبت کاربر جدید.',
+      example: 'ساخت کاربر عضو کسب‌وکار یا کاربر سیستم تاو',
     },
     modelCount: {
       text: 'تعداد مدل‌های فعال در جدول قیمت.',

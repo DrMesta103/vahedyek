@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowLeft, Bot, ChevronLeft, Sparkles, Wand2 } from 'lucide-react';
+import { ArrowLeft, Bot, ChevronLeft, FlaskConical, Sparkles } from 'lucide-react';
 
 type TaaviaEntryModeClientProps = {
   businessId: string;
@@ -47,8 +47,8 @@ export function TaaviaEntryModeClient({
             <span className="text-[rgb(163,188,255)]"> دستی</span> تنظیمش کنی
           </h1>
           <p className="m-0 max-w-2xl text-[length:var(--taav-text-md)] leading-8 text-[rgba(221,231,255,0.74)]">
-            هر دو مسیر آماده‌اند. اگر بخواهی سریع‌تر شروع کنی، AI مستقیم تو را وارد چت مدیریت برند می‌کند. اگر کنترل کامل
-            می‌خواهی، مسیر دستی برای انتخاب بخش‌ها و تنظیمات دقیق آماده است.
+            مسیرها آماده‌اند. اگر بخواهی سریع‌تر شروع کنی، AI مستقیم تو را وارد چت مدیریت برند می‌کند. همچنین می‌توانی مسیر
+            تنظیم دستی برای ساخت Knowledge Base را استفاده کنی.
           </p>
         </div>
 
@@ -88,17 +88,17 @@ export function TaaviaEntryModeClient({
             </article>
           </Link>
 
-          <Link href={`${basePath}/manual`} className="group">
-            <article className="relative overflow-hidden rounded-[30px] border border-white/12 bg-white/8 p-5 backdrop-blur-2xl transition duration-300 hover:-translate-y-1.5 hover:border-[rgba(120,146,255,0.34)] hover:bg-white/12 hover:shadow-[0_20px_60px_rgba(92,112,255,0.16)]">
-              <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(112,131,255,0.24)_0%,rgba(112,131,255,0.06)_42%,rgba(255,255,255,0.06)_100%)] opacity-90" />
-              <div className="absolute left-5 top-5 h-24 w-24 rounded-full bg-[radial-gradient(circle,rgba(255,255,255,0.18)_0%,rgba(255,255,255,0)_72%)] blur-2xl" />
+          <Link href={`${basePath}/test`} className="group">
+            <article className="relative overflow-hidden rounded-[30px] border border-white/12 bg-white/8 p-5 backdrop-blur-2xl transition duration-300 hover:-translate-y-1.5 hover:border-[rgba(250,204,21,0.34)] hover:bg-white/12 hover:shadow-[0_20px_60px_rgba(250,204,21,0.14)]">
+              <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(250,204,21,0.20)_0%,rgba(250,204,21,0.05)_42%,rgba(255,255,255,0.06)_100%)] opacity-90" />
+              <div className="absolute left-1/2 top-5 h-24 w-24 -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(255,255,255,0.18)_0%,rgba(255,255,255,0)_72%)] blur-2xl" />
               <div className="relative grid gap-6">
                 <div className="flex items-start justify-between gap-3">
                   <div className="inline-flex h-14 w-14 items-center justify-center rounded-[18px] border border-white/14 bg-[rgba(255,255,255,0.12)] text-white shadow-[0_12px_28px_rgba(0,0,0,0.16)]">
-                    <Wand2 className="h-7 w-7" />
+                    <FlaskConical className="h-7 w-7" />
                   </div>
-                  <span className="inline-flex items-center gap-2 rounded-full bg-[rgba(8,16,31,0.24)] px-3 py-1 text-[length:var(--taav-text-xs)] font-black text-[rgb(210,218,255)]">
-                    دستی
+                  <span className="inline-flex items-center gap-2 rounded-full bg-[rgba(8,16,31,0.24)] px-3 py-1 text-[length:var(--taav-text-xs)] font-black text-[rgb(253,224,71)]">
+                    تنظیم دستی
                     <Sparkles className="h-3.5 w-3.5" />
                   </span>
                 </div>
@@ -106,18 +106,17 @@ export function TaaviaEntryModeClient({
                 <div className="grid gap-3 text-right">
                   <h2 className="m-0 text-[clamp(1.7rem,2vw,2.3rem)] font-black text-white">تنظیم دستی</h2>
                   <p className="m-0 text-[length:var(--taav-text-sm)] leading-8 text-[rgba(233,238,255,0.78)]">
-                    بخش‌های استفاده، مسیر فعال‌سازی و جزئیات راه‌اندازی را قدم‌به‌قدم خودت انتخاب کن و کنترل کامل روی تنظیمات
-                    داشته باش.
+                    در این مسیر می‌توانی محتوای برند، محصول و FAQ را وارد کنی و یک Knowledge Base قابل ویرایش بسازی.
                   </p>
                 </div>
 
                 <div className="grid gap-2 text-right text-[length:var(--taav-text-xs)] text-[rgba(223,229,255,0.78)]">
-                  <span>کنترل کامل روی تنظیمات</span>
-                  <span>مناسب برای تعیین دقیق بخش‌ها و ساختار برند</span>
+                  <span>ساخت نالج‌بیس برند</span>
+                  <span>مناسب برای تنظیم دستی ساختار و محتوا</span>
                 </div>
 
                 <div className="inline-flex items-center justify-between rounded-[22px] border border-white/10 bg-[rgba(7,16,30,0.24)] px-4 py-3 text-white">
-                  <span className="text-[length:var(--taav-text-sm)] font-black">ورود به مسیر دستی</span>
+                  <span className="text-[length:var(--taav-text-sm)] font-black">ورود به مسیر تنظیم دستی</span>
                   <ChevronLeft className="h-5 w-5 transition group-hover:-translate-x-1" />
                 </div>
               </div>

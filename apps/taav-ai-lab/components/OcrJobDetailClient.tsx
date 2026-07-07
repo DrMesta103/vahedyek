@@ -1,36 +1,95 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
-import { ArrowLeft, FileText, TriangleAlert } from 'lucide-react';
-import { TaavBadge, TaavButton } from '@repo/ui/taav/primitives';
-import { TaavTextarea } from '@repo/ui/taav/forms';
-import { TaavProgressSummary } from '@repo/ui/taav/layout';
+import { useSearchParams } from 'next/navigation';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { ArrowRight, Check, Loader2, Radio } from 'lucide-react';
 import type { OcrSimulationJob } from '@/app/lib/data';
-import { formatTokenCount } from '@/app/lib/business-utils';
-import { OcrPageBadge, OcrPageShell } from '@/components/ocr/OcrPageShell';
-import { OcrSectionCard } from '@/components/ocr/OcrSectionCard';
+import type { OcrTransportMode } from '@/app/lib/ocr-transport';
+import { getOcrBatchRevealDelayMs, isBatchOcrTransportMode, isGrpcStreamingMode } from '@/app/lib/ocr-transport';
 import {
   formatConfidence,
-  formatOverallStatus,
-  formatReviewStatus,
-  formatValidationStatus,
-  getJobProgress,
-  getStatusMeta,
+  getOcrAiUsage,
+  getOcrFormFields,
+  getOcrTransportLabel,
+  getOcrTransportMode,
+  normalizeOcrTransportMode,
 } from '@/components/ocr/utils';
+import { OcrAiUsagePanel } from '@/components/ocr/OcrAiUsagePanel';
+import './ocr/ocr-result.css';
 
 type OcrJobDetailClientProps = {
   businessId: string;
   initialJob: OcrSimulationJob;
 };
 
+const GRPC_DONE_KEY = (jobId: string) => `ocr-grpc-done:${jobId}`;
+const TRANSPORT_KEY = (jobId: string) => `ocr-transport:${jobId}`;
+
+function buildInitialValues(job: OcrSimulationJob) {
+  return Object.fromEntries(getOcrFormFields(job).map((field) => [field.key, field.targetValue]));
+}
+
+function resolveTransport(job: OcrSimulationJob, searchParams: URLSearchParams | null): OcrTransportMode {
+  const fromQuery = searchParams?.get('transport');
+  if (fromQuery) return normalizeOcrTransportMode(fromQuery);
+  if (typeof window !== 'undefined') {
+    const stored = sessionStorage.getItem(TRANSPORT_KEY(job.id));
+    if (stored) return normalizeOcrTransportMode(stored);
+  }
+  return getOcrTransportMode(job);
+}
+
+function getFullResponseDurationMs(job: OcrSimulationJob) {
+  const startedAt = new Date(job.startedAt).getTime();
+  if (!Number.isFinite(startedAt)) return undefined;
+  const endedAtRaw = job.completedAt ?? job.readyAt;
+  const endedAt = new Date(endedAtRaw).getTime();
+  if (!Number.isFinite(endedAt)) return undefined;
+  return Math.max(0, endedAt - startedAt);
+}
+
 export function OcrJobDetailClient({ businessId, initialJob }: OcrJobDetailClientProps) {
+  const searchParams = useSearchParams();
   const [job, setJob] = useState(initialJob);
-  const [clockTick, setClockTick] = useState(0);
+  const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
+  const [fieldsLocked, setFieldsLocked] = useState(false);
+  const [streamingComplete, setStreamingComplete] = useState(false);
+  const [activeStreamKey, setActiveStreamKey] = useState<string | null>(null);
+  const [revealedKeys, setRevealedKeys] = useState<Set<string>>(new Set());
+  const [batchReady, setBatchReady] = useState(false);
+  const streamStartedRef = useRef(false);
+  const jobRef = useRef(initialJob);
+  const grpcModeDecidedRef = useRef(false);
+  const shouldStreamRef = useRef(false);
+
+  const transportMode = useMemo(() => resolveTransport(job, searchParams), [job, searchParams]);
+  const formFields = useMemo(() => getOcrFormFields(job), [job]);
+  const aiUsage = useMemo(() => getOcrAiUsage(job, transportMode), [job, transportMode]);
+  const durationMs = useMemo(() => getFullResponseDurationMs(job), [job]);
+  const isProcessing = job.status === 'queued' || job.status === 'processing';
+  const isGrpcStreaming = isGrpcStreamingMode(transportMode);
+  const isBatchMode = isBatchOcrTransportMode(transportMode);
+  const isGrpcUnary = transportMode === 'grpc-unary';
+
+  // Decide once (on first render for this job) whether we should play the live
+  // stream, so that flipping GRPC_DONE_KEY mid-stream never re-triggers effects.
+  if (!grpcModeDecidedRef.current) {
+    const alreadyPlayed =
+      typeof window !== 'undefined' && sessionStorage.getItem(GRPC_DONE_KEY(job.id)) === '1';
+    shouldStreamRef.current = isGrpcStreaming && !alreadyPlayed;
+    grpcModeDecidedRef.current = true;
+  }
+  const shouldGrpcStream = isGrpcStreaming && shouldStreamRef.current && formFields.length > 0;
 
   useEffect(() => {
     setJob(initialJob);
-  }, [initialJob]);
+    jobRef.current = initialJob;
+    const fromQuery = searchParams?.get('transport');
+    if (fromQuery) {
+      sessionStorage.setItem(TRANSPORT_KEY(initialJob.id), normalizeOcrTransportMode(fromQuery));
+    }
+  }, [initialJob, searchParams]);
 
   useEffect(() => {
     if (job.status !== 'processing' && job.status !== 'queued') return undefined;
@@ -40,174 +99,274 @@ export function OcrJobDetailClient({ businessId, initialJob }: OcrJobDetailClien
       if (!response.ok) return;
       const payload = (await response.json().catch(() => null)) as { jobs?: OcrSimulationJob[] } | null;
       const nextJob = payload?.jobs?.find((item) => item.id === job.id);
-      if (nextJob) setJob(nextJob);
+      if (nextJob) {
+        jobRef.current = nextJob;
+        setJob(nextJob);
+      }
     }, 900);
 
     return () => window.clearInterval(timer);
   }, [businessId, job.id, job.status]);
 
   useEffect(() => {
-    if (job.status !== 'processing') return undefined;
-    const timer = window.setInterval(() => setClockTick((value) => value + 1), 240);
-    return () => window.clearInterval(timer);
-  }, [job.status]);
+    streamStartedRef.current = false;
+    grpcModeDecidedRef.current = false;
+    setRevealedKeys(new Set());
+    setActiveStreamKey(null);
+    setStreamingComplete(false);
+    setFieldsLocked(false);
+    setFieldValues({});
+    setBatchReady(false);
+  }, [job.id]);
 
-  const progress = getJobProgress(job, clockTick);
-  const statusMeta = getStatusMeta(job.status);
-  const StatusIcon = statusMeta.icon;
-  const jsonPreview = JSON.stringify(job.resultJson ?? job.extractedJson, null, 2);
-  const outputFields = job.resultJson?.fields ?? job.extractedFields;
-  const overallStatus = job.resultJson?.overall_status ?? (job.status === 'failed' ? 'failed' : 'processing');
-  const isProcessing = job.status === 'queued' || job.status === 'processing';
+  useEffect(() => {
+    if (!isBatchMode || formFields.length === 0) return;
 
-  const metaBadges: Array<{ key: string; label: string; tone: 'neutral' | 'brand' | 'danger' | 'success' | 'warning' }> = [
-    { key: 'source', label: job.sourceType === 'sample' ? 'نمونه' : 'آپلود', tone: 'neutral' },
-    ...(job.templateLabel ? [{ key: 'template', label: job.templateLabel, tone: 'brand' as const }] : []),
-    ...(job.scenario
-      ? [
-          {
-            key: 'scenario',
-            label: job.scenario === 'miss' ? 'تشخیص ندهد' : 'تشخیص بدهد',
-            tone: job.scenario === 'miss' ? ('danger' as const) : ('success' as const),
-          },
-        ]
-      : []),
-    ...(job.resultJson?.overall_status
-      ? [
-          {
-            key: 'overall',
-            label: formatOverallStatus(overallStatus),
-            tone:
-              overallStatus === 'failed'
-                ? ('danger' as const)
-                : overallStatus === 'completed_with_review_required'
-                  ? ('warning' as const)
-                  : ('success' as const),
-          },
-        ]
-      : []),
-  ];
+    if (isProcessing) {
+      setBatchReady(false);
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      setFieldValues(buildInitialValues(jobRef.current));
+      setStreamingComplete(true);
+      setFieldsLocked(false);
+      setBatchReady(true);
+    }, getOcrBatchRevealDelayMs(transportMode));
+
+    return () => window.clearTimeout(timer);
+  }, [formFields, isBatchMode, isProcessing, transportMode]);
+
+  const hasFields = formFields.length > 0;
+
+  useEffect(() => {
+    if (!shouldGrpcStream || !hasFields) return undefined;
+    if (streamStartedRef.current) return undefined;
+    streamStartedRef.current = true;
+
+    const jobId = jobRef.current.id;
+    const streamFields = getOcrFormFields(jobRef.current);
+    setFieldsLocked(true);
+    setFieldValues(Object.fromEntries(streamFields.map((field) => [field.key, ''])));
+
+    let cancelled = false;
+
+    const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
+
+    const streamField = (fieldKey: string, fullValue: string) =>
+      new Promise<void>((resolve) => {
+        setActiveStreamKey(fieldKey);
+        let charIndex = 0;
+
+        const tick = () => {
+          if (cancelled) return;
+          charIndex += 1;
+          setFieldValues((current) => ({
+            ...current,
+            [fieldKey]: fullValue.slice(0, charIndex),
+          }));
+
+          if (charIndex < fullValue.length) {
+            window.setTimeout(tick, Math.max(14, 32 - Math.floor(fullValue.length / 16)));
+            return;
+          }
+
+          setRevealedKeys((current) => new Set([...current, fieldKey]));
+          setActiveStreamKey(null);
+          window.setTimeout(resolve, 160);
+        };
+
+        tick();
+      });
+
+    const run = async () => {
+      await wait(500);
+      for (const field of streamFields) {
+        if (cancelled) return;
+        await streamField(field.key, field.targetValue || '—');
+      }
+
+      if (cancelled) return;
+
+      // small settle delay, then unlock so the user can edit
+      await wait(400);
+      if (cancelled) return;
+
+      sessionStorage.setItem(GRPC_DONE_KEY(jobId), '1');
+      setActiveStreamKey(null);
+      setStreamingComplete(true);
+      setFieldsLocked(false);
+    };
+
+    void run();
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shouldGrpcStream, hasFields]);
+
+  useEffect(() => {
+    if (!isGrpcStreaming || shouldGrpcStream || formFields.length === 0) return;
+    setFieldValues(buildInitialValues(jobRef.current));
+    setRevealedKeys(new Set(formFields.map((field) => field.key)));
+    setStreamingComplete(true);
+    setFieldsLocked(false);
+  }, [formFields, isGrpcStreaming, shouldGrpcStream]);
+
+  const showBatchLoading = isBatchMode && (isProcessing || !batchReady);
+  const showGrpcShell = isGrpcStreaming && formFields.length > 0;
+  const showBatchForm = isBatchMode && batchReady && formFields.length > 0;
+  const grpcStreaming = isGrpcStreaming && shouldGrpcStream && !streamingComplete;
+  const batchSectionClass = isGrpcUnary ? 'ai-lab-ocr-result-grpc-unary' : 'ai-lab-ocr-result-rest';
+  const batchDoneSectionClass = isGrpcUnary ? 'ai-lab-ocr-result-grpc-unary-done' : 'ai-lab-ocr-result-rest-done';
 
   return (
-    <OcrPageShell
-      eyebrow="جزئیات کار"
-      title={job.sourceLabel}
-      description={job.summary}
-      badge={
-        <OcrPageBadge
-          label={statusMeta.label}
-          icon={<StatusIcon className={statusMeta.tone === 'brand' ? 'h-3.5 w-3.5 animate-spin' : 'h-3.5 w-3.5'} />}
-        />
-      }
-      actions={
-        <Link href={`/businesses/${businessId}/ai-tools/ocr`}>
-          <TaavButton variant="secondary" tone="neutral" iconStart={<ArrowLeft className="h-4 w-4" />}>
-            بازگشت
-          </TaavButton>
-        </Link>
-      }
+    <div
+      className={`ai-lab-ocr-result-page ai-lab-ocr-result-page--${transportMode}`}
+      dir="rtl"
+      lang="fa"
     >
-      <div className="ocr-flow-tag-row">
-        {metaBadges.map((item) => (
-          <TaavBadge key={item.key} tone={item.tone} variant="soft">
-            {item.label}
-          </TaavBadge>
-        ))}
-      </div>
+      <header className="ai-lab-ocr-result-top">
+        <Link href={`/businesses/${businessId}/ai-tools/ocr`} className="ai-lab-ocr-result-back">
+          <ArrowRight className="h-4 w-4" aria-hidden />
+          بازگشت
+        </Link>
+        <span className={`ai-lab-ocr-result-mode ai-lab-ocr-result-mode--${transportMode}`}>
+          {getOcrTransportLabel(transportMode)}
+        </span>
+      </header>
 
-      <OcrSectionCard title="وضعیت پردازش">
-        <TaavProgressSummary
-          variant="bar"
-          percent={progress}
-          description={isProcessing ? 'در حال شبیه‌سازی پردازش سند…' : 'پردازش تکمیل شد'}
-          tone={isProcessing ? 'brand' : statusMeta.tone === 'danger' ? 'danger' : 'success'}
-          showPercent
-        />
-
-        <div className="ocr-flow-metric-grid">
-          <div className="ocr-flow-metric-card">
-            <span className="ocr-flow-stat-label">سطح اطمینان</span>
-            <strong>{formatConfidence(job.confidence)}</strong>
-          </div>
-          <div className="ocr-flow-metric-card">
-            <span className="ocr-flow-stat-label">صفحات</span>
-            <strong>{new Intl.NumberFormat('fa-IR').format(job.pageCount)}</strong>
-          </div>
-          <div className="ocr-flow-metric-card">
-            <span className="ocr-flow-stat-label">توکن مصرفی</span>
-            <strong>{formatTokenCount(job.tokensUsed)}</strong>
-          </div>
-        </div>
-      </OcrSectionCard>
-
-      {!isProcessing ? (
-        <>
-          <OcrSectionCard title="پیش‌نمایش متن">
-            <TaavTextarea readOnly value={job.previewText} rows={6} inputClassName="text-sm leading-7" />
-          </OcrSectionCard>
-
-          <OcrSectionCard title="فیلدهای استخراج‌شده">
-            <div className="ocr-flow-field-list">
-              {outputFields.map((field) => {
-                const fieldLabel = 'label' in field ? field.label : field.key;
-                const fieldConfidence = 'confidence' in field ? field.confidence : null;
-                const normalizedValue = 'normalized_value' in field ? field.normalized_value : null;
-                const validationStatus = 'validation_status' in field ? field.validation_status : null;
-                const reviewStatus = 'review_status' in field ? field.review_status : null;
-
-                return (
-                  <div key={field.key} className="ocr-flow-field-row">
-                    <div className="ocr-flow-field-label">
-                      <span>{fieldLabel}</span>
-                      {normalizedValue !== null ? (
-                        <span className="ocr-flow-field-normalized">نرمال: {normalizedValue || '—'}</span>
-                      ) : null}
-                      {validationStatus ? (
-                        <span className="ocr-flow-field-status">{formatValidationStatus(validationStatus)}</span>
-                      ) : null}
-                      {reviewStatus ? (
-                        <span className="ocr-flow-field-status">{formatReviewStatus(reviewStatus)}</span>
-                      ) : null}
-                    </div>
-                    <div className="ocr-flow-field-value">
-                      {fieldConfidence !== null ? (
-                        <span className="ocr-flow-field-confidence">
-                          {new Intl.NumberFormat('fa-IR', { maximumFractionDigits: 0 }).format(fieldConfidence * 100)}٪
-                        </span>
-                      ) : null}
-                      <strong>{field.value}</strong>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </OcrSectionCard>
-
-          <OcrSectionCard title="خروجی ساختاریافته">
-            <TaavTextarea readOnly value={jsonPreview} rows={8} inputClassName="font-mono text-[11px] leading-6" dir="ltr" />
-          </OcrSectionCard>
-        </>
-      ) : (
-        <div className="ocr-flow-processing-placeholder">
-          <FileText className="h-8 w-8" aria-hidden />
-          <strong>در حال پردازش سند</strong>
-          <p>خروجی کامل پس از اتمام کار نمایش داده می‌شود.</p>
-        </div>
-      )}
-
-      {job.warnings.length ? (
-        <div className="ocr-flow-warning-panel">
-          <div className="ocr-flow-warning-title">
-            <TriangleAlert className="h-4 w-4" />
-            نکات شبیه‌سازی
-          </div>
-          <ul>
-            {job.warnings.map((warning) => (
-              <li key={warning}>{warning}</li>
-            ))}
-          </ul>
-        </div>
+      {showBatchLoading ? (
+        <section className={batchSectionClass} aria-label={`در حال پردازش ${getOcrTransportLabel(transportMode)}`}>
+          <Loader2 className="ai-lab-ocr-result-rest-icon animate-spin" aria-hidden />
+          <h1>{job.sourceLabel}</h1>
+          <p>{isGrpcUnary ? 'در حال دریافت پاسخ gRPC…' : 'در حال استخراج اطلاعات…'}</p>
+          <span className="ai-lab-ocr-result-rest-hint">
+            {isGrpcUnary ? 'پاسخ کامل پس از اتمام، یک‌جا نمایش داده می‌شود' : 'فرم پس از اتمام، یک‌جا نمایش داده می‌شود'}
+          </span>
+          <OcrAiUsagePanel usage={aiUsage} transportMode={transportMode} durationMs={durationMs} compact />
+        </section>
       ) : null}
-    </OcrPageShell>
+
+      {showGrpcShell ? (
+        <section className="ai-lab-ocr-result-grpc" aria-label="استریم gRPC">
+          <div className="ai-lab-ocr-result-grpc-head">
+            <div>
+              <h1>{job.sourceLabel}</h1>
+              <p>{job.templateLabel ?? 'استخراج زنده فیلدها'}</p>
+            </div>
+            {grpcStreaming ? (
+              <span className="ai-lab-ocr-result-live">
+                <span className="ai-lab-ocr-result-live-dot" aria-hidden />
+                <Radio className="h-3 w-3" aria-hidden />
+                LIVE
+              </span>
+            ) : streamingComplete ? (
+              <span className="ai-lab-ocr-result-done">
+                <Check className="h-3.5 w-3.5" aria-hidden />
+                تکمیل
+              </span>
+            ) : null}
+          </div>
+
+          <OcrAiUsagePanel
+            usage={aiUsage}
+            transportMode={transportMode}
+            confidence={streamingComplete ? job.confidence : undefined}
+            durationMs={durationMs}
+            compact={grpcStreaming}
+          />
+
+          <ol className="ai-lab-ocr-result-steps" aria-label="پیشرفت فیلدها">
+            {formFields.map((field) => {
+              const done = revealedKeys.has(field.key);
+              const active = activeStreamKey === field.key;
+              return (
+                <li
+                  key={field.key}
+                  className={[
+                    done ? 'is-done' : '',
+                    active ? 'is-active' : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
+                >
+                  {done ? <Check className="h-3 w-3" aria-hidden /> : active ? <Loader2 className="h-3 w-3 animate-spin" aria-hidden /> : null}
+                  {field.label}
+                </li>
+              );
+            })}
+          </ol>
+
+          <div className="ai-lab-ocr-result-form">
+            {formFields.map((field) => {
+              const isRevealed = revealedKeys.has(field.key);
+              const isStreaming = activeStreamKey === field.key;
+
+              return (
+                <div
+                  key={field.key}
+                  className={[
+                    'ai-lab-ocr-result-field',
+                    isStreaming ? 'is-streaming' : '',
+                    isRevealed ? 'is-filled' : 'is-pending',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
+                >
+                  <label htmlFor={`ocr-field-${field.key}`}>{field.label}</label>
+                  <input
+                    id={`ocr-field-${field.key}`}
+                    value={fieldValues[field.key] ?? ''}
+                    disabled={fieldsLocked}
+                    onChange={(event) =>
+                      setFieldValues((current) => ({ ...current, [field.key]: event.target.value }))
+                    }
+                    placeholder={fieldsLocked ? 'در انتظار استریم…' : ''}
+                  />
+                  {isRevealed && field.confidence !== null ? (
+                    <span className="ai-lab-ocr-result-field-score">
+                      اطمینان {formatConfidence(Math.round(field.confidence * 100))}
+                    </span>
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      ) : null}
+
+      {showBatchForm ? (
+        <section className={batchDoneSectionClass} aria-label={`نتیجه ${getOcrTransportLabel(transportMode)}`}>
+          <h1>{job.sourceLabel}</h1>
+          <p className="ai-lab-ocr-result-rest-done-note">
+            {isGrpcUnary ? 'پاسخ gRPC یک‌جا دریافت شد' : 'همه فیلدها یک‌جا استخراج شدند'}
+          </p>
+
+          <OcrAiUsagePanel usage={aiUsage} transportMode={transportMode} confidence={job.confidence} durationMs={durationMs} />
+
+          <div className={`ai-lab-ocr-result-form ${isGrpcUnary ? 'ai-lab-ocr-result-form--grpc-unary' : 'ai-lab-ocr-result-form--rest'}`}>
+            {formFields.map((field) => (
+              <div key={field.key} className="ai-lab-ocr-result-field is-filled">
+                <label htmlFor={`ocr-batch-field-${field.key}`}>{field.label}</label>
+                <input
+                  id={`ocr-batch-field-${field.key}`}
+                  value={fieldValues[field.key] ?? ''}
+                  onChange={(event) =>
+                    setFieldValues((current) => ({ ...current, [field.key]: event.target.value }))
+                  }
+                />
+                {field.confidence !== null ? (
+                  <span className="ai-lab-ocr-result-field-score">
+                    اطمینان {formatConfidence(Math.round(field.confidence * 100))}
+                  </span>
+                ) : null}
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
+    </div>
   );
 }

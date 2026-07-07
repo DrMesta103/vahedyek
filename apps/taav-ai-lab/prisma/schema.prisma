@@ -12,6 +12,7 @@ model AppUser {
   id           String                 @id @default(cuid())
   email        String?                @unique
   mobile       String?                @unique
+  avatarUrl    String?
   firstName    String
   lastName     String
   fullName     String
@@ -21,6 +22,20 @@ model AppUser {
   createdAt    DateTime               @default(now())
   updatedAt    DateTime               @updatedAt
   memberships  UserTenantMembership[]
+  notifications UserNotification[]
+}
+
+model UserNotification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  message   String   @db.Text
+  kind      String   @default("test")
+  seenAt    DateTime?
+  createdAt DateTime @default(now())
+  user      AppUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, seenAt, createdAt])
 }
 
 model Tenant {

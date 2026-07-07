@@ -1,8 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { FileText, FileUp, ImageIcon, LoaderCircle, X } from 'lucide-react';
-import { TaavButton } from '@repo/ui/taav/primitives';
+import { FileText, FileUp, FolderOpen, ImageIcon, LoaderCircle, X } from 'lucide-react';
 import { toReadableFileSize } from '@/components/ocr/utils';
 
 export type OcrUploadFileState = {
@@ -18,9 +17,17 @@ type OcrUploadZoneProps = {
   onError: (message: string) => void;
   disabled?: boolean;
   compact?: boolean;
+  variant?: 'default' | 'inline';
 };
 
-export function OcrUploadZone({ value, onChange, onError, disabled, compact }: OcrUploadZoneProps) {
+export function OcrUploadZone({
+  value,
+  onChange,
+  onError,
+  disabled,
+  compact,
+  variant = 'default',
+}: OcrUploadZoneProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -65,36 +72,91 @@ export function OcrUploadZone({ value, onChange, onError, disabled, compact }: O
     await processFile(file);
   };
 
+  const openPicker = () => fileInputRef.current?.click();
+
+  const fileInput = (
+    <input
+      ref={fileInputRef}
+      type="file"
+      className="sr-only"
+      disabled={disabled || loading}
+      onChange={async (event) => {
+        const file = event.target.files?.[0] ?? null;
+        await processFile(file);
+        event.target.value = '';
+      }}
+    />
+  );
+
+  if (variant === 'inline') {
+    return (
+      <div
+        className="ai-lab-ocr-create-upload-row"
+        onDragOver={(event) => {
+          event.preventDefault();
+          if (!disabled && !loading) setDragging(true);
+        }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={handleDrop}
+      >
+        {fileInput}
+
+        {value ? (
+          <div className="ai-lab-ocr-create-file">
+            <span className="ai-lab-ocr-create-file-icon" aria-hidden>
+              {value.fileType.startsWith('image/') ? <ImageIcon className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
+            </span>
+            <div className="ai-lab-ocr-create-file-copy">
+              <strong>{value.fileName}</strong>
+              <span>{toReadableFileSize(value.fileSize)}</span>
+            </div>
+            <button
+              type="button"
+              className="ai-lab-ocr-create-file-remove"
+              aria-label="حذف فایل"
+              onClick={() => onChange(null)}
+              disabled={disabled || loading}
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        ) : (
+          <div className={['ai-lab-ocr-create-upload-empty', dragging ? 'is-dragging' : ''].filter(Boolean).join(' ')}>
+            {loading ? 'در حال خواندن فایل…' : 'فایلی انتخاب نشده'}
+          </div>
+        )}
+
+        <button
+          type="button"
+          className="ai-lab-ocr-create-pick-file"
+          onClick={openPicker}
+          disabled={disabled || loading}
+        >
+          {loading ? <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden /> : <FolderOpen className="h-4 w-4" aria-hidden />}
+          انتخاب فایل
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className={['ocr-flow-upload', compact ? 'ocr-flow-upload--compact' : ''].filter(Boolean).join(' ')}>
       <div className="ocr-flow-upload-head">
         <span className="ocr-flow-field-label">آپلود فایل (اختیاری)</span>
         {value ? (
-          <TaavButton
+          <button
             type="button"
-            size="sm"
-            variant="ghost"
-            tone="neutral"
-            iconStart={<X className="h-3.5 w-3.5" />}
+            className="ai-lab-ocr-create-file-remove"
             onClick={() => onChange(null)}
             disabled={disabled || loading}
           >
+            <X className="h-3.5 w-3.5" />
             حذف
-          </TaavButton>
+          </button>
         ) : null}
       </div>
 
-      <input
-        ref={fileInputRef}
-        type="file"
-        className="sr-only"
-        disabled={disabled || loading}
-        onChange={async (event) => {
-          const file = event.target.files?.[0] ?? null;
-          await processFile(file);
-          event.target.value = '';
-        }}
-      />
+      {fileInput}
 
       {value ? (
         <div className="ocr-flow-upload-preview">
@@ -125,17 +187,9 @@ export function OcrUploadZone({ value, onChange, onError, disabled, compact }: O
             <strong>فایل را رها کنید یا انتخاب کنید</strong>
             <span>پی‌دی‌اف، تصویر یا متن · حداکثر ۲۰ مگابایت</span>
           </div>
-          <TaavButton
-            type="button"
-            size="sm"
-            variant="secondary"
-            tone="neutral"
-            iconStart={<FileUp className="h-4 w-4" />}
-            onClick={() => fileInputRef.current?.click()}
-            disabled={disabled || loading}
-          >
+          <button type="button" className="ai-lab-ocr-create-pick-file" onClick={openPicker} disabled={disabled || loading}>
             انتخاب فایل
-          </TaavButton>
+          </button>
         </div>
       )}
     </div>

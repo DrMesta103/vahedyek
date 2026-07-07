@@ -1,13 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type ChangeEvent, type DragEvent, type FormEvent, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { ImageIcon, Upload, X } from 'lucide-react';
+import { Building2, ImageUp, Plus } from 'lucide-react';
 import { TaavButton } from '@repo/ui/taav/primitives';
-import { TaavFieldBlock, TaavInput } from '@repo/ui/taav/forms';
-import { AI_LAB_TOOLTIPS } from '@/app/lib/tooltips';
-import { AiLabLabelWithTooltip } from '@/components/AiLabTooltip';
+import { TaavInput } from '@repo/ui/taav/forms';
+
+const ACCEPTED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/svg+xml'];
 
 async function fileToDataUrl(file: File) {
   return await new Promise<string>((resolve, reject) => {
@@ -18,24 +18,45 @@ async function fileToDataUrl(file: File) {
   });
 }
 
+function isAcceptedImage(file: File) {
+  return ACCEPTED_IMAGE_TYPES.includes(file.type) || file.type.startsWith('image/');
+}
+
+function CreateBusinessLabel({ children, required = false }: { children: ReactNode; required?: boolean }) {
+  return (
+    <label className="ai-lab-create-label">
+      {children}
+      {required ? <span className="ai-lab-create-required">*</span> : null}
+    </label>
+  );
+}
+
 export function CreateBusinessForm({
   mode = 'page',
+  defaultFirstName = '',
+  defaultLastName = '',
   onCancel,
   onCreated,
 }: {
   mode?: 'page' | 'dialog';
+  defaultFirstName?: string;
+  defaultLastName?: string;
   onCancel?: () => void;
   onCreated?: (businessId: string) => void;
 }) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [name, setName] = useState('');
+  const [firstName, setFirstName] = useState(defaultFirstName);
+  const [lastName, setLastName] = useState(defaultLastName);
+  const [nameError, setNameError] = useState('');
+  const [firstNameError, setFirstNameError] = useState('');
+  const [lastNameError, setLastNameError] = useState('');
   const [logoPreview, setLogoPreview] = useState('');
-  const [logoFileName, setLogoFileName] = useState('');
-  const [tokenLimit, setTokenLimit] = useState('250000');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [logoLoading, setLogoLoading] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
 
   useEffect(() => {
     return () => {
@@ -45,32 +66,15 @@ export function CreateBusinessForm({
     };
   }, [logoPreview]);
 
-  const resetLogo = () => {
-    if (logoPreview.startsWith('blob:')) {
-      URL.revokeObjectURL(logoPreview);
-    }
-
-    setLogoPreview('');
-    setLogoFileName('');
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
-  const handleLogoPick = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.startsWith('image/')) {
-      setError('فقط فایل تصویری برای لوگو قابل قبول است.');
-      event.target.value = '';
+  const applyLogoFile = async (file: File) => {
+    if (!isAcceptedImage(file)) {
+      setError('فقط فایل‌های PNG، JPG، WEBP یا SVG برای لوگو قابل قبول است.');
       return;
     }
 
     const maxSizeInBytes = 5 * 1024 * 1024;
     if (file.size > maxSizeInBytes) {
-      setError('حجم تصویر لوگو نباید بیشتر از 5 مگابایت باشد.');
-      event.target.value = '';
+      setError('حجم تصویر لوگو نباید بیشتر از ۵ مگابایت باشد.');
       return;
     }
 
@@ -80,7 +84,6 @@ export function CreateBusinessForm({
     try {
       const preview = await fileToDataUrl(file);
       setLogoPreview(preview);
-      setLogoFileName(file.name);
     } catch (readError) {
       setError(readError instanceof Error ? readError.message : 'خواندن تصویر انجام نشد.');
     } finally {
@@ -88,8 +91,69 @@ export function CreateBusinessForm({
     }
   };
 
+  const handleLogoPick = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    await applyLogoFile(file);
+    event.target.value = '';
+  };
+
+  const handleDragOver = (event: DragEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    if (!submitting && !logoLoading) {
+      setDragActive(true);
+    }
+  };
+
+  const handleDragLeave = (event: DragEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    setDragActive(false);
+  };
+
+  const handleDrop = async (event: DragEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    setDragActive(false);
+    if (submitting || logoLoading) return;
+
+    const file = event.dataTransfer.files?.[0];
+    if (file) {
+      await applyLogoFile(file);
+    }
+  };
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    const trimmedName = name.trim();
+    const trimmedFirstName = firstName.trim();
+    const trimmedLastName = lastName.trim();
+    let hasError = false;
+
+    if (!trimmedName) {
+      setNameError('نام کسب‌وکار الزامی است.');
+      hasError = true;
+    } else {
+      setNameError('');
+    }
+
+    if (!trimmedFirstName) {
+      setFirstNameError('نام صاحب کسب‌وکار الزامی است.');
+      hasError = true;
+    } else {
+      setFirstNameError('');
+    }
+
+    if (!trimmedLastName) {
+      setLastNameError('نام خانوادگی صاحب کسب‌وکار الزامی است.');
+      hasError = true;
+    } else {
+      setLastNameError('');
+    }
+
+    if (hasError) {
+      return;
+    }
+
     setSubmitting(true);
     setError('');
 
@@ -98,9 +162,10 @@ export function CreateBusinessForm({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name,
+          name: trimmedName,
+          firstName: trimmedFirstName,
+          lastName: trimmedLastName,
           logoUrl: logoPreview,
-          tokenLimit: Number(tokenLimit),
         }),
       });
 
@@ -124,104 +189,140 @@ export function CreateBusinessForm({
   };
 
   return (
-    <form className="ai-lab-form-grid" onSubmit={handleSubmit}>
-      <TaavFieldBlock
-        label={<AiLabLabelWithTooltip label="نام کسب‌وکار" tooltip={AI_LAB_TOOLTIPS.forms.businessName} required />}
-        required
-        htmlFor="business-name"
-      >
+    <form className="ai-lab-create-business-form" onSubmit={handleSubmit} noValidate>
+      <div className="ai-lab-create-field">
+        <CreateBusinessLabel required>نام کسب‌وکار</CreateBusinessLabel>
         <TaavInput
           id="business-name"
           value={name}
-          onChange={(event) => setName(event.target.value)}
-          placeholder="مثال: بازرگانی فراتک"
-          required
+          onChange={(event) => {
+            setName(event.target.value);
+            if (nameError) setNameError('');
+          }}
+          placeholder="مثال: استودیو خلاقه پارس"
           disabled={submitting}
+          aria-invalid={Boolean(nameError)}
+          aria-describedby={nameError ? 'business-name-error' : undefined}
         />
-      </TaavFieldBlock>
+        {nameError ? (
+          <p id="business-name-error" className="ai-lab-create-field-error" role="alert">
+            {nameError}
+          </p>
+        ) : null}
+      </div>
 
-      <TaavFieldBlock
-        label={<AiLabLabelWithTooltip label="لوگوی کسب‌وکار" tooltip={AI_LAB_TOOLTIPS.forms.businessLogo} />}
-        description="یک فایل تصویری واقعی انتخاب کنید تا همان‌جا پیش‌نمایش آن را ببینید و در فرم ذخیره شود."
-      >
-        <div className="grid gap-3">
-          <div className="flex flex-wrap items-center gap-3">
-            <input
-              ref={fileInputRef}
-              id="business-logo"
-              type="file"
-              accept="image/*"
-              className="sr-only"
-              onChange={handleLogoPick}
-              disabled={submitting || logoLoading}
-            />
-            <TaavButton
-              type="button"
-              variant="secondary"
-              tone="neutral"
-              iconStart={<Upload className="h-4 w-4" />}
-              onClick={() => fileInputRef.current?.click()}
-              disabled={submitting || logoLoading}
-            >
-              انتخاب عکس لوگو
-            </TaavButton>
+      <div className="ai-lab-create-field-row">
+        <div className="ai-lab-create-field">
+          <CreateBusinessLabel required>نام صاحب کسب‌وکار</CreateBusinessLabel>
+          <TaavInput
+            id="owner-first-name"
+            value={firstName}
+            onChange={(event) => {
+              setFirstName(event.target.value);
+              if (firstNameError) setFirstNameError('');
+            }}
+            placeholder="مثال: علی"
+            disabled={submitting}
+            aria-invalid={Boolean(firstNameError)}
+            aria-describedby={firstNameError ? 'owner-first-name-error' : undefined}
+          />
+          {firstNameError ? (
+            <p id="owner-first-name-error" className="ai-lab-create-field-error" role="alert">
+              {firstNameError}
+            </p>
+          ) : null}
+        </div>
+
+        <div className="ai-lab-create-field">
+          <CreateBusinessLabel required>نام خانوادگی صاحب کسب‌وکار</CreateBusinessLabel>
+          <TaavInput
+            id="owner-last-name"
+            value={lastName}
+            onChange={(event) => {
+              setLastName(event.target.value);
+              if (lastNameError) setLastNameError('');
+            }}
+            placeholder="مثال: محمدی"
+            disabled={submitting}
+            aria-invalid={Boolean(lastNameError)}
+            aria-describedby={lastNameError ? 'owner-last-name-error' : undefined}
+          />
+          {lastNameError ? (
+            <p id="owner-last-name-error" className="ai-lab-create-field-error" role="alert">
+              {lastNameError}
+            </p>
+          ) : null}
+        </div>
+      </div>
+
+      <div className="ai-lab-create-field">
+        <CreateBusinessLabel>آیکن یا لوگوی کسب‌وکار</CreateBusinessLabel>
+
+        <div className="ai-lab-create-upload-row">
+          <input
+            ref={fileInputRef}
+            id="business-logo"
+            type="file"
+            accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
+            className="sr-only"
+            onChange={handleLogoPick}
+            disabled={submitting || logoLoading}
+          />
+
+          <button
+            type="button"
+            className={['ai-lab-create-dropzone', dragActive ? 'is-drag-active' : ''].filter(Boolean).join(' ')}
+            onClick={() => fileInputRef.current?.click()}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            disabled={submitting || logoLoading}
+            aria-label="انتخاب یا کشیدن تصویر لوگو"
+          >
+            <div className="ai-lab-create-dropzone-icon" aria-hidden="true">
+              <ImageUp className="h-6 w-6" strokeWidth={1.6} />
+            </div>
+            <div className="ai-lab-create-dropzone-copy">
+              <strong>برای انتخاب فایل، کلیک کنید یا فایل را اینجا بکشید</strong>
+              <span>فرمت‌های مجاز: PNG, JPG, WEBP, SVG</span>
+            </div>
+          </button>
+
+          <div className="ai-lab-create-preview-card">
+            <p className="ai-lab-create-preview-title">پیش‌نمایش</p>
+            <div className="ai-lab-create-preview-body">
+              {logoPreview ? (
+                <img src={logoPreview} alt="پیش‌نمایش لوگوی انتخاب‌شده" className="ai-lab-create-preview-image" />
+              ) : (
+                <div className="ai-lab-create-preview-empty">
+                  <div className="ai-lab-create-preview-placeholder" aria-hidden="true">
+                    <Building2 className="h-5 w-5" strokeWidth={1.6} />
+                  </div>
+                  <p>پس از انتخاب، آیکن در اینجا نمایش داده می‌شود.</p>
+                </div>
+              )}
+            </div>
             {logoPreview ? (
-              <TaavButton
+              <button
                 type="button"
-                variant="ghost"
-                tone="neutral"
-                iconStart={<X className="h-4 w-4" />}
-                onClick={resetLogo}
+                className="ai-lab-create-preview-replace"
+                onClick={() => fileInputRef.current?.click()}
                 disabled={submitting || logoLoading}
               >
-                حذف تصویر
-              </TaavButton>
+                تغییر تصویر
+              </button>
             ) : null}
           </div>
-
-          <div className="ai-lab-logo-upload-preview">
-            {logoPreview ? (
-              <img src={logoPreview} alt="پیش‌نمایش لوگوی انتخاب‌شده" className="ai-lab-logo-upload-image" />
-            ) : (
-              <div className="ai-lab-logo-upload-empty">
-                <ImageIcon className="h-6 w-6" />
-                <div className="grid gap-1">
-                  <strong>هنوز لوگویی انتخاب نشده</strong>
-                  <span>PNG، JPG، WEBP یا SVG را انتخاب کنید.</span>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {logoFileName ? <p className="m-0 text-[length:var(--taav-text-xs)] text-[var(--taav-text-muted)]">فایل انتخاب‌شده: {logoFileName}</p> : null}
         </div>
-      </TaavFieldBlock>
-
-      <TaavFieldBlock
-        label={<AiLabLabelWithTooltip label="سقف کل توکن" tooltip={AI_LAB_TOOLTIPS.forms.tokenLimit} required />}
-        required
-        htmlFor="business-token-limit"
-      >
-        <TaavInput
-          id="business-token-limit"
-          type="number"
-          min={1}
-          step={1}
-          value={tokenLimit}
-          onChange={(event) => setTokenLimit(event.target.value)}
-          dir="ltr"
-          required
-          disabled={submitting}
-        />
-      </TaavFieldBlock>
+      </div>
 
       {error ? <div className="ai-lab-error-box">{error}</div> : null}
 
-      <div className="ai-lab-form-actions">
+      <div className="ai-lab-create-footer">
         {mode === 'page' ? (
           <Link href="/businesses">
-            <TaavButton type="button" variant="secondary" tone="neutral">
-              بازگشت به کسب‌وکارها
+            <TaavButton type="button" variant="secondary" tone="neutral" disabled={submitting}>
+              انصراف
             </TaavButton>
           </Link>
         ) : (
@@ -229,9 +330,8 @@ export function CreateBusinessForm({
             انصراف
           </TaavButton>
         )}
-        <div className="mr-auto" />
-        <TaavButton type="submit" loading={submitting}>
-          {mode === 'dialog' ? 'ثبت کسب‌وکار' : 'ایجاد کسب‌وکار'}
+        <TaavButton type="submit" loading={submitting} disabled={submitting || logoLoading} iconStart={<Plus className="h-4 w-4" />}>
+          ثبت کسب‌وکار
         </TaavButton>
       </div>
     </form>

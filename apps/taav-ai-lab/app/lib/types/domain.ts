@@ -4,6 +4,7 @@ import type {
   OcrTemplateScenario,
   OcrSimulationStatus,
 } from '../ocr-simulator-data';
+import type { OcrTransportMode } from '../ocr-transport';
 
 export type OcrSimulationSourceType = 'sample' | 'upload';
 
@@ -37,6 +38,8 @@ export type SimulatorUser = {
   lastName: string;
   email: string | null;
   mobile: string | null;
+  avatarUrl: string | null;
+  isActive: boolean;
   passwordHash: string;
   passwordSalt: string;
   createdAt: string;
@@ -113,12 +116,63 @@ export type CreateSimulatorUserInput = {
   identifier: string;
   mobile?: string;
   password: string;
+  avatarUrl?: string | null;
+};
+
+export type AdminUserRow = {
+  id: string;
+  fullName: string;
+  firstName: string;
+  lastName: string;
+  email: string | null;
+  mobile: string | null;
+  avatarUrl: string | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  tenantIds: string[];
+  tenantNames: string[];
+  membershipCount: number;
+  isSystemUser: boolean;
+};
+
+export type CreateAdminUserInput = {
+  firstName: string;
+  lastName: string;
+  mobile: string;
+  password: string;
+  avatarUrl?: string | null;
+  tenantId?: string | null;
+  systemUser: boolean;
+  isActive?: boolean;
+};
+
+export type UpdateAdminUserInput = {
+  userId: string;
+  firstName: string;
+  lastName: string;
+  avatarUrl?: string | null;
+  tenantId?: string | null;
+  systemUser: boolean;
+  isActive: boolean;
+};
+
+export type UserNotificationEvent = {
+  id: string;
+  userId: string;
+  title: string;
+  message: string;
+  kind: 'test';
+  createdAt: string;
+  seenAt: string | null;
 };
 
 export type CreateTenantInput = {
   name: string;
   logoUrl: string;
   tokenLimit: number;
+  ownerFirstName?: string;
+  ownerLastName?: string;
   slug?: string;
   brandCode?: string;
   packageKey?: string | null;
@@ -149,6 +203,8 @@ export type CreateOcrSimulationInput = {
   templateId?: string | null;
   scenario?: OcrTemplateScenario | null;
   sampleText?: string | null;
+  transportMode?: OcrTransportMode | null;
+  modelId?: string | null;
 };
 
 export type TaaviaChatMessage = {

@@ -2,17 +2,10 @@
 
 import { useRouter } from 'next/navigation';
 import { useCallback, useState } from 'react';
-import { ArrowLeft, Coins, LoaderCircle, ShieldAlert, ShieldCheck } from 'lucide-react';
-import { TaavBadge, TaavCard } from '@repo/ui/taav/primitives';
-import {
-  formatPackageLabel,
-  formatRelativeActivityLabel,
-  formatTokenCount,
-  formatTokenRatioLabel,
-} from '@/app/lib/business-utils';
+import { ChevronLeft, LoaderCircle } from 'lucide-react';
+import { TaavBadge, TaavButton, TaavCard } from '@repo/ui/taav/primitives';
+import { formatTokenCount } from '@/app/lib/business-utils';
 import type { Tenant } from '@/app/lib/data';
-import { AI_LAB_TOOLTIPS } from '@/app/lib/tooltips';
-import { AiLabSectionLabel, AiLabTooltipIcon } from '@/components/AiLabTooltip';
 import { BusinessLogo } from './BusinessLogo';
 
 function getUsageTone(usedTokens: number, tokenLimit: number) {
@@ -22,34 +15,34 @@ function getUsageTone(usedTokens: number, tokenLimit: number) {
   return 'success';
 }
 
-function UsageMeter({ usedTokens, tokenLimit }: { usedTokens: number; tokenLimit: number }) {
+function UsageRing({ usedTokens, tokenLimit }: { usedTokens: number; tokenLimit: number }) {
   const ratio = tokenLimit > 0 ? Math.max(0, Math.min(1, usedTokens / tokenLimit)) : 0;
   const progress = Math.round(ratio * 100);
   const tone = getUsageTone(usedTokens, tokenLimit);
-  const label = formatTokenRatioLabel(usedTokens, tokenLimit);
+  const radius = 22;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (progress / 100) * circumference;
 
   const toneClass =
-    tone === 'danger' ? 'ai-lab-meter-danger' : tone === 'warning' ? 'ai-lab-meter-warning' : 'ai-lab-meter-success';
+    tone === 'danger' ? 'ai-lab-ring-danger' : tone === 'warning' ? 'ai-lab-ring-warning' : 'ai-lab-ring-success';
 
   return (
-    <div className="ai-lab-business-meter">
-      <svg viewBox="0 0 120 84" className="ai-lab-business-meter-svg" aria-hidden="true">
-        <path d="M18 58 A42 42 0 0 1 102 58" pathLength={100} className="ai-lab-business-meter-track" />
-        <path
-          d="M18 58 A42 42 0 0 1 102 58"
-          pathLength={100}
+    <div className="ai-lab-business-ring" aria-hidden="true">
+      <svg viewBox="0 0 56 56" className="ai-lab-business-ring-svg">
+        <circle cx="28" cy="28" r={radius} className="ai-lab-business-ring-track" />
+        <circle
+          cx="28"
+          cy="28"
+          r={radius}
           className={toneClass}
-          style={{
-            strokeDasharray: '100',
-            strokeDashoffset: `${100 - progress}`,
-          }}
+          strokeDasharray={circumference}
+          strokeDashoffset={strokeDashoffset}
+          transform="rotate(-90 28 28)"
         />
       </svg>
-
-      <div className="ai-lab-business-meter-copy">
-        <strong>{label}</strong>
-        <span>{tone === 'danger' ? 'نیاز به تمدید' : tone === 'warning' ? 'نزدیک سقف' : 'آماده استفاده'}</span>
-      </div>
+      <span className="ai-lab-business-ring-label">
+        {new Intl.NumberFormat('fa-IR', { maximumFractionDigits: 0 }).format(progress)}٪
+      </span>
     </div>
   );
 }
@@ -59,20 +52,8 @@ export function BusinessCard({ business }: { business: Tenant }) {
   const [entering, setEntering] = useState(false);
 
   const usageTone = getUsageTone(business.usedTokens, business.tokenLimit);
-  const packageLabel = formatPackageLabel(business.packageKey, business.billingCycle);
-  const activityLabel = formatRelativeActivityLabel(business.lastActivity);
-  const statusLabel = usageTone === 'danger' ? 'منقضی شده' : usageTone === 'warning' ? 'نزدیک سقف' : 'فعال';
-  const statusTooltip =
-    usageTone === 'danger'
-      ? AI_LAB_TOOLTIPS.businesses.statusExpired
-      : usageTone === 'warning'
-        ? AI_LAB_TOOLTIPS.businesses.statusWarning
-        : AI_LAB_TOOLTIPS.businesses.statusActive;
-  const statusIcon = usageTone === 'danger' ? (
-    <ShieldAlert className="h-3.5 w-3.5" />
-  ) : (
-    <ShieldCheck className="h-3.5 w-3.5" />
-  );
+  const statusLabel = usageTone === 'danger' ? 'منقضی‌شده' : 'فعال';
+  const statusTone = usageTone === 'danger' ? 'danger' : 'success';
 
   const enterBusiness = useCallback(async () => {
     if (entering) return;
@@ -96,13 +77,6 @@ export function BusinessCard({ business }: { business: Tenant }) {
     }
   }, [business.id, entering, router]);
 
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      void enterBusiness();
-    }
-  };
-
   return (
     <TaavCard
       variant="outlined"
@@ -110,83 +84,44 @@ export function BusinessCard({ business }: { business: Tenant }) {
       radius="xl"
       wrapperClassName={['ai-lab-business-card', entering ? 'is-entering' : ''].filter(Boolean).join(' ')}
     >
-      <div
-        className="ai-lab-business-card-grid ai-lab-business-card-interactive"
-        dir="rtl"
-        role="button"
-        tabIndex={0}
-        aria-label={`ورود به ${business.name}`}
-        aria-busy={entering}
-        onClick={() => void enterBusiness()}
-        onKeyDown={handleKeyDown}
-      >
-        <div className="ai-lab-business-card-main">
-          <div className="ai-lab-business-card-head">
-            <div className="ai-lab-business-card-avatar">
-              <BusinessLogo business={business} />
-            </div>
-
-            <div className="ai-lab-business-card-headline">
-              <div className="ai-lab-business-card-title-row">
-                <h2>{business.name}</h2>
-                <TaavBadge
-                  tone={usageTone === 'danger' ? 'danger' : usageTone === 'warning' ? 'warning' : 'success'}
-                  variant="soft"
-                  iconStart={statusIcon}
-                >
-                  {statusLabel}
-                </TaavBadge>
-                <AiLabTooltipIcon content={statusTooltip} label={`راهنمای وضعیت ${statusLabel}`} />
-              </div>
-              <p className="ai-lab-business-card-lede">فضای کاری OCR، فایل‌ها و گزارش‌های هوش مصنوعی</p>
-            </div>
+      <div className="ai-lab-business-card-body" dir="rtl">
+        <div className="ai-lab-business-card-identity">
+          <div className="ai-lab-business-card-avatar">
+            <BusinessLogo business={business} />
           </div>
 
-          <div className="ai-lab-business-card-meta">
-            <div className="ai-lab-business-card-meta-item">
-              <AiLabSectionLabel label="نام بسته" tooltip={AI_LAB_TOOLTIPS.businesses.packageName} />
-              <strong>{packageLabel}</strong>
-            </div>
-            <div className="ai-lab-business-card-meta-item">
-              <AiLabSectionLabel label="سقف توکن" tooltip={AI_LAB_TOOLTIPS.businesses.tokenLimit} />
-              <strong>{formatTokenCount(business.tokenLimit)}</strong>
-            </div>
-            <div className="ai-lab-business-card-meta-item">
-              <AiLabSectionLabel label="OCR تست" tooltip={AI_LAB_TOOLTIPS.businesses.ocrTests} />
-              <strong>{formatTokenCount(business.ocrTestsCount)}</strong>
-            </div>
-          </div>
-
-          <div className="ai-lab-business-card-footnote">
-            <span className="inline-flex items-center gap-1">
-              آخرین فعالیت: {activityLabel}
-              <AiLabTooltipIcon content={AI_LAB_TOOLTIPS.businesses.lastActivity} label="راهنمای آخرین فعالیت" />
-            </span>
-            <span className="ai-lab-business-card-enter-hint">
-              {entering ? (
-                <>
-                  <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
-                  در حال ورود...
-                </>
-              ) : (
-                <>
-                  ورود به فضای کاری
-                  <ArrowLeft className="h-3.5 w-3.5" />
-                </>
-              )}
-            </span>
+          <div className="ai-lab-business-card-info">
+            <h2>{business.name}</h2>
+            <p className="ai-lab-business-card-usage-label">توکن مصرف‌شده</p>
+            <p className="ai-lab-business-card-usage-value" dir="ltr">
+              <span>{formatTokenCount(business.usedTokens)}</span>
+              <span className="ai-lab-business-card-usage-sep">/</span>
+              <span>{formatTokenCount(business.tokenLimit)}</span>
+            </p>
           </div>
         </div>
 
-        <div className="ai-lab-business-card-meter-shell">
-          <div className="inline-flex w-full items-start justify-end">
-            <AiLabTooltipIcon content={AI_LAB_TOOLTIPS.businesses.usageMeter} label="راهنمای نمودار مصرف" />
-          </div>
-          <UsageMeter usedTokens={business.usedTokens} tokenLimit={business.tokenLimit} />
+        <UsageRing usedTokens={business.usedTokens} tokenLimit={business.tokenLimit} />
 
-          <TaavBadge tone="neutral" variant="soft" iconStart={<Coins className="h-3.5 w-3.5" />}>
-            {formatTokenCount(business.usedTokens)} مصرف
+        <div className="ai-lab-business-card-actions">
+          <TaavBadge tone={statusTone} variant="soft" unsafeClassName="ai-lab-business-status-badge">
+            <span className={`ai-lab-business-status-dot ai-lab-business-status-dot--${statusTone}`} aria-hidden="true" />
+            {statusLabel}
           </TaavBadge>
+
+          <TaavButton
+            type="button"
+            variant="secondary"
+            tone="neutral"
+            size="sm"
+            unsafeClassName="ai-lab-business-enter-btn"
+            iconEnd={entering ? <LoaderCircle className="h-3.5 w-3.5 animate-spin" /> : <ChevronLeft className="h-3.5 w-3.5" />}
+            onClick={() => void enterBusiness()}
+            disabled={entering}
+            aria-busy={entering}
+          >
+            {entering ? 'در حال ورود...' : 'ورود به فضای کاری'}
+          </TaavButton>
         </div>
 
         {entering ? <div className="ai-lab-business-card-loading" aria-hidden="true" /> : null}

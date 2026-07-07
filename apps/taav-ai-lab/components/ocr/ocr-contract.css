@@ -1,0 +1,166 @@
+/* OCR API contract dialog */
+
+.ai-lab-ocr-contract-dialog {
+  width: min(760px, calc(100vw - 28px)) !important;
+  max-height: min(90vh, 860px);
+  overflow: hidden;
+  padding: 22px !important;
+  gap: 0 !important;
+  direction: rtl;
+  text-align: right;
+}
+
+.ai-lab-ocr-contract-title,
+.ai-lab-ocr-contract-description {
+  text-align: right;
+}
+
+.ai-lab-ocr-contract-tabs-list {
+  justify-content: flex-start;
+}
+
+.ai-lab-ocr-contract-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-direction: row;
+  text-align: right;
+}
+
+.ai-lab-ocr-contract-panel-head > div {
+  text-align: right;
+}
+
+.ai-lab-ocr-contract-header {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.ai-lab-ocr-contract-header-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ai-lab-ocr-contract-transport-tabs,
+.ai-lab-ocr-contract-layer-tabs {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.ai-lab-ocr-contract-transport-content,
+.ai-lab-ocr-contract-layer-content {
+  margin-top: 0;
+}
+
+.ai-lab-ocr-contract-panel {
+  display: grid;
+  gap: 10px;
+}
+
+.ai-lab-ocr-contract-panel-head h3 {
+  margin: 0 0 4px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #f8fbff;
+}
+
+.ai-lab-ocr-contract-panel-head p {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.65;
+  color: #8fa3bb;
+}
+
+.ai-lab-ocr-contract-code {
+  margin: 0;
+  max-height: min(42vh, 360px);
+  overflow: auto;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: rgba(2, 6, 23, 0.45);
+  color: #dbe7f5;
+  font-size: 11px;
+  line-height: 1.55;
+  white-space: pre;
+  word-break: normal;
+  direction: ltr;
+  text-align: left;
+  unicode-bidi: plaintext;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+}
+
+.ai-lab-ocr-contract-code--proto {
+  border-color: rgba(96, 165, 250, 0.2);
+}
+
+.ai-lab-ocr-contract-footnote {
+  margin: 12px 0 0;
+  font-size: 10px;
+  color: #64748b;
+}
+
+.ai-lab-ocr-contract-footer {
+  margin-top: 14px;
+}
+
+.ai-lab-ocr-contract-close {
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(255, 255, 255, 0.03);
+  color: #c7d5e5;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.ai-lab-ocr-contract-close:hover {
+  border-color: rgba(45, 212, 191, 0.28);
+  color: #e8f0fa;
+}
+
+/* Document type card contract trigger */
+
+.ai-lab-ocr-create-type-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.ai-lab-ocr-create-type-wrap .ai-lab-ocr-create-type {
+  padding-inline-start: 34px;
+}
+
+.ai-lab-ocr-create-type-contract {
+  position: absolute;
+  top: 8px;
+  inset-inline-start: 8px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(2, 6, 23, 0.55);
+  color: #94a3b8;
+  cursor: pointer;
+  transition: border-color 160ms ease, color 160ms ease, background 160ms ease;
+}
+
+.ai-lab-ocr-create-type-contract:hover {
+  border-color: rgba(96, 165, 250, 0.35);
+  background: rgba(96, 165, 250, 0.12);
+  color: #bfdbfe;
+}
+
+.ai-lab-ocr-create-type-wrap.is-active .ai-lab-ocr-create-type-contract {
+  border-color: rgba(45, 212, 191, 0.35);
+  color: #99f6e4;
+}

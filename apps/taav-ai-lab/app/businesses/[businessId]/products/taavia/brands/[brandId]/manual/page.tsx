@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import { getAdminAgentSetupState, getTaaviaBrandForTenant, getTenantForUser } from '@/app/lib/data';
 import { getCurrentTenant, requireSession } from '@/app/lib/session';
 import { AiLabShell } from '@/components/AiLabShell';
-import { TaaviaManualWorkspaceClient } from '@/components/taavia/TaaviaManualWorkspaceClient';
+import { TaaviaTestWorkspaceClient } from '@/components/taavia/TaaviaTestWorkspaceClient';
 
 export default async function TaaviaBrandManualPage({
   params,
@@ -45,7 +45,9 @@ export default async function TaaviaBrandManualPage({
       currentTenantId={business.id}
       currentTenantName={business.name}
     >
-      <TaaviaManualWorkspaceClient
+      <TaaviaTestWorkspaceClient
+        businessId={business.id}
+        brandId={brand.id}
         brandName={brand.name}
         selectedUseCases={setup?.selectedUseCases ?? []}
       />
