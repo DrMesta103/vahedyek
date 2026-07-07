@@ -28,27 +28,27 @@ import type { BuyerPenaltyCalculationDetail } from '../../../../lib/buyerPenalty
 import type { PaymentHistoryMonthBucket } from '../../../../lib/contractPaymentMonthBuckets';
 
 function formatMoneyRial(valueRial: number) {
-  if (!valueRial) return '? ????';
-  return `${Math.round(valueRial).toLocaleString('fa-IR')} ????`;
+  if (!valueRial) return '—';
+  return `${Math.round(valueRial).toLocaleString('fa-IR')} ریال`;
 }
 
 const TT_CONTRACT_BASE_EX_PENALTY =
-  '??? ???? ??????? ?? ???? ???? ??? ??????? ?? ?????? ?????/???? ???? ???? ????? ?? ??? ??? ???? ???? ???.';
+  'این رقم مجموع اصل بدهی قرارداد است و جرایم تاخیر یا مبالغ تنبیهی در آن محاسبه نشده‌اند.';
 
 const TT_PAID_EX_PENALTY =
-  '??? ??????????? ?? ??? ???????? ??? ???? ????? ?????????? ?????????? ??????????? ?? ????? ?? ??? ??? ??? ???????.';
+  'این رقم مجموع مبالغی است که بابت اصل تعهدات قرارداد، بدون احتساب جرایم تاخیر، ثبت و تسویه شده‌اند.';
 
 const TT_PENALTY_TOTAL =
-  '??? ????? ???? ???? ??????? ?? ?? ????? ??????????? ???????? ?? ???? ????????? ????? ? ???? ???? ?? ????? ?????.';
+  'این رقم کل جرایم محاسبه‌شده برای همه سررسیدهای مشمول تاخیر را نشان می‌دهد.';
 
 const TT_PENALTY_PAYABLE =
-  '????? ????? ???? ???? ?? ?? ??? ?????????? ??????????? ?? ???????? ?????.';
+  'مانده جرایمی که هنوز پرداخت یا تسویه نشده‌اند.';
 
 const TT_PENALTY_PAID =
-  '????? ??????????? ?? ?? ????? ????? ??? ???????? ????? ?????????.';
+  'مبلغ جرایمی که تا این لحظه پرداخت یا از طریق رسید تسویه شده‌اند.';
 
 const TT_TOTAL_DEBT =
-  '??? ????? ??? ???????? ??? ???? ? ????? ?? ?? ????? ?????? ??? timeline ?????.';
+  'این مبلغ جمع بدهی باقی‌مانده قرارداد و جرایم پرداخت‌نشده را در کل زمان‌بندی نشان می‌دهد.';
 
 type ReceiptDetailsState = {
   payload: DueRegisterReceiptPayload;
@@ -87,7 +87,7 @@ export default function ContractDuesPage() {
         const data = await getContractDetails(String(contractId));
         if (mounted) setContract(data);
       } catch (e) {
-        if (mounted) setError(e instanceof Error ? e.message : '?????? ??????? ????? ???.');
+        if (mounted) setError(e instanceof Error ? e.message : 'دریافت اطلاعات قرارداد انجام نشد.');
       } finally {
         if (mounted) setLoading(false);
       }
@@ -136,7 +136,7 @@ export default function ContractDuesPage() {
   useEffect(() => {
     if (!editingReceipt || editingReceipt.allocationMode !== 'direct') return;
     if (editReceiptContextResolved) return;
-    showError('?????? ??? ??? ?? ??????? ????? ????? ?????? ????.');
+    showError('برای این رسید، ردیف سررسید معتبر پیدا نشد.');
     setEditingReceipt(null);
     setEditingDueContext(null);
   }, [editingReceipt, editReceiptContextResolved, showError]);
@@ -185,7 +185,7 @@ export default function ContractDuesPage() {
   const contractNumber =
     contract?.data?.subject && typeof contract.data.subject.contractNumber === 'string'
       ? contract.data.subject.contractNumber
-      : '�';
+      : '—';
 
   const [collapsedMonths, setCollapsedMonths] = useState<Set<string>>(() => new Set());
 
@@ -210,7 +210,7 @@ export default function ContractDuesPage() {
         window.localStorage.setItem(getReceiptsStorageKey(String(contractId)), JSON.stringify(next));
       }
       queueMicrotask(() =>
-        showSuccess(existed ? '??? ??????????? ??.' : '??? ??? ?? ? ????? ?? ?? ???? ????? ? ???? ?????? ??.'),
+        showSuccess(existed ? 'رسید ویرایش شد.' : 'رسید جدید با موفقیت ثبت و به این سررسید متصل شد.'),
       );
       return next;
     });
@@ -221,7 +221,7 @@ export default function ContractDuesPage() {
   };
 
   const handleDeleteReceipt = (receiptId: string) => {
-    if (typeof window !== 'undefined' && !window.confirm('??? ??? ??? ????')) return;
+    if (typeof window !== 'undefined' && !window.confirm('این رسید حذف شود؟')) return;
     setRegisteredReceipts((current) => {
       const next = removeReceiptFromList(current, receiptId);
       if (contractId && typeof window !== 'undefined') {
@@ -232,7 +232,7 @@ export default function ContractDuesPage() {
     setReceiptDetails(null);
     setEditingReceipt(null);
     setEditingDueContext(null);
-    showSuccess('??? ??? ??.');
+    showSuccess('رسید حذف شد.');
   };
 
   const openPenaltyDetails = (payload: {
@@ -244,13 +244,13 @@ export default function ContractDuesPage() {
     if (payload.mode === 'single' && payload.row) {
       const detail = penaltyTimeline.penaltyDetailsByPrincipalDueId[payload.row.id];
       if (!detail) {
-        showError('?????? ????? ???? ??? ?????? ?? ????? ????.');
+        showError('جزئیات جریمه برای این ردیف پیدا نشد.');
         return;
       }
       setPenaltyDetailsState({
         mode: 'single',
-        title: '?????? ????? ??????',
-        subtitle: `${payload.row.title} � ?????? ${detail.dueDate}`,
+        title: 'جزئیات جریمه تاخیر',
+        subtitle: `${payload.row.title} - سررسید ${detail.dueDate}`,
         detail,
       });
       return;
@@ -268,18 +268,18 @@ export default function ContractDuesPage() {
       if (details.length === 0) {
         setPenaltyDetailsState({
           mode: 'single',
-          title: '?????? ????? ??????',
+          title: 'جزئیات جریمه تاخیر',
           subtitle: payload.monthHeading ?? payload.bucket.heading,
           detail: {
             principalDueId: '',
             penaltyTypeId: '',
-            penaltyTypeTitle: '�',
+            penaltyTypeTitle: '—',
             ruleId: '',
             ruleSettings: null,
             calculationMethod: 'fixed',
             period: 'daily',
-            dueDate: '�',
-            calculationDate: '�',
+            dueDate: '—',
+            calculationDate: '—',
             rawDelayDays: 0,
             gracePeriodDays: 0,
             chargeableDelayDays: 0,
@@ -303,7 +303,7 @@ export default function ContractDuesPage() {
             lateFeeRoundingRule: '0',
             progressiveBreakdown: null,
             calculationNotes: [],
-            zeroReason: '???? ????????? ??? ??? ???????? ?????? ???? ???.',
+            zeroReason: 'برای این ماه، جریمه قابل نمایش محاسبه نشد.',
           },
         });
         return;
@@ -311,7 +311,7 @@ export default function ContractDuesPage() {
 
       setPenaltyDetailsState({
         mode: 'monthly',
-        title: '?????? ????? ??????',
+        title: 'جزئیات جریمه تاخیر',
         subtitle: payload.monthHeading ?? payload.bucket.heading,
         details,
       });
@@ -332,18 +332,18 @@ export default function ContractDuesPage() {
             onClick={() => router.push(backHref)}
             className="inline-flex h-10 shrink-0 items-center gap-2 rounded-[8px] border border-slate-200 bg-white px-4 text-[13px] font-bold text-slate-700 shadow-sm transition hover:border-[color-mix(in_srgb,var(--dark-teal)_35%,transparent)] hover:bg-slate-50"
           >
-            ?????? ?? ?????? ???????
+            بازگشت به صفحه قرارداد
             <ArrowRight className="h-4 w-4" aria-hidden />
           </button>
         </div>
 
         {loading ? (
           <section className="rounded-[8px] border border-white/70 bg-white/95 p-10 text-center text-sm font-bold text-slate-500 shadow-[0_20px_50px_-24px_rgba(15,23,42,0.14)]">
-            ?? ??? ????????...
+            در حال بارگذاری...
           </section>
         ) : error || !contractId ? (
           <section className="rounded-[8px] border border-rose-200 bg-rose-50/95 p-8 text-center text-sm font-bold text-rose-800 shadow-sm">
-            {error || '????? ??????? ??????? ???.'}
+            {error || 'شناسه قرارداد معتبر نیست.'}
           </section>
         ) : (
           <div className="space-y-6">
@@ -353,9 +353,9 @@ export default function ContractDuesPage() {
                   <FileText className="h-5 w-5" aria-hidden />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <h1 className="text-[17px] font-black text-slate-900 md:text-[18px]">???????? ? ??????</h1>
+                  <h1 className="text-[17px] font-black text-slate-900 md:text-[18px]">سررسیدها و پرداخت‌ها</h1>
                   <p className="mt-1 text-[12px] font-semibold text-slate-500">
-                    ??????? {contractNumber} � ???? ?????? ???????? ? ??????? ?????? ???? ???????.
+                    قرارداد {contractNumber} - ثبت و پیگیری پرداخت‌ها و وضعیت مانده بدهی.
                   </p>
                   <button
                     type="button"
@@ -365,7 +365,7 @@ export default function ContractDuesPage() {
                     }}
                     className="mt-3 text-[11px] font-black text-[color-mix(in_srgb,var(--dark-teal)_90%,black)] underline decoration-dotted underline-offset-4 hover:opacity-90"
                   >
-                    ???? ?? ??????? ???????
+                    مشاهده گزارش قرارداد
                   </button>
                 </div>
               </div>
@@ -375,7 +375,7 @@ export default function ContractDuesPage() {
               <div
                 className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6"
                 role="group"
-                aria-label="????? ???? ???????? ??????? ????? ? ????? ????"
+                aria-label="خلاصه مبلغ قرارداد، جرایم و مانده بدهی"
               >
                 <div
                   tabIndex={0}
@@ -386,7 +386,7 @@ export default function ContractDuesPage() {
                     className="text-[10px] font-black uppercase tracking-wide text-slate-500 underline decoration-dotted decoration-slate-300 underline-offset-2 cursor-help"
                     title={TT_CONTRACT_BASE_EX_PENALTY}
                   >
-                    ?? ???? ??????? <span className="font-black text-slate-600">(?? ?? ?????)</span>
+                    اصل قرارداد <span className="font-black text-slate-600">(بدون جریمه)</span>
                   </div>
                   <div className="mt-1.5 text-[15px] font-black tabular-nums text-slate-900">
                     {formatMoneyRial(duesTotals.contractBaseExPenaltyRial)}
@@ -401,7 +401,7 @@ export default function ContractDuesPage() {
                     className="text-[10px] font-black uppercase tracking-wide text-slate-500 underline decoration-dotted decoration-slate-300 underline-offset-2 cursor-help"
                     title={TT_PAID_EX_PENALTY}
                   >
-                    ?? ??????? <span className="font-black text-slate-600">(?? ?? ?????)</span>
+                    پرداخت‌شده <span className="font-black text-slate-600">(بدون جریمه)</span>
                   </div>
                   <div className="mt-1.5 text-[15px] font-black tabular-nums text-slate-900">
                     {formatMoneyRial(duesTotals.paidExPenaltyRial)}
@@ -416,7 +416,7 @@ export default function ContractDuesPage() {
                     className="text-[10px] font-black uppercase tracking-wide text-slate-500 underline decoration-dotted decoration-slate-300 underline-offset-2 cursor-help"
                     title={TT_PENALTY_TOTAL}
                   >
-                    ???? ?? ?????
+                    کل جرایم
                   </div>
                   <div className="mt-1.5 text-[15px] font-black tabular-nums text-slate-900">
                     {formatMoneyRial(duesTotals.penaltyTotalRial)}
@@ -431,7 +431,7 @@ export default function ContractDuesPage() {
                     className="text-[10px] font-black uppercase tracking-wide text-slate-500 underline decoration-dotted decoration-slate-300 underline-offset-2 cursor-help"
                     title={TT_PENALTY_PAYABLE}
                   >
-                    ????? ???? ????
+                    مانده جرایم
                   </div>
                   <div className="mt-1.5 text-[15px] font-black tabular-nums text-slate-900">
                     {formatMoneyRial(duesTotals.penaltyPayableRial)}
@@ -446,7 +446,7 @@ export default function ContractDuesPage() {
                     className="text-[10px] font-black uppercase tracking-wide text-slate-500 underline decoration-dotted decoration-slate-300 underline-offset-2 cursor-help"
                     title={TT_PENALTY_PAID}
                   >
-                    ???? ??????? ?????
+                    جرایم پرداخت‌شده
                   </div>
                   <div className="mt-1.5 text-[15px] font-black tabular-nums text-slate-900">
                     {formatMoneyRial(duesTotals.penaltyPaidRial ?? 0)}
@@ -461,7 +461,7 @@ export default function ContractDuesPage() {
                     className="text-[10px] font-black uppercase tracking-wide text-rose-950/70 underline decoration-dotted decoration-rose-300 underline-offset-2 cursor-help"
                     title={TT_TOTAL_DEBT}
                   >
-                    ????? ??? ????
+                    جمع بدهی
                   </div>
                   <div className="mt-1.5 text-[15px] font-black tabular-nums text-rose-950">
                     {formatMoneyRial(duesTotals.totalDebtRial)}
@@ -475,30 +475,30 @@ export default function ContractDuesPage() {
                   onClick={() => setAutoReceiptOpen(true)}
                   className="ml-2 inline-flex min-h-[48px] w-full max-w-xs items-center justify-center gap-2 rounded-full bg-[linear-gradient(180deg,color-mix(in_srgb,var(--dark-teal)_92%,black),color-mix(in_srgb,var(--dark-teal)_78%,#0f766e))] px-6 py-2.5 text-[13px] font-black leading-snug text-white shadow-sm transition hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color-mix(in_srgb,var(--dark-teal)_40%,transparent)] focus-visible:ring-offset-2"
                 >
-                  ??? ??? ????????
+                  ثبت رسید تجمیعی
                   <ReceiptText className="h-[18px] w-[18px] shrink-0 opacity-90" aria-hidden />
                 </button>
                 <button
                   type="button"
                   onClick={() => router.push(receiptsHref)}
                   className="inline-flex min-h-[48px] w-full max-w-md items-center justify-center gap-2 rounded-full border-2 border-[color-mix(in_srgb,var(--dark-teal)_45%,transparent)] bg-white px-6 py-2.5 text-[13px] font-black leading-snug text-[color-mix(in_srgb,var(--dark-teal)_88%,black)] shadow-sm transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color-mix(in_srgb,var(--dark-teal)_40%,transparent)] focus-visible:ring-offset-2"
-                  title="???? ?????? ? ?????? ??????? ?????? ????? ???? ???????"
+                  title="نمایش فهرست و جزئیات همه رسیدهای ثبت‌شده برای این قرارداد"
                 >
-                  ?????? ??????? ?????
+                  مشاهده رسیدهای ثبت‌شده
                   <ReceiptText className="h-[18px] w-[18px] shrink-0 opacity-90" aria-hidden />
                 </button>
               </div>
 
               <div className="border-b border-slate-100 pb-4">
-                <div className="text-[15px] font-black text-slate-900">???? ?????? ????????</div>
+                <div className="text-[15px] font-black text-slate-900">وضعیت ماه‌های سررسید</div>
                 <p className="mt-1.5 text-[11px] font-semibold leading-5 text-slate-500">
-                  ???? ?? ????????? ????????? ?? ??? ???? ??????? ???????? ??????. ??????? ??????? ??? ?? ?????? ?? ???? ??? ???? ?????? ???.
+                  در این بخش می‌توانید پرداخت‌ها را روی ماه‌های سررسید مشاهده کنید. وضعیت هر ماه بر اساس رسیدهای ثبت‌شده به‌روز می‌شود.
                 </p>
               </div>
 
               {paymentMonthBuckets.length === 0 ? (
                 <div className="mt-6 rounded-3xl border border-dashed border-slate-200 bg-slate-50/40 px-4 py-10 text-center text-[13px] font-semibold text-slate-500">
-                  ???? ??? ??????? ??? ???? ??????? ?? ???? ???? ??? ???? ???.
+                  هنوز هیچ سررسیدی برای نمایش در این قرارداد ثبت نشده است.
                 </div>
               ) : (
                 <div className="mt-5 space-y-3">
@@ -583,17 +583,17 @@ export default function ContractDuesPage() {
 function transferKindLabel(kind: RegisteredReceiptRecord['transferKind']) {
   switch (kind) {
     case 'card_to_card':
-      return '???? ?? ????';
+      return 'کارت به کارت';
     case 'account_transfer':
-      return '???? ?? ????';
+      return 'انتقال بانکی';
     case 'remittance':
-      return '?????';
+      return 'حواله';
     case 'cheque':
-      return '??';
+      return 'چک';
     case 'cash':
-      return '???';
+      return 'نقدی';
     default:
-      return '??????';
+      return 'نامشخص';
   }
 }
 
@@ -631,27 +631,27 @@ function ReceiptDetailsDialog({
       <div className="flex max-h-[min(860px,calc(100vh-42px))] w-full max-w-3xl flex-col overflow-hidden rounded-[8px] border border-white/75 bg-white shadow-2xl sm:rounded-[8px]">
         <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-5 py-4">
           <div>
-            <div className="text-[15px] font-black text-slate-900">?????? ??????? ??????</div>
+            <div className="text-[15px] font-black text-slate-900">جزئیات رسید سررسید</div>
             <div className="mt-1 text-[12px] font-semibold text-slate-500">
-              {state.payload.row.title} � ?????? {state.payload.row.dueDate}
+              {state.payload.row.title} - سررسید {state.payload.row.dueDate}
             </div>
           </div>
-          <button type="button" onClick={onClose} className="rounded-[8px] p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700" aria-label="????">
+          <button type="button" onClick={onClose} className="rounded-[8px] p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700" aria-label="بستن">
             <X className="h-5 w-5" />
           </button>
         </div>
         <div className="flex-1 overflow-y-auto bg-slate-50/70 px-5 py-4">
           <div className="grid gap-3 sm:grid-cols-3">
-            <ReceiptSummaryCard label="???? ??????" value={formatMoneyRial(state.payload.row.amount)} />
-            <ReceiptSummaryCard label="??????? ???????????" value={formatMoneyRial(allocatedPaid)} tone="teal" />
-            <ReceiptSummaryCard label="?????" value={formatMoneyRial(remaining)} />
+            <ReceiptSummaryCard label="مبلغ سررسید" value={formatMoneyRial(state.payload.row.amount)} />
+            <ReceiptSummaryCard label="پرداخت تخصیص‌یافته" value={formatMoneyRial(allocatedPaid)} tone="teal" />
+            <ReceiptSummaryCard label="مانده" value={formatMoneyRial(remaining)} />
           </div>
 
           {penaltyDetail ? (
             <div className="mt-4">
               <div className="mb-3 flex items-center justify-between gap-3">
-                <div className="text-[12px] font-black text-rose-950">?????? ????? ??? ??????</div>
-                {onOpenPenaltyDetails ? <PenaltyInfoButton onClick={onOpenPenaltyDetails} label="????? ?? ????? ???????" /> : null}
+                <div className="text-[12px] font-black text-rose-950">جزئیات جریمه این سررسید</div>
+                {onOpenPenaltyDetails ? <PenaltyInfoButton onClick={onOpenPenaltyDetails} label="مشاهده شرح جریمه" /> : null}
               </div>
               <PenaltyCalculationBody detail={penaltyDetail} />
             </div>
@@ -660,8 +660,8 @@ function ReceiptDetailsDialog({
           <div className="mt-4 space-y-3">
             {state.receipts.length === 0 ? (
               <div className="rounded-3xl border border-dashed border-slate-200 bg-white px-4 py-10 text-center">
-                <div className="text-[13px] font-black text-slate-700">???? ??? ?????? ???? ???? ??? ???? ???.</div>
-                <p className="mt-1 text-[11px] font-semibold text-slate-500">?? ???? ??? ??? ???? ?????? ???? ????? ??? ?????? ??????? ????.</p>
+                <div className="text-[13px] font-black text-slate-700">هنوز برای این سررسید رسیدی ثبت نشده است.</div>
+                <p className="mt-1 text-[11px] font-semibold text-slate-500">با ثبت رسید، جزئیات پرداخت و فایل‌های پیوست اینجا نمایش داده می‌شود.</p>
               </div>
             ) : state.receipts.map((receipt, index) => (
               (() => {
@@ -673,10 +673,10 @@ function ReceiptDetailsDialog({
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <div className="text-[13px] font-black text-slate-900">
-                      ??? {Number(index + 1).toLocaleString('fa-IR')} � {transferKindLabel(receipt.transferKind)}
+                      رسید {Number(index + 1).toLocaleString('fa-IR')} - {transferKindLabel(receipt.transferKind)}
                     </div>
                     <div className="mt-1 text-[11px] font-semibold text-slate-500">
-                      ???: {new Date(receipt.createdAt).toLocaleDateString('fa-IR')} � ?????: {receipt.depositDate || '-'}
+                      ثبت: {new Date(receipt.createdAt).toLocaleDateString('fa-IR')} - واریز: {receipt.depositDate || '-'}
                     </div>
                   </div>
                   <div className="flex flex-col items-end gap-2 sm:flex-row sm:items-start sm:gap-3">
@@ -689,7 +689,7 @@ function ReceiptDetailsDialog({
                           className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 py-[5px] text-[10px] font-black text-slate-700 shadow-sm transition hover:bg-slate-50"
                         >
                           <Pencil className="h-3 w-3 shrink-0" aria-hidden />
-                          ??????
+                          ویرایش
                         </button>
                         <button
                           type="button"
@@ -697,27 +697,27 @@ function ReceiptDetailsDialog({
                           className="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-white px-2.5 py-[5px] text-[10px] font-black text-rose-700 shadow-sm transition hover:bg-rose-50"
                         >
                           <Trash2 className="h-3 w-3 shrink-0" aria-hidden />
-                          ???
+                          حذف
                         </button>
                       </div>
                     ) : null}
                   </div>
                 </div>
                 <div className="mt-3 grid gap-2 text-[11px] font-semibold text-slate-600 sm:grid-cols-2">
-                  <div className="rounded-[8px] bg-slate-50 px-3 py-2">??????????: {receipt.depositorName || '-'}</div>
-                  <div className="rounded-[8px] bg-slate-50 px-3 py-2">?????? ????: {receipt.destinationHolders.join('? ') || receipt.destinationHolder || '-'}</div>
-                  <div className="rounded-[8px] bg-slate-50 px-3 py-2">????: {receipt.destinationValue || '-'}</div>
-                  <div className="rounded-[8px] bg-slate-50 px-3 py-2">????? ??????/????: {receipt.trackingNumber || receipt.referenceNumber || receipt.receiptNumber || '-'}</div>
+                  <div className="rounded-[8px] bg-slate-50 px-3 py-2">واریزکننده: {receipt.depositorName || '-'}</div>
+                  <div className="rounded-[8px] bg-slate-50 px-3 py-2">مقصد واریز: {receipt.destinationHolders.join(' - ') || receipt.destinationHolder || '-'}</div>
+                  <div className="rounded-[8px] bg-slate-50 px-3 py-2">شناسه مقصد: {receipt.destinationValue || '-'}</div>
+                  <div className="rounded-[8px] bg-slate-50 px-3 py-2">شماره پیگیری/مرجع: {receipt.trackingNumber || receipt.referenceNumber || receipt.receiptNumber || '-'}</div>
                 </div>
                 {receipt.notes ? <p className="mt-3 rounded-[8px] bg-slate-50 px-3 py-2 text-[11px] font-semibold leading-5 text-slate-600">{receipt.notes}</p> : null}
                 <div className="mt-3">
-                  <div className="text-[11px] font-black text-slate-700">?????</div>
+                  <div className="text-[11px] font-black text-slate-700">پیوست‌ها</div>
                   <div className="mt-2 space-y-2">
                     {receipt.documents.map((doc) => (
                       <div key={doc.id} className="rounded-[8px] border border-slate-100 bg-slate-50/70 px-3 py-2">
                         <div className="text-[12px] font-black text-slate-800">{doc.title}</div>
                         <div className="mt-1 text-[11px] font-semibold text-slate-500">
-                          {doc.category || '???? ?????????'} � {doc.files.length.toLocaleString('fa-IR')} ????
+                          {doc.category || 'بدون دسته‌بندی'} - {doc.files.length.toLocaleString('fa-IR')} فایل
                         </div>
                       </div>
                     ))}

@@ -8,17 +8,6 @@ function formatCurrency(value: number) {
   return `${Math.round(value || 0).toLocaleString('fa-IR')} تومان`;
 }
 
-function getContractStatusLabel(status: ContractStatus) {
-  switch (status) {
-    case 'pending_approval':
-      return 'در انتظار تایید';
-    case 'completed':
-      return 'تکمیل شده';
-    default:
-      return 'پیش نویس';
-  }
-}
-
 function buildRingGradient(slices: Array<{ value: number; color: string }>) {
   const total = slices.reduce((sum, item) => sum + item.value, 0);
   if (!total) return '';
@@ -34,7 +23,6 @@ function buildRingGradient(slices: Array<{ value: number; color: string }>) {
       const visibleEnd = Math.max(start, end - separator);
       angle = end;
 
-      // use transparent separators so gaps show parent's background
       return `${item.color} ${start}deg ${visibleEnd}deg, transparent ${visibleEnd}deg ${end}deg`;
     })
     .join(', ');
@@ -57,11 +45,7 @@ function FinancialLightRing({
 
   const allocatedPercent = contractTotal > 0 ? Math.min(Math.round((allocatedAmount / contractTotal) * 100), 100) : 0;
   const chartKey = slices.map((item) => `${item.id}:${item.value}`).join('|');
-
-  // Build a conic gradient from slices using a dark separator (#12121a) like your example
   const ringBackground = `conic-gradient(${buildRingGradient(slices)})`;
-
-  // Use compact dimensions (small ring) — render directly (no renderScale)
   const size = 220;
 
   const ringStyle = {
@@ -69,10 +53,8 @@ function FinancialLightRing({
     width: `${size}px`,
     height: `${size}px`,
     borderRadius: '50%',
-    // mask tuned for the 220px ring to create inner cutout and soft shading
     WebkitMask: `radial-gradient(circle at center, transparent 0px, transparent 58px, rgba(0,0,0,0.1) 103px, rgba(0,0,0,1) 89px, rgba(0,0,0,1) 110px, black 108px, black 89px, transparent 110px)`,
     mask: `radial-gradient(circle at center, transparent 0px, transparent 58px, rgba(0,0,0,0.1) 103px, rgba(0,0,0,1) 89px, rgba(0,0,0,1) 110px, black 108px, black 89px, transparent 110px)`,
-    // position absolutely and center with transform so visual hole and center text align
     position: 'absolute',
     left: '50%',
     top: '50%',
@@ -81,10 +63,7 @@ function FinancialLightRing({
 
   return (
     <div className="contract-flow-report-chart-wrap" style={{ width: `${size}px`, height: `${size}px`, position: 'relative' }}>
-      {/* colored ring (masked) - absolutely centered */}
       <div key={chartKey} className="color-ring" style={ringStyle} />
-
-      {/* center content placed above the masked ring so it's visible */}
       <div
         className="contract-flow-report-chart-center"
         style={{
@@ -133,9 +112,9 @@ export function LeftReportSidebar({
   contractStatus,
 }: LeftReportSidebarProps) {
   void dueAmount;
+  void contractNumber;
+  void contractStatus;
 
-  const status = contractStatus ?? 'draft';
-  const contractNumberText = contractNumber?.trim() ? contractNumber.trim() : '—';
   const isOverContractLimit = remainder < 0;
   const financialLineRows = (reportData?.categories ?? []).filter(
     (item) => isFinancialLineHeaderCategoryId(item.id) && item.capAmount > 0,
@@ -179,9 +158,7 @@ export function LeftReportSidebar({
                   <strong>{formatCurrency(item.value)}</strong>
                 </div>
               ))}
-              {!paidSlices.length ? (
-                <div className="contract-flow-report-empty">بعد از ورود اطلاعات مالی، گزارش اینجا کامل می‌شود.</div>
-              ) : null}
+              {!paidSlices.length ? <div className="contract-flow-report-empty">بعد از ورود اطلاعات مالی، گزارش اینجا کامل می‌شود.</div> : null}
             </div>
           </div>
 
@@ -197,9 +174,7 @@ export function LeftReportSidebar({
                   <strong>{formatCurrency(item.capAmount)}</strong>
                 </div>
               ))}
-              {!financialLineRows.length ? (
-                <div className="contract-flow-report-empty">ردیف مالی اضافه‌شده‌ای هنوز ثبت نشده است.</div>
-              ) : null}
+              {!financialLineRows.length ? <div className="contract-flow-report-empty">ردیف مالی اضافه‌شده‌ای هنوز ثبت نشده است.</div> : null}
             </div>
           </div>
         </div>

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { Plus, Search, Trash2 } from 'lucide-react';
-import type { TestFaqItem, TestFaqPriority } from '@/app/lib/types/taavia-test-workspace';
+import type { TestFaqItem } from '@/app/lib/types/taavia-test-workspace';
 
 function createEmptyFaq(): TestFaqItem {
   return {
@@ -32,8 +32,7 @@ export function TestFaqEditor({ items, onChange }: TestFaqEditorProps) {
     return items.filter(
       (item) =>
         item.question.toLowerCase().includes(query) ||
-        item.answer.toLowerCase().includes(query) ||
-        item.category?.toLowerCase().includes(query),
+        item.answer.toLowerCase().includes(query),
     );
   }, [items, search]);
 
@@ -70,7 +69,7 @@ export function TestFaqEditor({ items, onChange }: TestFaqEditorProps) {
           <Plus className="h-4 w-4" />
           افزودن سوال
         </button>
-        <div className="relative min-w-[240px] flex-1 max-w-md">
+        <div className="relative min-w-[240px] max-w-md flex-1">
           <Search className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[rgba(217,229,255,0.45)]" />
           <input
             value={search}
@@ -95,30 +94,20 @@ export function TestFaqEditor({ items, onChange }: TestFaqEditorProps) {
               className="rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(18,30,56,0.78)_0%,rgba(10,19,38,0.78)_100%)] p-5"
             >
               <div className="mb-4 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2">
-                  <label className="inline-flex items-center gap-2 text-[12px] text-[rgba(217,229,255,0.72)]">
-                    <input
-                      type="checkbox"
-                      checked={item.isActive}
-                      onChange={(event) => updateItem(item.id, { isActive: event.target.checked })}
-                    />
-                    فعال
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => deleteItem(item.id)}
-                    className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[rgba(248,113,113,0.24)] bg-[rgba(248,113,113,0.10)] text-[rgb(254,202,202)]"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
                 <span className="rounded-full border border-white/10 bg-white/8 px-3 py-1 text-[11px] font-bold text-[rgba(217,229,255,0.72)]">
                   FAQ {index + 1}
                 </span>
+                <button
+                  type="button"
+                  onClick={() => deleteItem(item.id)}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[rgba(248,113,113,0.24)] bg-[rgba(248,113,113,0.10)] text-[rgb(254,202,202)]"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="grid gap-2 md:col-span-2">
+              <div className="grid gap-4">
+                <div className="grid gap-2">
                   <label className="text-[12px] font-bold text-[rgba(217,229,255,0.72)]">سوال</label>
                   <input
                     value={item.question}
@@ -128,7 +117,7 @@ export function TestFaqEditor({ items, onChange }: TestFaqEditorProps) {
                     className="w-full rounded-[14px] border border-white/10 bg-[rgba(5,12,25,0.72)] px-3 py-2.5 text-[length:var(--taav-text-sm)] text-white outline-none"
                   />
                 </div>
-                <div className="grid gap-2 md:col-span-2">
+                <div className="grid gap-2">
                   <label className="text-[12px] font-bold text-[rgba(217,229,255,0.72)]">جواب</label>
                   <textarea
                     value={item.answer}
@@ -137,52 +126,6 @@ export function TestFaqEditor({ items, onChange }: TestFaqEditorProps) {
                     placeholder="پاسخ استاندارد"
                     rows={4}
                     className="w-full resize-y rounded-[14px] border border-white/10 bg-[rgba(5,12,25,0.72)] px-3 py-2.5 text-[length:var(--taav-text-sm)] leading-7 text-white outline-none"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <label className="text-[12px] font-bold text-[rgba(217,229,255,0.72)]">دسته‌بندی</label>
-                  <input
-                    value={item.category ?? ''}
-                    onChange={(event) => updateItem(item.id, { category: event.target.value })}
-                    placeholder="مثلاً: پشتیبانی، محصول"
-                    className="w-full rounded-[14px] border border-white/10 bg-[rgba(5,12,25,0.72)] px-3 py-2.5 text-[length:var(--taav-text-sm)] text-white outline-none"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <label className="text-[12px] font-bold text-[rgba(217,229,255,0.72)]">اولویت</label>
-                  <select
-                    value={item.priority ?? 'medium'}
-                    onChange={(event) => updateItem(item.id, { priority: event.target.value as TestFaqPriority })}
-                    className="w-full rounded-[14px] border border-white/10 bg-[rgba(5,12,25,0.72)] px-3 py-2.5 text-[length:var(--taav-text-sm)] text-white outline-none"
-                  >
-                    <option value="low">کم</option>
-                    <option value="medium">متوسط</option>
-                    <option value="high">زیاد</option>
-                  </select>
-                </div>
-                <div className="grid gap-2 md:col-span-2">
-                  <label className="text-[12px] font-bold text-[rgba(217,229,255,0.72)]">برچسب‌ها (با ویرگول جدا کن)</label>
-                  <input
-                    value={item.tags?.join('، ') ?? ''}
-                    onChange={(event) =>
-                      updateItem(item.id, {
-                        tags: event.target.value
-                          .split(/[,،]/)
-                          .map((tag) => tag.trim())
-                          .filter(Boolean),
-                      })
-                    }
-                    placeholder="پشتیبانی، قیمت، محصول"
-                    className="w-full rounded-[14px] border border-white/10 bg-[rgba(5,12,25,0.72)] px-3 py-2.5 text-[length:var(--taav-text-sm)] text-white outline-none"
-                  />
-                </div>
-                <div className="grid gap-2 md:col-span-2">
-                  <label className="text-[12px] font-bold text-[rgba(217,229,255,0.72)]">توضیح تکمیلی</label>
-                  <textarea
-                    value={item.supplementaryNote ?? ''}
-                    onChange={(event) => updateItem(item.id, { supplementaryNote: event.target.value })}
-                    rows={2}
-                    className="w-full resize-y rounded-[14px] border border-white/10 bg-[rgba(5,12,25,0.72)] px-3 py-2.5 text-[length:var(--taav-text-sm)] text-white outline-none"
                   />
                 </div>
               </div>

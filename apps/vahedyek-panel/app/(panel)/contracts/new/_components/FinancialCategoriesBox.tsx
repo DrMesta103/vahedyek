@@ -84,7 +84,7 @@ export function FinancialCategoriesBox({
                         onOpenInfoIdChange(openInfoId === category.id ? null : category.id);
                       }}
                       className="rounded-[8px] p-1 text-sky-500 hover:bg-sky-50"
-                      title="انتخاب سرفصل مالی"
+                      title="جزئیات سرفصل مالی"
                     >
                       <Info className="h-4 w-4" />
                     </button>
@@ -108,7 +108,7 @@ export function FinancialCategoriesBox({
                         </div>
                         <div className="space-y-2 pt-3 text-xs text-gray-600">
                           <div className="flex items-center justify-between">
-                            <span>نوع</span>
+                            <span>مبلغ</span>
                             <span className="font-semibold text-gray-800">{formatMoney(category.capAmount)}</span>
                           </div>
                           <div className="flex items-center justify-between">
@@ -116,8 +116,8 @@ export function FinancialCategoriesBox({
                             <span className="font-semibold text-gray-800">{isLocked ? 'قفل شده' : 'قابل ویرایش'}</span>
                           </div>
                           <div className="flex items-center justify-between">
-                            <span>جمع هزینه‌ها</span>
-                            <span className="font-semibold text-gray-800">{categoryDueItems.length}</span>
+                            <span>تعداد پرداخت‌ها</span>
+                            <span className="font-semibold text-gray-800">{categoryDueItems.length.toLocaleString('fa-IR')}</span>
                           </div>
                           <div className="border-t border-gray-100 pt-2">
                             <div className="mb-2 text-[11px] font-semibold text-gray-500">خلاصه پرداخت</div>
@@ -160,7 +160,7 @@ export function FinancialCategoriesBox({
                           className="flex w-full items-center gap-2 rounded-[8px] px-3 py-2 text-right text-sm text-rose-600 hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-40"
                         >
                           <Trash2 className="h-4 w-4" />
-                          ???
+                          حذف
                         </button>
                       </div>
                     ) : null}
@@ -216,4 +216,3 @@ export function FinancialCategoriesBox({
     </FormBox>
   );
 }
-
