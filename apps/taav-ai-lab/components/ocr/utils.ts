@@ -2,6 +2,13 @@ import { CheckCircle2, Clock3, Loader2, TriangleAlert } from 'lucide-react';
 import type { OcrSimulationJob } from '@/app/lib/data';
 import { buildOcrAiMetaFromModel, resolveOcrModel } from '@/app/lib/ocr-models';
 import {
+  buildOcrUsageCost,
+  readOcrCostFromMetaWithToman,
+  resolveOcrModelPricing,
+  type OcrAiUsageCost,
+} from '@/app/lib/ocr-ai-pricing';
+import type { AiProviderAccountPublic } from '@/app/lib/types/ai-accounts';
+import {
   getOcrTransportUsageLabel,
   normalizeOcrTransportMode,
   type OcrTransportMode,
@@ -146,6 +153,28 @@ export function getOcrAiUsage(job: OcrSimulationJob, transportMode?: OcrTranspor
     outputTokens,
     totalTokens: inputTokens + outputTokens,
   };
+}
+
+export type { OcrAiUsageCost };
+
+export function getOcrAiUsageCost(
+  job: OcrSimulationJob,
+  usdToToman: number,
+  accounts?: AiProviderAccountPublic[],
+  transportMode?: OcrTransportMode | null,
+): OcrAiUsageCost {
+  const usage = getOcrAiUsage(job, transportMode);
+  const snapshot = readOcrCostFromMetaWithToman(job.extractedJson, usage.providerLabel, usdToToman);
+  if (snapshot) return snapshot;
+
+  const pricing = accounts ? resolveOcrModelPricing(usage.modelId, accounts) : null;
+  return buildOcrUsageCost({
+    inputTokens: usage.inputTokens,
+    outputTokens: usage.outputTokens,
+    pricing,
+    usdToToman,
+    providerLabel: usage.providerLabel,
+  });
 }
 
 export function getOcrFormFields(job: OcrSimulationJob): OcrResultFormField[] {

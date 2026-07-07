@@ -216,7 +216,7 @@
 
 .ai-lab-ocr-dashboard-kpis {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 12px;
 }
 
@@ -267,11 +267,28 @@
   color: #93c5fd;
 }
 
+.ai-lab-ocr-dashboard-kpi--amber .ai-lab-ocr-dashboard-kpi-icon {
+  border-color: rgba(251, 191, 36, 0.22);
+  background: rgba(251, 191, 36, 0.1);
+  color: #fcd34d;
+}
+
 .ai-lab-ocr-dashboard-kpi strong {
   font-size: 22px;
   font-weight: 800;
   line-height: 1.1;
   color: #f0f6ff;
+}
+
+.ai-lab-ocr-dashboard-kpi-cost {
+  display: grid;
+  gap: 4px;
+}
+
+.ai-lab-ocr-dashboard-kpi-cost small {
+  font-size: 12px;
+  font-weight: 700;
+  color: #9fb0c4;
 }
 
 .ai-lab-ocr-dashboard-kpi-wave {
@@ -509,6 +526,18 @@
 .ai-lab-ocr-dashboard-row-metric--updated { grid-area: updated; }
 .ai-lab-ocr-dashboard-row-metric--duration { grid-area: duration; }
 .ai-lab-ocr-dashboard-row-metric--tokens { grid-area: tokens; }
+
+.ai-lab-ocr-dashboard-row-tokens {
+  display: grid;
+  gap: 2px;
+  line-height: 1.2;
+}
+
+.ai-lab-ocr-dashboard-row-tokens small {
+  font-size: 10px;
+  font-weight: 700;
+  color: #7dd3fc;
+}
 
 .ai-lab-ocr-dashboard-confidence {
   grid-area: confidence;

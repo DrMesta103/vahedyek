@@ -50,6 +50,10 @@ export const OCR_MODEL_OPTIONS: OcrModelOption[] = [
 
 const OCR_MODEL_LOOKUP = new Map(OCR_MODEL_OPTIONS.map((model) => [model.id, model]));
 
+export function getOcrModelById(modelId: string): OcrModelOption | null {
+  return OCR_MODEL_LOOKUP.get(modelId) ?? null;
+}
+
 export function isOcrModelId(value: string | null | undefined): value is string {
   return Boolean(value && OCR_MODEL_LOOKUP.has(value));
 }

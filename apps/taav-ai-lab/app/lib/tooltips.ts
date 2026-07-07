@@ -218,12 +218,12 @@ export const AI_LAB_TOOLTIPS = {
       example: 'tenant_id · file.download_url · extraction.schema',
     },
     contractTransportGrpcStream: {
-      text: 'RPC ExtractStream — رویدادهای تکه‌ای ExtractFieldEvent از Python به .NET.',
-      example: 'is_final=true · confidence per field',
+      text: 'RPC ExtractDocumentStream — رویدادهای ExtractDocumentStreamResponse از Python به .NET.',
+      example: 'event_type · progress_percent · final_response',
     },
     contractTransportGrpcUnary: {
-      text: 'RPC ExtractSync — یک ExtractResponse کامل از Python به .NET.',
-      example: 'ExtractRequest → ExtractResponse',
+      text: 'RPC ExtractDocument — یک ExtractDocumentResponse کامل از Python به .NET.',
+      example: 'ExtractDocumentRequest → ExtractDocumentResponse',
     },
     scenarioRecognize: {
       text: 'شبیه‌سازی تشخیص موفق کارت ملی.',

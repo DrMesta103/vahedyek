@@ -517,6 +517,51 @@
   background: linear-gradient(90deg, #2dd4bf, #14b8a6);
 }
 
+.ai-lab-ocr-usage-cost {
+  margin-bottom: 10px;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.ai-lab-ocr-usage-cost-head {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #dbeafe;
+}
+
+.ai-lab-ocr-usage-cost-rows {
+  display: grid;
+  gap: 6px;
+}
+
+.ai-lab-ocr-usage-cost-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 8px;
+  align-items: center;
+  font-size: 10px;
+  color: #8fa3bb;
+}
+
+.ai-lab-ocr-usage-cost-row strong,
+.ai-lab-ocr-usage-cost-row span:nth-child(2),
+.ai-lab-ocr-usage-cost-row span:nth-child(3) {
+  color: #e2e8f0;
+  font-weight: 700;
+}
+
+.ai-lab-ocr-usage-cost-row--total {
+  padding-top: 6px;
+  border-top: 1px solid rgba(148, 163, 184, 0.12);
+  font-weight: 800;
+}
+
 .ai-lab-ocr-usage-foot {
   display: flex;
   flex-wrap: wrap;
@@ -539,4 +584,8 @@
 .ai-lab-ocr-usage--compact .ai-lab-ocr-usage-bar,
 .ai-lab-ocr-usage--compact .ai-lab-ocr-usage-foot {
   display: none;
+}
+
+.ai-lab-ocr-usage--compact .ai-lab-ocr-usage-cost {
+  margin-bottom: 8px;
 }

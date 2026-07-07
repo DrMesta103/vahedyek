@@ -5,6 +5,7 @@ import type {
   OcrSimulationStatus,
 } from '../ocr-simulator-data';
 import type { OcrTransportMode } from '../ocr-transport';
+import type { OcrExtractionFieldDraft } from '../ocr-extraction-fields';
 
 export type OcrSimulationSourceType = 'sample' | 'upload';
 
@@ -205,6 +206,7 @@ export type CreateOcrSimulationInput = {
   sampleText?: string | null;
   transportMode?: OcrTransportMode | null;
   modelId?: string | null;
+  extractionFields?: OcrExtractionFieldDraft[] | null;
 };
 
 export type TaaviaChatMessage = {

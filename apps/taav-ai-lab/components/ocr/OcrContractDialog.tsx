@@ -7,7 +7,6 @@ import { TaavTabs, TaavTabsContent, TaavTabsList, TaavTabsTrigger } from '@repo/
 import {
   TaavDialog,
   TaavDialogContent,
-  TaavDialogDescription,
   TaavDialogFooter,
   TaavDialogHeader,
   TaavDialogTitle,
@@ -18,53 +17,119 @@ import {
   getOcrContractTransportTabLabel,
   OCR_CONTRACT_LAYER_LABELS,
   OCR_CONTRACT_TRANSPORT_ORDER,
+  type OcrContractBuildContext,
   type OcrContractLayerKey,
+  type OcrContractView,
 } from '@/app/lib/ocr-contracts';
+import type { OcrExtractionFieldDraft } from '@/app/lib/ocr-extraction-fields';
 import type { OcrTransportMode } from '@/app/lib/ocr-transport';
-import { normalizeOcrTransportMode } from '@/app/lib/ocr-transport';
+import { getOcrTransportLabel, normalizeOcrTransportMode } from '@/app/lib/ocr-transport';
+import { DEFAULT_OCR_MODEL_ID, resolveOcrModel } from '@/app/lib/ocr-models';
 import type { OcrSampleDocument } from '@/app/lib/ocr-simulator-data';
-import { AI_LAB_TOOLTIPS } from '@/app/lib/tooltips';
-import { OcrVisibleHelp } from '@/components/ocr/OcrVisibleHelp';
 import { OcrContractCodePanel } from '@/components/ocr/OcrContractCodePanel';
 import './ocr-contract.css';
 
 const LAYER_ORDER: OcrContractLayerKey[] = ['request', 'response'];
-
-const TRANSPORT_TOOLTIPS: Record<OcrTransportMode, keyof typeof AI_LAB_TOOLTIPS.ocr> = {
-  rest: 'contractTransportRest',
-  'grpc-streaming': 'contractTransportGrpcStream',
-  'grpc-unary': 'contractTransportGrpcUnary',
-};
 
 type OcrContractDialogProps = {
   sample: OcrSampleDocument | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   initialTransport?: OcrTransportMode | null;
+  lockedTransport?: OcrTransportMode | null;
+  modelId?: string;
+  tenantId?: string;
+  extractionFields?: OcrExtractionFieldDraft[];
 };
+
+function ContractLayerTabs({
+  contract,
+  transport,
+  layerTab,
+  onLayerTabChange,
+  copiedKey,
+  onCopy,
+}: {
+  contract: OcrContractView;
+  transport: OcrTransportMode;
+  layerTab: OcrContractLayerKey;
+  onLayerTabChange: (layer: OcrContractLayerKey) => void;
+  copiedKey: string | null;
+  onCopy: (key: string, content: string) => void;
+}) {
+  return (
+    <TaavTabs value={layerTab} onValueChange={(value) => onLayerTabChange(value as OcrContractLayerKey)}>
+      <div className="ai-lab-ocr-contract-layer-tabs">
+        <TaavTabsList variant="pill" size="sm" className="ai-lab-ocr-contract-tabs-list w-full">
+          {LAYER_ORDER.map((layer) => (
+            <TaavTabsTrigger key={layer} value={layer} variant="pill" size="sm">
+              <Layers3 className="h-3 w-3" aria-hidden />
+              {OCR_CONTRACT_LAYER_LABELS[layer]}
+            </TaavTabsTrigger>
+          ))}
+        </TaavTabsList>
+      </div>
+
+      {LAYER_ORDER.map((layer) => {
+        const panel = contract[layer];
+        const copyKey = `${transport}:${layer}`;
+
+        return (
+          <TaavTabsContent key={layer} value={layer} className="ai-lab-ocr-contract-layer-content">
+            <OcrContractCodePanel
+              panel={panel}
+              copied={copiedKey === copyKey}
+              onCopy={() => onCopy(copyKey, panel.content)}
+            />
+          </TaavTabsContent>
+        );
+      })}
+    </TaavTabs>
+  );
+}
 
 export function OcrContractDialog({
   sample,
   open,
   onOpenChange,
   initialTransport = 'rest',
+  lockedTransport = null,
+  modelId,
+  tenantId,
+  extractionFields,
 }: OcrContractDialogProps) {
   const [transportTab, setTransportTab] = useState<OcrTransportMode>('rest');
   const [layerTab, setLayerTab] = useState<OcrContractLayerKey>('request');
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
-  const contracts = useMemo(() => (sample ? buildOcrContracts(sample) : []), [sample]);
+  const isLocked = lockedTransport !== null;
+  const resolvedTransport = normalizeOcrTransportMode(isLocked ? lockedTransport : transportTab);
+
+  const contractContext = useMemo<OcrContractBuildContext>(
+    () => ({
+      tenantId: tenantId ?? 'tenant_demo',
+      modelId: modelId ?? DEFAULT_OCR_MODEL_ID,
+      extractionFields,
+    }),
+    [extractionFields, modelId, tenantId],
+  );
+
+  const contracts = useMemo(
+    () => (sample ? buildOcrContracts(sample, contractContext) : []),
+    [contractContext, sample],
+  );
   const activeContract = useMemo(
-    () => (sample ? getOcrContractForTransport(sample, transportTab) : null),
-    [sample, transportTab],
+    () => (sample ? getOcrContractForTransport(sample, resolvedTransport, contractContext) : null),
+    [contractContext, resolvedTransport, sample],
   );
 
   useEffect(() => {
     if (!open) return;
-    setTransportTab(normalizeOcrTransportMode(initialTransport));
+    const nextTransport = normalizeOcrTransportMode(isLocked ? lockedTransport : initialTransport);
+    setTransportTab(nextTransport);
     setLayerTab('request');
     setCopiedKey(null);
-  }, [open, initialTransport, sample?.id]);
+  }, [open, initialTransport, isLocked, lockedTransport, sample?.id]);
 
   const handleCopy = async (key: string, content: string) => {
     try {
@@ -78,6 +143,8 @@ export function OcrContractDialog({
 
   if (!sample || !activeContract) return null;
 
+  const selectedModel = resolveOcrModel(contractContext.modelId);
+
   return (
     <TaavDialog open={open} onOpenChange={onOpenChange}>
       <TaavDialogContent size="lg" contentClassName="ai-lab-ocr-contract-dialog" dir="rtl" lang="fa">
@@ -89,72 +156,72 @@ export function OcrContractDialog({
             <TaavBadge tone="neutral" variant="soft">
               Sync
             </TaavBadge>
+            {isLocked ? (
+              <TaavBadge tone="brand" variant="outline">
+                {getOcrTransportLabel(resolvedTransport)}
+              </TaavBadge>
+            ) : null}
+            <TaavBadge tone="neutral" variant="outline">
+              {selectedModel.providerLabel}
+            </TaavBadge>
+            <TaavBadge tone="neutral" variant="soft">
+              {selectedModel.name}
+            </TaavBadge>
           </div>
           <TaavDialogTitle className="ai-lab-ocr-contract-title">
-            {sample.title} · قرارداد Document AI
+            {extractionFields?.length ? 'سند داینامیک' : sample.title} · قرارداد Document AI
           </TaavDialogTitle>
-          <TaavDialogDescription className="ai-lab-ocr-contract-description">
-            قرارداد ارتباط Domain Backend (.NET) با سرویس Document AI (Python). بر اساس سند طراحی Document AI.
-          </TaavDialogDescription>
-          <OcrVisibleHelp content={AI_LAB_TOOLTIPS.ocr.contractDialog} variant="compact" />
         </TaavDialogHeader>
 
-        <TaavTabs
-          value={transportTab}
-          onValueChange={(value) => setTransportTab(normalizeOcrTransportMode(value))}
-        >
-          <div className="ai-lab-ocr-contract-transport-tabs">
-            <TaavTabsList variant="pill" size="sm" className="ai-lab-ocr-contract-tabs-list w-full">
-              {OCR_CONTRACT_TRANSPORT_ORDER.map((transport) => (
-                <TaavTabsTrigger key={transport} value={transport} variant="pill" size="sm">
-                  {getOcrContractTransportTabLabel(transport)}
-                </TaavTabsTrigger>
-              ))}
-            </TaavTabsList>
-            <OcrVisibleHelp
-              content={AI_LAB_TOOLTIPS.ocr[TRANSPORT_TOOLTIPS[transportTab]]}
-              variant="compact"
+        <div className="ai-lab-ocr-contract-body">
+        {isLocked ? (
+          <div className="ai-lab-ocr-contract-transport-content">
+            <ContractLayerTabs
+              contract={activeContract}
+              transport={resolvedTransport}
+              layerTab={layerTab}
+              onLayerTabChange={setLayerTab}
+              copiedKey={copiedKey}
+              onCopy={(key, content) => void handleCopy(key, content)}
             />
           </div>
+        ) : (
+          <TaavTabs
+            value={transportTab}
+            onValueChange={(value) => setTransportTab(normalizeOcrTransportMode(value))}
+          >
+            <div className="ai-lab-ocr-contract-transport-tabs">
+              <TaavTabsList variant="pill" size="sm" className="ai-lab-ocr-contract-tabs-list w-full">
+                {OCR_CONTRACT_TRANSPORT_ORDER.map((transport) => (
+                  <TaavTabsTrigger key={transport} value={transport} variant="pill" size="sm">
+                    {getOcrContractTransportTabLabel(transport)}
+                  </TaavTabsTrigger>
+                ))}
+              </TaavTabsList>
+            </div>
 
-          {OCR_CONTRACT_TRANSPORT_ORDER.map((transport) => {
-            const contract = contracts.find((item) => item.transport === transport);
-            if (!contract) return null;
+            {OCR_CONTRACT_TRANSPORT_ORDER.map((transport) => {
+              const contract = contracts.find((item) => item.transport === transport);
+              if (!contract) return null;
 
-            return (
-              <TaavTabsContent key={transport} value={transport} className="ai-lab-ocr-contract-transport-content">
-                <TaavTabs value={layerTab} onValueChange={(value) => setLayerTab(value as OcrContractLayerKey)}>
-                  <div className="ai-lab-ocr-contract-layer-tabs">
-                    <TaavTabsList variant="pill" size="sm" className="ai-lab-ocr-contract-tabs-list w-full">
-                      {LAYER_ORDER.map((layer) => (
-                        <TaavTabsTrigger key={layer} value={layer} variant="pill" size="sm">
-                          <Layers3 className="h-3 w-3" aria-hidden />
-                          {OCR_CONTRACT_LAYER_LABELS[layer]}
-                        </TaavTabsTrigger>
-                      ))}
-                    </TaavTabsList>
-                  </div>
+              return (
+                <TaavTabsContent key={transport} value={transport} className="ai-lab-ocr-contract-transport-content">
+                  <ContractLayerTabs
+                    contract={contract}
+                    transport={transport}
+                    layerTab={layerTab}
+                    onLayerTabChange={setLayerTab}
+                    copiedKey={copiedKey}
+                    onCopy={(key, content) => void handleCopy(key, content)}
+                  />
+                </TaavTabsContent>
+              );
+            })}
+          </TaavTabs>
+        )}
+        </div>
 
-                  {LAYER_ORDER.map((layer) => {
-                    const panel = contract[layer];
-                    const copyKey = `${transport}:${layer}`;
-
-                    return (
-                      <TaavTabsContent key={layer} value={layer} className="ai-lab-ocr-contract-layer-content">
-                        <OcrContractCodePanel
-                          panel={panel}
-                          copied={copiedKey === copyKey}
-                          onCopy={() => void handleCopy(copyKey, panel.content)}
-                        />
-                      </TaavTabsContent>
-                    );
-                  })}
-                </TaavTabs>
-              </TaavTabsContent>
-            );
-          })}
-        </TaavTabs>
-
+        <div className="ai-lab-ocr-contract-bottom">
         <p className="ai-lab-ocr-contract-footnote">
           Async، Webhook و RabbitMQ در فاز بعدی به این قرارداد اضافه می‌شوند.
         </p>
@@ -164,6 +231,7 @@ export function OcrContractDialog({
             بستن
           </button>
         </TaavDialogFooter>
+        </div>
       </TaavDialogContent>
     </TaavDialog>
   );

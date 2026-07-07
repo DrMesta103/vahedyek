@@ -22,13 +22,15 @@ import {
   type AiProviderType,
 } from '@/app/lib/types/ai-accounts';
 import { formatUsd } from '@/app/lib/global-settings-mock';
-import { formatTokenPriceUsd } from '@/app/lib/ai-usage-cost';
+import { formatCostUsd, formatTokenPriceUsd, usdToTomanCost } from '@/app/lib/ai-usage-cost';
+import { formatCostToman, formatPerTokenPriceToman } from '@/app/lib/ocr-ai-pricing';
 import { AI_LAB_TOOLTIPS } from '@/app/lib/tooltips';
 import { AiLabLabelWithTooltip, AiLabTooltipIcon } from '@/components/AiLabTooltip';
 
 type AiAccountsSettingsClientProps = {
   initialAccounts: AiProviderAccountPublic[];
   initialSummary: AiProviderAccountSummary;
+  usdToToman: number;
 };
 
 type AccountFormState = {
@@ -112,6 +114,7 @@ function FormSection({ title, children }: { title: string; children: ReactNode }
 export function AiAccountsSettingsClient({
   initialAccounts,
   initialSummary,
+  usdToToman,
 }: AiAccountsSettingsClientProps) {
   const [accounts, setAccounts] = useState(initialAccounts);
   const [summary, setSummary] = useState(initialSummary);
@@ -122,6 +125,10 @@ export function AiAccountsSettingsClient({
   const [form, setForm] = useState<AccountFormState>(EMPTY_FORM);
   const [formError, setFormError] = useState<string | null>(null);
   const [formLoading, setFormLoading] = useState(false);
+  const formInputPrice = parseNonNegativeDecimalInput(form.inputTokenPriceUsd) ?? 0;
+  const formOutputPrice = parseNonNegativeDecimalInput(form.outputTokenPriceUsd) ?? 0;
+  const previewInputCostUsd = formInputPrice * 1000;
+  const previewOutputCostUsd = formOutputPrice * 1000;
   const [refreshing, setRefreshing] = useState(false);
 
   const statCards = useMemo(
@@ -391,8 +398,18 @@ export function AiAccountsSettingsClient({
                     <td>{formatUsd(account.purchasedCreditUsd)}</td>
                     <td>{formatUsd(account.usedCreditUsd)}</td>
                     <td>{formatUsd(account.remainingCreditUsd)}</td>
-                    <td dir="ltr">{formatTokenPriceUsd(account.inputTokenPriceUsd)}</td>
-                    <td dir="ltr">{formatTokenPriceUsd(account.outputTokenPriceUsd)}</td>
+                    <td dir="ltr">
+                      <div className="grid gap-0.5">
+                        <span>{formatTokenPriceUsd(account.inputTokenPriceUsd)}</span>
+                        <span className="ai-lab-settings-price-toman">{formatPerTokenPriceToman(account.inputTokenPriceUsd, usdToToman)}</span>
+                      </div>
+                    </td>
+                    <td dir="ltr">
+                      <div className="grid gap-0.5">
+                        <span>{formatTokenPriceUsd(account.outputTokenPriceUsd)}</span>
+                        <span className="ai-lab-settings-price-toman">{formatPerTokenPriceToman(account.outputTokenPriceUsd, usdToToman)}</span>
+                      </div>
+                    </td>
                     <td>
                       <TaavBadge tone={account.isActive ? 'success' : 'neutral'} variant="soft">
                         {account.isActive ? 'فعال' : 'غیرفعال'}
@@ -591,6 +608,21 @@ export function AiAccountsSettingsClient({
                   dir="ltr"
                 />
               </TaavFieldBlock>
+            </FormSection>
+
+            <FormSection title="پیش‌نمایش هزینه (۱۰۰۰ توکن)">
+              <div className="grid gap-2 text-[length:var(--taav-text-sm)] text-[var(--taav-text-muted)]">
+                <p className="m-0">
+                  ورودی: <strong className="text-[var(--taav-text-strong)]" dir="ltr">{formatCostUsd(previewInputCostUsd)}</strong>
+                  {' · '}
+                  <strong className="text-[var(--taav-text-strong)]">{formatCostToman(usdToTomanCost(previewInputCostUsd, usdToToman))}</strong>
+                </p>
+                <p className="m-0">
+                  خروجی: <strong className="text-[var(--taav-text-strong)]" dir="ltr">{formatCostUsd(previewOutputCostUsd)}</strong>
+                  {' · '}
+                  <strong className="text-[var(--taav-text-strong)]">{formatCostToman(usdToTomanCost(previewOutputCostUsd, usdToToman))}</strong>
+                </p>
+              </div>
             </FormSection>
 
             <FormSection title="وضعیت و توضیحات">

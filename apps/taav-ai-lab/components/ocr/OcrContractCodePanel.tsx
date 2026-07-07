@@ -13,11 +13,7 @@ type OcrContractCodePanelProps = {
 export function OcrContractCodePanel({ panel, copied, onCopy }: OcrContractCodePanelProps) {
   return (
     <div className="ai-lab-ocr-contract-panel">
-      <div className="ai-lab-ocr-contract-panel-head">
-        <div>
-          <h3>{panel.title}</h3>
-          <p>{panel.description}</p>
-        </div>
+      <div className="ai-lab-ocr-contract-panel-toolbar">
         <TaavButton
           size="sm"
           variant="secondary"
@@ -28,7 +24,10 @@ export function OcrContractCodePanel({ panel, copied, onCopy }: OcrContractCodeP
           {copied ? 'کپی شد' : 'کپی'}
         </TaavButton>
       </div>
-      <pre className={`ai-lab-ocr-contract-code ai-lab-ocr-contract-code--${panel.language}`} dir="ltr">
+      <pre
+        className={`ai-lab-ocr-contract-code ai-lab-ocr-contract-code--${panel.language}`}
+        dir="ltr"
+      >
         {panel.content}
       </pre>
     </div>

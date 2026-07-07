@@ -1,10 +1,13 @@
-import { ArrowDownToLine, ArrowUpFromLine, Bot, Clock3, Cpu } from 'lucide-react';
+import { ArrowDownToLine, ArrowUpFromLine, Bot, Clock3, Cpu, Wallet } from 'lucide-react';
 import { formatTokenCount } from '@/app/lib/business-utils';
-import { getOcrTransportUsageLabel, type OcrTransportMode } from '@/components/ocr/utils';
+import { formatCostUsd } from '@/app/lib/ai-usage-cost';
+import { formatCostToman } from '@/app/lib/ocr-ai-pricing';
+import { getOcrTransportUsageLabel, type OcrAiUsageCost, type OcrTransportMode } from '@/components/ocr/utils';
 import type { OcrAiUsage } from '@/components/ocr/utils';
 
 type OcrAiUsagePanelProps = {
   usage: OcrAiUsage;
+  cost?: OcrAiUsageCost | null;
   transportMode: OcrTransportMode;
   confidence?: number;
   durationMs?: number;
@@ -35,6 +38,7 @@ function formatDurationMs(durationMs: number) {
 
 export function OcrAiUsagePanel({
   usage,
+  cost,
   transportMode,
   confidence,
   durationMs,
@@ -44,6 +48,7 @@ export function OcrAiUsagePanel({
   const outputShare = 100 - inputShare;
   const durationLabel = durationMs !== undefined ? formatDurationMs(durationMs) : null;
   const usageStyleMode = transportMode === 'rest' ? 'rest' : 'grpc';
+  const showCost = cost && (cost.totalCostUsd > 0 || cost.totalCostToman > 0);
 
   return (
     <aside
@@ -94,6 +99,32 @@ export function OcrAiUsagePanel({
         <span className="ai-lab-ocr-usage-bar-input" style={{ width: `${inputShare}%` }} />
         <span className="ai-lab-ocr-usage-bar-output" style={{ width: `${outputShare}%` }} />
       </div>
+
+      {showCost ? (
+        <div className="ai-lab-ocr-usage-cost" aria-label="هزینه مصرف">
+          <div className="ai-lab-ocr-usage-cost-head">
+            <Wallet className="h-3.5 w-3.5" aria-hidden />
+            <strong>{cost.providerLabel}</strong>
+          </div>
+          <div className="ai-lab-ocr-usage-cost-rows">
+            <div className="ai-lab-ocr-usage-cost-row">
+              <span>ورودی</span>
+              <span dir="ltr">{formatCostUsd(cost.inputCostUsd)}</span>
+              <span>{formatCostToman(cost.inputCostToman)}</span>
+            </div>
+            <div className="ai-lab-ocr-usage-cost-row">
+              <span>خروجی</span>
+              <span dir="ltr">{formatCostUsd(cost.outputCostUsd)}</span>
+              <span>{formatCostToman(cost.outputCostToman)}</span>
+            </div>
+            <div className="ai-lab-ocr-usage-cost-row ai-lab-ocr-usage-cost-row--total">
+              <span>مجموع</span>
+              <span dir="ltr">{formatCostUsd(cost.totalCostUsd)}</span>
+              <span>{formatCostToman(cost.totalCostToman)}</span>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <footer className="ai-lab-ocr-usage-foot">
         <span>

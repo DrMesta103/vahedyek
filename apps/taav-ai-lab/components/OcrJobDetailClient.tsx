@@ -14,6 +14,7 @@ import {
   getOcrTransportLabel,
   getOcrTransportMode,
   normalizeOcrTransportMode,
+  type OcrAiUsageCost,
 } from '@/components/ocr/utils';
 import { OcrAiUsagePanel } from '@/components/ocr/OcrAiUsagePanel';
 import './ocr/ocr-result.css';
@@ -21,6 +22,7 @@ import './ocr/ocr-result.css';
 type OcrJobDetailClientProps = {
   businessId: string;
   initialJob: OcrSimulationJob;
+  usageCost: OcrAiUsageCost;
 };
 
 const GRPC_DONE_KEY = (jobId: string) => `ocr-grpc-done:${jobId}`;
@@ -49,7 +51,7 @@ function getFullResponseDurationMs(job: OcrSimulationJob) {
   return Math.max(0, endedAt - startedAt);
 }
 
-export function OcrJobDetailClient({ businessId, initialJob }: OcrJobDetailClientProps) {
+export function OcrJobDetailClient({ businessId, initialJob, usageCost }: OcrJobDetailClientProps) {
   const searchParams = useSearchParams();
   const [job, setJob] = useState(initialJob);
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
@@ -245,7 +247,7 @@ export function OcrJobDetailClient({ businessId, initialJob }: OcrJobDetailClien
           <span className="ai-lab-ocr-result-rest-hint">
             {isGrpcUnary ? 'پاسخ کامل پس از اتمام، یک‌جا نمایش داده می‌شود' : 'فرم پس از اتمام، یک‌جا نمایش داده می‌شود'}
           </span>
-          <OcrAiUsagePanel usage={aiUsage} transportMode={transportMode} durationMs={durationMs} compact />
+          <OcrAiUsagePanel usage={aiUsage} cost={usageCost} transportMode={transportMode} durationMs={durationMs} compact />
         </section>
       ) : null}
 
@@ -272,6 +274,7 @@ export function OcrJobDetailClient({ businessId, initialJob }: OcrJobDetailClien
 
           <OcrAiUsagePanel
             usage={aiUsage}
+            cost={usageCost}
             transportMode={transportMode}
             confidence={streamingComplete ? job.confidence : undefined}
             durationMs={durationMs}
@@ -344,7 +347,7 @@ export function OcrJobDetailClient({ businessId, initialJob }: OcrJobDetailClien
             {isGrpcUnary ? 'پاسخ gRPC یک‌جا دریافت شد' : 'همه فیلدها یک‌جا استخراج شدند'}
           </p>
 
-          <OcrAiUsagePanel usage={aiUsage} transportMode={transportMode} confidence={job.confidence} durationMs={durationMs} />
+          <OcrAiUsagePanel usage={aiUsage} cost={usageCost} transportMode={transportMode} confidence={job.confidence} durationMs={durationMs} />
 
           <div className={`ai-lab-ocr-result-form ${isGrpcUnary ? 'ai-lab-ocr-result-form--grpc-unary' : 'ai-lab-ocr-result-form--rest'}`}>
             {formFields.map((field) => (

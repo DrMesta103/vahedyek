@@ -13,6 +13,12 @@ import type {
   OcrSimulationJob,
   OcrSimulationSourceType,
 } from './types/domain';
+import {
+  buildDemoOutputField,
+  toTemplateSchema,
+  validateExtractionFields,
+  type OcrExtractionFieldDraft,
+} from './ocr-extraction-fields';
 import { buildOcrAiMetaFromModel, resolveOcrModel } from './ocr-models';
 import { getOcrReadyDelayMs, normalizeOcrTransportMode, type OcrTransportMode } from './ocr-transport';
 
@@ -182,7 +188,72 @@ function buildOcrJobFromSample(tenantId: string, sample: OcrSampleDocument): Ocr
   );
 }
 
+function buildOcrJobFromDynamicExtraction(
+  tenantId: string,
+  input: CreateOcrSimulationInput,
+  extractionFields: OcrExtractionFieldDraft[],
+): OcrSimulationJob {
+  const validation = validateExtractionFields(extractionFields);
+  const fields = validation.fields;
+  const templateSchema = toTemplateSchema(fields);
+  const resultFields = fields.map(buildDemoOutputField);
+  const result: OcrTemplateOutputResult = {
+    overall_status: resultFields.some((field) => field.review_status === 'needs_review')
+      ? 'completed_with_review_required'
+      : 'completed',
+    fields: resultFields,
+  };
+  const now = new Date().toISOString();
+  const readyAt = new Date(Date.now() + getOcrReadyDelayMs(input.transportMode, 'upload')).toISOString();
+  const tokensUsed = Math.max(1400, 900 + fields.length * 220);
+  const extractedJson = buildExtractedJson(result, input.transportMode, tokensUsed, input.modelId);
+  const labelByKey = new Map(fields.map((field) => [field.key, field.label] as const));
+
+  return {
+    id: createOcrId(),
+    tenantId,
+    sourceType: 'upload',
+    sourceName: input.sourceName,
+    sourceLabel: input.sourceName,
+    fileType: input.fileType?.trim() || 'application/octet-stream',
+    fileSize: input.fileSize ?? null,
+    sampleId: null,
+    templateId: 'dynamic',
+    templateLabel: 'سند داینامیک',
+    scenario: 'recognize',
+    status: 'processing',
+    progress: 18,
+    confidence: 88,
+    pageCount: 1,
+    tokensUsed,
+    summary: `استخراج داینامیک برای ${fields.length} فیلد تعریف‌شده انجام شد.`,
+    previewText:
+      input.sampleText?.trim() ||
+      `Document: ${input.sourceName}\nDynamic fields: ${fields.map((field) => field.label).join('، ')}`,
+    templateSchema,
+    resultJson: result,
+    extractedJson,
+    extractedFields: result.fields.map<OcrSimulationField>((field) => ({
+      key: field.key,
+      label: labelByKey.get(field.key) ?? field.key,
+      value: field.normalized_value || field.value || '—',
+    })),
+    warnings: validation.errors.length > 0 ? validation.errors : result.fields.flatMap((field) => field.warnings),
+    error: null,
+    terminalStatus: 'completed',
+    createdAt: now,
+    startedAt: now,
+    readyAt,
+    completedAt: null,
+    updatedAt: now,
+  };
+}
+
 function buildOcrJobFromUpload(tenantId: string, input: CreateOcrSimulationInput): OcrSimulationJob {
+  if (input.extractionFields?.length) {
+    return buildOcrJobFromDynamicExtraction(tenantId, input, input.extractionFields);
+  }
+
   const explicitTemplate = lookupOcrTemplateDocument(input.templateId);
   const derivedSampleId = classifyUploadedDocument(input.sourceName, input.sampleText);
   const fallbackTemplate = lookupOcrTemplateDocument(derivedSampleId);

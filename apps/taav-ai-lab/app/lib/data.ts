@@ -115,11 +115,25 @@ export {
 
 export {
   calculateAiUsageCost,
+  formatCostUsd,
   formatTokenPriceUsd,
   parseNonNegativeDecimal,
+  usdToTomanCost,
 } from './ai-usage-cost';
 
 export type { AiUsageCostAccount, AiUsageCostResult } from './ai-usage-cost';
+
+export {
+  buildOcrCostMeta,
+  buildOcrUsageCost,
+  formatCostToman,
+  formatPerTokenPriceToman,
+  mapOcrProviderToAccountType,
+  readOcrCostFromMetaWithToman,
+  resolveOcrModelPricing,
+} from './ocr-ai-pricing';
+
+export type { OcrAiUsageCost, OcrModelPricing } from './ocr-ai-pricing';
 
 export type {
   AiProviderModelPublic,

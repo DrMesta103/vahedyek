@@ -48,3 +48,18 @@ export function formatTokenPriceUsd(value: number) {
     maximumFractionDigits: 12,
   }).format(value);
 }
+
+export function usdToTomanCost(costUsd: number, usdToToman: number) {
+  if (!Number.isFinite(costUsd) || !Number.isFinite(usdToToman)) return 0;
+  return costUsd * usdToToman;
+}
+
+export function formatCostUsd(value: number) {
+  if (!Number.isFinite(value) || value === 0) return '$0.00';
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 6,
+  }).format(value);
+}

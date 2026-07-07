@@ -20,15 +20,29 @@ import {
   Settings,
   ShieldCheck,
   Target,
+  Wallet,
 } from 'lucide-react';
 import type { OcrSimulationJob, Tenant } from '@/app/lib/data';
+import { formatCostUsd } from '@/app/lib/ai-usage-cost';
 import { formatActivityLabel, formatRelativeActivityLabel, formatTokenCount } from '@/app/lib/business-utils';
-import { buildOcrStats, formatConfidence, getOcrTransportMode, getStatusMeta } from '@/components/ocr/utils';
+import { formatToman } from '@/app/lib/global-settings-mock';
+import type { AiProviderAccountPublic } from '@/app/lib/types/ai-accounts';
+import {
+  buildOcrStats,
+  formatConfidence,
+  getOcrAiUsageCost,
+  getOcrTransportMode,
+  getStatusMeta,
+  type OcrAiUsageCost,
+} from '@/components/ocr/utils';
 
 type OcrHubClientProps = {
   business: Tenant;
   businessId: string;
   initialJobs: OcrSimulationJob[];
+  jobCosts: Record<string, OcrAiUsageCost>;
+  usdToToman: number;
+  aiAccounts: AiProviderAccountPublic[];
 };
 
 type StatusFilter = 'all' | 'completed' | 'processing' | 'failed';
@@ -45,6 +59,7 @@ const KPI_ITEMS = [
   { key: 'completed', label: 'تکمیل شده', icon: CheckCircle2, tone: 'green' },
   { key: 'processing', label: 'در حال پردازش', icon: Loader2, tone: 'blue' },
   { key: 'tokensUsed', label: 'توکن مصرفی', icon: Database, tone: 'cyan' },
+  { key: 'totalCost', label: 'هزینه مصرفی کل', icon: Wallet, tone: 'amber' },
   { key: 'avgConfidence', label: 'میانگین دقت', icon: Target, tone: 'teal' },
 ] as const;
 
@@ -145,7 +160,14 @@ function ConfidenceRing({ value }: { value: number }) {
   );
 }
 
-export function OcrHubClient({ business, businessId, initialJobs }: OcrHubClientProps) {
+export function OcrHubClient({
+  business,
+  businessId,
+  initialJobs,
+  jobCosts,
+  usdToToman,
+  aiAccounts,
+}: OcrHubClientProps) {
   const [jobs, setJobs] = useState<OcrSimulationJob[]>(initialJobs);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
@@ -153,6 +175,19 @@ export function OcrHubClient({ business, businessId, initialJobs }: OcrHubClient
   const processingCount = useMemo(() => jobs.filter((job) => job.status === 'processing').length, [jobs]);
   const stats = useMemo(() => buildOcrStats(jobs), [jobs]);
   const serviceSummary = useMemo(() => buildServiceSummary(jobs), [jobs]);
+  const totalUsageCost = useMemo(
+    () =>
+      jobs.reduce(
+        (acc, job) => {
+          const cost = jobCosts[job.id] ?? getOcrAiUsageCost(job, usdToToman, aiAccounts);
+          acc.usd += cost.totalCostUsd;
+          acc.toman += cost.totalCostToman;
+          return acc;
+        },
+        { usd: 0, toman: 0 },
+      ),
+    [jobs, jobCosts, usdToToman, aiAccounts],
+  );
 
   useEffect(() => {
     setJobs(initialJobs);
@@ -189,7 +224,7 @@ export function OcrHubClient({ business, businessId, initialJobs }: OcrHubClient
       .sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime());
   }, [jobs, searchQuery, statusFilter]);
 
-  const kpiValues: Record<(typeof KPI_ITEMS)[number]['key'], string | number> = {
+  const kpiValues: Record<Exclude<(typeof KPI_ITEMS)[number]['key'], 'totalCost'>, string | number> = {
     total: stats.total,
     completed: stats.completed,
     processing: stats.processing,
@@ -253,9 +288,20 @@ export function OcrHubClient({ business, businessId, initialJobs }: OcrHubClient
                 </span>
               </div>
               <strong>
-                {typeof kpiValues[item.key] === 'number'
-                  ? new Intl.NumberFormat('fa-IR').format(kpiValues[item.key] as number)
-                  : kpiValues[item.key]}
+                {item.key === 'totalCost' ? (
+                  <span className="ai-lab-ocr-dashboard-kpi-cost">
+                    <span>{formatToman(totalUsageCost.toman)} تومان</span>
+                    <small dir="ltr">{formatCostUsd(totalUsageCost.usd)}</small>
+                  </span>
+                ) : item.key in kpiValues ? (
+                  typeof kpiValues[item.key as keyof typeof kpiValues] === 'number' ? (
+                    new Intl.NumberFormat('fa-IR').format(kpiValues[item.key as keyof typeof kpiValues] as number)
+                  ) : (
+                    kpiValues[item.key as keyof typeof kpiValues]
+                  )
+                ) : (
+                  '—'
+                )}
               </strong>
               <span className="ai-lab-ocr-dashboard-kpi-wave" aria-hidden="true" />
             </article>
@@ -386,7 +432,12 @@ export function OcrHubClient({ business, businessId, initialJobs }: OcrHubClient
 
                       <div className="ai-lab-ocr-dashboard-row-metric ai-lab-ocr-dashboard-row-metric--tokens">
                         <Database className="h-3.5 w-3.5" aria-hidden="true" />
-                        {formatTokenCount(job.tokensUsed)}
+                        <span className="ai-lab-ocr-dashboard-row-tokens">
+                          <span>{formatTokenCount(job.tokensUsed)}</span>
+                          {jobCosts[job.id]?.totalCostToman ? (
+                            <small>{formatToman(jobCosts[job.id].totalCostToman)} ت</small>
+                          ) : null}
+                        </span>
                       </div>
 
                       <ConfidenceRing value={job.confidence} />

@@ -7,13 +7,18 @@ import {
   Clock3,
   Cpu,
   Info,
+  ListTree,
   Loader2,
   Play,
-  Smartphone,
   UserRound,
   X,
   Zap,
 } from 'lucide-react';
+import {
+  createDefaultExtractionFields,
+  validateExtractionFields,
+  type OcrExtractionFieldDraft,
+} from '@/app/lib/ocr-extraction-fields';
 import {
   DEFAULT_OCR_MODEL_ID,
   OCR_MODEL_OPTIONS,
@@ -21,12 +26,16 @@ import {
 } from '@/app/lib/ocr-models';
 import {
   getOcrSampleById,
+  type OcrSampleDocument,
   type OcrSampleLane,
   type OcrTemplateScenario,
 } from '@/app/lib/ocr-simulator-data';
 import type { OcrSimulationJob } from '@/app/lib/data';
-import { isGrpcStreamingMode, type OcrTransportMode } from '@/app/lib/ocr-transport';
+import { OCR_CONTRACT_TRANSPORT_ORDER } from '@/app/lib/ocr-contracts';
+import { getOcrTransportLabel, isGrpcStreamingMode, type OcrTransportMode } from '@/app/lib/ocr-transport';
 import { OcrContractDialog } from '@/components/ocr/OcrContractDialog';
+import { OcrDynamicFieldEditor } from '@/components/ocr/OcrDynamicFieldEditor';
+import { OcrExtractionPreviewPanel } from '@/components/ocr/OcrExtractionPreviewPanel';
 import { OcrUploadZone, type OcrUploadFileState } from '@/components/ocr/OcrUploadZone';
 import './ocr/ocr-contract.css';
 import './ocr/ocr-create.css';
@@ -35,18 +44,47 @@ type OcrRegistrationClientProps = {
   businessId: string;
 };
 
-type DocumentTypeKey = 'id-card' | 'receipt';
+type DocumentTypeKey = 'id-card' | 'dynamic';
 
 const DOCUMENT_TYPES: {
   key: DocumentTypeKey;
-  sampleId: string;
+  sampleId: string | null;
   label: string;
   lane: OcrSampleLane;
   icon: typeof UserRound;
 }[] = [
   { key: 'id-card', sampleId: 'id-card', label: 'کارت ملی', lane: 'quick', icon: UserRound },
-  { key: 'receipt', sampleId: 'receipt', label: 'رسید پرداخت', lane: 'quick', icon: Smartphone },
+  { key: 'dynamic', sampleId: null, label: 'داینامیک', lane: 'quick', icon: ListTree },
 ];
+
+const DYNAMIC_CONTRACT_SAMPLE: OcrSampleDocument = {
+  id: 'dynamic',
+  title: 'سند داینامیک',
+  description: 'قرارداد استخراج داینامیک بر اساس فیلدهایی که در همین صفحه تعریف می‌شوند.',
+  lane: 'quick',
+  fileName: 'dynamic-document.pdf',
+  fileType: 'application/pdf',
+  previewLines: [],
+  tokensUsed: 1570,
+  confidence: 88,
+  pageCount: 1,
+  summary: 'استخراج داینامیک از فایل آپلودشده.',
+  prompt: 'فیلدهای داینامیک تعریف‌شده توسط کاربر را از سند استخراج کن.',
+  inputSchema: { fields: [] },
+  expectedResult: { overall_status: 'completed', fields: [] },
+  sampleText: '',
+  scenarios: {
+    recognize: {
+      label: 'استخراج داینامیک',
+      confidence: 88,
+      tokensUsed: 1570,
+      summary: 'فیلدهای داینامیک از فایل آپلودشده استخراج شدند.',
+      previewLines: [],
+      result: { overall_status: 'completed', fields: [] },
+      warnings: [],
+    },
+  },
+};
 
 function getDocumentType(key: DocumentTypeKey) {
   return DOCUMENT_TYPES.find((item) => item.key === key) ?? DOCUMENT_TYPES[0];
@@ -64,22 +102,29 @@ export function OcrRegistrationClient({ businessId }: OcrRegistrationClientProps
   const [activeLane, setActiveLane] = useState<OcrSampleLane>('quick');
   const [selectedTypeKey, setSelectedTypeKey] = useState<DocumentTypeKey>('id-card');
   const [selectedModelId, setSelectedModelId] = useState(DEFAULT_OCR_MODEL_ID);
+  const [selectedTransportMode, setSelectedTransportMode] = useState<OcrTransportMode>('rest');
   const [uploadState, setUploadState] = useState<OcrUploadFileState | null>(null);
   const [submissionLabel, setSubmissionLabel] = useState('کارت ملی');
+  const [dynamicFields, setDynamicFields] = useState<OcrExtractionFieldDraft[]>(() => createDefaultExtractionFields());
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [contractDialogType, setContractDialogType] = useState<DocumentTypeKey | null>(null);
 
   const selectedType = getDocumentType(selectedTypeKey);
+  const isDynamicDocument = activeLane === 'quick' && selectedTypeKey === 'dynamic';
+  const dynamicFieldValidation = useMemo(() => validateExtractionFields(dynamicFields), [dynamicFields]);
   const selectedSample = useMemo(() => {
     if (activeLane === 'long') return getOcrSampleById('contract');
+    if (!selectedType.sampleId) return null;
     return getOcrSampleById(selectedType.sampleId);
   }, [activeLane, selectedType.sampleId]);
 
   const sourceTitle = submissionLabel.trim() || uploadState?.fileName || selectedType.label;
   const contractSample = useMemo(() => {
     if (!contractDialogType) return null;
+    if (contractDialogType === 'dynamic') return DYNAMIC_CONTRACT_SAMPLE;
     const docType = getDocumentType(contractDialogType);
+    if (!docType.sampleId) return null;
     return getOcrSampleById(docType.sampleId);
   }, [contractDialogType]);
 
@@ -105,6 +150,19 @@ export function OcrRegistrationClient({ businessId }: OcrRegistrationClientProps
   };
 
   const validateForm = () => {
+    if (isDynamicDocument) {
+      if (!uploadState) {
+        setError('برای نوع سند داینامیک، ابتدا فایل مورد نظر را آپلود کنید.');
+        return false;
+      }
+      if (dynamicFieldValidation.errors.length > 0) {
+        setError(dynamicFieldValidation.errors[0] ?? 'فیلدهای داینامیک معتبر نیستند.');
+        return false;
+      }
+      setError('');
+      return true;
+    }
+
     if (!selectedSample) {
       setError('لطفاً یک نوع سند انتخاب کنید.');
       return false;
@@ -127,7 +185,7 @@ export function OcrRegistrationClient({ businessId }: OcrRegistrationClientProps
     const sample = selectedSample;
     const sourceName = sourceTitle.trim() || uploadState?.fileName || sample?.fileName || '';
 
-    if (!sample && !uploadState) {
+    if (!isDynamicDocument && !sample && !uploadState) {
       setError('یک نوع سند انتخاب کنید یا فایل آپلود نمایید.');
       return;
     }
@@ -140,7 +198,20 @@ export function OcrRegistrationClient({ businessId }: OcrRegistrationClientProps
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(
-          sourceType === 'sample'
+          isDynamicDocument
+            ? {
+                sourceType: 'upload',
+                templateId: 'dynamic',
+                scenario,
+                sourceName,
+                fileType: uploadState?.fileType,
+                fileSize: uploadState?.fileSize,
+                sampleText: uploadState?.contentSnippet,
+                transportMode,
+                modelId: selectedModelId,
+                extractionFields: dynamicFieldValidation.fields,
+              }
+            : sourceType === 'sample'
             ? {
                 sourceType,
                 sampleId: sample?.id,
@@ -210,43 +281,34 @@ export function OcrRegistrationClient({ businessId }: OcrRegistrationClientProps
           </button>
         </div>
 
-        <section className="ai-lab-ocr-create-section" aria-labelledby="ocr-doc-type-title">
+        <section className="ai-lab-ocr-create-section ai-lab-ocr-create-section--transport" aria-labelledby="ocr-transport-title">
           <div className="ai-lab-ocr-create-section-head">
-            <span className="ai-lab-ocr-create-step" aria-hidden>
-              1
-            </span>
             <div className="ai-lab-ocr-create-section-copy">
-              <h2 id="ocr-doc-type-title">نوع سند</h2>
-              <p>نوع سند خود را انتخاب کنید تا به AI در تشخیص‌تان کمک کند.</p>
+              <h2 id="ocr-transport-title">نوع درخواست</h2>
+              <p>نحوه ارتباط با سرویس Document AI را انتخاب کنید.</p>
             </div>
           </div>
 
-          <div className="ai-lab-ocr-create-types" role="group" aria-label="نوع سند">
-            {DOCUMENT_TYPES.map((item) => {
-              const Icon = item.icon;
-              const isActive = selectedTypeKey === item.key;
+          <div className="ai-lab-ocr-create-transports" role="radiogroup" aria-label="نوع درخواست">
+            {OCR_CONTRACT_TRANSPORT_ORDER.map((transport) => {
+              const isActive = selectedTransportMode === transport;
               return (
-                <div
-                  key={item.key}
-                  className={['ai-lab-ocr-create-type-wrap', isActive ? 'is-active' : ''].filter(Boolean).join(' ')}
+                <button
+                  key={transport}
+                  type="button"
+                  role="radio"
+                  aria-checked={isActive}
+                  className={[
+                    'ai-lab-ocr-create-transport',
+                    `ai-lab-ocr-create-transport--${transport}`,
+                    isActive ? 'is-active' : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
+                  onClick={() => setSelectedTransportMode(transport)}
                 >
-                  <button
-                    type="button"
-                    className="ai-lab-ocr-create-type-contract"
-                    aria-label={`مشاهده قرارداد API برای ${item.label}`}
-                    onClick={() => setContractDialogType(item.key)}
-                  >
-                    <Info className="h-3.5 w-3.5" aria-hidden />
-                  </button>
-                  <button
-                    type="button"
-                    className={isActive ? 'ai-lab-ocr-create-type is-active' : 'ai-lab-ocr-create-type'}
-                    onClick={() => handleTypeChange(item.key)}
-                  >
-                    <Icon aria-hidden />
-                    {item.label}
-                  </button>
-                </div>
+                  {getOcrTransportLabel(transport)}
+                </button>
               );
             })}
           </div>
@@ -255,7 +317,7 @@ export function OcrRegistrationClient({ businessId }: OcrRegistrationClientProps
         <section className="ai-lab-ocr-create-section" aria-labelledby="ocr-model-title">
           <div className="ai-lab-ocr-create-section-head">
             <span className="ai-lab-ocr-create-step" aria-hidden>
-              2
+              1
             </span>
             <div className="ai-lab-ocr-create-section-copy">
               <h2 id="ocr-model-title">مدل AI</h2>
@@ -297,10 +359,89 @@ export function OcrRegistrationClient({ businessId }: OcrRegistrationClientProps
           </div>
         </section>
 
+        <section className="ai-lab-ocr-create-section" aria-labelledby="ocr-doc-type-title">
+          <div className="ai-lab-ocr-create-section-head">
+            <span className="ai-lab-ocr-create-step" aria-hidden>
+              2
+            </span>
+            <div className="ai-lab-ocr-create-section-copy">
+              <h2 id="ocr-doc-type-title">نوع سند</h2>
+              <p>نوع سند خود را انتخاب کنید تا به AI در تشخیص‌تان کمک کند.</p>
+            </div>
+          </div>
+
+          <div className="ai-lab-ocr-create-types" role="group" aria-label="نوع سند">
+            {DOCUMENT_TYPES.map((item) => {
+              const Icon = item.icon;
+              const isActive = selectedTypeKey === item.key;
+              return (
+                <div
+                  key={item.key}
+                  className={['ai-lab-ocr-create-type-chip', isActive ? 'is-active' : ''].filter(Boolean).join(' ')}
+                >
+                  <button
+                    type="button"
+                    className="ai-lab-ocr-create-type-info"
+                    aria-label={`مشاهده قرارداد API برای ${item.label}`}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setContractDialogType(item.key);
+                    }}
+                  >
+                    <Info className="h-3.5 w-3.5" aria-hidden />
+                  </button>
+                  <span className="ai-lab-ocr-create-type-sep" aria-hidden />
+                  <button
+                    type="button"
+                    className="ai-lab-ocr-create-type-main"
+                    aria-pressed={isActive}
+                    onClick={() => handleTypeChange(item.key)}
+                  >
+                    <Icon className="h-4 w-4" aria-hidden />
+                    {item.label}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        {isDynamicDocument ? (
+          <section className="ai-lab-ocr-create-section" aria-labelledby="ocr-dynamic-fields-title">
+            <div className="ai-lab-ocr-create-section-head">
+              <span className="ai-lab-ocr-create-step" aria-hidden>
+                3
+              </span>
+              <div className="ai-lab-ocr-create-section-copy">
+                <h2 id="ocr-dynamic-fields-title">فیلدهای استخراج</h2>
+                <p>فیلدهایی که AI باید از فایل استخراج کند را تعریف کنید.</p>
+              </div>
+            </div>
+
+            <OcrDynamicFieldEditor
+              fields={dynamicFields}
+              errors={dynamicFieldValidation.errors}
+              onChange={setDynamicFields}
+              disabled={submitting}
+            />
+          </section>
+        ) : null}
+
+        {isDynamicDocument ? (
+          <OcrExtractionPreviewPanel
+            fields={dynamicFieldValidation.fields}
+            transportMode={selectedTransportMode}
+            tenantId={businessId}
+            modelId={selectedModelId}
+            fileName={uploadState?.fileName}
+            mimeType={uploadState?.fileType}
+          />
+        ) : null}
+
         <section className="ai-lab-ocr-create-section" aria-labelledby="ocr-doc-title-label">
           <div className="ai-lab-ocr-create-section-head">
             <span className="ai-lab-ocr-create-step" aria-hidden>
-              3
+              {isDynamicDocument ? 4 : 3}
             </span>
             <div className="ai-lab-ocr-create-section-copy">
               <h2 id="ocr-doc-title-label">عنوان سند</h2>
@@ -322,11 +463,15 @@ export function OcrRegistrationClient({ businessId }: OcrRegistrationClientProps
         <section className="ai-lab-ocr-create-section" aria-labelledby="ocr-upload-title">
           <div className="ai-lab-ocr-create-section-head">
             <span className="ai-lab-ocr-create-step" aria-hidden>
-              4
+              {isDynamicDocument ? 5 : 4}
             </span>
             <div className="ai-lab-ocr-create-section-copy">
-              <h2 id="ocr-upload-title">آپلود فایل (اختیاری)</h2>
-              <p>فایل مورد نظر خود را برای استخراج اطلاعات آپلود کنید.</p>
+              <h2 id="ocr-upload-title">{isDynamicDocument ? 'آپلود فایل' : 'آپلود فایل (اختیاری)'}</h2>
+              <p>
+                {isDynamicDocument
+                  ? 'برای سند داینامیک، فایل ورودی الزامی است تا استخراج بر اساس فیلدهای شما انجام شود.'
+                  : 'فایل مورد نظر خود را برای استخراج اطلاعات آپلود کنید.'}
+              </p>
             </div>
           </div>
 
@@ -347,35 +492,15 @@ export function OcrRegistrationClient({ businessId }: OcrRegistrationClientProps
             <X className="h-4 w-4" aria-hidden />
             انصراف
           </Link>
-          <div className="ai-lab-ocr-create-start-actions">
-            <button
-              type="button"
-              className="ai-lab-ocr-create-btn-primary"
-              onClick={() => runSimulation('recognize', 'rest')}
-              disabled={submitting}
-            >
-              {submitting ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <Play className="h-4 w-4" aria-hidden />}
-              شروع با REST API
-            </button>
-            <button
-              type="button"
-              className="ai-lab-ocr-create-btn-primary ai-lab-ocr-create-btn-primary--grpc"
-              onClick={() => runSimulation('recognize', 'grpc-streaming')}
-              disabled={submitting}
-            >
-              <Play className="h-4 w-4" aria-hidden />
-              شروع با gRPC Streaming
-            </button>
-            <button
-              type="button"
-              className="ai-lab-ocr-create-btn-primary ai-lab-ocr-create-btn-primary--grpc-unary"
-              onClick={() => runSimulation('recognize', 'grpc-unary')}
-              disabled={submitting}
-            >
-              <Play className="h-4 w-4" aria-hidden />
-              شروع با gRPC Request/Response
-            </button>
-          </div>
+          <button
+            type="button"
+            className="ai-lab-ocr-create-btn-primary"
+            onClick={() => runSimulation('recognize', selectedTransportMode)}
+            disabled={submitting}
+          >
+            {submitting ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <Play className="h-4 w-4" aria-hidden />}
+            شروع
+          </button>
         </div>
 
         {error ? <p className="ai-lab-ocr-create-error">{error}</p> : null}
@@ -384,6 +509,10 @@ export function OcrRegistrationClient({ businessId }: OcrRegistrationClientProps
       <OcrContractDialog
         sample={contractSample}
         open={contractDialogType !== null}
+        lockedTransport={selectedTransportMode}
+        modelId={selectedModelId}
+        tenantId={businessId}
+        extractionFields={contractDialogType === 'dynamic' ? dynamicFieldValidation.fields : undefined}
         onOpenChange={(open) => {
           if (!open) setContractDialogType(null);
         }}
