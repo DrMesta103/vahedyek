@@ -123,7 +123,7 @@ export function TestKnowledgeBaseCategoriesPreview({
 
   return (
     <>
-      <aside className="hidden h-full max-h-full w-full overflow-y-auto rounded-[14px] bg-[linear-gradient(180deg,rgba(18,30,56,0.94)_0%,rgba(10,19,38,0.94)_100%)] p-2.5 lg:block">
+      <aside className="hidden h-full max-h-full w-full overflow-hidden rounded-[14px] bg-[linear-gradient(180deg,rgba(18,30,56,0.94)_0%,rgba(10,19,38,0.94)_100%)] p-2.5 lg:block">
         {panelBody}
       </aside>
 

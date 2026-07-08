@@ -1,11 +1,11 @@
 import { notFound } from 'next/navigation';
 import {
-  getAdminAgentSetupState,
   getOrCreateAdminAgentConversation,
   getTaaviaBrandForTenant,
   getTenantForUser,
 } from '@/app/lib/data';
 import { getCurrentTenant, requireSession } from '@/app/lib/session';
+import { TAAVIA_ALL_USE_CASE_KEYS } from '@/app/lib/taavia-use-cases';
 import { AiLabShell } from '@/components/AiLabShell';
 import { TaaviaBrandWorkspaceClient } from '@/components/taavia/TaaviaBrandWorkspaceClient';
 
@@ -42,7 +42,6 @@ export default async function TaaviaBrandDetailPage({
   const brand = await getTaaviaBrandForTenant(session.userId, business.id, brandId);
   if (!brand) notFound();
 
-  const setup = await getAdminAgentSetupState(session.userId, business.id, brandId);
   const conversation = await getOrCreateAdminAgentConversation(session.userId, business.id, brandId);
   const initialView = mode === 'ai' ? 'chat' : 'auto';
 
@@ -58,8 +57,8 @@ export default async function TaaviaBrandDetailPage({
       <TaaviaBrandWorkspaceClient
         tenantId={business.id}
         brand={brand}
-        selectedUseCases={setup?.selectedUseCases ?? []}
-        setupComplete={Boolean(setup?.isComplete)}
+        selectedUseCases={TAAVIA_ALL_USE_CASE_KEYS}
+        setupComplete
         initialView={initialView}
         initialConversationId={conversation?.id ?? null}
         initialMessages={conversation?.messages ?? []}

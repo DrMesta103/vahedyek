@@ -1,8 +1,7 @@
 'use client';
 
-import { CircleHelp } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { TaavTooltip, TaavTooltipProvider, type TaavTooltipAlign, type TaavTooltipSide } from '@repo/ui/taav/primitives';
+import type { TaavTooltipAlign, TaavTooltipSide } from '@repo/ui/taav/primitives';
 import type { AiLabTooltipDef } from '@/app/lib/tooltips';
 
 export function renderTooltipContent(content: AiLabTooltipDef | string): ReactNode {
@@ -28,43 +27,32 @@ type AiLabTooltipContentProps = {
 };
 
 export function AiLabTooltipProvider({ children }: { children: ReactNode }) {
-  return <TaavTooltipProvider>{children}</TaavTooltipProvider>;
+  return <>{children}</>;
+}
+
+function AiLabVisibleTooltip({
+  content,
+  className,
+}: {
+  content: AiLabTooltipDef | string;
+  className?: string;
+}) {
+  return (
+    <div className={['ai-lab-helper-text', className].filter(Boolean).join(' ')}>
+      {renderTooltipContent(content)}
+    </div>
+  );
 }
 
 export function AiLabTooltipIcon({
   content,
-  side = 'top',
-  align = 'start',
-  label = 'راهنما',
   className,
-  triggerElement = 'button',
 }: AiLabTooltipContentProps) {
-  const triggerClassName = ['ai-lab-tooltip-trigger', className].filter(Boolean).join(' ');
-
-  return (
-    <TaavTooltip
-      content={renderTooltipContent(content)}
-      side={side}
-      align={align}
-      contentClassName="ai-lab-tooltip-content"
-    >
-      {triggerElement === 'span' ? (
-        <span className={triggerClassName} aria-label={label}>
-          <CircleHelp className="h-3.5 w-3.5" aria-hidden />
-        </span>
-      ) : (
-        <button type="button" className={triggerClassName} aria-label={label}>
-          <CircleHelp className="h-3.5 w-3.5" aria-hidden />
-        </button>
-      )}
-    </TaavTooltip>
-  );
+  return <AiLabVisibleTooltip content={content} className={className} />;
 }
 
 export function AiLabTooltipWrap({
   content,
-  side = 'top',
-  align = 'center',
   children,
 }: {
   content: AiLabTooltipDef | string;
@@ -73,16 +61,16 @@ export function AiLabTooltipWrap({
   children: ReactNode;
 }) {
   return (
-    <TaavTooltip content={renderTooltipContent(content)} side={side} align={align} contentClassName="ai-lab-tooltip-content">
+    <span className="ai-lab-tooltip-wrap">
       {children}
-    </TaavTooltip>
+      <AiLabVisibleTooltip content={content} />
+    </span>
   );
 }
 
 export function AiLabLabelWithTooltip({
   label,
   tooltip,
-  tooltipLabel,
   required,
 }: {
   label: string;
@@ -91,10 +79,12 @@ export function AiLabLabelWithTooltip({
   required?: boolean;
 }) {
   return (
-    <span className="inline-flex items-center gap-1">
-      <span>{label}</span>
-      {required ? <span className="text-[var(--taav-danger-strong)]">*</span> : null}
-      <AiLabTooltipIcon content={tooltip} label={tooltipLabel ?? `راهنمای ${label}`} />
+    <span className="ai-lab-label-with-tooltip">
+      <span className="inline-flex items-center gap-1">
+        <span>{label}</span>
+        {required ? <span className="text-[var(--taav-danger-strong)]">*</span> : null}
+      </span>
+      <AiLabVisibleTooltip content={tooltip} />
     </span>
   );
 }
@@ -107,9 +97,9 @@ export function AiLabSectionLabel({
   tooltip: AiLabTooltipDef | string;
 }) {
   return (
-    <span className="inline-flex items-center gap-1.5">
+    <span className="ai-lab-label-with-tooltip">
       <span>{label}</span>
-      <AiLabTooltipIcon content={tooltip} label={`راهنمای ${label}`} />
+      <AiLabVisibleTooltip content={tooltip} />
     </span>
   );
 }

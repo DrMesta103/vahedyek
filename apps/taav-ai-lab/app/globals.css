@@ -4757,6 +4757,43 @@ textarea {
   max-width: min(300px, 88vw);
 }
 
+.ai-lab-tooltip-inline {
+  display: inline-grid;
+  gap: 6px;
+  justify-items: start;
+  vertical-align: middle;
+}
+
+.ai-lab-tooltip-wrap {
+  display: inline-grid;
+  gap: 6px;
+  justify-items: center;
+}
+
+.ai-lab-label-with-tooltip {
+  display: inline-grid;
+  gap: 6px;
+}
+
+.ai-lab-helper-text {
+  max-width: min(620px, 92vw);
+  color: var(--taav-text-muted);
+  font-size: 11px;
+  line-height: 1.8;
+}
+
+.ai-lab-helper-text--header {
+  max-width: min(680px, 92vw);
+  width: fit-content;
+  font-size: 12px;
+}
+
+.ai-lab-helper-text--section {
+  max-width: min(520px, 92vw);
+  width: fit-content;
+  font-size: 11px;
+}
+
 .taavia-brand-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

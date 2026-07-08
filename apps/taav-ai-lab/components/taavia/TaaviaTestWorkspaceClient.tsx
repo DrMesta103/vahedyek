@@ -2,14 +2,12 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, BookText, Boxes, CircleHelp, FlaskConical, Sparkles } from 'lucide-react';
+import { ArrowLeft, BookText, Boxes, ChevronLeft, CircleHelp, FlaskConical, Sparkles } from 'lucide-react';
 import type { TaaviaUseCaseKey } from '@/app/lib/types/domain';
 import type { ProductCatalogSnapshot, ProductField, WorkspaceContentMessage } from '@/app/lib/types/taavia-workspace';
 import type { TestFaqItem, TestKnowledgeBaseDocument } from '@/app/lib/types/taavia-test-workspace';
 import { buildTestKnowledgeBaseDocument } from '@/app/lib/taavia-test-knowledge-builder';
 import {
-  buildTestStatusReportSections,
-  buildTestStatusWarnings,
   getTestWorkspaceCounts,
   hasAnyTestWorkspaceData,
 } from '@/app/lib/taavia-test-requirements';
@@ -21,7 +19,6 @@ import { TestFaqEditor } from '@/components/taavia/test/TestFaqEditor';
 import { TestKnowledgeBaseCategoriesPreview } from '@/components/taavia/test/TestKnowledgeBaseCategoriesPreview';
 import { TestKnowledgeBaseEditor } from '@/components/taavia/test/TestKnowledgeBaseEditor';
 import { TestProductCatalogEditor } from '@/components/taavia/test/TestProductCatalogEditor';
-import { TestStatusReportPanel } from '@/components/taavia/test/TestStatusReportPanel';
 import {
   TaavTabs,
   TaavTabsContent,
@@ -37,7 +34,7 @@ const INITIAL_PRODUCT_FIELDS: ProductField[] = [
   { id: 'product-active', label: 'فعال است؟', type: 'boolean' },
 ];
 
-const USE_CASE_LABELS: Record<TaaviaUseCaseKey, string> = {
+const USE_CASE_LABELS: Partial<Record<TaaviaUseCaseKey, string>> = {
   support: 'پشتیبانی',
   sales: 'فروش',
   marketing: 'بازاریابی',
@@ -345,6 +342,7 @@ export function TaaviaTestWorkspaceClient({
   const entryPath = `/businesses/${businessId}/products/taavia/brands/${brandId}/entry`;
 
   const [activeTab, setActiveTab] = useState<TestTab>('brand');
+  const [lastInputTab, setLastInputTab] = useState<Exclude<TestTab, 'knowledge-base'>>('brand');
   const [brandMessages, setBrandMessages] = useState<WorkspaceContentMessage[]>([]);
   const [productCatalog, setProductCatalog] = useState<ProductCatalogSnapshot>({
     fields: INITIAL_PRODUCT_FIELDS,
@@ -460,35 +458,6 @@ export function TaaviaTestWorkspaceClient({
     setPendingKbNavigation(null);
   }, [knowledgeBaseDocument, pendingKbNavigation, resolveKbSelection]);
 
-  const warnings = useMemo(
-    () => buildTestStatusWarnings({ brandMessages, productCatalog, faqItems }),
-    [brandMessages, productCatalog, faqItems],
-  );
-
-  const statusSections = useMemo(
-    () =>
-      buildTestStatusReportSections({
-        selectedUseCases,
-        brandMessages,
-        productCatalog,
-        faqItems,
-        predictedCategories: previewMeta.categories,
-        predictedSubsectionHints: previewMeta.subsectionHints,
-        knowledgeBaseBuilt: knowledgeBaseDocument !== null,
-        canBuild,
-      }),
-    [
-      brandMessages,
-      selectedUseCases,
-      productCatalog,
-      faqItems,
-      previewMeta.categories,
-      previewMeta.subsectionHints,
-      knowledgeBaseDocument,
-      canBuild,
-    ],
-  );
-
   const previewLines = useMemo(
     () => [
       `${new Intl.NumberFormat('fa-IR').format(counts.brandItems)} آیتم در معرفی برند`,
@@ -579,7 +548,9 @@ export function TaaviaTestWorkspaceClient({
         if (!confirmed) return;
         setKbDirty(false);
       }
-      setActiveTab(value as TestTab);
+      const nextTab = value as Exclude<TestTab, 'knowledge-base'>;
+      setLastInputTab(nextTab);
+      setActiveTab(nextTab);
     },
     [activeTab, kbDirty],
   );
@@ -627,20 +598,12 @@ export function TaaviaTestWorkspaceClient({
   const showCategoriesPreview = activeTab !== 'knowledge-base';
 
   return (
-    <div className="relative isolate overflow-hidden rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,16,33,0.98)_0%,rgba(11,22,43,0.95)_100%)] px-4 py-5 pb-6 md:px-5 md:py-6 lg:h-[calc(100vh-1rem)] lg:pb-6">
+    <div className="relative isolate overflow-hidden rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,16,33,0.98)_0%,rgba(11,22,43,0.95)_100%)] px-4 py-5 pb-0 md:px-5 md:py-6 lg:h-[calc(100vh-1rem)] lg:pb-0">
       <div className="absolute inset-x-[-10%] top-[-18%] h-64 rounded-full bg-[radial-gradient(circle,rgba(250,204,21,0.16)_0%,rgba(250,204,21,0)_72%)] blur-3xl" />
 
       <div className="relative grid gap-2 lg:h-full lg:min-h-0 lg:grid-rows-[auto_auto_auto_minmax(0,1fr)]">
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-[18px] border border-white/8 bg-white/[0.03] px-3 py-2">
           <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={handleAutofillWorkspace}
-              className="inline-flex items-center gap-2 rounded-full border border-[rgba(66,237,211,0.24)] bg-[rgba(66,237,211,0.12)] px-3 py-1.5 text-[12px] font-bold text-[rgb(150,246,231)] backdrop-blur-xl transition hover:border-[rgba(66,237,211,0.36)] hover:bg-[rgba(66,237,211,0.18)]"
-            >
-              <Sparkles className="h-3.5 w-3.5" />
-              پر کردن خودکار تب‌ها
-            </button>
             <Link href={entryPath}>
             <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[12px] font-bold text-[var(--taav-text-strong)] backdrop-blur-xl transition hover:border-white/20 hover:bg-white/10">
               <ArrowLeft className="h-3.5 w-3.5" />
@@ -655,10 +618,37 @@ export function TaaviaTestWorkspaceClient({
         </div>
 
         <div className="text-right">
-          <h1 className="m-0 text-[clamp(1.25rem,1.9vw,1.85rem)] font-black text-white">ساخت Knowledge Base (تنظیم دستی)</h1>
-          <p className="mt-1 max-w-3xl text-[12px] leading-6 text-[rgba(217,229,255,0.66)]">
-            اطلاعات برند، محصول و FAQ را وارد کن. در پایان یک سند قابل ویرایش با تب و زیرتب ساخته می‌شود.
-          </p>
+          <div className="relative overflow-hidden rounded-[26px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.06)_0%,rgba(255,255,255,0.03)_100%)] px-4 py-3 shadow-[0_18px_55px_rgba(0,0,0,0.18)] backdrop-blur-2xl md:px-5 md:py-4">
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_0%,rgba(66,237,211,0.14)_0%,rgba(66,237,211,0)_55%),radial-gradient(circle_at_85%_100%,rgba(250,204,21,0.12)_0%,rgba(250,204,21,0)_58%)]"
+            />
+            <div className="relative flex flex-wrap items-center justify-between gap-3">
+              <Link
+                href={entryPath}
+                className="inline-flex items-center justify-center rounded-full p-1 text-[var(--taav-text-strong)] transition hover:bg-white/5"
+                aria-label="بازگشت"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </Link>
+
+              <div className="inline-flex min-w-0 flex-1 items-center justify-end gap-2">
+                <div className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-[rgba(66,237,211,0.12)] text-[rgb(150,246,231)] md:h-12 md:w-12">
+                  <BookText className="h-5.5 w-5.5 md:h-6 md:w-6" />
+                </div>
+                <div className="text-[13px] font-black text-[var(--taav-text-strong)] md:text-[14px]">پر کردن خودکار تب‌ها</div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleAutofillWorkspace}
+                className="inline-flex items-center gap-2 rounded-full border border-[rgba(66,237,211,0.24)] bg-[rgba(66,237,211,0.12)] px-4 py-2 text-[12px] font-black text-[rgb(150,246,231)] transition hover:border-[rgba(66,237,211,0.36)] hover:bg-[rgba(66,237,211,0.18)]"
+              >
+                <Sparkles className="h-4 w-4" />
+                اجرا
+              </button>
+            </div>
+          </div>
         </div>
 
         {feedback ? (
@@ -676,23 +666,13 @@ export function TaaviaTestWorkspaceClient({
         <div
           className={`grid items-start gap-2 lg:min-h-0 lg:h-full lg:overflow-hidden ${
             showCategoriesPreview
-              ? 'lg:h-full lg:grid-cols-[minmax(200px,240px)_minmax(0,1fr)_minmax(200px,240px)]'
-              : 'lg:h-full lg:grid-cols-[minmax(200px,240px)_minmax(0,1fr)]'
+              ? 'lg:h-full lg:grid-cols-[minmax(0,1fr)_minmax(200px,240px)]'
+              : 'lg:h-full lg:grid-cols-[minmax(0,1fr)]'
           }`}
         >
-          <div className="order-3 lg:col-start-1 lg:row-start-1 lg:min-h-0 lg:h-full">
-            <TestStatusReportPanel
-              counts={counts}
-              predictedCategories={previewMeta.categories}
-              canBuild={canBuild}
-              sections={statusSections}
-              warnings={warnings}
-            />
-          </div>
-
-          <div className="order-1 min-w-0 lg:col-start-2 lg:row-start-1 lg:flex lg:min-h-0 lg:h-full lg:flex-col lg:overflow-y-auto lg:rounded-[22px] lg:border lg:border-white/8 lg:bg-[rgba(7,15,29,0.45)] lg:p-2 lg:pb-24">
+          <div className="order-1 min-w-0 lg:col-start-1 lg:row-start-1 lg:flex lg:min-h-0 lg:h-full lg:flex-col lg:overflow-hidden lg:rounded-[22px] lg:border lg:border-white/8 lg:bg-[rgba(7,15,29,0.45)] lg:p-2">
             <TaavTabs
-              value={activeTab === 'knowledge-base' ? '' : activeTab}
+              value={activeTab === 'knowledge-base' ? lastInputTab : activeTab}
               onValueChange={handleTabChange}
               dir="rtl"
               className="lg:flex lg:min-h-0 lg:flex-1 lg:flex-col"
@@ -727,36 +707,36 @@ export function TaaviaTestWorkspaceClient({
                     />
                   </TaavTabsContent>
 
-                  <TaavTabsContent value="products" className="m-0 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:pb-24">
+                  <TaavTabsContent value="products" className="m-0 lg:min-h-0 lg:flex-1 lg:overflow-y-auto">
                     <TestProductCatalogEditor catalog={productCatalog} onChange={setProductCatalog} />
                   </TaavTabsContent>
 
-                  <TaavTabsContent value="faq" className="m-0 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:pb-24">
+                  <TaavTabsContent value="faq" className="m-0 lg:min-h-0 lg:flex-1 lg:overflow-y-auto">
                     <TestFaqEditor items={faqItems} onChange={setFaqItems} />
                   </TaavTabsContent>
                 </>
               ) : null}
-            </TaavTabs>
 
-            {activeTab === 'knowledge-base' && knowledgeBaseDocument ? (
-            <div className="mt-2 lg:min-h-0">
-                <TestKnowledgeBaseEditor
-                  document={knowledgeBaseDocument}
-                  onChange={handleKnowledgeBaseChange}
-                  onSave={() => void handleKnowledgeBaseSave()}
-                  onBackToInput={handleBackToInput}
-                  isSaving={isSavingKb}
-                  isDirty={kbDirty}
-                  selectedTabId={kbSelection?.tabId ?? knowledgeBaseDocument.tabs[0]?.id}
-                  selectedSubTabId={kbSelection?.subTabId ?? null}
-                  onSelectTab={(tabId, subTabId) => setKbSelection({ tabId, subTabId })}
-                />
-              </div>
-            ) : null}
+              {activeTab === 'knowledge-base' && knowledgeBaseDocument ? (
+                <div className="mt-2 lg:min-h-0 lg:flex-1 lg:overflow-hidden">
+                  <TestKnowledgeBaseEditor
+                    document={knowledgeBaseDocument}
+                    onChange={handleKnowledgeBaseChange}
+                    onSave={() => void handleKnowledgeBaseSave()}
+                    onBackToInput={handleBackToInput}
+                    isSaving={isSavingKb}
+                    isDirty={kbDirty}
+                    selectedTabId={kbSelection?.tabId ?? knowledgeBaseDocument.tabs[0]?.id}
+                    selectedSubTabId={kbSelection?.subTabId ?? null}
+                    onSelectTab={(tabId, subTabId) => setKbSelection({ tabId, subTabId })}
+                  />
+                </div>
+              ) : null}
+            </TaavTabs>
           </div>
 
           {showCategoriesPreview ? (
-            <div className="order-2 lg:col-start-3 lg:row-start-1 lg:min-h-0 lg:h-full">
+            <div className="order-2 lg:col-start-2 lg:row-start-1 lg:min-h-0 lg:h-full">
               <TestKnowledgeBaseCategoriesPreview
                 tabs={kbPreviewTabs}
                 isBuilt={knowledgeBaseDocument !== null}

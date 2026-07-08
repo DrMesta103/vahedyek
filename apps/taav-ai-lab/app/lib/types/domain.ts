@@ -74,6 +74,15 @@ export type TaaviaBrandModelServiceKey =
   | 'textToSpeech';
 
 export type TaaviaUseCaseKey =
+  | 'brand_identity'
+  | 'products_services'
+  | 'customer_support'
+  | 'sales_consulting'
+  | 'pricing_plans'
+  | 'faq'
+  | 'training_guides'
+  | 'policies'
+  | 'complaints_handoff'
   | 'support'
   | 'sales'
   | 'marketing'

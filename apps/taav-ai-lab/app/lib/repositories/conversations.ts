@@ -1,6 +1,7 @@
 import { generateSimulatedAdminAgentReply } from '../admin-agent-simulator';
 import { assertTenantAccess } from '../auth';
 import { prisma } from '../prisma';
+import { TAAVIA_ALL_USE_CASE_KEYS } from '../taavia-use-cases';
 import { INITIAL_ASSISTANT_MESSAGE } from './taavia-brands';
 import type { TaaviaBrandSetup, TaaviaChatMessage, TaaviaUseCaseKey } from '../types/domain';
 
@@ -95,7 +96,7 @@ export async function getOrCreateAdminAgentConversation(
             role: 'assistant',
             content: INITIAL_ASSISTANT_MESSAGE,
             status: 'completed',
-            metadata: { setup: { selectedUseCases: [] } satisfies TaaviaBrandSetup },
+            metadata: { setup: { selectedUseCases: TAAVIA_ALL_USE_CASE_KEYS } satisfies TaaviaBrandSetup },
           },
         },
       },
@@ -113,7 +114,7 @@ export async function getOrCreateAdminAgentConversation(
         role: 'assistant',
         content: INITIAL_ASSISTANT_MESSAGE,
         status: 'completed',
-        metadata: { setup: { selectedUseCases: [] } satisfies TaaviaBrandSetup },
+        metadata: { setup: { selectedUseCases: TAAVIA_ALL_USE_CASE_KEYS } satisfies TaaviaBrandSetup },
       },
     });
 
@@ -147,8 +148,8 @@ export async function getAdminAgentSetupState(userId: string, tenantId: string, 
 
   const setup = (conversation?.messages[0]?.metadata as { setup?: TaaviaBrandSetup } | null | undefined)?.setup;
   return {
-    selectedUseCases: setup?.selectedUseCases ?? [],
-    isComplete: Boolean(setup?.selectedUseCases?.length),
+    selectedUseCases: setup?.selectedUseCases?.length ? setup.selectedUseCases : TAAVIA_ALL_USE_CASE_KEYS,
+    isComplete: true,
   };
 }
 
@@ -181,7 +182,7 @@ export async function updateAdminAgentSetupState(
   const updatedMetadata = {
     ...currentMetadata,
     setup: {
-      selectedUseCases,
+      selectedUseCases: selectedUseCases.length ? selectedUseCases : TAAVIA_ALL_USE_CASE_KEYS,
     },
   };
 
@@ -193,8 +194,8 @@ export async function updateAdminAgentSetupState(
   });
 
   return {
-    selectedUseCases,
-    isComplete: selectedUseCases.length > 0,
+    selectedUseCases: selectedUseCases.length ? selectedUseCases : TAAVIA_ALL_USE_CASE_KEYS,
+    isComplete: true,
   };
 }
 

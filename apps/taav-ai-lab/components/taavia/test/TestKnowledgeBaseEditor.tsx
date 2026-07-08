@@ -489,9 +489,9 @@ export function TestKnowledgeBaseEditor({
   };
 
   return (
-    <div className="grid gap-2">
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/8 pb-2">
-        <div className="flex flex-wrap items-center gap-2">
+    <div className="grid h-full gap-2">
+      <div className="grid gap-2 border-b border-white/8 pb-2 md:grid-cols-[auto_minmax(0,1fr)_auto] md:items-center">
+        <div className="flex items-center gap-2 md:order-3 md:justify-self-end">
           {onBackToInput ? (
             <button
               type="button"
@@ -503,7 +503,7 @@ export function TestKnowledgeBaseEditor({
             </button>
           ) : null}
         </div>
-        <div className="text-right">
+        <div className="text-right md:order-2 md:min-w-0 md:text-center">
           <div className="text-[12px] font-black text-white">{document.title}</div>
           <div className="text-[10px] text-[rgba(217,229,255,0.52)]">
             {document.lastSavedAt
@@ -517,15 +517,15 @@ export function TestKnowledgeBaseEditor({
           type="button"
           onClick={onSave}
           disabled={isSaving}
-          className="inline-flex items-center gap-1.5 rounded-full bg-[rgba(130,158,255,0.14)] px-3 py-1.5 text-[11px] font-bold text-[rgb(199,210,254)] disabled:opacity-60"
+          className="inline-flex items-center justify-center gap-1.5 rounded-full bg-[rgba(130,158,255,0.14)] px-3 py-1.5 text-[11px] font-bold text-[rgb(199,210,254)] disabled:opacity-60 md:order-1 md:justify-self-start"
         >
           {isSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
           ذخیره
         </button>
       </div>
 
-      <div className="overflow-hidden rounded-[16px] border border-white/10 bg-[linear-gradient(180deg,rgba(18,30,56,0.92)_0%,rgba(10,19,38,0.92)_100%)]">
-        <div className="grid xl:grid-cols-[minmax(260px,300px)_minmax(0,1fr)]">
+      <div className="flex-1 overflow-hidden rounded-[16px] border border-white/10 bg-[linear-gradient(180deg,rgba(18,30,56,0.92)_0%,rgba(10,19,38,0.92)_100%)]">
+        <div className="grid h-full xl:grid-cols-[minmax(260px,300px)_minmax(0,1fr)]">
           <aside className="border-l border-white/8 p-3 xl:max-h-[calc(100vh-14rem)] xl:overflow-y-auto">
             <div className="mb-3 flex items-center justify-between gap-2">
               <button
@@ -554,7 +554,7 @@ export function TestKnowledgeBaseEditor({
             )}
           </aside>
 
-          <div className="flex min-h-[480px] min-w-0 flex-col">
+          <div className="flex min-h-[480px] min-w-0 flex-col xl:h-full xl:min-h-0">
             <div className="border-b border-white/8 px-3 py-2">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="text-[10px] text-[rgba(217,229,255,0.58)]">
@@ -569,15 +569,15 @@ export function TestKnowledgeBaseEditor({
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-3">
+            <div className="flex flex-1 overflow-y-auto p-3 xl:min-h-0">
               {activeTab ? (
-                <div className="grid gap-3">
+                <div className="flex min-h-full w-full flex-col gap-3">
                   <textarea
                     value={editorBody}
                     onChange={(event) => updateActiveBody(event.target.value)}
                     placeholder="محتوای این بخش را بنویس یا ویرایش کن..."
                     rows={18}
-                    className="w-full resize-y rounded-[12px] border-0 bg-[rgba(5,12,25,0.45)] px-3 py-3 text-[14px] leading-7 text-white outline-none ring-1 ring-white/10 placeholder:text-[rgba(217,229,255,0.38)] focus:ring-[rgba(66,237,211,0.28)]"
+                    className="min-h-[420px] w-full flex-1 resize-none rounded-[12px] border-0 bg-[rgba(5,12,25,0.45)] px-3 py-3 text-[14px] leading-7 text-white outline-none ring-1 ring-white/10 placeholder:text-[rgba(217,229,255,0.38)] focus:ring-[rgba(66,237,211,0.28)] xl:min-h-0"
                   />
 
                   {editorAttachments.length > 0 ? (

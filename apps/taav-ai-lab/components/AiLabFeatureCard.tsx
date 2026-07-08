@@ -39,12 +39,12 @@ export function AiLabFeatureCard({
             {badge.label}
           </TaavBadge>
         </div>
-        <div>
-          <h2 className="m-0 inline-flex items-center gap-1.5 text-[length:var(--taav-text-lg)] font-black text-[var(--taav-text-strong)]">
+        <div className="grid gap-2">
+          <h2 className="m-0 text-[length:var(--taav-text-lg)] font-black text-[var(--taav-text-strong)]">
             {title}
-            <AiLabTooltipIcon content={tooltip} label={`راهنمای ${title}`} />
           </h2>
           <p className="mt-2 text-[length:var(--taav-text-sm)] text-[var(--taav-text-muted)]">{description}</p>
+          <AiLabTooltipIcon content={tooltip} label={`راهنمای ${title}`} />
         </div>
         {href && buttonLabel ? (
           <Link href={href}>
