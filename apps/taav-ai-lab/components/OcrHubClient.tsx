@@ -4,7 +4,6 @@ import './ocr/ocr-dashboard.css';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import {
-  Activity,
   CalendarDays,
   CheckCircle2,
   ChevronLeft,
@@ -18,7 +17,6 @@ import {
   ScanText,
   Search,
   Settings,
-  ShieldCheck,
   Target,
   Wallet,
 } from 'lucide-react';
@@ -69,44 +67,6 @@ function matchesStatusFilter(job: OcrSimulationJob, filter: StatusFilter) {
   if (filter === 'processing') return job.status === 'processing' || job.status === 'queued';
   if (filter === 'failed') return job.status === 'failed';
   return true;
-}
-
-function buildServiceSummary(jobs: OcrSimulationJob[]) {
-  if (jobs.length === 0) {
-    return {
-      lastRunLabel: '—',
-      avgResponseSeconds: null as number | null,
-      availabilityLabel: '—',
-      stable: false,
-    };
-  }
-
-  const latestJob = [...jobs].sort(
-    (left, right) => new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime(),
-  )[0];
-
-  const completedJobs = jobs.filter((job) => job.status === 'completed' && job.completedAt);
-  const responseTimes = completedJobs
-    .map((job) => {
-      const started = new Date(job.startedAt).getTime();
-      const completed = new Date(job.completedAt ?? job.updatedAt).getTime();
-      return Math.max(0, Math.round((completed - started) / 1000));
-    })
-    .filter((value) => value > 0);
-
-  const avgResponseSeconds =
-    responseTimes.length > 0
-      ? Math.round(responseTimes.reduce((sum, value) => sum + value, 0) / responseTimes.length)
-      : null;
-
-  const failedRatio = jobs.filter((job) => job.status === 'failed').length / jobs.length;
-
-  return {
-    lastRunLabel: formatActivityLabel(latestJob.updatedAt),
-    avgResponseSeconds,
-    availabilityLabel: failedRatio > 0.2 ? '۹۸٪' : '۹۹٫۹٪',
-    stable: failedRatio <= 0.2,
-  };
 }
 
 function getJobDurationMs(job: OcrSimulationJob) {
@@ -174,7 +134,6 @@ export function OcrHubClient({
 
   const processingCount = useMemo(() => jobs.filter((job) => job.status === 'processing').length, [jobs]);
   const stats = useMemo(() => buildOcrStats(jobs), [jobs]);
-  const serviceSummary = useMemo(() => buildServiceSummary(jobs), [jobs]);
   const totalUsageCost = useMemo(
     () =>
       jobs.reduce(
@@ -455,43 +414,6 @@ export function OcrHubClient({
             </>
           )}
         </section>
-
-        <aside className="ai-lab-ocr-dashboard-service" aria-label="وضعیت سرویس OCR">
-          <header>
-            <Activity className="h-4 w-4" />
-            <h3>وضعیت سرویس OCR</h3>
-          </header>
-
-          <div className="ai-lab-ocr-dashboard-service-list">
-            <article>
-              <span>آخرین اجرا</span>
-              <strong>{serviceSummary.lastRunLabel}</strong>
-            </article>
-            <article>
-              <span>وضعیت سرویس</span>
-              <strong className="ai-lab-ocr-dashboard-service-stable">
-                <ShieldCheck className="h-4 w-4" />
-                {serviceSummary.stable ? 'پایدار' : 'نیاز به بررسی'}
-              </strong>
-            </article>
-            <article>
-              <span>میانگین زمان پاسخ</span>
-              <strong>
-                {serviceSummary.avgResponseSeconds !== null
-                  ? `${new Intl.NumberFormat('fa-IR').format(serviceSummary.avgResponseSeconds)} ثانیه`
-                  : '—'}
-              </strong>
-            </article>
-            <article>
-              <span>در دسترس بودن</span>
-              <strong>{serviceSummary.availabilityLabel}</strong>
-            </article>
-          </div>
-
-          <button type="button" className="ai-lab-ocr-dashboard-service-link" disabled>
-            مشاهده جزئیات سرویس
-          </button>
-        </aside>
       </div>
     </div>
   );

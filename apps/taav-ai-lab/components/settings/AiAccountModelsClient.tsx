@@ -684,41 +684,30 @@ export function AiAccountModelsClient({ accountId, initialDetail, usdToToman }: 
               </div>
             </section>
 
-            <section className="grid gap-3">
-              <SectionTitle>قابلیت‌ها</SectionTitle>
-              <div className="grid gap-2 sm:grid-cols-2">
-                <TaavCheckbox label="پشتیبانی از فارسی" checked={form.supportsPersian} onChange={(e) => setForm((c) => ({ ...c, supportsPersian: e.target.checked }))} />
-                <TaavCheckbox label="پشتیبانی از انگلیسی" checked={form.supportsEnglish} onChange={(e) => setForm((c) => ({ ...c, supportsEnglish: e.target.checked }))} />
-                <TaavCheckbox label="پشتیبانی از تصویر" checked={form.supportsVision} onChange={(e) => setForm((c) => ({ ...c, supportsVision: e.target.checked }))} />
-                <TaavCheckbox label="پشتیبانی از PDF" checked={form.supportsPdf} onChange={(e) => setForm((c) => ({ ...c, supportsPdf: e.target.checked }))} />
-                <TaavCheckbox label="پشتیبانی از فایل تصویری" checked={form.supportsImage} onChange={(e) => setForm((c) => ({ ...c, supportsImage: e.target.checked }))} />
-                <TaavCheckbox label="استخراج ساخت‌یافته" checked={form.supportsStructuredExtraction} onChange={(e) => setForm((c) => ({ ...c, supportsStructuredExtraction: e.target.checked }))} />
-                <TaavCheckbox label="امبدینگ" checked={form.supportsEmbedding} onChange={(e) => setForm((c) => ({ ...c, supportsEmbedding: e.target.checked }))} />
-                <TaavCheckbox label="Function Calling" checked={form.supportsFunctionCalling} onChange={(e) => setForm((c) => ({ ...c, supportsFunctionCalling: e.target.checked }))} />
-              </div>
-            </section>
-
             <section className="grid gap-4">
-              <SectionTitle>محدودیت‌ها و پیش‌فرض‌ها</SectionTitle>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <TaavFieldBlock label="حداکثر توکن ورودی" htmlFor="model-max-input">
-                  <TaavInput id="model-max-input" type="number" min="0" value={form.maxInputTokens} onChange={(e) => setForm((c) => ({ ...c, maxInputTokens: e.target.value }))} dir="ltr" />
-                </TaavFieldBlock>
-                <TaavFieldBlock label="حداکثر توکن خروجی" htmlFor="model-max-output">
-                  <TaavInput id="model-max-output" type="number" min="0" value={form.maxOutputTokens} onChange={(e) => setForm((c) => ({ ...c, maxOutputTokens: e.target.value }))} dir="ltr" />
-                </TaavFieldBlock>
-              </div>
-              <div className="grid gap-2 sm:grid-cols-2">
-                <TaavCheckbox label="مدل پیش‌فرض برای Chat" checked={form.isDefaultForChat} onChange={(e) => setForm((c) => ({ ...c, isDefaultForChat: e.target.checked }))} />
-                <TaavCheckbox label="مدل پیش‌فرض برای OCR" checked={form.isDefaultForOcr} onChange={(e) => setForm((c) => ({ ...c, isDefaultForOcr: e.target.checked }))} />
-                <TaavCheckbox label="مدل پیش‌فرض برای Embedding" checked={form.isDefaultForEmbedding} onChange={(e) => setForm((c) => ({ ...c, isDefaultForEmbedding: e.target.checked }))} />
-                <TaavCheckbox label="مدل پیش‌فرض برای Vision" checked={form.isDefaultForVision} onChange={(e) => setForm((c) => ({ ...c, isDefaultForVision: e.target.checked }))} />
-              </div>
+              <SectionTitle>توضیحات و وضعیت</SectionTitle>
               <TaavFieldBlock label="توضیحات" htmlFor="model-notes">
-                <TaavTextarea id="model-notes" rows={3} value={form.notes} onChange={(e) => setForm((c) => ({ ...c, notes: e.target.value }))} />
+                <TaavTextarea
+                  id="model-notes"
+                  rows={3}
+                  value={form.notes}
+                  onChange={(e) => setForm((c) => ({ ...c, notes: e.target.value }))}
+                />
               </TaavFieldBlock>
               <TaavFieldBlock label="وضعیت" required>
-                <TaavChoiceChipGroup ariaLabel="وضعیت مدل" options={STATUS_OPTIONS} value={form.isActive ? 'active' : 'inactive'} onValueChange={(value) => { const next = Array.isArray(value) ? value[0] : value; if (next) setForm((c) => ({ ...c, isActive: next === 'active' })); }} size="sm" tone="brand" gap="sm" wrap={false} />
+                <TaavChoiceChipGroup
+                  ariaLabel="وضعیت مدل"
+                  options={STATUS_OPTIONS}
+                  value={form.isActive ? 'active' : 'inactive'}
+                  onValueChange={(value) => {
+                    const next = Array.isArray(value) ? value[0] : value;
+                    if (next) setForm((c) => ({ ...c, isActive: next === 'active' }));
+                  }}
+                  size="sm"
+                  tone="brand"
+                  gap="sm"
+                  wrap={false}
+                />
               </TaavFieldBlock>
             </section>
 
