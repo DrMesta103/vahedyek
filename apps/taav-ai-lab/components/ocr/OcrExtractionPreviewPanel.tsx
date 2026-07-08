@@ -7,13 +7,14 @@ import {
   toRestExtractionFields,
   type OcrExtractionFieldDraft,
 } from '@/app/lib/ocr-extraction-fields';
-import { resolveOcrModel } from '@/app/lib/ocr-models';
+import type { OcrModelProvider } from '@/app/lib/ocr-models';
 import type { OcrTransportMode } from '@/app/lib/ocr-transport';
 
 type OcrExtractionPreviewPanelProps = {
   fields: OcrExtractionFieldDraft[];
   transportMode: OcrTransportMode;
   tenantId: string;
+  provider: OcrModelProvider;
   modelId: string;
   fileName?: string | null;
   mimeType?: string | null;
@@ -26,12 +27,12 @@ export function OcrExtractionPreviewPanel({
   fields,
   transportMode,
   tenantId,
+  provider,
   modelId,
   fileName,
   mimeType,
 }: OcrExtractionPreviewPanelProps) {
   const [copied, setCopied] = useState(false);
-  const model = resolveOcrModel(modelId, transportMode);
 
   const content = useMemo(() => {
     const documentUrl = fileName
@@ -44,8 +45,8 @@ export function OcrExtractionPreviewPanel({
           correlationId: DEMO_CORRELATION_ID,
           tenantId,
           callerServiceId: DEMO_CALLER_SERVICE_ID,
-          provider: model.provider,
-          model: model.id,
+          provider,
+          model: modelId,
           document: {
             downloadUrl: documentUrl,
             mimeType: mimeType || 'application/pdf',
@@ -64,8 +65,8 @@ export function OcrExtractionPreviewPanel({
         correlation_id: DEMO_CORRELATION_ID,
         tenant_id: tenantId,
         caller_service_id: DEMO_CALLER_SERVICE_ID,
-        provider: model.provider,
-        model: model.id,
+        provider,
+        model: modelId,
         document: {
           download_url: documentUrl,
           mime_type: mimeType || 'application/pdf',
@@ -77,7 +78,7 @@ export function OcrExtractionPreviewPanel({
       null,
       2,
     );
-  }, [fields, fileName, mimeType, model.id, model.provider, tenantId, transportMode]);
+  }, [fields, fileName, mimeType, modelId, provider, tenantId, transportMode]);
 
   const handleCopy = async () => {
     try {

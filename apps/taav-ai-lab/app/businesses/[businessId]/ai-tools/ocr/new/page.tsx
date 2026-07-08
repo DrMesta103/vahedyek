@@ -1,4 +1,4 @@
-import { getTenantForUser } from '@/app/lib/data';
+import { getGlobalSettings, getTenantForUser, listSystemOcrModels } from '@/app/lib/data';
 import { getCurrentTenant, requireSession } from '@/app/lib/session';
 import { AiLabShell } from '@/components/AiLabShell';
 import { OcrRegistrationClient } from '@/components/OcrRegistrationClient';
@@ -26,6 +26,8 @@ export default async function OcrNewPage({ params }: { params: Promise<{ busines
     );
   }
 
+  const [ocrModels, globalSettings] = await Promise.all([listSystemOcrModels(), getGlobalSettings()]);
+
   return (
     <AiLabShell
       pathname={`/businesses/${business.id}/ai-tools/ocr/new`}
@@ -35,7 +37,11 @@ export default async function OcrNewPage({ params }: { params: Promise<{ busines
       currentTenantId={business.id}
       currentTenantName={business.name}
     >
-      <OcrRegistrationClient businessId={business.id} />
+      <OcrRegistrationClient
+        businessId={business.id}
+        initialOcrModels={ocrModels}
+        usdToToman={globalSettings.usdToToman}
+      />
     </AiLabShell>
   );
 }

@@ -1,11 +1,12 @@
+import { getOcrModelById, type OcrModelProvider } from './ocr-models';
+import type { AiProviderAccountPublic, AiProviderType } from './types/ai-accounts';
+import type { AiProviderModelPublic } from './types/ai-provider-models';
 import {
   calculateAiUsageCost,
   formatCostUsd,
   usdToTomanCost,
 } from './ai-usage-cost';
 import { formatToman } from './global-settings-mock';
-import { getOcrModelById, type OcrModelProvider } from './ocr-models';
-import type { AiProviderAccountPublic, AiProviderType } from './types/ai-accounts';
 
 export type OcrModelPricing = {
   accountId: string;
@@ -26,6 +27,10 @@ export type OcrAiUsageCost = {
   totalCostToman: number;
 };
 
+export type AiProviderAccountForPricing = AiProviderAccountPublic & {
+  models?: AiProviderModelPublic[];
+};
+
 const OCR_PROVIDER_TO_ACCOUNT_TYPE: Record<OcrModelProvider, AiProviderType> = {
   openai: 'OPENAI',
   deepseek: 'DEEPSEEK',
@@ -37,9 +42,17 @@ export function mapOcrProviderToAccountType(provider: OcrModelProvider): AiProvi
   return OCR_PROVIDER_TO_ACCOUNT_TYPE[provider];
 }
 
+function resolveModelPricingFromAccount(account: AiProviderAccountForPricing, ocrModelId: string) {
+  const models = account.models ?? [];
+  const byName = models.find((item) => item.isActive && item.providerModelName === ocrModelId);
+  if (byName) return byName;
+
+  return models.find((item) => item.isActive && item.isDefaultForOcr) ?? null;
+}
+
 export function resolveOcrModelPricing(
   modelId: string,
-  accounts: AiProviderAccountPublic[],
+  accounts: AiProviderAccountForPricing[],
 ): OcrModelPricing | null {
   const model = getOcrModelById(modelId);
   if (!model) return null;
@@ -48,12 +61,15 @@ export function resolveOcrModelPricing(
   const account = accounts.find((item) => item.isActive && item.provider === accountType);
   if (!account) return null;
 
+  const pricingModel = resolveModelPricingFromAccount(account, modelId);
+  if (!pricingModel) return null;
+
   return {
     accountId: account.id,
     provider: account.provider,
     providerLabel: account.providerLabel,
-    inputTokenPriceUsd: account.inputTokenPriceUsd,
-    outputTokenPriceUsd: account.outputTokenPriceUsd,
+    inputTokenPriceUsd: pricingModel.inputTokenPriceUsd,
+    outputTokenPriceUsd: pricingModel.outputTokenPriceUsd,
   };
 }
 

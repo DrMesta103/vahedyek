@@ -18,6 +18,7 @@ type OcrUploadZoneProps = {
   disabled?: boolean;
   compact?: boolean;
   variant?: 'default' | 'inline';
+  accept?: string;
 };
 
 export function OcrUploadZone({
@@ -27,6 +28,7 @@ export function OcrUploadZone({
   disabled,
   compact,
   variant = 'default',
+  accept,
 }: OcrUploadZoneProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
@@ -79,6 +81,7 @@ export function OcrUploadZone({
       ref={fileInputRef}
       type="file"
       className="sr-only"
+      accept={accept}
       disabled={disabled || loading}
       onChange={async (event) => {
         const file = event.target.files?.[0] ?? null;

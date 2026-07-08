@@ -1,3 +1,5 @@
+import type { AiProviderModelPublic } from './ai-provider-models';
+
 export const AI_PROVIDER_TYPES = [
   'OPENAI',
   'DEEPSEEK',
@@ -22,6 +24,8 @@ export const AI_PROVIDER_LABELS: Record<AiProviderType, string> = {
   OTHER: 'Other',
 };
 
+export const SYSTEM_AI_PROVIDER_TYPES: AiProviderType[] = ['OPENAI', 'DEEPSEEK', 'GEMINI', 'GROK'];
+
 export type AiProviderAccountPublic = {
   id: string;
   name: string;
@@ -32,9 +36,11 @@ export type AiProviderAccountPublic = {
   purchasedCreditUsd: number;
   usedCreditUsd: number;
   remainingCreditUsd: number;
-  inputTokenPriceUsd: number;
-  outputTokenPriceUsd: number;
+  isSystem: boolean;
   isActive: boolean;
+  totalModelCount: number;
+  activeModelCount: number;
+  models?: AiProviderModelPublic[];
   notes: string | null;
   createdByUserId: string | null;
   createdAt: string;
@@ -55,8 +61,6 @@ export type CreateAiProviderAccountInput = {
   apiKey: string;
   purchaseEmail?: string | null;
   purchasedCreditUsd: number;
-  inputTokenPriceUsd: number;
-  outputTokenPriceUsd: number;
   notes?: string | null;
   isActive: boolean;
   createdByUserId?: string | null;
@@ -68,8 +72,13 @@ export type UpdateAiProviderAccountInput = {
   apiKey?: string;
   purchaseEmail?: string | null;
   purchasedCreditUsd?: number;
-  inputTokenPriceUsd?: number;
-  outputTokenPriceUsd?: number;
   notes?: string | null;
   isActive?: boolean;
 };
+
+export class SystemAiProviderError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'SystemAiProviderError';
+  }
+}

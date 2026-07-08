@@ -53,6 +53,7 @@ export type AiProviderModelPublic = {
   pricingUnitLabel: string;
   inputTokenPriceUsd: number;
   outputTokenPriceUsd: number;
+  ocrInputRatio: number;
   requestPriceUsd: number;
   pagePriceUsd: number;
   imagePriceUsd: number;
@@ -71,6 +72,7 @@ export type AiProviderModelPublic = {
   isDefaultForOcr: boolean;
   isDefaultForEmbedding: boolean;
   isDefaultForVision: boolean;
+  isSystem: boolean;
   isActive: boolean;
   notes: string | null;
   createdByUserId: string | null;
@@ -89,6 +91,7 @@ export type AiProviderAccountDetail = {
     usedCreditUsd: number;
     remainingCreditUsd: number;
     isActive: boolean;
+    isSystem: boolean;
     totalModelCount: number;
     activeModelCount: number;
   };
@@ -102,6 +105,7 @@ export type CreateAiProviderModelInput = {
   pricingUnit: AiProviderPricingUnit;
   inputTokenPriceUsd?: number;
   outputTokenPriceUsd?: number;
+  ocrInputRatio?: number;
   requestPriceUsd?: number;
   pagePriceUsd?: number;
   imagePriceUsd?: number;

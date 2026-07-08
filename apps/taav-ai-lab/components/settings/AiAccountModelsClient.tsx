@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Pencil, Plus, Power, Trash2 } from 'lucide-react';
+import { ArrowRight, CircleCheck, MoreVertical, Pencil, Plus, Power, Shield, Trash2 } from 'lucide-react';
 import {
   TaavDialog,
   TaavDialogContent,
@@ -14,6 +14,13 @@ import {
 import { TaavEmptyState } from '@repo/ui/taav/data-display';
 import { TaavBadge, TaavButton, TaavCard } from '@repo/ui/taav/primitives';
 import {
+  TaavDropdown,
+  TaavDropdownContent,
+  TaavDropdownItem,
+  TaavDropdownSeparator,
+  TaavDropdownTrigger,
+} from '@repo/ui/taav';
+import {
   TaavCheckbox,
   TaavChoiceChipGroup,
   TaavFieldBlock,
@@ -21,6 +28,8 @@ import {
   TaavTextarea,
 } from '@repo/ui/taav/forms';
 import { formatUsd } from '@/app/lib/global-settings-mock';
+import { formatCostUsd, usdToTomanCost } from '@/app/lib/ai-usage-cost';
+import { formatCostToman } from '@/app/lib/ocr-ai-pricing';
 import { AI_LAB_TOOLTIPS } from '@/app/lib/tooltips';
 import {
   AI_PROVIDER_MODEL_TYPE_LABELS,
@@ -37,6 +46,7 @@ import { AiLabLabelWithTooltip, AiLabTooltipIcon } from '@/components/AiLabToolt
 type AiAccountModelsClientProps = {
   accountId: string;
   initialDetail: AiProviderAccountDetail;
+  usdToToman: number;
 };
 
 type ModelFormState = {
@@ -130,8 +140,19 @@ function formatPrice(value: number) {
   return value > 0 ? formatUsd(value) : '—';
 }
 
-function formatTokenPricePerMillion(value: number) {
-  return value > 0 ? `${formatUsd(value)} / ۱M` : '—';
+function formatTokenPriceCell(value: number, usdToToman: number) {
+  if (value <= 0) return '—';
+
+  return (
+    <div className="ai-lab-model-price-cell">
+      <span dir="ltr">{formatUsd(value)}</span>
+      <span className="ai-lab-settings-price-toman">{formatCostToman(usdToTomanCost(value, usdToToman))}</span>
+    </div>
+  );
+}
+
+function formatMaybeUsd(value: number) {
+  return value > 0 ? formatUsd(value) : '—';
 }
 
 function toFormState(model: AiProviderModelPublic): ModelFormState {
@@ -186,7 +207,7 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function AiAccountModelsClient({ accountId, initialDetail }: AiAccountModelsClientProps) {
+export function AiAccountModelsClient({ accountId, initialDetail, usdToToman }: AiAccountModelsClientProps) {
   const [detail, setDetail] = useState(initialDetail);
   const [listError, setListError] = useState<string | null>(null);
   const [actionFeedback, setActionFeedback] = useState<string | null>(null);
@@ -195,6 +216,11 @@ export function AiAccountModelsClient({ accountId, initialDetail }: AiAccountMod
   const [form, setForm] = useState<ModelFormState>(EMPTY_FORM);
   const [formError, setFormError] = useState<string | null>(null);
   const [formLoading, setFormLoading] = useState(false);
+
+  const formInputPerToken = Number(form.inputTokenPriceUsd) || 0;
+  const formOutputPerToken = Number(form.outputTokenPriceUsd) || 0;
+  const previewInputCostUsd = formInputPerToken * 1000;
+  const previewOutputCostUsd = formOutputPerToken * 1000;
 
   const summaryCards = useMemo(
     () => [
@@ -347,6 +373,8 @@ export function AiAccountModelsClient({ accountId, initialDetail }: AiAccountMod
   };
 
   const deleteModel = async (model: AiProviderModelPublic) => {
+    if (model.isSystem) return;
+
     const confirmed = window.confirm(`آیا مطمئن هستید که می‌خواهید مدل «${model.displayName}» را حذف کنید؟`);
     if (!confirmed) return;
 
@@ -369,7 +397,10 @@ export function AiAccountModelsClient({ accountId, initialDetail }: AiAccountMod
     <div className="business-settings-page-shell" dir="rtl" lang="fa">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="grid gap-1">
-          <span className="text-[length:var(--taav-text-xs)] text-[var(--taav-text-muted)]">{detail.account.name}</span>
+          <span className="text-[length:var(--taav-text-xs)] text-[var(--taav-text-muted)]">
+            {detail.account.name}
+            {detail.account.isSystem ? ' · اکانت سیستمی' : ''}
+          </span>
           <h1 className="m-0 inline-flex items-center gap-2 text-[length:var(--taav-text-xl)] font-black text-[var(--taav-text-strong)]">
             مدل‌ها و قیمت‌گذاری
             <AiLabTooltipIcon content={AI_LAB_TOOLTIPS.settings.aiAccountModelsPage} label="راهنمای مدل‌ها" />
@@ -441,84 +472,149 @@ export function AiAccountModelsClient({ accountId, initialDetail }: AiAccountMod
             }
           />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="ai-lab-settings-table">
-              <thead>
-                <tr>
-                  <th>نام نمایشی</th>
-                  <th>نام مدل در Provider</th>
-                  <th>نوع مدل</th>
-                  <th>واحد قیمت‌گذاری</th>
-                  <th>قیمت ورودی</th>
-                  <th>قیمت خروجی</th>
-                  <th>قیمت هر درخواست</th>
-                  <th>قیمت هر صفحه</th>
-                  <th>قابلیت‌ها</th>
-                  <th>وضعیت</th>
-                  <th>آخرین بروزرسانی</th>
-                  <th>عملیات</th>
-                </tr>
-              </thead>
-              <tbody>
-                {detail.models.map((model) => {
-                  const capabilities = buildCapabilities(model);
-                  return (
-                    <tr key={model.id}>
-                      <td>
-                        <div className="grid gap-1">
-                          <strong>{model.displayName}</strong>
-                          <div className="flex flex-wrap gap-1">
-                            {model.isDefaultForChat ? <TaavBadge tone="info" variant="soft" size="sm">پیش‌فرض Chat</TaavBadge> : null}
-                            {model.isDefaultForOcr ? <TaavBadge tone="info" variant="soft" size="sm">پیش‌فرض OCR</TaavBadge> : null}
-                            {model.isDefaultForEmbedding ? <TaavBadge tone="info" variant="soft" size="sm">پیش‌فرض Embedding</TaavBadge> : null}
-                            {model.isDefaultForVision ? <TaavBadge tone="info" variant="soft" size="sm">پیش‌فرض Vision</TaavBadge> : null}
-                          </div>
-                        </div>
-                      </td>
-                      <td dir="ltr" className="font-mono text-[length:var(--taav-text-xs)]">{model.providerModelName}</td>
-                      <td><TaavBadge tone="brand" variant="soft">{model.modelTypeLabel}</TaavBadge></td>
-                      <td>{model.pricingUnitLabel}</td>
-                      <td>{formatTokenPricePerMillion(model.inputTokenPriceUsd)}</td>
-                      <td>{formatTokenPricePerMillion(model.outputTokenPriceUsd)}</td>
-                      <td>{formatPrice(model.requestPriceUsd)}</td>
-                      <td>{formatPrice(model.pagePriceUsd)}</td>
-                      <td>
-                        <div className="flex max-w-[220px] flex-wrap gap-1">
-                          {capabilities.length > 0 ? (
-                            capabilities.map((item) => (
-                              <TaavBadge key={item} tone="neutral" variant="soft" size="sm">
-                                {item}
-                              </TaavBadge>
-                            ))
-                          ) : (
-                            <span className="text-[var(--taav-text-muted)]">—</span>
-                          )}
-                        </div>
-                      </td>
-                      <td>
-                        <TaavBadge tone={model.isActive ? 'success' : 'neutral'} variant="soft">
-                          {model.isActive ? 'فعال' : 'غیرفعال'}
+          <div className="grid gap-3 md:grid-cols-2">
+            {detail.models.map((model) => {
+              const capabilities = buildCapabilities(model);
+              return (
+                <TaavCard
+                  key={model.id}
+                  variant="outlined"
+                  padding="lg"
+                  radius="xl"
+                  contentClassName={model.isActive ? undefined : 'opacity-80'}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <h3 className="m-0 truncate text-[length:var(--taav-text-md)] font-black text-[var(--taav-text-strong)]">
+                          {model.displayName}
+                        </h3>
+                        {model.isSystem ? (
+                          <TaavBadge tone="info" variant="soft" size="sm">
+                            <span className="ai-lab-system-badge">
+                              <Shield className="h-3 w-3" />
+                              سیستمی
+                            </span>
+                          </TaavBadge>
+                        ) : null}
+                        {model.isDefaultForChat ? <TaavBadge tone="info" variant="soft" size="sm">پیش‌فرض Chat</TaavBadge> : null}
+                        {model.isDefaultForOcr ? <TaavBadge tone="info" variant="soft" size="sm">پیش‌فرض OCR</TaavBadge> : null}
+                        {model.isDefaultForEmbedding ? <TaavBadge tone="info" variant="soft" size="sm">پیش‌فرض Embedding</TaavBadge> : null}
+                        {model.isDefaultForVision ? <TaavBadge tone="info" variant="soft" size="sm">پیش‌فرض Vision</TaavBadge> : null}
+                      </div>
+                      <div className="mt-1 flex flex-wrap items-center gap-2 text-[length:var(--taav-text-xs)] text-[var(--taav-text-muted)]">
+                        <span className="font-mono" dir="ltr">
+                          {model.providerModelName}
+                        </span>
+                        <span>•</span>
+                        <TaavBadge tone="brand" variant="soft" size="sm">
+                          {model.modelTypeLabel}
                         </TaavBadge>
-                      </td>
-                      <td>{formatFaDateTime(model.updatedAt)}</td>
-                      <td>
-                        <div className="flex flex-wrap gap-1">
-                          <TaavButton size="sm" variant="secondary" iconStart={<Pencil className="h-3.5 w-3.5" />} onClick={() => openEditDialog(model)}>
-                            ویرایش
-                          </TaavButton>
-                          <TaavButton size="sm" variant="secondary" iconStart={<Power className="h-3.5 w-3.5" />} onClick={() => toggleStatus(model)}>
-                            {model.isActive ? 'غیرفعال' : 'فعال'}
-                          </TaavButton>
-                          <TaavButton size="sm" variant="ghost" iconStart={<Trash2 className="h-3.5 w-3.5" />} onClick={() => deleteModel(model)}>
-                            حذف
-                          </TaavButton>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                        <TaavBadge tone="neutral" variant="soft" size="sm">
+                          {model.pricingUnitLabel}
+                        </TaavBadge>
+                        <TaavBadge tone={model.isActive ? 'success' : 'neutral'} variant="soft" size="sm">
+                          <span className="inline-flex items-center gap-1">
+                            <CircleCheck className="h-3.5 w-3.5" />
+                            {model.isActive ? 'فعال' : 'غیرفعال'}
+                          </span>
+                        </TaavBadge>
+                      </div>
+                    </div>
+
+                    <TaavDropdown>
+                      <TaavDropdownTrigger asChild>
+                        <button type="button" className="ai-lab-admin-user-menu" aria-label={`اکشن‌های مدل ${model.displayName}`}>
+                          <MoreVertical className="h-4 w-4" />
+                        </button>
+                      </TaavDropdownTrigger>
+                      <TaavDropdownContent align="end">
+                        <TaavDropdownItem iconStart={<Pencil className="h-4 w-4" />} onSelect={() => openEditDialog(model)}>
+                          ویرایش
+                        </TaavDropdownItem>
+                        <TaavDropdownItem
+                          iconStart={<Power className="h-4 w-4" />}
+                          tone={model.isActive ? 'warning' : 'success'}
+                          onSelect={() => void toggleStatus(model)}
+                        >
+                          {model.isActive ? 'غیرفعال کردن' : 'فعال کردن'}
+                        </TaavDropdownItem>
+                        {!model.isSystem ? (
+                          <>
+                            <TaavDropdownSeparator />
+                            <TaavDropdownItem
+                              tone="danger"
+                              iconStart={<Trash2 className="h-4 w-4" />}
+                              description="غیرقابل بازگشت"
+                              onSelect={(event) => {
+                                event.preventDefault();
+                                void deleteModel(model);
+                              }}
+                            >
+                              حذف
+                            </TaavDropdownItem>
+                          </>
+                        ) : null}
+                      </TaavDropdownContent>
+                    </TaavDropdown>
+                  </div>
+
+                  <div className="mt-4 grid gap-3">
+                    <div className="grid grid-cols-2 gap-3 rounded-[14px] border border-[color:var(--taav-border-subtle)] bg-[var(--taav-surface-raised)] p-3">
+                      <div className="grid gap-1">
+                        <span className="text-[length:var(--taav-text-xs)] text-[var(--taav-text-muted)]">قیمت ورودی (هر توکن)</span>
+                        <strong className="text-[length:var(--taav-text-sm)] text-[var(--taav-text-strong)]">
+                          {formatTokenPriceCell(model.inputTokenPriceUsd, usdToToman)}
+                        </strong>
+                      </div>
+                      <div className="grid gap-1">
+                        <span className="text-[length:var(--taav-text-xs)] text-[var(--taav-text-muted)]">قیمت خروجی (هر توکن)</span>
+                        <strong className="text-[length:var(--taav-text-sm)] text-[var(--taav-text-strong)]">
+                          {formatTokenPriceCell(model.outputTokenPriceUsd, usdToToman)}
+                        </strong>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-3 text-[length:var(--taav-text-xs)] text-[var(--taav-text-muted)]">
+                      <div className="grid gap-1">
+                        <span>درخواست</span>
+                        <span className="text-[length:var(--taav-text-sm)] text-[var(--taav-text-strong)]" dir="ltr">
+                          {formatMaybeUsd(model.requestPriceUsd)}
+                        </span>
+                      </div>
+                      <div className="grid gap-1">
+                        <span>صفحه</span>
+                        <span className="text-[length:var(--taav-text-sm)] text-[var(--taav-text-strong)]" dir="ltr">
+                          {formatMaybeUsd(model.pagePriceUsd)}
+                        </span>
+                      </div>
+                      <div className="grid gap-1">
+                        <span>تصویر/دقیقه</span>
+                        <span className="text-[length:var(--taav-text-sm)] text-[var(--taav-text-strong)]" dir="ltr">
+                          {formatMaybeUsd(model.imagePriceUsd) !== '—' ? formatMaybeUsd(model.imagePriceUsd) : formatMaybeUsd(model.minutePriceUsd)}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-1">
+                      {capabilities.length > 0 ? (
+                        capabilities.map((item) => (
+                          <TaavBadge key={item} tone="neutral" variant="soft" size="sm">
+                            {item}
+                          </TaavBadge>
+                        ))
+                      ) : (
+                        <span className="text-[length:var(--taav-text-xs)] text-[var(--taav-text-muted)]">بدون قابلیت خاص</span>
+                      )}
+                    </div>
+
+                    <div className="text-[length:var(--taav-text-xs)] text-[var(--taav-text-muted)]">
+                      آخرین بروزرسانی: {formatFaDateTime(model.updatedAt)}
+                    </div>
+                  </div>
+                </TaavCard>
+              );
+            })}
           </div>
         )}
       </TaavCard>
@@ -528,7 +624,7 @@ export function AiAccountModelsClient({ accountId, initialDetail }: AiAccountMod
           <TaavDialogHeader>
             <TaavDialogTitle>{editingModel ? 'ویرایش مدل' : 'افزودن مدل'}</TaavDialogTitle>
             <TaavDialogDescription>
-              قیمت توکن‌ها بر اساس هر ۱ میلیون توکن ذخیره می‌شود. محاسبه مصرف واقعی در فاز بعدی اضافه خواهد شد.
+              قیمت‌ها به ازای هر ۱ توکن وارد می‌شوند. هزینه واقعی مصرف دقیقاً بر اساس تعداد توکن ورودی و خروجی محاسبه می‌شود.
             </TaavDialogDescription>
           </TaavDialogHeader>
 
@@ -552,11 +648,11 @@ export function AiAccountModelsClient({ accountId, initialDetail }: AiAccountMod
             <section className="grid gap-4">
               <SectionTitle>قیمت‌گذاری</SectionTitle>
               <div className="grid gap-4 sm:grid-cols-2">
-                <TaavFieldBlock label={<AiLabLabelWithTooltip label="قیمت هر ۱ میلیون توکن ورودی" tooltip={AI_LAB_TOOLTIPS.settings.aiModelInputPrice} />} htmlFor="model-input-price">
-                  <TaavInput id="model-input-price" type="number" min="0" step="0.000001" value={form.inputTokenPriceUsd} onChange={(e) => setForm((c) => ({ ...c, inputTokenPriceUsd: e.target.value }))} dir="ltr" />
+                <TaavFieldBlock label={<AiLabLabelWithTooltip label="قیمت هر ۱ توکن ورودی (USD)" tooltip={AI_LAB_TOOLTIPS.settings.aiModelInputPrice} />} htmlFor="model-input-price">
+                  <TaavInput id="model-input-price" type="number" min="0" step="0.000000001" value={form.inputTokenPriceUsd} onChange={(e) => setForm((c) => ({ ...c, inputTokenPriceUsd: e.target.value }))} dir="ltr" />
                 </TaavFieldBlock>
-                <TaavFieldBlock label={<AiLabLabelWithTooltip label="قیمت هر ۱ میلیون توکن خروجی" tooltip={AI_LAB_TOOLTIPS.settings.aiModelOutputPrice} />} htmlFor="model-output-price">
-                  <TaavInput id="model-output-price" type="number" min="0" step="0.000001" value={form.outputTokenPriceUsd} onChange={(e) => setForm((c) => ({ ...c, outputTokenPriceUsd: e.target.value }))} dir="ltr" />
+                <TaavFieldBlock label={<AiLabLabelWithTooltip label="قیمت هر ۱ توکن خروجی (USD)" tooltip={AI_LAB_TOOLTIPS.settings.aiModelOutputPrice} />} htmlFor="model-output-price">
+                  <TaavInput id="model-output-price" type="number" min="0" step="0.000000001" value={form.outputTokenPriceUsd} onChange={(e) => setForm((c) => ({ ...c, outputTokenPriceUsd: e.target.value }))} dir="ltr" />
                 </TaavFieldBlock>
                 <TaavFieldBlock label="قیمت هر درخواست" htmlFor="model-request-price">
                   <TaavInput id="model-request-price" type="number" min="0" step="0.000001" value={form.requestPriceUsd} onChange={(e) => setForm((c) => ({ ...c, requestPriceUsd: e.target.value }))} dir="ltr" />
@@ -570,6 +666,21 @@ export function AiAccountModelsClient({ accountId, initialDetail }: AiAccountMod
                 <TaavFieldBlock label="قیمت هر دقیقه" htmlFor="model-minute-price">
                   <TaavInput id="model-minute-price" type="number" min="0" step="0.000001" value={form.minutePriceUsd} onChange={(e) => setForm((c) => ({ ...c, minutePriceUsd: e.target.value }))} dir="ltr" />
                 </TaavFieldBlock>
+              </div>
+              <div className="rounded-[14px] border border-[color:var(--taav-border-subtle)] bg-[var(--taav-surface-raised)] p-4">
+                <p className="m-0 mb-2 text-[length:var(--taav-text-sm)] font-bold text-[var(--taav-text-strong)]">پیش‌نمایش هزینه (۱۰۰۰ توکن)</p>
+                <div className="grid gap-2 text-[length:var(--taav-text-sm)] text-[var(--taav-text-muted)]">
+                  <p className="m-0">
+                    ورودی: <strong className="text-[var(--taav-text-strong)]" dir="ltr">{formatCostUsd(previewInputCostUsd)}</strong>
+                    {' · '}
+                    <strong className="text-[var(--taav-text-strong)]">{formatCostToman(usdToTomanCost(previewInputCostUsd, usdToToman))}</strong>
+                  </p>
+                  <p className="m-0">
+                    خروجی: <strong className="text-[var(--taav-text-strong)]" dir="ltr">{formatCostUsd(previewOutputCostUsd)}</strong>
+                    {' · '}
+                    <strong className="text-[var(--taav-text-strong)]">{formatCostToman(usdToTomanCost(previewOutputCostUsd, usdToToman))}</strong>
+                  </p>
+                </div>
               </div>
             </section>
 
