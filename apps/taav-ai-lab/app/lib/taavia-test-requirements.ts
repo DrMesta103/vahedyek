@@ -1,9 +1,12 @@
 import type { TaaviaUseCaseKey } from '@/app/lib/types/domain';
+import type { ProductCatalogSnapshot, WorkspaceContentMessage } from '@/app/lib/types/taavia-workspace';
 import type {
-  ProductCatalogSnapshot,
-  WorkspaceContentMessage,
-} from '@/app/lib/types/taavia-workspace';
-import type { TestFaqItem, TestRequirementCard, TestSectionCompletionStatus, TestStatusReportSection, TestStatusWarning } from '@/app/lib/types/taavia-test-workspace';
+  TestFaqItem,
+  TestRequirementCard,
+  TestSectionCompletionStatus,
+  TestStatusReportSection,
+  TestStatusWarning,
+} from '@/app/lib/types/taavia-test-workspace';
 
 type RequirementDefinition = {
   id: string;
@@ -30,28 +33,28 @@ const REQUIREMENT_DEFINITIONS: RequirementDefinition[] = [
   {
     id: 'brand-tone',
     label: 'لحن پیام و سبک ارتباط برند',
-    description: 'سبک گفتار، لحن پاسخ‌گویی و شخصیت برند',
+    description: 'سبک گفتار، لحن پاسخ گویی و شخصیت برند',
     relatedTab: 'brand',
     useCases: ['support', 'sales', 'marketing', 'management', 'all'],
   },
   {
     id: 'brand-intro',
     label: 'معرفی برند',
-    description: 'معرفی کلی، مأموریت و چشم‌انداز برند',
+    description: 'معرفی کلی، ماموریت و چشم انداز برند',
     relatedTab: 'brand',
     useCases: ALL_USE_CASES,
   },
   {
     id: 'brand-history',
     label: 'تاریخچه برند',
-    description: 'داستان شکل‌گیری و سوابق فعالیت',
+    description: 'داستان شکل گیری و سوابق فعالیت',
     relatedTab: 'brand',
-    useCases: ['marketing', 'management', 'hr', 'all'],
+    useCases: ['support', 'marketing', 'management', 'hr', 'all'],
   },
   {
     id: 'brand-values',
-    label: 'ارزش‌ها و مأموریت برند',
-    description: 'اصول، تعهدات و ارزش‌های اصلی',
+    label: 'ارزش ها و ماموریت برند',
+    description: 'اصول، تعهدات و ارزش های اصلی',
     relatedTab: 'brand',
     useCases: ['sales', 'marketing', 'management', 'all'],
   },
@@ -72,20 +75,20 @@ const REQUIREMENT_DEFINITIONS: RequirementDefinition[] = [
   {
     id: 'faq',
     label: 'سوالات پرتکرار',
-    description: 'پرسش‌ها و پاسخ‌های استاندارد مشتریان',
+    description: 'پرسش ها و پاسخ های استاندارد مشتریان',
     relatedTab: 'faq',
     useCases: ['support', 'sales', 'marketing', 'operations', 'product', 'it', 'all'],
   },
   {
     id: 'support-info',
     label: 'اطلاعات پشتیبانی',
-    description: 'قوانین پاسخ‌گویی و مسیرهای ارجاع',
+    description: 'قوانین پاسخ گویی و مسیرهای ارجاع',
     relatedTab: 'support',
     useCases: ['support', 'operations', 'it', 'all'],
   },
   {
     id: 'competitive-advantage',
-    label: 'مزیت‌های رقابتی',
+    label: 'مزیت های رقابتی',
     description: 'تمایز برند نسبت به رقبا',
     relatedTab: 'brand',
     useCases: ['sales', 'marketing', 'management', 'all'],
@@ -93,14 +96,14 @@ const REQUIREMENT_DEFINITIONS: RequirementDefinition[] = [
   {
     id: 'conversation-scenarios',
     label: 'سناریوهای رایج مکالمه',
-    description: 'پاسخ‌های پیشنهادی برای موقعیت‌های تکراری',
+    description: 'پاسخ های پیشنهادی برای موقعیت های تکراری',
     relatedTab: 'support',
     useCases: ['support', 'sales', 'all'],
   },
   {
     id: 'media-assets',
-    label: 'فایل‌ها و مدیاهای مرتبط',
-    description: 'تصویر، ویدیو، صوت و داکیومنت‌های برند',
+    label: 'فایل ها و مدیاهای مرتبط',
+    description: 'تصویر، ویدیو، صوت و داکیومنت های برند',
     relatedTab: 'brand',
     useCases: ALL_USE_CASES,
   },
@@ -110,6 +113,7 @@ function normalizeUseCases(selectedUseCases: TaaviaUseCaseKey[]) {
   if (!selectedUseCases.length || selectedUseCases.includes('all')) {
     return new Set<RequirementDefinition['useCases'][number]>(ALL_USE_CASES);
   }
+
   return new Set(selectedUseCases);
 }
 
@@ -125,7 +129,6 @@ function hasFaqData(items: TestFaqItem[]) {
   return items.some((item) => item.isActive && item.question.trim() && item.answer.trim());
 }
 
-
 export function buildTestRequirementCards(input: {
   selectedUseCases: TaaviaUseCaseKey[];
   brandMessages: WorkspaceContentMessage[];
@@ -136,17 +139,20 @@ export function buildTestRequirementCards(input: {
   const brandData = hasBrandData(input.brandMessages);
   const productData = hasProductData(input.productCatalog);
   const faqData = hasFaqData(input.faqItems);
-  const hasMedia = input.brandMessages.some((m) => m.kind !== 'text');
+  const hasMedia = input.brandMessages.some((message) => message.kind !== 'text');
 
   return REQUIREMENT_DEFINITIONS.filter((definition) =>
     definition.useCases.some((useCase) => activeUseCases.has(useCase)),
   ).map((definition) => {
     let hasData = false;
+
     switch (definition.id) {
       case 'products':
         hasData = productData;
         break;
       case 'faq':
+      case 'support-info':
+      case 'conversation-scenarios':
         hasData = faqData;
         break;
       case 'media-assets':
@@ -210,7 +216,7 @@ export function buildTestStatusWarnings(input: {
   const counts = getTestWorkspaceCounts(input);
 
   if (counts.faqItems === 0 && input.faqItems.length > 0) {
-    warnings.push({ id: 'faq-incomplete', message: 'برخی FAQها ناقص هستند یا غیرفعال‌اند.' });
+    warnings.push({ id: 'faq-incomplete', message: 'برخی FAQها ناقص هستند یا غیرفعال اند.' });
   } else if (counts.faqItems === 0) {
     warnings.push({ id: 'faq-empty', message: 'هنوز FAQ وارد نشده است.' });
   }
@@ -221,10 +227,10 @@ export function buildTestStatusWarnings(input: {
     warnings.push({ id: 'product-no-rows', message: 'فیلد محصول ساخته شده اما محصولی ثبت نشده است.' });
   }
 
-  const hasBrandText = input.brandMessages.some((m) => m.kind === 'text' && m.text?.trim());
-  const hasBrandMedia = input.brandMessages.some((m) => m.kind !== 'text');
+  const hasBrandText = input.brandMessages.some((message) => message.kind === 'text' && message.text?.trim());
+  const hasBrandMedia = input.brandMessages.some((message) => message.kind !== 'text');
   if (hasBrandMedia && !hasBrandText) {
-    warnings.push({ id: 'brand-media-only', message: 'معرفی برند دارای فایل است اما متن ندارد.' });
+    warnings.push({ id: 'brand-media-only', message: 'معرفی برند فایل دارد اما متن برند هنوز کامل نشده است.' });
   }
 
   if (counts.brandItems === 0) {
@@ -241,6 +247,7 @@ function sectionStatus(hasData: boolean, hasPartial: boolean): TestSectionComple
 }
 
 export function buildTestStatusReportSections(input: {
+  selectedUseCases: TaaviaUseCaseKey[];
   brandMessages: WorkspaceContentMessage[];
   productCatalog: ProductCatalogSnapshot;
   faqItems: TestFaqItem[];
@@ -249,15 +256,17 @@ export function buildTestStatusReportSections(input: {
   knowledgeBaseBuilt: boolean;
   canBuild: boolean;
 }): TestStatusReportSection[] {
+  const activeUseCases = normalizeUseCases(input.selectedUseCases);
   const counts = getTestWorkspaceCounts(input);
   const fa = (n: number) => new Intl.NumberFormat('fa-IR').format(n);
 
-  const textCount = input.brandMessages.filter((m) => m.kind === 'text').length;
-  const voiceCount = input.brandMessages.filter((m) => m.kind === 'audio').length;
-  const imageCount = input.brandMessages.filter((m) => m.kind === 'image').length;
-  const videoCount = input.brandMessages.filter((m) => m.kind === 'video').length;
-  const fileCount = input.brandMessages.filter((m) => m.kind === 'file').length;
-  const hasBrandText = input.brandMessages.some((m) => m.kind === 'text' && m.text?.trim());
+  const textCount = input.brandMessages.filter((message) => message.kind === 'text').length;
+  const voiceCount = input.brandMessages.filter((message) => message.kind === 'audio').length;
+  const imageCount = input.brandMessages.filter((message) => message.kind === 'image').length;
+  const videoCount = input.brandMessages.filter((message) => message.kind === 'video').length;
+  const fileCount = input.brandMessages.filter((message) => message.kind === 'file').length;
+  const hasBrandText = input.brandMessages.some((message) => message.kind === 'text' && message.text?.trim());
+  const hasBrandData = input.brandMessages.length > 0;
 
   const brandStats: string[] = [];
   if (textCount > 0) brandStats.push(`${fa(textCount)} متن`);
@@ -272,65 +281,86 @@ export function buildTestStatusReportSections(input: {
 
   const hasFaqDrafts = input.faqItems.length > 0;
   const hasValidFaq = counts.faqItems > 0;
-
   const mediaTotal = voiceCount + imageCount + videoCount + fileCount;
 
   const kbTabCount = input.predictedCategories.length;
   const kbSubTabCount = input.predictedSubsectionHints.length;
   const kbReadiness = input.knowledgeBaseBuilt
-    ? 'ساخته‌شده'
+    ? 'ساخته شده'
     : input.canBuild
       ? 'آماده ساخت'
       : 'نیاز به حداقل یک داده';
 
-  return [
-    {
-      id: 'brand',
-      title: 'معرفی برند',
-      status:
-        counts.brandItems === 0 ? 'empty' : hasBrandText ? 'completed' : 'incomplete',
-      stats: brandStats.length > 0 ? brandStats : ['بدون محتوا'],
-    },
-    {
-      id: 'products',
-      title: 'محصولات و خدمات',
-      status: hasProductRows
-        ? 'completed'
-        : input.productCatalog.rows.length > 0 || hasPartialProducts
-          ? 'incomplete'
-          : 'empty',
-      stats: [
-        `${fa(input.productCatalog.fields.length)} فیلد داینامیک`,
-        `${fa(counts.productRows)} محصول ثبت‌شده`,
-      ],
-    },
-    {
-      id: 'faq',
-      title: 'سوالات پرتکرار',
-      status: sectionStatus(hasValidFaq, hasFaqDrafts && !hasValidFaq),
-      stats: [`${fa(counts.faqItems)} سوال و جواب فعال`],
-    },
-    {
-      id: 'assets',
-      title: 'فایل‌ها و منابع',
-      status: sectionStatus(mediaTotal > 0, false),
-      stats:
-        mediaTotal > 0
+  const requirementSections = REQUIREMENT_DEFINITIONS.filter((definition) =>
+    definition.useCases.some((useCase) => activeUseCases.has(useCase)),
+  ).map((definition) => {
+    let status: TestSectionCompletionStatus = 'empty';
+    let stats: string[] = [];
+
+    switch (definition.id) {
+      case 'products':
+        status = hasProductRows
+          ? 'completed'
+          : input.productCatalog.rows.length > 0 || hasPartialProducts
+            ? 'incomplete'
+            : 'empty';
+        stats = [
+          `${fa(input.productCatalog.fields.length)} فیلد`,
+          `${fa(counts.productRows)} محصول ثبت شده`,
+          'تکمیل از بخش محصول',
+        ];
+        break;
+      case 'faq':
+      case 'conversation-scenarios':
+      case 'support-info':
+        status = sectionStatus(hasValidFaq, hasFaqDrafts && !hasValidFaq);
+        stats = [
+          `${fa(counts.faqItems)} FAQ فعال`,
+          hasValidFaq ? 'از بخش FAQ تکمیل شده' : 'تکمیل از بخش FAQ',
+        ];
+        break;
+      case 'media-assets':
+        status = mediaTotal > 0 ? 'completed' : hasBrandData ? 'incomplete' : 'empty';
+        stats =
+          mediaTotal > 0
+            ? [
+                ...(imageCount > 0 ? [`${fa(imageCount)} تصویر`] : []),
+                ...(videoCount > 0 ? [`${fa(videoCount)} ویدیو`] : []),
+                ...(voiceCount > 0 ? [`${fa(voiceCount)} ویس`] : []),
+                ...(fileCount > 0 ? [`${fa(fileCount)} فایل`] : []),
+              ]
+            : ['تکمیل از بخش معرفی برند'];
+        break;
+      default:
+        status = counts.brandItems === 0 ? 'empty' : hasBrandText ? 'completed' : 'incomplete';
+        stats = hasBrandText
           ? [
-              ...(fileCount > 0 ? [`${fa(fileCount)} فایل`] : []),
-              ...(imageCount > 0 ? [`${fa(imageCount)} تصویر`] : []),
-              ...(videoCount > 0 ? [`${fa(videoCount)} ویدیو`] : []),
-              ...(voiceCount > 0 ? [`${fa(voiceCount)} ویس`] : []),
+              ...(brandStats.slice(0, 3).length > 0 ? brandStats.slice(0, 3) : [`${fa(counts.brandItems)} آیتم`]),
+              'از بخش معرفی برند',
             ]
-          : ['بدون فایل یا مدیا'],
-    },
+          : hasBrandData
+            ? ['داده برند وارد شده', 'بهتر است متن کامل تری ثبت شود']
+            : ['تکمیل از بخش معرفی برند'];
+        break;
+    }
+
+    return {
+      id: definition.id,
+      title: definition.label,
+      status,
+      stats,
+    } satisfies TestStatusReportSection;
+  });
+
+  return [
+    ...requirementSections,
     {
       id: 'kb-output',
       title: 'خروجی Knowledge Base',
       status: input.knowledgeBaseBuilt ? 'completed' : input.canBuild ? 'incomplete' : 'empty',
       stats: [
         `${fa(kbTabCount)} تب قابل ساخت`,
-        `${fa(kbSubTabCount)} زیرتب قابل ساخت`,
+        `${fa(kbSubTabCount)} زیربتب قابل ساخت`,
         `وضعیت: ${kbReadiness}`,
       ],
     },

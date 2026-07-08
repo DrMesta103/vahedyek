@@ -35,6 +35,12 @@ export type TestAttachmentRef = {
   label: string;
 };
 
+export type TestKnowledgeBaseSourceRef = {
+  id: string;
+  label: string;
+  detail?: string;
+};
+
 /** @deprecated legacy nested section — use TestKnowledgeBaseTab */
 export type TestKnowledgeBaseSection = {
   id: string;
@@ -57,6 +63,7 @@ export type TestKnowledgeBaseSubTab = {
   title: string;
   body: string;
   attachments: TestAttachmentRef[];
+  sources: TestKnowledgeBaseSourceRef[];
   updatedAt: string;
 };
 
@@ -65,6 +72,7 @@ export type TestKnowledgeBaseTab = {
   title: string;
   body: string;
   attachments: TestAttachmentRef[];
+  sources: TestKnowledgeBaseSourceRef[];
   subTabs: TestKnowledgeBaseSubTab[];
   updatedAt: string;
 };

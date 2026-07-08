@@ -13,6 +13,7 @@ export type {
   CreateTaaviaBrandInput,
   CreateOcrSimulationInput,
   TaaviaChatMessage,
+  TaaviaBrandModelServiceKey,
 } from './types/domain';
 
 export {
@@ -59,6 +60,7 @@ export {
   createTaaviaBrandForTenant,
   updateTaaviaBrandForTenant,
   deleteTaaviaBrandForTenant,
+  updateTaaviaBrandModelPreferences,
 } from './repositories/taavia-brands';
 
 export {

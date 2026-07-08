@@ -14,7 +14,7 @@ import {
   hasAnyTestWorkspaceData,
 } from '@/app/lib/taavia-test-requirements';
 import { loadTestWorkspaceSnapshot, saveTestWorkspaceSnapshot } from '@/app/lib/taavia-test-storage';
-import { createTextMessage, hydrateWorkspaceMessages } from '@/app/lib/taavia-workspace-knowledge';
+import { createFileMessage, createTextMessage, hydrateWorkspaceMessages } from '@/app/lib/taavia-workspace-knowledge';
 import { ContentFeedEditor } from '@/components/taavia/ContentFeedEditor';
 import { TestBuildKnowledgeBaseButton } from '@/components/taavia/test/TestBuildKnowledgeBaseButton';
 import { TestFaqEditor } from '@/components/taavia/test/TestFaqEditor';
@@ -63,7 +63,195 @@ function createAutofillFaqItem(index: number, question: string, answer: string, 
   };
 }
 
-function buildAutofillData(brandName: string, selectedUseCases: TaaviaUseCaseKey[]) {
+function canvasToBlob(canvas: HTMLCanvasElement, type: string, quality?: number) {
+  return new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        reject(new Error('blob generation failed'));
+        return;
+      }
+      resolve(blob);
+    }, type, quality);
+  });
+}
+
+async function createBrandPreviewImageFile(brandName: string, focusLabel: string) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 1200;
+  canvas.height = 720;
+  const context = canvas.getContext('2d');
+  if (!context) throw new Error('image context unavailable');
+
+  const background = context.createLinearGradient(0, 0, canvas.width, canvas.height);
+  background.addColorStop(0, '#0f1b33');
+  background.addColorStop(1, '#16345f');
+  context.fillStyle = background;
+  context.fillRect(0, 0, canvas.width, canvas.height);
+
+  context.fillStyle = 'rgba(45,226,199,0.16)';
+  context.beginPath();
+  context.arc(980, 120, 120, 0, Math.PI * 2);
+  context.fill();
+
+  context.fillStyle = 'rgba(250,204,21,0.12)';
+  context.beginPath();
+  context.arc(250, 560, 180, 0, Math.PI * 2);
+  context.fill();
+
+  context.fillStyle = '#ffffff';
+  context.textAlign = 'center';
+  context.font = '700 64px Tahoma';
+  context.fillText(brandName, canvas.width / 2, 305);
+  context.font = '30px Tahoma';
+  context.fillStyle = '#cfe4ff';
+  context.fillText('Brand Cover Preview', canvas.width / 2, 380);
+  context.font = '24px Tahoma';
+  context.fillText(focusLabel, canvas.width / 2, 435);
+
+  const blob = await canvasToBlob(canvas, 'image/png');
+  return new File([blob], `${brandName}-cover.png`, { type: 'image/png' });
+}
+
+function encodeWav(samples: Float32Array, sampleRate: number) {
+  const buffer = new ArrayBuffer(44 + samples.length * 2);
+  const view = new DataView(buffer);
+
+  const writeString = (offset: number, value: string) => {
+    for (let index = 0; index < value.length; index += 1) {
+      view.setUint8(offset + index, value.charCodeAt(index));
+    }
+  };
+
+  writeString(0, 'RIFF');
+  view.setUint32(4, 36 + samples.length * 2, true);
+  writeString(8, 'WAVE');
+  writeString(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * 2, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true);
+  writeString(36, 'data');
+  view.setUint32(40, samples.length * 2, true);
+
+  let offset = 44;
+  for (let index = 0; index < samples.length; index += 1) {
+    const sample = Math.max(-1, Math.min(1, samples[index]));
+    view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7fff, true);
+    offset += 2;
+  }
+
+  return buffer;
+}
+
+function createBrandVoiceFile(brandName: string) {
+  const sampleRate = 16000;
+  const durationSeconds = 2.2;
+  const totalSamples = Math.floor(sampleRate * durationSeconds);
+  const samples = new Float32Array(totalSamples);
+  const notes = [220, 277, 330, 392];
+  const segmentLength = Math.floor(totalSamples / notes.length);
+
+  for (let index = 0; index < totalSamples; index += 1) {
+    const noteIndex = Math.min(notes.length - 1, Math.floor(index / segmentLength));
+    const frequency = notes[noteIndex];
+    const t = index / sampleRate;
+    const envelope = Math.sin(Math.PI * ((index % segmentLength) / segmentLength));
+    samples[index] = Math.sin(2 * Math.PI * frequency * t) * 0.18 * envelope;
+  }
+
+  const wav = encodeWav(samples, sampleRate);
+  return new File([wav], `${brandName}-voice-note.wav`, { type: 'audio/wav' });
+}
+
+async function createBrandIntroVideoFile(brandName: string, focusLabel: string) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 1280;
+  canvas.height = 720;
+  const context = canvas.getContext('2d');
+  if (!context) throw new Error('video context unavailable');
+  if (typeof canvas.captureStream !== 'function' || typeof MediaRecorder === 'undefined') {
+    throw new Error('video capture unsupported');
+  }
+
+  const mimeType =
+    MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
+      ? 'video/webm;codecs=vp9'
+      : MediaRecorder.isTypeSupported('video/webm;codecs=vp8')
+        ? 'video/webm;codecs=vp8'
+        : 'video/webm';
+
+  const drawFrame = (progress: number) => {
+    const gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height);
+    gradient.addColorStop(0, '#091221');
+    gradient.addColorStop(1, '#173d68');
+    context.fillStyle = gradient;
+    context.fillRect(0, 0, canvas.width, canvas.height);
+
+    context.fillStyle = 'rgba(45,226,199,0.14)';
+    context.beginPath();
+    context.arc(920 + Math.sin(progress * Math.PI * 2) * 45, 130, 130, 0, Math.PI * 2);
+    context.fill();
+
+    context.fillStyle = 'rgba(250,204,21,0.12)';
+    context.beginPath();
+    context.arc(250, 560 - Math.sin(progress * Math.PI) * 30, 175, 0, Math.PI * 2);
+    context.fill();
+
+    context.fillStyle = '#ffffff';
+    context.textAlign = 'center';
+    context.font = '700 70px Tahoma';
+    context.fillText(brandName, canvas.width / 2, 310);
+    context.font = '30px Tahoma';
+    context.fillStyle = '#cfe4ff';
+    context.fillText('Autofill Brand Intro', canvas.width / 2, 380);
+    context.font = '24px Tahoma';
+    context.fillText(focusLabel, canvas.width / 2, 430);
+
+    context.strokeStyle = 'rgba(45,226,199,0.65)';
+    context.lineWidth = 4;
+    context.beginPath();
+    context.moveTo(260, 520);
+    context.quadraticCurveTo(640, 440 - progress * 40, 1020, 520);
+    context.stroke();
+  };
+
+  drawFrame(0);
+
+  const stream = canvas.captureStream(12);
+  const recorder = new MediaRecorder(stream, { mimeType });
+  const chunks: Blob[] = [];
+
+  await new Promise<void>((resolve, reject) => {
+    recorder.addEventListener('dataavailable', (event) => {
+      if (event.data.size > 0) chunks.push(event.data);
+    });
+    recorder.addEventListener('stop', () => resolve(), { once: true });
+    recorder.addEventListener('error', () => reject(new Error('video recording failed')), { once: true });
+
+    recorder.start();
+    const startedAt = performance.now();
+
+    const step = (now: number) => {
+      const progress = Math.min(1, (now - startedAt) / 2200);
+      drawFrame(progress);
+      if (progress < 1) {
+        window.requestAnimationFrame(step);
+        return;
+      }
+      window.setTimeout(() => recorder.stop(), 120);
+    };
+
+    window.requestAnimationFrame(step);
+  });
+
+  stream.getTracks().forEach((track) => track.stop());
+  return new File(chunks, `${brandName}-intro.webm`, { type: mimeType.split(';')[0] });
+}
+
+async function buildAutofillData(brandName: string, selectedUseCases: TaaviaUseCaseKey[]) {
   const useCaseKeys = selectedUseCases.filter((item) => item !== 'all');
   const useCaseLabels = useCaseKeys.map((item) => USE_CASE_LABELS[item]).filter(Boolean);
   const focusLabel = useCaseLabels.length > 0 ? useCaseLabels.join('، ') : 'پشتیبانی، فروش و راهنمایی مشتری';
@@ -72,22 +260,34 @@ function buildAutofillData(brandName: string, selectedUseCases: TaaviaUseCaseKey
     timeStyle: 'short',
   }).format(new Date());
 
+  const brandDocumentFile = new File(
+    [
+      [
+        `Brand: ${brandName}`,
+        `Focus: ${focusLabel}`,
+        `Generated At: ${generatedAt}`,
+        'Autofill document for quick brand onboarding.',
+      ].join('\n'),
+    ],
+    `${brandName}-brand-brief.txt`,
+    { type: 'text/plain' },
+  );
+
+  const brandImageFile = await createBrandPreviewImageFile(brandName, focusLabel);
+  const brandVoiceFile = createBrandVoiceFile(brandName);
+  const brandVideoFile = await createBrandIntroVideoFile(brandName, focusLabel);
+
   const brandMessages: WorkspaceContentMessage[] = [
-    createTextMessage(
-      `${brandName} یک برند در حال راه‌اندازی برای ارائه تجربه‌ای سریع، دقیق و حرفه‌ای است. لحن ارتباطی باید دوستانه، مطمئن و خلاصه باشد.`,
-    ),
-    createTextMessage(
-      `تمرکز اصلی ${brandName} روی ${focusLabel} است. پاسخ‌ها باید شفاف، عملیاتی و قابل اجرا باشند و در صورت نیاز کاربر را به گام بعدی هدایت کنند.`,
-    ),
-    createTextMessage(
-      `بسته خودکار در ${generatedAt} تولید شد تا همه تب‌ها برای ساخت Knowledge Base آماده باشند و فقط مرحله Set Knowledge باقی بماند.`,
-    ),
+    createTextMessage(`${brandName} یک برند در حال راه‌اندازی برای ارائه تجربه‌ای سریع، دقیق و حرفه‌ای است. لحن ارتباطی باید دوستانه، مطمئن و خلاصه باشد.`),
+    createTextMessage(`تمرکز اصلی ${brandName} روی ${focusLabel} است. پاسخ‌ها باید شفاف، عملیاتی و قابل اجرا باشند و در صورت نیاز کاربر را به گام بعدی هدایت کنند.`),
+    createTextMessage(`بسته خودکار در ${generatedAt} تولید شد تا همه تب‌ها برای ساخت Knowledge Base آماده باشند و فقط مرحله Set Knowledge باقی بماند.`),
+    createFileMessage(brandDocumentFile, 'file'),
+    createFileMessage(brandImageFile, 'image'),
+    createFileMessage(brandVoiceFile, 'audio'),
+    createFileMessage(brandVideoFile, 'video'),
   ];
 
-  const serviceSeeds =
-    useCaseLabels.length > 0
-      ? useCaseLabels.slice(0, 3)
-      : ['پشتیبانی', 'فروش', 'آنبوردینگ'];
+  const serviceSeeds = useCaseLabels.length > 0 ? useCaseLabels.slice(0, 3) : ['پشتیبانی', 'فروش', 'آنبوردینگ'];
 
   const productCatalog: ProductCatalogSnapshot = {
     fields: INITIAL_PRODUCT_FIELDS,
@@ -107,7 +307,7 @@ function buildAutofillData(brandName: string, selectedUseCases: TaaviaUseCaseKey
     createAutofillFaqItem(
       1,
       `${brandName} چه کمکی به کاربر می‌کند؟`,
-      `${brandName} با تمرکز روی ${focusLabel} به کاربر کمک می‌کند سریع‌تر تصمیم بگیرد و پاسخ دقیق‌تر دریافت کند.`,
+      `${brandName} با تمرکز روی ${focusLabel} به کاربر کمک می‌کند سریع‌تر تصمیم بگیرد و پاسخ دقیق‌تری دریافت کند.`,
       'شناخت برند',
     ),
     createAutofillFaqItem(
@@ -119,7 +319,7 @@ function buildAutofillData(brandName: string, selectedUseCases: TaaviaUseCaseKey
     createAutofillFaqItem(
       3,
       `آیا اطلاعات ${brandName} قابل سفارشی‌سازی است؟`,
-      `بله، ساختار Knowledge Base، داده‌های محصول و FAQ همگی قابل ویرایش و شخصی‌سازی هستند.`,
+      'بله، ساختار Knowledge Base، داده‌های محصول و FAQ همگی قابل ویرایش و شخصی‌سازی هستند.',
       'تنظیمات',
     ),
   ];
@@ -227,10 +427,6 @@ export function TaaviaTestWorkspaceClient({
         return { tabId: tab.id, subTabId: sub?.id ?? null };
       }
 
-      if (tab.subTabs.length > 0) {
-        return { tabId: tab.id, subTabId: tab.subTabs[0]?.id ?? null };
-      }
-
       return { tabId: tab.id, subTabId: null };
     },
     [knowledgeBaseDocument, kbPreviewTabs],
@@ -247,7 +443,7 @@ export function TaaviaTestWorkspaceClient({
         return current;
       }
       const first = knowledgeBaseDocument.tabs[0];
-      return { tabId: first?.id ?? '', subTabId: first?.subTabs[0]?.id ?? null };
+      return { tabId: first?.id ?? '', subTabId: null };
     });
   }, [knowledgeBaseDocument]);
 
@@ -272,6 +468,7 @@ export function TaaviaTestWorkspaceClient({
   const statusSections = useMemo(
     () =>
       buildTestStatusReportSections({
+        selectedUseCases,
         brandMessages,
         productCatalog,
         faqItems,
@@ -282,6 +479,7 @@ export function TaaviaTestWorkspaceClient({
       }),
     [
       brandMessages,
+      selectedUseCases,
       productCatalog,
       faqItems,
       previewMeta.categories,
@@ -300,7 +498,7 @@ export function TaaviaTestWorkspaceClient({
     [counts],
   );
 
-  const handleAutofillWorkspace = useCallback(() => {
+  const handleAutofillWorkspace = useCallback(async () => {
     const hasExistingData =
       brandMessages.length > 0 ||
       productCatalog.rows.length > 0 ||
@@ -312,7 +510,7 @@ export function TaaviaTestWorkspaceClient({
       if (!confirmed) return;
     }
 
-    const autofill = buildAutofillData(brandName, selectedUseCases);
+    const autofill = await buildAutofillData(brandName, selectedUseCases);
     setBrandMessages(autofill.brandMessages);
     setProductCatalog(autofill.productCatalog);
     setFaqItems(autofill.faqItems);
@@ -429,36 +627,36 @@ export function TaaviaTestWorkspaceClient({
   const showCategoriesPreview = activeTab !== 'knowledge-base';
 
   return (
-    <div className="relative isolate overflow-hidden rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,16,33,0.98)_0%,rgba(11,22,43,0.95)_100%)] px-4 py-5 pb-28 md:px-5 md:py-6">
+    <div className="relative isolate overflow-hidden rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,16,33,0.98)_0%,rgba(11,22,43,0.95)_100%)] px-4 py-5 pb-6 md:px-5 md:py-6 lg:h-[calc(100vh-1rem)] lg:pb-6">
       <div className="absolute inset-x-[-10%] top-[-18%] h-64 rounded-full bg-[radial-gradient(circle,rgba(250,204,21,0.16)_0%,rgba(250,204,21,0)_72%)] blur-3xl" />
 
-      <div className="relative grid gap-3">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-3">
+      <div className="relative grid gap-2 lg:h-full lg:min-h-0 lg:grid-rows-[auto_auto_auto_minmax(0,1fr)]">
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-[18px] border border-white/8 bg-white/[0.03] px-3 py-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
               onClick={handleAutofillWorkspace}
-              className="inline-flex items-center gap-2 rounded-full border border-[rgba(66,237,211,0.24)] bg-[rgba(66,237,211,0.12)] px-4 py-2 text-[length:var(--taav-text-sm)] font-bold text-[rgb(150,246,231)] backdrop-blur-xl transition hover:border-[rgba(66,237,211,0.36)] hover:bg-[rgba(66,237,211,0.18)]"
+              className="inline-flex items-center gap-2 rounded-full border border-[rgba(66,237,211,0.24)] bg-[rgba(66,237,211,0.12)] px-3 py-1.5 text-[12px] font-bold text-[rgb(150,246,231)] backdrop-blur-xl transition hover:border-[rgba(66,237,211,0.36)] hover:bg-[rgba(66,237,211,0.18)]"
             >
-              <Sparkles className="h-4 w-4" />
+              <Sparkles className="h-3.5 w-3.5" />
               پر کردن خودکار تب‌ها
             </button>
             <Link href={entryPath}>
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-[length:var(--taav-text-sm)] font-bold text-[var(--taav-text-strong)] backdrop-blur-xl transition hover:border-white/20 hover:bg-white/10">
-              <ArrowLeft className="h-4 w-4" />
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[12px] font-bold text-[var(--taav-text-strong)] backdrop-blur-xl transition hover:border-white/20 hover:bg-white/10">
+              <ArrowLeft className="h-3.5 w-3.5" />
               بازگشت به انتخاب مسیر
             </span>
             </Link>
           </div>
-          <div className="inline-flex items-center gap-2 rounded-full border border-[rgba(250,204,21,0.24)] bg-[rgba(250,204,21,0.10)] px-4 py-2 text-[length:var(--taav-text-xs)] font-black text-[rgb(253,224,71)]">
-            <FlaskConical className="h-4 w-4" />
+          <div className="inline-flex items-center gap-2 rounded-full border border-[rgba(250,204,21,0.24)] bg-[rgba(250,204,21,0.10)] px-3 py-1.5 text-[11px] font-black text-[rgb(253,224,71)]">
+            <FlaskConical className="h-3.5 w-3.5" />
             تنظیم دستی · {brandName}
           </div>
         </div>
 
         <div className="text-right">
-          <h1 className="m-0 text-[clamp(1.6rem,2.4vw,2.4rem)] font-black text-white">ساخت Knowledge Base (تنظیم دستی)</h1>
-          <p className="mt-2 max-w-3xl text-[length:var(--taav-text-sm)] leading-8 text-[rgba(217,229,255,0.72)]">
+          <h1 className="m-0 text-[clamp(1.25rem,1.9vw,1.85rem)] font-black text-white">ساخت Knowledge Base (تنظیم دستی)</h1>
+          <p className="mt-1 max-w-3xl text-[12px] leading-6 text-[rgba(217,229,255,0.66)]">
             اطلاعات برند، محصول و FAQ را وارد کن. در پایان یک سند قابل ویرایش با تب و زیرتب ساخته می‌شود.
           </p>
         </div>
@@ -476,13 +674,13 @@ export function TaaviaTestWorkspaceClient({
         ) : null}
 
         <div
-          className={`grid items-start gap-2 ${
+          className={`grid items-start gap-2 lg:min-h-0 lg:h-full lg:overflow-hidden ${
             showCategoriesPreview
-              ? 'lg:grid-cols-[minmax(200px,240px)_minmax(0,1fr)_minmax(200px,240px)]'
-              : 'lg:grid-cols-[minmax(200px,240px)_minmax(0,1fr)]'
+              ? 'lg:h-full lg:grid-cols-[minmax(200px,240px)_minmax(0,1fr)_minmax(200px,240px)]'
+              : 'lg:h-full lg:grid-cols-[minmax(200px,240px)_minmax(0,1fr)]'
           }`}
         >
-          <div className="order-3 lg:col-start-1 lg:row-start-1">
+          <div className="order-3 lg:col-start-1 lg:row-start-1 lg:min-h-0 lg:h-full">
             <TestStatusReportPanel
               counts={counts}
               predictedCategories={previewMeta.categories}
@@ -492,9 +690,14 @@ export function TaaviaTestWorkspaceClient({
             />
           </div>
 
-          <div className="order-1 min-w-0 lg:col-start-2 lg:row-start-1">
-            <TaavTabs value={activeTab === 'knowledge-base' ? 'brand' : activeTab} onValueChange={handleTabChange} dir="rtl">
-              <TaavTabsList className="flex w-full flex-wrap justify-start gap-2 overflow-x-auto bg-transparent p-0">
+          <div className="order-1 min-w-0 lg:col-start-2 lg:row-start-1 lg:flex lg:min-h-0 lg:h-full lg:flex-col lg:overflow-y-auto lg:rounded-[22px] lg:border lg:border-white/8 lg:bg-[rgba(7,15,29,0.45)] lg:p-2 lg:pb-24">
+            <TaavTabs
+              value={activeTab === 'knowledge-base' ? '' : activeTab}
+              onValueChange={handleTabChange}
+              dir="rtl"
+              className="lg:flex lg:min-h-0 lg:flex-1 lg:flex-col"
+            >
+              <TaavTabsList className="sticky top-0 z-10 flex w-full flex-wrap justify-start gap-2 overflow-x-auto bg-[linear-gradient(180deg,rgba(9,16,33,0.98)_0%,rgba(9,16,33,0.88)_100%)] p-0 pb-2 backdrop-blur-xl">
                 {tabs.map((tab) => {
                   const Icon = tab.icon;
                   return (
@@ -512,7 +715,7 @@ export function TaaviaTestWorkspaceClient({
 
               {activeTab !== 'knowledge-base' ? (
                 <>
-                  <TaavTabsContent value="brand" className="m-0">
+                  <TaavTabsContent value="brand" className="m-0 lg:flex-1 lg:min-h-0">
                     <ContentFeedEditor
                       title="معرفی برند"
                       description="متن، ویس، تصویر، ویدیو و فایل درباره برند"
@@ -524,11 +727,11 @@ export function TaaviaTestWorkspaceClient({
                     />
                   </TaavTabsContent>
 
-                  <TaavTabsContent value="products" className="m-0">
+                  <TaavTabsContent value="products" className="m-0 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:pb-24">
                     <TestProductCatalogEditor catalog={productCatalog} onChange={setProductCatalog} />
                   </TaavTabsContent>
 
-                  <TaavTabsContent value="faq" className="m-0">
+                  <TaavTabsContent value="faq" className="m-0 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:pb-24">
                     <TestFaqEditor items={faqItems} onChange={setFaqItems} />
                   </TaavTabsContent>
                 </>
@@ -536,7 +739,7 @@ export function TaaviaTestWorkspaceClient({
             </TaavTabs>
 
             {activeTab === 'knowledge-base' && knowledgeBaseDocument ? (
-              <div className="mt-2">
+            <div className="mt-2 lg:min-h-0">
                 <TestKnowledgeBaseEditor
                   document={knowledgeBaseDocument}
                   onChange={handleKnowledgeBaseChange}
@@ -545,7 +748,7 @@ export function TaaviaTestWorkspaceClient({
                   isSaving={isSavingKb}
                   isDirty={kbDirty}
                   selectedTabId={kbSelection?.tabId ?? knowledgeBaseDocument.tabs[0]?.id}
-                  selectedSubTabId={kbSelection?.subTabId ?? knowledgeBaseDocument.tabs[0]?.subTabs[0]?.id ?? null}
+                  selectedSubTabId={kbSelection?.subTabId ?? null}
                   onSelectTab={(tabId, subTabId) => setKbSelection({ tabId, subTabId })}
                 />
               </div>
@@ -553,7 +756,7 @@ export function TaaviaTestWorkspaceClient({
           </div>
 
           {showCategoriesPreview ? (
-            <div className="order-2 lg:col-start-3 lg:row-start-1">
+            <div className="order-2 lg:col-start-3 lg:row-start-1 lg:min-h-0 lg:h-full">
               <TestKnowledgeBaseCategoriesPreview
                 tabs={kbPreviewTabs}
                 isBuilt={knowledgeBaseDocument !== null}
@@ -579,3 +782,4 @@ export function TaaviaTestWorkspaceClient({
     </div>
   );
 }
+

@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, MoreVertical, PencilLine, Plus, Trash2 } from 'lucide-react';
+import { useState } from 'react';
+import { ArrowLeft, Cpu, MoreVertical, PencilLine, Plus, Trash2 } from 'lucide-react';
 import {
   TaavBadge,
   TaavButton,
@@ -16,6 +17,7 @@ import { TaavEmptyState } from '@repo/ui/taav/data-display';
 import type { TaaviaBrand } from '@/app/lib/data';
 import { AI_LAB_TOOLTIPS } from '@/app/lib/tooltips';
 import { AiLabTooltipIcon } from '@/components/AiLabTooltip';
+import { TaaviaBrandModelSettingsDialog } from '@/components/taavia/TaaviaBrandModelSettingsDialog';
 
 type TaaviaBrandsClientProps = {
   tenantId: string;
@@ -24,6 +26,7 @@ type TaaviaBrandsClientProps = {
 
 export function TaaviaBrandsClient({ tenantId, initialBrands }: TaaviaBrandsClientProps) {
   const router = useRouter();
+  const [modelSettingsBrand, setModelSettingsBrand] = useState<TaaviaBrand | null>(null);
 
   const openCreatePage = () => {
     router.push(`/businesses/${tenantId}/products/taavia/brands/new`);
@@ -127,6 +130,15 @@ export function TaaviaBrandsClient({ tenantId, initialBrands }: TaaviaBrandsClie
                         onClick={(event) => event.stopPropagation()}
                       >
                         <TaavDropdownItem
+                          iconStart={<Cpu className="h-4 w-4" />}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setModelSettingsBrand(brand);
+                          }}
+                        >
+                          تنظیمات مدل
+                        </TaavDropdownItem>
+                        <TaavDropdownItem
                           iconStart={<PencilLine className="h-4 w-4" />}
                           onClick={(event) => {
                             event.stopPropagation();
@@ -164,6 +176,14 @@ export function TaaviaBrandsClient({ tenantId, initialBrands }: TaaviaBrandsClie
           </div>
         </div>
       )}
+
+      <TaaviaBrandModelSettingsDialog
+        tenantId={tenantId}
+        brand={modelSettingsBrand}
+        open={modelSettingsBrand !== null}
+        onOpenChange={(open) => (!open ? setModelSettingsBrand(null) : undefined)}
+        onSaved={() => router.refresh()}
+      />
 
     </>
   );

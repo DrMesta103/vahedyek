@@ -8,6 +8,7 @@ import type {
   TestAttachmentRef,
   TestFaqItem,
   TestKnowledgeBaseDocument,
+  TestKnowledgeBaseSourceRef,
   TestKnowledgeBaseSubTab,
   TestKnowledgeBaseTab,
 } from '@/app/lib/types/taavia-test-workspace';
@@ -29,6 +30,10 @@ function stampTab(tab: TabDraft, stamp: string): TestKnowledgeBaseTab {
   };
 }
 
+function createSource(id: string, label: string, detail?: string): TestKnowledgeBaseSourceRef {
+  return { id, label, detail };
+}
+
 function mapMessagesToAttachments(messages: WorkspaceContentMessage[]): TestAttachmentRef[] {
   return messages
     .filter((message) => message.kind !== 'text')
@@ -41,6 +46,42 @@ function mapMessagesToAttachments(messages: WorkspaceContentMessage[]): TestAtta
     }));
 }
 
+function mapBrandSources(messages: WorkspaceContentMessage[]): TestKnowledgeBaseSourceRef[] {
+  return messages.map((message, index) =>
+    createSource(
+      message.id,
+      message.kind === 'text' ? `متن برند ${index + 1}` : `رسانه برند ${index + 1}`,
+      message.kind === 'text' ? message.text?.trim().slice(0, 140) : message.fileName ?? getContentKindLabel(message.kind),
+    ),
+  );
+}
+
+function mapProductRowSources(
+  catalog: ProductCatalogSnapshot,
+  row: ProductCatalogSnapshot['rows'][number],
+  index: number,
+): TestKnowledgeBaseSourceRef[] {
+  const detail = catalog.fields
+    .map((field) => {
+      const value = row.values[field.id]?.trim();
+      return value ? `${field.label}: ${value}` : null;
+    })
+    .filter(Boolean)
+    .join(' | ');
+
+  return [createSource(row.id, `ردیف محصول ${index + 1}`, detail)];
+}
+
+function mapFaqSources(item: TestFaqItem, index: number): TestKnowledgeBaseSourceRef[] {
+  return [
+    createSource(
+      item.id,
+      `FAQ ${index + 1}`,
+      `سوال: ${item.question}${item.category ? ` | دسته: ${item.category}` : ''}`,
+    ),
+  ];
+}
+
 function buildBrandTab(
   brandMessages: WorkspaceContentMessage[],
   productCatalog: ProductCatalogSnapshot,
@@ -50,12 +91,12 @@ function buildBrandTab(
 
   const derived = deriveCategoriesFromAllSources(brandMessages, productCatalog, faqItems, [], []);
   const brandDerived = derived.filter(
-    (section) =>
-      !section.title.includes('محصول') && !section.title.includes('سوالات') && !section.title.includes('FAQ'),
+    (section) => !section.title.includes('محصول') && !section.title.includes('سوالات') && !section.title.includes('FAQ'),
   );
 
   const subTabs: SubTabDraft[] = [];
   const mediaAttachments = mapMessagesToAttachments(brandMessages);
+  const brandSources = mapBrandSources(brandMessages);
 
   for (const section of brandDerived.filter((s) => s.parentId === null)) {
     const children = brandDerived.filter((child) => child.parentId === section.id);
@@ -68,22 +109,26 @@ function buildBrandTab(
           title: section.title,
           body: section.content,
           attachments: isMedia ? mediaAttachments : [],
+          sources: brandSources,
         });
       }
+
       for (const child of children) {
         subTabs.push({
           id: child.id,
           title: child.title,
           body: child.content,
           attachments: [],
+          sources: brandSources,
         });
       }
     } else if (section.content.trim() || isMedia) {
       subTabs.push({
         id: section.id,
         title: section.title,
-        body: section.content || 'فایل و رسانه‌های برند',
+        body: section.content || 'فایل‌ها و رسانه‌های برند',
         attachments: isMedia ? mediaAttachments : [],
+        sources: brandSources,
       });
     }
   }
@@ -93,26 +138,38 @@ function buildBrandTab(
     return {
       id: createTestKbId('tab-brand'),
       title: 'دانش برند',
-      body: text || 'محتوای متنی ثبت نشده؛ فقط فایل و مدیا موجود است.',
+      body: text || 'محتوای متنی ثبت نشده و فقط فایل یا رسانه موجود است.',
       attachments: mediaAttachments,
+      sources: brandSources,
       subTabs: [],
     };
   }
 
+  const brandSummary = collectMessagesText(brandMessages).trim();
+  const summaryParts = [
+    brandSummary || null,
+    subTabs.length > 0 ? `${subTabs.length} بخش برای دانش برند ساخته شده است.` : null,
+    mediaAttachments.length > 0 ? `${mediaAttachments.length} فایل یا رسانه به این تب متصل است.` : null,
+  ]
+    .filter(Boolean)
+    .join('\n\n');
+
   return {
     id: createTestKbId('tab-brand'),
     title: 'دانش برند',
-    body: '',
-    attachments: [],
+    body: summaryParts || 'مرور کلی دانش برند در این تب قرار می‌گیرد.',
+    attachments: mediaAttachments,
+    sources: brandSources,
     subTabs,
   };
 }
 
 function buildProductTab(catalog: ProductCatalogSnapshot): TabDraft | null {
-  const validRows = catalog.rows.filter((row) =>
-    catalog.fields.some((field) => row.values[field.id]?.trim()),
-  );
+  const validRows = catalog.rows.filter((row) => catalog.fields.some((field) => row.values[field.id]?.trim()));
   if (validRows.length === 0) return null;
+
+  const nameFieldId = catalog.fields.find((field) => field.label.includes('نام'))?.id ?? '';
+  const descriptionFieldId = catalog.fields.find((field) => field.label.includes('توضیح'))?.id ?? '';
 
   const subTabs: SubTabDraft[] = validRows.map((row, index) => {
     const lines = catalog.fields
@@ -123,23 +180,31 @@ function buildProductTab(catalog: ProductCatalogSnapshot): TabDraft | null {
       .filter(Boolean)
       .join('\n');
 
-    const name =
-      row.values[catalog.fields.find((f) => f.label.includes('نام'))?.id ?? '']?.trim() ||
-      `محصول ${index + 1}`;
+    const name = row.values[nameFieldId]?.trim() || `محصول ${index + 1}`;
 
     return {
       id: row.id,
       title: name,
       body: lines || name,
       attachments: [],
+      sources: mapProductRowSources(catalog, row, index),
     };
   });
+
+  const productSummary = validRows
+    .map((row, index) => {
+      const name = row.values[nameFieldId]?.trim() || `محصول ${index + 1}`;
+      const description = row.values[descriptionFieldId]?.trim();
+      return description ? `${name}: ${description}` : name;
+    })
+    .join('\n');
 
   return {
     id: createTestKbId('tab-products'),
     title: 'محصولات و خدمات',
-    body: '',
+    body: `${validRows.length} محصول یا خدمت ثبت شده است.\n\n${productSummary}`,
     attachments: [],
+    sources: validRows.flatMap((row, index) => mapProductRowSources(catalog, row, index)),
     subTabs,
   };
 }
@@ -195,6 +260,7 @@ function buildFaqTab(faqItems: TestFaqItem[]): TabDraft | null {
         )
         .join('\n\n---\n\n'),
       attachments: [],
+      sources: items.flatMap((item, index) => mapFaqSources(item, index)),
     }));
 
   return {
@@ -202,6 +268,7 @@ function buildFaqTab(faqItems: TestFaqItem[]): TabDraft | null {
     title: 'سوالات پرتکرار',
     body: `${valid.length} سوال فعال`,
     attachments: [],
+    sources: valid.flatMap((item, index) => mapFaqSources(item, index)),
     subTabs,
   };
 }
@@ -215,38 +282,45 @@ function buildSupportTab(
   const brandText = collectMessagesText(brandMessages).toLowerCase();
   const hasTone = /لحن|پیام|ارتباط|گفتار/.test(brandText);
   const hasRules = /قانون|ممنوع|حساس|ارجاع/.test(brandText);
+  const brandSources = mapBrandSources(brandMessages);
 
   const subTabs: SubTabDraft[] = [
     {
       id: createTestKbId('support-tone'),
-      title: 'لحن پاسخ‌گویی',
+      title: 'لحن و پیام',
       body: hasTone
-        ? 'بر اساس محتوای برند، لحن و سبک ارتباط استخراج شده است.'
-        : 'لحن پاسخ‌گویی هنوز به‌صورت صریح ثبت نشده است.',
+        ? 'بر اساس محتوای برند، لحن و سبک ارتباط استخراج شده و آماده استفاده است.'
+        : 'لحن و پیام برند هنوز به‌صورت صریح ثبت نشده است.',
       attachments: [],
+      sources: brandSources,
     },
     {
       id: createTestKbId('support-scenarios'),
-      title: 'سناریوهای رایج',
-      body: 'سناریوهای مکالمه بر اساس FAQ و محتوای برند قابل توسعه است.',
+      title: 'مخاطب هدف',
+      body: 'سناریوهای مکالمه و مسیر پاسخ‌گویی با تکیه بر محتوای برند و FAQ قابل توسعه است.',
       attachments: [],
+      sources: brandSources,
     },
   ];
 
   if (hasRules) {
     subTabs.push({
       id: createTestKbId('support-rules'),
-      title: 'قوانین و حساسیت‌های برند',
+      title: 'قوانین و حساسیت‌ها',
       body: 'موارد حساس و قوانین پاسخ‌گویی از محتوای برند استخراج شده است.',
       attachments: [],
+      sources: brandSources,
     });
   }
 
+  const supportSummary = subTabs.map((item) => `${item.title}: ${item.body}`).join('\n\n');
+
   return {
     id: createTestKbId('tab-support'),
-    title: 'پشتیبانی و مکالمه',
-    body: '',
+    title: 'کارشناس فروش',
+    body: supportSummary,
     attachments: [],
+    sources: brandSources,
     subTabs,
   };
 }
@@ -290,7 +364,7 @@ export function buildTestKnowledgeBaseDocument(input: {
   if (support) tabs.push(stampTab(support, stamp));
 
   return {
-    title: `Knowledge Base — ${input.brandName}`,
+    title: `Knowledge Base - ${input.brandName}`,
     brandName: input.brandName,
     builtAt: stamp,
     lastSavedAt: null,

@@ -57,7 +57,7 @@ export function TestBuildKnowledgeBaseButton({
 
   return (
     <>
-      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center p-4 md:p-6">
+      <div className="pointer-events-none sticky bottom-4 z-40 mt-4 flex justify-center px-2 pb-2 md:px-4">
         <div className="pointer-events-auto w-full max-w-4xl">
           <button
             type="button"

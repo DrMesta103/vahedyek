@@ -11,7 +11,7 @@ import {
   Plus,
   Save,
 } from 'lucide-react';
-import type { TestKnowledgeBaseDocument, TestKnowledgeBaseTab } from '@/app/lib/types/taavia-test-workspace';
+import type { TestKnowledgeBaseDocument, TestKnowledgeBaseSourceRef, TestKnowledgeBaseTab } from '@/app/lib/types/taavia-test-workspace';
 import {
   createEmptyKnowledgeBaseSubTab,
   createEmptyKnowledgeBaseTab,
@@ -42,6 +42,7 @@ type DialogState =
   | { type: 'add-subtab'; tabId: string; draft: string }
   | { type: 'delete-tab'; tabId: string; title: string }
   | { type: 'delete-subtab'; tabId: string; subTabId: string; title: string }
+  | { type: 'view-sources'; tabId: string }
   | null;
 
 type TestKnowledgeBaseEditorProps = {
@@ -94,6 +95,7 @@ export function TestKnowledgeBaseEditor({
 
   const activeSubTab = useMemo(() => {
     if (!activeTab || activeTab.subTabs.length === 0) return null;
+    if (activeSubTabId === null) return null;
     return activeTab.subTabs.find((sub) => sub.id === activeSubTabId) ?? activeTab.subTabs[0] ?? null;
   }, [activeTab, activeSubTabId]);
 
@@ -107,7 +109,11 @@ export function TestKnowledgeBaseEditor({
     if (!activeTab || isSelectionControlled) return;
     if (activeTab.subTabs.length > 0) {
       setInternalSubTabId((current) =>
-        current && activeTab.subTabs.some((sub) => sub.id === current) ? current : activeTab.subTabs[0]?.id ?? null,
+        current === null
+          ? null
+          : current && activeTab.subTabs.some((sub) => sub.id === current)
+            ? current
+            : activeTab.subTabs[0]?.id ?? null,
       );
     } else {
       setInternalSubTabId(null);
@@ -154,12 +160,10 @@ export function TestKnowledgeBaseEditor({
     );
   };
 
-  const editorTitle = activeSubTab?.title ?? activeTab?.title ?? '';
-  const editorBody = activeTab?.subTabs.length ? (activeSubTab?.body ?? '') : (activeTab?.body ?? '');
+  const editorTitle = activeSubTab ? activeSubTab.title : (activeTab?.title ?? '');
+  const editorBody = activeSubTab ? activeSubTab.body : (activeTab?.body ?? '');
   const editorUpdatedAt = activeSubTab?.updatedAt ?? activeTab?.updatedAt ?? document.builtAt;
-  const editorAttachments = activeTab?.subTabs.length
-    ? (activeSubTab?.attachments ?? [])
-    : (activeTab?.attachments ?? []);
+  const editorAttachments = activeSubTab ? activeSubTab.attachments : (activeTab?.attachments ?? []);
 
   const isTabCollapsed = (tabId: string) => collapsedTabIds.includes(tabId);
 
@@ -172,8 +176,6 @@ export function TestKnowledgeBaseEditor({
   const selectTab = (tab: TestKnowledgeBaseTab) => {
     if (tab.subTabs.length > 0) {
       setCollapsedTabIds((current) => current.filter((id) => id !== tab.id));
-      setSelection(tab.id, tab.subTabs[0]?.id ?? null);
-      return;
     }
     setSelection(tab.id, null);
   };
@@ -214,6 +216,11 @@ export function TestKnowledgeBaseEditor({
             : { ...tab, subTabs: tab.subTabs.filter((sub) => sub.id !== dialog.subTabId), updatedAt: stamp },
         ),
       );
+      closeDialog();
+      return;
+    }
+
+    if (dialog.type === 'view-sources') {
       closeDialog();
       return;
     }
@@ -302,7 +309,7 @@ export function TestKnowledgeBaseEditor({
 
           <button
             type="button"
-            onClick={() => (hasChildren ? toggleTabCollapse(tab.id) : selectTab(tab))}
+            onClick={() => selectTab(tab)}
             className="flex min-w-0 flex-1 items-center gap-2 text-right"
           >
             <span className="inline-flex h-6 w-6 items-center justify-center rounded-md text-[rgb(150,246,231)]">
@@ -337,6 +344,17 @@ export function TestKnowledgeBaseEditor({
                   }}
                 >
                   ویرایش عنوان
+                </button>
+                <button
+                  type="button"
+                  className="rounded-[12px] px-3 py-2 text-[12px] font-semibold text-white transition hover:bg-white/10"
+                  onClick={() => {
+                    setDialog({ type: 'view-sources', tabId: tab.id });
+                    setDialogError(null);
+                    setOpenMenu(null);
+                  }}
+                >
+                  منابع
                 </button>
                 <button
                   type="button"
@@ -378,10 +396,6 @@ export function TestKnowledgeBaseEditor({
                   }`}
                   style={{ marginLeft: '22px' }}
                 >
-                  <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center text-[rgba(217,229,255,0.34)]">
-                    <ChevronDown className="h-4 w-4" />
-                  </span>
-
                   <button
                     type="button"
                     onClick={() => selectSubTab(tab, subTab.id)}
@@ -448,6 +462,28 @@ export function TestKnowledgeBaseEditor({
               );
             })
           : null}
+      </div>
+    );
+  };
+
+  const sourcesDialogTab =
+    dialog?.type === 'view-sources' ? document.tabs.find((tab) => tab.id === dialog.tabId) ?? null : null;
+
+  const renderSourceList = (sources: TestKnowledgeBaseSourceRef[]) => {
+    if (sources.length === 0) {
+      return <div className="text-[12px] text-[rgba(217,229,255,0.58)]">منبعی برای این بخش ثبت نشده است.</div>;
+    }
+
+    return (
+      <div className="grid gap-2">
+        {sources.map((source) => (
+          <div key={source.id} className="rounded-[12px] border border-white/10 bg-white/5 px-3 py-2 text-right">
+            <div className="text-[12px] font-bold text-white">{source.label}</div>
+            {source.detail ? (
+              <div className="mt-1 text-[11px] leading-6 text-[rgba(217,229,255,0.64)]">{source.detail}</div>
+            ) : null}
+          </div>
+        ))}
       </div>
     );
   };
@@ -580,6 +616,8 @@ export function TestKnowledgeBaseEditor({
             <TaavDialogTitle className="text-right text-[length:var(--taav-text-lg)] font-black">
               {dialog?.type === 'delete-tab' || dialog?.type === 'delete-subtab'
                 ? 'تأیید حذف'
+                : dialog?.type === 'view-sources'
+                  ? 'منابع ساخت تب'
                 : dialog?.type === 'edit-tab-title' || dialog?.type === 'edit-subtab-title'
                   ? 'ویرایش عنوان'
                   : dialog?.type === 'add-subtab'
@@ -591,11 +629,39 @@ export function TestKnowledgeBaseEditor({
                 ? `آیا از حذف تب «${dialog.title}» و تمام زیرتب‌های آن مطمئن هستید؟`
                 : dialog?.type === 'delete-subtab'
                   ? `آیا از حذف زیرتب «${dialog.title}» مطمئن هستید؟`
+                  : dialog?.type === 'view-sources'
+                    ? 'در این بخش می‌توانی منابعی را ببینی که برای ساخت خود تب و زیرتب‌های آن استفاده شده‌اند.'
                   : 'عنوان را وارد کن.'}
             </TaavDialogDescription>
           </TaavDialogHeader>
 
-          {dialog && dialog.type !== 'delete-tab' && dialog.type !== 'delete-subtab' ? (
+          {dialog?.type === 'view-sources' && sourcesDialogTab ? (
+            <div className="grid gap-4">
+              <div className="grid gap-2">
+                <div className="text-right text-[12px] font-black text-white">منابع تب: {sourcesDialogTab.title}</div>
+                {renderSourceList(sourcesDialogTab.sources)}
+              </div>
+
+              <div className="grid gap-3">
+                <div className="text-right text-[12px] font-black text-white">منابع زیرتب‌ها</div>
+                {sourcesDialogTab.subTabs.length > 0 ? (
+                  <div className="grid gap-3">
+                    {sourcesDialogTab.subTabs.map((subTab) => (
+                      <div key={subTab.id} className="grid gap-2 rounded-[14px] border border-white/10 bg-[rgba(5,12,25,0.4)] p-3">
+                        <div className="text-right text-[12px] font-bold text-[rgb(199,210,254)]">{subTab.title}</div>
+                        {renderSourceList(subTab.sources)}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-[12px] text-[rgba(217,229,255,0.58)]">این تب زیرتب ندارد.</div>
+                )}
+              </div>
+            </div>
+          ) : dialog &&
+            dialog.type !== 'delete-tab' &&
+            dialog.type !== 'delete-subtab' &&
+            dialog.type !== 'view-sources' ? (
             <input
               value={dialog.draft}
               onChange={(event) => {
@@ -613,11 +679,13 @@ export function TestKnowledgeBaseEditor({
 
           <TaavDialogFooter>
             <TaavButton variant="secondary" tone="neutral" onClick={closeDialog}>
-              انصراف
+              {dialog?.type === 'view-sources' ? 'بستن' : 'انصراف'}
             </TaavButton>
-            <TaavButton onClick={confirmDialog}>
-              {dialog?.type === 'delete-tab' || dialog?.type === 'delete-subtab' ? 'حذف' : 'تأیید'}
-            </TaavButton>
+            {dialog?.type !== 'view-sources' ? (
+              <TaavButton onClick={confirmDialog}>
+                {dialog?.type === 'delete-tab' || dialog?.type === 'delete-subtab' ? 'حذف' : 'تأیید'}
+              </TaavButton>
+            ) : null}
           </TaavDialogFooter>
         </TaavDialogContent>
       </TaavDialog>

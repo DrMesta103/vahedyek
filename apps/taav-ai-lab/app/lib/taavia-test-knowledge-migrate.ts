@@ -12,6 +12,7 @@ export function createTestKbId(prefix: string) {
 function normalizeSubTab(sub: TestKnowledgeBaseSubTab, fallback: string): TestKnowledgeBaseSubTab {
   return {
     ...sub,
+    sources: Array.isArray(sub.sources) ? sub.sources : [],
     updatedAt: sub.updatedAt ?? fallback,
   };
 }
@@ -19,6 +20,7 @@ function normalizeSubTab(sub: TestKnowledgeBaseSubTab, fallback: string): TestKn
 function normalizeTab(tab: TestKnowledgeBaseTab, fallback: string): TestKnowledgeBaseTab {
   return {
     ...tab,
+    sources: Array.isArray(tab.sources) ? tab.sources : [],
     updatedAt: tab.updatedAt ?? fallback,
     subTabs: tab.subTabs.map((sub) => normalizeSubTab(sub, fallback)),
   };
@@ -40,6 +42,7 @@ function sectionToSubTabs(
           title: section.title,
           body: section.body,
           attachments: section.attachments,
+          sources: [],
           updatedAt: fallback,
         });
       }
@@ -49,6 +52,7 @@ function sectionToSubTabs(
           title: sub.title,
           body: sub.body,
           attachments: sub.attachments,
+          sources: [],
           updatedAt: fallback,
         });
       }
@@ -65,6 +69,7 @@ function sectionToSubTabs(
       title: section.title,
       body: section.body,
       attachments: section.attachments,
+      sources: [],
       updatedAt: fallback,
     });
   }
@@ -80,6 +85,7 @@ function categoryToTab(category: TestKnowledgeBaseCategory, fallback: string): T
     title: category.subtitle ?? category.title,
     body: subTabs.length > 0 ? '' : fallbackBody,
     attachments: subTabs.length > 0 ? [] : fallbackAttachments,
+    sources: [],
     subTabs,
     updatedAt: fallback,
   };
@@ -123,6 +129,7 @@ export function createEmptyKnowledgeBaseTab(title = 'تب جدید'): TestKnowle
     title,
     body: '',
     attachments: [],
+    sources: [],
     subTabs: [],
     updatedAt,
   };
@@ -134,6 +141,7 @@ export function createEmptyKnowledgeBaseSubTab(title = 'زیرتب جدید'): T
     title,
     body: '',
     attachments: [],
+    sources: [],
     updatedAt: new Date().toISOString(),
   };
 }

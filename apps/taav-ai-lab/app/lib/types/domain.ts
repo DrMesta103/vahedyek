@@ -56,7 +56,18 @@ export type TaaviaBrand = {
     iconName?: string;
     iconDataUrl?: string;
   };
+  modelPreferences?: Partial<Record<TaaviaBrandModelServiceKey, string>>;
 };
+
+export type TaaviaBrandModelServiceKey =
+  | 'adminAgent'
+  | 'knowledgeBase'
+  | 'faqAssistant'
+  | 'ocr'
+  | 'embeddings'
+  | 'vision'
+  | 'speechToText'
+  | 'textToSpeech';
 
 export type TaaviaUseCaseKey =
   | 'support'
@@ -135,6 +146,7 @@ export type CreateTaaviaBrandInput = {
     iconName?: string;
     iconDataUrl?: string;
   };
+  modelPreferences?: Partial<Record<TaaviaBrandModelServiceKey, string>>;
 };
 
 export type UpdateTaaviaBrandInput = CreateTaaviaBrandInput & {
