@@ -2,9 +2,9 @@ import { assertTenantAccess } from '../auth';
 import {
   buildOcrCostMeta,
   buildOcrUsageCost,
-  resolveOcrModelPricing,
 } from '../ocr-ai-pricing';
-import { buildOcrAiMetaFromModel, resolveOcrModel } from '../ocr-models';
+import { DEFAULT_OCR_MODEL_ID, type OcrModelProvider } from '../ocr-models';
+import { AI_PROVIDER_LABELS, type AiProviderType } from '../types/ai-accounts';
 import {
   buildOcrSimulationJob,
   mapDbJobToDomain,
@@ -12,9 +12,28 @@ import {
   materializeOcrJob,
 } from '../ocr-job-builder';
 import { prisma } from '../prisma';
-import { listAiProviderAccounts } from './ai-accounts';
 import { getGlobalSettings } from './global-settings';
 import type { CreateOcrSimulationInput, OcrSimulationJob } from '../types/domain';
+
+function toNumber(value: { toString(): string } | number) {
+  return Number(value);
+}
+
+function mapAccountProviderToOcrProvider(value: string): OcrModelProvider | null {
+  const normalized = value.trim().toUpperCase();
+  if (normalized === 'OPENAI') return 'openai';
+  if (normalized === 'DEEPSEEK') return 'deepseek';
+  if (normalized === 'GEMINI') return 'google';
+  if (normalized === 'GROK') return 'xai';
+  return null;
+}
+
+function parseOcrModelKey(value: string): { accountId: string; providerModelName: string } | null {
+  const trimmed = value.trim();
+  const idx = trimmed.indexOf(':');
+  if (idx <= 0 || idx === trimmed.length - 1) return null;
+  return { accountId: trimmed.slice(0, idx), providerModelName: trimmed.slice(idx + 1) };
+}
 
 async function persistMaterializedJob(job: OcrSimulationJob) {
   await prisma.ocrJob.update({
@@ -78,22 +97,62 @@ export async function createOcrJobForTenant(
   if (!(await assertTenantAccess(userId, input.tenantId))) return null;
 
   let job = buildOcrSimulationJob(input.tenantId, input);
-  const [{ accounts }, globalSettings] = await Promise.all([
-    listAiProviderAccounts(),
-    getGlobalSettings(),
-  ]);
+  const globalSettings = await getGlobalSettings();
 
-  const model = resolveOcrModel(input.modelId, input.transportMode);
-  const aiMeta = buildOcrAiMetaFromModel(job.tokensUsed, model);
-  const inputTokens = Number(aiMeta.__inputTokens);
-  const outputTokens = Number(aiMeta.__outputTokens);
-  const pricing = resolveOcrModelPricing(model.id, accounts);
+  const modelKey = input.modelId?.trim() || DEFAULT_OCR_MODEL_ID;
+  const parsedKey = parseOcrModelKey(modelKey);
+
+  const selectedModelRow = parsedKey
+    ? await prisma.aiProviderModel.findFirst({
+        where: {
+          accountId: parsedKey.accountId,
+          isActive: true,
+          modelType: 'OCR',
+          providerModelName: parsedKey.providerModelName,
+          account: { isActive: true },
+        },
+        include: { account: true },
+      })
+    : await prisma.aiProviderModel.findFirst({
+        where: {
+          isActive: true,
+          modelType: 'OCR',
+          providerModelName: modelKey,
+          account: { isActive: true },
+        },
+        include: { account: true },
+        orderBy: [{ updatedAt: 'desc' }],
+      });
+
+  const providerType = selectedModelRow ? (selectedModelRow.account.provider as AiProviderType) : null;
+  const provider = selectedModelRow
+    ? (mapAccountProviderToOcrProvider(selectedModelRow.account.provider) ?? 'openai')
+    : 'openai';
+  const providerLabel = providerType ? (AI_PROVIDER_LABELS[providerType] ?? selectedModelRow!.account.provider) : '—';
+
+  const rowRatio = selectedModelRow
+    ? toNumber(((selectedModelRow as unknown as { ocrInputRatio?: { toString(): string } | number }).ocrInputRatio ?? 0.6))
+    : 0.6;
+  const inputRatio = Math.min(0.99, Math.max(0.01, rowRatio));
+  const inputTokens = Math.max(1, Math.round(job.tokensUsed * inputRatio));
+  const outputTokens = Math.max(1, job.tokensUsed - inputTokens);
+
+  const pricing = selectedModelRow
+    ? {
+        accountId: selectedModelRow.accountId,
+        provider: (selectedModelRow.account.provider as AiProviderType) ?? 'OPENAI',
+        providerLabel,
+        inputTokenPriceUsd: toNumber(selectedModelRow.inputTokenPriceUsd),
+        outputTokenPriceUsd: toNumber(selectedModelRow.outputTokenPriceUsd),
+      }
+    : null;
+
   const usageCost = buildOcrUsageCost({
     inputTokens,
     outputTokens,
     pricing,
     usdToToman: globalSettings.usdToToman,
-    providerLabel: model.providerLabel,
+    providerLabel,
   });
 
   job = {
@@ -101,6 +160,12 @@ export async function createOcrJobForTenant(
     extractedJson: {
       ...job.extractedJson,
       ...buildOcrCostMeta(usageCost),
+      __aiModelId: selectedModelRow?.providerModelName ?? modelKey,
+      __aiModelName: selectedModelRow?.displayName ?? modelKey,
+      __aiProviderLabel: providerLabel,
+      __inputTokens: String(inputTokens),
+      __outputTokens: String(outputTokens),
+      __ocrProvider: provider,
     },
   };
 
@@ -124,7 +189,7 @@ export async function createOcrJobForTenant(
           tenantId: input.tenantId,
           businessId: input.tenantId,
           serviceName: 'ocr',
-          featureName: model.id,
+          featureName: selectedModelRow?.providerModelName ?? modelKey,
           requestId: job.id,
           inputTokens,
           outputTokens,
@@ -133,7 +198,7 @@ export async function createOcrJobForTenant(
           outputCostUsd: usageCost.outputCostUsd,
           totalCostUsd: usageCost.totalCostUsd,
           metadata: {
-            modelName: model.name,
+            modelName: selectedModelRow?.displayName ?? modelKey,
             providerLabel: usageCost.providerLabel,
             totalCostToman: usageCost.totalCostToman,
           },

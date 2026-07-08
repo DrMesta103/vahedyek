@@ -148,6 +148,7 @@ export {
   listAiProviderModels,
   getAiProviderModelById,
   getAiProviderAccountDetail,
+  listSystemOcrModels,
   createAiProviderModel,
   updateAiProviderModel,
   toggleAiProviderModelStatus,

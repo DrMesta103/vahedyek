@@ -2,7 +2,8 @@
 
 import { useMemo, useState, type ReactNode } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Pencil, Plus, Power, Trash2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { ArrowRight, Layers, Pencil, Plus, Power, Shield, Trash2 } from 'lucide-react';
 import {
   TaavDialog,
   TaavDialogContent,
@@ -22,8 +23,6 @@ import {
   type AiProviderType,
 } from '@/app/lib/types/ai-accounts';
 import { formatUsd } from '@/app/lib/global-settings-mock';
-import { formatCostUsd, formatTokenPriceUsd, usdToTomanCost } from '@/app/lib/ai-usage-cost';
-import { formatCostToman, formatPerTokenPriceToman } from '@/app/lib/ocr-ai-pricing';
 import { AI_LAB_TOOLTIPS } from '@/app/lib/tooltips';
 import { AiLabLabelWithTooltip, AiLabTooltipIcon } from '@/components/AiLabTooltip';
 
@@ -39,8 +38,6 @@ type AccountFormState = {
   apiKey: string;
   purchaseEmail: string;
   purchasedCreditUsd: string;
-  inputTokenPriceUsd: string;
-  outputTokenPriceUsd: string;
   notes: string;
   isActive: boolean;
 };
@@ -51,8 +48,6 @@ const EMPTY_FORM: AccountFormState = {
   apiKey: '',
   purchaseEmail: '',
   purchasedCreditUsd: '0',
-  inputTokenPriceUsd: '0',
-  outputTokenPriceUsd: '0',
   notes: '',
   isActive: true,
 };
@@ -95,8 +90,6 @@ function toFormState(account: AiProviderAccountPublic): AccountFormState {
     apiKey: '',
     purchaseEmail: account.purchaseEmail ?? '',
     purchasedCreditUsd: String(account.purchasedCreditUsd),
-    inputTokenPriceUsd: String(account.inputTokenPriceUsd),
-    outputTokenPriceUsd: String(account.outputTokenPriceUsd),
     notes: account.notes ?? '',
     isActive: account.isActive,
   };
@@ -114,8 +107,8 @@ function FormSection({ title, children }: { title: string; children: ReactNode }
 export function AiAccountsSettingsClient({
   initialAccounts,
   initialSummary,
-  usdToToman,
 }: AiAccountsSettingsClientProps) {
+  const router = useRouter();
   const [accounts, setAccounts] = useState(initialAccounts);
   const [summary, setSummary] = useState(initialSummary);
   const [listError, setListError] = useState<string | null>(null);
@@ -125,10 +118,6 @@ export function AiAccountsSettingsClient({
   const [form, setForm] = useState<AccountFormState>(EMPTY_FORM);
   const [formError, setFormError] = useState<string | null>(null);
   const [formLoading, setFormLoading] = useState(false);
-  const formInputPrice = parseNonNegativeDecimalInput(form.inputTokenPriceUsd) ?? 0;
-  const formOutputPrice = parseNonNegativeDecimalInput(form.outputTokenPriceUsd) ?? 0;
-  const previewInputCostUsd = formInputPrice * 1000;
-  const previewOutputCostUsd = formOutputPrice * 1000;
   const [refreshing, setRefreshing] = useState(false);
 
   const statCards = useMemo(
@@ -195,8 +184,6 @@ export function AiAccountsSettingsClient({
     setFormLoading(true);
 
     const purchasedCreditUsd = parseNonNegativeDecimalInput(form.purchasedCreditUsd);
-    const inputTokenPriceUsd = parseNonNegativeDecimalInput(form.inputTokenPriceUsd);
-    const outputTokenPriceUsd = parseNonNegativeDecimalInput(form.outputTokenPriceUsd);
 
     const payload = {
       name: form.name.trim(),
@@ -204,8 +191,6 @@ export function AiAccountsSettingsClient({
       apiKey: form.apiKey.trim() || undefined,
       purchaseEmail: form.purchaseEmail.trim() || null,
       purchasedCreditUsd,
-      inputTokenPriceUsd,
-      outputTokenPriceUsd,
       notes: form.notes.trim() || null,
       isActive: form.isActive,
     };
@@ -224,18 +209,6 @@ export function AiAccountsSettingsClient({
 
     if (purchasedCreditUsd === null) {
       setFormError('اعتبار خریداری‌شده باید صفر یا بیشتر باشد.');
-      setFormLoading(false);
-      return;
-    }
-
-    if (inputTokenPriceUsd === null) {
-      setFormError('قیمت توکن ورودی باید صفر یا بیشتر باشد.');
-      setFormLoading(false);
-      return;
-    }
-
-    if (outputTokenPriceUsd === null) {
-      setFormError('قیمت توکن خروجی باید صفر یا بیشتر باشد.');
       setFormLoading(false);
       return;
     }
@@ -285,6 +258,8 @@ export function AiAccountsSettingsClient({
   };
 
   const deleteAccount = async (account: AiProviderAccountPublic) => {
+    if (account.isSystem) return;
+
     const confirmed = window.confirm(`آیا مطمئن هستید که می‌خواهید اکانت «${account.name}» را حذف کنید؟`);
     if (!confirmed) return;
 
@@ -300,6 +275,8 @@ export function AiAccountsSettingsClient({
     await refreshAccounts();
   };
 
+  const isProviderLocked = Boolean(editingAccount?.isSystem);
+
   return (
     <div className="business-settings-page-shell" dir="rtl" lang="fa">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -310,7 +287,7 @@ export function AiAccountsSettingsClient({
             <AiLabTooltipIcon content={AI_LAB_TOOLTIPS.settings.aiAccounts} label="راهنمای اکانت‌های AI" />
           </h1>
           <p className="m-0 max-w-3xl text-[length:var(--taav-text-sm)] text-[var(--taav-text-muted)]">
-            مدیریت اکانت‌ها، API Keyها، Providerها، اعتبار و قیمت توکن برای استفاده در سرویس‌های هوش مصنوعی آزمایشگاه تاو.
+            مدیریت اکانت‌ها، API Keyها، Providerها و اعتبار. قیمت‌گذاری توکن در سطح مدل‌های هر Provider انجام می‌شود.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -372,11 +349,10 @@ export function AiAccountsSettingsClient({
                   <th>اعتبار خریداری‌شده</th>
                   <th>مصرف‌شده</th>
                   <th>باقی‌مانده</th>
-                  <th>قیمت توکن ورودی</th>
-                  <th>قیمت توکن خروجی</th>
+                  <th>مدل‌ها</th>
                   <th>وضعیت</th>
                   <th>آخرین بروزرسانی</th>
-                  <th>عملیات</th>
+                  <th className="sticky left-0 bg-[var(--taav-surface-base)]">عملیات</th>
                 </tr>
               </thead>
               <tbody>
@@ -384,7 +360,17 @@ export function AiAccountsSettingsClient({
                   <tr key={account.id}>
                     <td>
                       <div className="grid gap-1">
-                        <strong className="text-[var(--taav-text-strong)]">{account.name}</strong>
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <strong className="text-[var(--taav-text-strong)]">{account.name}</strong>
+                          {account.isSystem ? (
+                            <TaavBadge tone="info" variant="soft" size="sm">
+                              <span className="ai-lab-system-badge">
+                                <Shield className="h-3 w-3" />
+                                سیستمی
+                              </span>
+                            </TaavBadge>
+                          ) : null}
+                        </div>
                         <span className="font-mono text-[length:var(--taav-text-xs)] text-[var(--taav-text-muted)]" dir="ltr">
                           {account.apiKeyMasked}
                         </span>
@@ -398,17 +384,11 @@ export function AiAccountsSettingsClient({
                     <td>{formatUsd(account.purchasedCreditUsd)}</td>
                     <td>{formatUsd(account.usedCreditUsd)}</td>
                     <td>{formatUsd(account.remainingCreditUsd)}</td>
-                    <td dir="ltr">
-                      <div className="grid gap-0.5">
-                        <span>{formatTokenPriceUsd(account.inputTokenPriceUsd)}</span>
-                        <span className="ai-lab-settings-price-toman">{formatPerTokenPriceToman(account.inputTokenPriceUsd, usdToToman)}</span>
-                      </div>
-                    </td>
-                    <td dir="ltr">
-                      <div className="grid gap-0.5">
-                        <span>{formatTokenPriceUsd(account.outputTokenPriceUsd)}</span>
-                        <span className="ai-lab-settings-price-toman">{formatPerTokenPriceToman(account.outputTokenPriceUsd, usdToToman)}</span>
-                      </div>
+                    <td>
+                      <span className="text-[length:var(--taav-text-sm)] text-[var(--taav-text-strong)]">
+                        {formatFaNumber(account.activeModelCount)} / {formatFaNumber(account.totalModelCount)}
+                      </span>
+                      <span className="block text-[length:var(--taav-text-xs)] text-[var(--taav-text-muted)]">فعال / کل</span>
                     </td>
                     <td>
                       <TaavBadge tone={account.isActive ? 'success' : 'neutral'} variant="soft">
@@ -416,8 +396,16 @@ export function AiAccountsSettingsClient({
                       </TaavBadge>
                     </td>
                     <td>{formatFaDateTime(account.updatedAt)}</td>
-                    <td>
+                    <td className="sticky left-0 bg-[var(--taav-surface-base)]">
                       <div className="flex flex-wrap gap-1">
+                        <TaavButton
+                          size="sm"
+                          variant="secondary"
+                          iconStart={<Layers className="h-3.5 w-3.5" />}
+                          onClick={() => router.push(`/settings/ai-accounts/${account.id}`)}
+                        >
+                          مدل‌ها
+                        </TaavButton>
                         <TaavButton
                           size="sm"
                           variant="secondary"
@@ -434,14 +422,16 @@ export function AiAccountsSettingsClient({
                         >
                           {account.isActive ? 'غیرفعال' : 'فعال'}
                         </TaavButton>
-                        <TaavButton
-                          size="sm"
-                          variant="ghost"
-                          iconStart={<Trash2 className="h-3.5 w-3.5" />}
-                          onClick={() => deleteAccount(account)}
-                        >
-                          حذف
-                        </TaavButton>
+                        {!account.isSystem ? (
+                          <TaavButton
+                            size="sm"
+                            variant="ghost"
+                            iconStart={<Trash2 className="h-3.5 w-3.5" />}
+                            onClick={() => deleteAccount(account)}
+                          >
+                            حذف
+                          </TaavButton>
+                        ) : null}
                       </div>
                     </td>
                   </tr>
@@ -458,8 +448,8 @@ export function AiAccountsSettingsClient({
             <TaavDialogTitle>{editingAccount ? 'ویرایش اکانت' : 'افزودن اکانت'}</TaavDialogTitle>
             <TaavDialogDescription>
               {editingAccount
-                ? 'برای جایگزینی API Key مقدار جدید وارد کنید؛ در غیر این صورت خالی بگذارید.'
-                : 'اطلاعات اکانت Provider، اعتبار و قیمت توکن را وارد کنید.'}
+                ? 'برای جایگزینی API Key مقدار جدید وارد کنید؛ در غیر این صورت خالی بگذارید. قیمت توکن از مدل‌های این اکانت خوانده می‌شود.'
+                : 'اطلاعات اکانت Provider و اعتبار را وارد کنید. پس از ایجاد، مدل‌ها و قیمت‌گذاری را از بخش «مدل‌ها» تنظیم کنید.'}
             </TaavDialogDescription>
           </TaavDialogHeader>
 
@@ -484,20 +474,27 @@ export function AiAccountsSettingsClient({
                 label={<AiLabLabelWithTooltip label="ارائه‌دهنده" tooltip={AI_LAB_TOOLTIPS.settings.aiAccountProvider} required />}
                 required
               >
-                <TaavChoiceChipGroup
-                  ariaLabel="ارائه‌دهنده"
-                  options={PROVIDER_OPTIONS}
-                  value={form.provider}
-                  onValueChange={(value) => {
-                    const next = Array.isArray(value) ? value[0] : value;
-                    if (!next) return;
-                    setForm((current) => ({ ...current, provider: next as AiProviderType }));
-                  }}
-                  size="sm"
-                  tone="brand"
-                  gap="sm"
-                  wrap
-                />
+                {isProviderLocked ? (
+                  <p className="m-0 text-[length:var(--taav-text-sm)] text-[var(--taav-text-muted)]">
+                    Provider اکانت سیستمی قابل تغییر نیست:{' '}
+                    <strong className="text-[var(--taav-text-strong)]">{AI_PROVIDER_LABELS[form.provider]}</strong>
+                  </p>
+                ) : (
+                  <TaavChoiceChipGroup
+                    ariaLabel="ارائه‌دهنده"
+                    options={PROVIDER_OPTIONS}
+                    value={form.provider}
+                    onValueChange={(value) => {
+                      const next = Array.isArray(value) ? value[0] : value;
+                      if (!next) return;
+                      setForm((current) => ({ ...current, provider: next as AiProviderType }));
+                    }}
+                    size="sm"
+                    tone="brand"
+                    gap="sm"
+                    wrap
+                  />
+                )}
               </TaavFieldBlock>
 
               <TaavFieldBlock
@@ -539,9 +536,9 @@ export function AiAccountsSettingsClient({
               </TaavFieldBlock>
             </FormSection>
 
-            <FormSection title="اعتبار و قیمت توکن">
+            <FormSection title="اعتبار">
               <p className="m-0 text-[length:var(--taav-text-xs)] leading-relaxed text-[var(--taav-text-muted)]">
-                هر سرویس هوش مصنوعی در زمان مصرف، تعداد توکن ورودی و خروجی را ثبت می‌کند و هزینه مصرف از روی این قیمت‌ها محاسبه می‌شود.
+                هزینه مصرف از روی قیمت مدل‌های فعال محاسبه می‌شود. اعتبار خریداری‌شده سقف مصرف دلاری این اکانت است.
               </p>
 
               <TaavFieldBlock
@@ -562,67 +559,6 @@ export function AiAccountsSettingsClient({
                   dir="ltr"
                 />
               </TaavFieldBlock>
-
-              <TaavFieldBlock
-                label={
-                  <AiLabLabelWithTooltip
-                    label="قیمت هر ۱ توکن ورودی"
-                    tooltip={AI_LAB_TOOLTIPS.settings.aiAccountInputTokenPrice}
-                    required
-                  />
-                }
-                required
-                htmlFor="ai-account-input-price"
-              >
-                <TaavInput
-                  id="ai-account-input-price"
-                  type="number"
-                  min="0"
-                  step="any"
-                  value={form.inputTokenPriceUsd}
-                  onChange={(event) => setForm((current) => ({ ...current, inputTokenPriceUsd: event.target.value }))}
-                  placeholder="0.0000001"
-                  dir="ltr"
-                />
-              </TaavFieldBlock>
-
-              <TaavFieldBlock
-                label={
-                  <AiLabLabelWithTooltip
-                    label="قیمت هر ۱ توکن خروجی"
-                    tooltip={AI_LAB_TOOLTIPS.settings.aiAccountOutputTokenPrice}
-                    required
-                  />
-                }
-                required
-                htmlFor="ai-account-output-price"
-              >
-                <TaavInput
-                  id="ai-account-output-price"
-                  type="number"
-                  min="0"
-                  step="any"
-                  value={form.outputTokenPriceUsd}
-                  onChange={(event) => setForm((current) => ({ ...current, outputTokenPriceUsd: event.target.value }))}
-                  placeholder="0.0000002"
-                  dir="ltr"
-                />
-              </TaavFieldBlock>
-            </FormSection>
-
-            <FormSection title="پیش‌نمایش هزینه (۱۰۰۰ توکن)">
-              <div className="grid gap-2 text-[length:var(--taav-text-sm)] text-[var(--taav-text-muted)]">
-                <p className="m-0">
-                  ورودی: <strong className="text-[var(--taav-text-strong)]" dir="ltr">{formatCostUsd(previewInputCostUsd)}</strong>
-                  {' · '}
-                  <strong className="text-[var(--taav-text-strong)]">{formatCostToman(usdToTomanCost(previewInputCostUsd, usdToToman))}</strong>
-                </p>
-                <p className="m-0">
-                  خروجی: <strong className="text-[var(--taav-text-strong)]" dir="ltr">{formatCostUsd(previewOutputCostUsd)}</strong>
-                  {' · '}
-                  <strong className="text-[var(--taav-text-strong)]">{formatCostToman(usdToTomanCost(previewOutputCostUsd, usdToToman))}</strong>
-                </p>
-              </div>
             </FormSection>
 
             <FormSection title="وضعیت و توضیحات">

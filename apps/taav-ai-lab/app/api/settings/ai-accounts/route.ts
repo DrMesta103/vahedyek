@@ -15,8 +15,6 @@ type CreatePayload = {
   apiKey?: string;
   purchaseEmail?: string | null;
   purchasedCreditUsd?: number;
-  inputTokenPriceUsd?: number;
-  outputTokenPriceUsd?: number;
   notes?: string | null;
   isActive?: boolean;
 };
@@ -48,8 +46,6 @@ export async function POST(request: Request) {
   const purchaseEmailRaw = body?.purchaseEmail?.trim() ?? '';
   const notes = body?.notes?.trim() ?? '';
   const purchasedCreditUsd = parseNonNegativeDecimal(body?.purchasedCreditUsd);
-  const inputTokenPriceUsd = parseNonNegativeDecimal(body?.inputTokenPriceUsd);
-  const outputTokenPriceUsd = parseNonNegativeDecimal(body?.outputTokenPriceUsd);
   const isActive = body?.isActive !== false;
 
   if (!name) {
@@ -64,12 +60,6 @@ export async function POST(request: Request) {
   if (purchasedCreditUsd === null) {
     return NextResponse.json({ message: 'اعتبار خریداری‌شده باید صفر یا بیشتر باشد.' }, { status: 400 });
   }
-  if (inputTokenPriceUsd === null) {
-    return NextResponse.json({ message: 'قیمت توکن ورودی باید صفر یا بیشتر باشد.' }, { status: 400 });
-  }
-  if (outputTokenPriceUsd === null) {
-    return NextResponse.json({ message: 'قیمت توکن خروجی باید صفر یا بیشتر باشد.' }, { status: 400 });
-  }
   if (purchaseEmailRaw && !isValidPurchaseEmail(purchaseEmailRaw)) {
     return NextResponse.json({ message: 'ایمیل خریداری معتبر نیست.' }, { status: 400 });
   }
@@ -81,8 +71,6 @@ export async function POST(request: Request) {
       apiKey,
       purchaseEmail: purchaseEmailRaw || null,
       purchasedCreditUsd,
-      inputTokenPriceUsd,
-      outputTokenPriceUsd,
       notes: notes || null,
       isActive,
       createdByUserId: session.userId,

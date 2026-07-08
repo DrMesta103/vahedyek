@@ -19,8 +19,6 @@ type UpdatePayload = {
   apiKey?: string;
   purchaseEmail?: string | null;
   purchasedCreditUsd?: number;
-  inputTokenPriceUsd?: number;
-  outputTokenPriceUsd?: number;
   notes?: string | null;
   isActive?: boolean;
 };
@@ -96,22 +94,6 @@ export async function PATCH(request: Request, context: RouteContext) {
       return NextResponse.json({ message: 'اعتبار خریداری‌شده باید صفر یا بیشتر باشد.' }, { status: 400 });
     }
     updateData.purchasedCreditUsd = purchasedCreditUsd;
-  }
-
-  if (body?.inputTokenPriceUsd !== undefined) {
-    const inputTokenPriceUsd = parseNonNegativeDecimal(body.inputTokenPriceUsd);
-    if (inputTokenPriceUsd === null) {
-      return NextResponse.json({ message: 'قیمت توکن ورودی باید صفر یا بیشتر باشد.' }, { status: 400 });
-    }
-    updateData.inputTokenPriceUsd = inputTokenPriceUsd;
-  }
-
-  if (body?.outputTokenPriceUsd !== undefined) {
-    const outputTokenPriceUsd = parseNonNegativeDecimal(body.outputTokenPriceUsd);
-    if (outputTokenPriceUsd === null) {
-      return NextResponse.json({ message: 'قیمت توکن خروجی باید صفر یا بیشتر باشد.' }, { status: 400 });
-    }
-    updateData.outputTokenPriceUsd = outputTokenPriceUsd;
   }
 
   if (body?.isActive !== undefined) {

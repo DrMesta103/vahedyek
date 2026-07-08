@@ -67,6 +67,10 @@ function buildNavPath(
     if (pathname.startsWith('/settings/')) {
       if (pathname.includes('/ai-accounts')) {
         navPath.push({ label: 'اکانت‌های هوش مصنوعی', id: 'ai-accounts', href: '/settings/ai-accounts' });
+        const accountModelsMatch = pathname.match(/^\/settings\/ai-accounts\/([^/]+)$/);
+        if (accountModelsMatch?.[1]) {
+          navPath.push({ label: 'مدل‌ها', id: 'ai-account-models' });
+        }
       } else if (pathname.includes('/token-pricing')) {
         navPath.push({ label: 'قیمت‌گذاری توکن‌ها', id: 'token-pricing' });
       } else if (pathname.includes('/usd-rate')) {

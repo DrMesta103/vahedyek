@@ -508,6 +508,83 @@
   cursor: not-allowed;
 }
 
+.ai-lab-ocr-filetype-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+  padding: 12px 14px;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.ai-lab-ocr-filetype-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 180px;
+}
+
+.ai-lab-ocr-filetype-label {
+  font-size: 12px;
+  font-weight: 800;
+  color: #e6f0ff;
+}
+
+.ai-lab-ocr-filetype-hint {
+  font-size: 11px;
+  line-height: 1.6;
+  color: #7d91a8;
+}
+
+.ai-lab-ocr-filetype-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.ai-lab-ocr-filetype-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: rgba(255, 255, 255, 0.03);
+  color: #c7d5e5;
+  font-size: 12px;
+  font-weight: 800;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 160ms ease, background 160ms ease, transform 120ms ease, opacity 160ms ease;
+}
+
+.ai-lab-ocr-filetype-chip:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(148, 163, 184, 0.26);
+}
+
+.ai-lab-ocr-filetype-chip.is-active {
+  border-color: rgba(45, 212, 191, 0.55);
+  background: rgba(45, 212, 191, 0.12);
+  color: #5eead4;
+}
+
+.ai-lab-ocr-filetype-chip:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.ai-lab-ocr-filetype-chip.is-disabled,
+.ai-lab-ocr-filetype-chip:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .ai-lab-ocr-create-actions {
   display: flex;
   flex-wrap: wrap;

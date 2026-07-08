@@ -207,26 +207,26 @@ model PlatformAdminCredential {
 }
 
 model AiProviderAccount {
-  id                   String            @id @default(cuid())
-  name                 String
-  provider             String
-  apiKeyCipherText     String            @db.Text
-  apiKeyMasked         String
-  purchaseEmail        String?
-  purchasedCreditUsd   Decimal           @default(0) @db.Decimal(12, 2)
-  usedCreditUsd        Decimal           @default(0) @db.Decimal(12, 2)
-  inputTokenPriceUsd   Decimal           @default(0) @db.Decimal(18, 12)
-  outputTokenPriceUsd  Decimal           @default(0) @db.Decimal(18, 12)
-  isActive             Boolean           @default(true)
-  notes                String?           @db.Text
-  createdByUserId      String?
-  createdAt            DateTime          @default(now())
-  updatedAt            DateTime          @updatedAt
-  models               AiProviderModel[]
-  usageLogs            AiUsageLog[]
+  id                 String            @id @default(cuid())
+  name               String
+  provider           String
+  apiKeyCipherText   String            @db.Text
+  apiKeyMasked       String
+  purchaseEmail      String?
+  purchasedCreditUsd Decimal           @default(0) @db.Decimal(12, 2)
+  usedCreditUsd      Decimal           @default(0) @db.Decimal(12, 2)
+  isSystem           Boolean           @default(false)
+  isActive           Boolean           @default(true)
+  notes              String?           @db.Text
+  createdByUserId    String?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  models             AiProviderModel[]
+  usageLogs          AiUsageLog[]
 
   @@index([provider])
   @@index([isActive])
+  @@index([isSystem])
   @@index([updatedAt])
 }
 
@@ -239,6 +239,7 @@ model AiProviderModel {
   pricingUnit                  String
   inputTokenPriceUsd           Decimal          @default(0) @db.Decimal(12, 6)
   outputTokenPriceUsd          Decimal          @default(0) @db.Decimal(12, 6)
+  ocrInputRatio                Decimal          @default(0.6) @db.Decimal(5, 4)
   requestPriceUsd              Decimal          @default(0) @db.Decimal(12, 6)
   pagePriceUsd                 Decimal          @default(0) @db.Decimal(12, 6)
   imagePriceUsd                Decimal          @default(0) @db.Decimal(12, 6)
@@ -257,6 +258,7 @@ model AiProviderModel {
   isDefaultForOcr              Boolean          @default(false)
   isDefaultForEmbedding        Boolean          @default(false)
   isDefaultForVision           Boolean          @default(false)
+  isSystem                     Boolean          @default(false)
   isActive                     Boolean          @default(true)
   notes                        String?          @db.Text
   createdByUserId              String?

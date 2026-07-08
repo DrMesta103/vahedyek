@@ -24,7 +24,7 @@ import {
 import type { OcrExtractionFieldDraft } from '@/app/lib/ocr-extraction-fields';
 import type { OcrTransportMode } from '@/app/lib/ocr-transport';
 import { getOcrTransportLabel, normalizeOcrTransportMode } from '@/app/lib/ocr-transport';
-import { DEFAULT_OCR_MODEL_ID, resolveOcrModel } from '@/app/lib/ocr-models';
+import { DEFAULT_OCR_MODEL_ID, type OcrModelProvider } from '@/app/lib/ocr-models';
 import type { OcrSampleDocument } from '@/app/lib/ocr-simulator-data';
 import { OcrContractCodePanel } from '@/components/ocr/OcrContractCodePanel';
 import './ocr-contract.css';
@@ -38,6 +38,9 @@ type OcrContractDialogProps = {
   initialTransport?: OcrTransportMode | null;
   lockedTransport?: OcrTransportMode | null;
   modelId?: string;
+  modelProvider?: OcrModelProvider;
+  modelDisplayName?: string | null;
+  modelProviderLabel?: string | null;
   tenantId?: string;
   extractionFields?: OcrExtractionFieldDraft[];
 };
@@ -95,6 +98,9 @@ export function OcrContractDialog({
   initialTransport = 'rest',
   lockedTransport = null,
   modelId,
+  modelProvider,
+  modelDisplayName,
+  modelProviderLabel,
   tenantId,
   extractionFields,
 }: OcrContractDialogProps) {
@@ -142,8 +148,8 @@ export function OcrContractDialog({
   };
 
   if (!sample || !activeContract) return null;
-
-  const selectedModel = resolveOcrModel(contractContext.modelId);
+  const providerLabel = modelProviderLabel ?? '—';
+  const displayName = modelDisplayName ?? contractContext.modelId;
 
   return (
     <TaavDialog open={open} onOpenChange={onOpenChange}>
@@ -162,10 +168,10 @@ export function OcrContractDialog({
               </TaavBadge>
             ) : null}
             <TaavBadge tone="neutral" variant="outline">
-              {selectedModel.providerLabel}
+              {providerLabel}
             </TaavBadge>
             <TaavBadge tone="neutral" variant="soft">
-              {selectedModel.name}
+              {displayName}
             </TaavBadge>
           </div>
           <TaavDialogTitle className="ai-lab-ocr-contract-title">

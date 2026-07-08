@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Clock3,
   Cpu,
@@ -21,7 +21,6 @@ import {
 } from '@/app/lib/ocr-extraction-fields';
 import {
   DEFAULT_OCR_MODEL_ID,
-  OCR_MODEL_OPTIONS,
   type OcrModelProvider,
 } from '@/app/lib/ocr-models';
 import {
@@ -33,6 +32,9 @@ import {
 import type { OcrSimulationJob } from '@/app/lib/data';
 import { OCR_CONTRACT_TRANSPORT_ORDER } from '@/app/lib/ocr-contracts';
 import { getOcrTransportLabel, isGrpcStreamingMode, type OcrTransportMode } from '@/app/lib/ocr-transport';
+import { usdToTomanCost } from '@/app/lib/ai-usage-cost';
+import { formatCostToman } from '@/app/lib/ocr-ai-pricing';
+import { formatUsd } from '@/app/lib/global-settings-mock';
 import { OcrContractDialog } from '@/components/ocr/OcrContractDialog';
 import { OcrDynamicFieldEditor } from '@/components/ocr/OcrDynamicFieldEditor';
 import { OcrExtractionPreviewPanel } from '@/components/ocr/OcrExtractionPreviewPanel';
@@ -42,9 +44,21 @@ import './ocr/ocr-create.css';
 
 type OcrRegistrationClientProps = {
   businessId: string;
+  initialOcrModels: {
+    provider: OcrModelProvider;
+    providerLabel: string;
+    displayName: string;
+    providerModelName: string;
+    inputTokenPriceUsd: number;
+    outputTokenPriceUsd: number;
+    accountId: string;
+  }[];
+  usdToToman: number;
 };
 
 type DocumentTypeKey = 'id-card' | 'dynamic';
+
+type OcrFileTypeKey = 'auto' | 'jpg' | 'png' | 'pdf';
 
 const DOCUMENT_TYPES: {
   key: DocumentTypeKey;
@@ -97,27 +111,83 @@ const MODEL_PROVIDER_LABELS: Record<OcrModelProvider, string> = {
   xai: 'Grok',
 };
 
-export function OcrRegistrationClient({ businessId }: OcrRegistrationClientProps) {
+const OCR_FILE_TYPE_OPTIONS: { key: OcrFileTypeKey; label: string; accept?: string }[] = [
+  { key: 'jpg', label: 'JPG', accept: 'image/jpeg' },
+  { key: 'png', label: 'PNG', accept: 'image/png' },
+  { key: 'pdf', label: 'PDF', accept: 'application/pdf' },
+  { key: 'auto', label: 'سایر (تشخیص خودکار)' },
+];
+
+export function OcrRegistrationClient({ businessId, initialOcrModels, usdToToman }: OcrRegistrationClientProps) {
   const router = useRouter();
   const [activeLane, setActiveLane] = useState<OcrSampleLane>('quick');
   const [selectedTypeKey, setSelectedTypeKey] = useState<DocumentTypeKey>('id-card');
-  const [selectedModelId, setSelectedModelId] = useState(DEFAULT_OCR_MODEL_ID);
+  const [selectedModelKey, setSelectedModelKey] = useState(() => {
+    const first = initialOcrModels[0];
+    const firstKey = first ? `${first.accountId}:${first.providerModelName}` : `seed:${DEFAULT_OCR_MODEL_ID}`;
+    const defaultRow = initialOcrModels.find((item) => item.providerModelName === DEFAULT_OCR_MODEL_ID);
+    return defaultRow ? `${defaultRow.accountId}:${DEFAULT_OCR_MODEL_ID}` : firstKey;
+  });
   const [selectedTransportMode, setSelectedTransportMode] = useState<OcrTransportMode>('rest');
   const [uploadState, setUploadState] = useState<OcrUploadFileState | null>(null);
   const [submissionLabel, setSubmissionLabel] = useState('کارت ملی');
   const [dynamicFields, setDynamicFields] = useState<OcrExtractionFieldDraft[]>(() => createDefaultExtractionFields());
+  const [selectedFileType, setSelectedFileType] = useState<OcrFileTypeKey>('jpg');
+  const [lastUnlockedFileType, setLastUnlockedFileType] = useState<OcrFileTypeKey>('auto');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [contractDialogType, setContractDialogType] = useState<DocumentTypeKey | null>(null);
 
   const selectedType = getDocumentType(selectedTypeKey);
   const isDynamicDocument = activeLane === 'quick' && selectedTypeKey === 'dynamic';
+  const isIdCardDocument = activeLane === 'quick' && selectedTypeKey === 'id-card';
+  const wasIdCardDocument = useRef(isIdCardDocument);
+  const ocrModels = initialOcrModels;
   const dynamicFieldValidation = useMemo(() => validateExtractionFields(dynamicFields), [dynamicFields]);
   const selectedSample = useMemo(() => {
     if (activeLane === 'long') return getOcrSampleById('contract');
     if (!selectedType.sampleId) return null;
     return getOcrSampleById(selectedType.sampleId);
   }, [activeLane, selectedType.sampleId]);
+
+  useEffect(() => {
+    if (isIdCardDocument) {
+      wasIdCardDocument.current = true;
+      setSelectedFileType('jpg');
+      return;
+    }
+
+    if (wasIdCardDocument.current) {
+      wasIdCardDocument.current = false;
+      setSelectedFileType(lastUnlockedFileType);
+    }
+  }, [isIdCardDocument, lastUnlockedFileType]);
+
+  const acceptForFileType = useMemo(() => {
+    if (isIdCardDocument) return 'image/jpeg,image/png';
+
+    const selected = OCR_FILE_TYPE_OPTIONS.find((item) => item.key === selectedFileType);
+    return selected?.accept;
+  }, [isIdCardDocument, selectedFileType]);
+
+  useEffect(() => {
+    if (ocrModels.length === 0) return;
+    const stillExists = ocrModels.some((item) => `${item.accountId}:${item.providerModelName}` === selectedModelKey);
+    if (stillExists) return;
+    const defaultRow = ocrModels.find((item) => item.providerModelName === DEFAULT_OCR_MODEL_ID);
+    setSelectedModelKey(
+      defaultRow ? `${defaultRow.accountId}:${DEFAULT_OCR_MODEL_ID}` : `${ocrModels[0]!.accountId}:${ocrModels[0]!.providerModelName}`,
+    );
+  }, [ocrModels, selectedModelKey]);
+
+  const selectedModel = useMemo(() => {
+    const [accountId, providerModelName] = selectedModelKey.split(':');
+    return (
+      ocrModels.find((item) => item.accountId === accountId && item.providerModelName === providerModelName) ??
+      ocrModels[0] ??
+      null
+    );
+  }, [ocrModels, selectedModelKey]);
 
   const sourceTitle = submissionLabel.trim() || uploadState?.fileName || selectedType.label;
   const contractSample = useMemo(() => {
@@ -208,7 +278,7 @@ export function OcrRegistrationClient({ businessId }: OcrRegistrationClientProps
                 fileSize: uploadState?.fileSize,
                 sampleText: uploadState?.contentSnippet,
                 transportMode,
-                modelId: selectedModelId,
+                modelId: selectedModelKey,
                 extractionFields: dynamicFieldValidation.fields,
               }
             : sourceType === 'sample'
@@ -220,7 +290,7 @@ export function OcrRegistrationClient({ businessId }: OcrRegistrationClientProps
                 sourceName,
                 fileType: sample?.fileType,
                 transportMode,
-                modelId: selectedModelId,
+                modelId: selectedModelKey,
               }
             : {
                 sourceType,
@@ -231,7 +301,7 @@ export function OcrRegistrationClient({ businessId }: OcrRegistrationClientProps
                 fileSize: uploadState?.fileSize,
                 sampleText: uploadState?.contentSnippet,
                 transportMode,
-                modelId: selectedModelId,
+                modelId: selectedModelKey,
               },
         ),
       });
@@ -326,11 +396,12 @@ export function OcrRegistrationClient({ businessId }: OcrRegistrationClientProps
           </div>
 
           <div className="ai-lab-ocr-create-models" role="radiogroup" aria-label="مدل AI">
-            {OCR_MODEL_OPTIONS.map((model) => {
-              const isActive = selectedModelId === model.id;
+            {ocrModels.map((model) => {
+              const modelKey = `${model.accountId}:${model.providerModelName}`;
+              const isActive = selectedModelKey === modelKey;
               return (
                 <button
-                  key={model.id}
+                  key={modelKey}
                   type="button"
                   role="radio"
                   aria-checked={isActive}
@@ -341,7 +412,7 @@ export function OcrRegistrationClient({ businessId }: OcrRegistrationClientProps
                   ]
                     .filter(Boolean)
                     .join(' ')}
-                  onClick={() => setSelectedModelId(model.id)}
+                  onClick={() => setSelectedModelKey(modelKey)}
                 >
                   <span className="ai-lab-ocr-create-model-icon" aria-hidden>
                     <Cpu className="h-4 w-4" />
@@ -350,8 +421,21 @@ export function OcrRegistrationClient({ businessId }: OcrRegistrationClientProps
                     <span className="ai-lab-ocr-create-model-provider">
                       {MODEL_PROVIDER_LABELS[model.provider]}
                     </span>
-                    <strong>{model.name}</strong>
-                    <small>{model.description}</small>
+                    <strong>{model.displayName}</strong>
+                    <small>
+                      ورودی:{' '}
+                      <span dir="ltr">{formatUsd(model.inputTokenPriceUsd)}</span>
+                      {' · '}
+                      خروجی:{' '}
+                      <span dir="ltr">{formatUsd(model.outputTokenPriceUsd)}</span>
+                      {' · '}
+                      <span className="ai-lab-settings-price-toman">
+                        {formatCostToman(
+                          usdToTomanCost(model.inputTokenPriceUsd, usdToToman) +
+                            usdToTomanCost(model.outputTokenPriceUsd, usdToToman),
+                        )}
+                      </span>
+                    </small>
                   </span>
                 </button>
               );
@@ -432,7 +516,8 @@ export function OcrRegistrationClient({ businessId }: OcrRegistrationClientProps
             fields={dynamicFieldValidation.fields}
             transportMode={selectedTransportMode}
             tenantId={businessId}
-            modelId={selectedModelId}
+            provider={selectedModel?.provider ?? 'openai'}
+            modelId={selectedModel?.providerModelName ?? DEFAULT_OCR_MODEL_ID}
             fileName={uploadState?.fileName}
             mimeType={uploadState?.fileType}
           />
@@ -475,9 +560,49 @@ export function OcrRegistrationClient({ businessId }: OcrRegistrationClientProps
             </div>
           </div>
 
+          <div className="ai-lab-ocr-filetype-row" role="group" aria-label="نوع فایل">
+            <div className="ai-lab-ocr-filetype-copy">
+              <span className="ai-lab-ocr-filetype-label">نوع فایل</span>
+              <span className="ai-lab-ocr-filetype-hint">
+                {isIdCardDocument ? 'برای کارت ملی فقط تصویر مجاز است.' : 'نوع فایل را انتخاب کنید یا روی تشخیص خودکار بگذارید.'}
+              </span>
+            </div>
+            <div className="ai-lab-ocr-filetype-chips">
+              {OCR_FILE_TYPE_OPTIONS.map((option) => {
+                const isLocked = isIdCardDocument;
+                const isActive =
+                  isLocked ? option.key === 'jpg' : option.key === selectedFileType;
+
+                return (
+                  <button
+                    key={option.key}
+                    type="button"
+                    className={[
+                      'ai-lab-ocr-filetype-chip',
+                      isActive ? 'is-active' : '',
+                      isLocked ? 'is-disabled' : '',
+                    ]
+                      .filter(Boolean)
+                      .join(' ')}
+                    aria-pressed={isActive}
+                    disabled={isLocked || submitting}
+                    onClick={() => {
+                      if (isLocked) return;
+                      setSelectedFileType(option.key);
+                      setLastUnlockedFileType(option.key);
+                    }}
+                  >
+                    {option.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           <OcrUploadZone
             variant="inline"
             value={uploadState}
+            accept={acceptForFileType}
             onChange={(file) => {
               setUploadState(file);
               if (file) setSubmissionLabel(file.fileName);
@@ -510,7 +635,10 @@ export function OcrRegistrationClient({ businessId }: OcrRegistrationClientProps
         sample={contractSample}
         open={contractDialogType !== null}
         lockedTransport={selectedTransportMode}
-        modelId={selectedModelId}
+        modelId={selectedModel?.providerModelName ?? DEFAULT_OCR_MODEL_ID}
+        modelProvider={selectedModel?.provider ?? 'openai'}
+        modelDisplayName={selectedModel?.displayName ?? null}
+        modelProviderLabel={selectedModel?.providerLabel ?? null}
         tenantId={businessId}
         extractionFields={contractDialogType === 'dynamic' ? dynamicFieldValidation.fields : undefined}
         onOpenChange={(open) => {

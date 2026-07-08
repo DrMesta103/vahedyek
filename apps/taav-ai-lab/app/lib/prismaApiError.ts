@@ -1,10 +1,15 @@
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { NextResponse } from 'next/server';
+import { SystemAiProviderError } from '@/app/lib/types/ai-accounts';
 
 const SETUP_MESSAGE =
   'جدول‌های دیتابیس هنوز ساخته نشده‌اند. این دستورها را اجرا کنید: npm run prisma:generate سپس npm run prisma:migrate و در آخر npm run db:seed';
 
 export function handlePrismaApiError(error: unknown) {
+  if (error instanceof SystemAiProviderError) {
+    return NextResponse.json({ message: error.message }, { status: 403 });
+  }
+
   if (error instanceof Error && error.message.includes('Missing DATABASE_URL')) {
     return NextResponse.json(
       {

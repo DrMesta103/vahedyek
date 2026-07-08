@@ -6,7 +6,7 @@ import {
   type CreateOcrSimulationInput,
 } from '@/app/lib/data';
 import { validateExtractionFields, type OcrExtractionFieldDraft } from '@/app/lib/ocr-extraction-fields';
-import { isOcrModelId, DEFAULT_OCR_MODEL_ID } from '@/app/lib/ocr-models';
+import { DEFAULT_OCR_MODEL_ID } from '@/app/lib/ocr-models';
 import { parseOcrTransportMode } from '@/app/lib/ocr-transport';
 import { getOptionalSession } from '@/app/lib/session';
 
@@ -71,7 +71,7 @@ export async function POST(request: Request, context: RouteContext) {
     scenario: body.scenario === 'miss' ? 'miss' : body.scenario === 'recognize' ? 'recognize' : null,
     sampleText: body.sampleText?.trim() || null,
     transportMode: parseOcrTransportMode(body.transportMode),
-    modelId: isOcrModelId(body.modelId) ? body.modelId : DEFAULT_OCR_MODEL_ID,
+    modelId: body.modelId?.trim() || DEFAULT_OCR_MODEL_ID,
     extractionFields: isDynamicExtraction ? extractionValidation.fields : null,
   });
 

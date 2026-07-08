@@ -11,7 +11,8 @@ import {
   type CreateAiProviderModelInput,
   type UpdateAiProviderModelInput,
 } from '../types/ai-provider-models';
-import { AI_PROVIDER_LABELS, type AiProviderType } from '../types/ai-accounts';
+import { AI_PROVIDER_LABELS, SystemAiProviderError, type AiProviderType } from '../types/ai-accounts';
+import { type OcrModelProvider } from '../ocr-models';
 
 type ModelRow = Awaited<ReturnType<typeof prisma.aiProviderModel.findMany>>[number];
 
@@ -38,6 +39,8 @@ function mapModel(row: ModelRow): AiProviderModelPublic {
   const modelType = isModelType(row.modelType) ? row.modelType : 'OTHER';
   const pricingUnit = isPricingUnit(row.pricingUnit) ? row.pricingUnit : 'MIXED';
 
+  const ocrInputRatio = toNumber(((row as unknown as { ocrInputRatio?: { toString(): string } | number }).ocrInputRatio ?? 0.6));
+
   return {
     id: row.id,
     accountId: row.accountId,
@@ -49,6 +52,7 @@ function mapModel(row: ModelRow): AiProviderModelPublic {
     pricingUnitLabel: AI_PROVIDER_PRICING_UNIT_LABELS[pricingUnit],
     inputTokenPriceUsd: toNumber(row.inputTokenPriceUsd),
     outputTokenPriceUsd: toNumber(row.outputTokenPriceUsd),
+    ocrInputRatio,
     requestPriceUsd: toNumber(row.requestPriceUsd),
     pagePriceUsd: toNumber(row.pagePriceUsd),
     imagePriceUsd: toNumber(row.imagePriceUsd),
@@ -67,6 +71,7 @@ function mapModel(row: ModelRow): AiProviderModelPublic {
     isDefaultForOcr: row.isDefaultForOcr,
     isDefaultForEmbedding: row.isDefaultForEmbedding,
     isDefaultForVision: row.isDefaultForVision,
+    isSystem: row.isSystem,
     isActive: row.isActive,
     notes: row.notes,
     createdByUserId: row.createdByUserId,
@@ -83,6 +88,7 @@ function buildModelData(input: CreateAiProviderModelInput | UpdateAiProviderMode
     ...(input.pricingUnit !== undefined ? { pricingUnit: input.pricingUnit } : {}),
     ...(input.inputTokenPriceUsd !== undefined ? { inputTokenPriceUsd: input.inputTokenPriceUsd } : {}),
     ...(input.outputTokenPriceUsd !== undefined ? { outputTokenPriceUsd: input.outputTokenPriceUsd } : {}),
+    ...(input.ocrInputRatio !== undefined ? { ocrInputRatio: input.ocrInputRatio } : {}),
     ...(input.requestPriceUsd !== undefined ? { requestPriceUsd: input.requestPriceUsd } : {}),
     ...(input.pagePriceUsd !== undefined ? { pagePriceUsd: input.pagePriceUsd } : {}),
     ...(input.imagePriceUsd !== undefined ? { imagePriceUsd: input.imagePriceUsd } : {}),
@@ -126,6 +132,26 @@ async function unsetOtherDefaults(
 
 async function ensureAccountExists(accountId: string) {
   return prisma.aiProviderAccount.findUnique({ where: { id: accountId } });
+}
+
+function assertValidOcrInputRatio(value: number) {
+  if (!Number.isFinite(value) || value <= 0 || value >= 1) {
+    throw new SystemAiProviderError('برای مدل OCR، نسبت توکن ورودی باید عددی بین 0 و 1 باشد.');
+  }
+}
+
+async function assertUniqueProviderModelName(providerModelName: string, excludeModelId?: string) {
+  const existing = await prisma.aiProviderModel.findFirst({
+    where: {
+      providerModelName,
+      ...(excludeModelId ? { id: { not: excludeModelId } } : {}),
+    },
+    select: { id: true },
+  });
+
+  if (existing) {
+    throw new SystemAiProviderError('providerModelName تکراری است و امکان ثبت آن وجود ندارد.');
+  }
 }
 
 export async function listAiProviderModels(accountId: string) {
@@ -176,6 +202,7 @@ export async function getAiProviderAccountDetail(accountId: string): Promise<AiP
       usedCreditUsd,
       remainingCreditUsd: Math.max(0, purchasedCreditUsd - usedCreditUsd),
       isActive: account.isActive,
+      isSystem: account.isSystem,
       totalModelCount,
       activeModelCount,
     },
@@ -186,6 +213,17 @@ export async function getAiProviderAccountDetail(accountId: string): Promise<AiP
 export async function createAiProviderModel(accountId: string, input: CreateAiProviderModelInput) {
   const account = await ensureAccountExists(accountId);
   if (!account) return null;
+
+  await assertUniqueProviderModelName(input.providerModelName);
+
+  if (input.modelType === 'OCR') {
+    const inputPrice = input.inputTokenPriceUsd ?? 0;
+    const outputPrice = input.outputTokenPriceUsd ?? 0;
+    if (!(Number.isFinite(inputPrice) && inputPrice > 0) || !(Number.isFinite(outputPrice) && outputPrice > 0)) {
+      throw new SystemAiProviderError('برای مدل OCR، قیمت توکن ورودی و خروجی باید الزامی و بزرگ‌تر از صفر باشند.');
+    }
+    assertValidOcrInputRatio(input.ocrInputRatio ?? 0.6);
+  }
 
   const row = await prisma.$transaction(async (tx) => {
     const created = await tx.aiProviderModel.create({
@@ -198,6 +236,7 @@ export async function createAiProviderModel(accountId: string, input: CreateAiPr
         pricingUnit: input.pricingUnit,
         inputTokenPriceUsd: input.inputTokenPriceUsd ?? 0,
         outputTokenPriceUsd: input.outputTokenPriceUsd ?? 0,
+        ocrInputRatio: input.ocrInputRatio ?? 0.6,
         requestPriceUsd: input.requestPriceUsd ?? 0,
         pagePriceUsd: input.pagePriceUsd ?? 0,
         imagePriceUsd: input.imagePriceUsd ?? 0,
@@ -219,7 +258,7 @@ export async function createAiProviderModel(accountId: string, input: CreateAiPr
         isActive: input.isActive !== false,
         notes: input.notes ?? null,
         createdByUserId: input.createdByUserId ?? null,
-      },
+      } as any,
     });
 
     await unsetOtherDefaults(tx, accountId, created.id, {
@@ -245,10 +284,27 @@ export async function updateAiProviderModel(
   });
   if (!existing) return null;
 
+  if (input.providerModelName !== undefined && input.providerModelName !== existing.providerModelName) {
+    await assertUniqueProviderModelName(input.providerModelName, modelId);
+  }
+
+  const nextModelType = input.modelType ?? (isModelType(existing.modelType) ? existing.modelType : 'OTHER');
+  if (nextModelType === 'OCR') {
+    const nextInputPrice = input.inputTokenPriceUsd ?? toNumber(existing.inputTokenPriceUsd);
+    const nextOutputPrice = input.outputTokenPriceUsd ?? toNumber(existing.outputTokenPriceUsd);
+    if (!(Number.isFinite(nextInputPrice) && nextInputPrice > 0) || !(Number.isFinite(nextOutputPrice) && nextOutputPrice > 0)) {
+      throw new SystemAiProviderError('برای مدل OCR، قیمت توکن ورودی و خروجی باید الزامی و بزرگ‌تر از صفر باشند.');
+    }
+    const existingRatio = toNumber(
+      ((existing as unknown as { ocrInputRatio?: { toString(): string } | number }).ocrInputRatio ?? 0.6),
+    );
+    assertValidOcrInputRatio(input.ocrInputRatio ?? existingRatio);
+  }
+
   const row = await prisma.$transaction(async (tx) => {
     const updated = await tx.aiProviderModel.update({
       where: { id: modelId },
-      data: buildModelData(input),
+      data: buildModelData(input) as any,
     });
 
     await unsetOtherDefaults(tx, accountId, modelId, {
@@ -284,8 +340,97 @@ export async function deleteAiProviderModel(accountId: string, modelId: string) 
   });
   if (!existing) return false;
 
+  if (existing.isSystem) {
+    throw new SystemAiProviderError('مدل سیستمی قابل حذف نیست.');
+  }
+
   await prisma.aiProviderModel.delete({ where: { id: modelId } });
   return true;
+}
+
+export type SystemOcrModelRow = {
+  accountId: string;
+  provider: OcrModelProvider;
+  providerLabel: string;
+  displayName: string;
+  providerModelName: string;
+  inputTokenPriceUsd: number;
+  outputTokenPriceUsd: number;
+};
+
+function mapAccountProviderToOcrProvider(value: string): OcrModelProvider | null {
+  const normalized = value.trim().toUpperCase();
+  if (normalized === 'OPENAI') return 'openai';
+  if (normalized === 'DEEPSEEK') return 'deepseek';
+  if (normalized === 'GEMINI') return 'google';
+  if (normalized === 'GROK') return 'xai';
+  return null;
+}
+
+export async function listSystemOcrModels(): Promise<SystemOcrModelRow[]> {
+  const rows = await prisma.aiProviderModel.findMany({
+    where: {
+      isActive: true,
+      modelType: 'OCR',
+      account: {
+        isActive: true,
+      },
+    },
+    include: {
+      account: true,
+    },
+    orderBy: [{ updatedAt: 'desc' }, { displayName: 'asc' }],
+  });
+
+  return rows
+    .filter((row) => toNumber(row.inputTokenPriceUsd) > 0 && toNumber(row.outputTokenPriceUsd) > 0)
+    .map((row) => {
+      const provider = mapAccountProviderToOcrProvider(row.account.provider) ?? 'openai';
+      const providerType = row.account.provider as AiProviderType;
+      return {
+        accountId: row.accountId,
+        provider,
+        providerLabel: AI_PROVIDER_LABELS[providerType] ?? row.account.provider,
+        displayName: row.displayName,
+        providerModelName: row.providerModelName,
+        inputTokenPriceUsd: toNumber(row.inputTokenPriceUsd),
+        outputTokenPriceUsd: toNumber(row.outputTokenPriceUsd),
+      };
+    });
+}
+
+export async function resolveModelPricingForOcr(accountId: string, ocrModelId: string) {
+  const byName = await prisma.aiProviderModel.findFirst({
+    where: {
+      accountId,
+      isActive: true,
+      providerModelName: ocrModelId,
+    },
+  });
+
+  if (byName) {
+    return {
+      inputTokenPriceUsd: toNumber(byName.inputTokenPriceUsd),
+      outputTokenPriceUsd: toNumber(byName.outputTokenPriceUsd),
+    };
+  }
+
+  const defaultOcr = await prisma.aiProviderModel.findFirst({
+    where: {
+      accountId,
+      isActive: true,
+      isDefaultForOcr: true,
+    },
+  });
+
+  if (defaultOcr) {
+    return {
+      inputTokenPriceUsd: toNumber(defaultOcr.inputTokenPriceUsd),
+      outputTokenPriceUsd: toNumber(defaultOcr.outputTokenPriceUsd),
+    };
+  }
+
+  return null;
 }
 
 export function parseAiProviderModelType(value: unknown): AiProviderModelType | null {
@@ -316,6 +461,27 @@ export function hasAnyPositivePrice(input: {
     input.imagePriceUsd,
     input.minutePriceUsd,
   ].some((value) => typeof value === 'number' && value > 0);
+}
+
+export async function listModelsGroupedByAccountIds(accountIds: string[]) {
+  if (accountIds.length === 0) return new Map<string, AiProviderModelPublic[]>();
+
+  const rows = await prisma.aiProviderModel.findMany({
+    where: { accountId: { in: accountIds } },
+    orderBy: [{ updatedAt: 'desc' }, { displayName: 'asc' }],
+  });
+
+  const grouped = new Map<string, AiProviderModelPublic[]>();
+  for (const id of accountIds) {
+    grouped.set(id, []);
+  }
+  for (const row of rows) {
+    const current = grouped.get(row.accountId) ?? [];
+    current.push(mapModel(row));
+    grouped.set(row.accountId, current);
+  }
+
+  return grouped;
 }
 
 export async function getModelCountsByAccountIds(accountIds: string[]) {

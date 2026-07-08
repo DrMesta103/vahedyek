@@ -31,7 +31,7 @@ export default async function OcrPage({ params }: { params: Promise<{ businessId
   }
 
   const jobs = await getOcrJobsForTenant(session.userId, business.id);
-  const [{ accounts }, globalSettings] = await Promise.all([listAiProviderAccounts(), getGlobalSettings()]);
+  const [{ accounts }, globalSettings] = await Promise.all([listAiProviderAccounts({ includeModels: true }), getGlobalSettings()]);
   const jobCosts = Object.fromEntries(
     jobs.map((job) => [job.id, getOcrAiUsageCost(job, globalSettings.usdToToman, accounts)]),
   );
