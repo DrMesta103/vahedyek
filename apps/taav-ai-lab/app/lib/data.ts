@@ -4,11 +4,15 @@
 export type {
   Tenant,
   SimulatorUser,
+  AdminUserRow,
+  UpdateAdminUserInput,
+  UserNotificationEvent,
   TaaviaBrand,
   OcrSimulationJob,
   OcrSimulationField,
   OcrSimulationSourceType,
   CreateSimulatorUserInput,
+  CreateAdminUserInput,
   CreateTenantInput,
   CreateTaaviaBrandInput,
   CreateOcrSimulationInput,
@@ -36,6 +40,12 @@ export {
   getUserById,
   getUserByIdentifier,
   createSimulatorUser,
+  listAllUsersForAdmin,
+  createUserForAdmin,
+  updateUserForAdmin,
+  toggleUserActiveStatus,
+  sendTestNotificationToUser,
+  consumeUnreadNotificationsForUser,
 } from './repositories/users';
 
 export {
@@ -80,3 +90,69 @@ export {
   updateModelSettings,
   verifyPlatformAdmin,
 } from './repositories/global-settings';
+
+export type {
+  AiProviderAccountPublic,
+  AiProviderAccountSummary,
+  AiProviderType,
+  CreateAiProviderAccountInput,
+  UpdateAiProviderAccountInput,
+} from './types/ai-accounts';
+
+export {
+  AI_PROVIDER_LABELS,
+  AI_PROVIDER_TYPES,
+} from './types/ai-accounts';
+
+export {
+  listAiProviderAccounts,
+  getAiProviderAccountById,
+  createAiProviderAccount,
+  updateAiProviderAccount,
+  toggleAiProviderAccountStatus,
+  deleteAiProviderAccount,
+  parseAiProviderType,
+  isValidPurchaseEmail,
+} from './repositories/ai-accounts';
+
+export {
+  calculateAiUsageCost,
+  formatCostUsd,
+  formatTokenPriceUsd,
+  parseNonNegativeDecimal,
+  usdToTomanCost,
+} from './ai-usage-cost';
+
+export type { AiUsageCostAccount, AiUsageCostResult } from './ai-usage-cost';
+
+export {
+  buildOcrCostMeta,
+  buildOcrUsageCost,
+  formatCostToman,
+  formatPerTokenPriceToman,
+  mapOcrProviderToAccountType,
+  readOcrCostFromMetaWithToman,
+  resolveOcrModelPricing,
+} from './ocr-ai-pricing';
+
+export type { OcrAiUsageCost, OcrModelPricing } from './ocr-ai-pricing';
+
+export type {
+  AiProviderModelPublic,
+  AiProviderAccountDetail,
+  CreateAiProviderModelInput,
+  UpdateAiProviderModelInput,
+} from './types/ai-provider-models';
+
+export {
+  listAiProviderModels,
+  getAiProviderModelById,
+  getAiProviderAccountDetail,
+  createAiProviderModel,
+  updateAiProviderModel,
+  toggleAiProviderModelStatus,
+  deleteAiProviderModel,
+  parseAiProviderModelType,
+  parseAiProviderPricingUnit,
+  hasAnyPositivePrice,
+} from './repositories/ai-provider-models';

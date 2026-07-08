@@ -12,6 +12,7 @@ model AppUser {
   id           String                 @id @default(cuid())
   email        String?                @unique
   mobile       String?                @unique
+  avatarUrl    String?
   firstName    String
   lastName     String
   fullName     String
@@ -21,6 +22,20 @@ model AppUser {
   createdAt    DateTime               @default(now())
   updatedAt    DateTime               @updatedAt
   memberships  UserTenantMembership[]
+  notifications UserNotification[]
+}
+
+model UserNotification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  message   String   @db.Text
+  kind      String   @default("test")
+  seenAt    DateTime?
+  createdAt DateTime @default(now())
+  user      AppUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, seenAt, createdAt])
 }
 
 model Tenant {
@@ -189,4 +204,91 @@ model PlatformAdminCredential {
   passwordHash String
   passwordSalt String
   updatedAt    DateTime @updatedAt
+}
+
+model AiProviderAccount {
+  id                   String            @id @default(cuid())
+  name                 String
+  provider             String
+  apiKeyCipherText     String            @db.Text
+  apiKeyMasked         String
+  purchaseEmail        String?
+  purchasedCreditUsd   Decimal           @default(0) @db.Decimal(12, 2)
+  usedCreditUsd        Decimal           @default(0) @db.Decimal(12, 2)
+  inputTokenPriceUsd   Decimal           @default(0) @db.Decimal(18, 12)
+  outputTokenPriceUsd  Decimal           @default(0) @db.Decimal(18, 12)
+  isActive             Boolean           @default(true)
+  notes                String?           @db.Text
+  createdByUserId      String?
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+  models               AiProviderModel[]
+  usageLogs            AiUsageLog[]
+
+  @@index([provider])
+  @@index([isActive])
+  @@index([updatedAt])
+}
+
+model AiProviderModel {
+  id                           String           @id @default(cuid())
+  accountId                    String
+  displayName                  String
+  providerModelName            String
+  modelType                    String
+  pricingUnit                  String
+  inputTokenPriceUsd           Decimal          @default(0) @db.Decimal(12, 6)
+  outputTokenPriceUsd          Decimal          @default(0) @db.Decimal(12, 6)
+  requestPriceUsd              Decimal          @default(0) @db.Decimal(12, 6)
+  pagePriceUsd                 Decimal          @default(0) @db.Decimal(12, 6)
+  imagePriceUsd                Decimal          @default(0) @db.Decimal(12, 6)
+  minutePriceUsd               Decimal          @default(0) @db.Decimal(12, 6)
+  supportsPersian              Boolean          @default(false)
+  supportsEnglish              Boolean          @default(false)
+  supportsVision               Boolean          @default(false)
+  supportsPdf                  Boolean          @default(false)
+  supportsImage                Boolean          @default(false)
+  supportsStructuredExtraction Boolean        @default(false)
+  supportsEmbedding            Boolean          @default(false)
+  supportsFunctionCalling      Boolean          @default(false)
+  maxInputTokens               Int?
+  maxOutputTokens              Int?
+  isDefaultForChat             Boolean          @default(false)
+  isDefaultForOcr              Boolean          @default(false)
+  isDefaultForEmbedding        Boolean          @default(false)
+  isDefaultForVision           Boolean          @default(false)
+  isActive                     Boolean          @default(true)
+  notes                        String?          @db.Text
+  createdByUserId              String?
+  createdAt                    DateTime         @default(now())
+  updatedAt                    DateTime         @updatedAt
+  account                      AiProviderAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@unique([accountId, providerModelName])
+  @@index([accountId])
+  @@index([accountId, isActive])
+  @@index([updatedAt])
+}
+
+model AiUsageLog {
+  id            String            @id @default(cuid())
+  aiAccountId   String
+  tenantId      String?
+  businessId    String?
+  serviceName   String
+  featureName   String
+  requestId     String?
+  inputTokens   Int               @default(0)
+  outputTokens  Int               @default(0)
+  totalTokens   Int               @default(0)
+  inputCostUsd  Decimal           @default(0) @db.Decimal(18, 8)
+  outputCostUsd Decimal           @default(0) @db.Decimal(18, 8)
+  totalCostUsd  Decimal           @default(0) @db.Decimal(18, 8)
+  metadata      Json?
+  createdAt     DateTime          @default(now())
+  account       AiProviderAccount @relation(fields: [aiAccountId], references: [id], onDelete: Cascade)
+
+  @@index([aiAccountId, createdAt])
+  @@index([tenantId])
+  @@index([businessId])
 }

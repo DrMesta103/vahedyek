@@ -23,6 +23,9 @@ export async function POST(request: Request) {
   if (!user) {
     return NextResponse.json({ message: 'کاربر با این مشخصات پیدا نشد.' }, { status: 404 });
   }
+  if (!user.isActive) {
+    return NextResponse.json({ message: 'این کاربر غیرفعال است و دسترسی ندارد.' }, { status: 403 });
+  }
 
   if (!verifyPassword(password, user.passwordHash, user.passwordSalt)) {
     return NextResponse.json({ message: 'رمز عبور اشتباه است.' }, { status: 401 });

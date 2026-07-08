@@ -1,0 +1,207 @@
+syntax = "proto3";
+
+package taav.document_ai.v1;
+
+service DocumentAiService {
+  rpc ExtractDocument(ExtractDocumentRequest) returns (ExtractDocumentResponse);
+
+  rpc ExtractDocumentStream(ExtractDocumentRequest) returns (stream ExtractDocumentStreamResponse);
+}
+
+message ExtractDocumentRequest {
+  string correlation_id = 1;
+  string tenant_id = 2;
+  string caller_service_id = 3;
+
+  string provider = 4;
+  string model = 5;
+
+  DocumentInput document = 6;
+  ExtractionRequest extraction = 7;
+}
+
+message DocumentInput {
+  string download_url = 1;
+  string mime_type = 2;
+}
+
+message ExtractionRequest {
+  repeated ExtractionField fields = 1;
+}
+
+message ExtractionField {
+  string key = 1;
+  string label = 2;
+  FieldType type = 3;
+  bool required = 4;
+  FieldValidation validation = 5;
+}
+
+enum FieldType {
+  FIELD_TYPE_UNSPECIFIED = 0;
+  FIELD_TYPE_STRING = 1;
+  FIELD_TYPE_DATE = 2;
+  FIELD_TYPE_NUMBER = 3;
+  FIELD_TYPE_BOOLEAN = 4;
+}
+
+message FieldValidation {
+  optional string regex = 1;
+  optional int32 min_length = 2;
+  optional int32 max_length = 3;
+  optional string calendar = 4;
+  repeated string accepted_formats = 5;
+}
+
+message ExtractDocumentResponse {
+  string correlation_id = 1;
+  string tenant_id = 2;
+  string caller_service_id = 3;
+
+  ProcessingStatus status = 4;
+
+  string provider = 5;
+  string model = 6;
+
+  ExtractionResult result = 7;
+  DocumentQuality document_quality = 8;
+  TokenUsage usage = 9;
+
+  repeated ProcessingError errors = 10;
+}
+
+message ExtractionResult {
+  repeated ExtractedField fields = 1;
+}
+
+message ExtractedField {
+  string key = 1;
+  string label = 2;
+  optional string value = 3;
+
+  double confidence = 4;
+
+  ValidationStatus validation_status = 5;
+  HumanReviewStatus human_review_status = 6;
+
+  repeated FieldWarning warnings = 7;
+  repeated FieldError errors = 8;
+}
+
+message DocumentQuality {
+  double score = 1;
+  repeated DocumentQualityWarning warnings = 2;
+}
+
+message TokenUsage {
+  int32 input_tokens = 1;
+  int32 output_tokens = 2;
+  int32 total_tokens = 3;
+}
+
+message ProcessingError {
+  ProcessingErrorCode code = 1;
+  string message = 2;
+}
+
+message FieldWarning {
+  FieldWarningCode code = 1;
+  string message = 2;
+}
+
+message FieldError {
+  FieldErrorCode code = 1;
+  string message = 2;
+}
+
+enum ProcessingStatus {
+  PROCESSING_STATUS_UNSPECIFIED = 0;
+  PROCESSING_STATUS_COMPLETED = 1;
+  PROCESSING_STATUS_COMPLETED_WITH_HUMAN_REVIEW_REQUIRED = 2;
+  PROCESSING_STATUS_FAILED = 3;
+}
+
+enum ValidationStatus {
+  VALIDATION_STATUS_UNSPECIFIED = 0;
+  VALIDATION_STATUS_VALID = 1;
+  VALIDATION_STATUS_INVALID_FORMAT = 2;
+  VALIDATION_STATUS_MISSING_REQUIRED_FIELD = 3;
+  VALIDATION_STATUS_NOT_FOUND = 4;
+}
+
+enum HumanReviewStatus {
+  HUMAN_REVIEW_STATUS_UNSPECIFIED = 0;
+  HUMAN_REVIEW_STATUS_NOT_REQUIRED = 1;
+  HUMAN_REVIEW_STATUS_REQUIRED = 2;
+  HUMAN_REVIEW_STATUS_REJECTED = 3;
+}
+
+enum FieldWarningCode {
+  FIELD_WARNING_CODE_UNSPECIFIED = 0;
+  FIELD_WARNING_CODE_LOW_CONFIDENCE = 1;
+  FIELD_WARNING_CODE_FIELD_NOT_DETECTED = 2;
+  FIELD_WARNING_CODE_BLUR_DETECTED = 3;
+  FIELD_WARNING_CODE_LOW_RESOLUTION = 4;
+  FIELD_WARNING_CODE_BAD_LIGHTING = 5;
+  FIELD_WARNING_CODE_PARTIAL_VALUE_DETECTED = 6;
+  FIELD_WARNING_CODE_POSSIBLE_WRONG_FIELD = 7;
+  FIELD_WARNING_CODE_MULTIPLE_CANDIDATES_FOUND = 8;
+  FIELD_WARNING_CODE_DATE_FORMAT_UNCERTAIN = 9;
+}
+
+enum FieldErrorCode {
+  FIELD_ERROR_CODE_UNSPECIFIED = 0;
+  FIELD_ERROR_CODE_REQUIRED_FIELD_MISSING = 1;
+  FIELD_ERROR_CODE_INVALID_FORMAT = 2;
+  FIELD_ERROR_CODE_REGEX_NOT_MATCHED = 3;
+  FIELD_ERROR_CODE_MIN_LENGTH_NOT_MET = 4;
+  FIELD_ERROR_CODE_MAX_LENGTH_EXCEEDED = 5;
+  FIELD_ERROR_CODE_UNSUPPORTED_FIELD_TYPE = 6;
+  FIELD_ERROR_CODE_EXTRACTION_FAILED = 7;
+}
+
+enum DocumentQualityWarning {
+  DOCUMENT_QUALITY_WARNING_UNSPECIFIED = 0;
+  DOCUMENT_QUALITY_WARNING_LOW_RESOLUTION = 1;
+  DOCUMENT_QUALITY_WARNING_BLUR_DETECTED = 2;
+  DOCUMENT_QUALITY_WARNING_BAD_LIGHTING = 3;
+  DOCUMENT_QUALITY_WARNING_ROTATED_IMAGE = 4;
+  DOCUMENT_QUALITY_WARNING_CROPPED_DOCUMENT = 5;
+  DOCUMENT_QUALITY_WARNING_SHADOW_DETECTED = 6;
+  DOCUMENT_QUALITY_WARNING_GLARE_DETECTED = 7;
+  DOCUMENT_QUALITY_WARNING_LOW_CONTRAST = 8;
+}
+
+enum ProcessingErrorCode {
+  PROCESSING_ERROR_CODE_UNSPECIFIED = 0;
+  PROCESSING_ERROR_CODE_DOWNLOAD_FAILED = 1;
+  PROCESSING_ERROR_CODE_UNSUPPORTED_MIME_TYPE = 2;
+  PROCESSING_ERROR_CODE_FILE_TOO_LARGE = 3;
+  PROCESSING_ERROR_CODE_PROVIDER_TIMEOUT = 4;
+  PROCESSING_ERROR_CODE_PROVIDER_ERROR = 5;
+  PROCESSING_ERROR_CODE_OCR_FAILED = 6;
+  PROCESSING_ERROR_CODE_VALIDATION_FAILED = 7;
+  PROCESSING_ERROR_CODE_INTERNAL_ERROR = 8;
+}
+
+message ExtractDocumentStreamResponse {
+  string correlation_id = 1;
+  StreamEventType event_type = 2;
+  string message = 3;
+  int32 progress_percent = 4;
+
+  optional ExtractDocumentResponse final_response = 5;
+  repeated ProcessingError errors = 6;
+}
+
+enum StreamEventType {
+  STREAM_EVENT_TYPE_UNSPECIFIED = 0;
+  STREAM_EVENT_TYPE_STARTED = 1;
+  STREAM_EVENT_TYPE_FILE_DOWNLOADED = 2;
+  STREAM_EVENT_TYPE_OCR_STARTED = 3;
+  STREAM_EVENT_TYPE_EXTRACTION_STARTED = 4;
+  STREAM_EVENT_TYPE_FIELD_EXTRACTED = 5;
+  STREAM_EVENT_TYPE_VALIDATION_STARTED = 6;
+  STREAM_EVENT_TYPE_COMPLETED = 7;
+  STREAM_EVENT_TYPE_FAILED = 8;
+}

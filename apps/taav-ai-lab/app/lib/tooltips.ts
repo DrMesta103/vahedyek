@@ -209,6 +209,22 @@ export const AI_LAB_TOOLTIPS = {
       text: 'ساختار ورودی و خروجی قالب هوش مصنوعی اسناد.',
       example: 'فیلدها و قواعد اعتبارسنجی فاکتور',
     },
+    contractDialog: {
+      text: 'قرارداد ارتباط Domain Backend (.NET) با Document AI (Python) برای نوع سند انتخاب‌شده.',
+      example: 'درخواست sync · پاسخ structured · REST یا gRPC',
+    },
+    contractTransportRest: {
+      text: 'درخواست/پاسخ JSON بین .NET و Python از مسیر POST /api/v1/documents/extract/sync.',
+      example: 'tenant_id · file.download_url · extraction.schema',
+    },
+    contractTransportGrpcStream: {
+      text: 'RPC ExtractDocumentStream — رویدادهای ExtractDocumentStreamResponse از Python به .NET.',
+      example: 'event_type · progress_percent · final_response',
+    },
+    contractTransportGrpcUnary: {
+      text: 'RPC ExtractDocument — یک ExtractDocumentResponse کامل از Python به .NET.',
+      example: 'ExtractDocumentRequest → ExtractDocumentResponse',
+    },
     scenarioRecognize: {
       text: 'شبیه‌سازی تشخیص موفق کارت ملی.',
       example: 'سطح اطمینان بالا · فیلدهای پر',
@@ -422,7 +438,7 @@ export const AI_LAB_TOOLTIPS = {
   },
   settings: {
     hub: {
-      text: 'تنظیمات سراسری برای همه tenantها؛ ویرایش نیاز به gate مدیر.',
+      text: 'تنظیمات سراسری برای همه tenantها.',
       example: 'تغییر نرخ دلار ۹۲۰٬۰۰۰',
     },
     tokenPricing: {
@@ -433,9 +449,85 @@ export const AI_LAB_TOOLTIPS = {
       text: 'نرخ تبدیل برای نمایش هزینه به تومان.',
       example: '۱۰۰۰ توکن ≈ ۲۷٬۶۰۰ تومان',
     },
+    aiAccounts: {
+      text: 'مدیریت اکانت‌های Provider و API Keyهای سراسری برای OCR، تاویا و سایر سرویس‌های AI.',
+      example: 'OpenAI Main · $100 اعتبار · masked key',
+    },
+    aiAccountName: {
+      text: 'نام نمایشی اکانت برای شناسایی در پنل ادمین.',
+      example: 'OpenAI Main Account',
+    },
+    aiAccountProvider: {
+      text: 'ارائه‌دهنده مدل یا سرویس هوش مصنوعی.',
+      example: 'OpenAI، DeepSeek، Gemini',
+    },
+    aiAccountApiKey: {
+      text: 'کلید دسترسی Provider؛ پس از ذخیره فقط masked نمایش داده می‌شود.',
+      example: 'sk-••••••••••••ab12',
+    },
+    aiAccountPurchaseEmail: {
+      text: 'ایمیلی که با آن اعتبار یا اشتراک Provider خریداری شده است.',
+      example: 'billing@company.com',
+    },
+    aiAccountOrgId: {
+      text: 'شناسه سازمان یا پروژه در Provider (اختیاری).',
+      example: 'org_abc123',
+    },
+    aiAccountCredit: {
+      text: 'اعتبار دلاری خریداری‌شده برای این اکانت.',
+      example: '$100.00',
+    },
+    aiAccountInputTokenPrice: {
+      text: 'هزینه دلاری به ازای هر ۱ توکن ورودی؛ مقادیر اعشاری کوچک پشتیبانی می‌شود.',
+      example: '$0.00000015',
+    },
+    aiAccountOutputTokenPrice: {
+      text: 'هزینه دلاری به ازای هر ۱ توکن خروجی؛ مقادیر اعشاری کوچک پشتیبانی می‌شود.',
+      example: '$0.00000060',
+    },
+    aiAccountNotes: {
+      text: 'یادداشت داخلی برای تیم ادمین.',
+      example: 'اکانت production اصلی',
+    },
+    aiAccountStatus: {
+      text: 'اکانت‌های غیرفعال در routing بعدی استفاده نمی‌شوند.',
+      example: 'فعال / غیرفعال',
+    },
+    aiAccountModelsPage: {
+      text: 'تعریف مدل‌ها، قیمت‌ها و قابلیت‌ها برای این اکانت Provider؛ پایه Document AI و strategy resolver.',
+      example: 'GPT-4.1 Mini · Chat · $0.40 / 1M input',
+    },
+    aiModelDisplayName: {
+      text: 'نام نمایشی مدل در پنل ادمین.',
+      example: 'GPT-4.1 Mini',
+    },
+    aiModelProviderName: {
+      text: 'شناسه دقیق مدل در Provider؛ باید در همان اکانت یکتا باشد.',
+      example: 'gpt-4.1-mini',
+    },
+    aiModelType: {
+      text: 'نوع کاربرد مدل؛ OCR و استخراج ساخت‌یافته بعداً در Document AI استفاده می‌شوند.',
+      example: 'Chat، OCR، Vision',
+    },
+    aiModelPricingUnit: {
+      text: 'واحد اصلی قیمت‌گذاری؛ در فاز ۲ فقط پیکربندی است و مصرف واقعی محاسبه نمی‌شود.',
+      example: 'توکن، صفحه، درخواست',
+    },
+    aiModelInputPrice: {
+      text: 'هزینه دلاری به ازای هر ۱ میلیون توکن ورودی.',
+      example: '$0.40',
+    },
+    aiModelOutputPrice: {
+      text: 'هزینه دلاری به ازای هر ۱ میلیون توکن خروجی.',
+      example: '$1.60',
+    },
     businesses: {
       text: 'فهرست سراسری همه کسب‌وکارهای پلتفرم با مالک، مصرف توکن و وضعیت.',
       example: 'جستجو بر اساس نام کسب‌وکار یا صاحب آن',
+    },
+    users: {
+      text: 'فهرست سراسری همه کاربران در همه tenantها با امکان جستجو، فیلتر کسب‌وکار و ثبت کاربر جدید.',
+      example: 'ساخت کاربر عضو کسب‌وکار یا کاربر سیستم تاو',
     },
     modelCount: {
       text: 'تعداد مدل‌های فعال در جدول قیمت.',
@@ -458,7 +550,7 @@ export const AI_LAB_TOOLTIPS = {
       example: '$0.15 ≈ ۱۳۸٬۰۰۰ تومان',
     },
     apiKeyReveal: {
-      text: 'نمایش کامل key پس از تأیید مدیر.',
+      text: 'نمایش کامل key در UI.',
       example: 'sk-proj-…',
     },
   },

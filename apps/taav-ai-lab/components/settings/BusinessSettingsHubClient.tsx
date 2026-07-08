@@ -1,6 +1,6 @@
 'use client';
 
-import { Briefcase, Building2, Coins, DollarSign } from 'lucide-react';
+import { Briefcase, Building2, DollarSign, KeyRound, UsersRound } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import {
   TaavBusinessIntroCard,
@@ -13,12 +13,15 @@ import { AiLabTooltipIcon } from '@/components/AiLabTooltip';
 
 const SETTINGS_MODULES = [
   {
-    id: 'token-pricing',
-    title: 'تنظیمات قیمت‌گذاری توکن‌ها',
-    description: 'مدل‌های ChatGPT، Gemini، Grok و DeepSeek — قیمت هر ۱۰۰ توکن و API keyها',
-    href: '/settings/token-pricing',
-    icon: <Coins className="h-5 w-5" strokeWidth={2.1} />,
-    tooltip: AI_LAB_TOOLTIPS.settings.tokenPricing,
+    id: 'ai-accounts',
+    title: 'مدیریت اکانت‌ها و API Keyهای هوش مصنوعی',
+    description:
+      'تعریف اکانت‌های OpenAI، DeepSeek، Gemini، Grok و سایر ارائه‌دهندگان برای مدیریت هزینه، قیمت توکن و کلیدهای دسترسی.',
+    href: '/settings/ai-accounts',
+    eyebrow: 'فاز ۱',
+    statusLabel: 'مدیریت اکانت‌ها',
+    icon: <KeyRound className="h-5 w-5" strokeWidth={2.1} />,
+    tooltip: AI_LAB_TOOLTIPS.settings.aiAccounts,
   },
   {
     id: 'usd-rate',
@@ -38,6 +41,16 @@ const SETTINGS_MODULES = [
     eyebrow: 'تاو ادمین',
     statusLabel: 'مشاهده فهرست',
   },
+  {
+    id: 'users',
+    title: 'مدیریت کاربران',
+    description: 'فهرست سراسری کاربران همه tenantها با جستجو، فیلتر و ثبت کاربر جدید در سطح تاو ادمین.',
+    href: '/settings/users',
+    icon: <UsersRound className="h-5 w-5" strokeWidth={2.1} />,
+    tooltip: AI_LAB_TOOLTIPS.settings.users,
+    eyebrow: 'تاو ادمین',
+    statusLabel: 'ثبت و مدیریت کاربر',
+  },
 ] as const;
 
 export function BusinessSettingsHubClient() {
@@ -54,12 +67,12 @@ export function BusinessSettingsHubClient() {
         badge={`${SETTINGS_MODULES.length} بخش`}
         title={
           <span className="inline-flex items-center gap-2">
-            تنظیمات تاو ادمین
+            پنل تاو ادمین
             <AiLabTooltipIcon content={AI_LAB_TOOLTIPS.settings.hub} label="راهنمای تنظیمات" />
           </span>
         }
-        description="این تنظیمات سراسری است و برای همه کسب‌وکارها یکسان اعمال می‌شود. قیمت مدل‌ها و نرخ دلار را مشاهده کنید؛ برای ویرایش یا دسترسی به API key نیاز به تأیید مدیر دارید."
-        footnote="داده‌های این بخش فقط شبیه‌سازی هستند و در پایگاه داده ذخیره نمی‌شوند."
+        description="این تنظیمات سراسری است و برای همه کسب‌وکارها یکسان اعمال می‌شود. اکانت‌های AI، مدل‌ها و نرخ دلار را از همین بخش مدیریت کنید."
+        footnote="داده‌های این بخش در PostgreSQL ذخیره می‌شوند. API Keyها فقط به‌صورت masked نمایش داده می‌شوند."
         icon={<Briefcase strokeWidth={2.1} />}
       />
 

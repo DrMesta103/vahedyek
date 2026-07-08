@@ -5,7 +5,9 @@ import {
   getOcrJobsForTenant,
   type CreateOcrSimulationInput,
 } from '@/app/lib/data';
+import { validateExtractionFields, type OcrExtractionFieldDraft } from '@/app/lib/ocr-extraction-fields';
 import { isOcrModelId, DEFAULT_OCR_MODEL_ID } from '@/app/lib/ocr-models';
+import { parseOcrTransportMode } from '@/app/lib/ocr-transport';
 import { getOptionalSession } from '@/app/lib/session';
 
 type RouteContext = {
@@ -45,6 +47,19 @@ export async function POST(request: Request, context: RouteContext) {
     return NextResponse.json({ message: 'نمونه‌ی انتخاب‌شده معتبر نیست.' }, { status: 400 });
   }
 
+  const isDynamicExtraction = body.templateId === 'dynamic';
+  const extractionValidation = validateExtractionFields(
+    Array.isArray(body.extractionFields) ? (body.extractionFields as OcrExtractionFieldDraft[]) : [],
+  );
+
+  if (isDynamicExtraction && body.sourceType !== 'upload') {
+    return NextResponse.json({ message: 'برای نوع سند داینامیک، آپلود فایل الزامی است.' }, { status: 400 });
+  }
+
+  if (isDynamicExtraction && extractionValidation.errors.length > 0) {
+    return NextResponse.json({ message: extractionValidation.errors[0] }, { status: 400 });
+  }
+
   const job = await createOcrJobForTenant(session.userId, {
     tenantId: businessId,
     sourceType: body.sourceType,
@@ -55,8 +70,9 @@ export async function POST(request: Request, context: RouteContext) {
     templateId: body.templateId?.trim() || null,
     scenario: body.scenario === 'miss' ? 'miss' : body.scenario === 'recognize' ? 'recognize' : null,
     sampleText: body.sampleText?.trim() || null,
-    transportMode: body.transportMode === 'grpc' ? 'grpc' : 'rest',
+    transportMode: parseOcrTransportMode(body.transportMode),
     modelId: isOcrModelId(body.modelId) ? body.modelId : DEFAULT_OCR_MODEL_ID,
+    extractionFields: isDynamicExtraction ? extractionValidation.fields : null,
   });
 
   if (!job) {

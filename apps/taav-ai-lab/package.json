@@ -3,9 +3,10 @@
   "private": true,
   "version": "0.1.0",
   "scripts": {
-    "predev": "npm run prisma:generate && npm --workspace @repo/ui run build",
+    "predev": "npm run prisma:deploy && npm run prisma:generate && npm run db:seed && npm --workspace @repo/ui run build",
     "dev": "next dev -p 3070 --hostname 0.0.0.0",
     "build": "npm run prisma:generate && npm --workspace @repo/ui run build && next build",
+    "prestart": "npm run prisma:deploy",
     "start": "next start -p 3070",
     "lint": "next lint",
     "prisma:generate": "prisma generate",

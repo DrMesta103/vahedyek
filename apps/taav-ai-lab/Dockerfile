@@ -8,7 +8,7 @@ RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists
 
 FROM base AS builder
 
-ENV DATABASE_URL="postgres://postgres:postgres@172.19.0.8:5432/taaviAiLab"
+ENV DATABASE_URL="postgres://postgres:opL0u42d4Yx9Qiv@5.9.164.187:5432/ai-lab-next-app"
 
 COPY . .
 

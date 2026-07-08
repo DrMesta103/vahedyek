@@ -1,0 +1,351 @@
+import { prisma } from '../prisma';
+import {
+  AI_PROVIDER_MODEL_TYPE_LABELS,
+  AI_PROVIDER_MODEL_TYPES,
+  AI_PROVIDER_PRICING_UNIT_LABELS,
+  AI_PROVIDER_PRICING_UNITS,
+  type AiProviderAccountDetail,
+  type AiProviderModelPublic,
+  type AiProviderModelType,
+  type AiProviderPricingUnit,
+  type CreateAiProviderModelInput,
+  type UpdateAiProviderModelInput,
+} from '../types/ai-provider-models';
+import { AI_PROVIDER_LABELS, type AiProviderType } from '../types/ai-accounts';
+
+type ModelRow = Awaited<ReturnType<typeof prisma.aiProviderModel.findMany>>[number];
+
+const DEFAULT_FIELDS = [
+  'isDefaultForChat',
+  'isDefaultForOcr',
+  'isDefaultForEmbedding',
+  'isDefaultForVision',
+] as const;
+
+function toNumber(value: { toString(): string } | number) {
+  return Number(value);
+}
+
+function isModelType(value: string): value is AiProviderModelType {
+  return (AI_PROVIDER_MODEL_TYPES as readonly string[]).includes(value);
+}
+
+function isPricingUnit(value: string): value is AiProviderPricingUnit {
+  return (AI_PROVIDER_PRICING_UNITS as readonly string[]).includes(value);
+}
+
+function mapModel(row: ModelRow): AiProviderModelPublic {
+  const modelType = isModelType(row.modelType) ? row.modelType : 'OTHER';
+  const pricingUnit = isPricingUnit(row.pricingUnit) ? row.pricingUnit : 'MIXED';
+
+  return {
+    id: row.id,
+    accountId: row.accountId,
+    displayName: row.displayName,
+    providerModelName: row.providerModelName,
+    modelType,
+    modelTypeLabel: AI_PROVIDER_MODEL_TYPE_LABELS[modelType],
+    pricingUnit,
+    pricingUnitLabel: AI_PROVIDER_PRICING_UNIT_LABELS[pricingUnit],
+    inputTokenPriceUsd: toNumber(row.inputTokenPriceUsd),
+    outputTokenPriceUsd: toNumber(row.outputTokenPriceUsd),
+    requestPriceUsd: toNumber(row.requestPriceUsd),
+    pagePriceUsd: toNumber(row.pagePriceUsd),
+    imagePriceUsd: toNumber(row.imagePriceUsd),
+    minutePriceUsd: toNumber(row.minutePriceUsd),
+    supportsPersian: row.supportsPersian,
+    supportsEnglish: row.supportsEnglish,
+    supportsVision: row.supportsVision,
+    supportsPdf: row.supportsPdf,
+    supportsImage: row.supportsImage,
+    supportsStructuredExtraction: row.supportsStructuredExtraction,
+    supportsEmbedding: row.supportsEmbedding,
+    supportsFunctionCalling: row.supportsFunctionCalling,
+    maxInputTokens: row.maxInputTokens,
+    maxOutputTokens: row.maxOutputTokens,
+    isDefaultForChat: row.isDefaultForChat,
+    isDefaultForOcr: row.isDefaultForOcr,
+    isDefaultForEmbedding: row.isDefaultForEmbedding,
+    isDefaultForVision: row.isDefaultForVision,
+    isActive: row.isActive,
+    notes: row.notes,
+    createdByUserId: row.createdByUserId,
+    createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
+  };
+}
+
+function buildModelData(input: CreateAiProviderModelInput | UpdateAiProviderModelInput) {
+  return {
+    ...(input.displayName !== undefined ? { displayName: input.displayName } : {}),
+    ...(input.providerModelName !== undefined ? { providerModelName: input.providerModelName } : {}),
+    ...(input.modelType !== undefined ? { modelType: input.modelType } : {}),
+    ...(input.pricingUnit !== undefined ? { pricingUnit: input.pricingUnit } : {}),
+    ...(input.inputTokenPriceUsd !== undefined ? { inputTokenPriceUsd: input.inputTokenPriceUsd } : {}),
+    ...(input.outputTokenPriceUsd !== undefined ? { outputTokenPriceUsd: input.outputTokenPriceUsd } : {}),
+    ...(input.requestPriceUsd !== undefined ? { requestPriceUsd: input.requestPriceUsd } : {}),
+    ...(input.pagePriceUsd !== undefined ? { pagePriceUsd: input.pagePriceUsd } : {}),
+    ...(input.imagePriceUsd !== undefined ? { imagePriceUsd: input.imagePriceUsd } : {}),
+    ...(input.minutePriceUsd !== undefined ? { minutePriceUsd: input.minutePriceUsd } : {}),
+    ...(input.supportsPersian !== undefined ? { supportsPersian: input.supportsPersian } : {}),
+    ...(input.supportsEnglish !== undefined ? { supportsEnglish: input.supportsEnglish } : {}),
+    ...(input.supportsVision !== undefined ? { supportsVision: input.supportsVision } : {}),
+    ...(input.supportsPdf !== undefined ? { supportsPdf: input.supportsPdf } : {}),
+    ...(input.supportsImage !== undefined ? { supportsImage: input.supportsImage } : {}),
+    ...(input.supportsStructuredExtraction !== undefined
+      ? { supportsStructuredExtraction: input.supportsStructuredExtraction }
+      : {}),
+    ...(input.supportsEmbedding !== undefined ? { supportsEmbedding: input.supportsEmbedding } : {}),
+    ...(input.supportsFunctionCalling !== undefined ? { supportsFunctionCalling: input.supportsFunctionCalling } : {}),
+    ...(input.maxInputTokens !== undefined ? { maxInputTokens: input.maxInputTokens } : {}),
+    ...(input.maxOutputTokens !== undefined ? { maxOutputTokens: input.maxOutputTokens } : {}),
+    ...(input.isDefaultForChat !== undefined ? { isDefaultForChat: input.isDefaultForChat } : {}),
+    ...(input.isDefaultForOcr !== undefined ? { isDefaultForOcr: input.isDefaultForOcr } : {}),
+    ...(input.isDefaultForEmbedding !== undefined ? { isDefaultForEmbedding: input.isDefaultForEmbedding } : {}),
+    ...(input.isDefaultForVision !== undefined ? { isDefaultForVision: input.isDefaultForVision } : {}),
+    ...(input.isActive !== undefined ? { isActive: input.isActive } : {}),
+    ...(input.notes !== undefined ? { notes: input.notes } : {}),
+  };
+}
+
+async function unsetOtherDefaults(
+  tx: Parameters<Parameters<typeof prisma.$transaction>[0]>[0],
+  accountId: string,
+  modelId: string,
+  flags: Partial<Record<(typeof DEFAULT_FIELDS)[number], boolean>>,
+) {
+  for (const field of DEFAULT_FIELDS) {
+    if (flags[field] === true) {
+      await tx.aiProviderModel.updateMany({
+        where: { accountId, id: { not: modelId } },
+        data: { [field]: false },
+      });
+    }
+  }
+}
+
+async function ensureAccountExists(accountId: string) {
+  return prisma.aiProviderAccount.findUnique({ where: { id: accountId } });
+}
+
+export async function listAiProviderModels(accountId: string) {
+  const account = await ensureAccountExists(accountId);
+  if (!account) return null;
+
+  const rows = await prisma.aiProviderModel.findMany({
+    where: { accountId },
+    orderBy: [{ updatedAt: 'desc' }, { displayName: 'asc' }],
+  });
+
+  return rows.map(mapModel);
+}
+
+export async function getAiProviderModelById(accountId: string, modelId: string) {
+  const row = await prisma.aiProviderModel.findFirst({
+    where: { id: modelId, accountId },
+  });
+  if (!row) return null;
+  return mapModel(row);
+}
+
+export async function getAiProviderAccountDetail(accountId: string): Promise<AiProviderAccountDetail | null> {
+  const account = await ensureAccountExists(accountId);
+  if (!account) return null;
+
+  const [models, totalModelCount, activeModelCount] = await Promise.all([
+    prisma.aiProviderModel.findMany({
+      where: { accountId },
+      orderBy: [{ updatedAt: 'desc' }, { displayName: 'asc' }],
+    }),
+    prisma.aiProviderModel.count({ where: { accountId } }),
+    prisma.aiProviderModel.count({ where: { accountId, isActive: true } }),
+  ]);
+
+  const provider = account.provider as AiProviderType;
+  const purchasedCreditUsd = toNumber(account.purchasedCreditUsd);
+  const usedCreditUsd = toNumber(account.usedCreditUsd);
+
+  return {
+    account: {
+      id: account.id,
+      name: account.name,
+      provider: account.provider,
+      providerLabel: AI_PROVIDER_LABELS[provider] ?? account.provider,
+      apiKeyMasked: account.apiKeyMasked,
+      purchasedCreditUsd,
+      usedCreditUsd,
+      remainingCreditUsd: Math.max(0, purchasedCreditUsd - usedCreditUsd),
+      isActive: account.isActive,
+      totalModelCount,
+      activeModelCount,
+    },
+    models: models.map(mapModel),
+  };
+}
+
+export async function createAiProviderModel(accountId: string, input: CreateAiProviderModelInput) {
+  const account = await ensureAccountExists(accountId);
+  if (!account) return null;
+
+  const row = await prisma.$transaction(async (tx) => {
+    const created = await tx.aiProviderModel.create({
+      data: {
+        accountId,
+        ...buildModelData(input),
+        displayName: input.displayName,
+        providerModelName: input.providerModelName,
+        modelType: input.modelType,
+        pricingUnit: input.pricingUnit,
+        inputTokenPriceUsd: input.inputTokenPriceUsd ?? 0,
+        outputTokenPriceUsd: input.outputTokenPriceUsd ?? 0,
+        requestPriceUsd: input.requestPriceUsd ?? 0,
+        pagePriceUsd: input.pagePriceUsd ?? 0,
+        imagePriceUsd: input.imagePriceUsd ?? 0,
+        minutePriceUsd: input.minutePriceUsd ?? 0,
+        supportsPersian: input.supportsPersian ?? false,
+        supportsEnglish: input.supportsEnglish ?? false,
+        supportsVision: input.supportsVision ?? false,
+        supportsPdf: input.supportsPdf ?? false,
+        supportsImage: input.supportsImage ?? false,
+        supportsStructuredExtraction: input.supportsStructuredExtraction ?? false,
+        supportsEmbedding: input.supportsEmbedding ?? false,
+        supportsFunctionCalling: input.supportsFunctionCalling ?? false,
+        maxInputTokens: input.maxInputTokens ?? null,
+        maxOutputTokens: input.maxOutputTokens ?? null,
+        isDefaultForChat: input.isDefaultForChat ?? false,
+        isDefaultForOcr: input.isDefaultForOcr ?? false,
+        isDefaultForEmbedding: input.isDefaultForEmbedding ?? false,
+        isDefaultForVision: input.isDefaultForVision ?? false,
+        isActive: input.isActive !== false,
+        notes: input.notes ?? null,
+        createdByUserId: input.createdByUserId ?? null,
+      },
+    });
+
+    await unsetOtherDefaults(tx, accountId, created.id, {
+      isDefaultForChat: created.isDefaultForChat,
+      isDefaultForOcr: created.isDefaultForOcr,
+      isDefaultForEmbedding: created.isDefaultForEmbedding,
+      isDefaultForVision: created.isDefaultForVision,
+    });
+
+    return created;
+  });
+
+  return mapModel(row);
+}
+
+export async function updateAiProviderModel(
+  accountId: string,
+  modelId: string,
+  input: UpdateAiProviderModelInput,
+) {
+  const existing = await prisma.aiProviderModel.findFirst({
+    where: { id: modelId, accountId },
+  });
+  if (!existing) return null;
+
+  const row = await prisma.$transaction(async (tx) => {
+    const updated = await tx.aiProviderModel.update({
+      where: { id: modelId },
+      data: buildModelData(input),
+    });
+
+    await unsetOtherDefaults(tx, accountId, modelId, {
+      isDefaultForChat: input.isDefaultForChat,
+      isDefaultForOcr: input.isDefaultForOcr,
+      isDefaultForEmbedding: input.isDefaultForEmbedding,
+      isDefaultForVision: input.isDefaultForVision,
+    });
+
+    return updated;
+  });
+
+  return mapModel(row);
+}
+
+export async function toggleAiProviderModelStatus(accountId: string, modelId: string, isActive: boolean) {
+  const existing = await prisma.aiProviderModel.findFirst({
+    where: { id: modelId, accountId },
+  });
+  if (!existing) return null;
+
+  const row = await prisma.aiProviderModel.update({
+    where: { id: modelId },
+    data: { isActive },
+  });
+
+  return mapModel(row);
+}
+
+export async function deleteAiProviderModel(accountId: string, modelId: string) {
+  const existing = await prisma.aiProviderModel.findFirst({
+    where: { id: modelId, accountId },
+  });
+  if (!existing) return false;
+
+  await prisma.aiProviderModel.delete({ where: { id: modelId } });
+  return true;
+}
+
+export function parseAiProviderModelType(value: unknown): AiProviderModelType | null {
+  if (typeof value !== 'string') return null;
+  const normalized = value.trim().toUpperCase();
+  return isModelType(normalized) ? normalized : null;
+}
+
+export function parseAiProviderPricingUnit(value: unknown): AiProviderPricingUnit | null {
+  if (typeof value !== 'string') return null;
+  const normalized = value.trim().toUpperCase();
+  return isPricingUnit(normalized) ? normalized : null;
+}
+
+export function hasAnyPositivePrice(input: {
+  inputTokenPriceUsd?: number;
+  outputTokenPriceUsd?: number;
+  requestPriceUsd?: number;
+  pagePriceUsd?: number;
+  imagePriceUsd?: number;
+  minutePriceUsd?: number;
+}) {
+  return [
+    input.inputTokenPriceUsd,
+    input.outputTokenPriceUsd,
+    input.requestPriceUsd,
+    input.pagePriceUsd,
+    input.imagePriceUsd,
+    input.minutePriceUsd,
+  ].some((value) => typeof value === 'number' && value > 0);
+}
+
+export async function getModelCountsByAccountIds(accountIds: string[]) {
+  if (accountIds.length === 0) return new Map<string, { total: number; active: number }>();
+
+  const [totalRows, activeRows] = await Promise.all([
+    prisma.aiProviderModel.groupBy({
+      by: ['accountId'],
+      where: { accountId: { in: accountIds } },
+      _count: { _all: true },
+    }),
+    prisma.aiProviderModel.groupBy({
+      by: ['accountId'],
+      where: { accountId: { in: accountIds }, isActive: true },
+      _count: { _all: true },
+    }),
+  ]);
+
+  const counts = new Map<string, { total: number; active: number }>();
+  for (const id of accountIds) {
+    counts.set(id, { total: 0, active: 0 });
+  }
+  for (const row of totalRows) {
+    const current = counts.get(row.accountId) ?? { total: 0, active: 0 };
+    counts.set(row.accountId, { ...current, total: row._count._all });
+  }
+  for (const row of activeRows) {
+    const current = counts.get(row.accountId) ?? { total: 0, active: 0 };
+    counts.set(row.accountId, { ...current, active: row._count._all });
+  }
+
+  return counts;
+}

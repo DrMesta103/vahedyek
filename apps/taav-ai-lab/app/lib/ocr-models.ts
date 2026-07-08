@@ -1,3 +1,5 @@
+import type { OcrTransportMode } from './ocr-transport';
+
 export type OcrModelProvider = 'openai' | 'deepseek' | 'google' | 'xai';
 
 export type OcrModelOption = {
@@ -48,19 +50,23 @@ export const OCR_MODEL_OPTIONS: OcrModelOption[] = [
 
 const OCR_MODEL_LOOKUP = new Map(OCR_MODEL_OPTIONS.map((model) => [model.id, model]));
 
+export function getOcrModelById(modelId: string): OcrModelOption | null {
+  return OCR_MODEL_LOOKUP.get(modelId) ?? null;
+}
+
 export function isOcrModelId(value: string | null | undefined): value is string {
   return Boolean(value && OCR_MODEL_LOOKUP.has(value));
 }
 
 export function resolveOcrModel(
   modelId?: string | null,
-  transportMode?: 'rest' | 'grpc' | null,
+  transportMode?: OcrTransportMode | null,
 ): OcrModelOption {
   if (modelId && OCR_MODEL_LOOKUP.has(modelId)) {
     return OCR_MODEL_LOOKUP.get(modelId)!;
   }
 
-  if (transportMode === 'grpc') {
+  if (transportMode === 'grpc-streaming' || transportMode === 'grpc-unary') {
     return OCR_MODEL_LOOKUP.get('deepseek-ocr') ?? OCR_MODEL_OPTIONS[0];
   }
 

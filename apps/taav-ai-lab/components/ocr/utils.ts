@@ -1,6 +1,18 @@
 import { CheckCircle2, Clock3, Loader2, TriangleAlert } from 'lucide-react';
 import type { OcrSimulationJob } from '@/app/lib/data';
 import { buildOcrAiMetaFromModel, resolveOcrModel } from '@/app/lib/ocr-models';
+import {
+  buildOcrUsageCost,
+  readOcrCostFromMetaWithToman,
+  resolveOcrModelPricing,
+  type OcrAiUsageCost,
+} from '@/app/lib/ocr-ai-pricing';
+import type { AiProviderAccountPublic } from '@/app/lib/types/ai-accounts';
+import {
+  getOcrTransportUsageLabel,
+  normalizeOcrTransportMode,
+  type OcrTransportMode,
+} from '@/app/lib/ocr-transport';
 import type { OcrFieldReviewStatus, OcrFieldValidationStatus, OcrOverallStatus } from '@/app/lib/ocr-simulator-data';
 
 const OVERALL_STATUS_LABELS: Record<OcrOverallStatus, string> = {
@@ -91,10 +103,12 @@ export type OcrResultFormField = {
   confidence: number | null;
 };
 
-export function getOcrTransportMode(job: OcrSimulationJob, hint?: 'rest' | 'grpc' | null): 'rest' | 'grpc' {
-  if (hint === 'grpc' || hint === 'rest') return hint;
-  const mode = job.extractedJson?.__transportMode;
-  return mode === 'grpc' ? 'grpc' : 'rest';
+export type { OcrTransportMode } from '@/app/lib/ocr-transport';
+export { getOcrTransportLabel, getOcrTransportUsageLabel, normalizeOcrTransportMode } from '@/app/lib/ocr-transport';
+
+export function getOcrTransportMode(job: OcrSimulationJob, hint?: OcrTransportMode | string | null): OcrTransportMode {
+  if (hint) return normalizeOcrTransportMode(hint);
+  return normalizeOcrTransportMode(job.extractedJson?.__transportMode);
 }
 
 export type OcrAiUsage = {
@@ -106,7 +120,7 @@ export type OcrAiUsage = {
   totalTokens: number;
 };
 
-export function getOcrAiUsage(job: OcrSimulationJob, transportMode?: 'rest' | 'grpc' | null): OcrAiUsage {
+export function getOcrAiUsage(job: OcrSimulationJob, transportMode?: OcrTransportMode | null): OcrAiUsage {
   const mode = transportMode ?? getOcrTransportMode(job);
   const model = resolveOcrModel(job.extractedJson?.__aiModelId, mode);
 
@@ -139,6 +153,28 @@ export function getOcrAiUsage(job: OcrSimulationJob, transportMode?: 'rest' | 'g
     outputTokens,
     totalTokens: inputTokens + outputTokens,
   };
+}
+
+export type { OcrAiUsageCost };
+
+export function getOcrAiUsageCost(
+  job: OcrSimulationJob,
+  usdToToman: number,
+  accounts?: AiProviderAccountPublic[],
+  transportMode?: OcrTransportMode | null,
+): OcrAiUsageCost {
+  const usage = getOcrAiUsage(job, transportMode);
+  const snapshot = readOcrCostFromMetaWithToman(job.extractedJson, usage.providerLabel, usdToToman);
+  if (snapshot) return snapshot;
+
+  const pricing = accounts ? resolveOcrModelPricing(usage.modelId, accounts) : null;
+  return buildOcrUsageCost({
+    inputTokens: usage.inputTokens,
+    outputTokens: usage.outputTokens,
+    pricing,
+    usdToToman,
+    providerLabel: usage.providerLabel,
+  });
 }
 
 export function getOcrFormFields(job: OcrSimulationJob): OcrResultFormField[] {

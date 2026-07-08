@@ -1,11 +1,19 @@
 import { assertTenantAccess } from '../auth';
 import {
+  buildOcrCostMeta,
+  buildOcrUsageCost,
+  resolveOcrModelPricing,
+} from '../ocr-ai-pricing';
+import { buildOcrAiMetaFromModel, resolveOcrModel } from '../ocr-models';
+import {
   buildOcrSimulationJob,
   mapDbJobToDomain,
   mapOcrJobToDbData,
   materializeOcrJob,
 } from '../ocr-job-builder';
 import { prisma } from '../prisma';
+import { listAiProviderAccounts } from './ai-accounts';
+import { getGlobalSettings } from './global-settings';
 import type { CreateOcrSimulationInput, OcrSimulationJob } from '../types/domain';
 
 async function persistMaterializedJob(job: OcrSimulationJob) {
@@ -69,7 +77,33 @@ export async function createOcrJobForTenant(
 ): Promise<OcrSimulationJob | null> {
   if (!(await assertTenantAccess(userId, input.tenantId))) return null;
 
-  const job = buildOcrSimulationJob(input.tenantId, input);
+  let job = buildOcrSimulationJob(input.tenantId, input);
+  const [{ accounts }, globalSettings] = await Promise.all([
+    listAiProviderAccounts(),
+    getGlobalSettings(),
+  ]);
+
+  const model = resolveOcrModel(input.modelId, input.transportMode);
+  const aiMeta = buildOcrAiMetaFromModel(job.tokensUsed, model);
+  const inputTokens = Number(aiMeta.__inputTokens);
+  const outputTokens = Number(aiMeta.__outputTokens);
+  const pricing = resolveOcrModelPricing(model.id, accounts);
+  const usageCost = buildOcrUsageCost({
+    inputTokens,
+    outputTokens,
+    pricing,
+    usdToToman: globalSettings.usdToToman,
+    providerLabel: model.providerLabel,
+  });
+
+  job = {
+    ...job,
+    extractedJson: {
+      ...job.extractedJson,
+      ...buildOcrCostMeta(usageCost),
+    },
+  };
+
   const data = mapOcrJobToDbData(job);
 
   await prisma.$transaction(async (tx) => {
@@ -82,6 +116,37 @@ export async function createOcrJobForTenant(
         lastActivity: new Date(job.updatedAt),
       },
     });
+
+    if (usageCost.accountId && usageCost.totalCostUsd > 0) {
+      await tx.aiUsageLog.create({
+        data: {
+          aiAccountId: usageCost.accountId,
+          tenantId: input.tenantId,
+          businessId: input.tenantId,
+          serviceName: 'ocr',
+          featureName: model.id,
+          requestId: job.id,
+          inputTokens,
+          outputTokens,
+          totalTokens: inputTokens + outputTokens,
+          inputCostUsd: usageCost.inputCostUsd,
+          outputCostUsd: usageCost.outputCostUsd,
+          totalCostUsd: usageCost.totalCostUsd,
+          metadata: {
+            modelName: model.name,
+            providerLabel: usageCost.providerLabel,
+            totalCostToman: usageCost.totalCostToman,
+          },
+        },
+      });
+
+      await tx.aiProviderAccount.update({
+        where: { id: usageCost.accountId },
+        data: {
+          usedCreditUsd: { increment: usageCost.totalCostUsd },
+        },
+      });
+    }
   });
 
   return job;

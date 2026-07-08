@@ -20,15 +20,29 @@ import {
   Settings,
   ShieldCheck,
   Target,
+  Wallet,
 } from 'lucide-react';
 import type { OcrSimulationJob, Tenant } from '@/app/lib/data';
+import { formatCostUsd } from '@/app/lib/ai-usage-cost';
 import { formatActivityLabel, formatRelativeActivityLabel, formatTokenCount } from '@/app/lib/business-utils';
-import { buildOcrStats, formatConfidence, getOcrTransportMode, getStatusMeta } from '@/components/ocr/utils';
+import { formatToman } from '@/app/lib/global-settings-mock';
+import type { AiProviderAccountPublic } from '@/app/lib/types/ai-accounts';
+import {
+  buildOcrStats,
+  formatConfidence,
+  getOcrAiUsageCost,
+  getOcrTransportMode,
+  getStatusMeta,
+  type OcrAiUsageCost,
+} from '@/components/ocr/utils';
 
 type OcrHubClientProps = {
   business: Tenant;
   businessId: string;
   initialJobs: OcrSimulationJob[];
+  jobCosts: Record<string, OcrAiUsageCost>;
+  usdToToman: number;
+  aiAccounts: AiProviderAccountPublic[];
 };
 
 type StatusFilter = 'all' | 'completed' | 'processing' | 'failed';
@@ -45,6 +59,7 @@ const KPI_ITEMS = [
   { key: 'completed', label: 'تکمیل شده', icon: CheckCircle2, tone: 'green' },
   { key: 'processing', label: 'در حال پردازش', icon: Loader2, tone: 'blue' },
   { key: 'tokensUsed', label: 'توکن مصرفی', icon: Database, tone: 'cyan' },
+  { key: 'totalCost', label: 'هزینه مصرفی کل', icon: Wallet, tone: 'amber' },
   { key: 'avgConfidence', label: 'میانگین دقت', icon: Target, tone: 'teal' },
 ] as const;
 
@@ -94,6 +109,33 @@ function buildServiceSummary(jobs: OcrSimulationJob[]) {
   };
 }
 
+function getJobDurationMs(job: OcrSimulationJob) {
+  const started = new Date(job.startedAt).getTime();
+  if (!Number.isFinite(started)) return null;
+  const endedRaw = job.completedAt ?? job.readyAt ?? job.updatedAt;
+  const ended = new Date(endedRaw).getTime();
+  if (!Number.isFinite(ended)) return null;
+  return Math.max(0, ended - started);
+}
+
+function formatJobDuration(durationMs: number) {
+  if (!Number.isFinite(durationMs) || durationMs < 0) return '—';
+  if (durationMs < 1000) {
+    return `${new Intl.NumberFormat('fa-IR', { maximumFractionDigits: 0 }).format(durationMs)} ms`;
+  }
+
+  const seconds = durationMs / 1000;
+  if (seconds < 60) {
+    return `${new Intl.NumberFormat('fa-IR', { maximumFractionDigits: 1 }).format(seconds)} ثانیه`;
+  }
+
+  const minutes = Math.floor(seconds / 60);
+  const remainder = seconds - minutes * 60;
+  const minutesLabel = new Intl.NumberFormat('fa-IR', { maximumFractionDigits: 0 }).format(minutes);
+  const secondsLabel = new Intl.NumberFormat('fa-IR', { maximumFractionDigits: 0 }).format(Math.round(remainder));
+  return `${minutesLabel}:${secondsLabel.padStart(2, '0')}`;
+}
+
 function ConfidenceRing({ value }: { value: number }) {
   const radius = 14;
   const circumference = 2 * Math.PI * radius;
@@ -118,7 +160,14 @@ function ConfidenceRing({ value }: { value: number }) {
   );
 }
 
-export function OcrHubClient({ business, businessId, initialJobs }: OcrHubClientProps) {
+export function OcrHubClient({
+  business,
+  businessId,
+  initialJobs,
+  jobCosts,
+  usdToToman,
+  aiAccounts,
+}: OcrHubClientProps) {
   const [jobs, setJobs] = useState<OcrSimulationJob[]>(initialJobs);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
@@ -126,6 +175,19 @@ export function OcrHubClient({ business, businessId, initialJobs }: OcrHubClient
   const processingCount = useMemo(() => jobs.filter((job) => job.status === 'processing').length, [jobs]);
   const stats = useMemo(() => buildOcrStats(jobs), [jobs]);
   const serviceSummary = useMemo(() => buildServiceSummary(jobs), [jobs]);
+  const totalUsageCost = useMemo(
+    () =>
+      jobs.reduce(
+        (acc, job) => {
+          const cost = jobCosts[job.id] ?? getOcrAiUsageCost(job, usdToToman, aiAccounts);
+          acc.usd += cost.totalCostUsd;
+          acc.toman += cost.totalCostToman;
+          return acc;
+        },
+        { usd: 0, toman: 0 },
+      ),
+    [jobs, jobCosts, usdToToman, aiAccounts],
+  );
 
   useEffect(() => {
     setJobs(initialJobs);
@@ -162,7 +224,7 @@ export function OcrHubClient({ business, businessId, initialJobs }: OcrHubClient
       .sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime());
   }, [jobs, searchQuery, statusFilter]);
 
-  const kpiValues: Record<(typeof KPI_ITEMS)[number]['key'], string | number> = {
+  const kpiValues: Record<Exclude<(typeof KPI_ITEMS)[number]['key'], 'totalCost'>, string | number> = {
     total: stats.total,
     completed: stats.completed,
     processing: stats.processing,
@@ -226,9 +288,20 @@ export function OcrHubClient({ business, businessId, initialJobs }: OcrHubClient
                 </span>
               </div>
               <strong>
-                {typeof kpiValues[item.key] === 'number'
-                  ? new Intl.NumberFormat('fa-IR').format(kpiValues[item.key] as number)
-                  : kpiValues[item.key]}
+                {item.key === 'totalCost' ? (
+                  <span className="ai-lab-ocr-dashboard-kpi-cost">
+                    <span>{formatToman(totalUsageCost.toman)} تومان</span>
+                    <small dir="ltr">{formatCostUsd(totalUsageCost.usd)}</small>
+                  </span>
+                ) : item.key in kpiValues ? (
+                  typeof kpiValues[item.key as keyof typeof kpiValues] === 'number' ? (
+                    new Intl.NumberFormat('fa-IR').format(kpiValues[item.key as keyof typeof kpiValues] as number)
+                  ) : (
+                    kpiValues[item.key as keyof typeof kpiValues]
+                  )
+                ) : (
+                  '—'
+                )}
               </strong>
               <span className="ai-lab-ocr-dashboard-kpi-wave" aria-hidden="true" />
             </article>
@@ -306,6 +379,7 @@ export function OcrHubClient({ business, businessId, initialJobs }: OcrHubClient
                 {filteredJobs.map((job) => {
                   const meta = getStatusMeta(job.status);
                   const StatusIcon = meta.icon;
+                  const durationMs = getJobDurationMs(job);
 
                   return (
                     <Link
@@ -323,6 +397,13 @@ export function OcrHubClient({ business, businessId, initialJobs }: OcrHubClient
                         <MoreVertical className="h-4 w-4" />
                       </button>
 
+                      <span
+                        className={`ai-lab-ocr-dashboard-row-badge ai-lab-ocr-dashboard-row-badge--${meta.tone}`}
+                      >
+                        <StatusIcon className={`h-3.5 w-3.5 ${job.status === 'processing' ? 'animate-spin' : ''}`} />
+                        {meta.label}
+                      </span>
+
                       <div className="ai-lab-ocr-dashboard-row-thumb">
                         <FileText className="h-5 w-5" strokeWidth={1.6} />
                       </div>
@@ -336,22 +417,30 @@ export function OcrHubClient({ business, businessId, initialJobs }: OcrHubClient
                         </span>
                       </div>
 
-                      <div className="ai-lab-ocr-dashboard-row-metric">
+                      <div className="ai-lab-ocr-dashboard-row-metric ai-lab-ocr-dashboard-row-metric--updated">
                         <Clock3 className="h-3.5 w-3.5" aria-hidden="true" />
                         {formatRelativeActivityLabel(job.updatedAt)}
                       </div>
 
-                      <div className="ai-lab-ocr-dashboard-row-metric">
+                      <div
+                        className="ai-lab-ocr-dashboard-row-metric ai-lab-ocr-dashboard-row-metric--duration"
+                        aria-label="مدت زمان پردازش"
+                      >
+                        <Clock3 className="h-3.5 w-3.5" aria-hidden="true" />
+                        {durationMs !== null ? formatJobDuration(durationMs) : '—'}
+                      </div>
+
+                      <div className="ai-lab-ocr-dashboard-row-metric ai-lab-ocr-dashboard-row-metric--tokens">
                         <Database className="h-3.5 w-3.5" aria-hidden="true" />
-                        {formatTokenCount(job.tokensUsed)}
+                        <span className="ai-lab-ocr-dashboard-row-tokens">
+                          <span>{formatTokenCount(job.tokensUsed)}</span>
+                          {jobCosts[job.id]?.totalCostToman ? (
+                            <small>{formatToman(jobCosts[job.id].totalCostToman)} ت</small>
+                          ) : null}
+                        </span>
                       </div>
 
                       <ConfidenceRing value={job.confidence} />
-
-                      <span className={`ai-lab-ocr-dashboard-row-badge ai-lab-ocr-dashboard-row-badge--${meta.tone}`}>
-                        <StatusIcon className={`h-3.5 w-3.5 ${job.status === 'processing' ? 'animate-spin' : ''}`} />
-                        {meta.label}
-                      </span>
 
                       <ChevronLeft className="ai-lab-ocr-dashboard-row-chevron" aria-hidden="true" />
                     </Link>

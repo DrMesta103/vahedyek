@@ -1,7 +1,8 @@
-import { getOcrJobsForTenant, getTenantForUser } from '@/app/lib/data';
+import { getGlobalSettings, getOcrJobsForTenant, getTenantForUser, listAiProviderAccounts } from '@/app/lib/data';
 import { getCurrentTenant, requireSession } from '@/app/lib/session';
 import { AiLabShell } from '@/components/AiLabShell';
 import { OcrHubClient } from '@/components/OcrHubClient';
+import { getOcrAiUsageCost } from '@/components/ocr/utils';
 
 export default async function OcrPage({ params }: { params: Promise<{ businessId: string }> }) {
   const session = await requireSession();
@@ -30,6 +31,10 @@ export default async function OcrPage({ params }: { params: Promise<{ businessId
   }
 
   const jobs = await getOcrJobsForTenant(session.userId, business.id);
+  const [{ accounts }, globalSettings] = await Promise.all([listAiProviderAccounts(), getGlobalSettings()]);
+  const jobCosts = Object.fromEntries(
+    jobs.map((job) => [job.id, getOcrAiUsageCost(job, globalSettings.usdToToman, accounts)]),
+  );
 
   return (
     <AiLabShell
@@ -40,7 +45,14 @@ export default async function OcrPage({ params }: { params: Promise<{ businessId
       currentTenantId={business.id}
       currentTenantName={business.name}
     >
-      <OcrHubClient business={business} businessId={business.id} initialJobs={jobs} />
+      <OcrHubClient
+        business={business}
+        businessId={business.id}
+        initialJobs={jobs}
+        jobCosts={jobCosts}
+        usdToToman={globalSettings.usdToToman}
+        aiAccounts={accounts}
+      />
     </AiLabShell>
   );
 }

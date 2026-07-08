@@ -1,7 +1,8 @@
-import { getOcrJobForTenant, getTenantForUser } from '@/app/lib/data';
+import { getGlobalSettings, getOcrJobForTenant, getTenantForUser, listAiProviderAccounts } from '@/app/lib/data';
 import { getCurrentTenant, requireSession } from '@/app/lib/session';
 import { AiLabShell } from '@/components/AiLabShell';
 import { OcrJobDetailClient } from '@/components/OcrJobDetailClient';
+import { getOcrAiUsageCost } from '@/components/ocr/utils';
 import Link from 'next/link';
 import { Suspense } from 'react';
 import { TaavButton } from '@repo/ui/taav/primitives';
@@ -56,6 +57,9 @@ export default async function OcrJobPage({
     );
   }
 
+  const [{ accounts }, globalSettings] = await Promise.all([listAiProviderAccounts(), getGlobalSettings()]);
+  const usageCost = getOcrAiUsageCost(job, globalSettings.usdToToman, accounts);
+
   return (
     <AiLabShell
       pathname={`/businesses/${business.id}/ai-tools/ocr/${job.id}`}
@@ -66,7 +70,7 @@ export default async function OcrJobPage({
       currentTenantName={business.name}
     >
       <Suspense fallback={null}>
-        <OcrJobDetailClient businessId={business.id} initialJob={job} />
+        <OcrJobDetailClient businessId={business.id} initialJob={job} usageCost={usageCost} />
       </Suspense>
     </AiLabShell>
   );

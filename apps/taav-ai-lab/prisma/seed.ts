@@ -1,7 +1,10 @@
 import { applyCurrentDatabaseUrl } from '../app/config/database';
+import { maskApiKey } from '../app/lib/api-key-mask';
+import { AI_PROVIDER_SEED_ACCOUNTS, buildSeedTokenPrices } from '../app/lib/ai-provider-seed-data';
 import { hashPassword } from '../app/lib/auth';
 import { GLOBAL_SETTINGS_MOCK } from '../app/lib/global-settings-mock';
 import { prisma } from '../app/lib/prisma';
+import { encryptSecret } from '../app/lib/secret-encryption';
 
 applyCurrentDatabaseUrl();
 
@@ -12,7 +15,7 @@ const DEFAULT_PRODUCTS = ['ocr', 'taavia'] as const;
 async function seedGlobalSettings() {
   await prisma.platformUsdRate.upsert({
     where: { id: 'global' },
-    update: { usdToToman: GLOBAL_SETTINGS_MOCK.usdToToman },
+    update: {},
     create: { id: 'global', usdToToman: GLOBAL_SETTINGS_MOCK.usdToToman },
   });
 
@@ -62,6 +65,30 @@ async function seedGlobalSettings() {
     update: { username: 'admin', passwordHash, passwordSalt },
     create: { id: 'settings-admin', username: 'admin', passwordHash, passwordSalt },
   });
+}
+
+async function seedAiProviderAccounts() {
+  for (const account of AI_PROVIDER_SEED_ACCOUNTS) {
+    const tokenPrices = buildSeedTokenPrices(account.ocrModelId);
+
+    await prisma.aiProviderAccount.upsert({
+      where: { id: account.id },
+      update: {},
+      create: {
+        id: account.id,
+        name: account.name,
+        provider: account.provider,
+        apiKeyCipherText: encryptSecret(account.apiKey),
+        apiKeyMasked: maskApiKey(account.apiKey),
+        purchasedCreditUsd: account.purchasedCreditUsd,
+        usedCreditUsd: 0,
+        inputTokenPriceUsd: tokenPrices.inputTokenPriceUsd,
+        outputTokenPriceUsd: tokenPrices.outputTokenPriceUsd,
+        isActive: true,
+        notes: 'Seed account — created automatically on app startup.',
+      },
+    });
+  }
 }
 
 async function seedDemoUser() {
@@ -151,9 +178,10 @@ async function seedDemoTenant(ownerUserId: string) {
 
 async function main() {
   await seedGlobalSettings();
+  await seedAiProviderAccounts();
   const demoUser = await seedDemoUser();
   await seedDemoTenant(demoUser.id);
-  console.log('Seed completed: global settings, platform admin credential, and demo app user.');
+  console.log('Seed completed: global settings, AI provider accounts, platform admin credential, and demo app user.');
   console.log('App login: admin@local.dev / 123456');
   console.log('Settings admin gate: admin / 123456');
 }
