@@ -6,5 +6,5 @@ export default async function TaaviaBrandEditPage({
   params: Promise<{ businessId: string; brandId: string }>;
 }) {
   const { businessId, brandId } = await params;
-  redirect(`/businesses/${businessId}/products/taavia/brands/new?edit=${brandId}`);
+  redirect(`/businesses/${businessId}/products/taavia/brands/${brandId}`);
 }

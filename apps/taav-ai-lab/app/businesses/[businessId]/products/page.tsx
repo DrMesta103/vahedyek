@@ -17,6 +17,7 @@ import { getTaaviaBrandsForTenant, getTenantForUser } from '@/app/lib/data';
 import { getCurrentTenant, requireSession } from '@/app/lib/session';
 import { AiLabPage, AiLabSectionCard } from '@/components/AiLabPage';
 import { AiLabShell } from '@/components/AiLabShell';
+import { TaaviaProductDialog } from '@/components/TaaviaProductDialog';
 
 const upcomingProducts = [
   {
@@ -42,7 +43,7 @@ const upcomingProducts = [
   {
     name: 'درخواست خرید',
     icon: ShoppingCart,
-    description: 'برای ثبت، بررسی و تأیید درخواست‌های خرید داخلی.',
+    description: 'برای ثبت، بررسی و تایید درخواست‌های خرید داخلی.',
   },
   {
     name: 'منشی',
@@ -145,38 +146,7 @@ export default async function ProductsPage({ params }: { params: Promise<{ busin
         <AiLabSectionCard title="محصولات موجود" description="یک محصول را انتخاب کنید تا وارد فضای کاری آن شوید.">
           <div className="ai-lab-card-grid">
             {taaviaBrands.length === 0 ? (
-              <Link href={`/businesses/${business.id}/products/taavia/brands/new`} className="block h-full">
-                <TaavCard
-                  variant="outlined"
-                  padding="md"
-                  radius="xl"
-                  interactive
-                  wrapperClassName="h-full cursor-pointer transition-transform duration-200 hover:-translate-y-0.5"
-                >
-                  <div className="grid gap-4">
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex h-11 w-11 items-center justify-center rounded-[var(--taav-radius-lg)] bg-[var(--taav-brand-soft)] text-[var(--taav-brand-strong)]">
-                        <Bot className="h-5 w-5" />
-                      </div>
-                      <TaavBadge tone="brand" variant="soft">
-                        فعال
-                      </TaavBadge>
-                    </div>
-
-                    <div className="grid gap-2">
-                      <h2 className="m-0 text-[length:var(--taav-text-lg)] font-black text-[var(--taav-text-strong)]">تاویا</h2>
-                      <p className="m-0 text-[length:var(--taav-text-sm)] leading-7 text-[var(--taav-text-muted)]">
-                        هنوز برندی ساخته نشده است. برای شروع، اولین برند را در استپر ثبت برند ایجاد کنید.
-                      </p>
-                    </div>
-
-                    <div className="flex items-center justify-between rounded-[var(--taav-radius-lg)] border border-[var(--taav-border-subtle)] bg-[var(--taav-surface-subtle)] px-4 py-3 text-[length:var(--taav-text-sm)] font-semibold text-[var(--taav-text-strong)]">
-                      <span>افزودن برند</span>
-                      <span aria-hidden="true">‹</span>
-                    </div>
-                  </div>
-                </TaavCard>
-              </Link>
+              <TaaviaProductDialog businessId={business.id} />
             ) : (
               <Link href={`/businesses/${business.id}/products/taavia`} className="block h-full">
                 <TaavCard

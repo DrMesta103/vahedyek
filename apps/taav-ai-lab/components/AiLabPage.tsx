@@ -1,8 +1,21 @@
 import { Beaker } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { TaavBadge, TaavCard } from '@repo/ui/taav/primitives';
 import { TaavPageHeader } from '@repo/ui/taav/layout';
 import type { AiLabTooltipDef } from '@/app/lib/tooltips';
-import { AiLabTooltipIcon } from '@/components/AiLabTooltip';
+
+function renderPageTooltipContent(content: AiLabTooltipDef | string): ReactNode {
+  if (typeof content === 'string') return content;
+
+  return (
+    <span className="grid gap-1">
+      <span>{content.text}</span>
+      {content.example ? (
+        <span className="block text-[color:var(--taav-text-muted)]">مثال: {content.example}</span>
+      ) : null}
+    </span>
+  );
+}
 
 export function AiLabPage({
   eyebrow,
@@ -28,9 +41,11 @@ export function AiLabPage({
           eyebrow={eyebrow}
           title={
             titleTooltip ? (
-              <span className="inline-flex items-center gap-2">
-                {title}
-                <AiLabTooltipIcon content={titleTooltip} label={`راهنمای ${title}`} />
+              <span className="grid gap-2">
+                <span>{title}</span>
+                <span className="ai-lab-helper-text ai-lab-helper-text--header">
+                  {renderPageTooltipContent(titleTooltip)}
+                </span>
               </span>
             ) : (
               title
@@ -62,11 +77,13 @@ export function AiLabSectionCard({
       padding="md"
       radius="xl"
       header={
-        <div className="grid gap-1">
-          <strong className="inline-flex items-center gap-1.5 text-[length:var(--taav-text-sm)] text-[var(--taav-text-strong)]">
-            {title}
-            {titleTooltip ? <AiLabTooltipIcon content={titleTooltip} label={`راهنمای ${title}`} /> : null}
-          </strong>
+        <div className="grid gap-2">
+          <strong className="text-[length:var(--taav-text-sm)] text-[var(--taav-text-strong)]">{title}</strong>
+          {titleTooltip ? (
+            <span className="ai-lab-helper-text ai-lab-helper-text--section">
+              {renderPageTooltipContent(titleTooltip)}
+            </span>
+          ) : null}
           {description ? <span className="text-[length:var(--taav-text-xs)] text-[var(--taav-text-muted)]">{description}</span> : null}
         </div>
       }

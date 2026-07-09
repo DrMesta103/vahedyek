@@ -155,21 +155,19 @@ export function AdminAgentChatClient({
       <section className="taavia-agent-chat-panel" aria-label={`گفتگوی ایجنت مدیریت برند ${brandName}`}>
         <header className="taavia-agent-chat-panel-header">
           <div className="taavia-agent-chat-panel-title">
-            <span className="taavia-agent-chat-eyebrow inline-flex items-center gap-1">
-              ایجنت مدیریت برند
-              <AiLabTooltipIcon content={AI_LAB_TOOLTIPS.taavia.adminAgent} label="راهنمای ایجنت" />
-            </span>
+            <span className="taavia-agent-chat-eyebrow">ایجنت مدیریت برند</span>
             <strong>{brandName}</strong>
           </div>
-          <span className="taavia-agent-chat-sim-badge inline-flex items-center gap-1">
-            پاسخ شبیه‌سازی‌شده
-            <AiLabTooltipIcon content={AI_LAB_TOOLTIPS.taavia.simBadge} label="راهنمای شبیه‌سازی" />
-          </span>
+          <span className="taavia-agent-chat-sim-badge">پاسخ شبیه‌سازی‌شده</span>
         </header>
 
         <p className="taavia-agent-chat-description">
           این چت برای راه‌اندازی و مدیریت دانش برند استفاده می‌شود. پاسخ‌ها فعلاً شبیه‌سازی‌شده هستند و در مراحل بعد به سرویس هوش مصنوعی متصل می‌شوند.
         </p>
+        <div className="grid gap-1">
+          <AiLabTooltipIcon content={AI_LAB_TOOLTIPS.taavia.adminAgent} label="راهنمای ایجنت" />
+          <AiLabTooltipIcon content={AI_LAB_TOOLTIPS.taavia.simBadge} label="راهنمای شبیه‌سازی" />
+        </div>
 
         {error ? (
           <div className="taavia-agent-chat-error" role="alert">
