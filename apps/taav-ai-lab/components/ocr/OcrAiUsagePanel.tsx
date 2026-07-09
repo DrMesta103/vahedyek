@@ -117,6 +117,20 @@ export function OcrAiUsagePanel({
               <span dir="ltr">{formatCostUsd(cost.outputCostUsd)}</span>
               <span>{formatCostToman(cost.outputCostToman)}</span>
             </div>
+            {cost.cacheReadCostUsd > 0 || cost.cacheReadCostToman > 0 ? (
+              <div className="ai-lab-ocr-usage-cost-row">
+                <span>Cache read</span>
+                <span dir="ltr">{formatCostUsd(cost.cacheReadCostUsd)}</span>
+                <span>{formatCostToman(cost.cacheReadCostToman)}</span>
+              </div>
+            ) : null}
+            {cost.cacheWriteCostUsd > 0 || cost.cacheWriteCostToman > 0 ? (
+              <div className="ai-lab-ocr-usage-cost-row">
+                <span>Cache write</span>
+                <span dir="ltr">{formatCostUsd(cost.cacheWriteCostUsd)}</span>
+                <span>{formatCostToman(cost.cacheWriteCostToman)}</span>
+              </div>
+            ) : null}
             <div className="ai-lab-ocr-usage-cost-row ai-lab-ocr-usage-cost-row--total">
               <span>مجموع</span>
               <span dir="ltr">{formatCostUsd(cost.totalCostUsd)}</span>

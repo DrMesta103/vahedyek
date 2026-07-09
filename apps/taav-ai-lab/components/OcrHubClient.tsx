@@ -28,10 +28,14 @@ import type { AiProviderAccountPublic } from '@/app/lib/types/ai-accounts';
 import {
   buildOcrStats,
   formatConfidence,
+  getOcrAiUsage,
   getOcrAiUsageCost,
+  getOcrStageCost,
+  getOcrStageUsage,
   getOcrTransportMode,
   getStatusMeta,
   type OcrAiUsageCost,
+  type OcrStageKey,
 } from '@/components/ocr/utils';
 
 type OcrHubClientProps = {
@@ -94,6 +98,48 @@ function formatJobDuration(durationMs: number) {
   const minutesLabel = new Intl.NumberFormat('fa-IR', { maximumFractionDigits: 0 }).format(minutes);
   const secondsLabel = new Intl.NumberFormat('fa-IR', { maximumFractionDigits: 0 }).format(Math.round(remainder));
   return `${minutesLabel}:${secondsLabel.padStart(2, '0')}`;
+}
+
+function HistoryModelCostLine({
+  stage,
+  job,
+  usdToToman,
+  legacyUsage,
+  legacyCost,
+}: {
+  stage: OcrStageKey;
+  job: OcrSimulationJob;
+  usdToToman: number;
+  legacyUsage?: ReturnType<typeof getOcrAiUsage>;
+  legacyCost?: OcrAiUsageCost;
+}) {
+  const usage = getOcrStageUsage(job, stage);
+  const cost = getOcrStageCost(job, stage, usdToToman);
+  const hasStageMeta = usage.modelName !== '—' && usage.modelId !== '—';
+  const effectiveUsage = !hasStageMeta && stage === 'ocr' && legacyUsage ? legacyUsage : usage;
+  const effectiveCost = !hasStageMeta && stage === 'ocr' && legacyCost ? legacyCost : cost;
+  const providerLabel = effectiveUsage.providerLabel !== '—' ? effectiveUsage.providerLabel : '—';
+  const modelName = effectiveUsage.modelName !== '—' ? effectiveUsage.modelName : '—';
+  const hasCost = effectiveCost.totalCostUsd > 0 || effectiveCost.totalCostToman > 0;
+
+  return (
+    <div className={`ai-lab-ocr-dashboard-model-line ai-lab-ocr-dashboard-model-line--${stage}`}>
+      <span className="ai-lab-ocr-dashboard-model-line__tag">{stage === 'ocr' ? 'OCR' : 'Chat'}</span>
+      <span className="ai-lab-ocr-dashboard-model-line__identity" title={`${providerLabel} / ${modelName}`}>
+        <strong>{providerLabel}</strong>
+        <span className="ai-lab-ocr-dashboard-model-line__separator">/</span>
+        <span>{modelName}</span>
+      </span>
+      <span className="ai-lab-ocr-dashboard-model-line__costs">
+        <span className="ai-lab-ocr-dashboard-model-line__cost ai-lab-ocr-dashboard-model-line__cost--usd">
+          {hasCost ? formatCostUsd(effectiveCost.totalCostUsd) : '—'}
+        </span>
+        <span className="ai-lab-ocr-dashboard-model-line__cost ai-lab-ocr-dashboard-model-line__cost--toman">
+          {hasCost ? `${formatToman(effectiveCost.totalCostToman)} ت` : '—'}
+        </span>
+      </span>
+    </div>
+  );
 }
 
 function ConfidenceRing({ value }: { value: number }) {
@@ -338,70 +384,92 @@ export function OcrHubClient({
                 {filteredJobs.map((job) => {
                   const meta = getStatusMeta(job.status);
                   const StatusIcon = meta.icon;
+                  const transportMode = getOcrTransportMode(job);
                   const durationMs = getJobDurationMs(job);
+                  const legacyUsage = getOcrAiUsage(job, transportMode);
+                  const usageCost = jobCosts[job.id] ?? getOcrAiUsageCost(job, usdToToman, aiAccounts, transportMode);
 
                   return (
                     <Link
                       key={job.id}
-                      href={`/businesses/${businessId}/ai-tools/ocr/${job.id}?transport=${getOcrTransportMode(job)}`}
+                      href={`/businesses/${businessId}/ai-tools/ocr/${job.id}?transport=${transportMode}`}
                       className="ai-lab-ocr-dashboard-history-row"
                     >
-                      <button
-                        type="button"
-                        className="ai-lab-ocr-dashboard-row-menu"
-                        aria-label="گزینه‌های بیشتر"
-                        onClick={(event) => event.preventDefault()}
-                        tabIndex={-1}
-                      >
-                        <MoreVertical className="h-4 w-4" />
-                      </button>
-
-                      <span
-                        className={`ai-lab-ocr-dashboard-row-badge ai-lab-ocr-dashboard-row-badge--${meta.tone}`}
-                      >
-                        <StatusIcon className={`h-3.5 w-3.5 ${job.status === 'processing' ? 'animate-spin' : ''}`} />
-                        {meta.label}
-                      </span>
-
-                      <div className="ai-lab-ocr-dashboard-row-thumb">
-                        <FileText className="h-5 w-5" strokeWidth={1.6} />
+                      <div className="ai-lab-ocr-dashboard-history-row__start">
+                        <button
+                          type="button"
+                          className="ai-lab-ocr-dashboard-row-menu"
+                          aria-label="گزینه‌های بیشتر"
+                          onClick={(event) => event.preventDefault()}
+                          tabIndex={-1}
+                        >
+                          <MoreVertical className="h-4 w-4" />
+                        </button>
+                        <div className="ai-lab-ocr-dashboard-row-thumb">
+                          <FileText className="h-5 w-5" strokeWidth={1.6} />
+                        </div>
                       </div>
 
-                      <div className="ai-lab-ocr-dashboard-row-copy">
-                        <strong>{job.sourceLabel}</strong>
-                        <span>
-                          {job.templateLabel ?? (job.sourceType === 'sample' ? 'نمونه' : 'آپلود')}
-                          {' · '}
-                          {formatActivityLabel(job.createdAt)}
+                      <div className="ai-lab-ocr-dashboard-history-row__body">
+                        <div className="ai-lab-ocr-dashboard-history-row__head">
+                          <strong className="ai-lab-ocr-dashboard-history-row__title">{job.sourceLabel}</strong>
+                          <p className="ai-lab-ocr-dashboard-history-row__meta">
+                            <span>{job.templateLabel ?? (job.sourceType === 'sample' ? 'نمونه' : 'آپلود')}</span>
+                            <span className="ai-lab-ocr-dashboard-history-row__dot" aria-hidden="true">
+                              ·
+                            </span>
+                            <span>{formatActivityLabel(job.createdAt)}</span>
+                            <span className="ai-lab-ocr-dashboard-history-row__dot" aria-hidden="true">
+                              ·
+                            </span>
+                            <span>{formatRelativeActivityLabel(job.updatedAt)}</span>
+                          </p>
+                        </div>
+
+                        <div className="ai-lab-ocr-dashboard-history-row__models">
+                          <HistoryModelCostLine
+                            stage="ocr"
+                            job={job}
+                            usdToToman={usdToToman}
+                            legacyUsage={legacyUsage}
+                            legacyCost={usageCost}
+                          />
+                          <HistoryModelCostLine stage="chat" job={job} usdToToman={usdToToman} />
+                        </div>
+
+                        <div className="ai-lab-ocr-dashboard-history-row__stats">
+                          <div className="ai-lab-ocr-dashboard-row-metric ai-lab-ocr-dashboard-row-metric--tokens">
+                            <Database className="h-3.5 w-3.5" aria-hidden="true" />
+                            <span className="ai-lab-ocr-dashboard-row-tokens">
+                              <span>{formatTokenCount(job.tokensUsed)}</span>
+                              <small>توکن</small>
+                            </span>
+                          </div>
+                          <div
+                            className="ai-lab-ocr-dashboard-row-metric ai-lab-ocr-dashboard-row-metric--duration"
+                            aria-label="مدت زمان پردازش"
+                          >
+                            <Clock3 className="h-3.5 w-3.5" aria-hidden="true" />
+                            {durationMs !== null ? formatJobDuration(durationMs) : '—'}
+                          </div>
+                          <div className="ai-lab-ocr-dashboard-row-metric ai-lab-ocr-dashboard-row-metric--total">
+                            <Wallet className="h-3.5 w-3.5" aria-hidden="true" />
+                            <span className="ai-lab-ocr-dashboard-row-tokens">
+                              <span>{formatCostUsd(usageCost.totalCostUsd)}</span>
+                              <small>{formatToman(usageCost.totalCostToman)} ت</small>
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="ai-lab-ocr-dashboard-history-row__end">
+                        <span className={`ai-lab-ocr-dashboard-row-badge ai-lab-ocr-dashboard-row-badge--${meta.tone}`}>
+                          <StatusIcon className={`h-3.5 w-3.5 ${job.status === 'processing' ? 'animate-spin' : ''}`} />
+                          {meta.label}
                         </span>
+                        <ConfidenceRing value={job.confidence} />
+                        <ChevronLeft className="ai-lab-ocr-dashboard-row-chevron" aria-hidden="true" />
                       </div>
-
-                      <div className="ai-lab-ocr-dashboard-row-metric ai-lab-ocr-dashboard-row-metric--updated">
-                        <Clock3 className="h-3.5 w-3.5" aria-hidden="true" />
-                        {formatRelativeActivityLabel(job.updatedAt)}
-                      </div>
-
-                      <div
-                        className="ai-lab-ocr-dashboard-row-metric ai-lab-ocr-dashboard-row-metric--duration"
-                        aria-label="مدت زمان پردازش"
-                      >
-                        <Clock3 className="h-3.5 w-3.5" aria-hidden="true" />
-                        {durationMs !== null ? formatJobDuration(durationMs) : '—'}
-                      </div>
-
-                      <div className="ai-lab-ocr-dashboard-row-metric ai-lab-ocr-dashboard-row-metric--tokens">
-                        <Database className="h-3.5 w-3.5" aria-hidden="true" />
-                        <span className="ai-lab-ocr-dashboard-row-tokens">
-                          <span>{formatTokenCount(job.tokensUsed)}</span>
-                          {jobCosts[job.id]?.totalCostToman ? (
-                            <small>{formatToman(jobCosts[job.id].totalCostToman)} ت</small>
-                          ) : null}
-                        </span>
-                      </div>
-
-                      <ConfidenceRing value={job.confidence} />
-
-                      <ChevronLeft className="ai-lab-ocr-dashboard-row-chevron" aria-hidden="true" />
                     </Link>
                   );
                 })}

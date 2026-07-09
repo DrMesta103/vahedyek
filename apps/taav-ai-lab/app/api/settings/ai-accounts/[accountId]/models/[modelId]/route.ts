@@ -22,6 +22,8 @@ type ModelPayload = {
   pricingUnit?: string;
   inputTokenPriceUsd?: number;
   outputTokenPriceUsd?: number;
+  cacheReadTokenPriceUsd?: number;
+  cacheWriteTokenPriceUsd?: number;
   requestPriceUsd?: number;
   pagePriceUsd?: number;
   imagePriceUsd?: number;
@@ -130,6 +132,8 @@ export async function PATCH(request: Request, context: RouteContext) {
   const priceFields = [
     ['inputTokenPriceUsd', body?.inputTokenPriceUsd],
     ['outputTokenPriceUsd', body?.outputTokenPriceUsd],
+    ['cacheReadTokenPriceUsd', body?.cacheReadTokenPriceUsd],
+    ['cacheWriteTokenPriceUsd', body?.cacheWriteTokenPriceUsd],
     ['requestPriceUsd', body?.requestPriceUsd],
     ['pagePriceUsd', body?.pagePriceUsd],
     ['imagePriceUsd', body?.imagePriceUsd],

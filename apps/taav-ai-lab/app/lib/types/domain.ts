@@ -218,6 +218,7 @@ export type CreateOcrSimulationInput = {
   sampleText?: string | null;
   transportMode?: OcrTransportMode | null;
   modelId?: string | null;
+  chatModelId?: string | null;
   extractionFields?: OcrExtractionFieldDraft[] | null;
 };
 

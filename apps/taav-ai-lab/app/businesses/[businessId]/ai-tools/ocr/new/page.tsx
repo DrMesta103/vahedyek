@@ -1,4 +1,4 @@
-import { getGlobalSettings, getTenantForUser, listSystemOcrModels } from '@/app/lib/data';
+import { getGlobalSettings, getTenantForUser, listActiveChatModels, listSystemOcrModels } from '@/app/lib/data';
 import { getCurrentTenant, requireSession } from '@/app/lib/session';
 import { AiLabShell } from '@/components/AiLabShell';
 import { OcrRegistrationClient } from '@/components/OcrRegistrationClient';
@@ -26,7 +26,11 @@ export default async function OcrNewPage({ params }: { params: Promise<{ busines
     );
   }
 
-  const [ocrModels, globalSettings] = await Promise.all([listSystemOcrModels(), getGlobalSettings()]);
+  const [ocrModels, chatModels, globalSettings] = await Promise.all([
+    listSystemOcrModels(),
+    listActiveChatModels(),
+    getGlobalSettings(),
+  ]);
 
   return (
     <AiLabShell
@@ -40,6 +44,7 @@ export default async function OcrNewPage({ params }: { params: Promise<{ busines
       <OcrRegistrationClient
         businessId={business.id}
         initialOcrModels={ocrModels}
+        initialChatModels={chatModels}
         usdToToman={globalSettings.usdToToman}
       />
     </AiLabShell>

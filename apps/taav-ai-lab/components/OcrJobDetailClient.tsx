@@ -7,9 +7,11 @@ import { ArrowRight, Check, Loader2, Radio } from 'lucide-react';
 import type { OcrSimulationJob } from '@/app/lib/data';
 import type { OcrTransportMode } from '@/app/lib/ocr-transport';
 import { getOcrBatchRevealDelayMs, isBatchOcrTransportMode, isGrpcStreamingMode } from '@/app/lib/ocr-transport';
+import { formatUsd } from '@/app/lib/global-settings-mock';
 import {
   formatConfidence,
   getOcrAiUsage,
+  getOcrStageUsage,
   getOcrFormFields,
   getOcrTransportLabel,
   getOcrTransportMode,
@@ -68,6 +70,8 @@ export function OcrJobDetailClient({ businessId, initialJob, usageCost }: OcrJob
   const transportMode = useMemo(() => resolveTransport(job, searchParams), [job, searchParams]);
   const formFields = useMemo(() => getOcrFormFields(job), [job]);
   const aiUsage = useMemo(() => getOcrAiUsage(job, transportMode), [job, transportMode]);
+  const ocrStageUsage = useMemo(() => getOcrStageUsage(job, 'ocr'), [job]);
+  const chatStageUsage = useMemo(() => getOcrStageUsage(job, 'chat'), [job]);
   const durationMs = useMemo(() => getFullResponseDurationMs(job), [job]);
   const isProcessing = job.status === 'queued' || job.status === 'processing';
   const isGrpcStreaming = isGrpcStreamingMode(transportMode);
@@ -247,7 +251,34 @@ export function OcrJobDetailClient({ businessId, initialJob, usageCost }: OcrJob
           <span className="ai-lab-ocr-result-rest-hint">
             {isGrpcUnary ? 'پاسخ کامل پس از اتمام، یک‌جا نمایش داده می‌شود' : 'فرم پس از اتمام، یک‌جا نمایش داده می‌شود'}
           </span>
-          <OcrAiUsagePanel usage={aiUsage} cost={usageCost} transportMode={transportMode} durationMs={durationMs} compact />
+          <div className="grid gap-3">
+            <OcrAiUsagePanel usage={aiUsage} cost={usageCost} transportMode={transportMode} durationMs={durationMs} compact />
+            <div className="grid gap-2 rounded-[14px] border border-[color:rgba(148,163,184,0.14)] bg-[rgba(2,6,23,0.18)] p-3 text-[12px] text-[color:var(--taav-text-muted)]">
+              <strong className="text-[color:var(--taav-text-strong)]">مدل‌های استفاده‌شده</strong>
+              <div>
+                <span className="font-bold text-[color:var(--taav-text-strong)]">OCR:</span> {ocrStageUsage.providerLabel} · {ocrStageUsage.modelName}
+              </div>
+              <div>
+                <span className="font-bold text-[color:var(--taav-text-strong)]">Chat:</span> {chatStageUsage.providerLabel} · {chatStageUsage.modelName}
+              </div>
+              <div className="grid gap-1 pt-1">
+                <div>
+                  <span className="font-bold text-[color:var(--taav-text-strong)]">OCR Prices:</span>{' '}
+                  <span dir="ltr">
+                    in {formatUsd(ocrStageUsage.inputTokenPriceUsd)} · out {formatUsd(ocrStageUsage.outputTokenPriceUsd)} ·
+                    cacheR {formatUsd(ocrStageUsage.cacheReadTokenPriceUsd)} · cacheW {formatUsd(ocrStageUsage.cacheWriteTokenPriceUsd)}
+                  </span>
+                </div>
+                <div>
+                  <span className="font-bold text-[color:var(--taav-text-strong)]">Chat Prices:</span>{' '}
+                  <span dir="ltr">
+                    in {formatUsd(chatStageUsage.inputTokenPriceUsd)} · out {formatUsd(chatStageUsage.outputTokenPriceUsd)} ·
+                    cacheR {formatUsd(chatStageUsage.cacheReadTokenPriceUsd)} · cacheW {formatUsd(chatStageUsage.cacheWriteTokenPriceUsd)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
         </section>
       ) : null}
 
@@ -280,6 +311,24 @@ export function OcrJobDetailClient({ businessId, initialJob, usageCost }: OcrJob
             durationMs={durationMs}
             compact={grpcStreaming}
           />
+
+          <div className="mt-3 grid gap-2 rounded-[14px] border border-[color:rgba(148,163,184,0.14)] bg-[rgba(2,6,23,0.18)] p-3 text-[12px] text-[color:var(--taav-text-muted)]">
+            <strong className="text-[color:var(--taav-text-strong)]">مدل‌ها و قیمت‌ها</strong>
+            <div>
+              <span className="font-bold text-[color:var(--taav-text-strong)]">OCR:</span> {ocrStageUsage.providerLabel} · {ocrStageUsage.modelName}{' '}
+              <span dir="ltr">
+                (in {formatUsd(ocrStageUsage.inputTokenPriceUsd)} · out {formatUsd(ocrStageUsage.outputTokenPriceUsd)} ·
+                cacheR {formatUsd(ocrStageUsage.cacheReadTokenPriceUsd)} · cacheW {formatUsd(ocrStageUsage.cacheWriteTokenPriceUsd)})
+              </span>
+            </div>
+            <div>
+              <span className="font-bold text-[color:var(--taav-text-strong)]">Chat:</span> {chatStageUsage.providerLabel} · {chatStageUsage.modelName}{' '}
+              <span dir="ltr">
+                (in {formatUsd(chatStageUsage.inputTokenPriceUsd)} · out {formatUsd(chatStageUsage.outputTokenPriceUsd)} ·
+                cacheR {formatUsd(chatStageUsage.cacheReadTokenPriceUsd)} · cacheW {formatUsd(chatStageUsage.cacheWriteTokenPriceUsd)})
+              </span>
+            </div>
+          </div>
 
           <ol className="ai-lab-ocr-result-steps" aria-label="پیشرفت فیلدها">
             {formFields.map((field) => {
@@ -348,6 +397,24 @@ export function OcrJobDetailClient({ businessId, initialJob, usageCost }: OcrJob
           </p>
 
           <OcrAiUsagePanel usage={aiUsage} cost={usageCost} transportMode={transportMode} confidence={job.confidence} durationMs={durationMs} />
+
+          <div className="mt-3 grid gap-2 rounded-[14px] border border-[color:rgba(148,163,184,0.14)] bg-[rgba(2,6,23,0.18)] p-3 text-[12px] text-[color:var(--taav-text-muted)]">
+            <strong className="text-[color:var(--taav-text-strong)]">مدل‌ها و قیمت‌ها</strong>
+            <div>
+              <span className="font-bold text-[color:var(--taav-text-strong)]">OCR:</span> {ocrStageUsage.providerLabel} · {ocrStageUsage.modelName}{' '}
+              <span dir="ltr">
+                (in {formatUsd(ocrStageUsage.inputTokenPriceUsd)} · out {formatUsd(ocrStageUsage.outputTokenPriceUsd)} ·
+                cacheR {formatUsd(ocrStageUsage.cacheReadTokenPriceUsd)} · cacheW {formatUsd(ocrStageUsage.cacheWriteTokenPriceUsd)})
+              </span>
+            </div>
+            <div>
+              <span className="font-bold text-[color:var(--taav-text-strong)]">Chat:</span> {chatStageUsage.providerLabel} · {chatStageUsage.modelName}{' '}
+              <span dir="ltr">
+                (in {formatUsd(chatStageUsage.inputTokenPriceUsd)} · out {formatUsd(chatStageUsage.outputTokenPriceUsd)} ·
+                cacheR {formatUsd(chatStageUsage.cacheReadTokenPriceUsd)} · cacheW {formatUsd(chatStageUsage.cacheWriteTokenPriceUsd)})
+              </span>
+            </div>
+          </div>
 
           <div className={`ai-lab-ocr-result-form ${isGrpcUnary ? 'ai-lab-ocr-result-form--grpc-unary' : 'ai-lab-ocr-result-form--rest'}`}>
             {formFields.map((field) => (

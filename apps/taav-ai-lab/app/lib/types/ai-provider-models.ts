@@ -54,6 +54,8 @@ export type AiProviderModelPublic = {
   inputTokenPriceUsd: number;
   outputTokenPriceUsd: number;
   ocrInputRatio: number;
+  cacheReadTokenPriceUsd: number;
+  cacheWriteTokenPriceUsd: number;
   requestPriceUsd: number;
   pagePriceUsd: number;
   imagePriceUsd: number;
@@ -106,6 +108,8 @@ export type CreateAiProviderModelInput = {
   inputTokenPriceUsd?: number;
   outputTokenPriceUsd?: number;
   ocrInputRatio?: number;
+  cacheReadTokenPriceUsd?: number;
+  cacheWriteTokenPriceUsd?: number;
   requestPriceUsd?: number;
   pagePriceUsd?: number;
   imagePriceUsd?: number;

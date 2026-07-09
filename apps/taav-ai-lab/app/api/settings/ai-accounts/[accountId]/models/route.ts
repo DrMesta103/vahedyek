@@ -19,6 +19,8 @@ type ModelPayload = {
   pricingUnit?: string;
   inputTokenPriceUsd?: number;
   outputTokenPriceUsd?: number;
+  cacheReadTokenPriceUsd?: number;
+  cacheWriteTokenPriceUsd?: number;
   requestPriceUsd?: number;
   pagePriceUsd?: number;
   imagePriceUsd?: number;
@@ -81,6 +83,8 @@ function validateModelPayload(body: ModelPayload | null, requireAll: boolean) {
   const prices = {
     inputTokenPriceUsd: parseNonNegativeNumber(body?.inputTokenPriceUsd),
     outputTokenPriceUsd: parseNonNegativeNumber(body?.outputTokenPriceUsd),
+    cacheReadTokenPriceUsd: parseNonNegativeNumber(body?.cacheReadTokenPriceUsd),
+    cacheWriteTokenPriceUsd: parseNonNegativeNumber(body?.cacheWriteTokenPriceUsd),
     requestPriceUsd: parseNonNegativeNumber(body?.requestPriceUsd),
     pagePriceUsd: parseNonNegativeNumber(body?.pagePriceUsd),
     imagePriceUsd: parseNonNegativeNumber(body?.imagePriceUsd),
@@ -125,6 +129,12 @@ function validateModelPayload(body: ModelPayload | null, requireAll: boolean) {
       ...(pricingUnit ? { pricingUnit } : {}),
       ...(body?.inputTokenPriceUsd !== undefined ? { inputTokenPriceUsd: prices.inputTokenPriceUsd ?? 0 } : {}),
       ...(body?.outputTokenPriceUsd !== undefined ? { outputTokenPriceUsd: prices.outputTokenPriceUsd ?? 0 } : {}),
+      ...(body?.cacheReadTokenPriceUsd !== undefined
+        ? { cacheReadTokenPriceUsd: prices.cacheReadTokenPriceUsd ?? 0 }
+        : {}),
+      ...(body?.cacheWriteTokenPriceUsd !== undefined
+        ? { cacheWriteTokenPriceUsd: prices.cacheWriteTokenPriceUsd ?? 0 }
+        : {}),
       ...(body?.requestPriceUsd !== undefined ? { requestPriceUsd: prices.requestPriceUsd ?? 0 } : {}),
       ...(body?.pagePriceUsd !== undefined ? { pagePriceUsd: prices.pagePriceUsd ?? 0 } : {}),
       ...(body?.imagePriceUsd !== undefined ? { imagePriceUsd: prices.imagePriceUsd ?? 0 } : {}),

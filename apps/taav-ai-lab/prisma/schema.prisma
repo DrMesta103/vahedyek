@@ -240,6 +240,8 @@ model AiProviderModel {
   inputTokenPriceUsd           Decimal          @default(0) @db.Decimal(12, 6)
   outputTokenPriceUsd          Decimal          @default(0) @db.Decimal(12, 6)
   ocrInputRatio                Decimal          @default(0.6) @db.Decimal(5, 4)
+  cacheReadTokenPriceUsd       Decimal          @default(0) @db.Decimal(12, 6)
+  cacheWriteTokenPriceUsd      Decimal          @default(0) @db.Decimal(12, 6)
   requestPriceUsd              Decimal          @default(0) @db.Decimal(12, 6)
   pagePriceUsd                 Decimal          @default(0) @db.Decimal(12, 6)
   imagePriceUsd                Decimal          @default(0) @db.Decimal(12, 6)
@@ -282,9 +284,13 @@ model AiUsageLog {
   requestId     String?
   inputTokens   Int               @default(0)
   outputTokens  Int               @default(0)
+  cachedInputTokens Int           @default(0)
+  cacheWriteTokens  Int           @default(0)
   totalTokens   Int               @default(0)
   inputCostUsd  Decimal           @default(0) @db.Decimal(18, 8)
   outputCostUsd Decimal           @default(0) @db.Decimal(18, 8)
+  cacheReadCostUsd  Decimal       @default(0) @db.Decimal(18, 8)
+  cacheWriteCostUsd Decimal       @default(0) @db.Decimal(18, 8)
   totalCostUsd  Decimal           @default(0) @db.Decimal(18, 8)
   metadata      Json?
   createdAt     DateTime          @default(now())

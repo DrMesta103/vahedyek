@@ -149,6 +149,7 @@ export {
   getAiProviderModelById,
   getAiProviderAccountDetail,
   listSystemOcrModels,
+  listActiveChatModels,
   createAiProviderModel,
   updateAiProviderModel,
   toggleAiProviderModelStatus,

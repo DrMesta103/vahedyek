@@ -1,12 +1,26 @@
 export type AiUsageCostAccount = {
   inputTokenPriceUsd: number;
   outputTokenPriceUsd: number;
+  cacheReadTokenPriceUsd?: number;
+  cacheWriteTokenPriceUsd?: number;
 };
 
 export type AiUsageCostResult = {
   inputCostUsd: number;
   outputCostUsd: number;
   totalCostUsd: number;
+};
+
+export type AiUsageCostDetailedResult = AiUsageCostResult & {
+  cacheReadCostUsd: number;
+  cacheWriteCostUsd: number;
+};
+
+export type AiUsageTokenCounts = {
+  inputTokens: number;
+  outputTokens: number;
+  cachedInputTokens?: number;
+  cacheWriteTokens?: number;
 };
 
 /**
@@ -27,6 +41,29 @@ export function calculateAiUsageCost(
     inputCostUsd,
     outputCostUsd,
     totalCostUsd: inputCostUsd + outputCostUsd,
+  };
+}
+
+export function calculateAiUsageCostDetailed(
+  account: AiUsageCostAccount,
+  tokens: AiUsageTokenCounts,
+): AiUsageCostDetailedResult {
+  const safeInputTokens = Math.max(0, Math.floor(tokens.inputTokens));
+  const safeOutputTokens = Math.max(0, Math.floor(tokens.outputTokens));
+  const safeCachedInputTokens = Math.max(0, Math.floor(tokens.cachedInputTokens ?? 0));
+  const safeCacheWriteTokens = Math.max(0, Math.floor(tokens.cacheWriteTokens ?? 0));
+
+  const inputCostUsd = safeInputTokens * account.inputTokenPriceUsd;
+  const outputCostUsd = safeOutputTokens * account.outputTokenPriceUsd;
+  const cacheReadCostUsd = safeCachedInputTokens * (account.cacheReadTokenPriceUsd ?? 0);
+  const cacheWriteCostUsd = safeCacheWriteTokens * (account.cacheWriteTokenPriceUsd ?? 0);
+
+  return {
+    inputCostUsd,
+    outputCostUsd,
+    cacheReadCostUsd,
+    cacheWriteCostUsd,
+    totalCostUsd: inputCostUsd + outputCostUsd + cacheReadCostUsd + cacheWriteCostUsd,
   };
 }
 

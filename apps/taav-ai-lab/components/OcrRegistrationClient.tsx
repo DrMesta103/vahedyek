@@ -51,6 +51,19 @@ type OcrRegistrationClientProps = {
     providerModelName: string;
     inputTokenPriceUsd: number;
     outputTokenPriceUsd: number;
+    cacheReadTokenPriceUsd: number;
+    cacheWriteTokenPriceUsd: number;
+    accountId: string;
+  }[];
+  initialChatModels: {
+    provider: OcrModelProvider;
+    providerLabel: string;
+    displayName: string;
+    providerModelName: string;
+    inputTokenPriceUsd: number;
+    outputTokenPriceUsd: number;
+    cacheReadTokenPriceUsd: number;
+    cacheWriteTokenPriceUsd: number;
     accountId: string;
   }[];
   usdToToman: number;
@@ -118,7 +131,12 @@ const OCR_FILE_TYPE_OPTIONS: { key: OcrFileTypeKey; label: string; accept?: stri
   { key: 'auto', label: 'سایر (تشخیص خودکار)' },
 ];
 
-export function OcrRegistrationClient({ businessId, initialOcrModels, usdToToman }: OcrRegistrationClientProps) {
+export function OcrRegistrationClient({
+  businessId,
+  initialOcrModels,
+  initialChatModels,
+  usdToToman,
+}: OcrRegistrationClientProps) {
   const router = useRouter();
   const [activeLane, setActiveLane] = useState<OcrSampleLane>('quick');
   const [selectedTypeKey, setSelectedTypeKey] = useState<DocumentTypeKey>('id-card');
@@ -137,12 +155,17 @@ export function OcrRegistrationClient({ businessId, initialOcrModels, usdToToman
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [contractDialogType, setContractDialogType] = useState<DocumentTypeKey | null>(null);
+  const [selectedChatModelKey, setSelectedChatModelKey] = useState(() => {
+    const first = initialChatModels[0];
+    return first ? `${first.accountId}:${first.providerModelName}` : '—';
+  });
 
   const selectedType = getDocumentType(selectedTypeKey);
   const isDynamicDocument = activeLane === 'quick' && selectedTypeKey === 'dynamic';
   const isIdCardDocument = activeLane === 'quick' && selectedTypeKey === 'id-card';
   const wasIdCardDocument = useRef(isIdCardDocument);
   const ocrModels = initialOcrModels;
+  const chatModels = initialChatModels;
   const dynamicFieldValidation = useMemo(() => validateExtractionFields(dynamicFields), [dynamicFields]);
   const selectedSample = useMemo(() => {
     if (activeLane === 'long') return getOcrSampleById('contract');
@@ -180,6 +203,14 @@ export function OcrRegistrationClient({ businessId, initialOcrModels, usdToToman
     );
   }, [ocrModels, selectedModelKey]);
 
+  useEffect(() => {
+    if (chatModels.length === 0) return;
+    const stillExists = chatModels.some((item: any) => `${item.accountId}:${item.providerModelName}` === selectedChatModelKey);
+    if (stillExists) return;
+    const first = chatModels[0];
+    setSelectedChatModelKey(first ? `${first.accountId}:${first.providerModelName}` : '—');
+  }, [chatModels, selectedChatModelKey]);
+
   const selectedModel = useMemo(() => {
     const [accountId, providerModelName] = selectedModelKey.split(':');
     return (
@@ -188,6 +219,15 @@ export function OcrRegistrationClient({ businessId, initialOcrModels, usdToToman
       null
     );
   }, [ocrModels, selectedModelKey]);
+
+  const selectedChatModel = useMemo(() => {
+    const [accountId, providerModelName] = selectedChatModelKey.split(':');
+    return (
+      chatModels.find((item: any) => item.accountId === accountId && item.providerModelName === providerModelName) ??
+      chatModels[0] ??
+      null
+    );
+  }, [chatModels, selectedChatModelKey]);
 
   const sourceTitle = submissionLabel.trim() || uploadState?.fileName || selectedType.label;
   const contractSample = useMemo(() => {
@@ -279,6 +319,7 @@ export function OcrRegistrationClient({ businessId, initialOcrModels, usdToToman
                 sampleText: uploadState?.contentSnippet,
                 transportMode,
                 modelId: selectedModelKey,
+                chatModelId: selectedChatModelKey,
                 extractionFields: dynamicFieldValidation.fields,
               }
             : sourceType === 'sample'
@@ -291,6 +332,7 @@ export function OcrRegistrationClient({ businessId, initialOcrModels, usdToToman
                 fileType: sample?.fileType,
                 transportMode,
                 modelId: selectedModelKey,
+                chatModelId: selectedChatModelKey,
               }
             : {
                 sourceType,
@@ -302,13 +344,19 @@ export function OcrRegistrationClient({ businessId, initialOcrModels, usdToToman
                 sampleText: uploadState?.contentSnippet,
                 transportMode,
                 modelId: selectedModelKey,
+                chatModelId: selectedChatModelKey,
               },
         ),
       });
 
-      const payload = (await response.json().catch(() => null)) as { job?: OcrSimulationJob; message?: string } | null;
+      const payload = (await response.json().catch(() => null)) as {
+        job?: OcrSimulationJob;
+        message?: string;
+        debug?: string;
+      } | null;
       if (!response.ok || !payload?.job) {
-        throw new Error(payload?.message || 'ساخت کار نویسه‌خوانی انجام نشد.');
+        const detail = payload?.debug || payload?.message;
+        throw new Error(detail || 'ساخت کار نویسه‌خوانی انجام نشد.');
       }
 
       sessionStorage.setItem(`ocr-transport:${payload.job.id}`, transportMode);
@@ -429,10 +477,85 @@ export function OcrRegistrationClient({ businessId, initialOcrModels, usdToToman
                       خروجی:{' '}
                       <span dir="ltr">{formatUsd(model.outputTokenPriceUsd)}</span>
                       {' · '}
+                      Cache read:{' '}
+                      <span dir="ltr">{formatUsd(model.cacheReadTokenPriceUsd)}</span>
+                      {' · '}
+                      Cache write:{' '}
+                      <span dir="ltr">{formatUsd(model.cacheWriteTokenPriceUsd)}</span>
+                      {' · '}
                       <span className="ai-lab-settings-price-toman">
                         {formatCostToman(
                           usdToTomanCost(model.inputTokenPriceUsd, usdToToman) +
-                            usdToTomanCost(model.outputTokenPriceUsd, usdToToman),
+                            usdToTomanCost(model.outputTokenPriceUsd, usdToToman) +
+                            usdToTomanCost(model.cacheReadTokenPriceUsd, usdToToman) +
+                            usdToTomanCost(model.cacheWriteTokenPriceUsd, usdToToman),
+                        )}
+                      </span>
+                    </small>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        <section className="ai-lab-ocr-create-section" aria-labelledby="ocr-chat-model-title">
+          <div className="ai-lab-ocr-create-section-head">
+            <span className="ai-lab-ocr-create-step" aria-hidden>
+              2
+            </span>
+            <div className="ai-lab-ocr-create-section-copy">
+              <h2 id="ocr-chat-model-title">مدل چت AI</h2>
+              <p>مدل چت مورد استفاده در اجرای OCR را انتخاب کنید.</p>
+            </div>
+          </div>
+
+          <div className="ai-lab-ocr-create-models" role="radiogroup" aria-label="مدل چت AI">
+            {chatModels.map((model: any) => {
+              const modelKey = `${model.accountId}:${model.providerModelName}`;
+              const isActive = selectedChatModelKey === modelKey;
+              return (
+                <button
+                  key={modelKey}
+                  type="button"
+                  role="radio"
+                  aria-checked={isActive}
+                  className={[
+                    'ai-lab-ocr-create-model',
+                    `ai-lab-ocr-create-model--${model.provider}`,
+                    isActive ? 'is-active' : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
+                  onClick={() => setSelectedChatModelKey(modelKey)}
+                >
+                  <span className="ai-lab-ocr-create-model-icon" aria-hidden>
+                    <Cpu className="h-4 w-4" />
+                  </span>
+                  <span className="ai-lab-ocr-create-model-copy">
+                    <span className="ai-lab-ocr-create-model-provider">
+                      {MODEL_PROVIDER_LABELS[model.provider]}
+                    </span>
+                    <strong>{model.displayName}</strong>
+                    <small>
+                      ورودی:{' '}
+                      <span dir="ltr">{formatUsd(model.inputTokenPriceUsd)}</span>
+                      {' · '}
+                      خروجی:{' '}
+                      <span dir="ltr">{formatUsd(model.outputTokenPriceUsd)}</span>
+                      {' · '}
+                      Cache read:{' '}
+                      <span dir="ltr">{formatUsd(model.cacheReadTokenPriceUsd)}</span>
+                      {' · '}
+                      Cache write:{' '}
+                      <span dir="ltr">{formatUsd(model.cacheWriteTokenPriceUsd)}</span>
+                      {' · '}
+                      <span className="ai-lab-settings-price-toman">
+                        {formatCostToman(
+                          usdToTomanCost(model.inputTokenPriceUsd, usdToToman) +
+                            usdToTomanCost(model.outputTokenPriceUsd, usdToToman) +
+                            usdToTomanCost(model.cacheReadTokenPriceUsd, usdToToman) +
+                            usdToTomanCost(model.cacheWriteTokenPriceUsd, usdToToman),
                         )}
                       </span>
                     </small>
@@ -446,7 +569,7 @@ export function OcrRegistrationClient({ businessId, initialOcrModels, usdToToman
         <section className="ai-lab-ocr-create-section" aria-labelledby="ocr-doc-type-title">
           <div className="ai-lab-ocr-create-section-head">
             <span className="ai-lab-ocr-create-step" aria-hidden>
-              2
+              3
             </span>
             <div className="ai-lab-ocr-create-section-copy">
               <h2 id="ocr-doc-type-title">نوع سند</h2>

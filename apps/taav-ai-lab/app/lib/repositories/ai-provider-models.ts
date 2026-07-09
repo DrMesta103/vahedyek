@@ -40,6 +40,12 @@ function mapModel(row: ModelRow): AiProviderModelPublic {
   const pricingUnit = isPricingUnit(row.pricingUnit) ? row.pricingUnit : 'MIXED';
 
   const ocrInputRatio = toNumber(((row as unknown as { ocrInputRatio?: { toString(): string } | number }).ocrInputRatio ?? 0.6));
+  const cacheReadTokenPriceUsd = toNumber(
+    ((row as unknown as { cacheReadTokenPriceUsd?: { toString(): string } | number }).cacheReadTokenPriceUsd ?? 0),
+  );
+  const cacheWriteTokenPriceUsd = toNumber(
+    ((row as unknown as { cacheWriteTokenPriceUsd?: { toString(): string } | number }).cacheWriteTokenPriceUsd ?? 0),
+  );
 
   return {
     id: row.id,
@@ -53,6 +59,8 @@ function mapModel(row: ModelRow): AiProviderModelPublic {
     inputTokenPriceUsd: toNumber(row.inputTokenPriceUsd),
     outputTokenPriceUsd: toNumber(row.outputTokenPriceUsd),
     ocrInputRatio,
+    cacheReadTokenPriceUsd,
+    cacheWriteTokenPriceUsd,
     requestPriceUsd: toNumber(row.requestPriceUsd),
     pagePriceUsd: toNumber(row.pagePriceUsd),
     imagePriceUsd: toNumber(row.imagePriceUsd),
@@ -89,6 +97,8 @@ function buildModelData(input: CreateAiProviderModelInput | UpdateAiProviderMode
     ...(input.inputTokenPriceUsd !== undefined ? { inputTokenPriceUsd: input.inputTokenPriceUsd } : {}),
     ...(input.outputTokenPriceUsd !== undefined ? { outputTokenPriceUsd: input.outputTokenPriceUsd } : {}),
     ...(input.ocrInputRatio !== undefined ? { ocrInputRatio: input.ocrInputRatio } : {}),
+    ...(input.cacheReadTokenPriceUsd !== undefined ? { cacheReadTokenPriceUsd: input.cacheReadTokenPriceUsd } : {}),
+    ...(input.cacheWriteTokenPriceUsd !== undefined ? { cacheWriteTokenPriceUsd: input.cacheWriteTokenPriceUsd } : {}),
     ...(input.requestPriceUsd !== undefined ? { requestPriceUsd: input.requestPriceUsd } : {}),
     ...(input.pagePriceUsd !== undefined ? { pagePriceUsd: input.pagePriceUsd } : {}),
     ...(input.imagePriceUsd !== undefined ? { imagePriceUsd: input.imagePriceUsd } : {}),
@@ -237,6 +247,8 @@ export async function createAiProviderModel(accountId: string, input: CreateAiPr
         inputTokenPriceUsd: input.inputTokenPriceUsd ?? 0,
         outputTokenPriceUsd: input.outputTokenPriceUsd ?? 0,
         ocrInputRatio: input.ocrInputRatio ?? 0.6,
+        cacheReadTokenPriceUsd: input.cacheReadTokenPriceUsd ?? 0,
+        cacheWriteTokenPriceUsd: input.cacheWriteTokenPriceUsd ?? 0,
         requestPriceUsd: input.requestPriceUsd ?? 0,
         pagePriceUsd: input.pagePriceUsd ?? 0,
         imagePriceUsd: input.imagePriceUsd ?? 0,
@@ -356,6 +368,8 @@ export type SystemOcrModelRow = {
   providerModelName: string;
   inputTokenPriceUsd: number;
   outputTokenPriceUsd: number;
+  cacheReadTokenPriceUsd: number;
+  cacheWriteTokenPriceUsd: number;
 };
 
 function mapAccountProviderToOcrProvider(value: string): OcrModelProvider | null {
@@ -395,8 +409,62 @@ export async function listSystemOcrModels(): Promise<SystemOcrModelRow[]> {
         providerModelName: row.providerModelName,
         inputTokenPriceUsd: toNumber(row.inputTokenPriceUsd),
         outputTokenPriceUsd: toNumber(row.outputTokenPriceUsd),
+        cacheReadTokenPriceUsd: toNumber(
+          ((row as unknown as { cacheReadTokenPriceUsd?: { toString(): string } | number }).cacheReadTokenPriceUsd ?? 0),
+        ),
+        cacheWriteTokenPriceUsd: toNumber(
+          ((row as unknown as { cacheWriteTokenPriceUsd?: { toString(): string } | number }).cacheWriteTokenPriceUsd ?? 0),
+        ),
       };
     });
+}
+
+export type ActiveChatModelRow = {
+  accountId: string;
+  provider: OcrModelProvider;
+  providerLabel: string;
+  displayName: string;
+  providerModelName: string;
+  inputTokenPriceUsd: number;
+  outputTokenPriceUsd: number;
+  cacheReadTokenPriceUsd: number;
+  cacheWriteTokenPriceUsd: number;
+};
+
+export async function listActiveChatModels(): Promise<ActiveChatModelRow[]> {
+  const rows = await prisma.aiProviderModel.findMany({
+    where: {
+      isActive: true,
+      modelType: 'CHAT',
+      account: {
+        isActive: true,
+      },
+    },
+    include: {
+      account: true,
+    },
+    orderBy: [{ updatedAt: 'desc' }, { displayName: 'asc' }],
+  });
+
+  return rows.map((row) => {
+    const provider = mapAccountProviderToOcrProvider(row.account.provider) ?? 'openai';
+    const providerType = row.account.provider as AiProviderType;
+    return {
+      accountId: row.accountId,
+      provider,
+      providerLabel: AI_PROVIDER_LABELS[providerType] ?? row.account.provider,
+      displayName: row.displayName,
+      providerModelName: row.providerModelName,
+      inputTokenPriceUsd: toNumber(row.inputTokenPriceUsd),
+      outputTokenPriceUsd: toNumber(row.outputTokenPriceUsd),
+      cacheReadTokenPriceUsd: toNumber(
+        ((row as unknown as { cacheReadTokenPriceUsd?: { toString(): string } | number }).cacheReadTokenPriceUsd ?? 0),
+      ),
+      cacheWriteTokenPriceUsd: toNumber(
+        ((row as unknown as { cacheWriteTokenPriceUsd?: { toString(): string } | number }).cacheWriteTokenPriceUsd ?? 0),
+      ),
+    };
+  });
 }
 
 export async function resolveModelPricingForOcr(accountId: string, ocrModelId: string) {

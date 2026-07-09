@@ -56,6 +56,8 @@ type ModelFormState = {
   pricingUnit: AiProviderPricingUnit;
   inputTokenPriceUsd: string;
   outputTokenPriceUsd: string;
+  cacheReadTokenPriceUsd: string;
+  cacheWriteTokenPriceUsd: string;
   requestPriceUsd: string;
   pagePriceUsd: string;
   imagePriceUsd: string;
@@ -85,6 +87,8 @@ const EMPTY_FORM: ModelFormState = {
   pricingUnit: 'TOKEN',
   inputTokenPriceUsd: '0',
   outputTokenPriceUsd: '0',
+  cacheReadTokenPriceUsd: '0',
+  cacheWriteTokenPriceUsd: '0',
   requestPriceUsd: '0',
   pagePriceUsd: '0',
   imagePriceUsd: '0',
@@ -163,6 +167,8 @@ function toFormState(model: AiProviderModelPublic): ModelFormState {
     pricingUnit: model.pricingUnit,
     inputTokenPriceUsd: String(model.inputTokenPriceUsd),
     outputTokenPriceUsd: String(model.outputTokenPriceUsd),
+    cacheReadTokenPriceUsd: String(model.cacheReadTokenPriceUsd ?? 0),
+    cacheWriteTokenPriceUsd: String(model.cacheWriteTokenPriceUsd ?? 0),
     requestPriceUsd: String(model.requestPriceUsd),
     pagePriceUsd: String(model.pagePriceUsd),
     imagePriceUsd: String(model.imagePriceUsd),
@@ -295,6 +301,8 @@ export function AiAccountModelsClient({ accountId, initialDetail, usdToToman }: 
       pricingUnit: form.pricingUnit,
       inputTokenPriceUsd: Number(form.inputTokenPriceUsd),
       outputTokenPriceUsd: Number(form.outputTokenPriceUsd),
+      cacheReadTokenPriceUsd: Number(form.cacheReadTokenPriceUsd),
+      cacheWriteTokenPriceUsd: Number(form.cacheWriteTokenPriceUsd),
       requestPriceUsd: Number(form.requestPriceUsd),
       pagePriceUsd: Number(form.pagePriceUsd),
       imagePriceUsd: Number(form.imagePriceUsd),
@@ -653,6 +661,28 @@ export function AiAccountModelsClient({ accountId, initialDetail, usdToToman }: 
                 </TaavFieldBlock>
                 <TaavFieldBlock label={<AiLabLabelWithTooltip label="قیمت هر ۱ توکن خروجی (USD)" tooltip={AI_LAB_TOOLTIPS.settings.aiModelOutputPrice} />} htmlFor="model-output-price">
                   <TaavInput id="model-output-price" type="number" min="0" step="0.000000001" value={form.outputTokenPriceUsd} onChange={(e) => setForm((c) => ({ ...c, outputTokenPriceUsd: e.target.value }))} dir="ltr" />
+                </TaavFieldBlock>
+                <TaavFieldBlock label="قیمت Cache Read (هر ۱ توکن، USD)" htmlFor="model-cache-read-price">
+                  <TaavInput
+                    id="model-cache-read-price"
+                    type="number"
+                    min="0"
+                    step="0.000000001"
+                    value={form.cacheReadTokenPriceUsd}
+                    onChange={(e) => setForm((c) => ({ ...c, cacheReadTokenPriceUsd: e.target.value }))}
+                    dir="ltr"
+                  />
+                </TaavFieldBlock>
+                <TaavFieldBlock label="قیمت Cache Write (هر ۱ توکن، USD)" htmlFor="model-cache-write-price">
+                  <TaavInput
+                    id="model-cache-write-price"
+                    type="number"
+                    min="0"
+                    step="0.000000001"
+                    value={form.cacheWriteTokenPriceUsd}
+                    onChange={(e) => setForm((c) => ({ ...c, cacheWriteTokenPriceUsd: e.target.value }))}
+                    dir="ltr"
+                  />
                 </TaavFieldBlock>
                 <TaavFieldBlock label="قیمت هر درخواست" htmlFor="model-request-price">
                   <TaavInput id="model-request-price" type="number" min="0" step="0.000001" value={form.requestPriceUsd} onChange={(e) => setForm((c) => ({ ...c, requestPriceUsd: e.target.value }))} dir="ltr" />
