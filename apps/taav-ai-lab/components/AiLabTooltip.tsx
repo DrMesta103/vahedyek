@@ -63,7 +63,9 @@ export function AiLabTooltipWrap({
   return (
     <span className="ai-lab-tooltip-wrap">
       {children}
-      <AiLabVisibleTooltip content={content} />
+      <div className="ai-lab-tooltip-content" role="tooltip">
+        {renderTooltipContent(content)}
+      </div>
     </span>
   );
 }
