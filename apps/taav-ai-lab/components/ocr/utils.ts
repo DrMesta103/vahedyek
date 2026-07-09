@@ -259,6 +259,58 @@ export function getOcrStageCost(job: OcrSimulationJob, stage: OcrStageKey, usdTo
   };
 }
 
+function sumStageCosts(ocrCost: OcrAiUsageCost, chatCost: OcrAiUsageCost): OcrAiUsageCost {
+  return {
+    accountId: null,
+    providerLabel: 'کل',
+    inputCostUsd: ocrCost.inputCostUsd + chatCost.inputCostUsd,
+    outputCostUsd: ocrCost.outputCostUsd + chatCost.outputCostUsd,
+    cacheReadCostUsd: ocrCost.cacheReadCostUsd + chatCost.cacheReadCostUsd,
+    cacheWriteCostUsd: ocrCost.cacheWriteCostUsd + chatCost.cacheWriteCostUsd,
+    totalCostUsd: ocrCost.totalCostUsd + chatCost.totalCostUsd,
+    inputCostToman: ocrCost.inputCostToman + chatCost.inputCostToman,
+    outputCostToman: ocrCost.outputCostToman + chatCost.outputCostToman,
+    cacheReadCostToman: ocrCost.cacheReadCostToman + chatCost.cacheReadCostToman,
+    cacheWriteCostToman: ocrCost.cacheWriteCostToman + chatCost.cacheWriteCostToman,
+    totalCostToman: ocrCost.totalCostToman + chatCost.totalCostToman,
+  };
+}
+
+export function hasOcrStageMeta(job: OcrSimulationJob, stage: OcrStageKey) {
+  const prefix = stage === 'ocr' ? '__ocr' : '__chat';
+  const extracted = job.extractedJson ?? {};
+  const modelName = String((extracted as Record<string, string>)[`${prefix}ModelName`] ?? '');
+  return modelName.length > 0 && modelName !== '—';
+}
+
+export function getOcrPipelineCost(
+  job: OcrSimulationJob,
+  usdToToman: number,
+  legacyCost?: OcrAiUsageCost | null,
+): OcrAiUsageCost {
+  const extracted = job.extractedJson ?? {};
+  const ocrCost = getOcrStageCost(job, 'ocr', usdToToman);
+  const chatCost = getOcrStageCost(job, 'chat', usdToToman);
+  const totalCostUsd = readNumber((extracted as Record<string, string>).__totalCostUsd);
+  const totalCostToman = readNumber((extracted as Record<string, string>).__totalCostToman);
+
+  if (totalCostUsd > 0 || totalCostToman > 0) {
+    const summed = sumStageCosts(ocrCost, chatCost);
+    return {
+      ...summed,
+      totalCostUsd: totalCostUsd || summed.totalCostUsd,
+      totalCostToman: totalCostToman || usdToTomanCost(totalCostUsd || summed.totalCostUsd, usdToToman),
+    };
+  }
+
+  const summed = sumStageCosts(ocrCost, chatCost);
+  if (summed.totalCostUsd > 0 || summed.totalCostToman > 0) {
+    return summed;
+  }
+
+  return legacyCost ?? ocrCost;
+}
+
 export function getOcrAiUsageCost(
   job: OcrSimulationJob,
   usdToToman: number,

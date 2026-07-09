@@ -70,7 +70,12 @@ export default async function OcrJobPage({
       currentTenantName={business.name}
     >
       <Suspense fallback={null}>
-        <OcrJobDetailClient businessId={business.id} initialJob={job} usageCost={usageCost} />
+        <OcrJobDetailClient
+          businessId={business.id}
+          initialJob={job}
+          usageCost={usageCost}
+          usdToToman={globalSettings.usdToToman}
+        />
       </Suspense>
     </AiLabShell>
   );
