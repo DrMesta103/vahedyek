@@ -1,15 +1,19 @@
 import { prisma } from '../prisma';
 import {
+  AI_PROVIDER_MODEL_BRAND_TAG_LABELS,
+  AI_PROVIDER_MODEL_BRAND_TAGS,
   AI_PROVIDER_MODEL_TYPE_LABELS,
   AI_PROVIDER_MODEL_TYPES,
   AI_PROVIDER_PRICING_UNIT_LABELS,
   AI_PROVIDER_PRICING_UNITS,
   type AiProviderAccountDetail,
+  type AiProviderModelBrandTag,
   type AiProviderModelPublic,
   type AiProviderModelType,
   type AiProviderPricingUnit,
   type CreateAiProviderModelInput,
   type UpdateAiProviderModelInput,
+  type UsedBrandTagsByModelType,
 } from '../types/ai-provider-models';
 import { AI_PROVIDER_LABELS, SystemAiProviderError, type AiProviderType } from '../types/ai-accounts';
 import { type OcrModelProvider } from '../ocr-models';
@@ -35,6 +39,15 @@ function isPricingUnit(value: string): value is AiProviderPricingUnit {
   return (AI_PROVIDER_PRICING_UNITS as readonly string[]).includes(value);
 }
 
+function isBrandTag(value: string): value is AiProviderModelBrandTag {
+  return (AI_PROVIDER_MODEL_BRAND_TAGS as readonly string[]).includes(value);
+}
+
+function resolveBrandTag(value: string | null | undefined): AiProviderModelBrandTag | null {
+  if (!value) return null;
+  return isBrandTag(value) ? value : null;
+}
+
 function mapModel(row: ModelRow): AiProviderModelPublic {
   const modelType = isModelType(row.modelType) ? row.modelType : 'OTHER';
   const pricingUnit = isPricingUnit(row.pricingUnit) ? row.pricingUnit : 'MIXED';
@@ -46,6 +59,7 @@ function mapModel(row: ModelRow): AiProviderModelPublic {
   const cacheWriteTokenPriceUsd = toNumber(
     ((row as unknown as { cacheWriteTokenPriceUsd?: { toString(): string } | number }).cacheWriteTokenPriceUsd ?? 0),
   );
+  const brandTag = resolveBrandTag(row.brandTag);
 
   return {
     id: row.id,
@@ -81,6 +95,8 @@ function mapModel(row: ModelRow): AiProviderModelPublic {
     isDefaultForVision: row.isDefaultForVision,
     isSystem: row.isSystem,
     isActive: row.isActive,
+    brandTag,
+    brandTagLabel: brandTag ? AI_PROVIDER_MODEL_BRAND_TAG_LABELS[brandTag] : null,
     notes: row.notes,
     createdByUserId: row.createdByUserId,
     createdAt: row.createdAt.toISOString(),
@@ -120,6 +136,7 @@ function buildModelData(input: CreateAiProviderModelInput | UpdateAiProviderMode
     ...(input.isDefaultForEmbedding !== undefined ? { isDefaultForEmbedding: input.isDefaultForEmbedding } : {}),
     ...(input.isDefaultForVision !== undefined ? { isDefaultForVision: input.isDefaultForVision } : {}),
     ...(input.isActive !== undefined ? { isActive: input.isActive } : {}),
+    ...(input.brandTag !== undefined ? { brandTag: input.brandTag } : {}),
     ...(input.notes !== undefined ? { notes: input.notes } : {}),
   };
 }
@@ -162,6 +179,63 @@ async function assertUniqueProviderModelName(providerModelName: string, excludeM
   if (existing) {
     throw new SystemAiProviderError('providerModelName تکراری است و امکان ثبت آن وجود ندارد.');
   }
+}
+
+async function assertUniqueBrandTag(
+  modelType: AiProviderModelType,
+  brandTag: AiProviderModelBrandTag | null | undefined,
+  isActive: boolean,
+  excludeModelId?: string,
+) {
+  if (!brandTag || !isActive) return;
+
+  const existing = await prisma.aiProviderModel.findFirst({
+    where: {
+      modelType,
+      brandTag,
+      isActive: true,
+      ...(excludeModelId ? { id: { not: excludeModelId } } : {}),
+    },
+    select: { id: true, displayName: true },
+  });
+
+  if (existing) {
+    throw new SystemAiProviderError(
+      `برای ${AI_PROVIDER_MODEL_TYPE_LABELS[modelType]}، تگ ${AI_PROVIDER_MODEL_BRAND_TAG_LABELS[brandTag]} قبلاً به مدل «${existing.displayName}» اختصاص داده شده است.`,
+    );
+  }
+}
+
+export async function listUsedBrandTagsByModelType(): Promise<UsedBrandTagsByModelType> {
+  const rows = await prisma.aiProviderModel.findMany({
+    where: {
+      isActive: true,
+      brandTag: { not: null },
+    },
+    select: {
+      id: true,
+      displayName: true,
+      modelType: true,
+      brandTag: true,
+    },
+  });
+
+  const result: UsedBrandTagsByModelType = {};
+  for (const row of rows) {
+    const modelType = isModelType(row.modelType) ? row.modelType : null;
+    const brandTag = resolveBrandTag(row.brandTag);
+    if (!modelType || !brandTag) continue;
+
+    if (!result[modelType]) {
+      result[modelType] = {};
+    }
+    result[modelType]![brandTag] = {
+      modelId: row.id,
+      displayName: row.displayName,
+    };
+  }
+
+  return result;
 }
 
 export async function listAiProviderModels(accountId: string) {
@@ -235,6 +309,10 @@ export async function createAiProviderModel(accountId: string, input: CreateAiPr
     assertValidOcrInputRatio(input.ocrInputRatio ?? 0.6);
   }
 
+  const nextBrandTag = input.brandTag ?? null;
+  const nextIsActive = input.isActive !== false;
+  await assertUniqueBrandTag(input.modelType, nextBrandTag, nextIsActive);
+
   const row = await prisma.$transaction(async (tx) => {
     const created = await tx.aiProviderModel.create({
       data: {
@@ -267,7 +345,8 @@ export async function createAiProviderModel(accountId: string, input: CreateAiPr
         isDefaultForOcr: input.isDefaultForOcr ?? false,
         isDefaultForEmbedding: input.isDefaultForEmbedding ?? false,
         isDefaultForVision: input.isDefaultForVision ?? false,
-        isActive: input.isActive !== false,
+        isActive: nextIsActive,
+        brandTag: nextBrandTag,
         notes: input.notes ?? null,
         createdByUserId: input.createdByUserId ?? null,
       } as any,
@@ -313,6 +392,13 @@ export async function updateAiProviderModel(
     assertValidOcrInputRatio(input.ocrInputRatio ?? existingRatio);
   }
 
+  const nextBrandTag =
+    input.brandTag !== undefined
+      ? input.brandTag
+      : resolveBrandTag(existing.brandTag);
+  const nextIsActive = input.isActive ?? existing.isActive;
+  await assertUniqueBrandTag(nextModelType, nextBrandTag, nextIsActive, modelId);
+
   const row = await prisma.$transaction(async (tx) => {
     const updated = await tx.aiProviderModel.update({
       where: { id: modelId },
@@ -337,6 +423,10 @@ export async function toggleAiProviderModelStatus(accountId: string, modelId: st
     where: { id: modelId, accountId },
   });
   if (!existing) return null;
+
+  const modelType = isModelType(existing.modelType) ? existing.modelType : 'OTHER';
+  const brandTag = resolveBrandTag(existing.brandTag);
+  await assertUniqueBrandTag(modelType, brandTag, isActive, modelId);
 
   const row = await prisma.aiProviderModel.update({
     where: { id: modelId },
@@ -511,6 +601,13 @@ export function parseAiProviderPricingUnit(value: unknown): AiProviderPricingUni
   if (typeof value !== 'string') return null;
   const normalized = value.trim().toUpperCase();
   return isPricingUnit(normalized) ? normalized : null;
+}
+
+export function parseAiProviderModelBrandTag(value: unknown): AiProviderModelBrandTag | null {
+  if (value === null || value === undefined || value === '') return null;
+  if (typeof value !== 'string') return null;
+  const normalized = value.trim().toUpperCase();
+  return isBrandTag(normalized) ? normalized : null;
 }
 
 export function hasAnyPositivePrice(input: {

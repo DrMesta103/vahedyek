@@ -42,6 +42,10 @@ export function getOrbitNavItems(businessId: string) {
 export function getActiveNavItem(pathname: string, businessId?: string | null) {
   const workspaceBase = businessId ? `/businesses/${businessId}` : null;
 
+  if (workspaceBase && pathname === workspaceBase) {
+    return AI_LAB_NAV_ITEMS.find((item) => item.id === 'home') ?? AI_LAB_NAV_ITEMS[0];
+  }
+
   const ranked = [...AI_LAB_NAV_ITEMS].sort((a, b) => {
     const aLen = a.segment?.length ?? a.href?.length ?? 0;
     const bLen = b.segment?.length ?? b.href?.length ?? 0;
@@ -61,10 +65,6 @@ export function getActiveNavItem(pathname: string, businessId?: string | null) {
     if (pathname === href || (href !== workspaceBase && pathname.startsWith(`${href}/`))) {
       return item;
     }
-  }
-
-  if (workspaceBase && pathname === workspaceBase) {
-    return AI_LAB_NAV_ITEMS.find((item) => item.id === 'home') ?? AI_LAB_NAV_ITEMS[0];
   }
 
   if (pathname === '/businesses') {

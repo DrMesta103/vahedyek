@@ -75,6 +75,7 @@ export default async function OcrJobPage({
           initialJob={job}
           usageCost={usageCost}
           usdToToman={globalSettings.usdToToman}
+          accounts={accounts}
         />
       </Suspense>
     </AiLabShell>

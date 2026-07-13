@@ -22,7 +22,7 @@ export function buildCostLines(usage: OcrStageUsage, cost: OcrAiUsageCost): OcrC
   const cacheReadUnit = Number.isFinite(usage.cacheReadTokenPriceUsd) ? usage.cacheReadTokenPriceUsd : 0;
   const cacheWriteUnit = Number.isFinite(usage.cacheWriteTokenPriceUsd) ? usage.cacheWriteTokenPriceUsd : 0;
 
-  if (inputTokens > 0 || cost.inputCostUsd > 0 || cost.inputCostToman > 0) {
+  if (inputTokens > 0 || cost.inputCostUsd > 0 || cost.inputCostToman > 0 || inputUnit > 0) {
     lines.push({
       key: 'input',
       label: 'ورودی',
@@ -33,7 +33,7 @@ export function buildCostLines(usage: OcrStageUsage, cost: OcrAiUsageCost): OcrC
     });
   }
 
-  if (outputTokens > 0 || cost.outputCostUsd > 0 || cost.outputCostToman > 0) {
+  if (outputTokens > 0 || cost.outputCostUsd > 0 || cost.outputCostToman > 0 || outputUnit > 0) {
     lines.push({
       key: 'output',
       label: 'خروجی',
@@ -44,7 +44,7 @@ export function buildCostLines(usage: OcrStageUsage, cost: OcrAiUsageCost): OcrC
     });
   }
 
-  if (cacheReadTokens > 0 || cost.cacheReadCostUsd > 0 || cost.cacheReadCostToman > 0) {
+  if (cacheReadTokens > 0 || cost.cacheReadCostUsd > 0 || cost.cacheReadCostToman > 0 || cacheReadUnit > 0) {
     lines.push({
       key: 'cacheRead',
       label: 'کش (خواندن)',
@@ -55,7 +55,7 @@ export function buildCostLines(usage: OcrStageUsage, cost: OcrAiUsageCost): OcrC
     });
   }
 
-  if (cacheWriteTokens > 0 || cost.cacheWriteCostUsd > 0 || cost.cacheWriteCostToman > 0) {
+  if (cacheWriteTokens > 0 || cost.cacheWriteCostUsd > 0 || cost.cacheWriteCostToman > 0 || cacheWriteUnit > 0) {
     lines.push({
       key: 'cacheWrite',
       label: 'کش (نوشتن)',

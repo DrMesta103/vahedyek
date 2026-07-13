@@ -18,7 +18,6 @@ import type { TaaviaBrand } from '@/app/lib/data';
 import { AI_LAB_TOOLTIPS } from '@/app/lib/tooltips';
 import { AiLabTooltipIcon } from '@/components/AiLabTooltip';
 import { CreateBrandDialog } from '@/components/taavia/CreateBrandDialog';
-import { TaaviaBrandModelSettingsDialog } from '@/components/taavia/TaaviaBrandModelSettingsDialog';
 
 type TaaviaBrandsClientProps = {
   tenantId: string;
@@ -29,7 +28,6 @@ export function TaaviaBrandsClient({ tenantId, initialBrands }: TaaviaBrandsClie
   const router = useRouter();
   const [brandDialogOpen, setBrandDialogOpen] = useState(false);
   const [editingBrand, setEditingBrand] = useState<TaaviaBrand | null>(null);
-  const [modelSettingsBrand, setModelSettingsBrand] = useState<TaaviaBrand | null>(null);
 
   const openCreateDialog = () => {
     setEditingBrand(null);
@@ -142,7 +140,7 @@ export function TaaviaBrandsClient({ tenantId, initialBrands }: TaaviaBrandsClie
                           iconStart={<Cpu className="h-4 w-4" />}
                           onClick={(event) => {
                             event.stopPropagation();
-                            setModelSettingsBrand(brand);
+                            router.push(`/businesses/${tenantId}/products/taavia/brands/${brand.id}/model-settings`);
                           }}
                         >
                           تنظیمات مدل
@@ -185,14 +183,6 @@ export function TaaviaBrandsClient({ tenantId, initialBrands }: TaaviaBrandsClie
           </div>
         </div>
       )}
-
-      <TaaviaBrandModelSettingsDialog
-        tenantId={tenantId}
-        brand={modelSettingsBrand}
-        open={modelSettingsBrand !== null}
-        onOpenChange={(open) => (!open ? setModelSettingsBrand(null) : undefined)}
-        onSaved={() => router.refresh()}
-      />
 
       <CreateBrandDialog
         open={brandDialogOpen}

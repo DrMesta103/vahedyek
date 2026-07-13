@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { getAiProviderAccountDetail, getGlobalSettings } from '@/app/lib/data';
+import { getAiProviderAccountDetail, getGlobalSettings, listUsedBrandTagsByModelType } from '@/app/lib/data';
 import { getCurrentTenant, requireSession } from '@/app/lib/session';
 import { AiLabShell } from '@/components/AiLabShell';
 import { AiAccountModelsClient } from '@/components/settings/AiAccountModelsClient';
@@ -13,9 +13,10 @@ export default async function AiAccountModelsPage({ params }: PageProps) {
   const session = await requireSession();
   const currentTenant = await getCurrentTenant();
   const { accountId } = await params;
-  const [detail, globalSettings] = await Promise.all([
+  const [detail, globalSettings, usedBrandTags] = await Promise.all([
     getAiProviderAccountDetail(accountId),
     getGlobalSettings(),
+    listUsedBrandTagsByModelType(),
   ]);
 
   if (!detail) {
@@ -35,6 +36,7 @@ export default async function AiAccountModelsPage({ params }: PageProps) {
         <AiAccountModelsClient
           accountId={accountId}
           initialDetail={detail}
+          initialUsedBrandTags={usedBrandTags}
           usdToToman={globalSettings.usdToToman}
         />
       </SettingsClientShell>

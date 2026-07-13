@@ -213,6 +213,43 @@ export function getOcrStageUsage(job: OcrSimulationJob, stage: OcrStageKey): Ocr
   };
 }
 
+export function enrichStageUsagePricing(
+  usage: OcrStageUsage,
+  accounts?: AiProviderAccountPublic[],
+): OcrStageUsage {
+  if (!accounts?.length || usage.modelId === '—') return usage;
+
+  const storedPricesComplete =
+    usage.inputTokenPriceUsd > 0 &&
+    usage.outputTokenPriceUsd > 0 &&
+    usage.cacheReadTokenPriceUsd > 0 &&
+    usage.cacheWriteTokenPriceUsd > 0;
+  if (storedPricesComplete) return usage;
+
+  const model = accounts
+    .filter((account) => account.isActive)
+    .flatMap((account) => account.models ?? [])
+    .find(
+      (item) =>
+        item.isActive &&
+        (item.providerModelName === usage.modelId ||
+          item.id === usage.modelId ||
+          item.displayName === usage.modelName),
+    );
+
+  if (!model) return usage;
+
+  return {
+    ...usage,
+    inputTokenPriceUsd: usage.inputTokenPriceUsd > 0 ? usage.inputTokenPriceUsd : model.inputTokenPriceUsd,
+    outputTokenPriceUsd: usage.outputTokenPriceUsd > 0 ? usage.outputTokenPriceUsd : model.outputTokenPriceUsd,
+    cacheReadTokenPriceUsd:
+      usage.cacheReadTokenPriceUsd > 0 ? usage.cacheReadTokenPriceUsd : model.cacheReadTokenPriceUsd,
+    cacheWriteTokenPriceUsd:
+      usage.cacheWriteTokenPriceUsd > 0 ? usage.cacheWriteTokenPriceUsd : model.cacheWriteTokenPriceUsd,
+  };
+}
+
 export function getOcrStageCost(job: OcrSimulationJob, stage: OcrStageKey, usdToToman: number): OcrAiUsageCost {
   const extracted = job.extractedJson ?? {};
   const providerLabel = stage === 'ocr'

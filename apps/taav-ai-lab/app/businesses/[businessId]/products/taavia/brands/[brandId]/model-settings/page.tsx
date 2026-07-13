@@ -1,25 +1,17 @@
 import { notFound } from 'next/navigation';
-import {
-  getOrCreateAdminAgentConversation,
-  getTaaviaBrandForTenant,
-  getTenantForUser,
-} from '@/app/lib/data';
+import { getBrandModelSettings, getTenantForUser } from '@/app/lib/data';
 import { getCurrentTenant, requireSession } from '@/app/lib/session';
-import { TAAVIA_ALL_USE_CASE_KEYS } from '@/app/lib/taavia-use-cases';
 import { AiLabShell } from '@/components/AiLabShell';
-import { TaaviaBrandWorkspaceClient } from '@/components/taavia/TaaviaBrandWorkspaceClient';
+import { TaaviaBrandModelSettingsPageClient } from '@/components/taavia/TaaviaBrandModelSettingsPageClient';
 
-export default async function TaaviaBrandDetailPage({
+export default async function TaaviaBrandModelSettingsPage({
   params,
-  searchParams,
 }: {
   params: Promise<{ businessId: string; brandId: string }>;
-  searchParams: Promise<{ mode?: string }>;
 }) {
   const session = await requireSession();
   const currentTenant = await getCurrentTenant();
   const { businessId, brandId } = await params;
-  const { mode } = await searchParams;
   const business = await getTenantForUser(session.userId, businessId);
 
   if (!business) {
@@ -39,30 +31,22 @@ export default async function TaaviaBrandDetailPage({
     );
   }
 
-  const brand = await getTaaviaBrandForTenant(session.userId, business.id, brandId);
-  if (!brand) notFound();
-
-  const conversation = await getOrCreateAdminAgentConversation(session.userId, business.id, brandId);
-  const initialView = mode === 'ai' ? 'chat' : 'auto';
+  const settings = await getBrandModelSettings(session.userId, business.id, brandId);
+  if (!settings) notFound();
 
   return (
     <AiLabShell
-      pathname={`/businesses/${business.id}/products/taavia/brands/${brand.id}`}
+      pathname={`/businesses/${business.id}/products/taavia/brands/${brandId}/model-settings`}
       fullName={session.fullName}
       email={session.email}
       mobile={session.mobile}
       currentTenantId={business.id}
       currentTenantName={business.name}
     >
-      <TaaviaBrandWorkspaceClient
+      <TaaviaBrandModelSettingsPageClient
         tenantId={business.id}
-        brand={brand}
-        selectedUseCases={TAAVIA_ALL_USE_CASE_KEYS}
-        setupComplete
-        initialView={initialView}
-        initialConversationId={conversation?.id ?? null}
-        initialMessages={conversation?.messages ?? []}
-        initialEffectiveChatModel={conversation?.effectiveModel ?? null}
+        brandId={brandId}
+        initialData={settings}
       />
     </AiLabShell>
   );

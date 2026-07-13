@@ -1,11 +1,12 @@
 import { assertTenantAccess } from '../auth';
 import { prisma } from '../prisma';
 import type {
+  BrandToolModelType,
   CreateTaaviaBrandInput,
   TaaviaBrand,
-  TaaviaBrandModelServiceKey,
   UpdateTaaviaBrandInput,
 } from '../types/domain';
+import { sanitizeBrandToolModelPreferences, type BrandToolModelPreferences } from './brand-model-settings';
 
 const INITIAL_ASSISTANT_MESSAGE =
   'سلام، من کمک می‌کنم برند شما را برای ساخت چت‌بات پشتیبانی هوشمند آماده کنیم. لطفاً ابتدا برند خودتان را معرفی کنید و بگویید این برند چه کاری انجام می‌دهد.';
@@ -16,7 +17,7 @@ type BrandAssistantMetadata = {
     iconName?: string;
     iconDataUrl?: string;
   };
-  modelPreferences?: Partial<Record<TaaviaBrandModelServiceKey, string>>;
+  modelPreferences?: BrandToolModelPreferences;
 };
 
 function mapBrand(row: {
@@ -32,7 +33,7 @@ function mapBrand(row: {
     iconName?: string;
     iconDataUrl?: string;
   } | null;
-  modelPreferences?: Partial<Record<TaaviaBrandModelServiceKey, string>> | null;
+  modelPreferences?: BrandToolModelPreferences | null;
 }): TaaviaBrand {
   return {
     id: row.id,
@@ -64,11 +65,11 @@ function buildAssistantMetadata(input: {
     iconName?: string;
     iconDataUrl?: string;
   };
-  modelPreferences?: Partial<Record<TaaviaBrandModelServiceKey, string>>;
+  modelPreferences?: BrandToolModelPreferences;
   currentMetadata?: BrandAssistantMetadata | null;
 }) {
   const hasIntake = input.intake && Object.values(input.intake).some((value) => value.trim());
-  const nextModelPreferences = input.modelPreferences ?? input.currentMetadata?.modelPreferences;
+  const nextModelPreferences = sanitizeBrandToolModelPreferences(input.modelPreferences ?? input.currentMetadata?.modelPreferences);
 
   const metadata: BrandAssistantMetadata = {
     ...(hasIntake
@@ -109,7 +110,7 @@ export async function getTaaviaBrandsForTenant(userId: string, tenantId: string)
     return mapBrand({
       ...brand,
       intake: metadata?.intake,
-      modelPreferences: metadata?.modelPreferences,
+      modelPreferences: sanitizeBrandToolModelPreferences(metadata?.modelPreferences),
     });
   });
 }
@@ -145,7 +146,7 @@ export async function getTaaviaBrandForTenant(
   return mapBrand({
     ...brand,
     intake: metadata?.intake,
-    modelPreferences: metadata?.modelPreferences,
+    modelPreferences: sanitizeBrandToolModelPreferences(metadata?.modelPreferences),
   });
 }
 
@@ -198,7 +199,7 @@ export async function createTaaviaBrandForTenant(
   return mapBrand({
     ...brand,
     intake: input.intake,
-    modelPreferences: input.modelPreferences,
+    modelPreferences: sanitizeBrandToolModelPreferences(input.modelPreferences),
   });
 }
 
@@ -252,7 +253,7 @@ export async function updateTaaviaBrandForTenant(
           content: buildBrandAssistantMessage(input.intake ?? currentMetadata?.intake),
           metadata: buildAssistantMetadata({
             intake: input.intake,
-            modelPreferences: input.modelPreferences,
+            modelPreferences: sanitizeBrandToolModelPreferences(input.modelPreferences),
             currentMetadata,
           }),
         },
@@ -272,9 +273,10 @@ export async function updateTaaviaBrandModelPreferences(
   userId: string,
   tenantId: string,
   brandId: string,
-  modelPreferences: Partial<Record<TaaviaBrandModelServiceKey, string>>,
+  modelPreferences: Partial<Record<BrandToolModelType, string>>,
 ): Promise<TaaviaBrand | null> {
   if (!(await assertTenantAccess(userId, tenantId))) return null;
+  const sanitizedPreferences = sanitizeBrandToolModelPreferences(modelPreferences);
 
   const brand = await prisma.taaviaBrand.findFirst({
     where: { id: brandId, tenantId, isActive: true },
@@ -308,7 +310,7 @@ export async function updateTaaviaBrandModelPreferences(
         data: {
           metadata: buildAssistantMetadata({
             intake: currentMetadata?.intake,
-            modelPreferences,
+            modelPreferences: sanitizedPreferences,
             currentMetadata,
           }),
         },

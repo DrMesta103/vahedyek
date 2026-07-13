@@ -262,6 +262,7 @@ model AiProviderModel {
   isDefaultForVision           Boolean          @default(false)
   isSystem                     Boolean          @default(false)
   isActive                     Boolean          @default(true)
+  brandTag                     String?
   notes                        String?          @db.Text
   createdByUserId              String?
   createdAt                    DateTime         @default(now())

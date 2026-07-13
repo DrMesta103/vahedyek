@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { Bot, Clock3, Wallet } from 'lucide-react';
 import type { OcrSimulationJob } from '@/app/lib/data';
+import type { AiProviderAccountPublic } from '@/app/lib/types/ai-accounts';
 import { formatCostUsd } from '@/app/lib/ai-usage-cost';
 import { formatTokenCount } from '@/app/lib/business-utils';
 import { formatCostToman } from '@/app/lib/ocr-ai-pricing';
@@ -12,6 +13,7 @@ import {
   getOcrStageCost,
   getOcrStageUsage,
   getOcrTransportUsageLabel,
+  enrichStageUsagePricing,
   hasOcrStageMeta,
   type OcrAiUsageCost,
   type OcrStageUsage,
@@ -22,6 +24,7 @@ type OcrPipelineUsageSectionProps = {
   job: OcrSimulationJob;
   usdToToman: number;
   transportMode: OcrTransportMode;
+  accounts?: AiProviderAccountPublic[];
   legacyCost?: OcrAiUsageCost | null;
   confidence?: number;
   durationMs?: number;
@@ -72,16 +75,19 @@ export function OcrPipelineUsageSection({
   job,
   usdToToman,
   transportMode,
+  accounts,
   legacyCost,
   confidence,
   durationMs,
   compact = false,
 }: OcrPipelineUsageSectionProps) {
   const { ocrUsage, chatUsage, ocrCost, chatCost, pipelineCost, totalTokens } = useMemo(() => {
-    const ocrStageUsage = hasOcrStageMeta(job, 'ocr')
+    const rawOcrUsage = hasOcrStageMeta(job, 'ocr')
       ? getOcrStageUsage(job, 'ocr')
       : buildLegacyOcrStageUsage(job, transportMode);
-    const chatStageUsage = getOcrStageUsage(job, 'chat');
+    const rawChatUsage = getOcrStageUsage(job, 'chat');
+    const ocrStageUsage = enrichStageUsagePricing(rawOcrUsage, accounts);
+    const chatStageUsage = enrichStageUsagePricing(rawChatUsage, accounts);
     const ocrStageCost = hasOcrStageMeta(job, 'ocr')
       ? getOcrStageCost(job, 'ocr', usdToToman)
       : (legacyCost ?? getOcrStageCost(job, 'ocr', usdToToman));
@@ -99,7 +105,7 @@ export function OcrPipelineUsageSection({
       pipelineCost: pipeline,
       totalTokens: tokens,
     };
-  }, [job, usdToToman, transportMode, legacyCost]);
+  }, [accounts, job, usdToToman, transportMode, legacyCost]);
 
   const durationLabel = durationMs !== undefined ? formatDurationMs(durationMs) : null;
   const usageStyleMode = transportMode === 'rest' ? 'rest' : 'grpc';

@@ -6,6 +6,7 @@ import type {
 } from '../ocr-simulator-data';
 import type { OcrTransportMode } from '../ocr-transport';
 import type { OcrExtractionFieldDraft } from '../ocr-extraction-fields';
+import type { AiProviderModelType } from './ai-provider-models';
 
 export type OcrSimulationSourceType = 'sample' | 'upload';
 
@@ -60,8 +61,12 @@ export type TaaviaBrand = {
     iconName?: string;
     iconDataUrl?: string;
   };
-  modelPreferences?: Partial<Record<TaaviaBrandModelServiceKey, string>>;
+  modelPreferences?: Partial<Record<BrandToolModelType, string>>;
 };
+
+export type BrandToolModelType = AiProviderModelType;
+
+export const BRAND_TOOL_MODEL_TYPE_ORDER = ['CHAT', 'OCR', 'VISION', 'EMBEDDING'] as const;
 
 export type TaaviaBrandModelServiceKey =
   | 'adminAgent'
@@ -208,7 +213,7 @@ export type CreateTaaviaBrandInput = {
     iconName?: string;
     iconDataUrl?: string;
   };
-  modelPreferences?: Partial<Record<TaaviaBrandModelServiceKey, string>>;
+  modelPreferences?: Partial<Record<BrandToolModelType, string>>;
 };
 
 export type UpdateTaaviaBrandInput = CreateTaaviaBrandInput & {

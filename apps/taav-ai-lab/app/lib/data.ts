@@ -17,8 +17,11 @@ export type {
   CreateTaaviaBrandInput,
   CreateOcrSimulationInput,
   TaaviaChatMessage,
+  BrandToolModelType,
   TaaviaBrandModelServiceKey,
 } from './types/domain';
+
+export { BRAND_TOOL_MODEL_TYPE_ORDER } from './types/domain';
 
 export {
   OCR_SAMPLE_LIBRARY,
@@ -72,6 +75,22 @@ export {
   deleteTaaviaBrandForTenant,
   updateTaaviaBrandModelPreferences,
 } from './repositories/taavia-brands';
+
+export type {
+  BrandModelSettingsPayload,
+  BrandToolModelOption,
+  BrandToolModelPreferences,
+  BrandToolModelResolvedState,
+  BrandToolModelSection,
+} from './repositories/brand-model-settings';
+
+export {
+  getBrandModelSettings,
+  resolveBrandEffectiveModel,
+  resolveBrandEffectiveOcrModel,
+  resolveBrandEffectiveChatModel,
+  sanitizeBrandToolModelPreferences,
+} from './repositories/brand-model-settings';
 
 export {
   getAdminAgentConversation,
@@ -142,6 +161,7 @@ export type {
   AiProviderAccountDetail,
   CreateAiProviderModelInput,
   UpdateAiProviderModelInput,
+  UsedBrandTagsByModelType,
 } from './types/ai-provider-models';
 
 export {
@@ -156,5 +176,7 @@ export {
   deleteAiProviderModel,
   parseAiProviderModelType,
   parseAiProviderPricingUnit,
+  parseAiProviderModelBrandTag,
+  listUsedBrandTagsByModelType,
   hasAnyPositivePrice,
 } from './repositories/ai-provider-models';

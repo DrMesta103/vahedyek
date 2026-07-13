@@ -4,6 +4,7 @@ import {
   createAiProviderModel,
   hasAnyPositivePrice,
   listAiProviderModels,
+  parseAiProviderModelBrandTag,
   parseAiProviderModelType,
   parseAiProviderPricingUnit,
 } from '@/app/lib/data';
@@ -40,6 +41,7 @@ type ModelPayload = {
   isDefaultForEmbedding?: boolean;
   isDefaultForVision?: boolean;
   isActive?: boolean;
+  brandTag?: string | null;
   notes?: string | null;
 };
 
@@ -78,6 +80,19 @@ function validateModelPayload(body: ModelPayload | null, requireAll: boolean) {
   }
   if (body?.pricingUnit !== undefined && body.pricingUnit !== null && body.pricingUnit !== '' && !pricingUnit) {
     return { error: 'واحد قیمت‌گذاری معتبر نیست.' };
+  }
+
+  let brandTag: ReturnType<typeof parseAiProviderModelBrandTag> | undefined;
+  if (body?.brandTag !== undefined) {
+    if (body.brandTag === null || body.brandTag === '') {
+      brandTag = null;
+    } else {
+      const parsedBrandTag = parseAiProviderModelBrandTag(body.brandTag);
+      if (!parsedBrandTag) {
+        return { error: 'تگ برند معتبر نیست.' };
+      }
+      brandTag = parsedBrandTag;
+    }
   }
 
   const prices = {
@@ -158,6 +173,7 @@ function validateModelPayload(body: ModelPayload | null, requireAll: boolean) {
       ...(body?.isDefaultForEmbedding !== undefined ? { isDefaultForEmbedding: Boolean(body.isDefaultForEmbedding) } : {}),
       ...(body?.isDefaultForVision !== undefined ? { isDefaultForVision: Boolean(body.isDefaultForVision) } : {}),
       ...(body?.isActive !== undefined ? { isActive: Boolean(body.isActive) } : {}),
+      ...(brandTag !== undefined ? { brandTag } : {}),
       ...(body?.notes !== undefined ? { notes: body.notes?.trim() ? body.notes.trim() : null } : {}),
     },
   };
@@ -165,6 +181,13 @@ function validateModelPayload(body: ModelPayload | null, requireAll: boolean) {
 
 function handleModelWriteError(error: unknown) {
   if (error instanceof PrismaClientKnownRequestError && error.code === 'P2002') {
+    const target = Array.isArray(error.meta?.target) ? error.meta.target.join(',') : '';
+    if (target.includes('brandTag')) {
+      return NextResponse.json(
+        { message: 'این تگ برای نوع مدل انتخاب‌شده قبلاً به مدل فعال دیگری اختصاص داده شده است.' },
+        { status: 409 },
+      );
+    }
     return NextResponse.json(
       { message: 'این نام مدل در Provider قبلاً برای این اکانت ثبت شده است.' },
       { status: 409 },

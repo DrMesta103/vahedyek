@@ -75,10 +75,10 @@ export function OcrStageUsageCard({ stage, usage, cost, compact = false }: OcrSt
           <div className="ai-lab-ocr-stage-usage__chips" aria-label="توکن‌ها">
             <StageTokenChip kind="input" label="ورودی" value={usage.inputTokens} />
             <StageTokenChip kind="output" label="خروجی" value={usage.outputTokens} />
-            {usage.cachedInputTokens > 0 ? (
+            {usage.cachedInputTokens > 0 || usage.cacheReadTokenPriceUsd > 0 ? (
               <StageTokenChip kind="cacheRead" label="کش" value={usage.cachedInputTokens} />
             ) : null}
-            {usage.cacheWriteTokens > 0 ? (
+            {usage.cacheWriteTokens > 0 || usage.cacheWriteTokenPriceUsd > 0 ? (
               <StageTokenChip kind="cacheWrite" label="نوشتن کش" value={usage.cacheWriteTokens} />
             ) : null}
           </div>

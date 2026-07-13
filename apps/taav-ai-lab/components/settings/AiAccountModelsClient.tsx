@@ -32,20 +32,25 @@ import { formatCostUsd, usdToTomanCost } from '@/app/lib/ai-usage-cost';
 import { formatCostToman } from '@/app/lib/ocr-ai-pricing';
 import { AI_LAB_TOOLTIPS } from '@/app/lib/tooltips';
 import {
+  AI_PROVIDER_MODEL_BRAND_TAG_LABELS,
+  AI_PROVIDER_MODEL_BRAND_TAGS,
   AI_PROVIDER_MODEL_TYPE_LABELS,
   AI_PROVIDER_MODEL_TYPES,
   AI_PROVIDER_PRICING_UNIT_LABELS,
   AI_PROVIDER_PRICING_UNITS,
   type AiProviderAccountDetail,
+  type AiProviderModelBrandTag,
   type AiProviderModelPublic,
   type AiProviderModelType,
   type AiProviderPricingUnit,
+  type UsedBrandTagsByModelType,
 } from '@/app/lib/types/ai-provider-models';
 import { AiLabLabelWithTooltip, AiLabTooltipIcon } from '@/components/AiLabTooltip';
 
 type AiAccountModelsClientProps = {
   accountId: string;
   initialDetail: AiProviderAccountDetail;
+  initialUsedBrandTags: UsedBrandTagsByModelType;
   usdToToman: number;
 };
 
@@ -54,6 +59,7 @@ type ModelFormState = {
   providerModelName: string;
   modelType: AiProviderModelType;
   pricingUnit: AiProviderPricingUnit;
+  brandTag: AiProviderModelBrandTag | '';
   inputTokenPriceUsd: string;
   outputTokenPriceUsd: string;
   cacheReadTokenPriceUsd: string;
@@ -85,6 +91,7 @@ const EMPTY_FORM: ModelFormState = {
   providerModelName: '',
   modelType: 'CHAT',
   pricingUnit: 'TOKEN',
+  brandTag: '',
   inputTokenPriceUsd: '0',
   outputTokenPriceUsd: '0',
   cacheReadTokenPriceUsd: '0',
@@ -126,6 +133,64 @@ const STATUS_OPTIONS = [
   { label: 'غیرفعال', value: 'inactive' },
 ];
 
+const BRAND_TAG_OPTIONS = [
+  { label: 'بدون تگ', value: '' },
+  ...AI_PROVIDER_MODEL_BRAND_TAGS.map((value) => ({
+    label: AI_PROVIDER_MODEL_BRAND_TAG_LABELS[value],
+    value,
+  })),
+];
+
+function brandTagTone(tag: AiProviderModelBrandTag): 'info' | 'success' | 'warning' {
+  switch (tag) {
+    case 'RECOMMENDED':
+      return 'info';
+    case 'ECONOMICAL':
+      return 'success';
+    case 'PREMIUM':
+      return 'warning';
+    default:
+      return 'info';
+  }
+}
+
+function applyBrandTagAssignment(
+  usedBrandTags: UsedBrandTagsByModelType,
+  model: Pick<AiProviderModelPublic, 'id' | 'displayName' | 'modelType' | 'brandTag' | 'isActive'>,
+  mode: 'assign' | 'remove',
+): UsedBrandTagsByModelType {
+  const next: UsedBrandTagsByModelType = { ...usedBrandTags };
+
+  for (const modelType of AI_PROVIDER_MODEL_TYPES) {
+    const typeMap = next[modelType];
+    if (!typeMap) continue;
+
+    const updatedTypeMap = { ...typeMap };
+    for (const [tag, entry] of Object.entries(updatedTypeMap)) {
+      if (entry.modelId === model.id) {
+        delete updatedTypeMap[tag as AiProviderModelBrandTag];
+      }
+    }
+    if (Object.keys(updatedTypeMap).length === 0) {
+      delete next[modelType];
+    } else {
+      next[modelType] = updatedTypeMap;
+    }
+  }
+
+  if (mode === 'assign' && model.brandTag && model.isActive) {
+    next[model.modelType] = {
+      ...next[model.modelType],
+      [model.brandTag]: {
+        modelId: model.id,
+        displayName: model.displayName,
+      },
+    };
+  }
+
+  return next;
+}
+
 function formatFaNumber(value: number) {
   return new Intl.NumberFormat('fa-IR').format(value);
 }
@@ -165,6 +230,7 @@ function toFormState(model: AiProviderModelPublic): ModelFormState {
     providerModelName: model.providerModelName,
     modelType: model.modelType,
     pricingUnit: model.pricingUnit,
+    brandTag: model.brandTag ?? '',
     inputTokenPriceUsd: String(model.inputTokenPriceUsd),
     outputTokenPriceUsd: String(model.outputTokenPriceUsd),
     cacheReadTokenPriceUsd: String(model.cacheReadTokenPriceUsd ?? 0),
@@ -192,19 +258,6 @@ function toFormState(model: AiProviderModelPublic): ModelFormState {
   };
 }
 
-function buildCapabilities(model: AiProviderModelPublic) {
-  const items: string[] = [];
-  if (model.supportsPersian) items.push('فارسی');
-  if (model.supportsEnglish) items.push('انگلیسی');
-  if (model.supportsVision) items.push('بینایی');
-  if (model.supportsPdf) items.push('PDF');
-  if (model.supportsImage) items.push('تصویر');
-  if (model.supportsStructuredExtraction) items.push('استخراج');
-  if (model.supportsEmbedding) items.push('امبدینگ');
-  if (model.supportsFunctionCalling) items.push('Function');
-  return items;
-}
-
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
     <h3 className="m-0 border-b border-[color:rgba(148,163,184,0.14)] pb-2 text-[length:var(--taav-text-sm)] font-black text-[var(--taav-text-strong)]">
@@ -213,8 +266,14 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function AiAccountModelsClient({ accountId, initialDetail, usdToToman }: AiAccountModelsClientProps) {
+export function AiAccountModelsClient({
+  accountId,
+  initialDetail,
+  initialUsedBrandTags,
+  usdToToman,
+}: AiAccountModelsClientProps) {
   const [detail, setDetail] = useState(initialDetail);
+  const [usedBrandTags, setUsedBrandTags] = useState(initialUsedBrandTags);
   const [listError, setListError] = useState<string | null>(null);
   const [actionFeedback, setActionFeedback] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -227,6 +286,23 @@ export function AiAccountModelsClient({ accountId, initialDetail, usdToToman }: 
   const formOutputPerToken = Number(form.outputTokenPriceUsd) || 0;
   const previewInputCostUsd = formInputPerToken * 1000;
   const previewOutputCostUsd = formOutputPerToken * 1000;
+
+  const brandTagOptions = useMemo(
+    () =>
+      BRAND_TAG_OPTIONS.map((option) => {
+        if (!option.value) return option;
+
+        const occupied = usedBrandTags[form.modelType]?.[option.value as AiProviderModelBrandTag];
+        const disabled = Boolean(occupied && occupied.modelId !== editingModel?.id);
+
+        return {
+          ...option,
+          disabled,
+          title: disabled ? `این تگ برای ${AI_PROVIDER_MODEL_TYPE_LABELS[form.modelType]} به مدل «${occupied?.displayName}» اختصاص دارد.` : undefined,
+        };
+      }),
+    [editingModel?.id, form.modelType, usedBrandTags],
+  );
 
   const summaryCards = useMemo(
     () => [
@@ -321,6 +397,7 @@ export function AiAccountModelsClient({ accountId, initialDetail, usdToToman }: 
       isDefaultForOcr: form.isDefaultForOcr,
       isDefaultForEmbedding: form.isDefaultForEmbedding,
       isDefaultForVision: form.isDefaultForVision,
+      brandTag: form.brandTag || null,
       notes: form.notes.trim() || null,
       isActive: form.isActive,
     };
@@ -343,10 +420,16 @@ export function AiAccountModelsClient({ accountId, initialDetail, usdToToman }: 
         },
       );
 
-      const result = (await response.json().catch(() => null)) as { message?: string } | null;
+      const result = (await response.json().catch(() => null)) as
+        | { message?: string; model?: AiProviderModelPublic }
+        | null;
       if (!response.ok) {
         setFormError(result?.message ?? 'ذخیره مدل انجام نشد.');
         return;
+      }
+
+      if (result?.model) {
+        setUsedBrandTags((current) => applyBrandTagAssignment(current, result.model!, 'assign'));
       }
 
       setActionFeedback(editingModel ? 'مدل با موفقیت به‌روزرسانی شد.' : 'مدل جدید با موفقیت ایجاد شد.');
@@ -376,6 +459,13 @@ export function AiAccountModelsClient({ accountId, initialDetail, usdToToman }: 
       return;
     }
 
+    const nextModel = { ...model, isActive: !model.isActive };
+    setUsedBrandTags((current) =>
+      nextModel.isActive
+        ? applyBrandTagAssignment(current, nextModel, 'assign')
+        : applyBrandTagAssignment(current, nextModel, 'remove'),
+    );
+
     setActionFeedback(model.isActive ? 'مدل غیرفعال شد.' : 'مدل فعال شد.');
     await refreshDetail();
   };
@@ -398,6 +488,7 @@ export function AiAccountModelsClient({ accountId, initialDetail, usdToToman }: 
     }
 
     setActionFeedback('مدل حذف شد.');
+    setUsedBrandTags((current) => applyBrandTagAssignment(current, model, 'remove'));
     await refreshDetail();
   };
 
@@ -482,7 +573,6 @@ export function AiAccountModelsClient({ accountId, initialDetail, usdToToman }: 
         ) : (
           <div className="grid gap-3 md:grid-cols-2">
             {detail.models.map((model) => {
-              const capabilities = buildCapabilities(model);
               return (
                 <TaavCard
                   key={model.id}
@@ -505,10 +595,11 @@ export function AiAccountModelsClient({ accountId, initialDetail, usdToToman }: 
                             </span>
                           </TaavBadge>
                         ) : null}
-                        {model.isDefaultForChat ? <TaavBadge tone="info" variant="soft" size="sm">پیش‌فرض Chat</TaavBadge> : null}
-                        {model.isDefaultForOcr ? <TaavBadge tone="info" variant="soft" size="sm">پیش‌فرض OCR</TaavBadge> : null}
-                        {model.isDefaultForEmbedding ? <TaavBadge tone="info" variant="soft" size="sm">پیش‌فرض Embedding</TaavBadge> : null}
-                        {model.isDefaultForVision ? <TaavBadge tone="info" variant="soft" size="sm">پیش‌فرض Vision</TaavBadge> : null}
+                        {model.brandTag ? (
+                          <TaavBadge tone={brandTagTone(model.brandTag)} variant="soft" size="sm">
+                            {model.brandTagLabel}
+                          </TaavBadge>
+                        ) : null}
                       </div>
                       <div className="mt-1 flex flex-wrap items-center gap-2 text-[length:var(--taav-text-xs)] text-[var(--taav-text-muted)]">
                         <span className="font-mono" dir="ltr">
@@ -604,18 +695,6 @@ export function AiAccountModelsClient({ accountId, initialDetail, usdToToman }: 
                       </div>
                     </div>
 
-                    <div className="flex flex-wrap gap-1">
-                      {capabilities.length > 0 ? (
-                        capabilities.map((item) => (
-                          <TaavBadge key={item} tone="neutral" variant="soft" size="sm">
-                            {item}
-                          </TaavBadge>
-                        ))
-                      ) : (
-                        <span className="text-[length:var(--taav-text-xs)] text-[var(--taav-text-muted)]">بدون قابلیت خاص</span>
-                      )}
-                    </div>
-
                     <div className="text-[length:var(--taav-text-xs)] text-[var(--taav-text-muted)]">
                       آخرین بروزرسانی: {formatFaDateTime(model.updatedAt)}
                     </div>
@@ -646,10 +725,52 @@ export function AiAccountModelsClient({ accountId, initialDetail, usdToToman }: 
                 <TaavInput id="model-provider-name" value={form.providerModelName} onChange={(e) => setForm((c) => ({ ...c, providerModelName: e.target.value }))} placeholder="gpt-4.1-mini" dir="ltr" />
               </TaavFieldBlock>
               <TaavFieldBlock label={<AiLabLabelWithTooltip label="نوع مدل" tooltip={AI_LAB_TOOLTIPS.settings.aiModelType} required />} required>
-                <TaavChoiceChipGroup ariaLabel="نوع مدل" options={MODEL_TYPE_OPTIONS} value={form.modelType} onValueChange={(value) => { const next = Array.isArray(value) ? value[0] : value; if (next) setForm((c) => ({ ...c, modelType: next as AiProviderModelType })); }} size="sm" tone="brand" gap="sm" wrap />
+                <TaavChoiceChipGroup
+                  ariaLabel="نوع مدل"
+                  options={MODEL_TYPE_OPTIONS}
+                  value={form.modelType}
+                  onValueChange={(value) => {
+                    const next = Array.isArray(value) ? value[0] : value;
+                    if (!next) return;
+                    setForm((current) => {
+                      const modelType = next as AiProviderModelType;
+                      const occupied =
+                        current.brandTag
+                          ? usedBrandTags[modelType]?.[current.brandTag as AiProviderModelBrandTag]
+                          : null;
+                      const brandTag =
+                        current.brandTag && occupied && occupied.modelId !== editingModel?.id
+                          ? ''
+                          : current.brandTag;
+                      return { ...current, modelType, brandTag };
+                    });
+                  }}
+                  size="sm"
+                  tone="brand"
+                  gap="sm"
+                  wrap
+                />
               </TaavFieldBlock>
               <TaavFieldBlock label={<AiLabLabelWithTooltip label="واحد قیمت‌گذاری" tooltip={AI_LAB_TOOLTIPS.settings.aiModelPricingUnit} required />} required>
                 <TaavChoiceChipGroup ariaLabel="واحد قیمت‌گذاری" options={PRICING_UNIT_OPTIONS} value={form.pricingUnit} onValueChange={(value) => { const next = Array.isArray(value) ? value[0] : value; if (next) setForm((c) => ({ ...c, pricingUnit: next as AiProviderPricingUnit })); }} size="sm" tone="brand" gap="sm" wrap />
+              </TaavFieldBlock>
+              <TaavFieldBlock label="تگ برند">
+                <TaavChoiceChipGroup
+                  ariaLabel="تگ برند"
+                  options={brandTagOptions}
+                  value={form.brandTag}
+                  onValueChange={(value) => {
+                    const next = Array.isArray(value) ? value[0] : value;
+                    setForm((current) => ({ ...current, brandTag: (next ?? '') as AiProviderModelBrandTag | '' }));
+                  }}
+                  size="sm"
+                  tone="brand"
+                  gap="sm"
+                  wrap
+                />
+                <p className="m-0 mt-2 text-[length:var(--taav-text-xs)] text-[var(--taav-text-muted)]">
+                  برای هر نوع مدل، هر تگ فقط به یک مدل فعال در کل پلتفرم اختصاص می‌یابد.
+                </p>
               </TaavFieldBlock>
             </section>
 
