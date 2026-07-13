@@ -1,6 +1,7 @@
 import { applyCurrentDatabaseUrl } from '../app/config/database';
 import { hashPassword } from '../app/lib/auth';
 import { ensureAiProviderSeedData } from '../app/lib/ai-provider-runtime-seed';
+import { ensureAiProviderV2SeedData } from '../app/lib/ai-provider-v2-runtime-seed';
 import { GLOBAL_SETTINGS_MOCK } from '../app/lib/global-settings-mock';
 import { prisma } from '../app/lib/prisma';
 
@@ -153,9 +154,10 @@ async function seedDemoTenant(ownerUserId: string) {
 async function main() {
   await seedGlobalSettings();
   await ensureAiProviderSeedData();
+  await ensureAiProviderV2SeedData();
   const demoUser = await seedDemoUser();
   await seedDemoTenant(demoUser.id);
-  console.log('Seed completed: global settings, AI provider accounts/models, platform admin credential, and demo app user.');
+  console.log('Seed completed: global settings, AI provider accounts/models (v1 + v2), platform admin credential, and demo app user.');
   console.log('App login: admin@local.dev / 123456');
   console.log('Settings admin gate: admin / 123456');
 }

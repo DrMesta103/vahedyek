@@ -301,3 +301,269 @@ model AiUsageLog {
   @@index([tenantId])
   @@index([businessId])
 }
+
+// -----------------------------
+// AI Provider v2 (normalized)
+// -----------------------------
+
+enum AiProviderTypeV2 {
+  OpenAi
+  AzureOpenAi
+  GoogleGemini
+  DeepSeek
+  Grok
+  OpenRouter
+}
+
+enum AiProviderAccountTransactionTypeV2 {
+  Purchase
+  ManualAdjustment
+}
+
+enum AiProviderModelTypeV2 {
+  TextGeneration
+  Embedding
+  Reranking
+  SpeechToText
+  TextToSpeech
+  ImageGeneration
+  DocumentExtraction
+  Moderation
+}
+
+enum AiProviderModelCapabilityTypeV2 {
+  TextInput
+  ImageInput
+  AudioInput
+  VideoInput
+  FileInput
+
+  TextOutput
+  ImageOutput
+  AudioOutput
+
+  Streaming
+  ToolCalling
+  StructuredOutput
+}
+
+enum AiProviderUsageMetricTypeV2 {
+  InputToken
+  CachedInputToken
+  OutputToken
+  Image
+  Audio
+  Video
+  DocumentPage
+  Request
+  Character
+}
+
+enum AiProviderUsageUnitTypeV2 {
+  Token
+  Item
+  Second
+  Minute
+  Page
+  Request
+  Character
+}
+
+enum AiProviderModelUsageStatusV2 {
+  Succeeded
+  Failed
+  Canceled
+}
+
+model AiProviderAccountV2 {
+  id              String           @id
+  name            String
+  providerType    AiProviderTypeV2 @unique
+
+  encryptedApiKey String           @db.Text
+  apiKeyMasked    String
+
+  endpoint        String?
+  apiVersion      String?
+  billingEmail    String?
+
+  isSystem        Boolean          @default(false)
+  isActive        Boolean          @default(true)
+  description     String?          @db.Text
+
+  apiKeyUpdatedAt DateTime
+  apiKeyUpdatedBy String
+
+  createdBy       String
+  updatedBy       String
+  createdAt       DateTime
+  updatedAt       DateTime
+
+  transactions    AiProviderAccountTransactionV2[]
+  models          AiProviderModelV2[]
+
+  @@index([providerType])
+  @@index([isActive])
+  @@index([isSystem])
+  @@index([updatedAt])
+}
+
+model AiProviderAccountTransactionV2 {
+  id                String                          @id
+
+  aiProviderAccountId String
+  aiProviderAccount   AiProviderAccountV2            @relation(fields: [aiProviderAccountId], references: [id], onDelete: Cascade)
+
+  transactionType   AiProviderAccountTransactionTypeV2
+  amountUsd         Decimal                         @db.Decimal(28, 12)
+  amountToman       BigInt
+  transactionAt     DateTime
+  description       String?                         @db.Text
+
+  isDeleted         Boolean                         @default(false)
+  deletedAt         DateTime?
+  deletedBy         String?
+
+  createdBy         String
+  createdAt         DateTime
+
+  @@index([aiProviderAccountId, transactionAt])
+  @@index([aiProviderAccountId, isDeleted])
+}
+
+model AiProviderModelV2 {
+  id                String              @id
+
+  aiProviderAccountId String
+  aiProviderAccount   AiProviderAccountV2 @relation(fields: [aiProviderAccountId], references: [id], onDelete: Cascade)
+
+  name              String
+  providerModelId   String
+  modelType         AiProviderModelTypeV2
+
+  isSystem          Boolean             @default(false)
+  isActive          Boolean             @default(true)
+
+  createdBy         String
+  updatedBy         String
+  createdAt         DateTime
+  updatedAt         DateTime
+
+  capabilities      AiProviderModelCapabilityV2[]
+  pricings          AiProviderModelPricingV2[]
+  usages            AiProviderModelUsageV2[]
+
+  @@unique([aiProviderAccountId, providerModelId])
+  @@index([aiProviderAccountId, isActive])
+  @@index([updatedAt])
+}
+
+model AiProviderModelCapabilityV2 {
+  id               String                       @id
+  aiProviderModelId String
+  aiProviderModel   AiProviderModelV2           @relation(fields: [aiProviderModelId], references: [id], onDelete: Cascade)
+  capabilityType   AiProviderModelCapabilityTypeV2
+
+  @@unique([aiProviderModelId, capabilityType])
+}
+
+model AiProviderModelPricingV2 {
+  id               String             @id
+  aiProviderModelId String
+  aiProviderModel   AiProviderModelV2 @relation(fields: [aiProviderModelId], references: [id], onDelete: Cascade)
+
+  effectiveFrom    DateTime
+  effectiveTo      DateTime?
+  endedBy          String?
+
+  isDeleted        Boolean            @default(false)
+  deletedAt        DateTime?
+  deletedBy        String?
+
+  createdBy        String
+  createdAt        DateTime
+
+  priceItems       AiProviderModelPriceItemV2[]
+  usages           AiProviderModelUsageV2[]
+
+  @@index([aiProviderModelId, effectiveFrom, effectiveTo])
+}
+
+model AiProviderModelPriceItemV2 {
+  id                   String                  @id
+  aiProviderModelPricingId String
+  aiProviderModelPricing   AiProviderModelPricingV2 @relation(fields: [aiProviderModelPricingId], references: [id], onDelete: Cascade)
+
+  usageMetricType      AiProviderUsageMetricTypeV2
+  usageUnitType        AiProviderUsageUnitTypeV2
+  unitQuantity         Decimal                 @db.Decimal(28, 12)
+  priceUsd             Decimal                 @db.Decimal(28, 12)
+
+  createdBy            String
+  createdAt            DateTime
+  updatedBy            String
+  updatedAt            DateTime
+
+  isDeleted            Boolean                 @default(false)
+  deletedBy            String?
+  deletedAt            DateTime?
+
+  usageItems           AiProviderModelUsageItemV2[]
+
+  @@index([aiProviderModelPricingId])
+  @@unique([aiProviderModelPricingId, usageMetricType, isDeleted])
+}
+
+model AiProviderModelUsageV2 {
+  id                 String                    @id
+  aiProviderModelId  String
+  aiProviderModel    AiProviderModelV2         @relation(fields: [aiProviderModelId], references: [id], onDelete: Cascade)
+
+  usageReferenceId   String                    @unique
+  consumerCode       String
+  operationCode      String
+  tenantId           String?
+  resourceType       String?
+  resourceId         String?
+
+  status             AiProviderModelUsageStatusV2
+
+  startedAt          DateTime
+  finishedAt         DateTime
+  durationMilliseconds BigInt
+
+  aiProviderModelPricingId String?
+  aiProviderModelPricing   AiProviderModelPricingV2? @relation(fields: [aiProviderModelPricingId], references: [id], onDelete: SetNull)
+
+  totalCostUsd       Decimal                   @db.Decimal(28, 12)
+  createdAt          DateTime
+
+  usageItems         AiProviderModelUsageItemV2[]
+
+  @@index([aiProviderModelId, startedAt])
+  @@index([consumerCode, startedAt])
+  @@index([operationCode, startedAt])
+  @@index([tenantId, startedAt])
+  @@index([resourceType, resourceId])
+  @@index([status, startedAt])
+}
+
+model AiProviderModelUsageItemV2 {
+  id                   String                  @id
+  aiProviderModelUsageId String
+  aiProviderModelUsage   AiProviderModelUsageV2 @relation(fields: [aiProviderModelUsageId], references: [id], onDelete: Cascade)
+
+  aiProviderModelPriceItemId String
+  aiProviderModelPriceItem   AiProviderModelPriceItemV2 @relation(fields: [aiProviderModelPriceItemId], references: [id], onDelete: Restrict)
+
+  usageMetricType      AiProviderUsageMetricTypeV2
+  usageUnitType        AiProviderUsageUnitTypeV2
+  usageQuantity        Decimal                 @db.Decimal(28, 12)
+
+  appliedUnitQuantity  Decimal                 @db.Decimal(28, 12)
+  appliedPriceUsd      Decimal                 @db.Decimal(28, 12)
+  calculatedCostUsd    Decimal                 @db.Decimal(28, 12)
+
+  @@index([aiProviderModelUsageId])
+  @@index([usageMetricType])
+}
