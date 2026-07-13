@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import {
+  DuplicateAiProviderError,
   deleteAiProviderAccount,
   getAiProviderAccountById,
-  parseAiProviderType,
+  parseAiAccountProviderType,
   isValidPurchaseEmail,
   updateAiProviderAccount,
   parseNonNegativeDecimal,
@@ -62,7 +63,7 @@ export async function PATCH(request: Request, context: RouteContext) {
   }
 
   if (body?.provider !== undefined) {
-    const provider = parseAiProviderType(body.provider);
+    const provider = parseAiAccountProviderType(body.provider);
     if (!provider) {
       return NextResponse.json({ message: 'ارائه‌دهنده معتبر نیست.' }, { status: 400 });
     }
@@ -108,6 +109,9 @@ export async function PATCH(request: Request, context: RouteContext) {
 
     return NextResponse.json({ success: true, account });
   } catch (error) {
+    if (error instanceof DuplicateAiProviderError) {
+      return NextResponse.json({ message: error.message }, { status: 409 });
+    }
     return handlePrismaApiError(error);
   }
 }

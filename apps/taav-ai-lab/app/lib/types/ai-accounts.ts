@@ -11,6 +11,17 @@ export const AI_PROVIDER_TYPES = [
   'OTHER',
 ] as const;
 
+export const AI_ACCOUNT_PROVIDER_TYPES = [
+  'OPENAI',
+  'AZURE_OPENAI',
+  'GEMINI',
+  'DEEPSEEK',
+  'GROK',
+  'OPENROUTER',
+] as const;
+
+export type AiAccountProviderType = (typeof AI_ACCOUNT_PROVIDER_TYPES)[number];
+
 export type AiProviderType = (typeof AI_PROVIDER_TYPES)[number];
 
 export const AI_PROVIDER_LABELS: Record<AiProviderType, string> = {
@@ -23,6 +34,10 @@ export const AI_PROVIDER_LABELS: Record<AiProviderType, string> = {
   LOCAL_GATEWAY: 'Local Gateway',
   OTHER: 'Other',
 };
+
+export function isAiAccountProviderType(value: string): value is AiAccountProviderType {
+  return (AI_ACCOUNT_PROVIDER_TYPES as readonly string[]).includes(value);
+}
 
 export const SYSTEM_AI_PROVIDER_TYPES: AiProviderType[] = ['OPENAI', 'DEEPSEEK', 'GEMINI', 'GROK'];
 
@@ -80,5 +95,12 @@ export class SystemAiProviderError extends Error {
   constructor(message: string) {
     super(message);
     this.name = 'SystemAiProviderError';
+  }
+}
+
+export class DuplicateAiProviderError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'DuplicateAiProviderError';
   }
 }

@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import {
   createAiProviderAccount,
+  DuplicateAiProviderError,
   listAiProviderAccounts,
-  parseAiProviderType,
+  parseAiAccountProviderType,
   isValidPurchaseEmail,
   parseNonNegativeDecimal,
 } from '@/app/lib/data';
@@ -41,7 +42,7 @@ export async function POST(request: Request) {
 
   const body = (await request.json().catch(() => null)) as CreatePayload | null;
   const name = body?.name?.trim() ?? '';
-  const provider = parseAiProviderType(body?.provider);
+  const provider = parseAiAccountProviderType(body?.provider);
   const apiKey = body?.apiKey?.trim() ?? '';
   const purchaseEmailRaw = body?.purchaseEmail?.trim() ?? '';
   const notes = body?.notes?.trim() ?? '';
@@ -78,6 +79,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, account });
   } catch (error) {
+    if (error instanceof DuplicateAiProviderError) {
+      return NextResponse.json({ message: error.message }, { status: 409 });
+    }
     return handlePrismaApiError(error);
   }
 }
