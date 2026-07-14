@@ -1,4 +1,4 @@
-import type { Prisma } from '@prisma/client';
+import type { Prisma, AiProviderTypeV2 as PrismaAiProviderTypeV2, AiProviderAccountTransactionTypeV2 as PrismaTransactionTypeV2, AiProviderModelTypeV2 as PrismaModelTypeV2, AiProviderModelCapabilityTypeV2 as PrismaCapabilityTypeV2 } from '../prisma-client';
 import {
   AI_PROVIDER_LABELS_V2,
   type AiProviderAccountTransactionTypeV2,
@@ -14,7 +14,7 @@ function toNumber(value: { toString(): string } | number) {
   return Number(value);
 }
 
-export function mapProviderTypeToPrisma(value: AiProviderTypeV2): Prisma.AiProviderTypeV2 {
+export function mapProviderTypeToPrisma(value: AiProviderTypeV2): PrismaAiProviderTypeV2 {
   switch (value) {
     case 'OPENAI':
       return 'OpenAi';
@@ -31,7 +31,7 @@ export function mapProviderTypeToPrisma(value: AiProviderTypeV2): Prisma.AiProvi
   }
 }
 
-export function mapProviderTypeFromPrisma(value: Prisma.AiProviderTypeV2): AiProviderTypeV2 {
+export function mapProviderTypeFromPrisma(value: PrismaAiProviderTypeV2): AiProviderTypeV2 {
   switch (value) {
     case 'OpenAi':
       return 'OPENAI';
@@ -50,17 +50,17 @@ export function mapProviderTypeFromPrisma(value: Prisma.AiProviderTypeV2): AiPro
 
 export function mapTransactionTypeToPrisma(
   value: AiProviderAccountTransactionTypeV2,
-): Prisma.AiProviderAccountTransactionTypeV2 {
+): PrismaTransactionTypeV2 {
   return value === 'PURCHASE' ? 'Purchase' : 'ManualAdjustment';
 }
 
 export function mapTransactionTypeFromPrisma(
-  value: Prisma.AiProviderAccountTransactionTypeV2,
+  value: PrismaTransactionTypeV2,
 ): AiProviderAccountTransactionTypeV2 {
   return value === 'Purchase' ? 'PURCHASE' : 'MANUAL_ADJUSTMENT';
 }
 
-export function mapModelTypeToPrisma(value: AiProviderModelTypeV2): Prisma.AiProviderModelTypeV2 {
+export function mapModelTypeToPrisma(value: AiProviderModelTypeV2): PrismaModelTypeV2 {
   switch (value) {
     case 'TEXT_GENERATION':
       return 'TextGeneration';
@@ -81,7 +81,7 @@ export function mapModelTypeToPrisma(value: AiProviderModelTypeV2): Prisma.AiPro
   }
 }
 
-export function mapModelTypeFromPrisma(value: Prisma.AiProviderModelTypeV2): AiProviderModelTypeV2 {
+export function mapModelTypeFromPrisma(value: PrismaModelTypeV2): AiProviderModelTypeV2 {
   switch (value) {
     case 'TextGeneration':
       return 'TEXT_GENERATION';
@@ -104,7 +104,7 @@ export function mapModelTypeFromPrisma(value: Prisma.AiProviderModelTypeV2): AiP
 
 export function mapCapabilityToPrisma(
   value: AiProviderModelCapabilityTypeV2,
-): Prisma.AiProviderModelCapabilityTypeV2 {
+): PrismaCapabilityTypeV2 {
   switch (value) {
     case 'TEXT_INPUT':
       return 'TextInput';
@@ -132,7 +132,7 @@ export function mapCapabilityToPrisma(
 }
 
 export function mapCapabilityFromPrisma(
-  value: Prisma.AiProviderModelCapabilityTypeV2,
+  value: PrismaCapabilityTypeV2,
 ): AiProviderModelCapabilityTypeV2 {
   switch (value) {
     case 'TextInput':
@@ -163,7 +163,7 @@ export function mapCapabilityFromPrisma(
 export function mapAccountPublic(row: {
   id: string;
   name: string;
-  providerType: Prisma.AiProviderTypeV2;
+  providerType: PrismaAiProviderTypeV2;
   apiKeyMasked: string;
   endpoint: string | null;
   apiVersion: string | null;
@@ -221,14 +221,14 @@ export function mapModelPublic(row: {
   aiProviderAccountId: string;
   name: string;
   providerModelId: string;
-  modelType: Prisma.AiProviderModelTypeV2;
+  modelType: PrismaModelTypeV2;
   isSystem: boolean;
   isActive: boolean;
   createdBy: string;
   updatedBy: string;
   createdAt: Date;
   updatedAt: Date;
-  capabilities: Array<{ capabilityType: Prisma.AiProviderModelCapabilityTypeV2 }>;
+  capabilities: Array<{ capabilityType: PrismaCapabilityTypeV2 }>;
 }): AiProviderModelV2Public {
   return {
     id: row.id,

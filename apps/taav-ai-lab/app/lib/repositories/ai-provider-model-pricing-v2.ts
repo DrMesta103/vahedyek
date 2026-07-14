@@ -5,13 +5,13 @@ import type {
   CreateAiProviderModelPricingV2Input,
   EndAiProviderModelPricingV2Input,
 } from '../types/ai-provider-v2';
-import type { Prisma } from '@prisma/client';
+import type { AiProviderUsageMetricTypeV2, AiProviderUsageUnitTypeV2, Prisma } from '../prisma-client';
 
 function toNumber(value: { toString(): string } | number) {
   return Number(value);
 }
 
-function mapMetricToPrisma(value: any): Prisma.AiProviderUsageMetricTypeV2 {
+function mapMetricToPrisma(value: unknown): AiProviderUsageMetricTypeV2 {
   const v = String(value).toUpperCase();
   if (v === 'INPUT_TOKEN') return 'InputToken';
   if (v === 'CACHED_INPUT_TOKEN') return 'CachedInputToken';
@@ -25,7 +25,7 @@ function mapMetricToPrisma(value: any): Prisma.AiProviderUsageMetricTypeV2 {
   throw new Error('UsageMetricType معتبر نیست.');
 }
 
-function mapUnitToPrisma(value: any): Prisma.AiProviderUsageUnitTypeV2 {
+function mapUnitToPrisma(value: unknown): AiProviderUsageUnitTypeV2 {
   const v = String(value).toUpperCase();
   if (v === 'TOKEN') return 'Token';
   if (v === 'ITEM') return 'Item';
@@ -37,7 +37,7 @@ function mapUnitToPrisma(value: any): Prisma.AiProviderUsageUnitTypeV2 {
   throw new Error('UsageUnitType معتبر نیست.');
 }
 
-function mapMetricFromPrisma(value: Prisma.AiProviderUsageMetricTypeV2) {
+function mapMetricFromPrisma(value: AiProviderUsageMetricTypeV2) {
   switch (value) {
     case 'InputToken':
       return 'INPUT_TOKEN' as const;
@@ -60,7 +60,7 @@ function mapMetricFromPrisma(value: Prisma.AiProviderUsageMetricTypeV2) {
   }
 }
 
-function mapUnitFromPrisma(value: Prisma.AiProviderUsageUnitTypeV2) {
+function mapUnitFromPrisma(value: AiProviderUsageUnitTypeV2) {
   switch (value) {
     case 'Token':
       return 'TOKEN' as const;

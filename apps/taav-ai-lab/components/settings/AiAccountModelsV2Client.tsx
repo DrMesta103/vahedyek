@@ -779,8 +779,8 @@ export function AiAccountModelsV2Client({ account, initialModels }: Props) {
                   <TaavCheckbox
                     key={cap}
                     checked={form.capabilities[cap]}
-                    onCheckedChange={(checked) =>
-                      setForm((c) => ({ ...c, capabilities: { ...c.capabilities, [cap]: Boolean(checked) } }))
+                    onChange={(event) =>
+                      setForm((c) => ({ ...c, capabilities: { ...c.capabilities, [cap]: event.target.checked } }))
                     }
                     label={AI_PROVIDER_MODEL_CAPABILITY_LABELS_V2[cap]}
                   />
@@ -1027,7 +1027,7 @@ export function AiAccountModelsV2Client({ account, initialModels }: Props) {
                   value={pricingForm.effectiveFrom}
                   onChange={(e) => setPricingForm((current) => ({ ...current, effectiveFrom: e.target.value }))}
                   dir="ltr"
-                  className="ai-lab-pricing-datetime-input"
+                  inputClassName="ai-lab-pricing-datetime-input"
                 />
                 {formatLocalDateTimePreview(pricingForm.effectiveFrom) ? (
                   <p className="ai-lab-pricing-datetime-preview">
@@ -1072,7 +1072,7 @@ export function AiAccountModelsV2Client({ account, initialModels }: Props) {
                                 })
                               }
                               dir="ltr"
-                              className="ai-lab-pricing-form-input"
+                              inputClassName="ai-lab-pricing-form-input"
                             />
                           </td>
                           <td>
@@ -1091,7 +1091,7 @@ export function AiAccountModelsV2Client({ account, initialModels }: Props) {
                               }
                               dir="ltr"
                               placeholder="0"
-                              className="ai-lab-pricing-form-input"
+                              inputClassName="ai-lab-pricing-form-input"
                             />
                           </td>
                         </tr>

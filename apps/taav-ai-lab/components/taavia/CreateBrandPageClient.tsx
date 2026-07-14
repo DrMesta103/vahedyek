@@ -14,7 +14,7 @@ type CreateBrandPageClientProps = {
   tenantId: string;
   businessId: string;
   mode?: 'create' | 'edit';
-  initialBrand?: Pick<TaaviaBrand, 'id' | 'name' | 'intake'> | null;
+  initialBrand?: Pick<TaaviaBrand, 'id' | 'name' | 'description' | 'icon'> | null;
 };
 
 export function CreateBrandPageClient({
@@ -27,9 +27,8 @@ export function CreateBrandPageClient({
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const isEditMode = mode === 'edit';
   const [name, setName] = useState(initialBrand?.name ?? '');
-  const [description, setDescription] = useState(initialBrand?.intake?.description ?? '');
-  const [iconName, setIconName] = useState(initialBrand?.intake?.iconName ?? '');
-  const [iconDataUrl, setIconDataUrl] = useState(initialBrand?.intake?.iconDataUrl ?? '');
+  const [description, setDescription] = useState(initialBrand?.description ?? '');
+  const [iconDataUrl, setIconDataUrl] = useState(initialBrand?.icon?.previewData ?? '');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -38,7 +37,6 @@ export function CreateBrandPageClient({
       fileInputRef.current.value = '';
     }
 
-    setIconName('');
     setIconDataUrl('');
   };
 
@@ -55,7 +53,6 @@ export function CreateBrandPageClient({
     const reader = new FileReader();
     reader.onload = () => {
       setError(null);
-      setIconName(file.name);
       setIconDataUrl(typeof reader.result === 'string' ? reader.result : '');
     };
     reader.onerror = () => {
@@ -87,11 +84,8 @@ export function CreateBrandPageClient({
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               name: name.trim(),
-              intake: {
-                description,
-                iconName,
-                iconDataUrl,
-              },
+              description,
+              icon: iconDataUrl ? { extension: 'image', sizeBytes: null, previewData: iconDataUrl } : null,
             }),
           })
         : await fetch(`/api/businesses/${tenantId}/taavia/brands`, {
@@ -99,11 +93,8 @@ export function CreateBrandPageClient({
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               name: name.trim(),
-              intake: {
-                description,
-                iconName,
-                iconDataUrl,
-              },
+              description,
+              icon: iconDataUrl ? { extension: 'image', sizeBytes: null, previewData: iconDataUrl } : null,
             }),
           });
 

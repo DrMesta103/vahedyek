@@ -52,16 +52,7 @@ function formatEffectiveModelLabel(model: AdminAgentEffectiveModelSummary | null
 }
 
 function formatEffectiveModelState(model: AdminAgentEffectiveModelSummary | null | undefined) {
-  switch (model?.selectionState) {
-    case 'override':
-      return 'override برند';
-    case 'fallback-default':
-      return 'fallback ادمین';
-    case 'invalid-selection':
-      return 'انتخاب قبلی نامعتبر';
-    default:
-      return 'بدون مدل موثر';
-  }
+  return model?.modelId ? 'تخصیص فعال برند' : 'بدون مدل موثر';
 }
 
 export function AdminAgentChatClient({

@@ -6,11 +6,8 @@ type RouteContext = { params: Promise<{ businessId: string }> };
 
 type CreateBrandPayload = {
   name?: string;
-  intake?: {
-    description?: string;
-    iconName?: string;
-    iconDataUrl?: string;
-  };
+  description?: string | null;
+  icon?: { extension?: string | null; sizeBytes?: number | null; previewData?: string | null; storageUrl?: string | null } | null;
 };
 
 export async function GET(_request: Request, context: RouteContext) {
@@ -33,19 +30,11 @@ export async function POST(request: Request, context: RouteContext) {
   const { businessId } = await context.params;
   const body = (await request.json().catch(() => null)) as CreateBrandPayload | null;
   const name = body?.name?.trim() ?? '';
-  const intake = body?.intake
-    ? {
-        description: body.intake.description?.trim() ?? '',
-        iconName: body.intake.iconName?.trim() ?? '',
-        iconDataUrl: body.intake.iconDataUrl?.trim() ?? '',
-      }
-    : undefined;
-
   if (!name) {
     return NextResponse.json({ message: 'نام برند الزامی است.' }, { status: 400 });
   }
 
-  const brand = await createTaaviaBrandForTenant(session.userId, { tenantId: businessId, name, intake });
+  const brand = await createTaaviaBrandForTenant(session.userId, { tenantId: businessId, name, description: body?.description, icon: body?.icon });
   if (!brand) {
     return NextResponse.json({ message: 'این کسب‌وکار برای شما در دسترس نیست.' }, { status: 404 });
   }

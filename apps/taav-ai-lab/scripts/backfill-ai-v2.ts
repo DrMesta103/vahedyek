@@ -230,7 +230,6 @@ async function main() {
                 data: [
                   {
                     id: seedUuidN(),
-                    aiProviderModelUsageId: usageId,
                     aiProviderModelPriceItemId: priceItemInput,
                     usageMetricType: 'InputToken',
                     usageUnitType: 'Token',
@@ -241,7 +240,6 @@ async function main() {
                   },
                   {
                     id: seedUuidN(),
-                    aiProviderModelUsageId: usageId,
                     aiProviderModelPriceItemId: priceItemCached,
                     usageMetricType: 'CachedInputToken',
                     usageUnitType: 'Token',
@@ -252,7 +250,6 @@ async function main() {
                   },
                   {
                     id: seedUuidN(),
-                    aiProviderModelUsageId: usageId,
                     aiProviderModelPriceItemId: priceItemOutput,
                     usageMetricType: 'OutputToken',
                     usageUnitType: 'Token',

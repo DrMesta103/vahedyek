@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
-import { getBrandModelSettings, getTenantForUser } from '@/app/lib/data';
+import { getTenantForUser } from '@/app/lib/data';
 import { getCurrentTenant, requireSession } from '@/app/lib/session';
+import { getTaaviaBrandModelAssignments } from '@/app/lib/repositories/taavia-brand-model-assignments';
 import { AiLabShell } from '@/components/AiLabShell';
 import { TaaviaBrandModelSettingsPageClient } from '@/components/taavia/TaaviaBrandModelSettingsPageClient';
 
@@ -31,8 +32,12 @@ export default async function TaaviaBrandModelSettingsPage({
     );
   }
 
-  const settings = await getBrandModelSettings(session.userId, business.id, brandId);
-  if (!settings) notFound();
+  let settings;
+  try {
+    settings = await getTaaviaBrandModelAssignments(session.userId, business.id, brandId);
+  } catch {
+    notFound();
+  }
 
   return (
     <AiLabShell
@@ -43,11 +48,11 @@ export default async function TaaviaBrandModelSettingsPage({
       currentTenantId={business.id}
       currentTenantName={business.name}
     >
-      <TaaviaBrandModelSettingsPageClient
-        tenantId={business.id}
-        brandId={brandId}
-        initialData={settings}
-      />
+        <TaaviaBrandModelSettingsPageClient
+          tenantId={business.id}
+          brandId={brandId}
+          initialData={settings!}
+        />
     </AiLabShell>
   );
 }

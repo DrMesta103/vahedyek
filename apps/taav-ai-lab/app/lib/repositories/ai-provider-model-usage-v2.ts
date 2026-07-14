@@ -1,5 +1,5 @@
 import { prisma } from '../prisma';
-import type { Prisma } from '@prisma/client';
+import type { AiProviderModelUsageStatusV2, AiProviderUsageMetricTypeV2, AiProviderUsageUnitTypeV2, Prisma } from '../prisma-client';
 import { calculateUsageItemCostUsd } from '../ai-provider-v2-usage-cost';
 
 type UsageItemInput = {
@@ -31,7 +31,7 @@ export type RecordAiProviderModelUsageV2Input = {
   usageItems: UsageItemInput[];
 };
 
-function toMetric(value: UsageItemInput['usageMetricType']): Prisma.AiProviderUsageMetricTypeV2 {
+function toMetric(value: UsageItemInput['usageMetricType']): AiProviderUsageMetricTypeV2 {
   switch (value) {
     case 'INPUT_TOKEN':
       return 'InputToken';
@@ -54,7 +54,7 @@ function toMetric(value: UsageItemInput['usageMetricType']): Prisma.AiProviderUs
   }
 }
 
-function toUnit(value: UsageItemInput['usageUnitType']): Prisma.AiProviderUsageUnitTypeV2 {
+function toUnit(value: UsageItemInput['usageUnitType']): AiProviderUsageUnitTypeV2 {
   switch (value) {
     case 'TOKEN':
       return 'Token';
@@ -73,7 +73,7 @@ function toUnit(value: UsageItemInput['usageUnitType']): Prisma.AiProviderUsageU
   }
 }
 
-function toStatus(value: RecordAiProviderModelUsageV2Input['status']): Prisma.AiProviderModelUsageStatusV2 {
+function toStatus(value: RecordAiProviderModelUsageV2Input['status']): AiProviderModelUsageStatusV2 {
   switch (value) {
     case 'SUCCEEDED':
       return 'Succeeded';
@@ -139,7 +139,7 @@ export async function recordAiProviderModelUsageV2(input: {
   }
 
   const pricing = await resolvePricingForTime(input.data.aiProviderModelId, startedAt);
-  const priceItemsByMetric = new Map<Prisma.AiProviderUsageMetricTypeV2, { id: string; unitQuantity: number; priceUsd: number }>();
+  const priceItemsByMetric = new Map<AiProviderUsageMetricTypeV2, { id: string; unitQuantity: number; priceUsd: number }>();
   if (pricing) {
     for (const pi of pricing.priceItems) {
       priceItemsByMetric.set(pi.usageMetricType, {

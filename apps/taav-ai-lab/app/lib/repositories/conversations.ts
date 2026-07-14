@@ -4,31 +4,25 @@ import { prisma } from '../prisma';
 import { TAAVIA_ALL_USE_CASE_KEYS } from '../taavia-use-cases';
 import { INITIAL_ASSISTANT_MESSAGE } from './taavia-brands';
 import type { TaaviaBrandSetup, TaaviaChatMessage, TaaviaUseCaseKey } from '../types/domain';
-import { resolveBrandEffectiveChatModel } from './brand-model-settings';
+import { getTaaviaBrandModelAssignments } from './taavia-brand-model-assignments';
 
 export type AdminAgentEffectiveModelSummary = {
-  toolType: 'CHAT';
-  selectionState: 'override' | 'fallback-default' | 'invalid-selection' | null;
+  purpose: 'ADMIN_AGENT_CHAT';
   modelId: string | null;
   displayName: string | null;
   providerModelName: string | null;
   providerLabel: string | null;
 };
 
-function buildAdminAgentEffectiveModelSummary(
-  section:
-    | Awaited<ReturnType<typeof resolveBrandEffectiveChatModel>>
-    | null,
-): AdminAgentEffectiveModelSummary | null {
-  if (!section) return null;
+function buildAdminAgentEffectiveModelSummary(assignment: Awaited<ReturnType<typeof getTaaviaBrandModelAssignments>>['assignments'][number] | undefined): AdminAgentEffectiveModelSummary | null {
+  if (!assignment) return null;
 
   return {
-    toolType: 'CHAT',
-    selectionState: section.selectionState,
-    modelId: section.effectiveModel?.id ?? null,
-    displayName: section.effectiveModel?.displayName ?? null,
-    providerModelName: section.effectiveModel?.providerModelName ?? null,
-    providerLabel: section.effectiveModel?.providerLabel ?? null,
+    purpose: 'ADMIN_AGENT_CHAT',
+    modelId: assignment.aiProviderModelId,
+    displayName: assignment.model.name,
+    providerModelName: assignment.model.providerModelId,
+    providerLabel: assignment.account.providerType,
   };
 }
 
@@ -68,7 +62,7 @@ function mapConversation(conversation: {
 
 async function findBrandForTenant(tenantId: string, brandId: string) {
   return prisma.taaviaBrand.findFirst({
-    where: { id: brandId, tenantId, isActive: true },
+    where: { id: brandId, tenantId, status: 'ACTIVE' },
   });
 }
 
@@ -131,9 +125,7 @@ export async function getOrCreateAdminAgentConversation(
         messages: { orderBy: { createdAt: 'asc' } },
       },
     });
-    const effectiveModel = buildAdminAgentEffectiveModelSummary(
-      await resolveBrandEffectiveChatModel(userId, tenantId, brandId),
-    );
+    const effectiveModel = buildAdminAgentEffectiveModelSummary((await getTaaviaBrandModelAssignments(userId, tenantId, brandId)).assignments.find((item) => item.purpose === 'ADMIN_AGENT_CHAT'));
     return { ...mapConversation(conversation), effectiveModel };
   }
 
@@ -156,9 +148,7 @@ export async function getOrCreateAdminAgentConversation(
     });
   }
 
-  const effectiveModel = buildAdminAgentEffectiveModelSummary(
-    await resolveBrandEffectiveChatModel(userId, tenantId, brandId),
-  );
+  const effectiveModel = buildAdminAgentEffectiveModelSummary((await getTaaviaBrandModelAssignments(userId, tenantId, brandId)).assignments.find((item) => item.purpose === 'ADMIN_AGENT_CHAT'));
   return { ...mapConversation(conversation), effectiveModel };
 }
 
@@ -257,9 +247,7 @@ export async function sendAdminAgentMessage(
   const brand = await findBrandForTenant(tenantId, brandId);
   if (!brand) return null;
 
-  const effectiveModel = buildAdminAgentEffectiveModelSummary(
-    await resolveBrandEffectiveChatModel(userId, tenantId, brandId),
-  );
+  const effectiveModel = buildAdminAgentEffectiveModelSummary((await getTaaviaBrandModelAssignments(userId, tenantId, brandId)).assignments.find((item) => item.purpose === 'ADMIN_AGENT_CHAT'));
 
   const conversation = await prisma.taaviaConversation.findFirst({
     where: {

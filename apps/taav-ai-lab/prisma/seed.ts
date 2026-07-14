@@ -151,12 +151,53 @@ async function seedDemoTenant(ownerUserId: string) {
   }
 }
 
+async function seedTaaviaBrandsAndAssignments(ownerUserId: string) {
+  const tenant = await prisma.tenant.findUniqueOrThrow({ where: { slug: DEMO_TENANT_SLUG } });
+  const now = new Date();
+  const brands = [
+    { id: 'taavia-demo-brand-primary-000000000000', name: 'برند آزمایشی اصلی', description: 'برند نمونه برای بررسی جریان‌های تاویا.' },
+    { id: 'taavia-demo-brand-secondary-000000000000', name: 'برند خدمات سازمانی', description: 'نمونه دوم برای تست فیلترها و تاریخچه.' },
+  ];
+
+  for (const seedBrand of brands) {
+    await prisma.taaviaBrand.upsert({
+      where: { id: seedBrand.id },
+      update: { name: seedBrand.name, description: seedBrand.description, status: 'ACTIVE', setupMode: 'NOT_SELECTED', updatedAt: now },
+      create: { id: seedBrand.id, tenantId: tenant.id, name: seedBrand.name, description: seedBrand.description, status: 'ACTIVE', setupMode: 'NOT_SELECTED', createdByUserId: ownerUserId, createdAt: now, updatedAt: now },
+    });
+    await prisma.taaviaConversation.upsert({
+      where: { brandId_type: { brandId: seedBrand.id, type: 'admin_agent' } },
+      update: {},
+      create: { tenantId: tenant.id, brandId: seedBrand.id, type: 'admin_agent', createdByUserId: ownerUserId, messages: { create: { role: 'assistant', content: 'برند نمونه برای تست تاویا آماده است.', status: 'completed' } } },
+    });
+  }
+
+  const models = await prisma.aiProviderModelV2.findMany({ where: { isActive: true }, orderBy: { createdAt: 'asc' } });
+  const accounts = await prisma.aiProviderAccountV2.findMany({ where: { isActive: true } });
+  const accountById = new Map(accounts.map((account) => [account.id, account]));
+  const firstModel = models[0];
+  if (!firstModel) return;
+  const existing = await prisma.taaviaBrandAiModelAssignment.findFirst({ where: { brandId: brands[0].id, purpose: 'ADMIN_AGENT_CHAT', effectiveTo: null } });
+  if (existing) return;
+  const previousId = 'taavia-demo-assignment-history-000000';
+  await prisma.taaviaBrandAiModelAssignment.create({ data: { id: previousId, tenantId: tenant.id, brandId: brands[0].id, aiProviderAccountId: firstModel.aiProviderAccountId, aiProviderModelId: firstModel.id, purpose: 'ADMIN_AGENT_CHAT', effectiveFrom: new Date(now.getTime() - 86400000 * 5), effectiveTo: new Date(now.getTime() - 86400000), assignedBy: ownerUserId, endedBy: ownerUserId, createdAt: new Date(now.getTime() - 86400000 * 5) } });
+  await prisma.taaviaBrandAiModelAssignment.create({ data: { id: 'taavia-demo-assignment-active-000000', tenantId: tenant.id, brandId: brands[0].id, aiProviderAccountId: firstModel.aiProviderAccountId, aiProviderModelId: firstModel.id, purpose: 'ADMIN_AGENT_CHAT', effectiveFrom: new Date(now.getTime() - 86400000), effectiveTo: null, assignedBy: ownerUserId, endedBy: null, createdAt: new Date(now.getTime() - 86400000) } });
+  const account = accountById.get(firstModel.aiProviderAccountId);
+  if (account) {
+    await prisma.aiProviderModelAssignment.createMany({ data: [
+      { id: 'taavia-demo-registry-history-000000', externalAssignmentId: previousId, consumerCode: 'taavia', tenantId: tenant.id, resourceType: 'brand', resourceId: brands[0].id, aiProviderAccountId: account.id, aiProviderModelId: firstModel.id, purposeCode: 'ADMIN_AGENT_CHAT', effectiveFrom: new Date(now.getTime() - 86400000 * 5), effectiveTo: new Date(now.getTime() - 86400000), assignedBy: ownerUserId, endedBy: ownerUserId, createdAt: new Date(now.getTime() - 86400000 * 5) },
+      { id: 'taavia-demo-registry-active-000000', externalAssignmentId: 'taavia-demo-assignment-active-000000', consumerCode: 'taavia', tenantId: tenant.id, resourceType: 'brand', resourceId: brands[0].id, aiProviderAccountId: account.id, aiProviderModelId: firstModel.id, purposeCode: 'ADMIN_AGENT_CHAT', effectiveFrom: new Date(now.getTime() - 86400000), effectiveTo: null, assignedBy: ownerUserId, endedBy: null, createdAt: new Date(now.getTime() - 86400000) },
+    ], skipDuplicates: true });
+  }
+}
+
 async function main() {
   await seedGlobalSettings();
   await ensureAiProviderSeedData();
   await ensureAiProviderV2SeedData();
   const demoUser = await seedDemoUser();
   await seedDemoTenant(demoUser.id);
+  await seedTaaviaBrandsAndAssignments(demoUser.id);
   console.log('Seed completed: global settings, AI provider accounts/models (v1 + v2), platform admin credential, and demo app user.');
   console.log('App login: admin@local.dev / 123456');
   console.log('Settings admin gate: admin / 123456');
