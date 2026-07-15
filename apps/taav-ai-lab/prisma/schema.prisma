@@ -57,6 +57,8 @@ model Tenant {
   products          TenantProduct[]
   ocrJobs           OcrJob[]
   taaviaBrands      TaaviaBrand[]
+  taaviaBrandInfos  TaaviaBrandInfo[]
+  mediaAssets       MediaAsset[]
   conversations     TaaviaConversation[]
   taaviaAssignments TaaviaBrandAiModelAssignment[]
   taaviaUsages      TaaviaBrandAiModelUsage[]
@@ -73,6 +75,19 @@ enum TaaviaBrandSetupMode {
   NOT_SELECTED
   MANUAL
   AI_ASSISTED
+}
+
+enum TaaviaBrandInfoType {
+  TEXT
+  IMAGE
+  FILE
+  VOICE
+  VIDEO
+}
+
+enum TaaviaBrandInfoStatus {
+  ACTIVE
+  ARCHIVED
 }
 
 enum TaaviaBrandAiModelPurpose {
@@ -199,20 +214,55 @@ model TaaviaBrand {
   conversations   TaaviaConversation[]
   assignments     TaaviaBrandAiModelAssignment[]
   usages          TaaviaBrandAiModelUsage[]
+  brandInfos      TaaviaBrandInfo[]
 
   @@index([tenantId])
   @@index([tenantId, status])
 }
 
 model MediaAsset {
-  id          String        @id
-  extension   String?
-  sizeBytes   Int?
-  previewData String?       @db.Text
-  storageUrl  String?
-  createdAt   DateTime
-  updatedAt   DateTime
-  brands      TaaviaBrand[]
+  id           String            @id
+  tenantId     String?
+  extension    String?
+  sizeBytes    Int?
+  mimeType     String?
+  storageKey   String?
+  originalName String?
+  previewData  String?           @db.Text
+  storageUrl   String?
+  createdAt    DateTime
+  updatedAt    DateTime
+  brands       TaaviaBrand[]
+  tenant       Tenant?           @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  brandInfos   TaaviaBrandInfo[]
+}
+
+model TaaviaBrandInfo {
+  id           String                @id
+  tenantId     String
+  brandId      String
+  type         TaaviaBrandInfoType
+  title        String?               @db.VarChar(300)
+  textContent  String?               @db.Text
+  mediaAssetId String?
+  status       TaaviaBrandInfoStatus
+  displayOrder Int
+  revision     BigInt
+  contentHash  String
+  createdBy    String
+  updatedBy    String
+  archivedAt   DateTime?
+  archivedBy   String?
+  createdAt    DateTime
+  updatedAt    DateTime
+  tenant       Tenant                @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  brand        TaaviaBrand           @relation(fields: [brandId], references: [id], onDelete: Restrict)
+  media        MediaAsset?           @relation(fields: [mediaAssetId], references: [id], onDelete: Restrict)
+
+  @@index([tenantId, brandId, status, displayOrder])
+  @@index([tenantId, brandId, type, status])
+  @@index([tenantId, id, revision])
+  @@index([tenantId, brandId, contentHash])
 }
 
 model TaaviaBrandAiModelAssignment {
