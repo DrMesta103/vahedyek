@@ -174,6 +174,7 @@ export function TaavBusinessRecommendationCard({
               onClick={onDetailsClick}
               disabled={detailsDisabled}
               size={size === 'lg' ? 'md' : size === 'sm' ? 'sm' : 'md'}
+              wrapperClassName="mt-[6px] justify-self-start text-[12.5px] leading-[22px] text-[#7a8a9c]"
             >
               {detailsLabel}
             </TaavDetailsLink>
@@ -192,6 +193,11 @@ export function TaavBusinessRecommendationCard({
           size={mapSwitchSize(size)}
           tone={tone === 'info' ? 'brand' : tone === 'danger' ? 'danger' : tone === 'warning' ? 'warning' : tone === 'success' ? 'success' : tone === 'neutral' ? 'neutral' : 'brand'}
           ariaLabel="وضعیت فعال‌سازی تنظیم"
+          wrapperClassName={cn(
+            '!h-[40px] !w-[180px] !min-w-[180px] !gap-[4px] !border-0 !bg-[var(--taav-activation-switch-track-bg)] !p-[3px]',
+            '[&_[role=radio]]:h-[32px] [&_[role=radio]]:min-w-[88px] [&_[role=radio]]:px-[14px] [&_[role=radio]]:py-0',
+            '[&_[role=radio]]:text-[13px] [&_[role=radio]]:font-semibold',
+          )}
         />
       </div>
     </div>
@@ -200,6 +206,7 @@ export function TaavBusinessRecommendationCard({
   return (
     <article
       {...rest}
+      dir="rtl"
       data-taav-business-recommendation-card
       data-size={size}
       data-width={width}

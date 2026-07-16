@@ -84,7 +84,7 @@ export const LAB_LAYOUT_NAV: LabNavItem[] = [
   { href: '/layout/progress-summary', label: 'خلاصه پیشرفت', badge: 'TaavProgressSummary' },
 ];
 
-export const LAB_BUSINESS_NAV: LabNavItem[] = [
+export const LAB_BUSINESS_NAV: LabNavItem[] = ([
   {
     href: '/business/sidebar',
     label: 'سایدبار کسب‌وکار',
@@ -100,11 +100,25 @@ export const LAB_BUSINESS_NAV: LabNavItem[] = [
     keywords: ['hub', 'eyebrow', 'footnote', 'badge', 'تنظیمات کسب‌وکار', 'business settings'],
   },
   {
-    href: '/business/recommendation-card',
-    label: 'کارت پیشنهاد تنظیمات',
-    badge: 'TaavBusinessRecommendationCard',
-    description: 'تنظیم پیشنهادی با TaavActivationSwitch و لینک جزئیات',
-    keywords: ['activation', 'switch', 'recommendation', 'details link'],
+    href: '/business/section-toolbar-card',
+    label: 'کارت سربرگ مدیریتی بخش',
+    badge: 'TaavBusinessSectionToolbarCard',
+    description: 'الگوی مشترک برای سربرگ‌های مدیریتی با جستجو و اقدام',
+    keywords: ['toolbar card', 'section header', 'business management'],
+  },
+  {
+    href: '/business/header-card',
+    label: 'سربرگ',
+    badge: 'TaavBusinessHeaderCard',
+    description: 'کارت سربرگ بیزینسی برای عنوان، توضیح، آیکن، سوییچ، دکمه و جستجو',
+    keywords: ['header card', 'section header', 'toggle', 'action', 'search'],
+  },
+  {
+    href: '/business/mobile-number-input',
+    label: '???? ???? ????? ??????',
+    badge: 'TaavMobileNumberInputCard',
+    description: '???? ???? ???? ????? ?????? ?? ????? ??????? ? ???? ???',
+    keywords: ['mobile', 'phone', 'input', 'form', 'business'],
   },
   {
     href: '/business/module-card',
@@ -112,13 +126,6 @@ export const LAB_BUSINESS_NAV: LabNavItem[] = [
     badge: 'TaavModuleCard',
     description: 'کارت navigation برای ماژول‌ها و مراحل راه‌اندازی',
     keywords: ['setup', 'module', 'navigation card'],
-  },
-  {
-    href: '/business/module-card-grid',
-    label: 'گرید کارت ماژول',
-    badge: 'TaavModuleCardGrid',
-    description: 'چیدمان responsive کارت‌های TaavModuleCard',
-    keywords: ['grid', 'setup cards', 'two column'],
   },
   {
     href: '/business/currency-input',
@@ -148,7 +155,7 @@ export const LAB_BUSINESS_NAV: LabNavItem[] = [
     description: 'انتخاب محدود کسب‌وکار — نوع شرکت، نوع قرارداد، وضعیت ساده',
     keywords: ['choice chip', 'company type', 'contract type', 'selection'],
   },
-];
+]);
 
 export const LAB_CATEGORIES = [
   {
@@ -215,3 +222,4 @@ export const LAB_STATUS_ITEMS = [
   { key: 'ui-lab', label: 'UI Lab', status: 'مستندات', progress: 92 },
   { key: 'migration', label: 'Migration', status: 'شروع نشده', progress: 0 },
 ];
+

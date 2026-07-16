@@ -63,13 +63,20 @@ type TaavTooltipProps = {
     side?: TaavTooltipSide;
     align?: TaavTooltipAlign;
     delayDuration?: number;
+    sideOffset?: number;
+    collisionPadding?: number;
+    open?: boolean;
+    defaultOpen?: boolean;
+    onOpenChange?: (open: boolean) => void;
+    showArrow?: boolean;
     children: ReactNode;
     contentClassName?: string;
+    arrowClassName?: string;
 };
 declare function TaavTooltipProvider({ children }: {
     children: ReactNode;
 }): react_jsx_runtime.JSX.Element;
-declare function TaavTooltip({ content, side, align, delayDuration, children, contentClassName, }: TaavTooltipProps): react_jsx_runtime.JSX.Element;
+declare function TaavTooltip({ content, side, align, delayDuration, sideOffset, collisionPadding, open, defaultOpen, onOpenChange, showArrow, children, contentClassName, arrowClassName, }: TaavTooltipProps): react_jsx_runtime.JSX.Element;
 
 type TaavFieldHintTone = 'neutral' | 'info' | 'success' | 'warning' | 'danger';
 type TaavFieldHintSize = 'sm' | 'md';

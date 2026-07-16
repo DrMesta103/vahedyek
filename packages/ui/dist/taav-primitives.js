@@ -642,18 +642,25 @@ function TaavTooltip({
   side = "top",
   align = "center",
   delayDuration = 200,
+  sideOffset = 6,
+  collisionPadding = 8,
+  open,
+  defaultOpen,
+  onOpenChange,
+  showArrow = true,
   children,
-  contentClassName
+  contentClassName,
+  arrowClassName
 }) {
-  return /* @__PURE__ */ jsxRuntime.jsxs(TooltipPrimitive__namespace.Root, { delayDuration, children: [
+  return /* @__PURE__ */ jsxRuntime.jsxs(TooltipPrimitive__namespace.Root, { delayDuration, open, defaultOpen, onOpenChange, children: [
     /* @__PURE__ */ jsxRuntime.jsx(TooltipPrimitive__namespace.Trigger, { asChild: true, children: /* @__PURE__ */ jsxRuntime.jsx("span", { className: "inline-flex rounded-[var(--taav-radius-sm)] focus-visible:outline-none focus-visible:shadow-[var(--taav-focus-ring)]", children }) }),
     /* @__PURE__ */ jsxRuntime.jsx(TooltipPrimitive__namespace.Portal, { children: /* @__PURE__ */ jsxRuntime.jsxs(
       TooltipPrimitive__namespace.Content,
       {
         side,
         align,
-        sideOffset: 6,
-        collisionPadding: 8,
+        sideOffset,
+        collisionPadding,
         className: cn(
           "z-[var(--taav-z-tooltip)] max-w-[var(--taav-tooltip-max-width)]",
           "rounded-[var(--taav-tooltip-radius)] border border-[color:var(--taav-border)]",
@@ -665,14 +672,7 @@ function TaavTooltip({
         style: { direction: "rtl" },
         children: [
           content,
-          /* @__PURE__ */ jsxRuntime.jsx(
-            TooltipPrimitive__namespace.Arrow,
-            {
-              width: 10,
-              height: 5,
-              className: "fill-[var(--taav-surface-elevated)]"
-            }
-          )
+          showArrow ? /* @__PURE__ */ jsxRuntime.jsx(TooltipPrimitive__namespace.Arrow, { width: 10, height: 5, className: cn("fill-[var(--taav-surface-elevated)]", arrowClassName) }) : null
         ]
       }
     ) })

@@ -33,10 +33,7 @@ export function BusinessIntroCardPreviewFrame({ theme, children, className }: Bu
 
 export function BusinessIntroCardLightDemo() {
   return (
-    <BusinessIntroCardPreviewFrame
-      theme="light"
-      className="overflow-hidden rounded-[var(--taav-radius-xl)] border border-[color:var(--taav-border-subtle)]"
-    >
+    <BusinessIntroCardPreviewFrame theme="light" className="overflow-hidden">
       <TaavBusinessIntroCard
         title={BUSINESS_INTRO_CARD_DEMO.title}
         description={BUSINESS_INTRO_CARD_DEMO.description}

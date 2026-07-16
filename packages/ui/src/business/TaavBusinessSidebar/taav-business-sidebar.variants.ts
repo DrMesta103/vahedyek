@@ -205,6 +205,7 @@ export const businessSidebarNavPathRoot = cva(
   [
     'flex w-full shrink-0 items-center justify-start',
     'min-h-[var(--taav-business-nav-path-height)]',
+    'border-t border-[color:var(--taav-business-nav-path-border-top)]',
     'border-b border-[color:var(--taav-business-nav-path-border)]',
     'bg-[var(--taav-business-nav-path-bg)]',
     'px-[var(--taav-business-nav-path-px)] py-[var(--taav-business-nav-path-py)]',
@@ -218,7 +219,7 @@ export const businessSidebarNavPathList = cva(
 export const businessSidebarNavPathLink = cva(
   [
     'inline-flex min-w-0 items-center border-0 bg-transparent p-0 no-underline',
-    'text-[length:var(--taav-business-nav-path-text-size)] leading-tight',
+    'text-[length:var(--taav-business-nav-path-text-size)] leading-5 tracking-[-0.005em]',
     'text-[var(--taav-business-nav-path-text)]',
     'transition-colors hover:text-[var(--taav-business-nav-path-text-hover)]',
     'focus-visible:outline-none focus-visible:shadow-[var(--taav-focus-ring)]',
@@ -228,11 +229,11 @@ export const businessSidebarNavPathLink = cva(
 export const businessSidebarNavPathCurrent = cva(
   [
     'inline-flex min-w-0 items-center truncate',
-    'text-[length:var(--taav-business-nav-path-text-size)] font-bold leading-tight',
+    'text-[length:var(--taav-business-nav-path-text-size)] font-normal leading-5 tracking-[-0.005em]',
     'text-[var(--taav-business-nav-path-text-current)]',
   ].join(' '),
 );
 
 export const businessSidebarNavPathSeparator = cva(
-  'inline-flex shrink-0 text-[var(--taav-business-nav-path-separator)] [&_svg]:h-3 [&_svg]:w-3',
+  'inline-flex shrink-0 items-center justify-center text-[var(--taav-business-nav-path-separator)] [&_svg]:h-[var(--taav-business-nav-path-separator-size)] [&_svg]:w-[var(--taav-business-nav-path-separator-size)]',
 );

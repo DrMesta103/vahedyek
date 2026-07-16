@@ -8,8 +8,6 @@ export const detailsLinkRoot = cva(
     'text-[var(--taav-details-link-text)]',
     'decoration-[var(--taav-details-link-underline)] decoration-[length:var(--taav-details-link-underline-thickness)]',
     'underline-offset-[var(--taav-details-link-underline-offset)]',
-    'hover:text-[var(--taav-details-link-text-hover)]',
-    'hover:decoration-[var(--taav-details-link-underline-hover)]',
     TAAV_INTERACTION.base,
     TAAV_INTERACTION.focus,
   ],
@@ -29,11 +27,16 @@ export const detailsLinkRoot = cva(
         true: 'pointer-events-none opacity-[var(--taav-details-link-disabled-opacity)]',
         false: 'cursor-pointer',
       },
+      hoverEffect: {
+        true: 'hover:text-[var(--taav-details-link-text-hover)] hover:decoration-[var(--taav-details-link-underline-hover)]',
+        false: '',
+      },
     },
     defaultVariants: {
       size: 'md',
       underline: 'always',
       disabled: false,
+      hoverEffect: true,
     },
   },
 );

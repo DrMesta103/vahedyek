@@ -13,9 +13,9 @@ export const businessIntroCardRoot = cva(
   {
     variants: {
       size: {
-        sm: 'p-[var(--taav-business-intro-card-padding-sm)]',
-        md: 'p-[var(--taav-business-intro-card-padding-md)]',
-        lg: 'p-[var(--taav-business-intro-card-padding-lg)]',
+        sm: 'min-h-[var(--taav-business-intro-card-min-height-sm)] p-[var(--taav-business-intro-card-padding-sm)]',
+        md: 'min-h-[var(--taav-business-intro-card-min-height-md)] p-[var(--taav-business-intro-card-padding-md)]',
+        lg: 'min-h-[var(--taav-business-intro-card-min-height-lg)] p-[var(--taav-business-intro-card-padding-lg)]',
       },
       width: {
         normal: 'max-w-[var(--taav-business-intro-card-max-width-normal)]',
@@ -43,7 +43,7 @@ export const businessIntroCardRoot = cva(
 
 export const businessIntroCardLayout = cva('flex items-center justify-between gap-[var(--taav-business-intro-card-gap)]');
 
-export const businessIntroCardLeading = cva('flex min-w-0 flex-1 items-start gap-[var(--taav-business-intro-card-leading-gap)]');
+export const businessIntroCardLeading = cva('flex min-w-0 flex-1 items-center gap-[var(--taav-business-intro-card-leading-gap)]');
 
 export const businessIntroCardIconBox = cva(
   [
@@ -69,7 +69,7 @@ export const businessIntroCardIconBox = cva(
 );
 
 export const businessIntroCardTitle = cva(
-  'm-0 text-right font-black leading-[var(--taav-leading-tight)] text-[var(--taav-business-intro-card-title)]',
+  'm-0 text-right font-semibold leading-[var(--taav-business-intro-card-title-line-height)] text-[var(--taav-business-intro-card-title)]',
   {
     variants: {
       size: {
@@ -85,7 +85,7 @@ export const businessIntroCardTitle = cva(
 );
 
 export const businessIntroCardDescription = cva(
-  'm-0 text-right font-normal leading-[var(--taav-leading-relaxed)] text-[var(--taav-business-intro-card-description)]',
+  'm-0 text-right font-normal leading-[var(--taav-business-intro-card-description-line-height)] text-[var(--taav-business-intro-card-description)]',
   {
     variants: {
       size: {

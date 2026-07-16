@@ -12,8 +12,15 @@ export type TaavTooltipProps = {
   side?: TaavTooltipSide;
   align?: TaavTooltipAlign;
   delayDuration?: number;
+  sideOffset?: number;
+  collisionPadding?: number;
+  open?: boolean;
+  defaultOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  showArrow?: boolean;
   children: ReactNode;
   contentClassName?: string;
+  arrowClassName?: string;
 };
 
 export function TaavTooltipProvider({ children }: { children: ReactNode }) {
@@ -29,11 +36,18 @@ export function TaavTooltip({
   side = 'top',
   align = 'center',
   delayDuration = 200,
+  sideOffset = 6,
+  collisionPadding = 8,
+  open,
+  defaultOpen,
+  onOpenChange,
+  showArrow = true,
   children,
   contentClassName,
+  arrowClassName,
 }: TaavTooltipProps) {
   return (
-    <TooltipPrimitive.Root delayDuration={delayDuration}>
+    <TooltipPrimitive.Root delayDuration={delayDuration} open={open} defaultOpen={defaultOpen} onOpenChange={onOpenChange}>
       <TooltipPrimitive.Trigger asChild>
         <span className="inline-flex rounded-[var(--taav-radius-sm)] focus-visible:outline-none focus-visible:shadow-[var(--taav-focus-ring)]">
           {children}
@@ -43,8 +57,8 @@ export function TaavTooltip({
         <TooltipPrimitive.Content
           side={side}
           align={align}
-          sideOffset={6}
-          collisionPadding={8}
+          sideOffset={sideOffset}
+          collisionPadding={collisionPadding}
           className={cn(
             'z-[var(--taav-z-tooltip)] max-w-[var(--taav-tooltip-max-width)]',
             'rounded-[var(--taav-tooltip-radius)] border border-[color:var(--taav-border)]',
@@ -54,13 +68,9 @@ export function TaavTooltip({
             contentClassName,
           )}
           style={{ direction: 'rtl' }}
-        >
+          >
           {content}
-          <TooltipPrimitive.Arrow
-            width={10}
-            height={5}
-            className="fill-[var(--taav-surface-elevated)]"
-          />
+          {showArrow ? <TooltipPrimitive.Arrow width={10} height={5} className={cn('fill-[var(--taav-surface-elevated)]', arrowClassName)} /> : null}
         </TooltipPrimitive.Content>
       </TooltipPrimitive.Portal>
     </TooltipPrimitive.Root>

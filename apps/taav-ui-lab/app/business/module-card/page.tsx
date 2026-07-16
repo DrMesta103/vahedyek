@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  DocCodeBlock,
   DocDoDont,
   DocGuidelines,
   DocPageHeader,
@@ -19,7 +20,7 @@ import {
   ModuleCardStatusGallery,
   ModuleCardTwoColumnGridDemo,
 } from '@/components/lab/ModuleCardShowcase';
-import { MODULE_CARD_PROPS } from '@/lib/docs/component-props';
+import { MODULE_CARD_GRID_ITEM_PROPS, MODULE_CARD_GRID_PROPS, MODULE_CARD_PROPS } from '@/lib/docs/component-props';
 
 function StateNote({ children }: { children: React.ReactNode }) {
   return (
@@ -61,21 +62,14 @@ export default function ModuleCardDocPage() {
 
       <DocSection title="تم تیره — کارت‌های راه‌اندازی">
         <StateNote>نمونه نزدیک به اسکرین‌شات ERP تیره — پنج کارت دو ستونه با هدر الگویی.</StateNote>
-        <DocPreview label="themeMode=dark · setup cards">
+        <DocPreview bare>
           <ModuleCardDarkSetupDemo />
         </DocPreview>
       </DocSection>
 
       <DocSection title="تم روشن — کارت‌های راه‌اندازی">
-        <DocPreview label="themeMode=light · setup cards">
+        <DocPreview bare>
           <ModuleCardLightSetupDemo />
-        </DocPreview>
-      </DocSection>
-
-      <DocSection title="عرض ترکیبی — تنظیمات مالکیت">
-        <StateNote>ترکیب کارت full-width و دو ستونه — مانند بخش نوع مالکیت و شرکا در ERP.</StateNote>
-        <DocPreview label="mixed span · incomplete status در description">
-          <ModuleCardMixedOwnershipDemo />
         </DocPreview>
       </DocSection>
 
@@ -91,10 +85,56 @@ export default function ModuleCardDocPage() {
         </DocPreview>
       </DocSection>
 
-      <DocSection title="گرید دو ستونه">
-        <DocPreview label="با TaavModuleCardGrid">
+      <DocSection title="گرید کارت ماژول">
+        <StateNote>این بخش زیرمجموعه TaavModuleCard است و route جدا فقط برای backward compatibility نگه داشته می‌شود.</StateNote>
+        <DocPreview bare>
           <ModuleCardTwoColumnGridDemo />
         </DocPreview>
+        <div className="mt-4">
+          <DocCodeBlock>{`import { TaavModuleCard, TaavModuleCardGrid, TaavModuleCardGridItem } from "@repo/ui/taav/business";
+
+<TaavModuleCardGrid columns={2} gap="md">
+  <TaavModuleCardGridItem span={2}>
+    <TaavModuleCard
+      title="نوع مالکیت و اطلاعات پایه"
+      description="ورود این اطلاعات در تنظیمات قرارداد ضروری است"
+      href="#"
+      width="full"
+    />
+  </TaavModuleCardGridItem>
+
+  <TaavModuleCardGridItem>
+    <TaavModuleCard
+      title="نماینده قانونی"
+      description="مدیریت و تنظیم قراردادها، فرم‌های رسمی و الحاقیه‌ها"
+      status="incomplete"
+      href="#"
+    />
+  </TaavModuleCardGridItem>
+
+  <TaavModuleCardGridItem>
+    <TaavModuleCard
+      title="شرکای اصلی"
+      description="مدیریت شرکای اصلی و اطلاعات مرتبط با کسب‌وکار"
+      status="incomplete"
+      href="#"
+    />
+  </TaavModuleCardGridItem>
+</TaavModuleCardGrid>`}</DocCodeBlock>
+        </div>
+        <div className="mt-4">
+          <DocPreview label="mixed full-width + half-width">
+            <ModuleCardMixedOwnershipDemo />
+          </DocPreview>
+        </div>
+      </DocSection>
+
+      <DocSection title="Props — Grid">
+        <DocPropsTable rows={MODULE_CARD_GRID_PROPS} />
+      </DocSection>
+
+      <DocSection title="Props — Grid Item">
+        <DocPropsTable rows={MODULE_CARD_GRID_ITEM_PROPS} />
       </DocSection>
 
       <DocSection title="تفاوت با سایر کارت‌ها">
