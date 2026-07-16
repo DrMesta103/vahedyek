@@ -69,8 +69,8 @@ export {
   getTaaviaBrandForTenant,
   createTaaviaBrandForTenant,
   updateTaaviaBrandForTenant,
+  setTaaviaBrandStatus,
   deleteTaaviaBrandForTenant,
-  updateTaaviaBrandModelPreferences,
 } from './repositories/taavia-brands';
 
 export {
@@ -142,18 +142,33 @@ export type {
   AiProviderAccountDetail,
   CreateAiProviderModelInput,
   UpdateAiProviderModelInput,
+  UsedBrandTagsByModelType,
 } from './types/ai-provider-models';
+
+export type { TaaviaBrandAiModelPurpose } from './taavia-ai-models';
+export { TAAVIA_BRAND_AI_MODEL_PURPOSES, TAAVIA_PURPOSE_LABELS, TAAVIA_PURPOSE_DESCRIPTIONS } from './taavia-ai-models';
+
+export {
+  getTaaviaBrandModelAssignments,
+  getTaaviaBrandModelAssignmentHistory,
+  assignTaaviaBrandModel,
+} from './repositories/taavia-brand-model-assignments';
+
+export { recordTaaviaBrandAiUsage } from './repositories/taavia-brand-ai-usage';
 
 export {
   listAiProviderModels,
   getAiProviderModelById,
   getAiProviderAccountDetail,
   listSystemOcrModels,
+  listActiveChatModels,
   createAiProviderModel,
   updateAiProviderModel,
   toggleAiProviderModelStatus,
   deleteAiProviderModel,
   parseAiProviderModelType,
   parseAiProviderPricingUnit,
+  parseAiProviderModelBrandTag,
+  listUsedBrandTagsByModelType,
   hasAnyPositivePrice,
 } from './repositories/ai-provider-models';

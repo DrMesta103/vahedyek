@@ -129,16 +129,19 @@ export function OrbitMenu({ items, activeItem }: OrbitMenuProps) {
             return (
               <AiLabTooltipWrap
                 key={item.id}
+                className={`ai-lab-orbit-node-anchor${isActive ? ' active' : ''}${isNeighbor ? ' neighbor' : ''}`}
                 content={AI_LAB_TOOLTIPS.nav[item.id as keyof typeof AI_LAB_TOOLTIPS.nav] ?? item.label}
                 side="top"
                 align="center"
+                style={{
+                  left: `${formatOrbitNumber(x)}px`,
+                  top: `${formatOrbitNumber(y)}px`,
+                }}
               >
                 <button
                   type="button"
                   className={`ai-lab-orbit-node${isActive ? ' active' : ''}${isNeighbor ? ' neighbor' : ''}`}
                   style={{
-                    left: `${formatOrbitNumber(x)}px`,
-                    top: `${formatOrbitNumber(y)}px`,
                     transform: `rotate(${formatOrbitNumber(-currentRotation)}rad)`,
                   }}
                   onMouseDown={handleMouseDown}

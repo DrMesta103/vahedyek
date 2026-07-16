@@ -33,13 +33,14 @@ export async function POST(request: Request, context: RouteContext) {
     }
 
     return NextResponse.json(
-      {
-        conversationId: result.conversationId,
-        userMessage: result.userMessage,
-        assistantMessage: result.assistantMessage,
-        messages: [result.userMessage, result.assistantMessage],
-        source: 'database',
-      },
+        {
+          conversationId: result.conversationId,
+          userMessage: result.userMessage,
+          assistantMessage: result.assistantMessage,
+          effectiveModel: result.effectiveModel,
+          messages: [result.userMessage, result.assistantMessage],
+          source: 'database',
+        },
       { status: 201 },
     );
   } catch (error) {

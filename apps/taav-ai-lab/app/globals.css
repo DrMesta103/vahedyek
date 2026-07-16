@@ -240,8 +240,19 @@ textarea {
   transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
-.ai-lab-orbit-node {
+.ai-lab-orbit-line > .ai-lab-orbit-node-anchor.ai-lab-tooltip-wrap {
   position: absolute;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+.ai-lab-orbit-line > .ai-lab-orbit-node-anchor.ai-lab-tooltip-wrap.active {
+  z-index: 30;
+}
+
+.ai-lab-orbit-node {
   width: 55px;
   height: 55px;
   background: rgba(10, 21, 38, 0.92);
@@ -3280,6 +3291,240 @@ textarea {
   gap: 4px;
 }
 
+.ai-provider-account-list {
+  display: grid;
+  gap: 12px;
+}
+
+.ai-provider-account-card {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.ai-provider-account-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ai-provider-account-metrics {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+
+.ai-provider-account-metric {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  background: rgba(15, 23, 42, 0.28);
+}
+
+.ai-provider-account-metric span,
+.ai-provider-account-metric small {
+  font-size: var(--taav-text-xs);
+  color: var(--taav-text-muted);
+}
+
+.ai-provider-account-metric strong {
+  font-size: var(--taav-text-sm);
+  color: var(--taav-text-strong);
+}
+
+.ai-provider-account-footer {
+  margin: 0;
+  font-size: var(--taav-text-xs);
+  color: var(--taav-text-muted);
+}
+
+.ai-lab-pricing-dialog-body {
+  display: grid;
+  gap: 14px;
+}
+
+.ai-lab-pricing-dialog .ai-lab-dialog-scroll {
+  max-height: min(56vh, 500px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.35) transparent;
+}
+
+.ai-lab-pricing-dialog .ai-lab-dialog-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.ai-lab-pricing-dialog .ai-lab-dialog-scroll::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.35);
+}
+
+.ai-lab-pricing-dialog-footer {
+  justify-content: flex-start;
+}
+
+.ai-lab-pricing-section {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.ai-lab-pricing-section-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.ai-lab-pricing-history-list {
+  display: grid;
+  gap: 8px;
+  max-height: 220px;
+  overflow-y: auto;
+  padding-inline-start: 2px;
+  scrollbar-width: thin;
+}
+
+.ai-lab-pricing-history-item {
+  display: grid;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  background: rgba(15, 23, 42, 0.28);
+}
+
+.ai-lab-pricing-history-item.is-active {
+  border-color: rgba(45, 212, 191, 0.22);
+  background: rgba(45, 212, 191, 0.06);
+}
+
+.ai-lab-pricing-history-item-header {
+  display: grid;
+  gap: 4px;
+}
+
+.ai-lab-pricing-price-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.ai-lab-pricing-price-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 34%) minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  padding: 7px 10px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  font-size: var(--taav-text-xs);
+}
+
+.ai-lab-pricing-price-row-label {
+  color: var(--taav-text-muted);
+  font-weight: 600;
+}
+
+.ai-lab-pricing-price-row-value {
+  color: var(--taav-text-strong);
+  text-align: left;
+  direction: ltr;
+  font-variant-numeric: tabular-nums;
+}
+
+.ai-lab-pricing-datetime-input {
+  text-align: left;
+}
+
+.ai-lab-pricing-datetime-preview {
+  margin: 6px 0 0;
+  font-size: var(--taav-text-xs);
+  color: var(--taav-brand-strong);
+}
+
+.ai-lab-pricing-form-table-wrap {
+  overflow-x: auto;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.22);
+}
+
+.ai-lab-pricing-form-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--taav-text-sm);
+}
+
+.ai-lab-pricing-form-table th,
+.ai-lab-pricing-form-table td {
+  padding: 10px 12px;
+  text-align: right;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+  vertical-align: middle;
+}
+
+.ai-lab-pricing-form-table th {
+  font-size: var(--taav-text-xs);
+  font-weight: 700;
+  color: var(--taav-text-muted);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.ai-lab-pricing-form-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.ai-lab-pricing-form-metric {
+  display: grid;
+  gap: 2px;
+  min-width: 120px;
+}
+
+.ai-lab-pricing-form-metric span {
+  color: var(--taav-text-strong);
+  font-weight: 700;
+  font-size: var(--taav-text-sm);
+}
+
+.ai-lab-pricing-form-metric small {
+  color: var(--taav-text-muted);
+  font-size: var(--taav-text-xs);
+}
+
+.ai-lab-pricing-form-input {
+  min-width: 120px;
+  text-align: left;
+}
+
+.ai-lab-pricing-metric-toggle {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--taav-brand-strong);
+  font-size: var(--taav-text-xs);
+  font-weight: 600;
+  cursor: pointer;
+  text-align: right;
+}
+
+.ai-lab-pricing-metric-toggle:hover {
+  text-decoration: underline;
+}
+
 .ai-lab-model-price-cell {
   display: grid;
   gap: 2px;
@@ -4769,6 +5014,78 @@ textarea {
   max-width: min(300px, 88vw);
 }
 
+.ai-lab-tooltip-inline {
+  display: inline-grid;
+  gap: 6px;
+  justify-items: start;
+  vertical-align: middle;
+}
+
+.ai-lab-tooltip-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ai-lab-label-with-tooltip {
+  display: inline-grid;
+  gap: 6px;
+}
+
+.ai-lab-helper-text {
+  display: inline-grid;
+  max-width: min(620px, 92vw);
+  color: var(--taav-text-muted);
+  font-size: 11px;
+  line-height: 1.8;
+}
+
+.ai-lab-tooltip-content {
+  display: block;
+  position: absolute;
+  right: 50%;
+  bottom: calc(100% + 12px);
+  z-index: 50;
+  width: max-content;
+  max-width: min(320px, 70vw);
+  padding: 10px 12px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 14px;
+  background: rgba(8, 17, 31, 0.96);
+  color: #d9f4ff;
+  font-size: 11px;
+  line-height: 1.8;
+  box-shadow: 0 18px 44px rgba(2, 6, 23, 0.32);
+  transform: translate(50%, 6px);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease,
+    visibility 160ms ease;
+}
+
+.ai-lab-tooltip-wrap:hover .ai-lab-tooltip-content,
+.ai-lab-tooltip-wrap:focus-within .ai-lab-tooltip-content {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(50%, 0);
+}
+
+.ai-lab-helper-text--header {
+  max-width: min(680px, 92vw);
+  width: fit-content;
+  font-size: 12px;
+}
+
+.ai-lab-helper-text--section {
+  max-width: min(520px, 92vw);
+  width: fit-content;
+  font-size: 11px;
+}
+
 .taavia-brand-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -5884,6 +6201,526 @@ textarea {
   .ai-lab-user-notification-stack {
     inset: 16px 16px auto 16px;
     width: auto;
+  }
+}
+
+/* Taavia brand model settings */
+.taavia-model-settings {
+  direction: rtl;
+  text-align: right;
+}
+
+.taavia-model-settings__shell {
+  overflow: hidden;
+  border-radius: 28px;
+  border: 1px solid rgba(112, 142, 197, 0.18);
+  background: linear-gradient(180deg, rgba(9, 18, 37, 0.98) 0%, rgba(8, 16, 32, 0.94) 100%);
+  box-shadow: 0 24px 80px rgba(2, 8, 23, 0.45);
+}
+
+.taavia-model-settings__page-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: start;
+  gap: 1rem 1.25rem;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid rgba(112, 142, 197, 0.14);
+}
+
+.taavia-model-settings__page-intro {
+  min-width: 0;
+}
+
+.taavia-model-settings__page-title {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 800;
+  line-height: 1.35;
+  color: #fff;
+}
+
+.taavia-model-settings__page-subtitle {
+  margin: 0.5rem 0 0;
+  max-width: 42rem;
+  font-size: var(--taav-text-sm);
+  line-height: 1.7;
+  color: rgba(210, 226, 255, 0.68);
+}
+
+.taavia-model-settings__page-meta {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: 0.625rem;
+}
+
+.taavia-model-settings__page-actions {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.taavia-model-settings__save-btn {
+  min-width: 7rem;
+  background: linear-gradient(90deg, #19d7c3 0%, #17b8d4 100%) !important;
+  color: #03232c !important;
+  box-shadow: 0 14px 32px rgba(23, 184, 212, 0.28);
+}
+
+.taavia-model-settings__save-btn:hover {
+  filter: brightness(1.05);
+}
+
+.taavia-model-settings__back-btn {
+  min-width: 6.5rem;
+}
+
+.taavia-model-settings__chip {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-width: 8.5rem;
+  border-radius: 14px;
+  border: 1px solid rgba(80, 108, 156, 0.22);
+  background: rgba(14, 25, 44, 0.86);
+  padding: 0.625rem 0.75rem;
+}
+
+.taavia-model-settings__chip-body {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.taavia-model-settings__chip-label {
+  font-size: 11px;
+  color: rgba(173, 194, 232, 0.68);
+}
+
+.taavia-model-settings__chip-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: var(--taav-text-sm);
+  font-weight: 800;
+  color: #fff;
+}
+
+.taavia-model-settings__chip-dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 9999px;
+  background: #34d399;
+  box-shadow: 0 0 8px rgba(52, 211, 153, 0.65);
+}
+
+.taavia-model-settings__chip-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 10px;
+  border: 1px solid rgba(45, 212, 191, 0.18);
+  background: rgba(45, 212, 191, 0.08);
+  color: rgb(34, 211, 238);
+}
+
+.taavia-model-settings__alerts {
+  padding: 0.75rem 1.5rem 0;
+}
+
+.taavia-model-settings__alert {
+  border-radius: 14px;
+  padding: 0.625rem 0.875rem;
+  font-size: var(--taav-text-sm);
+}
+
+.taavia-model-settings__alert--error {
+  border: 1px solid rgba(248, 113, 113, 0.24);
+  background: rgba(127, 29, 29, 0.22);
+  color: rgb(254, 202, 202);
+}
+
+.taavia-model-settings__alert--success {
+  border: 1px solid rgba(45, 212, 191, 0.24);
+  background: rgba(13, 148, 136, 0.14);
+  color: rgb(153, 246, 228);
+}
+
+.taavia-model-settings__sections {
+  display: grid;
+  gap: 0.875rem;
+  padding: 1rem 1.25rem 0.75rem;
+}
+
+.taavia-model-settings__section {
+  border-radius: 18px;
+  border: 1px solid rgba(112, 142, 197, 0.14);
+  background: rgba(12, 21, 40, 0.86);
+  padding: 0.875rem 1rem 1rem;
+}
+
+.taavia-model-settings__section-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 260px);
+  align-items: start;
+  gap: 0.75rem 1rem;
+}
+
+.taavia-model-settings__section-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.taavia-model-settings__section-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex-shrink: 0;
+  border-radius: 12px;
+  border: 1px solid rgba(45, 212, 191, 0.14);
+  background: rgba(45, 212, 191, 0.08);
+  color: rgb(55, 228, 212);
+}
+
+.taavia-model-settings__section-copy {
+  min-width: 0;
+}
+
+.taavia-model-settings__section-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.taavia-model-settings__section-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #fff;
+}
+
+.taavia-model-settings__section-desc {
+  margin: 0.35rem 0 0;
+  font-size: var(--taav-text-xs);
+  line-height: 1.6;
+  color: rgba(200, 216, 244, 0.62);
+}
+
+.taavia-model-settings__selected-panel {
+  border-radius: 14px;
+  border: 1px solid rgba(80, 108, 156, 0.2);
+  background: rgba(17, 28, 48, 0.88);
+  padding: 0.625rem 0.75rem;
+}
+
+.taavia-model-settings__selected-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.taavia-model-settings__selected-panel-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(184, 203, 238, 0.72);
+}
+
+.taavia-model-settings__selected-panel-reset {
+  border: none;
+  background: transparent;
+  padding: 0;
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(147, 197, 253, 0.9);
+  cursor: pointer;
+}
+
+.taavia-model-settings__selected-panel-reset:hover {
+  color: #fff;
+}
+
+.taavia-model-settings__selected-panel-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.taavia-model-settings__selected-panel-copy {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.taavia-model-settings__selected-panel-name {
+  font-size: var(--taav-text-sm);
+  font-weight: 800;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.taavia-model-settings__selected-panel-name-row,
+.taavia-model-settings__picker-card-name-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.taavia-model-settings__brand-tag {
+  flex-shrink: 0;
+}
+
+.taavia-model-settings__brand-tag--recommended {
+  --taav-badge-bg: rgba(59, 130, 246, 0.16);
+  --taav-badge-fg: #93c5fd;
+}
+
+.taavia-model-settings__brand-tag--economical {
+  --taav-badge-bg: rgba(34, 197, 94, 0.16);
+  --taav-badge-fg: #86efac;
+}
+
+.taavia-model-settings__brand-tag--premium {
+  --taav-badge-bg: rgba(245, 158, 11, 0.16);
+  --taav-badge-fg: #fcd34d;
+}
+
+.taavia-model-settings__selected-panel-provider {
+  font-size: 11px;
+  color: rgba(164, 188, 229, 0.82);
+}
+
+.taavia-model-settings__selected-panel-empty {
+  font-size: 11px;
+  color: rgba(184, 203, 238, 0.66);
+}
+
+.taavia-model-settings__provider-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  flex-shrink: 0;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #fff;
+}
+
+.taavia-model-settings__rail {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  justify-content: flex-start;
+  direction: rtl;
+  gap: 0.625rem;
+  width: 100%;
+  margin-top: 0.75rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.125rem 0 0.25rem;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(80, 108, 156, 0.45) transparent;
+}
+
+.taavia-model-settings__rail::-webkit-scrollbar {
+  height: 4px;
+}
+
+.taavia-model-settings__rail::-webkit-scrollbar-thumb {
+  border-radius: 9999px;
+  background: rgba(80, 108, 156, 0.45);
+}
+
+.taavia-model-settings__picker-card {
+  display: grid;
+  gap: 0.45rem;
+  width: 10.5rem;
+  min-width: 10.5rem;
+  max-width: 10.5rem;
+  flex: 0 0 10.5rem;
+  scroll-snap-align: start;
+  appearance: none;
+  border-radius: 14px;
+  border: 1px solid rgba(80, 108, 156, 0.28);
+  background: rgba(10, 19, 36, 0.92);
+  padding: 0.625rem 0.7rem;
+  text-align: right;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+}
+
+.taavia-model-settings__picker-card:hover {
+  border-color: rgba(80, 220, 220, 0.32);
+  background: rgba(13, 24, 45, 0.96);
+}
+
+.taavia-model-settings__picker-card--selected {
+  border-color: rgba(45, 212, 191, 0.72);
+  background: rgba(45, 212, 191, 0.08);
+  box-shadow: 0 0 0 1px rgba(45, 212, 191, 0.18), 0 0 20px rgba(34, 211, 238, 0.14);
+}
+
+.taavia-model-settings__picker-card--effective {
+  border-color: rgba(45, 212, 191, 0.38);
+}
+
+.taavia-model-settings__picker-card-head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 0.5rem;
+}
+
+.taavia-model-settings__picker-radio {
+  width: 1rem;
+  height: 1rem;
+  margin-top: 0.15rem;
+  border-radius: 9999px;
+  border: 1.5px solid rgba(160, 186, 236, 0.48);
+  background: transparent;
+}
+
+.taavia-model-settings__picker-radio--on {
+  border-color: rgb(34, 211, 238);
+  background: radial-gradient(circle, rgb(34, 211, 238) 42%, transparent 44%);
+  box-shadow: 0 0 10px rgba(34, 211, 238, 0.35);
+}
+
+.taavia-model-settings__picker-card-copy {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.taavia-model-settings__picker-card-name {
+  font-size: var(--taav-text-sm);
+  font-weight: 800;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.taavia-model-settings__picker-card-provider {
+  font-size: 11px;
+  color: rgba(171, 194, 236, 0.78);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.taavia-model-settings__picker-card-prices {
+  display: grid;
+  gap: 0.15rem;
+  padding-top: 0.15rem;
+  border-top: 1px solid rgba(80, 108, 156, 0.14);
+}
+
+.taavia-model-settings__picker-price-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.35rem;
+  font-size: 9px;
+  line-height: 1.3;
+}
+
+.taavia-model-settings__picker-price-label {
+  color: rgba(160, 180, 220, 0.62);
+  white-space: nowrap;
+}
+
+.taavia-model-settings__picker-price-value {
+  color: rgba(198, 214, 242, 0.82);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 62%;
+  text-align: left;
+}
+
+.taavia-model-settings__invalid-note {
+  margin-top: 0.625rem;
+  border-radius: 12px;
+  border: 1px solid rgba(248, 113, 113, 0.18);
+  background: rgba(127, 29, 29, 0.18);
+  padding: 0.5rem 0.75rem;
+  font-size: 11px;
+  line-height: 1.5;
+  color: rgb(254, 202, 202);
+}
+
+.taavia-model-settings__footer {
+  margin: 0 1.25rem 1rem;
+  border-radius: 14px;
+  border: 1px solid rgba(80, 108, 156, 0.18);
+  background: rgba(12, 22, 40, 0.9);
+  padding: 0.75rem 1rem;
+  font-size: 11px;
+  line-height: 1.6;
+  color: rgba(190, 208, 240, 0.72);
+}
+
+.taavia-model-settings__pill {
+  display: inline-flex;
+  align-self: flex-start;
+  border-radius: var(--taav-radius-pill);
+  border: 1px solid transparent;
+  padding: 0.15rem 0.45rem;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.taavia-model-settings__pill--brand {
+  border-color: rgba(45, 212, 191, 0.18);
+  background: rgba(45, 212, 191, 0.12);
+  color: rgb(98, 246, 232);
+}
+
+.taavia-model-settings__pill--neutral {
+  border-color: rgba(148, 163, 184, 0.2);
+  background: rgba(100, 116, 139, 0.12);
+  color: rgb(203, 213, 225);
+}
+
+@media (max-width: 900px) {
+  .taavia-model-settings__page-header {
+    grid-template-columns: 1fr;
+    padding: 1rem;
+  }
+
+  .taavia-model-settings__page-meta,
+  .taavia-model-settings__page-actions {
+    flex-wrap: wrap;
+  }
+
+  .taavia-model-settings__sections {
+    padding: 0.75rem;
+  }
+
+  .taavia-model-settings__section-top {
+    grid-template-columns: 1fr;
   }
 }
 

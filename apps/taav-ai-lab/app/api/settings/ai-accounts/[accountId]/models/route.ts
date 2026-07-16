@@ -4,6 +4,7 @@ import {
   createAiProviderModel,
   hasAnyPositivePrice,
   listAiProviderModels,
+  parseAiProviderModelBrandTag,
   parseAiProviderModelType,
   parseAiProviderPricingUnit,
 } from '@/app/lib/data';
@@ -19,6 +20,8 @@ type ModelPayload = {
   pricingUnit?: string;
   inputTokenPriceUsd?: number;
   outputTokenPriceUsd?: number;
+  cacheReadTokenPriceUsd?: number;
+  cacheWriteTokenPriceUsd?: number;
   requestPriceUsd?: number;
   pagePriceUsd?: number;
   imagePriceUsd?: number;
@@ -38,6 +41,7 @@ type ModelPayload = {
   isDefaultForEmbedding?: boolean;
   isDefaultForVision?: boolean;
   isActive?: boolean;
+  brandTag?: string | null;
   notes?: string | null;
 };
 
@@ -78,9 +82,24 @@ function validateModelPayload(body: ModelPayload | null, requireAll: boolean) {
     return { error: 'واحد قیمت‌گذاری معتبر نیست.' };
   }
 
+  let brandTag: ReturnType<typeof parseAiProviderModelBrandTag> | undefined;
+  if (body?.brandTag !== undefined) {
+    if (body.brandTag === null || body.brandTag === '') {
+      brandTag = null;
+    } else {
+      const parsedBrandTag = parseAiProviderModelBrandTag(body.brandTag);
+      if (!parsedBrandTag) {
+        return { error: 'تگ برند معتبر نیست.' };
+      }
+      brandTag = parsedBrandTag;
+    }
+  }
+
   const prices = {
     inputTokenPriceUsd: parseNonNegativeNumber(body?.inputTokenPriceUsd),
     outputTokenPriceUsd: parseNonNegativeNumber(body?.outputTokenPriceUsd),
+    cacheReadTokenPriceUsd: parseNonNegativeNumber(body?.cacheReadTokenPriceUsd),
+    cacheWriteTokenPriceUsd: parseNonNegativeNumber(body?.cacheWriteTokenPriceUsd),
     requestPriceUsd: parseNonNegativeNumber(body?.requestPriceUsd),
     pagePriceUsd: parseNonNegativeNumber(body?.pagePriceUsd),
     imagePriceUsd: parseNonNegativeNumber(body?.imagePriceUsd),
@@ -125,6 +144,12 @@ function validateModelPayload(body: ModelPayload | null, requireAll: boolean) {
       ...(pricingUnit ? { pricingUnit } : {}),
       ...(body?.inputTokenPriceUsd !== undefined ? { inputTokenPriceUsd: prices.inputTokenPriceUsd ?? 0 } : {}),
       ...(body?.outputTokenPriceUsd !== undefined ? { outputTokenPriceUsd: prices.outputTokenPriceUsd ?? 0 } : {}),
+      ...(body?.cacheReadTokenPriceUsd !== undefined
+        ? { cacheReadTokenPriceUsd: prices.cacheReadTokenPriceUsd ?? 0 }
+        : {}),
+      ...(body?.cacheWriteTokenPriceUsd !== undefined
+        ? { cacheWriteTokenPriceUsd: prices.cacheWriteTokenPriceUsd ?? 0 }
+        : {}),
       ...(body?.requestPriceUsd !== undefined ? { requestPriceUsd: prices.requestPriceUsd ?? 0 } : {}),
       ...(body?.pagePriceUsd !== undefined ? { pagePriceUsd: prices.pagePriceUsd ?? 0 } : {}),
       ...(body?.imagePriceUsd !== undefined ? { imagePriceUsd: prices.imagePriceUsd ?? 0 } : {}),
@@ -148,6 +173,7 @@ function validateModelPayload(body: ModelPayload | null, requireAll: boolean) {
       ...(body?.isDefaultForEmbedding !== undefined ? { isDefaultForEmbedding: Boolean(body.isDefaultForEmbedding) } : {}),
       ...(body?.isDefaultForVision !== undefined ? { isDefaultForVision: Boolean(body.isDefaultForVision) } : {}),
       ...(body?.isActive !== undefined ? { isActive: Boolean(body.isActive) } : {}),
+      ...(brandTag !== undefined ? { brandTag } : {}),
       ...(body?.notes !== undefined ? { notes: body.notes?.trim() ? body.notes.trim() : null } : {}),
     },
   };
@@ -155,6 +181,13 @@ function validateModelPayload(body: ModelPayload | null, requireAll: boolean) {
 
 function handleModelWriteError(error: unknown) {
   if (error instanceof PrismaClientKnownRequestError && error.code === 'P2002') {
+    const target = Array.isArray(error.meta?.target) ? error.meta.target.join(',') : '';
+    if (target.includes('brandTag')) {
+      return NextResponse.json(
+        { message: 'این تگ برای نوع مدل انتخاب‌شده قبلاً به مدل فعال دیگری اختصاص داده شده است.' },
+        { status: 409 },
+      );
+    }
     return NextResponse.json(
       { message: 'این نام مدل در Provider قبلاً برای این اکانت ثبت شده است.' },
       { status: 409 },

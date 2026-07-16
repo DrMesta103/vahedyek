@@ -51,16 +51,18 @@ export type TaaviaBrand = {
   id: string;
   tenantId: string;
   name: string;
-  createdByUserId: string;
-  isActive: boolean;
+  description: string | null;
+  icon: {
+    id: string;
+    extension: string | null;
+    sizeBytes: number | null;
+    previewData: string | null;
+    storageUrl: string | null;
+  } | null;
+  status: 'ACTIVE' | 'INACTIVE' | 'ARCHIVED';
+  setupMode: 'NOT_SELECTED' | 'MANUAL' | 'AI_ASSISTED';
   createdAt: string;
   updatedAt: string;
-  intake?: {
-    description?: string;
-    iconName?: string;
-    iconDataUrl?: string;
-  };
-  modelPreferences?: Partial<Record<TaaviaBrandModelServiceKey, string>>;
 };
 
 export type TaaviaBrandModelServiceKey =
@@ -74,6 +76,15 @@ export type TaaviaBrandModelServiceKey =
   | 'textToSpeech';
 
 export type TaaviaUseCaseKey =
+  | 'brand_identity'
+  | 'products_services'
+  | 'customer_support'
+  | 'sales_consulting'
+  | 'pricing_plans'
+  | 'faq'
+  | 'training_guides'
+  | 'policies'
+  | 'complaints_handoff'
   | 'support'
   | 'sales'
   | 'marketing'
@@ -194,12 +205,13 @@ export type CreateTenantInput = {
 export type CreateTaaviaBrandInput = {
   tenantId: string;
   name: string;
-  intake?: {
-    description?: string;
-    iconName?: string;
-    iconDataUrl?: string;
-  };
-  modelPreferences?: Partial<Record<TaaviaBrandModelServiceKey, string>>;
+  description?: string | null;
+  icon?: {
+    extension?: string | null;
+    sizeBytes?: number | null;
+    previewData?: string | null;
+    storageUrl?: string | null;
+  } | null;
 };
 
 export type UpdateTaaviaBrandInput = CreateTaaviaBrandInput & {
@@ -218,6 +230,7 @@ export type CreateOcrSimulationInput = {
   sampleText?: string | null;
   transportMode?: OcrTransportMode | null;
   modelId?: string | null;
+  chatModelId?: string | null;
   extractionFields?: OcrExtractionFieldDraft[] | null;
 };
 

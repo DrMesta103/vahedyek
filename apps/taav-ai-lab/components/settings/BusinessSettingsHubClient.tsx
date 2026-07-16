@@ -65,13 +65,13 @@ export function BusinessSettingsHubClient() {
         themeMode="auto"
         eyebrow="مرکز کنترل تنظیمات"
         badge={`${SETTINGS_MODULES.length} بخش`}
-        title={
-          <span className="inline-flex items-center gap-2">
-            پنل تاو ادمین
+        title="پنل تاو ادمین"
+        description={
+          <span className="grid gap-2">
+            <span>این تنظیمات سراسری است و برای همه کسب‌وکارها یکسان اعمال می‌شود. اکانت‌های AI، مدل‌ها و نرخ دلار را از همین بخش مدیریت کنید.</span>
             <AiLabTooltipIcon content={AI_LAB_TOOLTIPS.settings.hub} label="راهنمای تنظیمات" />
           </span>
         }
-        description="این تنظیمات سراسری است و برای همه کسب‌وکارها یکسان اعمال می‌شود. اکانت‌های AI، مدل‌ها و نرخ دلار را از همین بخش مدیریت کنید."
         footnote="داده‌های این بخش در PostgreSQL ذخیره می‌شوند. API Keyها فقط به‌صورت masked نمایش داده می‌شوند."
         icon={<Briefcase strokeWidth={2.1} />}
       />
@@ -80,9 +80,10 @@ export function BusinessSettingsHubClient() {
         {SETTINGS_MODULES.map((module) => (
           <TaavModuleCardGridItem key={module.id}>
             <TaavModuleCard
-              title={
-                <span className="inline-flex items-center gap-1.5">
-                  {module.title}
+              title={module.title}
+              description={
+                <span className="grid gap-2">
+                  <span>{module.description}</span>
                   <AiLabTooltipIcon
                     content={module.tooltip}
                     label={`راهنمای ${module.title}`}
@@ -90,7 +91,6 @@ export function BusinessSettingsHubClient() {
                   />
                 </span>
               }
-              description={module.description}
               eyebrow={'eyebrow' in module ? module.eyebrow : undefined}
               statusLabel={'statusLabel' in module ? module.statusLabel : undefined}
               themeMode="auto"
