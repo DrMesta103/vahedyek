@@ -1,0 +1,342 @@
+import type {
+  BuildVersionStepDocCard,
+  BuildVersionStepDocMeta,
+} from '@/app/lib/taavia-build-version-step-doc-types';
+
+export const RECEIVE_EVENT_AND_CREATE_INBOX_JOB_META: BuildVersionStepDocMeta = {
+  slug: 'receive-event-and-create-inbox-job',
+  title: '۳. دریافت Event در Python و ثبت Inbox / Job',
+  description:
+    'دریافت درخواست ساخت Knowledge Base از .NET و تبدیل آن به Job پایدار در PostgreSQL. بعد از Ack، Job حتی با Restart سرویس Python از بین نمی‌رود.',
+  status: 'فعال',
+  pills: ['Python Consumer', 'Inbox', 'Idempotent'],
+};
+
+export const RECEIVE_EVENT_AND_CREATE_INBOX_JOB_OVERVIEW_STEPS = [
+  'دریافت Event',
+  'اعتبارسنجی Contract',
+  'Insert Inbox + Job',
+  'Commit + Ack',
+] as const;
+
+export const RECEIVE_EVENT_AND_CREATE_INBOX_JOB_OVERVIEW_NOTE =
+  'Ack فقط بعد از Commit موفق؛ Job توسط Worker Pool اجرا می‌شود نه Consumer.';
+
+export const RECEIVE_EVENT_AND_CREATE_INBOX_JOB_CARDS: BuildVersionStepDocCard[] = [
+  {
+    id: 'goal',
+    order: 1,
+    title: 'هدف',
+    tag: 'عمومی',
+    kind: 'text',
+    summaryLines: [
+      'دریافت درخواست ساخت Knowledge Base از .NET و تبدیل آن به Job پایدار در Python.',
+      'بعد از Ack شدن پیام RabbitMQ، Job در PostgreSQL ذخیره شده و با Restart سرویس از بین نمی‌رود.',
+    ],
+  },
+  {
+    id: 'responsibility',
+    order: 2,
+    title: 'مسئولیت مرحله',
+    tag: 'بک',
+    kind: 'detail-list',
+    summaryLines: [
+      'Consumer: دریافت Event → اعتبارسنجی Contract → ثبت Inbox → ایجاد Job → Ack.',
+      'پردازش AI، Sources، Progress و اجرای Job داخل Consumer انجام نمی‌شود.',
+    ],
+    actionLabel: 'محدوده خارج از این مرحله',
+    detail: {
+      type: 'bullet-list',
+      title: 'در این مرحله انجام نمی‌شود',
+      description: 'پردازش اصلی بعداً توسط Worker Pool انجام می‌شود.',
+      items: [
+        'پردازش فایل و متن',
+        'فراخوانی AI Model',
+        'دریافت Sources از .NET',
+        'ساخت Knowledge Base',
+        'ارسال Progress Event',
+        'اجرای مستقیم Job داخل Consumer',
+      ],
+    },
+  },
+  {
+    id: 'rabbitmq',
+    order: 3,
+    title: 'تنظیمات RabbitMQ',
+    tag: 'بک',
+    kind: 'build-summary',
+    summaryItems: [
+      'Exchange = taavia.knowledge-base',
+      'Queue = taavia-ai.knowledge-base.build.requested.v1',
+      'Routing Key = taavia.knowledge-base.build.requested.v1',
+      'Manual Ack = true',
+    ],
+    actionLabel: 'جزئیات تنظیمات',
+    detail: {
+      type: 'kv-list',
+      title: 'جزئیات تنظیمات RabbitMQ',
+      description: 'پیام‌های نامعتبر یا غیرقابل‌پردازش بدون Requeue به DLQ منتقل می‌شوند.',
+      items: [
+        { label: 'Exchange', value: 'taavia.knowledge-base' },
+        { label: 'Exchange Type', value: 'topic' },
+        { label: 'Routing Key', value: 'taavia.knowledge-base.build.requested.v1' },
+        { label: 'Queue', value: 'taavia-ai.knowledge-base.build.requested.v1' },
+        { label: 'Durable', value: 'true' },
+        { label: 'AutoDelete', value: 'false' },
+        { label: 'Exclusive', value: 'false' },
+        { label: 'Manual Ack', value: 'true' },
+        { label: 'DLQ', value: 'taavia-ai.knowledge-base.build.requested.v1.dlq' },
+      ],
+    },
+  },
+  {
+    id: 'contract',
+    order: 4,
+    title: 'Contract ورودی',
+    tag: 'بک',
+    kind: 'event',
+    eventName: 'TaaviaKnowledgeBaseBuildRequestedV1',
+    eventChips: ['eventId', 'eventType', 'occurredAt', 'tenantId', 'brandId', 'buildId', 'buildType'],
+    note: 'فیلد اختیاری جدید در V1 نباید Consumer را متوقف کند؛ فیلدهای الزامی باید وجود داشته باشند.',
+    actionLabel: 'مشاهده Payload',
+    detail: {
+      type: 'json',
+      title: 'نمونه پیام Contract',
+      description:
+        'eventId برای Idempotency است و در Retry تغییر نمی‌کند. occurredAt زمان ایجاد در Outbox (.NET) است، نه زمان دریافت Python.',
+      code: `{
+  "eventId": "4db58ce97ef248e8b9bcc3a76ac64896",
+  "eventType": "TaaviaKnowledgeBaseBuildRequestedV1",
+  "occurredAt": "2026-07-15T19:30:00Z",
+  "payload": {
+    "tenantId": "tenant-100",
+    "brandId": "brand-200",
+    "buildId": "7f04c30ae78547d9bc173c3557a0bc91",
+    "buildType": "InitialBuild"
+  }
+}`,
+    },
+  },
+  {
+    id: 'validations',
+    order: 5,
+    title: 'اعتبارسنجی Contract',
+    tag: 'بک',
+    kind: 'detail-list',
+    summaryLines: [
+      'قبل از ثبت دیتابیس، فیلدهای الزامی و eventType بررسی می‌شوند.',
+      'فقط InitialBuild و Rebuild مجازند؛ Rollback و ManualVersionCreation رد می‌شوند.',
+    ],
+    actionLabel: 'مشاهده همه اعتبارسنجی‌ها',
+    detail: {
+      type: 'bullet-list',
+      title: 'اعتبارسنجی‌های Contract',
+      description: 'دریافت Rollback یا ManualVersionCreation در این Queue خطای Producer محسوب می‌شود.',
+      items: [
+        'eventId خالی نباشد',
+        'eventType دقیقاً TaaviaKnowledgeBaseBuildRequestedV1 باشد',
+        'occurredAt معتبر و دارای Timezone باشد',
+        'tenantId خالی نباشد',
+        'brandId خالی نباشد',
+        'buildId خالی نباشد',
+        'buildType معتبر باشد (InitialBuild یا Rebuild)',
+        'Rollback و ManualVersionCreation پذیرفته نشوند',
+      ],
+    },
+  },
+  {
+    id: 'inbox',
+    order: 6,
+    title: 'جدول Inbox',
+    tag: 'بک',
+    kind: 'build-summary',
+    summaryItems: [
+      'integration_inbox_messages',
+      'UNIQUE(consumer_name, event_id)',
+      'consumer = knowledge-base-build-requested-v1',
+      'Immutable پس از ثبت',
+    ],
+    actionLabel: 'جزئیات Inbox',
+    detail: {
+      type: 'kv-list',
+      title: 'ساختار و قوانین Inbox',
+      description:
+        'Inbox تضمین می‌کند هر Event برای این Consumer فقط یک‌بار به Job تبدیل شود. رکورد بعد از ثبت ویرایش یا حذف فوری نمی‌شود.',
+      items: [
+        { label: 'id', value: 'bigint identity' },
+        { label: 'consumer_name', value: 'varchar(150)' },
+        { label: 'event_id', value: 'varchar(64)' },
+        { label: 'event_type', value: 'varchar(200)' },
+        { label: 'message_body', value: 'jsonb' },
+        { label: 'message_hash', value: 'char(64) SHA-256' },
+        { label: 'occurred_at', value: 'timestamptz (UTC)' },
+        { label: 'received_at', value: 'timestamptz (UTC)' },
+        { label: 'processed_at', value: 'timestamptz (UTC)' },
+        { label: 'PRIMARY KEY', value: 'id' },
+        { label: 'UNIQUE', value: '(consumer_name, event_id)' },
+        { label: 'consumer_name', value: 'knowledge-base-build-requested-v1' },
+      ],
+    },
+  },
+  {
+    id: 'job',
+    order: 7,
+    title: 'جدول Job',
+    tag: 'بک',
+    kind: 'build-summary',
+    summaryItems: [
+      'knowledge_base_build_jobs',
+      'Status = Queued',
+      'Stage = Queued',
+      'ProgressPercent = 0',
+      'UNIQUE(build_id)',
+    ],
+    actionLabel: 'جزئیات Job',
+    detail: {
+      type: 'kv-list',
+      title: 'مقادیر اولیه و Constraintهای Job',
+      description:
+        'Consumer عملیات سنگین اجرا نمی‌کند. Job نماینده پایدار Build در Python است و Worker Pool آن را اجرا می‌کند. Progress حداکثر تا ۹۰٪ توسط Python مدیریت می‌شود.',
+      items: [
+        { label: 'Status', value: 'Queued' },
+        { label: 'Stage', value: 'Queued' },
+        { label: 'ProgressPercent', value: '0' },
+        { label: 'AttemptCount', value: '0' },
+        { label: 'AvailableAt', value: 'UTC Now' },
+        { label: 'LockedBy / LockedUntil', value: 'null' },
+        { label: 'LastEventSequence', value: '0' },
+        { label: 'ResultReferenceId', value: 'null' },
+        { label: 'StartedAt / FinishedAt', value: 'null' },
+        { label: 'UNIQUE', value: 'build_id , inbox_message_id' },
+        { label: 'CHECK progress', value: 'BETWEEN 0 AND 90' },
+        { label: 'Worker index', value: '(status, available_at)' },
+        { label: 'Lease index', value: 'locked_until WHERE NOT NULL' },
+      ],
+    },
+  },
+  {
+    id: 'enums',
+    order: 8,
+    title: 'Enumها',
+    tag: 'بک',
+    kind: 'build-summary',
+    summaryItems: [
+      'BuildType: InitialBuild | Rebuild',
+      'JobStatus: Queued → … → ResultReady | Failed',
+      'JobStage: Queued → PreparingInputs → …',
+      'Stage کاهش پیدا نمی‌کند',
+    ],
+    actionLabel: 'جزئیات Enum و Transition',
+    detail: {
+      type: 'kv-list',
+      title: 'Enumها و Transitionهای مجاز',
+      description:
+        'در Retry فقط Status تغییر می‌کند؛ Stage به مرحله قبلی بازگردانده نمی‌شود. ResultReady و Failed وضعیت Terminal هستند.',
+      items: [
+        { label: 'BuildType', value: 'InitialBuild = 1 ، Rebuild = 2' },
+        { label: 'JobStatus', value: 'Queued → Processing' },
+        { label: 'JobStatus', value: 'Processing → RetryScheduled | ResultReady | Failed' },
+        { label: 'JobStatus', value: 'RetryScheduled → Processing' },
+        {
+          label: 'JobStage',
+          value: 'Queued → PreparingInputs → ProcessingSources → GeneratingKnowledgeBase → ResultReady',
+        },
+        {
+          label: 'ResultReady',
+          value: 'نتیجه Durable آماده gRPC است؛ نه فعال‌شدن Version در .NET',
+        },
+      ],
+    },
+  },
+  {
+    id: 'transaction',
+    order: 9,
+    title: 'Transaction',
+    tag: 'بک',
+    kind: 'transaction',
+    steps: [
+      'دریافت Event از RabbitMQ',
+      'اعتبارسنجی Contract + Canonicalize + MessageHash',
+      'Begin TX → Inbox + Job',
+      'Commit سپس Ack',
+    ],
+    note: 'Ack فقط بعد از Commit موفق ارسال می‌شود.',
+  },
+  {
+    id: 'duplicate',
+    order: 10,
+    title: 'رفتار Duplicate',
+    tag: 'بک',
+    kind: 'detail-list',
+    summaryLines: [
+      'EventId + MessageHash یکسان → Job جدید ساخته نمی‌شود و Ack می‌شود.',
+      'EventId یکسان با Hash متفاوت یا BuildId تکراری → DLQ.',
+    ],
+    actionLabel: 'مشاهده همه حالت‌ها',
+    detail: {
+      type: 'bullet-list',
+      title: 'حالت‌های Duplicate',
+      description: 'Python نباید Job دوم بسازد یا Job قبلی را بازنویسی کند.',
+      items: [
+        'همان EventId و همان MessageHash: Inbox موجود است → Job جدید ساخته نمی‌شود → Ack',
+        'همان EventId ولی MessageHash متفاوت: Contract Violation → Reject without Requeue → DLQ → Log + Sentry',
+        'EventId جدید ولی BuildId تکراری: Rollback → Reject without Requeue → DLQ → Log + Sentry',
+      ],
+    },
+  },
+  {
+    id: 'errors-ownership',
+    order: 11,
+    title: 'خطا و مالکیت',
+    tag: 'بک',
+    kind: 'detail-list',
+    summaryLines: [
+      'خطای موقت PostgreSQL → Rollback و Nack with Requeue.',
+      'پیام نامعتبر → Reject without Requeue و DLQ. Source of Truth اجرا = PostgreSQL Python.',
+    ],
+    actionLabel: 'جزئیات خطا و مالکیت',
+    detail: {
+      type: 'bullet-list',
+      title: 'رفتار خطا و مالکیت داده',
+      description: 'Consumer نباید در این مرحله API یا gRPC مربوط به .NET را برای تأیید Brand یا Build فراخوانی کند.',
+      items: [
+        'قطع اتصال / Timeout / Deadlock / Failover: Rollback → Nack with Requeue',
+        'پیام نامعتبر (فیلد اجباری، EventType، BuildType، تاریخ): Reject without Requeue → DLQ → Log + Sentry',
+        'قطع قبل از Commit: داده‌ای ثبت نشده و پیام دوباره تحویل می‌شود',
+        'قطع بعد از Commit و قبل از Ack: Inbox Duplicate را تشخیص می‌دهد و Job دوم ساخته نمی‌شود',
+        '.NET مالک BuildId، TenantId، BrandId و BuildType است',
+        'Python مالک وضعیت Job، Attempt، Lease، خطا و ResultReferenceId است',
+        'RabbitMQ فقط انتقال Event است و Source of Truth نیست',
+        'PostgreSQL Python = Source of Truth اجرای Job',
+      ],
+    },
+  },
+  {
+    id: 'output-acceptance',
+    order: 12,
+    title: 'خروجی و پذیرش',
+    tag: 'عمومی',
+    kind: 'detail-list',
+    summaryLines: [
+      'موفق: RabbitMQ Acked، Inbox Persisted، Job و Build برابر Queued با Progress 0.',
+      'در این مرحله Progress Event به .NET ارسال نمی‌شود.',
+    ],
+    actionLabel: 'معیارهای پذیرش',
+    detail: {
+      type: 'bullet-list',
+      title: 'معیارهای پذیرش',
+      description: 'پس از پایان موفق، Job فقط توسط Worker Pool اجرا می‌شود.',
+      items: [
+        'دریافت دوباره همان Event باعث ساخت Job دوم نشود',
+        'Ack قبل از Commit PostgreSQL ارسال نشود',
+        'Restart شدن Consumer بعد از Commit باعث ازبین‌رفتن Job نشود',
+        'یک BuildId نتواند دو Job ایجاد کند',
+        'پیام نامعتبر وارد Requeue نامحدود نشود',
+        'EventId یکسان با محتوای متفاوت به DLQ منتقل شود',
+        'Rollback و ManualVersionCreation توسط این Consumer پذیرفته نشوند',
+        'Consumer هیچ پردازش AI سنگینی انجام ندهد',
+        'Job فقط توسط Worker Pool اجرا شود',
+      ],
+    },
+  },
+];
