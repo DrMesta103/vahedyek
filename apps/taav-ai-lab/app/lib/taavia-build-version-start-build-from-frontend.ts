@@ -19,7 +19,7 @@ export const START_BUILD_FRONTEND_META: BuildVersionStepDocMeta = {
 
 export const START_BUILD_FRONTEND_OVERVIEW_STEPS = [
   'درخواست Build',
-  'اعتبارسنجی + Lock',
+  'اعتبارسنجی',
   'Create Build + Outbox',
   'Response 202',
 ] as const;
@@ -61,30 +61,20 @@ export const START_BUILD_FRONTEND_CARDS: BuildVersionStepDocCard[] = [
     detail: {
       type: 'bullet-list',
       title: 'همه اعتبارسنجی‌ها',
-      description: 'این بررسی‌ها قبل از ساخت Build و داخل محدوده قفل هم‌زمانی انجام می‌شوند.',
+      description: 'این بررسی‌ها قبل از ساخت Build انجام می‌شوند.',
       items: [
         'برند وجود داشته باشد',
         'متعلق به Tenant جاری باشد',
         'وضعیت برند Active باشد',
         'هنوز Knowledge Base Version نداشته باشد',
         'Build فعال دیگری برای برند وجود نداشته باشد',
-        'اگر Build فعال وجود داشته باشد، همان Build با پاسخ 202 برگردانده می‌شود',
+        'اگر Build فعال وجود داشته باشد، همان Build با پاسخ 200 و شناسه Build فعال، مشابه نمونه Response، برگردانده می‌شود',
       ],
     },
   },
   {
-    id: 'lock',
-    order: 4,
-    title: 'قفل هم‌زمانی',
-    tag: 'بک',
-    kind: 'lock',
-    lockKey: 'taavia:knowledge-sources:{tenantId}:{brandId}',
-    mechanism: 'sp_getapplock',
-    note: 'مانع ثبت هم‌زمان Build و تغییر Sources',
-  },
-  {
     id: 'build',
-    order: 5,
+    order: 4,
     title: 'ایجاد Build',
     tag: 'بک',
     kind: 'build-summary',
@@ -119,7 +109,7 @@ export const START_BUILD_FRONTEND_CARDS: BuildVersionStepDocCard[] = [
   },
   {
     id: 'outbox',
-    order: 6,
+    order: 5,
     title: 'Outbox Event',
     tag: 'بک',
     kind: 'event',
@@ -145,7 +135,7 @@ export const START_BUILD_FRONTEND_CARDS: BuildVersionStepDocCard[] = [
   },
   {
     id: 'transaction',
-    order: 7,
+    order: 6,
     title: 'Transaction',
     tag: 'بک',
     kind: 'transaction',
@@ -154,7 +144,7 @@ export const START_BUILD_FRONTEND_CARDS: BuildVersionStepDocCard[] = [
   },
   {
     id: 'response',
-    order: 8,
+    order: 7,
     title: 'Response',
     tag: 'فرانت',
     kind: 'response',
@@ -167,7 +157,7 @@ export const START_BUILD_FRONTEND_CARDS: BuildVersionStepDocCard[] = [
   },
   {
     id: 'rules',
-    order: 9,
+    order: 8,
     title: 'قوانین بیزینسی',
     tag: 'عمومی',
     kind: 'checklist',
