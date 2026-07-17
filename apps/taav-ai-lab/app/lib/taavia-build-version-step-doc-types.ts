@@ -46,7 +46,7 @@ export type BuildVersionStepDocCard =
         type: 'kv-list';
         title: string;
         description: string;
-        items: Array<{ label: string; value: string }>;
+        items: Array<{ label: string; value: string; description?: string }>;
       };
     }
   | {
@@ -64,6 +64,7 @@ export type BuildVersionStepDocCard =
         title: string;
         description: string;
         code: string;
+        fields?: Array<{ label: string; value: string; description: string }>;
       };
     }
   | {
@@ -111,6 +112,16 @@ export type BuildVersionStepDocCard =
         title: string;
         description: string;
         items: string[];
+      } | {
+        type: 'tabs';
+        title: string;
+        description: string;
+        tabs: Array<{
+          id: string;
+          label: string;
+          description: string;
+          items: string[];
+        }>;
       };
     };
 

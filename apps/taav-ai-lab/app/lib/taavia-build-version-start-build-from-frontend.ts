@@ -14,14 +14,14 @@ export const START_BUILD_FRONTEND_META: BuildVersionStepDocMeta = {
   description:
     'شروع ساخت اولیه Knowledge Base برای برندی که هنوز هیچ نسخه‌ای ندارد. عملیات غیرهم‌زمان است و به بازبودن صفحه کاربر وابسته نیست.',
   status: 'فعال',
-  pills: ['POST API', 'Async', '202 Accepted'],
+  pills: ['POST API', 'Async', '200 OK'],
 };
 
 export const START_BUILD_FRONTEND_OVERVIEW_STEPS = [
   'درخواست Build',
   'اعتبارسنجی',
   'Create Build + Outbox',
-  'Response 202',
+  'Response 200',
 ] as const;
 
 export const START_BUILD_FRONTEND_OVERVIEW_NOTE = '.NET منتظر اجرای Python نمی‌ماند.';
@@ -148,7 +148,7 @@ export const START_BUILD_FRONTEND_CARDS: BuildVersionStepDocCard[] = [
     title: 'Response',
     tag: 'فرانت',
     kind: 'response',
-    status: '202 Accepted',
+    status: '200 OK',
     code: `{
   "buildId": "7f04c30ae78547d9bc173c3557a0bc91",
   "status": "Queued",

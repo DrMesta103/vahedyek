@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   ChevronLeft,
   Copy,
+  CircleHelp,
   Database,
   FileJson,
   Globe,
@@ -47,6 +48,8 @@ const CARD_ICONS: Record<BuildVersionStepDocCard['kind'], LucideIcon> = {
   response: CheckCircle2,
   checklist: CheckCircle2,
 };
+
+const FIELD_DETAIL_ORDERS = new Set([4, 6, 7, 8]);
 
 type DialogState = {
   title: string;
@@ -153,6 +156,85 @@ function MiniSequence({ steps }: { steps: string[] }) {
   );
 }
 
+function FieldDetails({ fields }: { fields: Array<{ label: string; value: string; description: string }> }) {
+  return (
+    <div className="grid gap-2.5">
+      {fields.map((field) => (
+        <div
+          key={field.label}
+          className="grid gap-1.5 rounded-[var(--taav-radius-lg)] border border-[var(--taav-border-subtle)] bg-[var(--taav-surface-soft)] px-3 py-2.5"
+        >
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="text-[length:var(--taav-text-sm)] font-bold text-[var(--taav-text-strong)]">{field.label}</span>
+            <code className="text-left text-[13px] text-[var(--taav-text-muted)]">{field.value}</code>
+          </div>
+          <p className="m-0 text-[length:var(--taav-text-xs)] leading-6 text-[var(--taav-text-muted)]">{field.description}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function TabbedDetail({
+  tabs,
+}: {
+  tabs: Array<{ id: string; label: string; description: string; items: string[] }>;
+}) {
+  const [activeTabId, setActiveTabId] = useState(tabs[0]?.id ?? '');
+  const activeTab = tabs.find((tab) => tab.id === activeTabId) ?? tabs[0];
+
+  if (!activeTab) return null;
+
+  return (
+    <div className="grid gap-4">
+      <div className="grid grid-cols-2 gap-2 rounded-[var(--taav-radius-lg)] border border-[var(--taav-border-subtle)] bg-[var(--taav-surface-soft)] p-1" role="tablist">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            role="tab"
+            aria-selected={tab.id === activeTab.id}
+            onClick={() => setActiveTabId(tab.id)}
+            className={`rounded-[var(--taav-radius-md)] px-3 py-2 text-sm font-bold transition-colors ${
+              tab.id === activeTab.id
+                ? 'bg-[var(--taav-brand-soft)] text-[var(--taav-brand-strong)]'
+                : 'text-[var(--taav-text-muted)] hover:bg-[var(--taav-surface-raised)]'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+      <div className="grid gap-3">
+        <p className="m-0 text-sm leading-7 text-[var(--taav-text-muted)]">{activeTab.description}</p>
+        {activeTab.items.map((item) => (
+          <div key={item} className="flex items-start gap-2.5">
+            <CheckCircle2 className="mt-1 h-4 w-4 shrink-0 text-[var(--taav-brand-strong)]" />
+            <p className="m-0 text-sm leading-7 text-[var(--taav-text-strong)]">{item}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function DetailTrigger({ order, label, onClick }: { order: number; label: string; onClick: () => void }) {
+  const isFieldDetail = FIELD_DETAIL_ORDERS.has(order);
+
+  return (
+    <TaavButton
+      variant="secondary"
+      size="sm"
+      iconStart={isFieldDetail ? <CircleHelp className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+      aria-label={isFieldDetail ? label : undefined}
+      title={isFieldDetail ? label : undefined}
+      onClick={onClick}
+    >
+      {isFieldDetail ? null : label}
+    </TaavButton>
+  );
+}
+
 function CardBody({
   card,
   onOpenDetail,
@@ -189,9 +271,7 @@ function CardBody({
             </p>
           ))}
           <div>
-            <TaavButton variant="secondary" size="sm" iconStart={<ChevronLeft className="h-4 w-4" />} onClick={() => onOpenDetail(card)}>
-              {card.actionLabel}
-            </TaavButton>
+            <DetailTrigger order={card.order} label={card.actionLabel} onClick={() => onOpenDetail(card)} />
           </div>
         </div>
       );
@@ -222,9 +302,7 @@ function CardBody({
           </div>
           {card.actionLabel && card.detail ? (
             <div>
-              <TaavButton variant="secondary" size="sm" iconStart={<ChevronLeft className="h-4 w-4" />} onClick={() => onOpenDetail(card)}>
-                {card.actionLabel}
-              </TaavButton>
+              <DetailTrigger order={card.order} label={card.actionLabel} onClick={() => onOpenDetail(card)} />
             </div>
           ) : null}
         </div>
@@ -245,9 +323,7 @@ function CardBody({
           </div>
           <p className="m-0 text-[length:var(--taav-text-sm)] leading-7 text-[var(--taav-text-muted)]">{card.note}</p>
           <div>
-            <TaavButton variant="secondary" size="sm" iconStart={<ChevronLeft className="h-4 w-4" />} onClick={() => onOpenDetail(card)}>
-              {card.actionLabel}
-            </TaavButton>
+            <DetailTrigger order={card.order} label={card.actionLabel} onClick={() => onOpenDetail(card)} />
           </div>
         </div>
       );
@@ -311,11 +387,18 @@ function getDialogState(card: BuildVersionStepDocCard): DialogState {
         <div className="grid gap-2">
           {card.detail.items.map((item) => (
             <div
-              key={item.label}
+              key={`${item.label}-${item.value}`}
               className="flex items-center justify-between gap-3 rounded-[var(--taav-radius-lg)] border border-[var(--taav-border-subtle)] bg-[var(--taav-surface-soft)] px-3 py-2"
             >
               <span className="text-[length:var(--taav-text-sm)] font-semibold text-[var(--taav-text-strong)]">{item.label}</span>
-              <code className="text-left text-[13px] text-[var(--taav-text-muted)]">{item.value}</code>
+              <div className="grid min-w-0 gap-1 text-left">
+                <code className="text-[13px] text-[var(--taav-text-muted)]">{item.value}</code>
+                {item.description ? (
+                  <p className="m-0 text-right text-[length:var(--taav-text-xs)] leading-6 text-[var(--taav-text-muted)]">
+                    {item.description}
+                  </p>
+                ) : null}
+              </div>
             </div>
           ))}
         </div>
@@ -323,10 +406,23 @@ function getDialogState(card: BuildVersionStepDocCard): DialogState {
     };
   }
 
+  if (card.detail.type === 'tabs') {
+    return {
+      title: card.detail.title,
+      description: card.detail.description,
+      body: <TabbedDetail tabs={card.detail.tabs} />,
+    };
+  }
+
   return {
     title: card.detail.title,
     description: card.detail.description,
-    body: <CodePanel code={card.detail.code} />,
+    body: (
+      <div className="grid gap-4">
+        <CodePanel code={card.detail.code} />
+        {card.detail.fields ? <FieldDetails fields={card.detail.fields} /> : null}
+      </div>
+    ),
   };
 }
 
