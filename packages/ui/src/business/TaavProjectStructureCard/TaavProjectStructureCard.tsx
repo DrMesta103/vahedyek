@@ -103,10 +103,10 @@ function Header({ title, headerLabel, headerImage, tokens }: Pick<TaavProjectStr
 }
 
 function ActionIcon({ icon }: { icon?: TaavProjectStructureCardAction['icon'] }) {
-  if (icon === 'edit') return <Edit3 className="h-4 w-4" />;
-  if (icon === 'copy') return <Copy className="h-4 w-4" />;
-  if (icon === 'delete') return <Trash2 className="h-4 w-4" />;
-  return <WandSparkles className="h-4 w-4" />;
+  if (icon === 'edit') return <Edit3 className="h-5 w-5" strokeWidth={1.7} />;
+  if (icon === 'copy') return <Copy className="h-5 w-5" strokeWidth={1.7} />;
+  if (icon === 'delete') return <Trash2 className="h-5 w-5" strokeWidth={1.7} />;
+  return <WandSparkles className="h-5 w-5" strokeWidth={1.7} />;
 }
 
 function MenuButton({ onClick, open }: { onClick?: () => void; open: boolean }) {
@@ -114,8 +114,8 @@ function MenuButton({ onClick, open }: { onClick?: () => void; open: boolean }) 
 }
 
 function ActionMenu({ actions, tokens }: { actions: TaavProjectStructureCardAction[]; tokens: ToneTokens }) {
-  return <div dir="rtl" className="absolute left-[-20px] top-[95px] z-30 min-w-[101px] overflow-hidden rounded-[14px] border-0 bg-[#f1f2f3] p-1.5 text-right shadow-[0_6px_16px_rgba(30,44,52,.18)]" style={{ borderColor: tokens.borderColor }} role="menu">
-    {actions.map((action) => <button key={action.key} type="button" role="menuitem" disabled={action.disabled || !action.onClick} onClick={action.onClick} className="flex h-[43px] w-full items-center justify-between gap-2 rounded-[8px] px-2.5 text-[12px] font-normal text-[#4c5155] transition hover:bg-[#e1e4e6] focus-visible:bg-[#e1e4e6] focus-visible:outline-none disabled:cursor-default disabled:opacity-45">
+  return <div dir="rtl" className="absolute left-4 top-[95px] z-30 w-[126px] overflow-hidden rounded-[16px] border-0 bg-[#f1f2f3] p-[7px] text-right shadow-[0_7px_18px_rgba(30,44,52,.2)]" style={{ borderColor: tokens.borderColor }} role="menu">
+    {actions.map((action) => <button key={action.key} type="button" role="menuitem" disabled={action.disabled || !action.onClick} onClick={action.onClick} className="flex h-[52px] w-full items-center justify-between gap-4 rounded-[9px] px-3 text-[14px] font-normal leading-6 text-[#4c5155] transition hover:bg-[#e1e4e6] focus-visible:bg-[#e1e4e6] focus-visible:outline-none disabled:cursor-default disabled:opacity-45">
       <ActionIcon icon={action.icon} /><span>{action.label}</span>
     </button>)}
   </div>;
@@ -136,22 +136,21 @@ function UsageChips({ usageTitle, usageTypes, activeUsageType, onUsageTypeClick,
   </section>;
 }
 
-function ProgressReport({ report, tokens, showNavigate, onNavigate, resetKey }: { report: NonNullable<TaavProjectStructureCardProps['progressReport']>; tokens: ToneTokens; showNavigate?: boolean; onNavigate?: () => void; resetKey: number }) {
+function ProgressReport({ report, tokens, resetKey }: { report: NonNullable<TaavProjectStructureCardProps['progressReport']>; tokens: ToneTokens; resetKey: number }) {
   const [moreOpen, setMoreOpen] = useState(false);
   useEffect(() => setMoreOpen(false), [resetKey]);
   const status = report.statusLabel ?? (report.status === 'complete' ? 'تکمیل شده' : 'تکمیل نشده');
   return <section className="mt-3 border-t pt-3" style={{ borderColor: tokens.dividerColor }}>
     <h4 className="m-0 text-right text-[15px] font-bold leading-6 text-[#4f5559] line-clamp-2">{report.title}</h4>
-    {report.description && <div className="mt-1 flex items-center justify-between gap-2 text-right">
-      <p className="m-0 min-w-0 flex-1 text-right text-[11px] leading-5 text-[#656b70] line-clamp-2">{report.description}</p>
-      <button type="button" onClick={(event) => { event.stopPropagation(); setMoreOpen((open) => !open); report.onMoreClick?.(); }} className="inline-flex shrink-0 flex-row-reverse items-center gap-0.5 text-[11px] leading-5 text-[#0b9aa5] underline-offset-2 hover:underline">
+    {report.description && <div className="mt-1 flex min-w-0 items-center gap-1 text-right">
+      <p className="m-0 min-w-0 flex-1 truncate whitespace-nowrap text-right text-[11px] leading-5 text-[#656b70]">{report.description}</p>
+      <button type="button" onClick={(event) => { event.stopPropagation(); setMoreOpen((open) => !open); report.onMoreClick?.(); }} className="inline-flex shrink-0 items-center gap-0.5 whitespace-nowrap text-[11px] leading-5 text-[#0b9aa5] underline-offset-2 hover:underline">
         <span>{report.moreLabel ?? 'بیشتر'}</span><ChevronLeft className="h-[15px] w-[15px]" strokeWidth={2.1} />
       </button>
     </div>}
     {moreOpen && <div className="mt-2 rounded-[3px] border border-[#e0e3e5] bg-[#fafafa] px-3 py-2 text-right text-[11px] leading-5 text-[#656b70] shadow-[0_1px_3px_rgba(30,44,52,.05)]">{report.moreHint ?? report.description}</div>}
     <div className="relative mt-1.5 min-h-7">
-      {showNavigate ? <button type="button" aria-label="مشاهده جزئیات" onClick={(event) => { event.stopPropagation(); onNavigate?.(); }} className="absolute left-0 top-0 inline-flex h-7 w-7 items-center justify-center text-[#5e8998] hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#5e8998]"><ChevronLeft className="h-[19px] w-[19px]" strokeWidth={2.1} /></button> : null}
-      <button type="button" onClick={(event) => { event.stopPropagation(); report.onClick?.(); }} disabled={!report.onClick} className="flex w-full items-center justify-end gap-1 text-[11px] leading-5 disabled:cursor-default" style={{ color: tokens.statusColor }}><AlertCircle className="h-3.5 w-3.5" />{status}</button>
+      <button type="button" onClick={(event) => { event.stopPropagation(); report.onClick?.(); }} disabled={!report.onClick} className="flex w-full items-center justify-start gap-1 text-[11px] leading-5 disabled:cursor-default" style={{ color: tokens.statusColor }}><AlertCircle className="h-3.5 w-3.5" />{status}</button>
     </div>
   </section>;
 }
@@ -169,7 +168,7 @@ export function TaavProjectStructureCard({ entityType = 'custom', variant = 'ful
     <div className={cn('relative px-4 pb-4 pt-3', compact ? 'min-h-[124px]' : 'min-h-[284px]')}>
       {(subtitle || locationText) && variant !== 'usageOnly' && variant !== 'minimal' && <p className="m-0 max-w-[calc(100%-2rem)] truncate text-right text-[13px] leading-6 text-[#61676b]">{subtitle ?? locationText}</p>}
       {showUsage && <UsageChips usageTitle={usageTitle} usageTypes={usageTypes} activeUsageType={activeUsageType} onUsageTypeClick={onUsageTypeClick} tokens={tokens} />}
-      {showReport && progressReport && <ProgressReport report={progressReport} tokens={tokens} showNavigate={showNavigate} onNavigate={onNavigate} resetKey={cardClickVersion} />}
+      {showReport && progressReport && <ProgressReport report={progressReport} tokens={tokens} resetKey={cardClickVersion} />}
       {!showReport && showNavigate && <button type="button" aria-label="مشاهده جزئیات" onClick={(event) => { event.stopPropagation(); onNavigate?.(); }} className="absolute bottom-3 left-4 text-[#5e8998]"><ChevronLeft className="h-[19px] w-[19px]" strokeWidth={2.1} /></button>}
     </div>
   </article>;

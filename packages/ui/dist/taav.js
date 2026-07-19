@@ -5183,19 +5183,38 @@ var Building2 = createLucideIcon("building-2", __iconNode);
 var __iconNode2 = [["path", { d: "M20 6 9 17l-5-5", key: "1gmf2c" }]];
 var Check = createLucideIcon("check", __iconNode2);
 
+// ../../node_modules/lucide-react/dist/esm/icons/chevron-left.js
+var __iconNode3 = [["path", { d: "m15 18-6-6 6-6", key: "1wnfg3" }]];
+var ChevronLeft = createLucideIcon("chevron-left", __iconNode3);
+
 // ../../node_modules/lucide-react/dist/esm/icons/chevron-right.js
-var __iconNode3 = [["path", { d: "m9 18 6-6-6-6", key: "mthhwq" }]];
-var ChevronRight = createLucideIcon("chevron-right", __iconNode3);
+var __iconNode4 = [["path", { d: "m9 18 6-6-6-6", key: "mthhwq" }]];
+var ChevronRight = createLucideIcon("chevron-right", __iconNode4);
+
+// ../../node_modules/lucide-react/dist/esm/icons/circle-alert.js
+var __iconNode5 = [
+  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
+  ["line", { x1: "12", x2: "12", y1: "8", y2: "12", key: "1pkeuh" }],
+  ["line", { x1: "12", x2: "12.01", y1: "16", y2: "16", key: "4dfq90" }]
+];
+var CircleAlert = createLucideIcon("circle-alert", __iconNode5);
 
 // ../../node_modules/lucide-react/dist/esm/icons/circle-dot.js
-var __iconNode4 = [
+var __iconNode6 = [
   ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
   ["circle", { cx: "12", cy: "12", r: "1", key: "41hilf" }]
 ];
-var CircleDot = createLucideIcon("circle-dot", __iconNode4);
+var CircleDot = createLucideIcon("circle-dot", __iconNode6);
+
+// ../../node_modules/lucide-react/dist/esm/icons/copy.js
+var __iconNode7 = [
+  ["rect", { width: "14", height: "14", x: "8", y: "8", rx: "2", ry: "2", key: "17jyea" }],
+  ["path", { d: "M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2", key: "zix9uf" }]
+];
+var Copy = createLucideIcon("copy", __iconNode7);
 
 // ../../node_modules/lucide-react/dist/esm/icons/earth.js
-var __iconNode5 = [
+var __iconNode8 = [
   ["path", { d: "M21.54 15H17a2 2 0 0 0-2 2v4.54", key: "1djwo0" }],
   [
     "path",
@@ -5207,26 +5226,26 @@ var __iconNode5 = [
   ["path", { d: "M11 21.95V18a2 2 0 0 0-2-2a2 2 0 0 1-2-2v-1a2 2 0 0 0-2-2H2.05", key: "14pb5j" }],
   ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }]
 ];
-var Earth = createLucideIcon("earth", __iconNode5);
+var Earth = createLucideIcon("earth", __iconNode8);
 
 // ../../node_modules/lucide-react/dist/esm/icons/ellipsis-vertical.js
-var __iconNode6 = [
+var __iconNode9 = [
   ["circle", { cx: "12", cy: "12", r: "1", key: "41hilf" }],
   ["circle", { cx: "12", cy: "5", r: "1", key: "gxeob9" }],
   ["circle", { cx: "12", cy: "19", r: "1", key: "lyex9k" }]
 ];
-var EllipsisVertical = createLucideIcon("ellipsis-vertical", __iconNode6);
+var EllipsisVertical = createLucideIcon("ellipsis-vertical", __iconNode9);
 
 // ../../node_modules/lucide-react/dist/esm/icons/info.js
-var __iconNode7 = [
+var __iconNode10 = [
   ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
   ["path", { d: "M12 16v-4", key: "1dtifu" }],
   ["path", { d: "M12 8h.01", key: "e9boi3" }]
 ];
-var Info = createLucideIcon("info", __iconNode7);
+var Info = createLucideIcon("info", __iconNode10);
 
 // ../../node_modules/lucide-react/dist/esm/icons/landmark.js
-var __iconNode8 = [
+var __iconNode11 = [
   ["line", { x1: "3", x2: "21", y1: "22", y2: "22", key: "j8o0r" }],
   ["line", { x1: "6", x2: "6", y1: "18", y2: "11", key: "10tf0k" }],
   ["line", { x1: "10", x2: "10", y1: "18", y2: "11", key: "54lgf6" }],
@@ -5234,17 +5253,17 @@ var __iconNode8 = [
   ["line", { x1: "18", x2: "18", y1: "18", y2: "11", key: "1kevvc" }],
   ["polygon", { points: "12 2 20 7 4 7", key: "jkujk7" }]
 ];
-var Landmark = createLucideIcon("landmark", __iconNode8);
+var Landmark = createLucideIcon("landmark", __iconNode11);
 
 // ../../node_modules/lucide-react/dist/esm/icons/mail.js
-var __iconNode9 = [
+var __iconNode12 = [
   ["rect", { width: "20", height: "16", x: "2", y: "4", rx: "2", key: "18n3k1" }],
   ["path", { d: "m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7", key: "1ocrg3" }]
 ];
-var Mail = createLucideIcon("mail", __iconNode9);
+var Mail = createLucideIcon("mail", __iconNode12);
 
 // ../../node_modules/lucide-react/dist/esm/icons/map-pinned.js
-var __iconNode10 = [
+var __iconNode13 = [
   [
     "path",
     {
@@ -5261,10 +5280,23 @@ var __iconNode10 = [
     }
   ]
 ];
-var MapPinned = createLucideIcon("map-pinned", __iconNode10);
+var MapPinned = createLucideIcon("map-pinned", __iconNode13);
+
+// ../../node_modules/lucide-react/dist/esm/icons/pen-line.js
+var __iconNode14 = [
+  ["path", { d: "M12 20h9", key: "t2du7b" }],
+  [
+    "path",
+    {
+      d: "M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z",
+      key: "1ykcvy"
+    }
+  ]
+];
+var PenLine = createLucideIcon("pen-line", __iconNode14);
 
 // ../../node_modules/lucide-react/dist/esm/icons/pencil.js
-var __iconNode11 = [
+var __iconNode15 = [
   [
     "path",
     {
@@ -5274,10 +5306,10 @@ var __iconNode11 = [
   ],
   ["path", { d: "m15 5 4 4", key: "1mk7zo" }]
 ];
-var Pencil = createLucideIcon("pencil", __iconNode11);
+var Pencil = createLucideIcon("pencil", __iconNode15);
 
 // ../../node_modules/lucide-react/dist/esm/icons/phone-call.js
-var __iconNode12 = [
+var __iconNode16 = [
   [
     "path",
     {
@@ -5288,10 +5320,10 @@ var __iconNode12 = [
   ["path", { d: "M14.05 2a9 9 0 0 1 8 7.94", key: "vmijpz" }],
   ["path", { d: "M14.05 6A5 5 0 0 1 18 10", key: "13nbpp" }]
 ];
-var PhoneCall = createLucideIcon("phone-call", __iconNode12);
+var PhoneCall = createLucideIcon("phone-call", __iconNode16);
 
 // ../../node_modules/lucide-react/dist/esm/icons/phone.js
-var __iconNode13 = [
+var __iconNode17 = [
   [
     "path",
     {
@@ -5300,17 +5332,17 @@ var __iconNode13 = [
     }
   ]
 ];
-var Phone = createLucideIcon("phone", __iconNode13);
+var Phone = createLucideIcon("phone", __iconNode17);
 
 // ../../node_modules/lucide-react/dist/esm/icons/plus.js
-var __iconNode14 = [
+var __iconNode18 = [
   ["path", { d: "M5 12h14", key: "1ays0h" }],
   ["path", { d: "M12 5v14", key: "s699le" }]
 ];
-var Plus = createLucideIcon("plus", __iconNode14);
+var Plus = createLucideIcon("plus", __iconNode18);
 
 // ../../node_modules/lucide-react/dist/esm/icons/printer.js
-var __iconNode15 = [
+var __iconNode19 = [
   [
     "path",
     {
@@ -5321,26 +5353,26 @@ var __iconNode15 = [
   ["path", { d: "M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6", key: "1itne7" }],
   ["rect", { x: "6", y: "14", width: "12", height: "8", rx: "1", key: "1ue0tg" }]
 ];
-var Printer = createLucideIcon("printer", __iconNode15);
+var Printer = createLucideIcon("printer", __iconNode19);
 
 // ../../node_modules/lucide-react/dist/esm/icons/refresh-cw.js
-var __iconNode16 = [
+var __iconNode20 = [
   ["path", { d: "M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8", key: "v9h5vc" }],
   ["path", { d: "M21 3v5h-5", key: "1q7to0" }],
   ["path", { d: "M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16", key: "3uifl3" }],
   ["path", { d: "M8 16H3v5", key: "1cv678" }]
 ];
-var RefreshCw = createLucideIcon("refresh-cw", __iconNode16);
+var RefreshCw = createLucideIcon("refresh-cw", __iconNode20);
 
 // ../../node_modules/lucide-react/dist/esm/icons/search.js
-var __iconNode17 = [
+var __iconNode21 = [
   ["circle", { cx: "11", cy: "11", r: "8", key: "4ej97u" }],
   ["path", { d: "m21 21-4.3-4.3", key: "1qie3q" }]
 ];
-var Search = createLucideIcon("search", __iconNode17);
+var Search = createLucideIcon("search", __iconNode21);
 
 // ../../node_modules/lucide-react/dist/esm/icons/sliders-horizontal.js
-var __iconNode18 = [
+var __iconNode22 = [
   ["line", { x1: "21", x2: "14", y1: "4", y2: "4", key: "obuewd" }],
   ["line", { x1: "10", x2: "3", y1: "4", y2: "4", key: "1q6298" }],
   ["line", { x1: "21", x2: "12", y1: "12", y2: "12", key: "1iu8h1" }],
@@ -5351,17 +5383,17 @@ var __iconNode18 = [
   ["line", { x1: "8", x2: "8", y1: "10", y2: "14", key: "1i6ji0" }],
   ["line", { x1: "16", x2: "16", y1: "18", y2: "22", key: "1lctlv" }]
 ];
-var SlidersHorizontal = createLucideIcon("sliders-horizontal", __iconNode18);
+var SlidersHorizontal = createLucideIcon("sliders-horizontal", __iconNode22);
 
 // ../../node_modules/lucide-react/dist/esm/icons/smartphone.js
-var __iconNode19 = [
+var __iconNode23 = [
   ["rect", { width: "14", height: "20", x: "5", y: "2", rx: "2", ry: "2", key: "1yt0o3" }],
   ["path", { d: "M12 18h.01", key: "mhygvu" }]
 ];
-var Smartphone = createLucideIcon("smartphone", __iconNode19);
+var Smartphone = createLucideIcon("smartphone", __iconNode23);
 
 // ../../node_modules/lucide-react/dist/esm/icons/square-pen.js
-var __iconNode20 = [
+var __iconNode24 = [
   ["path", { d: "M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7", key: "1m0v6g" }],
   [
     "path",
@@ -5371,39 +5403,58 @@ var __iconNode20 = [
     }
   ]
 ];
-var SquarePen = createLucideIcon("square-pen", __iconNode20);
+var SquarePen = createLucideIcon("square-pen", __iconNode24);
 
 // ../../node_modules/lucide-react/dist/esm/icons/trash-2.js
-var __iconNode21 = [
+var __iconNode25 = [
   ["path", { d: "M3 6h18", key: "d0wm0j" }],
   ["path", { d: "M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6", key: "4alrt4" }],
   ["path", { d: "M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2", key: "v07s0e" }],
   ["line", { x1: "10", x2: "10", y1: "11", y2: "17", key: "1uufr5" }],
   ["line", { x1: "14", x2: "14", y1: "11", y2: "17", key: "xtxkd" }]
 ];
-var Trash2 = createLucideIcon("trash-2", __iconNode21);
+var Trash2 = createLucideIcon("trash-2", __iconNode25);
 
 // ../../node_modules/lucide-react/dist/esm/icons/user-round.js
-var __iconNode22 = [
+var __iconNode26 = [
   ["circle", { cx: "12", cy: "8", r: "5", key: "1hypcn" }],
   ["path", { d: "M20 21a8 8 0 0 0-16 0", key: "rfgkzh" }]
 ];
-var UserRound = createLucideIcon("user-round", __iconNode22);
+var UserRound = createLucideIcon("user-round", __iconNode26);
 
 // ../../node_modules/lucide-react/dist/esm/icons/users-round.js
-var __iconNode23 = [
+var __iconNode27 = [
   ["path", { d: "M18 21a8 8 0 0 0-16 0", key: "3ypg7q" }],
   ["circle", { cx: "10", cy: "8", r: "5", key: "o932ke" }],
   ["path", { d: "M22 20c0-3.37-2-6.5-4-8a5 5 0 0 0-.45-8.3", key: "10s06x" }]
 ];
-var UsersRound = createLucideIcon("users-round", __iconNode23);
+var UsersRound = createLucideIcon("users-round", __iconNode27);
+
+// ../../node_modules/lucide-react/dist/esm/icons/wand-sparkles.js
+var __iconNode28 = [
+  [
+    "path",
+    {
+      d: "m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72",
+      key: "ul74o6"
+    }
+  ],
+  ["path", { d: "m14 7 3 3", key: "1r5n42" }],
+  ["path", { d: "M5 6v4", key: "ilb8ba" }],
+  ["path", { d: "M19 14v4", key: "blhpug" }],
+  ["path", { d: "M10 2v2", key: "7u0qdc" }],
+  ["path", { d: "M7 8H3", key: "zfb6yr" }],
+  ["path", { d: "M21 16h-4", key: "1cnmox" }],
+  ["path", { d: "M11 3H9", key: "1obp7u" }]
+];
+var WandSparkles = createLucideIcon("wand-sparkles", __iconNode28);
 
 // ../../node_modules/lucide-react/dist/esm/icons/x.js
-var __iconNode24 = [
+var __iconNode29 = [
   ["path", { d: "M18 6 6 18", key: "1bl5f8" }],
   ["path", { d: "m6 6 12 12", key: "d8bk6v" }]
 ];
-var X = createLucideIcon("x", __iconNode24);
+var X = createLucideIcon("x", __iconNode29);
 var detailsLinkRoot = classVarianceAuthority.cva(
   [
     "inline-flex max-w-full items-center gap-[var(--taav-details-link-gap)]",
@@ -5513,7 +5564,7 @@ var businessHeaderCardRoot = classVarianceAuthority.cva(
   {
     variants: {
       variant: {
-        navigation: "md:h-[145px] md:min-h-[145px]",
+        navigation: "md:h-[100px] md:min-h-[100px] md:max-w-[696px] rounded-[16px] border border-[rgba(145,170,190,0.5)]",
         toggleWithLink: "",
         toggle: "md:h-[96px] md:min-h-[96px] md:max-w-[960px]",
         action: "md:h-[96px] md:min-h-[96px] md:max-w-[960px]",
@@ -5539,11 +5590,11 @@ var businessHeaderCardRoot = classVarianceAuthority.cva(
 var businessHeaderCardBody = classVarianceAuthority.cva("flex h-full min-h-0 flex-col gap-[12px] p-[24px_28px_24px_24px]", {
   variants: {
     variant: {
-      navigation: "",
+      navigation: "md:p-[17px_28px] md:justify-center",
       toggleWithLink: "",
       toggle: "md:p-[20px_28px]",
       action: "md:p-[20px_28px]",
-      actionWithSearch: ""
+      actionWithSearch: "w-full items-start"
     }
   },
   defaultVariants: { variant: "navigation" }
@@ -5582,7 +5633,7 @@ var businessHeaderCardCopy = classVarianceAuthority.cva("flex min-w-0 flex-col i
       toggleWithLink: "",
       toggle: "w-full items-start",
       action: "w-full items-start",
-      actionWithSearch: ""
+      actionWithSearch: "w-full text-right"
     }
   },
   defaultVariants: { variant: "navigation" }
@@ -5590,7 +5641,7 @@ var businessHeaderCardCopy = classVarianceAuthority.cva("flex min-w-0 flex-col i
 var businessHeaderCardTitle = classVarianceAuthority.cva("m-0 text-right text-[18px] font-semibold leading-[26px] text-[#30343b]", {
   variants: {
     variant: {
-      navigation: "w-full text-right",
+      navigation: "w-full text-right text-[18px] font-semibold leading-[22px]",
       toggleWithLink: "",
       toggle: "w-full text-right text-[18px] font-bold leading-[26px] text-[#30343b]",
       action: "w-full text-right text-[18px] font-bold leading-[26px] text-[#30343b]",
@@ -5604,11 +5655,11 @@ var businessHeaderCardDescription = classVarianceAuthority.cva(
   {
     variants: {
       variant: {
-        navigation: "",
+        navigation: "md:w-[520px] md:max-w-[520px] text-[12.5px] font-medium leading-[20px]",
         toggleWithLink: "",
         toggle: "whitespace-nowrap text-[12.5px] font-medium leading-[22px] text-[#6b7280]",
         action: "whitespace-nowrap text-[12.5px] font-medium leading-[22px] text-[#6b7280]",
-        actionWithSearch: ""
+        actionWithSearch: "whitespace-nowrap text-[12.5px] font-medium leading-[22px] text-[#5f6f80]"
       }
     },
     defaultVariants: { variant: "navigation" }
@@ -7938,14 +7989,15 @@ function TaavModuleCardGridItem({
 function ArrowIcon() {
   return /* @__PURE__ */ jsxRuntime.jsx("svg", { viewBox: "0 0 18 18", fill: "none", "aria-hidden": "true", className: "h-[18px] w-[18px]", children: /* @__PURE__ */ jsxRuntime.jsx("path", { d: "m10.5 4.5-4 4.5 4 4.5", stroke: "currentColor", strokeWidth: "1.7", strokeLinecap: "round", strokeLinejoin: "round" }) });
 }
-function ModuleLinkItem({ item }) {
+function TaavBusinessModuleLink({ item, className: customClassName, ...rest }) {
   const disabled = Boolean(item.disabled);
   const interactive = Boolean((item.href || item.onClick) && !disabled);
   const className = cn(
-    "group/module-link flex min-w-0 flex-row items-start gap-4 px-0 py-2 text-right",
+    "group/module-link flex w-full min-w-0 flex-row items-start gap-4 px-0 py-2 text-right",
     "text-[var(--taav-business-module-link-text)] transition-colors duration-150",
     interactive && "cursor-pointer hover:bg-[var(--taav-business-module-link-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--taav-focus-ring)]",
-    disabled && "cursor-not-allowed opacity-50"
+    disabled && "cursor-not-allowed opacity-50",
+    customClassName
   );
   const content = /* @__PURE__ */ jsxRuntime.jsxs(jsxRuntime.Fragment, { children: [
     /* @__PURE__ */ jsxRuntime.jsx("span", { className: "mt-1 shrink-0 text-[var(--taav-business-module-link-arrow)] transition-transform duration-150 group-hover/module-link:-translate-x-0.5", "aria-hidden": "true", children: /* @__PURE__ */ jsxRuntime.jsx(ArrowIcon, {}) }),
@@ -7957,13 +8009,9 @@ function ModuleLinkItem({ item }) {
       item.description ? /* @__PURE__ */ jsxRuntime.jsx("span", { className: "mt-1 block text-[length:var(--taav-business-module-link-description-size)] leading-6 text-[var(--taav-business-module-link-description)]", children: item.description }) : null
     ] })
   ] });
-  if (item.href && !disabled) {
-    return /* @__PURE__ */ jsxRuntime.jsx("a", { href: item.href, dir: "ltr", className, "aria-label": item.ariaLabel, children: content });
-  }
-  if (interactive) {
-    return /* @__PURE__ */ jsxRuntime.jsx("button", { type: "button", dir: "ltr", className, onClick: item.onClick, "aria-label": item.ariaLabel, children: content });
-  }
-  return /* @__PURE__ */ jsxRuntime.jsx("div", { dir: "ltr", className, "aria-disabled": disabled || void 0, children: content });
+  if (item.href && !disabled) return /* @__PURE__ */ jsxRuntime.jsx("a", { ...rest, href: item.href, dir: "ltr", className, "aria-label": item.ariaLabel, children: content });
+  if (interactive) return /* @__PURE__ */ jsxRuntime.jsx("button", { ...rest, type: "button", dir: "ltr", className, onClick: item.onClick, "aria-label": item.ariaLabel, children: content });
+  return /* @__PURE__ */ jsxRuntime.jsx("div", { ...rest, dir: "ltr", className, "aria-disabled": disabled || void 0, children: content });
 }
 function TaavBusinessModuleLinkGrid({ items, columns = 2, gap = "md", className, ...rest }) {
   return /* @__PURE__ */ jsxRuntime.jsx(
@@ -7979,7 +8027,7 @@ function TaavBusinessModuleLinkGrid({ items, columns = 2, gap = "md", className,
         gap === "sm" ? "gap-x-6 gap-y-3" : gap === "lg" ? "gap-x-16 gap-y-10" : "gap-x-12 gap-y-7",
         className
       ),
-      children: items.map((item) => /* @__PURE__ */ jsxRuntime.jsx(ModuleLinkItem, { item }, item.id))
+      children: items.map((item) => /* @__PURE__ */ jsxRuntime.jsx(TaavBusinessModuleLink, { item }, item.id))
     }
   );
 }
@@ -8276,6 +8324,161 @@ function TaavBankAccountInfoInputCard({
     ] })
   ] });
 }
+var TONE_TOKENS = {
+  teal: {
+    headerBackground: "#6d9eae",
+    headerOverlay: "#477f91",
+    borderColor: "#b7cbd5",
+    titleColor: "#3f4d55",
+    chipBorderColor: "#a4b7c4",
+    chipTextColor: "#718290",
+    activeChipBorderColor: "#3b82f6",
+    activeChipTextColor: "#2563eb",
+    statusColor: "#ef4444",
+    dividerColor: "#83a7b6"
+  },
+  gold: {
+    headerBackground: "#b4a675",
+    headerOverlay: "#918352",
+    borderColor: "#d5cda9",
+    titleColor: "#514a38",
+    chipBorderColor: "#b5ae9a",
+    chipTextColor: "#827b68",
+    activeChipBorderColor: "#f59e0b",
+    activeChipTextColor: "#f59e0b",
+    statusColor: "#ef4444",
+    dividerColor: "#b9aa76"
+  },
+  gray: {
+    headerBackground: "#7c8992",
+    headerOverlay: "#5c6870",
+    borderColor: "#c4cbd0",
+    titleColor: "#4b5560",
+    chipBorderColor: "#aeb8bf",
+    chipTextColor: "#71808b",
+    activeChipBorderColor: "#64748b",
+    activeChipTextColor: "#475569",
+    statusColor: "#ef4444",
+    dividerColor: "#aab5bc"
+  },
+  custom: {
+    headerBackground: "var(--taav-structure-header, #6d9eae)",
+    headerOverlay: "var(--taav-structure-overlay, #477f91)",
+    borderColor: "var(--taav-structure-border, #b7cbd5)",
+    titleColor: "var(--taav-structure-title, #3f4d55)",
+    chipBorderColor: "var(--taav-structure-chip-border, #a4b7c4)",
+    chipTextColor: "var(--taav-structure-chip-text, #718290)",
+    activeChipBorderColor: "var(--taav-structure-active-border, #3b82f6)",
+    activeChipTextColor: "var(--taav-structure-active-text, #2563eb)",
+    statusColor: "var(--taav-structure-status, #ef4444)",
+    dividerColor: "var(--taav-structure-divider, #83a7b6)"
+  }
+};
+var ACTIVE_CHIP_COLORS = {
+  blue: { border: "#3b82f6", text: "#2563eb" },
+  orange: { border: "#f59e0b", text: "#f59e0b" },
+  teal: { border: "#0f9aa8", text: "#087f8d" },
+  gray: { border: "#64748b", text: "#475569" },
+  default: { border: "#64748b", text: "#475569" }
+};
+function Header({ title, headerLabel, headerImage, tokens }) {
+  const style = { "--structure-header": tokens.headerBackground, "--structure-overlay": tokens.headerOverlay, ...headerImage ? { backgroundImage: `url(${headerImage})` } : {} };
+  return /* @__PURE__ */ jsxRuntime.jsxs("header", { className: "relative flex min-h-[88px] items-center overflow-hidden rounded-t-[16px] bg-[var(--structure-header)] px-5 py-4 text-white", style, children: [
+    !headerImage && /* @__PURE__ */ jsxRuntime.jsx("span", { "aria-hidden": true, className: "absolute inset-0 opacity-80 [background:linear-gradient(135deg,transparent_0_55%,var(--structure-overlay)_55%_72%,transparent_72%),linear-gradient(90deg,transparent_0_58%,rgba(255,255,255,.06)_58%_59%,transparent_59%)]" }),
+    /* @__PURE__ */ jsxRuntime.jsx("h3", { className: "relative z-10 m-0 min-w-0 flex-1 truncate text-right text-[21px] font-extrabold leading-8", children: headerLabel ?? title })
+  ] });
+}
+function ActionIcon({ icon }) {
+  if (icon === "edit") return /* @__PURE__ */ jsxRuntime.jsx(PenLine, { className: "h-5 w-5", strokeWidth: 1.7 });
+  if (icon === "copy") return /* @__PURE__ */ jsxRuntime.jsx(Copy, { className: "h-5 w-5", strokeWidth: 1.7 });
+  if (icon === "delete") return /* @__PURE__ */ jsxRuntime.jsx(Trash2, { className: "h-5 w-5", strokeWidth: 1.7 });
+  return /* @__PURE__ */ jsxRuntime.jsx(WandSparkles, { className: "h-5 w-5", strokeWidth: 1.7 });
+}
+function MenuButton({ onClick, open }) {
+  return /* @__PURE__ */ jsxRuntime.jsx("button", { type: "button", "aria-label": "\u0645\u0646\u0648\u06CC \u06A9\u0627\u0631\u062A", "aria-expanded": open, onClick: (event) => {
+    event.stopPropagation();
+    onClick?.();
+  }, className: cn("absolute left-4 top-[104px] z-20 inline-flex h-7 w-7 items-center justify-center rounded-md text-[#555b60] transition hover:bg-black/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#5b92a3]", open && "text-[#2f6979]"), children: /* @__PURE__ */ jsxRuntime.jsx(EllipsisVertical, { className: "h-5 w-5" }) });
+}
+function ActionMenu({ actions, tokens }) {
+  return /* @__PURE__ */ jsxRuntime.jsx("div", { dir: "rtl", className: "absolute left-4 top-[95px] z-30 w-[126px] overflow-hidden rounded-[16px] border-0 bg-[#f1f2f3] p-[7px] text-right shadow-[0_7px_18px_rgba(30,44,52,.2)]", style: { borderColor: tokens.borderColor }, role: "menu", children: actions.map((action) => /* @__PURE__ */ jsxRuntime.jsxs("button", { type: "button", role: "menuitem", disabled: action.disabled || !action.onClick, onClick: action.onClick, className: "flex h-[52px] w-full items-center justify-between gap-4 rounded-[9px] px-3 text-[14px] font-normal leading-6 text-[#4c5155] transition hover:bg-[#e1e4e6] focus-visible:bg-[#e1e4e6] focus-visible:outline-none disabled:cursor-default disabled:opacity-45", children: [
+    /* @__PURE__ */ jsxRuntime.jsx(ActionIcon, { icon: action.icon }),
+    /* @__PURE__ */ jsxRuntime.jsx("span", { children: action.label })
+  ] }, action.key)) });
+}
+function UsageChips({ usageTitle, usageTypes, activeUsageType, onUsageTypeClick, tokens }) {
+  if (!usageTypes?.length) return null;
+  return /* @__PURE__ */ jsxRuntime.jsxs("section", { className: "mt-3", "aria-label": usageTitle ?? "\u0646\u0648\u0639 \u06A9\u0627\u0631\u0628\u0631\u06CC", children: [
+    /* @__PURE__ */ jsxRuntime.jsx("h4", { className: "m-0 text-right text-[17px] font-bold leading-7 text-[#555b60]", children: usageTitle ?? "\u0646\u0648\u0639 \u06A9\u0627\u0631\u0628\u0631\u06CC" }),
+    /* @__PURE__ */ jsxRuntime.jsx("div", { className: "mt-2 flex flex-wrap justify-start gap-1.5", children: usageTypes.map((usage) => {
+      const active = usage.key === activeUsageType;
+      const colors = active ? ACTIVE_CHIP_COLORS[usage.tone ?? "default"] ?? { border: tokens.activeChipBorderColor, text: tokens.activeChipTextColor } : null;
+      const Chip = onUsageTypeClick ? "button" : "span";
+      return /* @__PURE__ */ jsxRuntime.jsx(Chip, { type: onUsageTypeClick ? "button" : void 0, onClick: onUsageTypeClick ? (event) => {
+        event.stopPropagation();
+        onUsageTypeClick(usage);
+      } : void 0, className: cn("inline-flex min-h-7 items-center rounded-full border bg-white px-2.5 text-[12px] font-medium leading-5 transition", onUsageTypeClick && "cursor-pointer hover:bg-[#f1f5f6] hover:shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#5b92a3]"), style: { borderColor: colors?.border ?? tokens.chipBorderColor, color: colors?.text ?? tokens.chipTextColor }, children: usage.label }, usage.key);
+    }) })
+  ] });
+}
+function ProgressReport({ report, tokens, resetKey }) {
+  const [moreOpen, setMoreOpen] = react.useState(false);
+  react.useEffect(() => setMoreOpen(false), [resetKey]);
+  const status = report.statusLabel ?? (report.status === "complete" ? "\u062A\u06A9\u0645\u06CC\u0644 \u0634\u062F\u0647" : "\u062A\u06A9\u0645\u06CC\u0644 \u0646\u0634\u062F\u0647");
+  return /* @__PURE__ */ jsxRuntime.jsxs("section", { className: "mt-3 border-t pt-3", style: { borderColor: tokens.dividerColor }, children: [
+    /* @__PURE__ */ jsxRuntime.jsx("h4", { className: "m-0 text-right text-[15px] font-bold leading-6 text-[#4f5559] line-clamp-2", children: report.title }),
+    report.description && /* @__PURE__ */ jsxRuntime.jsxs("div", { className: "mt-1 flex min-w-0 items-center gap-1 text-right", children: [
+      /* @__PURE__ */ jsxRuntime.jsx("p", { className: "m-0 min-w-0 flex-1 truncate whitespace-nowrap text-right text-[11px] leading-5 text-[#656b70]", children: report.description }),
+      /* @__PURE__ */ jsxRuntime.jsxs("button", { type: "button", onClick: (event) => {
+        event.stopPropagation();
+        setMoreOpen((open) => !open);
+        report.onMoreClick?.();
+      }, className: "inline-flex shrink-0 items-center gap-0.5 whitespace-nowrap text-[11px] leading-5 text-[#0b9aa5] underline-offset-2 hover:underline", children: [
+        /* @__PURE__ */ jsxRuntime.jsx("span", { children: report.moreLabel ?? "\u0628\u06CC\u0634\u062A\u0631" }),
+        /* @__PURE__ */ jsxRuntime.jsx(ChevronLeft, { className: "h-[15px] w-[15px]", strokeWidth: 2.1 })
+      ] })
+    ] }),
+    moreOpen && /* @__PURE__ */ jsxRuntime.jsx("div", { className: "mt-2 rounded-[3px] border border-[#e0e3e5] bg-[#fafafa] px-3 py-2 text-right text-[11px] leading-5 text-[#656b70] shadow-[0_1px_3px_rgba(30,44,52,.05)]", children: report.moreHint ?? report.description }),
+    /* @__PURE__ */ jsxRuntime.jsx("div", { className: "relative mt-1.5 min-h-7", children: /* @__PURE__ */ jsxRuntime.jsxs("button", { type: "button", onClick: (event) => {
+      event.stopPropagation();
+      report.onClick?.();
+    }, disabled: !report.onClick, className: "flex w-full items-center justify-start gap-1 text-[11px] leading-5 disabled:cursor-default", style: { color: tokens.statusColor }, children: [
+      /* @__PURE__ */ jsxRuntime.jsx(CircleAlert, { className: "h-3.5 w-3.5" }),
+      status
+    ] }) })
+  ] });
+}
+function TaavProjectStructureCard({ entityType = "custom", variant = "full", tone = "teal", title, subtitle, locationText, headerImage, headerLabel, usageTitle, usageTypes, activeUsageType, onUsageTypeClick, showMenu = false, onMenuClick, onCardClick, menuActions, showNavigate = false, onNavigate, progressReport, disabled = false, loading = false, className }) {
+  const tokens = TONE_TOKENS[tone];
+  const [menuOpen, setMenuOpen] = react.useState(false);
+  const [cardClickVersion, setCardClickVersion] = react.useState(0);
+  const compact = variant === "compact" || variant === "usageOnly" || variant === "minimal";
+  const showUsage = variant === "full" || variant === "compact" || variant === "usageOnly" || variant === "minimal";
+  const showReport = (variant === "full" || variant === "report") && Boolean(progressReport);
+  return /* @__PURE__ */ jsxRuntime.jsxs("article", { dir: "rtl", "data-taav-project-structure-card": true, "data-variant": variant, "data-entity-type": entityType, "aria-busy": loading || void 0, "aria-disabled": disabled || void 0, onClick: () => {
+    setMenuOpen(false);
+    setCardClickVersion((version) => version + 1);
+    onCardClick?.();
+  }, className: cn("relative w-full max-w-[300px] cursor-pointer overflow-visible rounded-[16px] border bg-white text-right shadow-[0_2px_8px_rgba(28,54,65,.04)] transition hover:shadow-[0_5px_16px_rgba(28,54,65,.09)]", compact ? "max-h-[280px]" : "min-h-[376px]", disabled && "pointer-events-none opacity-55", loading && "animate-pulse", className), style: { borderColor: tokens.borderColor }, children: [
+    /* @__PURE__ */ jsxRuntime.jsx(Header, { title, headerLabel, headerImage, tokens }),
+    showMenu && !loading && /* @__PURE__ */ jsxRuntime.jsxs(jsxRuntime.Fragment, { children: [
+      /* @__PURE__ */ jsxRuntime.jsx(MenuButton, { open: menuOpen, onClick: () => {
+        setMenuOpen((open) => !open);
+        onMenuClick?.();
+      } }),
+      menuOpen && menuActions?.length ? /* @__PURE__ */ jsxRuntime.jsx("div", { onClick: (event) => event.stopPropagation(), children: /* @__PURE__ */ jsxRuntime.jsx(ActionMenu, { actions: menuActions, tokens }) }) : null
+    ] }),
+    /* @__PURE__ */ jsxRuntime.jsxs("div", { className: cn("relative px-4 pb-4 pt-3", compact ? "min-h-[124px]" : "min-h-[284px]"), children: [
+      (subtitle || locationText) && variant !== "usageOnly" && variant !== "minimal" && /* @__PURE__ */ jsxRuntime.jsx("p", { className: "m-0 max-w-[calc(100%-2rem)] truncate text-right text-[13px] leading-6 text-[#61676b]", children: subtitle ?? locationText }),
+      showUsage && /* @__PURE__ */ jsxRuntime.jsx(UsageChips, { usageTitle, usageTypes, activeUsageType, onUsageTypeClick, tokens }),
+      showReport && progressReport && /* @__PURE__ */ jsxRuntime.jsx(ProgressReport, { report: progressReport, tokens, resetKey: cardClickVersion }),
+      !showReport && showNavigate && /* @__PURE__ */ jsxRuntime.jsx("button", { type: "button", "aria-label": "\u0645\u0634\u0627\u0647\u062F\u0647 \u062C\u0632\u0626\u06CC\u0627\u062A", onClick: (event) => {
+        event.stopPropagation();
+        onNavigate?.();
+      }, className: "absolute bottom-3 left-4 text-[#5e8998]", children: /* @__PURE__ */ jsxRuntime.jsx(ChevronLeft, { className: "h-[19px] w-[19px]", strokeWidth: 2.1 }) })
+    ] })
+  ] });
+}
 /*! Bundled license information:
 
 lucide-react/dist/esm/shared/src/utils.js:
@@ -8284,14 +8487,18 @@ lucide-react/dist/esm/Icon.js:
 lucide-react/dist/esm/createLucideIcon.js:
 lucide-react/dist/esm/icons/building-2.js:
 lucide-react/dist/esm/icons/check.js:
+lucide-react/dist/esm/icons/chevron-left.js:
 lucide-react/dist/esm/icons/chevron-right.js:
+lucide-react/dist/esm/icons/circle-alert.js:
 lucide-react/dist/esm/icons/circle-dot.js:
+lucide-react/dist/esm/icons/copy.js:
 lucide-react/dist/esm/icons/earth.js:
 lucide-react/dist/esm/icons/ellipsis-vertical.js:
 lucide-react/dist/esm/icons/info.js:
 lucide-react/dist/esm/icons/landmark.js:
 lucide-react/dist/esm/icons/mail.js:
 lucide-react/dist/esm/icons/map-pinned.js:
+lucide-react/dist/esm/icons/pen-line.js:
 lucide-react/dist/esm/icons/pencil.js:
 lucide-react/dist/esm/icons/phone-call.js:
 lucide-react/dist/esm/icons/phone.js:
@@ -8305,6 +8512,7 @@ lucide-react/dist/esm/icons/square-pen.js:
 lucide-react/dist/esm/icons/trash-2.js:
 lucide-react/dist/esm/icons/user-round.js:
 lucide-react/dist/esm/icons/users-round.js:
+lucide-react/dist/esm/icons/wand-sparkles.js:
 lucide-react/dist/esm/icons/x.js:
 lucide-react/dist/esm/lucide-react.js:
   (**
@@ -8335,6 +8543,7 @@ exports.TaavBusinessFormDialogCard = TaavBusinessFormDialogCard;
 exports.TaavBusinessHeaderCard = TaavBusinessHeaderCard;
 exports.TaavBusinessIconChoiceGroup = TaavBusinessIconChoiceGroup;
 exports.TaavBusinessIntroCard = TaavBusinessIntroCard;
+exports.TaavBusinessModuleLink = TaavBusinessModuleLink;
 exports.TaavBusinessModuleLinkGrid = TaavBusinessModuleLinkGrid;
 exports.TaavBusinessOwnerCard = TaavBusinessOwnerCard;
 exports.TaavBusinessOwnershipCard = TaavBusinessOwnershipCard;
@@ -8409,6 +8618,7 @@ exports.TaavPopoverClose = TaavPopoverClose;
 exports.TaavPopoverContent = TaavPopoverContent;
 exports.TaavPopoverTrigger = TaavPopoverTrigger;
 exports.TaavProgressSummary = TaavProgressSummary;
+exports.TaavProjectStructureCard = TaavProjectStructureCard;
 exports.TaavRadio = TaavRadio;
 exports.TaavRadioGroup = TaavRadioGroup;
 exports.TaavRequiredMark = TaavRequiredMark;

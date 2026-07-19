@@ -509,6 +509,11 @@ type TaavBusinessModuleLinkItem = {
     disabled?: boolean;
     ariaLabel?: string;
 };
+type TaavBusinessModuleLinkProps = {
+    item: TaavBusinessModuleLinkItem;
+} & Omit<HTMLAttributes<HTMLElement>, 'onClick' | 'children'>;
+declare function TaavBusinessModuleLink({ item, className: customClassName, ...rest }: TaavBusinessModuleLinkProps): react_jsx_runtime.JSX.Element;
+
 type TaavBusinessModuleLinkGridProps = {
     items: TaavBusinessModuleLinkItem[];
     columns?: 1 | 2;
@@ -616,4 +621,50 @@ type TaavBankAccountInfoInputCardProps = {
 } & Omit<HTMLAttributes<HTMLElement>, 'title'>;
 declare function TaavBankAccountInfoInputCard({ title, description, cardNumber, shebaNumber, accountNumber, variant, themeMode, className, ...rest }: TaavBankAccountInfoInputCardProps): react_jsx_runtime.JSX.Element;
 
-export { DEFAULT_BUSINESS_NAV_PATH, DEFAULT_BUSINESS_SIDEBAR_NAV_PATH, TaavActivationSwitch, type TaavActivationSwitchProps, type TaavActivationSwitchSize, type TaavActivationSwitchTone, type TaavActivationSwitchValue, TaavBankAccountInfoInputCard, type TaavBankAccountInfoInputCardProps, TaavBankAccountNumberInput, type TaavBankAccountNumberInputProps, TaavBankCardNumberInput, type TaavBankCardNumberInputProps, TaavBusinessAccountInfoCard, type TaavBusinessAccountInfoCardProps, TaavBusinessFormDialogCard, type TaavBusinessFormDialogCardProps, type TaavBusinessFormDialogField, TaavBusinessHeaderCard, type TaavBusinessHeaderCardAction, type TaavBusinessHeaderCardDetailLink, type TaavBusinessHeaderCardProps, type TaavBusinessHeaderCardSearch, type TaavBusinessHeaderCardToggleLabels, type TaavBusinessHeaderCardVariant, TaavBusinessIconChoiceGroup, type TaavBusinessIconChoiceGroupProps, type TaavBusinessIconOption, TaavBusinessIntroCard, type TaavBusinessIntroCardHeadingLevel, type TaavBusinessIntroCardLayout, type TaavBusinessIntroCardProps, type TaavBusinessIntroCardSize, type TaavBusinessIntroCardThemeMode, type TaavBusinessIntroCardTone, type TaavBusinessIntroCardVariant, type TaavBusinessIntroCardWidth, TaavBusinessModuleLinkGrid, type TaavBusinessModuleLinkGridProps, type TaavBusinessModuleLinkItem, type TaavBusinessNavPathItem, TaavBusinessOwnerCard, type TaavBusinessOwnerCardProps, TaavBusinessOwnershipCard, type TaavBusinessOwnershipCardProps, type TaavBusinessOwnershipValue, TaavBusinessProfileSummaryCard, type TaavBusinessProfileSummaryCardProps, TaavBusinessRecommendationCard, type TaavBusinessRecommendationCardActivationValue, type TaavBusinessRecommendationCardProps, type TaavBusinessRecommendationCardSize, type TaavBusinessRecommendationCardThemeMode, type TaavBusinessRecommendationCardTone, type TaavBusinessRecommendationCardVariant, type TaavBusinessRecommendationCardWidth, TaavBusinessSectionToolbarCard, type TaavBusinessSectionToolbarCardProps, TaavBusinessSidebar, type TaavBusinessSidebarItem, type TaavBusinessSidebarNavPathItem, type TaavBusinessSidebarPlacement, type TaavBusinessSidebarProps, type TaavBusinessSidebarQuickAction, type TaavBusinessSidebarTenant, type TaavBusinessSidebarTenantStatus, type TaavBusinessSidebarUser, type TaavBusinessSidebarVariant, type TaavBusinessSidebarWidth, TaavBusinessToggleCard, type TaavBusinessToggleCardProps, type TaavBusinessToggleCardVariant, type TaavCommunicationChannel, TaavCommunicationChannels, TaavCommunicationChannelsCard, type TaavCommunicationChannelsCardItem, type TaavCommunicationChannelsCardProps, type TaavCommunicationChannelsProps, TaavDetailsLink, type TaavDetailsLinkProps, type TaavDetailsLinkSize, type TaavDetailsLinkTone, type TaavDetailsLinkUnderline, type TaavFormStep, TaavFormStepIndicator, type TaavFormStepIndicatorProps, TaavMobileNumberInputCard, type TaavMobileNumberInputCardProps, TaavModuleCard, type TaavModuleCardAlign, type TaavModuleCardDirection, TaavModuleCardGrid, type TaavModuleCardGridColumns, type TaavModuleCardGridDensity, type TaavModuleCardGridGap, TaavModuleCardGridItem, type TaavModuleCardGridItemProps, type TaavModuleCardGridProps, type TaavModuleCardGridSpan, type TaavModuleCardHeaderPattern, type TaavModuleCardProps, type TaavModuleCardSize, type TaavModuleCardStatus, type TaavModuleCardThemeMode, type TaavModuleCardTone, type TaavModuleCardVariant, type TaavModuleCardWidth, TaavShebaNumberInput, type TaavShebaNumberInputProps };
+type TaavProjectStructureCardProps = {
+    entityType?: 'block' | 'floor' | 'unit' | 'plate' | 'area' | 'custom';
+    variant?: 'full' | 'compact' | 'usageOnly' | 'report' | 'minimal';
+    tone?: 'teal' | 'gold' | 'gray' | 'custom';
+    title: string;
+    subtitle?: string;
+    locationText?: string;
+    headerImage?: string;
+    headerLabel?: string;
+    usageTitle?: string;
+    usageTypes?: Array<{
+        key: string;
+        label: string;
+        tone?: 'default' | 'blue' | 'orange' | 'teal' | 'gray';
+    }>;
+    activeUsageType?: string;
+    onUsageTypeClick?: (usageType: NonNullable<TaavProjectStructureCardProps['usageTypes']>[number]) => void;
+    showMenu?: boolean;
+    onMenuClick?: () => void;
+    onCardClick?: () => void;
+    menuActions?: TaavProjectStructureCardAction[];
+    showNavigate?: boolean;
+    onNavigate?: () => void;
+    progressReport?: {
+        title: string;
+        description?: string;
+        moreLabel?: string;
+        onMoreClick?: () => void;
+        moreHint?: string;
+        statusLabel?: string;
+        status?: 'incomplete' | 'complete' | 'warning' | 'neutral';
+        onClick?: () => void;
+    };
+    disabled?: boolean;
+    loading?: boolean;
+    className?: string;
+};
+type TaavProjectStructureCardAction = {
+    key: string;
+    label: string;
+    icon?: 'edit' | 'copy' | 'delete' | 'custom';
+    onClick?: () => void;
+    disabled?: boolean;
+};
+declare function TaavProjectStructureCard({ entityType, variant, tone, title, subtitle, locationText, headerImage, headerLabel, usageTitle, usageTypes, activeUsageType, onUsageTypeClick, showMenu, onMenuClick, onCardClick, menuActions, showNavigate, onNavigate, progressReport, disabled, loading, className }: TaavProjectStructureCardProps): react_jsx_runtime.JSX.Element;
+
+export { DEFAULT_BUSINESS_NAV_PATH, DEFAULT_BUSINESS_SIDEBAR_NAV_PATH, TaavActivationSwitch, type TaavActivationSwitchProps, type TaavActivationSwitchSize, type TaavActivationSwitchTone, type TaavActivationSwitchValue, TaavBankAccountInfoInputCard, type TaavBankAccountInfoInputCardProps, TaavBankAccountNumberInput, type TaavBankAccountNumberInputProps, TaavBankCardNumberInput, type TaavBankCardNumberInputProps, TaavBusinessAccountInfoCard, type TaavBusinessAccountInfoCardProps, TaavBusinessFormDialogCard, type TaavBusinessFormDialogCardProps, type TaavBusinessFormDialogField, TaavBusinessHeaderCard, type TaavBusinessHeaderCardAction, type TaavBusinessHeaderCardDetailLink, type TaavBusinessHeaderCardProps, type TaavBusinessHeaderCardSearch, type TaavBusinessHeaderCardToggleLabels, type TaavBusinessHeaderCardVariant, TaavBusinessIconChoiceGroup, type TaavBusinessIconChoiceGroupProps, type TaavBusinessIconOption, TaavBusinessIntroCard, type TaavBusinessIntroCardHeadingLevel, type TaavBusinessIntroCardLayout, type TaavBusinessIntroCardProps, type TaavBusinessIntroCardSize, type TaavBusinessIntroCardThemeMode, type TaavBusinessIntroCardTone, type TaavBusinessIntroCardVariant, type TaavBusinessIntroCardWidth, TaavBusinessModuleLink, TaavBusinessModuleLinkGrid, type TaavBusinessModuleLinkGridProps, type TaavBusinessModuleLinkItem, type TaavBusinessModuleLinkProps, type TaavBusinessNavPathItem, TaavBusinessOwnerCard, type TaavBusinessOwnerCardProps, TaavBusinessOwnershipCard, type TaavBusinessOwnershipCardProps, type TaavBusinessOwnershipValue, TaavBusinessProfileSummaryCard, type TaavBusinessProfileSummaryCardProps, TaavBusinessRecommendationCard, type TaavBusinessRecommendationCardActivationValue, type TaavBusinessRecommendationCardProps, type TaavBusinessRecommendationCardSize, type TaavBusinessRecommendationCardThemeMode, type TaavBusinessRecommendationCardTone, type TaavBusinessRecommendationCardVariant, type TaavBusinessRecommendationCardWidth, TaavBusinessSectionToolbarCard, type TaavBusinessSectionToolbarCardProps, TaavBusinessSidebar, type TaavBusinessSidebarItem, type TaavBusinessSidebarNavPathItem, type TaavBusinessSidebarPlacement, type TaavBusinessSidebarProps, type TaavBusinessSidebarQuickAction, type TaavBusinessSidebarTenant, type TaavBusinessSidebarTenantStatus, type TaavBusinessSidebarUser, type TaavBusinessSidebarVariant, type TaavBusinessSidebarWidth, TaavBusinessToggleCard, type TaavBusinessToggleCardProps, type TaavBusinessToggleCardVariant, type TaavCommunicationChannel, TaavCommunicationChannels, TaavCommunicationChannelsCard, type TaavCommunicationChannelsCardItem, type TaavCommunicationChannelsCardProps, type TaavCommunicationChannelsProps, TaavDetailsLink, type TaavDetailsLinkProps, type TaavDetailsLinkSize, type TaavDetailsLinkTone, type TaavDetailsLinkUnderline, type TaavFormStep, TaavFormStepIndicator, type TaavFormStepIndicatorProps, TaavMobileNumberInputCard, type TaavMobileNumberInputCardProps, TaavModuleCard, type TaavModuleCardAlign, type TaavModuleCardDirection, TaavModuleCardGrid, type TaavModuleCardGridColumns, type TaavModuleCardGridDensity, type TaavModuleCardGridGap, TaavModuleCardGridItem, type TaavModuleCardGridItemProps, type TaavModuleCardGridProps, type TaavModuleCardGridSpan, type TaavModuleCardHeaderPattern, type TaavModuleCardProps, type TaavModuleCardSize, type TaavModuleCardStatus, type TaavModuleCardThemeMode, type TaavModuleCardTone, type TaavModuleCardVariant, type TaavModuleCardWidth, TaavProjectStructureCard, type TaavProjectStructureCardAction, type TaavProjectStructureCardProps, TaavShebaNumberInput, type TaavShebaNumberInputProps };
