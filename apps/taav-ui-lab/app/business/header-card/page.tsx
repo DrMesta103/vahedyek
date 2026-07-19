@@ -1,6 +1,5 @@
 'use client';
 
-import { BadgePercent } from 'lucide-react';
 import { TaavBusinessHeaderCard } from '@repo/ui/taav/business';
 import {
   DocCodeBlock,
@@ -76,21 +75,8 @@ export default function BusinessHeaderCardDocPage() {
         <BusinessHeaderCardActionWithSearchDemo />
       </DocSection>
 
-      <DocSection title="واریانت: پروفایل کسب و کار">
+      <DocSection title="توکن فقط اکشن بازگشت">
         <BusinessHeaderCardNavigationDemo />
-      </DocSection>
-
-      <DocSection title="تم روشن">
-        <div className="flex justify-center" dir="rtl">
-          <TaavBusinessHeaderCard
-            title="هزینه‌های جانبی"
-            description="هزینه‌های ثابت یا درصدی مانند کارمزد اداری، هزینه تشکیل پرونده و هزینه خدمات را در این بخش تعریف کنید."
-            icon={<BadgePercent className="h-6 w-6" strokeWidth={2.2} />}
-            variant="toggle"
-            enabled
-            themeMode="light"
-          />
-        </div>
       </DocSection>
 
       <DocSection title="code sample">

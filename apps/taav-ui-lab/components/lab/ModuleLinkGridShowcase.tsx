@@ -1,6 +1,6 @@
 'use client';
 
-import { TaavBusinessModuleLinkGrid, type TaavBusinessModuleLinkItem } from '@repo/ui/taav/business';
+import { TaavBusinessModuleLink, TaavBusinessModuleLinkGrid, type TaavBusinessModuleLinkItem } from '@repo/ui/taav/business';
 
 function LineIcon({ kind }: { kind: string }) {
   const paths: Record<string, string> = {
@@ -29,35 +29,20 @@ const ITEMS: TaavBusinessModuleLinkItem[] = [
 
 export function ModuleLinkGridShowcase() {
   return (
-    <div className="grid gap-6">
-      <div
-        dir="rtl"
-        data-taav-theme="light"
-        className="rounded-none bg-[var(--taav-bg)] px-5 py-4"
-      >
-        <p className="mb-3 text-sm font-semibold text-[var(--taav-text-muted)]">نمونه روشن</p>
-        <TaavBusinessModuleLinkGrid items={ITEMS} />
-      </div>
-      <div
-        dir="rtl"
-        data-taav-theme="dark"
-        className="rounded-none bg-[var(--taav-bg)] px-5 py-4"
-      >
-        <p className="mb-3 text-sm font-semibold text-[var(--taav-text-muted)]">نمونه تیره</p>
-        <TaavBusinessModuleLinkGrid items={ITEMS} />
-      </div>
+    <div
+      dir="rtl"
+      data-taav-theme="light"
+      className="w-full bg-white px-5 py-4"
+    >
+      <TaavBusinessModuleLinkGrid items={ITEMS} columns={2} gap="md" />
     </div>
   );
 }
 
-export function ModuleLinkGridPatternShowcase() {
+export function ModuleLinkShowcase() {
   return (
-    <div
-      dir="rtl"
-      data-taav-theme="light"
-      className="w-full bg-[var(--taav-bg)] px-5 py-4"
-    >
-      <TaavBusinessModuleLinkGrid items={ITEMS} columns={2} gap="md" />
+    <div dir="rtl" data-taav-theme="light" className="w-full bg-[var(--taav-bg)] px-5 py-4">
+      <TaavBusinessModuleLink item={ITEMS[0]} className="w-1/2" />
     </div>
   );
 }

@@ -23,3 +23,4 @@ export * from './TaavBankAccountInfoInputCard';
 export * from './TaavBankCardNumberInput';
 export * from './TaavShebaNumberInput';
 export * from './TaavBankAccountNumberInput';
+export * from './TaavProjectStructureCard';

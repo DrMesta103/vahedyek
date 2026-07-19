@@ -1,6 +1,6 @@
 import { DocCodeBlock, DocDoDont, DocGuidelines, DocPageHeader, DocPreview, DocSection, DocSpecGrid } from '@/components/lab/DocBlocks';
 import { DocPageShell } from '@/components/lab/DocPageShell';
-import { ModuleLinkGridPatternShowcase, ModuleLinkGridShowcase } from '@/components/lab/ModuleLinkGridShowcase';
+import { ModuleLinkGridShowcase, ModuleLinkShowcase } from '@/components/lab/ModuleLinkGridShowcase';
 
 export default function ModuleLinkGridPage() {
   return (
@@ -12,12 +12,12 @@ export default function ModuleLinkGridPage() {
           description="گرید دو ستونه برای نمایش مسیرهای اطلاعاتی و عملیاتی مجتمع با عنوان، توضیح، آیکن و فلش ورود."
           importCode={`import { TaavBusinessModuleLinkGrid } from '@repo/ui/taav/business';`}
         />
-        <DocSection title="الگو">
+        <DocSection title="کامپوننت اصلی">
           <DocPreview bare>
-            <ModuleLinkGridPatternShowcase />
+            <ModuleLinkShowcase />
           </DocPreview>
         </DocSection>
-        <DocSection title="نمونه‌های روشن و تیره">
+        <DocSection title="گریدبندی">
           <DocPreview bare>
             <ModuleLinkGridShowcase />
           </DocPreview>

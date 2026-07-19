@@ -12,7 +12,7 @@ export const businessHeaderCardRoot = cva(
   {
     variants: {
       variant: {
-        navigation: 'md:h-[145px] md:min-h-[145px]',
+        navigation: 'md:h-[100px] md:min-h-[100px] md:max-w-[696px] rounded-[16px] border border-[rgba(145,170,190,0.5)]',
         toggleWithLink: '',
         toggle: 'md:h-[96px] md:min-h-[96px] md:max-w-[960px]',
         action: 'md:h-[96px] md:min-h-[96px] md:max-w-[960px]',
@@ -39,11 +39,11 @@ export const businessHeaderCardRoot = cva(
 export const businessHeaderCardBody = cva('flex h-full min-h-0 flex-col gap-[12px] p-[24px_28px_24px_24px]', {
   variants: {
     variant: {
-      navigation: '',
+      navigation: 'md:p-[17px_28px] md:justify-center',
       toggleWithLink: '',
       toggle: 'md:p-[20px_28px]',
       action: 'md:p-[20px_28px]',
-      actionWithSearch: '',
+      actionWithSearch: 'w-full items-start',
     },
   },
   defaultVariants: { variant: 'navigation' },
@@ -87,7 +87,7 @@ export const businessHeaderCardCopy = cva('flex min-w-0 flex-col items-end justi
       toggleWithLink: '',
       toggle: 'w-full items-start',
       action: 'w-full items-start',
-      actionWithSearch: '',
+      actionWithSearch: 'w-full text-right',
     },
   },
   defaultVariants: { variant: 'navigation' },
@@ -96,7 +96,7 @@ export const businessHeaderCardCopy = cva('flex min-w-0 flex-col items-end justi
 export const businessHeaderCardTitle = cva('m-0 text-right text-[18px] font-semibold leading-[26px] text-[#30343b]', {
   variants: {
     variant: {
-      navigation: 'w-full text-right',
+      navigation: 'w-full text-right text-[18px] font-semibold leading-[22px]',
       toggleWithLink: '',
       toggle: 'w-full text-right text-[18px] font-bold leading-[26px] text-[#30343b]',
       action: 'w-full text-right text-[18px] font-bold leading-[26px] text-[#30343b]',
@@ -111,11 +111,11 @@ export const businessHeaderCardDescription = cva(
   {
     variants: {
       variant: {
-        navigation: '',
+        navigation: 'md:w-[520px] md:max-w-[520px] text-[12.5px] font-medium leading-[20px]',
         toggleWithLink: '',
         toggle: 'whitespace-nowrap text-[12.5px] font-medium leading-[22px] text-[#6b7280]',
         action: 'whitespace-nowrap text-[12.5px] font-medium leading-[22px] text-[#6b7280]',
-        actionWithSearch: '',
+        actionWithSearch: 'whitespace-nowrap text-[12.5px] font-medium leading-[22px] text-[#5f6f80]',
       },
     },
     defaultVariants: { variant: 'navigation' },

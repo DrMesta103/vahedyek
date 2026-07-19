@@ -110,7 +110,6 @@ export function BusinessHeaderCardNavigationDemo() {
         icon={<Building2 className="h-6 w-6" strokeWidth={2.2} />}
         variant="navigation"
         href="#"
-        wrapperClassName="md:h-[145px] md:min-h-[145px]"
         themeMode="light"
       />
     </VariantWrap>

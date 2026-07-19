@@ -7,6 +7,12 @@ import { LAB_BUSINESS_NAV } from '@/lib/navigation';
 const BUSINESS_ITEMS = [
   ...LAB_BUSINESS_NAV,
   {
+    href: '/business/project-structure-card',
+    label: 'کارت ساختار پروژه',
+    badge: 'TaavProjectStructureCard',
+    description: 'نمایش کارت‌های بلوک، طبقه، پلاک، واحد و کاربری با حالت‌های مختلف',
+  },
+  {
     href: '/business/ownership-card',
     label: 'کارت نوع مالکیت و اطلاعات پایه',
     badge: 'TaavBusinessOwnershipCard',
