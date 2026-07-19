@@ -915,6 +915,8 @@ export type CalendarShiftWizardProps = {
   enableBuiltinTemplatePicker?: boolean;
   submitLabel?: string;
   initialDescription?: string;
+  initialShiftConfig?: Record<string, unknown>;
+  initialShiftTitle?: string;
   hideFooter?: boolean;
   beforeSummarySlot?: ReactNode;
   onRegisterSubmit?: (handle: CalendarShiftWizardSubmitHandle | null) => void;
@@ -936,6 +938,8 @@ export function CalendarShiftWizard({
   enableBuiltinTemplatePicker = true,
   submitLabel,
   initialDescription = '',
+  initialShiftConfig,
+  initialShiftTitle,
   hideFooter = false,
   beforeSummarySlot,
   onRegisterSubmit,
@@ -944,7 +948,7 @@ export function CalendarShiftWizard({
   onCancel,
 }: CalendarShiftWizardProps) {
   const isTemplatePurpose = purpose === 'template';
-  const baseShiftConfig: Record<string, unknown> = {};
+  const baseShiftConfig: Record<string, unknown> = initialShiftConfig ?? {};
   const defaultWorkingDaysForContext = dayContext ? [] : DEFAULT_WORKING_DAYS;
   const singleDayDate = dayContext ? normalizePersianDateInput(dayContext.date) : null;
   const groupedIncludedDates = forcedIncludedDates.map((item) => normalizePersianDateInput(item)).filter(Boolean);
@@ -966,7 +970,7 @@ export function CalendarShiftWizard({
     enableBuiltinTemplatePicker ? ((baseShiftConfig.mode as ShiftMode | undefined) ?? 'manual') : 'manual',
   );
   const [selectedTemplateId, setSelectedTemplateId] = useState(String(baseShiftConfig.templateId ?? ''));
-  const [shiftTitle, setShiftTitle] = useState('');
+  const [shiftTitle, setShiftTitle] = useState(initialShiftTitle ?? String(baseShiftConfig.title ?? ''));
   const [saveError, setSaveError] = useState('');
   const [holidayConfirmOpen, setHolidayConfirmOpen] = useState(false);
   const [rotateComingSoonOpen, setRotateComingSoonOpen] = useState(false);
@@ -1356,6 +1360,7 @@ export function CalendarShiftWizard({
       shiftType,
       mode: shiftMode,
       templateId: selectedTemplateId,
+      ...(selectedTemplateId && !isTemplatePurpose ? { sourceShiftTemplateId: selectedTemplateId } : {}),
       title: resolveCalendarShiftTitle(shiftTitle, shiftType),
       fixedShift: { startTime, endTime, endsNextDay: nextDay },
       rests,

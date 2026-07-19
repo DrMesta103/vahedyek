@@ -4,7 +4,7 @@ import dynamic from 'next/dynamic';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { MinimalScroll } from '../../../components/MinimalScroll';
-import { createShiftTemplateFromDialogAction } from '../../../lib/actions';
+import { createShiftTemplateFromDialogAction, updateShiftTemplateFromDialogAction } from '../../../lib/actions';
 import type { CalendarShiftType } from '../../../lib/calendar-shifts';
 import { RotateShiftComingSoonModal } from '../../calendars/[calendarId]/_components/shift/RotateShiftComingSoonModal';
 import { SHIFT_TYPE_CARDS } from '../../calendars/[calendarId]/_components/shift/shift-type-cards';
@@ -29,6 +29,14 @@ type CreateShiftTemplateDialogProps = {
   initialShiftType?: CalendarShiftType | null;
   onClose: () => void;
   onSaved: () => void;
+  mode?: 'create' | 'edit' | 'clone';
+  template?: {
+    id: string;
+    title: string;
+    description: string | null;
+    shiftType: CalendarShiftType;
+    config: Record<string, unknown>;
+  } | null;
 };
 
 export function CreateShiftTemplateDialog({
@@ -36,6 +44,8 @@ export function CreateShiftTemplateDialog({
   initialShiftType = null,
   onClose,
   onSaved,
+  mode = 'create',
+  template = null,
 }: CreateShiftTemplateDialogProps) {
   const [mounted, setMounted] = useState(false);
   const [selectedType, setSelectedType] = useState<CalendarShiftType | null>(null);
@@ -142,7 +152,7 @@ export function CreateShiftTemplateDialog({
         onMouseDown={(event) => event.stopPropagation()}
       >
         <header className="calendar-shift-modal-head">
-          <h2 id="shift-template-modal-title">قالب شیفت جدید</h2>
+          <h2 id="shift-template-modal-title">{mode === 'edit' ? 'ویرایش قالب شیفت' : mode === 'clone' ? 'ایجاد نسخه مشابه قالب شیفت' : 'افزودن قالب شیفت'}</h2>
           <p>
             {selectedCard
               ? 'جزئیات قالب را تکمیل کنید تا در ثبت شیفت تقویم قابل استفاده باشد.'
@@ -190,16 +200,25 @@ export function CreateShiftTemplateDialog({
                 compact
                 purpose="template"
                 enableBuiltinTemplatePicker={false}
-                submitLabel="ثبت قالب"
+                submitLabel={mode === 'edit' ? 'ذخیره تغییرات' : mode === 'clone' ? 'ایجاد نسخه مشابه' : 'ثبت قالب'}
+                initialDescription={template?.description ?? ''}
+                initialShiftConfig={template?.config}
+                initialShiftTitle={mode === 'clone' ? `${template?.title ?? ''} - کپی` : template?.title}
                 onSaveShift={async (payload) => {
                   setError(null);
                   try {
-                    await createShiftTemplateFromDialogAction({
+                    const input = {
                       shiftType: payload.shiftType,
                       shiftTitle: payload.shiftTitle,
                       description: payload.description,
                       shiftConfig: payload.shiftConfig,
-                    });
+                      ...(mode === 'clone' && template ? { sourceTemplateId: template.id } : {}),
+                    };
+                    if (mode === 'edit' && template) {
+                      await updateShiftTemplateFromDialogAction({ ...input, id: template.id });
+                    } else {
+                      await createShiftTemplateFromDialogAction(input);
+                    }
                   } catch (saveError) {
                     setError(saveError instanceof Error ? saveError.message : 'ثبت قالب انجام نشد.');
                     throw saveError;

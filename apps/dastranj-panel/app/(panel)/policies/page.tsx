@@ -1,121 +1,45 @@
-import { CardMenu } from '../../components/CardMenu';
 import { ModuleAddTile } from '../../components/module-page/ModuleAddTile';
 import { ModulePageHeader } from '../../components/module-page/ModulePageHeader';
-import { deletePolicyAction } from '../../lib/actions';
 import { listPolicies } from '../../lib/data';
-import {
-  POLICY_FAMILIES,
-  getPolicyFamilyKey,
-  getPolicySectionValues,
-  getPolicyVariantMeta,
-  type PolicyFamilyKey,
-} from '../../lib/policy-workspaces';
+import { getPolicyAccess } from '../../lib/policy-access';
+import { POLICY_FAMILIES, getPolicyFamilyKey, getPolicySectionValues, getPolicyVariantMeta, type PolicyFamilyKey } from '../../lib/policy-workspaces';
+import { PolicyCard } from './_components/PolicyCard';
 
-type PoliciesPageProps = {
-  searchParams?: { q?: string } | Promise<{ q?: string }>;
-};
+type PoliciesPageProps = { searchParams?: { q?: string; status?: string; usage?: string } | Promise<{ q?: string; status?: string; usage?: string }> };
 
-function resolveFamilyLabel(familyKey: PolicyFamilyKey | null) {
-  if (!familyKey) return 'سیاست کاری';
-  return POLICY_FAMILIES.find((item) => item.key === familyKey)?.title ?? 'سیاست';
-}
-
-function formatCalendarYear(calendar: { yearLabel: string } | null | undefined) {
-  if (!calendar?.yearLabel?.trim()) return 'ثبت نشده';
-  return calendar.yearLabel.trim();
-}
-
-function normalize(value: string) {
-  return value
-    .toLowerCase()
-    .replace(/\s+/g, ' ')
-    .replace(/[يی]/g, 'ی')
-    .replace(/[كک]/g, 'ک')
-    .trim();
-}
+function familyLabel(key: PolicyFamilyKey | null) { return key ? POLICY_FAMILIES.find((item) => item.key === key)?.title ?? 'سیاست' : 'سیاست کاری'; }
+function calendarLabel(calendar: { yearLabel: string } | null | undefined) { return calendar?.yearLabel?.trim() || 'ثبت نشده'; }
+function normalize(value: string) { return value.toLowerCase().replace(/\s+/g, ' ').replace(/[ÙŠÛŒ]/g, 'ÛŒ').replace(/[ÙƒÚ©]/g, 'Ú©').trim(); }
 
 export default async function PoliciesPage({ searchParams }: PoliciesPageProps) {
-  const resolvedSearchParams = await Promise.resolve(searchParams ?? {});
-  const q = typeof resolvedSearchParams.q === 'string' ? resolvedSearchParams.q : '';
+  const params = await Promise.resolve(searchParams ?? {});
+  const q = typeof params.q === 'string' ? params.q : '';
+  const status = params.status === 'active' || params.status === 'inactive' ? params.status : 'all';
+  const usage = params.usage === 'used' || params.usage === 'unused' ? params.usage : 'all';
+  const [policies, access] = await Promise.all([listPolicies(), getPolicyAccess()]);
+  if (!access.canView) return <div className="page-stack module-page" dir="rtl" lang="fa"><div className="module-empty-state"><h2>دسترسی به سیاست‌های کاری ندارید.</h2><p>برای مشاهدهٔ این بخش به نقش مالک، مدیر یا مدیر منابع انسانی نیاز است.</p></div></div>;
   const query = normalize(q);
-  const policies = await listPolicies();
-
-  const filteredPolicies = query
-    ? policies.filter((policy) => {
-        const familyKey = getPolicyFamilyKey(policy);
-        const sectionValues = getPolicySectionValues(policy);
-        const variantKey = typeof sectionValues.variant === 'string' ? sectionValues.variant : null;
-        const familyTitle = resolveFamilyLabel(familyKey);
-        const variantTitle = familyKey ? getPolicyVariantMeta(familyKey, variantKey)?.title ?? '' : '';
-        const haystack = normalize(
-          [policy.title, policy.description ?? '', familyTitle, variantTitle, formatCalendarYear(policy.calendar)].join(' '),
-        );
-        return haystack.includes(query);
-      })
-    : policies;
-
-  return (
-    <div className="page-stack module-page" dir="rtl" lang="fa">
-      <ModulePageHeader
-        title="سیاست‌های کاری"
-        subtitle="مدیریت قوانین و سیاست‌های حضور و غیاب کارمندان"
-        addHref="/policies/new"
-        addLabel="افزودن سیاست"
-      />
-
-      <div className="module-page-toolbar">
-        <form action="/policies" method="get" className="module-year-filter">
-          <input
-            type="search"
-            name="q"
-            defaultValue={q}
-            aria-label="جستجوی سیاست"
-            placeholder="جستجوی سیاست..."
-          />
-        </form>
-      </div>
-
-      <div className="module-page-grid">
-        {filteredPolicies.map((policy) => {
-          const familyKey = getPolicyFamilyKey(policy);
-          const editHref = familyKey ? `/policies/${familyKey}?policyId=${policy.id}` : `/policies/work?policyId=${policy.id}`;
-
-          return (
-            <article key={policy.id} className="module-grid-card">
-              <div className="module-grid-card-top">
-                <div className="module-grid-card-body">
-                  <h3>{policy.title}</h3>
-                  <p>توضیحات : {policy.description?.trim() ? policy.description : 'ثبت نشده'}</p>
-                  <p>تقویم: {formatCalendarYear(policy.calendar)}</p>
-                </div>
-
-                <div className="module-grid-card-top-actions">
-                  <CardMenu
-                    items={[
-                      { kind: 'link', href: editHref, label: 'جزئیات' },
-                      { kind: 'link', href: editHref, label: 'ویرایش' },
-                      {
-                        kind: 'submit',
-                        label: 'حذف',
-                        tone: 'danger',
-                        action: deletePolicyAction,
-                        hiddenFields: { id: policy.id },
-                        confirm: {
-                          title: 'حذف سیاست کاری',
-                          description: `آیا از حذف «${policy.title}» مطمئن هستید؟ این رکورد از فهرست حذف می‌شود.`,
-                          confirmLabel: 'بله، حذف شود',
-                          cancelLabel: 'انصراف',
-                        },
-                      },
-                    ]}
-                  />
-                </div>
-              </div>
-            </article>
-          );
-        })}
-        <ModuleAddTile href="/policies/new" label="برای افزودن سیاست کاری کلیک کنید." />
-      </div>
+  const visible = policies.filter((policy) => {
+    if (status === 'active' && !policy.isActive) return false;
+    if (status === 'inactive' && policy.isActive) return false;
+    if (usage === 'used' && policy.groupCount === 0) return false;
+    if (usage === 'unused' && policy.groupCount > 0) return false;
+    if (!query) return true;
+    const key = getPolicyFamilyKey(policy); const values = getPolicySectionValues(policy);
+    const variant = key ? getPolicyVariantMeta(key, typeof values.variant === 'string' ? values.variant : null)?.title ?? '' : '';
+    return normalize([policy.title, policy.description ?? '', familyLabel(key), variant, calendarLabel(policy.calendar)].join(' ')).includes(query);
+  });
+  return <div className="page-stack module-page" dir="rtl" lang="fa">
+    <ModulePageHeader title="سیاست‌های کاری" subtitle="مدیریت قوانین حضور و غیاب کارکنان" addHref={access.canManage ? '/policies/new' : undefined} addLabel="افزودن سیاست" />
+    <div className="module-page-toolbar"><form action="/policies" method="get" className="module-year-filter">
+      <input type="search" name="q" defaultValue={q} aria-label="جست‌وجوی سیاست" placeholder="جست‌وجوی سیاست..." />
+      <select name="status" defaultValue={status} aria-label="فیلتر وضعیت"><option value="all">همه وضعیت‌ها</option><option value="active">فعال</option><option value="inactive">غیرفعال</option></select>
+      <select name="usage" defaultValue={usage} aria-label="فیلتر استفاده"><option value="all">همه استفاده‌ها</option><option value="used">استفاده‌شده</option><option value="unused">بدون استفاده</option></select>
+    </form></div>
+    <div className="module-page-grid">
+      {visible.map((policy) => { const key = getPolicyFamilyKey(policy); const values = getPolicySectionValues(policy); const variant = typeof values.variant === 'string' ? values.variant : null; const editHref = key ? `/policies/${key}?policyId=${policy.id}` : `/policies/work?policyId=${policy.id}`; return <PolicyCard key={policy.id} editHref={editHref} item={{ id: policy.id, title: policy.title, description: policy.description, calendarLabel: calendarLabel(policy.calendar), familyLabel: familyLabel(key), variantLabel: key ? getPolicyVariantMeta(key, variant)?.title ?? 'پیش‌فرض' : 'پیش‌فرض', isActive: policy.isActive, groupCount: policy.groupCount, employeeCount: policy.employeeCount, summary: `${Object.keys(values).filter((name) => !['familyKey', 'variant', 'title', 'description'].includes(name)).length.toLocaleString('fa-IR')} تنظیم` }} />; })}
+      {!visible.length ? <div className="module-empty-state"><h2>سیاستی مطابق فیلترها پیدا نشد.</h2><p>فیلترها را تغییر دهید یا یک سیاست کاری جدید ایجاد کنید.</p></div> : null}
+      {access.canManage ? <ModuleAddTile href="/policies/new" label="برای افزودن سیاست کاری کلیک کنید." /> : null}
     </div>
-  );
+  </div>;
 }

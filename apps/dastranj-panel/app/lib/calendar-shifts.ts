@@ -31,6 +31,7 @@ export type StoredCalendarShift = {
   title: string;
   config: Record<string, unknown>;
   createdAt: string;
+  sourceShiftTemplateId?: string;
 };
 
 export function getCalendarShiftTypeLabel(shiftType: string) {

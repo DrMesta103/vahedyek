@@ -5,6 +5,7 @@ import { requestReasonCategories } from './constants';
 import { ensureTenantDefaultRequestReasons } from './request-reason-defaults';
 import { getGlobalDefaultCalendarTemplate } from './calendar-defaults';
 import { mapShiftTemplateRecord, type ShiftTemplatePickerItem } from './shift-template-picker';
+import { summarizeBreaksForShift, summarizeShiftForDayPanel } from './calendar-shift-display';
 import {
   clampPersianMonth,
   getPersianPartsFromDate,
@@ -522,7 +523,53 @@ export async function getOrganizationUnit(id: string) {
 
 export async function listShiftTemplates() {
   const tenantId = await requireTenantId();
-  return prisma.shiftTemplate.findMany({ where: { tenantId }, orderBy: { updatedAt: 'desc' } });
+  const [templates, calendars] = await Promise.all([
+    prisma.shiftTemplate.findMany({ where: { tenantId }, orderBy: { updatedAt: 'desc' } }),
+    prisma.calendar.findMany({ where: { tenantId }, select: { id: true, title: true, shiftConfig: true } }),
+  ]);
+  const usages = new Map<string, { count: number; calendars: Array<{ id: string; title: string }> }>();
+  let legacyUsageUncertain = false;
+  for (const calendar of calendars) {
+    for (const shift of listCalendarShifts(calendar.shiftConfig)) {
+      const sourceId = shift.sourceShiftTemplateId
+        ?? (typeof shift.config.sourceShiftTemplateId === 'string' ? shift.config.sourceShiftTemplateId : null)
+        ?? (typeof shift.config.templateId === 'string' ? shift.config.templateId : null);
+      if (!sourceId) {
+        legacyUsageUncertain = true;
+        continue;
+      }
+      const current = usages.get(sourceId) ?? { count: 0, calendars: [] };
+      current.count += 1;
+      if (!current.calendars.some((item) => item.id === calendar.id)) current.calendars.push({ id: calendar.id, title: calendar.title });
+      usages.set(sourceId, current);
+    }
+  }
+  return templates.map((template) => {
+    const usage = usages.get(template.id);
+    const summary = summarizeShiftForDayPanel({
+      id: template.id,
+      title: template.title,
+      shiftType: template.type === 'floating_day_start' ? 'float-day' : template.type === 'floating_absolute' ? 'float-abs' : template.type,
+      config: (template.config && typeof template.config === 'object' && !Array.isArray(template.config) ? template.config : {}) as Record<string, unknown>,
+      createdAt: template.createdAt.toISOString(),
+    });
+    const shift = {
+      id: template.id,
+      title: template.title,
+      shiftType: template.type === 'floating_day_start' ? 'float-day' : template.type === 'floating_absolute' ? 'float-abs' : template.type,
+      config: (template.config && typeof template.config === 'object' && !Array.isArray(template.config) ? template.config : {}) as Record<string, unknown>,
+      createdAt: template.createdAt.toISOString(),
+    } as const;
+    return {
+      ...template,
+      usageCount: usage?.count ?? 0,
+      isUsed: Boolean(usage?.count),
+      usageUnknown: legacyUsageUncertain && !usage?.count,
+      usageCalendars: usage?.calendars ?? [],
+      timeSummary: summary.timeRange,
+      breakSummary: summarizeBreaksForShift(shift),
+    };
+  });
 }
 
 export async function listCalendars() {
@@ -719,19 +766,27 @@ export async function getCalendarDetails(
   };
 }
 
-export async function listPolicies() {
+export async function listPolicies(options?: { activeOnly?: boolean }) {
   const tenantId = await requireTenantId();
-  return prisma.workPolicy.findMany({
-    where: { tenantId },
-    include: { calendar: true, workGroups: true },
+  const rows = await prisma.workPolicy.findMany({
+    where: { tenantId, ...(options?.activeOnly ? { isActive: true } : {}) },
+    include: {
+      calendar: true,
+      workGroups: { include: { members: { where: { isCurrent: true }, select: { employeeId: true } } } },
+    },
     orderBy: { updatedAt: 'desc' },
   });
+  return rows.map((policy) => ({
+    ...policy,
+    groupCount: policy.workGroups.length,
+    employeeCount: new Set(policy.workGroups.flatMap((group) => group.members.map((member) => member.employeeId))).size,
+  }));
 }
 
 export async function listDefaultPolicies() {
   const tenantId = await requireTenantId();
   return prisma.workPolicy.findMany({
-    where: { tenantId, isDefault: true },
+    where: { tenantId, isDefault: true, isActive: true },
     include: { calendar: true },
     orderBy: { createdAt: 'asc' },
   });

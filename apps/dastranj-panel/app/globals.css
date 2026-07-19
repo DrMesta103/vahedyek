@@ -20489,8 +20489,49 @@ body.tenant-select-route {
 /* Shift templates page */
 .shift-templates-page .shift-templates-toolbar {
   display: flex;
+  align-items: center;
+  gap: 10px;
   justify-content: flex-end;
+  flex-wrap: wrap;
 }
+
+.shift-templates-page .shift-templates-toolbar select {
+  min-height: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.55);
+  color: #f8fafc;
+  padding: 0 10px;
+  font-family: inherit;
+}
+
+.shift-template-section { display: grid; gap: 14px; }
+.shift-template-section + .shift-template-section { margin-top: 28px; }
+.shift-template-section-header { display: grid; gap: 4px; }
+.shift-template-section-header h2 { margin: 0; color: #f8fafc; font-size: 18px; font-weight: 900; }
+.shift-template-section-header p { margin: 0; color: #94a3b8; font-size: 13px; line-height: 1.8; }
+.shift-template-blueprint-card { display: grid; gap: 12px; }
+.shift-template-blueprint-card h3, .shift-template-blueprint-card p { margin: 0; }
+.shift-template-blueprint-card p { color: #94a3b8; font-size: 12px; line-height: 1.8; }
+.shift-template-blueprint-card .calendar-create-submit { min-height: 42px; display: inline-flex; align-items: center; justify-content: center; }
+.shift-template-blueprint-card.is-coming-soon { opacity: 0.8; }
+.shift-template-empty-state { display: grid; gap: 8px; justify-items: start; grid-column: 1 / -1; border: 1px dashed rgba(148, 163, 184, 0.3); border-radius: 16px; padding: 28px; color: #94a3b8; }
+.shift-template-empty-state strong { color: #f8fafc; }
+.shift-template-empty-state button { min-height: 42px; border: 0; border-radius: 10px; background: #4f46e5; color: white; padding: 0 16px; font-family: inherit; font-weight: 800; cursor: pointer; }
+.shift-template-loading { padding: 24px; color: #94a3b8; }
+.shift-template-detail-body { display: grid; gap: 18px; }
+.shift-template-detail-title { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.shift-template-detail-title h3 { margin: 0; color: #f8fafc; font-size: 20px; }
+.shift-template-detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 0; }
+.shift-template-detail-grid div { display: grid; gap: 5px; border-radius: 12px; background: rgba(15, 23, 42, 0.65); padding: 12px; }
+.shift-template-detail-grid dt { color: #94a3b8; font-size: 12px; }
+.shift-template-detail-grid dd { margin: 0; color: #f8fafc; font-size: 13px; line-height: 1.7; }
+.shift-template-detail-usage { display: grid; gap: 7px; color: #cbd5e1; font-size: 13px; }
+.shift-template-card-title-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.shift-template-fetch-error, .shift-template-access-state { display: grid; gap: 12px; justify-items: start; padding: 28px; border: 1px solid rgba(248, 113, 113, 0.35); border-radius: 16px; background: rgba(127, 29, 29, 0.18); color: #fecaca; }
+.shift-template-fetch-error button { min-height: 40px; border: 0; border-radius: 10px; background: #4f46e5; color: #fff; padding: 0 16px; font-family: inherit; font-weight: 800; cursor: pointer; }
+.shift-template-detail-usage span { color: #a5b4fc; }
+@media (max-width: 640px) { .shift-template-detail-grid { grid-template-columns: 1fr; } }
 
 .shift-templates-search {
   display: inline-flex;

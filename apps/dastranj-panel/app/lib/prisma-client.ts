@@ -39,6 +39,7 @@ export type WorkPolicy = {
   title: string;
   description: string | null;
   calendarId: string | null;
+  isActive: boolean;
   calendar?: { yearLabel: string } | null;
   sectionValues: unknown;
 };

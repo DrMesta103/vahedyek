@@ -54,6 +54,34 @@ export default async function NewPolicyPage() {
           </div>
         </PolicySectionCard>
 
+        <PolicySectionCard title="Blueprint">
+          <div className="policy-form-card">
+            <label className="policy-field-stack">
+              <PolicyFieldLabel label="Blueprint مبنا" required hint="سیاست ساخته‌شده پس از ثبت مستقل است." />
+              <span className="policy-select-wrap">
+                <PolicyFieldSelect name="blueprintKey" required defaultValue="custom">
+                  <option value="custom">سیاست سفارشی</option>
+                  <option value="office">اداری</option>
+                  <option value="restaurant">رستورانی</option>
+                  <option value="retail">فروشگاهی</option>
+                </PolicyFieldSelect>
+                <ChevronDown className="policy-select-icon" aria-hidden />
+              </span>
+            </label>
+          </div>
+        </PolicySectionCard>
+
+        <PolicySectionCard title="قواعد پایه">
+          <div className="policy-form-card">
+            <label className="policy-toggle-field"><span className="policy-toggle-copy"><span className="policy-toggle-label">ورود الزامی</span></span><input name="entryRequired" type="checkbox" defaultChecked /></label>
+            <label className="policy-toggle-field"><span className="policy-toggle-copy"><span className="policy-toggle-label">خروج الزامی</span></span><input name="exitRequired" type="checkbox" defaultChecked /></label>
+            <label className="policy-toggle-field"><span className="policy-toggle-copy"><span className="policy-toggle-label">کنترل مکان</span></span><input name="requireGeofence" type="checkbox" /></label>
+            <label className="policy-toggle-field"><span className="policy-toggle-copy"><span className="policy-toggle-label">ثبت ناقص به‌عنوان غیبت ناقص</span></span><input name="incompleteAttendance" type="checkbox" defaultChecked /></label>
+            <label className="policy-toggle-field"><span className="policy-toggle-copy"><span className="policy-toggle-label">قابلیت درخواست</span></span><input name="requestEnabled" type="checkbox" defaultChecked /></label>
+            <p className="policy-info-strip">خلاصه قواعد انتخاب‌شده پیش از ثبت در همین صفحه نمایش داده می‌شود.</p>
+          </div>
+        </PolicySectionCard>
+
         {calendars.length === 0 ? (
           <div className="policy-info-strip" role="alert">
             <p>برای ثبت سیاست کاری ابتدا باید یک تقویم کاری ثبت شده باشد.</p>

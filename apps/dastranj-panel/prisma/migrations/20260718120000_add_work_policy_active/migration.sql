@@ -1,0 +1,2 @@
+ALTER TABLE "WorkPolicy"
+ADD COLUMN "isActive" BOOLEAN NOT NULL DEFAULT true;
