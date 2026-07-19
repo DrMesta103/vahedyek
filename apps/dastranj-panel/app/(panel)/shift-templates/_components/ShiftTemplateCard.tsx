@@ -21,6 +21,8 @@ export type ShiftTemplateListItem = {
   isUsed: boolean;
   usageUnknown: boolean;
   usageCalendars: Array<{ id: string; title: string }>;
+  sourceTemplateTitle: string | null;
+  createdAt: string;
   updatedAt: string;
 };
 
@@ -32,13 +34,15 @@ export function ShiftTemplateCard({ item, canManage, onDetail, onEdit, onClone }
   const router = useRouter();
   const [isActive, setIsActive] = useState(item.isActive);
   const [pending, startTransition] = useTransition();
+  const [toggleError, setToggleError] = useState<string | null>(null);
   const status = statusMeta(isActive);
   const weekDaysLabel = item.shiftType === 'rotate'
     ? 'الگوی چرخشی'
     : item.weekDays.length > 0 ? item.weekDays.join('، ') : 'روزی انتخاب نشده';
 
   const handleToggle = (next: boolean) => {
-    if (!next && !window.confirm(item.isUsed ? `این قالب در ${item.usageCount} استفاده ثبت‌شده دارد. غیرفعال شود؟` : 'قالب غیرفعال شود؟')) return;
+    if (!next && !window.confirm(item.isUsed ? 'این قالب قبلاً در تقویم‌های کاری استفاده شده است. غیرفعال‌سازی فقط مانع انتخاب آن برای استفاده‌های جدید می‌شود و تنظیمات قبلی تقویم‌ها را تغییر نمی‌دهد.\n\nغیرفعال کردن؟' : 'قالب غیرفعال شود؟')) return;
+    setToggleError(null);
     setIsActive(next);
     const formData = new FormData();
     formData.set('id', item.id);
@@ -46,7 +50,10 @@ export function ShiftTemplateCard({ item, canManage, onDetail, onEdit, onClone }
     startTransition(() => {
       void toggleShiftTemplateActiveAction(formData)
         .then(() => router.refresh())
-        .catch(() => setIsActive(!next));
+        .catch((error) => {
+          setIsActive(!next);
+          setToggleError(error instanceof Error && error.message ? error.message : 'تغییر وضعیت قالب شیفت انجام نشد. دوباره تلاش کنید.');
+        });
     });
   };
 
@@ -71,13 +78,25 @@ export function ShiftTemplateCard({ item, canManage, onDetail, onEdit, onClone }
   ];
 
   return (
-    <article className="module-grid-card shift-template-card">
+    <article
+      className="module-grid-card shift-template-card"
+      role="button"
+      tabIndex={0}
+      aria-label={`مشاهده جزئیات ${item.title}`}
+      onClick={onDetail}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          onDetail();
+        }
+      }}
+    >
       <div className="module-grid-card-top">
         <div className="module-grid-card-body">
           <div className="shift-template-card-title-row"><h3>{item.title}</h3><span className="module-status-pill is-neutral">{getShiftTemplateTypeLabel(item.shiftType)}</span></div>
           <p>{item.description?.trim() ? item.description : 'توضیحات ثبت نشده است'}</p>
         </div>
-        <div className="module-grid-card-top-actions">
+        <div className="module-grid-card-top-actions" onClick={(event) => event.stopPropagation()} onKeyDown={(event) => event.stopPropagation()}>
           <span className={`module-status-pill ${status.className}`}>{status.label}</span>
           {canManage ? <label className="request-reason-toggle module-grid-card-toggle" aria-label={isActive ? 'غیرفعال کردن قالب' : 'فعال کردن قالب'}>
             <input type="checkbox" checked={isActive} disabled={pending} onChange={(event) => handleToggle(event.target.checked)} />
@@ -91,8 +110,9 @@ export function ShiftTemplateCard({ item, canManage, onDetail, onEdit, onClone }
         <div className="module-metric-panel"><span>روزهای فعال</span><strong>{weekDaysLabel}</strong></div>
         <div className="module-metric-panel"><span>استفاده</span><strong>{item.isUsed ? `استفاده‌شده · ${item.usageCount} مورد` : item.usageUnknown ? 'استفاده نامشخص؛ داده قدیمی بدون منبع' : 'بدون استفاده ثبت‌شده'}</strong></div>
         <div className="module-metric-panel"><span>استراحت</span><strong>{item.breakSummary}</strong></div>
-        <div className="module-metric-panel"><span>منبع</span><strong>{typeof item.config.sourceTemplateId === 'string' ? 'نسخه مشابه از قالب دیگر' : 'سفارشی'}</strong></div>
+        <div className="module-metric-panel"><span>منبع</span><strong>{item.sourceTemplateTitle ? `نسخه مشابه از «${item.sourceTemplateTitle}»` : 'منبع قابل‌اثبات ثبت نشده'}</strong></div>
       </div>
+      {toggleError ? <p className="calendar-create-error" role="alert">{toggleError}</p> : null}
     </article>
   );
 }

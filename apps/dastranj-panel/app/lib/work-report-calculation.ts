@@ -794,7 +794,11 @@ export function calculateWorkReportDay(input: {
   const delayMinutes = attendanceAnalysis.delayMinutes;
   const earlyLeaveMinutes = attendanceAnalysis.earlyLeaveMinutes;
   const overtimeMinutes =
-    approvedOvertimeMinutes > 0 ? approvedOvertimeMinutes : Math.max(0, attendanceAnalysis.overtimeMinutes);
+    policyConfig.bundle.overtimeRule === 'disabled'
+      ? 0
+      : policyConfig.bundle.overtimeRule === 'manager_approval'
+        ? approvedOvertimeMinutes
+        : Math.max(approvedOvertimeMinutes, attendanceAnalysis.overtimeMinutes);
   const nightWorkMinutes = attendanceAnalysis.nightWorkMinutes;
   const isIncompleteAttendance = attendanceAnalysis.incomplete;
   const incompleteSegments = attendanceAnalysis.incompleteSegmentLabels ?? [];
@@ -844,7 +848,8 @@ export function calculateWorkReportDay(input: {
     ['leave', 'mission', 'remote', 'attendance'].includes(requestFamily(request.requestType)),
   );
   if (primaryRequests.length > 1) warnings.push('در این روز چند درخواست هم‌پوشان ثبت شده است.');
-  if (isIncompleteAttendance) warnings.push('تردد این روز کامل نیست.');
+  if (attendanceAnalysis.correctionRequired) warnings.push('تردد این روز کامل نیست و ثبت درخواست اصلاح تردد لازم است.');
+  else if (attendanceAnalysis.hasMissingPunch) warnings.push('تردد این روز کامل نیست؛ این مورد طبق سیاست فقط به‌صورت هشدار ثبت شده است.');
   if (shortageMinutes > 0) warnings.push('این روز کمتر از موظفی محاسبه شده است.');
 
   const statusBadges: WorkReportDayResult['statusBadges'] = [{ key: `${input.date}-status`, label: status, tone: badgeTone(status) }];

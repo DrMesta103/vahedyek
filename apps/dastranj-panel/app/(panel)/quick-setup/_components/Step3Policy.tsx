@@ -4,16 +4,15 @@ import { ArrowLeft, BriefcaseBusiness, CalendarDays, Check, ChevronDown, Chevron
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { MinimalScroll } from '../../../components/MinimalScroll';
 import { createPolicyFromQuickSetupAction } from '../../../lib/actions';
+import { POLICY_BLUEPRINTS } from '../../../lib/policy-blueprints';
 import type { CompletedCalendarItem, QuickPolicySummary } from './quick-setup.types';
 
 type PolicyTemplate = { id: string; title: string; description: string; application: string; year: string };
 type SectionKey = 'calendar' | 'template';
 
-const SYSTEM_TEMPLATES: PolicyTemplate[] = [
-  { id: 'office', title: 'سیاست کاری اداری', description: 'مناسب برای تیم‌های اداری با ساعات کاری منظم و استاندارد', application: 'اداری', year: '1404' },
-  { id: 'restaurant', title: 'سیاست کاری رستورانی', description: 'مناسب کسب‌وکارها و تیم‌های شیفتی و خدماتی', application: 'رستورانی', year: '1404' },
-  { id: 'retail', title: 'سیاست کاری فروشگاهی', description: 'مناسب فروشگاه‌ها و محیط‌های کاری با شیفت‌های منعطف', application: 'فروشگاهی', year: '1404' },
-];
+const SYSTEM_TEMPLATES: PolicyTemplate[] = POLICY_BLUEPRINTS
+  .filter((item) => item.available)
+  .map((item) => ({ id: item.key, title: item.title === 'سفارشی' ? 'سیاست کاری سفارشی' : `سیاست کاری ${item.title}`, description: item.description, application: item.application, year: '' }));
 
 function cn(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ');

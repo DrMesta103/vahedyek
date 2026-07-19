@@ -1,8 +1,10 @@
 import { savePolicyWorkspaceAction } from '../../../../lib/actions';
 import { listPolicies } from '../../../../lib/data';
+import { getPolicyAccess } from '../../../../lib/policy-access';
 import { findPolicyByFamilyKey, getPolicySectionValues } from '../../../../lib/policy-workspaces';
 import { OvertimePolicyEditor } from '../../_components/OvertimePolicyEditor';
 import { OtherPolicyEditor } from '../../_components/OtherPolicyEditor';
+import { PolicyImpactForm } from '../../_components/PolicyImpactForm';
 import {
   PolicyFieldInput,
   PolicyFieldLabel,
@@ -25,7 +27,8 @@ function boolDefault(value: unknown, fallback = false) {
 export default async function WorkPolicyBasePage({ searchParams }: WorkPolicyBasePageProps) {
   const resolvedSearchParams = await Promise.resolve(searchParams ?? {});
   const section = resolvedSearchParams.section ?? '';
-  const policies = await listPolicies();
+  const [policies, access] = await Promise.all([listPolicies(), getPolicyAccess()]);
+  if (!access.canManage) return <div className="page-stack module-page" dir="rtl" lang="fa"><div className="module-empty-state"><h2>دسترسی ویرایش سیاست کاری ندارید.</h2><p>برای این عملیات به نقش مالک، مدیر یا مدیر منابع انسانی نیاز است.</p></div></div>;
   const policy =
     (resolvedSearchParams.policyId ? policies.find((item) => item.id === resolvedSearchParams.policyId) : null) ??
     findPolicyByFamilyKey(policies, 'work');
@@ -65,7 +68,7 @@ export default async function WorkPolicyBasePage({ searchParams }: WorkPolicyBas
         actionHref={backHref}
         actionLabel="بازگشت به سیاست کاری"
       >
-        <form action={savePolicyWorkspaceAction} className="policy-form-stack">
+        <PolicyImpactForm action={savePolicyWorkspaceAction} groupCount={policy?.groupCount ?? 0} className="policy-form-stack">
           <input type="hidden" name="familyKey" value="work" />
           <input type="hidden" name="variant" value="default" />
           <input type="hidden" name="policyId" value={policyId} />
@@ -78,7 +81,7 @@ export default async function WorkPolicyBasePage({ searchParams }: WorkPolicyBas
           >
             <OtherPolicyEditor backHref={backHref} policyId={policyId} {...otherDefaults} />
           </PolicySectionCard>
-        </form>
+        </PolicyImpactForm>
       </PolicyPageShell>
     );
   }
@@ -91,7 +94,7 @@ export default async function WorkPolicyBasePage({ searchParams }: WorkPolicyBas
         actionHref={backHref}
         actionLabel="بازگشت به سیاست کاری"
       >
-        <form action={savePolicyWorkspaceAction} className="policy-form-stack">
+        <PolicyImpactForm action={savePolicyWorkspaceAction} groupCount={policy?.groupCount ?? 0} className="policy-form-stack">
           <input type="hidden" name="familyKey" value="work" />
           <input type="hidden" name="variant" value="default" />
           <input type="hidden" name="policyId" value={policyId} />
@@ -108,7 +111,7 @@ export default async function WorkPolicyBasePage({ searchParams }: WorkPolicyBas
               overtimeAfterShift={defaults.overtimeAfterShift}
             />
           </PolicySectionCard>
-        </form>
+        </PolicyImpactForm>
       </PolicyPageShell>
     );
   }
@@ -123,7 +126,7 @@ export default async function WorkPolicyBasePage({ searchParams }: WorkPolicyBas
       actionHref={backHref}
       actionLabel="بازگشت به سیاست کاری"
     >
-      <form action={savePolicyWorkspaceAction} className="policy-form-stack">
+      <PolicyImpactForm action={savePolicyWorkspaceAction} groupCount={policy?.groupCount ?? 0} className="policy-form-stack">
         <input type="hidden" name="familyKey" value="work" />
         <input type="hidden" name="variant" value="default" />
         <input type="hidden" name="policyId" value={policyId} />
@@ -187,7 +190,7 @@ export default async function WorkPolicyBasePage({ searchParams }: WorkPolicyBas
             <PolicyFormActions cancelHref={backHref} submitLabel="ذخیره تغییرات" />
           </div>
         </PolicySectionCard>
-      </form>
+      </PolicyImpactForm>
     </PolicyPageShell>
   );
 }

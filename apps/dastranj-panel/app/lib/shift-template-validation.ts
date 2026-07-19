@@ -25,6 +25,15 @@ function resolveRange(start: unknown, end: unknown, nextDay = false): Range | nu
   return { start: startMinutes, end: endMinutes };
 }
 
+function normalizeSplitTimeline(first: Range, second: Range) {
+  const normalizedSecond = { ...second };
+  if (normalizedSecond.start < first.start) {
+    normalizedSecond.start += 1440;
+    normalizedSecond.end += 1440;
+  }
+  return { first, second: normalizedSecond };
+}
+
 function validateRange(start: unknown, end: unknown, nextDay = false, label = 'بازه زمانی') {
   const range = resolveRange(start, end, nextDay);
   if (!range) return [`${label} را با قالب ساعت معتبر وارد کنید.`];
@@ -120,8 +129,8 @@ export function validateShiftTemplateInput(input: { title: string; type: string;
     errors.push(...validateRange(split.segment1Start, split.segment1End, Boolean(split.segment1EndsNextDay), 'بازه اول'));
     errors.push(...validateRange(split.segment2Start, split.segment2End, Boolean(split.segment2EndsNextDay), 'بازه دوم'));
     if (first && second) {
-      if (second.start < first.start) errors.push('ترتیب بازه‌های دو‌تکه معتبر نیست.');
-      if (second.start < first.end) errors.push('بازه‌های دو‌تکه نباید هم‌پوشانی داشته باشند.');
+      const timeline = normalizeSplitTimeline(first, second);
+      if (timeline.second.start < timeline.first.end) errors.push('بازه‌های دو‌تکه نباید هم‌پوشانی داشته باشند.');
     }
     errors.push(...validateBreaks(split.segment1Breaks, first, 'استراحت بازه اول'));
     errors.push(...validateBreaks(split.segment2Breaks, second, 'استراحت بازه دوم'));

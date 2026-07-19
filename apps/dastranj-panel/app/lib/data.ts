@@ -528,6 +528,7 @@ export async function listShiftTemplates() {
     prisma.calendar.findMany({ where: { tenantId }, select: { id: true, title: true, shiftConfig: true } }),
   ]);
   const usages = new Map<string, { count: number; calendars: Array<{ id: string; title: string }> }>();
+  const templateTitles = new Map(templates.map((template) => [template.id, template.title]));
   let legacyUsageUncertain = false;
   for (const calendar of calendars) {
     for (const shift of listCalendarShifts(calendar.shiftConfig)) {
@@ -562,6 +563,9 @@ export async function listShiftTemplates() {
     } as const;
     return {
       ...template,
+      sourceTemplateTitle: typeof shift.config.sourceTemplateId === 'string'
+        ? templateTitles.get(shift.config.sourceTemplateId) ?? null
+        : null,
       usageCount: usage?.count ?? 0,
       isUsed: Boolean(usage?.count),
       usageUnknown: legacyUsageUncertain && !usage?.count,
