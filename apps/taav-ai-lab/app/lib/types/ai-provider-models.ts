@@ -42,6 +42,25 @@ export const AI_PROVIDER_PRICING_UNIT_LABELS: Record<AiProviderPricingUnit, stri
   MIXED: 'ترکیبی',
 };
 
+export const AI_PROVIDER_MODEL_BRAND_TAGS = ['RECOMMENDED', 'ECONOMICAL', 'PREMIUM'] as const;
+
+export type AiProviderModelBrandTag = (typeof AI_PROVIDER_MODEL_BRAND_TAGS)[number];
+
+export const AI_PROVIDER_MODEL_BRAND_TAG_LABELS: Record<AiProviderModelBrandTag, string> = {
+  RECOMMENDED: 'پیشنهادی',
+  ECONOMICAL: 'اقتصادی',
+  PREMIUM: 'پرمیوم',
+};
+
+export type UsedBrandTagEntry = {
+  modelId: string;
+  displayName: string;
+};
+
+export type UsedBrandTagsByModelType = Partial<
+  Record<AiProviderModelType, Partial<Record<AiProviderModelBrandTag, UsedBrandTagEntry>>>
+>;
+
 export type AiProviderModelPublic = {
   id: string;
   accountId: string;
@@ -54,6 +73,8 @@ export type AiProviderModelPublic = {
   inputTokenPriceUsd: number;
   outputTokenPriceUsd: number;
   ocrInputRatio: number;
+  cacheReadTokenPriceUsd: number;
+  cacheWriteTokenPriceUsd: number;
   requestPriceUsd: number;
   pagePriceUsd: number;
   imagePriceUsd: number;
@@ -74,6 +95,8 @@ export type AiProviderModelPublic = {
   isDefaultForVision: boolean;
   isSystem: boolean;
   isActive: boolean;
+  brandTag: AiProviderModelBrandTag | null;
+  brandTagLabel: string | null;
   notes: string | null;
   createdByUserId: string | null;
   createdAt: string;
@@ -106,6 +129,8 @@ export type CreateAiProviderModelInput = {
   inputTokenPriceUsd?: number;
   outputTokenPriceUsd?: number;
   ocrInputRatio?: number;
+  cacheReadTokenPriceUsd?: number;
+  cacheWriteTokenPriceUsd?: number;
   requestPriceUsd?: number;
   pagePriceUsd?: number;
   imagePriceUsd?: number;
@@ -125,6 +150,7 @@ export type CreateAiProviderModelInput = {
   isDefaultForEmbedding?: boolean;
   isDefaultForVision?: boolean;
   isActive?: boolean;
+  brandTag?: AiProviderModelBrandTag | null;
   notes?: string | null;
   createdByUserId?: string | null;
 };

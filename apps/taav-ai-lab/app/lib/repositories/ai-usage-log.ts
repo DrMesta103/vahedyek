@@ -10,6 +10,8 @@ export type RecordAiUsageLogInput = {
   requestId?: string | null;
   inputTokens: number;
   outputTokens: number;
+  cachedInputTokens?: number;
+  cacheWriteTokens?: number;
   costs: Pick<OcrAiUsageCost, 'inputCostUsd' | 'outputCostUsd' | 'totalCostUsd'>;
   metadata?: Record<string, unknown> | null;
 };
@@ -17,6 +19,8 @@ export type RecordAiUsageLogInput = {
 export async function recordAiUsageLog(input: RecordAiUsageLogInput) {
   const safeInputTokens = Math.max(0, Math.floor(input.inputTokens));
   const safeOutputTokens = Math.max(0, Math.floor(input.outputTokens));
+  const safeCachedInputTokens = Math.max(0, Math.floor(input.cachedInputTokens ?? 0));
+  const safeCacheWriteTokens = Math.max(0, Math.floor(input.cacheWriteTokens ?? 0));
 
   return prisma.aiUsageLog.create({
     data: {
@@ -28,12 +32,16 @@ export async function recordAiUsageLog(input: RecordAiUsageLogInput) {
       requestId: input.requestId ?? null,
       inputTokens: safeInputTokens,
       outputTokens: safeOutputTokens,
-      totalTokens: safeInputTokens + safeOutputTokens,
+      cachedInputTokens: safeCachedInputTokens,
+      cacheWriteTokens: safeCacheWriteTokens,
+      totalTokens: safeInputTokens + safeOutputTokens + safeCachedInputTokens + safeCacheWriteTokens,
       inputCostUsd: input.costs.inputCostUsd,
       outputCostUsd: input.costs.outputCostUsd,
+      cacheReadCostUsd: (input.costs as any).cacheReadCostUsd ?? 0,
+      cacheWriteCostUsd: (input.costs as any).cacheWriteCostUsd ?? 0,
       totalCostUsd: input.costs.totalCostUsd,
       metadata: input.metadata ? (input.metadata as object) : undefined,
-    },
+    } as any,
   });
 }
 

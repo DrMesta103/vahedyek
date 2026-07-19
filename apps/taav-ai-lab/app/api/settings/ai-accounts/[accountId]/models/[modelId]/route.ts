@@ -9,6 +9,7 @@ import { handlePrismaApiError } from '@/app/lib/prismaApiError';
 import { getOptionalSession } from '@/app/lib/session';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import {
+  parseAiProviderModelBrandTag,
   parseAiProviderModelType,
   parseAiProviderPricingUnit,
 } from '@/app/lib/data';
@@ -22,6 +23,8 @@ type ModelPayload = {
   pricingUnit?: string;
   inputTokenPriceUsd?: number;
   outputTokenPriceUsd?: number;
+  cacheReadTokenPriceUsd?: number;
+  cacheWriteTokenPriceUsd?: number;
   requestPriceUsd?: number;
   pagePriceUsd?: number;
   imagePriceUsd?: number;
@@ -41,6 +44,7 @@ type ModelPayload = {
   isDefaultForEmbedding?: boolean;
   isDefaultForVision?: boolean;
   isActive?: boolean;
+  brandTag?: string | null;
   notes?: string | null;
 };
 
@@ -58,6 +62,13 @@ function parsePositiveInteger(value: unknown) {
 
 function handleModelWriteError(error: unknown) {
   if (error instanceof PrismaClientKnownRequestError && error.code === 'P2002') {
+    const target = Array.isArray(error.meta?.target) ? error.meta.target.join(',') : '';
+    if (target.includes('brandTag')) {
+      return NextResponse.json(
+        { message: 'این تگ برای نوع مدل انتخاب‌شده قبلاً به مدل فعال دیگری اختصاص داده شده است.' },
+        { status: 409 },
+      );
+    }
     return NextResponse.json(
       { message: 'این نام مدل در Provider قبلاً برای این اکانت ثبت شده است.' },
       { status: 409 },
@@ -130,6 +141,8 @@ export async function PATCH(request: Request, context: RouteContext) {
   const priceFields = [
     ['inputTokenPriceUsd', body?.inputTokenPriceUsd],
     ['outputTokenPriceUsd', body?.outputTokenPriceUsd],
+    ['cacheReadTokenPriceUsd', body?.cacheReadTokenPriceUsd],
+    ['cacheWriteTokenPriceUsd', body?.cacheWriteTokenPriceUsd],
     ['requestPriceUsd', body?.requestPriceUsd],
     ['pagePriceUsd', body?.pagePriceUsd],
     ['imagePriceUsd', body?.imagePriceUsd],
@@ -179,6 +192,17 @@ export async function PATCH(request: Request, context: RouteContext) {
   if (body?.isDefaultForEmbedding !== undefined) updateData.isDefaultForEmbedding = Boolean(body.isDefaultForEmbedding);
   if (body?.isDefaultForVision !== undefined) updateData.isDefaultForVision = Boolean(body.isDefaultForVision);
   if (body?.isActive !== undefined) updateData.isActive = Boolean(body.isActive);
+  if (body?.brandTag !== undefined) {
+    if (body.brandTag === null || body.brandTag === '') {
+      updateData.brandTag = null;
+    } else {
+      const brandTag = parseAiProviderModelBrandTag(body.brandTag);
+      if (!brandTag) {
+        return NextResponse.json({ message: 'تگ برند معتبر نیست.' }, { status: 400 });
+      }
+      updateData.brandTag = brandTag;
+    }
+  }
   if (body?.notes !== undefined) updateData.notes = body.notes?.trim() ? body.notes.trim() : null;
 
   try {

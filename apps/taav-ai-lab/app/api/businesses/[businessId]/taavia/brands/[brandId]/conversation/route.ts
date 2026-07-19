@@ -52,6 +52,7 @@ export async function POST(request: Request, context: RouteContext) {
         message: result.userMessage,
         userMessage: result.userMessage,
         assistantMessage: result.assistantMessage,
+        effectiveModel: result.effectiveModel,
         messages: [result.userMessage, result.assistantMessage],
         source: 'database',
       },

@@ -1,3 +1,13 @@
+import { getBuildVersionStepBySlug } from './taavia-build-version-flow';
+import { getBuildVersionStepPageMeta } from './taavia-build-version-step-pages';
+import { getTaaviaTechnicalFlowBySlug } from './taavia-technical-flows';
+
+export type NavPathItem = {
+  label: string;
+  id?: string;
+  href?: string;
+};
+
 export type AiLabNavItem = {
   id: string;
   label: string;
@@ -42,6 +52,10 @@ export function getOrbitNavItems(businessId: string) {
 export function getActiveNavItem(pathname: string, businessId?: string | null) {
   const workspaceBase = businessId ? `/businesses/${businessId}` : null;
 
+  if (workspaceBase && pathname === workspaceBase) {
+    return AI_LAB_NAV_ITEMS.find((item) => item.id === 'home') ?? AI_LAB_NAV_ITEMS[0];
+  }
+
   const ranked = [...AI_LAB_NAV_ITEMS].sort((a, b) => {
     const aLen = a.segment?.length ?? a.href?.length ?? 0;
     const bLen = b.segment?.length ?? b.href?.length ?? 0;
@@ -63,10 +77,6 @@ export function getActiveNavItem(pathname: string, businessId?: string | null) {
     }
   }
 
-  if (workspaceBase && pathname === workspaceBase) {
-    return AI_LAB_NAV_ITEMS.find((item) => item.id === 'home') ?? AI_LAB_NAV_ITEMS[0];
-  }
-
   if (pathname === '/businesses') {
     return AI_LAB_NAV_ITEMS.find((item) => item.id === 'businesses') ?? AI_LAB_NAV_ITEMS[0];
   }
@@ -80,4 +90,52 @@ export function getActiveNavItem(pathname: string, businessId?: string | null) {
 
 export function isWorkspaceHomePath(pathname: string, businessId?: string | null) {
   return Boolean(businessId && pathname === `/businesses/${businessId}`);
+}
+
+export function getTaaviaTechnicalFlowsNavPathSuffix(
+  pathname: string,
+  businessId: string,
+): NavPathItem[] | null {
+  const match = pathname.match(/^\/businesses\/([^/]+)\/products\/taavia\/technical-flows(?:\/(.+))?$/);
+  if (!match || match[1] !== businessId) {
+    return null;
+  }
+
+  const remainder = match[2];
+  const flowsBase = `/businesses/${businessId}/products/taavia/technical-flows`;
+  const items: NavPathItem[] = [
+    {
+      label: 'فلوهای ارتباطی فنی',
+      id: 'taavia-technical-flows',
+      href: remainder ? flowsBase : undefined,
+    },
+  ];
+
+  if (!remainder) {
+    return items;
+  }
+
+  const [flowSlug, stepSlug] = remainder.split('/');
+  const flow = getTaaviaTechnicalFlowBySlug(flowSlug);
+
+  if (flow) {
+    items.push({
+      label: flow.title,
+      id: `flow-${flow.slug}`,
+      href: stepSlug ? `${flowsBase}/${flow.slug}` : undefined,
+    });
+  }
+
+  if (stepSlug) {
+    const stepPage = getBuildVersionStepPageMeta(stepSlug);
+    const step = flowSlug === 'build-version' ? getBuildVersionStepBySlug(stepSlug) : null;
+    const label = stepPage?.title ?? step?.title ?? stepSlug;
+
+    items.push({
+      label,
+      id: `step-${stepSlug}`,
+    });
+  }
+
+  return items;
 }

@@ -62,6 +62,7 @@ export default async function TaaviaBrandDetailPage({
         initialView={initialView}
         initialConversationId={conversation?.id ?? null}
         initialMessages={conversation?.messages ?? []}
+        initialEffectiveChatModel={conversation?.effectiveModel ?? null}
       />
     </AiLabShell>
   );

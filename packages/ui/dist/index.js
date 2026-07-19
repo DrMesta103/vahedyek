@@ -5030,7 +5030,7 @@ function TaavBusinessIntroCard({
     }
   ) : null;
   const titleBlock = loading ? /* @__PURE__ */ jsxRuntime.jsx(TaavSkeleton, { variant: "title", width: "55%", contentClassName: "h-6" }) : /* @__PURE__ */ jsxRuntime.jsx(HeadingTag, { className: businessIntroCardTitle({ size }), children: title });
-  const descriptionBlock = description && !loading ? /* @__PURE__ */ jsxRuntime.jsx("p", { className: businessIntroCardDescription({ size }), children: description }) : null;
+  const descriptionBlock = description && !loading ? /* @__PURE__ */ jsxRuntime.jsx("div", { className: businessIntroCardDescription({ size }), children: description }) : null;
   const iconBlock = loading ? /* @__PURE__ */ jsxRuntime.jsx(TaavSkeleton, { variant: "custom", width: 48, height: 48, radius: "lg" }) : /* @__PURE__ */ jsxRuntime.jsx("span", { className: businessIntroCardIconBox({ size }), "aria-hidden": showDefaultIcon, children: icon ?? /* @__PURE__ */ jsxRuntime.jsx(BusinessIntroCardBuildingIcon, {}) });
   const standardBody = loading ? /* @__PURE__ */ jsxRuntime.jsxs("div", { className: businessIntroCardLayout(), children: [
     /* @__PURE__ */ jsxRuntime.jsxs("div", { className: businessIntroCardLeading(), children: [

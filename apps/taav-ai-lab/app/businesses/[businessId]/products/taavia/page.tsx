@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ArrowLeft, BarChart3, Building2, Headphones } from 'lucide-react';
+import { ArrowLeft, BarChart3, Building2, Headphones, Workflow } from 'lucide-react';
 import { AI_LAB_TOOLTIPS } from '@/app/lib/tooltips';
 import { getTenantForUser } from '@/app/lib/data';
 import { getCurrentTenant, requireSession } from '@/app/lib/session';
@@ -90,6 +90,15 @@ export default async function TaaviaPage({ params }: { params: Promise<{ busines
               buttonLabel="مشاهده"
               buttonVariant="secondary"
               variant="soft"
+            />
+            <AiLabFeatureCard
+              icon={<Workflow className="h-5 w-5 text-[var(--taav-brand-strong)]" />}
+              title="فلوهای ارتباطی فنی"
+              description="مشاهده و بررسی گرافیکی فلوهای ارتباطی بین Frontend، .NET، Python، RabbitMQ، gRPC و سرویس‌های زیرساختی."
+              tooltip="گراف فلوهای ارتباطی فنی بین لایه‌های Frontend، .NET، Python، RabbitMQ، gRPC و سرویس‌های زیرساختی."
+              badge={{ label: 'فعال', tone: 'brand' }}
+              href={`/businesses/${business.id}/products/taavia/technical-flows`}
+              buttonLabel="انتخاب"
             />
             </div>
           </AiLabSectionCard>

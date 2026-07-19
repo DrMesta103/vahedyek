@@ -8,6 +8,7 @@ import {
   type OcrAiUsageCost,
 } from '@/app/lib/ocr-ai-pricing';
 import type { AiProviderAccountPublic } from '@/app/lib/types/ai-accounts';
+import { usdToTomanCost } from '@/app/lib/ai-usage-cost';
 import {
   getOcrTransportUsageLabel,
   normalizeOcrTransportMode,
@@ -120,6 +121,30 @@ export type OcrAiUsage = {
   totalTokens: number;
 };
 
+export type OcrStageKey = 'ocr' | 'chat';
+
+export type OcrStageUsage = {
+  stage: OcrStageKey;
+  modelId: string;
+  modelName: string;
+  providerLabel: string;
+  provider: string;
+  inputTokens: number;
+  outputTokens: number;
+  cachedInputTokens: number;
+  cacheWriteTokens: number;
+  totalTokens: number;
+  inputTokenPriceUsd: number;
+  outputTokenPriceUsd: number;
+  cacheReadTokenPriceUsd: number;
+  cacheWriteTokenPriceUsd: number;
+};
+
+function readNumber(value: unknown) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
 export function getOcrAiUsage(job: OcrSimulationJob, transportMode?: OcrTransportMode | null): OcrAiUsage {
   const mode = transportMode ?? getOcrTransportMode(job);
   const model = resolveOcrModel(job.extractedJson?.__aiModelId, mode);
@@ -156,6 +181,172 @@ export function getOcrAiUsage(job: OcrSimulationJob, transportMode?: OcrTranspor
 }
 
 export type { OcrAiUsageCost };
+
+export function getOcrStageUsage(job: OcrSimulationJob, stage: OcrStageKey): OcrStageUsage {
+  const prefix = stage === 'ocr' ? '__ocr' : '__chat';
+  const extracted = job.extractedJson ?? {};
+  const modelId = String((extracted as any)[`${prefix}ModelId`] ?? '—');
+  const modelName = String((extracted as any)[`${prefix}ModelName`] ?? modelId);
+  const providerLabel = String((extracted as any)[`${prefix}ProviderLabel`] ?? '—');
+  const provider = String((extracted as any)[`${prefix}Provider`] ?? '—');
+  const inputTokens = readNumber((extracted as any)[`${prefix}InputTokens`]);
+  const outputTokens = readNumber((extracted as any)[`${prefix}OutputTokens`]);
+  const cachedInputTokens = readNumber((extracted as any)[`${prefix}CachedInputTokens`]);
+  const cacheWriteTokens = readNumber((extracted as any)[`${prefix}CacheWriteTokens`]);
+  const totalTokens = inputTokens + outputTokens + cachedInputTokens + cacheWriteTokens;
+
+  return {
+    stage,
+    modelId,
+    modelName,
+    providerLabel,
+    provider,
+    inputTokens,
+    outputTokens,
+    cachedInputTokens,
+    cacheWriteTokens,
+    totalTokens,
+    inputTokenPriceUsd: readNumber((extracted as any)[`${prefix}InputTokenPriceUsd`]),
+    outputTokenPriceUsd: readNumber((extracted as any)[`${prefix}OutputTokenPriceUsd`]),
+    cacheReadTokenPriceUsd: readNumber((extracted as any)[`${prefix}CacheReadTokenPriceUsd`]),
+    cacheWriteTokenPriceUsd: readNumber((extracted as any)[`${prefix}CacheWriteTokenPriceUsd`]),
+  };
+}
+
+export function enrichStageUsagePricing(
+  usage: OcrStageUsage,
+  accounts?: AiProviderAccountPublic[],
+): OcrStageUsage {
+  if (!accounts?.length || usage.modelId === '—') return usage;
+
+  const storedPricesComplete =
+    usage.inputTokenPriceUsd > 0 &&
+    usage.outputTokenPriceUsd > 0 &&
+    usage.cacheReadTokenPriceUsd > 0 &&
+    usage.cacheWriteTokenPriceUsd > 0;
+  if (storedPricesComplete) return usage;
+
+  const model = accounts
+    .filter((account) => account.isActive)
+    .flatMap((account) => account.models ?? [])
+    .find(
+      (item) =>
+        item.isActive &&
+        (item.providerModelName === usage.modelId ||
+          item.id === usage.modelId ||
+          item.displayName === usage.modelName),
+    );
+
+  if (!model) return usage;
+
+  return {
+    ...usage,
+    inputTokenPriceUsd: usage.inputTokenPriceUsd > 0 ? usage.inputTokenPriceUsd : model.inputTokenPriceUsd,
+    outputTokenPriceUsd: usage.outputTokenPriceUsd > 0 ? usage.outputTokenPriceUsd : model.outputTokenPriceUsd,
+    cacheReadTokenPriceUsd:
+      usage.cacheReadTokenPriceUsd > 0 ? usage.cacheReadTokenPriceUsd : model.cacheReadTokenPriceUsd,
+    cacheWriteTokenPriceUsd:
+      usage.cacheWriteTokenPriceUsd > 0 ? usage.cacheWriteTokenPriceUsd : model.cacheWriteTokenPriceUsd,
+  };
+}
+
+export function getOcrStageCost(job: OcrSimulationJob, stage: OcrStageKey, usdToToman: number): OcrAiUsageCost {
+  const extracted = job.extractedJson ?? {};
+  const providerLabel = stage === 'ocr'
+    ? String((extracted as any).__ocrProviderLabel ?? '—')
+    : String((extracted as any).__chatProviderLabel ?? '—');
+
+  const base = stage === 'ocr'
+    ? {
+        accountId: null,
+        providerLabel,
+        inputCostUsd: readNumber((extracted as any).__ocrInputCostUsd),
+        outputCostUsd: readNumber((extracted as any).__ocrOutputCostUsd),
+        cacheReadCostUsd: readNumber((extracted as any).__ocrCacheReadCostUsd),
+        cacheWriteCostUsd: readNumber((extracted as any).__ocrCacheWriteCostUsd),
+        totalCostUsd: readNumber((extracted as any).__ocrTotalCostUsd),
+        inputCostToman: 0,
+        outputCostToman: 0,
+        cacheReadCostToman: 0,
+        cacheWriteCostToman: 0,
+        totalCostToman: readNumber((extracted as any).__ocrTotalCostToman),
+      }
+    : {
+        accountId: null,
+        providerLabel,
+        inputCostUsd: readNumber((extracted as any).__chatInputCostUsd),
+        outputCostUsd: readNumber((extracted as any).__chatOutputCostUsd),
+        cacheReadCostUsd: readNumber((extracted as any).__chatCacheReadCostUsd),
+        cacheWriteCostUsd: readNumber((extracted as any).__chatCacheWriteCostUsd),
+        totalCostUsd: readNumber((extracted as any).__chatTotalCostUsd),
+        inputCostToman: 0,
+        outputCostToman: 0,
+        cacheReadCostToman: 0,
+        cacheWriteCostToman: 0,
+        totalCostToman: readNumber((extracted as any).__chatTotalCostToman),
+      };
+
+  return {
+    ...base,
+    inputCostToman: usdToTomanCost(base.inputCostUsd, usdToToman),
+    outputCostToman: usdToTomanCost(base.outputCostUsd, usdToToman),
+    cacheReadCostToman: usdToTomanCost(base.cacheReadCostUsd, usdToToman),
+    cacheWriteCostToman: usdToTomanCost(base.cacheWriteCostUsd, usdToToman),
+    totalCostToman: base.totalCostToman || usdToTomanCost(base.totalCostUsd, usdToToman),
+  };
+}
+
+function sumStageCosts(ocrCost: OcrAiUsageCost, chatCost: OcrAiUsageCost): OcrAiUsageCost {
+  return {
+    accountId: null,
+    providerLabel: 'کل',
+    inputCostUsd: ocrCost.inputCostUsd + chatCost.inputCostUsd,
+    outputCostUsd: ocrCost.outputCostUsd + chatCost.outputCostUsd,
+    cacheReadCostUsd: ocrCost.cacheReadCostUsd + chatCost.cacheReadCostUsd,
+    cacheWriteCostUsd: ocrCost.cacheWriteCostUsd + chatCost.cacheWriteCostUsd,
+    totalCostUsd: ocrCost.totalCostUsd + chatCost.totalCostUsd,
+    inputCostToman: ocrCost.inputCostToman + chatCost.inputCostToman,
+    outputCostToman: ocrCost.outputCostToman + chatCost.outputCostToman,
+    cacheReadCostToman: ocrCost.cacheReadCostToman + chatCost.cacheReadCostToman,
+    cacheWriteCostToman: ocrCost.cacheWriteCostToman + chatCost.cacheWriteCostToman,
+    totalCostToman: ocrCost.totalCostToman + chatCost.totalCostToman,
+  };
+}
+
+export function hasOcrStageMeta(job: OcrSimulationJob, stage: OcrStageKey) {
+  const prefix = stage === 'ocr' ? '__ocr' : '__chat';
+  const extracted = job.extractedJson ?? {};
+  const modelName = String((extracted as Record<string, string>)[`${prefix}ModelName`] ?? '');
+  return modelName.length > 0 && modelName !== '—';
+}
+
+export function getOcrPipelineCost(
+  job: OcrSimulationJob,
+  usdToToman: number,
+  legacyCost?: OcrAiUsageCost | null,
+): OcrAiUsageCost {
+  const extracted = job.extractedJson ?? {};
+  const ocrCost = getOcrStageCost(job, 'ocr', usdToToman);
+  const chatCost = getOcrStageCost(job, 'chat', usdToToman);
+  const totalCostUsd = readNumber((extracted as Record<string, string>).__totalCostUsd);
+  const totalCostToman = readNumber((extracted as Record<string, string>).__totalCostToman);
+
+  if (totalCostUsd > 0 || totalCostToman > 0) {
+    const summed = sumStageCosts(ocrCost, chatCost);
+    return {
+      ...summed,
+      totalCostUsd: totalCostUsd || summed.totalCostUsd,
+      totalCostToman: totalCostToman || usdToTomanCost(totalCostUsd || summed.totalCostUsd, usdToToman),
+    };
+  }
+
+  const summed = sumStageCosts(ocrCost, chatCost);
+  if (summed.totalCostUsd > 0 || summed.totalCostToman > 0) {
+    return summed;
+  }
+
+  return legacyCost ?? ocrCost;
+}
 
 export function getOcrAiUsageCost(
   job: OcrSimulationJob,

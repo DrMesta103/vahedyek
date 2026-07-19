@@ -1,360 +1,186 @@
-import { assertTenantAccess } from '../auth';
+import { randomUUID } from 'node:crypto';
+import { assertTenantAccess, assertTenantManagementAccess } from '../auth';
 import { prisma } from '../prisma';
-import type {
-  CreateTaaviaBrandInput,
-  TaaviaBrand,
-  TaaviaBrandModelServiceKey,
-  UpdateTaaviaBrandInput,
-} from '../types/domain';
+import type { CreateTaaviaBrandInput, TaaviaBrand, UpdateTaaviaBrandInput } from '../types/domain';
 
-const INITIAL_ASSISTANT_MESSAGE =
-  'سلام، من کمک می‌کنم برند شما را برای ساخت چت‌بات پشتیبانی هوشمند آماده کنیم. لطفاً ابتدا برند خودتان را معرفی کنید و بگویید این برند چه کاری انجام می‌دهد.';
+const MAX_NAME_LENGTH = 120;
+const MAX_DESCRIPTION_LENGTH = 1000;
+export const INITIAL_ASSISTANT_MESSAGE = 'سلام، من برای آماده‌سازی برند شما در تاویا کمک می‌کنم.';
 
-type BrandAssistantMetadata = {
-  intake?: {
-    description?: string;
-    iconName?: string;
-    iconDataUrl?: string;
-  };
-  modelPreferences?: Partial<Record<TaaviaBrandModelServiceKey, string>>;
-};
+function id() {
+  return randomUUID().replaceAll('-', '');
+}
+
+function normalizeText(value: string | null | undefined, max: number) {
+  const normalized = value?.trim() ?? '';
+  return normalized ? normalized.slice(0, max) : null;
+}
 
 function mapBrand(row: {
   id: string;
   tenantId: string;
   name: string;
-  createdByUserId: string;
-  isActive: boolean;
+  description: string | null;
+  mediaAsset: { id: string; extension: string | null; sizeBytes: number | null; previewData: string | null; storageUrl: string | null } | null;
+  status: 'ACTIVE' | 'INACTIVE' | 'ARCHIVED';
+  setupMode: 'NOT_SELECTED' | 'MANUAL' | 'AI_ASSISTED';
   createdAt: Date;
   updatedAt: Date;
-  intake?: {
-    description?: string;
-    iconName?: string;
-    iconDataUrl?: string;
-  } | null;
-  modelPreferences?: Partial<Record<TaaviaBrandModelServiceKey, string>> | null;
 }): TaaviaBrand {
   return {
     id: row.id,
     tenantId: row.tenantId,
     name: row.name,
-    createdByUserId: row.createdByUserId,
-    isActive: row.isActive,
+    description: row.description,
+    icon: row.mediaAsset,
+    status: row.status,
+    setupMode: row.setupMode,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
-    intake: row.intake ?? undefined,
-    modelPreferences: row.modelPreferences ?? undefined,
   };
 }
 
-function buildBrandAssistantMessage(intake?: {
-  description?: string;
-  iconName?: string;
-  iconDataUrl?: string;
-}) {
-  const hasIntake = intake && Object.values(intake).some((value) => value.trim());
-  if (!hasIntake) return INITIAL_ASSISTANT_MESSAGE;
+const brandInclude = {
+  mediaAsset: {
+    select: { id: true, extension: true, sizeBytes: true, previewData: true, storageUrl: true },
+  },
+} as const;
 
-  return `${INITIAL_ASSISTANT_MESSAGE}\n\nخلاصه اطلاعات اولیه برند:\n- توضیحات: ${intake?.description?.trim() || 'ثبت نشده'}\n- آیکون: ${intake?.iconName?.trim() || 'ثبت نشده'}`;
+async function findAuthorizedTenant(userId: string, tenantId: string) {
+  if (!(await assertTenantAccess(userId, tenantId))) return null;
+  return prisma.tenant.findFirst({ where: { id: tenantId, isActive: true }, select: { id: true } });
 }
 
-function buildAssistantMetadata(input: {
-  intake?: {
-    description?: string;
-    iconName?: string;
-    iconDataUrl?: string;
-  };
-  modelPreferences?: Partial<Record<TaaviaBrandModelServiceKey, string>>;
-  currentMetadata?: BrandAssistantMetadata | null;
-}) {
-  const hasIntake = input.intake && Object.values(input.intake).some((value) => value.trim());
-  const nextModelPreferences = input.modelPreferences ?? input.currentMetadata?.modelPreferences;
+async function findAuthorizedManager(userId: string, tenantId: string) {
+  if (!(await assertTenantManagementAccess(userId, tenantId))) return null;
+  return findAuthorizedTenant(userId, tenantId);
+}
 
-  const metadata: BrandAssistantMetadata = {
-    ...(hasIntake
-      ? { intake: input.intake }
-      : input.currentMetadata?.intake
-        ? { intake: input.currentMetadata.intake }
-        : {}),
-    ...(nextModelPreferences ? { modelPreferences: nextModelPreferences } : {}),
-  };
-
-  return Object.keys(metadata).length > 0 ? metadata : null;
+function validateBrandInput(name: string) {
+  const normalizedName = name.trim();
+  if (!normalizedName) throw new Error('نام برند الزامی است.');
+  if (normalizedName.length > MAX_NAME_LENGTH) throw new Error(`نام برند نمی‌تواند بیشتر از ${MAX_NAME_LENGTH} کاراکتر باشد.`);
+  return normalizedName;
 }
 
 export async function getTaaviaBrandsForTenant(userId: string, tenantId: string): Promise<TaaviaBrand[]> {
-  if (!(await assertTenantAccess(userId, tenantId))) return [];
-
+  if (!(await findAuthorizedTenant(userId, tenantId))) return [];
   const brands = await prisma.taaviaBrand.findMany({
-    where: { tenantId, isActive: true },
-    include: {
-      conversations: {
-        where: { type: 'admin_agent' },
-        select: {
-          messages: {
-            where: { role: 'assistant' },
-            orderBy: { createdAt: 'asc' },
-            take: 1,
-            select: { metadata: true },
-          },
-        },
-      },
-    },
-    orderBy: { createdAt: 'desc' },
+    where: { tenantId },
+    include: brandInclude,
+    orderBy: { updatedAt: 'desc' },
   });
-
-  return brands.map((brand) => {
-    const metadata = (brand.conversations[0]?.messages[0]?.metadata as BrandAssistantMetadata | null | undefined) ?? undefined;
-
-    return mapBrand({
-      ...brand,
-      intake: metadata?.intake,
-      modelPreferences: metadata?.modelPreferences,
-    });
-  });
+  return brands.map(mapBrand);
 }
 
-export async function getTaaviaBrandForTenant(
-  userId: string,
-  tenantId: string,
-  brandId: string,
-): Promise<TaaviaBrand | null> {
-  if (!(await assertTenantAccess(userId, tenantId))) return null;
-
-  const brand = await prisma.taaviaBrand.findFirst({
-    where: { id: brandId, tenantId, isActive: true },
-    include: {
-      conversations: {
-        where: { type: 'admin_agent' },
-        select: {
-          messages: {
-            where: { role: 'assistant' },
-            orderBy: { createdAt: 'asc' },
-            take: 1,
-            select: { metadata: true },
-          },
-        },
-      },
-    },
-  });
-
-  if (!brand) return null;
-
-  const metadata = (brand.conversations[0]?.messages[0]?.metadata as BrandAssistantMetadata | null | undefined) ?? undefined;
-
-  return mapBrand({
-    ...brand,
-    intake: metadata?.intake,
-    modelPreferences: metadata?.modelPreferences,
-  });
+export async function getTaaviaBrandForTenant(userId: string, tenantId: string, brandId: string): Promise<TaaviaBrand | null> {
+  if (!(await findAuthorizedTenant(userId, tenantId))) return null;
+  const brand = await prisma.taaviaBrand.findFirst({ where: { id: brandId, tenantId }, include: brandInclude });
+  return brand ? mapBrand(brand) : null;
 }
 
-export async function createTaaviaBrandForTenant(
-  userId: string,
-  input: CreateTaaviaBrandInput,
-): Promise<TaaviaBrand | null> {
-  if (!(await assertTenantAccess(userId, input.tenantId))) return null;
+export async function createTaaviaBrandForTenant(userId: string, input: CreateTaaviaBrandInput): Promise<TaaviaBrand | null> {
+  if (!(await findAuthorizedManager(userId, input.tenantId))) return null;
 
-  const name = input.name.trim();
-  if (!name) return null;
+  const name = validateBrandInput(input.name);
+  const description = normalizeText(input.description, MAX_DESCRIPTION_LENGTH);
+  const now = new Date();
+  const brandId = id();
 
-  const brand = await prisma.$transaction(async (tx) => {
-    const created = await tx.taaviaBrand.create({
+  const created = await prisma.$transaction(async (tx) => {
+    let mediaAssetId: string | null = null;
+    if (input.icon?.previewData) {
+      mediaAssetId = id();
+      await tx.mediaAsset.create({
+        data: {
+          id: mediaAssetId,
+          extension: input.icon.extension ?? null,
+          sizeBytes: input.icon.sizeBytes ?? null,
+          previewData: input.icon.previewData,
+          storageUrl: input.icon.storageUrl ?? null,
+          createdAt: now,
+          updatedAt: now,
+        },
+      });
+    }
+
+    const brand = await tx.taaviaBrand.create({
       data: {
+        id: brandId,
         tenantId: input.tenantId,
         name,
+        description,
+        mediaAssetId,
+        status: 'ACTIVE',
+        setupMode: 'NOT_SELECTED',
         createdByUserId: userId,
+        createdAt: now,
+        updatedAt: now,
       },
+      include: brandInclude,
     });
 
     await tx.taaviaConversation.create({
       data: {
         tenantId: input.tenantId,
-        brandId: created.id,
+        brandId,
         type: 'admin_agent',
         createdByUserId: userId,
-        messages: {
-          create: {
-            role: 'assistant',
-            content: buildBrandAssistantMessage(input.intake),
-            status: 'completed',
-            metadata: buildAssistantMetadata({
-              intake: input.intake,
-              modelPreferences: input.modelPreferences,
-            }),
-          },
-        },
+        messages: { create: { role: 'assistant', content: 'برند ایجاد شد. برای تکمیل راه‌اندازی، یکی از مسیرهای آماده‌سازی را انتخاب کنید.', status: 'completed' } },
       },
     });
 
-    await tx.tenant.update({
-      where: { id: input.tenantId },
-      data: { lastActivity: new Date() },
-    });
-
-    return created;
+    await tx.tenant.update({ where: { id: input.tenantId }, data: { lastActivity: now } });
+    return brand;
   });
 
-  return mapBrand({
-    ...brand,
-    intake: input.intake,
-    modelPreferences: input.modelPreferences,
-  });
+  return mapBrand(created);
 }
 
-export async function updateTaaviaBrandForTenant(
-  userId: string,
-  input: UpdateTaaviaBrandInput,
-): Promise<TaaviaBrand | null> {
-  if (!(await assertTenantAccess(userId, input.tenantId))) return null;
+export async function updateTaaviaBrandForTenant(userId: string, input: UpdateTaaviaBrandInput): Promise<TaaviaBrand | null> {
+  if (!(await findAuthorizedManager(userId, input.tenantId))) return null;
+  const existing = await prisma.taaviaBrand.findFirst({ where: { id: input.brandId, tenantId: input.tenantId } });
+  if (!existing) return null;
 
-  const name = input.name.trim();
-  if (!name) return null;
-
-  const brand = await prisma.taaviaBrand.findFirst({
-    where: { id: input.brandId, tenantId: input.tenantId, isActive: true },
-  });
-  if (!brand) return null;
-
-  const updatedAt = new Date();
-  await prisma.$transaction(async (tx) => {
-    await tx.taaviaBrand.update({
-      where: { id: input.brandId },
-      data: {
-        name,
-        updatedAt,
-      },
-    });
-
-    const conversation = await tx.taaviaConversation.findUnique({
-      where: {
-        brandId_type: {
-          brandId: input.brandId,
-          type: 'admin_agent',
-        },
-      },
-      include: {
-        messages: {
-          where: { role: 'assistant' },
-          orderBy: { createdAt: 'asc' },
-          take: 1,
-        },
-      },
-    });
-
-    if (conversation?.messages[0]) {
-      const assistantMessage = conversation.messages[0];
-      const currentMetadata = (assistantMessage.metadata as BrandAssistantMetadata | null | undefined) ?? undefined;
-
-      await tx.taaviaMessage.update({
-        where: { id: assistantMessage.id },
-        data: {
-          content: buildBrandAssistantMessage(input.intake ?? currentMetadata?.intake),
-          metadata: buildAssistantMetadata({
-            intake: input.intake,
-            modelPreferences: input.modelPreferences,
-            currentMetadata,
-          }),
-        },
-      });
-    }
-
-    await tx.tenant.update({
-      where: { id: input.tenantId },
-      data: { lastActivity: updatedAt },
-    });
-  });
-
-  return getTaaviaBrandForTenant(userId, input.tenantId, input.brandId);
-}
-
-export async function updateTaaviaBrandModelPreferences(
-  userId: string,
-  tenantId: string,
-  brandId: string,
-  modelPreferences: Partial<Record<TaaviaBrandModelServiceKey, string>>,
-): Promise<TaaviaBrand | null> {
-  if (!(await assertTenantAccess(userId, tenantId))) return null;
-
-  const brand = await prisma.taaviaBrand.findFirst({
-    where: { id: brandId, tenantId, isActive: true },
-  });
-  if (!brand) return null;
-
-  const updatedAt = new Date();
-  await prisma.$transaction(async (tx) => {
-    const conversation = await tx.taaviaConversation.findUnique({
-      where: {
-        brandId_type: {
-          brandId,
-          type: 'admin_agent',
-        },
-      },
-      include: {
-        messages: {
-          where: { role: 'assistant' },
-          orderBy: { createdAt: 'asc' },
-          take: 1,
-        },
-      },
-    });
-
-    if (conversation?.messages[0]) {
-      const assistantMessage = conversation.messages[0];
-      const currentMetadata = (assistantMessage.metadata as BrandAssistantMetadata | null | undefined) ?? undefined;
-
-      await tx.taaviaMessage.update({
-        where: { id: assistantMessage.id },
-        data: {
-          metadata: buildAssistantMetadata({
-            intake: currentMetadata?.intake,
-            modelPreferences,
-            currentMetadata,
-          }),
-        },
-      });
-    }
-
-    await tx.tenant.update({
-      where: { id: tenantId },
-      data: { lastActivity: updatedAt },
-    });
-  });
-
-  return getTaaviaBrandForTenant(userId, tenantId, brandId);
-}
-
-export async function deleteTaaviaBrandForTenant(
-  userId: string,
-  tenantId: string,
-  brandId: string,
-): Promise<boolean> {
-  if (!(await assertTenantAccess(userId, tenantId))) return false;
-
-  const brand = await prisma.taaviaBrand.findFirst({
-    where: { id: brandId, tenantId, isActive: true },
-    select: { id: true },
-  });
-
-  if (!brand) return false;
-
+  const name = validateBrandInput(input.name);
+  const description = normalizeText(input.description, MAX_DESCRIPTION_LENGTH);
   const now = new Date();
-  await prisma.$transaction(async (tx) => {
-    await tx.taaviaBrand.update({
-      where: { id: brandId },
-      data: {
-        isActive: false,
-        updatedAt: now,
-      },
-    });
 
-    await tx.tenant.update({
-      where: { id: tenantId },
-      data: { lastActivity: now },
+  const updated = await prisma.$transaction(async (tx) => {
+    let mediaAssetId = existing.mediaAssetId;
+    if (input.icon?.previewData) {
+      mediaAssetId = id();
+      await tx.mediaAsset.create({
+        data: {
+          id: mediaAssetId,
+          extension: input.icon.extension ?? null,
+          sizeBytes: input.icon.sizeBytes ?? null,
+          previewData: input.icon.previewData,
+          storageUrl: input.icon.storageUrl ?? null,
+          createdAt: now,
+          updatedAt: now,
+        },
+      });
+    }
+
+    return tx.taaviaBrand.update({
+      where: { id: input.brandId },
+      data: { name, description, mediaAssetId, updatedAt: now },
+      include: brandInclude,
     });
   });
 
-  return true;
+  return mapBrand(updated);
 }
 
-export { INITIAL_ASSISTANT_MESSAGE };
+export async function setTaaviaBrandStatus(userId: string, tenantId: string, brandId: string, status: 'ACTIVE' | 'INACTIVE' | 'ARCHIVED') {
+  if (!(await findAuthorizedManager(userId, tenantId))) return null;
+  const existing = await prisma.taaviaBrand.findFirst({ where: { id: brandId, tenantId } });
+  if (!existing) return null;
+  const updated = await prisma.taaviaBrand.update({ where: { id: brandId }, data: { status, updatedAt: new Date() }, include: brandInclude });
+  return mapBrand(updated);
+}
+
+export async function deleteTaaviaBrandForTenant(userId: string, tenantId: string, brandId: string) {
+  return Boolean(await setTaaviaBrandStatus(userId, tenantId, brandId, 'ARCHIVED'));
+}

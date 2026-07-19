@@ -125,8 +125,9 @@ async function importTaaviaBrands(brands: TaaviaBrand[]) {
       update: {
         tenantId: brand.tenantId,
         name: brand.name,
-        createdByUserId: brand.createdByUserId,
-        isActive: brand.isActive,
+        description: brand.description,
+        status: brand.status,
+        setupMode: brand.setupMode,
         createdAt: new Date(brand.createdAt),
         updatedAt: new Date(brand.updatedAt),
       },
@@ -134,8 +135,9 @@ async function importTaaviaBrands(brands: TaaviaBrand[]) {
         id: brand.id,
         tenantId: brand.tenantId,
         name: brand.name,
-        createdByUserId: brand.createdByUserId,
-        isActive: brand.isActive,
+        description: brand.description,
+        status: brand.status,
+        setupMode: brand.setupMode,
         createdAt: new Date(brand.createdAt),
         updatedAt: new Date(brand.updatedAt),
       },
@@ -151,7 +153,7 @@ async function importTaaviaBrands(brands: TaaviaBrand[]) {
           tenantId: brand.tenantId,
           brandId: brand.id,
           type: 'admin_agent',
-          createdByUserId: brand.createdByUserId,
+          createdByUserId: 'import',
           messages: {
             create: {
               role: 'assistant',

@@ -5,24 +5,26 @@ import { useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowRight, Check, Loader2, Radio } from 'lucide-react';
 import type { OcrSimulationJob } from '@/app/lib/data';
+import type { AiProviderAccountPublic } from '@/app/lib/types/ai-accounts';
 import type { OcrTransportMode } from '@/app/lib/ocr-transport';
 import { getOcrBatchRevealDelayMs, isBatchOcrTransportMode, isGrpcStreamingMode } from '@/app/lib/ocr-transport';
 import {
   formatConfidence,
-  getOcrAiUsage,
   getOcrFormFields,
   getOcrTransportLabel,
   getOcrTransportMode,
   normalizeOcrTransportMode,
   type OcrAiUsageCost,
 } from '@/components/ocr/utils';
-import { OcrAiUsagePanel } from '@/components/ocr/OcrAiUsagePanel';
+import { OcrPipelineUsageSection } from '@/components/ocr/OcrPipelineUsageSection';
 import './ocr/ocr-result.css';
 
 type OcrJobDetailClientProps = {
   businessId: string;
   initialJob: OcrSimulationJob;
   usageCost: OcrAiUsageCost;
+  usdToToman: number;
+  accounts?: AiProviderAccountPublic[];
 };
 
 const GRPC_DONE_KEY = (jobId: string) => `ocr-grpc-done:${jobId}`;
@@ -32,13 +34,12 @@ function buildInitialValues(job: OcrSimulationJob) {
   return Object.fromEntries(getOcrFormFields(job).map((field) => [field.key, field.targetValue]));
 }
 
-function resolveTransport(job: OcrSimulationJob, searchParams: URLSearchParams | null): OcrTransportMode {
+function resolveTransportFromSnapshot(
+  job: OcrSimulationJob,
+  searchParams: URLSearchParams | null,
+): OcrTransportMode {
   const fromQuery = searchParams?.get('transport');
   if (fromQuery) return normalizeOcrTransportMode(fromQuery);
-  if (typeof window !== 'undefined') {
-    const stored = sessionStorage.getItem(TRANSPORT_KEY(job.id));
-    if (stored) return normalizeOcrTransportMode(stored);
-  }
   return getOcrTransportMode(job);
 }
 
@@ -51,7 +52,51 @@ function getFullResponseDurationMs(job: OcrSimulationJob) {
   return Math.max(0, endedAt - startedAt);
 }
 
-export function OcrJobDetailClient({ businessId, initialJob, usageCost }: OcrJobDetailClientProps) {
+type OcrResultReportsProps = {
+  job: OcrSimulationJob;
+  usdToToman: number;
+  transportMode: OcrTransportMode;
+  accounts?: AiProviderAccountPublic[];
+  legacyCost?: OcrAiUsageCost | null;
+  confidence?: number;
+  durationMs?: number;
+  compact?: boolean;
+};
+
+function OcrResultReports({
+  job,
+  usdToToman,
+  transportMode,
+  accounts,
+  legacyCost,
+  confidence,
+  durationMs,
+  compact = false,
+}: OcrResultReportsProps) {
+  return (
+    <div className="ai-lab-ocr-result-reports">
+      <h2 className="ai-lab-ocr-result-reports-title">گزارش مصرف و هزینه</h2>
+      <OcrPipelineUsageSection
+        job={job}
+        usdToToman={usdToToman}
+        transportMode={transportMode}
+        accounts={accounts}
+        legacyCost={legacyCost}
+        confidence={confidence}
+        durationMs={durationMs}
+        compact={compact}
+      />
+    </div>
+  );
+}
+
+export function OcrJobDetailClient({
+  businessId,
+  initialJob,
+  usageCost,
+  usdToToman,
+  accounts,
+}: OcrJobDetailClientProps) {
   const searchParams = useSearchParams();
   const [job, setJob] = useState(initialJob);
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
@@ -60,29 +105,42 @@ export function OcrJobDetailClient({ businessId, initialJob, usageCost }: OcrJob
   const [activeStreamKey, setActiveStreamKey] = useState<string | null>(null);
   const [revealedKeys, setRevealedKeys] = useState<Set<string>>(new Set());
   const [batchReady, setBatchReady] = useState(false);
+  const [transportMode, setTransportMode] = useState<OcrTransportMode>(() =>
+    resolveTransportFromSnapshot(initialJob, searchParams),
+  );
+  const [shouldGrpcStream, setShouldGrpcStream] = useState(false);
+  const [grpcPlaybackReady, setGrpcPlaybackReady] = useState(false);
   const streamStartedRef = useRef(false);
   const jobRef = useRef(initialJob);
-  const grpcModeDecidedRef = useRef(false);
-  const shouldStreamRef = useRef(false);
 
-  const transportMode = useMemo(() => resolveTransport(job, searchParams), [job, searchParams]);
   const formFields = useMemo(() => getOcrFormFields(job), [job]);
-  const aiUsage = useMemo(() => getOcrAiUsage(job, transportMode), [job, transportMode]);
   const durationMs = useMemo(() => getFullResponseDurationMs(job), [job]);
   const isProcessing = job.status === 'queued' || job.status === 'processing';
   const isGrpcStreaming = isGrpcStreamingMode(transportMode);
   const isBatchMode = isBatchOcrTransportMode(transportMode);
   const isGrpcUnary = transportMode === 'grpc-unary';
 
-  // Decide once (on first render for this job) whether we should play the live
-  // stream, so that flipping GRPC_DONE_KEY mid-stream never re-triggers effects.
-  if (!grpcModeDecidedRef.current) {
-    const alreadyPlayed =
-      typeof window !== 'undefined' && sessionStorage.getItem(GRPC_DONE_KEY(job.id)) === '1';
-    shouldStreamRef.current = isGrpcStreaming && !alreadyPlayed;
-    grpcModeDecidedRef.current = true;
-  }
-  const shouldGrpcStream = isGrpcStreaming && shouldStreamRef.current && formFields.length > 0;
+  useEffect(() => {
+    const fromQuery = searchParams?.get('transport');
+    if (fromQuery) {
+      setTransportMode(normalizeOcrTransportMode(fromQuery));
+      return;
+    }
+
+    const stored = sessionStorage.getItem(TRANSPORT_KEY(job.id));
+    if (stored) {
+      setTransportMode(normalizeOcrTransportMode(stored));
+      return;
+    }
+
+    setTransportMode(getOcrTransportMode(job));
+  }, [job, searchParams]);
+
+  useEffect(() => {
+    const alreadyPlayed = sessionStorage.getItem(GRPC_DONE_KEY(job.id)) === '1';
+    setShouldGrpcStream(isGrpcStreaming && !alreadyPlayed && formFields.length > 0);
+    setGrpcPlaybackReady(true);
+  }, [formFields.length, isGrpcStreaming, job.id]);
 
   useEffect(() => {
     setJob(initialJob);
@@ -112,7 +170,8 @@ export function OcrJobDetailClient({ businessId, initialJob, usageCost }: OcrJob
 
   useEffect(() => {
     streamStartedRef.current = false;
-    grpcModeDecidedRef.current = false;
+    setGrpcPlaybackReady(false);
+    setShouldGrpcStream(false);
     setRevealedKeys(new Set());
     setActiveStreamKey(null);
     setStreamingComplete(false);
@@ -142,7 +201,7 @@ export function OcrJobDetailClient({ businessId, initialJob, usageCost }: OcrJob
   const hasFields = formFields.length > 0;
 
   useEffect(() => {
-    if (!shouldGrpcStream || !hasFields) return undefined;
+    if (!grpcPlaybackReady || !shouldGrpcStream || !hasFields) return undefined;
     if (streamStartedRef.current) return undefined;
     streamStartedRef.current = true;
 
@@ -206,15 +265,16 @@ export function OcrJobDetailClient({ businessId, initialJob, usageCost }: OcrJob
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [shouldGrpcStream, hasFields]);
+  }, [grpcPlaybackReady, shouldGrpcStream, hasFields]);
 
   useEffect(() => {
+    if (!grpcPlaybackReady) return;
     if (!isGrpcStreaming || shouldGrpcStream || formFields.length === 0) return;
     setFieldValues(buildInitialValues(jobRef.current));
     setRevealedKeys(new Set(formFields.map((field) => field.key)));
     setStreamingComplete(true);
     setFieldsLocked(false);
-  }, [formFields, isGrpcStreaming, shouldGrpcStream]);
+  }, [formFields, grpcPlaybackReady, isGrpcStreaming, shouldGrpcStream]);
 
   const showBatchLoading = isBatchMode && (isProcessing || !batchReady);
   const showGrpcShell = isGrpcStreaming && formFields.length > 0;
@@ -247,7 +307,15 @@ export function OcrJobDetailClient({ businessId, initialJob, usageCost }: OcrJob
           <span className="ai-lab-ocr-result-rest-hint">
             {isGrpcUnary ? 'پاسخ کامل پس از اتمام، یک‌جا نمایش داده می‌شود' : 'فرم پس از اتمام، یک‌جا نمایش داده می‌شود'}
           </span>
-          <OcrAiUsagePanel usage={aiUsage} cost={usageCost} transportMode={transportMode} durationMs={durationMs} compact />
+          <OcrResultReports
+            job={job}
+            usdToToman={usdToToman}
+            transportMode={transportMode}
+            accounts={accounts}
+            legacyCost={usageCost}
+            durationMs={durationMs}
+            compact
+          />
         </section>
       ) : null}
 
@@ -258,28 +326,21 @@ export function OcrJobDetailClient({ businessId, initialJob, usageCost }: OcrJob
               <h1>{job.sourceLabel}</h1>
               <p>{job.templateLabel ?? 'استخراج زنده فیلدها'}</p>
             </div>
-            {grpcStreaming ? (
-              <span className="ai-lab-ocr-result-live">
-                <span className="ai-lab-ocr-result-live-dot" aria-hidden />
-                <Radio className="h-3 w-3" aria-hidden />
-                LIVE
-              </span>
-            ) : streamingComplete ? (
-              <span className="ai-lab-ocr-result-done">
-                <Check className="h-3.5 w-3.5" aria-hidden />
-                تکمیل
-              </span>
+            {grpcPlaybackReady ? (
+              grpcStreaming ? (
+                <span className="ai-lab-ocr-result-live">
+                  <span className="ai-lab-ocr-result-live-dot" aria-hidden />
+                  <Radio className="h-3 w-3" aria-hidden />
+                  LIVE
+                </span>
+              ) : streamingComplete ? (
+                <span className="ai-lab-ocr-result-done">
+                  <Check className="h-3.5 w-3.5" aria-hidden />
+                  تکمیل
+                </span>
+              ) : null
             ) : null}
           </div>
-
-          <OcrAiUsagePanel
-            usage={aiUsage}
-            cost={usageCost}
-            transportMode={transportMode}
-            confidence={streamingComplete ? job.confidence : undefined}
-            durationMs={durationMs}
-            compact={grpcStreaming}
-          />
 
           <ol className="ai-lab-ocr-result-steps" aria-label="پیشرفت فیلدها">
             {formFields.map((field) => {
@@ -302,7 +363,7 @@ export function OcrJobDetailClient({ businessId, initialJob, usageCost }: OcrJob
             })}
           </ol>
 
-          <div className="ai-lab-ocr-result-form">
+          <div className="ai-lab-ocr-result-form ai-lab-ocr-result-form--grpc-stream">
             {formFields.map((field) => {
               const isRevealed = revealedKeys.has(field.key);
               const isStreaming = activeStreamKey === field.key;
@@ -337,6 +398,17 @@ export function OcrJobDetailClient({ businessId, initialJob, usageCost }: OcrJob
               );
             })}
           </div>
+
+          <OcrResultReports
+            job={job}
+            usdToToman={usdToToman}
+            transportMode={transportMode}
+            accounts={accounts}
+            legacyCost={usageCost}
+            confidence={streamingComplete ? job.confidence : undefined}
+            durationMs={durationMs}
+            compact={grpcStreaming}
+          />
         </section>
       ) : null}
 
@@ -346,8 +418,6 @@ export function OcrJobDetailClient({ businessId, initialJob, usageCost }: OcrJob
           <p className="ai-lab-ocr-result-rest-done-note">
             {isGrpcUnary ? 'پاسخ gRPC یک‌جا دریافت شد' : 'همه فیلدها یک‌جا استخراج شدند'}
           </p>
-
-          <OcrAiUsagePanel usage={aiUsage} cost={usageCost} transportMode={transportMode} confidence={job.confidence} durationMs={durationMs} />
 
           <div className={`ai-lab-ocr-result-form ${isGrpcUnary ? 'ai-lab-ocr-result-form--grpc-unary' : 'ai-lab-ocr-result-form--rest'}`}>
             {formFields.map((field) => (
@@ -368,6 +438,16 @@ export function OcrJobDetailClient({ businessId, initialJob, usageCost }: OcrJob
               </div>
             ))}
           </div>
+
+          <OcrResultReports
+            job={job}
+            usdToToman={usdToToman}
+            transportMode={transportMode}
+            accounts={accounts}
+            legacyCost={usageCost}
+            confidence={job.confidence}
+            durationMs={durationMs}
+          />
         </section>
       ) : null}
     </div>

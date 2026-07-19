@@ -154,7 +154,7 @@ export function TaavBusinessIntroCard({
   );
 
   const descriptionBlock =
-    description && !loading ? <p className={businessIntroCardDescription({ size })}>{description}</p> : null;
+    description && !loading ? <div className={businessIntroCardDescription({ size })}>{description}</div> : null;
 
   const descriptionSkeleton = loading ? <TaavSkeleton lines={2} size="sm" /> : null;
 

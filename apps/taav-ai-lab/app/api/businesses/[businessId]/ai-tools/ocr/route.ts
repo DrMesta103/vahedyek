@@ -8,6 +8,7 @@ import {
 import { validateExtractionFields, type OcrExtractionFieldDraft } from '@/app/lib/ocr-extraction-fields';
 import { DEFAULT_OCR_MODEL_ID } from '@/app/lib/ocr-models';
 import { parseOcrTransportMode } from '@/app/lib/ocr-transport';
+import { handlePrismaApiError } from '@/app/lib/prismaApiError';
 import { getOptionalSession } from '@/app/lib/session';
 
 type RouteContext = {
@@ -60,24 +61,33 @@ export async function POST(request: Request, context: RouteContext) {
     return NextResponse.json({ message: extractionValidation.errors[0] }, { status: 400 });
   }
 
-  const job = await createOcrJobForTenant(session.userId, {
-    tenantId: businessId,
-    sourceType: body.sourceType,
-    sourceName: body.sourceName.trim(),
-    fileType: body.fileType?.trim() || null,
-    fileSize: typeof body.fileSize === 'number' ? body.fileSize : null,
-    sampleId: body.sampleId?.trim() || null,
-    templateId: body.templateId?.trim() || null,
-    scenario: body.scenario === 'miss' ? 'miss' : body.scenario === 'recognize' ? 'recognize' : null,
-    sampleText: body.sampleText?.trim() || null,
-    transportMode: parseOcrTransportMode(body.transportMode),
-    modelId: body.modelId?.trim() || DEFAULT_OCR_MODEL_ID,
-    extractionFields: isDynamicExtraction ? extractionValidation.fields : null,
-  });
+  try {
+    const job = await createOcrJobForTenant(session.userId, {
+      tenantId: businessId,
+      sourceType: body.sourceType,
+      sourceName: body.sourceName.trim(),
+      fileType: body.fileType?.trim() || null,
+      fileSize: typeof body.fileSize === 'number' ? body.fileSize : null,
+      sampleId: body.sampleId?.trim() || null,
+      templateId: body.templateId?.trim() || null,
+      scenario: body.scenario === 'miss' ? 'miss' : body.scenario === 'recognize' ? 'recognize' : null,
+      sampleText: body.sampleText?.trim() || null,
+      transportMode: parseOcrTransportMode(body.transportMode),
+      modelId: body.modelId?.trim() || DEFAULT_OCR_MODEL_ID,
+      chatModelId: (() => {
+        const value = body.chatModelId?.trim();
+        if (!value || value === '—' || !value.includes(':')) return null;
+        return value;
+      })(),
+      extractionFields: isDynamicExtraction ? extractionValidation.fields : null,
+    });
 
-  if (!job) {
-    return NextResponse.json({ message: 'این کسب‌وکار برای شما در دسترس نیست.' }, { status: 404 });
+    if (!job) {
+      return NextResponse.json({ message: 'این کسب‌وکار برای شما در دسترس نیست.' }, { status: 404 });
+    }
+
+    return NextResponse.json({ job, source: 'database' }, { status: 201 });
+  } catch (error) {
+    return handlePrismaApiError(error);
   }
-
-  return NextResponse.json({ job, source: 'database' }, { status: 201 });
 }

@@ -3,6 +3,7 @@ import type { AiProviderAccountPublic, AiProviderType } from './types/ai-account
 import type { AiProviderModelPublic } from './types/ai-provider-models';
 import {
   calculateAiUsageCost,
+  calculateAiUsageCostDetailed,
   formatCostUsd,
   usdToTomanCost,
 } from './ai-usage-cost';
@@ -14,6 +15,8 @@ export type OcrModelPricing = {
   providerLabel: string;
   inputTokenPriceUsd: number;
   outputTokenPriceUsd: number;
+  cacheReadTokenPriceUsd?: number;
+  cacheWriteTokenPriceUsd?: number;
 };
 
 export type OcrAiUsageCost = {
@@ -21,9 +24,13 @@ export type OcrAiUsageCost = {
   providerLabel: string;
   inputCostUsd: number;
   outputCostUsd: number;
+  cacheReadCostUsd: number;
+  cacheWriteCostUsd: number;
   totalCostUsd: number;
   inputCostToman: number;
   outputCostToman: number;
+  cacheReadCostToman: number;
+  cacheWriteCostToman: number;
   totalCostToman: number;
 };
 
@@ -76,6 +83,8 @@ export function resolveOcrModelPricing(
 export function buildOcrUsageCost(input: {
   inputTokens: number;
   outputTokens: number;
+  cachedInputTokens?: number;
+  cacheWriteTokens?: number;
   pricing: OcrModelPricing | null;
   usdToToman: number;
   providerLabel?: string;
@@ -88,23 +97,36 @@ export function buildOcrUsageCost(input: {
       providerLabel,
       inputCostUsd: 0,
       outputCostUsd: 0,
+      cacheReadCostUsd: 0,
+      cacheWriteCostUsd: 0,
       totalCostUsd: 0,
       inputCostToman: 0,
       outputCostToman: 0,
+      cacheReadCostToman: 0,
+      cacheWriteCostToman: 0,
       totalCostToman: 0,
     };
   }
 
-  const costs = calculateAiUsageCost(input.pricing, input.inputTokens, input.outputTokens);
+  const costs = calculateAiUsageCostDetailed(input.pricing, {
+    inputTokens: input.inputTokens,
+    outputTokens: input.outputTokens,
+    cachedInputTokens: input.cachedInputTokens ?? 0,
+    cacheWriteTokens: input.cacheWriteTokens ?? 0,
+  });
 
   return {
     accountId: input.pricing.accountId,
     providerLabel,
     inputCostUsd: costs.inputCostUsd,
     outputCostUsd: costs.outputCostUsd,
+    cacheReadCostUsd: costs.cacheReadCostUsd,
+    cacheWriteCostUsd: costs.cacheWriteCostUsd,
     totalCostUsd: costs.totalCostUsd,
     inputCostToman: usdToTomanCost(costs.inputCostUsd, input.usdToToman),
     outputCostToman: usdToTomanCost(costs.outputCostUsd, input.usdToToman),
+    cacheReadCostToman: usdToTomanCost(costs.cacheReadCostUsd, input.usdToToman),
+    cacheWriteCostToman: usdToTomanCost(costs.cacheWriteCostUsd, input.usdToToman),
     totalCostToman: usdToTomanCost(costs.totalCostUsd, input.usdToToman),
   };
 }
@@ -123,6 +145,8 @@ export function buildOcrCostMeta(cost: OcrAiUsageCost): Record<string, string> {
   const meta: Record<string, string> = {
     __inputCostUsd: String(cost.inputCostUsd),
     __outputCostUsd: String(cost.outputCostUsd),
+    __cacheReadCostUsd: String(cost.cacheReadCostUsd),
+    __cacheWriteCostUsd: String(cost.cacheWriteCostUsd),
     __totalCostUsd: String(cost.totalCostUsd),
     __totalCostToman: String(cost.totalCostToman),
   };
@@ -152,9 +176,13 @@ export function readOcrCostFromMeta(
     providerLabel,
     inputCostUsd: Number.isFinite(inputCostUsd) ? inputCostUsd : 0,
     outputCostUsd: Number.isFinite(outputCostUsd) ? outputCostUsd : 0,
+    cacheReadCostUsd: Number(extractedJson.__cacheReadCostUsd) || 0,
+    cacheWriteCostUsd: Number(extractedJson.__cacheWriteCostUsd) || 0,
     totalCostUsd: Number.isFinite(totalCostUsd) ? totalCostUsd : 0,
     inputCostToman: 0,
     outputCostToman: 0,
+    cacheReadCostToman: 0,
+    cacheWriteCostToman: 0,
     totalCostToman: Number.isFinite(totalCostToman) ? totalCostToman : 0,
   };
 }
@@ -171,6 +199,8 @@ export function readOcrCostFromMetaWithToman(
     ...snapshot,
     inputCostToman: usdToTomanCost(snapshot.inputCostUsd, usdToToman),
     outputCostToman: usdToTomanCost(snapshot.outputCostUsd, usdToToman),
+    cacheReadCostToman: usdToTomanCost(snapshot.cacheReadCostUsd, usdToToman),
+    cacheWriteCostToman: usdToTomanCost(snapshot.cacheWriteCostUsd, usdToToman),
     totalCostToman: Number.isFinite(Number(extractedJson?.__totalCostToman))
       ? Number(extractedJson!.__totalCostToman)
       : usdToTomanCost(snapshot.totalCostUsd, usdToToman),

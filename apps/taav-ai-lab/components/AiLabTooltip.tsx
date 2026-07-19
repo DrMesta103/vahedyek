@@ -1,6 +1,6 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import type { TaavTooltipAlign, TaavTooltipSide } from '@repo/ui/taav/primitives';
 import type { AiLabTooltipDef } from '@/app/lib/tooltips';
 
@@ -38,9 +38,9 @@ function AiLabVisibleTooltip({
   className?: string;
 }) {
   return (
-    <div className={['ai-lab-helper-text', className].filter(Boolean).join(' ')}>
+    <span className={['ai-lab-helper-text', className].filter(Boolean).join(' ')}>
       {renderTooltipContent(content)}
-    </div>
+    </span>
   );
 }
 
@@ -54,18 +54,22 @@ export function AiLabTooltipIcon({
 export function AiLabTooltipWrap({
   content,
   children,
+  className,
+  style,
 }: {
   content: AiLabTooltipDef | string;
   side?: TaavTooltipSide;
   align?: TaavTooltipAlign;
   children: ReactNode;
+  className?: string;
+  style?: CSSProperties;
 }) {
   return (
-    <span className="ai-lab-tooltip-wrap">
+    <span className={['ai-lab-tooltip-wrap', className].filter(Boolean).join(' ')} style={style}>
       {children}
-      <div className="ai-lab-tooltip-content" role="tooltip">
+      <span className="ai-lab-tooltip-content" role="tooltip">
         {renderTooltipContent(content)}
-      </div>
+      </span>
     </span>
   );
 }

@@ -32,6 +32,15 @@ export async function assertTenantAccess(userId: string, tenantId: string) {
   return membership !== null;
 }
 
+// Temporary sample-project policy: brand management is limited to owner/admin/manager memberships.
+export async function assertTenantManagementAccess(userId: string, tenantId: string) {
+  const membership = await prisma.userTenantMembership.findUnique({
+    where: { userId_tenantId: { userId, tenantId } },
+    select: { role: true },
+  });
+  return membership !== null && ['owner', 'admin', 'manager'].includes(membership.role.toLowerCase());
+}
+
 export async function getTokenPayloadFromCookies() {
   const cookieStore = await cookies();
   const token = cookieStore.get(AUTH_COOKIE)?.value;

@@ -6,14 +6,15 @@ import { ArrowLeft, BookText, Boxes, ChevronLeft, CircleHelp, FlaskConical, Spar
 import type { TaaviaUseCaseKey } from '@/app/lib/types/domain';
 import type { ProductCatalogSnapshot, ProductField, WorkspaceContentMessage } from '@/app/lib/types/taavia-workspace';
 import type { TestFaqItem, TestKnowledgeBaseDocument } from '@/app/lib/types/taavia-test-workspace';
+import type { BrandInfoDto } from '@/app/lib/brand-info/types';
 import { buildTestKnowledgeBaseDocument } from '@/app/lib/taavia-test-knowledge-builder';
 import {
   getTestWorkspaceCounts,
   hasAnyTestWorkspaceData,
 } from '@/app/lib/taavia-test-requirements';
 import { loadTestWorkspaceSnapshot, saveTestWorkspaceSnapshot } from '@/app/lib/taavia-test-storage';
-import { createFileMessage, createTextMessage, hydrateWorkspaceMessages } from '@/app/lib/taavia-workspace-knowledge';
-import { ContentFeedEditor } from '@/components/taavia/ContentFeedEditor';
+import { createFileMessage, createTextMessage } from '@/app/lib/taavia-workspace-knowledge';
+import { BrandInfoEditor } from '@/components/taavia/BrandInfoEditor';
 import { TestBuildKnowledgeBaseButton } from '@/components/taavia/test/TestBuildKnowledgeBaseButton';
 import { TestFaqEditor } from '@/components/taavia/test/TestFaqEditor';
 import { TestKnowledgeBaseCategoriesPreview } from '@/components/taavia/test/TestKnowledgeBaseCategoriesPreview';
@@ -331,6 +332,7 @@ type TaaviaTestWorkspaceClientProps = {
   brandId: string;
   brandName: string;
   selectedUseCases?: TaaviaUseCaseKey[];
+  initialBrandInfo: BrandInfoDto[];
 };
 
 export function TaaviaTestWorkspaceClient({
@@ -338,6 +340,7 @@ export function TaaviaTestWorkspaceClient({
   brandId,
   brandName,
   selectedUseCases = [],
+  initialBrandInfo,
 }: TaaviaTestWorkspaceClientProps) {
   const entryPath = `/businesses/${businessId}/products/taavia/brands/${brandId}/entry`;
 
@@ -361,7 +364,7 @@ export function TaaviaTestWorkspaceClient({
   useEffect(() => {
     const saved = loadTestWorkspaceSnapshot(brandId);
     if (saved) {
-      setBrandMessages(hydrateWorkspaceMessages(saved.brandMessages));
+      setBrandMessages([]);
       setProductCatalog(saved.productCatalog);
       setFaqItems(saved.faqItems);
       setKnowledgeBaseDocument(saved.knowledgeBaseDocument);
@@ -372,7 +375,7 @@ export function TaaviaTestWorkspaceClient({
   useEffect(() => {
     if (!hydrated) return;
     saveTestWorkspaceSnapshot(brandId, {
-      brandMessages: brandMessages.map(({ file: _file, objectUrl: _objectUrl, ...message }) => message),
+      brandMessages: [],
       productCatalog,
       faqItems,
       knowledgeBaseDocument,
@@ -696,7 +699,8 @@ export function TaaviaTestWorkspaceClient({
               {activeTab !== 'knowledge-base' ? (
                 <>
                   <TaavTabsContent value="brand" className="m-0 lg:flex-1 lg:min-h-0">
-                    <ContentFeedEditor
+                    <BrandInfoEditor businessId={businessId} brandId={brandId} initialItems={initialBrandInfo} />
+                    {/*
                       title="معرفی برند"
                       description="متن، ویس، تصویر، ویدیو و فایل درباره برند"
                       placeholder="معرفی برند، تاریخچه، لحن، ارزش‌ها و مخاطب هدف را بنویس..."
@@ -704,7 +708,7 @@ export function TaaviaTestWorkspaceClient({
                       emptyDescription="می‌توانی متن بنویسی، ویس ضبط کنی یا فایل و تصویر اضافه کنی."
                       messages={brandMessages}
                       onMessagesChange={setBrandMessages}
-                    />
+                    /> */}
                   </TaavTabsContent>
 
                   <TaavTabsContent value="products" className="m-0 lg:min-h-0 lg:flex-1 lg:overflow-y-auto">
