@@ -371,6 +371,11 @@ export function EmployeeRequestsClient({
   }, [employee.id]);
 
   const activeTab = REQUEST_TAB_CONFIG.find((tab) => tab.key === activeType) ?? REQUEST_TAB_CONFIG[0];
+  const creationAllowed =
+    (activeType === 'leave' && ['leave_and_correction', 'leave_only'].includes(leaveRequestContext.requestRule)) ||
+    (activeType === 'attendance' && ['leave_and_correction', 'correction_only'].includes(leaveRequestContext.requestRule)) ||
+    (activeType === 'overtime' && leaveRequestContext.overtimeRule !== 'disabled') ||
+    !['leave', 'attendance', 'overtime'].includes(activeType);
 
   const currentRequests = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -399,6 +404,7 @@ export function EmployeeRequestsClient({
   }, [activeTab.requestTypes, dateFrom, dateTo, requests, searchQuery, sort, statuses, year]);
 
   const openCreate = () => {
+    if (!creationAllowed) return;
     setForm(createInitialEmployeeRequestForm(activeType, employee.id));
     setDialogMode('create');
     if (activeType === 'leave') void refreshLeaveBalance();
@@ -412,28 +418,28 @@ export function EmployeeRequestsClient({
 
   const save = () => {
     if (!form) return;
-    startTransition(async () => {
+    startTransition(() => { void (async () => {
       await saveEmployeeRequestAction(form);
       setDialogMode(null);
       setForm(null);
       router.refresh();
-    });
+    })(); });
   };
 
   const changeStatus = (request: EmployeeRequestItem, status: EmployeeRequestStatus) => {
-    startTransition(async () => {
+    startTransition(() => { void (async () => {
       await changeEmployeeRequestStatusAction(request.id, employee.id, status);
       router.refresh();
-    });
+    })(); });
   };
 
   const confirmDelete = () => {
     if (!deleteTarget) return;
-    startTransition(async () => {
+    startTransition(() => { void (async () => {
       await deleteEmployeeRequestAction(deleteTarget.id, employee.id);
       setDeleteTarget(null);
       router.refresh();
-    });
+    })(); });
   };
 
   const toggleStatus = (status: EmployeeRequestStatus) => {
@@ -545,7 +551,7 @@ export function EmployeeRequestsClient({
               </button>
             ) : null}
           </label>
-          <button type="button" className="employee-requests-add-btn" onClick={openCreate}>
+          <button type="button" className="employee-requests-add-btn" onClick={openCreate} disabled={!creationAllowed}>
             <Plus className="h-4 w-4" />
             افزودن درخواست
           </button>

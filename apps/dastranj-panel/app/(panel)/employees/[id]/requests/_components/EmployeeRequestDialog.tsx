@@ -671,7 +671,7 @@ export function EmployeeRequestDialog({
       return;
     }
     const timeout = setTimeout(() => {
-      startPreviewTransition(async () => {
+      startPreviewTransition(() => { void (async () => {
         try {
           const nextPreview = await previewEmployeeRequestAction(normalizedForm);
           setPreview(nextPreview);
@@ -680,10 +680,22 @@ export function EmployeeRequestDialog({
           setPreview(null);
           setPreviewError(nextError instanceof Error ? nextError.message : 'پیش‌نمایش قابل دریافت نیست.');
         }
-      });
+      })(); });
     }, 180);
     return () => clearTimeout(timeout);
-  }, [form.requestType, form.rangeType, form.startDate, form.endDate, form.startTime, form.endTime, form.dateTime, form.reasonId, form.loanId, form.amount, form.installments, form.attachments, form.submissionMode, normalizedForm]);
+  }, [form.requestType, form.rangeType, form.startDate, form.endDate, form.startTime, form.endTime, form.dateTime, form.reasonId, form.loanId, form.amount, form.installments, form.attachments, form.submissionMode, form.latitude, form.longitude, normalizedForm]);
+
+  const acquireAttendanceLocation = () => {
+    if (!navigator.geolocation) return setError('مرورگر شما امکان دریافت موقعیت مکانی را ندارد.');
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        onChange({ ...form, latitude: position.coords.latitude, longitude: position.coords.longitude });
+        setError('');
+      },
+      () => setError('دریافت موقعیت مکانی انجام نشد. دسترسی مکان را فعال و دوباره تلاش کنید.'),
+      { enableHighAccuracy: true, timeout: 15_000, maximumAge: 30_000 },
+    );
+  };
 
   const submit = () => {
     if (readonly) return onClose();
@@ -773,6 +785,7 @@ export function EmployeeRequestDialog({
             <>
               <RequestDateField label="تاریخ" value={form.startDate ?? ''} disabled={readonly} onChange={(value) => onChange({ ...form, startDate: value, dateTime: `${value} ${form.startTime ?? ''}`.trim() })} />
               <RequestTimeField label="ساعت" value={form.startTime ?? ''} disabled={readonly} onChange={(value) => onChange({ ...form, startTime: value, dateTime: `${form.startDate ?? ''} ${value}`.trim() })} />
+              {!readonly ? <button type="button" className="policy-btn policy-btn-secondary" onClick={acquireAttendanceLocation}>{Number.isFinite(form.latitude) && Number.isFinite(form.longitude) ? 'موقعیت مکانی دریافت شد' : 'دریافت موقعیت مکانی'}</button> : null}
             </>
           ) : null}
 

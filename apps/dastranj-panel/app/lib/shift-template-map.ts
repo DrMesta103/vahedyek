@@ -3,6 +3,10 @@ import { resolveCalendarShiftTitle, type CalendarShiftType } from './calendar-sh
 
 export type ShiftTemplateCategory = CalendarShiftType;
 
+export function getShiftTemplateTypeLabel(type: CalendarShiftType) {
+  return SHIFT_TEMPLATE_CATEGORIES.find((item) => item.id === type)?.label ?? 'نوع شیفت نامشخص';
+}
+
 export const SHIFT_TEMPLATE_CATEGORIES: Array<{
   id: ShiftTemplateCategory;
   label: string;

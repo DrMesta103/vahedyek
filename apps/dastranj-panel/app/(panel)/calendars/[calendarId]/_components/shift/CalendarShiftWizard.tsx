@@ -17,7 +17,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { ConfirmDialog } from '../../../../../components/ConfirmDialog';
 import { addCalendarShiftAction } from '../../../../../lib/actions';
 import { normalizePersianDateInput } from '../../../../../lib/calendar-events';
-import { resolveCalendarShiftTitle } from '../../../../../lib/calendar-shifts';
+import { getCalendarShiftTypeLabel, resolveCalendarShiftTitle } from '../../../../../lib/calendar-shifts';
 import { calculateTimeRangeDurationMinutes, validateTimeRangeUnder24Hours } from '../../../../../lib/time-range-validation';
 import type { ShiftTemplatePickerItem } from '../../../../../lib/shift-template-picker';
 import { RotateShiftComingSoonModal } from './RotateShiftComingSoonModal';
@@ -271,23 +271,26 @@ function grossShiftMinutes(start: string, end: string, nextDay: boolean) {
   return calculateTimeRangeDurationMinutes(start, end, nextDay);
 }
 
+function normalizeSplitTimeline(first: WorkRange, second: WorkRange) {
+  const firstStart = parseTime(first.start);
+  const firstEnd = parseTime(first.end) + (first.nextDay ? 24 * 60 : 0);
+  let secondStart = parseTime(second.start);
+  let secondEnd = parseTime(second.end) + (second.nextDay ? 24 * 60 : 0);
+  if (secondStart < firstStart) {
+    secondStart += 24 * 60;
+    secondEnd += 24 * 60;
+  }
+  return { firstStart, firstEnd, secondStart, secondEnd };
+}
+
 function intervalsOverlap(a: WorkRange, b: WorkRange) {
-  const aStart = parseTime(a.start);
-  const aEnd = rangeEndMinutes(a);
-  const bStart = parseTime(b.start);
-  const bEnd = rangeEndMinutes(b);
-  return aStart < bEnd && bStart < aEnd;
+  const timeline = normalizeSplitTimeline(a, b);
+  return timeline.firstStart < timeline.secondEnd && timeline.secondStart < timeline.firstEnd;
 }
 
 function intervalGapMinutes(first: WorkRange, second: WorkRange) {
-  const firstEnd = rangeEndMinutes(first);
-  let secondStart = parseTime(second.start);
-
-  while (secondStart < firstEnd) {
-    secondStart += 24 * 60;
-  }
-
-  return Math.max(secondStart - firstEnd, 0);
+  const timeline = normalizeSplitTimeline(first, second);
+  return Math.max(timeline.secondStart - timeline.firstEnd, 0);
 }
 
 function fixedRestInterval(item: RestItem, range: WorkRange) {
@@ -618,12 +621,14 @@ function TitleCard({
   setTitle,
   helper,
   error,
+  label = 'عنوان شیفت',
   placeholder = 'مثلاً: شیفت صبح اداری، شیفت عصر فروشگاه، شیفت ویژه تعطیل',
 }: {
   title: string;
   setTitle: (value: string) => void;
   helper?: string;
   error?: string;
+  label?: string;
   placeholder?: string;
 }) {
   return (
@@ -633,7 +638,7 @@ function TitleCard({
         <div className="text-xl font-black text-white">اطلاعات پایه شیفت</div>
       </div>
       <label className="mt-6 block space-y-2 text-right">
-        <span className="text-sm font-bold text-white">عنوان شیفت</span>
+        <span className="text-sm font-bold text-white">{label}</span>
         <input
           value={title}
           onChange={(event) => setTitle(event.target.value)}
@@ -894,6 +899,7 @@ export type ShiftWizardSavePayload = {
   shiftTitle: string;
   shiftConfig: Record<string, unknown>;
   description?: string;
+  isActive?: boolean;
 };
 
 export type CalendarShiftWizardSubmitHandle = {
@@ -915,11 +921,16 @@ export type CalendarShiftWizardProps = {
   enableBuiltinTemplatePicker?: boolean;
   submitLabel?: string;
   initialDescription?: string;
+  initialShiftConfig?: Record<string, unknown>;
+  initialShiftTitle?: string;
+  initialIsActive?: boolean;
+  requireReviewBeforeSave?: boolean;
+  allowTemplateStatusEditing?: boolean;
   hideFooter?: boolean;
   beforeSummarySlot?: ReactNode;
   onRegisterSubmit?: (handle: CalendarShiftWizardSubmitHandle | null) => void;
-  onSaveShift?: (payload: ShiftWizardSavePayload) => Promise<void>;
-  onSaved: () => void;
+  onSaveShift?: (payload: ShiftWizardSavePayload) => Promise<{ templateId?: string } | void>;
+  onSaved: (templateId?: string) => void;
   onCancel: () => void;
 };
 
@@ -936,6 +947,11 @@ export function CalendarShiftWizard({
   enableBuiltinTemplatePicker = true,
   submitLabel,
   initialDescription = '',
+  initialShiftConfig,
+  initialShiftTitle,
+  initialIsActive = true,
+  requireReviewBeforeSave = false,
+  allowTemplateStatusEditing = false,
   hideFooter = false,
   beforeSummarySlot,
   onRegisterSubmit,
@@ -944,7 +960,7 @@ export function CalendarShiftWizard({
   onCancel,
 }: CalendarShiftWizardProps) {
   const isTemplatePurpose = purpose === 'template';
-  const baseShiftConfig: Record<string, unknown> = {};
+  const baseShiftConfig: Record<string, unknown> = initialShiftConfig ?? {};
   const defaultWorkingDaysForContext = dayContext ? [] : DEFAULT_WORKING_DAYS;
   const singleDayDate = dayContext ? normalizePersianDateInput(dayContext.date) : null;
   const groupedIncludedDates = forcedIncludedDates.map((item) => normalizePersianDateInput(item)).filter(Boolean);
@@ -966,11 +982,13 @@ export function CalendarShiftWizard({
     enableBuiltinTemplatePicker ? ((baseShiftConfig.mode as ShiftMode | undefined) ?? 'manual') : 'manual',
   );
   const [selectedTemplateId, setSelectedTemplateId] = useState(String(baseShiftConfig.templateId ?? ''));
-  const [shiftTitle, setShiftTitle] = useState('');
+  const [shiftTitle, setShiftTitle] = useState(initialShiftTitle ?? String(baseShiftConfig.title ?? ''));
   const [saveError, setSaveError] = useState('');
   const [holidayConfirmOpen, setHolidayConfirmOpen] = useState(false);
   const [rotateComingSoonOpen, setRotateComingSoonOpen] = useState(false);
   const [templateDescription, setTemplateDescription] = useState(initialDescription);
+  const [templateIsActive, setTemplateIsActive] = useState(initialIsActive);
+  const [reviewMode, setReviewMode] = useState(false);
 
   const [workingDays, setWorkingDays] = useState<string[]>(
     stringArray(baseShiftConfig.workingDays, defaultWorkingDaysForContext),
@@ -1000,10 +1018,11 @@ export function CalendarShiftWizard({
     stringArray(baseShiftConfig.floatAbsWorkingDays, defaultWorkingDaysForContext),
   );
   const [floatAbsRequiredMinutes, setFloatAbsRequiredMinutes] = useState(Number(floatAbsConfig.requiredMinutes ?? 480) || 480);
-  const [floatAbsStart, setFloatAbsStart] = useState(String(floatAbsConfig.startTime ?? '08:00'));
-  const [floatAbsEnd, setFloatAbsEnd] = useState(String(floatAbsConfig.endTime ?? '16:00'));
+  const [floatAbsRangeEnabled, setFloatAbsRangeEnabled] = useState(Boolean(floatAbsConfig.registrationRangeEnabled ?? (floatAbsConfig.startTime && floatAbsConfig.endTime)));
+  const [floatAbsStart, setFloatAbsStart] = useState(String(floatAbsConfig.startTime ?? ''));
+  const [floatAbsEnd, setFloatAbsEnd] = useState(String(floatAbsConfig.endTime ?? ''));
   const [floatAbsRests, setFloatAbsRests] = useState<RestItem[]>(
-    normalizeAbsoluteFloatingRests(floatAbsConfig.rests ?? baseShiftConfig.floatAbsRests, true),
+    normalizeAbsoluteFloatingRests(floatAbsConfig.rests ?? baseShiftConfig.floatAbsRests, Boolean(floatAbsConfig.registrationRangeEnabled ?? (floatAbsConfig.startTime && floatAbsConfig.endTime))),
   );
 
   const [splitWorkingDays, setSplitWorkingDays] = useState<string[]>(
@@ -1027,10 +1046,10 @@ export function CalendarShiftWizard({
 
   const fixedWorkRange = useMemo<WorkRange>(() => ({ start: startTime, end: endTime, nextDay }), [endTime, nextDay, startTime]);
   const floatAbsWorkRange = useMemo<WorkRange | undefined>(() => {
-    if (!floatAbsStart || !floatAbsEnd) return undefined;
+    if (!floatAbsRangeEnabled || !floatAbsStart || !floatAbsEnd) return undefined;
     if (parseTime(floatAbsEnd) <= parseTime(floatAbsStart)) return undefined;
     return { start: floatAbsStart, end: floatAbsEnd, nextDay: false };
-  }, [floatAbsEnd, floatAbsStart]);
+  }, [floatAbsEnd, floatAbsRangeEnabled, floatAbsStart]);
   const floatAbsFixedBreaksAllowed = Boolean(floatAbsWorkRange);
   const floatAbsDeducted = useMemo(() => totalDeductedRestMinutes(floatAbsRests), [floatAbsRests]);
   const floatAbsNetMinutes = useMemo(() => Math.max(floatAbsRequiredMinutes - floatAbsDeducted, 0), [floatAbsDeducted, floatAbsRequiredMinutes]);
@@ -1076,7 +1095,7 @@ export function CalendarShiftWizard({
   const getFixedShiftErrors = () => {
     const errors: string[] = [];
     if (!dayContext && groupedIncludedDates.length === 0 && workingDays.length === 0) errors.push('حداقل یک روز برای این شیفت انتخاب کنید.');
-    if (!shiftTitle.trim()) errors.push('عنوان شیفت را وارد کنید.');
+    if (!shiftTitle.trim()) errors.push(isTemplatePurpose ? 'عنوان قالب شیفت را وارد کنید.' : 'عنوان شیفت را وارد کنید.');
     if (!startTime) errors.push('ساعت ورود را وارد کنید.');
     if (!endTime) errors.push('ساعت خروج را وارد کنید.');
     if (startTime && endTime && !nextDay && parseTime(endTime) <= parseTime(startTime)) {
@@ -1096,7 +1115,7 @@ export function CalendarShiftWizard({
   const getFloatDayErrors = () => {
     const errors: string[] = [];
     if (!dayContext && groupedIncludedDates.length === 0 && floatDayWorkingDays.length === 0) errors.push('حداقل یک روز برای این شیفت انتخاب کنید.');
-    if (!shiftTitle.trim()) errors.push('عنوان شیفت را وارد کنید.');
+    if (!shiftTitle.trim()) errors.push(isTemplatePurpose ? 'عنوان قالب شیفت را وارد کنید.' : 'عنوان شیفت را وارد کنید.');
     if (!floatDayEntryStart || !floatDayEntryEnd) errors.push('بازه مجاز ورود را کامل کنید.');
     if (floatDayEntryStart && floatDayEntryEnd && parseTime(floatDayEntryEnd) <= parseTime(floatDayEntryStart)) {
       errors.push('پایان بازه مجاز ورود باید بعد از شروع آن باشد.');
@@ -1134,15 +1153,15 @@ export function CalendarShiftWizard({
   const floatAbsErrors = (() => {
     if (shiftType !== 'float-abs') return [] as string[];
     const errors: string[] = [];
-    if (!shiftTitle.trim()) errors.push('عنوان شیفت را وارد کنید.');
+    if (!shiftTitle.trim()) errors.push(isTemplatePurpose ? 'عنوان قالب شیفت را وارد کنید.' : 'عنوان شیفت را وارد کنید.');
     if (!dayContext && groupedIncludedDates.length === 0 && floatAbsWorkingDays.length === 0) errors.push('حداقل یک روز برای این شیفت انتخاب کنید.');
     if (!floatAbsRequiredMinutes) errors.push('حداقل مدت کار روزانه را وارد کنید.');
     if (floatAbsRequiredMinutes <= 0) errors.push('حداقل مدت کار روزانه باید بیشتر از صفر باشد.');
-    if (!floatAbsStart || !floatAbsEnd) errors.push('محدوده مجاز ثبت تردد را کامل کنید.');
-    if (floatAbsStart && floatAbsEnd && parseTime(floatAbsEnd) <= parseTime(floatAbsStart)) {
+    if (floatAbsRangeEnabled && (!floatAbsStart || !floatAbsEnd)) errors.push('بازه اختیاری فعالیت را کامل کنید.');
+    if (floatAbsRangeEnabled && floatAbsStart && floatAbsEnd && parseTime(floatAbsEnd) <= parseTime(floatAbsStart)) {
       errors.push('پایان محدوده مجاز ثبت تردد باید بعد از شروع آن باشد.');
     }
-    if (validateTimeRangeUnder24Hours(floatAbsStart, floatAbsEnd)) {
+    if (floatAbsRangeEnabled && validateTimeRangeUnder24Hours(floatAbsStart, floatAbsEnd)) {
       errors.push('بازه زمانی نمی‌تواند ۲۴ ساعت یا بیشتر باشد.');
     }
     if (floatAbsDeducted > floatAbsRequiredMinutes) {
@@ -1160,7 +1179,7 @@ export function CalendarShiftWizard({
   const splitErrors = (() => {
     if (shiftType !== 'split') return [] as string[];
     const errors: string[] = [];
-    if (!shiftTitle.trim()) errors.push('عنوان شیفت را وارد کنید.');
+    if (!shiftTitle.trim()) errors.push(isTemplatePurpose ? 'عنوان قالب شیفت را وارد کنید.' : 'عنوان شیفت را وارد کنید.');
     if (!dayContext && groupedIncludedDates.length === 0 && splitWorkingDays.length === 0) errors.push('حداقل یک روز برای این شیفت انتخاب کنید.');
     if (!split1Start || !split1End) errors.push('شروع و پایان بازه اول کاری را کامل کنید.');
     if (!split2Start || !split2End) errors.push('شروع و پایان بازه دوم کاری را کامل کنید.');
@@ -1179,9 +1198,6 @@ export function CalendarShiftWizard({
     }
     if (intervalsOverlap(split1WorkRange, split2WorkRange)) {
       errors.push('دو بازه کاری نباید با یکدیگر هم‌پوشانی داشته باشند.');
-    }
-    if (split1Start && split1End && split2Start && split2End && rangeEndMinutes(split1WorkRange) > parseTime(split2Start) && split2NextDay === false) {
-      errors.push('بازه دوم باید بعد از بازه اول شروع شود.');
     }
     if (hasFixedRestError(split1Rests, split1WorkRange)) {
       errors.push('استراحت‌های بازه اول باید داخل همان بازه ثبت شوند.');
@@ -1290,9 +1306,11 @@ export function CalendarShiftWizard({
       const floatAbs = asObject(config.absoluteFloatingShift);
       setFloatAbsWorkingDays(template.weekDays.length > 0 ? template.weekDays : stringArray(config.floatAbsWorkingDays, DEFAULT_WORKING_DAYS));
       setFloatAbsRequiredMinutes(Number(floatAbs.requiredMinutes ?? 480) || 480);
-      setFloatAbsStart(String(floatAbs.startTime ?? '08:00'));
-      setFloatAbsEnd(String(floatAbs.endTime ?? '16:00'));
-      setFloatAbsRests(normalizeAbsoluteFloatingRests(floatAbs.rests, true));
+      const rangeEnabled = Boolean(floatAbs.registrationRangeEnabled ?? (floatAbs.startTime && floatAbs.endTime));
+      setFloatAbsRangeEnabled(rangeEnabled);
+      setFloatAbsStart(String(floatAbs.startTime ?? ''));
+      setFloatAbsEnd(String(floatAbs.endTime ?? ''));
+      setFloatAbsRests(normalizeAbsoluteFloatingRests(floatAbs.rests, rangeEnabled));
       return;
     }
 
@@ -1356,6 +1374,7 @@ export function CalendarShiftWizard({
       shiftType,
       mode: shiftMode,
       templateId: selectedTemplateId,
+      ...(selectedTemplateId && !isTemplatePurpose ? { sourceShiftTemplateId: selectedTemplateId } : {}),
       title: resolveCalendarShiftTitle(shiftTitle, shiftType),
       fixedShift: { startTime, endTime, endsNextDay: nextDay },
       rests,
@@ -1370,9 +1389,9 @@ export function CalendarShiftWizard({
       },
       absoluteFloatingShift: {
         requiredMinutes: floatAbsRequiredMinutes,
-        registrationRangeEnabled: true,
-        startTime: floatAbsStart,
-        endTime: floatAbsEnd,
+        registrationRangeEnabled: floatAbsRangeEnabled,
+        startTime: floatAbsRangeEnabled ? floatAbsStart : '',
+        endTime: floatAbsRangeEnabled ? floatAbsEnd : '',
         endsNextDay: false,
         rests: floatAbsRests,
       },
@@ -1401,10 +1420,12 @@ export function CalendarShiftWizard({
         shiftTitle: resolveCalendarShiftTitle(shiftTitle, shiftType),
         shiftConfig: buildShiftConfig(),
         description: isTemplatePurpose ? templateDescription.trim() || undefined : undefined,
+        isActive: isTemplatePurpose && allowTemplateStatusEditing ? templateIsActive : undefined,
       };
 
+      let result: { templateId?: string } | void;
       if (onSaveShift) {
-        await onSaveShift(payload);
+        result = await onSaveShift(payload);
       } else {
         await addCalendarShiftAction({
           calendarId: calendar.id,
@@ -1413,9 +1434,11 @@ export function CalendarShiftWizard({
           shiftConfig: payload.shiftConfig,
         });
       }
-      onSaved();
-    } catch {
-      setSaveError('شیفت ذخیره نشد. دوباره تلاش کنید.');
+      onSaved(result && 'templateId' in result ? result.templateId : undefined);
+    } catch (error) {
+      if (!(error instanceof DOMException && error.name === 'AbortError')) {
+        setSaveError('شیفت ذخیره نشد. دوباره تلاش کنید.');
+      }
     } finally {
       setSaving(false);
     }
@@ -1423,6 +1446,11 @@ export function CalendarShiftWizard({
 
   const save = async () => {
     if (!canSave) return;
+    if (requireReviewBeforeSave && !reviewMode) {
+      setSaveError('');
+      setReviewMode(true);
+      return;
+    }
     if (dayContext?.isHoliday && !holidayConfirmOpen) {
       setHolidayConfirmOpen(true);
       return;
@@ -1452,6 +1480,22 @@ export function CalendarShiftWizard({
     >
       <div className={compact ? 'calendar-shift-wizard-inner' : 'space-y-3 rounded-xl border border-white/10 bg-slate-950/45 p-4 sm:p-5'}>
         <div className={compact ? 'calendar-shift-wizard-content' : 'space-y-5 text-right'}>
+            {reviewMode ? (
+              <div className="space-y-5 rounded-[22px] border border-indigo-400/25 bg-indigo-950/30 p-5 text-right">
+                <div><h3 className="text-xl font-black text-white">خلاصه قالب شیفت</h3><p className="mt-2 text-sm text-slate-300">اطلاعات زیر را پیش از ثبت نهایی بررسی کنید.</p></div>
+                <dl className="shift-template-detail-grid">
+                  <div><dt>عنوان</dt><dd>{shiftTitle.trim()}</dd></div>
+                  <div><dt>نوع شیفت</dt><dd>{getCalendarShiftTypeLabel(shiftType)}</dd></div>
+                  <div><dt>وضعیت</dt><dd>{templateIsActive ? 'فعال' : 'غیرفعال'}</dd></div>
+                  <div><dt>روزهای فعال</dt><dd>{formatWorkingDaysLabel(shiftType === 'fixed' ? workingDays : shiftType === 'float-day' ? floatDayWorkingDays : shiftType === 'float-abs' ? floatAbsWorkingDays : splitWorkingDays)}</dd></div>
+                  {shiftType === 'fixed' ? <><div><dt>بازه کاری</dt><dd>{startTime} تا {endTime}{nextDay ? ' روز بعد' : ''}</dd></div><div><dt>مدت ناخالص</dt><dd>{formatDuration(grossShiftMinutes(startTime, endTime, nextDay))}</dd></div><div><dt>استراحت‌ها</dt><dd>{rests.length} مورد؛ {formatDuration(totalDeductedRestMinutes(rests))} کسرشونده</dd></div><div><dt>مدت خالص</dt><dd>{formatDuration(fixedTotalMinutes)}</dd></div></> : null}
+                  {shiftType === 'float-day' ? <><div><dt>بازه مجاز ورود</dt><dd>{floatDayEntryStart} تا {floatDayEntryEnd}</dd></div><div><dt>مدت کار مورد انتظار</dt><dd>{formatDuration(floatDayRequiredMinutes)}</dd></div><div><dt>استراحت‌ها</dt><dd>{floatDayRests.length} مورد؛ {formatDuration(totalDeductedRestMinutes(floatDayRests))} کسرشونده</dd></div><div><dt>قاعده خروج</dt><dd>خروج مورد انتظار بر اساس زمان ورود واقعی و مدت کار روزانه محاسبه می‌شود.</dd></div></> : null}
+                  {shiftType === 'float-abs' ? <><div><dt>مدت کار مورد انتظار</dt><dd>{formatDuration(floatAbsRequiredMinutes)}</dd></div><div><dt>بازه اختیاری</dt><dd>{floatAbsRangeEnabled ? `${floatAbsStart} تا ${floatAbsEnd}` : 'تعریف نشده'}</dd></div><div><dt>ساعت ثابت</dt><dd>ندارد</dd></div><div><dt>استراحت‌ها</dt><dd>{floatAbsRests.length} مورد؛ {formatDuration(totalDeductedRestMinutes(floatAbsRests))} کسرشونده</dd></div></> : null}
+                  {shiftType === 'split' ? <><div><dt>بازه اول</dt><dd>{split1Start} تا {split1End}{split1NextDay ? ' روز بعد' : ''}</dd></div><div><dt>بازه دوم</dt><dd>{split2Start} تا {split2End}{split2NextDay ? ' روز بعد' : ''}</dd></div><div><dt>مجموع زمان کار</dt><dd>{formatDuration(splitGrossMinutes)}</dd></div><div><dt>فاصله دو بازه</dt><dd>{formatDuration(splitGapMinutes)} (استراحت محسوب نمی‌شود)</dd></div><div><dt>استراحت‌ها</dt><dd>{split1Rests.length + split2Rests.length} مورد؛ {formatDuration(totalDeductedRestMinutes([...split1Rests, ...split2Rests]))} کسرشونده</dd></div><div><dt>مدت خالص</dt><dd>{formatDuration(splitTotalMinutes)}</dd></div></> : null}
+                </dl>
+                <p className="rounded-xl border border-white/10 bg-slate-950/40 px-4 py-3 text-sm text-slate-300">{templateIsActive ? 'قالب فعال در تقویم‌ها و بخش‌های پشتیبانی‌شده قابل انتخاب خواهد بود.' : 'قالب غیرفعال برای استفاده‌های جدید نمایش داده نمی‌شود.'}</p>
+              </div>
+            ) : <>
             {dayContext ? <LockedDayField dayContext={dayContext} /> : null}
 
             {dayContext?.isHoliday ? (
@@ -1462,7 +1506,8 @@ export function CalendarShiftWizard({
             ) : null}
 
             {isTemplatePurpose ? (
-              <label className="calendar-create-field">
+              <div className="space-y-4">
+              {allowTemplateStatusEditing ? <label className="calendar-create-field">
                 <span>توضیحات قالب</span>
                 <textarea
                   value={templateDescription}
@@ -1470,7 +1515,16 @@ export function CalendarShiftWizard({
                   placeholder="توضیحات قالب شیفت (اختیاری)"
                   rows={2}
                 />
+              </label> : null}
+              <label className="calendar-create-field">
+                <span>وضعیت قالب</span>
+                <select value={templateIsActive ? 'active' : 'inactive'} onChange={(event) => setTemplateIsActive(event.target.value === 'active')}>
+                  <option value="active">فعال</option>
+                  <option value="inactive">غیرفعال</option>
+                </select>
+                <small>قالب فعال در تقویم‌ها و بخش‌های پشتیبانی‌شده قابل انتخاب خواهد بود. قالب غیرفعال برای استفاده‌های جدید نمایش داده نمی‌شود.</small>
               </label>
+              </div>
             ) : null}
 
             {!hideTypePicker ? (
@@ -1532,6 +1586,7 @@ export function CalendarShiftWizard({
                 <TitleCard
                   title={shiftTitle}
                   setTitle={setShiftTitle}
+                  label={isTemplatePurpose ? 'عنوان قالب شیفت' : undefined}
                   helper="نامی برای این شیفت وارد کنید؛ مثل شیفت صبح اداری یا شیفت عصر فروشگاه."
                   placeholder="مثلاً: شیفت صبح اداری، شیفت عصر فروشگاه، شیفت ویژه تعطیل"
                 />
@@ -1644,6 +1699,7 @@ export function CalendarShiftWizard({
                 <TitleCard
                   title={shiftTitle}
                   setTitle={setShiftTitle}
+                  label={isTemplatePurpose ? 'عنوان قالب شیفت' : undefined}
                   helper="این عنوان بعداً در گزارش‌ها، تنظیمات کاربران و گروه‌های کاری نمایش داده می‌شود. در صورت خالی بودن، نام پیش‌فرض بر اساس نوع شیفت استفاده می‌شود."
                 />
                 <div className="rounded-xl border border-indigo-400/20 bg-indigo-500/10 p-4 text-right">
@@ -1783,7 +1839,7 @@ export function CalendarShiftWizard({
 
             {shiftType === 'float-abs' ? (
               <>
-                <TitleCard title={shiftTitle} setTitle={setShiftTitle} />
+                <TitleCard title={shiftTitle} setTitle={setShiftTitle} label={isTemplatePurpose ? 'عنوان قالب شیفت' : undefined} />
                 <div className="rounded-[22px] border border-white/10 p-5">
                   <div className="flex flex-row-reverse items-center justify-between gap-3 border-b border-white/10 pb-4 text-right">
                     <SlidersHorizontal className="h-5 w-5 text-indigo-300" />
@@ -1817,24 +1873,22 @@ export function CalendarShiftWizard({
                       ) : null}
                     </div>
                     <div className="space-y-3 rounded-[18px] border border-white/10 bg-slate-900/40 p-4">
-                      <div className="text-sm font-bold text-white">
-                        <b>*</b> بازه مجاز ثبت تردد
-                      </div>
-                      <p className="text-xs leading-6 text-slate-400">ثبت ورود و خروج فقط در این بازه زمانی مجاز است.</p>
-                      <div className="grid grid-cols-2 gap-4">
+                      <InlineToggle label="تعریف بازه اختیاری فعالیت" checked={floatAbsRangeEnabled} onChange={(checked) => { setFloatAbsRangeEnabled(checked); if (!checked) setFloatAbsRests((items) => normalizeAbsoluteFloatingRests(items, false)); }} />
+                      <p className="text-xs leading-6 text-slate-400">در صورت تعریف، این بازه به‌عنوان محدودیت زمانی قالب برای بخش‌های پشتیبانی‌شده ثبت می‌شود.</p>
+                      {floatAbsRangeEnabled ? <div className="grid grid-cols-2 gap-4">
                         <TimeField
-                          label="شروع بازه مجاز ثبت تردد"
+                          label="شروع بازه اختیاری فعالیت"
                           value={floatAbsStart}
                           onChange={setFloatAbsStart}
-                          hint="زودترین زمانی که ثبت تردد در این شیفت مجاز است."
+                          hint="شروع بازه زمانی اختیاری قالب."
                         />
                         <TimeField
-                          label="پایان بازه مجاز ثبت تردد"
+                          label="پایان بازه اختیاری فعالیت"
                           value={floatAbsEnd}
                           onChange={setFloatAbsEnd}
-                          hint="آخرین زمانی که ثبت تردد در این شیفت مجاز است."
+                          hint="پایان بازه زمانی اختیاری قالب."
                         />
-                      </div>
+                      </div> : null}
                     </div>
                     <BreakEditor
                       items={floatAbsRests}
@@ -1863,12 +1917,10 @@ export function CalendarShiftWizard({
                           <div>عنوان: {shiftTitle}</div>
                           <div>روزهای اعمال شیفت: {formatWorkingDaysLabel(floatAbsWorkingDays)}</div>
                           <div>مدت کار مورد انتظار: {formatDuration(floatAbsRequiredMinutes)}</div>
-                          <div>بازه مجاز ثبت تردد: {floatAbsStart && floatAbsEnd ? `${floatAbsStart} تا ${floatAbsEnd}` : 'نامشخص'}</div>
+                          <div>بازه اختیاری فعالیت: {floatAbsRangeEnabled && floatAbsStart && floatAbsEnd ? `${floatAbsStart} تا ${floatAbsEnd}` : 'تعریف نشده'}</div>
                           <div>استراحت قابل کسر: {formatDuration(floatAbsDeducted)}</div>
                           <div>مدت کارکرد مفید مورد انتظار: {formatDuration(floatAbsNetMinutes)}</div>
-                          <div className="rounded-xl bg-slate-900/50 px-3 py-2 text-xs leading-6 text-indigo-100">
-                            <div>در این نوع شیفت، تأخیر بر اساس ساعت ورود محاسبه نمی‌شود؛ ملاک، تکمیل حداقل کارکرد روزانه است.</div>
-                          </div>
+                          <div className="rounded-xl bg-slate-900/50 px-3 py-2 text-xs leading-6 text-indigo-100">در این نوع شیفت، ساعت شروع و پایان ثابت تعیین نمی‌شود و مجموع کار روزانه ملاک است.</div>
                         </div>
                       ) : (
                         <p className="mt-4 rounded-xl border border-white/10 bg-slate-950/40 px-3 py-2 text-sm leading-7 text-slate-300">
@@ -1891,7 +1943,7 @@ export function CalendarShiftWizard({
                     </div>
                     <SlidersHorizontal className="h-5 w-5 text-indigo-300" />
                   </div>
-                  <TitleCard title={shiftTitle} setTitle={setShiftTitle} />
+                  <TitleCard title={shiftTitle} setTitle={setShiftTitle} label={isTemplatePurpose ? 'عنوان قالب شیفت' : undefined} />
                   {enableBuiltinTemplatePicker ? <ModeSwitch mode={shiftMode} setMode={setShiftMode} /> : null}
                   {!dayContext && !hideWorkingDaysEditor ? (
                     <WeekDaysEditor
@@ -2101,6 +2153,7 @@ export function CalendarShiftWizard({
                 </div>
               </>
             ) : null}
+            </>}
 
             {saveError ? (
               <div className="rounded-xl border border-rose-400/25 bg-rose-950/40 px-4 py-3 text-right text-sm font-bold text-rose-200">{saveError}</div>
@@ -2114,8 +2167,9 @@ export function CalendarShiftWizard({
                   onClick={save}
                   disabled={!canSave || saving}
                 >
-                  {saving ? 'در حال ثبت...' : resolvedSubmitLabel}
+                  {saving ? 'در حال ثبت...' : reviewMode ? resolvedSubmitLabel : requireReviewBeforeSave ? 'مشاهده خلاصه و تأیید' : resolvedSubmitLabel}
                 </button>
+                {reviewMode ? <button type="button" className="calendar-shift-wizard-cancel" onClick={() => setReviewMode(false)}>بازگشت و ویرایش</button> : null}
                 <button type="button" className="calendar-shift-wizard-cancel" onClick={onCancel}>
                   انصراف
                 </button>

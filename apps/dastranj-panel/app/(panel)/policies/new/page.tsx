@@ -1,67 +1,18 @@
-import { ChevronDown } from 'lucide-react';
-import { savePolicyWorkspaceAction } from '../../../lib/actions';
 import { listCalendars } from '../../../lib/data';
-import {
-  PolicyFieldInput,
-  PolicyFieldLabel,
-  PolicyFieldSelect,
-  PolicyFieldTextarea,
-  PolicyFormActions,
-  PolicyPageShell,
-  PolicySectionCard,
-} from '../_components/PolicyWorkspaceShell';
+import { getPolicyAccess } from '../../../lib/policy-access';
+import { PolicyPageShell } from '../_components/PolicyWorkspaceShell';
+import { PolicyCreateForm } from './PolicyCreateForm';
 
 export default async function NewPolicyPage() {
-  const calendars = await listCalendars();
+  const [calendars, access] = await Promise.all([listCalendars(), getPolicyAccess()]);
+  if (!access.canManage) return <div className="page-stack module-page" dir="rtl" lang="fa"><div className="module-empty-state"><h2>دسترسی ایجاد سیاست کاری ندارید.</h2><p>برای این عملیات به نقش مالک، مدیر یا مدیر منابع انسانی نیاز است.</p></div></div>;
 
   return (
     <PolicyPageShell
       title="ثبت سیاست کاری جدید"
       subtitle="تنظیم قوانین حضور و غیاب کارمندان"
     >
-      <form action={savePolicyWorkspaceAction} className="policy-form-stack">
-        <input type="hidden" name="familyKey" value="work" />
-        <input type="hidden" name="variant" value="default" />
-
-        <PolicySectionCard title="اطلاعات پایه">
-          <div className="policy-form-card">
-            <label className="policy-field-stack">
-              <PolicyFieldLabel label="عنوان" required hint="عنوان نمایشی سیاست کاری" />
-              <PolicyFieldInput name="title" required />
-            </label>
-
-            <label className="policy-field-stack">
-              <PolicyFieldLabel label="توضیحات" hint="توضیحات تکمیلی (اختیاری)" />
-              <PolicyFieldTextarea name="description" rows={4} />
-            </label>
-
-            <label className="policy-field-stack">
-              <PolicyFieldLabel label="انتخاب تقویم کاری" required hint="پس از ذخیره، تقویم قابل تغییر نیست" />
-              <span className="policy-select-wrap">
-                <PolicyFieldSelect name="calendarId" required defaultValue="">
-                  <option value="" disabled>
-                    انتخاب کنید
-                  </option>
-                  {calendars.map((calendar) => (
-                    <option key={calendar.id} value={calendar.id}>
-                      {calendar.title} {calendar.yearLabel ? `- ${calendar.yearLabel}` : ''}
-                    </option>
-                  ))}
-                </PolicyFieldSelect>
-                <ChevronDown className="policy-select-icon" aria-hidden />
-              </span>
-            </label>
-          </div>
-        </PolicySectionCard>
-
-        {calendars.length === 0 ? (
-          <div className="policy-info-strip" role="alert">
-            <p>برای ثبت سیاست کاری ابتدا باید یک تقویم کاری ثبت شده باشد.</p>
-          </div>
-        ) : null}
-
-        <PolicyFormActions cancelHref="/policies" submitLabel="ایجاد سیاست" disabled={calendars.length === 0} />
-      </form>
+      <PolicyCreateForm calendars={calendars.map((calendar) => ({ id: calendar.id, title: calendar.title, yearLabel: calendar.yearLabel, status: calendar.status }))} />
     </PolicyPageShell>
   );
 }

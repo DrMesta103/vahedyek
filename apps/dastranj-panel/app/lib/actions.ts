@@ -31,7 +31,13 @@ import {
   resolveCalendarShiftTitle,
 } from './calendar-shifts';
 import { serializeShiftTemplateFromWizard } from './shift-template-map';
+import { templateTypeToCalendarShiftType } from './shift-template-map';
+import { getShiftTemplateAccess } from './shift-template-access';
+import { validateShiftTemplateInput } from './shift-template-validation';
 import { getPolicyFamilyMeta, getPolicySectionValues } from './policy-workspaces';
+import { requirePolicyManagement } from './policy-access';
+import { validatePolicyInput } from './policy-validation';
+import { getPolicyBlueprint, isAvailablePolicyBlueprintKey } from './policy-blueprints';
 import { applyVariantRule, getDefaultLeaveRule, LEAVE_VARIANT_TO_TYPE } from './leave-policy';
 import {
   buildSplitShiftSegmentsPayload,
@@ -116,6 +122,40 @@ async function getTenantId() {
   const session = await getSessionContext();
   if (!session?.tenantId) redirect('/select-tenant');
   return session.tenantId;
+}
+
+async function requireShiftTemplatePermission() {
+  const access = await getShiftTemplateAccess();
+  if (!access.canManage || !access.tenantId) {
+    throw new Error('برای مدیریت قالب‌های شیفت دسترسی کافی ندارید.');
+  }
+  return access.tenantId;
+}
+
+async function validateAndResolveShiftTemplate(input: {
+  title: string;
+  type: string;
+  weekDays: unknown;
+  config: Record<string, unknown>;
+  breaks: unknown;
+  excludeId?: string;
+}) {
+  const result = validateShiftTemplateInput(input);
+  if (!result.valid) throw new Error(result.errors.join(' '));
+  const duplicate = await prisma.shiftTemplate.findFirst({
+    where: { tenantId: await getTenantId(), title: input.title.trim(), ...(input.excludeId ? { id: { not: input.excludeId } } : {}) },
+    select: { id: true },
+  });
+  if (duplicate) throw new Error('قالبی با این عنوان قبلاً ثبت شده است.');
+  return duplicate;
+}
+
+async function ensureUniquePolicyTitle(tenantId: string, title: string, excludeId?: string) {
+  const duplicate = await prisma.workPolicy.findFirst({
+    where: { tenantId, title: title.trim(), ...(excludeId ? { id: { not: excludeId } } : {}) },
+    select: { id: true },
+  });
+  if (duplicate) throw new Error('سیاست کاری دیگری با همین عنوان در این کسب‌وکار وجود دارد.');
 }
 
 function tenantRelation(tenantId: string) {
@@ -670,45 +710,107 @@ export async function createShiftTemplateFromDialogAction(data: {
   shiftTitle: string;
   description?: string;
   shiftConfig: Record<string, unknown>;
+  sourceTemplateId?: string;
+  isActive?: boolean;
 }) {
-  const tenantId = await getTenantId();
+  const tenantId = await requireShiftTemplatePermission();
+  if (data.isActive !== undefined && typeof data.isActive !== 'boolean') throw new Error('وضعیت قالب معتبر نیست.');
   const payload = serializeShiftTemplateFromWizard({
     shiftType: data.shiftType as CalendarShiftType,
     shiftTitle: data.shiftTitle,
     description: data.description,
     shiftConfig: data.shiftConfig,
+    isActive: data.isActive,
   });
 
-  await prisma.shiftTemplate.create({
+  await validateAndResolveShiftTemplate({ title: payload.title, type: payload.type, weekDays: payload.weekDays, config: payload.config, breaks: payload.breaks });
+
+  const created = await prisma.shiftTemplate.create({
     data: {
       tenantId,
       title: payload.title,
       description: payload.description,
       type: payload.type,
       weekDays: jsonValue(payload.weekDays as any),
-      config: jsonValue(payload.config as any),
+      config: jsonValue(data.sourceTemplateId ? { ...payload.config, sourceTemplateId: data.sourceTemplateId } : payload.config as any),
       breaks: jsonValue(payload.breaks as any),
       isActive: payload.isActive,
     },
   });
 
   revalidatePath('/shift-templates');
+  return { ok: true as const, templateId: created.id };
+}
+
+export async function updateShiftTemplateFromDialogAction(data: {
+  id: string;
+  shiftType: string;
+  shiftTitle: string;
+  description?: string;
+  shiftConfig: Record<string, unknown>;
+}) {
+  const tenantId = await requireShiftTemplatePermission();
+  const current = await prisma.shiftTemplate.findFirst({ where: { id: data.id, tenantId } });
+  if (!current) throw new Error('قالب شیفت پیدا نشد.');
+  const payload = serializeShiftTemplateFromWizard({ shiftType: data.shiftType as CalendarShiftType, shiftTitle: data.shiftTitle, description: data.description, shiftConfig: data.shiftConfig });
+  if (payload.type !== current.type) throw new Error('نوع قالب هنگام ویرایش قابل تغییر نیست.');
+  await validateAndResolveShiftTemplate({ title: payload.title, type: payload.type, weekDays: payload.weekDays, config: payload.config, breaks: payload.breaks, excludeId: data.id });
+  await prisma.shiftTemplate.update({ where: { id: data.id }, data: { title: payload.title, description: payload.description, weekDays: jsonValue(payload.weekDays), config: jsonValue(payload.config), breaks: jsonValue(payload.breaks) } });
+  revalidatePath('/shift-templates');
+  return { ok: true as const };
+}
+
+export async function cloneShiftTemplateAction(data: { id: string; title: string; description?: string; shiftConfig: Record<string, unknown>; shiftType: string }) {
+  const tenantId = await requireShiftTemplatePermission();
+  const source = await prisma.shiftTemplate.findFirst({ where: { id: data.id, tenantId } });
+  if (!source) throw new Error('قالب مبدأ پیدا نشد.');
+  const payload = serializeShiftTemplateFromWizard({ shiftType: data.shiftType as CalendarShiftType, shiftTitle: data.title, description: data.description, shiftConfig: data.shiftConfig });
+  await validateAndResolveShiftTemplate({ title: payload.title, type: payload.type, weekDays: payload.weekDays, config: payload.config, breaks: payload.breaks });
+  await prisma.shiftTemplate.create({ data: { tenantId, title: payload.title, description: payload.description, type: payload.type, weekDays: jsonValue(payload.weekDays), config: jsonValue({ ...payload.config, sourceTemplateId: source.id }), breaks: jsonValue(payload.breaks), isActive: true } });
+  revalidatePath('/shift-templates');
   return { ok: true as const };
 }
 
 export async function deleteShiftTemplateAction(formData: FormData) {
-  const tenantId = await getTenantId();
+  const tenantId = await requireShiftTemplatePermission();
   const id = value(formData, 'id');
+  const calendars = await prisma.calendar.findMany({ where: { tenantId }, select: { shiftConfig: true } });
+  let used = false;
+  let legacyUncertain = false;
+  calendars.forEach((calendar) => {
+    const root = parseCalendarShiftConfig(calendar.shiftConfig);
+    const shifts = Array.isArray(root.shifts) ? root.shifts : root.shiftType ? [root] : [];
+    shifts.forEach((shift) => {
+      const record = shift && typeof shift === 'object' ? shift as Record<string, unknown> : {};
+      const config = record.config && typeof record.config === 'object' && !Array.isArray(record.config) ? record.config as Record<string, unknown> : record;
+      const sourceId = record.sourceShiftTemplateId ?? config.sourceShiftTemplateId ?? config.templateId;
+      if (sourceId === id) used = true;
+      if (!sourceId) legacyUncertain = true;
+    });
+  });
+  if (used) throw new Error('این قالب در بخش‌های عملیاتی استفاده شده است و حذف مستقیم آن ممکن نیست. ابتدا قالب را غیرفعال کنید.');
+  if (legacyUncertain) throw new Error('داده قدیمی بدون منبع قالب شناسایی شد و حذف ایمن قابل اثبات نیست. ابتدا قالب را غیرفعال کنید.');
   await prisma.shiftTemplate.deleteMany({ where: { id, tenantId } });
   revalidatePath('/shift-templates');
 }
 
 export async function toggleShiftTemplateActiveAction(formData: FormData) {
-  const tenantId = await getTenantId();
+  const tenantId = await requireShiftTemplatePermission();
   const id = value(formData, 'id');
   const isActive = boolValue(formData, 'isActive');
-  const current = await prisma.shiftTemplate.findFirst({ where: { id, tenantId }, select: { id: true } });
+  const current = await prisma.shiftTemplate.findFirst({ where: { id, tenantId }, select: { id: true, title: true, type: true, weekDays: true, config: true, breaks: true } });
   if (!current) throw new Error('Shift template not found for active tenant.');
+
+  if (isActive) {
+    const validation = validateShiftTemplateInput({
+      title: current.title,
+      type: templateTypeToCalendarShiftType(current.type),
+      weekDays: current.weekDays,
+      config: current.config,
+      breaks: current.breaks,
+    });
+    if (!validation.valid) throw new Error('تنظیمات این قالب معتبر نیست و پیش از فعال‌سازی باید اصلاح شود.');
+  }
 
   await prisma.shiftTemplate.update({
     where: { id },
@@ -718,18 +820,35 @@ export async function toggleShiftTemplateActiveAction(formData: FormData) {
 }
 
 export async function createShiftTemplateAction(formData: FormData) {
-  const tenantId = await getTenantId();
+  const tenantId = await requireShiftTemplatePermission();
+  const title = value(formData, 'title');
+  const rawType = value(formData, 'type');
+  const weekDays = value(formData, 'weekDays').split(',').map((item) => item.trim()).filter(Boolean);
+  const startTime = value(formData, 'startTime');
+  const endTime = value(formData, 'endTime');
+  const requiredMinutes = Number(value(formData, 'requiredMinutes') || '0');
+  const calendarType = templateTypeToCalendarShiftType(rawType as never);
+  const validation = validateShiftTemplateInput({
+    title,
+    type: calendarType,
+    weekDays,
+    config: calendarType === 'fixed'
+      ? { fixedShift: { startTime, endTime } }
+      : { floatingShiftStartOfDay: { entryWindowStart: startTime, entryWindowEnd: endTime, requiredMinutes } },
+    breaks: [],
+  });
+  if (!validation.valid) throw new Error(validation.errors.join(' '));
   await prisma.shiftTemplate.create({
     data: {
       tenantId,
-      title: value(formData, 'title'),
+      title,
       description: value(formData, 'description') || null,
-      type: value(formData, 'type') as never,
-      weekDays: jsonValue(value(formData, 'weekDays').split(',').map((item) => item.trim()).filter(Boolean)),
+      type: rawType as never,
+      weekDays: jsonValue(weekDays),
       config: jsonValue({
-        startTime: value(formData, 'startTime'),
-        endTime: value(formData, 'endTime'),
-        requiredMinutes: Number(value(formData, 'requiredMinutes') || '0'),
+        startTime,
+        endTime,
+        requiredMinutes,
       }),
       breaks: jsonValue([]),
       isActive: boolValue(formData, 'isActive'),
@@ -830,6 +949,7 @@ export async function addCalendarShiftAction(data: {
     title: resolvedShiftTitle,
     config: { ...data.shiftConfig, shiftType: data.shiftType, title: resolvedShiftTitle },
     createdAt: new Date().toISOString(),
+    ...(typeof data.shiftConfig.sourceShiftTemplateId === 'string' ? { sourceShiftTemplateId: data.shiftConfig.sourceShiftTemplateId } : {}),
   };
 
   existingShifts.push(newShift);
@@ -1412,36 +1532,64 @@ export async function updateCalendarFromQuickSetupAction(data: {
 }
 
 export async function createPolicyAction(formData: FormData) {
-  const tenantId = await getTenantId();
+  const tenantId = await requirePolicyManagement();
   const calendarId = value(formData, 'calendarId') || null;
   if (calendarId) {
-    const calendar = await prisma.calendar.findFirst({ where: { id: calendarId, tenantId }, select: { id: true } });
+    const calendar = await prisma.calendar.findFirst({ where: { id: calendarId, tenantId, status: 'active' }, select: { id: true } });
     if (!calendar) throw new Error('Calendar not found for active tenant.');
   }
-  await prisma.workPolicy.create({
+  const blueprintKey = value(formData, 'blueprintKey') || 'custom';
+  const blueprint = getPolicyBlueprint(blueprintKey);
+  if (!blueprint || !blueprint.defaults || !isAvailablePolicyBlueprintKey(blueprintKey)) throw new Error('Blueprint سیاست کاری معتبر نیست.');
+  const locationRule = value(formData, 'locationRule') || blueprint.defaults.locationRule;
+  const incompleteAttendanceRule = value(formData, 'incompleteAttendanceRule') || blueprint.defaults.incompleteAttendanceRule;
+  const overtimeRule = value(formData, 'overtimeRule') || blueprint.defaults.overtimeRule;
+  const requestRule = value(formData, 'requestRule') || blueprint.defaults.requestRule;
+  const entryGraceMinutes = Number(value(formData, 'entryGraceMinutes') || blueprint.defaults.entryGraceMinutes);
+  const sectionValues = {
+    blueprintKey,
+    blueprintTitle: blueprint.title,
+    entryRequired: value(formData, 'entryRequired') === 'true',
+    exitRequired: value(formData, 'exitRequired') === 'true',
+    locationRule,
+    requireGeofence: locationRule === 'workplace_only',
+    entryGraceMinutes,
+    incompleteAttendanceRule,
+    incompleteAttendance: incompleteAttendanceRule === 'correction_required',
+    overtimeRule,
+    overtimeFromAttendance: overtimeRule === 'automatic',
+    requestRule,
+    requestEnabled: requestRule !== 'none',
+    manualAttendance: boolValue(formData, 'manualAttendance'),
+    nightWorkStart: value(formData, 'nightWorkStart') || '22:00',
+    familyKey: 'work',
+    variant: 'default',
+  };
+  const validation = validatePolicyInput({ title: value(formData, 'title'), description: value(formData, 'description'), calendarId, blueprintKey, sectionValues });
+  if (!validation.valid) throw new Error(validation.errors[0]);
+  await ensureUniquePolicyTitle(tenantId, validation.values.title);
+  const created = await prisma.workPolicy.create({
     data: {
       tenantId,
-      title: value(formData, 'title'),
-      description: value(formData, 'description') || null,
+      title: validation.values.title,
+      description: validation.values.description,
       calendarId,
-      employeeCount: Number(value(formData, 'employeeCount') || '0'),
-      sectionValues: jsonValue({
-        manualAttendance: boolValue(formData, 'manualAttendance'),
-        overtimeFromAttendance: boolValue(formData, 'overtimeFromAttendance'),
-        nightWorkStart: value(formData, 'nightWorkStart') || '22:00',
-      }),
+      employeeCount: 0,
+      isActive: true,
+      sectionValues: jsonValue(sectionValues),
     },
   });
   revalidatePath('/policies');
   revalidatePath('/quick-setup');
-  redirect('/policies');
+  redirect(`/policies/work?policyId=${created.id}&created=1`);
 }
 
 export async function updatePolicyBasicInfoAction(formData: FormData) {
-  const tenantId = await getTenantId();
+  const tenantId = await requirePolicyManagement();
   const policyId = value(formData, 'policyId');
   const title = value(formData, 'title');
   const description = value(formData, 'description') || null;
+  const calendarId = value(formData, 'calendarId') || null;
 
   if (!policyId) throw new Error('شناسه سیاست الزامی است.');
   if (!title) throw new Error('عنوان سیاست الزامی است.');
@@ -1449,11 +1597,19 @@ export async function updatePolicyBasicInfoAction(formData: FormData) {
   const existing = await prisma.workPolicy.findFirst({ where: { id: policyId, tenantId } });
   if (!existing) throw new Error('سیاست برای tenant فعال یافت نشد.');
 
+  if (!calendarId) throw new Error('تقویم کاری را انتخاب کنید.');
+  const calendar = await prisma.calendar.findFirst({ where: { id: calendarId, tenantId, OR: [{ status: 'active' }, { id: existing.calendarId ?? '' }] }, select: { id: true } });
+  if (!calendar) throw new Error('تقویم کاری فعال برای tenant جاری پیدا نشد.');
+
   const sectionValues = getPolicySectionValues(existing);
+  const validation = validatePolicyInput({ title, description, calendarId, sectionValues });
+  if (!validation.valid) throw new Error(validation.errors[0]);
+  await ensureUniquePolicyTitle(tenantId, validation.values.title, existing.id);
   const mergedSectionValues = jsonValue({
     ...sectionValues,
     title,
     description,
+    calendarId,
   });
 
   await prisma.workPolicy.update({
@@ -1461,6 +1617,7 @@ export async function updatePolicyBasicInfoAction(formData: FormData) {
     data: {
       title,
       description,
+      calendarId,
       sectionValues: mergedSectionValues,
     },
   });
@@ -1471,7 +1628,7 @@ export async function updatePolicyBasicInfoAction(formData: FormData) {
 }
 
 export async function savePolicyWorkspaceAction(formData: FormData) {
-  const tenantId = await getTenantId();
+  const tenantId = await requirePolicyManagement();
   const familyKey = value(formData, 'familyKey');
   const variant = value(formData, 'variant') || 'default';
   const policyId = value(formData, 'policyId') || null;
@@ -1492,7 +1649,7 @@ export async function savePolicyWorkspaceAction(formData: FormData) {
   const existingPolicy = policyId
     ? await prisma.workPolicy.findFirst({
         where: { id: policyId, tenantId },
-        select: { id: true, title: true, description: true, sectionValues: true },
+        select: { id: true, title: true, description: true, calendarId: true, sectionValues: true },
       })
     : null;
   const previousSectionValues =
@@ -1748,8 +1905,21 @@ export async function savePolicyWorkspaceAction(formData: FormData) {
             overtimeFromAttendance: boolValue(formData, 'overtimeFromAttendance'),
             overtimeRequireAttachment: boolValue(formData, 'overtimeRequireAttachment'),
             overtimeBeforeShift: boolValue(formData, 'overtimeBeforeShift'),
-            overtimeAfterShift: boolValue(formData, 'overtimeAfterShift'),
-          });
+           overtimeAfterShift: boolValue(formData, 'overtimeAfterShift'),
+           });
+
+  const sectionRecord = sectionValues as unknown as Record<string, unknown>;
+  const validation = validatePolicyInput({
+    title,
+    description,
+    calendarId: effectiveCalendarId,
+    familyKey,
+    variant,
+    sectionValues: sectionRecord,
+  });
+  if (!validation.valid) throw new Error(validation.errors[0]);
+  if (!existingPolicy) await ensureUniquePolicyTitle(tenantId, validation.values.title);
+  else if (validation.values.title !== existingPolicy.title) await ensureUniquePolicyTitle(tenantId, validation.values.title, existingPolicy.id);
 
   const existing = existingPolicy;
 
@@ -1793,7 +1963,7 @@ export async function savePolicyWorkspaceAction(formData: FormData) {
 }
 
 export async function deletePolicyAction(formData: FormData) {
-  const tenantId = await getTenantId();
+  const tenantId = await requirePolicyManagement();
   const id = value(formData, 'id');
   const current = await prisma.workPolicy.findFirst({
     where: { id, tenantId },
@@ -1809,6 +1979,48 @@ export async function deletePolicyAction(formData: FormData) {
   redirect('/policies');
 }
 
+export async function togglePolicyActiveAction(formData: FormData) {
+  const tenantId = await requirePolicyManagement();
+  const id = value(formData, 'id');
+  const isActive = value(formData, 'isActive') === 'true';
+  const current = await prisma.workPolicy.findFirst({ where: { id, tenantId }, select: { id: true } });
+  if (!current) throw new Error('سیاست کاری برای tenant فعال پیدا نشد.');
+  await prisma.workPolicy.update({ where: { id }, data: { isActive } });
+  revalidatePath('/policies');
+  revalidatePath('/work-groups');
+}
+
+export async function clonePolicyAction(data: { id: string; title: string }) {
+  const tenantId = await requirePolicyManagement();
+  const source = await prisma.workPolicy.findFirst({ where: { id: data.id, tenantId } });
+  if (!source) throw new Error('سیاست کاری برای tenant فعال پیدا نشد.');
+  const sectionValues = getPolicySectionValues(source);
+  const validation = validatePolicyInput({
+    title: data.title,
+    description: source.description,
+    calendarId: source.calendarId,
+    familyKey: getPolicyFamilyKey(sectionValues),
+    variant: typeof sectionValues.variant === 'string' ? sectionValues.variant : null,
+    sectionValues,
+  });
+  if (!validation.valid) throw new Error(validation.errors[0]);
+  await ensureUniquePolicyTitle(tenantId, validation.values.title);
+  const clone = await prisma.workPolicy.create({
+    data: {
+      tenantId,
+      title: validation.values.title,
+      description: validation.values.description,
+      calendarId: source.calendarId,
+      employeeCount: 0,
+      isDefault: false,
+      isActive: true,
+      sectionValues: jsonValue({ ...sectionValues, clonedFromPolicyId: source.id }),
+    },
+  });
+  revalidatePath('/policies');
+  return { id: clone.id };
+}
+
 export async function createPolicyFromQuickSetupAction(data: {
   calendarId: string;
   policyTemplateId: string;
@@ -1817,22 +2029,38 @@ export async function createPolicyFromQuickSetupAction(data: {
   templateTitle?: string;
   year?: string;
 }) {
-  const tenantId = await getTenantId();
+  const tenantId = await requirePolicyManagement();
   const calendar = await prisma.calendar.findFirst({ where: { id: data.calendarId, tenantId }, select: { id: true } });
   if (!calendar) throw new Error('Calendar not found for active tenant.');
+  const blueprint = getPolicyBlueprint(data.policyTemplateId);
+  if (!blueprint?.defaults || !isAvailablePolicyBlueprintKey(data.policyTemplateId)) throw new Error('Blueprint سیاست کاری معتبر نیست.');
+  const sectionValues = {
+    familyKey: 'work',
+    variant: 'default',
+    blueprintKey: blueprint.key,
+    blueprintTitle: blueprint.title,
+    ...blueprint.defaults,
+    requireGeofence: blueprint.defaults.locationRule === 'workplace_only',
+    incompleteAttendance: blueprint.defaults.incompleteAttendanceRule === 'correction_required',
+    requestEnabled: blueprint.defaults.requestRule !== 'none',
+    manualAttendance: false,
+    overtimeFromAttendance: blueprint.defaults.overtimeRule === 'automatic',
+    nightWorkStart: '22:00',
+    templateType: 'quick-setup',
+  };
+  const validation = validatePolicyInput({ title: data.title, description: data.description, calendarId: data.calendarId, blueprintKey: blueprint.key, sectionValues });
+  if (!validation.valid) throw new Error(validation.errors[0]);
+  await ensureUniquePolicyTitle(tenantId, validation.values.title);
   const policy = await prisma.workPolicy.create({
     data: {
       tenantId,
-      title: data.title,
-      description: data.description ?? null,
+      title: validation.values.title,
+      description: validation.values.description,
       calendarId: data.calendarId,
       isDefault: true,
+      isActive: true,
       sectionValues: jsonValue({
-        familyKey: 'work',
-        variant: 'default',
-        manualAttendance: false,
-        overtimeFromAttendance: true,
-        nightWorkStart: '22:00',
+        ...sectionValues,
         templateType: 'quick-setup',
         templateId: data.policyTemplateId,
         templateTitle: data.templateTitle ?? data.title,
@@ -2752,8 +2980,12 @@ async function persistWorkGroupUpdate(
     if (!location) throw new Error('Location not found for active tenant.');
   }
   if (policyId) {
-    const policy = await prisma.workPolicy.findFirst({ where: { id: policyId, tenantId }, select: { id: true } });
+    const policy = await prisma.workPolicy.findFirst({ where: { id: policyId, tenantId }, select: { id: true, isActive: true } });
     if (!policy) throw new Error('Policy not found for active tenant.');
+    if (!policy.isActive) {
+      const current = workGroupId ? await prisma.workGroup.findFirst({ where: { id: workGroupId, tenantId }, select: { policyId: true } }) : null;
+      if (current?.policyId !== policyId) throw new Error('سیاست غیرفعال فقط برای حفظ اتصال فعلی قابل مشاهده است و برای تخصیص جدید قابل انتخاب نیست.');
+    }
   }
 
   const validEmployees = employeeIds.length
@@ -2839,8 +3071,9 @@ export async function createWorkGroupAction(formData: FormData) {
     if (!location) throw new Error('Location not found for active tenant.');
   }
   if (policyId) {
-    const policy = await prisma.workPolicy.findFirst({ where: { id: policyId, tenantId }, select: { id: true } });
+    const policy = await prisma.workPolicy.findFirst({ where: { id: policyId, tenantId }, select: { id: true, isActive: true } });
     if (!policy) throw new Error('Policy not found for active tenant.');
+    if (!policy.isActive) throw new Error('سیاست غیرفعال برای تخصیص جدید قابل انتخاب نیست.');
   }
   const validEmployees = employeeIds.length
     ? await prisma.employee.findMany({ where: { id: { in: employeeIds }, tenantId }, select: { id: true } })
@@ -3522,7 +3755,7 @@ export async function createWorkGroupFromQuickSetupAction(data: {
   if (!location) throw new Error('Location not found for active tenant.');
   const employees = await prisma.employee.findMany({ where: { id: { in: data.employeeIds }, tenantId }, select: { id: true } });
   if (employees.length !== data.employeeIds.length) throw new Error('Employee not found for active tenant.');
-  const policies = await prisma.workPolicy.findMany({ where: { id: { in: data.policyIds }, tenantId }, select: { id: true } });
+  const policies = await prisma.workPolicy.findMany({ where: { id: { in: data.policyIds }, tenantId, isActive: true }, select: { id: true } });
   if (policies.length !== data.policyIds.length) throw new Error('Policy not found for active tenant.');
 
   const workGroup = await prisma.$transaction(async (tx) => {

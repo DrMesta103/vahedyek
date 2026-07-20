@@ -140,6 +140,36 @@ function summarizeRotateShift(config: Record<string, unknown>) {
   };
 }
 
+function restDurationMinutes(item: RestRecord) {
+  if (item.type === 'floating' || !timeValue(item.start) || !timeValue(item.end)) return 0;
+  const [startHour, startMinute] = item.start.split(':').map(Number);
+  const [endHour, endMinute] = item.end.split(':').map(Number);
+  const duration = endHour * 60 + endMinute - (startHour * 60 + startMinute) + (item.endsNextDay ? 1440 : 0);
+  return duration > 0 ? duration : 0;
+}
+
+function timeValue(value: unknown): value is string {
+  return typeof value === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(value);
+}
+
+export function summarizeBreaksForShift(shift: StoredCalendarShift) {
+  const config = shift.config;
+  const fixed = asObject(config.fixedShift);
+  const floatingDay = asObject(config.floatingShiftStartOfDay);
+  const floatingAbsolute = asObject(config.absoluteFloatingShift);
+  const split = asObject(config.splitShift);
+  const rests = shift.shiftType === 'split'
+    ? [...listRests(split, ['segment1Breaks']), ...listRests(split, ['segment2Breaks'])]
+    : shift.shiftType === 'float-day'
+      ? listRests(floatingDay, ['rests'])
+      : shift.shiftType === 'float-abs'
+        ? listRests(floatingAbsolute, ['rests'])
+        : listRests(config, ['rests']);
+  if (!rests.length) return 'استراحت ثبت نشده';
+  const total = rests.reduce((sum, item) => sum + restDurationMinutes(item), 0);
+  return total > 0 ? `${rests.length} استراحت، مجموع ${total} دقیقه` : `${rests.length} استراحت ثبت‌شده`;
+}
+
 export function summarizeShiftForDayPanel(shift: StoredCalendarShift): CalendarDayShiftDetails {
   const config = shift.config;
   const description =
