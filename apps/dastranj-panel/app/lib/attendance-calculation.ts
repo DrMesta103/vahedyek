@@ -16,6 +16,8 @@ import {
   normalizePayrollSettings,
   type PayrollSettings,
 } from './payroll-business-settings';
+import { normalizePolicyRuntimeRules, type PolicyIncompleteAttendanceRule, type PolicyOvertimeRule, type PolicyRequestRule } from './policy-blueprints';
+import { distanceBetweenCoordinatesMeters } from './geofence';
 
 export { formatMinutesLabel } from './attendance-format';
 
@@ -75,6 +77,11 @@ export type SegmentAttendanceAnalysis = {
 };
 
 export type AttendancePolicyBundle = {
+  entryRequired: boolean;
+  exitRequired: boolean;
+  incompleteAttendanceRule: PolicyIncompleteAttendanceRule;
+  overtimeRule: PolicyOvertimeRule;
+  requestRule: PolicyRequestRule;
   manualEntryEnabled: boolean;
   manualRequireReason: boolean;
   manualRequireAttachment: boolean;
@@ -99,6 +106,8 @@ export type AttendancePolicyBundle = {
 export type AttendanceDayAnalysis = {
   status: string;
   incomplete: boolean;
+  hasMissingPunch: boolean;
+  correctionRequired: boolean;
   intervals: AttendanceInterval[];
   timestamps: AttendanceTimestamp[];
   workedMinutes: number;
@@ -281,7 +290,9 @@ function overlapMinutes(startA: number, endA: number, startB: number, endB: numb
 }
 
 export function readAttendancePolicyBundle(sectionValues: Record<string, unknown>): AttendancePolicyBundle {
+  const runtime = normalizePolicyRuntimeRules(sectionValues);
   return {
+    ...runtime,
     manualEntryEnabled: boolValue(sectionValues.manualEntryEnabled),
     manualRequireReason: boolValue(sectionValues.manualRequireReason),
     manualRequireAttachment: boolValue(sectionValues.requireAttachment),
@@ -550,7 +561,12 @@ function analyzeSplitShiftAttendance(input: {
   const requiredMinutes = splitSegments.reduce((sum, item) => sum + item.requiredMinutes, 0);
   const shortageMinutes = Math.max(0, requiredMinutes - workedMinutes);
   const overtimeMinutes = Math.max(0, workedMinutes - requiredMinutes);
-  const incomplete = incompleteSegmentLabels.length > 0;
+  const missingRequiredSegments = splitSegments
+    .filter((segment) => input.policy.entryRequired && !effectivePoints.some((point) => assignments.get(point.id) === segment.id))
+    .map((segment) => segment.label);
+  const rawIncomplete = incompleteSegmentLabels.length > 0;
+  const hasMissingPunch = missingRequiredSegments.length > 0 || (rawIncomplete && input.policy.exitRequired) || unassignedLabels.length > 0;
+  const correctionRequired = hasMissingPunch && input.policy.incompleteAttendanceRule === 'correction_required';
   const nightWorkMinutes = calculateNightWorkMinutes(
     completeIntervals,
     input.dateKey,
@@ -561,14 +577,17 @@ function analyzeSplitShiftAttendance(input: {
 
   let status = 'بدون تردد';
   if (unassignedLabels.length > 0) status = 'تردد خارج از بازه';
-  else if (incomplete) status = 'تردد ناقص';
+  else if (correctionRequired) status = 'تردد ناقص';
+  else if (hasMissingPunch) status = 'هشدار تردد ناقص';
   else if (workedMinutes > 0 && shortageMinutes === 0) status = 'تردد کامل';
   else if (workedMinutes > 0) status = 'حضور';
   else if (effectivePoints.length > 0) status = 'تردد ناقص';
 
   return {
     status,
-    incomplete: incomplete || unassignedLabels.length > 0,
+    incomplete: correctionRequired,
+    hasMissingPunch,
+    correctionRequired,
     intervals,
     timestamps: effectivePoints,
     workedMinutes,
@@ -577,7 +596,7 @@ function analyzeSplitShiftAttendance(input: {
     overtimeMinutes,
     nightWorkMinutes,
     shortageMinutes,
-    incompleteSegmentLabels,
+    incompleteSegmentLabels: [...new Set([...incompleteSegmentLabels, ...missingRequiredSegments])],
     outsideShiftWindow: unassignedLabels.length > 0,
     segmentAnalyses,
     unassignedTimestampLabels: unassignedLabels,
@@ -666,7 +685,7 @@ export function analyzeAttendanceForShiftWindow(input: {
   const intervals = pairAttendanceTimestamps(effectivePoints);
   const completeIntervals = intervals.filter((item) => item.isComplete && item.status === 'approved');
   const workedMinutes = completeIntervals.reduce((sum, item) => sum + item.minutes, 0);
-  const incomplete = intervals.some((item) => !item.isComplete);
+  const rawIncomplete = intervals.some((item) => !item.isComplete);
   const incompleteSegmentLabels: string[] = [];
 
   const primarySegment = input.segments[0] ?? null;
@@ -723,15 +742,22 @@ export function analyzeAttendanceForShiftWindow(input: {
     }
   }
 
+  const missingEntry = Boolean(primarySegment && effectivePoints.length === 0 && input.policy.entryRequired);
+  const missingExit = rawIncomplete && input.policy.exitRequired;
+  const hasMissingPunch = missingEntry || missingExit || incompleteSegmentLabels.length > 0;
+  const correctionRequired = hasMissingPunch && input.policy.incompleteAttendanceRule === 'correction_required';
   let status = 'بدون تردد';
-  if (incomplete || incompleteSegmentLabels.length > 0) status = 'تردد ناقص';
+  if (correctionRequired) status = 'تردد ناقص';
+  else if (hasMissingPunch) status = 'هشدار تردد ناقص';
   else if (workedMinutes > 0 && shortageMinutes === 0) status = 'تردد کامل';
   else if (workedMinutes > 0) status = 'حضور';
   else if (effectivePoints.length > 0) status = 'تردد ناقص';
 
   return {
     status,
-    incomplete: incomplete || incompleteSegmentLabels.length > 0,
+    incomplete: correctionRequired,
+    hasMissingPunch,
+    correctionRequired,
     intervals,
     timestamps: effectivePoints,
     workedMinutes,
@@ -789,7 +815,11 @@ export function previewAttendanceCorrection(input: {
   attachmentCount?: number;
   submissionMode: 'approved' | 'pending';
   isAdmin?: boolean;
-  hasGeolocation?: boolean;
+  attendanceLatitude?: number | null;
+  attendanceLongitude?: number | null;
+  workplaceLatitude?: number | null;
+  workplaceLongitude?: number | null;
+  workplaceRadiusMeters?: number | null;
   hasFaceVerification?: boolean;
   monthlyManualCount?: number;
 }): AttendancePreviewResult {
@@ -893,8 +923,16 @@ export function previewAttendanceCorrection(input: {
     }
   }
 
-  if (input.policy.requireGeofence && !input.hasGeolocation) {
-    warnings.push('ثبت دستی بدون موقعیت مکانی');
+  if (input.policy.requireGeofence) {
+    const attendanceCoordinatesValid = Number.isFinite(input.attendanceLatitude) && Number.isFinite(input.attendanceLongitude);
+    const workplaceCoordinatesValid = Number.isFinite(input.workplaceLatitude) && Number.isFinite(input.workplaceLongitude) && Number.isFinite(input.workplaceRadiusMeters) && Number(input.workplaceRadiusMeters) > 0;
+    if (!attendanceCoordinatesValid) {
+      blockingErrors.push('برای ثبت تردد در این سیاست، دسترسی به موقعیت مکانی الزامی است.');
+    } else if (!workplaceCoordinatesValid) {
+      blockingErrors.push('ثبت تردد ممکن نیست؛ محدوده مکانی محل کار برای این گروه یا کارمند تکمیل نشده است.');
+    } else if (distanceBetweenCoordinatesMeters(Number(input.attendanceLatitude), Number(input.attendanceLongitude), Number(input.workplaceLatitude), Number(input.workplaceLongitude)) > Number(input.workplaceRadiusMeters)) {
+      blockingErrors.push('شما خارج از محدوده مجاز محل کار قرار دارید و امکان ثبت تردد وجود ندارد.');
+    }
   }
   if (input.policy.faceRecognitionInFlow && !input.hasFaceVerification) {
     warnings.push('ثبت دستی بدون تشخیص چهره');
@@ -904,6 +942,7 @@ export function previewAttendanceCorrection(input: {
   else outcomeMessages.push(`وضعیت قبل: ${before.status}`);
 
   if (after.incomplete) outcomeMessages.push('پس از ثبت، تعداد ترددها همچنان فرد است و تردد ناقص باقی می‌ماند.');
+  else if (after.hasMissingPunch) warnings.push('تردد ناقص است و مطابق سیاست کاری فقط به‌صورت هشدار ثبت می‌شود.');
   else if (!before.incomplete && after.workedMinutes > before.workedMinutes) outcomeMessages.push('تردد کامل می‌شود.');
   else if (!after.incomplete && after.workedMinutes > 0) outcomeMessages.push('تردد کامل می‌شود.');
 

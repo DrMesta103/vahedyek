@@ -12,6 +12,10 @@ type PolicyOverviewCardProps = {
   description: string;
   calendarYearLabel: string;
   calendarTitle: string;
+  calendarId: string;
+  calendars: Array<{ id: string; title: string; yearLabel: string }>;
+  groupCount: number;
+  readOnly?: boolean;
 };
 
 function resolveCalendarTitle(calendarTitle: string) {
@@ -30,17 +34,25 @@ export function PolicyOverviewCard({
   description,
   calendarYearLabel,
   calendarTitle,
+  calendarId,
+  calendars,
+  groupCount,
+  readOnly = false,
 }: PolicyOverviewCardProps) {
   const [open, setOpen] = useState(false);
   const [draftTitle, setDraftTitle] = useState(title);
   const [draftDescription, setDraftDescription] = useState(description);
+  const [draftCalendarId, setDraftCalendarId] = useState(calendarId);
 
   useEffect(() => {
     if (!open) {
       setDraftTitle(title);
       setDraftDescription(description);
+      setDraftCalendarId(calendarId);
     }
-  }, [title, description, open]);
+  }, [title, description, calendarId, open]);
+  const changed = draftTitle.trim() !== title.trim() || draftDescription.trim() !== description.trim() || draftCalendarId !== calendarId;
+  const calendarChanged = draftCalendarId !== calendarId;
 
   const titleValue = title.trim() || 'ثبت نشده';
   const descriptionValue = description.trim() || 'ثبت نشده';
@@ -53,12 +65,12 @@ export function PolicyOverviewCard({
         <header className="policy-overview-top">
           <div className="policy-overview-top-copy">
             <span className="policy-overview-eyebrow">اطلاعات پایه سیاست</span>
-            <p className="policy-overview-top-hint">عنوان و توضیحات قابل ویرایش است؛ تقویم کاری پس از ثبت ثابت می‌ماند.</p>
+            <p className="policy-overview-top-hint">اطلاعات پایه و تقویم با کنترل اثر روی گروه‌های متصل قابل ویرایش است.</p>
           </div>
-          <button type="button" className="policy-overview-edit-btn" onClick={() => setOpen(true)}>
+          {!readOnly ? <button type="button" className="policy-overview-edit-btn" onClick={() => setOpen(true)}>
             <Pencil className="h-4 w-4" aria-hidden />
             ویرایش
-          </button>
+          </button> : null}
         </header>
 
         <div className="policy-overview-fields">
@@ -106,7 +118,11 @@ export function PolicyOverviewCard({
               ویرایش اطلاعات پایه
             </h2>
 
-            <form action={updatePolicyBasicInfoAction} className="policy-basic-dialog-form">
+            <form action={updatePolicyBasicInfoAction as never} className="policy-basic-dialog-form" onSubmit={(event) => {
+              if (!changed) { event.preventDefault(); return; }
+              if (groupCount > 0 && calendarChanged && !window.confirm('تقویم کاری این سیاست در حال تغییر است. این تغییر می‌تواند روزهای کاری، تعطیلات، برنامه‌های زمانی و نتایج پردازش تردد گروه‌های متصل را تحت تأثیر قرار دهد. آیا ادامه می‌دهید؟')) event.preventDefault();
+              else if (groupCount > 0 && !calendarChanged && !window.confirm('این سیاست در گروه‌های کاری استفاده می‌شود. ذخیره این تغییرات می‌تواند قواعد پردازش کارکنان این گروه‌ها را تغییر دهد. آیا از ذخیره تغییرات مطمئن هستید؟')) event.preventDefault();
+            }}>
               <input type="hidden" name="policyId" value={policyId} />
 
               <label className="policy-basic-dialog-field">
@@ -149,28 +165,18 @@ export function PolicyOverviewCard({
                 <span className="policy-basic-dialog-hint">توضیحات تکمیلی (اختیاری)</span>
               </label>
 
+              {groupCount > 0 ? <div className="policy-info-strip" role="alert"><p>این سیاست کاری در گروه‌های کاری استفاده می‌شود. تغییر قواعد آن می‌تواند بر پردازش تردد، تأخیر، غیبت، اضافه‌کاری و درخواست‌های کارکنان اثر بگذارد.</p></div> : null}
               <div className="policy-basic-dialog-readonly">
                 <span className="policy-basic-dialog-label">تقویم کاری</span>
-                <div className="policy-basic-dialog-readonly-grid">
-                  <div className="policy-basic-dialog-readonly-item">
-                    <span className="policy-basic-dialog-readonly-item-label">عنوان تقویم</span>
-                    <div className="policy-basic-dialog-readonly-value">{calendarTitleValue}</div>
-                  </div>
-                  <div className="policy-basic-dialog-readonly-item">
-                    <span className="policy-basic-dialog-readonly-item-label">سال کاری</span>
-                    <div className="policy-basic-dialog-readonly-value">{calendarYearValue}</div>
-                  </div>
-                </div>
-                <p className="policy-basic-dialog-readonly-note">
-                  تقویم کاری پس از ایجاد سیاست قابل تغییر نیست. برای استفاده از تقویم دیگر، سیاست جدید ثبت کنید.
-                </p>
+                <select name="calendarId" className="policy-field-select" value={draftCalendarId} onChange={(event) => setDraftCalendarId(event.target.value)} required>{calendars.map((item) => <option key={item.id} value={item.id}>{item.title} {item.yearLabel ? `- ${item.yearLabel}` : ''}</option>)}</select>
+                {groupCount > 0 && calendarChanged ? <p className="policy-basic-dialog-readonly-note" role="alert">تقویم کاری این سیاست در حال تغییر است و می‌تواند نتایج پردازش تردد گروه‌های متصل را تغییر دهد.</p> : null}
               </div>
 
               <div className="policy-basic-dialog-actions">
                 <button type="button" className="policy-basic-dialog-cancel" onClick={() => setOpen(false)}>
                   لغو
                 </button>
-                <button type="submit" className="policy-basic-dialog-submit">
+                <button type="submit" className="policy-basic-dialog-submit" disabled={!changed}>
                   تایید
                 </button>
               </div>

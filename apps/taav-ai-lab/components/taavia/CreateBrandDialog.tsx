@@ -1,316 +1,49 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
-import { Bot, Camera, Sparkles, X } from 'lucide-react';
-import {
-  TaavButton,
-  TaavDialog,
-  TaavDialogContent,
-  TaavDialogDescription,
-  TaavDialogFooter,
-  TaavDialogHeader,
-  TaavDialogTitle,
-} from '@repo/ui/taav';
+import { useEffect, useRef, useState, type ChangeEvent } from 'react';
+import { Camera, Sparkles, X } from 'lucide-react';
+import { TaavButton, TaavDialog, TaavDialogContent, TaavDialogDescription, TaavDialogFooter, TaavDialogHeader, TaavDialogTitle } from '@repo/ui/taav';
 import { TaavFieldBlock, TaavInput, TaavTextarea } from '@repo/ui/taav/forms';
-import type { TaaviaBrand } from '@/app/lib/data';
-import { AI_LAB_TOOLTIPS } from '@/app/lib/tooltips';
-import { AiLabLabelWithTooltip } from '@/components/AiLabTooltip';
+import type { TaaviaBrand } from '@/app/lib/types/domain';
 
-type BrandDialogMode = 'create' | 'edit';
-type BrandDialogSeed = Pick<TaaviaBrand, 'id' | 'name' | 'intake'>;
+type BrandDialogSeed = Pick<TaaviaBrand, 'id' | 'name' | 'description' | 'icon'>;
 
-type CreateBrandDialogProps = {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  tenantId: string;
-  onSaved: (brandId: string) => void;
-  mode?: BrandDialogMode;
-  initialBrand?: BrandDialogSeed | null;
-};
-
-export function CreateBrandDialog({
-  open,
-  onOpenChange,
-  tenantId,
-  onSaved,
-  mode = 'create',
-  initialBrand = null,
-}: CreateBrandDialogProps) {
+export function CreateBrandDialog({ open, onOpenChange, tenantId, onSaved, mode = 'create', initialBrand = null }: { open: boolean; onOpenChange: (open: boolean) => void; tenantId: string; onSaved: (brandId: string) => void; mode?: 'create' | 'edit'; initialBrand?: BrandDialogSeed | null }) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const isEditMode = mode === 'edit';
-  const [name, setName] = useState(initialBrand?.name ?? '');
-  const [description, setDescription] = useState(initialBrand?.intake?.description ?? '');
-  const [iconName, setIconName] = useState(initialBrand?.intake?.iconName ?? '');
-  const [iconDataUrl, setIconDataUrl] = useState(initialBrand?.intake?.iconDataUrl ?? '');
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [icon, setIcon] = useState<{ extension: string; sizeBytes: number; previewData: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const initialBrandSnapshot = useMemo(
-    () => ({
-      name: initialBrand?.name ?? '',
-      description: initialBrand?.intake?.description ?? '',
-      iconName: initialBrand?.intake?.iconName ?? '',
-      iconDataUrl: initialBrand?.intake?.iconDataUrl ?? '',
-    }),
-    [
-      initialBrand?.name,
-      initialBrand?.intake?.description,
-      initialBrand?.intake?.iconName,
-      initialBrand?.intake?.iconDataUrl,
-    ],
-  );
-
   useEffect(() => {
     if (!open) return;
-
-    setName(initialBrandSnapshot.name);
-    setDescription(initialBrandSnapshot.description);
-    setIconName(initialBrandSnapshot.iconName);
-    setIconDataUrl(initialBrandSnapshot.iconDataUrl);
+    setName(initialBrand?.name ?? '');
+    setDescription(initialBrand?.description ?? '');
+    setIcon(initialBrand?.icon?.previewData ? { extension: initialBrand.icon.extension ?? 'image', sizeBytes: initialBrand.icon.sizeBytes ?? 0, previewData: initialBrand.icon.previewData } : null);
     setError(null);
-    setLoading(false);
+  }, [open, initialBrand]);
 
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  }, [open, initialBrandSnapshot]);
-
-  const reset = () => {
-    setName(initialBrandSnapshot.name);
-    setDescription(initialBrandSnapshot.description);
-    setIconName(initialBrandSnapshot.iconName);
-    setIconDataUrl(initialBrandSnapshot.iconDataUrl);
-    setError(null);
-    setLoading(false);
-
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
-  const handleOpenChange = (nextOpen: boolean) => {
-    if (!nextOpen) {
-      reset();
-    }
-
-    onOpenChange(nextOpen);
-  };
-
-  const resetIcon = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-
-    setIconName('');
-    setIconDataUrl('');
-  };
-
-  const handleIconPick = async (event: ChangeEvent<HTMLInputElement>) => {
+  const handleIconPick = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-
-    if (!file.type.startsWith('image/')) {
-      setError('فقط فایل تصویری برای آیکون قابل قبول است.');
-      event.target.value = '';
-      return;
-    }
-
+    if (!file.type.startsWith('image/')) { setError('فقط فایل تصویری قابل انتخاب است.'); return; }
     const reader = new FileReader();
-    reader.onload = () => {
-      setError(null);
-      setIconName(file.name);
-      setIconDataUrl(typeof reader.result === 'string' ? reader.result : '');
-    };
-    reader.onerror = () => {
-      setError('خواندن تصویر آیکون انجام نشد.');
-      event.target.value = '';
-    };
+    reader.onload = () => setIcon({ extension: file.type.split('/')[1] ?? 'image', sizeBytes: file.size, previewData: typeof reader.result === 'string' ? reader.result : '' });
     reader.readAsDataURL(file);
   };
 
-  const validateBrand = () => {
-    if (!name.trim()) {
-      setError('نام برند الزامی است.');
-      return false;
-    }
-
-    if (isEditMode && !initialBrand?.id) {
-      setError('شناسه برند برای ویرایش یافت نشد.');
-      return false;
-    }
-
-    return true;
-  };
-
-  const handleSubmit = async () => {
-    if (!validateBrand()) return;
-
-    setLoading(true);
-    setError(null);
-
+  const submit = async () => {
+    if (!name.trim()) { setError('نام برند الزامی است.'); return; }
+    setLoading(true); setError(null);
     try {
-      const response = isEditMode
-        ? await fetch(`/api/businesses/${tenantId}/taavia/brands/${initialBrand?.id}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              name: name.trim(),
-              intake: {
-                description,
-                iconName,
-                iconDataUrl,
-              },
-            }),
-          })
-        : await fetch(`/api/businesses/${tenantId}/taavia/brands`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              name: name.trim(),
-              intake: {
-                description,
-                iconName,
-                iconDataUrl,
-              },
-            }),
-          });
-
+      const response = await fetch(mode === 'edit' && initialBrand ? `/api/businesses/${tenantId}/taavia/brands/${initialBrand.id}` : `/api/businesses/${tenantId}/taavia/brands`, { method: mode === 'edit' ? 'PATCH' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: name.trim(), description: description.trim() || null, icon }) });
       const payload = (await response.json().catch(() => null)) as { brand?: { id: string }; message?: string } | null;
-      if (!response.ok || !payload?.brand?.id) {
-        setError(payload?.message ?? (isEditMode ? 'ویرایش برند انجام نشد.' : 'ایجاد برند انجام نشد.'));
-        setLoading(false);
-        return;
-      }
-
-      reset();
-      onOpenChange(false);
-      onSaved(payload.brand.id);
-    } catch {
-      setError('خطا در ارتباط با سرور.');
-      setLoading(false);
-    }
+      if (!response.ok || !payload?.brand?.id) throw new Error(payload?.message ?? 'ذخیره برند انجام نشد.');
+      onOpenChange(false); onSaved(payload.brand.id);
+    } catch (submitError) { setError(submitError instanceof Error ? submitError.message : 'ذخیره برند انجام نشد.'); }
+    finally { setLoading(false); }
   };
 
-  return (
-    <TaavDialog open={open} onOpenChange={handleOpenChange}>
-      <TaavDialogContent size="sm" contentClassName="ai-lab-dialog">
-        <TaavDialogHeader>
-          <div className="flex items-start gap-3">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[var(--taav-radius-lg)] bg-[var(--taav-brand-soft)] text-[var(--taav-brand-strong)]">
-              {isEditMode ? <Bot className="h-6 w-6" /> : <Sparkles className="h-6 w-6" />}
-            </div>
-            <div className="grid gap-1">
-              <TaavDialogTitle className="text-right text-[length:var(--taav-text-xl)] font-black text-[var(--taav-text-strong)]">
-                {isEditMode ? 'ویرایش برند' : 'ثبت برند جدید'}
-              </TaavDialogTitle>
-              <TaavDialogDescription className="text-right text-[length:var(--taav-text-sm)] leading-7 text-[var(--taav-text-muted)]">
-                اطلاعات پایه برند را ثبت کن تا مسیر راه‌اندازی تاویا بدون مرحله انتخاب حوزه ادامه پیدا کند.
-              </TaavDialogDescription>
-            </div>
-          </div>
-        </TaavDialogHeader>
-
-        <div className="grid gap-4">
-          <div className="rounded-[var(--taav-radius-xl)] border border-[var(--taav-border-subtle)] bg-[var(--taav-surface-subtle)] p-4">
-            <div className="grid gap-4">
-              <TaavFieldBlock label="آپلود آیکون" htmlFor="taavia-brand-icon">
-                <div className="grid justify-items-center gap-3">
-                  <input
-                    ref={fileInputRef}
-                    id="taavia-brand-icon"
-                    type="file"
-                    accept="image/*"
-                    className="sr-only"
-                    disabled={loading}
-                    onChange={handleIconPick}
-                  />
-
-                  <div className="relative">
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={loading}
-                      className="flex h-[190px] w-[190px] items-center justify-center overflow-hidden rounded-full border border-[rgba(255,255,255,0.08)] bg-[#d6dae7] shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] transition hover:scale-[1.01] disabled:cursor-not-allowed"
-                      aria-label={isEditMode ? 'تغییر آیکون برند' : 'انتخاب آیکون برند'}
-                    >
-                      {iconDataUrl ? (
-                        <img src={iconDataUrl} alt="پیش‌نمایش آیکون انتخاب‌شده" className="h-full w-full object-cover" />
-                      ) : (
-                        <Bot className="h-14 w-14 text-white/85" strokeWidth={1.8} />
-                      )}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={loading}
-                      className="absolute bottom-2 left-2 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--taav-brand)] text-white shadow-[0_12px_24px_rgba(13,148,136,0.28)] transition hover:scale-105 disabled:cursor-not-allowed"
-                      aria-label={isEditMode ? 'تغییر آیکون برند' : 'آپلود آیکون برند'}
-                    >
-                      <Camera className="h-5 w-5" />
-                    </button>
-                  </div>
-
-                  {iconDataUrl ? (
-                    <div className="flex justify-center">
-                      <TaavButton
-                        type="button"
-                        variant="ghost"
-                        tone="neutral"
-                        iconStart={<X className="h-4 w-4" />}
-                        onClick={resetIcon}
-                        disabled={loading}
-                      >
-                        حذف آیکون
-                      </TaavButton>
-                    </div>
-                  ) : null}
-                </div>
-              </TaavFieldBlock>
-
-              <TaavFieldBlock
-                label={<AiLabLabelWithTooltip label="نام برند" tooltip={AI_LAB_TOOLTIPS.forms.brandName} required />}
-                required
-                htmlFor="taavia-brand-name"
-              >
-                <TaavInput
-                  id="taavia-brand-name"
-                  value={name}
-                  onChange={(event) => setName(event.target.value)}
-                  disabled={loading}
-                  onKeyDown={(event) => {
-                    if (event.key !== 'Enter') return;
-                    event.preventDefault();
-                    void handleSubmit();
-                  }}
-                />
-              </TaavFieldBlock>
-
-              <TaavFieldBlock label="توضیحات" htmlFor="taavia-brand-description">
-                <TaavTextarea
-                  id="taavia-brand-description"
-                  value={description}
-                  onChange={(event) => setDescription(event.target.value)}
-                  disabled={loading}
-                  rows={4}
-                  placeholder="توضیح کوتاهی درباره برند بنویسید"
-                />
-              </TaavFieldBlock>
-            </div>
-          </div>
-
-          {error ? <p className="m-0 text-[length:var(--taav-text-sm)] text-[var(--taav-danger-strong)]">{error}</p> : null}
-        </div>
-
-        <TaavDialogFooter>
-          <TaavButton variant="secondary" onClick={() => handleOpenChange(false)} disabled={loading}>
-            انصراف
-          </TaavButton>
-          <TaavButton onClick={() => void handleSubmit()} disabled={loading || !name.trim()}>
-            {loading ? 'در حال ثبت...' : isEditMode ? 'ثبت تغییرات' : 'ثبت برند و ادامه'}
-          </TaavButton>
-        </TaavDialogFooter>
-      </TaavDialogContent>
-    </TaavDialog>
-  );
+  return <TaavDialog open={open} onOpenChange={onOpenChange}><TaavDialogContent size="sm" contentClassName="ai-lab-dialog"><TaavDialogHeader><TaavDialogTitle>{mode === 'edit' ? 'ویرایش برند' : 'ایجاد برند جدید'}</TaavDialogTitle><TaavDialogDescription>اطلاعات پایه برند را مستقیم در پروفایل آن ثبت کنید.</TaavDialogDescription></TaavDialogHeader><div className="grid gap-4"><TaavFieldBlock label="نام برند" required htmlFor="brand-name"><TaavInput id="brand-name" value={name} onChange={(event) => setName(event.target.value)} disabled={loading} /></TaavFieldBlock><TaavFieldBlock label="توضیح کوتاه" htmlFor="brand-description"><TaavTextarea id="brand-description" value={description} onChange={(event) => setDescription(event.target.value)} rows={4} disabled={loading} /></TaavFieldBlock><TaavFieldBlock label="آیکون برند" htmlFor="brand-icon"><div className="flex items-center gap-3"><input ref={fileInputRef} id="brand-icon" type="file" accept="image/*" className="sr-only" onChange={handleIconPick} /><button type="button" onClick={() => fileInputRef.current?.click()} className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl bg-[var(--taav-brand-soft)] text-[var(--taav-brand-strong)]" aria-label="انتخاب آیکون برند">{icon?.previewData ? <img src={icon.previewData} alt="پیش‌نمایش آیکون" className="h-full w-full object-cover" /> : <Camera className="h-6 w-6" />}</button>{icon ? <TaavButton type="button" variant="ghost" tone="neutral" iconStart={<X className="h-4 w-4" />} onClick={() => setIcon(null)}>حذف آیکون</TaavButton> : <span className="text-xs text-[var(--taav-text-muted)]">تصویر کوچک و خوانا انتخاب کنید.</span>}</div></TaavFieldBlock>{error ? <p role="alert" className="m-0 text-sm text-[var(--taav-danger-strong)]">{error}</p> : null}</div><TaavDialogFooter><TaavButton variant="secondary" onClick={() => onOpenChange(false)} disabled={loading}>انصراف</TaavButton><TaavButton onClick={() => void submit()} disabled={loading} iconStart={<Sparkles className="h-4 w-4" />}>{loading ? 'در حال ذخیره…' : 'ذخیره برند'}</TaavButton></TaavDialogFooter></TaavDialogContent></TaavDialog>;
 }

@@ -6,7 +6,6 @@ import type {
 } from '../ocr-simulator-data';
 import type { OcrTransportMode } from '../ocr-transport';
 import type { OcrExtractionFieldDraft } from '../ocr-extraction-fields';
-import type { AiProviderModelType } from './ai-provider-models';
 
 export type OcrSimulationSourceType = 'sample' | 'upload';
 
@@ -52,21 +51,19 @@ export type TaaviaBrand = {
   id: string;
   tenantId: string;
   name: string;
-  createdByUserId: string;
-  isActive: boolean;
+  description: string | null;
+  icon: {
+    id: string;
+    extension: string | null;
+    sizeBytes: number | null;
+    previewData: string | null;
+    storageUrl: string | null;
+  } | null;
+  status: 'ACTIVE' | 'INACTIVE' | 'ARCHIVED';
+  setupMode: 'NOT_SELECTED' | 'MANUAL' | 'AI_ASSISTED';
   createdAt: string;
   updatedAt: string;
-  intake?: {
-    description?: string;
-    iconName?: string;
-    iconDataUrl?: string;
-  };
-  modelPreferences?: Partial<Record<BrandToolModelType, string>>;
 };
-
-export type BrandToolModelType = AiProviderModelType;
-
-export const BRAND_TOOL_MODEL_TYPE_ORDER = ['CHAT', 'OCR', 'VISION', 'EMBEDDING'] as const;
 
 export type TaaviaBrandModelServiceKey =
   | 'adminAgent'
@@ -208,12 +205,13 @@ export type CreateTenantInput = {
 export type CreateTaaviaBrandInput = {
   tenantId: string;
   name: string;
-  intake?: {
-    description?: string;
-    iconName?: string;
-    iconDataUrl?: string;
-  };
-  modelPreferences?: Partial<Record<BrandToolModelType, string>>;
+  description?: string | null;
+  icon?: {
+    extension?: string | null;
+    sizeBytes?: number | null;
+    previewData?: string | null;
+    storageUrl?: string | null;
+  } | null;
 };
 
 export type UpdateTaaviaBrandInput = CreateTaaviaBrandInput & {

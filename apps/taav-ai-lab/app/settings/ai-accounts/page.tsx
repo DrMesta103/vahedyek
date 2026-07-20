@@ -1,16 +1,13 @@
-import { getGlobalSettings, listAiProviderAccounts } from '@/app/lib/data';
+import { listAiProviderAccountsV2 } from '@/app/lib/repositories/ai-provider-accounts-v2';
 import { getCurrentTenant, requireSession } from '@/app/lib/session';
 import { AiLabShell } from '@/components/AiLabShell';
-import { AiAccountsSettingsClient } from '@/components/settings/AiAccountsSettingsClient';
+import { AiAccountsSettingsV2Client } from '@/components/settings/AiAccountsSettingsV2Client';
 import { SettingsClientShell } from '@/components/settings/SettingsClientShell';
 
 export default async function AiAccountsSettingsPage() {
   const session = await requireSession();
   const currentTenant = await getCurrentTenant();
-  const [{ accounts, summary }, globalSettings] = await Promise.all([
-    listAiProviderAccounts(),
-    getGlobalSettings(),
-  ]);
+  const initialData = await listAiProviderAccountsV2();
 
   return (
     <AiLabShell
@@ -22,11 +19,7 @@ export default async function AiAccountsSettingsPage() {
       currentTenantName={currentTenant?.name ?? null}
     >
       <SettingsClientShell>
-        <AiAccountsSettingsClient
-          initialAccounts={accounts}
-          initialSummary={summary}
-          usdToToman={globalSettings.usdToToman}
-        />
+        <AiAccountsSettingsV2Client initialData={initialData} />
       </SettingsClientShell>
     </AiLabShell>
   );

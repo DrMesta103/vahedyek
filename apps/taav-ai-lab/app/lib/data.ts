@@ -17,11 +17,8 @@ export type {
   CreateTaaviaBrandInput,
   CreateOcrSimulationInput,
   TaaviaChatMessage,
-  BrandToolModelType,
   TaaviaBrandModelServiceKey,
 } from './types/domain';
-
-export { BRAND_TOOL_MODEL_TYPE_ORDER } from './types/domain';
 
 export {
   OCR_SAMPLE_LIBRARY,
@@ -72,25 +69,9 @@ export {
   getTaaviaBrandForTenant,
   createTaaviaBrandForTenant,
   updateTaaviaBrandForTenant,
+  setTaaviaBrandStatus,
   deleteTaaviaBrandForTenant,
-  updateTaaviaBrandModelPreferences,
 } from './repositories/taavia-brands';
-
-export type {
-  BrandModelSettingsPayload,
-  BrandToolModelOption,
-  BrandToolModelPreferences,
-  BrandToolModelResolvedState,
-  BrandToolModelSection,
-} from './repositories/brand-model-settings';
-
-export {
-  getBrandModelSettings,
-  resolveBrandEffectiveModel,
-  resolveBrandEffectiveOcrModel,
-  resolveBrandEffectiveChatModel,
-  sanitizeBrandToolModelPreferences,
-} from './repositories/brand-model-settings';
 
 export {
   getAdminAgentConversation,
@@ -167,6 +148,17 @@ export type {
   UpdateAiProviderModelInput,
   UsedBrandTagsByModelType,
 } from './types/ai-provider-models';
+
+export type { TaaviaBrandAiModelPurpose } from './taavia-ai-models';
+export { TAAVIA_BRAND_AI_MODEL_PURPOSES, TAAVIA_PURPOSE_LABELS, TAAVIA_PURPOSE_DESCRIPTIONS } from './taavia-ai-models';
+
+export {
+  getTaaviaBrandModelAssignments,
+  getTaaviaBrandModelAssignmentHistory,
+  assignTaaviaBrandModel,
+} from './repositories/taavia-brand-model-assignments';
+
+export { recordTaaviaBrandAiUsage } from './repositories/taavia-brand-ai-usage';
 
 export {
   listAiProviderModels,

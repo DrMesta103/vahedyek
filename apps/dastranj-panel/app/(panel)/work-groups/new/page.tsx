@@ -3,7 +3,7 @@ import { listEmployees, listLocations, listPolicies } from '../../../lib/data';
 import { WorkGroupStepperForm } from './_components/WorkGroupStepperForm';
 
 export default async function NewWorkGroupPage() {
-  const [employees, locations, policies] = await Promise.all([listEmployees(), listLocations(), listPolicies()]);
+  const [employees, locations, policies] = await Promise.all([listEmployees(), listLocations(), listPolicies({ activeOnly: true })]);
 
   return (
     <div className="work-group-create-page module-page" dir="rtl" lang="fa">

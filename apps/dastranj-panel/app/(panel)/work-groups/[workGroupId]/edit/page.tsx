@@ -57,9 +57,9 @@ export default async function EditWorkGroupPage({ params }: EditWorkGroupPagePro
           name: `${item.firstName} ${item.lastName}`.trim() || item.mobile1 || item.email || 'کارمند',
           currentGroupName: item.workGroupMemberships.find((membership) => membership.isCurrent)?.workGroup.title ?? null,
         }))}
-        policies={policies.map((item) => ({
+        policies={policies.filter((item) => item.isActive || item.id === workGroup.policyId).map((item) => ({
           id: item.id,
-          title: item.title,
+          title: item.isActive ? item.title : `${item.title} (غیرفعال — اتصال فعلی)`,
           description: item.description ?? '',
           calendarTitle: item.calendar?.title ?? '',
           calendarYearLabel: item.calendar?.yearLabel ?? '',

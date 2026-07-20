@@ -9,55 +9,129 @@ datasource db {
 }
 
 model AppUser {
-  id           String                 @id @default(cuid())
-  email        String?                @unique
-  mobile       String?                @unique
-  avatarUrl    String?
-  firstName    String
-  lastName     String
-  fullName     String
-  passwordHash String
-  passwordSalt String
-  isActive     Boolean                @default(true)
-  createdAt    DateTime               @default(now())
-  updatedAt    DateTime               @updatedAt
-  memberships  UserTenantMembership[]
+  id            String                 @id @default(cuid())
+  email         String?                @unique
+  mobile        String?                @unique
+  avatarUrl     String?
+  firstName     String
+  lastName      String
+  fullName      String
+  passwordHash  String
+  passwordSalt  String
+  isActive      Boolean                @default(true)
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
+  memberships   UserTenantMembership[]
   notifications UserNotification[]
 }
 
 model UserNotification {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   userId    String
   title     String
-  message   String   @db.Text
-  kind      String   @default("test")
+  message   String    @db.Text
+  kind      String    @default("test")
   seenAt    DateTime?
-  createdAt DateTime @default(now())
-  user      AppUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+  user      AppUser   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, seenAt, createdAt])
 }
 
 model Tenant {
-  id            String                 @id @default(cuid())
-  slug          String                 @unique
-  name          String
-  brandCode     String?
-  packageKey    String?
-  billingCycle  String?
-  logoUrl       String
-  tokenLimit    Int
-  usedTokens    Int                    @default(0)
-  ocrTestsCount Int                    @default(0)
-  lastActivity  DateTime?
-  isActive      Boolean                @default(true)
-  createdAt     DateTime               @default(now())
-  updatedAt     DateTime               @updatedAt
-  memberships   UserTenantMembership[]
-  products      TenantProduct[]
-  ocrJobs       OcrJob[]
-  taaviaBrands  TaaviaBrand[]
-  conversations TaaviaConversation[]
+  id                String                         @id @default(cuid())
+  slug              String                         @unique
+  name              String
+  brandCode         String?
+  packageKey        String?
+  billingCycle      String?
+  logoUrl           String
+  tokenLimit        Int
+  usedTokens        Int                            @default(0)
+  ocrTestsCount     Int                            @default(0)
+  lastActivity      DateTime?
+  isActive          Boolean                        @default(true)
+  createdAt         DateTime                       @default(now())
+  updatedAt         DateTime                       @updatedAt
+  memberships       UserTenantMembership[]
+  products          TenantProduct[]
+  ocrJobs           OcrJob[]
+  taaviaBrands      TaaviaBrand[]
+  taaviaBrandInfos  TaaviaBrandInfo[]
+  mediaAssets       MediaAsset[]
+  conversations     TaaviaConversation[]
+  taaviaAssignments TaaviaBrandAiModelAssignment[]
+  taaviaUsages      TaaviaBrandAiModelUsage[]
+  taaviaUsageItems  TaaviaBrandAiModelUsageItem[]
+}
+
+enum TaaviaBrandStatus {
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+}
+
+enum TaaviaBrandSetupMode {
+  NOT_SELECTED
+  MANUAL
+  AI_ASSISTED
+}
+
+enum TaaviaBrandInfoType {
+  TEXT
+  IMAGE
+  FILE
+  VOICE
+  VIDEO
+}
+
+enum TaaviaBrandInfoStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+enum TaaviaBrandAiModelPurpose {
+  NONE
+  ADMIN_AGENT_CHAT
+  CUSTOMER_CHAT
+  KNOWLEDGE_BASE_CONTENT_GENERATION
+  OCR
+  EMBEDDING
+  RERANKING
+  SPEECH_TO_TEXT
+  TEXT_TO_SPEECH
+  VISION_ANALYSIS
+}
+
+enum TaaviaBrandAiModelUsageStatus {
+  NONE
+  SUCCEEDED
+  FAILED
+  CANCELED
+}
+
+enum TaaviaAiUsageMetricType {
+  NONE
+  INPUT_TOKEN
+  CACHED_INPUT_TOKEN
+  OUTPUT_TOKEN
+  IMAGE
+  AUDIO
+  VIDEO
+  DOCUMENT_PAGE
+  REQUEST
+  CHARACTER
+}
+
+enum TaaviaAiUsageUnitType {
+  NONE
+  TOKEN
+  ITEM
+  SECOND
+  MINUTE
+  PAGE
+  REQUEST
+  CHARACTER
 }
 
 model UserTenantMembership {
@@ -89,53 +163,207 @@ model TenantProduct {
 }
 
 model OcrJob {
-  id             String    @id @default(cuid())
-  tenantId       String
-  sourceType     String
-  sourceName     String
-  sourceLabel    String
-  fileType       String
-  fileSize       Int?
-  sampleId       String?
-  templateId     String?
-  templateLabel  String?
-  scenario       String?
-  status         String
-  progress       Int
-  confidence     Int
-  pageCount      Int
-  tokensUsed     Int
-  summary        String
-  previewText    String    @db.Text
-  templateSchema Json?
-  resultJson     Json?
-  extractedJson  Json      @default("{}")
-  extractedFields Json     @default("[]")
-  warnings       Json      @default("[]")
-  error          String?
-  terminalStatus String    @default("completed")
-  createdAt      DateTime  @default(now())
-  startedAt      DateTime
-  readyAt        DateTime
-  completedAt    DateTime?
-  updatedAt      DateTime  @updatedAt
-  tenant         Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  id              String    @id @default(cuid())
+  tenantId        String
+  sourceType      String
+  sourceName      String
+  sourceLabel     String
+  fileType        String
+  fileSize        Int?
+  sampleId        String?
+  templateId      String?
+  templateLabel   String?
+  scenario        String?
+  status          String
+  progress        Int
+  confidence      Int
+  pageCount       Int
+  tokensUsed      Int
+  summary         String
+  previewText     String    @db.Text
+  templateSchema  Json?
+  resultJson      Json?
+  extractedJson   Json      @default("{}")
+  extractedFields Json      @default("[]")
+  warnings        Json      @default("[]")
+  error           String?
+  terminalStatus  String    @default("completed")
+  createdAt       DateTime  @default(now())
+  startedAt       DateTime
+  readyAt         DateTime
+  completedAt     DateTime?
+  updatedAt       DateTime  @updatedAt
+  tenant          Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId, createdAt])
 }
 
 model TaaviaBrand {
-  id              String               @id @default(cuid())
+  id              String                         @id
   tenantId        String
   name            String
-  createdByUserId String
-  isActive        Boolean              @default(true)
-  createdAt       DateTime             @default(now())
-  updatedAt       DateTime             @updatedAt
-  tenant          Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  description     String?                        @db.Text
+  mediaAssetId    String?
+  status          TaaviaBrandStatus              @default(ACTIVE)
+  setupMode       TaaviaBrandSetupMode           @default(NOT_SELECTED)
+  createdByUserId String?
+  createdAt       DateTime
+  updatedAt       DateTime
+  tenant          Tenant                         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  mediaAsset      MediaAsset?                    @relation(fields: [mediaAssetId], references: [id], onDelete: SetNull)
   conversations   TaaviaConversation[]
+  assignments     TaaviaBrandAiModelAssignment[]
+  usages          TaaviaBrandAiModelUsage[]
+  brandInfos      TaaviaBrandInfo[]
 
   @@index([tenantId])
+  @@index([tenantId, status])
+}
+
+model MediaAsset {
+  id           String            @id
+  tenantId     String?
+  extension    String?
+  sizeBytes    Int?
+  mimeType     String?
+  storageKey   String?
+  originalName String?
+  previewData  String?           @db.Text
+  storageUrl   String?
+  createdAt    DateTime
+  updatedAt    DateTime
+  brands       TaaviaBrand[]
+  tenant       Tenant?           @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  brandInfos   TaaviaBrandInfo[]
+}
+
+model TaaviaBrandInfo {
+  id           String                @id
+  tenantId     String
+  brandId      String
+  type         TaaviaBrandInfoType
+  title        String?               @db.VarChar(300)
+  textContent  String?               @db.Text
+  mediaAssetId String?
+  status       TaaviaBrandInfoStatus
+  displayOrder Int
+  revision     BigInt
+  contentHash  String
+  createdBy    String
+  updatedBy    String
+  archivedAt   DateTime?
+  archivedBy   String?
+  createdAt    DateTime
+  updatedAt    DateTime
+  tenant       Tenant                @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  brand        TaaviaBrand           @relation(fields: [brandId], references: [id], onDelete: Restrict)
+  media        MediaAsset?           @relation(fields: [mediaAssetId], references: [id], onDelete: Restrict)
+
+  @@index([tenantId, brandId, status, displayOrder])
+  @@index([tenantId, brandId, type, status])
+  @@index([tenantId, id, revision])
+  @@index([tenantId, brandId, contentHash])
+}
+
+model TaaviaBrandAiModelAssignment {
+  id                  String                      @id
+  tenantId            String
+  brandId             String
+  aiProviderAccountId String
+  aiProviderModelId   String
+  purpose             TaaviaBrandAiModelPurpose
+  effectiveFrom       DateTime
+  effectiveTo         DateTime?
+  assignedBy          String
+  endedBy             String?
+  createdAt           DateTime
+  tenant              Tenant                      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  brand               TaaviaBrand                 @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  aiProviderAccount   AiProviderAccountV2         @relation(fields: [aiProviderAccountId], references: [id], onDelete: Restrict)
+  aiProviderModel     AiProviderModelV2           @relation(fields: [aiProviderModelId], references: [id], onDelete: Restrict)
+  usages              TaaviaBrandAiModelUsage[]
+  registryRecords     AiProviderModelAssignment[]
+
+  @@index([tenantId, brandId, purpose, effectiveTo])
+  @@index([brandId, effectiveFrom])
+  @@index([aiProviderAccountId])
+  @@index([aiProviderModelId])
+}
+
+model AiProviderModelAssignment {
+  id                   String                       @id
+  externalAssignmentId String                       @unique
+  consumerCode         String
+  tenantId             String
+  resourceType         String
+  resourceId           String
+  aiProviderAccountId  String
+  aiProviderModelId    String
+  purposeCode          String
+  effectiveFrom        DateTime
+  effectiveTo          DateTime?
+  assignedBy           String
+  endedBy              String?
+  createdAt            DateTime
+  taaviaAssignment     TaaviaBrandAiModelAssignment @relation(fields: [externalAssignmentId], references: [id], onDelete: Restrict)
+
+  @@index([consumerCode, resourceType, resourceId, purposeCode, effectiveTo])
+  @@index([tenantId, resourceId])
+}
+
+model IntegrationOutbox {
+  id          String    @id
+  eventType   String
+  aggregateId String
+  payload     Json
+  version     Int       @default(1)
+  occurredAt  DateTime
+  processedAt DateTime?
+  createdAt   DateTime
+
+  @@index([processedAt, createdAt])
+  @@index([eventType, aggregateId])
+}
+
+model TaaviaBrandAiModelUsage {
+  id                             String                        @id
+  tenantId                       String
+  brandId                        String
+  taaviaBrandAiModelAssignmentId String
+  aiProviderAccountId            String
+  aiProviderModelId              String
+  purpose                        TaaviaBrandAiModelPurpose
+  usageReferenceId               String                        @unique
+  operationCode                  String
+  resourceType                   String
+  resourceId                     String?
+  status                         TaaviaBrandAiModelUsageStatus
+  startedAt                      DateTime
+  finishedAt                     DateTime
+  durationMilliseconds           BigInt
+  createdAt                      DateTime
+  tenant                         Tenant                        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  brand                          TaaviaBrand                   @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  assignment                     TaaviaBrandAiModelAssignment  @relation(fields: [taaviaBrandAiModelAssignmentId], references: [id], onDelete: Restrict)
+  items                          TaaviaBrandAiModelUsageItem[]
+
+  @@index([tenantId, startedAt])
+  @@index([brandId, startedAt])
+  @@index([purpose, startedAt])
+}
+
+model TaaviaBrandAiModelUsageItem {
+  id                        String                  @id
+  tenantId                  String
+  taaviaBrandAiModelUsageId String
+  usageMetricType           TaaviaAiUsageMetricType
+  usageUnitType             TaaviaAiUsageUnitType
+  usageQuantity             Decimal                 @db.Decimal(28, 12)
+  tenant                    Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  usage                     TaaviaBrandAiModelUsage @relation(fields: [taaviaBrandAiModelUsageId], references: [id], onDelete: Cascade)
+
+  @@unique([taaviaBrandAiModelUsageId, usageMetricType])
+  @@index([tenantId, usageMetricType])
 }
 
 model TaaviaConversation {
@@ -231,42 +459,42 @@ model AiProviderAccount {
 }
 
 model AiProviderModel {
-  id                           String           @id @default(cuid())
+  id                           String            @id @default(cuid())
   accountId                    String
   displayName                  String
   providerModelName            String
   modelType                    String
   pricingUnit                  String
-  inputTokenPriceUsd           Decimal          @default(0) @db.Decimal(12, 6)
-  outputTokenPriceUsd          Decimal          @default(0) @db.Decimal(12, 6)
-  ocrInputRatio                Decimal          @default(0.6) @db.Decimal(5, 4)
-  cacheReadTokenPriceUsd       Decimal          @default(0) @db.Decimal(12, 6)
-  cacheWriteTokenPriceUsd      Decimal          @default(0) @db.Decimal(12, 6)
-  requestPriceUsd              Decimal          @default(0) @db.Decimal(12, 6)
-  pagePriceUsd                 Decimal          @default(0) @db.Decimal(12, 6)
-  imagePriceUsd                Decimal          @default(0) @db.Decimal(12, 6)
-  minutePriceUsd               Decimal          @default(0) @db.Decimal(12, 6)
-  supportsPersian              Boolean          @default(false)
-  supportsEnglish              Boolean          @default(false)
-  supportsVision               Boolean          @default(false)
-  supportsPdf                  Boolean          @default(false)
-  supportsImage                Boolean          @default(false)
-  supportsStructuredExtraction Boolean        @default(false)
-  supportsEmbedding            Boolean          @default(false)
-  supportsFunctionCalling      Boolean          @default(false)
+  inputTokenPriceUsd           Decimal           @default(0) @db.Decimal(12, 6)
+  outputTokenPriceUsd          Decimal           @default(0) @db.Decimal(12, 6)
+  ocrInputRatio                Decimal           @default(0.6) @db.Decimal(5, 4)
+  cacheReadTokenPriceUsd       Decimal           @default(0) @db.Decimal(12, 6)
+  cacheWriteTokenPriceUsd      Decimal           @default(0) @db.Decimal(12, 6)
+  requestPriceUsd              Decimal           @default(0) @db.Decimal(12, 6)
+  pagePriceUsd                 Decimal           @default(0) @db.Decimal(12, 6)
+  imagePriceUsd                Decimal           @default(0) @db.Decimal(12, 6)
+  minutePriceUsd               Decimal           @default(0) @db.Decimal(12, 6)
+  supportsPersian              Boolean           @default(false)
+  supportsEnglish              Boolean           @default(false)
+  supportsVision               Boolean           @default(false)
+  supportsPdf                  Boolean           @default(false)
+  supportsImage                Boolean           @default(false)
+  supportsStructuredExtraction Boolean           @default(false)
+  supportsEmbedding            Boolean           @default(false)
+  supportsFunctionCalling      Boolean           @default(false)
   maxInputTokens               Int?
   maxOutputTokens              Int?
-  isDefaultForChat             Boolean          @default(false)
-  isDefaultForOcr              Boolean          @default(false)
-  isDefaultForEmbedding        Boolean          @default(false)
-  isDefaultForVision           Boolean          @default(false)
-  isSystem                     Boolean          @default(false)
-  isActive                     Boolean          @default(true)
+  isDefaultForChat             Boolean           @default(false)
+  isDefaultForOcr              Boolean           @default(false)
+  isDefaultForEmbedding        Boolean           @default(false)
+  isDefaultForVision           Boolean           @default(false)
+  isSystem                     Boolean           @default(false)
+  isActive                     Boolean           @default(true)
   brandTag                     String?
-  notes                        String?          @db.Text
+  notes                        String?           @db.Text
   createdByUserId              String?
-  createdAt                    DateTime         @default(now())
-  updatedAt                    DateTime         @updatedAt
+  createdAt                    DateTime          @default(now())
+  updatedAt                    DateTime          @updatedAt
   account                      AiProviderAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
 
   @@unique([accountId, providerModelName])
@@ -276,28 +504,296 @@ model AiProviderModel {
 }
 
 model AiUsageLog {
-  id            String            @id @default(cuid())
-  aiAccountId   String
-  tenantId      String?
-  businessId    String?
-  serviceName   String
-  featureName   String
-  requestId     String?
-  inputTokens   Int               @default(0)
-  outputTokens  Int               @default(0)
-  cachedInputTokens Int           @default(0)
-  cacheWriteTokens  Int           @default(0)
-  totalTokens   Int               @default(0)
-  inputCostUsd  Decimal           @default(0) @db.Decimal(18, 8)
-  outputCostUsd Decimal           @default(0) @db.Decimal(18, 8)
-  cacheReadCostUsd  Decimal       @default(0) @db.Decimal(18, 8)
-  cacheWriteCostUsd Decimal       @default(0) @db.Decimal(18, 8)
-  totalCostUsd  Decimal           @default(0) @db.Decimal(18, 8)
-  metadata      Json?
-  createdAt     DateTime          @default(now())
-  account       AiProviderAccount @relation(fields: [aiAccountId], references: [id], onDelete: Cascade)
+  id                String            @id @default(cuid())
+  aiAccountId       String
+  tenantId          String?
+  businessId        String?
+  serviceName       String
+  featureName       String
+  requestId         String?
+  inputTokens       Int               @default(0)
+  outputTokens      Int               @default(0)
+  cachedInputTokens Int               @default(0)
+  cacheWriteTokens  Int               @default(0)
+  totalTokens       Int               @default(0)
+  inputCostUsd      Decimal           @default(0) @db.Decimal(18, 8)
+  outputCostUsd     Decimal           @default(0) @db.Decimal(18, 8)
+  cacheReadCostUsd  Decimal           @default(0) @db.Decimal(18, 8)
+  cacheWriteCostUsd Decimal           @default(0) @db.Decimal(18, 8)
+  totalCostUsd      Decimal           @default(0) @db.Decimal(18, 8)
+  metadata          Json?
+  createdAt         DateTime          @default(now())
+  account           AiProviderAccount @relation(fields: [aiAccountId], references: [id], onDelete: Cascade)
 
   @@index([aiAccountId, createdAt])
   @@index([tenantId])
   @@index([businessId])
+}
+
+// -----------------------------
+// AI Provider v2 (normalized)
+// -----------------------------
+
+enum AiProviderTypeV2 {
+  OpenAi
+  AzureOpenAi
+  GoogleGemini
+  DeepSeek
+  Grok
+  OpenRouter
+}
+
+enum AiProviderAccountTransactionTypeV2 {
+  Purchase
+  ManualAdjustment
+}
+
+enum AiProviderModelTypeV2 {
+  TextGeneration
+  Embedding
+  Reranking
+  SpeechToText
+  TextToSpeech
+  ImageGeneration
+  DocumentExtraction
+  Moderation
+}
+
+enum AiProviderModelCapabilityTypeV2 {
+  TextInput
+  ImageInput
+  AudioInput
+  VideoInput
+  FileInput
+
+  TextOutput
+  ImageOutput
+  AudioOutput
+
+  Streaming
+  ToolCalling
+  StructuredOutput
+}
+
+enum AiProviderUsageMetricTypeV2 {
+  InputToken
+  CachedInputToken
+  OutputToken
+  Image
+  Audio
+  Video
+  DocumentPage
+  Request
+  Character
+}
+
+enum AiProviderUsageUnitTypeV2 {
+  Token
+  Item
+  Second
+  Minute
+  Page
+  Request
+  Character
+}
+
+enum AiProviderModelUsageStatusV2 {
+  Succeeded
+  Failed
+  Canceled
+}
+
+model AiProviderAccountV2 {
+  id           String           @id
+  name         String
+  providerType AiProviderTypeV2 @unique
+
+  encryptedApiKey String @db.Text
+  apiKeyMasked    String
+
+  endpoint     String?
+  apiVersion   String?
+  billingEmail String?
+
+  isSystem    Boolean @default(false)
+  isActive    Boolean @default(true)
+  description String? @db.Text
+
+  apiKeyUpdatedAt DateTime
+  apiKeyUpdatedBy String
+
+  createdBy String
+  updatedBy String
+  createdAt DateTime
+  updatedAt DateTime
+
+  transactions      AiProviderAccountTransactionV2[]
+  models            AiProviderModelV2[]
+  taaviaAssignments TaaviaBrandAiModelAssignment[]
+
+  @@index([providerType])
+  @@index([isActive])
+  @@index([isSystem])
+  @@index([updatedAt])
+}
+
+model AiProviderAccountTransactionV2 {
+  id String @id
+
+  aiProviderAccountId String
+  aiProviderAccount   AiProviderAccountV2 @relation(fields: [aiProviderAccountId], references: [id], onDelete: Cascade)
+
+  transactionType AiProviderAccountTransactionTypeV2
+  amountUsd       Decimal                            @db.Decimal(28, 12)
+  amountToman     BigInt
+  transactionAt   DateTime
+  description     String?                            @db.Text
+
+  isDeleted Boolean   @default(false)
+  deletedAt DateTime?
+  deletedBy String?
+
+  createdBy String
+  createdAt DateTime
+
+  @@index([aiProviderAccountId, transactionAt])
+  @@index([aiProviderAccountId, isDeleted])
+}
+
+model AiProviderModelV2 {
+  id String @id
+
+  aiProviderAccountId String
+  aiProviderAccount   AiProviderAccountV2 @relation(fields: [aiProviderAccountId], references: [id], onDelete: Cascade)
+
+  name            String
+  providerModelId String
+  modelType       AiProviderModelTypeV2
+
+  isSystem Boolean @default(false)
+  isActive Boolean @default(true)
+
+  createdBy String
+  updatedBy String
+  createdAt DateTime
+  updatedAt DateTime
+
+  capabilities      AiProviderModelCapabilityV2[]
+  pricings          AiProviderModelPricingV2[]
+  usages            AiProviderModelUsageV2[]
+  taaviaAssignments TaaviaBrandAiModelAssignment[]
+
+  @@unique([aiProviderAccountId, providerModelId])
+  @@index([aiProviderAccountId, isActive])
+  @@index([updatedAt])
+}
+
+model AiProviderModelCapabilityV2 {
+  id                String                          @id
+  aiProviderModelId String
+  aiProviderModel   AiProviderModelV2               @relation(fields: [aiProviderModelId], references: [id], onDelete: Cascade)
+  capabilityType    AiProviderModelCapabilityTypeV2
+
+  @@unique([aiProviderModelId, capabilityType])
+}
+
+model AiProviderModelPricingV2 {
+  id                String            @id
+  aiProviderModelId String
+  aiProviderModel   AiProviderModelV2 @relation(fields: [aiProviderModelId], references: [id], onDelete: Cascade)
+
+  effectiveFrom DateTime
+  effectiveTo   DateTime?
+  endedBy       String?
+
+  isDeleted Boolean   @default(false)
+  deletedAt DateTime?
+  deletedBy String?
+
+  createdBy String
+  createdAt DateTime
+
+  priceItems AiProviderModelPriceItemV2[]
+  usages     AiProviderModelUsageV2[]
+
+  @@index([aiProviderModelId, effectiveFrom, effectiveTo])
+}
+
+model AiProviderModelPriceItemV2 {
+  id                       String                   @id
+  aiProviderModelPricingId String
+  aiProviderModelPricing   AiProviderModelPricingV2 @relation(fields: [aiProviderModelPricingId], references: [id], onDelete: Cascade)
+
+  usageMetricType AiProviderUsageMetricTypeV2
+  usageUnitType   AiProviderUsageUnitTypeV2
+  unitQuantity    Decimal                     @db.Decimal(28, 12)
+  priceUsd        Decimal                     @db.Decimal(28, 12)
+
+  createdBy String
+  createdAt DateTime
+  updatedBy String
+  updatedAt DateTime
+
+  isDeleted Boolean   @default(false)
+  deletedBy String?
+  deletedAt DateTime?
+
+  usageItems AiProviderModelUsageItemV2[]
+
+  @@unique([aiProviderModelPricingId, usageMetricType, isDeleted])
+  @@index([aiProviderModelPricingId])
+}
+
+model AiProviderModelUsageV2 {
+  id                String            @id
+  aiProviderModelId String
+  aiProviderModel   AiProviderModelV2 @relation(fields: [aiProviderModelId], references: [id], onDelete: Cascade)
+
+  usageReferenceId String  @unique
+  consumerCode     String
+  operationCode    String
+  tenantId         String?
+  resourceType     String?
+  resourceId       String?
+
+  status AiProviderModelUsageStatusV2
+
+  startedAt            DateTime
+  finishedAt           DateTime
+  durationMilliseconds BigInt
+
+  aiProviderModelPricingId String?
+  aiProviderModelPricing   AiProviderModelPricingV2? @relation(fields: [aiProviderModelPricingId], references: [id], onDelete: SetNull)
+
+  totalCostUsd Decimal  @db.Decimal(28, 12)
+  createdAt    DateTime
+
+  usageItems AiProviderModelUsageItemV2[]
+
+  @@index([aiProviderModelId, startedAt])
+  @@index([consumerCode, startedAt])
+  @@index([operationCode, startedAt])
+  @@index([tenantId, startedAt])
+  @@index([resourceType, resourceId])
+  @@index([status, startedAt])
+}
+
+model AiProviderModelUsageItemV2 {
+  id                     String                 @id
+  aiProviderModelUsageId String
+  aiProviderModelUsage   AiProviderModelUsageV2 @relation(fields: [aiProviderModelUsageId], references: [id], onDelete: Cascade)
+
+  aiProviderModelPriceItemId String
+  aiProviderModelPriceItem   AiProviderModelPriceItemV2 @relation(fields: [aiProviderModelPriceItemId], references: [id], onDelete: Restrict)
+
+  usageMetricType AiProviderUsageMetricTypeV2
+  usageUnitType   AiProviderUsageUnitTypeV2
+  usageQuantity   Decimal                     @db.Decimal(28, 12)
+
+  appliedUnitQuantity Decimal @db.Decimal(28, 12)
+  appliedPriceUsd     Decimal @db.Decimal(28, 12)
+  calculatedCostUsd   Decimal @db.Decimal(28, 12)
+
+  @@index([aiProviderModelUsageId])
+  @@index([usageMetricType])
 }

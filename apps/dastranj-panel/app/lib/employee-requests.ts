@@ -14,6 +14,7 @@ import {
 } from './attendance-calculation';
 import { getContractLeaveBalanceInputs, getContractOvertimeRules } from './employee-contracts';
 import { getCurrentEmployeeContract, getEmployeeContractForDate } from './employee-contracts.server';
+import { normalizePolicyRuntimeRules, type PolicyOvertimeRule, type PolicyRequestRule } from './policy-blueprints';
 import { getPersianPartsFromDate, formatPersianYmd } from './calendar-dates';
 import { parseCalendarStoredEvents } from './calendar-events';
 import { getDayDetails } from './calendar-grid';
@@ -171,6 +172,8 @@ export type EmployeeLeaveRequestContext = {
   policyTitle: string | null;
   leaveRules: LeavePolicyRules;
   ruleCards: EmployeeLeaveRulePresentation[];
+  requestRule: PolicyRequestRule;
+  overtimeRule: PolicyOvertimeRule;
 };
 
 export type EmployeeRemoteWorkRequestContext = {
@@ -237,6 +240,8 @@ export type EmployeeRequestFormPayload = {
   reasonId?: string | null;
   description?: string | null;
   attachments?: AttachmentDraft[];
+  latitude?: number | null;
+  longitude?: number | null;
 };
 
 type RawEmployeeRequestRow = {
@@ -461,12 +466,15 @@ type ResolvedLeaveContext = {
 };
 
 type ResolvedRequestContext = ResolvedLeaveContext & {
+  requestRule: PolicyRequestRule;
   overtimePolicy: {
+    rule: PolicyOvertimeRule;
     requireAttachment: boolean;
     fromAttendance: boolean;
     beforeShift: boolean;
     afterShift: boolean;
   };
+  workplace: { latitude: number | null; longitude: number | null; radius: number | null } | null;
 };
 
 function isWorkingDay(leaveContext: ResolvedLeaveContext | null, isoDate: string) {
@@ -569,6 +577,12 @@ function calculationMeta(
       countsAsWork: effect?.countsAsWork ?? false,
       payableMinutes: effect?.payableMinutes ?? 0,
       unpaidMinutes: effect?.unpaidMinutes ?? 0,
+    };
+  }
+  if (payload.requestType === 'attendance') {
+    return {
+      attendanceLatitude: Number.isFinite(payload.latitude) ? payload.latitude : null,
+      attendanceLongitude: Number.isFinite(payload.longitude) ? payload.longitude : null,
     };
   }
   return {};
@@ -685,6 +699,7 @@ async function resolveEmployeeLeaveContext(employeeId: string, tenantId: string,
     include: {
       workGroup: {
         include: {
+          location: { select: { tenantId: true, isActive: true, latitude: true, longitude: true, radius: true } },
           policy: {
             include: { calendar: true },
           },
@@ -695,6 +710,7 @@ async function resolveEmployeeLeaveContext(employeeId: string, tenantId: string,
 
   const workGroup = membership?.workGroup ?? null;
   const policy = workGroup?.policy ?? null;
+  const workplace = workGroup?.location?.tenantId === tenantId && workGroup.location.isActive ? workGroup.location : null;
 
   const tenantLeavePolicies = await prisma.workPolicy.findMany({
     where: { tenantId },
@@ -744,6 +760,7 @@ async function resolveEmployeeLeaveContext(employeeId: string, tenantId: string,
     leaveRules = mergeLeavePolicyRules(leaveRules, workPolicyLeaveRules);
   }
 
+  const runtimeRules = normalizePolicyRuntimeRules(policySectionValues);
   return {
     workGroupId: workGroup?.id ?? null,
     workGroupTitle: workGroup?.title ?? null,
@@ -756,6 +773,12 @@ async function resolveEmployeeLeaveContext(employeeId: string, tenantId: string,
     leaveRules,
     remoteWorkPolicy: parseRemoteWorkPolicy(policySectionValues),
     policySectionValues,
+    requestRule: runtimeRules.requestRule,
+    workplace: workplace ? {
+      latitude: workplace.latitude == null ? null : Number(workplace.latitude),
+      longitude: workplace.longitude == null ? null : Number(workplace.longitude),
+      radius: Number.isFinite(Number(workplace.radius)) ? Number(workplace.radius) : null,
+    } : null,
     weekends: Array.isArray(resolvedCalendar?.weekends)
       ? resolvedCalendar.weekends.filter((item): item is string => typeof item === 'string')
       : [],
@@ -764,6 +787,7 @@ async function resolveEmployeeLeaveContext(employeeId: string, tenantId: string,
     excludedShiftDates: resolvedCalendar ? listExcludedShiftDates(resolvedCalendar.shiftConfig) : [],
     weekendOverrideDates: resolvedCalendar ? listWeekendOverrideDates(resolvedCalendar.shiftConfig) : [],
     overtimePolicy: {
+      rule: runtimeRules.overtimeRule,
       requireAttachment: Boolean(policySectionValues.overtimeRequireAttachment ?? policySectionValues.requireAttachment),
       fromAttendance: Boolean(policySectionValues.overtimeFromAttendance),
       beforeShift: Boolean(policySectionValues.overtimeBeforeShift),
@@ -781,6 +805,8 @@ async function getEmployeeRequestLeaveContext(employeeId: string, tenantId: stri
     policyTitle: leaveContext.workPolicyTitle,
     leaveRules: leaveContext.leaveRules,
     ruleCards: leaveRuleCards(leaveContext.leaveRules),
+    requestRule: leaveContext.requestRule,
+    overtimeRule: leaveContext.overtimePolicy.rule,
   } satisfies EmployeeLeaveRequestContext;
 }
 
@@ -822,6 +848,14 @@ export async function previewEmployeeRequest(payload: EmployeeRequestFormPayload
   const leaveIdentity = mapRequestTypeToLeaveIdentity(payload.requestType, payload.rangeType);
   const leaveRule = leaveIdentity ? requestContext.leaveRules[leaveIdentity.leaveType] : null;
   const leaveBalance = leaveIdentity && previewDate ? await getEmployeeLeaveBalanceSummary(payload.employeeId, tenantId, previewDate) : null;
+  const isLeaveRequest = Boolean(leaveIdentity);
+  const isAttendanceCorrection = payload.requestType === 'attendance';
+  const requestAllowed =
+    (!isLeaveRequest && !isAttendanceCorrection) ||
+    requestContext.requestRule === 'leave_and_correction' ||
+    (isLeaveRequest && requestContext.requestRule === 'leave_only') ||
+    (isAttendanceCorrection && requestContext.requestRule === 'correction_only');
+  if (!requestAllowed) blockingErrors.push('ثبت این نوع درخواست بر اساس سیاست کاری فعلی شما مجاز نیست.');
 
   if (requestDates.length > 1) {
     const contracts = await Promise.all(requestDates.map((date) => getEmployeeContractForDate(payload.employeeId, date, tenantId)));
@@ -882,6 +916,7 @@ export async function previewEmployeeRequest(payload: EmployeeRequestFormPayload
   }
 
   if (payload.requestType === 'overtime') {
+    if (requestContext.overtimePolicy.rule === 'disabled') blockingErrors.push('ثبت درخواست اضافه‌کاری در این سیاست کاری غیرفعال است.');
     const overtimeRules = getContractOvertimeRules(activeContract);
     const requestedMinutes = calculatedDuration ?? positiveDuration(payload.startTime, payload.endTime);
     const shiftLabel = shiftLabelForDate(requestContext, payload.startDate);
@@ -1029,6 +1064,11 @@ export async function previewEmployeeRequest(payload: EmployeeRequestFormPayload
         attachmentCount: payload.attachments?.length ?? 0,
         submissionMode: payload.submissionMode,
         isAdmin: true,
+        attendanceLatitude: payload.latitude,
+        attendanceLongitude: payload.longitude,
+        workplaceLatitude: requestContext.workplace?.latitude,
+        workplaceLongitude: requestContext.workplace?.longitude,
+        workplaceRadiusMeters: requestContext.workplace?.radius,
         monthlyManualCount,
       });
 

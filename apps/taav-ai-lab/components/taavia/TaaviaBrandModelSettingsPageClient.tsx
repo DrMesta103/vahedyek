@@ -1,521 +1,124 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo, useRef, useState } from 'react';
-import {
-  ArrowLeft,
-  Bot,
-  BrainCircuit,
-  Coins,
-  Database,
-  Eye,
-  ScanText,
-  Settings2,
-} from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { ArrowLeft, CheckCircle2, Clock3, Cpu, History, Loader2, Save } from 'lucide-react';
 import { TaavBadge, TaavButton } from '@repo/ui/taav/primitives';
-import type {
-  BrandModelSettingsPayload,
-  BrandToolModelOption,
-  BrandToolModelPreferences,
-  BrandToolModelResolvedState,
-  BrandToolModelSection,
-  BrandToolModelType,
-} from '@/app/lib/data';
-import type { AiProviderModelBrandTag } from '@/app/lib/types/ai-provider-models';
+import { getPurposeCompatibility, TAAVIA_PURPOSE_LABELS, type TaaviaBrandAiModelPurpose } from '@/app/lib/taavia-ai-models';
 
-const SECTION_ICONS: Record<string, typeof Bot> = {
-  CHAT: Bot,
-  OCR: ScanText,
-  VISION: Eye,
-  EMBEDDING: Database,
-};
+type Model = { id: string; name: string; providerModelId: string; modelType: string; isActive: boolean; capabilities: string[]; pricing: Array<{ metric: string; unit: string; unitQuantity: number; priceUsd: number }> };
+type Account = { id: string; name: string; providerType: string; isActive: boolean; models: Model[] };
+type Assignment = { id: string; purpose: string; aiProviderAccountId: string; aiProviderModelId: string; effectiveFrom: string; effectiveTo: string | null; assignedBy: string; endedBy: string | null; account: { name: string; providerType: string; isActive: boolean }; model: Model };
+type SettingsData = { brand: { id: string; tenantId: string; name: string; description: string | null; status: string; setupMode: string; icon: { previewData?: string | null } | null }; purposes: Array<{ code: TaaviaBrandAiModelPurpose; label: string; description: string }>; assignments: Assignment[]; accounts: Account[]; lastAssignmentChange: string | null };
 
-const PROVIDER_COLORS: Record<string, string> = {
-  OpenAI: '#10a37f',
-  DeepSeek: '#4d6bfe',
-  'Google Gemini': '#4285f4',
-  Grok: '#f5f5f5',
-  'Azure OpenAI': '#0078d4',
-  OpenRouter: '#6366f1',
-};
-
-function brandTagTone(tag: AiProviderModelBrandTag): 'info' | 'success' | 'warning' {
-  switch (tag) {
-    case 'RECOMMENDED':
-      return 'info';
-    case 'ECONOMICAL':
-      return 'success';
-    case 'PREMIUM':
-      return 'warning';
-    default:
-      return 'info';
-  }
+function formatDate(value: string | null) {
+  return value ? new Date(value).toLocaleDateString('fa-IR') : '—';
 }
 
-function ModelBrandTagBadge({ model }: { model: BrandToolModelOption }) {
-  if (!model.brandTag || !model.brandTagLabel) return null;
-
-  return (
-    <TaavBadge
-      tone={brandTagTone(model.brandTag)}
-      variant="soft"
-      size="sm"
-      unsafeClassName={`taavia-model-settings__brand-tag taavia-model-settings__brand-tag--${model.brandTag.toLowerCase()}`}
-    >
-      {model.brandTagLabel}
-    </TaavBadge>
-  );
+function purposeIcon(code: TaaviaBrandAiModelPurpose) {
+  return code.slice(0, 2);
 }
 
-function typeLead(type: BrandToolModelType) {
-  switch (type) {
-    case 'CHAT':
-      return 'مدل گفت‌وگوی اصلی برای پاسخ‌گویی به سوالات و مکالمات.';
-    case 'OCR':
-      return 'مدل استخراج متن و داده از سند و تصویر برای جریان‌های OCR.';
-    case 'VISION':
-      return 'مدل تحلیل تصویر و ورودی‌های بصری برند.';
-    case 'EMBEDDING':
-      return 'مدل ساخت بردارهای معنایی و بازیابی دانش.';
-    default:
-      return 'مدل فعال برای این ابزار از پنل تاو ادمین خوانده می‌شود.';
-  }
-}
-
-function resolveEffectiveModel(
-  section: BrandToolModelSection,
-  currentValue: string,
-): BrandToolModelOption | null {
-  if (currentValue) {
-    return section.models.find((model) => model.id === currentValue) ?? null;
-  }
-  return section.defaultModel ?? null;
-}
-
-function resolveSelectionState(
-  section: BrandToolModelSection,
-  currentValue: string,
-): BrandToolModelResolvedState | null {
-  if (currentValue) {
-    const selected = section.models.find((model) => model.id === currentValue);
-    return selected ? 'override' : 'invalid-selection';
-  }
-  return section.defaultModel ? 'fallback-default' : null;
-}
-
-function formatCardPriceLines(model: BrandToolModelOption) {
-  const usdParts = model.priceSummaryUsd.split(' / ').map((part) => {
-    const spaceIndex = part.indexOf(' ');
-    if (spaceIndex === -1) return { label: part, value: '' };
-    return { label: part.slice(0, spaceIndex), value: part.slice(spaceIndex + 1) };
-  });
-  const tomanParts = model.priceSummaryToman.split(' / ').map((part) => {
-    const spaceIndex = part.indexOf(' ');
-    if (spaceIndex === -1) return { label: part, value: '' };
-    return { label: part.slice(0, spaceIndex), value: part.slice(spaceIndex + 1) };
-  });
-
-  return {
-    usd: usdParts,
-    toman: tomanParts,
-  };
-}
-
-type Props = {
-  tenantId: string;
-  brandId: string;
-  initialData: BrandModelSettingsPayload;
-};
-
-export function TaaviaBrandModelSettingsPageClient({ tenantId, brandId, initialData }: Props) {
+export function TaaviaBrandModelSettingsPageClient({ tenantId, brandId, initialData }: { tenantId: string; brandId: string; initialData: SettingsData }) {
   const [data, setData] = useState(initialData);
-  const [preferences, setPreferences] = useState<BrandToolModelPreferences>(initialData.modelPreferences);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [selectedAccount, setSelectedAccount] = useState<Record<string, string>>({});
+  const [selectedModel, setSelectedModel] = useState<Record<string, string>>({});
+  const [savingPurpose, setSavingPurpose] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
-  const queuedPreferencesRef = useRef<BrandToolModelPreferences | null>(null);
-  const inflightPreferencesRef = useRef<BrandToolModelPreferences | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [historyPurpose, setHistoryPurpose] = useState<string | null>(null);
+  const [history, setHistory] = useState<Assignment[]>([]);
 
-  const dirty = useMemo(
-    () => JSON.stringify(preferences) !== JSON.stringify(data.modelPreferences),
-    [data.modelPreferences, preferences],
-  );
+  const assignments = useMemo(() => new Map(data.assignments.map((assignment) => [assignment.purpose, assignment])), [data.assignments]);
 
-  const selectedOverridesCount = useMemo(
-    () => Object.keys(preferences).length,
-    [preferences],
-  );
+  const openHistory = async (purpose: string) => {
+    setHistoryPurpose(purpose);
+    const response = await fetch(`/api/businesses/${tenantId}/taavia/brands/${brandId}/model-assignments/history?purpose=${purpose}`);
+    const payload = (await response.json().catch(() => null)) as { assignments?: Assignment[] } | null;
+    setHistory(payload?.assignments ?? []);
+  };
 
-  const persistPreferences = async (nextPreferences: BrandToolModelPreferences) => {
-    if (saving) {
-      queuedPreferencesRef.current = nextPreferences;
+  const save = async (purpose: TaaviaBrandAiModelPurpose) => {
+    const accountId = selectedAccount[purpose];
+    const modelId = selectedModel[purpose];
+    if (!accountId || !modelId) return;
+    const current = assignments.get(purpose);
+    if (current?.aiProviderAccountId === accountId && current.aiProviderModelId === modelId) {
+      setFeedback('این تخصیص هم‌اکنون فعال است.');
       return;
     }
-
-    inflightPreferencesRef.current = nextPreferences;
-    setSaving(true);
+    if (current && !window.confirm('تخصیص قبلی بسته می‌شود و تاریخچه آن حفظ خواهد شد. ادامه می‌دهید؟')) return;
+    setSavingPurpose(purpose);
+    setFeedback(null);
     setError(null);
-    setFeedback('در حال ذخیره تغییرات...');
-
     try {
-      const response = await fetch(`/api/businesses/${tenantId}/taavia/brands/${brandId}/model-settings`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ modelPreferences: nextPreferences }),
-      });
-
-      const payload = (await response.json().catch(() => null)) as
-        | BrandModelSettingsPayload
-        | { message?: string }
-        | null;
-
-      if (!response.ok || !payload || !('sections' in payload)) {
-        throw new Error((payload as { message?: string } | null)?.message ?? 'ذخیره تنظیمات مدل انجام نشد.');
-      }
-
-      setData(payload);
-      setPreferences(payload.modelPreferences);
-      setFeedback('تغییرات مدل برند ذخیره شد.');
+      const response = await fetch(`/api/businesses/${tenantId}/taavia/brands/${brandId}/model-assignments`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ purpose, aiProviderAccountId: accountId, aiProviderModelId: modelId }) });
+      const payload = (await response.json().catch(() => null)) as { assignment?: Assignment; message?: string } | null;
+      if (!response.ok || !payload?.assignment) throw new Error(payload?.message ?? 'ذخیره تخصیص انجام نشد.');
+      setData((currentData) => ({ ...currentData, assignments: [...currentData.assignments.filter((item) => item.purpose !== purpose), payload.assignment!], lastAssignmentChange: payload.assignment!.effectiveFrom }));
+      setFeedback('تخصیص مدل با موفقیت ذخیره شد.');
     } catch (saveError) {
-      setPreferences(data.modelPreferences);
-      setError(saveError instanceof Error ? saveError.message : 'ذخیره تنظیمات مدل انجام نشد.');
-      setFeedback(null);
+      setError(saveError instanceof Error ? saveError.message : 'ذخیره تخصیص انجام نشد.');
     } finally {
-      const queuedPreferences = queuedPreferencesRef.current;
-      const inflightPreferences = inflightPreferencesRef.current;
-      queuedPreferencesRef.current = null;
-      inflightPreferencesRef.current = null;
-
-      if (
-        queuedPreferences &&
-        JSON.stringify(queuedPreferences) !== JSON.stringify(inflightPreferences)
-      ) {
-        setSaving(false);
-        void persistPreferences(queuedPreferences);
-        return;
-      }
-
-      setSaving(false);
+      setSavingPurpose(null);
     }
   };
 
-  const handleSelect = (type: BrandToolModelType, value: string) => {
-    setError(null);
-    setFeedback(null);
-    setPreferences((current) => {
-      const next = { ...current };
-      if (value) {
-        next[type] = value;
-      } else {
-        delete next[type];
-      }
-      void persistPreferences(next);
-      return next;
-    });
-  };
-
   return (
-    <div className="taavia-model-settings" dir="rtl" lang="fa">
-      <div className="taavia-model-settings__shell">
-        <header className="taavia-model-settings__page-header">
-          <div className="taavia-model-settings__page-intro">
-            <h1 className="taavia-model-settings__page-title">
-              مدل‌های ابزار برند {data.brand.name}
-            </h1>
-            <p className="taavia-model-settings__page-subtitle">
-              برای هر ابزار، مدل مورد نظر را از بین مدل‌های فعال تاو ادمین انتخاب کنید. اگر override برای برندی
-              تعریف نشود، مدل پیش‌فرض ادمین برای همان ابزار اعمال خواهد شد.
-            </p>
-          </div>
-
-          <div className="taavia-model-settings__page-meta">
-            <InfoChip
-              icon={Settings2}
-              title="وضعیت override"
-              value={selectedOverridesCount > 0 ? 'فعال' : 'ندارد'}
-              active={selectedOverridesCount > 0}
-            />
-            <InfoChip
-              icon={Coins}
-              title="نرخ دلار"
-              value={`${new Intl.NumberFormat('fa-IR').format(data.usdToToman)} تومان`}
-            />
-            <InfoChip
-              icon={Settings2}
-              title="وضعیت ثبت"
-              value={saving ? 'در حال ثبت' : dirty ? 'در انتظار ثبت' : 'همگام'}
-              active={saving || dirty}
-            />
-          </div>
-
-          <div className="taavia-model-settings__page-actions">
-            <Link href={`/businesses/${tenantId}/products/taavia/brands/${brandId}`}>
-              <TaavButton variant="secondary" unsafeClassName="taavia-model-settings__back-btn" iconStart={<ArrowLeft className="h-4 w-4" />}>
-                بازگشت
-              </TaavButton>
-            </Link>
-          </div>
-        </header>
-
-        {(error || feedback) ? (
-          <div className="taavia-model-settings__alerts">
-            {error ? <div className="taavia-model-settings__alert taavia-model-settings__alert--error">{error}</div> : null}
-            {feedback ? <div className="taavia-model-settings__alert taavia-model-settings__alert--success">{feedback}</div> : null}
-          </div>
-        ) : null}
-
-        <div className="taavia-model-settings__sections">
-          {data.sections.map((section) => {
-            const Icon = SECTION_ICONS[section.type] ?? BrainCircuit;
-            const currentValue = preferences[section.type] ?? '';
-            const effectiveModel = resolveEffectiveModel(section, currentValue);
-            const selectionState = resolveSelectionState(section, currentValue);
-            const hasInvalidSelection = selectionState === 'invalid-selection' && Boolean(currentValue);
-
-            return (
-              <section key={section.type} className="taavia-model-settings__section">
-                <div className="taavia-model-settings__section-top">
-                  <div className="taavia-model-settings__section-info">
-                    <div className="taavia-model-settings__section-icon">
-                      <Icon className="h-4 w-4" />
-                    </div>
-                    <div className="taavia-model-settings__section-copy">
-                      <div className="taavia-model-settings__section-title-row">
-                        <h2 className="taavia-model-settings__section-title">{section.typeLabel}</h2>
-                        {selectionState === 'override' ? <TaavBadge tone="info" variant="soft">override</TaavBadge> : null}
-                        {selectionState === 'fallback-default' ? <TaavBadge tone="neutral" variant="soft">fallback ادمین</TaavBadge> : null}
-                        {selectionState === 'invalid-selection' ? <TaavBadge tone="danger" variant="soft">نامعتبر</TaavBadge> : null}
-                      </div>
-                      <p className="taavia-model-settings__section-desc">{typeLead(section.type)}</p>
-                    </div>
-                  </div>
-
-                  <SelectedModelPanel
-                    model={effectiveModel}
-                    selectionState={selectionState}
-                    onReset={currentValue ? () => handleSelect(section.type, '') : undefined}
-                  />
-                </div>
-
-                <ModelPickerRail
-                  models={section.models}
-                  currentValue={currentValue}
-                  effectiveModelId={effectiveModel?.id ?? null}
-                  selectionState={selectionState}
-                  onSelect={(modelId) => handleSelect(section.type, modelId)}
-                />
-
-                {hasInvalidSelection ? (
-                  <div className="taavia-model-settings__invalid-note">
-                    مدل ذخیره‌شده قبلی دیگر معتبر نیست. تا زمان انتخاب مدل جدید، fallback ادمین برای این ابزار استفاده می‌شود.
-                  </div>
-                ) : null}
-              </section>
-            );
-          })}
-        </div>
-
-        <footer className="taavia-model-settings__footer">
-          قیمت‌ها بر اساس نرخ دلار فعلی محاسبه شده‌اند و ممکن است تغییر کنند. مدل‌هایی که به عنوان default ادمین
-          marked شده‌اند، برای همه برندها fallback خواهند بود.
-        </footer>
-      </div>
-    </div>
-  );
-}
-
-function InfoChip({
-  icon: Icon,
-  title,
-  value,
-  active = false,
-}: {
-  icon: typeof Settings2;
-  title: string;
-  value: string;
-  active?: boolean;
-}) {
-  return (
-    <div className="taavia-model-settings__chip">
-      <div className="taavia-model-settings__chip-body">
-        <span className="taavia-model-settings__chip-label">{title}</span>
-        <strong className="taavia-model-settings__chip-value">
-          {active ? <span className="taavia-model-settings__chip-dot" aria-hidden="true" /> : null}
-          {value}
-        </strong>
-      </div>
-      <div className="taavia-model-settings__chip-icon">
-        <Icon className="h-4 w-4" />
-      </div>
-    </div>
-  );
-}
-
-function SelectedModelPanel({
-  model,
-  selectionState,
-  onReset,
-}: {
-  model: BrandToolModelOption | null;
-  selectionState: BrandToolModelResolvedState | null;
-  onReset?: () => void;
-}) {
-  const statusLabel =
-    selectionState === 'override'
-      ? 'فعال'
-      : selectionState === 'fallback-default'
-        ? 'fallback'
-        : selectionState === 'invalid-selection'
-          ? 'نامعتبر'
-          : '—';
-
-  return (
-    <div className="taavia-model-settings__selected-panel">
-      <div className="taavia-model-settings__selected-panel-head">
-        <span className="taavia-model-settings__selected-panel-label">مدل انتخاب شده</span>
-        {onReset ? (
-          <button type="button" className="taavia-model-settings__selected-panel-reset" onClick={onReset}>
-            پیش‌فرض ادمین
-          </button>
-        ) : null}
-      </div>
-
-      {model ? (
-        <div className="taavia-model-settings__selected-panel-body">
-          <div className="taavia-model-settings__selected-panel-copy">
-            <div className="taavia-model-settings__selected-panel-name-row">
-              <strong className="taavia-model-settings__selected-panel-name">{model.displayName}</strong>
-              <ModelBrandTagBadge model={model} />
+    <div dir="rtl" className="mx-auto grid max-w-7xl gap-6 pb-10">
+      <header className="rounded-3xl border border-[var(--taav-border-subtle)] bg-[var(--taav-surface)] p-5 shadow-[var(--taav-shadow-sm)] md:p-7">
+        <div className="flex flex-wrap items-start justify-between gap-5">
+          <div className="flex items-center gap-4">
+            <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl bg-[var(--taav-brand-soft)] text-lg font-black text-[var(--taav-brand-strong)]">
+              {data.brand.icon?.previewData ? <img src={data.brand.icon.previewData} alt="" className="h-full w-full object-cover" /> : data.brand.name.slice(0, 2)}
             </div>
-            <span className="taavia-model-settings__selected-panel-provider">{model.providerLabel}</span>
+            <div>
+              <div className="mb-1 text-sm text-[var(--taav-text-muted)]">تنظیمات هوش مصنوعی برند</div>
+              <h1 className="m-0 text-2xl font-black text-[var(--taav-text-strong)]">{data.brand.name}</h1>
+              <p className="mt-2 max-w-2xl text-sm leading-7 text-[var(--taav-text-muted)]">برای هر کاربرد، حساب ارائه‌دهنده و مدل مستقل انتخاب کنید. هر تغییر به‌صورت تاریخی ثبت می‌شود.</p>
+            </div>
           </div>
-          <ProviderAvatar label={model.providerLabel} />
-          <span className={`taavia-model-settings__pill taavia-model-settings__pill--${selectionState === 'fallback-default' ? 'neutral' : 'brand'}`}>
-            {statusLabel}
-          </span>
+          <Link href={`/businesses/${tenantId}/products/taavia/brands`}><TaavButton variant="secondary" iconStart={<ArrowLeft className="h-4 w-4" />}>بازگشت به برندها</TaavButton></Link>
         </div>
-      ) : (
-        <div className="taavia-model-settings__selected-panel-empty">مدل موثری برای این ابزار پیدا نشد.</div>
-      )}
-    </div>
-  );
-}
-
-function ProviderAvatar({ label }: { label: string }) {
-  const color = PROVIDER_COLORS[label] ?? '#64748b';
-  const initial = label.trim().charAt(0).toUpperCase() || '?';
-
-  return (
-    <span
-      className="taavia-model-settings__provider-avatar"
-      style={{ backgroundColor: color }}
-      aria-hidden="true"
-    >
-      {initial}
-    </span>
-  );
-}
-
-function ModelPickerRail({
-  models,
-  currentValue,
-  effectiveModelId,
-  selectionState,
-  onSelect,
-}: {
-  models: BrandToolModelOption[];
-  currentValue: string;
-  effectiveModelId: string | null;
-  selectionState: BrandToolModelResolvedState | null;
-  onSelect: (modelId: string) => void;
-}) {
-  return (
-    <div className="taavia-model-settings__rail">
-      {models.map((model) => {
-        const selected = currentValue === model.id;
-        const effective = effectiveModelId === model.id;
-
-        return (
-          <ModelPickerCard
-            key={model.id}
-            model={model}
-            selected={selected}
-            effective={effective}
-            selectionState={selectionState}
-            onSelect={() => onSelect(model.id)}
-          />
-        );
-      })}
-    </div>
-  );
-}
-
-function ModelPickerCard({
-  model,
-  selected,
-  effective,
-  selectionState,
-  onSelect,
-}: {
-  model: BrandToolModelOption;
-  selected: boolean;
-  effective: boolean;
-  selectionState: BrandToolModelResolvedState | null;
-  onSelect: () => void;
-}) {
-  const prices = formatCardPriceLines(model);
-  const showStatus = selected || effective;
-  const statusLabel =
-    selected
-      ? 'فعال'
-      : selectionState === 'fallback-default' && effective
-        ? 'fallback'
-        : effective
-          ? 'فعال'
-          : '';
-
-  const cardClass = [
-    'taavia-model-settings__picker-card',
-    selected ? 'taavia-model-settings__picker-card--selected' : '',
-    effective && !selected ? 'taavia-model-settings__picker-card--effective' : '',
-  ]
-    .filter(Boolean)
-    .join(' ');
-
-  return (
-    <button type="button" onClick={onSelect} className={cardClass}>
-      <div className="taavia-model-settings__picker-card-head">
-        <span className={`taavia-model-settings__picker-radio ${selected ? 'taavia-model-settings__picker-radio--on' : ''}`} />
-        <div className="taavia-model-settings__picker-card-copy">
-          <div className="taavia-model-settings__picker-card-name-row">
-            <span className="taavia-model-settings__picker-card-name">{model.displayName}</span>
-            <ModelBrandTagBadge model={model} />
-          </div>
-          <span className="taavia-model-settings__picker-card-provider">{model.providerLabel}</span>
+        <div className="mt-6 flex flex-wrap gap-3 text-sm">
+          <TaavBadge tone={data.brand.status === 'ACTIVE' ? 'success' : 'warning'} variant="soft">{data.brand.status === 'ACTIVE' ? 'فعال' : data.brand.status}</TaavBadge>
+          <span className="inline-flex items-center gap-2 rounded-full bg-[var(--taav-surface-soft)] px-3 py-2 text-[var(--taav-text-muted)]"><CheckCircle2 className="h-4 w-4" />{data.assignments.length} کاربرد تنظیم‌شده</span>
+          <span className="inline-flex items-center gap-2 rounded-full bg-[var(--taav-surface-soft)] px-3 py-2 text-[var(--taav-text-muted)]"><Clock3 className="h-4 w-4" />آخرین تغییر: {formatDate(data.lastAssignmentChange)}</span>
         </div>
-        <ProviderAvatar label={model.providerLabel} />
+      </header>
+
+      {error ? <div role="alert" className="rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-300">{error}</div> : null}
+      {feedback ? <div role="status" className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-300">{feedback}</div> : null}
+
+      <div className="grid gap-4">
+        {data.purposes.map((purpose) => {
+          const current = assignments.get(purpose.code);
+          const accountId = selectedAccount[purpose.code] ?? current?.aiProviderAccountId ?? '';
+          const account = data.accounts.find((item) => item.id === accountId);
+          const modelId = selectedModel[purpose.code] ?? current?.aiProviderModelId ?? '';
+          const compatibleModels = account?.models.filter((model) => model.isActive && getPurposeCompatibility(purpose.code, model).compatible) ?? [];
+          const saving = savingPurpose === purpose.code;
+          return (
+            <section key={purpose.code} className="rounded-3xl border border-[var(--taav-border-subtle)] bg-[var(--taav-surface)] p-5 md:p-6">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--taav-brand-soft)] font-black text-[var(--taav-brand-strong)]"><Cpu className="h-5 w-5" /></div>
+                  <div><h2 className="m-0 text-lg font-bold text-[var(--taav-text-strong)]">{purpose.label}</h2><p className="mt-1 text-sm text-[var(--taav-text-muted)]">{purpose.description}</p></div>
+                </div>
+                <button type="button" onClick={() => void openHistory(purpose.code)} className="inline-flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm text-[var(--taav-brand-strong)] transition hover:bg-[var(--taav-brand-soft)]"><History className="h-4 w-4" />مشاهده تاریخچه</button>
+              </div>
+              <div className="mt-5 grid gap-4 xl:grid-cols-[1fr_1fr_1.15fr]">
+                <div className="rounded-2xl bg-[var(--taav-surface-soft)] p-4"><div className="mb-2 text-xs text-[var(--taav-text-muted)]">تخصیص فعال</div>{current ? <><div className="font-bold text-[var(--taav-text-strong)]">{current.model.name}</div><div className="mt-1 text-sm text-[var(--taav-text-muted)]">{current.account.name} · از {formatDate(current.effectiveFrom)}</div></> : <div className="text-sm text-[var(--taav-text-muted)]">برای این کاربرد هنوز مدلی انتخاب نشده است.</div>}</div>
+                <label className="grid gap-2 text-sm font-medium text-[var(--taav-text-strong)]">حساب ارائه‌دهنده<select value={accountId} onChange={(event) => { setSelectedAccount((value) => ({ ...value, [purpose.code]: event.target.value })); setSelectedModel((value) => ({ ...value, [purpose.code]: '' })); }} className="min-h-12 rounded-xl border border-[var(--taav-border-subtle)] bg-[var(--taav-surface-soft)] px-3 text-[var(--taav-text-strong)]"><option value="">انتخاب حساب</option>{data.accounts.map((item) => <option key={item.id} value={item.id}>{item.name} · {item.providerType}</option>)}</select></label>
+                <label className="grid gap-2 text-sm font-medium text-[var(--taav-text-strong)]">مدل سازگار<select value={modelId} disabled={!accountId} onChange={(event) => setSelectedModel((value) => ({ ...value, [purpose.code]: event.target.value }))} className="min-h-12 rounded-xl border border-[var(--taav-border-subtle)] bg-[var(--taav-surface-soft)] px-3 text-[var(--taav-text-strong)]"><option value="">انتخاب مدل</option>{compatibleModels.map((model) => <option key={model.id} value={model.id}>{model.name} · {model.modelType}</option>)}</select></label>
+              </div>
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-3"><div className="text-xs text-[var(--taav-text-muted)]">مدل‌ها پس از بررسی سازگاری purpose از سرور ارائه می‌شوند.</div><TaavButton disabled={!accountId || !modelId || saving} onClick={() => void save(purpose.code)} iconStart={saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}>{saving ? 'در حال ذخیره…' : 'ذخیره تخصیص'}</TaavButton></div>
+            </section>
+          );
+        })}
       </div>
 
-      <div className="taavia-model-settings__picker-card-prices">
-        {prices.usd.map((part) => (
-          <div key={`usd-${part.label}`} className="taavia-model-settings__picker-price-row">
-            <span className="taavia-model-settings__picker-price-label">{part.label}</span>
-            <span className="taavia-model-settings__picker-price-value" dir="ltr">{part.value}</span>
-          </div>
-        ))}
-        {prices.toman.map((part) => (
-          <div key={`toman-${part.label}`} className="taavia-model-settings__picker-price-row">
-            <span className="taavia-model-settings__picker-price-label">{part.label}</span>
-            <span className="taavia-model-settings__picker-price-value" dir="ltr">{part.value}</span>
-          </div>
-        ))}
-      </div>
-
-      {showStatus && statusLabel ? (
-        <span className={`taavia-model-settings__pill taavia-model-settings__pill--${statusLabel === 'fallback' ? 'neutral' : 'brand'}`}>
-          {statusLabel}
-        </span>
-      ) : null}
-    </button>
+      {historyPurpose ? <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-4 md:items-center" role="dialog" aria-modal="true"><div className="max-h-[85vh] w-full max-w-2xl overflow-auto rounded-3xl border border-[var(--taav-border-subtle)] bg-[var(--taav-surface)] p-5"><div className="flex items-center justify-between"><h2 className="text-lg font-bold">تاریخچه {TAAVIA_PURPOSE_LABELS[historyPurpose as TaaviaBrandAiModelPurpose]}</h2><button type="button" className="min-h-11 rounded-xl px-3 text-sm text-[var(--taav-text-muted)] hover:bg-[var(--taav-surface-soft)]" onClick={() => setHistoryPurpose(null)}>بستن</button></div><div className="mt-4 grid gap-3">{history.length ? history.map((item) => <div key={item.id} className="rounded-2xl bg-[var(--taav-surface-soft)] p-4"><div className="flex flex-wrap items-center justify-between gap-2"><strong>{item.model.name}</strong><TaavBadge tone={item.effectiveTo ? 'neutral' : 'success'} variant="soft">{item.effectiveTo ? 'پایان‌یافته' : 'فعال'}</TaavBadge></div><div className="mt-2 text-sm text-[var(--taav-text-muted)]">{item.account.name} · {formatDate(item.effectiveFrom)} تا {formatDate(item.effectiveTo)} · تخصیص‌دهنده: {item.assignedBy}</div></div>) : <div className="rounded-2xl bg-[var(--taav-surface-soft)] p-5 text-sm text-[var(--taav-text-muted)]">تاریخچه‌ای ثبت نشده است.</div>}</div></div></div> : null}
+    </div>
   );
 }

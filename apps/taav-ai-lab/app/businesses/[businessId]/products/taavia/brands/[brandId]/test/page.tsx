@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import { getTaaviaBrandForTenant, getTenantForUser } from '@/app/lib/data';
+import { listBrandInfo } from '@/app/lib/brand-info/service';
 import { getCurrentTenant, requireSession } from '@/app/lib/session';
 import { TAAVIA_ALL_USE_CASE_KEYS } from '@/app/lib/taavia-use-cases';
 import { AiLabShell } from '@/components/AiLabShell';
@@ -34,6 +35,7 @@ export default async function TaaviaBrandTestPage({
 
   const brand = await getTaaviaBrandForTenant(session.userId, business.id, brandId);
   if (!brand) notFound();
+  const brandInfoItems = await listBrandInfo(session.userId, business.id, brand.id);
 
   return (
     <AiLabShell
@@ -49,6 +51,7 @@ export default async function TaaviaBrandTestPage({
         brandId={brand.id}
         brandName={brand.name}
         selectedUseCases={TAAVIA_ALL_USE_CASE_KEYS}
+        initialBrandInfo={brandInfoItems}
       />
     </AiLabShell>
   );

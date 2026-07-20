@@ -12,6 +12,7 @@ import {
   getActiveNavItem,
   getOrbitNavItems,
   getSidebarNavItems,
+  getTaaviaTechnicalFlowsNavPathSuffix,
   isWorkspaceHomePath,
   resolveNavHref,
 } from '@/app/lib/navigation';
@@ -55,11 +56,23 @@ function buildNavPath(
   }
 
   if (currentTenantId) {
+    const tenantHref = pathname.includes(`/businesses/${currentTenantId}/products/taavia`)
+      ? `/businesses/${currentTenantId}/products/taavia`
+      : `/businesses/${currentTenantId}`;
+
     navPath.push({
       label: currentTenantName?.trim() || 'فضای کاری',
       id: currentTenantId,
-      href: `/businesses/${currentTenantId}`,
+      href: tenantHref,
     });
+  }
+
+  if (currentTenantId) {
+    const technicalFlowsSuffix = getTaaviaTechnicalFlowsNavPathSuffix(pathname, currentTenantId);
+    if (technicalFlowsSuffix) {
+      navPath.push(...technicalFlowsSuffix);
+      return navPath;
+    }
   }
 
   const activeItem = getActiveNavItem(pathname, currentTenantId);

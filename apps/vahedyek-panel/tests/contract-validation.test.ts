@@ -431,7 +431,7 @@ test('validateDiscountsStep rejects active discount types without any saved rule
   );
 
   assert.equal(result.valid, false);
-  assert.equal(result.errors['type:contract-base'], 'برای «تخفیف روی اصل قرارداد» باید حداقل یک تخفیف ثبت شود.');
+  assert.equal(result.errors['type:contract-base'], 'برای «تخفیف روی اصل قرارداد» حداقل یک قانون باید ثبت شود.');
 });
 
 test('validateDiscountsStep rejects invalid discount ranges and empty approval threshold', () => {
@@ -455,9 +455,88 @@ test('validateDiscountsStep rejects invalid discount ranges and empty approval t
   );
 
   assert.equal(result.valid, false);
-  assert.equal(result.errors['rule:discount-rule-1:range'], 'حداقل تخفیف نمی‌تواند بیشتر از حداکثر تخفیف باشد.');
-  assert.equal(result.errors['rule:discount-rule-1:approvalThreshold'], 'آستانه تایید مدیر را وارد کنید.');
+  assert.equal(result.errors['rule:discount-rule-1:range'], 'بازه مقدارها نامعتبر است.');
+  assert.equal(result.errors['rule:discount-rule-1:approvalThreshold'], 'آستانه تأیید مدیر باید تعیین شود.');
 });
+test('validateDiscountsStep rejects an active discount type when all of its rules are disabled', () => {
+  const base = makeValidDiscountsData();
+  const result = validateDiscountsStep({ ...base, rules: [{ ...base.rules[0], enabled: false }] });
+
+  assert.equal(result.valid, false);
+  assert.ok(result.errors['type:contract-base']);
+});
+
+test('validateDiscountsStep accepts an equal minimum and maximum value', () => {
+  const base = makeValidDiscountsData();
+  const result = validateDiscountsStep({ ...base, rules: [{ ...base.rules[0], minValue: '100000', maxValue: '100000' }] });
+
+  assert.equal(result.valid, true);
+  assert.equal(result.errors['rule:discount-rule-1:range'], undefined);
+});
+
+test('validateDiscountsStep rejects a negative minimum value', () => {
+  const base = makeValidDiscountsData();
+  const result = validateDiscountsStep({ ...base, rules: [{ ...base.rules[0], minValue: '-1', maxValue: '100000' }] });
+
+  assert.equal(result.valid, false);
+  assert.ok(result.errors['rule:discount-rule-1:minValue']);
+});
+
+test('validateDiscountsStep rejects a non-positive maximum value', () => {
+  const base = makeValidDiscountsData();
+  const result = validateDiscountsStep({ ...base, rules: [{ ...base.rules[0], minValue: '', maxValue: '0' }] });
+
+  assert.equal(result.valid, false);
+  assert.ok(result.errors['rule:discount-rule-1:maxValue']);
+});
+
+test('validateDiscountsStep rejects a negative maximum value', () => {
+  const base = makeValidDiscountsData();
+  const result = validateDiscountsStep({ ...base, rules: [{ ...base.rules[0], minValue: '', maxValue: '-1' }] });
+
+  assert.equal(result.valid, false);
+  assert.ok(result.errors['rule:discount-rule-1:maxValue']);
+});
+
+test('validateDiscountsStep accepts an inactive discount type without a rule', () => {
+  const base = makeValidDiscountsData({
+    types: makeValidDiscountsData().types.map((type) => ({ ...type, active: false })),
+    rules: [],
+  });
+  const result = validateDiscountsStep(base);
+
+  assert.equal(result.valid, true);
+  assert.equal(result.errors['type:early-payment'], undefined);
+  assert.deepEqual(result.errors, {});
+});
+
+test('validateDiscountsStep accepts an empty threshold when manager approval is disabled', () => {
+  const base = makeValidDiscountsData();
+  const result = validateDiscountsStep({ ...base, rules: [{ ...base.rules[0], managerApproval: false, approvalThreshold: '' }] });
+
+  assert.equal(result.valid, true);
+  assert.equal(result.errors['rule:discount-rule-1:approvalThreshold'], undefined);
+});
+
+test('validateDiscountsStep requires a positive threshold when manager approval is enabled', () => {
+  const base = makeValidDiscountsData();
+  const result = validateDiscountsStep({ ...base, rules: [{ ...base.rules[0], managerApproval: true, approvalThreshold: '0' }] });
+
+  assert.equal(result.valid, false);
+  assert.ok(result.errors['rule:discount-rule-1:approvalThreshold']);
+});
+
+test('validateDiscountsStep requires a rule for every active discount type', () => {
+  const base = makeValidDiscountsData();
+  const result = validateDiscountsStep({
+    ...base,
+    types: base.types.map((type) => ({ ...type, active: true })),
+  });
+
+  assert.equal(result.valid, false);
+  assert.ok(result.errors['type:early-payment']);
+});
+
 function makeValidTerminationData(overrides: Partial<ContractTerminationData> = {}): ContractTerminationData {
   return {
     terminationEnabled: true,

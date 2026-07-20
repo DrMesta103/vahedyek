@@ -88,9 +88,9 @@ export function TaaviaBrandWorkspaceClient({
                 </strong>
               </div>
 
-              {brand.intake?.description?.trim() ? (
+              {brand.description?.trim() ? (
                 <p className="m-0 text-right text-[length:var(--taav-text-sm)] leading-7 text-[var(--taav-text-muted)]">
-                  {brand.intake.description}
+                  {brand.description}
                 </p>
               ) : (
                 <p className="m-0 text-right text-[length:var(--taav-text-sm)] leading-7 text-[var(--taav-text-muted)]">
