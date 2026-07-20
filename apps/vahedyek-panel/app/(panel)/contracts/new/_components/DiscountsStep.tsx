@@ -12,11 +12,15 @@ import { DISCOUNT_GROUPS, ITEMIZED_DISCOUNT_ENTRIES, WHOLE_DISCOUNT_ENTRY, getDi
 import {
   ensureActiveDraftId,
   fetchContractFlowBootstrapSettings,
+  getDraftRuleSettings,
+  getBusinessSettingsReference,
   getContractFlowBootstrapSettings,
   getFrontendStepDraft,
   setFrontendStepDraft,
+  setBusinessSettingsReference,
+  saveDraftRuleSettings,
 } from '../../../../lib/contractDraftClient';
-import type { ContractRuleState } from '../../../../lib/businessContractRules';
+import { RULE_CONFIGS, type ContractRuleState } from '../../../../lib/businessContractRules';
 import { validateDiscountsStep } from '../../../../lib/contractValidation';
 import { buildValidationSummary } from './validationPresentation';
 import type {
@@ -30,6 +34,10 @@ import { dispatchContractFlowDirty, dispatchContractFlowSavedForDraft } from './
 import type { ContractFlowSectionId } from './contractFlowSignals';
 import { useContractFlowBasePath } from './useContractFlowBasePath';
 import { ContractSettingsImportDialog } from './ContractSettingsImportDialog';
+import { BusinessSettingsHint } from './BusinessSettingsHint';
+import { useBusinessSettingsReference } from './useBusinessSettingsReference';
+import { buildRuleStateComparison } from '../../../../lib/contractSettingsReference';
+import { useContractDraftAutosave } from './useContractDraftAutosave';
 
 const SCOPE_OPTIONS: Array<{ value: DiscountScope; label: string }> = [
   { value: 'whole', label: 'روی کل قرارداد' },
@@ -495,6 +503,7 @@ export function DiscountsStep({ stepId, title, embedded = false }: { stepId: str
   const router = useRouter();
   const basePath = useContractFlowBasePath();
   const initialSnapshotRef = useRef('');
+  const { snapshot } = useBusinessSettingsReference();
 
   const [draftId, setDraftId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -526,6 +535,24 @@ export function DiscountsStep({ stepId, title, embedded = false }: { stepId: str
   );
 
   const activeTypes = useMemo(() => types.filter((item) => item.active), [types]);
+  const discountHintState = useMemo<ContractRuleState>(() => {
+    const firstRule = rules.find((item) => item.enabled);
+    return {
+      active: activeTypes.length > 0,
+      activeTab: firstRule?.discountTypeId ?? payload.activeTab,
+      activeChip: payload.activeTab,
+      values: {
+        discountScope: firstRule?.scope ?? '',
+        discountEntryId: firstRule?.entryId ?? '',
+        discountValueMode: firstRule?.valueMode ?? '',
+        discountMinValue: firstRule?.minValue ?? '',
+        discountMaxValue: firstRule?.maxValue ?? '',
+        discountConditionConfigured: Boolean(firstRule?.conditionConfigured),
+        discountManagerApproval: Boolean(firstRule?.managerApproval),
+        discountApprovalThreshold: firstRule?.approvalThreshold ?? '',
+      },
+    };
+  }, [activeTypes.length, payload.activeTab, rules]);
 
   const typeRule = (typeId: string, scope: DiscountScope = 'whole', entryId = WHOLE_DISCOUNT_ENTRY.id) =>
     rules.find((item) => item.discountTypeId === typeId && item.scope === scope && (scope === 'whole' || item.entryId === entryId));
@@ -643,9 +670,11 @@ export function DiscountsStep({ stepId, title, embedded = false }: { stepId: str
     setImportError('');
     try {
       const bootstrap = await fetchContractFlowBootstrapSettings();
+      setBusinessSettingsReference(bootstrap);
       const nextPayload = normalizeDiscountsPayload(buildBootstrapDiscountsPayload(bootstrap.rules.discount ?? null));
       setTypes(nextPayload.types);
       setRules(nextPayload.rules);
+      await saveDraftRuleSettings(draftId, 'discounts', nextPayload);
       setFrontendStepDraft(draftId, 'discounts', nextPayload);
       initialSnapshotRef.current = serializePayload(nextPayload);
       setDirty(false);
@@ -672,7 +701,8 @@ export function DiscountsStep({ stepId, title, embedded = false }: { stepId: str
         const bootstrap = getContractFlowBootstrapSettings();
         const frontendDraft = getFrontendStepDraft<ContractDiscountsData>(nextDraftId, 'discounts');
         if (!mounted) return;
-        const nextPayload = normalizeDiscountsPayload(frontendDraft ?? buildBootstrapDiscountsPayload(bootstrap?.rules.discount ?? null));
+        const serverDraft = await getDraftRuleSettings<ContractDiscountsData>(nextDraftId, 'discounts').catch(() => null);
+        const nextPayload = normalizeDiscountsPayload(serverDraft ?? frontendDraft ?? buildBootstrapDiscountsPayload(bootstrap?.rules.discount ?? null));
         setTypes(nextPayload.types);
         setRules(nextPayload.rules);
         initialSnapshotRef.current = serializePayload(nextPayload);
@@ -704,6 +734,15 @@ export function DiscountsStep({ stepId, title, embedded = false }: { stepId: str
     }
   }, [dirty, draftId, loading, payload, stepId]);
 
+  useContractDraftAutosave({
+    draftId,
+    step: 'discounts',
+    payload,
+    enabled: !loading && Boolean(draftId),
+    save: (next) => saveDraftRuleSettings(draftId as string, 'discounts', next),
+    onError: (error) => setFormError(error instanceof Error ? `ذخیره خودکار تخفیف‌ها انجام نشد: ${error.message}` : 'ذخیره خودکار تخفیف‌ها انجام نشد.'),
+  });
+
   const handleSubmit = async () => {
     if (!draftId) return;
 
@@ -718,6 +757,7 @@ export function DiscountsStep({ stepId, title, embedded = false }: { stepId: str
 
     try {
       setFrontendStepDraft(draftId, 'discounts', payload);
+      await saveDraftRuleSettings(draftId, 'discounts', payload);
       initialSnapshotRef.current = serializePayload(payload);
       setDirty(false);
       dispatchContractFlowDirty(stepId as ContractFlowSectionId, false);
@@ -808,6 +848,10 @@ export function DiscountsStep({ stepId, title, embedded = false }: { stepId: str
           </button>
         </div>
       ) : null}
+
+      <BusinessSettingsHint
+        comparison={buildRuleStateComparison(RULE_CONFIGS.discount, snapshot?.rules?.discount, discountHintState)}
+      />
 
       <div className="space-y-4">
         <SectionShell

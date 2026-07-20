@@ -12,6 +12,7 @@ import { TagPills } from './ContractFormPrimitives';
 import {
   clearFrontendStepDraft,
   ensureActiveDraftId,
+  getContractFlowBootstrapSettings,
   getFrontendStepDraft,
   getStepData,
   saveStepData,
@@ -40,6 +41,11 @@ import type {
 import { dispatchContractFlowDirty, dispatchContractFlowSavedForDraft } from './contractFlowSignals';
 import type { ContractFlowSectionId } from './contractFlowSignals';
 import { BuilderPenaltyInFlow, type BuilderPenaltyInFlowHandle } from './penalties/BuilderPenaltyInFlow';
+import { BusinessSettingsHint } from './BusinessSettingsHint';
+import { useContractDraftAutosave } from './useContractDraftAutosave';
+import { useBusinessSettingsReference } from './useBusinessSettingsReference';
+import { RULE_CONFIGS, type ContractRuleState } from '../../../../lib/businessContractRules';
+import { buildRuleStateComparison } from '../../../../lib/contractSettingsReference';
 
 type PenaltyPartyTab = 'buyer' | 'seller';
 
@@ -161,6 +167,42 @@ function normalizePenaltiesPayload(data: ContractPenaltiesData | null): Contract
   const activeTab = types.find((item) => item.active)?.id ?? types[0]?.id ?? '';
 
   return { activeTab, types, rules };
+}
+
+function buildBootstrapPenaltiesPayload(ruleState: { active: boolean; activeTab: string; values: Record<string, string | boolean> } | null) {
+  if (!ruleState) return null;
+  const typeId = 'installment-delay';
+  const active = Boolean(ruleState.active);
+  const mode = ['fixed', 'overdue', 'contract', 'progressive'].includes(ruleState.activeTab) ? ruleState.activeTab : 'fixed';
+  const prefix = mode === 'overdue' ? 'penaltyDebt' : `penalty${mode[0].toUpperCase()}${mode.slice(1)}`;
+  const get = (key: string) => String(ruleState.values[`${prefix}${key}`] ?? '');
+  const percent = mode === 'overdue' ? get('Percent') : mode === 'contract' ? get('Percent') : '';
+  const rule = normalizeRule({
+    ...makeEmptyRule(typeId),
+    id: 'penalty-bootstrap-installment-delay',
+    mode: mode as PenaltyMode,
+    period: (get('Period') || 'monthly') as PenaltyPeriod,
+    fixedAmount: get('Amount'),
+    penaltyPercent: percent,
+    bankInterestPercent: get('BankPercent'),
+    graceDays: get('GraceDays') || '2',
+    roundRule: (get('Round') || '100') as PenaltyRoundRule,
+    extraFeeEnabled: ruleState.values[`${prefix}ExtraFeeEnabled`] === true,
+    extraFeeType: (get('ExtraFeeType') || 'percent') as PenaltyExtraFeeType,
+    extraFeeAmount: get('ExtraFeeAmount'),
+    extraFeeRoundRule: (get('ExtraFeeRound') || '100') as PenaltyRoundRule,
+    progressiveRows: [1, 2, 3, 4].map((index) => ({
+      id: `row-${index}`,
+      fromDay: String(ruleState.values[`penaltyProgressiveRow${index}From`] ?? ''),
+      toDay: String(ruleState.values[`penaltyProgressiveRow${index}To`] ?? ''),
+      rate: String(ruleState.values[`penaltyProgressiveRow${index}Rate`] ?? ''),
+    })),
+  });
+  return normalizePenaltiesPayload({
+    activeTab: typeId,
+    types: PENALTY_ITEMS.map((item) => ({ ...item, active: active && item.id === typeId })),
+    rules: active ? [rule] : [],
+  });
 }
 
 function formatInput(value: string) {
@@ -353,6 +395,7 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
   const router = useRouter();
   const basePath = useContractFlowBasePath();
   const initialSnapshotRef = useRef('');
+  const { snapshot } = useBusinessSettingsReference();
 
   const [draftId, setDraftId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -393,6 +436,31 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
     () => activeTypes.filter((t) => rules.some((r) => r.penaltyTypeId === t.id)).length,
     [activeTypes, rules],
   );
+  const penaltyHintState = useMemo<ContractRuleState>(() => {
+    const firstRule = rules[0];
+    const activeTab = firstRule?.mode === 'overdue'
+      ? 'debt-percent'
+      : firstRule?.mode === 'contract'
+        ? 'contract-percent'
+        : firstRule?.mode ?? payload.activeTab;
+    return {
+      active: activeTypes.length > 0,
+      activeTab,
+      values: {
+        penaltyFixedPeriod: firstRule?.period ?? '',
+        penaltyFixedAmount: firstRule?.fixedAmount ?? '',
+        penaltyFixedGraceDays: firstRule?.graceDays ?? '',
+        penaltyDebtPeriod: firstRule?.period ?? '',
+        penaltyDebtPercent: firstRule?.penaltyPercent ?? '',
+        penaltyDebtGraceDays: firstRule?.graceDays ?? '',
+        penaltyContractPeriod: firstRule?.period ?? '',
+        penaltyContractPercent: firstRule?.penaltyPercent ?? '',
+        penaltyContractGraceDays: firstRule?.graceDays ?? '',
+        penaltyProgressivePeriod: firstRule?.period ?? '',
+        penaltyProgressiveGraceDays: firstRule?.graceDays ?? '',
+      },
+    };
+  }, [activeTypes.length, payload.activeTab, rules]);
 
   useEffect(() => {
     if (!expandedPenaltyTypeId) {
@@ -417,15 +485,19 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
       setDraftId(nextDraftId);
 
       try {
+        const bootstrap = getContractFlowBootstrapSettings();
         const [serverData, frontendDraft] = await Promise.all([
           getStepData<ContractPenaltiesData>(nextDraftId, 'penalties'),
           Promise.resolve(getFrontendStepDraft<ContractPenaltiesData>(nextDraftId, 'penalties')),
         ]);
 
         if (!mounted) return;
-        const nextPayload = normalizePenaltiesPayload(frontendDraft ?? serverData);
+        const nextPayload = normalizePenaltiesPayload(serverData ?? frontendDraft ?? buildBootstrapPenaltiesPayload(bootstrap?.rules.penalty ?? null));
         setTypes(nextPayload.types);
         setRules(nextPayload.rules);
+        if (!serverData && !frontendDraft && bootstrap?.rules.penalty) {
+          void saveStepData(nextDraftId, 'penalties', nextPayload).catch(() => undefined);
+        }
         initialSnapshotRef.current = serializePayload(nextPayload);
         setDirty(false);
         dispatchContractFlowDirty(stepId as ContractFlowSectionId, false);
@@ -454,6 +526,14 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
       dispatchContractFlowDirty(stepId as ContractFlowSectionId, nextDirty);
     }
   }, [dirty, draftId, loading, payload, stepId]);
+
+  useContractDraftAutosave({
+    draftId,
+    step: 'penalties',
+    payload,
+    enabled: !loading && Boolean(draftId),
+    onError: (error) => setFormError(error instanceof Error ? `ذخیره خودکار جرایم انجام نشد: ${error.message}` : 'ذخیره خودکار جرایم انجام نشد.'),
+  });
 
   const loadRuleFormForType = (penaltyTypeId: string) => {
     const existingRule = rules.find((item) => item.penaltyTypeId === penaltyTypeId);
@@ -584,6 +664,12 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
           sellerProgressLabel="تنظیمات"
           onSelect={setPartyTab}
         />
+
+        <div className="px-6 pt-5 sm:px-8">
+          <BusinessSettingsHint
+            comparison={buildRuleStateComparison(RULE_CONFIGS.penalty, snapshot?.rules?.penalty, penaltyHintState)}
+          />
+        </div>
 
         {/* Keep both tabs mounted to prevent layout "jump" on switch */}
         <div className={partyTab === 'seller' ? 'block' : 'hidden'} aria-hidden={partyTab !== 'seller'}>

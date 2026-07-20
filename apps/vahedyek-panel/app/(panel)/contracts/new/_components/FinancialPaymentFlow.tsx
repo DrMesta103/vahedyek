@@ -108,6 +108,8 @@ function PaymentSection({
   formatInput,
   formatMoney,
   invalid = false,
+  categoryHint,
+  categoryDueHint,
 }: {
   category: FinancialCategoryData;
   locked: boolean;
@@ -123,6 +125,8 @@ function PaymentSection({
   formatInput: (value: string) => string;
   formatMoney: (value: number) => string;
   invalid?: boolean;
+  categoryHint?: ReactNode;
+  categoryDueHint?: ReactNode;
 }) {
   const requiresDue = category.requiresDue;
   const dueTotal = dueItems.reduce((sum, item) => sum + item.amount, 0);
@@ -230,6 +234,7 @@ function PaymentSection({
             <div>
               <div className="flex flex-wrap items-center gap-2">
                 <MoneyInput value={category.capAmount} onChange={(value) => onAmountChange(category.id, formatInput(value))} />
+                {categoryHint ? <div className="w-full max-w-sm">{categoryHint}</div> : null}
               </div>
             </div>
           </div>
@@ -294,6 +299,7 @@ function PaymentSection({
                   </div>
                 </div>
               </div>
+              {categoryDueHint ? <div className="mt-3 max-w-xl">{categoryDueHint}</div> : null}
             </>
           ) : null}
         </div>
@@ -328,6 +334,8 @@ export function FinancialPaymentFlow({
   additionalCostsFooter,
   showRootCategoryActions = true,
   showAddCategoryButton = true,
+  categoryHints = {},
+  categoryDueHints = {},
   additionalSectionTitle = 'سایر هزینه‌ها',
   additionalSectionDescription = 'تمام ردیف‌های مالی اضافه‌شده و سررسیدهای مرتبط را در این بخش مدیریت کنید.',
 }: {
@@ -356,6 +364,8 @@ export function FinancialPaymentFlow({
   additionalCostsFooter?: ReactNode;
   showRootCategoryActions?: boolean;
   showAddCategoryButton?: boolean;
+  categoryHints?: Record<string, ReactNode>;
+  categoryDueHints?: Record<string, ReactNode>;
   additionalSectionTitle?: string;
   additionalSectionDescription?: string;
 }) {
@@ -443,6 +453,8 @@ export function FinancialPaymentFlow({
                     formatInput={formatInput}
                     formatMoney={formatMoney}
                     invalid={invalidCategoryIds.includes(category.id)}
+                    categoryHint={categoryHints[category.id]}
+                    categoryDueHint={categoryDueHints[category.id]}
                   />
                 </div>
               ))}
@@ -572,6 +584,8 @@ export function FinancialPaymentFlow({
                               formatInput={formatInput}
                               formatMoney={formatMoney}
                               invalid={invalidCategoryIds.includes(category.id)}
+                              categoryHint={categoryHints[category.id]}
+                              categoryDueHint={categoryDueHints[category.id]}
                             />
                           </div>
                         ))}
@@ -604,6 +618,8 @@ export function FinancialPaymentFlow({
                     formatInput={formatInput}
                     formatMoney={formatMoney}
                     invalid={invalidCategoryIds.includes(category.id)}
+                    categoryHint={categoryHints[category.id]}
+                    categoryDueHint={categoryDueHints[category.id]}
                   />
                 </div>
               </div>

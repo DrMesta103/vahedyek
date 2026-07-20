@@ -31,6 +31,7 @@ import {
   setFrontendStepDraft,
 } from '../../../../lib/contractDraftClient';
 import { validateTerminationStep, validateTerminationSubsection, validateBuyerTerminationSubsection } from '../../../../lib/contractValidation';
+import { useContractDraftAutosave } from './useContractDraftAutosave';
 import { buildValidationSummary } from './validationPresentation';
 import { normalizePersistedBuyerRules } from '../../../../lib/terminationBuyerRules';
 import type {
@@ -64,6 +65,9 @@ import { normalizeTerminationPayload } from './termination/terminationDefaults';
 import { firstErrorMessage } from './termination/TerminationPrimitives';
 import { useContractFlowBasePath } from './useContractFlowBasePath';
 import { ContractSettingsImportDialog } from './ContractSettingsImportDialog';
+import { BusinessSettingsHint } from './BusinessSettingsHint';
+import { useBusinessSettingsReference } from './useBusinessSettingsReference';
+import { buildBusinessSettingsComparison } from '../../../../lib/contractSettingsReference';
 
 function serializePayload(payload: ContractTerminationData) {
   return JSON.stringify(payload);
@@ -335,6 +339,7 @@ function TerminationPartyTabBar({
 }
 
 export function TerminationStep({ stepId, title, embedded = false }: { stepId: string; title: string; embedded?: boolean }) {
+  const { snapshot } = useBusinessSettingsReference();
   const router = useRouter();
   const basePath = useContractFlowBasePath();
   const initialSnapshotRef = useRef('');
@@ -381,9 +386,10 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
         const localRecord =
           frontendDraft && typeof frontendDraft === 'object' ? (frontendDraft as Record<string, unknown>) : {};
 
+        const hasServerPayload = Boolean(remoteTermination?.payload || remoteTermination?.buyerRules);
         const nextPayload = syncTerminationActivation(normalizeTerminationPayload({
-          ...(bootstrap?.termination ?? {}),
-          ...serverRecord,
+          ...(!hasServerPayload ? (bootstrap?.termination ?? {}) : {}),
+          ...(hasServerPayload ? serverRecord : localRecord),
           ...(fromServer
             ? {
                 buyerTerms: fromServer.buyerTerms,
@@ -391,7 +397,6 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
                 ...(fromServer.terminationBuyerPanel !== undefined ? { terminationBuyerPanel: fromServer.terminationBuyerPanel } : {}),
               }
             : {}),
-          ...localRecord,
         }));
         setPayload(nextPayload);
         setSubjectData(subject);
@@ -413,6 +418,15 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
     if (loading) return;
     dispatchContractFlowDirty(stepId as ContractFlowSectionId, serializePayload(payload) !== initialSnapshotRef.current);
   }, [loading, payload, stepId]);
+
+  useContractDraftAutosave({
+    draftId,
+    step: 'termination',
+    payload,
+    enabled: !loading && Boolean(draftId),
+    save: (next) => saveTerminationStepData(draftId as string, syncTerminationActivation(next)),
+    onError: (error) => setFormError(error instanceof Error ? `ذخیره خودکار فسخ انجام نشد: ${error.message}` : 'ذخیره خودکار فسخ انجام نشد.'),
+  });
 
 
   const partyLabels = useMemo(() => {
@@ -446,6 +460,7 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
       const bootstrap = await fetchContractFlowBootstrapSettings();
       const nextPayload = syncTerminationActivation(normalizeTerminationPayload(bootstrap.termination ?? null));
       setPayload(nextPayload);
+      await saveTerminationStepData(draftId, nextPayload);
       setFrontendStepDraft(draftId, 'termination', nextPayload);
       initialSnapshotRef.current = serializePayload(nextPayload);
       dispatchContractFlowDirty(stepId as ContractFlowSectionId, false);
@@ -815,6 +830,26 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
 
       <div className="overflow-hidden rounded-[8px] border border-gray-200 bg-white text-right shadow-sm">
         <div className="space-y-0">
+            <div className="px-5 pt-5 sm:px-8">
+              <BusinessSettingsHint
+                comparison={buildBusinessSettingsComparison({
+                  reference: snapshot?.termination?.terminationEnabled,
+                  current: payload.terminationEnabled,
+                  referenceLines: [
+                    { label: 'وضعیت فسخ در تنظیمات', value: snapshot?.termination?.terminationEnabled ? 'فعال' : 'غیرفعال' },
+                    { label: 'فسخ سازنده در تنظیمات', value: snapshot?.termination?.sellerTerminationEngaged ? 'فعال' : 'غیرفعال' },
+                    { label: 'فسخ خریدار در تنظیمات', value: snapshot?.termination?.buyerTerminationEngaged ? 'فعال' : 'غیرفعال' },
+                  ],
+                  currentLines: [
+                    { label: 'وضعیت فعلی فسخ', value: payload.terminationEnabled ? 'فعال' : 'غیرفعال' },
+                    { label: 'فسخ سازنده در پیش‌نویس', value: payload.sellerTerminationEngaged ? 'فعال' : 'غیرفعال' },
+                    { label: 'فسخ خریدار در پیش‌نویس', value: payload.buyerTerminationEngaged ? 'فعال' : 'غیرفعال' },
+                  ],
+                  breakdownLines: [{ label: 'تب فعلی پیش‌نویس', value: payload.terminationPartyTab === 'seller' ? 'سازنده' : 'خریدار' }],
+                  helperText: 'این مرجع از تنظیمات فسخ کسب‌وکار خوانده شده و تغییر دستی پیش‌نویس را بازنویسی نمی‌کند.',
+                })}
+              />
+            </div>
             <TerminationPartyTabBar
               activeTab={payload.terminationPartyTab}
               sellerLabel={partyLabels.sellerLabel}

@@ -13,6 +13,7 @@ import type { ContractRuleId, ContractRuleState, LoanSettingsState } from './bus
 const ACTIVE_DRAFT_KEY = 'active-contract-draft-id';
 const FRONTEND_STEP_DRAFT_PREFIX = 'contract-flow:frontend-step-draft';
 const BOOTSTRAP_SETTINGS_KEY = 'contract-flow:bootstrap-settings';
+const BUSINESS_SETTINGS_REFERENCE_KEY = 'contract-flow:business-settings-reference';
 
 export type ContractFlowBootstrapSettings = {
   rules: Partial<Record<ContractRuleId, ContractRuleState>>;
@@ -166,6 +167,27 @@ export function clearContractFlowBootstrapSettings() {
   localStorage.removeItem(BOOTSTRAP_SETTINGS_KEY);
 }
 
+export function getBusinessSettingsReference() {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(BUSINESS_SETTINGS_REFERENCE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as ContractFlowBootstrapSettings;
+  } catch {
+    return null;
+  }
+}
+
+export function setBusinessSettingsReference(payload: ContractFlowBootstrapSettings) {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(BUSINESS_SETTINGS_REFERENCE_KEY, JSON.stringify(payload));
+}
+
+export function clearBusinessSettingsReference() {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem(BUSINESS_SETTINGS_REFERENCE_KEY);
+}
+
 export async function fetchContractFlowBootstrapSettings() {
   const [rulesResponse, loanResponse, terminationResponse] = await Promise.all([
     readJson<{ rules?: Partial<Record<ContractRuleId, ContractRuleState>> }>('/api/business-settings/contract-rules', {
@@ -221,12 +243,50 @@ export async function saveStepData<T>(draftId: string, step: 'subject' | 'partie
   });
 }
 
+const draftAutosaveTimers = new Map<string, number>();
+const draftAutosaveSequences = new Map<string, number>();
+
+export function scheduleDraftStepAutosave<T>(
+  draftId: string,
+  step: 'subject' | 'parties' | 'financial' | 'penalties',
+  payload: T,
+  onError?: (error: unknown) => void,
+  delayMs = 650,
+) {
+  if (typeof window === 'undefined') return;
+  const key = `${draftId}:${step}`;
+  const previousTimer = draftAutosaveTimers.get(key);
+  if (previousTimer) window.clearTimeout(previousTimer);
+  const sequence = (draftAutosaveSequences.get(key) ?? 0) + 1;
+  draftAutosaveSequences.set(key, sequence);
+  const timer = window.setTimeout(async () => {
+    try {
+      await saveStepData(draftId, step, payload);
+      if (draftAutosaveSequences.get(key) === sequence) draftAutosaveTimers.delete(key);
+    } catch (error) {
+      if (draftAutosaveSequences.get(key) === sequence) onError?.(error);
+    }
+  }, delayMs);
+  draftAutosaveTimers.set(key, timer);
+}
+
 export async function getDraftRuleStepData<T>(draftId: string, step: 'forgiveness') {
   return readJson<T | null>(`/api/contracts/drafts/${draftId}/${step}`);
 }
 
 export async function saveDraftRuleStepData<T>(draftId: string, step: 'forgiveness', payload: T) {
   return readJson<{ success: true }>(`/api/contracts/drafts/${draftId}/${step}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function getDraftRuleSettings<T>(draftId: string, ruleId: string) {
+  return readJson<T | null>(`/api/contracts/drafts/${draftId}/rule-settings/${encodeURIComponent(ruleId)}`);
+}
+
+export async function saveDraftRuleSettings<T>(draftId: string, ruleId: string, payload: T) {
+  return readJson<{ success: true }>(`/api/contracts/drafts/${draftId}/rule-settings/${encodeURIComponent(ruleId)}`, {
     method: 'PUT',
     body: JSON.stringify(payload),
   });
@@ -246,6 +306,32 @@ export async function saveTerminationStepData<T>(draftId: string, payload: T) {
     method: 'PUT',
     body: JSON.stringify(payload),
   });
+}
+
+const customAutosaveTimers = new Map<string, number>();
+const customAutosaveSequences = new Map<string, number>();
+
+export function scheduleDraftAutosave<T>(
+  key: string,
+  payload: T,
+  save: (payload: T) => Promise<unknown>,
+  onError?: (error: unknown) => void,
+  delayMs = 650,
+) {
+  if (typeof window === 'undefined') return;
+  const previousTimer = customAutosaveTimers.get(key);
+  if (previousTimer) window.clearTimeout(previousTimer);
+  const sequence = (customAutosaveSequences.get(key) ?? 0) + 1;
+  customAutosaveSequences.set(key, sequence);
+  const timer = window.setTimeout(async () => {
+    try {
+      await save(payload);
+      if (customAutosaveSequences.get(key) === sequence) customAutosaveTimers.delete(key);
+    } catch (error) {
+      if (customAutosaveSequences.get(key) === sequence) onError?.(error);
+    }
+  }, delayMs);
+  customAutosaveTimers.set(key, timer);
 }
 
 export async function getReferenceData(draftId?: string | null) {

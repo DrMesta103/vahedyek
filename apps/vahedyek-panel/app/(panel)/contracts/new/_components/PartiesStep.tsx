@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Info } from 'lucide-react';
 import { PartySection } from './PartySection';
@@ -40,6 +40,7 @@ import {
   type ReferenceDataResponse,
 } from '../../../../lib/contractDraftClient';
 import type { ContractPartiesData } from '../../../../types/contract';
+import { useContractDraftAutosave } from './useContractDraftAutosave';
 
 type AuthMePayload = {
   user: {
@@ -398,8 +399,15 @@ export function PartiesStep({ stepId, title, embedded = false }: { stepId: strin
     partyTwo: mapRowsToPayload(partyTwoRows, shareMode),
   });
 
-  const payload = buildPayload();
+  const payload = useMemo<ContractPartiesData>(() => buildPayload(), [defaultPartyOneRow, partyOneRows, partyTwoRows, shareMode]);
   const validation = validateStep2(payload);
+  useContractDraftAutosave({
+    draftId,
+    step: 'parties',
+    payload,
+    enabled: !loading && Boolean(draftId),
+    onError: (error) => setFormError(error instanceof Error ? `ذخیره خودکار طرفین انجام نشد: ${error.message}` : 'ذخیره خودکار طرفین انجام نشد.'),
+  });
   const visibleErrors = showValidation ? validation.errors : {};
 
   const handleSubmit = async () => {

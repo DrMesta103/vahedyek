@@ -14,15 +14,22 @@ import {
   fetchContractFlowBootstrapSettings,
   getContractFlowBootstrapSettings,
   getDraftRuleStepData,
+  getDraftRuleSettings,
   getFrontendStepDraft,
   saveDraftRuleStepData,
+  saveDraftRuleSettings,
+  setBusinessSettingsReference,
   setFrontendStepDraft,
 } from '../../../../lib/contractDraftClient';
 import { InterestRuleSection } from '../../../business-settings/_components/InterestRuleSection';
 import { ContractStepLoader } from './ContractStepLoader';
 import { ContractSettingsImportDialog } from './ContractSettingsImportDialog';
+import { BusinessSettingsHint } from './BusinessSettingsHint';
+import { useBusinessSettingsReference } from './useBusinessSettingsReference';
+import { buildRuleStateComparison } from '../../../../lib/contractSettingsReference';
 import { ForgivenessDraftRuleSection } from './ForgivenessDraftRuleSection';
 import { dispatchContractFlowDirty, dispatchContractFlowSavedForDraft, type ContractFlowSectionId } from './contractFlowSignals';
+import { useContractDraftAutosave } from './useContractDraftAutosave';
 
 type SupportedDraftRuleId = Extract<ContractRuleId, 'interest' | 'forgiveness'>;
 type SupportedDraftSectionId = Extract<ContractFlowSectionId, 'interest' | 'forgiveness'>;
@@ -70,14 +77,15 @@ async function fetchBusinessRule(ruleId: SupportedDraftRuleId) {
 }
 
 async function fetchDraftRuleState(draftId: string, stepId: SupportedDraftSectionId, ruleId: SupportedDraftRuleId) {
-  if (stepId !== 'forgiveness') return null;
-  const payload = await getDraftRuleStepData<ContractRuleState>(draftId, stepId);
+  const payload = stepId === 'forgiveness'
+    ? await getDraftRuleStepData<ContractRuleState>(draftId, stepId)
+    : await getDraftRuleSettings<ContractRuleState>(draftId, ruleId);
   return payload ? normalizeRuleState(ruleId, payload) : null;
 }
 
 async function saveDraftRuleState(draftId: string, stepId: SupportedDraftSectionId, payload: ContractRuleState) {
-  if (stepId !== 'forgiveness') return;
-  await saveDraftRuleStepData(draftId, stepId, payload);
+  if (stepId === 'forgiveness') await saveDraftRuleStepData(draftId, stepId, payload);
+  else await saveDraftRuleSettings(draftId, 'interest', payload);
 }
 
 export function ContractRuleDraftStep({
@@ -92,6 +100,7 @@ export function ContractRuleDraftStep({
   embedded?: boolean;
 }) {
   const rule = RULE_CONFIGS[ruleId];
+  const { snapshot } = useBusinessSettingsReference();
   const initialSnapshotRef = useRef('');
   const [draftId, setDraftId] = useState<string | null>(null);
   const [state, setState] = useState<ContractRuleState | null>(null);
@@ -111,12 +120,14 @@ export function ContractRuleDraftStep({
     setImportError('');
     try {
       const bootstrap = await fetchContractFlowBootstrapSettings();
+      setBusinessSettingsReference(bootstrap);
       const bootstrapRule = bootstrap.rules[ruleId] ?? null;
       if (!bootstrapRule) {
         throw new Error('انتخاب وضعیت قرارداد ناموفق بود.');
       }
       const nextState = normalizeRuleState(ruleId, bootstrapRule);
       setState(nextState);
+      await saveDraftRuleState(draftId, stepId, nextState);
       setFrontendStepDraft(draftId, stepId, nextState);
       initialSnapshotRef.current = serializePayload(nextState);
       setDirty(false);
@@ -145,10 +156,13 @@ export function ContractRuleDraftStep({
         const frontendDraft = getFrontendStepDraft<ContractRuleState>(nextDraftId, stepId);
         const persistedDraft = await withTimeout(fetchDraftRuleState(nextDraftId, stepId, ruleId), 1500, null);
         const fallbackState = createInitialRuleState(ruleId);
-        const businessRule = persistedDraft ? null : await withTimeout(fetchBusinessRule(ruleId), 2000, fallbackState);
+        // Business settings are used as an initial value only when the user
+        // explicitly chose the import flow. In the blank flow they remain a
+        // reference for hints and must not populate the draft.
+        const businessRule = persistedDraft || !bootstrap ? null : await withTimeout(fetchBusinessRule(ruleId), 2000, fallbackState);
         const bootstrapRule = bootstrap?.rules?.[ruleId] ?? null;
         const nextState =
-          frontendDraft ? normalizeRuleState(ruleId, frontendDraft) : persistedDraft ?? bootstrapRule ?? businessRule ?? fallbackState;
+          normalizeRuleState(ruleId, persistedDraft ?? frontendDraft ?? bootstrapRule ?? businessRule ?? fallbackState);
         if (!mounted) return;
         setState(nextState);
         initialSnapshotRef.current = serializePayload(nextState);
@@ -178,6 +192,15 @@ export function ContractRuleDraftStep({
       dispatchContractFlowDirty(stepId, nextDirty);
     }
   }, [dirty, draftId, loading, state, stepId]);
+
+  useContractDraftAutosave({
+    draftId,
+    step: stepId,
+    payload: state,
+    enabled: !loading && Boolean(draftId) && Boolean(state),
+    save: (next) => saveDraftRuleState(draftId as string, stepId as SupportedDraftSectionId, next),
+    onError: (error) => setFormError(error instanceof Error ? `ذخیره خودکار ${sectionTitle} انجام نشد: ${error.message}` : `ذخیره خودکار ${sectionTitle} انجام نشد.`),
+  });
 
   const handleSubmit = async () => {
     if (!draftId || !state) return;
@@ -271,6 +294,7 @@ export function ContractRuleDraftStep({
           <div className="flex min-w-0 flex-1 flex-col justify-center space-y-3 text-right [direction:rtl] lg:items-start">
             <h2 className="text-xl font-black text-[color:var(--text-strong)]">{rule.activationTitle}</h2>
             <p className="w-full text-sm leading-7 text-[color:var(--text-muted)]">{rule.activationDescription}</p>
+            <BusinessSettingsHint comparison={buildRuleStateComparison(rule, snapshot?.rules?.[ruleId], state)} />
             {!state.active ? (
               <p className="w-full text-sm text-[color:var(--text-muted)]">
                 برای ادامه، وضعیت‌های مالی و حقوقی را از همین بخش تنظیم کنید.

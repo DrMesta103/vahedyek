@@ -7,10 +7,12 @@ import {
   clearContractFlowBootstrapSettings,
   createDraftId,
   fetchContractFlowBootstrapSettings,
+  getBusinessSettingsReference,
   getActiveDraftId,
   getFrontendStepDraft,
   getStepData,
   setContractFlowBootstrapSettings,
+  setBusinessSettingsReference,
 } from '../../../../lib/contractDraftClient';
 import { computeContractTotalRialFromFinancial } from '../../../../lib/contractFinancialPricing';
 import { isFinancialLineHeaderCategoryId, isFinancialLineSubtreeCategoryId, isLegacyCustomRootCategoryId } from '../../../../lib/financialUtils';
@@ -312,6 +314,11 @@ export function ContractFlowHub() {
       const draftId = getActiveDraftId();
       if (!draftId) {
         if (mounted) {
+          if (!getBusinessSettingsReference()) {
+            void fetchContractFlowBootstrapSettings()
+              .then(setBusinessSettingsReference)
+              .catch(() => undefined);
+          }
           setLoading(false);
           setBootstrapDialogOpen(true);
         }
@@ -338,8 +345,8 @@ export function ContractFlowHub() {
         setSubjectData(subject);
         setPartiesData(parties);
         setFinancialData(financial);
-        setFinancialLiveData(financialFrontendDraft ?? financial);
-        setPenaltiesData(penaltiesFrontendDraft ?? penalties);
+        setFinancialLiveData(financial ?? financialFrontendDraft);
+        setPenaltiesData(penalties ?? penaltiesFrontendDraft);
         setDiscountsData(discountsFrontendDraft);
         setTerminationData(terminationFrontendDraft);
         setExtraCostsExists(Boolean(extraCosts.ok && extraCosts.exists));
@@ -375,6 +382,14 @@ export function ContractFlowHub() {
       setBootstrapBusy(true);
       setBootstrapError('');
       clearContractFlowBootstrapSettings();
+      if (!getBusinessSettingsReference()) {
+        try {
+          const settings = await fetchContractFlowBootstrapSettings();
+          setBusinessSettingsReference(settings);
+        } catch {
+          // A blank draft must remain usable even when the reference settings are unavailable.
+        }
+      }
       await createDraftId();
       setBootstrapDialogOpen(false);
       setBootstrapRunId((current) => current + 1);
@@ -391,6 +406,7 @@ export function ContractFlowHub() {
       setBootstrapBusy(true);
       setBootstrapError('');
       const settings = await fetchContractFlowBootstrapSettings();
+      setBusinessSettingsReference(settings);
       setContractFlowBootstrapSettings(settings);
       await createDraftId();
       setBootstrapDialogOpen(false);

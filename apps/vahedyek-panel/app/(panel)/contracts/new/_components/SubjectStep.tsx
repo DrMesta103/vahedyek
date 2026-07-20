@@ -13,6 +13,7 @@ import { createDraftId, getActiveDraftId, getReferenceData, getStepData, saveSte
 import { validateStep1 } from '../../../../lib/contractValidation';
 import type { ContractSubjectData } from '../../../../types/contract';
 import { buildValidationSummary } from './validationPresentation';
+import { useContractDraftAutosave } from './useContractDraftAutosave';
 
 type EmployeeOption = { id: string; firstName: string; lastName: string };
 type BlockOption = {
@@ -81,6 +82,13 @@ export function SubjectStep({ stepId, title, embedded = false }: { stepId: strin
     selectedUnit,
   ]);
   const validation = useMemo(() => validateStep1(payload), [payload]);
+  useContractDraftAutosave({
+    draftId,
+    step: 'subject',
+    payload,
+    enabled: !loading && Boolean(draftId),
+    onError: (error) => setFormError(error instanceof Error ? `ذخیره خودکار اطلاعات پایه انجام نشد: ${error.message}` : 'ذخیره خودکار اطلاعات پایه انجام نشد.'),
+  });
   const visibleErrors = showValidation ? validation.errors : {};
   const shortcutBlockId = searchParams.get('selectedBlock') ?? '';
   const shortcutUnitId = searchParams.get('selectedUnit') ?? '';
