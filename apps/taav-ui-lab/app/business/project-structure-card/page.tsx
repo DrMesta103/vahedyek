@@ -1,15 +1,12 @@
 'use client';
 
-import { TaavProjectStructureCard } from '@repo/ui/taav/business';
 import { DocPageHeader, DocPropsTable, DocSection } from '@/components/lab/DocBlocks';
 import { DocPageShell } from '@/components/lab/DocPageShell';
 import { ProjectStructureCardShowcase } from '@/components/lab/ProjectStructureCardShowcase';
 
 const PROPS = [
-  { name: 'variant', type: '"full" | "compact" | "usageOnly" | "report" | "minimal"', description: 'بخش‌های قابل نمایش کارت' },
-  { name: 'tone', type: '"teal" | "gold" | "gray" | "custom"', description: 'توکن‌های رنگی کارت' },
-  { name: 'entityType', type: '"block" | "floor" | "unit" | "plate" | "area" | "custom"', description: 'نوع موجودیت ساختار پروژه' },
-  { name: 'usageTypes', type: 'Array<{ key; label; tone? }>', description: 'چیپ‌های نوع کاربری به‌صورت data-driven' },
+  { name: 'token', type: '"floor" | "unit"', description: 'توکن تصویری طبقه یا واحد، ساخته‌شده بر پایه‌ی کارت بلوک' },
+  { name: 'usageTypes', type: 'Array<{ key; label }>', description: 'چیپ‌های نوع کاربری به‌صورت data-driven' },
   { name: 'activeUsageType', type: 'string', description: 'کلید چیپ فعال' },
   { name: 'progressReport', type: '{ title; description?; statusLabel?; status?; onClick? }', description: 'گزارش پیشرفت اختیاری' },
   { name: 'showMenu / onMenuClick', type: 'boolean / function', description: 'نمایش و کنترل منوی کارت' },
@@ -18,13 +15,10 @@ const PROPS = [
 ];
 
 export default function ProjectStructureCardPage() {
-  return <DocPageShell breadcrumbs={[{ label: 'خانه', href: '/' }, { label: 'Business', href: '/business' }, { label: 'کارت ساختار پروژه' }]}>
-    <DocPageHeader eyebrow="Business Components" title="کارت ساختار پروژه" description="نمایش کارت‌های بلوک، طبقه، پلاک، واحد و نوع کاربری با حالت‌های کامل، خلاصه، کاربری‌محور، گزارشی و مینیمال" importCode={'import { TaavProjectStructureCard } from "@repo/ui/taav/business";'} />
-    <DocSection title="نمونه‌های کامپوننت">
+  return <DocPageShell breadcrumbs={[{ label: 'خانه', href: '/' }, { label: 'Business', href: '/business' }, { label: 'کارت بلوک، واحد' }]}>
+    <DocPageHeader eyebrow="Business Components" title="کارت بلوک، واحد" description="کارت پایه‌ی بلوک به‌همراه توکن طبقه، با ساختار قابل توسعه و داده‌محور" importCode={'import { TaavProjectStructureCard } from "@repo/ui/taav/business";'} />
+    <DocSection title="کارت بلوک">
       <ProjectStructureCardShowcase />
-    </DocSection>
-    <DocSection title="استفاده">
-      <TaavProjectStructureCard variant="minimal" tone="gray" title="نمونه قابل توسعه" usageTypes={[{ key: 'one', label: 'نوع اول' }, { key: 'two', label: 'نوع دوم' }]} />
     </DocSection>
     <DocSection title="Props"><DocPropsTable rows={PROPS} /></DocSection>
   </DocPageShell>;

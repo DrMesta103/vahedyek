@@ -4144,62 +4144,47 @@ function TaavBankAccountInfoInputCard({
     ] })
   ] });
 }
-var TONE_TOKENS = {
-  teal: {
-    headerBackground: "#6d9eae",
-    headerOverlay: "#477f91",
-    borderColor: "#b7cbd5",
-    titleColor: "#3f4d55",
-    chipBorderColor: "#a4b7c4",
-    chipTextColor: "#718290",
-    activeChipBorderColor: "#3b82f6",
-    activeChipTextColor: "#2563eb",
-    statusColor: "#ef4444",
-    dividerColor: "#83a7b6"
-  },
-  gold: {
-    headerBackground: "#b4a675",
-    headerOverlay: "#918352",
-    borderColor: "#d5cda9",
-    titleColor: "#514a38",
-    chipBorderColor: "#b5ae9a",
-    chipTextColor: "#827b68",
-    activeChipBorderColor: "#f59e0b",
-    activeChipTextColor: "#f59e0b",
-    statusColor: "#ef4444",
-    dividerColor: "#b9aa76"
-  },
-  gray: {
-    headerBackground: "#7c8992",
-    headerOverlay: "#5c6870",
-    borderColor: "#c4cbd0",
-    titleColor: "#4b5560",
-    chipBorderColor: "#aeb8bf",
-    chipTextColor: "#71808b",
-    activeChipBorderColor: "#64748b",
-    activeChipTextColor: "#475569",
-    statusColor: "#ef4444",
-    dividerColor: "#aab5bc"
-  },
-  custom: {
-    headerBackground: "var(--taav-structure-header, #6d9eae)",
-    headerOverlay: "var(--taav-structure-overlay, #477f91)",
-    borderColor: "var(--taav-structure-border, #b7cbd5)",
-    titleColor: "var(--taav-structure-title, #3f4d55)",
-    chipBorderColor: "var(--taav-structure-chip-border, #a4b7c4)",
-    chipTextColor: "var(--taav-structure-chip-text, #718290)",
-    activeChipBorderColor: "var(--taav-structure-active-border, #3b82f6)",
-    activeChipTextColor: "var(--taav-structure-active-text, #2563eb)",
-    statusColor: "var(--taav-structure-status, #ef4444)",
-    dividerColor: "var(--taav-structure-divider, #83a7b6)"
-  }
+var BASE_TOKENS = {
+  headerBackground: "#6d9eae",
+  headerOverlay: "#477f91",
+  borderColor: "#b7cbd5",
+  titleColor: "#3f4d55",
+  chipBorderColor: "#a4b7c4",
+  chipTextColor: "#718290",
+  activeChipBorderColor: "#f59e0b",
+  activeChipTextColor: "#f59e0b",
+  statusColor: "#ef4444",
+  dividerColor: "#83a7b6"
 };
-var ACTIVE_CHIP_COLORS = {
+var FLOOR_TOKENS = {
+  headerBackground: "#b4a675",
+  headerOverlay: "#918352",
+  borderColor: "#c8c5a8",
+  titleColor: "#514a38",
+  chipBorderColor: "#aeb8bf",
+  chipTextColor: "#71808a",
+  activeChipBorderColor: "#f59e0b",
+  activeChipTextColor: "#f59e0b",
+  statusColor: "#ef4444",
+  dividerColor: "#b9aa76"
+};
+var UNIT_TOKENS = {
+  headerBackground: "#3d5fa7",
+  headerOverlay: "#294c91",
+  borderColor: "rgba(145, 170, 190, 0.72)",
+  titleColor: "#35486e",
+  chipBorderColor: "#278cc1",
+  chipTextColor: "#197ea9",
+  activeChipBorderColor: "#f59e0b",
+  activeChipTextColor: "#f59e0b",
+  statusColor: "#ef4444",
+  dividerColor: "#7c98c8"
+};
+var UNIT_CHIP_COLORS = {
+  orange: { border: "#f59e0b", text: "#ed8d00" },
   blue: { border: "#3b82f6", text: "#2563eb" },
-  orange: { border: "#f59e0b", text: "#f59e0b" },
-  teal: { border: "#0f9aa8", text: "#087f8d" },
-  gray: { border: "#64748b", text: "#475569" },
-  default: { border: "#64748b", text: "#475569" }
+  teal: { border: "#1599b5", text: "#087f98" },
+  purple: { border: "#7c4dff", text: "#6d3df0" }
 };
 function Header({ title, headerLabel, headerImage, tokens }) {
   const style = { "--structure-header": tokens.headerBackground, "--structure-overlay": tokens.headerOverlay, ...headerImage ? { backgroundImage: `url(${headerImage})` } : {} };
@@ -4209,30 +4194,31 @@ function Header({ title, headerLabel, headerImage, tokens }) {
   ] });
 }
 function ActionIcon({ icon }) {
-  if (icon === "edit") return /* @__PURE__ */ jsx(PenLine, { className: "h-5 w-5", strokeWidth: 1.7 });
-  if (icon === "copy") return /* @__PURE__ */ jsx(Copy, { className: "h-5 w-5", strokeWidth: 1.7 });
-  if (icon === "delete") return /* @__PURE__ */ jsx(Trash2, { className: "h-5 w-5", strokeWidth: 1.7 });
-  return /* @__PURE__ */ jsx(WandSparkles, { className: "h-5 w-5", strokeWidth: 1.7 });
+  if (icon === "edit") return /* @__PURE__ */ jsx(PenLine, { className: "h-4 w-4", strokeWidth: 1.7 });
+  if (icon === "copy") return /* @__PURE__ */ jsx(Copy, { className: "h-4 w-4", strokeWidth: 1.7 });
+  if (icon === "delete") return /* @__PURE__ */ jsx(Trash2, { className: "h-4 w-4", strokeWidth: 1.7 });
+  return /* @__PURE__ */ jsx(WandSparkles, { className: "h-4 w-4", strokeWidth: 1.7 });
 }
 function MenuButton({ onClick, open }) {
   return /* @__PURE__ */ jsx("button", { type: "button", "aria-label": "\u0645\u0646\u0648\u06CC \u06A9\u0627\u0631\u062A", "aria-expanded": open, onClick: (event) => {
     event.stopPropagation();
     onClick?.();
-  }, className: cn("absolute left-4 top-[104px] z-20 inline-flex h-7 w-7 items-center justify-center rounded-md text-[#555b60] transition hover:bg-black/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#5b92a3]", open && "text-[#2f6979]"), children: /* @__PURE__ */ jsx(EllipsisVertical, { className: "h-5 w-5" }) });
+  }, className: cn("absolute left-4 top-[104px] z-20 inline-flex h-7 w-7 items-center justify-center rounded-md text-[#555b60] transition hover:bg-black/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#5b92a3]", open && "text-[#2f6979]"), children: /* @__PURE__ */ jsx(EllipsisVertical, { className: "h-5 w-5", strokeWidth: 3 }) });
 }
-function ActionMenu({ actions, tokens }) {
-  return /* @__PURE__ */ jsx("div", { dir: "rtl", className: "absolute left-4 top-[95px] z-30 w-[126px] overflow-hidden rounded-[16px] border-0 bg-[#f1f2f3] p-[7px] text-right shadow-[0_7px_18px_rgba(30,44,52,.2)]", style: { borderColor: tokens.borderColor }, role: "menu", children: actions.map((action) => /* @__PURE__ */ jsxs("button", { type: "button", role: "menuitem", disabled: action.disabled || !action.onClick, onClick: action.onClick, className: "flex h-[52px] w-full items-center justify-between gap-4 rounded-[9px] px-3 text-[14px] font-normal leading-6 text-[#4c5155] transition hover:bg-[#e1e4e6] focus-visible:bg-[#e1e4e6] focus-visible:outline-none disabled:cursor-default disabled:opacity-45", children: [
+function ActionMenu({ actions, tokens, isUnitToken }) {
+  return /* @__PURE__ */ jsx("div", { dir: "rtl", className: cn("absolute left-[-20px] top-[95px] z-30 overflow-hidden rounded-[14px] border-0 bg-[#f1f2f3] p-1.5 text-right shadow-[0_7px_18px_rgba(30,44,52,.2)]", isUnitToken ? "w-[135px]" : "w-[101px]"), style: { borderColor: tokens.borderColor }, role: "menu", children: actions.map((action) => /* @__PURE__ */ jsxs("button", { type: "button", role: "menuitem", disabled: action.disabled || !action.onClick, onClick: action.onClick, className: cn("flex w-full items-center justify-start rounded-[8px] text-right text-[12px] font-normal leading-5 text-[#4c5155] transition hover:bg-[#e1e4e6] focus-visible:bg-[#e1e4e6] focus-visible:outline-none disabled:cursor-default disabled:opacity-45", isUnitToken ? "h-[52px] gap-2 px-3" : "h-[43px] gap-1.5 px-2.5"), children: [
     /* @__PURE__ */ jsx(ActionIcon, { icon: action.icon }),
-    /* @__PURE__ */ jsx("span", { children: action.label })
+    /* @__PURE__ */ jsx("span", { className: "flex-1 text-right", children: action.label })
   ] }, action.key)) });
 }
-function UsageChips({ usageTitle, usageTypes, activeUsageType, onUsageTypeClick, tokens }) {
+function UsageChips({ usageTitle, unitAreaText, usageTypes, activeUsageType, onUsageTypeClick, tokens, isUnitToken }) {
   if (!usageTypes?.length) return null;
   return /* @__PURE__ */ jsxs("section", { className: "mt-3", "aria-label": usageTitle ?? "\u0646\u0648\u0639 \u06A9\u0627\u0631\u0628\u0631\u06CC", children: [
     /* @__PURE__ */ jsx("h4", { className: "m-0 text-right text-[17px] font-bold leading-7 text-[#555b60]", children: usageTitle ?? "\u0646\u0648\u0639 \u06A9\u0627\u0631\u0628\u0631\u06CC" }),
+    isUnitToken && unitAreaText && /* @__PURE__ */ jsx("p", { className: "m-0 mt-1 text-right text-[13px] leading-6 text-[#5f666b]", children: unitAreaText }),
     /* @__PURE__ */ jsx("div", { className: "mt-2 flex flex-wrap justify-start gap-1.5", children: usageTypes.map((usage) => {
       const active = usage.key === activeUsageType;
-      const colors = active ? ACTIVE_CHIP_COLORS[usage.tone ?? "default"] ?? { border: tokens.activeChipBorderColor, text: tokens.activeChipTextColor } : null;
+      const colors = isUnitToken && usage.tone && UNIT_CHIP_COLORS[usage.tone] ? UNIT_CHIP_COLORS[usage.tone] : active ? { border: tokens.activeChipBorderColor, text: tokens.activeChipTextColor } : null;
       const Chip = onUsageTypeClick ? "button" : "span";
       return /* @__PURE__ */ jsx(Chip, { type: onUsageTypeClick ? "button" : void 0, onClick: onUsageTypeClick ? (event) => {
         event.stopPropagation();
@@ -4241,24 +4227,30 @@ function UsageChips({ usageTitle, usageTypes, activeUsageType, onUsageTypeClick,
     }) })
   ] });
 }
+function UnitStatuses({ items }) {
+  return /* @__PURE__ */ jsx("div", { className: "mt-4 flex flex-wrap justify-start gap-2", children: items.map((item) => /* @__PURE__ */ jsxs("span", { className: cn("inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11px] leading-5", item.tone === "danger" ? "bg-[#fbe8e8] text-[#d94848]" : "bg-[#f5e8df] text-[#b45b2e]"), children: [
+    item.icon === "close" ? /* @__PURE__ */ jsx("span", { className: "inline-flex h-3.5 w-3.5 items-center justify-center rounded-full border border-current text-[10px]", children: "\xD7" }) : /* @__PURE__ */ jsx("span", { className: "text-[13px]", children: "\u25F7" }),
+    item.label
+  ] }, item.key)) });
+}
 function ProgressReport({ report, tokens, resetKey }) {
   const [moreOpen, setMoreOpen] = useState(false);
   useEffect(() => setMoreOpen(false), [resetKey]);
   const status = report.statusLabel ?? (report.status === "complete" ? "\u062A\u06A9\u0645\u06CC\u0644 \u0634\u062F\u0647" : "\u062A\u06A9\u0645\u06CC\u0644 \u0646\u0634\u062F\u0647");
-  return /* @__PURE__ */ jsxs("section", { className: "mt-3 border-t pt-3", style: { borderColor: tokens.dividerColor }, children: [
+  return /* @__PURE__ */ jsxs("section", { className: "relative mt-3 border-t pt-3", style: { borderColor: tokens.dividerColor }, children: [
     /* @__PURE__ */ jsx("h4", { className: "m-0 text-right text-[15px] font-bold leading-6 text-[#4f5559] line-clamp-2", children: report.title }),
-    report.description && /* @__PURE__ */ jsxs("div", { className: "mt-1 flex min-w-0 items-center gap-1 text-right", children: [
+    report.description && /* @__PURE__ */ jsxs("div", { className: "mt-1 flex min-w-0 items-center justify-between gap-1 text-right", children: [
       /* @__PURE__ */ jsx("p", { className: "m-0 min-w-0 flex-1 truncate whitespace-nowrap text-right text-[11px] leading-5 text-[#656b70]", children: report.description }),
-      /* @__PURE__ */ jsxs("button", { type: "button", onClick: (event) => {
+      /* @__PURE__ */ jsxs("button", { dir: "ltr", type: "button", onClick: (event) => {
         event.stopPropagation();
         setMoreOpen((open) => !open);
         report.onMoreClick?.();
-      }, className: "inline-flex shrink-0 items-center gap-0.5 whitespace-nowrap text-[11px] leading-5 text-[#0b9aa5] underline-offset-2 hover:underline", children: [
-        /* @__PURE__ */ jsx("span", { children: report.moreLabel ?? "\u0628\u06CC\u0634\u062A\u0631" }),
-        /* @__PURE__ */ jsx(ChevronLeft, { className: "h-[15px] w-[15px]", strokeWidth: 2.1 })
+      }, className: "inline-flex shrink-0 items-center gap-0.5 whitespace-nowrap text-[11px] leading-5 text-[#0798a3] underline-offset-2 hover:underline", children: [
+        /* @__PURE__ */ jsx(ChevronLeft, { className: "h-[15px] w-[15px] text-[#9da3a6]", strokeWidth: 2.1 }),
+        /* @__PURE__ */ jsx("span", { children: report.moreLabel ?? "\u0628\u06CC\u0634\u062A\u0631" })
       ] })
     ] }),
-    moreOpen && /* @__PURE__ */ jsx("div", { className: "mt-2 rounded-[3px] border border-[#e0e3e5] bg-[#fafafa] px-3 py-2 text-right text-[11px] leading-5 text-[#656b70] shadow-[0_1px_3px_rgba(30,44,52,.05)]", children: report.moreHint ?? report.description }),
+    moreOpen && /* @__PURE__ */ jsx("div", { className: "absolute left-0 right-0 top-[52px] z-10 rounded-[3px] border border-[#e0e3e5] bg-[#fafafa] px-3 py-2 text-right text-[11px] leading-5 text-[#656b70] shadow-[0_1px_3px_rgba(30,44,52,.05)]", children: report.moreHint ?? report.description }),
     /* @__PURE__ */ jsx("div", { className: "relative mt-1.5 min-h-7", children: /* @__PURE__ */ jsxs("button", { type: "button", onClick: (event) => {
       event.stopPropagation();
       report.onClick?.();
@@ -4268,31 +4260,31 @@ function ProgressReport({ report, tokens, resetKey }) {
     ] }) })
   ] });
 }
-function TaavProjectStructureCard({ entityType = "custom", variant = "full", tone = "teal", title, subtitle, locationText, headerImage, headerLabel, usageTitle, usageTypes, activeUsageType, onUsageTypeClick, showMenu = false, onMenuClick, onCardClick, menuActions, showNavigate = false, onNavigate, progressReport, disabled = false, loading = false, className }) {
-  const tokens = TONE_TOKENS[tone];
+function TaavProjectStructureCard({ token, title, subtitle, locationText, headerImage, headerLabel, usageTitle, unitAreaText, usageTypes, activeUsageType, onUsageTypeClick, statusItems, showMenu = false, onMenuClick, onCardClick, menuActions, showNavigate = false, onNavigate, progressReport, disabled = false, loading = false, className }) {
+  const isFloorToken = token === "floor";
+  const isUnitToken = token === "unit";
+  const tokens = isUnitToken ? UNIT_TOKENS : isFloorToken ? FLOOR_TOKENS : BASE_TOKENS;
   const [menuOpen, setMenuOpen] = useState(false);
   const [cardClickVersion, setCardClickVersion] = useState(0);
-  const compact = variant === "compact" || variant === "usageOnly" || variant === "minimal";
-  const showUsage = variant === "full" || variant === "compact" || variant === "usageOnly" || variant === "minimal";
-  const showReport = (variant === "full" || variant === "report") && Boolean(progressReport);
-  return /* @__PURE__ */ jsxs("article", { dir: "rtl", "data-taav-project-structure-card": true, "data-variant": variant, "data-entity-type": entityType, "aria-busy": loading || void 0, "aria-disabled": disabled || void 0, onClick: () => {
+  return /* @__PURE__ */ jsxs("article", { dir: "rtl", "data-taav-project-structure-card": true, "data-token": token, "aria-busy": loading || void 0, "aria-disabled": disabled || void 0, onClick: () => {
     setMenuOpen(false);
     setCardClickVersion((version) => version + 1);
     onCardClick?.();
-  }, className: cn("relative w-full max-w-[300px] cursor-pointer overflow-visible rounded-[16px] border bg-white text-right shadow-[0_2px_8px_rgba(28,54,65,.04)] transition hover:shadow-[0_5px_16px_rgba(28,54,65,.09)]", compact ? "max-h-[280px]" : "min-h-[376px]", disabled && "pointer-events-none opacity-55", loading && "animate-pulse", className), style: { borderColor: tokens.borderColor }, children: [
+  }, className: cn("relative w-full max-w-[300px] cursor-pointer overflow-visible border bg-white text-right shadow-[0_2px_8px_rgba(28,54,65,.04)] transition hover:shadow-[0_5px_16px_rgba(28,54,65,.09)]", isUnitToken ? "rounded-[15px]" : "rounded-[16px]", isFloorToken ? "h-[250px] max-h-[250px] min-h-[250px]" : isUnitToken ? "h-[326px] max-h-[326px] min-h-[326px]" : "h-[376px] max-h-[376px] min-h-[376px]", disabled && "pointer-events-none opacity-55", loading && "animate-pulse", className), style: { borderColor: tokens.borderColor }, children: [
     /* @__PURE__ */ jsx(Header, { title, headerLabel, headerImage, tokens }),
     showMenu && !loading && /* @__PURE__ */ jsxs(Fragment, { children: [
       /* @__PURE__ */ jsx(MenuButton, { open: menuOpen, onClick: () => {
         setMenuOpen((open) => !open);
         onMenuClick?.();
       } }),
-      menuOpen && menuActions?.length ? /* @__PURE__ */ jsx("div", { onClick: (event) => event.stopPropagation(), children: /* @__PURE__ */ jsx(ActionMenu, { actions: menuActions, tokens }) }) : null
+      menuOpen && menuActions?.length ? /* @__PURE__ */ jsx("div", { onClick: (event) => event.stopPropagation(), children: /* @__PURE__ */ jsx(ActionMenu, { actions: menuActions, tokens, isUnitToken }) }) : null
     ] }),
-    /* @__PURE__ */ jsxs("div", { className: cn("relative px-4 pb-4 pt-3", compact ? "min-h-[124px]" : "min-h-[284px]"), children: [
-      (subtitle || locationText) && variant !== "usageOnly" && variant !== "minimal" && /* @__PURE__ */ jsx("p", { className: "m-0 max-w-[calc(100%-2rem)] truncate text-right text-[13px] leading-6 text-[#61676b]", children: subtitle ?? locationText }),
-      showUsage && /* @__PURE__ */ jsx(UsageChips, { usageTitle, usageTypes, activeUsageType, onUsageTypeClick, tokens }),
-      showReport && progressReport && /* @__PURE__ */ jsx(ProgressReport, { report: progressReport, tokens, resetKey: cardClickVersion }),
-      !showReport && showNavigate && /* @__PURE__ */ jsx("button", { type: "button", "aria-label": "\u0645\u0634\u0627\u0647\u062F\u0647 \u062C\u0632\u0626\u06CC\u0627\u062A", onClick: (event) => {
+    /* @__PURE__ */ jsxs("div", { className: cn("relative min-h-0 overflow-visible px-4 pb-4 pt-3", isFloorToken ? "h-[162px]" : isUnitToken ? "h-[238px]" : "h-[284px]"), children: [
+      !isFloorToken && (subtitle || locationText) && /* @__PURE__ */ jsx("p", { className: "m-0 max-w-[calc(100%-2rem)] truncate text-right text-[13px] leading-6 text-[#61676b]", children: subtitle ?? locationText }),
+      /* @__PURE__ */ jsx(UsageChips, { usageTitle, unitAreaText, usageTypes, activeUsageType, onUsageTypeClick, tokens, isUnitToken }),
+      isUnitToken && statusItems?.length ? /* @__PURE__ */ jsx(UnitStatuses, { items: statusItems }) : null,
+      progressReport && /* @__PURE__ */ jsx(ProgressReport, { report: progressReport, tokens, resetKey: cardClickVersion }),
+      !progressReport && showNavigate && /* @__PURE__ */ jsx("button", { type: "button", "aria-label": "\u0645\u0634\u0627\u0647\u062F\u0647 \u062C\u0632\u0626\u06CC\u0627\u062A", onClick: (event) => {
         event.stopPropagation();
         onNavigate?.();
       }, className: "absolute bottom-3 left-4 text-[#5e8998]", children: /* @__PURE__ */ jsx(ChevronLeft, { className: "h-[19px] w-[19px]", strokeWidth: 2.1 }) })

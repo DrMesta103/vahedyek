@@ -8,9 +8,9 @@ const BUSINESS_ITEMS = [
   ...LAB_BUSINESS_NAV,
   {
     href: '/business/project-structure-card',
-    label: 'کارت ساختار پروژه',
+    label: 'کارت بلوک، واحد',
     badge: 'TaavProjectStructureCard',
-    description: 'نمایش کارت‌های بلوک، طبقه، پلاک، واحد و کاربری با حالت‌های مختلف',
+    description: 'نمایش کارت‌های بلوک و واحد با حالت‌های مختلف',
   },
   {
     href: '/business/ownership-card',
