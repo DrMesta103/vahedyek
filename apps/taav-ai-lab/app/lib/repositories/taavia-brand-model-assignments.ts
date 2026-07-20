@@ -154,7 +154,7 @@ export async function assignTaaviaBrandModel(input: {
       const model = await tx.aiProviderModelV2.findFirst({ where: { id: input.aiProviderModelId, aiProviderAccountId: account.id, isActive: true }, include: { capabilities: { select: { capabilityType: true } } } });
       if (!model) throw new Error('مدل فعال متعلق به حساب انتخاب‌شده پیدا نشد.');
       const compatibility = getPurposeCompatibility(requestedPurpose, { modelType: model.modelType, capabilities: model.capabilities.map((item) => item.capabilityType) });
-      if (!compatibility.compatible) throw new Error(compatibility.reason);
+      if (!compatibility.compatible) throw new Error(compatibility.reason || 'مدل انتخاب‌شده با این نوع فنی سازگار نیست.');
 
       const existing = await tx.taaviaBrandAiModelAssignment.findFirst({ where: { tenantId: input.tenantId, brandId: input.brandId, purpose, effectiveTo: null }, include: assignmentInclude });
       if (existing && existing.aiProviderAccountId === account.id && existing.aiProviderModelId === model.id) return mapAssignment(existing);

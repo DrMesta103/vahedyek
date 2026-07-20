@@ -7,7 +7,7 @@ import type { TaaviaBrandSetup, TaaviaChatMessage, TaaviaUseCaseKey } from '../t
 import { getTaaviaBrandModelAssignments } from './taavia-brand-model-assignments';
 
 export type AdminAgentEffectiveModelSummary = {
-  purpose: 'ADMIN_AGENT_CHAT';
+  purpose: 'TEXT_GENERATION';
   modelId: string | null;
   displayName: string | null;
   providerModelName: string | null;
@@ -18,7 +18,7 @@ function buildAdminAgentEffectiveModelSummary(assignment: Awaited<ReturnType<typ
   if (!assignment) return null;
 
   return {
-    purpose: 'ADMIN_AGENT_CHAT',
+    purpose: 'TEXT_GENERATION',
     modelId: assignment.aiProviderModelId,
     displayName: assignment.model.name,
     providerModelName: assignment.model.providerModelId,
@@ -125,7 +125,7 @@ export async function getOrCreateAdminAgentConversation(
         messages: { orderBy: { createdAt: 'asc' } },
       },
     });
-    const effectiveModel = buildAdminAgentEffectiveModelSummary((await getTaaviaBrandModelAssignments(userId, tenantId, brandId)).assignments.find((item) => item.purpose === 'ADMIN_AGENT_CHAT'));
+    const effectiveModel = buildAdminAgentEffectiveModelSummary((await getTaaviaBrandModelAssignments(userId, tenantId, brandId)).assignments.find((item) => item.purpose === 'TEXT_GENERATION'));
     return { ...mapConversation(conversation), effectiveModel };
   }
 
@@ -148,7 +148,7 @@ export async function getOrCreateAdminAgentConversation(
     });
   }
 
-  const effectiveModel = buildAdminAgentEffectiveModelSummary((await getTaaviaBrandModelAssignments(userId, tenantId, brandId)).assignments.find((item) => item.purpose === 'ADMIN_AGENT_CHAT'));
+  const effectiveModel = buildAdminAgentEffectiveModelSummary((await getTaaviaBrandModelAssignments(userId, tenantId, brandId)).assignments.find((item) => item.purpose === 'TEXT_GENERATION'));
   return { ...mapConversation(conversation), effectiveModel };
 }
 
@@ -247,7 +247,7 @@ export async function sendAdminAgentMessage(
   const brand = await findBrandForTenant(tenantId, brandId);
   if (!brand) return null;
 
-  const effectiveModel = buildAdminAgentEffectiveModelSummary((await getTaaviaBrandModelAssignments(userId, tenantId, brandId)).assignments.find((item) => item.purpose === 'ADMIN_AGENT_CHAT'));
+  const effectiveModel = buildAdminAgentEffectiveModelSummary((await getTaaviaBrandModelAssignments(userId, tenantId, brandId)).assignments.find((item) => item.purpose === 'TEXT_GENERATION'));
 
   const conversation = await prisma.taaviaConversation.findFirst({
     where: {
