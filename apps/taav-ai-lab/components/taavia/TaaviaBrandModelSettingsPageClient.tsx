@@ -15,10 +15,6 @@ function formatDate(value: string | null) {
   return value ? new Date(value).toLocaleDateString('fa-IR') : '—';
 }
 
-function purposeIcon(code: TaaviaBrandAiModelPurpose) {
-  return code.slice(0, 2);
-}
-
 export function TaaviaBrandModelSettingsPageClient({ tenantId, brandId, initialData }: { tenantId: string; brandId: string; initialData: SettingsData }) {
   const [data, setData] = useState(initialData);
   const [selectedAccount, setSelectedAccount] = useState<Record<string, string>>({});
@@ -75,14 +71,14 @@ export function TaaviaBrandModelSettingsPageClient({ tenantId, brandId, initialD
             <div>
               <div className="mb-1 text-sm text-[var(--taav-text-muted)]">تنظیمات هوش مصنوعی برند</div>
               <h1 className="m-0 text-2xl font-black text-[var(--taav-text-strong)]">{data.brand.name}</h1>
-              <p className="mt-2 max-w-2xl text-sm leading-7 text-[var(--taav-text-muted)]">برای هر کاربرد، حساب ارائه‌دهنده و مدل مستقل انتخاب کنید. هر تغییر به‌صورت تاریخی ثبت می‌شود.</p>
+              <p className="mt-2 max-w-2xl text-sm leading-7 text-[var(--taav-text-muted)]">برای هر نوع مدل فنی، حساب ارائه‌دهنده و مدل مستقل انتخاب کنید. هر تغییر به‌صورت تاریخی ثبت می‌شود.</p>
             </div>
           </div>
           <Link href={`/businesses/${tenantId}/products/taavia/brands`}><TaavButton variant="secondary" iconStart={<ArrowLeft className="h-4 w-4" />}>بازگشت به برندها</TaavButton></Link>
         </div>
         <div className="mt-6 flex flex-wrap gap-3 text-sm">
           <TaavBadge tone={data.brand.status === 'ACTIVE' ? 'success' : 'warning'} variant="soft">{data.brand.status === 'ACTIVE' ? 'فعال' : data.brand.status}</TaavBadge>
-          <span className="inline-flex items-center gap-2 rounded-full bg-[var(--taav-surface-soft)] px-3 py-2 text-[var(--taav-text-muted)]"><CheckCircle2 className="h-4 w-4" />{data.assignments.length} کاربرد تنظیم‌شده</span>
+          <span className="inline-flex items-center gap-2 rounded-full bg-[var(--taav-surface-soft)] px-3 py-2 text-[var(--taav-text-muted)]"><CheckCircle2 className="h-4 w-4" />{data.assignments.length} نوع مدل تنظیم‌شده</span>
           <span className="inline-flex items-center gap-2 rounded-full bg-[var(--taav-surface-soft)] px-3 py-2 text-[var(--taav-text-muted)]"><Clock3 className="h-4 w-4" />آخرین تغییر: {formatDate(data.lastAssignmentChange)}</span>
         </div>
       </header>
@@ -108,11 +104,11 @@ export function TaaviaBrandModelSettingsPageClient({ tenantId, brandId, initialD
                 <button type="button" onClick={() => void openHistory(purpose.code)} className="inline-flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm text-[var(--taav-brand-strong)] transition hover:bg-[var(--taav-brand-soft)]"><History className="h-4 w-4" />مشاهده تاریخچه</button>
               </div>
               <div className="mt-5 grid gap-4 xl:grid-cols-[1fr_1fr_1.15fr]">
-                <div className="rounded-2xl bg-[var(--taav-surface-soft)] p-4"><div className="mb-2 text-xs text-[var(--taav-text-muted)]">تخصیص فعال</div>{current ? <><div className="font-bold text-[var(--taav-text-strong)]">{current.model.name}</div><div className="mt-1 text-sm text-[var(--taav-text-muted)]">{current.account.name} · از {formatDate(current.effectiveFrom)}</div></> : <div className="text-sm text-[var(--taav-text-muted)]">برای این کاربرد هنوز مدلی انتخاب نشده است.</div>}</div>
+                <div className="rounded-2xl bg-[var(--taav-surface-soft)] p-4"><div className="mb-2 text-xs text-[var(--taav-text-muted)]">تخصیص فعال</div>{current ? <><div className="font-bold text-[var(--taav-text-strong)]">{current.model.name}</div><div className="mt-1 text-sm text-[var(--taav-text-muted)]">{current.account.name} · از {formatDate(current.effectiveFrom)}</div></> : <div className="text-sm text-[var(--taav-text-muted)]">برای این نوع مدل هنوز تخصیصی انتخاب نشده است.</div>}</div>
                 <label className="grid gap-2 text-sm font-medium text-[var(--taav-text-strong)]">حساب ارائه‌دهنده<select value={accountId} onChange={(event) => { setSelectedAccount((value) => ({ ...value, [purpose.code]: event.target.value })); setSelectedModel((value) => ({ ...value, [purpose.code]: '' })); }} className="min-h-12 rounded-xl border border-[var(--taav-border-subtle)] bg-[var(--taav-surface-soft)] px-3 text-[var(--taav-text-strong)]"><option value="">انتخاب حساب</option>{data.accounts.map((item) => <option key={item.id} value={item.id}>{item.name} · {item.providerType}</option>)}</select></label>
                 <label className="grid gap-2 text-sm font-medium text-[var(--taav-text-strong)]">مدل سازگار<select value={modelId} disabled={!accountId} onChange={(event) => setSelectedModel((value) => ({ ...value, [purpose.code]: event.target.value }))} className="min-h-12 rounded-xl border border-[var(--taav-border-subtle)] bg-[var(--taav-surface-soft)] px-3 text-[var(--taav-text-strong)]"><option value="">انتخاب مدل</option>{compatibleModels.map((model) => <option key={model.id} value={model.id}>{model.name} · {model.modelType}</option>)}</select></label>
               </div>
-              <div className="mt-4 flex flex-wrap items-center justify-between gap-3"><div className="text-xs text-[var(--taav-text-muted)]">مدل‌ها پس از بررسی سازگاری purpose از سرور ارائه می‌شوند.</div><TaavButton disabled={!accountId || !modelId || saving} onClick={() => void save(purpose.code)} iconStart={saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}>{saving ? 'در حال ذخیره…' : 'ذخیره تخصیص'}</TaavButton></div>
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-3"><div className="text-xs text-[var(--taav-text-muted)]">فقط مدل‌هایی با همین نوع فنی از حساب انتخاب‌شده نمایش داده می‌شوند.</div><TaavButton disabled={!accountId || !modelId || saving} onClick={() => void save(purpose.code)} iconStart={saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}>{saving ? 'در حال ذخیره…' : 'ذخیره تخصیص'}</TaavButton></div>
             </section>
           );
         })}

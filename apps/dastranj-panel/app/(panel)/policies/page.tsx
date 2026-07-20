@@ -4,6 +4,7 @@ import { listPolicies } from '../../lib/data';
 import { getPolicyAccess } from '../../lib/policy-access';
 import { POLICY_FAMILIES, getPolicyFamilyKey, getPolicySectionValues, getPolicyVariantMeta, type PolicyFamilyKey } from '../../lib/policy-workspaces';
 import { PolicyCard } from './_components/PolicyCard';
+import { getPolicyHumanSummary } from '../../lib/policy-blueprints';
 
 type PoliciesPageProps = { searchParams?: { q?: string; status?: string; usage?: string } | Promise<{ q?: string; status?: string; usage?: string }> };
 
@@ -37,7 +38,7 @@ export default async function PoliciesPage({ searchParams }: PoliciesPageProps) 
       <select name="usage" defaultValue={usage} aria-label="فیلتر استفاده"><option value="all">همه استفاده‌ها</option><option value="used">استفاده‌شده</option><option value="unused">بدون استفاده</option></select>
     </form></div>
     <div className="module-page-grid">
-      {visible.map((policy) => { const key = getPolicyFamilyKey(policy); const values = getPolicySectionValues(policy); const variant = typeof values.variant === 'string' ? values.variant : null; const editHref = key ? `/policies/${key}?policyId=${policy.id}` : `/policies/work?policyId=${policy.id}`; return <PolicyCard key={policy.id} editHref={editHref} item={{ id: policy.id, title: policy.title, description: policy.description, calendarLabel: calendarLabel(policy.calendar), familyLabel: familyLabel(key), variantLabel: key ? getPolicyVariantMeta(key, variant)?.title ?? 'پیش‌فرض' : 'پیش‌فرض', isActive: policy.isActive, groupCount: policy.groupCount, employeeCount: policy.employeeCount, summary: `${Object.keys(values).filter((name) => !['familyKey', 'variant', 'title', 'description'].includes(name)).length.toLocaleString('fa-IR')} تنظیم` }} />; })}
+      {visible.map((policy) => { const key = getPolicyFamilyKey(policy); const values = getPolicySectionValues(policy); const variant = typeof values.variant === 'string' ? values.variant : null; const editHref = key ? `/policies/${key}?policyId=${policy.id}` : `/policies/work?policyId=${policy.id}`; return <PolicyCard key={policy.id} editHref={editHref} viewHref={`/policies/work?policyId=${policy.id}&mode=view`} item={{ id: policy.id, title: policy.title, description: policy.description, calendarLabel: calendarLabel(policy.calendar), familyLabel: familyLabel(key), variantLabel: key ? getPolicyVariantMeta(key, variant)?.title ?? 'پیش‌فرض' : 'پیش‌فرض', isActive: policy.isActive, groupCount: policy.groupCount, employeeCount: policy.employeeCount, summary: getPolicyHumanSummary(values), connectedGroups: policy.workGroups.map((group) => ({ id: group.id, title: group.title, memberCount: group.members.length })) }} />; })}
       {!visible.length ? <div className="module-empty-state"><h2>سیاستی مطابق فیلترها پیدا نشد.</h2><p>فیلترها را تغییر دهید یا یک سیاست کاری جدید ایجاد کنید.</p></div> : null}
       {access.canManage ? <ModuleAddTile href="/policies/new" label="برای افزودن سیاست کاری کلیک کنید." /> : null}
     </div>

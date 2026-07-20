@@ -198,18 +198,18 @@ async function seedTaaviaBrandsAndAssignments(ownerUserId: string) {
   const models = await prisma.aiProviderModelV2.findMany({ where: { isActive: true }, orderBy: { createdAt: 'asc' } });
   const accounts = await prisma.aiProviderAccountV2.findMany({ where: { isActive: true } });
   const accountById = new Map(accounts.map((account) => [account.id, account]));
-  const firstModel = models[0];
+  const firstModel = models.find((model) => model.modelType === 'TextGeneration') ?? models[0];
   if (!firstModel) return;
-  const existing = await prisma.taaviaBrandAiModelAssignment.findFirst({ where: { brandId: brands[0].id, purpose: 'ADMIN_AGENT_CHAT', effectiveTo: null } });
+  const existing = await prisma.taaviaBrandAiModelAssignment.findFirst({ where: { brandId: brands[0].id, purpose: 'TEXT_GENERATION', effectiveTo: null } });
   if (existing) return;
   const previousId = 'taavia-demo-assignment-history-000000';
-  await prisma.taaviaBrandAiModelAssignment.create({ data: { id: previousId, tenantId: tenant.id, brandId: brands[0].id, aiProviderAccountId: firstModel.aiProviderAccountId, aiProviderModelId: firstModel.id, purpose: 'ADMIN_AGENT_CHAT', effectiveFrom: new Date(now.getTime() - 86400000 * 5), effectiveTo: new Date(now.getTime() - 86400000), assignedBy: ownerUserId, endedBy: ownerUserId, createdAt: new Date(now.getTime() - 86400000 * 5) } });
-  await prisma.taaviaBrandAiModelAssignment.create({ data: { id: 'taavia-demo-assignment-active-000000', tenantId: tenant.id, brandId: brands[0].id, aiProviderAccountId: firstModel.aiProviderAccountId, aiProviderModelId: firstModel.id, purpose: 'ADMIN_AGENT_CHAT', effectiveFrom: new Date(now.getTime() - 86400000), effectiveTo: null, assignedBy: ownerUserId, endedBy: null, createdAt: new Date(now.getTime() - 86400000) } });
+  await prisma.taaviaBrandAiModelAssignment.create({ data: { id: previousId, tenantId: tenant.id, brandId: brands[0].id, aiProviderAccountId: firstModel.aiProviderAccountId, aiProviderModelId: firstModel.id, purpose: 'TEXT_GENERATION', effectiveFrom: new Date(now.getTime() - 86400000 * 5), effectiveTo: new Date(now.getTime() - 86400000), assignedBy: ownerUserId, endedBy: ownerUserId, createdAt: new Date(now.getTime() - 86400000 * 5) } });
+  await prisma.taaviaBrandAiModelAssignment.create({ data: { id: 'taavia-demo-assignment-active-000000', tenantId: tenant.id, brandId: brands[0].id, aiProviderAccountId: firstModel.aiProviderAccountId, aiProviderModelId: firstModel.id, purpose: 'TEXT_GENERATION', effectiveFrom: new Date(now.getTime() - 86400000), effectiveTo: null, assignedBy: ownerUserId, endedBy: null, createdAt: new Date(now.getTime() - 86400000) } });
   const account = accountById.get(firstModel.aiProviderAccountId);
   if (account) {
     await prisma.aiProviderModelAssignment.createMany({ data: [
-      { id: 'taavia-demo-registry-history-000000', externalAssignmentId: previousId, consumerCode: 'taavia', tenantId: tenant.id, resourceType: 'brand', resourceId: brands[0].id, aiProviderAccountId: account.id, aiProviderModelId: firstModel.id, purposeCode: 'ADMIN_AGENT_CHAT', effectiveFrom: new Date(now.getTime() - 86400000 * 5), effectiveTo: new Date(now.getTime() - 86400000), assignedBy: ownerUserId, endedBy: ownerUserId, createdAt: new Date(now.getTime() - 86400000 * 5) },
-      { id: 'taavia-demo-registry-active-000000', externalAssignmentId: 'taavia-demo-assignment-active-000000', consumerCode: 'taavia', tenantId: tenant.id, resourceType: 'brand', resourceId: brands[0].id, aiProviderAccountId: account.id, aiProviderModelId: firstModel.id, purposeCode: 'ADMIN_AGENT_CHAT', effectiveFrom: new Date(now.getTime() - 86400000), effectiveTo: null, assignedBy: ownerUserId, endedBy: null, createdAt: new Date(now.getTime() - 86400000) },
+      { id: 'taavia-demo-registry-history-000000', externalAssignmentId: previousId, consumerCode: 'taavia', tenantId: tenant.id, resourceType: 'brand', resourceId: brands[0].id, aiProviderAccountId: account.id, aiProviderModelId: firstModel.id, purposeCode: 'TEXT_GENERATION', effectiveFrom: new Date(now.getTime() - 86400000 * 5), effectiveTo: new Date(now.getTime() - 86400000), assignedBy: ownerUserId, endedBy: ownerUserId, createdAt: new Date(now.getTime() - 86400000 * 5) },
+      { id: 'taavia-demo-registry-active-000000', externalAssignmentId: 'taavia-demo-assignment-active-000000', consumerCode: 'taavia', tenantId: tenant.id, resourceType: 'brand', resourceId: brands[0].id, aiProviderAccountId: account.id, aiProviderModelId: firstModel.id, purposeCode: 'TEXT_GENERATION', effectiveFrom: new Date(now.getTime() - 86400000), effectiveTo: null, assignedBy: ownerUserId, endedBy: null, createdAt: new Date(now.getTime() - 86400000) },
     ], skipDuplicates: true });
   }
 }

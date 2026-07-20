@@ -1,4 +1,4 @@
-import { isPolicyBlueprintKey } from './policy-blueprints';
+import { isAvailablePolicyBlueprintKey } from './policy-blueprints';
 
 const NON_NEGATIVE_FIELDS = [
   'entryGraceMinutes', 'exitGraceMinutes', 'maxDelayMinutes', 'maxEarlyLeaveMinutes',
@@ -22,12 +22,13 @@ export function validatePolicyInput(input: PolicyValidationInput) {
   const title = input.title.trim();
   const description = input.description?.trim() ?? '';
 
-  if (!title) errors.push('عنوان سیاست کاری الزامی است.');
+  if (!title) errors.push('عنوان سیاست کاری را وارد کنید.');
+  if (title && title.length < 3) errors.push('عنوان سیاست کاری باید حداقل ۳ نویسه باشد.');
   if (title.length > 120) errors.push('عنوان سیاست کاری نباید بیشتر از ۱۲۰ نویسه باشد.');
   if (description.length > 1000) errors.push('توضیحات سیاست کاری نباید بیشتر از ۱۰۰۰ نویسه باشد.');
-  if (!input.calendarId) errors.push('انتخاب تقویم کاری الزامی است.');
+  if (!input.calendarId) errors.push('تقویم کاری را انتخاب کنید.');
 
-  if (input.blueprintKey !== undefined && !isPolicyBlueprintKey(input.blueprintKey)) {
+  if (input.blueprintKey !== undefined && !isAvailablePolicyBlueprintKey(input.blueprintKey)) {
     errors.push('Blueprint سیاست کاری معتبر نیست.');
   }
   if (input.sectionValues !== undefined && (!input.sectionValues || typeof input.sectionValues !== 'object' || Array.isArray(input.sectionValues))) {
@@ -37,6 +38,30 @@ export function validatePolicyInput(input: PolicyValidationInput) {
     const fieldValue = input.sectionValues?.[key];
     if (fieldValue !== undefined && typeof fieldValue !== 'boolean') errors.push(`مقدار ${key} باید بولی باشد.`);
   }
+  if (input.sectionValues?.entryRequired !== undefined && input.sectionValues.entryRequired !== true) {
+    errors.push('غیرفعال‌کردن الزام ورود در نسخه فعلی پشتیبانی نمی‌شود.');
+  }
+  if (input.sectionValues?.exitRequired !== undefined && input.sectionValues.exitRequired !== true) {
+    errors.push('غیرفعال‌کردن الزام خروج در نسخه فعلی پشتیبانی نمی‌شود.');
+  }
+
+  const enums: Array<[string, readonly string[]]> = [
+    ['locationRule', ['workplace_only', 'unrestricted']],
+    ['incompleteAttendanceRule', ['correction_required', 'warning_only']],
+    ['overtimeRule', ['manager_approval', 'automatic', 'disabled']],
+    ['requestRule', ['leave_and_correction', 'leave_only', 'correction_only', 'none']],
+  ];
+  for (const [key, allowed] of enums) {
+    const fieldValue = input.sectionValues?.[key];
+    if (input.blueprintKey !== undefined && fieldValue !== undefined && !allowed.includes(String(fieldValue))) errors.push(`مقدار ${key} معتبر نیست.`);
+  }
+  if (
+    input.blueprintKey !== undefined &&
+    input.sectionValues?.incompleteAttendanceRule === 'correction_required' &&
+    (input.sectionValues?.requestRule === 'leave_only' || input.sectionValues?.requestRule === 'none')
+  ) errors.push('برای تردد ناقص نیازمند اصلاح، ثبت درخواست اصلاح تردد باید فعال باشد.');
+  const grace = input.sectionValues?.entryGraceMinutes;
+  if (typeof grace === 'number' && (!Number.isInteger(grace) || grace > 240)) errors.push('فرجه ورود باید عدد صحیح بین صفر تا ۲۴۰ دقیقه باشد.');
 
   if (input.familyKey && !['work', 'shift', 'leave', 'manual', 'night', 'remote'].includes(input.familyKey)) {
     errors.push('خانوادهٔ سیاست کاری معتبر نیست.');

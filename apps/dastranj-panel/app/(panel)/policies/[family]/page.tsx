@@ -10,6 +10,7 @@ import {
   type PolicyFamilyKey,
 } from '../../../lib/policy-workspaces';
 import { savePolicyWorkspaceAction } from '../../../lib/actions';
+import { getPolicyAccess } from '../../../lib/policy-access';
 import {
   PolicyFamilyList,
   PolicyFamilyListItem,
@@ -24,6 +25,7 @@ import {
   PolicyToggleField,
   PolicyVariantTabs,
 } from '../_components/PolicyWorkspaceShell';
+import { PolicyImpactForm } from '../_components/PolicyImpactForm';
 import { LeavePolicyEditor } from '../_components/LeavePolicyEditor';
 import { ManualPolicyEditor } from '../_components/ManualPolicyEditor';
 import { NightPolicyEditor } from '../_components/NightPolicyEditor';
@@ -116,7 +118,8 @@ export default async function PolicyFamilyPage({
 
   const familyKey = familyMeta.key;
   const requestedVariant = resolvedSearchParams?.variant ?? POLICY_VARIANTS[familyKey][0]?.key ?? 'default';
-  const policies = await listPolicies();
+  const [policies, access] = await Promise.all([listPolicies(), getPolicyAccess()]);
+  if (!access.canManage) return <div className="page-stack module-page" dir="rtl" lang="fa"><div className="module-empty-state"><h2>دسترسی ویرایش سیاست کاری ندارید.</h2><p>برای این عملیات به نقش مالک، مدیر یا مدیر منابع انسانی نیاز است.</p></div></div>;
   const familyPolicies = listPoliciesByFamilyKey(policies, familyKey);
   const defaultPolicyForFamily =
     familyKey === 'leave'
@@ -236,7 +239,7 @@ export default async function PolicyFamilyPage({
         </PolicyFamilyList>
       ) : null}
 
-      <form action={savePolicyWorkspaceAction} className="policy-form-stack">
+      <PolicyImpactForm action={savePolicyWorkspaceAction} groupCount={policy?.groupCount ?? 0} className="policy-form-stack">
         <input type="hidden" name="familyKey" value={familyKey} />
         <input type="hidden" name="variant" value={activeVariant} />
         <input type="hidden" name="policyId" value={policyId} />
@@ -519,7 +522,7 @@ export default async function PolicyFamilyPage({
             <RemotePolicyEditor backHref={backHref} policyId={policyId} policy={remoteWorkPolicy} />
           ) : null}
         </PolicySectionCard>
-      </form>
+      </PolicyImpactForm>
     </PolicyPageShell>
   );
 }

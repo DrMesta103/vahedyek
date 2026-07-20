@@ -6,6 +6,8 @@ import { getModelCountsByAccountIds, listModelsGroupedByAccountIds } from './ai-
 import {
   AI_PROVIDER_LABELS,
   AI_PROVIDER_TYPES,
+  isAiAccountProviderType,
+  DuplicateAiProviderError,
   SystemAiProviderError,
   type AiProviderAccountPublic,
   type AiProviderAccountSummary,
@@ -56,6 +58,20 @@ function mapAccount(
   };
 }
 
+async function getAccountByProvider(provider: AiProviderType, excludeAccountId?: string) {
+  return prisma.aiProviderAccount.findFirst({
+    where: {
+      provider,
+      ...(excludeAccountId ? { id: { not: excludeAccountId } } : {}),
+    },
+    select: {
+      id: true,
+      name: true,
+      provider: true,
+    },
+  });
+}
+
 function buildSummary(accounts: AiProviderAccountPublic[]): AiProviderAccountSummary {
   const activeAccounts = accounts.filter((account) => account.isActive).length;
   const totalPurchasedCreditUsd = accounts.reduce((sum, account) => sum + account.purchasedCreditUsd, 0);
@@ -100,6 +116,11 @@ export async function getAiProviderAccountById(accountId: string) {
 }
 
 export async function createAiProviderAccount(input: CreateAiProviderAccountInput) {
+  const existing = await getAccountByProvider(input.provider);
+  if (existing) {
+    throw new DuplicateAiProviderError(`هر Provider فقط یک‌بار قابل ثبت است. Provider «${AI_PROVIDER_LABELS[input.provider]}» قبلاً در اکانت «${existing.name}» ثبت شده است.`);
+  }
+
   const row = await prisma.aiProviderAccount.create({
     data: {
       name: input.name,
@@ -125,6 +146,15 @@ export async function updateAiProviderAccount(accountId: string, input: UpdateAi
 
   if (existing.isSystem && input.provider !== undefined && input.provider !== existing.provider) {
     throw new SystemAiProviderError('تغییر Provider برای اکانت سیستمی مجاز نیست.');
+  }
+
+  if (input.provider !== undefined && input.provider !== existing.provider) {
+    const duplicate = await getAccountByProvider(input.provider, accountId);
+    if (duplicate) {
+      throw new DuplicateAiProviderError(
+        `هر Provider فقط یک‌بار قابل ثبت است. Provider «${AI_PROVIDER_LABELS[input.provider]}» قبلاً در اکانت «${duplicate.name}» ثبت شده است.`,
+      );
+    }
   }
 
   const row = await prisma.aiProviderAccount.update({
@@ -178,6 +208,12 @@ export function parseAiProviderType(value: unknown): AiProviderType | null {
   if (typeof value !== 'string') return null;
   const normalized = value.trim().toUpperCase();
   return isAiProviderType(normalized) ? normalized : null;
+}
+
+export function parseAiAccountProviderType(value: unknown): AiProviderType | null {
+  if (typeof value !== 'string') return null;
+  const normalized = value.trim().toUpperCase();
+  return isAiAccountProviderType(normalized) ? normalized : null;
 }
 
 export function isValidPurchaseEmail(value: string) {

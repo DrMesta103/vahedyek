@@ -102,6 +102,9 @@ export type {
 export {
   AI_PROVIDER_LABELS,
   AI_PROVIDER_TYPES,
+  AI_ACCOUNT_PROVIDER_TYPES,
+  isAiAccountProviderType,
+  DuplicateAiProviderError,
 } from './types/ai-accounts';
 
 export {
@@ -112,6 +115,7 @@ export {
   toggleAiProviderAccountStatus,
   deleteAiProviderAccount,
   parseAiProviderType,
+  parseAiAccountProviderType,
   isValidPurchaseEmail,
 } from './repositories/ai-accounts';
 

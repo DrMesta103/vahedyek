@@ -17,7 +17,7 @@ import { TaavBadge, TaavButton, TaavCard } from '@repo/ui/taav/primitives';
 import { TaavFieldBlock, TaavInput, TaavTextarea, TaavChoiceChipGroup } from '@repo/ui/taav/forms';
 import {
   AI_PROVIDER_LABELS,
-  AI_PROVIDER_TYPES,
+  AI_ACCOUNT_PROVIDER_TYPES,
   type AiProviderAccountPublic,
   type AiProviderAccountSummary,
   type AiProviderType,
@@ -52,7 +52,7 @@ const EMPTY_FORM: AccountFormState = {
   isActive: true,
 };
 
-const PROVIDER_OPTIONS = AI_PROVIDER_TYPES.map((provider) => ({
+const PROVIDER_OPTIONS = AI_ACCOUNT_PROVIDER_TYPES.map((provider) => ({
   label: AI_PROVIDER_LABELS[provider],
   value: provider,
 }));
@@ -119,6 +119,15 @@ export function AiAccountsSettingsClient({
   const [formError, setFormError] = useState<string | null>(null);
   const [formLoading, setFormLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const currentProviderIds = useMemo(() => new Set(accounts.map((account) => account.provider)), [accounts]);
+  const providerOptions = useMemo(() => {
+    const excludedProvider = editingAccount?.provider;
+
+    return PROVIDER_OPTIONS.map((option) => ({
+      ...option,
+      disabled: currentProviderIds.has(option.value) && option.value !== excludedProvider,
+    }));
+  }, [currentProviderIds, editingAccount?.provider]);
 
   const statCards = useMemo(
     () => [
@@ -159,7 +168,8 @@ export function AiAccountsSettingsClient({
 
   const openCreateDialog = () => {
     setEditingAccount(null);
-    setForm(EMPTY_FORM);
+    const nextProvider = AI_ACCOUNT_PROVIDER_TYPES.find((provider) => !currentProviderIds.has(provider)) ?? EMPTY_FORM.provider;
+    setForm({ ...EMPTY_FORM, provider: nextProvider });
     setFormError(null);
     setDialogOpen(true);
   };
@@ -482,7 +492,7 @@ export function AiAccountsSettingsClient({
                 ) : (
                   <TaavChoiceChipGroup
                     ariaLabel="ارائه‌دهنده"
-                    options={PROVIDER_OPTIONS}
+                    options={providerOptions}
                     value={form.provider}
                     onValueChange={(value) => {
                       const next = Array.isArray(value) ? value[0] : value;
@@ -495,6 +505,9 @@ export function AiAccountsSettingsClient({
                     wrap
                   />
                 )}
+                <p className="m-0 text-[length:var(--taav-text-xs)] text-[var(--taav-text-muted)]">
+                  هر Provider فقط یک‌بار قابل ثبت است.
+                </p>
               </TaavFieldBlock>
 
               <TaavFieldBlock

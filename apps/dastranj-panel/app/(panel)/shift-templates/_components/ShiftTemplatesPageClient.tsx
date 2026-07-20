@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Clock3, GitBranch, Hourglass, Search, Timer } from 'lucide-react';
 import { ModuleAddTile } from '../../../components/module-page/ModuleAddTile';
@@ -14,7 +14,8 @@ const CATEGORY_ICONS = { fixed: Clock3, 'float-day': Hourglass, 'float-abs': Tim
 
 type RawItem = {
   id: string; title: string; description: string | null; type: string; weekDays: unknown; isActive: boolean; config: unknown;
-  timeSummary: string; breakSummary: string; usageCount: number; isUsed: boolean; usageUnknown: boolean; usageCalendars: Array<{ id: string; title: string }>; updatedAt: Date;
+  timeSummary: string; breakSummary: string; usageCount: number; isUsed: boolean; usageUnknown: boolean; usageCalendars: Array<{ id: string; title: string }>;
+  sourceTemplateTitle: string | null; createdAt: Date; updatedAt: Date;
 };
 
 type Props = { items: RawItem[]; canManage: boolean; error?: string | null };
@@ -27,7 +28,8 @@ function normalizeItems(items: RawItem[]): ShiftTemplateListItem[] {
     isActive: item.isActive,
     config: item.config && typeof item.config === 'object' && !Array.isArray(item.config) ? item.config as Record<string, unknown> : {},
     timeSummary: item.timeSummary, breakSummary: item.breakSummary, usageCount: item.usageCount, isUsed: item.isUsed, usageUnknown: item.usageUnknown,
-    usageCalendars: item.usageCalendars, updatedAt: item.updatedAt.toISOString(),
+    usageCalendars: item.usageCalendars, sourceTemplateTitle: item.sourceTemplateTitle,
+    createdAt: item.createdAt.toISOString(), updatedAt: item.updatedAt.toISOString(),
   }));
 }
 
@@ -43,6 +45,22 @@ function Inner({ items, canManage, error }: Props) {
   const [selected, setSelected] = useState<ShiftTemplateListItem | null>(null);
   const [detail, setDetail] = useState<ShiftTemplateListItem | null>(null);
   const [initialType, setInitialType] = useState<ShiftTemplateCategory | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [pendingDetailId, setPendingDetailId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!notice) return;
+    const timer = window.setTimeout(() => setNotice(null), 4000);
+    return () => window.clearTimeout(timer);
+  }, [notice]);
+
+  useEffect(() => {
+    if (!pendingDetailId) return;
+    const created = normalizedItems.find((item) => item.id === pendingDetailId);
+    if (!created) return;
+    setDetail(created);
+    setPendingDetailId(null);
+  }, [normalizedItems, pendingDetailId]);
 
   const filtered = useMemo(() => normalizedItems.filter((item) => {
     if (type !== 'all' && item.shiftType !== type) return false;
@@ -58,7 +76,7 @@ function Inner({ items, canManage, error }: Props) {
 
   const openDialog = (mode: 'create' | 'edit' | 'clone', item: ShiftTemplateListItem | null = null, preferredType: ShiftTemplateCategory | null = null) => {
     if (mode === 'edit' && item?.usageCount) {
-      const confirmed = window.confirm('این قالب قبلاً در تقویم‌های کاری استفاده شده است. تغییرات این قالب روی استفاده‌های قبلی اعمال نمی‌شود و فقط در استفاده‌های بعدی قابل استفاده خواهد بود.');
+      const confirmed = window.confirm('این قالب قبلاً استفاده شده است. ویرایش آن استفاده‌های قبلی را تغییر نمی‌دهد.\n\nادامه ویرایش؟');
       if (!confirmed) return;
     }
     setDialogMode(mode); setSelected(item); setInitialType(preferredType ?? item?.shiftType ?? null); setDialogOpen(true);
@@ -84,7 +102,8 @@ function Inner({ items, canManage, error }: Props) {
       </div>
     </section>
       <section className="shift-template-section shift-template-blueprints"><header className="shift-template-section-header"><h2>الگوهای پایه سیستم</h2><p>از این الگوها برای ساخت قالب شیفت اختصاصی سازمان استفاده کنید.</p></header><div className="module-page-grid shift-templates-grid">{SHIFT_TEMPLATE_CATEGORIES.filter((category) => category.id !== 'rotate').map((category) => { const Icon = CATEGORY_ICONS[category.id]; return <article key={category.id} className="module-grid-card shift-template-blueprint-card"><span className={`shift-template-category-card-icon is-${category.tone}`}><Icon className="h-5 w-5" /></span><h3>الگوی پایه {category.label}</h3><p>{category.description}</p><span className="module-status-pill is-active">قابل استفاده برای ساخت</span>{canManage ? <button type="button" className="calendar-create-submit" onClick={() => { setType(category.id); openDialog('create', null, category.id); }}>ساخت قالب از این الگو</button> : null}</article>; })}<article className="module-grid-card shift-template-blueprint-card is-coming-soon"><h3>الگوی پایه شیفت چرخشی</h3><p>موتور عملیاتی چرخش هنوز در دست توسعه است و در این مرحله قابل ساخت نیست.</p><span className="module-status-pill is-inactive">در دست توسعه</span></article></div></section>
-    <CreateShiftTemplateDialog open={dialogOpen} initialShiftType={initialType} onClose={() => { setDialogOpen(false); setSelected(null); }} onSaved={() => { setDialogOpen(false); setSelected(null); router.refresh(); }} mode={dialogMode} template={selected} />
+    {notice ? <div className="calendar-page-toast" role="status">{notice}</div> : null}
+    <CreateShiftTemplateDialog open={dialogOpen} initialShiftType={initialType} onClose={() => { setDialogOpen(false); setSelected(null); }} onSaved={(templateId) => { setDialogOpen(false); setSelected(null); setNotice(dialogMode === 'edit' ? 'تغییرات قالب شیفت با موفقیت ذخیره شد.' : dialogMode === 'clone' ? 'نسخه مشابه قالب شیفت با موفقیت ایجاد شد.' : 'قالب شیفت با موفقیت ایجاد شد.'); if (dialogMode === 'create' && templateId) setPendingDetailId(templateId); router.refresh(); }} mode={dialogMode} template={selected} />
     <ShiftTemplateDetailDialog item={detail} canManage={canManage} onClose={() => setDetail(null)} onEdit={() => { if (canManage && detail) openDialog('edit', detail); setDetail(null); }} onClone={() => { if (canManage && detail) openDialog('clone', detail); setDetail(null); }} />
   </>;
 }
