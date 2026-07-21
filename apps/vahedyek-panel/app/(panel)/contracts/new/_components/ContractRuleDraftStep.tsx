@@ -26,7 +26,7 @@ import { ContractStepLoader } from './ContractStepLoader';
 import { ContractSettingsImportDialog } from './ContractSettingsImportDialog';
 import { BusinessSettingsHint } from './BusinessSettingsHint';
 import { useBusinessSettingsReference } from './useBusinessSettingsReference';
-import { buildRuleStateComparison } from '../../../../lib/contractSettingsReference';
+import { resolveDomainRuleHint } from '../../../../lib/contractSettingsHints';
 import { ForgivenessDraftRuleSection } from './ForgivenessDraftRuleSection';
 import { dispatchContractFlowDirty, dispatchContractFlowSavedForDraft, type ContractFlowSectionId } from './contractFlowSignals';
 import { useContractDraftAutosave } from './useContractDraftAutosave';
@@ -243,6 +243,8 @@ export function ContractRuleDraftStep({
           onSave={() => void handleSubmit()}
         />
 
+        <BusinessSettingsHint comparison={resolveDomainRuleHint(rule, snapshot?.rules?.[ruleId], state)} />
+
         {formError ? <div className="rounded-[8px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{formError}</div> : null}
 
         <StickySubmitBar
@@ -294,7 +296,7 @@ export function ContractRuleDraftStep({
           <div className="flex min-w-0 flex-1 flex-col justify-center space-y-3 text-right [direction:rtl] lg:items-start">
             <h2 className="text-xl font-black text-[color:var(--text-strong)]">{rule.activationTitle}</h2>
             <p className="w-full text-sm leading-7 text-[color:var(--text-muted)]">{rule.activationDescription}</p>
-            <BusinessSettingsHint comparison={buildRuleStateComparison(rule, snapshot?.rules?.[ruleId], state)} />
+            <BusinessSettingsHint comparison={resolveDomainRuleHint(rule, snapshot?.rules?.[ruleId], state)} />
             {!state.active ? (
               <p className="w-full text-sm text-[color:var(--text-muted)]">
                 برای ادامه، وضعیت‌های مالی و حقوقی را از همین بخش تنظیم کنید.

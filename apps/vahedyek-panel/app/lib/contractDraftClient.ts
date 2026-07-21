@@ -222,10 +222,10 @@ export async function ensureActiveDraftId() {
   return result.id;
 }
 
-export async function createDraftId() {
+export async function createDraftId(options?: { applySettings?: boolean }) {
   const result = await readJson<{ id: string }>('/api/contracts/drafts', {
     method: 'POST',
-    body: JSON.stringify({}),
+    body: JSON.stringify({ applySettings: Boolean(options?.applySettings) }),
   });
 
   localStorage.setItem(ACTIVE_DRAFT_KEY, result.id);

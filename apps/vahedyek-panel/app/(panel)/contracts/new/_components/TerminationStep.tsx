@@ -67,7 +67,7 @@ import { useContractFlowBasePath } from './useContractFlowBasePath';
 import { ContractSettingsImportDialog } from './ContractSettingsImportDialog';
 import { BusinessSettingsHint } from './BusinessSettingsHint';
 import { useBusinessSettingsReference } from './useBusinessSettingsReference';
-import { buildBusinessSettingsComparison } from '../../../../lib/contractSettingsReference';
+import { resolveTerminationHint } from '../../../../lib/contractSettingsHints';
 
 function serializePayload(payload: ContractTerminationData) {
   return JSON.stringify(payload);
@@ -832,21 +832,9 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
         <div className="space-y-0">
             <div className="px-5 pt-5 sm:px-8">
               <BusinessSettingsHint
-                comparison={buildBusinessSettingsComparison({
-                  reference: snapshot?.termination?.terminationEnabled,
-                  current: payload.terminationEnabled,
-                  referenceLines: [
-                    { label: 'وضعیت فسخ در تنظیمات', value: snapshot?.termination?.terminationEnabled ? 'فعال' : 'غیرفعال' },
-                    { label: 'فسخ سازنده در تنظیمات', value: snapshot?.termination?.sellerTerminationEngaged ? 'فعال' : 'غیرفعال' },
-                    { label: 'فسخ خریدار در تنظیمات', value: snapshot?.termination?.buyerTerminationEngaged ? 'فعال' : 'غیرفعال' },
-                  ],
-                  currentLines: [
-                    { label: 'وضعیت فعلی فسخ', value: payload.terminationEnabled ? 'فعال' : 'غیرفعال' },
-                    { label: 'فسخ سازنده در پیش‌نویس', value: payload.sellerTerminationEngaged ? 'فعال' : 'غیرفعال' },
-                    { label: 'فسخ خریدار در پیش‌نویس', value: payload.buyerTerminationEngaged ? 'فعال' : 'غیرفعال' },
-                  ],
-                  breakdownLines: [{ label: 'تب فعلی پیش‌نویس', value: payload.terminationPartyTab === 'seller' ? 'سازنده' : 'خریدار' }],
-                  helperText: 'این مرجع از تنظیمات فسخ کسب‌وکار خوانده شده و تغییر دستی پیش‌نویس را بازنویسی نمی‌کند.',
+                comparison={resolveTerminationHint(snapshot?.termination, payload, {
+                  builder: snapshot?.rules?.['builder-cancellation'] ?? null,
+                  buyer: snapshot?.rules?.['buyer-cancellation'] ?? null,
                 })}
               />
             </div>

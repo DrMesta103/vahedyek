@@ -11,6 +11,7 @@
     "start": "npm run migrate-and-start",
     "migrate-and-start": "node scripts/migrate-and-start.mjs",
     "test:financial": "node --test --import tsx tests/financial-utils.test.ts tests/contract-validation.test.ts tests/buyer-penalty-calculation.test.ts tests/contract-penalty-engine.test.ts tests/contract-buyer-financial-summary.test.ts tests/dues-penalty-display.test.ts tests/physical-progress-termination.test.ts",
+    "test:parties": "node --test --import tsx tests/contract-parties-related-participants.test.ts",
     "test:appendices": "node --test --import tsx tests/appendix-payloads.test.ts",
     "test:subject": "node --test --import tsx tests/subject-utils.test.ts",
     "test:workflow": "node --test --import tsx tests/workflow-runtime.test.ts",

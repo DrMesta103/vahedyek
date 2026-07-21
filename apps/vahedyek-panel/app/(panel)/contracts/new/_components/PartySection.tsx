@@ -1,5 +1,6 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import { Plus, Star, Trash2, UserRound } from 'lucide-react';
 import { FormBox } from './FormBox';
 import { Input } from '@repo/ui';
@@ -22,6 +23,7 @@ export function PartySection({
   disableAdd = false,
   layout = 'stack',
   primaryControl = 'button',
+  renderRowActions,
 }: {
   title: string;
   description: string;
@@ -36,6 +38,7 @@ export function PartySection({
   disableAdd?: boolean;
   layout?: PartySectionLayout;
   primaryControl?: PrimaryControl;
+  renderRowActions?: (row: PartyRow) => ReactNode;
 }) {
   const isSingleRow = rows.length <= 1;
   return (
@@ -92,6 +95,8 @@ export function PartySection({
                       ) : null}
                     </div>
                   </div>
+
+                  {renderRowActions ? renderRowActions(row) : null}
 
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="text-right">

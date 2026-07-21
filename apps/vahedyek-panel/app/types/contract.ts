@@ -30,6 +30,24 @@ export type AppendixTagKey =
   | 'unit-delivery-date';
 export type ShareMode = 'percent' | 'dang';
 export type PersonType = 'natural' | 'legal';
+export type PartyOneMemberKind = 'business' | 'natural_shareholder' | 'legal_shareholder';
+export type FirstPartySnapshot = {
+  fullName?: string;
+  mobile?: string;
+  email?: string;
+  legalName?: string;
+  tradeName?: string;
+  nationalId?: string;
+  registrationNumber?: string;
+  registrationDate?: string;
+  economicCode?: string;
+  contactName?: string;
+};
+export type FirstPartyRelatedParticipantRole =
+  | 'representative'
+  | 'board_member'
+  | 'natural_shareholder'
+  | 'legal_shareholder';
 export type PricingType = 'fixed' | 'metered';
 export type AreaPricingMode = 'unit-only' | 'unit-plus-parking' | 'unit-plus-storage' | 'unit-plus-storage-parking';
 export type PenaltyMode = 'fixed' | 'overdue' | 'contract' | 'progressive';
@@ -58,6 +76,20 @@ export interface ContractParty {
   name: string;
   share: Share;
   isPrimary?: boolean;
+  partyOneMemberKind?: PartyOneMemberKind | null;
+  snapshot?: FirstPartySnapshot | null;
+}
+
+export interface FirstPartyRelatedParticipant {
+  id: string;
+  sourceId: string;
+  sourceDirectoryId?: string | null;
+  personType: PersonType;
+  role: FirstPartyRelatedParticipantRole;
+  name: string;
+  parentParticipantId?: string | null;
+  parentSourceId?: string | null;
+  snapshot?: FirstPartySnapshot | null;
 }
 
 export interface ContractSubjectData {
@@ -79,6 +111,7 @@ export interface ContractPartiesData {
   partyTwoMode: ShareMode;
   partyOne: ContractParty[];
   partyTwo: ContractParty[];
+  firstPartyRelatedParticipants?: FirstPartyRelatedParticipant[];
 }
 
 export interface FinancialCategoryData {

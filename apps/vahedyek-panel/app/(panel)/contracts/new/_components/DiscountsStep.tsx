@@ -20,6 +20,11 @@ import {
   setBusinessSettingsReference,
   saveDraftRuleSettings,
 } from '../../../../lib/contractDraftClient';
+import {
+  buildBootstrapDiscountsPayload,
+  normalizeDiscountRule,
+  normalizeDiscountsPayload,
+} from '../../../../lib/contractSettingsBootstrap';
 import { RULE_CONFIGS, type ContractRuleState } from '../../../../lib/businessContractRules';
 import { validateDiscountsStep } from '../../../../lib/contractValidation';
 import { buildValidationSummary } from './validationPresentation';
@@ -36,7 +41,7 @@ import { useContractFlowBasePath } from './useContractFlowBasePath';
 import { ContractSettingsImportDialog } from './ContractSettingsImportDialog';
 import { BusinessSettingsHint } from './BusinessSettingsHint';
 import { useBusinessSettingsReference } from './useBusinessSettingsReference';
-import { buildRuleStateComparison } from '../../../../lib/contractSettingsReference';
+import { resolveDomainRuleHint } from '../../../../lib/contractSettingsHints';
 import { useContractDraftAutosave } from './useContractDraftAutosave';
 
 const SCOPE_OPTIONS: Array<{ value: DiscountScope; label: string }> = [
@@ -76,102 +81,6 @@ function makeEmptyRule(discountTypeId: string, scope: DiscountScope = 'whole', e
     conditionSettlementTiming: 'unit-handover',
     managerApproval: false,
     approvalThreshold: '',
-  };
-}
-
-function normalizeRule(rule: DiscountRuleData): DiscountRuleData {
-  const scope = rule.scope === 'itemized' ? 'itemized' : 'whole';
-
-  return {
-    ...rule,
-    scope,
-    entryId: scope === 'itemized' ? rule.entryId || ITEMIZED_DISCOUNT_ENTRIES[0]?.id || '' : WHOLE_DISCOUNT_ENTRY.id,
-    valueMode: rule.valueMode === 'percent' ? 'percent' : 'amount',
-    enabled: rule.enabled === true,
-    minValue: String(rule.minValue ?? ''),
-    maxValue: String(rule.maxValue ?? ''),
-    conditionNote: String(rule.conditionNote ?? ''),
-    conditionConfigured: Boolean(rule.conditionConfigured),
-    conditionMaxDelayCount: String(rule.conditionMaxDelayCount ?? ''),
-    conditionGraceDays: String(rule.conditionGraceDays ?? ''),
-    conditionDueBasis: Array.isArray(rule.conditionDueBasis) && rule.conditionDueBasis.length ? rule.conditionDueBasis : ['all-payment-types'],
-    conditionKeepOnDelay: Boolean(rule.conditionKeepOnDelay),
-    conditionPenaltyOnDiscount: Boolean(rule.conditionPenaltyOnDiscount),
-    conditionSettlementTiming: String(rule.conditionSettlementTiming ?? 'unit-handover'),
-    approvalThreshold: String(rule.approvalThreshold ?? ''),
-  };
-}
-
-function normalizeDiscountsPayload(data: ContractDiscountsData | null): ContractDiscountsData {
-  const typeMap = new Map((data?.types ?? []).map((item) => [item.id, item]));
-  const types = DISCOUNT_GROUPS.map((item) => ({
-    id: item.id,
-    title: item.title,
-    description: item.description,
-    active: typeMap.get(item.id)?.active ?? false,
-  }));
-
-  const validTypeIds = new Set(types.map((item) => item.id));
-  const rules = (data?.rules ?? [])
-    .map((rule) => normalizeRule(rule))
-    .filter((rule) => validTypeIds.has(rule.discountTypeId));
-  const activeTab = types.find((item) => item.active)?.id ?? types[0]?.id ?? '';
-
-  return { activeTab, types, rules };
-}
-
-function buildBootstrapDiscountsPayload(ruleState: ContractRuleState | null): ContractDiscountsData | null {
-  if (!ruleState) return null;
-
-  const activeGroupId = ruleState.active && ruleState.activeChip ? (ruleState.activeChip as 'contract-base' | 'early-payment') : null;
-  const baseTypes = DISCOUNT_GROUPS.map((item) => ({
-    id: item.id,
-    title: item.title,
-    description: item.description,
-    active: activeGroupId === item.id,
-  }));
-
-  if (!activeGroupId) {
-    return {
-      activeTab: baseTypes[0]?.id ?? '',
-      types: baseTypes,
-      rules: [],
-    };
-  }
-
-  const isContractBase = activeGroupId === 'contract-base';
-  const amountValue = isContractBase ? String(ruleState.values.discountContractValue ?? '') : String(ruleState.values.discountEarlyValue ?? '');
-  const scope = String(ruleState.values.discountScope || 'whole') as DiscountScope;
-  const entryId =
-    scope === 'whole'
-      ? WHOLE_DISCOUNT_ENTRY.id
-      : String(ruleState.values.discountEntryId || ITEMIZED_DISCOUNT_ENTRIES[0]?.id || WHOLE_DISCOUNT_ENTRY.id);
-
-  return {
-    activeTab: activeGroupId,
-    types: baseTypes,
-    rules: [
-      normalizeRule({
-        id: `discount-bootstrap-${activeGroupId}`,
-        discountTypeId: activeGroupId,
-        scope,
-        entryId,
-        valueMode: String(ruleState.values.discountValueMode || 'amount') as DiscountValueMode,
-        enabled: true,
-        minValue: amountValue,
-        maxValue: amountValue,
-        conditionNote: isContractBase ? String(ruleState.values.discountContractSettlement ?? '') : String(ruleState.values.discountEarlyDeadline ?? ''),
-        conditionConfigured: Boolean(ruleState.values.discountConditionConfigured),
-        conditionMaxDelayCount: String(ruleState.values.discountApprovalThreshold ?? ''),
-        conditionGraceDays: isContractBase ? '' : String(ruleState.values.discountEarlyDeadline ?? ''),
-        conditionDueBasis: ['all-payment-types'],
-        conditionKeepOnDelay: Boolean(ruleState.values.discountEarlyKeepOnDelay),
-        conditionPenaltyOnDiscount: Boolean(ruleState.values.discountContractNeedApproval),
-        conditionSettlementTiming: String(ruleState.values.discountContractSettlement ?? 'unit-handover'),
-        managerApproval: Boolean(ruleState.values.discountManagerApproval),
-        approvalThreshold: String(ruleState.values.discountApprovalThreshold ?? ''),
-      }),
-    ],
   };
 }
 
@@ -562,7 +471,7 @@ export function DiscountsStep({ stepId, title, embedded = false }: { stepId: str
 
   const setRule = (nextRule: DiscountRuleData) => {
     setRules((current) => {
-      const next = normalizeRule(nextRule);
+      const next = normalizeDiscountRule(nextRule);
       const index = current.findIndex((item) => item.id === next.id);
       if (index >= 0) {
         const copy = current.slice();
@@ -850,7 +759,7 @@ export function DiscountsStep({ stepId, title, embedded = false }: { stepId: str
       ) : null}
 
       <BusinessSettingsHint
-        comparison={buildRuleStateComparison(RULE_CONFIGS.discount, snapshot?.rules?.discount, discountHintState)}
+        comparison={resolveDomainRuleHint(RULE_CONFIGS.discount, snapshot?.rules?.discount, discountHintState)}
       />
 
       <div className="space-y-4">

@@ -407,8 +407,9 @@ export function ContractFlowHub() {
       setBootstrapError('');
       const settings = await fetchContractFlowBootstrapSettings();
       setBusinessSettingsReference(settings);
+      // Keep bootstrap snapshot for any client-side fallback hydrate; server already seeds payloads.
       setContractFlowBootstrapSettings(settings);
-      await createDraftId();
+      await createDraftId({ applySettings: true });
       setBootstrapDialogOpen(false);
       setBootstrapRunId((current) => current + 1);
     } catch (error) {

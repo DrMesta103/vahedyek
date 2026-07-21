@@ -29,6 +29,7 @@ import {
   ProfileTextField,
 } from './ProfileFormShell';
 import { BusinessRepresentativePickerPanel } from './BusinessRepresentativePickerPanel';
+import { ContractDraftReturnButton, parseContractDraftReturnContext } from './ContractDraftReturnButton';
 import { PersonAvatar, PersonRowCard } from './ProfilePeoplePrimitives';
 
 type ShareholderKind = 'natural' | 'legal';
@@ -98,7 +99,8 @@ export function BusinessShareholderEditorPanel({ shareholderId, entity = 'shareh
   const searchParams = useSearchParams();
   const config = entityConfig[entity];
   const returnTo = searchParams.get('returnTo');
-  const safeReturnTo = returnTo && returnTo.startsWith('/') ? returnTo : null;
+  const safeReturnTo = returnTo && returnTo.startsWith('/') && !returnTo.startsWith('//') ? returnTo : null;
+  const contractReturnContext = parseContractDraftReturnContext(safeReturnTo);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const requestedKind = searchParams.get('kind');
   const lockedKind = requestedKind === 'legal' || requestedKind === 'natural' ? requestedKind : null;
@@ -255,6 +257,7 @@ export function BusinessShareholderEditorPanel({ shareholderId, entity = 'shareh
   return (
     <ProfilePageShell>
       <ProfileCard className={`shareholder-editor-card${isLegalRegistrationFlow ? ' is-legal-registration-flow' : ''}`}>
+        {contractReturnContext ? <ContractDraftReturnButton context={contractReturnContext} /> : null}
         <ProfileHeading title={headingTitle} description={headingDescription} />
 
         {kind === 'legal' ? <ShareholderSteps activeStep={step} /> : null}

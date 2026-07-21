@@ -44,8 +44,9 @@ import { BuilderPenaltyInFlow, type BuilderPenaltyInFlowHandle } from './penalti
 import { BusinessSettingsHint } from './BusinessSettingsHint';
 import { useContractDraftAutosave } from './useContractDraftAutosave';
 import { useBusinessSettingsReference } from './useBusinessSettingsReference';
+import { buildBootstrapPenaltiesPayload, normalizePenaltiesPayload } from '../../../../lib/contractSettingsBootstrap';
 import { RULE_CONFIGS, type ContractRuleState } from '../../../../lib/businessContractRules';
-import { buildRuleStateComparison } from '../../../../lib/contractSettingsReference';
+import { resolveDomainRuleHint } from '../../../../lib/contractSettingsHints';
 
 type PenaltyPartyTab = 'buyer' | 'seller';
 
@@ -152,57 +153,6 @@ function normalizeRule(rule: PenaltyRuleData): PenaltyRuleData {
       openEnded: Boolean(row.openEnded),
     }))),
   };
-}
-
-function normalizePenaltiesPayload(data: ContractPenaltiesData | null): ContractPenaltiesData {
-  const typeMap = new Map((data?.types ?? []).map((item) => [item.id, item]));
-  const types = PENALTY_ITEMS.map((item) => ({
-    id: item.id,
-    title: item.title,
-    description: item.description,
-    active: typeMap.get(item.id)?.active ?? false,
-  }));
-  const validTypeIds = new Set(types.map((item) => item.id));
-  const rules = (data?.rules ?? []).filter((item) => validTypeIds.has(item.penaltyTypeId)).map(normalizeRule);
-  const activeTab = types.find((item) => item.active)?.id ?? types[0]?.id ?? '';
-
-  return { activeTab, types, rules };
-}
-
-function buildBootstrapPenaltiesPayload(ruleState: { active: boolean; activeTab: string; values: Record<string, string | boolean> } | null) {
-  if (!ruleState) return null;
-  const typeId = 'installment-delay';
-  const active = Boolean(ruleState.active);
-  const mode = ['fixed', 'overdue', 'contract', 'progressive'].includes(ruleState.activeTab) ? ruleState.activeTab : 'fixed';
-  const prefix = mode === 'overdue' ? 'penaltyDebt' : `penalty${mode[0].toUpperCase()}${mode.slice(1)}`;
-  const get = (key: string) => String(ruleState.values[`${prefix}${key}`] ?? '');
-  const percent = mode === 'overdue' ? get('Percent') : mode === 'contract' ? get('Percent') : '';
-  const rule = normalizeRule({
-    ...makeEmptyRule(typeId),
-    id: 'penalty-bootstrap-installment-delay',
-    mode: mode as PenaltyMode,
-    period: (get('Period') || 'monthly') as PenaltyPeriod,
-    fixedAmount: get('Amount'),
-    penaltyPercent: percent,
-    bankInterestPercent: get('BankPercent'),
-    graceDays: get('GraceDays') || '2',
-    roundRule: (get('Round') || '100') as PenaltyRoundRule,
-    extraFeeEnabled: ruleState.values[`${prefix}ExtraFeeEnabled`] === true,
-    extraFeeType: (get('ExtraFeeType') || 'percent') as PenaltyExtraFeeType,
-    extraFeeAmount: get('ExtraFeeAmount'),
-    extraFeeRoundRule: (get('ExtraFeeRound') || '100') as PenaltyRoundRule,
-    progressiveRows: [1, 2, 3, 4].map((index) => ({
-      id: `row-${index}`,
-      fromDay: String(ruleState.values[`penaltyProgressiveRow${index}From`] ?? ''),
-      toDay: String(ruleState.values[`penaltyProgressiveRow${index}To`] ?? ''),
-      rate: String(ruleState.values[`penaltyProgressiveRow${index}Rate`] ?? ''),
-    })),
-  });
-  return normalizePenaltiesPayload({
-    activeTab: typeId,
-    types: PENALTY_ITEMS.map((item) => ({ ...item, active: active && item.id === typeId })),
-    rules: active ? [rule] : [],
-  });
 }
 
 function formatInput(value: string) {
@@ -666,9 +616,15 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
         />
 
         <div className="px-6 pt-5 sm:px-8">
-          <BusinessSettingsHint
-            comparison={buildRuleStateComparison(RULE_CONFIGS.penalty, snapshot?.rules?.penalty, penaltyHintState)}
-          />
+          {partyTab === 'buyer' ? (
+            <BusinessSettingsHint
+              comparison={resolveDomainRuleHint(RULE_CONFIGS.penalty, snapshot?.rules?.penalty, penaltyHintState)}
+            />
+          ) : (
+            <BusinessSettingsHint
+              comparison={resolveDomainRuleHint(RULE_CONFIGS['builder-penalty'], snapshot?.rules?.['builder-penalty'], null)}
+            />
+          )}
         </div>
 
         {/* Keep both tabs mounted to prevent layout "jump" on switch */}
