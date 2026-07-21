@@ -41,8 +41,12 @@ export function ModuleLinkGridShowcase() {
 
 export function ModuleLinkShowcase() {
   return (
-    <div dir="rtl" data-taav-theme="light" className="w-full bg-[var(--taav-bg)] px-5 py-4">
-      <TaavBusinessModuleLink item={ITEMS[0]} className="w-1/2" />
+    <div
+      dir="rtl"
+      data-taav-theme="light"
+      className="w-full bg-[var(--taav-bg)] px-5 py-4 md:max-w-[calc((100%-3rem)/2)]"
+    >
+      <TaavBusinessModuleLink item={ITEMS[0]} className="w-full" />
     </div>
   );
 }

@@ -66,7 +66,7 @@ export function TaavCommunicationChannels({
           );
         })}
       </div>
-      <div className="flex justify-center pt-[16px]"><button type="button" onClick={onBack} disabled={disabled || !onBack} className="rounded-[8px] bg-[var(--taav-communication-button)] px-[10px] py-[6px] text-[14px] font-semibold text-white transition-colors hover:bg-[var(--taav-communication-button-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#80d7d9] disabled:cursor-not-allowed disabled:opacity-50">{backLabel}</button></div>
+      {onBack ? <div className="flex justify-center pt-[16px]"><button type="button" onClick={onBack} disabled={disabled} className="rounded-[8px] bg-[var(--taav-communication-button)] px-[10px] py-[6px] text-[14px] font-semibold text-white transition-colors hover:bg-[var(--taav-communication-button-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#80d7d9] disabled:cursor-not-allowed disabled:opacity-50">{backLabel}</button></div> : null}
     </section>
   );
 }

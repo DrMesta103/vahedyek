@@ -68,12 +68,6 @@ const BUSINESS_ITEMS = [
     description: 'مدیریت تلفن، ایمیل، فکس، وبسایت و شبکه‌های اجتماعی',
   },
   {
-    href: '/business/communication-channels-card',
-    label: 'کارت راه‌های ارتباطی',
-    badge: 'TaavCommunicationChannels',
-    description: 'مدیریت تلفن، ایمیل، فکس، وبسایت و شبکه‌های اجتماعی',
-  },
-  {
     href: '/business/module-link-grid',
     label: 'فهرست دسترسی‌های مجتمع',
     badge: 'TaavBusinessModuleLinkGrid',
@@ -84,7 +78,6 @@ const BUSINESS_ITEMS = [
 const BUSINESS_COPY: Record<string, { label: string; description: string }> = {
   '/business/module-link-grid': { label: 'فهرست دسترسی‌های مجتمع', description: 'گرید دو ستونه برای نمایش مسیرهای اطلاعاتی و عملیاتی مجتمع با آیکن و فلش ورود' },
   '/business/sidebar': { label: 'سایدبار کسب‌وکار', description: 'ناوبری ERP با مسیر، tenant و دسترسی‌های سریع' },
-  '/business/intro-card': { label: 'کارت معرفی بخش', description: 'کارت معرفی استاندارد برای مرکز تنظیمات کسب‌وکار' },
   '/business/recommendation-card': { label: 'کارت پیشنهاد تنظیمات', description: 'تنظیم پیشنهادی با کلید فعال‌سازی و لینک جزئیات' },
   '/business/section-toolbar-card': { label: 'کارت سربرگ مدیریتی بخش', description: 'سربرگ مشترک برای بخش‌های مدیریتی با جست‌وجو و اقدام' },
   '/business/header-card': { label: 'سربرگ', description: 'کارت سربرگ بیزینسی برای عنوان، توضیح، آیکن، سوییچ، دکمه و جستجو' },
@@ -96,13 +89,17 @@ const BUSINESS_COPY: Record<string, { label: string; description: string }> = {
   '/business/choice-chip': { label: 'چیپ انتخابی', description: 'انتخاب گزینه‌های کسب‌وکاری مانند نوع شرکت و نوع قرارداد' },
 };
 
-export default function BusinessOverviewPage() {
+export function BusinessOverviewPage({ sectionTitle = 'کامپوننت‌های کسب‌وکار', sectionLabel = 'کسب‌وکار', sectionMode = 'business' }: { sectionTitle?: string; sectionLabel?: string; sectionMode?: 'business' | 'components' }) {
+  const items = sectionMode === 'components'
+    ? [...BUSINESS_ITEMS.filter((item) => item.href !== '/business/section-toolbar-card'), { href: '/business-components/choice-chip', label: 'chips', badge: 'TaavChoiceChipGroup', description: 'انتخاب محدود کسب‌وکار — نوع شرکت، نوع قرارداد، وضعیت ساده' }]
+    : BUSINESS_ITEMS;
+
   return (
     <div dir="rtl" className="text-right">
-      <DocPageShell breadcrumbs={[{ label: 'خانه', href: '/' }, { label: 'کسب‌وکار' }]}>
+      <DocPageShell breadcrumbs={[{ label: 'خانه', href: '/' }, { label: sectionLabel }]}>
       <DocPageHeader
         eyebrow="کامپوننت‌های کسب‌وکار"
-        title="کامپوننت‌های کسب‌وکار"
+        title={sectionTitle}
         description="مجموعه‌ای از اجزای تخصصی برای ساخت تجربه‌های کسب‌وکاری، فرم‌ها، ناوبری و کارت‌های مدیریتی."
         importCode={`import {
   TaavBusinessSidebar,
@@ -116,20 +113,24 @@ export default function BusinessOverviewPage() {
       />
       <DocApiNote />
       <div className="grid gap-4 md:grid-cols-2">
-        {BUSINESS_ITEMS.map((item) => {
+        {items.map((item) => {
             if (item.href === '/business/toggle-card') return null;
-            if (item.href === '/business/communication-channels-card') return null;
-            const copy = BUSINESS_COPY[item.href] ?? { label: item.label, description: 'مستندات، ویژگی‌ها، جدول props و پیش‌نمایش راست‌چین' };
+            const displayItem = sectionMode === 'components' && item.href === '/business/choice-chip'
+              ? { ...item, href: '/business-components/badges', label: 'badges', badge: 'TaavBadge' }
+              : item;
+            const copy = sectionMode === 'components' && item.href === '/business/choice-chip'
+              ? { label: 'badges', description: 'Badgeهای نمایشی برای وضعیت، نوع کاربری، ویژگی‌های واحد و وضعیت معامله' }
+              : BUSINESS_COPY[item.href] ?? { label: displayItem.label, description: 'مستندات، ویژگی‌ها، جدول props و پیش‌نمایش راست‌چین' };
             return (
-              <Link key={item.href} href={item.href} className="h-full">
+              <Link key={displayItem.href} href={displayItem.href} className="h-full">
                 <TaavCard variant="outlined" padding="md" radius="lg" interactive wrapperClassName="h-full">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <h2 className="m-0 text-[length:var(--taav-text-lg)] font-black text-[var(--taav-text-strong)]">{copy.label}</h2>
                       <p className="mt-2 text-[length:var(--taav-text-sm)] leading-7 text-[var(--taav-text-muted)]">{copy.description}</p>
-                      {'subcomponent' in item && item.subcomponent ? <p className="mt-2 text-xs font-semibold text-[var(--taav-brand-600)]">زیرمجموعه: {item.subcomponent}</p> : null}
+                      {'subcomponent' in displayItem && displayItem.subcomponent ? <p className="mt-2 text-xs font-semibold text-[var(--taav-brand-600)]">زیرمجموعه: {displayItem.subcomponent}</p> : null}
                     </div>
-                    {item.badge ? <TaavBadge tone="brand" variant="soft" size="sm">{item.badge}</TaavBadge> : null}
+                    {displayItem.badge ? <TaavBadge tone="brand" variant="soft" size="sm">{displayItem.badge}</TaavBadge> : null}
                   </div>
                 </TaavCard>
               </Link>
@@ -140,3 +141,5 @@ export default function BusinessOverviewPage() {
     </div>
   );
 }
+
+export default BusinessOverviewPage;

@@ -15,6 +15,7 @@ export const LAB_MAIN_NAV: LabNavItem[] = [
   { href: '/data-display', label: 'Data Display' },
   { href: '/layout', label: 'Layout' },
   { href: '/business', label: 'Business' },
+  { href: '/business-components', label: 'Components' },
 ];
 
 export const LAB_FOUNDATION_NAV: LabNavItem[] = [
@@ -93,17 +94,17 @@ export const LAB_BUSINESS_NAV: LabNavItem[] = ([
     keywords: ['sidebar', 'navigation', 'dastranj'],
   },
   {
-    href: '/business/intro-card',
-    label: 'کارت معرفی بخش',
-    badge: 'TaavBusinessIntroCard',
-    description: 'intro استاندارد و layout=hub برای مرکز تنظیمات کسب‌وکار',
-    keywords: ['hub', 'eyebrow', 'footnote', 'badge', 'تنظیمات کسب‌وکار', 'business settings'],
+    href: '/business/section-toolbar-card',
+    label: 'کارت سربرگ مدیریتی بخش',
+    badge: 'TaavBusinessSectionToolbarCard',
+    description: 'الگوی مشترک برای سربرگ‌های مدیریتی با جستجو و اقدام',
+    keywords: ['toolbar card', 'section header', 'business management'],
   },
   {
     href: '/business/section-toolbar-card',
     label: 'کارت سربرگ مدیریتی بخش',
     badge: 'TaavBusinessSectionToolbarCard',
-    description: 'الگوی مشترک برای سربرگ‌های مدیریتی با جستجو و اقدام',
+    description: 'الگوی مشترک برای سربرگ‌های مدیریتی با جست‌وجو و اقدام',
     keywords: ['toolbar card', 'section header', 'business management'],
   },
   {
